@@ -21,6 +21,7 @@
     session: null,
     queue: [],
     busy: false,
+    failed: false,
     cache: new Map(), // key: `${npcId}::${node}` -> string[]
     seenKeys: new Set(), // avoid re-enqueue storms
   };
@@ -41,8 +42,10 @@
     _ensureUI();
     if(!_ui.badge) return;
     const on=_state.ready && window.NanoDialog.enabled;
-    _ui.badge.textContent= on ? '✓':'✗';
-    _ui.badge.classList.toggle('off', !on);
+    _ui.badge.textContent = on ? '✓' : (_state.failed ? '!' : '✗');
+    _ui.badge.classList.toggle('on', on);
+    _ui.badge.classList.toggle('off', !on && !_state.failed);
+    _ui.badge.classList.toggle('failed', _state.failed);
   }
 
   function _showProgress(p){
@@ -63,14 +66,20 @@
 
   // ===== Lifecycle =====
   async function init(){
-    if(!_featureSupported()){ log && log('[Nano] Prompt API not supported.'); return; }
-    try {
-      _ensureUI();
+    _ensureUI();
+    _state.failed=false;
+    _updateBadge();
+    if(!_featureSupported()){
+      log && log('[Nano] Prompt API not supported.');
+      _state.failed=true;
       _updateBadge();
+      return;
+    }
+    try {
       const avail = await LanguageModel.availability({ outputLanguage: "en" });
       if (avail === "available") {
         _state.session = await LanguageModel.create({ outputLanguage: "en" });
-        _state.ready = true; log && log('[Nano] Model ready.');
+        _state.ready = true; _state.failed=false; log && log('[Nano] Model ready.');
         _updateBadge();
       } else if (avail === "downloadable" || avail === "downloading") {
         log && log('[Nano] Downloading on-device model…');
@@ -85,16 +94,18 @@
           }
         });
         _hideProgress();
-        _state.ready = true; log && log('[Nano] Model ready.');
+        _state.ready = true; _state.failed=false; log && log('[Nano] Model ready.');
         _updateBadge();
       } else {
         log && log('[Nano] Model not available on this device.');
+        _state.failed=true;
         _updateBadge();
       }
     } catch (err){
       console.error(err);
       log && log('[Nano] Failed to init model.');
       _hideProgress();
+      _state.failed=true;
       _updateBadge();
     }
     _pump(); // start background worker
@@ -149,11 +160,12 @@
 
   // ===== Prompt construction =====
   function _buildPrompt(npcId, nodeId){
-    if(!window.NPCS || !window.party || !window.player || !window.quests) return null;
+    if(typeof NPCS==='undefined' || typeof party==='undefined' || typeof player==='undefined' || typeof quests==='undefined') return null;
     const npc = NPCS.find(n=> n.id===npcId);
     if(!npc) return null;
+    const desc = (typeof NPC_DESCS!=='undefined' && NPC_DESCS[npc.id]) || '';
 
-    const leader = party[window.selectedMember] || party[0] || null;
+    const leader = party[typeof selectedMember==='number' ? selectedMember : 0] || null;
     const inv = (player.inv || []).map(i=>i.name);
     const completed = Object.entries(quests)
       .filter(([,q])=>q.status==='completed')
@@ -168,6 +180,7 @@ NPC:
 - id: ${npc.id}
 - name: ${npc.name}
 - title: ${npc.title}
+- description: ${desc}
 
 World vibe: dry humor, 90s CRPG snark, a little heart.
 
