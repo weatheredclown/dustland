@@ -7,6 +7,10 @@
   <link rel="stylesheet" href="dustland.css" />
 </head>
 <body>
+  <div id="nanoStatus">
+    <div id="nanoProgress" class="nano-progress"></div>
+    <div id="nanoBadge" class="nano-badge off">✗</div>
+  </div>
   <div class="wrap">
     <div class="crt-wrap" style="flex:1;display:flex;align-items:center;justify-content:center">
       <div class="tube">
@@ -30,15 +34,16 @@
         </div>
         <div id="inv"></div>
         <div id="party" style="display:none"></div>
-        <div id="quests" style="display:none"></div>
-        <div style="margin-top:8px">
-          <button class="btn" id="saveBtn">Save</button>
-          <button class="btn" id="loadBtn">Load</button>
-          <button class="btn" id="resetBtn">Reset</button>
+          <div id="quests" style="display:none"></div>
+          <div style="margin-top:8px">
+            <button class="btn" id="saveBtn">Save</button>
+            <button class="btn" id="loadBtn">Load</button>
+            <button class="btn" id="resetBtn">Reset</button>
+            <button class="btn" id="nanoToggle">Nano Dialog</button>
+          </div>
         </div>
-      </div>
-    </aside>
-  </div>
+      </aside>
+    </div>
 
   <!-- Start Menu -->
   <div id="start">
@@ -93,5 +98,6 @@
 
   <script src="dustland-core.js"></script>
   <script src="dustland-engine.js"></script>
+  <script src="dustland-nano.js"></script>
 </body>
 </html>
