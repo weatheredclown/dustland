@@ -8,6 +8,20 @@ function log(msg){
   logEl.prepend(p);
 }
 
+// --- Toasts (lightweight) ---
+const toastHost = document.createElement('div');
+toastHost.style.cssText = 'position:fixed;left:50%;top:24px;transform:translateX(-50%);z-index:9999;pointer-events:none';
+document.body.appendChild(toastHost);
+
+function toast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'margin:6px 0;padding:8px 12px;background:#101910;border:1px solid #2b3b2b;border-radius:8px;color:#c8f7c9;box-shadow:0 8px 20px rgba(0,0,0,.4);opacity:0;transition:opacity .15s, transform .15s; transform: translateY(-6px)';
+  toastHost.appendChild(t);
+  requestAnimationFrame(()=>{ t.style.opacity = '1'; t.style.transform='translateY(0)'; });
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(-6px)'; setTimeout(()=> t.remove(), 180); }, 1600);
+}
+
 // Tile colors for rendering
 const colors = {0:'#1e271d',1:'#2c342c',2:'#1573ff',3:'#203320',4:'#394b39',5:'#304326',6:'#4d5f4d',7:'#233223',8:'#8bd98d',9:'#000000'};
 
@@ -82,7 +96,31 @@ document.getElementById('tabParty').onclick=()=>showTab('party');
 document.getElementById('tabQuests').onclick=()=>showTab('quests');
 
 // ===== Renderers =====
-function renderInv(){ const inv=document.getElementById('inv'); inv.innerHTML=''; if(player.inv.length===0){ inv.innerHTML='<div class="slot muted">(empty)</div>'; return; } player.inv.forEach((it,idx)=>{ const d=document.createElement('div'); d.className='slot clickable'; d.textContent= it.name + (it.slot?` [${it.slot}]`: ''); d.onclick=()=> equipItem(selectedMember, idx); inv.appendChild(d); }); }
+function renderInv(){
+  const inv=document.getElementById('inv');
+  inv.innerHTML='';
+  if(player.inv.length===0){
+    inv.innerHTML='<div class="slot muted">(empty)</div>';
+    return;
+  }
+  player.inv.forEach((it,idx)=>{
+    const row=document.createElement('div');
+    row.className='slot';
+    const label = it.name + (it.slot?` [${it.slot}]`: '');
+    row.innerHTML = `<div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+        <span>${label}</span>
+        <span style="display:flex;gap:6px">
+          ${it.slot? `<button class="btn" data-a="equip">Equip</button>`:''}
+          ${it.use?  `<button class="btn" data-a="use">Use</button>`:''}
+        </span>
+      </div>`;
+    const equipBtn = row.querySelector('button[data-a="equip"]');
+    if(equipBtn) equipBtn.onclick=()=> equipItem(selectedMember, idx);
+    const useBtn = row.querySelector('button[data-a="use"]');
+    if(useBtn) useBtn.onclick=()=> useItem(idx);
+    inv.appendChild(row);
+  });
+}
 function renderQuests(){ const q=document.getElementById('quests'); q.innerHTML=''; const ids=Object.keys(quests); if(ids.length===0){ q.innerHTML='<div class="q muted">(no quests)</div>'; return; } ids.forEach(id=>{ const v=quests[id]; const div=document.createElement('div'); div.className='q'; div.innerHTML=`<div><b>${v.title}</b></div><div class="small">${v.desc}</div><div class="status">${v.status}</div>`; q.appendChild(div); }); }
 function renderParty(){ const p=document.getElementById('party'); p.innerHTML=''; if(party.length===0){ p.innerHTML='<div class="pcard muted">(no party members yet)</div>'; return; } party.forEach((m,i)=>{ const c=document.createElement('div'); c.className='pcard'; const bonus=m._bonus||{}; c.innerHTML = `<div class='row'><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div><div class='row small'>${statLine(m.stats)}</div><div class='row'>HP ${m.hp}  AP ${m.ap}  ATK ${(bonus.ATK||0)}  DEF ${(bonus.DEF||0)}  LCK ${(bonus.LCK||0)}</div><div class='row small'>WPN: ${m.equip.weapon?m.equip.weapon.name:'—'}  ARM: ${m.equip.armor?m.equip.armor.name:'—'}  TRK: ${m.equip.trinket?m.equip.trinket.name:'—'}</div><div class='row small'>XP ${m.xp}/${xpToNext(m.lvl)}</div><div class='row'><label><input type='radio' name='selMember' ${i===selectedMember?'checked':''}> Selected</label></div>`; c.querySelector('input').onchange=()=>{ selectedMember=i; }; p.appendChild(c); }); }
 
@@ -109,10 +147,13 @@ function runTests(){
 document.getElementById('saveBtn').onclick=()=>save();
 document.getElementById('loadBtn').onclick=()=>{ load(); };
 document.getElementById('resetBtn').onclick=()=>resetAll();
-window.addEventListener('keydown',(e)=>{ if(overlay.classList.contains('shown')){ if(e.key==='Escape') closeDialog(); return; } switch(e.key){ case 'ArrowUp': case 'w': case 'W': move(0,-1); break; case 'ArrowDown': case 's': case 'S': move(0,1); break; case 'ArrowLeft': case 'a': case 'A': move(-1,0); break; case 'ArrowRight': case 'd': case 'D': move(1,0); break; case 'e': case 'E': case ' ': interact(); break; case 't': case 'T': takeNearestItem(); break; case 'i': case 'I': showTab('inv'); break; case 'p': case 'P': showTab('party'); break; case 'q': if(!e.ctrlKey && !e.metaKey){ showTab('quests'); e.preventDefault(); } break; case 'm': case 'M': showMini=!showMini; break; }});
+window.addEventListener('keydown',(e)=>{ if(overlay.classList.contains('shown')){ if(e.key==='Escape') closeDialog(); return; } switch(e.key){ case 'ArrowUp': case 'w': case 'W': move(0,-1); break; case 'ArrowDown': case 's': case 'S': move(0,1); break; case 'ArrowLeft': case 'a': case 'A': move(-1,0); break; case 'ArrowRight': case 'd': case 'D': move(1,0); break; case 'e': case 'E': case ' ': interact(); break; case 't': case 'T': takeNearestItem(); break; case 'i': case 'I': showTab('inv'); break; case 'p': case 'P': showTab('party'); break; case 'q': if(!e.ctrlKey && !e.metaKey){ showTab('quests'); e.preventDefault(); } break; case 'Tab': e.preventDefault(); if (party.length>0){ selectedMember = (selectedMember + 1) % party.length; renderParty(); toast(`Leader: ${party[selectedMember].name}`); } break; case 'm': case 'M': showMini=!showMini; break; }});
 
 // ===== Boot =====
 genHall();                              // ensure a grid exists before first frame
+// Example consumables
+itemDrops.push({map:'hall', x: hall.entryX+1, y: hall.entryY, name:'Water Flask', use:{type:'heal', amount:4}});
+itemDrops.push({map:'hall', x: hall.entryX-1, y: hall.entryY, name:'Old Medkit', use:{type:'heal', amount:6}});
 state.map='hall';
 player.x=hall.entryX; player.y=hall.entryY; centerCamera(player.x,player.y,'hall');
 requestAnimationFrame(draw);
