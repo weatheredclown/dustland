@@ -37,8 +37,8 @@ _______________________________________________________________________________
   - Picking up: stand next to or on your tile and press E/Space or T.
   - The selected party member (radio in Party tab) makes skill rolls and
     receives XP for dialog checks and quest rewards.
-  - World buildings appear as black structures; they are not enterable
-    from the overworld. Interiors are entered via scripted hall/world flows.
+  - World buildings appear as black structures; their doors lead to
+    simple interiors you can enter directly from the overworld.
   - Water is bright blue and is not walkable; items won’t spawn in water.
 
 [ CHARACTER CREATION ]
@@ -63,7 +63,7 @@ _______________________________________________________________________________
   - Stable boot: hall always renders before any modal (no blank canvas).
   - Items/NPCs draw before player (no sprite pop-under).
   - Loot from chests spawns on a nearby free tile (never under the player).
-  - Doors in world are decorative; hall top door exits to world.
+  - World building doors lead to interiors; hall top door exits to world.
   - “Selected” party member determines rolls & takes XP.
 
 [ TROUBLESHOOTING ]

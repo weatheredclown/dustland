@@ -150,7 +150,21 @@
     const grid=currentGrid(); const t=grid[player.y][player.x];
     if(t===TILE.DOOR){
       if(state.map==='hall' && player.y===1 && player.x===15){ startRealWorld(); return true; }
-      if(state.map==='world'){ log('The doorway is boarded up from the outside.'); return true; } // not enterable from world
+      if(state.map==='world'){
+        const b=buildings.find(b=> b.doorX===player.x && b.doorY===player.y);
+        if(b){
+          state.map=b.interiorId;
+          const I=interiors[state.map];
+          if(I){ player.x=I.entryX; player.y=I.entryY; }
+          document.getElementById('mapname').textContent='Interior';
+          log('You step inside.');
+          centerCamera(player.x,player.y,state.map);
+          updateHUD();
+          return true;
+        }
+        log('The doorway is boarded up from the outside.');
+        return true;
+      }
       if(state.map!=='world' && state.map!=='hall'){ // coming from interior
         const b=buildings.find(b=> b.interiorId===state.map);
         if(b){ state.map='world'; player.x=b.doorX; player.y=b.doorY-1; document.getElementById('mapname').textContent='Wastes'; log('You step back outside.'); centerCamera(player.x,player.y,state.map); updateHUD(); return true; }
