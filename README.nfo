@@ -1,0 +1,123 @@
+_______________________________________________________________________________
+|                                                                             |
+|   ______           __           __        __               __               |
+|  /_  __/___  _____/ /___ ______/ /_____ _/ /____  ________/ /__  ____ _____ |
+|   / / / __ \/ ___/ / __ `/ ___/ __/ __ `/ __/ _ \/ ___/ _  / _ \/ __ `/ __ \|
+|  / / / /_/ / /__/ / /_/ (__  ) /_/ /_/ / /_/  __/ /  /  __/  __/ /_/ / / / /|
+| /_/  \____/\___/_/\__,_/____/\__/\__,_/\__/\___/_/   \___/\___/\__,_/_/ /_/ |
+|                                                                             |
+|                           D U S T L A N D   C R T                           |
+|                       Wasteland-style web prototype                         |
+|                               v0.6.7 .NFO                                   |
+|_____________________________________________________________________________|
+
+[ ABOUT ]
+  Dustland CRT is a single-file HTML/JS prototype with a crunchy CRT vibe,
+  branching dialog, party stats, inventory, quests, and a world+hall demo.
+  It’s built to be easy to run and easy to hack.
+
+[ HOW TO RUN ]
+  - Just open:  index.html  (double-click or serve from any static server).
+  - No build step. No dependencies. Works offline.
+  - Tip: Use a modern Chromium, Firefox, or Safari.
+
+[ CONTROLS ]
+  Movement .......... WASD / Arrow Keys
+  Interact .......... E / Space  (talk, doors, take nearby item)
+  Take Item ......... T          (take from your tile or adjacent tiles)
+  Inventory ......... I
+  Party ............. P          (radio button selects the acting member)
+  Quests ............ Q
+  Save / Load ....... G / L      (or UI buttons)
+  Minimap ........... M
+  Close Dialog ...... Esc
+
+[ KEY MECHANICS ]
+  - You cannot stand on NPCs (!) or items; they block movement.
+  - Picking up: stand next to or on your tile and press E/Space or T.
+  - The selected party member (radio in Party tab) makes skill rolls and
+    receives XP for dialog checks and quest rewards.
+  - World buildings appear as black structures; they are not enterable
+    from the overworld. Interiors are entered via scripted hall/world flows.
+  - Water is bright blue and is not walkable; items won’t spawn in water.
+
+[ CHARACTER CREATION ]
+  - Start a new game at boot if no save is present.
+  - Create 1–3 drifters (funny quirks, specializations, secret origins).
+  - You’re NOT forced to fill all three slots—“Start Now” begins immediately.
+  - You can also hit “Load Game” directly from creator.
+
+[ SAVE DATA ]
+  - Saved to localStorage under key: dustland_crt
+  - “Reset” clears party/inventory and returns you to Creator.
+  - To fully wipe: clear the site’s localStorage from your browser.
+
+[ PROJECT LAYOUT ]
+  - Single file:  index.html
+    * Styles (CRT curvature/ghosting), Canvas renderer, Game state, Creator,
+      Dialog system, Quests, Inventory + Equipment, Save/Load, Test Hall,
+      simple World gen.
+  - No external assets or libraries.
+
+[ KNOWN GOOD BEHAVIOR (v0.6.7) ]
+  - Stable boot: hall always renders before any modal (no blank canvas).
+  - Items/NPCs draw before player (no sprite pop-under).
+  - Loot from chests spawns on a nearby free tile (never under the player).
+  - Doors in world are decorative; hall top door exits to world.
+  - “Selected” party member determines rolls & takes XP.
+
+[ TROUBLESHOOTING ]
+  - Black screen on load?
+      * Hard refresh (Ctrl+F5 / Cmd+Shift+R).
+      * Check console for errors.
+      * If a corrupted save exists, click “Reset” or clear localStorage.
+  - Can’t pick up items?
+      * Press E/Space or T while standing next to (or on) the item tile.
+  - Rolls/XP going to the wrong member?
+      * Open Party tab and switch the Selected radio—this member becomes
+        the leader for checks and XP.
+
+[ HACKING NOTES ]
+  - Everything is at the bottom of the HTML inside a self-invoking function.
+  - Useful entry points:
+      * genHall(), genWorld(), seedWorldDropsAndNPCs()
+      * makeNPC(), NPCS[], quests{}, itemDrops[]
+      * renderParty(), renderInv(), renderQuests()
+      * takeNearestItem(), interact(), move()
+  - Tiles: see TILE enum + colors[] + walkable[].
+
+[ LICENSE ]
+  MIT License
+
+  Copyright (c) 2024 Dustland Contributors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+[ CREDITS ]
+  - Design & code: you + contributors.
+  - ASCII/NFO: generated in classic BBS spirit.
+  - Inspirations: Wasteland (DOS), Planescape-like dialog energy, 90s P&P.
+
+[ CONTACT ]
+  - GitHub issues preferred. Paste console logs & steps to reproduce.
+  - Include browser/version and whether a save existed when it happened.
+
+[ GREETS ]
+  - To all the wasteland drifters, ANSI pirates, and CRT enjoyers. o7
+_______________________________________________________________________________
