@@ -147,7 +147,46 @@ function runTests(){
 document.getElementById('saveBtn').onclick=()=>save();
 document.getElementById('loadBtn').onclick=()=>{ load(); };
 document.getElementById('resetBtn').onclick=()=>resetAll();
-window.addEventListener('keydown',(e)=>{ if(overlay.classList.contains('shown')){ if(e.key==='Escape') closeDialog(); return; } switch(e.key){ case 'ArrowUp': case 'w': case 'W': move(0,-1); break; case 'ArrowDown': case 's': case 'S': move(0,1); break; case 'ArrowLeft': case 'a': case 'A': move(-1,0); break; case 'ArrowRight': case 'd': case 'D': move(1,0); break; case 'e': case 'E': case ' ': interact(); break; case 't': case 'T': takeNearestItem(); break; case 'i': case 'I': showTab('inv'); break; case 'p': case 'P': showTab('party'); break; case 'q': if(!e.ctrlKey && !e.metaKey){ showTab('quests'); e.preventDefault(); } break; case 'Tab': e.preventDefault(); if (party.length>0){ selectedMember = (selectedMember + 1) % party.length; renderParty(); toast(`Leader: ${party[selectedMember].name}`); } break; case 'm': case 'M': showMini=!showMini; break; }});
+
+document.getElementById('nanoToggle').onclick=()=>{
+  if(window.NanoDialog){
+    NanoDialog.enabled = !NanoDialog.enabled;
+    if (typeof toast === 'function') toast(`Dynamic dialog ${NanoDialog.enabled ? 'enabled' : 'disabled'}`);
+    if (NanoDialog.refreshIndicator) NanoDialog.refreshIndicator();
+  }
+};
+
+window.addEventListener('keydown',(e)=>{
+  if(overlay.classList.contains('shown')){
+    if(e.key==='Escape') closeDialog();
+    return;
+  }
+  switch(e.key){
+    case 'ArrowUp': case 'w': case 'W': move(0,-1); break;
+    case 'ArrowDown': case 's': case 'S': move(0,1); break;
+    case 'ArrowLeft': case 'a': case 'A': move(-1,0); break;
+    case 'ArrowRight': case 'd': case 'D': move(1,0); break;
+    case 'e': case 'E': case ' ': interact(); break;
+    case 't': case 'T': takeNearestItem(); break;
+    case 'i': case 'I': showTab('inv'); break;
+    case 'p': case 'P': showTab('party'); break;
+    case 'q': if(!e.ctrlKey && !e.metaKey){ showTab('quests'); e.preventDefault(); } break;
+    case 'Tab':
+      e.preventDefault();
+      if (party.length>0){
+        selectedMember = (selectedMember + 1) % party.length;
+        renderParty();
+        toast(`Leader: ${party[selectedMember].name}`);
+        if(window.NanoDialog){
+          const near = NPCS.filter(n => n.map === (state.map==='creator'?'hall':state.map)
+            && Math.abs(n.x - player.x) + Math.abs(n.y - player.y) < 10);
+          near.forEach(n => NanoDialog.queueForNPC(n, 'start', 'leader change'));
+        }
+      }
+      break;
+    case 'm': case 'M': showMini=!showMini; break;
+  }
+});
 
 // ===== Boot =====
 genHall();                              // ensure a grid exists before first frame
@@ -159,6 +198,7 @@ player.x=hall.entryX; player.y=hall.entryY; centerCamera(player.x,player.y,'hall
 requestAnimationFrame(draw);
 document.getElementById('mapname').textContent='Test Hall';
 log('v0.6.7 — Stable boot; items/NPCs visible; E/T to take; selected member rolls.');
+if (window.NanoDialog) NanoDialog.init();
 
 if(location.hash.includes('test')){ runTests(); }
 else {

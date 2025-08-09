@@ -27,7 +27,15 @@
 
   // ===== Inventory / equipment =====
   const itemDrops=[]; // {map,x,y,name,slot,mods}
-  function addToInv(item){ if(typeof item==='string') item={name:item}; player.inv.push(item); renderInv(); }
+  function addToInv(item){
+    if(typeof item==='string') item={name:item};
+    player.inv.push(item);
+    renderInv();
+    if (window.NanoDialog) {
+      NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+          .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
+    }
+  }
   let selectedMember = 0;
   function equipItem(memberIndex, invIndex){ const m=party[memberIndex]; const it=player.inv[invIndex]; if(!m||!it||!it.slot){ log('Cannot equip that.'); return; } const slot = it.slot; const prevEq = m.equip[slot]; if(prevEq) player.inv.push(prevEq); m.equip[slot]=it; player.inv.splice(invIndex,1); applyEquipmentStats(m); renderInv(); renderParty(); log(`${m.name} equips ${it.name}.`); }
   function applyEquipmentStats(m){ m._bonus = {ATK:0, DEF:0, LCK:0}; for(const k of ['weapon','armor','trinket']){ const it=m.equip[k]; if(it&&it.mods){ for(const stat in it.mods){ m._bonus[stat]=(m._bonus[stat]||0)+it.mods[stat]; } } } }
@@ -55,6 +63,10 @@
       if (typeof toast === 'function') toast(`${who.name} +${it.use.amount} HP`);
       player.inv.splice(invIndex,1);
       renderInv(); renderParty(); updateHUD();
+      if (window.NanoDialog) {
+        NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+            .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
+      }
       return true;
     }
     if(typeof it.use.onUse === 'function'){
@@ -62,6 +74,10 @@
       if(ok!==false){
         player.inv.splice(invIndex,1);
         renderInv(); renderParty(); updateHUD();
+        if (window.NanoDialog) {
+          NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+              .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
+        }
       }
       return !!ok;
     }
@@ -126,7 +142,17 @@
   const quests = {};
   const NPC_DESCS = {}; // id -> description
   function setNPCDesc(id, desc){ NPC_DESCS[id]=desc; }
-  function addQuest(id, title, desc){ if(!quests[id]){ quests[id]={title, desc, status:'active'}; renderQuests(); log('Quest added: '+title); } }
+  function addQuest(id, title, desc){
+    if(!quests[id]){
+      quests[id]={title, desc, status:'active'};
+      renderQuests();
+      log('Quest added: '+title);
+      if (window.NanoDialog) {
+        NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+            .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'quest update'));
+      }
+    }
+  }
   function completeQuest(id){
     const q=quests[id];
     if(q && q.status!=='completed'){
@@ -135,6 +161,10 @@
       log('Quest completed: '+q.title);
       if (typeof toast === 'function') toast(`QUEST COMPLETE: ${q.title}`);
       party.forEach(p=> awardXP(p,5));
+      if (window.NanoDialog) {
+        NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+            .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'quest update'));
+      }
     }
   }
   function makeNPC(id, map, x, y, color, name, title, tree){ return {id,map,x,y,color,name,title,tree}; }
@@ -241,11 +271,19 @@
     small.classList.add('npcdesc');
     hdr.appendChild(small);
   }
-  renderDialog(); overlay.classList.add('shown'); }
+  renderDialog(); overlay.classList.add('shown'); if (window.NanoDialog) NanoDialog.queueForNPC(currentNPC, currentNode, 'open'); }
   function closeDialog(){ overlay.classList.remove('shown'); currentNPC=null; choicesEl.innerHTML=''; }
   function setContinueOnly(){ choicesEl.innerHTML=''; const cont=document.createElement('div'); cont.className='choice'; cont.textContent='(Continue)'; cont.onclick=()=>{ closeDialog(); }; choicesEl.appendChild(cont); }
   function renderDialog(){
     const node=resolveNode(currentNPC.tree,currentNode);
+    // --- Nano lines merge (if any) ---
+    try {
+      const extra = (window.NanoDialog && NanoDialog.linesFor(currentNPC.id, currentNode)) || [];
+      if (extra.length) {
+        if (Array.isArray(node.text)) node.text = node.text.concat(extra);
+        else node.text = [node.text].concat(extra);
+      }
+    } catch(_) {}
     // Support arrays of lines (rotate to avoid repetition)
     const key = currentNPC.id + '::' + currentNode;
     window.__npcLineIx = window.__npcLineIx || {};
