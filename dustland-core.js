@@ -32,6 +32,50 @@
   function equipItem(memberIndex, invIndex){ const m=party[memberIndex]; const it=player.inv[invIndex]; if(!m||!it||!it.slot){ log('Cannot equip that.'); return; } const slot = it.slot; const prevEq = m.equip[slot]; if(prevEq) player.inv.push(prevEq); m.equip[slot]=it; player.inv.splice(invIndex,1); applyEquipmentStats(m); renderInv(); renderParty(); log(`${m.name} equips ${it.name}.`); }
   function applyEquipmentStats(m){ m._bonus = {ATK:0, DEF:0, LCK:0}; for(const k of ['weapon','armor','trinket']){ const it=m.equip[k]; if(it&&it.mods){ for(const stat in it.mods){ m._bonus[stat]=(m._bonus[stat]||0)+it.mods[stat]; } } } }
 
+  // Normalizer ensures future fields exist
+  function normalizeItem(it){
+    if(!it) return null;
+    const out = {...it};
+    // common future fields: { use: {type:'heal', amount:4} } etc.
+    return out;
+  }
+
+  function useItem(invIndex){
+    const it = player.inv[invIndex];
+    if(!it || !it.use){
+      log('Cannot use that.');
+      return false;
+    }
+    // Simple built-ins
+    if(it.use.type==='heal'){
+      const who = (party[selectedMember]||party[0]);
+      if(!who){ log('No party member to heal.'); return false; }
+      who.hp += it.use.amount;
+      log(`${who.name} drinks ${it.name} (+${it.use.amount} HP).`);
+      if (typeof toast === 'function') toast(`${who.name} +${it.use.amount} HP`);
+      player.inv.splice(invIndex,1);
+      renderInv(); renderParty(); updateHUD();
+      return true;
+    }
+    if(typeof it.use.onUse === 'function'){
+      const ok = it.use.onUse({player, party, log, toast});
+      if(ok!==false){
+        player.inv.splice(invIndex,1);
+        renderInv(); renderParty(); updateHUD();
+      }
+      return !!ok;
+    }
+    log('Nothing happens...');
+    return false;
+  }
+
+  // Wrap addToInv so items get normalized
+  const _origAddToInv = addToInv;
+  addToInv = function(item){
+    if(typeof item==='string') item={name:item};
+    _origAddToInv(normalizeItem(item));
+  };
+
   // ===== Helpers =====
   function getLeader(){ return party[selectedMember] || party[0]; }
   function mapIdForState(){ return state.map==='creator' ? 'hall' : state.map; }
@@ -80,8 +124,19 @@
 
   // ===== Quests / NPC =====
   const quests = {};
+  const NPC_DESCS = {}; // id -> description
+  function setNPCDesc(id, desc){ NPC_DESCS[id]=desc; }
   function addQuest(id, title, desc){ if(!quests[id]){ quests[id]={title, desc, status:'active'}; renderQuests(); log('Quest added: '+title); } }
-  function completeQuest(id){ const q=quests[id]; if(q && q.status!=='completed'){ q.status='completed'; renderQuests(); log('Quest completed: '+q.title); party.forEach(p=> awardXP(p,5)); } }
+  function completeQuest(id){
+    const q=quests[id];
+    if(q && q.status!=='completed'){
+      q.status='completed';
+      renderQuests();
+      log('Quest completed: '+q.title);
+      if (typeof toast === 'function') toast(`QUEST COMPLETE: ${q.title}`);
+      party.forEach(p=> awardXP(p,5));
+    }
+  }
   function makeNPC(id, map, x, y, color, name, title, tree){ return {id,map,x,y,color,name,title,tree}; }
   function resolveNode(tree, nodeId){ const n = tree[nodeId]; const choices = n.choices||[]; return {...n, choices}; }
   const NPCS=[];
@@ -177,12 +232,31 @@
 
   // ===== Dialog =====
   const overlay=document.getElementById('overlay'); const choicesEl=document.getElementById('choices'); const textEl=document.getElementById('dialogText'); const nameEl=document.getElementById('npcName'); const titleEl=document.getElementById('npcTitle'); const portEl=document.getElementById('port'); let currentNPC=null, currentNode='start';
-  function openDialog(npc, node='start'){ currentNPC=npc; currentNode=node; nameEl.textContent=npc.name; titleEl.textContent=npc.title; portEl.style.background=npc.color; renderDialog(); overlay.classList.add('shown'); }
+  function openDialog(npc, node='start'){ currentNPC=npc; currentNode=node; nameEl.textContent=npc.name; titleEl.textContent=npc.title; portEl.style.background=npc.color; const desc = NPC_DESCS[npc.id]; if (desc) {
+    const small = document.createElement('div');
+    small.className = 'small';
+    small.textContent = desc;
+    const hdr = titleEl.parentElement;
+    [...hdr.querySelectorAll('.small.npcdesc')].forEach(n=>n.remove());
+    small.classList.add('npcdesc');
+    hdr.appendChild(small);
+  }
+  renderDialog(); overlay.classList.add('shown'); }
   function closeDialog(){ overlay.classList.remove('shown'); currentNPC=null; choicesEl.innerHTML=''; }
   function setContinueOnly(){ choicesEl.innerHTML=''; const cont=document.createElement('div'); cont.className='choice'; cont.textContent='(Continue)'; cont.onclick=()=>{ closeDialog(); }; choicesEl.appendChild(cont); }
   function renderDialog(){
     const node=resolveNode(currentNPC.tree,currentNode);
-    textEl.textContent=node.text; choicesEl.innerHTML='';
+    // Support arrays of lines (rotate to avoid repetition)
+    const key = currentNPC.id + '::' + currentNode;
+    window.__npcLineIx = window.__npcLineIx || {};
+    if (Array.isArray(node.text)) {
+      const ix = (window.__npcLineIx[key]||0) % node.text.length;
+      textEl.textContent = node.text[ix];
+      window.__npcLineIx[key] = ix + 1;
+    } else {
+      textEl.textContent = node.text;
+    }
+    choicesEl.innerHTML='';
     const handleSpecial = (c)=>{
       if(currentNPC.id==='mouthdoor' && c.to==='roll'){
         const leader=(party[selectedMember]||party[0]); const dc=8; const roll=rand(12)+1 + Math.floor((leader?.stats?.CHA||0)/2);
@@ -385,7 +459,7 @@ const Q = {
 // ---------- NPC Factories ----------
 function npc_PumpKeeper(x, y) {
   return makeNPC('pump', 'world', x, y, '#9ef7a0', 'Mara the Pump-Keeper', 'Parched Farmer', {
-    start: { text: 'I can hear the pump wheeze. Need a Valve to breathe again.',
+    start: { text: ['I can hear the pump wheeze. Need a Valve to breathe again.', 'Pump’s choking on sand. Only a Valve will save it.'],
       choices: [
         {label:'(Accept) I will find a Valve.', to:'accept'},
         {label:'(Hand Over Valve)', to:'turnin'},
@@ -402,13 +476,13 @@ function npc_PumpKeeper(x, y) {
 
 function npc_Grin(x,y){
   return makeNPC('grin','world',x,y,'#caffc6','Grin','Scav-for-Hire',{
-    start:{ text:'Got two hands and a crowbar. You got a plan?',
+    start:{ text:['Got two hands and a crowbar. You got a plan?','Crowbar’s itching for work. You hiring?'],
       choices:[
         {label:'(Recruit) Join me.', to:'rec'},
         {label:'(Chat)', to:'chat'},
         {label:'(Leave)', to:'bye'}
       ]},
-    chat:{ text:'Keep to the road. The sand eats soles and souls.',
+    chat:{ text:['Keep to the road. The sand eats soles and souls.','Stay off the dunes. Sand chews boots.'],
       choices:[{label:'(Nod)', to:'bye'}] },
     rec:{ text:'Convince me. Or pay me.',
       choices:[
@@ -475,7 +549,7 @@ function npc_IdolHermit(x,y){
 // Shadow version of your Duchess (kept light)
 function npc_Duchess(x,y){
   return makeNPC('duchess','world',x,y,'#a9f59f','Scrap Duchess','Toll-Queen',{
-    start:{text:'Road tax or road rash.',
+    start:{text:['Road tax or road rash.','Coins or cuts. Your pick.'],
       choices:[
         {label:'(Pay) Nod and pass', to:'pay'},
         {label:'(Refuse)', to:'ref'},
@@ -485,6 +559,10 @@ function npc_Duchess(x,y){
     ref:{text:'Brave. Or foolish.', choices:[{label:'(Ok)', to:'bye'}]}
   });
 }
+
+setNPCDesc('duchess', 'A crown of bottlecaps; eyes like razors.');
+setNPCDesc('grin', 'Lean scav with a crowbar and half a smile.');
+setNPCDesc('pump', 'Sunburnt hands, hopeful eyes. Smells faintly of mud.');
 
 // ---------------- Hook quest logic into dialog renderer ----------------
 const _oldRenderDialog = renderDialog;
