@@ -13,6 +13,15 @@
   // ===== Tiles =====
   const TILE = { SAND:0, ROCK:1, WATER:2, BRUSH:3, ROAD:4, RUIN:5, WALL:6, FLOOR:7, DOOR:8, BUILDING:9 };
   const walkable = {0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false};
+  const mapNameEl = document.getElementById('mapname');
+  function mapLabel(id){
+    return id==='world'? 'Wastes' : (id==='hall'? 'Test Hall' : (id==='creator'? 'Creator' : 'Interior'));
+  }
+  function setMap(id,label){
+    state.map=id;
+    mapNameEl.textContent = label || mapLabel(id);
+  }
+  function isWalkable(tile){ return !!walkable[tile]; }
 
   // ===== World sizes =====
   const VIEW_W=40, VIEW_H=30, TS=16;
@@ -23,6 +32,7 @@
   const state = { map:'hall' }; // default to hall so we always have a map
   const player = { x:2, y:2, hp:10, ap:2, flags:{}, inv:[] };
   let doorPulseUntil = 0;
+  let lastInteract = 0;
 
   // ===== Party / stats =====
   const baseStats = ()=> ({STR:4, AGI:4, INT:4, PER:4, LCK:4, CHA:4});
@@ -181,23 +191,30 @@
   }
   // Find nearest free, walkable, unoccupied (and not water on world)
   function findFreeDropTile(map,x,y){
-    const dims = (map==='world'? {W:WORLD_W,H:WORLD_H} : (map==='hall'? {W:hall.w,H:hall.h} : (interiors[map]||{w:VIEW_W,h:VIEW_H})));
-    const W=dims.W||dims.w, H=dims.H||dims.h;
-    const grid = (map==='world'? world : (map==='hall'? hall.grid : interiors[map].grid));
+    let W,H,grid;
+    if(map==='world'){ W=WORLD_W; H=WORLD_H; grid=world; }
+    else if(map==='hall'){ W=hall.w; H=hall.h; grid=hall.grid; }
+    else {
+      const I = interiors[map];
+      if(!I) throw new Error('Missing interior for '+map);
+      W=I.w; H=I.h; grid=I.grid;
+    }
     const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
     const seen=new Set([x+','+y]);
-    const q=[[x,y]];
+    const q=[[x,y,0]];
+    const MAX_RAD=50;
     while(q.length){
-      const [cx,cy]=q.shift();
+      const [cx,cy,d]=q.shift();
+      if(d>MAX_RAD) break;
       if(cx>=0&&cy>=0&&cx<W&&cy<H){
         const t=grid[cy][cx];
-        if(walkable[t] && !occupiedAt(cx,cy) && !(map==='world' && t===TILE.WATER)){
+        if(isWalkable(t) && !occupiedAt(cx,cy) && !(map==='world' && t===TILE.WATER)){
           return {x:cx,y:cy};
         }
       }
       for(const [dx,dy] of dirs){
-        const nx=cx+dx, ny=cy+dy, k=nx+','+ny;
-        if(nx>=0&&ny>=0&&nx<W&&ny<H&&!seen.has(k)){ seen.add(k); q.push([nx,ny]); }
+        const nx=cx+dx, ny=cy+dy, nd=d+1, k=nx+','+ny;
+        if(nx>=0&&ny>=0&&nx<W&&ny<H&&!seen.has(k) && nd<=MAX_RAD){ seen.add(k); q.push([nx,ny,nd]); }
       }
     }
     return {x,y};
@@ -355,7 +372,7 @@
     if(state.map==='creator') return false;
     const grid=currentGrid(); const {W,H}=mapWH();
     if(!(x>=0&&y>=0&&x<W&&y<H)) return false;
-    if(!walkable[grid[y][x]]) return false;
+    if(!isWalkable(grid[y][x])) return false;
     if(occupiedAt(x,y)) return false;
     return true;
   }
@@ -372,6 +389,8 @@
     return false;
   }
   function interact(){
+    if(Date.now()-lastInteract < 200) return false;
+    lastInteract = Date.now();
     if(state.map==='creator') return false;
     const n=adjacentNPC(); if(n){ openDialog(n); return true; }
     const grid=currentGrid(); const t=grid[player.y][player.x];
@@ -384,9 +403,9 @@
             return true;
           }
           state.map=b.interiorId;
+          setMap(b.interiorId,'Interior');
           const I=interiors[state.map];
           if(I){ player.x=I.entryX; player.y=I.entryY; }
-          document.getElementById('mapname').textContent='Interior';
           log('You step inside.');
           centerCamera(player.x,player.y,state.map);
           updateHUD();
@@ -397,7 +416,7 @@
       }
       if(state.map!=='world' && state.map!=='hall'){ // coming from interior
         const b=buildings.find(b=> b.interiorId===state.map);
-        if(b){ state.map='world'; player.x=b.doorX; player.y=b.doorY-1; document.getElementById('mapname').textContent='Wastes'; log('You step back outside.'); centerCamera(player.x,player.y,state.map); updateHUD(); return true; }
+        if(b){ setMap('world'); player.x=b.doorX; player.y=b.doorY-1; log('You step back outside.'); centerCamera(player.x,player.y,state.map); updateHUD(); return true; }
       }
     }
     if(takeNearestItem()) return true;
@@ -440,7 +459,7 @@
       textEl.textContent = node.text;
     }
     choicesEl.innerHTML='';
-    const extras = (window.NanoDialog && NanoDialog.choicesFor(currentNPC.id, currentNode)) || [];
+    const extras = (window.NanoDialog && NanoDialog.choicesEnabled && NanoDialog.choicesFor(currentNPC.id, currentNode)) || [];
     let nodeChoices = (node.choices||[]).slice();
     for(const ex of extras){
       const k = `${currentNPC.id}::${currentNode}::${ex.label}`;
@@ -509,8 +528,7 @@
       quests[k] = Object.assign(new Quest(v.id, v.title, v.desc), v);
     });
     party.length=0; (d.party||[]).forEach(m=> party.push(m));
-    document.getElementById('mapname').textContent=
-      state.map==='world'? 'Wastes' : (state.map==='hall'?'Test Hall':'Interior');
+    setMap(state.map);
     centerCamera(player.x,player.y,state.map);
     renderInv(); renderQuests(); renderParty(); updateHUD();
     log('Game loaded.');
@@ -537,13 +555,12 @@
 
   function openCreator(){
     if(!hall.grid || hall.grid.length===0) genHall();
-    state.map='hall';
+    setMap('hall','Creator');
     creator.style.display='flex';
     step=1;
     building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null };
     player.x=hall.entryX; player.y=hall.entryY; centerCamera(player.x,player.y,'hall');
     renderStep();
-    document.getElementById('mapname').textContent='Creator';
   }
   function closeCreator(){ creator.style.display='none'; }
   function updateCreatorButtons(){ ccStart.disabled = (built.length===0 && !building?.name); }
@@ -603,9 +620,8 @@
 
   function startRealWorld(){
     genWorld();
-    document.getElementById('mapname').textContent='Wastes';
+    setMap('world');
     player.x=2; player.y=Math.floor(WORLD_H/2);
-    state.map='world';
     centerCamera(player.x,player.y,'world');
     renderInv(); renderQuests(); renderParty(); updateHUD();
     log('You step into the wastes.');

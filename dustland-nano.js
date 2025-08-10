@@ -14,6 +14,7 @@
     choicesFor,    // get cached choices; returns []
     isReady: ()=> _state.ready,
     enabled: true, // flip to false to disable
+    choicesEnabled: false,
     refreshIndicator
   };
 
