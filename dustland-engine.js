@@ -27,6 +27,29 @@ function toast(msg) {
   }
 }
 
+// tiny sfx and hud feedback
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function sfxTick(){
+  const o=audioCtx.createOscillator();
+  const g=audioCtx.createGain();
+  o.type='square';
+  o.frequency.value=800;
+  o.connect(g); g.connect(audioCtx.destination);
+  g.gain.value=0.1;
+  o.start();
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.1);
+  o.stop(audioCtx.currentTime+0.1);
+}
+function hudBadge(msg){
+  const ap=document.getElementById('ap');
+  if(!ap) return;
+  const span=document.createElement('span');
+  span.className='hudBadge';
+  span.textContent=msg;
+  ap.parentElement.appendChild(span);
+  setTimeout(()=>span.remove(),1000);
+}
+
 // Tile colors for rendering
 const colors = {0:'#1e271d',1:'#2c342c',2:'#1573ff',3:'#203320',4:'#394b39',5:'#304326',6:'#4d5f4d',7:'#233223',8:'#8bd98d',9:'#000000'};
 
@@ -119,6 +142,11 @@ function renderInv(){
           ${it.use?  `<button class="btn" data-a="use">Use</button>`:''}
         </span>
       </div>`;
+    const mods = Object.entries(it.mods).map(([k,v])=>`${k} ${v>=0?'+':''}${v}`).join(' ');
+    const use = it.use? `${it.use.type}${it.use.amount?` ${it.use.amount}`:''}`:'';
+    const tip = [it.desc, mods?`Mods: ${mods}`:'', use?`Use: ${use}`:'', `Rarity: ${it.rarity}`, `Value: ${it.value}`]
+      .filter(Boolean).join('\n');
+    row.title = tip;
     const equipBtn = row.querySelector('button[data-a="equip"]');
     if(equipBtn) equipBtn.onclick=()=> equipItem(selectedMember, idx);
     const useBtn = row.querySelector('button[data-a="use"]');
@@ -127,7 +155,7 @@ function renderInv(){
   });
 }
 function renderQuests(){ const q=document.getElementById('quests'); q.innerHTML=''; const ids=Object.keys(quests); if(ids.length===0){ q.innerHTML='<div class="q muted">(no quests)</div>'; return; } ids.forEach(id=>{ const v=quests[id]; const div=document.createElement('div'); div.className='q'; div.innerHTML=`<div><b>${v.title}</b></div><div class="small">${v.desc}</div><div class="status">${v.status}</div>`; q.appendChild(div); }); }
-function renderParty(){ const p=document.getElementById('party'); p.innerHTML=''; if(party.length===0){ p.innerHTML='<div class="pcard muted">(no party members yet)</div>'; return; } party.forEach((m,i)=>{ const c=document.createElement('div'); c.className='pcard'; const bonus=m._bonus||{}; c.innerHTML = `<div class='row'><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div><div class='row small'>${statLine(m.stats)}</div><div class='row'>HP ${m.hp}  AP ${m.ap}  ATK ${(bonus.ATK||0)}  DEF ${(bonus.DEF||0)}  LCK ${(bonus.LCK||0)}</div><div class='row small'>WPN: ${m.equip.weapon?m.equip.weapon.name:'—'}  ARM: ${m.equip.armor?m.equip.armor.name:'—'}  TRK: ${m.equip.trinket?m.equip.trinket.name:'—'}</div><div class='row small'>XP ${m.xp}/${xpToNext(m.lvl)}</div><div class='row'><label><input type='radio' name='selMember' ${i===selectedMember?'checked':''}> Selected</label></div>`; c.querySelector('input').onchange=()=>{ selectedMember=i; }; p.appendChild(c); }); }
+function renderParty(){ const p=document.getElementById('party'); p.innerHTML=''; if(party.length===0){ p.innerHTML='<div class="pcard muted">(no party members yet)</div>'; return; } party.forEach((m,i)=>{ const c=document.createElement('div'); c.className='pcard'; const bonus=m._bonus||{}; const fmt=v=> (v>0? '+'+v : v); c.innerHTML = `<div class='row'><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div><div class='row small'>${statLine(m.stats)}</div><div class='row'>HP ${m.hp}/${m.maxHp}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div><div class='row small'>WPN: ${m.equip.weapon?m.equip.weapon.name:'—'}  ARM: ${m.equip.armor?m.equip.armor.name:'—'}  TRK: ${m.equip.trinket?m.equip.trinket.name:'—'}</div><div class='row small'>XP ${m.xp}/${xpToNext(m.lvl)}</div><div class='row'><label><input type='radio' name='selMember' ${i===selectedMember?'checked':''}> Selected</label></div>`; c.querySelector('input').onchange=()=>{ selectedMember=i; }; p.appendChild(c); }); }
 
 // ===== Minimal Unit Tests (#test) =====
 function assert(name, cond){ const msg = (cond? '✅ ':'❌ ') + name; log(msg); if(!cond) console.error('Test failed:', name); }

@@ -18,149 +18,179 @@
   const VIEW_W=40, VIEW_H=30, TS=16;
   const WORLD_W=120, WORLD_H=90;
 
-  // ===== Game state =====
-  let world=[], interiors={}, buildings=[];
-  const state = { map:'hall' }; // default to hall so we always have a map
-  const player = { x:2, y:2, hp:10, ap:2, flags:{}, inv:[] };
-  let doorPulseUntil = 0;
+// ===== Game state =====
+let world = [], interiors = {}, buildings = [];
+const state = { map:'hall' }; // default to hall so we always have a map
+const player = { x:2, y:2, hp:10, ap:2, flags:{}, inv:[] };
+let doorPulseUntil = 0;
 
-  // ===== Party / stats =====
-  const baseStats = ()=> ({STR:4, AGI:4, INT:4, PER:4, LCK:4, CHA:4});
+// ===== Party / stats =====
+const baseStats = ()=> ({STR:4, AGI:4, INT:4, PER:4, LCK:4, CHA:4});
 
-  class Character {
-    constructor(id, name, role){
-      this.id=id; this.name=name; this.role=role;
-      this.lvl=1; this.xp=0;
-      this.stats=baseStats();
-      this.equip={weapon:null, armor:null, trinket:null};
-      this.hp=10; this.ap=2;
-      this.map='hall'; this.x=player.x; this.y=player.y;
-      this._bonus={ATK:0, DEF:0, LCK:0};
+class Character {
+  constructor(id, name, role){
+    this.id=id; this.name=name; this.role=role;
+    this.lvl=1; this.xp=0;
+    this.stats=baseStats();
+    this.equip={weapon:null, armor:null, trinket:null};
+    this.maxHp=10;              // polished: track max HP
+    this.hp=this.maxHp;
+    this.ap=2;
+    this.map='hall'; this.x=player.x; this.y=player.y;
+    this._bonus={ATK:0, DEF:0, LCK:0};
+  }
+  xpToNext(){ return 10*this.lvl; }
+  awardXP(amt){
+    this.xp += amt;
+    log(`${this.name} gains ${amt} XP.`);
+    while(this.xp >= this.xpToNext()){
+      this.xp -= this.xpToNext();
+      this.lvl++;
+      this.levelUp();
     }
-    xpToNext(){ return 10*this.lvl; }
-    awardXP(amt){
-      this.xp += amt;
-      log(`${this.name} gains ${amt} XP.`);
-      while(this.xp >= this.xpToNext()){
-        this.xp -= this.xpToNext();
-        this.lvl++;
-        this.levelUp();
-      }
-      renderParty();
+    renderParty();
+  }
+  levelUp(){
+    const inc = {STR:0,AGI:0,INT:0,PER:0,LCK:0,CHA:0};
+    if(/Gunslinger|Wanderer|Raider/.test(this.role)){ inc.STR++; inc.AGI++; }
+    else if(/Scavenger|Cogwitch|Mechanic/.test(this.role)){ inc.INT++; inc.PER++; }
+    else { inc.CHA++; inc.LCK++; }
+    for(const k in inc){ this.stats[k]+=inc[k]; }
+    this.maxHp += 2;                            // polished: grow max HP
+    this.hp = Math.min(this.hp + 2, this.maxHp);
+    if(this.lvl%2===0){
+      this.ap += 1;
+      if(typeof hudBadge==='function') hudBadge('AP +1'); // feedback hooks
+      if(typeof sfxTick==='function') sfxTick();
     }
-    levelUp(){
-      const inc = {STR:0,AGI:0,INT:0,PER:0,LCK:0,CHA:0};
-      if(/Gunslinger|Wanderer|Raider/.test(this.role)){ inc.STR++; inc.AGI++; }
-      else if(/Scavenger|Cogwitch|Mechanic/.test(this.role)){ inc.INT++; inc.PER++; }
-      else { inc.CHA++; inc.LCK++; }
-      for(const k in inc){ this.stats[k]+=inc[k]; }
-      this.hp += 2;
-      if(this.lvl%2===0) this.ap += 1;
-      log(`${this.name} leveled up to ${this.lvl}! (+HP, stats)`);
-    }
-    applyEquipmentStats(){
-      this._bonus = {ATK:0, DEF:0, LCK:0};
-      for(const k of ['weapon','armor','trinket']){
-        const it=this.equip[k];
-        if(it&&it.mods){
-          for(const stat in it.mods){
-            this._bonus[stat]=(this._bonus[stat]||0)+it.mods[stat];
-          }
+    log(`${this.name} leveled up to ${this.lvl}! (+HP, stats)`);
+  }
+  applyEquipmentStats(){
+    this._bonus = {ATK:0, DEF:0, LCK:0};
+    for(const k of ['weapon','armor','trinket']){
+      const it=this.equip[k];
+      if(it&&it.mods){
+        for(const stat in it.mods){
+          this._bonus[stat]=(this._bonus[stat]||0)+it.mods[stat];
         }
       }
     }
   }
+}
 
-  class Party extends Array {
-    addMember(member){
-      this.push(member);
-      member.applyEquipmentStats();
-      renderParty(); updateHUD();
-      log(member.name+" joins the party.");
-    }
-    leader(){
-      return this[selectedMember] || this[0];
-    }
+class Party extends Array {
+  addMember(member){
+    this.push(member);
+    member.applyEquipmentStats();
+    renderParty(); updateHUD();
+    log(member.name+" joins the party.");
   }
+  leader(){ return this[selectedMember] || this[0]; }
+}
 
-  const party = new Party();
+const party = new Party();
 
-  function makeMember(id, name, role){ return new Character(id, name, role); }
-  function addPartyMember(member){ party.addMember(member); }
-  function statLine(s){ return `STR ${s.STR}  AGI ${s.AGI}  INT ${s.INT}  PER ${s.PER}  LCK ${s.LCK}  CHA ${s.CHA}`; }
-  function xpToNext(lvl){ return 10*lvl; }
-  function awardXP(who, amt){ who.awardXP(amt); }
-  function levelUp(who){ who.levelUp(); }
-  function applyEquipmentStats(m){ m.applyEquipmentStats(); }
+function makeMember(id, name, role){ return new Character(id, name, role); }
+function addPartyMember(member){ party.addMember(member); }
+function statLine(s){ return `STR ${s.STR}  AGI ${s.AGI}  INT ${s.INT}  PER ${s.PER}  LCK ${s.LCK}  CHA ${s.CHA}`; }
+function xpToNext(lvl){ return 10*lvl; }
+function awardXP(who, amt){ who.awardXP(amt); }
+function applyEquipmentStats(m){ m.applyEquipmentStats(); }
 
-  // ===== Inventory / equipment =====
-  const itemDrops=[]; // {map,x,y,name,slot,mods}
-  function addToInv(item){
-    if(typeof item==='string') item={name:item};
-    player.inv.push(item);
-    renderInv();
+// ===== Inventory / equipment =====
+const itemDrops=[]; // {map,x,y,name,slot,mods,...}
+
+function addToInv(item){
+  if(typeof item==='string') item={name:item};
+  player.inv.push(item);
+  renderInv();
+  if (window.NanoDialog) {
+    NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+        .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
+  }
+}
+
+let selectedMember = 0;
+
+// polished: equip shows feedback and returns previous gear
+function equipItem(memberIndex, invIndex){
+  const m=party[memberIndex]; const it=player.inv[invIndex];
+  if(!m||!it||!it.slot){ log('Cannot equip that.'); return; }
+  const slot = it.slot;
+  const prevEq = m.equip[slot];
+  if(prevEq) player.inv.push(prevEq);
+  m.equip[slot]=it;
+  player.inv.splice(invIndex,1);
+  applyEquipmentStats(m);
+  renderInv(); renderParty();
+  log(`${m.name} equips ${it.name}.`);
+  if(typeof toast==='function') toast(`${m.name} equips ${it.name}`);
+  if(typeof sfxTick==='function') sfxTick();
+}
+
+// Normalizer ensures future fields exist (stable shape for UI/tooltips)
+function normalizeItem(it){
+  if(!it) return null;
+  return {
+    name: it.name || 'Unknown',
+    slot: it.slot || null,
+    mods: it.mods || {},
+    use: it.use || null,       // e.g. {type:'heal', amount:4, onUse?}
+    rarity: it.rarity || 'common',
+    value: it.value ?? 0,
+    desc: it.desc || '',
+  };
+}
+
+function useItem(invIndex){
+  const it = player.inv[invIndex];
+  if(!it || !it.use){
+    log('Cannot use that.');
+    return false;
+  }
+  // Built-in: heal (clamped to maxHp)
+  if(it.use.type==='heal'){
+    const who = (party[selectedMember]||party[0]);
+    if(!who){ log('No party member to heal.'); return false; }
+    const before = who.hp;
+    who.hp = Math.min(who.hp + it.use.amount, who.maxHp);
+    const healed = who.hp - before;
+    log(`${who.name} drinks ${it.name} (+${healed} HP).`);
+    if (typeof toast === 'function') toast(`${who.name} +${healed} HP`);
+    if (typeof sfxTick === 'function') sfxTick();
+    player.inv.splice(invIndex,1);
+    renderInv(); renderParty(); updateHUD();
     if (window.NanoDialog) {
       NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
           .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
     }
+    return true;
   }
-  let selectedMember = 0;
-  function equipItem(memberIndex, invIndex){ const m=party[memberIndex]; const it=player.inv[invIndex]; if(!m||!it||!it.slot){ log('Cannot equip that.'); return; } const slot = it.slot; const prevEq = m.equip[slot]; if(prevEq) player.inv.push(prevEq); m.equip[slot]=it; player.inv.splice(invIndex,1); applyEquipmentStats(m); renderInv(); renderParty(); log(`${m.name} equips ${it.name}.`); }
-
-  // Normalizer ensures future fields exist
-  function normalizeItem(it){
-    if(!it) return null;
-    const out = {...it};
-    // common future fields: { use: {type:'heal', amount:4} } etc.
-    return out;
-  }
-
-  function useItem(invIndex){
-    const it = player.inv[invIndex];
-    if(!it || !it.use){
-      log('Cannot use that.');
-      return false;
-    }
-    // Simple built-ins
-    if(it.use.type==='heal'){
-      const who = (party[selectedMember]||party[0]);
-      if(!who){ log('No party member to heal.'); return false; }
-      who.hp += it.use.amount;
-      log(`${who.name} drinks ${it.name} (+${it.use.amount} HP).`);
-      if (typeof toast === 'function') toast(`${who.name} +${it.use.amount} HP`);
+  // Custom onUse hook
+  if(typeof it.use.onUse === 'function'){
+    const ok = it.use.onUse({player, party, log, toast});
+    if(ok!==false){
       player.inv.splice(invIndex,1);
       renderInv(); renderParty(); updateHUD();
       if (window.NanoDialog) {
         NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
             .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
       }
-      return true;
     }
-    if(typeof it.use.onUse === 'function'){
-      const ok = it.use.onUse({player, party, log, toast});
-      if(ok!==false){
-        player.inv.splice(invIndex,1);
-        renderInv(); renderParty(); updateHUD();
-        if (window.NanoDialog) {
-          NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
-              .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
-        }
-      }
-      return !!ok;
-    }
-    log('Nothing happens...');
-    return false;
+    return !!ok;
   }
+  log('Nothing happens...');
+  return false;
+}
 
-  // Wrap addToInv so items get normalized
-  const _origAddToInv = addToInv;
-  addToInv = function(item){
-    if(typeof item==='string') item={name:item};
-    _origAddToInv(normalizeItem(item));
-  };
+// Wrap addToInv so items get normalized
+const _origAddToInv = addToInv;
+addToInv = function(item){
+  if(typeof item==='string') item={name:item};
+  _origAddToInv(normalizeItem(item));
+};
 
   // ===== Helpers =====
-  function getLeader(){ return party.leader(); }
   function mapIdForState(){ return state.map==='creator' ? 'hall' : state.map; }
   function mapWH(){ if(state.map==='world') return {W:WORLD_W,H:WORLD_H}; if(state.map==='hall' || state.map==='creator'){ return {W:hall.w||VIEW_W,H:hall.h||VIEW_H}; } const I=interiors[state.map]; return {W:(I&&I.w)||VIEW_W,H:(I&&I.h)||VIEW_H}; }
   function currentGrid(){
@@ -209,7 +239,8 @@
   class Quest {
     constructor(id, title, desc, meta={}){
       this.id=id; this.title=title; this.desc=desc;
-      this.status='active';
+      // Quests start as 'available' until the player accepts them
+      this.status='available';
       Object.assign(this, meta);
     }
     complete(){
@@ -231,6 +262,7 @@
     constructor(){ this.quests={}; }
     add(quest){
       if(!this.quests[quest.id]){
+        quest.status = 'active';
         this.quests[quest.id]=quest;
         renderQuests();
         log('Quest added: '+quest.title);
@@ -256,10 +288,10 @@
   function defaultQuestProcessor(npc, nodeId){
     const meta = npc.quest;
     if(!meta) return;
-    if(nodeId==='accept'){
+    if(nodeId==='accept' && meta.status==='available'){
       questLog.add(meta);
     }
-    if(nodeId==='do_turnin'){
+    if(nodeId==='do_turnin' && meta.status==='active'){
       if(!meta.item || hasItem(meta.item)){
         if(meta.item){ removeItemByName(meta.item); renderInv(); }
         questLog.complete(meta.id);
@@ -326,27 +358,11 @@
     interiors[HALL_ID]=hall;
     doorPulseUntil = Date.now() + 60000;
     NPCS.length=0;
-    const doorNPC = makeNPC('exitdoor',HALL_ID, hall.entryX, 2,'#a9f59f','Locked Door','Needs Key',{
-      start:{text:'A heavy door bars the way.',choices:[
-        {label:'(Search for key)',to:'accept',q:'accept'},
-        {label:'(Use Rusted Key)',to:'do_turnin',q:'turnin'},
-        {label:'(Leave)',to:'bye'}]},
-      accept:{text:'Maybe a key is hidden nearby.',choices:[{label:'(Okay)',to:'bye'}]},
-      do_turnin:{text:'The door grinds open.',choices:[{label:'(Continue)',to:'bye'}]}
-    }, {id:Q.HALL_KEY, title:'Find the Rusted Key', desc:'Search the hall for a Rusted Key to unlock the exit.', item:'Rusted Key', moveTo:{x:hall.entryX-1, y:2}});
+    const doorNPC = npc_ExitDoor(hall.entryX, 2);
     NPCS.push(doorNPC);
-    const crateNPC = makeNPC('keycrate',HALL_ID, hall.entryX+2, hall.entryY,'#9ef7a0','Dusty Crate','',{
-      start:{text:'A dusty crate rests here.',choices:[{label:'(Open)',to:'open'}]},
-      open:{text:'Inside you find a Rusted Key.',choices:[{label:'(Take Rusted Key)',to:'take'}]},
-      take:{text:'You pocket the key.',choices:[{label:'(Done)',to:'bye'}]}
-    }, null, function(node){
-      if(node==='take'){
-        addToInv({name:'Rusted Key'});
-        this.tree.start={text:'An empty crate.',choices:[{label:'(Leave)',to:'bye'}]};
-      }
-    });
+    const crateNPC = npc_KeyCrate(hall.entryX+2, hall.entryY);
     NPCS.push(crateNPC);
-    NPCS.push(makeNPC('hallflavor',HALL_ID, hall.entryX-4, hall.entryY-1,'#b8ffb6','Lone Drifter','Mutters',{ start:{text:'"Dust gets in everything."',choices:[{label:'(Nod)',to:'bye'}]} }));
+    NPCS.push(npc_HallDrifter(hall.entryX-4, hall.entryY-1));
     player.x=hall.entryX; player.y=hall.entryY; centerCamera(player.x,player.y,'hall');
   }
 
@@ -363,6 +379,7 @@
   function adjacentNPC(){ const map=mapIdForState(); for(const n of NPCS){ if(n.map!==map) continue; if(Math.abs(n.x-player.x)+Math.abs(n.y-player.y)===1) return n; } return null; }
   function takeNearestItem(){
     const map=mapIdForState();
+    // current tile first for snappier pickups
     const dirs=[[0,0],[1,0],[-1,0],[0,1],[0,-1]];
     for(const [dx,dy] of dirs){
       const tx=player.x+dx, ty=player.y+dy;
@@ -378,21 +395,18 @@
     if(t===TILE.DOOR){
       if(state.map==='world'){
         const b=buildings.find(b=> b.doorX===player.x && b.doorY===player.y);
-        if(b){
-          if(b.boarded){
-            log('The doorway is boarded up from the outside.');
-            return true;
-          }
-          state.map=b.interiorId;
-          const I=interiors[state.map];
-          if(I){ player.x=I.entryX; player.y=I.entryY; }
-          document.getElementById('mapname').textContent='Interior';
-          log('You step inside.');
-          centerCamera(player.x,player.y,state.map);
-          updateHUD();
+        if(!b){ log('No entrance here.'); return true; }
+        if(b.boarded){
+          log('The doorway is boarded up from the outside.');
           return true;
         }
-        log('The doorway is boarded up from the outside.');
+        state.map=b.interiorId;
+        const I=interiors[state.map];
+        if(I){ player.x=I.entryX; player.y=I.entryY; }
+        document.getElementById('mapname').textContent='Interior';
+        log('You step inside.');
+        centerCamera(player.x,player.y,state.map);
+        updateHUD();
         return true;
       }
       if(state.map!=='world' && state.map!=='hall'){ // coming from interior
@@ -447,10 +461,10 @@
       if(!usedNanoChoices.has(k)) nodeChoices.push({...ex, nano:true, key:k});
     }
     if(currentNPC.quest){
-      const meta=currentNPC.quest; const q=quests[meta.id];
+      const meta=currentNPC.quest;
       nodeChoices = nodeChoices.filter(c=>{
-        if(c.q==='accept' && q) return false;
-        if(c.q==='turnin' && (!q || q.status!=='active' || (meta.item && !hasItem(meta.item)))) return false;
+        if(c.q==='accept' && meta.status!=='available') return false;
+        if(c.q==='turnin' && (meta.status!=='active' || (meta.item && !hasItem(meta.item)))) return false;
         return true;
       });
     }
@@ -492,7 +506,18 @@
   }
 
   // ===== Save/Load & Start =====
-  function save(){ const data={world, player, state, NPCS, buildings, interiors, itemDrops, quests, party}; localStorage.setItem('dustland_crt', JSON.stringify(data)); log('Game saved.'); }
+  function save(){
+    const npcData = NPCS.map(({id,map,x,y,quest})=>({id,map,x,y,quest:quest?{id:quest.id,status:quest.status}:null}));
+    const questData = {};
+    Object.keys(quests).forEach(k=>{
+      const q=quests[k];
+      questData[k]={title:q.title,desc:q.desc,status:q.status};
+    });
+    const partyData = party.map(p=>({id:p.id,name:p.name,role:p.role,lvl:p.lvl,xp:p.xp,stats:p.stats,equip:p.equip,hp:p.hp,ap:p.ap,map:p.map,x:p.x,y:p.y}));
+    const data={world, player, state, buildings, interiors, itemDrops, npcs:npcData, quests:questData, party:partyData};
+    localStorage.setItem('dustland_crt', JSON.stringify(data));
+    log('Game saved.');
+  }
   function load(){
     const j=localStorage.getItem('dustland_crt');
     if(!j){ log('No save.'); return; }
@@ -500,13 +525,34 @@
     world=d.world;
     Object.assign(player,d.player);
     Object.assign(state,d.state);
-    NPCS.length=0; d.NPCS.forEach(n=> NPCS.push(n));
-    buildings.length=0; d.buildings.forEach(b=> buildings.push(b));
-    interiors={}; Object.keys(d.interiors).forEach(k=> interiors[k]=d.interiors[k]);
-    itemDrops.length=0; d.itemDrops.forEach(i=> itemDrops.push(i));
+    buildings.length=0; (d.buildings||[]).forEach(b=> buildings.push(b));
+    interiors={}; Object.keys(d.interiors||{}).forEach(k=> interiors[k]=d.interiors[k]);
+    itemDrops.length=0; (d.itemDrops||[]).forEach(i=> itemDrops.push(i));
     Object.keys(quests).forEach(k=> delete quests[k]);
-    Object.keys(d.quests||{}).forEach(k=> quests[k]=d.quests[k]);
-    party.length=0; (d.party||[]).forEach(m=> party.push(m));
+    Object.keys(d.quests||{}).forEach(id=>{
+      const qd=d.quests[id];
+      const q=new Quest(id,qd.title,qd.desc); q.status=qd.status; quests[id]=q;
+    });
+    NPCS.length=0;
+    (d.npcs||[]).forEach(n=>{
+      const f=NPC_FACTORY[n.id];
+      if(f){
+        const npc=f(n.x,n.y);
+        npc.map=n.map;
+        if(n.quest){
+          if(quests[n.quest.id]) npc.quest=quests[n.quest.id];
+          else if(npc.quest) npc.quest.status=n.quest.status;
+        }
+        NPCS.push(npc);
+      }
+    });
+    party.length=0;
+    (d.party||[]).forEach(m=>{
+      const mem=new Character(m.id,m.name,m.role);
+      Object.assign(mem,m);
+      mem.applyEquipmentStats();
+      party.push(mem);
+    });
     document.getElementById('mapname').textContent=
       state.map==='world'? 'Wastes' : (state.map==='hall'?'Test Hall':'Interior');
     centerCamera(player.x,player.y,state.map);
@@ -702,18 +748,23 @@ function npc_PumpKeeper(x, y) {
 }
 
 function npc_Grin(x,y){
+  const quest = new Quest(
+    Q.RECRUIT_GRIN,
+    'Recruit Grin',
+    'Convince or pay Grin to join.'
+  );
   const processNode = function(node){
     if(node==='start'){
-      addQuest(Q.RECRUIT_GRIN,'Recruit Grin','Convince or pay Grin to join.');
+      defaultQuestProcessor(this,'accept');
     }
     if(node==='rollcha'){
       const r = skillRoll('CHA'); const dc = 8;
       textEl.textContent = `Roll: ${r} vs DC ${dc}. ${r>=dc ? 'Grin smirks: "Alright."' : 'Grin shrugs: "Not buying it."'}`;
       if(r>=dc){
-        completeQuest(Q.RECRUIT_GRIN);
         const m = makeMember('grin', 'Grin', 'Scavenger');
         m.stats.AGI += 1; m.stats.PER += 1;
         addPartyMember(m);
+        defaultQuestProcessor(this,'do_turnin');
       }
     }
     if(node==='dopay'){
@@ -721,10 +772,10 @@ function npc_Grin(x,y){
       if(tIndex>-1){
         player.inv.splice(tIndex,1);
         renderInv();
-        completeQuest(Q.RECRUIT_GRIN);
         const m = makeMember('grin', 'Grin', 'Scavenger');
         addPartyMember(m);
         log('Grin joins you.');
+        defaultQuestProcessor(this,'do_turnin');
       } else {
         textEl.textContent = 'You have no trinket to pay with.';
       }
@@ -751,7 +802,7 @@ function npc_Grin(x,y){
     pay:{ text:'Hand me something shiny.',
       choices:[{label:'(Give random trinket)', to:'dopay'}] },
     dopay:{ text:'Deal.', choices:[{label:'(Ok)', to:'bye'}] },
-  }, null, processNode);
+  }, quest, processNode);
 }
 
 function npc_Postmaster(x,y){
@@ -781,7 +832,7 @@ function npc_TowerTech(x,y){
     Q.TOWER,
     'Dead Air',
     'Repair the radio tower console (Toolkit helps).',
-    { item:'Toolkit' }
+    { item:'Toolkit', reward:{name:'Tuner Charm', slot:'trinket', mods:{PER:+1}}, xp:5 }
   );
   const processNode = function(node){
     if(node==='rollint'){
@@ -792,9 +843,7 @@ function npc_TowerTech(x,y){
       const r = skillRoll('INT'); const dc = 9;
       textEl.textContent = `Roll: ${r} vs DC ${dc}. ${r>=dc ? 'Static fades. The tower hums.' : 'You cross a wire and pop a fuse.'}`;
       if(r>=dc){
-        completeQuest(Q.TOWER);
-        awardXP(leader(), 5);
-        addToInv({name:'Tuner Charm', slot:'trinket', mods:{PER:+1}});
+        defaultQuestProcessor(this,'do_turnin');
       }
     }
   };
@@ -836,11 +885,16 @@ function npc_IdolHermit(x,y){
 
 // Shadow version of your Duchess (kept light)
 function npc_Duchess(x,y){
+  const quest = new Quest(
+    Q.TOLL,
+    'Toll-Booth Etiquette',
+    'You met the Duchess on the road.',
+    {xp:2}
+  );
   const processNode = function(node){
     if(node==='pay' || node==='ref'){
-      addQuest(Q.TOLL,'Toll-Booth Etiquette','You met the Duchess on the road.');
-      completeQuest(Q.TOLL);
-      awardXP(leader(), 2);
+      defaultQuestProcessor(this,'accept');
+      defaultQuestProcessor(this,'do_turnin');
     }
   };
   return makeNPC('duchess','world',x,y,'#a9f59f','Scrap Duchess','Toll-Queen',{
@@ -852,8 +906,56 @@ function npc_Duchess(x,y){
       ]},
     pay:{text:'Wise. Move along.', choices:[{label:'(Ok)', to:'bye'}]},
     ref:{text:'Brave. Or foolish.', choices:[{label:'(Ok)', to:'bye'}]}
-  }, null, processNode);
+  }, quest, processNode);
 }
+
+function npc_ExitDoor(x,y){
+  const quest = new Quest(
+    Q.HALL_KEY,
+    'Find the Rusted Key',
+    'Search the hall for a Rusted Key to unlock the exit.',
+    {item:'Rusted Key', moveTo:{x:hall.entryX-1,y:2}}
+  );
+  return makeNPC('exitdoor',HALL_ID,x, y,'#a9f59f','Locked Door','Needs Key',{
+    start:{text:'A heavy door bars the way.',choices:[
+      {label:'(Search for key)',to:'accept',q:'accept'},
+      {label:'(Use Rusted Key)',to:'do_turnin',q:'turnin'},
+      {label:'(Leave)',to:'bye'}]},
+    accept:{text:'Maybe a key is hidden nearby.',choices:[{label:'(Okay)',to:'bye'}]},
+    do_turnin:{text:'The door grinds open.',choices:[{label:'(Continue)',to:'bye'}]}
+  }, quest);
+}
+
+function npc_KeyCrate(x,y){
+  return makeNPC('keycrate',HALL_ID,x,y,'#9ef7a0','Dusty Crate','',{
+    start:{text:'A dusty crate rests here.',choices:[{label:'(Open)',to:'open'}]},
+    open:{text:'Inside you find a Rusted Key.',choices:[{label:'(Take Rusted Key)',to:'take'}]},
+    take:{text:'You pocket the key.',choices:[{label:'(Done)',to:'bye'}]}
+  }, null, function(node){
+    if(node==='take'){
+      addToInv({name:'Rusted Key'});
+      this.tree.start={text:'An empty crate.',choices:[{label:'(Leave)',to:'bye'}]};
+    }
+  });
+}
+
+function npc_HallDrifter(x,y){
+  return makeNPC('hallflavor',HALL_ID,x,y,'#b8ffb6','Lone Drifter','Mutters',{
+    start:{text:'"Dust gets in everything."',choices:[{label:'(Nod)',to:'bye'}]}
+  });
+}
+
+const NPC_FACTORY = {
+  pump: npc_PumpKeeper,
+  grin: npc_Grin,
+  post: npc_Postmaster,
+  tower: npc_TowerTech,
+  hermit: npc_IdolHermit,
+  duchess: npc_Duchess,
+  exitdoor: npc_ExitDoor,
+  keycrate: npc_KeyCrate,
+  hallflavor: npc_HallDrifter
+};
 
 setNPCDesc('duchess', 'A crown of bottlecaps; eyes like razors.');
 setNPCDesc('grin', 'Lean scav with a crowbar and half a smile.');
