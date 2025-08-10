@@ -2,6 +2,14 @@
   const rand = (n)=> Math.floor(Math.random()*n);
   const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
 
+  class Dice {
+    static roll(sides=12){ return Math.floor(Math.random()*sides)+1; }
+    static skill(character, stat, add=0, sides=12){
+      const base = (character?.stats?.[stat] || 0);
+      return Dice.roll(sides) + Math.floor(base/2) + add;
+    }
+  }
+
   // ===== Tiles =====
   const TILE = { SAND:0, ROCK:1, WATER:2, BRUSH:3, ROAD:4, RUIN:5, WALL:6, FLOOR:7, DOOR:8, BUILDING:9 };
   const walkable = {0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false};
@@ -17,14 +25,73 @@
   let doorPulseUntil = 0;
 
   // ===== Party / stats =====
-  const party = [];
   const baseStats = ()=> ({STR:4, AGI:4, INT:4, PER:4, LCK:4, CHA:4});
-  function makeMember(id, name, role){ return { id, name, role, lvl:1, xp:0, stats: baseStats(), equip: { weapon:null, armor:null, trinket:null }, hp: 10, ap: 2, map:'hall', x:player.x, y:player.y }; }
-  function addPartyMember(member){ party.push(member); applyEquipmentStats(member); renderParty(); updateHUD(); log(member.name+" joins the party."); }
+
+  class Character {
+    constructor(id, name, role){
+      this.id=id; this.name=name; this.role=role;
+      this.lvl=1; this.xp=0;
+      this.stats=baseStats();
+      this.equip={weapon:null, armor:null, trinket:null};
+      this.hp=10; this.ap=2;
+      this.map='hall'; this.x=player.x; this.y=player.y;
+      this._bonus={ATK:0, DEF:0, LCK:0};
+    }
+    xpToNext(){ return 10*this.lvl; }
+    awardXP(amt){
+      this.xp += amt;
+      log(`${this.name} gains ${amt} XP.`);
+      while(this.xp >= this.xpToNext()){
+        this.xp -= this.xpToNext();
+        this.lvl++;
+        this.levelUp();
+      }
+      renderParty();
+    }
+    levelUp(){
+      const inc = {STR:0,AGI:0,INT:0,PER:0,LCK:0,CHA:0};
+      if(/Gunslinger|Wanderer|Raider/.test(this.role)){ inc.STR++; inc.AGI++; }
+      else if(/Scavenger|Cogwitch|Mechanic/.test(this.role)){ inc.INT++; inc.PER++; }
+      else { inc.CHA++; inc.LCK++; }
+      for(const k in inc){ this.stats[k]+=inc[k]; }
+      this.hp += 2;
+      if(this.lvl%2===0) this.ap += 1;
+      log(`${this.name} leveled up to ${this.lvl}! (+HP, stats)`);
+    }
+    applyEquipmentStats(){
+      this._bonus = {ATK:0, DEF:0, LCK:0};
+      for(const k of ['weapon','armor','trinket']){
+        const it=this.equip[k];
+        if(it&&it.mods){
+          for(const stat in it.mods){
+            this._bonus[stat]=(this._bonus[stat]||0)+it.mods[stat];
+          }
+        }
+      }
+    }
+  }
+
+  class Party extends Array {
+    addMember(member){
+      this.push(member);
+      member.applyEquipmentStats();
+      renderParty(); updateHUD();
+      log(member.name+" joins the party.");
+    }
+    leader(){
+      return this[selectedMember] || this[0];
+    }
+  }
+
+  const party = new Party();
+
+  function makeMember(id, name, role){ return new Character(id, name, role); }
+  function addPartyMember(member){ party.addMember(member); }
   function statLine(s){ return `STR ${s.STR}  AGI ${s.AGI}  INT ${s.INT}  PER ${s.PER}  LCK ${s.LCK}  CHA ${s.CHA}`; }
   function xpToNext(lvl){ return 10*lvl; }
-  function awardXP(who, amt){ who.xp += amt; log(`${who.name} gains ${amt} XP.`); while(who.xp >= xpToNext(who.lvl)){ who.xp -= xpToNext(who.lvl); who.lvl++; levelUp(who); } renderParty(); }
-  function levelUp(who){ const inc = {STR:0,AGI:0,INT:0,PER:0,LCK:0,CHA:0}; if(/Gunslinger|Wanderer|Raider/.test(who.role)){ inc.STR++; inc.AGI++; } else if(/Scavenger|Cogwitch|Mechanic/.test(who.role)){ inc.INT++; inc.PER++; } else { inc.CHA++; inc.LCK++; } for(const k in inc){ who.stats[k]+=inc[k]; } who.hp += 2; if(who.lvl%2===0) who.ap += 1; log(`${who.name} leveled up to ${who.lvl}! (+HP, stats)`); }
+  function awardXP(who, amt){ who.awardXP(amt); }
+  function levelUp(who){ who.levelUp(); }
+  function applyEquipmentStats(m){ m.applyEquipmentStats(); }
 
   // ===== Inventory / equipment =====
   const itemDrops=[]; // {map,x,y,name,slot,mods}
@@ -39,7 +106,6 @@
   }
   let selectedMember = 0;
   function equipItem(memberIndex, invIndex){ const m=party[memberIndex]; const it=player.inv[invIndex]; if(!m||!it||!it.slot){ log('Cannot equip that.'); return; } const slot = it.slot; const prevEq = m.equip[slot]; if(prevEq) player.inv.push(prevEq); m.equip[slot]=it; player.inv.splice(invIndex,1); applyEquipmentStats(m); renderInv(); renderParty(); log(`${m.name} equips ${it.name}.`); }
-  function applyEquipmentStats(m){ m._bonus = {ATK:0, DEF:0, LCK:0}; for(const k of ['weapon','armor','trinket']){ const it=m.equip[k]; if(it&&it.mods){ for(const stat in it.mods){ m._bonus[stat]=(m._bonus[stat]||0)+it.mods[stat]; } } } }
 
   // Normalizer ensures future fields exist
   function normalizeItem(it){
@@ -94,7 +160,7 @@
   };
 
   // ===== Helpers =====
-  function getLeader(){ return party[selectedMember] || party[0]; }
+  function getLeader(){ return party.leader(); }
   function mapIdForState(){ return state.map==='creator' ? 'hall' : state.map; }
   function mapWH(){ if(state.map==='world') return {W:WORLD_W,H:WORLD_H}; if(state.map==='hall' || state.map==='creator'){ return {W:hall.w||VIEW_W,H:hall.h||VIEW_H}; } const I=interiors[state.map]; return {W:(I&&I.w)||VIEW_W,H:(I&&I.h)||VIEW_H}; }
   function currentGrid(){
@@ -140,35 +206,59 @@
   }
 
   // ===== Quests / NPC =====
-  const quests = {};
+  class Quest {
+    constructor(id, title, desc, meta={}){
+      this.id=id; this.title=title; this.desc=desc;
+      this.status='active';
+      Object.assign(this, meta);
+    }
+    complete(){
+      if(this.status!=='completed'){
+        this.status='completed';
+        renderQuests();
+        log('Quest completed: '+this.title);
+        if (typeof toast === 'function') toast(`QUEST COMPLETE: ${this.title}`);
+        party.forEach(p=> awardXP(p,5));
+        if (window.NanoDialog) {
+          NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+              .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'quest update'));
+        }
+      }
+    }
+  }
+
+  class QuestLog {
+    constructor(){ this.quests={}; }
+    add(quest){
+      if(!this.quests[quest.id]){
+        this.quests[quest.id]=quest;
+        renderQuests();
+        log('Quest added: '+quest.title);
+        if (window.NanoDialog) {
+          NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+              .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'quest update'));
+        }
+      }
+    }
+    complete(id){
+      const q=this.quests[id];
+      if(q) q.complete();
+    }
+  }
+
+  const questLog = new QuestLog();
+  const quests = questLog.quests;
   const NPC_DESCS = {}; // id -> description
   function setNPCDesc(id, desc){ NPC_DESCS[id]=desc; }
-  function addQuest(id, title, desc){
-    if(!quests[id]){
-      quests[id]={title, desc, status:'active'};
-      renderQuests();
-      log('Quest added: '+title);
-      if (window.NanoDialog) {
-        NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
-            .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'quest update'));
-      }
+  function addQuest(id, title, desc, meta){ questLog.add(new Quest(id, title, desc, meta)); }
+  function completeQuest(id){ questLog.complete(id); }
+
+  class NPC {
+    constructor({id,map,x,y,color,name,title,tree,quest=null}){
+      Object.assign(this,{id,map,x,y,color,name,title,tree,quest});
     }
   }
-  function completeQuest(id){
-    const q=quests[id];
-    if(q && q.status!=='completed'){
-      q.status='completed';
-      renderQuests();
-      log('Quest completed: '+q.title);
-      if (typeof toast === 'function') toast(`QUEST COMPLETE: ${q.title}`);
-      party.forEach(p=> awardXP(p,5));
-      if (window.NanoDialog) {
-        NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
-            .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'quest update'));
-      }
-    }
-  }
-  function makeNPC(id, map, x, y, color, name, title, tree){ return {id,map,x,y,color,name,title,tree}; }
+  function makeNPC(id, map, x, y, color, name, title, tree, quest){ return new NPC({id,map,x,y,color,name,title,tree,quest}); }
   function resolveNode(tree, nodeId){ const n = tree[nodeId]; const choices = n.choices||[]; return {...n, choices}; }
   const NPCS=[];
   const usedNanoChoices = new Set();
@@ -522,11 +612,9 @@ function removeItemByName(name) {
 }
 
 function hasItem(name) { return player.inv.some(it => it.name === name); }
-function leader() { return (party[selectedMember] || party[0]); }
+function leader() { return party.leader(); }
 function skillRoll(stat, add = 0, sides = 12) {
-  const who = leader();
-  const base = (who?.stats?.[stat] || 0);
-  return (Math.floor(Math.random()*sides)+1) + Math.floor(base/2) + add;
+  return Dice.skill(leader(), stat, add, sides);
 }
 
 // ---------- World Items (static seeds around the central road) ----------
@@ -574,11 +662,17 @@ const Q = {
 
 // ---------- NPC Factories ----------
 function npc_PumpKeeper(x, y) {
+  const quest = new Quest(
+    Q.WATERPUMP,
+    'Water for the Pump',
+    'Find a Valve and help Mara restart the pump.',
+    { item:'Valve', reward:{name:'Rusted Badge', slot:'trinket', mods:{LCK:+1}}, xp:4 }
+  );
   return makeNPC('pump', 'world', x, y, '#9ef7a0', 'Mara the Pump-Keeper', 'Parched Farmer', {
     start: { text: ['I can hear the pump wheeze. Need a Valve to breathe again.', 'Pump’s choking on sand. Only a Valve will save it.'],
       choices: [
-        {label:'(Accept) I will find a Valve.', to:'accept'},
-        {label:'(Hand Over Valve)', to:'turnin'},
+        {label:'(Accept) I will find a Valve.', to:'accept', q:'accept'},
+        {label:'(Hand Over Valve)', to:'turnin', q:'turnin'},
         {label:'(Leave)', to:'bye'}
       ]},
     accept: { text: 'Bless. Try the roadside ruins.',
@@ -587,7 +681,7 @@ function npc_PumpKeeper(x, y) {
       choices:[{label:'(Give Valve)', to:'do_turnin'}] },
     do_turnin: { text: 'It fits! Water again. Take this.',
       choices:[{label:'(Continue)', to:'bye'}] },
-  });
+  }, quest);
 }
 
 function npc_Grin(x,y){
@@ -689,13 +783,15 @@ renderDialog = function(){
 
   if(currentNPC.quest){
     if(currentNode==='accept'){
-      addQuest(currentNPC.quest.id, currentNPC.quest.title, currentNPC.quest.desc);
+      questLog.add(currentNPC.quest);
     }
     if(currentNode==='do_turnin'){
       const meta=currentNPC.quest;
       if(!meta.item || hasItem(meta.item)){
         if(meta.item){ removeItemByName(meta.item); renderInv(); }
-        completeQuest(meta.id);
+        questLog.complete(meta.id);
+        if(meta.reward){ addToInv(meta.reward); }
+        if(meta.xp){ awardXP(leader(), meta.xp); }
         if(meta.moveTo){ currentNPC.x=meta.moveTo.x; currentNPC.y=meta.moveTo.y; }
       } else {
         textEl.textContent=`You don’t have ${meta.item}.`;
@@ -703,23 +799,6 @@ renderDialog = function(){
     }
   }
 
-  // WATERPUMP
-  if(currentNPC.id==='pump'){
-    if(currentNode==='accept'){
-      addQuest(Q.WATERPUMP, 'Water for the Pump', 'Find a Valve and help Mara restart the pump.');
-    }
-    if(currentNode==='do_turnin'){
-      if(hasItem('Valve')){
-        removeItemByName('Valve');
-        completeQuest(Q.WATERPUMP);
-        awardXP(leader(), 4);
-        addToInv({name:'Rusted Badge', slot:'trinket', mods:{LCK:+1}});
-        log('You receive a Rusted Badge (+1 LCK).');
-      } else {
-        textEl.textContent = 'You don’t have a Valve.';
-      }
-    }
-  }
   if(currentNPC.id==='keycrate' && currentNode==='take'){
     addToInv({name:'Rusted Key'});
     currentNPC.tree.start={text:'An empty crate.',choices:[{label:'(Leave)',to:'bye'}]};
@@ -840,3 +919,5 @@ function seedWorldContent(){
   NPCS.push(npc_Duchess(40, midY));
 }
 // =================== END DUSTLAND CONTENT PACK v1 =====================
+
+Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog});
