@@ -18,145 +18,177 @@
   const VIEW_W=40, VIEW_H=30, TS=16;
   const WORLD_W=120, WORLD_H=90;
 
-  // ===== Game state =====
-  let world=[], interiors={}, buildings=[];
-  const state = { map:'hall' }; // default to hall so we always have a map
-  const player = { x:2, y:2, hp:10, ap:2, flags:{}, inv:[] };
-  let doorPulseUntil = 0;
+// ===== Game state =====
+let world = [], interiors = {}, buildings = [];
+const state = { map:'hall' }; // default to hall so we always have a map
+const player = { x:2, y:2, hp:10, ap:2, flags:{}, inv:[] };
+let doorPulseUntil = 0;
 
-  // ===== Party / stats =====
-  const baseStats = ()=> ({STR:4, AGI:4, INT:4, PER:4, LCK:4, CHA:4});
+// ===== Party / stats =====
+const baseStats = ()=> ({STR:4, AGI:4, INT:4, PER:4, LCK:4, CHA:4});
 
-  class Character {
-    constructor(id, name, role){
-      this.id=id; this.name=name; this.role=role;
-      this.lvl=1; this.xp=0;
-      this.stats=baseStats();
-      this.equip={weapon:null, armor:null, trinket:null};
-      this.hp=10; this.ap=2;
-      this.map='hall'; this.x=player.x; this.y=player.y;
-      this._bonus={ATK:0, DEF:0, LCK:0};
+class Character {
+  constructor(id, name, role){
+    this.id=id; this.name=name; this.role=role;
+    this.lvl=1; this.xp=0;
+    this.stats=baseStats();
+    this.equip={weapon:null, armor:null, trinket:null};
+    this.maxHp=10;              // polished: track max HP
+    this.hp=this.maxHp;
+    this.ap=2;
+    this.map='hall'; this.x=player.x; this.y=player.y;
+    this._bonus={ATK:0, DEF:0, LCK:0};
+  }
+  xpToNext(){ return 10*this.lvl; }
+  awardXP(amt){
+    this.xp += amt;
+    log(`${this.name} gains ${amt} XP.`);
+    while(this.xp >= this.xpToNext()){
+      this.xp -= this.xpToNext();
+      this.lvl++;
+      this.levelUp();
     }
-    xpToNext(){ return 10*this.lvl; }
-    awardXP(amt){
-      this.xp += amt;
-      log(`${this.name} gains ${amt} XP.`);
-      while(this.xp >= this.xpToNext()){
-        this.xp -= this.xpToNext();
-        this.lvl++;
-        this.levelUp();
-      }
-      renderParty();
+    renderParty();
+  }
+  levelUp(){
+    const inc = {STR:0,AGI:0,INT:0,PER:0,LCK:0,CHA:0};
+    if(/Gunslinger|Wanderer|Raider/.test(this.role)){ inc.STR++; inc.AGI++; }
+    else if(/Scavenger|Cogwitch|Mechanic/.test(this.role)){ inc.INT++; inc.PER++; }
+    else { inc.CHA++; inc.LCK++; }
+    for(const k in inc){ this.stats[k]+=inc[k]; }
+    this.maxHp += 2;                            // polished: grow max HP
+    this.hp = Math.min(this.hp + 2, this.maxHp);
+    if(this.lvl%2===0){
+      this.ap += 1;
+      if(typeof hudBadge==='function') hudBadge('AP +1'); // feedback hooks
+      if(typeof sfxTick==='function') sfxTick();
     }
-    levelUp(){
-      const inc = {STR:0,AGI:0,INT:0,PER:0,LCK:0,CHA:0};
-      if(/Gunslinger|Wanderer|Raider/.test(this.role)){ inc.STR++; inc.AGI++; }
-      else if(/Scavenger|Cogwitch|Mechanic/.test(this.role)){ inc.INT++; inc.PER++; }
-      else { inc.CHA++; inc.LCK++; }
-      for(const k in inc){ this.stats[k]+=inc[k]; }
-      this.hp += 2;
-      if(this.lvl%2===0) this.ap += 1;
-      log(`${this.name} leveled up to ${this.lvl}! (+HP, stats)`);
-    }
-    applyEquipmentStats(){
-      this._bonus = {ATK:0, DEF:0, LCK:0};
-      for(const k of ['weapon','armor','trinket']){
-        const it=this.equip[k];
-        if(it&&it.mods){
-          for(const stat in it.mods){
-            this._bonus[stat]=(this._bonus[stat]||0)+it.mods[stat];
-          }
+    log(`${this.name} leveled up to ${this.lvl}! (+HP, stats)`);
+  }
+  applyEquipmentStats(){
+    this._bonus = {ATK:0, DEF:0, LCK:0};
+    for(const k of ['weapon','armor','trinket']){
+      const it=this.equip[k];
+      if(it&&it.mods){
+        for(const stat in it.mods){
+          this._bonus[stat]=(this._bonus[stat]||0)+it.mods[stat];
         }
       }
     }
   }
+}
 
-  class Party extends Array {
-    addMember(member){
-      this.push(member);
-      member.applyEquipmentStats();
-      renderParty(); updateHUD();
-      log(member.name+" joins the party.");
-    }
-    leader(){
-      return this[selectedMember] || this[0];
-    }
+class Party extends Array {
+  addMember(member){
+    this.push(member);
+    member.applyEquipmentStats();
+    renderParty(); updateHUD();
+    log(member.name+" joins the party.");
   }
+  leader(){ return this[selectedMember] || this[0]; }
+}
 
-  const party = new Party();
+const party = new Party();
 
-  function makeMember(id, name, role){ return new Character(id, name, role); }
-  function addPartyMember(member){ party.addMember(member); }
-  function statLine(s){ return `STR ${s.STR}  AGI ${s.AGI}  INT ${s.INT}  PER ${s.PER}  LCK ${s.LCK}  CHA ${s.CHA}`; }
-  function xpToNext(lvl){ return 10*lvl; }
-  function awardXP(who, amt){ who.awardXP(amt); }
-  function applyEquipmentStats(m){ m.applyEquipmentStats(); }
+function makeMember(id, name, role){ return new Character(id, name, role); }
+function addPartyMember(member){ party.addMember(member); }
+function statLine(s){ return `STR ${s.STR}  AGI ${s.AGI}  INT ${s.INT}  PER ${s.PER}  LCK ${s.LCK}  CHA ${s.CHA}`; }
+function xpToNext(lvl){ return 10*lvl; }
+function awardXP(who, amt){ who.awardXP(amt); }
+function applyEquipmentStats(m){ m.applyEquipmentStats(); }
 
-  // ===== Inventory / equipment =====
-  const itemDrops=[]; // {map,x,y,name,slot,mods}
-  function addToInv(item){
-    if(typeof item==='string') item={name:item};
-    player.inv.push(item);
-    renderInv();
+// ===== Inventory / equipment =====
+const itemDrops=[]; // {map,x,y,name,slot,mods,...}
+
+function addToInv(item){
+  if(typeof item==='string') item={name:item};
+  player.inv.push(item);
+  renderInv();
+  if (window.NanoDialog) {
+    NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+        .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
+  }
+}
+
+let selectedMember = 0;
+
+// polished: equip shows feedback and returns previous gear
+function equipItem(memberIndex, invIndex){
+  const m=party[memberIndex]; const it=player.inv[invIndex];
+  if(!m||!it||!it.slot){ log('Cannot equip that.'); return; }
+  const slot = it.slot;
+  const prevEq = m.equip[slot];
+  if(prevEq) player.inv.push(prevEq);
+  m.equip[slot]=it;
+  player.inv.splice(invIndex,1);
+  applyEquipmentStats(m);
+  renderInv(); renderParty();
+  log(`${m.name} equips ${it.name}.`);
+  if(typeof toast==='function') toast(`${m.name} equips ${it.name}`);
+  if(typeof sfxTick==='function') sfxTick();
+}
+
+// Normalizer ensures future fields exist (stable shape for UI/tooltips)
+function normalizeItem(it){
+  if(!it) return null;
+  return {
+    name: it.name || 'Unknown',
+    slot: it.slot || null,
+    mods: it.mods || {},
+    use: it.use || null,       // e.g. {type:'heal', amount:4, onUse?}
+    rarity: it.rarity || 'common',
+    value: it.value ?? 0,
+    desc: it.desc || '',
+  };
+}
+
+function useItem(invIndex){
+  const it = player.inv[invIndex];
+  if(!it || !it.use){
+    log('Cannot use that.');
+    return false;
+  }
+  // Built-in: heal (clamped to maxHp)
+  if(it.use.type==='heal'){
+    const who = (party[selectedMember]||party[0]);
+    if(!who){ log('No party member to heal.'); return false; }
+    const before = who.hp;
+    who.hp = Math.min(who.hp + it.use.amount, who.maxHp);
+    const healed = who.hp - before;
+    log(`${who.name} drinks ${it.name} (+${healed} HP).`);
+    if (typeof toast === 'function') toast(`${who.name} +${healed} HP`);
+    if (typeof sfxTick === 'function') sfxTick();
+    player.inv.splice(invIndex,1);
+    renderInv(); renderParty(); updateHUD();
     if (window.NanoDialog) {
       NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
           .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
     }
+    return true;
   }
-  let selectedMember = 0;
-  function equipItem(memberIndex, invIndex){ const m=party[memberIndex]; const it=player.inv[invIndex]; if(!m||!it||!it.slot){ log('Cannot equip that.'); return; } const slot = it.slot; const prevEq = m.equip[slot]; if(prevEq) player.inv.push(prevEq); m.equip[slot]=it; player.inv.splice(invIndex,1); applyEquipmentStats(m); renderInv(); renderParty(); log(`${m.name} equips ${it.name}.`); }
-
-  // Normalizer ensures future fields exist
-  function normalizeItem(it){
-    if(!it) return null;
-    const out = {...it};
-    // common future fields: { use: {type:'heal', amount:4} } etc.
-    return out;
-  }
-
-  function useItem(invIndex){
-    const it = player.inv[invIndex];
-    if(!it || !it.use){
-      log('Cannot use that.');
-      return false;
-    }
-    // Simple built-ins
-    if(it.use.type==='heal'){
-      const who = (party[selectedMember]||party[0]);
-      if(!who){ log('No party member to heal.'); return false; }
-      who.hp += it.use.amount;
-      log(`${who.name} drinks ${it.name} (+${it.use.amount} HP).`);
-      if (typeof toast === 'function') toast(`${who.name} +${it.use.amount} HP`);
+  // Custom onUse hook
+  if(typeof it.use.onUse === 'function'){
+    const ok = it.use.onUse({player, party, log, toast});
+    if(ok!==false){
       player.inv.splice(invIndex,1);
       renderInv(); renderParty(); updateHUD();
       if (window.NanoDialog) {
         NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
             .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
       }
-      return true;
     }
-    if(typeof it.use.onUse === 'function'){
-      const ok = it.use.onUse({player, party, log, toast});
-      if(ok!==false){
-        player.inv.splice(invIndex,1);
-        renderInv(); renderParty(); updateHUD();
-        if (window.NanoDialog) {
-          NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
-              .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
-        }
-      }
-      return !!ok;
-    }
-    log('Nothing happens...');
-    return false;
+    return !!ok;
   }
+  log('Nothing happens...');
+  return false;
+}
 
-  // Wrap addToInv so items get normalized
-  const _origAddToInv = addToInv;
-  addToInv = function(item){
-    if(typeof item==='string') item={name:item};
-    _origAddToInv(normalizeItem(item));
-  };
+// Wrap addToInv so items get normalized
+const _origAddToInv = addToInv;
+addToInv = function(item){
+  if(typeof item==='string') item={name:item};
+  _origAddToInv(normalizeItem(item));
+};
 
   // ===== Helpers =====
   function mapIdForState(){ return state.map==='creator' ? 'hall' : state.map; }
@@ -347,6 +379,7 @@
   function adjacentNPC(){ const map=mapIdForState(); for(const n of NPCS){ if(n.map!==map) continue; if(Math.abs(n.x-player.x)+Math.abs(n.y-player.y)===1) return n; } return null; }
   function takeNearestItem(){
     const map=mapIdForState();
+    // current tile first for snappier pickups
     const dirs=[[0,0],[1,0],[-1,0],[0,1],[0,-1]];
     for(const [dx,dy] of dirs){
       const tx=player.x+dx, ty=player.y+dy;
