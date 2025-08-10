@@ -20,6 +20,11 @@ function toast(msg) {
   toastHost.appendChild(t);
   requestAnimationFrame(()=>{ t.style.opacity = '1'; t.style.transform='translateY(0)'; });
   setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(-6px)'; setTimeout(()=> t.remove(), 180); }, 1600);
+  if(/end of demo/i.test(msg) || /demo complete/i.test(msg)){
+    player.flags = player.flags || {};
+    player.flags.demoComplete = true;
+    if(typeof save === 'function') save();
+  }
 }
 
 // Tile colors for rendering
@@ -62,7 +67,7 @@ function drawScene(ctx){
     for(let vx=0; vx<VIEW_W; vx++){
       const gx=camX+vx, gy=camY+vy; if(gx<0||gy<0||gx>=W||gy>=H) continue;
       const t=grid[gy][gx]; ctx.fillStyle=colors[t]; ctx.fillRect(vx*TS,vy*TS,TS,TS);
-      if(t===TILE.DOOR){ ctx.strokeStyle='#9ef7a0'; ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10); }
+      if(t===TILE.DOOR){ ctx.strokeStyle='#9ef7a0'; ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10); if(doorPulseUntil && Date.now()<doorPulseUntil){ const a=0.3+0.2*Math.sin(Date.now()/200); ctx.globalAlpha=a; ctx.strokeRect(vx*TS+3,vy*TS+3,TS-6,TS-6); ctx.globalAlpha=1; } }
     }
   }
   const activeMap = (state.map==='creator'?'hall':state.map);
@@ -202,7 +207,20 @@ if (window.NanoDialog) NanoDialog.init();
 
 if(location.hash.includes('test')){ runTests(); }
 else {
-  if(localStorage.getItem('dustland_crt')){ document.getElementById('start').style.display='flex'; }
-  else { openCreator(); }
+  const saveStr = localStorage.getItem('dustland_crt');
+  if(saveStr){
+    try{
+      const d = JSON.parse(saveStr);
+      if(d.player && d.player.flags && d.player.flags.demoComplete){
+        document.getElementById('start').style.display='flex';
+      } else {
+        load();
+      }
+    } catch(e){
+      openCreator();
+    }
+  } else {
+    openCreator();
+  }
 }
 
