@@ -20,6 +20,11 @@ function toast(msg) {
   toastHost.appendChild(t);
   requestAnimationFrame(()=>{ t.style.opacity = '1'; t.style.transform='translateY(0)'; });
   setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(-6px)'; setTimeout(()=> t.remove(), 180); }, 1600);
+  if(/end of demo/i.test(msg) || /demo complete/i.test(msg)){
+    player.flags = player.flags || {};
+    player.flags.demoComplete = true;
+    if(typeof save === 'function') save();
+  }
 }
 
 // Tile colors for rendering
@@ -202,7 +207,20 @@ if (window.NanoDialog) NanoDialog.init();
 
 if(location.hash.includes('test')){ runTests(); }
 else {
-  if(localStorage.getItem('dustland_crt')){ document.getElementById('start').style.display='flex'; }
-  else { openCreator(); }
+  const saveStr = localStorage.getItem('dustland_crt');
+  if(saveStr){
+    try{
+      const d = JSON.parse(saveStr);
+      if(d.player && d.player.flags && d.player.flags.demoComplete){
+        document.getElementById('start').style.display='flex';
+      } else {
+        load();
+      }
+    } catch(e){
+      openCreator();
+    }
+  } else {
+    openCreator();
+  }
 }
 
