@@ -11,6 +11,7 @@
     init,
     queueForNPC,
     linesFor,      // get cached lines; returns []
+    choicesFor,    // get cached choices; returns []
     isReady: ()=> _state.ready,
     enabled: true, // flip to false to disable
     refreshIndicator
@@ -22,7 +23,7 @@
     queue: [],
     busy: false,
     failed: false,
-    cache: new Map(), // key: `${npcId}::${node}` -> string[]
+    cache: new Map(), // key: `${npcId}::${node}` -> {lines:[],choices:[]}
     seenKeys: new Set(), // avoid re-enqueue storms
   };
 
@@ -124,8 +125,13 @@
   }
 
   function linesFor(npcId, nodeId='start'){
-    const arr = _state.cache.get(_key(npcId, nodeId));
-    return Array.isArray(arr) ? arr : [];
+    const data = _state.cache.get(_key(npcId, nodeId));
+    return data && Array.isArray(data.lines) ? data.lines : [];
+  }
+
+  function choicesFor(npcId, nodeId='start'){
+    const data = _state.cache.get(_key(npcId, nodeId));
+    return data && Array.isArray(data.choices) ? data.choices : [];
   }
 
   function _key(npcId, node){ return `${npcId}::${node}`; }
@@ -141,13 +147,18 @@
       if(!prompt){ _state.busy=false; _pump(); return; }
 
       const txt = await _state.session.prompt(prompt);
-      const lines = _extractLines(txt);
-      if(lines.length){
+      const data = _extract(txt);
+      if(data.lines.length || data.choices.length){
         const key=_key(job.npcId, job.nodeId);
-        _state.cache.set(key, _dedupe((_state.cache.get(key)||[]).concat(lines)));
+        const prev = _state.cache.get(key) || {lines:[],choices:[]};
+        const merged = {
+          lines: _dedupe(prev.lines.concat(data.lines)),
+          choices: _dedupeChoices(prev.choices.concat(data.choices))
+        };
+        _state.cache.set(key, merged);
         // allow re-enqueue later for fresh variants
         setTimeout(()=> _state.seenKeys.delete(key), 10000);
-        if (typeof toast === 'function') toast(`New lines for ${job.npcId}`);
+        if (typeof toast === 'function') toast(`New dialog for ${job.npcId}`);
       }
     } catch(err){
       console.warn('[Nano] generation error', err);
@@ -171,10 +182,11 @@
       .filter(([,q])=>q.status==='completed')
       .map(([id,q])=> q.title || id);
 
-    // Keep it compact; ask for 3 short lines in-character
-    return `You are writing in-universe dialog lines for a post-apocalyptic, witty,
-dusty wasteland RPG NPC. Keep each line to 4–14 words. No stage directions.
-3 variants only. No quotes.
+    // Ask for short lines plus up to two choice hooks
+    return `You write in-universe dialog for DUSTLAND – a rusted,
+sun-blasted world of scrap tech and wry survivors. Tone: dry humor,
+90s CRPG bite, hints of hope. Keep each line 4-14 words. No quotes
+or stage directions.
 
 NPC:
 - id: ${npc.id}
@@ -182,35 +194,51 @@ NPC:
 - title: ${npc.title}
 - description: ${desc}
 
-World vibe: dry humor, 90s CRPG snark, a little heart.
-
 Player state:
 - leader: ${leader ? `${leader.name} (${leader.role}) lvl ${leader.lvl}` : 'none'}
 - leader stats: ${leader ? JSON.stringify(leader.stats) : '{}'}
 - inventory: ${inv.join(', ') || 'empty'}
-- completed: ${completed.join(', ') || 'none'}
+- completed quests: ${completed.join(', ') || 'none'}
 
 Context:
 - This is node: ${nodeId}
-- If the inventory or completed quests relate, reference them slyly.
+- If inventory or quests relate, reference them.
 - Never repeat earlier lines verbatim; be fresh.
 
-Output format:
+Output format strictly:
+Lines:
 Line1
 Line2
 Line3
+Choices:
+Label|STAT|DC|Reward
+Label2|STAT|DC|Reward
 `;
   }
 
   // ===== Parsing helpers =====
-  function _extractLines(txt){
-    if(!txt) return [];
-    // split by newlines, trim, keep short non-empty lines
-    return txt.split(/\r?\n/)
+  function _extract(txt){
+    if(!txt) return {lines:[],choices:[]};
+    const parts = txt.split(/Choices:/i);
+    const linePart = parts[0] || '';
+    const choicePart = parts[1] || '';
+    const lines = linePart.split(/\r?\n/)
       .map(s=>s.trim())
       .filter(Boolean)
       .filter(s=> s.length<=80)
       .slice(0,3);
+    const choices = choicePart.split(/\r?\n/)
+      .map(_parseChoice)
+      .filter(Boolean)
+      .slice(0,2);
+    return {lines, choices};
+  }
+
+  function _parseChoice(s){
+    const parts = s.split('|').map(p=>p.trim());
+    if(parts.length < 4) return null;
+    const dc = parseInt(parts[2],10);
+    return {label:parts[0], stat:parts[1].toUpperCase(), dc:isNaN(dc)?0:dc, reward:parts[3]};
   }
 
   function _dedupe(arr){
@@ -220,6 +248,15 @@ Line3
       if(!seen.has(k)){ seen.add(k); out.push(s); }
     }
     return out.slice(-12); // keep latest 12
+  }
+
+  function _dedupeChoices(arr){
+    const seen=new Set(), out=[];
+    for(const c of arr){
+      const k=c.label.toLowerCase();
+      if(!seen.has(k)){ seen.add(k); out.push(c); }
+    }
+    return out.slice(-4); // keep latest few
   }
 
 })();
