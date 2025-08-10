@@ -62,7 +62,7 @@ function drawScene(ctx){
     for(let vx=0; vx<VIEW_W; vx++){
       const gx=camX+vx, gy=camY+vy; if(gx<0||gy<0||gx>=W||gy>=H) continue;
       const t=grid[gy][gx]; ctx.fillStyle=colors[t]; ctx.fillRect(vx*TS,vy*TS,TS,TS);
-      if(t===TILE.DOOR){ ctx.strokeStyle='#9ef7a0'; ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10); }
+      if(t===TILE.DOOR){ ctx.strokeStyle='#9ef7a0'; ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10); if(doorPulseUntil && Date.now()<doorPulseUntil){ const a=0.3+0.2*Math.sin(Date.now()/200); ctx.globalAlpha=a; ctx.strokeRect(vx*TS+3,vy*TS+3,TS-6,TS-6); ctx.globalAlpha=1; } }
     }
   }
   const activeMap = (state.map==='creator'?'hall':state.map);
