@@ -311,7 +311,9 @@
     const w=6,h=5;
     for(let yy=0; yy<h; yy++){ for(let xx=0; xx<w; xx++){ const gx=x+xx, gy=y+yy; world[gy][gx]=TILE.BUILDING; }}
     const doorX=x+Math.floor(w/2), doorY=y+h-1; world[doorY][doorX]=TILE.DOOR; // decorative in world
-    const interiorId=makeInteriorRoom(); buildings.push({x,y,w,h,doorX,doorY,interiorId});
+    const interiorId=makeInteriorRoom();
+    const boarded = Math.random() < 0.3;
+    buildings.push({x,y,w,h,doorX,doorY,interiorId,boarded});
   }
 
   // ===== HALL =====
@@ -374,10 +376,13 @@
     const n=adjacentNPC(); if(n){ openDialog(n); return true; }
     const grid=currentGrid(); const t=grid[player.y][player.x];
     if(t===TILE.DOOR){
-      if(state.map==='hall' && player.y===1 && player.x===15){ startRealWorld(); return true; }
       if(state.map==='world'){
         const b=buildings.find(b=> b.doorX===player.x && b.doorY===player.y);
         if(b){
+          if(b.boarded){
+            log('The doorway is boarded up from the outside.');
+            return true;
+          }
           state.map=b.interiorId;
           const I=interiors[state.map];
           if(I){ player.x=I.entryX; player.y=I.entryY; }
@@ -502,14 +507,8 @@
     Object.keys(quests).forEach(k=> delete quests[k]);
     Object.keys(d.quests||{}).forEach(k=> quests[k]=d.quests[k]);
     party.length=0; (d.party||[]).forEach(m=> party.push(m));
-    if(!player.flags || !player.flags.demoComplete){
-      state.map='hall';
-      if(!hall.grid || hall.grid.length===0) genHall();
-      player.x=hall.entryX; player.y=hall.entryY;
-      document.getElementById('mapname').textContent='Test Hall';
-    } else {
-      document.getElementById('mapname').textContent= state.map==='world'? 'Wastes' : (state.map==='hall'?'Test Hall':'Interior');
-    }
+    document.getElementById('mapname').textContent=
+      state.map==='world'? 'Wastes' : (state.map==='hall'?'Test Hall':'Interior');
     centerCamera(player.x,player.y,state.map);
     renderInv(); renderQuests(); renderParty(); updateHUD();
     log('Game loaded.');
@@ -597,11 +596,18 @@
 
   ccBack.onclick=()=>{ if(step>1) { step--; renderStep(); } };
   ccNext.onclick=()=>{ if(step<5){ step++; renderStep(); } else { finalizeCurrentMember(); building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null }; step=1; renderStep(); log('Member added. You can add up to 2 more, or press Start Now.'); } };
-  ccStart.onclick=()=>{ if(built.length===0){ finalizeCurrentMember(); } closeCreator(); startTestHall(); };
+  ccStart.onclick=()=>{ if(built.length===0){ finalizeCurrentMember(); } closeCreator(); startRealWorld(); };
   ccLoad.onclick=()=>{ load(); closeCreator(); };
 
-  function startTestHall(){ state.map='hall'; document.getElementById('mapname').textContent='Test Hall'; genHall(); player.x=hall.entryX; player.y=hall.entryY; centerCamera(player.x,player.y,state.map); updateHUD(); showTab('party'); log('Welcome to the Test Hall. Try the stations, then exit at the top door.'); }
-  function startRealWorld(){ genWorld(); document.getElementById('mapname').textContent='Wastes'; player.x=2; player.y=Math.floor(WORLD_H/2); state.map='world'; centerCamera(player.x,player.y,'world'); updateHUD(); log('You step into the wastes.'); seedWorldDropsAndNPCs(); }
+  function startRealWorld(){
+    genWorld();
+    document.getElementById('mapname').textContent='Wastes';
+    player.x=2; player.y=Math.floor(WORLD_H/2);
+    state.map='world';
+    centerCamera(player.x,player.y,'world');
+    renderInv(); renderQuests(); renderParty(); updateHUD();
+    log('You step into the wastes.');
+  }
 
   // ===== Seed world content =====
   function placeItemSafe(map,x,y,item){
@@ -609,13 +615,6 @@
     const spot=findFreeDropTile(map,x,y);
     itemDrops.push({map,x:spot.x,y:spot.y,...item});
   }
-  function seedWorldDropsAndNPCs(){
-    placeItemSafe('world', 8, Math.floor(WORLD_H/2), {name:'Pipe Rifle', slot:'weapon', mods:{ATK:+2}});
-    placeItemSafe('world', 10, Math.floor(WORLD_H/2), {name:'Leather Jacket', slot:'armor', mods:{DEF:+1}});
-    placeItemSafe('world', 12, Math.floor(WORLD_H/2), {name:'Lucky Bottlecap', slot:'trinket', mods:{LCK:+1}});
-    NPCS.push(makeNPC('duchess','world', 20, Math.floor(WORLD_H/2), '#a9f59f','Scrap Duchess','Toll-Queen',{start:{text:'Road tax or road rash.',choices:[{label:'(Nod)',to:'bye'}]}}));
-  }
-
   // ===================== DUSTLAND CONTENT PACK v1 ======================
 // Safe helpers (don’t collide with your existing ones)
 function dropItemSafe(map, x, y, item) {
@@ -879,6 +878,26 @@ function seedWorldContent(){
   NPCS.push(npc_TowerTech(48, midY-2));
   NPCS.push(npc_IdolHermit(68, midY+2));
   NPCS.push(npc_Duchess(40, midY));
+
+  // Populate some building interiors
+  const interiorLoot = [
+    {name:'Canned Beans'},
+    {name:'Scrap Wire'},
+    {name:'Old Coin'}
+  ];
+  const interiorLines = ['Stay safe out there.', 'Not much left for scavvers.'];
+  let lootIx = 0, lineIx = 0;
+  buildings.filter(b=>!b.boarded).forEach((b,i)=>{
+    const I = interiors[b.interiorId];
+    if(!I) return;
+    const cx = Math.floor(I.w/2), cy = Math.floor(I.h/2);
+    dropItemSafe(b.interiorId, cx, cy, interiorLoot[lootIx++ % interiorLoot.length]);
+    if(i % 2 === 0){
+      NPCS.push(makeNPC('hut_dweller'+i, b.interiorId, cx+1, cy, '#a9f59f', 'Hut Dweller','', {
+        start:{ text: interiorLines[lineIx++ % interiorLines.length], choices:[{label:'(Leave)', to:'bye'}] }
+      }));
+    }
+  });
 }
 // =================== END DUSTLAND CONTENT PACK v1 =====================
 
