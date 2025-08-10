@@ -253,12 +253,41 @@
   function addQuest(id, title, desc, meta){ questLog.add(new Quest(id, title, desc, meta)); }
   function completeQuest(id){ questLog.complete(id); }
 
-  class NPC {
-    constructor({id,map,x,y,color,name,title,tree,quest=null}){
-      Object.assign(this,{id,map,x,y,color,name,title,tree,quest});
+  function defaultQuestProcessor(npc, nodeId){
+    const meta = npc.quest;
+    if(!meta) return;
+    if(nodeId==='accept'){
+      questLog.add(meta);
+    }
+    if(nodeId==='do_turnin'){
+      if(!meta.item || hasItem(meta.item)){
+        if(meta.item){ removeItemByName(meta.item); renderInv(); }
+        questLog.complete(meta.id);
+        if(meta.reward){ addToInv(meta.reward); }
+        if(meta.xp){ awardXP(leader(), meta.xp); }
+        if(meta.moveTo){ npc.x=meta.moveTo.x; npc.y=meta.moveTo.y; }
+      } else {
+        textEl.textContent=`You don’t have ${meta.item}.`;
+      }
     }
   }
-  function makeNPC(id, map, x, y, color, name, title, tree, quest){ return new NPC({id,map,x,y,color,name,title,tree,quest}); }
+
+  class NPC {
+    constructor({id,map,x,y,color,name,title,tree,quest=null,processNode=null,processChoice=null}){
+      Object.assign(this,{id,map,x,y,color,name,title,tree,quest});
+      if(quest && processNode){
+        this.processNode=(node)=>{ defaultQuestProcessor(this,node); processNode.call(this,node); };
+      } else if(quest){
+        this.processNode=(node)=> defaultQuestProcessor(this,node);
+      } else if(processNode){
+        this.processNode=processNode;
+      }
+      if(processChoice) this.processChoice=processChoice;
+    }
+  }
+  function makeNPC(id, map, x, y, color, name, title, tree, quest, processNode, processChoice){
+    return new NPC({id,map,x,y,color,name,title,tree,quest,processNode,processChoice});
+  }
   function resolveNode(tree, nodeId){ const n = tree[nodeId]; const choices = n.choices||[]; return {...n, choices}; }
   const NPCS=[];
   const usedNanoChoices = new Set();
@@ -302,13 +331,17 @@
         {label:'(Leave)',to:'bye'}]},
       accept:{text:'Maybe a key is hidden nearby.',choices:[{label:'(Okay)',to:'bye'}]},
       do_turnin:{text:'The door grinds open.',choices:[{label:'(Continue)',to:'bye'}]}
-    });
-    doorNPC.quest = {id:Q.HALL_KEY, title:'Find the Rusted Key', desc:'Search the hall for a Rusted Key to unlock the exit.', item:'Rusted Key', moveTo:{x:hall.entryX-1, y:2}};
+    }, {id:Q.HALL_KEY, title:'Find the Rusted Key', desc:'Search the hall for a Rusted Key to unlock the exit.', item:'Rusted Key', moveTo:{x:hall.entryX-1, y:2}});
     NPCS.push(doorNPC);
     const crateNPC = makeNPC('keycrate',HALL_ID, hall.entryX+2, hall.entryY,'#9ef7a0','Dusty Crate','',{
       start:{text:'A dusty crate rests here.',choices:[{label:'(Open)',to:'open'}]},
       open:{text:'Inside you find a Rusted Key.',choices:[{label:'(Take Rusted Key)',to:'take'}]},
       take:{text:'You pocket the key.',choices:[{label:'(Done)',to:'bye'}]}
+    }, null, function(node){
+      if(node==='take'){
+        addToInv({name:'Rusted Key'});
+        this.tree.start={text:'An empty crate.',choices:[{label:'(Leave)',to:'bye'}]};
+      }
     });
     NPCS.push(crateNPC);
     NPCS.push(makeNPC('hallflavor',HALL_ID, hall.entryX-4, hall.entryY-1,'#b8ffb6','Lone Drifter','Mutters',{ start:{text:'"Dust gets in everything."',choices:[{label:'(Nod)',to:'bye'}]} }));
@@ -438,26 +471,8 @@
         setContinueOnly();
         return true;
       }
-      if(currentNPC.id==='mouthdoor' && c.to==='roll'){
-        const leader=(party[selectedMember]||party[0]); const dc=8; const roll=rand(12)+1 + Math.floor((leader?.stats?.CHA||0)/2);
-        textEl.textContent = `You rolled ${roll} vs DC ${dc}. ${roll>=dc? 'The door purrs open.': 'The door snorts and stays shut.'}`;
-        if(roll>=dc){ awardXP(leader,2); }
-        setContinueOnly(); return true;
-      }
-      if(currentNPC.id==='crate' && (c.to==='rollpick'||c.to==='rollkick')){
-        const leader=(party[selectedMember]||party[0]); let roll=0, dc=9;
-        if(c.to==='rollpick'){ roll=rand(12)+1 + Math.floor(((leader?.stats?.AGI||0)+(leader?.stats?.PER||0))/3); }
-        else { roll=rand(12)+1 + Math.floor((leader?.stats?.STR||0)/2); }
-        textEl.textContent=`You rolled ${roll} vs DC ${dc}. ${roll>=dc? 'It pops!':'Nope.'}`;
-        if(roll>=dc){
-          const loot=[{name:'Scrap',slot:null},{name:'Lucky Bottlecap',slot:'trinket',mods:{LCK:+1}},{name:'Pipe Rifle',slot:'weapon',mods:{ATK:+2}}][rand(3)];
-          const map=mapIdForState();
-          const spot=findFreeDropTile(map, player.x, player.y);
-          itemDrops.push({map, x:spot.x, y:spot.y, name:loot.name, slot:loot.slot, mods:loot.mods});
-          awardXP(leader,2);
-          log(`Loot popped out: ${loot.name}`);
-        }
-        setContinueOnly(); return true;
+      if(currentNPC && typeof currentNPC.processChoice==='function'){
+        return currentNPC.processChoice(c)===true;
       }
       return false;
     };
@@ -465,6 +480,9 @@
       const div=document.createElement('div'); div.className='choice'; div.textContent=c.label;
       div.onclick=()=>{ currentNode=c.to||'bye'; if(handleSpecial(c)) return; if(currentNode==='bye'){ closeDialog(); } else { renderDialog(); } };
       choicesEl.appendChild(div);
+    }
+    if(currentNPC && typeof currentNPC.processNode==='function'){
+      currentNPC.processNode(currentNode);
     }
   }
 
@@ -685,6 +703,34 @@ function npc_PumpKeeper(x, y) {
 }
 
 function npc_Grin(x,y){
+  const processNode = function(node){
+    if(node==='start'){
+      addQuest(Q.RECRUIT_GRIN,'Recruit Grin','Convince or pay Grin to join.');
+    }
+    if(node==='rollcha'){
+      const r = skillRoll('CHA'); const dc = 8;
+      textEl.textContent = `Roll: ${r} vs DC ${dc}. ${r>=dc ? 'Grin smirks: "Alright."' : 'Grin shrugs: "Not buying it."'}`;
+      if(r>=dc){
+        completeQuest(Q.RECRUIT_GRIN);
+        const m = makeMember('grin', 'Grin', 'Scavenger');
+        m.stats.AGI += 1; m.stats.PER += 1;
+        addPartyMember(m);
+      }
+    }
+    if(node==='dopay'){
+      const tIndex = player.inv.findIndex(it=> it.slot==='trinket');
+      if(tIndex>-1){
+        player.inv.splice(tIndex,1);
+        renderInv();
+        completeQuest(Q.RECRUIT_GRIN);
+        const m = makeMember('grin', 'Grin', 'Scavenger');
+        addPartyMember(m);
+        log('Grin joins you.');
+      } else {
+        textEl.textContent = 'You have no trinket to pay with.';
+      }
+    }
+  };
   return makeNPC('grin','world',x,y,'#caffc6','Grin','Scav-for-Hire',{
     start:{ text:['Got two hands and a crowbar. You got a plan?','Crowbar’s itching for work. You hiring?'],
       choices:[
@@ -706,15 +752,21 @@ function npc_Grin(x,y){
     pay:{ text:'Hand me something shiny.',
       choices:[{label:'(Give random trinket)', to:'dopay'}] },
     dopay:{ text:'Deal.', choices:[{label:'(Ok)', to:'bye'}] },
-  });
+  }, null, processNode);
 }
 
 function npc_Postmaster(x,y){
+  const quest = new Quest(
+    Q.POSTAL,
+    'Lost Parcel',
+    'Find and return the Lost Satchel to Ivo.',
+    { item:'Lost Satchel', reward:{name:'Brass Stamp', slot:'trinket', mods:{LCK:+1}}, xp:4 }
+  );
   return makeNPC('post','world',x,y,'#b8ffb6','Postmaster Ivo','Courier of Dust',{
     start:{ text:'Lost a courier bag on the road. Grey canvas. Reward if found.',
       choices:[
-        {label:'(Accept) I will look.', to:'accept'},
-        {label:'(Turn in Satchel)', to:'turnin'}, {label:'(Leave)', to:'bye'}
+        {label:'(Accept) I will look.', to:'accept', q:'accept'},
+        {label:'(Turn in Satchel)', to:'turnin', q:'turnin'}, {label:'(Leave)', to:'bye'}
       ]},
     accept:{ text:'Much obliged.',
       choices:[{label:'(Ok)', to:'bye'}] },
@@ -722,141 +774,18 @@ function npc_Postmaster(x,y){
       choices:[{label:'(Give Lost Satchel)', to:'do_turnin'}] },
     do_turnin:{ text:'Mail moves again. Take this stamp. Worth more than water.',
       choices:[{label:'(Ok)', to:'bye'}] }
-  });
+  }, quest);
 }
 
 function npc_TowerTech(x,y){
-  return makeNPC('tower','world',x,y,'#a9f59f','Rella','Radio Tech',{
-    start:{ text:'Tower’s console fried. If you got a Toolkit and brains, lend both.',
-      choices:[
-        {label:'(Accept) I will help.', to:'accept'},
-        {label:'(Repair) INT check with Toolkit', to:'repair'},
-        {label:'(Leave)', to:'bye'}
-      ]},
-    accept:{ text:'I owe you static and thanks.', choices:[{label:'(Ok)', to:'bye'}] },
-    repair:{ text:'Roll vs INT...',
-      choices:[{label:'(Roll)', to:'rollint'}] },
-    rollint:{ text:'…', choices:[{label:'(Ok)', to:'bye'}] }
-  });
-}
-
-function npc_IdolHermit(x,y){
-  return makeNPC('hermit','world',x,y,'#9abf9a','The Shifting Hermit','Pilgrim',{
-    start:{ text:'Something rust-holy sits in the ruins. Bring the Idol.',
-      choices:[
-        {label:'(Accept)', to:'accept'},
-        {label:'(Offer Rust Idol)', to:'turnin'},
-        {label:'(Leave)', to:'bye'}
-      ]},
-    accept:{ text:'The sand will guide or bury you.', choices:[{label:'(Ok)', to:'bye'}] },
-    turnin:{ text:'Do you carry grace?',
-      choices:[{label:'(Give Idol)', to:'do_turnin'}] },
-    do_turnin:{ text:'The idol warms. You are seen.',
-      choices:[{label:'(Ok)', to:'bye'}] }
-  });
-}
-
-// Shadow version of your Duchess (kept light)
-function npc_Duchess(x,y){
-  return makeNPC('duchess','world',x,y,'#a9f59f','Scrap Duchess','Toll-Queen',{
-    start:{text:['Road tax or road rash.','Coins or cuts. Your pick.'],
-      choices:[
-        {label:'(Pay) Nod and pass', to:'pay'},
-        {label:'(Refuse)', to:'ref'},
-        {label:'(Leave)', to:'bye'}
-      ]},
-    pay:{text:'Wise. Move along.', choices:[{label:'(Ok)', to:'bye'}]},
-    ref:{text:'Brave. Or foolish.', choices:[{label:'(Ok)', to:'bye'}]}
-  });
-}
-
-setNPCDesc('duchess', 'A crown of bottlecaps; eyes like razors.');
-setNPCDesc('grin', 'Lean scav with a crowbar and half a smile.');
-setNPCDesc('pump', 'Sunburnt hands, hopeful eyes. Smells faintly of mud.');
-
-// ---------------- Hook quest logic into dialog renderer ----------------
-const _oldRenderDialog = renderDialog;
-renderDialog = function(){
-  _oldRenderDialog.apply(this, arguments);
-  // Patch in quest effects after node paint (we reuse currentNPC/currentNode)
-  if(!currentNPC) return;
-
-  if(currentNPC.quest){
-    if(currentNode==='accept'){
-      questLog.add(currentNPC.quest);
-    }
-    if(currentNode==='do_turnin'){
-      const meta=currentNPC.quest;
-      if(!meta.item || hasItem(meta.item)){
-        if(meta.item){ removeItemByName(meta.item); renderInv(); }
-        questLog.complete(meta.id);
-        if(meta.reward){ addToInv(meta.reward); }
-        if(meta.xp){ awardXP(leader(), meta.xp); }
-        if(meta.moveTo){ currentNPC.x=meta.moveTo.x; currentNPC.y=meta.moveTo.y; }
-      } else {
-        textEl.textContent=`You don’t have ${meta.item}.`;
-      }
-    }
-  }
-
-  if(currentNPC.id==='keycrate' && currentNode==='take'){
-    addToInv({name:'Rusted Key'});
-    currentNPC.tree.start={text:'An empty crate.',choices:[{label:'(Leave)',to:'bye'}]};
-  }
-
-  // RECRUIT GRIN
-  if(currentNPC.id==='grin'){
-    if(currentNode==='start'){ addQuest(Q.RECRUIT_GRIN,'Recruit Grin','Convince or pay Grin to join.'); }
-    if(currentNode==='rollcha'){
-      const r = skillRoll('CHA'); const dc = 8;
-      textEl.textContent = `Roll: ${r} vs DC ${dc}. ${r>=dc ? 'Grin smirks: "Alright."' : 'Grin shrugs: "Not buying it."'}`
-      if(r>=dc){
-        completeQuest(Q.RECRUIT_GRIN);
-        const m = makeMember('grin', 'Grin', 'Scavenger');
-        m.stats.AGI += 1; m.stats.PER += 1;
-        addPartyMember(m);
-      }
-    }
-    if(currentNode==='dopay'){
-      // take any trinket
-      const tIndex = player.inv.findIndex(it=> it.slot==='trinket');
-      if(tIndex>-1){
-        player.inv.splice(tIndex,1);
-        renderInv();
-        completeQuest(Q.RECRUIT_GRIN);
-        const m = makeMember('grin', 'Grin', 'Scavenger');
-        addPartyMember(m);
-        log('Grin joins you.');
-      } else {
-        textEl.textContent = 'You have no trinket to pay with.';
-      }
-    }
-  }
-
-  // POSTMASTER
-  if(currentNPC.id==='post'){
-    if(currentNode==='accept'){
-      addQuest(Q.POSTAL,'Lost Parcel','Find and return the Lost Satchel to Ivo.');
-    }
-    if(currentNode==='do_turnin'){
-      if(hasItem('Lost Satchel')){
-        removeItemByName('Lost Satchel');
-        completeQuest(Q.POSTAL);
-        awardXP(leader(), 4);
-        addToInv({name:'Brass Stamp', slot:'trinket', mods:{LCK:+1}});
-        log('Reward: Brass Stamp (+1 LCK).');
-      } else {
-        textEl.textContent = 'You don’t have the Satchel.';
-      }
-    }
-  }
-
-  // TOWER
-  if(currentNPC.id==='tower'){
-    if(currentNode==='accept'){
-      addQuest(Q.TOWER,'Dead Air','Repair the radio tower console (Toolkit helps).');
-    }
-    if(currentNode==='rollint'){
+  const quest = new Quest(
+    Q.TOWER,
+    'Dead Air',
+    'Repair the radio tower console (Toolkit helps).',
+    { item:'Toolkit' }
+  );
+  const processNode = function(node){
+    if(node==='rollint'){
       if(!player.inv.some(it=> it.name==='Toolkit')){
         textEl.textContent = 'You need a Toolkit to even try.';
         return;
@@ -869,35 +798,68 @@ renderDialog = function(){
         addToInv({name:'Tuner Charm', slot:'trinket', mods:{PER:+1}});
       }
     }
-  }
+  };
+  return makeNPC('tower','world',x,y,'#a9f59f','Rella','Radio Tech',{
+    start:{ text:'Tower’s console fried. If you got a Toolkit and brains, lend both.',
+      choices:[
+        {label:'(Accept) I will help.', to:'accept', q:'accept'},
+        {label:'(Repair) INT check with Toolkit', to:'repair', q:'turnin'},
+        {label:'(Leave)', to:'bye'}
+      ]},
+    accept:{ text:'I owe you static and thanks.', choices:[{label:'(Ok)', to:'bye'}] },
+    repair:{ text:'Roll vs INT...',
+      choices:[{label:'(Roll)', to:'rollint'}] },
+    rollint:{ text:'…', choices:[{label:'(Ok)', to:'bye'}] }
+  }, quest, processNode);
+}
 
-  // IDOL
-  if(currentNPC.id==='hermit'){
-    if(currentNode==='accept'){
-      addQuest(Q.IDOL,'Rust Idol','Recover the Rust Idol from roadside ruins.');
-    }
-    if(currentNode==='do_turnin'){
-      if(hasItem('Rust Idol')){
-        removeItemByName('Rust Idol');
-        completeQuest(Q.IDOL);
-        awardXP(leader(), 5);
-        addToInv({name:'Pilgrim Thread', slot:'trinket', mods:{CHA:+1}});
-        log('You feel oddly seen (+1 CHA).');
-      } else {
-        textEl.textContent = 'The Hermit shakes their head: empty hands.';
-      }
-    }
-  }
+function npc_IdolHermit(x,y){
+  const quest = new Quest(
+    Q.IDOL,
+    'Rust Idol',
+    'Recover the Rust Idol from roadside ruins.',
+    { item:'Rust Idol', reward:{name:'Pilgrim Thread', slot:'trinket', mods:{CHA:+1}}, xp:5 }
+  );
+  return makeNPC('hermit','world',x,y,'#9abf9a','The Shifting Hermit','Pilgrim',{
+    start:{ text:'Something rust-holy sits in the ruins. Bring the Idol.',
+      choices:[
+        {label:'(Accept)', to:'accept', q:'accept'},
+        {label:'(Offer Rust Idol)', to:'turnin', q:'turnin'},
+        {label:'(Leave)', to:'bye'}
+      ]},
+    accept:{ text:'The sand will guide or bury you.', choices:[{label:'(Ok)', to:'bye'}] },
+    turnin:{ text:'Do you carry grace?',
+      choices:[{label:'(Give Idol)', to:'do_turnin'}] },
+    do_turnin:{ text:'The idol warms. You are seen.',
+      choices:[{label:'(Ok)', to:'bye'}] }
+  }, quest);
+}
 
-  // DUCHESS (light quest flag)
-  if(currentNPC.id==='duchess'){
-    if(currentNode==='pay' || currentNode==='ref'){
+// Shadow version of your Duchess (kept light)
+function npc_Duchess(x,y){
+  const processNode = function(node){
+    if(node==='pay' || node==='ref'){
       addQuest(Q.TOLL,'Toll-Booth Etiquette','You met the Duchess on the road.');
       completeQuest(Q.TOLL);
       awardXP(leader(), 2);
     }
-  }
-};
+  };
+  return makeNPC('duchess','world',x,y,'#a9f59f','Scrap Duchess','Toll-Queen',{
+    start:{text:['Road tax or road rash.','Coins or cuts. Your pick.'],
+      choices:[
+        {label:'(Pay) Nod and pass', to:'pay'},
+        {label:'(Refuse)', to:'ref'},
+        {label:'(Leave)', to:'bye'}
+      ]},
+    pay:{text:'Wise. Move along.', choices:[{label:'(Ok)', to:'bye'}]},
+    ref:{text:'Brave. Or foolish.', choices:[{label:'(Ok)', to:'bye'}]}
+  }, null, processNode);
+}
+
+setNPCDesc('duchess', 'A crown of bottlecaps; eyes like razors.');
+setNPCDesc('grin', 'Lean scav with a crowbar and half a smile.');
+setNPCDesc('pump', 'Sunburnt hands, hopeful eyes. Smells faintly of mud.');
+
 
 // ---------- World NPC + item seeding ----------
 function seedWorldContent(){
