@@ -209,7 +209,8 @@
   class Quest {
     constructor(id, title, desc, meta={}){
       this.id=id; this.title=title; this.desc=desc;
-      this.status='active';
+      // Quests start as 'available' until the player accepts them
+      this.status='available';
       Object.assign(this, meta);
     }
     complete(){
@@ -231,6 +232,7 @@
     constructor(){ this.quests={}; }
     add(quest){
       if(!this.quests[quest.id]){
+        quest.status = 'active';
         this.quests[quest.id]=quest;
         renderQuests();
         log('Quest added: '+quest.title);
@@ -256,10 +258,10 @@
   function defaultQuestProcessor(npc, nodeId){
     const meta = npc.quest;
     if(!meta) return;
-    if(nodeId==='accept'){
+    if(nodeId==='accept' && meta.status==='available'){
       questLog.add(meta);
     }
-    if(nodeId==='do_turnin'){
+    if(nodeId==='do_turnin' && meta.status==='active'){
       if(!meta.item || hasItem(meta.item)){
         if(meta.item){ removeItemByName(meta.item); renderInv(); }
         questLog.complete(meta.id);
@@ -447,10 +449,10 @@
       if(!usedNanoChoices.has(k)) nodeChoices.push({...ex, nano:true, key:k});
     }
     if(currentNPC.quest){
-      const meta=currentNPC.quest; const q=quests[meta.id];
+      const meta=currentNPC.quest;
       nodeChoices = nodeChoices.filter(c=>{
-        if(c.q==='accept' && q) return false;
-        if(c.q==='turnin' && (!q || q.status!=='active' || (meta.item && !hasItem(meta.item)))) return false;
+        if(c.q==='accept' && meta.status!=='available') return false;
+        if(c.q==='turnin' && (meta.status!=='active' || (meta.item && !hasItem(meta.item)))) return false;
         return true;
       });
     }
@@ -505,7 +507,9 @@
     interiors={}; Object.keys(d.interiors).forEach(k=> interiors[k]=d.interiors[k]);
     itemDrops.length=0; d.itemDrops.forEach(i=> itemDrops.push(i));
     Object.keys(quests).forEach(k=> delete quests[k]);
-    Object.keys(d.quests||{}).forEach(k=> quests[k]=d.quests[k]);
+    Object.entries(d.quests||{}).forEach(([k,v])=>{
+      quests[k] = Object.assign(new Quest(v.id, v.title, v.desc), v);
+    });
     party.length=0; (d.party||[]).forEach(m=> party.push(m));
     document.getElementById('mapname').textContent=
       state.map==='world'? 'Wastes' : (state.map==='hall'?'Test Hall':'Interior');
