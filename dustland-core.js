@@ -356,7 +356,32 @@
 
   // ===== Save/Load & Start =====
   function save(){ const data={world, player, state, NPCS, buildings, interiors, itemDrops, quests, party}; localStorage.setItem('dustland_crt', JSON.stringify(data)); log('Game saved.'); }
-  function load(){ const j=localStorage.getItem('dustland_crt'); if(!j){ log('No save.'); return; } const d=JSON.parse(j); world=d.world; Object.assign(player,d.player); Object.assign(state,d.state); NPCS.length=0; d.NPCS.forEach(n=> NPCS.push(n)); buildings.length=0; d.buildings.forEach(b=> buildings.push(b)); interiors={}; Object.keys(d.interiors).forEach(k=> interiors[k]=d.interiors[k]); itemDrops.length=0; d.itemDrops.forEach(i=> itemDrops.push(i)); Object.keys(quests).forEach(k=> delete quests[k]); Object.keys(d.quests||{}).forEach(k=> quests[k]=d.quests[k]); party.length=0; (d.party||[]).forEach(m=> party.push(m)); document.getElementById('mapname').textContent= state.map==='world'? 'Wastes' : (state.map==='hall'?'Test Hall':'Interior'); centerCamera(player.x,player.y,state.map); renderInv(); renderQuests(); renderParty(); updateHUD(); log('Game loaded.'); }
+  function load(){
+    const j=localStorage.getItem('dustland_crt');
+    if(!j){ log('No save.'); return; }
+    const d=JSON.parse(j);
+    world=d.world;
+    Object.assign(player,d.player);
+    Object.assign(state,d.state);
+    NPCS.length=0; d.NPCS.forEach(n=> NPCS.push(n));
+    buildings.length=0; d.buildings.forEach(b=> buildings.push(b));
+    interiors={}; Object.keys(d.interiors).forEach(k=> interiors[k]=d.interiors[k]);
+    itemDrops.length=0; d.itemDrops.forEach(i=> itemDrops.push(i));
+    Object.keys(quests).forEach(k=> delete quests[k]);
+    Object.keys(d.quests||{}).forEach(k=> quests[k]=d.quests[k]);
+    party.length=0; (d.party||[]).forEach(m=> party.push(m));
+    if(!player.flags || !player.flags.demoComplete){
+      state.map='hall';
+      if(!hall.grid || hall.grid.length===0) genHall();
+      player.x=hall.entryX; player.y=hall.entryY;
+      document.getElementById('mapname').textContent='Test Hall';
+    } else {
+      document.getElementById('mapname').textContent= state.map==='world'? 'Wastes' : (state.map==='hall'?'Test Hall':'Interior');
+    }
+    centerCamera(player.x,player.y,state.map);
+    renderInv(); renderQuests(); renderParty(); updateHUD();
+    log('Game loaded.');
+  }
 
   const startEl = document.getElementById('start');
   const startContinue = document.getElementById('startContinue');
