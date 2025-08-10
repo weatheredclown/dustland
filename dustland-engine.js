@@ -85,15 +85,16 @@ function centerCamera(x,y,map){
 // ===== Drawing (tiles -> items -> NPCs -> player) =====
 function drawScene(ctx){
   ctx.fillStyle='#000'; ctx.fillRect(0,0,disp.width,disp.height);
-  const grid=currentGrid(); const {W,H}=mapWH();
+  const activeMap = mapIdForState();
+  const {W,H}=mapWH(activeMap);
   for(let vy=0; vy<VIEW_H; vy++){
     for(let vx=0; vx<VIEW_W; vx++){
       const gx=camX+vx, gy=camY+vy; if(gx<0||gy<0||gx>=W||gy>=H) continue;
-      const t=grid[gy][gx]; ctx.fillStyle=colors[t]; ctx.fillRect(vx*TS,vy*TS,TS,TS);
+      const t=getTile(activeMap,gx,gy); if(t===null) continue;
+      ctx.fillStyle=colors[t]; ctx.fillRect(vx*TS,vy*TS,TS,TS);
       if(t===TILE.DOOR){ ctx.strokeStyle='#9ef7a0'; ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10); if(doorPulseUntil && Date.now()<doorPulseUntil){ const a=0.3+0.2*Math.sin(Date.now()/200); ctx.globalAlpha=a; ctx.strokeRect(vx*TS+3,vy*TS+3,TS-6,TS-6); ctx.globalAlpha=1; } }
     }
   }
-  const activeMap = (state.map==='creator'?'hall':state.map);
   // Items first
   for(const it of itemDrops){
     if(it.map!==activeMap) continue;
