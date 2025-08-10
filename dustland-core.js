@@ -1,10 +1,55 @@
+  /**
+   * @typedef {Object} Item
+   * @property {string} name
+   * @property {string} [slot]
+   * @property {Object<string, number>} [mods]
+   * @property {{type:string, amount?:number}} [use]
+   * @property {string} [desc]
+   * @property {number} [rarity]
+   * @property {number} [value]
+   */
+
+  /**
+   * @typedef {Object} QuestState
+   * @property {string} id
+   * @property {'available'|'active'|'complete'} status
+   */
+
+  /**
+   * @typedef {Object} NPC
+   * @property {string} id
+   * @property {string} map
+   * @property {number} x
+   * @property {number} y
+   * @property {string} color
+   * @property {string} name
+   * @property {string} title
+   * @property {Object<string, any>} tree
+   * @property {Quest} [quest]
+   */
+
   // ===== Core helpers =====
-  const rand = (n)=> Math.floor(Math.random()*n);
+  const ROLL_SIDES = 12;
+  const DC = { TALK:8, REPAIR:9 };
+
+  let worldSeed = Date.now();
+  function createRNG(seed){
+    return function(){
+      seed |= 0;
+      seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = (t + Math.imul(t ^ t >>> 7, 61 | t)) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  let rng = createRNG(worldSeed);
+  function setRNGSeed(seed){ worldSeed = seed >>> 0; rng = createRNG(worldSeed); }
+  const rand = (n)=> Math.floor(rng()*n);
   const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
 
   class Dice {
-    static roll(sides=12){ return Math.floor(Math.random()*sides)+1; }
-    static skill(character, stat, add=0, sides=12){
+    static roll(sides=ROLL_SIDES){ return Math.floor(Math.random()*sides)+1; }
+    static skill(character, stat, add=0, sides=ROLL_SIDES){
       const base = (character?.stats?.[stat] || 0);
       return Dice.roll(sides) + Math.floor(base/2) + add;
     }
@@ -192,18 +237,29 @@ addToInv = function(item){
 
   // ===== Helpers =====
   function mapIdForState(){ return state.map==='creator' ? 'hall' : state.map; }
-  function mapWH(){ if(state.map==='world') return {W:WORLD_W,H:WORLD_H}; if(state.map==='hall' || state.map==='creator'){ return {W:hall.w||VIEW_W,H:hall.h||VIEW_H}; } const I=interiors[state.map]; return {W:(I&&I.w)||VIEW_W,H:(I&&I.h)||VIEW_H}; }
+  function mapWH(map=state.map){
+    if(map==='world') return {W:WORLD_W,H:WORLD_H};
+    if(map==='hall' || map==='creator') return {W:hall.w||VIEW_W,H:hall.h||VIEW_H};
+    const I=interiors[map];
+    return {W:(I&&I.w)||VIEW_W,H:(I&&I.h)||VIEW_H};
+  }
+  function gridFor(map){
+    if(map==='world') return world;
+    if(map==='hall') return hall.grid;
+    return interiors[map] && interiors[map].grid;
+  }
+  function getTile(map,x,y){
+    const g=gridFor(map); if(!g) return null;
+    if(y<0||x<0||y>=g.length||x>=g[0].length) return null;
+    return g[y][x];
+  }
+  function setTile(map,x,y,t){
+    const g=gridFor(map); if(!g) return false;
+    if(y<0||x<0||y>=g.length||x>=g[0].length) return false;
+    g[y][x]=t; return true;
+  }
   function currentGrid(){
-    if(state.map==='world') return world;
-    const isCreator = (state.map==='creator');
-    if(state.map==='hall' || isCreator){
-      if(!hall.grid || hall.grid.length===0) genHall();
-      return hall.grid;
-    }
-    const I=interiors[state.map];
-    if(I && I.grid) return I.grid;
-    if(!hall.grid || hall.grid.length===0) genHall();
-    return hall.grid;
+    return gridFor(mapIdForState());
   }
   function occupiedAt(x,y){
     const map=mapIdForState();
@@ -213,17 +269,15 @@ addToInv = function(item){
   }
   // Find nearest free, walkable, unoccupied (and not water on world)
   function findFreeDropTile(map,x,y){
-    const dims = (map==='world'? {W:WORLD_W,H:WORLD_H} : (map==='hall'? {W:hall.w,H:hall.h} : (interiors[map]||{w:VIEW_W,h:VIEW_H})));
-    const W=dims.W||dims.w, H=dims.H||dims.h;
-    const grid = (map==='world'? world : (map==='hall'? hall.grid : interiors[map].grid));
+    const {W,H}=mapWH(map);
     const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
     const seen=new Set([x+','+y]);
     const q=[[x,y]];
     while(q.length){
       const [cx,cy]=q.shift();
       if(cx>=0&&cy>=0&&cx<W&&cy<H){
-        const t=grid[cy][cx];
-        if(walkable[t] && !occupiedAt(cx,cy) && !(map==='world' && t===TILE.WATER)){
+        const t=getTile(map,cx,cy);
+        if(t!==null && walkable[t] && !occupiedAt(cx,cy) && !(map==='world' && t===TILE.WATER)){
           return {x:cx,y:cy};
         }
       }
@@ -327,24 +381,25 @@ addToInv = function(item){
   // ===== WORLD GEN =====
   const HALL_W=30, HALL_H=22; const HALL_ID='hall';
   function genWorld(seed=Date.now()){
+    setRNGSeed(seed);
     world = Array.from({length:WORLD_H},(_,y)=> Array.from({length:WORLD_W},(_,x)=>{
       const v=(Math.sin((x+seed%977)*.37)+Math.cos((y+seed%911)*.29)+Math.sin((x+y)*.11))*0.5;
       if(v> .62) return TILE.ROCK; if(v<-0.62) return TILE.WATER; if(v> .18) return TILE.BRUSH; return TILE.SAND;
     }));
-    for(let x=0;x<WORLD_W;x++){ const ry= clamp(Math.floor(WORLD_H/2 + Math.sin(x*0.22)*6), 2, WORLD_H-3); world[ry][x]=TILE.ROAD; if(world[ry-1]) world[ry-1][x]=TILE.ROAD; }
-    for(let i=0;i<120;i++){ const rx=rand(WORLD_W), ry=rand(WORLD_H); if(world[ry][rx]!==TILE.WATER) world[ry][rx]=TILE.RUIN; }
-    buildings.length=0; for(let i=0;i<10;i++){ let x=8+rand(WORLD_W-16), y=6+rand(WORLD_H-12); if(world[y][x]===TILE.WATER){ const p=findNearestLand(x,y); x=p.x; y=p.y; } placeHut(x,y);}    
+    for(let x=0;x<WORLD_W;x++){ const ry= clamp(Math.floor(WORLD_H/2 + Math.sin(x*0.22)*6), 2, WORLD_H-3); setTile('world', x, ry, TILE.ROAD); setTile('world', x, ry-1, TILE.ROAD); }
+    for(let i=0;i<120;i++){ const rx=rand(WORLD_W), ry=rand(WORLD_H); if(getTile('world',rx,ry)!==TILE.WATER) setTile('world',rx,ry,TILE.RUIN); }
+    buildings.length=0; for(let i=0;i<10;i++){ let x=8+rand(WORLD_W-16), y=6+rand(WORLD_H-12); if(getTile('world',x,y)===TILE.WATER){ const p=findNearestLand(x,y); x=p.x; y=p.y; } placeHut(x,y);}
     seedWorldContent();
   }
-  function isWater(x,y){ return world[y] && world[y][x]===TILE.WATER; }
+  function isWater(x,y){ return getTile('world',x,y)===TILE.WATER; }
   function findNearestLand(sx,sy){ const q=[[sx,sy]], seen=new Set([sx+","+sy]); const dirs=[[1,0],[-1,0],[0,1],[0,-1]]; while(q.length){ const [x,y]=q.shift(); if(!isWater(x,y)) return {x,y}; for(const [dx,dy] of dirs){ const nx=x+dx, ny=y+dy; const k=nx+","+ny; if(nx>=0&&ny>=0&&nx<WORLD_W&&ny<WORLD_H&&!seen.has(k)){ seen.add(k); q.push([nx,ny]); } } } return {x:sx,y:sy}; }
-  function makeInteriorRoom(){ const id = 'room_'+Math.random().toString(36).slice(2,8); const w=12, h=9; const g=Array.from({length:h},(_,y)=> Array.from({length:w},(_,x)=>{ const edge= y===0||y===h-1||x===0||x===w-1; return edge? TILE.WALL : TILE.FLOOR; })); const ex=Math.floor(w/2), ey=h-1; g[ey][ex]=TILE.DOOR; interiors[id] = {w,h,grid:g, entryX:ex, entryY:h-2}; return id; }
+  function makeInteriorRoom(){ const id = 'room_'+rng().toString(36).slice(2,8); const w=12, h=9; const g=Array.from({length:h},(_,y)=> Array.from({length:w},(_,x)=>{ const edge= y===0||y===h-1||x===0||x===w-1; return edge? TILE.WALL : TILE.FLOOR; })); const ex=Math.floor(w/2), ey=h-1; g[ey][ex]=TILE.DOOR; interiors[id] = {w,h,grid:g, entryX:ex, entryY:h-2}; return id; }
   function placeHut(x,y){
     const w=6,h=5;
-    for(let yy=0; yy<h; yy++){ for(let xx=0; xx<w; xx++){ const gx=x+xx, gy=y+yy; world[gy][gx]=TILE.BUILDING; }}
-    const doorX=x+Math.floor(w/2), doorY=y+h-1; world[doorY][doorX]=TILE.DOOR; // decorative in world
+    for(let yy=0; yy<h; yy++){ for(let xx=0; xx<w; xx++){ setTile('world',x+xx,y+yy,TILE.BUILDING); }}
+    const doorX=x+Math.floor(w/2), doorY=y+h-1; setTile('world',doorX,doorY,TILE.DOOR); // decorative in world
     const interiorId=makeInteriorRoom();
-    const boarded = Math.random() < 0.3;
+    const boarded = rng() < 0.3;
     buildings.push({x,y,w,h,doorX,doorY,interiorId,boarded});
   }
 
@@ -369,9 +424,10 @@ addToInv = function(item){
   // ===== Interaction =====
   function canWalk(x,y){
     if(state.map==='creator') return false;
-    const grid=currentGrid(); const {W,H}=mapWH();
-    if(!(x>=0&&y>=0&&x<W&&y<H)) return false;
-    if(!walkable[grid[y][x]]) return false;
+    const map=mapIdForState();
+    const t=getTile(map,x,y);
+    if(t===null) return false;
+    if(!walkable[t]) return false;
     if(occupiedAt(x,y)) return false;
     return true;
   }
@@ -391,7 +447,7 @@ addToInv = function(item){
   function interact(){
     if(state.map==='creator') return false;
     const n=adjacentNPC(); if(n){ openDialog(n); return true; }
-    const grid=currentGrid(); const t=grid[player.y][player.x];
+    const t=getTile(mapIdForState(), player.x, player.y);
     if(t===TILE.DOOR){
       if(state.map==='world'){
         const b=buildings.find(b=> b.doorX===player.x && b.doorY===player.y);
@@ -514,7 +570,7 @@ addToInv = function(item){
       questData[k]={title:q.title,desc:q.desc,status:q.status};
     });
     const partyData = party.map(p=>({id:p.id,name:p.name,role:p.role,lvl:p.lvl,xp:p.xp,stats:p.stats,equip:p.equip,hp:p.hp,ap:p.ap,map:p.map,x:p.x,y:p.y}));
-    const data={world, player, state, buildings, interiors, itemDrops, npcs:npcData, quests:questData, party:partyData};
+    const data={worldSeed, world, player, state, buildings, interiors, itemDrops, npcs:npcData, quests:questData, party:partyData};
     localStorage.setItem('dustland_crt', JSON.stringify(data));
     log('Game saved.');
   }
@@ -522,7 +578,10 @@ addToInv = function(item){
     const j=localStorage.getItem('dustland_crt');
     if(!j){ log('No save.'); return; }
     const d=JSON.parse(j);
-    world=d.world;
+    worldSeed = d.worldSeed || Date.now();
+    setRNGSeed(worldSeed);
+    if(d.world){ world=d.world; }
+    else { genWorld(worldSeed); }
     Object.assign(player,d.player);
     Object.assign(state,d.state);
     buildings.length=0; (d.buildings||[]).forEach(b=> buildings.push(b));
@@ -646,7 +705,8 @@ addToInv = function(item){
   ccLoad.onclick=()=>{ load(); closeCreator(); };
 
   function startRealWorld(){
-    genWorld();
+    const seed = Date.now();
+    genWorld(seed);
     document.getElementById('mapname').textContent='Wastes';
     player.x=2; player.y=Math.floor(WORLD_H/2);
     state.map='world';
@@ -654,353 +714,6 @@ addToInv = function(item){
     renderInv(); renderQuests(); renderParty(); updateHUD();
     log('You step into the wastes.');
   }
-
-  // ===== Seed world content =====
-  function placeItemSafe(map,x,y,item){
-    if(map==='world' && world[y] && world[y][x]===TILE.WATER){ const p=findNearestLand(x,y); x=p.x; y=p.y; }
-    const spot=findFreeDropTile(map,x,y);
-    itemDrops.push({map,x:spot.x,y:spot.y,...item});
-  }
-  // ===================== DUSTLAND CONTENT PACK v1 ======================
-// Safe helpers (don’t collide with your existing ones)
-function dropItemSafe(map, x, y, item) {
-  const spot = findFreeDropTile(map, x, y);
-  itemDrops.push({ map, x: spot.x, y: spot.y, ...item });
-}
-
-function removeItemByName(name) {
-  const i = player.inv.findIndex(it => it.name === name);
-  if (i > -1) return player.inv.splice(i, 1)[0];
-  return null;
-}
-
-function hasItem(name) { return player.inv.some(it => it.name === name); }
-function leader() { return party.leader(); }
-function skillRoll(stat, add = 0, sides = 12) {
-  return Dice.skill(leader(), stat, add, sides);
-}
-
-// ---------- World Items (static seeds around the central road) ----------
-function seedStaticItems() {
-  const midY = Math.floor(WORLD_H/2);
-  // Starter line along the road (safe from water)
-  dropItemSafe('world', 8,  midY, {name:'Pipe Rifle', slot:'weapon', mods:{ATK:+2}});
-  dropItemSafe('world', 10, midY, {name:'Leather Jacket', slot:'armor', mods:{DEF:+1}});
-  dropItemSafe('world', 12, midY, {name:'Lucky Bottlecap', slot:'trinket', mods:{LCK:+1}});
-
-  // A few ruins goodies
-  const spots = [
-    {x: 28, y: midY-4}, {x: 35, y: midY+6}, {x: 52, y: midY-3},
-    {x: 67, y: midY+5}, {x: 83, y: midY-2}, {x: 95, y: midY+2}
-  ];
-  const loot = [
-    {name:'Crowbar', slot:'weapon', mods:{ATK:+1}},
-    {name:'Rebar Club', slot:'weapon', mods:{ATK:+1}},
-    {name:'Kevlar Scrap Vest', slot:'armor', mods:{DEF:+2}},
-    {name:'Goggles', slot:'trinket', mods:{PER:+1}},
-    {name:'Wrench', slot:'trinket', mods:{INT:+1}},
-    {name:'Lucky Rabbit Foot', slot:'trinket', mods:{LCK:+1}},
-  ];
-  spots.forEach((s,i)=> dropItemSafe('world', s.x, s.y, loot[i % loot.length]));
-}
-
-// ---------- Quests ----------
-/*
-  Q_WATERPUMP  : Fix the farm pump (find Valve)
-  Q_RECRUIT_GRIN: Recruit Grin the Scav
-  Q_POSTAL     : Return the Lost Satchel
-  Q_TOWER      : Repair radio tower console
-  Q_IDOL       : Recover the Rust Idol for the Hermit
-  Q_TOLL       : Deal with the Duchess (nod / refuse)
-*/
-const Q = {
-  HALL_KEY: 'q_hall_key',
-  WATERPUMP: 'q_waterpump',
-  RECRUIT_GRIN: 'q_recruit_grin',
-  POSTAL: 'q_postal',
-  TOWER: 'q_tower',
-  IDOL: 'q_idol',
-  TOLL: 'q_toll',
-};
-
-// ---------- NPC Factories ----------
-function npc_PumpKeeper(x, y) {
-  const quest = new Quest(
-    Q.WATERPUMP,
-    'Water for the Pump',
-    'Find a Valve and help Mara restart the pump.',
-    { item:'Valve', reward:{name:'Rusted Badge', slot:'trinket', mods:{LCK:+1}}, xp:4 }
-  );
-  return makeNPC('pump', 'world', x, y, '#9ef7a0', 'Mara the Pump-Keeper', 'Parched Farmer', {
-    start: { text: ['I can hear the pump wheeze. Need a Valve to breathe again.', 'Pump’s choking on sand. Only a Valve will save it.'],
-      choices: [
-        {label:'(Accept) I will find a Valve.', to:'accept', q:'accept'},
-        {label:'(Hand Over Valve)', to:'turnin', q:'turnin'},
-        {label:'(Leave)', to:'bye'}
-      ]},
-    accept: { text: 'Bless. Try the roadside ruins.',
-      choices:[{label:'(Ok)', to:'bye'}] },
-    turnin: { text: 'Let me see...',
-      choices:[{label:'(Give Valve)', to:'do_turnin'}] },
-    do_turnin: { text: 'It fits! Water again. Take this.',
-      choices:[{label:'(Continue)', to:'bye'}] },
-  }, quest);
-}
-
-function npc_Grin(x,y){
-  const quest = new Quest(
-    Q.RECRUIT_GRIN,
-    'Recruit Grin',
-    'Convince or pay Grin to join.'
-  );
-  const processNode = function(node){
-    if(node==='start'){
-      defaultQuestProcessor(this,'accept');
-    }
-    if(node==='rollcha'){
-      const r = skillRoll('CHA'); const dc = 8;
-      textEl.textContent = `Roll: ${r} vs DC ${dc}. ${r>=dc ? 'Grin smirks: "Alright."' : 'Grin shrugs: "Not buying it."'}`;
-      if(r>=dc){
-        const m = makeMember('grin', 'Grin', 'Scavenger');
-        m.stats.AGI += 1; m.stats.PER += 1;
-        addPartyMember(m);
-        defaultQuestProcessor(this,'do_turnin');
-      }
-    }
-    if(node==='dopay'){
-      const tIndex = player.inv.findIndex(it=> it.slot==='trinket');
-      if(tIndex>-1){
-        player.inv.splice(tIndex,1);
-        renderInv();
-        const m = makeMember('grin', 'Grin', 'Scavenger');
-        addPartyMember(m);
-        log('Grin joins you.');
-        defaultQuestProcessor(this,'do_turnin');
-      } else {
-        textEl.textContent = 'You have no trinket to pay with.';
-      }
-    }
-  };
-  return makeNPC('grin','world',x,y,'#caffc6','Grin','Scav-for-Hire',{
-    start:{ text:['Got two hands and a crowbar. You got a plan?','Crowbar’s itching for work. You hiring?'],
-      choices:[
-        {label:'(Recruit) Join me.', to:'rec'},
-        {label:'(Chat)', to:'chat'},
-        {label:'(Leave)', to:'bye'}
-      ]},
-    chat:{ text:['Keep to the road. The sand eats soles and souls.','Stay off the dunes. Sand chews boots.'],
-      choices:[{label:'(Nod)', to:'bye'}] },
-    rec:{ text:'Convince me. Or pay me.',
-      choices:[
-        {label:'(CHA) Talk up the score', to:'cha'},
-        {label:'(Pay) Give 1 trinket as hire bonus', to:'pay'},
-        {label:'(Back)', to:'start'}
-      ]},
-    cha:{ text:'Roll vs CHA...',
-      choices:[{label:'(Roll)', to:'rollcha'}] },
-    rollcha:{ text:'…', choices:[{label:'(Ok)', to:'bye'}] },
-    pay:{ text:'Hand me something shiny.',
-      choices:[{label:'(Give random trinket)', to:'dopay'}] },
-    dopay:{ text:'Deal.', choices:[{label:'(Ok)', to:'bye'}] },
-  }, quest, processNode);
-}
-
-function npc_Postmaster(x,y){
-  const quest = new Quest(
-    Q.POSTAL,
-    'Lost Parcel',
-    'Find and return the Lost Satchel to Ivo.',
-    { item:'Lost Satchel', reward:{name:'Brass Stamp', slot:'trinket', mods:{LCK:+1}}, xp:4 }
-  );
-  return makeNPC('post','world',x,y,'#b8ffb6','Postmaster Ivo','Courier of Dust',{
-    start:{ text:'Lost a courier bag on the road. Grey canvas. Reward if found.',
-      choices:[
-        {label:'(Accept) I will look.', to:'accept', q:'accept'},
-        {label:'(Turn in Satchel)', to:'turnin', q:'turnin'}, {label:'(Leave)', to:'bye'}
-      ]},
-    accept:{ text:'Much obliged.',
-      choices:[{label:'(Ok)', to:'bye'}] },
-    turnin:{ text:'You got it?',
-      choices:[{label:'(Give Lost Satchel)', to:'do_turnin'}] },
-    do_turnin:{ text:'Mail moves again. Take this stamp. Worth more than water.',
-      choices:[{label:'(Ok)', to:'bye'}] }
-  }, quest);
-}
-
-function npc_TowerTech(x,y){
-  const quest = new Quest(
-    Q.TOWER,
-    'Dead Air',
-    'Repair the radio tower console (Toolkit helps).',
-    { item:'Toolkit', reward:{name:'Tuner Charm', slot:'trinket', mods:{PER:+1}}, xp:5 }
-  );
-  const processNode = function(node){
-    if(node==='rollint'){
-      if(!player.inv.some(it=> it.name==='Toolkit')){
-        textEl.textContent = 'You need a Toolkit to even try.';
-        return;
-      }
-      const r = skillRoll('INT'); const dc = 9;
-      textEl.textContent = `Roll: ${r} vs DC ${dc}. ${r>=dc ? 'Static fades. The tower hums.' : 'You cross a wire and pop a fuse.'}`;
-      if(r>=dc){
-        defaultQuestProcessor(this,'do_turnin');
-      }
-    }
-  };
-  return makeNPC('tower','world',x,y,'#a9f59f','Rella','Radio Tech',{
-    start:{ text:'Tower’s console fried. If you got a Toolkit and brains, lend both.',
-      choices:[
-        {label:'(Accept) I will help.', to:'accept', q:'accept'},
-        {label:'(Repair) INT check with Toolkit', to:'repair', q:'turnin'},
-        {label:'(Leave)', to:'bye'}
-      ]},
-    accept:{ text:'I owe you static and thanks.', choices:[{label:'(Ok)', to:'bye'}] },
-    repair:{ text:'Roll vs INT...',
-      choices:[{label:'(Roll)', to:'rollint'}] },
-    rollint:{ text:'…', choices:[{label:'(Ok)', to:'bye'}] }
-  }, quest, processNode);
-}
-
-function npc_IdolHermit(x,y){
-  const quest = new Quest(
-    Q.IDOL,
-    'Rust Idol',
-    'Recover the Rust Idol from roadside ruins.',
-    { item:'Rust Idol', reward:{name:'Pilgrim Thread', slot:'trinket', mods:{CHA:+1}}, xp:5 }
-  );
-  return makeNPC('hermit','world',x,y,'#9abf9a','The Shifting Hermit','Pilgrim',{
-    start:{ text:'Something rust-holy sits in the ruins. Bring the Idol.',
-      choices:[
-        {label:'(Accept)', to:'accept', q:'accept'},
-        {label:'(Offer Rust Idol)', to:'turnin', q:'turnin'},
-        {label:'(Leave)', to:'bye'}
-      ]},
-    accept:{ text:'The sand will guide or bury you.', choices:[{label:'(Ok)', to:'bye'}] },
-    turnin:{ text:'Do you carry grace?',
-      choices:[{label:'(Give Idol)', to:'do_turnin'}] },
-    do_turnin:{ text:'The idol warms. You are seen.',
-      choices:[{label:'(Ok)', to:'bye'}] }
-  }, quest);
-}
-
-// Shadow version of your Duchess (kept light)
-function npc_Duchess(x,y){
-  const quest = new Quest(
-    Q.TOLL,
-    'Toll-Booth Etiquette',
-    'You met the Duchess on the road.',
-    {xp:2}
-  );
-  const processNode = function(node){
-    if(node==='pay' || node==='ref'){
-      defaultQuestProcessor(this,'accept');
-      defaultQuestProcessor(this,'do_turnin');
-    }
-  };
-  return makeNPC('duchess','world',x,y,'#a9f59f','Scrap Duchess','Toll-Queen',{
-    start:{text:['Road tax or road rash.','Coins or cuts. Your pick.'],
-      choices:[
-        {label:'(Pay) Nod and pass', to:'pay'},
-        {label:'(Refuse)', to:'ref'},
-        {label:'(Leave)', to:'bye'}
-      ]},
-    pay:{text:'Wise. Move along.', choices:[{label:'(Ok)', to:'bye'}]},
-    ref:{text:'Brave. Or foolish.', choices:[{label:'(Ok)', to:'bye'}]}
-  }, quest, processNode);
-}
-
-function npc_ExitDoor(x,y){
-  const quest = new Quest(
-    Q.HALL_KEY,
-    'Find the Rusted Key',
-    'Search the hall for a Rusted Key to unlock the exit.',
-    {item:'Rusted Key', moveTo:{x:hall.entryX-1,y:2}}
-  );
-  return makeNPC('exitdoor',HALL_ID,x, y,'#a9f59f','Locked Door','Needs Key',{
-    start:{text:'A heavy door bars the way.',choices:[
-      {label:'(Search for key)',to:'accept',q:'accept'},
-      {label:'(Use Rusted Key)',to:'do_turnin',q:'turnin'},
-      {label:'(Leave)',to:'bye'}]},
-    accept:{text:'Maybe a key is hidden nearby.',choices:[{label:'(Okay)',to:'bye'}]},
-    do_turnin:{text:'The door grinds open.',choices:[{label:'(Continue)',to:'bye'}]}
-  }, quest);
-}
-
-function npc_KeyCrate(x,y){
-  return makeNPC('keycrate',HALL_ID,x,y,'#9ef7a0','Dusty Crate','',{
-    start:{text:'A dusty crate rests here.',choices:[{label:'(Open)',to:'open'}]},
-    open:{text:'Inside you find a Rusted Key.',choices:[{label:'(Take Rusted Key)',to:'take'}]},
-    take:{text:'You pocket the key.',choices:[{label:'(Done)',to:'bye'}]}
-  }, null, function(node){
-    if(node==='take'){
-      addToInv({name:'Rusted Key'});
-      this.tree.start={text:'An empty crate.',choices:[{label:'(Leave)',to:'bye'}]};
-    }
-  });
-}
-
-function npc_HallDrifter(x,y){
-  return makeNPC('hallflavor',HALL_ID,x,y,'#b8ffb6','Lone Drifter','Mutters',{
-    start:{text:'"Dust gets in everything."',choices:[{label:'(Nod)',to:'bye'}]}
-  });
-}
-
-const NPC_FACTORY = {
-  pump: npc_PumpKeeper,
-  grin: npc_Grin,
-  post: npc_Postmaster,
-  tower: npc_TowerTech,
-  hermit: npc_IdolHermit,
-  duchess: npc_Duchess,
-  exitdoor: npc_ExitDoor,
-  keycrate: npc_KeyCrate,
-  hallflavor: npc_HallDrifter
-};
-
-setNPCDesc('duchess', 'A crown of bottlecaps; eyes like razors.');
-setNPCDesc('grin', 'Lean scav with a crowbar and half a smile.');
-setNPCDesc('pump', 'Sunburnt hands, hopeful eyes. Smells faintly of mud.');
-
-
-// ---------- World NPC + item seeding ----------
-function seedWorldContent(){
-  // Items
-  seedStaticItems();
-
-  // Quest macguffins placed along/near the road (safe)
-  const midY = Math.floor(WORLD_H/2);
-  dropItemSafe('world', 18, midY-2, {name:'Valve'});
-  dropItemSafe('world', 26, midY+3, {name:'Lost Satchel'});
-  dropItemSafe('world', 60, midY-1, {name:'Rust Idol'});
-
-  // NPC placements (roadside)
-  NPCS.push(npc_PumpKeeper(14, midY-1));
-  NPCS.push(npc_Grin(22, midY));
-  NPCS.push(npc_Postmaster(30, midY+1));
-  NPCS.push(npc_TowerTech(48, midY-2));
-  NPCS.push(npc_IdolHermit(68, midY+2));
-  NPCS.push(npc_Duchess(40, midY));
-
-  // Populate some building interiors
-  const interiorLoot = [
-    {name:'Canned Beans'},
-    {name:'Scrap Wire'},
-    {name:'Old Coin'}
-  ];
-  const interiorLines = ['Stay safe out there.', 'Not much left for scavvers.'];
-  let lootIx = 0, lineIx = 0;
-  buildings.filter(b=>!b.boarded).forEach((b,i)=>{
-    const I = interiors[b.interiorId];
-    if(!I) return;
-    const cx = Math.floor(I.w/2), cy = Math.floor(I.h/2);
-    dropItemSafe(b.interiorId, cx, cy, interiorLoot[lootIx++ % interiorLoot.length]);
-    if(i % 2 === 0){
-      NPCS.push(makeNPC('hut_dweller'+i, b.interiorId, cx+1, cy, '#a9f59f', 'Hut Dweller','', {
-        start:{ text: interiorLines[lineIx++ % interiorLines.length], choices:[{label:'(Leave)', to:'bye'}] }
-      }));
-    }
-  });
-}
-// =================== END DUSTLAND CONTENT PACK v1 =====================
+  // Content pack moved to dustland-content.js
 
 Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog});
