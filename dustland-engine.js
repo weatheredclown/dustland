@@ -195,9 +195,6 @@ window.addEventListener('keydown',(e)=>{
 
 // ===== Boot =====
 genHall();                              // ensure a grid exists before first frame
-// Example consumables
-itemDrops.push({map:'hall', x: hall.entryX+1, y: hall.entryY, name:'Water Flask', use:{type:'heal', amount:4}});
-itemDrops.push({map:'hall', x: hall.entryX-1, y: hall.entryY, name:'Old Medkit', use:{type:'heal', amount:6}});
 state.map='hall';
 player.x=hall.entryX; player.y=hall.entryY; centerCamera(player.x,player.y,'hall');
 requestAnimationFrame(draw);
@@ -209,16 +206,7 @@ if(location.hash.includes('test')){ runTests(); }
 else {
   const saveStr = localStorage.getItem('dustland_crt');
   if(saveStr){
-    try{
-      const d = JSON.parse(saveStr);
-      if(d.player && d.player.flags && d.player.flags.demoComplete){
-        document.getElementById('start').style.display='flex';
-      } else {
-        load();
-      }
-    } catch(e){
-      openCreator();
-    }
+    showStart();
   } else {
     openCreator();
   }
