@@ -170,6 +170,7 @@
   function makeNPC(id, map, x, y, color, name, title, tree){ return {id,map,x,y,color,name,title,tree}; }
   function resolveNode(tree, nodeId){ const n = tree[nodeId]; const choices = n.choices||[]; return {...n, choices}; }
   const NPCS=[];
+  const usedNanoChoices = new Set();
 
   // ===== WORLD GEN =====
   const HALL_W=30, HALL_H=22; const HALL_ID='hall';
@@ -295,7 +296,34 @@
       textEl.textContent = node.text;
     }
     choicesEl.innerHTML='';
+    const extras = (window.NanoDialog && NanoDialog.choicesFor(currentNPC.id, currentNode)) || [];
+    const nodeChoices = (node.choices||[]).slice();
+    for(const ex of extras){
+      const k = `${currentNPC.id}::${currentNode}::${ex.label}`;
+      if(!usedNanoChoices.has(k)) nodeChoices.push({...ex, nano:true, key:k});
+    }
     const handleSpecial = (c)=>{
+      if(c.nano){
+        const roll = skillRoll(c.stat);
+        textEl.textContent = `You rolled ${roll} vs DC ${c.dc}.`;
+        if(roll >= c.dc){
+          if(/^xp\s*\d+/i.test(c.reward)){
+            const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
+            awardXP(leader(), amt);
+            textEl.textContent += ` Reward: ${amt} XP.`;
+          } else if(c.reward && c.reward.toLowerCase()!=='none'){
+            addToInv({name:c.reward});
+            textEl.textContent += ` You receive ${c.reward}.`;
+          } else {
+            textEl.textContent += ' Success.';
+          }
+        } else {
+          textEl.textContent += ' Failed.';
+        }
+        usedNanoChoices.add(c.key);
+        setContinueOnly();
+        return true;
+      }
       if(currentNPC.id==='mouthdoor' && c.to==='roll'){
         const leader=(party[selectedMember]||party[0]); const dc=8; const roll=rand(12)+1 + Math.floor((leader?.stats?.CHA||0)/2);
         textEl.textContent = `You rolled ${roll} vs DC ${dc}. ${roll>=dc? 'The door purrs open.': 'The door snorts and stays shut.'}`;
@@ -319,7 +347,7 @@
       }
       return false;
     };
-    for(const c of (node.choices||[])){
+    for(const c of nodeChoices){
       const div=document.createElement('div'); div.className='choice'; div.textContent=c.label;
       div.onclick=()=>{ currentNode=c.to||'bye'; if(handleSpecial(c)) return; if(currentNode==='bye'){ closeDialog(); } else { renderDialog(); } };
       choicesEl.appendChild(div);
