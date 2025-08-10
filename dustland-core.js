@@ -90,7 +90,6 @@
   function statLine(s){ return `STR ${s.STR}  AGI ${s.AGI}  INT ${s.INT}  PER ${s.PER}  LCK ${s.LCK}  CHA ${s.CHA}`; }
   function xpToNext(lvl){ return 10*lvl; }
   function awardXP(who, amt){ who.awardXP(amt); }
-  function levelUp(who){ who.levelUp(); }
   function applyEquipmentStats(m){ m.applyEquipmentStats(); }
 
   // ===== Inventory / equipment =====
@@ -160,7 +159,6 @@
   };
 
   // ===== Helpers =====
-  function getLeader(){ return party.leader(); }
   function mapIdForState(){ return state.map==='creator' ? 'hall' : state.map; }
   function mapWH(){ if(state.map==='world') return {W:WORLD_W,H:WORLD_H}; if(state.map==='hall' || state.map==='creator'){ return {W:hall.w||VIEW_W,H:hall.h||VIEW_H}; } const I=interiors[state.map]; return {W:(I&&I.w)||VIEW_W,H:(I&&I.h)||VIEW_H}; }
   function currentGrid(){
