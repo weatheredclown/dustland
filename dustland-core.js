@@ -33,7 +33,7 @@
       this.lvl=1; this.xp=0;
       this.stats=baseStats();
       this.equip={weapon:null, armor:null, trinket:null};
-      this.hp=10; this.ap=2;
+      this.maxHp=10; this.hp=this.maxHp; this.ap=2;
       this.map='hall'; this.x=player.x; this.y=player.y;
       this._bonus={ATK:0, DEF:0, LCK:0};
     }
@@ -54,8 +54,13 @@
       else if(/Scavenger|Cogwitch|Mechanic/.test(this.role)){ inc.INT++; inc.PER++; }
       else { inc.CHA++; inc.LCK++; }
       for(const k in inc){ this.stats[k]+=inc[k]; }
-      this.hp += 2;
-      if(this.lvl%2===0) this.ap += 1;
+      this.maxHp += 2;
+      this.hp = Math.min(this.hp + 2, this.maxHp);
+      if(this.lvl%2===0){
+        this.ap += 1;
+        if(typeof hudBadge==='function') hudBadge('AP +1');
+        if(typeof sfxTick==='function') sfxTick();
+      }
       log(`${this.name} leveled up to ${this.lvl}! (+HP, stats)`);
     }
     applyEquipmentStats(){
@@ -104,13 +109,20 @@
     }
   }
   let selectedMember = 0;
-  function equipItem(memberIndex, invIndex){ const m=party[memberIndex]; const it=player.inv[invIndex]; if(!m||!it||!it.slot){ log('Cannot equip that.'); return; } const slot = it.slot; const prevEq = m.equip[slot]; if(prevEq) player.inv.push(prevEq); m.equip[slot]=it; player.inv.splice(invIndex,1); applyEquipmentStats(m); renderInv(); renderParty(); log(`${m.name} equips ${it.name}.`); }
+  function equipItem(memberIndex, invIndex){ const m=party[memberIndex]; const it=player.inv[invIndex]; if(!m||!it||!it.slot){ log('Cannot equip that.'); return; } const slot = it.slot; const prevEq = m.equip[slot]; if(prevEq) player.inv.push(prevEq); m.equip[slot]=it; player.inv.splice(invIndex,1); applyEquipmentStats(m); renderInv(); renderParty(); log(`${m.name} equips ${it.name}.`); if(typeof toast==='function') toast(`${m.name} equips ${it.name}`); if(typeof sfxTick==='function') sfxTick(); }
 
   // Normalizer ensures future fields exist
   function normalizeItem(it){
     if(!it) return null;
-    const out = {...it};
-    // common future fields: { use: {type:'heal', amount:4} } etc.
+    const out = {
+      name: it.name || 'Unknown',
+      slot: it.slot || null,
+      mods: it.mods || {},
+      use: it.use || null,
+      rarity: it.rarity || 'common',
+      value: it.value ?? 0,
+      desc: it.desc || '',
+    };
     return out;
   }
 
@@ -124,9 +136,10 @@
     if(it.use.type==='heal'){
       const who = (party[selectedMember]||party[0]);
       if(!who){ log('No party member to heal.'); return false; }
-      who.hp += it.use.amount;
+      who.hp = Math.min(who.hp + it.use.amount, who.maxHp);
       log(`${who.name} drinks ${it.name} (+${it.use.amount} HP).`);
       if (typeof toast === 'function') toast(`${who.name} +${it.use.amount} HP`);
+      if (typeof sfxTick === 'function') sfxTick();
       player.inv.splice(invIndex,1);
       renderInv(); renderParty(); updateHUD();
       if (window.NanoDialog) {
@@ -363,6 +376,7 @@
   function adjacentNPC(){ const map=mapIdForState(); for(const n of NPCS){ if(n.map!==map) continue; if(Math.abs(n.x-player.x)+Math.abs(n.y-player.y)===1) return n; } return null; }
   function takeNearestItem(){
     const map=mapIdForState();
+    // current tile first for snappier pickups
     const dirs=[[0,0],[1,0],[-1,0],[0,1],[0,-1]];
     for(const [dx,dy] of dirs){
       const tx=player.x+dx, ty=player.y+dy;
