@@ -324,27 +324,11 @@
     interiors[HALL_ID]=hall;
     doorPulseUntil = Date.now() + 60000;
     NPCS.length=0;
-    const doorNPC = makeNPC('exitdoor',HALL_ID, hall.entryX, 2,'#a9f59f','Locked Door','Needs Key',{
-      start:{text:'A heavy door bars the way.',choices:[
-        {label:'(Search for key)',to:'accept',q:'accept'},
-        {label:'(Use Rusted Key)',to:'do_turnin',q:'turnin'},
-        {label:'(Leave)',to:'bye'}]},
-      accept:{text:'Maybe a key is hidden nearby.',choices:[{label:'(Okay)',to:'bye'}]},
-      do_turnin:{text:'The door grinds open.',choices:[{label:'(Continue)',to:'bye'}]}
-    }, {id:Q.HALL_KEY, title:'Find the Rusted Key', desc:'Search the hall for a Rusted Key to unlock the exit.', item:'Rusted Key', moveTo:{x:hall.entryX-1, y:2}});
+    const doorNPC = npc_ExitDoor(hall.entryX, 2);
     NPCS.push(doorNPC);
-    const crateNPC = makeNPC('keycrate',HALL_ID, hall.entryX+2, hall.entryY,'#9ef7a0','Dusty Crate','',{
-      start:{text:'A dusty crate rests here.',choices:[{label:'(Open)',to:'open'}]},
-      open:{text:'Inside you find a Rusted Key.',choices:[{label:'(Take Rusted Key)',to:'take'}]},
-      take:{text:'You pocket the key.',choices:[{label:'(Done)',to:'bye'}]}
-    }, null, function(node){
-      if(node==='take'){
-        addToInv({name:'Rusted Key'});
-        this.tree.start={text:'An empty crate.',choices:[{label:'(Leave)',to:'bye'}]};
-      }
-    });
+    const crateNPC = npc_KeyCrate(hall.entryX+2, hall.entryY);
     NPCS.push(crateNPC);
-    NPCS.push(makeNPC('hallflavor',HALL_ID, hall.entryX-4, hall.entryY-1,'#b8ffb6','Lone Drifter','Mutters',{ start:{text:'"Dust gets in everything."',choices:[{label:'(Nod)',to:'bye'}]} }));
+    NPCS.push(npc_HallDrifter(hall.entryX-4, hall.entryY-1));
     player.x=hall.entryX; player.y=hall.entryY; centerCamera(player.x,player.y,'hall');
   }
 
@@ -376,21 +360,18 @@
     if(t===TILE.DOOR){
       if(state.map==='world'){
         const b=buildings.find(b=> b.doorX===player.x && b.doorY===player.y);
-        if(b){
-          if(b.boarded){
-            log('The doorway is boarded up from the outside.');
-            return true;
-          }
-          state.map=b.interiorId;
-          const I=interiors[state.map];
-          if(I){ player.x=I.entryX; player.y=I.entryY; }
-          document.getElementById('mapname').textContent='Interior';
-          log('You step inside.');
-          centerCamera(player.x,player.y,state.map);
-          updateHUD();
+        if(!b){ log('No entrance here.'); return true; }
+        if(b.boarded){
+          log('The doorway is boarded up from the outside.');
           return true;
         }
-        log('The doorway is boarded up from the outside.');
+        state.map=b.interiorId;
+        const I=interiors[state.map];
+        if(I){ player.x=I.entryX; player.y=I.entryY; }
+        document.getElementById('mapname').textContent='Interior';
+        log('You step inside.');
+        centerCamera(player.x,player.y,state.map);
+        updateHUD();
         return true;
       }
       if(state.map!=='world' && state.map!=='hall'){ // coming from interior
@@ -490,7 +471,18 @@
   }
 
   // ===== Save/Load & Start =====
-  function save(){ const data={world, player, state, NPCS, buildings, interiors, itemDrops, quests, party}; localStorage.setItem('dustland_crt', JSON.stringify(data)); log('Game saved.'); }
+  function save(){
+    const npcData = NPCS.map(({id,map,x,y,quest})=>({id,map,x,y,quest:quest?{id:quest.id,status:quest.status}:null}));
+    const questData = {};
+    Object.keys(quests).forEach(k=>{
+      const q=quests[k];
+      questData[k]={title:q.title,desc:q.desc,status:q.status};
+    });
+    const partyData = party.map(p=>({id:p.id,name:p.name,role:p.role,lvl:p.lvl,xp:p.xp,stats:p.stats,equip:p.equip,hp:p.hp,ap:p.ap,map:p.map,x:p.x,y:p.y}));
+    const data={world, player, state, buildings, interiors, itemDrops, npcs:npcData, quests:questData, party:partyData};
+    localStorage.setItem('dustland_crt', JSON.stringify(data));
+    log('Game saved.');
+  }
   function load(){
     const j=localStorage.getItem('dustland_crt');
     if(!j){ log('No save.'); return; }
@@ -498,13 +490,34 @@
     world=d.world;
     Object.assign(player,d.player);
     Object.assign(state,d.state);
-    NPCS.length=0; d.NPCS.forEach(n=> NPCS.push(n));
-    buildings.length=0; d.buildings.forEach(b=> buildings.push(b));
-    interiors={}; Object.keys(d.interiors).forEach(k=> interiors[k]=d.interiors[k]);
-    itemDrops.length=0; d.itemDrops.forEach(i=> itemDrops.push(i));
+    buildings.length=0; (d.buildings||[]).forEach(b=> buildings.push(b));
+    interiors={}; Object.keys(d.interiors||{}).forEach(k=> interiors[k]=d.interiors[k]);
+    itemDrops.length=0; (d.itemDrops||[]).forEach(i=> itemDrops.push(i));
     Object.keys(quests).forEach(k=> delete quests[k]);
-    Object.keys(d.quests||{}).forEach(k=> quests[k]=d.quests[k]);
-    party.length=0; (d.party||[]).forEach(m=> party.push(m));
+    Object.keys(d.quests||{}).forEach(id=>{
+      const qd=d.quests[id];
+      const q=new Quest(id,qd.title,qd.desc); q.status=qd.status; quests[id]=q;
+    });
+    NPCS.length=0;
+    (d.npcs||[]).forEach(n=>{
+      const f=NPC_FACTORY[n.id];
+      if(f){
+        const npc=f(n.x,n.y);
+        npc.map=n.map;
+        if(n.quest){
+          if(quests[n.quest.id]) npc.quest=quests[n.quest.id];
+          else if(npc.quest) npc.quest.status=n.quest.status;
+        }
+        NPCS.push(npc);
+      }
+    });
+    party.length=0;
+    (d.party||[]).forEach(m=>{
+      const mem=new Character(m.id,m.name,m.role);
+      Object.assign(mem,m);
+      mem.applyEquipmentStats();
+      party.push(mem);
+    });
     document.getElementById('mapname').textContent=
       state.map==='world'? 'Wastes' : (state.map==='hall'?'Test Hall':'Interior');
     centerCamera(player.x,player.y,state.map);
@@ -700,18 +713,23 @@ function npc_PumpKeeper(x, y) {
 }
 
 function npc_Grin(x,y){
+  const quest = new Quest(
+    Q.RECRUIT_GRIN,
+    'Recruit Grin',
+    'Convince or pay Grin to join.'
+  );
   const processNode = function(node){
     if(node==='start'){
-      addQuest(Q.RECRUIT_GRIN,'Recruit Grin','Convince or pay Grin to join.');
+      defaultQuestProcessor(this,'accept');
     }
     if(node==='rollcha'){
       const r = skillRoll('CHA'); const dc = 8;
       textEl.textContent = `Roll: ${r} vs DC ${dc}. ${r>=dc ? 'Grin smirks: "Alright."' : 'Grin shrugs: "Not buying it."'}`;
       if(r>=dc){
-        completeQuest(Q.RECRUIT_GRIN);
         const m = makeMember('grin', 'Grin', 'Scavenger');
         m.stats.AGI += 1; m.stats.PER += 1;
         addPartyMember(m);
+        defaultQuestProcessor(this,'do_turnin');
       }
     }
     if(node==='dopay'){
@@ -719,10 +737,10 @@ function npc_Grin(x,y){
       if(tIndex>-1){
         player.inv.splice(tIndex,1);
         renderInv();
-        completeQuest(Q.RECRUIT_GRIN);
         const m = makeMember('grin', 'Grin', 'Scavenger');
         addPartyMember(m);
         log('Grin joins you.');
+        defaultQuestProcessor(this,'do_turnin');
       } else {
         textEl.textContent = 'You have no trinket to pay with.';
       }
@@ -749,7 +767,7 @@ function npc_Grin(x,y){
     pay:{ text:'Hand me something shiny.',
       choices:[{label:'(Give random trinket)', to:'dopay'}] },
     dopay:{ text:'Deal.', choices:[{label:'(Ok)', to:'bye'}] },
-  }, null, processNode);
+  }, quest, processNode);
 }
 
 function npc_Postmaster(x,y){
@@ -779,7 +797,7 @@ function npc_TowerTech(x,y){
     Q.TOWER,
     'Dead Air',
     'Repair the radio tower console (Toolkit helps).',
-    { item:'Toolkit' }
+    { item:'Toolkit', reward:{name:'Tuner Charm', slot:'trinket', mods:{PER:+1}}, xp:5 }
   );
   const processNode = function(node){
     if(node==='rollint'){
@@ -790,9 +808,7 @@ function npc_TowerTech(x,y){
       const r = skillRoll('INT'); const dc = 9;
       textEl.textContent = `Roll: ${r} vs DC ${dc}. ${r>=dc ? 'Static fades. The tower hums.' : 'You cross a wire and pop a fuse.'}`;
       if(r>=dc){
-        completeQuest(Q.TOWER);
-        awardXP(leader(), 5);
-        addToInv({name:'Tuner Charm', slot:'trinket', mods:{PER:+1}});
+        defaultQuestProcessor(this,'do_turnin');
       }
     }
   };
@@ -834,11 +850,16 @@ function npc_IdolHermit(x,y){
 
 // Shadow version of your Duchess (kept light)
 function npc_Duchess(x,y){
+  const quest = new Quest(
+    Q.TOLL,
+    'Toll-Booth Etiquette',
+    'You met the Duchess on the road.',
+    {xp:2}
+  );
   const processNode = function(node){
     if(node==='pay' || node==='ref'){
-      addQuest(Q.TOLL,'Toll-Booth Etiquette','You met the Duchess on the road.');
-      completeQuest(Q.TOLL);
-      awardXP(leader(), 2);
+      defaultQuestProcessor(this,'accept');
+      defaultQuestProcessor(this,'do_turnin');
     }
   };
   return makeNPC('duchess','world',x,y,'#a9f59f','Scrap Duchess','Toll-Queen',{
@@ -850,8 +871,56 @@ function npc_Duchess(x,y){
       ]},
     pay:{text:'Wise. Move along.', choices:[{label:'(Ok)', to:'bye'}]},
     ref:{text:'Brave. Or foolish.', choices:[{label:'(Ok)', to:'bye'}]}
-  }, null, processNode);
+  }, quest, processNode);
 }
+
+function npc_ExitDoor(x,y){
+  const quest = new Quest(
+    Q.HALL_KEY,
+    'Find the Rusted Key',
+    'Search the hall for a Rusted Key to unlock the exit.',
+    {item:'Rusted Key', moveTo:{x:hall.entryX-1,y:2}}
+  );
+  return makeNPC('exitdoor',HALL_ID,x, y,'#a9f59f','Locked Door','Needs Key',{
+    start:{text:'A heavy door bars the way.',choices:[
+      {label:'(Search for key)',to:'accept',q:'accept'},
+      {label:'(Use Rusted Key)',to:'do_turnin',q:'turnin'},
+      {label:'(Leave)',to:'bye'}]},
+    accept:{text:'Maybe a key is hidden nearby.',choices:[{label:'(Okay)',to:'bye'}]},
+    do_turnin:{text:'The door grinds open.',choices:[{label:'(Continue)',to:'bye'}]}
+  }, quest);
+}
+
+function npc_KeyCrate(x,y){
+  return makeNPC('keycrate',HALL_ID,x,y,'#9ef7a0','Dusty Crate','',{
+    start:{text:'A dusty crate rests here.',choices:[{label:'(Open)',to:'open'}]},
+    open:{text:'Inside you find a Rusted Key.',choices:[{label:'(Take Rusted Key)',to:'take'}]},
+    take:{text:'You pocket the key.',choices:[{label:'(Done)',to:'bye'}]}
+  }, null, function(node){
+    if(node==='take'){
+      addToInv({name:'Rusted Key'});
+      this.tree.start={text:'An empty crate.',choices:[{label:'(Leave)',to:'bye'}]};
+    }
+  });
+}
+
+function npc_HallDrifter(x,y){
+  return makeNPC('hallflavor',HALL_ID,x,y,'#b8ffb6','Lone Drifter','Mutters',{
+    start:{text:'"Dust gets in everything."',choices:[{label:'(Nod)',to:'bye'}]}
+  });
+}
+
+const NPC_FACTORY = {
+  pump: npc_PumpKeeper,
+  grin: npc_Grin,
+  post: npc_Postmaster,
+  tower: npc_TowerTech,
+  hermit: npc_IdolHermit,
+  duchess: npc_Duchess,
+  exitdoor: npc_ExitDoor,
+  keycrate: npc_KeyCrate,
+  hallflavor: npc_HallDrifter
+};
 
 setNPCDesc('duchess', 'A crown of bottlecaps; eyes like razors.');
 setNPCDesc('grin', 'Lean scav with a crowbar and half a smile.');
