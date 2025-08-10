@@ -237,7 +237,7 @@
     // Ask for short lines plus up to two choice hooks
     return `You write in-universe dialog for DUSTLAND – a rusted,
 sun-blasted world of scrap tech and wry survivors. Tone: dry humor,
-90s CRPG bite, hints of hope. Keep each line 4-14 words. No quotes
+90s CRPG bite, hints of hope. Keep each line a complete sentence of 4-14 words. No quotes
 or stage directions.
 
 NPC:
