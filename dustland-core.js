@@ -639,7 +639,7 @@ addToInv = function(item){
   let step=1; let building=null; let built=[];
 
   function openCreator(){
-    if(!hall.grid || hall.grid.length===0) genHall();
+    genHall();
     state.map='hall';
     creator.style.display='flex';
     step=1;
@@ -701,8 +701,15 @@ addToInv = function(item){
 
   ccBack.onclick=()=>{ if(step>1) { step--; renderStep(); } };
   ccNext.onclick=()=>{ if(step<5){ step++; renderStep(); } else { finalizeCurrentMember(); building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null }; step=1; renderStep(); log('Member added. You can add up to 2 more, or press Start Now.'); } };
-  ccStart.onclick=()=>{ if(built.length===0){ finalizeCurrentMember(); } closeCreator(); startRealWorld(); };
+  ccStart.onclick=()=>{ if(built.length===0){ finalizeCurrentMember(); } closeCreator(); startHall(); };
   ccLoad.onclick=()=>{ load(); closeCreator(); };
+
+  function startHall(){
+    document.getElementById('mapname').textContent='Test Hall';
+    state.map='hall';
+    centerCamera(player.x,player.y,'hall');
+    renderInv(); renderQuests(); renderParty(); updateHUD();
+  }
 
   function startRealWorld(){
     const seed = Date.now();
