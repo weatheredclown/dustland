@@ -261,7 +261,12 @@ function npc_ExitDoor(x,y){
       {label:'(Leave)',to:'bye'}]},
     accept:{text:'Maybe a key is hidden nearby.',choices:[{label:'(Okay)',to:'bye'}]},
     do_turnin:{text:'The door grinds open.',choices:[{label:'(Continue)',to:'bye'}]}
-  }, quest);
+  }, quest, function(node){
+    if(node==='do_turnin'){
+      startRealWorld();
+      closeDialog();
+    }
+  });
 }
 
 function npc_KeyCrate(x,y){
