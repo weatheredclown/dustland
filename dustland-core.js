@@ -532,25 +532,30 @@ addToInv = function(item){
     }
     const handleSpecial = (c)=>{
       if(c.nano){
-        const roll = skillRoll(c.stat);
-        textEl.textContent = `You rolled ${roll} vs DC ${c.dc}.`;
-        if(roll >= c.dc){
-          if(/^xp\s*\d+/i.test(c.reward)){
-            const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
-            awardXP(leader(), amt);
-            textEl.textContent += ` Reward: ${amt} XP.`;
-          } else if(c.reward && c.reward.toLowerCase()!=='none'){
-            addToInv({name:c.reward});
-            textEl.textContent += ` You receive ${c.reward}.`;
-          } else {
-            textEl.textContent += ' Success.';
+        if(c.stat){
+          const roll = skillRoll(c.stat);
+          const success = roll >= c.dc;
+          textEl.textContent = success ? c.success : c.failure;
+          textEl.textContent += ` (Roll ${roll} vs DC ${c.dc}.)`;
+          if(success){
+            if(/^xp\s*\d+/i.test(c.reward)){
+              const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
+              awardXP(leader(), amt);
+              textEl.textContent += ` Reward: ${amt} XP.`;
+            } else if(c.reward){
+              addToInv({name:c.reward});
+              textEl.textContent += ` You receive ${c.reward}.`;
+            }
           }
-        } else {
-          textEl.textContent += ' Failed.';
+          usedNanoChoices.add(c.key);
+          setContinueOnly();
+          return true;
+        } else if(c.response){
+          textEl.textContent = c.response;
+          usedNanoChoices.add(c.key);
+          setContinueOnly();
+          return true;
         }
-        usedNanoChoices.add(c.key);
-        setContinueOnly();
-        return true;
       }
       if(currentNPC && typeof currentNPC.processChoice==='function'){
         return currentNPC.processChoice(c)===true;
