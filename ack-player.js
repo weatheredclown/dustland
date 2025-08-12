@@ -50,7 +50,7 @@ loadBtn.onclick = () => {
 };
 
 // After party creation, start the loaded module
-window.startHall = function(){
+window.startGame = function(){
   if(moduleData) applyModule(moduleData);
   setMap('world', 'Module');
   player.x = 2;

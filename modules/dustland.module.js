@@ -55,6 +55,25 @@ const Q = {
   TOLL: 'q_toll',
 };
 
+// ----- Starting Hall -----
+const HALL_W=30, HALL_H=22, HALL_ID='hall';
+const hall = { w:HALL_W, h:HALL_H, grid:[], entryX:15, entryY:18 };
+function genHall(){
+  hall.grid = Array.from({length:HALL_H},(_,y)=> Array.from({length:HALL_W},(_,x)=>{
+    const edge = y===0||y===HALL_H-1||x===0||x===HALL_W-1; return edge? TILE.WALL : TILE.FLOOR;
+  }));
+  for(let x=2;x<HALL_W-2;x++){ hall.grid[6][x]=TILE.WALL; hall.grid[12][x]=TILE.WALL; }
+  hall.grid[6][5]=TILE.DOOR; hall.grid[6][24]=TILE.DOOR; hall.grid[12][15]=TILE.DOOR;
+  hall.grid[1][15] = TILE.WALL; // lock exit visually
+  interiors[HALL_ID]=hall;
+  doorPulseUntil = Date.now() + 60000;
+  NPCS.length=0;
+  NPCS.push(npc_ExitDoor(hall.entryX, hall.entryY - 1));
+  NPCS.push(npc_KeyCrate(hall.entryX + 2, hall.entryY));
+  NPCS.push(npc_HallDrifter(hall.entryX - 4, hall.entryY - 1));
+  player.x=hall.entryX; player.y=hall.entryY;
+}
+
 // ---------- NPC Factories ----------
 function npc_PumpKeeper(x, y) {
   const quest = new Quest(
@@ -328,7 +347,7 @@ function npc_ExitDoor(x,y){
     },
     quest,
     function(node){
-      if(node==='do_turnin'){ startRealWorld(); closeDialog(); }
+      if(node==='do_turnin'){ startWorld(); closeDialog(); }
     }
   );
 }
@@ -406,4 +425,13 @@ function seedWorldContent(){
     }
   });
 }
+
+// Override startGame to begin in the hall
+const _startGameCore = startGame;
+startGame = function(){
+  genHall();
+  setMap(HALL_ID,'Test Hall');
+  centerCamera(player.x,player.y,HALL_ID);
+  renderInv(); renderQuests(); renderParty(); updateHUD();
+};
 // =================== END DUSTLAND CONTENT PACK v1 =====================

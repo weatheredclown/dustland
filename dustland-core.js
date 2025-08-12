@@ -102,7 +102,7 @@ const TILE = { SAND:0, ROCK:1, WATER:2, BRUSH:3, ROAD:4, RUIN:5, WALL:6, FLOOR:7
 const walkable = {0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false};
 const mapNameEl = document.getElementById('mapname');
 function mapLabel(id){
-  return id==='world'? 'Wastes' : (id==='hall'? 'Test Hall' : (id==='creator'? 'Creator' : 'Interior'));
+  return id==='world'? 'Wastes' : (id==='creator'? 'Creator' : 'Interior');
 }
 function setMap(id,label){
   state.map=id;
@@ -117,10 +117,19 @@ const WORLD_W=120, WORLD_H=90;
 
 // ===== Game state =====
 let world = [], interiors = {}, buildings = [];
-const state = { map:'hall' }; // default to hall so we always have a map
+const state = { map:'world' }; // default map
 const player = { x:2, y:2, hp:10, ap:2, flags:{}, inv:[], scrap:0 };
 let doorPulseUntil = 0;
 let lastInteract = 0;
+
+// Simple map used during character creation
+const creatorMap = { w:30, h:22, grid:[], entryX:15, entryY:10 };
+function genCreatorMap(){
+  creatorMap.grid = Array.from({length:creatorMap.h},(_,y)=> Array.from({length:creatorMap.w},(_,x)=>{
+    const edge = y===0||y===creatorMap.h-1||x===0||x===creatorMap.w-1; return edge? TILE.WALL : TILE.FLOOR;
+  }));
+  interiors['creator'] = creatorMap;
+}
 
 // ===== Party / stats =====
 const baseStats = ()=> ({STR:4, AGI:4, INT:4, PER:4, LCK:4, CHA:4});
@@ -134,7 +143,7 @@ class Character {
     this.maxHp=10;
     this.hp=this.maxHp;
     this.ap=2;
-    this.map='hall'; this.x=player.x; this.y=player.y;
+    this.map=state.map; this.x=player.x; this.y=player.y;
     this._bonus={ATK:0, DEF:0, LCK:0};
   }
   xpToNext(){ return 10*this.lvl; }
@@ -205,7 +214,7 @@ function addToInv(item){
   player.inv.push(item);
   renderInv();
   if (window.NanoDialog) {
-    NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+    NPCS.filter(n=> n.map === state.map)
         .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
   }
 }
@@ -213,7 +222,7 @@ function removeFromInv(invIndex){
   player.inv.splice(invIndex,1);
   renderInv();
   if (window.NanoDialog) {
-    NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+    NPCS.filter(n=> n.map === state.map)
         .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
   }
 }
@@ -265,7 +274,7 @@ function useItem(invIndex){
     player.inv.splice(invIndex,1);
     renderInv(); renderParty(); updateHUD();
     if (window.NanoDialog) {
-      NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+      NPCS.filter(n=> n.map === state.map)
           .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
     }
     return true;
@@ -278,7 +287,7 @@ function useItem(invIndex){
       if(typeof toast==='function') toast(`Used ${it.name}`);
       if(typeof sfxTick==='function') sfxTick();
       if (window.NanoDialog) {
-        NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+        NPCS.filter(n=> n.map === state.map)
             .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
       }
     }
@@ -296,16 +305,16 @@ addToInv = function(item){
 };
 
 // ===== Helpers =====
-function mapIdForState(){ return state.map==='creator' ? 'hall' : state.map; }
+function mapIdForState(){ return state.map; }
 function mapWH(map=state.map){
   if(map==='world') return {W:WORLD_W,H:WORLD_H};
-  if(map==='hall' || map==='creator') return {W:hall.w||VIEW_W,H:hall.h||VIEW_H};
+  if(map==='creator') return {W:creatorMap.w||VIEW_W,H:creatorMap.h||VIEW_H};
   const I=interiors[map];
   return {W:(I&&I.w)||VIEW_W,H:(I&&I.h)||VIEW_H};
 }
 function gridFor(map){
   if(map==='world') return world;
-  if(map==='hall') return hall.grid;
+  if(map==='creator') return creatorMap.grid;
   return interiors[map] && interiors[map].grid;
 }
 function getTile(map,x,y){
@@ -364,7 +373,7 @@ class Quest {
       if (typeof toast === 'function') toast(`QUEST COMPLETE: ${this.title}`);
       party.forEach(p=> awardXP(p,5));
       if (window.NanoDialog) {
-        NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+        NPCS.filter(n=> n.map === state.map)
             .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'quest update'));
       }
     }
@@ -380,7 +389,7 @@ class QuestLog {
       renderQuests();
       log('Quest added: '+quest.title);
       if (window.NanoDialog) {
-        NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+        NPCS.filter(n=> n.map === state.map)
             .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'quest update'));
       }
     }
@@ -442,7 +451,6 @@ function removeNPC(npc){
 const usedNanoChoices = new Set();
 
 // ===== WORLD GEN =====
-const HALL_W=30, HALL_H=22; const HALL_ID='hall';
 function genWorld(seed=Date.now()){
   setRNGSeed(seed);
   world = Array.from({length:WORLD_H},(_,y)=> Array.from({length:WORLD_W},(_,x)=>{
@@ -499,25 +507,6 @@ function placeHut(x,y){
 }
 
 // ===== HALL =====
-const hall = { w:HALL_W, h:HALL_H, grid:[], entryX:15, entryY:18 };
-function genHall(){
-  hall.grid = Array.from({length:HALL_H},(_,y)=> Array.from({length:HALL_W},(_,x)=>{
-    const edge = y===0||y===HALL_H-1||x===0||x===HALL_W-1; return edge? TILE.WALL : TILE.FLOOR;
-  }));
-  for(let x=2;x<HALL_W-2;x++){ hall.grid[6][x]=TILE.WALL; hall.grid[12][x]=TILE.WALL; }
-  hall.grid[6][5]=TILE.DOOR; hall.grid[6][24]=TILE.DOOR; hall.grid[12][15]=TILE.DOOR;
-  hall.grid[1][15] = TILE.WALL; // lock exit visually
-  interiors[HALL_ID]=hall;
-  doorPulseUntil = Date.now() + 60000;
-
-  NPCS.length=0;
-  const doorNPC = npc_ExitDoor(hall.entryX, hall.entryY - 1); // caretaker near player
-  NPCS.push(doorNPC);
-  const crateNPC = npc_KeyCrate(hall.entryX+2, hall.entryY);
-  NPCS.push(crateNPC);
-  NPCS.push(npc_HallDrifter(hall.entryX-4, hall.entryY-1));
-  player.x=hall.entryX; player.y=hall.entryY; centerCamera(player.x,player.y,'hall');
-}
 
 // ===== Interaction =====
 function canWalk(x,y){
@@ -574,7 +563,7 @@ function interact(){
       if(I){ player.x=I.entryX; player.y=I.entryY; }
       log('You step inside.'); centerCamera(player.x,player.y,state.map); updateHUD(); return true;
     }
-    if(state.map!=='world' && state.map!=='hall'){ // coming from interior
+    if(state.map!=='world'){ // coming from interior
       const b=buildings.find(b=> b.interiorId===state.map);
       if(b){ setMap('world'); player.x=b.doorX; player.y=b.doorY-1; log('You step back outside.'); centerCamera(player.x,player.y,state.map); updateHUD(); return true; }
     }
@@ -761,7 +750,7 @@ startNew.onclick=()=>{ hideStart(); resetAll(); };
 
 function resetAll(){
   party.length=0; player.inv=[]; player.flags={}; player.scrap=0;
-  state.map='hall'; openCreator();
+  state.map='creator'; openCreator();
   log('Reset. Back to character creation.');
 }
 
@@ -791,12 +780,12 @@ const hiddenOrigins={ 'Rustborn':{desc:'You survived a machine womb. +1 PER, wei
 
 let step=1; let building=null; let built=[];
 function openCreator(){
-  if(!hall.grid || hall.grid.length===0) genHall();
-  setMap('hall','Creator');
+  if(!creatorMap.grid || creatorMap.grid.length===0) genCreatorMap();
+  setMap('creator','Creator');
   creator.style.display='flex';
   step=1;
   building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null };
-  player.x=hall.entryX; player.y=hall.entryY; centerCamera(player.x,player.y,'hall');
+  player.x=creatorMap.entryX; player.y=creatorMap.entryY; centerCamera(player.x,player.y,'creator');
   renderStep();
 }
 function closeCreator(){ creator.style.display='none'; }
@@ -852,16 +841,14 @@ function finalizeCurrentMember(){
 
 ccBack.onclick=()=>{ if(step>1) { step--; renderStep(); } };
 ccNext.onclick=()=>{ if(step<5){ step++; renderStep(); } else { finalizeCurrentMember(); building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null }; step=1; renderStep(); log('Member added. You can add up to 2 more, or press Start Now.'); } };
-ccStart.onclick=()=>{ if(built.length===0){ finalizeCurrentMember(); } closeCreator(); startHall(); };
+ccStart.onclick=()=>{ if(built.length===0){ finalizeCurrentMember(); } closeCreator(); startGame(); };
 ccLoad.onclick=()=>{ load(); closeCreator(); };
 
-function startHall(){
-  setMap('hall','Test Hall');
-  centerCamera(player.x,player.y,'hall');
-  renderInv(); renderQuests(); renderParty(); updateHUD();
+function startGame(){
+  startWorld();
 }
 
-function startRealWorld(){
+function startWorld(){
   const seed = Date.now();
   genWorld(seed);
   setMap('world','Wastes');
