@@ -74,6 +74,12 @@ function genHall(){
   player.x=hall.entryX; player.y=hall.entryY;
 }
 
+function bootMap(){
+  genHall();
+  setMap(HALL_ID,'Test Hall');
+  centerCamera(player.x,player.y,HALL_ID);
+}
+
 // ---------- NPC Factories ----------
 function npc_PumpKeeper(x, y) {
   const quest = new Quest(
@@ -429,9 +435,20 @@ function seedWorldContent(){
 // Override startGame to begin in the hall
 const _startGameCore = startGame;
 startGame = function(){
-  genHall();
-  setMap(HALL_ID,'Test Hall');
-  centerCamera(player.x,player.y,HALL_ID);
+  bootMap();
   renderInv(); renderQuests(); renderParty(); updateHUD();
 };
+
+function moduleTests(assert){
+  genHall(); assert('Hall size', hall.w===HALL_W && hall.h===HALL_H);
+  assert('Cannot walk into hall wall', canWalk(0,0)===false);
+
+  state.map=HALL_ID; player.x=hall.entryX; player.y=hall.entryY;
+  const beforeCount=itemDrops.length;
+  const spot=findFreeDropTile(HALL_ID, player.x, player.y);
+  itemDrops.push({map:HALL_ID,x:spot.x,y:spot.y,name:'TestDrop'});
+  assert('Drop not on player tile', !(spot.x===player.x && spot.y===player.y));
+  assert('Item blocks movement', canWalk(spot.x,spot.y)===false);
+  const took = takeNearestItem(); assert('Take with T/E works', took===true && itemDrops.length===beforeCount);
+}
 // =================== END DUSTLAND CONTENT PACK v1 =====================
