@@ -247,6 +247,31 @@ function npc_Duchess(x,y){
   }, quest, processNode);
 }
 
+function npc_Raider(x,y){
+  const processNode = function(node){
+    if(node==='rollcha'){
+      const r = skillRoll('CHA'); const dc = DC.TALK;
+      textEl.textContent = `Roll: ${r} vs DC ${dc}. ${r>=dc ? 'He grunts and lets you pass.' : 'He tightens his grip.'}`;
+    }
+    if(node==='do_fight'){
+      const res = quickCombat({DEF:5, loot:{name:'Raider Knife', slot:'weapon', mods:{ATK:+1}}});
+      const msg = res.result==='loot' ? 'The raider collapses. You take his knife.' :
+                  res.result==='bruise' ? 'A sharp blow leaves a bruise.' :
+                  'You back away from the raider.';
+      textEl.textContent = `Roll: ${res.roll} vs DEF ${res.dc}. ${msg}`;
+    }
+  };
+  return makeNPC('raider','world',x,y,'#f88','Road Raider','Bandit',{
+    start:{text:'A raider blocks the path, eyeing your gear.', choices:[
+      {label:'(Fight)', to:'do_fight'},
+      {label:'(Talk) Stand down', to:'rollcha'},
+      {label:'(Leave)', to:'bye'}
+    ]},
+    rollcha:{text:'', choices:[{label:'(Continue)', to:'bye'}]},
+    do_fight:{text:'', choices:[{label:'(Continue)', to:'bye'}]}
+  }, null, processNode);
+}
+
 function npc_ExitDoor(x,y){
   const quest = new Quest(
     Q.HALL_KEY,
@@ -303,6 +328,7 @@ const NPC_FACTORY = {
   tower: npc_TowerTech,
   hermit: npc_IdolHermit,
   duchess: npc_Duchess,
+  raider: npc_Raider,
   exitdoor: npc_ExitDoor,
   keycrate: npc_KeyCrate,
   hallflavor: npc_HallDrifter
@@ -311,6 +337,7 @@ const NPC_FACTORY = {
 setNPCDesc('duchess', 'A crown of bottlecaps; eyes like razors.');
 setNPCDesc('grin', 'Lean scav with a crowbar and half a smile.');
 setNPCDesc('pump', 'Sunburnt hands, hopeful eyes. Smells faintly of mud.');
+setNPCDesc('raider', 'Scarred scav looking for trouble.');
 
 
 // ---------- World NPC + item seeding ----------
@@ -329,6 +356,7 @@ function seedWorldContent(){
   NPCS.push(npc_Grin(22, midY));
   NPCS.push(npc_Postmaster(30, midY+1));
   NPCS.push(npc_TowerTech(48, midY-2));
+  NPCS.push(npc_Raider(56, midY-1));
   NPCS.push(npc_IdolHermit(68, midY+2));
   NPCS.push(npc_Duchess(40, midY));
 
