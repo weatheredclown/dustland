@@ -206,6 +206,14 @@ function addToInv(item){
         .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
   }
 }
+function removeFromInv(invIndex){
+  player.inv.splice(invIndex,1);
+  renderInv();
+  if (window.NanoDialog) {
+    NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
+        .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
+  }
+}
 let selectedMember = 0;
 
 function equipItem(memberIndex, invIndex){
@@ -387,12 +395,6 @@ function completeQuest(id){ questLog.complete(id); }
 
 // minimal core helpers so defaultQuestProcessor works even without content helpers loaded yet
 function hasItem(name){ return player.inv.some(it=> it.name===name); }
-function removeItemByName(name){
-  const i = player.inv.findIndex(it => it.name === name);
-  if(i>-1) return player.inv.splice(i,1)[0];
-  return null;
-}
-
 function defaultQuestProcessor(npc, nodeId){
   const meta = npc.quest;
   if(!meta) return;
@@ -401,7 +403,7 @@ function defaultQuestProcessor(npc, nodeId){
   }
   if(nodeId==='do_turnin' && meta.status==='active'){
     if(!meta.item || hasItem(meta.item)){
-      if(meta.item){ removeItemByName(meta.item); renderInv(); }
+      if(meta.item){ const i = player.inv.findIndex(it=> it.name===meta.item); if(i>-1) removeFromInv(i); }
       questLog.complete(meta.id);
       if(meta.reward){ addToInv(meta.reward); }
       if(meta.xp){ awardXP(leader(), meta.xp); }
