@@ -10,19 +10,19 @@ _______________________________________________________________________________
 |   ░ ░  ░  ░░░ ░ ░ ░  ░  ░    ░         ░ ░   ░ ░   ▒     ░   ░ ░  ░ ░  ░    |
 |     ░       ░           ░                ░  ░      ░           ░    ░       |
 |                           D U S T L A N D   C R T                           |
-|                       Wasteland-style web prototype                         |
+|                      Wasteland-style browser RPG (WIP)                      |
 |                               v0.6.7 .NFO                                   |
 |_____________________________________________________________________________|
 
 [ ABOUT ]
-  Dustland CRT is a single-file HTML/JS prototype with a crunchy CRT vibe,
+  Dustland CRT is a work-in-progress browser RPG with a crunchy CRT vibe,
   branching dialog, party stats, inventory, quests, and a world+hall demo.
-  It’s built to be easy to run and easy to hack.
+  It’s still built to be easy to run and easy to hack.
 
 [ HOW TO RUN ]
   - Play the latest build in your browser:
     https://weatheredclown.github.io/dustland/dustland.html
-  - Just open:  index.html  (double-click or serve from any static server).
+  - Just open:  dustland.html  (double-click or serve from any static server).
   - No build step. No dependencies. Works offline.
   - Tip: Use a modern Chromium, Firefox, or Safari.
 
@@ -58,10 +58,18 @@ _______________________________________________________________________________
   - To fully wipe: clear the site’s localStorage from your browser.
 
 [ PROJECT LAYOUT ]
-  - Single file:  index.html
-    * Styles (CRT curvature/ghosting), Canvas renderer, Game state, Creator,
-      Dialog system, Quests, Inventory + Equipment, Save/Load, Test Hall,
-      simple World gen.
+  - dustland.html
+    * Entry point wiring up the canvas, UI, and scripts.
+  - dustland-core.js
+    * Game state, dialog system, quests, inventory & equipment.
+  - dustland-engine.js
+    * Renderer, input handling, HUD, and tiny sfx.
+  - dustland-content.js
+    * NPCs, items, world data, and quests.
+  - dustland-nano.js
+    * Micro helper utilities.
+  - dustland.css
+    * CRT styling and layout.
   - No external assets or libraries.
 
 [ KNOWN GOOD BEHAVIOR (v0.6.7) ]
@@ -83,7 +91,7 @@ _______________________________________________________________________________
         the leader for checks and XP.
 
 [ HACKING NOTES ]
-  - Everything is at the bottom of the HTML inside a self-invoking function.
+  - Plain JS modules; no build step or framework.
   - Useful entry points:
       * genHall(), genWorld(), seedWorldDropsAndNPCs()
       * makeNPC(), NPCS[], quests{}, itemDrops[]
