@@ -6,12 +6,6 @@ function dropItemSafe(map, x, y, item) {
   itemDrops.push({ map, x: spot.x, y: spot.y, ...item });
 }
 
-function removeItemByName(name) {
-  const i = player.inv.findIndex(it => it.name === name);
-  if (i > -1) return player.inv.splice(i, 1)[0];
-  return null;
-}
-
 function hasItem(name) { return player.inv.some(it => it.name === name); }
 function leader() { return party.leader(); }
 function skillRoll(stat, add = 0, sides = ROLL_SIDES) {
@@ -102,16 +96,17 @@ function npc_Grin(x,y){
         const m = makeMember('grin', 'Grin', 'Scavenger');
         m.stats.AGI += 1; m.stats.PER += 1;
         addPartyMember(m);
+        removeNPC(this);
         defaultQuestProcessor(this,'do_turnin');
       }
     }
     if(node==='dopay'){
       const tIndex = player.inv.findIndex(it=> it.slot==='trinket');
       if(tIndex>-1){
-        player.inv.splice(tIndex,1);
-        renderInv();
+        removeFromInv(tIndex);
         const m = makeMember('grin', 'Grin', 'Scavenger');
         addPartyMember(m);
+        removeNPC(this);
         log('Grin joins you.');
         defaultQuestProcessor(this,'do_turnin');
       } else {
