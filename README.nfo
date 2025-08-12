@@ -20,6 +20,8 @@ _______________________________________________________________________________
   It’s built to be easy to run and easy to hack.
 
 [ HOW TO RUN ]
+  - Play the latest build in your browser:
+    https://weatheredclown.github.io/dustland/dustland.html
   - Just open:  index.html  (double-click or serve from any static server).
   - No build step. No dependencies. Works offline.
   - Tip: Use a modern Chromium, Firefox, or Safari.
