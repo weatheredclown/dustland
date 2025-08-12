@@ -382,8 +382,6 @@ class QuestLog {
 
 const questLog = new QuestLog();
 const quests = questLog.quests;
-const NPC_DESCS = {}; // id -> description
-function setNPCDesc(id, desc){ NPC_DESCS[id]=desc; }
 function addQuest(id, title, desc, meta){ questLog.add(new Quest(id, title, desc, meta)); }
 function completeQuest(id){ questLog.complete(id); }
 
@@ -415,8 +413,8 @@ function defaultQuestProcessor(npc, nodeId){
 }
 
 class NPC {
-  constructor({id,map,x,y,color,name,title,tree,quest=null,processNode=null,processChoice=null}){
-    Object.assign(this,{id,map,x,y,color,name,title,tree,quest});
+  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null}){
+    Object.assign(this,{id,map,x,y,color,name,title,desc,tree,quest});
     if(quest && processNode){
       this.processNode=(node)=>{ defaultQuestProcessor(this,node); processNode.call(this,node); };
     } else if(quest){
@@ -427,8 +425,8 @@ class NPC {
     if(processChoice) this.processChoice=processChoice;
   }
 }
-function makeNPC(id, map, x, y, color, name, title, tree, quest, processNode, processChoice){
-  return new NPC({id,map,x,y,color,name,title,tree,quest,processNode,processChoice});
+function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNode, processChoice){
+  return new NPC({id,map,x,y,color,name,title,desc,tree,quest,processNode,processChoice});
 }
 function resolveNode(tree, nodeId){ const n = tree[nodeId]; const choices = n.choices||[]; return {...n, choices}; }
 const NPCS=[];
@@ -589,7 +587,7 @@ let currentNPC=null, currentNode='start';
 function openDialog(npc, node='start'){
   currentNPC=npc; currentNode=node;
   nameEl.textContent=npc.name; titleEl.textContent=npc.title; portEl.style.background=npc.color;
-  const desc = NPC_DESCS[npc.id];
+  const desc = npc.desc;
   if (desc) {
     const small = document.createElement('div');
     small.className = 'small';

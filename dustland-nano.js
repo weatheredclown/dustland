@@ -243,7 +243,7 @@
       console.warn("[Nano] NPC not found:", npcId);
       return null;
     }
-    const desc = (typeof NPC_DESCS!=='undefined' && NPC_DESCS[npc.id]) || '';
+    const desc = npc.desc || '';
 
     const leader = party[typeof selectedMember==='number' ? selectedMember : 0] || null;
     const inv = (player.inv || []).map(i=>i.name);

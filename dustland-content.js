@@ -69,7 +69,7 @@ function npc_PumpKeeper(x, y) {
     'Find a Valve and help Mara restart the pump.',
     { item:'Valve', reward:{name:'Rusted Badge', slot:'trinket', mods:{LCK:+1}}, xp:4 }
   );
-  return makeNPC('pump', 'world', x, y, '#9ef7a0', 'Mara the Pump-Keeper', 'Parched Farmer', {
+  return makeNPC('pump', 'world', x, y, '#9ef7a0', 'Mara the Pump-Keeper', 'Parched Farmer', 'Sunburnt hands, hopeful eyes. Smells faintly of mud.', {
     start: { text: ['I can hear the pump wheeze. Need a Valve to breathe again.', 'Pump’s choking on sand. Only a Valve will save it.'],
       choices: [
         {label:'(Accept) I will find a Valve.', to:'accept', q:'accept'},
@@ -119,7 +119,7 @@ function npc_Grin(x,y){
       }
     }
   };
-  return makeNPC('grin','world',x,y,'#caffc6','Grin','Scav-for-Hire',{
+  return makeNPC('grin','world',x,y,'#caffc6','Grin','Scav-for-Hire','Lean scav with a crowbar and half a smile.',{
     start:{ text:['Got two hands and a crowbar. You got a plan?','Crowbar’s itching for work. You hiring?'],
       choices:[
         {label:'(Recruit) Join me.', to:'rec'},
@@ -150,7 +150,7 @@ function npc_Postmaster(x,y){
     'Find and return the Lost Satchel to Ivo.',
     { item:'Lost Satchel', reward:{name:'Brass Stamp', slot:'trinket', mods:{LCK:+1}}, xp:4 }
   );
-  return makeNPC('post','world',x,y,'#b8ffb6','Postmaster Ivo','Courier of Dust',{
+  return makeNPC('post','world',x,y,'#b8ffb6','Postmaster Ivo','Courier of Dust','Dusty courier seeking a lost parcel.',{
     start:{ text:'Lost a courier bag on the road. Grey canvas. Reward if found.',
       choices:[
         {label:'(Accept) I will look.', to:'accept', q:'accept'},
@@ -185,7 +185,7 @@ function npc_TowerTech(x,y){
       }
     }
   };
-  return makeNPC('tower','world',x,y,'#a9f59f','Rella','Radio Tech',{
+  return makeNPC('tower','world',x,y,'#a9f59f','Rella','Radio Tech','Tower technician with grease-stained hands.',{
     start:{ text:'Tower’s console fried. If you got a Toolkit and brains, lend both.',
       choices:[
         {label:'(Accept) I will help.', to:'accept', q:'accept'},
@@ -206,7 +206,7 @@ function npc_IdolHermit(x,y){
     'Recover the Rust Idol from roadside ruins.',
     { item:'Rust Idol', reward:{name:'Pilgrim Thread', slot:'trinket', mods:{CHA:+1}}, xp:5 }
   );
-  return makeNPC('hermit','world',x,y,'#9abf9a','The Shifting Hermit','Pilgrim',{
+  return makeNPC('hermit','world',x,y,'#9abf9a','The Shifting Hermit','Pilgrim','A cloaked hermit murmuring about rusted idols.',{
     start:{ text:'Something rust-holy sits in the ruins. Bring the Idol.',
       choices:[
         {label:'(Accept)', to:'accept', q:'accept'},
@@ -235,7 +235,7 @@ function npc_Duchess(x,y){
       defaultQuestProcessor(this,'do_turnin');
     }
   };
-  return makeNPC('duchess','world',x,y,'#a9f59f','Scrap Duchess','Toll-Queen',{
+  return makeNPC('duchess','world',x,y,'#a9f59f','Scrap Duchess','Toll-Queen','A crown of bottlecaps; eyes like razors.',{
     start:{text:['Road tax or road rash.','Coins or cuts. Your pick.'],
       choices:[
         {label:'(Pay) Nod and pass', to:'pay'},
@@ -261,7 +261,7 @@ function npc_Raider(x,y){
       textEl.textContent = `Roll: ${res.roll} vs DEF ${res.dc}. ${msg}`;
     }
   };
-  return makeNPC('raider','world',x,y,'#f88','Road Raider','Bandit',{
+  return makeNPC('raider','world',x,y,'#f88','Road Raider','Bandit','Scarred scav looking for trouble.',{
     start:{text:'A raider blocks the path, eyeing your gear.', choices:[
       {label:'(Fight)', to:'do_fight'},
       {label:'(Talk) Stand down', to:'rollcha'},
@@ -297,7 +297,7 @@ function npc_Trader(x,y){
       return true;
     }
   };
-  return makeNPC('trader','world',x,y,'#caffc6','Cass the Trader','Shopkeep',{
+  return makeNPC('trader','world',x,y,'#caffc6','Cass the Trader','Shopkeep','A roving merchant weighing your wares.',{
     start:{ text:'Got goods to sell? I pay in scrap.', choices:[
       {label:'(Sell items)', to:'sell'},
       {label:'(Leave)', to:'bye'}
@@ -319,6 +319,7 @@ function npc_ExitDoor(x,y){
     '#a9f59f',
     'Caretaker Kesh',          // was 'Locked Door'
     'Hall Steward',            // was 'Needs Key'
+    'Weary caretaker guarding the hall\'s chained exit.',
     {
       start: { text: 'Caretaker Kesh eyes the chained exit.',
         choices: [
@@ -337,7 +338,7 @@ function npc_ExitDoor(x,y){
 }
 
 function npc_KeyCrate(x,y){
-  return makeNPC('keycrate',HALL_ID,x,y,'#9ef7a0','Dusty Crate','',{
+  return makeNPC('keycrate',HALL_ID,x,y,'#9ef7a0','Dusty Crate','','A dusty crate that might hide something useful.',{
     start:{text:'A dusty crate rests here.',choices:[{label:'(Open)',to:'open'}]},
     open:{text:'Inside you find a Rusted Key.',choices:[{label:'(Take Rusted Key)',to:'take'}]},
     take:{text:'You pocket the key.',choices:[{label:'(Done)',to:'bye'}]}
@@ -350,7 +351,7 @@ function npc_KeyCrate(x,y){
 }
 
 function npc_HallDrifter(x,y){
-  return makeNPC('hallflavor',HALL_ID,x,y,'#b8ffb6','Lone Drifter','Mutters',{
+  return makeNPC('hallflavor',HALL_ID,x,y,'#b8ffb6','Lone Drifter','Mutters','A drifter muttering to themselves.',{
     start:{text:'"Dust gets in everything."',choices:[{label:'(Nod)',to:'bye'}]}
   });
 }
@@ -368,14 +369,6 @@ const NPC_FACTORY = {
   keycrate: npc_KeyCrate,
   hallflavor: npc_HallDrifter
 };
-
-setNPCDesc('duchess', 'A crown of bottlecaps; eyes like razors.');
-setNPCDesc('grin', 'Lean scav with a crowbar and half a smile.');
-setNPCDesc('pump', 'Sunburnt hands, hopeful eyes. Smells faintly of mud.');
-setNPCDesc('raider', 'Scarred scav looking for trouble.');
-setNPCDesc('trader', 'A roving merchant weighing your wares.');
-
-
 // ---------- World NPC + item seeding ----------
 function seedWorldContent(){
   // Items
@@ -411,7 +404,7 @@ function seedWorldContent(){
     const cx = Math.floor(I.w/2), cy = Math.floor(I.h/2);
     dropItemSafe(b.interiorId, cx, cy, interiorLoot[lootIx++ % interiorLoot.length]);
     if(i % 2 === 0){
-      NPCS.push(makeNPC('hut_dweller'+i, b.interiorId, cx+1, cy, '#a9f59f', 'Hut Dweller','', {
+      NPCS.push(makeNPC('hut_dweller'+i, b.interiorId, cx+1, cy, '#a9f59f', 'Hut Dweller','', 'A weary dweller taking shelter.', {
         start:{ text: interiorLines[lineIx++ % interiorLines.length], choices:[{label:'(Leave)', to:'bye'}] }
       }));
     }
