@@ -80,8 +80,8 @@ function draw(){
 function centerCamera(x,y,map){
   let W,H;
   if(map==='world'){ W=WORLD_W; H=WORLD_H; }
-  else if(map==='hall' || map==='creator' || !interiors[map]){ W=hall.w||VIEW_W; H=hall.h||VIEW_H; }
-  else { const I=interiors[map]; W=(I&&I.w)||VIEW_W; H=(I&&I.h)||VIEW_H; }
+  else if(interiors[map]){ const I=interiors[map]; W=(I&&I.w)||VIEW_W; H=(I&&I.h)||VIEW_H; }
+  else { W=VIEW_W; H=VIEW_H; }
   camX = clamp(x - Math.floor(VIEW_W/2), 0, Math.max(0, (W||VIEW_W) - VIEW_W));
   camY = clamp(y - Math.floor(VIEW_H/2), 0, Math.max(0, (H||VIEW_H) - VIEW_H));
 }
@@ -189,20 +189,12 @@ function renderParty(){ const p=document.getElementById('party'); p.innerHTML=''
 // ===== Minimal Unit Tests (#test) =====
 function assert(name, cond){ const msg = (cond? '✅ ':'❌ ') + name; log(msg); if(!cond) console.error('Test failed:', name); }
 function runTests(){
-  genHall(); assert('Hall size', hall.w===HALL_W && hall.h===HALL_H);
   openCreator(); assert('Creator visible', creator.style.display==='flex');
   step=2; renderStep(); assert('Stat + buttons exist', ccRight.querySelectorAll('button[data-d="1"]').length>0);
-  assert('Cannot walk into hall wall', canWalk(0,0)===false);
 
   genWorld(); const hutsOK = buildings.length>0 && buildings.every(b=> b.interiorId && interiors[b.interiorId] && interiors[b.interiorId].grid); assert('Huts have interiors', hutsOK);
 
-  state.map='hall'; player.x=hall.entryX; player.y=hall.entryY;
-  const beforeCount=itemDrops.length;
-  const spot=findFreeDropTile('hall', player.x, player.y);
-  itemDrops.push({map:'hall',x:spot.x,y:spot.y,name:'TestDrop'});
-  assert('Drop not on player tile', !(spot.x===player.x && spot.y===player.y));
-  assert('Item blocks movement', canWalk(spot.x,spot.y)===false);
-  const took = takeNearestItem(); assert('Take with T/E works', took===true && itemDrops.length===beforeCount);
+  if(typeof moduleTests === 'function') moduleTests(assert);
 }
 
 // ===== Input =====
@@ -240,7 +232,7 @@ window.addEventListener('keydown',(e)=>{
         renderParty();
         toast(`Leader: ${party[selectedMember].name}`);
         if(window.NanoDialog){
-          const near = NPCS.filter(n => n.map === (state.map==='creator'?'hall':state.map)
+          const near = NPCS.filter(n => n.map === state.map
             && Math.abs(n.x - player.x) + Math.abs(n.y - player.y) < 10);
           near.forEach(n => NanoDialog.queueForNPC(n, 'start', 'leader change'));
         }
@@ -251,9 +243,7 @@ window.addEventListener('keydown',(e)=>{
 });
 
 // ===== Boot =====
-genHall();                              // ensure a grid exists before first frame
-setMap('hall','Test Hall');
-player.x=hall.entryX; player.y=hall.entryY; centerCamera(player.x,player.y,'hall');
+if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
 requestAnimationFrame(draw);
 log('v0.6.7 — Stable boot; items/NPCs visible; E/T to take; selected member rolls.');
 if (window.NanoDialog) NanoDialog.init();
