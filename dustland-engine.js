@@ -125,7 +125,7 @@ function drawScene(ctx){
 function updateHUD(){
   hpEl.textContent=player.hp;
   apEl.textContent=player.ap;
-  if(scrEl) scr.textContent = player.scrap;
+  if(scrEl) scrEl.textContent = player.scrap;
 }
 function showTab(which){ const inv=document.getElementById('inv'), partyEl=document.getElementById('party'), q=document.getElementById('quests'); const tInv=document.getElementById('tabInv'), tP=document.getElementById('tabParty'), tQ=document.getElementById('tabQuests'); inv.style.display=(which==='inv'?'grid':'none'); partyEl.style.display=(which==='party'?'grid':'none'); q.style.display=(which==='quests'?'grid':'none'); for(const el of [tInv,tP,tQ]) el.classList.remove('active'); if(which==='inv') tInv.classList.add('active'); if(which==='party') tP.classList.add('active'); if(which==='quests') tQ.classList.add('active'); }
 document.getElementById('tabInv').onclick=()=>showTab('inv');
