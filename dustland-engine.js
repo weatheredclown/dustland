@@ -145,8 +145,14 @@ function renderInv(){
       </div>`;
     const mods = Object.entries(it.mods).map(([k,v])=>`${k} ${v>=0?'+':''}${v}`).join(' ');
     const use = it.use? `${it.use.type}${it.use.amount?` ${it.use.amount}`:''}`:'';
-    const tip = [it.desc, mods?`Mods: ${mods}`:'', use?`Use: ${use}`:'', `Rarity: ${it.rarity}`, `Value: ${it.value}`]
-      .filter(Boolean).join('\n');
+    const tip = [
+      `${it.name}${it.slot?` [${it.slot}]`:''}`,
+      it.desc,
+      mods?`Mods: ${mods}`:'',
+      use?`Use: ${use}`:'',
+      `Rarity: ${it.rarity}`,
+      `Value: ${it.value}`
+    ].filter(Boolean).join('\n');
     row.title = tip;
     const equipBtn = row.querySelector('button[data-a="equip"]');
     if(equipBtn) equipBtn.onclick=()=> equipItem(selectedMember, idx);

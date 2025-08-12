@@ -88,12 +88,14 @@ class Character {
   awardXP(amt){
     this.xp += amt;
     log(`${this.name} gains ${amt} XP.`);
+    if(typeof toast==='function') toast(`${this.name} +${amt} XP`);
+    if(typeof sfxTick==='function') sfxTick();
     while(this.xp >= this.xpToNext()){
       this.xp -= this.xpToNext();
       this.lvl++;
       this.levelUp();
     }
-    renderParty();
+    renderParty(); updateHUD();
   }
   levelUp(){
     const inc = {STR:0,AGI:0,INT:0,PER:0,LCK:0,CHA:0};
@@ -167,7 +169,7 @@ function equipItem(memberIndex, invIndex){
   m.equip[slot]=it;
   player.inv.splice(invIndex,1);
   applyEquipmentStats(m);
-  renderInv(); renderParty();
+  renderInv(); renderParty(); updateHUD();
   log(`${m.name} equips ${it.name}.`);
   if(typeof toast==='function') toast(`${m.name} equips ${it.name}`);
   if(typeof sfxTick==='function') sfxTick();
@@ -217,6 +219,8 @@ function useItem(invIndex){
     if(ok!==false){
       player.inv.splice(invIndex,1);
       renderInv(); renderParty(); updateHUD();
+      if(typeof toast==='function') toast(`Used ${it.name}`);
+      if(typeof sfxTick==='function') sfxTick();
       if (window.NanoDialog) {
         NPCS.filter(n=> n.map === (state.map==='creator'?'hall':state.map))
             .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
