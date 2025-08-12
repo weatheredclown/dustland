@@ -118,7 +118,12 @@ function drawScene(ctx){
 }
 
 // ===== HUD & Tabs =====
-function updateHUD(){ document.getElementById('hp').textContent=player.hp; document.getElementById('ap').textContent=player.ap; }
+function updateHUD(){
+  document.getElementById('hp').textContent=player.hp;
+  document.getElementById('ap').textContent=player.ap;
+  const scr = document.getElementById('scrap');
+  if(scr) scr.textContent = player.scrap;
+}
 function showTab(which){ const inv=document.getElementById('inv'), partyEl=document.getElementById('party'), q=document.getElementById('quests'); const tInv=document.getElementById('tabInv'), tP=document.getElementById('tabParty'), tQ=document.getElementById('tabQuests'); inv.style.display=(which==='inv'?'grid':'none'); partyEl.style.display=(which==='party'?'grid':'none'); q.style.display=(which==='quests'?'grid':'none'); for(const el of [tInv,tP,tQ]) el.classList.remove('active'); if(which==='inv') tInv.classList.add('active'); if(which==='party') tP.classList.add('active'); if(which==='quests') tQ.classList.add('active'); }
 document.getElementById('tabInv').onclick=()=>showTab('inv');
 document.getElementById('tabParty').onclick=()=>showTab('party');
@@ -143,17 +148,31 @@ function renderInv(){
           ${it.use?  `<button class="btn" data-a="use">Use</button>`:''}
         </span>
       </div>`;
-    const mods = Object.entries(it.mods).map(([k,v])=>`${k} ${v>=0?'+':''}${v}`).join(' ');
-    const use = it.use? `${it.use.type}${it.use.amount?` ${it.use.amount}`:''}`:'';
+    // Build tooltip (name/slot + desc + mods + use + rarity + value [+ currency])
+    const mods = Object.entries(it.mods || {})
+      .map(([k, v]) => `${k} ${v >= 0 ? '+' : ''}${v}`)
+      .join(' ');
+
+    const use = it.use ? `${it.use.type}${it.use.amount ? ` ${it.use.amount}` : ''}` : '';
+
+    const valueStr = (() => {
+      const v = it.value ?? 0;
+      // Show currency if defined (shopkeeper branch), else just the number (main)
+      return (typeof CURRENCY !== 'undefined' && CURRENCY)
+        ? `${v} ${CURRENCY}`
+        : String(v);
+    })();
+
     const tip = [
-      `${it.name}${it.slot?` [${it.slot}]`:''}`,
-      it.desc,
-      mods?`Mods: ${mods}`:'',
-      use?`Use: ${use}`:'',
+      `${it.name}${it.slot ? ` [${it.slot}]` : ''}`, // from main
+      it.desc || '',
+      mods ? `Mods: ${mods}` : '',
+      use  ? `Use: ${use}`   : '',
       `Rarity: ${it.rarity}`,
-      `Value: ${it.value}`
+      `Value: ${valueStr}`                         // from shopkeeper branch (currency-aware)
     ].filter(Boolean).join('\n');
-    row.title = tip;
+
+    row.title = tip;    
     const equipBtn = row.querySelector('button[data-a="equip"]');
     if(equipBtn) equipBtn.onclick=()=> equipItem(selectedMember, idx);
     const useBtn = row.querySelector('button[data-a="use"]');

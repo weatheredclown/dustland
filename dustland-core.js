@@ -31,6 +31,7 @@
   // ===== Core helpers =====
   const ROLL_SIDES = 12;
   const DC = { TALK:8, REPAIR:9 };
+  const CURRENCY = 'Scrap';
 
   let worldSeed = Date.now();
   function createRNG(seed){
@@ -66,7 +67,7 @@
 // ===== Game state =====
 let world = [], interiors = {}, buildings = [];
 const state = { map:'hall' }; // default to hall so we always have a map
-const player = { x:2, y:2, hp:10, ap:2, flags:{}, inv:[] };
+const player = { x:2, y:2, hp:10, ap:2, flags:{}, inv:[], scrap:0 };
 let doorPulseUntil = 0;
 
 // ===== Party / stats =====
@@ -184,7 +185,7 @@ function normalizeItem(it){
     mods: it.mods || {},
     use: it.use || null,       // e.g. {type:'heal', amount:4, onUse?}
     rarity: it.rarity || 'common',
-    value: it.value ?? 0,
+    value: Math.max(1, it.value ?? 0),
     desc: it.desc || '',
   };
 }
@@ -632,7 +633,7 @@ addToInv = function(item){
   startContinue.onclick=()=>{ load(); hideStart(); };
   startNew.onclick=()=>{ hideStart(); resetAll(); };
 
-  function resetAll(){ party.length=0; player.inv=[]; player.flags={}; state.map='hall'; openCreator(); log('Reset. Back to character creation.'); }
+  function resetAll(){ party.length=0; player.inv=[]; player.flags={}; player.scrap=0; state.map='hall'; openCreator(); log('Reset. Back to character creation.'); }
 
   // ===== Character Creator =====
   const creator=document.getElementById('creator'); const ccStepEl=document.getElementById('ccStep'); const ccRight=document.getElementById('ccRight'); const ccHint=document.getElementById('ccHint'); const ccBack=document.getElementById('ccBack'); const ccNext=document.getElementById('ccNext'); const ccPortrait=document.getElementById('ccPortrait'); const ccStart=document.getElementById('ccStart'); const ccLoad=document.getElementById('ccLoad');
