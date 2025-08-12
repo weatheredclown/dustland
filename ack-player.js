@@ -18,7 +18,7 @@ function applyModule(data){
   });
   itemDrops.length = 0;
   (data.items||[]).forEach(it=>{
-    itemDrops.push({map:'world', x:it.x, y:it.y, name:it.name, slot:it.slot, mods:it.mods});
+    itemDrops.push({map:it.map||'world', x:it.x, y:it.y, name:it.name, slot:it.slot, mods:it.mods, value:it.value, use:it.use});
   });
   Object.keys(quests).forEach(k=> delete quests[k]);
   (data.quests||[]).forEach(q=>{
@@ -27,7 +27,7 @@ function applyModule(data){
   NPCS.length = 0;
   (data.npcs||[]).forEach(n=>{
     const tree = { start:{ text:n.dialog||'', choices:[{label:'(Leave)', to:'bye'}] } };
-    const npc = makeNPC(n.id, 'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, '', '', tree);
+    const npc = makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, '', '', tree);
     NPCS.push(npc);
   });
 }

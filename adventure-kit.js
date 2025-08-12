@@ -22,7 +22,7 @@ function drawWorld(){
     }
   }
   // Draw NPC markers
-  moduleData.npcs.forEach(n=>{
+  moduleData.npcs.filter(n=> n.map==='world').forEach(n=>{
     ctx.fillStyle = n.color || '#fff';
     ctx.fillRect(n.x*sx, n.y*sy, sx, sy);
   });
@@ -40,29 +40,37 @@ function addNPC(){
   const id=document.getElementById('npcId').value.trim();
   const name=document.getElementById('npcName').value.trim();
   const color=document.getElementById('npcColor').value.trim()||'#fff';
+  const map=document.getElementById('npcMap').value.trim()||'world';
   const x=parseInt(document.getElementById('npcX').value,10)||0;
   const y=parseInt(document.getElementById('npcY').value,10)||0;
   const dialog=document.getElementById('npcDialog').value.trim();
-  moduleData.npcs.push({id,name,color,x,y,dialog});
+  moduleData.npcs.push({id,name,color,map,x,y,dialog});
   renderNPCList();
   drawWorld();
 }
 function renderNPCList(){
   const list=document.getElementById('npcList');
-  list.innerHTML=moduleData.npcs.map(n=>`<div>${n.id} @(${n.x},${n.y})</div>`).join('');
+  list.innerHTML=moduleData.npcs.map(n=>`<div>${n.id} @${n.map} (${n.x},${n.y})</div>`).join('');
 }
 
 // --- Items ---
 function addItem(){
   const name=document.getElementById('itemName').value.trim();
+  const map=document.getElementById('itemMap').value.trim()||'world';
   const x=parseInt(document.getElementById('itemX').value,10)||0;
   const y=parseInt(document.getElementById('itemY').value,10)||0;
-  moduleData.items.push({name,x,y});
+  const slot=document.getElementById('itemSlot').value.trim()||null;
+  let mods={};
+  try{ mods=JSON.parse(document.getElementById('itemMods').value||'{}'); }catch(e){ mods={}; }
+  const value=parseInt(document.getElementById('itemValue').value,10)||0;
+  let use=null;
+  try{ use=JSON.parse(document.getElementById('itemUse').value||'null'); }catch(e){ use=null; }
+  moduleData.items.push({name,map,x,y,slot,mods,value,use});
   renderItemList();
 }
 function renderItemList(){
   const list=document.getElementById('itemList');
-  list.innerHTML=moduleData.items.map(it=>`<div>${it.name} @(${it.x},${it.y})</div>`).join('');
+  list.innerHTML=moduleData.items.map(it=>`<div>${it.name} @${it.map} (${it.x},${it.y})</div>`).join('');
 }
 
 // --- Buildings ---
