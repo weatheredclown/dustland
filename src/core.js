@@ -864,6 +864,6 @@ function startRealWorld(){
   log('You step into the wastes.');
 }
 
-// Content pack moved to dustland-content.js
+// Content pack moved to content.js
 
 Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat});

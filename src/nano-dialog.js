@@ -1,4 +1,4 @@
-// dustland-nano.js
+// nano-dialog.js
 // Gemini Nano background dialog generator for Dustland
 // - Detects on-device LanguageModel Prompt API
 // - Keeps a single session
