@@ -7,6 +7,8 @@
     .panel .content{padding:12px;flex:1;overflow:auto}
     .hud{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
     .badge{border:1px solid #283228;padding:6px 8px;border-radius:8px;background:#0e110e}
+    .hudBadge{margin-left:4px;color:var(--accent);font-weight:700;animation:hudFade 1s ease-out forwards}
+    @keyframes hudFade{from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(-8px);}}
     .muted{color:var(--muted)}
     .btn{display:inline-block;text-align:center;padding:8px 10px;margin:6px 6px 0 0;border-radius:6px;background:#121612;border:1px solid #2a372a;color:var(--ink);cursor:pointer}
     .btn:hover{border-color:#4f6b4f;background:#151b15}

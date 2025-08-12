@@ -6,6 +6,8 @@
 // - Never blocks gameplay; best-effort only
 
 (function(){
+  console.log("[Nano] Script loaded and initializing public API...");
+
   // Public API
   window.NanoDialog = {
     init,
@@ -30,12 +32,16 @@
 
   const _ui = { badge:null, progress:null };
 
-  function refreshIndicator(){ _updateBadge(); }
+  function refreshIndicator(){ 
+    _updateBadge(); 
+  }
 
   function _ensureUI(){
     if(_ui.badge) return;
     const wrap=document.getElementById('nanoStatus');
-    if(!wrap) return;
+    if(!wrap) {
+      return;
+    }
     _ui.progress=wrap.querySelector('#nanoProgress');
     _ui.badge=wrap.querySelector('#nanoBadge');
   }
@@ -68,64 +74,93 @@
 
   // ===== Lifecycle =====
   async function init(){
+    console.log("[Nano] init() called...");
     _ensureUI();
     _state.failed=false;
     _updateBadge();
     if(!_featureSupported()){
-      log && log('[Nano] Prompt API not supported.');
+      console.warn("[Nano] Prompt API not supported in this browser.");
       _state.failed=true;
       _updateBadge();
       return;
     }
     try {
+      console.log("[Nano] Checking LanguageModel.availability...");
       const avail = await LanguageModel.availability({ outputLanguage: "en" });
+      console.log("[Nano] availability() returned:", avail);
+
       if (avail === "available") {
+        console.log("[Nano] Creating session (model already available)...");
         _state.session = await LanguageModel.create({ outputLanguage: "en" });
-        _state.ready = true; _state.failed=false; log && log('[Nano] Model ready.');
+        _state.ready = true; _state.failed=false; 
+        console.log("[Nano] Model ready.");
         _updateBadge();
+
       } else if (avail === "downloadable" || avail === "downloading") {
-        log && log('[Nano] Downloading on-device model…');
+        console.log("[Nano] Downloading on-device model…");
         _showProgress(0);
         _state.session = await LanguageModel.create({
           outputLanguage: "en",
           monitor(m){
             m.addEventListener("downloadprogress", (e)=>{
               const pct = e.total ? (e.loaded / e.total) * 100 : e.loaded * 100;
+              console.log(`[Nano] Download progress: ${pct.toFixed(1)}%`);
               _showProgress(pct);
             });
           }
         });
         _hideProgress();
-        _state.ready = true; _state.failed=false; log && log('[Nano] Model ready.');
+        _state.ready = true; _state.failed=false; 
+        console.log("[Nano] Model ready after download.");
         _updateBadge();
+
       } else {
-        log && log('[Nano] Model not available on this device.');
+        console.warn("[Nano] Model not available on this device.");
         _state.failed=true;
         _updateBadge();
       }
     } catch (err){
-      console.error(err);
-      log && log('[Nano] Failed to init model.');
+      console.error("[Nano] Failed to init model:", err);
       _hideProgress();
       _state.failed=true;
       _updateBadge();
     }
+    console.log("[Nano] Starting background worker pump...");
     _pump(); // start background worker
   }
 
-  function _featureSupported(){ return !!window.LanguageModel; }
+  function _featureSupported(){ 
+    const supported = !!window.LanguageModel; 
+    console.log("[Nano] Feature supported:", supported);
+    return supported; 
+  }
 
   // ===== Public: schedule generation for an NPC/node pair =====
+  // state
+  _state.seenAt = new Map(); // key -> timestamp
+  const SEEN_TTL_MS = 8000;  // allow re-gen after 8s
+
   function queueForNPC(npc, nodeId='start', reason='timer'){
+    console.log(`[Nano] queueForNPC called: npcId=${npc?.id}, nodeId=${nodeId}, reason=${reason}`);
     if(!_state.ready || !window.NanoDialog.enabled) return;
+
     const key = _key(npc.id, nodeId);
-    if(_state.seenKeys.has(key)) return;
-    _state.seenKeys.add(key);
-    _state.queue.push({ npcId:npc.id, nodeId, reason, when: Date.now() });
+    const now = Date.now();
+    const last = _state.seenAt.get(key) || 0;
+    const ttl = (reason === 'quest update') ? 0 : SEEN_TTL_MS;
+
+    if (now - last < ttl) {
+      console.log("[Nano] Throttled; seen recently:", key, `(+${now-last}ms)`);
+      return;
+    }
+    _state.seenAt.set(key, now);
+    _state.queue.push({ npcId:npc.id, nodeId, reason, when: now });
+    console.log("[Nano] Job queued. Queue length now:", _state.queue.length);
     _pump();
   }
 
   function linesFor(npcId, nodeId='start'){
+    console.log(`[Nano] linesFor called: npcId=${npcId}, nodeId=${nodeId}`);
     const data = _state.cache.get(_key(npcId, nodeId));
     return data && Array.isArray(data.lines) ? data.lines : [];
   }
@@ -135,19 +170,28 @@
     return data && Array.isArray(data.choices) ? data.choices : [];
   }
 
-  function _key(npcId, node){ return `${npcId}::${node}`; }
+  function _key(npcId, node){ 
+    return `${npcId}::${node}`; 
+  }
 
   // ===== Background worker =====
   async function _pump(){
     if(_state.busy || !_state.ready || _state.queue.length===0) return;
     _setBusy(true);
     try{
-      // FIFO
       const job = _state.queue.shift();
+      console.log("[Nano] Processing job:", job);
       const prompt = _buildPrompt(job.npcId, job.nodeId);
-      if(!prompt){ _state.busy=false; _pump(); return; }
+      if(!prompt){ 
+        console.warn("[Nano] No prompt built; skipping job.");
+        _state.busy=false; 
+        _pump(); 
+        return; 
+      }
 
       const txt = await _state.session.prompt(prompt);
+      console.log("[Nano] Prompt built:\n"+ prompt);
+      console.log("[Nano] returned:\n"+ txt);
       const data = _extract(txt);
       if(data.lines.length || data.choices.length){
         const key=_key(job.npcId, job.nodeId);
@@ -165,16 +209,40 @@
       console.warn('[Nano] generation error', err);
     } finally{
       _setBusy(false);
-      // keep trickling jobs, but don’t starve main thread
       setTimeout(_pump, 50);
     }
   }
 
+  function _visibleLabels(npc, nodeId) {
+    const node = resolveNode(npc.tree, nodeId);
+    if (!node) return [];
+    let labels = (node.choices || []).slice();
+  
+    // Apply the same visibility rules your UI uses for quest choices
+    if (npc.quest) {
+      const q = npc.quest;
+      labels = labels.filter(c => {
+        if (c.q === 'accept' && q.status !== 'available') return false;
+        if (c.q === 'turnin' && (q.status !== 'active' || (q.item && !hasItem(q.item)))) return false;
+        return true;
+      });
+    }
+  
+    return labels.map(c => (c.label || '').replace(/\|/g,'').trim()).filter(Boolean);
+  }
+
   // ===== Prompt construction =====
   function _buildPrompt(npcId, nodeId){
-    if(typeof NPCS==='undefined' || typeof party==='undefined' || typeof player==='undefined' || typeof quests==='undefined') return null;
+    console.log("[Nano] Building prompt for npcId:", npcId, "nodeId:", nodeId);
+    if(typeof NPCS==='undefined' || typeof party==='undefined' || typeof player==='undefined' || typeof quests==='undefined') {
+      console.warn("[Nano] Game state globals missing; cannot build prompt.");
+      return null;
+    }
     const npc = NPCS.find(n=> n.id===npcId);
-    if(!npc) return null;
+    if(!npc) {
+      console.warn("[Nano] NPC not found:", npcId);
+      return null;
+    }
     const desc = (typeof NPC_DESCS!=='undefined' && NPC_DESCS[npc.id]) || '';
 
     const leader = party[typeof selectedMember==='number' ? selectedMember : 0] || null;
@@ -183,63 +251,130 @@
       .filter(([,q])=>q.status==='completed')
       .map(([id,q])=> q.title || id);
 
+    const existing = _visibleLabels(npc, nodeId);
+    const text = resolveNode(npc.tree, nodeId).text;
+
+    // Consider this in the prompt:
+    //CURRENT UI CHOICES SHOWN TO PLAYER (do not duplicate these labels):
+    //${existing.map(l => `- ${l}`).join('\n') || '- (none)'}
+
     // Ask for short lines plus up to two choice hooks
-    return `You write in-universe dialog for DUSTLAND – a rusted,
-sun-blasted world of scrap tech and wry survivors. Tone: dry humor,
-90s CRPG bite, hints of hope. Keep each line 4-14 words. No quotes
-or stage directions.
+    var prompt = `You write in-universe dialog for DUSTLAND — a rusted, sun-blasted world.
+Voice must match the NPC. Dry humor, 90s CRPG bite, hints of hope.
+Each line: 4–14 word complete sentences, ≤80 chars. No quotes. No leading dashes/bullets.
+Stay in-world. Avoid modern real-world references or idioms (e.g., saunas, airports, brand names, bar talk).
+Do NOT include the NPC’s name in any line. No stage directions.
 
 NPC:
 - id: ${npc.id}
 - name: ${npc.name}
 - title: ${npc.title}
-- description: ${desc}
+- description: ${desc || 'n/a'}
+- text: ${text}
 
-Player state:
-- leader: ${leader ? `${leader.name} (${leader.role}) lvl ${leader.lvl}` : 'none'}
+Player:
+- party leader: ${leader ? leader.name : 'none'}
 - leader stats: ${leader ? JSON.stringify(leader.stats) : '{}'}
 - inventory: ${inv.join(', ') || 'empty'}
 - completed quests: ${completed.join(', ') || 'none'}
 
 Context:
-- This is node: ${nodeId}
-- If inventory or quests relate, reference them.
-- Never repeat earlier lines verbatim; be fresh.
+- dialog node: ${nodeId}
+- If inventory/quests are relevant, reference them naturally.
+- Avoid generic greetings or “you’re new here” clichés.
+- Do not repeat lines previously used for this NPC/node.
 
-Output format strictly:
+CHOICE SCHEMA:
+- Skill check format: <label>|<STAT>|<DC>|<Reward>|<Success>|<Failure>
+- Only create a skill check if the reward is XP or an item.
+- STAT in {STR, AGI, INT, PER, LCK, CHA}; DC 6–12.
+- Reward must be "xp N" or an item name; otherwise, omit the skill check.
+- Simple dialog format (no roll): <label>|<Response>
+- Success/failure/response lines follow the same style rules as dialog lines.
+ - Output 0–2 choices total. If no useful option fits, leave the Choices section empty.
+- Do not duplicate any label already visible to the player.
+
+OUTPUT EXAMPLES (FOLLOW FORMAT EXACTLY; THESE ARE EXAMPLES, NOT TO BE REPEATED):
 Lines:
-Line1
-Line2
-Line3
+Pump coughs at dusk but still runs.
+Keep the gears oiled and it behaves.
+If it wheezes, kick the intake gently.
 Choices:
-Label|STAT|DC|Reward
-Label2|STAT|DC|Reward
+Check the intake|INT|9|xp 10|Mesh clears and hum steadies.|You drop a bolt, cursing softly.
+Ask about spare parts|Any for trade?|She shakes her head and turns away.
+
+Lines:
+Tolls keep the road quiet and safe.
+Pay the price or pay in blood.
+Your choice decides your luck today.
+Choices:
+Intimidate her guard|STR|10|xp 12|Guard backs off, eyes wide.|He laughs and calls your bluff.
+Ask for mercy|Can you cut the toll?|She snorts but lets you pass.
+
+Lines:
+Road’s quiet, but don’t trust quiet.
+Keep your head low past the ruins.
+Trade if you must; run if you can’t.
+
+Choices:
+Check the intake|INT|9|xp 10|You tweak the valves and it purrs.|Steam hisses and you flinch back.
+Offer spare gasket|CHA|8|Valve|She smiles and pockets the part.|She waves you off, unimpressed.
+
+EXACT OUTPUT FORMAT:
+Lines:
+<up to 3 short dialog lines, no name/quotes/bullets>
+Choices:
+<label>|<STAT>|<DC>|<Reward>|<Success>|<Failure>
+<label>|<Response>
 `;
+    return prompt;
   }
 
   // ===== Parsing helpers =====
+  function _cleanLine(s){
+    // remove leading bullets/dashes/quotes; trim trailing quotes
+    return s.replace(/^[\s"'`–—\-•·]+/, '').replace(/["'`]+$/, '').trim();
+  }
+  
   function _extract(txt){
-    if(!txt) return {lines:[],choices:[]};
+    if(!txt) return {lines:[], choices:[]};
     const parts = txt.split(/Choices:/i);
     const linePart = parts[0] || '';
     const choicePart = parts[1] || '';
+  
     const lines = linePart.split(/\r?\n/)
-      .map(s=>s.trim())
+      .map(s => _cleanLine(s))
       .filter(Boolean)
-      .filter(s=> s.length<=80)
-      .slice(0,3);
+      .filter(s => s.length <= 80)
+      .slice(0, 3);
+  
     const choices = choicePart.split(/\r?\n/)
       .map(_parseChoice)
       .filter(Boolean)
-      .slice(0,2);
-    return {lines, choices};
+      .filter(c => !(c.stat && (!c.reward || c.reward.toLowerCase() === 'none')))
+      .slice(0, 2);
+  
+    console.log("Produced:", lines, choices);
+    return { lines, choices };
   }
 
   function _parseChoice(s){
     const parts = s.split('|').map(p=>p.trim());
-    if(parts.length < 4) return null;
-    const dc = parseInt(parts[2],10);
-    return {label:parts[0], stat:parts[1].toUpperCase(), dc:isNaN(dc)?0:dc, reward:parts[3]};
+    if(parts.length === 2){
+      return {label: parts[0], response: parts[1]};
+    }
+    if(parts.length >= 6){
+      const dc = parseInt(parts[2],10);
+      return {
+        label: parts[0],
+        stat: parts[1].toUpperCase(),
+        dc: isNaN(dc)?0:dc,
+        reward: parts[3],
+        success: parts[4],
+        failure: parts[5]
+      };
+    }
+    return null;
   }
 
   function _dedupe(arr){

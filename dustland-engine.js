@@ -4,6 +4,8 @@
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const apEl = document.getElementById('ap');
+const scrEl = document.getElementById('scrap');
+
 function log(msg){
   const p=document.createElement('div');
   p.textContent=msg;
@@ -27,6 +29,29 @@ function toast(msg) {
     player.flags.demoComplete = true;
     if(typeof save === 'function') save();
   }
+}
+
+// tiny sfx and hud feedback
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function sfxTick(){
+  const o=audioCtx.createOscillator();
+  const g=audioCtx.createGain();
+  o.type='square';
+  o.frequency.value=800;
+  o.connect(g); g.connect(audioCtx.destination);
+  g.gain.value=0.1;
+  o.start();
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.1);
+  o.stop(audioCtx.currentTime+0.1);
+}
+function hudBadge(msg){
+  const ap=document.getElementById('ap');
+  if(!ap) return;
+  const span=document.createElement('span');
+  span.className='hudBadge';
+  span.textContent=msg;
+  ap.parentElement.appendChild(span);
+  setTimeout(()=>span.remove(),1000);
 }
 
 // Tile colors for rendering
@@ -64,15 +89,16 @@ function centerCamera(x,y,map){
 // ===== Drawing (tiles -> items -> NPCs -> player) =====
 function drawScene(ctx){
   ctx.fillStyle='#000'; ctx.fillRect(0,0,disp.width,disp.height);
-  const grid=currentGrid(); const {W,H}=mapWH();
+  const activeMap = mapIdForState();
+  const {W,H}=mapWH(activeMap);
   for(let vy=0; vy<VIEW_H; vy++){
     for(let vx=0; vx<VIEW_W; vx++){
       const gx=camX+vx, gy=camY+vy; if(gx<0||gy<0||gx>=W||gy>=H) continue;
-      const t=grid[gy][gx]; ctx.fillStyle=colors[t]; ctx.fillRect(vx*TS,vy*TS,TS,TS);
+      const t=getTile(activeMap,gx,gy); if(t===null) continue;
+      ctx.fillStyle=colors[t]; ctx.fillRect(vx*TS,vy*TS,TS,TS);
       if(t===TILE.DOOR){ ctx.strokeStyle='#9ef7a0'; ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10); if(doorPulseUntil && Date.now()<doorPulseUntil){ const a=0.3+0.2*Math.sin(Date.now()/200); ctx.globalAlpha=a; ctx.strokeRect(vx*TS+3,vy*TS+3,TS-6,TS-6); ctx.globalAlpha=1; } }
     }
   }
-  const activeMap = (state.map==='creator'?'hall':state.map);
   // Items first
   for(const it of itemDrops){
     if(it.map!==activeMap) continue;
@@ -96,7 +122,11 @@ function drawScene(ctx){
 }
 
 // ===== HUD & Tabs =====
-function updateHUD(){ hpEl.textContent=player.hp; apEl.textContent=player.ap; }
+function updateHUD(){
+  hpEl.textContent=player.hp;
+  apEl.textContent=player.ap;
+  if(scrEl) scr.textContent = player.scrap;
+}
 function showTab(which){ const inv=document.getElementById('inv'), partyEl=document.getElementById('party'), q=document.getElementById('quests'); const tInv=document.getElementById('tabInv'), tP=document.getElementById('tabParty'), tQ=document.getElementById('tabQuests'); inv.style.display=(which==='inv'?'grid':'none'); partyEl.style.display=(which==='party'?'grid':'none'); q.style.display=(which==='quests'?'grid':'none'); for(const el of [tInv,tP,tQ]) el.classList.remove('active'); if(which==='inv') tInv.classList.add('active'); if(which==='party') tP.classList.add('active'); if(which==='quests') tQ.classList.add('active'); }
 document.getElementById('tabInv').onclick=()=>showTab('inv');
 document.getElementById('tabParty').onclick=()=>showTab('party');
@@ -121,6 +151,31 @@ function renderInv(){
           ${it.use?  `<button class="btn" data-a="use">Use</button>`:''}
         </span>
       </div>`;
+    // Build tooltip (name/slot + desc + mods + use + rarity + value [+ currency])
+    const mods = Object.entries(it.mods || {})
+      .map(([k, v]) => `${k} ${v >= 0 ? '+' : ''}${v}`)
+      .join(' ');
+
+    const use = it.use ? `${it.use.type}${it.use.amount ? ` ${it.use.amount}` : ''}` : '';
+
+    const valueStr = (() => {
+      const v = it.value ?? 0;
+      // Show currency if defined (shopkeeper branch), else just the number (main)
+      return (typeof CURRENCY !== 'undefined' && CURRENCY)
+        ? `${v} ${CURRENCY}`
+        : String(v);
+    })();
+
+    const tip = [
+      `${it.name}${it.slot ? ` [${it.slot}]` : ''}`, // from main
+      it.desc || '',
+      mods ? `Mods: ${mods}` : '',
+      use  ? `Use: ${use}`   : '',
+      `Rarity: ${it.rarity}`,
+      `Value: ${valueStr}`                         // from shopkeeper branch (currency-aware)
+    ].filter(Boolean).join('\n');
+
+    row.title = tip;    
     const equipBtn = row.querySelector('button[data-a="equip"]');
     if(equipBtn) equipBtn.onclick=()=> equipItem(selectedMember, idx);
     const useBtn = row.querySelector('button[data-a="use"]');
@@ -129,7 +184,7 @@ function renderInv(){
   });
 }
 function renderQuests(){ const q=document.getElementById('quests'); q.innerHTML=''; const ids=Object.keys(quests); if(ids.length===0){ q.innerHTML='<div class="q muted">(no quests)</div>'; return; } ids.forEach(id=>{ const v=quests[id]; const div=document.createElement('div'); div.className='q'; div.innerHTML=`<div><b>${v.title}</b></div><div class="small">${v.desc}</div><div class="status">${v.status}</div>`; q.appendChild(div); }); }
-function renderParty(){ const p=document.getElementById('party'); p.innerHTML=''; if(party.length===0){ p.innerHTML='<div class="pcard muted">(no party members yet)</div>'; return; } party.forEach((m,i)=>{ const c=document.createElement('div'); c.className='pcard'; const bonus=m._bonus||{}; c.innerHTML = `<div class='row'><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div><div class='row small'>${statLine(m.stats)}</div><div class='row'>HP ${m.hp}  AP ${m.ap}  ATK ${(bonus.ATK||0)}  DEF ${(bonus.DEF||0)}  LCK ${(bonus.LCK||0)}</div><div class='row small'>WPN: ${m.equip.weapon?m.equip.weapon.name:'—'}  ARM: ${m.equip.armor?m.equip.armor.name:'—'}  TRK: ${m.equip.trinket?m.equip.trinket.name:'—'}</div><div class='row small'>XP ${m.xp}/${xpToNext(m.lvl)}</div><div class='row'><label><input type='radio' name='selMember' ${i===selectedMember?'checked':''}> Selected</label></div>`; c.querySelector('input').onchange=()=>{ selectedMember=i; }; p.appendChild(c); }); }
+function renderParty(){ const p=document.getElementById('party'); p.innerHTML=''; if(party.length===0){ p.innerHTML='<div class="pcard muted">(no party members yet)</div>'; return; } party.forEach((m,i)=>{ const c=document.createElement('div'); c.className='pcard'; const bonus=m._bonus||{}; const fmt=v=> (v>0? '+'+v : v); c.innerHTML = `<div class='row'><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div><div class='row small'>${statLine(m.stats)}</div><div class='row'>HP ${m.hp}/${m.maxHp}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div><div class='row small'>WPN: ${m.equip.weapon?m.equip.weapon.name:'—'}  ARM: ${m.equip.armor?m.equip.armor.name:'—'}  TRK: ${m.equip.trinket?m.equip.trinket.name:'—'}</div><div class='row small'>XP ${m.xp}/${xpToNext(m.lvl)}</div><div class='row'><label><input type='radio' name='selMember' ${i===selectedMember?'checked':''}> Selected</label></div>`; c.querySelector('input').onchange=()=>{ selectedMember=i; }; p.appendChild(c); }); }
 
 // ===== Minimal Unit Tests (#test) =====
 function assert(name, cond){ const msg = (cond? '✅ ':'❌ ') + name; log(msg); if(!cond) console.error('Test failed:', name); }
