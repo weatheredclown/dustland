@@ -254,19 +254,27 @@ function npc_ExitDoor(x,y){
     'Search the hall for a Rusted Key to unlock the exit.',
     {item:'Rusted Key', moveTo:{x:hall.entryX-1,y:2}}
   );
-  return makeNPC('exitdoor',HALL_ID,x, y,'#a9f59f','Locked Door','Needs Key',{
-    start:{text:'A heavy door bars the way.',choices:[
-      {label:'(Search for key)',to:'accept',q:'accept'},
-      {label:'(Use Rusted Key)',to:'do_turnin',q:'turnin'},
-      {label:'(Leave)',to:'bye'}]},
-    accept:{text:'Maybe a key is hidden nearby.',choices:[{label:'(Okay)',to:'bye'}]},
-    do_turnin:{text:'The door grinds open.',choices:[{label:'(Continue)',to:'bye'}]}
-  }, quest, function(node){
-    if(node==='do_turnin'){
-      startRealWorld();
-      closeDialog();
+
+  return makeNPC(
+    'exitdoor', HALL_ID, x, y,
+    '#a9f59f',
+    'Caretaker Kesh',          // was 'Locked Door'
+    'Hall Steward',            // was 'Needs Key'
+    {
+      start: { text: 'Caretaker Kesh eyes the chained exit.',
+        choices: [
+          {label:'(Search for key)', to:'accept', q:'accept'},
+          {label:'(Use Rusted Key)', to:'do_turnin', q:'turnin'},
+          {label:'(Leave)', to:'bye'}
+        ]},
+      accept:{ text:'Try the crates. And don’t scuff the floor.', choices:[{label:'(Okay)', to:'bye'}] },
+      do_turnin:{ text:'Kesh unlocks the chain. “Off you go.”', choices:[{label:'(Continue)', to:'bye'}] }
+    },
+    quest,
+    function(node){
+      if(node==='do_turnin'){ startRealWorld(); closeDialog(); }
     }
-  });
+  );
 }
 
 function npc_KeyCrate(x,y){

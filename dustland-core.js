@@ -410,10 +410,11 @@ addToInv = function(item){
     for(let x=2;x<HALL_W-2;x++){ hall.grid[6][x]=TILE.WALL; hall.grid[12][x]=TILE.WALL; }
     hall.grid[6][5]=TILE.DOOR; hall.grid[6][24]=TILE.DOOR; hall.grid[12][15]=TILE.DOOR;
     hall.grid[1][15]=TILE.DOOR;
+    hall.grid[1][15] = TILE.WALL;
     interiors[HALL_ID]=hall;
     doorPulseUntil = Date.now() + 60000;
     NPCS.length=0;
-    const doorNPC = npc_ExitDoor(hall.entryX, 2);
+    const doorNPC = npc_ExitDoor(hall.entryX, hall.entryY - 1);
     NPCS.push(doorNPC);
     const crateNPC = npc_KeyCrate(hall.entryX+2, hall.entryY);
     NPCS.push(crateNPC);
