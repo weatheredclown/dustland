@@ -64,8 +64,8 @@ _______________________________________________________________________________
     * Game state, dialog system, quests, inventory & equipment.
   - dustland-engine.js
     * Renderer, input handling, HUD, and tiny sfx.
-  - dustland-content.js
-    * NPCs, items, world data, and quests.
+  - modules/dustland.module.js
+    * NPCs, items, world data, and quests for the core adventure.
   - dustland-nano.js
     * Micro helper utilities.
   - dustland.css

@@ -1,9 +1,6 @@
 // ACK Module Player
 // Loads a module JSON and starts the game using its data.
 
-// Prevent default content seeding
-window.seedWorldContent = () => {};
-
 let moduleData = null;
 const loader = document.getElementById('moduleLoader');
 const fileInput = document.getElementById('modFile');
