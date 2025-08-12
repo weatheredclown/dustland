@@ -272,6 +272,40 @@ function npc_Raider(x,y){
   }, null, processNode);
 }
 
+function npc_Trader(x,y){
+  const processNode = function(node){
+    if(node==='sell'){
+      const items = player.inv.map((it,idx)=>({label:`Sell ${it.name} (${Math.max(1, it.value || 0)} ${CURRENCY})`, to:'sell', sellIndex:idx}));
+      if(items.length===0){
+        this.tree.sell.text = 'Nothing to sell.';
+      } else {
+        this.tree.sell.text = 'What are you selling?';
+      }
+      items.push({label:'(Back)', to:'start'});
+      this.tree.sell.choices = items;
+    }
+  };
+  const processChoice = function(c){
+    if(typeof c.sellIndex==='number'){
+      const it = player.inv.splice(c.sellIndex,1)[0];
+      const val = Math.max(1, it.value || 0);
+      player.scrap += val;
+      renderInv(); updateHUD();
+      textEl.textContent = `Sold ${it.name} for ${val} ${CURRENCY}.`;
+      currentNode='sell';
+      renderDialog();
+      return true;
+    }
+  };
+  return makeNPC('trader','world',x,y,'#caffc6','Cass the Trader','Shopkeep',{
+    start:{ text:'Got goods to sell? I pay in scrap.', choices:[
+      {label:'(Sell items)', to:'sell'},
+      {label:'(Leave)', to:'bye'}
+    ]},
+    sell:{ text:'What are you selling?', choices:[] }
+  }, null, processNode, processChoice);
+}
+
 function npc_ExitDoor(x,y){
   const quest = new Quest(
     Q.HALL_KEY,
@@ -329,6 +363,7 @@ const NPC_FACTORY = {
   hermit: npc_IdolHermit,
   duchess: npc_Duchess,
   raider: npc_Raider,
+  trader: npc_Trader,
   exitdoor: npc_ExitDoor,
   keycrate: npc_KeyCrate,
   hallflavor: npc_HallDrifter
@@ -338,6 +373,7 @@ setNPCDesc('duchess', 'A crown of bottlecaps; eyes like razors.');
 setNPCDesc('grin', 'Lean scav with a crowbar and half a smile.');
 setNPCDesc('pump', 'Sunburnt hands, hopeful eyes. Smells faintly of mud.');
 setNPCDesc('raider', 'Scarred scav looking for trouble.');
+setNPCDesc('trader', 'A roving merchant weighing your wares.');
 
 
 // ---------- World NPC + item seeding ----------
@@ -357,14 +393,15 @@ function seedWorldContent(){
   NPCS.push(npc_Postmaster(30, midY+1));
   NPCS.push(npc_TowerTech(48, midY-2));
   NPCS.push(npc_Raider(56, midY-1));
+  NPCS.push(npc_Trader(34, midY-1));
   NPCS.push(npc_IdolHermit(68, midY+2));
   NPCS.push(npc_Duchess(40, midY));
 
   // Populate some building interiors
   const interiorLoot = [
-    {name:'Canned Beans'},
-    {name:'Scrap Wire'},
-    {name:'Old Coin'}
+    {name:'Canned Beans', value:2},
+    {name:'Scrap Wire', value:1},
+    {name:'Old Coin', value:5}
   ];
   const interiorLines = ['Stay safe out there.', 'Not much left for scavvers.'];
   let lootIx = 0, lineIx = 0;

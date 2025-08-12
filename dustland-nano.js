@@ -16,6 +16,7 @@
     choicesFor,    // get cached choices; returns []
     isReady: ()=> _state.ready,
     enabled: true, // flip to false to disable
+    choicesEnabled: false,
     refreshIndicator
   };
 
@@ -284,11 +285,14 @@ Context:
 - Do not repeat lines previously used for this NPC/node.
 
 CHOICE SCHEMA:
-- Format: <label>|<STAT>|<DC>|<Reward>
+- Skill check format: <label>|<STAT>|<DC>|<Reward>|<Success>|<Failure>
+- Only create a skill check if the reward is XP or an item.
 - STAT in {STR, AGI, INT, PER, LCK, CHA}; DC 6–12.
-- Reward: "none", "xp N", or an item name.
-- Output 0–2 choices. If no useful test fits, output none.
-- If you add a choice, it must NOT duplicate any label above.
+- Reward must be "xp N" or an item name; otherwise, omit the skill check.
+- Simple dialog format (no roll): <label>|<Response>
+- Success/failure/response lines follow the same style rules as dialog lines.
+ - Output 0–2 choices total. If no useful option fits, leave the Choices section empty.
+- Do not duplicate any label already visible to the player.
 
 OUTPUT EXAMPLES (FOLLOW FORMAT EXACTLY; THESE ARE EXAMPLES, NOT TO BE REPEATED):
 Lines:
@@ -296,16 +300,16 @@ Pump coughs at dusk but still runs.
 Keep the gears oiled and it behaves.
 If it wheezes, kick the intake gently.
 Choices:
-Check the intake|INT|9|xp 10
-Trade a spare filter|CHA|8|none
+Check the intake|INT|9|xp 10|Mesh clears and hum steadies.|You drop a bolt, cursing softly.
+Ask about spare parts|Any for trade?|She shakes her head and turns away.
 
 Lines:
 Tolls keep the road quiet and safe.
 Pay the price or pay in blood.
 Your choice decides your luck today.
 Choices:
-Diplomatically negotiate toll|CHA|9|none
-Intimidate her guard|STR|10|xp 12
+Intimidate her guard|STR|10|xp 12|Guard backs off, eyes wide.|He laughs and calls your bluff.
+Ask for mercy|Can you cut the toll?|She snorts but lets you pass.
 
 Lines:
 Road’s quiet, but don’t trust quiet.
@@ -313,15 +317,15 @@ Keep your head low past the ruins.
 Trade if you must; run if you can’t.
 
 Choices:
-Check the intake|INT|9|xp 10
-Offer spare gasket|CHA|8|Valve
+Check the intake|INT|9|xp 10|You tweak the valves and it purrs.|Steam hisses and you flinch back.
+Offer spare gasket|CHA|8|Valve|She smiles and pockets the part.|She waves you off, unimpressed.
 
 EXACT OUTPUT FORMAT:
 Lines:
-<up to 3 short dialog lines choices, no name/quotes/bullets>
+<up to 3 short dialog lines, no name/quotes/bullets>
 Choices:
-<label>|<STAT>|<DC>|<Reward>
-<label>|<STAT>|<DC>|<Reward>
+<label>|<STAT>|<DC>|<Reward>|<Success>|<Failure>
+<label>|<Response>
 `;
     return prompt;
   }
@@ -347,6 +351,7 @@ Choices:
     const choices = choicePart.split(/\r?\n/)
       .map(_parseChoice)
       .filter(Boolean)
+      .filter(c => !(c.stat && (!c.reward || c.reward.toLowerCase() === 'none')))
       .slice(0, 2);
   
     console.log("Produced:", lines, choices);
@@ -355,9 +360,21 @@ Choices:
 
   function _parseChoice(s){
     const parts = s.split('|').map(p=>p.trim());
-    if(parts.length < 4) return null;
-    const dc = parseInt(parts[2],10);
-    return {label:parts[0], stat:parts[1].toUpperCase(), dc:isNaN(dc)?0:dc, reward:parts[3]};
+    if(parts.length === 2){
+      return {label: parts[0], response: parts[1]};
+    }
+    if(parts.length >= 6){
+      const dc = parseInt(parts[2],10);
+      return {
+        label: parts[0],
+        stat: parts[1].toUpperCase(),
+        dc: isNaN(dc)?0:dc,
+        reward: parts[3],
+        success: parts[4],
+        failure: parts[5]
+      };
+    }
+    return null;
   }
 
   function _dedupe(arr){
