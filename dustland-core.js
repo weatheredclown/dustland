@@ -33,6 +33,9 @@ const ROLL_SIDES = 12;
 const DC = { TALK:8, REPAIR:9 };
 const CURRENCY = 'Scrap';
 
+// Placeholder; actual content provided by modules (e.g. Dustland)
+function seedWorldContent(){}
+
 let worldSeed = Date.now();
 function createRNG(seed){
   return function(){
@@ -868,6 +871,6 @@ function startRealWorld(){
   log('You step into the wastes.');
 }
 
-// Content pack moved to dustland-content.js
+// Content pack moved to modules/dustland.module.js
 
 Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat, removeNPC});
