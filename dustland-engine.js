@@ -118,7 +118,12 @@ function drawScene(ctx){
 }
 
 // ===== HUD & Tabs =====
-function updateHUD(){ document.getElementById('hp').textContent=player.hp; document.getElementById('ap').textContent=player.ap; }
+function updateHUD(){
+  document.getElementById('hp').textContent=player.hp;
+  document.getElementById('ap').textContent=player.ap;
+  const scr = document.getElementById('scrap');
+  if(scr) scr.textContent = player.scrap;
+}
 function showTab(which){ const inv=document.getElementById('inv'), partyEl=document.getElementById('party'), q=document.getElementById('quests'); const tInv=document.getElementById('tabInv'), tP=document.getElementById('tabParty'), tQ=document.getElementById('tabQuests'); inv.style.display=(which==='inv'?'grid':'none'); partyEl.style.display=(which==='party'?'grid':'none'); q.style.display=(which==='quests'?'grid':'none'); for(const el of [tInv,tP,tQ]) el.classList.remove('active'); if(which==='inv') tInv.classList.add('active'); if(which==='party') tP.classList.add('active'); if(which==='quests') tQ.classList.add('active'); }
 document.getElementById('tabInv').onclick=()=>showTab('inv');
 document.getElementById('tabParty').onclick=()=>showTab('party');
@@ -145,7 +150,7 @@ function renderInv(){
       </div>`;
     const mods = Object.entries(it.mods).map(([k,v])=>`${k} ${v>=0?'+':''}${v}`).join(' ');
     const use = it.use? `${it.use.type}${it.use.amount?` ${it.use.amount}`:''}`:'';
-    const tip = [it.desc, mods?`Mods: ${mods}`:'', use?`Use: ${use}`:'', `Rarity: ${it.rarity}`, `Value: ${it.value}`]
+    const tip = [it.desc, mods?`Mods: ${mods}`:'', use?`Use: ${use}`:'', `Rarity: ${it.rarity}`, `Value: ${it.value} ${CURRENCY}`]
       .filter(Boolean).join('\n');
     row.title = tip;
     const equipBtn = row.querySelector('button[data-a="equip"]');
