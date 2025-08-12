@@ -432,6 +432,10 @@ function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNo
 }
 function resolveNode(tree, nodeId){ const n = tree[nodeId]; const choices = n.choices||[]; return {...n, choices}; }
 const NPCS=[];
+function removeNPC(npc){
+  const idx = NPCS.indexOf(npc);
+  if(idx > -1) NPCS.splice(idx,1);
+}
 const usedNanoChoices = new Set();
 
 // ===== WORLD GEN =====
@@ -866,4 +870,4 @@ function startRealWorld(){
 
 // Content pack moved to dustland-content.js
 
-Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat});
+Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat, removeNPC});

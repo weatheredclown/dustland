@@ -254,6 +254,7 @@ function npc_Raider(x,y){
                   res.result==='bruise' ? 'A sharp blow leaves a bruise.' :
                   'You back away from the raider.';
       textEl.textContent = `Roll: ${res.roll} vs DEF ${res.dc}. ${msg}`;
+      if(res.result==='loot') removeNPC(this);
     }
   };
   return makeNPC('raider','world',x,y,'#f88','Road Raider','Bandit','Scarred scav looking for trouble.',{
