@@ -56,6 +56,44 @@ class Dice {
   }
 }
 
+// ===== Combat =====
+/**
+ * Quick combat resolver. Uses party leader's ATK + LCK vs defender's DEF.
+ * @param {{DEF:number, loot?:Item}} defender
+ * @returns {{result:'bruise'|'loot'|'flee', roll:number, dc:number}}
+ */
+function quickCombat(defender){
+  const attacker = party.leader?.() || null;
+  const dc = defender?.DEF || 0;
+  if(!attacker) return { result:'flee', roll:0, dc };
+
+  const atk = attacker._bonus?.ATK || 0;
+  const lck = (attacker.stats?.LCK || 0) + (attacker._bonus?.LCK || 0);
+  const roll = Dice.roll() + atk + lck;
+
+  let result = 'flee';
+  if (roll > dc) result = 'loot';
+  else if (roll < dc) result = 'bruise';
+
+  // Spend AP and apply outcome
+  attacker.ap = Math.max(0, (attacker.ap||0) - 1);
+
+  if(result==='bruise'){
+    attacker.hp = Math.max(0, (attacker.hp||0) - 1);
+    if(typeof toast==='function') toast('Bruised! -1 HP');
+  } else if(result==='loot'){
+    if(defender.loot) addToInv(defender.loot);
+    if(typeof toast==='function') toast(`Looted ${defender.loot ? defender.loot.name : ''}`);
+  } else {
+    if(typeof toast==='function') toast('You flee.');
+  }
+
+  // Mirror player summary to HUD if you use player.hp/ap there
+  player.hp = attacker.hp; player.ap = attacker.ap;
+  renderInv?.(); renderParty?.(); updateHUD?.();
+  return { result, roll, dc };
+}
+
 // ===== Tiles =====
 const TILE = { SAND:0, ROCK:1, WATER:2, BRUSH:3, ROAD:4, RUIN:5, WALL:6, FLOOR:7, DOOR:8, BUILDING:9 };
 const walkable = {0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false};
@@ -68,6 +106,7 @@ function setMap(id,label){
   mapNameEl.textContent = label || mapLabel(id);
 }
 function isWalkable(tile){ return !!walkable[tile]; }
+
 
 // ===== World sizes =====
 const VIEW_W=40, VIEW_H=30, TS=16;
@@ -827,4 +866,4 @@ function startRealWorld(){
 
 // Content pack moved to dustland-content.js
 
-Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog});
+Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat});
