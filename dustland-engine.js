@@ -2,6 +2,10 @@
 
 // Logging
 const logEl = document.getElementById('log');
+const hpEl = document.getElementById('hp');
+const apEl = document.getElementById('ap');
+const scrEl = document.getElementById('scrap');
+
 function log(msg){
   const p=document.createElement('div');
   p.textContent=msg;
@@ -119,10 +123,9 @@ function drawScene(ctx){
 
 // ===== HUD & Tabs =====
 function updateHUD(){
-  document.getElementById('hp').textContent=player.hp;
-  document.getElementById('ap').textContent=player.ap;
-  const scr = document.getElementById('scrap');
-  if(scr) scr.textContent = player.scrap;
+  hpEl.textContent=player.hp;
+  apEl.textContent=player.ap;
+  if(scrEl) scr.textContent = player.scrap;
 }
 function showTab(which){ const inv=document.getElementById('inv'), partyEl=document.getElementById('party'), q=document.getElementById('quests'); const tInv=document.getElementById('tabInv'), tP=document.getElementById('tabParty'), tQ=document.getElementById('tabQuests'); inv.style.display=(which==='inv'?'grid':'none'); partyEl.style.display=(which==='party'?'grid':'none'); q.style.display=(which==='quests'?'grid':'none'); for(const el of [tInv,tP,tQ]) el.classList.remove('active'); if(which==='inv') tInv.classList.add('active'); if(which==='party') tP.classList.add('active'); if(which==='quests') tQ.classList.add('active'); }
 document.getElementById('tabInv').onclick=()=>showTab('inv');
@@ -249,10 +252,9 @@ window.addEventListener('keydown',(e)=>{
 
 // ===== Boot =====
 genHall();                              // ensure a grid exists before first frame
-state.map='hall';
+setMap('hall','Test Hall');
 player.x=hall.entryX; player.y=hall.entryY; centerCamera(player.x,player.y,'hall');
 requestAnimationFrame(draw);
-document.getElementById('mapname').textContent='Test Hall';
 log('v0.6.7 — Stable boot; items/NPCs visible; E/T to take; selected member rolls.');
 if (window.NanoDialog) NanoDialog.init();
 
