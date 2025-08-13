@@ -107,6 +107,28 @@ function generateQuestTree(){
 }
 
 // --- NPCs ---
+function applyCombatTree(tree){
+  tree.start = tree.start || {text:'', choices:[]};
+  if(!tree.start.choices.some(c=>c.to==='do_fight'))
+    tree.start.choices.unshift({label:'(Fight)', to:'do_fight'});
+  tree.do_fight = tree.do_fight || {text:'', choices:[{label:'(Continue)', to:'bye'}]};
+}
+function removeCombatTree(tree){
+  if(tree.start && Array.isArray(tree.start.choices))
+    tree.start.choices = tree.start.choices.filter(c=>c.to!=='do_fight');
+  delete tree.do_fight;
+}
+function applyShopTree(tree){
+  tree.start = tree.start || {text:'', choices:[]};
+  if(!tree.start.choices.some(c=>c.to==='sell'))
+    tree.start.choices.push({label:'(Sell items)', to:'sell'});
+  tree.sell = tree.sell || {text:'What are you selling?', choices:[]};
+}
+function removeShopTree(tree){
+  if(tree.start && Array.isArray(tree.start.choices))
+    tree.start.choices = tree.start.choices.filter(c=>c.to!=='sell');
+  delete tree.sell;
+}
 function addNPC(){
   const id=document.getElementById('npcId').value.trim();
   const name=document.getElementById('npcName').value.trim();
@@ -118,6 +140,8 @@ function addNPC(){
   const questId=document.getElementById('npcQuest').value.trim();
   const accept=document.getElementById('npcAccept').value.trim();
   const turnin=document.getElementById('npcTurnin').value.trim();
+  const combat=document.getElementById('npcCombat').checked;
+  const shop=document.getElementById('npcShop').checked;
   let tree=null;
   const treeTxt=document.getElementById('npcTree').value.trim();
   if(treeTxt){ try{ tree=JSON.parse(treeTxt); }catch(e){ tree=null; } }
@@ -132,7 +156,14 @@ function addNPC(){
       tree={start:{text:dialog,choices:[{label:'(Leave)',to:'bye'}]}};
     }
   }
+  if(combat) applyCombatTree(tree); else removeCombatTree(tree);
+  if(shop) applyShopTree(tree); else removeShopTree(tree);
+  document.getElementById('npcTree').value=JSON.stringify(tree,null,2);
+  renderDialogPreview();
+
   const npc={id,name,color,map,x,y,tree,questId};
+  if(combat) npc.combat = {DEF:5};
+  if(shop) npc.shop = true;
   if(editNPCIdx>=0){
     moduleData.npcs[editNPCIdx]=npc;
   } else {
@@ -143,6 +174,8 @@ function addNPC(){
   document.getElementById('delNPC').style.display='none';
   renderNPCList();
   document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
+  document.getElementById('npcCombat').checked=false;
+  document.getElementById('npcShop').checked=false;
   drawWorld();
   renderDialogPreview();
 }
@@ -160,6 +193,8 @@ function editNPC(i){
   document.getElementById('npcAccept').value=n.tree?.accept?.text||'Good luck.';
   document.getElementById('npcTurnin').value=n.tree?.do_turnin?.text||'Thanks for helping.';
   document.getElementById('npcTree').value=JSON.stringify(n.tree,null,2);
+   document.getElementById('npcCombat').checked=!!n.combat;
+   document.getElementById('npcShop').checked=!!n.shop;
   document.getElementById('addNPC').textContent='Update NPC';
   document.getElementById('delNPC').style.display='block';
   renderDialogPreview();

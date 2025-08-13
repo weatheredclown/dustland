@@ -427,20 +427,65 @@ function defaultQuestProcessor(npc, nodeId){
 }
 
 class NPC {
-  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null}){
-    Object.assign(this,{id,map,x,y,color,name,title,desc,tree,quest});
-    if(quest && processNode){
-      this.processNode=(node)=>{ defaultQuestProcessor(this,node); processNode.call(this,node); };
-    } else if(quest){
-      this.processNode=(node)=> defaultQuestProcessor(this,node);
-    } else if(processNode){
-      this.processNode=processNode;
+  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null,combat=null,shop=false}){
+    Object.assign(this,{id,map,x,y,color,name,title,desc,tree,quest,combat,shop});
+    const capNode = (node)=>{
+      if(this.combat && node==='do_fight'){
+        const {DEF=0, loot} = this.combat;
+        const res = quickCombat({DEF, loot});
+        const msg = res.result==='loot' ? 'The foe collapses.' :
+                    res.result==='bruise' ? 'A sharp blow leaves a bruise.' :
+                    'You back away.';
+        textEl.textContent = `Roll: ${res.roll} vs DEF ${res.dc}. ${msg}`;
+        if(res.result==='loot') removeNPC(this);
+      } else if(this.shop && node==='sell'){
+        const items = player.inv.map((it,idx)=>({label:`Sell ${it.name} (${Math.max(1, it.value || 0)} ${CURRENCY})`, to:'sell', sellIndex:idx}));
+        this.tree.sell.text = items.length? 'What are you selling?' : 'Nothing to sell.';
+        items.push({label:'(Back)', to:'start'});
+        this.tree.sell.choices = items;
+      }
+    };
+    const capChoice = (c)=>{
+      if(this.shop && typeof c.sellIndex==='number'){
+        const it = player.inv.splice(c.sellIndex,1)[0];
+        const val = Math.max(1, it.value || 0);
+        player.scrap += val;
+        renderInv(); updateHUD();
+        textEl.textContent = `Sold ${it.name} for ${val} ${CURRENCY}.`;
+        currentNode='sell';
+        renderDialog();
+        return true;
+      }
+      return false;
+    };
+    const userPN = processNode;
+    this.processNode = (node)=>{
+      if(quest) defaultQuestProcessor(this,node);
+      capNode(node);
+      if(userPN) userPN.call(this,node);
+    };
+    const userPC = processChoice;
+    if(userPC){
+      this.processChoice = (c)=>{ if(capChoice(c)) return; return userPC.call(this,c); };
+    } else {
+      this.processChoice = (c)=>{ capChoice(c); };
     }
-    if(processChoice) this.processChoice=processChoice;
   }
 }
-function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNode, processChoice){
-  return new NPC({id,map,x,y,color,name,title,desc,tree,quest,processNode,processChoice});
+function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNode, processChoice, opts){
+  if(opts?.combat){
+    tree = tree || {};
+    tree.start = tree.start || {text:'', choices:[]};
+    tree.start.choices.unshift({label:'(Fight)', to:'do_fight'});
+    tree.do_fight = tree.do_fight || {text:'', choices:[{label:'(Continue)', to:'bye'}]};
+  }
+  if(opts?.shop){
+    tree = tree || {};
+    tree.start = tree.start || {text:'', choices:[]};
+    tree.start.choices.push({label:'(Sell items)', to:'sell'});
+    tree.sell = tree.sell || {text:'What are you selling?', choices:[]};
+  }
+  return new NPC({id,map,x,y,color,name,title,desc,tree,quest,processNode,processChoice, ...(opts||{})});
 }
 function resolveNode(tree, nodeId){ const n = tree[nodeId]; const choices = n.choices||[]; return {...n, choices}; }
 const NPCS=[];
@@ -863,4 +908,4 @@ function startWorld(){
 
 // Content pack moved to modules/dustland.module.js
 
-Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat, removeNPC});
+Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat, removeNPC, makeNPC});
