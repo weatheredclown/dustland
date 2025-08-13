@@ -156,20 +156,25 @@ function renderTreeEditor(){
 function updateTreeData(){
   const wrap=document.getElementById('treeEditor');
   treeData={};
+  const choiceRefs=[];
+  const nodeRefs={};
   wrap.querySelectorAll('.node').forEach(nodeEl=>{
     const id=nodeEl.querySelector('.nodeId').value.trim();
     if(!id) return;
+    nodeRefs[id]=nodeEl;
     const text=nodeEl.querySelector('.nodeText').value;
     const choices=[];
     nodeEl.querySelectorAll('.choices > div').forEach(chEl=>{
       const label=chEl.querySelector('.choiceLabel').value.trim();
-      const to=chEl.querySelector('.choiceTo').value.trim();
+      const toEl=chEl.querySelector('.choiceTo');
+      const to=toEl.value.trim();
       const reward=chEl.querySelector('.choiceReward').value.trim();
       const stat=chEl.querySelector('.choiceStat').value.trim();
       const dc=parseInt(chEl.querySelector('.choiceDC').value.trim(),10);
       const success=chEl.querySelector('.choiceSuccess').value.trim();
       const failure=chEl.querySelector('.choiceFailure').value.trim();
       const once=chEl.querySelector('.choiceOnce').checked;
+      choiceRefs.push({to,el:toEl});
       if(label){
         const c={label};
         if(to) c.to=to;
@@ -186,6 +191,35 @@ function updateTreeData(){
   });
   document.getElementById('npcTree').value=JSON.stringify(treeData,null,2);
   renderDialogPreview();
+
+  // Validate choice targets
+  choiceRefs.forEach(({to,el})=>{
+    el.style.borderColor = (to && !treeData[to]) ? 'red' : '';
+  });
+
+  // Reachability check from start
+  const visited=new Set();
+  const visit=id=>{
+    if(visited.has(id) || !treeData[id]) return;
+    visited.add(id);
+    (treeData[id].choices||[]).forEach(c=>{ if(c.to) visit(c.to); });
+  };
+  visit('start');
+
+  const orphans=[];
+  Object.entries(nodeRefs).forEach(([id,nodeEl])=>{
+    if(!visited.has(id)){
+      nodeEl.style.borderColor='orange';
+      orphans.push(id);
+    } else {
+      nodeEl.style.borderColor='';
+    }
+  });
+
+  const warnEl=document.getElementById('treeWarning');
+  if(warnEl){
+    warnEl.textContent=orphans.length?`Orphan nodes: ${orphans.join(', ')}`:'';
+  }
 }
 
 function loadTreeEditor(){
