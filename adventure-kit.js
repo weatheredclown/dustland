@@ -275,6 +275,11 @@ function loadTreeEditor(){
   updateTreeData();
 }
 
+function toggleQuestDialogBtn(){
+  const btn=document.getElementById('genQuestDialog');
+  btn.style.display=document.getElementById('npcQuest').value? 'block' : 'none';
+}
+
 function addNode(){
   const id = Object.keys(treeData).length? 'node'+Object.keys(treeData).length : 'start';
   treeData[id]={text:'',choices:[{label:'(Leave)',to:'bye'}]};
@@ -342,6 +347,7 @@ function startNewNPC(){
   document.getElementById('addNPC').textContent='Add NPC';
   document.getElementById('delNPC').style.display='none';
   loadTreeEditor();
+  toggleQuestDialogBtn();
   placingType='npc';
   placingPos=null;
   selectedObj=null;
@@ -427,6 +433,7 @@ function editNPC(i){
   document.getElementById('addNPC').textContent='Update NPC';
   document.getElementById('delNPC').style.display='block';
   loadTreeEditor();
+  toggleQuestDialogBtn();
   showNPCEditor(true);
   selectedObj={type:'npc',obj:n};
   drawWorld();
@@ -777,11 +784,14 @@ document.getElementById('loadFile').addEventListener('change',e=>{
   document.getElementById('setStart').onclick=()=>{settingStart=true;};
   document.getElementById('playtest').onclick=playtestModule;
   document.getElementById('addNode').onclick=addNode;
-['npcDialog','npcAccept','npcTurnin','npcQuest'].forEach(id=>{
-  document.getElementById(id).addEventListener(id==='npcQuest'?'change':'input',()=>{
-    if(document.getElementById('npcQuest').value) generateQuestTree(); else renderDialogPreview();
-  });
+['npcDialog','npcAccept','npcTurnin'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',renderDialogPreview);
 });
+document.getElementById('npcQuest').addEventListener('change',()=>{
+  toggleQuestDialogBtn();
+  renderDialogPreview();
+});
+document.getElementById('genQuestDialog').onclick=generateQuestTree;
 
 // --- Map interactions ---
 function canvasPos(ev){
