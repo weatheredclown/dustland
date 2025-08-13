@@ -11,6 +11,7 @@ const ctx = canvas.getContext('2d');
 let dragTarget=null, settingStart=false, hoverTarget=null;
 let placingType=null, placingPos=null;
 let hoverTile=null;
+let coordTarget=null;
 
 const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [], start:{map:'world',x:2,y:Math.floor(WORLD_H/2)} };
 const STAT_OPTS=['ATK','DEF','LCK','INT','PER','CHA'];
@@ -709,6 +710,14 @@ document.getElementById('loadFile').addEventListener('change',e=>{
   document.getElementById('setStart').onclick=()=>{settingStart=true;};
   document.getElementById('playtest').onclick=playtestModule;
   document.getElementById('addNode').onclick=addNode;
+  document.getElementById('npcPick').onclick=()=>{
+    coordTarget={x:'npcX',y:'npcY'};
+    canvas.style.cursor='crosshair';
+  };
+  document.getElementById('itemPick').onclick=()=>{
+    coordTarget={x:'itemX',y:'itemY'};
+    canvas.style.cursor='crosshair';
+  };
 ['npcDialog','npcAccept','npcTurnin','npcQuest'].forEach(id=>{
   document.getElementById(id).addEventListener(id==='npcQuest'?'change':'input',()=>{
     if(document.getElementById('npcQuest').value) generateQuestTree(); else renderDialogPreview();
@@ -726,6 +735,14 @@ function canvasPos(ev){
 canvas.addEventListener('mousedown',ev=>{
   const {x,y}=canvasPos(ev);
   hoverTarget=null;
+  if(coordTarget){
+    document.getElementById(coordTarget.x).value=x;
+    document.getElementById(coordTarget.y).value=y;
+    coordTarget=null;
+    canvas.style.cursor='';
+    drawWorld();
+    return;
+  }
   if(placingType){
     if(placingType==='npc'){
       document.getElementById('npcX').value=x;
