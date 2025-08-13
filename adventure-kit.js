@@ -352,6 +352,11 @@ function generateQuestTree(){
   loadTreeEditor();
 }
 
+function toggleQuestTextWrap(){
+  const wrap=document.getElementById('questTextWrap');
+  wrap.style.display=document.getElementById('npcQuest').value? 'block':'none';
+}
+
 // --- NPCs ---
 function applyCombatTree(tree){
   tree.start = tree.start || {text:'', choices:[]};
@@ -391,6 +396,7 @@ function startNewNPC(){
   document.getElementById('npcQuest').value='';
   document.getElementById('npcAccept').value='Good luck.';
   document.getElementById('npcTurnin').value='Thanks for helping.';
+  toggleQuestTextWrap();
   document.getElementById('npcTree').value='';
   document.getElementById('npcCombat').checked=false;
   document.getElementById('npcShop').checked=false;
@@ -477,6 +483,7 @@ function editNPC(i){
   document.getElementById('npcQuest').value=n.questId||'';
   document.getElementById('npcAccept').value=n.tree?.accept?.text||'Good luck.';
   document.getElementById('npcTurnin').value=n.tree?.do_turnin?.text||'Thanks for helping.';
+  toggleQuestTextWrap();
   document.getElementById('npcTree').value=JSON.stringify(n.tree,null,2);
    document.getElementById('npcCombat').checked=!!n.combat;
    document.getElementById('npcShop').checked=!!n.shop;
@@ -843,9 +850,20 @@ document.getElementById('loadFile').addEventListener('change',e=>{
   document.getElementById('setStart').onclick=()=>{settingStart=true;};
   document.getElementById('playtest').onclick=playtestModule;
   document.getElementById('addNode').onclick=addNode;
-document.getElementById('npcQuest').addEventListener('change',()=>{
+// Live preview when dialog text changes
+['npcDialog','npcAccept','npcTurnin'].forEach(id=>{
+`  document.getElementById(id).addEventListener('input', renderDialogPreview);
+});
+
+// When quest selection changes, show/hide extra fields, update preview, and (optionally) auto-generate the quest scaffold
+document.getElementById('npcQuest').addEventListener('change', () => {
   toggleQuestDialogBtn();
-  renderDialogPreview();
+  toggleQuestTextWrap();
+  if (document.getElementById('npcQuest').value) {
+    generateQuestTree();     // build start/accept/turn-in scaffold
+  } else {
+    renderDialogPreview();   // just refresh preview of whatever is in the editor
+  }
 });
 document.getElementById('genQuestDialog').onclick=generateQuestTree;
 
