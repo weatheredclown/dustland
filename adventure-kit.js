@@ -8,6 +8,8 @@ const colors = {0:'#1e271d',1:'#2c342c',2:'#1573ff',3:'#203320',4:'#394b39',5:'#
 const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
 
+let dragTarget=null;
+
 const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [] };
 
 function drawWorld(){
@@ -25,6 +27,11 @@ function drawWorld(){
   moduleData.npcs.filter(n=> n.map==='world').forEach(n=>{
     ctx.fillStyle = n.color || '#fff';
     ctx.fillRect(n.x*sx, n.y*sy, sx, sy);
+  });
+  // Draw Item markers
+  moduleData.items.filter(it=> it.map==='world').forEach(it=>{
+    ctx.strokeStyle = '#ff0';
+    ctx.strokeRect(it.x*sx+1, it.y*sy+1, sx-2, sy-2);
   });
 }
 
@@ -67,6 +74,7 @@ function addItem(){
   try{ use=JSON.parse(document.getElementById('itemUse').value||'null'); }catch(e){ use=null; }
   moduleData.items.push({name,map,x,y,slot,mods,value,use});
   renderItemList();
+  drawWorld();
 }
 function renderItemList(){
   const list=document.getElementById('itemList');
@@ -116,5 +124,38 @@ document.getElementById('addItem').onclick=addItem;
 document.getElementById('addBldg').onclick=addBuilding;
 document.getElementById('addQuest').onclick=addQuest;
 document.getElementById('save').onclick=saveModule;
+
+// --- Map interactions ---
+function canvasPos(ev){
+  const rect=canvas.getBoundingClientRect();
+  const sx=canvas.width/WORLD_W, sy=canvas.height/WORLD_H;
+  const x=clamp(Math.floor((ev.clientX-rect.left)/sx),0,WORLD_W-1);
+  const y=clamp(Math.floor((ev.clientY-rect.top)/sy),0,WORLD_H-1);
+  return {x,y};
+}
+canvas.addEventListener('mousedown',ev=>{
+  const {x,y}=canvasPos(ev);
+  dragTarget = moduleData.npcs.find(n=>n.map==='world'&&n.x===x&&n.y===y);
+  if(dragTarget){ dragTarget._type='npc'; return; }
+  dragTarget = moduleData.items.find(it=>it.map==='world'&&it.x===x&&it.y===y);
+  if(dragTarget){ dragTarget._type='item'; return; }
+  document.getElementById('npcX').value=x; document.getElementById('npcY').value=y;
+  document.getElementById('itemX').value=x; document.getElementById('itemY').value=y;
+  drawWorld();
+});
+canvas.addEventListener('mousemove',ev=>{
+  if(!dragTarget) return;
+  const {x,y}=canvasPos(ev);
+  dragTarget.x=x; dragTarget.y=y;
+  if(dragTarget._type==='npc'){
+    renderNPCList();
+    document.getElementById('npcX').value=x; document.getElementById('npcY').value=y;
+  } else {
+    renderItemList();
+    document.getElementById('itemX').value=x; document.getElementById('itemY').value=y;
+  }
+  drawWorld();
+});
+['mouseup','mouseleave'].forEach(ev=>canvas.addEventListener(ev,()=>{ if(dragTarget) delete dragTarget._type; dragTarget=null; }));
 
 regenWorld();
