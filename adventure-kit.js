@@ -464,6 +464,12 @@ function deleteNPC(){
 function showItemEditor(show){
   document.getElementById('itemEditor').style.display = show ? 'block' : 'none';
 }
+
+function updateModsWrap(){
+  const slot=document.getElementById('itemSlot').value;
+  document.getElementById('modsWrap').style.display=
+    ['weapon','armor','trinket'].includes(slot)?'block':'none';
+}
 function startNewItem(){
   editItemIdx=-1;
   document.getElementById('itemName').value='';
@@ -471,6 +477,7 @@ function startNewItem(){
   document.getElementById('itemX').value=0;
   document.getElementById('itemY').value=0;
   document.getElementById('itemSlot').value='';
+  updateModsWrap();
   loadMods({});
   document.getElementById('itemValue').value=0;
   document.getElementById('itemUse').value='';
@@ -515,6 +522,7 @@ function editItem(i){
   document.getElementById('itemX').value=it.x;
   document.getElementById('itemY').value=it.y;
   document.getElementById('itemSlot').value=it.slot||'';
+  updateModsWrap();
   loadMods(it.mods);
   document.getElementById('itemValue').value=it.value||0;
   document.getElementById('itemUse').value=it.use?JSON.stringify(it.use,null,2):'';
@@ -768,6 +776,7 @@ document.getElementById('delItem').onclick=deleteItem;
 document.getElementById('delBldg').onclick=deleteBldg;
 document.getElementById('delQuest').onclick=deleteQuest;
 document.getElementById('addMod').onclick=()=>modRow();
+document.getElementById('itemSlot').addEventListener('change',updateModsWrap);
 document.getElementById('save').onclick=saveModule;
 document.getElementById('load').onclick=()=>document.getElementById('loadFile').click();
 document.getElementById('loadFile').addEventListener('change',e=>{
