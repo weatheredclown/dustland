@@ -16,6 +16,7 @@ const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], building
 const STAT_OPTS=['ATK','DEF','LCK','INT','PER','CHA'];
 let editNPCIdx=-1, editItemIdx=-1, editQuestIdx=-1, editBldgIdx=-1;
 let treeData={};
+let selectedObj=null;
 
 function nextId(prefix, arr){
   let i=1; while(arr.some(o=>o.id===prefix+i)) i++; return prefix+i;
@@ -25,6 +26,7 @@ function drawWorld(){
   const W = WORLD_W, H = WORLD_H;
   const sx = canvas.width / W;
   const sy = canvas.height / H;
+  const pulse = 2 + Math.sin(Date.now()/300)*2;
   for(let y=0;y<H;y++){
     for(let x=0;x<W;x++){
       const t = world[y][x];
@@ -77,8 +79,27 @@ function drawWorld(){
     ctx.restore();
   }
   if(moduleData.start && moduleData.start.map==='world'){
+    ctx.save();
     ctx.strokeStyle = '#f00';
+    ctx.lineWidth = pulse;
     ctx.strokeRect(moduleData.start.x*sx+1, moduleData.start.y*sy+1, sx-2, sy-2);
+    ctx.restore();
+  }
+  if(selectedObj && selectedObj.obj){
+    const o = selectedObj.obj;
+    ctx.save();
+    ctx.lineWidth = pulse;
+    if(selectedObj.type==='npc' && o.map==='world'){
+      ctx.strokeStyle = o.color || '#fff';
+      ctx.strokeRect(o.x*sx+1, o.y*sy+1, sx-2, sy-2);
+    } else if(selectedObj.type==='item' && o.map==='world'){
+      ctx.strokeStyle = '#ff0';
+      ctx.strokeRect(o.x*sx+1, o.y*sy+1, sx-2, sy-2);
+    } else if(selectedObj.type==='bldg'){
+      ctx.strokeStyle = '#fff';
+      ctx.strokeRect(o.x*sx, o.y*sy, o.w*sx, o.h*sy);
+    }
+    ctx.restore();
   }
   if(placingType && placingPos){
     ctx.save();
@@ -294,6 +315,8 @@ function startNewNPC(){
   loadTreeEditor();
   placingType='npc';
   placingPos=null;
+  selectedObj=null;
+  drawWorld();
   showNPCEditor(true);
 }
 function addNPC(){
@@ -350,6 +373,7 @@ function addNPC(){
   document.getElementById('npcDesc').value='';
   document.getElementById('npcCombat').checked=false;
   document.getElementById('npcShop').checked=false;
+  selectedObj=null;
   drawWorld();
   loadTreeEditor();
   showNPCEditor(false);
@@ -375,6 +399,8 @@ function editNPC(i){
   document.getElementById('delNPC').style.display='block';
   loadTreeEditor();
   showNPCEditor(true);
+  selectedObj={type:'npc',obj:n};
+  drawWorld();
 }
 function renderNPCList(){
   const list=document.getElementById('npcList');
@@ -390,6 +416,7 @@ function deleteNPC(){
   document.getElementById('addNPC').textContent='Add NPC';
   document.getElementById('delNPC').style.display='none';
   renderNPCList();
+  selectedObj=null;
   drawWorld();
   document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
   document.getElementById('npcDesc').value='';
@@ -415,6 +442,8 @@ function startNewItem(){
   document.getElementById('delItem').style.display='none';
   placingType='item';
   placingPos=null;
+  selectedObj=null;
+  drawWorld();
   showItemEditor(true);
 }
 function addItem(){
@@ -438,6 +467,7 @@ function addItem(){
   document.getElementById('delItem').style.display='none';
   loadMods({});
   renderItemList();
+  selectedObj=null;
   drawWorld();
   showItemEditor(false);
 }
@@ -455,6 +485,8 @@ function editItem(i){
   document.getElementById('addItem').textContent='Update Item';
   document.getElementById('delItem').style.display='block';
   showItemEditor(true);
+  selectedObj={type:'item',obj:it};
+  drawWorld();
 }
 function renderItemList(){
   const list=document.getElementById('itemList');
@@ -470,6 +502,7 @@ function deleteItem(){
   document.getElementById('delItem').style.display='none';
   loadMods({});
   renderItemList();
+  selectedObj=null;
   drawWorld();
   showItemEditor(false);
 }
@@ -485,6 +518,8 @@ function startNewBldg(){
   document.getElementById('delBldg').style.display='none';
   placingType='bldg';
   placingPos=null;
+  selectedObj=null;
+  drawWorld();
   showBldgEditor(true);
 }
 function addBuilding(){
@@ -493,6 +528,7 @@ function addBuilding(){
   const b=placeHut(x,y);
   moduleData.buildings.push(b);
   renderBldgList();
+  selectedObj=null;
   drawWorld();
   editBldgIdx=-1;
   document.getElementById('delBldg').style.display='none';
@@ -511,6 +547,8 @@ function editBldg(i){
   document.getElementById('bldgY').value=b.y;
   document.getElementById('delBldg').style.display='block';
   showBldgEditor(true);
+  selectedObj={type:'bldg',obj:b};
+  drawWorld();
 }
 
 function removeBuilding(b){
@@ -538,6 +576,7 @@ function deleteBldg(){
   editBldgIdx=-1;
   document.getElementById('delBldg').style.display='none';
   renderBldgList();
+  selectedObj=null;
   drawWorld();
   showBldgEditor(false);
 }
@@ -754,12 +793,15 @@ canvas.addEventListener('mousedown',ev=>{
     document.getElementById('bldgY').value=dragTarget.y;
     editBldgIdx=moduleData.buildings.indexOf(dragTarget);
     document.getElementById('delBldg').style.display='block';
+    selectedObj={type:'bldg',obj:dragTarget};
+    drawWorld();
     showBldgEditor(true);
     return;
   }
   document.getElementById('npcX').value=x; document.getElementById('npcY').value=y;
   document.getElementById('itemX').value=x; document.getElementById('itemY').value=y;
   document.getElementById('bldgX').value=x; document.getElementById('bldgY').value=y;
+  selectedObj=null;
   drawWorld();
 });
 canvas.addEventListener('mousemove',ev=>{
@@ -775,6 +817,7 @@ canvas.addEventListener('mousemove',ev=>{
   if(!dragTarget) return;
   if(dragTarget._type==='bldg'){
     dragTarget=moveBuilding(dragTarget,x,y); dragTarget._type='bldg';
+    if(selectedObj && selectedObj.type==='bldg') selectedObj.obj=dragTarget;
     renderBldgList();
     document.getElementById('bldgX').value=x; document.getElementById('bldgY').value=y;
     document.getElementById('delBldg').style.display='block';
@@ -818,3 +861,8 @@ showQuestEditor(false);
 document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
 document.getElementById('questId').value=nextId('quest',moduleData.quests);
 loadTreeEditor();
+function animate(){
+  drawWorld();
+  requestAnimationFrame(animate);
+}
+animate();
