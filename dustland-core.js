@@ -503,7 +503,9 @@ function placeHut(x,y){
   const doorX=x+Math.floor(w/2), doorY=y+h-1; setTile('world',doorX,doorY,TILE.DOOR);
   const interiorId=makeInteriorRoom();
   const boarded = rng() < 0.3;
-  buildings.push({x,y,w,h,doorX,doorY,interiorId,boarded});
+  const b={x,y,w,h,doorX,doorY,interiorId,boarded};
+  buildings.push(b);
+  return b;
 }
 
 // ===== HALL =====

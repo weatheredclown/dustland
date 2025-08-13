@@ -22,12 +22,18 @@ function applyModule(data){
   });
   Object.keys(quests).forEach(k=> delete quests[k]);
   (data.quests||[]).forEach(q=>{
-    quests[q.id] = new Quest(q.id, q.title, q.desc);
+    quests[q.id] = new Quest(q.id, q.title, q.desc, {item:q.item, reward:q.reward, xp:q.xp});
   });
   NPCS.length = 0;
   (data.npcs||[]).forEach(n=>{
-    const tree = { start:{ text:n.dialog||'', choices:[{label:'(Leave)', to:'bye'}] } };
-    const npc = makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, '', '', tree);
+    let tree=n.tree;
+    if(typeof tree==='string'){ try{ tree=JSON.parse(tree); }catch(e){ tree=null; } }
+    if(!tree){
+      tree = { start:{ text:n.dialog||'', choices:[{label:'(Leave)', to:'bye'}] } };
+    }
+    let quest=null;
+    if(n.questId && quests[n.questId]) quest=quests[n.questId];
+    const npc = makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, '', '', tree, quest);
     NPCS.push(npc);
   });
 }
