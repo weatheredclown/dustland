@@ -228,44 +228,93 @@ function renderTreeEditor(){
 }
 
 function updateTreeData(){
-  const wrap=document.getElementById('treeEditor');
-  const newTree={};
+  const wrap = document.getElementById('treeEditor');
+  const newTree = {};
+  const choiceRefs = [];
+  const nodeRefs = {};
+
+  // Build tree from editor UI. Preserve collapsed nodes by keeping previous snapshot.
   wrap.querySelectorAll('.node').forEach(nodeEl=>{
-    const id=nodeEl.querySelector('.nodeId').value.trim();
+    const id = nodeEl.querySelector('.nodeId').value.trim();
     if(!id) return;
-    if(nodeEl.classList.contains('collapsed')){
-      if(treeData[id]) newTree[id]=treeData[id];
+
+    nodeRefs[id] = nodeEl;
+
+    // If collapsed, keep previous data for this node (don’t overwrite)
+    if (nodeEl.classList.contains('collapsed')) {
+      if (treeData[id]) newTree[id] = treeData[id];
       return;
     }
-    const text=nodeEl.querySelector('.nodeText').value;
-    const choices=[];
+
+    const text = nodeEl.querySelector('.nodeText').value;
+    const choices = [];
+
     nodeEl.querySelectorAll('.choices > div').forEach(chEl=>{
-      const label=chEl.querySelector('.choiceLabel').value.trim();
-      const to=chEl.querySelector('.choiceTo').value;
-      const reward=chEl.querySelector('.choiceReward').value.trim();
-      const stat=chEl.querySelector('.choiceStat').value.trim();
-      const dc=parseInt(chEl.querySelector('.choiceDC').value.trim(),10);
-      const success=chEl.querySelector('.choiceSuccess').value.trim();
-      const failure=chEl.querySelector('.choiceFailure').value.trim();
-      const once=chEl.querySelector('.choiceOnce').checked;
-      if(label){
-        const c={label};
-        if(to) c.to=to;
-        if(reward) c.reward=reward;
-        if(stat) c.stat=stat;
-        if(dc) c.dc=dc;
-        if(success) c.success=success;
-        if(failure) c.failure=failure;
-        if(once) c.once=true;
+      const label   = chEl.querySelector('.choiceLabel').value.trim();
+      const toEl    = chEl.querySelector('.choiceTo');
+      const to      = toEl.value.trim();
+      const reward  = chEl.querySelector('.choiceReward').value.trim();
+      const stat    = chEl.querySelector('.choiceStat').value.trim();
+      const dcTxt   = chEl.querySelector('.choiceDC').value.trim();
+      const dc      = dcTxt ? parseInt(dcTxt, 10) : undefined;
+      const success = chEl.querySelector('.choiceSuccess').value.trim();
+      const failure = chEl.querySelector('.choiceFailure').value.trim();
+      const once    = chEl.querySelector('.choiceOnce').checked;
+
+      choiceRefs.push({ to, el: toEl });
+
+      if (label) {
+        const c = { label };
+        if (to)      c.to = to;
+        if (reward)  c.reward = reward;
+        if (stat)    c.stat = stat;
+        if (dc != null && !Number.isNaN(dc)) c.dc = dc;
+        if (success) c.success = success;
+        if (failure) c.failure = failure;
+        if (once)    c.once = true;
         choices.push(c);
       }
     });
-    newTree[id]={text,choices};
+
+    newTree[id] = { text, choices };
   });
-  treeData=newTree;
-  document.getElementById('npcTree').value=JSON.stringify(treeData,null,2);
+
+  // Commit + mirror into textarea for persistence/preview
+  treeData = newTree;
+  document.getElementById('npcTree').value = JSON.stringify(treeData, null, 2);
+
+  // Live preview + keep "to" dropdowns in sync with current node keys
   renderDialogPreview();
   refreshChoiceDropdowns();
+
+  // ---- Validation: highlight bad targets & orphans ----
+
+  // 1) Choice target validation: red border if target doesn't exist
+  choiceRefs.forEach(({ to, el })=>{
+    el.style.borderColor = (to && !treeData[to]) ? 'red' : '';
+  });
+
+  // 2) Reachability from 'start' (orange outline for orphan nodes)
+  const visited = new Set();
+  const visit = id => {
+    if (visited.has(id) || !treeData[id]) return;
+    visited.add(id);
+    (treeData[id].choices || []).forEach(c => { if (c.to) visit(c.to); });
+  };
+  visit('start');
+
+  const orphans = [];
+  Object.entries(nodeRefs).forEach(([id, nodeEl])=>{
+    if (!visited.has(id)) {
+      nodeEl.style.borderColor = 'orange';
+      orphans.push(id);
+    } else {
+      nodeEl.style.borderColor = '';
+    }
+  });
+
+  const warnEl = document.getElementById('treeWarning');
+  if (warnEl) warnEl.textContent = orphans.length ? `Orphan nodes: ${orphans.join(', ')}` : '';
 }
 
 function loadTreeEditor(){
@@ -892,54 +941,62 @@ canvas.addEventListener('mousedown',ev=>{
   drawWorld();
   updateCursor(x,y);
 });
-canvas.addEventListener('mousemove',ev=>{
-  const {x,y}=canvasPos(ev);
-  // TODO: Do placingType and hoverTile concepts conflict? Hey Codex, please resolve this!!!
-  // TODO: Agent should evaluate the state of this function that may be a result of bad branch merges.
-  hoverTile={x,y};
-  if(placingType){
-    placingPos={x,y};
+canvas.addEventListener('mousemove', ev=>{
+  const { x, y } = canvasPos(ev);
+  hoverTile = { x, y };
+
+  // While placing, show ghost & bail
+  if (placingType) {
+    placingPos = { x, y };
     drawWorld();
-    updateCursor(x,y);
+    updateCursor(x, y);
     return;
   }
-  if(!dragTarget){
-    updateCursor(x,y);
-    return;
-  }
-  if(dragTarget._type==='bldg'){
-    dragTarget=moveBuilding(dragTarget,x,y); dragTarget._type='bldg';
-    if(selectedObj && selectedObj.type==='bldg') selectedObj.obj=dragTarget;
-    renderBldgList();
-    document.getElementById('bldgX').value=x; document.getElementById('bldgY').value=y;
-    document.getElementById('delBldg').style.display='block';
-  } else {
-    dragTarget.x=x; dragTarget.y=y;
-    if(dragTarget._type==='npc'){
+
+  // While dragging, move the correct thing & bail
+  if (dragTarget) {
+    if (dragTarget._type === 'bldg') {
+      // Buildings are re-placed to keep tiles coherent
+      dragTarget = moveBuilding(dragTarget, x, y);
+      dragTarget._type = 'bldg';
+      if (selectedObj && selectedObj.type === 'bldg') selectedObj.obj = dragTarget;
+      renderBldgList();
+      document.getElementById('bldgX').value = x;
+      document.getElementById('bldgY').value = y;
+      document.getElementById('delBldg').style.display = 'block';
+    } else if (dragTarget._type === 'npc') {
+      dragTarget.x = x; dragTarget.y = y;
       renderNPCList();
-      document.getElementById('npcX').value=x; document.getElementById('npcY').value=y;
-    } else {
-      dragTarget.x=x; dragTarget.y=y;
-      if(dragTarget._type==='npc'){
-        renderNPCList();
-        document.getElementById('npcX').value=x; document.getElementById('npcY').value=y;
-      } else {
-        renderItemList();
-        document.getElementById('itemX').value=x; document.getElementById('itemY').value=y;
-      }
+      document.getElementById('npcX').value = x;
+      document.getElementById('npcY').value = y;
+    } else { // item
+      dragTarget.x = x; dragTarget.y = y;
+      renderItemList();
+      document.getElementById('itemX').value = x;
+      document.getElementById('itemY').value = y;
     }
     drawWorld();
-  } else {
-    let ht=null;
-    let obj = moduleData.npcs.find(n=>n.map==='world'&&n.x===x&&n.y===y);
-    if(obj) ht={obj,type:'npc'};
-    else if(obj = moduleData.items.find(it=>it.map==='world'&&it.x===x&&it.y===y)) ht={obj,type:'item'};
-    else if(obj = moduleData.buildings.find(b=> x>=b.x && x<b.x+b.w && y>=b.y && y<b.y+b.h)) ht={obj,type:'bldg'};
-    if((hoverTarget && (!ht || hoverTarget.obj!==ht.obj)) || (!hoverTarget && ht)){
-      hoverTarget=ht;
-      drawWorld();
-    }
+    updateCursor(x, y);
+    return;
   }
+
+  // Not dragging: update hover target highlighting
+  let ht = null;
+  let obj = moduleData.npcs.find(n => n.map === 'world' && n.x === x && n.y === y);
+  if (obj) {
+    ht = { obj, type: 'npc' };
+  } else if (obj = moduleData.items.find(it => it.map === 'world' && it.x === x && it.y === y)) {
+    ht = { obj, type: 'item' };
+  } else if (obj = moduleData.buildings.find(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h)) {
+    ht = { obj, type: 'bldg' };
+  }
+
+  if ((hoverTarget && (!ht || hoverTarget.obj !== ht.obj)) || (!hoverTarget && ht)) {
+    hoverTarget = ht;
+    drawWorld();
+  }
+
+  updateCursor(x, y);
 });
 canvas.addEventListener('mouseup',()=>{
   if(dragTarget) delete dragTarget._type;
