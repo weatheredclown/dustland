@@ -39,19 +39,22 @@
     <input type="file" id="loadFile" accept="application/json" style="display:none" />
   </div>
   <fieldset class="card" id="npcCard">
-    <legend>Add NPC</legend>
-    <label>ID<input id="npcId"/></label>
-    <label>Name<input id="npcName"/></label>
-    <label>Description<textarea id="npcDesc" rows="2"></textarea></label>
-    <label>Color<input id="npcColor" type="color" value="#9ef7a0"/></label>
-    <label>Map<input id="npcMap" value="world"/></label>
-    <label>X<input id="npcX" type="number" min="0"/></label>
-    <label>Y<input id="npcY" type="number" min="0"/></label>
-    <label>Dialog<textarea id="npcDialog" rows="2"></textarea></label>
-    <label>Quest<select id="npcQuest"><option value="">(none)</option></select></label>
-    <label>Accept Text<textarea id="npcAccept" rows="2">Good luck.</textarea></label>
-    <label>Turn-in Text<textarea id="npcTurnin" rows="2">Thanks for helping.</textarea></label>
-    <label><input type="checkbox" id="npcCombat"> Combat NPC</label>
+    <legend>NPCs</legend>
+    <div class="list" id="npcList"></div>
+    <button class="btn" type="button" id="newNPC">+ NPC</button>
+    <div id="npcEditor" style="display:none">
+      <label>ID<input id="npcId"/></label>
+      <label>Name<input id="npcName"/></label>
+      <label>Description<textarea id="npcDesc" rows="2"></textarea></label>
+      <label>Color<input id="npcColor" type="color" value="#9ef7a0"/></label>
+      <label>Map<input id="npcMap" value="world"/></label>
+      <label>X<input id="npcX" type="number" min="0"/></label>
+      <label>Y<input id="npcY" type="number" min="0"/></label>
+      <label>Dialog<textarea id="npcDialog" rows="2"></textarea></label>
+      <label>Quest<select id="npcQuest"><option value="">(none)</option></select></label>
+      <label>Accept Text<textarea id="npcAccept" rows="2">Good luck.</textarea></label>
+      <label>Turn-in Text<textarea id="npcTurnin" rows="2">Thanks for helping.</textarea></label>
+      <label><input type="checkbox" id="npcCombat"> Combat NPC</label>
       <label><input type="checkbox" id="npcShop"> Shop NPC</label>
       <div id="treeWrap">
         <label>Dialog Tree</label>
@@ -60,9 +63,9 @@
       </div>
       <textarea id="npcTree" style="display:none"></textarea>
       <div id="dialogPreview" style="margin-top:6px"></div>
-    <button class="btn" id="addNPC">Add NPC</button>
-    <button class="btn" id="delNPC" style="display:none">Delete NPC</button>
-    <div class="list" id="npcList"></div>
+      <button class="btn" id="addNPC">Add NPC</button>
+      <button class="btn" id="delNPC" style="display:none">Delete NPC</button>
+    </div>
   </fieldset>
   <fieldset class="card" id="itemCard">
     <legend>Items</legend>
@@ -91,25 +94,31 @@
     </div>
   </fieldset>
   <fieldset class="card" id="bldgCard">
-    <legend>Add Building</legend>
-    <label>X<input id="bldgX" type="number" min="0"/></label>
-    <label>Y<input id="bldgY" type="number" min="0"/></label>
-    <button class="btn" id="addBldg">Place Hut</button>
-    <button class="btn" id="delBldg" style="display:none">Remove Hut</button>
+    <legend>Buildings</legend>
     <div class="list" id="bldgList"></div>
+    <button class="btn" type="button" id="newBldg">+ Building</button>
+    <div id="bldgEditor" style="display:none">
+      <label>X<input id="bldgX" type="number" min="0"/></label>
+      <label>Y<input id="bldgY" type="number" min="0"/></label>
+      <button class="btn" id="addBldg">Place Hut</button>
+      <button class="btn" id="delBldg" style="display:none">Remove Hut</button>
+    </div>
   </fieldset>
   <fieldset class="card" id="questCard">
-    <legend>Add Quest</legend>
-    <label>ID<input id="questId"/></label>
-    <label>Title<input id="questTitle"/></label>
-    <label>Description<textarea id="questDesc" rows="2"></textarea></label>
-    <label>Required Item<input id="questItem"/></label>
-    <label>Reward Item<input id="questReward"/></label>
-    <label>XP Reward<input id="questXP" type="number" min="0"/></label>
-    <label>NPC<select id="questNPC"><option value="">(none)</option></select></label>
-    <button class="btn" id="addQuest">Add Quest</button>
-    <button class="btn" id="delQuest" style="display:none">Delete Quest</button>
+    <legend>Quests</legend>
     <div class="list" id="questList"></div>
+    <button class="btn" type="button" id="newQuest">+ Quest</button>
+    <div id="questEditor" style="display:none">
+      <label>ID<input id="questId"/></label>
+      <label>Title<input id="questTitle"/></label>
+      <label>Description<textarea id="questDesc" rows="2"></textarea></label>
+      <label>Required Item<input id="questItem"/></label>
+      <label>Reward Item<input id="questReward"/></label>
+      <label>XP Reward<input id="questXP" type="number" min="0"/></label>
+      <label>NPC<select id="questNPC"><option value="">(none)</option></select></label>
+      <button class="btn" id="addQuest">Add Quest</button>
+      <button class="btn" id="delQuest" style="display:none">Delete Quest</button>
+    </div>
   </fieldset>
   <script src="dustland-core.js"></script>
   <script src="adventure-kit.js"></script>

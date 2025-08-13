@@ -218,6 +218,30 @@ function removeShopTree(tree){
     tree.start.choices = tree.start.choices.filter(c=>c.to!=='sell');
   delete tree.sell;
 }
+function showNPCEditor(show){
+  document.getElementById('npcEditor').style.display = show ? 'block' : 'none';
+}
+function startNewNPC(){
+  editNPCIdx=-1;
+  document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
+  document.getElementById('npcName').value='';
+  document.getElementById('npcDesc').value='';
+  document.getElementById('npcColor').value='#9ef7a0';
+  document.getElementById('npcMap').value='world';
+  document.getElementById('npcX').value=0;
+  document.getElementById('npcY').value=0;
+  document.getElementById('npcDialog').value='';
+  document.getElementById('npcQuest').value='';
+  document.getElementById('npcAccept').value='Good luck.';
+  document.getElementById('npcTurnin').value='Thanks for helping.';
+  document.getElementById('npcTree').value='';
+  document.getElementById('npcCombat').checked=false;
+  document.getElementById('npcShop').checked=false;
+  document.getElementById('addNPC').textContent='Add NPC';
+  document.getElementById('delNPC').style.display='none';
+  loadTreeEditor();
+  showNPCEditor(true);
+}
 function addNPC(){
   const id=document.getElementById('npcId').value.trim();
   const name=document.getElementById('npcName').value.trim();
@@ -274,6 +298,7 @@ function addNPC(){
   document.getElementById('npcShop').checked=false;
   drawWorld();
   loadTreeEditor();
+  showNPCEditor(false);
 }
 function editNPC(i){
   const n=moduleData.npcs[i];
@@ -295,6 +320,7 @@ function editNPC(i){
   document.getElementById('addNPC').textContent='Update NPC';
   document.getElementById('delNPC').style.display='block';
   loadTreeEditor();
+  showNPCEditor(true);
 }
 function renderNPCList(){
   const list=document.getElementById('npcList');
@@ -314,6 +340,7 @@ function deleteNPC(){
   document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
   document.getElementById('npcDesc').value='';
   loadTreeEditor();
+  showNPCEditor(false);
 }
 
 // --- Items ---
@@ -392,6 +419,16 @@ function deleteItem(){
 }
 
 // --- Buildings ---
+function showBldgEditor(show){
+  document.getElementById('bldgEditor').style.display = show ? 'block' : 'none';
+}
+function startNewBldg(){
+  editBldgIdx=-1;
+  document.getElementById('bldgX').value=0;
+  document.getElementById('bldgY').value=0;
+  document.getElementById('delBldg').style.display='none';
+  showBldgEditor(true);
+}
 function addBuilding(){
   const x=parseInt(document.getElementById('bldgX').value,10)||0;
   const y=parseInt(document.getElementById('bldgY').value,10)||0;
@@ -401,6 +438,7 @@ function addBuilding(){
   drawWorld();
   editBldgIdx=-1;
   document.getElementById('delBldg').style.display='none';
+  showBldgEditor(false);
 }
 function renderBldgList(){
   const list=document.getElementById('bldgList');
@@ -414,6 +452,7 @@ function editBldg(i){
   document.getElementById('bldgX').value=b.x;
   document.getElementById('bldgY').value=b.y;
   document.getElementById('delBldg').style.display='block';
+  showBldgEditor(true);
 }
 
 function removeBuilding(b){
@@ -442,9 +481,26 @@ function deleteBldg(){
   document.getElementById('delBldg').style.display='none';
   renderBldgList();
   drawWorld();
+  showBldgEditor(false);
 }
 
 // --- Quests ---
+function showQuestEditor(show){
+  document.getElementById('questEditor').style.display = show ? 'block' : 'none';
+}
+function startNewQuest(){
+  editQuestIdx=-1;
+  document.getElementById('questId').value=nextId('quest',moduleData.quests);
+  document.getElementById('questTitle').value='';
+  document.getElementById('questDesc').value='';
+  document.getElementById('questItem').value='';
+  document.getElementById('questReward').value='';
+  document.getElementById('questXP').value=0;
+  document.getElementById('questNPC').value='';
+  document.getElementById('addQuest').textContent='Add Quest';
+  document.getElementById('delQuest').style.display='none';
+  showQuestEditor(true);
+}
 function addQuest(){
   const id=document.getElementById('questId').value.trim();
   const title=document.getElementById('questTitle').value.trim();
@@ -469,6 +525,7 @@ function addQuest(){
   renderQuestList();
   renderNPCList();
   document.getElementById('questId').value=nextId('quest',moduleData.quests);
+  showQuestEditor(false);
 }
 function renderQuestList(){
   const list=document.getElementById('questList');
@@ -489,6 +546,7 @@ function editQuest(i){
   document.getElementById('questNPC').value=npc?npc.id:'';
   document.getElementById('addQuest').textContent='Update Quest';
   document.getElementById('delQuest').style.display='block';
+  showQuestEditor(true);
 }
 function updateQuestOptions(){
   const sel=document.getElementById('npcQuest');
@@ -515,6 +573,7 @@ function deleteQuest(){
   renderNPCList();
   updateQuestOptions();
   document.getElementById('questId').value=nextId('quest',moduleData.quests);
+  showQuestEditor(false);
 }
 
 function applyLoadedModule(data){
@@ -539,6 +598,9 @@ function applyLoadedModule(data){
   updateQuestOptions();
   loadMods({});
   showItemEditor(false);
+  showNPCEditor(false);
+  showBldgEditor(false);
+  showQuestEditor(false);
 }
 
 function saveModule(){
@@ -563,6 +625,9 @@ document.getElementById('regen').onclick=regenWorld;
 document.getElementById('addNPC').onclick=addNPC;
 document.getElementById('addItem').onclick=addItem;
 document.getElementById('newItem').onclick=startNewItem;
+document.getElementById('newNPC').onclick=startNewNPC;
+document.getElementById('newBldg').onclick=startNewBldg;
+document.getElementById('newQuest').onclick=startNewQuest;
 document.getElementById('addBldg').onclick=addBuilding;
 document.getElementById('addQuest').onclick=addQuest;
 document.getElementById('delNPC').onclick=deleteNPC;
@@ -614,6 +679,7 @@ canvas.addEventListener('mousedown',ev=>{
     document.getElementById('bldgY').value=dragTarget.y;
     editBldgIdx=moduleData.buildings.indexOf(dragTarget);
     document.getElementById('delBldg').style.display='block';
+    showBldgEditor(true);
     return;
   }
   document.getElementById('npcX').value=x; document.getElementById('npcY').value=y;
@@ -646,6 +712,9 @@ canvas.addEventListener('mousemove',ev=>{
 regenWorld();
 loadMods({});
 showItemEditor(false);
+showNPCEditor(false);
+showBldgEditor(false);
+showQuestEditor(false);
 document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
 document.getElementById('questId').value=nextId('quest',moduleData.quests);
 loadTreeEditor();
