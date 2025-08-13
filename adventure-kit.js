@@ -852,7 +852,7 @@ document.getElementById('loadFile').addEventListener('change',e=>{
   document.getElementById('addNode').onclick=addNode;
 // Live preview when dialog text changes
 ['npcDialog','npcAccept','npcTurnin'].forEach(id=>{
-`  document.getElementById(id).addEventListener('input', renderDialogPreview);
+  document.getElementById(id).addEventListener('input', renderDialogPreview);
 });
 
 // When quest selection changes, show/hide extra fields, update preview, and (optionally) auto-generate the quest scaffold
@@ -893,7 +893,8 @@ function updateCursor(x, y){
     const overNpc = moduleData.npcs.some(n=>n.map==='world'&&n.x===x&&n.y===y);
     const overItem = moduleData.items.some(it=>it.map==='world'&&it.x===x&&it.y===y);
     const overBldg = moduleData.buildings.some(b=>x>=b.x && x<b.x+b.w && y>=b.y && y<b.y+b.h);
-    canvas.style.cursor = (overNpc||overItem||overBldg)?'grab':'pointer';
+    const overStart = moduleData.start && moduleData.start.map==='world' && moduleData.start.x===x && moduleData.start.y===y;
+    canvas.style.cursor = (overNpc||overItem||overBldg||overStart)?'grab':'pointer';
   } else {
     canvas.style.cursor='pointer';
   }
@@ -930,6 +931,12 @@ canvas.addEventListener('mousedown',ev=>{
     moduleData.start={map:'world',x,y};
     settingStart=false;
     drawWorld();
+    updateCursor(x,y);
+    return;
+  }
+  if(moduleData.start && moduleData.start.map==='world' && moduleData.start.x===x && moduleData.start.y===y){
+    dragTarget = moduleData.start;
+    dragTarget._type='start';
     updateCursor(x,y);
     return;
   }
@@ -993,6 +1000,8 @@ canvas.addEventListener('mousemove', ev=>{
       renderNPCList();
       document.getElementById('npcX').value = x;
       document.getElementById('npcY').value = y;
+    } else if (dragTarget._type === 'start') {
+      dragTarget.x = x; dragTarget.y = y;
     } else { // item
       dragTarget.x = x; dragTarget.y = y;
       renderItemList();
