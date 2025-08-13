@@ -122,7 +122,7 @@ function addChoiceRow(container,ch={}){
   const {label='',to='',reward='',stat='',dc='',success='',failure='',once=false}=ch||{};
   const row=document.createElement('div');
   row.innerHTML=`<input class="choiceLabel" placeholder="label" value="${label}"/>
-    <input class="choiceTo" placeholder="to" value="${to}"/>
+    <select class="choiceTo"></select>
     <input class="choiceReward" placeholder="reward" value="${reward||''}"/>
     <input class="choiceStat" placeholder="stat" value="${stat||''}"/>
     <input class="choiceDC" placeholder="dc" value="${dc||''}"/>
@@ -131,9 +131,25 @@ function addChoiceRow(container,ch={}){
     <label><input type="checkbox" class="choiceOnce" ${once?'checked':''}/> once</label>
     <button class="btn delChoice" type="button">x</button>`;
   container.appendChild(row);
-  row.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',updateTreeData));
+  populateChoiceDropdown(row.querySelector('.choiceTo'), to);
+  row.querySelectorAll('input,textarea,select').forEach(el=>el.addEventListener('input',updateTreeData));
+  row.querySelector('.choiceTo').addEventListener('change',updateTreeData);
   row.querySelectorAll('input[type=checkbox]').forEach(el=>el.addEventListener('change',updateTreeData));
   row.querySelector('.delChoice').addEventListener('click',()=>{row.remove();updateTreeData();});
+}
+
+function populateChoiceDropdown(sel, selected=''){
+  const keys=Object.keys(treeData);
+  sel.innerHTML='<option value=""></option>'+keys.map(k=>`<option value="${k}">${k}</option>`).join('');
+  if(selected && !keys.includes(selected)){
+    sel.innerHTML+=`<option value="${selected}" selected>${selected}</option>`;
+  } else {
+    sel.value=selected;
+  }
+}
+
+function refreshChoiceDropdowns(){
+  document.querySelectorAll('.choiceTo').forEach(sel=>populateChoiceDropdown(sel, sel.value));
 }
 
 function renderTreeEditor(){
@@ -149,7 +165,8 @@ function renderTreeEditor(){
     div.querySelector('.addChoice').onclick=()=>addChoiceRow(choicesDiv);
     wrap.appendChild(div);
   });
-  wrap.querySelectorAll('input,textarea').forEach(el=> el.addEventListener('input',updateTreeData));
+  wrap.querySelectorAll('input,textarea,select').forEach(el=> el.addEventListener('input',updateTreeData));
+  wrap.querySelectorAll('select').forEach(el=> el.addEventListener('change',updateTreeData));
   wrap.querySelectorAll('input[type=checkbox]').forEach(el=> el.addEventListener('change',updateTreeData));
 }
 
@@ -163,7 +180,7 @@ function updateTreeData(){
     const choices=[];
     nodeEl.querySelectorAll('.choices > div').forEach(chEl=>{
       const label=chEl.querySelector('.choiceLabel').value.trim();
-      const to=chEl.querySelector('.choiceTo').value.trim();
+      const to=chEl.querySelector('.choiceTo').value;
       const reward=chEl.querySelector('.choiceReward').value.trim();
       const stat=chEl.querySelector('.choiceStat').value.trim();
       const dc=parseInt(chEl.querySelector('.choiceDC').value.trim(),10);
@@ -186,6 +203,7 @@ function updateTreeData(){
   });
   document.getElementById('npcTree').value=JSON.stringify(treeData,null,2);
   renderDialogPreview();
+  refreshChoiceDropdowns();
 }
 
 function loadTreeEditor(){
