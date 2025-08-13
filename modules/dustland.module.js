@@ -273,58 +273,22 @@ function npc_Raider(x,y){
       const r = skillRoll('CHA'); const dc = DC.TALK;
       textEl.textContent = `Roll: ${r} vs DC ${dc}. ${r>=dc ? 'He grunts and lets you pass.' : 'He tightens his grip.'}`;
     }
-    if(node==='do_fight'){
-      const res = quickCombat({DEF:5, loot:{name:'Raider Knife', slot:'weapon', mods:{ATK:+1}}});
-      const msg = res.result==='loot' ? 'The raider collapses. You take his knife.' :
-                  res.result==='bruise' ? 'A sharp blow leaves a bruise.' :
-                  'You back away from the raider.';
-      textEl.textContent = `Roll: ${res.roll} vs DEF ${res.dc}. ${msg}`;
-      if(res.result==='loot') removeNPC(this);
-    }
   };
   return makeNPC('raider','world',x,y,'#f88','Road Raider','Bandit','Scarred scav looking for trouble.',{
     start:{text:'A raider blocks the path, eyeing your gear.', choices:[
-      {label:'(Fight)', to:'do_fight'},
       {label:'(Talk) Stand down', to:'rollcha'},
       {label:'(Leave)', to:'bye'}
     ]},
-    rollcha:{text:'', choices:[{label:'(Continue)', to:'bye'}]},
-    do_fight:{text:'', choices:[{label:'(Continue)', to:'bye'}]}
-  }, null, processNode);
+    rollcha:{text:'', choices:[{label:'(Continue)', to:'bye'}]}
+  }, null, processNode, null, {combat:{DEF:5, loot:{name:'Raider Knife', slot:'weapon', mods:{ATK:+1}}}});
 }
 
 function npc_Trader(x,y){
-  const processNode = function(node){
-    if(node==='sell'){
-      const items = player.inv.map((it,idx)=>({label:`Sell ${it.name} (${Math.max(1, it.value || 0)} ${CURRENCY})`, to:'sell', sellIndex:idx}));
-      if(items.length===0){
-        this.tree.sell.text = 'Nothing to sell.';
-      } else {
-        this.tree.sell.text = 'What are you selling?';
-      }
-      items.push({label:'(Back)', to:'start'});
-      this.tree.sell.choices = items;
-    }
-  };
-  const processChoice = function(c){
-    if(typeof c.sellIndex==='number'){
-      const it = player.inv.splice(c.sellIndex,1)[0];
-      const val = Math.max(1, it.value || 0);
-      player.scrap += val;
-      renderInv(); updateHUD();
-      textEl.textContent = `Sold ${it.name} for ${val} ${CURRENCY}.`;
-      currentNode='sell';
-      renderDialog();
-      return true;
-    }
-  };
   return makeNPC('trader','world',x,y,'#caffc6','Cass the Trader','Shopkeep','A roving merchant weighing your wares.',{
     start:{ text:'Got goods to sell? I pay in scrap.', choices:[
-      {label:'(Sell items)', to:'sell'},
       {label:'(Leave)', to:'bye'}
-    ]},
-    sell:{ text:'What are you selling?', choices:[] }
-  }, null, processNode, processChoice);
+    ]}
+  }, null, null, null, {shop:true});
 }
 
 function npc_ExitDoor(x,y){
