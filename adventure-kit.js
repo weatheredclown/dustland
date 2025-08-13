@@ -247,6 +247,11 @@ function generateQuestTree(){
   loadTreeEditor();
 }
 
+function toggleQuestTextWrap(){
+  const wrap=document.getElementById('questTextWrap');
+  wrap.style.display=document.getElementById('npcQuest').value? 'block':'none';
+}
+
 // --- NPCs ---
 function applyCombatTree(tree){
   tree.start = tree.start || {text:'', choices:[]};
@@ -286,6 +291,7 @@ function startNewNPC(){
   document.getElementById('npcQuest').value='';
   document.getElementById('npcAccept').value='Good luck.';
   document.getElementById('npcTurnin').value='Thanks for helping.';
+  toggleQuestTextWrap();
   document.getElementById('npcTree').value='';
   document.getElementById('npcCombat').checked=false;
   document.getElementById('npcShop').checked=false;
@@ -368,6 +374,7 @@ function editNPC(i){
   document.getElementById('npcQuest').value=n.questId||'';
   document.getElementById('npcAccept').value=n.tree?.accept?.text||'Good luck.';
   document.getElementById('npcTurnin').value=n.tree?.do_turnin?.text||'Thanks for helping.';
+  toggleQuestTextWrap();
   document.getElementById('npcTree').value=JSON.stringify(n.tree,null,2);
    document.getElementById('npcCombat').checked=!!n.combat;
    document.getElementById('npcShop').checked=!!n.shop;
@@ -711,6 +718,7 @@ document.getElementById('loadFile').addEventListener('change',e=>{
   document.getElementById('addNode').onclick=addNode;
 ['npcDialog','npcAccept','npcTurnin','npcQuest'].forEach(id=>{
   document.getElementById(id).addEventListener(id==='npcQuest'?'change':'input',()=>{
+    if(id==='npcQuest') toggleQuestTextWrap();
     if(document.getElementById('npcQuest').value) generateQuestTree(); else renderDialogPreview();
   });
 });
