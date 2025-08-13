@@ -6,13 +6,14 @@
   <title>Adventure Construction Kit</title>
   <link rel="stylesheet" href="dustland.css" />
   <style>
-    body{display:flex;gap:16px;margin:0;padding:16px;background:#000;color:#c8f7c9;font-family:ui-monospace;}
-    canvas{border:1px solid #2b3b2b;background:#000;image-rendering:pixelated;}
+    body{display:flex;gap:16px;margin:0;padding:16px;background:#000;color:#c8f7c9;font-family:ui-monospace;position:relative;}
+    body:after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.05)0,rgba(255,255,255,.05)1px,rgba(0,0,0,0)2px);mix-blend-mode:overlay;opacity:.15;}
+    canvas{border:1px solid #2b3b2b;background:#000;image-rendering:pixelated;box-shadow:0 0 12px #000,0 0 8px #9ef7a0;}
     .side{width:260px;display:flex;flex-direction:column;gap:12px;}
-    .side fieldset{border:1px solid #2b3b2b;padding:8px;}
+    .side fieldset{border:1px solid #2b3b2b;padding:8px;background:#0f120f;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,.6);}
     .list{font-size:12px;}
     label{display:block;margin-top:4px;font-size:12px;}
-    input,textarea{width:100%;margin-top:2px;background:#101910;border:1px solid #2b3b2b;color:#c8f7c9;font-family:inherit;font-size:12px;}
+    input,textarea{width:100%;margin-top:2px;background:#101910;border:1px solid #2b3b2b;color:#c8f7c9;font-family:inherit;font-size:12px;border-radius:4px;}
     button.btn{margin-top:6px;}
   </style>
 </head>
