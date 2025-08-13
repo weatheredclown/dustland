@@ -49,7 +49,7 @@ function applyModule(data){
     const opts = {};
     if(n.combat) opts.combat = n.combat;
     if(n.shop) opts.shop = n.shop;
-    const npc = makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, '', '', tree, quest, null, null, opts);
+    const npc = makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, '', n.desc||'', tree, quest, null, null, opts);
     NPCS.push(npc);
   });
 }
