@@ -24,6 +24,9 @@
       #treeEditor .node{border:1px solid #2b3b2b;padding:4px;margin-top:4px;}
       #treeEditor .choices div{display:flex;gap:4px;margin-top:2px;}
       #treeEditor .choices input{flex:1;}
+      #treeEditor .nodeHeader{display:flex;align-items:center;}
+      #treeEditor .toggle{margin-right:4px;}
+      #treeEditor .node.collapsed .nodeBody{display:none;}
   </style>
 </head>
 <body>
@@ -50,8 +53,10 @@
       <label>Map<input id="npcMap" value="world"/></label>
       <label>X<input id="npcX" type="number" min="0"/></label>
       <label>Y<input id="npcY" type="number" min="0"/></label>
+      <button class="btn" type="button" id="npcPick">Select on Map</button>
       <label>Dialog<textarea id="npcDialog" rows="2"></textarea></label>
       <label>Quest<select id="npcQuest"><option value="">(none)</option></select></label>
+      <button class="btn" type="button" id="genQuestDialog" style="display:none">Generate Quest Dialog</button>
       <div id="questTextWrap" style="display:none">
         <label>Accept Text<textarea id="npcAccept" rows="2">Good luck.</textarea></label>
         <label>Turn-in Text<textarea id="npcTurnin" rows="2">Thanks for helping.</textarea></label>
@@ -61,6 +66,7 @@
       <div id="treeWrap">
         <label>Dialog Tree</label>
         <div id="treeEditor"></div>
+        <div id="treeWarning" style="color:#f66;font-size:12px;margin-top:4px"></div>
         <button class="btn" type="button" id="addNode">Add Node</button>
       </div>
       <textarea id="npcTree" style="display:none"></textarea>
@@ -78,13 +84,14 @@
       <label>Map<input id="itemMap" value="world"/></label>
       <label>X<input id="itemX" type="number" min="0"/></label>
       <label>Y<input id="itemY" type="number" min="0"/></label>
+      <button class="btn" type="button" id="itemPick">Select on Map</button>
       <label>Slot<select id="itemSlot">
         <option value="">(none)</option>
         <option value="weapon">Weapon</option>
         <option value="armor">Armor</option>
         <option value="trinket">Trinket</option>
       </select></label>
-      <div id="modsWrap">
+      <div id="modsWrap" style="display:none">
         <label>Mods</label>
         <div id="modBuilder"></div>
         <button class="btn" type="button" id="addMod">Add Mod</button>

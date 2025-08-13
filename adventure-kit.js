@@ -11,11 +11,13 @@ const ctx = canvas.getContext('2d');
 let dragTarget=null, settingStart=false, hoverTarget=null;
 let placingType=null, placingPos=null;
 let hoverTile=null;
+let coordTarget=null;
 
 const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [], start:{map:'world',x:2,y:Math.floor(WORLD_H/2)} };
 const STAT_OPTS=['ATK','DEF','LCK','INT','PER','CHA'];
 let editNPCIdx=-1, editItemIdx=-1, editQuestIdx=-1, editBldgIdx=-1;
 let treeData={};
+let selectedObj=null;
 
 function nextId(prefix, arr){
   let i=1; while(arr.some(o=>o.id===prefix+i)) i++; return prefix+i;
@@ -25,6 +27,7 @@ function drawWorld(){
   const W = WORLD_W, H = WORLD_H;
   const sx = canvas.width / W;
   const sy = canvas.height / H;
+  const pulse = 2 + Math.sin(Date.now()/300)*2;
   for(let y=0;y<H;y++){
     for(let x=0;x<W;x++){
       const t = world[y][x];
@@ -77,8 +80,27 @@ function drawWorld(){
     ctx.restore();
   }
   if(moduleData.start && moduleData.start.map==='world'){
+    ctx.save();
     ctx.strokeStyle = '#f00';
+    ctx.lineWidth = pulse;
     ctx.strokeRect(moduleData.start.x*sx+1, moduleData.start.y*sy+1, sx-2, sy-2);
+    ctx.restore();
+  }
+  if(selectedObj && selectedObj.obj){
+    const o = selectedObj.obj;
+    ctx.save();
+    ctx.lineWidth = pulse;
+    if(selectedObj.type==='npc' && o.map==='world'){
+      ctx.strokeStyle = o.color || '#fff';
+      ctx.strokeRect(o.x*sx+1, o.y*sy+1, sx-2, sy-2);
+    } else if(selectedObj.type==='item' && o.map==='world'){
+      ctx.strokeStyle = '#ff0';
+      ctx.strokeRect(o.x*sx+1, o.y*sy+1, sx-2, sy-2);
+    } else if(selectedObj.type==='bldg'){
+      ctx.strokeStyle = '#fff';
+      ctx.strokeRect(o.x*sx, o.y*sy, o.w*sx, o.h*sy);
+    }
+    ctx.restore();
   }
   if(placingType && placingPos){
     ctx.save();
@@ -152,7 +174,7 @@ function addChoiceRow(container,ch={}){
   const {label='',to='',reward='',stat='',dc='',success='',failure='',once=false}=ch||{};
   const row=document.createElement('div');
   row.innerHTML=`<input class="choiceLabel" placeholder="label" value="${label}"/>
-    <input class="choiceTo" placeholder="to" value="${to}"/>
+    <select class="choiceTo"></select>
     <input class="choiceReward" placeholder="reward" value="${reward||''}"/>
     <input class="choiceStat" placeholder="stat" value="${stat||''}"/>
     <input class="choiceDC" placeholder="dc" value="${dc||''}"/>
@@ -161,9 +183,25 @@ function addChoiceRow(container,ch={}){
     <label><input type="checkbox" class="choiceOnce" ${once?'checked':''}/> once</label>
     <button class="btn delChoice" type="button">x</button>`;
   container.appendChild(row);
-  row.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',updateTreeData));
+  populateChoiceDropdown(row.querySelector('.choiceTo'), to);
+  row.querySelectorAll('input,textarea,select').forEach(el=>el.addEventListener('input',updateTreeData));
+  row.querySelector('.choiceTo').addEventListener('change',updateTreeData);
   row.querySelectorAll('input[type=checkbox]').forEach(el=>el.addEventListener('change',updateTreeData));
   row.querySelector('.delChoice').addEventListener('click',()=>{row.remove();updateTreeData();});
+}
+
+function populateChoiceDropdown(sel, selected=''){
+  const keys=Object.keys(treeData);
+  sel.innerHTML='<option value=""></option>'+keys.map(k=>`<option value="${k}">${k}</option>`).join('');
+  if(selected && !keys.includes(selected)){
+    sel.innerHTML+=`<option value="${selected}" selected>${selected}</option>`;
+  } else {
+    sel.value=selected;
+  }
+}
+
+function refreshChoiceDropdowns(){
+  document.querySelectorAll('.choiceTo').forEach(sel=>populateChoiceDropdown(sel, sel.value));
 }
 
 function renderTreeEditor(){
@@ -173,49 +211,111 @@ function renderTreeEditor(){
   Object.entries(treeData).forEach(([id,node])=>{
     const div=document.createElement('div');
     div.className='node';
-    div.innerHTML=`<label>Node ID<input class="nodeId" value="${id}"></label><label>Text<textarea class="nodeText" rows="2">${node.text||''}</textarea></label><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button>`;
+    div.innerHTML=`<div class="nodeHeader"><button class="toggle" type="button">[-]</button><label>Node ID<input class="nodeId" value="${id}"></label></div><div class="nodeBody"><label>Text<textarea class="nodeText" rows="2">${node.text||''}</textarea></label><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></div>`;
     const choicesDiv=div.querySelector('.choices');
     (node.choices||[]).forEach(ch=>addChoiceRow(choicesDiv,ch));
     div.querySelector('.addChoice').onclick=()=>addChoiceRow(choicesDiv);
+    const toggleBtn=div.querySelector('.toggle');
+    toggleBtn.addEventListener('click',()=>{
+      div.classList.toggle('collapsed');
+      toggleBtn.textContent=div.classList.contains('collapsed')?'[+]':'[-]';
+      updateTreeData();
+    });
     wrap.appendChild(div);
   });
-  wrap.querySelectorAll('input,textarea').forEach(el=> el.addEventListener('input',updateTreeData));
+  wrap.querySelectorAll('input,textarea,select').forEach(el=> el.addEventListener('input',updateTreeData));
+  wrap.querySelectorAll('select').forEach(el=> el.addEventListener('change',updateTreeData));
   wrap.querySelectorAll('input[type=checkbox]').forEach(el=> el.addEventListener('change',updateTreeData));
 }
 
 function updateTreeData(){
-  const wrap=document.getElementById('treeEditor');
-  treeData={};
+  const wrap = document.getElementById('treeEditor');
+  const newTree = {};
+  const choiceRefs = [];
+  const nodeRefs = {};
+
+  // Build tree from editor UI. Preserve collapsed nodes by keeping previous snapshot.
   wrap.querySelectorAll('.node').forEach(nodeEl=>{
-    const id=nodeEl.querySelector('.nodeId').value.trim();
+    const id = nodeEl.querySelector('.nodeId').value.trim();
     if(!id) return;
-    const text=nodeEl.querySelector('.nodeText').value;
-    const choices=[];
+
+    nodeRefs[id] = nodeEl;
+
+    // If collapsed, keep previous data for this node (don’t overwrite)
+    if (nodeEl.classList.contains('collapsed')) {
+      if (treeData[id]) newTree[id] = treeData[id];
+      return;
+    }
+
+    const text = nodeEl.querySelector('.nodeText').value;
+    const choices = [];
+
     nodeEl.querySelectorAll('.choices > div').forEach(chEl=>{
-      const label=chEl.querySelector('.choiceLabel').value.trim();
-      const to=chEl.querySelector('.choiceTo').value.trim();
-      const reward=chEl.querySelector('.choiceReward').value.trim();
-      const stat=chEl.querySelector('.choiceStat').value.trim();
-      const dc=parseInt(chEl.querySelector('.choiceDC').value.trim(),10);
-      const success=chEl.querySelector('.choiceSuccess').value.trim();
-      const failure=chEl.querySelector('.choiceFailure').value.trim();
-      const once=chEl.querySelector('.choiceOnce').checked;
-      if(label){
-        const c={label};
-        if(to) c.to=to;
-        if(reward) c.reward=reward;
-        if(stat) c.stat=stat;
-        if(dc) c.dc=dc;
-        if(success) c.success=success;
-        if(failure) c.failure=failure;
-        if(once) c.once=true;
+      const label   = chEl.querySelector('.choiceLabel').value.trim();
+      const toEl    = chEl.querySelector('.choiceTo');
+      const to      = toEl.value.trim();
+      const reward  = chEl.querySelector('.choiceReward').value.trim();
+      const stat    = chEl.querySelector('.choiceStat').value.trim();
+      const dcTxt   = chEl.querySelector('.choiceDC').value.trim();
+      const dc      = dcTxt ? parseInt(dcTxt, 10) : undefined;
+      const success = chEl.querySelector('.choiceSuccess').value.trim();
+      const failure = chEl.querySelector('.choiceFailure').value.trim();
+      const once    = chEl.querySelector('.choiceOnce').checked;
+
+      choiceRefs.push({ to, el: toEl });
+
+      if (label) {
+        const c = { label };
+        if (to)      c.to = to;
+        if (reward)  c.reward = reward;
+        if (stat)    c.stat = stat;
+        if (dc != null && !Number.isNaN(dc)) c.dc = dc;
+        if (success) c.success = success;
+        if (failure) c.failure = failure;
+        if (once)    c.once = true;
         choices.push(c);
       }
     });
-    treeData[id]={text,choices};
+
+    newTree[id] = { text, choices };
   });
-  document.getElementById('npcTree').value=JSON.stringify(treeData,null,2);
+
+  // Commit + mirror into textarea for persistence/preview
+  treeData = newTree;
+  document.getElementById('npcTree').value = JSON.stringify(treeData, null, 2);
+
+  // Live preview + keep "to" dropdowns in sync with current node keys
   renderDialogPreview();
+  refreshChoiceDropdowns();
+
+  // ---- Validation: highlight bad targets & orphans ----
+
+  // 1) Choice target validation: red border if target doesn't exist
+  choiceRefs.forEach(({ to, el })=>{
+    el.style.borderColor = (to && !treeData[to]) ? 'red' : '';
+  });
+
+  // 2) Reachability from 'start' (orange outline for orphan nodes)
+  const visited = new Set();
+  const visit = id => {
+    if (visited.has(id) || !treeData[id]) return;
+    visited.add(id);
+    (treeData[id].choices || []).forEach(c => { if (c.to) visit(c.to); });
+  };
+  visit('start');
+
+  const orphans = [];
+  Object.entries(nodeRefs).forEach(([id, nodeEl])=>{
+    if (!visited.has(id)) {
+      nodeEl.style.borderColor = 'orange';
+      orphans.push(id);
+    } else {
+      nodeEl.style.borderColor = '';
+    }
+  });
+
+  const warnEl = document.getElementById('treeWarning');
+  if (warnEl) warnEl.textContent = orphans.length ? `Orphan nodes: ${orphans.join(', ')}` : '';
 }
 
 function loadTreeEditor(){
@@ -223,6 +323,11 @@ function loadTreeEditor(){
   try{ treeData = txt?JSON.parse(txt):{}; }catch(e){ treeData={}; }
   renderTreeEditor();
   updateTreeData();
+}
+
+function toggleQuestDialogBtn(){
+  const btn=document.getElementById('genQuestDialog');
+  btn.style.display=document.getElementById('npcQuest').value? 'block' : 'none';
 }
 
 function addNode(){
@@ -298,8 +403,11 @@ function startNewNPC(){
   document.getElementById('addNPC').textContent='Add NPC';
   document.getElementById('delNPC').style.display='none';
   loadTreeEditor();
+  toggleQuestDialogBtn();
   placingType='npc';
   placingPos=null;
+  selectedObj=null;
+  drawWorld();
   showNPCEditor(true);
 }
 function addNPC(){
@@ -356,6 +464,7 @@ function addNPC(){
   document.getElementById('npcDesc').value='';
   document.getElementById('npcCombat').checked=false;
   document.getElementById('npcShop').checked=false;
+  selectedObj=null;
   drawWorld();
   loadTreeEditor();
   showNPCEditor(false);
@@ -381,7 +490,10 @@ function editNPC(i){
   document.getElementById('addNPC').textContent='Update NPC';
   document.getElementById('delNPC').style.display='block';
   loadTreeEditor();
+  toggleQuestDialogBtn();
   showNPCEditor(true);
+  selectedObj={type:'npc',obj:n};
+  drawWorld();
 }
 function renderNPCList(){
   const list=document.getElementById('npcList');
@@ -397,6 +509,7 @@ function deleteNPC(){
   document.getElementById('addNPC').textContent='Add NPC';
   document.getElementById('delNPC').style.display='none';
   renderNPCList();
+  selectedObj=null;
   drawWorld();
   document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
   document.getElementById('npcDesc').value='';
@@ -408,6 +521,12 @@ function deleteNPC(){
 function showItemEditor(show){
   document.getElementById('itemEditor').style.display = show ? 'block' : 'none';
 }
+
+function updateModsWrap(){
+  const slot=document.getElementById('itemSlot').value;
+  document.getElementById('modsWrap').style.display=
+    ['weapon','armor','trinket'].includes(slot)?'block':'none';
+}
 function startNewItem(){
   editItemIdx=-1;
   document.getElementById('itemName').value='';
@@ -415,6 +534,7 @@ function startNewItem(){
   document.getElementById('itemX').value=0;
   document.getElementById('itemY').value=0;
   document.getElementById('itemSlot').value='';
+  updateModsWrap();
   loadMods({});
   document.getElementById('itemValue').value=0;
   document.getElementById('itemUse').value='';
@@ -422,6 +542,8 @@ function startNewItem(){
   document.getElementById('delItem').style.display='none';
   placingType='item';
   placingPos=null;
+  selectedObj=null;
+  drawWorld();
   showItemEditor(true);
 }
 function addItem(){
@@ -445,6 +567,7 @@ function addItem(){
   document.getElementById('delItem').style.display='none';
   loadMods({});
   renderItemList();
+  selectedObj=null;
   drawWorld();
   showItemEditor(false);
 }
@@ -456,12 +579,15 @@ function editItem(i){
   document.getElementById('itemX').value=it.x;
   document.getElementById('itemY').value=it.y;
   document.getElementById('itemSlot').value=it.slot||'';
+  updateModsWrap();
   loadMods(it.mods);
   document.getElementById('itemValue').value=it.value||0;
   document.getElementById('itemUse').value=it.use?JSON.stringify(it.use,null,2):'';
   document.getElementById('addItem').textContent='Update Item';
   document.getElementById('delItem').style.display='block';
   showItemEditor(true);
+  selectedObj={type:'item',obj:it};
+  drawWorld();
 }
 function renderItemList(){
   const list=document.getElementById('itemList');
@@ -477,6 +603,7 @@ function deleteItem(){
   document.getElementById('delItem').style.display='none';
   loadMods({});
   renderItemList();
+  selectedObj=null;
   drawWorld();
   showItemEditor(false);
 }
@@ -492,6 +619,8 @@ function startNewBldg(){
   document.getElementById('delBldg').style.display='none';
   placingType='bldg';
   placingPos=null;
+  selectedObj=null;
+  drawWorld();
   showBldgEditor(true);
 }
 function addBuilding(){
@@ -500,6 +629,7 @@ function addBuilding(){
   const b=placeHut(x,y);
   moduleData.buildings.push(b);
   renderBldgList();
+  selectedObj=null;
   drawWorld();
   editBldgIdx=-1;
   document.getElementById('delBldg').style.display='none';
@@ -518,6 +648,8 @@ function editBldg(i){
   document.getElementById('bldgY').value=b.y;
   document.getElementById('delBldg').style.display='block';
   showBldgEditor(true);
+  selectedObj={type:'bldg',obj:b};
+  drawWorld();
 }
 
 function removeBuilding(b){
@@ -545,6 +677,7 @@ function deleteBldg(){
   editBldgIdx=-1;
   document.getElementById('delBldg').style.display='none';
   renderBldgList();
+  selectedObj=null;
   drawWorld();
   showBldgEditor(false);
 }
@@ -700,6 +833,7 @@ document.getElementById('delItem').onclick=deleteItem;
 document.getElementById('delBldg').onclick=deleteBldg;
 document.getElementById('delQuest').onclick=deleteQuest;
 document.getElementById('addMod').onclick=()=>modRow();
+document.getElementById('itemSlot').addEventListener('change',updateModsWrap);
 document.getElementById('save').onclick=saveModule;
 document.getElementById('load').onclick=()=>document.getElementById('loadFile').click();
 document.getElementById('loadFile').addEventListener('change',e=>{
@@ -716,12 +850,22 @@ document.getElementById('loadFile').addEventListener('change',e=>{
   document.getElementById('setStart').onclick=()=>{settingStart=true;};
   document.getElementById('playtest').onclick=playtestModule;
   document.getElementById('addNode').onclick=addNode;
-['npcDialog','npcAccept','npcTurnin','npcQuest'].forEach(id=>{
-  document.getElementById(id).addEventListener(id==='npcQuest'?'change':'input',()=>{
-    if(id==='npcQuest') toggleQuestTextWrap();
-    if(document.getElementById('npcQuest').value) generateQuestTree(); else renderDialogPreview();
-  });
+// Live preview when dialog text changes
+['npcDialog','npcAccept','npcTurnin'].forEach(id=>{
+`  document.getElementById(id).addEventListener('input', renderDialogPreview);
 });
+
+// When quest selection changes, show/hide extra fields, update preview, and (optionally) auto-generate the quest scaffold
+document.getElementById('npcQuest').addEventListener('change', () => {
+  toggleQuestDialogBtn();
+  toggleQuestTextWrap();
+  if (document.getElementById('npcQuest').value) {
+    generateQuestTree();     // build start/accept/turn-in scaffold
+  } else {
+    renderDialogPreview();   // just refresh preview of whatever is in the editor
+  }
+});
+document.getElementById('genQuestDialog').onclick=generateQuestTree;
 
 // --- Map interactions ---
 function canvasPos(ev){
@@ -731,9 +875,40 @@ function canvasPos(ev){
   const y=clamp(Math.floor((ev.clientY-rect.top)/sy),0,WORLD_H-1);
   return {x,y};
 }
+
+function updateCursor(x, y){
+  if(dragTarget){
+    canvas.style.cursor='grabbing';
+    return;
+  }
+  if(settingStart || placingType){
+    canvas.style.cursor='crosshair';
+    return;
+  }
+  if(x==null || y==null){
+    const ht = hoverTile;
+    if(ht){ x = ht.x; y = ht.y; }
+  }
+  if(x!=null && y!=null){
+    const overNpc = moduleData.npcs.some(n=>n.map==='world'&&n.x===x&&n.y===y);
+    const overItem = moduleData.items.some(it=>it.map==='world'&&it.x===x&&it.y===y);
+    const overBldg = moduleData.buildings.some(b=>x>=b.x && x<b.x+b.w && y>=b.y && y<b.y+b.h);
+    canvas.style.cursor = (overNpc||overItem||overBldg)?'grab':'pointer';
+  } else {
+    canvas.style.cursor='pointer';
+  }
+}
 canvas.addEventListener('mousedown',ev=>{
   const {x,y}=canvasPos(ev);
   hoverTarget=null;
+  if(coordTarget){
+    document.getElementById(coordTarget.x).value=x;
+    document.getElementById(coordTarget.y).value=y;
+    coordTarget=null;
+    canvas.style.cursor='';
+    drawWorld();
+    return;
+  }
   if(placingType){
     if(placingType==='npc'){
       document.getElementById('npcX').value=x;
@@ -748,13 +923,28 @@ canvas.addEventListener('mousedown',ev=>{
     placingType=null;
     placingPos=null;
     drawWorld();
+    updateCursor(x,y);
     return;
   }
-  if(settingStart){ moduleData.start={map:'world',x,y}; settingStart=false; drawWorld(); return; }
+  if(settingStart){
+    moduleData.start={map:'world',x,y};
+    settingStart=false;
+    drawWorld();
+    updateCursor(x,y);
+    return;
+  }
   dragTarget = moduleData.npcs.find(n=>n.map==='world'&&n.x===x&&n.y===y);
-  if(dragTarget){ dragTarget._type='npc'; return; }
+  if(dragTarget){
+    dragTarget._type='npc';
+    updateCursor(x,y);
+    return;
+  }
   dragTarget = moduleData.items.find(it=>it.map==='world'&&it.x===x&&it.y===y);
-  if(dragTarget){ dragTarget._type='item'; return; }
+  if(dragTarget){
+    dragTarget._type='item';
+    updateCursor(x,y);
+    return;
+  }
   dragTarget = moduleData.buildings.find(b=> x>=b.x && x<b.x+b.w && y>=b.y && y<b.y+b.h);
   if(dragTarget){
     dragTarget._type='bldg';
@@ -762,60 +952,88 @@ canvas.addEventListener('mousedown',ev=>{
     document.getElementById('bldgY').value=dragTarget.y;
     editBldgIdx=moduleData.buildings.indexOf(dragTarget);
     document.getElementById('delBldg').style.display='block';
+    selectedObj={type:'bldg',obj:dragTarget};
+    drawWorld();
     showBldgEditor(true);
+    updateCursor(x,y);
     return;
   }
   document.getElementById('npcX').value=x; document.getElementById('npcY').value=y;
   document.getElementById('itemX').value=x; document.getElementById('itemY').value=y;
   document.getElementById('bldgX').value=x; document.getElementById('bldgY').value=y;
+  selectedObj=null;
   drawWorld();
+  updateCursor(x,y);
 });
-canvas.addEventListener('mousemove',ev=>{
-  const {x,y}=canvasPos(ev);
-  // TODO: Do placingType and hoverTile concepts conflict? Hey Codex, please resolve this!!!
-  // TODO: Agent should evaluate the state of this function that may be a result of bad branch merges.
-  hoverTile={x,y};
-  if(placingType){
-    placingPos={x,y};
+canvas.addEventListener('mousemove', ev=>{
+  const { x, y } = canvasPos(ev);
+  hoverTile = { x, y };
+
+  // While placing, show ghost & bail
+  if (placingType) {
+    placingPos = { x, y };
     drawWorld();
+    updateCursor(x, y);
     return;
   }
-  if(!dragTarget) return;
-  if(dragTarget._type==='bldg'){
-    dragTarget=moveBuilding(dragTarget,x,y); dragTarget._type='bldg';
-    renderBldgList();
-    document.getElementById('bldgX').value=x; document.getElementById('bldgY').value=y;
-    document.getElementById('delBldg').style.display='block';
-  } else {
-    dragTarget.x=x; dragTarget.y=y;
-    if(dragTarget._type==='npc'){
+
+  // While dragging, move the correct thing & bail
+  if (dragTarget) {
+    if (dragTarget._type === 'bldg') {
+      // Buildings are re-placed to keep tiles coherent
+      dragTarget = moveBuilding(dragTarget, x, y);
+      dragTarget._type = 'bldg';
+      if (selectedObj && selectedObj.type === 'bldg') selectedObj.obj = dragTarget;
+      renderBldgList();
+      document.getElementById('bldgX').value = x;
+      document.getElementById('bldgY').value = y;
+      document.getElementById('delBldg').style.display = 'block';
+    } else if (dragTarget._type === 'npc') {
+      dragTarget.x = x; dragTarget.y = y;
       renderNPCList();
-      document.getElementById('npcX').value=x; document.getElementById('npcY').value=y;
-    } else {
-      dragTarget.x=x; dragTarget.y=y;
-      if(dragTarget._type==='npc'){
-        renderNPCList();
-        document.getElementById('npcX').value=x; document.getElementById('npcY').value=y;
-      } else {
-        renderItemList();
-        document.getElementById('itemX').value=x; document.getElementById('itemY').value=y;
-      }
+      document.getElementById('npcX').value = x;
+      document.getElementById('npcY').value = y;
+    } else { // item
+      dragTarget.x = x; dragTarget.y = y;
+      renderItemList();
+      document.getElementById('itemX').value = x;
+      document.getElementById('itemY').value = y;
     }
     drawWorld();
-  } else {
-    let ht=null;
-    let obj = moduleData.npcs.find(n=>n.map==='world'&&n.x===x&&n.y===y);
-    if(obj) ht={obj,type:'npc'};
-    else if(obj = moduleData.items.find(it=>it.map==='world'&&it.x===x&&it.y===y)) ht={obj,type:'item'};
-    else if(obj = moduleData.buildings.find(b=> x>=b.x && x<b.x+b.w && y>=b.y && y<b.y+b.h)) ht={obj,type:'bldg'};
-    if((hoverTarget && (!ht || hoverTarget.obj!==ht.obj)) || (!hoverTarget && ht)){
-      hoverTarget=ht;
-      drawWorld();
-    }
+    updateCursor(x, y);
+    return;
   }
+
+  // Not dragging: update hover target highlighting
+  let ht = null;
+  let obj = moduleData.npcs.find(n => n.map === 'world' && n.x === x && n.y === y);
+  if (obj) {
+    ht = { obj, type: 'npc' };
+  } else if (obj = moduleData.items.find(it => it.map === 'world' && it.x === x && it.y === y)) {
+    ht = { obj, type: 'item' };
+  } else if (obj = moduleData.buildings.find(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h)) {
+    ht = { obj, type: 'bldg' };
+  }
+
+  if ((hoverTarget && (!ht || hoverTarget.obj !== ht.obj)) || (!hoverTarget && ht)) {
+    hoverTarget = ht;
+    drawWorld();
+  }
+
+  updateCursor(x, y);
 });
-canvas.addEventListener('mouseup',()=>{ if(dragTarget) delete dragTarget._type; dragTarget=null; });
-canvas.addEventListener('mouseleave',()=>{ if(dragTarget) delete dragTarget._type; dragTarget=null; hoverTile=null; drawWorld(); });
+canvas.addEventListener('mouseup',()=>{
+  if(dragTarget) delete dragTarget._type;
+  dragTarget=null;
+  updateCursor();
+});
+canvas.addEventListener('mouseleave',()=>{
+  if(dragTarget) delete dragTarget._type;
+  dragTarget=null;
+  hoverTile=null;
+  drawWorld();
+  updateCursor();
+});
 
 regenWorld();
 loadMods({});
@@ -826,3 +1044,8 @@ showQuestEditor(false);
 document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
 document.getElementById('questId').value=nextId('quest',moduleData.quests);
 loadTreeEditor();
+function animate(){
+  drawWorld();
+  requestAnimationFrame(animate);
+}
+animate();
