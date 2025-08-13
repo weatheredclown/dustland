@@ -27,6 +27,9 @@
       #treeEditor .nodeHeader{display:flex;align-items:center;}
       #treeEditor .toggle{margin-right:4px;}
       #treeEditor .node.collapsed .nodeBody{display:none;}
+      .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:100;}
+      .modal.shown{display:flex;}
+      #dialogModal .card{position:relative;width:600px;max-height:80vh;overflow:auto;}
   </style>
 </head>
 <body>
@@ -65,12 +68,10 @@
       <div id="combatOpts" style="display:none"><p class="muted">(no combat options)</p></div>
       <label><input type="checkbox" id="npcShop"> Shop NPC</label>
       <div id="shopOpts" style="display:none"><p class="muted">(no shop options)</p></div>
-      <div id="treeWrap">
-        <label>Dialog Tree</label>
-        <div id="treeEditor"></div>
-        <div id="treeWarning" style="color:#f66;font-size:12px;margin-top:4px"></div>
-        <button class="btn" type="button" id="addNode">Add Node</button>
-      </div>
+        <div id="treeWrap">
+          <label>Dialog Tree</label>
+          <button class="btn" type="button" id="editDialog">Edit Dialog</button>
+        </div>
       <textarea id="npcTree" style="display:none"></textarea>
       <div id="dialogPreview" style="margin-top:6px"></div>
       <button class="btn" id="addNPC">Add NPC</button>
@@ -131,6 +132,17 @@
       <button class="btn" id="delQuest" style="display:none">Delete Quest</button>
     </div>
   </fieldset>
+  <div id="dialogModal" class="modal">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div><b>Dialog Tree Editor</b></div>
+        <button class="btn" type="button" id="closeDialogModal">Close</button>
+      </div>
+      <div id="treeEditor"></div>
+      <div id="treeWarning" style="color:#f66;font-size:12px;margin-top:4px"></div>
+      <button class="btn" type="button" id="addNode">Add Node</button>
+    </div>
+  </div>
   <script src="dustland-core.js"></script>
   <script src="adventure-kit.js"></script>
 </body>

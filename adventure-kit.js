@@ -325,6 +325,15 @@ function loadTreeEditor(){
   updateTreeData();
 }
 
+function openDialogEditor(){
+  document.getElementById('dialogModal').classList.add('shown');
+  renderTreeEditor();
+}
+
+function closeDialogEditor(){
+  document.getElementById('dialogModal').classList.remove('shown');
+}
+
 function toggleQuestDialogBtn(){
   const btn=document.getElementById('genQuestDialog');
   btn.style.display=document.getElementById('npcQuest').value? 'block' : 'none';
@@ -859,6 +868,9 @@ document.getElementById('loadFile').addEventListener('change',e=>{
   document.getElementById('setStart').onclick=()=>{settingStart=true;};
   document.getElementById('playtest').onclick=playtestModule;
   document.getElementById('addNode').onclick=addNode;
+  document.getElementById('editDialog').onclick=openDialogEditor;
+  document.getElementById('closeDialogModal').onclick=closeDialogEditor;
+  document.getElementById('dialogModal').addEventListener('click',e=>{ if(e.target.id==='dialogModal') closeDialogEditor(); });
 // Live preview when dialog text changes
 ['npcDialog','npcAccept','npcTurnin'].forEach(id=>{
   document.getElementById(id).addEventListener('input', renderDialogPreview);
