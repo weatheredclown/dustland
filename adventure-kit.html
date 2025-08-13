@@ -29,20 +29,26 @@
     <div class="controls">
       <button class="btn" id="regen">Generate World</button>
       <button class="btn" id="save">Download Module</button>
+      <button class="btn" id="setStart">Set Start</button>
+      <button class="btn" id="playtest">Playtest</button>
     </div>
   </div>
   <fieldset class="card" id="npcCard">
     <legend>Add NPC</legend>
     <label>ID<input id="npcId"/></label>
     <label>Name<input id="npcName"/></label>
-    <label>Color<input id="npcColor" value="#9ef7a0"/></label>
+    <label>Color<input id="npcColor" type="color" value="#9ef7a0"/></label>
     <label>Map<input id="npcMap" value="world"/></label>
     <label>X<input id="npcX" type="number" min="0"/></label>
     <label>Y<input id="npcY" type="number" min="0"/></label>
     <label>Dialog<textarea id="npcDialog" rows="2"></textarea></label>
     <label>Quest<select id="npcQuest"><option value="">(none)</option></select></label>
+    <label>Accept Text<textarea id="npcAccept" rows="2">Good luck.</textarea></label>
+    <label>Turn-in Text<textarea id="npcTurnin" rows="2">Thanks for helping.</textarea></label>
     <label>Tree JSON<textarea id="npcTree" rows="4" placeholder='{"start":{"text":"hi","choices":[{"label":"(Leave)","to":"bye"}]}}'></textarea></label>
+    <div id="dialogPreview" style="margin-top:6px"></div>
     <button class="btn" id="addNPC">Add NPC</button>
+    <button class="btn" id="delNPC" style="display:none">Delete NPC</button>
     <div class="list" id="npcList"></div>
   </fieldset>
   <fieldset class="card" id="itemCard">
@@ -65,6 +71,7 @@
     <label>Value<input id="itemValue" type="number" min="0"/></label>
     <label>Use<textarea id="itemUse" rows="2"></textarea></label>
     <button class="btn" id="addItem">Add Item</button>
+    <button class="btn" id="delItem" style="display:none">Delete Item</button>
     <div class="list" id="itemList"></div>
   </fieldset>
   <fieldset class="card" id="bldgCard">
@@ -72,6 +79,7 @@
     <label>X<input id="bldgX" type="number" min="0"/></label>
     <label>Y<input id="bldgY" type="number" min="0"/></label>
     <button class="btn" id="addBldg">Place Hut</button>
+    <button class="btn" id="delBldg" style="display:none">Remove Hut</button>
     <div class="list" id="bldgList"></div>
   </fieldset>
   <fieldset class="card" id="questCard">
@@ -82,7 +90,9 @@
     <label>Required Item<input id="questItem"/></label>
     <label>Reward Item<input id="questReward"/></label>
     <label>XP Reward<input id="questXP" type="number" min="0"/></label>
+    <label>NPC<select id="questNPC"><option value="">(none)</option></select></label>
     <button class="btn" id="addQuest">Add Quest</button>
+    <button class="btn" id="delQuest" style="display:none">Delete Quest</button>
     <div class="list" id="questList"></div>
   </fieldset>
   <script src="dustland-core.js"></script>

@@ -8,11 +8,15 @@ const colors = {0:'#1e271d',1:'#2c342c',2:'#1573ff',3:'#203320',4:'#394b39',5:'#
 const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
 
-let dragTarget=null;
+let dragTarget=null, settingStart=false;
 
-const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [] };
+const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [], start:{map:'world',x:2,y:Math.floor(WORLD_H/2)} };
 const STAT_OPTS=['ATK','DEF','LCK','INT','PER','CHA'];
-let editNPCIdx=-1, editItemIdx=-1, editQuestIdx=-1;
+let editNPCIdx=-1, editItemIdx=-1, editQuestIdx=-1, editBldgIdx=-1;
+
+function nextId(prefix, arr){
+  let i=1; while(arr.some(o=>o.id===prefix+i)) i++; return prefix+i;
+}
 
 function drawWorld(){
   const W = WORLD_W, H = WORLD_H;
@@ -35,6 +39,10 @@ function drawWorld(){
     ctx.strokeStyle = '#ff0';
     ctx.strokeRect(it.x*sx+1, it.y*sy+1, sx-2, sy-2);
   });
+  if(moduleData.start && moduleData.start.map==='world'){
+    ctx.strokeStyle = '#f00';
+    ctx.strokeRect(moduleData.start.x*sx+1, moduleData.start.y*sy+1, sx-2, sy-2);
+  }
 }
 
 function regenWorld(){
@@ -69,6 +77,35 @@ function loadMods(mods){
   Object.entries(mods||{}).forEach(([s,v])=>modRow(s,v));
 }
 
+function renderDialogPreview(){
+  const prev=document.getElementById('dialogPreview');
+  let tree=null;
+  const txt=document.getElementById('npcTree').value.trim();
+  if(txt){ try{ tree=JSON.parse(txt); }catch(e){ tree=null; } }
+  if(!tree){ prev.innerHTML=''; return; }
+  function show(id){
+    const node=tree[id]; if(!node) return;
+    prev.innerHTML=`<div>${node.text||''}</div>`+(node.choices||[]).map(c=>`<button class="btn" data-to="${c.to}" style="margin-top:4px">${c.label}</button>`).join('');
+    Array.from(prev.querySelectorAll('button')).forEach(btn=>btn.onclick=()=>show(btn.dataset.to));
+  }
+  show('start');
+}
+
+function generateQuestTree(){
+  const quest=document.getElementById('npcQuest').value.trim();
+  if(!quest) return;
+  const dialog=document.getElementById('npcDialog').value.trim();
+  const accept=document.getElementById('npcAccept').value.trim();
+  const turnin=document.getElementById('npcTurnin').value.trim();
+  const tree={
+    start:{text:dialog,choices:[{label:'Accept quest',to:'accept',q:'accept'},{label:'Turn in',to:'do_turnin',q:'turnin'},{label:'(Leave)',to:'bye'}]},
+    accept:{text:accept||'Good luck.',choices:[{label:'(Leave)',to:'bye'}]},
+    do_turnin:{text:turnin||'Thanks for helping.',choices:[{label:'(Leave)',to:'bye'}]}
+  };
+  document.getElementById('npcTree').value=JSON.stringify(tree,null,2);
+  renderDialogPreview();
+}
+
 // --- NPCs ---
 function addNPC(){
   const id=document.getElementById('npcId').value.trim();
@@ -79,6 +116,8 @@ function addNPC(){
   const y=parseInt(document.getElementById('npcY').value,10)||0;
   const dialog=document.getElementById('npcDialog').value.trim();
   const questId=document.getElementById('npcQuest').value.trim();
+  const accept=document.getElementById('npcAccept').value.trim();
+  const turnin=document.getElementById('npcTurnin').value.trim();
   let tree=null;
   const treeTxt=document.getElementById('npcTree').value.trim();
   if(treeTxt){ try{ tree=JSON.parse(treeTxt); }catch(e){ tree=null; } }
@@ -86,8 +125,8 @@ function addNPC(){
     if(questId){
       tree={
         start:{text:dialog,choices:[{label:'Accept quest',to:'accept',q:'accept'},{label:'Turn in',to:'do_turnin',q:'turnin'},{label:'(Leave)',to:'bye'}]},
-        accept:{text:'Good luck.',choices:[{label:'(Leave)',to:'bye'}]},
-        do_turnin:{text:'Thanks for helping.',choices:[{label:'(Leave)',to:'bye'}]}
+        accept:{text:accept||'Good luck.',choices:[{label:'(Leave)',to:'bye'}]},
+        do_turnin:{text:turnin||'Thanks for helping.',choices:[{label:'(Leave)',to:'bye'}]}
       };
     } else {
       tree={start:{text:dialog,choices:[{label:'(Leave)',to:'bye'}]}};
@@ -101,8 +140,11 @@ function addNPC(){
   }
   editNPCIdx=-1;
   document.getElementById('addNPC').textContent='Add NPC';
+  document.getElementById('delNPC').style.display='none';
   renderNPCList();
+  document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
   drawWorld();
+  renderDialogPreview();
 }
 function editNPC(i){
   const n=moduleData.npcs[i];
@@ -115,13 +157,30 @@ function editNPC(i){
   document.getElementById('npcY').value=n.y;
   document.getElementById('npcDialog').value=n.tree?.start?.text||'';
   document.getElementById('npcQuest').value=n.questId||'';
+  document.getElementById('npcAccept').value=n.tree?.accept?.text||'Good luck.';
+  document.getElementById('npcTurnin').value=n.tree?.do_turnin?.text||'Thanks for helping.';
   document.getElementById('npcTree').value=JSON.stringify(n.tree,null,2);
   document.getElementById('addNPC').textContent='Update NPC';
+  document.getElementById('delNPC').style.display='block';
+  renderDialogPreview();
 }
 function renderNPCList(){
   const list=document.getElementById('npcList');
   list.innerHTML=moduleData.npcs.map((n,i)=>`<div data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${n.questId?` [${n.questId}]`:''}</div>`).join('');
   Array.from(list.children).forEach(div=>div.onclick=()=>editNPC(parseInt(div.dataset.idx,10)));
+  updateQuestOptions();
+}
+
+function deleteNPC(){
+  if(editNPCIdx<0) return;
+  moduleData.npcs.splice(editNPCIdx,1);
+  editNPCIdx=-1;
+  document.getElementById('addNPC').textContent='Add NPC';
+  document.getElementById('delNPC').style.display='none';
+  renderNPCList();
+  drawWorld();
+  document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
+  renderDialogPreview();
 }
 
 // --- Items ---
@@ -143,6 +202,7 @@ function addItem(){
   }
   editItemIdx=-1;
   document.getElementById('addItem').textContent='Add Item';
+  document.getElementById('delItem').style.display='none';
   loadMods({});
   renderItemList();
   drawWorld();
@@ -159,11 +219,23 @@ function editItem(i){
   document.getElementById('itemValue').value=it.value||0;
   document.getElementById('itemUse').value=it.use?JSON.stringify(it.use,null,2):'';
   document.getElementById('addItem').textContent='Update Item';
+  document.getElementById('delItem').style.display='block';
 }
 function renderItemList(){
   const list=document.getElementById('itemList');
   list.innerHTML=moduleData.items.map((it,i)=>`<div data-idx="${i}">${it.name} @${it.map} (${it.x},${it.y})</div>`).join('');
   Array.from(list.children).forEach(div=>div.onclick=()=>editItem(parseInt(div.dataset.idx,10)));
+}
+
+function deleteItem(){
+  if(editItemIdx<0) return;
+  moduleData.items.splice(editItemIdx,1);
+  editItemIdx=-1;
+  document.getElementById('addItem').textContent='Add Item';
+  document.getElementById('delItem').style.display='none';
+  loadMods({});
+  renderItemList();
+  drawWorld();
 }
 
 // --- Buildings ---
@@ -174,22 +246,49 @@ function addBuilding(){
   moduleData.buildings.push(b);
   renderBldgList();
   drawWorld();
+  editBldgIdx=-1;
+  document.getElementById('delBldg').style.display='none';
 }
 function renderBldgList(){
   const list=document.getElementById('bldgList');
-  list.innerHTML=moduleData.buildings.map(b=>`<div>Hut @(${b.x},${b.y})</div>`).join('');
+  list.innerHTML=moduleData.buildings.map((b,i)=>`<div data-idx="${i}">Hut @(${b.x},${b.y})</div>`).join('');
+  Array.from(list.children).forEach(div=>div.onclick=()=>editBldg(parseInt(div.dataset.idx,10)));
+}
+
+function editBldg(i){
+  const b=moduleData.buildings[i];
+  editBldgIdx=i;
+  document.getElementById('bldgX').value=b.x;
+  document.getElementById('bldgY').value=b.y;
+  document.getElementById('delBldg').style.display='block';
 }
 
 function removeBuilding(b){
-  for(let yy=0; yy<b.h; yy++){ for(let xx=0; xx<b.w; xx++){ setTile('world',b.x+xx,b.y+yy,TILE.SAND); }}
+  if(b.under){
+    for(let yy=0; yy<b.h; yy++){ for(let xx=0; xx<b.w; xx++){ setTile('world',b.x+xx,b.y+yy,b.under[yy][xx]); }}
+  } else {
+    for(let yy=0; yy<b.h; yy++){ for(let xx=0; xx<b.w; xx++){ setTile('world',b.x+xx,b.y+yy,TILE.SAND); }}
+  }
   const idx=buildings.indexOf(b); if(idx>=0) buildings.splice(idx,1);
 }
 function moveBuilding(b,x,y){
+  const idx=moduleData.buildings.indexOf(b);
   removeBuilding(b);
   const nb=placeHut(x,y);
-  const idx=moduleData.buildings.indexOf(b);
   moduleData.buildings[idx]=nb;
+  editBldgIdx=idx;
   return nb;
+}
+
+function deleteBldg(){
+  if(editBldgIdx<0) return;
+  const b=moduleData.buildings[editBldgIdx];
+  removeBuilding(b);
+  moduleData.buildings.splice(editBldgIdx,1);
+  editBldgIdx=-1;
+  document.getElementById('delBldg').style.display='none';
+  renderBldgList();
+  drawWorld();
 }
 
 // --- Quests ---
@@ -206,9 +305,17 @@ function addQuest(){
   } else {
     moduleData.quests.push(quest);
   }
+  const npcId=document.getElementById('questNPC').value.trim();
+  if(npcId){
+    const npc=moduleData.npcs.find(n=>n.id===npcId);
+    if(npc) npc.questId=id;
+  }
   editQuestIdx=-1;
   document.getElementById('addQuest').textContent='Add Quest';
+  document.getElementById('delQuest').style.display='none';
   renderQuestList();
+  renderNPCList();
+  document.getElementById('questId').value=nextId('quest',moduleData.quests);
 }
 function renderQuestList(){
   const list=document.getElementById('questList');
@@ -225,17 +332,41 @@ function editQuest(i){
   document.getElementById('questItem').value=q.item||'';
   document.getElementById('questReward').value=q.reward||'';
   document.getElementById('questXP').value=q.xp||0;
+  const npc = moduleData.npcs.find(n=>n.questId===q.id);
+  document.getElementById('questNPC').value=npc?npc.id:'';
   document.getElementById('addQuest').textContent='Update Quest';
+  document.getElementById('delQuest').style.display='block';
 }
 function updateQuestOptions(){
   const sel=document.getElementById('npcQuest');
   const cur=sel.value;
   sel.innerHTML='<option value="">(none)</option>'+moduleData.quests.map(q=>`<option value="${q.id}">${q.title}</option>`).join('');
   sel.value=cur;
+  const npcSel=document.getElementById('questNPC');
+  if(npcSel){
+    const npcCur=npcSel.value;
+    npcSel.innerHTML='<option value="">(none)</option>'+moduleData.npcs.map(n=>`<option value="${n.id}">${n.id}</option>`).join('');
+    npcSel.value=npcCur;
+  }
+}
+
+function deleteQuest(){
+  if(editQuestIdx<0) return;
+  const q=moduleData.quests[editQuestIdx];
+  moduleData.npcs.forEach(n=>{ if(n.questId===q.id) n.questId=''; });
+  moduleData.quests.splice(editQuestIdx,1);
+  editQuestIdx=-1;
+  document.getElementById('addQuest').textContent='Add Quest';
+  document.getElementById('delQuest').style.display='none';
+  renderQuestList();
+  renderNPCList();
+  updateQuestOptions();
+  document.getElementById('questId').value=nextId('quest',moduleData.quests);
 }
 
 function saveModule(){
-  const data={...moduleData, world, buildings};
+  const bldgs=buildings.map(({under,...rest})=>rest);
+  const data={...moduleData, world, buildings:bldgs};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -244,13 +375,32 @@ function saveModule(){
   URL.revokeObjectURL(a.href);
 }
 
+function playtestModule(){
+  const bldgs=buildings.map(({under,...rest})=>rest);
+  const data={...moduleData, world, buildings:bldgs};
+  localStorage.setItem('ack_playtest', JSON.stringify(data));
+  window.open('ack-player.html#play','_blank');
+}
+
 document.getElementById('regen').onclick=regenWorld;
 document.getElementById('addNPC').onclick=addNPC;
 document.getElementById('addItem').onclick=addItem;
 document.getElementById('addBldg').onclick=addBuilding;
 document.getElementById('addQuest').onclick=addQuest;
+document.getElementById('delNPC').onclick=deleteNPC;
+document.getElementById('delItem').onclick=deleteItem;
+document.getElementById('delBldg').onclick=deleteBldg;
+document.getElementById('delQuest').onclick=deleteQuest;
 document.getElementById('addMod').onclick=()=>modRow();
 document.getElementById('save').onclick=saveModule;
+document.getElementById('setStart').onclick=()=>{settingStart=true;};
+document.getElementById('playtest').onclick=playtestModule;
+document.getElementById('npcTree').addEventListener('input',renderDialogPreview);
+['npcDialog','npcAccept','npcTurnin','npcQuest'].forEach(id=>{
+  document.getElementById(id).addEventListener(id==='npcQuest'?'change':'input',()=>{
+    if(document.getElementById('npcQuest').value) generateQuestTree(); else renderDialogPreview();
+  });
+});
 
 // --- Map interactions ---
 function canvasPos(ev){
@@ -262,6 +412,7 @@ function canvasPos(ev){
 }
 canvas.addEventListener('mousedown',ev=>{
   const {x,y}=canvasPos(ev);
+  if(settingStart){ moduleData.start={map:'world',x,y}; settingStart=false; drawWorld(); return; }
   dragTarget = moduleData.npcs.find(n=>n.map==='world'&&n.x===x&&n.y===y);
   if(dragTarget){ dragTarget._type='npc'; return; }
   dragTarget = moduleData.items.find(it=>it.map==='world'&&it.x===x&&it.y===y);
@@ -271,6 +422,8 @@ canvas.addEventListener('mousedown',ev=>{
     dragTarget._type='bldg';
     document.getElementById('bldgX').value=dragTarget.x;
     document.getElementById('bldgY').value=dragTarget.y;
+    editBldgIdx=moduleData.buildings.indexOf(dragTarget);
+    document.getElementById('delBldg').style.display='block';
     return;
   }
   document.getElementById('npcX').value=x; document.getElementById('npcY').value=y;
@@ -285,6 +438,7 @@ canvas.addEventListener('mousemove',ev=>{
     dragTarget=moveBuilding(dragTarget,x,y); dragTarget._type='bldg';
     renderBldgList();
     document.getElementById('bldgX').value=x; document.getElementById('bldgY').value=y;
+    document.getElementById('delBldg').style.display='block';
   } else {
     dragTarget.x=x; dragTarget.y=y;
     if(dragTarget._type==='npc'){
@@ -301,3 +455,6 @@ canvas.addEventListener('mousemove',ev=>{
 
 regenWorld();
 loadMods({});
+document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
+document.getElementById('questId').value=nextId('quest',moduleData.quests);
+renderDialogPreview();

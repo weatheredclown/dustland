@@ -499,11 +499,12 @@ function makeInteriorRoom(){
 }
 function placeHut(x,y){
   const w=6,h=5;
+  const under=Array.from({length:h},(_,yy)=>Array.from({length:w},(_,xx)=>getTile('world',x+xx,y+yy)));
   for(let yy=0; yy<h; yy++){ for(let xx=0; xx<w; xx++){ setTile('world',x+xx,y+yy,TILE.BUILDING); }}
   const doorX=x+Math.floor(w/2), doorY=y+h-1; setTile('world',doorX,doorY,TILE.DOOR);
   const interiorId=makeInteriorRoom();
   const boarded = rng() < 0.3;
-  const b={x,y,w,h,doorX,doorY,interiorId,boarded};
+  const b={x,y,w,h,doorX,doorY,interiorId,boarded,under};
   buildings.push(b);
   return b;
 }
