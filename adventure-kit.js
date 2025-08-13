@@ -157,6 +157,10 @@ function addNPC(){
       tree={start:{text:dialog,choices:[{label:'(Leave)',to:'bye'}]}};
     }
   }
+  // Update dialog text even when tree JSON already exists
+  if(tree.start) tree.start.text = dialog;
+  if(tree.accept) tree.accept.text = accept || tree.accept.text;
+  if(tree.do_turnin) tree.do_turnin.text = turnin || tree.do_turnin.text;
   if(combat) applyCombatTree(tree); else removeCombatTree(tree);
   if(shop) applyShopTree(tree); else removeShopTree(tree);
   document.getElementById('npcTree').value=JSON.stringify(tree,null,2);
