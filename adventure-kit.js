@@ -173,10 +173,16 @@ function renderTreeEditor(){
   Object.entries(treeData).forEach(([id,node])=>{
     const div=document.createElement('div');
     div.className='node';
-    div.innerHTML=`<label>Node ID<input class="nodeId" value="${id}"></label><label>Text<textarea class="nodeText" rows="2">${node.text||''}</textarea></label><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button>`;
+    div.innerHTML=`<div class="nodeHeader"><button class="toggle" type="button">[-]</button><label>Node ID<input class="nodeId" value="${id}"></label></div><div class="nodeBody"><label>Text<textarea class="nodeText" rows="2">${node.text||''}</textarea></label><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></div>`;
     const choicesDiv=div.querySelector('.choices');
     (node.choices||[]).forEach(ch=>addChoiceRow(choicesDiv,ch));
     div.querySelector('.addChoice').onclick=()=>addChoiceRow(choicesDiv);
+    const toggleBtn=div.querySelector('.toggle');
+    toggleBtn.addEventListener('click',()=>{
+      div.classList.toggle('collapsed');
+      toggleBtn.textContent=div.classList.contains('collapsed')?'[+]':'[-]';
+      updateTreeData();
+    });
     wrap.appendChild(div);
   });
   wrap.querySelectorAll('input,textarea').forEach(el=> el.addEventListener('input',updateTreeData));
@@ -185,10 +191,14 @@ function renderTreeEditor(){
 
 function updateTreeData(){
   const wrap=document.getElementById('treeEditor');
-  treeData={};
+  const newTree={};
   wrap.querySelectorAll('.node').forEach(nodeEl=>{
     const id=nodeEl.querySelector('.nodeId').value.trim();
     if(!id) return;
+    if(nodeEl.classList.contains('collapsed')){
+      if(treeData[id]) newTree[id]=treeData[id];
+      return;
+    }
     const text=nodeEl.querySelector('.nodeText').value;
     const choices=[];
     nodeEl.querySelectorAll('.choices > div').forEach(chEl=>{
@@ -212,8 +222,9 @@ function updateTreeData(){
         choices.push(c);
       }
     });
-    treeData[id]={text,choices};
+    newTree[id]={text,choices};
   });
+  treeData=newTree;
   document.getElementById('npcTree').value=JSON.stringify(treeData,null,2);
   renderDialogPreview();
 }
