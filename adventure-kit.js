@@ -9,6 +9,7 @@ const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
 
 let dragTarget=null, settingStart=false;
+let placingType=null, placingPos=null;
 
 const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [], start:{map:'world',x:2,y:Math.floor(WORLD_H/2)} };
 const STAT_OPTS=['ATK','DEF','LCK','INT','PER','CHA'];
@@ -43,6 +44,22 @@ function drawWorld(){
   if(moduleData.start && moduleData.start.map==='world'){
     ctx.strokeStyle = '#f00';
     ctx.strokeRect(moduleData.start.x*sx+1, moduleData.start.y*sy+1, sx-2, sy-2);
+  }
+  if(placingType && placingPos){
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    if(placingType==='npc'){
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(placingPos.x*sx, placingPos.y*sy, sx, sy);
+    } else if(placingType==='item'){
+      ctx.strokeStyle = '#ff0';
+      ctx.strokeRect(placingPos.x*sx+1, placingPos.y*sy+1, sx-2, sy-2);
+    } else if(placingType==='bldg'){
+      const bw=6, bh=5;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(placingPos.x*sx, placingPos.y*sy, bw*sx, bh*sy);
+    }
+    ctx.restore();
   }
 }
 
@@ -240,6 +257,8 @@ function startNewNPC(){
   document.getElementById('addNPC').textContent='Add NPC';
   document.getElementById('delNPC').style.display='none';
   loadTreeEditor();
+  placingType='npc';
+  placingPos=null;
   showNPCEditor(true);
 }
 function addNPC(){
@@ -359,6 +378,8 @@ function startNewItem(){
   document.getElementById('itemUse').value='';
   document.getElementById('addItem').textContent='Add Item';
   document.getElementById('delItem').style.display='none';
+  placingType='item';
+  placingPos=null;
   showItemEditor(true);
 }
 function addItem(){
@@ -427,6 +448,8 @@ function startNewBldg(){
   document.getElementById('bldgX').value=0;
   document.getElementById('bldgY').value=0;
   document.getElementById('delBldg').style.display='none';
+  placingType='bldg';
+  placingPos=null;
   showBldgEditor(true);
 }
 function addBuilding(){
@@ -667,6 +690,22 @@ function canvasPos(ev){
 }
 canvas.addEventListener('mousedown',ev=>{
   const {x,y}=canvasPos(ev);
+  if(placingType){
+    if(placingType==='npc'){
+      document.getElementById('npcX').value=x;
+      document.getElementById('npcY').value=y;
+    } else if(placingType==='item'){
+      document.getElementById('itemX').value=x;
+      document.getElementById('itemY').value=y;
+    } else if(placingType==='bldg'){
+      document.getElementById('bldgX').value=x;
+      document.getElementById('bldgY').value=y;
+    }
+    placingType=null;
+    placingPos=null;
+    drawWorld();
+    return;
+  }
   if(settingStart){ moduleData.start={map:'world',x,y}; settingStart=false; drawWorld(); return; }
   dragTarget = moduleData.npcs.find(n=>n.map==='world'&&n.x===x&&n.y===y);
   if(dragTarget){ dragTarget._type='npc'; return; }
@@ -688,8 +727,13 @@ canvas.addEventListener('mousedown',ev=>{
   drawWorld();
 });
 canvas.addEventListener('mousemove',ev=>{
-  if(!dragTarget) return;
   const {x,y}=canvasPos(ev);
+  if(placingType){
+    placingPos={x,y};
+    drawWorld();
+    return;
+  }
+  if(!dragTarget) return;
   if(dragTarget._type==='bldg'){
     dragTarget=moveBuilding(dragTarget,x,y); dragTarget._type='bldg';
     renderBldgList();
