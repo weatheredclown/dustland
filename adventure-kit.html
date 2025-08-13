@@ -65,27 +65,30 @@
     <div class="list" id="npcList"></div>
   </fieldset>
   <fieldset class="card" id="itemCard">
-    <legend>Add Item</legend>
-    <label>Name<input id="itemName"/></label>
-    <label>Map<input id="itemMap" value="world"/></label>
-    <label>X<input id="itemX" type="number" min="0"/></label>
-    <label>Y<input id="itemY" type="number" min="0"/></label>
-    <label>Slot<select id="itemSlot">
-      <option value="">(none)</option>
-      <option value="weapon">Weapon</option>
-      <option value="armor">Armor</option>
-      <option value="trinket">Trinket</option>
-    </select></label>
-    <div id="modsWrap">
-      <label>Mods</label>
-      <div id="modBuilder"></div>
-      <button class="btn" type="button" id="addMod">Add Mod</button>
-    </div>
-    <label>Value<input id="itemValue" type="number" min="0"/></label>
-    <label>Use<textarea id="itemUse" rows="2"></textarea></label>
-    <button class="btn" id="addItem">Add Item</button>
-    <button class="btn" id="delItem" style="display:none">Delete Item</button>
+    <legend>Items</legend>
     <div class="list" id="itemList"></div>
+    <button class="btn" type="button" id="newItem">+ Item</button>
+    <div id="itemEditor" style="display:none">
+      <label>Name<input id="itemName"/></label>
+      <label>Map<input id="itemMap" value="world"/></label>
+      <label>X<input id="itemX" type="number" min="0"/></label>
+      <label>Y<input id="itemY" type="number" min="0"/></label>
+      <label>Slot<select id="itemSlot">
+        <option value="">(none)</option>
+        <option value="weapon">Weapon</option>
+        <option value="armor">Armor</option>
+        <option value="trinket">Trinket</option>
+      </select></label>
+      <div id="modsWrap">
+        <label>Mods</label>
+        <div id="modBuilder"></div>
+        <button class="btn" type="button" id="addMod">Add Mod</button>
+      </div>
+      <label>Value<input id="itemValue" type="number" min="0"/></label>
+      <label>Use<textarea id="itemUse" rows="2"></textarea></label>
+      <button class="btn" id="addItem">Add Item</button>
+      <button class="btn" id="delItem" style="display:none">Delete Item</button>
+    </div>
   </fieldset>
   <fieldset class="card" id="bldgCard">
     <legend>Add Building</legend>

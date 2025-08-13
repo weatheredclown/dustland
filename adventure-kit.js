@@ -317,6 +317,23 @@ function deleteNPC(){
 }
 
 // --- Items ---
+function showItemEditor(show){
+  document.getElementById('itemEditor').style.display = show ? 'block' : 'none';
+}
+function startNewItem(){
+  editItemIdx=-1;
+  document.getElementById('itemName').value='';
+  document.getElementById('itemMap').value='world';
+  document.getElementById('itemX').value=0;
+  document.getElementById('itemY').value=0;
+  document.getElementById('itemSlot').value='';
+  loadMods({});
+  document.getElementById('itemValue').value=0;
+  document.getElementById('itemUse').value='';
+  document.getElementById('addItem').textContent='Add Item';
+  document.getElementById('delItem').style.display='none';
+  showItemEditor(true);
+}
 function addItem(){
   const name=document.getElementById('itemName').value.trim();
   const map=document.getElementById('itemMap').value.trim()||'world';
@@ -339,6 +356,7 @@ function addItem(){
   loadMods({});
   renderItemList();
   drawWorld();
+  showItemEditor(false);
 }
 function editItem(i){
   const it=moduleData.items[i];
@@ -353,6 +371,7 @@ function editItem(i){
   document.getElementById('itemUse').value=it.use?JSON.stringify(it.use,null,2):'';
   document.getElementById('addItem').textContent='Update Item';
   document.getElementById('delItem').style.display='block';
+  showItemEditor(true);
 }
 function renderItemList(){
   const list=document.getElementById('itemList');
@@ -369,6 +388,7 @@ function deleteItem(){
   loadMods({});
   renderItemList();
   drawWorld();
+  showItemEditor(false);
 }
 
 // --- Buildings ---
@@ -518,6 +538,7 @@ function applyLoadedModule(data){
   renderQuestList();
   updateQuestOptions();
   loadMods({});
+  showItemEditor(false);
 }
 
 function saveModule(){
@@ -541,6 +562,7 @@ function playtestModule(){
 document.getElementById('regen').onclick=regenWorld;
 document.getElementById('addNPC').onclick=addNPC;
 document.getElementById('addItem').onclick=addItem;
+document.getElementById('newItem').onclick=startNewItem;
 document.getElementById('addBldg').onclick=addBuilding;
 document.getElementById('addQuest').onclick=addQuest;
 document.getElementById('delNPC').onclick=deleteNPC;
@@ -623,6 +645,7 @@ canvas.addEventListener('mousemove',ev=>{
 
 regenWorld();
 loadMods({});
+showItemEditor(false);
 document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
 document.getElementById('questId').value=nextId('quest',moduleData.quests);
 loadTreeEditor();
