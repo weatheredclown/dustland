@@ -693,6 +693,29 @@ function canvasPos(ev){
   const y=clamp(Math.floor((ev.clientY-rect.top)/sy),0,WORLD_H-1);
   return {x,y};
 }
+
+function updateCursor(x, y){
+  if(dragTarget){
+    canvas.style.cursor='grabbing';
+    return;
+  }
+  if(settingStart || placingType){
+    canvas.style.cursor='crosshair';
+    return;
+  }
+  if(x==null || y==null){
+    const ht = hoverTile;
+    if(ht){ x = ht.x; y = ht.y; }
+  }
+  if(x!=null && y!=null){
+    const overNpc = moduleData.npcs.some(n=>n.map==='world'&&n.x===x&&n.y===y);
+    const overItem = moduleData.items.some(it=>it.map==='world'&&it.x===x&&it.y===y);
+    const overBldg = moduleData.buildings.some(b=>x>=b.x && x<b.x+b.w && y>=b.y && y<b.y+b.h);
+    canvas.style.cursor = (overNpc||overItem||overBldg)?'grab':'pointer';
+  } else {
+    canvas.style.cursor='pointer';
+  }
+}
 canvas.addEventListener('mousedown',ev=>{
   const {x,y}=canvasPos(ev);
   if(placingType){
@@ -709,13 +732,28 @@ canvas.addEventListener('mousedown',ev=>{
     placingType=null;
     placingPos=null;
     drawWorld();
+    updateCursor(x,y);
     return;
   }
-  if(settingStart){ moduleData.start={map:'world',x,y}; settingStart=false; drawWorld(); return; }
+  if(settingStart){
+    moduleData.start={map:'world',x,y};
+    settingStart=false;
+    drawWorld();
+    updateCursor(x,y);
+    return;
+  }
   dragTarget = moduleData.npcs.find(n=>n.map==='world'&&n.x===x&&n.y===y);
-  if(dragTarget){ dragTarget._type='npc'; return; }
+  if(dragTarget){
+    dragTarget._type='npc';
+    updateCursor(x,y);
+    return;
+  }
   dragTarget = moduleData.items.find(it=>it.map==='world'&&it.x===x&&it.y===y);
-  if(dragTarget){ dragTarget._type='item'; return; }
+  if(dragTarget){
+    dragTarget._type='item';
+    updateCursor(x,y);
+    return;
+  }
   dragTarget = moduleData.buildings.find(b=> x>=b.x && x<b.x+b.w && y>=b.y && y<b.y+b.h);
   if(dragTarget){
     dragTarget._type='bldg';
@@ -724,12 +762,14 @@ canvas.addEventListener('mousedown',ev=>{
     editBldgIdx=moduleData.buildings.indexOf(dragTarget);
     document.getElementById('delBldg').style.display='block';
     showBldgEditor(true);
+    updateCursor(x,y);
     return;
   }
   document.getElementById('npcX').value=x; document.getElementById('npcY').value=y;
   document.getElementById('itemX').value=x; document.getElementById('itemY').value=y;
   document.getElementById('bldgX').value=x; document.getElementById('bldgY').value=y;
   drawWorld();
+  updateCursor(x,y);
 });
 canvas.addEventListener('mousemove',ev=>{
   const {x,y}=canvasPos(ev);
@@ -739,9 +779,13 @@ canvas.addEventListener('mousemove',ev=>{
   if(placingType){
     placingPos={x,y};
     drawWorld();
+    updateCursor(x,y);
     return;
   }
-  if(!dragTarget) return;
+  if(!dragTarget){
+    updateCursor(x,y);
+    return;
+  }
   if(dragTarget._type==='bldg'){
     dragTarget=moveBuilding(dragTarget,x,y); dragTarget._type='bldg';
     renderBldgList();
@@ -758,9 +802,20 @@ canvas.addEventListener('mousemove',ev=>{
     }
   }
   drawWorld();
+  updateCursor(x,y);
 });
-canvas.addEventListener('mouseup',()=>{ if(dragTarget) delete dragTarget._type; dragTarget=null; });
-canvas.addEventListener('mouseleave',()=>{ if(dragTarget) delete dragTarget._type; dragTarget=null; hoverTile=null; drawWorld(); });
+canvas.addEventListener('mouseup',()=>{
+  if(dragTarget) delete dragTarget._type;
+  dragTarget=null;
+  updateCursor();
+});
+canvas.addEventListener('mouseleave',()=>{
+  if(dragTarget) delete dragTarget._type;
+  dragTarget=null;
+  hoverTile=null;
+  drawWorld();
+  updateCursor();
+});
 
 regenWorld();
 loadMods({});
