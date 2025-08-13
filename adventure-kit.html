@@ -20,7 +20,10 @@
     #npcCard{right:292px;top:16px;width:260px;}
     #itemCard{right:16px;top:16px;width:260px;}
     #bldgCard{right:16px;top:560px;width:260px;}
-    #questCard{right:16px;top:800px;width:260px;}
+      #questCard{right:16px;top:800px;width:260px;}
+      #treeEditor .node{border:1px solid #2b3b2b;padding:4px;margin-top:4px;}
+      #treeEditor .choices div{display:flex;gap:4px;margin-top:2px;}
+      #treeEditor .choices input{flex:1;}
   </style>
 </head>
 <body>
@@ -49,9 +52,14 @@
     <label>Accept Text<textarea id="npcAccept" rows="2">Good luck.</textarea></label>
     <label>Turn-in Text<textarea id="npcTurnin" rows="2">Thanks for helping.</textarea></label>
     <label><input type="checkbox" id="npcCombat"> Combat NPC</label>
-    <label><input type="checkbox" id="npcShop"> Shop NPC</label>
-    <label>Tree JSON<textarea id="npcTree" rows="4" placeholder='{"start":{"text":"hi","choices":[{"label":"(Leave)","to":"bye"}]}}'></textarea></label>
-    <div id="dialogPreview" style="margin-top:6px"></div>
+      <label><input type="checkbox" id="npcShop"> Shop NPC</label>
+      <div id="treeWrap">
+        <label>Dialog Tree</label>
+        <div id="treeEditor"></div>
+        <button class="btn" type="button" id="addNode">Add Node</button>
+      </div>
+      <textarea id="npcTree" style="display:none"></textarea>
+      <div id="dialogPreview" style="margin-top:6px"></div>
     <button class="btn" id="addNPC">Add NPC</button>
     <button class="btn" id="delNPC" style="display:none">Delete NPC</button>
     <div class="list" id="npcList"></div>
