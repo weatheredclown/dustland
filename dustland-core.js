@@ -814,8 +814,8 @@ const startContinue = document.getElementById('startContinue');
 const startNew = document.getElementById('startNew');
 function showStart(){ startEl.style.display='flex'; }
 function hideStart(){ startEl.style.display='none'; }
-startContinue.onclick=()=>{ load(); hideStart(); };
-startNew.onclick=()=>{ hideStart(); resetAll(); };
+if (startContinue) startContinue.onclick = () => { load(); hideStart(); };
+if (startNew) startNew.onclick = () => { hideStart(); resetAll(); };
 
 function resetAll(){
   party.length=0; player.inv=[]; player.flags={}; player.scrap=0;
