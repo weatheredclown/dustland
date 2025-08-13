@@ -15,13 +15,13 @@
     .tabs{display:flex;gap:6px;margin:8px 0}
     .tab{padding:6px 8px;border:1px solid #273027;border-radius:6px;cursor:pointer;background:#0f120f}
     .tab.active{outline:1px solid #4f6b4f}
-    #inv{display:grid;grid-template-columns:1fr;gap:6px;margin-top:8px}
+    #inv{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px;margin-top:8px}
     .slot{padding:6px 8px;border:1px dashed #2b382b;border-radius:6px;background:#0c0f0c}
     .slot.clickable{cursor:pointer}
-    #party{display:grid;grid-template-columns:1fr;gap:8px}
+    #party{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px}
     .pcard{border:1px solid #273027;border-radius:8px;background:#0f120f;padding:8px}
     .row{display:flex;flex-wrap:wrap;gap:8px}
-    #quests{display:grid;grid-template-columns:1fr;gap:8px}
+    #quests{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px}
     .q{border:1px solid #273027;border-radius:8px;background:#0f120f;padding:8px}
     .q .status{color:#9ab09a}
     .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:20}

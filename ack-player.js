@@ -6,6 +6,19 @@ const loader = document.getElementById('moduleLoader');
 const fileInput = document.getElementById('modFile');
 const loadBtn = document.getElementById('modLoadBtn');
 
+const playData = localStorage.getItem('ack_playtest');
+if(playData){
+  try{
+    moduleData = JSON.parse(playData);
+    localStorage.removeItem('ack_playtest');
+    loader.style.display='none';
+    window.openCreator = window._realOpenCreator;
+    openCreator();
+  }catch(e){
+    localStorage.removeItem('ack_playtest');
+  }
+}
+
 function applyModule(data){
   setRNGSeed(data.seed || Date.now());
   world = data.world || world;
@@ -58,10 +71,11 @@ loadBtn.onclick = () => {
 // After party creation, start the loaded module
 window.startGame = function(){
   if(moduleData) applyModule(moduleData);
-  setMap('world', 'Module');
-  player.x = 2;
-  player.y = Math.floor(WORLD_H/2);
-  centerCamera(player.x, player.y, 'world');
+  const start=moduleData && moduleData.start ? moduleData.start : {map:'world',x:2,y:Math.floor(WORLD_H/2)};
+  setMap(start.map||'world', 'Module');
+  player.x = start.x;
+  player.y = start.y;
+  centerCamera(player.x, player.y, start.map||'world');
   renderInv(); renderQuests(); renderParty(); updateHUD();
   log('Adventure begins.');
 };
