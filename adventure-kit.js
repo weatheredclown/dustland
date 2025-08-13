@@ -380,6 +380,12 @@ function removeShopTree(tree){
     tree.start.choices = tree.start.choices.filter(c=>c.to!=='sell');
   delete tree.sell;
 }
+function updateNPCOptSections(){
+  document.getElementById('combatOpts').style.display =
+    document.getElementById('npcCombat').checked ? 'block' : 'none';
+  document.getElementById('shopOpts').style.display =
+    document.getElementById('npcShop').checked ? 'block' : 'none';
+}
 function showNPCEditor(show){
   document.getElementById('npcEditor').style.display = show ? 'block' : 'none';
 }
@@ -400,6 +406,7 @@ function startNewNPC(){
   document.getElementById('npcTree').value='';
   document.getElementById('npcCombat').checked=false;
   document.getElementById('npcShop').checked=false;
+  updateNPCOptSections();
   document.getElementById('addNPC').textContent='Add NPC';
   document.getElementById('delNPC').style.display='none';
   loadTreeEditor();
@@ -464,6 +471,7 @@ function addNPC(){
   document.getElementById('npcDesc').value='';
   document.getElementById('npcCombat').checked=false;
   document.getElementById('npcShop').checked=false;
+  updateNPCOptSections();
   selectedObj=null;
   drawWorld();
   loadTreeEditor();
@@ -487,6 +495,7 @@ function editNPC(i){
   document.getElementById('npcTree').value=JSON.stringify(n.tree,null,2);
    document.getElementById('npcCombat').checked=!!n.combat;
    document.getElementById('npcShop').checked=!!n.shop;
+  updateNPCOptSections();
   document.getElementById('addNPC').textContent='Update NPC';
   document.getElementById('delNPC').style.display='block';
   loadTreeEditor();
@@ -865,6 +874,8 @@ document.getElementById('npcQuest').addEventListener('change', () => {
     renderDialogPreview();   // just refresh preview of whatever is in the editor
   }
 });
+document.getElementById('npcCombat').addEventListener('change',updateNPCOptSections);
+document.getElementById('npcShop').addEventListener('change',updateNPCOptSections);
 document.getElementById('genQuestDialog').onclick=generateQuestTree;
 
 // --- Map interactions ---
