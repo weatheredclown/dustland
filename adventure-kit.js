@@ -399,6 +399,29 @@ function deleteQuest(){
   document.getElementById('questId').value=nextId('quest',moduleData.quests);
 }
 
+function applyLoadedModule(data){
+  moduleData.seed = data.seed || Date.now();
+  moduleData.npcs = data.npcs || [];
+  moduleData.items = data.items || [];
+  moduleData.quests = data.quests || [];
+  moduleData.buildings = data.buildings || [];
+  moduleData.start = data.start || {map:'world',x:2,y:Math.floor(WORLD_H/2)};
+
+  world = data.world || world;
+  buildings = moduleData.buildings.map(b=>({
+    ...b,
+    under: Array.from({length:b.h},()=>Array.from({length:b.w},()=>TILE.SAND))
+  }));
+
+  drawWorld();
+  renderNPCList();
+  renderItemList();
+  renderBldgList();
+  renderQuestList();
+  updateQuestOptions();
+  loadMods({});
+}
+
 function saveModule(){
   const bldgs=buildings.map(({under,...rest})=>rest);
   const data={...moduleData, world, buildings:bldgs};
@@ -428,6 +451,18 @@ document.getElementById('delBldg').onclick=deleteBldg;
 document.getElementById('delQuest').onclick=deleteQuest;
 document.getElementById('addMod').onclick=()=>modRow();
 document.getElementById('save').onclick=saveModule;
+document.getElementById('load').onclick=()=>document.getElementById('loadFile').click();
+document.getElementById('loadFile').addEventListener('change',e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{ applyLoadedModule(JSON.parse(reader.result)); }
+    catch(err){ alert('Invalid module'); }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+});
 document.getElementById('setStart').onclick=()=>{settingStart=true;};
 document.getElementById('playtest').onclick=playtestModule;
 document.getElementById('npcTree').addEventListener('input',renderDialogPreview);
