@@ -86,18 +86,31 @@ function renderDialogPreview(){
   if(!tree){ prev.innerHTML=''; return; }
   function show(id){
     const node=tree[id]; if(!node) return;
-    prev.innerHTML=`<div>${node.text||''}</div>`+(node.choices||[]).map(c=>`<button class="btn" data-to="${c.to}" style="margin-top:4px">${c.label}</button>`).join('');
+    const html = (node.choices||[])
+      .filter(c=>c.to)
+      .map(c=>`<button class="btn" data-to="${c.to}" style="margin-top:4px">${c.label}</button>`)
+      .join('');
+    prev.innerHTML=`<div>${node.text||''}</div>`+html;
     Array.from(prev.querySelectorAll('button')).forEach(btn=>btn.onclick=()=>show(btn.dataset.to));
   }
   show('start');
 }
 
-function addChoiceRow(container,label='',to=''){
+function addChoiceRow(container,ch={}){
+  const {label='',to='',reward='',stat='',dc='',success='',failure='',once=false}=ch||{};
   const row=document.createElement('div');
-  row.innerHTML=`<input class="choiceLabel" placeholder="label" value="${label}"/> <input class="choiceTo" placeholder="to" value="${to}"/> <button class="btn delChoice" type="button">x</button>`;
+  row.innerHTML=`<input class="choiceLabel" placeholder="label" value="${label}"/>
+    <input class="choiceTo" placeholder="to" value="${to}"/>
+    <input class="choiceReward" placeholder="reward" value="${reward||''}"/>
+    <input class="choiceStat" placeholder="stat" value="${stat||''}"/>
+    <input class="choiceDC" placeholder="dc" value="${dc||''}"/>
+    <input class="choiceSuccess" placeholder="success text" value="${success||''}"/>
+    <input class="choiceFailure" placeholder="failure text" value="${failure||''}"/>
+    <label><input type="checkbox" class="choiceOnce" ${once?'checked':''}/> once</label>
+    <button class="btn delChoice" type="button">x</button>`;
   container.appendChild(row);
-  row.querySelector('.choiceLabel').addEventListener('input',updateTreeData);
-  row.querySelector('.choiceTo').addEventListener('input',updateTreeData);
+  row.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',updateTreeData));
+  row.querySelectorAll('input[type=checkbox]').forEach(el=>el.addEventListener('change',updateTreeData));
   row.querySelector('.delChoice').addEventListener('click',()=>{row.remove();updateTreeData();});
 }
 
@@ -110,11 +123,12 @@ function renderTreeEditor(){
     div.className='node';
     div.innerHTML=`<label>Node ID<input class="nodeId" value="${id}"></label><label>Text<textarea class="nodeText" rows="2">${node.text||''}</textarea></label><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button>`;
     const choicesDiv=div.querySelector('.choices');
-    (node.choices||[]).forEach(ch=>addChoiceRow(choicesDiv,ch.label,ch.to));
+    (node.choices||[]).forEach(ch=>addChoiceRow(choicesDiv,ch));
     div.querySelector('.addChoice').onclick=()=>addChoiceRow(choicesDiv);
     wrap.appendChild(div);
   });
   wrap.querySelectorAll('input,textarea').forEach(el=> el.addEventListener('input',updateTreeData));
+  wrap.querySelectorAll('input[type=checkbox]').forEach(el=> el.addEventListener('change',updateTreeData));
 }
 
 function updateTreeData(){
@@ -128,7 +142,23 @@ function updateTreeData(){
     nodeEl.querySelectorAll('.choices > div').forEach(chEl=>{
       const label=chEl.querySelector('.choiceLabel').value.trim();
       const to=chEl.querySelector('.choiceTo').value.trim();
-      if(label && to) choices.push({label,to});
+      const reward=chEl.querySelector('.choiceReward').value.trim();
+      const stat=chEl.querySelector('.choiceStat').value.trim();
+      const dc=parseInt(chEl.querySelector('.choiceDC').value.trim(),10);
+      const success=chEl.querySelector('.choiceSuccess').value.trim();
+      const failure=chEl.querySelector('.choiceFailure').value.trim();
+      const once=chEl.querySelector('.choiceOnce').checked;
+      if(label){
+        const c={label};
+        if(to) c.to=to;
+        if(reward) c.reward=reward;
+        if(stat) c.stat=stat;
+        if(dc) c.dc=dc;
+        if(success) c.success=success;
+        if(failure) c.failure=failure;
+        if(once) c.once=true;
+        choices.push(c);
+      }
     });
     treeData[id]={text,choices};
   });
