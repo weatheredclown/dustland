@@ -132,6 +132,7 @@ function removeShopTree(tree){
 function addNPC(){
   const id=document.getElementById('npcId').value.trim();
   const name=document.getElementById('npcName').value.trim();
+  const desc=document.getElementById('npcDesc').value.trim();
   const color=document.getElementById('npcColor').value.trim()||'#fff';
   const map=document.getElementById('npcMap').value.trim()||'world';
   const x=parseInt(document.getElementById('npcX').value,10)||0;
@@ -161,7 +162,7 @@ function addNPC(){
   document.getElementById('npcTree').value=JSON.stringify(tree,null,2);
   renderDialogPreview();
 
-  const npc={id,name,color,map,x,y,tree,questId};
+  const npc={id,name,desc,color,map,x,y,tree,questId};
   if(combat) npc.combat = {DEF:5};
   if(shop) npc.shop = true;
   if(editNPCIdx>=0){
@@ -174,6 +175,7 @@ function addNPC(){
   document.getElementById('delNPC').style.display='none';
   renderNPCList();
   document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
+  document.getElementById('npcDesc').value='';
   document.getElementById('npcCombat').checked=false;
   document.getElementById('npcShop').checked=false;
   drawWorld();
@@ -184,6 +186,7 @@ function editNPC(i){
   editNPCIdx=i;
   document.getElementById('npcId').value=n.id;
   document.getElementById('npcName').value=n.name;
+  document.getElementById('npcDesc').value=n.desc||'';
   document.getElementById('npcColor').value=n.color;
   document.getElementById('npcMap').value=n.map;
   document.getElementById('npcX').value=n.x;
@@ -215,6 +218,7 @@ function deleteNPC(){
   renderNPCList();
   drawWorld();
   document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
+  document.getElementById('npcDesc').value='';
   renderDialogPreview();
 }
 
