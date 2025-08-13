@@ -6,67 +6,85 @@
   <title>Adventure Construction Kit</title>
   <link rel="stylesheet" href="dustland.css" />
   <style>
-    body{display:flex;gap:16px;margin:0;padding:16px;background:#000;color:#c8f7c9;font-family:ui-monospace;position:relative;}
+    body{margin:0;background:#000;color:#c8f7c9;font-family:ui-monospace;position:relative;min-height:100vh;}
     body:after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.05)0,rgba(255,255,255,.05)1px,rgba(0,0,0,0)2px);mix-blend-mode:overlay;opacity:.15;}
     canvas{border:1px solid #2b3b2b;background:#000;image-rendering:pixelated;box-shadow:0 0 12px #000,0 0 8px #9ef7a0;}
-    .side{width:260px;display:flex;flex-direction:column;gap:12px;}
-    .side fieldset{border:1px solid #2b3b2b;padding:8px;background:#0f120f;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,.6);}
+    .card{position:absolute;padding:8px;background:#0f120f;border:2px solid #2b3b2b;border-radius:8px;box-shadow:0 0 12px #000,0 0 8px #9ef7a0;}
     .list{font-size:12px;}
+    .list div{cursor:pointer;}
     label{display:block;margin-top:4px;font-size:12px;}
-    input,textarea{width:100%;margin-top:2px;background:#101910;border:1px solid #2b3b2b;color:#c8f7c9;font-family:inherit;font-size:12px;border-radius:4px;}
+    input,textarea,select{width:100%;margin-top:2px;background:#101910;border:1px solid #2b3b2b;color:#c8f7c9;font-family:inherit;font-size:12px;border-radius:4px;}
     button.btn{margin-top:6px;}
+    #mapCard{left:16px;top:16px;width:640px;}
+    #mapCard .controls{text-align:center;margin-top:8px;}
+    #npcCard{right:16px;top:16px;width:260px;}
+    #itemCard{right:16px;top:320px;width:260px;}
+    #bldgCard{right:16px;top:560px;width:260px;}
+    #questCard{right:16px;top:800px;width:260px;}
   </style>
 </head>
 <body>
-  <div>
+  <div class="card" id="mapCard">
     <canvas id="map" width="640" height="480" aria-label="Map preview"></canvas>
-    <div style="margin-top:8px">
+    <div class="controls">
       <button class="btn" id="regen">Generate World</button>
       <button class="btn" id="save">Download Module</button>
     </div>
   </div>
-  <div class="side">
-    <fieldset>
-      <legend>Add NPC</legend>
-      <label>ID<input id="npcId"/></label>
-      <label>Name<input id="npcName"/></label>
-      <label>Color<input id="npcColor" value="#9ef7a0"/></label>
-      <label>Map<input id="npcMap" value="world"/></label>
-      <label>X<input id="npcX" type="number" min="0"/></label>
-      <label>Y<input id="npcY" type="number" min="0"/></label>
-      <label>Dialog<textarea id="npcDialog" rows="2"></textarea></label>
-      <button class="btn" id="addNPC">Add NPC</button>
-      <div class="list" id="npcList"></div>
-    </fieldset>
-    <fieldset>
-      <legend>Add Item</legend>
-      <label>Name<input id="itemName"/></label>
-      <label>Map<input id="itemMap" value="world"/></label>
-      <label>X<input id="itemX" type="number" min="0"/></label>
-      <label>Y<input id="itemY" type="number" min="0"/></label>
-      <label>Slot<input id="itemSlot"/></label>
-      <label>Mods<textarea id="itemMods" rows="2"></textarea></label>
-      <label>Value<input id="itemValue" type="number" min="0"/></label>
-      <label>Use<textarea id="itemUse" rows="2"></textarea></label>
-      <button class="btn" id="addItem">Add Item</button>
-      <div class="list" id="itemList"></div>
-    </fieldset>
-    <fieldset>
-      <legend>Add Building</legend>
-      <label>X<input id="bldgX" type="number" min="0"/></label>
-      <label>Y<input id="bldgY" type="number" min="0"/></label>
-      <button class="btn" id="addBldg">Place Hut</button>
-      <div class="list" id="bldgList"></div>
-    </fieldset>
-    <fieldset>
-      <legend>Add Quest</legend>
-      <label>ID<input id="questId"/></label>
-      <label>Title<input id="questTitle"/></label>
-      <label>Description<textarea id="questDesc" rows="2"></textarea></label>
-      <button class="btn" id="addQuest">Add Quest</button>
-      <div class="list" id="questList"></div>
-    </fieldset>
-  </div>
+  <fieldset class="card" id="npcCard">
+    <legend>Add NPC</legend>
+    <label>ID<input id="npcId"/></label>
+    <label>Name<input id="npcName"/></label>
+    <label>Color<input id="npcColor" value="#9ef7a0"/></label>
+    <label>Map<input id="npcMap" value="world"/></label>
+    <label>X<input id="npcX" type="number" min="0"/></label>
+    <label>Y<input id="npcY" type="number" min="0"/></label>
+    <label>Dialog<textarea id="npcDialog" rows="2"></textarea></label>
+    <label>Quest<select id="npcQuest"><option value="">(none)</option></select></label>
+    <label>Tree JSON<textarea id="npcTree" rows="4" placeholder='{"start":{"text":"hi","choices":[{"label":"(Leave)","to":"bye"}]}}'></textarea></label>
+    <button class="btn" id="addNPC">Add NPC</button>
+    <div class="list" id="npcList"></div>
+  </fieldset>
+  <fieldset class="card" id="itemCard">
+    <legend>Add Item</legend>
+    <label>Name<input id="itemName"/></label>
+    <label>Map<input id="itemMap" value="world"/></label>
+    <label>X<input id="itemX" type="number" min="0"/></label>
+    <label>Y<input id="itemY" type="number" min="0"/></label>
+    <label>Slot<select id="itemSlot">
+      <option value="">(none)</option>
+      <option value="weapon">Weapon</option>
+      <option value="armor">Armor</option>
+      <option value="trinket">Trinket</option>
+    </select></label>
+    <div id="modsWrap">
+      <label>Mods</label>
+      <div id="modBuilder"></div>
+      <button class="btn" type="button" id="addMod">Add Mod</button>
+    </div>
+    <label>Value<input id="itemValue" type="number" min="0"/></label>
+    <label>Use<textarea id="itemUse" rows="2"></textarea></label>
+    <button class="btn" id="addItem">Add Item</button>
+    <div class="list" id="itemList"></div>
+  </fieldset>
+  <fieldset class="card" id="bldgCard">
+    <legend>Add Building</legend>
+    <label>X<input id="bldgX" type="number" min="0"/></label>
+    <label>Y<input id="bldgY" type="number" min="0"/></label>
+    <button class="btn" id="addBldg">Place Hut</button>
+    <div class="list" id="bldgList"></div>
+  </fieldset>
+  <fieldset class="card" id="questCard">
+    <legend>Add Quest</legend>
+    <label>ID<input id="questId"/></label>
+    <label>Title<input id="questTitle"/></label>
+    <label>Description<textarea id="questDesc" rows="2"></textarea></label>
+    <label>Required Item<input id="questItem"/></label>
+    <label>Reward Item<input id="questReward"/></label>
+    <label>XP Reward<input id="questXP" type="number" min="0"/></label>
+    <button class="btn" id="addQuest">Add Quest</button>
+    <div class="list" id="questList"></div>
+  </fieldset>
   <script src="dustland-core.js"></script>
   <script src="adventure-kit.js"></script>
 </body>
