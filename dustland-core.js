@@ -494,6 +494,7 @@ function removeNPC(npc){
   if(idx > -1) NPCS.splice(idx,1);
 }
 const usedNanoChoices = new Set();
+const usedOnceChoices = new Set();
 
 // ===== WORLD GEN =====
 function genWorld(seed=Date.now()){
@@ -678,7 +679,7 @@ function renderDialog(){
   let nodeChoices = (node.choices||[]).slice();
   for(const ex of extras){
     const k = `${currentNPC.id}::${currentNode}::${ex.label}`;
-    if(!usedNanoChoices.has(k)) nodeChoices.push({...ex, nano:true, key:k});
+    if(!usedNanoChoices.has(k) && !usedOnceChoices.has(k)) nodeChoices.push({...ex, nano:true, key:k});
   }
   if(currentNPC.quest){
     const meta=currentNPC.quest;
@@ -688,31 +689,45 @@ function renderDialog(){
       return true;
     });
   }
+  nodeChoices = nodeChoices.filter(c=>{
+    if(!c.once) return true;
+    const key = `${currentNPC.id}::${currentNode}::${c.label}`;
+    return !usedOnceChoices.has(key);
+  });
   const handleSpecial = (c)=>{
-    if(c.nano){
-      if(c.stat){
-        const roll = skillRoll(c.stat);
-        const success = roll >= c.dc;
-        textEl.textContent = success ? c.success : c.failure;
-        textEl.textContent += ` (Roll ${roll} vs DC ${c.dc}.)`;
-        if(success){
-          if(/^xp\s*\d+/i.test(c.reward)){
-            const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
-            awardXP(leader(), amt);
-            textEl.textContent += ` Reward: ${amt} XP.`;
-          } else if(c.reward){
-            addToInv({name:c.reward});
-            textEl.textContent += ` You receive ${c.reward}.`;
-          }
+    if(c.stat){
+      const roll = skillRoll(c.stat);
+      const success = roll >= c.dc;
+      textEl.textContent = success ? (c.success||'') : (c.failure||'');
+      textEl.textContent += ` (Roll ${roll} vs DC ${c.dc}.)`;
+      if(success && c.reward){
+        if(/^xp\s*\d+/i.test(c.reward)){
+          const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
+          awardXP(leader(), amt);
+          textEl.textContent += ` Reward: ${amt} XP.`;
+        } else {
+          addToInv({name:c.reward});
+          textEl.textContent += ` You receive ${c.reward}.`;
         }
-        usedNanoChoices.add(c.key);
-        setContinueOnly();
-        return true;
-      } else if(c.response){
-        textEl.textContent = c.response;
-        usedNanoChoices.add(c.key);
-        setContinueOnly();
-        return true;
+      }
+      if(c.nano && c.key) usedNanoChoices.add(c.key);
+      setContinueOnly();
+      return true;
+    }
+    if(c.response){
+      textEl.textContent = c.response;
+      if(c.nano && c.key) usedNanoChoices.add(c.key);
+      setContinueOnly();
+      return true;
+    }
+    if(c.reward){
+      if(/^xp\s*\d+/i.test(c.reward)){
+        const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
+        awardXP(leader(), amt);
+        if(typeof toast==='function') toast(`+${amt} XP`);
+      } else {
+        addToInv({name:c.reward});
+        if(typeof toast==='function') toast(`Received ${c.reward}`);
       }
     }
     if(currentNPC && typeof currentNPC.processChoice==='function'){
@@ -722,7 +737,13 @@ function renderDialog(){
   };
   for(const c of nodeChoices){
     const div=document.createElement('div'); div.className='choice'; div.textContent=c.label;
-    div.onclick=()=>{ currentNode=c.to||'bye'; if(handleSpecial(c)) return; if(currentNode==='bye'){ closeDialog(); } else { renderDialog(); } };
+    div.onclick=()=>{
+      const key = `${currentNPC.id}::${currentNode}::${c.label}`;
+      if(c.once) usedOnceChoices.add(key);
+      currentNode=c.to||'bye';
+      if(handleSpecial(c)) return;
+      if(currentNode==='bye'){ closeDialog(); } else { renderDialog(); }
+    };
     choicesEl.appendChild(div);
   }
   if(currentNPC && typeof currentNPC.processNode==='function'){
