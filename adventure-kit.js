@@ -13,6 +13,7 @@ let dragTarget=null, settingStart=false;
 const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [], start:{map:'world',x:2,y:Math.floor(WORLD_H/2)} };
 const STAT_OPTS=['ATK','DEF','LCK','INT','PER','CHA'];
 let editNPCIdx=-1, editItemIdx=-1, editQuestIdx=-1, editBldgIdx=-1;
+let treeData={};
 
 function nextId(prefix, arr){
   let i=1; while(arr.some(o=>o.id===prefix+i)) i++; return prefix+i;
@@ -91,6 +92,64 @@ function renderDialogPreview(){
   show('start');
 }
 
+function addChoiceRow(container,label='',to=''){
+  const row=document.createElement('div');
+  row.innerHTML=`<input class="choiceLabel" placeholder="label" value="${label}"/> <input class="choiceTo" placeholder="to" value="${to}"/> <button class="btn delChoice" type="button">x</button>`;
+  container.appendChild(row);
+  row.querySelector('.choiceLabel').addEventListener('input',updateTreeData);
+  row.querySelector('.choiceTo').addEventListener('input',updateTreeData);
+  row.querySelector('.delChoice').addEventListener('click',()=>{row.remove();updateTreeData();});
+}
+
+function renderTreeEditor(){
+  const wrap=document.getElementById('treeEditor');
+  if(!wrap) return;
+  wrap.innerHTML='';
+  Object.entries(treeData).forEach(([id,node])=>{
+    const div=document.createElement('div');
+    div.className='node';
+    div.innerHTML=`<label>Node ID<input class="nodeId" value="${id}"></label><label>Text<textarea class="nodeText" rows="2">${node.text||''}</textarea></label><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button>`;
+    const choicesDiv=div.querySelector('.choices');
+    (node.choices||[]).forEach(ch=>addChoiceRow(choicesDiv,ch.label,ch.to));
+    div.querySelector('.addChoice').onclick=()=>addChoiceRow(choicesDiv);
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll('input,textarea').forEach(el=> el.addEventListener('input',updateTreeData));
+}
+
+function updateTreeData(){
+  const wrap=document.getElementById('treeEditor');
+  treeData={};
+  wrap.querySelectorAll('.node').forEach(nodeEl=>{
+    const id=nodeEl.querySelector('.nodeId').value.trim();
+    if(!id) return;
+    const text=nodeEl.querySelector('.nodeText').value;
+    const choices=[];
+    nodeEl.querySelectorAll('.choices > div').forEach(chEl=>{
+      const label=chEl.querySelector('.choiceLabel').value.trim();
+      const to=chEl.querySelector('.choiceTo').value.trim();
+      if(label && to) choices.push({label,to});
+    });
+    treeData[id]={text,choices};
+  });
+  document.getElementById('npcTree').value=JSON.stringify(treeData,null,2);
+  renderDialogPreview();
+}
+
+function loadTreeEditor(){
+  let txt=document.getElementById('npcTree').value.trim();
+  try{ treeData = txt?JSON.parse(txt):{}; }catch(e){ treeData={}; }
+  renderTreeEditor();
+  updateTreeData();
+}
+
+function addNode(){
+  const id = Object.keys(treeData).length? 'node'+Object.keys(treeData).length : 'start';
+  treeData[id]={text:'',choices:[{label:'(Leave)',to:'bye'}]};
+  renderTreeEditor();
+  updateTreeData();
+}
+
 function generateQuestTree(){
   const quest=document.getElementById('npcQuest').value.trim();
   if(!quest) return;
@@ -103,7 +162,7 @@ function generateQuestTree(){
     do_turnin:{text:turnin||'Thanks for helping.',choices:[{label:'(Leave)',to:'bye'}]}
   };
   document.getElementById('npcTree').value=JSON.stringify(tree,null,2);
-  renderDialogPreview();
+  loadTreeEditor();
 }
 
 // --- NPCs ---
@@ -143,6 +202,7 @@ function addNPC(){
   const turnin=document.getElementById('npcTurnin').value.trim();
   const combat=document.getElementById('npcCombat').checked;
   const shop=document.getElementById('npcShop').checked;
+  updateTreeData();
   let tree=null;
   const treeTxt=document.getElementById('npcTree').value.trim();
   if(treeTxt){ try{ tree=JSON.parse(treeTxt); }catch(e){ tree=null; } }
@@ -164,7 +224,7 @@ function addNPC(){
   if(combat) applyCombatTree(tree); else removeCombatTree(tree);
   if(shop) applyShopTree(tree); else removeShopTree(tree);
   document.getElementById('npcTree').value=JSON.stringify(tree,null,2);
-  renderDialogPreview();
+  loadTreeEditor();
 
   const npc={id,name,desc,color,map,x,y,tree,questId};
   if(combat) npc.combat = {DEF:5};
@@ -183,7 +243,7 @@ function addNPC(){
   document.getElementById('npcCombat').checked=false;
   document.getElementById('npcShop').checked=false;
   drawWorld();
-  renderDialogPreview();
+  loadTreeEditor();
 }
 function editNPC(i){
   const n=moduleData.npcs[i];
@@ -204,7 +264,7 @@ function editNPC(i){
    document.getElementById('npcShop').checked=!!n.shop;
   document.getElementById('addNPC').textContent='Update NPC';
   document.getElementById('delNPC').style.display='block';
-  renderDialogPreview();
+  loadTreeEditor();
 }
 function renderNPCList(){
   const list=document.getElementById('npcList');
@@ -223,7 +283,7 @@ function deleteNPC(){
   drawWorld();
   document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
   document.getElementById('npcDesc').value='';
-  renderDialogPreview();
+  loadTreeEditor();
 }
 
 // --- Items ---
@@ -471,9 +531,9 @@ document.getElementById('loadFile').addEventListener('change',e=>{
   reader.readAsText(file);
   e.target.value='';
 });
-document.getElementById('setStart').onclick=()=>{settingStart=true;};
-document.getElementById('playtest').onclick=playtestModule;
-document.getElementById('npcTree').addEventListener('input',renderDialogPreview);
+  document.getElementById('setStart').onclick=()=>{settingStart=true;};
+  document.getElementById('playtest').onclick=playtestModule;
+  document.getElementById('addNode').onclick=addNode;
 ['npcDialog','npcAccept','npcTurnin','npcQuest'].forEach(id=>{
   document.getElementById(id).addEventListener(id==='npcQuest'?'change':'input',()=>{
     if(document.getElementById('npcQuest').value) generateQuestTree(); else renderDialogPreview();
@@ -535,4 +595,4 @@ regenWorld();
 loadMods({});
 document.getElementById('npcId').value=nextId('npc',moduleData.npcs);
 document.getElementById('questId').value=nextId('quest',moduleData.quests);
-renderDialogPreview();
+loadTreeEditor();
