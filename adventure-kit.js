@@ -8,7 +8,7 @@ const colors = {0:'#1e271d',1:'#2c342c',2:'#1573ff',3:'#203320',4:'#394b39',5:'#
 const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
 
-let dragTarget=null, settingStart=false;
+let dragTarget=null, settingStart=false, hoverTarget=null;
 
 const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [], start:{map:'world',x:2,y:Math.floor(WORLD_H/2)} };
 const STAT_OPTS=['ATK','DEF','LCK','INT','PER','CHA'];
@@ -32,14 +32,44 @@ function drawWorld(){
   }
   // Draw NPC markers
   moduleData.npcs.filter(n=> n.map==='world').forEach(n=>{
-    ctx.fillStyle = n.color || '#fff';
+    const hovering = hoverTarget && hoverTarget.type==='npc' && hoverTarget.obj===n;
+    ctx.save();
+    ctx.fillStyle = hovering ? '#fff' : (n.color || '#fff');
+    if(hovering){
+      ctx.shadowColor = '#fff';
+      ctx.shadowBlur = 8;
+    }
     ctx.fillRect(n.x*sx, n.y*sy, sx, sy);
+    if(hovering){
+      ctx.strokeStyle = '#fff';
+      ctx.strokeRect(n.x*sx, n.y*sy, sx, sy);
+    }
+    ctx.restore();
   });
   // Draw Item markers
   moduleData.items.filter(it=> it.map==='world').forEach(it=>{
-    ctx.strokeStyle = '#ff0';
+    const hovering = hoverTarget && hoverTarget.type==='item' && hoverTarget.obj===it;
+    ctx.save();
+    ctx.strokeStyle = hovering ? '#fff' : '#ff0';
+    if(hovering){
+      ctx.shadowColor = '#fff';
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 2;
+    }
     ctx.strokeRect(it.x*sx+1, it.y*sy+1, sx-2, sy-2);
+    ctx.restore();
   });
+  // Highlight hovered building
+  if(hoverTarget && hoverTarget.type==='bldg'){
+    const b=hoverTarget.obj;
+    ctx.save();
+    ctx.strokeStyle='#fff';
+    ctx.lineWidth=2;
+    ctx.shadowColor='#fff';
+    ctx.shadowBlur=8;
+    ctx.strokeRect(b.x*sx, b.y*sy, b.w*sx, b.h*sy);
+    ctx.restore();
+  }
   if(moduleData.start && moduleData.start.map==='world'){
     ctx.strokeStyle = '#f00';
     ctx.strokeRect(moduleData.start.x*sx+1, moduleData.start.y*sy+1, sx-2, sy-2);
@@ -667,6 +697,7 @@ function canvasPos(ev){
 }
 canvas.addEventListener('mousedown',ev=>{
   const {x,y}=canvasPos(ev);
+  hoverTarget=null;
   if(settingStart){ moduleData.start={map:'world',x,y}; settingStart=false; drawWorld(); return; }
   dragTarget = moduleData.npcs.find(n=>n.map==='world'&&n.x===x&&n.y===y);
   if(dragTarget){ dragTarget._type='npc'; return; }
@@ -688,24 +719,35 @@ canvas.addEventListener('mousedown',ev=>{
   drawWorld();
 });
 canvas.addEventListener('mousemove',ev=>{
-  if(!dragTarget) return;
   const {x,y}=canvasPos(ev);
-  if(dragTarget._type==='bldg'){
-    dragTarget=moveBuilding(dragTarget,x,y); dragTarget._type='bldg';
-    renderBldgList();
-    document.getElementById('bldgX').value=x; document.getElementById('bldgY').value=y;
-    document.getElementById('delBldg').style.display='block';
-  } else {
-    dragTarget.x=x; dragTarget.y=y;
-    if(dragTarget._type==='npc'){
-      renderNPCList();
-      document.getElementById('npcX').value=x; document.getElementById('npcY').value=y;
+  if(dragTarget){
+    if(dragTarget._type==='bldg'){
+      dragTarget=moveBuilding(dragTarget,x,y); dragTarget._type='bldg';
+      renderBldgList();
+      document.getElementById('bldgX').value=x; document.getElementById('bldgY').value=y;
+      document.getElementById('delBldg').style.display='block';
     } else {
-      renderItemList();
-      document.getElementById('itemX').value=x; document.getElementById('itemY').value=y;
+      dragTarget.x=x; dragTarget.y=y;
+      if(dragTarget._type==='npc'){
+        renderNPCList();
+        document.getElementById('npcX').value=x; document.getElementById('npcY').value=y;
+      } else {
+        renderItemList();
+        document.getElementById('itemX').value=x; document.getElementById('itemY').value=y;
+      }
+    }
+    drawWorld();
+  } else {
+    let ht=null;
+    let obj = moduleData.npcs.find(n=>n.map==='world'&&n.x===x&&n.y===y);
+    if(obj) ht={obj,type:'npc'};
+    else if(obj = moduleData.items.find(it=>it.map==='world'&&it.x===x&&it.y===y)) ht={obj,type:'item'};
+    else if(obj = moduleData.buildings.find(b=> x>=b.x && x<b.x+b.w && y>=b.y && y<b.y+b.h)) ht={obj,type:'bldg'};
+    if((hoverTarget && (!ht || hoverTarget.obj!==ht.obj)) || (!hoverTarget && ht)){
+      hoverTarget=ht;
+      drawWorld();
     }
   }
-  drawWorld();
 });
 ['mouseup','mouseleave'].forEach(ev=>canvas.addEventListener(ev,()=>{ if(dragTarget) delete dragTarget._type; dragTarget=null; }));
 
