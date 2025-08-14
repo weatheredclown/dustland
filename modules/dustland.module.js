@@ -110,57 +110,23 @@ function npc_Grin(x,y){
     'Recruit Grin',
     'Convince or pay Grin to join.'
   );
-  const processNode = function(node){
-    if(node==='start'){
-      defaultQuestProcessor(this,'accept');
-    }
-    if(node==='rollcha'){
-      const r = skillRoll('CHA'); const dc = DC.TALK;
-      textEl.textContent = `Roll: ${r} vs DC ${dc}. ${r>=dc ? 'Grin smirks: "Alright."' : 'Grin shrugs: "Not buying it."'}`;
-      if(r>=dc){
-        const m = makeMember('grin', 'Grin', 'Scavenger');
-        m.stats.AGI += 1; m.stats.PER += 1;
-        addPartyMember(m);
-        removeNPC(this);
-        defaultQuestProcessor(this,'do_turnin');
-      }
-    }
-    if(node==='dopay'){
-      const tIndex = player.inv.findIndex(it=> it.slot==='trinket');
-      if(tIndex>-1){
-        removeFromInv(tIndex);
-        const m = makeMember('grin', 'Grin', 'Scavenger');
-        addPartyMember(m);
-        removeNPC(this);
-        log('Grin joins you.');
-        defaultQuestProcessor(this,'do_turnin');
-      } else {
-        textEl.textContent = 'You have no trinket to pay with.';
-      }
-    }
-  };
   return makeNPC('grin','world',x,y,'#caffc6','Grin','Scav-for-Hire','Lean scav with a crowbar and half a smile.',{
     start:{ text:['Got two hands and a crowbar. You got a plan?','Crowbar’s itching for work. You hiring?'],
       choices:[
-        {label:'(Recruit) Join me.', to:'rec'},
+        {label:'(Recruit) Join me.', to:'accept', q:'accept'},
         {label:'(Chat)', to:'chat'},
         {label:'(Leave)', to:'bye'}
       ]},
+    accept:{ text:'', choices:[{label:'(Continue)', to:'rec'}] },
     chat:{ text:['Keep to the road. The sand eats soles and souls.','Stay off the dunes. Sand chews boots.'],
       choices:[{label:'(Nod)', to:'bye'}] },
     rec:{ text:'Convince me. Or pay me.',
       choices:[
-        {label:'(CHA) Talk up the score', to:'cha'},
-        {label:'(Pay) Give 1 trinket as hire bonus', to:'pay'},
+        {label:'(CHA) Talk up the score', stat:'CHA', dc:DC.TALK, success:'Grin smirks: "Alright."', failure:'Grin shrugs: "Not buying it."', join:{id:'grin',name:'Grin',role:'Scavenger'}, q:'turnin'},
+        {label:'(Pay) Give 1 trinket as hire bonus', costSlot:'trinket', success:'Deal.', failure:'You have no trinket to pay with.', join:{id:'grin',name:'Grin',role:'Scavenger'}, q:'turnin'},
         {label:'(Back)', to:'start'}
       ]},
-    cha:{ text:'Roll vs CHA...',
-      choices:[{label:'(Roll)', to:'rollcha'}] },
-    rollcha:{ text:'…', choices:[{label:'(Ok)', to:'bye'}] },
-    pay:{ text:'Hand me something shiny.',
-      choices:[{label:'(Give random trinket)', to:'dopay'}] },
-    dopay:{ text:'Deal.', choices:[{label:'(Ok)', to:'bye'}] },
-  }, quest, processNode);
+  }, quest);
 }
 
 function npc_Postmaster(x,y){
@@ -192,31 +158,15 @@ function npc_TowerTech(x,y){
     'Repair the radio tower console (Toolkit helps).',
     { item:'Toolkit', reward:{name:'Tuner Charm', slot:'trinket', mods:{PER:+1}}, xp:5 }
   );
-  const processNode = function(node){
-    if(node==='rollint'){
-      if(!player.inv.some(it=> it.name==='Toolkit')){
-        textEl.textContent = 'You need a Toolkit to even try.';
-        return;
-      }
-      const r = skillRoll('INT'); const dc = DC.REPAIR;
-      textEl.textContent = `Roll: ${r} vs DC ${dc}. ${r>=dc ? 'Static fades. The tower hums.' : 'You cross a wire and pop a fuse.'}`;
-      if(r>=dc){
-        defaultQuestProcessor(this,'do_turnin');
-      }
-    }
-  };
   return makeNPC('tower','world',x,y,'#a9f59f','Rella','Radio Tech','Tower technician with grease-stained hands.',{
     start:{ text:'Tower’s console fried. If you got a Toolkit and brains, lend both.',
       choices:[
         {label:'(Accept) I will help.', to:'accept', q:'accept'},
-        {label:'(Repair) INT check with Toolkit', to:'repair', q:'turnin'},
+        {label:'(Repair) INT check with Toolkit', stat:'INT', dc:DC.REPAIR, success:'Static fades. The tower hums.', failure:'You cross a wire and pop a fuse.', q:'turnin'},
         {label:'(Leave)', to:'bye'}
       ]},
-    accept:{ text:'I owe you static and thanks.', choices:[{label:'(Ok)', to:'bye'}] },
-    repair:{ text:'Roll vs INT...',
-      choices:[{label:'(Roll)', to:'rollint'}] },
-    rollint:{ text:'…', choices:[{label:'(Ok)', to:'bye'}] }
-  }, quest, processNode);
+    accept:{ text:'I owe you static and thanks.', choices:[{label:'(Ok)', to:'bye'}] }
+  }, quest);
 }
 
 function npc_IdolHermit(x,y){
