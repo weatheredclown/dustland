@@ -700,14 +700,57 @@ function renderDialog(){
       const success = roll >= c.dc;
       textEl.textContent = success ? (c.success||'') : (c.failure||'');
       textEl.textContent += ` (Roll ${roll} vs DC ${c.dc}.)`;
-      if(success && c.reward){
-        if(/^xp\s*\d+/i.test(c.reward)){
-          const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
-          awardXP(leader(), amt);
-          textEl.textContent += ` Reward: ${amt} XP.`;
-        } else {
-          addToInv({name:c.reward});
-          textEl.textContent += ` You receive ${c.reward}.`;
+      if(success){
+        if(c.reward){
+          if(/^xp\s*\d+/i.test(c.reward)){
+            const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
+            awardXP(leader(), amt);
+            textEl.textContent += ` Reward: ${amt} XP.`;
+          } else {
+            addToInv({name:c.reward});
+            textEl.textContent += ` You receive ${c.reward}.`;
+          }
+        }
+        if(c.join){
+          const j=c.join;
+          const m=makeMember(j.id, j.name, j.role);
+          addPartyMember(m);
+          removeNPC(currentNPC);
+        }
+        if(c.q==='turnin' && currentNPC?.quest){
+          defaultQuestProcessor(currentNPC,'do_turnin');
+        }
+      }
+      if(c.nano && c.key) usedNanoChoices.add(c.key);
+      setContinueOnly();
+      return true;
+    }
+    if(c.costItem || c.costSlot){
+      const idx = c.costItem ? player.inv.findIndex(it=> it.name===c.costItem)
+                             : player.inv.findIndex(it=> it.slot===c.costSlot);
+      if(idx === -1){
+        textEl.textContent = c.failure || 'You lack the required item.';
+      } else {
+        removeFromInv(idx);
+        textEl.textContent = c.success || '';
+        if(c.reward){
+          if(/^xp\s*\d+/i.test(c.reward)){
+            const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
+            awardXP(leader(), amt);
+            if(typeof toast==='function') toast(`+${amt} XP`);
+          } else {
+            addToInv({name:c.reward});
+            if(typeof toast==='function') toast(`Received ${c.reward}`);
+          }
+        }
+        if(c.join){
+          const j=c.join;
+          const m=makeMember(j.id, j.name, j.role);
+          addPartyMember(m);
+          removeNPC(currentNPC);
+        }
+        if(c.q==='turnin' && currentNPC?.quest){
+          defaultQuestProcessor(currentNPC,'do_turnin');
         }
       }
       if(c.nano && c.key) usedNanoChoices.add(c.key);
@@ -729,6 +772,18 @@ function renderDialog(){
         addToInv({name:c.reward});
         if(typeof toast==='function') toast(`Received ${c.reward}`);
       }
+    }
+    if(c.join){
+      const j=c.join;
+      const m=makeMember(j.id, j.name, j.role);
+      addPartyMember(m);
+      removeNPC(currentNPC);
+      if(c.q==='turnin' && currentNPC?.quest){
+        defaultQuestProcessor(currentNPC,'do_turnin');
+      }
+      if(c.nano && c.key) usedNanoChoices.add(c.key);
+      setContinueOnly();
+      return true;
     }
     if(currentNPC && typeof currentNPC.processChoice==='function'){
       return currentNPC.processChoice(c)===true;

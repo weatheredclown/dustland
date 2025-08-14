@@ -161,17 +161,20 @@ function renderDialogPreview() {
   function show(id) {
     const node = tree[id]; if (!node) return;
     const html = (node.choices || [])
-      .filter(c => c.to)
-      .map(c => `<button class="btn" data-to="${c.to}" style="margin-top:4px">${c.label}</button>`)
+      .map(c => `<button class="btn" data-to="${c.to || ''}" style="margin-top:4px">${c.label}</button>`)
       .join('');
     prev.innerHTML = `<div>${node.text || ''}</div>` + html;
-    Array.from(prev.querySelectorAll('button')).forEach(btn => btn.onclick = () => show(btn.dataset.to));
+    Array.from(prev.querySelectorAll('button')).forEach(btn => btn.onclick = () => {
+      const t = btn.dataset.to;
+      if (t) show(t);
+    });
   }
   show('start');
 }
 
 function addChoiceRow(container, ch = {}) {
-  const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false } = ch || {};
+  const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', join = null, q = '' } = ch || {};
+  const joinId = join?.id || '', joinName = join?.name || '', joinRole = join?.role || '';
   const row = document.createElement('div');
   row.innerHTML = `<input class="choiceLabel" placeholder="label" value="${label}"/>
     <select class="choiceTo"></select>
@@ -180,6 +183,12 @@ function addChoiceRow(container, ch = {}) {
     <input class="choiceDC" placeholder="dc" value="${dc || ''}"/>
     <input class="choiceSuccess" placeholder="success text" value="${success || ''}"/>
     <input class="choiceFailure" placeholder="failure text" value="${failure || ''}"/>
+    <input class="choiceCostItem" placeholder="cost item" value="${costItem || ''}"/>
+    <input class="choiceCostSlot" placeholder="cost slot" value="${costSlot || ''}"/>
+    <input class="choiceJoinId" placeholder="join id" value="${joinId}"/>
+    <input class="choiceJoinName" placeholder="join name" value="${joinName}"/>
+    <input class="choiceJoinRole" placeholder="join role" value="${joinRole}"/>
+    <input class="choiceQ" placeholder="q" value="${q || ''}"/>
     <label><input type="checkbox" class="choiceOnce" ${once ? 'checked' : ''}/> once</label>
     <button class="btn delChoice" type="button">x</button>`;
   container.appendChild(row);
@@ -260,6 +269,12 @@ function updateTreeData() {
       const dc = dcTxt ? parseInt(dcTxt, 10) : undefined;
       const success = chEl.querySelector('.choiceSuccess').value.trim();
       const failure = chEl.querySelector('.choiceFailure').value.trim();
+      const costItem = chEl.querySelector('.choiceCostItem').value.trim();
+      const costSlot = chEl.querySelector('.choiceCostSlot').value.trim();
+      const joinId = chEl.querySelector('.choiceJoinId').value.trim();
+      const joinName = chEl.querySelector('.choiceJoinName').value.trim();
+      const joinRole = chEl.querySelector('.choiceJoinRole').value.trim();
+      const q = chEl.querySelector('.choiceQ').value.trim();
       const once = chEl.querySelector('.choiceOnce').checked;
 
       choiceRefs.push({ to, el: toEl });
@@ -272,6 +287,10 @@ function updateTreeData() {
         if (dc != null && !Number.isNaN(dc)) c.dc = dc;
         if (success) c.success = success;
         if (failure) c.failure = failure;
+        if (costItem) c.costItem = costItem;
+        if (costSlot) c.costSlot = costSlot;
+        if (joinId || joinName || joinRole) c.join = { id: joinId, name: joinName, role: joinRole };
+        if (q) c.q = q;
         if (once) c.once = true;
         choices.push(c);
       }
