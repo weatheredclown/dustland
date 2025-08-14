@@ -1,0 +1,11 @@
+{
+  "name": "dustland",
+  "version": "0.0.1",
+  "description": "Wasteland-style browser RPG with a CRT vibe",
+  "main": "dustland-core.js",
+  "scripts": {
+    "test": "echo 'No tests specified'"
+  },
+  "author": "",
+  "license": "MIT"
+}
