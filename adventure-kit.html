@@ -34,7 +34,6 @@
     }
 
     .card {
-      position: absolute;
       padding: 8px;
       background: #0f120f;
       border: 2px solid #2b3b2b;
@@ -73,39 +72,9 @@
       margin-top: 6px;
     }
 
-    #mapCard {
-      left: 16px;
-      top: 16px;
-      width: 640px;
-    }
-
     #mapCard .controls {
       text-align: center;
       margin-top: 8px;
-    }
-
-    #npcCard {
-      right: 292px;
-      top: 16px;
-      width: 260px;
-    }
-
-    #itemCard {
-      right: 16px;
-      top: 16px;
-      width: 260px;
-    }
-
-    #bldgCard {
-      right: 16px;
-      top: 560px;
-      width: 260px;
-    }
-
-    #questCard {
-      right: 16px;
-      top: 800px;
-      width: 260px;
     }
 
     #treeEditor .node {
@@ -182,30 +151,31 @@
 </head>
 
 <body>
-  <div class="card" id="mapCard">
-    <canvas id="map" width="640" height="480" aria-label="Map preview"></canvas>
-    <div class="controls">
-      <button class="btn" id="regen">Generate World</button>
-      <button class="btn btn--primary" id="save">Download Module</button>
-      <button class="btn" id="load">Load Module</button>
-      <button class="btn" id="setStart">Set Start</button>
-      <button class="btn btn--primary" id="playtest">Playtest</button>
-    </div>
-    <input type="file" id="loadFile" accept="application/json" style="display:none" />
-  </div>
-  <aside class="panel-right" id="editorPanel">
-    <div class="tabs2" role="tablist" aria-label="Editors">
-      <button class="tab2 active" data-tab="npc" role="tab" aria-selected="true">NPCs</button>
-      <button class="tab2" data-tab="items" role="tab" aria-selected="false">Items</button>
-      <button class="tab2" data-tab="buildings" role="tab" aria-selected="false">Buildings</button>
-      <button class="tab2" data-tab="quests" role="tab" aria-selected="false">Quests</button>
-    </div>
-    <div class="tabpanes">
-      <fieldset class="card" id="npcCard" data-pane="npc">
-        <legend>NPCs</legend>
-        <div class="list" id="npcList"></div>
-        <button class="btn" type="button" id="newNPC">+ NPC</button>
-        <div id="npcEditor" style="display:none">
+  <div class="ak-layout">
+    <section class="card map-card" id="mapCard">
+      <canvas id="map" width="640" height="480" aria-label="Map preview"></canvas>
+      <div class="controls">
+        <button class="btn" id="regen">Generate World</button>
+        <button class="btn btn--primary" id="save">Download Module</button>
+        <button class="btn" id="load">Load Module</button>
+        <button class="btn" id="setStart">Set Start</button>
+        <button class="btn btn--primary" id="playtest">Playtest</button>
+      </div>
+      <input type="file" id="loadFile" accept="application/json" style="display:none" />
+    </section>
+    <aside class="editor-panel" id="editorPanel">
+      <div class="tabs2" role="tablist" aria-label="Editors">
+        <button class="tab2 active" data-tab="npc" role="tab" aria-selected="true">NPCs</button>
+        <button class="tab2" data-tab="items" role="tab" aria-selected="false">Items</button>
+        <button class="tab2" data-tab="buildings" role="tab" aria-selected="false">Buildings</button>
+        <button class="tab2" data-tab="quests" role="tab" aria-selected="false">Quests</button>
+      </div>
+      <div class="tabpanes">
+        <fieldset class="card" id="npcCard" data-pane="npc">
+          <legend>NPCs</legend>
+          <div class="list" id="npcList"></div>
+          <button class="btn" type="button" id="newNPC">+ NPC</button>
+          <div id="npcEditor" style="display:none">
           <label>ID<input id="npcId" /></label>
           <label>Name<input id="npcName" /></label>
           <label>Description<textarea id="npcDesc" rows="2"></textarea></label>
@@ -297,23 +267,26 @@
           <button class="btn" id="delQuest" style="display:none">Delete Quest</button>
         </div>
       </fieldset>
-      <div id="dialogModal" class="modal">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div><b>Dialog Tree Editor</b></div>
-            <button class="btn" type="button" id="closeDialogModal">Close</button>
-          </div>
-          <div id="treeEditor"></div>
-          <div id="treeWarning" style="color:#f66;font-size:12px;margin-top:4px"></div>
-          <button class="btn" type="button" id="addNode">Add Node</button>
-        </div>
+      </div><!-- /.tabpanes -->
+    </aside>
+  </div><!-- /.ak-layout -->
+  <div id="dialogModal" class="modal">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div><b>Dialog Tree Editor</b></div>
+        <button class="btn" type="button" id="closeDialogModal">Close</button>
       </div>
-      <button id="playtestFloat" class="btn btn--primary" style="
+      <div id="treeEditor"></div>
+      <div id="treeWarning" style="color:#f66;font-size:12px;margin-top:4px"></div>
+      <button class="btn" type="button" id="addNode">Add Node</button>
+    </div>
+  </div>
+  <button id="playtestFloat" class="btn btn--primary" style="
     position:fixed; right:20px; bottom:20px; z-index:9999; border-radius:999px; padding:10px 14px;">
-        ▶ Playtest
-      </button>
-      <script src="dustland-core.js"></script>
-      <script src="adventure-kit.js"></script>
+      ▶ Playtest
+  </button>
+  <script src="dustland-core.js"></script>
+  <script src="adventure-kit.js"></script>
 </body>
 
 </html>
