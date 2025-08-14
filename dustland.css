@@ -133,7 +133,10 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
         gap: 6px;
-        margin-top: 8px
+    }
+
+    .tabwrap {
+        margin-top: 8px;
     }
 
     .slot {
@@ -181,6 +184,28 @@
 
     .q .status {
         color: #9ab09a
+    }
+
+    @media (min-width: 1600px) {
+        .panel {
+            width: 840px;
+        }
+
+        .tabs {
+            display: none;
+        }
+
+        .tabwrap {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .tabwrap > #inv,
+        .tabwrap > #party,
+        .tabwrap > #quests {
+            display: grid !important;
+        }
     }
 
     .overlay {
@@ -608,8 +633,28 @@
         box-sizing: border-box;
     }
 
-    #editorPanel #treeEditor,
-    #editorPanel #dialogPreview {
-        max-height: 40vh;
-        overflow: auto;
+#editorPanel #treeEditor,
+#editorPanel #dialogPreview {
+    max-height: 40vh;
+    overflow: auto;
+}
+
+@media (min-width: 1800px) {
+    .panel-right {
+        width: 1100px;
     }
+
+    .tabs2 {
+        display: none;
+    }
+
+    .tabpanes {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+
+    .tabpanes > [data-pane] {
+        display: block !important;
+    }
+}

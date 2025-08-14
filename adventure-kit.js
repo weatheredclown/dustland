@@ -1086,20 +1086,32 @@ animate();
 (function () {
   const panel = document.getElementById('editorPanel');
   if (!panel) return;
+  const tabsEl = panel.querySelector('.tabs2');
   const tabs = Array.from(panel.querySelectorAll('.tab2'));
   const panes = Array.from(panel.querySelectorAll('[data-pane]'));
+  let active = 'npc';
+
+  function updateLayout() {
+    const wide = window.innerWidth >= 1800;
+    tabsEl.style.display = wide ? 'none' : 'flex';
+    panes.forEach(p => {
+      p.style.display = wide ? '' : (p.dataset.pane === active ? '' : 'none');
+    });
+  }
 
   function show(tabName) {
+    active = tabName;
     tabs.forEach(t => {
       const on = t.dataset.tab === tabName;
       t.classList.toggle('active', on);
       t.setAttribute('aria-selected', on ? 'true' : 'false');
     });
-    panes.forEach(p => p.style.display = (p.dataset.pane === tabName ? '' : 'none'));
+    updateLayout();
   }
 
   tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.tab)));
-  show('npc'); // default
+  window.addEventListener('resize', updateLayout);
+  updateLayout();
 })();
 
 document.getElementById('playtestFloat').onclick =
