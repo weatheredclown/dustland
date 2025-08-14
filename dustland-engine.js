@@ -122,12 +122,46 @@ function drawScene(ctx){
 }
 
 // ===== HUD & Tabs =====
+const TAB_BREAKPOINT = 1600;
+let activeTab = 'inv';
+
 function updateHUD(){
   hpEl.textContent=player.hp;
   apEl.textContent=player.ap;
   if(scrEl) scrEl.textContent = player.scrap;
 }
-function showTab(which){ const inv=document.getElementById('inv'), partyEl=document.getElementById('party'), q=document.getElementById('quests'); const tInv=document.getElementById('tabInv'), tP=document.getElementById('tabParty'), tQ=document.getElementById('tabQuests'); inv.style.display=(which==='inv'?'grid':'none'); partyEl.style.display=(which==='party'?'grid':'none'); q.style.display=(which==='quests'?'grid':'none'); for(const el of [tInv,tP,tQ]) el.classList.remove('active'); if(which==='inv') tInv.classList.add('active'); if(which==='party') tP.classList.add('active'); if(which==='quests') tQ.classList.add('active'); }
+
+function showTab(which){
+  activeTab = which;
+  if(window.innerWidth >= TAB_BREAKPOINT) return;
+  const inv=document.getElementById('inv'), partyEl=document.getElementById('party'), q=document.getElementById('quests');
+  const tInv=document.getElementById('tabInv'), tP=document.getElementById('tabParty'), tQ=document.getElementById('tabQuests');
+  inv.style.display=(which==='inv'?'grid':'none');
+  partyEl.style.display=(which==='party'?'grid':'none');
+  q.style.display=(which==='quests'?'grid':'none');
+  for(const el of [tInv,tP,tQ]) el.classList.remove('active');
+  if(which==='inv') tInv.classList.add('active');
+  if(which==='party') tP.classList.add('active');
+  if(which==='quests') tQ.classList.add('active');
+}
+
+function updateTabsLayout(){
+  const wide = window.innerWidth >= TAB_BREAKPOINT;
+  const tabs = document.querySelector('.tabs');
+  const inv=document.getElementById('inv'), partyEl=document.getElementById('party'), q=document.getElementById('quests');
+  if(wide){
+    if(tabs) tabs.style.display='none';
+    inv.style.display='grid';
+    partyEl.style.display='grid';
+    q.style.display='grid';
+  } else {
+    if(tabs) tabs.style.display='flex';
+    showTab(activeTab);
+  }
+}
+window.addEventListener('resize', updateTabsLayout);
+updateTabsLayout();
+
 document.getElementById('tabInv').onclick=()=>showTab('inv');
 document.getElementById('tabParty').onclick=()=>showTab('party');
 document.getElementById('tabQuests').onclick=()=>showTab('quests');
