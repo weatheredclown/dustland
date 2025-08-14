@@ -1082,14 +1082,29 @@ function animate() {
 }
 animate();
 
-// ---- Simple right-rail tabs ----
+// ---- Right-rail tabs with wide-screen mode ----
 (function () {
   const panel = document.getElementById('editorPanel');
   if (!panel) return;
   const tabs = Array.from(panel.querySelectorAll('.tab2'));
   const panes = Array.from(panel.querySelectorAll('[data-pane]'));
+  const mq = window.matchMedia('(min-width: 1600px)');
+  let current = 'npc';
+
+  function setLayout() {
+    if (mq.matches) {
+      panel.classList.add('wide');
+      tabs.forEach(t => t.setAttribute('aria-selected', 'true'));
+      panes.forEach(p => p.style.display = '');
+    } else {
+      panel.classList.remove('wide');
+      show(current);
+    }
+  }
 
   function show(tabName) {
+    current = tabName;
+    if (mq.matches) return;
     tabs.forEach(t => {
       const on = t.dataset.tab === tabName;
       t.classList.toggle('active', on);
@@ -1099,7 +1114,8 @@ animate();
   }
 
   tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.tab)));
-  show('npc'); // default
+  mq.addEventListener('change', setLayout);
+  setLayout();
 })();
 
 document.getElementById('playtestFloat').onclick =
