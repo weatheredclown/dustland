@@ -985,3 +985,8 @@ function startWorld(){
 // Content pack moved to modules/dustland.module.js
 
 Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat, removeNPC, makeNPC});
+
+// Export a few helpers for Node-based tests without affecting the browser build
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { clamp, createRNG, Dice };
+}
