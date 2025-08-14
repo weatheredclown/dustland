@@ -98,6 +98,7 @@ _______________________________________________________________________________
       * renderParty(), renderInv(), renderQuests()
       * takeNearestItem(), interact(), move()
   - Tiles: see TILE enum + colors[] + walkable[].
+  - Tests: run `npm test` for basic checks.
 
 [ LICENSE ]
   MIT License

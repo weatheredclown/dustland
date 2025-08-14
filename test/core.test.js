@@ -1,0 +1,40 @@
+const assert = require('assert');
+const { test } = require('node:test');
+
+function stubEl(){
+  return {
+    style:{},
+    classList:{ toggle: ()=>{} },
+    textContent:'',
+    onclick:null,
+    querySelector: () => stubEl()
+  };
+}
+
+global.window = global;
+global.document = {
+  getElementById: () => stubEl(),
+  createElement: () => stubEl()
+};
+
+const { clamp, createRNG, Dice } = require('../dustland-core.js');
+
+test('clamp restricts values to range', () => {
+  assert.strictEqual(clamp(5, 0, 10), 5);
+  assert.strictEqual(clamp(-1, 0, 10), 0);
+  assert.strictEqual(clamp(15, 0, 10), 10);
+});
+
+test('createRNG produces deterministic sequences', () => {
+  const rngA = createRNG(123);
+  const rngB = createRNG(123);
+  assert.strictEqual(rngA(), rngB());
+  assert.strictEqual(rngA(), rngB());
+});
+
+test('Dice.roll is within inclusive bounds', () => {
+  for(let i=0;i<100;i++){
+    const roll = Dice.roll(6);
+    assert.ok(roll >= 1 && roll <= 6);
+  }
+});
