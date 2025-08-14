@@ -908,10 +908,10 @@ function finalizeCurrentMember(){
   return m;
 }
 
-ccBack.onclick=()=>{ if(step>1) { step--; renderStep(); } };
-ccNext.onclick=()=>{ if(step<5){ step++; renderStep(); } else { finalizeCurrentMember(); building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null }; step=1; renderStep(); log('Member added. You can add up to 2 more, or press Start Now.'); } };
-ccStart.onclick=()=>{ if(built.length===0){ finalizeCurrentMember(); } closeCreator(); startGame(); };
-ccLoad.onclick=()=>{ load(); closeCreator(); };
+if (ccBack) ccBack.onclick=()=>{ if(step>1) { step--; renderStep(); } };
+if (ccNext) ccNext.onclick=()=>{ if(step<5){ step++; renderStep(); } else { finalizeCurrentMember(); building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null }; step=1; renderStep(); log('Member added. You can add up to 2 more, or press Start Now.'); } };
+if (ccStart) ccStart.onclick=()=>{ if(built.length===0){ finalizeCurrentMember(); } closeCreator(); startGame(); };
+if (ccLoad) ccLoad.onclick=()=>{ load(); closeCreator(); };
 
 function startGame(){
   startWorld();

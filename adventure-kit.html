@@ -1,154 +1,319 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Adventure Construction Kit</title>
   <link rel="stylesheet" href="dustland.css" />
   <style>
-    body{margin:0;background:#000;color:#c8f7c9;font-family:ui-monospace;position:relative;min-height:100vh;}
-    body:after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.05)0,rgba(255,255,255,.05)1px,rgba(0,0,0,0)2px);mix-blend-mode:overlay;opacity:.15;}
-    canvas{border:1px solid #2b3b2b;background:#000;image-rendering:pixelated;box-shadow:0 0 12px #000,0 0 8px #9ef7a0;}
-    .card{position:absolute;padding:8px;background:#0f120f;border:2px solid #2b3b2b;border-radius:8px;box-shadow:0 0 12px #000,0 0 8px #9ef7a0;}
-    .list{font-size:12px;}
-    .list div{cursor:pointer;}
-    label{display:block;margin-top:4px;font-size:12px;}
-    input,textarea,select{width:100%;margin-top:2px;background:#101910;border:1px solid #2b3b2b;color:#c8f7c9;font-family:inherit;font-size:12px;border-radius:4px;}
-    button.btn{margin-top:6px;}
-    #mapCard{left:16px;top:16px;width:640px;}
-    #mapCard .controls{text-align:center;margin-top:8px;}
-    #npcCard{right:292px;top:16px;width:260px;}
-    #itemCard{right:16px;top:16px;width:260px;}
-    #bldgCard{right:16px;top:560px;width:260px;}
-      #questCard{right:16px;top:800px;width:260px;}
-      #treeEditor .node{border:1px solid #2b3b2b;padding:4px;margin-top:4px;}
-      #treeEditor .choices div{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}
-      #treeEditor .choices input,
-      #treeEditor .choices select{flex:1 1 120px;width:auto;min-width:120px;}
-      #treeEditor .choices .choiceSuccess,
-      #treeEditor .choices .choiceFailure{flex-basis:100%;}
-      #treeEditor .choices label{display:flex;align-items:center;gap:4px;margin-top:0;flex:0 0 auto;}
-      #treeEditor .choices .delChoice{flex:0 0 auto;}
-      #treeEditor .nodeHeader{display:flex;align-items:center;}
-      #treeEditor .toggle{margin-right:4px;}
-      #treeEditor .node.collapsed .nodeBody{display:none;}
-      .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:100;}
-      .modal.shown{display:flex;}
-      #dialogModal .card{position:relative;width:600px;max-height:80vh;overflow:auto;}
+    body {
+      margin: 0;
+      background: #000;
+      color: #c8f7c9;
+      font-family: ui-monospace;
+      position: relative;
+      min-height: 100vh;
+    }
+
+    body:after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, .05)0, rgba(255, 255, 255, .05)1px, rgba(0, 0, 0, 0)2px);
+      mix-blend-mode: overlay;
+      opacity: .15;
+    }
+
+    canvas {
+      border: 1px solid #2b3b2b;
+      background: #000;
+      image-rendering: pixelated;
+      box-shadow: 0 0 12px #000, 0 0 8px #9ef7a0;
+    }
+
+    .card {
+      position: absolute;
+      padding: 8px;
+      background: #0f120f;
+      border: 2px solid #2b3b2b;
+      border-radius: 8px;
+      box-shadow: 0 0 12px #000, 0 0 8px #9ef7a0;
+    }
+
+    .list {
+      font-size: 12px;
+    }
+
+    .list div {
+      cursor: pointer;
+    }
+
+    label {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      margin-top: 2px;
+      background: #101910;
+      border: 1px solid #2b3b2b;
+      color: #c8f7c9;
+      font-family: inherit;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+
+    button.btn {
+      margin-top: 6px;
+    }
+
+    #mapCard {
+      left: 16px;
+      top: 16px;
+      width: 640px;
+    }
+
+    #mapCard .controls {
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    #npcCard {
+      right: 292px;
+      top: 16px;
+      width: 260px;
+    }
+
+    #itemCard {
+      right: 16px;
+      top: 16px;
+      width: 260px;
+    }
+
+    #bldgCard {
+      right: 16px;
+      top: 560px;
+      width: 260px;
+    }
+
+    #questCard {
+      right: 16px;
+      top: 800px;
+      width: 260px;
+    }
+
+    #treeEditor .node {
+      border: 1px solid #2b3b2b;
+      padding: 4px;
+      margin-top: 4px;
+    }
+
+    #treeEditor .choices div {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    #treeEditor .choices input,
+    #treeEditor .choices select {
+      flex: 1 1 120px;
+      width: auto;
+      min-width: 120px;
+    }
+
+    #treeEditor .choices .choiceSuccess,
+    #treeEditor .choices .choiceFailure {
+      flex-basis: 100%;
+    }
+
+    #treeEditor .choices label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 0;
+      flex: 0 0 auto;
+    }
+
+    #treeEditor .choices .delChoice {
+      flex: 0 0 auto;
+    }
+
+    #treeEditor .nodeHeader {
+      display: flex;
+      align-items: center;
+    }
+
+    #treeEditor .toggle {
+      margin-right: 4px;
+    }
+
+    #treeEditor .node.collapsed .nodeBody {
+      display: none;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, .6);
+      z-index: 100;
+    }
+
+    .modal.shown {
+      display: flex;
+    }
+
+    #dialogModal .card {
+      position: relative;
+      width: 600px;
+      max-height: 80vh;
+      overflow: auto;
+    }
   </style>
 </head>
+
 <body>
   <div class="card" id="mapCard">
     <canvas id="map" width="640" height="480" aria-label="Map preview"></canvas>
     <div class="controls">
       <button class="btn" id="regen">Generate World</button>
-      <button class="btn" id="save">Download Module</button>
+      <button class="btn btn--primary" id="save">Download Module</button>
       <button class="btn" id="load">Load Module</button>
       <button class="btn" id="setStart">Set Start</button>
-      <button class="btn" id="playtest">Playtest</button>
+      <button class="btn btn--primary" id="playtest">Playtest</button>
     </div>
     <input type="file" id="loadFile" accept="application/json" style="display:none" />
   </div>
-  <fieldset class="card" id="npcCard">
-    <legend>NPCs</legend>
-    <div class="list" id="npcList"></div>
-    <button class="btn" type="button" id="newNPC">+ NPC</button>
-    <div id="npcEditor" style="display:none">
-      <label>ID<input id="npcId"/></label>
-      <label>Name<input id="npcName"/></label>
-      <label>Description<textarea id="npcDesc" rows="2"></textarea></label>
-      <label>Color<input id="npcColor" type="color" value="#9ef7a0"/></label>
-      <label>Map<input id="npcMap" value="world"/></label>
-      <label>X<input id="npcX" type="number" min="0"/></label>
-      <label>Y<input id="npcY" type="number" min="0"/></label>
-      <button class="btn" type="button" id="npcPick">Select on Map</button>
-      <label>Dialog<textarea id="npcDialog" rows="2"></textarea></label>
-      <label>Quest<select id="npcQuest"><option value="">(none)</option></select></label>
-      <button class="btn" type="button" id="genQuestDialog" style="display:none">Generate Quest Dialog</button>
-      <div id="questTextWrap" style="display:none">
-        <label>Accept Text<textarea id="npcAccept" rows="2">Good luck.</textarea></label>
-        <label>Turn-in Text<textarea id="npcTurnin" rows="2">Thanks for helping.</textarea></label>
-      </div>
-      <label><input type="checkbox" id="npcCombat"> Combat NPC</label>
-      <div id="combatOpts" style="display:none"><p class="muted">(no combat options)</p></div>
-      <label><input type="checkbox" id="npcShop"> Shop NPC</label>
-      <div id="shopOpts" style="display:none"><p class="muted">(no shop options)</p></div>
-        <div id="treeWrap">
-          <label>Dialog Tree</label>
-          <button class="btn" type="button" id="editDialog">Edit Dialog</button>
+  <aside class="panel-right" id="editorPanel">
+    <div class="tabs2" role="tablist" aria-label="Editors">
+      <button class="tab2 active" data-tab="npc" role="tab" aria-selected="true">NPCs</button>
+      <button class="tab2" data-tab="items" role="tab" aria-selected="false">Items</button>
+      <button class="tab2" data-tab="buildings" role="tab" aria-selected="false">Buildings</button>
+      <button class="tab2" data-tab="quests" role="tab" aria-selected="false">Quests</button>
+    </div>
+    <div class="tabpanes">
+      <fieldset class="card" id="npcCard" data-pane="npc">
+        <legend>NPCs</legend>
+        <div class="list" id="npcList"></div>
+        <button class="btn" type="button" id="newNPC">+ NPC</button>
+        <div id="npcEditor" style="display:none">
+          <label>ID<input id="npcId" /></label>
+          <label>Name<input id="npcName" /></label>
+          <label>Description<textarea id="npcDesc" rows="2"></textarea></label>
+          <label>Color<input id="npcColor" type="color" value="#9ef7a0" /></label>
+          <label>Map<input id="npcMap" value="world" /></label>
+          <label>X<input id="npcX" type="number" min="0" /></label>
+          <label>Y<input id="npcY" type="number" min="0" /></label>
+          <button class="btn" type="button" id="npcPick">Select on Map</button>
+          <label>Dialog<textarea id="npcDialog" rows="2"></textarea></label>
+          <label>Quest<select id="npcQuest">
+              <option value="">(none)</option>
+            </select></label>
+          <button class="btn" type="button" id="genQuestDialog" style="display:none">Generate Quest Dialog</button>
+          <div id="questTextWrap" style="display:none">
+            <label>Accept Text<textarea id="npcAccept" rows="2">Good luck.</textarea></label>
+            <label>Turn-in Text<textarea id="npcTurnin" rows="2">Thanks for helping.</textarea></label>
+          </div>
+          <label><input type="checkbox" id="npcCombat"> Combat NPC</label>
+          <div id="combatOpts" style="display:none">
+            <p class="muted">(no combat options)</p>
+          </div>
+          <label><input type="checkbox" id="npcShop"> Shop NPC</label>
+          <div id="shopOpts" style="display:none">
+            <p class="muted">(no shop options)</p>
+          </div>
+          <div id="treeWrap">
+            <label>Dialog Tree</label>
+            <button class="btn" type="button" id="editDialog">Edit Dialog</button>
+          </div>
+          <textarea id="npcTree" style="display:none"></textarea>
+          <div id="dialogPreview" style="margin-top:6px"></div>
+          <button class="btn" id="addNPC">Add NPC</button>
+          <button class="btn" id="delNPC" style="display:none">Delete NPC</button>
         </div>
-      <textarea id="npcTree" style="display:none"></textarea>
-      <div id="dialogPreview" style="margin-top:6px"></div>
-      <button class="btn" id="addNPC">Add NPC</button>
-      <button class="btn" id="delNPC" style="display:none">Delete NPC</button>
-    </div>
-  </fieldset>
-  <fieldset class="card" id="itemCard">
-    <legend>Items</legend>
-    <div class="list" id="itemList"></div>
-    <button class="btn" type="button" id="newItem">+ Item</button>
-    <div id="itemEditor" style="display:none">
-      <label>Name<input id="itemName"/></label>
-      <label>Map<input id="itemMap" value="world"/></label>
-      <label>X<input id="itemX" type="number" min="0"/></label>
-      <label>Y<input id="itemY" type="number" min="0"/></label>
-      <button class="btn" type="button" id="itemPick">Select on Map</button>
-      <label>Slot<select id="itemSlot">
-        <option value="">(none)</option>
-        <option value="weapon">Weapon</option>
-        <option value="armor">Armor</option>
-        <option value="trinket">Trinket</option>
-      </select></label>
-      <div id="modsWrap" style="display:none">
-        <label>Mods</label>
-        <div id="modBuilder"></div>
-        <button class="btn" type="button" id="addMod">Add Mod</button>
+      </fieldset>
+      <fieldset class="card" id="itemCard" data-pane="items" style="display:none">
+        <legend>Items</legend>
+        <div class="list" id="itemList"></div>
+        <button class="btn" type="button" id="newItem">+ Item</button>
+        <div id="itemEditor" style="display:none">
+          <label>Name<input id="itemName" /></label>
+          <label>Map<input id="itemMap" value="world" /></label>
+          <label>X<input id="itemX" type="number" min="0" /></label>
+          <label>Y<input id="itemY" type="number" min="0" /></label>
+          <button class="btn" type="button" id="itemPick">Select on Map</button>
+          <label>Slot<select id="itemSlot">
+              <option value="">(none)</option>
+              <option value="weapon">Weapon</option>
+              <option value="armor">Armor</option>
+              <option value="trinket">Trinket</option>
+            </select></label>
+          <div id="modsWrap" style="display:none">
+            <label>Mods</label>
+            <div id="modBuilder"></div>
+            <button class="btn" type="button" id="addMod">Add Mod</button>
+          </div>
+          <label>Value<input id="itemValue" type="number" min="0" /></label>
+          <label>Use<textarea id="itemUse" rows="2"></textarea></label>
+          <button class="btn" id="addItem">Add Item</button>
+          <button class="btn" id="delItem" style="display:none">Delete Item</button>
+        </div>
+      </fieldset>
+      <fieldset class="card" id="bldgCard" data-pane="buildings" style="display:none">
+        <legend>Buildings</legend>
+        <div class="list" id="bldgList"></div>
+        <button class="btn" type="button" id="newBldg">+ Building</button>
+        <div id="bldgEditor" style="display:none">
+          <label>X<input id="bldgX" type="number" min="0" /></label>
+          <label>Y<input id="bldgY" type="number" min="0" /></label>
+          <button class="btn" id="addBldg">Place Hut</button>
+          <button class="btn" id="delBldg" style="display:none">Remove Hut</button>
+        </div>
+      </fieldset>
+      <fieldset class="card" id="questCard" data-pane="quests" style="display:none">
+        <legend>Quests</legend>
+        <div class="list" id="questList"></div>
+        <button class="btn" type="button" id="newQuest">+ Quest</button>
+        <div id="questEditor" style="display:none">
+          <label>ID<input id="questId" /></label>
+          <label>Title<input id="questTitle" /></label>
+          <label>Description<textarea id="questDesc" rows="2"></textarea></label>
+          <label>Required Item<input id="questItem" /></label>
+          <label>Reward Item<input id="questReward" /></label>
+          <label>XP Reward<input id="questXP" type="number" min="0" /></label>
+          <label>NPC<select id="questNPC">
+              <option value="">(none)</option>
+            </select></label>
+          <button class="btn" id="addQuest">Add Quest</button>
+          <button class="btn" id="delQuest" style="display:none">Delete Quest</button>
+        </div>
+      </fieldset>
+      <div id="dialogModal" class="modal">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div><b>Dialog Tree Editor</b></div>
+            <button class="btn" type="button" id="closeDialogModal">Close</button>
+          </div>
+          <div id="treeEditor"></div>
+          <div id="treeWarning" style="color:#f66;font-size:12px;margin-top:4px"></div>
+          <button class="btn" type="button" id="addNode">Add Node</button>
+        </div>
       </div>
-      <label>Value<input id="itemValue" type="number" min="0"/></label>
-      <label>Use<textarea id="itemUse" rows="2"></textarea></label>
-      <button class="btn" id="addItem">Add Item</button>
-      <button class="btn" id="delItem" style="display:none">Delete Item</button>
-    </div>
-  </fieldset>
-  <fieldset class="card" id="bldgCard">
-    <legend>Buildings</legend>
-    <div class="list" id="bldgList"></div>
-    <button class="btn" type="button" id="newBldg">+ Building</button>
-    <div id="bldgEditor" style="display:none">
-      <label>X<input id="bldgX" type="number" min="0"/></label>
-      <label>Y<input id="bldgY" type="number" min="0"/></label>
-      <button class="btn" id="addBldg">Place Hut</button>
-      <button class="btn" id="delBldg" style="display:none">Remove Hut</button>
-    </div>
-  </fieldset>
-  <fieldset class="card" id="questCard">
-    <legend>Quests</legend>
-    <div class="list" id="questList"></div>
-    <button class="btn" type="button" id="newQuest">+ Quest</button>
-    <div id="questEditor" style="display:none">
-      <label>ID<input id="questId"/></label>
-      <label>Title<input id="questTitle"/></label>
-      <label>Description<textarea id="questDesc" rows="2"></textarea></label>
-      <label>Required Item<input id="questItem"/></label>
-      <label>Reward Item<input id="questReward"/></label>
-      <label>XP Reward<input id="questXP" type="number" min="0"/></label>
-      <label>NPC<select id="questNPC"><option value="">(none)</option></select></label>
-      <button class="btn" id="addQuest">Add Quest</button>
-      <button class="btn" id="delQuest" style="display:none">Delete Quest</button>
-    </div>
-  </fieldset>
-  <div id="dialogModal" class="modal">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div><b>Dialog Tree Editor</b></div>
-        <button class="btn" type="button" id="closeDialogModal">Close</button>
-      </div>
-      <div id="treeEditor"></div>
-      <div id="treeWarning" style="color:#f66;font-size:12px;margin-top:4px"></div>
-      <button class="btn" type="button" id="addNode">Add Node</button>
-    </div>
-  </div>
-  <script src="dustland-core.js"></script>
-  <script src="adventure-kit.js"></script>
+      <button id="playtestFloat" class="btn btn--primary" style="
+    position:fixed; right:20px; bottom:20px; z-index:9999; border-radius:999px; padding:10px 14px;">
+        ▶ Playtest
+      </button>
+      <script src="dustland-core.js"></script>
+      <script src="adventure-kit.js"></script>
 </body>
+
 </html>
