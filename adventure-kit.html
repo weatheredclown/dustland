@@ -22,8 +22,13 @@
     #bldgCard{right:16px;top:560px;width:260px;}
       #questCard{right:16px;top:800px;width:260px;}
       #treeEditor .node{border:1px solid #2b3b2b;padding:4px;margin-top:4px;}
-      #treeEditor .choices div{display:flex;gap:4px;margin-top:2px;}
-      #treeEditor .choices input{flex:1;}
+      #treeEditor .choices div{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}
+      #treeEditor .choices input,
+      #treeEditor .choices select{flex:1 1 120px;width:auto;min-width:120px;}
+      #treeEditor .choices .choiceSuccess,
+      #treeEditor .choices .choiceFailure{flex-basis:100%;}
+      #treeEditor .choices label{display:flex;align-items:center;gap:4px;margin-top:0;flex:0 0 auto;}
+      #treeEditor .choices .delChoice{flex:0 0 auto;}
       #treeEditor .nodeHeader{display:flex;align-items:center;}
       #treeEditor .toggle{margin-right:4px;}
       #treeEditor .node.collapsed .nodeBody{display:none;}
