@@ -496,11 +496,20 @@
         }
     }
 
-    /* -- Right rail container -- */
-    .panel-right {
-        position: absolute;
-        right: 16px;
-        top: 16px;
+    /* -- Adventure Kit layout -- */
+    .ak-layout {
+        display: flex;
+        gap: 16px;
+        padding: 16px;
+        box-sizing: border-box;
+        align-items: flex-start;
+    }
+
+    .map-card {
+        width: 640px;
+    }
+
+    .editor-panel {
         width: 320px;
         background: #0b0d0b;
         border: 1px solid #273027;
@@ -612,4 +621,30 @@
     #editorPanel #dialogPreview {
         max-height: 40vh;
         overflow: auto;
+    }
+
+    /* Show all editor panes side-by-side on wide screens */
+    @media (min-width: 1600px) {
+        .editor-panel {
+            width: auto;
+            flex: 1;
+            max-height: none;
+        }
+
+        .editor-panel.wide .tabs2 {
+            display: none;
+        }
+
+        .editor-panel.wide .tabpanes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 16px;
+            overflow: visible;
+        }
+
+        .editor-panel.wide .tabpanes .card {
+            flex: 1 1 320px;
+            margin: 0 8px 16px !important;
+        }
     }
