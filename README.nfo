@@ -17,12 +17,16 @@ _______________________________________________________________________________
 [ ABOUT ]
   Dustland CRT is a work-in-progress browser RPG with a crunchy CRT vibe,
   branching dialog, party stats, inventory, quests, and a world+hall demo.
-  It’s still built to be easy to run and easy to hack.
+  The repo now ships with an Adventure Construction Kit (ACK) and a tiny
+  module player so you can craft and try your own wasteland tales. It’s
+  still built to be easy to run and easy to hack.
 
 [ HOW TO RUN ]
   - Play the latest build in your browser:
     https://weatheredclown.github.io/dustland/dustland.html
   - Just open:  dustland.html  (double-click or serve from any static server).
+  - Build a module with: adventure-kit.html  (save to JSON).
+  - Play a module with: ack-player.html and load your JSON.
   - No build step. No dependencies. Works offline.
   - Tip: Use a modern Chromium, Firefox, or Safari.
 
@@ -66,6 +70,10 @@ _______________________________________________________________________________
     * Renderer, input handling, HUD, and tiny sfx.
   - modules/dustland.module.js
     * NPCs, items, world data, and quests for the core adventure.
+  - adventure-kit.html / adventure-kit.js
+    * Map/NPC/item/quest editor for making modules.
+  - ack-player.html / ack-player.js
+    * Loads a JSON module and runs it in the engine.
   - dustland-nano.js
     * Micro helper utilities.
   - dustland.css
@@ -93,10 +101,11 @@ _______________________________________________________________________________
 [ HACKING NOTES ]
   - Plain JS modules; no build step or framework.
   - Useful entry points:
-      * genHall(), genWorld(), seedWorldDropsAndNPCs()
+      * genHall(), genWorld(), seedWorldContent()
       * makeNPC(), NPCS[], quests{}, itemDrops[]
       * renderParty(), renderInv(), renderQuests()
       * takeNearestItem(), interact(), move()
+      * applyModule(data), openCreator()
   - Tiles: see TILE enum + colors[] + walkable[].
   - Tests: run `npm test` for basic checks.
 
