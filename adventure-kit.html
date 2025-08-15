@@ -168,6 +168,7 @@
         <button class="tab2 active" data-tab="npc" role="tab" aria-selected="true">NPCs</button>
         <button class="tab2" data-tab="items" role="tab" aria-selected="false">Items</button>
         <button class="tab2" data-tab="buildings" role="tab" aria-selected="false">Buildings</button>
+        <button class="tab2" data-tab="interiors" role="tab" aria-selected="false">Interiors</button>
         <button class="tab2" data-tab="quests" role="tab" aria-selected="false">Quests</button>
       </div>
       <div class="tabpanes">
@@ -245,8 +246,19 @@
         <div id="bldgEditor" style="display:none">
           <label>X<input id="bldgX" type="number" min="0" /></label>
           <label>Y<input id="bldgY" type="number" min="0" /></label>
+          <label>Interior<select id="bldgInterior"></select></label>
           <button class="btn" id="addBldg">Place Hut</button>
           <button class="btn" id="delBldg" style="display:none">Remove Hut</button>
+        </div>
+      </fieldset>
+      <fieldset class="card" id="intCard" data-pane="interiors" style="display:none">
+        <legend>Interiors</legend>
+        <div class="list" id="intList"></div>
+        <button class="btn" type="button" id="newInterior">+ Interior</button>
+        <div id="intEditor" style="display:none">
+          <label>ID<input id="intId" readonly /></label>
+          <canvas id="intCanvas" width="192" height="144" style="margin-top:4px"></canvas>
+          <button class="btn" type="button" id="delInterior" style="display:none">Delete Interior</button>
         </div>
       </fieldset>
       <fieldset class="card" id="questCard" data-pane="quests" style="display:none">

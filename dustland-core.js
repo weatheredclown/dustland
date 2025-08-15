@@ -498,8 +498,42 @@ function removeNPC(npc){
 const usedNanoChoices = new Set();
 const usedOnceChoices = new Set();
 
+function applyModule(data){
+  setRNGSeed(data.seed || Date.now());
+  if(data.world){
+    world = data.world;
+    interiors = {};
+    (data.interiors||[]).forEach(I=>{ const {id,...rest}=I; interiors[id]={...rest}; });
+    buildings = data.buildings || [];
+    buildings.forEach(b=>{ if(!interiors[b.interiorId]){ makeInteriorRoom(b.interiorId); } });
+  }
+  itemDrops.length = 0;
+  (data.items||[]).forEach(it=>{
+    itemDrops.push({map:it.map||'world', x:it.x, y:it.y, name:it.name, slot:it.slot, mods:it.mods, value:it.value, use:it.use});
+  });
+  Object.keys(quests).forEach(k=> delete quests[k]);
+  (data.quests||[]).forEach(q=>{
+    quests[q.id] = new Quest(q.id, q.title, q.desc, {item:q.item, reward:q.reward, xp:q.xp});
+  });
+  NPCS.length = 0;
+  (data.npcs||[]).forEach(n=>{
+    let tree=n.tree;
+    if(typeof tree==='string'){ try{ tree=JSON.parse(tree); }catch(e){ tree=null; } }
+    if(!tree){
+      tree = { start:{ text:n.dialog||'', choices:[{label:'(Leave)', to:'bye'}] } };
+    }
+    let quest=null;
+    if(n.questId && quests[n.questId]) quest=quests[n.questId];
+    const opts = {};
+    if(n.combat) opts.combat = n.combat;
+    if(n.shop) opts.shop = n.shop;
+    const npc = makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, n.title||'', n.desc||'', tree, quest, null, null, opts);
+    NPCS.push(npc);
+  });
+}
+
 // ===== WORLD GEN =====
-function genWorld(seed=Date.now()){
+function genWorld(seed=Date.now(), data={}){
   setRNGSeed(seed);
   world = Array.from({length:WORLD_H},(_,y)=> Array.from({length:WORLD_W},(_,x)=>{
     const v=(Math.sin((x+seed%977)*.37)+Math.cos((y+seed%911)*.29)+Math.sin((x+y)*.11))*0.5;
@@ -514,11 +548,18 @@ function genWorld(seed=Date.now()){
     const rx=rand(WORLD_W), ry=rand(WORLD_H);
     if(getTile('world',rx,ry)!==TILE.WATER) setTile('world',rx,ry,TILE.RUIN);
   }
+  interiors = {};
+  if(creatorMap.grid && creatorMap.grid.length) interiors['creator']=creatorMap;
+  (data.interiors||[]).forEach(I=>{ const {id,...rest}=I; interiors[id]={...rest}; });
   buildings.length=0;
-  for(let i=0;i<10;i++){
-    let x=8+rand(WORLD_W-16), y=6+rand(WORLD_H-12);
-    if(getTile('world',x,y)===TILE.WATER){ const p=findNearestLand(x,y); x=p.x; y=p.y; }
-    placeHut(x,y);
+  if(data.buildings && data.buildings.length){
+    data.buildings.forEach(b=> placeHut(b.x, b.y, b));
+  } else {
+    for(let i=0;i<10;i++){
+      let x=8+rand(WORLD_W-16), y=6+rand(WORLD_H-12);
+      if(getTile('world',x,y)===TILE.WATER){ const p=findNearestLand(x,y); x=p.x; y=p.y; }
+      placeHut(x,y);
+    }
   }
   seedWorldContent();
 }
@@ -535,8 +576,8 @@ function findNearestLand(sx,sy){
   }
   return {x:sx,y:sy};
 }
-function makeInteriorRoom(){
-  const id = 'room_'+rng().toString(36).slice(2,8);
+function makeInteriorRoom(id){
+  id = id || ('room_'+rng().toString(36).slice(2,8));
   const w=12, h=9;
   const g=Array.from({length:h},(_,y)=> Array.from({length:w},(_,x)=>{
     const edge= y===0||y===h-1||x===0||x===w-1; return edge? TILE.WALL : TILE.FLOOR;
@@ -545,16 +586,23 @@ function makeInteriorRoom(){
   interiors[id] = {w,h,grid:g, entryX:ex, entryY:h-2};
   return id;
 }
-function placeHut(x,y){
+function placeHut(x,y,b){
   const w=6,h=5;
   const under=Array.from({length:h},(_,yy)=>Array.from({length:w},(_,xx)=>getTile('world',x+xx,y+yy)));
   for(let yy=0; yy<h; yy++){ for(let xx=0; xx<w; xx++){ setTile('world',x+xx,y+yy,TILE.BUILDING); }}
   const doorX=x+Math.floor(w/2), doorY=y+h-1; setTile('world',doorX,doorY,TILE.DOOR);
-  const interiorId=makeInteriorRoom();
-  const boarded = rng() < 0.3;
-  const b={x,y,w,h,doorX,doorY,interiorId,boarded,under};
-  buildings.push(b);
-  return b;
+  let interiorId, boarded;
+  if(b){
+    interiorId = b.interiorId || makeInteriorRoom();
+    if(b.interiorId && !interiors[b.interiorId]) makeInteriorRoom(b.interiorId);
+    boarded = b.boarded || false;
+  } else {
+    interiorId = makeInteriorRoom();
+    boarded = rng() < 0.3;
+  }
+  const nb={x,y,w,h,doorX,doorY,interiorId,boarded,under};
+  buildings.push(nb);
+  return nb;
 }
 
 // ===== HALL =====

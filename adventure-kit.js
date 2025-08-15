@@ -13,11 +13,13 @@ let placingType = null, placingPos = null;
 let hoverTile = null;
 let coordTarget = null;
 
-const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
+const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [], interiors: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
-let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1;
+let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1;
 let treeData = {};
 let selectedObj = null;
+const intCanvas = document.getElementById('intCanvas');
+const intCtx = intCanvas.getContext('2d');
 
 function nextId(prefix, arr) {
   let i = 1; while (arr.some(o => o.id === prefix + i)) i++; return prefix + i;
@@ -120,10 +122,91 @@ function drawWorld() {
   }
 }
 
+function drawInterior() {
+  if (editInteriorIdx < 0) return;
+  const I = moduleData.interiors[editInteriorIdx];
+  const sx = intCanvas.width / I.w;
+  const sy = intCanvas.height / I.h;
+  intCtx.clearRect(0, 0, intCanvas.width, intCanvas.height);
+  for (let y = 0; y < I.h; y++) {
+    for (let x = 0; x < I.w; x++) {
+      const t = I.grid[y][x];
+      intCtx.fillStyle = t === TILE.WALL ? '#444' : t === TILE.DOOR ? '#8bd98d' : '#222';
+      intCtx.fillRect(x * sx, y * sy, sx, sy);
+    }
+  }
+}
+
+intCanvas.addEventListener('click', e => {
+  if (editInteriorIdx < 0) return;
+  const I = moduleData.interiors[editInteriorIdx];
+  const rect = intCanvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left) / (intCanvas.width / I.w));
+  const y = Math.floor((e.clientY - rect.top) / (intCanvas.height / I.h));
+  const cyc = [TILE.WALL, TILE.FLOOR, TILE.DOOR];
+  let idx = cyc.indexOf(I.grid[y][x]);
+  idx = (idx + 1) % cyc.length;
+  I.grid[y][x] = cyc[idx];
+  if (I.grid[y][x] === TILE.DOOR) { I.entryX = x; I.entryY = y - 1; }
+  drawInterior();
+});
+
+function showInteriorEditor(show) {
+  document.getElementById('intEditor').style.display = show ? 'block' : 'none';
+}
+
+function renderInteriorList() {
+  const list = document.getElementById('intList');
+  list.innerHTML = moduleData.interiors.map((I, i) => `<div data-idx="${i}">${I.id}</div>`).join('');
+  Array.from(list.children).forEach(div => div.onclick = () => editInterior(parseInt(div.dataset.idx, 10)));
+  updateInteriorOptions();
+}
+
+function startNewInterior() {
+  const id = makeInteriorRoom();
+  const I = interiors[id];
+  I.id = id;
+  moduleData.interiors.push(I);
+  renderInteriorList();
+  editInterior(moduleData.interiors.length - 1);
+}
+
+function editInterior(i) {
+  const I = moduleData.interiors[i];
+  editInteriorIdx = i;
+  document.getElementById('intId').value = I.id;
+  showInteriorEditor(true);
+  document.getElementById('delInterior').style.display = 'block';
+  drawInterior();
+}
+
+function deleteInterior() {
+  if (editInteriorIdx < 0) return;
+  const I = moduleData.interiors[editInteriorIdx];
+  delete interiors[I.id];
+  moduleData.interiors.splice(editInteriorIdx, 1);
+  editInteriorIdx = -1;
+  showInteriorEditor(false);
+  renderInteriorList();
+}
+
+function updateInteriorOptions() {
+  const sel = document.getElementById('bldgInterior');
+  if (!sel) return;
+  sel.innerHTML = '<option value=""></option>' + moduleData.interiors.map(I => `<option value="${I.id}">${I.id}</option>`).join('');
+}
+
 function regenWorld() {
   moduleData.seed = Date.now();
   genWorld(moduleData.seed);
   moduleData.buildings = [...buildings];
+  moduleData.interiors = [];
+  for (const id in interiors) {
+    if(id==='creator') continue;
+    const I = interiors[id]; I.id = id; moduleData.interiors.push(I);
+  }
+  renderInteriorList();
+  renderBldgList();
   drawWorld();
 }
 
@@ -668,6 +751,7 @@ function startNewBldg() {
   editBldgIdx = -1;
   document.getElementById('bldgX').value = 0;
   document.getElementById('bldgY').value = 0;
+  updateInteriorOptions();
   document.getElementById('delBldg').style.display = 'none';
   placingType = 'bldg';
   placingPos = null;
@@ -678,7 +762,12 @@ function startNewBldg() {
 function addBuilding() {
   const x = parseInt(document.getElementById('bldgX').value, 10) || 0;
   const y = parseInt(document.getElementById('bldgY').value, 10) || 0;
-  const b = placeHut(x, y);
+  let interiorId = document.getElementById('bldgInterior').value;
+  if (!interiorId) {
+    interiorId = makeInteriorRoom();
+    const I = interiors[interiorId]; I.id = interiorId; moduleData.interiors.push(I); renderInteriorList();
+  }
+  const b = placeHut(x, y, { interiorId });
   moduleData.buildings.push(b);
   renderBldgList();
   selectedObj = null;
@@ -698,6 +787,8 @@ function editBldg(i) {
   editBldgIdx = i;
   document.getElementById('bldgX').value = b.x;
   document.getElementById('bldgY').value = b.y;
+  updateInteriorOptions();
+  document.getElementById('bldgInterior').value = b.interiorId || '';
   document.getElementById('delBldg').style.display = 'block';
   showBldgEditor(true);
   selectedObj = { type: 'bldg', obj: b };
@@ -715,7 +806,7 @@ function removeBuilding(b) {
 function moveBuilding(b, x, y) {
   const idx = moduleData.buildings.indexOf(b);
   removeBuilding(b);
-  const nb = placeHut(x, y);
+  const nb = placeHut(x, y, { interiorId: b.interiorId, boarded: b.boarded });
   moduleData.buildings[idx] = nb;
   editBldgIdx = idx;
   return nb;
@@ -832,7 +923,10 @@ function applyLoadedModule(data) {
   moduleData.items = data.items || [];
   moduleData.quests = data.quests || [];
   moduleData.buildings = data.buildings || [];
+  moduleData.interiors = data.interiors || [];
   moduleData.start = data.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+  interiors = {};
+  moduleData.interiors.forEach(I => { interiors[I.id] = I; });
 
   world = data.world || world;
   buildings = moduleData.buildings.map(b => ({
@@ -844,12 +938,14 @@ function applyLoadedModule(data) {
   renderNPCList();
   renderItemList();
   renderBldgList();
+  renderInteriorList();
   renderQuestList();
   updateQuestOptions();
   loadMods({});
   showItemEditor(false);
   showNPCEditor(false);
   showBldgEditor(false);
+  showInteriorEditor(false);
   showQuestEditor(false);
 }
 
@@ -883,6 +979,8 @@ document.getElementById('addQuest').onclick = addQuest;
 document.getElementById('delNPC').onclick = deleteNPC;
 document.getElementById('delItem').onclick = deleteItem;
 document.getElementById('delBldg').onclick = deleteBldg;
+document.getElementById('newInterior').onclick = startNewInterior;
+document.getElementById('delInterior').onclick = deleteInterior;
 document.getElementById('delQuest').onclick = deleteQuest;
 document.getElementById('addMod').onclick = () => modRow();
 document.getElementById('itemSlot').addEventListener('change', updateModsWrap);
