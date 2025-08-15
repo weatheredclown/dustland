@@ -785,6 +785,18 @@ function renderDialog(){
       setContinueOnly();
       return true;
     }
+    if(c.goto){
+      const g=c.goto;
+      if(g.map==='world'){ startWorld(); }
+      else if(g.map){ setMap(g.map); }
+      if(typeof g.x==='number') player.x=g.x;
+      if(typeof g.y==='number') player.y=g.y;
+      centerCamera(player.x,player.y,state.map);
+      updateHUD?.();
+      closeDialog();
+      if(c.nano && c.key) usedNanoChoices.add(c.key);
+      return true;
+    }
     if(currentNPC && typeof currentNPC.processChoice==='function'){
       return currentNPC.processChoice(c)===true;
     }
