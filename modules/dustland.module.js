@@ -199,22 +199,16 @@ function npc_Duchess(x,y){
     'You met the Duchess on the road.',
     {xp:2}
   );
-  const processNode = function(node){
-    if(node==='pay' || node==='ref'){
-      defaultQuestProcessor(this,'accept');
-      defaultQuestProcessor(this,'do_turnin');
-    }
-  };
   return makeNPC('duchess','world',x,y,'#a9f59f','Scrap Duchess','Toll-Queen','A crown of bottlecaps; eyes like razors.',{
     start:{text:['Road tax or road rash.','Coins or cuts. Your pick.'],
       choices:[
-        {label:'(Pay) Nod and pass', to:'pay'},
-        {label:'(Refuse)', to:'ref'},
+        {label:'(Pay) Nod and pass', to:'pay', q:'turnin'},
+        {label:'(Refuse)', to:'ref', q:'turnin'},
         {label:'(Leave)', to:'bye'}
       ]},
     pay:{text:'Wise. Move along.', choices:[{label:'(Ok)', to:'bye'}]},
     ref:{text:'Brave. Or foolish.', choices:[{label:'(Ok)', to:'bye'}]}
-  }, quest, processNode);
+  }, quest);
 }
 
 function npc_Raider(x,y){
