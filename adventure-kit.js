@@ -193,13 +193,13 @@ function addChoiceRow(container, ch = {}) {
     <input class="choiceGotoMap" placeholder="goto map" value="${gotoMap}"/>
     <input class="choiceGotoX" placeholder="x" value="${gotoX}"/>
     <input class="choiceGotoY" placeholder="y" value="${gotoY}"/>
-    <input class="choiceQ" placeholder="q" value="${q || ''}"/>
+    <select class="choiceQ"><option value=""></option><option value="accept" ${q==='accept'?'selected':''}>accept</option><option value="turnin" ${q==='turnin'?'selected':''}>turnin</option></select>
     <label><input type="checkbox" class="choiceOnce" ${once ? 'checked' : ''}/> once</label>
     <button class="btn delChoice" type="button">x</button>`;
   container.appendChild(row);
   populateChoiceDropdown(row.querySelector('.choiceTo'), to);
   row.querySelectorAll('input,textarea,select').forEach(el => el.addEventListener('input', updateTreeData));
-  row.querySelector('.choiceTo').addEventListener('change', updateTreeData);
+  row.querySelectorAll('select').forEach(el => el.addEventListener('change', updateTreeData));
   row.querySelectorAll('input[type=checkbox]').forEach(el => el.addEventListener('change', updateTreeData));
   row.querySelector('.delChoice').addEventListener('click', () => { row.remove(); updateTreeData(); });
 }

@@ -410,18 +410,20 @@ function hasItem(name){ return player.inv.some(it=> it.name===name); }
 function defaultQuestProcessor(npc, nodeId){
   const meta = npc.quest;
   if(!meta) return;
-  if(nodeId==='accept' && meta.status==='available'){
-    questLog.add(meta);
-  }
-  if(nodeId==='do_turnin' && meta.status==='active'){
-    if(!meta.item || hasItem(meta.item)){
-      if(meta.item){ const i = player.inv.findIndex(it=> it.name===meta.item); if(i>-1) removeFromInv(i); }
-      questLog.complete(meta.id);
-      if(meta.reward){ addToInv(meta.reward); }
-      if(meta.xp){ awardXP(leader(), meta.xp); }
-      if(meta.moveTo){ npc.x=meta.moveTo.x; npc.y=meta.moveTo.y; }
-    } else {
-      textEl.textContent=`You don’t have ${meta.item}.`;
+  if(nodeId==='accept'){
+    if(meta.status==='available') questLog.add(meta);
+  } else if(nodeId==='do_turnin'){
+    if(meta.status==='available') questLog.add(meta);
+    if(meta.status==='active'){
+      if(!meta.item || hasItem(meta.item)){
+        if(meta.item){ const i = player.inv.findIndex(it=> it.name===meta.item); if(i>-1) removeFromInv(i); }
+        questLog.complete(meta.id);
+        if(meta.reward){ addToInv(meta.reward); }
+        if(meta.xp){ awardXP(leader(), meta.xp); }
+        if(meta.moveTo){ npc.x=meta.moveTo.x; npc.y=meta.moveTo.y; }
+      } else {
+        textEl.textContent=`You don’t have ${meta.item}.`;
+      }
     }
   }
 }
@@ -685,7 +687,7 @@ function renderDialog(){
     const meta=currentNPC.quest;
     nodeChoices = nodeChoices.filter(c=>{
       if(c.q==='accept' && meta.status!=='available') return false;
-      if(c.q==='turnin' && (meta.status!=='active' || (meta.item && !hasItem(meta.item)))) return false;
+      if(c.q==='turnin' && (meta.status==='completed' || (meta.item && !hasItem(meta.item)))) return false;
       return true;
     });
   }
@@ -694,6 +696,11 @@ function renderDialog(){
     const key = `${currentNPC.id}::${currentNode}::${c.label}`;
     return !usedOnceChoices.has(key);
   });
+  const processQFlag = (c)=>{
+    if(!currentNPC?.quest || !c.q) return;
+    if(c.q==='accept') defaultQuestProcessor(currentNPC,'accept');
+    if(c.q==='turnin') defaultQuestProcessor(currentNPC,'do_turnin');
+  };
   const handleSpecial = (c)=>{
     if(c.stat){
       const roll = skillRoll(c.stat);
@@ -717,9 +724,7 @@ function renderDialog(){
           addPartyMember(m);
           removeNPC(currentNPC);
         }
-        if(c.q==='turnin' && currentNPC?.quest){
-          defaultQuestProcessor(currentNPC,'do_turnin');
-        }
+        processQFlag(c);
       }
       if(c.nano && c.key) usedNanoChoices.add(c.key);
       setContinueOnly();
@@ -749,9 +754,7 @@ function renderDialog(){
           addPartyMember(m);
           removeNPC(currentNPC);
         }
-        if(c.q==='turnin' && currentNPC?.quest){
-          defaultQuestProcessor(currentNPC,'do_turnin');
-        }
+        processQFlag(c);
       }
       if(c.nano && c.key) usedNanoChoices.add(c.key);
       setContinueOnly();
@@ -778,9 +781,7 @@ function renderDialog(){
       const m=makeMember(j.id, j.name, j.role);
       addPartyMember(m);
       removeNPC(currentNPC);
-      if(c.q==='turnin' && currentNPC?.quest){
-        defaultQuestProcessor(currentNPC,'do_turnin');
-      }
+      processQFlag(c);
       if(c.nano && c.key) usedNanoChoices.add(c.key);
       setContinueOnly();
       return true;
@@ -807,8 +808,9 @@ function renderDialog(){
     div.onclick=()=>{
       const key = `${currentNPC.id}::${currentNode}::${c.label}`;
       if(c.once) usedOnceChoices.add(key);
-      currentNode=c.to||'bye';
       if(handleSpecial(c)) return;
+      processQFlag(c);
+      currentNode=c.to||'bye';
       if(currentNode==='bye'){ closeDialog(); } else { renderDialog(); }
     };
     choicesEl.appendChild(div);
