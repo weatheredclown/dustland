@@ -22,11 +22,12 @@ if(playData){
 function applyModule(data){
   setRNGSeed(data.seed || Date.now());
   world = data.world || world;
+  interiors = {};
+  (data.interiors||[]).forEach(I=>{ const {id,...rest}=I; interiors[id]={...rest}; });
   buildings = data.buildings || [];
   buildings.forEach(b=>{
     if(!interiors[b.interiorId]){
-      const id = makeInteriorRoom();
-      b.interiorId = id;
+      makeInteriorRoom(b.interiorId);
     }
   });
   itemDrops.length = 0;
