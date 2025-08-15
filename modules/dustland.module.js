@@ -257,12 +257,9 @@ function npc_ExitDoor(x,y){
           {label:'(Leave)', to:'bye'}
         ]},
       accept:{ text:'Try the crates. And don’t scuff the floor.', choices:[{label:'(Okay)', to:'bye'}] },
-      do_turnin:{ text:'Kesh unlocks the chain. “Off you go.”', choices:[{label:'(Continue)', to:'bye'}] }
+      do_turnin:{ text:'Kesh unlocks the chain. “Off you go.”', choices:[{label:'(Continue)', to:'bye', goto:{map:'world', x:2, y:Math.floor(WORLD_H/2)}}] }
     },
-    quest,
-    function(node){
-      if(node==='do_turnin'){ startWorld(); closeDialog(); }
-    }
+    quest
   );
 }
 

@@ -175,6 +175,8 @@ function renderDialogPreview() {
 function addChoiceRow(container, ch = {}) {
   const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', join = null, q = '' } = ch || {};
   const joinId = join?.id || '', joinName = join?.name || '', joinRole = join?.role || '';
+  const goto = ch.goto || {};
+  const gotoMap = goto.map || '', gotoX = goto.x != null ? goto.x : '', gotoY = goto.y != null ? goto.y : '';
   const row = document.createElement('div');
   row.innerHTML = `<input class="choiceLabel" placeholder="label" value="${label}"/>
     <select class="choiceTo"></select>
@@ -188,6 +190,9 @@ function addChoiceRow(container, ch = {}) {
     <input class="choiceJoinId" placeholder="join id" value="${joinId}"/>
     <input class="choiceJoinName" placeholder="join name" value="${joinName}"/>
     <input class="choiceJoinRole" placeholder="join role" value="${joinRole}"/>
+    <input class="choiceGotoMap" placeholder="goto map" value="${gotoMap}"/>
+    <input class="choiceGotoX" placeholder="x" value="${gotoX}"/>
+    <input class="choiceGotoY" placeholder="y" value="${gotoY}"/>
     <select class="choiceQ"><option value=""></option><option value="accept" ${q==='accept'?'selected':''}>accept</option><option value="turnin" ${q==='turnin'?'selected':''}>turnin</option></select>
     <label><input type="checkbox" class="choiceOnce" ${once ? 'checked' : ''}/> once</label>
     <button class="btn delChoice" type="button">x</button>`;
@@ -274,6 +279,9 @@ function updateTreeData() {
       const joinId = chEl.querySelector('.choiceJoinId').value.trim();
       const joinName = chEl.querySelector('.choiceJoinName').value.trim();
       const joinRole = chEl.querySelector('.choiceJoinRole').value.trim();
+      const gotoMap = chEl.querySelector('.choiceGotoMap').value.trim();
+      const gotoXTxt = chEl.querySelector('.choiceGotoX').value.trim();
+      const gotoYTxt = chEl.querySelector('.choiceGotoY').value.trim();
       const q = chEl.querySelector('.choiceQ').value.trim();
       const once = chEl.querySelector('.choiceOnce').checked;
 
@@ -290,6 +298,13 @@ function updateTreeData() {
         if (costItem) c.costItem = costItem;
         if (costSlot) c.costSlot = costSlot;
         if (joinId || joinName || joinRole) c.join = { id: joinId, name: joinName, role: joinRole };
+        if (gotoMap) {
+          c.goto = { map: gotoMap };
+          const gx = gotoXTxt ? parseInt(gotoXTxt, 10) : undefined;
+          const gy = gotoYTxt ? parseInt(gotoYTxt, 10) : undefined;
+          if (gx != null && !Number.isNaN(gx)) c.goto.x = gx;
+          if (gy != null && !Number.isNaN(gy)) c.goto.y = gy;
+        }
         if (q) c.q = q;
         if (once) c.once = true;
         choices.push(c);
