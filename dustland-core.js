@@ -503,10 +503,13 @@ function applyModule(data){
   if(data.world){
     world = data.world;
     interiors = {};
-    (data.interiors||[]).forEach(I=>{ const {id,...rest}=I; interiors[id]={...rest}; });
     buildings = data.buildings || [];
-    buildings.forEach(b=>{ if(!interiors[b.interiorId]){ makeInteriorRoom(b.interiorId); } });
   }
+  (data.interiors||[]).forEach(I=>{ const {id,...rest}=I; interiors[id]={...rest}; });
+  if(!data.world && data.buildings && data.buildings.length){
+    buildings = data.buildings;
+  }
+  buildings.forEach(b=>{ if(!interiors[b.interiorId]){ makeInteriorRoom(b.interiorId); } });
   itemDrops.length = 0;
   (data.items||[]).forEach(it=>{
     itemDrops.push({map:it.map||'world', x:it.x, y:it.y, name:it.name, slot:it.slot, mods:it.mods, value:it.value, use:it.use});

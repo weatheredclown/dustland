@@ -88,22 +88,35 @@ function centerCamera(x,y,map){
 
 // ===== Drawing (tiles -> items -> NPCs -> player) =====
 function drawScene(ctx){
-  ctx.fillStyle='#000'; ctx.fillRect(0,0,disp.width,disp.height);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, disp.width, disp.height);
   const activeMap = mapIdForState();
-  const {W,H}=mapWH(activeMap);
+  const { W, H } = mapWH(activeMap);
+  const offX = Math.max(0, Math.floor((VIEW_W - W) / 2));
+  const offY = Math.max(0, Math.floor((VIEW_H - H) / 2));
   for(let vy=0; vy<VIEW_H; vy++){
     for(let vx=0; vx<VIEW_W; vx++){
-      const gx=camX+vx, gy=camY+vy; if(gx<0||gy<0||gx>=W||gy>=H) continue;
-      const t=getTile(activeMap,gx,gy); if(t===null) continue;
-      ctx.fillStyle=colors[t]; ctx.fillRect(vx*TS,vy*TS,TS,TS);
-      if(t===TILE.DOOR){ ctx.strokeStyle='#9ef7a0'; ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10); if(doorPulseUntil && Date.now()<doorPulseUntil){ const a=0.3+0.2*Math.sin(Date.now()/200); ctx.globalAlpha=a; ctx.strokeRect(vx*TS+3,vy*TS+3,TS-6,TS-6); ctx.globalAlpha=1; } }
+      const gx = camX + vx - offX, gy = camY + vy - offY;
+      if(gx<0||gy<0||gx>=W||gy>=H) continue;
+      const t = getTile(activeMap,gx,gy); if(t===null) continue;
+      ctx.fillStyle = colors[t]; ctx.fillRect(vx*TS,vy*TS,TS,TS);
+      if(t===TILE.DOOR){
+        ctx.strokeStyle='#9ef7a0';
+        ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10);
+        if(doorPulseUntil && Date.now()<doorPulseUntil){
+          const a=0.3+0.2*Math.sin(Date.now()/200);
+          ctx.globalAlpha=a;
+          ctx.strokeRect(vx*TS+3,vy*TS+3,TS-6,TS-6);
+          ctx.globalAlpha=1;
+        }
+      }
     }
   }
   // Items first
   for(const it of itemDrops){
     if(it.map!==activeMap) continue;
     if(it.x>=camX&&it.y>=camY&&it.x<camX+VIEW_W&&it.y<camY+VIEW_H){
-      const vx=(it.x-camX)*TS, vy=(it.y-camY)*TS;
+      const vx=(it.x-camX+offX)*TS, vy=(it.y-camY+offY)*TS;
       ctx.fillStyle='#c8ffbf'; ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
     }
   }
@@ -111,15 +124,18 @@ function drawScene(ctx){
   for(const n of NPCS){
     if(n.map!==activeMap) continue;
     if(n.x>=camX&&n.y>=camY&&n.x<camX+VIEW_W&&n.y<camY+VIEW_H){
-      const vx=(n.x-camX)*TS, vy=(n.y-camY)*TS;
+      const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
       ctx.fillStyle=n.color; ctx.fillRect(vx,vy,TS,TS);
       ctx.fillStyle='#000'; ctx.fillText('!',vx+5,vy+12);
     }
   }
   // Player last
-  const px=(player.x-camX)*TS, py=(player.y-camY)*TS; ctx.fillStyle='#d9ffbe'; ctx.fillRect(px,py,TS,TS); ctx.fillStyle='#000'; ctx.fillText('@',px+4,py+12);
+  const px=(player.x-camX+offX)*TS, py=(player.y-camY+offY)*TS;
+  ctx.fillStyle='#d9ffbe'; ctx.fillRect(px,py,TS,TS);
+  ctx.fillStyle='#000'; ctx.fillText('@',px+4,py+12);
   ctx.strokeStyle='#2a3b2a'; ctx.strokeRect(0.5,0.5,VIEW_W*TS-1,VIEW_H*TS-1);
 }
+
 
 // ===== HUD & Tabs =====
 const TAB_BREAKPOINT = 1600;
