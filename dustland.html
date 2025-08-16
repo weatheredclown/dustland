@@ -100,8 +100,14 @@
   </div>
 
   <script src="dustland-core.js"></script>
-  <script src="modules/dustland.module.js"></script>
+  <script>
+    window._realOpenCreator = window.openCreator;
+    window._realShowStart = window.showStart;
+    window.openCreator = function(){};
+    window.showStart = function(){};
+  </script>
   <script src="dustland-nano.js"></script>
   <script src="dustland-engine.js"></script>
+  <script src="module-picker.js"></script>
 </body>
 </html>

@@ -410,18 +410,20 @@ function hasItem(name){ return player.inv.some(it=> it.name===name); }
 function defaultQuestProcessor(npc, nodeId){
   const meta = npc.quest;
   if(!meta) return;
-  if(nodeId==='accept' && meta.status==='available'){
-    questLog.add(meta);
-  }
-  if(nodeId==='do_turnin' && meta.status==='active'){
-    if(!meta.item || hasItem(meta.item)){
-      if(meta.item){ const i = player.inv.findIndex(it=> it.name===meta.item); if(i>-1) removeFromInv(i); }
-      questLog.complete(meta.id);
-      if(meta.reward){ addToInv(meta.reward); }
-      if(meta.xp){ awardXP(leader(), meta.xp); }
-      if(meta.moveTo){ npc.x=meta.moveTo.x; npc.y=meta.moveTo.y; }
-    } else {
-      textEl.textContent=`You don’t have ${meta.item}.`;
+  if(nodeId==='accept'){
+    if(meta.status==='available') questLog.add(meta);
+  } else if(nodeId==='do_turnin'){
+    if(meta.status==='available') questLog.add(meta);
+    if(meta.status==='active'){
+      if(!meta.item || hasItem(meta.item)){
+        if(meta.item){ const i = player.inv.findIndex(it=> it.name===meta.item); if(i>-1) removeFromInv(i); }
+        questLog.complete(meta.id);
+        if(meta.reward){ addToInv(meta.reward); }
+        if(meta.xp){ awardXP(leader(), meta.xp); }
+        if(meta.moveTo){ npc.x=meta.moveTo.x; npc.y=meta.moveTo.y; }
+      } else {
+        textEl.textContent=`You don’t have ${meta.item}.`;
+      }
     }
   }
 }
@@ -496,8 +498,45 @@ function removeNPC(npc){
 const usedNanoChoices = new Set();
 const usedOnceChoices = new Set();
 
+function applyModule(data){
+  setRNGSeed(data.seed || Date.now());
+  if(data.world){
+    world = data.world;
+    interiors = {};
+    buildings = data.buildings || [];
+  }
+  (data.interiors||[]).forEach(I=>{ const {id,...rest}=I; interiors[id]={...rest}; });
+  if(!data.world && data.buildings && data.buildings.length){
+    buildings = data.buildings;
+  }
+  buildings.forEach(b=>{ if(!interiors[b.interiorId]){ makeInteriorRoom(b.interiorId); } });
+  itemDrops.length = 0;
+  (data.items||[]).forEach(it=>{
+    itemDrops.push({map:it.map||'world', x:it.x, y:it.y, name:it.name, slot:it.slot, mods:it.mods, value:it.value, use:it.use});
+  });
+  Object.keys(quests).forEach(k=> delete quests[k]);
+  (data.quests||[]).forEach(q=>{
+    quests[q.id] = new Quest(q.id, q.title, q.desc, {item:q.item, reward:q.reward, xp:q.xp});
+  });
+  NPCS.length = 0;
+  (data.npcs||[]).forEach(n=>{
+    let tree=n.tree;
+    if(typeof tree==='string'){ try{ tree=JSON.parse(tree); }catch(e){ tree=null; } }
+    if(!tree){
+      tree = { start:{ text:n.dialog||'', choices:[{label:'(Leave)', to:'bye'}] } };
+    }
+    let quest=null;
+    if(n.questId && quests[n.questId]) quest=quests[n.questId];
+    const opts = {};
+    if(n.combat) opts.combat = n.combat;
+    if(n.shop) opts.shop = n.shop;
+    const npc = makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, n.title||'', n.desc||'', tree, quest, null, null, opts);
+    NPCS.push(npc);
+  });
+}
+
 // ===== WORLD GEN =====
-function genWorld(seed=Date.now()){
+function genWorld(seed=Date.now(), data={}){
   setRNGSeed(seed);
   world = Array.from({length:WORLD_H},(_,y)=> Array.from({length:WORLD_W},(_,x)=>{
     const v=(Math.sin((x+seed%977)*.37)+Math.cos((y+seed%911)*.29)+Math.sin((x+y)*.11))*0.5;
@@ -512,11 +551,18 @@ function genWorld(seed=Date.now()){
     const rx=rand(WORLD_W), ry=rand(WORLD_H);
     if(getTile('world',rx,ry)!==TILE.WATER) setTile('world',rx,ry,TILE.RUIN);
   }
+  interiors = {};
+  if(creatorMap.grid && creatorMap.grid.length) interiors['creator']=creatorMap;
+  (data.interiors||[]).forEach(I=>{ const {id,...rest}=I; interiors[id]={...rest}; });
   buildings.length=0;
-  for(let i=0;i<10;i++){
-    let x=8+rand(WORLD_W-16), y=6+rand(WORLD_H-12);
-    if(getTile('world',x,y)===TILE.WATER){ const p=findNearestLand(x,y); x=p.x; y=p.y; }
-    placeHut(x,y);
+  if(data.buildings && data.buildings.length){
+    data.buildings.forEach(b=> placeHut(b.x, b.y, b));
+  } else {
+    for(let i=0;i<10;i++){
+      let x=8+rand(WORLD_W-16), y=6+rand(WORLD_H-12);
+      if(getTile('world',x,y)===TILE.WATER){ const p=findNearestLand(x,y); x=p.x; y=p.y; }
+      placeHut(x,y);
+    }
   }
   seedWorldContent();
 }
@@ -533,8 +579,8 @@ function findNearestLand(sx,sy){
   }
   return {x:sx,y:sy};
 }
-function makeInteriorRoom(){
-  const id = 'room_'+rng().toString(36).slice(2,8);
+function makeInteriorRoom(id){
+  id = id || ('room_'+rng().toString(36).slice(2,8));
   const w=12, h=9;
   const g=Array.from({length:h},(_,y)=> Array.from({length:w},(_,x)=>{
     const edge= y===0||y===h-1||x===0||x===w-1; return edge? TILE.WALL : TILE.FLOOR;
@@ -543,16 +589,23 @@ function makeInteriorRoom(){
   interiors[id] = {w,h,grid:g, entryX:ex, entryY:h-2};
   return id;
 }
-function placeHut(x,y){
+function placeHut(x,y,b){
   const w=6,h=5;
   const under=Array.from({length:h},(_,yy)=>Array.from({length:w},(_,xx)=>getTile('world',x+xx,y+yy)));
   for(let yy=0; yy<h; yy++){ for(let xx=0; xx<w; xx++){ setTile('world',x+xx,y+yy,TILE.BUILDING); }}
   const doorX=x+Math.floor(w/2), doorY=y+h-1; setTile('world',doorX,doorY,TILE.DOOR);
-  const interiorId=makeInteriorRoom();
-  const boarded = rng() < 0.3;
-  const b={x,y,w,h,doorX,doorY,interiorId,boarded,under};
-  buildings.push(b);
-  return b;
+  let interiorId, boarded;
+  if(b){
+    interiorId = b.interiorId || makeInteriorRoom();
+    if(b.interiorId && !interiors[b.interiorId]) makeInteriorRoom(b.interiorId);
+    boarded = b.boarded || false;
+  } else {
+    interiorId = makeInteriorRoom();
+    boarded = rng() < 0.3;
+  }
+  const nb={x,y,w,h,doorX,doorY,interiorId,boarded,under};
+  buildings.push(nb);
+  return nb;
 }
 
 // ===== HALL =====
@@ -703,128 +756,168 @@ function renderDialog(){
     const k = `${currentNPC.id}::${currentNode}::${ex.label}`;
     if(!usedNanoChoices.has(k) && !usedOnceChoices.has(k)) nodeChoices.push({...ex, nano:true, key:k});
   }
-  if(currentNPC.quest){
-    const meta=currentNPC.quest;
-    nodeChoices = nodeChoices.filter(c=>{
-      if(c.q==='accept' && meta.status!=='available') return false;
-      if(c.q==='turnin' && (meta.status!=='active' || (meta.item && !hasItem(meta.item)))) return false;
+  // Filter/prepare choices
+  if (currentNPC.quest) {
+    const meta = currentNPC.quest;
+    nodeChoices = nodeChoices.filter(c => {
+      if (c.q === 'accept' && meta.status !== 'available') return false;
+      // Show turn-in only if quest is active AND (no item needed OR item present)
+      if (c.q === 'turnin' && (meta.status !== 'active' || (meta.item && !hasItem(meta.item)))) return false;
       return true;
     });
   }
-  nodeChoices = nodeChoices.filter(c=>{
-    if(!c.once) return true;
+
+  nodeChoices = nodeChoices.filter(c => {
+    if (!c.once) return true;
     const key = `${currentNPC.id}::${currentNode}::${c.label}`;
     return !usedOnceChoices.has(key);
   });
-  const handleSpecial = (c)=>{
-    if(c.stat){
+
+  // Helper to run quest flags attached to a choice
+  const processQFlag = (c) => {
+    if (!currentNPC?.quest || !c.q) return;
+    if (c.q === 'accept')  defaultQuestProcessor(currentNPC, 'accept');
+    if (c.q === 'turnin')  defaultQuestProcessor(currentNPC, 'do_turnin');
+  };
+
+  const handleSpecial = (c) => {
+    // Stat-gated choice
+    if (c.stat) {
       const roll = skillRoll(c.stat);
       const success = roll >= c.dc;
-      textEl.textContent = success ? (c.success||'') : (c.failure||'');
+      textEl.textContent = success ? (c.success || '') : (c.failure || '');
       textEl.textContent += ` (Roll ${roll} vs DC ${c.dc}.)`;
-      if(success){
-        if(c.reward){
-          if(/^xp\s*\d+/i.test(c.reward)){
-            const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
+
+      if (success) {
+        if (c.reward) {
+          if (/^xp\s*\d+/i.test(c.reward)) {
+            const amt = parseInt(c.reward.replace(/[^0-9]/g, ''), 10) || 0;
             awardXP(leader(), amt);
             textEl.textContent += ` Reward: ${amt} XP.`;
           } else {
-            addToInv({name:c.reward});
+            addToInv({ name: c.reward });
             textEl.textContent += ` You receive ${c.reward}.`;
           }
         }
-        if(c.join){
-          const j=c.join;
-          const m=makeMember(j.id, j.name, j.role);
+        if (c.join) {
+          const j = c.join;
+          const m = makeMember(j.id, j.name, j.role);
           addPartyMember(m);
           removeNPC(currentNPC);
         }
-        if(c.q==='turnin' && currentNPC?.quest){
-          defaultQuestProcessor(currentNPC,'do_turnin');
-        }
+        processQFlag(c);
       }
-      if(c.nano && c.key) usedNanoChoices.add(c.key);
+
+      if (c.nano && c.key) usedNanoChoices.add(c.key);
       setContinueOnly();
       return true;
     }
-    if(c.costItem || c.costSlot){
-      const idx = c.costItem ? player.inv.findIndex(it=> it.name===c.costItem)
-                             : player.inv.findIndex(it=> it.slot===c.costSlot);
-      if(idx === -1){
+
+    // Item-cost or slot-cost choice
+    if (c.costItem || c.costSlot) {
+      const idx = c.costItem
+        ? player.inv.findIndex(it => it.name === c.costItem)
+        : player.inv.findIndex(it => it.slot === c.costSlot);
+
+      if (idx === -1) {
         textEl.textContent = c.failure || 'You lack the required item.';
       } else {
         removeFromInv(idx);
         textEl.textContent = c.success || '';
-        if(c.reward){
-          if(/^xp\s*\d+/i.test(c.reward)){
-            const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
+
+        if (c.reward) {
+          if (/^xp\s*\d+/i.test(c.reward)) {
+            const amt = parseInt(c.reward.replace(/[^0-9]/g, ''), 10) || 0;
             awardXP(leader(), amt);
-            if(typeof toast==='function') toast(`+${amt} XP`);
+            if (typeof toast === 'function') toast(`+${amt} XP`);
           } else {
-            addToInv({name:c.reward});
-            if(typeof toast==='function') toast(`Received ${c.reward}`);
+            addToInv({ name: c.reward });
+            if (typeof toast === 'function') toast(`Received ${c.reward}`);
           }
         }
-        if(c.join){
-          const j=c.join;
-          const m=makeMember(j.id, j.name, j.role);
+
+        if (c.join) {
+          const j = c.join;
+          const m = makeMember(j.id, j.name, j.role);
           addPartyMember(m);
           removeNPC(currentNPC);
         }
-        if(c.q==='turnin' && currentNPC?.quest){
-          defaultQuestProcessor(currentNPC,'do_turnin');
-        }
+
+        processQFlag(c);
       }
-      if(c.nano && c.key) usedNanoChoices.add(c.key);
+
+      if (c.nano && c.key) usedNanoChoices.add(c.key);
       setContinueOnly();
       return true;
     }
-    if(c.response){
+
+    // Simple response
+    if (c.response) {
       textEl.textContent = c.response;
-      if(c.nano && c.key) usedNanoChoices.add(c.key);
+      if (c.nano && c.key) usedNanoChoices.add(c.key);
       setContinueOnly();
       return true;
     }
-    if(c.reward){
-      if(/^xp\s*\d+/i.test(c.reward)){
-        const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
+
+    // Unconditional rewards / joins
+    if (c.reward) {
+      if (/^xp\s*\d+/i.test(c.reward)) {
+        const amt = parseInt(c.reward.replace(/[^0-9]/g, ''), 10) || 0;
         awardXP(leader(), amt);
-        if(typeof toast==='function') toast(`+${amt} XP`);
+        if (typeof toast === 'function') toast(`+${amt} XP`);
       } else {
-        addToInv({name:c.reward});
-        if(typeof toast==='function') toast(`Received ${c.reward}`);
+        addToInv({ name: c.reward });
+        if (typeof toast === 'function') toast(`Received ${c.reward}`);
       }
     }
-    if(c.join){
-      const j=c.join;
-      const m=makeMember(j.id, j.name, j.role);
+
+    if (c.join) {
+      const j = c.join;
+      const m = makeMember(j.id, j.name, j.role);
       addPartyMember(m);
       removeNPC(currentNPC);
-      if(c.q==='turnin' && currentNPC?.quest){
-        defaultQuestProcessor(currentNPC,'do_turnin');
-      }
-      if(c.nano && c.key) usedNanoChoices.add(c.key);
+      processQFlag(c);
+      if (c.nano && c.key) usedNanoChoices.add(c.key);
       setContinueOnly();
       return true;
     }
-    if(currentNPC && typeof currentNPC.processChoice==='function'){
-      return currentNPC.processChoice(c)===true;
+
+    // Map / node jumps
+    if (c.goto) {
+      const g = c.goto;
+      if (g.map === 'world') { startWorld(); }
+      else if (g.map) { setMap(g.map); }
+      if (typeof g.x === 'number') player.x = g.x;
+      if (typeof g.y === 'number') player.y = g.y;
+      centerCamera(player.x, player.y, state.map);
+      updateHUD?.();
+      closeDialog();
+      if (c.nano && c.key) usedNanoChoices.add(c.key);
+      return true;
     }
+
+    // Defer to NPC-specific handler
+    if (currentNPC && typeof currentNPC.processChoice === 'function') {
+      return currentNPC.processChoice(c) === true;
+    }
+
     return false;
   };
-  for(const c of nodeChoices){
-    const div=document.createElement('div'); div.className='choice'; div.textContent=c.label;
-    div.onclick=()=>{
+
+  // Render clickable choices
+  for (const c of nodeChoices) {
+    const div = document.createElement('div');
+    div.className = 'choice';
+    div.textContent = c.label;
+    div.onclick = () => {
       const key = `${currentNPC.id}::${currentNode}::${c.label}`;
-      if(c.once) usedOnceChoices.add(key);
-      currentNode=c.to||'bye';
-      if(handleSpecial(c)) return;
-      if(currentNode==='bye'){ closeDialog(); } else { renderDialog(); }
+      if (c.once) usedOnceChoices.add(key);
+      if (handleSpecial(c)) return;
+      processQFlag(c); // ensure accept/turnin happens even for simple choices
+      currentNode = c.to || 'bye';
+      if (currentNode === 'bye') { closeDialog(); } else { renderDialog(); }
     };
     choicesEl.appendChild(div);
-  }
-  if(currentNPC && typeof currentNPC.processNode==='function'){
-    currentNPC.processNode(currentNode);
   }
 }
 
