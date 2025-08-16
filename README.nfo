@@ -25,6 +25,7 @@ _______________________________________________________________________________
   - Play the latest build in your browser:
     https://weatheredclown.github.io/dustland/dustland.html
   - Just open:  dustland.html  (double-click or serve from any static server).
+  - Pick a module on startup (e.g. Dustland or Echoes).
   - Build a module with: adventure-kit.html  (save to JSON).
   - Play a module with: ack-player.html and load your JSON.
   - No build step. No dependencies. Works offline.
