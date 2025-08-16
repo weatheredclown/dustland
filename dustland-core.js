@@ -631,9 +631,31 @@ const titleEl=document.getElementById('npcTitle');
 const portEl=document.getElementById('port');
 let currentNPC=null, currentNode='start';
 
+// dustland-core.js (near other dialog helpers)
+function setPortrait(portEl, npc){
+  // Fallback to color if no sheet provided
+  if(!npc.portraitSheet){
+    portEl.style.backgroundImage = '';
+    portEl.style.background = npc.color || '#274227';
+    return;
+  }
+  const frame = Math.floor(Math.random() * 4); // 0..3
+  const col = frame % 2;         // 0 or 1
+  const row = Math.floor(frame/2); // 0 or 1
+  const posX = col === 0 ? '0%'   : '100%';
+  const posY = row === 0 ? '0%'   : '100%';
+  portEl.style.background = 'transparent';
+  portEl.style.backgroundImage = `url(${npc.portraitSheet})`;
+  portEl.style.backgroundSize = '200% 200%';
+  portEl.style.backgroundPosition = `${posX} ${posY}`;
+}
+
 function openDialog(npc, node='start'){
   currentNPC=npc; currentNode=node;
-  nameEl.textContent=npc.name; titleEl.textContent=npc.title; portEl.style.background=npc.color;
+  nameEl.textContent=npc.name; titleEl.textContent=npc.title;
+
+  setPortrait(portEl, npc);
+
   const desc = npc.desc;
   if (desc) {
     const small = document.createElement('div');
