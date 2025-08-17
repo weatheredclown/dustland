@@ -38,7 +38,7 @@ const DUSTLAND_MODULE = (() => {
   ];
 
   const quests = [
-    { id: 'q_hall_key', title: 'Find the Rusted Key', desc: 'Search the hall for a Rusted Key to unlock the exit.' },
+    { id: 'q_hall_key', title: 'Find the Rusted Key', desc: 'Search the hall for a Rusted Key to unlock the exit.', item: 'Rusted Key' },
     { id: 'q_waterpump', title: 'Water for the Pump', desc: 'Find a Valve and help Mara restart the pump.', item: 'Valve', reward: { name: 'Rusted Badge', slot: 'trinket', mods: { LCK: 1 } }, xp: 4 },
     { id: 'q_recruit_grin', title: 'Recruit Grin', desc: 'Convince or pay Grin to join.' },
     { id: 'q_postal', title: 'Lost Parcel', desc: 'Find and return the Lost Satchel to Ivo.', item: 'Lost Satchel', reward: { name: 'Brass Stamp', slot: 'trinket', mods: { LCK: 1 } }, xp: 4 },
