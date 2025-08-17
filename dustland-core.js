@@ -812,13 +812,15 @@ function handleGoto(g){
 function advanceDialog(stateObj, choiceIdx){
   const node=stateObj.tree[stateObj.node];
   const choice=node.next[choiceIdx];
-  if(!choice){ stateObj.node=null; return {next:null, close:true}; }
+  if(!choice){ stateObj.node=null; return {next:null, text:null, close:true}; }
+
+  // pre-check effects (e.g., condition gates)
   runEffects(choice.checks);
 
   const res={next:null, text:null, close:false};
-
   const finalize=(text)=>{ res.text=text||null; res.close=true; stateObj.node=null; return res; };
 
+  // Item/slot costs
   if(choice.costItem || choice.costSlot){
     const idx = choice.costItem ? player.inv.findIndex(it=> it.name===choice.costItem)
                                 : player.inv.findIndex(it=> it.slot===choice.costSlot);
@@ -833,6 +835,7 @@ function advanceDialog(stateObj, choiceIdx){
     return finalize(choice.success || '');
   }
 
+  // Stat roll gates
   if(choice.stat){
     const roll=skillRoll(choice.stat);
     const success = roll >= (choice.dc||0);
@@ -846,12 +849,14 @@ function advanceDialog(stateObj, choiceIdx){
     return finalize(msg + ` (Roll ${roll} vs DC ${choice.dc}).`);
   }
 
+  // Direct response
   if(choice.response){
     processQuestFlag(choice);
     runEffects(choice.effects);
     return finalize(choice.response);
   }
 
+  // Reward/join without roll
   if(choice.reward || choice.join){
     applyReward(choice.reward);
     joinParty(choice.join);
@@ -860,6 +865,7 @@ function advanceDialog(stateObj, choiceIdx){
     return finalize(choice.success || '');
   }
 
+  // Map moves
   if(choice.goto){
     handleGoto(choice.goto);
     processQuestFlag(choice);
@@ -869,6 +875,7 @@ function advanceDialog(stateObj, choiceIdx){
     return res;
   }
 
+  // Default: move to another node
   processQuestFlag(choice);
   runEffects(choice.effects);
   stateObj.node=choice.id||null;
@@ -884,6 +891,8 @@ function openDialog(npc, node='start'){
   nameEl.textContent=npc.name;
   titleEl.textContent=npc.title;
   portEl.style.background=npc.color;
+
+  // Optional subtitle/desc adornment
   const desc = npc.desc;
   if(desc){
     const small=document.createElement('div');
@@ -893,6 +902,7 @@ function openDialog(npc, node='start'){
     [...hdr.querySelectorAll('.small.npcdesc')].forEach(n=>n.remove());
     hdr.appendChild(small);
   }
+
   renderDialog();
   overlay.classList.add('shown');
   setGameState(GAME_STATE.DIALOG);
@@ -912,10 +922,13 @@ function renderDialog(){
   if(!dialogState.tree) return;
   const node=dialogState.tree[dialogState.node];
   if(!node){ closeDialog(); return; }
+
   runEffects(node.checks);
   runEffects(node.effects);
+
   textEl.textContent=node.text;
   choicesEl.innerHTML='';
+
   if(!node.next || node.next.length===0){
     const cont=document.createElement('div');
     cont.className='choice';
@@ -924,7 +937,11 @@ function renderDialog(){
     choicesEl.appendChild(cont);
     return;
   }
+
+  // Start with all choices, then apply filters
   let choices=node.next.map((opt,idx)=>({opt,idx}));
+
+  // Quest choice visibility (accept/turnin)
   if(currentNPC?.quest){
     const meta=currentNPC.quest;
     choices=choices.filter(({opt})=>{
@@ -933,11 +950,15 @@ function renderDialog(){
       return true;
     });
   }
+
+  // Once-only choices
   choices=choices.filter(({opt})=>{
     if(!opt.once) return true;
     const key=`${currentNPC.id}::${dialogState.node}::${opt.label}`;
     return !usedOnceChoices.has(key);
   });
+
+  // Render choices
   choices.forEach(({opt,idx})=>{
     const div=document.createElement('div');
     div.className='choice';
@@ -945,6 +966,7 @@ function renderDialog(){
     div.onclick=()=>{
       const key=`${currentNPC.id}::${dialogState.node}::${opt.label}`;
       if(opt.once) usedOnceChoices.add(key);
+
       const result=advanceDialog(dialogState,idx);
       if(result && result.text!==null){
         textEl.textContent=result.text;

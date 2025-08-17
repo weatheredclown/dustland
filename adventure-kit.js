@@ -261,24 +261,26 @@ function addChoiceRow(container, ch = {}) {
   const goto = ch.goto || {};
   const gotoMap = goto.map || '', gotoX = goto.x != null ? goto.x : '', gotoY = goto.y != null ? goto.y : '';
   const row = document.createElement('div');
-  row.innerHTML = `<input class="choiceLabel" placeholder="label" value="${label}"/>
-    <select class="choiceTo"></select>
-    <input class="choiceReward" placeholder="reward" value="${reward || ''}"/>
-    <input class="choiceStat" placeholder="stat" value="${stat || ''}"/>
-    <input class="choiceDC" placeholder="dc" value="${dc || ''}"/>
-    <input class="choiceSuccess" placeholder="success text" value="${success || ''}"/>
-    <input class="choiceFailure" placeholder="failure text" value="${failure || ''}"/>
-    <input class="choiceCostItem" placeholder="cost item" value="${costItem || ''}"/>
-    <input class="choiceCostSlot" placeholder="cost slot" value="${costSlot || ''}"/>
-    <input class="choiceJoinId" placeholder="join id" value="${joinId}"/>
-    <input class="choiceJoinName" placeholder="join name" value="${joinName}"/>
-    <input class="choiceJoinRole" placeholder="join role" value="${joinRole}"/>
-    <input class="choiceGotoMap" placeholder="goto map" value="${gotoMap}"/>
-    <input class="choiceGotoX" placeholder="x" value="${gotoX}"/>
-    <input class="choiceGotoY" placeholder="y" value="${gotoY}"/>
-    <select class="choiceQ"><option value=""></option><option value="accept" ${q==='accept'?'selected':''}>accept</option><option value="turnin" ${q==='turnin'?'selected':''}>turnin</option></select>
-    <label><input type="checkbox" class="choiceOnce" ${once ? 'checked' : ''}/> once</label>
-    <button class="btn delChoice" type="button">x</button>`;
+  row.innerHTML = `<label>Label<input class="choiceLabel" value="${label}"/></label>
+    <label>To<select class="choiceTo"></select></label>
+    <button class="btn delChoice" type="button">x</button>
+    <details class="choiceAdv"><summary>Advanced</summary>
+      <label>Reward<input class="choiceReward" value="${reward || ''}"/></label>
+      <label>Stat<input class="choiceStat" value="${stat || ''}"/></label>
+      <label>DC<input class="choiceDC" value="${dc || ''}"/></label>
+      <label>Success<input class="choiceSuccess" value="${success || ''}"/></label>
+      <label>Failure<input class="choiceFailure" value="${failure || ''}"/></label>
+      <label>Cost Item<input class="choiceCostItem" value="${costItem || ''}"/></label>
+      <label>Cost Slot<input class="choiceCostSlot" value="${costSlot || ''}"/></label>
+      <label>Join ID<input class="choiceJoinId" value="${joinId}"/></label>
+      <label>Join Name<input class="choiceJoinName" value="${joinName}"/></label>
+      <label>Join Role<input class="choiceJoinRole" value="${joinRole}"/></label>
+      <label>Goto Map<input class="choiceGotoMap" value="${gotoMap}"/></label>
+      <label>Goto X<input class="choiceGotoX" value="${gotoX}"/></label>
+      <label>Goto Y<input class="choiceGotoY" value="${gotoY}"/></label>
+      <label>Quest<select class="choiceQ"><option value=""></option><option value="accept" ${q==='accept'?'selected':''}>accept</option><option value="turnin" ${q==='turnin'?'selected':''}>turnin</option></select></label>
+      <label class="onceWrap"><input type="checkbox" class="choiceOnce" ${once ? 'checked' : ''}/> once</label>
+    </details>`;
   container.appendChild(row);
   populateChoiceDropdown(row.querySelector('.choiceTo'), to);
   row.querySelectorAll('input,textarea,select').forEach(el => el.addEventListener('input', updateTreeData));
@@ -308,7 +310,7 @@ function renderTreeEditor() {
   Object.entries(treeData).forEach(([id, node]) => {
     const div = document.createElement('div');
     div.className = 'node';
-    div.innerHTML = `<div class="nodeHeader"><button class="toggle" type="button">[-]</button><label>Node ID<input class="nodeId" value="${id}"></label></div><div class="nodeBody"><label>Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></div>`;
+    div.innerHTML = `<div class="nodeHeader"><button class="toggle" type="button">[-]</button><label>Node ID<input class="nodeId" value="${id}"></label></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
     const choicesDiv = div.querySelector('.choices');
     (node.choices || []).forEach(ch => addChoiceRow(choicesDiv, ch));
     div.querySelector('.addChoice').onclick = () => addChoiceRow(choicesDiv);
