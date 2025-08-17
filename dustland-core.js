@@ -370,11 +370,11 @@ function setTile(map,x,y,t){
   g[y][x]=t; return true;
 }
 function currentGrid(){ return gridFor(mapIdForState()); }
-function occupiedAt(x,y){
-  const map=mapIdForState();
-  if(NPCS.some(n=> n.map===map && n.x===x && n.y===y)) return true;
-  if(itemDrops.some(it=> it.map===map && it.x===x && it.y===y)) return true;
-  return false;
+function queryTile(x,y,map=mapIdForState()){
+  const tile = getTile(map,x,y);
+  const entities = NPCS.filter(n=> n.map===map && n.x===x && n.y===y);
+  const items = itemDrops.filter(it=> it.map===map && it.x===x && it.y===y);
+  return { walkable: tile!==null && !!walkable[tile] && entities.length===0, entities, items };
 }
 // Find nearest free, walkable, unoccupied (and not water on world)
 function findFreeDropTile(map,x,y){
@@ -387,8 +387,9 @@ function findFreeDropTile(map,x,y){
     const [cx,cy,d]=q.shift();
     if(d>MAX_RAD) break;
     if(cx>=0&&cy>=0&&cx<W&&cy<H){
+      const info=queryTile(cx,cy,map);
       const t=getTile(map,cx,cy);
-      if(t!==null && isWalkable(t) && !occupiedAt(cx,cy) && !(map==='world' && t===TILE.WATER)){
+      if(t!==null && info.walkable && info.items.length===0){
         return {x:cx,y:cy};
       }
     }
@@ -666,12 +667,8 @@ function placeHut(x,y,b){
 // ===== Interaction =====
 function canWalk(x,y){
   if(state.map==='creator') return false;
-  const map=mapIdForState();
-  const t=getTile(map,x,y);
-  if(t===null) return false;
-  if(!walkable[t]) return false;
-  if(occupiedAt(x,y)) return false;
-  return true;
+  const info=queryTile(x,y);
+  return info.walkable;
 }
 function move(dx,dy){
   if(state.map==='creator') return;
@@ -681,36 +678,20 @@ function move(dx,dy){
     centerCamera(player.x,player.y,state.map); updateHUD();
   }
 }
-function adjacentNPC(){
-  const map=mapIdForState();
-  for(const n of NPCS){
-    if(n.map!==map) continue;
-    if(Math.abs(n.x-player.x)+Math.abs(n.y-player.y)===1) return n;
-  }
-  return null;
-}
-function takeNearestItem(){
-  const map=mapIdForState();
-  const dirs=[[0,0],[1,0],[-1,0],[0,1],[0,-1]];
-  for(const [dx,dy] of dirs){
-    const tx=player.x+dx, ty=player.y+dy;
-    const idx=itemDrops.findIndex(it=> it.map===map && it.x===tx && it.y===ty);
-    if(idx>-1){
-      const it=itemDrops[idx]; addToInv(it); itemDrops.splice(idx,1);
-      log('Took '+it.name+'.'); updateHUD(); return true;
-    }
-  }
-  return false;
-}
-function interact(){
+function interactAt(x,y){
   if(Date.now()-lastInteract < 200) return false;
   lastInteract = Date.now();
   if(state.map==='creator') return false;
-  const n=adjacentNPC(); if(n){ openDialog(n); return true; }
-  const t=getTile(mapIdForState(), player.x, player.y);
-  if(t===TILE.DOOR){
+  const info=queryTile(x,y);
+  const dist=Math.abs(player.x-x)+Math.abs(player.y-y);
+  if(info.entities.length && dist<=1){
+    openDialog(info.entities[0]);
+    return true;
+  }
+  const t=getTile(mapIdForState(), x, y);
+  if(t===TILE.DOOR && dist===0){
     if(state.map==='world'){
-      const b=buildings.find(b=> b.doorX===player.x && b.doorY===player.y);
+      const b=buildings.find(b=> b.doorX===x && b.doorY===y);
       if(!b){ log('No entrance here.'); return true; }
       if(b.boarded){ log('The doorway is boarded up from the outside.'); return true; }
       setMap(b.interiorId,'Interior');
@@ -718,12 +699,13 @@ function interact(){
       if(I){ player.x=I.entryX; player.y=I.entryY; }
       log('You step inside.'); centerCamera(player.x,player.y,state.map); updateHUD(); return true;
     }
-    if(state.map!=='world'){ // coming from interior
-      const b=buildings.find(b=> b.interiorId===state.map);
-      if(b){ setMap('world'); player.x=b.doorX; player.y=b.doorY-1; log('You step back outside.'); centerCamera(player.x,player.y,state.map); updateHUD(); return true; }
-    }
+    const b=buildings.find(b=> b.interiorId===state.map);
+    if(b){ setMap('world'); player.x=b.doorX; player.y=b.doorY-1; log('You step back outside.'); centerCamera(player.x,player.y,state.map); updateHUD(); return true; }
   }
-  if(takeNearestItem()) return true;
+  if(info.items.length && dist<=1){
+    const it=info.items[0]; addToInv(it); itemDrops.splice(itemDrops.indexOf(it),1);
+    log('Took '+it.name+'.'); updateHUD(); return true;
+  }
   log('Nothing interesting.');
   return false;
 }
@@ -1102,7 +1084,7 @@ function startWorld(){
 
 // Content pack moved to modules/dustland.module.js
 
-Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat, removeNPC, makeNPC});
+Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat, removeNPC, makeNPC, interactAt, queryTile});
 
 // Export a few helpers for Node-based tests without affecting the browser build
 if (typeof module !== 'undefined' && module.exports) {

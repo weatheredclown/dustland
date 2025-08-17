@@ -272,8 +272,16 @@ window.addEventListener('keydown',(e)=>{
     case 'ArrowDown': case 's': case 'S': move(0,1); break;
     case 'ArrowLeft': case 'a': case 'A': move(-1,0); break;
     case 'ArrowRight': case 'd': case 'D': move(1,0); break;
-    case 'e': case 'E': case ' ': interact(); break;
-    case 't': case 'T': takeNearestItem(); break;
+    case 'e': case 'E': case ' ': {
+      const dirs=[[0,0],[1,0],[-1,0],[0,1],[0,-1]];
+      for(const [dx,dy] of dirs){ if(interactAt(player.x+dx, player.y+dy)) break; }
+      break;
+    }
+    case 't': case 'T': {
+      const dirs=[[0,0],[1,0],[-1,0],[0,1],[0,-1]];
+      for(const [dx,dy] of dirs){ if(interactAt(player.x+dx, player.y+dy)) break; }
+      break;
+    }
     case 'i': case 'I': showTab('inv'); break;
     case 'p': case 'P': showTab('party'); break;
     case 'q': if(!e.ctrlKey && !e.metaKey){ showTab('quests'); e.preventDefault(); } break;
@@ -292,6 +300,31 @@ window.addEventListener('keydown',(e)=>{
       break;
     case 'm': case 'M': showMini=!showMini; break;
   }
+});
+
+function tileFromClient(x,y){
+  const rect=disp.getBoundingClientRect();
+  const sx=x-rect.left, sy=y-rect.top;
+  const map=mapIdForState();
+  const {W,H}=mapWH(map);
+  const offX=Math.max(0, Math.floor((VIEW_W-W)/2));
+  const offY=Math.max(0, Math.floor((VIEW_H-H)/2));
+  return {
+    x: camX + Math.floor(sx/TS) - offX,
+    y: camY + Math.floor(sy/TS) - offY
+  };
+}
+
+disp.addEventListener('click',e=>{
+  const {x,y}=tileFromClient(e.clientX, e.clientY);
+  interactAt(x,y);
+});
+
+disp.addEventListener('touchend',e=>{
+  const t=e.changedTouches[0];
+  const {x,y}=tileFromClient(t.clientX, t.clientY);
+  interactAt(x,y);
+  e.preventDefault();
 });
 
 // ===== Boot =====
