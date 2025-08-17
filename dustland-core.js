@@ -1185,20 +1185,28 @@ Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat
 // Export a few helpers for Node-based tests without affecting the browser build
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
+    addToInv,
+    advanceDialog,
+    applyModule,
+    canWalk,
+    Character,
     clamp,
     createRNG,
     Dice,
-    addToInv,
     equipItem,
-    unequipItem,
-    normalizeItem,
-    player,
-    party,
-    state,
-    Character,
-    advanceDialog,
-    setGameState,
+    findFreeDropTile,
     GAME_STATE,
-    getGameState: () => gameState
+    getGameState: () => gameState,
+    itemDrops,
+    move,
+    normalizeItem,
+    NPCS,
+    openDialog,
+    party,
+    player,
+    setGameState,
+    setLeader: (idx)=>{ selectedMember = idx; },
+    state,
+    unequipItem  
   };
 }
