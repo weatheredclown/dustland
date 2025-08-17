@@ -67,9 +67,11 @@ const prev = document.createElement('canvas'); prev.width=disp.width; prev.heigh
 sctx.font = '12px ui-monospace';
 
 let camX=0, camY=0, showMini=true;
+let _lastTime=0;
 
-function draw(){
-  drawScene(sctx);
+function draw(t){
+  const dt=(t-_lastTime)||0; _lastTime=t;
+  render(state, dt/1000);
   dctx.globalAlpha=0.10; dctx.drawImage(prev, 1, 0);
   dctx.globalAlpha=1.0; dctx.drawImage(scene, 0, 0);
   pctx.clearRect(0,0,prev.width,prev.height); pctx.drawImage(scene,0,0);
@@ -86,16 +88,31 @@ function centerCamera(x,y,map){
   camY = clamp(y - Math.floor(VIEW_H/2), 0, Math.max(0, (H||VIEW_H) - VIEW_H));
 }
 
-// ===== Drawing with configurable layer order =====
-const renderOrder = ['tiles', 'items', 'npcs', 'player'];
-function drawScene(ctx){
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, disp.width, disp.height);
-  const activeMap = mapIdForState();
+// ===== Drawing Pipeline =====
+const renderOrder = ['tiles', 'items', 'entitiesBelow', 'player', 'entitiesAbove'];
+
+function render(gameState=state, dt){
+  const ctx = sctx;
+  ctx.fillStyle='#000';
+  ctx.fillRect(0,0,disp.width,disp.height);
+  
+  const activeMap = gameState.map || mapIdForState();
   const { W, H } = mapWH(activeMap);
   const offX = Math.max(0, Math.floor((VIEW_W - W) / 2));
   const offY = Math.max(0, Math.floor((VIEW_H - H) / 2));
-  for (const layer of renderOrder){
+
+  const items = gameState.itemDrops || itemDrops;
+  const entities = gameState.entities || NPCS;
+  const ply = gameState.player || player;
+
+  // split entities into below/above
+  const below = [], above = [];
+  for(const n of entities){
+    if(n.map !== activeMap) continue;
+    (n.drawAbovePlayer ? above : below).push(n);
+  }
+
+  for(const layer of renderOrder){
     if(layer==='tiles'){
       for(let vy=0; vy<VIEW_H; vy++){
         for(let vx=0; vx<VIEW_W; vx++){
@@ -115,35 +132,41 @@ function drawScene(ctx){
           }
         }
       }
-    } else if(layer==='items'){
-      for(const it of itemDrops){
+    }
+    else if(layer==='items'){
+      for(const it of items){
         if(it.map!==activeMap) continue;
         if(it.x>=camX&&it.y>=camY&&it.x<camX+VIEW_W&&it.y<camY+VIEW_H){
           const vx=(it.x-camX+offX)*TS, vy=(it.y-camY+offY)*TS;
           ctx.fillStyle='#c8ffbf'; ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
         }
       }
-    } else if(layer==='npcs'){
-      for(const n of NPCS){
-        if(n.map!==activeMap) continue;
-        if(n.x>=camX&&n.y>=camY&&n.x<camX+VIEW_W&&n.y<camY+VIEW_H){
-          const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
-          ctx.fillStyle=n.color; ctx.fillRect(vx,vy,TS,TS);
-          ctx.fillStyle='#000'; ctx.fillText('!',vx+5,vy+12);
-        }
-      }
-    } else if(layer==='player'){
-      const px=(player.x-camX+offX)*TS, py=(player.y-camY+offY)*TS;
+    }
+    else if(layer==='entitiesBelow'){ drawEntities(ctx, below, offX, offY); }
+    else if(layer==='player'){
+      const px=(ply.x-camX+offX)*TS, py=(ply.y-camY+offY)*TS;
       ctx.fillStyle='#d9ffbe'; ctx.fillRect(px,py,TS,TS);
       ctx.fillStyle='#000'; ctx.fillText('@',px+4,py+12);
     }
+    else if(layer==='entitiesAbove'){ drawEntities(ctx, above, offX, offY); }
   }
-  ctx.strokeStyle='#2a3b2a'; ctx.strokeRect(0.5,0.5,VIEW_W*TS-1,VIEW_H*TS-1);
+
+  // UI border
+  ctx.strokeStyle='#2a3b2a';
+  ctx.strokeRect(0.5,0.5,VIEW_W*TS-1,VIEW_H*TS-1);
 }
 
-const renderOrderSystem = { order: renderOrder, drawScene };
-Object.assign(window, { renderOrderSystem });
+function drawEntities(ctx, list, offX, offY){
+  for(const n of list){
+    if(n.x>=camX&&n.y>=camY&&n.x<camX+VIEW_W&&n.y<camY+VIEW_H){
+      const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
+      ctx.fillStyle=n.color; ctx.fillRect(vx,vy,TS,TS);
+      ctx.fillStyle='#000'; ctx.fillText('!',vx+5,vy+12);
+    }
+  }
+}
 
+Object.assign(window, { renderOrderSystem: { order: renderOrder, render } });
 
 // ===== HUD & Tabs =====
 const TAB_BREAKPOINT = 1600;
