@@ -21,15 +21,19 @@ const OFFICE_MODULE = (() => {
   }
 
   function addElevator(grid) {
-    // Larger elevator placed outside the main office square
+    // Wider elevator placed outside the main office rectangle
     for (let y = 1; y <= 4; y++) {
-      grid[y][midX - 1] = TILE.WALL;
-      grid[y][midX + 1] = TILE.WALL;
+      grid[y][midX - 2] = TILE.WALL;
+      grid[y][midX + 2] = TILE.WALL;
     }
     for (let y = 1; y < 4; y++) {
+      grid[y][midX - 1] = TILE.FLOOR;
       grid[y][midX] = TILE.FLOOR; // NPC spot and elevator floor
+      grid[y][midX + 1] = TILE.FLOOR;
     }
+    grid[4][midX - 1] = TILE.DOOR;
     grid[4][midX] = TILE.DOOR;
+    grid[4][midX + 1] = TILE.DOOR;
   }
 
   function makeFloor1() {
@@ -102,7 +106,17 @@ const OFFICE_MODULE = (() => {
   return {
     seed: Date.now(),
     start: { map: 'floor1', x: midX, y: FLOOR_H - 2 },
-    items: [],
+    items: [
+      {
+        map: 'floor3',
+        x: midX,
+        y: 6,
+        name: 'Cursed VR Helmet',
+        slot: 'armor',
+        cursed: true,
+        equip: { teleport: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } }
+      }
+    ],
     quests: [],
     npcs,
     interiors: [floor1, floor2, floor3],
