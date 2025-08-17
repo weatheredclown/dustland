@@ -17,7 +17,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character } = require('../dustland-core.js');
+const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog } = require('../dustland-core.js');
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -76,4 +76,27 @@ test('equipping teleport item moves player', () => {
   assert.strictEqual(player.x,5);
   assert.strictEqual(player.y,6);
   assert.strictEqual(state.map,'world');
+});
+
+test('advanceDialog moves to next node', () => {
+  const tree = {
+    start: { text: 'hi', next: [{ id: 'bye', label: 'Bye' }] },
+    bye: { text: 'bye', next: [] }
+  };
+  const dialog = { tree, node: 'start' };
+  advanceDialog(dialog, 0);
+  assert.strictEqual(dialog.node, 'bye');
+});
+
+test('advanceDialog handles cost and reward', () => {
+  player.inv.length = 0;
+  addToInv({ name: 'Key' });
+  const tree = {
+    start: { text: '', next: [{ label: 'Use Key', costItem: 'Key', reward: 'Gem' }] }
+  };
+  const dialog = { tree, node: 'start' };
+  const res = advanceDialog(dialog, 0);
+  assert.ok(player.inv.some(it => it.name === 'Gem'));
+  assert.ok(!player.inv.some(it => it.name === 'Key'));
+  assert.ok(res.close);
 });
