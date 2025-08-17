@@ -2,13 +2,18 @@ function seedWorldContent() {}
 
 const OFFICE_MODULE = (() => {
   const FLOOR_W = 20,
-    FLOOR_H = 20;
+    // Expanded height to make room for an exterior elevator area
+    FLOOR_H = 24;
   const midX = Math.floor(FLOOR_W / 2);
 
   function baseGrid() {
     return Array.from({ length: FLOOR_H }, (_, y) =>
       Array.from({ length: FLOOR_W }, (_, x) =>
-        y === 0 || y === FLOOR_H - 1 || x === 0 || x === FLOOR_W - 1
+        y === 0 ||
+        y === FLOOR_H - 1 ||
+        x === 0 ||
+        x === FLOOR_W - 1 ||
+        y === 4
           ? TILE.WALL
           : TILE.FLOOR
       )
@@ -16,15 +21,15 @@ const OFFICE_MODULE = (() => {
   }
 
   function addElevator(grid) {
-    grid[1][midX - 1] = TILE.WALL;
-    grid[1][midX + 1] = TILE.WALL;
-    grid[2][midX - 1] = TILE.WALL;
-    grid[2][midX + 1] = TILE.WALL;
-    grid[3][midX - 1] = TILE.WALL;
-    grid[3][midX + 1] = TILE.WALL;
-    grid[1][midX] = TILE.FLOOR; // NPC spot
-    grid[2][midX] = TILE.FLOOR;
-    grid[3][midX] = TILE.DOOR;
+    // Larger elevator placed outside the main office square
+    for (let y = 1; y <= 4; y++) {
+      grid[y][midX - 1] = TILE.WALL;
+      grid[y][midX + 1] = TILE.WALL;
+    }
+    for (let y = 1; y < 4; y++) {
+      grid[y][midX] = TILE.FLOOR; // NPC spot and elevator floor
+    }
+    grid[4][midX] = TILE.DOOR;
   }
 
   function makeFloor1() {
@@ -32,7 +37,7 @@ const OFFICE_MODULE = (() => {
     addElevator(grid);
     // four pillars
     [6, FLOOR_W - 7].forEach((x) =>
-      [6, FLOOR_H - 7].forEach((y) => (grid[y][x] = TILE.WALL))
+      [10, FLOOR_H - 7].forEach((y) => (grid[y][x] = TILE.WALL))
     );
     // front desk
     for (let x = 3; x < FLOOR_W - 3; x++) {
@@ -46,8 +51,8 @@ const OFFICE_MODULE = (() => {
     addElevator(grid);
     // cubicle walls
     [4, 8, 12, 16].forEach((x, i) => {
-      for (let y = 4; y < FLOOR_H - 4; y++) {
-        if (y === (i % 2 === 0 ? 10 : 14)) continue; // door gaps
+      for (let y = 8; y < FLOOR_H - 4; y++) {
+        if (y === (i % 2 === 0 ? 14 : 18)) continue; // door gaps
         grid[y][x] = TILE.WALL;
       }
     });
@@ -58,10 +63,10 @@ const OFFICE_MODULE = (() => {
     const grid = baseGrid();
     addElevator(grid);
     // central conference room
-    for (let y = 5; y <= FLOOR_H - 6; y++) {
+    for (let y = 9; y <= FLOOR_H - 6; y++) {
       for (let x = 5; x <= FLOOR_W - 6; x++) {
         const edge =
-          y === 5 || y === FLOOR_H - 6 || x === 5 || x === FLOOR_W - 6;
+          y === 9 || y === FLOOR_H - 6 || x === 5 || x === FLOOR_W - 6;
         if (edge) grid[y][x] = TILE.WALL;
       }
     }
@@ -77,7 +82,8 @@ const OFFICE_MODULE = (() => {
     id: `elevator_${map}`,
     map,
     x: midX,
-    y: 1,
+    // Centered inside the larger elevator
+    y: 2,
     color: '#a9f59f',
     name: 'Elevator Buttons',
     desc: 'A panel to select floors.',
