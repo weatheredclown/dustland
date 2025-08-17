@@ -1117,6 +1117,14 @@ if (typeof module !== 'undefined' && module.exports) {
     player,
     party,
     state,
-    Character
+    Character,
+    applyModule,
+    findFreeDropTile,
+    canWalk,
+    move,
+    openDialog,
+    NPCS,
+    itemDrops,
+    setLeader: (idx)=>{ selectedMember = idx; }
   };
 }
