@@ -37,7 +37,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, applyModule, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader } = require('../dustland-core.js');
+const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader } = require('../dustland-core.js');
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -141,4 +141,25 @@ test('selected party member receives XP on dialog success', () => {
   choicesEl.children[0].onclick();
   assert.strictEqual(a.xp,0);
   assert.strictEqual(b.xp,5);
+test('advanceDialog moves to next node', () => {
+  const tree = {
+    start: { text: 'hi', next: [{ id: 'bye', label: 'Bye' }] },
+    bye: { text: 'bye', next: [] }
+  };
+  const dialog = { tree, node: 'start' };
+  advanceDialog(dialog, 0);
+  assert.strictEqual(dialog.node, 'bye');
+});
+
+test('advanceDialog handles cost and reward', () => {
+  player.inv.length = 0;
+  addToInv({ name: 'Key' });
+  const tree = {
+    start: { text: '', next: [{ label: 'Use Key', costItem: 'Key', reward: 'Gem' }] }
+  };
+  const dialog = { tree, node: 'start' };
+  const res = advanceDialog(dialog, 0);
+  assert.ok(player.inv.some(it => it.name === 'Gem'));
+  assert.ok(!player.inv.some(it => it.name === 'Key'));
+  assert.ok(res.close);
 });

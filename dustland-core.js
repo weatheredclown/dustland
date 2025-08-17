@@ -102,11 +102,19 @@ const TILE = { SAND:0, ROCK:1, WATER:2, BRUSH:3, ROAD:4, RUIN:5, WALL:6, FLOOR:7
 const walkable = {0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false};
 const mapNameEl = document.getElementById('mapname');
 function mapLabel(id){
-  return id==='world'? 'Wastes' : (id==='creator'? 'Creator' : 'Interior');
+  if (id === 'world') return 'Wastes';
+  if (id === 'creator') return 'Creator';
+  if (id === 'floor1') return 'Lobby';
+  if (id === 'floor2') return 'Workspace';
+  if (id === 'floor3') return 'Executive Suite';
+  return 'Interior';
 }
 function setMap(id,label){
   state.map=id;
   mapNameEl.textContent = label || mapLabel(id);
+  if(id==='world') setGameState(GAME_STATE.WORLD);
+  else if(id==='creator') setGameState(GAME_STATE.CREATOR);
+  else setGameState(GAME_STATE.INTERIOR);
 }
 function isWalkable(tile){ return !!walkable[tile]; }
 
@@ -119,6 +127,16 @@ const WORLD_W=120, WORLD_H=90;
 let world = [], interiors = {}, buildings = [];
 const state = { map:'world' }; // default map
 const player = { x:2, y:2, hp:10, ap:2, flags:{}, inv:[], scrap:0 };
+const GAME_STATE = Object.freeze({
+  TITLE: 'title',
+  CREATOR: 'creator',
+  WORLD: 'world',
+  INTERIOR: 'interior',
+  DIALOG: 'dialog',
+  MENU: 'menu'
+});
+let gameState = GAME_STATE.TITLE;
+function setGameState(next){ gameState = next; }
 let doorPulseUntil = 0;
 let lastInteract = 0;
 
@@ -728,6 +746,12 @@ function interact(){
   return false;
 }
 
+// Grouped systems expose focused gameplay concerns
+const movementSystem = { canWalk, move };
+const collisionSystem = { occupiedAt, canWalk };
+const interactionSystem = { adjacentNPC, takeNearestItem, interact };
+Object.assign(window, { movementSystem, collisionSystem, interactionSystem });
+
 // ===== Dialog =====
 const overlay=document.getElementById('overlay');
 const choicesEl=document.getElementById('choices');
@@ -735,193 +759,241 @@ const textEl=document.getElementById('dialogText');
 const nameEl=document.getElementById('npcName');
 const titleEl=document.getElementById('npcTitle');
 const portEl=document.getElementById('port');
-let currentNPC=null, currentNode='start';
+let currentNPC=null;
+const dialogState={ tree:null, node:null };
+
+function normalizeDialogTree(tree){
+  const out={};
+  for(const id in tree){
+    const n=tree[id];
+    const next=(n.next||n.choices||[]).map(c=>{
+      if(typeof c==='string') return {id:c,label:c};
+      const {to,id:cid,label,text,checks=[],effects=[],...rest}=c;
+      return {id:to||cid,label:label||text||'(Continue)',checks,effects,...rest};
+    });
+    out[id]={text:n.text||'',checks:n.checks||[],effects:n.effects||[],next};
+  }
+  return out;
+}
+
+function runEffects(effects){
+  for(const fn of effects||[]){ if(typeof fn==='function') fn({player,party,state}); }
+}
+
+function skillRoll(stat){
+  const leaderChar = leader();
+  return Dice.skill(leaderChar, stat);
+}
+
+function applyReward(reward){
+  if(!reward) return;
+  if(typeof reward==='string' && /^xp\s*\d+/i.test(reward)){
+    const amt=parseInt(reward.replace(/[^0-9]/g,''),10)||0;
+    awardXP(leader(), amt);
+    if(typeof toast==='function') toast(`+${amt} XP`);
+  } else {
+    addToInv(typeof reward==='string'?{name:reward}:reward);
+    if(typeof toast==='function') toast(`Received ${typeof reward==='string'?reward:reward.name}`);
+  }
+}
+
+function processQuestFlag(c){
+  if(!currentNPC?.quest || !c?.q) return;
+  if(c.q==='accept') defaultQuestProcessor(currentNPC,'accept');
+  if(c.q==='turnin') defaultQuestProcessor(currentNPC,'do_turnin');
+}
+
+function joinParty(join){
+  if(!join) return;
+  const m=makeMember(join.id, join.name, join.role);
+  addPartyMember(m);
+  removeNPC(currentNPC);
+}
+
+function handleGoto(g){
+  if(!g) return;
+  if(g.map==='world'){ startWorld(); }
+  else if(g.map){ setMap(g.map); }
+  if(typeof g.x==='number') player.x=g.x;
+  if(typeof g.y==='number') player.y=g.y;
+  centerCamera(player.x,player.y,state.map);
+  updateHUD?.();
+}
+
+function advanceDialog(stateObj, choiceIdx){
+  const node=stateObj.tree[stateObj.node];
+  const choice=node.next[choiceIdx];
+  if(!choice){ stateObj.node=null; return {next:null, text:null, close:true}; }
+
+  // pre-check effects (e.g., condition gates)
+  runEffects(choice.checks);
+
+  const res={next:null, text:null, close:false};
+  const finalize=(text)=>{ res.text=text||null; res.close=true; stateObj.node=null; return res; };
+
+  // Item/slot costs
+  if(choice.costItem || choice.costSlot){
+    const idx = choice.costItem ? player.inv.findIndex(it=> it.name===choice.costItem)
+                                : player.inv.findIndex(it=> it.slot===choice.costSlot);
+    if(idx === -1){
+      return finalize(choice.failure || 'You lack the required item.');
+    }
+    removeFromInv(idx);
+    applyReward(choice.reward);
+    joinParty(choice.join);
+    processQuestFlag(choice);
+    runEffects(choice.effects);
+    return finalize(choice.success || '');
+  }
+
+  // Stat roll gates
+  if(choice.stat){
+    const roll=skillRoll(choice.stat);
+    const success = roll >= (choice.dc||0);
+    if(success){
+      applyReward(choice.reward);
+      joinParty(choice.join);
+      processQuestFlag(choice);
+    }
+    runEffects(choice.effects);
+    const msg = (success?choice.success:choice.failure)||'';
+    return finalize(msg + ` (Roll ${roll} vs DC ${choice.dc}).`);
+  }
+
+  // Direct response
+  if(choice.response){
+    processQuestFlag(choice);
+    runEffects(choice.effects);
+    return finalize(choice.response);
+  }
+
+  // Reward/join without roll
+  if(choice.reward || choice.join){
+    applyReward(choice.reward);
+    joinParty(choice.join);
+    processQuestFlag(choice);
+    runEffects(choice.effects);
+    return finalize(choice.success || '');
+  }
+
+  // Map moves
+  if(choice.goto){
+    handleGoto(choice.goto);
+    processQuestFlag(choice);
+    runEffects(choice.effects);
+    res.close=true;
+    stateObj.node=null;
+    return res;
+  }
+
+  // Default: move to another node
+  processQuestFlag(choice);
+  runEffects(choice.effects);
+  stateObj.node=choice.id||null;
+  res.next=stateObj.node;
+  if(!res.next) res.close=true;
+  return res;
+}
 
 function openDialog(npc, node='start'){
-  currentNPC=npc; currentNode=node;
-  nameEl.textContent=npc.name; titleEl.textContent=npc.title; portEl.style.background=npc.color;
+  currentNPC=npc;
+  dialogState.tree=normalizeDialogTree(npc.tree||{});
+  dialogState.node=node;
+  nameEl.textContent=npc.name;
+  titleEl.textContent=npc.title;
+  portEl.style.background=npc.color;
+
+  // Optional subtitle/desc adornment
   const desc = npc.desc;
-  if (desc) {
-    const small = document.createElement('div');
-    small.className = 'small';
-    small.textContent = desc;
-    const hdr = titleEl.parentElement;
+  if(desc){
+    const small=document.createElement('div');
+    small.className='small npcdesc';
+    small.textContent=desc;
+    const hdr=titleEl.parentElement;
     [...hdr.querySelectorAll('.small.npcdesc')].forEach(n=>n.remove());
-    small.classList.add('npcdesc');
     hdr.appendChild(small);
   }
+
   renderDialog();
   overlay.classList.add('shown');
-  if (window.NanoDialog) NanoDialog.queueForNPC(currentNPC, currentNode, 'open');
+  setGameState(GAME_STATE.DIALOG);
 }
-function closeDialog(){ overlay.classList.remove('shown'); currentNPC=null; choicesEl.innerHTML=''; }
-function setContinueOnly(){
+
+function closeDialog(){
+  overlay.classList.remove('shown');
+  currentNPC=null;
+  dialogState.tree=null;
+  dialogState.node=null;
   choicesEl.innerHTML='';
-  const cont=document.createElement('div'); cont.className='choice'; cont.textContent='(Continue)';
-  cont.onclick=()=>{ closeDialog(); }; choicesEl.appendChild(cont);
+  const back= state.map==='world'?GAME_STATE.WORLD:GAME_STATE.INTERIOR;
+  setGameState(back);
 }
+
 function renderDialog(){
-  const node=resolveNode(currentNPC.tree,currentNode);
-  // --- Nano lines merge (if any) ---
-  try {
-    const extra = (window.NanoDialog && NanoDialog.linesFor(currentNPC.id, currentNode)) || [];
-    if (extra.length) {
-      if (Array.isArray(node.text)) node.text = node.text.concat(extra);
-      else node.text = [node.text].concat(extra);
-    }
-  } catch(_) {}
-  // Support arrays of lines (rotate to avoid repetition)
-  const key = currentNPC.id + '::' + currentNode;
-  window.__npcLineIx = window.__npcLineIx || {};
-  if (Array.isArray(node.text)) {
-    const ix = (window.__npcLineIx[key]||0) % node.text.length;
-    textEl.textContent = node.text[ix];
-    window.__npcLineIx[key] = ix + 1;
-  } else {
-    textEl.textContent = node.text;
-  }
+  if(!dialogState.tree) return;
+  const node=dialogState.tree[dialogState.node];
+  if(!node){ closeDialog(); return; }
+
+  runEffects(node.checks);
+  runEffects(node.effects);
+
+  textEl.textContent=node.text;
   choicesEl.innerHTML='';
-  const extras = (window.NanoDialog && NanoDialog.choicesEnabled && NanoDialog.choicesFor(currentNPC.id, currentNode)) || [];
-  let nodeChoices = (node.choices||[]).slice();
-  for(const ex of extras){
-    const k = `${currentNPC.id}::${currentNode}::${ex.label}`;
-    if(!usedNanoChoices.has(k) && !usedOnceChoices.has(k)) nodeChoices.push({...ex, nano:true, key:k});
+
+  if(!node.next || node.next.length===0){
+    const cont=document.createElement('div');
+    cont.className='choice';
+    cont.textContent='(Continue)';
+    cont.onclick=()=> closeDialog();
+    choicesEl.appendChild(cont);
+    return;
   }
-  if(currentNPC.quest){
+
+  // Start with all choices, then apply filters
+  let choices=node.next.map((opt,idx)=>({opt,idx}));
+
+  // Quest choice visibility (accept/turnin)
+  if(currentNPC?.quest){
     const meta=currentNPC.quest;
-    nodeChoices = nodeChoices.filter(c=>{
-      if(c.q==='accept' && meta.status!=='available') return false;
-      if(c.q==='turnin' && (meta.status==='completed' || (meta.item && !hasItem(meta.item)))) return false;
+    choices=choices.filter(({opt})=>{
+      if(opt.q==='accept' && meta.status!=='available') return false;
+      if(opt.q==='turnin' && (meta.status==='completed' || (meta.item && !hasItem(meta.item)))) return false;
       return true;
     });
   }
-  nodeChoices = nodeChoices.filter(c=>{
-    if(!c.once) return true;
-    const key = `${currentNPC.id}::${currentNode}::${c.label}`;
+
+  // Once-only choices
+  choices=choices.filter(({opt})=>{
+    if(!opt.once) return true;
+    const key=`${currentNPC.id}::${dialogState.node}::${opt.label}`;
     return !usedOnceChoices.has(key);
   });
-  const processQFlag = (c)=>{
-    if(!currentNPC?.quest || !c.q) return;
-    if(c.q==='accept') defaultQuestProcessor(currentNPC,'accept');
-    if(c.q==='turnin') defaultQuestProcessor(currentNPC,'do_turnin');
-  };
-  const handleSpecial = (c)=>{
-    if(c.stat){
-      const roll = skillRoll(c.stat);
-      const success = roll >= c.dc;
-      textEl.textContent = success ? (c.success||'') : (c.failure||'');
-      textEl.textContent += ` (Roll ${roll} vs DC ${c.dc}.)`;
-      if(success){
-        if(c.reward){
-          if(/^xp\s*\d+/i.test(c.reward)){
-            const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
-            awardXP(leader(), amt);
-            textEl.textContent += ` Reward: ${amt} XP.`;
-          } else {
-            addToInv({name:c.reward});
-            textEl.textContent += ` You receive ${c.reward}.`;
-          }
-        }
-        if(c.join){
-          const j=c.join;
-          const m=makeMember(j.id, j.name, j.role);
-          addPartyMember(m);
-          removeNPC(currentNPC);
-        }
-        processQFlag(c);
-      }
-      if(c.nano && c.key) usedNanoChoices.add(c.key);
-      setContinueOnly();
-      return true;
-    }
-    if(c.costItem || c.costSlot){
-      const idx = c.costItem ? player.inv.findIndex(it=> it.name===c.costItem)
-                             : player.inv.findIndex(it=> it.slot===c.costSlot);
-      if(idx === -1){
-        textEl.textContent = c.failure || 'You lack the required item.';
-      } else {
-        removeFromInv(idx);
-        textEl.textContent = c.success || '';
-        if(c.reward){
-          if(/^xp\s*\d+/i.test(c.reward)){
-            const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
-            awardXP(leader(), amt);
-            if(typeof toast==='function') toast(`+${amt} XP`);
-          } else {
-            addToInv({name:c.reward});
-            if(typeof toast==='function') toast(`Received ${c.reward}`);
-          }
-        }
-        if(c.join){
-          const j=c.join;
-          const m=makeMember(j.id, j.name, j.role);
-          addPartyMember(m);
-          removeNPC(currentNPC);
-        }
-        processQFlag(c);
-      }
-      if(c.nano && c.key) usedNanoChoices.add(c.key);
-      setContinueOnly();
-      return true;
-    }
-    if(c.response){
-      textEl.textContent = c.response;
-      if(c.nano && c.key) usedNanoChoices.add(c.key);
-      setContinueOnly();
-      return true;
-    }
-    if(c.reward){
-      if(/^xp\s*\d+/i.test(c.reward)){
-        const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
-        awardXP(leader(), amt);
-        if(typeof toast==='function') toast(`+${amt} XP`);
-      } else {
-        addToInv({name:c.reward});
-        if(typeof toast==='function') toast(`Received ${c.reward}`);
-      }
-    }
-    if(c.join){
-      const j=c.join;
-      const m=makeMember(j.id, j.name, j.role);
-      addPartyMember(m);
-      removeNPC(currentNPC);
-      processQFlag(c);
-      if(c.nano && c.key) usedNanoChoices.add(c.key);
-      setContinueOnly();
-      return true;
-    }
-    if(c.goto){
-      const g=c.goto;
-      if(g.map==='world'){ startWorld(); }
-      else if(g.map){ setMap(g.map); }
-      if(typeof g.x==='number') player.x=g.x;
-      if(typeof g.y==='number') player.y=g.y;
-      centerCamera(player.x,player.y,state.map);
-      updateHUD?.();
-      closeDialog();
-      if(c.nano && c.key) usedNanoChoices.add(c.key);
-      return true;
-    }
-    if(currentNPC && typeof currentNPC.processChoice==='function'){
-      return currentNPC.processChoice(c)===true;
-    }
-    return false;
-  };
-  for(const c of nodeChoices){
-    const div=document.createElement('div'); div.className='choice'; div.textContent=c.label;
+
+  // Render choices
+  choices.forEach(({opt,idx})=>{
+    const div=document.createElement('div');
+    div.className='choice';
+    div.textContent=opt.label||'(Continue)';
     div.onclick=()=>{
-      const key = `${currentNPC.id}::${currentNode}::${c.label}`;
-      if(c.once) usedOnceChoices.add(key);
-      if(handleSpecial(c)) return;
-      processQFlag(c);
-      currentNode=c.to||'bye';
-      if(currentNode==='bye'){ closeDialog(); } else { renderDialog(); }
+      const key=`${currentNPC.id}::${dialogState.node}::${opt.label}`;
+      if(opt.once) usedOnceChoices.add(key);
+
+      const result=advanceDialog(dialogState,idx);
+      if(result && result.text!==null){
+        textEl.textContent=result.text;
+        choicesEl.innerHTML='';
+        const cont=document.createElement('div');
+        cont.className='choice';
+        cont.textContent='(Continue)';
+        cont.onclick=()=>{ if(result.close) closeDialog(); else { dialogState.node=result.next; renderDialog(); } };
+        choicesEl.appendChild(cont);
+      } else {
+        if(result && result.close) closeDialog();
+        else renderDialog();
+      }
     };
     choicesEl.appendChild(div);
-  }
-  if(currentNPC && typeof currentNPC.processNode==='function'){
-    currentNPC.processNode(currentNode);
-  }
+  });
 }
 
 // ===== Save/Load & Start =====
@@ -985,8 +1057,14 @@ function load(){
 const startEl = document.getElementById('start');
 const startContinue = document.getElementById('startContinue');
 const startNew = document.getElementById('startNew');
-function showStart(){ startEl.style.display='flex'; }
-function hideStart(){ startEl.style.display='none'; }
+function showStart(){ startEl.style.display='flex'; setGameState(GAME_STATE.MENU); }
+function hideStart(){
+  startEl.style.display='none';
+  const back = state.map==='world'
+    ? GAME_STATE.WORLD
+    : (state.map==='creator' ? GAME_STATE.CREATOR : GAME_STATE.INTERIOR);
+  setGameState(back);
+}
 if (startContinue) startContinue.onclick = () => { load(); hideStart(); };
 if (startNew) startNew.onclick = () => { hideStart(); resetAll(); };
 
@@ -1107,24 +1185,28 @@ Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat
 // Export a few helpers for Node-based tests without affecting the browser build
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
+    addToInv,
+    advanceDialog,
+    applyModule,
+    canWalk,
+    Character,
     clamp,
     createRNG,
     Dice,
-    addToInv,
     equipItem,
-    unequipItem,
-    normalizeItem,
-    player,
-    party,
-    state,
-    Character,
-    applyModule,
     findFreeDropTile,
-    canWalk,
-    move,
-    openDialog,
-    NPCS,
+    GAME_STATE,
+    getGameState: () => gameState,
     itemDrops,
-    setLeader: (idx)=>{ selectedMember = idx; }
+    move,
+    normalizeItem,
+    NPCS,
+    openDialog,
+    party,
+    player,
+    setGameState,
+    setLeader: (idx)=>{ selectedMember = idx; },
+    state,
+    unequipItem  
   };
 }

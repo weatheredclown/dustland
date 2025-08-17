@@ -114,6 +114,45 @@
       flex: 0 0 auto;
     }
 
+    #treeEditor .choiceGroup {
+      border: 1px solid #2b3b2b;
+      padding: 4px;
+      margin-top: 4px;
+    }
+
+    #treeEditor .choiceGroup legend {
+      padding: 0 4px;
+    }
+
+    #treeEditor .choices details {
+      flex-basis: 100%;
+    }
+
+    #treeEditor .choices details summary {
+      cursor: pointer;
+    }
+
+    #treeEditor .choices details[open] {
+      border: 1px solid #2b3b2b;
+      padding: 4px;
+    }
+
+    #treeEditor .choices details label {
+      display: block;
+      margin-top: 4px;
+    }
+
+    #treeEditor .choices details label:first-child {
+      margin-top: 0;
+    }
+
+    #treeEditor .choices details input,
+    #treeEditor .choices details select {
+      width: 100%;
+      flex: none;
+      min-width: 0;
+    }
+
     #treeEditor .nodeHeader {
       display: flex;
       align-items: center;
