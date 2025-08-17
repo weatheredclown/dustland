@@ -233,13 +233,52 @@ function equipItem(memberIndex, invIndex){
   if(!m||!it||!it.slot){ log('Cannot equip that.'); return; }
   const slot = it.slot;
   const prevEq = m.equip[slot];
-  if(prevEq) player.inv.push(prevEq);
+  if(prevEq){
+    if(prevEq.cursed){
+      prevEq.cursedKnown = true;
+      renderInv(); renderParty(); updateHUD();
+      log(`${prevEq.name} is cursed and cannot be removed.`);
+      return;
+    }
+    player.inv.push(prevEq);
+  }
   m.equip[slot]=it;
   player.inv.splice(invIndex,1);
   applyEquipmentStats(m);
   renderInv(); renderParty(); updateHUD();
   log(`${m.name} equips ${it.name}.`);
   if(typeof toast==='function') toast(`${m.name} equips ${it.name}`);
+  if(typeof sfxTick==='function') sfxTick();
+  if(it.equip && it.equip.teleport){
+    const t=it.equip.teleport;
+    if(t.map) setMap(t.map);
+    if(typeof t.x==='number') player.x=t.x;
+    if(typeof t.y==='number') player.y=t.y;
+    if(typeof centerCamera==='function') centerCamera(player.x,player.y,state.map);
+    updateHUD();
+  }
+  if(it.equip && typeof it.equip.onEquip==='function'){
+    it.equip.onEquip({player, party, state, setMap, centerCamera, log});
+  }
+}
+
+function unequipItem(memberIndex, slot){
+  const m=party[memberIndex];
+  if(!m) return;
+  const it=m.equip[slot];
+  if(!it){ log('Nothing to unequip.'); return; }
+  if(it.cursed){
+    it.cursedKnown = true;
+    renderInv(); renderParty(); updateHUD();
+    log(`${it.name} is cursed and won't come off!`);
+    return;
+  }
+  m.equip[slot]=null;
+  player.inv.push(it);
+  applyEquipmentStats(m);
+  renderInv(); renderParty(); updateHUD();
+  log(`${m.name} unequips ${it.name}.`);
+  if(typeof toast==='function') toast(`${m.name} unequips ${it.name}`);
   if(typeof sfxTick==='function') sfxTick();
 }
 
@@ -250,6 +289,9 @@ function normalizeItem(it){
     slot: it.slot || null,
     mods: it.mods || {},
     use: it.use || null,
+    equip: it.equip || null,
+    cursed: !!it.cursed,
+    cursedKnown: !!it.cursedKnown,
     rarity: it.rarity || 'common',
     value: Math.max(1, it.value ?? 0),
     desc: it.desc || '',
@@ -512,7 +554,18 @@ function applyModule(data){
   buildings.forEach(b=>{ if(!interiors[b.interiorId]){ makeInteriorRoom(b.interiorId); } });
   itemDrops.length = 0;
   (data.items||[]).forEach(it=>{
-    itemDrops.push({map:it.map||'world', x:it.x, y:it.y, name:it.name, slot:it.slot, mods:it.mods, value:it.value, use:it.use});
+    itemDrops.push({
+      map:it.map||'world',
+      x:it.x,
+      y:it.y,
+      name:it.name,
+      slot:it.slot,
+      mods:it.mods,
+      value:it.value,
+      use:it.use,
+      equip:it.equip,
+      cursed:it.cursed
+    });
   });
   Object.keys(quests).forEach(k=> delete quests[k]);
   (data.quests||[]).forEach(q=>{
@@ -1053,5 +1106,17 @@ Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat
 
 // Export a few helpers for Node-based tests without affecting the browser build
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { clamp, createRNG, Dice };
+  module.exports = {
+    clamp,
+    createRNG,
+    Dice,
+    addToInv,
+    equipItem,
+    unequipItem,
+    normalizeItem,
+    player,
+    party,
+    state,
+    Character
+  };
 }

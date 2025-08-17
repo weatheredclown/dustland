@@ -17,7 +17,16 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, Dice } = require('../dustland-core.js');
+const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character } = require('../dustland-core.js');
+
+// Stub out globals used by equipment functions
+global.log = () => {};
+global.toast = () => {};
+global.sfxTick = () => {};
+global.renderInv = () => {};
+global.renderParty = () => {};
+global.updateHUD = () => {};
+global.centerCamera = () => {};
 
 test('clamp restricts values to range', () => {
   assert.strictEqual(clamp(5, 0, 10), 5);
@@ -37,4 +46,34 @@ test('Dice.roll is within inclusive bounds', () => {
     const roll = Dice.roll(6);
     assert.ok(roll >= 1 && roll <= 6);
   }
+});
+
+test('cursed items reveal on unequip attempt and stay equipped', () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const mem = new Character('t1','Tester','Role');
+  party.addMember(mem);
+  const cursed = normalizeItem({ name:'Mask', slot:'armor', cursed:true });
+  addToInv(cursed);
+  equipItem(0,0);
+  assert.strictEqual(mem.equip.armor.name,'Mask');
+  unequipItem(0,'armor');
+  assert.ok(mem.equip.armor.cursed);
+  assert.ok(mem.equip.armor.cursedKnown);
+  assert.strictEqual(mem.equip.armor.name,'Mask');
+});
+
+test('equipping teleport item moves player', () => {
+  party.length = 0;
+  player.inv.length = 0;
+  state.map = 'world';
+  player.x = 0; player.y = 0;
+  const mem = new Character('t2','Tele','Role');
+  party.addMember(mem);
+  const tp = normalizeItem({ name:'Warp Ring', slot:'trinket', equip:{ teleport:{ map:'world', x:5, y:6 } } });
+  addToInv(tp);
+  equipItem(0,0);
+  assert.strictEqual(player.x,5);
+  assert.strictEqual(player.y,6);
+  assert.strictEqual(state.map,'world');
 });
