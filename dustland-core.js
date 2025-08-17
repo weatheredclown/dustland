@@ -59,6 +59,24 @@ class Dice {
   }
 }
 
+// ===== Skill checks =====
+/**
+ * Resolve a skill check against an actor.
+ * @param {{stat:string, dc:number}} check
+ * @param {Character} [actor]
+ * @param {Function} [rngFn=Math.random]
+ * @returns {{success:boolean, roll:number, dc:number}}
+ */
+function resolveCheck(check, actor=leader(), rngFn=Math.random){
+  const stat = check?.stat || 'STR';
+  const dc = check?.dc || 0;
+  const base = actor?.stats?.[stat] || 0;
+  const roll = Math.floor(rngFn()*ROLL_SIDES)+1 + Math.floor(base/2);
+  const success = roll >= dc;
+  if(typeof log==='function') log(`[CHECK] ${stat} ${roll} vs DC ${dc} -> ${success?'success':'fail'}`);
+  return { success, roll, dc };
+}
+
 // ===== Combat =====
 /**
  * Quick combat resolver. Uses party leader's ATK + LCK vs defender's DEF.
@@ -806,33 +824,61 @@ function renderDialog(){
     if(c.q==='turnin') defaultQuestProcessor(currentNPC,'do_turnin');
   };
   const handleSpecial = (c)=>{
-    if(c.stat){
-      const roll = skillRoll(c.stat);
-      const success = roll >= c.dc;
-      textEl.textContent = success ? (c.success||'') : (c.failure||'');
-      textEl.textContent += ` (Roll ${roll} vs DC ${c.dc}.)`;
-      if(success){
-        if(c.reward){
-          if(/^xp\s*\d+/i.test(c.reward)){
-            const amt=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
-            awardXP(leader(), amt);
-            textEl.textContent += ` Reward: ${amt} XP.`;
-          } else {
-            addToInv({name:c.reward});
-            textEl.textContent += ` You receive ${c.reward}.`;
-          }
+    const runCheck = (check)=>{
+      const res = resolveCheck(check, leader());
+      const effects = res.success ? check.onSuccess : check.onFail;
+      let textShown=false;
+      for(const eff of effects||[]){
+        switch(eff.type){
+          case 'text':
+            textEl.textContent = eff.value;
+            textShown=true;
+            break;
+          case 'reward':
+            if(eff.xp){
+              awardXP(leader(), eff.xp);
+              if(textShown) textEl.textContent += ` Reward: ${eff.xp} XP.`;
+            }
+            if(eff.item){
+              addToInv({name:eff.item});
+              if(textShown) textEl.textContent += ` You receive ${eff.item}.`;
+            }
+            break;
+          case 'join':
+            const m=makeMember(eff.id, eff.name, eff.role);
+            addPartyMember(m);
+            removeNPC(currentNPC);
+            break;
+          case 'quest':
+            if(eff.action==='accept') defaultQuestProcessor(currentNPC,'accept');
+            else if(eff.action==='turnin') defaultQuestProcessor(currentNPC,'do_turnin');
+            break;
         }
-        if(c.join){
-          const j=c.join;
-          const m=makeMember(j.id, j.name, j.role);
-          addPartyMember(m);
-          removeNPC(currentNPC);
-        }
-        processQFlag(c);
       }
-      if(c.nano && c.key) usedNanoChoices.add(c.key);
+      if(textShown) textEl.textContent += ` (Roll ${res.roll} vs DC ${check.dc}.)`;
       setContinueOnly();
       return true;
+    };
+    if(c.check || c.stat){
+      const check = c.check ? {...c.check} : {
+        stat:c.stat,
+        dc:c.dc,
+        onSuccess:[],
+        onFail:[]
+      };
+      if(!c.check && c.success) check.onSuccess.push({type:'text', value:c.success});
+      if(!c.check && c.failure) check.onFail.push({type:'text', value:c.failure});
+      if(!c.check && c.reward){
+        const eff={type:'reward'};
+        if(/^xp\s*\d+/i.test(c.reward)) eff.xp=parseInt(c.reward.replace(/[^0-9]/g,''),10)||0;
+        else eff.item=c.reward;
+        check.onSuccess.push(eff);
+      }
+      if(!c.check && c.join){ check.onSuccess.push({type:'join', ...c.join}); }
+      if(!c.check && c.q){ check.onSuccess.push({type:'quest', action:c.q}); }
+      const handled = runCheck(check);
+      if(c.nano && c.key) usedNanoChoices.add(c.key);
+      return handled;
     }
     if(c.costItem || c.costSlot){
       const idx = c.costItem ? player.inv.findIndex(it=> it.name===c.costItem)
