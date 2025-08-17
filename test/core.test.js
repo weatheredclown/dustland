@@ -141,6 +141,8 @@ test('selected party member receives XP on dialog success', () => {
   choicesEl.children[0].onclick();
   assert.strictEqual(a.xp,0);
   assert.strictEqual(b.xp,5);
+});
+
 test('advanceDialog moves to next node', () => {
   const tree = {
     start: { text: 'hi', next: [{ id: 'bye', label: 'Bye' }] },
