@@ -89,79 +89,84 @@ function centerCamera(x,y,map){
 }
 
 // ===== Drawing Pipeline =====
+const renderOrder = ['tiles', 'items', 'entitiesBelow', 'player', 'entitiesAbove'];
+
 function render(gameState=state, dt){
-  const ctx=sctx;
+  const ctx = sctx;
   ctx.fillStyle='#000';
   ctx.fillRect(0,0,disp.width,disp.height);
-  const activeMap=gameState.map || mapIdForState();
-  const {W,H}=mapWH(activeMap);
-  const offX=Math.max(0,Math.floor((VIEW_W-W)/2));
-  const offY=Math.max(0,Math.floor((VIEW_H-H)/2));
+  
+  const activeMap = gameState.map || mapIdForState();
+  const { W, H } = mapWH(activeMap);
+  const offX = Math.max(0, Math.floor((VIEW_W - W) / 2));
+  const offY = Math.max(0, Math.floor((VIEW_H - H) / 2));
 
-  // --- Floor ---
-  for(let vy=0; vy<VIEW_H; vy++){
-    for(let vx=0; vx<VIEW_W; vx++){
-      const gx=camX+vx-offX, gy=camY+vy-offY;
-      if(gx<0||gy<0||gx>=W||gy>=H) continue;
-      const t=getTile(activeMap,gx,gy); if(t===null) continue;
-      ctx.fillStyle=colors[t]; ctx.fillRect(vx*TS,vy*TS,TS,TS);
-      if(t===TILE.DOOR){
-        ctx.strokeStyle='#9ef7a0';
-        ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10);
-        if(doorPulseUntil && Date.now()<doorPulseUntil){
-          const a=0.3+0.2*Math.sin(Date.now()/200);
-          ctx.globalAlpha=a;
-          ctx.strokeRect(vx*TS+3,vy*TS+3,TS-6,TS-6);
-          ctx.globalAlpha=1;
+  const items = gameState.itemDrops || itemDrops;
+  const entities = gameState.entities || NPCS;
+  const ply = gameState.player || player;
+
+  // split entities into below/above
+  const below = [], above = [];
+  for(const n of entities){
+    if(n.map !== activeMap) continue;
+    (n.drawAbovePlayer ? above : below).push(n);
+  }
+
+  for(const layer of renderOrder){
+    if(layer==='tiles'){
+      for(let vy=0; vy<VIEW_H; vy++){
+        for(let vx=0; vx<VIEW_W; vx++){
+          const gx = camX + vx - offX, gy = camY + vy - offY;
+          if(gx<0||gy<0||gx>=W||gy>=H) continue;
+          const t = getTile(activeMap,gx,gy); if(t===null) continue;
+          ctx.fillStyle = colors[t]; ctx.fillRect(vx*TS,vy*TS,TS,TS);
+          if(t===TILE.DOOR){
+            ctx.strokeStyle='#9ef7a0';
+            ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10);
+            if(doorPulseUntil && Date.now()<doorPulseUntil){
+              const a=0.3+0.2*Math.sin(Date.now()/200);
+              ctx.globalAlpha=a;
+              ctx.strokeRect(vx*TS+3,vy*TS+3,TS-6,TS-6);
+              ctx.globalAlpha=1;
+            }
+          }
         }
       }
     }
-  }
-
-  // --- Items ---
-  const items = gameState.itemDrops || itemDrops;
-  for(const it of items){
-    if(it.map!==activeMap) continue;
-    if(it.x>=camX&&it.y>=camY&&it.x<camX+VIEW_W&&it.y<camY+VIEW_H){
-      const vx=(it.x-camX+offX)*TS, vy=(it.y-camY+offY)*TS;
-      ctx.fillStyle='#c8ffbf'; ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
-    }
-  }
-
-  // Split entities into below/above layers
-  const entities = gameState.entities || NPCS;
-  const below=[], above=[];
-  for(const n of entities){
-    if(n.map!==activeMap) continue;
-    (n.drawAbovePlayer?above:below).push(n);
-  }
-  const drawEntities=list=>{
-    for(const n of list){
-      if(n.x>=camX&&n.y>=camY&&n.x<camX+VIEW_W&&n.y<camY+VIEW_H){
-        const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
-        ctx.fillStyle=n.color; ctx.fillRect(vx,vy,TS,TS);
-        ctx.fillStyle='#000'; ctx.fillText('!',vx+5,vy+12);
+    else if(layer==='items'){
+      for(const it of items){
+        if(it.map!==activeMap) continue;
+        if(it.x>=camX&&it.y>=camY&&it.x<camX+VIEW_W&&it.y<camY+VIEW_H){
+          const vx=(it.x-camX+offX)*TS, vy=(it.y-camY+offY)*TS;
+          ctx.fillStyle='#c8ffbf'; ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
+        }
       }
     }
-  };
+    else if(layer==='entitiesBelow'){ drawEntities(ctx, below, offX, offY); }
+    else if(layer==='player'){
+      const px=(ply.x-camX+offX)*TS, py=(ply.y-camY+offY)*TS;
+      ctx.fillStyle='#d9ffbe'; ctx.fillRect(px,py,TS,TS);
+      ctx.fillStyle='#000'; ctx.fillText('@',px+4,py+12);
+    }
+    else if(layer==='entitiesAbove'){ drawEntities(ctx, above, offX, offY); }
+  }
 
-  // --- Entities below player ---
-  drawEntities(below);
-
-  // --- Player ---
-  const ply = gameState.player || player;
-  const px=(ply.x-camX+offX)*TS, py=(ply.y-camY+offY)*TS;
-  ctx.fillStyle='#d9ffbe'; ctx.fillRect(px,py,TS,TS);
-  ctx.fillStyle='#000'; ctx.fillText('@',px+4,py+12);
-
-  // --- Entities above player ---
-  drawEntities(above);
-
-  // --- UI ---
+  // UI border
   ctx.strokeStyle='#2a3b2a';
   ctx.strokeRect(0.5,0.5,VIEW_W*TS-1,VIEW_H*TS-1);
 }
 
+function drawEntities(ctx, list, offX, offY){
+  for(const n of list){
+    if(n.x>=camX&&n.y>=camY&&n.x<camX+VIEW_W&&n.y<camY+VIEW_H){
+      const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
+      ctx.fillStyle=n.color; ctx.fillRect(vx,vy,TS,TS);
+      ctx.fillStyle='#000'; ctx.fillText('!',vx+5,vy+12);
+    }
+  }
+}
+
+Object.assign(window, { renderOrderSystem: { order: renderOrder, render } });
 
 // ===== HUD & Tabs =====
 const TAB_BREAKPOINT = 1600;
