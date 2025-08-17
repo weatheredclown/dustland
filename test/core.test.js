@@ -87,3 +87,16 @@ test('advanceDialog moves to next node', () => {
   advanceDialog(dialog, 0);
   assert.strictEqual(dialog.node, 'bye');
 });
+
+test('advanceDialog handles cost and reward', () => {
+  player.inv.length = 0;
+  addToInv({ name: 'Key' });
+  const tree = {
+    start: { text: '', next: [{ label: 'Use Key', costItem: 'Key', reward: 'Gem' }] }
+  };
+  const dialog = { tree, node: 'start' };
+  const res = advanceDialog(dialog, 0);
+  assert.ok(player.inv.some(it => it.name === 'Gem'));
+  assert.ok(!player.inv.some(it => it.name === 'Key'));
+  assert.ok(res.close);
+});
