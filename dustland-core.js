@@ -728,6 +728,12 @@ function interact(){
   return false;
 }
 
+// Grouped systems expose focused gameplay concerns
+const movementSystem = { canWalk, move };
+const collisionSystem = { occupiedAt, canWalk };
+const interactionSystem = { adjacentNPC, takeNearestItem, interact };
+Object.assign(window, { movementSystem, collisionSystem, interactionSystem });
+
 // ===== Dialog =====
 const overlay=document.getElementById('overlay');
 const choicesEl=document.getElementById('choices');
