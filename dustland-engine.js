@@ -67,9 +67,11 @@ const prev = document.createElement('canvas'); prev.width=disp.width; prev.heigh
 sctx.font = '12px ui-monospace';
 
 let camX=0, camY=0, showMini=true;
+let _lastTime=0;
 
-function draw(){
-  drawScene(sctx);
+function draw(t){
+  const dt=(t-_lastTime)||0; _lastTime=t;
+  render(state, dt/1000);
   dctx.globalAlpha=0.10; dctx.drawImage(prev, 1, 0);
   dctx.globalAlpha=1.0; dctx.drawImage(scene, 0, 0);
   pctx.clearRect(0,0,prev.width,prev.height); pctx.drawImage(scene,0,0);
@@ -86,20 +88,23 @@ function centerCamera(x,y,map){
   camY = clamp(y - Math.floor(VIEW_H/2), 0, Math.max(0, (H||VIEW_H) - VIEW_H));
 }
 
-// ===== Drawing (tiles -> items -> NPCs -> player) =====
-function drawScene(ctx){
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, disp.width, disp.height);
-  const activeMap = mapIdForState();
-  const { W, H } = mapWH(activeMap);
-  const offX = Math.max(0, Math.floor((VIEW_W - W) / 2));
-  const offY = Math.max(0, Math.floor((VIEW_H - H) / 2));
+// ===== Drawing Pipeline =====
+function render(gameState=state, dt){
+  const ctx=sctx;
+  ctx.fillStyle='#000';
+  ctx.fillRect(0,0,disp.width,disp.height);
+  const activeMap=gameState.map || mapIdForState();
+  const {W,H}=mapWH(activeMap);
+  const offX=Math.max(0,Math.floor((VIEW_W-W)/2));
+  const offY=Math.max(0,Math.floor((VIEW_H-H)/2));
+
+  // --- Floor ---
   for(let vy=0; vy<VIEW_H; vy++){
     for(let vx=0; vx<VIEW_W; vx++){
-      const gx = camX + vx - offX, gy = camY + vy - offY;
+      const gx=camX+vx-offX, gy=camY+vy-offY;
       if(gx<0||gy<0||gx>=W||gy>=H) continue;
-      const t = getTile(activeMap,gx,gy); if(t===null) continue;
-      ctx.fillStyle = colors[t]; ctx.fillRect(vx*TS,vy*TS,TS,TS);
+      const t=getTile(activeMap,gx,gy); if(t===null) continue;
+      ctx.fillStyle=colors[t]; ctx.fillRect(vx*TS,vy*TS,TS,TS);
       if(t===TILE.DOOR){
         ctx.strokeStyle='#9ef7a0';
         ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10);
@@ -112,28 +117,49 @@ function drawScene(ctx){
       }
     }
   }
-  // Items first
-  for(const it of itemDrops){
+
+  // --- Items ---
+  const items = gameState.itemDrops || itemDrops;
+  for(const it of items){
     if(it.map!==activeMap) continue;
     if(it.x>=camX&&it.y>=camY&&it.x<camX+VIEW_W&&it.y<camY+VIEW_H){
       const vx=(it.x-camX+offX)*TS, vy=(it.y-camY+offY)*TS;
       ctx.fillStyle='#c8ffbf'; ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
     }
   }
-  // NPCs next
-  for(const n of NPCS){
+
+  // Split entities into below/above layers
+  const entities = gameState.entities || NPCS;
+  const below=[], above=[];
+  for(const n of entities){
     if(n.map!==activeMap) continue;
-    if(n.x>=camX&&n.y>=camY&&n.x<camX+VIEW_W&&n.y<camY+VIEW_H){
-      const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
-      ctx.fillStyle=n.color; ctx.fillRect(vx,vy,TS,TS);
-      ctx.fillStyle='#000'; ctx.fillText('!',vx+5,vy+12);
-    }
+    (n.drawAbovePlayer?above:below).push(n);
   }
-  // Player last
-  const px=(player.x-camX+offX)*TS, py=(player.y-camY+offY)*TS;
+  const drawEntities=list=>{
+    for(const n of list){
+      if(n.x>=camX&&n.y>=camY&&n.x<camX+VIEW_W&&n.y<camY+VIEW_H){
+        const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
+        ctx.fillStyle=n.color; ctx.fillRect(vx,vy,TS,TS);
+        ctx.fillStyle='#000'; ctx.fillText('!',vx+5,vy+12);
+      }
+    }
+  };
+
+  // --- Entities below player ---
+  drawEntities(below);
+
+  // --- Player ---
+  const ply = gameState.player || player;
+  const px=(ply.x-camX+offX)*TS, py=(ply.y-camY+offY)*TS;
   ctx.fillStyle='#d9ffbe'; ctx.fillRect(px,py,TS,TS);
   ctx.fillStyle='#000'; ctx.fillText('@',px+4,py+12);
-  ctx.strokeStyle='#2a3b2a'; ctx.strokeRect(0.5,0.5,VIEW_W*TS-1,VIEW_H*TS-1);
+
+  // --- Entities above player ---
+  drawEntities(above);
+
+  // --- UI ---
+  ctx.strokeStyle='#2a3b2a';
+  ctx.strokeRect(0.5,0.5,VIEW_W*TS-1,VIEW_H*TS-1);
 }
 
 
