@@ -390,7 +390,7 @@ const OFFICE_MODULE = (() => {
           id: 'q_toll',
           title: 'Bridge Tax',
           desc: 'Pay the Toll Keeper with a trinket.',
-          moveTo: { x: WORLD_MID + 1, y: WORLD_MIDY }
+          moveTo: { x: WORLD_MID + 2, y: WORLD_MIDY }
         }
       ],
     npcs,
