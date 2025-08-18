@@ -96,19 +96,31 @@ test('cursed items reveal on unequip attempt and stay equipped', () => {
   assert.strictEqual(mem.equip.armor.name,'Mask');
 });
 
-test('equipping teleport item moves player', () => {
+test('equipping teleport item moves player and logs message', () => {
+  const oldLog = global.log;
+  const oldCenter = global.centerCamera;
+  const logs = [];
+  let centered = null;
+  global.log = (msg) => logs.push(msg);
+  global.centerCamera = (x, y, map) => { centered = { x, y, map }; };
+
   party.length = 0;
   player.inv.length = 0;
   state.map = 'world';
   player.x = 0; player.y = 0;
   const mem = new Character('t2','Tele','Role');
   party.addMember(mem);
-  const tp = normalizeItem({ id:'warp_ring', name:'Warp Ring', type:'trinket', slot:'trinket', equip:{ teleport:{ map:'world', x:5, y:6 } } });
+  const tp = normalizeItem({ id:'warp_ring', name:'Warp Ring', type:'trinket', slot:'trinket', equip:{ teleport:{ map:'world', x:5, y:6 }, msg:'whoosh' } });
   addToInv(tp);
   equipItem(0,0);
   assert.strictEqual(player.x,5);
   assert.strictEqual(player.y,6);
   assert.strictEqual(state.map,'world');
+  assert.deepStrictEqual(centered,{x:5,y:6,map:'world'});
+  assert.ok(logs.includes('whoosh'));
+
+  global.log = oldLog;
+  global.centerCamera = oldCenter;
 });
 
 test('pathfinding blocks on NPCs', () => {
@@ -271,4 +283,21 @@ test('door portals link interiors', () => {
   assert.strictEqual(state.map, 'castle');
   interactAt(1,1);
   assert.strictEqual(state.map, 'forest');
+});
+
+test('quest turn-in grants reward item', () => {
+  player.inv.length = 0;
+  NPCS.length = 0;
+  registerItem({ id: 'cursed_vr_helmet', name: 'Cursed VR Helmet', type: 'armor', slot: 'armor' });
+  const quest = new Quest('q_reward', 'Quest', '', { reward: 'cursed_vr_helmet' });
+  quest.status = 'active';
+  const tree = {
+    start: { text: '', choices: [ { label: 'turn in', to: 'do_turnin', q: 'turnin' } ] },
+    do_turnin: { text: '', choices: [ { label: 'bye', to: 'bye' } ] }
+  };
+  const npc = makeNPC('jen', 'world', 0, 0, '#fff', 'Jen', '', '', tree, quest);
+  NPCS.push(npc);
+  openDialog(npc);
+  choicesEl.children[0].onclick();
+  assert.ok(player.inv.some(it => it.id === 'cursed_vr_helmet'));
 });

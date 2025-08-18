@@ -117,6 +117,7 @@ function mapLabel(id){
 function setMap(id,label){
   state.map=id;
   mapNameEl.textContent = label || mapLabel(id);
+  if(typeof centerCamera==='function') centerCamera(player.x,player.y,state.map);
   if(id==='world') setGameState(GAME_STATE.WORLD);
   else if(id==='creator') setGameState(GAME_STATE.CREATOR);
   else setGameState(GAME_STATE.INTERIOR);
@@ -301,14 +302,13 @@ function equipItem(memberIndex, invIndex){
   if(typeof sfxTick==='function') sfxTick();
   if(it.equip && it.equip.teleport){
     const t=it.equip.teleport;
-    if(t.map) setMap(t.map);
     if(typeof t.x==='number') player.x=t.x;
     if(typeof t.y==='number') player.y=t.y;
-    if(typeof centerCamera==='function') centerCamera(player.x,player.y,state.map);
+    if(t.map) setMap(t.map);
     updateHUD();
   }
-  if(it.equip && typeof it.equip.onEquip==='function'){
-    it.equip.onEquip({player, party, state, setMap, centerCamera, log});
+  if(it.equip && it.equip.msg){
+    log(it.equip.msg);
   }
 }
 
@@ -771,23 +771,24 @@ function interactAt(x,y){
       const b=buildings.find(b=> b.doorX===x && b.doorY===y);
       if(!b){ log('No entrance here.'); return true; }
       if(b.boarded){ log('The doorway is boarded up from the outside.'); return true; }
-      setMap(b.interiorId,'Interior');
-      const I=interiors[state.map];
+      const I=interiors[b.interiorId];
       if(I){ player.x=I.entryX; player.y=I.entryY; }
-      log('You step inside.'); centerCamera(player.x,player.y,state.map); updateHUD(); return true;
+      setMap(b.interiorId,'Interior');
+      log('You step inside.'); updateHUD(); return true;
     }
     if(state.map!=='world'){
       const p=portals.find(p=> p.map===state.map && p.x===x && p.y===y);
       if(p){
-        setMap(p.toMap);
-        const I=interiors[state.map];
+        const target=p.toMap;
+        const I=interiors[target];
         player.x = (typeof p.toX==='number') ? p.toX : (I?I.entryX:0);
         player.y = (typeof p.toY==='number') ? p.toY : (I?I.entryY:0);
+        setMap(target);
         log(p.desc || 'You move through the doorway.');
-        centerCamera(player.x,player.y,state.map); updateHUD(); return true;
+        updateHUD(); return true;
       }
       const b=buildings.find(b=> b.interiorId===state.map);
-      if(b){ setMap('world'); player.x=b.doorX; player.y=b.doorY-1; log('You step back outside.'); centerCamera(player.x,player.y,state.map); updateHUD(); return true; }
+      if(b){ player.x=b.doorX; player.y=b.doorY-1; setMap('world'); log('You step back outside.'); updateHUD(); return true; }
     }
   }
   return false;
@@ -882,11 +883,16 @@ function joinParty(join){
 
 function handleGoto(g){
   if(!g) return;
-  if(g.map==='world'){ startWorld(); }
-  else if(g.map){ setMap(g.map); }
-  if(typeof g.x==='number') player.x=g.x;
-  if(typeof g.y==='number') player.y=g.y;
-  centerCamera(player.x,player.y,state.map);
+  if(g.map==='world'){
+    startWorld();
+    if(typeof g.x==='number') player.x=g.x;
+    if(typeof g.y==='number') player.y=g.y;
+    setMap('world');
+  }else{
+    if(typeof g.x==='number') player.x=g.x;
+    if(typeof g.y==='number') player.y=g.y;
+    if(g.map) setMap(g.map); else if(typeof centerCamera==='function') centerCamera(player.x,player.y,state.map);
+  }
   updateHUD?.();
 }
 
@@ -1145,7 +1151,6 @@ function load(){
     party.push(mem);
   });
   setMap(state.map);
-  centerCamera(player.x,player.y,state.map);
   renderInv(); renderQuests(); renderParty(); updateHUD();
   log('Game loaded.');
 }
@@ -1197,11 +1202,11 @@ const hiddenOrigins={ 'Rustborn':{desc:'You survived a machine womb. +1 PER, wei
 let step=1; let building=null; let built=[];
 function openCreator(){
   if(!creatorMap.grid || creatorMap.grid.length===0) genCreatorMap();
+  player.x=creatorMap.entryX; player.y=creatorMap.entryY;
   setMap('creator','Creator');
   creator.style.display='flex';
   step=1;
   building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null };
-  player.x=creatorMap.entryX; player.y=creatorMap.entryY; centerCamera(player.x,player.y,'creator');
   renderStep();
 }
 function closeCreator(){ creator.style.display='none'; }
@@ -1267,9 +1272,8 @@ function startGame(){
 function startWorld(){
   const seed = Date.now();
   genWorld(seed);
-  setMap('world','Wastes');
   player.x=2; player.y=Math.floor(WORLD_H/2);
-  centerCamera(player.x,player.y,'world');
+  setMap('world','Wastes');
   renderInv(); renderQuests(); renderParty(); updateHUD();
   log('You step into the wastes.');
 }

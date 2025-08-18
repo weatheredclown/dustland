@@ -350,28 +350,25 @@ const OFFICE_MODULE = (() => {
       castle: 'Castle'
     },
       items: [
-        { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] }
+        { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] },
+        {
+          id: 'cursed_vr_helmet',
+          name: 'Cursed VR Helmet',
+          type: 'armor',
+          slot: 'armor',
+          cursed: true,
+          equip: {
+            teleport: { map: 'world', x: 2, y: WORLD_MIDY },
+            msg: 'You step into the forest.'
+          }
+        }
       ],
       quests: [
         {
           id: 'q_card',
           title: 'Access Granted',
           desc: 'Convince security to lend you an access card and join Jen in the sim.',
-          reward: {
-            id: 'cursed_vr_helmet',
-            name: 'Cursed VR Helmet',
-            type: 'armor',
-            slot: 'armor',
-            cursed: true,
-            equip: {
-              teleport: { map: 'world', x: 2, y: WORLD_MIDY },
-              onEquip: ({ setMap, log, centerCamera, player }) => {
-                setMap('world');
-                centerCamera(player.x, player.y, 'world');
-                log('You step into the forest.');
-              }
-            }
-          }
+          reward: 'cursed_vr_helmet'
         },
         { id: 'q_toll', title: 'Bridge Tax', desc: 'Pay the Toll Keeper with a trinket.' }
       ],
@@ -400,10 +397,9 @@ startGame = function () {
       itemDrops.push({ id: charm.id, map: castleId, x: ix, y: iy });
     }
     const s = OFFICE_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-    setMap(s.map);
     player.x = s.x;
     player.y = s.y;
-    centerCamera(player.x, player.y, s.map);
+    setMap(s.map);
     renderInv();
     renderQuests();
     renderParty();
