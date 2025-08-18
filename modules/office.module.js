@@ -291,8 +291,7 @@ const OFFICE_MODULE = (() => {
           choices: [
             {
               label: '(Continue)',
-              to: 'bye',
-              effects: [() => removeNPC(currentNPC)]
+              to: 'bye'
             }
           ]
         }
@@ -386,7 +385,12 @@ const OFFICE_MODULE = (() => {
           desc: 'Convince security to lend you an access card and join Jen in the sim.',
           reward: 'cursed_vr_helmet'
         },
-        { id: 'q_toll', title: 'Bridge Tax', desc: 'Pay the Toll Keeper with a trinket.' }
+        {
+          id: 'q_toll',
+          title: 'Bridge Tax',
+          desc: 'Pay the Toll Keeper with a trinket.',
+          moveTo: { x: WORLD_MID + 1, y: WORLD_MIDY }
+        }
       ],
     npcs,
     interiors: [floor1, floor2, floor3, castle],
