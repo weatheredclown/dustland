@@ -148,7 +148,7 @@ const OFFICE_MODULE = (() => {
     map,
     x: midX,
     // Centered inside the larger elevator
-    y: 2,
+    y: 1,
     color: '#a9f59f',
     name: 'Elevator Buttons',
     desc: 'A panel to select floors.',
