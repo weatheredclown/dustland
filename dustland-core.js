@@ -296,19 +296,30 @@ const usedOnceChoices = new Set();
 // ===== Module application =====
 function applyModule(data){
   setRNGSeed(data.seed || Date.now());
-  if(data.world){
-    world = data.world;
-    interiors = {};
-    buildings = data.buildings || [];
-    portals = data.portals || [];
+
+  if (data.world) {
+    // Replace world grid while preserving array reference for consumers
+    world.length = 0;
+    data.world.forEach(row => world.push([...row]));
+
+    // Reset and repopulate core collections without changing references
+    Object.keys(interiors).forEach(k => delete interiors[k]);
+    buildings.length = 0;
+    portals.length = 0;
+    if (data.buildings) buildings.push(...data.buildings);
+    if (data.portals)   portals.push(...data.portals);
+  } else {
+    if (data.buildings) { buildings.length = 0; buildings.push(...data.buildings); }
+    if (data.portals)   { portals.length = 0;   portals.push(...data.portals); }
   }
-  (data.interiors||[]).forEach(I=>{ const {id,...rest}=I; interiors[id]={...rest}; });
-  if(!data.world){
-    if(data.buildings && data.buildings.length){ buildings = data.buildings; }
-    if(data.portals && data.portals.length){ portals = data.portals; }
-  }
-  if(data.mapLabels){ Object.assign(mapLabels, data.mapLabels); }
-  buildings.forEach(b=>{ if(!interiors[b.interiorId]){ makeInteriorRoom(b.interiorId); } });
+
+  (data.interiors || []).forEach(I => {
+    const { id, ...rest } = I;
+    interiors[id] = { ...rest };
+  });
+
+  if (data.mapLabels) Object.assign(mapLabels, data.mapLabels);
+  buildings.forEach(b => { if (!interiors[b.interiorId]) { makeInteriorRoom(b.interiorId); } });
   itemDrops.length = 0;
   Object.keys(ITEMS).forEach(k=> delete ITEMS[k]);
   (data.items||[]).forEach(it=>{
