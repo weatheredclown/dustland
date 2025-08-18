@@ -179,15 +179,26 @@ class Quest {
 class QuestLog {
   constructor(){ this.quests={}; }
   add(quest){
-    if(!this.quests[quest.id]){
-      quest.status = 'active';
-      this.quests[quest.id]=quest;
-      renderQuests();
-      log('Quest added: '+quest.title);
-      if (window.NanoDialog) {
-        NPCS.filter(n=> n.map === state.map)
-            .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'quest update'));
+    const existing=this.quests[quest.id];
+    if(existing){
+      if(existing.status==='available'){
+        existing.status='active';
+        renderQuests();
+        log('Quest added: '+existing.title);
+        if (window.NanoDialog) {
+          NPCS.filter(n=> n.map === state.map)
+              .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'quest update'));
+        }
       }
+      return;
+    }
+    quest.status = 'active';
+    this.quests[quest.id]=quest;
+    renderQuests();
+    log('Quest added: '+quest.title);
+    if (window.NanoDialog) {
+      NPCS.filter(n=> n.map === state.map)
+          .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'quest update'));
     }
   }
   complete(id){
