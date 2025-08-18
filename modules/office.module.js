@@ -96,9 +96,81 @@ const OFFICE_MODULE = (() => {
     return { id: 'floor3', w: FLOOR_W, h: FLOOR_H, grid, entryX: midX, entryY: 2 };
   }
 
+  function makeForest() {
+    const grid = Array.from({ length: FOREST_H }, (_, y) =>
+      Array.from({ length: FOREST_W }, (_, x) => {
+        if (y === 0 || y === FOREST_H - 1 || x === 0 || x === FOREST_W - 1)
+          return TILE.WALL;
+        if (x === FOREST_MID) return TILE.WATER;
+        return TILE.FLOOR;
+      })
+    );
+    // bridge over the river
+    grid[FOREST_MIDY][FOREST_MID] = TILE.FLOOR;
+    // doorway to the castle
+    grid[FOREST_MIDY][FOREST_W - 2] = TILE.DOOR;
+    return {
+      id: 'forest',
+      w: FOREST_W,
+      h: FOREST_H,
+      grid,
+      entryX: 2,
+      entryY: FOREST_MIDY
+    };
+  }
+
+  function makeCastle() {
+    const W = 30,
+      H = 30;
+    const grid = Array.from({ length: H }, () =>
+      Array.from({ length: W }, () => TILE.WALL)
+    );
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+    function carve(x, y) {
+      grid[y][x] = TILE.FLOOR;
+      shuffle(
+        [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1]
+        ]
+      ).forEach(([dx, dy]) => {
+        const nx = x + dx * 2,
+          ny = y + dy * 2;
+        if (
+          nx > 0 &&
+          ny > 0 &&
+          nx < W - 1 &&
+          ny < H - 1 &&
+          grid[ny][nx] === TILE.WALL
+        ) {
+          grid[y + dy][x + dx] = TILE.FLOOR;
+          carve(nx, ny);
+        }
+      });
+    }
+    carve(1, 1);
+    grid[1][1] = TILE.DOOR;
+    return { id: 'castle', w: W, h: H, grid, entryX: 1, entryY: 1 };
+  }
+
   const floor1 = makeFloor1();
   const floor2 = makeFloor2();
   const floor3 = makeFloor3();
+  const forest = makeForest();
+  const castle = makeCastle();
+
+  const portals = [
+    { map: 'forest', x: FOREST_W - 2, y: FOREST_MIDY, toMap: 'castle', toX: 1, toY: 1 },
+    { map: 'castle', x: 1, y: 1, toMap: 'forest', toX: FOREST_W - 3, toY: FOREST_MIDY }
+  ];
 
   const elevatorNPCs = ['floor1', 'floor2', 'floor3'].map((map) => ({
     id: `elevator_${map}`,
@@ -141,14 +213,14 @@ const OFFICE_MODULE = (() => {
         start: {
           text: 'Access to the third floor requires a card.',
           choices: [
-            { label: '(Ask for Access Card)', to: 'give', once: true },
+            {
+              label: '(Persuade for card)',
+              check: { stat: 'CHA', dc: DC.TALK },
+              success: 'He sighs and hands over a spare card.',
+              failure: 'Rules are rules.',
+              reward: 'access_card'
+            },
             { label: '(Leave)', to: 'bye' }
-          ]
-        },
-        give: {
-          text: 'He lends you a spare card.',
-          choices: [
-            { label: '(Take Access Card)', to: 'bye', reward: 'access_card' }
           ]
         }
       }
@@ -181,10 +253,20 @@ const OFFICE_MODULE = (() => {
       color: '#caffc6',
       name: 'Coworker Jen',
       desc: 'Your friend scrolling through code.',
+      questId: 'q_card',
       tree: {
         start: {
           text: 'Ready for the sim once you get the card.',
-          choices: [ { label: '(Nod)', to: 'bye' } ]
+          choices: [
+            { label: '(Where do I get one?)', to: 'accept', q: 'accept' },
+            { label: '(I have the card)', to: 'do_turnin', q: 'turnin' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        },
+        accept: { text: 'Security downstairs hoards spares.', choices: [ { label: '(Thanks)', to: 'bye' } ] },
+        do_turnin: {
+          text: 'Jen hands you a battered VR headset.',
+          choices: [ { label: '(Continue)', to: 'bye' } ]
         }
       }
     },
@@ -211,18 +293,30 @@ const OFFICE_MODULE = (() => {
       color: '#a9f59f',
       name: 'Toll Keeper',
       desc: 'Blocks the only bridge across the river.',
+      questId: 'q_toll',
       tree: {
         start: {
           text: 'Pay a trinket to cross.',
           choices: [
-            { label: '(Pay)', to: 'paid', costSlot: 'trinket', success: '', failure: 'You have no trinket.' },
+            {
+              label: '(Pay)',
+              to: 'do_turnin',
+              q: 'turnin',
+              costSlot: 'trinket',
+              success: '',
+              failure: 'You have no trinket.'
+            },
             { label: '(Leave)', to: 'bye' }
           ]
         },
-        paid: {
+        do_turnin: {
           text: 'The toll keeper steps aside.',
           choices: [
-            { label: '(Continue)', to: 'bye', effects: [() => removeNPC(currentNPC)] }
+            {
+              label: '(Continue)',
+              to: 'bye',
+              effects: [() => removeNPC(currentNPC)]
+            }
           ]
         }
       }
@@ -248,20 +342,58 @@ const OFFICE_MODULE = (() => {
           choices: [ { label: '(Contemplate)', to: 'bye' } ]
         }
       }
+    },
+    {
+      id: 'vending',
+      map: 'floor2',
+      x: midX,
+      y: 6,
+      color: '#a9f59f',
+      name: 'Vending Machine',
+      desc: 'It flashes "TRADE".',
+      shop: true,
+      tree: { start: { text: 'The machine hums softly.', choices: [ { label: '(Leave)', to: 'bye' } ] } }
+    },
+    {
+      id: 'rogue_janitor',
+      map: 'floor1',
+      x: 3,
+      y: 6,
+      color: '#f88',
+      name: 'Rogue Janitor',
+      desc: 'Wields a dripping mop.',
+      tree: { start: { text: 'He blocks your path.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      combat: { DEF: 3, loot: { id: 'rusty_mop', name: 'Rusty Mop', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } } }
     }
   ];
 
   return {
     seed: Date.now(),
     worldGen: genForestWorld,
-    start: { map: 'world', x: 2, y: WORLD_MIDY },
-    items: [
-      { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] }
-    ],
-    quests: [],
+    start: { map: 'floor1', x: midX, y: FLOOR_H - 2 },
+      items: [
+        { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] }
+      ],
+      quests: [
+        {
+          id: 'q_card',
+          title: 'Access Granted',
+          desc: 'Convince security to lend you an access card and join Jen in the sim.',
+          reward: {
+            id: 'cursed_vr_helmet',
+            name: 'Cursed VR Helmet',
+            type: 'armor',
+            slot: 'armor',
+            cursed: true,
+            equip: { teleport: { map: 'forest', x: 2, y: FOREST_MIDY } }
+          }
+        },
+        { id: 'q_toll', title: 'Bridge Tax', desc: 'Pay the Toll Keeper with a trinket.' }
+      ],
     npcs,
-    interiors: [floor1, floor2, floor3],
-    buildings: []
+    interiors: [floor1, floor2, floor3, castle],
+    buildings: [],
+    portals
   };
 })();
 
