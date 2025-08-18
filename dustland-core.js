@@ -397,11 +397,13 @@ function setTile(map,x,y,t){
   g[y][x]=t; return true;
 }
 function currentGrid(){ return gridFor(mapIdForState()); }
-function occupiedAt(x,y){
-  const map=mapIdForState();
-  if(NPCS.some(n=> n.map===map && n.x===x && n.y===y)) return true;
-  if(itemDrops.some(it=> it.map===map && it.x===x && it.y===y)) return true;
-  return false;
+function queryTile(x,y,map=mapIdForState()){
+  const tile=getTile(map,x,y);
+  if(tile===null) return {tile:null, walkable:false, entities:[], items:[]};
+  const entities=NPCS.filter(n=> n.map===map && n.x===x && n.y===y);
+  const items=itemDrops.filter(it=> it.map===map && it.x===x && it.y===y);
+  const walkableFlag=!!(walkable[tile] && entities.length===0 && items.length===0);
+  return {tile, walkable:walkableFlag, entities, items};
 }
 // Find nearest free, walkable, unoccupied (and not water on world)
 function findFreeDropTile(map,x,y){
@@ -414,10 +416,8 @@ function findFreeDropTile(map,x,y){
     const [cx,cy,d]=q.shift();
     if(d>MAX_RAD) break;
     if(cx>=0&&cy>=0&&cx<W&&cy<H){
-      const t=getTile(map,cx,cy);
-      if(t!==null && isWalkable(t) && !occupiedAt(cx,cy) && !(map==='world' && t===TILE.WATER)){
-        return {x:cx,y:cy};
-      }
+      const info=queryTile(cx,cy,map);
+      if(info.walkable) return {x:cx,y:cy};
     }
     for(const [dx,dy] of dirs){
       const nx=cx+dx, ny=cy+dy, nd=d+1, k=nx+','+ny;
@@ -693,12 +693,7 @@ function placeHut(x,y,b){
 // ===== Interaction =====
 function canWalk(x,y){
   if(state.map==='creator') return false;
-  const map=mapIdForState();
-  const t=getTile(map,x,y);
-  if(t===null) return false;
-  if(!walkable[t]) return false;
-  if(occupiedAt(x,y)) return false;
-  return true;
+  return queryTile(x,y).walkable;
 }
 function move(dx,dy){
   if(state.map==='creator') return;
@@ -709,35 +704,44 @@ function move(dx,dy){
   }
 }
 function adjacentNPC(){
-  const map=mapIdForState();
-  for(const n of NPCS){
-    if(n.map!==map) continue;
-    if(Math.abs(n.x-player.x)+Math.abs(n.y-player.y)===1) return n;
+  const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+  for(const [dx,dy] of dirs){
+    const info=queryTile(player.x+dx,player.y+dy);
+    if(info.entities.length) return info.entities[0];
   }
   return null;
 }
 function takeNearestItem(){
-  const map=mapIdForState();
   const dirs=[[0,0],[1,0],[-1,0],[0,1],[0,-1]];
   for(const [dx,dy] of dirs){
-    const tx=player.x+dx, ty=player.y+dy;
-    const idx=itemDrops.findIndex(it=> it.map===map && it.x===tx && it.y===ty);
-    if(idx>-1){
-      const it=itemDrops[idx]; addToInv(it); itemDrops.splice(idx,1);
-      log('Took '+it.name+'.'); updateHUD(); return true;
+    const info=queryTile(player.x+dx,player.y+dy);
+    if(info.items.length){
+      const it=info.items[0];
+      const idx=itemDrops.indexOf(it);
+      if(idx>-1) itemDrops.splice(idx,1);
+      addToInv(it);
+      log('Took '+it.name+'.'); updateHUD();
+      return true;
     }
   }
   return false;
 }
-function interact(){
-  if(Date.now()-lastInteract < 200) return false;
-  lastInteract = Date.now();
+function interactAt(x,y){
   if(state.map==='creator') return false;
-  const n=adjacentNPC(); if(n){ openDialog(n); return true; }
-  const t=getTile(mapIdForState(), player.x, player.y);
-  if(t===TILE.DOOR){
+  const dist=Math.abs(player.x-x)+Math.abs(player.y-y);
+  if(dist>1) return false;
+  const info=queryTile(x,y);
+  if(info.entities.length){ openDialog(info.entities[0]); return true; }
+  if(info.items.length){
+    const it=info.items[0];
+    const idx=itemDrops.indexOf(it);
+    if(idx>-1) itemDrops.splice(idx,1);
+    addToInv(it); log('Took '+it.name+'.'); updateHUD();
+    return true;
+  }
+  if(x===player.x && y===player.y && info.tile===TILE.DOOR){
     if(state.map==='world'){
-      const b=buildings.find(b=> b.doorX===player.x && b.doorY===player.y);
+      const b=buildings.find(b=> b.doorX===x && b.doorY===y);
       if(!b){ log('No entrance here.'); return true; }
       if(b.boarded){ log('The doorway is boarded up from the outside.'); return true; }
       setMap(b.interiorId,'Interior');
@@ -745,21 +749,29 @@ function interact(){
       if(I){ player.x=I.entryX; player.y=I.entryY; }
       log('You step inside.'); centerCamera(player.x,player.y,state.map); updateHUD(); return true;
     }
-    if(state.map!=='world'){ // coming from interior
+    if(state.map!=='world'){
       const b=buildings.find(b=> b.interiorId===state.map);
       if(b){ setMap('world'); player.x=b.doorX; player.y=b.doorY-1; log('You step back outside.'); centerCamera(player.x,player.y,state.map); updateHUD(); return true; }
     }
   }
-  if(takeNearestItem()) return true;
+  return false;
+}
+function interact(){
+  if(Date.now()-lastInteract < 200) return false;
+  lastInteract = Date.now();
+  const dirs=[[0,0],[1,0],[-1,0],[0,1],[0,-1]];
+  for(const [dx,dy] of dirs){
+    if(interactAt(player.x+dx,player.y+dy)) return true;
+  }
   log('Nothing interesting.');
   return false;
 }
 
 // Grouped systems expose focused gameplay concerns
 const movementSystem = { canWalk, move };
-const collisionSystem = { occupiedAt, canWalk };
-const interactionSystem = { adjacentNPC, takeNearestItem, interact };
-Object.assign(window, { movementSystem, collisionSystem, interactionSystem });
+const collisionSystem = { queryTile, canWalk };
+const interactionSystem = { adjacentNPC, takeNearestItem, interact, interactAt };
+Object.assign(window, { movementSystem, collisionSystem, interactionSystem, queryTile, interactAt });
 
 // ===== Dialog =====
 const overlay=document.getElementById('overlay');
@@ -1219,10 +1231,13 @@ if (typeof module !== 'undefined' && module.exports) {
     itemDrops,
     move,
     normalizeItem,
+    interactAt,
+    queryTile,
     NPCS,
     openDialog,
     party,
     player,
+    takeNearestItem,
     resolveCheck,
     setGameState,
     setLeader: (idx)=>{ selectedMember = idx; },

@@ -37,7 +37,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck } = require('../dustland-core.js');
+const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt } = require('../dustland-core.js');
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -120,6 +120,37 @@ test('pathfinding blocks on NPCs', () => {
   assert.strictEqual(canWalk(1,0), false);
   move(1,0);
   assert.strictEqual(player.x,0);
+});
+
+test('queryTile reports entities and items', () => {
+  const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
+  applyModule({world});
+  state.map='world';
+  player.x=0; player.y=0;
+  NPCS.length=0; itemDrops.length=0;
+  NPCS.push({id:'n',map:'world',x:1,y:1,name:'N'});
+  itemDrops.push({id:'i',map:'world',x:2,y:0,name:'Item'});
+  let q=queryTile(0,0);
+  assert.strictEqual(q.walkable,true);
+  q=queryTile(1,1);
+  assert.strictEqual(q.walkable,false);
+  assert.strictEqual(q.entities.length,1);
+  q=queryTile(2,0);
+  assert.strictEqual(q.walkable,false);
+  assert.strictEqual(q.items.length,1);
+});
+
+test('interactAt picks up adjacent item', () => {
+  const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
+  applyModule({world});
+  state.map='world';
+  player.x=0; player.y=0;
+  itemDrops.length=0; player.inv.length=0;
+  const itm={id:'i',map:'world',x:1,y:0,name:'Gem'};
+  itemDrops.push(itm);
+  interactAt(1,0);
+  assert.ok(player.inv.some(it=>it.name==='Gem'));
+  assert.ok(!itemDrops.includes(itm));
 });
 
 test('findFreeDropTile avoids water and player tiles', () => {
