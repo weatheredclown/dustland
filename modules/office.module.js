@@ -151,14 +151,14 @@ const OFFICE_MODULE = (() => {
         start: {
           text: 'Access to the third floor requires a card.',
           choices: [
-            { label: '(Ask for Access Card)', to: 'give', once: true },
+            {
+              label: '(Persuade for card)',
+              check: { stat: 'CHA', dc: DC.TALK },
+              success: 'He sighs and hands over a spare card.',
+              failure: 'Rules are rules.',
+              reward: 'access_card'
+            },
             { label: '(Leave)', to: 'bye' }
-          ]
-        },
-        give: {
-          text: 'He lends you a spare card.',
-          choices: [
-            { label: '(Take Access Card)', to: 'bye', reward: 'access_card' }
           ]
         }
       }
@@ -191,10 +191,20 @@ const OFFICE_MODULE = (() => {
       color: '#caffc6',
       name: 'Coworker Jen',
       desc: 'Your friend scrolling through code.',
+      questId: 'q_card',
       tree: {
         start: {
           text: 'Ready for the sim once you get the card.',
-          choices: [ { label: '(Nod)', to: 'bye' } ]
+          choices: [
+            { label: '(Where do I get one?)', to: 'accept', q: 'accept' },
+            { label: '(I have the card)', to: 'do_turnin', q: 'turnin' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        },
+        accept: { text: 'Security downstairs hoards spares.', choices: [ { label: '(Thanks)', to: 'bye' } ] },
+        do_turnin: {
+          text: 'Jen hands you a battered VR headset.',
+          choices: [ { label: '(Continue)', to: 'bye' } ]
         }
       }
     },
@@ -221,18 +231,30 @@ const OFFICE_MODULE = (() => {
       color: '#a9f59f',
       name: 'Toll Keeper',
       desc: 'Blocks the only bridge across the river.',
+      questId: 'q_toll',
       tree: {
         start: {
           text: 'Pay a trinket to cross.',
           choices: [
-            { label: '(Pay)', to: 'paid', costSlot: 'trinket', success: '', failure: 'You have no trinket.' },
+            {
+              label: '(Pay)',
+              to: 'do_turnin',
+              q: 'turnin',
+              costSlot: 'trinket',
+              success: '',
+              failure: 'You have no trinket.'
+            },
             { label: '(Leave)', to: 'bye' }
           ]
         },
-        paid: {
+        do_turnin: {
           text: 'The toll keeper steps aside.',
           choices: [
-            { label: '(Continue)', to: 'bye', effects: [() => removeNPC(currentNPC)] }
+            {
+              label: '(Continue)',
+              to: 'bye',
+              effects: [() => removeNPC(currentNPC)]
+            }
           ]
         }
       }
@@ -258,27 +280,53 @@ const OFFICE_MODULE = (() => {
           choices: [ { label: '(Contemplate)', to: 'bye' } ]
         }
       }
+    },
+    {
+      id: 'vending',
+      map: 'floor2',
+      x: midX,
+      y: 6,
+      color: '#a9f59f',
+      name: 'Vending Machine',
+      desc: 'It flashes "TRADE".',
+      shop: true,
+      tree: { start: { text: 'The machine hums softly.', choices: [ { label: '(Leave)', to: 'bye' } ] } }
+    },
+    {
+      id: 'rogue_janitor',
+      map: 'floor1',
+      x: 3,
+      y: 6,
+      color: '#f88',
+      name: 'Rogue Janitor',
+      desc: 'Wields a dripping mop.',
+      tree: { start: { text: 'He blocks your path.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      combat: { DEF: 3, loot: { id: 'rusty_mop', name: 'Rusty Mop', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } } }
     }
   ];
 
   return {
     seed: Date.now(),
     start: { map: 'floor1', x: midX, y: FLOOR_H - 2 },
-    items: [
-      { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] },
-      {
-        map: 'floor3',
-        x: midX,
-        y: 6,
-        id: 'cursed_vr_helmet',
-        name: 'Cursed VR Helmet',
-        type: 'armor',
-        slot: 'armor',
-        cursed: true,
-        equip: { teleport: { map: 'forest', x: 2, y: FOREST_MIDY } }
-      }
-    ],
-    quests: [],
+      items: [
+        { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] }
+      ],
+      quests: [
+        {
+          id: 'q_card',
+          title: 'Access Granted',
+          desc: 'Convince security to lend you an access card and join Jen in the sim.',
+          reward: {
+            id: 'cursed_vr_helmet',
+            name: 'Cursed VR Helmet',
+            type: 'armor',
+            slot: 'armor',
+            cursed: true,
+            equip: { teleport: { map: 'forest', x: 2, y: FOREST_MIDY } }
+          }
+        },
+        { id: 'q_toll', title: 'Bridge Tax', desc: 'Pay the Toll Keeper with a trinket.' }
+      ],
     npcs,
     interiors: [floor1, floor2, floor3, forest],
     buildings: []
