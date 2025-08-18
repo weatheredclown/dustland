@@ -225,6 +225,7 @@ test('advanceDialog handles cost and reward', () => {
   assert.ok(player.inv.some(it => it.id === 'gem'));
   assert.ok(!player.inv.some(it => it.id === 'key'));
   assert.ok(res.close);
+  assert.ok(res.success);
 });
 
 test('advanceDialog respects goto with costItem', () => {
@@ -272,6 +273,25 @@ test('advanceDialog matches reqItem case-insensitively', () => {
   advanceDialog(dialog, 0);
   assert.strictEqual(player.x, 7);
   assert.strictEqual(player.y, 8);
+});
+
+test('advanceDialog returns success flag on failure', () => {
+  const tree = {
+    start: { text: '', next: [{ label: 'Fail', check: { stat: 'str', dc: 999 } }] }
+  };
+  const dialog = { tree, node: 'start' };
+  const res = advanceDialog(dialog, 0);
+  assert.strictEqual(res.success, false);
+});
+
+test('once choice not consumed on failed check', () => {
+  globalThis.usedOnceChoices.clear();
+  const npc = { id: 'tester', name: 'Tester', tree: { start: { text: '', next: [{ label: 'Try', once: true, check: { stat: 'str', dc: 999 }, failure: 'nope' }] } } };
+  openDialog(npc);
+  const key = 'tester::start::Try';
+  choicesEl.children[0].onclick();
+  assert.ok(!globalThis.usedOnceChoices.has(key));
+  closeDialog();
 });
 
 test('door portals link interiors', () => {
