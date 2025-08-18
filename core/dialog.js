@@ -144,9 +144,10 @@ function advanceDialog(stateObj, choiceIdx){
     res.close=true; stateObj.node=null; return res;
   }
 
-  if(choice.to){
-    res.next=choice.to;
-    stateObj.node=choice.to;
+  const nextId = choice.to || choice.id;
+  if (nextId) {
+    res.next = nextId;
+    stateObj.node = nextId;
     return res;
   }
 
