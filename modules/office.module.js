@@ -394,8 +394,7 @@ const OFFICE_MODULE = (() => {
         }
       ],
     npcs,
-    interiors: [floor1, floor2, floor3, castle],
-    buildings: []
+    interiors: [floor1, floor2, floor3, castle]
   };
 })();
 
