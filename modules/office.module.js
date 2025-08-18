@@ -361,6 +361,16 @@ const OFFICE_MODULE = (() => {
             teleport: { map: 'world', x: 2, y: WORLD_MIDY },
             msg: 'You step into the forest.'
           }
+        },
+        {
+          map: 'world',
+          x: WORLD_MID - 2,
+          y: WORLD_MIDY,
+          id: 'river_trinket',
+          name: 'River Trinket',
+          type: 'trinket',
+          slot: 'trinket',
+          mods: { LCK: 1 }
         }
       ],
       quests: [
