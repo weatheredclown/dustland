@@ -75,9 +75,9 @@ function applyEquipmentStats(m){ m.applyEquipmentStats(); }
 function leader(){ return party.leader(); }
 function setLeader(idx){ selectedMember = idx; }
 
-const exportsObj = { baseStats, Character, Party, party, makeMember, addPartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, selectedMember };
-Object.assign(globalThis, exportsObj);
+const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, selectedMember };
+Object.assign(globalThis, partyExports);
 
 if (typeof module !== 'undefined' && module.exports){
-  module.exports = exportsObj;
+  module.exports = partyExports;
 }

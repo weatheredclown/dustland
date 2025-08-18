@@ -154,7 +154,7 @@ function advanceDialog(stateObj, choiceIdx){
   return finalize(choice.text || '');
 }
 
-const usedOnceChoices=new Set();
+const onceChoices = globalThis.usedOnceChoices || (globalThis.usedOnceChoices = new Set());
 
 function setPortrait(portEl, npc){
   if(!npc.portraitSheet){
@@ -241,7 +241,7 @@ function renderDialog(){
   choices=choices.filter(({opt})=>{
     if(!opt.once) return true;
     const key=`${currentNPC.id}::${dialogState.node}::${opt.label}`;
-    return !usedOnceChoices.has(key);
+    return !onceChoices.has(key);
   });
 
   choices.forEach(({opt,idx})=>{
@@ -250,7 +250,7 @@ function renderDialog(){
     div.textContent=opt.label||'(Continue)';
     div.onclick=()=>{
       const key=`${currentNPC.id}::${dialogState.node}::${opt.label}`;
-      if(opt.once) usedOnceChoices.add(key);
+      if(opt.once) onceChoices.add(key);
 
       const result=advanceDialog(dialogState,idx);
       if(result && result.text!==null){
