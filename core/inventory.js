@@ -164,9 +164,9 @@ function useItem(invIndex){
   return false;
 }
 
-const exportsObj = { ITEMS, itemDrops, registerItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem };
-Object.assign(globalThis, exportsObj);
+const inventoryExports = { ITEMS, itemDrops, registerItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem };
+Object.assign(globalThis, inventoryExports);
 
 if (typeof module !== 'undefined' && module.exports){
-  module.exports = exportsObj;
+  module.exports = inventoryExports;
 }
