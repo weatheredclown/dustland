@@ -110,13 +110,9 @@ function quickCombat(defender){
 const TILE = { SAND:0, ROCK:1, WATER:2, BRUSH:3, ROAD:4, RUIN:5, WALL:6, FLOOR:7, DOOR:8, BUILDING:9 };
 const walkable = {0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false};
 const mapNameEl = document.getElementById('mapname');
+const mapLabels = { world: 'Wastes', creator: 'Creator' };
 function mapLabel(id){
-  if (id === 'world') return 'Wastes';
-  if (id === 'creator') return 'Creator';
-  if (id === 'floor1') return 'Lobby';
-  if (id === 'floor2') return 'Workspace';
-  if (id === 'floor3') return 'Executive Suite';
-  return 'Interior';
+  return mapLabels[id] || 'Interior';
 }
 function setMap(id,label){
   state.map=id;
@@ -608,6 +604,7 @@ function applyModule(data){
     if(data.buildings && data.buildings.length){ buildings = data.buildings; }
     if(data.portals && data.portals.length){ portals = data.portals; }
   }
+  if(data.mapLabels){ Object.assign(mapLabels, data.mapLabels); }
   buildings.forEach(b=>{ if(!interiors[b.interiorId]){ makeInteriorRoom(b.interiorId); } });
   itemDrops.length = 0;
   Object.keys(ITEMS).forEach(k=> delete ITEMS[k]);
@@ -1308,6 +1305,7 @@ if (typeof module !== 'undefined' && module.exports) {
     portals,
     player,
     ITEMS,
+    mapLabels,
     takeNearestItem,
     resolveCheck,
     setGameState,
