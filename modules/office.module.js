@@ -6,11 +6,23 @@ const OFFICE_MODULE = (() => {
     FLOOR_H = 24;
   const midX = Math.floor(FLOOR_W / 2);
 
-  // VR Forest dimensions
-  const FOREST_W = 20,
-    FOREST_H = 15,
-    FOREST_MID = Math.floor(FOREST_W / 2),
-    FOREST_MIDY = Math.floor(FOREST_H / 2);
+  const WORLD_MID = Math.floor(WORLD_W / 2),
+    WORLD_MIDY = Math.floor(WORLD_H / 2);
+
+  function genForestWorld(seed = Date.now()) {
+    setRNGSeed(seed);
+    world = Array.from({ length: WORLD_H }, () =>
+      Array.from({ length: WORLD_W }, (_, x) =>
+        x === WORLD_MID ? TILE.WATER : TILE.BRUSH
+      )
+    );
+    setTile('world', WORLD_MID, WORLD_MIDY, TILE.ROAD);
+    interiors = {};
+    if (creatorMap.grid && creatorMap.grid.length) interiors['creator'] = creatorMap;
+    buildings.length = 0;
+    const hut = placeHut(WORLD_MID - 8, WORLD_MIDY - 2);
+    return { hutId: hut?.interiorId };
+  }
 
   function baseGrid() {
     return Array.from({ length: FLOOR_H }, (_, y) =>
@@ -84,31 +96,9 @@ const OFFICE_MODULE = (() => {
     return { id: 'floor3', w: FLOOR_W, h: FLOOR_H, grid, entryX: midX, entryY: 2 };
   }
 
-  function makeForest() {
-    const grid = Array.from({ length: FOREST_H }, (_, y) =>
-      Array.from({ length: FOREST_W }, (_, x) => {
-        if (y === 0 || y === FOREST_H - 1 || x === 0 || x === FOREST_W - 1)
-          return TILE.WALL;
-        if (x === FOREST_MID) return TILE.WATER;
-        return TILE.FLOOR;
-      })
-    );
-    // bridge over the river
-    grid[FOREST_MIDY][FOREST_MID] = TILE.FLOOR;
-    return {
-      id: 'forest',
-      w: FOREST_W,
-      h: FOREST_H,
-      grid,
-      entryX: 2,
-      entryY: FOREST_MIDY
-    };
-  }
-
   const floor1 = makeFloor1();
   const floor2 = makeFloor2();
   const floor3 = makeFloor3();
-  const forest = makeForest();
 
   const elevatorNPCs = ['floor1', 'floor2', 'floor3'].map((map) => ({
     id: `elevator_${map}`,
@@ -215,9 +205,9 @@ const OFFICE_MODULE = (() => {
     },
     {
       id: 'toll',
-      map: 'forest',
-      x: FOREST_MID,
-      y: FOREST_MIDY,
+      map: 'world',
+      x: WORLD_MID,
+      y: WORLD_MIDY,
       color: '#a9f59f',
       name: 'Toll Keeper',
       desc: 'Blocks the only bridge across the river.',
@@ -239,9 +229,9 @@ const OFFICE_MODULE = (() => {
     },
     {
       id: 'fae_prince',
-      map: 'forest',
-      x: FOREST_W - 3,
-      y: FOREST_MIDY - 2,
+      map: 'world',
+      x: WORLD_W - 3,
+      y: WORLD_MIDY - 2,
       color: '#caffc6',
       name: 'Fae Prince',
       desc: 'An ethereal figure with an enigmatic smile.',
@@ -263,39 +253,48 @@ const OFFICE_MODULE = (() => {
 
   return {
     seed: Date.now(),
-    start: { map: 'floor1', x: midX, y: FLOOR_H - 2 },
+    worldGen: genForestWorld,
+    start: { map: 'world', x: 2, y: WORLD_MIDY },
     items: [
-      { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] },
-      {
-        map: 'floor3',
-        x: midX,
-        y: 6,
-        id: 'cursed_vr_helmet',
-        name: 'Cursed VR Helmet',
-        type: 'armor',
-        slot: 'armor',
-        cursed: true,
-        equip: { teleport: { map: 'forest', x: 2, y: FOREST_MIDY } }
-      }
+      { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] }
     ],
     quests: [],
     npcs,
-    interiors: [floor1, floor2, floor3, forest],
+    interiors: [floor1, floor2, floor3],
     buildings: []
   };
 })();
 
 const _startGame = startGame;
 startGame = function () {
-  startWorld();
-  applyModule(OFFICE_MODULE);
-  const s = OFFICE_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-  setMap(s.map);
-  player.x = s.x;
-  player.y = s.y;
-  centerCamera(player.x, player.y, s.map);
-  renderInv();
-  renderQuests();
-  renderParty();
-  updateHUD();
+  if (OFFICE_MODULE.worldGen) {
+    const { hutId } = OFFICE_MODULE.worldGen();
+    applyModule(OFFICE_MODULE);
+    const charm = registerItem({
+      id: 'forest_charm',
+      name: 'Forest Charm',
+      type: 'trinket',
+      slot: 'trinket',
+      mods: { LCK: 1 }
+    });
+    if (hutId && interiors[hutId]) {
+      const interior = interiors[hutId];
+      const ix = Math.floor(interior.w / 2);
+      const iy = Math.floor(interior.h / 2);
+      itemDrops.push({ id: charm.id, map: hutId, x: ix, y: iy });
+    }
+    const s = OFFICE_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+    setMap(s.map, 'Forest');
+    player.x = s.x;
+    player.y = s.y;
+    centerCamera(player.x, player.y, s.map);
+    renderInv();
+    renderQuests();
+    renderParty();
+    updateHUD();
+    log('You step into the forest.');
+  } else {
+    _startGame();
+    applyModule(OFFICE_MODULE);
+  }
 };
