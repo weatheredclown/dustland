@@ -235,10 +235,37 @@ function applyEquipmentStats(m){ m.applyEquipmentStats(); }
 function leader(){ return party.leader(); } // handy globally
 
 // ===== Inventory / equipment =====
-const itemDrops=[]; // {map,x,y,name,slot,mods,...}
+const ITEMS = {}; // item definitions by id
+const itemDrops = []; // {map,x,y,id}
+function cloneItem(it){
+  return {
+    ...it,
+    mods: { ...it.mods },
+    tags: [...it.tags],
+    use: it.use ? JSON.parse(JSON.stringify(it.use)) : null,
+    equip: it.equip ? JSON.parse(JSON.stringify(it.equip)) : null
+  };
+}
+function registerItem(item){
+  const norm = normalizeItem(item);
+  if(!norm.id) throw new Error('Item must have id');
+  ITEMS[norm.id] = norm;
+  return norm;
+}
+function getItem(id){
+  const it = ITEMS[id];
+  return it ? cloneItem(it) : null;
+}
 function addToInv(item){
-  if(typeof item==='string') item={name:item};
-  player.inv.push(item);
+  let base = null;
+  if(typeof item === 'string'){
+    base = getItem(item);
+  } else if(item && item.id){
+    base = ITEMS[item.id] || registerItem(item);
+    base = cloneItem(base);
+  }
+  if(!base) throw new Error('Unknown item');
+  player.inv.push(base);
   renderInv();
   if (window.NanoDialog) {
     NPCS.filter(n=> n.map === state.map)
@@ -312,9 +339,12 @@ function unequipItem(memberIndex, slot){
 function normalizeItem(it){
   if(!it) return null;
   return {
+    id: it.id || '',
     name: it.name || 'Unknown',
+    type: it.type || 'misc',
+    tags: Array.isArray(it.tags) ? it.tags.map(t=>t.toLowerCase()) : [],
     slot: it.slot || null,
-    mods: it.mods || {},
+    mods: it.mods ? { ...it.mods } : {},
     use: it.use || null,
     equip: it.equip || null,
     cursed: !!it.cursed,
@@ -365,13 +395,6 @@ function useItem(invIndex){
   log('Nothing happens...');
   return false;
 }
-
-// Wrap addToInv so items get normalized
-const _origAddToInv = addToInv;
-addToInv = function(item){
-  if(typeof item==='string') item={name:item};
-  _origAddToInv(normalizeItem(item));
-};
 
 // ===== Helpers =====
 function mapIdForState(){ return state.map; }
@@ -475,7 +498,11 @@ function addQuest(id, title, desc, meta){ questLog.add(new Quest(id, title, desc
 function completeQuest(id){ questLog.complete(id); }
 
 // minimal core helpers so defaultQuestProcessor works even without content helpers loaded yet
-function hasItem(name){ return player.inv.some(it=> it.name===name); }
+function findItemIndex(idOrTag){
+  const tag = typeof idOrTag === 'string' ? idOrTag.toLowerCase() : '';
+  return player.inv.findIndex(it => it.id === idOrTag || it.tags.map(t=>t.toLowerCase()).includes(tag));
+}
+function hasItem(idOrTag){ return findItemIndex(idOrTag) !== -1; }
 function defaultQuestProcessor(npc, nodeId){
   const meta = npc.quest;
   if(!meta) return;
@@ -485,13 +512,14 @@ function defaultQuestProcessor(npc, nodeId){
     if(meta.status==='available') questLog.add(meta);
     if(meta.status==='active'){
       if(!meta.item || hasItem(meta.item)){
-        if(meta.item){ const i = player.inv.findIndex(it=> it.name===meta.item); if(i>-1) removeFromInv(i); }
+        if(meta.item){ const i = findItemIndex(meta.item); if(i>-1) removeFromInv(i); }
         questLog.complete(meta.id);
         if(meta.reward){ addToInv(meta.reward); }
         if(meta.xp){ awardXP(leader(), meta.xp); }
         if(meta.moveTo){ npc.x=meta.moveTo.x; npc.y=meta.moveTo.y; }
       } else {
-        textEl.textContent=`You don’t have ${meta.item}.`;
+        const def = ITEMS[meta.item];
+        textEl.textContent=`You don’t have ${def?def.name:meta.item}.`;
       }
     }
   }
@@ -580,19 +608,13 @@ function applyModule(data){
   }
   buildings.forEach(b=>{ if(!interiors[b.interiorId]){ makeInteriorRoom(b.interiorId); } });
   itemDrops.length = 0;
+  Object.keys(ITEMS).forEach(k=> delete ITEMS[k]);
   (data.items||[]).forEach(it=>{
-    itemDrops.push({
-      map:it.map||'world',
-      x:it.x,
-      y:it.y,
-      name:it.name,
-      slot:it.slot,
-      mods:it.mods,
-      value:it.value,
-      use:it.use,
-      equip:it.equip,
-      cursed:it.cursed
-    });
+    const {map, x, y, ...def} = it;
+    const registered = registerItem(def);
+    if(map!==undefined && x!==undefined && y!==undefined){
+      itemDrops.push({id: registered.id, map: map||'world', x, y});
+    }
   });
   Object.keys(quests).forEach(k=> delete quests[k]);
   (data.quests||[]).forEach(q=>{
@@ -719,8 +741,9 @@ function takeNearestItem(){
       const it=info.items[0];
       const idx=itemDrops.indexOf(it);
       if(idx>-1) itemDrops.splice(idx,1);
-      addToInv(it);
-      log('Took '+it.name+'.'); updateHUD();
+      const def = ITEMS[it.id];
+      addToInv(it.id);
+      log('Took '+(def?def.name:it.id)+'.'); updateHUD();
       return true;
     }
   }
@@ -736,7 +759,8 @@ function interactAt(x,y){
     const it=info.items[0];
     const idx=itemDrops.indexOf(it);
     if(idx>-1) itemDrops.splice(idx,1);
-    addToInv(it); log('Took '+it.name+'.'); updateHUD();
+    const def = ITEMS[it.id];
+    addToInv(it.id); log('Took '+(def?def.name:it.id)+'.'); updateHUD();
     return true;
   }
   if(x===player.x && y===player.y && info.tile===TILE.DOOR){
@@ -824,8 +848,10 @@ function applyReward(reward){
     awardXP(leader(), amt);
     if(typeof toast==='function') toast(`+${amt} XP`);
   } else {
-    addToInv(typeof reward==='string'?{name:reward}:reward);
-    if(typeof toast==='function') toast(`Received ${typeof reward==='string'?reward:reward.name}`);
+    addToInv(reward);
+    const id = typeof reward === 'string' ? reward : reward.id;
+    const def = ITEMS[id] || (typeof reward === 'object' ? reward : null);
+    if(typeof toast==='function') toast(`Received ${def?.name || id}`);
   }
 }
 
@@ -866,9 +892,7 @@ function advanceDialog(stateObj, choiceIdx){
   // Required item/slot without consumption
   if(choice.reqItem || choice.reqSlot){
     const idx = choice.reqItem
-      ? player.inv.findIndex(
-          it => it.name?.trim().toLowerCase() === choice.reqItem.trim().toLowerCase()
-        )
+      ? findItemIndex(choice.reqItem)
       : player.inv.findIndex(it => it.slot === choice.reqSlot);
     if(idx === -1){
       return finalize(choice.failure || 'You lack the required item.');
@@ -888,7 +912,7 @@ function advanceDialog(stateObj, choiceIdx){
 
   // Item/slot costs
   if(choice.costItem || choice.costSlot){
-    const idx = choice.costItem ? player.inv.findIndex(it=> it.name===choice.costItem)
+    const idx = choice.costItem ? findItemIndex(choice.costItem)
                                 : player.inv.findIndex(it=> it.slot===choice.costSlot);
     if(idx === -1){
       return finalize(choice.failure || 'You lack the required item.');
@@ -1261,11 +1285,13 @@ if (typeof module !== 'undefined' && module.exports) {
     move,
     normalizeItem,
     interactAt,
+    registerItem,
     queryTile,
     NPCS,
     openDialog,
     party,
     player,
+    ITEMS,
     takeNearestItem,
     resolveCheck,
     setGameState,

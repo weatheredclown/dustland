@@ -37,7 +37,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt } = require('../dustland-core.js');
+const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem } = require('../dustland-core.js');
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -86,7 +86,7 @@ test('cursed items reveal on unequip attempt and stay equipped', () => {
   player.inv.length = 0;
   const mem = new Character('t1','Tester','Role');
   party.addMember(mem);
-  const cursed = normalizeItem({ name:'Mask', slot:'armor', cursed:true });
+  const cursed = normalizeItem({ id:'mask', name:'Mask', type:'armor', slot:'armor', cursed:true });
   addToInv(cursed);
   equipItem(0,0);
   assert.strictEqual(mem.equip.armor.name,'Mask');
@@ -103,7 +103,7 @@ test('equipping teleport item moves player', () => {
   player.x = 0; player.y = 0;
   const mem = new Character('t2','Tele','Role');
   party.addMember(mem);
-  const tp = normalizeItem({ name:'Warp Ring', slot:'trinket', equip:{ teleport:{ map:'world', x:5, y:6 } } });
+  const tp = normalizeItem({ id:'warp_ring', name:'Warp Ring', type:'trinket', slot:'trinket', equip:{ teleport:{ map:'world', x:5, y:6 } } });
   addToInv(tp);
   equipItem(0,0);
   assert.strictEqual(player.x,5);
@@ -129,7 +129,8 @@ test('queryTile reports entities and items', () => {
   player.x=0; player.y=0;
   NPCS.length=0; itemDrops.length=0;
   NPCS.push({id:'n',map:'world',x:1,y:1,name:'N'});
-  itemDrops.push({id:'i',map:'world',x:2,y:0,name:'Item'});
+  registerItem({id:'i',name:'Item',type:'quest'});
+  itemDrops.push({id:'i',map:'world',x:2,y:0});
   let q=queryTile(0,0);
   assert.strictEqual(q.walkable,true);
   q=queryTile(1,1);
@@ -146,10 +147,11 @@ test('interactAt picks up adjacent item', () => {
   state.map='world';
   player.x=0; player.y=0;
   itemDrops.length=0; player.inv.length=0;
-  const itm={id:'i',map:'world',x:1,y:0,name:'Gem'};
+  registerItem({id:'gem',name:'Gem',type:'quest'});
+  const itm={id:'gem',map:'world',x:1,y:0};
   itemDrops.push(itm);
   interactAt(1,0);
-  assert.ok(player.inv.some(it=>it.name==='Gem'));
+  assert.ok(player.inv.some(it=>it.id==='gem'));
   assert.ok(!itemDrops.includes(itm));
 });
 
@@ -199,54 +201,59 @@ test('advanceDialog moves to next node', () => {
 
 test('advanceDialog handles cost and reward', () => {
   player.inv.length = 0;
-  addToInv({ name: 'Key' });
+  registerItem({id:'key',name:'Key',type:'quest'});
+  registerItem({id:'gem',name:'Gem',type:'quest'});
+  addToInv('key');
   const tree = {
-    start: { text: '', next: [{ label: 'Use Key', costItem: 'Key', reward: 'Gem' }] }
+    start: { text: '', next: [{ label: 'Use Key', costItem: 'key', reward: 'gem' }] }
   };
   const dialog = { tree, node: 'start' };
   const res = advanceDialog(dialog, 0);
-  assert.ok(player.inv.some(it => it.name === 'Gem'));
-  assert.ok(!player.inv.some(it => it.name === 'Key'));
+  assert.ok(player.inv.some(it => it.id === 'gem'));
+  assert.ok(!player.inv.some(it => it.id === 'key'));
   assert.ok(res.close);
 });
 
 test('advanceDialog respects goto with costItem', () => {
   player.inv.length = 0;
-  addToInv({ name: 'Key' });
+  registerItem({id:'key',name:'Key',type:'quest'});
+  addToInv('key');
   state.map = 'world';
   player.x = 0; player.y = 0;
   const tree = {
-    start: { text: '', next: [{ label: 'Go', costItem: 'Key', goto: { map: 'room', x: 3, y: 4 } }] }
+    start: { text: '', next: [{ label: 'Go', costItem: 'key', goto: { map: 'room', x: 3, y: 4 } }] }
   };
   const dialog = { tree, node: 'start' };
   advanceDialog(dialog, 0);
   assert.strictEqual(player.x, 3);
   assert.strictEqual(player.y, 4);
-  assert.ok(!player.inv.some(it => it.name === 'Key'));
+  assert.ok(!player.inv.some(it => it.id === 'key'));
 });
 
 test('advanceDialog uses reqItem without consuming and allows goto', () => {
   player.inv.length = 0;
-  addToInv({ name: 'Pass' });
+  registerItem({id:'pass',name:'Pass',type:'quest'});
+  addToInv('pass');
   state.map = 'world';
   player.x = 1; player.y = 1;
   const tree = {
-    start: { text: '', next: [{ label: 'Enter', reqItem: 'Pass', goto: { map: 'room', x: 5, y: 6 } }] }
+    start: { text: '', next: [{ label: 'Enter', reqItem: 'pass', goto: { map: 'room', x: 5, y: 6 } }] }
   };
   const dialog = { tree, node: 'start' };
   advanceDialog(dialog, 0);
   assert.strictEqual(player.x, 5);
   assert.strictEqual(player.y, 6);
-  assert.ok(player.inv.some(it => it.name === 'Pass'));
+  assert.ok(player.inv.some(it => it.id === 'pass'));
 });
 
 test('advanceDialog matches reqItem case-insensitively', () => {
   player.inv.length = 0;
-  addToInv({ name: 'access card' });
+  registerItem({id:'access_card',name:'access card',type:'quest',tags:['pass']});
+  addToInv('access_card');
   state.map = 'world';
   player.x = 2; player.y = 2;
   const tree = {
-    start: { text: '', next: [{ label: 'Up', reqItem: 'Access Card', goto: { map: 'room', x: 7, y: 8 } }] }
+    start: { text: '', next: [{ label: 'Up', reqItem: 'PASS', goto: { map: 'room', x: 7, y: 8 } }] }
   };
   const dialog = { tree, node: 'start' };
   advanceDialog(dialog, 0);

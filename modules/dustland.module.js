@@ -23,27 +23,29 @@ const DUSTLAND_MODULE = (() => {
   const hall = makeHall();
 
   const items = [
-    { map: 'world', x: 8, y: midY, name: 'Pipe Rifle', slot: 'weapon', mods: { ATK: 2 } },
-    { map: 'world', x: 10, y: midY, name: 'Leather Jacket', slot: 'armor', mods: { DEF: 1 } },
-    { map: 'world', x: 12, y: midY, name: 'Lucky Bottlecap', slot: 'trinket', mods: { LCK: 1 } },
-    { map: 'world', x: 28, y: midY - 4, name: 'Crowbar', slot: 'weapon', mods: { ATK: 1 } },
-    { map: 'world', x: 35, y: midY + 6, name: 'Rebar Club', slot: 'weapon', mods: { ATK: 1 } },
-    { map: 'world', x: 52, y: midY - 3, name: 'Kevlar Scrap Vest', slot: 'armor', mods: { DEF: 2 } },
-    { map: 'world', x: 67, y: midY + 5, name: 'Goggles', slot: 'trinket', mods: { PER: 1 } },
-    { map: 'world', x: 83, y: midY - 2, name: 'Wrench', slot: 'trinket', mods: { INT: 1 } },
-    { map: 'world', x: 95, y: midY + 2, name: 'Lucky Rabbit Foot', slot: 'trinket', mods: { LCK: 1 } },
-    { map: 'world', x: 18, y: midY - 2, name: 'Valve' },
-    { map: 'world', x: 26, y: midY + 3, name: 'Lost Satchel' },
-    { map: 'world', x: 60, y: midY - 1, name: 'Rust Idol' }
+    { id: 'rusted_key', name: 'Rusted Key', type: 'quest', tags: ['key'] },
+    { id: 'toolkit', name: 'Toolkit', type: 'quest', tags: ['tool'] },
+    { map: 'world', x: 8, y: midY, id: 'pipe_rifle', name: 'Pipe Rifle', type: 'weapon', slot: 'weapon', mods: { ATK: 2 } },
+    { map: 'world', x: 10, y: midY, id: 'leather_jacket', name: 'Leather Jacket', type: 'armor', slot: 'armor', mods: { DEF: 1 } },
+    { map: 'world', x: 12, y: midY, id: 'lucky_bottlecap', name: 'Lucky Bottlecap', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } },
+    { map: 'world', x: 28, y: midY - 4, id: 'crowbar', name: 'Crowbar', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } },
+    { map: 'world', x: 35, y: midY + 6, id: 'rebar_club', name: 'Rebar Club', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } },
+    { map: 'world', x: 52, y: midY - 3, id: 'kevlar_scrap_vest', name: 'Kevlar Scrap Vest', type: 'armor', slot: 'armor', mods: { DEF: 2 } },
+    { map: 'world', x: 67, y: midY + 5, id: 'goggles', name: 'Goggles', type: 'trinket', slot: 'trinket', mods: { PER: 1 } },
+    { map: 'world', x: 83, y: midY - 2, id: 'wrench', name: 'Wrench', type: 'trinket', slot: 'trinket', mods: { INT: 1 } },
+    { map: 'world', x: 95, y: midY + 2, id: 'lucky_rabbit_foot', name: 'Lucky Rabbit Foot', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } },
+    { map: 'world', x: 18, y: midY - 2, id: 'valve', name: 'Valve', type: 'quest' },
+    { map: 'world', x: 26, y: midY + 3, id: 'lost_satchel', name: 'Lost Satchel', type: 'quest' },
+    { map: 'world', x: 60, y: midY - 1, id: 'rust_idol', name: 'Rust Idol', type: 'quest', tags: ['idol'] }
   ];
 
   const quests = [
-    { id: 'q_hall_key', title: 'Find the Rusted Key', desc: 'Search the hall for a Rusted Key to unlock the exit.', item: 'Rusted Key' },
-    { id: 'q_waterpump', title: 'Water for the Pump', desc: 'Find a Valve and help Mara restart the pump.', item: 'Valve', reward: { name: 'Rusted Badge', slot: 'trinket', mods: { LCK: 1 } }, xp: 4 },
+    { id: 'q_hall_key', title: 'Find the Rusted Key', desc: 'Search the hall for a Rusted Key to unlock the exit.', item: 'rusted_key' },
+    { id: 'q_waterpump', title: 'Water for the Pump', desc: 'Find a Valve and help Mara restart the pump.', item: 'valve', reward: { id: 'rusted_badge', name: 'Rusted Badge', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } }, xp: 4 },
     { id: 'q_recruit_grin', title: 'Recruit Grin', desc: 'Convince or pay Grin to join.' },
-    { id: 'q_postal', title: 'Lost Parcel', desc: 'Find and return the Lost Satchel to Ivo.', item: 'Lost Satchel', reward: { name: 'Brass Stamp', slot: 'trinket', mods: { LCK: 1 } }, xp: 4 },
-    { id: 'q_tower', title: 'Dead Air', desc: 'Repair the radio tower console (Toolkit helps).', item: 'Toolkit', reward: { name: 'Tuner Charm', slot: 'trinket', mods: { PER: 1 } }, xp: 5 },
-    { id: 'q_idol', title: 'Rust Idol', desc: 'Recover the Rust Idol from roadside ruins.', item: 'Rust Idol', reward: { name: 'Pilgrim Thread', slot: 'trinket', mods: { CHA: 1 } }, xp: 5 },
+    { id: 'q_postal', title: 'Lost Parcel', desc: 'Find and return the Lost Satchel to Ivo.', item: 'lost_satchel', reward: { id: 'brass_stamp', name: 'Brass Stamp', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } }, xp: 4 },
+    { id: 'q_tower', title: 'Dead Air', desc: 'Repair the radio tower console (Toolkit helps).', item: 'toolkit', reward: { id: 'tuner_charm', name: 'Tuner Charm', type: 'trinket', slot: 'trinket', mods: { PER: 1 } }, xp: 5 },
+    { id: 'q_idol', title: 'Rust Idol', desc: 'Recover the Rust Idol from roadside ruins.', item: 'rust_idol', reward: { id: 'pilgrim_thread', name: 'Pilgrim Thread', type: 'trinket', slot: 'trinket', mods: { CHA: 1 } }, xp: 5 },
     { id: 'q_toll', title: 'Toll-Booth Etiquette', desc: 'You met the Duchess on the road.', xp: 2 }
   ];
 
@@ -93,7 +95,7 @@ const DUSTLAND_MODULE = (() => {
         },
         open: {
           text: 'Inside you find a Rusted Key.',
-          choices: [ { label: '(Take Rusted Key)', to: 'empty', reward: 'Rusted Key' } ]
+          choices: [ { label: '(Take Rusted Key)', to: 'empty', reward: 'rusted_key' } ]
         },
         empty: { text: 'An empty crate.', choices: [ { label: '(Leave)', to: 'bye' } ] }
       }
@@ -316,7 +318,7 @@ const DUSTLAND_MODULE = (() => {
           ]
         }
       },
-      combat: { DEF: 5, loot: { name: 'Raider Knife', slot: 'weapon', mods: { ATK: 1 } } }
+      combat: { DEF: 5, loot: { id: 'raider_knife', name: 'Raider Knife', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } } }
     },
     {
       id: 'trader',

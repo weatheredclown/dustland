@@ -673,6 +673,9 @@ function updateModsWrap() {
 function startNewItem() {
   editItemIdx = -1;
   document.getElementById('itemName').value = '';
+  document.getElementById('itemId').value = '';
+  document.getElementById('itemType').value = '';
+  document.getElementById('itemTags').value = '';
   document.getElementById('itemMap').value = 'world';
   document.getElementById('itemX').value = 0;
   document.getElementById('itemY').value = 0;
@@ -691,6 +694,9 @@ function startNewItem() {
 }
 function addItem() {
   const name = document.getElementById('itemName').value.trim();
+  const id = document.getElementById('itemId').value.trim();
+  const type = document.getElementById('itemType').value.trim();
+  const tags = document.getElementById('itemTags').value.split(',').map(t=>t.trim()).filter(Boolean);
   const map = document.getElementById('itemMap').value.trim() || 'world';
   const x = parseInt(document.getElementById('itemX').value, 10) || 0;
   const y = parseInt(document.getElementById('itemY').value, 10) || 0;
@@ -699,7 +705,7 @@ function addItem() {
   const value = parseInt(document.getElementById('itemValue').value, 10) || 0;
   let use = null;
   try { use = JSON.parse(document.getElementById('itemUse').value || 'null'); } catch (e) { use = null; }
-  const item = { name, map, x, y, slot, mods, value, use };
+  const item = { id, name, type, tags, map, x, y, slot, mods, value, use };
   if (editItemIdx >= 0) {
     moduleData.items[editItemIdx] = item;
   } else {
@@ -718,6 +724,9 @@ function editItem(i) {
   const it = moduleData.items[i];
   editItemIdx = i;
   document.getElementById('itemName').value = it.name;
+  document.getElementById('itemId').value = it.id;
+  document.getElementById('itemType').value = it.type || '';
+  document.getElementById('itemTags').value = (it.tags || []).join(',');
   document.getElementById('itemMap').value = it.map;
   document.getElementById('itemX').value = it.x;
   document.getElementById('itemY').value = it.y;

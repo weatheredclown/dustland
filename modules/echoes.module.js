@@ -19,9 +19,9 @@ const ECHOES_MODULE = (() => {
   const archive = makeRoom('archive', 'east');
 
   const items = [
-    { map: 'atrium', x: 3, y: 2, name: 'Spark Key' },
-    { map: 'workshop', x: 4, y: 5, name: 'Cog Key' },
-    { map: 'archive', x: 8, y: 4, name: 'Sun Charm', slot: 'trinket', mods: { LCK: 1 } }
+    { map: 'atrium', x: 3, y: 2, id: 'spark_key', name: 'Spark Key', type: 'quest', tags: ['key'] },
+    { map: 'workshop', x: 4, y: 5, id: 'cog_key', name: 'Cog Key', type: 'quest', tags: ['key'] },
+    { map: 'archive', x: 8, y: 4, id: 'sun_charm', name: 'Sun Charm', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } }
   ];
 
   const quests = [
@@ -47,7 +47,7 @@ const ECHOES_MODULE = (() => {
             { label: '(Leave)', to: 'bye' }
           ]
         },
-        open: { text: 'Inside you find a Spark Key.', choices: [ { label: '(Take Key)', to: 'empty', reward: 'Spark Key' } ] },
+        open: { text: 'Inside you find a Spark Key.', choices: [ { label: '(Take Key)', to: 'empty', reward: 'spark_key' } ] },
         empty: { text: 'An empty crate.', choices: [ { label: '(Leave)', to: 'bye' } ] }
       }
     },
@@ -88,7 +88,7 @@ const ECHOES_MODULE = (() => {
             { label: '(Leave)', to: 'bye' }
           ]
         },
-        open: { text: 'Among the gears is a Cog Key.', choices: [ { label: '(Take Key)', to: 'empty', reward: 'Cog Key' } ] },
+        open: { text: 'Among the gears is a Cog Key.', choices: [ { label: '(Take Key)', to: 'empty', reward: 'cog_key' } ] },
         empty: { text: 'Only scraps remain.', choices: [ { label: '(Leave)', to: 'bye' } ] }
       }
     },
@@ -151,7 +151,7 @@ const ECHOES_MODULE = (() => {
         start: {
           text: 'The beacon glows, promising brighter days.',
           choices: [
-            { label: '(Take Sun Charm)', to: 'reward', reward: 'Sun Charm' },
+            { label: '(Take Sun Charm)', to: 'reward', reward: 'sun_charm' },
             { label: '(Leave)', to: 'bye' }
           ]
         },
