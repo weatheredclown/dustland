@@ -124,7 +124,6 @@ function setMap(id,label){
 }
 function isWalkable(tile){ return !!walkable[tile]; }
 
-
 // ===== World sizes =====
 const VIEW_W=40, VIEW_H=30, TS=16;
 const WORLD_W=120, WORLD_H=90;
@@ -351,6 +350,12 @@ function normalizeItem(it){
   };
 }
 
+function findItemIndex(idOrTag){
+  const tag = typeof idOrTag === 'string' ? idOrTag.toLowerCase() : '';
+  return player.inv.findIndex(it => it.id === idOrTag || it.tags.map(t=>t.toLowerCase()).includes(tag));
+}
+function hasItem(idOrTag){ return findItemIndex(idOrTag) !== -1; }
+
 function useItem(invIndex){
   const it = player.inv[invIndex];
   if(!it || !it.use){
@@ -494,11 +499,6 @@ function addQuest(id, title, desc, meta){ questLog.add(new Quest(id, title, desc
 function completeQuest(id){ questLog.complete(id); }
 
 // minimal core helpers so defaultQuestProcessor works even without content helpers loaded yet
-function findItemIndex(idOrTag){
-  const tag = typeof idOrTag === 'string' ? idOrTag.toLowerCase() : '';
-  return player.inv.findIndex(it => it.id === idOrTag || it.tags.map(t=>t.toLowerCase()).includes(tag));
-}
-function hasItem(idOrTag){ return findItemIndex(idOrTag) !== -1; }
 function defaultQuestProcessor(npc, nodeId){
   const meta = npc.quest;
   if(!meta) return;
@@ -547,7 +547,7 @@ class NPC {
         player.scrap += val;
         renderInv(); updateHUD();
         textEl.textContent = `Sold ${it.name} for ${val} ${CURRENCY}.`;
-        currentNode='sell';
+        dialogState.node='sell';
         renderDialog();
         return true;
       }
@@ -588,9 +588,9 @@ function removeNPC(npc){
   const idx = NPCS.indexOf(npc);
   if(idx > -1) NPCS.splice(idx,1);
 }
-const usedNanoChoices = new Set();
 const usedOnceChoices = new Set();
 
+// ===== Module application =====
 function applyModule(data){
   setRNGSeed(data.seed || Date.now());
   if(data.world){
@@ -713,8 +713,6 @@ function placeHut(x,y,b){
   return nb;
 }
 
-// ===== HALL =====
-
 // ===== Interaction =====
 function canWalk(x,y){
   if(state.map==='creator') return false;
@@ -825,7 +823,7 @@ function normalizeDialogTree(tree){
   for(const id in tree){
     const n=tree[id];
     const next=(n.next||n.choices||[]).map(c=>{
-      if(typeof c==='string') return {id:c,label:c};
+      if(typeof c==='string') return {id:c,label=c};
       const {to,id:cid,label,text,checks=[],effects=[],...rest}=c;
       return {id:to||cid,label:label||text||'(Continue)',checks,effects,...rest};
     });
@@ -997,13 +995,32 @@ function advanceDialog(stateObj, choiceIdx){
   return res;
 }
 
+// Portrait selection from a 2x2 sheet or fallback color
+function setPortrait(portEl, npc){
+  if(!npc.portraitSheet){
+    portEl.style.backgroundImage = '';
+    portEl.style.background = npc.color || '#274227';
+    return;
+  }
+  const frame = Math.floor(Math.random() * 4); // 0..3
+  const col = frame % 2;         // 0 or 1
+  const row = Math.floor(frame/2); // 0 or 1
+  const posX = col === 0 ? '0%'   : '100%';
+  const posY = row === 0 ? '0%'   : '100%';
+  portEl.style.background = 'transparent';
+  portEl.style.backgroundImage = `url(${npc.portraitSheet})`;
+  portEl.style.backgroundSize = '200% 200%';
+  portEl.style.backgroundPosition = `${posX} ${posY}`;
+}
+
 function openDialog(npc, node='start'){
   currentNPC=npc;
   dialogState.tree=normalizeDialogTree(npc.tree||{});
   dialogState.node=node;
   nameEl.textContent=npc.name;
   titleEl.textContent=npc.title;
-  portEl.style.background=npc.color;
+
+  setPortrait(portEl, npc);
 
   // Optional subtitle/desc adornment
   const desc = npc.desc;
@@ -1260,7 +1277,7 @@ function finalizeCurrentMember(){
   return m;
 }
 
-if (ccBack) ccBack.onclick=()=>{ if(step>1) { step--; renderStep(); } };
+if  (ccBack) ccBack.onclick=()=>{ if(step>1) { step--; renderStep(); } };
 if (ccNext) ccNext.onclick=()=>{ if(step<5){ step++; renderStep(); } else { finalizeCurrentMember(); building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null }; step=1; renderStep(); log('Member added. You can add up to 2 more, or press Start Now.'); } };
 if (ccStart) ccStart.onclick=()=>{ if(built.length===0){ finalizeCurrentMember(); } closeCreator(); startGame(); };
 if (ccLoad) ccLoad.onclick=()=>{ load(); closeCreator(); };

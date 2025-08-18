@@ -238,13 +238,15 @@
         gap: 8px
     }
 
-    .portrait {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: #274227;
-        border: 1px solid #1c261c
-    }
+.portrait{
+  width:64px; height:64px;
+  border-radius:6px; /* square-ish, keep a little rounding */
+  background:#274227;              /* fallback color */
+  border:1px solid #1c261c;
+  image-rendering: pixelated;      /* preserve chunky pixels */
+  background-repeat:no-repeat;
+  background-size:200% 200%;       /* 2×2 grid */
+}
 
     .dialog main {
         padding: 12px
