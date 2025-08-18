@@ -189,7 +189,8 @@ const OFFICE_MODULE = (() => {
               check: { stat: 'CHA', dc: DC.TALK },
               success: 'He sighs and hands over a spare card.',
               failure: 'Rules are rules.',
-              reward: 'access_card'
+              reward: 'access_card',
+              once: true
             },
             { label: '(Leave)', to: 'bye' }
           ]
