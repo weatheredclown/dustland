@@ -95,6 +95,8 @@ const OFFICE_MODULE = (() => {
     );
     // bridge over the river
     grid[FOREST_MIDY][FOREST_MID] = TILE.FLOOR;
+    // doorway to the castle
+    grid[FOREST_MIDY][FOREST_W - 2] = TILE.DOOR;
     return {
       id: 'forest',
       w: FOREST_W,
@@ -105,10 +107,58 @@ const OFFICE_MODULE = (() => {
     };
   }
 
+  function makeCastle() {
+    const W = 30,
+      H = 30;
+    const grid = Array.from({ length: H }, () =>
+      Array.from({ length: W }, () => TILE.WALL)
+    );
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+    function carve(x, y) {
+      grid[y][x] = TILE.FLOOR;
+      shuffle(
+        [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1]
+        ]
+      ).forEach(([dx, dy]) => {
+        const nx = x + dx * 2,
+          ny = y + dy * 2;
+        if (
+          nx > 0 &&
+          ny > 0 &&
+          nx < W - 1 &&
+          ny < H - 1 &&
+          grid[ny][nx] === TILE.WALL
+        ) {
+          grid[y + dy][x + dx] = TILE.FLOOR;
+          carve(nx, ny);
+        }
+      });
+    }
+    carve(1, 1);
+    grid[1][1] = TILE.DOOR;
+    return { id: 'castle', w: W, h: H, grid, entryX: 1, entryY: 1 };
+  }
+
   const floor1 = makeFloor1();
   const floor2 = makeFloor2();
   const floor3 = makeFloor3();
   const forest = makeForest();
+  const castle = makeCastle();
+
+  const portals = [
+    { map: 'forest', x: FOREST_W - 2, y: FOREST_MIDY, toMap: 'castle', toX: 1, toY: 1 },
+    { map: 'castle', x: 1, y: 1, toMap: 'forest', toX: FOREST_W - 3, toY: FOREST_MIDY }
+  ];
 
   const elevatorNPCs = ['floor1', 'floor2', 'floor3'].map((map) => ({
     id: `elevator_${map}`,
@@ -328,8 +378,9 @@ const OFFICE_MODULE = (() => {
         { id: 'q_toll', title: 'Bridge Tax', desc: 'Pay the Toll Keeper with a trinket.' }
       ],
     npcs,
-    interiors: [floor1, floor2, floor3, forest],
-    buildings: []
+    interiors: [floor1, floor2, floor3, forest, castle],
+    buildings: [],
+    portals
   };
 })();
 

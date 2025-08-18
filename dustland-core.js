@@ -133,7 +133,7 @@ const VIEW_W=40, VIEW_H=30, TS=16;
 const WORLD_W=120, WORLD_H=90;
 
 // ===== Game state =====
-let world = [], interiors = {}, buildings = [];
+let world = [], interiors = {}, buildings = [], portals = [];
 const state = { map:'world' }; // default map
 const player = { x:2, y:2, hp:10, ap:2, flags:{}, inv:[], scrap:0 };
 const GAME_STATE = Object.freeze({
@@ -601,10 +601,12 @@ function applyModule(data){
     world = data.world;
     interiors = {};
     buildings = data.buildings || [];
+    portals = data.portals || [];
   }
   (data.interiors||[]).forEach(I=>{ const {id,...rest}=I; interiors[id]={...rest}; });
-  if(!data.world && data.buildings && data.buildings.length){
-    buildings = data.buildings;
+  if(!data.world){
+    if(data.buildings && data.buildings.length){ buildings = data.buildings; }
+    if(data.portals && data.portals.length){ portals = data.portals; }
   }
   buildings.forEach(b=>{ if(!interiors[b.interiorId]){ makeInteriorRoom(b.interiorId); } });
   itemDrops.length = 0;
@@ -665,6 +667,10 @@ function genWorld(seed=Date.now(), data={}){
       if(getTile('world',x,y)===TILE.WATER){ const p=findNearestLand(x,y); x=p.x; y=p.y; }
       placeHut(x,y);
     }
+  }
+  portals.length=0;
+  if(data.portals && data.portals.length){
+    data.portals.forEach(p=> portals.push(p));
   }
   seedWorldContent();
 }
@@ -774,6 +780,15 @@ function interactAt(x,y){
       log('You step inside.'); centerCamera(player.x,player.y,state.map); updateHUD(); return true;
     }
     if(state.map!=='world'){
+      const p=portals.find(p=> p.map===state.map && p.x===x && p.y===y);
+      if(p){
+        setMap(p.toMap);
+        const I=interiors[state.map];
+        player.x = (typeof p.toX==='number') ? p.toX : (I?I.entryX:0);
+        player.y = (typeof p.toY==='number') ? p.toY : (I?I.entryY:0);
+        log(p.desc || 'You move through the doorway.');
+        centerCamera(player.x,player.y,state.map); updateHUD(); return true;
+      }
       const b=buildings.find(b=> b.interiorId===state.map);
       if(b){ setMap('world'); player.x=b.doorX; player.y=b.doorY-1; log('You step back outside.'); centerCamera(player.x,player.y,state.map); updateHUD(); return true; }
     }
@@ -1290,6 +1305,7 @@ if (typeof module !== 'undefined' && module.exports) {
     NPCS,
     openDialog,
     party,
+    portals,
     player,
     ITEMS,
     takeNearestItem,

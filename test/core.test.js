@@ -260,3 +260,15 @@ test('advanceDialog matches reqItem case-insensitively', () => {
   assert.strictEqual(player.x, 7);
   assert.strictEqual(player.y, 8);
 });
+
+test('door portals link interiors', () => {
+  const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
+  const forest = { id:'forest', w:3, h:3, grid:[[6,6,6],[6,8,6],[6,6,6]], entryX:1, entryY:1 };
+  const castle = { id:'castle', w:3, h:3, grid:[[6,6,6],[6,8,6],[6,6,6]], entryX:1, entryY:1 };
+  applyModule({world, interiors:[forest, castle], portals:[{ map:'forest', x:1, y:1, toMap:'castle', toX:1, toY:1 },{ map:'castle', x:1, y:1, toMap:'forest', toX:1, toY:1 }]});
+  state.map='forest'; player.x=1; player.y=1;
+  interactAt(1,1);
+  assert.strictEqual(state.map, 'castle');
+  interactAt(1,1);
+  assert.strictEqual(state.map, 'forest');
+});
