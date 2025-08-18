@@ -30,7 +30,7 @@ loadBtn.onclick = () => {
       window.openCreator = window._realOpenCreator;
       openCreator();
     } catch(err){
-      alert('Invalid module');
+      alert('Invalid module:' +  err);
     }
   };
   reader.readAsText(file);
