@@ -45,6 +45,7 @@ global.toast = () => {};
 global.sfxTick = () => {};
 global.renderInv = () => {};
 global.renderParty = () => {};
+global.renderQuests = () => {};
 global.updateHUD = () => {};
 global.centerCamera = () => {};
 
@@ -300,4 +301,32 @@ test('quest turn-in grants reward item', () => {
   openDialog(npc);
   choicesEl.children[0].onclick();
   assert.ok(player.inv.some(it => it.id === 'cursed_vr_helmet'));
+});
+
+test('turn-in choice hidden until quest accepted', () => {
+  player.inv.length = 0;
+  NPCS.length = 0;
+  const quest = new Quest('q_hidden', 'Quest', '');
+  const tree = {
+    start: { text: '', choices: [
+      { label: 'accept', to: 'accept', q: 'accept' },
+      { label: 'turn in', to: 'do_turnin', q: 'turnin' }
+    ] },
+    accept: { text: '', choices: [ { label: 'bye', to: 'bye' } ] },
+    do_turnin: { text: '', choices: [ { label: 'bye', to: 'bye' } ] }
+  };
+  const npc = makeNPC('jen', 'world', 0, 0, '#fff', 'Jen', '', '', tree, quest);
+  NPCS.push(npc);
+
+  openDialog(npc);
+  let labels = choicesEl.children.map(c => c.textContent);
+  assert.ok(!labels.includes('turn in'));
+
+  // accept quest
+  choicesEl.children[0].onclick(); // accept
+  choicesEl.children[0].onclick(); // bye
+
+  openDialog(npc);
+  labels = choicesEl.children.map(c => c.textContent);
+  assert.ok(labels.includes('turn in'));
 });

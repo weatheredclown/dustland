@@ -233,7 +233,7 @@ function renderDialog(){
     const meta=currentNPC.quest;
     choices=choices.filter(({opt})=>{
       if(opt.q==='accept' && meta.status!=='available') return false;
-      if(opt.q==='turnin' && (meta.status==='completed' || (meta.item && !hasItem(meta.item)))) return false;
+      if(opt.q==='turnin' && (meta.status!=='active' || (meta.item && !hasItem(meta.item)))) return false;
       return true;
     });
   }
