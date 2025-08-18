@@ -28,6 +28,14 @@
  * @property {Quest} [quest]
  */
 
+/**
+ * @typedef {Object} Check
+ * @property {string} stat
+ * @property {number} dc
+ * @property {Function[]} [onSuccess]
+ * @property {Function[]} [onFail]
+ */
+
 // ===== Core helpers =====
 const ROLL_SIDES = 12;
 const DC = { TALK:8, REPAIR:9 };
@@ -53,9 +61,10 @@ const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
 
 class Dice {
   static roll(sides=ROLL_SIDES){ return Math.floor(Math.random()*sides)+1; }
-  static skill(character, stat, add=0, sides=ROLL_SIDES){
+  static skill(character, stat, add=0, sides=ROLL_SIDES, rng=Math.random){
     const base = (character?.stats?.[stat] || 0);
-    return Dice.roll(sides) + Math.floor(base/2) + add;
+    const roll = Math.floor(rng()*sides)+1;
+    return roll + Math.floor(base/2) + add;
   }
 }
 
@@ -780,9 +789,20 @@ function runEffects(effects){
   for(const fn of effects||[]){ if(typeof fn==='function') fn({player,party,state}); }
 }
 
-function skillRoll(stat){
-  const leaderChar = leader();
-  return Dice.skill(leaderChar, stat);
+/**
+ * Resolve a stat check against a DC and run effects.
+ * @param {Check} check
+ * @param {Character} [actor=leader()]
+ * @param {Function} [rng=Math.random]
+ * @returns {{success:boolean, roll:number, dc:number, stat:string}}
+ */
+function resolveCheck(check, actor=leader(), rng=Math.random){
+  const roll = Dice.skill(actor, check.stat, 0, ROLL_SIDES, rng);
+  const dc = check.dc || 0;
+  const success = roll >= dc;
+  log?.(`Check ${check.stat} rolled ${roll} vs DC ${dc}: ${success?'success':'fail'}`);
+  runEffects(success ? check.onSuccess : check.onFail);
+  return { success, roll, dc, stat: check.stat };
 }
 
 function applyReward(reward){
@@ -847,9 +867,8 @@ function advanceDialog(stateObj, choiceIdx){
   }
 
   // Stat roll gates
-  if(choice.stat){
-    const roll=skillRoll(choice.stat);
-    const success = roll >= (choice.dc||0);
+  if(choice.check){
+    const { success, roll, dc } = resolveCheck(choice.check, leader());
     if(success){
       applyReward(choice.reward);
       joinParty(choice.join);
@@ -857,7 +876,7 @@ function advanceDialog(stateObj, choiceIdx){
     }
     runEffects(choice.effects);
     const msg = (success?choice.success:choice.failure)||'';
-    return finalize(msg + ` (Roll ${roll} vs DC ${choice.dc}).`);
+    return finalize(msg + ` (Roll ${roll} vs DC ${dc}).`);
   }
 
   // Direct response
@@ -1180,7 +1199,7 @@ function startWorld(){
 
 // Content pack moved to modules/dustland.module.js
 
-Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat, removeNPC, makeNPC});
+Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat, removeNPC, makeNPC, resolveCheck});
 
 // Export a few helpers for Node-based tests without affecting the browser build
 if (typeof module !== 'undefined' && module.exports) {
@@ -1204,9 +1223,10 @@ if (typeof module !== 'undefined' && module.exports) {
     openDialog,
     party,
     player,
+    resolveCheck,
     setGameState,
     setLeader: (idx)=>{ selectedMember = idx; },
     state,
-    unequipItem  
+    unequipItem
   };
 }
