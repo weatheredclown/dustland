@@ -1148,7 +1148,7 @@ function startWorld(){
 
 // Content pack moved to modules/dustland.module.js
 
-Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat, removeNPC, makeNPC});
+Object.assign(window, {Dice, Character, Party, Quest, NPC, questLog, quickCombat, removeNPC, makeNPC, resolveCheck});
 
 // Export a few helpers for Node-based tests without affecting the browser build
 if (typeof module !== 'undefined' && module.exports) {
@@ -1163,6 +1163,7 @@ if (typeof module !== 'undefined' && module.exports) {
     player,
     party,
     state,
-    Character
+    Character,
+    resolveCheck
   };
 }
