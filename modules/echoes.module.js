@@ -179,10 +179,9 @@ startGame = function () {
   startWorld();
   applyModule(ECHOES_MODULE);
   const s = ECHOES_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-  setMap(s.map, s.map === 'world' ? 'Wastes' : 'Echoes');
   player.x = s.x;
   player.y = s.y;
-  centerCamera(player.x, player.y, s.map);
+  setMap(s.map, s.map === 'world' ? 'Wastes' : 'Echoes');
   renderInv();
   renderQuests();
   renderParty();

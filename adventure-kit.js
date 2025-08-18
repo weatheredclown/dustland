@@ -683,6 +683,7 @@ function startNewItem() {
   updateModsWrap();
   loadMods({});
   document.getElementById('itemValue').value = 0;
+  document.getElementById('itemEquip').value = '';
   document.getElementById('itemUse').value = '';
   document.getElementById('addItem').textContent = 'Add Item';
   document.getElementById('delItem').style.display = 'none';
@@ -703,9 +704,11 @@ function addItem() {
   const slot = document.getElementById('itemSlot').value || null;
   const mods = collectMods();
   const value = parseInt(document.getElementById('itemValue').value, 10) || 0;
+  let equip = null;
+  try { equip = JSON.parse(document.getElementById('itemEquip').value || 'null'); } catch (e) { equip = null; }
   let use = null;
   try { use = JSON.parse(document.getElementById('itemUse').value || 'null'); } catch (e) { use = null; }
-  const item = { id, name, type, tags, map, x, y, slot, mods, value, use };
+  const item = { id, name, type, tags, map, x, y, slot, mods, value, use, equip };
   if (editItemIdx >= 0) {
     moduleData.items[editItemIdx] = item;
   } else {
@@ -734,6 +737,7 @@ function editItem(i) {
   updateModsWrap();
   loadMods(it.mods);
   document.getElementById('itemValue').value = it.value || 0;
+  document.getElementById('itemEquip').value = it.equip ? JSON.stringify(it.equip, null, 2) : '';
   document.getElementById('itemUse').value = it.use ? JSON.stringify(it.use, null, 2) : '';
   document.getElementById('addItem').textContent = 'Update Item';
   document.getElementById('delItem').style.display = 'block';

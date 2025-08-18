@@ -350,10 +350,9 @@ startGame = function () {
   startWorld();
   applyModule(DUSTLAND_MODULE);
   const s = DUSTLAND_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-  setMap(s.map, s.map === 'world' ? 'Wastes' : 'Test Hall');
   player.x = s.x;
   player.y = s.y;
-  centerCamera(player.x, player.y, s.map);
+  setMap(s.map, s.map === 'world' ? 'Wastes' : 'Test Hall');
   renderInv();
   renderQuests();
   renderParty();
