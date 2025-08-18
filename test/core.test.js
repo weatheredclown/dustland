@@ -165,3 +165,33 @@ test('advanceDialog handles cost and reward', () => {
   assert.ok(!player.inv.some(it => it.name === 'Key'));
   assert.ok(res.close);
 });
+
+test('advanceDialog respects goto with costItem', () => {
+  player.inv.length = 0;
+  addToInv({ name: 'Key' });
+  state.map = 'world';
+  player.x = 0; player.y = 0;
+  const tree = {
+    start: { text: '', next: [{ label: 'Go', costItem: 'Key', goto: { map: 'room', x: 3, y: 4 } }] }
+  };
+  const dialog = { tree, node: 'start' };
+  advanceDialog(dialog, 0);
+  assert.strictEqual(player.x, 3);
+  assert.strictEqual(player.y, 4);
+  assert.ok(!player.inv.some(it => it.name === 'Key'));
+});
+
+test('advanceDialog uses reqItem without consuming and allows goto', () => {
+  player.inv.length = 0;
+  addToInv({ name: 'Pass' });
+  state.map = 'world';
+  player.x = 1; player.y = 1;
+  const tree = {
+    start: { text: '', next: [{ label: 'Enter', reqItem: 'Pass', goto: { map: 'room', x: 5, y: 6 } }] }
+  };
+  const dialog = { tree, node: 'start' };
+  advanceDialog(dialog, 0);
+  assert.strictEqual(player.x, 5);
+  assert.strictEqual(player.y, 6);
+  assert.ok(player.inv.some(it => it.name === 'Pass'));
+});
