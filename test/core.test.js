@@ -239,3 +239,17 @@ test('advanceDialog uses reqItem without consuming and allows goto', () => {
   assert.strictEqual(player.y, 6);
   assert.ok(player.inv.some(it => it.name === 'Pass'));
 });
+
+test('advanceDialog matches reqItem case-insensitively', () => {
+  player.inv.length = 0;
+  addToInv({ name: 'access card' });
+  state.map = 'world';
+  player.x = 2; player.y = 2;
+  const tree = {
+    start: { text: '', next: [{ label: 'Up', reqItem: 'Access Card', goto: { map: 'room', x: 7, y: 8 } }] }
+  };
+  const dialog = { tree, node: 'start' };
+  advanceDialog(dialog, 0);
+  assert.strictEqual(player.x, 7);
+  assert.strictEqual(player.y, 8);
+});

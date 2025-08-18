@@ -865,8 +865,11 @@ function advanceDialog(stateObj, choiceIdx){
 
   // Required item/slot without consumption
   if(choice.reqItem || choice.reqSlot){
-    const idx = choice.reqItem ? player.inv.findIndex(it=> it.name===choice.reqItem)
-                               : player.inv.findIndex(it=> it.slot===choice.reqSlot);
+    const idx = choice.reqItem
+      ? player.inv.findIndex(
+          it => it.name?.trim().toLowerCase() === choice.reqItem.trim().toLowerCase()
+        )
+      : player.inv.findIndex(it => it.slot === choice.reqSlot);
     if(idx === -1){
       return finalize(choice.failure || 'You lack the required item.');
     }
