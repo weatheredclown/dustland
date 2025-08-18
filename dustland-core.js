@@ -525,6 +525,7 @@ const ccNext=document.getElementById('ccNext');
 const ccPortrait=document.getElementById('ccPortrait');
 const ccStart=document.getElementById('ccStart');
 const ccLoad=document.getElementById('ccLoad');
+if(ccNext) ccNext.classList.add('btn--primary');
 const portraits=['@','&','#','%','*']; let portraitIndex=0;
 const specializations={
   'Scavenger':{desc:'Finds better loot from ruins; starts with crowbar.', gear:[{name:'Crowbar',slot:'weapon',mods:{ATK:+1}}]},
@@ -587,6 +588,7 @@ function renderStep(){
     if(got){ building.stats.PER+=1; }
   }
   updateCreatorButtons();
+  ccNext?.focus?.();
 }
 
 function finalizeCurrentMember(){
@@ -604,6 +606,12 @@ if  (ccBack) ccBack.onclick=()=>{ if(step>1) { step--; renderStep(); } };
 if (ccNext) ccNext.onclick=()=>{ if(step<5){ step++; renderStep(); } else { finalizeCurrentMember(); building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null }; step=1; renderStep(); log('Member added. You can add up to 2 more, or press Start Now.'); } };
 if (ccStart) ccStart.onclick=()=>{ if(built.length===0){ finalizeCurrentMember(); } closeCreator(); startGame(); };
 if (ccLoad) ccLoad.onclick=()=>{ load(); closeCreator(); };
+if (creator?.addEventListener) creator.addEventListener('keydown', e => {
+  if(e.key==='Enter'){
+    e.preventDefault();
+    if(ccNext?.click) ccNext.click(); else ccNext?.onclick?.();
+  }
+});
 
 function startGame(){
   startWorld();

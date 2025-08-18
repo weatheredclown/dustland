@@ -270,6 +270,11 @@ const OFFICE_MODULE = (() => {
           text: 'Pay a trinket to cross.',
           choices: [
             {
+              label: '(Accept quest)',
+              to: 'accept',
+              q: 'accept'
+            },
+            {
               label: '(Pay)',
               to: 'do_turnin',
               q: 'turnin',
@@ -280,6 +285,7 @@ const OFFICE_MODULE = (() => {
             { label: '(Leave)', to: 'bye' }
           ]
         },
+        accept: { text: 'Bring me a trinket and you may cross.', choices: [ { label: '(Leave)', to: 'bye' } ] },
         do_turnin: {
           text: 'The toll keeper steps aside.',
           choices: [
