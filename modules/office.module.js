@@ -129,7 +129,7 @@ const OFFICE_MODULE = (() => {
             label: 'Executive Suite',
             to: 'bye',
             goto: { map: 'floor3', x: midX, y: 2 },
-            reqItem: 'Access Card',
+            reqItem: 'access_card',
             failure: 'Requires Access Card.'
           }
         ]
@@ -158,7 +158,7 @@ const OFFICE_MODULE = (() => {
         give: {
           text: 'He lends you a spare card.',
           choices: [
-            { label: '(Take Access Card)', to: 'bye', reward: 'Access Card' }
+            { label: '(Take Access Card)', to: 'bye', reward: 'access_card' }
           ]
         }
       }
@@ -265,11 +265,14 @@ const OFFICE_MODULE = (() => {
     seed: Date.now(),
     start: { map: 'floor1', x: midX, y: FLOOR_H - 2 },
     items: [
+      { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] },
       {
         map: 'floor3',
         x: midX,
         y: 6,
+        id: 'cursed_vr_helmet',
         name: 'Cursed VR Helmet',
+        type: 'armor',
         slot: 'armor',
         cursed: true,
         equip: { teleport: { map: 'forest', x: 2, y: FOREST_MIDY } }
