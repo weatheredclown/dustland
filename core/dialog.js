@@ -1,0 +1,277 @@
+// ===== Dialog =====
+const overlay=document.getElementById('overlay');
+const choicesEl=document.getElementById('choices');
+const textEl=document.getElementById('dialogText');
+const nameEl=document.getElementById('npcName');
+const titleEl=document.getElementById('npcTitle');
+const portEl=document.getElementById('port');
+let currentNPC=null;
+const dialogState={ tree:null, node:null };
+
+function normalizeDialogTree(tree){
+  const out={};
+  for(const id in tree){
+    const n=tree[id];
+    const next=(n.next||n.choices||[]).map(c=>{
+      if(typeof c==='string') return {id:c,label:c};
+      const {to,id:cid,label,text,checks=[],effects=[],...rest}=c;
+      return {id:to||cid,label:label||text||'(Continue)',checks,effects,...rest};
+    });
+    out[id]={text:n.text||'',checks:n.checks||[],effects:n.effects||[],next};
+  }
+  return out;
+}
+
+function runEffects(effects){
+  for(const fn of effects||[]){ if(typeof fn==='function') fn({player,party,state}); }
+}
+
+function resolveCheck(check, actor=leader(), rng=Math.random){
+  const roll = Dice.skill(actor, check.stat, 0, ROLL_SIDES, rng);
+  const dc = check.dc || 0;
+  const success = roll >= dc;
+  log?.(`Check ${check.stat} rolled ${roll} vs DC ${dc}: ${success?'success':'fail'}`);
+  runEffects(success ? check.onSuccess : check.onFail);
+  return { success, roll, dc, stat: check.stat };
+}
+
+function applyReward(reward){
+  if(!reward) return;
+  if(typeof reward==='string' && /^xp\s*\d+/i.test(reward)){
+    const amt=parseInt(reward.replace(/[^0-9]/g,''),10)||0;
+    awardXP(leader(), amt);
+    if(typeof toast==='function') toast(`+${amt} XP`);
+  } else {
+    addToInv(reward);
+    const id = typeof reward === 'string' ? reward : reward.id;
+    const def = ITEMS[id] || (typeof reward === 'object' ? reward : null);
+    if(typeof toast==='function') toast(`Received ${def?.name || id}`);
+  }
+}
+
+function processQuestFlag(c){
+  if(!currentNPC?.quest || !c?.q) return;
+  if(c.q==='accept') defaultQuestProcessor(currentNPC,'accept');
+  if(c.q==='turnin') defaultQuestProcessor(currentNPC,'do_turnin');
+}
+
+function joinParty(join){
+  if(!join) return;
+  const m=makeMember(join.id, join.name, join.role);
+  addPartyMember(m);
+  removeNPC(currentNPC);
+}
+
+function handleGoto(g){
+  if(!g) return;
+  if(g.map==='world'){
+    startWorld();
+    if(typeof g.x==='number') player.x=g.x;
+    if(typeof g.y==='number') player.y=g.y;
+    setMap('world');
+  }else{
+    if(typeof g.x==='number') player.x=g.x;
+    if(typeof g.y==='number') player.y=g.y;
+    if(g.map) setMap(g.map); else if(typeof centerCamera==='function') centerCamera(player.x,player.y,state.map);
+  }
+  updateHUD?.();
+}
+
+function advanceDialog(stateObj, choiceIdx){
+  const node=stateObj.tree[stateObj.node];
+  const choice=node.next[choiceIdx];
+  if(!choice){ stateObj.node=null; return {next:null, text:null, close:true}; }
+
+  runEffects(choice.checks);
+
+  const res={next:null, text:null, close:false};
+  const finalize=(text)=>{ res.text=text||null; res.close=true; stateObj.node=null; return res; };
+
+  if(choice.reqItem || choice.reqSlot){
+    const idx = choice.reqItem
+      ? findItemIndex(choice.reqItem)
+      : player.inv.findIndex(it => it.slot === choice.reqSlot);
+    if(idx === -1){
+      return finalize(choice.failure || 'You lack the required item.');
+    }
+    applyReward(choice.reward);
+    joinParty(choice.join);
+    processQuestFlag(choice);
+    runEffects(choice.effects);
+    if(choice.goto){
+      handleGoto(choice.goto);
+      res.close=true;
+      stateObj.node=null;
+      return res;
+    }
+    return finalize(choice.success || '');
+  }
+
+  if(choice.costItem || choice.costSlot){
+    const idx = choice.costItem ? findItemIndex(choice.costItem)
+                                : player.inv.findIndex(it=> it.slot===choice.costSlot);
+    if(idx === -1){
+      return finalize(choice.failure || 'You lack the required item.');
+    }
+    const removed = player.inv[idx];
+    player.inv.splice(idx,1);
+    applyReward(choice.reward);
+    joinParty(choice.join);
+    processQuestFlag(choice);
+    runEffects(choice.effects);
+    if(choice.goto){
+      handleGoto(choice.goto);
+      res.close=true; stateObj.node=null; return res;
+    }
+    return finalize(choice.success || '');
+  }
+
+  if(choice.check){
+    const { success, roll, dc } = resolveCheck(choice.check, leader());
+    log?.(`Dialog check ${choice.check.stat}: ${roll} vs ${dc}`);
+    if(!success){
+      return finalize(choice.failure || 'Failed.');
+    }
+  }
+
+  applyReward(choice.reward);
+  joinParty(choice.join);
+  processQuestFlag(choice);
+  runEffects(choice.effects);
+
+  if(choice.goto){
+    handleGoto(choice.goto);
+    res.close=true; stateObj.node=null; return res;
+  }
+
+  if(choice.to){
+    res.next=choice.to;
+    stateObj.node=choice.to;
+    return res;
+  }
+
+  return finalize(choice.text || '');
+}
+
+const usedOnceChoices=new Set();
+
+function setPortrait(portEl, npc){
+  if(!npc.portraitSheet){
+    portEl.style.backgroundImage = '';
+    portEl.style.background = npc.color || '#274227';
+    return;
+  }
+  const frame = Math.floor(Math.random() * 4);
+  const col = frame % 2;
+  const row = Math.floor(frame/2);
+  const posX = col === 0 ? '0%'   : '100%';
+  const posY = row === 0 ? '0%'   : '100%';
+  portEl.style.background = 'transparent';
+  portEl.style.backgroundImage = `url(${npc.portraitSheet})`;
+  portEl.style.backgroundSize = '200% 200%';
+  portEl.style.backgroundPosition = `${posX} ${posY}`;
+}
+
+function openDialog(npc, node='start'){
+  currentNPC=npc;
+  dialogState.tree=normalizeDialogTree(npc.tree||{});
+  dialogState.node=node;
+  nameEl.textContent=npc.name;
+  titleEl.textContent=npc.title;
+
+  setPortrait(portEl, npc);
+
+  const desc = npc.desc;
+  if(desc){
+    const small=document.createElement('div');
+    small.className='small npcdesc';
+    small.textContent=desc;
+    const hdr=titleEl.parentElement;
+    [...hdr.querySelectorAll('.small.npcdesc')].forEach(n=>n.remove());
+    hdr.appendChild(small);
+  }
+
+  renderDialog();
+  overlay.classList.add('shown');
+  setGameState(GAME_STATE.DIALOG);
+}
+
+function closeDialog(){
+  overlay.classList.remove('shown');
+  currentNPC=null;
+  dialogState.tree=null;
+  dialogState.node=null;
+  choicesEl.innerHTML='';
+  const back= state.map==='world'?GAME_STATE.WORLD:GAME_STATE.INTERIOR;
+  setGameState(back);
+}
+
+function renderDialog(){
+  if(!dialogState.tree) return;
+  const node=dialogState.tree[dialogState.node];
+  if(!node){ closeDialog(); return; }
+
+  runEffects(node.checks);
+  runEffects(node.effects);
+
+  textEl.textContent=node.text;
+  choicesEl.innerHTML='';
+
+  if(!node.next || node.next.length===0){
+    const cont=document.createElement('div');
+    cont.className='choice';
+    cont.textContent='(Continue)';
+    cont.onclick=()=> closeDialog();
+    choicesEl.appendChild(cont);
+    return;
+  }
+
+  let choices=node.next.map((opt,idx)=>({opt,idx}));
+
+  if(currentNPC?.quest){
+    const meta=currentNPC.quest;
+    choices=choices.filter(({opt})=>{
+      if(opt.q==='accept' && meta.status!=='available') return false;
+      if(opt.q==='turnin' && (meta.status==='completed' || (meta.item && !hasItem(meta.item)))) return false;
+      return true;
+    });
+  }
+
+  choices=choices.filter(({opt})=>{
+    if(!opt.once) return true;
+    const key=`${currentNPC.id}::${dialogState.node}::${opt.label}`;
+    return !usedOnceChoices.has(key);
+  });
+
+  choices.forEach(({opt,idx})=>{
+    const div=document.createElement('div');
+    div.className='choice';
+    div.textContent=opt.label||'(Continue)';
+    div.onclick=()=>{
+      const key=`${currentNPC.id}::${dialogState.node}::${opt.label}`;
+      if(opt.once) usedOnceChoices.add(key);
+
+      const result=advanceDialog(dialogState,idx);
+      if(result && result.text!==null){
+        textEl.textContent=result.text;
+        choicesEl.innerHTML='';
+        const cont=document.createElement('div');
+        cont.className='choice';
+        cont.textContent='(Continue)';
+        cont.onclick=()=>{ if(result.close) closeDialog(); else { dialogState.node=result.next; renderDialog(); } };
+        choicesEl.appendChild(cont);
+      } else {
+        if(result && result.close) closeDialog();
+        else renderDialog();
+      }
+    };
+    choicesEl.appendChild(div);
+  });
+}
+
+const dialogExports = { overlay, choicesEl, textEl, nameEl, titleEl, portEl, openDialog, closeDialog, renderDialog, advanceDialog, resolveCheck };
+Object.assign(globalThis, dialogExports);
+
+if (typeof module !== 'undefined' && module.exports){
+  module.exports = dialogExports;
+}
