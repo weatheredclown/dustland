@@ -256,29 +256,33 @@ function renderDialogPreview() {
 }
 
 function addChoiceRow(container, ch = {}) {
-  const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', join = null, q = '' } = ch || {};
+  const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', reqItem = '', reqSlot = '', join = null, q = '' } = ch || {};
   const joinId = join?.id || '', joinName = join?.name || '', joinRole = join?.role || '';
   const goto = ch.goto || {};
   const gotoMap = goto.map || '', gotoX = goto.x != null ? goto.x : '', gotoY = goto.y != null ? goto.y : '';
   const row = document.createElement('div');
-  row.innerHTML = `<input class="choiceLabel" placeholder="label" value="${label}"/>
-    <select class="choiceTo"></select>
-    <input class="choiceReward" placeholder="reward" value="${reward || ''}"/>
-    <input class="choiceStat" placeholder="stat" value="${stat || ''}"/>
-    <input class="choiceDC" placeholder="dc" value="${dc || ''}"/>
-    <input class="choiceSuccess" placeholder="success text" value="${success || ''}"/>
-    <input class="choiceFailure" placeholder="failure text" value="${failure || ''}"/>
-    <input class="choiceCostItem" placeholder="cost item" value="${costItem || ''}"/>
-    <input class="choiceCostSlot" placeholder="cost slot" value="${costSlot || ''}"/>
-    <input class="choiceJoinId" placeholder="join id" value="${joinId}"/>
-    <input class="choiceJoinName" placeholder="join name" value="${joinName}"/>
-    <input class="choiceJoinRole" placeholder="join role" value="${joinRole}"/>
-    <input class="choiceGotoMap" placeholder="goto map" value="${gotoMap}"/>
-    <input class="choiceGotoX" placeholder="x" value="${gotoX}"/>
-    <input class="choiceGotoY" placeholder="y" value="${gotoY}"/>
-    <select class="choiceQ"><option value=""></option><option value="accept" ${q==='accept'?'selected':''}>accept</option><option value="turnin" ${q==='turnin'?'selected':''}>turnin</option></select>
-    <label><input type="checkbox" class="choiceOnce" ${once ? 'checked' : ''}/> once</label>
-    <button class="btn delChoice" type="button">x</button>`;
+  row.innerHTML = `<label>Label<input class="choiceLabel" value="${label}"/></label>
+    <label>To<select class="choiceTo"></select></label>
+    <button class="btn delChoice" type="button">x</button>
+    <details class="choiceAdv"><summary>Advanced</summary>
+      <label>Reward<input class="choiceReward" value="${reward || ''}"/></label>
+      <label>Stat<input class="choiceStat" value="${stat || ''}"/></label>
+      <label>DC<input class="choiceDC" value="${dc || ''}"/></label>
+      <label>Success<input class="choiceSuccess" value="${success || ''}"/></label>
+      <label>Failure<input class="choiceFailure" value="${failure || ''}"/></label>
+      <label>Cost Item<input class="choiceCostItem" value="${costItem || ''}"/></label>
+      <label>Cost Slot<input class="choiceCostSlot" value="${costSlot || ''}"/></label>
+      <label>Req Item<input class="choiceReqItem" value="${reqItem || ''}"/></label>
+      <label>Req Slot<input class="choiceReqSlot" value="${reqSlot || ''}"/></label>
+      <label>Join ID<input class="choiceJoinId" value="${joinId}"/></label>
+      <label>Join Name<input class="choiceJoinName" value="${joinName}"/></label>
+      <label>Join Role<input class="choiceJoinRole" value="${joinRole}"/></label>
+      <label>Goto Map<input class="choiceGotoMap" value="${gotoMap}"/></label>
+      <label>Goto X<input class="choiceGotoX" value="${gotoX}"/></label>
+      <label>Goto Y<input class="choiceGotoY" value="${gotoY}"/></label>
+      <label>Quest<select class="choiceQ"><option value=""></option><option value="accept" ${q==='accept'?'selected':''}>accept</option><option value="turnin" ${q==='turnin'?'selected':''}>turnin</option></select></label>
+      <label class="onceWrap"><input type="checkbox" class="choiceOnce" ${once ? 'checked' : ''}/> once</label>
+    </details>`;
   container.appendChild(row);
   populateChoiceDropdown(row.querySelector('.choiceTo'), to);
   row.querySelectorAll('input,textarea,select').forEach(el => el.addEventListener('input', updateTreeData));
@@ -308,7 +312,7 @@ function renderTreeEditor() {
   Object.entries(treeData).forEach(([id, node]) => {
     const div = document.createElement('div');
     div.className = 'node';
-    div.innerHTML = `<div class="nodeHeader"><button class="toggle" type="button">[-]</button><label>Node ID<input class="nodeId" value="${id}"></label></div><div class="nodeBody"><label>Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></div>`;
+    div.innerHTML = `<div class="nodeHeader"><button class="toggle" type="button">[-]</button><label>Node ID<input class="nodeId" value="${id}"></label></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
     const choicesDiv = div.querySelector('.choices');
     (node.choices || []).forEach(ch => addChoiceRow(choicesDiv, ch));
     div.querySelector('.addChoice').onclick = () => addChoiceRow(choicesDiv);
@@ -359,6 +363,8 @@ function updateTreeData() {
       const failure = chEl.querySelector('.choiceFailure').value.trim();
       const costItem = chEl.querySelector('.choiceCostItem').value.trim();
       const costSlot = chEl.querySelector('.choiceCostSlot').value.trim();
+      const reqItem = chEl.querySelector('.choiceReqItem').value.trim();
+      const reqSlot = chEl.querySelector('.choiceReqSlot').value.trim();
       const joinId = chEl.querySelector('.choiceJoinId').value.trim();
       const joinName = chEl.querySelector('.choiceJoinName').value.trim();
       const joinRole = chEl.querySelector('.choiceJoinRole').value.trim();
@@ -380,6 +386,8 @@ function updateTreeData() {
         if (failure) c.failure = failure;
         if (costItem) c.costItem = costItem;
         if (costSlot) c.costSlot = costSlot;
+        if (reqItem) c.reqItem = reqItem;
+        if (reqSlot) c.reqSlot = reqSlot;
         if (joinId || joinName || joinRole) c.join = { id: joinId, name: joinName, role: joinRole };
         if (gotoMap) {
           c.goto = { map: gotoMap };
@@ -665,6 +673,9 @@ function updateModsWrap() {
 function startNewItem() {
   editItemIdx = -1;
   document.getElementById('itemName').value = '';
+  document.getElementById('itemId').value = '';
+  document.getElementById('itemType').value = '';
+  document.getElementById('itemTags').value = '';
   document.getElementById('itemMap').value = 'world';
   document.getElementById('itemX').value = 0;
   document.getElementById('itemY').value = 0;
@@ -672,6 +683,7 @@ function startNewItem() {
   updateModsWrap();
   loadMods({});
   document.getElementById('itemValue').value = 0;
+  document.getElementById('itemEquip').value = '';
   document.getElementById('itemUse').value = '';
   document.getElementById('addItem').textContent = 'Add Item';
   document.getElementById('delItem').style.display = 'none';
@@ -683,15 +695,20 @@ function startNewItem() {
 }
 function addItem() {
   const name = document.getElementById('itemName').value.trim();
+  const id = document.getElementById('itemId').value.trim();
+  const type = document.getElementById('itemType').value.trim();
+  const tags = document.getElementById('itemTags').value.split(',').map(t=>t.trim()).filter(Boolean);
   const map = document.getElementById('itemMap').value.trim() || 'world';
   const x = parseInt(document.getElementById('itemX').value, 10) || 0;
   const y = parseInt(document.getElementById('itemY').value, 10) || 0;
   const slot = document.getElementById('itemSlot').value || null;
   const mods = collectMods();
   const value = parseInt(document.getElementById('itemValue').value, 10) || 0;
+  let equip = null;
+  try { equip = JSON.parse(document.getElementById('itemEquip').value || 'null'); } catch (e) { equip = null; }
   let use = null;
   try { use = JSON.parse(document.getElementById('itemUse').value || 'null'); } catch (e) { use = null; }
-  const item = { name, map, x, y, slot, mods, value, use };
+  const item = { id, name, type, tags, map, x, y, slot, mods, value, use, equip };
   if (editItemIdx >= 0) {
     moduleData.items[editItemIdx] = item;
   } else {
@@ -710,6 +727,9 @@ function editItem(i) {
   const it = moduleData.items[i];
   editItemIdx = i;
   document.getElementById('itemName').value = it.name;
+  document.getElementById('itemId').value = it.id;
+  document.getElementById('itemType').value = it.type || '';
+  document.getElementById('itemTags').value = (it.tags || []).join(',');
   document.getElementById('itemMap').value = it.map;
   document.getElementById('itemX').value = it.x;
   document.getElementById('itemY').value = it.y;
@@ -717,6 +737,7 @@ function editItem(i) {
   updateModsWrap();
   loadMods(it.mods);
   document.getElementById('itemValue').value = it.value || 0;
+  document.getElementById('itemEquip').value = it.equip ? JSON.stringify(it.equip, null, 2) : '';
   document.getElementById('itemUse').value = it.use ? JSON.stringify(it.use, null, 2) : '';
   document.getElementById('addItem').textContent = 'Update Item';
   document.getElementById('delItem').style.display = 'block';

@@ -1,6 +1,7 @@
 const MODULES = [
   { id: 'dustland', name: 'Dustland', file: 'modules/dustland.module.js' },
-  { id: 'echoes', name: 'Echoes', file: 'modules/echoes.module.js' }
+  { id: 'echoes', name: 'Echoes', file: 'modules/echoes.module.js' },
+  { id: 'office', name: 'Office', file: 'modules/office.module.js' }
 ];
 
 function loadModule(mod){

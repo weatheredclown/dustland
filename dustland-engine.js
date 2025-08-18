@@ -67,9 +67,11 @@ const prev = document.createElement('canvas'); prev.width=disp.width; prev.heigh
 sctx.font = '12px ui-monospace';
 
 let camX=0, camY=0, showMini=true;
+let _lastTime=0;
 
-function draw(){
-  drawScene(sctx);
+function draw(t){
+  const dt=(t-_lastTime)||0; _lastTime=t;
+  render(state, dt/1000);
   dctx.globalAlpha=0.10; dctx.drawImage(prev, 1, 0);
   dctx.globalAlpha=1.0; dctx.drawImage(scene, 0, 0);
   pctx.clearRect(0,0,prev.width,prev.height); pctx.drawImage(scene,0,0);
@@ -86,56 +88,85 @@ function centerCamera(x,y,map){
   camY = clamp(y - Math.floor(VIEW_H/2), 0, Math.max(0, (H||VIEW_H) - VIEW_H));
 }
 
-// ===== Drawing (tiles -> items -> NPCs -> player) =====
-function drawScene(ctx){
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, disp.width, disp.height);
-  const activeMap = mapIdForState();
+// ===== Drawing Pipeline =====
+const renderOrder = ['tiles', 'items', 'entitiesBelow', 'player', 'entitiesAbove'];
+
+function render(gameState=state, dt){
+  const ctx = sctx;
+  ctx.fillStyle='#000';
+  ctx.fillRect(0,0,disp.width,disp.height);
+  
+  const activeMap = gameState.map || mapIdForState();
   const { W, H } = mapWH(activeMap);
   const offX = Math.max(0, Math.floor((VIEW_W - W) / 2));
   const offY = Math.max(0, Math.floor((VIEW_H - H) / 2));
-  for(let vy=0; vy<VIEW_H; vy++){
-    for(let vx=0; vx<VIEW_W; vx++){
-      const gx = camX + vx - offX, gy = camY + vy - offY;
-      if(gx<0||gy<0||gx>=W||gy>=H) continue;
-      const t = getTile(activeMap,gx,gy); if(t===null) continue;
-      ctx.fillStyle = colors[t]; ctx.fillRect(vx*TS,vy*TS,TS,TS);
-      if(t===TILE.DOOR){
-        ctx.strokeStyle='#9ef7a0';
-        ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10);
-        if(doorPulseUntil && Date.now()<doorPulseUntil){
-          const a=0.3+0.2*Math.sin(Date.now()/200);
-          ctx.globalAlpha=a;
-          ctx.strokeRect(vx*TS+3,vy*TS+3,TS-6,TS-6);
-          ctx.globalAlpha=1;
+
+  const items = gameState.itemDrops || itemDrops;
+  const entities = gameState.entities || NPCS;
+  const ply = gameState.player || player;
+
+  // split entities into below/above
+  const below = [], above = [];
+  for(const n of entities){
+    if(n.map !== activeMap) continue;
+    (n.drawAbovePlayer ? above : below).push(n);
+  }
+
+  for(const layer of renderOrder){
+    if(layer==='tiles'){
+      for(let vy=0; vy<VIEW_H; vy++){
+        for(let vx=0; vx<VIEW_W; vx++){
+          const gx = camX + vx - offX, gy = camY + vy - offY;
+          if(gx<0||gy<0||gx>=W||gy>=H) continue;
+          const t = getTile(activeMap,gx,gy); if(t===null) continue;
+          ctx.fillStyle = colors[t]; ctx.fillRect(vx*TS,vy*TS,TS,TS);
+          if(t===TILE.DOOR){
+            ctx.strokeStyle='#9ef7a0';
+            ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10);
+            if(doorPulseUntil && Date.now()<doorPulseUntil){
+              const a=0.3+0.2*Math.sin(Date.now()/200);
+              ctx.globalAlpha=a;
+              ctx.strokeRect(vx*TS+3,vy*TS+3,TS-6,TS-6);
+              ctx.globalAlpha=1;
+            }
+          }
         }
       }
     }
-  }
-  // Items first
-  for(const it of itemDrops){
-    if(it.map!==activeMap) continue;
-    if(it.x>=camX&&it.y>=camY&&it.x<camX+VIEW_W&&it.y<camY+VIEW_H){
-      const vx=(it.x-camX+offX)*TS, vy=(it.y-camY+offY)*TS;
-      ctx.fillStyle='#c8ffbf'; ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
+    else if(layer==='items'){
+      for(const it of items){
+        if(it.map!==activeMap) continue;
+        if(it.x>=camX&&it.y>=camY&&it.x<camX+VIEW_W&&it.y<camY+VIEW_H){
+          const vx=(it.x-camX+offX)*TS, vy=(it.y-camY+offY)*TS;
+          ctx.fillStyle='#c8ffbf'; ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
+        }
+      }
     }
+    else if(layer==='entitiesBelow'){ drawEntities(ctx, below, offX, offY); }
+    else if(layer==='player'){
+      const px=(ply.x-camX+offX)*TS, py=(ply.y-camY+offY)*TS;
+      ctx.fillStyle='#d9ffbe'; ctx.fillRect(px,py,TS,TS);
+      ctx.fillStyle='#000'; ctx.fillText('@',px+4,py+12);
+    }
+    else if(layer==='entitiesAbove'){ drawEntities(ctx, above, offX, offY); }
   }
-  // NPCs next
-  for(const n of NPCS){
-    if(n.map!==activeMap) continue;
+
+  // UI border
+  ctx.strokeStyle='#2a3b2a';
+  ctx.strokeRect(0.5,0.5,VIEW_W*TS-1,VIEW_H*TS-1);
+}
+
+function drawEntities(ctx, list, offX, offY){
+  for(const n of list){
     if(n.x>=camX&&n.y>=camY&&n.x<camX+VIEW_W&&n.y<camY+VIEW_H){
       const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
       ctx.fillStyle=n.color; ctx.fillRect(vx,vy,TS,TS);
       ctx.fillStyle='#000'; ctx.fillText('!',vx+5,vy+12);
     }
   }
-  // Player last
-  const px=(player.x-camX+offX)*TS, py=(player.y-camY+offY)*TS;
-  ctx.fillStyle='#d9ffbe'; ctx.fillRect(px,py,TS,TS);
-  ctx.fillStyle='#000'; ctx.fillText('@',px+4,py+12);
-  ctx.strokeStyle='#2a3b2a'; ctx.strokeRect(0.5,0.5,VIEW_W*TS-1,VIEW_H*TS-1);
 }
 
+Object.assign(window, { renderOrderSystem: { order: renderOrder, render } });
 
 // ===== HUD & Tabs =====
 const TAB_BREAKPOINT = 1600;
@@ -193,7 +224,8 @@ function renderInv(){
   player.inv.forEach((it,idx)=>{
     const row=document.createElement('div');
     row.className='slot';
-    const label = it.name + (it.slot?` [${it.slot}]`: '');
+    const baseLabel = it.name + (it.slot?` [${it.slot}]`:'');
+    const label = (it.cursed && it.cursedKnown)? `${baseLabel} (cursed)` : baseLabel;
     row.innerHTML = `<div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
         <span>${label}</span>
         <span style="display:flex;gap:6px">
@@ -216,8 +248,9 @@ function renderInv(){
         : String(v);
     })();
 
+    const nameLine = baseLabel + ((it.cursed && it.cursedKnown)? ' (cursed)' : '');
     const tip = [
-      `${it.name}${it.slot ? ` [${it.slot}]` : ''}`, // from main
+      nameLine, // from main
       it.desc || '',
       mods ? `Mods: ${mods}` : '',
       use  ? `Use: ${use}`   : '',
@@ -234,7 +267,7 @@ function renderInv(){
   });
 }
 function renderQuests(){ const q=document.getElementById('quests'); q.innerHTML=''; const ids=Object.keys(quests); if(ids.length===0){ q.innerHTML='<div class="q muted">(no quests)</div>'; return; } ids.forEach(id=>{ const v=quests[id]; const div=document.createElement('div'); div.className='q'; div.innerHTML=`<div><b>${v.title}</b></div><div class="small">${v.desc}</div><div class="status">${v.status}</div>`; q.appendChild(div); }); }
-function renderParty(){ const p=document.getElementById('party'); p.innerHTML=''; if(party.length===0){ p.innerHTML='<div class="pcard muted">(no party members yet)</div>'; return; } party.forEach((m,i)=>{ const c=document.createElement('div'); c.className='pcard'; const bonus=m._bonus||{}; const fmt=v=> (v>0? '+'+v : v); c.innerHTML = `<div class='row'><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div><div class='row small'>${statLine(m.stats)}</div><div class='row'>HP ${m.hp}/${m.maxHp}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div><div class='row small'>WPN: ${m.equip.weapon?m.equip.weapon.name:'—'}  ARM: ${m.equip.armor?m.equip.armor.name:'—'}  TRK: ${m.equip.trinket?m.equip.trinket.name:'—'}</div><div class='row small'>XP ${m.xp}/${xpToNext(m.lvl)}</div><div class='row'><label><input type='radio' name='selMember' ${i===selectedMember?'checked':''}> Selected</label></div>`; c.querySelector('input').onchange=()=>{ selectedMember=i; }; p.appendChild(c); }); }
+function renderParty(){ const p=document.getElementById('party'); p.innerHTML=''; if(party.length===0){ p.innerHTML='<div class="pcard muted">(no party members yet)</div>'; return; } party.forEach((m,i)=>{ const c=document.createElement('div'); c.className='pcard'; const bonus=m._bonus||{}; const fmt=v=> (v>0? '+'+v : v); const wLabel=m.equip.weapon?(m.equip.weapon.cursed&&m.equip.weapon.cursedKnown?m.equip.weapon.name+' (cursed)':m.equip.weapon.name):'—'; const aLabel=m.equip.armor?(m.equip.armor.cursed&&m.equip.armor.cursedKnown?m.equip.armor.name+' (cursed)':m.equip.armor.name):'—'; const tLabel=m.equip.trinket?(m.equip.trinket.cursed&&m.equip.trinket.cursedKnown?m.equip.trinket.name+' (cursed)':m.equip.trinket.name):'—'; c.innerHTML = `<div class='row'><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div><div class='row small'>${statLine(m.stats)}</div><div class='row'>HP ${m.hp}/${m.maxHp}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div><div class='row small'>WPN: ${wLabel}${m.equip.weapon?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${m.equip.armor?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${m.equip.trinket?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div><div class='row small'>XP ${m.xp}/${xpToNext(m.lvl)}</div><div class='row'><label><input type='radio' name='selMember' ${i===selectedMember?'checked':''}> Selected</label></div>`; c.querySelector('input').onchange=()=>{ selectedMember=i; }; c.querySelectorAll('button[data-a="unequip"]').forEach(b=>{ const sl=b.dataset.slot; b.onclick=()=> unequipItem(i,sl); }); p.appendChild(c); }); }
 
 // ===== Minimal Unit Tests (#test) =====
 function assert(name, cond){ const msg = (cond? '✅ ':'❌ ') + name; log(msg); if(!cond) console.error('Test failed:', name); }
@@ -290,6 +323,21 @@ window.addEventListener('keydown',(e)=>{
       break;
     case 'm': case 'M': showMini=!showMini; break;
   }
+});
+
+disp.addEventListener('click',e=>{
+  const rect=disp.getBoundingClientRect();
+  const x=Math.floor((e.clientX-rect.left)/TS)+camX;
+  const y=Math.floor((e.clientY-rect.top)/TS)+camY;
+  interactAt(x,y);
+});
+disp.addEventListener('touchstart',e=>{
+  const t=e.touches[0];
+  const rect=disp.getBoundingClientRect();
+  const x=Math.floor((t.clientX-rect.left)/TS)+camX;
+  const y=Math.floor((t.clientY-rect.top)/TS)+camY;
+  interactAt(x,y);
+  e.preventDefault();
 });
 
 // ===== Boot =====
