@@ -342,7 +342,12 @@ function applyModule(data){
   });
   Object.keys(quests).forEach(k=> delete quests[k]);
   (data.quests||[]).forEach(q=>{
-    quests[q.id] = new Quest(q.id, q.title, q.desc, {item:q.item, reward:q.reward, xp:q.xp});
+    quests[q.id] = new Quest(
+      q.id,
+      q.title,
+      q.desc,
+      { item: q.item, reward: q.reward, xp: q.xp, moveTo: q.moveTo }
+    );
   });
   NPCS.length = 0;
   (data.npcs||[]).forEach(n=>{
