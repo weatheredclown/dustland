@@ -256,7 +256,7 @@ function renderDialogPreview() {
 }
 
 function addChoiceRow(container, ch = {}) {
-  const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', join = null, q = '' } = ch || {};
+  const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', reqItem = '', reqSlot = '', join = null, q = '' } = ch || {};
   const joinId = join?.id || '', joinName = join?.name || '', joinRole = join?.role || '';
   const goto = ch.goto || {};
   const gotoMap = goto.map || '', gotoX = goto.x != null ? goto.x : '', gotoY = goto.y != null ? goto.y : '';
@@ -272,6 +272,8 @@ function addChoiceRow(container, ch = {}) {
       <label>Failure<input class="choiceFailure" value="${failure || ''}"/></label>
       <label>Cost Item<input class="choiceCostItem" value="${costItem || ''}"/></label>
       <label>Cost Slot<input class="choiceCostSlot" value="${costSlot || ''}"/></label>
+      <label>Req Item<input class="choiceReqItem" value="${reqItem || ''}"/></label>
+      <label>Req Slot<input class="choiceReqSlot" value="${reqSlot || ''}"/></label>
       <label>Join ID<input class="choiceJoinId" value="${joinId}"/></label>
       <label>Join Name<input class="choiceJoinName" value="${joinName}"/></label>
       <label>Join Role<input class="choiceJoinRole" value="${joinRole}"/></label>
@@ -361,6 +363,8 @@ function updateTreeData() {
       const failure = chEl.querySelector('.choiceFailure').value.trim();
       const costItem = chEl.querySelector('.choiceCostItem').value.trim();
       const costSlot = chEl.querySelector('.choiceCostSlot').value.trim();
+      const reqItem = chEl.querySelector('.choiceReqItem').value.trim();
+      const reqSlot = chEl.querySelector('.choiceReqSlot').value.trim();
       const joinId = chEl.querySelector('.choiceJoinId').value.trim();
       const joinName = chEl.querySelector('.choiceJoinName').value.trim();
       const joinRole = chEl.querySelector('.choiceJoinRole').value.trim();
@@ -382,6 +386,8 @@ function updateTreeData() {
         if (failure) c.failure = failure;
         if (costItem) c.costItem = costItem;
         if (costSlot) c.costSlot = costSlot;
+        if (reqItem) c.reqItem = reqItem;
+        if (reqSlot) c.reqSlot = reqSlot;
         if (joinId || joinName || joinRole) c.join = { id: joinId, name: joinName, role: joinRole };
         if (gotoMap) {
           c.goto = { map: gotoMap };

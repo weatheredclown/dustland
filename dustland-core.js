@@ -851,6 +851,26 @@ function advanceDialog(stateObj, choiceIdx){
   const res={next:null, text:null, close:false};
   const finalize=(text)=>{ res.text=text||null; res.close=true; stateObj.node=null; return res; };
 
+  // Required item/slot without consumption
+  if(choice.reqItem || choice.reqSlot){
+    const idx = choice.reqItem ? player.inv.findIndex(it=> it.name===choice.reqItem)
+                               : player.inv.findIndex(it=> it.slot===choice.reqSlot);
+    if(idx === -1){
+      return finalize(choice.failure || 'You lack the required item.');
+    }
+    applyReward(choice.reward);
+    joinParty(choice.join);
+    processQuestFlag(choice);
+    runEffects(choice.effects);
+    if(choice.goto){
+      handleGoto(choice.goto);
+      res.close=true;
+      stateObj.node=null;
+      return res;
+    }
+    return finalize(choice.success || '');
+  }
+
   // Item/slot costs
   if(choice.costItem || choice.costSlot){
     const idx = choice.costItem ? player.inv.findIndex(it=> it.name===choice.costItem)
@@ -863,6 +883,12 @@ function advanceDialog(stateObj, choiceIdx){
     joinParty(choice.join);
     processQuestFlag(choice);
     runEffects(choice.effects);
+    if(choice.goto){
+      handleGoto(choice.goto);
+      res.close=true;
+      stateObj.node=null;
+      return res;
+    }
     return finalize(choice.success || '');
   }
 

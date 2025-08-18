@@ -129,8 +129,7 @@ const OFFICE_MODULE = (() => {
             label: 'Executive Suite',
             to: 'bye',
             goto: { map: 'floor3', x: midX, y: 2 },
-            costItem: 'Access Card',
-            reward: 'Access Card',
+            reqItem: 'Access Card',
             failure: 'Requires Access Card.'
           }
         ]
