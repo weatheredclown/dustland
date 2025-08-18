@@ -685,9 +685,6 @@ function startWorld(){
 
 const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, quickCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, state, player, GAME_STATE, setGameState, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld };
 
-
-const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, quickCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, state, player, GAME_STATE, setGameState, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld };
-
 Object.assign(globalThis, coreExports);
 
 if (typeof module !== 'undefined' && module.exports) {
