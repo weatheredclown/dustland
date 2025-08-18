@@ -7,6 +7,37 @@ const titleEl=document.getElementById('npcTitle');
 const portEl=document.getElementById('port');
 let currentNPC=null;
 const dialogState={ tree:null, node:null };
+let selectedChoice=0;
+
+function highlightChoice(){
+  [...choicesEl.children].forEach((c,i)=>{
+    if(c.classList?.toggle) c.classList.toggle('sel', i===selectedChoice);
+  });
+}
+
+function moveChoice(dir){
+  const total=choicesEl.children.length;
+  if(total===0) return;
+  selectedChoice=(selectedChoice+dir+total)%total;
+  highlightChoice();
+}
+
+function handleDialogKey(e){
+  if(!dialogState.tree) return false;
+  switch(e.key){
+    case 'ArrowUp':
+    case 'ArrowLeft':
+      moveChoice(-1); return true;
+    case 'ArrowDown':
+    case 'ArrowRight':
+      moveChoice(1); return true;
+    case 'Enter':{
+      const el=choicesEl.children[selectedChoice];
+      if(el?.click) el.click(); else el?.onclick?.();
+      return true; }
+  }
+  return false;
+}
 
 function normalizeDialogTree(tree){
   const out={};
@@ -224,6 +255,8 @@ function renderDialog(){
     cont.textContent='(Continue)';
     cont.onclick=()=> closeDialog();
     choicesEl.appendChild(cont);
+    selectedChoice=0;
+    highlightChoice();
     return;
   }
 
@@ -268,9 +301,11 @@ function renderDialog(){
     };
     choicesEl.appendChild(div);
   });
+  selectedChoice=0;
+  highlightChoice();
 }
 
-const dialogExports = { overlay, choicesEl, textEl, nameEl, titleEl, portEl, openDialog, closeDialog, renderDialog, advanceDialog, resolveCheck };
+const dialogExports = { overlay, choicesEl, textEl, nameEl, titleEl, portEl, openDialog, closeDialog, renderDialog, advanceDialog, resolveCheck, handleDialogKey };
 Object.assign(globalThis, dialogExports);
 
 if (typeof module !== 'undefined' && module.exports){

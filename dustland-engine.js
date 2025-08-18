@@ -310,6 +310,7 @@ document.getElementById('nanoToggle').onclick=()=>{
 window.addEventListener('keydown',(e)=>{
   if(overlay.classList.contains('shown')){
     if(e.key==='Escape') closeDialog();
+    else if(handleDialogKey?.(e)) e.preventDefault();
     return;
   }
   switch(e.key){

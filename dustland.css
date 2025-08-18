@@ -270,6 +270,11 @@
         background: #111711
     }
 
+    .choice.sel {
+        border-color: #5c8a5c;
+        background: #111711
+    }
+
     .small {
         font-size: 12px;
         color: #9ab09a
