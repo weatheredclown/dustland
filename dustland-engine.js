@@ -325,6 +325,21 @@ window.addEventListener('keydown',(e)=>{
   }
 });
 
+disp.addEventListener('click',e=>{
+  const rect=disp.getBoundingClientRect();
+  const x=Math.floor((e.clientX-rect.left)/TS)+camX;
+  const y=Math.floor((e.clientY-rect.top)/TS)+camY;
+  interactAt(x,y);
+});
+disp.addEventListener('touchstart',e=>{
+  const t=e.touches[0];
+  const rect=disp.getBoundingClientRect();
+  const x=Math.floor((t.clientX-rect.left)/TS)+camX;
+  const y=Math.floor((t.clientY-rect.top)/TS)+camY;
+  interactAt(x,y);
+  e.preventDefault();
+});
+
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
 requestAnimationFrame(draw);
