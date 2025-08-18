@@ -171,8 +171,7 @@ const DUSTLAND_MODULE = (() => {
           choices: [
             {
               label: '(CHA) Talk up the score',
-              stat: 'CHA',
-              dc: DC.TALK,
+              check: { stat: 'CHA', dc: DC.TALK },
               success: 'Grin smirks: "Alright."',
               failure: 'Grin shrugs: "Not buying it."',
               join: { id: 'grin', name: 'Grin', role: 'Scavenger' },
@@ -235,8 +234,7 @@ const DUSTLAND_MODULE = (() => {
             { label: '(Accept) I will help.', to: 'accept', q: 'accept' },
             {
               label: '(Repair) INT check with Toolkit',
-              stat: 'INT',
-              dc: DC.REPAIR,
+              check: { stat: 'INT', dc: DC.REPAIR },
               success: 'Static fades. The tower hums.',
               failure: 'You cross a wire and pop a fuse.',
               q: 'turnin'
@@ -309,8 +307,7 @@ const DUSTLAND_MODULE = (() => {
           choices: [
             {
               label: '(Talk) Stand down',
-              stat: 'CHA',
-              dc: DC.TALK,
+              check: { stat: 'CHA', dc: DC.TALK },
               success: 'He grunts and lets you pass.',
               failure: 'He tightens his grip.',
               to: 'bye'
