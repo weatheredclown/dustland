@@ -160,6 +160,7 @@ function renderInteriorList() {
   list.innerHTML = moduleData.interiors.map((I, i) => `<div data-idx="${i}">${I.id}</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editInterior(parseInt(div.dataset.idx, 10)));
   updateInteriorOptions();
+  refreshChoiceDropdowns();
 }
 
 function startNewInterior() {
@@ -265,26 +266,41 @@ function addChoiceRow(container, ch = {}) {
     <label>To<select class="choiceTo"></select></label>
     <button class="btn delChoice" type="button">x</button>
     <details class="choiceAdv"><summary>Advanced</summary>
-      <label>Reward<input class="choiceReward" value="${reward || ''}"/></label>
-      <label>Stat<input class="choiceStat" value="${stat || ''}"/></label>
-      <label>DC<input class="choiceDC" value="${dc || ''}"/></label>
-      <label>Success<input class="choiceSuccess" value="${success || ''}"/></label>
-      <label>Failure<input class="choiceFailure" value="${failure || ''}"/></label>
-      <label>Cost Item<input class="choiceCostItem" value="${costItem || ''}"/></label>
-      <label>Cost Slot<input class="choiceCostSlot" value="${costSlot || ''}"/></label>
-      <label>Req Item<input class="choiceReqItem" value="${reqItem || ''}"/></label>
-      <label>Req Slot<input class="choiceReqSlot" value="${reqSlot || ''}"/></label>
-      <label>Join ID<input class="choiceJoinId" value="${joinId}"/></label>
-      <label>Join Name<input class="choiceJoinName" value="${joinName}"/></label>
-      <label>Join Role<input class="choiceJoinRole" value="${joinRole}"/></label>
-      <label>Goto Map<input class="choiceGotoMap" value="${gotoMap}"/></label>
-      <label>Goto X<input class="choiceGotoX" value="${gotoX}"/></label>
-      <label>Goto Y<input class="choiceGotoY" value="${gotoY}"/></label>
+      <label>Reward<input class="choiceReward" list="akItemIds" value="${reward || ''}"/><span class="small">Item ID or \"XP N\".</span></label>
+      <label>Stat<select class="choiceStat"></select></label>
+      <label>DC<input type="number" class="choiceDC" value="${dc || ''}"/><span class="small">Target number for stat check.</span></label>
+      <label>Success<input class="choiceSuccess" value="${success || ''}"/><span class="small">Shown if check passes.</span></label>
+      <label>Failure<input class="choiceFailure" value="${failure || ''}"/><span class="small">Shown if check fails.</span></label>
+      <label>Cost Item<select class="choiceCostItem"></select></label>
+      <label>Cost Slot<select class="choiceCostSlot"></select></label>
+      <label>Req Item<select class="choiceReqItem"></select></label>
+      <label>Req Slot<select class="choiceReqSlot"></select></label>
+      <label>Join ID<select class="choiceJoinId"></select></label>
+      <label>Join Name<input class="choiceJoinName" value="${joinName}"/><span class="small">Name shown after joining.</span></label>
+      <label>Join Role<select class="choiceJoinRole"></select></label>
+      <label>Goto Map<select class="choiceGotoMap"></select></label>
+      <label>Goto X<input type="number" class="choiceGotoX" value="${gotoX}"/><span class="small">X coordinate.</span></label>
+      <label>Goto Y<input type="number" class="choiceGotoY" value="${gotoY}"/><span class="small">Y coordinate.</span></label>
       <label>Quest<select class="choiceQ"><option value=""></option><option value="accept" ${q==='accept'?'selected':''}>accept</option><option value="turnin" ${q==='turnin'?'selected':''}>turnin</option></select></label>
       <label class="onceWrap"><input type="checkbox" class="choiceOnce" ${once ? 'checked' : ''}/> once</label>
     </details>`;
   container.appendChild(row);
   populateChoiceDropdown(row.querySelector('.choiceTo'), to);
+  populateStatDropdown(row.querySelector('.choiceStat'), stat);
+  populateItemDropdown(row.querySelector('.choiceCostItem'), costItem);
+  populateSlotDropdown(row.querySelector('.choiceCostSlot'), costSlot);
+  populateItemDropdown(row.querySelector('.choiceReqItem'), reqItem);
+  populateSlotDropdown(row.querySelector('.choiceReqSlot'), reqSlot);
+  populateNPCDropdown(row.querySelector('.choiceJoinId'), joinId);
+  populateRoleDropdown(row.querySelector('.choiceJoinRole'), joinRole);
+  populateMapDropdown(row.querySelector('.choiceGotoMap'), gotoMap);
+  const joinSel = row.querySelector('.choiceJoinId');
+  joinSel.addEventListener('change', () => {
+    const npc = moduleData.npcs.find(n => n.id === joinSel.value);
+    const nameEl = row.querySelector('.choiceJoinName');
+    if (npc && !nameEl.value) nameEl.value = npc.name;
+    updateTreeData();
+  });
   row.querySelectorAll('input,textarea,select').forEach(el => el.addEventListener('input', updateTreeData));
   row.querySelectorAll('select').forEach(el => el.addEventListener('change', updateTreeData));
   row.querySelectorAll('input[type=checkbox]').forEach(el => el.addEventListener('change', updateTreeData));
@@ -301,14 +317,61 @@ function populateChoiceDropdown(sel, selected = '') {
   }
 }
 
+function populateStatDropdown(sel, selected = '') {
+  const stats = ['', 'STR', 'AGI', 'INT', 'PER', 'LCK', 'CHA'];
+  sel.innerHTML = stats.map(s => `<option value="${s}">${s}</option>`).join('');
+  sel.value = selected;
+}
+
+function populateSlotDropdown(sel, selected = '') {
+  const slots = ['', 'weapon', 'armor', 'trinket'];
+  sel.innerHTML = slots.map(s => `<option value="${s}">${s}</option>`).join('');
+  sel.value = selected;
+}
+
+function populateItemDropdown(sel, selected = '') {
+  sel.innerHTML = '<option value=""></option>' + moduleData.items.map(it => `<option value="${it.id}">${it.id}</option>`).join('');
+  sel.value = selected;
+}
+
+function populateNPCDropdown(sel, selected = '') {
+  sel.innerHTML = '<option value=""></option>' + moduleData.npcs.map(n => `<option value="${n.id}">${n.id}</option>`).join('');
+  sel.value = selected;
+}
+
+function populateRoleDropdown(sel, selected = '') {
+  const roles = ['', 'Wanderer', 'Scavenger', 'Gunslinger', 'Snakeoil Preacher', 'Cogwitch'];
+  sel.innerHTML = roles.map(r => `<option value="${r}">${r}</option>`).join('');
+  sel.value = selected;
+}
+
+function populateMapDropdown(sel, selected = '') {
+  const maps = ['world', ...moduleData.interiors.map(I => I.id)];
+  sel.innerHTML = '<option value=""></option>' + maps.map(m => `<option value="${m}">${m}</option>`).join('');
+  sel.value = selected;
+}
+
 function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceTo').forEach(sel => populateChoiceDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceStat').forEach(sel => populateStatDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceCostSlot').forEach(sel => populateSlotDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceReqSlot').forEach(sel => populateSlotDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceCostItem').forEach(sel => populateItemDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceReqItem').forEach(sel => populateItemDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceJoinId').forEach(sel => populateNPCDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceJoinRole').forEach(sel => populateRoleDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceGotoMap').forEach(sel => populateMapDropdown(sel, sel.value));
+  const dl = document.getElementById('akItemIds');
+  if (dl) dl.innerHTML = moduleData.items.map(it => `<option value="${it.id}"></option>`).join('');
 }
 
 function renderTreeEditor() {
   const wrap = document.getElementById('treeEditor');
   if (!wrap) return;
   wrap.innerHTML = '';
+  let dl = document.getElementById('akItemIds');
+  if (!dl) { dl = document.createElement('datalist'); dl.id = 'akItemIds'; document.body.appendChild(dl); }
+  dl.innerHTML = moduleData.items.map(it => `<option value="${it.id}"></option>`).join('');
   Object.entries(treeData).forEach(([id, node]) => {
     const div = document.createElement('div');
     div.className = 'node';
@@ -643,6 +706,7 @@ function renderNPCList() {
   list.innerHTML = moduleData.npcs.map((n, i) => `<div data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${n.questId ? ` [${n.questId}]` : ''}</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editNPC(parseInt(div.dataset.idx, 10)));
   updateQuestOptions();
+  refreshChoiceDropdowns();
 }
 
 function deleteNPC() {
@@ -749,6 +813,7 @@ function renderItemList() {
   const list = document.getElementById('itemList');
   list.innerHTML = moduleData.items.map((it, i) => `<div data-idx="${i}">${it.name} @${it.map} (${it.x},${it.y})</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editItem(parseInt(div.dataset.idx, 10)));
+  refreshChoiceDropdowns();
 }
 
 function deleteItem() {

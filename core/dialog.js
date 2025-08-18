@@ -111,19 +111,19 @@ function handleGoto(g){
 function advanceDialog(stateObj, choiceIdx){
   const node=stateObj.tree[stateObj.node];
   const choice=node.next[choiceIdx];
-  if(!choice){ stateObj.node=null; return {next:null, text:null, close:true}; }
+  if(!choice){ stateObj.node=null; return {next:null, text:null, close:true, success:false}; }
 
   runEffects(choice.checks);
 
-  const res={next:null, text:null, close:false};
-  const finalize=(text)=>{ res.text=text||null; res.close=true; stateObj.node=null; return res; };
+  const res={next:null, text:null, close:false, success:true};
+  const finalize=(text, ok)=>{ res.text=text||null; res.close=true; res.success=!!ok; stateObj.node=null; return res; };
 
   if(choice.reqItem || choice.reqSlot){
     const idx = choice.reqItem
       ? findItemIndex(choice.reqItem)
       : player.inv.findIndex(it => it.slot === choice.reqSlot);
     if(idx === -1){
-      return finalize(choice.failure || 'You lack the required item.');
+      return finalize(choice.failure || 'You lack the required item.', false);
     }
     applyReward(choice.reward);
     joinParty(choice.join);
@@ -131,18 +131,16 @@ function advanceDialog(stateObj, choiceIdx){
     runEffects(choice.effects);
     if(choice.goto){
       handleGoto(choice.goto);
-      res.close=true;
-      stateObj.node=null;
-      return res;
+      res.close=true; res.success=true; stateObj.node=null; return res;
     }
-    return finalize(choice.success || '');
+    return finalize(choice.success || '', true);
   }
 
   if(choice.costItem || choice.costSlot){
     const idx = choice.costItem ? findItemIndex(choice.costItem)
                                 : player.inv.findIndex(it=> it.slot===choice.costSlot);
     if(idx === -1){
-      return finalize(choice.failure || 'You lack the required item.');
+      return finalize(choice.failure || 'You lack the required item.', false);
     }
     const removed = player.inv[idx];
     player.inv.splice(idx,1);
@@ -152,16 +150,16 @@ function advanceDialog(stateObj, choiceIdx){
     runEffects(choice.effects);
     if(choice.goto){
       handleGoto(choice.goto);
-      res.close=true; stateObj.node=null; return res;
+      res.close=true; res.success=true; stateObj.node=null; return res;
     }
-    return finalize(choice.success || '');
+    return finalize(choice.success || '', true);
   }
 
   if(choice.check){
     const { success, roll, dc } = resolveCheck(choice.check, leader());
     log?.(`Dialog check ${choice.check.stat}: ${roll} vs ${dc}`);
     if(!success){
-      return finalize(choice.failure || 'Failed.');
+      return finalize(choice.failure || 'Failed.', false);
     }
   }
 
@@ -172,7 +170,7 @@ function advanceDialog(stateObj, choiceIdx){
 
   if(choice.goto){
     handleGoto(choice.goto);
-    res.close=true; stateObj.node=null; return res;
+    res.close=true; res.success=true; stateObj.node=null; return res;
   }
 
   const nextId = choice.to || choice.id;
@@ -182,7 +180,7 @@ function advanceDialog(stateObj, choiceIdx){
     return res;
   }
 
-  return finalize(choice.text || '');
+  return finalize(choice.text || '', true);
 }
 
 const onceChoices = globalThis.usedOnceChoices || (globalThis.usedOnceChoices = new Set());
@@ -283,9 +281,8 @@ function renderDialog(){
     div.textContent=opt.label||'(Continue)';
     div.onclick=()=>{
       const key=`${currentNPC.id}::${dialogState.node}::${opt.label}`;
-      if(opt.once) onceChoices.add(key);
-
       const result=advanceDialog(dialogState,idx);
+      if(opt.once && result?.success) onceChoices.add(key);
       if(result && result.text!==null){
         textEl.textContent=result.text;
         choicesEl.innerHTML='';
