@@ -37,7 +37,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem } = require('../dustland-core.js');
+const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem } = require('../dustland-core.js');
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -349,4 +349,20 @@ test('turn-in choice hidden until quest accepted', () => {
   openDialog(npc);
   labels = choicesEl.children.map(c => c.textContent);
   assert.ok(labels.includes('turn in'));
+});
+
+test('createNpcFactory builds NPCs from definitions', () => {
+  const defs = [{
+    id: 't',
+    map: 'world',
+    name: 'Tester',
+    tree: '{"start":{"text":"hi","choices":[{"label":"bye","to":"bye"}]}}'
+  }];
+  const factory = createNpcFactory(defs);
+  const npc = factory.t(2, 3);
+  assert.strictEqual(npc.id, 't');
+  assert.strictEqual(npc.x, 2);
+  assert.strictEqual(npc.y, 3);
+  assert.strictEqual(npc.map, 'world');
+  assert.strictEqual(npc.tree.start.text, 'hi');
 });

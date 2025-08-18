@@ -298,11 +298,44 @@ function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNo
 }
 function resolveNode(tree, nodeId){ const n = tree[nodeId]; const choices = n.choices||[]; return {...n, choices}; }
 const NPCS=[];
+
 function removeNPC(npc){
   const idx = NPCS.indexOf(npc);
   if(idx > -1) NPCS.splice(idx,1);
 }
 const usedOnceChoices = new Set();
+
+function createNpcFactory(defs){
+  const npcFactory={};
+  (defs||[]).forEach(n=>{
+    npcFactory[n.id]=(x=n.x, y=n.y)=>{
+      let tree=n.tree;
+      if(typeof tree==='string'){ try{ tree=JSON.parse(tree); }catch(e){ tree=null; } }
+      if(!tree){
+        tree={ start:{ text:n.dialog||'', choices:[{label:'(Leave)', to:'bye'}] } };
+      }
+      const opts={};
+      if(n.combat) opts.combat=n.combat;
+      if(n.shop) opts.shop=n.shop;
+      return makeNPC(
+        n.id,
+        n.map||'world',
+        x,
+        y,
+        n.color||'#9ef7a0',
+        n.name||n.id,
+        n.title||'',
+        n.desc||'',
+        tree,
+        null,
+        null,
+        null,
+        opts
+      );
+    };
+  });
+  return npcFactory;
+}
 
 // ===== Module application =====
 function applyModule(data){
@@ -342,6 +375,7 @@ function applyModule(data){
   });
   Object.keys(quests).forEach(k=> delete quests[k]);
   (data.quests||[]).forEach(q=>{
+
     quests[q.id] = new Quest(
       q.id,
       q.title,
@@ -445,7 +479,20 @@ function placeHut(x,y,b){
 
 // ===== Save/Load & Start =====
 function save(){
-  const npcData = NPCS.map(({id,map,x,y,quest})=>({id,map,x,y,quest:quest?{id:quest.id,status:quest.status}:null}));
+  const npcData = NPCS.map(n=>({
+    id:n.id,
+    map:n.map,
+    x:n.x,
+    y:n.y,
+    color:n.color,
+    name:n.name,
+    title:n.title,
+    desc:n.desc,
+    tree:n.tree,
+    combat:n.combat,
+    shop:n.shop,
+    quest:n.quest?{id:n.quest.id,status:n.quest.status}:null
+  }));
   const questData = {};
   Object.keys(quests).forEach(k=>{
     const q=quests[k];
@@ -475,9 +522,11 @@ function load(){
     const qd=d.quests[id];
     const q=new Quest(id,qd.title,qd.desc); q.status=qd.status; quests[id]=q;
   });
+
+  const npcFactory = createNpcFactory(d.npcs || []);
   NPCS.length=0;
   (d.npcs||[]).forEach(n=>{
-    const f=NPC_FACTORY[n.id];
+    const f=npcFactory[n.id];
     if(f){
       const npc=f(n.x,n.y);
       npc.map=n.map;
@@ -634,7 +683,8 @@ function startWorld(){
 // Content pack moved to modules/dustland.module.js
 
 
-// Export a few helpers for Node-based tests without affecting the browser build
+const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, quickCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, state, player, GAME_STATE, setGameState, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld };
+
 
 const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, quickCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, state, player, GAME_STATE, setGameState, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld };
 
