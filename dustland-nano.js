@@ -351,7 +351,7 @@ Choices:
     const choices = choicePart.split(/\r?\n/)
       .map(_parseChoice)
       .filter(Boolean)
-      .filter(c => !(c.stat && (!c.reward || c.reward.toLowerCase() === 'none')))
+      .filter(c => !(c.check && (!c.reward || c.reward.toLowerCase() === 'none')))
       .slice(0, 2);
   
     console.log("Produced:", lines, choices);
@@ -367,8 +367,7 @@ Choices:
       const dc = parseInt(parts[2],10);
       return {
         label: parts[0],
-        stat: parts[1].toUpperCase(),
-        dc: isNaN(dc)?0:dc,
+        check: { stat: parts[1].toUpperCase(), dc: isNaN(dc)?0:dc },
         reward: parts[3],
         success: parts[4],
         failure: parts[5]

@@ -37,7 +37,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader } = require('../dustland-core.js');
+const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck } = require('../dustland-core.js');
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -66,6 +66,19 @@ test('Dice.roll is within inclusive bounds', () => {
     const roll = Dice.roll(6);
     assert.ok(roll >= 1 && roll <= 6);
   }
+});
+
+test('resolveCheck uses rng and runs effects', () => {
+  const actor = new Character('t','Tester','Role');
+  const events = [];
+  const check = { stat:'CHA', dc:5, onSuccess:[()=>events.push('s')], onFail:[()=>events.push('f')] };
+  const failRes = resolveCheck(check, actor, () => 0);
+  assert.strictEqual(failRes.success, false);
+  assert.deepStrictEqual(events, ['f']);
+  events.length = 0;
+  const winRes = resolveCheck(check, actor, () => 0.99);
+  assert.strictEqual(winRes.success, true);
+  assert.deepStrictEqual(events, ['s']);
 });
 
 test('cursed items reveal on unequip attempt and stay equipped', () => {
