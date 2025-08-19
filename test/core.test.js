@@ -37,7 +37,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem } = require('../dustland-core.js');
+const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, randRange, sample, setRNGSeed } = require('../dustland-core.js');
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -365,4 +365,33 @@ test('createNpcFactory builds NPCs from definitions', () => {
   assert.strictEqual(npc.y, 3);
   assert.strictEqual(npc.map, 'world');
   assert.strictEqual(npc.tree.start.text, 'hi');
+});
+
+test('clamp swaps reversed bounds', () => {
+  assert.strictEqual(clamp(5, 10, 0), 5);
+});
+
+test('Dice.roll uses provided rng', () => {
+  const rng = () => 0.99;
+  assert.strictEqual(Dice.roll(6, rng), 6);
+});
+
+test('randRange yields inclusive integers and respects seed', () => {
+  setRNGSeed(42);
+  const a = randRange(1, 3);
+  setRNGSeed(42);
+  const b = randRange(1, 3);
+  assert.strictEqual(a, b);
+  assert.ok(a >= 1 && a <= 3);
+});
+
+test('sample returns deterministic element and handles edge cases', () => {
+  const arr = ['a', 'b', 'c'];
+  setRNGSeed(123);
+  const first = sample(arr);
+  setRNGSeed(123);
+  const second = sample(arr);
+  assert.strictEqual(first, second);
+  assert.strictEqual(sample([]), undefined);
+  assert.strictEqual(sample('nope'), undefined);
 });
