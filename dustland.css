@@ -286,6 +286,18 @@
         background: #111711
     }
 
+/* Combat UI */
+#combatOverlay { background: transparent; pointer-events: none; }
+#combatOverlay .combat-window { pointer-events:auto; width:min(480px,92vw); background:#0b0d0b; border:1px solid #2a382a; border-radius:10px; padding:8px; display:flex; flex-direction:column; align-items:center; }
+#combatOverlay .enemy-row, #combatOverlay .party-row { display:flex; gap:12px; }
+#combatOverlay .enemy-row { justify-content:center; margin-bottom:8px; }
+#combatOverlay .party-row { justify-content:center; margin-top:8px; }
+#combatOverlay .member { position:relative; display:flex; flex-direction:column; align-items:center; }
+#combatOverlay .enemy.active .portrait, #combatOverlay .member.active .portrait { border-color:#5c8a5c; }
+#combatOverlay .cmd { position:absolute; top:70px; background:#0f120f; border:1px solid #253525; padding:4px 12px; border-radius:6px; }
+#combatOverlay .cmd div { padding:2px 0; }
+#combatOverlay .cmd div.sel::before { content:'>'; margin-right:4px; }
+
     .small {
         font-size: 12px;
         color: #9ab09a
