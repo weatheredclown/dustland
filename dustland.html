@@ -74,6 +74,14 @@
     </div>
   </div>
 
+  <!-- Combat overlay -->
+  <div class="overlay" id="combatOverlay" role="dialog" aria-modal="true">
+    <div class="combat-window">
+      <div class="enemy-row" id="combatEnemies"></div>
+      <div class="party-row" id="combatParty"></div>
+    </div>
+  </div>
+
   <!-- Character Creator -->
   <div id="creator" style="display:none">
     <div class="win">
@@ -104,6 +112,7 @@
   <script src="core/inventory.js"></script>
   <script src="core/movement.js"></script>
   <script src="core/dialog.js"></script>
+  <script src="core/combat.js"></script>
   <script>
     window._realOpenCreator = window.openCreator;
     window._realShowStart = window.showStart;
