@@ -1334,19 +1334,19 @@ canvas.addEventListener('click', ev => {
   const { x, y } = canvasPos(ev);
   let idx = moduleData.npcs.findIndex(n => n.map === 'world' && n.x === x && n.y === y);
   if (idx >= 0) {
-    document.querySelector('.tab2[data-tab="npc"]').click();
+    if (window.showEditorTab) window.showEditorTab('npc');
     editNPC(idx);
     return;
   }
   idx = moduleData.items.findIndex(it => it.map === 'world' && it.x === x && it.y === y);
   if (idx >= 0) {
-    document.querySelector('.tab2[data-tab="items"]').click();
+    if (window.showEditorTab) window.showEditorTab('items');
     editItem(idx);
     return;
   }
   idx = moduleData.buildings.findIndex(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
   if (idx >= 0) {
-    document.querySelector('.tab2[data-tab="buildings"]').click();
+    if (window.showEditorTab) window.showEditorTab('buildings');
     editBldg(idx);
   }
 });
@@ -1411,6 +1411,7 @@ animate();
   tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.tab)));
   mq.addEventListener('change', setLayout);
   setLayout();
+  window.showEditorTab = show;
 })();
 
 document.getElementById('playtestFloat').onclick =
