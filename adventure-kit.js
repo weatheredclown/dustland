@@ -261,12 +261,18 @@ function addChoiceRow(container, ch = {}) {
   const joinId = join?.id || '', joinName = join?.name || '', joinRole = join?.role || '';
   const goto = ch.goto || {};
   const gotoMap = goto.map || '', gotoX = goto.x != null ? goto.x : '', gotoY = goto.y != null ? goto.y : '';
+  const isXP = typeof reward === 'string' && /^xp\s*\d+/i.test(reward);
+  const xpVal = isXP ? parseInt(reward.replace(/[^0-9]/g, ''), 10) : '';
+  const isItem = reward && !isXP;
+  const itemVal = isItem ? reward : '';
   const row = document.createElement('div');
   row.innerHTML = `<label>Label<input class="choiceLabel" value="${label}"/></label>
     <label>To<select class="choiceTo"></select></label>
     <button class="btn delChoice" type="button">x</button>
     <details class="choiceAdv"><summary>Advanced</summary>
-      <label>Reward<input class="choiceReward" list="akItemIds" value="${reward || ''}"/><span class="small">Item ID or \"XP N\".</span></label>
+      <label>Reward<select class="choiceRewardType"><option value="" ${!reward?'selected':''}></option><option value="xp" ${isXP?'selected':''}>XP</option><option value="item" ${isItem?'selected':''}>Item</option></select>
+        <input type="number" class="choiceRewardXP" value="${xpVal}" style="display:${isXP?'inline-block':'none'}"/>
+        <select class="choiceRewardItem" style="display:${isItem?'inline-block':'none'}"></select></label>
       <label>Stat<select class="choiceStat"></select></label>
       <label>DC<input type="number" class="choiceDC" value="${dc || ''}"/><span class="small">Target number for stat check.</span></label>
       <label>Success<input class="choiceSuccess" value="${success || ''}"/><span class="small">Shown if check passes.</span></label>
@@ -294,6 +300,15 @@ function addChoiceRow(container, ch = {}) {
   populateNPCDropdown(row.querySelector('.choiceJoinId'), joinId);
   populateRoleDropdown(row.querySelector('.choiceJoinRole'), joinRole);
   populateMapDropdown(row.querySelector('.choiceGotoMap'), gotoMap);
+  populateItemDropdown(row.querySelector('.choiceRewardItem'), itemVal);
+  const rewardTypeSel = row.querySelector('.choiceRewardType');
+  const rewardXP = row.querySelector('.choiceRewardXP');
+  const rewardItem = row.querySelector('.choiceRewardItem');
+  rewardTypeSel.addEventListener('change', () => {
+    rewardXP.style.display = rewardTypeSel.value === 'xp' ? 'inline-block' : 'none';
+    rewardItem.style.display = rewardTypeSel.value === 'item' ? 'inline-block' : 'none';
+    updateTreeData();
+  });
   const joinSel = row.querySelector('.choiceJoinId');
   joinSel.addEventListener('change', () => {
     const npc = moduleData.npcs.find(n => n.id === joinSel.value);
@@ -361,17 +376,13 @@ function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceJoinId').forEach(sel => populateNPCDropdown(sel, sel.value));
   document.querySelectorAll('.choiceJoinRole').forEach(sel => populateRoleDropdown(sel, sel.value));
   document.querySelectorAll('.choiceGotoMap').forEach(sel => populateMapDropdown(sel, sel.value));
-  const dl = document.getElementById('akItemIds');
-  if (dl) dl.innerHTML = moduleData.items.map(it => `<option value="${it.id}"></option>`).join('');
+  document.querySelectorAll('.choiceRewardItem').forEach(sel => populateItemDropdown(sel, sel.value));
 }
 
 function renderTreeEditor() {
   const wrap = document.getElementById('treeEditor');
   if (!wrap) return;
   wrap.innerHTML = '';
-  let dl = document.getElementById('akItemIds');
-  if (!dl) { dl = document.createElement('datalist'); dl.id = 'akItemIds'; document.body.appendChild(dl); }
-  dl.innerHTML = moduleData.items.map(it => `<option value="${it.id}"></option>`).join('');
   Object.entries(treeData).forEach(([id, node]) => {
     const div = document.createElement('div');
     div.className = 'node';
@@ -418,7 +429,12 @@ function updateTreeData() {
       const label = chEl.querySelector('.choiceLabel').value.trim();
       const toEl = chEl.querySelector('.choiceTo');
       const to = toEl.value.trim();
-      const reward = chEl.querySelector('.choiceReward').value.trim();
+      const rewardType = chEl.querySelector('.choiceRewardType').value;
+      const xpTxt = chEl.querySelector('.choiceRewardXP').value.trim();
+      const itemReward = chEl.querySelector('.choiceRewardItem').value.trim();
+      let reward = '';
+      if (rewardType === 'xp' && xpTxt) reward = `XP ${parseInt(xpTxt, 10)}`;
+      else if (rewardType === 'item' && itemReward) reward = itemReward;
       const stat = chEl.querySelector('.choiceStat').value.trim();
       const dcTxt = chEl.querySelector('.choiceDC').value.trim();
       const dc = dcTxt ? parseInt(dcTxt, 10) : undefined;
