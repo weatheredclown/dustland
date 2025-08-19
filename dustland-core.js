@@ -750,7 +750,7 @@ function renderStep(){
 function finalizeCurrentMember(){
   if(!building) return null;
   if(!building.name || !building.name.trim()) building.name = 'Drifter '+(built.length+1);
-  const m=makeMember(building.id, building.name, building.spec||'Wanderer');
+  const m=makeMember(building.id, building.name, building.spec||'Wanderer', {permanent:true});
   m.stats=building.stats; m.origin=building.origin; m.quirk=building.quirk;
   addPartyMember(m);
   const spec = specializations[building.spec]; if(spec){ spec.gear.forEach(g=> addToInv(g)); }

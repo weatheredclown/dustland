@@ -99,8 +99,9 @@ function processQuestFlag(c){
 function joinParty(join){
   if(!join) return;
   const m=makeMember(join.id, join.name, join.role);
-  addPartyMember(m);
-  removeNPC(currentNPC);
+  if(addPartyMember(m)){
+    removeNPC(currentNPC);
+  }
 }
 
 function handleGoto(g){
