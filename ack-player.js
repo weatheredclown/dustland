@@ -2,20 +2,21 @@
 // Loads a module JSON and starts the game using its data.
 
 let moduleData = null;
+const PLAYTEST_KEY = 'ack_playtest';
 const loader = document.getElementById('moduleLoader');
 const fileInput = document.getElementById('modFile');
 const loadBtn = document.getElementById('modLoadBtn');
 
-const playData = localStorage.getItem('ack_playtest');
+const playData = localStorage.getItem(PLAYTEST_KEY);
 if(playData){
   try{
     moduleData = JSON.parse(playData);
-    localStorage.removeItem('ack_playtest');
+    localStorage.removeItem(PLAYTEST_KEY);
     loader.style.display='none';
     window.openCreator = window._realOpenCreator;
     openCreator();
   }catch(e){
-    localStorage.removeItem('ack_playtest');
+    localStorage.removeItem(PLAYTEST_KEY);
   }
 }
 

@@ -4,6 +4,8 @@
 // Ensure world generation doesn't pull default content
 window.seedWorldContent = () => { };
 
+const PLAYTEST_KEY = 'ack_playtest';
+
 const colors = { 0: '#1e271d', 1: '#2c342c', 2: '#1573ff', 3: '#203320', 4: '#394b39', 5: '#304326', 6: '#4d5f4d', 7: '#233223', 8: '#8bd98d', 9: '#000' };
 const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
@@ -1065,7 +1067,7 @@ function saveModule() {
 function playtestModule() {
   const bldgs = buildings.map(({ under, ...rest }) => rest);
   const data = { ...moduleData, world, buildings: bldgs };
-  localStorage.setItem('ack_playtest', JSON.stringify(data));
+  localStorage.setItem(PLAYTEST_KEY, JSON.stringify(data));
   window.open('ack-player.html#play', '_blank');
 }
 
