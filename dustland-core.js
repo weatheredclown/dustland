@@ -242,8 +242,8 @@ function defaultQuestProcessor(npc, nodeId){
 }
 
 class NPC {
-  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null,combat=null,shop=false}){
-    Object.assign(this,{id,map,x,y,color,name,title,desc,tree,quest,combat,shop});
+  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null}){
+    Object.assign(this,{id,map,x,y,color,name,title,desc,tree,quest,combat,shop,portraitSheet});
     const capNode = (node)=>{
       if(this.combat && node==='do_fight'){
         const {DEF=0, loot} = this.combat;
@@ -331,6 +331,7 @@ function createNpcFactory(defs){
       const opts={};
       if(n.combat) opts.combat=n.combat;
       if(n.shop) opts.shop=n.shop;
+      if(n.portraitSheet) opts.portraitSheet=n.portraitSheet;
       return makeNPC(
         n.id,
         n.map||'world',
@@ -409,6 +410,7 @@ function applyModule(data){
     const opts = {};
     if(n.combat) opts.combat = n.combat;
     if(n.shop) opts.shop = n.shop;
+    if(n.portraitSheet) opts.portraitSheet = n.portraitSheet;
     const npc = makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, n.title||'', n.desc||'', tree, quest, null, null, opts);
     NPCS.push(npc);
   });
