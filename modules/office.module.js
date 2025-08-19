@@ -321,6 +321,39 @@ const OFFICE_MODULE = (() => {
       }
     },
     {
+      id: 'forest_rat',
+      map: 'world',
+      x: WORLD_MID + 5,
+      y: WORLD_MIDY + 3,
+      color: '#ffb6b6',
+      name: 'Giant Rat',
+      desc: 'It bares its teeth.',
+      combat: { HP: 3, ATK: 1, DEF: 0, loot: { name: 'Rat Tail' }, auto: true },
+      tree: { start: { text: 'The rat lunges!', choices: [ { label: '(Leave)', to: 'bye' } ] } }
+    },
+    {
+      id: 'forest_bandit',
+      map: 'world',
+      x: WORLD_MID + 6,
+      y: WORLD_MIDY - 4,
+      color: '#f88',
+      name: 'Bandit',
+      desc: 'Lurks among the trees.',
+      combat: { HP: 6, ATK: 2, DEF: 1, loot: { name: 'Rusty Dagger' }, auto: true },
+      tree: { start: { text: 'Your coin or your life!', choices: [ { label: '(Leave)', to: 'bye' } ] } }
+    },
+    {
+      id: 'forest_ogre',
+      map: 'world',
+      x: WORLD_MID + 12,
+      y: WORLD_MIDY + 1,
+      color: '#f55',
+      name: 'Forest Ogre',
+      desc: 'Towering and enraged.',
+      combat: { HP: 12, ATK: 4, DEF: 2, loot: { name: 'Ogre Tooth' }, auto: true },
+      tree: { start: { text: 'The ogre roars.', choices: [ { label: '(Leave)', to: 'bye' } ] } }
+    },
+    {
       id: 'vending',
       map: 'floor2',
       x: midX,
