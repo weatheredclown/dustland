@@ -367,6 +367,15 @@ test('createNpcFactory builds NPCs from definitions', () => {
   assert.strictEqual(npc.tree.start.text, 'hi');
 });
 
+test('openDialog displays portrait when sheet provided', () => {
+  NPCS.length = 0;
+  const tree = { start: { text: '', choices: [] } };
+  const npc = makeNPC('p', 'world', 0, 0, '#fff', 'Port', '', '', tree, null, null, null, { portraitSheet: 'assets/portraits/kesh_4.png' });
+  NPCS.push(npc);
+  openDialog(npc);
+  assert.ok(portEl.style.backgroundImage.includes('kesh_4.png'));
+});
+
 test('clamp swaps reversed bounds', () => {
   assert.strictEqual(clamp(5, 10, 0), 5);
 });
