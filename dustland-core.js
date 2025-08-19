@@ -81,37 +81,91 @@ class Dice {
 
 // ===== Combat =====
 /**
- * Quick combat resolver. Uses party leader's ATK + LCK vs defender's DEF.
- * @param {{DEF:number, loot?:Item}} defender
+ * Final Fantasy II style turn-based combat. Falls back to quick resolution
+ * when running in a non-browser environment (e.g. during tests).
+ * @param {{HP?:number,ATK?:number,DEF:number,loot?:Item,auto?:boolean}} defender
  * @returns {{result:'bruise'|'loot'|'flee', roll:number, dc:number}}
  */
-function quickCombat(defender){
+function turnBasedCombat(defender){
   const attacker = party.leader?.() || null;
   const dc = defender?.DEF || 0;
   if(!attacker) return { result:'flee', roll:0, dc };
 
+  let aHP = attacker.hp || 10;
+  let eHP = defender.HP || 5;
+  const aAtk = (attacker._bonus?.ATK || 0) + (attacker.stats?.ATK || 0);
+  const aDef = (attacker._bonus?.DEF || 0) + (attacker.stats?.DEF || 0);
+  const aLck = (attacker.stats?.LCK || 0) + (attacker._bonus?.LCK || 0);
+  const eAtk = defender.ATK || 0;
+  const eDef = defender.DEF || 0;
+
+  while(aHP>0 && eHP>0){
+    let choice = 'attack';
+    if(typeof prompt==='function'){
+      const ans = prompt(`Enemy HP:${eHP}  Your HP:${aHP}\n(1) Attack\n(2) Flee`,'1');
+      if(ans==='2') choice='flee';
+    }
+    if(choice==='flee'){
+      if(typeof toast==='function') toast('You flee.');
+      attacker.ap = Math.max(0,(attacker.ap||0)-1);
+      player.ap = attacker.ap; updateHUD?.();
+      return { result:'flee', roll:0, dc:eDef };
+    }
+
+    // Player attacks
+    let roll = Dice.roll() + aAtk + aLck;
+    let dmg = Math.max(1, roll - eDef);
+    eHP -= dmg;
+    if(typeof toast==='function') toast(`You hit for ${dmg}!`);
+    if(eHP<=0) break;
+
+    // Enemy retaliates
+    roll = Dice.roll() + eAtk;
+    dmg = Math.max(1, roll - aDef);
+    aHP -= dmg;
+    if(typeof toast==='function') toast(`Enemy hits for ${dmg}!`);
+  }
+
+  attacker.ap = Math.max(0,(attacker.ap||0)-1);
+  attacker.hp = Math.max(0,aHP);
+  player.hp = attacker.hp; player.ap = attacker.ap;
+  renderInv?.(); renderParty?.(); updateHUD?.();
+
+  if(aHP<=0){
+    if(typeof toast==='function') toast('You were defeated.');
+    return { result:'bruise', roll:0, dc:eDef };
+  }
+  if(defender.loot) addToInv(defender.loot);
+  if(typeof toast==='function') toast(`Victory${defender.loot ? ' - '+defender.loot.name : ''}!`);
+  return { result:'loot', roll:0, dc:eDef };
+}
+
+/**
+ * Combat entry point. Uses the turn-based system in browsers, falling back to
+ * the original quick resolver when no prompt function is available.
+ * @param {{HP?:number,ATK?:number,DEF:number,loot?:Item}} defender
+ * @returns {{result:'bruise'|'loot'|'flee', roll:number, dc:number}}
+ */
+function quickCombat(defender){
+  if(typeof prompt==='function'){
+    return turnBasedCombat(defender);
+  }
+  // Fallback quick resolution for non-interactive environments (e.g. tests)
+  const attacker = party.leader?.() || null;
+  const dc = defender?.DEF || 0;
+  if(!attacker) return { result:'flee', roll:0, dc };
   const atk = attacker._bonus?.ATK || 0;
   const lck = (attacker.stats?.LCK || 0) + (attacker._bonus?.LCK || 0);
   const roll = Dice.roll() + atk + lck;
-
   let result = 'flee';
-  if (roll > dc) result = 'loot';
-  else if (roll < dc) result = 'bruise';
-
-  // Spend AP and apply outcome
-  attacker.ap = Math.max(0, (attacker.ap||0) - 1);
-
+  if(roll > dc) result = 'loot';
+  else if(roll < dc) result = 'bruise';
+  attacker.ap = Math.max(0,(attacker.ap||0)-1);
   if(result==='bruise'){
-    attacker.hp = Math.max(0, (attacker.hp||0) - 1);
-    if(typeof toast==='function') toast('Bruised! -1 HP');
+    attacker.hp = Math.max(0,(attacker.hp||0)-1);
   } else if(result==='loot'){
     if(defender.loot) addToInv(defender.loot);
-    if(typeof toast==='function') toast(`Looted ${defender.loot ? defender.loot.name : ''}`);
-  } else {
-    if(typeof toast==='function') toast('You flee.');
   }
-
-  // Mirror player summary to HUD if you use player.hp/ap there
   player.hp = attacker.hp; player.ap = attacker.ap;
   renderInv?.(); renderParty?.(); updateHUD?.();
   return { result, roll, dc };

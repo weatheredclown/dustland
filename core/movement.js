@@ -63,6 +63,19 @@ function move(dx,dy){
   if(canWalk(nx,ny)){
     setPlayerPos(nx, ny);
     centerCamera(player.x,player.y,state.map); updateHUD();
+    checkAggro();
+  }
+}
+
+function checkAggro(){
+  for(const n of NPCS){
+    if(!n.combat || !n.combat.auto) continue;
+    if(n.map!==state.map) continue;
+    const d = Math.abs(n.x - player.x) + Math.abs(n.y - player.y);
+    if(d<=3){
+      const res = quickCombat(n.combat);
+      if(res.result==='loot') removeNPC(n);
+    }
   }
 }
 function adjacentNPC(){
