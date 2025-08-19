@@ -34,6 +34,8 @@ const DUSTLAND_MODULE = (() => {
     { map: 'world', x: 67, y: midY + 5, id: 'goggles', name: 'Goggles', type: 'trinket', slot: 'trinket', mods: { PER: 1 } },
     { map: 'world', x: 83, y: midY - 2, id: 'wrench', name: 'Wrench', type: 'trinket', slot: 'trinket', mods: { INT: 1 } },
     { map: 'world', x: 95, y: midY + 2, id: 'lucky_rabbit_foot', name: 'Lucky Rabbit Foot', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } },
+    { map: 'world', x: 32, y: midY + 2, id: 'water_flask', name: 'Water Flask', type: 'consumable', use: { type: 'heal', amount: 3 } },
+    { map: 'world', x: 80, y: midY - 3, id: 'medkit', name: 'Medkit', type: 'consumable', use: { type: 'heal', amount: 5 } },
     { map: 'world', x: 18, y: midY - 2, id: 'valve', name: 'Valve', type: 'quest' },
     { map: 'world', x: 26, y: midY + 3, id: 'lost_satchel', name: 'Lost Satchel', type: 'quest' },
     { map: 'world', x: 60, y: midY - 1, id: 'rust_idol', name: 'Rust Idol', type: 'quest', tags: ['idol'] }

@@ -752,6 +752,11 @@ function updateModsWrap() {
   document.getElementById('modsWrap').style.display =
     ['weapon', 'armor', 'trinket'].includes(slot) ? 'block' : 'none';
 }
+function updateUseWrap() {
+  const type = document.getElementById('itemUseType').value;
+  document.getElementById('itemUseAmtWrap').style.display = type === 'heal' ? 'block' : 'none';
+  document.getElementById('itemUseWrap').style.display = type ? 'none' : 'block';
+}
 function startNewItem() {
   editItemIdx = -1;
   document.getElementById('itemName').value = '';
@@ -766,7 +771,10 @@ function startNewItem() {
   loadMods({});
   document.getElementById('itemValue').value = 0;
   document.getElementById('itemEquip').value = '';
+  document.getElementById('itemUseType').value = '';
+  document.getElementById('itemUseAmount').value = 0;
   document.getElementById('itemUse').value = '';
+  updateUseWrap();
   document.getElementById('addItem').textContent = 'Add Item';
   document.getElementById('delItem').style.display = 'none';
   placingType = 'item';
@@ -789,7 +797,13 @@ function addItem() {
   let equip = null;
   try { equip = JSON.parse(document.getElementById('itemEquip').value || 'null'); } catch (e) { equip = null; }
   let use = null;
-  try { use = JSON.parse(document.getElementById('itemUse').value || 'null'); } catch (e) { use = null; }
+  const useType = document.getElementById('itemUseType').value;
+  if (useType === 'heal') {
+    const amt = parseInt(document.getElementById('itemUseAmount').value, 10) || 0;
+    use = { type: 'heal', amount: amt };
+  } else {
+    try { use = JSON.parse(document.getElementById('itemUse').value || 'null'); } catch (e) { use = null; }
+  }
   const item = { id, name, type, tags, map, x, y, slot, mods, value, use, equip };
   if (editItemIdx >= 0) {
     moduleData.items[editItemIdx] = item;
@@ -820,7 +834,16 @@ function editItem(i) {
   loadMods(it.mods);
   document.getElementById('itemValue').value = it.value || 0;
   document.getElementById('itemEquip').value = it.equip ? JSON.stringify(it.equip, null, 2) : '';
-  document.getElementById('itemUse').value = it.use ? JSON.stringify(it.use, null, 2) : '';
+  if (it.use && it.use.type === 'heal') {
+    document.getElementById('itemUseType').value = 'heal';
+    document.getElementById('itemUseAmount').value = it.use.amount || 0;
+    document.getElementById('itemUse').value = '';
+  } else {
+    document.getElementById('itemUseType').value = '';
+    document.getElementById('itemUseAmount').value = 0;
+    document.getElementById('itemUse').value = it.use ? JSON.stringify(it.use, null, 2) : '';
+  }
+  updateUseWrap();
   document.getElementById('addItem').textContent = 'Update Item';
   document.getElementById('delItem').style.display = 'block';
   showItemEditor(true);
@@ -1088,6 +1111,7 @@ document.getElementById('delInterior').onclick = deleteInterior;
 document.getElementById('delQuest').onclick = deleteQuest;
 document.getElementById('addMod').onclick = () => modRow();
 document.getElementById('itemSlot').addEventListener('change', updateModsWrap);
+document.getElementById('itemUseType').addEventListener('change', updateUseWrap);
 document.getElementById('save').onclick = saveModule;
 document.getElementById('load').onclick = () => document.getElementById('loadFile').click();
 document.getElementById('loadFile').addEventListener('change', e => {
