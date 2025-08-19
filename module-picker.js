@@ -5,8 +5,11 @@ const MODULES = [
 ];
 
 function loadModule(moduleInfo){
+  const existingScript = document.getElementById('activeModuleScript');
+  if (existingScript) existingScript.remove();
   const script = document.createElement('script');
-  script.src = moduleInfo.file;
+  script.id = 'activeModuleScript';
+  script.src = `${moduleInfo.file}?_=${Date.now()}`;
   script.onload = () => {
     const picker = document.getElementById('modulePicker');
     if(picker) picker.remove();
