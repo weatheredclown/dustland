@@ -5,7 +5,7 @@ function cloneItem(it){
   return {
     ...it,
     mods: { ...it.mods },
-    tags: [...it.tags],
+    tags: Array.isArray(it.tags) ? [...it.tags] : [],
     use: it.use ? JSON.parse(JSON.stringify(it.use)) : null,
     equip: it.equip ? JSON.parse(JSON.stringify(it.equip)) : null
   };
@@ -31,18 +31,12 @@ function addToInv(item){
   if(!base) throw new Error('Unknown item');
   player.inv.push(base);
   renderInv();
-  if (window.NanoDialog) {
-    NPCS.filter(n=> n.map === state.map)
-        .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
-  }
+  queueNanoDialogForNPCs('start', 'inventory change');
 }
 function removeFromInv(invIndex){
   player.inv.splice(invIndex,1);
   renderInv();
-  if (window.NanoDialog) {
-    NPCS.filter(n=> n.map === state.map)
-        .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
-  }
+  queueNanoDialogForNPCs('start', 'inventory change');
 }
 
 function equipItem(memberIndex, invIndex){
@@ -68,8 +62,7 @@ function equipItem(memberIndex, invIndex){
   if(typeof sfxTick==='function') sfxTick();
   if(it.equip && it.equip.teleport){
     const t=it.equip.teleport;
-    if(typeof t.x==='number') player.x=t.x;
-    if(typeof t.y==='number') player.y=t.y;
+    setPlayerPos(t.x, t.y);
     if(t.map) setMap(t.map);
     updateHUD();
   }
@@ -140,10 +133,7 @@ function useItem(invIndex){
     if (typeof sfxTick === 'function') sfxTick();
     player.inv.splice(invIndex,1);
     renderInv(); renderParty(); updateHUD();
-    if (window.NanoDialog) {
-      NPCS.filter(n=> n.map === state.map)
-          .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
-    }
+    queueNanoDialogForNPCs('start', 'inventory change');
     return true;
   }
   if(typeof it.use.onUse === 'function'){
@@ -153,10 +143,7 @@ function useItem(invIndex){
       renderInv(); renderParty(); updateHUD();
       if(typeof toast==='function') toast(`Used ${it.name}`);
       if(typeof sfxTick==='function') sfxTick();
-      if (window.NanoDialog) {
-        NPCS.filter(n=> n.map === state.map)
-            .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'inventory change'));
-      }
+      queueNanoDialogForNPCs('start', 'inventory change');
     }
     return !!ok;
   }
