@@ -3,7 +3,7 @@ const combatOverlay = typeof document !== 'undefined' ? document.getElementById(
 const enemyRow = typeof document !== 'undefined' ? document.getElementById('combatEnemies') : null;
 const partyRow = typeof document !== 'undefined' ? document.getElementById('combatParty') : null;
 
-const combatState = { enemies: [], phase: 'party', active: 0, choice: 0 };
+const combatState = { enemies: [], phase: 'party', active: 0, choice: 0, onComplete:null };
 
 function setPortraitDiv(el, obj){
   if(!el) return;
@@ -56,19 +56,25 @@ function renderCombat(){
 }
 
 function openCombat(enemies){
-  if(!combatOverlay) return;
-  combatState.enemies = enemies.map(e=>({...e}));
-  combatState.phase='party';
-  combatState.active=0;
-  combatState.choice=0;
-  renderCombat();
-  combatOverlay.classList.add('shown');
-  openCommand();
+  if(!combatOverlay) return Promise.resolve({ result:'flee', roll:0 });
+  return new Promise((resolve)=>{
+    combatState.enemies = enemies.map(e=>({...e}));
+    combatState.phase='party';
+    combatState.active=0;
+    combatState.choice=0;
+    combatState.onComplete=resolve;
+    renderCombat();
+    combatOverlay.classList.add('shown');
+    openCommand();
+  });
 }
 
-function closeCombat(){
+function closeCombat(result){
   if(!combatOverlay) return;
   combatOverlay.classList.remove('shown');
+  const res = result || { result:'flee', roll:0 };
+  combatState.onComplete?.(res);
+  combatState.onComplete=null;
 }
 
 function highlightActive(){
@@ -122,7 +128,7 @@ function chooseOption(){
   cmd.style.display='none';
   if(choice==='flee'){
     log?.('You fled the battle.');
-    closeCombat();
+    closeCombat({ result:'flee', roll:0 });
     return;
   }
   if(choice==='attack') doAttack(1);
@@ -139,7 +145,7 @@ function doAttack(dmg){
     log?.(`${target.name} is defeated!`);
     combatState.enemies.shift();
     renderCombat();
-    if(combatState.enemies.length===0){ log?.('Victory!'); closeCombat(); return; }
+    if(combatState.enemies.length===0){ log?.('Victory!'); closeCombat({ result:'loot', roll:0 }); return; }
   }
   nextCombatant();
 }
@@ -161,14 +167,14 @@ function enemyPhase(){
 function enemyAttack(){
   const enemy=combatState.enemies[combatState.active];
   const target=party[0];
-  if(!enemy || !target){ closeCombat(); return; }
+  if(!enemy || !target){ closeCombat({ result:'flee', roll:0 }); return; }
   target.hp-=1;
   log?.(`${enemy.name} strikes ${target.name} for 1 damage.`);
   if(target.hp<=0){
     log?.(`${target.name} falls!`);
     party.splice(0,1);
     renderCombat();
-    if(party.length===0){ log?.('The party has fallen...'); closeCombat(); return; }
+    if(party.length===0){ log?.('The party has fallen...'); closeCombat({ result:'bruise', roll:0 }); return; }
   }
   combatState.active++;
   if(combatState.active<combatState.enemies.length){

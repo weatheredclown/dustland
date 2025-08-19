@@ -81,102 +81,27 @@ class Dice {
 
 // ===== Combat =====
 /**
- * Final Fantasy II style turn-based combat. Falls back to quick resolution
- * when running in a non-browser environment (e.g. during tests).
- * @param {{HP?:number,ATK?:number,DEF:number,loot?:Item,auto?:boolean}} defender
- * @returns {{result:'bruise'|'loot'|'flee', roll:number, dc:number}}
+ * Combat entry point. Uses the HTML-based state machine when available,
+ * falling back to quick resolution in non-browser environments.
+ * @param {{HP?:number,ATK?:number,DEF:number,loot?:Item,name?:string}} defender
+ * @returns {Promise<{result:'bruise'|'loot'|'flee', roll:number, dc:number}>}
  */
-function turnBasedCombat(defender){
+async function quickCombat(defender){
   const attacker = party.leader?.() || null;
   const dc = defender?.DEF || 0;
-  if(!attacker) return { result:'flee', roll:0, dc };
-
-  let aHP = attacker.hp || 10;
-  let eHP = defender.HP || 5;
-  const aAtk = (attacker._bonus?.ATK || 0) + (attacker.stats?.ATK || 0);
-  const aDef = (attacker._bonus?.DEF || 0) + (attacker.stats?.DEF || 0);
-  const aLck = (attacker.stats?.LCK || 0) + (attacker._bonus?.LCK || 0);
-  const eAtk = defender.ATK || 0;
-  const eDef = defender.DEF || 0;
-  const specials = {
-    'Scavenger': ()=>{ const dmg=3; eHP-=dmg; if(typeof toast==='function') toast(`Scrap bomb for ${dmg}!`); },
-    'Gunslinger': ()=>{ let roll=Dice.roll()+aAtk+aLck+2; let dmg=Math.max(1,roll-eDef); eHP-=dmg; if(typeof toast==='function') toast(`Power shot for ${dmg}!`); },
-    'Snakeoil Preacher': ()=>{ const before=aHP; aHP=Math.min(attacker.maxHp,aHP+3); if(typeof toast==='function') toast(`Heal ${aHP-before} HP`); },
-    'Cogwitch': ()=>{ let roll=Dice.roll()+aAtk+aLck+1; let dmg=Math.max(1,roll-eDef); eHP-=dmg; if(typeof toast==='function') toast(`Overclock strike for ${dmg}!`); }
-  };
-  const specialAction = specials[attacker.role];
-
-  while(aHP>0 && eHP>0){
-    let choice = 'attack';
-    if(typeof prompt==='function'){
-      let menu=`Enemy HP:${eHP}  Your HP:${aHP}\n(1) Attack`;
-      const opts={1:'attack'};
-      let opt=2;
-      if(specialAction){ menu+=`\n(${opt}) Special`; opts[opt]='special'; opt++; }
-      menu+=`\n(${opt}) Item`; opts[opt]='item'; opt++;
-      menu+=`\n(${opt}) Flee`; opts[opt]='flee';
-      const ans = prompt(menu,'1');
-      choice = opts[ans] || 'attack';
-    }
-    if(choice==='flee'){
-      if(typeof toast==='function') toast('You flee.');
+  if(typeof openCombat === 'function' && typeof document !== 'undefined'){
+    const enemy = { name:defender.name||'Enemy', hp:defender.HP||5 };
+    const result = await openCombat([enemy]);
+    if(attacker){
       attacker.ap = Math.max(0,(attacker.ap||0)-1);
-      player.ap = attacker.ap; updateHUD?.();
-      return { result:'flee', roll:0, dc:eDef };
+      player.ap = attacker.ap;
+      player.hp = attacker.hp;
     }
-    if(choice==='item'){
-      const usable = player.inv.map((it,i)=> it.use ? `${i+1}) ${it.name}` : null).filter(Boolean);
-      if(usable.length===0){ if(typeof toast==='function') toast('No usable items.'); continue; }
-      const ans = prompt('Use which item?\n'+usable.join('\n'),'1');
-      const idx = parseInt(ans,10)-1;
-      if(idx>=0 && player.inv[idx] && player.inv[idx].use){
-        useItem(idx);
-        aHP = attacker.hp;
-      } else {
-        if(typeof toast==='function') toast('Invalid item.');
-        continue;
-      }
-    } else if(choice==='special' && specialAction){
-      specialAction();
-    } else {
-      let roll = Dice.roll() + aAtk + aLck;
-      let dmg = Math.max(1, roll - eDef);
-      eHP -= dmg;
-      if(typeof toast==='function') toast(`You hit for ${dmg}!`);
-    }
-    if(eHP<=0) break;
-    let roll = Dice.roll() + eAtk;
-    let dmg = Math.max(1, roll - aDef);
-    aHP -= dmg;
-    if(typeof toast==='function') toast(`Enemy hits for ${dmg}!`);
-  }
-  attacker.ap = Math.max(0,(attacker.ap||0)-1);
-  attacker.hp = Math.max(0,aHP);
-  player.hp = attacker.hp; player.ap = attacker.ap;
-  renderInv?.(); renderParty?.(); updateHUD?.();
-
-  if(aHP<=0){
-    if(typeof toast==='function') toast('You were defeated.');
-    return { result:'bruise', roll:0, dc:eDef };
-  }
-  if(defender.loot) addToInv(defender.loot);
-  if(typeof toast==='function') toast(`Victory${defender.loot ? ' - '+defender.loot.name : ''}!`);
-  return { result:'loot', roll:0, dc:eDef };
-}
-
-/**
- * Combat entry point. Uses the turn-based system in browsers, falling back to
- * the original quick resolver when no prompt function is available.
- * @param {{HP?:number,ATK?:number,DEF:number,loot?:Item}} defender
- * @returns {{result:'bruise'|'loot'|'flee', roll:number, dc:number}}
- */
-function quickCombat(defender){
-  if(typeof prompt==='function'){
-    return turnBasedCombat(defender);
+    if(result.result==='loot' && defender.loot) addToInv(defender.loot);
+    renderInv?.(); renderParty?.(); updateHUD?.();
+    return { ...result, dc };
   }
   // Fallback quick resolution for non-interactive environments (e.g. tests)
-  const attacker = party.leader?.() || null;
-  const dc = defender?.DEF || 0;
   if(!attacker) return { result:'flee', roll:0, dc };
   const atk = attacker._bonus?.ATK || 0;
   const lck = (attacker.stats?.LCK || 0) + (attacker._bonus?.LCK || 0);

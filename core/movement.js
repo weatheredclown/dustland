@@ -68,13 +68,14 @@ function move(dx,dy){
 }
 
 function checkAggro(){
+  if(typeof document !== 'undefined' && document.getElementById('combatOverlay')?.classList?.contains?.('shown')) return;
   for(const n of NPCS){
     if(!n.combat || !n.combat.auto) continue;
     if(n.map!==state.map) continue;
     const d = Math.abs(n.x - player.x) + Math.abs(n.y - player.y);
     if(d<=3){
-      const res = quickCombat(n.combat);
-      if(res.result==='loot') removeNPC(n);
+      quickCombat(n.combat).then(res=>{ if(res.result==='loot') removeNPC(n); });
+      break;
     }
   }
 }
