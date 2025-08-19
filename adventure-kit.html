@@ -199,10 +199,11 @@
         <button class="btn" id="load">Load Module</button>
         <button class="btn" id="setStart">Set Start</button>
         <button class="btn btn--primary" id="playtest">Playtest</button>
+        <button class="btn" id="toggleEditor" aria-expanded="true">Hide Editor</button>
       </div>
       <input type="file" id="loadFile" accept="application/json" style="display:none" />
     </section>
-    <aside class="editor-panel" id="editorPanel">
+    <aside class="editor-panel" id="editorPanel" aria-hidden="false">
       <div class="tabs2" role="tablist" aria-label="Editors">
         <button class="tab2 active" data-tab="npc" role="tab" aria-selected="true">NPCs</button>
         <button class="tab2" data-tab="items" role="tab" aria-selected="false">Items</button>
