@@ -10,7 +10,7 @@
     body {
         height: 100%;
         margin: 0;
-        background: var(--bg);
+        background: radial-gradient(circle at top, #141614 0%, var(--bg) 70%);
         color: var(--ink);
         font: 14px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, Liberation Mono, monospace;
     }
@@ -38,7 +38,8 @@
         border-radius: 10px;
         display: flex;
         flex-direction: column;
-        overflow: hidden
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
     }
 
     .panel h1 {
@@ -103,12 +104,14 @@
         background: #121612;
         border: 1px solid #2a372a;
         color: var(--ink);
-        cursor: pointer
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
     }
 
     .btn:hover {
         border-color: #4f6b4f;
-        background: #151b15
+        background: #151b15;
+        transform: translateY(-2px);
     }
 
     .tabs {
