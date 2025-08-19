@@ -291,7 +291,15 @@ function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNo
   if(opts?.combat){
     tree = tree || {};
     tree.start = tree.start || {text:'', choices:[]};
-    tree.start.choices.unshift({label:'(Fight)', to:'do_fight'});
+    let fightChoice = tree.start.choices.find(c => c.label === '(Fight)' || c.to === 'do_fight');
+    if(fightChoice){
+      fightChoice.label = '(Fight)';
+      fightChoice.to = 'do_fight';
+    } else {
+      fightChoice = {label:'(Fight)', to:'do_fight'};
+      tree.start.choices.unshift(fightChoice);
+    }
+    tree.start.choices = tree.start.choices.filter(c => c === fightChoice || c.label !== '(Fight)');
     tree.do_fight = tree.do_fight || {text:'', choices:[{label:'(Continue)', to:'bye'}]};
   }
   if(opts?.shop){

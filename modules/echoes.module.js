@@ -65,11 +65,11 @@ const ECHOES_MODULE = (() => {
         start: {
           text: 'The door is sealed.',
           choices: [
-            { label: '(Use Spark Key)', to: 'open', q: 'turnin' },
+            { label: '(Use Spark Key)', to: 'do_turnin', q: 'turnin' },
             { label: '(Leave)', to: 'bye' }
           ]
         },
-        open: { text: 'The door slides aside.', choices: [ { label: '(Continue)', to: 'bye', goto: { map: 'workshop', x: 1, y: workshop.entryY } } ] }
+        do_turnin: { text: 'The door slides aside.', choices: [ { label: '(Continue)', to: 'bye', goto: { map: 'workshop', x: 1, y: workshop.entryY } } ] }
       }
     },
     {
@@ -106,11 +106,11 @@ const ECHOES_MODULE = (() => {
         start: {
           text: 'The door is locked tight.',
           choices: [
-            { label: '(Use Cog Key)', to: 'open', q: 'turnin' },
+            { label: '(Use Cog Key)', to: 'do_turnin', q: 'turnin' },
             { label: '(Leave)', to: 'bye' }
           ]
         },
-        open: { text: 'The door creaks open.', choices: [ { label: '(Continue)', to: 'bye', goto: { map: 'archive', x: 1, y: archive.entryY } } ] }
+        do_turnin: { text: 'The door creaks open.', choices: [ { label: '(Continue)', to: 'bye', goto: { map: 'archive', x: 1, y: archive.entryY } } ] }
       }
     },
     {
@@ -122,7 +122,7 @@ const ECHOES_MODULE = (() => {
       name: 'Dust Rat',
       title: 'Menace',
       desc: 'A rat swollen with dust.',
-      tree: { start: { text: 'The rat bares its teeth.', choices: [ { label: '(Fight)', to: 'bye' } ] } },
+      tree: { start: { text: 'The rat bares its teeth.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       combat: { HP: 5, ATK: 2, DEF: 1, loot: { name: 'Rat Tail' } }
     },
     {
@@ -135,7 +135,7 @@ const ECHOES_MODULE = (() => {
       title: 'Guardian',
       desc: 'A whirring husk hungry for scraps.',
       questId: 'q_beacon',
-      tree: { start: { text: 'The ghoul clanks forward.', choices: [ { label: '(Fight)', to: 'bye', q: 'turnin' } ] } },
+      tree: { start: { text: 'The ghoul clanks forward.', choices: [ { label: '(Fight)', to: 'do_fight', q: 'turnin' }, { label: '(Leave)', to: 'bye' } ] } },
       combat: { HP: 8, ATK: 3, DEF: 2, loot: { name: 'Copper Cog' } }
     },
     {
