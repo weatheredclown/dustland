@@ -361,8 +361,7 @@ startGame = function () {
   startWorld();
   applyModule(DUSTLAND_MODULE);
   const s = DUSTLAND_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-  player.x = s.x;
-  player.y = s.y;
+  setPlayerPos(s.x, s.y);
   setMap(s.map, s.map === 'world' ? 'Wastes' : 'Test Hall');
   renderInv();
   renderQuests();

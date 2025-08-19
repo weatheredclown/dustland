@@ -97,12 +97,10 @@ function handleGoto(g){
   if(!g) return;
   if(g.map==='world'){
     startWorld();
-    if(typeof g.x==='number') player.x=g.x;
-    if(typeof g.y==='number') player.y=g.y;
+    setPlayerPos(g.x, g.y);
     setMap('world');
   }else{
-    if(typeof g.x==='number') player.x=g.x;
-    if(typeof g.y==='number') player.y=g.y;
+    setPlayerPos(g.x, g.y);
     if(g.map) setMap(g.map); else if(typeof centerCamera==='function') centerCamera(player.x,player.y,state.map);
   }
   updateHUD?.();

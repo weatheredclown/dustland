@@ -61,7 +61,7 @@ function move(dx,dy){
   if(state.map==='creator') return;
   const nx=player.x+dx, ny=player.y+dy;
   if(canWalk(nx,ny)){
-    player.x=nx; player.y=ny;
+    setPlayerPos(nx, ny);
     centerCamera(player.x,player.y,state.map); updateHUD();
   }
 }
@@ -109,7 +109,7 @@ function interactAt(x,y){
       if(!b){ log('No entrance here.'); return true; }
       if(b.boarded){ log('The doorway is boarded up from the outside.'); return true; }
       const I=interiors[b.interiorId];
-      if(I){ player.x=I.entryX; player.y=I.entryY; }
+      if(I){ setPlayerPos(I.entryX, I.entryY); }
       setMap(b.interiorId,'Interior');
       log('You step inside.'); updateHUD(); return true;
     }
@@ -118,14 +118,15 @@ function interactAt(x,y){
       if(p){
         const target=p.toMap;
         const I=interiors[target];
-        player.x = (typeof p.toX==='number') ? p.toX : (I?I.entryX:0);
-        player.y = (typeof p.toY==='number') ? p.toY : (I?I.entryY:0);
+        const px = (typeof p.toX==='number') ? p.toX : (I?I.entryX:0);
+        const py = (typeof p.toY==='number') ? p.toY : (I?I.entryY:0);
+        setPlayerPos(px, py);
         setMap(target);
         log(p.desc || 'You move through the doorway.');
         updateHUD(); return true;
       }
       const b=buildings.find(b=> b.interiorId===state.map);
-      if(b){ player.x=b.doorX; player.y=b.doorY-1; setMap('world'); log('You step back outside.'); updateHUD(); return true; }
+      if(b){ setPlayerPos(b.doorX, b.doorY-1); setMap('world'); log('You step back outside.'); updateHUD(); return true; }
     }
   }
   return false;

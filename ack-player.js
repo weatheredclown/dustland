@@ -40,8 +40,7 @@ loadBtn.onclick = () => {
 window.startGame = function(){
   if(moduleData) applyModule(moduleData);
   const start=moduleData && moduleData.start ? moduleData.start : {map:'world',x:2,y:Math.floor(WORLD_H/2)};
-  player.x = start.x;
-  player.y = start.y;
+  setPlayerPos(start.x, start.y);
   setMap(start.map||'world', 'Module');
   renderInv(); renderQuests(); renderParty(); updateHUD();
   log('Adventure begins.');
