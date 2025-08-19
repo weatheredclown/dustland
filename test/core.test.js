@@ -37,7 +37,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, randRange, sample, setRNGSeed } = require('../dustland-core.js');
+const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, randRange, sample, setRNGSeed, useItem } = require('../dustland-core.js');
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -166,6 +166,18 @@ test('interactAt picks up adjacent item', () => {
   interactAt(1,0);
   assert.ok(player.inv.some(it=>it.id==='gem'));
   assert.ok(!itemDrops.includes(itm));
+});
+
+test('useItem heals party member and consumes item', () => {
+  party.length = 0; player.inv.length = 0;
+  const m = new Character('h','Healer','Role');
+  m.hp = 5; m.maxHp = 10;
+  party.addMember(m);
+  registerItem({ id:'tonic', name:'Tonic', type:'consumable', use:{ type:'heal', amount:3 } });
+  addToInv('tonic');
+  useItem(0);
+  assert.strictEqual(m.hp, 8);
+  assert.strictEqual(player.inv.length, 0);
 });
 
 test('findFreeDropTile avoids water and player tiles', () => {
