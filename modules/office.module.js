@@ -299,6 +299,21 @@ const OFFICE_MODULE = (() => {
       }
     },
     {
+      id: 'silver_wolf',
+      map: 'world',
+      x: WORLD_MID + 5,
+      y: WORLD_MIDY - 4,
+      color: '#ddd',
+      name: 'Silver Wolf',
+      desc: 'Its fur ripples like moonlit water.',
+      tree: {
+        start: {
+          text: 'The wolf watches in silence.',
+          choices: [ { label: '(Leave)', to: 'bye' } ]
+        }
+      }
+    },
+    {
       id: 'fae_prince',
       map: 'world',
       x: WORLD_MID + 9,
@@ -306,17 +321,30 @@ const OFFICE_MODULE = (() => {
       color: '#caffc6',
       name: 'Fae Prince',
       desc: 'An ethereal figure with an enigmatic smile.',
+      questId: 'q_arrow',
       tree: {
         start: {
-          text: 'Welcome, wanderer. Is this real or dream?',
+          text: 'Welcome, wanderer. Have you seen my silver arrow?',
           choices: [
-            { label: '(Ask)', to: 'ask' },
+            { label: '(Ask about the arrow)', to: 'accept', q: 'accept' },
+            {
+              label: '(Return arrow)',
+              to: 'do_turnin',
+              q: 'turnin',
+              costItem: 'runed_arrow',
+              reward: 'prince_token',
+              success: 'He accepts the arrow, eyes bright.'
+            },
             { label: '(Leave)', to: 'bye' }
           ]
         },
-        ask: {
-          text: 'He only laughs and vanishes into mist.',
-          choices: [ { label: '(Contemplate)', to: 'bye' } ]
+        accept: {
+          text: 'I loosed it at a wolf of silver. Bring it back to me if you find it.',
+          choices: [ { label: '(Leave)', to: 'bye' } ]
+        },
+        do_turnin: {
+          text: 'His fingers brush yours as he takes the arrow.',
+          choices: [ { label: '(Continue)', to: 'bye' } ]
         }
       }
     },
@@ -410,6 +438,21 @@ const OFFICE_MODULE = (() => {
           type: 'trinket',
           slot: 'trinket',
           mods: { LCK: 1 }
+        },
+        {
+          map: 'world',
+          x: WORLD_MID + 7,
+          y: WORLD_MIDY - 3,
+          id: 'runed_arrow',
+          name: 'Runed Arrow',
+          type: 'quest'
+        },
+        {
+          id: 'prince_token',
+          name: "Prince's Token",
+          type: 'trinket',
+          slot: 'trinket',
+          mods: { CHA: 1 }
         }
       ],
       quests: [
@@ -424,6 +467,12 @@ const OFFICE_MODULE = (() => {
           title: 'Bridge Tax',
           desc: 'Pay the Toll Keeper with a trinket.',
           moveTo: { x: WORLD_MID + 2, y: WORLD_MIDY }
+        },
+        {
+          id: 'q_arrow',
+          title: 'Silver Return',
+          desc: 'Return the runed arrow to the Fae Prince.',
+          reward: 'prince_token'
         }
       ],
     npcs,
