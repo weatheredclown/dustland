@@ -59,6 +59,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Caretaker Kesh',
       title: 'Hall Steward',
       desc: "Weary caretaker guarding the hall's chained exit.",
+      portraitSheet: 'assets/portraits/kesh_4.png',
       questId: 'q_hall_key',
       tree: {
         start: {
@@ -85,6 +86,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Dusty Crate',
       title: '',
       desc: 'A dusty crate that might hide something useful.',
+      portraitSheet: 'assets/portraits/crate_4.png',
       tree: {
         start: {
           text: 'A dusty crate rests here.',
@@ -109,6 +111,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Lone Drifter',
       title: 'Mutters',
       desc: 'A drifter muttering to themselves.',
+      portraitSheet: 'assets/portraits/drifter_4.png',
       tree: { start: { text: '"Dust gets in everything."', choices: [ { label: '(Nod)', to: 'bye' } ] } }
     },
     {
@@ -120,6 +123,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Mara the Pump-Keeper',
       title: 'Parched Farmer',
       desc: 'Sunburnt hands, hopeful eyes. Smells faintly of mud.',
+      portraitSheet: 'assets/portraits/mara_4.png',
       questId: 'q_waterpump',
       tree: {
         start: {
@@ -147,6 +151,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Grin',
       title: 'Scav-for-Hire',
       desc: 'Lean scav with a crowbar and half a smile.',
+      portraitSheet: 'assets/portraits/grin_4.png',
       questId: 'q_recruit_grin',
       tree: {
         start: {
@@ -201,6 +206,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Postmaster Ivo',
       title: 'Courier of Dust',
       desc: 'Dusty courier seeking a lost parcel.',
+      portraitSheet: 'assets/portraits/ivo_4.png',
       questId: 'q_postal',
       tree: {
         start: {
@@ -228,6 +234,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Rella',
       title: 'Radio Tech',
       desc: 'Tower technician with grease-stained hands.',
+      portraitSheet: 'assets/portraits/rella_4.png',
       questId: 'q_tower',
       tree: {
         start: {
@@ -256,6 +263,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'The Shifting Hermit',
       title: 'Pilgrim',
       desc: 'A cloaked hermit murmuring about rusted idols.',
+      portraitSheet: 'assets/portraits/pilgrim_4.png',
       questId: 'q_idol',
       tree: {
         start: {
@@ -280,6 +288,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Scrap Duchess',
       title: 'Toll-Queen',
       desc: 'A crown of bottlecaps; eyes like razors.',
+      portraitSheet: 'assets/portraits/scrap_4.png',
       questId: 'q_toll',
       tree: {
         start: {
@@ -303,6 +312,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Road Raider',
       title: 'Bandit',
       desc: 'Scarred scav looking for trouble.',
+      portraitSheet: 'assets/portraits/raider_4.png',
       tree: {
         start: {
           text: 'A raider blocks the path, eyeing your gear.',
@@ -329,6 +339,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Cass the Trader',
       title: 'Shopkeep',
       desc: 'A roving merchant weighing your wares.',
+      portraitSheet: 'assets/portraits/cass_4.png',
       tree: { start: { text: 'Got goods to sell? I pay in scrap.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       shop: true
     }
