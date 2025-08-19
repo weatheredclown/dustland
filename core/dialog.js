@@ -35,6 +35,8 @@ function handleDialogKey(e){
       const el=choicesEl.children[selectedChoice];
       if(el?.click) el.click(); else el?.onclick?.();
       return true; }
+    case 'Escape':
+      closeDialog(); return true;
   }
   return false;
 }
@@ -271,6 +273,12 @@ function renderDialog(){
     if(!opt.once) return true;
     const key=`${currentNPC.id}::${dialogState.node}::${opt.label}`;
     return !onceChoices.has(key);
+  });
+
+  choices.sort((a,b)=>{
+    const aLeave=(a.opt.label||'').toLowerCase()==='leave';
+    const bLeave=(b.opt.label||'').toLowerCase()==='leave';
+    return aLeave===bLeave?0:(aLeave?1:-1);
   });
 
   choices.forEach(({opt,idx})=>{

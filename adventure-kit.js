@@ -10,7 +10,7 @@ const colors = { 0: '#1e271d', 1: '#2c342c', 2: '#1573ff', 3: '#203320', 4: '#39
 const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
 
-let dragTarget = null, settingStart = false, hoverTarget = null;
+let dragTarget = null, settingStart = false, hoverTarget = null, didDrag = false;
 let placingType = null, placingPos = null;
 let hoverTile = null;
 let coordTarget = null;
@@ -1161,6 +1161,7 @@ function updateCursor(x, y) {
 canvas.addEventListener('mousedown', ev => {
   const { x, y } = canvasPos(ev);
   hoverTarget = null;
+  didDrag = false;
   if (coordTarget) {
     document.getElementById(coordTarget.x).value = x;
     document.getElementById(coordTarget.y).value = y;
@@ -1245,6 +1246,7 @@ canvas.addEventListener('mousemove', ev => {
 
   // While dragging, move the correct thing & bail
   if (dragTarget) {
+    didDrag = true;
     if (dragTarget._type === 'bldg') {
       // Buildings are re-placed to keep tiles coherent
       dragTarget = moveBuilding(dragTarget, x, y);
@@ -1303,6 +1305,38 @@ canvas.addEventListener('mouseleave', () => {
   updateCursor();
 });
 
+canvas.addEventListener('click', ev => {
+  if (didDrag) { didDrag = false; return; }
+  const { x, y } = canvasPos(ev);
+  let idx = moduleData.npcs.findIndex(n => n.map === 'world' && n.x === x && n.y === y);
+  if (idx >= 0) {
+    document.querySelector('.tab2[data-tab="npc"]').click();
+    editNPC(idx);
+    return;
+  }
+  idx = moduleData.items.findIndex(it => it.map === 'world' && it.x === x && it.y === y);
+  if (idx >= 0) {
+    document.querySelector('.tab2[data-tab="items"]').click();
+    editItem(idx);
+    return;
+  }
+  idx = moduleData.buildings.findIndex(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+  if (idx >= 0) {
+    document.querySelector('.tab2[data-tab="buildings"]').click();
+    editBldg(idx);
+  }
+});
+
+function setPlaceholders() {
+  document.querySelectorAll('label').forEach(label => {
+    const input = label.querySelector('input:not([type=checkbox]):not([type=color]), textarea');
+    if (input && !input.placeholder) {
+      const txt = label.childNodes[0]?.textContent?.trim() || label.textContent.trim();
+      input.placeholder = txt;
+    }
+  });
+}
+
 regenWorld();
 loadMods({});
 showItemEditor(false);
@@ -1312,6 +1346,7 @@ showQuestEditor(false);
 document.getElementById('npcId').value = nextId('npc', moduleData.npcs);
 document.getElementById('questId').value = nextId('quest', moduleData.quests);
 loadTreeEditor();
+setPlaceholders();
 function animate() {
   drawWorld();
   requestAnimationFrame(animate);
@@ -1330,23 +1365,23 @@ animate();
   function setLayout() {
     if (mq.matches) {
       panel.classList.add('wide');
-      tabs.forEach(t => t.setAttribute('aria-selected', 'true'));
       panes.forEach(p => p.style.display = '');
     } else {
       panel.classList.remove('wide');
-      show(current);
     }
+    show(current);
   }
 
   function show(tabName) {
     current = tabName;
-    if (mq.matches) return;
     tabs.forEach(t => {
       const on = t.dataset.tab === tabName;
       t.classList.toggle('active', on);
       t.setAttribute('aria-selected', on ? 'true' : 'false');
     });
-    panes.forEach(p => p.style.display = (p.dataset.pane === tabName ? '' : 'none'));
+    if (!mq.matches) {
+      panes.forEach(p => p.style.display = (p.dataset.pane === tabName ? '' : 'none'));
+    }
   }
 
   tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.tab)));

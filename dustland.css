@@ -6,6 +6,12 @@
         --muted: #7a8a7a;
     }
 
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--muted);
+        opacity: 0.8;
+    }
+
     html,
     body {
         height: 100%;

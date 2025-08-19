@@ -415,3 +415,13 @@ test('makeNPC normalizes existing fight choices', () => {
   assert.strictEqual(fights[0].to, 'do_fight');
   assert.strictEqual(fights[0].q, 'turnin');
 });
+
+test('leave choice is rendered last', () => {
+  NPCS.length = 0;
+  const tree = { start: { text: '', choices: [ { label: 'Leave', to: 'bye' }, { label: 'Talk', to: 'talk' } ] }, talk: { text: '', choices: [] }, bye: { text: '', choices: [] } };
+  const npc = makeNPC('l', 'world', 0, 0, '#fff', 'L', '', '', tree);
+  NPCS.push(npc);
+  openDialog(npc);
+  const labels = choicesEl.children.map(c => c.textContent);
+  assert.strictEqual(labels[labels.length - 1], 'Leave');
+});
