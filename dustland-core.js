@@ -755,11 +755,28 @@ function finalizeCurrentMember(){
   addPartyMember(m);
   const spec = specializations[building.spec]; if(spec){ spec.gear.forEach(g=> addToInv(g)); }
   built.push(m);
+  building = null;
   return m;
 }
 
 if  (ccBack) ccBack.onclick=()=>{ if(step>1) { step--; renderStep(); } };
-if (ccNext) ccNext.onclick=()=>{ if(step<5){ step++; renderStep(); } else { finalizeCurrentMember(); building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null }; step=1; renderStep(); log('Member added. You can add up to 2 more, or press Start Now.'); } };
+if (ccNext) ccNext.onclick=()=>{
+  if(step<5){
+    step++;
+    renderStep();
+  } else {
+    finalizeCurrentMember();
+    if(built.length>=3){
+      closeCreator();
+      startGame();
+    } else {
+      building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null };
+      step=1;
+      renderStep();
+      log('Member added. You can add up to '+(3-built.length)+' more, or press Start Now.');
+    }
+  }
+};
 if (ccStart) ccStart.onclick=()=>{ if(built.length===0){ finalizeCurrentMember(); } closeCreator(); startGame(); };
 if (ccLoad) ccLoad.onclick=()=>{ load(); closeCreator(); };
 if (creator?.addEventListener) creator.addEventListener('keydown', e => {
