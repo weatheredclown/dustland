@@ -38,7 +38,7 @@
 
 // ===== Core helpers =====
 const ROLL_SIDES = 12;
-const DC = { TALK:8, REPAIR:9 };
+const DC = Object.freeze({ TALK:8, REPAIR:9 });
 const CURRENCY = 'Scrap';
 
 // Placeholder; actual content provided by modules (e.g. Dustland)
@@ -107,8 +107,8 @@ function quickCombat(defender){
 }
 
 // ===== Tiles =====
-const TILE = { SAND:0, ROCK:1, WATER:2, BRUSH:3, ROAD:4, RUIN:5, WALL:6, FLOOR:7, DOOR:8, BUILDING:9 };
-const walkable = {0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false};
+const TILE = Object.freeze({ SAND:0, ROCK:1, WATER:2, BRUSH:3, ROAD:4, RUIN:5, WALL:6, FLOOR:7, DOOR:8, BUILDING:9 });
+const walkable = Object.freeze({0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false});
 const mapNameEl = document.getElementById('mapname');
 const mapLabels = { world: 'Wastes', creator: 'Creator' };
 function mapLabel(id){
