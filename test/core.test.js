@@ -454,3 +454,65 @@ test('handleDialogKey navigates dialog choices with WASD', () => {
 
   assert.deepStrictEqual(picked, ['Two', 'One']);
 });
+
+test('party enforces maximum size of six', () => {
+  party.length = 0;
+  const members = [
+    new Character('a','A','Role'),
+    new Character('b','B','Role'),
+    new Character('c','C','Role'),
+    new Character('d','D','Role'),
+    new Character('e','E','Role'),
+    new Character('f','F','Role'),
+    new Character('g','G','Role')
+  ];
+  members.slice(0,6).forEach(m=>assert.strictEqual(party.addMember(m), true));
+  assert.strictEqual(party.addMember(members[6]), false);
+  assert.strictEqual(party.length, 6);
+});
+
+test('NPC is not removed when party is full', () => {
+  party.length = 0;
+  const members = [
+    new Character('a','A','Role'),
+    new Character('b','B','Role'),
+    new Character('c','C','Role'),
+    new Character('d','D','Role'),
+    new Character('e','E','Role'),
+    new Character('f','F','Role')
+  ];
+  members.forEach(m=>party.addMember(m));
+
+  const npc = { id: 'r', name: 'Recruit', map:'world', x:1, y:0,
+    tree: { start: { text: '', choices: [ { label: 'Join', join: { id:'r', name:'Recruit', role:'Role' } } ] } } };
+  NPCS.length = 0; NPCS.push(npc);
+  openDialog(npc);
+  choicesEl.children[0].onclick();
+  assert.strictEqual(party.length, 6);
+  assert.ok(NPCS.includes(npc));
+});
+
+test('cannot remove created party members', () => {
+  party.length = 0; NPCS.length = 0;
+  const base = new Character('a','A','Role', {permanent:true});
+  const recruit = new Character('b','B','Role');
+  party.addMember(base); party.addMember(recruit);
+  assert.strictEqual(party.removeMember(base), false);
+  assert.strictEqual(party.length, 2);
+  assert.strictEqual(NPCS.length, 0);
+});
+
+test('removed member becomes NPC at current location', () => {
+  party.length = 0; NPCS.length = 0;
+  state.map = 'world'; player.x = 0; player.y = 0;
+  const base = new Character('a','A','Role', {permanent:true});
+  const recruit = new Character('b','B','Role');
+  party.addMember(base); party.addMember(recruit);
+  assert.strictEqual(party.removeMember(recruit), true);
+  assert.strictEqual(party.length, 1);
+  const npc = NPCS.find(n=>n.id==='b');
+  assert.ok(npc);
+  assert.strictEqual(npc.map, 'world');
+  assert.strictEqual(npc.x, 0);
+  assert.strictEqual(npc.y, 0);
+});
