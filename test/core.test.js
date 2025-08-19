@@ -404,3 +404,14 @@ test('sample returns deterministic element and handles edge cases', () => {
   assert.strictEqual(sample([]), undefined);
   assert.strictEqual(sample('nope'), undefined);
 });
+
+test('makeNPC normalizes existing fight choices', () => {
+  const quest = new Quest('q_boss', 'Boss', '');
+  quest.status = 'active';
+  const tree = { start: { text: 'growl', choices: [ { label: '(Fight)', to: 'bye', q: 'turnin' }, { label: '(Leave)', to: 'bye' } ] } };
+  const npc = makeNPC('beast', 'world', 0, 0, '#fff', 'Beast', '', '', tree, quest, null, null, { combat: { DEF: 1 } });
+  const fights = npc.tree.start.choices.filter(c => c.label === '(Fight)');
+  assert.strictEqual(fights.length, 1);
+  assert.strictEqual(fights[0].to, 'do_fight');
+  assert.strictEqual(fights[0].q, 'turnin');
+});
