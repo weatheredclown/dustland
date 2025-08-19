@@ -98,12 +98,25 @@ function turnBasedCombat(defender){
   const aLck = (attacker.stats?.LCK || 0) + (attacker._bonus?.LCK || 0);
   const eAtk = defender.ATK || 0;
   const eDef = defender.DEF || 0;
+  const specials = {
+    'Scavenger': ()=>{ const dmg=3; eHP-=dmg; if(typeof toast==='function') toast(`Scrap bomb for ${dmg}!`); },
+    'Gunslinger': ()=>{ let roll=Dice.roll()+aAtk+aLck+2; let dmg=Math.max(1,roll-eDef); eHP-=dmg; if(typeof toast==='function') toast(`Power shot for ${dmg}!`); },
+    'Snakeoil Preacher': ()=>{ const before=aHP; aHP=Math.min(attacker.maxHp,aHP+3); if(typeof toast==='function') toast(`Heal ${aHP-before} HP`); },
+    'Cogwitch': ()=>{ let roll=Dice.roll()+aAtk+aLck+1; let dmg=Math.max(1,roll-eDef); eHP-=dmg; if(typeof toast==='function') toast(`Overclock strike for ${dmg}!`); }
+  };
+  const specialAction = specials[attacker.role];
 
   while(aHP>0 && eHP>0){
     let choice = 'attack';
     if(typeof prompt==='function'){
-      const ans = prompt(`Enemy HP:${eHP}  Your HP:${aHP}\n(1) Attack\n(2) Flee`,'1');
-      if(ans==='2') choice='flee';
+      let menu=`Enemy HP:${eHP}  Your HP:${aHP}\n(1) Attack`;
+      const opts={1:'attack'};
+      let opt=2;
+      if(specialAction){ menu+=`\n(${opt}) Special`; opts[opt]='special'; opt++; }
+      menu+=`\n(${opt}) Item`; opts[opt]='item'; opt++;
+      menu+=`\n(${opt}) Flee`; opts[opt]='flee';
+      const ans = prompt(menu,'1');
+      choice = opts[ans] || 'attack';
     }
     if(choice==='flee'){
       if(typeof toast==='function') toast('You flee.');
@@ -111,21 +124,32 @@ function turnBasedCombat(defender){
       player.ap = attacker.ap; updateHUD?.();
       return { result:'flee', roll:0, dc:eDef };
     }
-
-    // Player attacks
-    let roll = Dice.roll() + aAtk + aLck;
-    let dmg = Math.max(1, roll - eDef);
-    eHP -= dmg;
-    if(typeof toast==='function') toast(`You hit for ${dmg}!`);
+    if(choice==='item'){
+      const usable = player.inv.map((it,i)=> it.use ? `${i+1}) ${it.name}` : null).filter(Boolean);
+      if(usable.length===0){ if(typeof toast==='function') toast('No usable items.'); continue; }
+      const ans = prompt('Use which item?\n'+usable.join('\n'),'1');
+      const idx = parseInt(ans,10)-1;
+      if(idx>=0 && player.inv[idx] && player.inv[idx].use){
+        useItem(idx);
+        aHP = attacker.hp;
+      } else {
+        if(typeof toast==='function') toast('Invalid item.');
+        continue;
+      }
+    } else if(choice==='special' && specialAction){
+      specialAction();
+    } else {
+      let roll = Dice.roll() + aAtk + aLck;
+      let dmg = Math.max(1, roll - eDef);
+      eHP -= dmg;
+      if(typeof toast==='function') toast(`You hit for ${dmg}!`);
+    }
     if(eHP<=0) break;
-
-    // Enemy retaliates
-    roll = Dice.roll() + eAtk;
-    dmg = Math.max(1, roll - aDef);
+    let roll = Dice.roll() + eAtk;
+    let dmg = Math.max(1, roll - aDef);
     aHP -= dmg;
     if(typeof toast==='function') toast(`Enemy hits for ${dmg}!`);
   }
-
   attacker.ap = Math.max(0,(attacker.ap||0)-1);
   attacker.hp = Math.max(0,aHP);
   player.hp = attacker.hp; player.ap = attacker.ap;
