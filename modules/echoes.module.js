@@ -179,8 +179,7 @@ startGame = function () {
   startWorld();
   applyModule(ECHOES_MODULE);
   const s = ECHOES_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-  player.x = s.x;
-  player.y = s.y;
+  setPlayerPos(s.x, s.y);
   setMap(s.map, s.map === 'world' ? 'Wastes' : 'Echoes');
   renderInv();
   renderQuests();

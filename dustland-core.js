@@ -38,7 +38,7 @@
 
 // ===== Core helpers =====
 const ROLL_SIDES = 12;
-const DC = { TALK:8, REPAIR:9 };
+const DC = Object.freeze({ TALK:8, REPAIR:9 });
 const CURRENCY = 'Scrap';
 
 // Placeholder; actual content provided by modules (e.g. Dustland)
@@ -118,8 +118,8 @@ function quickCombat(defender){
 }
 
 // ===== Tiles =====
-const TILE = { SAND:0, ROCK:1, WATER:2, BRUSH:3, ROAD:4, RUIN:5, WALL:6, FLOOR:7, DOOR:8, BUILDING:9 };
-const walkable = {0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false};
+const TILE = Object.freeze({ SAND:0, ROCK:1, WATER:2, BRUSH:3, ROAD:4, RUIN:5, WALL:6, FLOOR:7, DOOR:8, BUILDING:9 });
+const walkable = Object.freeze({0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false});
 const mapNameEl = document.getElementById('mapname');
 const mapLabels = { world: 'Wastes', creator: 'Creator' };
 function mapLabel(id){
@@ -143,6 +143,10 @@ const WORLD_W=120, WORLD_H=90;
 let world = [], interiors = {}, buildings = [], portals = [];
 const state = { map:'world' }; // default map
 const player = { x:2, y:2, hp:10, ap:2, flags:{}, inv:[], scrap:0 };
+function setPlayerPos(x, y){
+  if(typeof x === 'number') player.x = x;
+  if(typeof y === 'number') player.y = y;
+}
 const GAME_STATE = Object.freeze({
   TITLE: 'title',
   CREATOR: 'creator',
@@ -179,10 +183,7 @@ class Quest {
       log('Quest completed: '+this.title);
       if (typeof toast === 'function') toast(`QUEST COMPLETE: ${this.title}`);
       party.forEach(p=> awardXP(p,5));
-      if (window.NanoDialog) {
-        NPCS.filter(n=> n.map === state.map)
-            .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'quest update'));
-      }
+      queueNanoDialogForNPCs('start', 'quest update');
     }
   }
 }
@@ -196,10 +197,7 @@ class QuestLog {
         existing.status='active';
         renderQuests();
         log('Quest added: '+existing.title);
-        if (window.NanoDialog) {
-          NPCS.filter(n=> n.map === state.map)
-              .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'quest update'));
-        }
+        queueNanoDialogForNPCs('start', 'quest update');
       }
       return;
     }
@@ -207,10 +205,7 @@ class QuestLog {
     this.quests[quest.id]=quest;
     renderQuests();
     log('Quest added: '+quest.title);
-    if (window.NanoDialog) {
-      NPCS.filter(n=> n.map === state.map)
-          .forEach(n=> NanoDialog.queueForNPC(n, 'start', 'quest update'));
-    }
+    queueNanoDialogForNPCs('start', 'quest update');
   }
   complete(id){
     const q=this.quests[id];
@@ -309,6 +304,14 @@ function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNo
 }
 function resolveNode(tree, nodeId){ const n = tree[nodeId]; const choices = n.choices||[]; return {...n, choices}; }
 const NPCS=[];
+function npcsOnMap(map = state.map){
+  return NPCS.filter(n => n.map === map);
+}
+
+function queueNanoDialogForNPCs(nodeId='start', reason='inventory change', map = state.map){
+  if(!window.NanoDialog) return;
+  npcsOnMap(map).forEach(n => NanoDialog.queueForNPC(n, nodeId, reason));
+}
 
 function removeNPC(npc){
   const idx = NPCS.indexOf(npc);
@@ -608,7 +611,7 @@ const hiddenOrigins={ 'Rustborn':{desc:'You survived a machine womb. +1 PER, wei
 let step=1; let building=null; let built=[];
 function openCreator(){
   if(!creatorMap.grid || creatorMap.grid.length===0) genCreatorMap();
-  player.x=creatorMap.entryX; player.y=creatorMap.entryY;
+  setPlayerPos(creatorMap.entryX, creatorMap.entryY);
   setMap('creator','Creator');
   creator.style.display='flex';
   step=1;
@@ -685,7 +688,7 @@ function startGame(){
 function startWorld(){
   const seed = Date.now();
   genWorld(seed);
-  player.x=2; player.y=Math.floor(WORLD_H/2);
+  setPlayerPos(2, Math.floor(WORLD_H/2));
   setMap('world','Wastes');
   renderInv(); renderQuests(); renderParty(); updateHUD();
   log('You step into the wastes.');
@@ -694,7 +697,7 @@ function startWorld(){
 // Content pack moved to modules/dustland.module.js
 
 
-const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, quickCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, state, player, GAME_STATE, setGameState, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, randRange, sample };
+const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, quickCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, state, player, GAME_STATE, setGameState, setPlayerPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, randRange, sample };
 
 Object.assign(globalThis, coreExports);
 
