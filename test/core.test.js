@@ -37,7 +37,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, randRange, sample, setRNGSeed, useItem } = require('../dustland-core.js');
+const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, randRange, sample, setRNGSeed, useItem, handleDialogKey } = require('../dustland-core.js');
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -436,4 +436,21 @@ test('leave choice is rendered last', () => {
   openDialog(npc);
   const labels = choicesEl.children.map(c => c.textContent);
   assert.strictEqual(labels[labels.length - 1], 'Leave');
+});
+
+test('handleDialogKey navigates dialog choices with WASD', () => {
+  NPCS.length = 0;
+  const npc = { id: 'nav', name: 'Nav', tree: { start: { text: '', choices: [ { label: 'One' }, { label: 'Two' } ] } } };
+  NPCS.push(npc);
+  openDialog(npc);
+  const picked = [];
+  choicesEl.children[0].click = () => picked.push('One');
+  choicesEl.children[1].click = () => picked.push('Two');
+
+  handleDialogKey({ key: 's' });
+  handleDialogKey({ key: 'Enter' });
+  handleDialogKey({ key: 'w' });
+  handleDialogKey({ key: 'Enter' });
+
+  assert.deepStrictEqual(picked, ['Two', 'One']);
 });

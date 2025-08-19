@@ -27,9 +27,17 @@ function handleDialogKey(e){
   switch(e.key){
     case 'ArrowUp':
     case 'ArrowLeft':
+    case 'w':
+    case 'W':
+    case 'a':
+    case 'A':
       moveChoice(-1); return true;
     case 'ArrowDown':
     case 'ArrowRight':
+    case 's':
+    case 'S':
+    case 'd':
+    case 'D':
       moveChoice(1); return true;
     case 'Enter':{
       const el=choicesEl.children[selectedChoice];
