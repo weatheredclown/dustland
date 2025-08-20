@@ -1,4 +1,6 @@
 // ===== Inventory / equipment =====
+import { emit } from '../event-bus.js';
+
 const ITEMS = {}; // item definitions by id
 const itemDrops = []; // {map,x,y,id}
 function cloneItem(it){
@@ -27,19 +29,21 @@ function resolveItem(def){
   if(!it && typeof def === 'object') it = def;
   return it;
 }
+function notifyInventoryChanged(){
+  emit('inventory:changed');
+}
 function addToInv(item){
   if(!item || typeof item !== 'object' || !item.id){
     throw new Error('Unknown item');
   }
   const base = cloneItem(ITEMS[item.id] || registerItem(item));
   player.inv.push(base);
-  renderInv();
-  queueNanoDialogForNPCs('start', 'inventory change');
+  emit('item:picked', base);
+  notifyInventoryChanged();
 }
 function removeFromInv(invIndex){
   player.inv.splice(invIndex,1);
-  renderInv();
-  queueNanoDialogForNPCs('start', 'inventory change');
+  notifyInventoryChanged();
 }
 
 function equipItem(memberIndex, invIndex){
@@ -50,17 +54,17 @@ function equipItem(memberIndex, invIndex){
   if(prevEq){
     if(prevEq.cursed){
       prevEq.cursedKnown = true;
-      renderInv(); renderParty(); updateHUD();
-      log(`${prevEq.name} is cursed and cannot be removed.`);
-      return;
+        notifyInventoryChanged();
+        log(`${prevEq.name} is cursed and cannot be removed.`);
+        return;
+      }
+      player.inv.push(prevEq);
     }
-    player.inv.push(prevEq);
-  }
-  m.equip[slot]=it;
-  player.inv.splice(invIndex,1);
-  applyEquipmentStats(m);
-  renderInv(); renderParty(); updateHUD();
-  log(`${m.name} equips ${it.name}.`);
+    m.equip[slot]=it;
+    player.inv.splice(invIndex,1);
+    applyEquipmentStats(m);
+    notifyInventoryChanged();
+    log(`${m.name} equips ${it.name}.`);
   if(typeof toast==='function') toast(`${m.name} equips ${it.name}`);
   if(typeof sfxTick==='function') sfxTick();
   if(it.equip && it.equip.teleport){
@@ -81,15 +85,15 @@ function unequipItem(memberIndex, slot){
   if(!it){ log('Nothing to unequip.'); return; }
   if(it.cursed){
     it.cursedKnown = true;
-    renderInv(); renderParty(); updateHUD();
-    log(`${it.name} is cursed and won't come off!`);
-    return;
-  }
-  m.equip[slot]=null;
-  player.inv.push(it);
-  applyEquipmentStats(m);
-  renderInv(); renderParty(); updateHUD();
-  log(`${m.name} unequips ${it.name}.`);
+      notifyInventoryChanged();
+      log(`${it.name} is cursed and won't come off!`);
+      return;
+    }
+    m.equip[slot]=null;
+    player.inv.push(it);
+    applyEquipmentStats(m);
+    notifyInventoryChanged();
+    log(`${m.name} unequips ${it.name}.`);
   if(typeof toast==='function') toast(`${m.name} unequips ${it.name}`);
   if(typeof sfxTick==='function') sfxTick();
 }
@@ -135,18 +139,16 @@ function useItem(invIndex){
     if (typeof toast === 'function') toast(`${who.name} +${healed} HP`);
     if (typeof sfxTick === 'function') sfxTick();
     player.inv.splice(invIndex,1);
-    renderInv(); renderParty(); updateHUD();
-    queueNanoDialogForNPCs('start', 'inventory change');
+    notifyInventoryChanged();
     return true;
   }
   if(typeof it.use.onUse === 'function'){
     const ok = it.use.onUse({player, party, log, toast});
     if(ok!==false){
-      player.inv.splice(invIndex,1);
-      renderInv(); renderParty(); updateHUD();
-      if(typeof toast==='function') toast(`Used ${it.name}`);
-      if(typeof sfxTick==='function') sfxTick();
-      queueNanoDialogForNPCs('start', 'inventory change');
+        player.inv.splice(invIndex,1);
+        notifyInventoryChanged();
+        if(typeof toast==='function') toast(`Used ${it.name}`);
+        if(typeof sfxTick==='function') sfxTick();
     }
     return !!ok;
   }
@@ -157,6 +159,4 @@ function useItem(invIndex){
 const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem };
 Object.assign(globalThis, inventoryExports);
 
-if (typeof module !== 'undefined' && module.exports){
-  module.exports = inventoryExports;
-}
+export { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem };

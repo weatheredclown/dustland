@@ -1,8 +1,16 @@
+import './dustland-core.js';
+import { setTile } from './core/movement.js';
+
 // Adventure Construction Kit
 // Provides basic tools to build Dustland modules.
 
 // Ensure world generation doesn't pull default content
 window.seedWorldContent = () => { };
+
+const { TILE, WORLD_W, WORLD_H, clamp } = globalThis;
+let world = globalThis.world;
+let interiors = globalThis.interiors;
+let buildings = globalThis.buildings;
 
 const PLAYTEST_KEY = 'ack_playtest';
 
@@ -1249,14 +1257,17 @@ function applyLoadedModule(data) {
   moduleData.interiors = data.interiors || [];
   moduleData.events = data.events || [];
   moduleData.start = data.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-  interiors = {};
+  globalThis.interiors = {};
+  interiors = globalThis.interiors;
   moduleData.interiors.forEach(I => { interiors[I.id] = I; });
 
-  world = data.world || world;
-  buildings = moduleData.buildings.map(b => ({
+  globalThis.world = data.world || world;
+  world = globalThis.world;
+  globalThis.buildings = moduleData.buildings.map(b => ({
     ...b,
     under: Array.from({ length: b.h }, () => Array.from({ length: b.w }, () => TILE.SAND))
   }));
+  buildings = globalThis.buildings;
 
   drawWorld();
   renderNPCList();
