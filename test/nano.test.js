@@ -18,7 +18,11 @@ global.NPCS = [{
   }
 }];
 
-global.resolveNode = (tree, id) => tree[id];
+global.resolveNode = (tree, id) => {
+  const n = tree[id];
+  if (!n) return null;
+  return { ...n, choices: n.choices || [] };
+};
 
 global.party = [{ name: 'Hero', stats: { STR: 5 } }];
 global.selectedMember = 0;
@@ -45,4 +49,15 @@ test('NanoDialog generates lines and choices', async () => {
   assert.strictEqual(choices[0].response, 'Got anything rare?');
   assert.strictEqual(choices[1].check.stat, 'INT');
   assert.strictEqual(choices[1].reward, 'XP 5');
+});
+
+test('NanoDialog skips missing dialog nodes', async () => {
+  await import('../dustland-nano.js');
+  await window.NanoDialog.init();
+  window.NanoDialog.queueForNPC(NPCS[0], 'bogus', 'test');
+  await new Promise(r => setTimeout(r, 100));
+  const lines = window.NanoDialog.linesFor('npc1', 'bogus');
+  const choices = window.NanoDialog.choicesFor('npc1', 'bogus');
+  assert.deepStrictEqual(lines, []);
+  assert.deepStrictEqual(choices, []);
 });
