@@ -5,14 +5,11 @@
 // Ensure world generation doesn't pull default content
 window.seedWorldContent = () => { };
 
-const { TILE, WORLD_W, WORLD_H, clamp } = globalThis;
-let world = globalThis.world;
-let interiors = globalThis.interiors;
-let buildings = globalThis.buildings;
+
 
 const PLAYTEST_KEY = 'ack_playtest';
 
-const colors = { 0: '#1e271d', 1: '#2c342c', 2: '#1573ff', 3: '#203320', 4: '#394b39', 5: '#304326', 6: '#4d5f4d', 7: '#233223', 8: '#8bd98d', 9: '#000' };
+const akColors = { 0: '#1e271d', 1: '#2c342c', 2: '#1573ff', 3: '#203320', 4: '#394b39', 5: '#304326', 6: '#4d5f4d', 7: '#233223', 8: '#8bd98d', 9: '#000' };
 const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
 
@@ -41,7 +38,7 @@ function drawWorld() {
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const t = world[y][x];
-      ctx.fillStyle = colors[t] || '#000';
+        ctx.fillStyle = akColors[t] || '#000';
       ctx.fillRect(x * sx, y * sy, sx, sy);
     }
   }
