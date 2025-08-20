@@ -1,3 +1,5 @@
+import { on } from './event-bus.js';
+
 /**
  * @typedef {Object} Item
  * @property {string} name
@@ -26,6 +28,27 @@
  * @property {string} title
  * @property {Object<string, any>} tree
  * @property {Quest} [quest]
+ */
+
+/**
+ * @typedef {Object} Quest
+ * @property {string} id
+ * @property {string} name
+ * @property {'available'|'active'|'completed'} status
+ * @property {string} [desc]
+ * @property {Function} [onStart]
+ * @property {Function} [onComplete]
+ */
+
+/**
+ * @typedef {Object} Map
+ * @property {string} id
+ * @property {number} w
+ * @property {number} h
+ * @property {number[][]} grid
+ * @property {number} [entryX]
+ * @property {number} [entryY]
+ * @property {string} [name]
  */
 
 /**
@@ -755,6 +778,17 @@ function startWorld(){
   log('You step into the wastes.');
 }
 
+on('inventory:changed', () => {
+  renderInv?.();
+  renderParty?.();
+  updateHUD?.();
+  queueNanoDialogForNPCs?.('start', 'inventory change');
+});
+
+on('item:picked', (it) => {
+  log?.(`Picked up ${it.name}`);
+});
+
 // Content pack moved to modules/dustland.module.js
 
 
@@ -762,11 +796,11 @@ const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, startCombat, TILE, wal
 
 Object.assign(globalThis, coreExports);
 
-if (typeof module !== 'undefined' && module.exports) {
-  const party = require('./core/party.js');
-  const inventory = require('./core/inventory.js');
-  const movement = require('./core/movement.js');
-  const dialog = require('./core/dialog.js');
-  const effects = require('./core/effects.js');
-  module.exports = { ...coreExports, ...party, ...inventory, ...movement, ...dialog, ...effects, getGameState: () => gameState };
-}
+export { ROLL_SIDES, clamp, createRNG, Dice, startCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, tileEvents, registerTileEvents, state, player, GAME_STATE, setGameState, setPartyPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, worldFlags, incFlag };
+export * from './core/party.js';
+export * from './core/inventory.js';
+export * from './core/movement.js';
+export * from './core/dialog.js';
+export * from './core/effects.js';
+export * from './core/combat.js';
+export const getGameState = () => gameState;

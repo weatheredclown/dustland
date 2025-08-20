@@ -1,4 +1,4 @@
-const Effects = {
+export const Effects = {
   apply(list = [], ctx = {}) {
     for (const eff of list || []) {
       if (!eff) continue;
@@ -47,6 +47,4 @@ const Effects = {
   }
 };
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { Effects };
-}
+export default Effects;

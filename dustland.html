@@ -112,21 +112,24 @@
     </div>
   </div>
 
-  <script src="dustland-core.js"></script>
-  <script src="core/party.js"></script>
-  <script src="core/inventory.js"></script>
-  <script src="core/effects.js"></script>
-  <script src="core/movement.js"></script>
-  <script src="core/dialog.js"></script>
-  <script src="core/combat.js"></script>
-  <script>
+  <script type="module">
+    import { applyModule, genWorld, interact } from './dustland-core.js';
+    import './core/party.js';
+    import './core/inventory.js';
+    import './core/effects.js';
+    import './core/movement.js';
+    import './core/dialog.js';
+    import './core/combat.js';
     window._realOpenCreator = window.openCreator;
     window._realShowStart = window.showStart;
     window.openCreator = function(){};
     window.showStart = function(){};
+    import './dustland-nano.js';
+    import './dustland-engine.js';
+    import './module-picker.js';
+    window.applyModule = applyModule;
+    window.genWorld = genWorld;
+    window.interact = interact;
   </script>
-  <script src="dustland-nano.js"></script>
-  <script src="dustland-engine.js"></script>
-  <script src="module-picker.js"></script>
 </body>
 </html>
