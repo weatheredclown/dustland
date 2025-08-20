@@ -4,7 +4,13 @@ const { test } = require('node:test');
 function stubEl(){
   const el = {
     style:{},
-    classList:{ toggle: ()=>{}, add: ()=>{}, remove: ()=>{} },
+    classList:{
+      _set:new Set(),
+      toggle(c){ this._set.has(c)?this._set.delete(c):this._set.add(c); },
+      add(c){ this._set.add(c); },
+      remove(c){ this._set.delete(c); },
+      contains(c){ return this._set.has(c); }
+    },
     textContent:'',
     onclick:null,
     _innerHTML:'',
@@ -25,6 +31,10 @@ const dialogText = stubEl();
 const npcName = stubEl();
 const npcTitle = stubEl();
 const portEl = stubEl();
+const combatOverlay = stubEl();
+const combatEnemies = stubEl();
+const combatParty = stubEl();
+const combatCmd = stubEl();
 global.document = {
   getElementById: (id) => ({
     overlay,
@@ -32,12 +42,17 @@ global.document = {
     dialogText,
     npcName,
     npcTitle,
-    port: portEl
+    port: portEl,
+    combatOverlay,
+    combatEnemies,
+    combatParty,
+    combatCmd
   })[id] || stubEl(),
   createElement: () => stubEl()
 };
 
 const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, randRange, sample, setRNGSeed, useItem, handleDialogKey } = require('../dustland-core.js');
+const { openCombat, handleCombatKey } = require('../core/combat.js');
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -515,4 +530,54 @@ test('removed member becomes NPC at current location', () => {
   assert.strictEqual(npc.map, 'world');
   assert.strictEqual(npc.x, 0);
   assert.strictEqual(npc.y, 0);
+});
+
+test('NPCs are removed individually during combat', async () => {
+  NPCS.length = 0;
+  const npc1 = { id:'n1', map:'world', x:0, y:0, name:'N1' };
+  const npc2 = { id:'n2', map:'world', x:1, y:0, name:'N2' };
+  NPCS.push(npc1, npc2);
+  party.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  const m2 = new Character('p2','P2','Role');
+  party.addMember(m1);
+  party.addMember(m2);
+  player.inv.length = 0;
+
+  const resultPromise = openCombat([
+    { name:'E1', hp:1, npc:npc1, loot:{ id:'l1', name:'L1' } },
+    { name:'E2', hp:1, npc:npc2, loot:{ id:'l2', name:'L2' } }
+  ]);
+
+  handleCombatKey({ key:'Enter' });
+  assert.ok(!NPCS.includes(npc1));
+  assert.ok(NPCS.includes(npc2));
+  assert.ok(player.inv.some(it=>it.id==='l1'));
+  assert.ok(!player.inv.some(it=>it.id==='l2'));
+
+  handleCombatKey({ key:'Enter' });
+  const res = await resultPromise;
+  assert.strictEqual(res.result, 'loot');
+  assert.strictEqual(NPCS.length, 0);
+  assert.ok(player.inv.some(it=>it.id==='l1'));
+  assert.ok(player.inv.some(it=>it.id==='l2'));
+});
+
+test('fallen party members are revived after combat', async () => {
+  NPCS.length = 0;
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  m1.hp = 1;
+  party.addMember(m1);
+
+  const resultPromise = openCombat([
+    { name:'E1', hp:3 }
+  ]);
+
+  handleCombatKey({ key:'Enter' });
+  const res = await resultPromise;
+  assert.strictEqual(res.result, 'bruise');
+  assert.strictEqual(party.length, 1);
+  assert.ok(party[0].hp >= 1);
 });

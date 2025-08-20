@@ -4,7 +4,7 @@ const enemyRow = typeof document !== 'undefined' ? document.getElementById('comb
 const partyRow = typeof document !== 'undefined' ? document.getElementById('combatParty') : null;
 const cmdMenu = typeof document !== 'undefined' ? document.getElementById('combatCmd') : null;
 
-const combatState = { enemies: [], phase: 'party', active: 0, choice: 0, mode:'command', onComplete:null };
+const combatState = { enemies: [], phase: 'party', active: 0, choice: 0, mode:'command', onComplete:null, fallen:[] };
 
 function setPortraitDiv(el, obj){
   if(!el) return;
@@ -58,6 +58,7 @@ function openCombat(enemies){
     combatState.active=0;
     combatState.choice=0;
     combatState.onComplete=resolve;
+    combatState.fallen = [];
     renderCombat();
     combatOverlay.classList.add('shown');
     openCommand();
@@ -68,6 +69,8 @@ function closeCombat(result){
   if(!combatOverlay) return;
   combatOverlay.classList.remove('shown');
   if(cmdMenu) cmdMenu.style.display='none';
+  combatState.fallen.forEach(m=>{ m.hp = Math.max(1, m.hp||0); party.push(m); });
+  combatState.fallen.length = 0;
   const res = result || { result:'flee', roll:0 };
   combatState.onComplete?.(res);
   combatState.onComplete=null;
@@ -201,6 +204,8 @@ function doAttack(dmg){
   log?.(`${attacker.name} hits ${target.name} for ${dmg} damage.`);
   if(target.hp<=0){
     log?.(`${target.name} is defeated!`);
+    if(target.loot) addToInv?.(target.loot);
+    if(target.npc) removeNPC(target.npc);
     combatState.enemies.shift();
     renderCombat();
     if(combatState.enemies.length===0){ log?.('Victory!'); closeCombat({ result:'loot', roll:0 }); return; }
@@ -230,6 +235,7 @@ function enemyAttack(){
   log?.(`${enemy.name} strikes ${target.name} for 1 damage.`);
   if(target.hp<=0){
     log?.(`${target.name} falls!`);
+    combatState.fallen.push(target);
     party.splice(0,1);
     renderCombat();
     if(party.length===0){ log?.('The party has fallen...'); closeCombat({ result:'bruise', roll:0 }); return; }

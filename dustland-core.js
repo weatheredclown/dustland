@@ -92,17 +92,13 @@ async function startCombat(defender){
     return { result:'flee', roll:0 };
   }
 
-  const enemy = { name:defender.name||'Enemy', hp:defender.HP||5 };
+  const enemy = { name:defender.name||'Enemy', hp:defender.HP||5, npc:defender.npc, loot:defender.loot };
   const result = await openCombat([enemy]);
 
   if(attacker){
     attacker.ap = Math.max(0,(attacker.ap||0)-1);
     player.ap = attacker.ap;
     player.hp = attacker.hp;
-  }
-  if(result.result==='loot'){
-    if(defender.loot) addToInv(defender.loot);
-    if(defender.npc) removeNPC(defender.npc);
   }
   renderInv?.(); renderParty?.(); updateHUD?.();
   return result;
