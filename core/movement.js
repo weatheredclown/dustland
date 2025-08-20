@@ -173,6 +173,20 @@ function interact(){
 const movementSystem = { canWalk, move };
 const collisionSystem = { queryTile, canWalk };
 const interactionSystem = { adjacentNPC, takeNearestItem, interact, interactAt };
-Object.assign(globalThis, { movementSystem, collisionSystem, interactionSystem, queryTile, interactAt, findFreeDropTile, canWalk, move, takeNearestItem, onEnter, buffs });
+Object.assign(globalThis, {
+  movementSystem,
+  collisionSystem,
+  interactionSystem,
+  queryTile,
+  interactAt,
+  findFreeDropTile,
+  mapWH,
+  mapIdForState,
+  canWalk,
+  move,
+  takeNearestItem,
+  onEnter,
+  buffs
+});
 
 export { mapIdForState, mapWH, gridFor, getTile, setTile, currentGrid, queryTile, findFreeDropTile, canWalk, move, adjacentNPC, takeNearestItem, interactAt, interact, movementSystem, collisionSystem, interactionSystem, onEnter, buffs };
