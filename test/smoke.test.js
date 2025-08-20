@@ -13,9 +13,10 @@ async function loadNoError(file){
     resources: 'usable',
     pretendToBeVisual: true,
     beforeParse(window){
-      window.requestAnimationFrame = (cb) => setTimeout(() => cb(0), 0);
-      window.cancelAnimationFrame = (id) => clearTimeout(id);
+      window.requestAnimationFrame = () => 0;
+      window.cancelAnimationFrame = () => {};
       window.alert = () => {};
+      window.matchMedia = () => ({ matches: false, addEventListener(){}, removeEventListener(){} });
       window.AudioContext = class {
         createOscillator(){ return { connect(){}, start(){}, stop(){}, frequency:{ value:0 }, type:'' }; }
         createGain(){ return { connect(){}, gain:{ value:0, exponentialRampToValueAtTime(){}} }; }
@@ -25,11 +26,31 @@ async function loadNoError(file){
       const dummyCtx = new Proxy({}, { get: () => () => {}, set: () => true });
       window.HTMLCanvasElement.prototype.getContext = () => dummyCtx;
       const store = new Map();
-      window.localStorage = {
-        getItem: (k) => (store.has(k) ? store.get(k) : null),
-        setItem: (k, v) => { store.set(k, String(v)); },
-        removeItem: (k) => { store.delete(k); },
-        clear: () => { store.clear(); }
+      Object.defineProperty(window, 'localStorage', {
+        value: {
+          getItem: k => (store.has(k) ? store.get(k) : null),
+          setItem: (k, v) => { store.set(k, String(v)); },
+          removeItem: k => { store.delete(k); },
+          clear: () => { store.clear(); }
+        },
+        configurable: true
+      });
+      const realGetById = window.document.getElementById.bind(window.document);
+      window.document.getElementById = id => {
+        const el = realGetById(id);
+        if (el) return el;
+        if (id === 'game') {
+          const canvas = window.document.createElement('canvas');
+          canvas.id = 'game';
+          canvas.width = 640;
+          canvas.height = 480;
+          window.document.body.appendChild(canvas);
+          return canvas;
+        }
+        const div = window.document.createElement('div');
+        div.id = id;
+        window.document.body.appendChild(div);
+        return div;
       };
     }
   });
