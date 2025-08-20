@@ -97,7 +97,7 @@ test('cursed items reveal on unequip attempt and stay equipped', () => {
   assert.strictEqual(mem.equip.armor.name,'Mask');
 });
 
-test('equipping teleport item moves player and logs message', () => {
+test('equipping teleport item moves party and logs message', () => {
   const oldLog = global.log;
   const oldCenter = global.centerCamera;
   const logs = [];
@@ -108,14 +108,14 @@ test('equipping teleport item moves player and logs message', () => {
   party.length = 0;
   player.inv.length = 0;
   state.map = 'world';
-  player.x = 0; player.y = 0;
+  party.x = 0; party.y = 0;
   const mem = new Character('t2','Tele','Role');
   party.addMember(mem);
   const tp = normalizeItem({ id:'warp_ring', name:'Warp Ring', type:'trinket', slot:'trinket', equip:{ teleport:{ map:'world', x:5, y:6 }, msg:'whoosh' } });
   addToInv(tp);
   equipItem(0,0);
-  assert.strictEqual(player.x,5);
-  assert.strictEqual(player.y,6);
+  assert.strictEqual(party.x,5);
+  assert.strictEqual(party.y,6);
   assert.strictEqual(state.map,'world');
   assert.deepStrictEqual(centered,{x:5,y:6,map:'world'});
   assert.ok(logs.includes('whoosh'));
@@ -129,17 +129,17 @@ test('pathfinding blocks on NPCs', () => {
   const world = Array.from({length:H},()=>Array.from({length:W},()=>7));
   applyModule({world, npcs:[{id:'g', map:'world', x:1, y:0, name:'Guard'}]});
   state.map='world';
-  player.x=0; player.y=0;
+  party.x=0; party.y=0;
   assert.strictEqual(canWalk(1,0), false);
   move(1,0);
-  assert.strictEqual(player.x,0);
+  assert.strictEqual(party.x,0);
 });
 
 test('queryTile reports entities and items', () => {
   const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
   applyModule({world});
   state.map='world';
-  player.x=0; player.y=0;
+  party.x=0; party.y=0;
   NPCS.length=0; itemDrops.length=0;
   NPCS.push({id:'n',map:'world',x:1,y:1,name:'N'});
   registerItem({id:'i',name:'Item',type:'quest'});
@@ -158,7 +158,7 @@ test('interactAt picks up adjacent item', () => {
   const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
   applyModule({world});
   state.map='world';
-  player.x=0; player.y=0;
+  party.x=0; party.y=0;
   itemDrops.length=0; player.inv.length=0;
   registerItem({id:'gem',name:'Gem',type:'quest'});
   const itm={id:'gem',map:'world',x:1,y:0};
@@ -180,13 +180,13 @@ test('useItem heals party member and consumes item', () => {
   assert.strictEqual(player.inv.length, 0);
 });
 
-test('findFreeDropTile avoids water and player tiles', () => {
+test('findFreeDropTile avoids water and party tiles', () => {
   const W=120, H=90;
   const world = Array.from({length:H},()=>Array.from({length:W},()=>7));
   world[10][10] = 2; // water
   applyModule({world});
   state.map='world';
-  player.x=0; player.y=0;
+  party.x=0; party.y=0;
   NPCS.length=0;
   NPCS.push({map:'world', x:0, y:0});
   let spot = findFreeDropTile('world',0,0);
@@ -200,7 +200,7 @@ test('selected party member receives XP on dialog success', () => {
   const world = Array.from({length:H},()=>Array.from({length:W},()=>7));
   applyModule({world, npcs:[{id:'s', map:'world', x:1, y:0, name:'Sage', tree:{start:{text:'hi', choices:[{label:'learn', reward:'XP 5', to:'bye'}]}}}]});
   state.map='world';
-  player.x=0; player.y=0;
+  party.x=0; party.y=0;
   party.length=0;
   const a=new Character('a','A','Role');
   const b=new Character('b','B','Role');
@@ -245,14 +245,14 @@ test('advanceDialog respects goto with costItem', () => {
   registerItem({id:'key',name:'Key',type:'quest'});
   addToInv('key');
   state.map = 'world';
-  player.x = 0; player.y = 0;
+  party.x = 0; party.y = 0;
   const tree = {
     start: { text: '', next: [{ label: 'Go', costItem: 'key', goto: { map: 'room', x: 3, y: 4 } }] }
   };
   const dialog = { tree, node: 'start' };
   advanceDialog(dialog, 0);
-  assert.strictEqual(player.x, 3);
-  assert.strictEqual(player.y, 4);
+  assert.strictEqual(party.x, 3);
+  assert.strictEqual(party.y, 4);
   assert.ok(!player.inv.some(it => it.id === 'key'));
 });
 
@@ -261,14 +261,14 @@ test('advanceDialog uses reqItem without consuming and allows goto', () => {
   registerItem({id:'pass',name:'Pass',type:'quest'});
   addToInv('pass');
   state.map = 'world';
-  player.x = 1; player.y = 1;
+  party.x = 1; party.y = 1;
   const tree = {
     start: { text: '', next: [{ label: 'Enter', reqItem: 'pass', goto: { map: 'room', x: 5, y: 6 } }] }
   };
   const dialog = { tree, node: 'start' };
   advanceDialog(dialog, 0);
-  assert.strictEqual(player.x, 5);
-  assert.strictEqual(player.y, 6);
+  assert.strictEqual(party.x, 5);
+  assert.strictEqual(party.y, 6);
   assert.ok(player.inv.some(it => it.id === 'pass'));
 });
 
@@ -277,14 +277,14 @@ test('advanceDialog matches reqItem case-insensitively', () => {
   registerItem({id:'access_card',name:'access card',type:'quest',tags:['pass']});
   addToInv('access_card');
   state.map = 'world';
-  player.x = 2; player.y = 2;
+  party.x = 2; party.y = 2;
   const tree = {
     start: { text: '', next: [{ label: 'Up', reqItem: 'PASS', goto: { map: 'room', x: 7, y: 8 } }] }
   };
   const dialog = { tree, node: 'start' };
   advanceDialog(dialog, 0);
-  assert.strictEqual(player.x, 7);
-  assert.strictEqual(player.y, 8);
+  assert.strictEqual(party.x, 7);
+  assert.strictEqual(party.y, 8);
 });
 
 test('advanceDialog returns success flag on failure', () => {
@@ -311,7 +311,7 @@ test('door portals link interiors', () => {
   const forest = { id:'forest', w:3, h:3, grid:[[6,6,6],[6,8,6],[6,6,6]], entryX:1, entryY:1 };
   const castle = { id:'castle', w:3, h:3, grid:[[6,6,6],[6,8,6],[6,6,6]], entryX:1, entryY:1 };
   applyModule({world, interiors:[forest, castle], portals:[{ map:'forest', x:1, y:1, toMap:'castle', toX:1, toY:1 },{ map:'castle', x:1, y:1, toMap:'forest', toX:1, toY:1 }]});
-  state.map='forest'; player.x=1; player.y=1;
+  state.map='forest'; party.x=1; party.y=1;
   interactAt(1,1);
   assert.strictEqual(state.map, 'castle');
   interactAt(1,1);
@@ -504,7 +504,7 @@ test('cannot remove created party members', () => {
 
 test('removed member becomes NPC at current location', () => {
   party.length = 0; NPCS.length = 0;
-  state.map = 'world'; player.x = 0; player.y = 0;
+  state.map = 'world'; party.map = 'world'; party.x = 0; party.y = 0;
   const base = new Character('a','A','Role', {permanent:true});
   const recruit = new Character('b','B','Role');
   party.addMember(base); party.addMember(recruit);
