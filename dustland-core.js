@@ -758,7 +758,7 @@ function startWorld(){
 // Content pack moved to modules/dustland.module.js
 
 
-const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, startCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, tileEvents, registerTileEvents, state, player, GAME_STATE, setGameState, setPartyPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, worldFlags, incFlag };
+const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, startCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, tileEvents, registerTileEvents, state, player, GAME_STATE, setGameState, setPartyPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, worldFlags, incFlag, flagValue, checkFlagCondition };
 
 Object.assign(globalThis, coreExports);
 
