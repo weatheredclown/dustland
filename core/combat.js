@@ -51,7 +51,7 @@ function renderCombat(){
 }
 
 function openCombat(enemies){
-  if(!combatOverlay) return Promise.resolve({ result:'flee', roll:0 });
+  if(!combatOverlay) return Promise.resolve({ result:'flee' });
   return new Promise((resolve)=>{
     combatState.enemies = enemies.map(e=>({...e}));
     combatState.phase='party';
@@ -65,14 +65,13 @@ function openCombat(enemies){
   });
 }
 
-function closeCombat(result){
+function closeCombat(result='flee'){
   if(!combatOverlay) return;
   combatOverlay.classList.remove('shown');
   if(cmdMenu) cmdMenu.style.display='none';
   combatState.fallen.forEach(m=>{ m.hp = Math.max(1, m.hp||0); party.push(m); });
   combatState.fallen.length = 0;
-  const res = result || { result:'flee', roll:0 };
-  combatState.onComplete?.(res);
+  combatState.onComplete?.({ result });
   combatState.onComplete=null;
 }
 
@@ -170,7 +169,7 @@ function chooseOption(){
     cmdMenu.style.display='none';
     if(choice==='flee'){
       log?.('You fled the battle.');
-      closeCombat({ result:'flee', roll:0 });
+      closeCombat('flee');
       return;
     }
     if(choice==='attack') doAttack(1);
@@ -208,7 +207,7 @@ function doAttack(dmg){
     if(target.npc) removeNPC(target.npc);
     combatState.enemies.shift();
     renderCombat();
-    if(combatState.enemies.length===0){ log?.('Victory!'); closeCombat({ result:'loot', roll:0 }); return; }
+    if(combatState.enemies.length===0){ log?.('Victory!'); closeCombat('loot'); return; }
   }
   nextCombatant();
 }
@@ -230,7 +229,7 @@ function enemyPhase(){
 function enemyAttack(){
   const enemy=combatState.enemies[combatState.active];
   const target=party[0];
-  if(!enemy || !target){ closeCombat({ result:'flee', roll:0 }); return; }
+  if(!enemy || !target){ closeCombat('flee'); return; }
   target.hp-=1;
   log?.(`${enemy.name} strikes ${target.name} for 1 damage.`);
   if(target.hp<=0){
@@ -238,7 +237,7 @@ function enemyAttack(){
     combatState.fallen.push(target);
     party.splice(0,1);
     renderCombat();
-    if(party.length===0){ log?.('The party has fallen...'); closeCombat({ result:'bruise', roll:0 }); return; }
+    if(party.length===0){ log?.('The party has fallen...'); closeCombat('bruise'); return; }
   }
   combatState.active++;
   if(combatState.active<combatState.enemies.length){
