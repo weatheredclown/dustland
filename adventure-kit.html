@@ -210,6 +210,7 @@
         <button class="tab2" type="button" data-tab="buildings" role="tab" aria-selected="false">Buildings</button>
         <button class="tab2" type="button" data-tab="interiors" role="tab" aria-selected="false">Interiors</button>
         <button class="tab2" type="button" data-tab="quests" role="tab" aria-selected="false">Quests</button>
+        <button class="tab2" type="button" data-tab="events" role="tab" aria-selected="false">Events</button>
       </div>
       <div class="tabpanes">
         <fieldset class="card" id="npcCard" data-pane="npc">
@@ -331,6 +332,32 @@
           <button class="btn" id="delQuest" style="display:none">Delete Quest</button>
         </div>
       </fieldset>
+      <fieldset class="card" id="eventCard" data-pane="events" style="display:none">
+        <legend>Tile Events</legend>
+        <div class="list" id="eventList"></div>
+        <button class="btn" type="button" id="newEvent">+ Event</button>
+        <div id="eventEditor" style="display:none">
+          <label>Map<input id="eventMap" value="world" /></label>
+          <label>X<input id="eventX" type="number" min="0" /></label>
+          <label>Y<input id="eventY" type="number" min="0" /></label>
+          <button class="btn" type="button" id="eventPick">Select on Map</button>
+          <label>Effect<select id="eventEffect">
+              <option value="toast">Toast</option>
+              <option value="log">Log</option>
+              <option value="addFlag">Add Flag</option>
+              <option value="modStat">Mod Stat</option>
+            </select></label>
+          <label id="eventMsgWrap">Message<input id="eventMsg" /></label>
+          <label id="eventFlagWrap" style="display:none">Flag<input id="eventFlag" /></label>
+          <div id="eventStatWrap" style="display:none">
+            <label>Stat<select id="eventStat"></select></label>
+            <label>Delta<input id="eventDelta" type="number" /></label>
+            <label>Duration<input id="eventDuration" type="number" min="0" /></label>
+          </div>
+          <button class="btn" id="addEvent">Add Event</button>
+          <button class="btn" id="delEvent" style="display:none">Delete Event</button>
+        </div>
+      </fieldset>
       </div><!-- /.tabpanes -->
     </aside>
   </div><!-- /.ak-layout -->
@@ -350,6 +377,10 @@
       ▶ Playtest
   </button>
   <script src="dustland-core.js"></script>
+  <script src="core/party.js"></script>
+  <script src="core/inventory.js"></script>
+  <script src="core/movement.js"></script>
+  <script src="core/dialog.js"></script>
   <script src="adventure-kit.js"></script>
 </body>
 

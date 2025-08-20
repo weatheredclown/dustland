@@ -20,15 +20,18 @@ function getItem(id){
   const it = ITEMS[id];
   return it ? cloneItem(it) : null;
 }
+function resolveItem(def){
+  if(!def) return null;
+  const id = typeof def === 'string' ? def : def.id;
+  let it = id ? getItem(id) : null;
+  if(!it && typeof def === 'object') it = def;
+  return it;
+}
 function addToInv(item){
-  let base = null;
-  if(typeof item === 'string'){
-    base = getItem(item);
-  } else if(item && item.id){
-    base = ITEMS[item.id] || registerItem(item);
-    base = cloneItem(base);
+  if(!item || typeof item !== 'object' || !item.id){
+    throw new Error('Unknown item');
   }
-  if(!base) throw new Error('Unknown item');
+  const base = cloneItem(ITEMS[item.id] || registerItem(item));
   player.inv.push(base);
   renderInv();
   queueNanoDialogForNPCs('start', 'inventory change');
@@ -62,7 +65,7 @@ function equipItem(memberIndex, invIndex){
   if(typeof sfxTick==='function') sfxTick();
   if(it.equip && it.equip.teleport){
     const t=it.equip.teleport;
-    setPlayerPos(t.x, t.y);
+    setPartyPos(t.x, t.y);
     if(t.map) setMap(t.map);
     updateHUD();
   }
@@ -151,7 +154,7 @@ function useItem(invIndex){
   return false;
 }
 
-const inventoryExports = { ITEMS, itemDrops, registerItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem };
+const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem };
 Object.assign(globalThis, inventoryExports);
 
 if (typeof module !== 'undefined' && module.exports){

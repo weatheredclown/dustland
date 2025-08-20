@@ -22,6 +22,10 @@ const DUSTLAND_MODULE = (() => {
   };
   const hall = makeHall();
 
+  const events = [
+    { map: 'hall', x: hall.entryX - 1, y: hall.entryY, events:[{ when:'enter', effect:'toast', msg:'You smell rot.' }] }
+  ];
+
   const items = [
     { id: 'rusted_key', name: 'Rusted Key', type: 'quest', tags: ['key'] },
     { id: 'toolkit', name: 'Toolkit', type: 'quest', tags: ['tool'] },
@@ -38,7 +42,8 @@ const DUSTLAND_MODULE = (() => {
     { map: 'world', x: 80, y: midY - 3, id: 'medkit', name: 'Medkit', type: 'consumable', use: { type: 'heal', amount: 5 } },
     { map: 'world', x: 18, y: midY - 2, id: 'valve', name: 'Valve', type: 'quest' },
     { map: 'world', x: 26, y: midY + 3, id: 'lost_satchel', name: 'Lost Satchel', type: 'quest' },
-    { map: 'world', x: 60, y: midY - 1, id: 'rust_idol', name: 'Rust Idol', type: 'quest', tags: ['idol'] }
+    { map: 'world', x: 60, y: midY - 1, id: 'rust_idol', name: 'Rust Idol', type: 'quest', tags: ['idol'] },
+    { id: 'raider_knife', name: 'Raider Knife', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } }
   ];
 
   const quests = [
@@ -343,7 +348,7 @@ const DUSTLAND_MODULE = (() => {
           ]
         }
       },
-      combat: { DEF: 5, loot: { id: 'raider_knife', name: 'Raider Knife', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } } }
+      combat: { DEF: 5, loot: 'raider_knife' }
     },
     {
       id: 'trader',
@@ -366,6 +371,7 @@ const DUSTLAND_MODULE = (() => {
     items,
     quests,
     npcs,
+    events,
     interiors: [hall],
     buildings: []
   };
@@ -376,7 +382,7 @@ startGame = function () {
   startWorld();
   applyModule(DUSTLAND_MODULE);
   const s = DUSTLAND_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-  setPlayerPos(s.x, s.y);
+  setPartyPos(s.x, s.y);
   setMap(s.map, s.map === 'world' ? 'Wastes' : 'Test Hall');
   renderInv();
   renderQuests();

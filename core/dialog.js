@@ -9,17 +9,17 @@ let currentNPC=null;
 const dialogState={ tree:null, node:null };
 let selectedChoice=0;
 
-function highlightChoice(){
+function dlgHighlightChoice(){
   [...choicesEl.children].forEach((c,i)=>{
     if(c.classList?.toggle) c.classList.toggle('sel', i===selectedChoice);
   });
 }
 
-function moveChoice(dir){
+function dlgMoveChoice(dir){
   const total=choicesEl.children.length;
   if(total===0) return;
   selectedChoice=(selectedChoice+dir+total)%total;
-  highlightChoice();
+  dlgHighlightChoice();
 }
 
 function handleDialogKey(e){
@@ -27,10 +27,18 @@ function handleDialogKey(e){
   switch(e.key){
     case 'ArrowUp':
     case 'ArrowLeft':
-      moveChoice(-1); return true;
+    case 'w':
+    case 'W':
+    case 'a':
+    case 'A':
+      dlgMoveChoice(-1); return true;
     case 'ArrowDown':
     case 'ArrowRight':
-      moveChoice(1); return true;
+    case 's':
+    case 'S':
+    case 'd':
+    case 'D':
+      dlgMoveChoice(1); return true;
     case 'Enter':{
       const el=choicesEl.children[selectedChoice];
       if(el?.click) el.click(); else el?.onclick?.();
@@ -93,10 +101,8 @@ function applyReward(reward){
     awardXP(leader(), amt);
     if(typeof toast==='function') toast(`+${amt} XP`);
   } else {
-    addToInv(reward);
-    const id = typeof reward === 'string' ? reward : reward.id;
-    const def = ITEMS[id] || (typeof reward === 'object' ? reward : null);
-    if(typeof toast==='function') toast(`Received ${def?.name || id}`);
+    const rewardIt = resolveItem(reward);
+    if(rewardIt){ addToInv(rewardIt); if(typeof toast==='function') toast(`Received ${rewardIt.name}`); }
   }
 }
 
@@ -109,19 +115,20 @@ function processQuestFlag(c){
 function joinParty(join){
   if(!join) return;
   const m=makeMember(join.id, join.name, join.role);
-  addPartyMember(m);
-  removeNPC(currentNPC);
+  if(addPartyMember(m)){
+    removeNPC(currentNPC);
+  }
 }
 
 function handleGoto(g){
   if(!g) return;
   if(g.map==='world'){
     startWorld();
-    setPlayerPos(g.x, g.y);
+    setPartyPos(g.x, g.y);
     setMap('world');
   }else{
-    setPlayerPos(g.x, g.y);
-    if(g.map) setMap(g.map); else if(typeof centerCamera==='function') centerCamera(player.x,player.y,state.map);
+    setPartyPos(g.x, g.y);
+    if(g.map) setMap(g.map); else if(typeof centerCamera==='function') centerCamera(party.x,party.y,state.map);
   }
   updateHUD?.();
 }
@@ -272,7 +279,7 @@ function renderDialog(){
     cont.onclick=()=> closeDialog();
     choicesEl.appendChild(cont);
     selectedChoice=0;
-    highlightChoice();
+    dlgHighlightChoice();
     return;
   }
 
@@ -325,7 +332,7 @@ function renderDialog(){
     choicesEl.appendChild(div);
   });
   selectedChoice=0;
-  highlightChoice();
+  dlgHighlightChoice();
 }
 
 const dialogExports = { overlay, choicesEl, textEl, nameEl, titleEl, portEl, openDialog, closeDialog, renderDialog, advanceDialog, resolveCheck, handleDialogKey };
