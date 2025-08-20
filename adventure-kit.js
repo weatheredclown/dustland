@@ -15,9 +15,9 @@ let placingType = null, placingPos = null;
 let hoverTile = null;
 let coordTarget = null;
 
-const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [], interiors: [], events: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
+const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
-let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1;
+let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1;
 let treeData = {};
 let selectedObj = null;
 const intCanvas = document.getElementById('intCanvas');
@@ -72,6 +72,19 @@ function drawWorld() {
     ctx.strokeRect(it.x * sx + 1, it.y * sy + 1, sx - 2, sy - 2);
     ctx.restore();
   });
+  // Draw Portal markers
+  moduleData.portals.filter(p => p.map === 'world').forEach(p => {
+    const hovering = hoverTarget && hoverTarget.type === 'portal' && hoverTarget.obj === p;
+    ctx.save();
+    ctx.strokeStyle = hovering ? '#f0f' : '#f0f';
+    if (hovering) {
+      ctx.shadowColor = '#f0f';
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 2;
+    }
+    ctx.strokeRect(p.x * sx + 2, p.y * sy + 2, sx - 4, sy - 4);
+    ctx.restore();
+  });
   // Draw Tile Event markers
   moduleData.events.filter(ev => ev.map === 'world').forEach(ev => {
     const hovering = hoverTarget && hoverTarget.type === 'event' && hoverTarget.obj === ev;
@@ -118,6 +131,9 @@ function drawWorld() {
     } else if (selectedObj.type === 'event' && o.map === 'world') {
       ctx.strokeStyle = '#0ff';
       ctx.strokeRect(o.x * sx + 1, o.y * sy + 1, sx - 2, sy - 2);
+    } else if (selectedObj.type === 'portal' && o.map === 'world') {
+      ctx.strokeStyle = '#f0f';
+      ctx.strokeRect(o.x * sx + 2, o.y * sy + 2, sx - 4, sy - 4);
     }
     ctx.restore();
   }
@@ -220,6 +236,7 @@ function regenWorld() {
   moduleData.buildings = [...buildings];
   moduleData.interiors = [];
   moduleData.events = [];
+  moduleData.portals = [];
   for (const id in interiors) {
     if(id==='creator') continue;
     const I = interiors[id]; I.id = id; moduleData.interiors.push(I);
@@ -227,6 +244,7 @@ function regenWorld() {
   renderInteriorList();
   renderBldgList();
   renderEventList();
+  renderPortalList();
   drawWorld();
 }
 
@@ -1066,6 +1084,84 @@ function deleteEvent() {
   showEventEditor(false);
 }
 
+// --- Portals ---
+function showPortalEditor(show) {
+  document.getElementById('portalEditor').style.display = show ? 'block' : 'none';
+}
+
+function startNewPortal() {
+  editPortalIdx = -1;
+  document.getElementById('portalMap').value = 'world';
+  document.getElementById('portalX').value = 0;
+  document.getElementById('portalY').value = 0;
+  document.getElementById('portalToMap').value = 'world';
+  document.getElementById('portalToX').value = 0;
+  document.getElementById('portalToY').value = 0;
+  document.getElementById('addPortal').textContent = 'Add Portal';
+  document.getElementById('delPortal').style.display = 'none';
+  showPortalEditor(true);
+}
+
+function collectPortal() {
+  const map = document.getElementById('portalMap').value.trim() || 'world';
+  const x = parseInt(document.getElementById('portalX').value, 10) || 0;
+  const y = parseInt(document.getElementById('portalY').value, 10) || 0;
+  const toMap = document.getElementById('portalToMap').value.trim() || 'world';
+  const toX = parseInt(document.getElementById('portalToX').value, 10) || 0;
+  const toY = parseInt(document.getElementById('portalToY').value, 10) || 0;
+  return { map, x, y, toMap, toX, toY };
+}
+
+function addPortal() {
+  const entry = collectPortal();
+  if (editPortalIdx >= 0) {
+    moduleData.portals[editPortalIdx] = entry;
+  } else {
+    moduleData.portals.push(entry);
+  }
+  editPortalIdx = -1;
+  document.getElementById('addPortal').textContent = 'Add Portal';
+  document.getElementById('delPortal').style.display = 'none';
+  renderPortalList();
+  selectedObj = null;
+  drawWorld();
+  showPortalEditor(false);
+}
+
+function editPortal(i) {
+  const p = moduleData.portals[i];
+  editPortalIdx = i;
+  document.getElementById('portalMap').value = p.map;
+  document.getElementById('portalX').value = p.x;
+  document.getElementById('portalY').value = p.y;
+  document.getElementById('portalToMap').value = p.toMap;
+  document.getElementById('portalToX').value = p.toX;
+  document.getElementById('portalToY').value = p.toY;
+  document.getElementById('addPortal').textContent = 'Update Portal';
+  document.getElementById('delPortal').style.display = 'block';
+  showPortalEditor(true);
+  selectedObj = { type: 'portal', obj: p };
+  drawWorld();
+}
+
+function renderPortalList() {
+  const list = document.getElementById('portalList');
+  list.innerHTML = moduleData.portals.map((p, i) => `<div data-idx="${i}">${p.map} @(${p.x},${p.y}) → ${p.toMap} (${p.toX},${p.toY})</div>`).join('');
+  Array.from(list.children).forEach(div => div.onclick = () => editPortal(parseInt(div.dataset.idx, 10)));
+}
+
+function deletePortal() {
+  if (editPortalIdx < 0) return;
+  moduleData.portals.splice(editPortalIdx, 1);
+  editPortalIdx = -1;
+  document.getElementById('addPortal').textContent = 'Add Portal';
+  document.getElementById('delPortal').style.display = 'none';
+  renderPortalList();
+  selectedObj = null;
+  drawWorld();
+  showPortalEditor(false);
+}
+
 // --- Buildings ---
 function showBldgEditor(show) {
   document.getElementById('bldgEditor').style.display = show ? 'block' : 'none';
@@ -1247,6 +1343,7 @@ function applyLoadedModule(data) {
   moduleData.quests = data.quests || [];
   moduleData.buildings = data.buildings || [];
   moduleData.interiors = data.interiors || [];
+  moduleData.portals = data.portals || [];
   moduleData.events = data.events || [];
   moduleData.start = data.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   interiors = {};
@@ -1263,6 +1360,7 @@ function applyLoadedModule(data) {
   renderItemList();
   renderBldgList();
   renderInteriorList();
+  renderPortalList();
   renderQuestList();
   renderEventList();
   updateQuestOptions();
@@ -1303,6 +1401,8 @@ document.getElementById('addBldg').onclick = addBuilding;
 document.getElementById('addQuest').onclick = addQuest;
 document.getElementById('addEvent').onclick = addEvent;
 document.getElementById('newEvent').onclick = startNewEvent;
+document.getElementById('addPortal').onclick = addPortal;
+document.getElementById('newPortal').onclick = startNewPortal;
 document.getElementById('delNPC').onclick = deleteNPC;
 document.getElementById('delItem').onclick = deleteItem;
 document.getElementById('delBldg').onclick = deleteBldg;
@@ -1310,6 +1410,7 @@ document.getElementById('newInterior').onclick = startNewInterior;
 document.getElementById('delInterior').onclick = deleteInterior;
 document.getElementById('delQuest').onclick = deleteQuest;
 document.getElementById('delEvent').onclick = deleteEvent;
+document.getElementById('delPortal').onclick = deletePortal;
 document.getElementById('addMod').onclick = () => modRow();
 document.getElementById('itemSlot').addEventListener('change', updateModsWrap);
 document.getElementById('itemUseType').addEventListener('change', updateUseWrap);
@@ -1317,6 +1418,8 @@ document.getElementById('eventEffect').addEventListener('change', updateEventEff
 document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
 document.getElementById('npcFlagType').addEventListener('change', updateFlagBuilder);
 document.getElementById('npcFlagPick').onclick = () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY' }; };
+document.getElementById('portalPick').onclick = () => { coordTarget = { x: 'portalX', y: 'portalY' }; };
+document.getElementById('portalDestPick').onclick = () => { coordTarget = { x: 'portalToX', y: 'portalToY' }; };
 document.getElementById('save').onclick = saveModule;
 document.getElementById('load').onclick = () => document.getElementById('loadFile').click();
 document.getElementById('loadFile').addEventListener('change', e => {
@@ -1384,7 +1487,8 @@ function updateCursor(x, y) {
     const overBldg = moduleData.buildings.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
     const overStart = moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y;
     const overEvent = moduleData.events.some(ev => ev.map === 'world' && ev.x === x && ev.y === y);
-    canvas.style.cursor = (overNpc || overItem || overBldg || overStart || overEvent) ? 'grab' : 'pointer';
+    const overPortal = moduleData.portals.some(p => p.map === 'world' && p.x === x && p.y === y);
+    canvas.style.cursor = (overNpc || overItem || overBldg || overStart || overEvent || overPortal) ? 'grab' : 'pointer';
   } else {
     canvas.style.cursor = 'pointer';
   }
@@ -1460,6 +1564,9 @@ canvas.addEventListener('mousedown', ev => {
   document.getElementById('itemX').value = x; document.getElementById('itemY').value = y;
   document.getElementById('bldgX').value = x; document.getElementById('bldgY').value = y;
   document.getElementById('eventX').value = x; document.getElementById('eventY').value = y;
+  const px = document.getElementById('portalX');
+  const py = document.getElementById('portalY');
+  if (px && py) { px.value = x; py.value = y; }
   selectedObj = null;
   drawWorld();
   updateCursor(x, y);
@@ -1517,6 +1624,8 @@ canvas.addEventListener('mousemove', ev => {
     ht = { obj, type: 'bldg' };
   } else if (obj = moduleData.events.find(ev => ev.map === 'world' && ev.x === x && ev.y === y)) {
     ht = { obj, type: 'event' };
+  } else if (obj = moduleData.portals.find(p => p.map === 'world' && p.x === x && p.y === y)) {
+    ht = { obj, type: 'portal' };
   }
 
   if ((hoverTarget && (!ht || hoverTarget.obj !== ht.obj)) || (!hoverTarget && ht)) {
@@ -1564,6 +1673,12 @@ canvas.addEventListener('click', ev => {
   if (idx >= 0) {
     if (window.showEditorTab) window.showEditorTab('events');
     editEvent(idx);
+    return;
+  }
+  idx = moduleData.portals.findIndex(p => p.map === 'world' && p.x === x && p.y === y);
+  if (idx >= 0) {
+    if (window.showEditorTab) window.showEditorTab('portals');
+    editPortal(idx);
   }
 });
 
