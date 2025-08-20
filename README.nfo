@@ -111,7 +111,8 @@ _______________________________________________________________________________
       * takeNearestItem(), interact(), move()
       * applyModule(data), openCreator()
   - Tiles: see TILE enum + colors[] + walkable[].
-  - Tests: run `npm test` for basic checks.
+  - Tests: run `npm install` to fetch dev deps like jsdom, then `npm test` for basic checks.
+    The main game still runs from the repo download alone.
 
 [ LICENSE ]
   MIT License
