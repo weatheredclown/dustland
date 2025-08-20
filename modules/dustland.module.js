@@ -22,6 +22,10 @@ const DUSTLAND_MODULE = (() => {
   };
   const hall = makeHall();
 
+  const events = [
+    { map: 'hall', x: hall.entryX - 1, y: hall.entryY, events:[{ when:'enter', effect:'toast', msg:'You smell rot.' }] }
+  ];
+
   const items = [
     { id: 'rusted_key', name: 'Rusted Key', type: 'quest', tags: ['key'] },
     { id: 'toolkit', name: 'Toolkit', type: 'quest', tags: ['tool'] },
@@ -353,6 +357,7 @@ const DUSTLAND_MODULE = (() => {
     items,
     quests,
     npcs,
+    events,
     interiors: [hall],
     buildings: []
   };

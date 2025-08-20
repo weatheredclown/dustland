@@ -37,7 +37,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, randRange, sample, setRNGSeed, useItem } = require('../dustland-core.js');
+const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, randRange, sample, setRNGSeed, useItem, registerTileEvents, buffs } = require('../dustland-core.js');
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -436,4 +436,26 @@ test('leave choice is rendered last', () => {
   openDialog(npc);
   const labels = choicesEl.children.map(c => c.textContent);
   assert.strictEqual(labels[labels.length - 1], 'Leave');
+});
+
+test('onEnter triggers effects and temporary stat mod', () => {
+  const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
+  applyModule({world});
+  state.map='world';
+  player.x=0; player.y=0;
+  party.length=0;
+  const hero = new Character('h','Hero','Role');
+  party.addMember(hero);
+  registerTileEvents([{map:'world', x:1, y:0, events:[{when:'enter', effect:'toast', msg:'You smell rot.'},{when:'enter', effect:'modStat', stat:'CHA', delta:-1, duration:2}]}]);
+  const msgs=[];
+  global.toast = (m)=>msgs.push(m);
+  move(1,0);
+  assert.strictEqual(player.x,1);
+  assert.ok(msgs.includes('You smell rot.'));
+  assert.strictEqual(party[0].stats.CHA,3);
+  move(1,0);
+  assert.strictEqual(party[0].stats.CHA,3);
+  move(1,0);
+  assert.strictEqual(party[0].stats.CHA,4);
+  assert.strictEqual(buffs.length,0);
 });

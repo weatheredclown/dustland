@@ -1,3 +1,8 @@
+const { Effects } = require('./effects.js');
+
+// active temporary stat modifiers
+const buffs = [];
+
 // ===== Helpers =====
 function mapIdForState(){ return state.map; }
 function mapWH(map=state.map){
@@ -52,6 +57,13 @@ function findFreeDropTile(map,x,y){
   return {x,y};
 }
 
+function onEnter(map,x,y,ctx){
+  const t = tileEvents.find(e => (e.map || 'world') === map && e.x === x && e.y === y);
+  if(!t) return;
+  const list = (t.events || []).filter(ev => ev.when === 'enter');
+  if(list.length) Effects.apply(list, ctx);
+}
+
 // ===== Interaction =====
 function canWalk(x,y){
   if(state.map==='creator') return false;
@@ -61,7 +73,9 @@ function move(dx,dy){
   if(state.map==='creator') return;
   const nx=player.x+dx, ny=player.y+dy;
   if(canWalk(nx,ny)){
+    Effects.tick({buffs});
     setPlayerPos(nx, ny);
+    onEnter(state.map, nx, ny, { player, state, actor: typeof leader==='function'? leader(): null, buffs });
     centerCamera(player.x,player.y,state.map); updateHUD();
     checkAggro();
   }
@@ -158,8 +172,8 @@ function interact(){
 const movementSystem = { canWalk, move };
 const collisionSystem = { queryTile, canWalk };
 const interactionSystem = { adjacentNPC, takeNearestItem, interact, interactAt };
-Object.assign(globalThis, { movementSystem, collisionSystem, interactionSystem, queryTile, interactAt, findFreeDropTile, canWalk, move, takeNearestItem });
+Object.assign(globalThis, { movementSystem, collisionSystem, interactionSystem, queryTile, interactAt, findFreeDropTile, canWalk, move, takeNearestItem, onEnter, buffs });
 
 if (typeof module !== 'undefined' && module.exports){
-  module.exports = { mapIdForState, mapWH, gridFor, getTile, setTile, currentGrid, queryTile, findFreeDropTile, canWalk, move, adjacentNPC, takeNearestItem, interactAt, interact, movementSystem, collisionSystem, interactionSystem };
+  module.exports = { mapIdForState, mapWH, gridFor, getTile, setTile, currentGrid, queryTile, findFreeDropTile, canWalk, move, adjacentNPC, takeNearestItem, interactAt, interact, movementSystem, collisionSystem, interactionSystem, onEnter, buffs };
 }
