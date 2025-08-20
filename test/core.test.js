@@ -98,6 +98,8 @@ const files = [
   '../core/movement.js',
   '../core/dialog.js',
   '../core/combat.js',
+  '../core/quests.js',
+  '../core/npc.js',
   '../dustland-core.js'
 ];
 for (const f of files) {

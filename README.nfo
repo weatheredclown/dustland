@@ -66,7 +66,11 @@ _______________________________________________________________________________
   - dustland.html
     * Entry point wiring up the canvas, UI, and scripts.
   - dustland-core.js
-    * Game state, dialog system, quests, inventory & equipment.
+    * Game state, dialog system, inventory & equipment.
+  - core/quests.js
+    * Quest system and logging.
+  - core/npc.js
+    * NPC utilities and dialog helpers.
   - dustland-engine.js
     * Renderer, input handling, HUD, and tiny sfx.
   - modules/dustland.module.js
