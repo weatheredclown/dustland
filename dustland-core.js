@@ -312,7 +312,7 @@ class NPC {
         const it = player.inv.splice(c.sellIndex,1)[0];
         const val = Math.max(1, it.value || 0);
         player.scrap += val;
-        renderInv(); updateHUD();
+        renderInv?.(); updateHUD?.();
         textEl.textContent = `Sold ${it.name} for ${val} ${CURRENCY}.`;
         dialogState.node='sell';
         renderDialog();
@@ -668,7 +668,7 @@ function load(){
     party.push(mem);
   });
   setMap(state.map);
-  renderInv(); renderQuests(); renderParty(); updateHUD();
+  renderInv?.(); renderQuests?.(); renderParty?.(); updateHUD?.();
   log('Game loaded.');
 }
 
@@ -817,7 +817,7 @@ function startWorld(){
   genWorld(seed);
   setPartyPos(2, Math.floor(WORLD_H/2));
   setMap('world','Wastes');
-  renderInv(); renderQuests(); renderParty(); updateHUD();
+  renderInv?.(); renderQuests?.(); renderParty?.(); updateHUD?.();
   log('You step into the wastes.');
 }
 
@@ -859,6 +859,7 @@ on('item:picked', (it) => {
 
 const coreExports = {
   ROLL_SIDES,
+  DC,
   clamp,
   createRNG,
   Dice,
@@ -925,6 +926,7 @@ Object.assign(globalThis, coreExports);
 
 export {
   ROLL_SIDES,
+  DC,
   clamp,
   createRNG,
   Dice,

@@ -1,3 +1,5 @@
+import { getTile, mapWH, mapIdForState } from './core/movement.js';
+
 // ===== Rendering & Utilities =====
 
 // Logging
