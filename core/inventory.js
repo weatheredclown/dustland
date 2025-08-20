@@ -73,6 +73,9 @@ function equipItem(memberIndex, invIndex){
     if(t.map) setMap(t.map);
     updateHUD();
   }
+  if(it.equip && it.equip.flag){
+    incFlag(it.equip.flag);
+  }
   if(it.equip && it.equip.msg){
     log(it.equip.msg);
   }
@@ -96,6 +99,32 @@ function unequipItem(memberIndex, slot){
     log(`${m.name} unequips ${it.name}.`);
   if(typeof toast==='function') toast(`${m.name} unequips ${it.name}`);
   if(typeof sfxTick==='function') sfxTick();
+  if(it.unequip && it.unequip.teleport){
+    const t=it.unequip.teleport;
+    setPartyPos(t.x, t.y);
+    if(t.map) setMap(t.map);
+    updateHUD();
+  }
+  if(it.unequip && it.unequip.msg){
+    log(it.unequip.msg);
+  }
+}
+
+// Remove curse flag from item with given id in inventory or equipped slots
+function uncurseItem(id){
+  if(!id) return false;
+  let found=false;
+  for(const it of player.inv){
+    if(it.id===id){ it.cursed=false; it.cursedKnown=false; found=true; }
+  }
+  for(const m of party){
+    ['weapon','armor','trinket'].forEach(sl=>{
+      const eq=m.equip[sl];
+      if(eq && eq.id===id){ eq.cursed=false; eq.cursedKnown=false; found=true; }
+    });
+  }
+  if(found) notifyInventoryChanged();
+  return found;
 }
 
 function normalizeItem(it){
@@ -109,6 +138,7 @@ function normalizeItem(it){
     mods: it.mods ? { ...it.mods } : {},
     use: it.use || null,
     equip: it.equip || null,
+    unequip: it.unequip || null,
     cursed: !!it.cursed,
     cursedKnown: !!it.cursedKnown,
     rarity: it.rarity || 'common',
@@ -156,7 +186,7 @@ function useItem(invIndex){
   return false;
 }
 
-const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem };
+const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, uncurseItem };
 Object.assign(globalThis, inventoryExports);
 
-export { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem };
+export { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, uncurseItem };

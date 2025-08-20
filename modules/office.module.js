@@ -9,6 +9,10 @@ const OFFICE_MODULE = (() => {
   const WORLD_MID = Math.floor(WORLD_W / 2),
     WORLD_MIDY = Math.floor(WORLD_H / 2);
 
+  function liftHelmetCurse() {
+    uncurseItem('cursed_vr_helmet');
+  }
+
   function genForestWorld(seed = Date.now()) {
     setRNGSeed(seed);
     world = Array.from({ length: WORLD_H }, () =>
@@ -210,7 +214,10 @@ const OFFICE_MODULE = (() => {
       color: '#b8ffb6',
       name: 'Office Worker',
       desc: 'Busy typing at their desk.',
-      tree: { start: { text: 'Too busy to chat.', choices: [ { label: '(Leave)', to: 'bye' } ] } }
+      tree: () =>
+        flagValue('visited_forest')
+          ? { start: { text: 'Back from the forest already?', choices: [ { label: '(Leave)', to: 'bye' } ] } }
+          : { start: { text: 'Too busy to chat.', choices: [ { label: '(Leave)', to: 'bye' } ] } }
     },
     {
       id: 'worker2',
@@ -220,7 +227,10 @@ const OFFICE_MODULE = (() => {
       color: '#b8ffb6',
       name: 'Office Worker',
       desc: 'On a long conference call.',
-      tree: { start: { text: 'Shh, on a call...', choices: [ { label: '(Leave quietly)', to: 'bye' } ] } }
+      tree: () =>
+        flagValue('visited_forest')
+          ? { start: { text: 'Heard you roamed the forest.', choices: [ { label: '(Leave quietly)', to: 'bye' } ] } }
+          : { start: { text: 'Shh, on a call...', choices: [ { label: '(Leave quietly)', to: 'bye' } ] } }
     },
     {
       id: 'friend1',
@@ -231,21 +241,32 @@ const OFFICE_MODULE = (() => {
       name: 'Coworker Jen',
       desc: 'Your friend scrolling through code.',
       questId: 'q_card',
-      tree: {
-        start: {
-          text: 'Ready for the sim once you get the card.',
-          choices: [
-            { label: '(Where do I get one?)', to: 'accept', q: 'accept' },
-            { label: '(I have the card)', to: 'do_turnin', q: 'turnin' },
-            { label: '(Leave)', to: 'bye' }
-          ]
-        },
-        accept: { text: 'Security downstairs hoards spares.', choices: [ { label: '(Thanks)', to: 'bye' } ] },
-        do_turnin: {
-          text: 'Jen hands you a battered VR headset.',
-          choices: [ { label: '(Continue)', to: 'bye' } ]
-        }
-      }
+      tree: () =>
+        flagValue('visited_forest')
+          ? {
+              start: {
+                text: 'Glad you made it back from the forest.',
+                choices: [ { label: '(Chat later)', to: 'bye' } ]
+              }
+            }
+          : {
+              start: {
+                text: 'Ready for the sim once you get the card.',
+                choices: [
+                  { label: '(Where do I get one?)', to: 'accept', q: 'accept' },
+                  { label: '(I have the card)', to: 'do_turnin', q: 'turnin' },
+                  { label: '(Leave)', to: 'bye' }
+                ]
+              },
+              accept: {
+                text: 'Security downstairs hoards spares.',
+                choices: [ { label: '(Thanks)', to: 'bye' } ]
+              },
+              do_turnin: {
+                text: 'Jen hands you a battered VR headset.',
+                choices: [ { label: '(Continue)', to: 'bye' } ]
+              }
+            }
     },
     {
       id: 'friend2',
@@ -255,12 +276,10 @@ const OFFICE_MODULE = (() => {
       color: '#caffc6',
       name: 'Coworker Luis',
       desc: 'Testing a new patch.',
-      tree: {
-        start: {
-          text: 'See you in the forest.',
-          choices: [ { label: '(Laugh)', to: 'bye' } ]
-        }
-      }
+      tree: () =>
+        flagValue('visited_forest')
+          ? { start: { text: 'The forest changed you.', choices: [ { label: '(Smile)', to: 'bye' } ] } }
+          : { start: { text: 'See you in the forest.', choices: [ { label: '(Laugh)', to: 'bye' } ] } }
     },
     {
       id: 'toll',
@@ -321,7 +340,8 @@ const OFFICE_MODULE = (() => {
               to: 'gift',
               if: { flag: 'visited_castle', op: '>=', value: 1 },
               once: true,
-              reward: 'fae_token'
+              reward: 'fae_token',
+              effects: [liftHelmetCurse]
             },
             { label: '(Leave)', to: 'bye' }
           ]
@@ -330,7 +350,10 @@ const OFFICE_MODULE = (() => {
           text: 'He only laughs and vanishes into mist.',
           choices: [ { label: '(Contemplate)', to: 'bye' } ]
         },
-        gift: { text: 'He presses a token into your palm.', choices: [ { label: '(Accept)', to: 'bye' } ] }
+        gift: {
+          text: 'He presses a token into your palm. The curse on your helm fades.',
+          choices: [ { label: '(Accept)', to: 'bye' } ]
+        }
       }
     },
     {
@@ -427,7 +450,12 @@ const OFFICE_MODULE = (() => {
           cursed: true,
           equip: {
             teleport: { map: 'world', x: 2, y: WORLD_MIDY },
-            msg: 'You step into the forest.'
+            msg: 'You step into the forest.',
+            flag: 'visited_forest'
+          },
+          unequip: {
+            teleport: { map: 'floor1', x: midX, y: FLOOR_H - 2 },
+            msg: 'You remove the helmet and return to the office.'
           }
         },
         {
