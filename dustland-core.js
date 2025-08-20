@@ -1,5 +1,7 @@
 import { on } from './event-bus.js';
 
+let renderInv, renderParty, updateHUD;
+
 /**
  * @typedef {Object} Item
  * @property {string} name
@@ -994,3 +996,17 @@ export * from './core/dialog.js';
 export * from './core/effects.js';
 export * from './core/combat.js';
 export const getGameState = () => gameState;
+
+if (typeof process === 'undefined') {
+  const engine = await import('./dustland-engine.js');
+  renderInv = engine.renderInv;
+  renderParty = engine.renderParty;
+  updateHUD = engine.updateHUD;
+  Object.assign(globalThis, {
+    renderInv,
+    renderParty,
+    updateHUD,
+    log: engine.log,
+    renderQuests: engine.renderQuests
+  });
+}
