@@ -96,7 +96,7 @@ function takeNearestItem(){
       const idx=itemDrops.indexOf(it);
       if(idx>-1) itemDrops.splice(idx,1);
       const def = ITEMS[it.id];
-      addToInv(it.id);
+      addToInv(getItem(it.id));
       log('Took '+(def?def.name:it.id)+'.'); updateHUD();
       return true;
     }
@@ -114,7 +114,7 @@ function interactAt(x,y){
     const idx=itemDrops.indexOf(it);
     if(idx>-1) itemDrops.splice(idx,1);
     const def = ITEMS[it.id];
-    addToInv(it.id); log('Took '+(def?def.name:it.id)+'.'); updateHUD();
+    addToInv(getItem(it.id)); log('Took '+(def?def.name:it.id)+'.'); updateHUD();
     return true;
   }
   if(x===party.x && y===party.y && info.tile===TILE.DOOR){

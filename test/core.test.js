@@ -37,7 +37,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, randRange, sample, setRNGSeed, useItem, handleDialogKey } = require('../dustland-core.js');
+const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, randRange, sample, setRNGSeed, useItem, handleDialogKey } = require('../dustland-core.js');
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -173,8 +173,8 @@ test('useItem heals party member and consumes item', () => {
   const m = new Character('h','Healer','Role');
   m.hp = 5; m.maxHp = 10;
   party.addMember(m);
-  registerItem({ id:'tonic', name:'Tonic', type:'consumable', use:{ type:'heal', amount:3 } });
-  addToInv('tonic');
+  const tonic = registerItem({ id:'tonic', name:'Tonic', type:'consumable', use:{ type:'heal', amount:3 } });
+  addToInv(tonic);
   useItem(0);
   assert.strictEqual(m.hp, 8);
   assert.strictEqual(player.inv.length, 0);
@@ -226,9 +226,9 @@ test('advanceDialog moves to next node', () => {
 
 test('advanceDialog handles cost and reward', () => {
   player.inv.length = 0;
-  registerItem({id:'key',name:'Key',type:'quest'});
+  const key = registerItem({id:'key',name:'Key',type:'quest'});
   registerItem({id:'gem',name:'Gem',type:'quest'});
-  addToInv('key');
+  addToInv(key);
   const tree = {
     start: { text: '', next: [{ label: 'Use Key', costItem: 'key', reward: 'gem' }] }
   };
@@ -242,8 +242,8 @@ test('advanceDialog handles cost and reward', () => {
 
 test('advanceDialog respects goto with costItem', () => {
   player.inv.length = 0;
-  registerItem({id:'key',name:'Key',type:'quest'});
-  addToInv('key');
+  const key = registerItem({id:'key',name:'Key',type:'quest'});
+  addToInv(key);
   state.map = 'world';
   party.x = 0; party.y = 0;
   const tree = {
@@ -258,8 +258,8 @@ test('advanceDialog respects goto with costItem', () => {
 
 test('advanceDialog uses reqItem without consuming and allows goto', () => {
   player.inv.length = 0;
-  registerItem({id:'pass',name:'Pass',type:'quest'});
-  addToInv('pass');
+  const pass = registerItem({id:'pass',name:'Pass',type:'quest'});
+  addToInv(pass);
   state.map = 'world';
   party.x = 1; party.y = 1;
   const tree = {
@@ -274,8 +274,8 @@ test('advanceDialog uses reqItem without consuming and allows goto', () => {
 
 test('advanceDialog matches reqItem case-insensitively', () => {
   player.inv.length = 0;
-  registerItem({id:'access_card',name:'access card',type:'quest',tags:['pass']});
-  addToInv('access_card');
+  const accessCard = registerItem({id:'access_card',name:'access card',type:'quest',tags:['pass']});
+  addToInv(accessCard);
   state.map = 'world';
   party.x = 2; party.y = 2;
   const tree = {
