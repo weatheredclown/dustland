@@ -2,6 +2,7 @@
 const combatOverlay = typeof document !== 'undefined' ? document.getElementById('combatOverlay') : null;
 const enemyRow = typeof document !== 'undefined' ? document.getElementById('combatEnemies') : null;
 const partyRow = typeof document !== 'undefined' ? document.getElementById('combatParty') : null;
+const cmdMenu = typeof document !== 'undefined' ? document.getElementById('combatCmd') : null;
 
 const combatState = { enemies: [], phase: 'party', active: 0, choice: 0, onComplete:null };
 
@@ -44,18 +45,6 @@ function renderCombat(){
     wrap.appendChild(p);
     const lab=document.createElement('div'); lab.className='label'; lab.textContent=m.name||'';
     wrap.appendChild(lab);
-    const cmd=document.createElement('div');
-    cmd.className='cmd';
-    cmd.style.display='none';
-    ['Attack','Special','Item','Flee'].forEach((opt,i)=>{
-      const d=document.createElement('div');
-      if(i===0) d.classList.add('sel');
-      d.textContent=opt;
-      if(opt==='Special' && !m.special) d.classList.add('disabled');
-      if(opt==='Item' && (!(player?.inv?.length>0))) d.classList.add('disabled');
-      cmd.appendChild(d);
-    });
-    wrap.appendChild(cmd);
     partyRow.appendChild(wrap);
   });
   highlightActive();
@@ -78,6 +67,7 @@ function openCombat(enemies){
 function closeCombat(result){
   if(!combatOverlay) return;
   combatOverlay.classList.remove('shown');
+  if(cmdMenu) cmdMenu.style.display='none';
   const res = result || { result:'flee', roll:0 };
   combatState.onComplete?.(res);
   combatState.onComplete=null;
@@ -94,33 +84,38 @@ function highlightActive(){
 }
 
 function openCommand(){
-  if(combatState.phase!=='party') return;
-  const wrap=partyRow.children[combatState.active];
-  if(!wrap) return;
-  const cmd=wrap.querySelector('.cmd');
-  cmd.style.display='block';
-  const opts=[...cmd.children];
+  if(combatState.phase!=='party' || !cmdMenu) return;
+  cmdMenu.innerHTML='';
+  const m = party[combatState.active];
+  ['Attack','Special','Item','Flee'].forEach((opt,i)=>{
+    const d=document.createElement('div');
+    d.textContent=opt;
+    if(opt==='Special' && !m?.special) d.classList.add('disabled');
+    if(opt==='Item' && (!(player?.inv?.length>0))) d.classList.add('disabled');
+    cmdMenu.appendChild(d);
+  });
+  const opts=[...cmdMenu.children];
   let idx=opts.findIndex(c=>!c.classList.contains('disabled'));
   combatState.choice = idx>=0?idx:0;
-  updateChoice(cmd);
+  updateChoice();
+  cmdMenu.style.display='block';
 }
 
-function updateChoice(cmd){
-  [...cmd.children].forEach((c,i)=> c.classList.toggle('sel', i===combatState.choice));
+function updateChoice(){
+  if(!cmdMenu) return;
+  [...cmdMenu.children].forEach((c,i)=> c.classList.toggle('sel', i===combatState.choice));
 }
 
 function moveChoice(dir){
-  const wrap=partyRow.children[combatState.active];
-  if(!wrap) return;
-  const cmd=wrap.querySelector('.cmd');
-  const opts=[...cmd.children];
+  if(!cmdMenu) return;
+  const opts=[...cmdMenu.children];
   const tot=opts.length;
   let idx=combatState.choice;
   do {
     idx=(idx+dir+tot)%tot;
   } while(opts[idx].classList.contains('disabled'));
   combatState.choice=idx;
-  updateChoice(cmd);
+  updateChoice();
 }
 
 function handleCombatKey(e){
@@ -135,13 +130,11 @@ function handleCombatKey(e){
 }
 
 function chooseOption(){
-  const wrap=partyRow.children[combatState.active];
-  if(!wrap) return;
-  const cmd=wrap.querySelector('.cmd');
-  const opt=cmd.children[combatState.choice];
-  if(opt.classList.contains('disabled')) return;
+  if(!cmdMenu) return;
+  const opt=cmdMenu.children[combatState.choice];
+  if(!opt || opt.classList.contains('disabled')) return;
   const choice=opt.textContent.toLowerCase();
-  cmd.style.display='none';
+  cmdMenu.style.display='none';
   if(choice==='flee'){
     log?.('You fled the battle.');
     closeCombat({ result:'flee', roll:0 });
