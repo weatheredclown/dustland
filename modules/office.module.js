@@ -304,25 +304,33 @@ const OFFICE_MODULE = (() => {
       }
     },
     {
-      id: 'fae_prince',
+      id: 'fae_king',
       map: 'world',
       x: WORLD_MID + 9,
       y: WORLD_MIDY - 2,
       color: '#caffc6',
-      name: 'Fae Prince',
-      desc: 'An ethereal figure with an enigmatic smile.',
+      name: 'Fae King',
+      desc: 'A regal fae with an enigmatic smile.',
       tree: {
         start: {
           text: 'Welcome, wanderer. Is this real or dream?',
           choices: [
             { label: '(Ask)', to: 'ask' },
+            {
+              label: '(Request Boon)',
+              to: 'gift',
+              if: { flag: 'visited_castle', op: '>=', value: 1 },
+              once: true,
+              reward: 'fae_token'
+            },
             { label: '(Leave)', to: 'bye' }
           ]
         },
         ask: {
           text: 'He only laughs and vanishes into mist.',
           choices: [ { label: '(Contemplate)', to: 'bye' } ]
-        }
+        },
+        gift: { text: 'He presses a token into your palm.', choices: [ { label: '(Accept)', to: 'bye' } ] }
       }
     },
     {
@@ -393,6 +401,14 @@ const OFFICE_MODULE = (() => {
       floor3: 'Executive Suite',
       castle: 'Castle'
     },
+    events: [
+      {
+        map: 'castle',
+        x: 2,
+        y: 2,
+        events: [ { when: 'enter', effect: 'addFlag', flag: 'visited_castle' } ]
+      }
+    ],
       items: [
         { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] },
         {
@@ -419,6 +435,7 @@ const OFFICE_MODULE = (() => {
         { map: 'world', x: WORLD_MID - 4, y: WORLD_MIDY - 2, id: 'healing_potion1', name: 'Healing Potion', type: 'consumable', use: { type: 'heal', amount: 5 } },
         { map: 'world', x: WORLD_MID + 5, y: WORLD_MIDY + 3, id: 'healing_potion2', name: 'Healing Potion', type: 'consumable', use: { type: 'heal', amount: 5 } },
         { map: 'world', x: WORLD_MID - 6, y: WORLD_MIDY + 5, id: 'healing_potion3', name: 'Healing Potion', type: 'consumable', use: { type: 'heal', amount: 5 } },
+        { id: 'fae_token', name: 'Fae Token', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } },
         { id: 'rat_tail', name: 'Rat Tail', type: 'quest' },
         { id: 'rusty_dagger', name: 'Rusty Dagger', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } },
         { id: 'ogre_tooth', name: 'Ogre Tooth', type: 'quest' },
