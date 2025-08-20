@@ -320,6 +320,11 @@ window.addEventListener('keydown',(e)=>{
     else if(handleDialogKey?.(e)) e.preventDefault();
     return;
   }
+  const combat = document.getElementById('combatOverlay');
+  if(combat?.classList?.contains('shown')){
+    if(handleCombatKey?.(e)) e.preventDefault();
+    return;
+  }
   switch(e.key){
     case 'ArrowUp': case 'w': case 'W': move(0,-1); break;
     case 'ArrowDown': case 's': case 'S': move(0,1); break;
