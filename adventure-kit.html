@@ -209,6 +209,7 @@
         <button class="tab2" type="button" data-tab="items" role="tab" aria-selected="false">Items</button>
         <button class="tab2" type="button" data-tab="buildings" role="tab" aria-selected="false">Buildings</button>
         <button class="tab2" type="button" data-tab="interiors" role="tab" aria-selected="false">Interiors</button>
+        <button class="tab2" type="button" data-tab="portals" role="tab" aria-selected="false">Portals</button>
         <button class="tab2" type="button" data-tab="quests" role="tab" aria-selected="false">Quests</button>
         <button class="tab2" type="button" data-tab="events" role="tab" aria-selected="false">Events</button>
       </div>
@@ -324,6 +325,23 @@
           <button class="btn" type="button" id="delInterior" style="display:none">Delete Interior</button>
         </div>
       </fieldset>
+      <fieldset class="card" id="portalCard" data-pane="portals" style="display:none">
+        <legend>Portals</legend>
+        <div class="list" id="portalList"></div>
+        <button class="btn" type="button" id="newPortal">+ Portal</button>
+        <div id="portalEditor" style="display:none">
+          <label>Map<input id="portalMap" value="world" /></label>
+          <label>X<input id="portalX" type="number" min="0" /></label>
+          <label>Y<input id="portalY" type="number" min="0" /></label>
+          <button class="btn" type="button" id="portalPick">Select on Map</button>
+          <label>To Map<input id="portalToMap" value="world" /></label>
+          <label>To X<input id="portalToX" type="number" min="0" /></label>
+          <label>To Y<input id="portalToY" type="number" min="0" /></label>
+          <button class="btn" type="button" id="portalDestPick">Pick Destination</button>
+          <button class="btn" id="addPortal">Add Portal</button>
+          <button class="btn" id="delPortal" style="display:none">Delete Portal</button>
+        </div>
+      </fieldset>
       <fieldset class="card" id="questCard" data-pane="quests" style="display:none">
         <legend>Quests</legend>
         <div class="list" id="questList"></div>
@@ -380,6 +398,7 @@
       <div id="treeEditor"></div>
       <div id="treeWarning" style="color:#f66;font-size:12px;margin-top:4px"></div>
       <button class="btn" type="button" id="addNode">Add Node</button>
+      <datalist id="choiceFlagList"></datalist>
     </div>
   </div>
   <button id="playtestFloat" class="btn btn--primary" style="

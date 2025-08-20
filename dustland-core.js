@@ -52,6 +52,27 @@ import { on } from './event-bus.js';
  */
 
 /**
+ * @typedef {Object} Quest
+ * @property {string} id
+ * @property {string} name
+ * @property {'available'|'active'|'completed'} status
+ * @property {string} [desc]
+ * @property {Function} [onStart]
+ * @property {Function} [onComplete]
+ */
+
+/**
+ * @typedef {Object} Map
+ * @property {string} id
+ * @property {number} w
+ * @property {number} h
+ * @property {number[][]} grid
+ * @property {number} [entryX]
+ * @property {number} [entryY]
+ * @property {string} [name]
+ */
+
+/**
  * @typedef {Object} Check
  * @property {string} stat
  * @property {number} dc
@@ -789,10 +810,21 @@ on('item:picked', (it) => {
   log?.(`Picked up ${it.name}`);
 });
 
+on('inventory:changed', () => {
+  renderInv?.();
+  renderParty?.();
+  updateHUD?.();
+  queueNanoDialogForNPCs?.('start', 'inventory change');
+});
+
+on('item:picked', (it) => {
+  log?.(`Picked up ${it.name}`);
+});
+
 // Content pack moved to modules/dustland.module.js
 
 
-const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, startCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, tileEvents, registerTileEvents, state, player, GAME_STATE, setGameState, setPartyPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, showStart, openCreator, setRNGSeed, worldFlags, incFlag };
+const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, startCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, tileEvents, registerTileEvents, state, player, GAME_STATE, setGameState, setPartyPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, showStart, openCreator, setRNGSeed, worldFlags, incFlag, flagValue, checkFlagCondition };
 
 Object.assign(globalThis, coreExports);
 
