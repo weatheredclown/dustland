@@ -277,6 +277,10 @@ function renderDialogPreview() {
 
 function addChoiceRow(container, ch = {}) {
   const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', reqItem = '', reqSlot = '', join = null, q = '' } = ch || {};
+  const cond = ch && ch.if ? ch.if : null;
+  const flag = cond?.flag || '';
+  const op = cond?.op || '>=';
+  const val = cond?.value != null ? cond.value : 1;
   const joinId = join?.id || '', joinName = join?.name || '', joinRole = join?.role || '';
   const goto = ch.goto || {};
   const gotoMap = goto.map || '', gotoX = goto.x != null ? goto.x : '', gotoY = goto.y != null ? goto.y : '';
@@ -308,6 +312,16 @@ function addChoiceRow(container, ch = {}) {
       <label>Goto Y<input type="number" class="choiceGotoY" value="${gotoY}"/><span class="small">Y coordinate.</span></label>
       <label>Quest<select class="choiceQ"><option value=""></option><option value="accept" ${q==='accept'?'selected':''}>accept</option><option value="turnin" ${q==='turnin'?'selected':''}>turnin</option></select></label>
       <label class="onceWrap"><input type="checkbox" class="choiceOnce" ${once ? 'checked' : ''}/> once</label>
+      <label>Flag<input class="choiceFlag" list="choiceFlagList" value="${flag}"/></label>
+      <label>Op<select class="choiceOp">
+        <option value=">=" ${op === '>=' ? 'selected' : ''}>>=</option>
+        <option value=">" ${op === '>' ? 'selected' : ''}>></option>
+        <option value="<=" ${op === '<=' ? 'selected' : ''}><=</option>
+        <option value="<" ${op === '<' ? 'selected' : ''}><</option>
+        <option value="==" ${op === '==' ? 'selected' : ''}>=</option>
+        <option value="!=" ${op === '!=' ? 'selected' : ''}>!=</option>
+      </select></label>
+      <label>Value<input type="number" class="choiceVal" value="${val}"/></label>
     </details>`;
   container.appendChild(row);
   populateChoiceDropdown(row.querySelector('.choiceTo'), to);
@@ -471,6 +485,10 @@ function updateTreeData() {
       const gotoYTxt = chEl.querySelector('.choiceGotoY').value.trim();
       const q = chEl.querySelector('.choiceQ').value.trim();
       const once = chEl.querySelector('.choiceOnce').checked;
+      const flag = chEl.querySelector('.choiceFlag').value.trim();
+      const op = chEl.querySelector('.choiceOp').value;
+      const valTxt = chEl.querySelector('.choiceVal').value.trim();
+      const val = valTxt ? parseInt(valTxt, 10) : undefined;
 
       choiceRefs.push({ to, el: toEl });
 
@@ -496,6 +514,7 @@ function updateTreeData() {
         }
         if (q) c.q = q;
         if (once) c.once = true;
+        if (flag) c.if = { flag, op, value: val != null && !Number.isNaN(val) ? val : 0 };
         choices.push(c);
       }
     });
@@ -635,9 +654,11 @@ function gatherEventFlags() {
   return [...flags];
 }
 function populateFlagList() {
-  const list = document.getElementById('npcFlagList');
-  if (!list) return;
-  list.innerHTML = gatherEventFlags().map(f => `<option value="${f}"></option>`).join('');
+  const flags = gatherEventFlags().map(f => `<option value="${f}"></option>`).join('');
+  const npcList = document.getElementById('npcFlagList');
+  if (npcList) npcList.innerHTML = flags;
+  const choiceList = document.getElementById('choiceFlagList');
+  if (choiceList) choiceList.innerHTML = flags;
 }
 function getRevealFlag() {
   const type = document.getElementById('npcFlagType').value;
