@@ -9,17 +9,17 @@ let currentNPC=null;
 const dialogState={ tree:null, node:null };
 let selectedChoice=0;
 
-function highlightChoice(){
+function dlgHighlightChoice(){
   [...choicesEl.children].forEach((c,i)=>{
     if(c.classList?.toggle) c.classList.toggle('sel', i===selectedChoice);
   });
 }
 
-function moveChoice(dir){
+function dlgMoveChoice(dir){
   const total=choicesEl.children.length;
   if(total===0) return;
   selectedChoice=(selectedChoice+dir+total)%total;
-  highlightChoice();
+  dlgHighlightChoice();
 }
 
 function handleDialogKey(e){
@@ -31,14 +31,14 @@ function handleDialogKey(e){
     case 'W':
     case 'a':
     case 'A':
-      moveChoice(-1); return true;
+      dlgMoveChoice(-1); return true;
     case 'ArrowDown':
     case 'ArrowRight':
     case 's':
     case 'S':
     case 'd':
     case 'D':
-      moveChoice(1); return true;
+      dlgMoveChoice(1); return true;
     case 'Enter':{
       const el=choicesEl.children[selectedChoice];
       if(el?.click) el.click(); else el?.onclick?.();
@@ -263,7 +263,7 @@ function renderDialog(){
     cont.onclick=()=> closeDialog();
     choicesEl.appendChild(cont);
     selectedChoice=0;
-    highlightChoice();
+    dlgHighlightChoice();
     return;
   }
 
@@ -314,7 +314,7 @@ function renderDialog(){
     choicesEl.appendChild(div);
   });
   selectedChoice=0;
-  highlightChoice();
+  dlgHighlightChoice();
 }
 
 const dialogExports = { overlay, choicesEl, textEl, nameEl, titleEl, portEl, openDialog, closeDialog, renderDialog, advanceDialog, resolveCheck, handleDialogKey };
