@@ -12,9 +12,14 @@ const OFFICE_MODULE = (() => {
   function genForestWorld(seed = Date.now()) {
     setRNGSeed(seed);
     world = Array.from({ length: WORLD_H }, () =>
-      Array.from({ length: WORLD_W }, (_, x) =>
-        x === WORLD_MID ? TILE.WATER : TILE.BRUSH
-      )
+      Array.from({ length: WORLD_W }, (_, x) => {
+        if (x === WORLD_MID) return TILE.WATER;
+        // Add variety so the forest isn't a featureless expanse
+        const roll = rand(100);
+        if (roll < 10) return TILE.ROCK;
+        if (roll < 30) return TILE.SAND;
+        return TILE.BRUSH;
+      })
     );
     setTile('world', WORLD_MID, WORLD_MIDY, TILE.ROAD);
     interiors = {};
@@ -377,6 +382,13 @@ const OFFICE_MODULE = (() => {
     }
   ];
 
+  const portals = [
+    { map: 'floor1', x: midX, y: 4, toMap: 'floor2', toX: midX, toY: 4 },
+    { map: 'floor2', x: midX, y: 4, toMap: 'floor1', toX: midX, toY: 4 },
+    { map: 'floor2', x: midX + 1, y: 4, toMap: 'floor3', toX: midX + 1, toY: 4 },
+    { map: 'floor3', x: midX + 1, y: 4, toMap: 'floor2', toX: midX + 1, toY: 4 }
+  ];
+
   return {
     seed: Date.now(),
     worldGen: genForestWorld,
@@ -388,7 +400,8 @@ const OFFICE_MODULE = (() => {
       floor3: 'Executive Suite',
       castle: 'Castle'
     },
-      items: [
+    portals,
+    items: [
         { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] },
         {
           id: 'cursed_vr_helmet',
