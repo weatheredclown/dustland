@@ -644,28 +644,6 @@ on('item:picked', (it) => {
   log?.(`Picked up ${it.name}`);
 });
 
-on('inventory:changed', () => {
-  renderInv?.();
-  renderParty?.();
-  updateHUD?.();
-  queueNanoDialogForNPCs?.('start', 'inventory change');
-});
-
-on('item:picked', (it) => {
-  log?.(`Picked up ${it.name}`);
-});
-
-on('inventory:changed', () => {
-  renderInv?.();
-  renderParty?.();
-  updateHUD?.();
-  queueNanoDialogForNPCs?.('start', 'inventory change');
-});
-
-on('item:picked', (it) => {
-  log?.(`Picked up ${it.name}`);
-});
-
 // Content pack moved to modules/dustland.module.js
 
 
