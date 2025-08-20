@@ -67,7 +67,7 @@ function equipItem(memberIndex, invIndex){
     notifyInventoryChanged();
     log(`${m.name} equips ${it.name}.`);
   if(typeof toast==='function') toast(`${m.name} equips ${it.name}`);
-  if(typeof sfxTick==='function') sfxTick();
+  emit('sfx','tick');
   if(it.equip && it.equip.teleport){
     const t=it.equip.teleport;
     setPartyPos(t.x, t.y);
@@ -99,7 +99,7 @@ function unequipItem(memberIndex, slot){
     notifyInventoryChanged();
     log(`${m.name} unequips ${it.name}.`);
   if(typeof toast==='function') toast(`${m.name} unequips ${it.name}`);
-  if(typeof sfxTick==='function') sfxTick();
+  emit('sfx','tick');
   if(it.unequip && it.unequip.teleport){
     const t=it.unequip.teleport;
     setPartyPos(t.x, t.y);
@@ -168,7 +168,7 @@ function useItem(invIndex){
     const healed = who.hp - before;
     log(`${who.name} drinks ${it.name} (+${healed} HP).`);
     if (typeof toast === 'function') toast(`${who.name} +${healed} HP`);
-    if (typeof sfxTick === 'function') sfxTick();
+    emit('sfx','tick');
     player.inv.splice(invIndex,1);
     notifyInventoryChanged();
     return true;
@@ -179,7 +179,7 @@ function useItem(invIndex){
         player.inv.splice(invIndex,1);
         notifyInventoryChanged();
         if(typeof toast==='function') toast(`Used ${it.name}`);
-        if(typeof sfxTick==='function') sfxTick();
+        emit('sfx','tick');
     }
     return !!ok;
   }

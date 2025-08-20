@@ -5,7 +5,7 @@ class NPC {
     const capNode = (node) => {
       if (this.combat && node === 'do_fight') {
         closeDialog();
-        startCombat({ ...this.combat, npc: this, name: this.name });
+        Actions.startCombat({ ...this.combat, npc: this, name: this.name });
       } else if (this.shop && node === 'sell') {
         const items = player.inv.map((it, idx) => ({label: `Sell ${it.name} (${Math.max(1, it.value || 0)} ${CURRENCY})`, to: 'sell', sellIndex: idx}));
         this.tree.sell.text = items.length ? 'What are you selling?' : 'Nothing to sell.';

@@ -92,6 +92,7 @@ global.centerCamera = () => {};
 
 const files = [
   '../event-bus.js',
+  '../core/actions.js',
   '../core/effects.js',
   '../core/party.js',
   '../core/inventory.js',

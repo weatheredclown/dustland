@@ -17,7 +17,7 @@ class Character {
     this.xp += amt;
     log(`${this.name} gains ${amt} XP.`);
     if(typeof toast==='function') toast(`${this.name} +${amt} XP`);
-    if(typeof sfxTick==='function') sfxTick();
+    EventBus.emit('sfx','tick');
     while(this.xp >= this.xpToNext()){
       this.xp -= this.xpToNext();
       this.lvl++;
@@ -36,7 +36,7 @@ class Character {
     if(this.lvl%2===0){
       this.ap += 1;
       if(typeof hudBadge==='function') hudBadge('AP +1');
-      if(typeof sfxTick==='function') sfxTick();
+      EventBus.emit('sfx','tick');
     }
     log(`${this.name} leveled up to ${this.lvl}! (+HP, stats)`);
   }
