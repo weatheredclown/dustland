@@ -754,3 +754,9 @@ test('save serializes party when map method is shadowed', () => {
   assert.strictEqual(saved.party[0].id, 'p1');
   assert.strictEqual(saved.party.length, 1);
 });
+
+test('combat overlay sits behind the log panel', async () => {
+  const css = await fs.readFile(new URL('../dustland.css', import.meta.url), 'utf8');
+  assert.match(css, /\.panel\s*{[\s\S]*z-index:\s*15/);
+  assert.match(css, /#combatOverlay\s*{[\s\S]*z-index:\s*10/);
+});

@@ -38,7 +38,7 @@
         filter: contrast(1.06) saturate(1.1);
     }
 
-    .panel {
+.panel {
         width: 440px;
         background: #0b0d0b;
         border: 1px solid #2a382a;
@@ -47,6 +47,8 @@
         flex-direction: column;
         overflow: hidden;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+        position: relative;
+        z-index: 15;
         image-rendering: pixelated;
     }
 
@@ -287,7 +289,7 @@
     }
 
 /* Combat UI */
-#combatOverlay { background:rgba(0,0,0,.8); pointer-events:auto; }
+#combatOverlay { background:rgba(0,0,0,.8); pointer-events:auto; z-index:10; }
 #combatOverlay .combat-window {
   pointer-events:auto;
   width:min(640px,92vw);
