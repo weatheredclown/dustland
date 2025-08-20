@@ -31,6 +31,8 @@ function renderCombat(){
     const p=document.createElement('div'); p.className='portrait';
     setPortraitDiv(p,e);
     wrap.appendChild(p);
+    const lab=document.createElement('div'); lab.className='label'; lab.textContent=e.name||'';
+    wrap.appendChild(lab);
     enemyRow.appendChild(wrap);
   }
   partyRow.innerHTML='';
@@ -40,6 +42,8 @@ function renderCombat(){
     const p=document.createElement('div'); p.className='portrait';
     setPortraitDiv(p,m);
     wrap.appendChild(p);
+    const lab=document.createElement('div'); lab.className='label'; lab.textContent=m.name||'';
+    wrap.appendChild(lab);
     const cmd=document.createElement('div');
     cmd.className='cmd';
     cmd.style.display='none';

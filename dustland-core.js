@@ -83,7 +83,7 @@ class Dice {
 /**
  * Combat entry point. Uses the HTML-based state machine when available,
  * falling back to quick resolution in non-browser environments.
- * @param {{HP?:number,ATK?:number,DEF:number,loot?:Item,name?:string}} defender
+ * @param {{HP?:number,ATK?:number,DEF:number,loot?:Item,name?:string,npc?:NPC}} defender
  * @returns {Promise<{result:'bruise'|'loot'|'flee', roll:number, dc:number}>}
  */
 async function quickCombat(defender){
@@ -97,7 +97,10 @@ async function quickCombat(defender){
       player.ap = attacker.ap;
       player.hp = attacker.hp;
     }
-    if(result.result==='loot' && defender.loot) addToInv(defender.loot);
+    if(result.result==='loot'){
+      if(defender.loot) addToInv(defender.loot);
+      if(defender.npc) removeNPC(defender.npc);
+    }
     renderInv?.(); renderParty?.(); updateHUD?.();
     return { ...result, dc };
   }
@@ -114,6 +117,7 @@ async function quickCombat(defender){
     attacker.hp = Math.max(0,(attacker.hp||0)-1);
   } else if(result==='loot'){
     if(defender.loot) addToInv(defender.loot);
+    if(defender.npc) removeNPC(defender.npc);
   }
   player.hp = attacker.hp; player.ap = attacker.ap;
   renderInv?.(); renderParty?.(); updateHUD?.();
@@ -250,12 +254,12 @@ class NPC {
     const capNode = (node)=>{
       if(this.combat && node==='do_fight'){
         const {DEF=0, loot} = this.combat;
-        const res = quickCombat({DEF, loot});
-        const msg = res.result==='loot' ? 'The foe collapses.' :
-                    res.result==='bruise' ? 'A sharp blow leaves a bruise.' :
-                    'You back away.';
-        textEl.textContent = `Roll: ${res.roll} vs DEF ${res.dc}. ${msg}`;
-        if(res.result==='loot') removeNPC(this);
+        quickCombat({DEF, loot, npc:this, name:this.name}).then(res=>{
+          const msg = res.result==='loot' ? 'The foe collapses.' :
+                      res.result==='bruise' ? 'A sharp blow leaves a bruise.' :
+                      'You back away.';
+          textEl.textContent = `Roll: ${res.roll} vs DEF ${res.dc}. ${msg}`;
+        });
       } else if(this.shop && node==='sell'){
         const items = player.inv.map((it,idx)=>({label:`Sell ${it.name} (${Math.max(1, it.value || 0)} ${CURRENCY})`, to:'sell', sellIndex:idx}));
         this.tree.sell.text = items.length? 'What are you selling?' : 'Nothing to sell.';
