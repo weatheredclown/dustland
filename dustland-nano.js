@@ -213,8 +213,8 @@
     }
   }
 
-  function _visibleLabels(npc, nodeId) {
-    const node = resolveNode(npc.tree, nodeId);
+  function _visibleLabels(npc, nodeId, node) {
+    node = node || resolveNode(npc.tree, nodeId);
     if (!node) return [];
     let labels = (node.choices || []).slice();
   
@@ -243,6 +243,11 @@
       console.warn("[Nano] NPC not found:", npcId);
       return null;
     }
+    const node = resolveNode(npc.tree, nodeId);
+    if(!node){
+      console.warn("[Nano] Node not found:", nodeId);
+      return null;
+    }
     const desc = npc.desc || '';
 
     const leader = party[typeof selectedMember==='number' ? selectedMember : 0] || null;
@@ -251,8 +256,8 @@
       .filter(([,q])=>q.status==='completed')
       .map(([id,q])=> q.title || id);
 
-    const existing = _visibleLabels(npc, nodeId);
-    const text = resolveNode(npc.tree, nodeId).text;
+    const existing = _visibleLabels(npc, nodeId, node);
+    const text = node.text;
 
     // Consider this in the prompt:
     //CURRENT UI CHOICES SHOWN TO PLAYER (do not duplicate these labels):
