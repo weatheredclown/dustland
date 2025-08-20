@@ -620,6 +620,38 @@ function updateNPCOptSections() {
   document.getElementById('revealOpts').style.display =
     document.getElementById('npcHidden').checked ? 'block' : 'none';
 }
+function updateFlagBuilder() {
+  const type = document.getElementById('npcFlagType').value;
+  document.getElementById('revealVisit').style.display = type === 'visits' ? 'block' : 'none';
+  document.getElementById('revealParty').style.display = type === 'party' ? 'block' : 'none';
+}
+function gatherEventFlags() {
+  const flags = new Set();
+  (moduleData.events || []).forEach(e => {
+    (e.events || []).forEach(ev => {
+      if (ev.effect === 'addFlag' && ev.flag) flags.add(ev.flag);
+    });
+  });
+  return [...flags];
+}
+function populateFlagList() {
+  const list = document.getElementById('npcFlagList');
+  if (!list) return;
+  list.innerHTML = gatherEventFlags().map(f => `<option value="${f}"></option>`).join('');
+}
+function getRevealFlag() {
+  const type = document.getElementById('npcFlagType').value;
+  if (type === 'visits') {
+    const map = document.getElementById('npcFlagMap').value.trim() || 'world';
+    const x = parseInt(document.getElementById('npcFlagX').value, 10) || 0;
+    const y = parseInt(document.getElementById('npcFlagY').value, 10) || 0;
+    return `visits@${map}@${x},${y}`;
+  }
+  if (type === 'party') {
+    return document.getElementById('npcFlagName').value.trim();
+  }
+  return '';
+}
 function showNPCEditor(show) {
   document.getElementById('npcEditor').style.display = show ? 'block' : 'none';
 }
@@ -633,9 +665,15 @@ function startNewNPC() {
   document.getElementById('npcX').value = 0;
   document.getElementById('npcY').value = 0;
   document.getElementById('npcHidden').checked = false;
-  document.getElementById('npcFlag').value = '';
+  document.getElementById('npcFlagType').value = 'visits';
+  document.getElementById('npcFlagMap').value = 'world';
+  document.getElementById('npcFlagX').value = 0;
+  document.getElementById('npcFlagY').value = 0;
+  document.getElementById('npcFlagName').value = '';
   document.getElementById('npcOp').value = '>=';
   document.getElementById('npcVal').value = 1;
+  populateFlagList();
+  updateFlagBuilder();
   document.getElementById('npcDialog').value = '';
   document.getElementById('npcQuest').value = '';
   document.getElementById('npcAccept').value = 'Good luck.';
@@ -670,7 +708,7 @@ function addNPC() {
   const combat = document.getElementById('npcCombat').checked;
   const shop = document.getElementById('npcShop').checked;
   const hidden = document.getElementById('npcHidden').checked;
-  const flag = document.getElementById('npcFlag').value.trim();
+  const flag = getRevealFlag();
   const op = document.getElementById('npcOp').value;
   const val = parseInt(document.getElementById('npcVal').value, 10) || 0;
   updateTreeData();
@@ -715,9 +753,15 @@ function addNPC() {
   document.getElementById('npcCombat').checked = false;
   document.getElementById('npcShop').checked = false;
   document.getElementById('npcHidden').checked = false;
-  document.getElementById('npcFlag').value = '';
+  document.getElementById('npcFlagType').value = 'visits';
+  document.getElementById('npcFlagMap').value = 'world';
+  document.getElementById('npcFlagX').value = 0;
+  document.getElementById('npcFlagY').value = 0;
+  document.getElementById('npcFlagName').value = '';
   document.getElementById('npcOp').value = '>=';
   document.getElementById('npcVal').value = 1;
+  populateFlagList();
+  updateFlagBuilder();
   updateNPCOptSections();
   selectedObj = null;
   drawWorld();
@@ -735,9 +779,21 @@ function editNPC(i) {
   document.getElementById('npcX').value = n.x;
   document.getElementById('npcY').value = n.y;
   document.getElementById('npcHidden').checked = !!n.hidden;
-  document.getElementById('npcFlag').value = n.reveal?.flag || '';
+  if (n.reveal?.flag?.startsWith('visits@')) {
+    document.getElementById('npcFlagType').value = 'visits';
+    const parts = n.reveal.flag.split('@');
+    document.getElementById('npcFlagMap').value = parts[1] || 'world';
+    const [fx, fy] = (parts[2] || '0,0').split(',');
+    document.getElementById('npcFlagX').value = fx;
+    document.getElementById('npcFlagY').value = fy;
+  } else {
+    document.getElementById('npcFlagType').value = 'party';
+    document.getElementById('npcFlagName').value = n.reveal?.flag || '';
+  }
   document.getElementById('npcOp').value = n.reveal?.op || '>=';
   document.getElementById('npcVal').value = n.reveal?.value ?? 1;
+  populateFlagList();
+  updateFlagBuilder();
   document.getElementById('npcDialog').value = n.tree?.start?.text || '';
   document.getElementById('npcQuest').value = n.questId || '';
   document.getElementById('npcAccept').value = n.tree?.accept?.text || 'Good luck.';
@@ -995,6 +1051,7 @@ function renderEventList() {
     return `<div data-idx="${i}">${e.map} @(${e.x},${e.y}) - ${eff}</div>`;
   }).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editEvent(parseInt(div.dataset.idx, 10)));
+  populateFlagList();
 }
 
 function deleteEvent() {
@@ -1258,6 +1315,8 @@ document.getElementById('itemSlot').addEventListener('change', updateModsWrap);
 document.getElementById('itemUseType').addEventListener('change', updateUseWrap);
 document.getElementById('eventEffect').addEventListener('change', updateEventEffectFields);
 document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
+document.getElementById('npcFlagType').addEventListener('change', updateFlagBuilder);
+document.getElementById('npcFlagPick').onclick = () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY' }; };
 document.getElementById('save').onclick = saveModule;
 document.getElementById('load').onclick = () => document.getElementById('loadFile').click();
 document.getElementById('loadFile').addEventListener('change', e => {

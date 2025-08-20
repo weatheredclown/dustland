@@ -227,7 +227,17 @@
           <label>Y<input id="npcY" type="number" min="0" /></label>
           <label><input type="checkbox" id="npcHidden"> Hidden NPC</label>
           <div id="revealOpts" style="display:none">
-            <label>Flag<input id="npcFlag" /></label>
+            <label>Flag Type<select id="npcFlagType"><option value="visits">Visited Tile</option><option value="party">Party Flag</option></select></label>
+            <div id="revealVisit">
+              <label>Map<input id="npcFlagMap" value="world" /></label>
+              <label>X<input id="npcFlagX" type="number" min="0" /></label>
+              <label>Y<input id="npcFlagY" type="number" min="0" /></label>
+              <button class="btn" type="button" id="npcFlagPick">Pick Tile</button>
+            </div>
+            <div id="revealParty" style="display:none">
+              <label>Name<input id="npcFlagName" list="npcFlagList" /></label>
+              <datalist id="npcFlagList"></datalist>
+            </div>
             <label>Op<select id="npcOp"><option value=">=">&ge;</option><option value=">">&gt;</option><option value="==">==</option><option value="!=">!=</option><option value="<=">&le;</option><option value="<">&lt;</option></select></label>
             <label>Value<input id="npcVal" type="number" value="1" /></label>
           </div>

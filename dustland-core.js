@@ -123,7 +123,7 @@ let world = [], interiors = {}, buildings = [], portals = [];
 const tileEvents = [];
 function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
 const state = { map:'world' }; // default map
-const player = { hp:10, ap:2, flags:{}, inv:[], scrap:0 };
+const player = { hp:10, ap:2, inv:[], scrap:0 };
 function setPartyPos(x, y){
   if(typeof x === 'number') party.x = x;
   if(typeof y === 'number') party.y = y;
@@ -342,7 +342,10 @@ function createNpcFactory(defs){
   return npcFactory;
 }
 
-function flagValue(flag){ return worldFlags[flag]?.count || 0; }
+function flagValue(flag){
+  if (worldFlags[flag]) return worldFlags[flag].count;
+  return party.flags?.[flag] ? 1 : 0;
+}
 
 function checkFlagCondition(cond){
   if(!cond) return true;
@@ -619,7 +622,7 @@ if (startContinue) startContinue.onclick = () => { load(); hideStart(); };
 if (startNew) startNew.onclick = () => { hideStart(); resetAll(); };
 
 function resetAll(){
-  party.length=0; player.inv=[]; player.flags={}; player.scrap=0;
+  party.length=0; player.inv=[]; party.flags={}; player.scrap=0;
   state.map='creator'; openCreator();
   log('Reset. Back to character creation.');
 }

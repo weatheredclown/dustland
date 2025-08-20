@@ -59,6 +59,7 @@ class Party extends Array {
     this.map = state.map;
     this.x = 2;
     this.y = 2;
+    this.flags = {};
   }
   addMember(member){
     if(this.length >= 6){

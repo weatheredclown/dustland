@@ -75,7 +75,7 @@ function move(dx,dy){
   if(canWalk(nx,ny)){
     Effects.tick({buffs});
     setPartyPos(nx, ny);
-    onEnter(state.map, nx, ny, { player, state, actor: typeof leader==='function'? leader(): null, buffs });
+    onEnter(state.map, nx, ny, { player, party, state, actor: typeof leader==='function'? leader(): null, buffs });
     centerCamera(party.x,party.y,state.map); updateHUD();
     checkAggro();
   }
