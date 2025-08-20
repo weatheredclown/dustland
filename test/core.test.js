@@ -105,7 +105,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem } = globalThis;
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save } = globalThis;
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -697,4 +697,23 @@ test('fallen party members are revived after combat', async () => {
   assert.strictEqual(res.result, 'bruise');
   assert.strictEqual(party.length, 1);
   assert.ok(party[0].hp >= 1);
+});
+
+test('save serializes party when map method is shadowed', () => {
+  party.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  party.addMember(m1);
+  party.map = 'world';
+  const store = {};
+  const orig = global.localStorage;
+  global.localStorage = {
+    setItem(k, v){ store[k] = v; },
+    getItem(k){ return store[k]; },
+    removeItem(k){ delete store[k]; }
+  };
+  assert.doesNotThrow(() => save());
+  global.localStorage = orig;
+  const saved = JSON.parse(store['dustland_crt']);
+  assert.strictEqual(saved.party[0].id, 'p1');
+  assert.strictEqual(saved.party.length, 1);
 });

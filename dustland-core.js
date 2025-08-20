@@ -621,7 +621,7 @@ function save(){
     const q=quests[k];
     questData[k]={title:q.title,desc:q.desc,status:q.status};
   });
-  const partyData = party.map(p=>({
+  const partyData = Array.from(party, p => ({
     id:p.id,name:p.name,role:p.role,lvl:p.lvl,xp:p.xp,stats:p.stats,equip:p.equip,hp:p.hp,ap:p.ap,map:p.map,x:p.x,y:p.y,maxHp:p.maxHp
   }));
   const data={worldSeed, world, player, state, buildings, interiors, itemDrops, npcs:npcData, quests:questData, party:partyData};
