@@ -23,3 +23,9 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 ## Lessons from prior work
 - Keep pull requests small and self-contained to simplify review.
 - Pair code changes with accompanying tests and documentation updates.
+- Avoid sweeping refactors without strong tests or a clear fallback plan.
+- Favor simple, menu-driven flows and minimize persistent state.
+- Remove dead code promptly and consolidate shared operations.
+- Ensure new code works across environments (ES modules only) and normalize user-facing data.
+- Provide tests for state transitions and dialog navigation to catch regressions early.
+- Reflect game changes across all modules; new functionality should be configurable via the Adventure Kit (ACK).
