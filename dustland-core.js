@@ -81,47 +81,31 @@ class Dice {
 
 // ===== Combat =====
 /**
- * Combat entry point. Uses the HTML-based state machine when available,
- * falling back to quick resolution in non-browser environments.
- * @param {{HP?:number,ATK?:number,DEF:number,loot?:Item,name?:string,npc?:NPC}} defender
- * @returns {Promise<{result:'bruise'|'loot'|'flee', roll:number, dc:number}>}
+ * Launch the menu-based combat interface. In non-browser environments the
+ * player automatically flees.
+ * @param {{HP?:number,DEF:number,loot?:Item,name?:string,npc?:NPC}} defender
+ * @returns {Promise<{result:'bruise'|'loot'|'flee', roll:number}>}
  */
-async function quickCombat(defender){
+async function startCombat(defender){
   const attacker = party.leader?.() || null;
-  const dc = defender?.DEF || 0;
-  if(typeof openCombat === 'function' && typeof document !== 'undefined'){
-    const enemy = { name:defender.name||'Enemy', hp:defender.HP||5 };
-    const result = await openCombat([enemy]);
-    if(attacker){
-      attacker.ap = Math.max(0,(attacker.ap||0)-1);
-      player.ap = attacker.ap;
-      player.hp = attacker.hp;
-    }
-    if(result.result==='loot'){
-      if(defender.loot) addToInv(defender.loot);
-      if(defender.npc) removeNPC(defender.npc);
-    }
-    renderInv?.(); renderParty?.(); updateHUD?.();
-    return { ...result, dc };
+  if(typeof openCombat !== 'function' || typeof document === 'undefined'){
+    return { result:'flee', roll:0 };
   }
-  // Fallback quick resolution for non-interactive environments (e.g. tests)
-  if(!attacker) return { result:'flee', roll:0, dc };
-  const atk = attacker._bonus?.ATK || 0;
-  const lck = (attacker.stats?.LCK || 0) + (attacker._bonus?.LCK || 0);
-  const roll = Dice.roll() + atk + lck;
-  let result = 'flee';
-  if(roll > dc) result = 'loot';
-  else if(roll < dc) result = 'bruise';
-  attacker.ap = Math.max(0,(attacker.ap||0)-1);
-  if(result==='bruise'){
-    attacker.hp = Math.max(0,(attacker.hp||0)-1);
-  } else if(result==='loot'){
+
+  const enemy = { name:defender.name||'Enemy', hp:defender.HP||5 };
+  const result = await openCombat([enemy]);
+
+  if(attacker){
+    attacker.ap = Math.max(0,(attacker.ap||0)-1);
+    player.ap = attacker.ap;
+    player.hp = attacker.hp;
+  }
+  if(result.result==='loot'){
     if(defender.loot) addToInv(defender.loot);
     if(defender.npc) removeNPC(defender.npc);
   }
-  player.hp = attacker.hp; player.ap = attacker.ap;
   renderInv?.(); renderParty?.(); updateHUD?.();
-  return { result, roll, dc };
+  return result;
 }
 
 // ===== Tiles =====
@@ -253,13 +237,8 @@ class NPC {
     Object.assign(this,{id,map,x,y,color,name,title,desc,tree,quest,combat,shop,portraitSheet});
     const capNode = (node)=>{
       if(this.combat && node==='do_fight'){
-        const {DEF=0, loot} = this.combat;
-        quickCombat({DEF, loot, npc:this, name:this.name}).then(res=>{
-          const msg = res.result==='loot' ? 'The foe collapses.' :
-                      res.result==='bruise' ? 'A sharp blow leaves a bruise.' :
-                      'You back away.';
-          textEl.textContent = `Roll: ${res.roll} vs DEF ${res.dc}. ${msg}`;
-        });
+        closeDialog();
+        startCombat({ ...this.combat, npc:this, name:this.name });
       } else if(this.shop && node==='sell'){
         const items = player.inv.map((it,idx)=>({label:`Sell ${it.name} (${Math.max(1, it.value || 0)} ${CURRENCY})`, to:'sell', sellIndex:idx}));
         this.tree.sell.text = items.length? 'What are you selling?' : 'Nothing to sell.';
@@ -731,7 +710,7 @@ function startWorld(){
 // Content pack moved to modules/dustland.module.js
 
 
-const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, quickCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, state, player, GAME_STATE, setGameState, setPlayerPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, randRange, sample };
+const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, startCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, state, player, GAME_STATE, setGameState, setPlayerPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, randRange, sample };
 
 Object.assign(globalThis, coreExports);
 

@@ -74,7 +74,7 @@ function checkAggro(){
     if(n.map!==state.map) continue;
     const d = Math.abs(n.x - player.x) + Math.abs(n.y - player.y);
     if(d<=3){
-      quickCombat({ ...n.combat, npc:n, name:n.name });
+      startCombat({ ...n.combat, npc:n, name:n.name });
       break;
     }
   }
