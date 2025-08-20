@@ -295,10 +295,22 @@
 #combatOverlay .member { position:relative; display:flex; flex-direction:column; align-items:center; }
 #combatOverlay .label { margin-top:4px; text-align:center; }
 #combatOverlay .enemy.active .portrait, #combatOverlay .member.active .portrait { border-color:#5c8a5c; }
-#combatOverlay .cmd { position:absolute; top:80px; background:#0f120f; border:1px solid #253525; padding:4px 12px; border-radius:6px; }
-#combatOverlay .cmd div { padding:2px 0; }
+#combatOverlay .cmd {
+  position:absolute;
+  top:80px;
+  background:#000;
+  border:2px solid #5c8a5c;
+  padding:4px 16px;
+  border-radius:6px;
+  min-width:120px;
+  font-family:'Courier New', monospace;
+  color:#fff;
+  box-shadow:0 0 8px #000 inset;
+}
+#combatOverlay .cmd div { padding:2px 0; white-space:nowrap; }
 #combatOverlay .cmd div::before { content:''; display:inline-block; width:1em; }
 #combatOverlay .cmd div.sel::before { content:'>'; }
+#combatOverlay .cmd div.disabled { color:#666; }
 
     .small {
         font-size: 12px;
