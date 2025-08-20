@@ -258,4 +258,4 @@ function startPartyTurn(){
 
 const combatExports = { openCombat, closeCombat, handleCombatKey };
 Object.assign(globalThis, combatExports);
-if (typeof module !== 'undefined' && module.exports){ module.exports = combatExports; }
+export { openCombat, closeCombat, handleCombatKey };

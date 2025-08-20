@@ -209,6 +209,7 @@
         <button class="tab2" type="button" data-tab="items" role="tab" aria-selected="false">Items</button>
         <button class="tab2" type="button" data-tab="buildings" role="tab" aria-selected="false">Buildings</button>
         <button class="tab2" type="button" data-tab="interiors" role="tab" aria-selected="false">Interiors</button>
+        <button class="tab2" type="button" data-tab="portals" role="tab" aria-selected="false">Portals</button>
         <button class="tab2" type="button" data-tab="quests" role="tab" aria-selected="false">Quests</button>
         <button class="tab2" type="button" data-tab="events" role="tab" aria-selected="false">Events</button>
       </div>
@@ -322,6 +323,23 @@
           <label>ID<input id="intId" readonly /></label>
           <canvas id="intCanvas" width="192" height="144" style="margin-top:4px"></canvas>
           <button class="btn" type="button" id="delInterior" style="display:none">Delete Interior</button>
+        </div>
+      </fieldset>
+      <fieldset class="card" id="portalCard" data-pane="portals" style="display:none">
+        <legend>Portals</legend>
+        <div class="list" id="portalList"></div>
+        <button class="btn" type="button" id="newPortal">+ Portal</button>
+        <div id="portalEditor" style="display:none">
+          <label>Map<input id="portalMap" value="world" /></label>
+          <label>X<input id="portalX" type="number" min="0" /></label>
+          <label>Y<input id="portalY" type="number" min="0" /></label>
+          <button class="btn" type="button" id="portalPick">Select on Map</button>
+          <label>To Map<input id="portalToMap" value="world" /></label>
+          <label>To X<input id="portalToX" type="number" min="0" /></label>
+          <label>To Y<input id="portalToY" type="number" min="0" /></label>
+          <button class="btn" type="button" id="portalDestPick">Pick Destination</button>
+          <button class="btn" id="addPortal">Add Portal</button>
+          <button class="btn" id="delPortal" style="display:none">Delete Portal</button>
         </div>
       </fieldset>
       <fieldset class="card" id="questCard" data-pane="quests" style="display:none">

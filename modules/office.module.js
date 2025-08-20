@@ -390,6 +390,13 @@ const OFFICE_MODULE = (() => {
     }
   ];
 
+  const portals = [
+    { map: 'floor1', x: midX, y: 4, toMap: 'floor2', toX: midX, toY: 4 },
+    { map: 'floor2', x: midX, y: 4, toMap: 'floor1', toX: midX, toY: 4 },
+    { map: 'floor2', x: midX + 1, y: 4, toMap: 'floor3', toX: midX + 1, toY: 4 },
+    { map: 'floor3', x: midX + 1, y: 4, toMap: 'floor2', toX: midX + 1, toY: 4 }
+  ];
+
   return {
     seed: Date.now(),
     worldGen: genForestWorld,
@@ -409,7 +416,8 @@ const OFFICE_MODULE = (() => {
         events: [ { when: 'enter', effect: 'addFlag', flag: 'visited_castle' } ]
       }
     ],
-      items: [
+    portals,
+    items: [
         { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] },
         {
           id: 'cursed_vr_helmet',
