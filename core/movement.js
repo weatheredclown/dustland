@@ -74,8 +74,13 @@ function move(dx,dy){
   const nx=party.x+dx, ny=party.y+dy;
   if(canWalk(nx,ny)){
     Effects.tick({buffs});
+    const actor = typeof leader==='function'? leader(): null;
+    if(actor){
+      actor.hp = Math.min(actor.hp + 1, actor.maxHp);
+      player.hp = actor.hp;
+    }
     setPartyPos(nx, ny);
-    onEnter(state.map, nx, ny, { player, party, state, actor: typeof leader==='function'? leader(): null, buffs });
+    onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
     centerCamera(party.x,party.y,state.map); updateHUD();
     checkAggro();
   }

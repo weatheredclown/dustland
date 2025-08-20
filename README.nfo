@@ -50,6 +50,7 @@ _______________________________________________________________________________
   - World buildings appear as black structures; their doors lead to
     simple interiors you can enter directly from the overworld.
   - Water is bright blue and is not walkable; items won’t spawn in water.
+  - Walking gradually restores HP for the selected party member.
 
 [ CHARACTER CREATION ]
   - Start a new game at boot if no save is present.
