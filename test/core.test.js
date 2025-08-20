@@ -105,7 +105,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey } = globalThis;
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem } = globalThis;
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -156,6 +156,30 @@ test('cursed items reveal on unequip attempt and stay equipped', () => {
   assert.ok(mem.equip.armor.cursed);
   assert.ok(mem.equip.armor.cursedKnown);
   assert.strictEqual(mem.equip.armor.name,'Mask');
+});
+
+test('uncursed gear can be removed and triggers unequip effects', () => {
+  party.length = 0;
+  player.inv.length = 0;
+  state.map = 'world';
+  const mem = new Character('t1','Tester','Role');
+  party.addMember(mem);
+  const helm = normalizeItem({
+    id: 'helm',
+    name: 'Helm',
+    type: 'armor',
+    slot: 'armor',
+    cursed: true,
+    unequip: { teleport: { map: 'office', x: 1, y: 1 }, msg: 'back' }
+  });
+  addToInv(helm);
+  equipItem(0,0);
+  unequipItem(0,'armor');
+  assert.ok(mem.equip.armor); // still cursed
+  uncurseItem('helm');
+  unequipItem(0,'armor');
+  assert.strictEqual(mem.equip.armor, null);
+  assert.strictEqual(state.map, 'office');
 });
 
 test('equipping teleport item moves party and logs message', () => {

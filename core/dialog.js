@@ -211,7 +211,8 @@ function setPortrait(portEl, npc){
 
 function openDialog(npc, node='start'){
   currentNPC=npc;
-  dialogState.tree=normalizeDialogTree(npc.tree||{});
+  const rawTree = typeof npc.tree === 'function' ? npc.tree() : npc.tree;
+  dialogState.tree=normalizeDialogTree(rawTree||{});
   dialogState.node=node;
   nameEl.textContent=npc.name;
   titleEl.textContent=npc.title;
