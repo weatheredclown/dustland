@@ -1,5 +1,3 @@
-import './dustland-core.js';
-import { setTile } from './core/movement.js';
 
 // Adventure Construction Kit
 // Provides basic tools to build Dustland modules.

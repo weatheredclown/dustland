@@ -1,5 +1,7 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
+import fs from 'node:fs/promises';
+import vm from 'node:vm';
 
 function stubEl(){
   const el = {
@@ -78,8 +80,32 @@ global.document = {
   querySelector: () => stubEl()
 };
 
-const core = await import('../dustland-core.js');
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey } = core;
+// Stub globals used during module evaluation
+global.log = () => {};
+global.toast = () => {};
+global.sfxTick = () => {};
+global.renderInv = () => {};
+global.renderParty = () => {};
+global.renderQuests = () => {};
+global.updateHUD = () => {};
+global.centerCamera = () => {};
+
+const files = [
+  '../event-bus.js',
+  '../core/effects.js',
+  '../core/party.js',
+  '../core/inventory.js',
+  '../core/movement.js',
+  '../core/dialog.js',
+  '../core/combat.js',
+  '../dustland-core.js'
+];
+for (const f of files) {
+  const code = await fs.readFile(new URL(f, import.meta.url), 'utf8');
+  vm.runInThisContext(code, { filename: f });
+}
+
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey } = globalThis;
 
 // Stub out globals used by equipment functions
 global.log = () => {};
