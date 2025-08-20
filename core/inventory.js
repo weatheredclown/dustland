@@ -1,5 +1,5 @@
 // ===== Inventory / equipment =====
-import { emit } from '../event-bus.js';
+const { emit } = globalThis.EventBus;
 
 const ITEMS = {}; // item definitions by id
 const itemDrops = []; // {map,x,y,id}
@@ -188,5 +188,3 @@ function useItem(invIndex){
 
 const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, uncurseItem };
 Object.assign(globalThis, inventoryExports);
-
-export { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, uncurseItem };

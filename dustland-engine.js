@@ -1,4 +1,3 @@
-import { getTile, mapWH, mapIdForState } from './core/movement.js';
 
 // ===== Rendering & Utilities =====
 
@@ -8,7 +7,7 @@ const hpEl = document.getElementById('hp');
 const apEl = document.getElementById('ap');
 const scrEl = document.getElementById('scrap');
 
-export function log(msg){
+function log(msg){
   const p=document.createElement('div');
   p.textContent=msg;
   logEl.prepend(p);
@@ -181,7 +180,7 @@ Object.assign(window, { renderOrderSystem: { order: renderOrder, render } });
 const TAB_BREAKPOINT = 1600;
 let activeTab = 'inv';
 
-export function updateHUD(){
+function updateHUD(){
   hpEl.textContent=player.hp;
   apEl.textContent=player.ap;
   if(scrEl) scrEl.textContent = player.scrap;
@@ -223,7 +222,7 @@ document.getElementById('tabParty').onclick=()=>showTab('party');
 document.getElementById('tabQuests').onclick=()=>showTab('quests');
 
 // ===== Renderers =====
-export function renderInv(){
+function renderInv(){
   const inv=document.getElementById('inv');
   inv.innerHTML='';
   if(player.inv.length===0){
@@ -275,7 +274,7 @@ export function renderInv(){
     inv.appendChild(row);
   });
 }
-export function renderQuests(){
+function renderQuests(){
   const q=document.getElementById('quests');
   q.innerHTML='';
   const shown=Object.values(quests).filter(v=> v.status!=='available');
@@ -290,7 +289,10 @@ export function renderQuests(){
     q.appendChild(div);
   });
 }
-export function renderParty(){ const p=document.getElementById('party'); p.innerHTML=''; if(party.length===0){ p.innerHTML='<div class="pcard muted">(no party members yet)</div>'; return; } party.forEach((m,i)=>{ const c=document.createElement('div'); c.className='pcard'; const bonus=m._bonus||{}; const fmt=v=> (v>0? '+'+v : v); const wLabel=m.equip.weapon?(m.equip.weapon.cursed&&m.equip.weapon.cursedKnown?m.equip.weapon.name+' (cursed)':m.equip.weapon.name):'—'; const aLabel=m.equip.armor?(m.equip.armor.cursed&&m.equip.armor.cursedKnown?m.equip.armor.name+' (cursed)':m.equip.armor.name):'—'; const tLabel=m.equip.trinket?(m.equip.trinket.cursed&&m.equip.trinket.cursedKnown?m.equip.trinket.name+' (cursed)':m.equip.trinket.name):'—'; c.innerHTML = `<div class='row'><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div><div class='row small'>${statLine(m.stats)}</div><div class='row'>HP ${m.hp}/${m.maxHp}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div><div class='row small'>WPN: ${wLabel}${m.equip.weapon?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${m.equip.armor?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${m.equip.trinket?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div><div class='row small'>XP ${m.xp}/${xpToNext(m.lvl)}</div><div class='row'><label><input type='radio' name='selMember' ${i===selectedMember?'checked':''}> Selected</label></div>`; c.querySelector('input').onchange=()=>{ selectedMember=i; }; c.querySelectorAll('button[data-a="unequip"]').forEach(b=>{ const sl=b.dataset.slot; b.onclick=()=> unequipItem(i,sl); }); p.appendChild(c); }); }
+function renderParty(){ const p=document.getElementById('party'); p.innerHTML=''; if(party.length===0){ p.innerHTML='<div class="pcard muted">(no party members yet)</div>'; return; } party.forEach((m,i)=>{ const c=document.createElement('div'); c.className='pcard'; const bonus=m._bonus||{}; const fmt=v=> (v>0? '+'+v : v); const wLabel=m.equip.weapon?(m.equip.weapon.cursed&&m.equip.weapon.cursedKnown?m.equip.weapon.name+' (cursed)':m.equip.weapon.name):'—'; const aLabel=m.equip.armor?(m.equip.armor.cursed&&m.equip.armor.cursedKnown?m.equip.armor.name+' (cursed)':m.equip.armor.name):'—'; const tLabel=m.equip.trinket?(m.equip.trinket.cursed&&m.equip.trinket.cursedKnown?m.equip.trinket.name+' (cursed)':m.equip.trinket.name):'—'; c.innerHTML = `<div class='row'><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div><div class='row small'>${statLine(m.stats)}</div><div class='row'>HP ${m.hp}/${m.maxHp}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div><div class='row small'>WPN: ${wLabel}${m.equip.weapon?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${m.equip.armor?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${m.equip.trinket?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div><div class='row small'>XP ${m.xp}/${xpToNext(m.lvl)}</div><div class='row'><label><input type='radio' name='selMember' ${i===selectedMember?'checked':''}> Selected</label></div>`; c.querySelector('input').onchange=()=>{ selectedMember=i; }; c.querySelectorAll('button[data-a="unequip"]').forEach(b=>{ const sl=b.dataset.slot; b.onclick=()=> unequipItem(i,sl); }); p.appendChild(c); }); }
+
+const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty };
+Object.assign(globalThis, engineExports);
 
 // ===== Minimal Unit Tests (#test) =====
 function assert(name, cond){ const msg = (cond? '✅ ':'❌ ') + name; log(msg); if(!cond) console.error('Test failed:', name); }
@@ -377,7 +379,7 @@ if (window.NanoDialog) NanoDialog.init();
 
 if(location.hash.includes('test')){ runTests(); }
 else {
-  const saveStr = localStorage.getItem('dustland_crt');
+const saveStr = globalThis.localStorage?.getItem('dustland_crt');
   if(saveStr){
     showStart();
   } else {

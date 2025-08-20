@@ -1,4 +1,4 @@
-import { Effects } from './effects.js';
+const { Effects } = globalThis;
 
 // active temporary stat modifiers
 const buffs = [];
@@ -188,5 +188,3 @@ Object.assign(globalThis, {
   onEnter,
   buffs
 });
-
-export { mapIdForState, mapWH, gridFor, getTile, setTile, currentGrid, queryTile, findFreeDropTile, canWalk, move, adjacentNPC, takeNearestItem, interactAt, interact, movementSystem, collisionSystem, interactionSystem, onEnter, buffs };

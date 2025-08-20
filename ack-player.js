@@ -1,24 +1,13 @@
 // ACK Module Player (ESM)
 // Loads a module JSON and starts the game using its data.
 
-import { applyModule, setPartyPos, setMap, WORLD_H, openCreator } from './dustland-core.js';
-import './core/party.js';
-import './core/inventory.js';
-import './core/effects.js';
-import './core/movement.js';
-import './core/dialog.js';
-import './core/combat.js';
-import './dustland-nano.js';
+// use globals from core and engine
 
 // Prevent the engine from auto-starting the creator or start menu
 window.showStart = () => {};
 const realOpenCreator = openCreator;
 window.openCreator = () => {};
 
-let renderInv, renderQuests, renderParty, updateHUD, log;
-const enginePromise = import('./dustland-engine.js').then(mod => {
-  ({ renderInv, renderQuests, renderParty, updateHUD, log } = mod);
-});
 
 let moduleData = null;
 const PLAYTEST_KEY = 'ack_playtest';
@@ -58,7 +47,6 @@ loadBtn.onclick = () => {
 
 // After party creation, start the loaded module
 window.startGame = async function () {
-  await enginePromise;
   if (moduleData) applyModule(moduleData);
   const start = moduleData && moduleData.start ? moduleData.start : { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   setPartyPos(start.x, start.y);

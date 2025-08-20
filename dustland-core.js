@@ -1,4 +1,4 @@
-import { on } from './event-bus.js';
+const { on } = globalThis.EventBus;
 
 /**
  * @typedef {Object} Item
@@ -922,75 +922,5 @@ const coreExports = {
   resetAll
 };
 
+Object.assign(coreExports, { getGameState: () => gameState });
 Object.assign(globalThis, coreExports);
-
-export {
-  ROLL_SIDES,
-  DC,
-  clamp,
-  createRNG,
-  Dice,
-  startCombat,
-  TILE,
-  walkable,
-  mapLabels,
-  mapLabel,
-  setMap,
-  isWalkable,
-  VIEW_W,
-  VIEW_H,
-  TS,
-  WORLD_W,
-  WORLD_H,
-  world,
-  interiors,
-  buildings,
-  portals,
-  tileEvents,
-  registerTileEvents,
-  state,
-  player,
-  GAME_STATE,
-  setGameState,
-  setPartyPos,
-  doorPulseUntil,
-  lastInteract,
-  creatorMap,
-  genCreatorMap,
-  Quest,
-  NPC,
-  questLog,
-  NPCS,
-  npcsOnMap,
-  queueNanoDialogForNPCs,
-  addQuest,
-  completeQuest,
-  defaultQuestProcessor,
-  removeNPC,
-  makeNPC,
-  createNpcFactory,
-  applyModule,
-  genWorld,
-  isWater,
-  findNearestLand,
-  makeInteriorRoom,
-  placeHut,
-  startGame,
-  startWorld,
-  setRNGSeed,
-  worldFlags,
-  incFlag,
-  showStart,
-  hideStart,
-  openCreator,
-  closeCreator,
-  resetAll
-};
-
-export * from './core/party.js';
-export * from './core/inventory.js';
-export * from './core/movement.js';
-export * from './core/dialog.js';
-export * from './core/effects.js';
-export * from './core/combat.js';
-export const getGameState = () => gameState;
