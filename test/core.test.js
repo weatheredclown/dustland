@@ -15,16 +15,40 @@ function stubEl(){
     onclick:null,
     _innerHTML:'',
     children:[],
+    width:0,
+    height:0,
     appendChild(child){ this.children.push(child); child.parentElement=this; },
+    prepend(child){ this.children.unshift(child); child.parentElement=this; },
     querySelector: () => stubEl(),
     querySelectorAll: () => [],
+    getContext: () => ({
+      clearRect(){}, drawImage(){}, fillRect(){}, beginPath(){}, moveTo(){}, lineTo(){}, stroke(){},
+      save(){}, restore(){}, translate(){}, font:'', fillText(){}, globalAlpha:1
+    }),
+    addEventListener(){},
     parentElement:{ appendChild:()=>{}, querySelectorAll:()=>[] }
   };
   Object.defineProperty(el,'innerHTML',{ get(){return this._innerHTML;}, set(v){ this._innerHTML=v; this.children=[]; }});
   return el;
 }
 
+class AudioCtxStub {
+  createOscillator(){ return { type:'', frequency:{ value:0 }, connect(){}, start(){}, stop(){} }; }
+  createGain(){ return { connect(){}, gain:{ value:0, exponentialRampToValueAtTime(){} } }; }
+  get destination(){ return {}; }
+}
+
+global.requestAnimationFrame = () => {};
+Object.assign(global, {
+  addEventListener: () => {},
+  innerWidth: 800,
+  AudioContext: AudioCtxStub,
+  webkitAudioContext: AudioCtxStub
+});
 global.window = global;
+global.location = { hash: '' };
+global.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+
 const overlay = stubEl();
 const choicesEl = stubEl();
 const dialogText = stubEl();
@@ -35,7 +59,9 @@ const combatOverlay = stubEl();
 const combatEnemies = stubEl();
 const combatParty = stubEl();
 const combatCmd = stubEl();
+const bodyEl = stubEl();
 global.document = {
+  body: bodyEl,
   getElementById: (id) => ({
     overlay,
     choices: choicesEl,
@@ -48,7 +74,8 @@ global.document = {
     combatParty,
     combatCmd
   })[id] || stubEl(),
-  createElement: () => stubEl()
+  createElement: () => stubEl(),
+  querySelector: () => stubEl()
 };
 
 const core = await import('../dustland-core.js');
