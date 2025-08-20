@@ -33,10 +33,11 @@ function notifyInventoryChanged(){
   emit('inventory:changed');
 }
 function addToInv(item){
-  if(!item || typeof item !== 'object' || !item.id){
+  const it = resolveItem(item);
+  if(!it || !it.id){
     throw new Error('Unknown item');
   }
-  const base = cloneItem(ITEMS[item.id] || registerItem(item));
+  const base = cloneItem(ITEMS[it.id] || registerItem(it));
   player.inv.push(base);
   emit('item:picked', base);
   notifyInventoryChanged();
