@@ -12,9 +12,14 @@ const OFFICE_MODULE = (() => {
   function genForestWorld(seed = Date.now()) {
     setRNGSeed(seed);
     world = Array.from({ length: WORLD_H }, () =>
-      Array.from({ length: WORLD_W }, (_, x) =>
-        x === WORLD_MID ? TILE.WATER : TILE.BRUSH
-      )
+      Array.from({ length: WORLD_W }, (_, x) => {
+        if (x === WORLD_MID) return TILE.WATER;
+        // Add variety so the forest isn't a featureless expanse
+        const roll = rand(100);
+        if (roll < 10) return TILE.ROCK;
+        if (roll < 30) return TILE.SAND;
+        return TILE.BRUSH;
+      })
     );
     setTile('world', WORLD_MID, WORLD_MIDY, TILE.ROAD);
     interiors = {};
@@ -299,25 +304,33 @@ const OFFICE_MODULE = (() => {
       }
     },
     {
-      id: 'fae_prince',
+      id: 'fae_king',
       map: 'world',
       x: WORLD_MID + 9,
       y: WORLD_MIDY - 2,
       color: '#caffc6',
-      name: 'Fae Prince',
-      desc: 'An ethereal figure with an enigmatic smile.',
+      name: 'Fae King',
+      desc: 'A regal fae with an enigmatic smile.',
       tree: {
         start: {
           text: 'Welcome, wanderer. Is this real or dream?',
           choices: [
             { label: '(Ask)', to: 'ask' },
+            {
+              label: '(Request Boon)',
+              to: 'gift',
+              if: { flag: 'visited_castle', op: '>=', value: 1 },
+              once: true,
+              reward: 'fae_token'
+            },
             { label: '(Leave)', to: 'bye' }
           ]
         },
         ask: {
           text: 'He only laughs and vanishes into mist.',
           choices: [ { label: '(Contemplate)', to: 'bye' } ]
-        }
+        },
+        gift: { text: 'He presses a token into your palm.', choices: [ { label: '(Accept)', to: 'bye' } ] }
       }
     },
     {
@@ -377,6 +390,13 @@ const OFFICE_MODULE = (() => {
     }
   ];
 
+  const portals = [
+    { map: 'floor1', x: midX, y: 4, toMap: 'floor2', toX: midX, toY: 4 },
+    { map: 'floor2', x: midX, y: 4, toMap: 'floor1', toX: midX, toY: 4 },
+    { map: 'floor2', x: midX + 1, y: 4, toMap: 'floor3', toX: midX + 1, toY: 4 },
+    { map: 'floor3', x: midX + 1, y: 4, toMap: 'floor2', toX: midX + 1, toY: 4 }
+  ];
+
   return {
     seed: Date.now(),
     worldGen: genForestWorld,
@@ -388,7 +408,16 @@ const OFFICE_MODULE = (() => {
       floor3: 'Executive Suite',
       castle: 'Castle'
     },
-      items: [
+    events: [
+      {
+        map: 'castle',
+        x: 2,
+        y: 2,
+        events: [ { when: 'enter', effect: 'addFlag', flag: 'visited_castle' } ]
+      }
+    ],
+    portals,
+    items: [
         { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] },
         {
           id: 'cursed_vr_helmet',
@@ -414,6 +443,7 @@ const OFFICE_MODULE = (() => {
         { map: 'world', x: WORLD_MID - 4, y: WORLD_MIDY - 2, id: 'healing_potion1', name: 'Healing Potion', type: 'consumable', use: { type: 'heal', amount: 5 } },
         { map: 'world', x: WORLD_MID + 5, y: WORLD_MIDY + 3, id: 'healing_potion2', name: 'Healing Potion', type: 'consumable', use: { type: 'heal', amount: 5 } },
         { map: 'world', x: WORLD_MID - 6, y: WORLD_MIDY + 5, id: 'healing_potion3', name: 'Healing Potion', type: 'consumable', use: { type: 'heal', amount: 5 } },
+        { id: 'fae_token', name: 'Fae Token', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } },
         { id: 'rat_tail', name: 'Rat Tail', type: 'quest' },
         { id: 'rusty_dagger', name: 'Rusty Dagger', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } },
         { id: 'ogre_tooth', name: 'Ogre Tooth', type: 'quest' },
