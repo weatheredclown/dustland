@@ -12,9 +12,14 @@ const OFFICE_MODULE = (() => {
   function genForestWorld(seed = Date.now()) {
     setRNGSeed(seed);
     world = Array.from({ length: WORLD_H }, () =>
-      Array.from({ length: WORLD_W }, (_, x) =>
-        x === WORLD_MID ? TILE.WATER : TILE.BRUSH
-      )
+      Array.from({ length: WORLD_W }, (_, x) => {
+        if (x === WORLD_MID) return TILE.WATER;
+        // Add variety so the forest isn't a featureless expanse
+        const roll = rand(100);
+        if (roll < 10) return TILE.ROCK;
+        if (roll < 30) return TILE.SAND;
+        return TILE.BRUSH;
+      })
     );
     setTile('world', WORLD_MID, WORLD_MIDY, TILE.ROAD);
     interiors = {};
