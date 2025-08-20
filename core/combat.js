@@ -51,6 +51,8 @@ function renderCombat(){
       const d=document.createElement('div');
       if(i===0) d.classList.add('sel');
       d.textContent=opt;
+      if(opt==='Special' && !m.special) d.classList.add('disabled');
+      if(opt==='Item' && (!(player?.inv?.length>0))) d.classList.add('disabled');
       cmd.appendChild(d);
     });
     wrap.appendChild(cmd);
@@ -97,7 +99,9 @@ function openCommand(){
   if(!wrap) return;
   const cmd=wrap.querySelector('.cmd');
   cmd.style.display='block';
-  combatState.choice=0;
+  const opts=[...cmd.children];
+  let idx=opts.findIndex(c=>!c.classList.contains('disabled'));
+  combatState.choice = idx>=0?idx:0;
   updateChoice(cmd);
 }
 
@@ -109,13 +113,19 @@ function moveChoice(dir){
   const wrap=partyRow.children[combatState.active];
   if(!wrap) return;
   const cmd=wrap.querySelector('.cmd');
-  const tot=cmd.children.length;
-  combatState.choice=(combatState.choice+dir+tot)%tot;
+  const opts=[...cmd.children];
+  const tot=opts.length;
+  let idx=combatState.choice;
+  do {
+    idx=(idx+dir+tot)%tot;
+  } while(opts[idx].classList.contains('disabled'));
+  combatState.choice=idx;
   updateChoice(cmd);
 }
 
 function handleCombatKey(e){
   if(!combatOverlay || !combatOverlay.classList.contains('shown')) return false;
+  if(e.key==='Enter' && e.repeat) return false;
   switch(e.key){
     case 'ArrowUp': moveChoice(-1); return true;
     case 'ArrowDown': moveChoice(1); return true;
@@ -128,7 +138,9 @@ function chooseOption(){
   const wrap=partyRow.children[combatState.active];
   if(!wrap) return;
   const cmd=wrap.querySelector('.cmd');
-  const choice=cmd.children[combatState.choice].textContent.toLowerCase();
+  const opt=cmd.children[combatState.choice];
+  if(opt.classList.contains('disabled')) return;
+  const choice=opt.textContent.toLowerCase();
   cmd.style.display='none';
   if(choice==='flee'){
     log?.('You fled the battle.');
@@ -196,9 +208,6 @@ function startPartyTurn(){
   openCommand();
 }
 
-if(typeof document !== 'undefined'){
-  document.addEventListener('keydown', e=>{ if(handleCombatKey(e)) e.preventDefault(); });
-}
 
 const combatExports = { openCombat, closeCombat, handleCombatKey };
 Object.assign(globalThis, combatExports);
