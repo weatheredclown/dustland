@@ -65,7 +65,7 @@ function equipItem(memberIndex, invIndex){
   if(typeof sfxTick==='function') sfxTick();
   if(it.equip && it.equip.teleport){
     const t=it.equip.teleport;
-    setPlayerPos(t.x, t.y);
+    setPartyPos(t.x, t.y);
     if(t.map) setMap(t.map);
     updateHUD();
   }

@@ -106,11 +106,11 @@ function handleGoto(g){
   if(!g) return;
   if(g.map==='world'){
     startWorld();
-    setPlayerPos(g.x, g.y);
+    setPartyPos(g.x, g.y);
     setMap('world');
   }else{
-    setPlayerPos(g.x, g.y);
-    if(g.map) setMap(g.map); else if(typeof centerCamera==='function') centerCamera(player.x,player.y,state.map);
+    setPartyPos(g.x, g.y);
+    if(g.map) setMap(g.map); else if(typeof centerCamera==='function') centerCamera(party.x,party.y,state.map);
   }
   updateHUD?.();
 }

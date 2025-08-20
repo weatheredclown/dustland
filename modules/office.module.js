@@ -457,7 +457,7 @@ startGame = function () {
       itemDrops.push({ id: charm.id, map: castleId, x: ix, y: iy });
     }
     const s = OFFICE_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-    setPlayerPos(s.x, s.y);
+    setPartyPos(s.x, s.y);
     setMap(s.map);
     renderInv();
     renderQuests();
