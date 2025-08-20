@@ -57,21 +57,12 @@ function createRNG(seed){
 let rng = createRNG(worldSeed);
 function setRNGSeed(seed){ worldSeed = seed >>> 0; rng = createRNG(worldSeed); }
 const rand = (n)=> Math.floor(rng()*n);
-function randRange(min, max){
-  if(min > max){ [min, max] = [max, min]; }
-  return Math.floor(rng() * (max - min + 1)) + min;
-}
-function sample(arr){
-  if(!Array.isArray(arr) || arr.length === 0) return undefined;
-  return arr[rand(arr.length)];
-}
 const clamp = (v,a,b)=> {
   if(a > b){ [a,b] = [b,a]; }
   return Math.max(a, Math.min(b, v));
 };
 
 class Dice {
-  static roll(sides=ROLL_SIDES, rng=Math.random){ return Math.floor(rng()*sides)+1; }
   static skill(character, stat, add=0, sides=ROLL_SIDES, rng=Math.random){
     const base = (character?.stats?.[stat] || 0);
     const roll = Math.floor(rng()*sides)+1;
@@ -84,12 +75,12 @@ class Dice {
  * Launch the menu-based combat interface. In non-browser environments the
  * player automatically flees.
  * @param {{HP?:number,DEF:number,loot?:Item,name?:string,npc?:NPC}} defender
- * @returns {Promise<{result:'bruise'|'loot'|'flee', roll:number}>}
+ * @returns {Promise<{result:'bruise'|'loot'|'flee'}>}
  */
 async function startCombat(defender){
   const attacker = party.leader?.() || null;
   if(typeof openCombat !== 'function' || typeof document === 'undefined'){
-    return { result:'flee', roll:0 };
+    return { result:'flee' };
   }
 
   const enemy = { name:defender.name||'Enemy', hp:defender.HP||5, npc:defender.npc, loot:defender.loot };
@@ -140,7 +131,6 @@ function setPartyPos(x, y){
 }
 const worldFlags = {};
 const hiddenNPCs = [];
-const setPlayerPos = setPartyPos; // backward compatibility
 const GAME_STATE = Object.freeze({
   TITLE: 'title',
   CREATOR: 'creator',
@@ -765,7 +755,7 @@ function startWorld(){
 // Content pack moved to modules/dustland.module.js
 
 
-const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, quickCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, tileEvents, registerTileEvents, state, player, GAME_STATE, setGameState, setPartyPos, setPlayerPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, randRange, sample, worldFlags, incFlag };
+const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, startCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, tileEvents, registerTileEvents, state, player, GAME_STATE, setGameState, setPartyPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, worldFlags, incFlag };
 
 Object.assign(globalThis, coreExports);
 

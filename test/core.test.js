@@ -51,7 +51,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, randRange, sample, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, setPlayerPos, worldFlags, makeNPC } = require('../dustland-core.js');
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC } = require('../dustland-core.js');
 const { openCombat, handleCombatKey } = require('../core/combat.js');
 
 // Stub out globals used by equipment functions
@@ -75,13 +75,6 @@ test('createRNG produces deterministic sequences', () => {
   const rngB = createRNG(123);
   assert.strictEqual(rngA(), rngB());
   assert.strictEqual(rngA(), rngB());
-});
-
-test('Dice.roll is within inclusive bounds', () => {
-  for(let i=0;i<100;i++){
-    const roll = Dice.roll(6);
-    assert.ok(roll >= 1 && roll <= 6);
-  }
 });
 
 test('resolveCheck uses rng and runs effects', () => {
@@ -407,31 +400,6 @@ test('clamp swaps reversed bounds', () => {
   assert.strictEqual(clamp(5, 10, 0), 5);
 });
 
-test('Dice.roll uses provided rng', () => {
-  const rng = () => 0.99;
-  assert.strictEqual(Dice.roll(6, rng), 6);
-});
-
-test('randRange yields inclusive integers and respects seed', () => {
-  setRNGSeed(42);
-  const a = randRange(1, 3);
-  setRNGSeed(42);
-  const b = randRange(1, 3);
-  assert.strictEqual(a, b);
-  assert.ok(a >= 1 && a <= 3);
-});
-
-test('sample returns deterministic element and handles edge cases', () => {
-  const arr = ['a', 'b', 'c'];
-  setRNGSeed(123);
-  const first = sample(arr);
-  setRNGSeed(123);
-  const second = sample(arr);
-  assert.strictEqual(first, second);
-  assert.strictEqual(sample([]), undefined);
-  assert.strictEqual(sample('nope'), undefined);
-});
-
 test('makeNPC normalizes existing fight choices', () => {
   const quest = new Quest('q_boss', 'Boss', '');
   quest.status = 'active';
@@ -459,10 +427,10 @@ test('hidden NPC reveals after visit condition met', () => {
   NPCS.length = 0;
   applyModule({ npcs: [ { id: 'herm', map: 'world', x: 1, y: 1, name: 'Herm', hidden: true, reveal: { flag: 'visits@world@1,1', op: '>=', value: 2 } } ] });
   assert.strictEqual(NPCS.length, 0);
-  setPlayerPos(1,1);
+  setPartyPos(1,1);
   assert.strictEqual(NPCS.length, 0);
-  setPlayerPos(0,0);
-  setPlayerPos(1,1);
+  setPartyPos(0,0);
+  setPartyPos(1,1);
   assert.strictEqual(NPCS.length, 1);
   assert.strictEqual(NPCS[0].id, 'herm');
 });
@@ -477,7 +445,7 @@ test('dialog choices can be gated by world flags', () => {
   openDialog(npc);
   assert.strictEqual(choicesEl.children.length, 1);
   closeDialog();
-  setPlayerPos(5,5);
+  setPartyPos(5,5);
   openDialog(npc);
   assert.strictEqual(choicesEl.children.length, 2);
   closeDialog();
