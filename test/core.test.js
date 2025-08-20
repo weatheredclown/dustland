@@ -227,6 +227,30 @@ test('pathfinding blocks on NPCs', () => {
   assert.strictEqual(party.x,0);
 });
 
+test('walking regenerates leader HP', () => {
+  const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
+  applyModule({world});
+  state.map='world';
+  party.length = 0; player.inv.length = 0;
+  const hero = new Character('h', 'Hero', 'Role');
+  hero.hp = 5; hero.maxHp = 10;
+  party.addMember(hero);
+  party.x = 0; party.y = 0;
+
+  move(1,0);
+  assert.strictEqual(hero.hp, 6);
+  assert.strictEqual(player.hp, 6);
+
+  hero.hp = 9; player.hp = 9;
+  move(1,0);
+  assert.strictEqual(hero.hp, 10);
+  assert.strictEqual(player.hp, 10);
+
+  move(1,0);
+  assert.strictEqual(hero.hp, 10);
+  assert.strictEqual(player.hp, 10);
+});
+
 test('queryTile reports entities and items', () => {
   const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
   applyModule({world});
