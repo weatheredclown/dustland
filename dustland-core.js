@@ -357,7 +357,12 @@ function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNo
   }
   return new NPC({id,map,x,y,color,name,title,desc,tree,quest,processNode,processChoice, ...(opts||{})});
 }
-function resolveNode(tree, nodeId){ const n = tree[nodeId]; const choices = n.choices||[]; return {...n, choices}; }
+function resolveNode(tree, nodeId){
+  // Provide a safe fallback when a dialog node is missing
+  const n = tree?.[nodeId] || {};
+  const choices = Array.isArray(n.choices) ? n.choices : [];
+  return { ...n, choices };
+}
 const NPCS=[];
 function npcsOnMap(map = state.map){
   return NPCS.filter(n => n.map === map);

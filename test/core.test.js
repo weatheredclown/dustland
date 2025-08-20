@@ -105,7 +105,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save } = globalThis;
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, resolveNode, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save } = globalThis;
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -716,4 +716,10 @@ test('save serializes party when map method is shadowed', () => {
   const saved = JSON.parse(store['dustland_crt']);
   assert.strictEqual(saved.party[0].id, 'p1');
   assert.strictEqual(saved.party.length, 1);
+});
+
+test('resolveNode handles missing node', () => {
+  const tree = { start: { text: 'hi', choices: [] } };
+  const node = resolveNode(tree, 'missing');
+  assert.deepStrictEqual(node, { choices: [] });
 });
