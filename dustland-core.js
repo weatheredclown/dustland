@@ -129,6 +129,8 @@ const WORLD_W=120, WORLD_H=90;
 
 // ===== Game state =====
 let world = [], interiors = {}, buildings = [], portals = [];
+const tileEvents = [];
+function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
 const state = { map:'world' }; // default map
 const player = { hp:10, ap:2, flags:{}, inv:[], scrap:0 };
 function setPartyPos(x, y){
@@ -366,6 +368,9 @@ function applyModule(data){
     if (data.buildings) { buildings.length = 0; buildings.push(...data.buildings); }
     if (data.portals)   { portals.length = 0;   portals.push(...data.portals); }
   }
+
+  tileEvents.length = 0;
+  if (data.events) registerTileEvents(data.events);
 
   (data.interiors || []).forEach(I => {
     const { id, ...rest } = I;
@@ -711,7 +716,7 @@ function startWorld(){
 // Content pack moved to modules/dustland.module.js
 
 
-const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, startCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, state, player, GAME_STATE, setGameState, setPartyPos, setPlayerPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, randRange, sample };
+const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, quickCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, tileEvents, registerTileEvents, state, player, GAME_STATE, setGameState, setPartyPos, setPlayerPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, randRange, sample };
 
 Object.assign(globalThis, coreExports);
 
@@ -720,5 +725,6 @@ if (typeof module !== 'undefined' && module.exports) {
   const inventory = require('./core/inventory.js');
   const movement = require('./core/movement.js');
   const dialog = require('./core/dialog.js');
-  module.exports = { ...coreExports, ...party, ...inventory, ...movement, ...dialog, getGameState: () => gameState };
+  const effects = require('./core/effects.js');
+  module.exports = { ...coreExports, ...party, ...inventory, ...movement, ...dialog, ...effects, getGameState: () => gameState };
 }
