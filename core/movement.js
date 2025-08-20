@@ -1,6 +1,4 @@
-const Effects = (typeof module !== 'undefined' && module.exports)
-  ? require('./effects.js').Effects
-  : globalThis.Effects;
+import { Effects } from './effects.js';
 
 // active temporary stat modifiers
 const buffs = [];
@@ -177,6 +175,4 @@ const collisionSystem = { queryTile, canWalk };
 const interactionSystem = { adjacentNPC, takeNearestItem, interact, interactAt };
 Object.assign(globalThis, { movementSystem, collisionSystem, interactionSystem, queryTile, interactAt, findFreeDropTile, canWalk, move, takeNearestItem, onEnter, buffs });
 
-if (typeof module !== 'undefined' && module.exports){
-  module.exports = { mapIdForState, mapWH, gridFor, getTile, setTile, currentGrid, queryTile, findFreeDropTile, canWalk, move, adjacentNPC, takeNearestItem, interactAt, interact, movementSystem, collisionSystem, interactionSystem, onEnter, buffs };
-}
+export { mapIdForState, mapWH, gridFor, getTile, setTile, currentGrid, queryTile, findFreeDropTile, canWalk, move, adjacentNPC, takeNearestItem, interactAt, interact, movementSystem, collisionSystem, interactionSystem, onEnter, buffs };
