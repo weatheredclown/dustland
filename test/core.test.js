@@ -130,18 +130,25 @@ test('createRNG produces deterministic sequences', () => {
   assert.strictEqual(rngA(), rngB());
 });
 
-test('resolveCheck uses rng and runs effects', () => {
-  const actor = new Character('t','Tester','Role');
-  const events = [];
-  const check = { stat:'CHA', dc:5, onSuccess:[()=>events.push('s')], onFail:[()=>events.push('f')] };
-  const failRes = resolveCheck(check, actor, () => 0);
-  assert.strictEqual(failRes.success, false);
-  assert.deepStrictEqual(events, ['f']);
-  events.length = 0;
-  const winRes = resolveCheck(check, actor, () => 0.99);
-  assert.strictEqual(winRes.success, true);
-  assert.deepStrictEqual(events, ['s']);
-});
+  test('resolveCheck uses rng and runs effects', () => {
+    const actor = new Character('t','Tester','Role');
+    const events = [];
+    const check = { stat:'CHA', dc:5, onSuccess:[()=>events.push('s')], onFail:[()=>events.push('f')] };
+    const failRes = resolveCheck(check, actor, () => 0);
+    assert.strictEqual(failRes.success, false);
+    assert.deepStrictEqual(events, ['f']);
+    events.length = 0;
+    const winRes = resolveCheck(check, actor, () => 0.99);
+    assert.strictEqual(winRes.success, true);
+    assert.deepStrictEqual(events, ['s']);
+  });
+
+  test('addToInv accepts item ids', () => {
+    player.inv.length = 0;
+    registerItem({ id:'apple', name:'Apple' });
+    addToInv('apple');
+    assert.ok(player.inv.some(it=>it.id==='apple'));
+  });
 
 test('cursed items reveal on unequip attempt and stay equipped', () => {
   party.length = 0;
