@@ -83,10 +83,8 @@ function applyReward(reward){
     awardXP(leader(), amt);
     if(typeof toast==='function') toast(`+${amt} XP`);
   } else {
-    addToInv(reward);
-    const id = typeof reward === 'string' ? reward : reward.id;
-    const def = ITEMS[id] || (typeof reward === 'object' ? reward : null);
-    if(typeof toast==='function') toast(`Received ${def?.name || id}`);
+    const rewardIt = resolveItem(reward);
+    if(rewardIt){ addToInv(rewardIt); if(typeof toast==='function') toast(`Received ${rewardIt.name}`); }
   }
 }
 

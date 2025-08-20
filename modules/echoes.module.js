@@ -21,7 +21,9 @@ const ECHOES_MODULE = (() => {
   const items = [
     { map: 'atrium', x: 3, y: 2, id: 'spark_key', name: 'Spark Key', type: 'quest', tags: ['key'] },
     { map: 'workshop', x: 4, y: 5, id: 'cog_key', name: 'Cog Key', type: 'quest', tags: ['key'] },
-    { map: 'archive', x: 8, y: 4, id: 'sun_charm', name: 'Sun Charm', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } }
+    { map: 'archive', x: 8, y: 4, id: 'sun_charm', name: 'Sun Charm', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } },
+    { id: 'rat_tail', name: 'Rat Tail', type: 'quest' },
+    { id: 'copper_cog', name: 'Copper Cog', type: 'quest' }
   ];
 
   const quests = [
@@ -123,7 +125,7 @@ const ECHOES_MODULE = (() => {
       title: 'Menace',
       desc: 'A rat swollen with dust.',
       tree: { start: { text: 'The rat bares its teeth.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
-      combat: { HP: 5, ATK: 2, DEF: 1, loot: { name: 'Rat Tail' } }
+      combat: { HP: 5, ATK: 2, DEF: 1, loot: 'rat_tail' }
     },
     {
       id: 'ghoul',
@@ -136,7 +138,7 @@ const ECHOES_MODULE = (() => {
       desc: 'A whirring husk hungry for scraps.',
       questId: 'q_beacon',
       tree: { start: { text: 'The ghoul clanks forward.', choices: [ { label: '(Fight)', to: 'do_fight', q: 'turnin' }, { label: '(Leave)', to: 'bye' } ] } },
-      combat: { HP: 8, ATK: 3, DEF: 2, loot: { name: 'Copper Cog' } }
+      combat: { HP: 8, ATK: 3, DEF: 2, loot: 'copper_cog' }
     },
     {
       id: 'beacon',
