@@ -1,4 +1,6 @@
-const { Effects } = require('./effects.js');
+const Effects = (typeof module !== 'undefined' && module.exports)
+  ? require('./effects.js').Effects
+  : globalThis.Effects;
 
 // active temporary stat modifiers
 const buffs = [];
