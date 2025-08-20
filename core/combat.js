@@ -4,7 +4,7 @@ const enemyRow = typeof document !== 'undefined' ? document.getElementById('comb
 const partyRow = typeof document !== 'undefined' ? document.getElementById('combatParty') : null;
 const cmdMenu = typeof document !== 'undefined' ? document.getElementById('combatCmd') : null;
 
-const combatState = { enemies: [], phase: 'party', active: 0, choice: 0, onComplete:null };
+const combatState = { enemies: [], phase: 'party', active: 0, choice: 0, mode:'command', onComplete:null };
 
 function setPortraitDiv(el, obj){
   if(!el) return;
@@ -86,14 +86,43 @@ function highlightActive(){
 function openCommand(){
   if(combatState.phase!=='party' || !cmdMenu) return;
   cmdMenu.innerHTML='';
+  combatState.mode='command';
   const m = party[combatState.active];
-  ['Attack','Special','Item','Flee'].forEach((opt,i)=>{
+  ['Attack','Special','Item','Flee'].forEach((opt)=>{
     const d=document.createElement('div');
     d.textContent=opt;
     if(opt==='Special' && !m?.special) d.classList.add('disabled');
     if(opt==='Item' && (!(player?.inv?.length>0))) d.classList.add('disabled');
     cmdMenu.appendChild(d);
   });
+  const opts=[...cmdMenu.children];
+  let idx=opts.findIndex(c=>!c.classList.contains('disabled'));
+  combatState.choice = idx>=0?idx:0;
+  updateChoice();
+  cmdMenu.style.display='block';
+}
+
+function openItemMenu(){
+  if(combatState.phase!=='party' || !cmdMenu) return;
+  cmdMenu.innerHTML='';
+  combatState.mode='items';
+  const usable = player?.inv?.map((it,idx)=>({it,idx})).filter(x=>x.it.use) || [];
+  usable.forEach(({it,idx})=>{
+    const d=document.createElement('div');
+    d.textContent=it.name;
+    d.dataset.idx=idx;
+    cmdMenu.appendChild(d);
+  });
+  if(usable.length===0){
+    const none=document.createElement('div');
+    none.textContent='(No usable items)';
+    none.classList.add('disabled');
+    cmdMenu.appendChild(none);
+  }
+  const back=document.createElement('div');
+  back.textContent='(Back)';
+  back.dataset.action='back';
+  cmdMenu.appendChild(back);
   const opts=[...cmdMenu.children];
   let idx=opts.findIndex(c=>!c.classList.contains('disabled'));
   combatState.choice = idx>=0?idx:0;
@@ -133,16 +162,36 @@ function chooseOption(){
   if(!cmdMenu) return;
   const opt=cmdMenu.children[combatState.choice];
   if(!opt || opt.classList.contains('disabled')) return;
-  const choice=opt.textContent.toLowerCase();
-  cmdMenu.style.display='none';
-  if(choice==='flee'){
-    log?.('You fled the battle.');
-    closeCombat({ result:'flee', roll:0 });
+  if(combatState.mode==='command'){
+    const choice=opt.textContent.toLowerCase();
+    cmdMenu.style.display='none';
+    if(choice==='flee'){
+      log?.('You fled the battle.');
+      closeCombat({ result:'flee', roll:0 });
+      return;
+    }
+    if(choice==='attack') doAttack(1);
+    else if(choice==='special') doAttack(2);
+    else if(choice==='item') openItemMenu();
     return;
   }
-  if(choice==='attack') doAttack(1);
-  else if(choice==='special') doAttack(2);
-  else if(choice==='item'){ log?.(`${party[combatState.active].name} fumbles for an item.`); nextCombatant(); }
+  // item selection mode
+  const action=opt.dataset.action;
+  if(action==='back'){
+    openCommand();
+    return;
+  }
+  const invIdx=parseInt(opt.dataset.idx,10);
+  if(Number.isInteger(invIdx)){
+    const prevSel=selectedMember;
+    selectedMember=combatState.active;
+    const used=useItem(invIdx);
+    selectedMember=prevSel;
+    cmdMenu.style.display='none';
+    combatState.mode='command';
+    if(used) nextCombatant();
+    else openCommand();
+  }
 }
 
 function doAttack(dmg){
