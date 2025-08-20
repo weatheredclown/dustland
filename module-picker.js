@@ -4,6 +4,11 @@ const MODULES = [
   { id: 'office', name: 'Office', file: 'modules/office.module.js' }
 ];
 
+const realOpenCreator = window.openCreator;
+const realShowStart = window.showStart;
+window.openCreator = () => {};
+window.showStart = () => {};
+
 function loadModule(moduleInfo){
   const existingScript = document.getElementById('activeModuleScript');
   if (existingScript) existingScript.remove();
@@ -13,8 +18,8 @@ function loadModule(moduleInfo){
   script.onload = () => {
     const picker = document.getElementById('modulePicker');
     if(picker) picker.remove();
-    window.openCreator = window._realOpenCreator;
-    window.showStart = window._realShowStart;
+    window.openCreator = realOpenCreator;
+    window.showStart = realShowStart;
     const savedGame = localStorage.getItem('dustland_crt');
     if(savedGame){
       showStart();
