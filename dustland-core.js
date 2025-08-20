@@ -98,7 +98,10 @@ async function quickCombat(defender){
       player.hp = attacker.hp;
     }
     if(result.result==='loot'){
-      if(defender.loot) addToInv(defender.loot);
+      if(defender.loot){
+        const lootIt = resolveItem(defender.loot);
+        if(lootIt) addToInv(lootIt);
+      }
       if(defender.npc) removeNPC(defender.npc);
     }
     renderInv?.(); renderParty?.(); updateHUD?.();
@@ -116,7 +119,10 @@ async function quickCombat(defender){
   if(result==='bruise'){
     attacker.hp = Math.max(0,(attacker.hp||0)-1);
   } else if(result==='loot'){
-    if(defender.loot) addToInv(defender.loot);
+    if(defender.loot){
+      const lootIt = resolveItem(defender.loot);
+      if(lootIt) addToInv(lootIt);
+    }
     if(defender.npc) removeNPC(defender.npc);
   }
   player.hp = attacker.hp; player.ap = attacker.ap;
@@ -237,7 +243,10 @@ function defaultQuestProcessor(npc, nodeId){
       if(!meta.item || hasItem(meta.item)){
         if(meta.item){ const i = findItemIndex(meta.item); if(i>-1) removeFromInv(i); }
         questLog.complete(meta.id);
-        if(meta.reward){ addToInv(meta.reward); }
+        if(meta.reward){
+          const rewardIt = resolveItem(meta.reward);
+          if(rewardIt) addToInv(rewardIt);
+        }
         if(meta.xp){ awardXP(leader(), meta.xp); }
         if(meta.moveTo){ npc.x=meta.moveTo.x; npc.y=meta.moveTo.y; }
       } else {
@@ -613,10 +622,10 @@ const ccLoad=document.getElementById('ccLoad');
 if(ccNext) ccNext.classList.add('btn--primary');
 const portraits=['@','&','#','%','*']; let portraitIndex=0;
 const specializations={
-  'Scavenger':{desc:'Finds better loot from ruins; starts with crowbar.', gear:[{name:'Crowbar',slot:'weapon',mods:{ATK:+1}}]},
-  'Gunslinger':{desc:'Higher chance to win quick fights; starts with pipe rifle.', gear:[{name:'Pipe Rifle',slot:'weapon',mods:{ATK:+2}}]},
-  'Snakeoil Preacher':{desc:'Can sway naive foes; +1 CHA trinket.', gear:[{name:'Tin Sun',slot:'trinket',mods:{LCK:+1}}]},
-  'Cogwitch':{desc:'Tinker checks succeed more often; starts with toolkit.', gear:[{name:'Toolkit',slot:'trinket',mods:{INT:+1}}]}
+  'Scavenger':{desc:'Finds better loot from ruins; starts with crowbar.', gear:[{id:'crowbar',name:'Crowbar',slot:'weapon',mods:{ATK:+1}}]},
+  'Gunslinger':{desc:'Higher chance to win quick fights; starts with pipe rifle.', gear:[{id:'pipe_rifle',name:'Pipe Rifle',slot:'weapon',mods:{ATK:+2}}]},
+  'Snakeoil Preacher':{desc:'Can sway naive foes; +1 CHA trinket.', gear:[{id:'tin_sun',name:'Tin Sun',slot:'trinket',mods:{LCK:+1}}]},
+  'Cogwitch':{desc:'Tinker checks succeed more often; starts with toolkit.', gear:[{id:'toolkit',name:'Toolkit',slot:'trinket',mods:{INT:+1}}]}
 };
 const quirks={
   'Lucky Lint':{desc:'+1 LCK. Occasionally avoid mishaps.'},

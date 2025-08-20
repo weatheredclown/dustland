@@ -38,7 +38,8 @@ const DUSTLAND_MODULE = (() => {
     { map: 'world', x: 80, y: midY - 3, id: 'medkit', name: 'Medkit', type: 'consumable', use: { type: 'heal', amount: 5 } },
     { map: 'world', x: 18, y: midY - 2, id: 'valve', name: 'Valve', type: 'quest' },
     { map: 'world', x: 26, y: midY + 3, id: 'lost_satchel', name: 'Lost Satchel', type: 'quest' },
-    { map: 'world', x: 60, y: midY - 1, id: 'rust_idol', name: 'Rust Idol', type: 'quest', tags: ['idol'] }
+    { map: 'world', x: 60, y: midY - 1, id: 'rust_idol', name: 'Rust Idol', type: 'quest', tags: ['idol'] },
+    { id: 'raider_knife', name: 'Raider Knife', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } }
   ];
 
   const quests = [
@@ -330,7 +331,7 @@ const DUSTLAND_MODULE = (() => {
           ]
         }
       },
-      combat: { DEF: 5, loot: { id: 'raider_knife', name: 'Raider Knife', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } } }
+      combat: { DEF: 5, loot: 'raider_knife' }
     },
     {
       id: 'trader',

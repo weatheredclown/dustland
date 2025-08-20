@@ -328,7 +328,7 @@ const OFFICE_MODULE = (() => {
       color: '#ffb6b6',
       name: 'Giant Rat',
       desc: 'It bares its teeth.',
-      combat: { HP: 3, ATK: 1, DEF: 0, loot: { name: 'Rat Tail' }, auto: true },
+      combat: { HP: 3, ATK: 1, DEF: 0, loot: 'rat_tail', auto: true },
       tree: { start: { text: 'The rat lunges!', choices: [ { label: '(Leave)', to: 'bye' } ] } }
     },
     {
@@ -339,7 +339,7 @@ const OFFICE_MODULE = (() => {
       color: '#f88',
       name: 'Bandit',
       desc: 'Lurks among the trees.',
-      combat: { HP: 6, ATK: 2, DEF: 1, loot: { name: 'Rusty Dagger' }, auto: true },
+      combat: { HP: 6, ATK: 2, DEF: 1, loot: 'rusty_dagger', auto: true },
       tree: { start: { text: 'Your coin or your life!', choices: [ { label: '(Leave)', to: 'bye' } ] } }
     },
     {
@@ -350,7 +350,7 @@ const OFFICE_MODULE = (() => {
       color: '#f55',
       name: 'Forest Ogre',
       desc: 'Towering and enraged.',
-      combat: { HP: 12, ATK: 4, DEF: 2, loot: { name: 'Ogre Tooth' }, auto: true },
+      combat: { HP: 12, ATK: 4, DEF: 2, loot: 'ogre_tooth', auto: true },
       tree: { start: { text: 'The ogre roars.', choices: [ { label: '(Leave)', to: 'bye' } ] } }
     },
     {
@@ -373,7 +373,7 @@ const OFFICE_MODULE = (() => {
       name: 'Rogue Janitor',
       desc: 'Wields a dripping mop.',
       tree: { start: { text: 'He blocks your path.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
-      combat: { DEF: 3, loot: { id: 'rusty_mop', name: 'Rusty Mop', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } } }
+      combat: { DEF: 3, loot: 'rusty_mop' }
     }
   ];
 
@@ -414,6 +414,10 @@ const OFFICE_MODULE = (() => {
         { map: 'world', x: WORLD_MID - 4, y: WORLD_MIDY - 2, id: 'healing_potion1', name: 'Healing Potion', type: 'consumable', use: { type: 'heal', amount: 5 } },
         { map: 'world', x: WORLD_MID + 5, y: WORLD_MIDY + 3, id: 'healing_potion2', name: 'Healing Potion', type: 'consumable', use: { type: 'heal', amount: 5 } },
         { map: 'world', x: WORLD_MID - 6, y: WORLD_MIDY + 5, id: 'healing_potion3', name: 'Healing Potion', type: 'consumable', use: { type: 'heal', amount: 5 } },
+        { id: 'rat_tail', name: 'Rat Tail', type: 'quest' },
+        { id: 'rusty_dagger', name: 'Rusty Dagger', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } },
+        { id: 'ogre_tooth', name: 'Ogre Tooth', type: 'quest' },
+        { id: 'rusty_mop', name: 'Rusty Mop', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } },
       ],
       quests: [
         {
