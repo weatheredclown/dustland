@@ -118,8 +118,9 @@ function mapLabel(id){
 }
 function setMap(id,label){
   state.map=id;
+  party.map = id;
   mapNameEl.textContent = label || mapLabel(id);
-  if(typeof centerCamera==='function') centerCamera(player.x,player.y,state.map);
+  if(typeof centerCamera==='function') centerCamera(party.x,party.y,state.map);
   if(id==='world') setGameState(GAME_STATE.WORLD);
   else if(id==='creator') setGameState(GAME_STATE.CREATOR);
   else setGameState(GAME_STATE.INTERIOR);
@@ -133,11 +134,12 @@ const WORLD_W=120, WORLD_H=90;
 // ===== Game state =====
 let world = [], interiors = {}, buildings = [], portals = [];
 const state = { map:'world' }; // default map
-const player = { x:2, y:2, hp:10, ap:2, flags:{}, inv:[], scrap:0 };
-function setPlayerPos(x, y){
-  if(typeof x === 'number') player.x = x;
-  if(typeof y === 'number') player.y = y;
+const player = { hp:10, ap:2, flags:{}, inv:[], scrap:0 };
+function setPartyPos(x, y){
+  if(typeof x === 'number') party.x = x;
+  if(typeof y === 'number') party.y = y;
 }
+const setPlayerPos = setPartyPos; // backward compatibility
 const GAME_STATE = Object.freeze({
   TITLE: 'title',
   CREATOR: 'creator',
@@ -607,7 +609,7 @@ const hiddenOrigins={ 'Rustborn':{desc:'You survived a machine womb. +1 PER, wei
 let step=1; let building=null; let built=[];
 function openCreator(){
   if(!creatorMap.grid || creatorMap.grid.length===0) genCreatorMap();
-  setPlayerPos(creatorMap.entryX, creatorMap.entryY);
+  setPartyPos(creatorMap.entryX, creatorMap.entryY);
   setMap('creator','Creator');
   creator.style.display='flex';
   step=1;
@@ -701,7 +703,7 @@ function startGame(){
 function startWorld(){
   const seed = Date.now();
   genWorld(seed);
-  setPlayerPos(2, Math.floor(WORLD_H/2));
+  setPartyPos(2, Math.floor(WORLD_H/2));
   setMap('world','Wastes');
   renderInv(); renderQuests(); renderParty(); updateHUD();
   log('You step into the wastes.');
@@ -710,7 +712,7 @@ function startWorld(){
 // Content pack moved to modules/dustland.module.js
 
 
-const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, startCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, state, player, GAME_STATE, setGameState, setPlayerPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, randRange, sample };
+const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, startCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, state, player, GAME_STATE, setGameState, setPartyPos, setPlayerPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, randRange, sample };
 
 Object.assign(globalThis, coreExports);
 

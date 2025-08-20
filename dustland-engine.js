@@ -106,7 +106,7 @@ function render(gameState=state, dt){
 
   const items = gameState.itemDrops || itemDrops;
   const entities = gameState.entities || NPCS;
-  const ply = gameState.player || player;
+  const pos = gameState.party || party;
 
   // split entities into below/above
   const below = [], above = [];
@@ -151,7 +151,7 @@ function render(gameState=state, dt){
     }
     else if(layer==='entitiesBelow'){ drawEntities(ctx, below, offX, offY); }
     else if(layer==='player'){
-      const px=(ply.x-camX+offX)*TS, py=(ply.y-camY+offY)*TS;
+      const px=(pos.x-camX+offX)*TS, py=(pos.y-camY+offY)*TS;
       ctx.fillStyle='#d9ffbe'; ctx.fillRect(px,py,TS,TS);
       ctx.fillStyle='#000'; ctx.fillText('@',px+4,py+12);
     }
@@ -343,7 +343,7 @@ window.addEventListener('keydown',(e)=>{
         toast(`Leader: ${party[selectedMember].name}`);
         if(window.NanoDialog){
           const near = NPCS.filter(n => n.map === state.map
-            && Math.abs(n.x - player.x) + Math.abs(n.y - player.y) < 10);
+            && Math.abs(n.x - party.x) + Math.abs(n.y - party.y) < 10);
           near.forEach(n => NanoDialog.queueForNPC(n, 'start', 'leader change'));
         }
       }

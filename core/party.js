@@ -10,7 +10,6 @@ class Character {
     this.maxHp=10;
     this.hp=this.maxHp;
     this.ap=2;
-    this.map=state.map; this.x=player.x; this.y=player.y;
     this._bonus={ATK:0, DEF:0, LCK:0};
   }
   xpToNext(){ return 10*this.lvl; }
@@ -55,6 +54,12 @@ class Character {
 }
 
 class Party extends Array {
+  constructor(...args){
+    super(...args);
+    this.map = state.map;
+    this.x = 2;
+    this.y = 2;
+  }
   addMember(member){
     if(this.length >= 6){
       log('Party is full.');
@@ -77,7 +82,7 @@ class Party extends Array {
     renderParty(); updateHUD();
     if(typeof makeNPC==='function' && Array.isArray(NPCS)){
       const tree={ start:{ text:'', choices:[{label:'(Leave)', to:'bye'}] }, bye:{ text:'' } };
-      const npc=makeNPC(member.id, member.map, member.x, member.y, '#fff', member.name, '', '', tree);
+      const npc=makeNPC(member.id, this.map, this.x, this.y, '#fff', member.name, '', '', tree);
       NPCS.push(npc);
     }
     return true;

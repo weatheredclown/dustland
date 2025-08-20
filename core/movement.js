@@ -59,10 +59,10 @@ function canWalk(x,y){
 }
 function move(dx,dy){
   if(state.map==='creator') return;
-  const nx=player.x+dx, ny=player.y+dy;
+  const nx=party.x+dx, ny=party.y+dy;
   if(canWalk(nx,ny)){
-    setPlayerPos(nx, ny);
-    centerCamera(player.x,player.y,state.map); updateHUD();
+    setPartyPos(nx, ny);
+    centerCamera(party.x,party.y,state.map); updateHUD();
     checkAggro();
   }
 }
@@ -72,7 +72,7 @@ function checkAggro(){
   for(const n of NPCS){
     if(!n.combat || !n.combat.auto) continue;
     if(n.map!==state.map) continue;
-    const d = Math.abs(n.x - player.x) + Math.abs(n.y - player.y);
+    const d = Math.abs(n.x - party.x) + Math.abs(n.y - party.y);
     if(d<=3){
       startCombat({ ...n.combat, npc:n, name:n.name });
       break;
@@ -82,7 +82,7 @@ function checkAggro(){
 function adjacentNPC(){
   const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
   for(const [dx,dy] of dirs){
-    const info=queryTile(player.x+dx,player.y+dy);
+    const info=queryTile(party.x+dx,party.y+dy);
     if(info.entities.length) return info.entities[0];
   }
   return null;
@@ -90,7 +90,7 @@ function adjacentNPC(){
 function takeNearestItem(){
   const dirs=[[0,0],[1,0],[-1,0],[0,1],[0,-1]];
   for(const [dx,dy] of dirs){
-    const info=queryTile(player.x+dx,player.y+dy);
+    const info=queryTile(party.x+dx,party.y+dy);
     if(info.items.length){
       const it=info.items[0];
       const idx=itemDrops.indexOf(it);
@@ -105,7 +105,7 @@ function takeNearestItem(){
 }
 function interactAt(x,y){
   if(state.map==='creator') return false;
-  const dist=Math.abs(player.x-x)+Math.abs(player.y-y);
+  const dist=Math.abs(party.x-x)+Math.abs(party.y-y);
   if(dist>1) return false;
   const info=queryTile(x,y);
   if(info.entities.length){ openDialog(info.entities[0]); return true; }
@@ -117,13 +117,13 @@ function interactAt(x,y){
     addToInv(it.id); log('Took '+(def?def.name:it.id)+'.'); updateHUD();
     return true;
   }
-  if(x===player.x && y===player.y && info.tile===TILE.DOOR){
+  if(x===party.x && y===party.y && info.tile===TILE.DOOR){
     if(state.map==='world'){
       const b=buildings.find(b=> b.doorX===x && b.doorY===y);
       if(!b){ log('No entrance here.'); return true; }
       if(b.boarded){ log('The doorway is boarded up from the outside.'); return true; }
       const I=interiors[b.interiorId];
-      if(I){ setPlayerPos(I.entryX, I.entryY); }
+      if(I){ setPartyPos(I.entryX, I.entryY); }
       setMap(b.interiorId,'Interior');
       log('You step inside.'); updateHUD(); return true;
     }
@@ -134,13 +134,13 @@ function interactAt(x,y){
         const I=interiors[target];
         const px = (typeof p.toX==='number') ? p.toX : (I?I.entryX:0);
         const py = (typeof p.toY==='number') ? p.toY : (I?I.entryY:0);
-        setPlayerPos(px, py);
+        setPartyPos(px, py);
         setMap(target);
         log(p.desc || 'You move through the doorway.');
         updateHUD(); return true;
       }
       const b=buildings.find(b=> b.interiorId===state.map);
-      if(b){ setPlayerPos(b.doorX, b.doorY-1); setMap('world'); log('You step back outside.'); updateHUD(); return true; }
+      if(b){ setPartyPos(b.doorX, b.doorY-1); setMap('world'); log('You step back outside.'); updateHUD(); return true; }
     }
   }
   return false;
@@ -150,7 +150,7 @@ function interact(){
   lastInteract = Date.now();
   const dirs=[[0,0],[1,0],[-1,0],[0,1],[0,-1]];
   for(const [dx,dy] of dirs){
-    if(interactAt(player.x+dx,player.y+dy)) return true;
+    if(interactAt(party.x+dx,party.y+dy)) return true;
   }
   log('Nothing interesting.');
   return false;
