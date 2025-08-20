@@ -51,7 +51,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC } = require('../dustland-core.js');
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects } = require('../dustland-core.js');
 const { openCombat, handleCombatKey } = require('../core/combat.js');
 
 // Stub out globals used by equipment functions
@@ -450,11 +450,26 @@ test('dialog choices can be gated by world flags', () => {
   assert.strictEqual(choicesEl.children.length, 2);
   closeDialog();
 });
+test('dialog choices can be gated by party flags', () => {
+  party.flags = {};
+  state.map = 'world';
+  NPCS.length = 0;
+  const tree = { start:{ text:'hi', choices:[ { label:'secret', to:'bye', if:{ flag:'demo', op:">=", value:1 } } ] }, bye:{ text:'', choices:[] } };
+  const npc = makeNPC('p', 'world', 0, 0, '#fff', 'P', '', '', tree);
+  NPCS.push(npc);
+  openDialog(npc);
+  assert.strictEqual(choicesEl.children.length, 0);
+  closeDialog();
+  Effects.apply([{ effect:'addFlag', flag:'demo' }], { party });
+  openDialog(npc);
+  assert.strictEqual(choicesEl.children.length, 1);
+  closeDialog();
+});
 test('onEnter triggers effects and temporary stat mod', () => {
   const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
   applyModule({world});
   state.map='world';
-  player.x=0; player.y=0;
+  party.x=0; party.y=0;
   party.length=0;
   const hero = new Character('h','Hero','Role');
   party.addMember(hero);
@@ -462,7 +477,7 @@ test('onEnter triggers effects and temporary stat mod', () => {
   const msgs=[];
   global.toast = (m)=>msgs.push(m);
   move(1,0);
-  assert.strictEqual(player.x,1);
+  assert.strictEqual(party.x,1);
   assert.ok(msgs.includes('You smell rot.'));
   assert.strictEqual(party[0].stats.CHA,3);
   move(1,0);
@@ -470,6 +485,7 @@ test('onEnter triggers effects and temporary stat mod', () => {
   move(1,0);
   assert.strictEqual(party[0].stats.CHA,4);
   assert.strictEqual(buffs.length,0);
+});
 test('handleDialogKey navigates dialog choices with WASD', () => {
   NPCS.length = 0;
   const npc = { id: 'nav', name: 'Nav', tree: { start: { text: '', choices: [ { label: 'One' }, { label: 'Two' } ] } } };

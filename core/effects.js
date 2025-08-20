@@ -11,12 +11,14 @@ const Effects = {
         case 'log':
           if (typeof log === 'function') log(eff.msg || '');
           break;
-        case 'addFlag':
-          if (ctx.player) {
-            ctx.player.flags = ctx.player.flags || {};
-            ctx.player.flags[eff.flag] = true;
+        case 'addFlag': {
+          const p = ctx.party || globalThis.party;
+          if (p) {
+            p.flags = p.flags || {};
+            p.flags[eff.flag] = true;
+            if (typeof revealHiddenNPCs === 'function') revealHiddenNPCs();
           }
-          break;
+          break; }
         case 'modStat': {
           const target = ctx.actor || ctx.player;
           if (target && target.stats && eff.stat) {

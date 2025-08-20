@@ -67,7 +67,10 @@ function runEffects(effects){
   for(const fn of effects||[]){ if(typeof fn==='function') fn({player,party,state}); }
 }
 
-function flagValue(flag){ return worldFlags?.[flag]?.count || 0; }
+function flagValue(flag){
+  if (worldFlags?.[flag]) return worldFlags[flag].count;
+  return party.flags?.[flag] ? 1 : 0;
+}
 
 function checkFlagCondition(cond){
   if(!cond) return true;
