@@ -15,9 +15,9 @@ let placingType = null, placingPos = null;
 let hoverTile = null;
 let coordTarget = null;
 
-const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [], interiors: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
+const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [], interiors: [], events: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
-let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1;
+let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1;
 let treeData = {};
 let selectedObj = null;
 const intCanvas = document.getElementById('intCanvas');
@@ -72,6 +72,18 @@ function drawWorld() {
     ctx.strokeRect(it.x * sx + 1, it.y * sy + 1, sx - 2, sy - 2);
     ctx.restore();
   });
+  // Draw Tile Event markers
+  moduleData.events.filter(ev => ev.map === 'world').forEach(ev => {
+    const hovering = hoverTarget && hoverTarget.type === 'event' && hoverTarget.obj === ev;
+    ctx.save();
+    ctx.fillStyle = hovering ? '#0ff' : '#0ff';
+    if (hovering) {
+      ctx.shadowColor = '#0ff';
+      ctx.shadowBlur = 8;
+    }
+    ctx.fillRect(ev.x * sx + sx / 4, ev.y * sy + sy / 4, sx / 2, sy / 2);
+    ctx.restore();
+  });
   // Highlight hovered building
   if (hoverTarget && hoverTarget.type === 'bldg') {
     const b = hoverTarget.obj;
@@ -103,6 +115,9 @@ function drawWorld() {
     } else if (selectedObj.type === 'bldg') {
       ctx.strokeStyle = '#fff';
       ctx.strokeRect(o.x * sx, o.y * sy, o.w * sx, o.h * sy);
+    } else if (selectedObj.type === 'event' && o.map === 'world') {
+      ctx.strokeStyle = '#0ff';
+      ctx.strokeRect(o.x * sx + 1, o.y * sy + 1, sx - 2, sy - 2);
     }
     ctx.restore();
   }
@@ -204,12 +219,14 @@ function regenWorld() {
   genWorld(moduleData.seed);
   moduleData.buildings = [...buildings];
   moduleData.interiors = [];
+  moduleData.events = [];
   for (const id in interiors) {
     if(id==='creator') continue;
     const I = interiors[id]; I.id = id; moduleData.interiors.push(I);
   }
   renderInteriorList();
   renderBldgList();
+  renderEventList();
   drawWorld();
 }
 
@@ -600,6 +617,8 @@ function updateNPCOptSections() {
     document.getElementById('npcCombat').checked ? 'block' : 'none';
   document.getElementById('shopOpts').style.display =
     document.getElementById('npcShop').checked ? 'block' : 'none';
+  document.getElementById('revealOpts').style.display =
+    document.getElementById('npcHidden').checked ? 'block' : 'none';
 }
 function showNPCEditor(show) {
   document.getElementById('npcEditor').style.display = show ? 'block' : 'none';
@@ -613,6 +632,10 @@ function startNewNPC() {
   document.getElementById('npcMap').value = 'world';
   document.getElementById('npcX').value = 0;
   document.getElementById('npcY').value = 0;
+  document.getElementById('npcHidden').checked = false;
+  document.getElementById('npcFlag').value = '';
+  document.getElementById('npcOp').value = '>=';
+  document.getElementById('npcVal').value = 1;
   document.getElementById('npcDialog').value = '';
   document.getElementById('npcQuest').value = '';
   document.getElementById('npcAccept').value = 'Good luck.';
@@ -646,6 +669,10 @@ function addNPC() {
   const turnin = document.getElementById('npcTurnin').value.trim();
   const combat = document.getElementById('npcCombat').checked;
   const shop = document.getElementById('npcShop').checked;
+  const hidden = document.getElementById('npcHidden').checked;
+  const flag = document.getElementById('npcFlag').value.trim();
+  const op = document.getElementById('npcOp').value;
+  const val = parseInt(document.getElementById('npcVal').value, 10) || 0;
   updateTreeData();
   let tree = null;
   const treeTxt = document.getElementById('npcTree').value.trim();
@@ -673,6 +700,7 @@ function addNPC() {
   const npc = { id, name, desc, color, map, x, y, tree, questId };
   if (combat) npc.combat = { DEF: 5 };
   if (shop) npc.shop = true;
+  if (hidden && flag) npc.hidden = true, npc.reveal = { flag, op, value: val };
   if (editNPCIdx >= 0) {
     moduleData.npcs[editNPCIdx] = npc;
   } else {
@@ -686,6 +714,10 @@ function addNPC() {
   document.getElementById('npcDesc').value = '';
   document.getElementById('npcCombat').checked = false;
   document.getElementById('npcShop').checked = false;
+  document.getElementById('npcHidden').checked = false;
+  document.getElementById('npcFlag').value = '';
+  document.getElementById('npcOp').value = '>=';
+  document.getElementById('npcVal').value = 1;
   updateNPCOptSections();
   selectedObj = null;
   drawWorld();
@@ -702,6 +734,10 @@ function editNPC(i) {
   document.getElementById('npcMap').value = n.map;
   document.getElementById('npcX').value = n.x;
   document.getElementById('npcY').value = n.y;
+  document.getElementById('npcHidden').checked = !!n.hidden;
+  document.getElementById('npcFlag').value = n.reveal?.flag || '';
+  document.getElementById('npcOp').value = n.reveal?.op || '>=';
+  document.getElementById('npcVal').value = n.reveal?.value ?? 1;
   document.getElementById('npcDialog').value = n.tree?.start?.text || '';
   document.getElementById('npcQuest').value = n.questId || '';
   document.getElementById('npcAccept').value = n.tree?.accept?.text || 'Good luck.';
@@ -868,6 +904,109 @@ function deleteItem() {
   selectedObj = null;
   drawWorld();
   showItemEditor(false);
+}
+
+// --- Tile Events ---
+function showEventEditor(show) {
+  document.getElementById('eventEditor').style.display = show ? 'block' : 'none';
+}
+
+function updateEventEffectFields() {
+  const eff = document.getElementById('eventEffect').value;
+  document.getElementById('eventMsgWrap').style.display = (eff === 'toast' || eff === 'log') ? 'block' : 'none';
+  document.getElementById('eventFlagWrap').style.display = eff === 'addFlag' ? 'block' : 'none';
+  document.getElementById('eventStatWrap').style.display = eff === 'modStat' ? 'block' : 'none';
+}
+
+function startNewEvent() {
+  editEventIdx = -1;
+  document.getElementById('eventMap').value = 'world';
+  document.getElementById('eventX').value = 0;
+  document.getElementById('eventY').value = 0;
+  document.getElementById('eventEffect').value = 'toast';
+  document.getElementById('eventMsg').value = '';
+  document.getElementById('eventFlag').value = '';
+  document.getElementById('eventStat').value = STAT_OPTS[0];
+  document.getElementById('eventDelta').value = 0;
+  document.getElementById('eventDuration').value = 0;
+  updateEventEffectFields();
+  document.getElementById('addEvent').textContent = 'Add Event';
+  document.getElementById('delEvent').style.display = 'none';
+  showEventEditor(true);
+}
+
+function collectEvent() {
+  const map = document.getElementById('eventMap').value.trim() || 'world';
+  const x = parseInt(document.getElementById('eventX').value, 10) || 0;
+  const y = parseInt(document.getElementById('eventY').value, 10) || 0;
+  const eff = document.getElementById('eventEffect').value;
+  const ev = { when: 'enter', effect: eff };
+  if (eff === 'toast' || eff === 'log') ev.msg = document.getElementById('eventMsg').value;
+  if (eff === 'addFlag') ev.flag = document.getElementById('eventFlag').value;
+  if (eff === 'modStat') {
+    ev.stat = document.getElementById('eventStat').value;
+    ev.delta = parseInt(document.getElementById('eventDelta').value, 10) || 0;
+    ev.duration = parseInt(document.getElementById('eventDuration').value, 10) || 0;
+  }
+  return { map, x, y, events: [ev] };
+}
+
+function addEvent() {
+  const entry = collectEvent();
+  if (editEventIdx >= 0) {
+    moduleData.events[editEventIdx] = entry;
+  } else {
+    moduleData.events.push(entry);
+  }
+  editEventIdx = -1;
+  document.getElementById('addEvent').textContent = 'Add Event';
+  document.getElementById('delEvent').style.display = 'none';
+  renderEventList();
+  selectedObj = null;
+  drawWorld();
+  showEventEditor(false);
+}
+
+function editEvent(i) {
+  const e = moduleData.events[i];
+  editEventIdx = i;
+  document.getElementById('eventMap').value = e.map;
+  document.getElementById('eventX').value = e.x;
+  document.getElementById('eventY').value = e.y;
+  const ev = e.events[0] || { effect: 'toast' };
+  document.getElementById('eventEffect').value = ev.effect;
+  document.getElementById('eventMsg').value = ev.msg || '';
+  document.getElementById('eventFlag').value = ev.flag || '';
+  document.getElementById('eventStat').value = ev.stat || STAT_OPTS[0];
+  document.getElementById('eventDelta').value = ev.delta || 0;
+  document.getElementById('eventDuration').value = ev.duration || 0;
+  updateEventEffectFields();
+  document.getElementById('addEvent').textContent = 'Update Event';
+  document.getElementById('delEvent').style.display = 'block';
+  showEventEditor(true);
+  selectedObj = { type: 'event', obj: e };
+  drawWorld();
+}
+
+function renderEventList() {
+  const list = document.getElementById('eventList');
+  list.innerHTML = moduleData.events.map((e, i) => {
+    const eff = e.events[0]?.effect;
+    return `<div data-idx="${i}">${e.map} @(${e.x},${e.y}) - ${eff}</div>`;
+  }).join('');
+  Array.from(list.children).forEach(div => div.onclick = () => editEvent(parseInt(div.dataset.idx, 10)));
+}
+
+function deleteEvent() {
+  if (editEventIdx < 0) return;
+  moduleData.events.splice(editEventIdx, 1);
+  editEventIdx = -1;
+  document.getElementById('addEvent').textContent = 'Add Event';
+  document.getElementById('delEvent').style.display = 'none';
+  renderEventList();
+  selectedObj = null;
+  drawWorld();
+  showEventEditor(false);
 }
 
 // --- Buildings ---
@@ -1051,6 +1190,7 @@ function applyLoadedModule(data) {
   moduleData.quests = data.quests || [];
   moduleData.buildings = data.buildings || [];
   moduleData.interiors = data.interiors || [];
+  moduleData.events = data.events || [];
   moduleData.start = data.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   interiors = {};
   moduleData.interiors.forEach(I => { interiors[I.id] = I; });
@@ -1067,6 +1207,7 @@ function applyLoadedModule(data) {
   renderBldgList();
   renderInteriorList();
   renderQuestList();
+  renderEventList();
   updateQuestOptions();
   loadMods({});
   showItemEditor(false);
@@ -1103,15 +1244,20 @@ document.getElementById('newBldg').onclick = startNewBldg;
 document.getElementById('newQuest').onclick = startNewQuest;
 document.getElementById('addBldg').onclick = addBuilding;
 document.getElementById('addQuest').onclick = addQuest;
+document.getElementById('addEvent').onclick = addEvent;
+document.getElementById('newEvent').onclick = startNewEvent;
 document.getElementById('delNPC').onclick = deleteNPC;
 document.getElementById('delItem').onclick = deleteItem;
 document.getElementById('delBldg').onclick = deleteBldg;
 document.getElementById('newInterior').onclick = startNewInterior;
 document.getElementById('delInterior').onclick = deleteInterior;
 document.getElementById('delQuest').onclick = deleteQuest;
+document.getElementById('delEvent').onclick = deleteEvent;
 document.getElementById('addMod').onclick = () => modRow();
 document.getElementById('itemSlot').addEventListener('change', updateModsWrap);
 document.getElementById('itemUseType').addEventListener('change', updateUseWrap);
+document.getElementById('eventEffect').addEventListener('change', updateEventEffectFields);
+document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
 document.getElementById('save').onclick = saveModule;
 document.getElementById('load').onclick = () => document.getElementById('loadFile').click();
 document.getElementById('loadFile').addEventListener('change', e => {
@@ -1148,6 +1294,7 @@ document.getElementById('npcQuest').addEventListener('change', () => {
 });
 document.getElementById('npcCombat').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcShop').addEventListener('change', updateNPCOptSections);
+document.getElementById('npcHidden').addEventListener('change', updateNPCOptSections);
 document.getElementById('genQuestDialog').onclick = generateQuestTree;
 
 // --- Map interactions ---
@@ -1177,7 +1324,8 @@ function updateCursor(x, y) {
     const overItem = moduleData.items.some(it => it.map === 'world' && it.x === x && it.y === y);
     const overBldg = moduleData.buildings.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
     const overStart = moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y;
-    canvas.style.cursor = (overNpc || overItem || overBldg || overStart) ? 'grab' : 'pointer';
+    const overEvent = moduleData.events.some(ev => ev.map === 'world' && ev.x === x && ev.y === y);
+    canvas.style.cursor = (overNpc || overItem || overBldg || overStart || overEvent) ? 'grab' : 'pointer';
   } else {
     canvas.style.cursor = 'pointer';
   }
@@ -1252,6 +1400,7 @@ canvas.addEventListener('mousedown', ev => {
   document.getElementById('npcX').value = x; document.getElementById('npcY').value = y;
   document.getElementById('itemX').value = x; document.getElementById('itemY').value = y;
   document.getElementById('bldgX').value = x; document.getElementById('bldgY').value = y;
+  document.getElementById('eventX').value = x; document.getElementById('eventY').value = y;
   selectedObj = null;
   drawWorld();
   updateCursor(x, y);
@@ -1307,6 +1456,8 @@ canvas.addEventListener('mousemove', ev => {
     ht = { obj, type: 'item' };
   } else if (obj = moduleData.buildings.find(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h)) {
     ht = { obj, type: 'bldg' };
+  } else if (obj = moduleData.events.find(ev => ev.map === 'world' && ev.x === x && ev.y === y)) {
+    ht = { obj, type: 'event' };
   }
 
   if ((hoverTarget && (!ht || hoverTarget.obj !== ht.obj)) || (!hoverTarget && ht)) {
@@ -1348,6 +1499,12 @@ canvas.addEventListener('click', ev => {
   if (idx >= 0) {
     if (window.showEditorTab) window.showEditorTab('buildings');
     editBldg(idx);
+    return;
+  }
+  idx = moduleData.events.findIndex(ev => ev.map === 'world' && ev.x === x && ev.y === y);
+  if (idx >= 0) {
+    if (window.showEditorTab) window.showEditorTab('events');
+    editEvent(idx);
   }
 });
 
@@ -1367,8 +1524,11 @@ showItemEditor(false);
 showNPCEditor(false);
 showBldgEditor(false);
 showQuestEditor(false);
+showEventEditor(false);
 document.getElementById('npcId').value = nextId('npc', moduleData.npcs);
 document.getElementById('questId').value = nextId('quest', moduleData.quests);
+document.getElementById('eventStat').innerHTML = STAT_OPTS.map(s => `<option value="${s}">${s}</option>`).join('');
+renderEventList();
 loadTreeEditor();
 setPlaceholders();
 function animate() {

@@ -51,7 +51,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, handleDialogKey } = require('../dustland-core.js');
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC } = require('../dustland-core.js');
 const { openCombat, handleCombatKey } = require('../core/combat.js');
 
 // Stub out globals used by equipment functions
@@ -421,6 +421,55 @@ test('leave choice is rendered last', () => {
   assert.strictEqual(labels[labels.length - 1], 'Leave');
 });
 
+test('hidden NPC reveals after visit condition met', () => {
+  Object.keys(worldFlags).forEach(k => delete worldFlags[k]);
+  state.map = 'world';
+  NPCS.length = 0;
+  applyModule({ npcs: [ { id: 'herm', map: 'world', x: 1, y: 1, name: 'Herm', hidden: true, reveal: { flag: 'visits@world@1,1', op: '>=', value: 2 } } ] });
+  assert.strictEqual(NPCS.length, 0);
+  setPartyPos(1,1);
+  assert.strictEqual(NPCS.length, 0);
+  setPartyPos(0,0);
+  setPartyPos(1,1);
+  assert.strictEqual(NPCS.length, 1);
+  assert.strictEqual(NPCS[0].id, 'herm');
+});
+
+test('dialog choices can be gated by world flags', () => {
+  Object.keys(worldFlags).forEach(k => delete worldFlags[k]);
+  state.map = 'world';
+  NPCS.length = 0;
+  const tree = { start:{ text:'hi', choices:[ { label:'always', to:'bye' }, { label:'secret', to:'bye', if:{ flag:'visits@world@5,5', op:">=", value:1 } } ] }, bye:{ text:'', choices:[] } };
+  const npc = makeNPC('t', 'world', 0, 0, '#fff', 'T', '', '', tree);
+  NPCS.push(npc);
+  openDialog(npc);
+  assert.strictEqual(choicesEl.children.length, 1);
+  closeDialog();
+  setPartyPos(5,5);
+  openDialog(npc);
+  assert.strictEqual(choicesEl.children.length, 2);
+  closeDialog();
+});
+test('onEnter triggers effects and temporary stat mod', () => {
+  const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
+  applyModule({world});
+  state.map='world';
+  player.x=0; player.y=0;
+  party.length=0;
+  const hero = new Character('h','Hero','Role');
+  party.addMember(hero);
+  registerTileEvents([{map:'world', x:1, y:0, events:[{when:'enter', effect:'toast', msg:'You smell rot.'},{when:'enter', effect:'modStat', stat:'CHA', delta:-1, duration:2}]}]);
+  const msgs=[];
+  global.toast = (m)=>msgs.push(m);
+  move(1,0);
+  assert.strictEqual(player.x,1);
+  assert.ok(msgs.includes('You smell rot.'));
+  assert.strictEqual(party[0].stats.CHA,3);
+  move(1,0);
+  assert.strictEqual(party[0].stats.CHA,3);
+  move(1,0);
+  assert.strictEqual(party[0].stats.CHA,4);
+  assert.strictEqual(buffs.length,0);
 test('handleDialogKey navigates dialog choices with WASD', () => {
   NPCS.length = 0;
   const npc = { id: 'nav', name: 'Nav', tree: { start: { text: '', choices: [ { label: 'One' }, { label: 'Two' } ] } } };

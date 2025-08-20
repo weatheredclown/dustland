@@ -120,12 +120,17 @@ const WORLD_W=120, WORLD_H=90;
 
 // ===== Game state =====
 let world = [], interiors = {}, buildings = [], portals = [];
+const tileEvents = [];
+function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
 const state = { map:'world' }; // default map
 const player = { hp:10, ap:2, flags:{}, inv:[], scrap:0 };
 function setPartyPos(x, y){
   if(typeof x === 'number') party.x = x;
   if(typeof y === 'number') party.y = y;
+  incFlag(`visits@${state.map}@${party.x},${party.y}`);
 }
+const worldFlags = {};
+const hiddenNPCs = [];
 const GAME_STATE = Object.freeze({
   TITLE: 'title',
   CREATOR: 'creator',
@@ -337,6 +342,49 @@ function createNpcFactory(defs){
   return npcFactory;
 }
 
+function flagValue(flag){ return worldFlags[flag]?.count || 0; }
+
+function checkFlagCondition(cond){
+  if(!cond) return true;
+  const v = flagValue(cond.flag);
+  const val = cond.value ?? 0;
+  switch(cond.op){
+    case '>=': return v >= val;
+    case '>': return v > val;
+    case '<=': return v <= val;
+    case '<': return v < val;
+    case '!=': return v !== val;
+    case '=':
+    case '==': return v === val;
+  }
+  return false;
+}
+
+function revealHiddenNPCs(){
+  for(let i=hiddenNPCs.length-1;i>=0;i--){
+    const n=hiddenNPCs[i];
+    if(checkFlagCondition(n.reveal)){
+      let quest=null;
+      if(n.questId && quests[n.questId]) quest=quests[n.questId];
+      const opts={};
+      if(n.combat) opts.combat=n.combat;
+      if(n.shop) opts.shop=n.shop;
+      if(n.portraitSheet) opts.portraitSheet=n.portraitSheet;
+      const npc=makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, n.title||'', n.desc||'', n.tree, quest, null, null, opts);
+      NPCS.push(npc);
+      hiddenNPCs.splice(i,1);
+    }
+  }
+}
+
+function incFlag(flag, amt=1){
+  const entry = worldFlags[flag] || (worldFlags[flag] = {count:0, time:0});
+  entry.count += amt;
+  entry.time = Date.now();
+  revealHiddenNPCs();
+  return entry.count;
+}
+
 // ===== Module application =====
 function applyModule(data){
   setRNGSeed(data.seed || Date.now());
@@ -356,6 +404,9 @@ function applyModule(data){
     if (data.buildings) { buildings.length = 0; buildings.push(...data.buildings); }
     if (data.portals)   { portals.length = 0;   portals.push(...data.portals); }
   }
+
+  tileEvents.length = 0;
+  if (data.events) registerTileEvents(data.events);
 
   (data.interiors || []).forEach(I => {
     const { id, ...rest } = I;
@@ -384,7 +435,9 @@ function applyModule(data){
     );
   });
   NPCS.length = 0;
+  hiddenNPCs.length = 0;
   (data.npcs||[]).forEach(n=>{
+    if(n.hidden && n.reveal){ hiddenNPCs.push(n); return; }
     let tree=n.tree;
     if(typeof tree==='string'){ try{ tree=JSON.parse(tree); }catch(e){ tree=null; } }
     if(!tree){
@@ -399,6 +452,7 @@ function applyModule(data){
     const npc = makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, n.title||'', n.desc||'', tree, quest, null, null, opts);
     NPCS.push(npc);
   });
+  revealHiddenNPCs();
 }
 
 // ===== WORLD GEN =====
@@ -701,7 +755,7 @@ function startWorld(){
 // Content pack moved to modules/dustland.module.js
 
 
-const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, startCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, state, player, GAME_STATE, setGameState, setPartyPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed };
+const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, startCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, tileEvents, registerTileEvents, state, player, GAME_STATE, setGameState, setPartyPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, worldFlags, incFlag };
 
 Object.assign(globalThis, coreExports);
 
@@ -710,5 +764,6 @@ if (typeof module !== 'undefined' && module.exports) {
   const inventory = require('./core/inventory.js');
   const movement = require('./core/movement.js');
   const dialog = require('./core/dialog.js');
-  module.exports = { ...coreExports, ...party, ...inventory, ...movement, ...dialog, getGameState: () => gameState };
+  const effects = require('./core/effects.js');
+  module.exports = { ...coreExports, ...party, ...inventory, ...movement, ...dialog, ...effects, getGameState: () => gameState };
 }

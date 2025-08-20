@@ -22,6 +22,10 @@ const DUSTLAND_MODULE = (() => {
   };
   const hall = makeHall();
 
+  const events = [
+    { map: 'hall', x: hall.entryX - 1, y: hall.entryY, events:[{ when:'enter', effect:'toast', msg:'You smell rot.' }] }
+  ];
+
   const items = [
     { id: 'rusted_key', name: 'Rusted Key', type: 'quest', tags: ['key'] },
     { id: 'toolkit', name: 'Toolkit', type: 'quest', tags: ['tool'] },
@@ -307,6 +311,19 @@ const DUSTLAND_MODULE = (() => {
       }
     },
     {
+      id: 'hidden_hermit',
+      hidden: true,
+      map: 'world',
+      x: 20,
+      y: midY + 2,
+      color: '#b8ffb6',
+      name: 'Hidden Hermit',
+      title: 'Lurker',
+      desc: 'A hermit steps out when you return.',
+      tree: { start: { text: 'Didn\'t expect company twice.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      reveal: { flag: `visits@world@20,${midY + 2}`, op: '>=', value: 2 }
+    },
+    {
       id: 'raider',
       map: 'world',
       x: 56,
@@ -354,6 +371,7 @@ const DUSTLAND_MODULE = (() => {
     items,
     quests,
     npcs,
+    events,
     interiors: [hall],
     buildings: []
   };
