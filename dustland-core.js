@@ -81,118 +81,27 @@ class Dice {
 
 // ===== Combat =====
 /**
- * Final Fantasy II style turn-based combat. Falls back to quick resolution
- * when running in a non-browser environment (e.g. during tests).
- * @param {{HP?:number,ATK?:number,DEF:number,loot?:Item,auto?:boolean}} defender
- * @returns {{result:'bruise'|'loot'|'flee', roll:number, dc:number}}
+ * Launch the menu-based combat interface. In non-browser environments the
+ * player automatically flees.
+ * @param {{HP?:number,DEF:number,loot?:Item,name?:string,npc?:NPC}} defender
+ * @returns {Promise<{result:'bruise'|'loot'|'flee', roll:number}>}
  */
-function turnBasedCombat(defender){
+async function startCombat(defender){
   const attacker = party.leader?.() || null;
-  const dc = defender?.DEF || 0;
-  if(!attacker) return { result:'flee', roll:0, dc };
-
-  let aHP = attacker.hp || 10;
-  let eHP = defender.HP || 5;
-  const aAtk = (attacker._bonus?.ATK || 0) + (attacker.stats?.ATK || 0);
-  const aDef = (attacker._bonus?.DEF || 0) + (attacker.stats?.DEF || 0);
-  const aLck = (attacker.stats?.LCK || 0) + (attacker._bonus?.LCK || 0);
-  const eAtk = defender.ATK || 0;
-  const eDef = defender.DEF || 0;
-  const specials = {
-    'Scavenger': ()=>{ const dmg=3; eHP-=dmg; if(typeof toast==='function') toast(`Scrap bomb for ${dmg}!`); },
-    'Gunslinger': ()=>{ let roll=Dice.roll()+aAtk+aLck+2; let dmg=Math.max(1,roll-eDef); eHP-=dmg; if(typeof toast==='function') toast(`Power shot for ${dmg}!`); },
-    'Snakeoil Preacher': ()=>{ const before=aHP; aHP=Math.min(attacker.maxHp,aHP+3); if(typeof toast==='function') toast(`Heal ${aHP-before} HP`); },
-    'Cogwitch': ()=>{ let roll=Dice.roll()+aAtk+aLck+1; let dmg=Math.max(1,roll-eDef); eHP-=dmg; if(typeof toast==='function') toast(`Overclock strike for ${dmg}!`); }
-  };
-  const specialAction = specials[attacker.role];
-
-  while(aHP>0 && eHP>0){
-    let choice = 'attack';
-    if(typeof prompt==='function'){
-      let menu=`Enemy HP:${eHP}  Your HP:${aHP}\n(1) Attack`;
-      const opts={1:'attack'};
-      let opt=2;
-      if(specialAction){ menu+=`\n(${opt}) Special`; opts[opt]='special'; opt++; }
-      menu+=`\n(${opt}) Item`; opts[opt]='item'; opt++;
-      menu+=`\n(${opt}) Flee`; opts[opt]='flee';
-      const ans = prompt(menu,'1');
-      choice = opts[ans] || 'attack';
-    }
-    if(choice==='flee'){
-      if(typeof toast==='function') toast('You flee.');
-      attacker.ap = Math.max(0,(attacker.ap||0)-1);
-      player.ap = attacker.ap; updateHUD?.();
-      return { result:'flee', roll:0, dc:eDef };
-    }
-    if(choice==='item'){
-      const usable = player.inv.map((it,i)=> it.use ? `${i+1}) ${it.name}` : null).filter(Boolean);
-      if(usable.length===0){ if(typeof toast==='function') toast('No usable items.'); continue; }
-      const ans = prompt('Use which item?\n'+usable.join('\n'),'1');
-      const idx = parseInt(ans,10)-1;
-      if(idx>=0 && player.inv[idx] && player.inv[idx].use){
-        useItem(idx);
-        aHP = attacker.hp;
-      } else {
-        if(typeof toast==='function') toast('Invalid item.');
-        continue;
-      }
-    } else if(choice==='special' && specialAction){
-      specialAction();
-    } else {
-      let roll = Dice.roll() + aAtk + aLck;
-      let dmg = Math.max(1, roll - eDef);
-      eHP -= dmg;
-      if(typeof toast==='function') toast(`You hit for ${dmg}!`);
-    }
-    if(eHP<=0) break;
-    let roll = Dice.roll() + eAtk;
-    let dmg = Math.max(1, roll - aDef);
-    aHP -= dmg;
-    if(typeof toast==='function') toast(`Enemy hits for ${dmg}!`);
+  if(typeof openCombat !== 'function' || typeof document === 'undefined'){
+    return { result:'flee', roll:0 };
   }
-  attacker.ap = Math.max(0,(attacker.ap||0)-1);
-  attacker.hp = Math.max(0,aHP);
-  player.hp = attacker.hp; player.ap = attacker.ap;
+
+  const enemy = { name:defender.name||'Enemy', hp:defender.HP||5, npc:defender.npc, loot:defender.loot };
+  const result = await openCombat([enemy]);
+
+  if(attacker){
+    attacker.ap = Math.max(0,(attacker.ap||0)-1);
+    player.ap = attacker.ap;
+    player.hp = attacker.hp;
+  }
   renderInv?.(); renderParty?.(); updateHUD?.();
-
-  if(aHP<=0){
-    if(typeof toast==='function') toast('You were defeated.');
-    return { result:'bruise', roll:0, dc:eDef };
-  }
-  if(defender.loot) addToInv(defender.loot);
-  if(typeof toast==='function') toast(`Victory${defender.loot ? ' - '+defender.loot.name : ''}!`);
-  return { result:'loot', roll:0, dc:eDef };
-}
-
-/**
- * Combat entry point. Uses the turn-based system in browsers, falling back to
- * the original quick resolver when no prompt function is available.
- * @param {{HP?:number,ATK?:number,DEF:number,loot?:Item}} defender
- * @returns {{result:'bruise'|'loot'|'flee', roll:number, dc:number}}
- */
-function quickCombat(defender){
-  if(typeof prompt==='function'){
-    return turnBasedCombat(defender);
-  }
-  // Fallback quick resolution for non-interactive environments (e.g. tests)
-  const attacker = party.leader?.() || null;
-  const dc = defender?.DEF || 0;
-  if(!attacker) return { result:'flee', roll:0, dc };
-  const atk = attacker._bonus?.ATK || 0;
-  const lck = (attacker.stats?.LCK || 0) + (attacker._bonus?.LCK || 0);
-  const roll = Dice.roll() + atk + lck;
-  let result = 'flee';
-  if(roll > dc) result = 'loot';
-  else if(roll < dc) result = 'bruise';
-  attacker.ap = Math.max(0,(attacker.ap||0)-1);
-  if(result==='bruise'){
-    attacker.hp = Math.max(0,(attacker.hp||0)-1);
-  } else if(result==='loot'){
-    if(defender.loot) addToInv(defender.loot);
-  }
-  player.hp = attacker.hp; player.ap = attacker.ap;
-  renderInv?.(); renderParty?.(); updateHUD?.();
-  return { result, roll, dc };
+  return result;
 }
 
 // ===== Tiles =====
@@ -205,8 +114,9 @@ function mapLabel(id){
 }
 function setMap(id,label){
   state.map=id;
+  party.map = id;
   mapNameEl.textContent = label || mapLabel(id);
-  if(typeof centerCamera==='function') centerCamera(player.x,player.y,state.map);
+  if(typeof centerCamera==='function') centerCamera(party.x,party.y,state.map);
   if(id==='world') setGameState(GAME_STATE.WORLD);
   else if(id==='creator') setGameState(GAME_STATE.CREATOR);
   else setGameState(GAME_STATE.INTERIOR);
@@ -222,11 +132,12 @@ let world = [], interiors = {}, buildings = [], portals = [];
 const tileEvents = [];
 function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
 const state = { map:'world' }; // default map
-const player = { x:2, y:2, hp:10, ap:2, flags:{}, inv:[], scrap:0 };
-function setPlayerPos(x, y){
-  if(typeof x === 'number') player.x = x;
-  if(typeof y === 'number') player.y = y;
+const player = { hp:10, ap:2, flags:{}, inv:[], scrap:0 };
+function setPartyPos(x, y){
+  if(typeof x === 'number') party.x = x;
+  if(typeof y === 'number') party.y = y;
 }
+const setPlayerPos = setPartyPos; // backward compatibility
 const GAME_STATE = Object.freeze({
   TITLE: 'title',
   CREATOR: 'creator',
@@ -310,7 +221,10 @@ function defaultQuestProcessor(npc, nodeId){
       if(!meta.item || hasItem(meta.item)){
         if(meta.item){ const i = findItemIndex(meta.item); if(i>-1) removeFromInv(i); }
         questLog.complete(meta.id);
-        if(meta.reward){ addToInv(meta.reward); }
+        if(meta.reward){
+          const rewardIt = resolveItem(meta.reward);
+          if(rewardIt) addToInv(rewardIt);
+        }
         if(meta.xp){ awardXP(leader(), meta.xp); }
         if(meta.moveTo){ npc.x=meta.moveTo.x; npc.y=meta.moveTo.y; }
       } else {
@@ -326,13 +240,8 @@ class NPC {
     Object.assign(this,{id,map,x,y,color,name,title,desc,tree,quest,combat,shop,portraitSheet});
     const capNode = (node)=>{
       if(this.combat && node==='do_fight'){
-        const {DEF=0, loot} = this.combat;
-        const res = quickCombat({DEF, loot});
-        const msg = res.result==='loot' ? 'The foe collapses.' :
-                    res.result==='bruise' ? 'A sharp blow leaves a bruise.' :
-                    'You back away.';
-        textEl.textContent = `Roll: ${res.roll} vs DEF ${res.dc}. ${msg}`;
-        if(res.result==='loot') removeNPC(this);
+        closeDialog();
+        startCombat({ ...this.combat, npc:this, name:this.name });
       } else if(this.shop && node==='sell'){
         const items = player.inv.map((it,idx)=>({label:`Sell ${it.name} (${Math.max(1, it.value || 0)} ${CURRENCY})`, to:'sell', sellIndex:idx}));
         this.tree.sell.text = items.length? 'What are you selling?' : 'Nothing to sell.';
@@ -689,10 +598,10 @@ const ccLoad=document.getElementById('ccLoad');
 if(ccNext) ccNext.classList.add('btn--primary');
 const portraits=['@','&','#','%','*']; let portraitIndex=0;
 const specializations={
-  'Scavenger':{desc:'Finds better loot from ruins; starts with crowbar.', gear:[{name:'Crowbar',slot:'weapon',mods:{ATK:+1}}]},
-  'Gunslinger':{desc:'Higher chance to win quick fights; starts with pipe rifle.', gear:[{name:'Pipe Rifle',slot:'weapon',mods:{ATK:+2}}]},
-  'Snakeoil Preacher':{desc:'Can sway naive foes; +1 CHA trinket.', gear:[{name:'Tin Sun',slot:'trinket',mods:{LCK:+1}}]},
-  'Cogwitch':{desc:'Tinker checks succeed more often; starts with toolkit.', gear:[{name:'Toolkit',slot:'trinket',mods:{INT:+1}}]}
+  'Scavenger':{desc:'Finds better loot from ruins; starts with crowbar.', gear:[{id:'crowbar',name:'Crowbar',slot:'weapon',mods:{ATK:+1}}]},
+  'Gunslinger':{desc:'Higher chance to win quick fights; starts with pipe rifle.', gear:[{id:'pipe_rifle',name:'Pipe Rifle',slot:'weapon',mods:{ATK:+2}}]},
+  'Snakeoil Preacher':{desc:'Can sway naive foes; +1 CHA trinket.', gear:[{id:'tin_sun',name:'Tin Sun',slot:'trinket',mods:{LCK:+1}}]},
+  'Cogwitch':{desc:'Tinker checks succeed more often; starts with toolkit.', gear:[{id:'toolkit',name:'Toolkit',slot:'trinket',mods:{INT:+1}}]}
 };
 const quirks={
   'Lucky Lint':{desc:'+1 LCK. Occasionally avoid mishaps.'},
@@ -704,7 +613,7 @@ const hiddenOrigins={ 'Rustborn':{desc:'You survived a machine womb. +1 PER, wei
 let step=1; let building=null; let built=[];
 function openCreator(){
   if(!creatorMap.grid || creatorMap.grid.length===0) genCreatorMap();
-  setPlayerPos(creatorMap.entryX, creatorMap.entryY);
+  setPartyPos(creatorMap.entryX, creatorMap.entryY);
   setMap('creator','Creator');
   creator.style.display='flex';
   step=1;
@@ -755,16 +664,33 @@ function renderStep(){
 function finalizeCurrentMember(){
   if(!building) return null;
   if(!building.name || !building.name.trim()) building.name = 'Drifter '+(built.length+1);
-  const m=makeMember(building.id, building.name, building.spec||'Wanderer');
+  const m=makeMember(building.id, building.name, building.spec||'Wanderer', {permanent:true});
   m.stats=building.stats; m.origin=building.origin; m.quirk=building.quirk;
   addPartyMember(m);
   const spec = specializations[building.spec]; if(spec){ spec.gear.forEach(g=> addToInv(g)); }
   built.push(m);
+  building = null;
   return m;
 }
 
 if  (ccBack) ccBack.onclick=()=>{ if(step>1) { step--; renderStep(); } };
-if (ccNext) ccNext.onclick=()=>{ if(step<5){ step++; renderStep(); } else { finalizeCurrentMember(); building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null }; step=1; renderStep(); log('Member added. You can add up to 2 more, or press Start Now.'); } };
+if (ccNext) ccNext.onclick=()=>{
+  if(step<5){
+    step++;
+    renderStep();
+  } else {
+    finalizeCurrentMember();
+    if(built.length>=3){
+      closeCreator();
+      startGame();
+    } else {
+      building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null };
+      step=1;
+      renderStep();
+      log('Member added. You can add up to '+(3-built.length)+' more, or press Start Now.');
+    }
+  }
+};
 if (ccStart) ccStart.onclick=()=>{ if(built.length===0){ finalizeCurrentMember(); } closeCreator(); startGame(); };
 if (ccLoad) ccLoad.onclick=()=>{ load(); closeCreator(); };
 if (creator?.addEventListener) creator.addEventListener('keydown', e => {
@@ -781,7 +707,7 @@ function startGame(){
 function startWorld(){
   const seed = Date.now();
   genWorld(seed);
-  setPlayerPos(2, Math.floor(WORLD_H/2));
+  setPartyPos(2, Math.floor(WORLD_H/2));
   setMap('world','Wastes');
   renderInv(); renderQuests(); renderParty(); updateHUD();
   log('You step into the wastes.');
@@ -790,7 +716,7 @@ function startWorld(){
 // Content pack moved to modules/dustland.module.js
 
 
-const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, quickCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, tileEvents, registerTileEvents, state, player, GAME_STATE, setGameState, setPlayerPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, randRange, sample };
+const coreExports = { ROLL_SIDES, clamp, createRNG, Dice, quickCombat, TILE, walkable, mapLabels, mapLabel, setMap, isWalkable, VIEW_W, VIEW_H, TS, WORLD_W, WORLD_H, world, interiors, buildings, portals, tileEvents, registerTileEvents, state, player, GAME_STATE, setGameState, setPartyPos, setPlayerPos, doorPulseUntil, lastInteract, creatorMap, genCreatorMap, Quest, NPC, questLog, NPCS, npcsOnMap, queueNanoDialogForNPCs, addQuest, completeQuest, defaultQuestProcessor, removeNPC, makeNPC, createNpcFactory, applyModule, genWorld, isWater, findNearestLand, makeInteriorRoom, placeHut, startGame, startWorld, setRNGSeed, randRange, sample };
 
 Object.assign(globalThis, coreExports);
 
