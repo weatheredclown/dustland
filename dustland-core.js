@@ -52,6 +52,27 @@ import { on } from './event-bus.js';
  */
 
 /**
+ * @typedef {Object} Quest
+ * @property {string} id
+ * @property {string} name
+ * @property {'available'|'active'|'completed'} status
+ * @property {string} [desc]
+ * @property {Function} [onStart]
+ * @property {Function} [onComplete]
+ */
+
+/**
+ * @typedef {Object} Map
+ * @property {string} id
+ * @property {number} w
+ * @property {number} h
+ * @property {number[][]} grid
+ * @property {number} [entryX]
+ * @property {number} [entryY]
+ * @property {string} [name]
+ */
+
+/**
  * @typedef {Object} Check
  * @property {string} stat
  * @property {number} dc
@@ -790,6 +811,17 @@ on('item:picked', (it) => {
   log?.(`Picked up ${it.name}`);
 });
 
+on('inventory:changed', () => {
+  renderInv?.();
+  renderParty?.();
+  updateHUD?.();
+  queueNanoDialogForNPCs?.('start', 'inventory change');
+});
+
+on('item:picked', (it) => {
+  log?.(`Picked up ${it.name}`);
+});
+
 // Content pack moved to modules/dustland.module.js
 
 
@@ -920,6 +952,7 @@ export {
   closeCreator,
   resetAll
 };
+
 export * from './core/party.js';
 export * from './core/inventory.js';
 export * from './core/movement.js';
