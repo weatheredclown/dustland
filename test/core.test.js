@@ -152,6 +152,17 @@ test('createRNG produces deterministic sequences', () => {
     assert.ok(player.inv.some(it=>it.id==='apple'));
   });
 
+  test('picking up an item logs once', () => {
+    player.inv.length = 0;
+    const oldLog = global.log;
+    const logs = [];
+    global.log = (msg) => logs.push(msg);
+    registerItem({ id: 'stone', name: 'Stone' });
+    addToInv('stone');
+    assert.deepStrictEqual(logs, ['Picked up Stone']);
+    global.log = oldLog;
+  });
+
 test('cursed items reveal on unequip attempt and stay equipped', () => {
   party.length = 0;
   player.inv.length = 0;
