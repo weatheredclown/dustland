@@ -53,14 +53,14 @@ class Character {
   }
 }
 
-class Party extends Array {
-  constructor(...args){
-    super(...args);
-    this.map = state.map;
-    this.x = 2;
-    this.y = 2;
-    this.flags = {};
-  }
+  class Party extends Array {
+    constructor(...args){
+      super(...args);
+      this.map = globalThis.state ? globalThis.state.map : 'world';
+      this.x = 2;
+      this.y = 2;
+      this.flags = {};
+    }
   addMember(member){
     if(this.length >= 6){
       log('Party is full.');
@@ -107,6 +107,4 @@ function setLeader(idx){ selectedMember = idx; }
 const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, selectedMember };
 Object.assign(globalThis, partyExports);
 
-if (typeof module !== 'undefined' && module.exports){
-  module.exports = partyExports;
-}
+export { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, selectedMember };
