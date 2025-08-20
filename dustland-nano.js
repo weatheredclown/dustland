@@ -288,7 +288,7 @@ CHOICE SCHEMA:
 - Skill check format: <label>|<STAT>|<DC>|<Reward>|<Success>|<Failure>
 - Only create a skill check if the reward is XP or an item.
 - STAT in {STR, AGI, INT, PER, LCK, CHA}; DC 6–12.
-- Reward must be "xp N" or an item name; otherwise, omit the skill check.
+- Reward must be "XP N" or an item name; otherwise, omit the skill check.
 - Simple dialog format (no roll): <label>|<Response>
 - Success/failure/response lines follow the same style rules as dialog lines.
  - Output 0–2 choices total. If no useful option fits, leave the Choices section empty.
@@ -300,7 +300,7 @@ Pump coughs at dusk but still runs.
 Keep the gears oiled and it behaves.
 If it wheezes, kick the intake gently.
 Choices:
-Check the intake|INT|9|xp 10|Mesh clears and hum steadies.|You drop a bolt, cursing softly.
+Check the intake|INT|9|XP 10|Mesh clears and hum steadies.|You drop a bolt, cursing softly.
 Ask about spare parts|Any for trade?|She shakes her head and turns away.
 
 Lines:
@@ -308,7 +308,7 @@ Tolls keep the road quiet and safe.
 Pay the price or pay in blood.
 Your choice decides your luck today.
 Choices:
-Intimidate her guard|STR|10|xp 12|Guard backs off, eyes wide.|He laughs and calls your bluff.
+Intimidate her guard|STR|10|XP 12|Guard backs off, eyes wide.|He laughs and calls your bluff.
 Ask for mercy|Can you cut the toll?|She snorts but lets you pass.
 
 Lines:
@@ -317,7 +317,7 @@ Keep your head low past the ruins.
 Trade if you must; run if you can’t.
 
 Choices:
-Check the intake|INT|9|xp 10|You tweak the valves and it purrs.|Steam hisses and you flinch back.
+Check the intake|INT|9|XP 10|You tweak the valves and it purrs.|Steam hisses and you flinch back.
 Offer spare gasket|CHA|8|Valve|She smiles and pockets the part.|She waves you off, unimpressed.
 
 EXACT OUTPUT FORMAT:
