@@ -37,7 +37,7 @@ global.document = {
   createElement: () => stubEl()
 };
 
-const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, randRange, sample, setRNGSeed, useItem } = require('../dustland-core.js');
+const { clamp, createRNG, Dice, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, randRange, sample, setRNGSeed, useItem, setPlayerPos, worldFlags, makeNPC } = require('../dustland-core.js');
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -436,4 +436,34 @@ test('leave choice is rendered last', () => {
   openDialog(npc);
   const labels = choicesEl.children.map(c => c.textContent);
   assert.strictEqual(labels[labels.length - 1], 'Leave');
+});
+
+test('hidden NPC reveals after visit condition met', () => {
+  Object.keys(worldFlags).forEach(k => delete worldFlags[k]);
+  state.map = 'world';
+  NPCS.length = 0;
+  applyModule({ npcs: [ { id: 'herm', map: 'world', x: 1, y: 1, name: 'Herm', hidden: true, reveal: { flag: 'visits@world@1,1', op: '>=', value: 2 } } ] });
+  assert.strictEqual(NPCS.length, 0);
+  setPlayerPos(1,1);
+  assert.strictEqual(NPCS.length, 0);
+  setPlayerPos(0,0);
+  setPlayerPos(1,1);
+  assert.strictEqual(NPCS.length, 1);
+  assert.strictEqual(NPCS[0].id, 'herm');
+});
+
+test('dialog choices can be gated by world flags', () => {
+  Object.keys(worldFlags).forEach(k => delete worldFlags[k]);
+  state.map = 'world';
+  NPCS.length = 0;
+  const tree = { start:{ text:'hi', choices:[ { label:'always', to:'bye' }, { label:'secret', to:'bye', if:{ flag:'visits@world@5,5', op:">=", value:1 } } ] }, bye:{ text:'', choices:[] } };
+  const npc = makeNPC('t', 'world', 0, 0, '#fff', 'T', '', '', tree);
+  NPCS.push(npc);
+  openDialog(npc);
+  assert.strictEqual(choicesEl.children.length, 1);
+  closeDialog();
+  setPlayerPos(5,5);
+  openDialog(npc);
+  assert.strictEqual(choicesEl.children.length, 2);
+  closeDialog();
 });
