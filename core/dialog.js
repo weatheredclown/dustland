@@ -76,17 +76,6 @@ function resolveCheck(check, actor=leader(), rng=Math.random){
   return { success, roll, dc, stat: check.stat };
 }
 
-function applyReward(reward){
-  if(!reward) return;
-  if(typeof reward==='string' && /^xp\s*\d+/i.test(reward)){
-    const amt=parseInt(reward.replace(/[^0-9]/g,''),10)||0;
-    awardXP(leader(), amt);
-    if(typeof toast==='function') toast(`+${amt} XP`);
-  } else {
-    const rewardIt = resolveItem(reward);
-    if(rewardIt){ addToInv(rewardIt); if(typeof toast==='function') toast(`Received ${rewardIt.name}`); }
-  }
-}
 
 function processQuestFlag(c){
   if(!currentNPC?.quest || !c?.q) return;
@@ -132,7 +121,7 @@ function advanceDialog(stateObj, choiceIdx){
     if(idx === -1){
       return finalize(choice.failure || 'You lack the required item.', false);
     }
-    applyReward(choice.reward);
+    Actions.applyQuestReward(choice.reward);
     joinParty(choice.join);
     processQuestFlag(choice);
     runEffects(choice.effects);
@@ -151,7 +140,7 @@ function advanceDialog(stateObj, choiceIdx){
     }
     const removed = player.inv[idx];
     player.inv.splice(idx,1);
-    applyReward(choice.reward);
+    Actions.applyQuestReward(choice.reward);
     joinParty(choice.join);
     processQuestFlag(choice);
     runEffects(choice.effects);
@@ -170,7 +159,7 @@ function advanceDialog(stateObj, choiceIdx){
     }
   }
 
-  applyReward(choice.reward);
+  Actions.applyQuestReward(choice.reward);
   joinParty(choice.join);
   processQuestFlag(choice);
   runEffects(choice.effects);

@@ -45,6 +45,7 @@ function sfxTick(){
   g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.1);
   o.stop(audioCtx.currentTime+0.1);
 }
+EventBus.on('sfx', id => { if(id==='tick') sfxTick(); });
 function hudBadge(msg){
   const ap=document.getElementById('ap');
   if(!ap) return;
