@@ -617,6 +617,8 @@ function updateNPCOptSections() {
     document.getElementById('npcCombat').checked ? 'block' : 'none';
   document.getElementById('shopOpts').style.display =
     document.getElementById('npcShop').checked ? 'block' : 'none';
+  document.getElementById('revealOpts').style.display =
+    document.getElementById('npcHidden').checked ? 'block' : 'none';
 }
 function showNPCEditor(show) {
   document.getElementById('npcEditor').style.display = show ? 'block' : 'none';
@@ -630,6 +632,10 @@ function startNewNPC() {
   document.getElementById('npcMap').value = 'world';
   document.getElementById('npcX').value = 0;
   document.getElementById('npcY').value = 0;
+  document.getElementById('npcHidden').checked = false;
+  document.getElementById('npcFlag').value = '';
+  document.getElementById('npcOp').value = '>=';
+  document.getElementById('npcVal').value = 1;
   document.getElementById('npcDialog').value = '';
   document.getElementById('npcQuest').value = '';
   document.getElementById('npcAccept').value = 'Good luck.';
@@ -663,6 +669,10 @@ function addNPC() {
   const turnin = document.getElementById('npcTurnin').value.trim();
   const combat = document.getElementById('npcCombat').checked;
   const shop = document.getElementById('npcShop').checked;
+  const hidden = document.getElementById('npcHidden').checked;
+  const flag = document.getElementById('npcFlag').value.trim();
+  const op = document.getElementById('npcOp').value;
+  const val = parseInt(document.getElementById('npcVal').value, 10) || 0;
   updateTreeData();
   let tree = null;
   const treeTxt = document.getElementById('npcTree').value.trim();
@@ -690,6 +700,7 @@ function addNPC() {
   const npc = { id, name, desc, color, map, x, y, tree, questId };
   if (combat) npc.combat = { DEF: 5 };
   if (shop) npc.shop = true;
+  if (hidden && flag) npc.hidden = true, npc.reveal = { flag, op, value: val };
   if (editNPCIdx >= 0) {
     moduleData.npcs[editNPCIdx] = npc;
   } else {
@@ -703,6 +714,10 @@ function addNPC() {
   document.getElementById('npcDesc').value = '';
   document.getElementById('npcCombat').checked = false;
   document.getElementById('npcShop').checked = false;
+  document.getElementById('npcHidden').checked = false;
+  document.getElementById('npcFlag').value = '';
+  document.getElementById('npcOp').value = '>=';
+  document.getElementById('npcVal').value = 1;
   updateNPCOptSections();
   selectedObj = null;
   drawWorld();
@@ -719,6 +734,10 @@ function editNPC(i) {
   document.getElementById('npcMap').value = n.map;
   document.getElementById('npcX').value = n.x;
   document.getElementById('npcY').value = n.y;
+  document.getElementById('npcHidden').checked = !!n.hidden;
+  document.getElementById('npcFlag').value = n.reveal?.flag || '';
+  document.getElementById('npcOp').value = n.reveal?.op || '>=';
+  document.getElementById('npcVal').value = n.reveal?.value ?? 1;
   document.getElementById('npcDialog').value = n.tree?.start?.text || '';
   document.getElementById('npcQuest').value = n.questId || '';
   document.getElementById('npcAccept').value = n.tree?.accept?.text || 'Good luck.';
@@ -1275,6 +1294,7 @@ document.getElementById('npcQuest').addEventListener('change', () => {
 });
 document.getElementById('npcCombat').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcShop').addEventListener('change', updateNPCOptSections);
+document.getElementById('npcHidden').addEventListener('change', updateNPCOptSections);
 document.getElementById('genQuestDialog').onclick = generateQuestTree;
 
 // --- Map interactions ---

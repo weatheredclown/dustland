@@ -225,6 +225,12 @@
           <label>Map<input id="npcMap" value="world" /></label>
           <label>X<input id="npcX" type="number" min="0" /></label>
           <label>Y<input id="npcY" type="number" min="0" /></label>
+          <label><input type="checkbox" id="npcHidden"> Hidden NPC</label>
+          <div id="revealOpts" style="display:none">
+            <label>Flag<input id="npcFlag" /></label>
+            <label>Op<select id="npcOp"><option value=">=">&ge;</option><option value=">">&gt;</option><option value="==">==</option><option value="!=">!=</option><option value="<=">&le;</option><option value="<">&lt;</option></select></label>
+            <label>Value<input id="npcVal" type="number" value="1" /></label>
+          </div>
           <button class="btn" type="button" id="npcPick">Select on Map</button>
           <label>Dialog<textarea id="npcDialog" rows="2"></textarea></label>
           <label>Quest<select id="npcQuest">

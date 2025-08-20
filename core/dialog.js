@@ -67,6 +67,24 @@ function runEffects(effects){
   for(const fn of effects||[]){ if(typeof fn==='function') fn({player,party,state}); }
 }
 
+function flagValue(flag){ return worldFlags?.[flag]?.count || 0; }
+
+function checkFlagCondition(cond){
+  if(!cond) return true;
+  const v = flagValue(cond.flag);
+  const val = cond.value ?? 0;
+  switch(cond.op){
+    case '>=': return v >= val;
+    case '>': return v > val;
+    case '<=': return v <= val;
+    case '<': return v < val;
+    case '!=': return v !== val;
+    case '=':
+    case '==': return v === val;
+  }
+  return false;
+}
+
 function resolveCheck(check, actor=leader(), rng=Math.random){
   const roll = Dice.skill(actor, check.stat, 0, ROLL_SIDES, rng);
   const dc = check.dc || 0;
@@ -266,6 +284,8 @@ function renderDialog(){
   }
 
   let choices=node.next.map((opt,idx)=>({opt,idx}));
+
+  choices = choices.filter(({opt})=> !opt.if || checkFlagCondition(opt.if));
 
   if(currentNPC?.quest){
     const meta=currentNPC.quest;

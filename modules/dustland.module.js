@@ -311,6 +311,19 @@ const DUSTLAND_MODULE = (() => {
       }
     },
     {
+      id: 'hidden_hermit',
+      hidden: true,
+      map: 'world',
+      x: 20,
+      y: midY + 2,
+      color: '#b8ffb6',
+      name: 'Hidden Hermit',
+      title: 'Lurker',
+      desc: 'A hermit steps out when you return.',
+      tree: { start: { text: 'Didn\'t expect company twice.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      reveal: { flag: `visits@world@20,${midY + 2}`, op: '>=', value: 2 }
+    },
+    {
       id: 'raider',
       map: 'world',
       x: 56,
