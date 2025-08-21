@@ -44,7 +44,11 @@ test('NanoDialog generates lines and choices', async () => {
   await new Promise(r => setTimeout(r, 100));
   const lines = window.NanoDialog.linesFor('npc1', 'start');
   const choices = window.NanoDialog.choicesFor('npc1', 'start');
-  assert.ok(Array.isArray(lines) && lines.length > 0, 'lines generated');
+  assert.deepStrictEqual(lines, [
+    'Rust bites every gear, but we endure.',
+    'Keep your scrap dry.',
+    'Never trade hope for rust.'
+  ]);
   assert.ok(Array.isArray(choices) && choices.length === 2, 'choices generated');
   assert.strictEqual(choices[0].response, 'Got anything rare?');
   assert.strictEqual(choices[1].check.stat, 'INT');
