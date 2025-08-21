@@ -78,7 +78,8 @@ _______________________________________________________________________________
   - modules/dustland.module.js
     * NPCs, items, world data, and quests for the core adventure.
   - adventure-kit.html / adventure-kit.js
-    * Map/NPC/item/quest editor for making modules.
+    * Map/NPC/item/quest editor for making modules. Includes palette-based
+      interior and building editors with customizable door placement.
   - ack-player.html / ack-player.js
     * Loads a JSON module and runs it in the engine.
   - dustland-nano.js

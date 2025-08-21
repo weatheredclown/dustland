@@ -25,6 +25,16 @@ let treeData = {};
 let selectedObj = null;
 const intCanvas = document.getElementById('intCanvas');
 const intCtx = intCanvas.getContext('2d');
+const intPalette = document.getElementById('intPalette');
+let intPaint = TILE.WALL;
+let intPainting = false;
+
+const bldgCanvas = document.getElementById('bldgCanvas');
+const bldgCtx = bldgCanvas.getContext('2d');
+const bldgPalette = document.getElementById('bldgPalette');
+let bldgPaint = TILE.BUILDING;
+let bldgPainting = false;
+let bldgGrid = [];
 
 function nextId(prefix, arr) {
   let i = 1; while (arr.some(o => o.id === prefix + i)) i++; return prefix + i;
@@ -150,9 +160,17 @@ function drawWorld() {
       ctx.strokeStyle = '#ff0';
       ctx.strokeRect(placingPos.x * sx + 1, placingPos.y * sy + 1, sx - 2, sy - 2);
     } else if (placingType === 'bldg') {
-      const bw = 6, bh = 5;
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(placingPos.x * sx, placingPos.y * sy, bw * sx, bh * sy);
+      const bw = bldgGrid[0]?.length || 0;
+      const bh = bldgGrid.length || 0;
+      for(let yy=0; yy<bh; yy++){
+        for(let xx=0; xx<bw; xx++){
+          const t=bldgGrid[yy][xx];
+          if(t){
+            ctx.fillStyle = t===TILE.DOOR? '#8bd98d' : '#fff';
+            ctx.fillRect((placingPos.x+xx)*sx, (placingPos.y+yy)*sy, sx, sy);
+          }
+        }
+      }
     }
     ctx.restore();
   }
@@ -173,19 +191,30 @@ function drawInterior() {
   }
 }
 
-intCanvas.addEventListener('click', e => {
-  if (editInteriorIdx < 0) return;
-  const I = moduleData.interiors[editInteriorIdx];
-  const rect = intCanvas.getBoundingClientRect();
-  const x = Math.floor((e.clientX - rect.left) / (intCanvas.width / I.w));
-  const y = Math.floor((e.clientY - rect.top) / (intCanvas.height / I.h));
-  const cyc = [TILE.WALL, TILE.FLOOR, TILE.DOOR];
-  let idx = cyc.indexOf(I.grid[y][x]);
-  idx = (idx + 1) % cyc.length;
-  I.grid[y][x] = cyc[idx];
-  if (I.grid[y][x] === TILE.DOOR) { I.entryX = x; I.entryY = y - 1; }
+function paintInterior(e){
+  if(editInteriorIdx<0||!intPainting) return;
+  const I=moduleData.interiors[editInteriorIdx];
+  const rect=intCanvas.getBoundingClientRect();
+  const x=Math.floor((e.clientX-rect.left)/(intCanvas.width/I.w));
+  const y=Math.floor((e.clientY-rect.top)/(intCanvas.height/I.h));
+  I.grid[y][x]=intPaint;
+  if(intPaint===TILE.DOOR){ I.entryX=x; I.entryY=y-1; }
   drawInterior();
+}
+intCanvas.addEventListener('mousedown',e=>{ intPainting=true; paintInterior(e); });
+intCanvas.addEventListener('mousemove',paintInterior);
+intCanvas.addEventListener('mouseup',()=>{ intPainting=false; });
+intCanvas.addEventListener('mouseleave',()=>{ intPainting=false; });
+
+intPalette.querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    intPalette.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const t=btn.dataset.tile;
+    intPaint = t==='W'?TILE.WALL: t==='D'?TILE.DOOR: TILE.FLOOR;
+  });
 });
+intPalette.querySelector('button')?.classList.add('active');
 
 function showInteriorEditor(show) {
   document.getElementById('intEditor').style.display = show ? 'block' : 'none';
@@ -200,7 +229,9 @@ function renderInteriorList() {
 }
 
 function startNewInterior() {
-  const id = makeInteriorRoom();
+  const w = parseInt(document.getElementById('intW').value,10) || 12;
+  const h = parseInt(document.getElementById('intH').value,10) || 9;
+  const id = makeInteriorRoom(undefined,w,h);
   const I = interiors[id];
   I.id = id;
   moduleData.interiors.push(I);
@@ -212,10 +243,27 @@ function editInterior(i) {
   const I = moduleData.interiors[i];
   editInteriorIdx = i;
   document.getElementById('intId').value = I.id;
+  document.getElementById('intW').value = I.w;
+  document.getElementById('intH').value = I.h;
   showInteriorEditor(true);
   document.getElementById('delInterior').style.display = 'block';
   drawInterior();
 }
+
+function resizeInterior(){
+  if(editInteriorIdx<0) return;
+  const I=moduleData.interiors[editInteriorIdx];
+  const w=parseInt(document.getElementById('intW').value,10)||I.w;
+  const h=parseInt(document.getElementById('intH').value,10)||I.h;
+  const ng=Array.from({length:h},(_,y)=>Array.from({length:w},(_,x)=>{
+    if(y<I.h && x<I.w) return I.grid[y][x];
+    const edge=y===0||y===h-1||x===0||x===w-1; return edge?TILE.WALL:TILE.FLOOR;
+  }));
+  I.w=w; I.h=h; I.grid=ng;
+  drawInterior();
+}
+document.getElementById('intW').addEventListener('change',resizeInterior);
+document.getElementById('intH').addEventListener('change',resizeInterior);
 
 function deleteInterior() {
   if (editInteriorIdx < 0) return;
@@ -1187,6 +1235,18 @@ function deletePortal() {
 }
 
 // --- Buildings ---
+function drawBldg(){
+  const w=bldgGrid[0]?.length||1, h=bldgGrid.length||1;
+  const sx=bldgCanvas.width/w, sy=bldgCanvas.height/h;
+  bldgCtx.clearRect(0,0,bldgCanvas.width,bldgCanvas.height);
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const t=bldgGrid[y][x];
+      bldgCtx.fillStyle = t===TILE.BUILDING? '#fff' : t===TILE.DOOR? '#8bd98d' : '#000';
+      bldgCtx.fillRect(x*sx,y*sy,sx,sy);
+    }
+  }
+}
 function showBldgEditor(show) {
   document.getElementById('bldgEditor').style.display = show ? 'block' : 'none';
 }
@@ -1194,12 +1254,20 @@ function startNewBldg() {
   editBldgIdx = -1;
   document.getElementById('bldgX').value = 0;
   document.getElementById('bldgY').value = 0;
+  document.getElementById('bldgW').value = 6;
+  document.getElementById('bldgH').value = 5;
+  bldgGrid = Array.from({length:5},(_,yy)=>Array.from({length:6},(_,xx)=>TILE.BUILDING));
+  bldgGrid[4][3]=TILE.DOOR;
+  bldgPalette.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+  bldgPalette.querySelector('button[data-tile="B"]').classList.add('active');
+  bldgPaint = TILE.BUILDING;
   updateInteriorOptions();
   document.getElementById('delBldg').style.display = 'none';
   placingType = 'bldg';
   placingPos = null;
   selectedObj = null;
   drawWorld();
+  drawBldg();
   showBldgEditor(true);
 }
 function addBuilding() {
@@ -1210,8 +1278,16 @@ function addBuilding() {
     interiorId = makeInteriorRoom();
     const I = interiors[interiorId]; I.id = interiorId; moduleData.interiors.push(I); renderInteriorList();
   }
-  const b = placeHut(x, y, { interiorId });
-  moduleData.buildings.push(b);
+  let b;
+  if(editBldgIdx>=0){
+    const ob=moduleData.buildings[editBldgIdx];
+    removeBuilding(ob);
+    b = placeHut(x,y,{interiorId, grid:bldgGrid, boarded: ob.boarded});
+    moduleData.buildings[editBldgIdx]=b;
+  }else{
+    b = placeHut(x,y,{interiorId, grid:bldgGrid});
+    moduleData.buildings.push(b);
+  }
   renderBldgList();
   selectedObj = null;
   drawWorld();
@@ -1221,7 +1297,7 @@ function addBuilding() {
 }
 function renderBldgList() {
   const list = document.getElementById('bldgList');
-  list.innerHTML = moduleData.buildings.map((b, i) => `<div data-idx="${i}">Hut @(${b.x},${b.y})</div>`).join('');
+  list.innerHTML = moduleData.buildings.map((b, i) => `<div data-idx="${i}">Bldg @(${b.x},${b.y})</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editBldg(parseInt(div.dataset.idx, 10)));
 }
 
@@ -1230,13 +1306,56 @@ function editBldg(i) {
   editBldgIdx = i;
   document.getElementById('bldgX').value = b.x;
   document.getElementById('bldgY').value = b.y;
+  document.getElementById('bldgW').value = b.w;
+  document.getElementById('bldgH').value = b.h;
+  bldgGrid = b.grid ? b.grid.map(r=>r.slice()) : Array.from({length:b.h},()=>Array.from({length:b.w},()=>TILE.BUILDING));
   updateInteriorOptions();
   document.getElementById('bldgInterior').value = b.interiorId || '';
   document.getElementById('delBldg').style.display = 'block';
+  bldgPalette.querySelectorAll('button').forEach(btn=>btn.classList.remove('active'));
+  bldgPalette.querySelector('button[data-tile="B"]').classList.add('active');
+  bldgPaint = TILE.BUILDING;
+  drawBldg();
   showBldgEditor(true);
   selectedObj = { type: 'bldg', obj: b };
   drawWorld();
 }
+
+function paintBldg(e){
+  if(!bldgPainting) return;
+  const w=bldgGrid[0]?.length||1, h=bldgGrid.length||1;
+  const rect=bldgCanvas.getBoundingClientRect();
+  const x=Math.floor((e.clientX-rect.left)/(bldgCanvas.width/w));
+  const y=Math.floor((e.clientY-rect.top)/(bldgCanvas.height/h));
+  if(bldgPaint===TILE.DOOR){
+    for(let yy=0; yy<h; yy++){ for(let xx=0; xx<w; xx++){ if(bldgGrid[yy][xx]===TILE.DOOR) bldgGrid[yy][xx]=TILE.BUILDING; }}
+  }
+  bldgGrid[y][x]=bldgPaint;
+  drawBldg();
+}
+bldgCanvas.addEventListener('mousedown',e=>{ bldgPainting=true; paintBldg(e); });
+bldgCanvas.addEventListener('mousemove',paintBldg);
+bldgCanvas.addEventListener('mouseup',()=>{ bldgPainting=false; });
+bldgCanvas.addEventListener('mouseleave',()=>{ bldgPainting=false; });
+
+function resizeBldg(){
+  const w=parseInt(document.getElementById('bldgW').value,10)||1;
+  const h=parseInt(document.getElementById('bldgH').value,10)||1;
+  const ng=Array.from({length:h},(_,y)=>Array.from({length:w},(_,x)=> (y<bldgGrid.length && x<bldgGrid[0].length)? bldgGrid[y][x]:null));
+  bldgGrid=ng; drawBldg();
+}
+document.getElementById('bldgW').addEventListener('change',resizeBldg);
+document.getElementById('bldgH').addEventListener('change',resizeBldg);
+
+bldgPalette.querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    bldgPalette.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const t=btn.dataset.tile;
+    bldgPaint = t==='B'?TILE.BUILDING : t==='D'?TILE.DOOR : null;
+  });
+});
+bldgPalette.querySelector('button')?.classList.add('active');
 
 function removeBuilding(b) {
   if (b.under) {
@@ -1249,7 +1368,7 @@ function removeBuilding(b) {
 function moveBuilding(b, x, y) {
   const idx = moduleData.buildings.indexOf(b);
   removeBuilding(b);
-  const nb = placeHut(x, y, { interiorId: b.interiorId, boarded: b.boarded });
+  const nb = placeHut(x, y, { interiorId: b.interiorId, boarded: b.boarded, grid: b.grid });
   moduleData.buildings[idx] = nb;
   editBldgIdx = idx;
   return nb;

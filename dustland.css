@@ -739,8 +739,13 @@
             overflow: visible;
         }
 
-        .editor-panel.wide .tabpanes .card {
+.editor-panel.wide .tabpanes .card {
             flex: 1 1 320px;
             margin: 0 8px 16px !important;
         }
     }
+
+#intPalette button,
+#bldgPalette button { width:20px; height:20px; border:none; margin:2px; }
+#intPalette button.active,
+#bldgPalette button.active { outline:2px solid #fff; }

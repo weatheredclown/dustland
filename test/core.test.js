@@ -108,7 +108,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save } = globalThis;
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, makeInteriorRoom, placeHut, TILE, getTile, interiors } = globalThis;
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -446,6 +446,28 @@ test('door portals link interiors', () => {
   assert.strictEqual(state.map, 'castle');
   interactAt(1,1);
   assert.strictEqual(state.map, 'forest');
+});
+
+test('makeInteriorRoom supports custom size', () => {
+  const id = makeInteriorRoom('big', 20, 15);
+  const I = interiors[id];
+  assert.strictEqual(I.w, 20);
+  assert.strictEqual(I.h, 15);
+  assert.strictEqual(I.grid.length, 15);
+  assert.strictEqual(I.grid[0].length, 20);
+});
+
+test('placeHut uses custom grid and door', () => {
+  const grid = [
+    [TILE.BUILDING, TILE.DOOR],
+    [null, TILE.BUILDING]
+  ];
+  const before = getTile('world', 0, 1);
+  const b = placeHut(0, 0, { interiorId: makeInteriorRoom(), grid });
+  assert.strictEqual(b.w, 2);
+  assert.strictEqual(b.h, 2);
+  assert.strictEqual(getTile('world', 1, 0), TILE.DOOR);
+  assert.strictEqual(getTile('world', 0, 1), before);
 });
 
 test('quest turn-in grants reward item', () => {

@@ -383,9 +383,8 @@ function findNearestLand(sx,sy){
   }
   return {x:sx,y:sy};
 }
-function makeInteriorRoom(id){
+function makeInteriorRoom(id,w=12,h=9){
   id = id || ('room_'+rng().toString(36).slice(2,8));
-  const w=12, h=9;
   const g=Array.from({length:h},(_,y)=> Array.from({length:w},(_,x)=>{
     const edge= y===0||y===h-1||x===0||x===w-1; return edge? TILE.WALL : TILE.FLOOR;
   }));
@@ -393,21 +392,37 @@ function makeInteriorRoom(id){
   interiors[id] = {w,h,grid:g, entryX:ex, entryY:h-2};
   return id;
 }
-function placeHut(x,y,b){
-  const w=6,h=5;
-  const under=Array.from({length:h},(_,yy)=>Array.from({length:w},(_,xx)=>getTile('world',x+xx,y+yy)));
-  for(let yy=0; yy<h; yy++){ for(let xx=0; xx<w; xx++){ setTile('world',x+xx,y+yy,TILE.BUILDING); }}
-  const doorX=x+Math.floor(w/2), doorY=y+h-1; setTile('world',doorX,doorY,TILE.DOOR);
-  let interiorId, boarded;
-  if(b){
-    interiorId = b.interiorId || makeInteriorRoom();
-    if(b.interiorId && !interiors[b.interiorId]) makeInteriorRoom(b.interiorId);
-    boarded = b.boarded || false;
-  } else {
-    interiorId = makeInteriorRoom();
-    boarded = rng() < 0.3;
+function placeHut(x,y,b={}){
+  let grid=b.grid;
+  let w,h,doorX,doorY;
+  if(grid){
+    h=grid.length; w=grid[0].length;
+    for(let yy=0; yy<h; yy++){ for(let xx=0; xx<w; xx++){
+      const tile=grid[yy][xx];
+      if(tile===TILE.DOOR){ doorX=x+xx; doorY=y+yy; }
+    }}
+    if(doorX==null){ doorX=x+Math.floor(w/2); doorY=y+h-1; }
+  }else{
+    w=b.w||6; h=b.h||5;
+    grid=Array.from({length:h},(_,yy)=>Array.from({length:w},(_,xx)=>TILE.BUILDING));
+    const relX = b.doorX!=null ? b.doorX - x : Math.floor(w/2);
+    const relY = b.doorY!=null ? b.doorY - y : h-1;
+    if(relY>=0&&relY<h&&relX>=0&&relX<w) grid[relY][relX]=TILE.DOOR;
+    doorX=x+relX; doorY=y+relY;
   }
-  const nb={x,y,w,h,doorX,doorY,interiorId,boarded,under};
+  const under=Array.from({length:h},(_,yy)=>Array.from({length:w},(_,xx)=>getTile('world',x+xx,y+yy)));
+  for(let yy=0; yy<h; yy++){
+    for(let xx=0; xx<w; xx++){
+      const t=grid[yy][xx];
+      if(t===TILE.DOOR){ setTile('world',x+xx,y+yy,TILE.DOOR); }
+      else if(t===TILE.BUILDING){ setTile('world',x+xx,y+yy,TILE.BUILDING); }
+    }
+  }
+  let interiorId, boarded;
+  interiorId = b.interiorId || makeInteriorRoom();
+  if(b.interiorId && !interiors[b.interiorId]) makeInteriorRoom(b.interiorId);
+  boarded = b.boarded!==undefined ? b.boarded : rng()<0.3;
+  const nb={x,y,w,h,doorX,doorY,interiorId,boarded,under,grid};
   buildings.push(nb);
   return nb;
 }
