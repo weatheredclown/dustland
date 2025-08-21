@@ -487,6 +487,18 @@ test('quest turn-in grants reward item', () => {
   assert.ok(player.inv.some(it => it.id === 'cursed_vr_helmet'));
 });
 
+test('quest turn-in awards XP once', () => {
+  for (const k in quests) delete quests[k];
+  NPCS.length = 0;
+  party.length = 0;
+  const char = new Character('g', 'Gil', 'Role');
+  party.addMember(char);
+  const quest = new Quest('q_xp', 'Quest', '', { xp: 4 });
+  const npc = { quest };
+  defaultQuestProcessor(npc, 'do_turnin');
+  assert.strictEqual(char.xp, 4);
+});
+
 test('turn-in choice hidden until quest accepted', () => {
   player.inv.length = 0;
   NPCS.length = 0;
