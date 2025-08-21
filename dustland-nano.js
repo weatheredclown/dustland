@@ -74,7 +74,6 @@
 
   // ===== Lifecycle =====
   async function init(){
-    console.log("[Nano] init() called...");
     _ensureUI();
     _state.failed=false;
     _updateBadge();
@@ -85,7 +84,6 @@
       return;
     }
     try {
-      console.log("[Nano] Checking LanguageModel.availability...");
       const avail = await LanguageModel.availability({ outputLanguage: "en" });
       console.log("[Nano] availability() returned:", avail);
 
@@ -93,7 +91,6 @@
         console.log("[Nano] Creating session (model already available)...");
         _state.session = await LanguageModel.create({ outputLanguage: "en" });
         _state.ready = true; _state.failed=false; 
-        console.log("[Nano] Model ready.");
         _updateBadge();
 
       } else if (avail === "downloadable" || avail === "downloading") {
@@ -111,7 +108,6 @@
         });
         _hideProgress();
         _state.ready = true; _state.failed=false; 
-        console.log("[Nano] Model ready after download.");
         _updateBadge();
 
       } else {
