@@ -60,7 +60,8 @@ function playSfx(id){
   const a=sfxBase.cloneNode();
   a.volume=0.2;
   a.currentTime=meta.start;
-  a.play();
+  // Ignore playback aborts from rapid movement to avoid console noise
+  a.play().catch(()=>{});
   setTimeout(()=>a.pause(), meta.dur*1000);
 }
 EventBus.on('sfx', playSfx);
