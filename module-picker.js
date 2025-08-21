@@ -1,5 +1,5 @@
 // Splash screen allowing the player to pick a module.
-// Displays a pulsing title and swirling dust background.
+// Displays a pulsing title and swirling dust background with drifting particles.
 const MODULES = [
   { id: 'dustland', name: 'Dustland', file: 'modules/dustland.module.js' },
   { id: 'echoes', name: 'Echoes', file: 'modules/echoes.module.js' },
@@ -22,15 +22,38 @@ function startDust(canvas){
   }
   resize();
   window.addEventListener('resize', resize);
+  // Reset a particle with a new lifetime and entry point at the screen edge.
+  function spawn(p){
+    p.life = Math.random()*100 + 200;
+    p.size = Math.random()*2 + 1;
+    p.speed = Math.random()*0.5 + 0.2;
+    const side = Math.floor(Math.random()*4);
+    if(side === 0){
+      p.x = 0;
+      p.y = Math.random()*canvas.height;
+      p.vx = Math.random()*1 + 0.5;
+      p.vy = (Math.random()*2 - 1)*0.5;
+    } else if(side === 1){
+      p.x = canvas.width;
+      p.y = Math.random()*canvas.height;
+      p.vx = -(Math.random()*1 + 0.5);
+      p.vy = (Math.random()*2 - 1)*0.5;
+    } else if(side === 2){
+      p.x = Math.random()*canvas.width;
+      p.y = 0;
+      p.vx = (Math.random()*2 - 1)*0.5;
+      p.vy = Math.random()*1 + 0.5;
+    } else {
+      p.x = Math.random()*canvas.width;
+      p.y = canvas.height;
+      p.vx = (Math.random()*2 - 1)*0.5;
+      p.vy = -(Math.random()*1 + 0.5);
+    }
+  }
   for(let i=0;i<60;i++){
-    particles.push({
-      x: Math.random()*canvas.width,
-      y: Math.random()*canvas.height,
-      size: Math.random()*2+1,
-      speed: Math.random()*0.5+0.2,
-      vx: 0,
-      vy: 0
-    });
+    const p = { x: 0, y: 0, vx: 0, vy: 0 };
+    spawn(p);
+    particles.push(p);
   }
   function update(){
     const cx = canvas.width/2;
@@ -44,6 +67,12 @@ function startDust(canvas){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = 'rgba(255,255,255,.4)';
     particles.forEach(p => {
+      p.life--;
+      if(p.life <= 0 || p.x < -p.size || p.x > canvas.width + p.size || p.y < -p.size || p.y > canvas.height + p.size){
+        spawn(p);
+        ctx.fillRect(p.x,p.y,p.size,p.size);
+        return;
+      }
       attractors.forEach(a => {
         const dx = a.x - p.x;
         const dy = a.y - p.y;
@@ -57,16 +86,11 @@ function startDust(canvas){
       p.x += p.vx - p.speed;
       p.y += p.vy;
       ctx.fillRect(p.x,p.y,p.size,p.size);
-      if(p.x < -p.size || p.y < -p.size || p.y > canvas.height + p.size){
-        p.x = canvas.width + p.size;
-        p.y = Math.random()*canvas.height;
-        p.vx = 0;
-        p.vy = 0;
-      }
     });
     requestAnimationFrame(update);
   }
   update();
+  return { particles, update };
 }
 
 function loadModule(moduleInfo){
