@@ -21,6 +21,18 @@
               if (typeof revealHiddenNPCs === 'function') revealHiddenNPCs();
             }
             break; }
+          case 'unboardDoor': {
+            if (eff.interiorId && Array.isArray(globalThis.buildings)) {
+              const b = globalThis.buildings.find(b => b.interiorId === eff.interiorId);
+              if (b) b.boarded = false;
+            }
+            break; }
+          case 'boardDoor': {
+            if (eff.interiorId && Array.isArray(globalThis.buildings)) {
+              const b = globalThis.buildings.find(b => b.interiorId === eff.interiorId);
+              if (b) b.boarded = true;
+            }
+            break; }
           case 'modStat': {
             const target = ctx.actor || ctx.player;
             if (target && target.stats && eff.stat) {

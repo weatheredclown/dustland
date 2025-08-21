@@ -44,7 +44,10 @@ const OFFICE_MODULE = (() => {
     interiors = {};
     if (creatorMap.grid && creatorMap.grid.length) interiors['creator'] = creatorMap;
     buildings.length = 0;
-    const hut = placeHut(WORLD_MID + 3, WORLD_MIDY - 2, { interiorId: 'castle' });
+    const hut = placeHut(WORLD_MID + 3, WORLD_MIDY - 2, {
+      interiorId: 'castle',
+      boarded: true
+    });
     return { castleId: hut?.interiorId };
   }
 
@@ -359,6 +362,11 @@ const OFFICE_MODULE = (() => {
           choices: [
             { label: '(Ask)', to: 'ask' },
             {
+              label: '(Open Castle)',
+              to: 'unlock',
+              once: true
+            },
+            {
               label: '(Request Boon)',
               to: 'gift',
               if: { flag: 'visited_castle', op: '>=', value: 1 },
@@ -368,6 +376,11 @@ const OFFICE_MODULE = (() => {
             },
             { label: '(Leave)', to: 'bye' }
           ]
+        },
+        unlock: {
+          text: 'He gestures; the castle doors creak open.',
+          effects: [ { effect: 'unboardDoor', interiorId: 'castle' } ],
+          choices: [ { label: '(Thanks)', to: 'bye' } ]
         },
         ask: {
           text: 'He only laughs and vanishes into mist.',
@@ -389,7 +402,15 @@ const OFFICE_MODULE = (() => {
       desc: 'It bares its teeth.',
       portraitSheet: portraits.rat,
       combat: { HP: 3, ATK: 1, DEF: 0, loot: 'rat_tail', auto: true },
-      tree: { start: { text: 'The rat lunges!', choices: [ { label: '(Leave)', to: 'bye' } ] } }
+      tree: {
+        start: {
+          text: 'The rat lunges!',
+          choices: [
+            { label: '(Fight)', to: 'do_fight' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        }
+      }
     },
     {
       id: 'forest_bandit',
@@ -401,7 +422,15 @@ const OFFICE_MODULE = (() => {
       desc: 'Lurks among the trees.',
       portraitSheet: portraits.bandit,
       combat: { HP: 6, ATK: 2, DEF: 1, loot: 'rusty_dagger', auto: true },
-      tree: { start: { text: 'Your coin or your life!', choices: [ { label: '(Leave)', to: 'bye' } ] } }
+      tree: {
+        start: {
+          text: 'Your coin or your life!',
+          choices: [
+            { label: '(Fight)', to: 'do_fight' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        }
+      }
     },
     {
       id: 'forest_ogre',
@@ -413,7 +442,15 @@ const OFFICE_MODULE = (() => {
       desc: 'Towering and enraged.',
       portraitSheet: portraits.ogre,
       combat: { HP: 12, ATK: 4, DEF: 2, loot: 'ogre_tooth', auto: true },
-      tree: { start: { text: 'The ogre roars.', choices: [ { label: '(Leave)', to: 'bye' } ] } }
+      tree: {
+        start: {
+          text: 'The ogre roars.',
+          choices: [
+            { label: '(Fight)', to: 'do_fight' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        }
+      }
     },
     {
       id: 'vending',
@@ -436,7 +473,15 @@ const OFFICE_MODULE = (() => {
       name: 'Rogue Janitor',
       desc: 'Wields a dripping mop.',
       portraitSheet: portraits.janitor,
-      tree: { start: { text: 'He blocks your path.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      tree: {
+        start: {
+          text: 'He blocks your path.',
+          choices: [
+            { label: '(Fight)', to: 'do_fight' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        }
+      },
       combat: { DEF: 3, loot: 'rusty_mop' }
     }
   ];
