@@ -8,9 +8,13 @@ const apEl = document.getElementById('ap');
 const scrEl = document.getElementById('scrap');
 
 function log(msg){
-  const p=document.createElement('div');
-  p.textContent=msg;
-  logEl.prepend(p);
+  if (logEl) {
+    const p=document.createElement('div');
+    p.textContent=msg;
+    logEl.prepend(p);
+  } else {
+    console.log("Log: " + msg);
+  }
 }
 
 // --- Toasts (lightweight) ---
@@ -94,6 +98,9 @@ let camX=0, camY=0, showMini=true;
 let _lastTime=0;
 
 function draw(t){
+  if (disp.width < 16) {
+    return;
+  }
   const dt=(t-_lastTime)||0; _lastTime=t;
   render(state, dt/1000);
   dctx.globalAlpha=0.10; dctx.drawImage(prev, 1, 0);
@@ -211,13 +218,17 @@ function showTab(which){
   if(window.innerWidth >= TAB_BREAKPOINT) return;
   const inv=document.getElementById('inv'), partyEl=document.getElementById('party'), q=document.getElementById('quests');
   const tInv=document.getElementById('tabInv'), tP=document.getElementById('tabParty'), tQ=document.getElementById('tabQuests');
-  inv.style.display=(which==='inv'?'grid':'none');
-  partyEl.style.display=(which==='party'?'grid':'none');
-  q.style.display=(which==='quests'?'grid':'none');
-  for(const el of [tInv,tP,tQ]) el.classList.remove('active');
-  if(which==='inv') tInv.classList.add('active');
-  if(which==='party') tP.classList.add('active');
-  if(which==='quests') tQ.classList.add('active');
+  if (inv) {
+    inv.style.display=(which==='inv'?'grid':'none');
+    partyEl.style.display=(which==='party'?'grid':'none');
+    q.style.display=(which==='quests'?'grid':'none');
+    for(const el of [tInv,tP,tQ]) el.classList.remove('active');
+    if(which==='inv') tInv.classList.add('active');
+    if(which==='party') tP.classList.add('active');
+    if(which==='quests') tQ.classList.add('active');
+  } else {
+    console.error("showTab failed. Adventure Kit?");
+  }
 }
 
 function updateTabsLayout(){
@@ -237,10 +248,13 @@ function updateTabsLayout(){
 window.addEventListener('resize', updateTabsLayout);
 updateTabsLayout();
 
-document.getElementById('tabInv').onclick=()=>showTab('inv');
-document.getElementById('tabParty').onclick=()=>showTab('party');
-document.getElementById('tabQuests').onclick=()=>showTab('quests');
-
+if (document.getElementById('tabInv')) {
+  document.getElementById('tabInv').onclick=()=>showTab('inv');
+  document.getElementById('tabParty').onclick=()=>showTab('party');
+  document.getElementById('tabQuests').onclick=()=>showTab('quests');
+} else {
+  console.error("showTab setup failed. Adventure Kit?");
+}
 // ===== Renderers =====
 function renderInv(){
   const inv=document.getElementById('inv');
@@ -326,55 +340,60 @@ function runTests(){
 }
 
 // ===== Input =====
-document.getElementById('saveBtn').onclick=()=>save();
-document.getElementById('loadBtn').onclick=()=>{ load(); };
-document.getElementById('resetBtn').onclick=()=>resetAll();
+if (document.getElementById('saveBtn')) {
+  document.getElementById('saveBtn').onclick=()=>save();
+  document.getElementById('loadBtn').onclick=()=>{ load(); };
+  document.getElementById('resetBtn').onclick=()=>resetAll();
+  document.getElementById('nanoToggle').onclick=()=>{
+    if(window.NanoDialog){
+      NanoDialog.enabled = !NanoDialog.enabled;
+      if (typeof toast === 'function') toast(`Dynamic dialog ${NanoDialog.enabled ? 'enabled' :   'disabled'}`);
+      if (NanoDialog.refreshIndicator) NanoDialog.refreshIndicator();
+    }
+  };
 
-document.getElementById('nanoToggle').onclick=()=>{
-  if(window.NanoDialog){
-    NanoDialog.enabled = !NanoDialog.enabled;
-    if (typeof toast === 'function') toast(`Dynamic dialog ${NanoDialog.enabled ? 'enabled' : 'disabled'}`);
-    if (NanoDialog.refreshIndicator) NanoDialog.refreshIndicator();
-  }
-};
-
-window.addEventListener('keydown',(e)=>{
-  if(overlay.classList.contains('shown')){
-    if(e.key==='Escape') closeDialog();
-    else if(handleDialogKey?.(e)) e.preventDefault();
-    return;
-  }
-  const combat = document.getElementById('combatOverlay');
-  if(combat?.classList?.contains('shown')){
-    if(handleCombatKey?.(e)) e.preventDefault();
-    return;
-  }
-  switch(e.key){
-    case 'ArrowUp': case 'w': case 'W': move(0,-1); break;
-    case 'ArrowDown': case 's': case 'S': move(0,1); break;
-    case 'ArrowLeft': case 'a': case 'A': move(-1,0); break;
-    case 'ArrowRight': case 'd': case 'D': move(1,0); break;
-    case 'e': case 'E': case ' ': interact(); break;
-    case 't': case 'T': takeNearestItem(); break;
-    case 'i': case 'I': showTab('inv'); break;
-    case 'p': case 'P': showTab('party'); break;
-    case 'q': if(!e.ctrlKey && !e.metaKey){ showTab('quests'); e.preventDefault(); } break;
-    case 'Tab':
-      e.preventDefault();
-      if (party.length>0){
-        selectedMember = (selectedMember + 1) % party.length;
-        renderParty();
-        toast(`Leader: ${party[selectedMember].name}`);
-        if(window.NanoDialog){
-          const near = NPCS.filter(n => n.map === state.map
-            && Math.abs(n.x - party.x) + Math.abs(n.y - party.y) < 10);
-          near.forEach(n => NanoDialog.queueForNPC(n, 'start', 'leader change'));
+  window.addEventListener('keydown',(e)=>{
+    if(overlay?.classList.contains('shown')){
+      if(e.key==='Escape') closeDialog();
+      else if(handleDialogKey?.(e)) e.preventDefault();
+      return;
+    }
+    const combat = document.getElementById('combatOverlay');
+    if(combat?.classList?.contains('shown')){
+      if(handleCombatKey?.(e)) e.preventDefault();
+      return;
+    }
+    switch(e.key){
+      case 'ArrowUp': case 'w': case 'W': move(0,-1); break;
+      case 'ArrowDown': case 's': case 'S': move(0,1); break;
+      case 'ArrowLeft': case 'a': case 'A': move(-1,0); break;
+      case 'ArrowRight': case 'd': case 'D': move(1,0); break;
+      case 'e': case 'E': case ' ': interact(); break;
+      case 't': case 'T': takeNearestItem(); break;
+      case 'i': case 'I': showTab('inv'); break;
+      case 'p': case 'P': showTab('party'); break;
+      case 'q': if(!e.ctrlKey && !e.metaKey){ showTab('quests'); e.preventDefault(); } break;
+      case 'Tab':
+        e.preventDefault();
+        if (party.length>0){
+          selectedMember = (selectedMember + 1) % party.length;
+          renderParty();
+          toast(`Leader: ${party[selectedMember].name}`);
+          if(window.NanoDialog){
+            const near = NPCS.filter(n => n.map === state.map
+              && Math.abs(n.x - party.x) + Math.abs(n.y - party.y) < 10);
+            near.forEach(n => NanoDialog.queueForNPC(n, 'start', 'leader change'));
+          }
         }
-      }
-      break;
-    case 'm': case 'M': showMini=!showMini; break;
-  }
-});
+        break;
+      case 'm': case 'M': showMini=!showMini; break;
+    }
+  });
+
+} else {
+  console.error("No save/load btns. Adventure Kit?");
+  NanoDialog.enabled = false;
+}
 
 disp.addEventListener('click',e=>{
   const rect=disp.getBoundingClientRect();

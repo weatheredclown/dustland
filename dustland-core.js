@@ -502,7 +502,7 @@ function load(){
 const startEl = document.getElementById('start');
 const startContinue = document.getElementById('startContinue');
 const startNew = document.getElementById('startNew');
-function showStart(){ startEl.style.display='flex'; setGameState(GAME_STATE.MENU); }
+function showStart(){ if (startEl) {startEl.style.display='flex'; setGameState(GAME_STATE.MENU); } }
 function hideStart(){
   startEl.style.display='none';
   const back = state.map==='world'
