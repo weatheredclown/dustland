@@ -175,6 +175,9 @@
         background: #0f120f;
         padding: 8px
     }
+    .pcard.selected {
+        box-shadow: 0 0 0 2px #8bd98d;
+    }
 
     .row {
         display: flex;
