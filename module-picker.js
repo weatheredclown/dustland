@@ -80,19 +80,20 @@ function showModulePicker(){
 
   const canvas = document.createElement('canvas');
   canvas.id = 'dustParticles';
-  canvas.style = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
+  // Background dust layer; z-index keeps UI elements in front.
+  canvas.style = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0';
   overlay.appendChild(canvas);
   startDust(canvas);
 
   const title = document.createElement('div');
   title.id = 'gameTitle';
   title.textContent = 'Dustland CRT';
-  title.style = 'color:#0f0;text-shadow:0 0 10px #0f0;font-size:32px;margin-bottom:20px;animation:pulse 2s infinite';
+  title.style = 'position:relative;z-index:1;color:#0f0;text-shadow:0 0 10px #0f0;font-size:32px;margin-bottom:20px;animation:pulse 2s infinite';
   overlay.appendChild(title);
 
   const win = document.createElement('div');
   win.className = 'win';
-  win.style = 'width:min(420px,92vw);background:#0b0d0b;border:1px solid #2a382a;border-radius:12px;box-shadow:0 20px 80px rgba(0,0,0,.7);overflow:hidden';
+  win.style = 'position:relative;z-index:1;width:min(420px,92vw);background:#0b0d0b;border:1px solid #2a382a;border-radius:12px;box-shadow:0 20px 80px rgba(0,0,0,.7);overflow:hidden';
   win.innerHTML = '<header style="padding:10px 12px;border-bottom:1px solid #223022;font-weight:700">Select Module</header><main style="padding:12px" id="moduleButtons"></main>';
   overlay.appendChild(win);
   document.body.appendChild(overlay);
