@@ -6,6 +6,21 @@ const OFFICE_MODULE = (() => {
     FLOOR_H = 24;
   const midX = Math.floor(FLOOR_W / 2);
 
+  const portraits = {
+    security: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjZmZiNmI2Ii8+PHRleHQgeD0iMTYiIHk9IjIxIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIj5TPC90ZXh0Pjwvc3ZnPg==',
+    worker: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjYjhmZmI2Ii8+PHRleHQgeD0iMTYiIHk9IjIxIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIj5XPC90ZXh0Pjwvc3ZnPg==',
+    friendJ: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjY2FmZmM2Ii8+PHRleHQgeD0iMTYiIHk9IjIxIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIj5KPC90ZXh0Pjwvc3ZnPg==',
+    friendL: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjY2FmZmM2Ii8+PHRleHQgeD0iMTYiIHk9IjIxIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIj5MPC90ZXh0Pjwvc3ZnPg==',
+    toll: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjYTlmNTlmIi8+PHRleHQgeD0iMTYiIHk9IjIxIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIj5UPC90ZXh0Pjwvc3ZnPg==',
+    fae: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjY2FmZmM2Ii8+PHRleHQgeD0iMTYiIHk9IjIxIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIj5GPC90ZXh0Pjwvc3ZnPg==',
+    rat: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjZmZiNmI2Ii8+PHRleHQgeD0iMTYiIHk9IjIxIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIj5SPC90ZXh0Pjwvc3ZnPg==',
+    bandit: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjZjg4Ii8+PHRleHQgeD0iMTYiIHk9IjIxIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIj5CPC90ZXh0Pjwvc3ZnPg==',
+    ogre: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjZjU1Ii8+PHRleHQgeD0iMTYiIHk9IjIxIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIj5PPC90ZXh0Pjwvc3ZnPg==',
+    vending: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjYTlmNTlmIi8+PHRleHQgeD0iMTYiIHk9IjIxIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIj5WPC90ZXh0Pjwvc3ZnPg==',
+    janitor: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjZjg4Ii8+PHRleHQgeD0iMTYiIHk9IjIxIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIj5KPC90ZXh0Pjwvc3ZnPg==',
+    elevator: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjYTlmNTlmIi8+PHRleHQgeD0iMTYiIHk9IjIxIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIj5FPC90ZXh0Pjwvc3ZnPg=='
+  };
+
   const WORLD_MID = Math.floor(WORLD_W / 2),
     WORLD_MIDY = Math.floor(WORLD_H / 2);
 
@@ -161,6 +176,7 @@ const OFFICE_MODULE = (() => {
     color: '#a9f59f',
     name: 'Elevator Buttons',
     desc: 'A panel to select floors.',
+    portraitSheet: portraits.elevator,
     tree: {
       start: {
         text: 'Select floor:',
@@ -189,6 +205,7 @@ const OFFICE_MODULE = (() => {
       color: '#ffb6b6',
       name: 'Security Guard',
       desc: 'A sharp-eyed guard watches the lobby.',
+      portraitSheet: portraits.security,
       tree: {
         start: {
           text: 'Access to the third floor requires a card.',
@@ -214,6 +231,7 @@ const OFFICE_MODULE = (() => {
       color: '#b8ffb6',
       name: 'Office Worker',
       desc: 'Busy typing at their desk.',
+      portraitSheet: portraits.worker,
       tree: () =>
         flagValue('visited_forest')
           ? { start: { text: 'Back from the forest already?', choices: [ { label: '(Leave)', to: 'bye' } ] } }
@@ -227,6 +245,7 @@ const OFFICE_MODULE = (() => {
       color: '#b8ffb6',
       name: 'Office Worker',
       desc: 'On a long conference call.',
+      portraitSheet: portraits.worker,
       tree: () =>
         flagValue('visited_forest')
           ? { start: { text: 'Heard you roamed the forest.', choices: [ { label: '(Leave quietly)', to: 'bye' } ] } }
@@ -240,6 +259,7 @@ const OFFICE_MODULE = (() => {
       color: '#caffc6',
       name: 'Coworker Jen',
       desc: 'Your friend scrolling through code.',
+      portraitSheet: portraits.friendJ,
       questId: 'q_card',
       tree: () =>
         flagValue('visited_forest')
@@ -276,6 +296,7 @@ const OFFICE_MODULE = (() => {
       color: '#caffc6',
       name: 'Coworker Luis',
       desc: 'Testing a new patch.',
+      portraitSheet: portraits.friendL,
       tree: () =>
         flagValue('visited_forest')
           ? { start: { text: 'The forest changed you.', choices: [ { label: '(Smile)', to: 'bye' } ] } }
@@ -289,6 +310,7 @@ const OFFICE_MODULE = (() => {
       color: '#a9f59f',
       name: 'Toll Keeper',
       desc: 'Blocks the only bridge across the river.',
+      portraitSheet: portraits.toll,
       questId: 'q_toll',
       tree: {
         start: {
@@ -330,6 +352,7 @@ const OFFICE_MODULE = (() => {
       color: '#caffc6',
       name: 'Fae King',
       desc: 'A regal fae with an enigmatic smile.',
+      portraitSheet: portraits.fae,
       tree: {
         start: {
           text: 'Welcome, wanderer. Is this real or dream?',
@@ -364,6 +387,7 @@ const OFFICE_MODULE = (() => {
       color: '#ffb6b6',
       name: 'Giant Rat',
       desc: 'It bares its teeth.',
+      portraitSheet: portraits.rat,
       combat: { HP: 3, ATK: 1, DEF: 0, loot: 'rat_tail', auto: true },
       tree: { start: { text: 'The rat lunges!', choices: [ { label: '(Leave)', to: 'bye' } ] } }
     },
@@ -375,6 +399,7 @@ const OFFICE_MODULE = (() => {
       color: '#f88',
       name: 'Bandit',
       desc: 'Lurks among the trees.',
+      portraitSheet: portraits.bandit,
       combat: { HP: 6, ATK: 2, DEF: 1, loot: 'rusty_dagger', auto: true },
       tree: { start: { text: 'Your coin or your life!', choices: [ { label: '(Leave)', to: 'bye' } ] } }
     },
@@ -386,6 +411,7 @@ const OFFICE_MODULE = (() => {
       color: '#f55',
       name: 'Forest Ogre',
       desc: 'Towering and enraged.',
+      portraitSheet: portraits.ogre,
       combat: { HP: 12, ATK: 4, DEF: 2, loot: 'ogre_tooth', auto: true },
       tree: { start: { text: 'The ogre roars.', choices: [ { label: '(Leave)', to: 'bye' } ] } }
     },
@@ -397,6 +423,7 @@ const OFFICE_MODULE = (() => {
       color: '#a9f59f',
       name: 'Vending Machine',
       desc: 'It flashes "TRADE".',
+      portraitSheet: portraits.vending,
       shop: true,
       tree: { start: { text: 'The machine hums softly.', choices: [ { label: '(Leave)', to: 'bye' } ] } }
     },
@@ -408,6 +435,7 @@ const OFFICE_MODULE = (() => {
       color: '#f88',
       name: 'Rogue Janitor',
       desc: 'Wields a dripping mop.',
+      portraitSheet: portraits.janitor,
       tree: { start: { text: 'He blocks your path.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       combat: { DEF: 3, loot: 'rusty_mop' }
     }

@@ -9,15 +9,21 @@ const combatState = { enemies: [], phase: 'party', active: 0, choice: 0, mode:'c
 function setPortraitDiv(el, obj){
   if(!el) return;
   if(obj && obj.portraitSheet){
-    const frame = Math.floor(Math.random() * 4);
-    const col = frame % 2;
-    const row = Math.floor(frame/2);
-    const posX = col === 0 ? '0%' : '100%';
-    const posY = row === 0 ? '0%' : '100%';
     el.style.background = 'transparent';
-    el.style.backgroundImage = `url(${obj.portraitSheet})`;
-    el.style.backgroundSize = '200% 200%';
-    el.style.backgroundPosition = `${posX} ${posY}`;
+    if(/_4\.[a-z]+$/i.test(obj.portraitSheet)){
+      const frame = Math.floor(Math.random() * 4);
+      const col = frame % 2;
+      const row = Math.floor(frame/2);
+      const posX = col === 0 ? '0%' : '100%';
+      const posY = row === 0 ? '0%' : '100%';
+      el.style.backgroundImage = `url(${obj.portraitSheet})`;
+      el.style.backgroundSize = '200% 200%';
+      el.style.backgroundPosition = `${posX} ${posY}`;
+    } else {
+      el.style.backgroundImage = `url(${obj.portraitSheet})`;
+      el.style.backgroundSize = '100% 100%';
+      el.style.backgroundPosition = 'center';
+    }
   } else {
     el.textContent = obj && obj.portrait ? obj.portrait : '@';
   }

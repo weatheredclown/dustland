@@ -540,6 +540,23 @@ test('openDialog displays portrait when sheet provided', () => {
   assert.ok(portEl.style.backgroundImage.includes('kesh_4.png'));
 });
 
+test('openDialog uses full image when not sprite sheet', () => {
+  NPCS.length = 0;
+  const tree = { start: { text: '', choices: [] } };
+  const img = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>').toString('base64');
+  const npc = makeNPC('p2', 'world', 0, 0, '#fff', 'Port2', '', '', tree, null, null, null, { portraitSheet: img });
+  NPCS.push(npc);
+  openDialog(npc);
+  assert.strictEqual(portEl.style.backgroundSize, '100% 100%');
+});
+
+test('setPortraitDiv uses full image when not sprite sheet', () => {
+  const el = stubEl();
+  const img = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>').toString('base64');
+  setPortraitDiv(el, { portraitSheet: img });
+  assert.strictEqual(el.style.backgroundSize, '100% 100%');
+});
+
 test('clamp swaps reversed bounds', () => {
   assert.strictEqual(clamp(5, 10, 0), 5);
 });
