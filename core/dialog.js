@@ -109,6 +109,10 @@ function advanceDialog(stateObj, choiceIdx){
   const choice=node.next[choiceIdx];
   if(!choice){ stateObj.node=null; return {next:null, text:null, close:true, success:false}; }
 
+  if(currentNPC?.processChoice?.(choice)){
+    return {next:null, text:null, close:false, success:true};
+  }
+
   runEffects(choice.checks);
 
   const res={next:null, text:null, close:false, success:true};
@@ -241,6 +245,8 @@ function closeDialog(){
 
 function renderDialog(){
   if(!dialogState.tree) return;
+  currentNPC?.processNode?.(dialogState.node);
+  if(!dialogState.tree || !dialogState.node) return;
   const node=dialogState.tree[dialogState.node];
   if(!node){ closeDialog(); return; }
 
