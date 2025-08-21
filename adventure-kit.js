@@ -1493,13 +1493,21 @@ function applyLoadedModule(data) {
   interiors = globalThis.interiors;
   moduleData.interiors.forEach(I => { interiors[I.id] = I; });
 
-  globalThis.world = data.world || world;
-  world = globalThis.world;
-  globalThis.buildings = moduleData.buildings.map(b => ({
-    ...b,
-    under: Array.from({ length: b.h }, () => Array.from({ length: b.w }, () => TILE.SAND))
-  }));
-  buildings = globalThis.buildings;
+  if (data.world) {
+    globalThis.world = data.world;
+    world = globalThis.world;
+  } else {
+    buildings.forEach(b => {
+      for (let yy = 0; yy < b.h; yy++) {
+        for (let xx = 0; xx < b.w; xx++) {
+          setTile('world', b.x + xx, b.y + yy, b.under[yy][xx]);
+        }
+      }
+    });
+  }
+  buildings.length = 0;
+  moduleData.buildings.forEach(b => buildings.push(placeHut(b.x, b.y, b)));
+  moduleData.buildings = [...buildings];
 
   drawWorld();
   renderNPCList();
