@@ -545,6 +545,17 @@ const quirks={
 };
 const hiddenOrigins={ 'Rustborn':{desc:'You survived a machine womb. +1 PER, weird dialog tags.'} };
 
+// Pool of placeholder names to auto-fill the creator
+const randomNames=['Ash','Rex','Nova','Jax','Mara','Zed','Iris','Knox','Luna','Kai'];
+function randomName(){
+  const used=new Set(built.map(m=>m.name));
+  const avail=randomNames.filter(n=>!used.has(n));
+  return avail.length? avail[Math.floor(Math.random()*avail.length)] : 'Drifter '+(built.length+1);
+}
+function newBuilding(){
+  return { id:'pc'+(built.length+1), name:randomName(), role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null };
+}
+
 let step=1; let building=null; let built=[];
 function openCreator(){
   if(!creatorMap.grid || creatorMap.grid.length===0) genCreatorMap();
@@ -552,7 +563,7 @@ function openCreator(){
   setMap('creator','Creator');
   creator.style.display='flex';
   step=1;
-  building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null };
+  building=newBuilding();
   renderStep();
 }
 function closeCreator(){ creator.style.display='none'; }
@@ -619,7 +630,7 @@ if (ccNext) ccNext.onclick=()=>{
       closeCreator();
       startGame();
     } else {
-      building={ id:'pc'+(built.length+1), name:'', role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null };
+      building=newBuilding();
       step=1;
       renderStep();
       log('Member added. You can add up to '+(3-built.length)+' more, or press Start Now.');

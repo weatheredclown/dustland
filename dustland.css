@@ -255,6 +255,8 @@
         }
         #panelToggle {
             display: block;
+            padding: 12px;
+            font-size: 24px;
         }
     }
 
