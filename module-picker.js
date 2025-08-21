@@ -1,5 +1,5 @@
 // Splash screen allowing the player to pick a module.
-// Displays a pulsing title and drifting dust background.
+// Displays a pulsing title and swirling dust background.
 const MODULES = [
   { id: 'dustland', name: 'Dustland', file: 'modules/dustland.module.js' },
   { id: 'echoes', name: 'Echoes', file: 'modules/echoes.module.js' },
@@ -15,6 +15,7 @@ window.showStart = () => {};
 function startDust(canvas){
   const ctx = canvas.getContext('2d');
   const particles = [];
+  const attractors = [{ angle: 0 }, { angle: Math.PI }];
   function resize(){
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -26,18 +27,41 @@ function startDust(canvas){
       x: Math.random()*canvas.width,
       y: Math.random()*canvas.height,
       size: Math.random()*2+1,
-      speed: Math.random()*0.5+0.2
+      speed: Math.random()*0.5+0.2,
+      vx: 0,
+      vy: 0
     });
   }
   function update(){
+    const cx = canvas.width/2;
+    const cy = canvas.height/2;
+    const radius = Math.min(canvas.width,canvas.height)/3;
+    attractors.forEach((a,i) => {
+      a.angle += 0.01 + i*0.005;
+      a.x = cx + Math.cos(a.angle)*radius;
+      a.y = cy + Math.sin(a.angle)*radius;
+    });
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = 'rgba(255,255,255,.4)';
     particles.forEach(p => {
+      attractors.forEach(a => {
+        const dx = a.x - p.x;
+        const dy = a.y - p.y;
+        const dist = Math.hypot(dx,dy) || 1;
+        const force = 0.05;
+        p.vx += (dx/dist)*force + (-dy/dist)*force*0.5;
+        p.vy += (dy/dist)*force + (dx/dist)*force*0.5;
+      });
+      p.vx *= 0.98;
+      p.vy *= 0.98;
+      p.x += p.vx - p.speed;
+      p.y += p.vy;
       ctx.fillRect(p.x,p.y,p.size,p.size);
-      p.x -= p.speed;
-      if(p.x < -p.size){
+      if(p.x < -p.size || p.y < -p.size || p.y > canvas.height + p.size){
         p.x = canvas.width + p.size;
         p.y = Math.random()*canvas.height;
+        p.vx = 0;
+        p.vy = 0;
       }
     });
     requestAnimationFrame(update);
