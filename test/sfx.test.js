@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { test } from 'node:test';
 import { JSDOM } from 'jsdom';
 
-test('playSfx handles aborted play without unhandled rejection', async (t) => {
+async function setup(playImpl = () => Promise.resolve()) {
   const dom = new JSDOM(`<!doctype html><body>
     <div class="tabs">
       <button id="tabInv"></button>
@@ -47,15 +47,22 @@ test('playSfx handles aborted play without unhandled rejection', async (t) => {
   global.showStart = () => {};
   const dummyCtx = new Proxy({}, { get: () => () => {}, set: () => true });
   window.HTMLCanvasElement.prototype.getContext = () => dummyCtx;
-  window.AudioContext = class {};
+  window.AudioContext = class { suspend() {} resume() {} };
+  let plays = 0;
   global.Audio = class {
     constructor(src){ this.src = src; }
     cloneNode(){ return new Audio(this.src); }
-    play(){ return Promise.reject(Object.assign(new Error('AbortError'), { name: 'AbortError' })); }
+    play(){ plays++; return playImpl(); }
     pause(){}
   };
   global.EventBus = { on: (evt, fn) => { if (evt === 'sfx') global._playSfx = fn; } };
   await import(new URL('../dustland-engine.js', import.meta.url));
+  const cleanup = () => dom.window.close();
+  return { cleanup, getPlays: () => plays };
+}
+
+test('playSfx handles aborted play without unhandled rejection', async () => {
+  const { cleanup } = await setup(() => Promise.reject(Object.assign(new Error('AbortError'), { name: 'AbortError' })));
   const unhandled = [];
   const handler = err => unhandled.push(err);
   process.on('unhandledRejection', handler);
@@ -63,5 +70,13 @@ test('playSfx handles aborted play without unhandled rejection', async (t) => {
   await new Promise(r => setTimeout(r, 100));
   assert.strictEqual(unhandled.length, 0);
   process.off('unhandledRejection', handler);
-  dom.window.close();
+  cleanup();
+});
+
+test('toggleAudio prevents playback', async () => {
+  const { cleanup, getPlays } = await setup();
+  toggleAudio();
+  global._playSfx('step');
+  assert.strictEqual(getPlays(), 0);
+  cleanup();
 });

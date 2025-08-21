@@ -42,6 +42,7 @@ _______________________________________________________________________________
   Save / Load ....... G / L      (or UI buttons)
   Minimap ........... M
   Close Dialog ...... Esc
+  Audio Toggle ...... UI button
 
 [ KEY MECHANICS ]
   - You cannot stand on NPCs (!) or items; they block movement.
