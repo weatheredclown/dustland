@@ -36,6 +36,11 @@ let bldgPaint = TILE.BUILDING;
 let bldgPainting = false;
 let bldgGrid = [];
 
+const note=document.createElement('div');
+note.textContent='Note: water (bright blue) is not walkable; spawns cannot go there.';
+note.style.cssText='padding:4px;background:#300;color:#f88;text-align:center;';
+document.body.prepend(note);
+
 function nextId(prefix, arr) {
   let i = 1; while (arr.some(o => o.id === prefix + i)) i++; return prefix + i;
 }
@@ -1552,7 +1557,19 @@ function applyLoadedModule(data) {
   showQuestEditor(false);
 }
 
+function validateSpawns(){
+  const walkable={0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false};
+  const issues=[];
+  const s=moduleData.start;
+  if(!walkable[world[s.y][s.x]]) issues.push('Player start is on blocked tile');
+  moduleData.npcs.filter(n=>n.map==='world').forEach(n=>{ if(!walkable[world[n.y][n.x]]) issues.push('NPC '+(n.id||'')+' on blocked tile'); });
+  moduleData.items.filter(it=>it.map==='world').forEach(it=>{ if(!walkable[world[it.y][it.x]]) issues.push('Item '+it.id+' on blocked tile'); });
+  if(issues.length){ alert('Fix spawn locations:\n'+issues.join('\n')+'\nHint: water tiles are bright blue and block spawns.'); return false; }
+  return true;
+}
+
 function saveModule() {
+  if(!validateSpawns()) return;
   const bldgs = buildings.map(({ under, ...rest }) => rest);
   const data = { ...moduleData, world, buildings: bldgs };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

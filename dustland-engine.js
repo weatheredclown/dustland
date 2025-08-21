@@ -107,6 +107,18 @@ sctx.font = '12px ui-monospace';
 
 let camX=0, camY=0, showMini=true;
 let _lastTime=0;
+let bumpX=0, bumpY=0, bumpEnd=0;
+const sparkles=[];
+
+function footstepBump(){
+  bumpX = (Math.random()-0.5)*2;
+  bumpY = (Math.random()-0.5)*2;
+  bumpEnd = performance.now() + 50;
+}
+
+function pickupSparkle(x,y){
+  sparkles.push({x,y});
+}
 
 function draw(t){
   if (disp.width < 16) {
@@ -114,8 +126,10 @@ function draw(t){
   }
   const dt=(t-_lastTime)||0; _lastTime=t;
   render(state, dt/1000);
-  dctx.globalAlpha=0.20; dctx.drawImage(prev, 1, 0);
-  dctx.globalAlpha=0.2; dctx.drawImage(scene, 0, 0);
+  const bx = bumpEnd > performance.now() ? bumpX : 0;
+  const by = bumpEnd > performance.now() ? bumpY : 0;
+  dctx.globalAlpha=0.20; dctx.drawImage(prev, 1 + bx, by);
+  dctx.globalAlpha=0.2; dctx.drawImage(scene, bx, by);
   pctx.clearRect(0,0,prev.width,prev.height); pctx.drawImage(scene,0,0);
   requestAnimationFrame(draw);
 }
@@ -197,20 +211,30 @@ function render(gameState=state, dt){
     else if(layer==='entitiesAbove'){ drawEntities(ctx, above, offX, offY); }
   }
 
+  if(sparkles.length){
+    for(const s of sparkles){
+      const sx = (s.x - camX + offX) * TS;
+      const sy = (s.y - camY + offY) * TS;
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fillRect(sx, sy, TS, TS);
+    }
+    sparkles.length = 0;
+  }
+
   // UI border
   ctx.strokeStyle='#2a3b2a';
   ctx.strokeRect(0.5,0.5,VIEW_W*TS-1,VIEW_H*TS-1);
 }
 
 function drawEntities(ctx, list, offX, offY){
-  for(const n of list){
-    if(n.x>=camX&&n.y>=camY&&n.x<camX+VIEW_W&&n.y<camY+VIEW_H){
-      const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
-      ctx.fillStyle=n.color; ctx.fillRect(vx,vy,TS,TS);
-      ctx.fillStyle='#000'; ctx.fillText('!',vx+5,vy+12);
+    for(const n of list){
+      if(n.x>=camX&&n.y>=camY&&n.x<camX+VIEW_W&&n.y<camY+VIEW_H){
+        const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
+        ctx.fillStyle=n.color; ctx.fillRect(vx,vy,TS,TS);
+        ctx.fillStyle='#000'; ctx.fillText('!',vx+5,vy+12);
+      }
     }
   }
-}
 
 Object.assign(window, { renderOrderSystem: { order: renderOrder, render } });
 
@@ -318,6 +342,7 @@ function renderInv(){
     if(equipBtn) equipBtn.onclick=()=> equipItem(selectedMember, idx);
     const useBtn = row.querySelector('button[data-a="use"]');
     if(useBtn) useBtn.onclick=()=> useItem(idx);
+    row.onclick=e=>{ if(e.target.tagName==='BUTTON') return; if(it.slot) equipItem(selectedMember, idx); };
     inv.appendChild(row);
   });
 }
@@ -336,9 +361,9 @@ function renderQuests(){
     q.appendChild(div);
   });
 }
-function renderParty(){ const p=document.getElementById('party'); p.innerHTML=''; if(party.length===0){ p.innerHTML='<div class="pcard muted">(no party members yet)</div>'; return; } party.forEach((m,i)=>{ const c=document.createElement('div'); c.className='pcard'; const bonus=m._bonus||{}; const fmt=v=> (v>0? '+'+v : v); const wLabel=m.equip.weapon?(m.equip.weapon.cursed&&m.equip.weapon.cursedKnown?m.equip.weapon.name+' (cursed)':m.equip.weapon.name):'—'; const aLabel=m.equip.armor?(m.equip.armor.cursed&&m.equip.armor.cursedKnown?m.equip.armor.name+' (cursed)':m.equip.armor.name):'—'; const tLabel=m.equip.trinket?(m.equip.trinket.cursed&&m.equip.trinket.cursedKnown?m.equip.trinket.name+' (cursed)':m.equip.trinket.name):'—'; c.innerHTML = `<div class='row'><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div><div class='row small'>${statLine(m.stats)}</div><div class='row'>HP ${m.hp}/${m.maxHp}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div><div class='row small'>WPN: ${wLabel}${m.equip.weapon?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${m.equip.armor?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${m.equip.trinket?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div><div class='row small'>XP ${m.xp}/${xpToNext(m.lvl)}</div><div class='row'><label><input type='radio' name='selMember' ${i===selectedMember?'checked':''}> Selected</label></div>`; c.querySelector('input').onchange=()=>{ selectedMember=i; }; c.querySelectorAll('button[data-a="unequip"]').forEach(b=>{ const sl=b.dataset.slot; b.onclick=()=> unequipItem(i,sl); }); p.appendChild(c); }); }
+function renderParty(){ const p=document.getElementById('party'); p.innerHTML=''; if(party.length===0){ p.innerHTML='<div class="pcard muted">(no party members yet)</div>'; return; } party.forEach((m,i)=>{ const c=document.createElement('div'); c.className='pcard'+(i===selectedMember?' selected':''); const bonus=m._bonus||{}; const fmt=v=> (v>0? '+'+v : v); const wLabel=m.equip.weapon?(m.equip.weapon.cursed&&m.equip.weapon.cursedKnown?m.equip.weapon.name+' (cursed)':m.equip.weapon.name):'—'; const aLabel=m.equip.armor?(m.equip.armor.cursed&&m.equip.armor.cursedKnown?m.equip.armor.name+' (cursed)':m.equip.armor.name):'—'; const tLabel=m.equip.trinket?(m.equip.trinket.cursed&&m.equip.trinket.cursedKnown?m.equip.trinket.name+' (cursed)':m.equip.trinket.name):'—'; c.innerHTML = `<div class='row'><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div><div class='row small'>${statLine(m.stats)}</div><div class='row'>HP ${m.hp}/${m.maxHp}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div><div class='row small'>WPN: ${wLabel}${m.equip.weapon?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${m.equip.armor?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${m.equip.trinket?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div><div class='row small'>XP ${m.xp}/${xpToNext(m.lvl)}</div><div class='row'><label><input type='radio' name='selMember' ${i===selectedMember?'checked':''}> Selected</label></div>`; c.querySelector('input').onchange=()=>{ selectedMember=i; }; c.querySelectorAll('button[data-a="unequip"]').forEach(b=>{ const sl=b.dataset.slot; b.onclick=()=> unequipItem(i,sl); }); p.appendChild(c); }); }
 
-const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty };
+const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle };
 Object.assign(globalThis, engineExports);
 
 // ===== Minimal Unit Tests (#test) =====
@@ -425,6 +450,20 @@ disp.addEventListener('touchstart',e=>{
   interactAt(x,y);
   e.preventDefault();
 });
+
+if(new URLSearchParams(location.search).get('touch')==='1'){
+  const pad=document.createElement('div');
+  pad.style.cssText='position:fixed;bottom:20px;left:20px;display:grid;grid-template-columns:repeat(3,40px);grid-template-rows:repeat(3,40px);gap:6px;z-index:1000;';
+  const mk=(t,fn)=>{ const b=document.createElement('button'); b.textContent=t; b.style.cssText='width:40px;height:40px;'; b.onclick=fn; return b; };
+  const cells=[document.createElement('div'),mk('↑',()=>move(0,-1)),document.createElement('div'),mk('←',()=>move(-1,0)),document.createElement('div'),mk('→',()=>move(1,0)),document.createElement('div'),mk('↓',()=>move(0,1)),document.createElement('div')];
+  cells.forEach(c=>pad.appendChild(c));
+  document.body.appendChild(pad);
+  const ab=document.createElement('div');
+  ab.style.cssText='position:fixed;bottom:20px;right:20px;display:flex;gap:10px;z-index:1000;';
+  ab.appendChild(mk('A',interact));
+  ab.appendChild(mk('B',takeNearestItem));
+  document.body.appendChild(ab);
+}
 
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
