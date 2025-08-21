@@ -27,7 +27,7 @@ _______________________________________________________________________________
   - Just open:  dustland.html  (double-click or serve from any static server).
   - Pick a module on startup (e.g. Dustland or Echoes).
   - Build a module with: adventure-kit.html  (save to JSON).
-  - Play a module with: ack-player.html and load your JSON.
+  - Play a module with: ack-player.html (fetch a module URL, load a local JSON, or pass ?module=URL to auto-load; defaults to modules/golden.module.json).
   - No build step. No dependencies. Works offline.
   - Tip: Use a modern Chromium, Firefox, or Safari.
 
@@ -76,10 +76,12 @@ _______________________________________________________________________________
     * Renderer, input handling, HUD, and tiny sfx.
   - modules/dustland.module.js
     * NPCs, items, world data, and quests for the core adventure.
+  - modules/golden.module.json
+    * Sample module showcasing a fetch quest, stat gate, joinable NPC, timed spawn, event toasts, portal, chest loot drop, healing potion, and combat; default module for ACK player.
   - adventure-kit.html / adventure-kit.js
     * Map/NPC/item/quest editor for making modules.
   - ack-player.html / ack-player.js
-    * Loads a JSON module and runs it in the engine.
+    * Fetch a module JSON from the web or load a local file into the engine.
   - dustland-nano.js
     * Micro helper utilities.
   - dustland.css

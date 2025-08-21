@@ -117,9 +117,12 @@
     <div class="win" style="width:min(420px,92vw);background:#0b0d0b;border:1px solid #2a382a;border-radius:12px;box-shadow:0 20px 80px rgba(0,0,0,.7);overflow:hidden">
       <header style="padding:10px 12px;border-bottom:1px solid #223022;font-weight:700">Load Adventure Module</header>
       <main style="padding:12px">
-        <p class="muted" style="margin-bottom:8px">Select an ACK module JSON file to begin.</p>
+        <p class="muted" style="margin-bottom:8px">Load a module from the web or a local JSON file.</p>
+        <input type="text" id="modUrl" value="modules/golden.module.json" style="width:100%" />
+        <button class="btn" id="modUrlBtn" style="margin-top:8px">Load from URL</button>
+        <hr style="margin:12px 0" />
         <input type="file" id="modFile" accept="application/json" />
-        <button class="btn" id="modLoadBtn" style="margin-top:8px">Load Module</button>
+        <button class="btn" id="modFileBtn" style="margin-top:8px">Load from File</button>
       </main>
     </div>
   </div>

@@ -1,7 +1,8 @@
 const MODULES = [
   { id: 'dustland', name: 'Dustland', file: 'modules/dustland.module.js' },
   { id: 'echoes', name: 'Echoes', file: 'modules/echoes.module.js' },
-  { id: 'office', name: 'Office', file: 'modules/office.module.js' }
+  { id: 'office', name: 'Office', file: 'modules/office.module.js' },
+  { id: 'golden', name: 'Golden Sample', file: 'modules/golden.module.json' }
 ];
 
 const realOpenCreator = window.openCreator;
@@ -12,6 +13,10 @@ window.showStart = () => {};
 function loadModule(moduleInfo){
   const existingScript = document.getElementById('activeModuleScript');
   if (existingScript) existingScript.remove();
+  if (moduleInfo.file.endsWith('.json')) {
+    window.location.href = `ack-player.html?module=${encodeURIComponent(moduleInfo.file)}`;
+    return;
+  }
   const script = document.createElement('script');
   script.id = 'activeModuleScript';
   script.src = `${moduleInfo.file}?_=${Date.now()}`;
