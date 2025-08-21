@@ -473,6 +473,12 @@ function populateMapDropdown(sel, selected = '') {
   sel.value = selected;
 }
 
+function populateInteriorDropdown(sel, selected = '') {
+  const ints = moduleData.interiors.map(i => i.id);
+  sel.innerHTML = '<option value=""></option>' + ints.map(i => `<option value="${i}">${i}</option>`).join('');
+  sel.value = selected;
+}
+
 function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceTo').forEach(sel => populateChoiceDropdown(sel, sel.value));
   document.querySelectorAll('.choiceStat').forEach(sel => populateStatDropdown(sel, sel.value));
@@ -484,6 +490,8 @@ function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceJoinRole').forEach(sel => populateRoleDropdown(sel, sel.value));
   document.querySelectorAll('.choiceGotoMap').forEach(sel => populateMapDropdown(sel, sel.value));
   document.querySelectorAll('.choiceRewardItem').forEach(sel => populateItemDropdown(sel, sel.value));
+  document.querySelectorAll('.nodeBoard').forEach(sel => populateInteriorDropdown(sel, sel.value));
+  document.querySelectorAll('.nodeUnboard').forEach(sel => populateInteriorDropdown(sel, sel.value));
 }
 
 function renderTreeEditor() {
@@ -493,10 +501,16 @@ function renderTreeEditor() {
   Object.entries(treeData).forEach(([id, node]) => {
     const div = document.createElement('div');
     div.className = 'node';
-    div.innerHTML = `<div class="nodeHeader"><button class="toggle" type="button">[-]</button><label>Node ID<input class="nodeId" value="${id}"></label></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
+    const boardEff = (node.effects || []).find(e => e.effect === 'boardDoor');
+    const unboardEff = (node.effects || []).find(e => e.effect === 'unboardDoor');
+    const boardId = boardEff ? boardEff.interiorId || '' : '';
+    const unboardId = unboardEff ? unboardEff.interiorId || '' : '';
+    div.innerHTML = `<div class="nodeHeader"><button class="toggle" type="button">[-]</button><label>Node ID<input class="nodeId" value="${id}"></label></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><label>Board Door<select class="nodeBoard"></select></label><label>Unboard Door<select class="nodeUnboard"></select></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
     const choicesDiv = div.querySelector('.choices');
     (node.choices || []).forEach(ch => addChoiceRow(choicesDiv, ch));
     div.querySelector('.addChoice').onclick = () => addChoiceRow(choicesDiv);
+    populateInteriorDropdown(div.querySelector('.nodeBoard'), boardId);
+    populateInteriorDropdown(div.querySelector('.nodeUnboard'), unboardId);
     const toggleBtn = div.querySelector('.toggle');
     toggleBtn.addEventListener('click', () => {
       div.classList.toggle('collapsed');
@@ -531,6 +545,8 @@ function updateTreeData() {
 
     const text = nodeEl.querySelector('.nodeText').value;
     const choices = [];
+    const boardId = nodeEl.querySelector('.nodeBoard').value.trim();
+    const unboardId = nodeEl.querySelector('.nodeUnboard').value.trim();
 
     nodeEl.querySelectorAll('.choices > div').forEach(chEl => {
       const label = chEl.querySelector('.choiceLabel').value.trim();
@@ -593,7 +609,13 @@ function updateTreeData() {
       }
     });
 
-    newTree[id] = { text, choices };
+    const nodeData = { text, choices };
+    const effects = [];
+    if (boardId) effects.push({ effect: 'boardDoor', interiorId: boardId });
+    if (unboardId) effects.push({ effect: 'unboardDoor', interiorId: unboardId });
+    if (effects.length) nodeData.effects = effects;
+
+    newTree[id] = nodeData;
   });
 
   // Commit + mirror into textarea for persistence/preview
