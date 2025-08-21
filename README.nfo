@@ -19,7 +19,8 @@ _______________________________________________________________________________
   branching dialog, party stats, inventory, quests, and a world+hall demo.
   The repo now ships with an Adventure Construction Kit (ACK) and a tiny
   module player so you can craft and try your own wasteland tales. It’s
-  still built to be easy to run and easy to hack.
+  still built to be easy to run and easy to hack. Tiny inline SFX add a bit of
+  snap without requiring extra assets.
 
 [ HOW TO RUN ]
   - Play the latest build in your browser:
