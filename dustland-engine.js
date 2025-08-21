@@ -77,12 +77,31 @@ function setMobileControls(on){
         b.onpointerleave=up;
         return b;
       };
-      const cells=[document.createElement('div'),mk("↑",()=>move(0,-1)),document.createElement('div'),mk("←",()=>move(-1,0)),document.createElement('div'),mk("→",()=>move(1,0)),document.createElement('div'),mk("↓",()=>move(0,1)),document.createElement('div')];
+      const mobileMove=(dx,dy,key)=>{
+        if(overlay?.classList?.contains('shown')){
+          handleDialogKey?.({ key });
+        }else{
+          move(dx,dy);
+        }
+      };
+      const cells=[
+        document.createElement('div'),
+        mk("↑",()=>mobileMove(0,-1,'ArrowUp')),
+        document.createElement('div'),
+        mk("←",()=>mobileMove(-1,0,'ArrowLeft')),
+        document.createElement('div'),
+        mk("→",()=>mobileMove(1,0,'ArrowRight')),
+        document.createElement('div'),
+        mk("↓",()=>mobileMove(0,1,'ArrowDown')),
+        document.createElement('div')
+      ];
       cells.forEach(c=>mobilePad.appendChild(c));
       document.body.appendChild(mobilePad);
       mobileAB=document.createElement('div');
       mobileAB.style.cssText='position:fixed;bottom:20px;right:20px;display:flex;gap:10px;z-index:1000;user-select:none;';
-      mobileAB.appendChild(mk('A',interact));
+      mobileAB.appendChild(mk('A',()=>{
+        if(overlay?.classList?.contains('shown')) handleDialogKey?.({ key:'Enter' }); else interact();
+      }));
       mobileAB.appendChild(mk('B',takeNearestItem));
       document.body.appendChild(mobileAB);
     }
@@ -452,6 +471,14 @@ if (document.getElementById('saveBtn')) {
     settingsBtn.onclick=()=>{ settings.style.display='flex'; };
     const closeBtn=document.getElementById('settingsClose');
     if(closeBtn) closeBtn.onclick=()=>{ settings.style.display='none'; };
+  }
+  const panelToggle=document.getElementById('panelToggle');
+  const panel=document.querySelector('.panel');
+  if(panelToggle && panel){
+    panelToggle.onclick=()=>{
+      const open=panel.classList.toggle('show');
+      panelToggle.textContent=open?'×':'☰';
+    };
   }
 
   window.addEventListener('keydown',(e)=>{
