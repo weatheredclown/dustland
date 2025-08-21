@@ -80,6 +80,7 @@ function move(dx,dy){
       player.hp = actor.hp;
     }
     setPartyPos(nx, ny);
+    if(typeof footstepBump==='function') footstepBump();
     onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
     centerCamera(party.x,party.y,state.map); updateHUD();
     checkAggro();
@@ -120,6 +121,7 @@ function takeNearestItem(){
       const def = ITEMS[it.id];
       addToInv(getItem(it.id));
       log('Took '+(def?def.name:it.id)+'.'); updateHUD();
+      if(typeof pickupSparkle==='function') pickupSparkle(party.x+dx,party.y+dy);
       EventBus.emit('sfx','pickup');
       return true;
     }
@@ -136,16 +138,17 @@ function interactAt(x,y){
     EventBus.emit('sfx','confirm');
     return true;
   }
-  if(info.items.length){
-    const it=info.items[0];
-    const idx=itemDrops.indexOf(it);
-    if(idx>-1) itemDrops.splice(idx,1);
-    const def = ITEMS[it.id];
-    addToInv(getItem(it.id));
-    log('Took '+(def?def.name:it.id)+'.'); updateHUD();
-    EventBus.emit('sfx','pickup');
-    return true;
-  }
+    if(info.items.length){
+      const it=info.items[0];
+      const idx=itemDrops.indexOf(it);
+      if(idx>-1) itemDrops.splice(idx,1);
+      const def = ITEMS[it.id];
+      addToInv(getItem(it.id));
+      log('Took '+(def?def.name:it.id)+'.'); updateHUD();
+      if(typeof pickupSparkle==='function') pickupSparkle(x,y);
+      EventBus.emit('sfx','pickup');
+      return true;
+    }
   if(x===party.x && y===party.y && info.tile===TILE.DOOR){
     if(state.map==='world'){
       const b=buildings.find(b=> b.doorX===x && b.doorY===y);

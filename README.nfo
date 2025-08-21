@@ -36,12 +36,13 @@ _______________________________________________________________________________
   Movement .......... WASD / Arrow Keys
   Interact .......... E / Space  (talk, doors, take nearby item)
   Take Item ......... T          (take from your tile or adjacent tiles)
-  Inventory ......... I
+  Inventory ......... I (click items to equip)
   Party ............. P          (radio button selects the acting member)
   Quests ............ Q
   Save / Load ....... G / L      (or UI buttons)
   Minimap ........... M
   Close Dialog ...... Esc
+  Touch Controls .... add ?touch=1 to URL for on-screen buttons
 
 [ KEY MECHANICS ]
   - You cannot stand on NPCs (!) or items; they block movement.
