@@ -83,6 +83,9 @@ function move(dx,dy){
     onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
     centerCamera(party.x,party.y,state.map); updateHUD();
     checkAggro();
+    EventBus.emit('sfx','step');
+  } else {
+    EventBus.emit('sfx','denied');
   }
 }
 
@@ -117,6 +120,7 @@ function takeNearestItem(){
       const def = ITEMS[it.id];
       addToInv(getItem(it.id));
       log('Took '+(def?def.name:it.id)+'.'); updateHUD();
+      EventBus.emit('sfx','pickup');
       return true;
     }
   }
@@ -127,24 +131,32 @@ function interactAt(x,y){
   const dist=Math.abs(party.x-x)+Math.abs(party.y-y);
   if(dist>1) return false;
   const info=queryTile(x,y);
-  if(info.entities.length){ openDialog(info.entities[0]); return true; }
+  if(info.entities.length){
+    openDialog(info.entities[0]);
+    EventBus.emit('sfx','confirm');
+    return true;
+  }
   if(info.items.length){
     const it=info.items[0];
     const idx=itemDrops.indexOf(it);
     if(idx>-1) itemDrops.splice(idx,1);
     const def = ITEMS[it.id];
-    addToInv(getItem(it.id)); log('Took '+(def?def.name:it.id)+'.'); updateHUD();
+    addToInv(getItem(it.id));
+    log('Took '+(def?def.name:it.id)+'.'); updateHUD();
+    EventBus.emit('sfx','pickup');
     return true;
   }
   if(x===party.x && y===party.y && info.tile===TILE.DOOR){
     if(state.map==='world'){
       const b=buildings.find(b=> b.doorX===x && b.doorY===y);
-      if(!b){ log('No entrance here.'); return true; }
-      if(b.boarded){ log('The doorway is boarded up from the outside.'); return true; }
+      if(!b){ log('No entrance here.'); EventBus.emit('sfx','denied'); return true; }
+      if(b.boarded){ log('The doorway is boarded up from the outside.'); EventBus.emit('sfx','denied'); return true; }
       const I=interiors[b.interiorId];
       if(I){ setPartyPos(I.entryX, I.entryY); }
       setMap(b.interiorId,'Interior');
-      log('You step inside.'); updateHUD(); return true;
+      log('You step inside.'); updateHUD();
+      EventBus.emit('sfx','confirm');
+      return true;
     }
     if(state.map!=='world'){
       const p=portals.find(p=> p.map===state.map && p.x===x && p.y===y);
@@ -156,10 +168,19 @@ function interactAt(x,y){
         setPartyPos(px, py);
         setMap(target);
         log(p.desc || 'You move through the doorway.');
-        updateHUD(); return true;
+        updateHUD();
+        EventBus.emit('sfx','confirm');
+        return true;
       }
       const b=buildings.find(b=> b.interiorId===state.map);
-      if(b){ setPartyPos(b.doorX, b.doorY-1); setMap('world'); log('You step back outside.'); updateHUD(); return true; }
+      if(b){
+        setPartyPos(b.doorX, b.doorY-1);
+        setMap('world');
+        log('You step back outside.');
+        updateHUD();
+        EventBus.emit('sfx','confirm');
+        return true;
+      }
     }
   }
   return false;
@@ -172,6 +193,7 @@ function interact(){
     if(interactAt(party.x+dx,party.y+dy)) return true;
   }
   log('Nothing interesting.');
+  EventBus.emit('sfx','denied');
   return false;
 }
 
