@@ -57,13 +57,31 @@ function setMobileControls(on){
   if(on){
     if(!mobilePad){
       mobilePad=document.createElement('div');
-      mobilePad.style.cssText='position:fixed;bottom:20px;left:20px;display:grid;grid-template-columns:repeat(3,40px);grid-template-rows:repeat(3,40px);gap:6px;z-index:1000;';
-      const mk=(t,fn)=>{ const b=document.createElement('button'); b.textContent=t; b.style.cssText='width:40px;height:40px;'; b.onclick=fn; return b; };
+      mobilePad.style.cssText='position:fixed;bottom:20px;left:20px;display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);gap:6px;z-index:1000;user-select:none;';
+      const mk=(t,fn)=>{
+        const b=document.createElement('button');
+        b.textContent=t;
+        b.style.cssText='width:48px;height:48px;border:2px solid #0f0;border-radius:8px;background:#000;color:#0f0;font-size:20px;user-select:none;outline:none;';
+        b.onclick=fn;
+        b.onpointerdown=()=>{
+          b.style.background='#0f0';
+          b.style.color='#000';
+          b.style.boxShadow='0 0 8px #0f0';
+        };
+        const up=()=>{
+          b.style.background='#000';
+          b.style.color='#0f0';
+          b.style.boxShadow='none';
+        };
+        b.onpointerup=up;
+        b.onpointerleave=up;
+        return b;
+      };
       const cells=[document.createElement('div'),mk("↑",()=>move(0,-1)),document.createElement('div'),mk("←",()=>move(-1,0)),document.createElement('div'),mk("→",()=>move(1,0)),document.createElement('div'),mk("↓",()=>move(0,1)),document.createElement('div')];
       cells.forEach(c=>mobilePad.appendChild(c));
       document.body.appendChild(mobilePad);
       mobileAB=document.createElement('div');
-      mobileAB.style.cssText='position:fixed;bottom:20px;right:20px;display:flex;gap:10px;z-index:1000;';
+      mobileAB.style.cssText='position:fixed;bottom:20px;right:20px;display:flex;gap:10px;z-index:1000;user-select:none;';
       mobileAB.appendChild(mk('A',interact));
       mobileAB.appendChild(mk('B',takeNearestItem));
       document.body.appendChild(mobileAB);
