@@ -773,7 +773,7 @@ function startNewNPC() {
   document.getElementById('npcCombat').checked = false;
   document.getElementById('npcShop').checked = false;
   updateNPCOptSections();
-  document.getElementById('addNPC').textContent = 'Add NPC';
+  document.getElementById('addNPC').style.display = 'block';
   document.getElementById('delNPC').style.display = 'none';
   loadTreeEditor();
   toggleQuestDialogBtn();
@@ -783,7 +783,8 @@ function startNewNPC() {
   drawWorld();
   showNPCEditor(true);
 }
-function addNPC() {
+// Gather NPC form fields into an object
+function collectNPCFromForm() {
   const id = document.getElementById('npcId').value.trim();
   const name = document.getElementById('npcName').value.trim();
   const desc = document.getElementById('npcDesc').value.trim();
@@ -816,7 +817,6 @@ function addNPC() {
       tree = { start: { text: dialog, choices: [{ label: '(Leave)', to: 'bye' }] } };
     }
   }
-  // Update dialog text even when tree JSON already exists
   if (tree.start) tree.start.text = dialog;
   if (tree.accept) tree.accept.text = accept || tree.accept.text;
   if (tree.do_turnin) tree.do_turnin.text = turnin || tree.do_turnin.text;
@@ -829,34 +829,29 @@ function addNPC() {
   if (combat) npc.combat = { DEF: 5 };
   if (shop) npc.shop = true;
   if (hidden && flag) npc.hidden = true, npc.reveal = { flag, op, value: val };
-  if (editNPCIdx >= 0) {
-    moduleData.npcs[editNPCIdx] = npc;
-  } else {
-    moduleData.npcs.push(npc);
-  }
-  editNPCIdx = -1;
-  document.getElementById('addNPC').textContent = 'Add NPC';
-  document.getElementById('delNPC').style.display = 'none';
+  return npc;
+}
+
+// Add a new NPC to the module and begin editing it
+function addNPC() {
+  const npc = collectNPCFromForm();
+  moduleData.npcs.push(npc);
+  editNPCIdx = moduleData.npcs.length - 1;
   renderNPCList();
-  document.getElementById('npcId').value = nextId('npc', moduleData.npcs);
-  document.getElementById('npcDesc').value = '';
-  document.getElementById('npcCombat').checked = false;
-  document.getElementById('npcShop').checked = false;
-  document.getElementById('npcHidden').checked = false;
-  document.getElementById('npcFlagType').value = 'visits';
-  document.getElementById('npcFlagMap').value = 'world';
-  document.getElementById('npcFlagX').value = 0;
-  document.getElementById('npcFlagY').value = 0;
-  document.getElementById('npcFlagName').value = '';
-  document.getElementById('npcOp').value = '>=';
-  document.getElementById('npcVal').value = 1;
-  populateFlagList();
-  updateFlagBuilder();
-  updateNPCOptSections();
-  selectedObj = null;
+  document.getElementById('delNPC').style.display = 'block';
+  document.getElementById('addNPC').style.display = 'none';
+  selectedObj = { type: 'npc', obj: npc };
   drawWorld();
-  loadTreeEditor();
-  showNPCEditor(false);
+}
+
+// Update the currently edited NPC as form fields change
+function applyNPCChanges() {
+  if (editNPCIdx < 0) return;
+  const npc = collectNPCFromForm();
+  moduleData.npcs[editNPCIdx] = npc;
+  renderNPCList();
+  selectedObj = { type: 'npc', obj: npc };
+  drawWorld();
 }
 function editNPC(i) {
   const n = moduleData.npcs[i];
@@ -893,7 +888,7 @@ function editNPC(i) {
   document.getElementById('npcCombat').checked = !!n.combat;
   document.getElementById('npcShop').checked = !!n.shop;
   updateNPCOptSections();
-  document.getElementById('addNPC').textContent = 'Update NPC';
+  document.getElementById('addNPC').style.display = 'none';
   document.getElementById('delNPC').style.display = 'block';
   loadTreeEditor();
   toggleQuestDialogBtn();
@@ -913,7 +908,7 @@ function deleteNPC() {
   if (editNPCIdx < 0) return;
   moduleData.npcs.splice(editNPCIdx, 1);
   editNPCIdx = -1;
-  document.getElementById('addNPC').textContent = 'Add NPC';
+  document.getElementById('addNPC').style.display = 'block';
   document.getElementById('delNPC').style.display = 'none';
   renderNPCList();
   selectedObj = null;
@@ -922,6 +917,15 @@ function deleteNPC() {
   document.getElementById('npcDesc').value = '';
   loadTreeEditor();
   showNPCEditor(false);
+}
+
+function closeNPCEditor() {
+  editNPCIdx = -1;
+  selectedObj = null;
+  placingType = null;
+  showNPCEditor(false);
+  document.getElementById('addNPC').style.display = 'block';
+  document.getElementById('delNPC').style.display = 'none';
 }
 
 // --- Items ---
@@ -1262,6 +1266,7 @@ function startNewBldg() {
   bldgPalette.querySelector('button[data-tile="B"]').classList.add('active');
   bldgPaint = TILE.BUILDING;
   updateInteriorOptions();
+  document.getElementById('addBldg').style.display = 'block';
   document.getElementById('delBldg').style.display = 'none';
   placingType = 'bldg';
   placingPos = null;
@@ -1270,6 +1275,7 @@ function startNewBldg() {
   drawBldg();
   showBldgEditor(true);
 }
+// Add a new building to the world and start editing it
 function addBuilding() {
   const x = parseInt(document.getElementById('bldgX').value, 10) || 0;
   const y = parseInt(document.getElementById('bldgY').value, 10) || 0;
@@ -1278,22 +1284,16 @@ function addBuilding() {
     interiorId = makeInteriorRoom();
     const I = interiors[interiorId]; I.id = interiorId; moduleData.interiors.push(I); renderInteriorList();
   }
-  let b;
-  if(editBldgIdx>=0){
-    const ob=moduleData.buildings[editBldgIdx];
-    removeBuilding(ob);
-    b = placeHut(x,y,{interiorId, grid:bldgGrid, boarded: ob.boarded});
-    moduleData.buildings[editBldgIdx]=b;
-  }else{
-    b = placeHut(x,y,{interiorId, grid:bldgGrid});
-    moduleData.buildings.push(b);
-  }
+  const b = placeHut(x,y,{interiorId, grid:bldgGrid});
+  moduleData.buildings.push(b);
+  editBldgIdx = moduleData.buildings.length - 1;
   renderBldgList();
-  selectedObj = null;
+  selectedObj = { type: 'bldg', obj: b };
+  placingType = null;
+  placingPos = null;
   drawWorld();
-  editBldgIdx = -1;
-  document.getElementById('delBldg').style.display = 'none';
-  showBldgEditor(false);
+  document.getElementById('delBldg').style.display = 'block';
+  document.getElementById('addBldg').style.display = 'none';
 }
 function renderBldgList() {
   const list = document.getElementById('bldgList');
@@ -1311,6 +1311,7 @@ function editBldg(i) {
   bldgGrid = b.grid ? b.grid.map(r=>r.slice()) : Array.from({length:b.h},()=>Array.from({length:b.w},()=>TILE.BUILDING));
   updateInteriorOptions();
   document.getElementById('bldgInterior').value = b.interiorId || '';
+  document.getElementById('addBldg').style.display = 'none';
   document.getElementById('delBldg').style.display = 'block';
   bldgPalette.querySelectorAll('button').forEach(btn=>btn.classList.remove('active'));
   bldgPalette.querySelector('button[data-tile="B"]').classList.add('active');
@@ -1332,6 +1333,7 @@ function paintBldg(e){
   }
   bldgGrid[y][x]=bldgPaint;
   drawBldg();
+  applyBldgChanges();
 }
 bldgCanvas.addEventListener('mousedown',e=>{ bldgPainting=true; paintBldg(e); });
 bldgCanvas.addEventListener('mousemove',paintBldg);
@@ -1343,6 +1345,7 @@ function resizeBldg(){
   const h=parseInt(document.getElementById('bldgH').value,10)||1;
   const ng=Array.from({length:h},(_,y)=>Array.from({length:w},(_,x)=> (y<bldgGrid.length && x<bldgGrid[0].length)? bldgGrid[y][x]:null));
   bldgGrid=ng; drawBldg();
+  applyBldgChanges();
 }
 document.getElementById('bldgW').addEventListener('change',resizeBldg);
 document.getElementById('bldgH').addEventListener('change',resizeBldg);
@@ -1374,12 +1377,35 @@ function moveBuilding(b, x, y) {
   return nb;
 }
 
+// Update the currently edited building when fields or tiles change
+function applyBldgChanges() {
+  if (editBldgIdx < 0) return;
+  const x = parseInt(document.getElementById('bldgX').value, 10) || 0;
+  const y = parseInt(document.getElementById('bldgY').value, 10) || 0;
+  let interiorId = document.getElementById('bldgInterior').value;
+  if (!interiorId) {
+    interiorId = makeInteriorRoom();
+    const I = interiors[interiorId]; I.id = interiorId; moduleData.interiors.push(I); renderInteriorList();
+    document.getElementById('bldgInterior').value = interiorId;
+  }
+  const ob = moduleData.buildings[editBldgIdx];
+  removeBuilding(ob);
+  const b = placeHut(x, y, { interiorId, grid: bldgGrid, boarded: ob.boarded });
+  moduleData.buildings[editBldgIdx] = b;
+  selectedObj = { type: 'bldg', obj: b };
+  placingType = null;
+  placingPos = null;
+  renderBldgList();
+  drawWorld();
+}
+
 function deleteBldg() {
   if (editBldgIdx < 0) return;
   const b = moduleData.buildings[editBldgIdx];
   removeBuilding(b);
   moduleData.buildings.splice(editBldgIdx, 1);
   editBldgIdx = -1;
+  document.getElementById('addBldg').style.display = 'block';
   document.getElementById('delBldg').style.display = 'none';
   renderBldgList();
   selectedObj = null;
@@ -1550,6 +1576,7 @@ document.getElementById('newEvent').onclick = startNewEvent;
 document.getElementById('addPortal').onclick = addPortal;
 document.getElementById('newPortal').onclick = startNewPortal;
 document.getElementById('delNPC').onclick = deleteNPC;
+document.getElementById('closeNPC').onclick = closeNPCEditor;
 document.getElementById('delItem').onclick = deleteItem;
 document.getElementById('delBldg').onclick = deleteBldg;
 document.getElementById('newInterior').onclick = startNewInterior;
@@ -1563,6 +1590,10 @@ document.getElementById('itemUseType').addEventListener('change', updateUseWrap)
 document.getElementById('eventEffect').addEventListener('change', updateEventEffectFields);
 document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
 document.getElementById('npcFlagType').addEventListener('change', updateFlagBuilder);
+document.getElementById('npcEditor').addEventListener('input', applyNPCChanges);
+document.getElementById('npcEditor').addEventListener('change', applyNPCChanges);
+document.getElementById('bldgEditor').addEventListener('input', applyBldgChanges);
+document.getElementById('bldgEditor').addEventListener('change', applyBldgChanges);
 document.getElementById('npcFlagPick').onclick = () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY' }; };
 document.getElementById('portalPick').onclick = () => { coordTarget = { x: 'portalX', y: 'portalY' }; };
 document.getElementById('portalDestPick').onclick = () => { coordTarget = { x: 'portalToX', y: 'portalToY' }; };
