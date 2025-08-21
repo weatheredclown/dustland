@@ -89,7 +89,7 @@
     {
       "id": "bandit",
       "map": "world",
-      "x": 7,
+      "x": 9,
       "y": 8,
       "color": "#f66",
       "name": "Sneaky Bandit",
@@ -173,5 +173,5 @@
       "entryY": 3
     }
   ],
-  "buildings": [ { "x": 5, "y": 5, "interiorId": "cabin" } ]
+  "buildings": [ { "x": 2, "y": 1, "interiorId": "cabin", "boarded": false } ]
 }
