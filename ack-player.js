@@ -12,8 +12,10 @@ window.openCreator = () => {};
 let moduleData = null;
 const PLAYTEST_KEY = 'ack_playtest';
 const loader = document.getElementById('moduleLoader');
+const urlInput = document.getElementById('modUrl');
+const urlBtn = document.getElementById('modUrlBtn');
 const fileInput = document.getElementById('modFile');
-const loadBtn = document.getElementById('modLoadBtn');
+const fileBtn = document.getElementById('modFileBtn');
 
 const playData = localStorage.getItem(PLAYTEST_KEY);
 if (playData) {
@@ -28,16 +30,42 @@ if (playData) {
   }
 }
 
-loadBtn.onclick = () => {
+const params = new URLSearchParams(location.search);
+const autoUrl = params.get('module');
+if (!moduleData && autoUrl) {
+  urlInput.value = autoUrl;
+  fetch(autoUrl)
+    .then((r) => r.json())
+    .then((data) => loadModule(data))
+    .catch((err) => alert('Invalid module:' + err));
+}
+
+async function loadModule(data) {
+  moduleData = data;
+  loader.style.display = 'none';
+  window.openCreator = realOpenCreator;
+  realOpenCreator();
+}
+
+urlBtn.onclick = async () => {
+  const url = urlInput.value.trim();
+  if (!url) return;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    await loadModule(data);
+  } catch (err) {
+    alert('Invalid module:' + err);
+  }
+};
+
+fileBtn.onclick = () => {
   const file = fileInput.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
     try {
-      moduleData = JSON.parse(reader.result);
-      loader.style.display = 'none';
-      window.openCreator = realOpenCreator;
-      realOpenCreator();
+      loadModule(JSON.parse(reader.result));
     } catch (err) {
       alert('Invalid module:' + err);
     }
