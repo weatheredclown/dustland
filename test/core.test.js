@@ -584,6 +584,20 @@ test('makeNPC normalizes existing fight choices', () => {
   assert.strictEqual(fights[0].q, 'turnin');
 });
 
+test('fight choice triggers combat', () => {
+  NPCS.length = 0;
+  const orig = Actions.startCombat;
+  let triggered = false;
+  Actions.startCombat = () => { triggered = true; };
+  const npc = makeNPC('rival', 'world', 0, 0, '#fff', 'Rival', '', '', null, null, null, null, { combat: { DEF: 1 } });
+  NPCS.push(npc);
+  openDialog(npc);
+  const fightBtn = choicesEl.children.find(c => c.textContent === '(Fight)');
+  fightBtn.onclick();
+  assert.ok(triggered);
+  Actions.startCombat = orig;
+});
+
 test('leave choice is rendered last', () => {
   NPCS.length = 0;
   const tree = { start: { text: '', choices: [ { label: 'Leave', to: 'bye' }, { label: 'Talk', to: 'talk' } ] }, talk: { text: '', choices: [] }, bye: { text: '', choices: [] } };
