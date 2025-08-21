@@ -1,8 +1,6 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
 import { JSDOM } from 'jsdom';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 test('playSfx handles aborted play without unhandled rejection', async (t) => {
   const dom = new JSDOM(`<!doctype html><body>
@@ -57,8 +55,7 @@ test('playSfx handles aborted play without unhandled rejection', async (t) => {
     pause(){}
   };
   global.EventBus = { on: (evt, fn) => { if (evt === 'sfx') global._playSfx = fn; } };
-  const rootDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-  await import(path.join(rootDir, 'dustland-engine.js'));
+  await import(new URL('../dustland-engine.js', import.meta.url));
   const unhandled = [];
   const handler = err => unhandled.push(err);
   process.on('unhandledRejection', handler);
