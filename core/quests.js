@@ -13,7 +13,6 @@ class Quest {
       renderQuests();
       log('Quest completed: ' + this.title);
       if (typeof toast === 'function') toast(`QUEST COMPLETE: ${this.title}`);
-      party.forEach(p => awardXP(p, 5));
       queueNanoDialogForNPCs?.('start', 'quest update');
     }
   }
@@ -65,7 +64,8 @@ function defaultQuestProcessor(npc, nodeId) {
           const rewardIt = resolveItem(meta.reward);
           if (rewardIt) addToInv(rewardIt);
         }
-        if (meta.xp) { awardXP(leader(), meta.xp); }
+        const xp = meta.xp ?? 5;
+        party.forEach(p => awardXP(p, xp));
         if (meta.moveTo) { npc.x = meta.moveTo.x; npc.y = meta.moveTo.y; }
       } else {
         const def = ITEMS[meta.item];
