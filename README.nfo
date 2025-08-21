@@ -42,6 +42,7 @@ _______________________________________________________________________________
   Save / Load ....... G / L      (or UI buttons)
   Minimap ........... M
   Close Dialog ...... Esc
+  Audio Toggle ...... UI button
   Touch Controls .... add ?touch=1 to URL for on-screen buttons
 
 [ KEY MECHANICS ]
