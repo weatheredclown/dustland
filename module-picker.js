@@ -14,7 +14,7 @@ function loadModule(moduleInfo){
   const existingScript = document.getElementById('activeModuleScript');
   if (existingScript) existingScript.remove();
   if (moduleInfo.file.endsWith('.json')) {
-    window.location.href = `ack-player.html?module=${encodeURIComponent(moduleInfo.file)}`;
+    window.location.href = `dustland.html?ack-player=1&module=${encodeURIComponent(moduleInfo.file)}`;
     return;
   }
   const script = document.createElement('script');
