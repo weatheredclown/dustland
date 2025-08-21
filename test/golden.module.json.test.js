@@ -42,4 +42,22 @@ test('golden module json exposes core features', () => {
   );
   assert.ok(mod.items.some((i) => i.use?.type === 'heal'), 'has healing item');
   assert.ok(mod.portals && mod.portals.length > 0, 'has portals');
+
+  const hut = mod.buildings.find((b) => b.interiorId === 'cabin');
+  assert.strictEqual(hut.boarded, false, 'cabin is enterable');
+  const w = hut.w || 6;
+  const h = hut.h || 5;
+  const overlaps = mod.npcs.some(
+    (n) =>
+      n.map === 'world' &&
+      n.x >= hut.x &&
+      n.x < hut.x + w &&
+      n.y >= hut.y &&
+      n.y < hut.y + h
+  );
+  assert.ok(!overlaps, 'npcs avoid building area');
+
+  const bandit = mod.npcs.find((n) => n.id === 'bandit');
+  const dist = Math.abs(bandit.x - mod.start.x) + Math.abs(bandit.y - mod.start.y);
+  assert.ok(dist > 2, 'bandit is spaced away from start');
 });
