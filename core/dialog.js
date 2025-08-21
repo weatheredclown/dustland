@@ -187,15 +187,21 @@ function setPortrait(portEl, npc){
     portEl.style.background = npc.color || '#274227';
     return;
   }
-  const frame = Math.floor(Math.random() * 4);
-  const col = frame % 2;
-  const row = Math.floor(frame/2);
-  const posX = col === 0 ? '0%'   : '100%';
-  const posY = row === 0 ? '0%'   : '100%';
   portEl.style.background = 'transparent';
-  portEl.style.backgroundImage = `url(${npc.portraitSheet})`;
-  portEl.style.backgroundSize = '200% 200%';
-  portEl.style.backgroundPosition = `${posX} ${posY}`;
+  if(/_4\.[a-z]+$/i.test(npc.portraitSheet)){
+    const frame = Math.floor(Math.random() * 4);
+    const col = frame % 2;
+    const row = Math.floor(frame/2);
+    const posX = col === 0 ? '0%' : '100%';
+    const posY = row === 0 ? '0%' : '100%';
+    portEl.style.backgroundImage = `url(${npc.portraitSheet})`;
+    portEl.style.backgroundSize = '200% 200%';
+    portEl.style.backgroundPosition = `${posX} ${posY}`;
+  } else {
+    portEl.style.backgroundImage = `url(${npc.portraitSheet})`;
+    portEl.style.backgroundSize = '100% 100%';
+    portEl.style.backgroundPosition = 'center';
+  }
 }
 
 function openDialog(npc, node='start'){
