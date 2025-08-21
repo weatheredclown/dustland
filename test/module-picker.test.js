@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
 function stubEl(){
+  const ctx = { clearRect(){}, fillRect(){ ctx.count++; }, fillStyle:'', count:0 };
   const el = {
     id: '',
     style: {},
@@ -13,7 +14,8 @@ function stubEl(){
     appendChild(child){ this.children.push(child); child.parentElement = this; },
     querySelector: () => stubEl(),
     querySelectorAll: () => [],
-    getContext: () => ({ clearRect(){}, fillRect(){}, fillStyle:'', })
+    ctx,
+    getContext: () => ctx
   };
   return el;
 }
@@ -51,4 +53,5 @@ test('module picker shows title and dust background', () => {
   assert.strictEqual(title.textContent, 'Dustland CRT');
   const canvas = overlay.children.find(c => c.id === 'dustParticles');
   assert.ok(canvas);
+  assert.ok(canvas.ctx.count > 0);
 });
