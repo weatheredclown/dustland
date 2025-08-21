@@ -55,3 +55,14 @@ test('module picker shows title and dust background', () => {
   assert.ok(canvas);
   assert.ok(canvas.ctx.count > 0);
 });
+
+test('particles respawn at edges after aging', () => {
+  const canvas = stubEl();
+  const dust = startDust(canvas);
+  dust.particles.forEach(p => p.life = 1);
+  dust.update();
+  const allAtEdges = dust.particles.every(p => p.x === 0 || p.x === canvas.width || p.y === 0 || p.y === canvas.height);
+  assert.ok(allAtEdges);
+  const moving = dust.particles.some(p => p.vx !== 0 || p.vy !== 0);
+  assert.ok(moving);
+});
