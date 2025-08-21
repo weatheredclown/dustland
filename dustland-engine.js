@@ -103,8 +103,8 @@ function draw(t){
   }
   const dt=(t-_lastTime)||0; _lastTime=t;
   render(state, dt/1000);
-  dctx.globalAlpha=0.10; dctx.drawImage(prev, 1, 0);
-  dctx.globalAlpha=1.0; dctx.drawImage(scene, 0, 0);
+  dctx.globalAlpha=0.20; dctx.drawImage(prev, 1, 0);
+  dctx.globalAlpha=0.2; dctx.drawImage(scene, 0, 0);
   pctx.clearRect(0,0,prev.width,prev.height); pctx.drawImage(scene,0,0);
   requestAnimationFrame(draw);
 }
@@ -237,9 +237,11 @@ function updateTabsLayout(){
   const inv=document.getElementById('inv'), partyEl=document.getElementById('party'), q=document.getElementById('quests');
   if(wide){
     if(tabs) tabs.style.display='none';
-    inv.style.display='grid';
-    partyEl.style.display='grid';
-    q.style.display='grid';
+    if (inv) {
+      inv.style.display='grid';
+      partyEl.style.display='grid';
+      q.style.display='grid';
+    }
   } else {
     if(tabs) tabs.style.display='flex';
     showTab(activeTab);
