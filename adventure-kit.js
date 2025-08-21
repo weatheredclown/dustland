@@ -1606,7 +1606,7 @@ function playtestModule() {
   const bldgs = buildings.map(({ under, ...rest }) => rest);
   const data = { ...moduleData, world, buildings: bldgs };
   localStorage.setItem(PLAYTEST_KEY, JSON.stringify(data));
-  window.open('ack-player.html#play', '_blank');
+  window.open('dustland.html?ack-player=1#play', '_blank');
 }
 
 document.getElementById('regen').onclick = regenWorld;

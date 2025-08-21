@@ -4,7 +4,7 @@ import { JSDOM } from 'jsdom';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const htmlFiles = ['dustland.html', 'ack-player.html', 'adventure-kit.html'];
+const htmlFiles = ['dustland.html', 'adventure-kit.html'];
 const rootDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
 async function loadNoError(file){

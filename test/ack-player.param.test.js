@@ -14,7 +14,7 @@ test('ack-player auto-loads module from URL param', async () => {
     <input id="modFile" />
     <button id="modFileBtn"></button>
   </body>`;
-  const dom = new JSDOM(html, { url: 'http://localhost/ack-player.html?module=modules/golden.module.json' });
+  const dom = new JSDOM(html, { url: 'http://localhost/dustland.html?ack-player=1&module=modules/golden.module.json' });
   const { window } = dom;
   let started = false;
   window.openCreator = () => { started = true; };

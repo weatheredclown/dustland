@@ -38,7 +38,7 @@
           <div id="party" style="display:none"></div>
           <div id="quests" style="display:none"></div>
         </div>
-        <div style="margin-top:8px">
+        <div style="margin-top:8px" id="mainButtons">
           <button class="btn" id="saveBtn">Save</button>
           <button class="btn" id="loadBtn">Load</button>
           <button class="btn" id="resetBtn">Reset</button>
@@ -125,6 +125,21 @@
     </div>
   </div>
 
+  <!-- Module Loader -->
+  <div id="moduleLoader" style="position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:40">
+    <div class="win" style="width:min(420px,92vw);background:#0b0d0b;border:1px solid #2a382a;border-radius:12px;box-shadow:0 20px 80px rgba(0,0,0,.7);overflow:hidden">
+      <header style="padding:10px 12px;border-bottom:1px solid #223022;font-weight:700">Load Adventure Module</header>
+      <main style="padding:12px">
+        <p class="muted" style="margin-bottom:8px">Load a module from the web or a local JSON file.</p>
+        <input type="text" id="modUrl" value="modules/golden.module.json" style="width:100%" />
+        <button class="btn" id="modUrlBtn" style="margin-top:8px">Load from URL</button>
+        <hr style="margin:12px 0" />
+        <input type="file" id="modFile" accept="application/json" />
+        <button class="btn" id="modFileBtn" style="margin-top:8px">Load from File</button>
+      </main>
+    </div>
+  </div>
+
   <script defer src="./event-bus.js"></script>
   <script defer src="./core/effects.js"></script>
   <script defer src="./core/inventory.js"></script>
@@ -138,6 +153,23 @@
   <script defer src="./dustland-core.js"></script>
   <script defer src="./dustland-nano.js"></script>
   <script defer src="./dustland-engine.js"></script>
-  <script defer src="./module-picker.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const isAck = params.get('ack-player') === '1';
+    if (isAck) {
+      document.getElementById('moduleLoader').style.display = 'flex';
+      const btns = document.getElementById('mainButtons');
+      const nanoBtn = document.getElementById('nanoToggle');
+      const audioBtn = document.getElementById('audioToggle');
+      btns.appendChild(nanoBtn);
+      btns.appendChild(audioBtn);
+      const settingsBtn = document.getElementById('settingsBtn');
+      if (settingsBtn) settingsBtn.style.display = 'none';
+    }
+    const modeScript = document.createElement('script');
+    modeScript.defer = true;
+    modeScript.src = isAck ? './ack-player.js' : './module-picker.js';
+    document.body.appendChild(modeScript);
+  </script>
 </body>
 </html>
