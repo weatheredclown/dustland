@@ -626,6 +626,14 @@ test('dialog choices can be gated by party flags', () => {
   assert.strictEqual(choicesEl.children.length, 1);
   closeDialog();
 });
+test('board/unboard effects toggle building access', () => {
+  globalThis.buildings = [ { interiorId: 'castle', boarded: true } ];
+  Effects.apply([{ effect: 'unboardDoor', interiorId: 'castle' }]);
+  assert.strictEqual(globalThis.buildings[0].boarded, false);
+  Effects.apply([{ effect: 'boardDoor', interiorId: 'castle' }]);
+  assert.strictEqual(globalThis.buildings[0].boarded, true);
+  globalThis.buildings.length = 0;
+});
 test('onEnter triggers effects and temporary stat mod', () => {
   const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
   applyModule({world});
