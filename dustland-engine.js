@@ -47,6 +47,33 @@ function setAudio(on){
 }
 function toggleAudio(){ setAudio(!audioEnabled); }
 globalThis.toggleAudio = toggleAudio;
+const isMobileUA = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+let mobileControlsEnabled = isMobileUA;
+let mobilePad = null, mobileAB = null;
+function setMobileControls(on){
+  mobileControlsEnabled = on;
+  const btn=document.getElementById('mobileToggle');
+  if(btn) btn.textContent = `Mobile Controls: ${on ? 'On' : 'Off'}`;
+  if(on){
+    if(!mobilePad){
+      mobilePad=document.createElement('div');
+      mobilePad.style.cssText='position:fixed;bottom:20px;left:20px;display:grid;grid-template-columns:repeat(3,40px);grid-template-rows:repeat(3,40px);gap:6px;z-index:1000;';
+      const mk=(t,fn)=>{ const b=document.createElement('button'); b.textContent=t; b.style.cssText='width:40px;height:40px;'; b.onclick=fn; return b; };
+      const cells=[document.createElement('div'),mk("↑",()=>move(0,-1)),document.createElement('div'),mk("←",()=>move(-1,0)),document.createElement('div'),mk("→",()=>move(1,0)),document.createElement('div'),mk("↓",()=>move(0,1)),document.createElement('div')];
+      cells.forEach(c=>mobilePad.appendChild(c));
+      document.body.appendChild(mobilePad);
+      mobileAB=document.createElement('div');
+      mobileAB.style.cssText='position:fixed;bottom:20px;right:20px;display:flex;gap:10px;z-index:1000;';
+      mobileAB.appendChild(mk('A',interact));
+      mobileAB.appendChild(mk('B',takeNearestItem));
+      document.body.appendChild(mobileAB);
+    }
+  } else {
+    if(mobilePad) { mobilePad.remove(); mobilePad=null; }
+    if(mobileAB) { mobileAB.remove(); mobileAB=null; }
+  }
+}
+function toggleMobileControls(){ setMobileControls(!mobileControlsEnabled); }
 function sfxTick(){
   if(!audioEnabled) return;
   const o=audioCtx.createOscillator();
@@ -382,16 +409,32 @@ if (document.getElementById('saveBtn')) {
   document.getElementById('saveBtn').onclick=()=>save();
   document.getElementById('loadBtn').onclick=()=>{ load(); };
   document.getElementById('resetBtn').onclick=()=>resetAll();
-  document.getElementById('nanoToggle').onclick=()=>{
-    if(window.NanoDialog){
-      NanoDialog.enabled = !NanoDialog.enabled;
-      if (typeof toast === 'function') toast(`Dynamic dialog ${NanoDialog.enabled ? 'enabled' :   'disabled'}`);
-      if (NanoDialog.refreshIndicator) NanoDialog.refreshIndicator();
-    }
-  };
-  const audioBtn = document.getElementById('audioToggle');
+  const nanoBtn=document.getElementById('nanoToggle');
+  if(nanoBtn){
+    const updateNano=()=>{ nanoBtn.textContent = `Nano Dialog: ${window.NanoDialog?.enabled ? 'On' : 'Off'}`; };
+    nanoBtn.onclick=()=>{
+      if(window.NanoDialog){
+        NanoDialog.enabled=!NanoDialog.enabled;
+        if (typeof toast === 'function') toast(`Dynamic dialog ${NanoDialog.enabled ? 'enabled' : 'disabled'}`);
+        if (NanoDialog.refreshIndicator) NanoDialog.refreshIndicator();
+      }
+      updateNano();
+    };
+    updateNano();
+  }
+  const audioBtn=document.getElementById('audioToggle');
   if(audioBtn) audioBtn.onclick=()=>toggleAudio();
+  const mobileBtn=document.getElementById('mobileToggle');
+  if(mobileBtn) mobileBtn.onclick=()=>toggleMobileControls();
   setAudio(audioEnabled);
+  setMobileControls(mobileControlsEnabled);
+  const settingsBtn=document.getElementById('settingsBtn');
+  const settings=document.getElementById('settings');
+  if(settingsBtn && settings){
+    settingsBtn.onclick=()=>{ settings.style.display='flex'; };
+    const closeBtn=document.getElementById('settingsClose');
+    if(closeBtn) closeBtn.onclick=()=>{ settings.style.display='none'; };
+  }
 
   window.addEventListener('keydown',(e)=>{
     if(overlay?.classList.contains('shown')){
@@ -450,20 +493,6 @@ disp.addEventListener('touchstart',e=>{
   interactAt(x,y);
   e.preventDefault();
 });
-
-if(new URLSearchParams(location.search).get('touch')==='1'){
-  const pad=document.createElement('div');
-  pad.style.cssText='position:fixed;bottom:20px;left:20px;display:grid;grid-template-columns:repeat(3,40px);grid-template-rows:repeat(3,40px);gap:6px;z-index:1000;';
-  const mk=(t,fn)=>{ const b=document.createElement('button'); b.textContent=t; b.style.cssText='width:40px;height:40px;'; b.onclick=fn; return b; };
-  const cells=[document.createElement('div'),mk('↑',()=>move(0,-1)),document.createElement('div'),mk('←',()=>move(-1,0)),document.createElement('div'),mk('→',()=>move(1,0)),document.createElement('div'),mk('↓',()=>move(0,1)),document.createElement('div')];
-  cells.forEach(c=>pad.appendChild(c));
-  document.body.appendChild(pad);
-  const ab=document.createElement('div');
-  ab.style.cssText='position:fixed;bottom:20px;right:20px;display:flex;gap:10px;z-index:1000;';
-  ab.appendChild(mk('A',interact));
-  ab.appendChild(mk('B',takeNearestItem));
-  document.body.appendChild(ab);
-}
 
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
