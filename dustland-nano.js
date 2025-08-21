@@ -343,7 +343,10 @@ Choices:
     const linePart = parts[0] || '';
     const choicePart = parts[1] || '';
   
-    const lines = linePart.split(/\r?\n/)
+    const rawLines = linePart.split(/\r?\n/).map(s => s.trim());
+    if(rawLines[0]?.toLowerCase() !== 'lines:') return {lines:[], choices:[]};
+    rawLines.shift();
+    const lines = rawLines
       .map(s => _cleanLine(s))
       .filter(Boolean)
       .filter(s => s.length <= 80)
