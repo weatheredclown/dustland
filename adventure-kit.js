@@ -1443,6 +1443,20 @@ function moveBuilding(b, x, y) {
   return nb;
 }
 
+function redrawBuildings() {
+  moduleData.buildings.forEach(b => {
+    const grid = b.grid || Array.from({ length: b.h }, () => Array.from({ length: b.w }, () => TILE.BUILDING));
+    for (let yy = 0; yy < b.h; yy++) {
+      for (let xx = 0; xx < b.w; xx++) {
+        const t = grid[yy][xx];
+        if (t === TILE.DOOR || t === TILE.BUILDING) {
+          setTile('world', b.x + xx, b.y + yy, t);
+        }
+      }
+    }
+  });
+}
+
 // Update the currently edited building when fields or tiles change
 function applyBldgChanges() {
   if (editBldgIdx < 0) return;
@@ -1927,13 +1941,21 @@ canvas.addEventListener('mouseup', () => {
   worldPainting = false;
   if (dragTarget) delete dragTarget._type;
   dragTarget = null;
+  if (didPaint) {
+    redrawBuildings();
+    drawWorld();
+  }
   updateCursor();
 });
 canvas.addEventListener('mouseleave', () => {
+  if (didPaint) {
+    redrawBuildings();
+  }
   worldPainting = false;
   if (dragTarget) delete dragTarget._type;
   dragTarget = null;
   hoverTile = null;
+  didPaint = false;
   drawWorld();
   updateCursor();
 });
