@@ -9,7 +9,7 @@ window.seedWorldContent = () => { };
 
 const PLAYTEST_KEY = 'ack_playtest';
 
-const akColors = { 0: '#1e271d', 1: '#2c342c', 2: '#1573ff', 3: '#203320', 4: '#394b39', 5: '#304326', 6: '#4d5f4d', 7: '#233223', 8: '#8bd98d', 9: '#000' };
+const akColors = { 0: '#1e271d', 1: '#2c342c', 2: '#1573ff', 3: '#203320', 4: '#777777', 5: '#304326', 6: '#4d5f4d', 7: '#233223', 8: '#8bd98d', 9: '#000' };
 const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
 
@@ -40,6 +40,15 @@ const worldPalette = document.getElementById('worldPalette');
 let worldPaint = null;
 let worldPainting = false;
 let didPaint = false;
+const noiseToggle = document.getElementById('noiseToggle');
+let worldPaintNoise = true;
+if (noiseToggle) {
+  noiseToggle.addEventListener('click', () => {
+    worldPaintNoise = !worldPaintNoise;
+    noiseToggle.textContent = `Noise: ${worldPaintNoise ? 'On' : 'Off'}`;
+  });
+  noiseToggle.textContent = 'Noise: On';
+}
 
 const note=document.createElement('div');
 note.textContent='Note: water (bright blue) is not walkable; spawns cannot go there.';
@@ -52,6 +61,7 @@ function nextId(prefix, arr) {
 
 function addTerrainFeature(x, y, tile) {
   if (!setTile('world', x, y, tile)) return;
+  if (!worldPaintNoise) return;
   for (let dy = -1; dy <= 1; dy++) {
     for (let dx = -1; dx <= 1; dx++) {
       if (dx || dy) {
