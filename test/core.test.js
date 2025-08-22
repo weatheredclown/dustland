@@ -89,6 +89,7 @@ global.renderParty = () => {};
 global.renderQuests = () => {};
 global.updateHUD = () => {};
 global.centerCamera = () => {};
+delete global.navigator;
 
 const files = [
   '../event-bus.js',
@@ -108,7 +109,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, makeInteriorRoom, placeHut, TILE, getTile, interiors } = globalThis;
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, makeInteriorRoom, placeHut, TILE, getTile, interiors, calcMoveDelay, getMoveDelay } = globalThis;
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -263,6 +264,30 @@ test('walking regenerates leader HP', () => {
   move(1,0);
   assert.strictEqual(hero.hp, 10);
   assert.strictEqual(player.hp, 10);
+});
+
+test('movement delay improves with agility and equipment', () => {
+  const world = Array.from({ length:5 }, () => Array.from({ length:5 }, () => 7));
+  applyModule({ world });
+  state.map = 'world';
+  party.length = 0;
+  player.inv.length = 0;
+  const hero = new Character('h', 'Hero', 'Role');
+  hero.stats.AGI = 4;
+  party.addMember(hero);
+  party.x = 0; party.y = 0;
+
+  move(1,0);
+  const baseDelay = getMoveDelay();
+
+  addToInv({ id:'agi_charm', name:'AGI Charm', type:'trinket', slot:'trinket', mods:{ AGI:2 } });
+  equipItem(0,0);
+
+  move(1,0);
+  const boostedDelay = getMoveDelay();
+  assert.ok(boostedDelay < baseDelay);
+  const expected = calcMoveDelay(getTile(state.map, party.x, party.y), hero);
+  assert.strictEqual(boostedDelay, expected);
 });
 
 test('queryTile reports entities and items', () => {
