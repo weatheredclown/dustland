@@ -12,6 +12,7 @@ class Character {
     this.hp=this.maxHp;
     this.ap=2;
     this._bonus={ATK:0, DEF:0, LCK:0};
+    this.special = opts.special || null;
   }
   xpToNext(){ return 10*this.lvl; }
   awardXP(amt){
