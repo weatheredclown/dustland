@@ -155,7 +155,7 @@ function hudBadge(msg){
 }
 
 // Tile colors for rendering
-const colors = {0:'#1e271d',1:'#2c342c',2:'#1573ff',3:'#203320',4:'#394b39',5:'#304326',6:'#4d5f4d',7:'#233223',8:'#8bd98d',9:'#000000'};
+const colors = {0:'#1e271d',1:'#2c342c',2:'#1573ff',3:'#203320',4:'#777777',5:'#304326',6:'#4d5f4d',7:'#233223',8:'#8bd98d',9:'#000000'};
 // Alternate floor colors used in office interiors for subtle variation
 const officeFloorColors = ['#233223','#243424','#222a22'];
 const officeMaps = new Set(['floor1','floor2','floor3']);

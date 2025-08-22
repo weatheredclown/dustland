@@ -2,6 +2,20 @@ const { Effects } = globalThis;
 
 // active temporary stat modifiers
 const buffs = [];
+const tileColors = {0:'#1e271d',1:'#2c342c',2:'#1573ff',3:'#203320',4:'#777777',5:'#304326',6:'#4d5f4d',7:'#233223',8:'#8bd98d',9:'#000000'};
+let lastMove = 0;
+let moveDelay = 0;
+function tileDelay(t){
+  if(t===TILE.ROAD) return 0;
+  const col=tileColors[t];
+  if(!col) return 200;
+  const r=parseInt(col.slice(1,3),16);
+  const g=parseInt(col.slice(3,5),16);
+  const b=parseInt(col.slice(5,7),16);
+  const bright=(r+g+b)/3;
+  const min=100, max=400;
+  return min + (bright/255)*(max-min);
+}
 
 // ===== Helpers =====
 function mapIdForState(){ return state.map; }
@@ -71,6 +85,7 @@ function canWalk(x,y){
 }
 function move(dx,dy){
   if(state.map==='creator') return;
+  if(typeof navigator!=='undefined' && Date.now()-lastMove < moveDelay) return;
   const nx=party.x+dx, ny=party.y+dy;
   if(canWalk(nx,ny)){
     Effects.tick({buffs});
@@ -80,6 +95,8 @@ function move(dx,dy){
       player.hp = actor.hp;
     }
     setPartyPos(nx, ny);
+    moveDelay = tileDelay(getTile(state.map, nx, ny));
+    lastMove = Date.now();
     if(typeof footstepBump==='function') footstepBump();
     onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
     centerCamera(party.x,party.y,state.map); updateHUD();
