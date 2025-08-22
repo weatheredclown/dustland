@@ -192,9 +192,16 @@
 <body>
   <canvas id="game" width="0" height="0" class="glow" aria-label="Dustland CRT"></canvas>
   <div class="ak-layout">
-    <section class="card map-card" id="mapCard">
-      <canvas id="map" width="640" height="480" aria-label="Map preview"></canvas>
-      <div class="controls">
+      <section class="card map-card" id="mapCard">
+        <canvas id="map" width="640" height="480" aria-label="Map preview"></canvas>
+        <div id="worldPalette" style="margin-top:4px">
+          <button type="button" data-tile="0" style="background:#1e271d"></button>
+          <button type="button" data-tile="1" style="background:#2c342c"></button>
+          <button type="button" data-tile="2" style="background:#1573ff"></button>
+          <button type="button" data-tile="3" style="background:#203320"></button>
+          <button type="button" data-tile="5" style="background:#304326"></button>
+        </div>
+        <div class="controls">
         <button class="btn" id="regen">Generate World</button>
         <button class="btn btn--primary" id="save">Download Module</button>
         <button class="btn" id="load">Load Module</button>

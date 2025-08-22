@@ -36,6 +36,11 @@ let bldgPaint = TILE.BUILDING;
 let bldgPainting = false;
 let bldgGrid = [];
 
+const worldPalette = document.getElementById('worldPalette');
+let worldPaint = null;
+let worldPainting = false;
+let didPaint = false;
+
 const note=document.createElement('div');
 note.textContent='Note: water (bright blue) is not walkable; spawns cannot go there.';
 note.style.cssText='padding:4px;background:#300;color:#f88;text-align:center;';
@@ -44,6 +49,18 @@ document.body.prepend(note);
 function nextId(prefix, arr) {
   let i = 1; while (arr.some(o => o.id === prefix + i)) i++; return prefix + i;
 }
+
+function addTerrainFeature(x, y, tile) {
+  if (!setTile('world', x, y, tile)) return;
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      if (dx || dy) {
+        if (Math.random() < 0.3) setTile('world', x + dx, y + dy, tile);
+      }
+    }
+  }
+}
+window.addTerrainFeature = addTerrainFeature;
 
 function drawWorld() {
   const W = WORLD_W, H = WORLD_H;
@@ -1387,6 +1404,18 @@ bldgPalette.querySelectorAll('button').forEach(btn=>{
 });
 bldgPalette.querySelector('button')?.classList.add('active');
 
+if (worldPalette) {
+  worldPalette.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const isOn = btn.classList.contains('active');
+      worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      worldPaint = isOn ? null : parseInt(btn.dataset.tile, 10);
+      if (!isOn) btn.classList.add('active');
+      updateCursor();
+    });
+  });
+}
+
 function removeBuilding(b) {
   if (b.under) {
     for (let yy = 0; yy < b.h; yy++) { for (let xx = 0; xx < b.w; xx++) { setTile('world', b.x + xx, b.y + yy, b.under[yy][xx]); } }
@@ -1693,6 +1722,10 @@ function canvasPos(ev) {
 }
 
 function updateCursor(x, y) {
+  if (worldPaint != null) {
+    canvas.style.cursor = 'crosshair';
+    return;
+  }
   if (dragTarget) {
     canvas.style.cursor = 'grabbing';
     return;
@@ -1719,6 +1752,21 @@ function updateCursor(x, y) {
 }
 canvas.addEventListener('mousedown', ev => {
   const { x, y } = canvasPos(ev);
+  const overNpc = moduleData.npcs.some(n => n.map === 'world' && n.x === x && n.y === y);
+  const overItem = moduleData.items.some(it => it.map === 'world' && it.x === x && it.y === y);
+  const overBldg = moduleData.buildings.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+  const overStart = moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y;
+  const overEvent = moduleData.events.some(ev => ev.map === 'world' && ev.x === x && ev.y === y);
+  const overPortal = moduleData.portals.some(p => p.map === 'world' && p.x === x && p.y === y);
+  if (worldPaint != null && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal)) {
+    worldPainting = true;
+    hoverTile = { x, y };
+    addTerrainFeature(x, y, worldPaint);
+    didPaint = true;
+    drawWorld();
+    updateCursor(x, y);
+    return;
+  }
   hoverTarget = null;
   didDrag = false;
   if (coordTarget) {
@@ -1798,6 +1846,12 @@ canvas.addEventListener('mousedown', ev => {
 canvas.addEventListener('mousemove', ev => {
   const { x, y } = canvasPos(ev);
   hoverTile = { x, y };
+  if (worldPainting && worldPaint != null) {
+    addTerrainFeature(x, y, worldPaint);
+    didPaint = true;
+    drawWorld();
+    return;
+  }
 
   // While placing, show ghost & bail
   if (placingType) {
@@ -1860,11 +1914,13 @@ canvas.addEventListener('mousemove', ev => {
   updateCursor(x, y);
 });
 canvas.addEventListener('mouseup', () => {
+  worldPainting = false;
   if (dragTarget) delete dragTarget._type;
   dragTarget = null;
   updateCursor();
 });
 canvas.addEventListener('mouseleave', () => {
+  worldPainting = false;
   if (dragTarget) delete dragTarget._type;
   dragTarget = null;
   hoverTile = null;
@@ -1873,6 +1929,7 @@ canvas.addEventListener('mouseleave', () => {
 });
 
 canvas.addEventListener('click', ev => {
+  if (didPaint) { didPaint = false; return; }
   if (didDrag) { didDrag = false; return; }
   const { x, y } = canvasPos(ev);
   let idx = moduleData.npcs.findIndex(n => n.map === 'world' && n.x === x && n.y === y);
