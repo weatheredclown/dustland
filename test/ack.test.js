@@ -41,6 +41,7 @@ function stubEl(){
 
 global.requestAnimationFrame = () => {};
 global.alert = () => {};
+global.confirm = () => true;
 global.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 global.window = global;
 window.matchMedia = () => ({ matches:false, addEventListener(){}, removeEventListener(){} });
@@ -155,4 +156,21 @@ test('painting over building restores tiles', () => {
   canvasEl._listeners.mousemove[0]({ clientX:5, clientY:5 });
   canvasEl._listeners.mouseup[0]({});
   assert.strictEqual(world[5][5], TILE.BUILDING);
+});
+
+test('regenWorld creates empty map without buildings', () => {
+  regenWorld();
+  assert.strictEqual(globalThis.buildings.length, 0);
+  assert.ok(world.every(row => row.every(t => t !== TILE.BUILDING)));
+});
+
+test('clearWorld wipes tiles and data', () => {
+  genWorld(1, { buildings: [] });
+  moduleData.npcs = [{ id:'n1', map:'world', x:0, y:0 }];
+  setTile('world',0,0,TILE.BUILDING);
+  globalThis.buildings.push({ x:0, y:0, w:1, h:1, under:[[TILE.SAND]] });
+  clearWorld();
+  assert.strictEqual(world[0][0], TILE.SAND);
+  assert.strictEqual(moduleData.npcs.length, 0);
+  assert.strictEqual(globalThis.buildings.length, 0);
 });
