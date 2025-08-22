@@ -128,3 +128,31 @@ test('clicking building while paint palette active still edits', () => {
   globalThis.editBldg = orig;
   assert.strictEqual(edited, true);
 });
+
+test('painting then leaving map keeps next click', () => {
+  genWorld(1);
+  moduleData.buildings = [{ x:5, y:5, w:1, h:1 }];
+  setTile('world',5,5,TILE.BUILDING);
+  worldPaint = TILE.ROCK;
+  canvasEl._listeners.mousedown[0]({ clientX:0, clientY:0 });
+  canvasEl._listeners.mouseleave[0]({});
+  let edited = false;
+  const orig = globalThis.editBldg;
+  globalThis.editBldg = () => { edited = true; };
+  canvasEl._listeners.mousedown[0]({ clientX:5, clientY:5 });
+  canvasEl._listeners.mouseup[0]({});
+  canvasEl._listeners.click[0]({ clientX:5, clientY:5 });
+  globalThis.editBldg = orig;
+  assert.strictEqual(edited, true);
+});
+
+test('painting over building restores tiles', () => {
+  genWorld(1);
+  moduleData.buildings = [{ x:5, y:5, w:1, h:1 }];
+  setTile('world',5,5,TILE.BUILDING);
+  worldPaint = TILE.ROCK;
+  canvasEl._listeners.mousedown[0]({ clientX:0, clientY:0 });
+  canvasEl._listeners.mousemove[0]({ clientX:5, clientY:5 });
+  canvasEl._listeners.mouseup[0]({});
+  assert.strictEqual(world[5][5], TILE.BUILDING);
+});
