@@ -1703,7 +1703,6 @@ function playtestModule() {
   window.open('dustland.html?ack-player=1#play', '_blank');
 }
 
-document.getElementById('regen').onclick = regenWorld;
 document.getElementById('clear').onclick = clearWorld;
 document.getElementById('addNPC').onclick = addNPC;
 document.getElementById('addItem').onclick = addItem;
@@ -2115,15 +2114,3 @@ animate();
 
 document.getElementById('playtestFloat').onclick =
   () => document.getElementById('playtest')?.click();
-
-const toggleEditorBtn = document.getElementById('toggleEditor');
-if (toggleEditorBtn) {
-  const panel = document.getElementById('editorPanel');
-  toggleEditorBtn.addEventListener('click', () => {
-    const isShown = panel.style.display !== 'none';
-    panel.style.display = isShown ? 'none' : '';
-    toggleEditorBtn.textContent = isShown ? 'Show Editor' : 'Hide Editor';
-    toggleEditorBtn.setAttribute('aria-expanded', String(!isShown));
-    panel.setAttribute('aria-hidden', String(isShown));
-  });
-}
