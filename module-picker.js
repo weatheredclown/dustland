@@ -126,6 +126,14 @@ function showModulePicker(){
   styleTag.textContent = '@keyframes pulse{0%,100%{opacity:.8}50%{opacity:1}}';
   document.head.appendChild(styleTag);
 
+  const ackBtn = document.createElement('div');
+  ackBtn.id = 'ackGlyph';
+  ackBtn.textContent = '✎';
+  ackBtn.title = 'Adventure Kit';
+  ackBtn.style = 'position:absolute;top:10px;right:10px;z-index:1;color:#0f0;font-size:24px;cursor:pointer';
+  ackBtn.onclick = () => { window.location.href = 'adventure-kit.html'; };
+  overlay.appendChild(ackBtn);
+
   const canvas = document.createElement('canvas');
   canvas.id = 'dustParticles';
   // Background dust layer; z-index keeps UI elements in front.

@@ -26,7 +26,8 @@ Object.assign(global, {
   innerWidth: 800,
   innerHeight: 600,
   addEventListener(){},
-  localStorage: { getItem: () => null }
+  localStorage: { getItem: () => null },
+  location: { href: '' }
 });
 
 const bodyEl = stubEl();
@@ -54,6 +55,14 @@ test('module picker shows title and dust background', () => {
   const canvas = overlay.children.find(c => c.id === 'dustParticles');
   assert.ok(canvas);
   assert.ok(canvas.ctx.count > 0);
+});
+
+test('adventure kit glyph navigates to editor', () => {
+  const overlay = bodyEl.children.find(c => c.id === 'modulePicker');
+  const glyph = overlay.children.find(c => c.id === 'ackGlyph');
+  assert.ok(glyph);
+  glyph.onclick();
+  assert.strictEqual(global.location.href, 'adventure-kit.html');
 });
 
 test('particles respawn at edges after aging', () => {
