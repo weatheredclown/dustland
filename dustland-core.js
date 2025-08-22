@@ -360,14 +360,14 @@ function genWorld(seed=Date.now(), data={}){
   interiors = {};
   if(creatorMap.grid && creatorMap.grid.length) interiors['creator']=creatorMap;
   (data.interiors||[]).forEach(I=>{ const {id,...rest}=I; interiors[id]={...rest}; });
-  buildings.length=0;
-  if(data.buildings && data.buildings.length){
-    data.buildings.forEach(b=> placeHut(b.x, b.y, b));
+  buildings.length = 0;
+  if (data.buildings) {
+    data.buildings.forEach(b => placeHut(b.x, b.y, b));
   } else {
-    for(let i=0;i<10;i++){
-      let x=8+rand(WORLD_W-16), y=6+rand(WORLD_H-12);
-      if(getTile('world',x,y)===TILE.WATER){ const p=findNearestLand(x,y); x=p.x; y=p.y; }
-      placeHut(x,y);
+    for (let i = 0; i < 10; i++) {
+      let x = 8 + rand(WORLD_W - 16), y = 6 + rand(WORLD_H - 12);
+      if (getTile('world', x, y) === TILE.WATER) { const p = findNearestLand(x, y); x = p.x; y = p.y; }
+      placeHut(x, y);
     }
   }
   portals.length=0;

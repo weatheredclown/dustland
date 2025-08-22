@@ -315,17 +315,45 @@ function updateInteriorOptions() {
 
 function regenWorld() {
   moduleData.seed = Date.now();
-  genWorld(moduleData.seed);
-  moduleData.buildings = [...buildings];
+  genWorld(moduleData.seed, { buildings: [] });
+  moduleData.buildings = [];
   moduleData.interiors = [];
   moduleData.events = [];
   moduleData.portals = [];
   for (const id in interiors) {
-    if(id==='creator') continue;
+    if (id === 'creator') continue;
     const I = interiors[id]; I.id = id; moduleData.interiors.push(I);
   }
   renderInteriorList();
   renderBldgList();
+  renderEventList();
+  renderPortalList();
+  drawWorld();
+}
+
+function clearWorld() {
+  if (!confirm('Clear the world map?')) return;
+  for (let y = 0; y < WORLD_H; y++) {
+    for (let x = 0; x < WORLD_W; x++) {
+      setTile('world', x, y, TILE.SAND);
+    }
+  }
+  moduleData.npcs = [];
+  moduleData.items = [];
+  moduleData.quests = [];
+  moduleData.buildings = [];
+  moduleData.interiors = [];
+  moduleData.portals = [];
+  moduleData.events = [];
+  buildings.length = 0;
+  portals.length = 0;
+  globalThis.interiors = {};
+  interiors = globalThis.interiors;
+  renderNPCList();
+  renderItemList();
+  renderQuestList();
+  renderBldgList();
+  renderInteriorList();
   renderEventList();
   renderPortalList();
   drawWorld();
@@ -1676,6 +1704,7 @@ function playtestModule() {
 }
 
 document.getElementById('regen').onclick = regenWorld;
+document.getElementById('clear').onclick = clearWorld;
 document.getElementById('addNPC').onclick = addNPC;
 document.getElementById('addItem').onclick = addItem;
 document.getElementById('newItem').onclick = startNewItem;
