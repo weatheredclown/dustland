@@ -4,6 +4,17 @@ const enemyRow = typeof document !== 'undefined' ? document.getElementById('comb
 const partyRow = typeof document !== 'undefined' ? document.getElementById('combatParty') : null;
 const cmdMenu = typeof document !== 'undefined' ? document.getElementById('combatCmd') : null;
 
+if(cmdMenu){
+  cmdMenu.addEventListener('click', (e) => {
+    const opts = [...cmdMenu.children];
+    const idx = opts.indexOf(e.target);
+    if(idx >= 0){
+      combatState.choice = idx;
+      chooseOption();
+    }
+  });
+}
+
 const combatState = { enemies: [], phase: 'party', active: 0, choice: 0, mode:'command', onComplete:null, fallen:[] };
 
 function setPortraitDiv(el, obj){

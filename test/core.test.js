@@ -60,7 +60,11 @@ const portEl = stubEl();
 const combatOverlay = stubEl();
 const combatEnemies = stubEl();
 const combatParty = stubEl();
+let combatClickHandler = null;
 const combatCmd = stubEl();
+combatCmd.addEventListener = (ev, fn) => {
+  if (ev === 'click') combatClickHandler = fn;
+};
 const bodyEl = stubEl();
 global.document = {
   body: bodyEl,
@@ -837,6 +841,32 @@ test('fallen party members are revived after combat', async () => {
   assert.strictEqual(res.result, 'bruise');
   assert.strictEqual(party.length, 1);
   assert.ok(party[0].hp >= 1);
+});
+
+test('combat menu can be clicked', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  party.addMember(m1);
+
+  const resultPromise = openCombat([
+    { name:'E1', hp:1 }
+  ]);
+
+  combatClickHandler({ target: combatCmd.children[0] });
+  const res = await resultPromise;
+  assert.strictEqual(res.result, 'loot');
+});
+
+test('startCombat forwards portraitSheet', async () => {
+  let captured;
+  const orig = global.openCombat;
+  global.openCombat = async (enemies) => { captured = enemies; return { result:'flee' }; };
+  const defender = { name:'R', HP:5, portraitSheet:'img.png' };
+  const res = await global.startCombat(defender);
+  global.openCombat = orig;
+  assert.strictEqual(captured[0].portraitSheet, 'img.png');
+  assert.strictEqual(res.result, 'flee');
 });
 
 test('save serializes party when map method is shadowed', () => {

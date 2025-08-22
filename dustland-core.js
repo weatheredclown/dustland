@@ -148,7 +148,13 @@ async function startCombat(defender){
     return { result:'flee' };
   }
 
-  const enemy = { name:defender.name||'Enemy', hp:defender.HP||5, npc:defender.npc, loot:defender.loot };
+  const enemy = {
+    name: defender.name || 'Enemy',
+    hp: defender.HP || 5,
+    npc: defender.npc,
+    loot: defender.loot,
+    portraitSheet: defender.portraitSheet || defender.npc?.portraitSheet
+  };
   const result = await openCombat([enemy]);
 
   if(attacker){
