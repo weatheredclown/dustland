@@ -18,12 +18,19 @@ function stubEl(){
     prepend(child){ this.children.unshift(child); child.parentElement=this; },
     querySelector: () => stubEl(),
     querySelectorAll: () => [],
+    getBoundingClientRect: () => ({ left:0, top:0 }),
     getContext: () => ({
       clearRect(){}, drawImage(){}, fillRect(){}, beginPath(){}, moveTo(){}, lineTo(){}, stroke(){}, strokeRect(){},
       save(){}, restore(){}, translate(){}, font:'', fillText(){}, globalAlpha:1
     }),
-    addEventListener(){},
-    removeEventListener(){},
+    addEventListener(type, fn){
+      this._listeners = this._listeners || {};
+      (this._listeners[type] = this._listeners[type] || []).push(fn);
+    },
+    removeEventListener(type, fn){
+      if (!this._listeners || !this._listeners[type]) return;
+      this._listeners[type] = this._listeners[type].filter(f => f !== fn);
+    },
     parentElement:{ appendChild(){}, querySelectorAll(){ return []; } },
     setAttribute(){},
     click(){},
@@ -38,9 +45,12 @@ global.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () =
 global.window = global;
 window.matchMedia = () => ({ matches:false, addEventListener(){}, removeEventListener(){} });
 const bodyEl = stubEl();
+const canvasEl = stubEl();
+canvasEl.width = 120;
+canvasEl.height = 90;
 global.document = {
   body: bodyEl,
-  getElementById: () => stubEl(),
+  getElementById: id => id === 'map' ? canvasEl : stubEl(),
   createElement: () => stubEl(),
   querySelector: () => stubEl(),
   querySelectorAll: () => []
@@ -57,7 +67,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { applyLoadedModule, TILE, setTile, placeHut, genWorld } = globalThis;
+const { applyLoadedModule, TILE, setTile, placeHut, genWorld, addTerrainFeature } = globalThis;
 
 test('applyLoadedModule clears previous building tiles', () => {
   genWorld(123);
@@ -74,4 +84,47 @@ test('applyLoadedModule clears previous building tiles', () => {
   applyLoadedModule({ seed: 123, buildings: [] });
   assert.notStrictEqual(world[1][1], TILE.BUILDING);
   assert.strictEqual(globalThis.buildings.length, 0);
+});
+
+test('addTerrainFeature sprinkles noise', () => {
+  genWorld(1);
+  for (let dy=-1; dy<=1; dy++) {
+    for (let dx=-1; dx<=1; dx++) {
+      setTile('world', 5+dx, 5+dy, TILE.SAND);
+    }
+  }
+  const prev = world[4][5];
+  const rnd = Math.random;
+  Math.random = () => 0;
+  addTerrainFeature(5,5,TILE.ROCK);
+  Math.random = rnd;
+  assert.strictEqual(world[5][5], TILE.ROCK);
+  assert.strictEqual(world[4][5], TILE.ROCK);
+  assert.strictEqual(prev, TILE.SAND);
+});
+
+test('dragging building ignores paint', () => {
+  genWorld(1);
+  moduleData.buildings = [{ x:5, y:5, w:1, h:1 }];
+  setTile('world',5,5,TILE.BUILDING);
+  worldPaint = TILE.ROCK;
+  const before = world[5][5];
+  canvasEl._listeners.mousedown[0]({ clientX:5, clientY:5 });
+  assert.strictEqual(world[5][5], before);
+  assert.strictEqual(worldPainting, false);
+});
+
+test('clicking building while paint palette active still edits', () => {
+  genWorld(1);
+  moduleData.buildings = [{ x:5, y:5, w:1, h:1 }];
+  setTile('world',5,5,TILE.BUILDING);
+  worldPaint = TILE.ROCK;
+  let edited = false;
+  const orig = globalThis.editBldg;
+  globalThis.editBldg = () => { edited = true; };
+  canvasEl._listeners.mousedown[0]({ clientX:5, clientY:5 });
+  canvasEl._listeners.mouseup[0]({});
+  canvasEl._listeners.click[0]({ clientX:5, clientY:5 });
+  globalThis.editBldg = orig;
+  assert.strictEqual(edited, true);
 });
