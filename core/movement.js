@@ -1,24 +1,74 @@
 const { Effects } = globalThis;
 
 // active temporary stat modifiers
-const buffs = [];
-const tileColors = {0:'#1e271d',1:'#2c342c',2:'#1573ff',3:'#203320',4:'#777777',5:'#304326',6:'#4d5f4d',7:'#233223',8:'#8bd98d',9:'#000000'};
-let lastMove = 0;
+const buffs = [];              // 2c342c / 313831
+const tileColors = {0:'#1e271d',1:'#313831',2:'#1573ff',3:'#203320',4:'#777777',5:'#304326',6:'#4d5f4d',7:'#233223',8:'#8bd98d',9:'#000000'};// 2B382B / 203320
 let moveDelay = 0;
-function tileDelay(t){
-  if(t===TILE.ROAD) return 0;
-  const col=tileColors[t];
-  if(!col) return 200;
-  const r=parseInt(col.slice(1,3),16);
-  const g=parseInt(col.slice(3,5),16);
-  const b=parseInt(col.slice(5,7),16);
-  const bright=(r+g+b)/3;
-  const min=100, max=400;
-  return min + (bright/255)*(max-min);
+
+function hexToHsv(hex) {
+    // 1. Convert Hex to RGB
+    let r = 0, g = 0, b = 0;
+    // Handle #RRGGBB format
+    if (hex.length === 7) {
+        r = parseInt(hex.substring(1, 3), 16);
+        g = parseInt(hex.substring(3, 5), 16);
+        b = parseInt(hex.substring(5, 7), 16);
+    } 
+    // Handle #RGB format (shorthand)
+    else if (hex.length === 4) {
+        r = parseInt(hex[1] + hex[1], 16);
+        g = parseInt(hex[2] + hex[2], 16);
+        b = parseInt(hex[3] + hex[3], 16);
+    } else {
+        // Invalid hex format
+        return null; 
+    }
+
+    // Normalize RGB values to a 0-1 range
+    r /= 255;
+    g /= 255;
+    b /= 255;
+
+    // 2. Convert RGB to HSV
+    let max = Math.max(r, g, b);
+    let min = Math.min(r, g, b);
+    let h, s, v = max;
+
+    let d = max - min;
+    s = max === 0 ? 0 : d / max;
+
+    if (max === min) {
+        h = 0; // achromatic
+    } else {
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+
+    // Return HSV values, typically hue in [0, 360], saturation and value in [0, 100]
+    return [Math.round(h * 360), Math.round(s * 100), Math.round(v * 100)];
 }
 
-function calcMoveDelay(tile, actor){
-  const base = tileDelay(tile);
+function tileDelay(t, map=state.map){
+  if(t===TILE.ROAD) return 0;
+  if(map!=='world') return 100;
+  const col=tileColors[t];
+  if(!col) return 200;
+  const brightness = hexToHsv(col)[2];
+  const maxBright=26;
+  const minBright=15;
+  const pct = clamp(((brightness - minBright) / (maxBright - minBright)) * 100, 0, 100);
+  const minDelay=100, maxDelay=500;
+  const delay = minDelay + (pct/100)*(maxDelay-minDelay);
+  console.log("T",t," Brightness", brightness, " Pct", pct, " Delay", delay);
+  return delay;
+}
+
+function calcMoveDelay(tile, actor, map=state.map){
+  const base = tileDelay(tile, map);
   const agi = (actor?.stats?.AGI || 0) + (actor?._bonus?.AGI || 0);
   const adjusted = base - agi * 10;
   return adjusted > 0 ? adjusted : 0;
@@ -92,23 +142,26 @@ function canWalk(x,y){
 }
 function move(dx,dy){
   if(state.map==='creator') return;
-  if(typeof navigator!=='undefined' && Date.now()-lastMove < moveDelay) return;
+  if(typeof navigator!=='undefined' && moveDelay > 0) return;
   const nx=party.x+dx, ny=party.y+dy;
   if(canWalk(nx,ny)){
-    Effects.tick({buffs});
     const actor = typeof leader==='function'? leader(): null;
-    if(actor){
-      actor.hp = Math.min(actor.hp + 1, actor.maxHp);
-      player.hp = actor.hp;
-    }
-    setPartyPos(nx, ny);
-    moveDelay = calcMoveDelay(getTile(state.map, nx, ny), actor);
-    lastMove = Date.now();
-    if(typeof footstepBump==='function') footstepBump();
-    onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
-    centerCamera(party.x,party.y,state.map); updateHUD();
-    checkAggro();
-    EventBus.emit('sfx','step');
+    moveDelay = calcMoveDelay(getTile(state.map, party.x, party.y), actor);
+    // Schedule the move logic to run after the delay
+    setTimeout(() => {
+      Effects.tick({buffs});
+      if(actor){
+        actor.hp = Math.min(actor.hp + 1, actor.maxHp);
+        player.hp = actor.hp;
+      }
+      setPartyPos(nx, ny);
+      if(typeof footstepBump==='function') footstepBump();
+      onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
+      centerCamera(party.x,party.y,state.map); updateHUD();
+      checkAggro();
+      EventBus.emit('sfx','step');
+      moveDelay = 0;
+    }, moveDelay);
   } else {
     EventBus.emit('sfx','denied');
   }
