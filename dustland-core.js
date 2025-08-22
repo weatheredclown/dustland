@@ -556,6 +556,13 @@ const specializations={
   'Snakeoil Preacher':{desc:'Can sway naive foes; +1 CHA trinket.', gear:[{id:'tin_sun',name:'Tin Sun',slot:'trinket',mods:{LCK:+1}}]},
   'Cogwitch':{desc:'Tinker checks succeed more often; starts with toolkit.', gear:[{id:'toolkit',name:'Toolkit',slot:'trinket',mods:{INT:+1}}]}
 };
+const classSpecials={
+  'Scavenger':[{label:'Scrap Toss',dmg:2}],
+  'Gunslinger':[{label:'Quick Shot',dmg:2}],
+  'Snakeoil Preacher':[{label:'Sermon',dmg:2}],
+  'Cogwitch':[{label:'Gizmo Blast',dmg:2}],
+  'Wanderer':[{label:'Grit',dmg:2}]
+};
 const quirks={
   'Lucky Lint':{desc:'+1 LCK. Occasionally avoid mishaps.'},
   'Dust Allergy':{desc:'Random sneezes in dialog (harmless, funny).'},
@@ -632,6 +639,7 @@ function finalizeCurrentMember(){
   if(!building.name || !building.name.trim()) building.name = 'Drifter '+(built.length+1);
   const m=makeMember(building.id, building.name, building.spec||'Wanderer', {permanent:true, portraitSheet: building.portraitSheet});
   m.stats=building.stats; m.origin=building.origin; m.quirk=building.quirk;
+  m.special = classSpecials[building.spec||'Wanderer'] || null;
   addPartyMember(m);
   const spec = specializations[building.spec]; if(spec){ spec.gear.forEach(g=> addToInv(g)); }
   built.push(m);

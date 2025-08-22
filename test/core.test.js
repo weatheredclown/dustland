@@ -19,6 +19,7 @@ function stubEl(){
     children:[],
     width:0,
     height:0,
+    dataset:{},
     appendChild(child){ this.children.push(child); child.parentElement=this; },
     prepend(child){ this.children.unshift(child); child.parentElement=this; },
     querySelector: () => stubEl(),
@@ -65,6 +66,7 @@ const combatCmd = stubEl();
 combatCmd.addEventListener = (ev, fn) => {
   if (ev === 'click') combatClickHandler = fn;
 };
+const turnIndicator = stubEl();
 const bodyEl = stubEl();
 global.document = {
   body: bodyEl,
@@ -78,7 +80,8 @@ global.document = {
     combatOverlay,
     combatEnemies,
     combatParty,
-    combatCmd
+    combatCmd,
+    turnIndicator
   })[id] || stubEl(),
   createElement: () => stubEl(),
   querySelector: () => stubEl()
@@ -858,6 +861,29 @@ test('combat menu can be clicked', async () => {
   assert.strictEqual(res.result, 'loot');
 });
 
+test('turn indicator updates with active member', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role', { special:[{ label:'Power Hit', dmg:2 }] });
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name:'E1', hp:1 }]);
+  assert.strictEqual(turnIndicator.textContent, "P1's turn");
+  closeCombat('flee');
+  await resultPromise;
+});
+
+test('special menu lists class ability', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role', { special:[{ label:'Power Hit', dmg:2 }] });
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name:'E1', hp:3 }]);
+  combatClickHandler({ target: combatCmd.children[1] });
+  assert.strictEqual(combatCmd.children[0].textContent, 'Power Hit');
+  closeCombat('flee');
+  await resultPromise;
+});
+
 test('startCombat forwards portraitSheet', async () => {
   let captured;
   const orig = global.openCombat;
@@ -892,4 +918,9 @@ test('combat overlay sits behind the log panel', async () => {
   const css = await fs.readFile(new URL('../dustland.css', import.meta.url), 'utf8');
   assert.match(css, /\.panel\s*{[\s\S]*z-index:\s*15/);
   assert.match(css, /#combatOverlay\s*{[\s\S]*z-index:\s*10/);
+});
+
+test('combat overlay leaves room for panel', async () => {
+  const css = await fs.readFile(new URL('../dustland.css', import.meta.url), 'utf8');
+  assert.match(css, /#combatOverlay\s*{[\s\S]*right:\s*440px/);
 });

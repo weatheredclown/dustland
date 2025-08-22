@@ -3,6 +3,7 @@ const combatOverlay = typeof document !== 'undefined' ? document.getElementById(
 const enemyRow = typeof document !== 'undefined' ? document.getElementById('combatEnemies') : null;
 const partyRow = typeof document !== 'undefined' ? document.getElementById('combatParty') : null;
 const cmdMenu = typeof document !== 'undefined' ? document.getElementById('combatCmd') : null;
+const turnIndicator = typeof document !== 'undefined' ? document.getElementById('turnIndicator') : null;
 
 if(cmdMenu){
   cmdMenu.addEventListener('click', (e) => {
@@ -86,6 +87,7 @@ function closeCombat(result='flee'){
   if(!combatOverlay) return;
   combatOverlay.classList.remove('shown');
   if(cmdMenu) cmdMenu.style.display='none';
+  if(turnIndicator) turnIndicator.textContent='';
   combatState.fallen.forEach(m=>{ m.hp = Math.max(1, m.hp||0); party.push(m); });
   combatState.fallen.length = 0;
   combatState.onComplete?.({ result });
@@ -100,6 +102,15 @@ function highlightActive(){
   [...enemyRow.children].forEach((el,i)=>{
     el.classList.toggle('active', combatState.phase==='enemy' && i===combatState.active);
   });
+  if(turnIndicator){
+    if(combatState.phase==='party'){
+      const m=party[combatState.active];
+      turnIndicator.textContent=m?`${m.name}'s turn`:'';
+    } else {
+      const e=combatState.enemies[combatState.active];
+      turnIndicator.textContent=e?`${e.name}'s turn`:'';
+    }
+  }
 }
 
 function openCommand(){
@@ -117,6 +128,26 @@ function openCommand(){
   const opts=[...cmdMenu.children];
   let idx=opts.findIndex(c=>!c.classList.contains('disabled'));
   combatState.choice = idx>=0?idx:0;
+  updateChoice();
+  cmdMenu.style.display='block';
+}
+
+function openSpecialMenu(){
+  if(combatState.phase!=='party' || !cmdMenu) return;
+  cmdMenu.innerHTML='';
+  combatState.mode='special';
+  const m = party[combatState.active];
+  (m.special||[]).forEach((s,idx)=>{
+    const d=document.createElement('div');
+    d.textContent=s.label;
+    d.dataset.action=idx;
+    cmdMenu.appendChild(d);
+  });
+  const back=document.createElement('div');
+  back.textContent='Back';
+  back.dataset.action='back';
+  cmdMenu.appendChild(back);
+  combatState.choice=0;
   updateChoice();
   cmdMenu.style.display='block';
 }
@@ -190,26 +221,35 @@ function chooseOption(){
       return;
     }
     if(choice==='attack') doAttack(1);
-    else if(choice==='special') doAttack(2);
+    else if(choice==='special') openSpecialMenu();
     else if(choice==='item') openItemMenu();
     return;
   }
-  // item selection mode
+  // submenu modes
   const action=opt.dataset.action;
-  if(action==='back'){
-    openCommand();
-    return;
-  }
-  const invIdx=parseInt(opt.dataset.idx,10);
-  if(Number.isInteger(invIdx)){
-    const prevSel=selectedMember;
-    selectedMember=combatState.active;
-    const used=useItem(invIdx);
-    selectedMember=prevSel;
-    cmdMenu.style.display='none';
-    combatState.mode='command';
-    if(used) nextCombatant();
-    else openCommand();
+  if(combatState.mode==='items'){
+    if(action==='back'){
+      openCommand();
+      return;
+    }
+    const invIdx=parseInt(opt.dataset.idx,10);
+    if(Number.isInteger(invIdx)){
+      const prevSel=selectedMember;
+      selectedMember=combatState.active;
+      const used=useItem(invIdx);
+      selectedMember=prevSel;
+      cmdMenu.style.display='none';
+      combatState.mode='command';
+      if(used) nextCombatant();
+      else openCommand();
+    }
+  } else if(combatState.mode==='special'){
+    if(action==='back'){
+      openCommand();
+      return;
+    }
+    const idx=parseInt(action,10);
+    doSpecial(idx);
   }
 }
 
@@ -227,6 +267,14 @@ function doAttack(dmg){
     if(combatState.enemies.length===0){ log?.('Victory!'); closeCombat('loot'); return; }
   }
   nextCombatant();
+}
+
+function doSpecial(idx){
+  const m=party[combatState.active];
+  const spec=m.special?.[idx];
+  if(!spec){ openCommand(); return; }
+  if(spec.dmg) doAttack(spec.dmg);
+  else nextCombatant();
 }
 
 function nextCombatant(){

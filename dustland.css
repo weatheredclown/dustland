@@ -221,6 +221,9 @@
         .panel {
             width: 840px;
         }
+        #combatOverlay {
+            right: 840px;
+        }
 
         .tabs {
             display: none;
@@ -249,6 +252,9 @@
             max-width: 440px;
             transform: translateX(100%);
             transition: transform .2s;
+        }
+        #combatOverlay {
+            right: 0;
         }
         .panel.show {
             transform: translateX(0);
@@ -328,7 +334,7 @@
     }
 
 /* Combat UI */
-#combatOverlay { background:rgba(0,0,0,.8); pointer-events:auto; z-index:10; }
+#combatOverlay { background:rgba(0,0,0,.8); pointer-events:auto; z-index:10; right:440px; }
 #combatOverlay .combat-window {
   pointer-events:auto;
   width:min(640px,92vw);
@@ -358,6 +364,7 @@
 #combatOverlay .member { position:relative; display:flex; flex-direction:column; align-items:center; }
 #combatOverlay .label { margin-top:4px; text-align:center; }
 #combatOverlay .enemy.active .portrait, #combatOverlay .member.active .portrait { border-color:#5c8a5c; }
+#combatOverlay .turn { text-align:center; margin-bottom:4px; }
 #combatOverlay .command-row { margin-top:8px; }
 #combatOverlay .cmd {
   display:none;
