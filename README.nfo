@@ -55,6 +55,7 @@ _______________________________________________________________________________
     simple interiors you can enter directly from the overworld.
   - Water is bright blue and is not walkable; items won’t spawn in water.
   - Walking gradually restores HP for the selected party member.
+  - Movement speed improves with the leader's AGI, including equipment bonuses.
 
 [ CHARACTER CREATION ]
   - Start a new game at boot if no save is present.

@@ -17,6 +17,13 @@ function tileDelay(t){
   return min + (bright/255)*(max-min);
 }
 
+function calcMoveDelay(tile, actor){
+  const base = tileDelay(tile);
+  const agi = (actor?.stats?.AGI || 0) + (actor?._bonus?.AGI || 0);
+  const adjusted = base - agi * 10;
+  return adjusted > 0 ? adjusted : 0;
+}
+
 // ===== Helpers =====
 function mapIdForState(){ return state.map; }
 function mapWH(map=state.map){
@@ -95,7 +102,7 @@ function move(dx,dy){
       player.hp = actor.hp;
     }
     setPartyPos(nx, ny);
-    moveDelay = tileDelay(getTile(state.map, nx, ny));
+    moveDelay = calcMoveDelay(getTile(state.map, nx, ny), actor);
     lastMove = Date.now();
     if(typeof footstepBump==='function') footstepBump();
     onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
@@ -233,5 +240,7 @@ Object.assign(globalThis, {
   move,
   takeNearestItem,
   onEnter,
-  buffs
+  buffs,
+  calcMoveDelay,
+  getMoveDelay: () => moveDelay
 });
