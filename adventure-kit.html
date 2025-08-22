@@ -236,6 +236,12 @@
           <label>Map<input id="npcMap" value="world" /></label>
           <label>X<input id="npcX" type="number" min="0" /></label>
           <label>Y<input id="npcY" type="number" min="0" /></label>
+          <div class="portrait" id="npcPort"></div>
+          <div class="row" style="margin:8px 0">
+            <span class="pill" id="npcPrevP">&lt;</span>
+            <span class="pill">Portrait</span>
+            <span class="pill" id="npcNextP">&gt;</span>
+          </div>
           <label><input type="checkbox" id="npcHidden"> Hidden NPC</label>
           <div id="revealOpts" style="display:none">
             <label>Flag Type<select id="npcFlagType"><option value="visits">Visited Tile</option><option value="party">Party Flag</option></select></label>

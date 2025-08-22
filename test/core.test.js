@@ -559,7 +559,8 @@ test('createNpcFactory builds NPCs from definitions', () => {
     id: 't',
     map: 'world',
     name: 'Tester',
-    tree: '{"start":{"text":"hi","choices":[{"label":"bye","to":"bye"}]}}'
+    tree: '{"start":{"text":"hi","choices":[{"label":"bye","to":"bye"}]}}',
+    portraitSheet: 'assets/portraits/portrait_1000.png'
   }];
   const factory = createNpcFactory(defs);
   const npc = factory.t(2, 3);
@@ -568,6 +569,7 @@ test('createNpcFactory builds NPCs from definitions', () => {
   assert.strictEqual(npc.y, 3);
   assert.strictEqual(npc.map, 'world');
   assert.strictEqual(npc.tree.start.text, 'hi');
+  assert.strictEqual(npc.portraitSheet, 'assets/portraits/portrait_1000.png');
 });
 
 test('openDialog displays portrait when sheet provided', () => {
