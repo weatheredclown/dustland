@@ -242,7 +242,7 @@ test('pathfinding blocks on NPCs', () => {
   assert.strictEqual(party.x,0);
 });
 
-test('walking regenerates leader HP', () => {
+test('walking regenerates leader HP', async () => {
   const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
   applyModule({world});
   state.map='world';
@@ -252,21 +252,21 @@ test('walking regenerates leader HP', () => {
   party.addMember(hero);
   party.x = 0; party.y = 0;
 
-  move(1,0);
+  await move(1,0);
   assert.strictEqual(hero.hp, 6);
   assert.strictEqual(player.hp, 6);
 
   hero.hp = 9; player.hp = 9;
-  move(1,0);
+  await move(1,0);
   assert.strictEqual(hero.hp, 10);
   assert.strictEqual(player.hp, 10);
 
-  move(1,0);
+  await move(1,0);
   assert.strictEqual(hero.hp, 10);
   assert.strictEqual(player.hp, 10);
 });
 
-test('movement delay improves with agility and equipment', () => {
+test('movement delay improves with agility and equipment', async () => {
   const world = Array.from({ length:5 }, () => Array.from({ length:5 }, () => 7));
   applyModule({ world });
   state.map = 'world';
@@ -277,17 +277,19 @@ test('movement delay improves with agility and equipment', () => {
   party.addMember(hero);
   party.x = 0; party.y = 0;
 
-  move(1,0);
+  const firstMove = move(1,0);
   const baseDelay = getMoveDelay();
+  await firstMove;
 
   addToInv({ id:'agi_charm', name:'AGI Charm', type:'trinket', slot:'trinket', mods:{ AGI:2 } });
   equipItem(0,0);
 
-  move(1,0);
+  const secondMove = move(1,0);
   const boostedDelay = getMoveDelay();
   assert.ok(boostedDelay < baseDelay);
   const expected = calcMoveDelay(getTile(state.map, party.x, party.y), hero);
   assert.strictEqual(boostedDelay, expected);
+  await secondMove;
 });
 
 test('queryTile reports entities and items', () => {
@@ -685,7 +687,7 @@ test('board/unboard effects toggle building access', () => {
   assert.strictEqual(globalThis.buildings[0].boarded, true);
   globalThis.buildings.length = 0;
 });
-test('onEnter triggers effects and temporary stat mod', () => {
+test('onEnter triggers effects and temporary stat mod', async () => {
   const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
   applyModule({world});
   state.map='world';
@@ -696,13 +698,13 @@ test('onEnter triggers effects and temporary stat mod', () => {
   registerTileEvents([{map:'world', x:1, y:0, events:[{when:'enter', effect:'toast', msg:'You smell rot.'},{when:'enter', effect:'modStat', stat:'CHA', delta:-1, duration:2}]}]);
   const msgs=[];
   global.toast = (m)=>msgs.push(m);
-  move(1,0);
+  await move(1,0);
   assert.strictEqual(party.x,1);
   assert.ok(msgs.includes('You smell rot.'));
   assert.strictEqual(party[0].stats.CHA,3);
-  move(1,0);
+  await move(1,0);
   assert.strictEqual(party[0].stats.CHA,3);
-  move(1,0);
+  await move(1,0);
   assert.strictEqual(party[0].stats.CHA,4);
   assert.strictEqual(buffs.length,0);
 });
