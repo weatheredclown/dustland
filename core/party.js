@@ -4,6 +4,7 @@ class Character {
   constructor(id, name, role, opts={}){
     this.id=id; this.name=name; this.role=role;
     this.permanent=!!opts.permanent;
+    this.portraitSheet = opts.portraitSheet || null;
     this.lvl=1; this.xp=0;
     this.stats=baseStats();
     this.equip={weapon:null, armor:null, trinket:null};

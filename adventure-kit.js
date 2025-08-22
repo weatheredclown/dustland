@@ -732,6 +732,13 @@ function toggleQuestTextWrap() {
 }
 
 // --- NPCs ---
+const npcPortraits = [null, ...Array.from({ length: 90 }, (_, i) => `assets/portraits/portrait_${1000 + i}.png`)];
+let npcPortraitIndex = 0;
+function setNpcPortrait() {
+  const el = document.getElementById('npcPort');
+  const img = npcPortraits[npcPortraitIndex];
+  if (el) el.style.backgroundImage = img ? `url(${img})` : '';
+}
 function applyCombatTree(tree) {
   tree.start = tree.start || { text: '', choices: [] };
   if (!tree.start.choices.some(c => c.to === 'do_fight'))
@@ -808,6 +815,8 @@ function startNewNPC() {
   document.getElementById('npcMap').value = 'world';
   document.getElementById('npcX').value = 0;
   document.getElementById('npcY').value = 0;
+  npcPortraitIndex = 0;
+  setNpcPortrait();
   document.getElementById('npcHidden').checked = false;
   document.getElementById('npcFlagType').value = 'visits';
   document.getElementById('npcFlagMap').value = 'world';
@@ -883,6 +892,7 @@ function collectNPCFromForm() {
   if (combat) npc.combat = { DEF: 5 };
   if (shop) npc.shop = true;
   if (hidden && flag) npc.hidden = true, npc.reveal = { flag, op, value: val };
+  if (npcPortraitIndex > 0) npc.portraitSheet = npcPortraits[npcPortraitIndex];
   return npc;
 }
 
@@ -917,6 +927,9 @@ function editNPC(i) {
   document.getElementById('npcMap').value = n.map;
   document.getElementById('npcX').value = n.x;
   document.getElementById('npcY').value = n.y;
+  npcPortraitIndex = npcPortraits.indexOf(n.portraitSheet);
+  if (npcPortraitIndex < 0) npcPortraitIndex = 0;
+  setNpcPortrait();
   document.getElementById('npcHidden').checked = !!n.hidden;
   if (n.reveal?.flag?.startsWith('visits@')) {
     document.getElementById('npcFlagType').value = 'visits';
@@ -1677,6 +1690,16 @@ document.getElementById('addPortal').onclick = addPortal;
 document.getElementById('newPortal').onclick = startNewPortal;
 document.getElementById('delNPC').onclick = deleteNPC;
 document.getElementById('closeNPC').onclick = closeNPCEditor;
+document.getElementById('npcPrevP').onclick = () => {
+  npcPortraitIndex = (npcPortraitIndex + npcPortraits.length - 1) % npcPortraits.length;
+  setNpcPortrait();
+  applyNPCChanges();
+};
+document.getElementById('npcNextP').onclick = () => {
+  npcPortraitIndex = (npcPortraitIndex + 1) % npcPortraits.length;
+  setNpcPortrait();
+  applyNPCChanges();
+};
 document.getElementById('delItem').onclick = deleteItem;
 document.getElementById('delBldg').onclick = deleteBldg;
 document.getElementById('newInterior').onclick = startNewInterior;

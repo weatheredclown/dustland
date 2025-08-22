@@ -531,7 +531,19 @@ const ccPortrait=document.getElementById('ccPortrait');
 const ccStart=document.getElementById('ccStart');
 const ccLoad=document.getElementById('ccLoad');
 if(ccNext) ccNext.classList.add('btn--primary');
-const portraits=['@','&','#','%','*']; let portraitIndex=0;
+// Pre-generated character portraits available for player selection
+const portraits = Array.from({ length: 90 }, (_, i) => `assets/portraits/portrait_${1000 + i}.png`);
+let portraitIndex = 0;
+function setCreatorPortrait(){
+  const img = portraits[portraitIndex];
+  if(ccPortrait){
+    ccPortrait.style.backgroundImage = `url(${img})`;
+    ccPortrait.style.backgroundSize = '100% 100%';
+    ccPortrait.style.backgroundPosition = 'center';
+    ccPortrait.textContent = '';
+  }
+  if(building) building.portraitSheet = img;
+}
 const specializations={
   'Scavenger':{desc:'Finds better loot from ruins; starts with crowbar.', gear:[{id:'crowbar',name:'Crowbar',slot:'weapon',mods:{ATK:+1}}]},
   'Gunslinger':{desc:'Higher chance to win quick fights; starts with pipe rifle.', gear:[{id:'pipe_rifle',name:'Pipe Rifle',slot:'weapon',mods:{ATK:+2}}]},
@@ -553,7 +565,8 @@ function randomName(){
   return avail.length? avail[Math.floor(Math.random()*avail.length)] : 'Drifter '+(built.length+1);
 }
 function newBuilding(){
-  return { id:'pc'+(built.length+1), name:randomName(), role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null };
+  portraitIndex = 0;
+  return { id:'pc'+(built.length+1), name:randomName(), role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null, portraitSheet: portraits[portraitIndex] };
 }
 
 let step=1; let building=null; let built=[];
@@ -576,9 +589,10 @@ function renderStep(){
   if(step===1){
     ccHint.textContent='Pick a name and portrait.';
     r.innerHTML=`<div class='field'><label>Name</label><input id='nm' value='${building.name||''}' class='slot' style='padding:6px;background:#0c0f0c;color:var(--ink);border:1px solid #2b382b;border-radius:6px'></div><div class='row' style='margin-top:8px'><span class='pill' id='prevP'>&lt;</span><span class='pill'>Portrait</span><span class='pill' id='nextP'>&gt;</span></div>`;
-    document.getElementById('prevP').onclick=()=>{ portraitIndex=(portraitIndex+portraits.length-1)%portraits.length; ccPortrait.textContent=portraits[portraitIndex]; };
-    document.getElementById('nextP').onclick=()=>{ portraitIndex=(portraitIndex+1)%portraits.length; ccPortrait.textContent=portraits[portraitIndex]; };
+    document.getElementById('prevP').onclick=()=>{ portraitIndex=(portraitIndex+portraits.length-1)%portraits.length; setCreatorPortrait(); };
+    document.getElementById('nextP').onclick=()=>{ portraitIndex=(portraitIndex+1)%portraits.length; setCreatorPortrait(); };
     const nm=document.getElementById('nm'); nm.oninput=()=>{ building.name=nm.value; updateCreatorButtons(); };
+    setCreatorPortrait();
   }
   if(step===2){
     ccHint.textContent='Distribute 6 points among stats.';
@@ -610,7 +624,7 @@ function renderStep(){
 function finalizeCurrentMember(){
   if(!building) return null;
   if(!building.name || !building.name.trim()) building.name = 'Drifter '+(built.length+1);
-  const m=makeMember(building.id, building.name, building.spec||'Wanderer', {permanent:true});
+  const m=makeMember(building.id, building.name, building.spec||'Wanderer', {permanent:true, portraitSheet: building.portraitSheet});
   m.stats=building.stats; m.origin=building.origin; m.quirk=building.quirk;
   addPartyMember(m);
   const spec = specializations[building.spec]; if(spec){ spec.gear.forEach(g=> addToInv(g)); }
