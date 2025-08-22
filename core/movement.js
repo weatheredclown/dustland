@@ -147,21 +147,23 @@ function move(dx,dy){
   if(canWalk(nx,ny)){
     const actor = typeof leader==='function'? leader(): null;
     moveDelay = calcMoveDelay(getTile(state.map, party.x, party.y), actor);
-    // Schedule the move logic to run after the delay
-    setTimeout(() => {
-      Effects.tick({buffs});
-      if(actor){
-        actor.hp = Math.min(actor.hp + 1, actor.maxHp);
-        player.hp = actor.hp;
-      }
-      setPartyPos(nx, ny);
-      if(typeof footstepBump==='function') footstepBump();
-      onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
-      centerCamera(party.x,party.y,state.map); updateHUD();
-      checkAggro();
-      EventBus.emit('sfx','step');
-      moveDelay = 0;
-    }, moveDelay);
+    return new Promise(resolve => {
+      setTimeout(() => {
+        Effects.tick({buffs});
+        if(actor){
+          actor.hp = Math.min(actor.hp + 1, actor.maxHp);
+          player.hp = actor.hp;
+        }
+        setPartyPos(nx, ny);
+        if(typeof footstepBump==='function') footstepBump();
+        onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
+        centerCamera(party.x,party.y,state.map); updateHUD();
+        checkAggro();
+        EventBus.emit('sfx','step');
+        moveDelay = 0;
+        resolve();
+      }, moveDelay);
+    });
   } else {
     EventBus.emit('sfx','denied');
   }
