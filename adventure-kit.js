@@ -1022,6 +1022,7 @@ function startNewNPC() {
   document.getElementById('npcMap').value = 'world';
   document.getElementById('npcX').value = 0;
   document.getElementById('npcY').value = 0;
+  document.getElementById('npcLoop').value = '';
   npcPortraitIndex = 0;
   setNpcPortrait();
   document.getElementById('npcHidden').checked = false;
@@ -1073,6 +1074,7 @@ function collectNPCFromForm() {
   const map = document.getElementById('npcMap').value.trim() || 'world';
   const x = parseInt(document.getElementById('npcX').value, 10) || 0;
   const y = parseInt(document.getElementById('npcY').value, 10) || 0;
+  const loopStr = document.getElementById('npcLoop').value.trim();
   const dialog = document.getElementById('npcDialog').value.trim();
   const questId = document.getElementById('npcQuest').value.trim();
   const accept = document.getElementById('npcAccept').value.trim();
@@ -1107,6 +1109,13 @@ function collectNPCFromForm() {
   loadTreeEditor();
 
   const npc = { id, name, desc, color, map, x, y, tree, questId };
+  if (loopStr) {
+    const pts = loopStr.split(';').map(p => {
+      const [px, py] = p.split(',').map(n => parseInt(n, 10) || 0);
+      return { x: px, y: py };
+    }).filter(p => !isNaN(p.x) && !isNaN(p.y));
+    if (pts.length >= 2) npc.loop = pts;
+  }
   if (combat) npc.combat = { DEF: 5 };
   if (shop) npc.shop = true;
   if (hidden && flag) npc.hidden = true, npc.reveal = { flag, op, value: val };
@@ -1155,6 +1164,7 @@ function editNPC(i) {
   document.getElementById('npcMap').value = n.map;
   document.getElementById('npcX').value = n.x;
   document.getElementById('npcY').value = n.y;
+  document.getElementById('npcLoop').value = (n.loop || []).map(p => `${p.x},${p.y}`).join(';');
   npcPortraitIndex = npcPortraits.indexOf(n.portraitSheet);
   if (npcPortraitIndex < 0) npcPortraitIndex = 0;
   setNpcPortrait();
