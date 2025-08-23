@@ -1663,7 +1663,7 @@ if (worldPalette) {
         btn.dataset.name = 'AI';
         btn.textContent = block[0]?.[0] || '?';
         const anchor = document.getElementById('stampsBtn');
-        if (worldPalette.insertBefore && anchor) {
+        if (worldPalette.insertBefore && anchor && worldPalette.contains(anchor)) {
           worldPalette.insertBefore(btn, anchor);
         } else {
           worldPalette.appendChild(btn);
