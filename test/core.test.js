@@ -249,6 +249,15 @@ test('pathfinding blocks on NPCs', () => {
   assert.strictEqual(party.x,0);
 });
 
+test('applyModule parses emoji world grid', () => {
+  const worldRows = ['\u{1F3DD}\u{1FAA8}', '\u{1F30A}\u{1F33F}'];
+  applyModule({world: worldRows});
+  assert.strictEqual(world[0][0], TILE.SAND);
+  assert.strictEqual(world[0][1], TILE.ROCK);
+  assert.strictEqual(world[1][0], TILE.WATER);
+  assert.strictEqual(world[1][1], TILE.BRUSH);
+});
+
 test('walking regenerates leader HP', async () => {
   const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
   applyModule({world});

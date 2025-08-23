@@ -128,6 +128,7 @@ _______________________________________________________________________________
   - NPC trees can be functions for dynamic dialog.
   - Items support `equip.flag` and `unequip` teleport/message effects.
   - Tiles: see TILE enum + colors[] + walkable[].
+  - Maps can be specified as arrays of emoji strings using `tileEmoji` (numeric grids still load).
   - Tests: run `npm install` to fetch dev deps like jsdom, then `npm test` for basic checks.
     The main game still runs from the repo download alone.
 
