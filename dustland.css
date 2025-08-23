@@ -303,7 +303,7 @@
   border:1px solid #1c261c;
   image-rendering: pixelated;      /* preserve chunky pixels */
   background-repeat:no-repeat;
-  background-size:200% 200%;       /* 2×2 grid */
+  background-size:100% 100%;       /* 2×2 grid */
 }
 
     .dialog main {
