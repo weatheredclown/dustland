@@ -18,7 +18,7 @@
         margin: 0;
         background: radial-gradient(circle at top, #141614 0%, var(--bg) 70%);
         color: var(--ink);
-        font: 14px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, Liberation Mono, monospace;
+        font: 14px/1.5 system-ui, sans-serif;
     }
 
     .wrap {
@@ -68,14 +68,14 @@
     }
 
     .panel h1 {
-        font-size: 16px;
+        font-size: 18px;
         margin: 0;
         padding: 10px 12px;
         background: #0f120f;
         border-bottom: 1px solid #1a1f1a;
         color: #c7ff9e;
         font-weight: 800;
-        letter-spacing: .6px
+        letter-spacing: .6px;
     }
 
     .panel .content {
@@ -131,6 +131,8 @@
         color: var(--ink);
         cursor: pointer;
         transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+        font-size: 14px;
+        font-family: inherit;
     }
 
     .btn:hover {
@@ -373,7 +375,8 @@
   padding:8px 16px;
   border-radius:6px;
   min-width:120px;
-  font-family:'Courier New', monospace;
+  font-family:system-ui, sans-serif;
+  font-size:14px;
   color:#fff;
   box-shadow:0 0 8px #000 inset;
 }
@@ -724,6 +727,8 @@
         border-radius: 6px;
         background: #121712;
         color: var(--ink);
+        font-size: 13px;
+        font-weight: 600;
     }
 
     .tab2:hover {
@@ -835,4 +840,4 @@
 #intPalette button.active,
 #bldgPalette button.active,
 #worldPalette button.active { outline:2px solid #fff; }
-#paletteLabel { color:#fff; font-family:sans-serif; margin-top:4px; }
+#paletteLabel { color:#fff; font-family:system-ui, sans-serif; margin-top:4px; }

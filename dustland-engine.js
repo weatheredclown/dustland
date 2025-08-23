@@ -167,7 +167,7 @@ const scene = document.createElement('canvas'); scene.width=disp.width; scene.he
 const prev = document.createElement('canvas'); prev.width=disp.width; prev.height=disp.height; const pctx=prev.getContext('2d');
 
 // Font init (prevents invisible glyphs on some canvases)
-sctx.font = '12px ui-monospace';
+sctx.font = '12px system-ui, sans-serif';
 
 let camX=0, camY=0, showMini=true;
 let _lastTime=0;
