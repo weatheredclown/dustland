@@ -638,6 +638,8 @@ function addChoiceRow(container, ch = {}) {
   const joinId = join?.id || '', joinName = join?.name || '', joinRole = join?.role || '';
   const goto = ch.goto || {};
   const gotoMap = goto.map || '', gotoX = goto.x != null ? goto.x : '', gotoY = goto.y != null ? goto.y : '';
+  const gotoTarget = goto.target === 'npc' ? 'npc' : 'player';
+  const gotoRel = !!goto.rel;
   const isXP = typeof reward === 'string' && /^xp\s*\d+/i.test(reward);
   const xpVal = isXP ? parseInt(reward.replace(/[^0-9]/g, ''), 10) : '';
   const isItem = reward && !isXP;
@@ -663,12 +665,18 @@ function addChoiceRow(container, ch = {}) {
       <label>Cost Slot<select class="choiceCostSlot"></select></label>
       <label>Req Item<select class="choiceReqItem"></select></label>
       <label>Req Slot<select class="choiceReqSlot"></select></label>
-      <label>Join ID<select class="choiceJoinId"></select></label>
-      <label>Join Name<input class="choiceJoinName" value="${joinName}"/><span class="small">Name shown after joining.</span></label>
-      <label>Join Role<select class="choiceJoinRole"></select></label>
-      <label>Goto Map<select class="choiceGotoMap"></select></label>
-      <label>Goto X<input type="number" class="choiceGotoX" value="${gotoX}"/><span class="small">X coordinate.</span></label>
-      <label>Goto Y<input type="number" class="choiceGotoY" value="${gotoY}"/><span class="small">Y coordinate.</span></label>
+      <fieldset class="choiceSubGroup"><legend>Join</legend>
+        <label>ID<select class="choiceJoinId"></select></label>
+        <label>Name<input class="choiceJoinName" value="${joinName}"/><span class="small">Name shown after joining.</span></label>
+        <label>Role<select class="choiceJoinRole"></select></label>
+      </fieldset>
+      <fieldset class="choiceSubGroup"><legend>Goto</legend>
+        <label>Target<select class="choiceGotoTarget"><option value="player" ${gotoTarget==='player'?'selected':''}>Player</option><option value="npc" ${gotoTarget==='npc'?'selected':''}>NPC</option></select></label>
+        <label>Map<select class="choiceGotoMap"></select></label>
+        <label>X<input type="number" class="choiceGotoX" value="${gotoX}"/><span class="small">X coordinate.</span></label>
+        <label>Y<input type="number" class="choiceGotoY" value="${gotoY}"/><span class="small">Y coordinate.</span></label>
+        <label class="inline"><input type="checkbox" class="choiceGotoRel" ${gotoRel?'checked':''}/> relative</label>
+      </fieldset>
       <label>Board Door<select class="choiceBoard"></select></label>
       <label>Unboard Door<select class="choiceUnboard"></select></label>
       <label>Quest<select class="choiceQ"><option value=""></option><option value="accept" ${q==='accept'?'selected':''}>accept</option><option value="turnin" ${q==='turnin'?'selected':''}>turnin</option></select></label>
@@ -861,6 +869,8 @@ function updateTreeData() {
       const gotoMap = chEl.querySelector('.choiceGotoMap').value.trim();
       const gotoXTxt = chEl.querySelector('.choiceGotoX').value.trim();
       const gotoYTxt = chEl.querySelector('.choiceGotoY').value.trim();
+      const gotoTarget = chEl.querySelector('.choiceGotoTarget').value;
+      const gotoRel = chEl.querySelector('.choiceGotoRel').checked;
       const q = chEl.querySelector('.choiceQ').value.trim();
       const once = chEl.querySelector('.choiceOnce').checked;
       const flag = chEl.querySelector('.choiceFlag').value.trim();
@@ -883,12 +893,16 @@ function updateTreeData() {
         if (reqItem) c.reqItem = reqItem;
         if (reqSlot) c.reqSlot = reqSlot;
         if (joinId || joinName || joinRole) c.join = { id: joinId, name: joinName, role: joinRole };
-        if (gotoMap) {
-          c.goto = { map: gotoMap };
+        if (gotoMap || gotoXTxt || gotoYTxt || gotoTarget === 'npc' || gotoRel) {
+          const go = {};
+          if (gotoMap) go.map = gotoMap;
           const gx = gotoXTxt ? parseInt(gotoXTxt, 10) : undefined;
           const gy = gotoYTxt ? parseInt(gotoYTxt, 10) : undefined;
-          if (gx != null && !Number.isNaN(gx)) c.goto.x = gx;
-          if (gy != null && !Number.isNaN(gy)) c.goto.y = gy;
+          if (gx != null && !Number.isNaN(gx)) go.x = gx;
+          if (gy != null && !Number.isNaN(gy)) go.y = gy;
+          if (gotoTarget === 'npc') go.target = 'npc';
+          if (gotoRel) go.rel = true;
+          c.goto = go;
         }
         if (q) c.q = q;
         if (once) c.once = true;
