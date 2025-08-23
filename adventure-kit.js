@@ -18,7 +18,7 @@ let placingType = null, placingPos = null;
 let hoverTile = null;
 let coordTarget = null;
 
-const moduleData = { seed: Date.now(), npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
+const moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1;
 let treeData = {};
@@ -1648,6 +1648,7 @@ function deleteQuest() {
 
 function applyLoadedModule(data) {
   moduleData.seed = data.seed || Date.now();
+  moduleData.name = data.name || 'adventure-module';
   moduleData.npcs = data.npcs || [];
   moduleData.items = data.items || [];
   moduleData.quests = data.quests || [];
@@ -1656,6 +1657,7 @@ function applyLoadedModule(data) {
   moduleData.portals = data.portals || [];
   moduleData.events = data.events || [];
   moduleData.start = data.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+  document.getElementById('moduleName').value = moduleData.name;
   globalThis.interiors = {};
   interiors = globalThis.interiors;
   moduleData.interiors.forEach(I => { interiors[I.id] = I; });
@@ -1706,17 +1708,19 @@ function validateSpawns(){
 
 function saveModule() {
   if(!validateSpawns()) return;
+  moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
   const bldgs = buildings.map(({ under, ...rest }) => rest);
   const data = { ...moduleData, world, buildings: bldgs };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'adventure-module.json';
+  a.download = moduleData.name + '.json';
   a.click();
   URL.revokeObjectURL(a.href);
 }
 
 function playtestModule() {
+  moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
   const bldgs = buildings.map(({ under, ...rest }) => rest);
   const data = { ...moduleData, world, buildings: bldgs };
   localStorage.setItem(PLAYTEST_KEY, JSON.stringify(data));
@@ -1762,6 +1766,7 @@ document.getElementById('eventEffect').addEventListener('change', updateEventEff
 document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
 document.getElementById('npcFlagType').addEventListener('change', updateFlagBuilder);
 document.getElementById('npcEditor').addEventListener('input', applyNPCChanges);
+document.getElementById('moduleName').value = moduleData.name;
 document.getElementById('npcEditor').addEventListener('change', applyNPCChanges);
 document.getElementById('bldgEditor').addEventListener('input', applyBldgChanges);
 document.getElementById('bldgEditor').addEventListener('change', applyBldgChanges);

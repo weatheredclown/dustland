@@ -545,13 +545,18 @@ requestAnimationFrame(draw);
 log('v0.6.7 — Stable boot; items/NPCs visible; E/T to take; selected member rolls.');
 if (window.NanoDialog) NanoDialog.init();
 
-if(location.hash.includes('test')){ runTests(); }
-else {
-const saveStr = globalThis.localStorage?.getItem('dustland_crt');
-  if(saveStr){
-    showStart();
-  } else {
-    openCreator();
+{ // skip normal boot flow in ACK player mode
+  const params = new URLSearchParams(location.search);
+  const isAck = params.get('ack-player') === '1';
+  if (location.hash.includes('test')) {
+    runTests();
+  } else if (!isAck) {
+    const saveStr = globalThis.localStorage?.getItem('dustland_crt');
+    if (saveStr) {
+      showStart();
+    } else {
+      openCreator();
+    }
   }
 }
 
