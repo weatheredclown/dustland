@@ -30,10 +30,12 @@ global.player = { inv: [] };
 global.quests = {};
 global.toast = noop;
 
+let lastPrompt = '';
 global.LanguageModel = {
   availability: async () => 'available',
   create: async () => ({
     prompt: async (p) => {
+      lastPrompt = p;
       if (p.includes('New 16x16 block')) {
         const line = '🏝'.repeat(16);
         const block = Array(16).fill(line).join('\n');
@@ -78,4 +80,16 @@ test('NanoPalette generates a block', async () => {
   await window.NanoPalette.init();
   const block = await window.NanoPalette.generate();
   assert.ok(Array.isArray(block) && block.length === 16, 'block generated');
+});
+
+test('NanoPalette uses stamp emoji examples by default', async () => {
+  global.worldStampEmoji = {
+    hill: Array(16).fill('🏝'.repeat(16)),
+    cross: Array(16).fill('🪨'.repeat(16))
+  };
+  await import('../dustland-nano.js');
+  await window.NanoPalette.init();
+  lastPrompt = '';
+  await window.NanoPalette.generate();
+  assert.ok(lastPrompt.includes('🏝'.repeat(3)) && lastPrompt.includes('🪨'.repeat(3)), 'prompt contains emoji examples');
 });
