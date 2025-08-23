@@ -362,6 +362,18 @@ const DUSTLAND_MODULE = (() => {
       portraitSheet: 'assets/portraits/cass_4.png',
       tree: { start: { text: 'Got goods to sell? I pay in scrap.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       shop: true
+    },
+    {
+      id: 'mara_patrol',
+      map: 'world',
+      x: 14,
+      y: midY - 1,
+      color: '#9ef7a0',
+      name: 'Mara the Scout',
+      title: 'Water Runner',
+      desc: 'She checks the pump then the far ridge.',
+      tree: { start: { text: 'Mara strides past on her rounds.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      loop: [ { x: 14, y: midY - 1 }, { x: 80, y: midY + 4 } ]
     }
   ];
 

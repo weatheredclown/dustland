@@ -189,6 +189,7 @@ function draw(t){
     return;
   }
   const dt=(t-_lastTime)||0; _lastTime=t;
+  if (typeof tickPathAI === 'function') tickPathAI(dt);
   render(state, dt/1000);
   const bx = bumpEnd > performance.now() ? bumpX : 0;
   const by = bumpEnd > performance.now() ? bumpY : 0;
