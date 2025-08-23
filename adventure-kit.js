@@ -127,6 +127,45 @@ let panning = false, panStartX = 0, panStartY = 0, panMouseX = 0, panMouseY = 0;
 const baseTileW = canvas.width / WORLD_W;
 const baseTileH = canvas.height / WORLD_H;
 
+let loopHover = null;
+const loopPlus = document.createElement('span');
+loopPlus.textContent = '+';
+loopPlus.className = 'pill';
+loopPlus.style.position = 'absolute';
+loopPlus.style.display = 'none';
+document.body.appendChild(loopPlus);
+const loopMinus = document.createElement('span');
+loopMinus.textContent = '-';
+loopMinus.className = 'pill';
+loopMinus.style.position = 'absolute';
+loopMinus.style.display = 'none';
+document.body.appendChild(loopMinus);
+
+loopPlus.addEventListener('click', () => {
+  if (!selectedObj || selectedObj.type !== 'npc' || !hoverTile) return;
+  const npc = selectedObj.obj;
+  npc.loop = npc.loop || [{ x: npc.x, y: npc.y }];
+  const idx = loopHover ? loopHover.idx : npc.loop.length - 1;
+  npc.loop.splice(idx + 1, 0, { x: hoverTile.x, y: hoverTile.y });
+  renderLoopFields(npc.loop);
+  drawWorld();
+  loopPlus.style.display = 'none';
+  loopMinus.style.display = 'none';
+  loopHover = null;
+});
+
+loopMinus.addEventListener('click', () => {
+  if (!selectedObj || selectedObj.type !== 'npc' || !loopHover) return;
+  if (loopHover.idx <= 0) return;
+  const npc = selectedObj.obj;
+  npc.loop.splice(loopHover.idx, 1);
+  renderLoopFields(npc.loop);
+  drawWorld();
+  loopPlus.style.display = 'none';
+  loopMinus.style.display = 'none';
+  loopHover = null;
+});
+
 const moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1;
@@ -242,6 +281,25 @@ function drawWorld() {
     }
     ctx.restore();
   });
+  if (selectedObj && selectedObj.type === 'npc' && selectedObj.obj.loop) {
+    const pts = selectedObj.obj.loop;
+    ctx.save();
+    ctx.strokeStyle = '#0f0';
+    ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    pts.forEach((p, i) => {
+      const px = (p.x - panX) * sx + sx / 2;
+      const py = (p.y - panY) * sy + sy / 2;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+    pts.forEach(p => {
+      ctx.strokeStyle = '#0f0';
+      ctx.strokeRect((p.x - panX) * sx, (p.y - panY) * sy, sx, sy);
+    });
+    ctx.restore();
+  }
   // Draw Item markers
   moduleData.items.filter(it => it.map === 'world').forEach(it => {
     const hovering = hoverTarget && hoverTarget.type === 'item' && hoverTarget.obj === it;
@@ -976,6 +1034,51 @@ function updateNPCOptSections() {
   document.getElementById('revealOpts').style.display =
     document.getElementById('npcHidden').checked ? 'block' : 'none';
 }
+
+function renderLoopFields(pts) {
+  const wrap = document.getElementById('npcLoopPts');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  pts.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'row loopPoint';
+    row.innerHTML = `<label>X<input type="number" class="loopX" value="${p.x}" /></label>` +
+      `<label>Y<input type="number" class="loopY" value="${p.y}" /></label>`;
+    const del = document.createElement('span');
+    del.textContent = '-';
+    del.className = 'pill';
+    del.onclick = () => row.remove();
+    row.appendChild(del);
+    wrap.appendChild(row);
+  });
+}
+
+function gatherLoopFields() {
+  const pts = [];
+  document.querySelectorAll('#npcLoopPts .loopPoint').forEach(row => {
+    const x = parseInt(row.querySelector('.loopX').value, 10);
+    const y = parseInt(row.querySelector('.loopY').value, 10);
+    if (!isNaN(x) && !isNaN(y)) pts.push({ x, y });
+  });
+  return pts;
+}
+
+const addLoopBtn = document.getElementById('addLoopPt');
+if (addLoopBtn) {
+  addLoopBtn.addEventListener('click', () => {
+    const pts = gatherLoopFields();
+    pts.push({ x: 0, y: 0 });
+    renderLoopFields(pts);
+  });
+}
+const loopWrap = document.getElementById('npcLoopPts');
+if (loopWrap) {
+  loopWrap.addEventListener('input', () => {
+    if (selectedObj && selectedObj.type === 'npc') {
+      selectedObj.obj.loop = gatherLoopFields();
+    }
+  });
+}
 function updateFlagBuilder() {
   const type = document.getElementById('npcFlagType').value;
   document.getElementById('revealVisit').style.display = type === 'visits' ? 'block' : 'none';
@@ -1022,7 +1125,7 @@ function startNewNPC() {
   document.getElementById('npcMap').value = 'world';
   document.getElementById('npcX').value = 0;
   document.getElementById('npcY').value = 0;
-  document.getElementById('npcLoop').value = '';
+  renderLoopFields([]);
   npcPortraitIndex = 0;
   setNpcPortrait();
   document.getElementById('npcHidden').checked = false;
@@ -1074,7 +1177,6 @@ function collectNPCFromForm() {
   const map = document.getElementById('npcMap').value.trim() || 'world';
   const x = parseInt(document.getElementById('npcX').value, 10) || 0;
   const y = parseInt(document.getElementById('npcY').value, 10) || 0;
-  const loopStr = document.getElementById('npcLoop').value.trim();
   const dialog = document.getElementById('npcDialog').value.trim();
   const questId = document.getElementById('npcQuest').value.trim();
   const accept = document.getElementById('npcAccept').value.trim();
@@ -1109,13 +1211,8 @@ function collectNPCFromForm() {
   loadTreeEditor();
 
   const npc = { id, name, desc, color, map, x, y, tree, questId };
-  if (loopStr) {
-    const pts = loopStr.split(';').map(p => {
-      const [px, py] = p.split(',').map(n => parseInt(n, 10) || 0);
-      return { x: px, y: py };
-    }).filter(p => !isNaN(p.x) && !isNaN(p.y));
-    if (pts.length >= 2) npc.loop = pts;
-  }
+  const pts = gatherLoopFields();
+  if (pts.length >= 2) npc.loop = pts;
   if (combat) npc.combat = { DEF: 5 };
   if (shop) npc.shop = true;
   if (hidden && flag) npc.hidden = true, npc.reveal = { flag, op, value: val };
@@ -1164,7 +1261,7 @@ function editNPC(i) {
   document.getElementById('npcMap').value = n.map;
   document.getElementById('npcX').value = n.x;
   document.getElementById('npcY').value = n.y;
-  document.getElementById('npcLoop').value = (n.loop || []).map(p => `${p.x},${p.y}`).join(';');
+  renderLoopFields(n.loop || []);
   npcPortraitIndex = npcPortraits.indexOf(n.portraitSheet);
   if (npcPortraitIndex < 0) npcPortraitIndex = 0;
   setNpcPortrait();
@@ -2259,6 +2356,14 @@ canvas.addEventListener('mousedown', ev => {
     updateCursor(x, y);
     return;
   }
+  if (selectedObj && selectedObj.type === 'npc' && selectedObj.obj.loop) {
+    const idx = selectedObj.obj.loop.findIndex(p => p.x === x && p.y === y);
+    if (idx >= 0) {
+      dragTarget = { _type: 'loop', npc: selectedObj.obj, idx };
+      updateCursor(x, y);
+      return;
+    }
+  }
   dragTarget = moduleData.npcs.find(n => n.map === 'world' && n.x === x && n.y === y);
   if (dragTarget) {
     dragTarget._type = 'npc';
@@ -2296,6 +2401,8 @@ canvas.addEventListener('mousedown', ev => {
   updateCursor(x, y);
 });
 canvas.addEventListener('mousemove', ev => {
+  loopPlus.style.display = 'none';
+  loopMinus.style.display = 'none';
   if (panning) {
     const dx = (ev.clientX - panMouseX) / (baseTileW * worldZoom);
     const dy = (ev.clientY - panMouseY) / (baseTileH * worldZoom);
@@ -2338,6 +2445,16 @@ canvas.addEventListener('mousemove', ev => {
       document.getElementById('bldgX').value = x;
       document.getElementById('bldgY').value = y;
       document.getElementById('delBldg').style.display = 'block';
+    } else if (dragTarget._type === 'loop') {
+      const npc = dragTarget.npc;
+      npc.loop[dragTarget.idx].x = x; npc.loop[dragTarget.idx].y = y;
+      if (dragTarget.idx === 0) {
+        npc.x = x; npc.y = y;
+        document.getElementById('npcX').value = x;
+        document.getElementById('npcY').value = y;
+        renderNPCList();
+      }
+      renderLoopFields(npc.loop);
     } else if (dragTarget._type === 'npc') {
       dragTarget.x = x; dragTarget.y = y;
       renderNPCList();
@@ -2376,6 +2493,42 @@ canvas.addEventListener('mousemove', ev => {
     drawWorld();
   }
 
+  if (selectedObj && selectedObj.type === 'npc') {
+    const npc = selectedObj.obj;
+    const pts = npc.loop || [{ x: npc.x, y: npc.y }];
+    let found = null;
+    for (let i = 0; i < pts.length; i++) {
+      if (Math.abs(pts[i].x - x) <= 3 && Math.abs(pts[i].y - y) <= 3) {
+        found = { idx: i, x: pts[i].x, y: pts[i].y };
+        break;
+      }
+    }
+    if (!found && Math.abs(npc.x - x) <= 3 && Math.abs(npc.y - y) <= 3) {
+      found = { idx: 0, x: npc.x, y: npc.y };
+    }
+    loopHover = found;
+    if (found) {
+      const rect = canvas.getBoundingClientRect();
+      const sx = baseTileW * worldZoom;
+      const sy = baseTileH * worldZoom;
+      const px = rect.left + (found.x - panX) * sx;
+      const py = rect.top + (found.y - panY) * sy;
+      loopPlus.style.left = px + 'px';
+      loopPlus.style.top = py - 24 + 'px';
+      loopPlus.style.display = 'block';
+      loopMinus.style.left = px + 24 + 'px';
+      loopMinus.style.top = py - 24 + 'px';
+      loopMinus.style.display = found.idx > 0 ? 'block' : 'none';
+    } else {
+      loopPlus.style.display = 'none';
+      loopMinus.style.display = 'none';
+    }
+  } else {
+    loopPlus.style.display = 'none';
+    loopMinus.style.display = 'none';
+    loopHover = null;
+  }
+
   updateCursor(x, y);
 });
 canvas.addEventListener('mouseup', ev => {
@@ -2393,6 +2546,9 @@ canvas.addEventListener('mouseup', ev => {
     drawWorld();
   }
   updateCursor();
+  loopPlus.style.display = 'none';
+  loopMinus.style.display = 'none';
+  loopHover = null;
 });
 canvas.addEventListener('mouseleave', () => {
   if (panning) panning = false;
@@ -2406,6 +2562,9 @@ canvas.addEventListener('mouseleave', () => {
   didPaint = false;
   drawWorld();
   updateCursor();
+  loopPlus.style.display = 'none';
+  loopMinus.style.display = 'none';
+  loopHover = null;
 });
 
 canvas.addEventListener('click', ev => {
