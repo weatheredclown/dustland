@@ -144,7 +144,6 @@ let bldgPainting = false;
 let bldgGrid = [];
 
 const worldPalette = document.getElementById('worldPalette');
-const stampPalette = document.getElementById('stampPalette');
 const paletteLabel = document.getElementById('paletteLabel');
 let worldPaint = null;
 let worldStamp = null;
@@ -205,8 +204,22 @@ function drawWorld() {
     }
   }
   if (hoverTile) {
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
-    ctx.fillRect((hoverTile.x - panX) * sx, (hoverTile.y - panY) * sy, sx, sy);
+    if (worldStamp) {
+      ctx.globalAlpha = 0.5;
+      for (let yy = 0; yy < worldStamp.length; yy++) {
+        for (let xx = 0; xx < worldStamp[yy].length; xx++) {
+          const tx = hoverTile.x + xx;
+          const ty = hoverTile.y + yy;
+          if (tx < 0 || ty < 0 || tx >= WORLD_W || ty >= WORLD_H) continue;
+          ctx.fillStyle = akColors[worldStamp[yy][xx]] || '#000';
+          ctx.fillRect((tx - panX) * sx, (ty - panY) * sy, sx, sy);
+        }
+      }
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.fillRect((hoverTile.x - panX) * sx, (hoverTile.y - panY) * sy, sx, sy);
+    }
   }
   // Draw NPC markers
   moduleData.npcs.filter(n => n.map === 'world').forEach(n => {
@@ -1626,7 +1639,6 @@ if (worldPalette) {
       worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
       worldPaint = isOn ? null : parseInt(btn.dataset.tile, 10);
       worldStamp = null;
-      if (stampPalette) stampPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
       if (!isOn) {
         btn.classList.add('active');
         if (paletteLabel) paletteLabel.textContent = tileNames[worldPaint] || '';
@@ -1638,22 +1650,42 @@ if (worldPalette) {
   });
 }
 
-if (stampPalette) {
-  stampPalette.querySelectorAll('button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const isOn = btn.classList.contains('active');
-      stampPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-      worldStamp = isOn ? null : worldStamps[btn.dataset.stamp];
-      worldPaint = null;
-      if (worldPalette) worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-      if (!isOn) {
-        btn.classList.add('active');
-        if (paletteLabel) paletteLabel.textContent = stampNames[btn.dataset.stamp] || '';
-      } else if (paletteLabel) {
-        paletteLabel.textContent = '';
+const stampsBtn = document.getElementById('stampsBtn');
+const stampWindow = document.getElementById('stampWindow');
+if (stampsBtn && stampWindow) {
+  function renderStampWindow() {
+    stampWindow.innerHTML = '';
+    for (const [id, stamp] of Object.entries(worldStamps)) {
+      const opt = document.createElement('div');
+      opt.className = 'stamp-option';
+      const canv = document.createElement('canvas');
+      canv.width = 64; canv.height = 64;
+      const c = canv.getContext('2d');
+      for (let y = 0; y < stamp.length; y++) {
+        for (let x = 0; x < stamp[y].length; x++) {
+          c.fillStyle = akColors[stamp[y][x]] || '#000';
+          c.fillRect(x * 4, y * 4, 4, 4);
+        }
       }
-      updateCursor();
-    });
+      opt.appendChild(canv);
+      const lbl = document.createElement('span');
+      lbl.textContent = stampNames[id] || id;
+      opt.appendChild(lbl);
+      opt.addEventListener('click', () => {
+        worldStamp = worldStamps[id];
+        worldPaint = null;
+        if (worldPalette) worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        if (paletteLabel) paletteLabel.textContent = stampNames[id] || '';
+        stampWindow.style.display = 'none';
+        updateCursor();
+        drawWorld();
+      });
+      stampWindow.appendChild(opt);
+    }
+  }
+  renderStampWindow();
+  stampsBtn.addEventListener('click', () => {
+    stampWindow.style.display = stampWindow.style.display === 'block' ? 'none' : 'block';
   });
 }
 
@@ -2154,6 +2186,7 @@ canvas.addEventListener('mousemove', ev => {
   }
   const { x, y } = canvasPos(ev);
   hoverTile = { x, y };
+  if (worldStamp) drawWorld();
   if (worldPainting && worldPaint != null) {
     addTerrainFeature(x, y, worldPaint);
     didPaint = true;

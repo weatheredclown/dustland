@@ -79,6 +79,32 @@
       font-size: 13px;
     }
 
+    #stampWindow {
+      position: absolute;
+      top: 40px;
+      right: 10px;
+      background: #0f120f;
+      border: 1px solid #2b3b2b;
+      padding: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+      z-index: 50;
+    }
+
+    #stampWindow .stamp-option {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      margin-bottom: 4px;
+    }
+
+    #stampWindow canvas {
+      image-rendering: pixelated;
+      border: 1px solid #2b3b2b;
+    }
+
     legend {
       font-size: 16px;
       font-weight: 600;
@@ -231,13 +257,9 @@
               <button type="button" data-tile="4" style="background:#777777"></button>
               <button type="button" data-tile="5" style="background:#304326"></button>
               <button type="button" data-tile="6" style="background:#4d5f4d"></button>
+              <button type="button" id="stampsBtn">Stamps</button>
             </div>
-            <div id="stampPalette">
-              <button type="button" data-stamp="hill">Hill</button>
-              <button type="button" data-stamp="cross">Cross Roads</button>
-              <button type="button" data-stamp="compound">Compound</button>
-              <button type="button" data-stamp="pond">Pond</button>
-            </div>
+            <div id="stampWindow"></div>
             <div id="paletteLabel"></div>
           </div>
           <button class="btn" id="noiseToggle">Noise: On</button>
