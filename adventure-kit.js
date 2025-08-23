@@ -117,7 +117,7 @@ const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
 
 let dragTarget = null, settingStart = false, hoverTarget = null, didDrag = false;
-let placingType = null, placingPos = null;
+let placingType = null, placingPos = null, placingCb = null;
 let hoverTile = null;
 var coordTarget = null;
 function setCoordTarget(v){ coordTarget = v; }
@@ -1044,14 +1044,25 @@ function startNewNPC() {
   document.getElementById('npcShop').checked = false;
   updateNPCOptSections();
   document.getElementById('addNPC').style.display = 'block';
+  document.getElementById('cancelNPC').style.display = 'none';
   document.getElementById('delNPC').style.display = 'none';
   loadTreeEditor();
   toggleQuestDialogBtn();
-  placingType = 'npc';
+  placingType = null;
   placingPos = null;
   selectedObj = null;
   drawWorld();
   showNPCEditor(true);
+}
+
+function beginPlaceNPC() {
+  placingType = 'npc';
+  placingPos = null;
+  placingCb = addNPC;
+  document.getElementById('addNPC').style.display = 'none';
+  document.getElementById('cancelNPC').style.display = 'block';
+  selectedObj = null;
+  drawWorld();
 }
 // Gather NPC form fields into an object
 function collectNPCFromForm() {
@@ -1115,6 +1126,16 @@ function addNPC() {
   drawWorld();
 }
 
+function cancelNPC() {
+  placingType = null;
+  placingPos = null;
+  placingCb = null;
+  document.getElementById('addNPC').style.display = 'block';
+  document.getElementById('cancelNPC').style.display = 'none';
+  drawWorld();
+  updateCursor();
+}
+
 // Update the currently edited NPC as form fields change
 function applyNPCChanges() {
   if (editNPCIdx < 0) return;
@@ -1163,6 +1184,7 @@ function editNPC(i) {
   document.getElementById('npcShop').checked = !!n.shop;
   updateNPCOptSections();
   document.getElementById('addNPC').style.display = 'none';
+  document.getElementById('cancelNPC').style.display = 'none';
   document.getElementById('delNPC').style.display = 'block';
   loadTreeEditor();
   toggleQuestDialogBtn();
@@ -1183,6 +1205,7 @@ function deleteNPC() {
   moduleData.npcs.splice(editNPCIdx, 1);
   editNPCIdx = -1;
   document.getElementById('addNPC').style.display = 'block';
+  document.getElementById('cancelNPC').style.display = 'none';
   document.getElementById('delNPC').style.display = 'none';
   renderNPCList();
   selectedObj = null;
@@ -1199,6 +1222,7 @@ function closeNPCEditor() {
   placingType = null;
   showNPCEditor(false);
   document.getElementById('addNPC').style.display = 'block';
+  document.getElementById('cancelNPC').style.display = 'none';
   document.getElementById('delNPC').style.display = 'none';
 }
 
@@ -1236,12 +1260,23 @@ function startNewItem() {
   document.getElementById('itemUse').value = '';
   updateUseWrap();
   document.getElementById('addItem').textContent = 'Add Item';
+  document.getElementById('cancelItem').style.display = 'none';
   document.getElementById('delItem').style.display = 'none';
-  placingType = 'item';
+  placingType = null;
   placingPos = null;
   selectedObj = null;
   drawWorld();
   showItemEditor(true);
+}
+
+function beginPlaceItem() {
+  placingType = 'item';
+  placingPos = null;
+  placingCb = addItem;
+  document.getElementById('addItem').style.display = 'none';
+  document.getElementById('cancelItem').style.display = 'block';
+  selectedObj = null;
+  drawWorld();
 }
 function addItem() {
   const name = document.getElementById('itemName').value.trim();
@@ -1272,12 +1307,23 @@ function addItem() {
   }
   editItemIdx = -1;
   document.getElementById('addItem').textContent = 'Add Item';
+  document.getElementById('cancelItem').style.display = 'none';
   document.getElementById('delItem').style.display = 'none';
   loadMods({});
   renderItemList();
   selectedObj = null;
   drawWorld();
   showItemEditor(false);
+}
+
+function cancelItem() {
+  placingType = null;
+  placingPos = null;
+  placingCb = null;
+  document.getElementById('addItem').style.display = 'block';
+  document.getElementById('cancelItem').style.display = 'none';
+  drawWorld();
+  updateCursor();
 }
 function editItem(i) {
   const it = moduleData.items[i];
@@ -1306,6 +1352,7 @@ function editItem(i) {
   updateUseWrap();
   document.getElementById('addItem').textContent = 'Update Item';
   document.getElementById('delItem').style.display = 'block';
+  document.getElementById('cancelItem').style.display = 'none';
   showItemEditor(true);
   selectedObj = { type: 'item', obj: it };
   drawWorld();
@@ -1541,13 +1588,24 @@ function startNewBldg() {
   bldgPaint = TILE.BUILDING;
   updateInteriorOptions();
   document.getElementById('addBldg').style.display = 'block';
+  document.getElementById('cancelBldg').style.display = 'none';
   document.getElementById('delBldg').style.display = 'none';
-  placingType = 'bldg';
+  placingType = null;
   placingPos = null;
   selectedObj = null;
   drawWorld();
   drawBldg();
   showBldgEditor(true);
+}
+
+function beginPlaceBldg() {
+  placingType = 'bldg';
+  placingPos = null;
+  placingCb = addBuilding;
+  document.getElementById('addBldg').style.display = 'none';
+  document.getElementById('cancelBldg').style.display = 'block';
+  selectedObj = null;
+  drawWorld();
 }
 // Add a new building to the world and start editing it
 function addBuilding() {
@@ -1569,6 +1627,16 @@ function addBuilding() {
   document.getElementById('delBldg').style.display = 'block';
   document.getElementById('addBldg').style.display = 'none';
 }
+
+function cancelBldg() {
+  placingType = null;
+  placingPos = null;
+  placingCb = null;
+  document.getElementById('addBldg').style.display = 'block';
+  document.getElementById('cancelBldg').style.display = 'none';
+  drawWorld();
+  updateCursor();
+}
 function renderBldgList() {
   const list = document.getElementById('bldgList');
   list.innerHTML = moduleData.buildings.map((b, i) => `<div data-idx="${i}">Bldg @(${b.x},${b.y})</div>`).join('');
@@ -1586,6 +1654,7 @@ function editBldg(i) {
   updateInteriorOptions();
   document.getElementById('bldgInterior').value = b.interiorId || '';
   document.getElementById('addBldg').style.display = 'none';
+  document.getElementById('cancelBldg').style.display = 'none';
   document.getElementById('delBldg').style.display = 'block';
   bldgPalette.querySelectorAll('button').forEach(btn=>btn.classList.remove('active'));
   bldgPalette.querySelector('button[data-tile="B"]').classList.add('active');
@@ -1777,6 +1846,7 @@ function deleteBldg() {
   moduleData.buildings.splice(editBldgIdx, 1);
   editBldgIdx = -1;
   document.getElementById('addBldg').style.display = 'block';
+  document.getElementById('cancelBldg').style.display = 'none';
   document.getElementById('delBldg').style.display = 'none';
   renderBldgList();
   selectedObj = null;
@@ -1964,15 +2034,18 @@ function playtestModule() {
 }
 
 document.getElementById('clear').onclick = clearWorld;
-document.getElementById('addNPC').onclick = addNPC;
-document.getElementById('addItem').onclick = addItem;
+document.getElementById('addNPC').onclick = beginPlaceNPC;
+document.getElementById('addItem').onclick = () => { if (editItemIdx >= 0) addItem(); else beginPlaceItem(); };
 document.getElementById('newItem').onclick = startNewItem;
 document.getElementById('newNPC').onclick = startNewNPC;
 document.getElementById('newBldg').onclick = startNewBldg;
 document.getElementById('newQuest').onclick = startNewQuest;
-document.getElementById('addBldg').onclick = addBuilding;
+document.getElementById('addBldg').onclick = beginPlaceBldg;
 document.getElementById('addQuest').onclick = addQuest;
 document.getElementById('addEvent').onclick = addEvent;
+document.getElementById('cancelNPC').onclick = cancelNPC;
+document.getElementById('cancelItem').onclick = cancelItem;
+document.getElementById('cancelBldg').onclick = cancelBldg;
 document.getElementById('newEvent').onclick = startNewEvent;
 document.getElementById('addPortal').onclick = addPortal;
 document.getElementById('newPortal').onclick = startNewPortal;
@@ -2137,15 +2210,22 @@ canvas.addEventListener('mousedown', ev => {
     if (placingType === 'npc') {
       document.getElementById('npcX').value = x;
       document.getElementById('npcY').value = y;
+      if (placingCb) placingCb();
+      document.getElementById('cancelNPC').style.display = 'none';
     } else if (placingType === 'item') {
       document.getElementById('itemX').value = x;
       document.getElementById('itemY').value = y;
+      if (placingCb) placingCb();
+      document.getElementById('cancelItem').style.display = 'none';
     } else if (placingType === 'bldg') {
       document.getElementById('bldgX').value = x;
       document.getElementById('bldgY').value = y;
+      if (placingCb) placingCb();
+      document.getElementById('cancelBldg').style.display = 'none';
     }
     placingType = null;
     placingPos = null;
+    placingCb = null;
     drawWorld();
     updateCursor(x, y);
     return;
