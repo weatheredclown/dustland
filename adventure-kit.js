@@ -1788,7 +1788,15 @@ if (stampsBtn && stampWindow) {
   }
   renderStampWindow();
   stampsBtn.addEventListener('click', () => {
-    stampWindow.style.display = stampWindow.style.display === 'block' ? 'none' : 'block';
+    if (stampWindow.style.display === 'block') {
+      stampWindow.style.display = 'none';
+      return;
+    }
+    const rect = stampsBtn.getBoundingClientRect();
+    stampWindow.style.left = rect.left + window.scrollX + 'px';
+    stampWindow.style.top = rect.bottom + window.scrollY + 'px';
+    stampWindow.style.right = 'auto';
+    stampWindow.style.display = 'block';
   });
 }
 
