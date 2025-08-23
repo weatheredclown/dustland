@@ -133,6 +133,8 @@ _______________________________________________________________________________
   - World map editor supports mousewheel zoom and right-drag panning.
   - World map editor includes a stamp icon for 16x16 terrain chunks.
   - NPC patrol routes are visualized with draggable waypoints and add/remove controls.
+  - World palette tiles show names on hover.
+  - Ctrl+S downloads the current module; Ctrl+P launches playtest.
 
 [ LICENSE ]
  MIT License

@@ -176,6 +176,13 @@ const intCtx = intCanvas.getContext('2d');
 const intPalette = document.getElementById('intPalette');
 let intPaint = TILE.WALL;
 let intPainting = false;
+if (intPalette) {
+  const names = { W: 'Wall', F: 'Floor', D: 'Door' };
+  intPalette.querySelectorAll('button').forEach(btn => {
+    const name = names[btn.dataset.tile];
+    if (name) btn.title = name;
+  });
+}
 
 const bldgCanvas = document.getElementById('bldgCanvas');
 const bldgCtx = bldgCanvas.getContext('2d');
@@ -1811,6 +1818,12 @@ bldgPalette.querySelectorAll('button').forEach(btn=>{
 bldgPalette.querySelector('button')?.classList.add('active');
 
 if (worldPalette) {
+  worldPalette.querySelectorAll('button').forEach(btn => {
+    const id = parseInt(btn.dataset.tile, 10);
+    const name = tileNames[id] || '';
+    btn.title = name;
+    btn.dataset.name = name;
+  });
   function bindPaletteBtn(btn) {
     btn.addEventListener('click', () => {
       const isOn = btn.classList.contains('active');
@@ -2703,6 +2716,20 @@ animate();
     window.showEditorTab = show;
   }
 })();
+
+if (document && typeof document.addEventListener === 'function') {
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 's') {
+        e.preventDefault();
+        saveModule();
+      } else if (e.key === 'p') {
+        e.preventDefault();
+        playtestModule();
+      }
+    }
+  });
+}
 
 document.getElementById('playtestFloat').onclick =
   () => document.getElementById('playtest')?.click();
