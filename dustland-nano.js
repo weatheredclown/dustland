@@ -19,6 +19,12 @@
     choicesEnabled: false,
     refreshIndicator
   };
+  window.NanoPalette = {
+    init,
+    generate: generatePalette,
+    isReady: ()=> _state.ready,
+    enabled: true
+  };
 
   const _state = {
     ready: false,
@@ -396,6 +402,30 @@ Choices:
       if(!seen.has(k)){ seen.add(k); out.push(c); }
     }
     return out.slice(-4); // keep latest few
+  }
+
+  async function generatePalette(examples){
+    if(!_state.ready || !window.NanoPalette.enabled) return null;
+    const prompt = _buildPalettePrompt(examples);
+    try {
+      const out = await _state.session.prompt(prompt);
+      const txt = out?.output?.[0]?.content?.[0]?.text || '';
+      return _parseEmojiBlock(txt);
+    } catch(err){
+      console.error('[Nano] palette generation failed:', err);
+      return null;
+    }
+  }
+
+  function _buildPalettePrompt(examples){
+    const ex = (examples||[]).map(b=>b.join('\n')).join('\n\n');
+    return `Examples of 16x16 emoji blocks for Dustland world tiles:\n${ex}\n\nNew 16x16 block:`;
+  }
+
+  function _parseEmojiBlock(txt){
+    const lines = txt.trim().split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+    const block = lines.slice(0,16).map(line=> Array.from(line).slice(0,16).join(''));
+    return block.length===16 ? block : null;
   }
 
 })();
