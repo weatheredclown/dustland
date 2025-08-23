@@ -138,7 +138,7 @@ test('select on map does not paint', () => {
   worldPaint = TILE.ROCK;
   const before = world[2][3];
   coordTarget = { x: 'eventX', y: 'eventY' };
-  canvasEl._listeners.mousedown[0]({ clientX:3, clientY:2 });
+  canvasEl._listeners.mousedown[0]({ clientX:3, clientY:2, button:0 });
   assert.strictEqual(world[2][3], before);
   assert.strictEqual(worldPainting, false);
   assert.strictEqual(document.getElementById('eventX').value, 3);
