@@ -16,7 +16,9 @@ const ctx = canvas.getContext('2d');
 let dragTarget = null, settingStart = false, hoverTarget = null, didDrag = false;
 let placingType = null, placingPos = null;
 let hoverTile = null;
-let coordTarget = null;
+var coordTarget = null;
+function setCoordTarget(v){ coordTarget = v; }
+globalThis.setCoordTarget = setCoordTarget;
 let worldZoom = 1, panX = 0, panY = 0;
 let panning = false, panStartX = 0, panStartY = 0, panMouseX = 0, panMouseY = 0;
 const baseTileW = canvas.width / WORLD_W;
@@ -454,6 +456,11 @@ function addChoiceRow(container, ch = {}) {
   const xpVal = isXP ? parseInt(reward.replace(/[^0-9]/g, ''), 10) : '';
   const isItem = reward && !isXP;
   const itemVal = isItem ? reward : '';
+  const effs = Array.isArray(ch.effects) ? ch.effects : [];
+  const boardEff = effs.find(e => e.effect === 'boardDoor');
+  const unboardEff = effs.find(e => e.effect === 'unboardDoor');
+  const boardId = boardEff ? boardEff.interiorId || '' : '';
+  const unboardId = unboardEff ? unboardEff.interiorId || '' : '';
   const row = document.createElement('div');
   row.innerHTML = `<label>Label<input class="choiceLabel" value="${label}"/></label>
     <label>To<select class="choiceTo"></select></label>
@@ -476,6 +483,8 @@ function addChoiceRow(container, ch = {}) {
       <label>Goto Map<select class="choiceGotoMap"></select></label>
       <label>Goto X<input type="number" class="choiceGotoX" value="${gotoX}"/><span class="small">X coordinate.</span></label>
       <label>Goto Y<input type="number" class="choiceGotoY" value="${gotoY}"/><span class="small">Y coordinate.</span></label>
+      <label>Board Door<select class="choiceBoard"></select></label>
+      <label>Unboard Door<select class="choiceUnboard"></select></label>
       <label>Quest<select class="choiceQ"><option value=""></option><option value="accept" ${q==='accept'?'selected':''}>accept</option><option value="turnin" ${q==='turnin'?'selected':''}>turnin</option></select></label>
       <label class="onceWrap"><input type="checkbox" class="choiceOnce" ${once ? 'checked' : ''}/> once</label>
       <label>Flag<input class="choiceFlag" list="choiceFlagList" value="${flag}"/></label>
@@ -500,6 +509,8 @@ function addChoiceRow(container, ch = {}) {
   populateRoleDropdown(row.querySelector('.choiceJoinRole'), joinRole);
   populateMapDropdown(row.querySelector('.choiceGotoMap'), gotoMap);
   populateItemDropdown(row.querySelector('.choiceRewardItem'), itemVal);
+  populateInteriorDropdown(row.querySelector('.choiceBoard'), boardId);
+  populateInteriorDropdown(row.querySelector('.choiceUnboard'), unboardId);
   const rewardTypeSel = row.querySelector('.choiceRewardType');
   const rewardXP = row.querySelector('.choiceRewardXP');
   const rewardItem = row.querySelector('.choiceRewardItem');
@@ -582,8 +593,8 @@ function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceJoinRole').forEach(sel => populateRoleDropdown(sel, sel.value));
   document.querySelectorAll('.choiceGotoMap').forEach(sel => populateMapDropdown(sel, sel.value));
   document.querySelectorAll('.choiceRewardItem').forEach(sel => populateItemDropdown(sel, sel.value));
-  document.querySelectorAll('.nodeBoard').forEach(sel => populateInteriorDropdown(sel, sel.value));
-  document.querySelectorAll('.nodeUnboard').forEach(sel => populateInteriorDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceBoard').forEach(sel => populateInteriorDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceUnboard').forEach(sel => populateInteriorDropdown(sel, sel.value));
 }
 
 function renderTreeEditor() {
@@ -601,8 +612,6 @@ function renderTreeEditor() {
     const choicesDiv = div.querySelector('.choices');
     (node.choices || []).forEach(ch => addChoiceRow(choicesDiv, ch));
     div.querySelector('.addChoice').onclick = () => addChoiceRow(choicesDiv);
-    populateInteriorDropdown(div.querySelector('.nodeBoard'), boardId);
-    populateInteriorDropdown(div.querySelector('.nodeUnboard'), unboardId);
     const toggleBtn = div.querySelector('.toggle');
     toggleBtn.addEventListener('click', () => {
       div.classList.toggle('collapsed');
@@ -642,8 +651,6 @@ function updateTreeData() {
 
     const text = nodeEl.querySelector('.nodeText').value;
     const choices = [];
-    const boardId = nodeEl.querySelector('.nodeBoard').value.trim();
-    const unboardId = nodeEl.querySelector('.nodeUnboard').value.trim();
 
     nodeEl.querySelectorAll('.choices > div').forEach(chEl => {
       const label = chEl.querySelector('.choiceLabel').value.trim();
@@ -701,17 +708,18 @@ function updateTreeData() {
         }
         if (q) c.q = q;
         if (once) c.once = true;
+        const boardId = chEl.querySelector('.choiceBoard')?.value.trim();
+        const unboardId = chEl.querySelector('.choiceUnboard')?.value.trim();
         if (flag) c.if = { flag, op, value: val != null && !Number.isNaN(val) ? val : 0 };
+        const effs = [];
+        if (boardId) effs.push({ effect: 'boardDoor', interiorId: boardId });
+        if (unboardId) effs.push({ effect: 'unboardDoor', interiorId: unboardId });
+        if (effs.length) c.effects = effs;
         choices.push(c);
       }
     });
 
     const nodeData = { text, choices };
-    const effects = [];
-    if (boardId) effects.push({ effect: 'boardDoor', interiorId: boardId });
-    if (unboardId) effects.push({ effect: 'unboardDoor', interiorId: unboardId });
-    if (effects.length) nodeData.effects = effects;
-
     newTree[id] = nodeData;
   });
 
