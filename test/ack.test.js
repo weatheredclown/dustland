@@ -49,9 +49,14 @@ const bodyEl = stubEl();
 const canvasEl = stubEl();
 canvasEl.width = 120;
 canvasEl.height = 90;
+const moduleNameInput = stubEl();
 global.document = {
   body: bodyEl,
-  getElementById: id => id === 'map' ? canvasEl : stubEl(),
+  getElementById: id => {
+    if (id === 'map') return canvasEl;
+    if (id === 'moduleName') return moduleNameInput;
+    return stubEl();
+  },
   createElement: () => stubEl(),
   querySelector: () => stubEl(),
   querySelectorAll: () => []
@@ -85,6 +90,22 @@ test('applyLoadedModule clears previous building tiles', () => {
   applyLoadedModule({ seed: 123, buildings: [] });
   assert.notStrictEqual(world[1][1], TILE.BUILDING);
   assert.strictEqual(globalThis.buildings.length, 0);
+});
+
+test('saveModule uses module name for download', () => {
+  const origValidateSpawns = globalThis.validateSpawns;
+  globalThis.validateSpawns = () => true;
+  moduleNameInput.value = 'custom-name';
+  const aEl = stubEl();
+  const origCreate = document.createElement;
+  document.createElement = tag => tag === 'a' ? aEl : origCreate(tag);
+  const origURL = global.URL;
+  global.URL = { createObjectURL: () => 'u', revokeObjectURL: () => {} };
+  saveModule();
+  assert.strictEqual(aEl.download, 'custom-name.json');
+  document.createElement = origCreate;
+  global.URL = origURL;
+  globalThis.validateSpawns = origValidateSpawns;
 });
 
 test('addTerrainFeature sprinkles noise', () => {
