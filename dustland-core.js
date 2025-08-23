@@ -249,6 +249,7 @@ function revealHiddenNPCs(){
       if(n.shop) opts.shop=n.shop;
       if(n.portraitSheet) opts.portraitSheet=n.portraitSheet;
       const npc=makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, n.title||'', n.desc||'', n.tree, quest, null, null, opts);
+      if (Array.isArray(n.loop)) npc.loop = n.loop;
       NPCS.push(npc);
       hiddenNPCs.splice(i,1);
     }
@@ -333,6 +334,7 @@ function applyModule(data){
     if(n.shop) opts.shop = n.shop;
     if(n.portraitSheet) opts.portraitSheet = n.portraitSheet;
     const npc = makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, n.title||'', n.desc||'', tree, quest, null, null, opts);
+    if (Array.isArray(n.loop)) npc.loop = n.loop;
     NPCS.push(npc);
   });
   revealHiddenNPCs();
@@ -444,7 +446,8 @@ function save(){
     tree:n.tree,
     combat:n.combat,
     shop:n.shop,
-    quest:n.quest?{id:n.quest.id,status:n.quest.status}:null
+    quest:n.quest?{id:n.quest.id,status:n.quest.status}:null,
+    loop:n.loop
   }));
   const questData = {};
   Object.keys(quests).forEach(k=>{
@@ -483,6 +486,7 @@ function load(){
     if(f){
       const npc=f(n.x,n.y);
       npc.map=n.map;
+      if (Array.isArray(n.loop)) npc.loop = n.loop;
       if(n.quest){
         if(quests[n.quest.id]) npc.quest=quests[n.quest.id];
         else if(npc.quest) npc.quest.status=n.quest.status;
