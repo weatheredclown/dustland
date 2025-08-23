@@ -203,3 +203,14 @@ test('clearWorld wipes tiles and data', () => {
   assert.strictEqual(moduleData.npcs.length, 0);
   assert.strictEqual(globalThis.buildings.length, 0);
 });
+
+test('renderDialogPreview clears when no start node', () => {
+  const treeEl = document.getElementById('npcTree');
+  const prevEl = document.getElementById('dialogPreview');
+  treeEl.value = JSON.stringify({ start: { text: 'hi', choices: [] } });
+  renderDialogPreview();
+  assert.ok(prevEl.innerHTML.includes('hi'));
+  treeEl.value = '{}';
+  renderDialogPreview();
+  assert.strictEqual(prevEl.innerHTML, '');
+});

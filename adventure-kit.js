@@ -428,7 +428,7 @@ function renderDialogPreview() {
   let tree = null;
   const txt = document.getElementById('npcTree').value.trim();
   if (txt) { try { tree = JSON.parse(txt); } catch (e) { tree = null; } }
-  if (!tree) { prev.innerHTML = ''; return; }
+  if (!tree || !tree.start) { prev.innerHTML = ''; return; }
   function show(id) {
     const node = tree[id]; if (!node) return;
     const html = (node.choices || [])
