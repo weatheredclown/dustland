@@ -131,7 +131,7 @@ _______________________________________________________________________________
 [ FEATURE LOG ]
   - ACK player can fetch modules by URL, load local JSON, or auto-load via &module=URL (defaults to modules/golden.module.json).
   - World map editor supports mousewheel zoom and right-drag panning.
-  - World map editor includes a stamp palette for 16x16 terrain chunks.
+  - World map editor includes a Stamps button for 16x16 terrain chunks.
 
 [ LICENSE ]
  MIT License

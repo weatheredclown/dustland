@@ -146,6 +146,21 @@ test('hill stamp emits 16x16 emoji grid', () => {
   assert.strictEqual(Array.from(block[8])[8], tileEmoji[TILE.ROCK]);
 });
 
+test('stamps window selects a world stamp', () => {
+  genWorld(1);
+  const first = Object.keys(worldStamps)[0];
+  const btn = document.getElementById('stampsBtn');
+  btn._listeners.click[0]();
+  const win = document.getElementById('stampWindow');
+  assert.strictEqual(win.style.display, 'block');
+  const opt = win.children[0];
+  opt._listeners.click[0]();
+  assert.strictEqual(worldStamp, worldStamps[first]);
+  assert.notStrictEqual(document.getElementById('paletteLabel').textContent, '');
+  assert.strictEqual(win.style.display, 'none');
+  worldStamp = null;
+});
+
 test('dragging building ignores paint', () => {
   genWorld(1);
   moduleData.buildings = [{ x:5, y:5, w:1, h:1 }];
