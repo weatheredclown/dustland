@@ -387,6 +387,25 @@ const DUSTLAND_MODULE = (() => {
       desc: 'She checks the pump then the far ridge.',
       tree: { start: { text: 'Mara strides past on her rounds.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       loop: [ { x: 14, y: midY - 1 }, { x: 80, y: midY + 4 } ]
+    },
+    {
+      id: 'stalker_patrol',
+      map: 'world',
+      x: 90,
+      y: midY + 2,
+      color: '#f55',
+      name: 'Grit Stalker',
+      title: 'Wasteland Hunter',
+      desc: 'A ruthless drifter prowling for prey.',
+      portraitSheet: 'assets/portraits/portrait_1079.png',
+      tree: { start: { text: 'The stalker circles the wastes.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      loop: [
+        { x: 90, y: midY + 2 },
+        { x: 110, y: midY + 2 },
+        { x: 110, y: midY - 6 },
+        { x: 90, y: midY - 6 }
+      ],
+      combat: { HP: 7, ATK: 2, DEF: 1, loot: 'raider_knife', auto: true }
     }
   ];
 
