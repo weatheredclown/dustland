@@ -408,7 +408,7 @@ Choices:
   async function generatePalette(examples){
     if(!_state.ready || !window.NanoPalette.enabled) return null;
     _setBusy(true);
-    const prompt = _buildPalettePrompt(examples);
+    const prompt = _buildPalettePrompt(examples || _defaultExamples());
     try {
       const out = await _state.session.prompt(prompt);
       const txt = out?.output?.[0]?.content?.[0]?.text || '';
@@ -419,6 +419,14 @@ Choices:
     } finally {
       _setBusy(false);
     }
+  }
+
+  function _defaultExamples(){
+    if(globalThis.worldStampEmoji){
+      return Object.values(globalThis.worldStampEmoji);
+    }
+    const palette = globalThis.tileEmoji ? Object.values(globalThis.tileEmoji) : [];
+    return palette.map(e => Array(16).fill(e.repeat(16)));
   }
 
   function _buildPalettePrompt(examples){
