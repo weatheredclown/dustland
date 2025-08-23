@@ -50,11 +50,6 @@ if (noiseToggle) {
   noiseToggle.textContent = 'Noise: On';
 }
 
-const note=document.createElement('div');
-note.textContent='Note: water (bright blue) is not walkable; spawns cannot go there.';
-note.style.cssText='padding:4px;background:#300;color:#f88;text-align:center;';
-document.body.prepend(note);
-
 function nextId(prefix, arr) {
   let i = 1; while (arr.some(o => o.id === prefix + i)) i++; return prefix + i;
 }
