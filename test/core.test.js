@@ -674,14 +674,27 @@ test('fight choice triggers combat', () => {
   Actions.startCombat = orig;
 });
 
-test('leave choice is rendered last', () => {
+test('choices pointing to bye are rendered last', () => {
   NPCS.length = 0;
-  const tree = { start: { text: '', choices: [ { label: 'Leave', to: 'bye' }, { label: 'Talk', to: 'talk' } ] }, talk: { text: '', choices: [] }, bye: { text: '', choices: [] } };
-  const npc = makeNPC('l', 'world', 0, 0, '#fff', 'L', '', '', tree);
+  const tree = {
+    start: {
+      text: '',
+      choices: [
+        { label: '(Leave)', to: 'bye' },
+        { label: 'Later', to: 'bye' },
+        { label: 'Talk', to: 'talk' }
+      ]
+    },
+    talk: { text: '', choices: [] },
+    bye: { text: '', choices: [] }
+  };
+  const npc = makeNPC('b', 'world', 0, 0, '#fff', 'B', '', '', tree);
   NPCS.push(npc);
   openDialog(npc);
   const labels = choicesEl.children.map(c => c.textContent);
-  assert.strictEqual(labels[labels.length - 1], 'Leave');
+  assert.strictEqual(labels[0], 'Talk');
+  const tail = labels.slice(1).sort();
+  assert.deepStrictEqual(tail, ['(Leave)', 'Later'].sort());
 });
 
 test('hidden NPC reveals after visit condition met', () => {

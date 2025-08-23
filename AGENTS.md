@@ -11,6 +11,7 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 ## Testing
 - Run `npm test` after making changes; it invokes Node's built-in test runner.
 - Ensure the working tree is clean and tests pass before committing.
+- Before adding new tests, check for existing coverage and extend or modify tests instead of duplicating cases.
 
 ## Commit conventions
 - Use concise messages with prefixes such as `feat:`, `fix:`, or `docs:`.

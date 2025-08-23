@@ -56,7 +56,9 @@ function normalizeDialogTree(tree){
     const next=(n.next||n.choices||[]).map(c=>{
       if(typeof c==='string') return {id:c,label:c};
       const {to,id:cid,label,text,checks=[],effects=[],...rest}=c;
-      return {id:to||cid,label:label||text||'(Continue)',checks,effects,...rest};
+      const obj={id:to||cid,label:label||text||'(Continue)',checks,effects,...rest};
+      if(to) obj.to=to;
+      return obj;
     });
     out[id]={text:n.text||'',checks:n.checks||[],effects:n.effects||[],next};
   }
@@ -300,10 +302,11 @@ function renderDialog(){
     return !onceChoices.has(key);
   });
 
+  const isExit=opt=> opt.to==='bye';
   choices.sort((a,b)=>{
-    const aLeave=(a.opt.label||'').toLowerCase()==='leave';
-    const bLeave=(b.opt.label||'').toLowerCase()==='leave';
-    return aLeave===bLeave?0:(aLeave?1:-1);
+    const aExit=isExit(a.opt);
+    const bExit=isExit(b.opt);
+    return aExit===bExit?0:(aExit?1:-1);
   });
 
   choices.forEach(({opt,idx})=>{
