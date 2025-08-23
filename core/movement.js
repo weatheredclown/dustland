@@ -63,7 +63,6 @@ function tileDelay(t, map=state.map){
   const pct = clamp(((brightness - minBright) / (maxBright - minBright)) * 100, 0, 100);
   const minDelay=100, maxDelay=500;
   const delay = minDelay + (pct/100)*(maxDelay-minDelay);
-  console.log("T",t," Brightness", brightness, " Pct", pct, " Delay", delay);
   return delay;
 }
 
