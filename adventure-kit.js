@@ -1654,28 +1654,10 @@ if (worldPalette) {
     });
   }
   worldPalette.querySelectorAll('button').forEach(bindPaletteBtn);
+}
 
-  if (window.NanoPalette) {
-    window.NanoPalette.init();
-    async function pumpAiTiles() {
-      const block = await window.NanoPalette.generate();
-      if (block) {
-        const btn = document.createElement('button');
-        btn.dataset.tile = '0';
-        btn.dataset.name = 'AI';
-        btn.textContent = block[0]?.[0] || '?';
-        const anchor = document.getElementById('stampsBtn');
-        if (worldPalette.insertBefore && anchor && worldPalette.contains(anchor)) {
-          worldPalette.insertBefore(btn, anchor);
-        } else {
-          worldPalette.appendChild(btn);
-        }
-        bindPaletteBtn(btn);
-      }
-      setTimeout(pumpAiTiles, 0);
-    }
-    pumpAiTiles();
-  }
+if (window.NanoPalette) {
+  window.NanoPalette.init();
 }
 
 const stampsBtn = document.getElementById('stampsBtn');
@@ -1709,6 +1691,30 @@ if (stampsBtn && stampWindow) {
         drawWorld();
       });
       stampWindow.appendChild(opt);
+    }
+    if (window.NanoPalette) {
+      const aiBtn = document.createElement('button');
+      aiBtn.id = 'nanoStampBtn';
+      aiBtn.className = 'btn';
+      aiBtn.textContent = '🤖';
+      aiBtn.addEventListener('click', async () => {
+        const block = await window.NanoPalette.generate();
+        if (block) {
+          const grid = gridFromEmoji(block);
+          worldStamps.nano = grid;
+          worldStampEmoji.nano = block;
+          stampNames.nano = 'Nano';
+          renderStampWindow();
+          worldStamp = worldStamps.nano;
+          worldPaint = null;
+          if (worldPalette) worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          if (paletteLabel) paletteLabel.textContent = stampNames.nano || '';
+          stampWindow.style.display = 'none';
+          updateCursor();
+          drawWorld();
+        }
+      });
+      stampWindow.appendChild(aiBtn);
     }
   }
   renderStampWindow();

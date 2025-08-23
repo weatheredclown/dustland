@@ -67,6 +67,12 @@ global.document = {
   querySelectorAll: () => []
 };
 
+global.NanoPalette = {
+  init: () => {},
+  generate: async () => Array(16).fill('🏝'.repeat(16)),
+  enabled: true
+};
+
 const files = [
   '../event-bus.js',
   '../core/movement.js',
@@ -158,6 +164,20 @@ test('stamps window selects a world stamp', () => {
   assert.strictEqual(worldStamp, worldStamps[first]);
   assert.notStrictEqual(document.getElementById('paletteLabel').textContent, '');
   assert.strictEqual(win.style.display, 'none');
+  worldStamp = null;
+});
+
+test('nano button generates a stamp', async () => {
+  genWorld(1);
+  const btn = document.getElementById('stampsBtn');
+  btn._listeners.click[0]();
+  const win = document.getElementById('stampWindow');
+  const nanoBtn = win.children[win.children.length - 1];
+  let called = 0;
+  NanoPalette.generate = async () => { called++; return Array(16).fill('🏝'.repeat(16)); };
+  await nanoBtn._listeners.click[0]();
+  assert.strictEqual(called, 1);
+  assert.ok(Array.isArray(worldStamp) && worldStamp.length === 16);
   worldStamp = null;
 });
 
