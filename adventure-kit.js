@@ -608,20 +608,22 @@ function renderTreeEditor() {
     const unboardEff = (node.effects || []).find(e => e.effect === 'unboardDoor');
     const boardId = boardEff ? boardEff.interiorId || '' : '';
     const unboardId = unboardEff ? unboardEff.interiorId || '' : '';
-    div.innerHTML = `<div class="nodeHeader"><button class="toggle" type="button">[-]</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="delNode" type="button">Delete</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><label>Board Door<select class="nodeBoard"></select></label><label>Unboard Door<select class="nodeUnboard"></select></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
+    div.innerHTML = `<div class="nodeHeader"><button class="btn toggle" type="button">-</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="btn delNode" type="button" title="Delete node">&#128465;</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><label>Board Door<select class="nodeBoard"></select></label><label>Unboard Door<select class="nodeUnboard"></select></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
     const choicesDiv = div.querySelector('.choices');
     (node.choices || []).forEach(ch => addChoiceRow(choicesDiv, ch));
     div.querySelector('.addChoice').onclick = () => addChoiceRow(choicesDiv);
     const toggleBtn = div.querySelector('.toggle');
     toggleBtn.addEventListener('click', () => {
       div.classList.toggle('collapsed');
-      toggleBtn.textContent = div.classList.contains('collapsed') ? '[+]' : '[-]';
+      toggleBtn.textContent = div.classList.contains('collapsed') ? '+' : '-';
       updateTreeData();
     });
     const delBtn = div.querySelector('.delNode');
     delBtn.addEventListener('click', () => {
-      div.remove();
-      updateTreeData();
+      confirmDialog('Delete this node?', () => {
+        div.remove();
+        updateTreeData();
+      });
     });
     wrap.appendChild(div);
   });

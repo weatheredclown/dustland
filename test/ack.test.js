@@ -215,6 +215,54 @@ test('renderDialogPreview clears when no start node', () => {
   assert.strictEqual(prevEl.innerHTML, '');
 });
 
+test('node delete uses confirm dialog', () => {
+  treeData = { start: { text: '', choices: [] } };
+  const wrap = document.getElementById('treeEditor');
+  wrap.innerHTML = '';
+  const origCreate = document.createElement;
+  const origUpdate = globalThis.updateTreeData;
+  globalThis.updateTreeData = () => {};
+  let delBtn;
+  document.createElement = tag => {
+    if (tag === 'div') {
+      const el = stubEl();
+      const del = stubEl();
+      const toggle = stubEl();
+      const choices = stubEl();
+      const addChoice = stubEl();
+      const nodeId = stubEl();
+      const nodeText = stubEl();
+      const nodeBoard = stubEl();
+      const nodeUnboard = stubEl();
+      el.remove = () => {};
+      el.querySelector = sel => {
+        if (sel === '.nodeId') return nodeId;
+        if (sel === '.nodeText') return nodeText;
+        if (sel === '.nodeBoard') return nodeBoard;
+        if (sel === '.nodeUnboard') return nodeUnboard;
+        if (sel === '.choices') return choices;
+        if (sel === '.addChoice') return addChoice;
+        if (sel === '.toggle') return toggle;
+        if (sel === '.delNode') return del;
+        return stubEl();
+      };
+      el.querySelectorAll = () => [];
+      delBtn = del;
+      return el;
+    }
+    return origCreate(tag);
+  };
+  let confirmed = false;
+  const origConfirm = globalThis.confirmDialog;
+  globalThis.confirmDialog = (msg, onYes) => { confirmed = true; onYes(); };
+  renderTreeEditor();
+  delBtn._listeners.click[0]();
+  assert.ok(confirmed);
+  document.createElement = origCreate;
+  globalThis.confirmDialog = origConfirm;
+  globalThis.updateTreeData = origUpdate;
+});
+
 test('closing dialog editor persists dialog changes', () => {
   moduleData.npcs = [{
     id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0,
