@@ -25,6 +25,8 @@ test('ack-player auto-loads module from URL param', async () => {
   global.applyModule = window.applyModule;
   global.location = window.location;
   global.alert = () => {};
+  window.params = new URLSearchParams(window.location.search);
+  global.params = window.params;
   window.fetch = () => Promise.resolve({ json: () => Promise.resolve({}) });
   global.fetch = window.fetch;
   const store = {};

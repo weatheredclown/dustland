@@ -17,6 +17,10 @@ let dragTarget = null, settingStart = false, hoverTarget = null, didDrag = false
 let placingType = null, placingPos = null;
 let hoverTile = null;
 let coordTarget = null;
+let worldZoom = 1, panX = 0, panY = 0;
+let panning = false, panStartX = 0, panStartY = 0, panMouseX = 0, panMouseY = 0;
+const baseTileW = canvas.width / WORLD_W;
+const baseTileH = canvas.height / WORLD_H;
 
 const moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
@@ -69,39 +73,51 @@ window.addTerrainFeature = addTerrainFeature;
 
 function drawWorld() {
   const W = WORLD_W, H = WORLD_H;
-  const sx = canvas.width / W;
-  const sy = canvas.height / H;
+  const sx = baseTileW * worldZoom;
+  const sy = baseTileH * worldZoom;
   const pulse = 2 + Math.sin(Date.now() / 300) * 2;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   for (let y = 0; y < H; y++) {
+    const py = (y - panY) * sy;
+    if (py + sy < 0 || py >= canvas.height) continue;
     for (let x = 0; x < W; x++) {
+      const px = (x - panX) * sx;
+      if (px + sx < 0 || px >= canvas.width) continue;
       const t = world[y][x];
-        ctx.fillStyle = akColors[t] || '#000';
-      ctx.fillRect(x * sx, y * sy, sx, sy);
+      ctx.fillStyle = akColors[t] || '#000';
+      ctx.fillRect(px, py, sx, sy);
     }
   }
   if (hoverTile) {
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
-    ctx.fillRect(hoverTile.x * sx, hoverTile.y * sy, sx, sy);
+    ctx.fillRect((hoverTile.x - panX) * sx, (hoverTile.y - panY) * sy, sx, sy);
   }
   // Draw NPC markers
   moduleData.npcs.filter(n => n.map === 'world').forEach(n => {
     const hovering = hoverTarget && hoverTarget.type === 'npc' && hoverTarget.obj === n;
+    const px = (n.x - panX) * sx;
+    const py = (n.y - panY) * sy;
+    if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height) return;
     ctx.save();
     ctx.fillStyle = hovering ? '#fff' : (n.color || '#fff');
     if (hovering) {
       ctx.shadowColor = '#fff';
       ctx.shadowBlur = 8;
     }
-    ctx.fillRect(n.x * sx, n.y * sy, sx, sy);
+    ctx.fillRect(px, py, sx, sy);
     if (hovering) {
       ctx.strokeStyle = '#fff';
-      ctx.strokeRect(n.x * sx, n.y * sy, sx, sy);
+      ctx.strokeRect(px, py, sx, sy);
     }
     ctx.restore();
   });
   // Draw Item markers
   moduleData.items.filter(it => it.map === 'world').forEach(it => {
     const hovering = hoverTarget && hoverTarget.type === 'item' && hoverTarget.obj === it;
+    const px = (it.x - panX) * sx;
+    const py = (it.y - panY) * sy;
+    if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height) return;
     ctx.save();
     ctx.strokeStyle = hovering ? '#fff' : '#ff0';
     if (hovering) {
@@ -109,12 +125,15 @@ function drawWorld() {
       ctx.shadowBlur = 8;
       ctx.lineWidth = 2;
     }
-    ctx.strokeRect(it.x * sx + 1, it.y * sy + 1, sx - 2, sy - 2);
+    ctx.strokeRect(px + 1, py + 1, sx - 2, sy - 2);
     ctx.restore();
   });
   // Draw Portal markers
   moduleData.portals.filter(p => p.map === 'world').forEach(p => {
     const hovering = hoverTarget && hoverTarget.type === 'portal' && hoverTarget.obj === p;
+    const px = (p.x - panX) * sx;
+    const py = (p.y - panY) * sy;
+    if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height) return;
     ctx.save();
     ctx.strokeStyle = hovering ? '#f0f' : '#f0f';
     if (hovering) {
@@ -122,19 +141,22 @@ function drawWorld() {
       ctx.shadowBlur = 8;
       ctx.lineWidth = 2;
     }
-    ctx.strokeRect(p.x * sx + 2, p.y * sy + 2, sx - 4, sy - 4);
+    ctx.strokeRect(px + 2, py + 2, sx - 4, sy - 4);
     ctx.restore();
   });
   // Draw Tile Event markers
   moduleData.events.filter(ev => ev.map === 'world').forEach(ev => {
     const hovering = hoverTarget && hoverTarget.type === 'event' && hoverTarget.obj === ev;
+    const px = (ev.x - panX) * sx;
+    const py = (ev.y - panY) * sy;
+    if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height) return;
     ctx.save();
     ctx.fillStyle = hovering ? '#0ff' : '#0ff';
     if (hovering) {
       ctx.shadowColor = '#0ff';
       ctx.shadowBlur = 8;
     }
-    ctx.fillRect(ev.x * sx + sx / 4, ev.y * sy + sy / 4, sx / 2, sy / 2);
+    ctx.fillRect(px + sx / 4, py + sy / 4, sx / 2, sy / 2);
     ctx.restore();
   });
   // Highlight hovered building
@@ -145,14 +167,14 @@ function drawWorld() {
     ctx.lineWidth = 2;
     ctx.shadowColor = '#fff';
     ctx.shadowBlur = 8;
-    ctx.strokeRect(b.x * sx, b.y * sy, b.w * sx, b.h * sy);
+    ctx.strokeRect((b.x - panX) * sx, (b.y - panY) * sy, b.w * sx, b.h * sy);
     ctx.restore();
   }
   if (moduleData.start && moduleData.start.map === 'world') {
     ctx.save();
     ctx.strokeStyle = '#f00';
     ctx.lineWidth = pulse;
-    ctx.strokeRect(moduleData.start.x * sx + 1, moduleData.start.y * sy + 1, sx - 2, sy - 2);
+    ctx.strokeRect((moduleData.start.x - panX) * sx + 1, (moduleData.start.y - panY) * sy + 1, sx - 2, sy - 2);
     ctx.restore();
   }
   if (selectedObj && selectedObj.obj) {
@@ -161,19 +183,19 @@ function drawWorld() {
     ctx.lineWidth = pulse;
     if (selectedObj.type === 'npc' && o.map === 'world') {
       ctx.strokeStyle = o.color || '#fff';
-      ctx.strokeRect(o.x * sx + 1, o.y * sy + 1, sx - 2, sy - 2);
+      ctx.strokeRect((o.x - panX) * sx + 1, (o.y - panY) * sy + 1, sx - 2, sy - 2);
     } else if (selectedObj.type === 'item' && o.map === 'world') {
       ctx.strokeStyle = '#ff0';
-      ctx.strokeRect(o.x * sx + 1, o.y * sy + 1, sx - 2, sy - 2);
+      ctx.strokeRect((o.x - panX) * sx + 1, (o.y - panY) * sy + 1, sx - 2, sy - 2);
     } else if (selectedObj.type === 'bldg') {
       ctx.strokeStyle = '#fff';
-      ctx.strokeRect(o.x * sx, o.y * sy, o.w * sx, o.h * sy);
+      ctx.strokeRect((o.x - panX) * sx, (o.y - panY) * sy, o.w * sx, o.h * sy);
     } else if (selectedObj.type === 'event' && o.map === 'world') {
       ctx.strokeStyle = '#0ff';
-      ctx.strokeRect(o.x * sx + 1, o.y * sy + 1, sx - 2, sy - 2);
+      ctx.strokeRect((o.x - panX) * sx + 1, (o.y - panY) * sy + 1, sx - 2, sy - 2);
     } else if (selectedObj.type === 'portal' && o.map === 'world') {
       ctx.strokeStyle = '#f0f';
-      ctx.strokeRect(o.x * sx + 2, o.y * sy + 2, sx - 4, sy - 4);
+      ctx.strokeRect((o.x - panX) * sx + 2, (o.y - panY) * sy + 2, sx - 4, sy - 4);
     }
     ctx.restore();
   }
@@ -182,19 +204,19 @@ function drawWorld() {
     ctx.globalAlpha = 0.5;
     if (placingType === 'npc') {
       ctx.fillStyle = '#fff';
-      ctx.fillRect(placingPos.x * sx, placingPos.y * sy, sx, sy);
+      ctx.fillRect((placingPos.x - panX) * sx, (placingPos.y - panY) * sy, sx, sy);
     } else if (placingType === 'item') {
       ctx.strokeStyle = '#ff0';
-      ctx.strokeRect(placingPos.x * sx + 1, placingPos.y * sy + 1, sx - 2, sy - 2);
+      ctx.strokeRect((placingPos.x - panX) * sx + 1, (placingPos.y - panY) * sy + 1, sx - 2, sy - 2);
     } else if (placingType === 'bldg') {
       const bw = bldgGrid[0]?.length || 0;
       const bh = bldgGrid.length || 0;
-      for(let yy=0; yy<bh; yy++){
-        for(let xx=0; xx<bw; xx++){
-          const t=bldgGrid[yy][xx];
-          if(t){
-            ctx.fillStyle = t===TILE.DOOR? '#8bd98d' : '#fff';
-            ctx.fillRect((placingPos.x+xx)*sx, (placingPos.y+yy)*sy, sx, sy);
+      for (let yy = 0; yy < bh; yy++) {
+        for (let xx = 0; xx < bw; xx++) {
+          const t = bldgGrid[yy][xx];
+          if (t) {
+            ctx.fillStyle = t === TILE.DOOR ? '#8bd98d' : '#fff';
+            ctx.fillRect((placingPos.x + xx - panX) * sx, (placingPos.y + yy - panY) * sy, sx, sy);
           }
         }
       }
@@ -1810,13 +1832,17 @@ document.getElementById('genQuestDialog').onclick = generateQuestTree;
 // --- Map interactions ---
 function canvasPos(ev) {
   const rect = canvas.getBoundingClientRect();
-  const sx = canvas.width / WORLD_W, sy = canvas.height / WORLD_H;
-  const x = clamp(Math.floor((ev.clientX - rect.left) / sx), 0, WORLD_W - 1);
-  const y = clamp(Math.floor((ev.clientY - rect.top) / sy), 0, WORLD_H - 1);
+  const sx = baseTileW * worldZoom, sy = baseTileH * worldZoom;
+  const x = clamp(Math.floor((ev.clientX - rect.left) / sx + panX), 0, WORLD_W - 1);
+  const y = clamp(Math.floor((ev.clientY - rect.top) / sy + panY), 0, WORLD_H - 1);
   return { x, y };
 }
 
 function updateCursor(x, y) {
+  if (panning) {
+    canvas.style.cursor = 'grabbing';
+    return;
+  }
   if (worldPaint != null) {
     canvas.style.cursor = 'crosshair';
     return;
@@ -1846,12 +1872,22 @@ function updateCursor(x, y) {
   }
 }
 canvas.addEventListener('mousedown', ev => {
+  if (ev.button === 2) {
+    panning = true;
+    panMouseX = ev.clientX;
+    panMouseY = ev.clientY;
+    panStartX = panX;
+    panStartY = panY;
+    canvas.style.cursor = 'grabbing';
+    return;
+  }
+  if (ev.button !== 0) return;
   const { x, y } = canvasPos(ev);
   const overNpc = moduleData.npcs.some(n => n.map === 'world' && n.x === x && n.y === y);
   const overItem = moduleData.items.some(it => it.map === 'world' && it.x === x && it.y === y);
   const overBldg = moduleData.buildings.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
   const overStart = moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y;
-  const overEvent = moduleData.events.some(ev => ev.map === 'world' && ev.x === x && ev.y === y);
+  const overEvent = moduleData.events.some(ev2 => ev2.map === 'world' && ev2.x === x && ev2.y === y);
   const overPortal = moduleData.portals.some(p => p.map === 'world' && p.x === x && p.y === y);
   if (worldPaint != null && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal)) {
     worldPainting = true;
@@ -1939,6 +1975,18 @@ canvas.addEventListener('mousedown', ev => {
   updateCursor(x, y);
 });
 canvas.addEventListener('mousemove', ev => {
+  if (panning) {
+    const dx = (ev.clientX - panMouseX) / (baseTileW * worldZoom);
+    const dy = (ev.clientY - panMouseY) / (baseTileH * worldZoom);
+    const maxPanX = WORLD_W - WORLD_W / worldZoom;
+    const maxPanY = WORLD_H - WORLD_H / worldZoom;
+    panX = clamp(panStartX - dx, 0, maxPanX);
+    panY = clamp(panStartY - dy, 0, maxPanY);
+    hoverTile = canvasPos(ev);
+    drawWorld();
+    updateCursor();
+    return;
+  }
   const { x, y } = canvasPos(ev);
   hoverTile = { x, y };
   if (worldPainting && worldPaint != null) {
@@ -2008,7 +2056,13 @@ canvas.addEventListener('mousemove', ev => {
 
   updateCursor(x, y);
 });
-canvas.addEventListener('mouseup', () => {
+canvas.addEventListener('mouseup', ev => {
+  if (ev.button === 2 && panning) {
+    panning = false;
+    updateCursor();
+    return;
+  }
+  if (ev.button !== 0) return;
   worldPainting = false;
   if (dragTarget) delete dragTarget._type;
   dragTarget = null;
@@ -2019,6 +2073,7 @@ canvas.addEventListener('mouseup', () => {
   updateCursor();
 });
 canvas.addEventListener('mouseleave', () => {
+  if (panning) panning = false;
   if (didPaint) {
     redrawBuildings();
   }
@@ -2032,6 +2087,7 @@ canvas.addEventListener('mouseleave', () => {
 });
 
 canvas.addEventListener('click', ev => {
+  if (ev.button !== 0) return;
   if (didPaint) { didPaint = false; return; }
   if (didDrag) { didDrag = false; return; }
   const { x, y } = canvasPos(ev);
@@ -2065,6 +2121,27 @@ canvas.addEventListener('click', ev => {
     editPortal(idx);
   }
 });
+
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('wheel', ev => {
+  ev.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const mx = ev.clientX - rect.left;
+  const my = ev.clientY - rect.top;
+  const tileX = panX + mx / (baseTileW * worldZoom);
+  const tileY = panY + my / (baseTileH * worldZoom);
+  const factor = ev.deltaY < 0 ? 1.25 : 0.8;
+  const newZoom = clamp(worldZoom * factor, 1, 8);
+  if (newZoom === worldZoom) return;
+  worldZoom = newZoom;
+  const maxPanX = WORLD_W - WORLD_W / worldZoom;
+  const maxPanY = WORLD_H - WORLD_H / worldZoom;
+  panX = clamp(tileX - mx / (baseTileW * worldZoom), 0, maxPanX);
+  panY = clamp(tileY - my / (baseTileH * worldZoom), 0, maxPanY);
+  hoverTile = canvasPos(ev);
+  drawWorld();
+  updateCursor(hoverTile.x, hoverTile.y);
+}, { passive: false });
 
 function setPlaceholders() {
   document.querySelectorAll('label').forEach(label => {
