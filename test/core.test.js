@@ -579,6 +579,14 @@ test('createNpcFactory builds NPCs from definitions', () => {
   assert.strictEqual(npc.portraitSheet, 'assets/portraits/portrait_1000.png');
 });
 
+test('createNpcFactory defaults empty tree to dialog', () => {
+  const defs = [{ id: 'n', map: 'world', dialog: 'Hi', tree: {} }];
+  const factory = createNpcFactory(defs);
+  const npc = factory.n();
+  assert.strictEqual(npc.tree.start.text, 'Hi');
+  assert.ok(npc.tree.start.choices.some(c => c.label === '(Leave)'));
+});
+
 test('openDialog displays portrait when sheet provided', () => {
   NPCS.length = 0;
   const tree = { start: { text: '', choices: [] } };

@@ -130,3 +130,28 @@ test('updateTreeData captures door board/unboard effects', () => {
   updateTreeData();
   assert.deepStrictEqual(treeData.start.choices[0].effects, [ { effect: 'unboardDoor', interiorId: 'castle' } ]);
 });
+
+test('updateTreeData removes deleted nodes', () => {
+  treeData = { start: { text: '', choices: [] }, node1: { text: '', choices: [] } };
+  const nodeEl = {
+    querySelector(sel){
+      switch(sel){
+        case '.nodeId': return { value: 'start' };
+        case '.nodeText': return { value: '' };
+        case '.nodeBoard': return { value: '' };
+        case '.nodeUnboard': return { value: '' };
+        default: return { value: '' };
+      }
+    },
+    querySelectorAll(){ return []; },
+    classList:{ contains(){ return false; } },
+    style:{}
+  };
+  elements['treeEditor'] = {
+    querySelectorAll(sel){ return sel === '.node' ? [nodeEl] : []; }
+  };
+  elements['npcTree'] = { value: '' };
+  elements['treeWarning'] = { textContent: '' };
+  updateTreeData();
+  assert.deepStrictEqual(treeData, { start: { text: '', choices: [] } });
+});

@@ -604,7 +604,11 @@ function renderTreeEditor() {
   Object.entries(treeData).forEach(([id, node]) => {
     const div = document.createElement('div');
     div.className = 'node';
-    div.innerHTML = `<div class="nodeHeader"><button class="toggle" type="button">[-]</button><label>Node ID<input class="nodeId" value="${id}"></label></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
+    const boardEff = (node.effects || []).find(e => e.effect === 'boardDoor');
+    const unboardEff = (node.effects || []).find(e => e.effect === 'unboardDoor');
+    const boardId = boardEff ? boardEff.interiorId || '' : '';
+    const unboardId = unboardEff ? unboardEff.interiorId || '' : '';
+    div.innerHTML = `<div class="nodeHeader"><button class="toggle" type="button">[-]</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="delNode" type="button">Delete</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><label>Board Door<select class="nodeBoard"></select></label><label>Unboard Door<select class="nodeUnboard"></select></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
     const choicesDiv = div.querySelector('.choices');
     (node.choices || []).forEach(ch => addChoiceRow(choicesDiv, ch));
     div.querySelector('.addChoice').onclick = () => addChoiceRow(choicesDiv);
@@ -612,6 +616,11 @@ function renderTreeEditor() {
     toggleBtn.addEventListener('click', () => {
       div.classList.toggle('collapsed');
       toggleBtn.textContent = div.classList.contains('collapsed') ? '[+]' : '[-]';
+      updateTreeData();
+    });
+    const delBtn = div.querySelector('.delNode');
+    delBtn.addEventListener('click', () => {
+      div.remove();
       updateTreeData();
     });
     wrap.appendChild(div);
@@ -938,7 +947,7 @@ function collectNPCFromForm() {
   let tree = null;
   const treeTxt = document.getElementById('npcTree').value.trim();
   if (treeTxt) { try { tree = JSON.parse(treeTxt); } catch (e) { tree = null; } }
-  if (!tree) {
+  if (!tree || !Object.keys(tree).length) {
     if (questId) {
       tree = {
         start: { text: dialog, choices: [{ label: 'Accept quest', to: 'accept', q: 'accept' }, { label: 'Turn in', to: 'do_turnin', q: 'turnin' }, { label: '(Leave)', to: 'bye' }] },
