@@ -20,6 +20,9 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 - Update README files or inline comments when behavior or APIs change.
 - Extend this file whenever new best practices emerge during development.
 
+## UI style
+- Ensure any newly added buttons match the visual style of existing controls in both the game and editor.
+
 ## Lessons from prior work
 - Keep pull requests small and self-contained to simplify review.
 - Pair code changes with accompanying tests and documentation updates.
