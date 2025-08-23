@@ -30,7 +30,6 @@ if (playData) {
   }
 }
 
-const params = new URLSearchParams(location.search);
 const autoUrl = params.get('module');
 if (!moduleData && autoUrl) {
   urlInput.value = autoUrl;
