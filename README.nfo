@@ -28,7 +28,7 @@ _______________________________________________________________________________
     https://weatheredclown.github.io/dustland/dustland.html
   - Just open:  dustland.html  (double-click or serve from any static server).
   - Pick a module on startup (e.g. Dustland or Echoes).
-  - Build a module with: adventure-kit.html  (save to JSON).
+  - Build a module with: adventure-kit.html  (set a module name to save as custom-name.json).
   - Play a module with: dustland.html?ack-player=1 (fetch a module URL, load a local JSON, or pass &module=URL to auto-load; defaults to modules/golden.module.json).
   - No build step. No dependencies. Works offline.
   - Tip: Use a modern Chromium, Firefox, or Safari.
