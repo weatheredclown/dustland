@@ -830,6 +830,9 @@
     }
 
 #intPalette button,
-#bldgPalette button { width:20px; height:20px; border:none; margin:2px; }
+#bldgPalette button,
+#worldPalette button { width:20px; height:20px; border:none; margin:2px; }
 #intPalette button.active,
-#bldgPalette button.active { outline:2px solid #fff; }
+#bldgPalette button.active,
+#worldPalette button.active { outline:2px solid #fff; }
+#paletteLabel { color:#fff; font-family:sans-serif; margin-top:4px; }

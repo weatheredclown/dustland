@@ -50,7 +50,15 @@ const canvasEl = stubEl();
 canvasEl.width = 120;
 canvasEl.height = 90;
 const moduleNameInput = stubEl();
-const elements = { map: canvasEl, moduleName: moduleNameInput  };
+const paletteLabel = stubEl();
+const worldButtons = Array.from({ length: 3 }, (_, i) => {
+  const b = stubEl();
+  b.dataset = { tile: String(i) };
+  return b;
+});
+const worldPalette = stubEl();
+worldPalette.querySelectorAll = () => worldButtons;
+const elements = { map: canvasEl, moduleName: moduleNameInput, worldPalette, paletteLabel };
 global.document = {
   body: bodyEl,
   getElementById: id => elements[id] || (elements[id] = stubEl()),
@@ -192,6 +200,17 @@ test('regenWorld creates empty map without buildings', () => {
   assert.ok(world.every(row => row.every(t => t !== TILE.BUILDING)));
 });
 
+test('world palette selection stays highlighted and labels color', () => {
+  genWorld(1);
+  const btn = worldButtons[1];
+  btn._listeners.click[0]();
+  assert.strictEqual(btn.classList.contains('active'), true);
+  assert.strictEqual(paletteLabel.textContent, 'Rock');
+  canvasEl._listeners.mousedown[0]({ clientX:0, clientY:0, button:0 });
+  canvasEl._listeners.mouseup[0]({ button:0 });
+  assert.strictEqual(btn.classList.contains('active'), true);
+});
+
 test('clearWorld wipes tiles and data', () => {
   genWorld(1, { buildings: [] });
   moduleData.npcs = [{ id:'n1', map:'world', x:0, y:0 }];
@@ -278,4 +297,22 @@ test('closing dialog editor persists dialog changes', () => {
   globalThis.updateTreeData = origUpdate;
   closeNPCEditor();
   assert.strictEqual(moduleData.npcs[0].tree.start.text, 'bye');
+});
+
+test('dialog text edited in tree editor is preserved', () => {
+  moduleData.npcs = [{
+    id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0,
+    tree: { start: { text: 'hi', choices: [{ label: '(Leave)', to: 'bye' }] } }
+  }];
+  editNPC(0);
+  const newTree = { start: { text: 'welcome', choices: [{ label: '(Leave)', to: 'bye' }] } };
+  treeData = newTree;
+  document.getElementById('npcTree').value = JSON.stringify(newTree);
+  document.getElementById('npcDialog').value = '';
+  const origUpdate = globalThis.updateTreeData;
+  globalThis.updateTreeData = () => {};
+  closeDialogEditor();
+  globalThis.updateTreeData = origUpdate;
+  closeNPCEditor();
+  assert.strictEqual(moduleData.npcs[0].tree.start.text, 'welcome');
 });

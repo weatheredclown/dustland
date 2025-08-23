@@ -10,6 +10,15 @@ window.seedWorldContent = () => { };
 const PLAYTEST_KEY = 'ack_playtest';
 
 const akColors = { 0: '#1e271d', 1: '#2c342c', 2: '#1573ff', 3: '#203320', 4: '#777777', 5: '#304326', 6: '#4d5f4d', 7: '#233223', 8: '#8bd98d', 9: '#000' };
+const tileNames = {
+  [TILE.SAND]: 'Sand',
+  [TILE.ROCK]: 'Rock',
+  [TILE.WATER]: 'Water',
+  [TILE.BRUSH]: 'Brush',
+  [TILE.ROAD]: 'Road',
+  [TILE.RUIN]: 'Ruin',
+  [TILE.WALL]: 'Wall'
+};
 const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
 
@@ -43,6 +52,7 @@ let bldgPainting = false;
 let bldgGrid = [];
 
 const worldPalette = document.getElementById('worldPalette');
+const paletteLabel = document.getElementById('paletteLabel');
 let worldPaint = null;
 let worldPainting = false;
 let didPaint = false;
@@ -604,11 +614,7 @@ function renderTreeEditor() {
   Object.entries(treeData).forEach(([id, node]) => {
     const div = document.createElement('div');
     div.className = 'node';
-    const boardEff = (node.effects || []).find(e => e.effect === 'boardDoor');
-    const unboardEff = (node.effects || []).find(e => e.effect === 'unboardDoor');
-    const boardId = boardEff ? boardEff.interiorId || '' : '';
-    const unboardId = unboardEff ? unboardEff.interiorId || '' : '';
-    div.innerHTML = `<div class="nodeHeader"><button class="btn toggle" type="button">-</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="btn delNode" type="button" title="Delete node">&#128465;</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><label>Board Door<select class="nodeBoard"></select></label><label>Unboard Door<select class="nodeUnboard"></select></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
+    div.innerHTML = `<div class="nodeHeader"><button class="btn toggle" type="button">-</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="btn delNode" type="button" title="Delete node">&#128465;</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
     const choicesDiv = div.querySelector('.choices');
     (node.choices || []).forEach(ch => addChoiceRow(choicesDiv, ch));
     div.querySelector('.addChoice').onclick = () => addChoiceRow(choicesDiv);
@@ -777,6 +783,8 @@ function openDialogEditor() {
 
 function closeDialogEditor() {
   document.getElementById('dialogModal').classList.remove('shown');
+  const dlgEl = document.getElementById('npcDialog');
+  if (!dlgEl.value.trim()) dlgEl.value = treeData.start?.text || '';
   applyNPCChanges();
 }
 
@@ -1514,7 +1522,12 @@ if (worldPalette) {
       const isOn = btn.classList.contains('active');
       worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
       worldPaint = isOn ? null : parseInt(btn.dataset.tile, 10);
-      if (!isOn) btn.classList.add('active');
+      if (!isOn) {
+        btn.classList.add('active');
+        if (paletteLabel) paletteLabel.textContent = tileNames[worldPaint] || '';
+      } else if (paletteLabel) {
+        paletteLabel.textContent = '';
+      }
       updateCursor();
     });
   });
