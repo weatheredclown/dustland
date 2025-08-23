@@ -128,7 +128,7 @@ test('dragging building ignores paint', () => {
   setTile('world',5,5,TILE.BUILDING);
   worldPaint = TILE.ROCK;
   const before = world[5][5];
-  canvasEl._listeners.mousedown[0]({ clientX:5, clientY:5 });
+  canvasEl._listeners.mousedown[0]({ clientX:5, clientY:5, button:0 });
   assert.strictEqual(world[5][5], before);
   assert.strictEqual(worldPainting, false);
 });
@@ -153,9 +153,9 @@ test('clicking building while paint palette active still edits', () => {
   let edited = false;
   const orig = globalThis.editBldg;
   globalThis.editBldg = () => { edited = true; };
-  canvasEl._listeners.mousedown[0]({ clientX:5, clientY:5 });
-  canvasEl._listeners.mouseup[0]({});
-  canvasEl._listeners.click[0]({ clientX:5, clientY:5 });
+  canvasEl._listeners.mousedown[0]({ clientX:5, clientY:5, button:0 });
+  canvasEl._listeners.mouseup[0]({ button:0 });
+  canvasEl._listeners.click[0]({ clientX:5, clientY:5, button:0 });
   globalThis.editBldg = orig;
   assert.strictEqual(edited, true);
 });
@@ -165,14 +165,14 @@ test('painting then leaving map keeps next click', () => {
   moduleData.buildings = [{ x:5, y:5, w:1, h:1 }];
   setTile('world',5,5,TILE.BUILDING);
   worldPaint = TILE.ROCK;
-  canvasEl._listeners.mousedown[0]({ clientX:0, clientY:0 });
+  canvasEl._listeners.mousedown[0]({ clientX:0, clientY:0, button:0 });
   canvasEl._listeners.mouseleave[0]({});
   let edited = false;
   const orig = globalThis.editBldg;
   globalThis.editBldg = () => { edited = true; };
-  canvasEl._listeners.mousedown[0]({ clientX:5, clientY:5 });
-  canvasEl._listeners.mouseup[0]({});
-  canvasEl._listeners.click[0]({ clientX:5, clientY:5 });
+  canvasEl._listeners.mousedown[0]({ clientX:5, clientY:5, button:0 });
+  canvasEl._listeners.mouseup[0]({ button:0 });
+  canvasEl._listeners.click[0]({ clientX:5, clientY:5, button:0 });
   globalThis.editBldg = orig;
   assert.strictEqual(edited, true);
 });
@@ -182,9 +182,9 @@ test('painting over building restores tiles', () => {
   moduleData.buildings = [{ x:5, y:5, w:1, h:1 }];
   setTile('world',5,5,TILE.BUILDING);
   worldPaint = TILE.ROCK;
-  canvasEl._listeners.mousedown[0]({ clientX:0, clientY:0 });
+  canvasEl._listeners.mousedown[0]({ clientX:0, clientY:0, button:0 });
   canvasEl._listeners.mousemove[0]({ clientX:5, clientY:5 });
-  canvasEl._listeners.mouseup[0]({});
+  canvasEl._listeners.mouseup[0]({ button:0 });
   assert.strictEqual(world[5][5], TILE.BUILDING);
 });
 
