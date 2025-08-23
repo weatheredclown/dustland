@@ -33,7 +33,14 @@ global.toast = noop;
 global.LanguageModel = {
   availability: async () => 'available',
   create: async () => ({
-    prompt: async () => `Lines:\nRust bites every gear, but we endure.\nKeep your scrap dry.\nNever trade hope for rust.\nChoices:\nAsk about wares|Got anything rare?\nInspect the stall|INT|8|XP 5|You spot a hidden coil.|You find only dust.\n`
+    prompt: async (p) => {
+      if (p.includes('New 16x16 block')) {
+        const line = '🏝'.repeat(16);
+        const block = Array(16).fill(line).join('\n');
+        return { output: [{ content: [{ text: block }] }] };
+      }
+      return `Lines:\nRust bites every gear, but we endure.\nKeep your scrap dry.\nNever trade hope for rust.\nChoices:\nAsk about wares|Got anything rare?\nInspect the stall|INT|8|XP 5|You spot a hidden coil.|You find only dust.\n`;
+    }
   })
 };
 
@@ -64,4 +71,11 @@ test('NanoDialog skips missing dialog nodes', async () => {
   const choices = window.NanoDialog.choicesFor('npc1', 'bogus');
   assert.deepStrictEqual(lines, []);
   assert.deepStrictEqual(choices, []);
+});
+
+test('NanoPalette generates a block', async () => {
+  await import('../dustland-nano.js');
+  await window.NanoPalette.init();
+  const block = await window.NanoPalette.generate();
+  assert.ok(Array.isArray(block) && block.length === 16, 'block generated');
 });

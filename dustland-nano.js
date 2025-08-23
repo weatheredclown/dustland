@@ -23,7 +23,8 @@
     init,
     generate: generatePalette,
     isReady: ()=> _state.ready,
-    enabled: true
+    enabled: true,
+    refreshIndicator
   };
 
   const _state = {
@@ -55,7 +56,7 @@
   function _updateBadge(){
     _ensureUI();
     if(!_ui.badge) return;
-    const on=_state.ready && window.NanoDialog.enabled;
+    const on=_state.ready && (window.NanoDialog.enabled || window.NanoPalette.enabled);
     _ui.badge.textContent = on ? '✓' : (_state.failed ? '!' : '✗');
     _ui.badge.classList.toggle('on', on);
     _ui.badge.classList.toggle('off', !on && !_state.failed);
@@ -406,6 +407,7 @@ Choices:
 
   async function generatePalette(examples){
     if(!_state.ready || !window.NanoPalette.enabled) return null;
+    _setBusy(true);
     const prompt = _buildPalettePrompt(examples);
     try {
       const out = await _state.session.prompt(prompt);
@@ -414,6 +416,8 @@ Choices:
     } catch(err){
       console.error('[Nano] palette generation failed:', err);
       return null;
+    } finally {
+      _setBusy(false);
     }
   }
 
