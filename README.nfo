@@ -30,6 +30,7 @@ _______________________________________________________________________________
   - Pick a module on startup (e.g. Dustland or Echoes).
   - Build a module with: adventure-kit.html  (set a module name to save as custom-name.json).
   - The world map editor supports mousewheel zoom and right-drag panning.
+  - World map editor includes a stamp palette for 16x16 terrain chunks.
   - Play a module with: dustland.html?ack-player=1 (fetch a module URL, load a local JSON, or pass &module=URL to auto-load; defaults to modules/golden.module.json).
   - No build step. No dependencies. Works offline.
   - Tip: Use a modern Chromium, Firefox, or Safari.

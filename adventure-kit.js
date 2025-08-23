@@ -19,6 +19,43 @@ const tileNames = {
   [TILE.RUIN]: 'Ruin',
   [TILE.WALL]: 'Wall'
 };
+const stampNames = {
+  hill: 'Hill',
+  cross: 'Cross Roads',
+  compound: 'Walled Compound',
+  pond: 'Pond & River'
+};
+function makeHill() {
+  const g = Array.from({ length: 16 }, () => Array(16).fill(TILE.SAND));
+  for (let y = 3; y < 13; y++) { for (let x = 3; x < 13; x++) g[y][x] = TILE.BRUSH; }
+  for (let y = 5; y < 11; y++) { for (let x = 5; x < 11; x++) g[y][x] = TILE.ROCK; }
+  return g;
+}
+function makeCross() {
+  const g = Array.from({ length: 16 }, () => Array(16).fill(TILE.SAND));
+  for (let i = 0; i < 16; i++) {
+    g[7][i] = g[8][i] = TILE.ROAD;
+    g[i][7] = g[i][8] = TILE.ROAD;
+  }
+  return g;
+}
+function makeCompound() {
+  const g = Array.from({ length: 16 }, () => Array(16).fill(TILE.SAND));
+  for (let i = 0; i < 16; i++) {
+    g[0][i] = g[15][i] = TILE.WALL;
+    g[i][0] = g[i][15] = TILE.WALL;
+  }
+  g[15][7] = g[15][8] = TILE.ROAD;
+  return g;
+}
+function makePond() {
+  const g = Array.from({ length: 16 }, () => Array(16).fill(TILE.BRUSH));
+  for (let y = 4; y < 12; y++) { for (let x = 4; x < 12; x++) g[y][x] = TILE.WATER; }
+  for (let y = 0; y < 4; y++) { g[y][7] = g[y][8] = TILE.WATER; }
+  return g;
+}
+const worldStamps = { hill: makeHill(), cross: makeCross(), compound: makeCompound(), pond: makePond() };
+window.worldStamps = worldStamps;
 const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
 
@@ -52,8 +89,10 @@ let bldgPainting = false;
 let bldgGrid = [];
 
 const worldPalette = document.getElementById('worldPalette');
+const stampPalette = document.getElementById('stampPalette');
 const paletteLabel = document.getElementById('paletteLabel');
 let worldPaint = null;
+let worldStamp = null;
 let worldPainting = false;
 let didPaint = false;
 const noiseToggle = document.getElementById('noiseToggle');
@@ -82,6 +121,15 @@ function addTerrainFeature(x, y, tile) {
   }
 }
 window.addTerrainFeature = addTerrainFeature;
+
+function stampWorld(x, y, stamp) {
+  for (let yy = 0; yy < stamp.length; yy++) {
+    for (let xx = 0; xx < stamp[yy].length; xx++) {
+      setTile('world', x + xx, y + yy, stamp[yy][xx]);
+    }
+  }
+}
+window.stampWorld = stampWorld;
 
 function drawWorld() {
   const W = WORLD_W, H = WORLD_H;
@@ -1522,9 +1570,30 @@ if (worldPalette) {
       const isOn = btn.classList.contains('active');
       worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
       worldPaint = isOn ? null : parseInt(btn.dataset.tile, 10);
+      worldStamp = null;
+      if (stampPalette) stampPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
       if (!isOn) {
         btn.classList.add('active');
         if (paletteLabel) paletteLabel.textContent = tileNames[worldPaint] || '';
+      } else if (paletteLabel) {
+        paletteLabel.textContent = '';
+      }
+      updateCursor();
+    });
+  });
+}
+
+if (stampPalette) {
+  stampPalette.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const isOn = btn.classList.contains('active');
+      stampPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      worldStamp = isOn ? null : worldStamps[btn.dataset.stamp];
+      worldPaint = null;
+      if (worldPalette) worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      if (!isOn) {
+        btn.classList.add('active');
+        if (paletteLabel) paletteLabel.textContent = stampNames[btn.dataset.stamp] || '';
       } else if (paletteLabel) {
         paletteLabel.textContent = '';
       }
@@ -1878,7 +1947,7 @@ function updateCursor(x, y) {
     canvas.style.cursor = 'grabbing';
     return;
   }
-  if (worldPaint != null) {
+  if (worldPaint != null || worldStamp) {
     canvas.style.cursor = 'crosshair';
     return;
   }
@@ -1924,6 +1993,12 @@ canvas.addEventListener('mousedown', ev => {
   const overStart = moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y;
   const overEvent = moduleData.events.some(ev2 => ev2.map === 'world' && ev2.x === x && ev2.y === y);
   const overPortal = moduleData.portals.some(p => p.map === 'world' && p.x === x && p.y === y);
+  if (worldStamp && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal)) {
+    stampWorld(x, y, worldStamp);
+    drawWorld();
+    updateCursor(x, y);
+    return;
+  }
   if (worldPaint != null && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal)) {
     worldPainting = true;
     hoverTile = { x, y };

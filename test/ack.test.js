@@ -78,7 +78,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { applyLoadedModule, TILE, setTile, placeHut, genWorld, addTerrainFeature } = globalThis;
+const { applyLoadedModule, TILE, setTile, placeHut, genWorld, addTerrainFeature, stampWorld, worldStamps } = globalThis;
 
 test('applyLoadedModule clears previous building tiles', () => {
   genWorld(123);
@@ -128,6 +128,15 @@ test('addTerrainFeature sprinkles noise', () => {
   assert.strictEqual(world[5][5], TILE.ROCK);
   assert.strictEqual(world[4][5], TILE.ROCK);
   assert.strictEqual(prev, TILE.SAND);
+});
+
+test('stampWorld applies a stamp pattern', () => {
+  genWorld(1);
+  const stamp = worldStamps.cross;
+  stampWorld(0,0,stamp);
+  assert.strictEqual(world[7][0], TILE.ROAD);
+  assert.strictEqual(world[0][7], TILE.ROAD);
+  assert.strictEqual(world[0][0], TILE.SAND);
 });
 
 test('dragging building ignores paint', () => {
