@@ -1699,7 +1699,10 @@ function applyLoadedModule(data) {
   moduleData.items = data.items || [];
   moduleData.quests = data.quests || [];
   moduleData.buildings = data.buildings || [];
-  moduleData.interiors = data.interiors || [];
+  moduleData.interiors = (data.interiors || []).map(I => {
+    const g = I.grid && typeof I.grid[0] === 'string' ? gridFromEmoji(I.grid) : I.grid;
+    return { ...I, grid: g };
+  });
   moduleData.portals = data.portals || [];
   moduleData.events = data.events || [];
   moduleData.start = data.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
@@ -1709,7 +1712,8 @@ function applyLoadedModule(data) {
   moduleData.interiors.forEach(I => { interiors[I.id] = I; });
 
   if (data.world) {
-    globalThis.world = data.world;
+    const w = typeof data.world[0] === 'string' ? gridFromEmoji(data.world) : data.world;
+    globalThis.world = w;
     world = globalThis.world;
   } else {
     buildings.forEach(b => {
@@ -1756,7 +1760,8 @@ function saveModule() {
   if(!validateSpawns()) return;
   moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
   const bldgs = buildings.map(({ under, ...rest }) => rest);
-  const data = { ...moduleData, world, buildings: bldgs };
+  const ints = moduleData.interiors.map(I => ({...I, grid: gridToEmoji(I.grid)}));
+  const data = { ...moduleData, world: gridToEmoji(world), buildings: bldgs, interiors: ints };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -1768,7 +1773,8 @@ function saveModule() {
 function playtestModule() {
   moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
   const bldgs = buildings.map(({ under, ...rest }) => rest);
-  const data = { ...moduleData, world, buildings: bldgs };
+  const ints = moduleData.interiors.map(I => ({...I, grid: gridToEmoji(I.grid)}));
+  const data = { ...moduleData, world: gridToEmoji(world), buildings: bldgs, interiors: ints };
   localStorage.setItem(PLAYTEST_KEY, JSON.stringify(data));
   window.open('dustland.html?ack-player=1#play', '_blank');
 }

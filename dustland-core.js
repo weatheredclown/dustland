@@ -169,6 +169,33 @@ async function startCombat(defender){
 // ===== Tiles =====
 const TILE = Object.freeze({ SAND:0, ROCK:1, WATER:2, BRUSH:3, ROAD:4, RUIN:5, WALL:6, FLOOR:7, DOOR:8, BUILDING:9 });
 const walkable = Object.freeze({0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false});
+
+const tileEmoji = Object.freeze({
+  0:'\u{1F3DD}', // 🏝
+  1:'\u{1FAA8}', // 🪨
+  2:'\u{1F30A}', // 🌊
+  3:'\u{1F33F}', // 🌿
+  4:'\u{1F6E3}', // 🛣
+  5:'\u{1F3DA}', // 🏚
+  6:'\u{1F9F1}', // 🧱
+  7:'\u{2B1C}', // ⬜
+  8:'\u{1F6AA}', // 🚪
+  9:'\u{1F3E0}'  // 🏠
+});
+const emojiTile = Object.freeze(Object.fromEntries(Object.entries(tileEmoji).map(([k,v])=>[v,+k])));
+
+function gridFromEmoji(rows){
+  return rows.map(r=> Array.from(r).map(ch=> emojiTile[ch] ?? 0));
+}
+function gridToEmoji(grid){
+  return grid.map(r=> r.map(t=> tileEmoji[t] || '').join(''));
+}
+
+globalThis.tileEmoji = tileEmoji;
+globalThis.emojiTile = emojiTile;
+globalThis.gridFromEmoji = gridFromEmoji;
+globalThis.gridToEmoji = gridToEmoji;
+
 const mapNameEl = document.getElementById('mapname');
 const mapLabels = { world: 'Wastes', creator: 'Creator' };
 function mapLabel(id){
@@ -278,7 +305,11 @@ function applyModule(data){
   if (data.world) {
     // Replace world grid while preserving array reference for consumers
     world.length = 0;
-    data.world.forEach(row => world.push([...row]));
+    if (Array.isArray(data.world[0])) {
+      data.world.forEach(row => world.push([...row]));
+    } else if (typeof data.world[0] === 'string') {
+      gridFromEmoji(data.world).forEach(r => world.push(r));
+    }
 
     // Reset and repopulate core collections without changing references
     Object.keys(interiors).forEach(k => delete interiors[k]);
@@ -295,8 +326,9 @@ function applyModule(data){
   if (data.events) registerTileEvents(data.events);
 
   (data.interiors || []).forEach(I => {
-    const { id, ...rest } = I;
-    interiors[id] = { ...rest };
+    const { id, grid, ...rest } = I;
+    const g = grid && typeof grid[0] === 'string' ? gridFromEmoji(grid) : grid;
+    interiors[id] = { ...rest, grid: g };
   });
 
   if (data.mapLabels) Object.assign(mapLabels, data.mapLabels);
