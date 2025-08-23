@@ -141,17 +141,40 @@ loopMinus.style.position = 'absolute';
 loopMinus.style.display = 'none';
 document.body.appendChild(loopMinus);
 
+function positionLoopControls() {
+  if (!loopHover) return;
+  const rect = canvas.getBoundingClientRect();
+  const sx = baseTileW * worldZoom;
+  const sy = baseTileH * worldZoom;
+  const px = rect.left + (loopHover.x - panX) * sx;
+  const py = rect.top + (loopHover.y - panY) * sy;
+  loopPlus.style.left = px + 'px';
+  loopPlus.style.top = py - 24 + 'px';
+  loopMinus.style.left = px + 24 + 'px';
+  loopMinus.style.top = py - 24 + 'px';
+}
+
+function showLoopControls(sel) {
+  if (sel) {
+    loopHover = sel;
+    positionLoopControls();
+    loopPlus.style.display = 'block';
+    loopMinus.style.display = sel.idx > 0 ? 'block' : 'none';
+  } else {
+    loopHover = null;
+    loopPlus.style.display = 'none';
+    loopMinus.style.display = 'none';
+  }
+}
+
 loopPlus.addEventListener('click', () => {
-  if (!selectedObj || selectedObj.type !== 'npc' || !hoverTile) return;
+  if (!selectedObj || selectedObj.type !== 'npc' || !loopHover) return;
   const npc = selectedObj.obj;
   npc.loop = npc.loop || [{ x: npc.x, y: npc.y }];
-  const idx = loopHover ? loopHover.idx : npc.loop.length - 1;
-  npc.loop.splice(idx + 1, 0, { x: hoverTile.x, y: hoverTile.y });
+  npc.loop.splice(loopHover.idx + 1, 0, { x: loopHover.x, y: loopHover.y });
   renderLoopFields(npc.loop);
   drawWorld();
-  loopPlus.style.display = 'none';
-  loopMinus.style.display = 'none';
-  loopHover = null;
+  showLoopControls(null);
 });
 
 loopMinus.addEventListener('click', () => {
@@ -161,9 +184,7 @@ loopMinus.addEventListener('click', () => {
   npc.loop.splice(loopHover.idx, 1);
   renderLoopFields(npc.loop);
   drawWorld();
-  loopPlus.style.display = 'none';
-  loopMinus.style.display = 'none';
-  loopHover = null;
+  showLoopControls(null);
 });
 
 const moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
@@ -299,6 +320,7 @@ function drawWorld() {
       ctx.strokeRect((p.x - panX) * sx, (p.y - panY) * sy, sx, sy);
     });
     ctx.restore();
+    positionLoopControls();
   }
   // Draw Item markers
   moduleData.items.filter(it => it.map === 'world').forEach(it => {
@@ -2286,6 +2308,7 @@ function updateCursor(x, y) {
 }
 canvas.addEventListener('mousedown', ev => {
   if (ev.button === 2) {
+    showLoopControls(null);
     panning = true;
     panMouseX = ev.clientX;
     panMouseY = ev.clientY;
@@ -2294,6 +2317,7 @@ canvas.addEventListener('mousedown', ev => {
     canvas.style.cursor = 'grabbing';
     return;
   }
+  showLoopControls(null);
   if (ev.button !== 0) return;
   const { x, y } = canvasPos(ev);
   const overNpc = moduleData.npcs.some(n => n.map === 'world' && n.x === x && n.y === y);
@@ -2409,8 +2433,6 @@ canvas.addEventListener('mousedown', ev => {
   updateCursor(x, y);
 });
 canvas.addEventListener('mousemove', ev => {
-  loopPlus.style.display = 'none';
-  loopMinus.style.display = 'none';
   if (panning) {
     const dx = (ev.clientX - panMouseX) / (baseTileW * worldZoom);
     const dy = (ev.clientY - panMouseY) / (baseTileH * worldZoom);
@@ -2501,41 +2523,7 @@ canvas.addEventListener('mousemove', ev => {
     drawWorld();
   }
 
-  if (selectedObj && selectedObj.type === 'npc') {
-    const npc = selectedObj.obj;
-    const pts = npc.loop || [{ x: npc.x, y: npc.y }];
-    let found = null;
-    for (let i = 0; i < pts.length; i++) {
-      if (Math.abs(pts[i].x - x) <= 3 && Math.abs(pts[i].y - y) <= 3) {
-        found = { idx: i, x: pts[i].x, y: pts[i].y };
-        break;
-      }
-    }
-    if (!found && Math.abs(npc.x - x) <= 3 && Math.abs(npc.y - y) <= 3) {
-      found = { idx: 0, x: npc.x, y: npc.y };
-    }
-    loopHover = found;
-    if (found) {
-      const rect = canvas.getBoundingClientRect();
-      const sx = baseTileW * worldZoom;
-      const sy = baseTileH * worldZoom;
-      const px = rect.left + (found.x - panX) * sx;
-      const py = rect.top + (found.y - panY) * sy;
-      loopPlus.style.left = px + 'px';
-      loopPlus.style.top = py - 24 + 'px';
-      loopPlus.style.display = 'block';
-      loopMinus.style.left = px + 24 + 'px';
-      loopMinus.style.top = py - 24 + 'px';
-      loopMinus.style.display = found.idx > 0 ? 'block' : 'none';
-    } else {
-      loopPlus.style.display = 'none';
-      loopMinus.style.display = 'none';
-    }
-  } else {
-    loopPlus.style.display = 'none';
-    loopMinus.style.display = 'none';
-    loopHover = null;
-  }
+  if (loopHover) positionLoopControls();
 
   updateCursor(x, y);
 });
@@ -2554,9 +2542,6 @@ canvas.addEventListener('mouseup', ev => {
     drawWorld();
   }
   updateCursor();
-  loopPlus.style.display = 'none';
-  loopMinus.style.display = 'none';
-  loopHover = null;
 });
 canvas.addEventListener('mouseleave', () => {
   if (panning) panning = false;
@@ -2570,9 +2555,6 @@ canvas.addEventListener('mouseleave', () => {
   didPaint = false;
   drawWorld();
   updateCursor();
-  loopPlus.style.display = 'none';
-  loopMinus.style.display = 'none';
-  loopHover = null;
 });
 
 canvas.addEventListener('click', ev => {
@@ -2580,6 +2562,17 @@ canvas.addEventListener('click', ev => {
   if (didPaint) { didPaint = false; return; }
   if (didDrag) { didDrag = false; return; }
   const { x, y } = canvasPos(ev);
+  if (selectedObj && selectedObj.type === 'npc') {
+    const npc = selectedObj.obj;
+    if (x === npc.x && y === npc.y) {
+      showLoopControls({ idx: 0, x: npc.x, y: npc.y });
+      return;
+    }
+    const pts = npc.loop || [];
+    const li = pts.findIndex(p => p.x === x && p.y === y);
+    if (li >= 0) { showLoopControls({ idx: li, x: pts[li].x, y: pts[li].y }); return; }
+  }
+  showLoopControls(null);
   let idx = moduleData.npcs.findIndex(n => n.map === 'world' && n.x === x && n.y === y);
   if (idx >= 0) {
     if (window.showEditorTab) window.showEditorTab('npc');
