@@ -133,7 +133,7 @@ _______________________________________________________________________________
   - ACK player can fetch modules by URL, load local JSON, or auto-load via &module=URL (defaults to modules/golden.module.json).
   - World map editor supports mousewheel zoom and right-drag panning.
   - World map editor includes a stamp icon for 16x16 terrain chunks.
-  - NPC patrol routes are visualized with draggable waypoints and add/remove controls.
+  - NPC patrol routes are visualized with draggable waypoints and click-to-add/remove controls.
 
 [ LICENSE ]
  MIT License

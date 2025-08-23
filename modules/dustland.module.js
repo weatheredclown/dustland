@@ -77,7 +77,7 @@ const DUSTLAND_MODULE = (() => {
             { label: '(Leave)', to: 'bye' }
           ]
         },
-        accept: { text: 'Try the crates. And don’t scuff the floor.', choices: [ { label: '(Okay)', to: 'bye' } ] },
+        accept: { text: 'Try the crates. This hall sheltered survivors once. Don’t scuff the floor.', choices: [ { label: '(Okay)', to: 'bye' } ] },
         do_turnin: {
           text: 'Kesh unlocks the chain. “Off you go.”',
           choices: [ { label: '(Continue)', to: 'bye', goto: { map: 'world', x: 2, y: midY } } ]
@@ -120,6 +120,17 @@ const DUSTLAND_MODULE = (() => {
       desc: 'A drifter muttering to themselves.',
       portraitSheet: 'assets/portraits/drifter_4.png',
       tree: { start: { text: '"Dust gets in everything."', choices: [ { label: '(Nod)', to: 'bye' } ] } }
+    },
+    {
+      id: 'road_sign',
+      map: 'world',
+      x: 6,
+      y: midY,
+      color: '#caffc6',
+      name: 'Worn Sign',
+      title: 'Warning',
+      desc: 'Faded letters warn travelers.',
+      tree: { start: { text: 'Rust storms east. Shelter west.', choices: [ { label: '(Leave)', to: 'bye' } ] } }
     },
     {
       id: 'pump',
@@ -303,11 +314,13 @@ const DUSTLAND_MODULE = (() => {
           choices: [
             { label: '(Pay) Nod and pass', to: 'pay', q: 'turnin' },
             { label: '(Refuse)', to: 'ref', q: 'turnin' },
+            { label: '(Rumors)', to: 'rumors' },
             { label: '(Leave)', to: 'bye' }
           ]
         },
         pay: { text: 'Wise. Move along.', choices: [ { label: '(Ok)', to: 'bye' } ] },
-        ref: { text: 'Brave. Or foolish.', choices: [ { label: '(Ok)', to: 'bye' } ] }
+        ref: { text: 'Brave. Or foolish.', choices: [ { label: '(Ok)', to: 'bye' } ] },
+        rumors: { text: 'Radio crackles from the north; idol whispers from the south.', choices: [ { label: '(Thanks)', to: 'bye' } ] }
       }
     },
     {

@@ -20,6 +20,10 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 - Update README files or inline comments when behavior or APIs change.
 - Extend this file whenever new best practices emerge during development.
 
+## Design documentation
+- Keep design docs in `docs/design`.
+- Each document should list its author and reflect the background and tone from `docs/team-bios.md`.
+
 ## UI style
 - Ensure any newly added buttons match the visual style of existing controls in both the game and editor.
 
