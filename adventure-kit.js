@@ -2101,15 +2101,14 @@ animate();
   if (!panel) return;
   const tabs = Array.from(panel.querySelectorAll('.tab2'));
   const panes = Array.from(panel.querySelectorAll('[data-pane]'));
-  const mq = window.matchMedia('(min-width: 1600px)');
   let current = 'npc';
+  let wide = false;
 
   function setLayout() {
-    if (mq.matches) {
-      panel.classList.add('wide');
+    wide = panel.offsetWidth >= 960;
+    panel.classList.toggle('wide', wide);
+    if (wide) {
       panes.forEach(p => p.style.display = '');
-    } else {
-      panel.classList.remove('wide');
     }
     show(current);
   }
@@ -2121,15 +2120,22 @@ animate();
       t.classList.toggle('active', on);
       t.setAttribute('aria-selected', on ? 'true' : 'false');
     });
-    if (!mq.matches) {
+    if (!wide) {
       panes.forEach(p => p.style.display = (p.dataset.pane === tabName ? '' : 'none'));
     }
   }
 
   tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.tab)));
-  mq.addEventListener('change', setLayout);
+  if (typeof ResizeObserver === 'function') {
+    const ro = new ResizeObserver(setLayout);
+    ro.observe(panel);
+  } else if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('resize', setLayout);
+  }
   setLayout();
-  window.showEditorTab = show;
+  if (typeof window !== 'undefined') {
+    window.showEditorTab = show;
+  }
 })();
 
 document.getElementById('playtestFloat').onclick =
