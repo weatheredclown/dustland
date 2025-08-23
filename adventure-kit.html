@@ -222,16 +222,18 @@
       <section class="card map-card" id="mapCard">
         <canvas id="map" width="640" height="480" aria-label="Map preview"></canvas>
         <div class="btn-group" id="paletteGroup">
-          <div id="worldPalette">
-            <button type="button" data-tile="0" style="background:#1e271d"></button>
-            <button type="button" data-tile="1" style="background:#2c342c"></button>
-            <button type="button" data-tile="2" style="background:#1573ff"></button>
-            <button type="button" data-tile="3" style="background:#203320"></button>
-            <button type="button" data-tile="4" style="background:#777777"></button>
-            <button type="button" data-tile="5" style="background:#304326"></button>
-            <button type="button" data-tile="6" style="background:#4d5f4d"></button>
+          <div id="paletteWrap">
+            <div id="worldPalette">
+              <button type="button" data-tile="0" style="background:#1e271d"></button>
+              <button type="button" data-tile="1" style="background:#2c342c"></button>
+              <button type="button" data-tile="2" style="background:#1573ff"></button>
+              <button type="button" data-tile="3" style="background:#203320"></button>
+              <button type="button" data-tile="4" style="background:#777777"></button>
+              <button type="button" data-tile="5" style="background:#304326"></button>
+              <button type="button" data-tile="6" style="background:#4d5f4d"></button>
+            </div>
+            <div id="paletteLabel"></div>
           </div>
-          <div id="paletteLabel"></div>
           <button class="btn" id="noiseToggle">Noise: On</button>
           <button class="btn" id="clear">Clear Map</button>
         </div>

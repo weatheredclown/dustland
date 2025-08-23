@@ -840,4 +840,5 @@
 #intPalette button.active,
 #bldgPalette button.active,
 #worldPalette button.active { outline:2px solid #fff; }
+#paletteWrap { display:flex; flex-direction:column; align-items:center; }
 #paletteLabel { color:#fff; font-family:system-ui, sans-serif; margin-top:4px; }
