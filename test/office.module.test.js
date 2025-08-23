@@ -12,6 +12,6 @@ test('office module boards castle and unboards via dialog', () => {
     src,
     /placeHut\(WORLD_MID \+ 3, WORLD_MIDY - 2, {\s*\n\s*interiorId: 'castle',\s*\n\s*boarded: true\s*\n\s*}\)/
   );
-  assert.match(src, /effect: 'unboardDoor',\s*interiorId: 'castle'/);
+  assert.match(src, /start: [\s\S]*?effect: 'unboardDoor',\s*interiorId: 'castle'[\s\S]*?unlock:/);
   assert.match(src, /label: '\(Fight\)'/);
 });

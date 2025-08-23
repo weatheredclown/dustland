@@ -66,19 +66,55 @@ moduleData.interiors = [ { id: 'castle' } ];
 test('updateTreeData captures door board/unboard effects', () => {
   const boardSel = { value: 'castle' };
   const unboardSel = { value: '' };
+  const choiceEl = {
+    querySelector(sel){
+      switch(sel){
+        case '.choiceLabel': return { value: 'open' };
+        case '.choiceTo': return { value: '', style:{} };
+        case '.choiceRewardType':
+        case '.choiceRewardXP':
+        case '.choiceRewardItem':
+        case '.choiceStat':
+        case '.choiceDC':
+        case '.choiceSuccess':
+        case '.choiceFailure':
+        case '.choiceCostItem':
+        case '.choiceCostSlot':
+        case '.choiceReqItem':
+        case '.choiceReqSlot':
+        case '.choiceJoinId':
+        case '.choiceJoinName':
+        case '.choiceJoinRole':
+        case '.choiceGotoMap':
+        case '.choiceGotoX':
+        case '.choiceGotoY':
+        case '.choiceQ':
+        case '.choiceFlag':
+        case '.choiceOp':
+        case '.choiceVal':
+          return { value: '' };
+        case '.choiceOnce':
+          return { checked: false };
+        case '.choiceBoard':
+          return boardSel;
+        case '.choiceUnboard':
+          return unboardSel;
+        default:
+          return { value: '' };
+      }
+    }
+  };
   const nodeEl = {
     querySelector(sel){
       switch(sel){
         case '.nodeId': return { value: 'start' };
         case '.nodeText': return { value: 'hi' };
-        case '.nodeBoard': return boardSel;
-        case '.nodeUnboard': return unboardSel;
         default: return { value: '' };
       }
     },
-    querySelectorAll(sel){ return sel === '.choices > div' ? [] : []; },
+    querySelectorAll(sel){ return sel === '.choices > div' ? [choiceEl] : []; },
     classList:{ contains(){ return false; } },
-    style:{}
+    style:{},
   };
   elements['treeEditor'] = {
     querySelectorAll(sel){ return sel === '.node' ? [nodeEl] : []; }
@@ -87,10 +123,10 @@ test('updateTreeData captures door board/unboard effects', () => {
   elements['treeWarning'] = { textContent: '' };
 
   updateTreeData();
-  assert.deepStrictEqual(treeData.start.effects, [ { effect: 'boardDoor', interiorId: 'castle' } ]);
+  assert.deepStrictEqual(treeData.start.choices[0].effects, [ { effect: 'boardDoor', interiorId: 'castle' } ]);
 
   boardSel.value = '';
   unboardSel.value = 'castle';
   updateTreeData();
-  assert.deepStrictEqual(treeData.start.effects, [ { effect: 'unboardDoor', interiorId: 'castle' } ]);
+  assert.deepStrictEqual(treeData.start.choices[0].effects, [ { effect: 'unboardDoor', interiorId: 'castle' } ]);
 });

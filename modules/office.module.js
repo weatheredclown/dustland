@@ -364,7 +364,8 @@ const OFFICE_MODULE = (() => {
             {
               label: '(Open Castle)',
               to: 'unlock',
-              once: true
+              once: true,
+              effects: [ { effect: 'unboardDoor', interiorId: 'castle' } ]
             },
             {
               label: '(Request Boon)',
@@ -379,7 +380,6 @@ const OFFICE_MODULE = (() => {
         },
         unlock: {
           text: 'He gestures; the castle doors creak open.',
-          effects: [ { effect: 'unboardDoor', interiorId: 'castle' } ],
           choices: [ { label: '(Thanks)', to: 'bye' } ]
         },
         ask: {
