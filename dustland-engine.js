@@ -499,7 +499,9 @@ if (document.getElementById('saveBtn')) {
       case 'ArrowLeft': case 'a': case 'A': move(-1,0); break;
       case 'ArrowRight': case 'd': case 'D': move(1,0); break;
       case 'e': case 'E': case ' ': interact(); break;
-      case 't': case 'T': takeNearestItem(); break;
+      case 't': case 'T': case 'g': case 'G': takeNearestItem(); break;
+      case 'o': case 'O': toggleAudio(); break;
+      case 'c': case 'C': toggleMobileControls(); break;
       case 'i': case 'I': showTab('inv'); break;
       case 'p': case 'P': showTab('party'); break;
       case 'q': if(!e.ctrlKey && !e.metaKey){ showTab('quests'); e.preventDefault(); } break;
