@@ -92,24 +92,32 @@
 
   function key(x,y){ return x+','+y; }
 
+  // Step NPCs along their waypoint loops. Invoked after player moves.
   function tickPathAI(){
-    const now=Date.now();
     for(const n of NPCS){
       const pts=n.loop;
       if(!Array.isArray(pts) || pts.length<2) continue;
-      n._loop = n._loop || { idx:1, path:[], job:null, next:0 };
+      n._loop = n._loop || { idx:1, path:[], job:null };
       const st=n._loop;
+      const near=party && Math.abs(n.x-party.x)+Math.abs(n.y-party.y) <= 2;
+      if(near) continue;
       if(st.path.length){
-        if(now<st.next) continue;
         const step=st.path.shift();
         if(step){ n.x=step.x; n.y=step.y; }
-        st.next=now+400;
         if(!st.path.length){ st.idx=(st.idx+1)%pts.length; }
         continue;
       }
       if(st.job){
         const p=PathQueue.pathFor(st.job);
-        if(p){ st.path=p.slice(1); st.job=null; }
+        if(p){
+          st.path=p.slice(1);
+          st.job=null;
+          if(st.path.length){
+            const step=st.path.shift();
+            if(step){ n.x=step.x; n.y=step.y; }
+            if(!st.path.length){ st.idx=(st.idx+1)%pts.length; }
+          }
+        }
         continue;
       }
       const target=pts[st.idx];
