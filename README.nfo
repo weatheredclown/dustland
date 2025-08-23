@@ -24,16 +24,11 @@ _______________________________________________________________________________
   The terrain editor lets you paint features with organic noise.
 
 [ HOW TO RUN ]
-  - Play the latest build in your browser:
-    https://weatheredclown.github.io/dustland/dustland.html
-  - Just open:  dustland.html  (double-click or serve from any static server).
-  - Pick a module on startup (e.g. Dustland or Echoes).
-  - Build a module with: adventure-kit.html  (set a module name to save as custom-name.json).
-  - The world map editor supports mousewheel zoom and right-drag panning.
-  - World map editor includes a stamp palette for 16x16 terrain chunks.
-  - Play a module with: dustland.html?ack-player=1 (fetch a module URL, load a local JSON, or pass &module=URL to auto-load; defaults to modules/golden.module.json).
-  - No build step. No dependencies. Works offline.
-  - Tip: Use a modern Chromium, Firefox, or Safari.
+  - Play online: https://weatheredclown.github.io/dustland/dustland.html
+  - Run locally: open dustland.html (no build step; works offline)
+  - Build modules: adventure-kit.html
+  - Play modules: dustland.html?ack-player=1 (load module URLs or local JSON)
+  - Tip: use a modern Chromium, Firefox, or Safari
 
 [ CONTROLS ]
   Movement .......... WASD / Arrow Keys
@@ -133,8 +128,13 @@ _______________________________________________________________________________
   - Tests: run `npm install` to fetch dev deps like jsdom, then `npm test` for basic checks.
     The main game still runs from the repo download alone.
 
+[ FEATURE LOG ]
+  - ACK player can fetch modules by URL, load local JSON, or auto-load via &module=URL (defaults to modules/golden.module.json).
+  - World map editor supports mousewheel zoom and right-drag panning.
+  - World map editor includes a stamp palette for 16x16 terrain chunks.
+
 [ LICENSE ]
-  MIT License
+ MIT License
 
   Copyright (c) 2024 Dustland Contributors
 
