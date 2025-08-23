@@ -91,15 +91,29 @@ function joinParty(join){
   }
 }
 
+// Teleport actor to a new position.
+// g: { map?, x?, y?, target?:'npc'|'player', rel?:true }
+//   target defaults to player (party).
+//   rel=true offsets from current position.
 function handleGoto(g){
   if(!g) return;
-  if(g.map==='world'){
-    startWorld();
-    setPartyPos(g.x, g.y);
-    setMap('world');
+  const tgtNPC = g.target === 'npc' ? currentNPC : null;
+  const base = tgtNPC || party;
+  const x = g.rel ? base.x + (g.x || 0) : (g.x != null ? g.x : base.x);
+  const y = g.rel ? base.y + (g.y || 0) : (g.y != null ? g.y : base.y);
+  if(tgtNPC){
+    if(g.map) tgtNPC.map = g.map;
+    tgtNPC.x = x;
+    tgtNPC.y = y;
   }else{
-    setPartyPos(g.x, g.y);
-    if(g.map) setMap(g.map); else if(typeof centerCamera==='function') centerCamera(party.x,party.y,state.map);
+    if(g.map==='world'){
+      startWorld();
+      setPartyPos(x, y);
+      setMap('world');
+    }else{
+      setPartyPos(x, y);
+      if(g.map) setMap(g.map); else if(typeof centerCamera==='function') centerCamera(party.x,party.y,state.map);
+    }
   }
   updateHUD?.();
 }

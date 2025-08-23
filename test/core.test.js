@@ -460,6 +460,29 @@ test('advanceDialog matches reqItem case-insensitively', () => {
   assert.strictEqual(party.y, 8);
 });
 
+test('advanceDialog goto can target NPC', () => {
+  NPCS.length = 0;
+  const tree = { start: { text: '', choices: [ { label: 'Move', goto: { target: 'npc', x: 1, y: 2 } } ] } };
+  const npc = makeNPC('m', 'world', 0, 0, '#fff', 'Mover', '', '', tree);
+  NPCS.push(npc);
+  openDialog(npc);
+  choicesEl.children[0].onclick();
+  assert.strictEqual(npc.x, 1);
+  assert.strictEqual(npc.y, 2);
+  closeDialog();
+  NPCS.length = 0;
+});
+
+test('advanceDialog goto supports relative movement', () => {
+  state.map = 'world';
+  party.x = 4; party.y = 5;
+  const tree = { start: { text: '', next: [ { label: 'Step', goto: { rel: true, x: 2, y: -1 } } ] } };
+  const dialog = { tree, node: 'start' };
+  advanceDialog(dialog, 0);
+  assert.strictEqual(party.x, 6);
+  assert.strictEqual(party.y, 4);
+});
+
 test('advanceDialog returns success flag on failure', () => {
   const tree = {
     start: { text: '', next: [{ label: 'Fail', check: { stat: 'str', dc: 999 } }] }
