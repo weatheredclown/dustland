@@ -214,3 +214,20 @@ test('renderDialogPreview clears when no start node', () => {
   renderDialogPreview();
   assert.strictEqual(prevEl.innerHTML, '');
 });
+
+test('closing dialog editor persists dialog changes', () => {
+  moduleData.npcs = [{
+    id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0,
+    tree: { start: { text: 'hi', choices: [{ label: '(Leave)', to: 'bye' }] } }
+  }];
+  editNPC(0);
+  const newTree = { start: { text: 'bye', choices: [{ label: '(Leave)', to: 'bye' }] } };
+  document.getElementById('npcTree').value = JSON.stringify(newTree);
+  document.getElementById('npcDialog').value = 'bye';
+  const origUpdate = globalThis.updateTreeData;
+  globalThis.updateTreeData = () => {};
+  closeDialogEditor();
+  globalThis.updateTreeData = origUpdate;
+  closeNPCEditor();
+  assert.strictEqual(moduleData.npcs[0].tree.start.text, 'bye');
+});

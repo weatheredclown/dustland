@@ -775,6 +775,7 @@ function openDialogEditor() {
 
 function closeDialogEditor() {
   document.getElementById('dialogModal').classList.remove('shown');
+  applyNPCChanges();
 }
 
 function toggleQuestDialogBtn() {
