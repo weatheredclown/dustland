@@ -1633,7 +1633,7 @@ bldgPalette.querySelectorAll('button').forEach(btn=>{
 bldgPalette.querySelector('button')?.classList.add('active');
 
 if (worldPalette) {
-  worldPalette.querySelectorAll('button').forEach(btn => {
+  function bindPaletteBtn(btn) {
     btn.addEventListener('click', () => {
       const isOn = btn.classList.contains('active');
       worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
@@ -1641,13 +1641,39 @@ if (worldPalette) {
       worldStamp = null;
       if (!isOn) {
         btn.classList.add('active');
-        if (paletteLabel) paletteLabel.textContent = tileNames[worldPaint] || '';
+        if (paletteLabel) {
+          const label = btn.dataset.name || tileNames[worldPaint] || '';
+          paletteLabel.textContent = label;
+        }
       } else if (paletteLabel) {
         paletteLabel.textContent = '';
       }
       updateCursor();
     });
-  });
+  }
+  worldPalette.querySelectorAll('button').forEach(bindPaletteBtn);
+
+  if (window.NanoPalette) {
+    window.NanoPalette.init();
+    async function pumpAiTiles() {
+      const block = await window.NanoPalette.generate();
+      if (block) {
+        const btn = document.createElement('button');
+        btn.dataset.tile = '0';
+        btn.dataset.name = 'AI';
+        btn.textContent = block[0]?.[0] || '?';
+        const anchor = document.getElementById('stampsBtn');
+        if (worldPalette.insertBefore && anchor) {
+          worldPalette.insertBefore(btn, anchor);
+        } else {
+          worldPalette.appendChild(btn);
+        }
+        bindPaletteBtn(btn);
+      }
+      setTimeout(pumpAiTiles, 0);
+    }
+    pumpAiTiles();
+  }
 }
 
 const stampsBtn = document.getElementById('stampsBtn');
