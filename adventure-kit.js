@@ -1853,7 +1853,7 @@ canvas.addEventListener('mousedown', ev => {
   const overStart = moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y;
   const overEvent = moduleData.events.some(ev => ev.map === 'world' && ev.x === x && ev.y === y);
   const overPortal = moduleData.portals.some(p => p.map === 'world' && p.x === x && p.y === y);
-  if (worldPaint != null && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal)) {
+  if (worldPaint != null && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal)) {
     worldPainting = true;
     hoverTile = { x, y };
     addTerrainFeature(x, y, worldPaint);

@@ -133,6 +133,18 @@ test('dragging building ignores paint', () => {
   assert.strictEqual(worldPainting, false);
 });
 
+test('select on map does not paint', () => {
+  genWorld(1);
+  worldPaint = TILE.ROCK;
+  const before = world[2][3];
+  coordTarget = { x: 'eventX', y: 'eventY' };
+  canvasEl._listeners.mousedown[0]({ clientX:3, clientY:2 });
+  assert.strictEqual(world[2][3], before);
+  assert.strictEqual(worldPainting, false);
+  assert.strictEqual(document.getElementById('eventX').value, 3);
+  assert.strictEqual(document.getElementById('eventY').value, 2);
+});
+
 test('clicking building while paint palette active still edits', () => {
   genWorld(1);
   moduleData.buildings = [{ x:5, y:5, w:1, h:1 }];
