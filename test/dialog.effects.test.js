@@ -138,8 +138,6 @@ test('updateTreeData removes deleted nodes', () => {
       switch(sel){
         case '.nodeId': return { value: 'start' };
         case '.nodeText': return { value: '' };
-        case '.nodeBoard': return { value: '' };
-        case '.nodeUnboard': return { value: '' };
         default: return { value: '' };
       }
     },
