@@ -578,7 +578,7 @@ function randomName(){
   return avail.length? avail[Math.floor(Math.random()*avail.length)] : 'Drifter '+(built.length+1);
 }
 function newBuilding(){
-  portraitIndex = 0;
+  portraitIndex = Math.floor(Math.random()*portraits.length);
   return { id:'pc'+(built.length+1), name:randomName(), role:'Wanderer', stats:baseStats(), quirk:null, spec:null, origin:null, portraitSheet: portraits[portraitIndex] };
 }
 

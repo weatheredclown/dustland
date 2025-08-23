@@ -56,3 +56,11 @@ test('combat uses member portrait', () => {
   context.setPortraitDiv(el, context.party[0]);
   assert.ok(el.style.backgroundImage.includes('assets/portraits/portrait_1000.png'));
 });
+
+test('creator picks random default portrait', () => {
+  const {context} = setup();
+  context.Math.random = () => 0.5;
+  context.openCreator();
+  const sheet = vm.runInContext('building.portraitSheet', context);
+  assert.strictEqual(sheet, 'assets/portraits/portrait_1045.png');
+});
