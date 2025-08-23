@@ -93,7 +93,7 @@ function createNpcFactory(defs) {
     npcFactory[n.id] = (x = n.x, y = n.y) => {
       let tree = n.tree;
       if (typeof tree === 'string') { try { tree = JSON.parse(tree); } catch (e) { tree = null; } }
-      if (!tree) {
+      if (!tree || !Object.keys(tree).length) {
         tree = { start: { text: n.dialog || '', choices: [{label: '(Leave)', to: 'bye'}] } };
       }
       const opts = {};

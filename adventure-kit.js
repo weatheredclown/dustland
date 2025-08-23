@@ -939,7 +939,7 @@ function collectNPCFromForm() {
   let tree = null;
   const treeTxt = document.getElementById('npcTree').value.trim();
   if (treeTxt) { try { tree = JSON.parse(treeTxt); } catch (e) { tree = null; } }
-  if (!tree) {
+  if (!tree || !Object.keys(tree).length) {
     if (questId) {
       tree = {
         start: { text: dialog, choices: [{ label: 'Accept quest', to: 'accept', q: 'accept' }, { label: 'Turn in', to: 'do_turnin', q: 'turnin' }, { label: '(Leave)', to: 'bye' }] },
