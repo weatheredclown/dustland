@@ -49,9 +49,10 @@ const bodyEl = stubEl();
 const canvasEl = stubEl();
 canvasEl.width = 120;
 canvasEl.height = 90;
+const elements = { map: canvasEl };
 global.document = {
   body: bodyEl,
-  getElementById: id => id === 'map' ? canvasEl : stubEl(),
+  getElementById: id => elements[id] || (elements[id] = stubEl()),
   createElement: () => stubEl(),
   querySelector: () => stubEl(),
   querySelectorAll: () => []
@@ -170,6 +171,7 @@ test('clearWorld wipes tiles and data', () => {
   setTile('world',0,0,TILE.BUILDING);
   globalThis.buildings.push({ x:0, y:0, w:1, h:1, under:[[TILE.SAND]] });
   clearWorld();
+  document.getElementById('confirmYes').onclick();
   assert.strictEqual(world[0][0], TILE.SAND);
   assert.strictEqual(moduleData.npcs.length, 0);
   assert.strictEqual(globalThis.buildings.length, 0);

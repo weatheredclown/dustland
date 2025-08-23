@@ -313,6 +313,25 @@ function updateInteriorOptions() {
   sel.innerHTML = '<option value=""></option>' + moduleData.interiors.map(I => `<option value="${I.id}">${I.id}</option>`).join('');
 }
 
+function confirmDialog(msg, onYes) {
+  const modal = document.getElementById('confirmModal');
+  if (!modal) {
+    if (confirm(msg)) onYes();
+    return;
+  }
+  document.getElementById('confirmText').textContent = msg;
+  modal.classList.add('shown');
+  const yes = document.getElementById('confirmYes');
+  const no = document.getElementById('confirmNo');
+  const cleanup = () => {
+    modal.classList.remove('shown');
+    yes.onclick = null;
+    no.onclick = null;
+  };
+  yes.onclick = () => { cleanup(); onYes(); };
+  no.onclick = cleanup;
+}
+
 function regenWorld() {
   moduleData.seed = Date.now();
   genWorld(moduleData.seed, { buildings: [] });
@@ -332,31 +351,32 @@ function regenWorld() {
 }
 
 function clearWorld() {
-  if (!confirm('Clear the world map?')) return;
-  for (let y = 0; y < WORLD_H; y++) {
-    for (let x = 0; x < WORLD_W; x++) {
-      setTile('world', x, y, TILE.SAND);
+  confirmDialog('Clear the world map?', () => {
+    for (let y = 0; y < WORLD_H; y++) {
+      for (let x = 0; x < WORLD_W; x++) {
+        setTile('world', x, y, TILE.SAND);
+      }
     }
-  }
-  moduleData.npcs = [];
-  moduleData.items = [];
-  moduleData.quests = [];
-  moduleData.buildings = [];
-  moduleData.interiors = [];
-  moduleData.portals = [];
-  moduleData.events = [];
-  buildings.length = 0;
-  portals.length = 0;
-  globalThis.interiors = {};
-  interiors = globalThis.interiors;
-  renderNPCList();
-  renderItemList();
-  renderQuestList();
-  renderBldgList();
-  renderInteriorList();
-  renderEventList();
-  renderPortalList();
-  drawWorld();
+    moduleData.npcs = [];
+    moduleData.items = [];
+    moduleData.quests = [];
+    moduleData.buildings = [];
+    moduleData.interiors = [];
+    moduleData.portals = [];
+    moduleData.events = [];
+    buildings.length = 0;
+    portals.length = 0;
+    globalThis.interiors = {};
+    interiors = globalThis.interiors;
+    renderNPCList();
+    renderItemList();
+    renderQuestList();
+    renderBldgList();
+    renderInteriorList();
+    renderEventList();
+    renderPortalList();
+    drawWorld();
+  });
 }
 
 function modRow(stat = 'ATK', val = 1) {
