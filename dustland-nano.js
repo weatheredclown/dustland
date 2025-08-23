@@ -419,7 +419,8 @@ Choices:
 
   function _buildPalettePrompt(examples){
     const ex = (examples||[]).map(b=>b.join('\n')).join('\n\n');
-    return `Examples of 16x16 emoji blocks for Dustland world tiles:\n${ex}\n\nNew 16x16 block:`;
+    const legend = 'Emojis: 🏝 sand, 🪨 rock, 🌊 water, 🌿 brush, 🛣 road, 🏚 ruin, 🧱 wall, ⬜ floor, 🚪 door, 🏠 building. These are map tiles in a 2D game world.';
+    return `${legend}\n\nExamples of 16x16 emoji blocks:\n${ex}\n\nNew 16x16 block:`;
   }
 
   function _parseEmojiBlock(txt){
