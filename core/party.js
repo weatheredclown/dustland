@@ -1,5 +1,27 @@
 const baseStats = () => ({STR:4, AGI:4, INT:4, PER:4, LCK:4, CHA:4});
 
+const defaultXPCurve = [0,100,200,300,400,500,700,900,1100,1300,1500,1900,2300,2700,3100,3500,4300,5100,5900,6700];
+let xpCurve = defaultXPCurve.slice();
+
+async function loadXPCurve(url='xpCurve.json'){
+  try{
+    if(typeof fetch==='function'){
+      const res = await fetch(url);
+      const arr = await res.json();
+      if(Array.isArray(arr)) xpCurve = arr.map(n=>parseInt(n,10)||0);
+      return;
+    }
+  }catch(e){}
+  try{
+    const fs = await import('node:fs/promises');
+    const txt = await fs.readFile(url, 'utf8');
+    const arr = JSON.parse(txt);
+    if(Array.isArray(arr)) xpCurve = arr.map(n=>parseInt(n,10)||0);
+  }catch(e){}
+}
+
+loadXPCurve();
+
 class Character {
   constructor(id, name, role, opts={}){
     this.id=id; this.name=name; this.role=role;
@@ -14,7 +36,7 @@ class Character {
     this._bonus={ATK:0, DEF:0, LCK:0};
     this.special = opts.special || null;
   }
-  xpToNext(){ return 10*this.lvl; }
+  xpToNext(){ return xpToNext(this.lvl); }
   awardXP(amt){
     this.xp += amt;
     log(`${this.name} gains ${amt} XP.`);
@@ -100,11 +122,15 @@ function makeMember(id, name, role, opts){ return new Character(id, name, role, 
 function addPartyMember(member){ return party.addMember(member); }
 function removePartyMember(member){ return party.removeMember(member); }
 function statLine(s){ return `STR ${s.STR}  AGI ${s.AGI}  INT ${s.INT}  PER ${s.PER}  LCK ${s.LCK}  CHA ${s.CHA}`; }
-function xpToNext(lvl){ return 10*lvl; }
+function xpToNext(lvl){
+  const prev = xpCurve[lvl-1] ?? 0;
+  const next = xpCurve[lvl] ?? (prev + 10*lvl);
+  return next - prev;
+}
 function awardXP(who, amt){ who.awardXP(amt); }
 function applyEquipmentStats(m){ m.applyEquipmentStats(); }
 function leader(){ return party.leader(); }
 function setLeader(idx){ selectedMember = idx; }
 
-const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, selectedMember };
+const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, selectedMember, xpCurve, loadXPCurve };
 Object.assign(globalThis, partyExports);

@@ -40,6 +40,11 @@ players trek back to a nearby specialist trainer, open **Upgrade Skills**, and
 see exact stat deltas before committing. Zones advertise enemy level ranges so
 wandering into tougher turf feels like a choice, not a trap.
 
+**HUD & UX**
+
+The party panel along the bottom left gains a tiny XP bar and a skill point badge for each character. The bar shows `currentXP/nextXP` when hovered and stays a thin progress strip otherwise so the HUD stays clean. Unspent points raise a small glowing badge with the point count over the portrait until the player spends them at a trainer. This keeps level progress visible without cluttering the action.
+
+
 **Numbers**
 
 *XP Curve (levels 1–20)*
@@ -118,8 +123,10 @@ natural.
 > **Clown:** Let's carve a roadmap so each slice ships mod-ready and testable.
 
 **Task List**
-- [ ] Load `xpCurve.json` at startup with sane defaults and expose it for mods.
+- [x] Load `xpCurve.json` at startup with sane defaults and expose it for mods.
 - [ ] Track XP and level-ups, auto-apply +10 max HP and grant skill points.
+- [ ] Show each character's current and next level XP on the party HUD.
+- [ ] Badge portraits when unspent skill points are available.
 - [ ] Trigger optional mentor one-liners on level-up.
 - [ ] Build trainer NPCs with specialized **Upgrade Skills** dialogs that preview stat deltas and costs.
 - [ ] Enforce trainer specialties through UI and stat preview hooks.
