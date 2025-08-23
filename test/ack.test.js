@@ -18,7 +18,7 @@ function stubEl(){
     prepend(child){ this.children.unshift(child); child.parentElement=this; },
     querySelector: () => stubEl(),
     querySelectorAll: () => [],
-    getBoundingClientRect: () => ({ left:0, top:0 }),
+    getBoundingClientRect: () => ({ left:0, top:0, bottom:0 }),
     getContext: () => ({
       clearRect(){}, drawImage(){}, fillRect(){}, beginPath(){}, moveTo(){}, lineTo(){}, stroke(){}, strokeRect(){},
       save(){}, restore(){}, translate(){}, font:'', fillText(){}, globalAlpha:1
@@ -165,6 +165,16 @@ test('stamps window selects a world stamp', () => {
   assert.notStrictEqual(document.getElementById('paletteLabel').textContent, '');
   assert.strictEqual(win.style.display, 'none');
   worldStamp = null;
+});
+
+test('stamps window positions near button', () => {
+  genWorld(1);
+  const btn = document.getElementById('stampsBtn');
+  btn._listeners.click[0]();
+  const win = document.getElementById('stampWindow');
+  assert.notStrictEqual(win.style.left, '');
+  assert.notStrictEqual(win.style.top, '');
+  win.style.display = 'none';
 });
 
 test('nano button generates a stamp', async () => {
