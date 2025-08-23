@@ -52,48 +52,6 @@ const { on } = globalThis.EventBus;
  */
 
 /**
- * @typedef {Object} Quest
- * @property {string} id
- * @property {string} name
- * @property {'available'|'active'|'completed'} status
- * @property {string} [desc]
- * @property {Function} [onStart]
- * @property {Function} [onComplete]
- */
-
-/**
- * @typedef {Object} Map
- * @property {string} id
- * @property {number} w
- * @property {number} h
- * @property {number[][]} grid
- * @property {number} [entryX]
- * @property {number} [entryY]
- * @property {string} [name]
- */
-
-/**
- * @typedef {Object} Quest
- * @property {string} id
- * @property {string} name
- * @property {'available'|'active'|'completed'} status
- * @property {string} [desc]
- * @property {Function} [onStart]
- * @property {Function} [onComplete]
- */
-
-/**
- * @typedef {Object} Map
- * @property {string} id
- * @property {number} w
- * @property {number} h
- * @property {number[][]} grid
- * @property {number} [entryX]
- * @property {number} [entryY]
- * @property {string} [name]
- */
-
-/**
  * @typedef {Object} Check
  * @property {string} stat
  * @property {number} dc
@@ -126,6 +84,13 @@ const clamp = (v,a,b)=> {
   if(a > b){ [a,b] = [b,a]; }
   return Math.max(a, Math.min(b, v));
 };
+
+function refreshUI(){
+  renderInv?.();
+  renderQuests?.();
+  renderParty?.();
+  updateHUD?.();
+}
 
 class Dice {
   static skill(character, stat, add=0, sides=ROLL_SIDES, rng=Math.random){
@@ -162,7 +127,7 @@ async function startCombat(defender){
     player.ap = attacker.ap;
     player.hp = attacker.hp;
   }
-  renderInv?.(); renderParty?.(); updateHUD?.();
+  refreshUI();
   return result;
 }
 
@@ -533,7 +498,7 @@ function load(){
     party.push(mem);
   });
   setMap(state.map);
-  renderInv?.(); renderQuests?.(); renderParty?.(); updateHUD?.();
+  refreshUI();
   log('Game loaded.');
 }
 
@@ -603,11 +568,12 @@ const quirks={
 const hiddenOrigins={ 'Rustborn':{desc:'You survived a machine womb. +1 PER, weird dialog tags.'} };
 
 // Pool of placeholder names to auto-fill the creator
+function defaultDrifterName(n){ return 'Drifter '+n; }
 const randomNames=['Ash','Rex','Nova','Jax','Mara','Zed','Iris','Knox','Luna','Kai','Gil'];
 function randomName(){
   const used=new Set(built.map(m=>m.name));
   const avail=randomNames.filter(n=>!used.has(n));
-  return avail.length? avail[Math.floor(Math.random()*avail.length)] : 'Drifter '+(built.length+1);
+  return avail.length? avail[Math.floor(Math.random()*avail.length)] : defaultDrifterName(built.length+1);
 }
 function newBuilding(){
   portraitIndex = Math.floor(Math.random()*portraits.length);
@@ -668,7 +634,7 @@ function renderStep(){
 
 function finalizeCurrentMember(){
   if(!building) return null;
-  if(!building.name || !building.name.trim()) building.name = 'Drifter '+(built.length+1);
+  if(!building.name || !building.name.trim()) building.name = defaultDrifterName(built.length+1);
   const m=makeMember(building.id, building.name, building.spec||'Wanderer', {permanent:true, portraitSheet: building.portraitSheet});
   m.stats=building.stats; m.origin=building.origin; m.quirk=building.quirk;
   m.special = classSpecials[building.spec||'Wanderer'] || null;
@@ -715,14 +681,12 @@ function startWorld(){
   genWorld(seed);
   setPartyPos(2, Math.floor(WORLD_H/2));
   setMap('world','Wastes');
-  renderInv?.(); renderQuests?.(); renderParty?.(); updateHUD?.();
+  refreshUI();
   log('You step into the wastes.');
 }
 
 on('inventory:changed', () => {
-  renderInv?.();
-  renderParty?.();
-  updateHUD?.();
+  refreshUI();
   queueNanoDialogForNPCs?.('start', 'inventory change');
 });
 
@@ -739,6 +703,7 @@ const coreExports = {
   clamp,
   createRNG,
   Dice,
+  refreshUI,
   startCombat,
   TILE,
   walkable,

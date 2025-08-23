@@ -122,6 +122,7 @@ _______________________________________________________________________________
       * applyModule(data), openCreator()
       * uncurseItem(id)
   - NPC trees can be functions for dynamic dialog.
+  - Dialog choices support `goto` targeting the player or NPC with optional relative coordinates.
   - Items support `equip.flag` and `unequip` teleport/message effects.
   - Tiles: see TILE enum + colors[] + walkable[].
   - Maps can be specified as arrays of emoji strings using `tileEmoji` (numeric grids still load).
@@ -132,7 +133,7 @@ _______________________________________________________________________________
   - ACK player can fetch modules by URL, load local JSON, or auto-load via &module=URL (defaults to modules/golden.module.json).
   - World map editor supports mousewheel zoom and right-drag panning.
   - World map editor includes a stamp icon for 16x16 terrain chunks.
-  - NPC patrol routes are visualized with draggable waypoints and add/remove controls.
+  - NPC patrol routes are visualized with draggable waypoints and click-to-add/remove controls.
   - World palette tiles show names on hover.
   - Ctrl+S downloads the current module; Ctrl+P launches playtest.
 
