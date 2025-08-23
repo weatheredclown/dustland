@@ -250,3 +250,21 @@ test('closing dialog editor persists dialog changes', () => {
   closeNPCEditor();
   assert.strictEqual(moduleData.npcs[0].tree.start.text, 'bye');
 });
+
+test('dialog text edited in tree editor is preserved', () => {
+  moduleData.npcs = [{
+    id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0,
+    tree: { start: { text: 'hi', choices: [{ label: '(Leave)', to: 'bye' }] } }
+  }];
+  editNPC(0);
+  const newTree = { start: { text: 'welcome', choices: [{ label: '(Leave)', to: 'bye' }] } };
+  treeData = newTree;
+  document.getElementById('npcTree').value = JSON.stringify(newTree);
+  document.getElementById('npcDialog').value = '';
+  const origUpdate = globalThis.updateTreeData;
+  globalThis.updateTreeData = () => {};
+  closeDialogEditor();
+  globalThis.updateTreeData = origUpdate;
+  closeNPCEditor();
+  assert.strictEqual(moduleData.npcs[0].tree.start.text, 'welcome');
+});

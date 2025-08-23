@@ -781,6 +781,8 @@ function openDialogEditor() {
 
 function closeDialogEditor() {
   document.getElementById('dialogModal').classList.remove('shown');
+  const dlgEl = document.getElementById('npcDialog');
+  if (!dlgEl.value.trim()) dlgEl.value = treeData.start?.text || '';
   applyNPCChanges();
 }
 
