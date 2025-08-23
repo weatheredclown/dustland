@@ -160,6 +160,8 @@ function move(dx,dy){
         centerCamera(party.x,party.y,state.map); updateHUD();
         checkAggro();
         EventBus.emit('sfx','step');
+        // NPCs advance along paths after the player steps
+        if(typeof tickPathAI==='function') tickPathAI();
         moveDelay = 0;
         resolve();
       }, moveDelay);
