@@ -4,6 +4,7 @@
 // - Keeps a single session
 // - Queues NPC dialog generations and caches lines per (npcId, "start"/node)
 // - Never blocks gameplay; best-effort only
+// - chrome://on-device-internals/ to resent your crash count if needed
 
 (function(){
   console.log("[Nano] Script loaded and initializing public API...");
@@ -410,8 +411,9 @@ Choices:
     _setBusy(true);
     const prompt = _buildPalettePrompt(examples || _defaultExamples());
     try {
-      const out = await _state.session.prompt(prompt);
-      const txt = out?.output?.[0]?.content?.[0]?.text || '';
+      console.log("[Nano] prompt palette:\n"+prompt);
+      const txt = await _state.session.prompt(prompt);
+      console.log("[Nano] returned:\n"+ txt);
       return _parseEmojiBlock(txt);
     } catch(err){
       console.error('[Nano] palette generation failed:', err);
@@ -430,7 +432,27 @@ Choices:
   }
 
   function _buildPalettePrompt(examples){
-    const ex = (examples||[]).map(b=>b.join('\n')).join('\n\n');
+    const ex = examples?.map(b=>b.join('\n')).join('\n\n')??
+[
+[
+    "🏝🏝🏝🏝🏝🏝🏝🛣🛣🏝🏝🏝🏝🏝🏝🏝",
+    "🏝🏝🏝🏝🏝🏝🏝🛣🛣🏝🏝🏝🏝🏝🏝🏝",
+    "🏝🏝🏝🏝🏝🏝🏝🛣🛣🏝🏝🏝🏝🏝🏝🏝",
+    "🏝🏝🏝🏝🏝🏝🏝🛣🛣🏝🏝🏝🏝🏝🏝🏝",
+    "🏝🏝🏝🏝🏝🏝🏝🛣🛣🏝🏝🏝🏝🏝🏝🏝",
+    "🏝🏝🏝🏝🏝🏝🏝🛣🛣🏝🏝🏝🏝🏝🏝🏝",
+    "🏝🏝🏝🏝🏝🏝🏝🛣🛣🏝🏝🏝🏝🏝🏝🏝",
+    "🛣🛣🛣🛣🛣🛣🛣🛣🛣🛣🛣🛣🛣🛣🛣🛣",
+    "🛣🛣🛣🛣🛣🛣🛣🛣🛣🛣🛣🛣🛣🛣🛣🛣",
+    "🏝🏝🏝🏝🏝🏝🏝🛣🛣🏝🏝🏝🏝🏝🏝🏝",
+    "🏝🏝🏝🏝🏝🏝🏝🛣🛣🏝🏝🏝🏝🏝🏝🏝",
+    "🏝🏝🏝🏝🏝🏝🏝🛣🛣🏝🏝🏝🏝🏝🏝🏝",
+    "🏝🏝🏝🏝🏝🏝🏝🛣🛣🏝🏝🏝🏝🏝🏝🏝",
+    "🏝🏝🏝🏝🏝🏝🏝🛣🛣🏝🏝🏝🏝🏝🏝🏝",
+    "🏝🏝🏝🏝🏝🏝🏝🛣🛣🏝🏝🏝🏝🏝🏝🏝",
+    "🏝🏝🏝🏝🏝🏝🏝🛣🛣🏝🏝🏝🏝🏝🏝🏝"
+].join("\n")
+].join("\n\n");
     const legend = 'Emojis: 🏝 sand, 🪨 rock, 🌊 water, 🌿 brush, 🛣 road, 🏚 ruin, 🧱 wall, ⬜ floor, 🚪 door, 🏠 building. These are map tiles in a 2D game world.';
     return `${legend}\n\nExamples of 16x16 emoji blocks:\n${ex}\n\nNew 16x16 block:`;
   }
