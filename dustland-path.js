@@ -92,18 +92,22 @@
 
   function key(x,y){ return x+','+y; }
 
+  const NPC_MOVE_DELAY = globalThis.NPC_MOVE_DELAY || 200; // min ms between NPC patrol steps
+
   // Step NPCs along their waypoint loops. Invoked after player moves.
   function tickPathAI(){
+    const now = Date.now();
     for(const n of NPCS){
       const pts=n.loop;
       if(!Array.isArray(pts) || pts.length<2) continue;
       n._loop = n._loop || { idx:1, path:[], job:null };
+      if(n._lastMove && now - n._lastMove < NPC_MOVE_DELAY) continue;
       const st=n._loop;
       const near=party && Math.abs(n.x-party.x)+Math.abs(n.y-party.y) <= 2;
       if(near) continue;
       if(st.path.length){
         const step=st.path.shift();
-        if(step){ n.x=step.x; n.y=step.y; }
+        if(step){ n.x=step.x; n.y=step.y; n._lastMove=now; }
         if(!st.path.length){ st.idx=(st.idx+1)%pts.length; }
         continue;
       }
@@ -114,7 +118,7 @@
           st.job=null;
           if(st.path.length){
             const step=st.path.shift();
-            if(step){ n.x=step.x; n.y=step.y; }
+            if(step){ n.x=step.x; n.y=step.y; n._lastMove=now; }
             if(!st.path.length){ st.idx=(st.idx+1)%pts.length; }
           }
         }
