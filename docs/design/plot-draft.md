@@ -59,9 +59,13 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 
 #### **Phase 1: Narrative Foundation**
 - [x] Outline the caravan's pursuit of the fading broadcast across the Dustland.
-- [ ] **Define the Ghost Signal:** Write a detailed lore document explaining the origin and nature of the signal. Is it benevolent, malevolent, or something in between?
-- [ ] **The Silencers:** Create a new faction, the "Silencers," who act as the primary antagonists. Define their motivations, key members, and their methods for hunting the signal.
+  - The caravan catches the ghost of a broadcast near the Salt Flats and tracks its fading pulses by night.
+  - Ruined rail towns and dead malls scatter false echoes, but the crew rigs antennas and readings to keep the trail alive.
+  - A final shiver of sound draws them to a collapsed observatory where the signal sinks beneath the horizon, promising deeper secrets.
+- [ ] **Define the Ghost Signal:** Write 3-bullet lore (as above) explaining the origin and nature of the signal. Is it benevolent, malevolent, or something in between?
+- [ ] **The Silencers:** Create a new faction, the "Silencers," who act as the primary antagonists. 3-bullet lore: Define their motivations, key members, and their methods for hunting the signal.
 - [ ] **Modular Story Beats:** Design the first three "broadcast fragment" modules. Each should introduce a new location, a new set of characters, and a new piece of the central mystery.
+  - We are going to need to be able to link multiple world maps together in single module, or let character/inventory carry state across modules to tell this story
 
 #### **Phase 2: Character and Item Implementation**
 - [x] Detail Mara "Surveyor"—an ex-cartographer seeking the map she burned; arc: learns the signal isn't the only way home.
