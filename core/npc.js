@@ -122,5 +122,18 @@ function createNpcFactory(defs) {
   return npcFactory;
 }
 
-const npcExports = { NPC, makeNPC, resolveNode, NPCS, npcsOnMap, queueNanoDialogForNPCs, removeNPC, createNpcFactory };
+function scaleEnemy(npc, lvl = 1, build = []) {
+  npc.stats = npc.stats || (typeof baseStats === 'function' ? baseStats() : {});
+  npc.maxHp = npc.maxHp ?? npc.hp ?? 10;
+  npc.hp = npc.maxHp;
+  for (let i = 1; i < lvl; i++) {
+    npc.maxHp += 10;
+    npc.hp = npc.maxHp;
+    const stat = Array.isArray(build) && build.length ? build[(i - 1) % build.length] : null;
+    if (stat) npc.stats[stat] = (npc.stats[stat] || 0) + 1;
+  }
+  npc.lvl = lvl;
+}
+
+const npcExports = { NPC, makeNPC, resolveNode, NPCS, npcsOnMap, queueNanoDialogForNPCs, removeNPC, createNpcFactory, scaleEnemy };
 Object.assign(globalThis, npcExports);
