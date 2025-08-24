@@ -6,6 +6,7 @@ const nameEl=document.getElementById('npcName');
 const titleEl=document.getElementById('npcTitle');
 const portEl=document.getElementById('port');
 let currentNPC=null;
+Object.defineProperty(globalThis,'currentNPC',{get:()=>currentNPC,set:v=>{currentNPC=v;}});
 const dialogState={ tree:null, node:null };
 let selectedChoice=0;
 
@@ -107,6 +108,10 @@ function handleGoto(g){
     if(g.map) tgtNPC.map = g.map;
     tgtNPC.x = x;
     tgtNPC.y = y;
+    if(tgtNPC._loop){
+      tgtNPC._loop.path = [];
+      tgtNPC._loop.job = null;
+    }
   }else{
     if(g.map==='world'){
       startWorld();
@@ -355,5 +360,5 @@ function renderDialog(){
   dlgHighlightChoice();
 }
 
-const dialogExports = { overlay, choicesEl, textEl, nameEl, titleEl, portEl, openDialog, closeDialog, renderDialog, advanceDialog, resolveCheck, handleDialogKey };
+const dialogExports = { overlay, choicesEl, textEl, nameEl, titleEl, portEl, openDialog, closeDialog, renderDialog, advanceDialog, resolveCheck, handleDialogKey, handleGoto };
 Object.assign(globalThis, dialogExports);
