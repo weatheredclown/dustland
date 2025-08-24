@@ -718,6 +718,18 @@ test('fight choice triggers combat', () => {
   Actions.startCombat = orig;
 });
 
+test('boss special telegraphs before striking', async () => {
+  party.length = 0;
+  party.push({ name: 'Hero', hp: 10 });
+  openCombat([{ name: 'Boss', special: { cue: 'gathers power', dmg: 5, delay: 0 } }]);
+  enemyPhase();
+  assert.ok(combatOverlay.classList.contains('warning'));
+  await new Promise(r => setTimeout(r, 10));
+  assert.strictEqual(party[0].hp, 5);
+  assert.ok(!combatOverlay.classList.contains('warning'));
+  closeCombat('flee');
+});
+
 test('choices pointing to bye are rendered last', () => {
   NPCS.length = 0;
   const tree = {

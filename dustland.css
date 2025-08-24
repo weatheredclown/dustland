@@ -377,6 +377,8 @@
 
 /* Combat UI */
 #combatOverlay { background:rgba(0,0,0,.8); pointer-events:auto; z-index:10; right:440px; }
+#combatOverlay.warning { animation:bossWarn .3s steps(1) 4; }
+@keyframes bossWarn { 50% { background:rgba(80,0,0,.8); } }
 #combatOverlay .combat-window {
   pointer-events:auto;
   width:min(640px,92vw);
