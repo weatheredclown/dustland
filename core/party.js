@@ -21,6 +21,7 @@ class Character {
     this.xp += amt;
     log(`${this.name} gains ${amt} XP.`);
     if(typeof toast==='function') toast(`${this.name} +${amt} XP`);
+    EventBus.emit('xp:gained', { character: this, amount: amt });
     EventBus.emit('sfx','tick');
     while(this.xp >= this.xpToNext()){
       this.xp -= this.xpToNext();
@@ -34,6 +35,7 @@ class Character {
     this.hp = this.maxHp;
     this.skillPoints += 1;
     if(typeof hudBadge==='function') hudBadge('+1 Skill Point');
+    EventBus.emit('character:leveled-up', { character: this });
     EventBus.emit('sfx','tick');
     log(`${this.name} leveled up to ${this.lvl}! (+10 HP, +1 SP)`);
   }

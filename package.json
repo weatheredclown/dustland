@@ -5,11 +5,16 @@
   "type": "module",
   "main": "dustland-core.js",
   "scripts": {
-    "test": "node --test"
+    "serve": "http-server -p 8080",
+    "test": "node --test",
+    "test:balance": "node --test test/balance-tester.test.js",
+    "test:puppeteer": "node --test test/puppeteer-runner.test.js"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "jsdom": "^26.1.0"
+    "http-server": "^14.1.1",
+    "jsdom": "^26.1.0",
+    "puppeteer": "^22.10.0"
   }
 }
