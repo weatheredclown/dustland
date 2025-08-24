@@ -23,7 +23,7 @@ global.NPCS = [
 
 global.party = { x:5, y:5 };
 
-test('NPC follows waypoints per player move and waits when close', async () => {
+test('NPC follows waypoints with capped speed and waits when close', async () => {
   await import('../dustland-path.js');
   window.tickPathAI();
   await new Promise(r => setTimeout(r,20));
@@ -33,6 +33,9 @@ test('NPC follows waypoints per player move and waits when close', async () => {
   window.tickPathAI();
   assert.strictEqual(NPCS[0].x, 1);
   party.x = 5; party.y = 5;
+  window.tickPathAI();
+  assert.strictEqual(NPCS[0].x, 1);
+  await new Promise(r => setTimeout(r,210));
   window.tickPathAI();
   assert.strictEqual(NPCS[0].x, 2);
 });
