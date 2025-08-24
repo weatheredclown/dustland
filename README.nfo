@@ -32,8 +32,7 @@ _______________________________________________________________________________
 
 [ CONTROLS ]
   Movement .......... WASD / Arrow Keys
-  Interact .......... E / Space  (talk, doors, take nearby item)
-  Take Item ......... T          (take from your tile or adjacent tiles)
+  Interact/Take ..... E / Space / T (talk, use doors, take items)
   Inventory ......... I (click items to equip)
   Party ............. P          (radio button selects the acting member)
   Quests ............ Q
@@ -70,10 +69,8 @@ _______________________________________________________________________________
     * Entry point wiring up the canvas, UI, and scripts.
   - dustland-core.js
     * Game state, dialog system, inventory & equipment.
-  - core/quests.js
-    * Quest system and logging.
-  - core/npc.js
-    * NPC utilities and dialog helpers.
+  - core/*.js
+    * Core gameplay systems: combat, quests, NPCs, movement, etc.
   - dustland-engine.js
     * Renderer, input handling, HUD, and tiny sfx.
   - modules/dustland.module.js
@@ -86,7 +83,7 @@ _______________________________________________________________________________
   - dustland.html?ack-player=1 / ack-player.js
     * Fetch a module JSON from the web or load a local file into the engine.
   - dustland-nano.js
-    * Micro helper utilities.
+    * On-device AI for dynamic dialog and content generation.
   - dustland.css
     * CRT styling and layout.
   - No external assets or libraries.
