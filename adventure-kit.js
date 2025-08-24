@@ -171,10 +171,13 @@ loopPlus.addEventListener('click', () => {
   if (!selectedObj || selectedObj.type !== 'npc' || !loopHover) return;
   const npc = selectedObj.obj;
   npc.loop = npc.loop || [{ x: npc.x, y: npc.y }];
-  npc.loop.splice(loopHover.idx + 1, 0, { x: loopHover.x, y: loopHover.y });
+  const newIdx = loopHover.idx + 1;
+  const pos = nextLoopPoint(npc.loop[loopHover.idx], npc);
+  npc.loop.splice(newIdx, 0, pos);
   renderLoopFields(npc.loop);
   drawWorld();
-  showLoopControls(null);
+  // Keep NPC selected and highlight the new point for easy dragging
+  showLoopControls({ idx: newIdx, x: pos.x, y: pos.y });
 });
 
 loopMinus.addEventListener('click', () => {
