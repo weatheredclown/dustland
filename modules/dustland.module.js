@@ -565,6 +565,19 @@ const DUSTLAND_MODULE = (() => {
           ]
         }
       }
+    },
+    {
+      id: 'scrap_behemoth',
+      map: 'world',
+      x: 120,
+      y: midY,
+      color: '#f33',
+      name: 'Scrap Behemoth',
+      title: 'Wastes Boss',
+      desc: 'A towering mass of twisted metal.',
+      portraitSheet: 'assets/portraits/portrait_1084.png',
+      tree: { start: { text: 'The behemoth looms.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      combat: { HP: 30, ATK: 3, DEF: 2, loot: 'raider_knife', special: { cue: 'crackles with energy!', dmg: 5, delay: 1000 } }
     }
   ];
 

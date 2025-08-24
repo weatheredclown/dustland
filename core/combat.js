@@ -291,12 +291,7 @@ function enemyPhase(){
   enemyAttack();
 }
 
-function enemyAttack(){
-  const enemy=combatState.enemies[combatState.active];
-  const target=party[0];
-  if(!enemy || !target){ closeCombat('flee'); return; }
-  target.hp-=1;
-  log?.(`${enemy.name} strikes ${target.name} for 1 damage.`);
+function finishEnemyAttack(enemy, target){
   if(target.hp<=0){
     log?.(`${target.name} falls!`);
     combatState.fallen.push(target);
@@ -311,6 +306,28 @@ function enemyAttack(){
   } else {
     startPartyTurn();
   }
+}
+
+function enemyAttack(){
+  const enemy=combatState.enemies[combatState.active];
+  const target=party[0];
+  if(!enemy || !target){ closeCombat('flee'); return; }
+  if(enemy.special && !enemy._didSpecial){
+    enemy._didSpecial=true;
+    combatOverlay?.classList.add('warning');
+    log?.(`${enemy.name} ${enemy.special.cue||'charges up!'}`);
+    setTimeout(()=>{
+      combatOverlay?.classList.remove('warning');
+      const dmg=enemy.special.dmg||5;
+      target.hp-=dmg;
+      log?.(`${enemy.name} unleashes for ${dmg} damage.`);
+      finishEnemyAttack(enemy,target);
+    }, enemy.special.delay ?? 1000);
+    return;
+  }
+  target.hp-=1;
+  log?.(`${enemy.name} strikes ${target.name} for 1 damage.`);
+  finishEnemyAttack(enemy,target);
 }
 
 function startPartyTurn(){

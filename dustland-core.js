@@ -118,7 +118,8 @@ async function startCombat(defender){
     hp: defender.HP || 5,
     npc: defender.npc,
     loot: defender.loot,
-    portraitSheet: defender.portraitSheet || defender.npc?.portraitSheet
+    portraitSheet: defender.portraitSheet || defender.npc?.portraitSheet,
+    special: defender.special
   };
   const result = await openCombat([enemy]);
 
