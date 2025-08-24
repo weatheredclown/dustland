@@ -442,7 +442,9 @@ function renderParty(){
     const tLabel=m.equip.trinket?(m.equip.trinket.cursed&&m.equip.trinket.cursedKnown?m.equip.trinket.name+' (cursed)':m.equip.trinket.name):'—';
     const nextXP=xpToNext(m.lvl);
     const pct=Math.min(100,(m.xp/nextXP)*100);
-    c.innerHTML = `<div class='row'><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div>
+    const badge = m.skillPoints>0?`<div class="spbadge">${m.skillPoints}</div>`:'';
+    const portrait = `<div class='portrait' ${m.portraitSheet?`style="background-image:url(${m.portraitSheet})"`:''}>${badge}</div>`;
+    c.innerHTML = `<div class='row'>${portrait}<div><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div></div>
 <div class='row small'>${statLine(m.stats)}</div>
 <div class='row'>HP ${m.hp}/${m.maxHp}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div>
 <div class='row'><div class='xpbar' data-xp='${m.xp}/${nextXP}'><div class='fill' style='width:${pct}%'></div></div></div>
