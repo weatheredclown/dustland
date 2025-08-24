@@ -57,7 +57,7 @@ Here’s the roadmap. We’ll build the core systems first, get the player-facin
 - [x] **Respec Logic:** Implement the "Memory Worm" token item. Create a function in `core/party.js` that consumes a token to reset a character's spent skill points.
 
 #### **Phase 2: HUD and UX (The Dashboard)**
-- [ ] **Party Panel UI:** Add a compact XP bar below each character's health in the party panel. On hover, it should expand to show `currentXP / nextXP` values.
+- [x] **Party Panel UI:** Add a compact XP bar below each character's health in the party panel. On hover, it should expand to show `currentXP / nextXP` values.
 - [ ] **Skill Point Badge:** Create a small, glowing badge that appears over a character's portrait when they have unspent skill points. The badge should display the number of available points.
 - [ ] **Mentor System:** Implement a simple event hook in the level-up function that can trigger a sound file and a brief on-screen text notification (a "bark"). This should be tied to a quest flag or a specific item to remain optional.
 - [ ] **Trainer UI Mockup:** Design the "Upgrade Skills" dialog. It needs a list of available upgrades (stats and abilities), their costs, and a clear "before and after" preview for any selected stat change.
