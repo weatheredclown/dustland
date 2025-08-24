@@ -333,6 +333,19 @@
   image-rendering: pixelated;      /* preserve chunky pixels */
   background-repeat:no-repeat;
   background-size:100% 100%;       /* 2×2 grid */
+  position:relative;
+}
+
+.spbadge{
+  position:absolute;
+  top:-4px; right:-4px;
+  background:#8bd98d;
+  color:#0f120f;
+  border-radius:8px;
+  padding:2px 4px;
+  font-size:10px;
+  line-height:1;
+  box-shadow:0 0 4px #8bd98d;
 }
 
     .dialog main {
