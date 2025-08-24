@@ -105,5 +105,22 @@ function applyEquipmentStats(m){ m.applyEquipmentStats(); }
 function leader(){ return party.leader(); }
 function setLeader(idx){ selectedMember = idx; }
 
-const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, selectedMember, xpCurve };
+function respec(memberIndex=selectedMember){
+  const m = party[memberIndex];
+  if(!m) return false;
+  const tokenIdx = typeof findItemIndex==='function' ? findItemIndex('memory_worm') : -1;
+  if(tokenIdx===-1){
+    log('Need a Memory Worm token.');
+    return false;
+  }
+  removeFromInv(tokenIdx);
+  m.stats = baseStats();
+  m.skillPoints = m.lvl - 1;
+  m.applyEquipmentStats();
+  renderParty(); updateHUD();
+  log(`${m.name} respecs their skills.`);
+  return true;
+}
+
+const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, respec, selectedMember, xpCurve };
 Object.assign(globalThis, partyExports);

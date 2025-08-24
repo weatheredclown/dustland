@@ -187,6 +187,14 @@ const tileEvents = [];
 function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
 const state = { map:'world' }; // default map
 const player = { hp:10, ap:2, inv:[], scrap:0 };
+if (typeof registerItem === 'function') {
+  registerItem({
+    id: 'memory_worm',
+    name: 'Memory Worm',
+    type: 'token',
+    desc: 'Resets a character\'s spent skill points.'
+  });
+}
 function setPartyPos(x, y){
   if(typeof x === 'number') party.x = x;
   if(typeof y === 'number') party.y = y;
