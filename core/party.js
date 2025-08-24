@@ -36,6 +36,9 @@ class Character {
     if(typeof hudBadge==='function') hudBadge('+1 Skill Point');
     EventBus.emit('sfx','tick');
     log(`${this.name} leveled up to ${this.lvl}! (+10 HP, +1 SP)`);
+    if((party.flags && party.flags.mentor) || (typeof hasItem==='function' && hasItem('mentor_token'))){
+      EventBus.emit('mentor:bark', { text:'Another scar, another lesson learned.', sound:'mentor' });
+    }
   }
   applyEquipmentStats(){
     this._bonus = {ATK:0, DEF:0, LCK:0};
