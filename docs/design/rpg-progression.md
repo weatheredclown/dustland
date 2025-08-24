@@ -1,141 +1,83 @@
-# RPG Progression
+# RPG Progression, v2
+
 *By Mateo "Wing" Alvarez*
-*Comments from Alex "Echo" Johnson, Priya "Gizmo" Sharma, and Riley "Clown" Morgan appear in blockquotes.*
 
-Level ups need to hit like split-second boosts. Every time a character gains enough XP, they ding, snag +10 max HP automatically, grab a skill point, and reset the clock. Points funnel into stats or moves, no passive fluff.
+> **Clown:** The first pass was a good sketch. This revision is where we ink the details and bake the chaos right into the core loop. Let's make a system that feels good to master and even better to break.
 
-> **Echo:** Could an early mentor narrate these boosts? A pinch of story makes each ding ring louder.
-> **Wing:** Keep it tight—mentor barks a one-liner, then we move.
+### Core Loop: The Ninety-Second Ding
 
-An optional mentor can shout a quick line at each ding, but play snaps right back to action.
+Level ups need to hit like a perfectly timed parry—instant, satisfying, and immediately useful. Every time a character banks enough XP, they ding. No fanfare, no menu interruptions. Just a flash, a sound spike, and the goods: **+10 max HP, automatically applied**. One skill point lands in their pocket. Then it's right back to the action. The stopwatch is king; if the flow from combat to upgrade and back to combat takes longer than a minute and a half, we've failed.
 
-Spend those points at a trainer NPC. Walk up, pick the **Upgrade Skills** dialog, and a lean menu pops: speed, power, endurance, or new tricks. Keep it snappy so players return to the fray fast.
-
-> **Echo:** Love the tempo, but maybe each trainer has a shtick—wasteland hermit for endurance, arena champ for power?
-> **Wing:** Works if shticks stay snappy—hermit for endurance, champ for power, etc.
-
-> **Gizmo:** Let's preview stat shifts in that menu—clear numbers keep the upgrade flow accessible.
-> **Wing:** Agreed. We'll show stat delta before locking in.
-
-Enemies run the same playbook. Each foe carries a level, gains the same +10 max HP per level automatically, and spends its own points on presets, so their damage and defense climb in pace with the party. Zones set enemy level ranges to keep fights fair—outplays win, not inflated numbers.
-
-> **Echo:** Can bosses bend the rules for drama or do they march in lockstep?
-> **Wing:** Bosses can script a spike or phase shift, but we telegraph it.
-
-Behind the curtain, an XP curve doubles every five levels, and every level grants one point. No rubber-banding: you earn it, they mirror it, and the stopwatch stays honest.
-
-> **Gizmo:** If the curve lives in a JSON config, we can tweak pacing without digging through code.
-> **Wing:** To dodge file-loading issues, embed `xpCurve` in code and expose it globally for quick tuning.
-
-> **Echo:** If players mis-spend a point, do trainers offer respecs?
+> **Echo:** I still think a mentor's voice can add texture here. Not a lecture, just a ghostly whisper on the wind when you level up—"Another scar, another lesson learned." It makes the ding feel less like a system and more like a story beat.
 >
-> **Wing:** Maybe through pricey tokens. Keeps choices sticky but not permanent.
+> **Wing:** Fine, as long as it's a bark, not a monologue. A single sound file, maybe 1.5 seconds max. We can even tie it to a "mentor" item or a quest flag. Keeps it lean.
 
-**Player Experience**
+### Spending a Point: The Trainer's Booth
 
-From a fresh spawn, the XP bar ticks up as players mow through on-level foes.
-About five even-match wins trigger the ding: +10 max HP flashes, a skill point
-slots into their pool, and a mentor quips if one tags along. Between fights,
-players trek back to a nearby specialist trainer, open **Upgrade Skills**, and
-see exact stat deltas before committing. Zones advertise enemy level ranges so
-wandering into tougher turf feels like a choice, not a trap.
+Skill points are spent at trainer NPCs. This isn't a spreadsheet screen. It's a quick, sharp dialogue exchange. The player walks up, picks the **Upgrade Skills** option, and gets a stripped-down menu: power, endurance, or a new trick. They see the delta, confirm, and they're out. The goal is a pit stop, not a garage rebuild.
 
-**HUD & UX**
+> **Echo:** Giving each trainer a personality sells the world. The endurance trainer could be a grizzled old scavenger who smells of rust and wisdom, found hunkered over a campfire. The power trainer? A former arena champion with scars that tell stories. It turns a mechanical stop into a character moment.
+>
+> **Wing:** As long as their shtick is punchy. I don't want players wading through five text boxes to get a +5 stat bump. One line of flavor text, then the menu. Quick in, quick out.
+>
+> **Gizmo:** The UI for this needs to be crystal clear. When a player highlights an upgrade, we should show the exact numerical change: `STR: 25 -> 30`. No ambiguity. This also makes it easier for modders to add their own skills later; the UI just needs to read the delta from the data object. Let's make sure the cost is displayed just as clearly, whether it's skill points or a rare token.
 
-The party panel along the bottom left gains a tiny XP bar and a skill point badge for each character. The bar shows `currentXP/nextXP` when hovered and stays a thin progress strip otherwise so the HUD stays clean. Unspent points raise a small glowing badge with the point count over the portrait until the player spends them at a trainer. This keeps level progress visible without cluttering the action.
+### The Mirror Match: Enemy Progression
 
+Enemies play by the same rules. They level up, get the same +10 max HP boost, and spend points on pre-defined builds. This isn't about letting the player out-grind the challenge; it's about making every fight a test of skill. The player gets smarter and stronger, and so do their opponents. Zones will have clear enemy level ranges, so walking into a high-level area is a conscious choice—a challenge, not a punishment.
 
-**Numbers**
+> **Echo:** Do bosses get to break the rules? A climactic fight should feel like the world itself is breaking, not just a tougher stat check.
+>
+> **Wing:** Bosses get one or two scripted "cheats," but they have to be telegraphed. A boss might overload its core for a massive damage spike, but the player will see it coming—glowing cracks, a high-pitched whine. It's a skill check, not a cheap shot.
+>
+> **Clown:** This is a perfect spot for some visual mayhem. When a boss telegraphs a big move, let's mess with the CRT filter. A little screen shake, a touch of color bleed. It makes the threat feel real and gives modders a hook to create their own custom boss effects.
 
-*XP Curve (levels 1–20)*
+### The Numbers Game
 
-| Level | Total XP | XP to Next |
-| --- | --- | --- |
-| 1 | 0 | 100 |
-| 2 | 100 | 100 |
-| 3 | 200 | 100 |
-| 4 | 300 | 100 |
-| 5 | 400 | 100 |
-| 6 | 500 | 200 |
-| 7 | 700 | 200 |
-| 8 | 900 | 200 |
-| 9 | 1100 | 200 |
-| 10 | 1300 | 200 |
-| 11 | 1500 | 400 |
-| 12 | 1900 | 400 |
-| 13 | 2300 | 400 |
-| 14 | 2700 | 400 |
-| 15 | 3100 | 400 |
-| 16 | 3500 | 800 |
-| 17 | 4300 | 800 |
-| 18 | 5100 | 800 |
-| 19 | 5900 | 800 |
-| 20 | 6700 | 800 |
+The XP curve doubles every five levels—a simple, predictable ramp. It's stored in a global `xpCurve` array, so we can tune it without a full recompile. One skill point per level. No funny business.
 
-Default `xpCurve` array:
+> **Gizmo:** I still lean toward a JSON file for the curve. It's cleaner and separates data from logic. But embedding it as a global array is fine for now, as long as we document clearly where it is and how to modify it. We can always refactor it into a config file later if we need to.
+>
+> **Wing:** Code is faster. No file I/O, no async headaches. We stick with the embedded array for now. Speed is everything.
+>
+> **Echo:** What about mistakes? If a player sinks a point into a stat they regret, is there a way back?
+>
+> **Wing:** Respecs should be costly. Make them find or buy a "Memory Worm" token. It keeps their choices meaningful but offers an out for those who want to experiment. Make the tokens rare drops from bosses or expensive items at a special vendor.
 
-```js
-[0,100,200,300,400,500,700,900,1100,1300,1500,1900,2300,2700,3100,3500,4300,5100,5900,6700]
-```
+---
+### **Expanded Task List**
 
-*Auto Gains*
+Here’s the roadmap. We’ll build the core systems first, get the player-facing UX in place, and then layer in the content and balancing. Each of these is a ticket waiting to happen.
 
-- +10 max HP automatically per level; no points needed.
+#### **Phase 1: Core Progression Mechanics (The Engine)**
+- [x] Embed `xpCurve` array in `core/party.js` with sane defaults and expose it globally for mods.
+- [x] Implement XP tracking and level-up logic in the `Character` class. Automatically apply +10 max HP and grant one skill point upon level-up.
+- [ ] **Data Structure:** Define the data structure for active and passive abilities. This should include cost, prerequisites (level, other abilities), and the actual effect (e.g., `damage_boost`, `aoe_attack`).
+- [ ] **Enemy Scaling:** Create a function in `core/npc.js` that applies level-up logic to enemy NPCs based on their level. This should include the standard +10 max HP and a method for allocating points into predefined stat builds.
+- [ ] **Respec Logic:** Implement the "Memory Worm" token item. Create a function in `core/party.js` that consumes a token to reset a character's spent skill points.
 
-*Skill Points*
+#### **Phase 2: HUD and UX (The Dashboard)**
+- [ ] **Party Panel UI:** Add a compact XP bar below each character's health in the party panel. On hover, it should expand to show `currentXP / nextXP` values.
+- [ ] **Skill Point Badge:** Create a small, glowing badge that appears over a character's portrait when they have unspent skill points. The badge should display the number of available points.
+- [ ] **Mentor System:** Implement a simple event hook in the level-up function that can trigger a sound file and a brief on-screen text notification (a "bark"). This should be tied to a quest flag or a specific item to remain optional.
+- [ ] **Trainer UI Mockup:** Design the "Upgrade Skills" dialog. It needs a list of available upgrades (stats and abilities), their costs, and a clear "before and after" preview for any selected stat change.
+    > **Gizmo:** Let's make this UI data-driven. It should just read a list of available upgrades from the trainer NPC's data. That way, modders can add new trainers with unique skill trees just by editing a JSON file.
 
-- 1 point per level; unspent points carry over.
-- Stat bump: +5 to chosen stat for 1 point.
-- New ability: costs 2 points and shows prerequisites.
-- Respec: costs 1 token; vendors sell tokens for 500 scrap and bosses drop 1.
+#### **Phase 3: Content Implementation (The World)**
+- [ ] **Trainer NPCs:** Create at least three specialized trainer NPCs (e.g., Power, Endurance, Tricks) and place them in the world. Each trainer's `tree` object should include the **Upgrade Skills** dialog option and their unique list of available upgrades.
+- [ ] **Enemy Presets:** Create a `presets.json` file to define enemy stat allocations per level. For example, a "Scrapper" preset might allocate points into `STR` and `AGI`, while a "Bulwark" preset focuses on `DEF`.
+- [ ] **Zone Population:** Populate the "Scrap Wastes" (Levels 1-5) with 5-7 on-level enemies and one or two higher-level "challenge" enemies off the main path. Ensure the zone layout naturally funnels players back toward a trainer NPC.
+- [ ] **Boss Mechanics:** Implement the first boss with a telegraphed special move. This involves creating a visual cue (e.g., a "charging up" animation or effect) and a corresponding high-damage attack that triggers after a short delay.
+- [ ] **Respec Vendor:** Create a special vendor NPC who sells "Memory Worm" tokens for a high price (e.g., 500 scrap). This vendor should be placed in a mid-to-late game area.
 
-*Enemy Presets*
+#### **Phase 4: Testing and Balancing (The Stopwatch)**
+- [ ] **Progression Test Suite:** Write automated tests to verify:
+    - XP is awarded correctly.
+    - Level-ups trigger at the right thresholds according to `xpCurve`.
+    - HP and skill points are granted correctly.
+    - Enemy stats scale as expected with their level.
+- [ ] **Playtest: The First Ding:** Run internal playtests focusing on the time it takes a new player to reach their first level-up. Target: under 10 minutes of active play.
+- [ ] **Playtest: Trainer Flow:** Test the trainer UI for clarity and speed. A player should be able to spend a skill point and exit the dialog in under 15 seconds.
+- [ ] **Playtest: Zone Difficulty:** Evaluate the "Scrap Wastes" zone to ensure the difficulty curve feels fair but engaging. Check if players feel encouraged to tackle the optional high-level enemies.
 
-| Zone | Enemy Levels | Example Allocation |
-| --- | --- | --- |
-| Scrap Wastes | 1–5 | 3 speed / 2 power |
-| Gear Alley | 6–10 | 5 power / 3 endurance |
-| Steel Summit | 11–15 | 4 speed / 6 power |
-| Final Gauntlet | 16–20 | Custom boss scripts |
-
-*Enemy XP & Availability*
-
-> **Gizmo:** How much juice does each foe spill? Designers need counts so players
-aren't stuck grinding.
-> **Wing:** Same-level grunts drop 20 XP × their level—roughly five takedowns per
-ding. Elites pay 30 × level so zones don't stall.
-
-- Common enemies: 20 XP × level.
-- Elite enemies: 30 XP × level.
-- Zones should seed 5–7 on-level foes near each trainer so players can level
-without backtracking.
-- Sprinkle higher-level threats off the main path as opt-in challenges.
-- Route loops should funnel back toward trainers so the upgrade trip feels
-natural.
-
-**Systems**
-- XP thresholds double every five levels; curve stored in the `xpCurve` array.
-- Each level auto grants +10 max HP, yields one skill point, and can trigger a mentor one-liner.
-- Trainer NPCs specialize and open the Upgrade Skills menu with previewed stat shifts.
-- Skill points fuel stat bumps or new abilities; respec via costly tokens.
-- Enemies spend equal points on predefined builds; bosses get telegraphed boosts.
-
-> **Clown:** Let's carve a roadmap so each slice ships mod-ready and testable.
-
-**Task List**
-- [x] Embed `xpCurve` with sane defaults and expose it for mods.
-- [x] Track XP and level-ups, auto-apply +10 max HP and grant skill points.
-- [ ] Show each character's current and next level XP on the party HUD.
-- [ ] Badge portraits when unspent skill points are available.
-- [ ] Trigger optional mentor one-liners on level-up.
-- [ ] Build trainer NPCs with specialized **Upgrade Skills** dialogs that preview stat deltas and costs.
-- [ ] Enforce trainer specialties through UI and stat preview hooks.
-- [ ] Define enemy level ranges and point presets in external JSON files.
-- [ ] Seed zones with 5–7 on-level foes and optional higher-level challenges near trainers.
-- [ ] Script boss spike telegraphs and implement a token-based respec vendor.
-- [ ] Write tests for XP progression, mentor hooks, trainer menus, enemy scaling, boss spikes, and respec flows.
-
-> **Wing:** Task granularity looks good—core loop first, content second, tests last.
-> **Gizmo:** Each bullet maps to one system; capture JSON schemas and UI mocks while we implement.
-> **Echo:** Narrative beats land through mentor barks and boss telegraphs—keep the flair.
-> **Clown:** We'll spin each bullet into a ticket and split trainer UI versus specialties if scope balloons.
+> **Clown:** This roadmap feels solid. It's a ladder of features we can build and test one rung at a time. And every rung is something a modder can hook into and twist. Let's get to it.
