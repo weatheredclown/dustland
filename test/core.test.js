@@ -393,6 +393,17 @@ test('selected party member receives XP on dialog success', () => {
   assert.strictEqual(b.xp,5);
 });
 
+test('level up grants +10 max HP and a skill point', () => {
+  const c = new Character('c','C','Role');
+  c.skillPoints = 0;
+  const need = xpToNext(c.lvl);
+  c.awardXP(need);
+  assert.strictEqual(c.lvl, 2);
+  assert.strictEqual(c.maxHp, 20);
+  assert.strictEqual(c.hp, 20);
+  assert.strictEqual(c.skillPoints, 1);
+});
+
 test('advanceDialog moves to next node', () => {
   const tree = {
     start: { text: 'hi', next: [{ id: 'bye', label: 'Bye' }] },
