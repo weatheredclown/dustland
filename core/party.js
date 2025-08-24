@@ -125,5 +125,24 @@ function respec(memberIndex=selectedMember){
   return true;
 }
 
-const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, respec, selectedMember, xpCurve };
+function trainStat(stat, memberIndex = selectedMember){
+  const m = party[memberIndex];
+  if(!m) return false;
+  if(m.skillPoints <= 0){
+    log('No skill points to spend.');
+    return false;
+  }
+  m.skillPoints -= 1;
+  if(stat === 'HP'){
+    m.maxHp += 5;
+    m.hp = m.maxHp;
+  }else{
+    m.stats[stat] = (m.stats[stat] || 0) + 1;
+  }
+  renderParty(); updateHUD();
+  log(`${m.name} trains ${stat}.`);
+  return true;
+}
+
+const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, respec, trainStat, selectedMember, xpCurve };
 Object.assign(globalThis, partyExports);

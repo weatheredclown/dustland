@@ -406,6 +406,87 @@ const DUSTLAND_MODULE = (() => {
         { x: 90, y: midY - 6 }
       ],
       combat: { HP: 7, ATK: 2, DEF: 1, loot: 'raider_knife', auto: true }
+    },
+    {
+      id: 'trainer_power',
+      map: 'world',
+      x: 6,
+      y: midY - 1,
+      color: '#ffcc99',
+      name: 'Brakk',
+      title: 'Power Trainer',
+      desc: 'A former arena champ teaching raw strength.',
+      tree: {
+        start: {
+          text: 'Brakk cracks his knuckles.',
+          choices: [
+            { label: '(Upgrade Skills)', to: 'train' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        },
+        train: {
+          text: 'Push your limits.',
+          choices: [
+            { label: 'STR +1', to: 'train', effects: [() => trainStat('STR')] },
+            { label: 'AGI +1', to: 'train', effects: [() => trainStat('AGI')] },
+            { label: '(Back)', to: 'start' }
+          ]
+        }
+      }
+    },
+    {
+      id: 'trainer_endurance',
+      map: 'world',
+      x: 6,
+      y: midY + 1,
+      color: '#99ccff',
+      name: 'Rusty',
+      title: 'Endurance Trainer',
+      desc: 'A grizzled scavenger preaching survival.',
+      tree: {
+        start: {
+          text: 'Rusty studies your stance.',
+          choices: [
+            { label: '(Upgrade Skills)', to: 'train' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        },
+        train: {
+          text: 'Breathe deep and endure.',
+          choices: [
+            { label: 'Max HP +5', to: 'train', effects: [() => trainStat('HP')] },
+            { label: 'DEF +1', to: 'train', effects: [() => trainStat('DEF')] },
+            { label: '(Back)', to: 'start' }
+          ]
+        }
+      }
+    },
+    {
+      id: 'trainer_tricks',
+      map: 'world',
+      x: 6,
+      y: midY + 3,
+      color: '#cc99ff',
+      name: 'Mira',
+      title: 'Tricks Trainer',
+      desc: 'A nimble tinkerer teaching odd moves.',
+      tree: {
+        start: {
+          text: 'Mira twirls a coin.',
+          choices: [
+            { label: '(Upgrade Skills)', to: 'train' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        },
+        train: {
+          text: 'Learn a new trick.',
+          choices: [
+            { label: 'PER +1', to: 'train', effects: [() => trainStat('PER')] },
+            { label: 'LCK +1', to: 'train', effects: [() => trainStat('LCK')] },
+            { label: '(Back)', to: 'start' }
+          ]
+        }
+      }
     }
   ];
 
