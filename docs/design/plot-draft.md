@@ -4,7 +4,10 @@
 This checklist charts the caravan's chase after a fading broadcast. We'll cross off each beat as the signal sharpens.
 
 ## Plot
-- [ ] Outline the caravan's pursuit of the fading broadcast across the Dustland.
+- [x] Outline the caravan's pursuit of the fading broadcast across the Dustland.
+  - The caravan catches the ghost of a broadcast near the Salt Flats and tracks its fading pulses by night.
+  - Ruined rail towns and dead malls scatter false echoes, but the crew rigs antennas and readings to keep the trail alive.
+  - A final shiver of sound draws them to a collapsed observatory where the signal sinks beneath the horizon, promising deeper secrets.
 - [ ] Decide whether restoring the broadcast heals the wastes or silences their stories.
 - [ ] **Gizmo:** Keep broadcast fragments modular so new episodes slot in without rewiring tools.
 - [ ] **Wing:** Pace each stop with a ticking clock or rival crew so the caravan never stalls.
