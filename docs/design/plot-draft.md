@@ -62,7 +62,10 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
   - The caravan catches the ghost of a broadcast near the Salt Flats and tracks its fading pulses by night.
   - Ruined rail towns and dead malls scatter false echoes, but the crew rigs antennas and readings to keep the trail alive.
   - A final shiver of sound draws them to a collapsed observatory where the signal sinks beneath the horizon, promising deeper secrets.
-- [ ] **Define the Ghost Signal:** Write 3-bullet lore (as above) explaining the origin and nature of the signal. Is it benevolent, malevolent, or something in between?
+- [x] **Define the Ghost Signal:** Write 3-bullet lore (as above) explaining the origin and nature of the signal. Is it benevolent, malevolent, or something in between?
+  - It is the fragmented consciousness of a pre-Fall scientist, an AI ghost whispering secrets of a world that could be reborn.
+  - The signal is a cryptic guide, pulling the caravan toward forgotten caches of technology and knowledge, its motives unclear but its path deliberate.
+  - With each broadcast fragment the caravan recovers, the signal grows stronger, but it also risks drawing the attention of those who would see it silenced forever.
 - [ ] **The Silencers:** Create a new faction, the "Silencers," who act as the primary antagonists. 3-bullet lore: Define their motivations, key members, and their methods for hunting the signal.
 - [ ] **Modular Story Beats:** Design the first three "broadcast fragment" modules. Each should introduce a new location, a new set of characters, and a new piece of the central mystery.
   - We are going to need to be able to link multiple world maps together in single module, or let character/inventory carry state across modules to tell this story
