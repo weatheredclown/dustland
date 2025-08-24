@@ -269,32 +269,32 @@
               <div id="nanoBadge" class="nano-badge off">✗</div>
             </div>
             <div id="worldPalette">
-              <button type="button" data-tile="0" style="background:#1e271d"></button>
-              <button type="button" data-tile="1" style="background:#2c342c"></button>
-              <button type="button" data-tile="2" style="background:#1573ff"></button>
-              <button type="button" data-tile="3" style="background:#203320"></button>
-              <button type="button" data-tile="4" style="background:#777777"></button>
-              <button type="button" data-tile="5" style="background:#304326"></button>
-              <button type="button" data-tile="6" style="background:#4d5f4d"></button>
+              <button type="button" data-tile="0" style="background:#1e271d" title="Sand"></button>
+              <button type="button" data-tile="1" style="background:#2c342c" title="Rock"></button>
+              <button type="button" data-tile="2" style="background:#1573ff" title="Water"></button>
+              <button type="button" data-tile="3" style="background:#203320" title="Brush"></button>
+              <button type="button" data-tile="4" style="background:#777777" title="Road"></button>
+              <button type="button" data-tile="5" style="background:#304326" title="Ruin"></button>
+              <button type="button" data-tile="6" style="background:#4d5f4d" title="Wall"></button>
             </div>
             <button class="btn" type="button" id="stampsBtn" title="Stamps" aria-label="Stamps">🔖</button>
             <div id="stampWindow"></div>
             <div id="paletteLabel"></div>
           </div>
-          <button class="btn" id="noiseToggle">Noise: On</button>
-          <button class="btn" id="clear">Clear Map</button>
+          <button class="btn" id="noiseToggle" title="Toggle organic brush noise">Noise: On</button>
         </div>
         <div class="btn-group">
-        <div style="padding:0px 13px 0px 0px;font-family: sans-serif;">
-        <label for="moduleName">Module Name</label>
-        <input type="text" id="moduleName" />
-        </div>
-          <button class="btn btn--primary" id="save">Download Module</button>
-          <button class="btn" id="load">Load Module</button>
+          <div style="padding:0px 13px 0px 0px;font-family: sans-serif;">
+          <label for="moduleName">Module Name</label>
+          <input type="text" id="moduleName" />
+          </div>
+          <button class="btn btn--primary" id="save" title="Download module as a JSON file">Save</button>
+          <button class="btn" id="load" title="Load a module from a JSON file">Load</button>
         </div>
         <div class="btn-group">
-          <button class="btn" id="setStart">Set Start</button>
-          <button class="btn btn--primary" id="playtest">Playtest</button>
+          <button class="btn" id="setStart" title="Set player starting tile">Set Start</button>
+          <button class="btn" id="resetStart" title="Reset player starting tile to the default">Reset Start</button>
+          <button class="btn" id="clear" title="Clear the entire map">Clear Map</button>
         </div>
       <input type="file" id="loadFile" accept="application/json" style="display:none" />
     </section>
