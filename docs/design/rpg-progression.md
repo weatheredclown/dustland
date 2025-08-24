@@ -124,7 +124,7 @@ natural.
 
 **Task List**
 - [x] Embed `xpCurve` with sane defaults and expose it for mods.
-- [ ] Track XP and level-ups, auto-apply +10 max HP and grant skill points.
+- [x] Track XP and level-ups, auto-apply +10 max HP and grant skill points.
 - [ ] Show each character's current and next level XP on the party HUD.
 - [ ] Badge portraits when unspent skill points are available.
 - [ ] Trigger optional mentor one-liners on level-up.
