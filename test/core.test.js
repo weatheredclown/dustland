@@ -404,6 +404,26 @@ test('level up grants +10 max HP and a skill point', () => {
   assert.strictEqual(c.skillPoints, 1);
 });
 
+test('respec consumes memory worm and restores skill points', () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const c = new Character('m','M','Role');
+  c.lvl = 3;
+  c.skillPoints = 0;
+  c.stats.STR += 2;
+  party.addMember(c);
+  setLeader(0);
+  registerItem({ id:'memory_worm', name:'Memory Worm', type:'token' });
+  addToInv('memory_worm');
+  const idx = findItemIndex('memory_worm');
+  assert.ok(idx !== -1);
+  const ok = respec();
+  assert.ok(ok);
+  assert.strictEqual(findItemIndex('memory_worm'), -1);
+  assert.deepStrictEqual(c.stats, baseStats());
+  assert.strictEqual(c.skillPoints, 2);
+});
+
 test('advanceDialog moves to next node', () => {
   const tree = {
     start: { text: 'hi', next: [{ id: 'bye', label: 'Bye' }] },

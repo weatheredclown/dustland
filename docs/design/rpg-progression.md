@@ -54,7 +54,7 @@ Here’s the roadmap. We’ll build the core systems first, get the player-facin
 - [x] Implement XP tracking and level-up logic in the `Character` class. Automatically apply +10 max HP and grant one skill point upon level-up.
 - [x] **Data Structure:** Define the data structure for active and passive abilities. This should include cost, prerequisites (level, other abilities), and the actual effect (e.g., `damage_boost`, `aoe_attack`).
 - [x] **Enemy Scaling:** Create a function in `core/npc.js` that applies level-up logic to enemy NPCs based on their level. This should include the standard +10 max HP and a method for allocating points into predefined stat builds.
-- [ ] **Respec Logic:** Implement the "Memory Worm" token item. Create a function in `core/party.js` that consumes a token to reset a character's spent skill points.
+- [x] **Respec Logic:** Implement the "Memory Worm" token item. Create a function in `core/party.js` that consumes a token to reset a character's spent skill points.
 
 #### **Phase 2: HUD and UX (The Dashboard)**
 - [ ] **Party Panel UI:** Add a compact XP bar below each character's health in the party panel. On hover, it should expand to show `currentXP / nextXP` values.
