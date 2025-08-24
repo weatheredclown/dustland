@@ -273,10 +273,14 @@ function incFlag(flag, amt=1){
 }
 
 // ===== Module application =====
-function applyModule(data){
-  setRNGSeed(data.seed || Date.now());
+function applyModule(data, options = {}){
+  const { fullReset = true } = options;
 
-  if (data.world) {
+  if (fullReset) {
+    setRNGSeed(data.seed || Date.now());
+  }
+
+  if (data.world && fullReset) {
     // Replace world grid while preserving array reference for consumers
     world.length = 0;
     if (Array.isArray(data.world[0])) {
@@ -284,22 +288,30 @@ function applyModule(data){
     } else if (typeof data.world[0] === 'string') {
       gridFromEmoji(data.world).forEach(r => world.push(r));
     }
+  }
 
+  if (fullReset) {
     // Reset and repopulate core collections without changing references
     Object.keys(interiors).forEach(k => delete interiors[k]);
     buildings.length = 0;
     portals.length = 0;
-    if (data.buildings) buildings.push(...data.buildings);
-    if (data.portals)   portals.push(...data.portals);
-  } else {
-    if (data.buildings) { buildings.length = 0; buildings.push(...data.buildings); }
-    if (data.portals)   { portals.length = 0;   portals.push(...data.portals); }
+    tileEvents.length = 0;
+    itemDrops.length = 0;
+    if (typeof ITEMS !== 'undefined') Object.keys(ITEMS).forEach(k=> delete ITEMS[k]);
+    if (typeof quests !== 'undefined') Object.keys(quests).forEach(k=> delete quests[k]);
+    NPCS.length = 0;
+    hiddenNPCs.length = 0;
   }
 
-  tileEvents.length = 0;
+  if (data.buildings) buildings.push(...data.buildings.filter(b => !buildings.some(eb => eb.x === b.x && eb.y === b.y)));
+  if (data.portals) portals.push(...data.portals);
   if (data.events) registerTileEvents(data.events);
 
   (data.interiors || []).forEach(I => {
+    if (!fullReset && interiors[I.id]) {
+      console.warn('Interior already exists: ' + I.id);
+      return;
+    }
     const { id, grid, ...rest } = I;
     const g = grid && typeof grid[0] === 'string' ? gridFromEmoji(grid) : grid;
     interiors[id] = { ...rest, grid: g };
@@ -307,28 +319,41 @@ function applyModule(data){
 
   if (data.mapLabels) Object.assign(mapLabels, data.mapLabels);
   buildings.forEach(b => { if (!interiors[b.interiorId]) { makeInteriorRoom(b.interiorId); } });
-  itemDrops.length = 0;
-  Object.keys(ITEMS).forEach(k=> delete ITEMS[k]);
-  (data.items||[]).forEach(it=>{
-    const {map, x, y, ...def} = it;
-    const registered = registerItem(def);
-    if(map!==undefined && x!==undefined && y!==undefined){
-      itemDrops.push({id: registered.id, map: map||'world', x, y});
-    }
-  });
-  Object.keys(quests).forEach(k=> delete quests[k]);
-  (data.quests||[]).forEach(q=>{
 
-    quests[q.id] = new Quest(
-      q.id,
-      q.title,
-      q.desc,
-      { item: q.item, reward: q.reward, xp: q.xp, moveTo: q.moveTo }
-    );
-  });
-  NPCS.length = 0;
-  hiddenNPCs.length = 0;
+  if (typeof ITEMS !== 'undefined' && data.items) {
+    (data.items||[]).forEach(it=>{
+      if (!fullReset && ITEMS[it.id]) {
+        console.warn('Item already exists: ' + it.id);
+        return;
+      }
+      const {map, x, y, ...def} = it;
+      const registered = registerItem(def);
+      if(map!==undefined && x!==undefined && y!==undefined){
+        itemDrops.push({id: registered.id, map: map||'world', x, y});
+      }
+    });
+  }
+
+  if (typeof quests !== 'undefined' && data.quests) {
+    (data.quests||[]).forEach(q=>{
+      if (!fullReset && quests[q.id]) {
+        console.warn('Quest already exists: ' + q.id);
+        return;
+      }
+      quests[q.id] = new Quest(
+        q.id,
+        q.title,
+        q.desc,
+        { item: q.item, reward: q.reward, xp: q.xp, moveTo: q.moveTo }
+      );
+    });
+  }
+
   (data.npcs||[]).forEach(n=>{
+    if (!fullReset && (NPCS.some(npc => npc.id === n.id) || hiddenNPCs.some(npc => npc.id === n.id))) {
+      console.warn('NPC already exists: ' + n.id);
+      return;
+    }
     if(n.hidden && n.reveal){ hiddenNPCs.push(n); return; }
     let tree=n.tree;
     if(typeof tree==='string'){ try{ tree=JSON.parse(tree); }catch(e){ tree=null; } }

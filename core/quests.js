@@ -57,8 +57,17 @@ function defaultQuestProcessor(npc, nodeId) {
   } else if (nodeId === 'do_turnin') {
     if (meta.status === 'available') questLog.add(meta);
     if (meta.status === 'active') {
-      if (!meta.item || hasItem(meta.item)) {
-        if (meta.item) { const i = findItemIndex(meta.item); if (i > -1) removeFromInv(i); }
+      const requiredCount = meta.count || 1;
+      const hasItems = !meta.item || countItems(meta.item) >= requiredCount;
+      const hasFlag = !meta.reqFlag || (typeof flagValue === 'function' && flagValue(meta.reqFlag));
+
+      if (hasItems && hasFlag) {
+        if (meta.item) {
+          for (let i = 0; i < requiredCount; i++) {
+            const itemIdx = findItemIndex(meta.item);
+            if (itemIdx > -1) removeFromInv(itemIdx);
+          }
+        }
         questLog.complete(meta.id);
         if (meta.reward) {
           const rewardIt = resolveItem(meta.reward);

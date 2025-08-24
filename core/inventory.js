@@ -153,6 +153,15 @@ function findItemIndex(idOrTag){
   return player.inv.findIndex(it => it.id === idOrTag || it.tags.map(t=>t.toLowerCase()).includes(tag));
 }
 function hasItem(idOrTag){ return findItemIndex(idOrTag) !== -1; }
+function countItems(idOrTag) {
+  const tag = typeof idOrTag === 'string' ? idOrTag.toLowerCase() : '';
+  return player.inv.reduce((count, it) => {
+    if (it.id === idOrTag || it.tags.map(t => t.toLowerCase()).includes(tag)) {
+      return count + 1;
+    }
+    return count;
+  }, 0);
+}
 
 function useItem(invIndex){
   const it = player.inv[invIndex];
@@ -187,5 +196,5 @@ function useItem(invIndex){
   return false;
 }
 
-const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, uncurseItem };
+const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem };
 Object.assign(globalThis, inventoryExports);
