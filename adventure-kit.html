@@ -204,11 +204,22 @@
       margin-top: 0;
     }
 
+    #treeEditor .choices label.inline,
+    #treeEditor .choices label.onceWrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
     #treeEditor .choices details input,
     #treeEditor .choices details select {
       width: 100%;
       flex: none;
       min-width: 0;
+    }
+
+    #treeEditor .choices details input[type=checkbox] {
+      width: auto;
     }
 
     #treeEditor .nodeHeader {
