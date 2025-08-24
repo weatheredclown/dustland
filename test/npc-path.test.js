@@ -39,3 +39,28 @@ test('NPC follows waypoints with capped speed and waits when close', async () =>
   window.tickPathAI();
   assert.strictEqual(NPCS[0].x, 2);
 });
+
+test('NPC re-pathfinds after being moved', async () => {
+  NPCS.length = 0;
+  NPCS.push({ id:'n2', map:'world', x:0, y:0, loop:[{x:0,y:0},{x:2,y:0}] });
+  party.x = 5; party.y = 5;
+  await import('../dustland-path.js');
+  global.updateHUD = () => {};
+  global.document = {
+    getElementById: () => ({ children: [], classList:{ toggle(){}, contains(){ return false; }, add(){}, remove(){} }, style:{}, appendChild(){}, remove(){}, innerHTML:'', textContent:'' }),
+    createElement: () => ({ children: [], classList:{ toggle(){}, contains(){ return false; }, add(){}, remove(){} }, style:{}, appendChild(){}, remove(){}, innerHTML:'', textContent:'', onclick:null }),
+  };
+  await import('../core/dialog.js');
+  window.tickPathAI();
+  await new Promise(r => setTimeout(r,20));
+  window.tickPathAI();
+  assert.strictEqual(NPCS[0].x, 1);
+  const stPre = NPCS[0]._loop;
+  assert.ok(stPre && (stPre.path.length > 0 || stPre.job));
+  global.currentNPC = NPCS[0];
+  window.handleGoto({target:'npc', x:0, y:1, rel:false});
+  assert.deepStrictEqual({x:NPCS[0].x, y:NPCS[0].y}, {x:0, y:1});
+  const st = NPCS[0]._loop;
+  assert.deepStrictEqual(st.path, []);
+  assert.strictEqual(st.job, null);
+});
