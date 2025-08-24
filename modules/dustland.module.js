@@ -389,6 +389,84 @@ const DUSTLAND_MODULE = (() => {
       loop: [ { x: 14, y: midY - 1 }, { x: 80, y: midY + 4 } ]
     },
     {
+      id: 'scrap_mutt',
+      map: 'world',
+      x: 18,
+      y: midY - 2,
+      color: '#d88',
+      name: 'Scrap Mutt',
+      title: 'Mangy Hound',
+      desc: 'A feral mutt snarling over junk.',
+      tree: { start: { text: 'The mutt bares its teeth.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      combat: { HP: 5, ATK: 1, loot: 'water_flask', auto: true }
+    },
+    {
+      id: 'scavenger_rat',
+      map: 'world',
+      x: 32,
+      y: midY + 3,
+      color: '#c66',
+      name: 'Scavenger Rat',
+      title: 'Vermin',
+      desc: 'A giant rat rooting through scraps.',
+      tree: { start: { text: 'It hisses.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      combat: { HP: 4, ATK: 1, loot: 'water_flask', auto: true }
+    },
+    {
+      id: 'rust_bandit',
+      map: 'world',
+      x: 44,
+      y: midY - 3,
+      color: '#f88',
+      name: 'Rust Bandit',
+      title: 'Scav Raider',
+      desc: 'A bandit prowling for easy loot.',
+      tree: { start: { text: 'The bandit sizes you up.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      combat: { HP: 6, ATK: 1, loot: 'raider_knife', auto: true }
+    },
+    {
+      id: 'feral_nomad',
+      map: 'world',
+      x: 68,
+      y: midY + 2,
+      color: '#f77',
+      name: 'Feral Nomad',
+      title: 'Mad Drifter',
+      desc: 'A wild-eyed drifter muttering to himself.',
+      tree: { start: { text: 'He lunges without warning.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      combat: { HP: 6, ATK: 2, loot: 'medkit', auto: true }
+    },
+    {
+      id: 'waste_ghoul',
+      map: 'world',
+      x: 82,
+      y: midY - 4,
+      color: '#aa8',
+      name: 'Waste Ghoul',
+      title: 'Rotwalker',
+      desc: 'A decayed wanderer hungry for flesh.',
+      tree: { start: { text: 'It shambles toward you.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      combat: { HP: 7, ATK: 2, loot: 'goggles', auto: true }
+    },
+    {
+      id: 'iron_brute',
+      map: 'world',
+      x: 120,
+      y: midY - 8,
+      color: '#f33',
+      name: 'Iron Brute',
+      title: 'Challenge',
+      desc: 'A hulking brute plated in scrap.',
+      tree: { start: { text: 'The brute roars.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      loop: [
+        { x: 120, y: midY - 8 },
+        { x: 124, y: midY - 8 },
+        { x: 124, y: midY - 12 },
+        { x: 120, y: midY - 12 }
+      ],
+      combat: { HP: 15, ATK: 3, DEF: 2, loot: 'raider_knife', auto: true }
+    },
+    {
       id: 'stalker_patrol',
       map: 'world',
       x: 90,
