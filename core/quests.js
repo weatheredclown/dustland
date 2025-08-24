@@ -13,6 +13,7 @@ class Quest {
       renderQuests();
       log('Quest completed: ' + this.title);
       if (typeof toast === 'function') toast(`QUEST COMPLETE: ${this.title}`);
+      EventBus.emit('quest:completed', { quest: this });
       queueNanoDialogForNPCs?.('start', 'quest update');
     }
   }
