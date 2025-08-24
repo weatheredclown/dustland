@@ -62,6 +62,7 @@ Here’s the roadmap. We’ll build the core systems first, get the player-facin
 - [ ] **Mentor System:** Implement a simple event hook in the level-up function that can trigger a sound file and a brief on-screen text notification (a "bark"). This should be tied to a quest flag or a specific item to remain optional.
 - [ ] **Trainer UI Mockup:** Design the "Upgrade Skills" dialog. It needs a list of available upgrades (stats and abilities), their costs, and a clear "before and after" preview for any selected stat change.
     > **Gizmo:** Let's make this UI data-driven. It should just read a list of available upgrades from the trainer NPC's data. That way, modders can add new trainers with unique skill trees just by editing a JSON file.
+    > **Clown:** It can be a json blob, but keep in mind that all json lives inside the javascript to keep the "no builds no servers" running locally ethos.
 
 #### **Phase 3: Content Implementation (The World)**
 - [ ] **Trainer NPCs:** Create at least three specialized trainer NPCs (e.g., Power, Endurance, Tricks) and place them in the world. Each trainer's `tree` object should include the **Upgrade Skills** dialog option and their unique list of available upgrades.
