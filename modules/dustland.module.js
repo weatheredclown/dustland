@@ -22,6 +22,17 @@ const DUSTLAND_MODULE = (() => {
   };
   const hall = makeHall();
 
+  function buyMemoryWorm() {
+    if (player.scrap < 500) {
+      log('Not enough scrap.');
+      return;
+    }
+    player.scrap -= 500;
+    addToInv('memory_worm');
+    renderInv?.(); updateHUD?.();
+    log('Purchased Memory Worm.');
+  }
+
   const events = [
     { map: 'hall', x: hall.entryX - 1, y: hall.entryY, events:[{ when:'enter', effect:'toast', msg:'You smell rot.' }] }
   ];
@@ -561,6 +572,32 @@ const DUSTLAND_MODULE = (() => {
           choices: [
             { label: 'PER +1', to: 'train', effects: [() => trainStat('PER')] },
             { label: 'LCK +1', to: 'train', effects: [() => trainStat('LCK')] },
+            { label: '(Back)', to: 'start' }
+          ]
+        }
+      }
+    },
+    {
+      id: 'respec_vendor',
+      map: 'world',
+      x: 94,
+      y: midY + 5,
+      color: '#ffee99',
+      name: 'Nora',
+      title: 'Worm Seller',
+      desc: 'She trades memory worms for scrap.',
+      tree: {
+        start: {
+          text: 'Fresh worms for fading sins.',
+          choices: [
+            { label: `Buy Memory Worm (500 ${CURRENCY})`, to: 'buy' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        },
+        buy: {
+          text: 'One bite resets the mind.',
+          choices: [
+            { label: '(Buy)', to: 'start', effects: [buyMemoryWorm] },
             { label: '(Back)', to: 'start' }
           ]
         }
