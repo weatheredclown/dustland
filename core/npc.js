@@ -135,5 +135,10 @@ function scaleEnemy(npc, lvl = 1, build = []) {
   npc.lvl = lvl;
 }
 
-const npcExports = { NPC, makeNPC, resolveNode, NPCS, npcsOnMap, queueNanoDialogForNPCs, removeNPC, createNpcFactory, scaleEnemy };
+function scaleEnemyWithPreset(npc, lvl = 1, preset = '') {
+  const build = enemyPresets?.[preset] || [];
+  scaleEnemy(npc, lvl, build);
+}
+
+const npcExports = { NPC, makeNPC, resolveNode, NPCS, npcsOnMap, queueNanoDialogForNPCs, removeNPC, createNpcFactory, scaleEnemy, scaleEnemyWithPreset };
 Object.assign(globalThis, npcExports);
