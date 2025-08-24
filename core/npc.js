@@ -100,7 +100,7 @@ function createNpcFactory(defs) {
       if (n.combat) opts.combat = n.combat;
       if (n.shop) opts.shop = n.shop;
       if (n.portraitSheet) opts.portraitSheet = n.portraitSheet;
-      return makeNPC(
+      const npc = makeNPC(
         n.id,
         n.map || 'world',
         x,
@@ -115,6 +115,8 @@ function createNpcFactory(defs) {
         null,
         opts
       );
+      if (Array.isArray(n.loop)) npc.loop = n.loop;
+      return npc;
     };
   });
   return npcFactory;

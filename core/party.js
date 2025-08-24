@@ -1,11 +1,13 @@
 const baseStats = () => ({STR:4, AGI:4, INT:4, PER:4, LCK:4, CHA:4});
 
+const xpCurve = [0,100,200,300,400,500,700,900,1100,1300,1500,1900,2300,2700,3100,3500,4300,5100,5900,6700];
+
 class Character {
   constructor(id, name, role, opts={}){
     this.id=id; this.name=name; this.role=role;
     this.permanent=!!opts.permanent;
     this.portraitSheet = opts.portraitSheet || null;
-    this.lvl=1; this.xp=0;
+    this.lvl=1; this.xp=0; this.skillPoints=0;
     this.stats=baseStats();
     this.equip={weapon:null, armor:null, trinket:null};
     this.maxHp=10;
@@ -14,7 +16,7 @@ class Character {
     this._bonus={ATK:0, DEF:0, LCK:0};
     this.special = opts.special || null;
   }
-  xpToNext(){ return 10*this.lvl; }
+  xpToNext(){ return xpToNext(this.lvl); }
   awardXP(amt){
     this.xp += amt;
     log(`${this.name} gains ${amt} XP.`);
@@ -28,19 +30,12 @@ class Character {
     renderParty(); updateHUD();
   }
   levelUp(){
-    const inc = {STR:0,AGI:0,INT:0,PER:0,LCK:0,CHA:0};
-    if(/Gunslinger|Wanderer|Raider/.test(this.role)){ inc.STR++; inc.AGI++; }
-    else if(/Scavenger|Cogwitch|Mechanic/.test(this.role)){ inc.INT++; inc.PER++; }
-    else { inc.CHA++; inc.LCK++; }
-    for(const k in inc){ this.stats[k]+=inc[k]; }
-    this.maxHp += 2;
-    this.hp = Math.min(this.hp + 2, this.maxHp);
-    if(this.lvl%2===0){
-      this.ap += 1;
-      if(typeof hudBadge==='function') hudBadge('AP +1');
-      EventBus.emit('sfx','tick');
-    }
-    log(`${this.name} leveled up to ${this.lvl}! (+HP, stats)`);
+    this.maxHp += 10;
+    this.hp = this.maxHp;
+    this.skillPoints += 1;
+    if(typeof hudBadge==='function') hudBadge('+1 Skill Point');
+    EventBus.emit('sfx','tick');
+    log(`${this.name} leveled up to ${this.lvl}! (+10 HP, +1 SP)`);
   }
   applyEquipmentStats(){
     this._bonus = {ATK:0, DEF:0, LCK:0};
@@ -100,11 +95,15 @@ function makeMember(id, name, role, opts){ return new Character(id, name, role, 
 function addPartyMember(member){ return party.addMember(member); }
 function removePartyMember(member){ return party.removeMember(member); }
 function statLine(s){ return `STR ${s.STR}  AGI ${s.AGI}  INT ${s.INT}  PER ${s.PER}  LCK ${s.LCK}  CHA ${s.CHA}`; }
-function xpToNext(lvl){ return 10*lvl; }
+function xpToNext(lvl){
+  const prev = xpCurve[lvl-1] ?? 0;
+  const next = xpCurve[lvl] ?? (prev + 10*lvl);
+  return next - prev;
+}
 function awardXP(who, amt){ who.awardXP(amt); }
 function applyEquipmentStats(m){ m.applyEquipmentStats(); }
 function leader(){ return party.leader(); }
 function setLeader(idx){ selectedMember = idx; }
 
-const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, selectedMember };
+const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, selectedMember, xpCurve };
 Object.assign(globalThis, partyExports);

@@ -258,6 +258,12 @@ test('applyModule parses emoji world grid', () => {
   assert.strictEqual(world[1][1], TILE.BRUSH);
 });
 
+test('applyModule assigns NPC loops', () => {
+  const world = [[7,7]];
+  applyModule({world, npcs:[{id:'n', map:'world', x:0, y:0, loop:[{x:0,y:0},{x:1,y:0}]}]});
+  assert.deepStrictEqual(NPCS[0].loop, [{x:0,y:0},{x:1,y:0}]);
+});
+
 test('walking regenerates leader HP', async () => {
   const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
   applyModule({world});
@@ -385,6 +391,17 @@ test('selected party member receives XP on dialog success', () => {
   choicesEl.children[0].onclick();
   assert.strictEqual(a.xp,0);
   assert.strictEqual(b.xp,5);
+});
+
+test('level up grants +10 max HP and a skill point', () => {
+  const c = new Character('c','C','Role');
+  c.skillPoints = 0;
+  const need = xpToNext(c.lvl);
+  c.awardXP(need);
+  assert.strictEqual(c.lvl, 2);
+  assert.strictEqual(c.maxHp, 20);
+  assert.strictEqual(c.hp, 20);
+  assert.strictEqual(c.skillPoints, 1);
 });
 
 test('advanceDialog moves to next node', () => {
@@ -617,6 +634,13 @@ test('createNpcFactory defaults empty tree to dialog', () => {
   const npc = factory.n();
   assert.strictEqual(npc.tree.start.text, 'Hi');
   assert.ok(npc.tree.start.choices.some(c => c.label === '(Leave)'));
+});
+
+test('createNpcFactory applies loop points', () => {
+  const defs = [{ id: 'm', map: 'world', loop: [{x:0,y:0},{x:1,y:0}] }];
+  const factory = createNpcFactory(defs);
+  const npc = factory.m();
+  assert.deepStrictEqual(npc.loop, [{x:0,y:0},{x:1,y:0}]);
 });
 
 test('openDialog displays portrait when sheet provided', () => {
@@ -965,6 +989,23 @@ test('save serializes party when map method is shadowed', () => {
   const saved = JSON.parse(store['dustland_crt']);
   assert.strictEqual(saved.party[0].id, 'p1');
   assert.strictEqual(saved.party.length, 1);
+});
+
+test('save/load preserves NPC loops', () => {
+  const world = Array.from({length:3},()=>Array.from({length:3},()=>7));
+  applyModule({world, npcs:[{id:'p', map:'world', x:0, y:0, loop:[{x:0,y:0},{x:2,y:0}]}]});
+  const store = {};
+  const orig = global.localStorage;
+  global.localStorage = {
+    setItem(k,v){ store[k]=v; },
+    getItem(k){ return store[k]; },
+    removeItem(k){ delete store[k]; }
+  };
+  save();
+  NPCS.length = 0;
+  load();
+  global.localStorage = orig;
+  assert.deepStrictEqual(NPCS[0].loop, [{x:0,y:0},{x:2,y:0}]);
 });
 
 test('combat overlay sits behind the log panel', async () => {
