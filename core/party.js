@@ -1,26 +1,6 @@
 const baseStats = () => ({STR:4, AGI:4, INT:4, PER:4, LCK:4, CHA:4});
 
-const defaultXPCurve = [0,100,200,300,400,500,700,900,1100,1300,1500,1900,2300,2700,3100,3500,4300,5100,5900,6700];
-let xpCurve = defaultXPCurve.slice();
-
-async function loadXPCurve(url='xpCurve.json'){
-  try{
-    if(typeof fetch==='function'){
-      const res = await fetch(url);
-      const arr = await res.json();
-      if(Array.isArray(arr)) xpCurve = arr.map(n=>parseInt(n,10)||0);
-      return;
-    }
-  }catch(e){}
-  try{
-    const fs = await import('node:fs/promises');
-    const txt = await fs.readFile(url, 'utf8');
-    const arr = JSON.parse(txt);
-    if(Array.isArray(arr)) xpCurve = arr.map(n=>parseInt(n,10)||0);
-  }catch(e){}
-}
-
-loadXPCurve();
+const xpCurve = [0,100,200,300,400,500,700,900,1100,1300,1500,1900,2300,2700,3100,3500,4300,5100,5900,6700];
 
 class Character {
   constructor(id, name, role, opts={}){
@@ -132,5 +112,5 @@ function applyEquipmentStats(m){ m.applyEquipmentStats(); }
 function leader(){ return party.leader(); }
 function setLeader(idx){ selectedMember = idx; }
 
-const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, selectedMember, xpCurve, loadXPCurve };
+const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, selectedMember, xpCurve };
 Object.assign(globalThis, partyExports);

@@ -25,7 +25,7 @@ Enemies run the same playbook. Each foe carries a level, gains the same +10 max 
 Behind the curtain, an XP curve doubles every five levels, and every level grants one point. No rubber-banding: you earn it, they mirror it, and the stopwatch stays honest.
 
 > **Gizmo:** If the curve lives in a JSON config, we can tweak pacing without digging through code.
-> **Wing:** Expose `xpCurve.json` for quick tuning.
+> **Wing:** To dodge file-loading issues, embed `xpCurve` in code and expose it globally for quick tuning.
 
 > **Echo:** If players mis-spend a point, do trainers offer respecs?
 >
@@ -72,9 +72,9 @@ The party panel along the bottom left gains a tiny XP bar and a skill point badg
 | 19 | 5900 | 800 |
 | 20 | 6700 | 800 |
 
-Sample `xpCurve.json`:
+Default `xpCurve` array:
 
-```json
+```js
 [0,100,200,300,400,500,700,900,1100,1300,1500,1900,2300,2700,3100,3500,4300,5100,5900,6700]
 ```
 
@@ -114,7 +114,7 @@ without backtracking.
 natural.
 
 **Systems**
-- XP thresholds double every five levels; curve stored in `xpCurve.json`.
+- XP thresholds double every five levels; curve stored in the `xpCurve` array.
 - Each level auto grants +10 max HP, yields one skill point, and can trigger a mentor one-liner.
 - Trainer NPCs specialize and open the Upgrade Skills menu with previewed stat shifts.
 - Skill points fuel stat bumps or new abilities; respec via costly tokens.
@@ -123,7 +123,7 @@ natural.
 > **Clown:** Let's carve a roadmap so each slice ships mod-ready and testable.
 
 **Task List**
-- [x] Load `xpCurve.json` at startup with sane defaults and expose it for mods.
+- [x] Embed `xpCurve` with sane defaults and expose it for mods.
 - [ ] Track XP and level-ups, auto-apply +10 max HP and grant skill points.
 - [ ] Show each character's current and next level XP on the party HUD.
 - [ ] Badge portraits when unspent skill points are available.
