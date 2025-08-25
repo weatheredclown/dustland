@@ -47,3 +47,19 @@ test('create returns cache item', () => {
     assert.ok(el.className.includes('sealed'));
     delete global.document;
   });
+
+test('openAll removes caches of specified rank', () => {
+  global.player = { inv: [SpoilsCache.create('sealed'), SpoilsCache.create('sealed'), {id:'x',type:'misc'}] };
+  let notified = 0;
+  global.notifyInventoryChanged = () => { notified++; };
+  const logs = [];
+  global.log = (msg) => logs.push(msg);
+  const opened = SpoilsCache.openAll('sealed');
+  assert.strictEqual(opened, 2);
+  assert.strictEqual(player.inv.length, 1);
+  assert.strictEqual(notified, 1);
+  assert.ok(logs[0].includes('Opened 2'));
+  delete global.player;
+  delete global.notifyInventoryChanged;
+  delete global.log;
+});

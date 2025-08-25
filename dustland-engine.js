@@ -397,19 +397,45 @@ function renderInv(){
     inv.innerHTML='<div class="slot muted">(empty)</div>';
     return;
   }
-  player.inv.forEach((it,idx)=>{
+  const caches = {};
+  const others = [];
+  player.inv.forEach(it => {
     if(it.type === 'spoils-cache'){
-      const row=document.createElement('div');
-      row.className='slot cache-slot';
-      const icon = SpoilsCache.renderIcon(it.rank, () => {
-        const index = player.inv.indexOf(it);
-        if(index !== -1) removeFromInv(index);
-        log?.(`${it.name} opened.`);
-      });
-      if(icon) row.appendChild(icon);
-      inv.appendChild(row);
-      return;
+      (caches[it.rank] ||= []).push(it);
+    } else {
+      others.push(it);
     }
+  });
+  Object.entries(caches).forEach(([rank, items]) => {
+    const row=document.createElement('div');
+    row.className='slot cache-slot';
+    const icon = SpoilsCache.renderIcon(rank, () => {
+      const index = player.inv.findIndex(c => c.type==='spoils-cache' && c.rank===rank);
+      if(index !== -1) removeFromInv(index);
+      log?.(`${SpoilsCache.ranks[rank].name} opened.`);
+    });
+    if(icon){
+      const wrap=document.createElement('div');
+      wrap.style.display='flex';
+      wrap.style.alignItems='center';
+      wrap.style.gap='6px';
+      wrap.appendChild(icon);
+      const count=document.createElement('span');
+      count.className='cache-count';
+      count.textContent='x'+items.length;
+      wrap.appendChild(count);
+      row.appendChild(wrap);
+    }
+    if(items.length>1){
+      const btn=document.createElement('button');
+      btn.className='btn jitter';
+      btn.textContent='Open All';
+      btn.onclick=()=>{ SpoilsCache.openAll(rank); };
+      row.appendChild(btn);
+    }
+    inv.appendChild(row);
+  });
+  others.forEach(it => {
     const row=document.createElement('div');
     row.className='slot';
     const baseLabel = it.name + (it.slot?` [${it.slot}]`:'');
@@ -421,37 +447,31 @@ function renderInv(){
           ${it.use?  `<button class="btn" data-a="use">Use</button>`:''}
         </span>
       </div>`;
-    // Build tooltip (name/slot + desc + mods + use + rarity + value [+ currency])
     const mods = Object.entries(it.mods || {})
       .map(([k, v]) => `${k} ${v >= 0 ? '+' : ''}${v}`)
       .join(' ');
-
     const use = it.use ? `${it.use.type}${it.use.amount ? ` ${it.use.amount}` : ''}` : '';
-
     const valueStr = (() => {
       const v = it.value ?? 0;
-      // Show currency if defined (shopkeeper branch), else just the number (main)
       return (typeof CURRENCY !== 'undefined' && CURRENCY)
         ? `${v} ${CURRENCY}`
         : String(v);
     })();
-
     const nameLine = baseLabel + ((it.cursed && it.cursedKnown)? ' (cursed)' : '');
     const tip = [
-      nameLine, // from main
+      nameLine,
       it.desc || '',
       mods ? `Mods: ${mods}` : '',
       use  ? `Use: ${use}`   : '',
       `Rarity: ${it.rarity}`,
-      `Value: ${valueStr}`                         // from shopkeeper branch (currency-aware)
+      `Value: ${valueStr}`
     ].filter(Boolean).join('\n');
-
-    row.title = tip;    
+    row.title = tip;
     const equipBtn = row.querySelector('button[data-a="equip"]');
-    if(equipBtn) equipBtn.onclick=()=> equipItem(selectedMember, idx);
+    if(equipBtn) equipBtn.onclick=()=> equipItem(selectedMember, player.inv.indexOf(it));
     const useBtn = row.querySelector('button[data-a="use"]');
-    if(useBtn) useBtn.onclick=()=> useItem(idx);
-    row.onclick=e=>{ if(e.target.tagName==='BUTTON') return; if(it.slot) equipItem(selectedMember, idx); };
+    if(useBtn) useBtn.onclick=()=> useItem(player.inv.indexOf(it));
+    row.onclick=e=>{ if(e.target.tagName==='BUTTON') return; if(it.slot) equipItem(selectedMember, player.inv.indexOf(it)); };
     inv.appendChild(row);
   });
 }
