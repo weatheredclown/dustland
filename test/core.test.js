@@ -116,7 +116,8 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, makeInteriorRoom, placeHut, TILE, getTile, interiors, calcMoveDelay, getMoveDelay } = globalThis;
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, makeInteriorRoom, placeHut, TILE, getTile, calcMoveDelay, getMoveDelay, buildings, world } = globalThis;
+let interiors = globalThis.interiors;
 
 // Stub out globals used by equipment functions
 global.log = () => {};
@@ -266,6 +267,20 @@ test('applyModule assigns NPC loops', () => {
   const world = [[7,7]];
   applyModule({world, npcs:[{id:'n', map:'world', x:0, y:0, loop:[{x:0,y:0},{x:1,y:0}]}]});
   assert.deepStrictEqual(NPCS[0].loop, [{x:0,y:0},{x:1,y:0}]);
+});
+
+test('applyModule removes random huts when module supplies buildings', () => {
+  world.length = 0;
+  for (let y = 0; y < 10; y++) world.push(Array(10).fill(TILE.SAND));
+  buildings.length = 0;
+  placeHut(3, 3);
+  const prev = buildings.map(b => ({ x: b.x, y: b.y }));
+  applyModule({ seed: 42, buildings: [{ x: 1, y: 1, w: 1, h: 2 }] });
+  prev.forEach(p => {
+    assert.notStrictEqual(getTile('world', p.x, p.y), TILE.BUILDING);
+  });
+  assert.strictEqual(getTile('world', 1, 1), TILE.BUILDING);
+  assert.strictEqual(buildings.length, 1);
 });
 
 test('walking regenerates leader HP', async () => {
