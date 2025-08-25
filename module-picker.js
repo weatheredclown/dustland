@@ -108,12 +108,8 @@ function loadModule(moduleInfo){
     if(picker) picker.remove();
     window.openCreator = realOpenCreator;
     window.showStart = realShowStart;
-    const savedGame = localStorage.getItem('dustland_crt');
-    if(savedGame){
-      showStart();
-    } else {
-      openCreator();
-    }
+    localStorage.removeItem('dustland_crt');
+    openCreator();
   };
   document.body.appendChild(script);
 }
