@@ -58,7 +58,7 @@ Opening a cache triggers a generator that stitches gear on the fly:
 - [x] Implement inventory UI for cache stacking and "Open All".
 
 #### Phase 3: Content & Balancing
-- [ ] Populate adjective/noun pools for item names and tier stat tables.
+- [x] Populate adjective/noun pools for item names and tier stat tables.
 - [ ] Tune `baseRate` and tier weights for different enemy challenges.
 - [ ] Author lore snippets for oddity items.
 
