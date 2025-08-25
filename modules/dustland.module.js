@@ -241,12 +241,11 @@ const DUSTLAND_MODULE = (() => {
             'Crowbar’s itching for work. You hiring?'
           ],
           choices: [
-            { label: '(Recruit) Join me.', to: 'accept', q: 'accept' },
+            { label: '(Recruit) Join me.', to: 'rec' },
             { label: '(Chat)', to: 'chat' },
             { label: '(Leave)', to: 'bye' }
           ]
         },
-        accept: { text: '', choices: [ { label: '(Continue)', to: 'rec' } ] },
         chat: {
           text: [
             'Keep to the road. The sand eats soles and souls.',
