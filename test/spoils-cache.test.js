@@ -17,3 +17,12 @@ test('create returns cache item', () => {
   assert.strictEqual(cache.rank, 'rusted');
   assert.strictEqual(cache.name, 'Rusted Cache');
 });
+
+test('drop roll tied to challenge rating', () => {
+  SpoilsCache.baseRate = 0.1;
+  const fail = SpoilsCache.rollDrop(1, () => 0.2);
+  assert.strictEqual(fail, null);
+  const hit = SpoilsCache.rollDrop(5, () => 0.2);
+  assert.ok(hit);
+  assert.strictEqual(hit.type, 'spoils-cache');
+});
