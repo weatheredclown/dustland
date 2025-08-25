@@ -918,3 +918,31 @@
 #worldPalette button.active { outline:2px solid #fff; }
 #paletteWrap { display:flex; flex-direction:column; align-items:center; }
 #paletteLabel { color:#fff; font-family:system-ui, sans-serif; margin-top:4px; }
+
+.cache-slot {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:40px;
+}
+.cache-icon {
+  width:24px;
+  height:24px;
+  border:1px solid #283228;
+  border-radius:4px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+.cache-icon.rusted { background:#5a3a2e; }
+.cache-icon.sealed { background:#3e4a5a; }
+.cache-icon.armored { background:#4a545a; }
+.cache-icon.vaulted { background:#563e5a; }
+.cache-icon.open { animation: cachePop .2s forwards; }
+@keyframes cachePop {
+  to {
+    transform: scale(1.4) rotate(10deg);
+    opacity:0;
+  }
+}

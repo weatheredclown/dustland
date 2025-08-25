@@ -54,7 +54,7 @@ Opening a cache triggers a generator that stitches gear on the fly:
 - [x] Create modular item generator for type, name, and stats.
 
 #### Phase 2: UI/UX
-- [ ] Add cache icons and quick-open animations.
+- [x] Add cache icons and quick-open animations.
 - [ ] Implement inventory UI for cache stacking and "Open All".
 
 #### Phase 3: Content & Balancing
