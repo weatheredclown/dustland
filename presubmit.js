@@ -26,3 +26,4 @@ if (failed) {
   console.error('Presubmit failed: remove unsupported patterns from HTML files.');
   process.exit(1);
 }
+console.log('Presubmit passed: no forbidden patterns found.');

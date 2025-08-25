@@ -166,6 +166,12 @@ _______________________________________________________________________________
   - ASCII/NFO: generated in classic BBS spirit.
   - Inspirations: Wasteland (DOS), Planescape-like dialog energy, 90s P&P.
 
+[ INSTALL TROUBLESHOOTING ]
+  - install-deps.sh fails with '403 Forbidden' from mise.jdx.dev?
+      * install-deps.sh now disables the mise repo and retries automatically.
+      * If the repo is required, ensure your proxy allows access or update the URL.
+      * You can re-enable it by editing /etc/apt/sources.list.d/mise.list.
+
 [ CONTACT ]
   - GitHub issues preferred. Paste console logs & steps to reproduce.
   - Include browser/version and whether a save existed when it happened.
