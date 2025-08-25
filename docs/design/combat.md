@@ -15,7 +15,7 @@ This creates a simple, aggressive loop:
 
 Sitting back and playing defensively is a losing strategy. The player who isn't actively generating Adrenaline is a player who isn't using their best tools.
 
-> **Clown:** I love it. It's pure forward momentum. We can visualize this with a pulsing, electric-blue bar under the HP meter. When it's full, it could arc with energy. When you use a Special, it slams down, then starts building again. The UI itself should feel energetic.
+> **Clown:** I'm into the forward momentum, but we should confirm the Adrenaline bar doesn't crowd the HUD. Let's prototype it with placeholder art before committing. When it's full, it could arc with energy. When you use a Special, it slams down, then starts building again. The UI itself should feel energetic.
 
 ### Specials: High Risk, High Reward
 
@@ -32,7 +32,7 @@ Specials are the heart of tactical combat. They're how the player turns the tide
 *   **Agile Foes:** Might dodge area-of-effect (AoE) specials if the player's timing is off.
 *   **Bosses:** Might have phases where they are immune to certain types of specials, requiring the player to adapt their strategy.
 
-> **Echo:** This gives us a ton of room for interesting enemy design. We can create "puzzle" encounters where the player needs to figure out the right combination of specials to use. A heavily shielded enemy guarding a group of snipers? Use a "Stun Grenade" special to disable the shield, then a multi-hit AoE to clear the snipers. It makes combat a conversation, not just a damage race.
+> **Echo:** Plenty of room for interesting enemy design, but we need to avoid overbuilding puzzles that kill the tempo. We can create "puzzle" encounters where the player needs to figure out the right combination of specials to use. A heavily shielded enemy guarding a group of snipers? Use a "Stun Grenade" special to disable the shield, then a multi-hit AoE to clear the snipers. It makes combat a conversation, not just a damage race.
 
 ### Equipment: The Tools of the Trade
 
@@ -42,7 +42,7 @@ Equipment isn't just about bigger numbers. It's about changing *how* you fight.
 *   **Armor:** Provides damage resistance, but can also have passive combat effects. A "Scavenger's Rig" might grant a small amount of Adrenaline at the start of combat. A "Juggernaut Plate" could make you immune to being interrupted while using a Special.
 *   **Gadgets (Accessories):** This is where things get wild. A "Stim-Pack" gadget could allow you to convert HP into Adrenaline in an emergency. A "Targeting Visor" could increase the critical hit chance of your specials.
 
-> **Gizmo:** The data structures for this need to be clean. An item should just have a `modifiers` object. For example: `{"adrenaline_gen_mod": 1.2, "granted_special": "CLEAVE"}`. The combat system just iterates through the equipped items and applies the modifiers at the start of a fight. This makes it incredibly easy for us, and for modders, to add new gear.
+> **Gizmo:** The data structures for this need to be clean. An item should just have a `modifiers` object. For example: `{"adrenaline_gen_mod": 1.2, "granted_special": "CLEAVE"}`. The combat system just iterates through the equipped items and applies the modifiers at the start of a fight. This makes it incredibly easy for us, and for modders, to add new gear, but we'll need profiling to ensure modifier checks stay cheap.
 
 ### UI/UX: Clarity in Chaos
 
@@ -63,6 +63,14 @@ The challenge should grow as the player masters the system.
 *   **Mid Game:** Enemies start appearing in mixed groups that require tactical use of specials (e.g., shielded enemies, healers, snipers).
 *   **Late Game:** Enemies will have their own "specials," resistances, and coordinated AI. Fights become deadly puzzles that test the player's full arsenal of abilities and equipment.
 
+### Feasibility & Risks
+
+* **Pacing Balance:** Overly generous Adrenaline may trivialize fights, while stingy gains could frustrate. We'll run simulated bouts to dial in the numbers before content work.
+* **HUD Noise:** Extra meters and icons risk clutter. Prototype the HUD in a mock fight and solicit playtester feedback.
+* **Implementation Scope:** Specials, enemy AI, and equipment modifiers touch many systems. Plan for iterative rollout so the core loop ships early and we layer complexity in subsequent updates.
+
+> **Gizmo:** Let's build a small vertical slice first. If the slice runs smoothly on low-end hardware and the flow feels right, we commit. Otherwise we adjust the design instead of patching later.
+
 ### Expanded Task List
 
 #### Phase 1: Core Systems
@@ -70,6 +78,7 @@ The challenge should grow as the player masters the system.
 - [ ] **Adrenaline Generation:** Basic attacks now generate Adrenaline. This value should be determined by weapon stats.
 - [ ] **Special Move Framework:** In `core/abilities.js`, create a data structure for Specials that includes `adrenaline_cost`, `target_type` (single, aoe), `effect` (damage, stun, etc.), and `wind_up_time`.
 - [ ] **Equipment Modifiers:** Update the inventory system to apply combat modifiers from equipped items at the start of each battle.
+- [ ] **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
 
 #### Phase 2: Content & UI
 - [ ] **New HUD:** Redesign the combat UI to include the Adrenaline bar, status effect icons, and improved health bar feedback.
@@ -77,9 +86,11 @@ The challenge should grow as the player masters the system.
 - [ ] **Implement 5-10 Specials:** Create a starter set of special moves (e.g., "Power Strike," "Stun Grenade," "First Aid").
 - [ ] **Implement Equipment:** Create a set of weapons and armor with varied combat modifiers.
 - [ ] **Enemy Design:** Create 3-5 new enemy types that require tactical use of specials (e.g., a "Shielded Guard" that is resistant to basic attacks).
+- [ ] **HUD Playtest:** Run quick usability tests on the new HUD and iterate on spacing and icon clarity.
 
 #### Phase 3: Polish & Balancing
 - [ ] **Visual Effects:** Add VFX for Adrenaline gain, special move activations, and status effects.
 - [ ] **Sound Design:** Add SFX for specials, UI feedback, and enemy telegraphing.
 - [ ] **Playtesting:** Conduct extensive playtests to balance Adrenaline generation rates, special costs, and overall combat difficulty. Ensure the difficulty curve is challenging but fair.
 - [ ] **AI Improvements:** Enhance enemy AI to use their own specials and coordinate attacks.
+- [ ] **Telemetry:** Log combat stats during playtests to surface pacing issues and balance swings early.
