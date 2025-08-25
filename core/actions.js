@@ -9,10 +9,15 @@
         }
         if(typeof toast==='function') toast(`+${amt} XP`);
       } else {
-        const item = typeof resolveItem==='function'? resolveItem(reward) : null;
-        if(item){
-          if(typeof addToInv==='function') addToInv(item);
-          if(typeof toast==='function') toast(`Received ${item.name}`);
+        const item = typeof resolveItem === 'function' ? resolveItem(reward) : null;
+        if (item) {
+          if (typeof addToInv === 'function') {
+            if (!addToInv(item)) {
+              if (typeof dropItemNearParty === 'function') dropItemNearParty(item);
+            } else {
+              if (typeof toast === 'function') toast(`Received ${item.name}`);
+            }
+          }
         }
       }
     },
@@ -20,9 +25,7 @@
       if(typeof globalThis.startCombat==='function') return globalThis.startCombat(defender);
     },
     openShop(npc){
-      if(globalThis.EventBus && typeof EventBus.emit==='function'){
-        EventBus.emit('shop:open', npc);
-      }
+      if(typeof globalThis.openShop==='function') return globalThis.openShop(npc);
     }
   };
   Object.assign(globalThis, { Actions });

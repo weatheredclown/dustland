@@ -156,6 +156,8 @@ test('createRNG produces deterministic sequences', () => {
 
   test('addToInv accepts item ids', () => {
     player.inv.length = 0;
+    party.length = 0;
+    party.addMember(new Character('t', 'T', 't'));
     registerItem({ id:'apple', name:'Apple' });
     addToInv('apple');
     assert.ok(player.inv.some(it=>it.id==='apple'));
@@ -163,6 +165,8 @@ test('createRNG produces deterministic sequences', () => {
 
   test('picking up an item logs once', () => {
     player.inv.length = 0;
+    party.length = 0;
+    party.addMember(new Character('t', 'T', 't'));
     const oldLog = global.log;
     const logs = [];
     global.log = (msg) => logs.push(msg);

@@ -1061,17 +1061,6 @@ function removeCombatTree(tree) {
     tree.start.choices = tree.start.choices.filter(c => c.to !== 'do_fight');
   delete tree.do_fight;
 }
-function applyShopTree(tree) {
-  tree.start = tree.start || { text: '', choices: [] };
-  if (!tree.start.choices.some(c => c.to === 'sell'))
-    tree.start.choices.push({ label: '(Sell items)', to: 'sell' });
-  tree.sell = tree.sell || { text: 'What are you selling?', choices: [] };
-}
-function removeShopTree(tree) {
-  if (tree.start && Array.isArray(tree.start.choices))
-    tree.start.choices = tree.start.choices.filter(c => c.to !== 'sell');
-  delete tree.sell;
-}
 function updateNPCOptSections() {
   document.getElementById('combatOpts').style.display =
     document.getElementById('npcCombat').checked ? 'block' : 'none';
@@ -1192,6 +1181,7 @@ function startNewNPC() {
   document.getElementById('npcTree').value = '';
   document.getElementById('npcCombat').checked = false;
   document.getElementById('npcShop').checked = false;
+  document.getElementById('shopMarkup').value = 2;
   updateNPCOptSections();
   document.getElementById('addNPC').style.display = 'block';
   document.getElementById('cancelNPC').style.display = 'none';
@@ -1229,6 +1219,7 @@ function collectNPCFromForm() {
   const turnin = document.getElementById('npcTurnin').value.trim();
   const combat = document.getElementById('npcCombat').checked;
   const shop = document.getElementById('npcShop').checked;
+  const shopMarkup = parseInt(document.getElementById('shopMarkup').value, 10) || 2;
   const hidden = document.getElementById('npcHidden').checked;
   const flag = getRevealFlag();
   const op = document.getElementById('npcOp').value;
@@ -1252,7 +1243,6 @@ function collectNPCFromForm() {
   if (tree.accept) tree.accept.text = accept || tree.accept.text;
   if (tree.do_turnin) tree.do_turnin.text = turnin || tree.do_turnin.text;
   if (combat) applyCombatTree(tree); else removeCombatTree(tree);
-  if (shop) applyShopTree(tree); else removeShopTree(tree);
   document.getElementById('npcTree').value = JSON.stringify(tree, null, 2);
   loadTreeEditor();
 
@@ -1260,7 +1250,7 @@ function collectNPCFromForm() {
   const pts = gatherLoopFields();
   if (pts.length >= 2) npc.loop = pts;
   if (combat) npc.combat = { DEF: 5 };
-  if (shop) npc.shop = true;
+  if (shop) npc.shop = { markup: shopMarkup, inv: [] };
   if (hidden && flag) npc.hidden = true, npc.reveal = { flag, op, value: val };
   if (npcPortraitIndex > 0) npc.portraitSheet = npcPortraits[npcPortraitIndex];
   return npc;
@@ -1335,6 +1325,7 @@ function editNPC(i) {
   document.getElementById('npcTree').value = JSON.stringify(n.tree, null, 2);
   document.getElementById('npcCombat').checked = !!n.combat;
   document.getElementById('npcShop').checked = !!n.shop;
+  document.getElementById('shopMarkup').value = n.shop ? n.shop.markup || 2 : 2;
   updateNPCOptSections();
   document.getElementById('addNPC').style.display = 'none';
   document.getElementById('cancelNPC').style.display = 'none';

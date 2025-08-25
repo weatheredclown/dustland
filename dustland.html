@@ -183,5 +183,25 @@
     modeScript.src = isAck ? './ack-player.js' : './module-picker.js';
     document.body.appendChild(modeScript);
   </script>
+
+  <!-- Shop overlay -->
+  <div class="overlay" id="shopOverlay" role="dialog" aria-modal="true">
+    <div class="shop-window">
+      <header>
+        <div id="shopName"></div>
+        <button id="closeShopBtn" class="btn">Close</button>
+      </header>
+      <div class="shop-panels">
+        <div class="shop-inv">
+          <h2>Buy</h2>
+          <div id="shopBuy" class="slot-list"></div>
+        </div>
+        <div class="player-inv">
+          <h2>Sell</h2>
+          <div id="shopSell" class="slot-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

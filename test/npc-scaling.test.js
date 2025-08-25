@@ -1,23 +1,36 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
-import '../core/party.js';
-import '../core/presets.js';
-import '../core/npc.js';
+import fs from 'node:fs/promises';
+import vm from 'node:vm';
 
-test('scaleEnemy applies level-based scaling', () => {
-  const npc = {};
-  scaleEnemy(npc, 3, ['STR', 'AGI']);
-  assert.strictEqual(npc.maxHp, 30);
-  assert.strictEqual(npc.hp, 30);
-  assert.strictEqual(npc.lvl, 3);
-  assert.strictEqual(npc.stats.STR, 5);
-  assert.strictEqual(npc.stats.AGI, 5);
-  assert.strictEqual(npc.stats.INT, 4);
-});
+test('NPC Scaling', async () => {
+  const partyCode = await fs.readFile(new URL('../core/party.js', import.meta.url), 'utf8');
+  vm.runInThisContext(partyCode, { filename: '../core/party.js' });
 
-test('scaleEnemyWithPreset uses named build', () => {
-  const npc = {};
-  scaleEnemyWithPreset(npc, 3, 'Scrapper');
-  assert.strictEqual(npc.stats.STR, 5);
-  assert.strictEqual(npc.stats.AGI, 5);
+  const presetsJson = await fs.readFile(new URL('../core/presets.json', import.meta.url), 'utf8');
+  globalThis.enemyPresets = JSON.parse(presetsJson);
+
+  const npcCode = await fs.readFile(new URL('../core/npc.js', import.meta.url), 'utf8');
+  vm.runInThisContext(npcCode, { filename: '../core/npc.js' });
+
+
+  const { scaleEnemy, scaleEnemyWithPreset } = globalThis;
+
+  await test('scaleEnemy applies level-based scaling', () => {
+    const npc = {};
+    scaleEnemy(npc, 3, ['STR', 'AGI']);
+    assert.strictEqual(npc.maxHp, 30);
+    assert.strictEqual(npc.hp, 30);
+    assert.strictEqual(npc.lvl, 3);
+    assert.strictEqual(npc.stats.STR, 5);
+    assert.strictEqual(npc.stats.AGI, 5);
+    assert.strictEqual(npc.stats.INT, 4);
+  });
+
+  await test('scaleEnemyWithPreset uses named build', () => {
+    const npc = {};
+    scaleEnemyWithPreset(npc, 3, 'Scrapper');
+    assert.strictEqual(npc.stats.STR, 5);
+    assert.strictEqual(npc.stats.AGI, 5);
+  });
 });
