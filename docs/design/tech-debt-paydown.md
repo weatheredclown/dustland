@@ -46,3 +46,20 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
 - Moving logic files no longer requires hunting for hidden DOM hooks.
 - A single `GameState` object mirrors what the player sees on screen.
 
+## Tasks
+
+- [ ] **Phase 1: Namespace the world**
+  - [ ] Introduce `globalThis.Dustland = {}`.
+  - [ ] Move module exports into `Dustland.*` buckets.
+  - [ ] Update references and tests incrementally.
+- [ ] **Phase 2: Untangle UI from logic**
+  - [ ] Replace direct DOM calls with event emissions.
+  - [ ] Build a tiny `ui.js` to listen for events.
+  - [ ] Keep old globals as shims during migration.
+- [ ] **Phase 3: Consolidate state**
+  - [ ] Create a `GameState` singleton.
+  - [ ] Provide accessors for state changes.
+- [ ] **Phase 4: Lint for sanity**
+  - [ ] Add ESLint with a vanilla config.
+  - [ ] Expose `npm run lint`.
+  - [ ] Run lint in CI and before commits.
