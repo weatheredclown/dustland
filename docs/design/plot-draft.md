@@ -78,7 +78,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 - [x] Detail Jax "Patch"—a scavenger mechanic hoarding tech; arc: opens his toolkit to the crew.
 - [x] Detail Nyx "Speaker"—a poet tuning radio static into verse; arc: chooses between broadcasting or listening.
 - [ ] **Implement Signature Encounters:**
-    - [ ] Design and build Mara's dust storm navigation puzzle.
+    - [x] Design and build Mara's dust storm navigation puzzle.
     - [ ] Script Jax's timed repair sequence under combat pressure.
     - [ ] Write the dialogue and branching paths for Nyx's "conversational tuning" encounter.
 - [ ] **Doppelgänger System:**
