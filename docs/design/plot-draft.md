@@ -10,6 +10,10 @@ Let's rectify that. Here is a properly expanded and improved version of `plot-dr
 
 > **Clown:** The first draft was a good skeleton. Now we flesh it out. Let's give this carnival ride some more loops and twists. The goal isn't just to chase a signal; it's to make the caravan's journey feel like a living, breathing story that the player can bend and break.
 
+### **Setting: The Barrel**
+
+Dustland sits in a barrel-shaped pocket dimension where debris from Earth's timeline slips in starting in the 1950s. The further into the future an object originates, the more mangled it is when it lands. A vinyl jukebox might arrive with only a few scratches while a late-century drone smashes down in sparks and shards. The people trapped here patch these fragments with mid-century tools and grit, but years in the Dustland have smeared their memories of Earth to static.
+
 ### **The Grand Narrative: The Ghost Signal**
 
 The core of our story remains the caravan's desperate pursuit of a fading broadcast, a ghost signal that whispers promises of a world not yet lost to rust and dust. But what is this signal? Is it a pre-Fall AI, a loop of a forgotten artist's last words, or something stranger? We need to build this mystery, layer by layer. Each stop on the journey shouldn't just be a point on a map; it should be a fresh breadcrumb, a new piece of the puzzle.
