@@ -118,7 +118,8 @@ async function startCombat(defender){
     hp: defender.HP || 5,
     npc: defender.npc,
     loot: defender.loot,
-    portraitSheet: defender.portraitSheet || defender.npc?.portraitSheet
+    portraitSheet: defender.portraitSheet || defender.npc?.portraitSheet,
+    special: defender.special
   };
   const result = await openCombat([enemy]);
 
@@ -185,8 +186,16 @@ const WORLD_W=120, WORLD_H=90;
 let world = [], interiors = {}, buildings = [], portals = [];
 const tileEvents = [];
 function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
-const state = { map:'world' }; // default map
+const state = { map:'world', mapFlags: {} }; // default map
 const player = { hp:10, ap:2, inv:[], scrap:0 };
+if (typeof registerItem === 'function') {
+  registerItem({
+    id: 'memory_worm',
+    name: 'Memory Worm',
+    type: 'token',
+    desc: 'Resets a character\'s spent skill points.'
+  });
+}
 function setPartyPos(x, y){
   if(typeof x === 'number') party.x = x;
   if(typeof y === 'number') party.y = y;
@@ -265,10 +274,14 @@ function incFlag(flag, amt=1){
 }
 
 // ===== Module application =====
-function applyModule(data){
-  setRNGSeed(data.seed || Date.now());
+function applyModule(data, options = {}){
+  const { fullReset = true } = options;
 
-  if (data.world) {
+  if (fullReset) {
+    setRNGSeed(data.seed || Date.now());
+  }
+
+  if (data.world && fullReset) {
     // Replace world grid while preserving array reference for consumers
     world.length = 0;
     if (Array.isArray(data.world[0])) {
@@ -276,22 +289,30 @@ function applyModule(data){
     } else if (typeof data.world[0] === 'string') {
       gridFromEmoji(data.world).forEach(r => world.push(r));
     }
+  }
 
+  if (fullReset) {
     // Reset and repopulate core collections without changing references
     Object.keys(interiors).forEach(k => delete interiors[k]);
     buildings.length = 0;
     portals.length = 0;
-    if (data.buildings) buildings.push(...data.buildings);
-    if (data.portals)   portals.push(...data.portals);
-  } else {
-    if (data.buildings) { buildings.length = 0; buildings.push(...data.buildings); }
-    if (data.portals)   { portals.length = 0;   portals.push(...data.portals); }
+    tileEvents.length = 0;
+    itemDrops.length = 0;
+    if (typeof ITEMS !== 'undefined') Object.keys(ITEMS).forEach(k=> delete ITEMS[k]);
+    if (typeof quests !== 'undefined') Object.keys(quests).forEach(k=> delete quests[k]);
+    NPCS.length = 0;
+    hiddenNPCs.length = 0;
   }
 
-  tileEvents.length = 0;
+  if (data.buildings) buildings.push(...data.buildings.filter(b => !buildings.some(eb => eb.x === b.x && eb.y === b.y)));
+  if (data.portals) portals.push(...data.portals);
   if (data.events) registerTileEvents(data.events);
 
   (data.interiors || []).forEach(I => {
+    if (!fullReset && interiors[I.id]) {
+      console.warn('Interior already exists: ' + I.id);
+      return;
+    }
     const { id, grid, ...rest } = I;
     const g = grid && typeof grid[0] === 'string' ? gridFromEmoji(grid) : grid;
     interiors[id] = { ...rest, grid: g };
@@ -299,28 +320,41 @@ function applyModule(data){
 
   if (data.mapLabels) Object.assign(mapLabels, data.mapLabels);
   buildings.forEach(b => { if (!interiors[b.interiorId]) { makeInteriorRoom(b.interiorId); } });
-  itemDrops.length = 0;
-  Object.keys(ITEMS).forEach(k=> delete ITEMS[k]);
-  (data.items||[]).forEach(it=>{
-    const {map, x, y, ...def} = it;
-    const registered = registerItem(def);
-    if(map!==undefined && x!==undefined && y!==undefined){
-      itemDrops.push({id: registered.id, map: map||'world', x, y});
-    }
-  });
-  Object.keys(quests).forEach(k=> delete quests[k]);
-  (data.quests||[]).forEach(q=>{
 
-    quests[q.id] = new Quest(
-      q.id,
-      q.title,
-      q.desc,
-      { item: q.item, reward: q.reward, xp: q.xp, moveTo: q.moveTo }
-    );
-  });
-  NPCS.length = 0;
-  hiddenNPCs.length = 0;
+  if (typeof ITEMS !== 'undefined' && data.items) {
+    (data.items||[]).forEach(it=>{
+      if (!fullReset && ITEMS[it.id]) {
+        console.warn('Item already exists: ' + it.id);
+        return;
+      }
+      const {map, x, y, ...def} = it;
+      const registered = registerItem(def);
+      if(map!==undefined && x!==undefined && y!==undefined){
+        itemDrops.push({id: registered.id, map: map||'world', x, y});
+      }
+    });
+  }
+
+  if (typeof quests !== 'undefined' && data.quests) {
+    (data.quests||[]).forEach(q=>{
+      if (!fullReset && quests[q.id]) {
+        console.warn('Quest already exists: ' + q.id);
+        return;
+      }
+      quests[q.id] = new Quest(
+        q.id,
+        q.title,
+        q.desc,
+        { item: q.item, reward: q.reward, xp: q.xp, moveTo: q.moveTo }
+      );
+    });
+  }
+
   (data.npcs||[]).forEach(n=>{
+    if (!fullReset && (NPCS.some(npc => npc.id === n.id) || hiddenNPCs.some(npc => npc.id === n.id))) {
+      console.warn('NPC already exists: ' + n.id);
+      return;
+    }
     if(n.hidden && n.reveal){ hiddenNPCs.push(n); return; }
     let tree=n.tree;
     if(typeof tree==='string'){ try{ tree=JSON.parse(tree); }catch(e){ tree=null; } }
@@ -343,10 +377,19 @@ function applyModule(data){
 // ===== WORLD GEN =====
 function genWorld(seed=Date.now(), data={}){
   setRNGSeed(seed);
-  world = Array.from({length:WORLD_H},(_,y)=> Array.from({length:WORLD_W},(_,x)=>{
-    const v=(Math.sin((x+seed%977)*.37)+Math.cos((y+seed%911)*.29)+Math.sin((x+y)*.11))*0.5;
-    if(v> .62) return TILE.ROCK; if(v<-0.62) return TILE.WATER; if(v> .18) return TILE.BRUSH; return TILE.SAND;
-  }));
+  // Preserve the world array reference for consumers by clearing then repopulating
+  world.length = 0;
+  for(let y=0; y<WORLD_H; y++){
+    const row = [];
+    for(let x=0; x<WORLD_W; x++){
+      const v=(Math.sin((x+seed%977)*.37)+Math.cos((y+seed%911)*.29)+Math.sin((x+y)*.11))*0.5;
+      if(v> .62) row.push(TILE.ROCK);
+      else if(v<-0.62) row.push(TILE.WATER);
+      else if(v> .18) row.push(TILE.BRUSH);
+      else row.push(TILE.SAND);
+    }
+    world.push(row);
+  }
   for(let x=0;x<WORLD_W;x++){
     const ry= clamp(Math.floor(WORLD_H/2 + Math.sin(x*0.22)*6), 2, WORLD_H-3);
     setTile('world', x, ry, TILE.ROAD);
@@ -679,6 +722,7 @@ if (creator?.addEventListener) creator.addEventListener('keydown', e => {
 
 function startGame(){
   startWorld();
+  applyModule(MARA_PUZZLE, { fullReset: false });
 }
 
 function startWorld(){

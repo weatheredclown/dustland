@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
 import '../core/party.js';
+import '../core/presets.js';
 import '../core/npc.js';
 
 test('scaleEnemy applies level-based scaling', () => {
@@ -12,4 +13,11 @@ test('scaleEnemy applies level-based scaling', () => {
   assert.strictEqual(npc.stats.STR, 5);
   assert.strictEqual(npc.stats.AGI, 5);
   assert.strictEqual(npc.stats.INT, 4);
+});
+
+test('scaleEnemyWithPreset uses named build', () => {
+  const npc = {};
+  scaleEnemyWithPreset(npc, 3, 'Scrapper');
+  assert.strictEqual(npc.stats.STR, 5);
+  assert.strictEqual(npc.stats.AGI, 5);
 });

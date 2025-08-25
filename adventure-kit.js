@@ -2152,7 +2152,7 @@ function applyLoadedModule(data) {
     });
   }
   buildings.length = 0;
-  moduleData.buildings.forEach(b => buildings.push(placeHut(b.x, b.y, b)));
+  moduleData.buildings.forEach(b => placeHut(b.x, b.y, b));
   moduleData.buildings = [...buildings];
 
   drawWorld();

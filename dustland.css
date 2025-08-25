@@ -196,6 +196,33 @@
         box-shadow: 0 0 0 2px #8bd98d;
     }
 
+.xpbar {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  background: #273027;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: height .2s;
+}
+.xpbar .fill {
+  height: 100%;
+  background: #8bd98d;
+  transition: width .2s;
+}
+.xpbar:hover {
+  height: 16px;
+}
+.xpbar:hover::after {
+  content: attr(data-xp);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  color: #fff;
+}
+
     .row {
         display: flex;
         flex-wrap: wrap;
@@ -306,6 +333,19 @@
   image-rendering: pixelated;      /* preserve chunky pixels */
   background-repeat:no-repeat;
   background-size:100% 100%;       /* 2×2 grid */
+  position:relative;
+}
+
+.spbadge{
+  position:absolute;
+  top:-4px; right:-4px;
+  background:#8bd98d;
+  color:#0f120f;
+  border-radius:8px;
+  padding:2px 4px;
+  font-size:10px;
+  line-height:1;
+  box-shadow:0 0 4px #8bd98d;
 }
 
     .dialog main {
@@ -337,6 +377,8 @@
 
 /* Combat UI */
 #combatOverlay { background:rgba(0,0,0,.8); pointer-events:auto; z-index:10; right:440px; }
+#combatOverlay.warning { animation:bossWarn .3s steps(1) 4; }
+@keyframes bossWarn { 50% { background:rgba(80,0,0,.8); } }
 #combatOverlay .combat-window {
   pointer-events:auto;
   width:min(640px,92vw);

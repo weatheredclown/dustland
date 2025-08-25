@@ -404,6 +404,26 @@ test('level up grants +10 max HP and a skill point', () => {
   assert.strictEqual(c.skillPoints, 1);
 });
 
+test('respec consumes memory worm and restores skill points', () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const c = new Character('m','M','Role');
+  c.lvl = 3;
+  c.skillPoints = 0;
+  c.stats.STR += 2;
+  party.addMember(c);
+  setLeader(0);
+  registerItem({ id:'memory_worm', name:'Memory Worm', type:'token' });
+  addToInv('memory_worm');
+  const idx = findItemIndex('memory_worm');
+  assert.ok(idx !== -1);
+  const ok = respec();
+  assert.ok(ok);
+  assert.strictEqual(findItemIndex('memory_worm'), -1);
+  assert.deepStrictEqual(c.stats, baseStats());
+  assert.strictEqual(c.skillPoints, 2);
+});
+
 test('advanceDialog moves to next node', () => {
   const tree = {
     start: { text: 'hi', next: [{ id: 'bye', label: 'Bye' }] },
@@ -696,6 +716,18 @@ test('fight choice triggers combat', () => {
   fightBtn.onclick();
   assert.ok(triggered);
   Actions.startCombat = orig;
+});
+
+test('boss special telegraphs before striking', async () => {
+  party.length = 0;
+  party.push({ name: 'Hero', hp: 10 });
+  openCombat([{ name: 'Boss', special: { cue: 'gathers power', dmg: 5, delay: 0 } }]);
+  enemyPhase();
+  assert.ok(combatOverlay.classList.contains('warning'));
+  await new Promise(r => setTimeout(r, 10));
+  assert.strictEqual(party[0].hp, 5);
+  assert.ok(!combatOverlay.classList.contains('warning'));
+  closeCombat('flee');
 });
 
 test('choices pointing to bye are rendered last', () => {

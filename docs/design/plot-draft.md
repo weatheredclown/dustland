@@ -10,9 +10,13 @@ Let's rectify that. Here is a properly expanded and improved version of `plot-dr
 
 > **Clown:** The first draft was a good skeleton. Now we flesh it out. Let's give this carnival ride some more loops and twists. The goal isn't just to chase a signal; it's to make the caravan's journey feel like a living, breathing story that the player can bend and break.
 
+### **Setting: The Barrel**
+
+Dustland sits in a barrel-shaped pocket dimension where debris from Earth's timeline slips in starting in the 1950s. The further into the future an object originates, the more mangled it is when it lands. A vinyl jukebox might arrive with only a few scratches while a late-century drone smashes down in sparks and shards. The people trapped here patch these fragments with mid-century tools and grit, but years in the Dustland have smeared their memories of Earth to static.
+
 ### **The Grand Narrative: The Ghost Signal**
 
-The core of our story remains the caravan's desperate pursuit of a fading broadcast, a ghost signal that whispers promises of a world not yet lost to rust and dust. But what is this signal? Is it a pre-Fall AI, a loop of a forgotten artist's last words, or something stranger? We need to build this mystery, layer by layer. Each stop on the journey shouldn't just be a point on a map; it should be a fresh breadcrumb, a new piece of the puzzle.
+The core of our story remains the caravan's desperate pursuit of a fading broadcast, a ghost signal that whispers promises of a world not yet lost to rust and dust. But what is this signal? Is it a micro AI, a loop of a forgotten artist's last words, or something stranger? We need to build this mystery, layer by layer. Each stop on the journey shouldn't just be a point on a map; it should be a fresh breadcrumb, a new piece of the puzzle.
 
 > **Wing:** Pacing is everything. Each leg of the journey needs a ticking clock. Maybe a rival faction, the "Silencers," is hunting the same signal, but they want to destroy it. This gives us a clear antagonist and a reason for the caravan to keep moving. Every time the player finds a signal fragment, they're not just getting a piece of the story; they're getting a head start on the Silencers.
 >
@@ -34,8 +38,8 @@ Our story is nothing without the people who live it. These aren't just party mem
 
 The items our party finds shouldn't just be stat sticks. They should be story-telling devices, each with its own history and its own role to play in the narrative.
 
-* **The Signal Compass**: This isn't just a quest marker. It's a broken, glitchy piece of pre-Fall tech that spins wildly, pointing not just to the next broadcast fragment, but also to places of emotional resonance—a character's lost home, a place of great tragedy, or a hidden oasis of hope.
-* **The Glinting Key**: This key doesn't just open a door; it opens a path to the past. It unlocks an "echo chamber" beneath the highway, a place where the party can experience a vision of the world before the Fall, a fleeting glimpse of what they're fighting to rebuild.
+* **The Signal Compass**: This isn't just a quest marker. It's a broken, glitchy piece of future tech that spins wildly, pointing not just to the next broadcast fragment, but also to places of emotional resonance—a character's lost home, a place of great tragedy, or a hidden oasis of hope.
+* **The Glinting Key**: This key doesn't just open a door; it opens a path to the past. It unlocks an "echo chamber" beneath the highway, a place where the party can experience a vision of a shining world, a fleeting glimpse of what they're fighting to build.
 * **The Memory Tape**: A rare and valuable item that allows the player to record a choice and its consequence. This tape can then be given to other NPCs, showing them what happened and influencing their decisions. It's a way for the player's actions to ripple through the world in a tangible way.
 
 > **Gizmo:** Any item with a unique mechanic needs a custom UI. The Signal Compass needs a special display on the HUD, and the Memory Tape needs a clear interface for recording and playback. We need to flag these needs early to keep our UI pipeline clean.
@@ -63,14 +67,14 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
   - Ruined rail towns and dead malls scatter false echoes, but the crew rigs antennas and readings to keep the trail alive.
   - A final shiver of sound draws them to a collapsed observatory where the signal sinks beneath the horizon, promising deeper secrets.
 - [x] **Define the Ghost Signal:** Write 3-bullet lore (as above) explaining the origin and nature of the signal. Is it benevolent, malevolent, or something in between?
-  - It is the fragmented consciousness of a pre-Fall scientist, an AI ghost whispering secrets of a world that could be reborn.
+  - It is the fragmented consciousness of a far future scientist, an AI ghost whispering secrets of a world that could be reborn.
   - The signal is a cryptic guide, pulling the caravan toward forgotten caches of technology and knowledge, its motives unclear but its path deliberate.
   - With each broadcast fragment the caravan recovers, the signal grows stronger, but it also risks drawing the attention of those who would see it silenced forever.
 - [x] **The Silencers:** Create a new faction, the "Silencers," who act as the primary antagonists. 3-bullet lore: Define their motivations, key members, and their methods for hunting the signal.
-  - They are a monastic order of technophobes who believe that the pre-Fall world's hubris, embodied in its technology, is what led to the apocalypse. They see the Ghost Signal as a siren song, a remnant of that hubris that threatens to corrupt the survivors and lead them down the same path of destruction. They seek to "silence" it to protect humanity from its own worst impulses.
-  - Led by the grim Warden Malachi, a former historian who witnessed technology's destructive power firsthand. His chief lieutenant is "Null," a tech-scavenger turned saboteur who creates devices to disrupt and track the signal. They command small, disciplined cells of "Echo Hunters" who are adept at tracking the caravan across the wastes.
-  - The Silencers use sophisticated listening posts and salvaged pre-Fall drone technology to hunt for the signal's source. They are surgical and swift, preferring to use EMPs and signal jammers to disable technology and isolate their targets. They will not hesitate to threaten or eliminate anyone who aids the caravan or attempts to amplify the Ghost Signal, viewing them as collaborators in humanity's potential downfall.
-- [ ] **Modular Story Beats:** Design the first three "broadcast fragment" modules. Each should introduce a new location, a new set of characters, and a new piece of the central mystery.
+  - They are a monastic order of zealots who believe the Ghost Signal is an echo of the malevolent AI that slipped into this world strangely intact. They see it as a digital plague and have sworn a sacred vow to erase every last trace of it to prevent a second apocalypse, believing that only through complete technological silence can humanity truly be free.
+  - Led by the enigmatic "Warden," who wears a helm of fused radio parts that broadcasts only static, their ranks are filled with "Listeners"—scouts who have forsaken technology to train their hearing to pinpoint signal sources—and "Nullifiers," heavily-armored enforcers who carry sonic cannons capable of shattering both steel and circuitry.
+  - The Silencers hunt with relentless, calculated precision. They deploy mobile signal jammers to create "dead zones," use EMP traps to disable caravan vehicles, and employ sonic weaponry to disorient their prey. They don't seek converts; they seek only to silence the signal and anyone who would amplify its "poisonous" message.
+- [x] **Modular Story Beats:** Design the first three "broadcast fragment" modules. Each should introduce a new location, a new set of characters, and a new piece of the central mystery.
   - We are going to need to be able to link multiple world maps together in single module, or let character/inventory carry state across modules to tell this story
 
 #### **Phase 2: Character and Item Implementation**
@@ -86,7 +90,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
     - [ ] Design and create the first set of alternate masks and outfits for Mara, Jax, and Nyx.
 - [ ] **Implement Key Items:**
     - [ ] Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.
-    - [ ] Create the "echo chamber" interior and the script that triggers the pre-Fall vision when the Glinting Key is used.
+    - [ ] Create the "echo chamber" interior and the script that triggers a vision when the Glinting Key is used.
     - [ ] Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event.
 
 #### **Phase 3: Puzzle and World Building**

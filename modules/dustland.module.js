@@ -22,6 +22,17 @@ const DUSTLAND_MODULE = (() => {
   };
   const hall = makeHall();
 
+  function buyMemoryWorm() {
+    if (player.scrap < 500) {
+      log('Not enough scrap.');
+      return;
+    }
+    player.scrap -= 500;
+    addToInv('memory_worm');
+    renderInv?.(); updateHUD?.();
+    log('Purchased Memory Worm.');
+  }
+
   const events = [
     { map: 'hall', x: hall.entryX - 1, y: hall.entryY, events:[{ when:'enter', effect:'toast', msg:'You smell rot.' }] }
   ];
@@ -57,6 +68,31 @@ const DUSTLAND_MODULE = (() => {
   ];
 
   const npcs = [
+    {
+      id: 'dust_storm_entrance',
+      map: 'world',
+      x: 10,
+      y: 10,
+      color: '#f5d442',
+      name: 'Strange Vortex',
+      title: 'A swirling vortex of dust and sand.',
+      desc: 'You feel a strange pull towards it.',
+      tree: {
+        start: {
+          text: 'A swirling vortex of dust and sand blocks your path.',
+          choices: [
+            { label: '(Enter the vortex)', to: 'enter' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        },
+        enter: {
+          text: 'You are pulled into the vortex.',
+          choices: [
+            { label: '(Continue)', to: 'bye', goto: { map: 'dust_storm', x: 10, y: 18 } }
+          ]
+        }
+      }
+    },
     {
       id: 'exitdoor',
       map: 'hall',
@@ -389,6 +425,84 @@ const DUSTLAND_MODULE = (() => {
       loop: [ { x: 14, y: midY - 1 }, { x: 80, y: midY + 4 } ]
     },
     {
+      id: 'scrap_mutt',
+      map: 'world',
+      x: 18,
+      y: midY - 2,
+      color: '#d88',
+      name: 'Scrap Mutt',
+      title: 'Mangy Hound',
+      desc: 'A feral mutt snarling over junk.',
+      tree: { start: { text: 'The mutt bares its teeth.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      combat: { HP: 5, ATK: 1, loot: 'water_flask', auto: true }
+    },
+    {
+      id: 'scavenger_rat',
+      map: 'world',
+      x: 32,
+      y: midY + 3,
+      color: '#c66',
+      name: 'Scavenger Rat',
+      title: 'Vermin',
+      desc: 'A giant rat rooting through scraps.',
+      tree: { start: { text: 'It hisses.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      combat: { HP: 4, ATK: 1, loot: 'water_flask', auto: true }
+    },
+    {
+      id: 'rust_bandit',
+      map: 'world',
+      x: 44,
+      y: midY - 3,
+      color: '#f88',
+      name: 'Rust Bandit',
+      title: 'Scav Raider',
+      desc: 'A bandit prowling for easy loot.',
+      tree: { start: { text: 'The bandit sizes you up.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      combat: { HP: 6, ATK: 1, loot: 'raider_knife', auto: true }
+    },
+    {
+      id: 'feral_nomad',
+      map: 'world',
+      x: 68,
+      y: midY + 2,
+      color: '#f77',
+      name: 'Feral Nomad',
+      title: 'Mad Drifter',
+      desc: 'A wild-eyed drifter muttering to himself.',
+      tree: { start: { text: 'He lunges without warning.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      combat: { HP: 6, ATK: 2, loot: 'medkit', auto: true }
+    },
+    {
+      id: 'waste_ghoul',
+      map: 'world',
+      x: 82,
+      y: midY - 4,
+      color: '#aa8',
+      name: 'Waste Ghoul',
+      title: 'Rotwalker',
+      desc: 'A decayed wanderer hungry for flesh.',
+      tree: { start: { text: 'It shambles toward you.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      combat: { HP: 7, ATK: 2, loot: 'goggles', auto: true }
+    },
+    {
+      id: 'iron_brute',
+      map: 'world',
+      x: 120,
+      y: midY - 8,
+      color: '#f33',
+      name: 'Iron Brute',
+      title: 'Challenge',
+      desc: 'A hulking brute plated in scrap.',
+      tree: { start: { text: 'The brute roars.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      loop: [
+        { x: 120, y: midY - 8 },
+        { x: 124, y: midY - 8 },
+        { x: 124, y: midY - 12 },
+        { x: 120, y: midY - 12 }
+      ],
+      combat: { HP: 15, ATK: 3, DEF: 2, loot: 'raider_knife', auto: true }
+    },
+    {
       id: 'stalker_patrol',
       map: 'world',
       x: 90,
@@ -406,6 +520,126 @@ const DUSTLAND_MODULE = (() => {
         { x: 90, y: midY - 6 }
       ],
       combat: { HP: 7, ATK: 2, DEF: 1, loot: 'raider_knife', auto: true }
+    },
+    {
+      id: 'trainer_power',
+      map: 'world',
+      x: 6,
+      y: midY - 1,
+      color: '#ffcc99',
+      name: 'Brakk',
+      title: 'Power Trainer',
+      desc: 'A former arena champ teaching raw strength.',
+      tree: {
+        start: {
+          text: 'Brakk cracks his knuckles.',
+          choices: [
+            { label: '(Upgrade Skills)', to: 'train' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        },
+        train: {
+          text: 'Push your limits.',
+          choices: [
+            { label: 'STR +1', to: 'train', effects: [() => trainStat('STR')] },
+            { label: 'AGI +1', to: 'train', effects: [() => trainStat('AGI')] },
+            { label: '(Back)', to: 'start' }
+          ]
+        }
+      }
+    },
+    {
+      id: 'trainer_endurance',
+      map: 'world',
+      x: 6,
+      y: midY + 1,
+      color: '#99ccff',
+      name: 'Rusty',
+      title: 'Endurance Trainer',
+      desc: 'A grizzled scavenger preaching survival.',
+      tree: {
+        start: {
+          text: 'Rusty studies your stance.',
+          choices: [
+            { label: '(Upgrade Skills)', to: 'train' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        },
+        train: {
+          text: 'Breathe deep and endure.',
+          choices: [
+            { label: 'Max HP +5', to: 'train', effects: [() => trainStat('HP')] },
+            { label: 'DEF +1', to: 'train', effects: [() => trainStat('DEF')] },
+            { label: '(Back)', to: 'start' }
+          ]
+        }
+      }
+    },
+    {
+      id: 'trainer_tricks',
+      map: 'world',
+      x: 6,
+      y: midY + 3,
+      color: '#cc99ff',
+      name: 'Mira',
+      title: 'Tricks Trainer',
+      desc: 'A nimble tinkerer teaching odd moves.',
+      tree: {
+        start: {
+          text: 'Mira twirls a coin.',
+          choices: [
+            { label: '(Upgrade Skills)', to: 'train' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        },
+        train: {
+          text: 'Learn a new trick.',
+          choices: [
+            { label: 'PER +1', to: 'train', effects: [() => trainStat('PER')] },
+            { label: 'LCK +1', to: 'train', effects: [() => trainStat('LCK')] },
+            { label: '(Back)', to: 'start' }
+          ]
+        }
+      }
+    },
+    {
+      id: 'respec_vendor',
+      map: 'world',
+      x: 94,
+      y: midY + 5,
+      color: '#ffee99',
+      name: 'Nora',
+      title: 'Worm Seller',
+      desc: 'She trades memory worms for scrap.',
+      tree: {
+        start: {
+          text: 'Fresh worms for fading sins.',
+          choices: [
+            { label: `Buy Memory Worm (500 ${CURRENCY})`, to: 'buy' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        },
+        buy: {
+          text: 'One bite resets the mind.',
+          choices: [
+            { label: '(Buy)', to: 'start', effects: [buyMemoryWorm] },
+            { label: '(Back)', to: 'start' }
+          ]
+        }
+      }
+    },
+    {
+      id: 'scrap_behemoth',
+      map: 'world',
+      x: 120,
+      y: midY,
+      color: '#f33',
+      name: 'Scrap Behemoth',
+      title: 'Wastes Boss',
+      desc: 'A towering mass of twisted metal.',
+      portraitSheet: 'assets/portraits/portrait_1084.png',
+      tree: { start: { text: 'The behemoth looms.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      combat: { HP: 30, ATK: 3, DEF: 2, loot: 'raider_knife', special: { cue: 'crackles with energy!', dmg: 5, delay: 1000 } }
     }
   ];
 
@@ -421,7 +655,6 @@ const DUSTLAND_MODULE = (() => {
   };
 })();
 
-const _startGame = startGame;
 startGame = function () {
   startWorld();
   applyModule(DUSTLAND_MODULE);

@@ -173,6 +173,28 @@ let camX=0, camY=0, showMini=true;
 let _lastTime=0;
 let bumpX=0, bumpY=0, bumpEnd=0;
 const sparkles=[];
+const soundSources = [];
+let lastChimeTime = 0;
+
+function playWindChime(x, y) {
+  if (!audioEnabled || Date.now() - lastChimeTime < 500) return;
+  lastChimeTime = Date.now();
+  const dx = party.x - x;
+  const dy = party.y - y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist > 10) return;
+
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = 'sine';
+  o.frequency.value = 1200 + Math.random() * 200;
+  o.connect(g);
+  g.connect(audioCtx.destination);
+  g.gain.value = (1 - dist / 10) * 0.2;
+  o.start();
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+  o.stop(audioCtx.currentTime + 0.5);
+}
 
 function footstepBump(){
   bumpX = (Math.random()-0.5)*2;
@@ -195,6 +217,15 @@ function draw(t){
   dctx.globalAlpha=0.20; dctx.drawImage(prev, 1 + bx, by);
   dctx.globalAlpha=0.2; dctx.drawImage(scene, bx, by);
   pctx.clearRect(0,0,prev.width,prev.height); pctx.drawImage(scene,0,0);
+
+  if (state.mapFlags && state.mapFlags.dustStorm) {
+    for (const source of soundSources) {
+      if (source.map === state.map) {
+        playWindChime(source.x, source.y);
+      }
+    }
+  }
+
   requestAnimationFrame(draw);
 }
 
@@ -425,7 +456,39 @@ function renderQuests(){
     q.appendChild(div);
   });
 }
-function renderParty(){ const p=document.getElementById('party'); p.innerHTML=''; if(party.length===0){ p.innerHTML='<div class="pcard muted">(no party members yet)</div>'; return; } party.forEach((m,i)=>{ const c=document.createElement('div'); c.className='pcard'+(i===selectedMember?' selected':''); const bonus=m._bonus||{}; const fmt=v=> (v>0? '+'+v : v); const wLabel=m.equip.weapon?(m.equip.weapon.cursed&&m.equip.weapon.cursedKnown?m.equip.weapon.name+' (cursed)':m.equip.weapon.name):'—'; const aLabel=m.equip.armor?(m.equip.armor.cursed&&m.equip.armor.cursedKnown?m.equip.armor.name+' (cursed)':m.equip.armor.name):'—'; const tLabel=m.equip.trinket?(m.equip.trinket.cursed&&m.equip.trinket.cursedKnown?m.equip.trinket.name+' (cursed)':m.equip.trinket.name):'—'; c.innerHTML = `<div class='row'><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div><div class='row small'>${statLine(m.stats)}</div><div class='row'>HP ${m.hp}/${m.maxHp}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div><div class='row small'>WPN: ${wLabel}${m.equip.weapon?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${m.equip.armor?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${m.equip.trinket?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div><div class='row small'>XP ${m.xp}/${xpToNext(m.lvl)}</div><div class='row'><label><input type='radio' name='selMember' ${i===selectedMember?'checked':''}> Selected</label></div>`; c.querySelector('input').onchange=()=>{ selectedMember=i; }; c.querySelectorAll('button[data-a="unequip"]').forEach(b=>{ const sl=b.dataset.slot; b.onclick=()=> unequipItem(i,sl); }); p.appendChild(c); }); }
+function renderParty(){
+  const p=document.getElementById('party');
+  p.innerHTML='';
+  if(party.length===0){
+    p.innerHTML='<div class="pcard muted">(no party members yet)</div>';
+    return;
+  }
+  party.forEach((m,i)=>{
+    const c=document.createElement('div');
+    c.className='pcard'+(i===selectedMember?' selected':'');
+    const bonus=m._bonus||{};
+    const fmt=v=> (v>0? '+'+v : v);
+    const wLabel=m.equip.weapon?(m.equip.weapon.cursed&&m.equip.weapon.cursedKnown?m.equip.weapon.name+' (cursed)':m.equip.weapon.name):'—';
+    const aLabel=m.equip.armor?(m.equip.armor.cursed&&m.equip.armor.cursedKnown?m.equip.armor.name+' (cursed)':m.equip.armor.name):'—';
+    const tLabel=m.equip.trinket?(m.equip.trinket.cursed&&m.equip.trinket.cursedKnown?m.equip.trinket.name+' (cursed)':m.equip.trinket.name):'—';
+    const nextXP=xpToNext(m.lvl);
+    const pct=Math.min(100,(m.xp/nextXP)*100);
+    const badge = m.skillPoints>0?`<div class="spbadge">${m.skillPoints}</div>`:'';
+    const portrait = `<div class='portrait' ${m.portraitSheet?`style="background-image:url(${m.portraitSheet})"`:''}>${badge}</div>`;
+    c.innerHTML = `<div class='row'>${portrait}<div><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div></div>
+<div class='row small'>${statLine(m.stats)}</div>
+<div class='row'>HP ${m.hp}/${m.maxHp}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div>
+<div class='row'><div class='xpbar' data-xp='${m.xp}/${nextXP}'><div class='fill' style='width:${pct}%'></div></div></div>
+<div class='row small'>WPN: ${wLabel}${m.equip.weapon?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${m.equip.armor?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${m.equip.trinket?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div>
+<div class='row'><label><input type='radio' name='selMember' ${i===selectedMember?'checked':''}> Selected</label></div>`;
+    c.querySelector('input').onchange=()=>{ selectedMember=i; };
+    c.querySelectorAll('button[data-a="unequip"]').forEach(b=>{
+      const sl=b.dataset.slot;
+      b.onclick=()=> unequipItem(i,sl);
+    });
+    p.appendChild(c);
+  });
+}
 
 const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle };
 Object.assign(globalThis, engineExports);

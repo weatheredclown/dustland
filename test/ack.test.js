@@ -103,6 +103,17 @@ test('applyLoadedModule clears previous building tiles', () => {
   assert.strictEqual(globalThis.buildings.length, 0);
 });
 
+test('applyLoadedModule avoids duplicate buildings', () => {
+  genWorld(1);
+  const data = { seed: 1, buildings: [{ x:2, y:2, w:2, h:2 }] };
+  applyLoadedModule(data);
+  assert.strictEqual(globalThis.buildings.length, 1);
+  const saved = { seed: moduleData.seed, buildings: moduleData.buildings };
+  applyLoadedModule(saved);
+  assert.strictEqual(globalThis.buildings.length, 1);
+  applyLoadedModule({ seed: 1, buildings: [] });
+});
+
 test('saveModule uses module name for download', () => {
   const origValidateSpawns = globalThis.validateSpawns;
   globalThis.validateSpawns = () => true;

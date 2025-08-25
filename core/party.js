@@ -21,6 +21,7 @@ class Character {
     this.xp += amt;
     log(`${this.name} gains ${amt} XP.`);
     if(typeof toast==='function') toast(`${this.name} +${amt} XP`);
+    EventBus.emit('xp:gained', { character: this, amount: amt });
     EventBus.emit('sfx','tick');
     while(this.xp >= this.xpToNext()){
       this.xp -= this.xpToNext();
@@ -34,8 +35,12 @@ class Character {
     this.hp = this.maxHp;
     this.skillPoints += 1;
     if(typeof hudBadge==='function') hudBadge('+1 Skill Point');
+    EventBus.emit('character:leveled-up', { character: this });
     EventBus.emit('sfx','tick');
     log(`${this.name} leveled up to ${this.lvl}! (+10 HP, +1 SP)`);
+    if((party.flags && party.flags.mentor) || (typeof hasItem==='function' && hasItem('mentor_token'))){
+      EventBus.emit('mentor:bark', { text:'Another scar, another lesson learned.', sound:'mentor' });
+    }
   }
   applyEquipmentStats(){
     this._bonus = {ATK:0, DEF:0, LCK:0};
@@ -105,5 +110,41 @@ function applyEquipmentStats(m){ m.applyEquipmentStats(); }
 function leader(){ return party.leader(); }
 function setLeader(idx){ selectedMember = idx; }
 
-const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, selectedMember, xpCurve };
+function respec(memberIndex=selectedMember){
+  const m = party[memberIndex];
+  if(!m) return false;
+  const tokenIdx = typeof findItemIndex==='function' ? findItemIndex('memory_worm') : -1;
+  if(tokenIdx===-1){
+    log('Need a Memory Worm token.');
+    return false;
+  }
+  removeFromInv(tokenIdx);
+  m.stats = baseStats();
+  m.skillPoints = m.lvl - 1;
+  m.applyEquipmentStats();
+  renderParty(); updateHUD();
+  log(`${m.name} respecs their skills.`);
+  return true;
+}
+
+function trainStat(stat, memberIndex = selectedMember){
+  const m = party[memberIndex];
+  if(!m) return false;
+  if(m.skillPoints <= 0){
+    log('No skill points to spend.');
+    return false;
+  }
+  m.skillPoints -= 1;
+  if(stat === 'HP'){
+    m.maxHp += 5;
+    m.hp = m.maxHp;
+  }else{
+    m.stats[stat] = (m.stats[stat] || 0) + 1;
+  }
+  renderParty(); updateHUD();
+  log(`${m.name} trains ${stat}.`);
+  return true;
+}
+
+const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, respec, trainStat, selectedMember, xpCurve };
 Object.assign(globalThis, partyExports);

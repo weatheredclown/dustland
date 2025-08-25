@@ -6,6 +6,7 @@ const nameEl=document.getElementById('npcName');
 const titleEl=document.getElementById('npcTitle');
 const portEl=document.getElementById('port');
 let currentNPC=null;
+Object.defineProperty(globalThis,'currentNPC',{get:()=>currentNPC,set:v=>{currentNPC=v;}});
 const dialogState={ tree:null, node:null };
 let selectedChoice=0;
 
@@ -107,6 +108,10 @@ function handleGoto(g){
     if(g.map) tgtNPC.map = g.map;
     tgtNPC.x = x;
     tgtNPC.y = y;
+    if(tgtNPC._loop){
+      tgtNPC._loop.path = [];
+      tgtNPC._loop.job = null;
+    }
   }else{
     if(g.map==='world'){
       startWorld();
@@ -135,10 +140,10 @@ function advanceDialog(stateObj, choiceIdx){
   const finalize=(text, ok)=>{ res.text=text||null; res.close=true; res.success=!!ok; stateObj.node=null; return res; };
 
   if(choice.reqItem || choice.reqSlot){
-    const idx = choice.reqItem
-      ? findItemIndex(choice.reqItem)
-      : player.inv.findIndex(it => it.slot === choice.reqSlot);
-    if(idx === -1){
+    const requiredCount = choice.reqCount || 1;
+    const hasEnough = choice.reqItem ? countItems(choice.reqItem) >= requiredCount : hasItem(choice.reqSlot);
+
+    if(!hasEnough){
       return finalize(choice.failure || 'You lack the required item.', false);
     }
     Actions.applyQuestReward(choice.reward);
@@ -153,13 +158,23 @@ function advanceDialog(stateObj, choiceIdx){
   }
 
   if(choice.costItem || choice.costSlot){
-    const idx = choice.costItem ? findItemIndex(choice.costItem)
-                                : player.inv.findIndex(it=> it.slot===choice.costSlot);
-    if(idx === -1){
+    const costCount = choice.costCount || 1;
+    const hasEnough = choice.costItem ? countItems(choice.costItem) >= costCount : hasItem(choice.costSlot);
+
+    if(!hasEnough){
       return finalize(choice.failure || 'You lack the required item.', false);
     }
-    const removed = player.inv[idx];
-    player.inv.splice(idx,1);
+
+    if (choice.costItem) {
+      for (let i = 0; i < costCount; i++) {
+        const itemIdx = findItemIndex(choice.costItem);
+        if (itemIdx > -1) removeFromInv(itemIdx);
+      }
+    } else if (choice.costSlot) {
+      const itemIdx = player.inv.findIndex(it=> it.slot===choice.costSlot);
+      if (itemIdx > -1) removeFromInv(itemIdx);
+    }
+
     Actions.applyQuestReward(choice.reward);
     joinParty(choice.join);
     processQuestFlag(choice);
@@ -183,6 +198,15 @@ function advanceDialog(stateObj, choiceIdx){
   joinParty(choice.join);
   processQuestFlag(choice);
   runEffects(choice.effects);
+
+  if (choice.applyModule) {
+    const moduleData = globalThis[choice.applyModule];
+    if (moduleData) {
+      applyModule(moduleData, { fullReset: false });
+    } else {
+      console.error(`Module ${choice.applyModule} not found in global scope.`);
+    }
+  }
 
   if(choice.goto){
     handleGoto(choice.goto);
@@ -336,5 +360,5 @@ function renderDialog(){
   dlgHighlightChoice();
 }
 
-const dialogExports = { overlay, choicesEl, textEl, nameEl, titleEl, portEl, openDialog, closeDialog, renderDialog, advanceDialog, resolveCheck, handleDialogKey };
+const dialogExports = { overlay, choicesEl, textEl, nameEl, titleEl, portEl, openDialog, closeDialog, renderDialog, advanceDialog, resolveCheck, handleDialogKey, handleGoto };
 Object.assign(globalThis, dialogExports);

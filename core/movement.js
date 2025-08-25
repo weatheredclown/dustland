@@ -63,7 +63,6 @@ function tileDelay(t, map=state.map){
   const pct = clamp(((brightness - minBright) / (maxBright - minBright)) * 100, 0, 100);
   const minDelay=100, maxDelay=500;
   const delay = minDelay + (pct/100)*(maxDelay-minDelay);
-  console.log("T",t," Brightness", brightness, " Pct", pct, " Delay", delay);
   return delay;
 }
 
@@ -130,9 +129,22 @@ function findFreeDropTile(map,x,y){
 
 function onEnter(map,x,y,ctx){
   const t = tileEvents.find(e => (e.map || 'world') === map && e.x === x && e.y === y);
-  if(!t) return;
+  if (!t) {
+    const wasInDustStorm = state.mapFlags && state.mapFlags.dustStorm;
+    if (wasInDustStorm) {
+      Effects.apply([{ effect: 'dustStorm', active: false }]);
+      if(state.mapFlags) state.mapFlags.dustStorm = false;
+    }
+    return;
+  }
   const list = (t.events || []).filter(ev => ev.when === 'enter');
   if(list.length) Effects.apply(list, ctx);
+
+  const hasDustStorm = list.some(e => e.effect === 'dustStorm');
+  if(state.mapFlags) state.mapFlags.dustStorm = hasDustStorm;
+  if (!hasDustStorm) {
+    Effects.apply([{ effect: 'dustStorm', active: false }]);
+  }
 }
 
 // ===== Interaction =====
