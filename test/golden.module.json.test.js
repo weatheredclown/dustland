@@ -57,6 +57,11 @@ test('golden module json exposes core features', () => {
   );
   assert.ok(!overlaps, 'npcs avoid building area');
 
+  const startClear = !mod.npcs.some(
+    (n) => n.map === mod.start.map && n.x === mod.start.x && n.y === mod.start.y
+  );
+  assert.ok(startClear, 'start tile is not occupied by NPC');
+
   const bandit = mod.npcs.find((n) => n.id === 'bandit');
   const dist = Math.abs(bandit.x - mod.start.x) + Math.abs(bandit.y - mod.start.y);
   assert.ok(dist > 2, 'bandit is spaced away from start');
