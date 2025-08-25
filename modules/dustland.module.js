@@ -684,7 +684,6 @@ const DUSTLAND_MODULE = (() => {
 })();
 
 startGame = function () {
-  startWorld();
   applyModule(DUSTLAND_MODULE);
   const s = DUSTLAND_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   setPartyPos(s.x, s.y);

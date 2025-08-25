@@ -9,9 +9,6 @@ window.addEventListener('load', () => {
 async function runBalanceTest() {
   try {
     console.log('Running balance test...');
-    // Boot world and load the golden module
-    startWorld();
-    console.log('Balance test checkpoint: world started');
     const modulePath = 'modules/golden.module.json';
     const res = await fetch(modulePath);
     const moduleData = await res.json();

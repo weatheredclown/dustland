@@ -51,7 +51,6 @@ const MARA_PUZZLE = {
 };
 
 startGame = function () {
-  startWorld();
   applyModule(MARA_PUZZLE);
   const s = MARA_PUZZLE.start;
   setPartyPos(s.x, s.y);

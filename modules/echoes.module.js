@@ -177,7 +177,6 @@ const ECHOES_MODULE = (() => {
 })();
 
 startGame = function () {
-  startWorld();
   applyModule(ECHOES_MODULE);
   const s = ECHOES_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   setPartyPos(s.x, s.y);

@@ -276,119 +276,112 @@ function incFlag(flag, amt=1){
 }
 
 // ===== Module application =====
-function applyModule(data, options = {}){
+function applyModule(data = {}, options = {}) {
   const { fullReset = true } = options;
+  let moduleData = data || {};
 
   if (fullReset) {
-    setRNGSeed(data.seed || Date.now());
-  }
+    const seed = moduleData.seed || Date.now();
+    setRNGSeed(seed);
 
-  if (data.world && fullReset) {
-    // Replace world grid while preserving array reference for consumers
-    world.length = 0;
-    if (Array.isArray(data.world[0])) {
-      data.world.forEach(row => world.push([...row]));
-    } else if (typeof data.world[0] === 'string') {
-      gridFromEmoji(data.world).forEach(r => world.push(r));
-    }
-  }
-
-  if (fullReset) {
-    // Reset and repopulate core collections without changing references
+    // Clear core collections
     Object.keys(interiors).forEach(k => delete interiors[k]);
-    buildings.forEach(b => {
-      for (let yy = 0; yy < b.h; yy++) {
-        for (let xx = 0; xx < b.w; xx++) {
-          setTile('world', b.x + xx, b.y + yy, b.under[yy][xx]);
-        }
-      }
-    });
     buildings.length = 0;
     portals.length = 0;
     tileEvents.length = 0;
     itemDrops.length = 0;
-    if (typeof ITEMS !== 'undefined') Object.keys(ITEMS).forEach(k=> delete ITEMS[k]);
-    if (typeof quests !== 'undefined') Object.keys(quests).forEach(k=> delete quests[k]);
+    if (typeof ITEMS !== 'undefined') Object.keys(ITEMS).forEach(k => delete ITEMS[k]);
+    if (typeof quests !== 'undefined') Object.keys(quests).forEach(k => delete quests[k]);
     NPCS.length = 0;
     hiddenNPCs.length = 0;
     Object.keys(enemyBanks).forEach(k => delete enemyBanks[k]);
-  }
 
-  if (data.buildings) {
-    data.buildings.forEach(b => {
-      if (!buildings.some(eb => eb.x === b.x && eb.y === b.y)) {
-        placeHut(b.x, b.y, b);
+    // Generate terrain based on config
+    let generated = false;
+    if (moduleData.worldGen) {
+      let gen = moduleData.worldGen;
+      if (typeof gen === 'string') gen = globalThis[gen];
+      if (typeof gen === 'function') {
+        const extra = gen(seed, moduleData) || {};
+        moduleData = { ...moduleData, ...extra };
+        generated = true;
       }
-    });
-  }
-  if (data.portals) portals.push(...data.portals);
-  if (data.events) registerTileEvents(data.events);
-  if (data.encounters) {
-    Object.entries(data.encounters).forEach(([map, list]) => {
-      enemyBanks[map] = list.map(e => ({ ...e }));
-    });
+    }
+    if (moduleData.world) {
+      world.length = 0;
+      const grid = Array.isArray(moduleData.world[0]) ? moduleData.world : gridFromEmoji(moduleData.world);
+      grid.forEach(row => world.push([...row]));
+      generated = true;
+    }
+    if (!generated) {
+      const genOpts = moduleData.buildings ? { buildings: [] } : {};
+      genWorld(seed, genOpts);
+    }
   }
 
-  (data.interiors || []).forEach(I => {
+  // Interiors
+  (moduleData.interiors || []).forEach(I => {
     const { id, grid, ...rest } = I;
     const g = grid && typeof grid[0] === 'string' ? gridFromEmoji(grid) : grid;
     interiors[id] = { ...rest, grid: g };
   });
 
-  if (data.mapLabels) Object.assign(mapLabels, data.mapLabels);
-  buildings.forEach(b => { if (!interiors[b.interiorId]) { makeInteriorRoom(b.interiorId); } });
-
-  if (typeof ITEMS !== 'undefined' && data.items) {
-    (data.items||[]).forEach(it=>{
-      if (!fullReset && ITEMS[it.id]) {
-        console.warn('Item already exists: ' + it.id);
-        return;
+  // Buildings
+  if (moduleData.buildings) {
+    moduleData.buildings.forEach(b => {
+      if (!buildings.some(eb => eb.x === b.x && eb.y === b.y)) {
+        placeHut(b.x, b.y, b);
       }
-      const {map, x, y, ...def} = it;
+    });
+  }
+
+  // Portals, events, and encounters
+  if (moduleData.portals) portals.push(...moduleData.portals);
+  if (moduleData.events) registerTileEvents(moduleData.events);
+  if (moduleData.encounters) {
+    Object.entries(moduleData.encounters).forEach(([map, list]) => {
+      enemyBanks[map] = list.map(e => ({ ...e }));
+    });
+  }
+
+  // Items
+  if (typeof ITEMS !== 'undefined' && moduleData.items) {
+    moduleData.items.forEach(it => {
+      const { map, x, y, ...def } = it;
       const registered = registerItem(def);
-      if(map!==undefined && x!==undefined && y!==undefined){
-        itemDrops.push({id: registered.id, map: map||'world', x, y});
+      if (map !== undefined && x !== undefined && y !== undefined) {
+        itemDrops.push({ id: registered.id, map: map || 'world', x, y });
       }
     });
   }
 
-  if (typeof quests !== 'undefined' && data.quests) {
-    (data.quests||[]).forEach(q=>{
-      if (!fullReset && quests[q.id]) {
-        console.warn('Quest already exists: ' + q.id);
-        return;
-      }
-      quests[q.id] = new Quest(
-        q.id,
-        q.title,
-        q.desc,
-        { item: q.item, reward: q.reward, xp: q.xp, moveTo: q.moveTo }
-      );
+  // Quests
+  if (typeof quests !== 'undefined' && moduleData.quests) {
+    moduleData.quests.forEach(q => {
+      quests[q.id] = new Quest(q.id, q.title, q.desc, { item: q.item, reward: q.reward, xp: q.xp, moveTo: q.moveTo });
     });
   }
 
-  (data.npcs||[]).forEach(n=>{
-    if (!fullReset && (NPCS.some(npc => npc.id === n.id) || hiddenNPCs.some(npc => npc.id === n.id))) {
-      console.warn('NPC already exists: ' + n.id);
-      return;
+  // NPCs
+  (moduleData.npcs || []).forEach(n => {
+    if (n.hidden && n.reveal) { hiddenNPCs.push(n); return; }
+    let tree = n.tree;
+    if (typeof tree === 'string') { try { tree = JSON.parse(tree); } catch (e) { tree = null; } }
+    if (!tree) {
+      tree = { start: { text: n.dialog || '', choices: [{ label: '(Leave)', to: 'bye' }] } };
     }
-    if(n.hidden && n.reveal){ hiddenNPCs.push(n); return; }
-    let tree=n.tree;
-    if(typeof tree==='string'){ try{ tree=JSON.parse(tree); }catch(e){ tree=null; } }
-    if(!tree){
-      tree = { start:{ text:n.dialog||'', choices:[{label:'(Leave)', to:'bye'}] } };
-    }
-    let quest=null;
-    if(n.questId && quests[n.questId]) quest=quests[n.questId];
+    let quest = null;
+    if (n.questId && quests[n.questId]) quest = quests[n.questId];
     const opts = {};
-    if(n.combat) opts.combat = n.combat;
-    if(n.shop) opts.shop = n.shop;
-    if(n.portraitSheet) opts.portraitSheet = n.portraitSheet;
-    const npc = makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, n.title||'', n.desc||'', tree, quest, null, null, opts);
+    if (n.combat) opts.combat = n.combat;
+    if (n.shop) opts.shop = n.shop;
+    if (n.portraitSheet) opts.portraitSheet = n.portraitSheet;
+    const npc = makeNPC(n.id, n.map || 'world', n.x, n.y, n.color || '#9ef7a0', n.name || n.id, n.title || '', n.desc || '', tree, quest, null, null, opts);
     if (Array.isArray(n.loop)) npc.loop = n.loop;
     NPCS.push(npc);
   });
   revealHiddenNPCs();
+  return moduleData;
 }
 
 // ===== WORLD GEN =====
@@ -416,7 +409,7 @@ function genWorld(seed=Date.now(), data={}){
     const rx=rand(WORLD_W), ry=rand(WORLD_H);
     if(getTile('world',rx,ry)!==TILE.WATER) setTile('world',rx,ry,TILE.RUIN);
   }
-  interiors = {};
+  Object.keys(interiors).forEach(k => delete interiors[k]);
   if(creatorMap.grid && creatorMap.grid.length) interiors['creator']=creatorMap;
   (data.interiors||[]).forEach(I=>{ const {id,...rest}=I; interiors[id]={...rest}; });
   buildings.length = 0;
@@ -738,17 +731,7 @@ if (creator?.addEventListener) creator.addEventListener('keydown', e => {
 });
 
 function startGame(){
-  startWorld();
-  applyModule(MARA_PUZZLE, { fullReset: false });
-}
-
-function startWorld(){
-  const seed = Date.now();
-  genWorld(seed);
-  setPartyPos(2, Math.floor(WORLD_H/2));
-  setMap('world','Wastes');
-  refreshUI();
-  log('You step into the wastes.');
+  applyModule(MARA_PUZZLE);
 }
 
 on('inventory:changed', () => {
@@ -805,7 +788,6 @@ const coreExports = {
   makeInteriorRoom,
   placeHut,
   startGame,
-  startWorld,
   setRNGSeed,
   worldFlags,
   incFlag,

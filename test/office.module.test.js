@@ -20,5 +20,5 @@ test('startGame preserves generated world when applying module', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
   const src = fs.readFileSync(file, 'utf8');
-  assert.match(src, /applyModule\(OFFICE_MODULE,\s*\{\s*fullReset: false\s*}\)/);
+  assert.match(src, /applyModule\(OFFICE_MODULE\)/);
 });

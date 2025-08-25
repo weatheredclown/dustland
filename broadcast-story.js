@@ -25,7 +25,6 @@ seedWorldContent = () => {};
 
 startGame = async function(){
   await fragmentsReady;
-  startWorld();
   applyModule(BROADCAST_FRAGMENT_1);
   const map = BROADCAST_FRAGMENT_1.startMap || 'world';
   const pt = BROADCAST_FRAGMENT_1.startPoint || { x: 2, y: Math.floor(WORLD_H/2) };
