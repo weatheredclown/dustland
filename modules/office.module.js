@@ -573,7 +573,7 @@ const OFFICE_MODULE = (() => {
 startGame = function () {
   if (OFFICE_MODULE.worldGen) {
     const { castleId } = OFFICE_MODULE.worldGen();
-    applyModule(OFFICE_MODULE);
+    applyModule(OFFICE_MODULE, { fullReset: false });
     const charm = registerItem({
       id: 'forest_charm',
       name: 'Forest Charm',

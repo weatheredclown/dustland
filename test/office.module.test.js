@@ -15,3 +15,10 @@ test('office module boards castle and unboards via dialog', () => {
   assert.match(src, /start: [\s\S]*?effect: 'unboardDoor',\s*interiorId: 'castle'[\s\S]*?unlock:/);
   assert.match(src, /label: '\(Fight\)'/);
 });
+
+test('startGame preserves generated world when applying module', () => {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const file = path.join(__dirname, '..', 'modules', 'office.module.js');
+  const src = fs.readFileSync(file, 'utf8');
+  assert.match(src, /applyModule\(OFFICE_MODULE,\s*\{\s*fullReset: false\s*}\)/);
+});
