@@ -90,6 +90,7 @@ function closeCombat(result='flee'){
   if(turnIndicator) turnIndicator.textContent='';
   combatState.fallen.forEach(m=>{ m.hp = Math.max(1, m.hp||0); party.push(m); });
   combatState.fallen.length = 0;
+  globalThis.EventBus?.emit?.('combat:ended', { result });
   combatState.onComplete?.({ result });
   combatState.onComplete=null;
 }
@@ -260,6 +261,7 @@ function doAttack(dmg){
   log?.(`${attacker.name} hits ${target.name} for ${dmg} damage.`);
   if(target.hp<=0){
     log?.(`${target.name} is defeated!`);
+    globalThis.EventBus?.emit?.('enemy:defeated', { target });
     if(target.loot) addToInv?.(target.loot);
     if(typeof SpoilsCache !== 'undefined'){
       const cache = SpoilsCache.rollDrop?.(target.challenge);
@@ -267,6 +269,7 @@ function doAttack(dmg){
         const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
         itemDrops?.push({ id: registered.id, map: party.map, x: party.x, y: party.y });
         log?.(`The ground coughs up a ${registered.name}.`);
+        globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target });
       }
     }
     if(target.npc) removeNPC(target.npc);

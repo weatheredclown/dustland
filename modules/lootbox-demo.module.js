@@ -10,6 +10,48 @@ const LOOTBOX_DEMO_MODULE = (() => {
   );
   const demoRoom = { id: 'demo_room', w: ROOM_W, h: ROOM_H, grid, entryX: 1, entryY: Math.floor(ROOM_H / 2) };
 
+  let dummyChallenge = 5;
+  function spawnDummy(){
+    const npc = makeNPC(
+      'training_dummy',
+      'demo_room',
+      5,
+      Math.floor(ROOM_H / 2),
+      '#f88',
+      'Training Dummy',
+      '',
+      {
+        start:{
+          text:'A sturdy dummy built for testing spoils caches.',
+          choices:[
+            { label:'(Fight)', to:'do_fight' },
+            { label:'(Leave)', to:'bye' }
+          ]
+        }
+      },
+      null,
+      null,
+      null,
+      { combat:{ HP: dummyChallenge, ATK:0, DEF:0, challenge: dummyChallenge } }
+    );
+    NPCS.push(npc);
+    refreshUI?.();
+  }
+
+  let sawDrop = false;
+  watchEventFlag?.('spoils:opened', 'cache_opened');
+  EventBus.on('spoils:drop', () => { sawDrop = true; });
+  EventBus.on('combat:ended', ({ result }) => {
+    if(result === 'loot'){
+      incFlag('dummy_defeated');
+      if(!sawDrop) EventBus.emit('mentor:bark', { text:'Better luck next time', sound:'mentor' });
+      sawDrop = false;
+    }
+  });
+  EventBus.on('spoils:opened', () => {
+    EventBus.emit('mentor:bark', { text:'Good job', sound:'mentor' });
+  });
+
   const npcs = [
     {
       id: 'cache_guide',
@@ -20,30 +62,40 @@ const LOOTBOX_DEMO_MODULE = (() => {
       name: 'Cache Guide',
       desc: 'An eager scavenger itching to teach you about spoils caches.',
       tree: {
-        start: {
-          text: 'Defeat the dummy and open the spoils cache it drops. The higher the challenge, the better the loot.',
-          choices: [ { label: '(Got it)', to: 'bye' } ]
-        }
-      }
-    },
-    {
-      id: 'training_dummy',
-      map: 'demo_room',
-      x: 5,
-      y: Math.floor(ROOM_H / 2),
-      color: '#f88',
-      name: 'Training Dummy',
-      desc: 'It just stands there, waiting to be whacked.',
-      tree: {
-        start: {
-          text: 'A sturdy dummy built for testing spoils caches.',
-          choices: [
-            { label: '(Fight)', to: 'do_fight' },
-            { label: '(Leave)', to: 'bye' }
-          ]
+        start: { text: '', choices: [] },
+        spawn_same: { text: 'Another dummy ready.', choices:[{ label:'(Back)', to:'start' }] },
+        spawn_tough: { text: 'Tougher dummy coming up.', choices:[{ label:'(Back)', to:'start' }] }
+      },
+      processNode(node){
+        if(node === 'start'){
+          const opened = flagValue('cache_opened') >= 1;
+          const fought = flagValue('dummy_defeated') >= 1;
+          if(opened){
+            this.tree.start.text = 'Nice work. Want another dummy?';
+          } else if(fought){
+            this.tree.start.text = 'No cache yet? Want to try again?';
+          } else {
+            this.tree.start.text = 'Defeat the dummy and open the spoils cache it drops. The higher the challenge, the better the loot.';
+          }
+          const choices = [];
+          if(fought){
+            choices.push({ label:'(Same dummy)', to:'spawn_same' });
+            choices.push({ label:'(Tougher dummy)', to:'spawn_tough' });
+          }
+          choices.push({ label:'(Leave)', to:'bye' });
+          this.tree.start.choices = choices;
         }
       },
-      combat: { HP: 1, ATK: 0, DEF: 0, challenge: 15 }
+      processChoice(c){
+        if(c.to === 'spawn_same'){
+          spawnDummy();
+          clearFlag('cache_opened');
+        } else if(c.to === 'spawn_tough'){
+          dummyChallenge++;
+          spawnDummy();
+          clearFlag('cache_opened');
+        }
+      }
     }
   ];
 
@@ -58,11 +110,11 @@ const LOOTBOX_DEMO_MODULE = (() => {
   };
 })();
 
-startGame = function () {
+startGame = function(){
   applyModule(LOOTBOX_DEMO_MODULE);
   const s = LOOTBOX_DEMO_MODULE.start;
   setPartyPos(s.x, s.y);
   setMap(s.map, 'Loot Box Demo');
+  spawnDummy();
   refreshUI();
 };
-
