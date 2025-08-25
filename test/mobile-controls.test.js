@@ -67,3 +67,19 @@ test('mobile arrows navigate dialog when overlay shown', async () => {
   down.onclick();
   assert.deepStrictEqual(keys, ['ArrowUp', 'ArrowDown']);
 });
+
+test('mobile arrows navigate combat menu when in combat', async () => {
+  const keys=[];
+  const html = '<body><div id="combatOverlay" class="shown"></div><canvas id="game"></canvas><div id="log"></div><div id="hp"></div><div id="ap"></div><div id="scrap"></div></body>';
+  const { context } = await setup(html, {
+    handleCombatKey: e => { keys.push(e.key); return true; },
+    move: () => { keys.push('move'); },
+    overlay: null
+  });
+  context.setMobileControls(true);
+  const up = [...context.document.querySelectorAll('button')].find(b => b.textContent === '↑');
+  up.onclick();
+  const down = [...context.document.querySelectorAll('button')].find(b => b.textContent === '↓');
+  down.onclick();
+  assert.deepStrictEqual(keys, ['ArrowUp', 'ArrowDown']);
+});
