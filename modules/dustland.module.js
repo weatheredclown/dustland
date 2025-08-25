@@ -684,10 +684,10 @@ const DUSTLAND_MODULE = (() => {
 })();
 
 startGame = function () {
-  applyModule(DUSTLAND_MODULE);
-  const s = DUSTLAND_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-  setPartyPos(s.x, s.y);
-  setMap(s.map, s.map === 'world' ? 'Wastes' : 'Test Hall');
+  const { start: s } = applyModule(DUSTLAND_MODULE) || {};
+  const loc = s || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+  setMap(loc.map, loc.map === 'world' ? 'Wastes' : 'Test Hall');
+  setPartyPos(loc.x, loc.y);
   renderInv();
   renderQuests();
   renderParty();
