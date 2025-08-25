@@ -46,7 +46,7 @@ test('Game balance tester', () => {
   global.NanoDialog = window.NanoDialog;
   window.AudioContext = function() {};
   window.webkitAudioContext = window.AudioContext;
-  window.Audio = function(){ return { cloneNode: () => ({ play: () => {} }) }; };
+  window.Audio = function(){ return { cloneNode: () => ({ play: () => ({ catch: () => {} }), pause: () => {} }) }; };
   global.Audio = window.Audio;
   global.EventBus = { on: () => {}, emit: () => {} };
   global.TS = 16;
@@ -145,8 +145,10 @@ test('Game balance tester', () => {
 
       // 3. Move randomly
       const directions = ['up', 'down', 'left', 'right'];
-      const randomDirection = directions[Math.floor(Math.random() * directions.length)];
-      move(randomDirection);
+      const dirMap = { up:[0,-1], down:[0,1], left:[-1,0], right:[1,0] };
+      const dir = directions[Math.floor(Math.random() * directions.length)];
+      const [dx, dy] = dirMap[dir];
+      move(dx, dy);
     }
   };
 

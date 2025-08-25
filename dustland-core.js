@@ -377,10 +377,19 @@ function applyModule(data, options = {}){
 // ===== WORLD GEN =====
 function genWorld(seed=Date.now(), data={}){
   setRNGSeed(seed);
-  world = Array.from({length:WORLD_H},(_,y)=> Array.from({length:WORLD_W},(_,x)=>{
-    const v=(Math.sin((x+seed%977)*.37)+Math.cos((y+seed%911)*.29)+Math.sin((x+y)*.11))*0.5;
-    if(v> .62) return TILE.ROCK; if(v<-0.62) return TILE.WATER; if(v> .18) return TILE.BRUSH; return TILE.SAND;
-  }));
+  // Preserve the world array reference for consumers by clearing then repopulating
+  world.length = 0;
+  for(let y=0; y<WORLD_H; y++){
+    const row = [];
+    for(let x=0; x<WORLD_W; x++){
+      const v=(Math.sin((x+seed%977)*.37)+Math.cos((y+seed%911)*.29)+Math.sin((x+y)*.11))*0.5;
+      if(v> .62) row.push(TILE.ROCK);
+      else if(v<-0.62) row.push(TILE.WATER);
+      else if(v> .18) row.push(TILE.BRUSH);
+      else row.push(TILE.SAND);
+    }
+    world.push(row);
+  }
   for(let x=0;x<WORLD_W;x++){
     const ry= clamp(Math.floor(WORLD_H/2 + Math.sin(x*0.22)*6), 2, WORLD_H-3);
     setTile('world', x, ry, TILE.ROAD);
