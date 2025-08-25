@@ -22,3 +22,12 @@ test('startGame preserves generated world when applying module', () => {
   const src = fs.readFileSync(file, 'utf8');
   assert.match(src, /applyModule\(OFFICE_MODULE\)/);
 });
+
+test('office module places Boots of Speed near forest entry', () => {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const file = path.join(__dirname, '..', 'modules', 'office.module.js');
+  const src = fs.readFileSync(file, 'utf8');
+  assert.match(src, /id: 'boots_of_speed'/);
+  assert.match(src, /x: 3,\s*y: WORLD_MIDY/);
+  assert.match(src, /mods: \{ AGI: 5 \}/);
+});

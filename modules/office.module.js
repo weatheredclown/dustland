@@ -534,6 +534,16 @@ const OFFICE_MODULE = (() => {
         },
         {
           map: 'world',
+          x: 3,
+          y: WORLD_MIDY,
+          id: 'boots_of_speed',
+          name: 'Boots of Speed',
+          type: 'trinket',
+          slot: 'trinket',
+          mods: { AGI: 5 }
+        },
+        {
+          map: 'world',
           x: WORLD_MID - 2,
           y: WORLD_MIDY,
           id: 'river_trinket',
