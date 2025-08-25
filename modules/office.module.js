@@ -462,6 +462,7 @@ const OFFICE_MODULE = (() => {
       desc: 'It flashes "TRADE".',
       portraitSheet: portraits.vending,
       shop: true,
+      vending: true,
       tree: { start: { text: 'The machine hums softly.', choices: [ { label: '(Leave)', to: 'bye' } ] } }
     },
     {
