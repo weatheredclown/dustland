@@ -114,7 +114,12 @@ function loadModule(moduleInfo){
     if(picker) picker.remove();
     window.openCreator = realOpenCreator;
     window.showStart = realShowStart;
-    window.resetAll = () => { realResetAll(); loadModule(moduleInfo); };
+    window.resetAll = () => {
+      // Prevent stale modules from launching before the new one loads
+      window.openCreator = () => {};
+      realResetAll();
+      loadModule(moduleInfo);
+    };
     localStorage.removeItem('dustland_crt');
     openCreator();
   };
