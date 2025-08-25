@@ -1,3 +1,5 @@
+function seedWorldContent() {}
+
 const MARA_PUZZLE = {
   "seed": "mara-puzzle",
   "name": "mara-puzzle",
@@ -44,5 +46,16 @@ const MARA_PUZZLE = {
   "portals": [
     { "map": "dust_storm", "x": 10, "y": 6, "toMap": "world", "toX": 10, "toY": 10, "desc": "You emerge from the dust storm." }
   ],
-  "buildings": []
+  "buildings": [],
+  "start": { "map": "dust_storm", "x": 10, "y": 18 }
+};
+
+startGame = function () {
+  startWorld();
+  applyModule(MARA_PUZZLE);
+  const s = MARA_PUZZLE.start;
+  setPartyPos(s.x, s.y);
+  setMap(s.map, 'Dust Storm');
+  refreshUI();
+  log('You are lost in a dust storm.');
 };
