@@ -84,6 +84,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 - [x] Detail Nyx "Speaker"—a poet tuning radio static into verse; arc: chooses between broadcasting or listening.
 - [ ] **Implement Signature Encounters:**
     - [x] Design and build Mara's dust storm navigation puzzle.
+    - [ ] Hook Mara's puzzle into the Broadcast Story sequence.
     - [ ] Script Jax's timed repair sequence under combat pressure.
     - [ ] Write the dialogue and branching paths for Nyx's "conversational tuning" encounter.
 - [ ] **Doppelgänger System:**
@@ -96,11 +97,11 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 
 #### **Phase 3: Puzzle and World Building**
 - [ ] **Design a radio tower alignment puzzle that tunes the broadcast:** This task is not yet complete. The *idea* is here, but the actual puzzle mechanics, UI, and implementation are not.
-- [ ] **Design a dust storm navigation puzzle using wind chimes along ruined billboards:** Similarly, this is a concept that needs to be designed and implemented.
+- [x] **Design a dust storm navigation puzzle using wind chimes along ruined billboards:** Implemented in `mara-puzzle.module.js` with chime events and a dust storm effect.
 - [ ] **Design a layered graffiti decoding puzzle to reveal a safe route before the sun bleeds out:** This is another conceptual task that requires design and implementation.
 - [ ] **Build Reusable Widgets:**
     - [ ] Create a generic "dial" widget for puzzles like the radio tower.
-    - [ ] Develop a "sound-based navigation" system that can be used for the dust storm and other similar challenges.
+    - [x] Develop a "sound-based navigation" system that can be used for the dust storm and other similar challenges.
 - [ ] **Flesh out the World:**
     - [ ] Design and build the first major hub city, where the caravan can rest, resupply, and find new quests.
     - [ ] Create a detailed world map that shows the planned route of the caravan and the locations of the first three broadcast fragments.
