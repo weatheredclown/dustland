@@ -10,6 +10,7 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 
 ## Testing
 - Run `npm test` after making changes; it invokes Node's built-in test runner.
+- Run `node presubmit.js` to check HTML files for unsupported fetch/import patterns.
 - Ensure the working tree is clean and tests pass before committing.
 - Before adding new tests, check for existing coverage and extend or modify tests instead of duplicating cases.
 
