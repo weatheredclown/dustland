@@ -8,8 +8,7 @@ if (typeof window === 'undefined') {
     const { JSDOM } = await import('jsdom');
     const fs = await import('node:fs');
     const path = await import('node:path');
-    const { fileURLToPath } = await import('node:url');
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const baseDir = process.cwd();
 
     const html = `<!DOCTYPE html><body>
       <div id="log"></div>
@@ -89,7 +88,7 @@ if (typeof window === 'undefined') {
       'dustland-engine.js'
     ];
     for (const file of scripts) {
-      w.eval(fs.readFileSync(path.join(__dirname, file), 'utf8'));
+      w.eval(fs.readFileSync(path.join(baseDir, file), 'utf8'));
     }
     await runBalanceTest();
   })().catch(err => {
@@ -114,9 +113,7 @@ async function runBalanceTest() {
     } else {
       const fs = await import('node:fs/promises');
       const path = await import('node:path');
-      const { fileURLToPath } = await import('node:url');
-      const __dirname = path.dirname(fileURLToPath(import.meta.url));
-      const json = await fs.readFile(path.join(__dirname, modulePath), 'utf8');
+      const json = await fs.readFile(path.join(process.cwd(), modulePath), 'utf8');
       moduleData = JSON.parse(json);
     }
     applyModule(moduleData);
