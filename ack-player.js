@@ -74,6 +74,8 @@ fileBtn.onclick = () => {
 
 // After party creation, start the loaded module
 window.startGame = async function () {
+  const seed = moduleData && moduleData.seed ? moduleData.seed : Date.now();
+  genWorld(seed);
   if (moduleData) applyModule(moduleData);
   const start = moduleData && moduleData.start ? moduleData.start : { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   setPartyPos(start.x, start.y);
