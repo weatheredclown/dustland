@@ -154,20 +154,12 @@
   <script defer src="./core/quests.js"></script>
   <script defer src="./core/npc.js"></script>
   <script defer src="./dustland-core.js"></script>
-  <script defer src="./modules/dustland.module.js"></script>
-  <script defer src="./modules/broadcast-fragment-1.module.js"></script>
-  <script defer src="./modules/broadcast-fragment-2.module.js"></script>
-  <script defer src="./modules/broadcast-fragment-3.module.js"></script>
-  <script defer src="./modules/mara-puzzle.module.js"></script>
   <script defer src="./dustland-path.js"></script>
   <script defer src="./dustland-nano.js"></script>
   <script defer src="./dustland-engine.js"></script>
   <script>
     const params = new URLSearchParams(location.search);
     const isAck = params.get('ack-player') === '1';
-    if (!isAck) {
-      document.querySelectorAll('script[src^="./modules/"]').forEach(s => s.remove());
-    }
     if (isAck) {
       document.getElementById('moduleLoader').style.display = 'flex';
       const btns = document.getElementById('mainButtons');
