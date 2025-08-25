@@ -69,6 +69,7 @@ const SpoilsCache = {
       setTimeout(() => {
         el.remove();
         onOpen?.();
+        globalThis.EventBus?.emit?.('spoils:opened', { rank });
       }, 200);
     }, { once: true });
     return el;
@@ -81,6 +82,7 @@ const SpoilsCache = {
       if(it.type === 'spoils-cache' && it.rank === rank){
         player.inv.splice(i,1);
         opened++;
+        globalThis.EventBus?.emit?.('spoils:opened', { rank });
       }
     }
     if(opened){
