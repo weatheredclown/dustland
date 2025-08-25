@@ -761,6 +761,14 @@ test('clamp swaps reversed bounds', () => {
   assert.strictEqual(clamp(5, 10, 0), 5);
 });
 
+test('makeNPC tolerates start nodes without choices', () => {
+  const tree = { start: { text: 'growl' } };
+  const npc = makeNPC('beast', 'world', 0, 0, '#fff', 'Beast', '', '', tree, null, null, null, { combat: { DEF: 1 } });
+  assert.ok(Array.isArray(npc.tree.start.choices));
+  const fights = npc.tree.start.choices.filter(c => c.label === '(Fight)');
+  assert.strictEqual(fights.length, 1);
+});
+
 test('makeNPC normalizes existing fight choices', () => {
   const quest = new Quest('q_boss', 'Boss', '');
   quest.status = 'active';
