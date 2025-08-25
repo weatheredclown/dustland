@@ -1201,6 +1201,8 @@ test('applyModule from dialog adds next fragment', async () => {
   assert.ok(tower);
   assert.ok(tower.x < WORLD_W && tower.y < WORLD_H);
 
+});
+
 test('grin recruitment can be retried after failure', () => {
   NPCS.length = 0;
   party.length = 0;

@@ -1,4 +1,7 @@
 // Tiny event bus for pub/sub communication
+
+// Global namespace for game modules
+globalThis.Dustland = globalThis.Dustland || {};
 /**
  * Simple pub/sub bus.
  * @typedef {(payload:any)=>void} EventHandler
