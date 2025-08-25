@@ -25,6 +25,13 @@ const ItemGen = {
     'Emitter',
     'Engine'
   ],
+  oddityLore: [
+    'Whispers of a lost caravan.',
+    'Hums a tune no one remembers.',
+    'Its needle spins toward a buried vault.',
+    'Smells faintly of ozone after a storm.',
+    'Vibrates near old world tech.'
+  ],
   statRanges: {
     rusted: { min: 1, max: 4 },
     sealed: { min: 4, max: 7 },
@@ -43,13 +50,17 @@ const ItemGen = {
     const noun = this.pick(this.nouns, rng);
     const range = this.statRanges[rank] || this.statRanges.rusted;
     const power = this.randRange(range.min, range.max, rng);
-    return {
+    const item = {
       type,
       name: `${adj} ${noun}`,
       rank,
       stats: { power },
       scrap: Math.round(power / 2)
     };
+    if(type === 'oddity'){
+      item.lore = this.pick(this.oddityLore, rng);
+    }
+    return item;
   }
 };
 Object.assign(globalThis, { ItemGen });
