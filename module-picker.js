@@ -102,6 +102,8 @@ function startDust(canvas){
 function loadModule(moduleInfo){
   const existingScript = document.getElementById('activeModuleScript');
   if (existingScript) existingScript.remove();
+  window.seedWorldContent = () => {};
+  window.startGame = () => {};
   if (moduleInfo.file.endsWith('.json')) {
     window.location.href = `dustland.html?ack-player=1&module=${encodeURIComponent(moduleInfo.file)}`;
     return;
