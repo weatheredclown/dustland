@@ -120,7 +120,7 @@ function handleGoto(g){
     }
   }else{
     if(g.map==='world'){
-      startWorld();
+      if(!world.length) applyModule({});
       setPartyPos(x, y);
       setMap('world');
     }else{
