@@ -76,6 +76,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
   - The Silencers hunt with relentless, calculated precision. They deploy mobile signal jammers to create "dead zones," use EMP traps to disable caravan vehicles, and employ sonic weaponry to disorient their prey. They don't seek converts; they seek only to silence the signal and anyone who would amplify its "poisonous" message.
 - [x] **Modular Story Beats:** Design the first three "broadcast fragment" modules. Each should introduce a new location, a new set of characters, and a new piece of the central mystery.
   - We are going to need to be able to link multiple world maps together in single module, or let character/inventory carry state across modules to tell this story
+  - Broadcast fragments now load through script tags and each defines a `startMap` and `startPoint`. The module picker offers a single **Broadcast Story** option that bootstraps the sequence.
 
 #### **Phase 2: Character and Item Implementation**
 - [x] Detail Mara "Surveyor"—an ex-cartographer seeking the map she burned; arc: learns the signal isn't the only way home.
