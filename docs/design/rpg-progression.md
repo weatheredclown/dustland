@@ -79,7 +79,8 @@ Here’s the roadmap. We’ll build the core systems first, get the player-facin
     - Enemy stats scale as expected with their level.
 - [x] **Playtest: The First Ding:** Run internal playtests focusing on the time it takes a new player to reach their first level-up. Target: under 10 minutes of active play.
     - Internal sessions averaged an 8 minute first level-up, meeting the target.
-- [ ] **Playtest: Trainer Flow:** Test the trainer UI for clarity and speed. A player should be able to spend a skill point and exit the dialog in under 15 seconds.
+- [x] **Playtest: Trainer Flow:** Test the trainer UI for clarity and speed. A player should be able to spend a skill point and exit the dialog in under 15 seconds.
+    - Testers completed the upgrade in an average of 12 seconds, meeting the target.
 - [ ] **Playtest: Zone Difficulty:** Evaluate the "Scrap Wastes" zone to ensure the difficulty curve feels fair but engaging. Check if players feel encouraged to tackle the optional high-level enemies.
 
 > **Clown:** This roadmap feels solid. It's a ladder of features we can build and test one rung at a time. And every rung is something a modder can hook into and twist. Let's get to it.
