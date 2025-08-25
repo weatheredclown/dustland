@@ -499,7 +499,76 @@ function renderParty(){
   });
 }
 
-const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle };
+function openShop(npc) {
+  const shopOverlay = document.getElementById('shopOverlay');
+  const shopName = document.getElementById('shopName');
+  const closeShopBtn = document.getElementById('closeShopBtn');
+  const shopBuy = document.getElementById('shopBuy');
+  const shopSell = document.getElementById('shopSell');
+
+  if (!npc.shop) return;
+
+  shopName.textContent = npc.name;
+
+  function renderShop() {
+    shopBuy.innerHTML = '';
+    shopSell.innerHTML = '';
+
+    const shopInv = npc.shop.inv || [];
+    const markup = npc.vending ? 1 : npc.shop.markup || 2;
+
+    shopInv.forEach((it, idx) => {
+      const item = getItem(it.id);
+      if (!item) return;
+      const row = document.createElement('div');
+      row.className = 'slot';
+      const price = Math.ceil(item.value * markup);
+      row.innerHTML = `<span>${item.name} - ${price} ${CURRENCY}</span><button class="btn">Buy</button>`;
+      row.querySelector('button').onclick = () => {
+        if (player.scrap >= price) {
+          if (addToInv(item)) {
+            player.scrap -= price;
+            if (!npc.vending) {
+              npc.shop.inv.splice(idx, 1);
+            }
+            renderShop();
+            updateHUD();
+          } else {
+            log('Inventory is full.');
+            if (typeof toast === 'function') toast('Inventory is full.');
+          }
+        } else {
+          log('Not enough scrap.');
+          if (typeof toast === 'function') toast('Not enough scrap.');
+        }
+      };
+      shopBuy.appendChild(row);
+    });
+
+    player.inv.forEach((item, idx) => {
+      const row = document.createElement('div');
+      row.className = 'slot';
+      const price = Math.floor(item.value / markup);
+      row.innerHTML = `<span>${item.name} - ${price} ${CURRENCY}</span><button class="btn">Sell</button>`;
+      row.querySelector('button').onclick = () => {
+        player.scrap += price;
+        npc.shop.inv.push({ id: item.id });
+        removeFromInv(idx);
+        renderShop();
+        updateHUD();
+      };
+      shopSell.appendChild(row);
+    });
+  }
+
+  renderShop();
+  shopOverlay.classList.add('shown');
+  closeShopBtn.onclick = () => {
+    shopOverlay.classList.remove('shown');
+  };
+}
+
+const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, openShop };
 Object.assign(globalThis, engineExports);
 
 // ===== Minimal Unit Tests (#test) =====

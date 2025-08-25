@@ -32,18 +32,38 @@ function resolveItem(def){
 function notifyInventoryChanged(){
   emit('inventory:changed');
 }
-function addToInv(item){
+function getPartyInventoryCapacity() {
+  return party.length * 20;
+}
+
+function dropItemNearParty(item) {
   const it = resolveItem(item);
-  if(!it || !it.id){
+  if (!it || !it.id) {
+    throw new Error('Unknown item');
+  }
+  const base = cloneItem(ITEMS[it.id] || registerItem(it));
+  itemDrops.push({ id: base.id, map: party.map, x: party.x, y: party.y });
+  log(`Inventory full, ${base.name} was dropped.`);
+  if (typeof toast === 'function') toast(`Inventory full, ${base.name} was dropped.`);
+}
+
+function addToInv(item) {
+  if (player.inv.length >= getPartyInventoryCapacity()) {
+    return false;
+  }
+  const it = resolveItem(item);
+  if (!it || !it.id) {
     throw new Error('Unknown item');
   }
   const base = cloneItem(ITEMS[it.id] || registerItem(it));
   player.inv.push(base);
   emit('item:picked', base);
   notifyInventoryChanged();
+  return true;
 }
-function removeFromInv(invIndex){
-  player.inv.splice(invIndex,1);
+
+function removeFromInv(invIndex) {
+  player.inv.splice(invIndex, 1);
   notifyInventoryChanged();
 }
 
@@ -196,5 +216,5 @@ function useItem(invIndex){
   return false;
 }
 
-const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem };
+const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty };
 Object.assign(globalThis, inventoryExports);

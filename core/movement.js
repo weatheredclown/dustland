@@ -203,45 +203,63 @@ function adjacentNPC(){
   }
   return null;
 }
-function takeNearestItem(){
-  const dirs=[[0,0],[1,0],[-1,0],[0,1],[0,-1]];
-  for(const [dx,dy] of dirs){
-    const info=queryTile(party.x+dx,party.y+dy);
-    if(info.items.length){
-      const it=info.items[0];
-      const idx=itemDrops.indexOf(it);
-      if(idx>-1) itemDrops.splice(idx,1);
+function takeNearestItem() {
+  const dirs = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
+  for (const [dx, dy] of dirs) {
+    const info = queryTile(party.x + dx, party.y + dy);
+    if (info.items.length) {
+      if (player.inv.length >= getPartyInventoryCapacity()) {
+        log('Inventory is full.');
+        if (typeof toast === 'function') toast('Inventory is full.');
+        return false;
+      }
+      const it = info.items[0];
+      const idx = itemDrops.indexOf(it);
+      if (idx > -1) itemDrops.splice(idx, 1);
       const def = ITEMS[it.id];
       addToInv(getItem(it.id));
-      log('Took '+(def?def.name:it.id)+'.'); updateHUD();
-      if(typeof pickupSparkle==='function') pickupSparkle(party.x+dx,party.y+dy);
-      EventBus.emit('sfx','pickup');
+      log('Took ' + (def ? def.name : it.id) + '.');
+      updateHUD();
+      if (typeof pickupSparkle === 'function') pickupSparkle(party.x + dx, party.y + dy);
+      EventBus.emit('sfx', 'pickup');
       return true;
     }
   }
   return false;
 }
-function interactAt(x,y){
-  if(state.map==='creator') return false;
-  const dist=Math.abs(party.x-x)+Math.abs(party.y-y);
-  if(dist>1) return false;
-  const info=queryTile(x,y);
-  if(info.entities.length){
-    openDialog(info.entities[0]);
-    EventBus.emit('sfx','confirm');
+
+function interactAt(x, y) {
+  if (state.map === 'creator') return false;
+  const dist = Math.abs(party.x - x) + Math.abs(party.y - y);
+  if (dist > 1) return false;
+  const info = queryTile(x, y);
+  if (info.entities.length) {
+    const npc = info.entities[0];
+    if (npc.shop) {
+      Actions.openShop(npc);
+    } else {
+      openDialog(npc);
+    }
+    EventBus.emit('sfx', 'confirm');
     return true;
   }
-    if(info.items.length){
-      const it=info.items[0];
-      const idx=itemDrops.indexOf(it);
-      if(idx>-1) itemDrops.splice(idx,1);
-      const def = ITEMS[it.id];
-      addToInv(getItem(it.id));
-      log('Took '+(def?def.name:it.id)+'.'); updateHUD();
-      if(typeof pickupSparkle==='function') pickupSparkle(x,y);
-      EventBus.emit('sfx','pickup');
-      return true;
+  if (info.items.length) {
+    if (player.inv.length >= getPartyInventoryCapacity()) {
+      log('Inventory is full.');
+      if (typeof toast === 'function') toast('Inventory is full.');
+      return false;
     }
+    const it = info.items[0];
+    const idx = itemDrops.indexOf(it);
+    if (idx > -1) itemDrops.splice(idx, 1);
+    const def = ITEMS[it.id];
+    addToInv(getItem(it.id));
+    log('Took ' + (def ? def.name : it.id) + '.');
+    updateHUD();
+    if (typeof pickupSparkle === 'function') pickupSparkle(x, y);
+    EventBus.emit('sfx', 'pickup');
+    return true;
+  }
   if(x===party.x && y===party.y && info.tile===TILE.DOOR){
     if(state.map==='world'){
       const b=buildings.find(b=> b.doorX===x && b.doorY===y);

@@ -478,6 +478,39 @@
         z-index: 25
     }
 
+.shop-window {
+  width: 600px;
+  background: #0f120f;
+  border: 1px solid #2b3b2b;
+  border-radius: 8px;
+  box-shadow: 0 0 20px #000;
+}
+
+.shop-window header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #2b3b2b;
+}
+
+.shop-panels {
+  display: flex;
+  padding: 12px;
+}
+
+.shop-inv, .player-inv {
+  flex: 1;
+  padding: 0 12px;
+}
+
+.slot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
     #creator .win {
         width: min(820px, 92vw);
         background: #0b0d0b;
