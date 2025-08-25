@@ -4,13 +4,19 @@ const MODULES = [
   { id: 'dustland', name: 'Dustland', file: 'modules/dustland.module.js' },
   { id: 'echoes', name: 'Echoes', file: 'modules/echoes.module.js' },
   { id: 'office', name: 'Office', file: 'modules/office.module.js' },
+  { id: 'broadcast1', name: 'Broadcast Fragment 1', file: 'modules/broadcast-fragment-1.module.js' },
+  { id: 'broadcast2', name: 'Broadcast Fragment 2', file: 'modules/broadcast-fragment-2.module.js' },
+  { id: 'broadcast3', name: 'Broadcast Fragment 3', file: 'modules/broadcast-fragment-3.module.js' },
+  { id: 'mara', name: 'Mara Puzzle', file: 'modules/mara-puzzle.module.js' },
   { id: 'golden', name: 'Golden Sample', file: 'modules/golden.module.json' }
 ];
 
 const realOpenCreator = window.openCreator;
 const realShowStart = window.showStart;
+const realResetAll = window.resetAll;
 window.openCreator = () => {};
 window.showStart = () => {};
+window.resetAll = () => {};
 
 function startDust(canvas){
   const ctx = canvas.getContext('2d');
@@ -108,6 +114,7 @@ function loadModule(moduleInfo){
     if(picker) picker.remove();
     window.openCreator = realOpenCreator;
     window.showStart = realShowStart;
+    window.resetAll = () => { realResetAll(); loadModule(moduleInfo); };
     localStorage.removeItem('dustland_crt');
     openCreator();
   };
