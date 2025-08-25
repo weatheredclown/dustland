@@ -294,6 +294,13 @@ function applyModule(data, options = {}){
   if (fullReset) {
     // Reset and repopulate core collections without changing references
     Object.keys(interiors).forEach(k => delete interiors[k]);
+    buildings.forEach(b => {
+      for (let yy = 0; yy < b.h; yy++) {
+        for (let xx = 0; xx < b.w; xx++) {
+          setTile('world', b.x + xx, b.y + yy, b.under[yy][xx]);
+        }
+      }
+    });
     buildings.length = 0;
     portals.length = 0;
     tileEvents.length = 0;
@@ -304,7 +311,13 @@ function applyModule(data, options = {}){
     hiddenNPCs.length = 0;
   }
 
-  if (data.buildings) buildings.push(...data.buildings.filter(b => !buildings.some(eb => eb.x === b.x && eb.y === b.y)));
+  if (data.buildings) {
+    data.buildings.forEach(b => {
+      if (!buildings.some(eb => eb.x === b.x && eb.y === b.y)) {
+        placeHut(b.x, b.y, b);
+      }
+    });
+  }
   if (data.portals) portals.push(...data.portals);
   if (data.events) registerTileEvents(data.events);
 
