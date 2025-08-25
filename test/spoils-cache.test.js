@@ -27,6 +27,14 @@ test('create returns cache item', () => {
     assert.strictEqual(hit.type, 'spoils-cache');
   });
 
+test('pickRank tuned for challenge tiers', () => {
+  assert.strictEqual(SpoilsCache.pickRank(7, () => 0.02), 'vaulted');
+  assert.strictEqual(SpoilsCache.pickRank(7, () => 0.5), 'armored');
+  assert.strictEqual(SpoilsCache.pickRank(7, () => 0.95), 'sealed');
+  assert.strictEqual(SpoilsCache.pickRank(9, () => 0.05), 'vaulted');
+  assert.strictEqual(SpoilsCache.pickRank(9, () => 0.95), 'armored');
+});
+
   test('renderIcon creates element with rank class', () => {
     global.document = {
       createElement(tag){

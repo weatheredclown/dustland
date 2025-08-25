@@ -22,7 +22,7 @@ const SpoilsCache = {
       icon: '💠'
     }
   },
-  baseRate: 0.1,
+  baseRate: 0.08,
   create(rank){
     const info = this.ranks[rank];
     if(!info) throw new Error('Unknown cache rank');
@@ -37,11 +37,11 @@ const SpoilsCache = {
     const c = Math.max(1, Math.min(10, challenge|0));
     const r = rng();
     if(c >= 9){
-      return r < 0.3 ? 'vaulted' : 'armored';
+      return r < 0.2 ? 'vaulted' : 'armored';
     }
     if(c >= 7){
-      if(r < 0.1) return 'vaulted';
-      if(r < 0.7) return 'armored';
+      if(r < 0.03) return 'vaulted';
+      if(r < 0.9) return 'armored';
       return 'sealed';
     }
     if(c >= 4){

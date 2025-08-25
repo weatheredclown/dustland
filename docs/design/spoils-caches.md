@@ -59,7 +59,7 @@ Opening a cache triggers a generator that stitches gear on the fly:
 
 #### Phase 3: Content & Balancing
 - [x] Populate adjective/noun pools for item names and tier stat tables.
-- [ ] Tune `baseRate` and tier weights for different enemy challenges.
+ - [x] Tune `baseRate` and tier weights for different enemy challenges.
 - [ ] Author lore snippets for oddity items.
 
 #### Phase 4: Testing
