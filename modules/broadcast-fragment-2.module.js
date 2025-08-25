@@ -2,7 +2,8 @@ const BROADCAST_FRAGMENT_2 = {
   "seed": "broadcast-2",
   "name": "broadcast-fragment-2",
   "startMap": "world",
-  "startPoint": { "x": 140, "y": 22 },
+  // Positioned within WORLD_W bounds (max 119)
+  "startPoint": { "x": 110, "y": 22 },
   "items": [
     { "id": "power_cell", "name": "Power Cell", "type": "quest" },
     { "id": "signal_fragment_2", "name": "Signal Fragment 2", "type": "quest", "desc": "Another humming fragment. The resonance is stronger." }
@@ -47,9 +48,9 @@ const BROADCAST_FRAGMENT_2 = {
         }
       }
     },
-    { "id": "depot1", "map": "world", "x": 135, "y": 15, "color": "#9ef7a0", "name": "Service Depot", "desc": "A rusty service depot.", "tree": { "start": { "text": "You find a Power Cell inside.", "choices": [ { "label": "(Take Cell)", "to": "bye", "reward": "power_cell", "once": true } ] } } },
-    { "id": "depot2", "map": "world", "x": 145, "y": 25, "color": "#9ef7a0", "name": "Service Depot", "desc": "A rusty service depot.", "tree": { "start": { "text": "You find a Power Cell inside.", "choices": [ { "label": "(Take Cell)", "to": "bye", "reward": "power_cell", "once": true } ] } } },
-    { "id": "depot3", "map": "world", "x": 150, "y": 18, "color": "#9ef7a0", "name": "Service Depot", "desc": "A rusty service depot.", "tree": { "start": { "text": "You find a Power Cell inside.", "choices": [ { "label": "(Take Cell)", "to": "bye", "reward": "power_cell", "once": true } ] } } }
+    { "id": "depot1", "map": "world", "x": 105, "y": 15, "color": "#9ef7a0", "name": "Service Depot", "desc": "A rusty service depot.", "tree": { "start": { "text": "You find a Power Cell inside.", "choices": [ { "label": "(Take Cell)", "to": "bye", "reward": "power_cell", "once": true } ] } } },
+    { "id": "depot2", "map": "world", "x": 115, "y": 25, "color": "#9ef7a0", "name": "Service Depot", "desc": "A rusty service depot.", "tree": { "start": { "text": "You find a Power Cell inside.", "choices": [ { "label": "(Take Cell)", "to": "bye", "reward": "power_cell", "once": true } ] } } },
+    { "id": "depot3", "map": "world", "x": 118, "y": 18, "color": "#9ef7a0", "name": "Service Depot", "desc": "A rusty service depot.", "tree": { "start": { "text": "You find a Power Cell inside.", "choices": [ { "label": "(Take Cell)", "to": "bye", "reward": "power_cell", "once": true } ] } } }
   ],
   "interiors": [
     {
@@ -72,7 +73,7 @@ const BROADCAST_FRAGMENT_2 = {
     }
   ],
   "buildings": [
-    { "x": 140, "y": 20, "w": 1, "h": 1, "interiorId": "comms_tower_base", "grid": [[8]] }
+    { "x": 110, "y": 20, "w": 1, "h": 1, "interiorId": "comms_tower_base", "grid": [[8]] }
   ]
 };
 globalThis.BROADCAST_FRAGMENT_2 = BROADCAST_FRAGMENT_2;

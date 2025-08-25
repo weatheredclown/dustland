@@ -1178,3 +1178,26 @@ test('no encounters occur on roads', () => {
   Math.random = origRand;
   assert.ok(!started);
 });
+
+test('applyModule from dialog adds next fragment', async () => {
+  await import('../modules/broadcast-fragment-1.module.js');
+  await import('../modules/broadcast-fragment-2.module.js');
+  applyModule(BROADCAST_FRAGMENT_1);
+  assert.ok(!buildings.some(b => b.interiorId === 'comms_tower_base'));
+  const state = {
+    tree: {
+      post_quest: {
+        next: [
+          { label: 'Head toward the tower.', applyModule: 'BROADCAST_FRAGMENT_2', to: 'bye' },
+          { label: 'Not yet.', to: 'bye' }
+        ]
+      }
+    },
+    node: 'post_quest'
+  };
+  currentNPC = {};
+  advanceDialog(state, 0);
+  const tower = buildings.find(b => b.interiorId === 'comms_tower_base');
+  assert.ok(tower);
+  assert.ok(tower.x < WORLD_W && tower.y < WORLD_H);
+});
