@@ -22,3 +22,11 @@ test('dustland module includes plot improvements', () => {
   assert.match(src, /hall sheltered survivors/);
   assert.match(src, /Radio crackles from the north; idol whispers from the south/);
 });
+
+test('dustland module warns about hall monster', () => {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const file = path.join(__dirname, '..', 'modules', 'dustland.module.js');
+  const src = fs.readFileSync(file, 'utf8');
+  assert.match(src, /id: 'hall_rotwalker'/);
+  assert.match(src, /rotwalker at the top of the hall/);
+});
