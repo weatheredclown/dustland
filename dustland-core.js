@@ -330,10 +330,6 @@ function applyModule(data, options = {}){
   }
 
   (data.interiors || []).forEach(I => {
-    if (!fullReset && interiors[I.id]) {
-      console.warn('Interior already exists: ' + I.id);
-      return;
-    }
     const { id, grid, ...rest } = I;
     const g = grid && typeof grid[0] === 'string' ? gridFromEmoji(grid) : grid;
     interiors[id] = { ...rest, grid: g };

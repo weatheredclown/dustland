@@ -570,6 +570,13 @@ test('door portals link interiors', () => {
   assert.strictEqual(state.map, 'forest');
 });
 
+test('applyModule overwrites existing interiors', () => {
+  applyModule({ interiors: [{ id: 'dup', w: 1, h: 1, grid: [[7]], entryX: 0, entryY: 0 }] });
+  applyModule({ interiors: [{ id: 'dup', w: 2, h: 2, grid: [[7,7],[7,7]], entryX: 1, entryY: 1 }] });
+  assert.strictEqual(interiors.dup.w, 2);
+  assert.strictEqual(interiors.dup.h, 2);
+});
+
 test('makeInteriorRoom supports custom size', () => {
   const id = makeInteriorRoom('big', 20, 15);
   const I = interiors[id];
