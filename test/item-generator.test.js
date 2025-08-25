@@ -1,0 +1,24 @@
+import assert from 'node:assert';
+import { test } from 'node:test';
+import fs from 'node:fs/promises';
+import vm from 'node:vm';
+
+const code = await fs.readFile(new URL('../core/item-generator.js', import.meta.url), 'utf8');
+vm.runInThisContext(code, { filename: 'core/item-generator.js' });
+
+test('generator creates item with type, name, and stats', () => {
+  const vals = [0,0,0,0];
+  const rng = () => vals.shift() ?? 0;
+  const item = ItemGen.generate('sealed', rng);
+  assert.strictEqual(item.type, 'weapon');
+  assert.strictEqual(item.name, 'Grit-Stitched Repeater');
+  assert.strictEqual(item.rank, 'sealed');
+  assert.ok(item.stats.power >= 3 && item.stats.power <= 5);
+  assert.strictEqual(item.scrap, Math.round(item.stats.power / 2));
+});
+
+test('higher rank yields higher power', () => {
+  const rusted = ItemGen.generate('rusted', () => 0.99);
+  const armored = ItemGen.generate('armored', () => 0);
+  assert.ok(armored.stats.power > rusted.stats.power);
+});
