@@ -13,6 +13,8 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 - Run `node presubmit.js` to check HTML files for unsupported fetch/import patterns.
 - Ensure the working tree is clean and tests pass before committing.
 - Before adding new tests, check for existing coverage and extend or modify tests instead of duplicating cases.
+- Run `./install-deps.sh` once to install optional browser dependencies required by some tests.
+- After touching combat, movement, or NPC logic, run `node balance-tester-agent.js` to exercise event-bus handlers and path queues.
 
 ## Commit conventions
 - Use concise messages with prefixes such as `feat:`, `fix:`, or `docs:`.
@@ -38,3 +40,4 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 - Ensure new code works across environments and normalize user-facing data.
 - Provide tests for state transitions and dialog navigation to catch regressions early.
 - Reflect game changes across all modules; new functionality should be configurable via the Adventure Kit (ACK).
+- Generate the world before applying modules; boot-order mistakes can duplicate rooms or overwrite interiors.
