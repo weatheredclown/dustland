@@ -49,6 +49,7 @@ const { on } = globalThis.EventBus;
  * @property {number} [entryX]
  * @property {number} [entryY]
  * @property {string} [name]
+ * @property {{name:string,HP?:number,DEF?:number,loot?:string}[]} [enemies]
  */
 
 /**
@@ -185,6 +186,7 @@ const WORLD_W=120, WORLD_H=90;
 // ===== Game state =====
 let world = [], interiors = {}, buildings = [], portals = [];
 const tileEvents = [];
+const enemyBanks = {};
 function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
 const state = { map:'world', mapFlags: {} }; // default map
 const player = { hp:10, ap:2, inv:[], scrap:0 };
@@ -309,6 +311,7 @@ function applyModule(data, options = {}){
     if (typeof quests !== 'undefined') Object.keys(quests).forEach(k=> delete quests[k]);
     NPCS.length = 0;
     hiddenNPCs.length = 0;
+    Object.keys(enemyBanks).forEach(k => delete enemyBanks[k]);
   }
 
   if (data.buildings) {
@@ -320,6 +323,11 @@ function applyModule(data, options = {}){
   }
   if (data.portals) portals.push(...data.portals);
   if (data.events) registerTileEvents(data.events);
+  if (data.encounters) {
+    Object.entries(data.encounters).forEach(([map, list]) => {
+      enemyBanks[map] = list.map(e => ({ ...e }));
+    });
+  }
 
   (data.interiors || []).forEach(I => {
     if (!fullReset && interiors[I.id]) {
@@ -783,6 +791,7 @@ const coreExports = {
   buildings,
   portals,
   tileEvents,
+  enemyBanks,
   registerTileEvents,
   state,
   player,

@@ -1078,3 +1078,33 @@ test('combat overlay leaves room for panel', async () => {
   const css = await fs.readFile(new URL('../dustland.css', import.meta.url), 'utf8');
   assert.match(css, /#combatOverlay\s*{[\s\S]*right:\s*440px/);
 });
+
+test('distance to road increases encounter chance', () => {
+  const row = Array(6).fill(TILE.SAND);
+  row[0] = TILE.ROAD;
+  applyModule({ world: [row], encounters: { world: [ { name: 'Test', HP: 1, DEF: 0 } ] } });
+  state.map = 'world';
+  setPartyPos(5, 0);
+  let started = false;
+  const origRand = Math.random;
+  Math.random = () => 0;
+  Actions.startCombat = () => { started = true; };
+  checkRandomEncounter();
+  Math.random = origRand;
+  assert.ok(started);
+});
+
+test('no encounters occur on roads', () => {
+  const row = Array(2).fill(TILE.SAND);
+  row[0] = TILE.ROAD;
+  applyModule({ world: [row], encounters: { world: [ { name: 'Test', HP: 1, DEF: 0 } ] } });
+  state.map = 'world';
+  setPartyPos(0, 0);
+  let started = false;
+  const origRand = Math.random;
+  Math.random = () => 0;
+  Actions.startCombat = () => { started = true; };
+  checkRandomEncounter();
+  Math.random = origRand;
+  assert.ok(!started);
+});
