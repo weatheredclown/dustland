@@ -39,18 +39,31 @@ async function runBalanceTest() {
           return;
         }
 
-        // 2. Interact with NPCs
+        // 2. Grab items or use doors
+        if (takeNearestItem()) return;
+        const nearbyDoor = findNearbyDoor();
+        if (nearbyDoor) {
+          interact();
+          return;
+        }
+
+        // 3. Talk to NPCs
         const nearbyNPC = findNearbyNPC();
         if (nearbyNPC) {
           interact();
           return;
         }
 
-        // 3. Move toward goal using A* pathfinding
+        // 4. Move toward goal using A* pathfinding
         const leader = party[0];
+        const px = party.x;
+        const py = party.y;
         if (agent.path.length) {
           const step = agent.path.shift();
-          await move(step.x - leader.x, step.y - leader.y);
+          const dx = step.x - px;
+          const dy = step.y - py;
+          await move(dx, dy);
+          stats.pathDistance += Math.abs(dx) + Math.abs(dy);
           return;
         }
         if (agent.job) {
@@ -61,8 +74,12 @@ async function runBalanceTest() {
           }
           return;
         }
-        agent.goal = findRandomWalkableTile('world');
-        agent.job = PathQueue.queue('world', { x: leader.x, y: leader.y }, agent.goal, leader.id);
+        const map = mapIdForState();
+        const target = findRandomGoal(map, agent.goal);
+        if (target) {
+          agent.goal = target;
+          agent.job = PathQueue.queue(map, { x: px, y: py }, agent.goal, leader.id);
+        }
       }
     };
 
@@ -86,20 +103,62 @@ async function runBalanceTest() {
     return null;
   }
 
+  function findNearbyDoor() {
+    const dirs = [
+      [0, 0],
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1]
+    ];
+    for (const [dx, dy] of dirs) {
+      const info = queryTile(party.x + dx, party.y + dy);
+      if (info.tile === TILE.DOOR) {
+        return { x: party.x + dx, y: party.y + dy };
+      }
+    }
+    return null;
+  }
+
+  function findRandomGoal(map, avoid) {
+    const candidates = [];
+    for (const npc of NPCS) {
+      if (!npc.combat && npc.map === map) {
+        const adj = findAdjacentWalkableTile(map, npc);
+        candidates.push(adj);
+      }
+    }
+    for (const it of itemDrops) {
+      if (it.map === map) candidates.push({ x: it.x, y: it.y });
+    }
+    for (const b of buildings) {
+      if (b.doorX != null && b.doorY != null && !b.boarded && (b.map == null || b.map === map)) {
+        candidates.push({ x: b.doorX, y: b.doorY });
+      }
+    }
+    const filtered = candidates.filter(c => !(avoid && c.x === avoid.x && c.y === avoid.y));
+    if (!filtered.length) return null;
+    return filtered[Math.floor(Math.random() * filtered.length)];
+  }
+
   function isAdjacent(pos1, pos2) {
     const dx = Math.abs(pos1.x - pos2.x);
     const dy = Math.abs(pos1.y - pos2.y);
     return dx <= 1 && dy <= 1;
   }
 
-  function findRandomWalkableTile(map) {
-    const { W, H } = mapWH(map);
-    while (true) {
-      const x = Math.floor(Math.random() * W);
-      const y = Math.floor(Math.random() * H);
-      const info = queryTile(x, y, map);
-      if (info.walkable) return { x, y };
+  function findAdjacentWalkableTile(map, pos) {
+    const dirs = [
+      { x: 1, y: 0 },
+      { x: -1, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: -1 }
+    ];
+    for (const d of dirs) {
+      const info = queryTile(pos.x + d.x, pos.y + d.y, map);
+      if (info.walkable) return { x: pos.x + d.x, y: pos.y + d.y };
     }
+    return { x: pos.x, y: pos.y };
   }
 
   // Game loop
@@ -110,6 +169,7 @@ async function runBalanceTest() {
     experienceGained: 0,
     partyMembersAdded: 0,
     questsCompleted: 0,
+    pathDistance: 0,
   };
 
   EventBus.on('xp:gained', ({ amount }) => {
@@ -126,12 +186,12 @@ async function runBalanceTest() {
 
     console.log('Balance test checkpoint: loop start');
     let lastPartySize = party.length;
-    const maxSteps = 5000;
+    const maxSteps = 50;
     let steps = 0;
     // Allow queued pathfinding and other async tasks to run between steps.
     const macroyield = () => new Promise(r => setTimeout(r, 0));
 
-    while (party[0].level < 5 && steps < maxSteps) {
+    while (party[0].lvl < 5 && steps < maxSteps) {
       await agent.think();
       if (party.length > lastPartySize) {
         stats.partyMembersAdded += party.length - lastPartySize;

@@ -52,9 +52,11 @@ if (puppeteer) {
       await page.waitForSelector('#results', { timeout: 60000 });
       lastCheckpoint = 'results';
       const results = await page.$eval('#results', el => el.textContent);
+      const stats = JSON.parse(results);
       console.log('Balance Test Results:');
-      console.log(JSON.parse(results));
+      console.log(stats);
       assert.ok(results, 'Should have results');
+      assert.ok(stats.pathDistance > 0, 'Pathfinding made no progress');
     } catch {
       const errorText = errors.length ? ` Errors: ${errors.join(' | ')}` : '';
       assert.fail(`Balance test failed after 60s (last checkpoint: ${lastCheckpoint}).${errorText}`);
