@@ -503,32 +503,47 @@ function renderParty(){
       card.classList.toggle('selected', j===selectedMember);
     });
   };
-  party.forEach((m,i)=>{
-    const c=document.createElement('div');
-    c.className='pcard'+(i===selectedMember?' selected':'');
-    c.tabIndex=0;
-    const bonus=m._bonus||{};
-    const fmt=v=> (v>0? '+'+v : v);
-    const wLabel=m.equip.weapon?(m.equip.weapon.cursed&&m.equip.weapon.cursedKnown?m.equip.weapon.name+' (cursed)':m.equip.weapon.name):'—';
-    const aLabel=m.equip.armor?(m.equip.armor.cursed&&m.equip.armor.cursedKnown?m.equip.armor.name+' (cursed)':m.equip.armor.name):'—';
-    const tLabel=m.equip.trinket?(m.equip.trinket.cursed&&m.equip.trinket.cursedKnown?m.equip.trinket.name+' (cursed)':m.equip.trinket.name):'—';
-    const nextXP=xpToNext(m.lvl);
-    const pct=Math.min(100,(m.xp/nextXP)*100);
-    const badge = m.skillPoints>0?`<div class="spbadge">${m.skillPoints}</div>`:'';
-    const portrait = `<div class='portrait' ${m.portraitSheet?`style="background-image:url(${m.portraitSheet})"`:''}>${badge}</div>`;
-    c.innerHTML = `<div class='row'>${portrait}<div><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div></div>
-<div class='row small'>${statLine(m.stats)}</div>
-<div class='row'>HP ${m.hp}/${m.maxHp}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div>
-<div class='row'><div class='xpbar' data-xp='${m.xp}/${nextXP}'><div class='fill' style='width:${pct}%'></div></div></div>
-<div class='row small'>WPN: ${wLabel}${m.equip.weapon?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${m.equip.armor?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${m.equip.trinket?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div>`;
-    c.onclick=()=>selectMember(i);
-    c.onfocus=()=>selectMember(i);
-    c.querySelectorAll('button[data-a="unequip"]').forEach(b=>{
-      const sl=b.dataset.slot;
-      b.onclick=()=> unequipItem(i,sl);
-    });
-    p.appendChild(c);
+party.forEach((m,i)=>{
+  const c=document.createElement('div');
+  c.className='pcard'+(i===selectedMember?' selected':'');
+  c.tabIndex=0;
+  const bonus=m._bonus||{};
+  const fmt=v=> (v>0? '+'+v : v);
+  const wLabel=m.equip.weapon?(m.equip.weapon.cursed&&m.equip.weapon.cursedKnown?m.equip.weapon.name+' (cursed)':m.equip.weapon.name):'—';
+  const aLabel=m.equip.armor?(m.equip.armor.cursed&&m.equip.armor.cursedKnown?m.equip.armor.name+' (cursed)':m.equip.armor.name):'—';
+  const tLabel=m.equip.trinket?(m.equip.trinket.cursed&&m.equip.trinket.cursedKnown?m.equip.trinket.name+' (cursed)':m.equip.trinket.name):'—';
+  const nextXP=xpToNext(m.lvl);
+  const pct=Math.min(100,(m.xp/nextXP)*100);
+  c.innerHTML = `<div class='row'><div class='portrait'></div><div><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div></div>`+
+`<div class='row small'>${statLine(m.stats)}</div>`+
+`<div class='row'>HP ${m.hp}/${m.maxHp}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div>`+
+`<div class='row'><div class='xpbar' data-xp='${m.xp}/${nextXP}'><div class='fill' style='width:${pct}%'></div></div></div>`+
+`<div class='row small'>WPN: ${wLabel}${m.equip.weapon?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${m.equip.armor?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${m.equip.trinket?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div>`;
+  const portrait=c.querySelector('.portrait');
+  if(m.portraitSheet){
+    portrait.style.backgroundImage=`url(${m.portraitSheet})`;
+    if(/_4\.[a-z]+$/i.test(m.portraitSheet)){
+      portrait.style.backgroundSize='200% 200%';
+      portrait.style.backgroundPosition='0% 0%';
+    }else{
+      portrait.style.backgroundSize='100% 100%';
+      portrait.style.backgroundPosition='center';
+    }
+  }
+  if(m.skillPoints>0){
+    const badge=document.createElement('div');
+    badge.className='spbadge';
+    badge.textContent=m.skillPoints;
+    portrait.appendChild(badge);
+  }
+  c.onclick=()=>selectMember(i);
+  c.onfocus=()=>selectMember(i);
+  c.querySelectorAll('button[data-a="unequip"]').forEach(b=>{
+    const sl=b.dataset.slot;
+    b.onclick=()=> unequipItem(i,sl);
   });
+  p.appendChild(c);
+});
 }
 
 function openShop(npc) {
