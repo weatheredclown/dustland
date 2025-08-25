@@ -2269,7 +2269,10 @@ document.getElementById('loadFile').addEventListener('change', e => {
   e.target.value = '';
 });
 document.getElementById('setStart').onclick = () => { settingStart = true; };
-document.getElementById('playtest').onclick = playtestModule;
+document.getElementById('resetStart').onclick = () => {
+  moduleData.start = { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+  drawWorld();
+};
 document.getElementById('addNode').onclick = addNode;
 document.getElementById('editDialog').onclick = openDialogEditor;
 document.getElementById('closeDialogModal').onclick = closeDialogEditor;
