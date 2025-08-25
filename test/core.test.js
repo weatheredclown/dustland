@@ -102,6 +102,7 @@ const files = [
   '../event-bus.js',
   '../core/actions.js',
   '../core/effects.js',
+  '../core/spoils-cache.js',
   '../core/party.js',
   '../core/inventory.js',
   '../core/movement.js',
@@ -969,6 +970,28 @@ test('NPCs are removed individually during combat', async () => {
   assert.strictEqual(NPCS.length, 0);
   assert.ok(player.inv.some(it=>it.id==='l1'));
   assert.ok(player.inv.some(it=>it.id==='l2'));
+});
+
+test('defeated enemies can drop spoils cache', async () => {
+  NPCS.length = 0;
+  party.length = 0;
+  player.inv.length = 0;
+  itemDrops.length = 0;
+  const logs = [];
+  const origLog = global.log;
+  global.log = (msg) => logs.push(msg);
+  const m1 = new Character('p1','P1','Role');
+  party.addMember(m1);
+  const origRoll = SpoilsCache.rollDrop;
+  SpoilsCache.rollDrop = () => SpoilsCache.create('sealed');
+  const resultPromise = openCombat([{ name:'E1', hp:1 }]);
+  handleCombatKey({ key:'Enter' });
+  const res = await resultPromise;
+  SpoilsCache.rollDrop = origRoll;
+  global.log = origLog;
+  assert.strictEqual(res.result, 'loot');
+  assert.strictEqual(itemDrops.length, 1);
+  assert.ok(logs.some(l => l.includes('Sealed Cache')));
 });
 
 test('fallen party members are revived after combat', async () => {
