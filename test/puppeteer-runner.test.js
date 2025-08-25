@@ -1,33 +1,41 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
-import puppeteer from 'puppeteer';
 import path from 'node:path';
 
-test('Game balance tester (Puppeteer)', { timeout: 300000 }, async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
+let puppeteer;
+try {
+  puppeteer = (await import('puppeteer')).default;
+} catch {
+  test('Game balance tester (Puppeteer)', { skip: true }, () => {});
+}
 
-  page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+if (puppeteer) {
+  test('Game balance tester (Puppeteer)', { timeout: 300000 }, async () => {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
 
-  const filePath = path.resolve(process.cwd(), 'balance-tester.html');
-  await page.goto(`file://${filePath}`);
+    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
-  // Wait for the results to appear on the page
-  try {
-    await page.waitForSelector('#results', { timeout: 60000 });
+    const filePath = path.resolve(process.cwd(), 'balance-tester.html');
+    await page.goto(`file://${filePath}`);
 
-    const results = await page.$eval('#results', el => el.textContent);
-    console.log('Balance Test Results:');
-    console.log(JSON.parse(results));
+    // Wait for the results to appear on the page
+    try {
+      await page.waitForSelector('#results', { timeout: 60000 });
 
-    // A simple assertion to make sure we got some results
-    assert.ok(results, 'Should have results');
-  } catch (e) {
-    console.error('Error in puppeteer test:', e);
-    const body = await page.evaluate(() => document.body.innerHTML);
-    console.log('Page body:', body);
-    assert.fail('Puppeteer test failed');
-  } finally {
-    await browser.close();
-  }
-});
+      const results = await page.$eval('#results', el => el.textContent);
+      console.log('Balance Test Results:');
+      console.log(JSON.parse(results));
+
+      // A simple assertion to make sure we got some results
+      assert.ok(results, 'Should have results');
+    } catch (e) {
+      console.error('Error in puppeteer test:', e);
+      const body = await page.evaluate(() => document.body.innerHTML);
+      console.log('Page body:', body);
+      assert.fail('Puppeteer test failed');
+    } finally {
+      await browser.close();
+    }
+  });
+}
