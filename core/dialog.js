@@ -132,6 +132,7 @@ function handleGoto(g){
 }
 
 function advanceDialog(stateObj, choiceIdx){
+  const prevNode = stateObj.node;
   const node=stateObj.tree[stateObj.node];
   const choice=node.next[choiceIdx];
   if(!choice){ stateObj.node=null; return {next:null, text:null, close:true, success:false}; }
@@ -204,6 +205,18 @@ function advanceDialog(stateObj, choiceIdx){
   joinParty(choice.join);
   processQuestFlag(choice);
   runEffects(choice.effects);
+
+  if (choice.q === 'accept' && currentNPC?.quest) {
+    const meta = currentNPC.quest;
+    const requiredCount = meta.count || 1;
+    const hasItems = !meta.item || countItems(meta.item) >= requiredCount;
+    const hasFlag = !meta.reqFlag || (typeof flagValue === 'function' && flagValue(meta.reqFlag));
+    if (meta.status === 'active' && hasItems && hasFlag) {
+      res.next = prevNode;
+      stateObj.node = prevNode;
+      return res;
+    }
+  }
 
   if (choice.applyModule) {
     const moduleData = globalThis[choice.applyModule];

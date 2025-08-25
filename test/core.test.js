@@ -629,7 +629,7 @@ test('quest turn-in awards XP once', () => {
   assert.strictEqual(char.xp, 4);
 });
 
-test('turn-in choice hidden until quest accepted', () => {
+test('turn-in choice appears immediately after accepting', () => {
   player.inv.length = 0;
   NPCS.length = 0;
   const quest = new Quest('q_hidden', 'Quest', '');
@@ -649,12 +649,11 @@ test('turn-in choice hidden until quest accepted', () => {
   assert.ok(!labels.includes('turn in'));
 
   // accept quest
-  choicesEl.children[0].onclick(); // accept
-  choicesEl.children[0].onclick(); // bye
+  choicesEl.children[0].onclick();
 
-  openDialog(npc);
   labels = choicesEl.children.map(c => c.textContent);
   assert.ok(labels.includes('turn in'));
+  closeDialog();
 });
 
 test('createNpcFactory builds NPCs from definitions', () => {
