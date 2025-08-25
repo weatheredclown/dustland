@@ -72,6 +72,23 @@ const SpoilsCache = {
       }, 200);
     }, { once: true });
     return el;
+  },
+  openAll(rank){
+    if(!player?.inv) return 0;
+    let opened = 0;
+    for(let i = player.inv.length - 1; i >= 0; i--){
+      const it = player.inv[i];
+      if(it.type === 'spoils-cache' && it.rank === rank){
+        player.inv.splice(i,1);
+        opened++;
+      }
+    }
+    if(opened){
+      const name = this.ranks[rank]?.name || rank;
+      log?.(`Opened ${opened} ${name}${opened>1?'s':''}.`);
+      notifyInventoryChanged?.();
+    }
+    return opened;
   }
 };
 Object.assign(globalThis, { SpoilsCache });

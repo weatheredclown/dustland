@@ -55,7 +55,7 @@ Opening a cache triggers a generator that stitches gear on the fly:
 
 #### Phase 2: UI/UX
 - [x] Add cache icons and quick-open animations.
-- [ ] Implement inventory UI for cache stacking and "Open All".
+- [x] Implement inventory UI for cache stacking and "Open All".
 
 #### Phase 3: Content & Balancing
 - [ ] Populate adjective/noun pools for item names and tier stat tables.
