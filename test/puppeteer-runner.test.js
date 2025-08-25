@@ -10,14 +10,20 @@ try {
 }
 
 if (puppeteer) {
-  test('Game balance tester (Puppeteer)', { timeout: 300000 }, async () => {
-    const browser = await puppeteer.launch({
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--allow-file-access-from-files'
-      ]
-    });
+  test('Game balance tester (Puppeteer)', { timeout: 300000 }, async t => {
+    let browser;
+    try {
+      browser = await puppeteer.launch({
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--allow-file-access-from-files'
+        ]
+      });
+    } catch (err) {
+      t.skip(`Puppeteer launch failed: ${err.message}`);
+      return;
+    }
     const page = await browser.newPage();
 
     const progress = { boot: false, play: false, results: false };
