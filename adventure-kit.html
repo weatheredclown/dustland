@@ -319,6 +319,7 @@
         <button class="tab2" type="button" data-tab="quests" role="tab" aria-selected="false">Quests</button>
         <button class="tab2" type="button" data-tab="events" role="tab" aria-selected="false">Events</button>
         <button class="tab2" type="button" data-tab="encounters" role="tab" aria-selected="false">Encounters</button>
+        <button class="tab2" type="button" data-tab="templates" role="tab" aria-selected="false">Templates</button>
       </div>
       <div class="tabpanes">
         <fieldset class="card" id="npcCard" data-pane="npc">
@@ -535,6 +536,21 @@
           <button class="btn" type="button" id="cancelEncounter" style="display:none">Cancel</button>
           <button class="btn" id="delEncounter" style="display:none">Delete Enemy</button>
           <button class="btn" type="button" id="closeEncounter">Done</button>
+        </div>
+      </fieldset>
+      <fieldset class="card" id="templateCard" data-pane="templates" style="display:none">
+        <legend>NPC Templates</legend>
+        <div class="list" id="templateList"></div>
+        <button class="btn" type="button" id="newTemplate">+ Template</button>
+        <div id="templateEditor" style="display:none">
+          <label>ID<input id="templateId" /></label>
+          <label>Name<input id="templateName" /></label>
+          <label>Description<textarea id="templateDesc" rows="2"></textarea></label>
+          <label>Color<input id="templateColor" type="color" value="#9ef7a0" /></label>
+          <label>Portrait<input id="templatePortrait" /></label>
+          <label>Combat<textarea id="templateCombat" rows="2"></textarea></label>
+          <button class="btn" id="addTemplate">Add Template</button>
+          <button class="btn" id="delTemplate" style="display:none">Delete Template</button>
         </div>
       </fieldset>
       </div><!-- /.tabpanes -->

@@ -190,9 +190,9 @@ loopMinus.addEventListener('click', () => {
   showLoopControls(null);
 });
 
-const moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], encounters: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
+const moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], encounters: [], templates: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
-let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editEncounterIdx = -1;
+let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
 let treeData = {};
 let selectedObj = null;
 const intCanvas = document.getElementById('intCanvas');
@@ -229,10 +229,6 @@ if (noiseToggle) {
     noiseToggle.textContent = `Noise: ${worldPaintNoise ? 'On' : 'Off'}`;
   });
   noiseToggle.textContent = 'Noise: On';
-}
-
-function nextId(prefix, arr) {
-  let i = 1; while (arr.some(o => o.id === prefix + i)) i++; return prefix + i;
 }
 
 function addTerrainFeature(x, y, tile) {
@@ -576,6 +572,7 @@ function regenWorld() {
   moduleData.interiors = [];
   moduleData.events = [];
   moduleData.portals = [];
+  moduleData.templates = [];
   for (const id in interiors) {
     if (id === 'creator') continue;
     const I = interiors[id]; I.id = id; moduleData.interiors.push(I);
@@ -585,6 +582,7 @@ function regenWorld() {
   renderEventList();
   renderPortalList();
   renderEncounterList();
+  renderTemplateList();
   drawWorld();
 }
 
@@ -603,6 +601,7 @@ function clearWorld() {
     moduleData.portals = [];
     moduleData.events = [];
     moduleData.encounters = [];
+    moduleData.templates = [];
     buildings.length = 0;
     portals.length = 0;
     globalThis.interiors = {};
@@ -665,7 +664,7 @@ function renderDialogPreview() {
 }
 
 function addChoiceRow(container, ch = {}) {
-  const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', reqItem = '', reqSlot = '', join = null, q = '' } = ch || {};
+  const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', reqItem = '', reqSlot = '', join = null, q = '', setFlag = null, spawn = null } = ch || {};
   const cond = ch && ch.if ? ch.if : null;
   const flag = cond?.flag || '';
   const op = cond?.op || '>=';
@@ -684,6 +683,12 @@ function addChoiceRow(container, ch = {}) {
   const unboardEff = effs.find(e => e.effect === 'unboardDoor');
   const boardId = boardEff ? boardEff.interiorId || '' : '';
   const unboardId = unboardEff ? unboardEff.interiorId || '' : '';
+  const setFlagName = setFlag?.flag || '';
+  const setFlagOp = setFlag?.op || 'set';
+  const setFlagVal = setFlag?.value ?? '';
+  const spawnTemplate = spawn?.templateId || '';
+  const spawnX = spawn?.x ?? '';
+  const spawnY = spawn?.y ?? '';
   const row = document.createElement('div');
   row.innerHTML = `<label>Label<input class="choiceLabel" value="${label}"/></label>
     <label>To<select class="choiceTo"></select></label>
@@ -714,6 +719,16 @@ function addChoiceRow(container, ch = {}) {
       </fieldset>
       <label>Board Door<select class="choiceBoard"></select></label>
       <label>Unboard Door<select class="choiceUnboard"></select></label>
+      <fieldset class="choiceSubGroup"><legend>Flag Effect</legend>
+        <label>Flag Name<input class="choiceSetFlagName" list="choiceFlagList" value="${setFlagName}"/></label>
+        <label>Operation<select class="choiceSetFlagOp"><option value="set">Set</option><option value="add">Add</option><option value="clear">Clear</option></select></label>
+        <label>Value<input type="number" class="choiceSetFlagValue" value="${setFlagVal}"/></label>
+      </fieldset>
+      <fieldset class="choiceSubGroup"><legend>Spawn NPC</legend>
+        <label>Template<select class="choiceSpawnTemplate"></select></label>
+        <label>X<input type="number" class="choiceSpawnX" value="${spawnX}"/></label>
+        <label>Y<input type="number" class="choiceSpawnY" value="${spawnY}"/></label>
+      </fieldset>
       <label>Quest<select class="choiceQ"><option value=""></option><option value="accept" ${q==='accept'?'selected':''}>accept</option><option value="turnin" ${q==='turnin'?'selected':''}>turnin</option></select></label>
       <label class="onceWrap"><input type="checkbox" class="choiceOnce" ${once ? 'checked' : ''}/> once</label>
       <label>Flag<input class="choiceFlag" list="choiceFlagList" value="${flag}"/></label>
@@ -728,7 +743,9 @@ function addChoiceRow(container, ch = {}) {
       <label>Value<input type="number" class="choiceVal" value="${val}"/></label>
     </details>`;
   container.appendChild(row);
+  row.querySelector('.choiceSetFlagOp').value = setFlagOp;
   populateChoiceDropdown(row.querySelector('.choiceTo'), to);
+  populateTemplateDropdown(row.querySelector('.choiceSpawnTemplate'), spawnTemplate);
   populateStatDropdown(row.querySelector('.choiceStat'), stat);
   populateItemDropdown(row.querySelector('.choiceCostItem'), costItem);
   populateSlotDropdown(row.querySelector('.choiceCostSlot'), costSlot);
@@ -811,6 +828,11 @@ function populateInteriorDropdown(sel, selected = '') {
   sel.value = selected;
 }
 
+function populateTemplateDropdown(sel, selected = '') {
+  sel.innerHTML = '<option value=""></option>' + moduleData.templates.map(t => `<option value="${t.id}">${t.id}</option>`).join('');
+  sel.value = selected;
+}
+
 function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceTo').forEach(sel => populateChoiceDropdown(sel, sel.value));
   document.querySelectorAll('.choiceStat').forEach(sel => populateStatDropdown(sel, sel.value));
@@ -824,6 +846,7 @@ function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceRewardItem').forEach(sel => populateItemDropdown(sel, sel.value));
   document.querySelectorAll('.choiceBoard').forEach(sel => populateInteriorDropdown(sel, sel.value));
   document.querySelectorAll('.choiceUnboard').forEach(sel => populateInteriorDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceSpawnTemplate').forEach(sel => populateTemplateDropdown(sel, sel.value));
 }
 
 function renderTreeEditor() {
@@ -908,6 +931,7 @@ function updateTreeData() {
       const gotoRel = chEl.querySelector('.choiceGotoRel').checked;
       const q = chEl.querySelector('.choiceQ').value.trim();
       const once = chEl.querySelector('.choiceOnce').checked;
+      const setFlagName = chEl.querySelector('.choiceSetFlagName').value.trim();
       const flag = chEl.querySelector('.choiceFlag').value.trim();
       const op = chEl.querySelector('.choiceOp').value;
       const valTxt = chEl.querySelector('.choiceVal').value.trim();
@@ -948,6 +972,18 @@ function updateTreeData() {
         if (boardId) effs.push({ effect: 'boardDoor', interiorId: boardId });
         if (unboardId) effs.push({ effect: 'unboardDoor', interiorId: unboardId });
         if (effs.length) c.effects = effs;
+        if (setFlagName) {
+          const op = chEl.querySelector('.choiceSetFlagOp').value;
+          const valTxt = chEl.querySelector('.choiceSetFlagValue').value.trim();
+          const value = valTxt ? parseInt(valTxt, 10) : undefined;
+          c.setFlag = { flag: setFlagName, op, value };
+        }
+        const spawnTemplate = chEl.querySelector('.choiceSpawnTemplate').value.trim();
+        if (spawnTemplate) {
+          const x = chEl.querySelector('.choiceSpawnX').value.trim();
+          const y = chEl.querySelector('.choiceSpawnY').value.trim();
+          c.spawn = { templateId: spawnTemplate, x: parseInt(x, 10), y: parseInt(y, 10) };
+        }
         choices.push(c);
       }
     });
@@ -1584,6 +1620,72 @@ function deleteEncounter(){
   showEncounterEditor(false);
 }
 
+// --- NPC Templates ---
+function showTemplateEditor(show){
+  document.getElementById('templateEditor').style.display = show ? 'block' : 'none';
+}
+function startNewTemplate(){
+  editTemplateIdx = -1;
+  document.getElementById('templateId').value = nextId('template', moduleData.templates);
+  document.getElementById('templateName').value = '';
+  document.getElementById('templateDesc').value = '';
+  document.getElementById('templateColor').value = '#9ef7a0';
+  document.getElementById('templatePortrait').value = '';
+  document.getElementById('templateCombat').value = '';
+  document.getElementById('addTemplate').textContent = 'Add Template';
+  document.getElementById('delTemplate').style.display = 'none';
+  showTemplateEditor(true);
+}
+function collectTemplate(){
+  const id = document.getElementById('templateId').value.trim();
+  const name = document.getElementById('templateName').value.trim();
+  const desc = document.getElementById('templateDesc').value.trim();
+  const color = document.getElementById('templateColor').value.trim();
+  const portraitSheet = document.getElementById('templatePortrait').value.trim();
+  let combat = null;
+  try { combat = JSON.parse(document.getElementById('templateCombat').value.trim() || 'null'); } catch(e){}
+  return { id, name, desc, color, portraitSheet, combat };
+}
+function addTemplate(){
+  const entry = collectTemplate();
+  if(editTemplateIdx >= 0){ moduleData.templates[editTemplateIdx] = entry; }
+  else moduleData.templates.push(entry);
+  editTemplateIdx = -1;
+  document.getElementById('addTemplate').textContent = 'Add Template';
+  document.getElementById('delTemplate').style.display = 'none';
+  renderTemplateList();
+  showTemplateEditor(false);
+}
+function editTemplate(i){
+  const t = moduleData.templates[i];
+  editTemplateIdx = i;
+  document.getElementById('templateId').value = t.id;
+  document.getElementById('templateName').value = t.name;
+  document.getElementById('templateDesc').value = t.desc;
+  document.getElementById('templateColor').value = t.color;
+  document.getElementById('templatePortrait').value = t.portraitSheet || '';
+  document.getElementById('templateCombat').value = t.combat ? JSON.stringify(t.combat, null, 2) : '';
+  document.getElementById('addTemplate').textContent = 'Update Template';
+  document.getElementById('delTemplate').style.display = 'block';
+  showTemplateEditor(true);
+}
+function renderTemplateList(){
+  const list = document.getElementById('templateList');
+  list.innerHTML = moduleData.templates.map((t,i)=>`<div data-idx="${i}">${t.id}</div>`).join('');
+  Array.from(list.children).forEach(div => div.onclick = () => editTemplate(parseInt(div.dataset.idx,10)));
+  refreshChoiceDropdowns();
+}
+function deleteTemplate(){
+  if(editTemplateIdx < 0) return;
+  moduleData.templates.splice(editTemplateIdx,1);
+  editTemplateIdx = -1;
+  document.getElementById('addTemplate').textContent = 'Add Template';
+  document.getElementById('delTemplate').style.display = 'none';
+  renderTemplateList();
+  showTemplateEditor(false);
+}
+
+
 // --- Tile Events ---
 function showEventEditor(show) {
   document.getElementById('eventEditor').style.display = show ? 'block' : 'none';
@@ -2186,6 +2288,7 @@ function applyLoadedModule(data) {
   });
   moduleData.portals = data.portals || [];
   moduleData.events = data.events || [];
+  moduleData.templates = data.templates || [];
   moduleData.encounters = [];
   if (data.encounters) {
     Object.entries(data.encounters).forEach(([map, list]) => {
@@ -2224,6 +2327,7 @@ function applyLoadedModule(data) {
   renderQuestList();
   renderEventList();
   renderEncounterList();
+  renderTemplateList();
   updateQuestOptions();
   loadMods({});
   showItemEditor(false);
@@ -2298,6 +2402,9 @@ document.getElementById('addEncounter').onclick = addEncounter;
 document.getElementById('cancelEncounter').onclick = () => { editEncounterIdx = -1; showEncounterEditor(false); };
 document.getElementById('delEncounter').onclick = deleteEncounter;
 document.getElementById('closeEncounter').onclick = () => showEncounterEditor(false);
+document.getElementById('newTemplate').onclick = startNewTemplate;
+document.getElementById('addTemplate').onclick = addTemplate;
+document.getElementById('delTemplate').onclick = deleteTemplate;
 document.getElementById('npcPrevP').onclick = () => {
   npcPortraitIndex = (npcPortraitIndex + npcPortraits.length - 1) % npcPortraits.length;
   setNpcPortrait();

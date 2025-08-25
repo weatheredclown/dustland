@@ -81,6 +81,9 @@ function createRNG(seed){
 let rng = createRNG(worldSeed);
 function setRNGSeed(seed){ worldSeed = seed >>> 0; rng = createRNG(worldSeed); }
 const rand = (n)=> Math.floor(rng()*n);
+function nextId(prefix, arr) {
+  let i = 1; while (arr.some(o => o.id === prefix + i)) i++; return prefix + i;
+}
 const clamp = (v,a,b)=> {
   if(a > b){ [a,b] = [b,a]; }
   return Math.max(a, Math.min(b, v));
@@ -184,7 +187,7 @@ const VIEW_W=40, VIEW_H=30, TS=16;
 const WORLD_W=120, WORLD_H=90;
 
 // ===== Game state =====
-let world = [], interiors = {}, buildings = [], portals = [];
+let world = [], interiors = {}, buildings = [], portals = [], npcTemplates = [];
 const tileEvents = [];
 const enemyBanks = {};
 function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
@@ -267,6 +270,13 @@ function revealHiddenNPCs(){
   }
 }
 
+function setFlag(flag, value) {
+  const entry = worldFlags[flag] || (worldFlags[flag] = { count: 0, time: 0 });
+  entry.count = value;
+  entry.time = Date.now();
+  revealHiddenNPCs();
+}
+
 function incFlag(flag, amt=1){
   const entry = worldFlags[flag] || (worldFlags[flag] = {count:0, time:0});
   entry.count += amt;
@@ -294,6 +304,7 @@ function applyModule(data = {}, options = {}) {
     if (typeof quests !== 'undefined') Object.keys(quests).forEach(k => delete quests[k]);
     NPCS.length = 0;
     hiddenNPCs.length = 0;
+    npcTemplates.length = 0;
     Object.keys(enemyBanks).forEach(k => delete enemyBanks[k]);
 
     // Generate terrain based on config
@@ -338,6 +349,7 @@ function applyModule(data = {}, options = {}) {
   // Portals, events, and encounters
   if (moduleData.portals) portals.push(...moduleData.portals);
   if (moduleData.events) registerTileEvents(moduleData.events);
+  if (moduleData.templates) npcTemplates.push(...moduleData.templates);
   if (moduleData.encounters) {
     Object.entries(moduleData.encounters).forEach(([map, list]) => {
       enemyBanks[map] = list.map(e => ({ ...e }));
@@ -750,6 +762,7 @@ const coreExports = {
   ROLL_SIDES,
   DC,
   clamp,
+  nextId,
   createRNG,
   Dice,
   refreshUI,
@@ -790,6 +803,7 @@ const coreExports = {
   startGame,
   setRNGSeed,
   worldFlags,
+  setFlag,
   incFlag,
   flagValue,
   checkFlagCondition,

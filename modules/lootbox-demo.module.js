@@ -10,34 +10,6 @@ const LOOTBOX_DEMO_MODULE = (() => {
   );
   const demoRoom = { id: 'demo_room', w: ROOM_W, h: ROOM_H, grid, entryX: 1, entryY: Math.floor(ROOM_H / 2) };
 
-  let dummyChallenge = 5;
-  function spawnDummy(){
-    const npc = makeNPC(
-      'training_dummy',
-      'demo_room',
-      5,
-      Math.floor(ROOM_H / 2),
-      '#f88',
-      'Training Dummy',
-      '',
-      {
-        start:{
-          text:'A sturdy dummy built for testing spoils caches.',
-          choices:[
-            { label:'(Fight)', to:'do_fight' },
-            { label:'(Leave)', to:'bye' }
-          ]
-        }
-      },
-      null,
-      null,
-      null,
-      { combat:{ HP: dummyChallenge, ATK:0, DEF:0, challenge: dummyChallenge } }
-    );
-    NPCS.push(npc);
-    refreshUI?.();
-  }
-
   let sawDrop = false;
   watchEventFlag?.('spoils:opened', 'cache_opened');
   EventBus.on('spoils:drop', () => { sawDrop = true; });
@@ -79,23 +51,23 @@ const LOOTBOX_DEMO_MODULE = (() => {
           }
           const choices = [];
           if(fought){
-            choices.push({ label:'(Same dummy)', to:'spawn_same' });
-            choices.push({ label:'(Tougher dummy)', to:'spawn_tough' });
+            choices.push({ label:'(Same dummy)', to:'spawn_same', effects: [()=>clearFlag('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') } });
+            choices.push({ label:'(Tougher dummy)', to:'spawn_tough', effects: [() => incFlag('dummy_challenge'), ()=>clearFlag('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') + 1 } });
           }
           choices.push({ label:'(Leave)', to:'bye' });
           this.tree.start.choices = choices;
         }
-      },
-      processChoice(c){
-        if(c.to === 'spawn_same'){
-          spawnDummy();
-          clearFlag('cache_opened');
-        } else if(c.to === 'spawn_tough'){
-          dummyChallenge++;
-          spawnDummy();
-          clearFlag('cache_opened');
-        }
       }
+    }
+  ];
+
+  const templates = [
+    {
+      id: 'training_dummy',
+      name: 'Training Dummy',
+      desc: 'A sturdy dummy built for testing spoils caches.',
+      color: '#f88',
+      combat: { ATK: 0, DEF: 0 }
     }
   ];
 
@@ -106,15 +78,19 @@ const LOOTBOX_DEMO_MODULE = (() => {
     items: [],
     quests: [],
     interiors: [demoRoom],
-    buildings: []
+    buildings: [],
+    templates
   };
 })();
 
 startGame = function(){
   applyModule(LOOTBOX_DEMO_MODULE);
+  setFlag('dummy_challenge', 5);
   const s = LOOTBOX_DEMO_MODULE.start;
   setPartyPos(s.x, s.y);
   setMap(s.map, 'Loot Box Demo');
-  spawnDummy();
+  const template = LOOTBOX_DEMO_MODULE.templates.find(t => t.id === 'training_dummy');
+  const npc = makeNPC('training_dummy_1', 'demo_room', 5, Math.floor(ROOM_H/2), template.color, template.name, '', template.desc, {}, null, null, null, { combat: { ...template.combat, HP: 5, challenge: 5 } });
+  NPCS.push(npc);
   refreshUI();
 };

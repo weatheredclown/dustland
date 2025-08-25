@@ -137,10 +137,6 @@ function advanceDialog(stateObj, choiceIdx){
   const choice=node.next[choiceIdx];
   if(!choice){ stateObj.node=null; return {next:null, text:null, close:true, success:false}; }
 
-  if(currentNPC?.processChoice?.(choice)){
-    return {next:null, text:null, close:false, success:true};
-  }
-
   runEffects(choice.checks);
 
   const res={next:null, text:null, close:false, success:true};
@@ -209,6 +205,33 @@ function advanceDialog(stateObj, choiceIdx){
   joinParty(choice.join);
   processQuestFlag(choice);
   runEffects(choice.effects);
+
+  if (choice.setFlag) {
+    const { flag, op, value } = choice.setFlag;
+    if (op === 'set') {
+      setFlag(flag, value);
+    } else if (op === 'add') {
+      incFlag(flag, value);
+    } else if (op === 'clear') {
+      clearFlag(flag);
+    }
+  }
+
+  if (choice.spawn) {
+    const template = npcTemplates.find(t => t.id === choice.spawn.templateId);
+    if (template) {
+      const id = nextId(template.id, NPCS);
+      const x = choice.spawn.x;
+      const y = choice.spawn.y;
+      const combat = template.combat ? {...template.combat} : {};
+      if (choice.spawn.challenge) {
+        combat.HP = choice.spawn.challenge;
+        combat.challenge = choice.spawn.challenge;
+      }
+      const npc = makeNPC(id, state.map, x, y, template.color, template.name, '', template.desc, {}, null, null, null, { combat });
+      NPCS.push(npc);
+    }
+  }
 
   if (choice.q === 'accept' && currentNPC?.quest) {
     const meta = currentNPC.quest;
