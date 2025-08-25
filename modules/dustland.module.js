@@ -69,6 +69,31 @@ const DUSTLAND_MODULE = (() => {
 
   const npcs = [
     {
+      id: 'dust_storm_entrance',
+      map: 'world',
+      x: 10,
+      y: 10,
+      color: '#f5d442',
+      name: 'Strange Vortex',
+      title: 'A swirling vortex of dust and sand.',
+      desc: 'You feel a strange pull towards it.',
+      tree: {
+        start: {
+          text: 'A swirling vortex of dust and sand blocks your path.',
+          choices: [
+            { label: '(Enter the vortex)', to: 'enter' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        },
+        enter: {
+          text: 'You are pulled into the vortex.',
+          choices: [
+            { label: '(Continue)', to: 'bye', goto: { map: 'dust_storm', x: 10, y: 18 } }
+          ]
+        }
+      }
+    },
+    {
       id: 'exitdoor',
       map: 'hall',
       x: hall.entryX,
