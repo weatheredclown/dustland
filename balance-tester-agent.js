@@ -1,17 +1,124 @@
 // This script is loaded into balance-tester.html and runs the game balance simulation.
 
-// Wait for the game to be ready
-window.addEventListener('load', () => {
-  console.log('Balance tester agent loaded.');
-  runBalanceTest();
-});
+// Wait for the game to be ready in the browser or set up a jsdom
+// environment when executed under Node.js. This allows the balance
+// tester to run headlessly via `node balance-tester-agent.js`.
+if (typeof window === 'undefined') {
+  (async () => {
+    const { JSDOM } = await import('jsdom');
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const { fileURLToPath } = await import('node:url');
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+    const html = `<!DOCTYPE html><body>
+      <div id="log"></div>
+      <div id="hp"></div>
+      <div id="ap"></div>
+      <div id="scrap"></div>
+      <canvas id="game"></canvas>
+      <div id="mapname"></div>
+      <div id="start"><div id="startContinue"></div><div id="startNew"></div></div>
+      <div id="creator">
+        <div id="ccStep"></div><div id="ccRight"></div><div id="ccHint"></div>
+        <div id="ccBack"></div><div id="ccNext"></div>
+        <div id="ccPortrait"></div><div id="ccStart"></div><div id="ccLoad"></div>
+      </div>
+      <div id="combatOverlay">
+        <div id="combatEnemies"></div>
+        <div id="combatParty"></div>
+        <div id="combatCmd"></div>
+        <div id="turnIndicator"></div>
+      </div>
+    </body>`;
+    const dom = new JSDOM(html, { url: 'http://localhost/dustland.html?ack-player=1' });
+    const { window: w } = dom;
+    global.window = w;
+    global.document = w.document;
+    global.location = w.location;
+    w.requestAnimationFrame = () => {};
+    global.requestAnimationFrame = w.requestAnimationFrame;
+    w.NanoDialog = { init: () => {} };
+    global.NanoDialog = w.NanoDialog;
+    w.AudioContext = function() {};
+    w.webkitAudioContext = w.AudioContext;
+    w.Audio = function(){ return { cloneNode: () => ({ play: () => ({ catch: () => {} }), pause: () => {} }) }; };
+    global.Audio = w.Audio;
+    global.EventBus = { on: () => {}, emit: () => {} };
+    global.TS = 16;
+    global.camX = 0;
+    global.camY = 0;
+    global.interactAt = () => {};
+    w.HTMLCanvasElement.prototype.getContext = () => ({
+      drawImage: () => {},
+      clearRect: () => {},
+      getImageData: () => ({ data: [] }),
+      putImageData: () => {}
+    });
+    const store = { dustland_crt: '{}' };
+    Object.defineProperty(w, 'localStorage', {
+      value: {
+        getItem: (k) => store[k],
+        setItem: (k, v) => { store[k] = String(v); },
+        removeItem: (k) => { delete store[k]; }
+      }
+    });
+    global.localStorage = w.localStorage;
+    global.showStart = () => {};
+    global.openCreator = () => {};
+    global.bootMap = () => {};
+    global.draw = () => {};
+    global.runTests = () => {};
+
+    const scripts = [
+      'event-bus.js',
+      'dustland-nano.js',
+      'dustland-core.js',
+      'core/party.js',
+      'core/quests.js',
+      'core/abilities.js',
+      'core/actions.js',
+      'core/combat.js',
+      'core/dialog.js',
+      'core/effects.js',
+      'core/inventory.js',
+      'core/loop.js',
+      'core/movement.js',
+      'core/npc.js',
+      'dustland-path.js',
+      'dustland-engine.js'
+    ];
+    for (const file of scripts) {
+      w.eval(fs.readFileSync(path.join(__dirname, file), 'utf8'));
+    }
+    await runBalanceTest();
+  })().catch(err => {
+    console.error('Balance test error:', err);
+    process.exit(1);
+  });
+} else {
+  window.addEventListener('load', () => {
+    console.log('Balance tester agent loaded.');
+    runBalanceTest();
+  });
+}
 
 async function runBalanceTest() {
   try {
     console.log('Running balance test...');
     const modulePath = 'modules/golden.module.json';
-    const res = await fetch(modulePath);
-    const moduleData = await res.json();
+    let moduleData;
+    if (typeof window !== 'undefined' && window.fetch) {
+      const res = await fetch(modulePath);
+      moduleData = await res.json();
+    } else {
+      const fs = await import('node:fs/promises');
+      const path = await import('node:path');
+      const { fileURLToPath } = await import('node:url');
+      const __dirname = path.dirname(fileURLToPath(import.meta.url));
+      const json = await fs.readFile(path.join(__dirname, modulePath), 'utf8');
+      moduleData = JSON.parse(json);
+    }
     applyModule(moduleData);
     console.log('Balance test checkpoint: module loaded');
 
@@ -142,11 +249,15 @@ async function runBalanceTest() {
     }
     console.log('Balance test checkpoint: loop end');
 
-    // Log the results to the page so puppeteer can grab them
-    const resultsEl = document.createElement('div');
-    resultsEl.id = 'results';
-    resultsEl.textContent = JSON.stringify(stats, null, 2);
-    document.body.appendChild(resultsEl);
+    // Log the results so puppeteer or the console can grab them
+    const resultText = JSON.stringify(stats, null, 2);
+    if (typeof document !== 'undefined' && document.body) {
+      const resultsEl = document.createElement('div');
+      resultsEl.id = 'results';
+      resultsEl.textContent = resultText;
+      document.body.appendChild(resultsEl);
+    }
+    console.log(resultText);
   } catch (err) {
     console.error('Balance test error:', err);
     throw err;
