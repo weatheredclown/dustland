@@ -88,7 +88,7 @@ function gridFor(map){
 }
 function getTile(map,x,y){
   const g=gridFor(map); if(!g) return null;
-  if(y<0||x<0||y>=g.length||x>=g[0].length) return null;
+  if(y<0||x<0||y>=g.length||!g[0]||x>=g[0].length) return null;
   return g[y][x];
 }
 function setTile(map,x,y,t){
