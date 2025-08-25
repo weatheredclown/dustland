@@ -72,7 +72,7 @@ Here’s the roadmap. We’ll build the core systems first, get the player-facin
 - [x] **Respec Vendor:** Create a special vendor NPC who sells "Memory Worm" tokens for a high price (e.g., 500 scrap). This vendor should be placed in a mid-to-late game area.
 
 #### **Phase 4: Testing and Balancing (The Stopwatch)**
-- [ ] **Progression Test Suite:** Write automated tests to verify:
+- [x] **Progression Test Suite:** Write automated tests to verify:
     - XP is awarded correctly.
     - Level-ups trigger at the right thresholds according to `xpCurve`.
     - HP and skill points are granted correctly.
