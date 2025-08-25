@@ -1,6 +1,8 @@
 const BROADCAST_FRAGMENT_1 = {
   "seed": "broadcast-1",
   "name": "broadcast-fragment-1",
+  "startMap": "world",
+  "startPoint": { "x": 102, "y": 20 },
   "items": [
     { "id": "tuned_crystal", "name": "Tuned Crystal", "type": "quest" },
     { "id": "signal_fragment_1", "name": "Signal Fragment 1", "type": "quest", "desc": "A strange, humming piece of metal that seems to resonate with the radio waves." }
@@ -90,3 +92,4 @@ const BROADCAST_FRAGMENT_1 = {
     { "x": 100, "y": 20, "w": 1, "h": 1, "interiorId": "radio_shack", "boarded": false }
   ]
 };
+globalThis.BROADCAST_FRAGMENT_1 = BROADCAST_FRAGMENT_1;

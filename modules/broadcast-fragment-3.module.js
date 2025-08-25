@@ -1,6 +1,8 @@
 const BROADCAST_FRAGMENT_3 = {
   "seed": "broadcast-3",
   "name": "broadcast-fragment-3",
+  "startMap": "world",
+  "startPoint": { "x": 140, "y": 12 },
   "items": [
     { "id": "signal_fragment_3", "name": "Signal Fragment 3", "type": "quest", "desc": "The final fragment. It hums with a powerful, clear energy." }
   ],
@@ -64,3 +66,4 @@ const BROADCAST_FRAGMENT_3 = {
     { "x": 140, "y": 10, "w": 1, "h": 1, "interiorId": "resonant_cave", "grid": [[8]] }
   ]
 };
+globalThis.BROADCAST_FRAGMENT_3 = BROADCAST_FRAGMENT_3;
