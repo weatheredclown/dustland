@@ -103,12 +103,16 @@ async function runBalanceTest() {
 
     console.log('Balance test checkpoint: loop start');
     let lastPartySize = party.length;
-    for (let i = 0; i < 100; i++) {
+    const maxSteps = 5000;
+    let steps = 0;
+
+    while (party[0].level < 5 && steps < maxSteps) {
       await agent.think();
       if (party.length > lastPartySize) {
         stats.partyMembersAdded += party.length - lastPartySize;
       }
       lastPartySize = party.length;
+      steps++;
     }
     console.log('Balance test checkpoint: loop end');
 
