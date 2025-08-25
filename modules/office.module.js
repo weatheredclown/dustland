@@ -518,7 +518,7 @@ const OFFICE_MODULE = (() => {
         { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] },
         {
           id: 'cursed_vr_helmet',
-          name: 'Cursed VR Helmet',
+          name: 'VR Helmet',
           type: 'armor',
           slot: 'armor',
           cursed: true,
