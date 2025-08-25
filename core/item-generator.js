@@ -1,13 +1,35 @@
 // ===== Item Generator =====
 const ItemGen = {
   types: ['weapon','armor','gadget','oddity'],
-  adjectives: ['Grit-Stitched','Rusty','Quantum','Crystal'],
-  nouns: ['Repeater','Shield','Gizmo','Compass'],
+  adjectives: [
+    'Grit-Stitched',
+    'Rusty',
+    'Quantum',
+    'Crystal',
+    'Welded',
+    'Scrap-Bound',
+    'Solar-Forged',
+    'Echoing',
+    'Harmonic',
+    'Nova-Etched'
+  ],
+  nouns: [
+    'Repeater',
+    'Shield',
+    'Gizmo',
+    'Compass',
+    'Blade',
+    'Injector',
+    'Mask',
+    'Harmonica',
+    'Emitter',
+    'Engine'
+  ],
   statRanges: {
-    rusted: { min: 1, max: 3 },
-    sealed: { min: 3, max: 5 },
-    armored: { min: 5, max: 8 },
-    vaulted: { min: 8, max: 12 }
+    rusted: { min: 1, max: 4 },
+    sealed: { min: 4, max: 7 },
+    armored: { min: 7, max: 10 },
+    vaulted: { min: 10, max: 15 }
   },
   pick(list, rng){
     return list[Math.floor(rng() * list.length)];
