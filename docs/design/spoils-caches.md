@@ -49,7 +49,7 @@ Opening a cache triggers a generator that stitches gear on the fly:
 ### Expanded Task List
 
 #### Phase 1: Core Systems
-- [ ] Define `SpoilsCache` item type and rank data structure.
+- [x] Define `SpoilsCache` item type and rank data structure.
 - [ ] Implement drop roll tied to enemy `challenge` rating.
 - [ ] Create modular item generator for type, name, and stats.
 
