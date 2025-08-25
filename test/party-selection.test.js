@@ -22,7 +22,7 @@ class Audio {
   pause(){}
 }
 
-test('party panels handle click and focus selection', async () => {
+function setup(party){
   const html = `<body>
   <div id="log"></div>
   <div id="hp"></div>
@@ -55,13 +55,7 @@ test('party panels handle click and focus selection', async () => {
   dom.window.AudioContext = AudioCtx;
   dom.window.webkitAudioContext = AudioCtx;
   dom.window.Audio = Audio;
-
-  const party = [
-    { name:'A', role:'Hero', lvl:1, hp:5, maxHp:5, ap:2, skillPoints:0, stats:{}, equip:{ weapon:null, armor:null, trinket:null }, _bonus:{}, portraitSheet:null, xp:0 },
-    { name:'B', role:'Mage', lvl:1, hp:5, maxHp:5, ap:2, skillPoints:0, stats:{}, equip:{ weapon:null, armor:null, trinket:null }, _bonus:{}, portraitSheet:null, xp:0 }
-  ];
   party.flags = {};
-
   const context = {
     window: dom.window,
     document: dom.window.document,
@@ -104,6 +98,15 @@ test('party panels handle click and focus selection', async () => {
   };
   vm.createContext(context);
   vm.runInContext(full, context);
+  return { context, dom };
+}
+
+test('party panels handle click and focus selection', async () => {
+  const party = [
+    { name:'A', role:'Hero', lvl:1, hp:5, maxHp:5, ap:2, skillPoints:0, stats:{}, equip:{ weapon:null, armor:null, trinket:null}, _bonus:{}, portraitSheet:null, xp:0 },
+    { name:'B', role:'Mage', lvl:1, hp:5, maxHp:5, ap:2, skillPoints:0, stats:{}, equip:{ weapon:null, armor:null, trinket:null}, _bonus:{}, portraitSheet:null, xp:0 }
+  ];
+  const { context, dom } = setup(party);
 
   context.renderParty();
   const partyDiv = dom.window.document.getElementById('party');
@@ -119,3 +122,14 @@ test('party panels handle click and focus selection', async () => {
   assert(partyDiv.children[0].classList.contains('selected'));
 });
 
+test('renderParty shows single frame from sprite sheet', () => {
+  const party = [
+    { name:'Grin', role:'NPC', lvl:1, hp:5, maxHp:5, ap:2, skillPoints:0, stats:{}, equip:{ weapon:null, armor:null, trinket:null}, _bonus:{}, portraitSheet:'assets/portraits/grin_4.png', xp:0 }
+  ];
+  const { context, dom } = setup(party);
+  context.renderParty();
+  const portrait = dom.window.document.querySelector('.portrait');
+  assert.ok(portrait.style.backgroundImage.includes('grin_4.png'));
+  assert.strictEqual(portrait.style.backgroundSize, '200% 200%');
+  assert.strictEqual(portrait.style.backgroundPosition, '0% 0%');
+});
