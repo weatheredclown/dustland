@@ -21,13 +21,14 @@ test('panel toggle shows and hides panel', async () => {
   dom.window.webkitAudioContext = AudioCtx;
   const dummyCtx = new Proxy({}, { get: () => () => {}, set: () => true });
   dom.window.HTMLCanvasElement.prototype.getContext = () => dummyCtx;
+  const AudioStub = class { constructor(){ this.addEventListener = () => {}; } cloneNode(){ return new AudioStub(); } };
   const context = {
     window: dom.window,
     document: dom.window.document,
     requestAnimationFrame: () => 0,
     AudioContext: AudioCtx,
     webkitAudioContext: AudioCtx,
-    Audio: class { constructor(){ this.addEventListener = () => {}; } },
+    Audio: AudioStub,
     EventBus: { on: () => {}, emit: () => {} },
     NanoDialog: { enabled: true },
     location: { hash: '' },
