@@ -45,6 +45,7 @@ function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNo
   if (opts?.combat) {
     tree = tree || {};
     tree.start = tree.start || {text: '', choices: []};
+    tree.start.choices = tree.start.choices || [];
     let fightChoice = tree.start.choices.find(c => c.label === '(Fight)' || c.to === 'do_fight');
     if (fightChoice) {
       fightChoice.label = '(Fight)';
@@ -59,6 +60,7 @@ function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNo
   if (opts?.shop) {
     tree = tree || {};
     tree.start = tree.start || {text: '', choices: []};
+    tree.start.choices = tree.start.choices || [];
     tree.start.choices.push({label: '(Sell items)', to: 'sell'});
     tree.sell = tree.sell || {text: 'What are you selling?', choices: []};
   }

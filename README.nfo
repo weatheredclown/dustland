@@ -106,6 +106,9 @@ _______________________________________________________________________________
       * Open Party tab and switch the Selected radio—this member becomes
         the leader for checks and XP.
 
+  - Starts in Creator map instead of your module?
+      * A module load error likely occurred. Check the console for exceptions.
+
 [ HACKING NOTES ]
   - Plain JS scripts with globals; no build step or framework.
   - Gameplay logic is split into tiny systems: movement, collisions,
