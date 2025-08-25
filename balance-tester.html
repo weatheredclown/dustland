@@ -170,10 +170,12 @@
       const settingsBtn = document.getElementById('settingsBtn');
       if (settingsBtn) settingsBtn.style.display = 'none';
     }
-    const modeScript = document.createElement('script');
-    modeScript.defer = true;
-    modeScript.src = isAck ? './ack-player.js' : './module-picker.js';
-    document.body.appendChild(modeScript);
+    if (isAck) {
+      const modeScript = document.createElement('script');
+      modeScript.defer = true;
+      modeScript.src = './ack-player.js';
+      document.body.appendChild(modeScript);
+    }
   </script>
   <script defer src="./balance-tester-agent.js"></script>
 </body>
