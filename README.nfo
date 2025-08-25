@@ -123,7 +123,11 @@ _______________________________________________________________________________
   - Items support `equip.flag` and `unequip` teleport/message effects.
   - Tiles: see TILE enum + colors[] + walkable[].
   - Maps can be specified as arrays of emoji strings using `tileEmoji` (numeric grids still load).
-  - Tests: run `npm install` to fetch dev deps like jsdom, then `npm test` for basic checks.
+  - Tests: run `npm install` to fetch dev deps like jsdom.
+    Ensure system libs (libatk1.0-0, libatk-bridge2.0-0, libcups2, libdrm2,
+    libxcomposite1, libxdamage1, libxfixes3, libxrandr2, libgbm1, libasound2,
+    libnss3, libxshmfence1, libxkbcommon0) exist before `npm test`.
+    Run `./install-deps.sh` on Debian/Ubuntu to install them.
     The main game still runs from the repo download alone.
 
 [ FEATURE LOG ]
