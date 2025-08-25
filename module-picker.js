@@ -4,7 +4,8 @@ const MODULES = [
   { id: 'dustland', name: 'Dustland', file: 'modules/dustland.module.js' },
   { id: 'echoes', name: 'Echoes', file: 'modules/echoes.module.js' },
   { id: 'office', name: 'Office', file: 'modules/office.module.js' },
-  { id: 'golden', name: 'Golden Sample', file: 'modules/golden.module.json' }
+  { id: 'golden', name: 'Golden Sample', file: 'modules/golden.module.json' },
+  { id: 'conestoga1992', name: 'Conestoga 1992', file: 'modules/conestoga1992.module.js' }
 ];
 
 const realOpenCreator = window.openCreator;
