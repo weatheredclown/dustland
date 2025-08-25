@@ -26,6 +26,9 @@ async function runBalanceTest() {
     console.log('Balance test checkpoint: party ready');
 
     const agent = {
+      goal: null,
+      path: [],
+      job: null,
       think: async () => {
         // 1. Attack monsters
         const nearbyMonster = findNearbyMonster();
@@ -46,10 +49,23 @@ async function runBalanceTest() {
           return;
         }
 
-        // 3. Move randomly
-        const directions = ['up', 'down', 'left', 'right'];
-        const randomDirection = directions[Math.floor(Math.random() * directions.length)];
-        move(randomDirection);
+        // 3. Move toward goal using A* pathfinding
+        const leader = party[0];
+        if (agent.path.length) {
+          const step = agent.path.shift();
+          await move(step.x - leader.x, step.y - leader.y);
+          return;
+        }
+        if (agent.job) {
+          const p = PathQueue.pathFor(agent.job);
+          if (p) {
+            agent.path = p.slice(1);
+            agent.job = null;
+          }
+          return;
+        }
+        agent.goal = findRandomWalkableTile('world');
+        agent.job = PathQueue.queue('world', { x: leader.x, y: leader.y }, agent.goal, leader.id);
       }
     };
 
@@ -77,6 +93,16 @@ async function runBalanceTest() {
     const dx = Math.abs(pos1.x - pos2.x);
     const dy = Math.abs(pos1.y - pos2.y);
     return dx <= 1 && dy <= 1;
+  }
+
+  function findRandomWalkableTile(map) {
+    const { W, H } = mapWH(map);
+    while (true) {
+      const x = Math.floor(Math.random() * W);
+      const y = Math.floor(Math.random() * H);
+      const info = queryTile(x, y, map);
+      if (info.walkable) return { x, y };
+    }
   }
 
   // Game loop
