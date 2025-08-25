@@ -20,19 +20,30 @@ if (puppeteer) {
     });
     const page = await browser.newPage();
 
-    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+    const progress = { boot: false, play: false, results: false };
+    page.on('console', msg => {
+      const text = msg.text();
+      console.log('PAGE LOG:', text);
+      if (text.includes('Balance tester agent loaded')) progress.boot = true;
+      if (text.includes('Running balance test')) progress.play = true;
+    });
 
     const filePath = path.resolve(process.cwd(), 'balance-tester.html');
     await page.goto(`file://${filePath}`);
 
     try {
       await page.waitForSelector('#results', { timeout: 60000 });
+      progress.results = true;
       const results = await page.$eval('#results', el => el.textContent);
       console.log('Balance Test Results:');
       console.log(JSON.parse(results));
       assert.ok(results, 'Should have results');
-    } catch (e) {
-      console.warn('Puppeteer balance test skipped:', e.message);
+    } catch {
+      let status = 'init';
+      if (progress.results) status = 'results';
+      else if (progress.play) status = 'play';
+      else if (progress.boot) status = 'boot';
+      assert.fail(`Balance test failed after 60s (last checkpoint: ${status})`);
     } finally {
       await browser.close();
     }
