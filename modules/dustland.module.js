@@ -655,7 +655,6 @@ const DUSTLAND_MODULE = (() => {
   };
 })();
 
-const _startGame = startGame;
 startGame = function () {
   startWorld();
   applyModule(DUSTLAND_MODULE);

@@ -569,7 +569,6 @@ const OFFICE_MODULE = (() => {
   };
 })();
 
-const _startGame = startGame;
 startGame = function () {
   if (OFFICE_MODULE.worldGen) {
     const { castleId } = OFFICE_MODULE.worldGen();
@@ -587,16 +586,12 @@ startGame = function () {
       const iy = Math.floor(interior.h / 2);
       itemDrops.push({ id: charm.id, map: castleId, x: ix, y: iy });
     }
-    const s = OFFICE_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+    const s = OFFICE_MODULE.start;
     setPartyPos(s.x, s.y);
     setMap(s.map);
-    renderInv();
-    renderQuests();
-    renderParty();
-    updateHUD();
-    log(s.map === 'world' ? 'You step into the forest.' : 'You arrive at the office.');
+    refreshUI();
+    log('You arrive at the office.');
   } else {
-    _startGame();
-    applyModule(OFFICE_MODULE);
+    throw Error("Malformed or incomplete module: OFFICE_MODULE");
   }
 };
