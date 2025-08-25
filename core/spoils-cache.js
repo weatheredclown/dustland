@@ -3,20 +3,24 @@ const SpoilsCache = {
   ranks: {
     rusted: {
       name: 'Rusted Cache',
-      desc: 'Hinges squeal; expect scraps and makeshift tools.'
+      desc: 'Hinges squeal; expect scraps and makeshift tools.',
+      icon: '🥫'
     },
     sealed: {
       name: 'Sealed Cache',
-      desc: 'Intact plating and corporate wax. Solid baseline loot.'
+      desc: 'Intact plating and corporate wax. Solid baseline loot.',
+      icon: '📦'
     },
     armored: {
       name: 'Armored Cache',
-      desc: 'Reinforced with ex-military alloy. High-grade hardware.'
+      desc: 'Reinforced with ex-military alloy. High-grade hardware.',
+      icon: '🛡️'
     },
     vaulted: {
       name: 'Vaulted Cache',
-      desc: 'Quantum locks and glowing seams. Legendary rarities.'
-    } 
+      desc: 'Quantum locks and glowing seams. Legendary rarities.',
+      icon: '💠'
+    }
   },
   baseRate: 0.1,
   create(rank){
@@ -53,6 +57,21 @@ const SpoilsCache = {
     if(rng() >= chance) return null;
     const rank = this.pickRank(c, rng);
     return this.create(rank);
+  },
+  renderIcon(rank, onOpen){
+    const info = this.ranks[rank];
+    if(!info || typeof document === 'undefined') return null;
+    const el = document.createElement('div');
+    el.className = `cache-icon ${rank}`;
+    el.textContent = info.icon || '';
+    el.addEventListener('click', () => {
+      el.classList.add('open');
+      setTimeout(() => {
+        el.remove();
+        onOpen?.();
+      }, 200);
+    }, { once: true });
+    return el;
   }
 };
 Object.assign(globalThis, { SpoilsCache });

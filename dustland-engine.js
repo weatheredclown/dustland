@@ -398,6 +398,18 @@ function renderInv(){
     return;
   }
   player.inv.forEach((it,idx)=>{
+    if(it.type === 'spoils-cache'){
+      const row=document.createElement('div');
+      row.className='slot cache-slot';
+      const icon = SpoilsCache.renderIcon(it.rank, () => {
+        const index = player.inv.indexOf(it);
+        if(index !== -1) removeFromInv(index);
+        log?.(`${it.name} opened.`);
+      });
+      if(icon) row.appendChild(icon);
+      inv.appendChild(row);
+      return;
+    }
     const row=document.createElement('div');
     row.className='slot';
     const baseLabel = it.name + (it.slot?` [${it.slot}]`:'');
