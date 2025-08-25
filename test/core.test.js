@@ -486,6 +486,39 @@ test('advanceDialog respects goto with costItem', () => {
   assert.ok(!player.inv.some(it => it.id === 'key'));
 });
 
+test('advanceDialog respects costSlot', () => {
+  player.inv.length = 0;
+  const trinket = registerItem({ id: 'river_trinket', name: 'Trinket', slot: 'trinket', type: 'trinket' });
+  addToInv(trinket);
+  const tree = {
+    start: { text: '', next: [ { label: 'Pay', costSlot: 'trinket', to: 'end' } ] },
+    end: { text: '' }
+  };
+  const dialog = { tree, node: 'start' };
+  const res = advanceDialog(dialog, 0);
+  assert.ok(res.success);
+  assert.ok(!player.inv.some(it => it.slot === 'trinket'));
+});
+
+test('advanceDialog honours reqSlot', () => {
+  player.inv.length = 0;
+  const token = registerItem({ id: 'fae_token', name: 'Fae Token', slot: 'trinket', type: 'trinket' });
+  const tree = {
+    start: { text: '', next: [ { label: 'Enter', reqSlot: 'trinket', success: 'ok', to: 'end' }, { label: 'Leave', to: 'end' } ] },
+    end: { text: '' }
+  };
+  let dialog = { tree, node: 'start' };
+  // Without item should fail
+  let res = advanceDialog(dialog, 0);
+  assert.ok(!res.success);
+  // With item should succeed
+  addToInv(token);
+  dialog = { tree, node: 'start' };
+  res = advanceDialog(dialog, 0);
+  assert.ok(res.success);
+  assert.ok(player.inv.some(it => it.slot === 'trinket'));
+});
+
 test('advanceDialog uses reqItem without consuming and allows goto', () => {
   player.inv.length = 0;
   const pass = registerItem({id:'pass',name:'Pass',type:'quest'});

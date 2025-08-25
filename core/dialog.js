@@ -147,7 +147,9 @@ function advanceDialog(stateObj, choiceIdx){
 
   if(choice.reqItem || choice.reqSlot){
     const requiredCount = choice.reqCount || 1;
-    const hasEnough = choice.reqItem ? countItems(choice.reqItem) >= requiredCount : hasItem(choice.reqSlot);
+    const hasEnough = choice.reqItem
+      ? countItems(choice.reqItem) >= requiredCount
+      : player.inv.some(it => it.slot === choice.reqSlot);
 
     if(!hasEnough){
       return finalize(choice.failure || 'You lack the required item.', false);
@@ -165,7 +167,9 @@ function advanceDialog(stateObj, choiceIdx){
 
   if(choice.costItem || choice.costSlot){
     const costCount = choice.costCount || 1;
-    const hasEnough = choice.costItem ? countItems(choice.costItem) >= costCount : hasItem(choice.costSlot);
+    const hasEnough = choice.costItem
+      ? countItems(choice.costItem) >= costCount
+      : player.inv.some(it => it.slot === choice.costSlot);
 
     if(!hasEnough){
       return finalize(choice.failure || 'You lack the required item.', false);
