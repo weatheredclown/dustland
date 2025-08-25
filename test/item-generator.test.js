@@ -35,3 +35,11 @@ test('generate uses updated tables', () => {
   assert.strictEqual(item.stats.power, 9);
   assert.strictEqual(item.scrap, 5);
 });
+
+test('oddity items include lore snippet', () => {
+  const vals = [0.95,0,0,0];
+  const rng = () => vals.shift() ?? 0;
+  const item = ItemGen.generate('rusted', rng);
+  assert.strictEqual(item.type, 'oddity');
+  assert.ok(ItemGen.oddityLore.includes(item.lore));
+});

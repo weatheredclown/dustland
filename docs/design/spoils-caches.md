@@ -52,6 +52,7 @@ Opening a cache triggers a generator that stitches gear on the fly:
 - [x] Define `SpoilsCache` item type and rank data structure.
 - [x] Implement drop roll tied to enemy `challenge` rating.
 - [x] Create modular item generator for type, name, and stats.
+- [ ] Expose tier weight configuration for modding.
 
 #### Phase 2: UI/UX
 - [x] Add cache icons and quick-open animations.
@@ -60,7 +61,8 @@ Opening a cache triggers a generator that stitches gear on the fly:
 #### Phase 3: Content & Balancing
 - [x] Populate adjective/noun pools for item names and tier stat tables.
  - [x] Tune `baseRate` and tier weights for different enemy challenges.
-- [ ] Author lore snippets for oddity items.
+- [x] Author lore snippets for oddity items.
+- [ ] Add affix or mini-quest hooks for Vaulted caches.
 
 #### Phase 4: Testing
 - [ ] Write tests to verify drop odds and tier distribution across challenge levels.
