@@ -261,6 +261,14 @@ function doAttack(dmg){
   if(target.hp<=0){
     log?.(`${target.name} is defeated!`);
     if(target.loot) addToInv?.(target.loot);
+    if(typeof SpoilsCache !== 'undefined'){
+      const cache = SpoilsCache.rollDrop?.(target.challenge);
+      if(cache){
+        const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
+        itemDrops?.push({ id: registered.id, map: party.map, x: party.x, y: party.y });
+        log?.(`The ground coughs up a ${registered.name}.`);
+      }
+    }
     if(target.npc) removeNPC(target.npc);
     combatState.enemies.shift();
     renderCombat();
