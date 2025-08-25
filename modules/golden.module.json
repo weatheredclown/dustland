@@ -2,10 +2,10 @@
   "seed": 1,
   "start": { "map": "world", "x": 7, "y": 7 },
   "items": [
-    { "id": "golden_coin", "name": "Golden Coin", "type": "quest" },
-    { "id": "thanks_medal", "name": "Thanks Medal", "type": "trinket", "slot": "trinket", "mods": { "LCK": 1 } },
-    { "id": "bonus_potion", "name": "Healing Potion", "type": "consumable", "use": { "type": "heal", "amount": 5 } },
-    { "map": "world", "x": 6, "y": 7, "id": "spare_potion", "name": "Spare Potion", "type": "consumable", "use": { "type": "heal", "amount": 5 } }
+    { "id": "golden_coin", "name": "Golden Coin", "type": "quest", "value": 1 },
+    { "id": "thanks_medal", "name": "Thanks Medal", "type": "trinket", "slot": "trinket", "mods": { "LCK": 1 }, "value": 10 },
+    { "id": "bonus_potion", "name": "Healing Potion", "type": "consumable", "use": { "type": "heal", "amount": 5 }, "value": 5 },
+    { "map": "world", "x": 6, "y": 7, "id": "spare_potion", "name": "Spare Potion", "type": "consumable", "use": { "type": "heal", "amount": 5 }, "value": 5 }
   ],
   "quests": [
     { "id": "q_fetch", "title": "Fetch the Coin", "desc": "Retrieve the coin from the cabin.", "item": "golden_coin", "reward": "thanks_medal", "xp": 2 }
@@ -89,7 +89,7 @@
     {
       "id": "bandit",
       "map": "world",
-      "x": 9,
+      "x": 12,
       "y": 8,
       "color": "#f66",
       "name": "Sneaky Bandit",
@@ -102,8 +102,8 @@
     {
       "id": "scout",
       "map": "world",
-      "x": 8,
-      "y": 7,
+      "x": 9,
+      "y": 6,
       "color": "#afa",
       "name": "Friendly Scout",
       "desc": "Offers to join your journey.",
@@ -121,12 +121,12 @@
     {
       "id": "trader",
       "map": "world",
-      "x": 8,
-      "y": 6,
+      "x": 5,
+      "y": 8,
       "color": "#caffc6",
       "name": "Traveling Trader",
       "desc": "Sells basic goods.",
-      "shop": true,
+      "shop": { "markup": 2, "inv": [ { "id": "bonus_potion" } ] },
       "tree": { "start": { "text": "Trade wares?", "choices": [ { "label": "(Leave)", "to": "bye" } ] } }
     },
     {
@@ -173,5 +173,5 @@
       "entryY": 3
     }
   ],
-  "buildings": [ { "x": 2, "y": 1, "interiorId": "cabin", "boarded": false } ]
+  "buildings": [ { "x": 10, "y": 9, "interiorId": "cabin", "boarded": false } ]
 }
