@@ -7,47 +7,51 @@ window.addEventListener('load', () => {
 });
 
 async function runBalanceTest() {
-  console.log('Running balance test...');
-  // Boot world and load the golden module
-  startWorld();
-  const modulePath = 'modules/golden.module.json';
-  const res = await fetch(modulePath);
-  const moduleData = await res.json();
-  applyModule(moduleData);
+  try {
+    console.log('Running balance test...');
+    // Boot world and load the golden module
+    startWorld();
+    console.log('Balance test checkpoint: world started');
+    const modulePath = 'modules/golden.module.json';
+    const res = await fetch(modulePath);
+    const moduleData = await res.json();
+    applyModule(moduleData);
+    console.log('Balance test checkpoint: module loaded');
 
-  // Create a party
-  party.push(makeMember('player1', 'Test Player', 'Wanderer'));
-  setLeader(0);
-  setPartyPos(2, 2);
-  setMap('world', 'Test');
+    // Create a party
+    party.push(makeMember('player1', 'Test Player', 'Wanderer'));
+    setLeader(0);
+    setPartyPos(2, 2);
+    setMap('world', 'Test');
+    console.log('Balance test checkpoint: party ready');
 
-  const agent = {
-    think: async () => {
-      // 1. Attack monsters
-      const nearbyMonster = findNearbyMonster();
-      if (nearbyMonster) {
-        const result = await startCombat(nearbyMonster);
-        if (result.result === 'loot') {
-          stats.monstersDefeated++;
-        } else if (result.result === 'bruise') {
-          stats.combatLost++;
+    const agent = {
+      think: async () => {
+        // 1. Attack monsters
+        const nearbyMonster = findNearbyMonster();
+        if (nearbyMonster) {
+          const result = await startCombat(nearbyMonster);
+          if (result.result === 'loot') {
+            stats.monstersDefeated++;
+          } else if (result.result === 'bruise') {
+            stats.combatLost++;
+          }
+          return;
         }
-        return;
-      }
 
-      // 2. Interact with NPCs
-      const nearbyNPC = findNearbyNPC();
-      if (nearbyNPC) {
-        interact();
-        return;
-      }
+        // 2. Interact with NPCs
+        const nearbyNPC = findNearbyNPC();
+        if (nearbyNPC) {
+          interact();
+          return;
+        }
 
-      // 3. Move randomly
-      const directions = ['up', 'down', 'left', 'right'];
-      const randomDirection = directions[Math.floor(Math.random() * directions.length)];
-      move(randomDirection);
-    }
-  };
+        // 3. Move randomly
+        const directions = ['up', 'down', 'left', 'right'];
+        const randomDirection = directions[Math.floor(Math.random() * directions.length)];
+        move(randomDirection);
+      }
+    };
 
   function findNearbyMonster() {
     const playerPos = { x: party[0].x, y: party[0].y };
@@ -97,18 +101,24 @@ async function runBalanceTest() {
     stats.questsCompleted++;
   });
 
-  let lastPartySize = party.length;
-  for (let i = 0; i < 100; i++) {
-    await agent.think();
-    if (party.length > lastPartySize) {
-      stats.partyMembersAdded += party.length - lastPartySize;
+    console.log('Balance test checkpoint: loop start');
+    let lastPartySize = party.length;
+    for (let i = 0; i < 100; i++) {
+      await agent.think();
+      if (party.length > lastPartySize) {
+        stats.partyMembersAdded += party.length - lastPartySize;
+      }
+      lastPartySize = party.length;
     }
-    lastPartySize = party.length;
-  }
+    console.log('Balance test checkpoint: loop end');
 
-  // Log the results to the page so puppeteer can grab them
-  const resultsEl = document.createElement('div');
-  resultsEl.id = 'results';
-  resultsEl.textContent = JSON.stringify(stats, null, 2);
-  document.body.appendChild(resultsEl);
+    // Log the results to the page so puppeteer can grab them
+    const resultsEl = document.createElement('div');
+    resultsEl.id = 'results';
+    resultsEl.textContent = JSON.stringify(stats, null, 2);
+    document.body.appendChild(resultsEl);
+  } catch (err) {
+    console.error('Balance test error:', err);
+    throw err;
+  }
 }

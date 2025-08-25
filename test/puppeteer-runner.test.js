@@ -26,12 +26,23 @@ if (puppeteer) {
     }
     const page = await browser.newPage();
 
-    const progress = { boot: false, play: false, results: false };
+    let lastCheckpoint = 'init';
+    const errors = [];
     page.on('console', msg => {
       const text = msg.text();
       console.log('PAGE LOG:', text);
-      if (text.includes('Balance tester agent loaded')) progress.boot = true;
-      if (text.includes('Running balance test')) progress.play = true;
+      if (msg.type() === 'error') errors.push(text);
+      if (text.includes('Balance tester agent loaded')) lastCheckpoint = 'boot';
+      else if (text.includes('Running balance test')) lastCheckpoint = 'play';
+      else if (text.startsWith('Balance test checkpoint: ')) {
+        lastCheckpoint = text.replace('Balance test checkpoint: ', '');
+      }
+    });
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+    page.on('error', err => {
+      errors.push(err.message);
     });
 
     const filePath = path.resolve(process.cwd(), 'balance-tester.html');
@@ -39,17 +50,14 @@ if (puppeteer) {
 
     try {
       await page.waitForSelector('#results', { timeout: 60000 });
-      progress.results = true;
+      lastCheckpoint = 'results';
       const results = await page.$eval('#results', el => el.textContent);
       console.log('Balance Test Results:');
       console.log(JSON.parse(results));
       assert.ok(results, 'Should have results');
     } catch {
-      let status = 'init';
-      if (progress.results) status = 'results';
-      else if (progress.play) status = 'play';
-      else if (progress.boot) status = 'boot';
-      assert.fail(`Balance test failed after 60s (last checkpoint: ${status})`);
+      const errorText = errors.length ? ` Errors: ${errors.join(' | ')}` : '';
+      assert.fail(`Balance test failed after 60s (last checkpoint: ${lastCheckpoint}).${errorText}`);
     } finally {
       await browser.close();
     }
