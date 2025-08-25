@@ -131,6 +131,8 @@ async function runBalanceTest() {
     let lastPartySize = party.length;
     const maxSteps = 5000;
     let steps = 0;
+    // Allow queued pathfinding and other async tasks to run between steps.
+    const macroyield = () => new Promise(r => setTimeout(r, 0));
 
     while (party[0].level < 5 && steps < maxSteps) {
       await agent.think();
@@ -139,6 +141,7 @@ async function runBalanceTest() {
       }
       lastPartySize = party.length;
       steps++;
+      await macroyield();
     }
     console.log('Balance test checkpoint: loop end');
 
