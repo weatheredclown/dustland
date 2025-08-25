@@ -8,7 +8,7 @@ test('balance tester does not load module picker', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const htmlPath = path.join(__dirname, '..', 'balance-tester.html');
   const html = fs.readFileSync(htmlPath, 'utf8');
-  const match = html.match(/<script>([\s\S]*?)<\/script>\s*<script defer src="\.\/balance-tester-agent.js"><\/script>/);
+  const match = html.match(/<script>([\s\S]*?)<\/script>\s*<script[^>]*src="\.\/balance-tester-agent.js"><\/script>/);
   assert.ok(match, 'inline script not found');
   const script = match[1];
   const appended = [];
