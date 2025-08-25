@@ -173,6 +173,28 @@ let camX=0, camY=0, showMini=true;
 let _lastTime=0;
 let bumpX=0, bumpY=0, bumpEnd=0;
 const sparkles=[];
+const soundSources = [];
+let lastChimeTime = 0;
+
+function playWindChime(x, y) {
+  if (!audioEnabled || Date.now() - lastChimeTime < 500) return;
+  lastChimeTime = Date.now();
+  const dx = party.x - x;
+  const dy = party.y - y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist > 10) return;
+
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = 'sine';
+  o.frequency.value = 1200 + Math.random() * 200;
+  o.connect(g);
+  g.connect(audioCtx.destination);
+  g.gain.value = (1 - dist / 10) * 0.2;
+  o.start();
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+  o.stop(audioCtx.currentTime + 0.5);
+}
 
 function footstepBump(){
   bumpX = (Math.random()-0.5)*2;
@@ -195,6 +217,15 @@ function draw(t){
   dctx.globalAlpha=0.20; dctx.drawImage(prev, 1 + bx, by);
   dctx.globalAlpha=0.2; dctx.drawImage(scene, bx, by);
   pctx.clearRect(0,0,prev.width,prev.height); pctx.drawImage(scene,0,0);
+
+  if (state.mapFlags && state.mapFlags.dustStorm) {
+    for (const source of soundSources) {
+      if (source.map === state.map) {
+        playWindChime(source.x, source.y);
+      }
+    }
+  }
+
   requestAnimationFrame(draw);
 }
 
