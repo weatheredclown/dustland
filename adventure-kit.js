@@ -2735,5 +2735,4 @@ if (document && typeof document.addEventListener === 'function') {
   });
 }
 
-document.getElementById('playtestFloat').onclick =
-  () => document.getElementById('playtest')?.click();
+document.getElementById('playtestFloat')?.addEventListener('click', playtestModule);
