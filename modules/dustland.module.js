@@ -125,6 +125,14 @@ const DUSTLAND_MODULE = (() => {
           text: 'Kesh unlocks the chain. “Off you go.”',
           choices: [ { label: '(Continue)', to: 'bye', goto: { map: 'world', x: 2, y: midY } } ]
         }
+      },
+      processNode(node) {
+        if (node === 'start') {
+          const monsterAlive = NPCS.some(n => n.id === 'hall_rotwalker');
+          this.tree.start.text = monsterAlive
+            ? 'Caretaker Kesh eyes the chained exit. "There\'s a rotwalker at the top of the hall. Killing it would be a good test."'
+            : 'Caretaker Kesh eyes the chained exit.';
+        }
       }
     },
     {
@@ -163,6 +171,18 @@ const DUSTLAND_MODULE = (() => {
       desc: 'A drifter muttering to themselves.',
       portraitSheet: 'assets/portraits/drifter_4.png',
       tree: { start: { text: '"Dust gets in everything."', choices: [ { label: '(Nod)', to: 'bye' } ] } }
+    },
+    {
+      id: 'hall_rotwalker',
+      map: 'hall',
+      x: hall.entryX,
+      y: 2,
+      color: '#f88',
+      name: 'Rotwalker',
+      title: 'Test Monster',
+      desc: 'A shambler posted here for practice.',
+      tree: { start: { text: 'A rotwalker lurches at you.' } },
+      combat: { HP: 6, ATK: 1, loot: 'water_flask', auto: true }
     },
     {
       id: 'road_sign',
