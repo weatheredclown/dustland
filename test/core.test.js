@@ -1178,3 +1178,33 @@ test('no encounters occur on roads', () => {
   Math.random = origRand;
   assert.ok(!started);
 });
+
+test('grin recruitment can be retried after failure', () => {
+  NPCS.length = 0;
+  party.length = 0;
+  const hero = new Character('h', 'Hero', 'Leader');
+  party.push(hero);
+  const tree = {
+    start: { text: '', choices: [ { label: '(Recruit) Join me.', to: 'rec' }, { label: '(Leave)', to: 'bye' } ] },
+    rec: {
+      text: 'Convince me. Or pay me.',
+      choices: [
+        { label: '(CHA) Talk up the score', check: { stat: 'CHA', dc: DC.TALK }, failure: 'No deal.', join: { id: 'grin', name: 'Grin', role: 'Scavenger' } }
+      ]
+    },
+    bye: { text: '' }
+  };
+  const grin = makeNPC('grin', 'world', 0, 0, '#fff', 'Grin', '', '', tree);
+  const origRand = Math.random;
+  Math.random = () => 0;
+  openDialog(grin);
+  // start -> rec
+  choicesEl.children[0].onclick();
+  // rec -> failure (adds continue button)
+  choicesEl.children[0].onclick();
+  // close dialog
+  choicesEl.children[0].onclick();
+  Math.random = origRand;
+  openDialog(grin);
+  assert.strictEqual(choicesEl.children[0].textContent, '(Recruit) Join me.');
+});
