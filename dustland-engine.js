@@ -80,6 +80,8 @@ function setMobileControls(on){
       const mobileMove=(dx,dy,key)=>{
         if(overlay?.classList?.contains('shown')){
           handleDialogKey?.({ key });
+        }else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
+          handleCombatKey?.({ key });
         }else{
           move(dx,dy);
         }
