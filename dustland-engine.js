@@ -554,6 +554,9 @@ function openShop(npc) {
   const shopSell = document.getElementById('shopSell');
 
   if (!npc.shop) return;
+  if (npc.shop === true) npc.shop = {};
+  npc.shop.inv = npc.shop.inv || [];
+  npc.shop.markup = npc.shop.markup || 2;
 
   shopName.textContent = npc.name;
 
