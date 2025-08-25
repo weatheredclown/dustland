@@ -88,7 +88,13 @@ function processQuestFlag(c){
 
 function joinParty(join){
   if(!join) return;
-  const m=makeMember(join.id, join.name, join.role);
+  const opts = {};
+  if(join.portraitSheet){
+    opts.portraitSheet = join.portraitSheet;
+  } else if(currentNPC?.portraitSheet){
+    opts.portraitSheet = currentNPC.portraitSheet;
+  }
+  const m=makeMember(join.id, join.name, join.role, opts);
   if(addPartyMember(m)){
     removeNPC(currentNPC);
   }

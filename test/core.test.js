@@ -689,6 +689,15 @@ test('setPortraitDiv uses full image when not sprite sheet', () => {
   assert.strictEqual(el.style.backgroundSize, '100% 100%');
 });
 
+test('joinParty copies current NPC portraitSheet', () => {
+  party.length = 0;
+  NPCS.length = 0;
+  currentNPC = { id: 'j', name: 'Joker', portraitSheet: 'assets/portraits/portrait_1000.png' };
+  joinParty({ id: 'j', name: 'Joker', role: 'Trickster' });
+  assert.strictEqual(party[0].portraitSheet, 'assets/portraits/portrait_1000.png');
+  currentNPC = null;
+});
+
 test('clamp swaps reversed bounds', () => {
   assert.strictEqual(clamp(5, 10, 0), 5);
 });
