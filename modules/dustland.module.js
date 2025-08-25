@@ -37,6 +37,13 @@ const DUSTLAND_MODULE = (() => {
     { map: 'hall', x: hall.entryX - 1, y: hall.entryY, events:[{ when:'enter', effect:'toast', msg:'You smell rot.' }] }
   ];
 
+  const encounters = {
+    world: [
+      { name: 'Rotwalker', HP: 6, DEF: 1, loot: 'water_flask' },
+      { name: 'Scavenger', HP: 5, DEF: 0, loot: 'raider_knife' }
+    ]
+  };
+
   const items = [
     { id: 'rusted_key', name: 'Rusted Key', type: 'quest', tags: ['key'] },
     { id: 'toolkit', name: 'Toolkit', type: 'quest', tags: ['tool'] },
@@ -650,6 +657,7 @@ const DUSTLAND_MODULE = (() => {
     quests,
     npcs,
     events,
+    encounters,
     interiors: [hall],
     buildings: []
   };

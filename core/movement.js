@@ -171,6 +171,7 @@ function move(dx,dy){
         onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
         centerCamera(party.x,party.y,state.map); updateHUD();
         checkAggro();
+        checkRandomEncounter();
         EventBus.emit('sfx','step');
         // NPCs advance along paths after the player steps
         if(typeof tickPathAI==='function') tickPathAI();
@@ -193,6 +194,36 @@ function checkAggro(){
       Actions.startCombat({ ...n.combat, npc:n, name:n.name });
       break;
     }
+  }
+}
+function distanceToRoad(x, y, map=state.map){
+  const {W,H} = mapWH(map);
+  const seen = new Set([x+','+y]);
+  const q = [[x,y,0]];
+  const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+  while(q.length){
+    const [cx,cy,d] = q.shift();
+    const t = getTile(map,cx,cy);
+    if(t === TILE.ROAD) return d;
+    for(const [dx,dy] of dirs){
+      const nx=cx+dx, ny=cy+dy, k=nx+','+ny;
+      if(nx>=0 && ny>=0 && nx<W && ny<H && !seen.has(k)){
+        seen.add(k);
+        q.push([nx,ny,d+1]);
+      }
+    }
+  }
+  return 999;
+}
+function checkRandomEncounter(){
+  const bank = enemyBanks[state.map];
+  if(!bank || !bank.length) return;
+  const dist = distanceToRoad(party.x, party.y);
+  if(dist<=0) return;
+  const chance = Math.min(dist * 0.02, 0.5);
+  if(Math.random() < chance){
+    const def = bank[Math.floor(Math.random()*bank.length)];
+    Actions.startCombat(def);
   }
 }
 function adjacentNPC(){
@@ -329,5 +360,7 @@ Object.assign(globalThis, {
   onEnter,
   buffs,
   calcMoveDelay,
-  getMoveDelay: () => moveDelay
+  getMoveDelay: () => moveDelay,
+  checkRandomEncounter,
+  distanceToRoad
 });

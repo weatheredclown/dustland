@@ -190,9 +190,9 @@ loopMinus.addEventListener('click', () => {
   showLoopControls(null);
 });
 
-const moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
+const moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], encounters: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
-let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1;
+let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editEncounterIdx = -1;
 let treeData = {};
 let selectedObj = null;
 const intCanvas = document.getElementById('intCanvas');
@@ -584,6 +584,7 @@ function regenWorld() {
   renderBldgList();
   renderEventList();
   renderPortalList();
+  renderEncounterList();
   drawWorld();
 }
 
@@ -601,6 +602,7 @@ function clearWorld() {
     moduleData.interiors = [];
     moduleData.portals = [];
     moduleData.events = [];
+    moduleData.encounters = [];
     buildings.length = 0;
     portals.length = 0;
     globalThis.interiors = {};
@@ -612,6 +614,7 @@ function clearWorld() {
     renderInteriorList();
     renderEventList();
     renderPortalList();
+    renderEncounterList();
     drawWorld();
   });
 }
@@ -1521,6 +1524,66 @@ function deleteItem() {
   showItemEditor(false);
 }
 
+// --- Encounters ---
+function showEncounterEditor(show){
+  document.getElementById('encounterEditor').style.display = show ? 'block' : 'none';
+}
+function startNewEncounter(){
+  editEncounterIdx = -1;
+  document.getElementById('encMap').value = 'world';
+  document.getElementById('encName').value = '';
+  document.getElementById('encHP').value = 5;
+  document.getElementById('encDEF').value = 0;
+  document.getElementById('encLoot').value = '';
+  document.getElementById('addEncounter').textContent = 'Add Enemy';
+  document.getElementById('delEncounter').style.display = 'none';
+  showEncounterEditor(true);
+}
+function collectEncounter(){
+  const map = document.getElementById('encMap').value.trim() || 'world';
+  const name = document.getElementById('encName').value.trim() || 'Enemy';
+  const HP = parseInt(document.getElementById('encHP').value,10) || 1;
+  const DEF = parseInt(document.getElementById('encDEF').value,10) || 0;
+  const loot = document.getElementById('encLoot').value.trim();
+  return { map, name, HP, DEF, loot };
+}
+function addEncounter(){
+  const entry = collectEncounter();
+  if(editEncounterIdx >= 0){ moduleData.encounters[editEncounterIdx] = entry; }
+  else moduleData.encounters.push(entry);
+  editEncounterIdx = -1;
+  document.getElementById('addEncounter').textContent = 'Add Enemy';
+  document.getElementById('delEncounter').style.display = 'none';
+  renderEncounterList();
+  showEncounterEditor(false);
+}
+function editEncounter(i){
+  const e = moduleData.encounters[i];
+  editEncounterIdx = i;
+  document.getElementById('encMap').value = e.map;
+  document.getElementById('encName').value = e.name;
+  document.getElementById('encHP').value = e.HP || 1;
+  document.getElementById('encDEF').value = e.DEF || 0;
+  document.getElementById('encLoot').value = e.loot || '';
+  document.getElementById('addEncounter').textContent = 'Update Enemy';
+  document.getElementById('delEncounter').style.display = 'block';
+  showEncounterEditor(true);
+}
+function renderEncounterList(){
+  const list = document.getElementById('encounterList');
+  list.innerHTML = moduleData.encounters.map((e,i)=>`<div data-idx="${i}">${e.map}: ${e.name}</div>`).join('');
+  Array.from(list.children).forEach(div => div.onclick = () => editEncounter(parseInt(div.dataset.idx,10)));
+}
+function deleteEncounter(){
+  if(editEncounterIdx < 0) return;
+  moduleData.encounters.splice(editEncounterIdx,1);
+  editEncounterIdx = -1;
+  document.getElementById('addEncounter').textContent = 'Add Enemy';
+  document.getElementById('delEncounter').style.display = 'none';
+  renderEncounterList();
+  showEncounterEditor(false);
+}
+
 // --- Tile Events ---
 function showEventEditor(show) {
   document.getElementById('eventEditor').style.display = show ? 'block' : 'none';
@@ -2123,6 +2186,12 @@ function applyLoadedModule(data) {
   });
   moduleData.portals = data.portals || [];
   moduleData.events = data.events || [];
+  moduleData.encounters = [];
+  if (data.encounters) {
+    Object.entries(data.encounters).forEach(([map, list]) => {
+      list.forEach(e => moduleData.encounters.push({ map, name: e.name, HP: e.HP, DEF: e.DEF, loot: e.loot }));
+    });
+  }
   moduleData.start = data.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   document.getElementById('moduleName').value = moduleData.name;
   globalThis.interiors = {};
@@ -2154,6 +2223,7 @@ function applyLoadedModule(data) {
   renderPortalList();
   renderQuestList();
   renderEventList();
+  renderEncounterList();
   updateQuestOptions();
   loadMods({});
   showItemEditor(false);
@@ -2179,7 +2249,11 @@ function saveModule() {
   moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
   const bldgs = buildings.map(({ under, ...rest }) => rest);
   const ints = moduleData.interiors.map(I => ({...I, grid: gridToEmoji(I.grid)}));
-  const data = { ...moduleData, world: gridToEmoji(world), buildings: bldgs, interiors: ints };
+  const enc = {};
+  (moduleData.encounters||[]).forEach(e => {
+    (enc[e.map] ||= []).push({ name: e.name, HP: e.HP, DEF: e.DEF, loot: e.loot });
+  });
+  const data = { ...moduleData, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -2192,7 +2266,11 @@ function playtestModule() {
   moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
   const bldgs = buildings.map(({ under, ...rest }) => rest);
   const ints = moduleData.interiors.map(I => ({...I, grid: gridToEmoji(I.grid)}));
-  const data = { ...moduleData, world: gridToEmoji(world), buildings: bldgs, interiors: ints };
+  const enc = {};
+  (moduleData.encounters||[]).forEach(e => {
+    (enc[e.map] ||= []).push({ name: e.name, HP: e.HP, DEF: e.DEF, loot: e.loot });
+  });
+  const data = { ...moduleData, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints };
   localStorage.setItem(PLAYTEST_KEY, JSON.stringify(data));
   window.open('dustland.html?ack-player=1#play', '_blank');
 }
@@ -2215,6 +2293,11 @@ document.getElementById('addPortal').onclick = addPortal;
 document.getElementById('newPortal').onclick = startNewPortal;
 document.getElementById('delNPC').onclick = deleteNPC;
 document.getElementById('closeNPC').onclick = closeNPCEditor;
+document.getElementById('newEncounter').onclick = startNewEncounter;
+document.getElementById('addEncounter').onclick = addEncounter;
+document.getElementById('cancelEncounter').onclick = () => { editEncounterIdx = -1; showEncounterEditor(false); };
+document.getElementById('delEncounter').onclick = deleteEncounter;
+document.getElementById('closeEncounter').onclick = () => showEncounterEditor(false);
 document.getElementById('npcPrevP').onclick = () => {
   npcPortraitIndex = (npcPortraitIndex + npcPortraits.length - 1) % npcPortraits.length;
   setNpcPortrait();

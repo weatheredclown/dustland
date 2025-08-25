@@ -318,6 +318,7 @@
         <button class="tab2" type="button" data-tab="portals" role="tab" aria-selected="false">Portals</button>
         <button class="tab2" type="button" data-tab="quests" role="tab" aria-selected="false">Quests</button>
         <button class="tab2" type="button" data-tab="events" role="tab" aria-selected="false">Events</button>
+        <button class="tab2" type="button" data-tab="encounters" role="tab" aria-selected="false">Encounters</button>
       </div>
       <div class="tabpanes">
         <fieldset class="card" id="npcCard" data-pane="npc">
@@ -518,6 +519,22 @@
           </div>
           <button class="btn" id="addEvent">Add Event</button>
           <button class="btn" id="delEvent" style="display:none">Delete Event</button>
+        </div>
+      </fieldset>
+      <fieldset class="card" id="encounterCard" data-pane="encounters" style="display:none">
+        <legend>Encounters</legend>
+        <div class="list" id="encounterList"></div>
+        <button class="btn" type="button" id="newEncounter">+ Enemy</button>
+        <div id="encounterEditor" style="display:none">
+          <label>Map<input id="encMap" value="world" /></label>
+          <label>Name<input id="encName" /></label>
+          <label>HP<input id="encHP" type="number" min="1" value="5" /></label>
+          <label>DEF<input id="encDEF" type="number" min="0" value="0" /></label>
+          <label>Loot<input id="encLoot" /></label>
+          <button class="btn" id="addEncounter">Add Enemy</button>
+          <button class="btn" type="button" id="cancelEncounter" style="display:none">Cancel</button>
+          <button class="btn" id="delEncounter" style="display:none">Delete Enemy</button>
+          <button class="btn" type="button" id="closeEncounter">Done</button>
         </div>
       </fieldset>
       </div><!-- /.tabpanes -->
