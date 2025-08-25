@@ -463,9 +463,16 @@ function renderParty(){
     p.innerHTML='<div class="pcard muted">(no party members yet)</div>';
     return;
   }
+  const selectMember=idx=>{
+    selectedMember=idx;
+    p.querySelectorAll('.pcard').forEach((card,j)=>{
+      card.classList.toggle('selected', j===selectedMember);
+    });
+  };
   party.forEach((m,i)=>{
     const c=document.createElement('div');
     c.className='pcard'+(i===selectedMember?' selected':'');
+    c.tabIndex=0;
     const bonus=m._bonus||{};
     const fmt=v=> (v>0? '+'+v : v);
     const wLabel=m.equip.weapon?(m.equip.weapon.cursed&&m.equip.weapon.cursedKnown?m.equip.weapon.name+' (cursed)':m.equip.weapon.name):'—';
@@ -479,9 +486,9 @@ function renderParty(){
 <div class='row small'>${statLine(m.stats)}</div>
 <div class='row'>HP ${m.hp}/${m.maxHp}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div>
 <div class='row'><div class='xpbar' data-xp='${m.xp}/${nextXP}'><div class='fill' style='width:${pct}%'></div></div></div>
-<div class='row small'>WPN: ${wLabel}${m.equip.weapon?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${m.equip.armor?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${m.equip.trinket?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div>
-<div class='row'><label><input type='radio' name='selMember' ${i===selectedMember?'checked':''}> Selected</label></div>`;
-    c.querySelector('input').onchange=()=>{ selectedMember=i; };
+<div class='row small'>WPN: ${wLabel}${m.equip.weapon?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${m.equip.armor?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${m.equip.trinket?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div>`;
+    c.onclick=()=>selectMember(i);
+    c.onfocus=()=>selectMember(i);
     c.querySelectorAll('button[data-a="unequip"]').forEach(b=>{
       const sl=b.dataset.slot;
       b.onclick=()=> unequipItem(i,sl);

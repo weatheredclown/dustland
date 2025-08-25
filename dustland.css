@@ -190,7 +190,8 @@
         border: 1px solid #273027;
         border-radius: 8px;
         background: #0f120f;
-        padding: 8px
+        padding: 8px;
+        cursor: pointer
     }
     .pcard.selected {
         box-shadow: 0 0 0 2px #8bd98d;
