@@ -185,7 +185,7 @@ const WORLD_W=120, WORLD_H=90;
 let world = [], interiors = {}, buildings = [], portals = [];
 const tileEvents = [];
 function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
-const state = { map:'world' }; // default map
+const state = { map:'world', mapFlags: {} }; // default map
 const player = { hp:10, ap:2, inv:[], scrap:0 };
 if (typeof registerItem === 'function') {
   registerItem({
@@ -712,6 +712,7 @@ if (creator?.addEventListener) creator.addEventListener('keydown', e => {
 
 function startGame(){
   startWorld();
+  applyModule(MARA_PUZZLE, { fullReset: false });
 }
 
 function startWorld(){
