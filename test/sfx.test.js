@@ -49,16 +49,22 @@ async function setup(playImpl = () => Promise.resolve()) {
   window.HTMLCanvasElement.prototype.getContext = () => dummyCtx;
   window.AudioContext = class { suspend() {} resume() {} };
   let plays = 0;
+  const audios = [];
   global.Audio = class {
-    constructor(src){ this.src = src; }
+    constructor(src){ this.src = src; this.isPlaying = false; audios.push(this); }
     cloneNode(){ return new Audio(this.src); }
-    play(){ plays++; return playImpl(); }
-    pause(){}
+    play(){ plays++; this.isPlaying = true; return playImpl(); }
+    pause(){ this.isPlaying = false; }
   };
   global.EventBus = { on: (evt, fn) => { if (evt === 'sfx') global._playSfx = fn; } };
-  await import(new URL('../dustland-engine.js', import.meta.url));
+  await import(new URL('../dustland-engine.js?' + Math.random(), import.meta.url));
   const cleanup = () => dom.window.close();
-  return { cleanup, getPlays: () => plays };
+  return {
+    cleanup,
+    getPlays: () => plays,
+    getPlaying: () => audios.filter(a => a.isPlaying).length,
+    getAudioCount: () => audios.length,
+  };
 }
 
 test('playSfx handles aborted play without unhandled rejection', async () => {
@@ -78,5 +84,13 @@ test('toggleAudio prevents playback', async () => {
   toggleAudio();
   global._playSfx('step');
   assert.strictEqual(getPlays(), 0);
+  cleanup();
+});
+
+test('playSfx reuses a pool of five audio elements', async () => {
+  const { cleanup, getAudioCount, getPlays } = await setup();
+  for (let i = 0; i < 7; i++) global._playSfx('step');
+  assert.strictEqual(getPlays(), 7);
+  assert.strictEqual(getAudioCount(), 6);
   cleanup();
 });
