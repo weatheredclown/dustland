@@ -170,5 +170,11 @@ function trainStat(stat, memberIndex = selectedMember){
   return true;
 }
 
-const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, applyCombatMods, leader, setLeader, respec, trainStat, selectedMember, xpCurve };
+function healParty(){
+  (party||[]).forEach(m=>{ m.hp = m.maxHp; m.adr = 0; });
+  player.hp = party[0] ? party[0].hp : player.hp;
+  renderParty?.(); updateHUD?.();
+}
+
+const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, applyCombatMods, leader, setLeader, respec, trainStat, healParty, selectedMember, xpCurve };
 Object.assign(globalThis, partyExports);

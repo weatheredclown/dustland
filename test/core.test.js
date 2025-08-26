@@ -117,7 +117,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, makeInteriorRoom, placeHut, TILE, getTile, calcMoveDelay, getMoveDelay, buildings, world } = globalThis;
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, findFreeDropTile, canWalk, move, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, makeInteriorRoom, placeHut, TILE, getTile, calcMoveDelay, getMoveDelay, healParty, buildings, world } = globalThis;
 let interiors = globalThis.interiors;
 
 // Stub out globals used by equipment functions
@@ -1104,7 +1104,7 @@ test('special menu lists class ability', async () => {
   await resultPromise;
 });
 
-test('openCombat resets adrenaline for party members', async () => {
+test('openCombat preserves adrenaline for party members', async () => {
   party.length = 0;
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role');
@@ -1112,10 +1112,32 @@ test('openCombat resets adrenaline for party members', async () => {
   m1.maxAdr = 150;
   party.addMember(m1);
   const resultPromise = openCombat([{ name:'E1', hp:1 }]);
-  assert.strictEqual(party[0].adr, 0);
+  assert.strictEqual(party[0].adr, 50);
   handleCombatKey({ key:'Enter' });
   const res = await resultPromise;
   assert.strictEqual(res.result, 'loot');
+});
+
+test('adrenaline cools when walking at full health', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  m1.adr = 20;
+  party.addMember(m1);
+  await move(1,0);
+  assert.strictEqual(m1.adr, 18);
+});
+
+test('healParty restores HP and clears adrenaline', () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  m1.hp = 5;
+  m1.adr = 30;
+  party.addMember(m1);
+  healParty();
+  assert.strictEqual(m1.hp, m1.maxHp);
+  assert.strictEqual(m1.adr, 0);
 });
 
 test('startCombat forwards portraitSheet', async () => {

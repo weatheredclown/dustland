@@ -166,6 +166,11 @@ function move(dx,dy){
           actor.hp = Math.min(actor.hp + 1, actor.maxHp);
           player.hp = actor.hp;
         }
+        (party||[]).forEach(m=>{
+          if(m.hp >= m.maxHp){
+            m.adr = Math.max(0, (m.adr||0) - 2);
+          }
+        });
         setPartyPos(nx, ny);
         if(typeof footstepBump==='function') footstepBump();
         onEnter(state.map, nx, ny, { player, party, state, actor, buffs });

@@ -15,6 +15,8 @@ This creates a simple, aggressive loop:
 
 Sitting back and playing defensively is a losing strategy. The player who isn't actively generating Adrenaline is a player who isn't using their best tools.
 
+Adrenaline persists between encounters, gently cooling when a character is at full health. A full rest that restores the whole party immediately clears any stored Adrenaline.
+
 > **Clown:** I'm into the forward momentum, but we should confirm the Adrenaline bar doesn't crowd the HUD. Let's prototype it with placeholder art before committing. When it's full, it could arc with energy. When you use a Special, it slams down, then starts building again. The UI itself should feel energetic.
 
 ### Specials: High Risk, High Reward
