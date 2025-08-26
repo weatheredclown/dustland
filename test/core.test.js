@@ -1275,3 +1275,16 @@ test('grin recruitment offers persuade or pay options after recruiting', () => {
   assert.ok(labels.includes('(Pay) Give 1 trinket as hire bonus'));
   closeDialog();
 });
+test('basic attacks generate adrenaline from weapon stats', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  m1.equip.weapon = { mods: { ADR: 20 } };
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name:'E1', hp:2 }]);
+  handleCombatKey({ key:'Enter' });
+  assert.strictEqual(party[0].adr, 20);
+  handleCombatKey({ key:'Enter' });
+  const res = await resultPromise;
+  assert.strictEqual(res.result, 'loot');
+});

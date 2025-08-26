@@ -47,11 +47,11 @@ const DUSTLAND_MODULE = (() => {
   const items = [
     { id: 'rusted_key', name: 'Rusted Key', type: 'quest', tags: ['key'] },
     { id: 'toolkit', name: 'Toolkit', type: 'quest', tags: ['tool'] },
-    { map: 'world', x: 8, y: midY, id: 'pipe_rifle', name: 'Pipe Rifle', type: 'weapon', slot: 'weapon', mods: { ATK: 2 } },
+    { map: 'world', x: 8, y: midY, id: 'pipe_rifle', name: 'Pipe Rifle', type: 'weapon', slot: 'weapon', mods: { ATK: 2, ADR: 15 } },
     { map: 'world', x: 10, y: midY, id: 'leather_jacket', name: 'Leather Jacket', type: 'armor', slot: 'armor', mods: { DEF: 1 } },
     { map: 'world', x: 12, y: midY, id: 'lucky_bottlecap', name: 'Lucky Bottlecap', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } },
-    { map: 'world', x: 28, y: midY - 4, id: 'crowbar', name: 'Crowbar', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } },
-    { map: 'world', x: 35, y: midY + 6, id: 'rebar_club', name: 'Rebar Club', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } },
+    { map: 'world', x: 28, y: midY - 4, id: 'crowbar', name: 'Crowbar', type: 'weapon', slot: 'weapon', mods: { ATK: 1, ADR: 10 } },
+    { map: 'world', x: 35, y: midY + 6, id: 'rebar_club', name: 'Rebar Club', type: 'weapon', slot: 'weapon', mods: { ATK: 1, ADR: 10 } },
     { map: 'world', x: 52, y: midY - 3, id: 'kevlar_scrap_vest', name: 'Kevlar Scrap Vest', type: 'armor', slot: 'armor', mods: { DEF: 2 } },
     { map: 'world', x: 67, y: midY + 5, id: 'goggles', name: 'Goggles', type: 'trinket', slot: 'trinket', mods: { PER: 1 } },
     { map: 'world', x: 83, y: midY - 2, id: 'wrench', name: 'Wrench', type: 'trinket', slot: 'trinket', mods: { INT: 1 } },
@@ -61,7 +61,7 @@ const DUSTLAND_MODULE = (() => {
     { map: 'world', x: 18, y: midY - 2, id: 'valve', name: 'Valve', type: 'quest' },
     { map: 'world', x: 26, y: midY + 3, id: 'lost_satchel', name: 'Lost Satchel', type: 'quest' },
     { map: 'world', x: 60, y: midY - 1, id: 'rust_idol', name: 'Rust Idol', type: 'quest', tags: ['idol'] },
-    { id: 'raider_knife', name: 'Raider Knife', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } }
+    { id: 'raider_knife', name: 'Raider Knife', type: 'weapon', slot: 'weapon', mods: { ATK: 1, ADR: 10 } }
   ];
 
   const quests = [

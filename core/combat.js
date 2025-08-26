@@ -259,6 +259,9 @@ function doAttack(dmg){
   const attacker=party[combatState.active];
   const target=combatState.enemies[0];
   target.hp-=dmg;
+  const weapon=attacker.equip?.weapon;
+  const gain=weapon?.mods?.ADR ?? 10;
+  attacker.adr=Math.min(attacker.maxAdr||100, attacker.adr+gain);
   log?.(`${attacker.name} hits ${target.name} for ${dmg} damage.`);
   if(target.hp<=0){
     log?.(`${target.name} is defeated!`);
