@@ -271,6 +271,20 @@ test('applyModule assigns NPC loops', () => {
   assert.deepStrictEqual(NPCS[0].loop, [{x:0,y:0},{x:1,y:0}]);
 });
 
+test('applyModule reports successful load', () => {
+  const logs = [];
+  const origLog = global.log;
+  const origDispatch = global.document.dispatchEvent;
+  const events = [];
+  global.log = m => logs.push(m);
+  global.document.dispatchEvent = e => events.push(e.type);
+  applyModule({ world: [[7]], name: 'testmod' });
+  global.log = origLog;
+  global.document.dispatchEvent = origDispatch;
+  assert.ok(logs.some(l => /loaded successfully/i.test(l)));
+  assert.ok(events.includes('moduleLoaded'));
+});
+
 test('applyModule removes random huts when module supplies buildings', () => {
   world.length = 0;
   for (let y = 0; y < 10; y++) world.push(Array(10).fill(TILE.SAND));
