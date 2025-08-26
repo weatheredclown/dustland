@@ -10,11 +10,18 @@ test('generator creates item with type, name, and stats', () => {
   const vals = [0,0,0,0];
   const rng = () => vals.shift() ?? 0;
   const item = ItemGen.generate('sealed', rng);
+  assert.ok(item.id);
   assert.strictEqual(item.type, 'weapon');
   assert.strictEqual(item.name, 'Grit-Stitched Repeater');
   assert.strictEqual(item.rank, 'sealed');
   assert.ok(item.stats.power >= 3 && item.stats.power <= 5);
   assert.strictEqual(item.scrap, Math.round(item.stats.power / 2));
+});
+
+test('generated items have unique ids', () => {
+  const a = ItemGen.generate('rusted', () => 0);
+  const b = ItemGen.generate('rusted', () => 0);
+  assert.notStrictEqual(a.id, b.id);
 });
 
 test('higher rank yields higher power', () => {
