@@ -1316,7 +1316,7 @@ test('basic attacks generate adrenaline from weapon stats', async () => {
   party.addMember(m1);
   const resultPromise = openCombat([{ name:'E1', hp:2 }]);
   handleCombatKey({ key:'Enter' });
-  assert.strictEqual(party[0].adr, 20);
+  assert.strictEqual(party[0].adr, 5);
   handleCombatKey({ key:'Enter' });
   const res = await resultPromise;
   assert.strictEqual(res.result, 'loot');
@@ -1332,7 +1332,7 @@ test('equipment modifiers apply at battle start', async () => {
   const resultPromise = openCombat([{ name: 'E1', hp: 2 }]);
   assert.strictEqual(m1.special.length, 1);
   handleCombatKey({ key: 'Enter' });
-  assert.strictEqual(m1.adr, 20);
+  assert.strictEqual(m1.adr, 5);
   handleCombatKey({ key: 'Enter' });
   await resultPromise;
 });

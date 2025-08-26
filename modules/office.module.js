@@ -590,11 +590,19 @@ startGame = function () {
       slot: 'trinket',
       mods: { LCK: 1 }
     });
+    const stim = registerItem({
+      id: 'adrenaline_charm',
+      name: 'Adrenaline Charm',
+      type: 'trinket',
+      slot: 'trinket',
+      mods: { adrenaline_gen_mod: 2 }
+    });
     if (castleId && interiors[castleId]) {
       const interior = interiors[castleId];
       const ix = Math.floor(interior.w / 2);
       const iy = Math.floor(interior.h / 2);
       itemDrops.push({ id: charm.id, map: castleId, x: ix, y: iy });
+      itemDrops.push({ id: stim.id, map: castleId, x: ix + 1, y: iy });
     }
     const s = OFFICE_MODULE.start;
     setPartyPos(s.x, s.y);

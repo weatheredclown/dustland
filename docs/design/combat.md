@@ -40,7 +40,7 @@ Equipment isn't just about bigger numbers. It's about changing *how* you fight.
 
 *   **Weapons:** Determine your basic attack speed, damage, and Adrenaline generation rate. A heavy hammer might generate more Adrenaline per hit, but a quick knife lets you build it faster with rapid strikes. Some rare weapons might even come with a unique Special move.
 *   **Armor:** Provides damage resistance, but can also have passive combat effects. A "Scavenger's Rig" might grant a small amount of Adrenaline at the start of combat. A "Juggernaut Plate" could make you immune to being interrupted while using a Special.
-*   **Gadgets (Accessories):** This is where things get wild. A "Stim-Pack" gadget could allow you to convert HP into Adrenaline in an emergency. A "Targeting Visor" could increase the critical hit chance of your specials.
+*   **Gadgets (Accessories):** This is where things get wild. A "Stim-Pack" gadget could allow you to convert HP into Adrenaline in an emergency. A "Targeting Visor" could increase the critical hit chance of your specials. An "Adrenaline Charm" might double the rate at which Adrenaline builds.
 
 > **Gizmo:** The data structures for this need to be clean. An item should just have a `modifiers` object. For example: `{"adrenaline_gen_mod": 1.2, "granted_special": "CLEAVE"}`. The combat system just iterates through the equipped items and applies the modifiers at the start of a fight. This makes it incredibly easy for us, and for modders, to add new gear, but we'll need profiling to ensure modifier checks stay cheap.
 
@@ -83,7 +83,7 @@ The script pits a lone hero against a dummy and logs `Adrenaline: <value>` whene
 
 **Evaluate**
 
-- **Fill rate:** The bar should reach 100 in roughly four to six basic attacks. If it spikes or crawls, tweak `hero.equip.weapon.mods.ADR` or the dummy's `hp` in the script.
+- **Fill rate:** Without gear bonuses the bar should reach 100 in roughly sixteen to twenty-four basic attacks. Items like an Adrenaline Charm can speed this up. If it spikes or crawls, tweak `hero.equip.weapon.mods.ADR` or the dummy's `hp` in the script.
 - **Stability:** Watch for unexpected jumps or stalls in the numbers.
 - **Log clarity:** Ensure the output is readable enough to guide tuning.
 

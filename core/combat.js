@@ -260,7 +260,7 @@ function doAttack(dmg){
   const target=combatState.enemies[0];
   target.hp-=dmg;
   const weapon=attacker.equip?.weapon;
-  const baseGain=weapon?.mods?.ADR ?? 10;
+  const baseGain=(weapon?.mods?.ADR ?? 10) / 4;
   const gain=Math.round(baseGain * (attacker.adrGenMod || 1));
   attacker.adr=Math.min(attacker.maxAdr||100, attacker.adr+gain);
   log?.(`${attacker.name} hits ${target.name} for ${dmg} damage.`);
