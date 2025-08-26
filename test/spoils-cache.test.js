@@ -5,8 +5,12 @@ import vm from 'node:vm';
 
 const genCode = await fs.readFile(new URL('../core/item-generator.js', import.meta.url), 'utf8');
 const cacheCode = await fs.readFile(new URL('../core/spoils-cache.js', import.meta.url), 'utf8');
+const invCode = await fs.readFile(new URL('../core/inventory.js', import.meta.url), 'utf8');
+global.EventBus = { emit(){} };
+global.party = [{}];
 vm.runInThisContext(genCode, { filename: 'core/item-generator.js' });
 vm.runInThisContext(cacheCode, { filename: 'core/spoils-cache.js' });
+vm.runInThisContext(invCode, { filename: 'core/inventory.js' });
 
 test('spoils cache ranks are defined', () => {
   const ranks = Object.keys(SpoilsCache.ranks);
@@ -72,8 +76,6 @@ test('open generates loot and removes one cache', () => {
   assert.strictEqual(events[0].e, 'spoils:opened');
   assert.strictEqual(events[0].d.item, loot);
   delete global.player;
-  delete global.notifyInventoryChanged;
-  delete global.addToInv;
   delete global.EventBus;
 });
 
@@ -91,7 +93,19 @@ test('openAll opens caches and adds loot', () => {
   assert.strictEqual(player.inv.length, 3);
   assert.ok(logs.some(m => m.includes('Opened 2')));
   delete global.player;
-  delete global.notifyInventoryChanged;
-  delete global.addToInv;
   delete global.log;
+});
+
+test('registering cache preserves rank for inventory', () => {
+  global.player = { inv: [] };
+  global.notifyInventoryChanged = () => {};
+  global.EventBus = { emit(){} };
+  registerItem(SpoilsCache.create('rusted'));
+  addToInv(getItem('cache-rusted'));
+  assert.strictEqual(player.inv[0].rank, 'rusted');
+  ItemGen.generate = () => null;
+  SpoilsCache.open('rusted');
+  assert.strictEqual(player.inv.length, 0);
+  delete global.player;
+  delete global.EventBus;
 });

@@ -154,6 +154,7 @@ function normalizeItem(it){
     id: it.id || '',
     name: it.name || 'Unknown',
     type: it.type || 'misc',
+    rank: it.rank,
     tags: Array.isArray(it.tags) ? it.tags.map(t=>t.toLowerCase()) : [],
     slot: it.slot || null,
     mods: it.mods ? { ...it.mods } : {},
