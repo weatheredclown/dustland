@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import vm from 'node:vm';
 
 test('office module boards castle and unboards via dialog', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -30,4 +31,40 @@ test('office module places Boots of Speed near forest entry', () => {
   assert.match(src, /id: 'boots_of_speed'/);
   assert.match(src, /x: 3,\s*y: WORLD_MIDY/);
   assert.match(src, /mods: \{ AGI: 5 \}/);
+});
+
+test('office worker lends scrap when low', () => {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const file = path.join(__dirname, '..', 'modules', 'office.module.js');
+  const src = fs.readFileSync(file, 'utf8');
+  const match = src.match(/\{\s*id: 'worker1',[\s\S]*?\n\s*\},\n\s*\{\s*id: 'worker2'/);
+  assert(match);
+  const objSrc = match[0].replace(/,\n\s*\{\s*id: 'worker2'.*/, '');
+  let hudCalled = false;
+  global.flagValue = () => 0;
+  global.player = { scrap: 1 };
+  global.updateHUD = () => { hudCalled = true; };
+  global.portraits = { worker: '' };
+  const worker = vm.runInThisContext('(' + objSrc + ')');
+  const tree = worker.tree();
+  assert(tree.start.choices.some((c) => c.label === 'Borrow 2 scrap'));
+  worker.processNode('borrow');
+  assert.equal(player.scrap, 3);
+  assert(hudCalled);
+});
+
+test('office worker hides loan if you have enough scrap', () => {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const file = path.join(__dirname, '..', 'modules', 'office.module.js');
+  const src = fs.readFileSync(file, 'utf8');
+  const match = src.match(/\{\s*id: 'worker1',[\s\S]*?\n\s*\},\n\s*\{\s*id: 'worker2'/);
+  assert(match);
+  const objSrc = match[0].replace(/,\n\s*\{\s*id: 'worker2'.*/, '');
+  global.flagValue = () => 0;
+  global.player = { scrap: 5 };
+  global.updateHUD = () => {};
+  global.portraits = { worker: '' };
+  const worker = vm.runInThisContext('(' + objSrc + ')');
+  const tree = worker.tree();
+  assert(!tree.start.choices.some((c) => c.label === 'Borrow 2 scrap'));
 });
