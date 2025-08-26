@@ -235,10 +235,23 @@ const OFFICE_MODULE = (() => {
       name: 'Office Worker',
       desc: 'Busy typing at their desk.',
       portraitSheet: portraits.worker,
-      tree: () =>
-        flagValue('visited_forest')
-          ? { start: { text: 'Back from the forest already?', choices: [ { label: '(Leave)', to: 'bye' } ] } }
-          : { start: { text: 'Too busy to chat.', choices: [ { label: '(Leave)', to: 'bye' } ] } }
+      tree: () => {
+        const baseText = flagValue('visited_forest')
+          ? 'Back from the forest already?'
+          : 'Too busy to chat.';
+        const choices = [];
+        if (player.scrap < 2)
+          choices.push({ label: 'Borrow 2 scrap', to: 'borrow', reward: 'SCRAP 2' });
+        choices.push({ label: '(Leave)', to: 'bye' });
+        const nodes = { start: { text: baseText, choices } };
+        if (player.scrap < 2) {
+          nodes.borrow = {
+            text: 'Here, just bring it back.',
+            choices: [ { label: '(Thanks)', to: 'bye' } ]
+          };
+        }
+        return nodes;
+      }
     },
     {
       id: 'worker2',
