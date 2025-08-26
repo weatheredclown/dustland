@@ -52,7 +52,7 @@ test('office worker lends scrap when low', () => {
   const tree = worker.tree();
   const loanChoice = tree.start.choices.find((c) => c.label === 'Borrow 2 scrap');
   assert(loanChoice);
-  Actions.applyQuestReward(loanChoice.reward);
+  globalThis.Dustland.actions.applyQuestReward(loanChoice.reward);
   assert.equal(player.scrap, 3);
   assert(hudCalled);
 });

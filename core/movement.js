@@ -197,7 +197,7 @@ function checkAggro(){
     if(n.map!==state.map) continue;
     const d = Math.abs(n.x - party.x) + Math.abs(n.y - party.y);
     if(d<=3){
-      Actions.startCombat({ ...n.combat, npc:n, name:n.name });
+      Dustland.actions.startCombat({ ...n.combat, npc:n, name:n.name });
       break;
     }
   }
@@ -229,7 +229,7 @@ function checkRandomEncounter(){
   const chance = Math.min(dist * 0.02, 0.5);
   if(Math.random() < chance){
     const def = bank[Math.floor(Math.random()*bank.length)];
-    Actions.startCombat(def);
+    Dustland.actions.startCombat(def);
   }
 }
 function adjacentNPC(){

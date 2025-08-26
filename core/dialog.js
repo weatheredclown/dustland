@@ -9,6 +9,7 @@ let currentNPC=null;
 Object.defineProperty(globalThis,'currentNPC',{get:()=>currentNPC,set:v=>{currentNPC=v;}});
 const dialogState={ tree:null, node:null };
 let selectedChoice=0;
+const { Dustland } = globalThis;
 
 function dlgHighlightChoice(){
   [...choicesEl.children].forEach((c,i)=>{
@@ -156,7 +157,7 @@ function advanceDialog(stateObj, choiceIdx){
     if(!hasEnough){
       return finalize(choice.failure || 'You lack the required item.', false, true);
     }
-    Actions.applyQuestReward(choice.reward);
+    Dustland.actions.applyQuestReward(choice.reward);
     joinParty(choice.join);
     processQuestFlag(choice);
     runEffects(choice.effects);
@@ -187,7 +188,7 @@ function advanceDialog(stateObj, choiceIdx){
       if (itemIdx > -1) removeFromInv(itemIdx);
     }
 
-    Actions.applyQuestReward(choice.reward);
+    Dustland.actions.applyQuestReward(choice.reward);
     joinParty(choice.join);
     processQuestFlag(choice);
     runEffects(choice.effects);
@@ -206,7 +207,7 @@ function advanceDialog(stateObj, choiceIdx){
     }
   }
 
-  Actions.applyQuestReward(choice.reward);
+  Dustland.actions.applyQuestReward(choice.reward);
   joinParty(choice.join);
   processQuestFlag(choice);
   runEffects(choice.effects);
