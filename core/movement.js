@@ -271,11 +271,7 @@ function interactAt(x, y) {
   const info = queryTile(x, y);
   if (info.entities.length) {
     const npc = info.entities[0];
-    if (npc.shop) {
-      Actions.openShop(npc);
-    } else {
-      openDialog(npc);
-    }
+    openDialog(npc);
     EventBus.emit('sfx', 'confirm');
     return true;
   }
