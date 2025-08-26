@@ -288,6 +288,7 @@ function doAttack(dmg){
     log?.(`${target.name} is defeated!`);
     globalThis.EventBus?.emit?.('enemy:defeated', { target });
     if(target.loot) addToInv?.(target.loot);
+    if(target.boss && Math.random() < 0.1){ addToInv?.('memory_worm'); }
     if(typeof SpoilsCache !== 'undefined'){
       const cache = SpoilsCache.rollDrop?.(target.challenge);
       if(cache){
