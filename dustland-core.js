@@ -403,6 +403,15 @@ function applyModule(data = {}, options = {}) {
     if (typeof NPCS !== 'undefined') NPCS.push(npc);
   });
   revealHiddenNPCs();
+  const moduleName = moduleData.name || moduleData.id || 'module';
+  if (typeof log === 'function') log(`${moduleName} loaded successfully.`);
+  else console.log(`${moduleName} loaded successfully.`);
+  if (typeof document !== 'undefined' && typeof document.dispatchEvent === 'function') {
+    const CE = document.defaultView?.CustomEvent || globalThis.CustomEvent;
+    const Ev = document.defaultView?.Event || globalThis.Event;
+    const evt = typeof CE === 'function' ? new CE('moduleLoaded', { detail: { name: moduleName } }) : new Ev('moduleLoaded');
+    document.dispatchEvent(evt);
+  }
   return moduleData;
 }
 
@@ -725,6 +734,21 @@ function finalizeCurrentMember(){
   return m;
 }
 
+function watchModuleLoad(){
+  let loaded = false;
+  if (typeof document !== 'undefined' && document.addEventListener) {
+    document.addEventListener('moduleLoaded', () => { loaded = true; }, { once: true });
+    setTimeout(() => {
+      if (!loaded) toast?.('Something went wrong loading the module. Check console.');
+    }, 500);
+  }
+}
+
+function beginGame(){
+  watchModuleLoad();
+  startGame();
+}
+
 if  (ccBack) ccBack.onclick=()=>{ if(step>1) { step--; renderStep(); } };
 if (ccNext) ccNext.onclick=()=>{
   if(step<5){
@@ -734,7 +758,7 @@ if (ccNext) ccNext.onclick=()=>{
     finalizeCurrentMember();
     if(built.length>=3){
       closeCreator();
-      startGame();
+      beginGame();
     } else {
       building=newBuilding();
       step=1;
@@ -743,7 +767,7 @@ if (ccNext) ccNext.onclick=()=>{
     }
   }
 };
-if (ccStart) ccStart.onclick=()=>{ if(built.length===0){ finalizeCurrentMember(); } closeCreator(); startGame(); };
+if (ccStart) ccStart.onclick=()=>{ if(built.length===0){ finalizeCurrentMember(); } closeCreator(); beginGame(); };
 if (ccLoad) ccLoad.onclick=()=>{ load(); closeCreator(); };
 if (creator?.addEventListener) creator.addEventListener('keydown', e => {
   if(e.key==='Enter'){
