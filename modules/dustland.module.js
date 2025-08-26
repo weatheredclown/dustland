@@ -261,16 +261,14 @@ const DUSTLAND_MODULE = (() => {
               check: { stat: 'CHA', dc: DC.TALK },
               success: 'Grin smirks: "Alright."',
               failure: 'Grin shrugs: "Not buying it."',
-              join: { id: 'grin', name: 'Grin', role: 'Scavenger' },
-              q: 'turnin'
+              join: { id: 'grin', name: 'Grin', role: 'Scavenger' }
             },
             {
               label: '(Pay) Give 1 trinket as hire bonus',
               costSlot: 'trinket',
               success: 'Deal.',
               failure: 'You have no trinket to pay with.',
-              join: { id: 'grin', name: 'Grin', role: 'Scavenger' },
-              q: 'turnin'
+              join: { id: 'grin', name: 'Grin', role: 'Scavenger' }
             },
             { label: '(Back)', to: 'start' }
           ]
