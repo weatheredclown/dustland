@@ -22,7 +22,18 @@
       <div class="content" id="log"></div>
       <div class="content">
         <div class="hud">
-          <div class="badge">HP: <span id="hp">10</span></div>
+          <div class="badge">
+            <div class="label">HP <span id="hp">10</span></div>
+            <div class="hudbar" id="hpBar">
+              <div class="ghost" id="hpGhost"></div>
+              <div class="fill" id="hpFill"></div>
+            </div>
+            <div class="status-row" id="statusIcons"></div>
+          </div>
+          <div class="badge">
+            <div class="label">Adrenaline</div>
+            <div class="hudbar adr" id="adrBar"><div class="fill" id="adrFill"></div></div>
+          </div>
           <div class="badge">AP: <span id="ap">2</span></div>
           <div class="badge">Scrap: <span id="scrap">0</span></div>
           <div class="badge">Map: <span id="mapname">—</span></div>

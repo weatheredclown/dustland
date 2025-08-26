@@ -6,6 +6,10 @@ const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const apEl = document.getElementById('ap');
 const scrEl = document.getElementById('scrap');
+const hpFill = document.getElementById('hpFill');
+const hpGhost = document.getElementById('hpGhost');
+const adrFill = document.getElementById('adrFill');
+const statusIcons = document.getElementById('statusIcons');
 
 function log(msg){
   if (logEl) {
@@ -357,9 +361,34 @@ const TAB_BREAKPOINT = 1600;
 let activeTab = 'inv';
 
 function updateHUD(){
-  hpEl.textContent=player.hp;
-  apEl.textContent=player.ap;
+  hpEl.textContent = player.hp;
+  apEl.textContent = player.ap;
   if(scrEl) scrEl.textContent = player.scrap;
+  const lead = typeof leader === 'function' ? leader() : null;
+  if(hpFill && lead){
+    const pct = Math.max(0, Math.min(100, (player.hp / (lead.maxHp || 1)) * 100));
+    hpFill.style.width = pct + '%';
+    if(hpGhost){
+      hpGhost.style.width = (updateHUD._lastHpPct ?? pct) + '%';
+      requestAnimationFrame(()=>{ hpGhost.style.width = pct + '%'; });
+    }
+    updateHUD._lastHpPct = pct;
+  }
+  if(adrFill && lead){
+    const apct = Math.max(0, Math.min(100, (lead.adr / (lead.maxAdr || 1)) * 100));
+    adrFill.style.width = apct + '%';
+  }
+  if(statusIcons){
+    statusIcons.innerHTML='';
+    if(typeof buffs !== 'undefined' && lead){
+      for(const b of buffs){
+        if(b.target===lead){
+          const s=document.createElement('span');
+          statusIcons.appendChild(s);
+        }
+      }
+    }
+  }
 }
 
 function showTab(which){
