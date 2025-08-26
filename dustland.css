@@ -131,6 +131,10 @@
         background: #d98b8b
     }
 
+    .hudbar.hurt .fill {
+        background: #f55
+    }
+
     .status-row {
         display: flex;
         gap: 2px;
@@ -143,6 +147,37 @@
         height: 8px;
         background: #8bd98d;
         border-radius: 2px
+    }
+
+    body.hp-critical #game {
+        filter: grayscale(.8)
+    }
+
+    body.hp-critical::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        box-shadow: inset 0 0 40px 20px rgba(0, 0, 0, .6)
+    }
+
+    body.hp-out #game {
+        filter: grayscale(1) brightness(.5)
+    }
+
+    body.hp-out::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        background: #000;
+        opacity: .8
     }
 
     .hudBadge {
