@@ -1089,6 +1089,27 @@ test('combat hp bars update after damage', async () => {
   assert.strictEqual(res.result, 'loot');
 });
 
+test('enemy hp bar defaults maxHp to hp', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  m1.hp = 2;
+  m1.maxHp = 2;
+  party.addMember(m1);
+
+  const resultPromise = openCombat([
+    { name:'E1', hp:2 }
+  ]);
+
+  handleCombatKey({ key:'Enter' });
+  const enemyHp = combatEnemies.children[0].children[1].children[0].style.width;
+  assert.strictEqual(enemyHp, '50%');
+
+  handleCombatKey({ key:'Enter' });
+  const res = await resultPromise;
+  assert.strictEqual(res.result, 'loot');
+});
+
 test('combat menu can be clicked', async () => {
   party.length = 0;
   player.inv.length = 0;
