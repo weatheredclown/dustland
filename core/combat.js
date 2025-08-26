@@ -87,7 +87,7 @@ function renderCombat(){
 function openCombat(enemies){
   if(!combatOverlay) return Promise.resolve({ result:'flee' });
   return new Promise((resolve)=>{
-    combatState.enemies = enemies.map(e=>({ ...e, maxAdr: e.maxAdr || 100, adr: 0 }));
+    combatState.enemies = enemies.map(e=>({ ...e, maxHp: e.maxHp || e.hp, maxAdr: e.maxAdr || 100, adr: 0 }));
     combatState.phase='party';
     combatState.active=0;
     combatState.choice=0;
