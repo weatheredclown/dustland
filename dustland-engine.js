@@ -576,7 +576,7 @@ party.forEach((m,i)=>{
   const pct=Math.min(100,(m.xp/nextXP)*100);
   c.innerHTML = `<div class='row'><div class='portrait'></div><div><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div></div>`+
 `<div class='row small'>${statLine(m.stats)}</div>`+
-`<div class='row'>HP ${m.hp}/${m.maxHp}  ADR ${m.adr}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div>`+
+`<div class='row stats'>HP ${m.hp}/${m.maxHp}  ADR ${m.adr}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div>`+
 `<div class='row'><div class='xpbar' data-xp='${m.xp}/${nextXP}'><div class='fill' style='width:${pct}%'></div></div></div>`+
 `<div class='row small'>WPN: ${wLabel}${m.equip.weapon?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${m.equip.armor?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${m.equip.trinket?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div>`;
   const portrait=c.querySelector('.portrait');
