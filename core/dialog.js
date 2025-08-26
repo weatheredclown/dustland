@@ -132,6 +132,10 @@ function handleGoto(g){
   updateHUD?.();
 }
 
+function getNextId(prefix, arr) {
+  let i = 1; while (arr.some(o => o.id === prefix + i)) i++; return prefix + i;
+}
+
 function advanceDialog(stateObj, choiceIdx){
   const prevNode = stateObj.node;
   const node=stateObj.tree[stateObj.node];
@@ -221,7 +225,7 @@ function advanceDialog(stateObj, choiceIdx){
   if (choice.spawn) {
     const template = npcTemplates.find(t => t.id === choice.spawn.templateId);
     if (template) {
-      const id = nextId(template.id, NPCS);
+      const id = getNextId(template.id, NPCS);
       const x = choice.spawn.x;
       const y = choice.spawn.y;
       const combat = template.combat ? {...template.combat} : {};
