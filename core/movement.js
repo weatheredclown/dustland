@@ -165,7 +165,11 @@ function move(dx,dy){
         Effects.tick({buffs});
         if(actor){
           actor.hp = Math.min(actor.hp + 1, actor.maxHp);
-          player.hp = actor.hp;
+          if(globalThis.gameState){
+            gameState.setPlayerHealth(actor.hp);
+          } else {
+            player.hp = actor.hp;
+          }
         }
         (party||[]).forEach(m=>{
           if(m.hp >= m.maxHp){

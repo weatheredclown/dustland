@@ -172,7 +172,11 @@ function trainStat(stat, memberIndex = selectedMember){
 
 function healParty(){
   (party||[]).forEach(m=>{ m.hp = m.maxHp; m.adr = 0; });
-  player.hp = party[0] ? party[0].hp : player.hp;
+  if(globalThis.gameState){
+    gameState.setPlayerHealth(party[0] ? party[0].hp : gameState.getPlayerHealth());
+  } else {
+    player.hp = party[0] ? party[0].hp : player.hp;
+  }
   renderParty?.(); updateHUD?.();
 }
 
