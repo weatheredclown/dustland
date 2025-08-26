@@ -274,7 +274,7 @@ function revealHiddenNPCs(){
       if(n.portraitSheet) opts.portraitSheet=n.portraitSheet;
       const npc=makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, n.title||'', n.desc||'', n.tree, quest, null, null, opts);
       if (Array.isArray(n.loop)) npc.loop = n.loop;
-      NPCS.push(npc);
+      if (typeof NPCS !== 'undefined') NPCS.push(npc);
       hiddenNPCs.splice(i,1);
     }
   }
@@ -312,7 +312,7 @@ function applyModule(data = {}, options = {}) {
     itemDrops.length = 0;
     if (typeof ITEMS !== 'undefined') Object.keys(ITEMS).forEach(k => delete ITEMS[k]);
     if (typeof quests !== 'undefined') Object.keys(quests).forEach(k => delete quests[k]);
-    NPCS.length = 0;
+    if (typeof NPCS !== 'undefined') NPCS.length = 0;
     hiddenNPCs.length = 0;
     npcTemplates.length = 0;
     Object.keys(enemyBanks).forEach(k => delete enemyBanks[k]);
@@ -400,7 +400,7 @@ function applyModule(data = {}, options = {}) {
     if (n.portraitSheet) opts.portraitSheet = n.portraitSheet;
     const npc = makeNPC(n.id, n.map || 'world', n.x, n.y, n.color || '#9ef7a0', n.name || n.id, n.title || '', n.desc || '', tree, quest, null, null, opts);
     if (Array.isArray(n.loop)) npc.loop = n.loop;
-    NPCS.push(npc);
+    if (typeof NPCS !== 'undefined') NPCS.push(npc);
   });
   revealHiddenNPCs();
   return moduleData;
@@ -509,7 +509,7 @@ function placeHut(x,y,b={}){
 
 // ===== Save/Load & Start =====
 function save(){
-  const npcData = NPCS.map(n=>({
+  const npcData = (typeof NPCS !== 'undefined' ? NPCS : []).map(n=>({
     id:n.id,
     map:n.map,
     x:n.x,
@@ -555,7 +555,7 @@ function load(){
   });
 
   const npcFactory = createNpcFactory(d.npcs || []);
-  NPCS.length=0;
+  if (typeof NPCS !== 'undefined') NPCS.length = 0;
   (d.npcs||[]).forEach(n=>{
     const f=npcFactory[n.id];
     if(f){
@@ -566,7 +566,7 @@ function load(){
         if(quests[n.quest.id]) npc.quest=quests[n.quest.id];
         else if(npc.quest) npc.quest.status=n.quest.status;
       }
-      NPCS.push(npc);
+      if (typeof NPCS !== 'undefined') NPCS.push(npc);
     }
   });
   party.length=0;

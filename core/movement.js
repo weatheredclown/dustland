@@ -101,7 +101,7 @@ function currentGrid(){ return gridFor(mapIdForState()); }
 function queryTile(x,y,map=mapIdForState()){
   const tile=getTile(map,x,y);
   if(tile===null) return {tile:null, walkable:false, entities:[], items:[]};
-  const entities=NPCS.filter(n=> n.map===map && n.x===x && n.y===y);
+  const entities=(typeof NPCS !== 'undefined' ? NPCS : []).filter(n=> n.map===map && n.x===x && n.y===y);
   const items=itemDrops.filter(it=> it.map===map && it.x===x && it.y===y);
   const walkableFlag=!!(walkable[tile] && entities.length===0 && items.length===0);
   return {tile, walkable:walkableFlag, entities, items};
@@ -192,7 +192,7 @@ function move(dx,dy){
 
 function checkAggro(){
   if(typeof document !== 'undefined' && document.getElementById('combatOverlay')?.classList?.contains?.('shown')) return;
-  for(const n of NPCS){
+  for(const n of (typeof NPCS !== 'undefined' ? NPCS : [])){
     if(!n.combat || !n.combat.auto) continue;
     if(n.map!==state.map) continue;
     const d = Math.abs(n.x - party.x) + Math.abs(n.y - party.y);

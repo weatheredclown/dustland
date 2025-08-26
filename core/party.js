@@ -106,7 +106,7 @@ class Character {
     }
     this.splice(idx,1);
     renderParty(); updateHUD();
-    if(typeof makeNPC==='function' && Array.isArray(NPCS)){
+    if(typeof makeNPC==='function' && typeof NPCS !== 'undefined' && Array.isArray(NPCS)){
       const tree={ start:{ text:'', choices:[{label:'(Leave)', to:'bye'}] }, bye:{ text:'' } };
       const npc=makeNPC(member.id, this.map, this.x, this.y, '#fff', member.name, '', '', tree);
       NPCS.push(npc);
