@@ -27,3 +27,23 @@ test('defineAbility supports passive abilities', () => {
   assert.strictEqual(ability.prereq.level, 2);
   assert.deepStrictEqual(ability.prereq.abilities, []);
 });
+
+test('defineSpecial registers special with fields and defaults', () => {
+  const special = globalThis.defineSpecial('stunGrenade', {
+    adrenaline_cost: 20,
+    target_type: 'aoe',
+    effect: { stun: 2 },
+    wind_up_time: 1
+  });
+  assert.strictEqual(globalThis.Specials.stunGrenade, special);
+  assert.strictEqual(special.adrenaline_cost, 20);
+  assert.strictEqual(special.target_type, 'aoe');
+  assert.deepStrictEqual(special.effect, { stun: 2 });
+  assert.strictEqual(special.wind_up_time, 1);
+
+  const defaults = globalThis.defineSpecial('quickJab');
+  assert.strictEqual(defaults.adrenaline_cost, 0);
+  assert.strictEqual(defaults.target_type, 'single');
+  assert.deepStrictEqual(defaults.effect, {});
+  assert.strictEqual(defaults.wind_up_time, 0);
+});
