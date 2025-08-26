@@ -109,3 +109,12 @@ test('registering cache preserves rank for inventory', () => {
   delete global.player;
   delete global.EventBus;
 });
+
+test('openAll handles missing ItemGen gracefully', () => {
+  delete global.ItemGen;
+  global.player = { inv: [SpoilsCache.create('sealed')] };
+  global.notifyInventoryChanged = () => {};
+  const opened = SpoilsCache.openAll('sealed');
+  assert.strictEqual(opened, 0);
+  delete global.player;
+});
