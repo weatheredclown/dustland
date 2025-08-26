@@ -687,7 +687,7 @@ const DUSTLAND_MODULE = (() => {
       desc: 'A towering mass of twisted metal.',
       portraitSheet: 'assets/portraits/portrait_1084.png',
       tree: { start: { text: 'The behemoth looms.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
-      combat: { HP: 30, ATK: 3, DEF: 2, loot: 'raider_knife', special: { cue: 'crackles with energy!', dmg: 5, delay: 1000 } }
+      combat: { HP: 30, ATK: 3, DEF: 2, loot: 'raider_knife', boss: true, special: { cue: 'crackles with energy!', dmg: 5, delay: 1000 } }
     }
   ];
 

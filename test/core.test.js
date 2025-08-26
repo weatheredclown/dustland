@@ -459,6 +459,42 @@ test('respec consumes memory worm and restores skill points', () => {
   assert.strictEqual(c.skillPoints, 2);
 });
 
+test('bosses can drop memory worms', async () => {
+  NPCS.length = 0;
+  party.length = 0;
+  player.inv.length = 0;
+  const m = new Character('p','P','Role');
+  party.addMember(m);
+  setLeader(0);
+  registerItem({ id:'memory_worm', name:'Memory Worm', type:'token' });
+  const origRand = Math.random;
+  Math.random = () => 0.05;
+  const resultPromise = openCombat([{ name:'Boss', hp:1, boss:true }]);
+  handleCombatKey({ key:'Enter' });
+  const res = await resultPromise;
+  Math.random = origRand;
+  assert.strictEqual(res.result, 'loot');
+  assert.ok(player.inv.some(it=>it.id==='memory_worm'));
+});
+
+test('boss memory worm drop respects probability', async () => {
+  NPCS.length = 0;
+  party.length = 0;
+  player.inv.length = 0;
+  const m = new Character('p','P','Role');
+  party.addMember(m);
+  setLeader(0);
+  registerItem({ id:'memory_worm', name:'Memory Worm', type:'token' });
+  const origRand = Math.random;
+  Math.random = () => 0.5;
+  const resultPromise = openCombat([{ name:'Boss', hp:1, boss:true }]);
+  handleCombatKey({ key:'Enter' });
+  const res = await resultPromise;
+  Math.random = origRand;
+  assert.strictEqual(res.result, 'loot');
+  assert.ok(!player.inv.some(it=>it.id==='memory_worm'));
+});
+
 test('advanceDialog moves to next node', () => {
   const tree = {
     start: { text: 'hi', next: [{ id: 'bye', label: 'Bye' }] },
