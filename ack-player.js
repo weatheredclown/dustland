@@ -5,8 +5,16 @@
 
 // Prevent the engine from auto-starting the creator or start menu
 window.showStart = () => {};
-const realOpenCreator = openCreator;
-window.openCreator = () => {};
+let realOpenCreator = null;
+function captureOpenCreator() {
+  if (typeof window.openCreator === 'function') {
+    realOpenCreator = window.openCreator;
+    window.openCreator = () => {};
+  } else {
+    setTimeout(captureOpenCreator, 0);
+  }
+}
+captureOpenCreator();
 
 
 let moduleData = null;
@@ -23,8 +31,10 @@ if (playData) {
     moduleData = JSON.parse(playData);
     localStorage.removeItem(PLAYTEST_KEY);
     loader.style.display = 'none';
-    window.openCreator = realOpenCreator;
-    realOpenCreator();
+    if (realOpenCreator) {
+      window.openCreator = realOpenCreator;
+      realOpenCreator();
+    }
   } catch (e) {
     localStorage.removeItem(PLAYTEST_KEY);
   }
@@ -42,8 +52,10 @@ if (!moduleData && autoUrl) {
 async function loadModule(data) {
   moduleData = data;
   loader.style.display = 'none';
-  window.openCreator = realOpenCreator;
-  realOpenCreator();
+  if (realOpenCreator) {
+    window.openCreator = realOpenCreator;
+    realOpenCreator();
+  }
 }
 
 urlBtn.onclick = async () => {
