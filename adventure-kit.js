@@ -666,6 +666,10 @@ function renderDialogPreview() {
 function addChoiceRow(container, ch = {}) {
   const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', reqItem = '', reqSlot = '', join = null, q = '', setFlag = null, spawn = null } = ch || {};
   const cond = ch && ch.if ? ch.if : null;
+  const ifOnce = ch && ch.ifOnce ? ch.ifOnce : null;
+  const ifOnceNode = ifOnce?.node || '';
+  const ifOnceLabel = ifOnce?.label || '';
+  const ifOnceUsed = ifOnce?.used ? true : false;
   const flag = cond?.flag || '';
   const op = cond?.op || '>=';
   const val = cond?.value != null ? cond.value : 1;
@@ -731,6 +735,11 @@ function addChoiceRow(container, ch = {}) {
       </fieldset>
       <label>Quest<select class="choiceQ"><option value=""></option><option value="accept" ${q==='accept'?'selected':''}>accept</option><option value="turnin" ${q==='turnin'?'selected':''}>turnin</option></select></label>
       <label class="onceWrap"><input type="checkbox" class="choiceOnce" ${once ? 'checked' : ''}/> once</label>
+      <fieldset class="choiceSubGroup"><legend>If Once</legend>
+        <label>Node<input class="choiceIfOnceNode" value="${ifOnceNode}"/></label>
+        <label>Label<input class="choiceIfOnceLabel" value="${ifOnceLabel}"/></label>
+        <label class="inline"><input type="checkbox" class="choiceIfOnceUsed" ${ifOnceUsed ? 'checked' : ''}/> used</label>
+      </fieldset>
       <label>Flag<input class="choiceFlag" list="choiceFlagList" value="${flag}"/></label>
       <label>Op<select class="choiceOp">
         <option value=">=" ${op === '>=' ? 'selected' : ''}>>=</option>
@@ -931,6 +940,9 @@ function updateTreeData() {
       const gotoRel = chEl.querySelector('.choiceGotoRel').checked;
       const q = chEl.querySelector('.choiceQ').value.trim();
       const once = chEl.querySelector('.choiceOnce').checked;
+      const ifOnceNode = chEl.querySelector('.choiceIfOnceNode').value.trim();
+      const ifOnceLabel = chEl.querySelector('.choiceIfOnceLabel').value.trim();
+      const ifOnceUsed = chEl.querySelector('.choiceIfOnceUsed').checked;
       const setFlagName = chEl.querySelector('.choiceSetFlagName').value.trim();
       const flag = chEl.querySelector('.choiceFlag').value.trim();
       const op = chEl.querySelector('.choiceOp').value;
@@ -965,6 +977,10 @@ function updateTreeData() {
         }
         if (q) c.q = q;
         if (once) c.once = true;
+        if (ifOnceNode && ifOnceLabel) {
+          c.ifOnce = { node: ifOnceNode, label: ifOnceLabel };
+          if (ifOnceUsed) c.ifOnce.used = true;
+        }
         const boardId = chEl.querySelector('.choiceBoard')?.value.trim();
         const unboardId = chEl.querySelector('.choiceUnboard')?.value.trim();
         if (flag) c.if = { flag, op, value: val != null && !Number.isNaN(val) ? val : 0 };

@@ -582,11 +582,24 @@ test('advanceDialog returns success flag on failure', () => {
   assert.strictEqual(res.success, false);
 });
 
-test('once choice not consumed on failed check', () => {
+test('once choice consumed on failed check', () => {
   globalThis.usedOnceChoices.clear();
   const npc = { id: 'tester', name: 'Tester', tree: { start: { text: '', next: [{ label: 'Try', once: true, check: { stat: 'str', dc: 999 }, failure: 'nope' }] } } };
   openDialog(npc);
   const key = 'tester::start::Try';
+  choicesEl.children[0].onclick();
+  assert.ok(globalThis.usedOnceChoices.has(key));
+  closeDialog();
+});
+
+test('once choice persists when lacking item', () => {
+  globalThis.usedOnceChoices.clear();
+  player.inv.length = 0;
+  const npc = { id: 'tester', name: 'Tester', tree: { start: { text: '', next: [
+    { label: 'Pay', once: true, costSlot: 'trinket', failure: 'nope' }
+  ] } } };
+  openDialog(npc);
+  const key = 'tester::start::Pay';
   choicesEl.children[0].onclick();
   assert.ok(!globalThis.usedOnceChoices.has(key));
   closeDialog();
@@ -1217,17 +1230,33 @@ test('applyModule from dialog adds next fragment', async () => {
 
 });
 
-test('grin recruitment can be retried after failure', () => {
+test('grin offers trinket option after charm fails', () => {
   NPCS.length = 0;
   party.length = 0;
   const hero = new Character('h', 'Hero', 'Leader');
   party.push(hero);
   const tree = {
-    start: { text: '', choices: [ { label: '(Recruit) Join me.', to: 'rec' }, { label: '(Leave)', to: 'bye' } ] },
+    start: {
+      text: '',
+      choices: [
+        { label: '(Recruit) Join me.', to: 'rec', ifOnce: { node: 'rec', label: '(CHA) Talk up the score' } },
+        { label: '(Recruit) Got a trinket?', to: 'rec_fail', ifOnce: { node: 'rec', label: '(CHA) Talk up the score', used: true } },
+        { label: '(Leave)', to: 'bye' }
+      ]
+    },
     rec: {
       text: 'Convince me. Or pay me.',
       choices: [
-        { label: '(CHA) Talk up the score', check: { stat: 'CHA', dc: DC.TALK }, failure: 'No deal.', join: { id: 'grin', name: 'Grin', role: 'Scavenger' } }
+        { label: '(CHA) Talk up the score', check: { stat: 'CHA', dc: DC.TALK }, failure: 'No deal.', once: true },
+        { label: '(Pay) Give 1 trinket as hire bonus', costSlot: 'trinket', join: { id: 'grin', name: 'Grin', role: 'Scavenger' } },
+        { label: '(Back)', to: 'start' }
+      ]
+    },
+    rec_fail: {
+      text: 'Charm didn\'t work. Got a trinket?',
+      choices: [
+        { label: '(Pay) Give 1 trinket as hire bonus', costSlot: 'trinket', join: { id: 'grin', name: 'Grin', role: 'Scavenger' } },
+        { label: '(Back)', to: 'start' }
       ]
     },
     bye: { text: '' }
@@ -1238,13 +1267,17 @@ test('grin recruitment can be retried after failure', () => {
   openDialog(grin);
   // start -> rec
   choicesEl.children[0].onclick();
-  // rec -> failure (adds continue button)
+  // rec -> fail CHA
   choicesEl.children[0].onclick();
-  // close dialog
+  // close
   choicesEl.children[0].onclick();
   Math.random = origRand;
   openDialog(grin);
-  assert.strictEqual(choicesEl.children[0].textContent, '(Recruit) Join me.');
+  assert.strictEqual(choicesEl.children[0].textContent, '(Recruit) Got a trinket?');
+  // start -> rec_fail
+  choicesEl.children[0].onclick();
+  const labels = choicesEl.children.map(c => c.textContent);
+  assert.ok(!labels.includes('(CHA) Talk up the score'));
 });
 
 test('grin recruitment offers persuade or pay options after recruiting', () => {
