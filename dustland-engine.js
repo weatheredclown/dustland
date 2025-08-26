@@ -472,9 +472,7 @@ function renderInv(){
     const row=document.createElement('div');
     row.className='slot cache-slot';
     const icon = SpoilsCache.renderIcon(rank, () => {
-      const index = player.inv.findIndex(c => c.type==='spoils-cache' && c.rank===rank);
-      if(index !== -1) removeFromInv(index);
-      log?.(`${SpoilsCache.ranks[rank].name} opened.`);
+      SpoilsCache.open(rank);
     });
     if(icon){
       const wrap=document.createElement('div');
