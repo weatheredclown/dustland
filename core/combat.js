@@ -71,12 +71,13 @@ function renderCombat(){
 function openCombat(enemies){
   if(!combatOverlay) return Promise.resolve({ result:'flee' });
   return new Promise((resolve)=>{
-    combatState.enemies = enemies.map(e=>({...e}));
+    combatState.enemies = enemies.map(e=>({ ...e, maxAdr: e.maxAdr || 100, adr: 0 }));
     combatState.phase='party';
     combatState.active=0;
     combatState.choice=0;
     combatState.onComplete=resolve;
     combatState.fallen = [];
+    (party||[]).forEach(m => { m.maxAdr = m.maxAdr || 100; m.adr = 0; });
     renderCombat();
     combatOverlay.classList.add('shown');
     openCommand();

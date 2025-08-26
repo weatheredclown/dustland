@@ -1091,6 +1091,20 @@ test('special menu lists class ability', async () => {
   await resultPromise;
 });
 
+test('openCombat resets adrenaline for party members', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  m1.adr = 50;
+  m1.maxAdr = 150;
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name:'E1', hp:1 }]);
+  assert.strictEqual(party[0].adr, 0);
+  handleCombatKey({ key:'Enter' });
+  const res = await resultPromise;
+  assert.strictEqual(res.result, 'loot');
+});
+
 test('startCombat forwards portraitSheet', async () => {
   let captured;
   const orig = global.openCombat;
