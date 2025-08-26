@@ -2,7 +2,6 @@
 // Simple A* pathfinding with async queue for Dustland
 (function(){
   console.log('[Path] Script loaded');
-  const PathQueue = { queue, pathFor };
   const state = { queue: [], busy:false, cache:new Map() };
 
   function queue(map, start, goal, ignoreId){
@@ -115,7 +114,7 @@
         continue;
       }
       if(st.job){
-        const p=PathQueue.pathFor(st.job);
+        const p=pathFor(st.job);
         if(p){
           st.path=p.slice(1);
           st.job=null;
@@ -131,6 +130,6 @@
       st.job=queue(n.map,{x:n.x,y:n.y},target,n.id);
     }
   }
-
-  Object.assign(globalThis,{ PathQueue, tickPathAI });
+  globalThis.Dustland = globalThis.Dustland || {};
+  globalThis.Dustland.path = { queue, pathFor, tickPathAI };
 })();

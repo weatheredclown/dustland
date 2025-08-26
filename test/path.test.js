@@ -22,9 +22,9 @@ global.NPCS = [];
 
 test('PathQueue finds a path', async () => {
   await import('../dustland-path.js');
-  const key = window.PathQueue.queue('world',{x:0,y:0},{x:2,y:2});
+  const key = window.Dustland.path.queue('world',{x:0,y:0},{x:2,y:2});
   await new Promise(r => setTimeout(r,20));
-  const path = window.PathQueue.pathFor(key);
+  const path = window.Dustland.path.pathFor(key);
   assert.ok(path && path.length > 0, 'path exists');
   assert.deepStrictEqual(path[0], {x:0,y:0});
   assert.deepStrictEqual(path[path.length-1], {x:2,y:2});
