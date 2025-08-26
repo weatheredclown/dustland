@@ -4,6 +4,7 @@
         --frame: #141614;
         --accent: #9ef7a0;
         --muted: #7a8a7a;
+        --panelW: 440px;
     }
 
     input::placeholder,
@@ -298,8 +299,8 @@
         .panel {
             width: 840px;
         }
-        #combatOverlay {
-            right: 840px;
+        :root {
+            --panelW: 840px;
         }
 
         .tabs {
@@ -330,8 +331,8 @@
             transform: translateX(100%);
             transition: transform .2s;
         }
-        #combatOverlay {
-            right: 0;
+        :root {
+            --panelW: 0;
         }
         .panel.show {
             transform: translateX(0);
@@ -442,7 +443,7 @@
     }
 
 /* Combat UI */
-#combatOverlay { background:rgba(0,0,0,.8); pointer-events:auto; z-index:10; right:440px; }
+#combatOverlay { background:rgba(0,0,0,.8); pointer-events:auto; z-index:10; right:var(--panelW); }
 #combatOverlay.warning { animation:bossWarn .3s steps(1) 4; }
 @keyframes bossWarn { 50% { background:rgba(80,0,0,.8); } }
 #combatOverlay .combat-window {
