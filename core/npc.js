@@ -11,6 +11,10 @@ class NPC {
         this.tree.sell.text = items.length ? 'What are you selling?' : 'Nothing to sell.';
         items.push({label: '(Back)', to: 'start'});
         this.tree.sell.choices = items;
+      } else if (this.shop && node === 'buy') {
+        closeDialog();
+        Actions.openShop(this);
+        return;
       }
     };
     const capChoice = (c) => {
@@ -61,7 +65,9 @@ function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNo
     tree = tree || {};
     tree.start = tree.start || {text: '', choices: []};
     tree.start.choices = tree.start.choices || [];
-    tree.start.choices.push({label: '(Sell items)', to: 'sell'});
+    if (!tree.start.choices.some(c => c.to === 'sell')) {
+      tree.start.choices.push({label: '(Sell items)', to: 'sell'});
+    }
     tree.sell = tree.sell || {text: 'What are you selling?', choices: []};
   }
   return new NPC({id,map,x,y,color,name,title,desc,tree,quest,processNode,processChoice, ...(opts || {})});

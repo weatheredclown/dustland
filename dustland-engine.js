@@ -620,6 +620,16 @@ function openShop(npc) {
 
   shopName.textContent = npc.name;
 
+  let focusables = [];
+  let focusIdx = 0;
+  function refreshFocusables() {
+    focusables = Array.from(shopOverlay.querySelectorAll('button'));
+    if (focusIdx >= focusables.length) focusIdx = 0;
+  }
+  function focusCurrent() {
+    refreshFocusables();
+    if (focusables.length) focusables[focusIdx].focus();
+  }
   function renderShop() {
     shopBuy.innerHTML = '';
     shopSell.innerHTML = '';
@@ -669,13 +679,32 @@ function openShop(npc) {
       };
       shopSell.appendChild(row);
     });
+    focusCurrent();
+  }
+
+  function close() {
+    shopOverlay.classList.remove('shown');
+    shopOverlay.removeEventListener('keydown', handleKey);
+  }
+  function handleKey(e) {
+    if (e.key === 'Escape') { close(); return; }
+    if (e.key === 'ArrowDown') {
+      focusIdx = (focusIdx + 1) % focusables.length;
+      focusCurrent();
+      e.preventDefault();
+    } else if (e.key === 'ArrowUp') {
+      focusIdx = (focusIdx - 1 + focusables.length) % focusables.length;
+      focusCurrent();
+      e.preventDefault();
+    }
   }
 
   renderShop();
   shopOverlay.classList.add('shown');
-  closeShopBtn.onclick = () => {
-    shopOverlay.classList.remove('shown');
-  };
+  shopOverlay.tabIndex = -1;
+  shopOverlay.addEventListener('keydown', handleKey);
+  closeShopBtn.onclick = close;
+  shopOverlay.focus();
 }
 
 const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, openShop };

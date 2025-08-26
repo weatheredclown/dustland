@@ -448,7 +448,16 @@ const DUSTLAND_MODULE = (() => {
       title: 'Shopkeep',
       desc: 'A roving merchant weighing your wares.',
       portraitSheet: 'assets/portraits/cass_4.png',
-      tree: { start: { text: 'Got goods to sell? I pay in scrap.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      tree: {
+        start: {
+          text: 'Got goods to sell? I pay in scrap.',
+          choices: [
+            { label: 'Browse goods', to: 'buy' },
+            { label: '(Sell items)', to: 'sell' },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        }
+      },
       shop: true
     },
     {

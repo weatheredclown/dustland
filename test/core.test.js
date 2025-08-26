@@ -1403,3 +1403,19 @@ test('equipment modifiers apply at battle start', async () => {
   handleCombatKey({ key: 'Enter' });
   await resultPromise;
 });
+
+test('shop npc opens dialog before trading', () => {
+  NPCS.length = 0;
+  party.x = 0; party.y = 0;
+  const shopNpc = makeNPC('shop', 'world', 1, 0, '#fff', 'Shopkeep', '', '', {
+    start: { text: 'Trade?', choices: [ { label: '(Leave)', to: 'bye' } ] }
+  }, null, null, null, { shop: { inv: [] } });
+  NPCS.push(shopNpc);
+  let openedShop = 0;
+  const origOpenShop = global.openShop;
+  global.openShop = () => { openedShop++; };
+  interactAt(1, 0);
+  assert.strictEqual(openedShop, 0);
+  global.openShop = origOpenShop;
+  closeDialog();
+});

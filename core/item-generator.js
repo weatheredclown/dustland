@@ -1,4 +1,5 @@
 // ===== Item Generator =====
+let nextItemId = 1;
 const ItemGen = {
   types: ['weapon','armor','gadget','oddity'],
   adjectives: [
@@ -51,6 +52,7 @@ const ItemGen = {
     const range = this.statRanges[rank] || this.statRanges.rusted;
     const power = this.randRange(range.min, range.max, rng);
     const item = {
+      id: `gen_${nextItemId++}`,
       type,
       name: `${adj} ${noun}`,
       rank,

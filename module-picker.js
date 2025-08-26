@@ -132,7 +132,7 @@ function showModulePicker(){
   overlay.id = 'modulePicker';
   overlay.style = 'position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;z-index:40';
   const styleTag = document.createElement('style');
-  styleTag.textContent = '@keyframes pulse{0%,100%{opacity:.8}50%{opacity:1}}';
+  styleTag.textContent = '@keyframes pulse{0%,100%{opacity:.8}50%{opacity:1}}.btn.selected{border-color:#4f6b4f;background:#151b15}';
   document.head.appendChild(styleTag);
 
   const ackBtn = document.createElement('div');
@@ -163,15 +163,48 @@ function showModulePicker(){
   overlay.appendChild(win);
   document.body.appendChild(overlay);
   const buttonContainer = overlay.querySelector('#moduleButtons');
-  MODULES.forEach(moduleInfo => {
+  const buttons = [];
+  let selectedIndex = 0;
+  function updateSelected() {
+    buttons.forEach((btn, i) => {
+      if (i === selectedIndex) {
+        btn.className = 'btn selected';
+        if (btn.focus) btn.focus();
+      } else {
+        btn.className = 'btn';
+      }
+    });
+  }
+  MODULES.forEach((moduleInfo, i) => {
     const btn = document.createElement('button');
     btn.className = 'btn';
     btn.textContent = moduleInfo.name;
     btn.style.display = 'block';
     btn.style.margin = '4px 0';
     btn.onclick = () => loadModule(moduleInfo);
+    btn.onfocus = () => { selectedIndex = i; updateSelected(); };
+    buttons.push(btn);
     buttonContainer.appendChild(btn);
   });
+  updateSelected();
+
+  overlay.tabIndex = 0;
+  if (overlay.focus) overlay.focus();
+  const keyHandler = (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      selectedIndex = (selectedIndex + 1) % buttons.length;
+      updateSelected();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      selectedIndex = (selectedIndex - 1 + buttons.length) % buttons.length;
+      updateSelected();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      loadModule(MODULES[selectedIndex]);
+    }
+  };
+  if (overlay.addEventListener) overlay.addEventListener('keydown', keyHandler);
 }
 
 showModulePicker();
