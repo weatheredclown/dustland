@@ -1232,3 +1232,32 @@ test('grin recruitment can be retried after failure', () => {
   openDialog(grin);
   assert.strictEqual(choicesEl.children[0].textContent, '(Recruit) Join me.');
 });
+
+test('grin recruitment offers persuade or pay options after recruiting', () => {
+  NPCS.length = 0;
+  party.length = 0;
+  player.inv.length = 0;
+  const hero = new Character('h', 'Hero', 'Leader');
+  party.push(hero);
+  const tree = {
+    start: { text: '', choices: [ { label: '(Recruit) Join me.', to: 'rec' }, { label: '(Leave)', to: 'bye' } ] },
+    rec: {
+      text: 'Convince me. Or pay me.',
+      choices: [
+        { label: '(CHA) Talk up the score', check: { stat: 'CHA', dc: DC.TALK }, join: { id: 'grin', name: 'Grin', role: 'Scavenger' } },
+        { label: '(Pay) Give 1 trinket as hire bonus', costSlot: 'trinket', join: { id: 'grin', name: 'Grin', role: 'Scavenger' } },
+        { label: '(Back)', to: 'start' }
+      ]
+    },
+    bye: { text: '' }
+  };
+  const grin = makeNPC('grin', 'world', 0, 0, '#fff', 'Grin', '', '', tree);
+  NPCS.push(grin);
+  openDialog(grin);
+  // start -> rec
+  choicesEl.children[0].onclick();
+  const labels = choicesEl.children.map(c => c.textContent);
+  assert.ok(labels.includes('(CHA) Talk up the score'));
+  assert.ok(labels.includes('(Pay) Give 1 trinket as hire bonus'));
+  closeDialog();
+});
