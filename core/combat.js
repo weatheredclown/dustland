@@ -5,6 +5,12 @@ const partyRow = typeof document !== 'undefined' ? document.getElementById('comb
 const cmdMenu = typeof document !== 'undefined' ? document.getElementById('combatCmd') : null;
 const turnIndicator = typeof document !== 'undefined' ? document.getElementById('turnIndicator') : null;
 
+window.bossTelegraphFX = window.bossTelegraphFX || { intensity:1, duration:1000 };
+window.setBossTelegraphFX = (opts={}) => {
+  if(typeof opts.intensity === 'number') window.bossTelegraphFX.intensity = opts.intensity;
+  if(typeof opts.duration === 'number') window.bossTelegraphFX.duration = opts.duration;
+};
+
 if(cmdMenu){
   cmdMenu.addEventListener('click', (e) => {
     const opts = [...cmdMenu.children];
@@ -356,6 +362,11 @@ function enemyAttack(){
   if(!enemy || !target){ closeCombat('flee'); return; }
   if(enemy.special && !enemy._didSpecial){
     enemy._didSpecial=true;
+    const fx=window.bossTelegraphFX||{};
+    const delay=enemy.special.delay ?? fx.duration ?? 1000;
+    const animDur=fx.duration ?? delay;
+    combatOverlay?.style?.setProperty?.('--telegraphIntensity', fx.intensity ?? 1);
+    combatOverlay?.style?.setProperty?.('--telegraphDuration', animDur+'ms');
     combatOverlay?.classList.add('warning');
     log?.(`${enemy.name} ${enemy.special.cue||'charges up!'}`);
     setTimeout(()=>{
@@ -364,7 +375,7 @@ function enemyAttack(){
       target.hp-=dmg;
       log?.(`${enemy.name} unleashes for ${dmg} damage.`);
       finishEnemyAttack(enemy,target);
-    }, enemy.special.delay ?? 1000);
+    }, delay);
     return;
   }
   target.hp-=1;
