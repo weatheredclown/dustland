@@ -294,6 +294,12 @@
             padding: 12px;
             font-size: 24px;
         }
+        :root { --ctrlH: 180px; }
+        body.mobile-on .wrap { height: calc(100% - var(--ctrlH)); }
+        body.mobile-on .crt-wrap { align-items: flex-start; }
+        body.mobile-on .panel { height: calc(100% - var(--ctrlH)); }
+        #mobileControls { touch-action: manipulation; }
+        #mobileControls button { touch-action: manipulation; }
     }
 
     .overlay {
@@ -308,6 +314,18 @@
 
     .overlay.shown {
         display: flex
+    }
+
+    @media (max-width: 900px) {
+        body.mobile-on .overlay,
+        body.mobile-on #settings,
+        body.mobile-on #start,
+        body.mobile-on #creator,
+        body.mobile-on #moduleLoader,
+        body.mobile-on #shopOverlay {
+            bottom: var(--ctrlH);
+            height: calc(100% - var(--ctrlH));
+        }
     }
 
     .dialog {

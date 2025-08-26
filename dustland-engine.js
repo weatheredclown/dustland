@@ -49,19 +49,22 @@ function toggleAudio(){ setAudio(!audioEnabled); }
 globalThis.toggleAudio = toggleAudio;
 const isMobileUA = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 let mobileControlsEnabled = isMobileUA;
-let mobilePad = null, mobileAB = null;
+let mobileWrap = null, mobilePad = null, mobileAB = null;
 function setMobileControls(on){
   mobileControlsEnabled = on;
   const btn=document.getElementById('mobileToggle');
   if(btn) btn.textContent = `Mobile Controls: ${on ? 'On' : 'Off'}`;
+  document.body.classList.toggle('mobile-on', on);
   if(on){
-    if(!mobilePad){
-      mobilePad=document.createElement('div');
-      mobilePad.style.cssText='position:fixed;bottom:20px;left:20px;display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);gap:6px;z-index:1000;user-select:none;';
+    if(!mobileWrap){
+      mobileWrap=document.createElement('div');
+      mobileWrap.id='mobileControls';
+      mobileWrap.style.cssText='position:fixed;left:0;right:0;bottom:0;height:180px;display:flex;justify-content:space-between;padding:20px;z-index:1000;touch-action:manipulation;';
+      document.body.appendChild(mobileWrap);
       const mk=(t,fn)=>{
         const b=document.createElement('button');
         b.textContent=t;
-        b.style.cssText='width:48px;height:48px;border:2px solid #0f0;border-radius:8px;background:#000;color:#0f0;font-size:20px;user-select:none;outline:none;';
+        b.style.cssText='width:48px;height:48px;border:2px solid #0f0;border-radius:8px;background:#000;color:#0f0;font-size:20px;user-select:none;outline:none;touch-action:manipulation;';
         b.onclick=fn;
         b.onpointerdown=()=>{
           b.style.background='#0f0';
@@ -86,6 +89,8 @@ function setMobileControls(on){
           move(dx,dy);
         }
       };
+      mobilePad=document.createElement('div');
+      mobilePad.style.cssText='display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);gap:6px;user-select:none;';
       const cells=[
         document.createElement('div'),
         mk("↑",()=>mobileMove(0,-1,'ArrowUp')),
@@ -98,9 +103,9 @@ function setMobileControls(on){
         document.createElement('div')
       ];
       cells.forEach(c=>mobilePad.appendChild(c));
-      document.body.appendChild(mobilePad);
+      mobileWrap.appendChild(mobilePad);
       mobileAB=document.createElement('div');
-      mobileAB.style.cssText='position:fixed;bottom:20px;right:20px;display:flex;gap:10px;z-index:1000;user-select:none;';
+      mobileAB.style.cssText='display:flex;gap:10px;user-select:none;';
       mobileAB.appendChild(mk('A',()=>{
         if(overlay?.classList?.contains('shown')){
           handleDialogKey?.({ key:'Enter' });
@@ -111,11 +116,11 @@ function setMobileControls(on){
         }
       }));
       mobileAB.appendChild(mk('B',takeNearestItem));
-      document.body.appendChild(mobileAB);
+      mobileWrap.appendChild(mobileAB);
     }
   } else {
-    if(mobilePad) { mobilePad.remove(); mobilePad=null; }
-    if(mobileAB) { mobileAB.remove(); mobileAB=null; }
+    if(mobileWrap){ mobileWrap.remove(); mobileWrap=null; }
+    mobilePad=null; mobileAB=null;
   }
 }
 function toggleMobileControls(){ setMobileControls(!mobileControlsEnabled); }
