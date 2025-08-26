@@ -1,0 +1,38 @@
+import assert from 'node:assert';
+import { test } from 'node:test';
+
+// Minimal stubs for globals used by core modules
+globalThis.EventBus = { emit() {} };
+globalThis.log = () => {};
+globalThis.toast = () => {};
+globalThis.player = { inv: [] };
+
+await import('../core/inventory.js');
+await import('../core/party.js');
+await import('../core/equipment.js');
+
+test('base equipment items are registered', () => {
+  const sword = getItem('pipe_blade');
+  assert.ok(sword, 'pipe_blade registered');
+  assert.strictEqual(sword.mods.ATK, 2);
+  assert.strictEqual(sword.mods.ADR, 12);
+  const armor = getItem('leather_jacket');
+  assert.ok(armor, 'leather_jacket registered');
+  assert.strictEqual(armor.mods.DEF, 1);
+});
+
+test('equipment modifiers apply to characters', () => {
+  const c = new Character('id', 'Hero', 'fighter');
+  c.equip.weapon = getItem('pipe_blade');
+  c.equip.armor = getItem('juggernaut_plate');
+  c.applyEquipmentStats();
+  assert.strictEqual(c._bonus.ATK, 2);
+  assert.strictEqual(c._bonus.DEF, 3);
+});
+
+test('adrenaline modifiers are applied', () => {
+  const c = new Character('id2', 'Scout', 'scout');
+  c.equip.armor = getItem('scavenger_rig');
+  c.applyCombatMods();
+  assert.strictEqual(c.adrGenMod, 1.1);
+});
