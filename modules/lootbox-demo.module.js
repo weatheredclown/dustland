@@ -34,29 +34,35 @@ const LOOTBOX_DEMO_MODULE = (() => {
       name: 'Cache Guide',
       desc: 'An eager scavenger itching to teach you about spoils caches.',
       tree: {
-        start: { text: '', choices: [] },
-        spawn_same: { text: 'Another dummy ready.', choices:[{ label:'(Back)', to:'start' }] },
-        spawn_tough: { text: 'Tougher dummy coming up.', choices:[{ label:'(Back)', to:'start' }] }
-      },
-      processNode(node){
-        if(node === 'start'){
-          const opened = flagValue('cache_opened') >= 1;
-          const fought = flagValue('dummy_defeated') >= 1;
-          if(opened){
-            this.tree.start.text = 'Nice work. Want another dummy?';
-          } else if(fought){
-            this.tree.start.text = 'No cache yet? Want to try again?';
-          } else {
-            this.tree.start.text = 'Defeat the dummy and open the spoils cache it drops. The higher the challenge, the better the loot.';
-          }
-          const choices = [];
-          if(fought){
-            choices.push({ label:'(Same dummy)', to:'spawn_same', effects: [()=>clearFlag('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') } });
-            choices.push({ label:'(Tougher dummy)', to:'spawn_tough', effects: [() => incFlag('dummy_challenge'), ()=>clearFlag('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') + 1 } });
-          }
-          choices.push({ label:'(Leave)', to:'bye' });
-          this.tree.start.choices = choices;
-        }
+        start: {
+          jump: [
+            { if: { flag: 'cache_opened', op: '>=', value: 1 }, to: 'opened' },
+            { if: { flag: 'dummy_defeated', op: '>=', value: 1 }, to: 'fought' },
+            { to: 'intro' }
+          ]
+        },
+        opened: {
+          text: 'Nice work. Want another dummy?',
+          choices: [
+            { label: '(Same dummy)', to: 'spawn_same', effects: [() => clearFlag('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') } },
+            { label: '(Tougher dummy)', to: 'spawn_tough', effects: [() => incFlag('dummy_challenge'), () => clearFlag('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') + 1 } },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        },
+        fought: {
+          text: 'No cache yet? Want to try again?',
+          choices: [
+            { label: '(Same dummy)', to: 'spawn_same', effects: [() => clearFlag('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') } },
+            { label: '(Tougher dummy)', to: 'spawn_tough', effects: [() => incFlag('dummy_challenge'), () => clearFlag('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') + 1 } },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        },
+        intro: {
+          text: 'Defeat the dummy and open the spoils cache it drops. The higher the challenge, the better the loot.',
+          choices: [ { label: '(Leave)', to: 'bye' } ]
+        },
+        spawn_same: { text: 'Another dummy ready.', choices: [ { label: '(Back)', to: 'start' } ] },
+        spawn_tough: { text: 'Tougher dummy coming up.', choices: [ { label: '(Back)', to: 'start' } ] }
       }
     }
   ];
