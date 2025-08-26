@@ -16,7 +16,8 @@ class Character {
     this.maxAdr=100;
     this.adr=0;
     this._bonus={ATK:0, DEF:0, LCK:0};
-    this.special = opts.special || null;
+    this.special = Array.isArray(opts.special) ? [...opts.special] : [];
+    this.adrGenMod = 1;
   }
   xpToNext(){ return xpToNext(this.lvl); }
   awardXP(amt){
@@ -51,6 +52,26 @@ class Character {
       if(it&&it.mods){
         for(const stat in it.mods){
           this._bonus[stat]=(this._bonus[stat]||0)+it.mods[stat];
+        }
+      }
+    }
+  }
+  applyCombatMods(){
+    this.adrGenMod = 1;
+    if(!Array.isArray(this._baseSpecial)){
+      this._baseSpecial = [...this.special];
+    }
+    this.special = [...(this._baseSpecial||[])];
+    for(const k of ['weapon','armor','trinket']){
+      const it=this.equip[k];
+      if(it&&it.mods){
+        if(typeof it.mods.adrenaline_gen_mod === 'number'){
+          this.adrGenMod *= it.mods.adrenaline_gen_mod;
+        }
+        const grant = it.mods.granted_special;
+        if(grant){
+          if(Array.isArray(grant)) this.special.push(...grant);
+          else this.special.push(grant);
         }
       }
     }
@@ -109,6 +130,7 @@ function xpToNext(lvl){
 }
 function awardXP(who, amt){ who.awardXP(amt); }
 function applyEquipmentStats(m){ m.applyEquipmentStats(); }
+function applyCombatMods(m){ m.applyCombatMods(); }
 function leader(){ return party.leader(); }
 function setLeader(idx){ selectedMember = idx; }
 
@@ -148,5 +170,5 @@ function trainStat(stat, memberIndex = selectedMember){
   return true;
 }
 
-const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, leader, setLeader, respec, trainStat, selectedMember, xpCurve };
+const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, applyCombatMods, leader, setLeader, respec, trainStat, selectedMember, xpCurve };
 Object.assign(globalThis, partyExports);

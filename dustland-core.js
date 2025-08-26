@@ -707,7 +707,7 @@ function finalizeCurrentMember(){
   if(!building.name || !building.name.trim()) building.name = defaultDrifterName(built.length+1);
   const m=makeMember(building.id, building.name, building.spec||'Wanderer', {permanent:true, portraitSheet: building.portraitSheet});
   m.stats=building.stats; m.origin=building.origin; m.quirk=building.quirk;
-  m.special = classSpecials[building.spec||'Wanderer'] || null;
+  m.special = classSpecials[building.spec||'Wanderer'] || [];
   addPartyMember(m);
   const spec = specializations[building.spec]; if(spec){ spec.gear.forEach(g=> addToInv(g)); }
   built.push(m);

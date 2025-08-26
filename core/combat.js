@@ -77,7 +77,7 @@ function openCombat(enemies){
     combatState.choice=0;
     combatState.onComplete=resolve;
     combatState.fallen = [];
-    (party||[]).forEach(m => { m.maxAdr = m.maxAdr || 100; m.adr = 0; });
+    (party||[]).forEach(m => { m.maxAdr = m.maxAdr || 100; m.adr = 0; m.applyCombatMods?.(); });
     renderCombat();
     combatOverlay.classList.add('shown');
     openCommand();
@@ -123,7 +123,7 @@ function openCommand(){
   ['Attack','Special','Item','Flee'].forEach((opt)=>{
     const d=document.createElement('div');
     d.textContent=opt;
-    if(opt==='Special' && !m?.special) d.classList.add('disabled');
+    if(opt==='Special' && !(m?.special?.length>0)) d.classList.add('disabled');
     if(opt==='Item' && (!(player?.inv?.length>0))) d.classList.add('disabled');
     cmdMenu.appendChild(d);
   });
@@ -260,7 +260,8 @@ function doAttack(dmg){
   const target=combatState.enemies[0];
   target.hp-=dmg;
   const weapon=attacker.equip?.weapon;
-  const gain=weapon?.mods?.ADR ?? 10;
+  const baseGain=weapon?.mods?.ADR ?? 10;
+  const gain=Math.round(baseGain * (attacker.adrGenMod || 1));
   attacker.adr=Math.min(attacker.maxAdr||100, attacker.adr+gain);
   log?.(`${attacker.name} hits ${target.name} for ${dmg} damage.`);
   if(target.hp<=0){
