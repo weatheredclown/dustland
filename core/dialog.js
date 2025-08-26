@@ -226,7 +226,7 @@ function advanceDialog(stateObj, choiceIdx){
   if (choice.spawn) {
     const template = npcTemplates.find(t => t.id === choice.spawn.templateId);
     if (template) {
-      const id = getNextId(template.id, NPCS);
+      const id = getNextId(template.id, typeof NPCS !== 'undefined' ? NPCS : []);
       const x = choice.spawn.x;
       const y = choice.spawn.y;
       const combat = template.combat ? {...template.combat} : {};
@@ -235,7 +235,7 @@ function advanceDialog(stateObj, choiceIdx){
         combat.challenge = choice.spawn.challenge;
       }
       const npc = makeNPC(id, state.map, x, y, template.color, template.name, '', template.desc, {}, null, null, null, { combat });
-      NPCS.push(npc);
+      if (typeof NPCS !== 'undefined') NPCS.push(npc);
     }
   }
 

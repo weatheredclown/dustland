@@ -99,7 +99,7 @@
   // Step NPCs along their waypoint loops. Invoked after player moves.
   function tickPathAI(){
     const now = Date.now();
-    for(const n of NPCS){
+    for(const n of (typeof NPCS !== 'undefined' ? NPCS : [])){
       const pts=n.loop;
       if(!Array.isArray(pts) || pts.length<2) continue;
       n._loop = n._loop || { idx:1, path:[], job:null };

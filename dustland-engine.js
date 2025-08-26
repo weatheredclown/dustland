@@ -279,7 +279,7 @@ function render(gameState=state, dt){
   const offY = Math.max(0, Math.floor((vH - H) / 2));
 
   const items = gameState.itemDrops || itemDrops;
-  const entities = gameState.entities || NPCS;
+  const entities = gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : []);
   const pos = gameState.party || party;
 
   // split entities into below/above
@@ -791,7 +791,7 @@ if (document.getElementById('saveBtn')) {
           renderParty();
           toast(`Leader: ${party[selectedMember].name}`);
           if(window.NanoDialog){
-            const near = NPCS.filter(n => n.map === state.map
+            const near = (typeof NPCS !== 'undefined' ? NPCS : []).filter(n => n.map === state.map
               && Math.abs(n.x - party.x) + Math.abs(n.y - party.y) < 10);
             near.forEach(n => NanoDialog.queueForNPC(n, 'start', 'leader change'));
           }
