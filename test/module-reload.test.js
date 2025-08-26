@@ -35,6 +35,8 @@ Object.assign(global, {
   location: { href: '' }
 });
 
+global.UI = { remove: () => {} };
+
 const bodyEl = stubEl();
 const headEl = stubEl();
 
