@@ -13,6 +13,7 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 - Run `node presubmit.js` to check HTML files for unsupported fetch/import patterns.
 - Ensure the working tree is clean and tests pass before committing.
 - Before adding new tests, check for existing coverage and extend or modify tests instead of duplicating cases.
+- Prefer behavior-driven tests that validate outcomes instead of asserting internal implementation details.
 - Run `./install-deps.sh` once to install optional browser dependencies required by some tests.
 - After touching combat, movement, or NPC logic, run `node balance-tester-agent.js` to exercise event-bus handlers and path queues.
 
