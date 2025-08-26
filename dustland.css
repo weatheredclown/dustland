@@ -508,6 +508,7 @@
 #combatOverlay .enemy-row { align-items:flex-start; }
 #combatOverlay .party-row { align-items:flex-end; }
 #combatOverlay .member { position:relative; display:flex; flex-direction:column; align-items:center; }
+#combatOverlay .enemy .hudbar, #combatOverlay .member .hudbar { width:48px; margin-top:2px; }
 #combatOverlay .label { margin-top:4px; text-align:center; }
 #combatOverlay .enemy.active .portrait, #combatOverlay .member.active .portrait { border-color:#5c8a5c; }
 #combatOverlay .turn { text-align:center; margin-bottom:4px; }
