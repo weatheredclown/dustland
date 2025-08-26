@@ -330,7 +330,9 @@ input[type="range"] {
     #party {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 8px
+        gap: 8px;
+        align-content: start;
+        align-items: start;
     }
 
     .pcard {
