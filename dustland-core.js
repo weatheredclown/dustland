@@ -753,7 +753,7 @@ if (creator?.addEventListener) creator.addEventListener('keydown', e => {
 });
 
 function startGame(){
-  applyModule(MARA_PUZZLE);
+  // No default module; callers should apply their own module data.
 }
 
 on('inventory:changed', () => {
