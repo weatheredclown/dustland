@@ -481,9 +481,31 @@
     }
 
 /* Combat UI */
-#combatOverlay { background:rgba(0,0,0,.8); pointer-events:auto; z-index:10; right:var(--panelW); }
-#combatOverlay.warning { animation:bossWarn .3s steps(1) 4; }
+#combatOverlay {
+  background:rgba(0,0,0,.8);
+  pointer-events:auto;
+  z-index:10;
+  right:var(--panelW);
+  --telegraphIntensity:1;
+  --telegraphDuration:1000ms;
+}
+#combatOverlay.warning {
+  animation:bossWarn .3s steps(1) 4,
+    screenShake .1s steps(2) infinite,
+    crtDistort var(--telegraphDuration) ease-in-out;
+  --shakeMag:calc(var(--telegraphIntensity)*2px);
+}
 @keyframes bossWarn { 50% { background:rgba(80,0,0,.8); } }
+@keyframes screenShake {
+  0%,100% { transform:translate(0,0); }
+  25% { transform:translate(var(--shakeMag),var(--shakeMag)); }
+  50% { transform:translate(calc(var(--shakeMag)*-1),var(--shakeMag)); }
+  75% { transform:translate(var(--shakeMag),calc(var(--shakeMag)*-1)); }
+}
+@keyframes crtDistort {
+  0%,100% { filter:none; }
+  50% { filter:contrast(2) saturate(1.5) hue-rotate(10deg); }
+}
 #combatOverlay .combat-window {
   pointer-events:auto;
   width:min(640px,92vw);

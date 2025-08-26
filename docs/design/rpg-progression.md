@@ -71,7 +71,7 @@ Here’s the roadmap. We’ll build the core systems first, get the player-facin
 - [x] **Enemy Presets:** Create a `presets.json` file to define enemy stat allocations per level. For example, a "Scrapper" preset might allocate points into `STR` and `AGI`, while a "Bulwark" preset focuses on `DEF`.
 - [x] **Zone Population:** Populate the "Scrap Wastes" (Levels 1-5) with 5-7 on-level enemies and one or two higher-level "challenge" enemies off the main path. Ensure the zone layout naturally funnels players back toward a trainer NPC.
 - [x] **Boss Mechanics:** Implement the first boss with a telegraphed special move. This involves creating a visual cue (e.g., a "charging up" animation or effect) and a corresponding high-damage attack that triggers after a short delay.
-- [ ] **Boss Visuals:** Add screen effects like CRT distortion or shake when a boss telegraphs a special move.
+- [x] **Boss Visuals:** Add configurable CRT distortion and shake when a boss telegraphs a special move.
 - [x] **Respec Vendor:** Create a special vendor NPC who sells "Memory Worm" tokens for a high price (e.g., 500 scrap). This vendor should be placed in a mid-to-late game area.
 - [ ] **Memory Worm Drops:** Make boss encounters occasionally drop "Memory Worm" tokens to complement vendor purchases.
 
