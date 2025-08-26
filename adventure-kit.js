@@ -636,20 +636,22 @@ function loadMods(mods) {
   mb.innerHTML = '';
   MOD_TYPES.forEach(m => {
     const label = document.createElement('label');
-    label.style.display = 'block';
+    label.style.display = 'flex';
+    label.style.alignItems = 'center';
+    label.style.gap = '4px';
     const chk = document.createElement('input');
     chk.type = 'checkbox';
     chk.dataset = chk.dataset || {};
     chk.dataset.mod = m;
+    const span = document.createElement('span');
+    span.textContent = m;
     const inp = document.createElement('input');
     inp.type = 'number';
     inp.className = 'modVal';
-    inp.style.marginLeft = '4px';
+    inp.style.width = '60px';
     inp.disabled = true;
     chk.onchange = () => { inp.disabled = !chk.checked; };
     label.appendChild(chk);
-    const span = document.createElement('span');
-    span.textContent = ' ' + m + ' ';
     label.appendChild(span);
     label.appendChild(inp);
     mb.appendChild(label);
