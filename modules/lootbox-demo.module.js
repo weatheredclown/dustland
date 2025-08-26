@@ -90,7 +90,7 @@ startGame = function(){
   setPartyPos(s.x, s.y);
   setMap(s.map, 'Loot Box Demo');
   const template = LOOTBOX_DEMO_MODULE.templates.find(t => t.id === 'training_dummy');
-  const npc = makeNPC('training_dummy_1', 'demo_room', 5, Math.floor(ROOM_H/2), template.color, template.name, '', template.desc, {}, null, null, null, { combat: { ...template.combat, HP: 5, challenge: 5 } });
+  const npc = makeNPC('training_dummy_1', 'demo_room', 5, Math.floor(LOOTBOX_DEMO_MODULE.ROOM_H/2), template.color, template.name, '', template.desc, {}, null, null, null, { combat: { ...template.combat, HP: 5, challenge: 5 } });
   NPCS.push(npc);
   refreshUI();
 };
