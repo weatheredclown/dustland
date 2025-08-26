@@ -1526,6 +1526,7 @@ function addItem() {
   }
   editItemIdx = -1;
   document.getElementById('addItem').textContent = 'Add Item';
+  document.getElementById('addItem').style.display = 'block';
   document.getElementById('cancelItem').style.display = 'none';
   document.getElementById('delItem').style.display = 'none';
   loadMods({});
