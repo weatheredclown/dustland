@@ -140,6 +140,86 @@
       "desc": "Appears after you linger.",
       "tree": { "start": { "text": "You finally noticed me.", "choices": [ { "label": "(Leave)", "to": "bye" } ] } },
       "reveal": { "flag": "visits@world@7,7", "op": ">=", "value": 3 }
+    },
+    {
+      "id": "dialog_tester",
+      "map": "world",
+      "x": 7,
+      "y": 17,
+      "color": "#fcc",
+      "name": "Dialog Tester",
+      "desc": "Demonstrates advanced dialog options.",
+      "tree": {
+        "start": {
+          "text": "Pick a feature to test.",
+          "choices": [
+            { "label": "(Check STR)", "to": "dc" },
+            { "label": "(Gain XP)", "to": "xp" },
+            { "label": "(Require Coin)", "to": "req_item" },
+            { "label": "(Need Trinket)", "to": "req_slot" },
+            { "label": "(Move Me)", "to": "move" },
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        },
+        "dc": {
+          "text": "Let's see your strength.",
+          "choices": [
+            {
+              "label": "(Roll)",
+              "to": "start",
+              "check": { "stat": "STR", "dc": 5 },
+              "success": "Impressive!",
+              "failure": "Not strong enough."
+            }
+          ]
+        },
+        "xp": {
+          "text": "Testing experience award.",
+          "choices": [
+            {
+              "label": "(Earn XP)",
+              "to": "start",
+              "reward": "XP 1",
+              "success": "You feel wiser."
+            }
+          ]
+        },
+        "req_item": {
+          "text": "Do you carry the coin?",
+          "choices": [
+            {
+              "label": "(Use Coin)",
+              "to": "start",
+              "reqItem": "golden_coin",
+              "success": "Thanks for the coin.",
+              "failure": "Bring me the Golden Coin."
+            }
+          ]
+        },
+        "req_slot": {
+          "text": "Show me any trinket.",
+          "choices": [
+            {
+              "label": "(Show Trinket)",
+              "to": "start",
+              "reqSlot": "trinket",
+              "success": "Nice trinket!",
+              "failure": "You lack a trinket."
+            }
+          ]
+        },
+        "move": {
+          "text": "I can move at your request.",
+          "choices": [
+            {
+              "label": "(Step North)",
+              "to": "start",
+              "goto": { "target": "npc", "rel": true, "y": -1 },
+              "success": "I moved north."
+            }
+          ]
+        }
+      }
     }
   ],
   "events": [
