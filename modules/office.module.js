@@ -241,7 +241,7 @@ const OFFICE_MODULE = (() => {
           : 'Too busy to chat.';
         const choices = [];
         if (player.scrap < 2)
-          choices.push({ label: 'Borrow 2 scrap', to: 'borrow' });
+          choices.push({ label: 'Borrow 2 scrap', to: 'borrow', reward: 'SCRAP 2' });
         choices.push({ label: '(Leave)', to: 'bye' });
         const nodes = { start: { text: baseText, choices } };
         if (player.scrap < 2) {
@@ -251,12 +251,6 @@ const OFFICE_MODULE = (() => {
           };
         }
         return nodes;
-      },
-      processNode(node) {
-        if (node === 'borrow') {
-          player.scrap += 2;
-          updateHUD?.();
-        }
       }
     },
     {

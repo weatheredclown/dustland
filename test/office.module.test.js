@@ -45,10 +45,14 @@ test('office worker lends scrap when low', () => {
   global.player = { scrap: 1 };
   global.updateHUD = () => { hudCalled = true; };
   global.portraits = { worker: '' };
+  vm.runInThisContext(
+    fs.readFileSync(path.join(__dirname, '..', 'core', 'actions.js'), 'utf8')
+  );
   const worker = vm.runInThisContext('(' + objSrc + ')');
   const tree = worker.tree();
-  assert(tree.start.choices.some((c) => c.label === 'Borrow 2 scrap'));
-  worker.processNode('borrow');
+  const loanChoice = tree.start.choices.find((c) => c.label === 'Borrow 2 scrap');
+  assert(loanChoice);
+  Actions.applyQuestReward(loanChoice.reward);
   assert.equal(player.scrap, 3);
   assert(hudCalled);
 });
