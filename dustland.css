@@ -279,6 +279,9 @@
     .pcard.selected {
         box-shadow: 0 0 0 2px #8bd98d;
     }
+    #party .stats {
+        white-space: nowrap
+    }
 
 .xpbar {
   position: relative;
