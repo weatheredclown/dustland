@@ -71,6 +71,24 @@ The challenge should grow as the player masters the system.
 
 > **Gizmo:** Let's build a small vertical slice first. If the slice runs smoothly on low-end hardware and the flow feels right, we commit. Otherwise we adjust the design instead of patching later.
 
+### Adrenaline Prototype: Arena Script
+
+Run the Node-driven `adrenaline-prototype.js` to spot-check Adrenaline flow before UI work.
+
+```
+node adrenaline-prototype.js
+```
+
+The script pits a lone hero against a dummy and logs `Adrenaline: <value>` whenever the meter changes.
+
+**Evaluate**
+
+- **Fill rate:** The bar should reach 100 in roughly four to six basic attacks. If it spikes or crawls, tweak `hero.equip.weapon.mods.ADR` or the dummy's `hp` in the script.
+- **Stability:** Watch for unexpected jumps or stalls in the numbers.
+- **Log clarity:** Ensure the output is readable enough to guide tuning.
+
+The prototype doesn't spend Adrenaline yet; it's a pacing probe. Once the gain curve feels right, move on to HUD and specials.
+
 ### Expanded Task List
 
 #### Phase 1: Core Systems
@@ -78,7 +96,7 @@ The challenge should grow as the player masters the system.
 - [x] **Adrenaline Generation:** Basic attacks now generate Adrenaline. This value is determined by weapon stats via the `ADR` modifier.
 - [x] **Special Move Framework:** In `core/abilities.js`, create a data structure for Specials that includes `adrenaline_cost`, `target_type` (single, aoe), `effect` (damage, stun, etc.), and `wind_up_time`.
 - [x] **Equipment Modifiers:** Update the inventory system to apply combat modifiers from equipped items at the start of each battle.
-- [ ] **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
+- [x] **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
 
 #### Phase 2: Content & UI
 - [ ] **New HUD:** Redesign the combat UI to include the Adrenaline bar, status effect icons, and improved health bar feedback.
