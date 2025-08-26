@@ -20,15 +20,16 @@ const setup = async () => {
 
 test('dustStorm and addSoundSource effects', async () => {
   const dom = await setup();
-  const { Effects } = globalThis;
+  const { effects } = globalThis.Dustland;
+  assert.strictEqual(globalThis.Effects, effects);
 
-  Effects.apply([{ effect: 'dustStorm', active: true }]);
+  effects.apply([{ effect: 'dustStorm', active: true }]);
   assert.ok(document.getElementById('dustStorm'));
 
-  Effects.apply([{ effect: 'addSoundSource', id: 'chime1', x: 2, y: 3 }]);
+  effects.apply([{ effect: 'addSoundSource', id: 'chime1', x: 2, y: 3 }]);
   assert.deepStrictEqual(global.soundSources, [{ id: 'chime1', x: 2, y: 3, map: 'dust_storm' }]);
 
-  Effects.apply([{ effect: 'dustStorm', active: false }]);
+  effects.apply([{ effect: 'dustStorm', active: false }]);
   assert.strictEqual(document.getElementById('dustStorm'), null);
 
   dom.window.close();
