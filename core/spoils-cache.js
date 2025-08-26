@@ -69,26 +69,43 @@ const SpoilsCache = {
       setTimeout(() => {
         el.remove();
         onOpen?.();
-        globalThis.EventBus?.emit?.('spoils:opened', { rank });
       }, 200);
     }, { once: true });
     return el;
   },
-  openAll(rank){
+  open(rank, rng=Math.random){
+    if(!player?.inv) return null;
+    const idx = player.inv.findIndex(c => c.type === 'spoils-cache' && c.rank === rank);
+    if(idx === -1) return null;
+    player.inv.splice(idx,1);
+    notifyInventoryChanged?.();
+    const item = ItemGen?.generate?.(rank, rng);
+    if(item){
+      if(typeof addToInv === 'function'){
+        if(!addToInv(item)){
+          if(typeof dropItemNearParty === 'function') dropItemNearParty(item);
+        }
+      } else {
+        player.inv.push(item);
+        notifyInventoryChanged?.();
+      }
+      globalThis.log?.(`${item.name} found in ${this.ranks[rank]?.name || rank}.`);
+      globalThis.EventBus?.emit?.('spoils:opened', { rank, item });
+    } else {
+      globalThis.log?.(`${this.ranks[rank]?.name || rank} opened.`);
+      globalThis.EventBus?.emit?.('spoils:opened', { rank });
+    }
+    return item;
+  },
+  openAll(rank, rng=Math.random){
     if(!player?.inv) return 0;
     let opened = 0;
-    for(let i = player.inv.length - 1; i >= 0; i--){
-      const it = player.inv[i];
-      if(it.type === 'spoils-cache' && it.rank === rank){
-        player.inv.splice(i,1);
-        opened++;
-        globalThis.EventBus?.emit?.('spoils:opened', { rank });
-      }
+    while(this.open(rank, rng)){
+      opened++;
     }
     if(opened){
       const name = this.ranks[rank]?.name || rank;
-      log?.(`Opened ${opened} ${name}${opened>1?'s':''}.`);
-      notifyInventoryChanged?.();
+      globalThis.log?.(`Opened ${opened} ${name}${opened>1?'s':''}.`);
     }
     return opened;
   }
