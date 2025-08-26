@@ -11,17 +11,17 @@ const LOOTBOX_DEMO_MODULE = (() => {
   const demoRoom = { id: 'demo_room', w: ROOM_W, h: ROOM_H, grid, entryX: 1, entryY: Math.floor(ROOM_H / 2) };
 
   let sawDrop = false;
-  watchEventFlag('spoils:opened', 'cache_opened');
-  EventBus.on('spoils:drop', () => { sawDrop = true; });
-  EventBus.on('combat:ended', ({ result }) => {
+  Dustland.eventFlags.watch('spoils:opened', 'cache_opened');
+  Dustland.eventBus.on('spoils:drop', () => { sawDrop = true; });
+  Dustland.eventBus.on('combat:ended', ({ result }) => {
     if(result === 'loot'){
       incFlag('dummy_defeated');
-      if(!sawDrop) EventBus.emit('mentor:bark', { text:'Better luck next time', sound:'mentor' });
+      if(!sawDrop) Dustland.eventBus.emit('mentor:bark', { text:'Better luck next time', sound:'mentor' });
       sawDrop = false;
     }
   });
-  EventBus.on('spoils:opened', () => {
-    EventBus.emit('mentor:bark', { text:'Good job', sound:'mentor' });
+  Dustland.eventBus.on('spoils:opened', () => {
+    Dustland.eventBus.emit('mentor:bark', { text:'Good job', sound:'mentor' });
   });
 
   const npcs = [
@@ -44,16 +44,16 @@ const LOOTBOX_DEMO_MODULE = (() => {
         opened: {
           text: 'Nice work. Want another dummy?',
           choices: [
-            { label: '(Same dummy)', to: 'spawn_same', effects: [() => clearFlag('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') } },
-            { label: '(Tougher dummy)', to: 'spawn_tough', effects: [() => incFlag('dummy_challenge'), () => clearFlag('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') + 1 } },
+            { label: '(Same dummy)', to: 'spawn_same', effects: [() => Dustland.eventFlags.clear('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') } },
+            { label: '(Tougher dummy)', to: 'spawn_tough', effects: [() => incFlag('dummy_challenge'), () => Dustland.eventFlags.clear('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') + 1 } },
             { label: '(Leave)', to: 'bye' }
           ]
         },
         fought: {
           text: 'No cache yet? Want to try again?',
           choices: [
-            { label: '(Same dummy)', to: 'spawn_same', effects: [() => clearFlag('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') } },
-            { label: '(Tougher dummy)', to: 'spawn_tough', effects: [() => incFlag('dummy_challenge'), () => clearFlag('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') + 1 } },
+            { label: '(Same dummy)', to: 'spawn_same', effects: [() => Dustland.eventFlags.clear('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') } },
+            { label: '(Tougher dummy)', to: 'spawn_tough', effects: [() => incFlag('dummy_challenge'), () => Dustland.eventFlags.clear('cache_opened')], spawn: { templateId: 'training_dummy', x: 5, y: Math.floor(ROOM_H / 2), challenge: flagValue('dummy_challenge') + 1 } },
             { label: '(Leave)', to: 'bye' }
           ]
         },

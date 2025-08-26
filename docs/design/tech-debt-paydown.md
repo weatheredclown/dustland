@@ -51,6 +51,8 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
 - [ ] **Phase 1: Namespace the world**
   - [x] Introduce `globalThis.Dustland = {}`.
   - [ ] Move module exports into `Dustland.*` buckets.
+    - [x] Namespace event bus under `Dustland.eventBus`.
+    - [x] Namespace event flag helpers under `Dustland.eventFlags`.
   - [ ] Update references and tests incrementally.
 - [ ] **Phase 2: Untangle UI from logic**
   - [ ] Replace direct DOM calls with event emissions.
