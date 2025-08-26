@@ -192,6 +192,7 @@ loopMinus.addEventListener('click', () => {
 
 const moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], encounters: [], templates: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
+const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod'];
 let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
 let treeData = {};
 let selectedObj = null;
@@ -618,29 +619,46 @@ function clearWorld() {
   });
 }
 
-function modRow(stat = 'ATK', val = 1) {
-  const div = document.createElement('div');
-  const sel = document.createElement('select');
-  sel.className = 'modStat';
-  sel.innerHTML = STAT_OPTS.map(s => `<option value="${s}"${s === stat ? ' selected' : ''}>${s}</option>`).join('');
-  const inp = document.createElement('input');
-  inp.type = 'number'; inp.className = 'modVal'; inp.value = val;
-  div.appendChild(sel); div.appendChild(inp);
-  document.getElementById('modBuilder').appendChild(div);
-}
 function collectMods() {
   const mods = {};
-  document.querySelectorAll('#modBuilder > div').forEach(div => {
-    const stat = div.querySelector('.modStat').value;
-    const val = parseInt(div.querySelector('.modVal').value, 10);
-    if (stat && val) mods[stat] = val;
+  document.querySelectorAll('#modBuilder > label').forEach(label => {
+    const chk = label.querySelector('input[type="checkbox"]');
+    if (chk.checked) {
+      const mod = chk.dataset.mod;
+      const val = parseInt(label.querySelector('.modVal').value, 10);
+      if (mod && !isNaN(val)) mods[mod] = val;
+    }
   });
   return mods;
 }
 function loadMods(mods) {
   const mb = document.getElementById('modBuilder');
   mb.innerHTML = '';
-  Object.entries(mods || {}).forEach(([s, v]) => modRow(s, v));
+  MOD_TYPES.forEach(m => {
+    const label = document.createElement('label');
+    label.style.display = 'block';
+    const chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.dataset = chk.dataset || {};
+    chk.dataset.mod = m;
+    const inp = document.createElement('input');
+    inp.type = 'number';
+    inp.className = 'modVal';
+    inp.style.marginLeft = '4px';
+    inp.disabled = true;
+    chk.onchange = () => { inp.disabled = !chk.checked; };
+    label.appendChild(chk);
+    const span = document.createElement('span');
+    span.textContent = ' ' + m + ' ';
+    label.appendChild(span);
+    label.appendChild(inp);
+    mb.appendChild(label);
+    if (typeof mods[m] === 'number') {
+      chk.checked = true;
+      inp.disabled = false;
+      inp.value = mods[m];
+    }
+  });
 }
 
 function renderDialogPreview() {
@@ -2438,7 +2456,6 @@ document.getElementById('delInterior').onclick = deleteInterior;
 document.getElementById('delQuest').onclick = deleteQuest;
 document.getElementById('delEvent').onclick = deleteEvent;
 document.getElementById('delPortal').onclick = deletePortal;
-document.getElementById('addMod').onclick = () => modRow();
 document.getElementById('itemSlot').addEventListener('change', updateModsWrap);
 document.getElementById('itemUseType').addEventListener('change', updateUseWrap);
 document.getElementById('eventEffect').addEventListener('change', updateEventEffectFields);
