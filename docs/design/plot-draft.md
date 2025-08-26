@@ -51,6 +51,11 @@ The items our party finds shouldn't just be stat sticks. They should be story-te
 The challenges our party faces shouldn't just be about combat. The wasteland is full of puzzles, remnants of a forgotten world that require brains, not just brawn, to solve.
 
 * **The Radio Tower Alignment**: A classic puzzle with a twist. The party has to align a series of radio towers to amplify the ghost signal, but each tower is guarded by a different faction with its own agenda. The player will have to negotiate, fight, or sneak their way through to get the job done.
+  - Each tower exposes a trio of dials that control pitch, gain, and phase. Spinning a dial paints an arc; when all arcs glow green, the broadcast snaps into focus.
+  - Missteps trigger a burst of static that draws nearby Silencer patrols, but the array resets instantly so players can iterate without a long trek back.
+> **Gizmo:** We'll reuse the generic dial widget here; every tower shares the same control surface so modders can kitbash new arrays.
+>
+> **Wing:** Failure needs teeth, but not fangs. A quick jolt of static and a patrol is enough. Keep the reset fast so it feels like tuning a finicky radio, not rewinding a level.
 * **The Dust Storm Navigation**: A survival puzzle where the party is caught in a blinding dust storm and has to navigate by the sound of wind chimes strung along ruined billboards. This is a great opportunity for some tense, atmospheric gameplay.
 * **The Layered Graffiti**: A decoding puzzle where the party has to decipher layers of graffiti on a collapsed overpass to find a safe route through a treacherous part of the wastes. Each layer of graffiti is from a different era, telling a story of the people who came before.
 
@@ -96,7 +101,9 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
     - [ ] Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event.
 
 #### **Phase 3: Puzzle and World Building**
-- [ ] **Design a radio tower alignment puzzle that tunes the broadcast:** This task is not yet complete. The *idea* is here, but the actual puzzle mechanics, UI, and implementation are not.
+- [x] **Design a radio tower alignment puzzle that tunes the broadcast.**
+  - Rotating pitch, gain, and phase dials brings the broadcast into focus while Silencer patrols home in on failed attempts.
+- [ ] **Implement the radio tower alignment puzzle with full UI and integration.**
 - [x] **Design a dust storm navigation puzzle using wind chimes along ruined billboards:** Implemented in `mara-puzzle.module.js` with chime events and a dust storm effect.
 - [ ] **Design a layered graffiti decoding puzzle to reveal a safe route before the sun bleeds out:** This is another conceptual task that requires design and implementation.
 - [ ] **Build Reusable Widgets:**
