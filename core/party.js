@@ -13,6 +13,8 @@ class Character {
     this.maxHp=10;
     this.hp=this.maxHp;
     this.ap=2;
+    this.maxAdr=100;
+    this.adr=0;
     this._bonus={ATK:0, DEF:0, LCK:0};
     this.special = opts.special || null;
   }
