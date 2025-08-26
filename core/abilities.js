@@ -1,5 +1,6 @@
 (function(){
   const Abilities = {};
+  const Specials = {};
 
   function defineAbility(id, data = {}){
     const ability = {
@@ -16,5 +17,17 @@
     return ability;
   }
 
-  Object.assign(globalThis, { Abilities, defineAbility });
+  function defineSpecial(id, data = {}){
+    const special = {
+      id,
+      adrenaline_cost: data.adrenaline_cost || 0,
+      target_type: data.target_type || 'single',
+      effect: data.effect || {},
+      wind_up_time: data.wind_up_time || 0
+    };
+    Specials[id] = special;
+    return special;
+  }
+
+  Object.assign(globalThis, { Abilities, defineAbility, Specials, defineSpecial });
 })();
