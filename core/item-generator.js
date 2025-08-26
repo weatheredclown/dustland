@@ -45,6 +45,16 @@ const ItemGen = {
   randRange(min, max, rng){
     return min + Math.floor(rng() * (max - min + 1));
   },
+  calcScrap(item){
+    let total = 0;
+    const stats = item.stats || {};
+    for(const val of Object.values(stats))
+      if(typeof val === 'number') total += val;
+    const mods = item.mods || {};
+    for(const val of Object.values(mods))
+      if(typeof val === 'number') total += Math.abs(val);
+    return Math.max(1, Math.round(total / 2));
+  },
   generate(rank='rusted', rng=Math.random){
     const type = this.pick(this.types, rng);
     const adj = this.pick(this.adjectives, rng);
@@ -56,9 +66,9 @@ const ItemGen = {
       type,
       name: `${adj} ${noun}`,
       rank,
-      stats: { power },
-      scrap: Math.round(power / 2)
+      stats: { power }
     };
+    item.scrap = this.calcScrap(item);
     if(type === 'oddity'){
       item.lore = this.pick(this.oddityLore, rng);
     }

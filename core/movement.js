@@ -1,5 +1,5 @@
-const { Dustland } = globalThis;
-const { effects: Effects } = Dustland || {};
+const { Dustland: DMove } = globalThis;
+const { effects: Effects } = DMove || {};
 
 // active temporary stat modifiers
 const buffs = [];              // 2c342c / 313831
@@ -180,7 +180,7 @@ function move(dx,dy){
         checkRandomEncounter();
         EventBus.emit('sfx','step');
         // NPCs advance along paths after the player steps
-        if (Dustland.path?.tickPathAI) Dustland.path.tickPathAI();
+        if (DMove.path?.tickPathAI) DMove.path.tickPathAI();
         moveDelay = 0;
         resolve();
       }, moveDelay);
@@ -197,7 +197,7 @@ function checkAggro(){
     if(n.map!==state.map) continue;
     const d = Math.abs(n.x - party.x) + Math.abs(n.y - party.y);
     if(d<=3){
-      Dustland.actions.startCombat({ ...n.combat, npc:n, name:n.name });
+      DMove.actions.startCombat({ ...n.combat, npc:n, name:n.name });
       break;
     }
   }
@@ -229,7 +229,7 @@ function checkRandomEncounter(){
   const chance = Math.min(dist * 0.02, 0.5);
   if(Math.random() < chance){
     const def = bank[Math.floor(Math.random()*bank.length)];
-    Dustland.actions.startCombat(def);
+    DMove.actions.startCombat(def);
   }
 }
 function adjacentNPC(){

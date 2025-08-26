@@ -15,7 +15,7 @@ test('generator creates item with type, name, and stats', () => {
   assert.strictEqual(item.name, 'Grit-Stitched Repeater');
   assert.strictEqual(item.rank, 'sealed');
   assert.ok(item.stats.power >= 3 && item.stats.power <= 5);
-  assert.strictEqual(item.scrap, Math.round(item.stats.power / 2));
+  assert.strictEqual(item.scrap, ItemGen.calcScrap(item));
 });
 
 test('generated items have unique ids', () => {
@@ -49,4 +49,10 @@ test('oddity items include lore snippet', () => {
   const item = ItemGen.generate('rusted', rng);
   assert.strictEqual(item.type, 'oddity');
   assert.ok(ItemGen.oddityLore.includes(item.lore));
+});
+
+test('scrap value accounts for stats and mods', () => {
+  const item = { stats: { power: 4, speed: 2 }, mods: { DEF: 3 } };
+  const expected = Math.round((4 + 2 + 3) / 2);
+  assert.strictEqual(ItemGen.calcScrap(item), expected);
 });

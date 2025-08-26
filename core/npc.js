@@ -1,12 +1,12 @@
 // ===== NPCs =====
-const { Dustland } = globalThis;
+const { Dustland: DNpc } = globalThis;
 class NPC {
   constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null}) {
     Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,combat,shop,portraitSheet});
     const capNode = (node) => {
       if (this.combat && node === 'do_fight') {
         closeDialog();
-        Dustland.actions.startCombat({ ...this.combat, npc: this, name: this.name });
+        DNpc.actions.startCombat({ ...this.combat, npc: this, name: this.name });
       } else if (this.shop && node === 'sell') {
         const items = player.inv.map((it, idx) => ({label: `Sell ${it.name} (${Math.max(1, it.value || 0)} ${CURRENCY})`, to: 'sell', sellIndex: idx}));
         this.tree.sell.text = items.length ? 'What are you selling?' : 'Nothing to sell.';
@@ -14,7 +14,7 @@ class NPC {
         this.tree.sell.choices = items;
       } else if (this.shop && node === 'buy') {
         closeDialog();
-        Dustland.actions.openShop(this);
+        DNpc.actions.openShop(this);
         return;
       }
     };

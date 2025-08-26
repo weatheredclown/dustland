@@ -9,7 +9,7 @@ let currentNPC=null;
 Object.defineProperty(globalThis,'currentNPC',{get:()=>currentNPC,set:v=>{currentNPC=v;}});
 const dialogState={ tree:null, node:null };
 let selectedChoice=0;
-const { Dustland } = globalThis;
+const { Dustland: DDialog } = globalThis;
 
 function dlgHighlightChoice(){
   [...choicesEl.children].forEach((c,i)=>{
@@ -157,7 +157,7 @@ function advanceDialog(stateObj, choiceIdx){
     if(!hasEnough){
       return finalize(choice.failure || 'You lack the required item.', false, true);
     }
-    Dustland.actions.applyQuestReward(choice.reward);
+    DDialog.actions.applyQuestReward(choice.reward);
     joinParty(choice.join);
     processQuestFlag(choice);
     runEffects(choice.effects);
@@ -188,7 +188,7 @@ function advanceDialog(stateObj, choiceIdx){
       if (itemIdx > -1) removeFromInv(itemIdx);
     }
 
-    Dustland.actions.applyQuestReward(choice.reward);
+    DDialog.actions.applyQuestReward(choice.reward);
     joinParty(choice.join);
     processQuestFlag(choice);
     runEffects(choice.effects);
@@ -207,7 +207,7 @@ function advanceDialog(stateObj, choiceIdx){
     }
   }
 
-  Dustland.actions.applyQuestReward(choice.reward);
+  DDialog.actions.applyQuestReward(choice.reward);
   joinParty(choice.join);
   processQuestFlag(choice);
   runEffects(choice.effects);
@@ -219,7 +219,7 @@ function advanceDialog(stateObj, choiceIdx){
     } else if (op === 'add') {
       incFlag(flag, value);
     } else if (op === 'clear') {
-      Dustland.eventFlags.clear(flag);
+      DDialog.eventFlags.clear(flag);
     }
   }
 
