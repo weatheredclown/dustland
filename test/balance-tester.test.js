@@ -148,7 +148,7 @@ test('Game balance tester', () => {
       const dirMap = { up:[0,-1], down:[0,1], left:[-1,0], right:[1,0] };
       const dir = directions[Math.floor(Math.random() * directions.length)];
       const [dx, dy] = dirMap[dir];
-      move(dx, dy);
+      Dustland.movement.move(dx, dy);
     }
   };
 

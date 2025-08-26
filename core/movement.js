@@ -179,7 +179,7 @@ function move(dx,dy){
         checkRandomEncounter();
         EventBus.emit('sfx','step');
         // NPCs advance along paths after the player steps
-        if(typeof tickPathAI==='function') tickPathAI();
+        if (Dustland.path?.tickPathAI) Dustland.path.tickPathAI();
         moveDelay = 0;
         resolve();
       }, moveDelay);
@@ -346,7 +346,7 @@ function interact(){
 const movementSystem = { canWalk, move };
 const collisionSystem = { queryTile, canWalk };
 const interactionSystem = { adjacentNPC, takeNearestItem, interact, interactAt };
-Object.assign(globalThis, {
+const movement = {
   movementSystem,
   collisionSystem,
   interactionSystem,
@@ -364,4 +364,7 @@ Object.assign(globalThis, {
   getMoveDelay: () => moveDelay,
   checkRandomEncounter,
   distanceToRoad
-});
+};
+globalThis.Dustland = globalThis.Dustland || {};
+globalThis.Dustland.movement = movement;
+Object.assign(globalThis, movement);

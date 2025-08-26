@@ -166,12 +166,12 @@ async function runBalanceTest() {
           const step = agent.path.shift();
           const dx = step.x - px;
           const dy = step.y - py;
-          await move(dx, dy);
+          await Dustland.movement.move(dx, dy);
           stats.pathDistance += Math.abs(dx) + Math.abs(dy);
           return;
         }
         if (agent.job) {
-          const p = PathQueue.pathFor(agent.job);
+          const p = Dustland.path.pathFor(agent.job);
           if (p) {
             agent.path = p.slice(1);
             agent.job = null;
@@ -182,7 +182,7 @@ async function runBalanceTest() {
         const target = findRandomGoal(map, agent.goal);
         if (target) {
           agent.goal = target;
-          agent.job = PathQueue.queue(map, { x: px, y: py }, agent.goal, leader.id);
+          agent.job = Dustland.path.queue(map, { x: px, y: py }, agent.goal, leader.id);
         }
       }
     };
