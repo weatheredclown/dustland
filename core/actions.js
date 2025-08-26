@@ -35,5 +35,7 @@
       if(typeof globalThis.openShop==='function') return globalThis.openShop(npc);
     }
   };
-  Object.assign(globalThis, { Actions });
+  globalThis.Dustland = globalThis.Dustland || {};
+  globalThis.Dustland.actions = Actions;
+  globalThis.Actions = Actions;
 })();

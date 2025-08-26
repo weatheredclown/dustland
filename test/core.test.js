@@ -796,16 +796,16 @@ test('makeNPC normalizes existing fight choices', () => {
 
 test('fight choice triggers combat', () => {
   NPCS.length = 0;
-  const orig = Actions.startCombat;
+  const orig = globalThis.Dustland.actions.startCombat;
   let triggered = false;
-  Actions.startCombat = () => { triggered = true; };
+  globalThis.Dustland.actions.startCombat = () => { triggered = true; };
   const npc = makeNPC('rival', 'world', 0, 0, '#fff', 'Rival', '', '', null, null, null, null, { combat: { DEF: 1 } });
   NPCS.push(npc);
   openDialog(npc);
   const fightBtn = choicesEl.children.find(c => c.textContent === '(Fight)');
   fightBtn.onclick();
   assert.ok(triggered);
-  Actions.startCombat = orig;
+  globalThis.Dustland.actions.startCombat = orig;
 });
 
 test('boss special telegraphs before striking', async () => {
@@ -1253,7 +1253,7 @@ test('distance to road increases encounter chance', () => {
   let started = false;
   const origRand = Math.random;
   Math.random = () => 0;
-  Actions.startCombat = () => { started = true; };
+  globalThis.Dustland.actions.startCombat = () => { started = true; };
   checkRandomEncounter();
   Math.random = origRand;
   assert.ok(started);
@@ -1268,7 +1268,7 @@ test('no encounters occur on roads', () => {
   let started = false;
   const origRand = Math.random;
   Math.random = () => 0;
-  Actions.startCombat = () => { started = true; };
+  globalThis.Dustland.actions.startCombat = () => { started = true; };
   checkRandomEncounter();
   Math.random = origRand;
   assert.ok(!started);

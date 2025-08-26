@@ -55,7 +55,8 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
     - [x] Namespace event flag helpers under `Dustland.eventFlags`.
     - [x] Namespace path helpers under `Dustland.path`.
     - [x] Namespace movement helpers under `Dustland.movement`.
-    - [x] Namespace effects under `Dustland.effects`.
+  - [x] Namespace effects under `Dustland.effects`.
+    - [x] Namespace actions under `Dustland.actions`.
   - [ ] Update references and tests incrementally.
 - [ ] **Phase 2: Untangle UI from logic**
   - [ ] Replace direct DOM calls with event emissions.
