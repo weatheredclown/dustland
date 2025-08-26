@@ -8,6 +8,13 @@
           awardXP(leader(), amt);
         }
         if(typeof toast==='function') toast(`+${amt} XP`);
+      } else if (typeof reward==='string' && /^scrap\s*\d+/i.test(reward)) {
+        const amt = parseInt(reward.replace(/[^0-9]/g,''),10)||0;
+        if (typeof player === 'object') {
+          player.scrap = (player.scrap || 0) + amt;
+        }
+        if(typeof updateHUD==='function') updateHUD();
+        if(typeof toast==='function') toast(`+${amt} ${CURRENCY||'Scrap'}`);
       } else {
         const item = typeof resolveItem === 'function' ? resolveItem(reward) : null;
         if (item) {
