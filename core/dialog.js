@@ -61,7 +61,8 @@ function normalizeDialogTree(tree){
       if(to) obj.to=to;
       return obj;
     });
-    out[id]={text:n.text||'',checks:n.checks||[],effects:n.effects||[],next};
+    const jump=(Array.isArray(n.jump)?n.jump:[]).map(j=>({to:j.to,if:j.if}));
+    out[id]={text:n.text||'',checks:n.checks||[],effects:n.effects||[],next,jump};
   }
   return out;
 }
@@ -333,8 +334,18 @@ function renderDialog(){
   if(!dialogState.tree) return;
   currentNPC?.processNode?.(dialogState.node);
   if(!dialogState.tree || !dialogState.node) return;
-  const node=dialogState.tree[dialogState.node];
+  let node=dialogState.tree[dialogState.node];
   if(!node){ closeDialog(); return; }
+
+  // Optional auto-redirects for config-only dialog trees.
+  if(node.jump && node.jump.length){
+    const tgt=node.jump.find(j=>!j.if || checkFlagCondition(j.if));
+    if(tgt){
+      dialogState.node=tgt.to;
+      renderDialog();
+      return;
+    }
+  }
 
   runEffects(node.checks);
   runEffects(node.effects);
