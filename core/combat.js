@@ -301,6 +301,8 @@ function doAttack(dmg){
     combatState.enemies.shift();
     renderCombat();
     if(combatState.enemies.length===0){ log?.('Victory!'); closeCombat('loot'); return; }
+  } else {
+    renderCombat();
   }
   nextCombatant();
 }
@@ -334,6 +336,8 @@ function finishEnemyAttack(enemy, target){
     party.splice(0,1);
     renderCombat();
     if(party.length===0){ log?.('The party has fallen...'); closeCombat('bruise'); return; }
+  } else {
+    renderCombat();
   }
   player.hp = party[0] ? party[0].hp : player.hp;
   updateHUD?.();
