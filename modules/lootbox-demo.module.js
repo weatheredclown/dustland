@@ -79,7 +79,9 @@ const LOOTBOX_DEMO_MODULE = (() => {
     quests: [],
     interiors: [demoRoom],
     buildings: [],
-    templates
+    templates,
+    ROOM_W: ROOM_W,
+    ROOM_H: ROOM_H
   };
 })();
 
