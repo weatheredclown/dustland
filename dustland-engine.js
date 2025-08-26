@@ -6,6 +6,7 @@ const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const apEl = document.getElementById('ap');
 const scrEl = document.getElementById('scrap');
+const hpBar = document.getElementById('hpBar');
 const hpFill = document.getElementById('hpFill');
 const hpGhost = document.getElementById('hpGhost');
 const adrFill = document.getElementById('adrFill');
@@ -364,10 +365,16 @@ const TAB_BREAKPOINT = 1600;
 let activeTab = 'inv';
 
 function updateHUD(){
+  const prevHp = updateHUD._lastHpVal ?? player.hp;
   hpEl.textContent = player.hp;
   apEl.textContent = player.ap;
   if(scrEl) scrEl.textContent = player.scrap;
   const lead = typeof leader === 'function' ? leader() : null;
+  if(hpBar && player.hp < prevHp){
+    hpBar.classList.add('hurt');
+    clearTimeout(updateHUD._hurtTimer);
+    updateHUD._hurtTimer = setTimeout(()=>hpBar.classList.remove('hurt'), 300);
+  }
   if(hpFill && lead){
     const pct = Math.max(0, Math.min(100, (player.hp / (lead.maxHp || 1)) * 100));
     hpFill.style.width = pct + '%';
@@ -376,6 +383,11 @@ function updateHUD(){
       requestAnimationFrame(()=>{ hpGhost.style.width = pct + '%'; });
     }
     updateHUD._lastHpPct = pct;
+    if(lead){
+      const crit = player.hp > 0 && player.hp <= (lead.maxHp || 1) * 0.25;
+      document.body.classList.toggle('hp-critical', crit);
+      document.body.classList.toggle('hp-out', player.hp <= 0);
+    }
   }
   if(adrFill && lead){
     const apct = Math.max(0, Math.min(100, (lead.adr / (lead.maxAdr || 1)) * 100));
@@ -392,6 +404,7 @@ function updateHUD(){
       }
     }
   }
+  updateHUD._lastHpVal = player.hp;
 }
 
 function showTab(which){
