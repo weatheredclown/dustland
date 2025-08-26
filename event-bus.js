@@ -23,6 +23,7 @@ globalThis.Dustland = globalThis.Dustland || {};
   }
 
   const bus = { on, off, emit };
-  Object.assign(globalThis, bus, { EventBus: bus });
+  globalThis.Dustland.eventBus = bus;
+  globalThis.EventBus = bus; // legacy shim during migration
 })();
 

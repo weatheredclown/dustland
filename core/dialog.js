@@ -213,7 +213,7 @@ function advanceDialog(stateObj, choiceIdx){
     } else if (op === 'add') {
       incFlag(flag, value);
     } else if (op === 'clear') {
-      clearFlag(flag);
+      Dustland.eventFlags.clearFlag(flag);
     }
   }
 

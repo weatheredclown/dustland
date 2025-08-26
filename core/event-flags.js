@@ -1,7 +1,9 @@
+globalThis.Dustland = globalThis.Dustland || {};
 (function(){
+  const bus = globalThis.Dustland.eventBus;
   function watchEventFlag(evt, flag){
-    if(!evt || !flag || !globalThis.EventBus?.on) return;
-    globalThis.EventBus.on(evt, () => incFlag?.(flag));
+    if(!evt || !flag || !bus?.on) return;
+    bus.on(evt, () => incFlag?.(flag));
   }
   function clearFlag(flag){
     if(!flag) return;
@@ -9,5 +11,5 @@
     if(v) incFlag?.(flag, -v);
     if(party?.flags) delete party.flags[flag];
   }
-  Object.assign(globalThis, { watchEventFlag, clearFlag });
+  globalThis.Dustland.eventFlags = { watchEventFlag, clearFlag };
 })();
