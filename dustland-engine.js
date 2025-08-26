@@ -258,8 +258,9 @@ function centerCamera(x,y,map){
   if(map==='world'){ W=WORLD_W; H=WORLD_H; }
   else if(interiors[map]){ const I=interiors[map]; W=(I&&I.w)||VIEW_W; H=(I&&I.h)||VIEW_H; }
   else { W=VIEW_W; H=VIEW_H; }
-  camX = clamp(x - Math.floor(VIEW_W/2), 0, Math.max(0, (W||VIEW_W) - VIEW_W));
-  camY = clamp(y - Math.floor(VIEW_H/2), 0, Math.max(0, (H||VIEW_H) - VIEW_H));
+  const { w:vW, h:vH } = getViewSize();
+  camX = clamp(x - Math.floor(vW/2), 0, Math.max(0, (W||vW) - vW));
+  camY = clamp(y - Math.floor(vH/2), 0, Math.max(0, (H||vH) - vH));
 }
 
 // ===== Drawing Pipeline =====
@@ -269,11 +270,12 @@ function render(gameState=state, dt){
   const ctx = sctx;
   ctx.fillStyle='#000';
   ctx.fillRect(0,0,disp.width,disp.height);
-  
+
   const activeMap = gameState.map || mapIdForState();
   const { W, H } = mapWH(activeMap);
-  const offX = Math.max(0, Math.floor((VIEW_W - W) / 2));
-  const offY = Math.max(0, Math.floor((VIEW_H - H) / 2));
+  const { w:vW, h:vH } = getViewSize();
+  const offX = Math.max(0, Math.floor((vW - W) / 2));
+  const offY = Math.max(0, Math.floor((vH - H) / 2));
 
   const items = gameState.itemDrops || itemDrops;
   const entities = gameState.entities || NPCS;
@@ -314,7 +316,7 @@ function render(gameState=state, dt){
     else if(layer==='items'){
       for(const it of items){
         if(it.map!==activeMap) continue;
-        if(it.x>=camX&&it.y>=camY&&it.x<camX+VIEW_W&&it.y<camY+VIEW_H){
+        if(it.x>=camX&&it.y>=camY&&it.x<camX+vW&&it.y<camY+vH){
           const vx=(it.x-camX+offX)*TS, vy=(it.y-camY+offY)*TS;
           ctx.fillStyle='#c8ffbf'; ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
         }
@@ -341,18 +343,19 @@ function render(gameState=state, dt){
 
   // UI border
   ctx.strokeStyle='#2a3b2a';
-  ctx.strokeRect(0.5,0.5,VIEW_W*TS-1,VIEW_H*TS-1);
+  ctx.strokeRect(0.5,0.5,vW*TS-1,vH*TS-1);
 }
 
 function drawEntities(ctx, list, offX, offY){
-    for(const n of list){
-      if(n.x>=camX&&n.y>=camY&&n.x<camX+VIEW_W&&n.y<camY+VIEW_H){
-        const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
-        ctx.fillStyle=n.color; ctx.fillRect(vx,vy,TS,TS);
-        ctx.fillStyle='#000'; ctx.fillText('!',vx+5,vy+12);
-      }
+  const { w:vW, h:vH } = getViewSize();
+  for(const n of list){
+    if(n.x>=camX&&n.y>=camY&&n.x<camX+vW&&n.y<camY+vH){
+      const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
+      ctx.fillStyle=n.color; ctx.fillRect(vx,vy,TS,TS);
+      ctx.fillStyle='#000'; ctx.fillText('!',vx+5,vy+12);
     }
   }
+}
 
 Object.assign(window, { renderOrderSystem: { order: renderOrder, render } });
 

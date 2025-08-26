@@ -186,6 +186,16 @@ function isWalkable(tile){ return !!walkable[tile]; }
 const VIEW_W=40, VIEW_H=30, TS=16;
 const WORLD_W=120, WORLD_H=90;
 
+function getViewSize(){
+  const iw = typeof window !== 'undefined' ? window.innerWidth : VIEW_W * TS;
+  const ih = typeof window !== 'undefined' ? window.innerHeight : VIEW_H * TS;
+  return {
+    w: Math.min(VIEW_W, Math.floor(iw / TS)),
+    h: Math.min(VIEW_H, Math.floor(ih / TS))
+  };
+}
+globalThis.getViewSize = getViewSize;
+
 // ===== Game state =====
 let world = [], interiors = {}, buildings = [], portals = [], npcTemplates = [];
 const tileEvents = [];
