@@ -9,7 +9,7 @@ let currentNPC=null;
 Object.defineProperty(globalThis,'currentNPC',{get:()=>currentNPC,set:v=>{currentNPC=v;}});
 const dialogState={ tree:null, node:null };
 let selectedChoice=0;
-const { Dustland } = globalThis;
+var Dustland = globalThis.Dustland;
 
 function dlgHighlightChoice(){
   [...choicesEl.children].forEach((c,i)=>{

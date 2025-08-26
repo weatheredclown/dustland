@@ -1,5 +1,5 @@
 // ===== NPCs =====
-const { Dustland } = globalThis;
+var Dustland = globalThis.Dustland;
 class NPC {
   constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null}) {
     Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,combat,shop,portraitSheet});

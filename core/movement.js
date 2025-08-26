@@ -1,4 +1,4 @@
-const { Dustland } = globalThis;
+var Dustland = globalThis.Dustland;
 const { effects: Effects } = Dustland || {};
 
 // active temporary stat modifiers
