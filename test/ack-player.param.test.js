@@ -44,6 +44,10 @@ test('ack-player auto-loads module from URL param', async () => {
     configurable: true
   });
   global.localStorage = window.localStorage;
+  const busPath = path.join(__dirname, '..', 'event-bus.js');
+  window.eval(fs.readFileSync(busPath, 'utf8'));
+  const uiPath = path.join(__dirname, '..', 'ui.js');
+  window.eval(fs.readFileSync(uiPath, 'utf8'));
   const scriptPath = path.join(__dirname, '..', 'ack-player.js');
   window.eval(fs.readFileSync(scriptPath, 'utf8'));
   await new Promise((r) => setTimeout(r, 10));

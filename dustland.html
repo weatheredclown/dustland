@@ -155,6 +155,7 @@
   </div>
 
     <script defer src="./event-bus.js"></script>
+    <script defer src="./ui.js"></script>
     <script defer src="./core/item-generator.js"></script>
     <script defer src="./core/effects.js"></script>
     <script defer src="./core/spoils-cache.js"></script>
@@ -176,14 +177,14 @@
     const params = new URLSearchParams(location.search);
     const isAck = params.get('ack-player') === '1';
     if (isAck) {
-      document.getElementById('moduleLoader').style.display = 'flex';
+      UI.show('moduleLoader', 'flex');
       const btns = document.getElementById('mainButtons');
       const nanoBtn = document.getElementById('nanoToggle');
       const audioBtn = document.getElementById('audioToggle');
       btns.appendChild(nanoBtn);
       btns.appendChild(audioBtn);
       const settingsBtn = document.getElementById('settingsBtn');
-      if (settingsBtn) settingsBtn.style.display = 'none';
+      if (settingsBtn) UI.hide('settingsBtn');
     }
     const modeScript = document.createElement('script');
     modeScript.defer = true;

@@ -111,8 +111,7 @@ function loadModule(moduleInfo){
   script.id = 'activeModuleScript';
   script.src = `${moduleInfo.file}?_=${Date.now()}`;
   script.onload = () => {
-    const picker = document.getElementById('modulePicker');
-    if(picker) picker.remove();
+    UI.remove('modulePicker');
     window.openCreator = realOpenCreator;
     window.showStart = realShowStart;
     window.resetAll = () => {

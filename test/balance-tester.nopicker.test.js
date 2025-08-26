@@ -18,7 +18,8 @@ test('balance tester does not load module picker', () => {
     createElement: () => ({})
   };
   const location = { search: '' };
-  new Function('document', 'location', script)(document, location);
+  const UI = { show: () => {}, hide: () => {} };
+  new Function('document', 'location', 'UI', script)(document, location, UI);
   const hasModulePicker = appended.some((el) => (el.src || '').includes('module-picker.js'));
   assert.strictEqual(hasModulePicker, false, 'module picker script should not be appended');
 });

@@ -19,7 +19,7 @@ captureOpenCreator();
 
 let moduleData = null;
 const PLAYTEST_KEY = 'ack_playtest';
-const loader = document.getElementById('moduleLoader');
+const loaderId = 'moduleLoader';
 const urlInput = document.getElementById('modUrl');
 const urlBtn = document.getElementById('modUrlBtn');
 const fileInput = document.getElementById('modFile');
@@ -30,7 +30,7 @@ if (playData) {
   try {
     moduleData = JSON.parse(playData);
     localStorage.removeItem(PLAYTEST_KEY);
-    loader.style.display = 'none';
+    UI.hide(loaderId);
     if (realOpenCreator) {
       window.openCreator = realOpenCreator;
       realOpenCreator();
@@ -42,7 +42,7 @@ if (playData) {
 
 const autoUrl = params.get('module');
 if (!moduleData && autoUrl) {
-  urlInput.value = autoUrl;
+  UI.setValue('modUrl', autoUrl);
   fetch(autoUrl)
     .then((r) => r.json())
     .then((data) => loadModule(data))
@@ -51,7 +51,7 @@ if (!moduleData && autoUrl) {
 
 async function loadModule(data) {
   moduleData = data;
-  loader.style.display = 'none';
+  UI.hide(loaderId);
   if (realOpenCreator) {
     window.openCreator = realOpenCreator;
     realOpenCreator();
