@@ -23,6 +23,8 @@ globalThis.Dustland = globalThis.Dustland || {};
   }
 
   const bus = { on, off, emit };
-  Object.assign(globalThis, bus, { EventBus: bus });
+  // Expose under Dustland namespace and keep a legacy shim
+  globalThis.Dustland.eventBus = bus;
+  globalThis.EventBus = bus;
 })();
 
