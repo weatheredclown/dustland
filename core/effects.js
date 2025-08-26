@@ -129,6 +129,8 @@
     }
   };
 
+  globalThis.Dustland = globalThis.Dustland || {};
+  globalThis.Dustland.effects = Effects;
   globalThis.Effects = Effects;
 })();
 

@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 test('movement exposes Dustland namespace', async () => {
   const code = await fs.readFile(new URL('../core/movement.js', import.meta.url), 'utf8');
-  const context = { Dustland: {}, Effects: {}, state: { map: 'world' } };
+  const context = { Dustland: { effects: {} }, state: { map: 'world' } };
   vm.createContext(context);
   vm.runInContext(code, context);
   assert.ok(context.Dustland?.movement);

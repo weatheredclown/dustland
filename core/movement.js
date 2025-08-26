@@ -1,4 +1,5 @@
-const { Effects } = globalThis;
+const { Dustland } = globalThis;
+const { effects: Effects } = Dustland || {};
 
 // active temporary stat modifiers
 const buffs = [];              // 2c342c / 313831
