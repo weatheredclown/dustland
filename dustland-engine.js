@@ -102,7 +102,13 @@ function setMobileControls(on){
       mobileAB=document.createElement('div');
       mobileAB.style.cssText='position:fixed;bottom:20px;right:20px;display:flex;gap:10px;z-index:1000;user-select:none;';
       mobileAB.appendChild(mk('A',()=>{
-        if(overlay?.classList?.contains('shown')) handleDialogKey?.({ key:'Enter' }); else interact();
+        if(overlay?.classList?.contains('shown')){
+          handleDialogKey?.({ key:'Enter' });
+        } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
+          handleCombatKey?.({ key:'Enter' });
+        } else {
+          interact();
+        }
       }));
       mobileAB.appendChild(mk('B',takeNearestItem));
       document.body.appendChild(mobileAB);

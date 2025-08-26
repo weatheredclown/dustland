@@ -83,3 +83,17 @@ test('mobile arrows navigate combat menu when in combat', async () => {
   down.onclick();
   assert.deepStrictEqual(keys, ['ArrowUp', 'ArrowDown']);
 });
+
+test('mobile A selects combat option when in combat', async () => {
+  const keys = [];
+  const html = '<body><div id="combatOverlay" class="shown"></div><canvas id="game"></canvas><div id="log"></div><div id="hp"></div><div id="ap"></div><div id="scrap"></div></body>';
+  const { context } = await setup(html, {
+    handleCombatKey: e => { keys.push(e.key); return true; },
+    interact: () => { keys.push('interact'); },
+    overlay: null
+  });
+  context.setMobileControls(true);
+  const a = [...context.document.querySelectorAll('button')].find(b => b.textContent === 'A');
+  a.onclick();
+  assert.deepStrictEqual(keys, ['Enter']);
+});
