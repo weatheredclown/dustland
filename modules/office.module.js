@@ -557,9 +557,9 @@ const OFFICE_MODULE = (() => {
         { map: 'world', x: WORLD_MID - 6, y: WORLD_MIDY + 5, id: 'healing_potion3', name: 'Healing Potion', type: 'consumable', use: { type: 'heal', amount: 5 } },
         { id: 'fae_token', name: 'Fae Token', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } },
         { id: 'rat_tail', name: 'Rat Tail', type: 'quest' },
-        { id: 'rusty_dagger', name: 'Rusty Dagger', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } },
+        { id: 'rusty_dagger', name: 'Rusty Dagger', type: 'weapon', slot: 'weapon', mods: { ATK: 1, ADR: 10 } },
         { id: 'ogre_tooth', name: 'Ogre Tooth', type: 'quest' },
-        { id: 'rusty_mop', name: 'Rusty Mop', type: 'weapon', slot: 'weapon', mods: { ATK: 1 } },
+        { id: 'rusty_mop', name: 'Rusty Mop', type: 'weapon', slot: 'weapon', mods: { ATK: 1, ADR: 10 } },
       ],
       quests: [
         {

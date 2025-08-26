@@ -75,7 +75,7 @@ The challenge should grow as the player masters the system.
 
 #### Phase 1: Core Systems
 - [x] **Adrenaline Resource:** Implement the Adrenaline bar (`adr`) for all combatants in `core/party.js` and `core/combat.js`.
-- [ ] **Adrenaline Generation:** Basic attacks now generate Adrenaline. This value should be determined by weapon stats.
+- [x] **Adrenaline Generation:** Basic attacks now generate Adrenaline. This value is determined by weapon stats via the `ADR` modifier.
 - [ ] **Special Move Framework:** In `core/abilities.js`, create a data structure for Specials that includes `adrenaline_cost`, `target_type` (single, aoe), `effect` (damage, stun, etc.), and `wind_up_time`.
 - [ ] **Equipment Modifiers:** Update the inventory system to apply combat modifiers from equipped items at the start of each battle.
 - [ ] **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
