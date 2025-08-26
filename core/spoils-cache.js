@@ -79,7 +79,7 @@ const SpoilsCache = {
     if(idx === -1) return null;
     player.inv.splice(idx,1);
     notifyInventoryChanged?.();
-    const item = ItemGen?.generate?.(rank, rng);
+    const item = globalThis.ItemGen?.generate?.(rank, rng);
     if(item){
       if(typeof addToInv === 'function'){
         if(!addToInv(item)){
