@@ -139,8 +139,8 @@ function advanceDialog(stateObj, choiceIdx){
 
   runEffects(choice.checks);
 
-  const res={next:null, text:null, close:false, success:true};
-  const finalize=(text, ok)=>{ res.text=text||null; res.close=true; res.success=!!ok; stateObj.node=null; return res; };
+  const res={next:null, text:null, close:false, success:true, retriable:false};
+  const finalize=(text, ok, retriable=false)=>{ res.text=text||null; res.close=true; res.success=!!ok; res.retriable=!!retriable; stateObj.node=null; return res; };
 
   if(choice.reqItem || choice.reqSlot){
     const requiredCount = choice.reqCount || 1;
@@ -149,7 +149,7 @@ function advanceDialog(stateObj, choiceIdx){
       : player.inv.some(it => it.slot === choice.reqSlot);
 
     if(!hasEnough){
-      return finalize(choice.failure || 'You lack the required item.', false);
+      return finalize(choice.failure || 'You lack the required item.', false, true);
     }
     Actions.applyQuestReward(choice.reward);
     joinParty(choice.join);
@@ -169,7 +169,7 @@ function advanceDialog(stateObj, choiceIdx){
       : player.inv.some(it => it.slot === choice.costSlot);
 
     if(!hasEnough){
-      return finalize(choice.failure || 'You lack the required item.', false);
+      return finalize(choice.failure || 'You lack the required item.', false, true);
     }
 
     if (choice.costItem) {
@@ -357,6 +357,18 @@ function renderDialog(){
 
   choices = choices.filter(({opt})=> !opt.if || checkFlagCondition(opt.if));
 
+  choices = choices.filter(({opt})=>{
+    const cond=opt.ifOnce;
+    if(!cond) return true;
+    const nodeId=cond.node;
+    const label=cond.label;
+    if(!nodeId || !label) return true;
+    const key=`${currentNPC.id}::${nodeId}::${label}`;
+    const used=cond.used===true;
+    const seen=onceChoices.has(key);
+    return used ? seen : !seen;
+  });
+
   if(currentNPC?.quest){
     const meta=currentNPC.quest;
     choices=choices.filter(({opt})=>{
@@ -386,7 +398,7 @@ function renderDialog(){
     div.onclick=()=>{
       const key=`${currentNPC.id}::${dialogState.node}::${opt.label}`;
       const result=advanceDialog(dialogState,idx);
-      if(opt.once && result?.success) onceChoices.add(key);
+      if(opt.once && !result.retriable) onceChoices.add(key);
       if(result && result.text!==null){
         textEl.textContent=result.text;
         choicesEl.innerHTML='';

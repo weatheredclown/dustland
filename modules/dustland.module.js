@@ -241,7 +241,8 @@ const DUSTLAND_MODULE = (() => {
             'Crowbar’s itching for work. You hiring?'
           ],
           choices: [
-            { label: '(Recruit) Join me.', to: 'rec' },
+            { label: '(Recruit) Join me.', to: 'rec', ifOnce: { node: 'rec', label: '(CHA) Talk up the score' } },
+            { label: '(Recruit) Got a trinket?', to: 'rec_fail', ifOnce: { node: 'rec', label: '(CHA) Talk up the score', used: true } },
             { label: '(Chat)', to: 'chat' },
             { label: '(Leave)', to: 'bye' }
           ]
@@ -261,8 +262,22 @@ const DUSTLAND_MODULE = (() => {
               check: { stat: 'CHA', dc: DC.TALK },
               success: 'Grin smirks: "Alright."',
               failure: 'Grin shrugs: "Not buying it."',
+              join: { id: 'grin', name: 'Grin', role: 'Scavenger' },
+              once: true
+            },
+            {
+              label: '(Pay) Give 1 trinket as hire bonus',
+              costSlot: 'trinket',
+              success: 'Deal.',
+              failure: 'You have no trinket to pay with.',
               join: { id: 'grin', name: 'Grin', role: 'Scavenger' }
             },
+            { label: '(Back)', to: 'start' }
+          ]
+        },
+        rec_fail: {
+          text: 'Charm didn\'t work. Got a trinket?',
+          choices: [
             {
               label: '(Pay) Give 1 trinket as hire bonus',
               costSlot: 'trinket',
