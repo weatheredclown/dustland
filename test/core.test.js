@@ -1173,7 +1173,8 @@ test('combat overlay sits behind the log panel', async () => {
 
 test('combat overlay leaves room for panel', async () => {
   const css = await fs.readFile(new URL('../dustland.css', import.meta.url), 'utf8');
-  assert.match(css, /#combatOverlay\s*{[\s\S]*right:\s*440px/);
+  assert.match(css, /#combatOverlay\s*{[\s\S]*right:\s*var\(--panelW\)/);
+  assert.match(css, /:root\s*{[\s\S]*--panelW:\s*440px/);
 });
 
 test('distance to road increases encounter chance', () => {
