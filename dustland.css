@@ -86,7 +86,7 @@
 
     .hud {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 8px
     }
 
@@ -95,6 +95,53 @@
         padding: 6px 8px;
         border-radius: 8px;
         background: #0e110e
+    }
+
+    .hud .label {
+        font-weight: 700;
+        margin-bottom: 4px
+    }
+
+    .hudbar {
+        position: relative;
+        width: 100%;
+        height: 6px;
+        background: #273027;
+        border-radius: 4px;
+        overflow: hidden
+    }
+
+    .hudbar .fill {
+        height: 100%;
+        background: #8bd98d;
+        transition: width .2s
+    }
+
+    .hudbar .ghost {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background: #3a493a;
+        transition: width .4s
+    }
+
+    .hudbar.adr .fill {
+        background: #d98b8b
+    }
+
+    .status-row {
+        display: flex;
+        gap: 2px;
+        margin-top: 4px;
+        min-height: 8px
+    }
+
+    .status-row span {
+        width: 8px;
+        height: 8px;
+        background: #8bd98d;
+        border-radius: 2px
     }
 
     .hudBadge {

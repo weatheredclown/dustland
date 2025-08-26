@@ -99,7 +99,7 @@ The prototype doesn't spend Adrenaline yet; it's a pacing probe. Once the gain c
 - [x] **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
 
 #### Phase 2: Content & UI
-- [ ] **New HUD:** Redesign the combat UI to include the Adrenaline bar, status effect icons, and improved health bar feedback.
+- [x] **New HUD:** Redesign the combat UI to include the Adrenaline bar, status effect icons, and improved health bar feedback.
 - [ ] **Player Health Panel:** Update the right-side player health panel to show damage being taken in real-time, with visual effects for critical health and passing out.
 - [ ] **Implement 5-10 Specials:** Create a starter set of special moves (e.g., "Power Strike," "Stun Grenade," "First Aid").
 - [ ] **Implement Equipment:** Create a set of weapons and armor with varied combat modifiers.

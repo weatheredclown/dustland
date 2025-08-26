@@ -79,6 +79,7 @@ function openCombat(enemies){
     combatState.fallen = [];
     (party||[]).forEach(m => { m.maxAdr = m.maxAdr || 100; m.adr = 0; m.applyCombatMods?.(); });
     renderCombat();
+    updateHUD?.();
     combatOverlay.classList.add('shown');
     openCommand();
   });
@@ -94,6 +95,8 @@ function closeCombat(result='flee'){
   globalThis.EventBus?.emit?.('combat:ended', { result });
   combatState.onComplete?.({ result });
   combatState.onComplete=null;
+  player.hp = party[0] ? party[0].hp : player.hp;
+  updateHUD?.();
 }
 
 function highlightActive(){
@@ -263,6 +266,7 @@ function doAttack(dmg){
   const baseGain=(weapon?.mods?.ADR ?? 10) / 4;
   const gain=Math.round(baseGain * (attacker.adrGenMod || 1));
   attacker.adr=Math.min(attacker.maxAdr||100, attacker.adr+gain);
+  updateHUD?.();
   log?.(`${attacker.name} hits ${target.name} for ${dmg} damage.`);
   if(target.hp<=0){
     log?.(`${target.name} is defeated!`);
@@ -315,6 +319,8 @@ function finishEnemyAttack(enemy, target){
     renderCombat();
     if(party.length===0){ log?.('The party has fallen...'); closeCombat('bruise'); return; }
   }
+  player.hp = party[0] ? party[0].hp : player.hp;
+  updateHUD?.();
   combatState.active++;
   if(combatState.active<combatState.enemies.length){
     highlightActive();
