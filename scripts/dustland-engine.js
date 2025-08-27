@@ -899,6 +899,7 @@ if (document.getElementById('saveBtn')) {
       case 'q': if(!e.ctrlKey && !e.metaKey){ showTab('quests'); e.preventDefault(); } break;
       case 'Tab':
         e.preventDefault();
+        e.stopImmediatePropagation();
         if (party.length>0){
           selectedMember = (selectedMember + 1) % party.length;
           renderParty();
@@ -932,7 +933,7 @@ disp.addEventListener('touchstart',e=>{
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
 requestAnimationFrame(draw);
-log('v0.7.4 — ESLint configuration tightened.');
+log('v0.7.5 — Tab key preserves party members.');
 if (window.NanoDialog) NanoDialog.init();
 
 { // skip normal boot flow in ACK player mode
