@@ -1558,6 +1558,32 @@ test('equipment modifiers apply at battle start', async () => {
   await resultPromise;
 });
 
+test('adrenaline boosts attack damage', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  m1.adr = 100;
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name: 'E1', hp: 3 }]);
+  handleCombatKey({ key: 'Enter' });
+  assert.strictEqual(combatState.enemies[0].hp, 1);
+  handleCombatKey({ key: 'Enter' });
+  await resultPromise;
+});
+
+test('adrenaline damage modifiers amplify boost', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  m1.equip.trinket = { mods: { adrenaline_dmg_mod: 2 } };
+  m1.adr = 100;
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name: 'E1', hp: 3 }]);
+  handleCombatKey({ key: 'Enter' });
+  const res = await resultPromise;
+  assert.strictEqual(res.result, 'loot');
+});
+
 test('enemy immune to basic attacks requires specials', async () => {
   party.length = 0;
   player.inv.length = 0;

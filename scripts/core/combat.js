@@ -377,6 +377,9 @@ function doAttack(dmg, type = 'basic'){
   if (!attacker || !target){ nextCombatant?.(); return; }
 
   let dealt = dmg;
+  const adrPct = Math.max(0, Math.min(1, (attacker.adr ?? 0) / (attacker.maxAdr || 100)));
+  const mult  = 1 + adrPct * (attacker.adrDmgMod || 1);
+  dealt = Math.round(dealt * mult);
 
   // Immunity to basic
   if (type === 'basic' && Array.isArray(target.immune) && target.immune.includes('basic')){

@@ -608,7 +608,7 @@ startGame = function () {
       name: 'Adrenaline Charm',
       type: 'trinket',
       slot: 'trinket',
-      mods: { adrenaline_gen_mod: 2 }
+      mods: { adrenaline_gen_mod: 2, adrenaline_dmg_mod: 1.5 }
     });
     if (castleId && interiors[castleId]) {
       const interior = interiors[castleId];
