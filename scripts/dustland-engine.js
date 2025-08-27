@@ -665,22 +665,28 @@ function renderParty(){
       card.classList.toggle('selected', j===selectedMember);
     });
   };
+  const labelEquip=eq=>{
+    if(!eq) return '—';
+    const base=eq.name||'Unnamed';
+    return (eq.cursed&&eq.cursedKnown)? base+' (cursed)':base;
+  };
 party.forEach((m,i)=>{
   const c=document.createElement('div');
   c.className='pcard'+(i===selectedMember?' selected':'');
   c.tabIndex=0;
   const bonus=m._bonus||{};
   const fmt=v=> (v>0? '+'+v : v);
-  const wLabel=m.equip.weapon?(m.equip.weapon.cursed&&m.equip.weapon.cursedKnown?m.equip.weapon.name+' (cursed)':m.equip.weapon.name):'—';
-  const aLabel=m.equip.armor?(m.equip.armor.cursed&&m.equip.armor.cursedKnown?m.equip.armor.name+' (cursed)':m.equip.armor.name):'—';
-  const tLabel=m.equip.trinket?(m.equip.trinket.cursed&&m.equip.trinket.cursedKnown?m.equip.trinket.name+' (cursed)':m.equip.trinket.name):'—';
+  const wEq=m.equip.weapon, aEq=m.equip.armor, tEq=m.equip.trinket;
+  const wLabel=labelEquip(wEq);
+  const aLabel=labelEquip(aEq);
+  const tLabel=labelEquip(tEq);
   const nextXP=xpToNext(m.lvl);
   const pct=Math.min(100,(m.xp/nextXP)*100);
   c.innerHTML = `<div class='row'><div class='portrait'></div><div><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div></div>`+
 `<div class='row small'>${statLine(m.stats)}</div>`+
 `<div class='row stats'>HP ${m.hp}/${m.maxHp}  ADR ${m.adr}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div>`+
 `<div class='row'><div class='xpbar' data-xp='${m.xp}/${nextXP}'><div class='fill' style='width:${pct}%'></div></div></div>`+
-`<div class='row small'>WPN: ${wLabel}${m.equip.weapon?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${m.equip.armor?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${m.equip.trinket?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div>`;
+`<div class='row small'>WPN: ${wLabel}${wEq?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${aEq?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${tEq?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div>`;
   const portrait=c.querySelector('.portrait');
   if(m.portraitSheet){
     portrait.style.backgroundImage=`url(${m.portraitSheet})`;
@@ -931,7 +937,7 @@ disp.addEventListener('touchstart',e=>{
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
 requestAnimationFrame(draw);
-log('v0.7.1 — Stable boot; items/NPCs visible; E/T to take; selected member rolls.');
+log('v0.7.2 — Stable boot; items/NPCs visible; E/T to take; selected member rolls; cursed gear label fix.');
 if (window.NanoDialog) NanoDialog.init();
 
 { // skip normal boot flow in ACK player mode
