@@ -77,6 +77,19 @@ class Character {
         }
       }
     }
+
+    // Resolve special IDs to inline objects for combat
+    this.special = this.special.map((raw, idx) => {
+      if(typeof raw === 'string'){
+        const base = globalThis.Specials?.[raw];
+        return base ? { ...base } : { id: raw };
+      }
+      if(raw && typeof raw === 'object'){
+        if(!raw.id) raw.id = raw.name || raw.label || `special_${idx}`;
+        return raw;
+      }
+      return raw;
+    });
   }
 }
 
