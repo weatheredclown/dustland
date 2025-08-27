@@ -44,3 +44,10 @@ test('apply upgrade via click', async () => {
   assert.strictEqual(m.stats.STR, 5);
   assert.strictEqual(m.skillPoints, 0);
 });
+
+test('trainer ui is fixed on screen', async () => {
+  const { context, dom } = setup();
+  const box = await context.TrainerUI.showTrainer('power');
+  assert.strictEqual(box.style.position, 'fixed');
+  assert.ok(parseInt(box.style.bottom) > 0);
+});
