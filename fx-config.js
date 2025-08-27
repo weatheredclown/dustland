@@ -6,6 +6,9 @@
     sceneAlpha: 0.2,
     offsetX: 0, // horizontal blur offset (disabled by default)
     offsetY: 0, // vertical blur offset (disabled by default)
-    damageFlash: false // disable red flash by default; toggle via fx menu
+    damageFlash: false, // disable red flash by default; toggle via fx menu
+    scanlines: false, // overlay horizontal scanlines
+    crtShear: false, // slight screen skew effect
+    colorBleed: false // simple chromatic aberration
   };
 })();

@@ -8,6 +8,17 @@
   const offsetY = document.getElementById('fxOffsetY');
   const enabled = document.getElementById('fxEnabled');
   const dmgFlash = document.getElementById('fxDamageFlash');
+  const scanlines = document.getElementById('fxScanlines');
+  const shear = document.getElementById('fxCrtShear');
+  const colorBleed = document.getElementById('fxColorBleed');
+  const canvas = document.getElementById('game');
+
+  function applyFx(){
+    if(!canvas || !globalThis.fxConfig) return;
+    canvas.classList.toggle('scanlines', !!globalThis.fxConfig.scanlines);
+    canvas.classList.toggle('shear', !!globalThis.fxConfig.crtShear);
+    canvas.classList.toggle('color-bleed', !!globalThis.fxConfig.colorBleed);
+  }
 
   function sync(){
     if(!globalThis.fxConfig) return;
@@ -17,6 +28,10 @@
     offsetY.value = globalThis.fxConfig.offsetY;
     enabled.checked = globalThis.fxConfig.enabled !== false;
     dmgFlash.checked = globalThis.fxConfig.damageFlash !== false;
+    if(scanlines) scanlines.checked = !!globalThis.fxConfig.scanlines;
+    if(shear) shear.checked = !!globalThis.fxConfig.crtShear;
+    if(colorBleed) colorBleed.checked = !!globalThis.fxConfig.colorBleed;
+    applyFx();
   }
 
   function show(){
@@ -40,6 +55,9 @@
     globalThis.fxConfig.damageFlash = e.target.checked;
     if(!e.target.checked) document.getElementById('hpBar')?.classList.remove('hurt');
   });
+  scanlines?.addEventListener('change', e => { globalThis.fxConfig.scanlines = e.target.checked; applyFx(); });
+  shear?.addEventListener('change', e => { globalThis.fxConfig.crtShear = e.target.checked; applyFx(); });
+  colorBleed?.addEventListener('change', e => { globalThis.fxConfig.colorBleed = e.target.checked; applyFx(); });
 
   const dragHandle = panel?.querySelector('header');
   let dragX = 0;
@@ -60,4 +78,5 @@
     document.removeEventListener('mouseup', endDrag);
   }
   dragHandle?.addEventListener('mousedown', startDrag);
+  applyFx();
 })();

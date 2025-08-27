@@ -151,6 +151,27 @@
         border-radius: 2px
     }
 
+    #game {
+        position: relative
+    }
+
+    #game.scanlines::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, .05) 0px, rgba(255, 255, 255, .05) 1px, rgba(0, 0, 0, 0) 2px);
+        mix-blend-mode: overlay
+    }
+
+    #game.shear {
+        transform: skewX(2deg)
+    }
+
+    #game.color-bleed {
+        filter: drop-shadow(0 0 2px #9ef7a0) drop-shadow(0 0 6px #9ef7a0) drop-shadow(2px 0 0 red) drop-shadow(-2px 0 0 cyan)
+    }
+
     body.hp-critical #game {
         filter: grayscale(.8)
     }
