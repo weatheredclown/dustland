@@ -833,6 +833,38 @@
         gap: 8px
     }
 
+    #fxPanel {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .8);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 40
+    }
+
+    #fxPanel .win {
+        width: min(340px, 92vw);
+        background: #0b0d0b;
+        border: 1px solid #2a382a;
+        border-radius: 12px;
+        box-shadow: 0 20px 80px rgba(0, 0, 0, .7);
+        overflow: hidden
+    }
+
+    #fxPanel header {
+        padding: 10px 12px;
+        border-bottom: 1px solid #223022;
+        font-weight: 700
+    }
+
+    #fxPanel main {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px
+    }
+
     #nanoStatus {
         position: fixed;
         top: 6px;
