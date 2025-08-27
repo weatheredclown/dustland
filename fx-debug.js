@@ -35,8 +35,8 @@
   sceneAlpha?.addEventListener('input', e => globalThis.fxConfig.sceneAlpha = parseFloat(e.target.value));
   offsetX?.addEventListener('input', e => globalThis.fxConfig.offsetX = parseInt(e.target.value, 10) || 0);
   offsetY?.addEventListener('input', e => globalThis.fxConfig.offsetY = parseInt(e.target.value, 10) || 0);
-  enabled?.addEventListener('input', e => globalThis.fxConfig.enabled = e.target.checked);
-  dmgFlash?.addEventListener('input', e => {
+  enabled?.addEventListener('change', e => globalThis.fxConfig.enabled = e.target.checked);
+  dmgFlash?.addEventListener('change', e => {
     globalThis.fxConfig.damageFlash = e.target.checked;
     if(!e.target.checked) document.getElementById('hpBar')?.classList.remove('hurt');
   });
