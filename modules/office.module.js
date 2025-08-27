@@ -528,7 +528,7 @@ const OFFICE_MODULE = (() => {
     ],
     portals,
     items: [
-        { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] },
+        { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'], value: 1 },
         {
           id: 'cursed_vr_helmet',
           name: 'VR Helmet',
