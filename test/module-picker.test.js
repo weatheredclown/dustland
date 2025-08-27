@@ -78,7 +78,7 @@ vm.runInThisContext(code, { filename: '../module-picker.js' });
 test('module picker shows title and dust background', () => {
   const overlay = bodyEl.children.find(c => c.id === 'modulePicker');
   assert.ok(overlay);
-  const title = overlay.children.find(c => c.id === 'gameTitle');
+  const title = overlay.querySelector('#gameTitle');
   assert.ok(title);
   assert.strictEqual(title.textContent, 'Dustland CRT');
   const canvas = overlay.children.find(c => c.id === 'dustParticles');

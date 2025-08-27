@@ -17,7 +17,7 @@ window.openCreator = () => {};
 window.showStart = () => {};
 window.resetAll = () => {};
 
-function startDust(canvas){
+function startDust(canvas, getScale = () => 1){
   const ctx = canvas.getContext('2d');
   const particles = [];
   const attractors = [{ angle: 0 }, { angle: Math.PI }];
@@ -69,13 +69,14 @@ function startDust(canvas){
       a.x = cx + Math.cos(a.angle)*radius;
       a.y = cy + Math.sin(a.angle)*radius;
     });
+    const scale = getScale();
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = 'rgba(255,255,255,.4)';
     particles.forEach(p => {
       p.life--;
-      if(p.life <= 0 || p.x < -p.size || p.x > canvas.width + p.size || p.y < -p.size || p.y > canvas.height + p.size){
+      if(p.life <= 0 || p.x < -p.size*scale || p.x > canvas.width + p.size*scale || p.y < -p.size*scale || p.y > canvas.height + p.size*scale){
         spawn(p);
-        ctx.fillRect(p.x,p.y,p.size,p.size);
+        ctx.fillRect(p.x,p.y,p.size*scale,p.size*scale);
         return;
       }
       attractors.forEach(a => {
@@ -90,7 +91,7 @@ function startDust(canvas){
       p.vy *= 0.98;
       p.x += p.vx - p.speed;
       p.y += p.vy;
-      ctx.fillRect(p.x,p.y,p.size,p.size);
+      ctx.fillRect(p.x,p.y,p.size*scale,p.size*scale);
     });
     requestAnimationFrame(update);
   }
@@ -147,20 +148,35 @@ function showModulePicker(){
   // Background dust layer; z-index keeps UI elements in front.
   canvas.style = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0';
   overlay.appendChild(canvas);
-  startDust(canvas);
 
   const title = document.createElement('div');
   title.id = 'gameTitle';
   title.textContent = 'Dustland CRT';
   title.style = 'position:relative;z-index:1;color:#0f0;text-shadow:0 0 10px #0f0;font-size:32px;margin-bottom:20px;animation:pulse 2s infinite';
-  overlay.appendChild(title);
 
   const win = document.createElement('div');
   win.className = 'win';
   win.style = 'position:relative;z-index:1;width:min(420px,92vw);background:#0b0d0b;border:1px solid #2a382a;border-radius:12px;box-shadow:0 20px 80px rgba(0,0,0,.7);overflow:hidden';
   win.innerHTML = '<header style="padding:10px 12px;border-bottom:1px solid #223022;font-weight:700">Select Module</header><main style="padding:12px" id="moduleButtons"></main>';
-  overlay.appendChild(win);
+
+  const uiBox = document.createElement('div');
+  uiBox.style = 'position:absolute;top:50%;left:50%;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%) scale(1);';
+  uiBox.appendChild(title);
+  uiBox.appendChild(win);
+  overlay.appendChild(uiBox);
   document.body.appendChild(overlay);
+
+  let uiScale = 1;
+  function applyScale(){
+    const small = Math.min(window.innerWidth, window.innerHeight);
+    uiScale = Math.max(1, small/600);
+    uiBox.style.transform = `translate(-50%,-50%) scale(${uiScale})`;
+    title.style.marginBottom = `${20 * uiScale}px`;
+  }
+  applyScale();
+  window.addEventListener('resize', applyScale);
+  startDust(canvas, () => uiScale);
+
   const buttonContainer = overlay.querySelector('#moduleButtons');
   const buttons = [];
   let selectedIndex = 0;
