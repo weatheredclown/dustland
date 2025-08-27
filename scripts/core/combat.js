@@ -555,7 +555,8 @@ function finishEnemyAttack(enemy, target){
     log?.(`${target.name} falls!`);
     recordCombatEvent?.({ type: 'player', actor: target.name, action: 'fall', by: enemy.name });
     combatState.fallen.push(target);
-    party.splice(0, 1);
+    const idx = party.indexOf?.(target);
+    if (idx >= 0) party.splice(idx, 1); else party.splice(0, 1);
     renderCombat();
     if ((party?.length || 0) === 0){
       log?.('The party has fallen...');
@@ -579,8 +580,10 @@ function finishEnemyAttack(enemy, target){
 }
 
 function enemyAttack(){
+  // Enemies strike a random party member.
   const enemy  = combatState.enemies[combatState.active];
-  const target = party[0];
+  const tgtIdx = Math.floor(Math.random() * ((party?.length) || 0));
+  const target = party[tgtIdx];
 
   if (!enemy || !target){ closeCombat('flee'); return; }
 
