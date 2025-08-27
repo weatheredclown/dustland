@@ -600,6 +600,7 @@ function renderParty(){
   }
   const selectMember=idx=>{
     selectedMember=idx;
+    EventBus?.emit('party:selected', selectedMember);
     p.querySelectorAll('.pcard').forEach((card,j)=>{
       card.classList.toggle('selected', j===selectedMember);
     });
