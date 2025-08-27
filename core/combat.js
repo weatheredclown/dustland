@@ -117,11 +117,7 @@ function closeCombat(result='flee'){
   globalThis.EventBus?.emit?.('combat:ended', { result });
   combatState.onComplete?.({ result });
   combatState.onComplete=null;
-  if(globalThis.gameState){
-    gameState.setPlayerHealth(party[0] ? party[0].hp : gameState.getPlayerHealth());
-  } else {
-    player.hp = party[0] ? party[0].hp : player.hp;
-  }
+  player.hp = party[0] ? party[0].hp : player.hp;
   updateHUD?.();
 }
 
@@ -350,11 +346,7 @@ function finishEnemyAttack(enemy, target){
   } else {
     renderCombat();
   }
-  if(globalThis.gameState){
-    gameState.setPlayerHealth(party[0] ? party[0].hp : gameState.getPlayerHealth());
-  } else {
-    player.hp = party[0] ? party[0].hp : player.hp;
-  }
+  player.hp = party[0] ? party[0].hp : player.hp;
   updateHUD?.();
   combatState.active++;
   if(combatState.active<combatState.enemies.length){
