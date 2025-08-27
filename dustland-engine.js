@@ -9,6 +9,7 @@ const scrEl = document.getElementById('scrap');
 const hpBar = document.getElementById('hpBar');
 const hpFill = document.getElementById('hpFill');
 const hpGhost = document.getElementById('hpGhost');
+const adrBar = document.getElementById('adrBar');
 const adrFill = document.getElementById('adrFill');
 const statusIcons = document.getElementById('statusIcons');
 
@@ -396,9 +397,12 @@ function updateHUD(){
     clearTimeout(updateHUD._hurtTimer);
     updateHUD._hurtTimer = setTimeout(()=>hpBar.classList.remove('hurt'), 300);
   }
-  if(hpFill && lead){
+  if(hpFill && hpBar && lead){
     const pct = Math.max(0, Math.min(100, (player.hp / (lead.maxHp || 1)) * 100));
     hpFill.style.width = pct + '%';
+    hpBar.setAttribute('aria-valuenow', player.hp);
+    hpBar.setAttribute('aria-valuemax', lead.maxHp || 1);
+    hpBar.setAttribute('aria-valuemin', 0);
     if(hpGhost){
       hpGhost.style.width = (updateHUD._lastHpPct ?? pct) + '%';
       requestAnimationFrame(()=>{ hpGhost.style.width = pct + '%'; });
@@ -410,9 +414,12 @@ function updateHUD(){
       document.body.classList.toggle('hp-out', player.hp <= 0);
     }
   }
-  if(adrFill && lead){
+  if(adrFill && adrBar && lead){
     const apct = Math.max(0, Math.min(100, (lead.adr / (lead.maxAdr || 1)) * 100));
     adrFill.style.width = apct + '%';
+    adrBar.setAttribute('aria-valuenow', lead.adr);
+    adrBar.setAttribute('aria-valuemax', lead.maxAdr || 1);
+    adrBar.setAttribute('aria-valuemin', 0);
   }
   if(statusIcons){
     statusIcons.innerHTML='';
