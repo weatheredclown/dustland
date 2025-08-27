@@ -21,7 +21,7 @@
 
   function show(){
     sync();
-    if(panel) panel.style.display = 'flex';
+    if(panel) panel.style.display = 'block';
   }
 
   function hide(){
@@ -40,4 +40,24 @@
     globalThis.fxConfig.damageFlash = e.target.checked;
     if(!e.target.checked) document.getElementById('hpBar')?.classList.remove('hurt');
   });
+
+  const dragHandle = panel?.querySelector('header');
+  let dragX = 0;
+  let dragY = 0;
+  function startDrag(e){
+    dragX = e.clientX - panel.offsetLeft;
+    dragY = e.clientY - panel.offsetTop;
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', endDrag);
+    e.preventDefault();
+  }
+  function onDrag(e){
+    panel.style.left = (e.clientX - dragX) + 'px';
+    panel.style.top = (e.clientY - dragY) + 'px';
+  }
+  function endDrag(){
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', endDrag);
+  }
+  dragHandle?.addEventListener('mousedown', startDrag);
 })();

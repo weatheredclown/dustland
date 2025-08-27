@@ -835,11 +835,9 @@
 
     #fxPanel {
         position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, .8);
+        top: 10px;
+        left: 10px;
         display: none;
-        align-items: center;
-        justify-content: center;
         z-index: 40
     }
 
@@ -855,7 +853,8 @@
     #fxPanel header {
         padding: 10px 12px;
         border-bottom: 1px solid #223022;
-        font-weight: 700
+        font-weight: 700;
+        cursor: move
     }
 
     #fxPanel main {
