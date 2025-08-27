@@ -24,7 +24,7 @@
         <div class="hud">
           <div class="badge">
             <div class="label">HP <span id="hp">10</span></div>
-            <div class="hudbar" id="hpBar">
+            <div class="hudbar" id="hpBar" role="progressbar" aria-label="Health" aria-valuemin="0" aria-valuemax="10" aria-valuenow="10">
               <div class="ghost" id="hpGhost"></div>
               <div class="fill" id="hpFill"></div>
             </div>
@@ -32,7 +32,7 @@
           </div>
           <div class="badge">
             <div class="label">Adrenaline</div>
-            <div class="hudbar adr" id="adrBar"><div class="fill" id="adrFill"></div></div>
+            <div class="hudbar adr" id="adrBar" role="progressbar" aria-label="Adrenaline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="fill" id="adrFill"></div></div>
           </div>
           <div class="badge">AP: <span id="ap">2</span></div>
           <div class="badge">Scrap: <span id="scrap">0</span></div>
