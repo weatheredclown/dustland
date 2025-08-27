@@ -351,6 +351,33 @@ test('movement delay improves with agility and equipment', async () => {
   await secondMove;
 });
 
+test('movement delay respects move_delay_mod equipment', async () => {
+  const world = Array.from({ length:5 }, () => Array.from({ length:5 }, () => 7));
+  applyModule({ world });
+  state.map = 'world';
+  party.length = 0;
+  player.inv.length = 0;
+  const hero = new Character('h', 'Hero', 'Role');
+  hero.stats.AGI = 4;
+  party.addMember(hero);
+  party.x = 0;
+  party.y = 0;
+
+  const firstMove = move(1,0);
+  const baseDelay = getMoveDelay();
+  await firstMove;
+
+  addToInv({ id:'speed_charm', name:'Speed Charm', type:'trinket', slot:'trinket', mods:{ move_delay_mod:0.5 } });
+  equipItem(0,0);
+
+  const secondMove = move(1,0);
+  const modDelay = getMoveDelay();
+  assert.ok(modDelay < baseDelay);
+  const expected = calcMoveDelay(getTile(state.map, party.x, party.y), hero);
+  assert.strictEqual(modDelay, expected);
+  await secondMove;
+});
+
 test('queryTile reports entities and items', () => {
   const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
   applyModule({world});
@@ -960,6 +987,18 @@ test('board/unboard effects toggle building access', () => {
   assert.strictEqual(globalThis.buildings[0].boarded, false);
   Effects.apply([{ effect: 'boardDoor', interiorId: 'castle' }]);
   assert.strictEqual(globalThis.buildings[0].boarded, true);
+  globalThis.buildings.length = 0;
+});
+test('dialog choice applies object effects', () => {
+  globalThis.buildings = [ { interiorId: 'castle', boarded: true } ];
+  const tree = { start:{ text:'hi', choices:[ { label:'open', to:'bye', effects:[ { effect:'unboardDoor', interiorId:'castle' } ] } ] }, bye:{ text:'', choices:[] } };
+  const npc = makeNPC('f', 'world', 0, 0, '#fff', 'F', '', '', tree);
+  NPCS.length = 0;
+  NPCS.push(npc);
+  openDialog(npc);
+  choicesEl.children[0].onclick();
+  closeDialog();
+  assert.strictEqual(globalThis.buildings[0].boarded, false);
   globalThis.buildings.length = 0;
 });
 test('onEnter triggers effects and temporary stat mod', async () => {
