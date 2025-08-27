@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { test } from 'node:test';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
-import { JSDOM } from 'jsdom';
+import { makeDocument } from './test-harness.js';
 
 const full = await fs.readFile(new URL('../dustland-engine.js', import.meta.url), 'utf8');
 const code = full.split('// ===== Boot =====')[0];
@@ -15,20 +15,35 @@ class AudioCtx {
 }
 
 test('panel toggle shows and hides panel', async () => {
-  const html = `<body><div id="log"></div><div id="hp"></div><div id="ap"></div><div id="scrap"></div><canvas id="game"></canvas><div class="panel"></div><div id="panelToggle"></div><button id="saveBtn"></button><button id="loadBtn"></button><button id="resetBtn"></button><button id="settingsBtn"></button><div id="settings"><button id="settingsClose"></button></div></body>`;
-  const dom = new JSDOM(html);
-  dom.window.AudioContext = AudioCtx;
-  dom.window.webkitAudioContext = AudioCtx;
-  const dummyCtx = new Proxy({}, { get: () => () => {}, set: () => true });
-  dom.window.HTMLCanvasElement.prototype.getContext = () => dummyCtx;
-  const AudioStub = class { constructor(){ this.addEventListener = () => {}; } cloneNode(){ return new AudioStub(); } };
+  const document = makeDocument();
+  const canvas = document.createElement('canvas');
+  canvas.id = 'game';
+  document.body.appendChild(document.getElementById('log'));
+  document.body.appendChild(document.getElementById('hp'));
+  document.body.appendChild(document.getElementById('ap'));
+  document.body.appendChild(document.getElementById('scrap'));
+  document.body.appendChild(canvas);
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+  document.body.appendChild(panel);
+  const toggleEl = document.getElementById('panelToggle');
+  document.body.appendChild(toggleEl);
+  document.body.appendChild(document.getElementById('saveBtn'));
+  document.body.appendChild(document.getElementById('loadBtn'));
+  document.body.appendChild(document.getElementById('resetBtn'));
+  document.body.appendChild(document.getElementById('settingsBtn'));
+  const settings = document.getElementById('settings');
+  document.body.appendChild(settings);
+  settings.appendChild(document.getElementById('settingsClose'));
+  const window = { document, AudioContext: AudioCtx, webkitAudioContext: AudioCtx, HTMLCanvasElement: class {}, addEventListener:()=>{}, removeEventListener:()=>{} };
+  window.HTMLCanvasElement.prototype.getContext = () => ({ });
   const context = {
-    window: dom.window,
-    document: dom.window.document,
+    window,
+    document,
     requestAnimationFrame: () => 0,
     AudioContext: AudioCtx,
     webkitAudioContext: AudioCtx,
-    Audio: AudioStub,
+    Audio: class { constructor(){ this.addEventListener = () => {}; } cloneNode(){ return new this.constructor(); } },
     EventBus: { on: () => {}, emit: () => {} },
     NanoDialog: { enabled: true },
     location: { hash: '' },
@@ -38,14 +53,14 @@ test('panel toggle shows and hides panel', async () => {
     save: () => {},
     load: () => {},
     resetAll: () => {},
-    console
+    console,
+    open: false
   };
   vm.createContext(context);
   vm.runInContext(code, context);
-  const toggle = context.document.getElementById('panelToggle');
-  const panel = context.document.querySelector('.panel');
-  toggle.click();
+  const toggle = document.getElementById('panelToggle');
+  toggle.onclick();
   assert.ok(panel.classList.contains('show'));
-  toggle.click();
+  toggle.onclick();
   assert.ok(!panel.classList.contains('show'));
 });
