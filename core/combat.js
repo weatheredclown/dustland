@@ -205,10 +205,16 @@ function openCommand(){
     }
   }
 
-  const hasSpecial = (m?.special || []).some(id => {
-    const spec = globalThis.Specials?.[id];
+  const hasSpecial = (m?.special || []).some((raw, idx) => {
+    const id  = typeof raw === 'string'
+      ? raw
+      : (raw?.id ?? raw?.key ?? raw?.name ?? raw?.label ?? `special_${idx}`);
+    const spec = (typeof raw === 'object' && raw && !globalThis.Specials?.[id])
+      ? raw
+      : (globalThis.Specials?.[id] ?? null);
+    const cost = spec?.adrCost ?? spec?.adrenaline_cost ?? 0;
     const cd = m.cooldowns?.[id] || 0;
-    return spec && cd <= 0 && (m.adr ?? 0) >= (spec.adrCost || 0);
+    return !!spec && cd <= 0 && (m.adr ?? 0) >= cost;
   });
 
   ['Attack', 'Special', 'Item', 'Flee'].forEach((opt) => {
@@ -233,13 +239,19 @@ function openSpecialMenu(){
   combatState.mode = 'special';
 
   const m = party[combatState.active];
-  (m.special || []).forEach((id, idx) => {
-    const spec = globalThis.Specials?.[id];
+  (m.special || []).forEach((raw, idx) => {
+    const id  = typeof raw === 'string'
+      ? raw
+      : (raw?.id ?? raw?.key ?? raw?.name ?? raw?.label ?? `special_${idx}`);
+    const spec = (typeof raw === 'object' && raw && !globalThis.Specials?.[id])
+      ? raw
+      : (globalThis.Specials?.[id] ?? null);
     if (!spec) return;
     const d = document.createElement('div');
-    d.textContent = spec.label || id;
+    d.textContent = spec.label || spec.name || id;
     d.dataset.action = idx;
-    if ((m.adr ?? 0) < (spec.adrCost || 0) || ((m.cooldowns?.[id] || 0) > 0)) d.classList.add('disabled');
+    const cost = spec.adrCost ?? spec.adrenaline_cost ?? 0;
+    if ((m.adr ?? 0) < cost || ((m.cooldowns?.[id] || 0) > 0)) d.classList.add('disabled');
     cmdMenu.appendChild(d);
   });
 
@@ -448,12 +460,14 @@ function doSpecial(idx){
 
   // Support: m.special[idx] can be an ID (look up in globalThis.Specials) or an inline object
   const raw = m.special?.[idx];
-  const id  = typeof raw === 'string' ? raw : (raw?.id ?? raw?.key ?? raw?.name);
+  const id  = typeof raw === 'string'
+    ? raw
+    : (raw?.id ?? raw?.key ?? raw?.name ?? raw?.label ?? `special_${idx}`);
   const spec = (typeof raw === 'object' && raw && !globalThis.Specials?.[id])
     ? raw
     : (globalThis.Specials?.[id] ?? null);
 
-  if (!id || !spec){ openCommand?.(); return; }
+  if (!spec){ openCommand?.(); return; }
 
   const label = spec.label || spec.name || id;
 
@@ -464,7 +478,7 @@ function doSpecial(idx){
     openSpecialMenu?.();
     return;
   }
-  const currentCd = (m.cooldowns?.[id]) ?? 0;
+  const currentCd = id ? (m.cooldowns?.[id] ?? 0) : 0;
   if (currentCd > 0){
     log?.('Move on cooldown.');
     openSpecialMenu?.();
@@ -473,7 +487,7 @@ function doSpecial(idx){
 
   // Pay cost & set cooldown
   m.adr = (m.adr ?? 0) - cost;
-  if (spec.cooldown){
+  if (spec.cooldown && id){
     if (!m.cooldowns) m.cooldowns = {};
     m.cooldowns[id] = spec.cooldown;
   }
