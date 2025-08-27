@@ -1,5 +1,8 @@
 const { effects: Effects } = globalThis.Dustland || {};
 var bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
+let combatActive = false;
+bus?.on?.('combat:started', () => { combatActive = true; });
+bus?.on?.('combat:ended', () => { combatActive = false; });
 
 // active temporary stat modifiers
 const buffs = [];              // 2c342c / 313831
@@ -194,7 +197,7 @@ function move(dx,dy){
 }
 
 function checkAggro(){
-  if(typeof document !== 'undefined' && document.getElementById('combatOverlay')?.classList?.contains?.('shown')) return;
+  if (combatActive) return;
   for(const n of (typeof NPCS !== 'undefined' ? NPCS : [])){
     if(!n.combat || !n.combat.auto) continue;
     if(n.map!==state.map) continue;
