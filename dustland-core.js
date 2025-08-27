@@ -789,6 +789,11 @@ on('item:picked', (it) => {
   log?.(`Picked up ${it.name}`);
 });
 
+on('mentor:bark', (evt) => {
+  if(evt?.text) toast?.(evt.text);
+  if(evt?.sound) EventBus.emit('sfx', evt.sound);
+});
+
 // Content pack moved to modules/dustland.module.js
 
 
