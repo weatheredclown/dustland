@@ -50,9 +50,10 @@ function setup(html){
   return context;
 }
 
+const HUD_HTML = `<body><canvas id="game"></canvas><div id="log"></div><div id="hp"></div><div id="ap"></div><div id="scrap"></div><div id="hpBar" class="hudbar"><div id="hpGhost"></div><div id="hpFill"></div></div><div id="adrBar" class="hudbar adr"><div id="adrFill"></div></div><div id="statusIcons"></div></body>`;
+
 test('hp bar flashes, updates aria values, and body gains critical/out classes', async () => {
-  const html = `<body><canvas id="game"></canvas><div id="log"></div><div id="hp"></div><div id="ap"></div><div id="scrap"></div><div id="hpBar" class="hudbar"><div id="hpGhost"></div><div id="hpFill"></div></div><div id="adrBar" class="hudbar adr"><div id="adrFill"></div></div><div id="statusIcons"></div></body>`;
-  const ctx = setup(html);
+  const ctx = setup(HUD_HTML);
   ctx.updateHUD();
   const bar = ctx.document.getElementById('hpBar');
   assert.equal(bar.getAttribute('aria-valuenow'), '10');
@@ -67,4 +68,14 @@ test('hp bar flashes, updates aria values, and body gains critical/out classes',
   assert.ok(ctx.document.body.classList.contains('hp-out'));
   const adrBar = ctx.document.getElementById('adrBar');
   assert.equal(adrBar.getAttribute('aria-valuemax'), '100');
+});
+
+test('damage flash can be disabled', async () => {
+  const ctx = setup(HUD_HTML);
+  ctx.updateHUD();
+  ctx.fxConfig = { damageFlash: false };
+  ctx.player.hp = 5;
+  ctx.updateHUD();
+  const bar = ctx.document.getElementById('hpBar');
+  assert.ok(!bar.classList.contains('hurt'));
 });
