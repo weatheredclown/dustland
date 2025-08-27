@@ -1,0 +1,38 @@
+[
+  {
+    "id": "POWER_STRIKE",
+    "label": "Power Strike",
+    "dmg": 3,
+    "adrCost": 30,
+    "cooldown": 1
+  },
+  {
+    "id": "STUN_GRENADE",
+    "label": "Stun Grenade",
+    "dmg": 1,
+    "stun": 1,
+    "adrCost": 40,
+    "cooldown": 3
+  },
+  {
+    "id": "FIRST_AID",
+    "label": "First Aid",
+    "heal": 4,
+    "adrCost": 35,
+    "cooldown": 2
+  },
+  {
+    "id": "ADRENAL_SURGE",
+    "label": "Adrenal Surge",
+    "adrGain": 50,
+    "adrCost": 0,
+    "cooldown": 4
+  },
+  {
+    "id": "GUARD_UP",
+    "label": "Guard",
+    "guard": true,
+    "adrCost": 20,
+    "cooldown": 2
+  }
+]

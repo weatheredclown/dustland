@@ -99,7 +99,12 @@ function openCombat(enemies){
     combatState.choice=0;
     combatState.onComplete=resolve;
     combatState.fallen = [];
-    (party||[]).forEach(m => { m.maxAdr = m.maxAdr || 100; m.applyCombatMods?.(); });
+    (party||[]).forEach(m => {
+      m.maxAdr = m.maxAdr || 100;
+      m.applyCombatMods?.();
+      m.guard = false;
+      m.cooldowns = m.cooldowns || {};
+    });
     renderCombat();
     updateHUD?.();
     combatOverlay.classList.add('shown');
@@ -145,10 +150,18 @@ function openCommand(){
   cmdMenu.innerHTML='';
   combatState.mode='command';
   const m = party[combatState.active];
+  if(m && m.cooldowns){
+    for(const id in m.cooldowns){ if(m.cooldowns[id]>0) m.cooldowns[id]--; }
+  }
+  const hasSpecial = (m?.special||[]).some(id=>{
+    const spec=globalThis.Specials?.[id];
+    const cd=m.cooldowns?.[id]||0;
+    return spec && cd<=0 && m.adr >= (spec.adrCost||0);
+  });
   ['Attack','Special','Item','Flee'].forEach((opt)=>{
     const d=document.createElement('div');
     d.textContent=opt;
-    if(opt==='Special' && !(m?.special?.length>0)) d.classList.add('disabled');
+    if(opt==='Special' && !hasSpecial) d.classList.add('disabled');
     if(opt==='Item' && (!(player?.inv?.length>0))) d.classList.add('disabled');
     cmdMenu.appendChild(d);
   });
@@ -164,17 +177,22 @@ function openSpecialMenu(){
   cmdMenu.innerHTML='';
   combatState.mode='special';
   const m = party[combatState.active];
-  (m.special||[]).forEach((s,idx)=>{
+  (m.special||[]).forEach((id,idx)=>{
+    const spec = globalThis.Specials?.[id];
+    if(!spec) return;
     const d=document.createElement('div');
-    d.textContent=s.label;
+    d.textContent=spec.label||id;
     d.dataset.action=idx;
+    if(m.adr < (spec.adrCost||0) || (m.cooldowns?.[id]||0)>0) d.classList.add('disabled');
     cmdMenu.appendChild(d);
   });
   const back=document.createElement('div');
   back.textContent='Back';
   back.dataset.action='back';
   cmdMenu.appendChild(back);
-  combatState.choice=0;
+  const opts=[...cmdMenu.children];
+  let idx=opts.findIndex(c=>!c.classList.contains('disabled'));
+  combatState.choice=idx>=0?idx:0;
   updateChoice();
   cmdMenu.style.display='block';
 }
@@ -316,10 +334,44 @@ function doAttack(dmg){
 
 function doSpecial(idx){
   const m=party[combatState.active];
-  const spec=m.special?.[idx];
-  if(!spec){ openCommand(); return; }
-  if(spec.dmg) doAttack(spec.dmg);
-  else nextCombatant();
+  const id=m.special?.[idx];
+  const spec=globalThis.Specials?.[id];
+  if(!id || !spec){ openCommand(); return; }
+  const cost=spec.adrCost || spec.adrenaline_cost || 0;
+  if(m.adr < cost){ log?.('Not enough adrenaline.'); openSpecialMenu(); return; }
+  const cd=m.cooldowns?.[id] || 0;
+  if(cd>0){ log?.('Move on cooldown.'); openSpecialMenu(); return; }
+  m.adr -= cost;
+  if(spec.cooldown) m.cooldowns[id]=spec.cooldown;
+  if(spec.heal){
+    m.hp = Math.min(m.maxHp||m.hp, m.hp + spec.heal);
+    log?.(`${m.name} uses ${spec.label} and heals ${spec.heal} HP.`);
+    renderCombat();
+    nextCombatant();
+    return;
+  }
+  if(spec.adrGain){
+    m.adr = Math.min(m.maxAdr||100, m.adr + spec.adrGain);
+    log?.(`${m.name} uses ${spec.label} and surges with adrenaline!`);
+    updateHUD?.();
+    nextCombatant();
+    return;
+  }
+  if(spec.guard){
+    m.guard = true;
+    log?.(`${m.name} takes a defensive stance.`);
+    nextCombatant();
+    return;
+  }
+  if(spec.stun){
+    const target=combatState.enemies[0];
+    if(target){ target.stun=(target.stun||0)+spec.stun; }
+    if(spec.dmg){ doAttack(spec.dmg); }
+    else { log?.(`${m.name} uses ${spec.label}!`); renderCombat(); nextCombatant(); }
+    return;
+  }
+  if(spec.dmg){ doAttack(spec.dmg); return; }
+  nextCombatant();
 }
 
 function nextCombatant(){
@@ -361,6 +413,18 @@ function enemyAttack(){
   const enemy=combatState.enemies[combatState.active];
   const target=party[0];
   if(!enemy || !target){ closeCombat('flee'); return; }
+  if(enemy.stun>0){
+    log?.(`${enemy.name} is stunned and cannot act!`);
+    enemy.stun--;
+    combatState.active++;
+    if(combatState.active<combatState.enemies.length){
+      highlightActive();
+      setTimeout(enemyAttack,300);
+    } else {
+      startPartyTurn();
+    }
+    return;
+  }
   if(enemy.special && !enemy._didSpecial){
     enemy._didSpecial=true;
     const fx=window.bossTelegraphFX||{};
@@ -379,8 +443,14 @@ function enemyAttack(){
     }, delay);
     return;
   }
-  target.hp-=1;
-  log?.(`${enemy.name} strikes ${target.name} for 1 damage.`);
+  let dmg=1;
+  if(target.guard){
+    target.guard=false;
+    dmg=Math.max(0,dmg-1);
+    log?.(`${target.name} guards against the attack.`);
+  }
+  target.hp-=dmg;
+  log?.(`${enemy.name} strikes ${target.name} for ${dmg} damage.`);
   finishEnemyAttack(enemy,target);
 }
 

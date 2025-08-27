@@ -47,3 +47,9 @@ test('defineSpecial registers special with fields and defaults', () => {
   assert.deepStrictEqual(defaults.effect, {});
   assert.strictEqual(defaults.wind_up_time, 0);
 });
+
+test('starter specials load from data file', async () => {
+  await new Promise((r) => setTimeout(r, 50));
+  assert.ok(globalThis.Specials.POWER_STRIKE);
+  assert.ok(globalThis.Specials.FIRST_AID);
+});

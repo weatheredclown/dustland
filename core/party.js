@@ -18,6 +18,8 @@ class Character {
     this._bonus={ATK:0, DEF:0, LCK:0};
     this.special = Array.isArray(opts.special) ? [...opts.special] : [];
     this.adrGenMod = 1;
+    this.cooldowns = {};
+    this.guard = false;
   }
   xpToNext(){ return xpToNext(this.lvl); }
   awardXP(amt){
