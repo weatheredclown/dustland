@@ -7,6 +7,7 @@ import { JSDOM } from 'jsdom';
 function setup(items, equipped){
   const dom = new JSDOM('<div id="inv"></div>');
   const equips = Array.isArray(equipped) ? equipped : [equipped];
+  const bus = { emit: () => {} };
   const ctx = {
     window: dom.window,
     document: dom.window.document,
@@ -19,7 +20,8 @@ function setup(items, equipped){
     log: () => {},
     renderParty: () => {},
     updateHUD: () => {},
-    EventBus: { emit: () => {} }
+    EventBus: bus,
+    Dustland: { eventBus: bus }
   };
   ctx.equipItem = (memberIndex, invIndex) => {
     const m = ctx.party[memberIndex];

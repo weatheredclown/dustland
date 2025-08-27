@@ -60,7 +60,7 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
     - [x] Namespace inventory helpers under `Dustland.inventory`.
   - [x] Namespace effects under `Dustland.effects`.
     - [x] Namespace actions under `Dustland.actions`.
-  - [ ] Update references and tests incrementally.
+  - [x] Update references and tests incrementally.
 - [x] **Phase 1.5: Reorganize the filesystem**
   - [x] move core and JS files in root under a new scripts directory
 - [ ] **Phase 2: Untangle UI from logic**

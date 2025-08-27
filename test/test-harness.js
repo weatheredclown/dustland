@@ -137,6 +137,7 @@ export function createGameProxy(party){
     webkitAudioContext:AudioCtx,
     Audio,
     EventBus,
+    Dustland:{ eventBus: EventBus },
     requestAnimationFrame:()=>0,
     move:()=>{},
     interact:()=>{},

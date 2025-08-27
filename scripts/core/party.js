@@ -2,6 +2,8 @@ const baseStats = () => ({STR:4, AGI:4, INT:4, PER:4, LCK:4, CHA:4});
 
 const xpCurve = [0,100,200,300,400,500,700,900,1100,1300,1500,1900,2300,2700,3100,3500,4300,5100,5900,6700];
 
+var bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
+
 class Character {
   constructor(id, name, role, opts={}){
     this.id=id; this.name=name; this.role=role;
@@ -27,8 +29,8 @@ class Character {
     this.xp += amt;
     log(`${this.name} gains ${amt} XP.`);
     if(typeof toast==='function') toast(`${this.name} +${amt} XP`);
-    EventBus.emit('xp:gained', { character: this, amount: amt });
-    EventBus.emit('sfx','tick');
+    bus.emit('xp:gained', { character: this, amount: amt });
+    bus.emit('sfx','tick');
     while(this.xp >= this.xpToNext()){
       this.xp -= this.xpToNext();
       this.lvl++;
@@ -41,11 +43,11 @@ class Character {
     this.hp = this.maxHp;
     this.skillPoints += 1;
     if(typeof hudBadge==='function') hudBadge('+1 Skill Point');
-    EventBus.emit('character:leveled-up', { character: this });
-    EventBus.emit('sfx','tick');
+    bus.emit('character:leveled-up', { character: this });
+    bus.emit('sfx','tick');
     log(`${this.name} leveled up to ${this.lvl}! (+10 HP, +1 SP)`);
     if((party.flags && party.flags.mentor) || (typeof hasItem==='function' && hasItem('mentor_token'))){
-      EventBus.emit('mentor:bark', { text:'Another scar, another lesson learned.', sound:'mentor' });
+      bus.emit('mentor:bark', { text:'Another scar, another lesson learned.', sound:'mentor' });
     }
   }
   applyEquipmentStats(){
