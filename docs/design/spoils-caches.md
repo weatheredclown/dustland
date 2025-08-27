@@ -52,7 +52,7 @@ Opening a cache triggers a generator that stitches gear on the fly:
 - [x] Define `SpoilsCache` item type and rank data structure.
 - [x] Implement drop roll tied to enemy `challenge` rating.
 - [x] Create modular item generator for type, name, and stats.
-- [ ] Expose tier weight configuration for modding.
+- [x] Expose tier weight configuration for modding.
 
 #### Phase 2: UI/UX
 - [x] Add cache icons and quick-open animations.

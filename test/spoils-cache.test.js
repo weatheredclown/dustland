@@ -41,6 +41,13 @@ test('pickRank tuned for challenge tiers', () => {
   assert.strictEqual(SpoilsCache.pickRank(9, () => 0.95), 'armored');
 });
 
+test('tierWeights can be overridden for modding', () => {
+  const orig = SpoilsCache.tierWeights;
+  SpoilsCache.tierWeights = { 1: [['sealed', 1]] };
+  assert.strictEqual(SpoilsCache.pickRank(1, () => 0.5), 'sealed');
+  SpoilsCache.tierWeights = orig;
+});
+
 test('renderIcon creates element with rank class', () => {
   global.document = {
     createElement(tag){
