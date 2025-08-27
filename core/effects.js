@@ -110,6 +110,7 @@
                 ctx.buffs = ctx.buffs || [];
                 ctx.buffs.push({ target, stat: eff.stat, delta, remaining: eff.duration });
               }
+              if(typeof playFX==='function') playFX('status');
             }
             break; }
         }

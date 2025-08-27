@@ -296,6 +296,7 @@ function doAttack(dmg){
   const baseGain=(weapon?.mods?.ADR ?? 10) / 4;
   const gain=Math.round(baseGain * (attacker.adrGenMod || 1));
   attacker.adr=Math.min(attacker.maxAdr||100, attacker.adr+gain);
+  if(gain>0 && typeof playFX==='function') playFX('adrenaline');
   updateHUD?.();
   log?.(`${attacker.name} hits ${target.name} for ${dmg} damage.`);
   if(target.hp<=0){
@@ -327,6 +328,7 @@ function doSpecial(idx){
   const m=party[combatState.active];
   const spec=m.special?.[idx];
   if(!spec){ openCommand(); return; }
+  if(typeof playFX==='function') playFX('special');
   if(spec.dmg) doAttack(spec.dmg);
   else nextCombatant();
 }
