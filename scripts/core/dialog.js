@@ -69,7 +69,12 @@ function normalizeDialogTree(tree){
 }
 
 function runEffects(effects){
-  for(const fn of effects||[]){ if(typeof fn==='function') fn({player,party,state}); }
+  for(const eff of effects || []){
+    if(typeof eff === 'function') eff({ player, party, state });
+    else if(eff && typeof eff === 'object' && Dustland?.effects?.apply){
+      Dustland.effects.apply([eff], { player, party, state });
+    }
+  }
 }
 
 function resolveCheck(check, actor=leader(), rng=Math.random){

@@ -962,6 +962,18 @@ test('board/unboard effects toggle building access', () => {
   assert.strictEqual(globalThis.buildings[0].boarded, true);
   globalThis.buildings.length = 0;
 });
+test('dialog choice applies object effects', () => {
+  globalThis.buildings = [ { interiorId: 'castle', boarded: true } ];
+  const tree = { start:{ text:'hi', choices:[ { label:'open', to:'bye', effects:[ { effect:'unboardDoor', interiorId:'castle' } ] } ] }, bye:{ text:'', choices:[] } };
+  const npc = makeNPC('f', 'world', 0, 0, '#fff', 'F', '', '', tree);
+  NPCS.length = 0;
+  NPCS.push(npc);
+  openDialog(npc);
+  choicesEl.children[0].onclick();
+  closeDialog();
+  assert.strictEqual(globalThis.buildings[0].boarded, false);
+  globalThis.buildings.length = 0;
+});
 test('onEnter triggers effects and temporary stat mod', async () => {
   const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
   applyModule({world});
