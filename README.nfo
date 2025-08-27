@@ -11,7 +11,7 @@ _______________________________________________________________________________
 |     ░       ░           ░                ░  ░      ░           ░    ░       |
 |                           D U S T L A N D   C R T                           |
 |                      Wasteland-style browser RPG (WIP)                      |
-|                               v0.7.1 .NFO                                   |
+|                               v0.7.2 .NFO                                   |
 |_____________________________________________________________________________|
 
 [ ABOUT ]
@@ -51,7 +51,7 @@ _______________________________________________________________________________
     simple interiors you can enter directly from the overworld.
   - Water is bright blue and is not walkable; items won’t spawn in water.
   - Walking gradually restores HP for the selected party member.
-  - Movement speed improves with the leader's AGI, including equipment bonuses.
+  - Movement speed improves with the leader's AGI, including equipment bonuses. Items like the Boots of Speed further reduce movement delay.
   - Special moves spend Adrenaline. Starter techniques include Power Strike,
     Stun Grenade, First Aid, Adrenal Surge, and Guard.
 
@@ -90,7 +90,7 @@ _______________________________________________________________________________
     * CRT styling and layout.
   - No external assets or libraries.
 
-[ KNOWN GOOD BEHAVIOR (v0.7.1) ]
+[ KNOWN GOOD BEHAVIOR (v0.7.2) ]
   - Stable boot: hall always renders before any modal (no blank canvas).
   - Items/NPCs draw before player (no sprite pop-under).
   - Loot from chests spawns on a nearby free tile (never under the player).

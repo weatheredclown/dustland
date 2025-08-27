@@ -553,7 +553,7 @@ const OFFICE_MODULE = (() => {
           name: 'Boots of Speed',
           type: 'trinket',
           slot: 'trinket',
-          mods: { AGI: 5 }
+          mods: { AGI: 5, move_delay_mod: 0.5 }
         },
         {
           map: 'world',
