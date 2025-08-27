@@ -1339,6 +1339,7 @@ test('healParty restores HP and clears adrenaline', () => {
 });
 
 test('startCombat forwards portraitSheet', async () => {
+  NPCS.length = 0;
   let captured;
   const orig = global.openCombat;
   global.openCombat = async (enemies) => { captured = enemies; return { result:'flee' }; };
@@ -1641,6 +1642,48 @@ test('combat log records player and enemy actions', async () => {
   const logEntries = getCombatLog();
   assert.ok(logEntries.some(e => e.type === 'player' && e.action === 'attack'));
   assert.ok(logEntries.some(e => e.type === 'enemy' && e.action === 'attack'));
+});
+
+test('enemy attacks random party member', async () => {
+  NPCS.length = 0;
+  party.length = 0;
+  const m1 = new Character('p1', 'P1', 'Role');
+  const m2 = new Character('p2', 'P2', 'Role');
+  m1.hp = m1.maxHp = 5;
+  m2.hp = m2.maxHp = 5;
+  party.addMember(m1);
+  party.addMember(m2);
+
+  const origRand = Math.random;
+  Math.random = () => 0.9; // force target index 1
+
+  const resultPromise = openCombat([{ name: 'E1', hp: 3 }]);
+  handleCombatKey({ key: 'Enter' }); // m1 attack
+  handleCombatKey({ key: 'Enter' }); // m2 attack triggers enemy phase
+
+  Math.random = origRand;
+  closeCombat('flee');
+  await resultPromise;
+
+  assert.strictEqual(m1.hp, 5);
+  assert.strictEqual(m2.hp, 4);
+});
+
+test('nearby combat NPCs join combat', async () => {
+  NPCS.length = 0;
+  party.x = 0; party.y = 0; party.map = 'world';
+  const npc1 = { id:'a', map:'world', x:0, y:0, name:'A', combat:{ HP:1 } };
+  const npc2 = { id:'b', map:'world', x:1, y:0, name:'B', combat:{ HP:1 } };
+  const npc3 = { id:'c', map:'world', x:5, y:5, name:'C', combat:{ HP:1 } };
+  NPCS.push(npc1, npc2, npc3);
+  let captured;
+  const orig = global.openCombat;
+  global.openCombat = async (enemies) => { captured = enemies; return { result:'flee' }; };
+  await startCombat({ ...npc1.combat, npc:npc1, name:npc1.name });
+  global.openCombat = orig;
+  assert.strictEqual(captured.length, 2);
+  assert.ok(captured.some(e => e.npc === npc1));
+  assert.ok(captured.some(e => e.npc === npc2));
 });
 
 test('shop npc opens dialog before trading', () => {

@@ -107,7 +107,8 @@ class Dice {
 // ===== Combat =====
 /**
  * Launch the menu-based combat interface. In non-browser environments the
- * player automatically flees.
+ * player automatically flees. Nearby combat-enabled NPCs within two tiles
+ * will join the defender.
  * @param {{HP?:number,DEF:number,loot?:Item,name?:string,npc?:NPC}} defender
  * @returns {Promise<{result:'bruise'|'loot'|'flee'}>}
  */
@@ -117,15 +118,30 @@ async function startCombat(defender){
     return { result:'flee' };
   }
 
-  const enemy = {
-    name: defender.name || 'Enemy',
-    hp: defender.HP || 5,
-    npc: defender.npc,
-    loot: defender.loot,
-    portraitSheet: defender.portraitSheet || defender.npc?.portraitSheet,
-    special: defender.special
+  const toEnemy = (def) => {
+    const { HP, portraitSheet, npc, name, ...rest } = def || {};
+    return {
+      ...rest,
+      name: name || npc?.name || 'Enemy',
+      hp: def.hp ?? HP ?? 5,
+      npc,
+      portraitSheet: portraitSheet || npc?.portraitSheet,
+      special: rest.special
+    };
   };
-  const result = await openCombat([enemy]);
+
+  const enemies = [toEnemy(defender)];
+  const px = party.x, py = party.y, map = party.map || state.map;
+  for (const n of (typeof NPCS !== 'undefined' ? NPCS : [])) {
+    if (!n.combat) continue;
+    if (n.map !== map) continue;
+    const dist = Math.abs(n.x - px) + Math.abs(n.y - py);
+    if (dist <= 2 && (!defender?.npc || n !== defender.npc)) {
+      enemies.push(toEnemy({ ...n.combat, npc: n, name: n.name, portraitSheet: n.portraitSheet }));
+    }
+  }
+
+  const result = await openCombat(enemies);
 
   if(attacker){
     attacker.ap = Math.max(0,(attacker.ap||0)-1);
