@@ -1134,6 +1134,24 @@ test('fallen party members are revived after combat', async () => {
   assert.ok(party[0].hp >= 1);
 });
 
+test('falling resets adrenaline', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  m1.hp = 1;
+  m1.adr = 30;
+  party.addMember(m1);
+
+  const resultPromise = openCombat([
+    { name:'E1', hp:3 }
+  ]);
+
+  handleCombatKey({ key:'Enter' });
+  const res = await resultPromise;
+  assert.strictEqual(res.result, 'bruise');
+  assert.strictEqual(m1.adr, 0);
+});
+
 test('combat hp bars update after damage', async () => {
   party.length = 0;
   player.inv.length = 0;

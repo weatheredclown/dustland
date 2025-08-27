@@ -554,6 +554,7 @@ function finishEnemyAttack(enemy, target){
   if (target.hp <= 0){
     log?.(`${target.name} falls!`);
     recordCombatEvent?.({ type: 'player', actor: target.name, action: 'fall', by: enemy.name });
+    target.adr = 0; // lose adrenaline on defeat
     combatState.fallen.push(target);
     party.splice(0, 1);
     renderCombat();
