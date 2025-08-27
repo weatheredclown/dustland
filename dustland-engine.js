@@ -55,7 +55,7 @@ function toggleAudio(){ setAudio(!audioEnabled); }
 globalThis.toggleAudio = toggleAudio;
 const isMobileUA = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 let mobileControlsEnabled = isMobileUA;
-let mobileWrap = null, mobilePad = null, mobileAB = null;
+let mobileWrap = null, mobilePad = null, mobileAB = null, mobileButtons = {};
 function setMobileControls(on){
   mobileControlsEnabled = on;
   const btn=document.getElementById('mobileToggle');
@@ -63,11 +63,12 @@ function setMobileControls(on){
   document.body.classList.toggle('mobile-on', on);
   if(on){
     if(!mobileWrap){
+      mobileButtons = {};
       mobileWrap=document.createElement('div');
       mobileWrap.id='mobileControls';
       mobileWrap.style.cssText='position:fixed;left:0;right:0;bottom:0;height:180px;display:flex;justify-content:space-between;padding:20px;z-index:1000;touch-action:manipulation;';
       document.body.appendChild(mobileWrap);
-      const mk=(t,fn)=>{
+      const mk=(name,t,fn)=>{
         const b=document.createElement('button');
         b.textContent=t;
         b.style.cssText='width:48px;height:48px;border:2px solid #0f0;border-radius:8px;background:#000;color:#0f0;font-size:20px;user-select:none;outline:none;touch-action:manipulation;';
@@ -84,6 +85,7 @@ function setMobileControls(on){
         };
         b.onpointerup=up;
         b.onpointerleave=up;
+        mobileButtons[name]=b;
         return b;
       };
       const mobileMove=(dx,dy,key)=>{
@@ -99,20 +101,20 @@ function setMobileControls(on){
       mobilePad.style.cssText='display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);gap:6px;user-select:none;';
       const cells=[
         document.createElement('div'),
-        mk("↑",()=>mobileMove(0,-1,'ArrowUp')),
+        mk('up','↑',()=>mobileMove(0,-1,'ArrowUp')),
         document.createElement('div'),
-        mk("←",()=>mobileMove(-1,0,'ArrowLeft')),
+        mk('left','←',()=>mobileMove(-1,0,'ArrowLeft')),
         document.createElement('div'),
-        mk("→",()=>mobileMove(1,0,'ArrowRight')),
+        mk('right','→',()=>mobileMove(1,0,'ArrowRight')),
         document.createElement('div'),
-        mk("↓",()=>mobileMove(0,1,'ArrowDown')),
+        mk('down','↓',()=>mobileMove(0,1,'ArrowDown')),
         document.createElement('div')
       ];
       cells.forEach(c=>mobilePad.appendChild(c));
       mobileWrap.appendChild(mobilePad);
       mobileAB=document.createElement('div');
       mobileAB.style.cssText='display:flex;gap:10px;user-select:none;';
-      mobileAB.appendChild(mk('A',()=>{
+      mobileAB.appendChild(mk('A','A',()=>{
         if(overlay?.classList?.contains('shown')){
           handleDialogKey?.({ key:'Enter' });
         } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
@@ -121,13 +123,14 @@ function setMobileControls(on){
           interact();
         }
       }));
-      mobileAB.appendChild(mk('B',takeNearestItem));
+      mobileAB.appendChild(mk('B','B',takeNearestItem));
       mobileWrap.appendChild(mobileAB);
     }
   } else {
     if(mobileWrap){ mobileWrap.remove(); mobileWrap=null; }
-    mobilePad=null; mobileAB=null;
+    mobilePad=null; mobileAB=null; mobileButtons={};
   }
+  return mobileButtons;
 }
 function toggleMobileControls(){ setMobileControls(!mobileControlsEnabled); }
 function sfxTick(){

@@ -10,8 +10,7 @@ async function setup(extras={}){
 
 test('mobile buttons are non-selectable and glow on press', async () => {
   const { context, document } = await setup();
-  context.setMobileControls(true);
-  const btn = document.querySelector('button');
+  const { up: btn } = context.setMobileControls(true);
   assert.ok(btn);
   assert.ok(btn.style.cssText?.includes('user-select:none'));
   btn.onpointerdown();
@@ -29,10 +28,8 @@ test('mobile arrows navigate dialog when overlay shown', async () => {
   });
   document.getElementById('overlay').classList.add('shown');
   context.overlay = document.getElementById('overlay');
-  context.setMobileControls(true);
-  const up = [...document.querySelectorAll('button')].find(b => b.textContent === '↑');
+  const { up, down } = context.setMobileControls(true);
   up.onclick();
-  const down = [...document.querySelectorAll('button')].find(b => b.textContent === '↓');
   down.onclick();
   assert.deepStrictEqual(keys, ['ArrowUp', 'ArrowDown']);
 });
@@ -45,10 +42,8 @@ test('mobile arrows navigate combat menu when in combat', async () => {
     overlay: null
   });
   document.getElementById('combatOverlay').classList.add('shown');
-  context.setMobileControls(true);
-  const up = [...document.querySelectorAll('button')].find(b => b.textContent === '↑');
+  const { up, down } = context.setMobileControls(true);
   up.onclick();
-  const down = [...document.querySelectorAll('button')].find(b => b.textContent === '↓');
   down.onclick();
   assert.deepStrictEqual(keys, ['ArrowUp', 'ArrowDown']);
 });
@@ -61,8 +56,7 @@ test('mobile A selects combat option when in combat', async () => {
     overlay: null
   });
   document.getElementById('combatOverlay').classList.add('shown');
-  context.setMobileControls(true);
-  const a = [...document.querySelectorAll('button')].find(b => b.textContent === 'A');
+  const { A: a } = context.setMobileControls(true);
   a.onclick();
   assert.deepStrictEqual(keys, ['Enter']);
 });
