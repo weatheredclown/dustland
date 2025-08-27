@@ -54,7 +54,7 @@ test('engine skips start when ack-player param present', () => {
   global.bootMap = () => {};
   global.draw = () => {};
   global.runTests = () => {};
-  const enginePath = path.join(__dirname, '..', 'dustland-engine.js');
+  const enginePath = path.join(__dirname, '..', 'scripts', 'dustland-engine.js');
   window.eval(fs.readFileSync(enginePath, 'utf8'));
   assert.ok(!startShown && !creatorOpened, 'engine should not boot when ack-player param present');
 });

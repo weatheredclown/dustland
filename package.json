@@ -3,7 +3,7 @@
   "version": "0.6.7",
   "description": "Wasteland-style browser RPG with a CRT vibe",
   "type": "module",
-  "main": "dustland-core.js",
+  "main": "scripts/dustland-core.js",
   "scripts": {
     "serve": "http-server -p 8080",
     "test": "node --test",

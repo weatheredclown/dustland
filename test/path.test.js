@@ -21,7 +21,7 @@ global.queryTile = (x,y,map='world') => {
 global.NPCS = [];
 
 test('PathQueue finds a path', async () => {
-  await import('../dustland-path.js');
+  await import('../scripts/dustland-path.js');
   const key = window.Dustland.path.queue('world',{x:0,y:0},{x:2,y:2});
   await new Promise(r => setTimeout(r,20));
   const path = window.Dustland.path.pathFor(key);

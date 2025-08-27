@@ -4,8 +4,8 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import { JSDOM } from 'jsdom';
 
-const trainerUiCode = await fs.readFile(new URL('../trainer-ui.js', import.meta.url), 'utf8');
-const partyCode = await fs.readFile(new URL('../core/party.js', import.meta.url), 'utf8');
+const trainerUiCode = await fs.readFile(new URL('../scripts/trainer-ui.js', import.meta.url), 'utf8');
+const partyCode = await fs.readFile(new URL('../scripts/core/party.js', import.meta.url), 'utf8');
 const dataCode = await fs.readFile(new URL('../data/skills/trainer-upgrades.js', import.meta.url), 'utf8');
 
 function setup(){

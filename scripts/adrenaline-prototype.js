@@ -31,9 +31,9 @@ if (typeof window === 'undefined') {
     global.registerItem = (x) => x;
     global.removeNPC = () => {};
     const scripts = [
-      'core/party.js',
-      'core/abilities.js',
-      'core/combat.js'
+      'scripts/core/party.js',
+      'scripts/core/abilities.js',
+      'scripts/core/combat.js'
     ];
     for (const file of scripts) {
       w.eval(fs.readFileSync(path.join(baseDir, file), 'utf8'));

@@ -21,7 +21,7 @@
 
 ## Integration Points
 - Boot strapper loads Magenta and Tone lazily after main UI settles.
-- `event-bus.js` broadcasts `music:seed` when a run starts; music module listens and spins up a new track.
+- `scripts/event-bus.js` broadcasts `music:seed` when a run starts; music module listens and spins up a new track.
 - Future: combat or weather events can tweak filters or switch instruments.
 
 ## Risks

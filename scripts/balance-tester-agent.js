@@ -2,7 +2,7 @@
 
 // Wait for the game to be ready in the browser or set up a jsdom
 // environment when executed under Node.js. This allows the balance
-// tester to run headlessly via `node balance-tester-agent.js`.
+// tester to run headlessly via `node scripts/balance-tester-agent.js`.
 if (typeof window === 'undefined') {
   (async () => {
     const { JSDOM } = await import('jsdom');
@@ -70,22 +70,22 @@ if (typeof window === 'undefined') {
     global.runTests = () => {};
 
     const scripts = [
-      'event-bus.js',
-      'dustland-nano.js',
-      'dustland-core.js',
-      'core/party.js',
-      'core/quests.js',
-      'core/abilities.js',
-      'core/actions.js',
-      'core/combat.js',
-      'core/dialog.js',
-      'core/effects.js',
-      'core/inventory.js',
-      'core/loop.js',
-      'core/movement.js',
-      'core/npc.js',
-      'dustland-path.js',
-      'dustland-engine.js'
+      'scripts/event-bus.js',
+      'scripts/dustland-nano.js',
+      'scripts/dustland-core.js',
+      'scripts/core/party.js',
+      'scripts/core/quests.js',
+      'scripts/core/abilities.js',
+      'scripts/core/actions.js',
+      'scripts/core/combat.js',
+      'scripts/core/dialog.js',
+      'scripts/core/effects.js',
+      'scripts/core/inventory.js',
+      'scripts/core/loop.js',
+      'scripts/core/movement.js',
+      'scripts/core/npc.js',
+      'scripts/dustland-path.js',
+      'scripts/dustland-engine.js'
     ];
     for (const file of scripts) {
       w.eval(fs.readFileSync(path.join(baseDir, file), 'utf8'));

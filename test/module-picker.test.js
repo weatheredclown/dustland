@@ -72,8 +72,8 @@ global.document = {
 global.openCreator = () => {};
 global.showStart = () => {};
 
-const code = await fs.readFile(new URL('../module-picker.js', import.meta.url), 'utf8');
-vm.runInThisContext(code, { filename: '../module-picker.js' });
+const code = await fs.readFile(new URL('../scripts/module-picker.js', import.meta.url), 'utf8');
+vm.runInThisContext(code, { filename: '../scripts/module-picker.js' });
 
 test('module picker shows title and dust background', () => {
   const overlay = bodyEl.children.find(c => c.id === 'modulePicker');

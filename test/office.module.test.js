@@ -48,7 +48,7 @@ test('office worker lends scrap when low and missing badge', () => {
   global.portraits = { worker: '' };
   global.hasItem = () => false;
   vm.runInThisContext(
-    fs.readFileSync(path.join(__dirname, '..', 'core', 'actions.js'), 'utf8')
+    fs.readFileSync(path.join(__dirname, '..', 'scripts', 'core', 'actions.js'), 'utf8')
   );
   const worker = vm.runInThisContext('(' + objSrc + ')');
   const tree = worker.tree();

@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
-import '../core/party.js';
-import '../core/npc.js';
+import '../scripts/core/party.js';
+import '../scripts/core/npc.js';
 
 globalThis.log = () => {};
 globalThis.toast = () => {};

@@ -26,7 +26,7 @@ global.party = { x:5, y:5 };
 import './fast-timeouts.js';
 
 test('NPC follows waypoints with capped speed and waits when close', async () => {
-  await import('../dustland-path.js');
+  await import('../scripts/dustland-path.js');
   window.Dustland.path.tickPathAI();
   await Promise.resolve();
   window.Dustland.path.tickPathAI();
@@ -46,13 +46,13 @@ test('NPC re-pathfinds after being moved', async () => {
   NPCS.length = 0;
   NPCS.push({ id:'n2', map:'world', x:0, y:0, loop:[{x:0,y:0},{x:2,y:0}] });
   party.x = 5; party.y = 5;
-  await import('../dustland-path.js');
+  await import('../scripts/dustland-path.js');
   global.updateHUD = () => {};
   global.document = {
     getElementById: () => ({ children: [], classList:{ toggle(){}, contains(){ return false; }, add(){}, remove(){} }, style:{}, appendChild(){}, remove(){}, innerHTML:'', textContent:'' }),
     createElement: () => ({ children: [], classList:{ toggle(){}, contains(){ return false; }, add(){}, remove(){} }, style:{}, appendChild(){}, remove(){}, innerHTML:'', textContent:'', onclick:null }),
   };
-  await import('../core/dialog.js');
+  await import('../scripts/core/dialog.js');
   window.Dustland.path.tickPathAI();
   await new Promise(r => setTimeout(r,20));
   window.Dustland.path.tickPathAI();

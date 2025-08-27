@@ -60,8 +60,8 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
   - [x] Namespace effects under `Dustland.effects`.
     - [x] Namespace actions under `Dustland.actions`.
   - [ ] Update references and tests incrementally.
-- [ ] **Phase 1.5: Reorganize the filesystem**
-  - [ ] move core and JS files in root under a new a scripts directory
+- [x] **Phase 1.5: Reorganize the filesystem**
+  - [x] move core and JS files in root under a new scripts directory
 - [ ] **Phase 2: Untangle UI from logic**
   - [ ] Replace direct DOM calls with event emissions.
   - [ ] Build a tiny `ui.js` to listen for events.

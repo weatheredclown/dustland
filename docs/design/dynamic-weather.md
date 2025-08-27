@@ -10,7 +10,7 @@
 - **Lightweight:** No heavy shaders; reuse existing sprite layers and CSS filters.
 
 ## Implementation Sketch
-1. Add `core/weather.js` managing region forecasts and broadcasting `weather:change`.
+1. Add `scripts/core/weather.js` managing region forecasts and broadcasting `weather:change`.
 2. Hook listeners in movement and encounter modules to adjust behavior.
 3. Display a small banner with icon and descriptor at top of HUD.
 
@@ -22,6 +22,6 @@
 
 ## Prototype
 ```
-node weather-prototype.js
+node scripts/weather-prototype.js
 ```
 Runs a console simulation cycling states and logging modifiers.

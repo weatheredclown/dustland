@@ -4,8 +4,8 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import { JSDOM } from 'jsdom';
 
-const coreCode = await fs.readFile(new URL('../dustland-core.js', import.meta.url), 'utf8');
-const combatCode = await fs.readFile(new URL('../core/combat.js', import.meta.url), 'utf8');
+const coreCode = await fs.readFile(new URL('../scripts/dustland-core.js', import.meta.url), 'utf8');
+const combatCode = await fs.readFile(new URL('../scripts/core/combat.js', import.meta.url), 'utf8');
 
 function setup(){
   const html = `<body><div id="mapname"></div><div id="creator"></div><div id="ccStep"></div><div id="ccRight"></div><div id="ccHint"></div><button id="ccBack"></button><button id="ccNext"></button><div id="ccPortrait"></div><button id="ccStart"></button><button id="ccLoad"></button><div id="combatOverlay"></div><div id="combatEnemies"></div><div id="combatParty"></div><div id="combatCmd"></div></body>`;

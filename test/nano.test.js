@@ -47,7 +47,7 @@ global.LanguageModel = {
 };
 
 test('NanoDialog generates lines and choices', async () => {
-  await import('../dustland-nano.js');
+  await import('../scripts/dustland-nano.js');
   await window.NanoDialog.init();
   window.NanoDialog.queueForNPC(NPCS[0], 'start', 'test');
   await new Promise(r => setTimeout(r, 100));
@@ -65,7 +65,7 @@ test('NanoDialog generates lines and choices', async () => {
 });
 
 test('NanoDialog skips missing dialog nodes', async () => {
-  await import('../dustland-nano.js');
+  await import('../scripts/dustland-nano.js');
   await window.NanoDialog.init();
   window.NanoDialog.queueForNPC(NPCS[0], 'bogus', 'test');
   await new Promise(r => setTimeout(r, 100));
@@ -76,7 +76,7 @@ test('NanoDialog skips missing dialog nodes', async () => {
 });
 
 test('NanoPalette generates a block', async () => {
-  await import('../dustland-nano.js');
+  await import('../scripts/dustland-nano.js');
   await window.NanoPalette.init();
   const block = await window.NanoPalette.generate();
   assert.ok(Array.isArray(block) && block.length === 16, 'block generated');
@@ -87,7 +87,7 @@ test('NanoPalette uses stamp emoji examples by default', async () => {
     hill: Array(16).fill('🏝'.repeat(16)),
     cross: Array(16).fill('🪨'.repeat(16))
   };
-  await import('../dustland-nano.js');
+  await import('../scripts/dustland-nano.js');
   await window.NanoPalette.init();
   lastPrompt = '';
   await window.NanoPalette.generate();

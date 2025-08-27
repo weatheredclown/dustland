@@ -22,7 +22,7 @@ function setup(items, equipped){
 }
 
 async function loadRender(ctx){
-  const full = await fs.readFile(new URL('../dustland-engine.js', import.meta.url), 'utf8');
+  const full = await fs.readFile(new URL('../scripts/dustland-engine.js', import.meta.url), 'utf8');
   const start = full.indexOf('function calcItemValue');
   const end = full.indexOf('function renderQuests');
   vm.runInContext(full.slice(start, end), ctx);

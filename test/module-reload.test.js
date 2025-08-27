@@ -54,8 +54,8 @@ global.openCreator = () => { openCalls++; };
 global.showStart = () => {};
 global.resetAll = () => { resetCalls++; };
 
-const code = await fs.readFile(new URL('../module-picker.js', import.meta.url), 'utf8');
-vm.runInThisContext(code, { filename: '../module-picker.js' });
+const code = await fs.readFile(new URL('../scripts/module-picker.js', import.meta.url), 'utf8');
+vm.runInThisContext(code, { filename: '../scripts/module-picker.js' });
 
 function getModule(){ return { id:'fake', name:'Fake', file:'fake.js' }; }
 

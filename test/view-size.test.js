@@ -39,7 +39,7 @@ test('getViewSize reflects window bounds', async () => {
     console
   };
   vm.createContext(context);
-  const code = await fs.readFile(new URL('../dustland-core.js', import.meta.url), 'utf8');
+  const code = await fs.readFile(new URL('../scripts/dustland-core.js', import.meta.url), 'utf8');
   vm.runInContext(code, context);
   const small = context.getViewSize();
   assert.strictEqual(small.w, 20);

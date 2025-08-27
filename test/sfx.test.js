@@ -57,7 +57,7 @@ async function setup(playImpl = () => Promise.resolve()) {
     pause(){ this.isPlaying = false; }
   };
   global.EventBus = { on: (evt, fn) => { if (evt === 'sfx') global._playSfx = fn; } };
-  await import(new URL('../dustland-engine.js?' + Math.random(), import.meta.url));
+  await import(new URL('../scripts/dustland-engine.js?' + Math.random(), import.meta.url));
   const cleanup = () => dom.window.close();
   return {
     cleanup,

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
-const code = await fs.readFile(new URL('../core/item-generator.js', import.meta.url), 'utf8');
+const code = await fs.readFile(new URL('../scripts/core/item-generator.js', import.meta.url), 'utf8');
 vm.runInThisContext(code, { filename: 'core/item-generator.js' });
 
 test('generator creates item with type, name, and stats', () => {

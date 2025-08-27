@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
-import '../core/party.js';
+import '../scripts/core/party.js';
 
 test('xpToNext pulls values from xpCurve', () => {
   assert.strictEqual(globalThis.xpCurve[1], 100);

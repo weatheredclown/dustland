@@ -74,10 +74,10 @@ global.NanoPalette = {
 };
 
 const files = [
-  '../event-bus.js',
-  '../core/movement.js',
-  '../dustland-core.js',
-  '../adventure-kit.js'
+  '../scripts/event-bus.js',
+  '../scripts/core/movement.js',
+  '../scripts/dustland-core.js',
+  '../scripts/adventure-kit.js'
 ];
 for (const f of files) {
   const code = await fs.readFile(new URL(f, import.meta.url), 'utf8');

@@ -42,10 +42,10 @@ global.document = {
 };
 
 const files = [
-  '../event-bus.js',
-  '../dustland-core.js',
-  '../core/npc.js',
-  '../core/dialog.js'
+  '../scripts/event-bus.js',
+  '../scripts/dustland-core.js',
+  '../scripts/core/npc.js',
+  '../scripts/core/dialog.js'
 ];
 for(const f of files){
   const code = await fs.readFile(new URL(f, import.meta.url), 'utf8');

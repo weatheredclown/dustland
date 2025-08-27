@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
-import '../core/abilities.js';
+import '../scripts/core/abilities.js';
 
 test('defineAbility stores ability with cost and prereqs', () => {
   const ability = globalThis.defineAbility('powerStrike', {
