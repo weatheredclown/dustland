@@ -899,6 +899,7 @@ if (document.getElementById('saveBtn')) {
       case 'q': if(!e.ctrlKey && !e.metaKey){ showTab('quests'); e.preventDefault(); } break;
       case 'Tab':
         e.preventDefault();
+        e.stopImmediatePropagation();
         if (party.length>0){
           selectedMember = (selectedMember + 1) % party.length;
           renderParty();
