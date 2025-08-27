@@ -1,0 +1,7 @@
+{
+  "id": "overcharger",
+  "name": "Overcharger",
+  "hp": 14,
+  "counterBasic": { "dmg": 2 },
+  "special": { "cue": "builds a massive surge", "dmg": 6, "delay": 800 }
+}

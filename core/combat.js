@@ -280,16 +280,26 @@ function chooseOption(){
   }
 }
 
-function doAttack(dmg){
+function doAttack(dmg, type='basic'){
   const attacker=party[combatState.active];
   const target=combatState.enemies[0];
-  target.hp-=dmg;
+  let dealt=dmg;
+  if(type==='basic' && Array.isArray(target.immune) && target.immune.includes('basic')){
+    dealt=0;
+    log?.(`${target.name} shrugs off the attack.`);
+  }
+  target.hp-=dealt;
   const weapon=attacker.equip?.weapon;
   const baseGain=(weapon?.mods?.ADR ?? 10) / 4;
   const gain=Math.round(baseGain * (attacker.adrGenMod || 1));
   attacker.adr=Math.min(attacker.maxAdr||100, attacker.adr+gain);
   updateHUD?.();
-  log?.(`${attacker.name} hits ${target.name} for ${dmg} damage.`);
+  if(dealt>0) log?.(`${attacker.name} hits ${target.name} for ${dealt} damage.`);
+  if(type==='basic' && target.counterBasic){
+    const cd=target.counterBasic.dmg||1;
+    attacker.hp-=cd;
+    log?.(`${target.name} counters for ${cd} damage.`);
+  }
   if(target.hp<=0){
     log?.(`${target.name} is defeated!`);
     globalThis.EventBus?.emit?.('enemy:defeated', { target });
@@ -318,7 +328,7 @@ function doSpecial(idx){
   const m=party[combatState.active];
   const spec=m.special?.[idx];
   if(!spec){ openCommand(); return; }
-  if(spec.dmg) doAttack(spec.dmg);
+  if(spec.dmg) doAttack(spec.dmg,'special');
   else nextCombatant();
 }
 

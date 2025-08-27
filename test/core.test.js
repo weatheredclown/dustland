@@ -1455,6 +1455,35 @@ test('equipment modifiers apply at battle start', async () => {
   await resultPromise;
 });
 
+test('enemy immune to basic attacks requires specials', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role', { special:[{ label:'Power Hit', dmg:2 }] });
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name:'Shield', hp:5, immune:['basic'] }]);
+  handleCombatKey({ key:'Enter' });
+  assert.strictEqual(combatState.enemies[0].hp, 5);
+  handleCombatKey({ key:'ArrowDown' });
+  handleCombatKey({ key:'Enter' });
+  handleCombatKey({ key:'Enter' });
+  assert.strictEqual(combatState.enemies[0].hp, 3);
+  closeCombat('flee');
+  await resultPromise;
+});
+
+test('enemy counters basic attacks', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name:'Mirror', hp:3, counterBasic:{dmg:1} }]);
+  handleCombatKey({ key:'Enter' });
+  assert.strictEqual(combatState.enemies[0].hp, 2);
+  assert.strictEqual(party[0].hp, 8);
+  closeCombat('flee');
+  await resultPromise;
+});
+
 test('shop npc opens dialog before trading', () => {
   NPCS.length = 0;
   party.x = 0; party.y = 0;
