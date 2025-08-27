@@ -260,8 +260,11 @@ function draw(t){
   render(state, dt/1000);
   const bx = bumpEnd > performance.now() ? bumpX : 0;
   const by = bumpEnd > performance.now() ? bumpY : 0;
-  dctx.globalAlpha=0.20; dctx.drawImage(prev, 1 + bx, by);
-  dctx.globalAlpha=0.2; dctx.drawImage(scene, bx, by);
+  const fx = globalThis.fxConfig;
+  dctx.globalAlpha = fx.prevAlpha;
+  dctx.drawImage(prev, (fx.offsetX || 0) + bx, (fx.offsetY || 0) + by);
+  dctx.globalAlpha = fx.sceneAlpha;
+  dctx.drawImage(scene, bx, by);
   pctx.clearRect(0,0,prev.width,prev.height); pctx.drawImage(scene,0,0);
 
   if (state.mapFlags && state.mapFlags.dustStorm) {
