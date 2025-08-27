@@ -85,3 +85,16 @@ test('damage flash disabled by default but can be enabled', async () => {
   ctx.updateHUD();
   assert.ok(bar.classList.contains('hurt'));
 });
+
+test('adrenaline tint and grayscale filters update based on config', async () => {
+  const ctx = setup(HUD_HTML);
+  ctx.fxConfig.adrenalineTint = true;
+  ctx.leader = () => ({ maxHp: 10, adr: 50, maxAdr: 100 });
+  ctx.updateHUD();
+  const filt1 = ctx.document.getElementById('game').style.getPropertyValue('--fxFilter');
+  assert.ok(/saturate/.test(filt1));
+  ctx.fxConfig.grayscale = true;
+  ctx.updateHUD();
+  const filt2 = ctx.document.getElementById('game').style.getPropertyValue('--fxFilter');
+  assert.ok(/grayscale/.test(filt2));
+});
