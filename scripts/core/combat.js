@@ -146,6 +146,7 @@ function openCombat(enemies){
     renderCombat();
     updateHUD?.();
     combatOverlay.classList.add('shown');
+    globalThis.EventBus?.emit?.('combat:started');
     openCommand();
   });
 }
