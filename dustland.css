@@ -651,7 +651,7 @@
   border: 1px solid #2b3b2b;
   border-radius: 8px;
   box-shadow: 0 0 20px #000;
-  max-height: 80vh;
+  max-height: min(480px, 92vh);
   display: flex;
   flex-direction: column;
 }

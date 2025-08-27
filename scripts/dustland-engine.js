@@ -780,6 +780,7 @@ function openShop(npc) {
     shopOverlay.removeEventListener('keydown', handleKey);
   }
   function handleKey(e) {
+    e.stopPropagation();
     if (e.key === 'Escape') { close(); return; }
     if (e.key === 'ArrowDown') {
       focusIdx = (focusIdx + 1) % focusables.length;
@@ -863,6 +864,10 @@ if (document.getElementById('saveBtn')) {
     const combat = document.getElementById('combatOverlay');
     if(combat?.classList?.contains('shown')){
       if(handleCombatKey?.(e)) e.preventDefault();
+      return;
+    }
+    const shop = document.getElementById('shopOverlay');
+    if (shop?.classList?.contains('shown')) {
       return;
     }
     switch(e.key){
