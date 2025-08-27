@@ -892,7 +892,7 @@ test('fight choice triggers combat', () => {
   NPCS.length = 0;
   const orig = globalThis.Dustland.actions.startCombat;
   let triggered = false;
-  globalThis.Dustland.actions.startCombat = () => { triggered = true; };
+  globalThis.Dustland.actions.startCombat = () => { triggered = true; return Promise.resolve({ result: 'flee' }); };
   const npc = makeNPC('rival', 'world', 0, 0, '#fff', 'Rival', '', '', null, null, null, null, { combat: { DEF: 1 } });
   NPCS.push(npc);
   openDialog(npc);
@@ -1446,7 +1446,7 @@ test('distance to road increases encounter chance', () => {
   let started = false;
   const origRand = Math.random;
   Math.random = () => 0;
-  globalThis.Dustland.actions.startCombat = () => { started = true; };
+  globalThis.Dustland.actions.startCombat = () => { started = true; return Promise.resolve({ result: 'flee' }); };
   checkRandomEncounter();
   Math.random = origRand;
   assert.ok(started);
@@ -1461,10 +1461,31 @@ test('no encounters occur on roads', () => {
   let started = false;
   const origRand = Math.random;
   Math.random = () => 0;
-  globalThis.Dustland.actions.startCombat = () => { started = true; };
+  globalThis.Dustland.actions.startCombat = () => { started = true; return Promise.resolve({ result: 'flee' }); };
   checkRandomEncounter();
   Math.random = origRand;
   assert.ok(!started);
+});
+
+test('random encounters award XP based on strength', async () => {
+  const row = Array(2).fill(TILE.SAND);
+  applyModule({ world: [row], encounters: { world: [ { name: 'Test', HP: 4, DEF: 0, challenge: 4 } ] } });
+  state.map = 'world';
+  party.length = 0;
+  party.push(makeMember('a','A','Hero'));
+  party.push(makeMember('b','B','Mage'));
+  setPartyPos(1, 0);
+  const origRand = Math.random;
+  Math.random = () => 0;
+  const orig = globalThis.Dustland.actions.startCombat;
+  globalThis.Dustland.actions.startCombat = () => Promise.resolve({ result: 'loot' });
+  checkRandomEncounter();
+  await Promise.resolve();
+  Math.random = origRand;
+  globalThis.Dustland.actions.startCombat = orig;
+  assert.strictEqual(party[0].xp, 4);
+  assert.strictEqual(party[1].xp, 4);
+  party.length = 0;
 });
 
 test('applyModule from dialog adds next fragment', async () => {
