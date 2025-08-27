@@ -1687,7 +1687,9 @@ function collectTemplate(){
   const color = document.getElementById('templateColor').value.trim();
   const portraitSheet = document.getElementById('templatePortrait').value.trim();
   let combat = null;
-  try { combat = JSON.parse(document.getElementById('templateCombat').value.trim() || 'null'); } catch(e){}
+  try { combat = JSON.parse(document.getElementById('templateCombat').value.trim() || 'null'); } catch (e) {
+    // ignore parse errors
+  }
   return { id, name, desc, color, portraitSheet, combat };
 }
 function addTemplate(){

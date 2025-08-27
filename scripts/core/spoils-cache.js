@@ -23,6 +23,12 @@ const SpoilsCache = {
     }
   },
   baseRate: 0.08,
+  tierWeights: {
+    1: [['rusted', 0.8], ['sealed', 0.2]],
+    4: [['rusted', 0.3], ['sealed', 0.6], ['armored', 0.1]],
+    7: [['vaulted', 0.03], ['armored', 0.87], ['sealed', 0.1]],
+    9: [['vaulted', 0.2], ['armored', 0.8]]
+  },
   create(rank){
     const info = this.ranks[rank];
     if(!info) throw new Error('Unknown cache rank');
@@ -35,21 +41,18 @@ const SpoilsCache = {
   },
   pickRank(challenge, rng=Math.random){
     const c = Math.max(1, Math.min(10, challenge|0));
+    const tiers = Object.keys(this.tierWeights).map(Number).sort((a,b)=>a-b);
+    let weights = this.tierWeights[tiers[0]];
+    for(const t of tiers){
+      if(c >= t) weights = this.tierWeights[t];
+    }
     const r = rng();
-    if(c >= 9){
-      return r < 0.2 ? 'vaulted' : 'armored';
+    let sum = 0;
+    for(const [rank, weight] of weights){
+      sum += weight;
+      if(r < sum) return rank;
     }
-    if(c >= 7){
-      if(r < 0.03) return 'vaulted';
-      if(r < 0.9) return 'armored';
-      return 'sealed';
-    }
-    if(c >= 4){
-      if(r < 0.1) return 'armored';
-      if(r < 0.7) return 'sealed';
-      return 'rusted';
-    }
-    return r < 0.2 ? 'sealed' : 'rusted';
+    return weights[0][0];
   },
   rollDrop(challenge, rng=Math.random){
     const c = Math.max(1, challenge||1);
