@@ -1,4 +1,4 @@
-{
+globalThis.TRAINER_UPGRADES = {
   "power": [
     { "id": "str", "label": "STR +1", "cost": 1, "type": "stat", "stat": "STR", "delta": 1 },
     { "id": "agi", "label": "AGI +1", "cost": 1, "type": "stat", "stat": "AGI", "delta": 1 }
@@ -11,4 +11,4 @@
     { "id": "per", "label": "PER +1", "cost": 1, "type": "stat", "stat": "PER", "delta": 1 },
     { "id": "lck", "label": "LCK +1", "cost": 1, "type": "stat", "stat": "LCK", "delta": 1 }
   ]
-}
+};

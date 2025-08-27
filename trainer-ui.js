@@ -1,14 +1,10 @@
 (function(){
-  async function loadTrainerData(){
-    if(loadTrainerData.cache) return loadTrainerData.cache;
-    const res = await fetch('data/skills/trainer-upgrades.json');
-    const data = await res.json();
-    loadTrainerData.cache = data;
-    return data;
+  function loadTrainerData(){
+    return globalThis.TRAINER_UPGRADES || {};
   }
 
   async function showTrainer(id, memberIndex){
-    const data = await loadTrainerData();
+    const data = loadTrainerData();
     const upgrades = data[id] || [];
     let box = document.getElementById('trainer_ui');
     if(!box){
@@ -29,7 +25,7 @@
   }
 
   function applyUpgrade(trainerId, upgradeId, memberIndex){
-    const data = loadTrainerData.cache;
+    const data = loadTrainerData();
     const up = (data?.[trainerId] || []).find(u => u.id === upgradeId);
     if(!up) return false;
     if(up.type === 'stat'){

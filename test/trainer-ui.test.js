@@ -6,7 +6,7 @@ import { JSDOM } from 'jsdom';
 
 const trainerUiCode = await fs.readFile(new URL('../trainer-ui.js', import.meta.url), 'utf8');
 const partyCode = await fs.readFile(new URL('../core/party.js', import.meta.url), 'utf8');
-const dataJson = await fs.readFile(new URL('../data/skills/trainer-upgrades.json', import.meta.url), 'utf8');
+const dataCode = await fs.readFile(new URL('../data/skills/trainer-upgrades.js', import.meta.url), 'utf8');
 
 function setup(){
   const dom = new JSDOM('<!doctype html><body></body>', { url: 'https://example.com' });
@@ -15,11 +15,11 @@ function setup(){
     log: () => {},
     renderParty: () => {},
     updateHUD: () => {},
-    EventBus: { emit: () => {} },
-    fetch: async () => ({ json: async () => JSON.parse(dataJson) })
+    EventBus: { emit: () => {} }
   };
   context.localStorage = dom.window.localStorage;
   vm.createContext(context);
+  vm.runInContext(dataCode, context);
   vm.runInContext(partyCode, context);
   vm.runInContext(trainerUiCode, context);
   return { context, dom };

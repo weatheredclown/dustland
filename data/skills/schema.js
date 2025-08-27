@@ -1,4 +1,4 @@
-{
+globalThis.TRAINER_UPGRADE_SCHEMA = {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Trainer Skill Upgrades",
   "type": "object",
@@ -18,4 +18,4 @@
       "additionalProperties": false
     }
   }
-}
+};
