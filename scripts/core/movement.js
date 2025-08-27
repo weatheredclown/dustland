@@ -232,7 +232,15 @@ function checkRandomEncounter(){
   const chance = Math.min(dist * 0.02, 0.5);
   if(Math.random() < chance){
     const def = bank[Math.floor(Math.random()*bank.length)];
-    Dustland.actions.startCombat(def);
+    // Award XP based on enemy strength versus party level
+    Dustland.actions.startCombat(def)?.then(res => {
+      if(res && res.result !== 'flee'){
+        const avgLvl = party.reduce((s,m)=>s+(m.lvl||1),0)/(party.length||1);
+        const enemyStr = def.challenge || def.HP || 1;
+        const xp = Math.max(1, Math.ceil(enemyStr/avgLvl));
+        party.forEach(m => awardXP(m, xp));
+      }
+    });
   }
 }
 function adjacentNPC(){
