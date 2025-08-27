@@ -101,9 +101,13 @@ const full = await fs.readFile(new URL('../dustland-engine.js', import.meta.url)
 
 export function createGameProxy(party){
   const document=makeDocument();
+  const stubTimeout=(fn)=>{ queueMicrotask(fn); return 0; };
+  const stubClear=()=>{};
   const winListeners={};
   const window={
     document,
+    setTimeout:stubTimeout,
+    clearTimeout:stubClear,
     AudioContext:AudioCtx,
     webkitAudioContext:AudioCtx,
     Audio,
@@ -127,6 +131,8 @@ export function createGameProxy(party){
     window,
     document,
     navigator:{ userAgent:'Test' },
+    setTimeout:stubTimeout,
+    clearTimeout:stubClear,
     AudioContext:AudioCtx,
     webkitAudioContext:AudioCtx,
     Audio,
