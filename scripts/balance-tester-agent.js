@@ -17,6 +17,15 @@ if (typeof window === 'undefined') {
       <div id="scrap"></div>
       <canvas id="game"></canvas>
       <div id="mapname"></div>
+      <div id="tabInv"></div>
+      <div id="tabParty"></div>
+      <div id="tabQuests"></div>
+      <div id="inv"></div>
+      <div id="party"></div>
+      <div id="quests"></div>
+      <button id="saveBtn"></button>
+      <button id="loadBtn"></button>
+      <button id="resetBtn"></button>
       <div id="start"><div id="startContinue"></div><div id="startNew"></div></div>
       <div id="creator">
         <div id="ccStep"></div><div id="ccRight"></div><div id="ccHint"></div>
@@ -90,6 +99,7 @@ if (typeof window === 'undefined') {
     for (const file of scripts) {
       w.eval(fs.readFileSync(path.join(baseDir, file), 'utf8'));
     }
+    global.NanoDialog = w.NanoDialog;
     await runBalanceTest();
   })().catch(err => {
     console.error('Balance test error:', err);
