@@ -94,3 +94,12 @@ test('playSfx reuses a pool of five audio elements', async () => {
   assert.strictEqual(getAudioCount(), 6);
   cleanup();
 });
+
+test('damage sfx uses oscillator without creating audio elements', async () => {
+  const { cleanup, getAudioCount, getPlays } = await setup();
+  const before = getAudioCount();
+  global._playSfx('damage');
+  assert.strictEqual(getAudioCount(), before);
+  assert.strictEqual(getPlays(), 0);
+  cleanup();
+});
