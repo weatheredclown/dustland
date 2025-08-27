@@ -18,6 +18,7 @@ class Character {
     this._bonus={ATK:0, DEF:0, LCK:0};
     this.special = Array.isArray(opts.special) ? [...opts.special] : [];
     this.adrGenMod = 1;
+    this.adrDmgMod = 1;
     this.cooldowns = {};
     this.guard = false;
   }
@@ -60,6 +61,7 @@ class Character {
   }
   applyCombatMods(){
     this.adrGenMod = 1;
+    this.adrDmgMod = 1;
     if(!Array.isArray(this._baseSpecial)){
       this._baseSpecial = [...this.special];
     }
@@ -69,6 +71,9 @@ class Character {
       if(it&&it.mods){
         if(typeof it.mods.adrenaline_gen_mod === 'number'){
           this.adrGenMod *= it.mods.adrenaline_gen_mod;
+        }
+        if(typeof it.mods.adrenaline_dmg_mod === 'number'){
+          this.adrDmgMod *= it.mods.adrenaline_dmg_mod;
         }
         const grant = it.mods.granted_special;
         if(grant){

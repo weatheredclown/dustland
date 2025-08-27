@@ -17,6 +17,8 @@ Sitting back and playing defensively is a losing strategy. The player who isn't 
 
 Adrenaline persists between encounters, gently cooling when a character is at full health. A full rest that restores the whole party immediately clears any stored Adrenaline.
 
+The more Adrenaline you have, the harder you hit. Damage scales with the current meter, reaching +100% at a full bar. Items that carry an `adrenaline_dmg_mod` can amplify this boost beyond 200%.
+
 > **Clown:** I'm into the forward momentum, but we should confirm the Adrenaline bar doesn't crowd the HUD. Let's prototype it with placeholder art before committing. When it's full, it could arc with energy. When you use a Special, it slams down, then starts building again. The UI itself should feel energetic.
 
 ### Specials: High Risk, High Reward
