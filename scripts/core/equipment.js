@@ -11,7 +11,7 @@
     name: 'Stun Baton',
     type: 'weapon',
     slot: 'weapon',
-    mods: { ATK: 1, ADR: 15, adrenaline_gen_mod: 1.2 }
+    mods: { ATK: 1, ADR: 15, adrenaline_gen_mod: 1.2, adrenaline_dmg_mod: 1.2 }
   });
   registerItem({
     id: 'leather_jacket',

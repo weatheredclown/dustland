@@ -36,3 +36,10 @@ test('adrenaline modifiers are applied', () => {
   c.applyCombatMods();
   assert.strictEqual(c.adrGenMod, 1.1);
 });
+
+test('adrenaline damage modifiers are applied', () => {
+  const c = new Character('id3', 'Brawler', 'brawler');
+  c.equip.weapon = getItem('stun_baton');
+  c.applyCombatMods();
+  assert.strictEqual(c.adrDmgMod, 1.2);
+});

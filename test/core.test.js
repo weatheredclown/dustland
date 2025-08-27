@@ -1134,6 +1134,24 @@ test('fallen party members are revived after combat', async () => {
   assert.ok(party[0].hp >= 1);
 });
 
+test('falling resets adrenaline', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  m1.hp = 1;
+  m1.adr = 30;
+  party.addMember(m1);
+
+  const resultPromise = openCombat([
+    { name:'E1', hp:3 }
+  ]);
+
+  handleCombatKey({ key:'Enter' });
+  const res = await resultPromise;
+  assert.strictEqual(res.result, 'bruise');
+  assert.strictEqual(m1.adr, 0);
+});
+
 test('combat hp bars update after damage', async () => {
   party.length = 0;
   player.inv.length = 0;
@@ -1321,6 +1339,7 @@ test('healParty restores HP and clears adrenaline', () => {
 });
 
 test('startCombat forwards portraitSheet', async () => {
+  NPCS.length = 0;
   let captured;
   const orig = global.openCombat;
   global.openCombat = async (enemies) => { captured = enemies; return { result:'flee' }; };
@@ -1540,6 +1559,32 @@ test('equipment modifiers apply at battle start', async () => {
   await resultPromise;
 });
 
+test('adrenaline boosts attack damage', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  m1.adr = 100;
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name: 'E1', hp: 3 }]);
+  handleCombatKey({ key: 'Enter' });
+  assert.strictEqual(combatState.enemies[0].hp, 1);
+  handleCombatKey({ key: 'Enter' });
+  await resultPromise;
+});
+
+test('adrenaline damage modifiers amplify boost', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  m1.equip.trinket = { mods: { adrenaline_dmg_mod: 2 } };
+  m1.adr = 100;
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name: 'E1', hp: 3 }]);
+  handleCombatKey({ key: 'Enter' });
+  const res = await resultPromise;
+  assert.strictEqual(res.result, 'loot');
+});
+
 test('enemy immune to basic attacks requires specials', async () => {
   party.length = 0;
   player.inv.length = 0;
@@ -1597,6 +1642,48 @@ test('combat log records player and enemy actions', async () => {
   const logEntries = getCombatLog();
   assert.ok(logEntries.some(e => e.type === 'player' && e.action === 'attack'));
   assert.ok(logEntries.some(e => e.type === 'enemy' && e.action === 'attack'));
+});
+
+test('enemy attacks random party member', async () => {
+  NPCS.length = 0;
+  party.length = 0;
+  const m1 = new Character('p1', 'P1', 'Role');
+  const m2 = new Character('p2', 'P2', 'Role');
+  m1.hp = m1.maxHp = 5;
+  m2.hp = m2.maxHp = 5;
+  party.addMember(m1);
+  party.addMember(m2);
+
+  const origRand = Math.random;
+  Math.random = () => 0.9; // force target index 1
+
+  const resultPromise = openCombat([{ name: 'E1', hp: 3 }]);
+  handleCombatKey({ key: 'Enter' }); // m1 attack
+  handleCombatKey({ key: 'Enter' }); // m2 attack triggers enemy phase
+
+  Math.random = origRand;
+  closeCombat('flee');
+  await resultPromise;
+
+  assert.strictEqual(m1.hp, 5);
+  assert.strictEqual(m2.hp, 4);
+});
+
+test('nearby combat NPCs join combat', async () => {
+  NPCS.length = 0;
+  party.x = 0; party.y = 0; party.map = 'world';
+  const npc1 = { id:'a', map:'world', x:0, y:0, name:'A', combat:{ HP:1 } };
+  const npc2 = { id:'b', map:'world', x:1, y:0, name:'B', combat:{ HP:1 } };
+  const npc3 = { id:'c', map:'world', x:5, y:5, name:'C', combat:{ HP:1 } };
+  NPCS.push(npc1, npc2, npc3);
+  let captured;
+  const orig = global.openCombat;
+  global.openCombat = async (enemies) => { captured = enemies; return { result:'flee' }; };
+  await startCombat({ ...npc1.combat, npc:npc1, name:npc1.name });
+  global.openCombat = orig;
+  assert.strictEqual(captured.length, 2);
+  assert.ok(captured.some(e => e.npc === npc1));
+  assert.ok(captured.some(e => e.npc === npc2));
 });
 
 test('shop npc opens dialog before trading', () => {
