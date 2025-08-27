@@ -153,7 +153,7 @@
 
     #game {
         position: relative;
-        filter: var(--fxFilter, none)
+        filter: var(--fxBloom, none) var(--fxFilter, none)
     }
 
     #game.scanlines::after {
@@ -181,11 +181,11 @@
     }
 
     #game.color-bleed {
-        filter: drop-shadow(0 0 2px #9ef7a0) drop-shadow(0 0 6px #9ef7a0) drop-shadow(2px 0 0 red) drop-shadow(-2px 0 0 cyan) var(--fxFilter, none)
+        filter: drop-shadow(0 0 2px #9ef7a0) drop-shadow(0 0 6px #9ef7a0) drop-shadow(2px 0 0 red) drop-shadow(-2px 0 0 cyan) var(--fxBloom, none) var(--fxFilter, none)
     }
 
     body.hp-critical #game {
-        filter: grayscale(.8) var(--fxFilter, none)
+        filter: grayscale(.8) var(--fxBloom, none) var(--fxFilter, none)
     }
 
     body.hp-critical::after {

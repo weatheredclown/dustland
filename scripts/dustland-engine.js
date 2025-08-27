@@ -273,6 +273,7 @@ function draw(t){
   if (disp.width < 16) {
     return;
   }
+  pulseAdrenaline(t);
   const dt=(t-_lastTime)||0; _lastTime=t;
   render(state, dt/1000);
   const bx = bumpEnd > performance.now() ? bumpX : 0;
@@ -482,6 +483,22 @@ function updateHUD(){
     }
   }
   updateHUD._lastHpVal = player.hp;
+}
+
+function pulseAdrenaline(t){
+  if(!disp || typeof leader !== 'function') return;
+  const lead = leader();
+  const fx = globalThis.fxConfig;
+  if(!lead || fx?.adrenalineTint === false) return;
+  const ratio = Math.max(0, Math.min(1, lead.adr / (lead.maxAdr || 1)));
+  if(ratio <= 0){
+    disp.style.removeProperty('--fxBloom');
+    return;
+  }
+  const pulse = (Math.sin(t / 200) + 1) / 2;
+  const intensity = ratio * pulse;
+  const blur = intensity * 4;
+  disp.style.setProperty('--fxBloom', `brightness(${1 + intensity}) blur(${blur}px)`);
 }
 
 function showTab(which){
@@ -933,7 +950,7 @@ disp.addEventListener('touchstart',e=>{
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
 requestAnimationFrame(draw);
-log('v0.7.8 — emit combat events.');
+log('v0.7.9 — add adrenaline bloom pulse.');
 if (window.NanoDialog) NanoDialog.init();
 
 { // skip normal boot flow in ACK player mode
