@@ -148,8 +148,21 @@ function uncurseItem(id){
   return found;
 }
 
+function estimateItemValue(it){
+  let val = 0;
+  if(it.use && it.use.type==='heal'){
+    val += it.use.amount || 0;
+  }
+  for(const v of Object.values(it.mods || {})){
+    if(v>0) val += v*10;
+  }
+  return val;
+}
+
 function normalizeItem(it){
   if(!it) return null;
+  const baseValue = typeof it.value === 'number' ? it.value : 0;
+  const val = baseValue > 0 ? baseValue : estimateItemValue(it);
   return {
     id: it.id || '',
     name: it.name || 'Unknown',
@@ -164,7 +177,7 @@ function normalizeItem(it){
     cursed: !!it.cursed,
     cursedKnown: !!it.cursedKnown,
     rarity: it.rarity || 'common',
-    value: Math.max(1, it.value ?? 0),
+    value: val,
     desc: it.desc || '',
   };
 }
