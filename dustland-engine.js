@@ -145,6 +145,19 @@ function sfxTick(){
   g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.1);
   o.stop(audioCtx.currentTime+0.1);
 }
+function sfxCrunch(){
+  if(!audioEnabled || typeof audioCtx?.createOscillator!=='function') return;
+  const o=audioCtx.createOscillator();
+  const g=audioCtx.createGain();
+  o.type='square';
+  o.frequency.setValueAtTime(200,audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(40,audioCtx.currentTime+0.2);
+  o.connect(g); g.connect(audioCtx.destination);
+  g.gain.value=0.3;
+  o.start();
+  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.2);
+  o.stop(audioCtx.currentTime+0.2);
+}
 const sfxSpriteData = [
   { id:'step', start:0.00, dur:0.05 },
   { id:'pickup', start:0.05, dur:0.08 },
@@ -159,6 +172,7 @@ let sfxIndex = 0;
 function playSfx(id){
   if(!audioEnabled) return;
   if(id==='tick') return sfxTick();
+  if(id==='damage') return sfxCrunch();
   const meta=sfxSpriteData.find(s=>s.id===id);
   if(!meta) return;
   const slot=sfxIndex++%sfxPool.length;
@@ -406,6 +420,7 @@ function updateHUD(){
   const fx = globalThis.fxConfig;
   if(hpBar){
     if(player.hp < prevHp && fx?.damageFlash !== false){
+      EventBus.emit('sfx','damage');
       hpBar.classList.add('hurt');
       clearTimeout(updateHUD._hurtTimer);
       updateHUD._hurtTimer = setTimeout(()=>hpBar.classList.remove('hurt'), 300);
