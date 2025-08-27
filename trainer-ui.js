@@ -10,6 +10,7 @@
     if(!box){
       box = document.createElement('div');
       box.id = 'trainer_ui';
+      box.style.cssText = 'position:fixed;left:50%;bottom:12px;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;z-index:1000;';
     }
     box.innerHTML = '';
     upgrades.forEach(up => {
