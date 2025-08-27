@@ -30,7 +30,7 @@ test('office module places Boots of Speed near forest entry', () => {
   const src = fs.readFileSync(file, 'utf8');
   assert.match(src, /id: 'boots_of_speed'/);
   assert.match(src, /x: 3,\s*y: WORLD_MIDY/);
-  assert.match(src, /mods: \{ AGI: 5 \}/);
+  assert.match(src, /mods: \{ AGI: 5, move_delay_mod: 0\.5 \}/);
 });
 
 test('office worker lends scrap when low and missing badge', () => {

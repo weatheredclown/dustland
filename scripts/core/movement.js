@@ -70,7 +70,9 @@ function tileDelay(t, map=state.map){
 function calcMoveDelay(tile, actor, map=state.map){
   const base = tileDelay(tile, map);
   const agi = (actor?.stats?.AGI || 0) + (actor?._bonus?.AGI || 0);
-  const adjusted = base - agi * 10;
+  let adjusted = base - agi * 10;
+  const delayMod = actor?._bonus?.move_delay_mod || 0;
+  if (delayMod) adjusted *= Math.max(0, 1 - delayMod);
   return adjusted > 0 ? adjusted : 0;
 }
 
