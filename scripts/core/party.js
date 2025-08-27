@@ -152,7 +152,24 @@ function awardXP(who, amt){ who.awardXP(amt); }
 function applyEquipmentStats(m){ m.applyEquipmentStats(); }
 function applyCombatMods(m){ m.applyCombatMods(); }
 function leader(){ return party.leader(); }
-function setLeader(idx){ selectedMember = idx; }
+function setLeader(idx){
+  selectedMember = idx;
+  const m = party[selectedMember];
+  if(!m) return;
+  for(const slot of ['weapon','armor','trinket']){
+    if(!m.equip[slot] && Array.isArray(player?.inv)){
+      const candidates = player.inv.filter(it => it.slot === slot);
+      if(candidates.length){
+        const max = Math.max(...candidates.map(it => calcItemValue(it)));
+        const best = candidates.filter(it => calcItemValue(it) === max);
+        const choice = best[Math.floor(Math.random()*best.length)];
+        const invIdx = player.inv.indexOf(choice);
+        if(invIdx !== -1) equipItem(selectedMember, invIdx);
+      }
+    }
+  }
+  if(typeof renderInv === 'function') renderInv();
+}
 
 function respec(memberIndex=selectedMember){
   const m = party[memberIndex];

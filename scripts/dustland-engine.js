@@ -554,6 +554,18 @@ function renderInv(){
     }
   });
   const member=party[selectedMember]||party[0];
+  const suggestions = {};
+  if(member){
+    for(const slot of ['weapon','armor','trinket']){
+      const eq=member.equip[slot];
+      const candidates = others.filter(it => it.slot===slot && (!eq || calcItemValue(it)>calcItemValue(eq)));
+      if(candidates.length){
+        const max=Math.max(...candidates.map(it=>calcItemValue(it)));
+        const best=candidates.filter(it=>calcItemValue(it)===max);
+        suggestions[slot]=best[Math.floor(Math.random()*best.length)];
+      }
+    }
+  }
   Object.entries(caches).forEach(([rank, items]) => {
     const row=document.createElement('div');
     row.className='slot cache-slot';
@@ -584,11 +596,8 @@ function renderInv(){
   others.forEach(it => {
     const row=document.createElement('div');
     row.className='slot';
-    if(it.slot && member){
-      const eq=member.equip[it.slot];
-      if(!eq || calcItemValue(it)>calcItemValue(eq)){
-        row.classList.add('better');
-      }
+    if(it.slot && suggestions[it.slot]===it){
+      row.classList.add('better');
     }
     const baseLabel = it.name + (it.slot?` [${it.slot}]`:'');
     const label = (it.cursed && it.cursedKnown)? `${baseLabel} (cursed)` : baseLabel;
