@@ -700,7 +700,9 @@ function addChoiceRow(container, ch = {}) {
   const gotoRel = !!goto.rel;
   const isXP = typeof reward === 'string' && /^xp\s*\d+/i.test(reward);
   const xpVal = isXP ? parseInt(reward.replace(/[^0-9]/g, ''), 10) : '';
-  const isItem = reward && !isXP;
+  const isScrap = typeof reward === 'string' && /^scrap\s*\d+/i.test(reward);
+  const scrapVal = isScrap ? parseInt(reward.replace(/[^0-9]/g, ''), 10) : '';
+  const isItem = reward && !isXP && !isScrap;
   const itemVal = isItem ? reward : '';
   const effs = Array.isArray(ch.effects) ? ch.effects : [];
   const boardEff = effs.find(e => e.effect === 'boardDoor');
@@ -718,8 +720,9 @@ function addChoiceRow(container, ch = {}) {
     <label>To<select class="choiceTo"></select></label>
     <button class="btn delChoice" type="button">x</button>
     <details class="choiceAdv"><summary>Advanced</summary>
-      <label>Reward<select class="choiceRewardType"><option value="" ${!reward?'selected':''}></option><option value="xp" ${isXP?'selected':''}>XP</option><option value="item" ${isItem?'selected':''}>Item</option></select>
+      <label>Reward<select class="choiceRewardType"><option value="" ${!reward?'selected':''}></option><option value="xp" ${isXP?'selected':''}>XP</option><option value="scrap" ${isScrap?'selected':''}>Scrap</option><option value="item" ${isItem?'selected':''}>Item</option></select>
         <input type="number" class="choiceRewardXP" value="${xpVal}" style="display:${isXP?'inline-block':'none'}"/>
+        <input type="number" class="choiceRewardScrap" value="${scrapVal}" style="display:${isScrap?'inline-block':'none'}"/>
         <select class="choiceRewardItem" style="display:${isItem?'inline-block':'none'}"></select></label>
       <label>Stat<select class="choiceStat"></select></label>
       <label>DC<input type="number" class="choiceDC" value="${dc || ''}"/><span class="small">Target number for stat check.</span></label>
@@ -788,9 +791,11 @@ function addChoiceRow(container, ch = {}) {
   populateInteriorDropdown(row.querySelector('.choiceUnboard'), unboardId);
   const rewardTypeSel = row.querySelector('.choiceRewardType');
   const rewardXP = row.querySelector('.choiceRewardXP');
+  const rewardScrap = row.querySelector('.choiceRewardScrap');
   const rewardItem = row.querySelector('.choiceRewardItem');
   rewardTypeSel.addEventListener('change', () => {
     rewardXP.style.display = rewardTypeSel.value === 'xp' ? 'inline-block' : 'none';
+    rewardScrap.style.display = rewardTypeSel.value === 'scrap' ? 'inline-block' : 'none';
     rewardItem.style.display = rewardTypeSel.value === 'item' ? 'inline-block' : 'none';
     updateTreeData();
   });
@@ -937,9 +942,11 @@ function updateTreeData() {
       const to = toEl.value.trim();
       const rewardType = chEl.querySelector('.choiceRewardType').value;
       const xpTxt = chEl.querySelector('.choiceRewardXP').value.trim();
+      const scrapTxt = chEl.querySelector('.choiceRewardScrap').value.trim();
       const itemReward = chEl.querySelector('.choiceRewardItem').value.trim();
       let reward = '';
       if (rewardType === 'xp' && xpTxt) reward = `XP ${parseInt(xpTxt, 10)}`;
+      else if (rewardType === 'scrap' && scrapTxt) reward = `SCRAP ${parseInt(scrapTxt, 10)}`;
       else if (rewardType === 'item' && itemReward) reward = itemReward;
       const stat = chEl.querySelector('.choiceStat').value.trim();
       const dcTxt = chEl.querySelector('.choiceDC').value.trim();

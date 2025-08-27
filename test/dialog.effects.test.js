@@ -131,6 +131,68 @@ test('updateTreeData captures door board/unboard effects', () => {
   assert.deepStrictEqual(treeData.start.choices[0].effects, [ { effect: 'unboardDoor', interiorId: 'castle' } ]);
 });
 
+test('updateTreeData captures scrap reward', () => {
+  treeData = {};
+  const choiceEl = {
+    querySelector(sel){
+      switch(sel){
+        case '.choiceLabel': return { value: 'borrow' };
+        case '.choiceTo': return { value: 'bye', style:{} };
+        case '.choiceRewardType': return { value: 'scrap' };
+        case '.choiceRewardXP': return { value: '' };
+        case '.choiceRewardScrap': return { value: '2' };
+        case '.choiceRewardItem': return { value: '' };
+        case '.choiceStat':
+        case '.choiceDC':
+        case '.choiceSuccess':
+        case '.choiceFailure':
+        case '.choiceCostItem':
+        case '.choiceCostSlot':
+        case '.choiceReqItem':
+        case '.choiceReqSlot':
+        case '.choiceJoinId':
+        case '.choiceJoinName':
+        case '.choiceJoinRole':
+        case '.choiceGotoMap':
+        case '.choiceGotoX':
+        case '.choiceGotoY':
+        case '.choiceQ':
+        case '.choiceFlag':
+        case '.choiceOp':
+        case '.choiceVal':
+          return { value: '' };
+        case '.choiceOnce':
+          return { checked: false };
+        case '.choiceBoard':
+        case '.choiceUnboard':
+          return { value: '' };
+        default:
+          return { value: '' };
+      }
+    }
+  };
+  const nodeEl = {
+    querySelector(sel){
+      switch(sel){
+        case '.nodeId': return { value: 'start' };
+        case '.nodeText': return { value: 'hi' };
+        default: return { value: '' };
+      }
+    },
+    querySelectorAll(sel){ return sel === '.choices > div' ? [choiceEl] : []; },
+    classList:{ contains(){ return false; } },
+    style:{},
+  };
+  elements['treeEditor'] = {
+    querySelectorAll(sel){ return sel === '.node' ? [nodeEl] : []; }
+  };
+  elements['npcTree'] = { value: '' };
+  elements['treeWarning'] = { textContent: '' };
+
+  updateTreeData();
+  assert.strictEqual(treeData.start.choices[0].reward, 'SCRAP 2');
+});
+
 test('updateTreeData removes deleted nodes', () => {
   treeData = { start: { text: '', choices: [] }, node1: { text: '', choices: [] } };
   const nodeEl = {
