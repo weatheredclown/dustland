@@ -1,0 +1,7 @@
+{
+  "id": "reflective_slime",
+  "name": "Reflective Slime",
+  "hp": 10,
+  "counterBasic": { "dmg": 1 },
+  "special": { "cue": "splits violently", "dmg": 3, "delay": 500 }
+}

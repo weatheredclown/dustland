@@ -287,18 +287,28 @@ function chooseOption(){
   }
 }
 
-function doAttack(dmg){
+function doAttack(dmg, type='basic'){
   const attacker=party[combatState.active];
   const target=combatState.enemies[0];
-  target.hp-=dmg;
-  recordCombatEvent({ type:'player', actor:attacker.name, action:'attack', target:target.name, damage:dmg, targetHp:target.hp });
+  let dealt=dmg;
+  if(type==='basic' && Array.isArray(target.immune) && target.immune.includes('basic')){
+    dealt=0;
+    log?.(`${target.name} shrugs off the attack.`);
+  }
+  target.hp-=dealt;
+  recordCombatEvent({ type:'player', actor:attacker.name, action:'attack', target:target.name, damage:dealt, targetHp:target.hp });
   const weapon=attacker.equip?.weapon;
   const baseGain=(weapon?.mods?.ADR ?? 10) / 4;
   const gain=Math.round(baseGain * (attacker.adrGenMod || 1));
   attacker.adr=Math.min(attacker.maxAdr||100, attacker.adr+gain);
   if(gain>0 && typeof playFX==='function') playFX('adrenaline');
   updateHUD?.();
-  log?.(`${attacker.name} hits ${target.name} for ${dmg} damage.`);
+  if(dealt>0) log?.(`${attacker.name} hits ${target.name} for ${dealt} damage.`);
+  if(type==='basic' && target.counterBasic){
+    const cd=target.counterBasic.dmg||1;
+    attacker.hp-=cd;
+    log?.(`${target.name} counters for ${cd} damage.`);
+  }
   if(target.hp<=0){
     log?.(`${target.name} is defeated!`);
     recordCombatEvent({ type:'enemy', actor:target.name, action:'defeated', by:attacker.name });
@@ -329,7 +339,7 @@ function doSpecial(idx){
   const spec=m.special?.[idx];
   if(!spec){ openCommand(); return; }
   if(typeof playFX==='function') playFX('special');
-  if(spec.dmg) doAttack(spec.dmg);
+  if(spec.dmg) doAttack(spec.dmg,'special');
   else nextCombatant();
 }
 

@@ -1492,15 +1492,60 @@ test('equipment modifiers apply at battle start', async () => {
   await resultPromise;
 });
 
+test('enemy immune to basic attacks requires specials', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role', { special:[{ label:'Power Hit', dmg:2 }] });
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name:'Shield', hp:5, immune:['basic'] }]);
+  handleCombatKey({ key:'Enter' });
+  assert.strictEqual(combatState.enemies[0].hp, 5);
+  handleCombatKey({ key:'ArrowDown' });
+  handleCombatKey({ key:'Enter' });
+  handleCombatKey({ key:'Enter' });
+  assert.strictEqual(combatState.enemies[0].hp, 3);
+  closeCombat('flee');
+  await resultPromise;
+});
+
+// --- Test: enemy counters basic attacks ---
+test('enemy counters basic attacks', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+
+  const m1 = new Character('p1', 'P1', 'Role');
+  party.addMember(m1);
+
+  const resultPromise = openCombat([{ name: 'Mirror', hp: 3, counterBasic: { dmg: 1 } }]);
+
+  // Player basic attack
+  handleCombatKey({ key: 'Enter' });
+
+  // Enemy should lose 1 HP; player should take counter damage
+  assert.strictEqual(combatState.enemies[0].hp, 2);
+  assert.strictEqual(party[0].hp, 8);
+
+  // Exit combat to resolve any pending state
+  closeCombat('flee');
+  await resultPromise;
+});
+
+// --- Test: combat log records player and enemy actions ---
 test('combat log records player and enemy actions', async () => {
   party.length = 0;
   player.inv.length = 0;
-  const m1 = new Character('p1','P1','Role');
+
+  const m1 = new Character('p1', 'P1', 'Role');
   party.addMember(m1);
+
   const resultPromise = openCombat([{ name: 'E1', hp: 2 }]);
+
+  // Player attacks twice; enemy should act in between/after depending on your loop
   handleCombatKey({ key: 'Enter' });
   handleCombatKey({ key: 'Enter' });
+
   await resultPromise;
+
   const logEntries = getCombatLog();
   assert.ok(logEntries.some(e => e.type === 'player' && e.action === 'attack'));
   assert.ok(logEntries.some(e => e.type === 'enemy' && e.action === 'attack'));
