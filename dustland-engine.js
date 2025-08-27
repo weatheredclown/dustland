@@ -260,11 +260,16 @@ function draw(t){
   render(state, dt/1000);
   const bx = bumpEnd > performance.now() ? bumpX : 0;
   const by = bumpEnd > performance.now() ? bumpY : 0;
-  const fx = globalThis.fxConfig;
-  dctx.globalAlpha = fx.prevAlpha;
-  dctx.drawImage(prev, (fx.offsetX || 0) + bx, (fx.offsetY || 0) + by);
-  dctx.globalAlpha = fx.sceneAlpha;
-  dctx.drawImage(scene, bx, by);
+  const fx = globalThis.fxConfig || {};
+  if(fx.enabled === false){
+    dctx.globalAlpha = 1;
+    dctx.drawImage(scene, bx, by);
+  }else{
+    dctx.globalAlpha = fx.prevAlpha;
+    dctx.drawImage(prev, (fx.offsetX || 0) + bx, (fx.offsetY || 0) + by);
+    dctx.globalAlpha = fx.sceneAlpha;
+    dctx.drawImage(scene, bx, by);
+  }
   pctx.clearRect(0,0,prev.width,prev.height); pctx.drawImage(scene,0,0);
 
   if (state.mapFlags && state.mapFlags.dustStorm) {
@@ -395,10 +400,15 @@ function updateHUD(){
   apEl.textContent = player.ap;
   if(scrEl) scrEl.textContent = player.scrap;
   const lead = typeof leader === 'function' ? leader() : null;
-  if(hpBar && player.hp < prevHp){
-    hpBar.classList.add('hurt');
-    clearTimeout(updateHUD._hurtTimer);
-    updateHUD._hurtTimer = setTimeout(()=>hpBar.classList.remove('hurt'), 300);
+  const fx = globalThis.fxConfig;
+  if(hpBar){
+    if(player.hp < prevHp && fx?.damageFlash !== false){
+      hpBar.classList.add('hurt');
+      clearTimeout(updateHUD._hurtTimer);
+      updateHUD._hurtTimer = setTimeout(()=>hpBar.classList.remove('hurt'), 300);
+    }else if(fx?.damageFlash === false){
+      hpBar.classList.remove('hurt');
+    }
   }
   if(hpFill && hpBar && lead){
     const pct = Math.max(0, Math.min(100, (player.hp / (lead.maxHp || 1)) * 100));
