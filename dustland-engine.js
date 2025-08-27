@@ -168,6 +168,27 @@ function playSfx(id){
   sfxTimers[slot]=setTimeout(()=>a.pause(), meta.dur*1000);
 }
 EventBus.on('sfx', playSfx);
+const fxOverlay = document.createElement('div');
+fxOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;opacity:0;transition:opacity .2s;z-index:200;';
+document.body.appendChild(fxOverlay);
+function playFX(type){
+  if(audioEnabled && typeof audioCtx?.createOscillator==='function'){
+    const o=audioCtx.createOscillator();
+    const g=audioCtx.createGain();
+    o.type='triangle';
+    o.frequency.value= type==='adrenaline'?600: type==='special'?900:300;
+    o.connect(g); g.connect(audioCtx.destination);
+    g.gain.value=0.2;
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.3);
+    o.stop(audioCtx.currentTime+0.3);
+  }
+  const color = type==='adrenaline'? 'rgba(255,0,0,0.3)': type==='special'? 'rgba(0,255,255,0.3)': 'rgba(255,255,0,0.3)';
+  fxOverlay.style.background=color;
+  fxOverlay.style.opacity='1';
+  clearTimeout(playFX._t);
+  playFX._t=setTimeout(()=>{ fxOverlay.style.opacity='0'; },200);
+}
 function hudBadge(msg){
   const ap=document.getElementById('ap');
   if(!ap) return;
@@ -707,7 +728,7 @@ function openShop(npc) {
   shopOverlay.focus();
 }
 
-const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, openShop };
+const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, openShop, playFX };
 Object.assign(globalThis, engineExports);
 
 // ===== Minimal Unit Tests (#test) =====
