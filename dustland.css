@@ -279,11 +279,16 @@
         padding: 6px 8px;
         border: 1px dashed #2b382b;
         border-radius: 6px;
-        background: #0c0f0c
+        background: #0c0f0c;
+    }
+
+    .slot.better {
+        border-color: #5b7b5b;
+        background: #121712;
     }
 
     .slot.clickable {
-        cursor: pointer
+        cursor: pointer;
     }
 
     #party {

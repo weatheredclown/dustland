@@ -496,6 +496,14 @@ if (document.getElementById('tabInv')) {
   console.error("showTab setup failed. Adventure Kit?");
 }
 // ===== Renderers =====
+function calcItemValue(it){
+  if(!it) return 0;
+  let score=it.value??0;
+  for(const v of Object.values(it.mods||{})){
+    score+=v;
+  }
+  return score;
+}
 function renderInv(){
   const inv=document.getElementById('inv');
   inv.innerHTML='';
@@ -512,6 +520,7 @@ function renderInv(){
       others.push(it);
     }
   });
+  const member=party[selectedMember]||party[0];
   Object.entries(caches).forEach(([rank, items]) => {
     const row=document.createElement('div');
     row.className='slot cache-slot';
@@ -542,6 +551,12 @@ function renderInv(){
   others.forEach(it => {
     const row=document.createElement('div');
     row.className='slot';
+    if(it.slot && member){
+      const eq=member.equip[it.slot];
+      if(!eq || calcItemValue(it)>calcItemValue(eq)){
+        row.classList.add('better');
+      }
+    }
     const baseLabel = it.name + (it.slot?` [${it.slot}]`:'');
     const label = (it.cursed && it.cursedKnown)? `${baseLabel} (cursed)` : baseLabel;
     row.innerHTML = `<div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
