@@ -160,8 +160,19 @@
         position: absolute;
         inset: 0;
         pointer-events: none;
-        background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, .05) 0px, rgba(255, 255, 255, .05) 1px, rgba(0, 0, 0, 0) 2px);
+        background-image: linear-gradient(rgba(0, 0, 0, .1) 50%, transparent 50%);
+        background-size: 100% 2px;
+        animation: scanlines 5s linear infinite;
         mix-blend-mode: overlay
+    }
+
+    @keyframes scanlines {
+        from {
+            background-position: 0 0;
+        }
+        to {
+            background-position: 0 100%;
+        }
     }
 
     #game.shear {
