@@ -205,16 +205,12 @@ function openCommand(){
     }
   }
 
-  const hasSpecial = (m?.special || []).some((raw, idx) => {
-    const id  = typeof raw === 'string'
-      ? raw
-      : (raw?.id ?? raw?.key ?? raw?.name ?? raw?.label ?? `special_${idx}`);
-    const spec = (typeof raw === 'object' && raw && !globalThis.Specials?.[id])
-      ? raw
-      : (globalThis.Specials?.[id] ?? null);
-    const cost = spec?.adrCost ?? spec?.adrenaline_cost ?? 0;
-    const cd = m.cooldowns?.[id] || 0;
-    return !!spec && cd <= 0 && (m.adr ?? 0) >= cost;
+  const hasSpecial = (m?.special || []).some((spec, idx) => {
+    if(typeof spec !== 'object' || !spec) return false;
+    const id   = spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`;
+    const cost = spec.adrCost ?? spec.adrenaline_cost ?? 0;
+    const cd   = m.cooldowns?.[id] || 0;
+    return cd <= 0 && (m.adr ?? 0) >= cost;
   });
 
   ['Attack', 'Special', 'Item', 'Flee'].forEach((opt) => {
@@ -239,19 +235,18 @@ function openSpecialMenu(){
   combatState.mode = 'special';
 
   const m = party[combatState.active];
-  (m.special || []).forEach((raw, idx) => {
-    const id  = typeof raw === 'string'
-      ? raw
-      : (raw?.id ?? raw?.key ?? raw?.name ?? raw?.label ?? `special_${idx}`);
-    const spec = (typeof raw === 'object' && raw && !globalThis.Specials?.[id])
-      ? raw
-      : (globalThis.Specials?.[id] ?? null);
-    if (!spec) return;
-    const d = document.createElement('div');
-    d.textContent = spec.label || spec.name || id;
+  (m.special || []).forEach((spec, idx) => {
+    if(typeof spec !== 'object' || !spec) return;
+    const id    = spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`;
+    const d     = document.createElement('div');
+    const label = spec.label || spec.name || id;
+    const cost  = spec.adrCost ?? spec.adrenaline_cost ?? 0;
+    const cd    = m.cooldowns?.[id] || 0;
+    d.textContent = label;
+    if(cost > 0) d.textContent += ` (${cost})`;
+    if(cd > 0) d.textContent += ` [CD ${cd}]`;
     d.dataset.action = idx;
-    const cost = spec.adrCost ?? spec.adrenaline_cost ?? 0;
-    if ((m.adr ?? 0) < cost || ((m.cooldowns?.[id] || 0) > 0)) d.classList.add('disabled');
+    if ((m.adr ?? 0) < cost || cd > 0) d.classList.add('disabled');
     cmdMenu.appendChild(d);
   });
 
@@ -458,17 +453,10 @@ function doSpecial(idx){
   const m = party[combatState.active];
   if (!m){ openCommand?.(); return; }
 
-  // Support: m.special[idx] can be an ID (look up in globalThis.Specials) or an inline object
-  const raw = m.special?.[idx];
-  const id  = typeof raw === 'string'
-    ? raw
-    : (raw?.id ?? raw?.key ?? raw?.name ?? raw?.label ?? `special_${idx}`);
-  const spec = (typeof raw === 'object' && raw && !globalThis.Specials?.[id])
-    ? raw
-    : (globalThis.Specials?.[id] ?? null);
+  const spec = m.special?.[idx];
+  if(typeof spec !== 'object' || !spec){ openCommand?.(); return; }
 
-  if (!spec){ openCommand?.(); return; }
-
+  const id    = spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`;
   const label = spec.label || spec.name || id;
 
   // Cost & cooldown checks

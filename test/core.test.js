@@ -1212,6 +1212,18 @@ test('party member receives class special', async () => {
   assert.ok(m1.special.includes('POWER_STRIKE'));
 });
 
+test('special ids resolve to objects in combat', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role', { special:['POWER_STRIKE'] });
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name:'E1', hp:1 }]);
+  assert.strictEqual(typeof party[0].special[0], 'object');
+  assert.strictEqual(party[0].special[0].id, 'POWER_STRIKE');
+  closeCombat('flee');
+  await resultPromise;
+});
+
 test('openCombat preserves adrenaline for party members', async () => {
   party.length = 0;
   player.inv.length = 0;
@@ -1252,6 +1264,28 @@ test('special move triggers fx', async () => {
   handleCombatKey({ key:'Enter' });
   handleCombatKey({ key:'Enter' });
   assert.ok(calls.includes('special'));
+  closeCombat('flee');
+  await resultPromise;
+});
+
+test('special applies cost and cooldown', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role', { special:[{ id:'STRIKE', label:'Strike', dmg:2, adrCost:10, cooldown:2 }] });
+  m1.adr = 20;
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name:'E1', hp:5 }]);
+  handleCombatKey({ key:'ArrowDown' });
+  handleCombatKey({ key:'Enter' });
+  const txt = combatCmd.children[0].textContent;
+  assert.match(txt, /Strike \(10\)/);
+  handleCombatKey({ key:'Enter' });
+  assert.strictEqual(m1.adr, 13);
+  assert.strictEqual(m1.cooldowns.STRIKE, 1);
+  openSpecialMenu();
+  const txt2 = combatCmd.children[0].textContent;
+  assert.match(txt2, /CD 1/);
+  assert.ok(combatCmd.children[0].classList.contains('disabled'));
   closeCombat('flee');
   await resultPromise;
 });
