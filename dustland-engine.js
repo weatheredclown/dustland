@@ -365,19 +365,18 @@ const TAB_BREAKPOINT = 1600;
 let activeTab = 'inv';
 
 function updateHUD(){
-  const prevHp = updateHUD._lastHpVal ?? (globalThis.gameState?.getPlayerHealth() ?? player.hp);
-  const curHp = globalThis.gameState?.getPlayerHealth() ?? player.hp;
-  hpEl.textContent = curHp;
+  const prevHp = updateHUD._lastHpVal ?? player.hp;
+  hpEl.textContent = player.hp;
   apEl.textContent = player.ap;
   if(scrEl) scrEl.textContent = player.scrap;
   const lead = typeof leader === 'function' ? leader() : null;
-  if(hpBar && curHp < prevHp){
+  if(hpBar && player.hp < prevHp){
     hpBar.classList.add('hurt');
     clearTimeout(updateHUD._hurtTimer);
     updateHUD._hurtTimer = setTimeout(()=>hpBar.classList.remove('hurt'), 300);
   }
   if(hpFill && lead){
-    const pct = Math.max(0, Math.min(100, (curHp / (lead.maxHp || 1)) * 100));
+    const pct = Math.max(0, Math.min(100, (player.hp / (lead.maxHp || 1)) * 100));
     hpFill.style.width = pct + '%';
     if(hpGhost){
       hpGhost.style.width = (updateHUD._lastHpPct ?? pct) + '%';
@@ -385,9 +384,9 @@ function updateHUD(){
     }
     updateHUD._lastHpPct = pct;
     if(lead){
-      const crit = curHp > 0 && curHp <= (lead.maxHp || 1) * 0.25;
+      const crit = player.hp > 0 && player.hp <= (lead.maxHp || 1) * 0.25;
       document.body.classList.toggle('hp-critical', crit);
-      document.body.classList.toggle('hp-out', curHp <= 0);
+      document.body.classList.toggle('hp-out', player.hp <= 0);
     }
   }
   if(adrFill && lead){
@@ -405,7 +404,7 @@ function updateHUD(){
       }
     }
   }
-  updateHUD._lastHpVal = curHp;
+  updateHUD._lastHpVal = player.hp;
 }
 
 function showTab(which){
