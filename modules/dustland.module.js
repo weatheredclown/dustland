@@ -582,15 +582,13 @@ const DUSTLAND_MODULE = (() => {
         start: {
           text: 'Brakk cracks his knuckles.',
           choices: [
-            { label: '(Upgrade Skills)', to: 'train' },
+            { label: '(Upgrade Skills)', to: 'train', effects: [() => TrainerUI.showTrainer('power')] },
             { label: '(Leave)', to: 'bye' }
           ]
         },
         train: {
           text: 'Push your limits.',
           choices: [
-            { label: 'STR +1', to: 'train', effects: [() => trainStat('STR')] },
-            { label: 'AGI +1', to: 'train', effects: [() => trainStat('AGI')] },
             { label: '(Back)', to: 'start' }
           ]
         }
@@ -609,15 +607,13 @@ const DUSTLAND_MODULE = (() => {
         start: {
           text: 'Rusty studies your stance.',
           choices: [
-            { label: '(Upgrade Skills)', to: 'train' },
+            { label: '(Upgrade Skills)', to: 'train', effects: [() => TrainerUI.showTrainer('endurance')] },
             { label: '(Leave)', to: 'bye' }
           ]
         },
         train: {
           text: 'Breathe deep and endure.',
           choices: [
-            { label: 'Max HP +5', to: 'train', effects: [() => trainStat('HP')] },
-            { label: 'DEF +1', to: 'train', effects: [() => trainStat('DEF')] },
             { label: '(Back)', to: 'start' }
           ]
         }
@@ -636,15 +632,13 @@ const DUSTLAND_MODULE = (() => {
         start: {
           text: 'Mira twirls a coin.',
           choices: [
-            { label: '(Upgrade Skills)', to: 'train' },
+            { label: '(Upgrade Skills)', to: 'train', effects: [() => TrainerUI.showTrainer('tricks')] },
             { label: '(Leave)', to: 'bye' }
           ]
         },
         train: {
           text: 'Learn a new trick.',
           choices: [
-            { label: 'PER +1', to: 'train', effects: [() => trainStat('PER')] },
-            { label: 'LCK +1', to: 'train', effects: [() => trainStat('LCK')] },
             { label: '(Back)', to: 'start' }
           ]
         }
