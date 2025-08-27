@@ -903,11 +903,6 @@ if (document.getElementById('saveBtn')) {
           selectedMember = (selectedMember + 1) % party.length;
           renderParty();
           toast(`Leader: ${party[selectedMember].name}`);
-          if(window.NanoDialog){
-            const near = (typeof NPCS !== 'undefined' ? NPCS : []).filter(n => n.map === state.map
-              && Math.abs(n.x - party.x) + Math.abs(n.y - party.y) < 10);
-            near.forEach(n => NanoDialog.queueForNPC(n, 'start', 'leader change'));
-          }
         }
         break;
       case 'm': case 'M': showMini=!showMini; break;
