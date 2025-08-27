@@ -109,8 +109,8 @@ The prototype doesn't spend Adrenaline yet; it's a pacing probe. Once the gain c
 - [ ] **HUD Playtest:** Run quick usability tests on the new HUD and iterate on spacing and icon clarity.
 
 #### Phase 3: Polish & Balancing
-- [ ] **Visual Effects:** Add VFX for Adrenaline gain, special move activations, and status effects.
-- [ ] **Sound Design:** Add SFX for specials, UI feedback, and enemy telegraphing.
+- [x] **Visual Effects:** Add VFX for Adrenaline gain, special move activations, and status effects.
+- [x] **Sound Design:** Add SFX for specials, UI feedback, and enemy telegraphing.
 - [ ] **Playtesting:** Conduct extensive playtests to balance Adrenaline generation rates, special costs, and overall combat difficulty. Ensure the difficulty curve is challenging but fair.
 - [ ] **AI Improvements:** Enhance enemy AI to use their own specials and coordinate attacks.
 - [ ] **Telemetry:** Log combat stats during playtests to surface pacing issues and balance swings early.

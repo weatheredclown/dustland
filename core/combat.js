@@ -22,7 +22,12 @@ if(cmdMenu){
   });
 }
 
-const combatState = { enemies: [], phase: 'party', active: 0, choice: 0, mode:'command', onComplete:null, fallen:[] };
+const combatState = { enemies: [], phase: 'party', active: 0, choice: 0, mode:'command', onComplete:null, fallen:[], log:[] };
+
+function recordCombatEvent(ev){
+  // Store structured events for post-combat analysis.
+  combatState.log.push(ev);
+}
 
 function setPortraitDiv(el, obj){
   if(!el) return;
@@ -99,6 +104,7 @@ function openCombat(enemies){
     combatState.choice=0;
     combatState.onComplete=resolve;
     combatState.fallen = [];
+    combatState.log = [];
     (party||[]).forEach(m => { m.maxAdr = m.maxAdr || 100; m.applyCombatMods?.(); });
     renderCombat();
     updateHUD?.();
@@ -114,6 +120,7 @@ function closeCombat(result='flee'){
   if(turnIndicator) turnIndicator.textContent='';
   combatState.fallen.forEach(m=>{ m.hp = Math.max(1, m.hp||0); party.push(m); });
   combatState.fallen.length = 0;
+  recordCombatEvent({ type:'system', action:'end', result });
   globalThis.EventBus?.emit?.('combat:ended', { result });
   combatState.onComplete?.({ result });
   combatState.onComplete=null;
@@ -289,10 +296,12 @@ function doAttack(dmg, type='basic'){
     log?.(`${target.name} shrugs off the attack.`);
   }
   target.hp-=dealt;
+  recordCombatEvent({ type:'player', actor:attacker.name, action:'attack', target:target.name, damage:dealt, targetHp:target.hp });
   const weapon=attacker.equip?.weapon;
   const baseGain=(weapon?.mods?.ADR ?? 10) / 4;
   const gain=Math.round(baseGain * (attacker.adrGenMod || 1));
   attacker.adr=Math.min(attacker.maxAdr||100, attacker.adr+gain);
+  if(gain>0 && typeof playFX==='function') playFX('adrenaline');
   updateHUD?.();
   if(dealt>0) log?.(`${attacker.name} hits ${target.name} for ${dealt} damage.`);
   if(type==='basic' && target.counterBasic){
@@ -302,6 +311,7 @@ function doAttack(dmg, type='basic'){
   }
   if(target.hp<=0){
     log?.(`${target.name} is defeated!`);
+    recordCombatEvent({ type:'enemy', actor:target.name, action:'defeated', by:attacker.name });
     globalThis.EventBus?.emit?.('enemy:defeated', { target });
     if(target.loot) addToInv?.(target.loot);
     if(target.boss && Math.random() < 0.1){ addToInv?.('memory_worm'); }
@@ -328,6 +338,7 @@ function doSpecial(idx){
   const m=party[combatState.active];
   const spec=m.special?.[idx];
   if(!spec){ openCommand(); return; }
+  if(typeof playFX==='function') playFX('special');
   if(spec.dmg) doAttack(spec.dmg,'special');
   else nextCombatant();
 }
@@ -349,6 +360,7 @@ function enemyPhase(){
 function finishEnemyAttack(enemy, target){
   if(target.hp<=0){
     log?.(`${target.name} falls!`);
+    recordCombatEvent({ type:'player', actor:target.name, action:'fall', by:enemy.name });
     combatState.fallen.push(target);
     party.splice(0,1);
     renderCombat();
@@ -384,12 +396,14 @@ function enemyAttack(){
       combatOverlay?.classList.remove('warning');
       const dmg=enemy.special.dmg||5;
       target.hp-=dmg;
+      recordCombatEvent({ type:'enemy', actor:enemy.name, action:'special', target:target.name, damage:dmg, targetHp:target.hp });
       log?.(`${enemy.name} unleashes for ${dmg} damage.`);
       finishEnemyAttack(enemy,target);
     }, delay);
     return;
   }
   target.hp-=1;
+  recordCombatEvent({ type:'enemy', actor:enemy.name, action:'attack', target:target.name, damage:1, targetHp:target.hp });
   log?.(`${enemy.name} strikes ${target.name} for 1 damage.`);
   finishEnemyAttack(enemy,target);
 }
@@ -401,6 +415,10 @@ function startPartyTurn(){
   openCommand();
 }
 
+function getCombatLog(){
+  // Return a copy of combat events for external analysis.
+  return combatState.log.slice();
+}
 
-const combatExports = { openCombat, closeCombat, handleCombatKey };
+const combatExports = { openCombat, closeCombat, handleCombatKey, getCombatLog };
 Object.assign(globalThis, combatExports);
