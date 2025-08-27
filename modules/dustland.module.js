@@ -66,7 +66,7 @@ const DUSTLAND_MODULE = (() => {
 
   const quests = [
     { id: 'q_hall_key', title: 'Find the Rusted Key', desc: 'Search the hall for a Rusted Key to unlock the exit.', item: 'rusted_key' },
-    { id: 'q_waterpump', title: 'Water for the Pump', desc: 'Find a Valve and help Mara restart the pump.', item: 'valve', reward: { id: 'rusted_badge', name: 'Rusted Badge', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } }, xp: 4 },
+    { id: 'q_waterpump', title: 'Water for the Pump', desc: 'Find a Valve and help Nila restart the pump.', item: 'valve', reward: { id: 'rusted_badge', name: 'Rusted Badge', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } }, xp: 4 },
     { id: 'q_recruit_grin', title: 'Recruit Grin', desc: 'Convince or pay Grin to join.' },
     { id: 'q_postal', title: 'Lost Parcel', desc: 'Find and return the Lost Satchel to Ivo.', item: 'lost_satchel', reward: { id: 'brass_stamp', name: 'Brass Stamp', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } }, xp: 4 },
     { id: 'q_tower', title: 'Dead Air', desc: 'Repair the radio tower console (Toolkit helps).', item: 'toolkit', reward: { id: 'tuner_charm', name: 'Tuner Charm', type: 'trinket', slot: 'trinket', mods: { PER: 1 } }, xp: 5 },
@@ -201,7 +201,7 @@ const DUSTLAND_MODULE = (() => {
       x: 14,
       y: midY - 1,
       color: '#9ef7a0',
-      name: 'Mara the Pump-Keeper',
+      name: 'Nila the Pump-Keeper',
       title: 'Parched Farmer',
       desc: 'Sunburnt hands, hopeful eyes. Smells faintly of mud.',
       portraitSheet: 'assets/portraits/mara_4.png',
@@ -461,15 +461,15 @@ const DUSTLAND_MODULE = (() => {
       shop: true
     },
     {
-      id: 'mara_patrol',
+      id: 'tess_patrol',
       map: 'world',
       x: 14,
       y: midY - 1,
       color: '#9ef7a0',
-      name: 'Mara the Scout',
+      name: 'Tess the Scout',
       title: 'Water Runner',
       desc: 'She checks the pump then the far ridge.',
-      tree: { start: { text: 'Mara strides past on her rounds.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      tree: { start: { text: 'Tess strides past on her rounds.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       loop: [ { x: 14, y: midY - 1 }, { x: 80, y: midY + 4 } ]
     },
     {

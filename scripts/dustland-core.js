@@ -658,7 +658,7 @@ const hiddenOrigins={ 'Rustborn':{desc:'You survived a machine womb. +1 PER, wei
 
 // Pool of placeholder names to auto-fill the creator
 function defaultDrifterName(n){ return 'Drifter '+n; }
-const randomNames=['Ash','Rex','Nova','Jax','Mara','Zed','Iris','Knox','Luna','Kai','Gil'];
+const randomNames=['Ash','Rex','Nova','Jax','Zed','Iris','Knox','Luna','Kai','Gil'];
 function randomName(){
   const used=new Set(built.map(m=>m.name));
   const avail=randomNames.filter(n=>!used.has(n));
