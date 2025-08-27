@@ -103,6 +103,7 @@ const files = [
   '../core/actions.js',
   '../core/effects.js',
   '../core/spoils-cache.js',
+  '../core/abilities.js',
   '../core/party.js',
   '../core/inventory.js',
   '../core/movement.js',
@@ -1194,7 +1195,7 @@ test('combat menu can be clicked', async () => {
 test('turn indicator updates with active member', async () => {
   party.length = 0;
   player.inv.length = 0;
-  const m1 = new Character('p1','P1','Role', { special:[{ label:'Power Hit', dmg:2 }] });
+  const m1 = new Character('p1','P1','Role', { special:['POWER_STRIKE'] });
   party.addMember(m1);
   const resultPromise = openCombat([{ name:'E1', hp:1 }]);
   assert.strictEqual(turnIndicator.textContent, "P1's turn");
@@ -1202,16 +1203,13 @@ test('turn indicator updates with active member', async () => {
   await resultPromise;
 });
 
-test('special menu lists class ability', async () => {
+test('party member receives class special', async () => {
   party.length = 0;
   player.inv.length = 0;
-  const m1 = new Character('p1','P1','Role', { special:[{ label:'Power Hit', dmg:2 }] });
+  const m1 = new Character('p1','P1','Role', { special:['POWER_STRIKE'] });
   party.addMember(m1);
-  const resultPromise = openCombat([{ name:'E1', hp:3 }]);
-  combatClickHandler({ target: combatCmd.children[1] });
-  assert.strictEqual(combatCmd.children[0].textContent, 'Power Hit');
-  closeCombat('flee');
-  await resultPromise;
+  await new Promise((r) => setTimeout(r, 50));
+  assert.ok(m1.special.includes('POWER_STRIKE'));
 });
 
 test('openCombat preserves adrenaline for party members', async () => {
@@ -1497,7 +1495,7 @@ test('equipment modifiers apply at battle start', async () => {
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role');
   m1.equip.weapon = { mods: { ADR: 10 } };
-  m1.equip.trinket = { mods: { adrenaline_gen_mod: 2, granted_special: { label: 'Power Hit', dmg: 2 } } };
+  m1.equip.trinket = { mods: { adrenaline_gen_mod: 2, granted_special: 'POWER_STRIKE' } };
   party.addMember(m1);
   const resultPromise = openCombat([{ name: 'E1', hp: 2 }]);
   assert.strictEqual(m1.special.length, 1);

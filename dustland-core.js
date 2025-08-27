@@ -643,11 +643,11 @@ const specializations={
   'Cogwitch':{desc:'Tinker checks succeed more often; starts with toolkit.', gear:[{id:'toolkit',name:'Toolkit',slot:'trinket',mods:{INT:+1}}]}
 };
 const classSpecials={
-  'Scavenger':[{label:'Scrap Toss',dmg:2}],
-  'Gunslinger':[{label:'Quick Shot',dmg:2}],
-  'Snakeoil Preacher':[{label:'Sermon',dmg:2}],
-  'Cogwitch':[{label:'Gizmo Blast',dmg:2}],
-  'Wanderer':[{label:'Grit',dmg:2}]
+  Scavenger:['POWER_STRIKE'],
+  Gunslinger:['STUN_GRENADE'],
+  'Snakeoil Preacher':['FIRST_AID'],
+  Cogwitch:['ADRENAL_SURGE'],
+  Wanderer:['GUARD_UP']
 };
 const quirks={
   'Lucky Lint':{desc:'+1 LCK. Occasionally avoid mishaps.'},

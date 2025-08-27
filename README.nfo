@@ -52,6 +52,8 @@ _______________________________________________________________________________
   - Water is bright blue and is not walkable; items won’t spawn in water.
   - Walking gradually restores HP for the selected party member.
   - Movement speed improves with the leader's AGI, including equipment bonuses.
+  - Special moves spend Adrenaline. Starter techniques include Power Strike,
+    Stun Grenade, First Aid, Adrenal Surge, and Guard.
 
 [ CHARACTER CREATION ]
   - Start a new game at boot if no save is present.
