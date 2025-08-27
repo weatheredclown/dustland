@@ -1,7 +1,5 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
-import '../scripts/core/party.js';
-import '../scripts/core/npc.js';
 
 globalThis.log = () => {};
 globalThis.toast = () => {};
@@ -10,6 +8,9 @@ globalThis.updateHUD = () => {};
 globalThis.hudBadge = () => {};
 globalThis.EventBus = { emit() {} };
 globalThis.hasItem = () => false;
+
+await import('../scripts/core/party.js');
+await import('../scripts/core/npc.js');
 
 test('awardXP uses xpCurve thresholds', () => {
   const c = new Character('t','Tester','Role');

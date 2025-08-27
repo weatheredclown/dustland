@@ -6,11 +6,13 @@ import vm from 'node:vm';
 const partyCode = await fs.readFile(new URL('../scripts/core/party.js', import.meta.url), 'utf8');
 
 function setupParty(){
+  const bus = { emit: () => {} };
   const context = {
     log: () => {},
     renderParty: () => {},
     updateHUD: () => {},
-    EventBus: { emit: () => {} }
+    EventBus: bus,
+    Dustland: { eventBus: bus }
   };
   vm.createContext(context);
   vm.runInContext(partyCode, context);
