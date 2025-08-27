@@ -18,31 +18,40 @@ class Audio {
 }
 
 class Elem {
-  constructor(){
+  constructor(tag='div'){
+    this.tagName=tag.toUpperCase();
     this.children=[];
     this.style={};
     this._className='';
     this.classList={
       classes:new Set(),
-      toggle:(cls,cond)=>{ cond?this.classList.classes.add(cls):this.classList.classes.delete(cls); },
+      toggle(cls,cond){
+        if(cond===undefined) cond=!this.classes.has(cls);
+        cond?this.classes.add(cls):this.classes.delete(cls);
+        return cond;
+      },
       contains:(cls)=>this.classList.classes.has(cls),
       add:(cls)=>{ this.classList.classes.add(cls); },
       remove:(cls)=>{ this.classList.classes.delete(cls); }
     };
+    this.listeners={};
+    this.value='';
+    this.textContent='';
   }
   appendChild(child){ this.children.push(child); child.parentElement=this; }
   prepend(child){ this.children.unshift(child); child.parentElement=this; }
-  querySelector(sel){
-    if(sel==='.portrait'){
-      const e=new Elem();
-      this.children.push(e);
-      return e;
-    }
-    return null;
+  _match(sel,elem){
+    if(sel.startsWith('.')) return elem.classList.contains(sel.slice(1));
+    return elem.tagName===sel.toUpperCase();
   }
+  querySelector(sel){ return this.querySelectorAll(sel)[0]||null; }
   querySelectorAll(sel){
-    if(sel==='.pcard') return this.children.filter(c=>c.classList.contains('pcard'));
-    return [];
+    const res=[];
+    const walk=e=>{ e.children.forEach(c=>{ if(this._match(sel,c)) res.push(c); walk(c); }); };
+    walk(this);
+    if(sel==='.portrait' && res.length===0){ const e=new Elem(); this.children.push(e); return [e]; }
+    if(sel==='.pcard') return res.filter(c=>c.classList.contains('pcard'));
+    return res;
   }
   set innerHTML(v){ this._innerHTML=v; if(v==='') this.children=[]; }
   get innerHTML(){ return this._innerHTML; }
@@ -50,14 +59,18 @@ class Elem {
   get className(){ return Array.from(this.classList.classes).join(' '); }
   focus(){ this.onfocus?.(); }
   getContext(){ return dummyCtx; }
-  addEventListener(){ }
-  removeEventListener(){ }
+  addEventListener(type,fn){ (this.listeners[type]=this.listeners[type]||[]).push(fn); }
+  removeEventListener(type,fn){ this.listeners[type]=(this.listeners[type]||[]).filter(f=>f!==fn); }
+  dispatchEvent(evt){
+    evt.target ??= this;
+    (this.listeners[evt.type]||[]).forEach(fn=>fn.call(this, evt));
+  }
   remove(){ }
 }
 
 class CanvasElem extends Elem {
   constructor(){
-    super();
+    super('canvas');
     this.width=0;
     this.height=0;
   }
@@ -68,11 +81,19 @@ const dummyCtx={ fillRect(){}, strokeRect(){}, drawImage(){}, clearRect(){}, beg
 
 function makeDocument(){
   const elements={ '.tabs': new Elem() };
+  const getElementById=id=>{
+    if(!elements[id]){
+      elements[id]=(id==='game'?new CanvasElem():new Elem());
+      elements[id].id=id;
+    }
+    return elements[id];
+  };
   return {
-    body:new Elem(),
-    getElementById(id){ if(!elements[id]) elements[id]=(id==='game'?new CanvasElem():new Elem()); return elements[id]; },
-    createElement(tag){ return tag==='canvas'?new CanvasElem():new Elem(); },
-    querySelector(sel){ return elements[sel] || null; }
+    body:new Elem('body'),
+    getElementById,
+    createElement(tag){ return tag==='canvas'?new CanvasElem():new Elem(tag); },
+    querySelector(sel){ if(elements[sel]) return elements[sel]; return this.body.querySelector(sel); },
+    querySelectorAll(sel){ return this.body.querySelectorAll(sel); }
   };
 }
 
@@ -80,14 +101,18 @@ const full = await fs.readFile(new URL('../dustland-engine.js', import.meta.url)
 
 export function createGameProxy(party){
   const document=makeDocument();
+  const winListeners={};
   const window={
     document,
     AudioContext:AudioCtx,
     webkitAudioContext:AudioCtx,
     Audio,
     HTMLCanvasElement:CanvasElem,
-    addEventListener:()=>{},
-    removeEventListener:()=>{},
+    addEventListener:(t,f)=>{ (winListeners[t]=winListeners[t]||[]).push(f); },
+    removeEventListener:(t,f)=>{ winListeners[t]=(winListeners[t]||[]).filter(fn=>fn!==f); },
+    dispatchEvent:evt=>{ (winListeners[evt.type]||[]).forEach(fn=>fn(evt)); },
+    KeyboardEvent: class { constructor(type,init={}){ this.type=type; Object.assign(this,init); } },
+    Event: class { constructor(type,init={}){ this.type=type; Object.assign(this,init); } },
     innerWidth:800
   };
   party.flags={};
