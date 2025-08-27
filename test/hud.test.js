@@ -6,6 +6,7 @@ import { JSDOM } from 'jsdom';
 
 const full = await fs.readFile(new URL('../dustland-engine.js', import.meta.url), 'utf8');
 const code = full.split('// ===== Boot =====')[0];
+const fxCode = await fs.readFile(new URL('../fx-config.js', import.meta.url), 'utf8');
 
 class AudioCtx {
   createOscillator(){ return { connect(){}, start(){}, stop(){}, frequency:{ value:0 }, type:'' }; }
@@ -47,6 +48,7 @@ function setup(html){
   };
   vm.createContext(context);
   vm.runInContext(code, context);
+  vm.runInContext(fxCode, context);
   return context;
 }
 
@@ -54,6 +56,7 @@ const HUD_HTML = `<body><canvas id="game"></canvas><div id="log"></div><div id="
 
 test('hp bar flashes, updates aria values, and body gains critical/out classes', async () => {
   const ctx = setup(HUD_HTML);
+  ctx.fxConfig.damageFlash = true;
   ctx.updateHUD();
   const bar = ctx.document.getElementById('hpBar');
   assert.equal(bar.getAttribute('aria-valuenow'), '10');
@@ -70,12 +73,15 @@ test('hp bar flashes, updates aria values, and body gains critical/out classes',
   assert.equal(adrBar.getAttribute('aria-valuemax'), '100');
 });
 
-test('damage flash can be disabled', async () => {
+test('damage flash disabled by default but can be enabled', async () => {
   const ctx = setup(HUD_HTML);
   ctx.updateHUD();
-  ctx.fxConfig = { damageFlash: false };
   ctx.player.hp = 5;
   ctx.updateHUD();
   const bar = ctx.document.getElementById('hpBar');
   assert.ok(!bar.classList.contains('hurt'));
+  ctx.fxConfig.damageFlash = true;
+  ctx.player.hp = 4;
+  ctx.updateHUD();
+  assert.ok(bar.classList.contains('hurt'));
 });

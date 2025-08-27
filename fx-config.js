@@ -4,8 +4,8 @@
     enabled: true,
     prevAlpha: 0.2,
     sceneAlpha: 0.2,
-    offsetX: 1,
-    offsetY: 0,
-    damageFlash: true
+    offsetX: 0, // horizontal blur offset (disabled by default)
+    offsetY: 0, // vertical blur offset (disabled by default)
+    damageFlash: false // disable red flash by default; toggle via fx menu
   };
 })();
