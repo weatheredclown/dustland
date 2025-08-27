@@ -60,6 +60,8 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
   - [x] Namespace effects under `Dustland.effects`.
     - [x] Namespace actions under `Dustland.actions`.
   - [ ] Update references and tests incrementally.
+- [ ] **Phase 1.5: Reorganize the filesystem**
+  - [ ] move core and JS files in root under a new a scripts directory
 - [ ] **Phase 2: Untangle UI from logic**
   - [ ] Replace direct DOM calls with event emissions.
   - [ ] Build a tiny `ui.js` to listen for events.
@@ -71,3 +73,4 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
   - [ ] Add ESLint with a vanilla config.
   - [ ] Expose `npm run lint`.
   - [ ] Run lint in CI and before commits.
+  - [ ] re-oganize
