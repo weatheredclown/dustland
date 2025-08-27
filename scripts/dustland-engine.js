@@ -452,6 +452,24 @@ function updateHUD(){
     adrBar.setAttribute('aria-valuemax', lead.maxAdr || 1);
     adrBar.setAttribute('aria-valuemin', 0);
   }
+  if(disp && fx){
+    const filters = [];
+    if(fx.grayscale) filters.push('grayscale(1)');
+    if(fx.adrenalineTint && lead){
+      const ratio = Math.max(0, Math.min(1, lead.adr / (lead.maxAdr || 1)));
+      if(ratio > 0){
+        const sat = 1 + ratio * 1.5;
+        const hue = ratio * 90;
+        filters.push(`saturate(${sat}) hue-rotate(${hue}deg)`);
+      }
+    }
+    const fstr = filters.join(' ');
+    if(fstr){
+      disp.style.setProperty('--fxFilter', fstr);
+    }else{
+      disp.style.removeProperty('--fxFilter');
+    }
+  }
   if(statusIcons){
     statusIcons.innerHTML='';
     if(typeof buffs !== 'undefined' && lead){

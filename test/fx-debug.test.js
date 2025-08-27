@@ -66,3 +66,27 @@ test('fx checkboxes apply classes and update config', async () => {
   assert.equal(window.fxConfig.colorBleed, false);
   assert.ok(!canvas.classList.contains('color-bleed'));
 });
+
+test('grayscale and adrenaline tint toggles update config and call updateHUD', async () => {
+  const document = makeDocument();
+  const window = { document };
+  let calls = 0;
+  function updateHUD(){ calls++; }
+  window.updateHUD = updateHUD;
+  window.fxConfig = { grayscale: false, adrenalineTint: true };
+  const sandbox = { window, document, fxConfig: window.fxConfig, updateHUD };
+  sandbox.globalThis = sandbox;
+  sandbox.setTimeout = setTimeout;
+  sandbox.clearTimeout = clearTimeout;
+  document.getElementById('fxPanel').appendChild(document.getElementById('fxGrayscale'));
+  document.getElementById('fxPanel').appendChild(document.getElementById('fxAdrTint'));
+  const code = await fs.readFile(new URL('../scripts/fx-debug.js', import.meta.url), 'utf8');
+  vm.runInNewContext(code, sandbox);
+  const gray = document.getElementById('fxGrayscale');
+  const adr = document.getElementById('fxAdrTint');
+  gray.checked = true; gray.dispatchEvent({ type:'change' });
+  adr.checked = false; adr.dispatchEvent({ type:'change' });
+  assert.equal(window.fxConfig.grayscale, true);
+  assert.equal(window.fxConfig.adrenalineTint, false);
+  assert.equal(calls, 3);
+});

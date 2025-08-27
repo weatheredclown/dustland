@@ -9,6 +9,8 @@
     damageFlash: false, // disable red flash by default; toggle via fx menu
     scanlines: false, // overlay horizontal scanlines
     crtShear: false, // slight screen skew effect
-    colorBleed: false // simple chromatic aberration
+    colorBleed: false, // simple chromatic aberration
+    grayscale: false, // render world in grayscale
+    adrenalineTint: true // green saturation scales with adrenaline
   };
 })();
