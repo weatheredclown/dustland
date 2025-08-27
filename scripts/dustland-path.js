@@ -5,7 +5,6 @@
   const state = { queue: [], busy:false, cache:new Map() };
 
   function queue(map, start, goal, ignoreId){
-    console.log("queue",map,start,goal);
     const key = `${map}@${start.x},${start.y}->${goal.x},${goal.y}`;
     if(state.cache.has(key) || state.queue.find(j=>j.key===key)) return key;
     state.queue.push({map,start,goal,key,ignoreId});
@@ -19,14 +18,12 @@
 
   function process(){
     if(state.busy || !state.queue.length) return;
-    console.log("pathfinding busy");
     state.busy=true;
     const job=state.queue.shift();
     setTimeout(()=>{
       const p=aStar(job.map, job.start, job.goal, job.ignoreId);
       state.cache.set(job.key, p);
       state.busy=false;
-      console.log("pathfinding not");
       process();
     },0);
   }
