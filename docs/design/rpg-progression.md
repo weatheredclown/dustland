@@ -60,7 +60,7 @@ Here’s the roadmap. We’ll build the core systems first, get the player-facin
 - [x] **Party Panel UI:** Add a compact XP bar below each character's health in the party panel. On hover, it should expand to show `currentXP / nextXP` values.
 - [x] **Skill Point Badge:** Create a small, glowing badge that appears over a character's portrait when they have unspent skill points. The badge should display the number of available points.
 - [x] **Mentor System:** Implement a simple event hook in the level-up function that can trigger a sound file and a brief on-screen text notification (a "bark"). This should be tied to a quest flag or a specific item to remain optional.
-- [ ] **Mentor Bark Handler:** Listen for `mentor:bark` events to play a sound and display the text cue.
+- [x] **Mentor Bark Handler:** Listen for `mentor:bark` events to play a sound and display the text cue.
 - [x] **Trainer UI Mockup:** Design the "Upgrade Skills" dialog. It needs a list of available upgrades (stats and abilities), their costs, and a clear "before and after" preview for any selected stat change. See `docs/design/trainer-ui-mockup.md`.
     > **Gizmo:** Let's make this UI data-driven. It should just read a list of available upgrades from the trainer NPC's data. That way, modders can add new trainers with unique skill trees just by editing a JSON file.
     > **Clown:** It can be a json blob, but keep in mind that all json lives inside the javascript to keep the "no builds no servers" running locally ethos.

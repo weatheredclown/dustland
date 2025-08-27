@@ -50,17 +50,21 @@ function setup(html){
   return context;
 }
 
-test('hp bar flashes and body gains critical/out classes', async () => {
-  const html = `<body><canvas id="game"></canvas><div id="log"></div><div id="hp"></div><div id="ap"></div><div id="scrap"></div><div id="hpBar" class="hudbar"><div id="hpGhost"></div><div id="hpFill"></div></div><div id="adrFill"></div><div id="statusIcons"></div></body>`;
+test('hp bar flashes, updates aria values, and body gains critical/out classes', async () => {
+  const html = `<body><canvas id="game"></canvas><div id="log"></div><div id="hp"></div><div id="ap"></div><div id="scrap"></div><div id="hpBar" class="hudbar"><div id="hpGhost"></div><div id="hpFill"></div></div><div id="adrBar" class="hudbar adr"><div id="adrFill"></div></div><div id="statusIcons"></div></body>`;
   const ctx = setup(html);
   ctx.updateHUD();
+  const bar = ctx.document.getElementById('hpBar');
+  assert.equal(bar.getAttribute('aria-valuenow'), '10');
   assert.ok(!ctx.document.body.classList.contains('hp-critical'));
   ctx.player.hp = 2;
   ctx.updateHUD();
   assert.ok(ctx.document.body.classList.contains('hp-critical'));
-  const bar = ctx.document.getElementById('hpBar');
+  assert.equal(bar.getAttribute('aria-valuenow'), '2');
   assert.ok(bar.classList.contains('hurt'));
   ctx.player.hp = 0;
   ctx.updateHUD();
   assert.ok(ctx.document.body.classList.contains('hp-out'));
+  const adrBar = ctx.document.getElementById('adrBar');
+  assert.equal(adrBar.getAttribute('aria-valuemax'), '100');
 });

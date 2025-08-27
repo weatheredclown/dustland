@@ -1,0 +1,7 @@
+{
+  "id": "arcane_wraith",
+  "name": "Arcane Wraith",
+  "hp": 8,
+  "immune": ["basic"],
+  "special": { "cue": "drains life force", "dmg": 5, "delay": 700 }
+}

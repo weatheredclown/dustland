@@ -1,0 +1,7 @@
+{
+  "id": "shield_drone",
+  "name": "Shield Drone",
+  "hp": 12,
+  "immune": ["basic"],
+  "special": { "cue": "overloads its capacitors", "dmg": 4, "delay": 600 }
+}

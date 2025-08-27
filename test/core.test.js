@@ -440,6 +440,21 @@ test('level up grants +10 max HP and a skill point', () => {
   assert.strictEqual(c.skillPoints, 1);
 });
 
+test('mentor bark plays sound and shows text', () => {
+  party.flags.mentor = true;
+  const msgs = [];
+  const prevToast = global.toast;
+  global.toast = (m) => msgs.push(m);
+  const sounds = [];
+  EventBus.on('sfx', (id) => sounds.push(id));
+  const c = new Character('m','M','Role');
+  const need = xpToNext(c.lvl);
+  c.awardXP(need);
+  assert.ok(msgs.includes('Another scar, another lesson learned.'));
+  assert.ok(sounds.includes('mentor'));
+  global.toast = prevToast;
+});
+
 test('respec consumes memory worm and restores skill points', () => {
   party.length = 0;
   player.inv.length = 0;
@@ -1211,6 +1226,43 @@ test('openCombat preserves adrenaline for party members', async () => {
   assert.strictEqual(res.result, 'loot');
 });
 
+test('basic attack plays adrenaline fx', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  party.addMember(m1);
+  const calls = [];
+  global.playFX = (t) => calls.push(t);
+  const resultPromise = openCombat([{ name:'E1', hp:1 }]);
+  handleCombatKey({ key:'Enter' });
+  assert.deepStrictEqual(calls, ['adrenaline']);
+  closeCombat('flee');
+  await resultPromise;
+});
+
+test('special move triggers fx', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role', { special:[{ label:'Power Hit', dmg:2 }] });
+  party.addMember(m1);
+  const calls = [];
+  global.playFX = (t) => calls.push(t);
+  const resultPromise = openCombat([{ name:'E1', hp:3 }]);
+  handleCombatKey({ key:'ArrowDown' });
+  handleCombatKey({ key:'Enter' });
+  handleCombatKey({ key:'Enter' });
+  assert.ok(calls.includes('special'));
+  closeCombat('flee');
+  await resultPromise;
+});
+
+test('status effects play fx', () => {
+  const calls = [];
+  global.playFX = (t) => calls.push(t);
+  Effects.apply([{ effect:'modStat', stat:'ATK', delta:1 }], { actor:{ stats:{ ATK:0 } } });
+  assert.deepStrictEqual(calls, ['status']);
+});
+
 test('adrenaline cools when walking at full health', async () => {
   party.length = 0;
   player.inv.length = 0;
@@ -1451,6 +1503,65 @@ test('equipment modifiers apply at battle start', async () => {
   assert.strictEqual(m1.adr, 5);
   handleCombatKey({ key: 'Enter' });
   await resultPromise;
+});
+
+test('enemy immune to basic attacks requires specials', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role', { special:[{ label:'Power Hit', dmg:2 }] });
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name:'Shield', hp:5, immune:['basic'] }]);
+  handleCombatKey({ key:'Enter' });
+  assert.strictEqual(combatState.enemies[0].hp, 5);
+  handleCombatKey({ key:'ArrowDown' });
+  handleCombatKey({ key:'Enter' });
+  handleCombatKey({ key:'Enter' });
+  assert.strictEqual(combatState.enemies[0].hp, 3);
+  closeCombat('flee');
+  await resultPromise;
+});
+
+// --- Test: enemy counters basic attacks ---
+test('enemy counters basic attacks', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+
+  const m1 = new Character('p1', 'P1', 'Role');
+  party.addMember(m1);
+
+  const resultPromise = openCombat([{ name: 'Mirror', hp: 3, counterBasic: { dmg: 1 } }]);
+
+  // Player basic attack
+  handleCombatKey({ key: 'Enter' });
+
+  // Enemy should lose 1 HP; player should take counter damage
+  assert.strictEqual(combatState.enemies[0].hp, 2);
+  assert.strictEqual(party[0].hp, 8);
+
+  // Exit combat to resolve any pending state
+  closeCombat('flee');
+  await resultPromise;
+});
+
+// --- Test: combat log records player and enemy actions ---
+test('combat log records player and enemy actions', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+
+  const m1 = new Character('p1', 'P1', 'Role');
+  party.addMember(m1);
+
+  const resultPromise = openCombat([{ name: 'E1', hp: 2 }]);
+
+  // Player attacks twice; enemy should act in between/after depending on your loop
+  handleCombatKey({ key: 'Enter' });
+  handleCombatKey({ key: 'Enter' });
+
+  await resultPromise;
+
+  const logEntries = getCombatLog();
+  assert.ok(logEntries.some(e => e.type === 'player' && e.action === 'attack'));
+  assert.ok(logEntries.some(e => e.type === 'enemy' && e.action === 'attack'));
 });
 
 test('shop npc opens dialog before trading', () => {

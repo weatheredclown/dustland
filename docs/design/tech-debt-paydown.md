@@ -8,7 +8,7 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
 
 - **Global sprawl.** Most modules dump functions and state into `globalThis`, making load order fragile and tests noisy.
 - **Logic tied to UI.** Core movement calls DOM helpers directly, so basic pathing can't run without a browser.
-- **Scattered state.** `player`, `party`, `state`, and other globals mutate from all directions with no single source of truth.
+- **Scattered state.** `player`, `party`, `state`, and other globals mutate from all directions with no single source of truth. Trying to treat `player.health` as a singleton also breaks once multiple party members enter play.
 
 ## Objectives
 
@@ -30,7 +30,9 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
 - Keep the old globals as shims during migration.
 
 ### 3. Consolidate state
-- Create a `GameState` singleton that owns `player`, `party`, `world`, and flags.
+- Create a `GameState` singleton that owns the party roster, world state, shared inventory, and global flags.
+- Keep per-member stats like health or stamina on the party members themselves.
+- Track cross-cutting systems such as the world clock, difficulty mode, and active quests inside `GameState`.
 - Provide accessors (`getState()`, `updateState(fn)`) so changes are explicit and observable.
 
 ### 4. Lint for sanity
