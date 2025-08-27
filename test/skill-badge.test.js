@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import { createGameProxy } from './test-harness.js';
 
-const partyCode = await fs.readFile(new URL('../core/party.js', import.meta.url), 'utf8');
+const partyCode = await fs.readFile(new URL('../scripts/core/party.js', import.meta.url), 'utf8');
 
 function setup(){
   const party=[];

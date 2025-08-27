@@ -100,19 +100,19 @@ global.centerCamera = () => {};
 delete global.navigator;
 
 const files = [
-  '../event-bus.js',
-  '../core/actions.js',
-  '../core/effects.js',
-  '../core/spoils-cache.js',
-  '../core/abilities.js',
-  '../core/party.js',
-  '../core/inventory.js',
-  '../core/movement.js',
-  '../core/dialog.js',
-  '../core/combat.js',
-  '../core/quests.js',
-  '../core/npc.js',
-  '../dustland-core.js'
+  '../scripts/event-bus.js',
+  '../scripts/core/actions.js',
+  '../scripts/core/effects.js',
+  '../scripts/core/spoils-cache.js',
+  '../scripts/core/abilities.js',
+  '../scripts/core/party.js',
+  '../scripts/core/inventory.js',
+  '../scripts/core/movement.js',
+  '../scripts/core/dialog.js',
+  '../scripts/core/combat.js',
+  '../scripts/core/quests.js',
+  '../scripts/core/npc.js',
+  '../scripts/dustland-core.js'
 ];
 for (const f of files) {
   const code = await fs.readFile(new URL(f, import.meta.url), 'utf8');

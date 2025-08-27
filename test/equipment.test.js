@@ -7,9 +7,9 @@ globalThis.log = () => {};
 globalThis.toast = () => {};
 globalThis.player = { inv: [] };
 
-await import('../core/inventory.js');
-await import('../core/party.js');
-await import('../core/equipment.js');
+await import('../scripts/core/inventory.js');
+await import('../scripts/core/party.js');
+await import('../scripts/core/equipment.js');
 
 test('base equipment items are registered', () => {
   const sword = getItem('pipe_blade');

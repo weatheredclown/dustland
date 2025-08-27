@@ -14,7 +14,7 @@ const setup = async () => {
   });
   global.soundSources = [];
   global.state = { map: 'dust_storm' };
-  await import(new URL('../core/effects.js', import.meta.url));
+  await import(new URL('../scripts/core/effects.js', import.meta.url));
   return dom;
 };
 

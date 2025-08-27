@@ -97,7 +97,7 @@ function makeDocument(){
   };
 }
 
-const full = await fs.readFile(new URL('../dustland-engine.js', import.meta.url), 'utf8');
+const full = await fs.readFile(new URL('../scripts/dustland-engine.js', import.meta.url), 'utf8');
 
 export function createGameProxy(party){
   const document=makeDocument();

@@ -10,9 +10,9 @@ test('ui module emits DOM updates via events', async () => {
   document.getElementById('field');
   const context = { window: { document }, document, console };
   vm.createContext(context);
-  const busCode = await fs.readFile(new URL('../event-bus.js', import.meta.url), 'utf8');
+  const busCode = await fs.readFile(new URL('../scripts/event-bus.js', import.meta.url), 'utf8');
   vm.runInContext(busCode, context);
-  const uiCode = await fs.readFile(new URL('../ui.js', import.meta.url), 'utf8');
+  const uiCode = await fs.readFile(new URL('../scripts/ui.js', import.meta.url), 'utf8');
   vm.runInContext(uiCode, context);
   context.Dustland.ui.show('box', 'flex');
   assert.strictEqual(document.getElementById('box').style.display, 'flex');

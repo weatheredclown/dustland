@@ -5,7 +5,7 @@ global.WORLD_W = 100;
 global.WORLD_H = 100;
 global.clamp = (v,a,b)=>{ if(a>b) [a,b]=[b,a]; return Math.max(a, Math.min(b, v)); };
 
-await import('../core/loop.js');
+await import('../scripts/core/loop.js');
 
 test('nextLoopPoint defaults to NPC position when no previous', () => {
   const npc = { x: 5, y: 7 };

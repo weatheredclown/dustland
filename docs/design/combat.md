@@ -75,10 +75,10 @@ The challenge should grow as the player masters the system.
 
 ### Adrenaline Prototype: Arena Script
 
-Run the Node-driven `adrenaline-prototype.js` to spot-check Adrenaline flow before UI work.
+Run the Node-driven `scripts/adrenaline-prototype.js` to spot-check Adrenaline flow before UI work.
 
 ```
-node adrenaline-prototype.js
+node scripts/adrenaline-prototype.js
 ```
 
 The script pits a lone hero against a dummy and logs `Adrenaline: <value>` whenever the meter changes.
@@ -94,9 +94,9 @@ The prototype doesn't spend Adrenaline yet; it's a pacing probe. Once the gain c
 ### Expanded Task List
 
 #### Phase 1: Core Systems
-- [x] **Adrenaline Resource:** Implement the Adrenaline bar (`adr`) for all combatants in `core/party.js` and `core/combat.js`.
+- [x] **Adrenaline Resource:** Implement the Adrenaline bar (`adr`) for all combatants in `scripts/core/party.js` and `scripts/core/combat.js`.
 - [x] **Adrenaline Generation:** Basic attacks now generate Adrenaline. This value is determined by weapon stats via the `ADR` modifier.
-- [x] **Special Move Framework:** In `core/abilities.js`, create a data structure for Specials that includes `adrenaline_cost`, `target_type` (single, aoe), `effect` (damage, stun, etc.), and `wind_up_time`.
+- [x] **Special Move Framework:** In `scripts/core/abilities.js`, create a data structure for Specials that includes `adrenaline_cost`, `target_type` (single, aoe), `effect` (damage, stun, etc.), and `wind_up_time`.
 - [x] **Equipment Modifiers:** Update the inventory system to apply combat modifiers from equipped items at the start of each battle.
 - [x] **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
 

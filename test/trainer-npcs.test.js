@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
-const partyCode = await fs.readFile(new URL('../core/party.js', import.meta.url), 'utf8');
+const partyCode = await fs.readFile(new URL('../scripts/core/party.js', import.meta.url), 'utf8');
 
 function setupParty(){
   const context = {

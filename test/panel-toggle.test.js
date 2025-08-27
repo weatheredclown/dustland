@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import { makeDocument } from './test-harness.js';
 
-const full = await fs.readFile(new URL('../dustland-engine.js', import.meta.url), 'utf8');
+const full = await fs.readFile(new URL('../scripts/dustland-engine.js', import.meta.url), 'utf8');
 const code = full.split('// ===== Boot =====')[0];
 
 class AudioCtx {

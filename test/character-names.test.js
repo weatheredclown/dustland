@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import { JSDOM } from 'jsdom';
 
-const code = await fs.readFile(new URL('../dustland-core.js', import.meta.url), 'utf8');
+const code = await fs.readFile(new URL('../scripts/dustland-core.js', import.meta.url), 'utf8');
 
 function setup(){
   const html = `<body><div id="mapname"></div><div id="creator"></div><div id="ccStep"></div><div id="ccRight"></div><div id="ccHint"></div><button id="ccBack"></button><button id="ccNext"></button><div id="ccPortrait"></div><button id="ccStart"></button><button id="ccLoad"></button></body>`;

@@ -10,7 +10,7 @@ test('wizard preserves state and validates steps', async () => {
   document.body.appendChild(containerEl);
   const context = { window: { document }, document, console };
   vm.createContext(context);
-  const busCode = await fs.readFile(new URL('../event-bus.js', import.meta.url), 'utf8');
+  const busCode = await fs.readFile(new URL('../scripts/event-bus.js', import.meta.url), 'utf8');
   vm.runInContext(busCode, context);
   const wizCode = await fs.readFile(new URL('../components/wizard/wizard.js', import.meta.url), 'utf8');
   vm.runInContext(wizCode, context);

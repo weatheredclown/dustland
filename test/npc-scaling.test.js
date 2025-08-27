@@ -4,14 +4,14 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
 test('NPC Scaling', async () => {
-  const partyCode = await fs.readFile(new URL('../core/party.js', import.meta.url), 'utf8');
-  vm.runInThisContext(partyCode, { filename: '../core/party.js' });
+  const partyCode = await fs.readFile(new URL('../scripts/core/party.js', import.meta.url), 'utf8');
+  vm.runInThisContext(partyCode, { filename: '../scripts/core/party.js' });
 
-  const presetsJson = await fs.readFile(new URL('../core/presets.json', import.meta.url), 'utf8');
+  const presetsJson = await fs.readFile(new URL('../scripts/core/presets.json', import.meta.url), 'utf8');
   globalThis.enemyPresets = JSON.parse(presetsJson);
 
-  const npcCode = await fs.readFile(new URL('../core/npc.js', import.meta.url), 'utf8');
-  vm.runInThisContext(npcCode, { filename: '../core/npc.js' });
+  const npcCode = await fs.readFile(new URL('../scripts/core/npc.js', import.meta.url), 'utf8');
+  vm.runInThisContext(npcCode, { filename: '../scripts/core/npc.js' });
 
 
   const { scaleEnemy, scaleEnemyWithPreset } = globalThis;

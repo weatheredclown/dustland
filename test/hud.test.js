@@ -4,9 +4,9 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import { JSDOM } from 'jsdom';
 
-const full = await fs.readFile(new URL('../dustland-engine.js', import.meta.url), 'utf8');
+const full = await fs.readFile(new URL('../scripts/dustland-engine.js', import.meta.url), 'utf8');
 const code = full.split('// ===== Boot =====')[0];
-const fxCode = await fs.readFile(new URL('../fx-config.js', import.meta.url), 'utf8');
+const fxCode = await fs.readFile(new URL('../scripts/fx-config.js', import.meta.url), 'utf8');
 
 class AudioCtx {
   createOscillator(){ return { connect(){}, start(){}, stop(){}, frequency:{ value:0 }, type:'' }; }
