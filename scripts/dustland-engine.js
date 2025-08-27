@@ -937,7 +937,7 @@ disp.addEventListener('touchstart',e=>{
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
 requestAnimationFrame(draw);
-log('v0.7.2 — Boots speed movement; delay mods supported.');
+log('v0.7.3 — Walking heals update party UI.');
 if (window.NanoDialog) NanoDialog.init();
 
 { // skip normal boot flow in ACK player mode

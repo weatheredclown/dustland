@@ -168,6 +168,7 @@ function move(dx,dy){
         if(actor){
           actor.hp = Math.min(actor.hp + 1, actor.maxHp);
           player.hp = actor.hp;
+          renderParty?.();
         }
         (party||[]).forEach(m=>{
           if(m.hp >= m.maxHp){
