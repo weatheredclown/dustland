@@ -17,5 +17,5 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm test
-      - run: node presubmit.js
+      - run: node scripts/presubmit.js
       - run: npm run lint
