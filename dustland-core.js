@@ -130,7 +130,11 @@ async function startCombat(defender){
   if(attacker){
     attacker.ap = Math.max(0,(attacker.ap||0)-1);
     player.ap = attacker.ap;
-    player.hp = attacker.hp;
+    if(globalThis.gameState){
+      gameState.setPlayerHealth(attacker.hp);
+    } else {
+      player.hp = attacker.hp;
+    }
   }
   refreshUI();
   return result;
@@ -203,6 +207,9 @@ const enemyBanks = {};
 function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
 const state = { map:'world', mapFlags: {} }; // default map
 const player = { hp:10, ap:2, inv:[], scrap:0 };
+if(globalThis.gameState){
+  gameState.setPlayerHealth(player.hp);
+}
 if (typeof registerItem === 'function') {
   registerItem({
     id: 'memory_worm',
