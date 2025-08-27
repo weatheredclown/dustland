@@ -37,9 +37,10 @@ test('office worker lends scrap when low and missing badge', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
   const src = fs.readFileSync(file, 'utf8');
-  const match = src.match(/\{\s*id: 'worker1',[\s\S]*?\n\s*\},\n\s*\{\s*id: 'worker2'/);
+  const worker1Regex = /\{\s*id: 'worker1',[\s\S]*?\r?\n\s*\},\r?\n\s*\{\s*id: 'worker2'/;
+  const match = src.match(worker1Regex);
   assert(match);
-  const objSrc = match[0].replace(/,\n\s*\{\s*id: 'worker2'.*/, '');
+  const objSrc = match[0].replace(/,\r?\n\s*\{\s*id: 'worker2'.*/, '');
   let hudCalled = false;
   global.flagValue = () => 0;
   global.player = { scrap: 1 };
@@ -62,9 +63,10 @@ test('office worker hides loan if you have enough scrap', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
   const src = fs.readFileSync(file, 'utf8');
-  const match = src.match(/\{\s*id: 'worker1',[\s\S]*?\n\s*\},\n\s*\{\s*id: 'worker2'/);
+  const worker1Regex = /\{\s*id: 'worker1',[\s\S]*?\r?\n\s*\},\r?\n\s*\{\s*id: 'worker2'/;
+  const match = src.match(worker1Regex);
   assert(match);
-  const objSrc = match[0].replace(/,\n\s*\{\s*id: 'worker2'.*/, '');
+  const objSrc = match[0].replace(/,\r?\n\s*\{\s*id: 'worker2'.*/, '');
   global.flagValue = () => 0;
   global.player = { scrap: 5 };
   global.updateHUD = () => {};
@@ -79,9 +81,10 @@ test('office worker hides loan if you still have your badge', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
   const src = fs.readFileSync(file, 'utf8');
-  const match = src.match(/\{\s*id: 'worker1',[\s\S]*?\n\s*\},\n\s*\{\s*id: 'worker2'/);
+  const worker1Regex = /\{\s*id: 'worker1',[\s\S]*?\r?\n\s*\},\r?\n\s*\{\s*id: 'worker2'/;
+  const match = src.match(worker1Regex);
   assert(match);
-  const objSrc = match[0].replace(/,\n\s*\{\s*id: 'worker2'.*/, '');
+  const objSrc = match[0].replace(/,\r?\n\s*\{\s*id: 'worker2'.*/, '');
   global.flagValue = () => 0;
   global.player = { scrap: 1 };
   global.updateHUD = () => {};
