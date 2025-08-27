@@ -11,6 +11,8 @@
   const scanlines = document.getElementById('fxScanlines');
   const shear = document.getElementById('fxCrtShear');
   const colorBleed = document.getElementById('fxColorBleed');
+  const adrTint = document.getElementById('fxAdrenalineTint');
+  const hpGray = document.getElementById('fxHpGrayscale');
   const canvas = document.getElementById('game');
 
   let shearTimer;
@@ -57,6 +59,8 @@
     if(scanlines) scanlines.checked = !!globalThis.fxConfig.scanlines;
     if(shear) shear.checked = !!globalThis.fxConfig.crtShear;
     if(colorBleed) colorBleed.checked = !!globalThis.fxConfig.colorBleed;
+    if(adrTint) adrTint.checked = globalThis.fxConfig.adrenalineTint !== false;
+    if(hpGray) hpGray.checked = globalThis.fxConfig.hpGrayscale !== false;
     applyFx();
   }
 
@@ -84,6 +88,8 @@
   scanlines?.addEventListener('change', e => { globalThis.fxConfig.scanlines = e.target.checked; applyFx(); });
   shear?.addEventListener('change', e => { globalThis.fxConfig.crtShear = e.target.checked; applyFx(); });
   colorBleed?.addEventListener('change', e => { globalThis.fxConfig.colorBleed = e.target.checked; applyFx(); });
+  adrTint?.addEventListener('change', e => { globalThis.fxConfig.adrenalineTint = e.target.checked; });
+  hpGray?.addEventListener('change', e => { globalThis.fxConfig.hpGrayscale = e.target.checked; });
 
   const dragHandle = panel?.querySelector('header');
   let dragX = 0;

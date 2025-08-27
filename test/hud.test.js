@@ -85,3 +85,33 @@ test('damage flash disabled by default but can be enabled', async () => {
   ctx.updateHUD();
   assert.ok(bar.classList.contains('hurt'));
 });
+
+test('adrenaline adds green filter to world', async () => {
+  const ctx = setup(HUD_HTML);
+  const game = ctx.document.getElementById('game');
+  ctx.updateHUD();
+  assert.equal(game.style.filter, '');
+  ctx.leader = () => ({ maxHp: 10, adr: 50, maxAdr: 100 });
+  ctx.updateHUD();
+  assert.ok(game.style.filter.includes('hue-rotate'));
+});
+
+test('adrenaline tint can be disabled', async () => {
+  const ctx = setup(HUD_HTML);
+  const game = ctx.document.getElementById('game');
+  ctx.leader = () => ({ maxHp: 10, adr: 50, maxAdr: 100 });
+  ctx.fxConfig.adrenalineTint = false;
+  ctx.updateHUD();
+  assert.equal(game.style.filter, '');
+});
+
+test('hp-critical grayscale can be disabled', async () => {
+  const ctx = setup(HUD_HTML);
+  const game = ctx.document.getElementById('game');
+  ctx.player.hp = 2;
+  ctx.updateHUD();
+  assert.ok(game.style.filter.includes('grayscale'));
+  ctx.fxConfig.hpGrayscale = false;
+  ctx.updateHUD();
+  assert.ok(!game.style.filter.includes('grayscale'));
+});

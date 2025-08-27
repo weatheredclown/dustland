@@ -9,6 +9,8 @@
     damageFlash: false, // disable red flash by default; toggle via fx menu
     scanlines: false, // overlay horizontal scanlines
     crtShear: false, // slight screen skew effect
-    colorBleed: false // simple chromatic aberration
+    colorBleed: false, // simple chromatic aberration
+    adrenalineTint: true, // green hue shift when adrenaline builds
+    hpGrayscale: true // grayscale when HP is critical
   };
 })();

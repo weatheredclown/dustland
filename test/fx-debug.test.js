@@ -66,3 +66,27 @@ test('fx checkboxes apply classes and update config', async () => {
   assert.equal(window.fxConfig.colorBleed, false);
   assert.ok(!canvas.classList.contains('color-bleed'));
 });
+
+test('tint and grayscale checkboxes update fxConfig', async () => {
+  const document = makeDocument();
+  const window = { document };
+  window.fxConfig = { adrenalineTint: true, hpGrayscale: true };
+  const sandbox = { window, document, fxConfig: window.fxConfig };
+  sandbox.globalThis = sandbox;
+  sandbox.setTimeout = setTimeout;
+  sandbox.clearTimeout = clearTimeout;
+  document.getElementById('fxPanel').appendChild(document.getElementById('fxAdrenalineTint'));
+  document.getElementById('fxPanel').appendChild(document.getElementById('fxHpGrayscale'));
+  const code = await fs.readFile(new URL('../fx-debug.js', import.meta.url), 'utf8');
+  vm.runInNewContext(code, sandbox);
+  const adr = document.getElementById('fxAdrenalineTint');
+  const gray = document.getElementById('fxHpGrayscale');
+
+  adr.checked = false;
+  adr.dispatchEvent({ type:'change' });
+  assert.equal(window.fxConfig.adrenalineTint, false);
+
+  gray.checked = false;
+  gray.dispatchEvent({ type:'change' });
+  assert.equal(window.fxConfig.hpGrayscale, false);
+});

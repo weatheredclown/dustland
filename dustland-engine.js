@@ -228,6 +228,9 @@ const disp = document.getElementById('game');
 const dctx = disp.getContext('2d');
 const scene = document.createElement('canvas'); scene.width=disp.width; scene.height=disp.height; const sctx=scene.getContext('2d');
 const prev = document.createElement('canvas'); prev.width=disp.width; prev.height=disp.height; const pctx=prev.getContext('2d');
+const baseGameFilter = (typeof window !== 'undefined' && window.getComputedStyle)
+  ? window.getComputedStyle(disp).filter
+  : 'none';
 
 // Font init (prevents invisible glyphs on some canvases)
 sctx.font = '12px system-ui, sans-serif';
@@ -417,7 +420,7 @@ function updateHUD(){
   apEl.textContent = player.ap;
   if(scrEl) scrEl.textContent = player.scrap;
   const lead = typeof leader === 'function' ? leader() : null;
-  const fx = globalThis.fxConfig;
+  const fx = globalThis.fxConfig || {};
   if(hpBar){
     if(player.hp < prevHp && fx?.damageFlash !== false){
       EventBus.emit('sfx','damage');
@@ -451,6 +454,18 @@ function updateHUD(){
     adrBar.setAttribute('aria-valuenow', lead.adr);
     adrBar.setAttribute('aria-valuemax', lead.maxAdr || 1);
     adrBar.setAttribute('aria-valuemin', 0);
+  }
+  if(disp && lead){
+    const ratio = Math.max(0, Math.min(1, lead.adr / (lead.maxAdr || 1)));
+    let filter = '';
+    if(baseGameFilter && baseGameFilter !== 'none') filter += baseGameFilter + ' ';
+    if(document.body.classList.contains('hp-critical') && fx.hpGrayscale !== false) filter += 'grayscale(.8) ';
+    if(ratio > 0 && fx.adrenalineTint !== false){
+      const sat = 1 + ratio * 1.5;
+      const hue = ratio * 40;
+      filter += `saturate(${sat}) hue-rotate(${hue}deg) `;
+    }
+    disp.style.filter = filter.trim();
   }
   if(statusIcons){
     statusIcons.innerHTML='';
