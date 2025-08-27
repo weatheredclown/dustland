@@ -27,8 +27,8 @@ const ECHOES_MODULE = (() => {
   ];
 
   const quests = [
-    { id: 'q_spark', title: 'Spark the Way', desc: 'Find the Spark Key to open the workshop.' },
-    { id: 'q_cog', title: 'Unlock the Archive', desc: 'Find the Cog Key to reach the beacon.' },
+    { id: 'q_spark', title: 'Spark the Way', desc: 'Find the Spark Key to open the workshop.', item: 'spark_key' },
+    { id: 'q_cog', title: 'Unlock the Archive', desc: 'Find the Cog Key to reach the beacon.', item: 'cog_key' },
     { id: 'q_beacon', title: 'Light the Beacon', desc: 'Defeat the Gear Ghoul and claim hope.' }
   ];
 
@@ -67,10 +67,12 @@ const ECHOES_MODULE = (() => {
         start: {
           text: 'The door is sealed.',
           choices: [
+            { label: '(Search for Spark Key)', to: 'accept', q: 'accept' },
             { label: '(Use Spark Key)', to: 'do_turnin', q: 'turnin' },
             { label: '(Leave)', to: 'bye' }
           ]
         },
+        accept: { text: 'Its lock crackles for a Spark Key.', choices: [ { label: '(Leave)', to: 'bye' } ] },
         do_turnin: { text: 'The door slides aside.', choices: [ { label: '(Continue)', to: 'bye', goto: { map: 'workshop', x: 1, y: workshop.entryY } } ] }
       }
     },
@@ -108,10 +110,12 @@ const ECHOES_MODULE = (() => {
         start: {
           text: 'The door is locked tight.',
           choices: [
+            { label: '(Search for Cog Key)', to: 'accept', q: 'accept' },
             { label: '(Use Cog Key)', to: 'do_turnin', q: 'turnin' },
             { label: '(Leave)', to: 'bye' }
           ]
         },
+        accept: { text: 'Its hinges await a Cog Key.', choices: [ { label: '(Leave)', to: 'bye' } ] },
         do_turnin: { text: 'The door creaks open.', choices: [ { label: '(Continue)', to: 'bye', goto: { map: 'archive', x: 1, y: archive.entryY } } ] }
       }
     },
