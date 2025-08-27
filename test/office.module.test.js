@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
+import { JSDOM } from 'jsdom';
 
 test('office module boards castle and unboards via dialog', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -30,7 +31,7 @@ test('office module places Boots of Speed near forest entry', () => {
   const src = fs.readFileSync(file, 'utf8');
   assert.match(src, /id: 'boots_of_speed'/);
   assert.match(src, /x: 3,\s*y: WORLD_MIDY/);
-  assert.match(src, /mods: \{ AGI: 5 \}/);
+  assert.match(src, /mods: \{ AGI: 5, move_delay_mod: 0\.5 \}/);
 });
 
 test('office worker lends scrap when low and missing badge', () => {
@@ -75,6 +76,46 @@ test('office worker hides loan if you have enough scrap', () => {
   const worker = vm.runInThisContext('(' + objSrc + ')');
   const tree = worker.tree();
   assert(!tree.start.choices.some((c) => c.label === 'Borrow 2 scrap'));
+});
+
+test('vending machine buys access card for scrap', () => {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const file = path.join(__dirname, '..', 'modules', 'office.module.js');
+  const src = fs.readFileSync(file, 'utf8');
+  const match = src.match(/\{\s*id: 'access_card'[\s\S]*?\}/);
+  assert(match);
+  const accessCard = vm.runInThisContext('(' + match[0] + ')');
+
+  const dom = new JSDOM(
+    '<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>'
+  );
+  global.window = dom.window;
+  global.document = dom.window.document;
+  global.requestAnimationFrame = () => {};
+  global.log = () => {};
+  global.toast = () => {};
+  global.CURRENCY = 's';
+  global.player = { scrap: 0, inv: [accessCard] };
+  global.removeFromInv = (idx) => { player.inv.splice(idx, 1); };
+  global.updateHUD = () => {};
+  global.addToInv = () => true;
+  global.getItem = () => accessCard;
+
+  function extractOpenShop(code) {
+    const m = code.match(/function openShop\(npc\) {[\s\S]*?shopOverlay\.focus\(\);\n}/);
+    return m && m[0];
+  }
+
+  const eng = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'dustland-engine.js'), 'utf8');
+  const openShopCode = extractOpenShop(eng);
+  vm.runInThisContext(openShopCode);
+
+  openShop({ name: 'Vend-O', vending: true, shop: { inv: [] } });
+  const sellBtn = document.querySelector('#shopSell .slot button');
+  assert(sellBtn);
+  sellBtn.onclick();
+  assert.strictEqual(player.scrap, accessCard.value);
+  assert.strictEqual(player.inv.length, 0);
 });
 
 test('office worker hides loan if you still have your badge', () => {

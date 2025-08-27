@@ -528,7 +528,7 @@ const OFFICE_MODULE = (() => {
     ],
     portals,
     items: [
-        { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] },
+        { id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'], value: 1 },
         {
           id: 'cursed_vr_helmet',
           name: 'VR Helmet',
@@ -553,7 +553,7 @@ const OFFICE_MODULE = (() => {
           name: 'Boots of Speed',
           type: 'trinket',
           slot: 'trinket',
-          mods: { AGI: 5 }
+          mods: { AGI: 5, move_delay_mod: 0.5 }
         },
         {
           map: 'world',
