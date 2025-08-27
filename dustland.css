@@ -19,7 +19,7 @@
         margin: 0;
         background: radial-gradient(circle at top, #141614 0%, var(--bg) 70%);
         color: var(--ink);
-        font: 14px/1.5 system-ui, sans-serif;
+        font: 14px/1.5 'Pixelify Sans', sans-serif;
     }
 
     .wrap {
