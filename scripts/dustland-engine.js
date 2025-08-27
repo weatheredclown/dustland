@@ -926,7 +926,7 @@ disp.addEventListener('touchstart',e=>{
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
 requestAnimationFrame(draw);
-log('v0.7 — Stable boot; items/NPCs visible; E/T to take; selected member rolls.');
+log('v0.7.1 — Stable boot; items/NPCs visible; E/T to take; selected member rolls.');
 if (window.NanoDialog) NanoDialog.init();
 
 { // skip normal boot flow in ACK player mode
