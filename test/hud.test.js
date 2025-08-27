@@ -98,3 +98,16 @@ test('adrenaline tint and grayscale filters update based on config', async () =>
   const filt2 = ctx.document.getElementById('game').style.getPropertyValue('--fxFilter');
   assert.ok(/grayscale/.test(filt2));
 });
+
+test('adrenaline bloom pulses with adr ratio', async () => {
+  const ctx = setup(HUD_HTML);
+  ctx.fxConfig.adrenalineTint = true;
+  ctx.leader = () => ({ maxHp: 10, adr: 50, maxAdr: 100 });
+  ctx.pulseAdrenaline(0);
+  const bloom1 = ctx.document.getElementById('game').style.getPropertyValue('--fxBloom');
+  assert.ok(/brightness/.test(bloom1));
+  ctx.leader = () => ({ maxHp: 10, adr: 0, maxAdr: 100 });
+  ctx.pulseAdrenaline(0);
+  const bloom2 = ctx.document.getElementById('game').style.getPropertyValue('--fxBloom');
+  assert.equal(bloom2, '');
+});
