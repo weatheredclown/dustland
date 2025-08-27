@@ -2,6 +2,7 @@ import assert from 'node:assert';
 import { test } from 'node:test';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
+import './fast-timeouts.js';
 
 function stubEl(){
   const el = {

@@ -7,8 +7,6 @@
   "scripts": {
     "serve": "http-server -p 8080",
     "test": "node --test",
-    "test:balance": "node --test test/balance-tester.test.js",
-    "test:puppeteer": "node --test test/puppeteer-runner.test.js",
     "lint": "eslint ."
   },
   "author": "",

@@ -23,10 +23,12 @@ global.NPCS = [
 
 global.party = { x:5, y:5 };
 
+import './fast-timeouts.js';
+
 test('NPC follows waypoints with capped speed and waits when close', async () => {
   await import('../dustland-path.js');
   window.Dustland.path.tickPathAI();
-  await new Promise(r => setTimeout(r,20));
+  await Promise.resolve();
   window.Dustland.path.tickPathAI();
   assert.strictEqual(NPCS[0].x, 1);
   party.x = 1; party.y = 0;
@@ -34,8 +36,8 @@ test('NPC follows waypoints with capped speed and waits when close', async () =>
   assert.strictEqual(NPCS[0].x, 1);
   party.x = 5; party.y = 5;
   window.Dustland.path.tickPathAI();
-  assert.strictEqual(NPCS[0].x, 1);
-  await new Promise(r => setTimeout(r,210));
+  await Promise.resolve();
+  NPCS[0]._lastMove = Date.now() - 211;
   window.Dustland.path.tickPathAI();
   assert.strictEqual(NPCS[0].x, 2);
 });
