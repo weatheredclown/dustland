@@ -1455,6 +1455,20 @@ test('equipment modifiers apply at battle start', async () => {
   await resultPromise;
 });
 
+test('combat log records player and enemy actions', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  party.addMember(m1);
+  const resultPromise = openCombat([{ name: 'E1', hp: 2 }]);
+  handleCombatKey({ key: 'Enter' });
+  handleCombatKey({ key: 'Enter' });
+  await resultPromise;
+  const logEntries = getCombatLog();
+  assert.ok(logEntries.some(e => e.type === 'player' && e.action === 'attack'));
+  assert.ok(logEntries.some(e => e.type === 'enemy' && e.action === 'attack'));
+});
+
 test('shop npc opens dialog before trading', () => {
   NPCS.length = 0;
   party.x = 0; party.y = 0;
