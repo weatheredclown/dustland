@@ -68,7 +68,7 @@ Here’s the roadmap. We’ll build the core systems first, get the player-facin
 
 #### **Phase 3: Content Implementation (The World)**
  - [x] **Trainer NPCs:** Create at least three specialized trainer NPCs (e.g., Power, Endurance, Tricks) and place them in the world. Each trainer's `tree` object should include the **Upgrade Skills** dialog option and their unique list of available upgrades.
-- [x] **Enemy Presets:** Create a `presets.json` file to define enemy stat allocations per level. For example, a "Scrapper" preset might allocate points into `STR` and `AGI`, while a "Bulwark" preset focuses on `DEF`.
+  - [x] **Enemy Presets:** Define enemy stat allocations per level in `scripts/core/presets.js`. For example, a "Scrapper" preset might allocate points into `STR` and `AGI`, while a "Bulwark" preset focuses on `DEF`.
 - [x] **Zone Population:** Populate the "Scrap Wastes" (Levels 1-5) with 5-7 on-level enemies and one or two higher-level "challenge" enemies off the main path. Ensure the zone layout naturally funnels players back toward a trainer NPC.
 - [x] **Boss Mechanics:** Implement the first boss with a telegraphed special move. This involves creating a visual cue (e.g., a "charging up" animation or effect) and a corresponding high-damage attack that triggers after a short delay.
 - [x] **Boss Visuals:** Add configurable CRT distortion and shake when a boss telegraphs a special move.
