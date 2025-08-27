@@ -13,11 +13,37 @@
   const colorBleed = document.getElementById('fxColorBleed');
   const canvas = document.getElementById('game');
 
+  let shearTimer;
+
+  function stopShear(){
+    clearTimeout(shearTimer);
+    shearTimer = null;
+    canvas?.classList.remove('shear');
+  }
+
+  function startShear(){
+    if(shearTimer || !canvas) return;
+    function warp(){
+      canvas.classList.add('shear');
+      setTimeout(() => {
+        canvas.classList.remove('shear');
+        const delay = 2000 + Math.random() * 3000;
+        shearTimer = setTimeout(warp, delay);
+        shearTimer.unref?.();
+      }, 100).unref?.();
+    }
+    warp();
+  }
+
   function applyFx(){
     if(!canvas || !globalThis.fxConfig) return;
     canvas.classList.toggle('scanlines', !!globalThis.fxConfig.scanlines);
-    canvas.classList.toggle('shear', !!globalThis.fxConfig.crtShear);
     canvas.classList.toggle('color-bleed', !!globalThis.fxConfig.colorBleed);
+    if(globalThis.fxConfig.crtShear){
+      startShear();
+    }else{
+      stopShear();
+    }
   }
 
   function sync(){

@@ -10,6 +10,8 @@ test('damage flash checkbox updates fxConfig', async () => {
   window.fxConfig = { damageFlash: true };
   const sandbox = { window, document, fxConfig: window.fxConfig };
   sandbox.globalThis = sandbox;
+  sandbox.setTimeout = setTimeout;
+  sandbox.clearTimeout = clearTimeout;
   document.getElementById('fxPanel').appendChild(document.getElementById('fxDamageFlash'));
   document.getElementById('hpBar').classList.add('hurt');
   const code = await fs.readFile(new URL('../fx-debug.js', import.meta.url), 'utf8');
@@ -30,6 +32,8 @@ test('fx checkboxes apply classes and update config', async () => {
   window.fxConfig = { scanlines: false, crtShear: false, colorBleed: false };
   const sandbox = { window, document, fxConfig: window.fxConfig };
   sandbox.globalThis = sandbox;
+  sandbox.setTimeout = setTimeout;
+  sandbox.clearTimeout = clearTimeout;
   document.getElementById('fxPanel').appendChild(document.getElementById('fxScanlines'));
   document.getElementById('fxPanel').appendChild(document.getElementById('fxCrtShear'));
   document.getElementById('fxPanel').appendChild(document.getElementById('fxColorBleed'));
@@ -49,6 +53,8 @@ test('fx checkboxes apply classes and update config', async () => {
   shear.dispatchEvent({ type:'change' });
   assert.equal(window.fxConfig.crtShear, true);
   assert.ok(canvas.classList.contains('shear'));
+  await new Promise(r => setTimeout(r, 150));
+  assert.ok(!canvas.classList.contains('shear'));
 
   bleed.checked = true;
   bleed.dispatchEvent({ type:'change' });
