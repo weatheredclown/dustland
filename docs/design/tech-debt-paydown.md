@@ -71,7 +71,7 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
   - [ ] Create a `GameState` singleton.
   - [ ] Provide accessors for state changes.
 - [ ] **Phase 4: Lint for sanity**
-  - [ ] Add ESLint with a vanilla config.
-  - [ ] Expose `npm run lint`.
-  - [ ] Run lint in CI and before commits.
+  - [x] Add ESLint with a vanilla config.
+  - [x] Expose `npm run lint`.
+  - [x] Run lint in CI and before commits.
   - [ ] re-oganize
