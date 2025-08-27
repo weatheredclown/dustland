@@ -240,13 +240,13 @@ const OFFICE_MODULE = (() => {
           ? 'Back from the forest already?'
           : 'Too busy to chat.';
         const choices = [];
-        if (player.scrap < 2)
+        if (player.scrap < 2 && !hasItem('access_card'))
           choices.push({ label: 'Borrow 2 scrap', to: 'borrow', reward: 'SCRAP 2' });
         choices.push({ label: '(Leave)', to: 'bye' });
         const nodes = { start: { text: baseText, choices } };
-        if (player.scrap < 2) {
+        if (player.scrap < 2 && !hasItem('access_card')) {
           nodes.borrow = {
-            text: 'Here, just bring it back.',
+            text: 'Here, buy back your badge.',
             choices: [ { label: '(Thanks)', to: 'bye' } ]
           };
         }

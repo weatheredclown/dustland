@@ -33,7 +33,7 @@ test('office module places Boots of Speed near forest entry', () => {
   assert.match(src, /mods: \{ AGI: 5 \}/);
 });
 
-test('office worker lends scrap when low', () => {
+test('office worker lends scrap when low and missing badge', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
   const src = fs.readFileSync(file, 'utf8');
@@ -45,6 +45,7 @@ test('office worker lends scrap when low', () => {
   global.player = { scrap: 1 };
   global.updateHUD = () => { hudCalled = true; };
   global.portraits = { worker: '' };
+  global.hasItem = () => false;
   vm.runInThisContext(
     fs.readFileSync(path.join(__dirname, '..', 'core', 'actions.js'), 'utf8')
   );
@@ -68,6 +69,24 @@ test('office worker hides loan if you have enough scrap', () => {
   global.player = { scrap: 5 };
   global.updateHUD = () => {};
   global.portraits = { worker: '' };
+  global.hasItem = () => false;
+  const worker = vm.runInThisContext('(' + objSrc + ')');
+  const tree = worker.tree();
+  assert(!tree.start.choices.some((c) => c.label === 'Borrow 2 scrap'));
+});
+
+test('office worker hides loan if you still have your badge', () => {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const file = path.join(__dirname, '..', 'modules', 'office.module.js');
+  const src = fs.readFileSync(file, 'utf8');
+  const match = src.match(/\{\s*id: 'worker1',[\s\S]*?\n\s*\},\n\s*\{\s*id: 'worker2'/);
+  assert(match);
+  const objSrc = match[0].replace(/,\n\s*\{\s*id: 'worker2'.*/, '');
+  global.flagValue = () => 0;
+  global.player = { scrap: 1 };
+  global.updateHUD = () => {};
+  global.portraits = { worker: '' };
+  global.hasItem = (id) => id === 'access_card';
   const worker = vm.runInThisContext('(' + objSrc + ')');
   const tree = worker.tree();
   assert(!tree.start.choices.some((c) => c.label === 'Borrow 2 scrap'));
