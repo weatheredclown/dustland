@@ -439,6 +439,21 @@ test('level up grants +10 max HP and a skill point', () => {
   assert.strictEqual(c.skillPoints, 1);
 });
 
+test('mentor bark plays sound and shows text', () => {
+  party.flags.mentor = true;
+  const msgs = [];
+  const prevToast = global.toast;
+  global.toast = (m) => msgs.push(m);
+  const sounds = [];
+  EventBus.on('sfx', (id) => sounds.push(id));
+  const c = new Character('m','M','Role');
+  const need = xpToNext(c.lvl);
+  c.awardXP(need);
+  assert.ok(msgs.includes('Another scar, another lesson learned.'));
+  assert.ok(sounds.includes('mentor'));
+  global.toast = prevToast;
+});
+
 test('respec consumes memory worm and restores skill points', () => {
   party.length = 0;
   player.inv.length = 0;
