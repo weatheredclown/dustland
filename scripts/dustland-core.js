@@ -143,6 +143,16 @@ async function startCombat(defender){
 
   const result = await openCombat(enemies);
 
+  if(result && result.result !== 'flee'){
+    const avgLvl = party.reduce((s,m)=>s+(m.lvl||1),0)/(party.length||1);
+    let xp = 0;
+    for(const e of enemies){
+      const str = e.challenge || e.hp || 1;
+      xp += Math.max(1, Math.ceil(str/avgLvl));
+    }
+    party.forEach(m => awardXP(m, xp));
+  }
+
   if(attacker){
     attacker.ap = Math.max(0,(attacker.ap||0)-1);
     player.ap = attacker.ap;

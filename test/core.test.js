@@ -1446,9 +1446,11 @@ test('distance to road increases encounter chance', () => {
   let started = false;
   const origRand = Math.random;
   Math.random = () => 0;
+  const origStart = globalThis.Dustland.actions.startCombat;
   globalThis.Dustland.actions.startCombat = () => { started = true; return Promise.resolve({ result: 'flee' }); };
   checkRandomEncounter();
   Math.random = origRand;
+  globalThis.Dustland.actions.startCombat = origStart;
   assert.ok(started);
 });
 
@@ -1461,9 +1463,11 @@ test('no encounters occur on roads', () => {
   let started = false;
   const origRand = Math.random;
   Math.random = () => 0;
+  const origStart = globalThis.Dustland.actions.startCombat;
   globalThis.Dustland.actions.startCombat = () => { started = true; return Promise.resolve({ result: 'flee' }); };
   checkRandomEncounter();
   Math.random = origRand;
+  globalThis.Dustland.actions.startCombat = origStart;
   assert.ok(!started);
 });
 
@@ -1477,12 +1481,11 @@ test('random encounters award XP based on strength', async () => {
   setPartyPos(1, 0);
   const origRand = Math.random;
   Math.random = () => 0;
-  const orig = globalThis.Dustland.actions.startCombat;
-  globalThis.Dustland.actions.startCombat = () => Promise.resolve({ result: 'loot' });
-  checkRandomEncounter();
-  await Promise.resolve();
+  const origOpen = global.openCombat;
+  global.openCombat = async () => ({ result: 'loot' });
+  await checkRandomEncounter();
   Math.random = origRand;
-  globalThis.Dustland.actions.startCombat = orig;
+  global.openCombat = origOpen;
   assert.strictEqual(party[0].xp, 4);
   assert.strictEqual(party[1].xp, 4);
   party.length = 0;
