@@ -85,7 +85,7 @@ This wizard helps create a building with multiple interior rooms, like a house w
 - [ ] **Configuration:** Create the `NpcWizard` configuration object.
 - [ ] **Custom Steps:** Develop the specific step components needed for this wizard:
     - `DialogueEditorStep`: A text area for writing dialogue.
-    - `ItemPickerStep`: A component to select an item from `presets.json`.
+      - `ItemPickerStep`: A component to select an item from the presets defined in `presets.js`.
 - [ ] **Logic:** Write the final "commit" function for the wizard that takes the completed data and generates the new NPC and quest data objects, saving them to the appropriate module file.
 
 #### **Phase 3: Building & Interiors Wizard**
