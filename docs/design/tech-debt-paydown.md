@@ -52,11 +52,12 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
 
 - [ ] **Phase 1: Namespace the world**
   - [x] Introduce `globalThis.Dustland = {}`.
-  - [ ] Move module exports into `Dustland.*` buckets.
+  - [x] Move module exports into `Dustland.*` buckets.
     - [x] Namespace event bus under `Dustland.eventBus`.
     - [x] Namespace event flag helpers under `Dustland.eventFlags`.
     - [x] Namespace path helpers under `Dustland.path`.
     - [x] Namespace movement helpers under `Dustland.movement`.
+    - [x] Namespace inventory helpers under `Dustland.inventory`.
   - [x] Namespace effects under `Dustland.effects`.
     - [x] Namespace actions under `Dustland.actions`.
   - [ ] Update references and tests incrementally.
