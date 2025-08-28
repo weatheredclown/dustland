@@ -10,6 +10,9 @@ async function setupContext() {
   context.TILE = { ROAD: 0 };
   context.walkable = { 0: true };
   context.world = [ [0,0], [0,0] ];
+  context.WORLD_W = 2;
+  context.WORLD_H = 2;
+  context.enemyBanks = { world: [] };
   context.itemDrops = [];
   context.NPCS = [];
   context.interiors = {};
