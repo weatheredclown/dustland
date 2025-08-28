@@ -2,6 +2,32 @@ function seedWorldContent() {}
 
 const DUSTLAND_MODULE = (() => {
   const midY = Math.floor(WORLD_H / 2);
+  function pullSlots(cost, payouts) {
+    if (player.scrap < cost) {
+      log('Not enough scrap.');
+      return;
+    }
+    player.scrap -= cost;
+    const reward = payouts[Math.floor(rng() * payouts.length)];
+    if (reward > 0) {
+      player.scrap += reward;
+      log(`The machine rattles and spits out ${reward} scrap.`);
+    } else {
+      log('The machine coughs and eats your scrap.');
+    }
+    updateHUD?.();
+  }
+  const slotInterior = (() => {
+    const w = 7, h = 7;
+    const grid = Array.from({ length: h }, (_, y) =>
+      Array.from({ length: w }, (_, x) => {
+        const edge = y === 0 || y === h - 1 || x === 0 || x === w - 1;
+        return edge ? TILE.WALL : TILE.FLOOR;
+      })
+    );
+    grid[h - 1][Math.floor(w / 2)] = TILE.DOOR;
+    return { id: 'slot_shack', w, h, grid, entryX: Math.floor(w / 2), entryY: h - 2 };
+  })();
   const makeHall = () => {
     const HALL_W = 30, HALL_H = 22;
     const grid = Array.from({ length: HALL_H }, (_, y) =>
@@ -692,6 +718,28 @@ const DUSTLAND_MODULE = (() => {
       }
     },
     {
+      id: 'slots',
+      map: 'slot_shack',
+      x: 3,
+      y: 2,
+      color: '#d4af37',
+      name: 'One-Armed Bandit',
+      title: 'Slot Machine',
+      desc: 'It wheezes, eager for scrap.',
+      portraitSheet: 'assets/portraits/crate_4.png',
+      tree: {
+        start: {
+          text: 'Lights sputter behind cracked glass.',
+          choices: [
+            { label: '(1 scrap)', to: 'start', effects: [() => pullSlots(1, [0, 1, 2])] },
+            { label: '(5 scrap)', to: 'start', effects: [() => pullSlots(5, [0, 3, 5, 6, 10])] },
+            { label: '(25 scrap)', to: 'start', effects: [() => pullSlots(25, [0, 10, 25, 35, 50])] },
+            { label: '(Leave)', to: 'bye' }
+          ]
+        }
+      }
+    },
+    {
       id: 'scrap_behemoth',
       map: 'world',
       x: 120,
@@ -716,8 +764,8 @@ const DUSTLAND_MODULE = (() => {
     events,
     zones,
     encounters,
-    interiors: [hall],
-    buildings: []
+    interiors: [hall, slotInterior],
+    buildings: [{ x: 40, y: midY - 2, w: 3, h: 3, interiorId: 'slot_shack', boarded: false }]
   };
 })();
 
