@@ -138,6 +138,24 @@ function handleGoto(g){
   updateHUD?.();
 }
 
+function calcCombatXP(npc){
+  const enemies=[npc.combat||{}];
+  const px=party.x, py=party.y, map=party.map||state.map;
+  for(const n of NPCS){
+    if(n===npc || !n.combat) continue;
+    if(n.map!==map) continue;
+    const dist=Math.abs(n.x-px)+Math.abs(n.y-py);
+    if(dist<=2) enemies.push(n.combat);
+  }
+  const avgLvl=Math.max(1, party.reduce((s,m)=>s+(m.lvl||1),0)/(party.length||1));
+  let xp=0;
+  for(const e of enemies){
+    const str=e.challenge||e.hp||e.HP||1;
+    xp+=Math.max(1, Math.ceil(str/avgLvl));
+  }
+  return xp;
+}
+
 function getNextId(prefix, arr) {
   let i = 1; while (arr.some(o => o.id === prefix + i)) i++; return prefix + i;
 }
@@ -416,6 +434,10 @@ function renderDialog(){
     const div=document.createElement('div');
     div.className='choice';
     div.textContent=opt.label||'(Continue)';
+    if(opt.to==='do_fight' && currentNPC?.combat){
+      const xp=calcCombatXP(currentNPC);
+      div.textContent=`${opt.label} (${xp} XP)`;
+    }
     div.onclick=()=>{
       const key=`${currentNPC.id}::${dialogState.node}::${opt.label}`;
       const result=advanceDialog(dialogState,idx);
