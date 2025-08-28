@@ -950,7 +950,7 @@ disp.addEventListener('touchstart',e=>{
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
 requestAnimationFrame(draw);
-log('v0.7.9 — add adrenaline bloom pulse.');
+log('v0.7.11 — document codex todo runner usage.');
 if (window.NanoDialog) NanoDialog.init();
 
 { // skip normal boot flow in ACK player mode
