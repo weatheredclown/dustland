@@ -171,6 +171,12 @@ function closeCombat(result = 'flee'){
   combatState.fallen.forEach(m => { m.hp = Math.max(1, m.hp || 0); party.push(m); });
   combatState.fallen.length = 0;
 
+  if(result === 'bruise' && state.mapEntry){
+    log?.('You wake up at the entrance.');
+    if(typeof toast==='function') toast('You wake up at the entrance.');
+    setPartyPos?.(state.mapEntry.x, state.mapEntry.y);
+  }
+
   recordCombatEvent({ type: 'system', action: 'end', result });
   globalThis.EventBus?.emit?.('combat:ended', { result });
   combatState.onComplete?.({ result });

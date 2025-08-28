@@ -200,6 +200,7 @@ function mapLabel(id){
 function setMap(id,label){
   state.map=id;
   party.map = id;
+  state.mapEntry = null;
   mapNameEl.textContent = label || mapLabel(id);
   if(typeof centerCamera==='function') centerCamera(party.x,party.y,state.map);
   if(id==='world') setGameState(GAME_STATE.WORLD);
@@ -225,8 +226,10 @@ globalThis.getViewSize = getViewSize;
 // ===== Game state =====
 let world = [], interiors = {}, buildings = [], portals = [], npcTemplates = [];
 const tileEvents = [];
+const zoneEffects = [];
 const enemyBanks = {};
 function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
+function registerZoneEffects(list){ (list||[]).forEach(z => zoneEffects.push(z)); }
 const state = { map:'world', mapFlags: {} }; // default map
 const player = { hp:10, ap:2, inv:[], scrap:0 };
 if (typeof registerItem === 'function') {
@@ -240,6 +243,9 @@ if (typeof registerItem === 'function') {
 function setPartyPos(x, y){
   if(typeof x === 'number') party.x = x;
   if(typeof y === 'number') party.y = y;
+  if(!state.mapEntry || state.mapEntry.map !== state.map){
+    state.mapEntry = { map: state.map, x: party.x, y: party.y };
+  }
   incFlag(`visits@${state.map}@${party.x},${party.y}`);
 }
 const worldFlags = {};
@@ -385,6 +391,7 @@ function applyModule(data = {}, options = {}) {
   // Portals, events, and encounters
   if (moduleData.portals) portals.push(...moduleData.portals);
   if (moduleData.events) registerTileEvents(moduleData.events);
+  if (moduleData.zones) registerZoneEffects(moduleData.zones);
   if (moduleData.templates) npcTemplates.push(...moduleData.templates);
   if (moduleData.encounters) {
     Object.entries(moduleData.encounters).forEach(([map, list]) => {
@@ -850,8 +857,10 @@ const coreExports = {
   buildings,
   portals,
   tileEvents,
+  zoneEffects,
   enemyBanks,
   registerTileEvents,
+  registerZoneEffects,
   state,
   player,
   GAME_STATE,

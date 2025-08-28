@@ -37,6 +37,11 @@ const DUSTLAND_MODULE = (() => {
     { map: 'hall', x: hall.entryX - 1, y: hall.entryY, events:[{ when:'enter', effect:'toast', msg:'You smell rot.' }] }
   ];
 
+  // Zones apply effects per step; top rows harbor a damaging nanite swarm
+  const zones = [
+    { map: 'world', x: 0, y: 0, w: typeof WORLD_W === 'number' ? WORLD_W : 120, h: 5, perStep: { hp: -1, msg: 'Nanite swarm!' }, negate: 'mask' }
+  ];
+
   const span = Math.max(typeof WORLD_W === 'number' ? WORLD_W : 0, typeof WORLD_H === 'number' ? WORLD_H : 0);
   const encounters = {
     world: [
@@ -51,6 +56,7 @@ const DUSTLAND_MODULE = (() => {
   const items = [
     { id: 'rusted_key', name: 'Rusted Key', type: 'quest', tags: ['key'] },
     { id: 'toolkit', name: 'Toolkit', type: 'quest', tags: ['tool'] },
+    { map: 'world', x: 5, y: midY - 5, id: 'mask', name: 'Mask', type: 'trinket', slot: 'trinket', desc: 'Filters nanite swarms.' },
     { map: 'world', x: 8, y: midY, id: 'pipe_rifle', name: 'Pipe Rifle', type: 'weapon', slot: 'weapon', mods: { ATK: 2, ADR: 15 } },
     { map: 'world', x: 10, y: midY, id: 'leather_jacket', name: 'Leather Jacket', type: 'armor', slot: 'armor', mods: { DEF: 1 } },
     { map: 'world', x: 12, y: midY, id: 'lucky_bottlecap', name: 'Lucky Bottlecap', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } },
@@ -710,6 +716,7 @@ const DUSTLAND_MODULE = (() => {
     quests,
     npcs,
     events,
+    zones,
     encounters,
     interiors: [hall],
     buildings: []
