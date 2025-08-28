@@ -17,6 +17,7 @@ async function setupContext() {
   context.zoneEffects = [ { map:'world', x:0, y:0, w:2, h:2, perStep:{ hp:-1, msg:'Nanite swarm!' }, negate:'mask' } ];
   context.Dustland.zoneEffects = context.zoneEffects;
   context.clamp = (v,min,max)=> Math.max(min, Math.min(max,v));
+  context.enemyBanks = {};
   context.setPartyPos = (x,y)=>{ context.party.x=x; context.party.y=y; };
   context.footstepBump = () => {};
   context.checkAggro = () => {};
@@ -26,7 +27,7 @@ async function setupContext() {
   context.centerCamera = () => {};
   context.log = () => {};
   context.toast = () => {};
-  context.hasItem = id => context.player.inv.some(i=>i.id===id);
+  context.hasItem = id => context.player.inv.some(i => i.id === id || (i.tags||[]).includes(id));
   context.state.map = 'world';
   context.state.mapEntry = { map:'world', x:0, y:0 };
   context.player.inv = [];
@@ -58,7 +59,7 @@ test('zone drains HP and warps on wipe', async () => {
 
 test('mask negates zone damage', async () => {
   const ctx = await setupContext();
-  ctx.player.inv.push({ id:'mask' });
+  ctx.player.inv.push({ id:'scrap_mask', tags:['mask'] });
   ctx.party[0].hp = 5; ctx.party[0].maxHp = 5;
   await ctx.move(1,0);
   assert.strictEqual(ctx.party[0].hp, 5);

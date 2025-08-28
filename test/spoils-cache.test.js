@@ -17,6 +17,17 @@ test('spoils cache ranks are defined', () => {
   assert.deepStrictEqual(ranks, ['rusted','sealed','armored','vaulted']);
 });
 
+test('generated mask items carry mask tag', () => {
+  const origPick = ItemGen.pick;
+  ItemGen.pick = (list, rng) => {
+    if (list.includes('Mask')) return 'Mask';
+    return origPick(list, rng);
+  };
+  const it = ItemGen.generate('rusted', () => 0.5);
+  ItemGen.pick = origPick;
+  assert.ok(it.tags.includes('mask'));
+});
+
 test('create returns cache item', () => {
   const cache = SpoilsCache.create('rusted');
   assert.strictEqual(cache.type, 'spoils-cache');
@@ -74,6 +85,7 @@ test('open generates loot and removes one cache', () => {
   global.player = { inv: [SpoilsCache.create('sealed')] };
   global.notifyInventoryChanged = () => {};
   global.addToInv = it => { player.inv.push(it); return true; };
+  const origGen = ItemGen.generate;
   ItemGen.generate = () => loot;
   const events = [];
   global.EventBus = { emit:(e,d)=>events.push({e,d}) };
@@ -84,6 +96,20 @@ test('open generates loot and removes one cache', () => {
   assert.strictEqual(events[0].d.item, loot);
   delete global.player;
   delete global.EventBus;
+  ItemGen.generate = origGen;
+});
+
+test('mask loot from cache includes mask tag', () => {
+  global.player = { inv: [SpoilsCache.create('sealed')] };
+  global.notifyInventoryChanged = () => {};
+  global.addToInv = it => { player.inv.push(it); return true; };
+  const origPick = ItemGen.pick;
+  ItemGen.pick = (list, rng) => list.includes('Mask') ? 'Mask' : origPick(list, rng);
+  const item = SpoilsCache.open('sealed');
+  ItemGen.pick = origPick;
+  assert.ok(item.tags.includes('mask'));
+  assert.ok(player.inv.some(i => i.tags.includes('mask')));
+  delete global.player;
 });
 
 test('openAll opens caches and adds loot', () => {
@@ -93,6 +119,7 @@ test('openAll opens caches and adds loot', () => {
   global.log = m => logs.push(m);
   const drops = [{id:'a',name:'A',type:'misc'},{id:'b',name:'B',type:'misc'}];
   let i = 0;
+  const origGen = ItemGen.generate;
   ItemGen.generate = () => drops[i++];
   global.addToInv = it => { player.inv.push(it); return true; };
   const opened = SpoilsCache.openAll('sealed');
@@ -101,6 +128,7 @@ test('openAll opens caches and adds loot', () => {
   assert.ok(logs.some(m => m.includes('Opened 2')));
   delete global.player;
   delete global.log;
+  ItemGen.generate = origGen;
 });
 
 test('registering cache preserves rank for inventory', () => {
