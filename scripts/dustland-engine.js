@@ -705,7 +705,9 @@ party.forEach((m,i)=>{
 `<div class='row'><div class='xpbar' data-xp='${m.xp}/${nextXP}'><div class='fill' style='width:${pct}%'></div></div></div>`+
 `<div class='row small'>WPN: ${wLabel}${wEq?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${aEq?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${tEq?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div>`;
   const portrait=c.querySelector('.portrait');
-  if(m.portraitSheet){
+  if (typeof setPortraitDiv === 'function') {
+    setPortraitDiv(portrait, m);
+  } else if (m.portraitSheet) {
     portrait.style.backgroundImage=`url(${m.portraitSheet})`;
     if(/_4\.[a-z]+$/i.test(m.portraitSheet)){
       portrait.style.backgroundSize='200% 200%';
