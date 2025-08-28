@@ -105,7 +105,7 @@ The prototype doesn't spend Adrenaline yet; it's a pacing probe. Once the gain c
 #### Phase 2: Content & UI
 - [x] **New HUD:** Redesign the combat UI to include the Adrenaline bar, status effect icons, and improved health bar feedback.
 - [x] **Player Health Panel:** Update the right-side player health panel to show damage being taken in real-time, with visual effects for critical health and passing out.
-- [ ] **Implement 5-10 Specials:** Create a starter set of special moves (e.g., "Power Strike," "Stun Grenade," "First Aid").
+- [x] **Implement 5-10 Specials:** Added starter moves Power Strike, Stun Grenade, First Aid, Adrenal Surge, and Guard.
  - [x] **Implement Equipment:** Create a set of weapons and armor with varied combat modifiers.
 - [x] **Enemy Design:** Added four enemy types that require tactical use of specials (e.g., Shield Drone resists basic attacks, Reflective Slime counters them).
 - [ ] **HUD Playtest:** Run quick usability tests on the new HUD and iterate on spacing and icon clarity.

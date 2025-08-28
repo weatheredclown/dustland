@@ -65,7 +65,7 @@ Opening a cache triggers a generator that stitches gear on the fly:
 - [x] Add affix or mini-quest hooks for Vaulted caches.
 
 #### Phase 4: Testing
-- [ ] Write tests to verify drop odds and tier distribution across challenge levels.
+- [x] Write tests to verify drop odds and tier distribution across challenge levels.
 - [ ] Simulate 1,000 cache openings per tier to ensure stat ranges stay sane.
 - [x] Run `node scripts/presubmit.js` to confirm no async snafus in cache UI — clean run.
 

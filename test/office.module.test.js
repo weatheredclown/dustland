@@ -102,7 +102,7 @@ test('vending machine buys access card for scrap', () => {
   global.getItem = () => accessCard;
 
   function extractOpenShop(code) {
-    const m = code.match(/function openShop\(npc\) {[\s\S]*?shopOverlay\.focus\(\);\n}/);
+    const m = code.match(/function openShop\(npc\) {[\s\S]*?shopOverlay\.focus\(\);\r?\n}/);
     return m && m[0];
   }
 

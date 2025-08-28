@@ -125,3 +125,85 @@ test('openAll handles missing ItemGen gracefully', () => {
   assert.strictEqual(opened, 0);
   delete global.player;
 });
+
+// --- Distribution & odds tests ---
+function makeRNG(seed = 2463534242) {
+  let x = seed >>> 0;
+  return function rng() {
+    // xorshift32
+    x ^= x << 13; x >>>= 0;
+    x ^= x >>> 17; x >>>= 0;
+    x ^= x << 5;  x >>>= 0;
+    return x / 0x100000000;
+  };
+}
+
+test('drop odds scale with challenge (empirical)', () => {
+  const origRate = SpoilsCache.baseRate;
+  const origPick = SpoilsCache.pickRank;
+  SpoilsCache.baseRate = 0.02; // keep under 1.0 across tested challenges
+  const trials = 10000;
+
+  const hitRate = (challenge, seed) => {
+    const rng = makeRNG(seed);
+    // Ensure rollDrop consumes exactly one RNG per trial by fixing pickRank
+    SpoilsCache.pickRank = () => 'sealed';
+    let hits = 0;
+    for (let i = 0; i < trials; i++) {
+      const res = SpoilsCache.rollDrop(challenge, rng);
+      if (res) hits++;
+    }
+    return hits / trials;
+  };
+
+  const rLow = hitRate(2, 42);   // expected ~ 0.04
+  const rHigh = hitRate(10, 1337); // expected ~ 0.20
+
+  assert.ok(rLow > 0.02 && rLow < 0.06, `low challenge rate out of bounds: ${rLow}`);
+  assert.ok(rHigh > 0.15 && rHigh < 0.25, `high challenge rate out of bounds: ${rHigh}`);
+
+  SpoilsCache.baseRate = origRate;
+  SpoilsCache.pickRank = origPick;
+});
+
+test('tier distribution roughly matches weights by challenge', () => {
+  const trials = 20000;
+  const approx = (val, exp, tol = 0.015) => {
+    const diff = Math.abs(val - exp);
+    assert.ok(diff <= tol, `expected ~${exp}, got ${val} (diff ${diff})`);
+  };
+
+  // Challenge 7 expects: vaulted 0.03, armored 0.87, sealed 0.10
+  {
+    const rng = makeRNG(7);
+    const counts = { vaulted: 0, armored: 0, sealed: 0, rusted: 0 };
+    for (let i = 0; i < trials; i++) {
+      const r = SpoilsCache.pickRank(7, rng);
+      counts[r]++;
+    }
+    const p = {
+      vaulted: counts.vaulted / trials,
+      armored: counts.armored / trials,
+      sealed: counts.sealed / trials
+    };
+    approx(p.vaulted, 0.03);
+    approx(p.armored, 0.87);
+    approx(p.sealed, 0.10);
+  }
+
+  // Challenge 9 expects: vaulted 0.2, armored 0.8
+  {
+    const rng = makeRNG(9);
+    const counts = { vaulted: 0, armored: 0 };
+    for (let i = 0; i < trials; i++) {
+      const r = SpoilsCache.pickRank(9, rng);
+      counts[r]++;
+    }
+    const p = {
+      vaulted: counts.vaulted / trials,
+      armored: counts.armored / trials
+    };
+    approx(p.vaulted, 0.2, 0.02);
+    approx(p.armored, 0.8, 0.02);
+  }
+});

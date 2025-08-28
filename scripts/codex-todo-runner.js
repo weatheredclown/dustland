@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Run with `node scripts/codex-todo-runner.js` from the repo root.
 
-import {execSync} from 'node:child_process';
+import {execSync, execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -22,7 +22,7 @@ function findDesignDocs() {
   return fs.readdirSync(dir).map(f => path.join(dir, f)).filter(f => fs.statSync(f).isFile());
 }
 
-function extractTodos(content) {
+export function extractTodos(content) {
   const todoRegex = /^\s*- \[ \] (.*)$/gm;
   const items = [];
   let match;
@@ -32,11 +32,11 @@ function extractTodos(content) {
   return items;
 }
 
-function markDone(content, index) {
+export function markDone(content, index) {
   return content.slice(0, index + 3) + 'x' + content.slice(index + 4);
 }
 
-function run() {
+export function run() {
   installCodex();
   const files = findDesignDocs();
   for (const file of files) {
@@ -46,7 +46,7 @@ function run() {
       const todo = todos[0];
       console.log('Working on', todo.text);
       try {
-        execSync(`codex commit "${todo.text}"`, {stdio: 'inherit'});
+        execFileSync('codex', ['commit', todo.text], {stdio: 'inherit'});
         text = markDone(text, todo.index);
         fs.writeFileSync(file, text);
         execSync(`git add ${file}`);
@@ -60,4 +60,4 @@ function run() {
   }
 }
 
-run();
+if (process.argv[1] === fileURLToPath(import.meta.url)) run();
