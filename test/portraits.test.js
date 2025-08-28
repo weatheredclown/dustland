@@ -64,3 +64,26 @@ test('creator picks random default portrait', () => {
   const sheet = vm.runInContext('building.portraitSheet', context);
   assert.strictEqual(sheet, 'assets/portraits/portrait_1045.png');
 });
+
+test('named NPC keeps consistent 2x2 frame', () => {
+  const {context,dom} = setup();
+  context.worldSeed = 123;
+  const npc = { id:'grin', portraitSheet:'assets/portraits/grin_4.png' };
+  const el1 = dom.window.document.createElement('div');
+  const el2 = dom.window.document.createElement('div');
+  context.setPortraitDiv(el1, npc);
+  context.setPortraitDiv(el2, npc);
+  assert.strictEqual(el1.style.backgroundPosition, el2.style.backgroundPosition);
+});
+
+test('generic portrait picks random frame each call', () => {
+  const {context,dom} = setup();
+  const npc = { id:'raider', portraitSheet:'assets/portraits/raider_4.png', portraitLock:false };
+  context.Math.random = () => 0;
+  const el1 = dom.window.document.createElement('div');
+  context.setPortraitDiv(el1, npc);
+  context.Math.random = () => 0.75;
+  const el2 = dom.window.document.createElement('div');
+  context.setPortraitDiv(el2, npc);
+  assert.notStrictEqual(el1.style.backgroundPosition, el2.style.backgroundPosition);
+});

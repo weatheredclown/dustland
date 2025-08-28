@@ -43,7 +43,17 @@ function setPortraitDiv(el, obj){
   if (obj && obj.portraitSheet){
     el.style.background = 'transparent';
     if (/_4\.[a-z]+$/i.test(obj.portraitSheet)){
-      const frame = Math.floor(Math.random() * 4);
+      const generic = /portrait_\d+\.[a-z]+$/i.test(obj.portraitSheet);
+      const locked = obj.portraitLock !== false && !generic && obj.id;
+      let frame;
+      if (locked){
+        let h = 0;
+        const s = String(worldSeed) + obj.id;
+        for(let i=0;i<s.length;i++){ h = (h * 31 + s.charCodeAt(i)) | 0; }
+        frame = Math.abs(h) % 4;
+      }else{
+        frame = Math.floor(Math.random() * 4);
+      }
       const col = frame % 2;
       const row = Math.floor(frame / 2);
       const posX = col === 0 ? '0%' : '100%';

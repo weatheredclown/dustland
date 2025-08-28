@@ -557,7 +557,9 @@ function save(){
     combat:n.combat,
     shop:n.shop,
     quest:n.quest?{id:n.quest.id,status:n.quest.status}:null,
-    loop:n.loop
+    loop:n.loop,
+    portraitSheet:n.portraitSheet,
+    portraitLock:n.portraitLock
   }));
   const questData = {};
   Object.keys(quests).forEach(k=>{
@@ -565,7 +567,7 @@ function save(){
     questData[k]={title:q.title,desc:q.desc,status:q.status};
   });
   const partyData = Array.from(party, p => ({
-    id:p.id,name:p.name,role:p.role,lvl:p.lvl,xp:p.xp,skillPoints:p.skillPoints,stats:p.stats,equip:p.equip,hp:p.hp,ap:p.ap,map:p.map,x:p.x,y:p.y,maxHp:p.maxHp
+    id:p.id,name:p.name,role:p.role,lvl:p.lvl,xp:p.xp,skillPoints:p.skillPoints,stats:p.stats,equip:p.equip,hp:p.hp,ap:p.ap,map:p.map,x:p.x,y:p.y,maxHp:p.maxHp,portraitSheet:p.portraitSheet
   }));
   const data={worldSeed, world, player, state, buildings, interiors, itemDrops, npcs:npcData, quests:questData, party:partyData};
   localStorage.setItem('dustland_crt', JSON.stringify(data));

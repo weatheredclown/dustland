@@ -145,6 +145,7 @@ const DUSTLAND_MODULE = (() => {
       title: '',
       desc: 'A dusty crate that might hide something useful.',
       portraitSheet: 'assets/portraits/crate_4.png',
+      portraitLock: false,
       tree: {
         start: {
           text: 'A dusty crate rests here.',
@@ -421,6 +422,7 @@ const DUSTLAND_MODULE = (() => {
       title: 'Bandit',
       desc: 'Scarred scav looking for trouble.',
       portraitSheet: 'assets/portraits/raider_4.png',
+      portraitLock: false,
       tree: {
         start: {
           text: 'A raider blocks the path, eyeing your gear.',
@@ -560,6 +562,7 @@ const DUSTLAND_MODULE = (() => {
       title: 'Wasteland Hunter',
       desc: 'A ruthless drifter prowling for prey.',
       portraitSheet: 'assets/portraits/portrait_1079.png',
+      portraitLock: false,
       tree: { start: { text: 'The stalker circles the wastes.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       loop: [
         { x: 90, y: midY + 2 },
@@ -680,6 +683,7 @@ const DUSTLAND_MODULE = (() => {
       title: 'Wastes Boss',
       desc: 'A towering mass of twisted metal.',
       portraitSheet: 'assets/portraits/portrait_1084.png',
+      portraitLock: false,
       tree: { start: { text: 'The behemoth looms.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       combat: { HP: 30, ATK: 3, DEF: 2, loot: 'raider_knife', boss: true, special: { cue: 'crackles with energy!', dmg: 5, delay: 1000 } }
     }
