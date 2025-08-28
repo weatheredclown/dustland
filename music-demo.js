@@ -176,12 +176,11 @@
     var counts = [], remainders = [], divisor = steps - pulses;
     remainders[0] = pulses;
     var level = 0;
-    while (true) {
+    while (remainders[level] > 1) {
       counts[level] = Math.floor(divisor / remainders[level]);
       remainders[level + 1] = divisor % remainders[level];
       divisor = remainders[level];
       level++;
-      if (remainders[level] <= 1) break;
     }
     counts[level] = divisor;
     var r = function(l) {
@@ -292,14 +291,13 @@
 
   // Instruments
   function playBassNote(midi, t, dur, vel) {
+    var f = hzFromMidi(midi);
     if (tone.enabled && tone.ready && tone.synths) {
-      var f = hzFromMidi(midi);
       var when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - ac.currentTime) : undefined;
       tone.synths.bass.frequency.setValueAtTime(f, when);
       tone.synths.bass.triggerAttackRelease(f, dur, when, (vel != null ? vel * 0.9 : 0.9));
       return;
     }
-    var f = hzFromMidi(midi);
     var o = mkOsc(music.bassWave, f, t);
     var e = envGate(t, 0.003, 0.06, 0.2, 0.06, dur * 0.9);
     var lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(1800, t);
@@ -523,7 +521,7 @@
       try {
         var qns = window.mm.sequences.quantizeNoteSequence(ns, 4);
         return eventsFromNoteSequence(qns);
-      } catch (e) {}
+      } catch (e) { /* ignore */ void e; }
     }
     arr.sort(function (a, b) { return a.step - b.step; });
     return arr;
@@ -541,7 +539,7 @@
         if (!a.quantizationInfo) a = window.mm.sequences.quantizeNoteSequence(a, 4);
         if (!b.quantizationInfo) b = window.mm.sequences.quantizeNoteSequence(b, 4);
       }
-    } catch (e) { /* best-effort */ }
+    } catch (e) { /* best-effort */ void e; }
     setMgStatus('interpolating…');
     mg.vae.interpolate([a, b], 5)
       .then(function (out) {
@@ -551,7 +549,7 @@
           var seq = out[i];
           if (!seq) continue;
           if (!seq.quantizationInfo && window.mm && window.mm.sequences) {
-            try { seq = window.mm.sequences.quantizeNoteSequence(seq, 4); } catch (e) {}
+            try { seq = window.mm.sequences.quantizeNoteSequence(seq, 4); } catch (e) { /* ignore */ void e; }
           }
           // Split 2-bar sequence into two one-bar chunks
           for (var off = 0; off <= stepsPerBar; off += stepsPerBar) {
@@ -728,7 +726,7 @@
           pwm.connect(lead.oscillator.width);
           var vibrato = new Tone.LFO({ frequency: 5.5, min: -4, max: 4 }).start();
           vibrato.connect(lead.frequency);
-        } catch (e) { /* best-effort */ }
+        } catch (e) { /* best-effort */ void e; }
 
         var bass = new Tone.MonoSynth({
           oscillator: { type: 'square' },
@@ -761,24 +759,24 @@
       if (tone.synths && tone.synths.lead.oscillator && tone.synths.lead.oscillator.width && fxPulse) {
         tone.synths.lead.oscillator.width.value = parseFloat(fxPulse.value || '0.5');
       }
-    } catch (e) {}
+    } catch (e) { /* ignore */ void e; }
     // Enable controls
     [fxPulse, fxBits, fxDown, fxEcho].forEach(function (el) { if (el) el.disabled = false; });
     if (fxPulse) fxPulse.oninput = function () {
       var v = parseFloat(fxPulse.value || '0.5'); if (fxPulseLabel) fxPulseLabel.textContent = v.toFixed(2);
-      try { if (tone.synths && tone.synths.lead.oscillator && tone.synths.lead.oscillator.width) tone.synths.lead.oscillator.width.value = v; } catch (e) {}
+      try { if (tone.synths && tone.synths.lead.oscillator && tone.synths.lead.oscillator.width) tone.synths.lead.oscillator.width.value = v; } catch (e) { /* ignore */ void e; }
     };
     if (fxBits) fxBits.oninput = function () {
       var bits = parseInt(fxBits.value || '6', 10); if (fxBitsLabel) fxBitsLabel.textContent = bits + ' bits';
-      try { tone.fx.crusher.bits = bits; } catch (e) {}
+      try { tone.fx.crusher.bits = bits; } catch (e) { /* ignore */ void e; }
     };
     if (fxDown) fxDown.oninput = function () {
       var v = parseFloat(fxDown.value || '0.3'); if (fxDownLabel) fxDownLabel.textContent = v.toFixed(2);
-      try { var freq2 = 1000 + v * 7000; tone.fx.color.frequency.setValueAtTime(freq2, Tone.now()); } catch (e) {}
+      try { var freq2 = 1000 + v * 7000; tone.fx.color.frequency.setValueAtTime(freq2, Tone.now()); } catch (e) { /* ignore */ void e; }
     };
     if (fxEcho) fxEcho.oninput = function () {
       var v = parseFloat(fxEcho.value || '0.25'); if (fxEchoLabel) fxEchoLabel.textContent = v.toFixed(2);
-      try { tone.fx.ping.wet.value = v; } catch (e) {}
+      try { tone.fx.ping.wet.value = v; } catch (e) { /* ignore */ void e; }
     };
   }
 
@@ -966,7 +964,7 @@
       globalSeed = notes.slice();
       renderConfig();
       if (moodInfo) moodInfo.textContent = 'Motif updated (' + notes.length + ' notes).';
-    } catch (e) {}
+    } catch (e) { /* ignore */ void e; }
   }
   function loadSeedRows() {
     if (!seedRows) return;
@@ -986,7 +984,7 @@
       seedRows.addEventListener('change', autoPersistMotifFromRows, true);
       var mo = new MutationObserver(function () { autoPersistMotifFromRows(); });
       mo.observe(seedRows, { childList: true });
-    } catch (e) {}
+    } catch (e) { /* ignore */ void e; }
   }
   // no save button handler; autoPersistMotifFromRows handles changes
   if (addMotifBtn) addMotifBtn.onclick = function () {
