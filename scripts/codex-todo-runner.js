@@ -13,11 +13,7 @@ function installCodex() {
     execSync('codex --version', {stdio: 'ignore'});
   } catch {
     console.log('Installing GitHub Codex CLI...');
-    const home = process.env.HOME || process.cwd();
-    execSync(
-      'curl -fsSL https://developers.openai.com/codex/install.sh | sh',
-      {stdio: 'inherit', cwd: home}
-    );
+    execSync('npm install -g @openai/codex', {stdio: 'inherit'});
   }
 }
 
