@@ -41,7 +41,9 @@ function handleDialogKey(e){
     case 'd':
     case 'D':
       dlgMoveChoice(1); return true;
-    case 'Enter':{
+    case 'Enter':
+    case ' ': // space
+    case 'Spacebar':{
       const el=choicesEl.children[selectedChoice];
       if(el?.click) el.click(); else el?.onclick?.();
       return true; }
