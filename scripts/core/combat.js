@@ -406,6 +406,13 @@ function doAttack(dmg, type = 'basic'){
     log?.(`${target.name} shrugs off the attack.`);
   }
 
+  const luck = (attacker.stats?.LCK || 0) + (attacker._bonus?.LCK || 0);
+  const eff  = Math.max(0, luck - 4);
+  if (Math.random() < eff * 0.05){
+    dealt += 1;
+    log?.('Lucky strike!');
+  }
+
   target.hp -= dealt;
 
   recordCombatEvent?.({
@@ -646,7 +653,13 @@ function enemyAttack(){
 
     setTimeout(() => {
       combatOverlay?.classList.remove('warning');
-      const dmg = enemy.special.dmg || 5;
+      let dmg = enemy.special.dmg || 5;
+      const luck = (target.stats?.LCK || 0) + (target._bonus?.LCK || 0);
+      const eff  = Math.max(0, luck - 4);
+      if (Math.random() < eff * 0.05 && dmg > 0){
+        dmg = Math.max(0, dmg - 1);
+        log?.('Lucky break!');
+      }
       target.hp -= dmg;
       recordCombatEvent?.({ type: 'enemy', actor: enemy.name, action: 'special', target: target.name, damage: dmg, targetHp: target.hp });
       log?.(`${enemy.name} unleashes for ${dmg} damage.`);
@@ -662,6 +675,12 @@ function enemyAttack(){
     target.guard = false;
     dmg = Math.max(0, dmg - 1);
     log?.(`${target.name} guards against the attack.`);
+  }
+  const luck = (target.stats?.LCK || 0) + (target._bonus?.LCK || 0);
+  const eff  = Math.max(0, luck - 4);
+  if (Math.random() < eff * 0.05 && dmg > 0){
+    dmg = Math.max(0, dmg - 1);
+    log?.('Lucky break!');
   }
   target.hp -= dmg;
 
