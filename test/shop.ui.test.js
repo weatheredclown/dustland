@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import { JSDOM } from 'jsdom';
 
 function extractOpenShop(code) {
-  const match = code.match(/function openShop\(npc\) {[\s\S]*?shopOverlay\.focus\(\);\n}/);
+  const match = code.match(/function openShop\(npc\) {[\s\S]*?shopOverlay\.focus\(\);\r?\n}/);
   return match && match[0];
 }
 
