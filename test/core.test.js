@@ -1462,7 +1462,7 @@ test('distance to road reduces encounter chance', () => {
   const origRand = Math.random;
   const origStart = globalThis.Dustland.actions.startCombat;
   globalThis.Dustland.actions.startCombat = () => { started = true; return Promise.resolve({ result: 'flee' }); };
-  Math.random = () => 0.1;
+  Math.random = () => 0.23;
   setPartyPos(1, 0); // Near the road
   checkRandomEncounter();
   assert.ok(started);
@@ -1527,6 +1527,34 @@ test('distant encounters use hard enemy pool', () => {
   Math.random = origRand;
   globalThis.Dustland.actions.startCombat = origStart;
   assert.strictEqual(chosen.name, 'Hard');
+});
+
+test('enemies respect max distance', () => {
+  const row = Array(10).fill(TILE.SAND);
+  row[0] = TILE.ROAD;
+  applyModule({ world: [row], encounters: { world: [ { name: 'Near', HP: 1, DEF: 0, maxDist: 2 } ] } });
+  state.map = 'world';
+  setPartyPos(5, 0);
+  let started = false;
+  const origRand = Math.random;
+  Math.random = () => 0;
+  const origStart = globalThis.Dustland.actions.startCombat;
+  globalThis.Dustland.actions.startCombat = () => { started = true; return Promise.resolve({ result: 'flee' }); };
+  checkRandomEncounter();
+  Math.random = origRand;
+  globalThis.Dustland.actions.startCombat = origStart;
+  assert.ok(!started);
+});
+
+test('enemy requires a specific weapon', () => {
+  const enemy = { name: 'Shellback', hp: 10, requires: 'artifact_blade' };
+  const attacker = makeMember('a', 'A', 'Hero');
+  attacker.equip = { weapon: { id: 'rusted_sword', mods: { ADR: 10 } } };
+  __testAttack(attacker, enemy, 5);
+  assert.strictEqual(enemy.hp, 10);
+  attacker.equip.weapon.id = 'artifact_blade';
+  __testAttack(attacker, enemy, 5);
+  assert.strictEqual(enemy.hp, 5);
 });
 
 test('applyModule from dialog adds next fragment', async () => {
