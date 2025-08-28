@@ -62,7 +62,7 @@ Opening a cache triggers a generator that stitches gear on the fly:
 - [x] Populate adjective/noun pools for item names and tier stat tables.
  - [x] Tune `baseRate` and tier weights for different enemy challenges.
 - [x] Author lore snippets for oddity items.
-- [ ] Add affix or mini-quest hooks for Vaulted caches.
+- [x] Add affix or mini-quest hooks for Vaulted caches.
 
 #### Phase 4: Testing
 - [ ] Write tests to verify drop odds and tier distribution across challenge levels.

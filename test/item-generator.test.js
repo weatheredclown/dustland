@@ -50,3 +50,20 @@ test('oddity items include lore snippet', () => {
   assert.strictEqual(item.type, 'oddity');
   assert.ok(ItemGen.oddityLore.includes(item.lore));
 });
+
+test('vaulted items can gain an affix', () => {
+  const vals = [0,0,0,0,0.3,0];
+  const rng = () => vals.shift() ?? 0;
+  const item = ItemGen.generate('vaulted', rng);
+  assert.strictEqual(item.affix, 'of Fury');
+  assert.ok(item.name.endsWith(' of Fury'));
+  assert.strictEqual(item.miniQuest, undefined);
+});
+
+test('vaulted items can carry a mini-quest hook', () => {
+  const vals = [0,0,0,0,0.7,0];
+  const rng = () => vals.shift() ?? 0;
+  const item = ItemGen.generate('vaulted', rng);
+  assert.strictEqual(item.miniQuest, 'lostArchive');
+  assert.strictEqual(item.affix, undefined);
+});
