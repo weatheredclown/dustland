@@ -1,15 +1,23 @@
 #!/usr/bin/env node
+// Run with `node scripts/codex-todo-runner.js` from the repo root.
 
-const {execSync} = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import {execSync} from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function installCodex() {
   try {
     execSync('codex --version', {stdio: 'ignore'});
-  } catch (err) {
+  } catch {
     console.log('Installing GitHub Codex CLI...');
-    execSync('curl -fsSL https://developers.openai.com/codex/install.sh | sh', {stdio: 'inherit'});
+    const home = process.env.HOME || process.cwd();
+    execSync(
+      'curl -fsSL https://developers.openai.com/codex/install.sh | sh',
+      {stdio: 'inherit', cwd: home}
+    );
   }
 }
 
@@ -37,9 +45,9 @@ function run() {
   const files = findDesignDocs();
   for (const file of files) {
     let text = fs.readFileSync(file, 'utf8');
-    const todos = extractTodos(text);
-    if (!todos.length) continue;
-    for (const todo of todos) {
+    let todos = extractTodos(text);
+    while (todos.length) {
+      const todo = todos[0];
       console.log('Working on', todo.text);
       try {
         execSync(`codex commit "${todo.text}"`, {stdio: 'inherit'});
@@ -47,9 +55,11 @@ function run() {
         fs.writeFileSync(file, text);
         execSync(`git add ${file}`);
         execSync(`git commit -m "feat: ${todo.text}"`);
-      } catch (err) {
+      } catch {
         console.error('Codex failed for', todo.text);
+        break;
       }
+      todos = extractTodos(text);
     }
   }
 }
