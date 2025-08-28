@@ -164,7 +164,7 @@ function applyZones(map,x,y){
       if(z.negate && hasItem(z.negate)) continue;
     } else {
       if(z.require) continue;
-      if(z.negate) {}
+      if(z.negate) { /* cannot verify inventory */ }
     }
     const step = z.perStep || z.step;
     if(step && typeof step.hp==='number'){
