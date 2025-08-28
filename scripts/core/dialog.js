@@ -54,6 +54,7 @@ function handleDialogKey(e){
 function normalizeDialogTree(tree){
   const out={};
   for(const id in tree){
+    if(id==='imports') continue;
     const n=tree[id];
     const next=(n.next||n.choices||[]).map(c=>{
       if(typeof c==='string') return {id:c,label:c};

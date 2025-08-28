@@ -668,6 +668,37 @@ function renderDialogPreview() {
   let tree = null;
   const txt = document.getElementById('npcTree').value.trim();
   if (txt) { try { tree = JSON.parse(txt); } catch (e) { tree = null; } }
+  // Inject preview + spoof controls once
+  if (prev && !document.getElementById('dlgPreviewControls')) {
+    const ctl = document.createElement('div');
+    ctl.id = 'dlgPreviewControls';
+    ctl.style.marginBottom = '6px';
+    ctl.innerHTML = `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <input id="spoofFlags" placeholder="flag=a, other=2" style="flex:1 1 200px"/>
+      <button class="btn" type="button" id="playDlg">Play In-Game</button>
+      <button class="btn" type="button" id="stopDlg">Stop</button>
+    </div>
+    <div id="spoofImports" class="small" style="margin-top:6px"></div>`;
+    prev.parentElement.insertBefore(ctl, prev);
+    document.getElementById('playDlg').onclick = () => playInGameWithSpoof();
+    document.getElementById('stopDlg').onclick = () => stopSpoofPlayback();
+  }
+  // Render imports spoof panel (lightweight)
+  const importsEl = document.getElementById('spoofImports');
+  if (importsEl) {
+    let imports = (tree && tree.imports) || null;
+    if (!imports && tree) imports = generateImportsShallow(tree);
+    const flags = (imports && imports.flags) || [];
+    const items = (imports && imports.items) || [];
+    let html = '';
+    if (flags.length) {
+      html += '<div><b>Flags</b> ' + flags.map(f=>`<label style="margin-right:6px">${f}<input type="number" data-flag="${f}" value="1" min="0" style="width:56px;margin-left:4px"/></label>`).join('') + '</div>';
+    }
+    if (items.length) {
+      html += '<div style="margin-top:4px"><b>Items</b> ' + items.map(it=>`<label style="margin-right:6px">${it}<input type="number" data-item="${it}" value="1" min="0" style="width:56px;margin-left:4px"/></label>`).join('') + '</div>';
+    }
+    importsEl.innerHTML = html || '<span class="muted">(no imports)</span>';
+  }
   if (!tree || !tree.start) { prev.innerHTML = ''; return; }
   function show(id) {
     const node = tree[id]; if (!node) return;
@@ -683,6 +714,99 @@ function renderDialogPreview() {
   show('start');
 }
 
+// Shallow imports generator (editor-only)
+function generateImportsShallow(tree) {
+  const flags = new Set();
+  const items = new Set();
+  Object.entries(tree || {}).forEach(([id, node]) => {
+    if (id === 'imports') return;
+    const choices = (node && node.choices) || [];
+    choices.forEach(c => {
+      if (c.if && c.if.flag) flags.add(c.if.flag);
+      if (c.setFlag && c.setFlag.flag) flags.add(c.setFlag.flag);
+      if (c.reqItem) items.add(c.reqItem);
+      if (c.costItem) items.add(c.costItem);
+      if (c.reward && typeof c.reward === 'string' && !/^xp|scrap/i.test(c.reward)) items.add(c.reward);
+    });
+  });
+  return { flags: [...flags], items: [...items], events: [], queries: [] };
+}
+
+let _origFlagValue = null;
+let _origCloseDialog = null;
+let _origHasItem = null;
+let _origCountItems = null;
+
+function parseSpoofFlags(input) {
+  const out = {};
+  (input || '').split(',').forEach(pair => {
+    const [k, v] = pair.split('=').map(s => (s || '').trim());
+    if (!k) return;
+    const num = v === '' ? 1 : (isNaN(Number(v)) ? 1 : Number(v));
+    out[k] = num;
+  });
+  return out;
+}
+
+function buildSpoofFlagsFromPanel() {
+  const panel = document.getElementById('spoofImports');
+  if (!panel) return null;
+  const inputs = panel.querySelectorAll('input[data-flag]');
+  if (!inputs.length) return null;
+  const out = {};
+  inputs.forEach(inp => { const v = parseInt(inp.value, 10); out[inp.dataset.flag] = Number.isNaN(v) ? 1 : v; });
+  return out;
+}
+function buildSpoofItemsFromPanel() {
+  const panel = document.getElementById('spoofImports');
+  if (!panel) return null;
+  const inputs = panel.querySelectorAll('input[data-item]');
+  if (!inputs.length) return null;
+  const out = {};
+  inputs.forEach(inp => { const v = parseInt(inp.value, 10); out[inp.dataset.item] = Number.isNaN(v) ? 1 : v; });
+  return out;
+}
+
+function startSpoofPlayback(tree, flags, items) {
+  if (!_origFlagValue) _origFlagValue = globalThis.flagValue;
+  if (!_origCloseDialog) _origCloseDialog = globalThis.closeDialog;
+  if (!_origHasItem) _origHasItem = globalThis.hasItem;
+  if (!_origCountItems) _origCountItems = globalThis.countItems;
+  globalThis.flagValue = function (flag) {
+    if (Object.prototype.hasOwnProperty.call(flags || {}, flag)) return flags[flag] || 0;
+    return _origFlagValue(flag);
+  };
+  const itemCounts = items || {};
+  globalThis.hasItem = function(idOrTag){
+    if (typeof idOrTag === 'string' && Object.prototype.hasOwnProperty.call(itemCounts, idOrTag)) return (itemCounts[idOrTag]||0) > 0;
+    return _origHasItem(idOrTag);
+  };
+  globalThis.countItems = function(idOrTag){
+    if (typeof idOrTag === 'string' && Object.prototype.hasOwnProperty.call(itemCounts, idOrTag)) return itemCounts[idOrTag]||0;
+    return _origCountItems(idOrTag);
+  };
+  globalThis.closeDialog = function () {
+    stopSpoofPlayback();
+    _origCloseDialog();
+  };
+  const npc = { id: 'ack_preview', map: state.map, x: party.x, y: party.y, color: '#9ef7a0', name: 'Preview', title: '', desc: '', tree };
+  openDialog(npc, 'start');
+}
+function stopSpoofPlayback() {
+  if (_origFlagValue) { globalThis.flagValue = _origFlagValue; _origFlagValue = null; }
+  if (_origCloseDialog) { globalThis.closeDialog = _origCloseDialog; _origCloseDialog = null; }
+  if (_origHasItem) { globalThis.hasItem = _origHasItem; _origHasItem = null; }
+  if (_origCountItems) { globalThis.countItems = _origCountItems; _origCountItems = null; }
+}
+function playInGameWithSpoof() {
+  // Use imports panel values if present, else freeform field
+  const txt = document.getElementById('npcTree').value.trim();
+  if (!txt) return;
+  let tree = null; try { tree = JSON.parse(txt); } catch (e) { alert('Invalid tree JSON'); return; }
+  const flags = buildSpoofFlagsFromPanel() || parseSpoofFlags(document.getElementById('spoofFlags').value);
+  const items = buildSpoofItemsFromPanel() || {};
+  startSpoofPlayback(tree, flags, items);
+}
 function addChoiceRow(container, ch = {}) {
   const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', reqItem = '', reqSlot = '', join = null, q = '', setFlag = null, spawn = null } = ch || {};
   const cond = ch && ch.if ? ch.if : null;
@@ -789,6 +913,9 @@ function addChoiceRow(container, ch = {}) {
   populateItemDropdown(row.querySelector('.choiceRewardItem'), itemVal);
   populateInteriorDropdown(row.querySelector('.choiceBoard'), boardId);
   populateInteriorDropdown(row.querySelector('.choiceUnboard'), unboardId);
+  // Support [new] auto-create shortcut
+  const toSel = row.querySelector('.choiceTo');
+  toSel.addEventListener('change', () => { if (toSel.value === '[new]') updateTreeData(); });
   const rewardTypeSel = row.querySelector('.choiceRewardType');
   const rewardXP = row.querySelector('.choiceRewardXP');
   const rewardScrap = row.querySelector('.choiceRewardScrap');
@@ -814,7 +941,7 @@ function addChoiceRow(container, ch = {}) {
 
 function populateChoiceDropdown(sel, selected = '') {
   const keys = Object.keys(treeData);
-  sel.innerHTML = '<option value=""></option>' + keys.map(k => `<option value="${k}">${k}</option>`).join('');
+  sel.innerHTML = '<option value=""></option><option value="[new]">[new]</option>' + keys.map(k => `<option value="${k}">${k}</option>`).join('');
   if (selected && !keys.includes(selected)) {
     sel.innerHTML += `<option value="${selected}" selected>${selected}</option>`;
   } else {
@@ -939,7 +1066,7 @@ function updateTreeData() {
     nodeEl.querySelectorAll('.choices > div').forEach(chEl => {
       const label = chEl.querySelector('.choiceLabel').value.trim();
       const toEl = chEl.querySelector('.choiceTo');
-      const to = toEl.value.trim();
+      let to = toEl.value.trim();
       const rewardType = chEl.querySelector('.choiceRewardType').value;
       const xpTxt = chEl.querySelector('.choiceRewardXP').value.trim();
       const scrapTxt = chEl.querySelector('.choiceRewardScrap').value.trim();
@@ -977,6 +1104,18 @@ function updateTreeData() {
       const val = valTxt ? parseInt(valTxt, 10) : undefined;
 
       choiceRefs.push({ to, el: toEl });
+
+      // Auto-create targets for [new] and new:<slug>
+      if (to === '[new]' || to.startsWith('new:')) {
+        const slug = to === '[new]' ? '' : to.substring(4);
+        let base = slug || 'node';
+        let cand = base;
+        let i = 1;
+        while (newTree[cand] || treeData[cand]) { cand = base + '-' + i++; }
+        if (!newTree[cand]) newTree[cand] = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
+        to = cand;
+        populateChoiceDropdown(toEl, to);
+      }
 
       if (label) {
         const c = { label };
@@ -1035,7 +1174,13 @@ function updateTreeData() {
     newTree[id] = nodeData;
   });
 
-  // Commit + mirror into textarea for persistence/preview
+  // Commit + mirror into textarea for persistence/preview, persist imports (only if non-empty)
+  const __imp = generateImportsShallow(newTree);
+  if ((__imp.flags && __imp.flags.length) || (__imp.items && __imp.items.length) || (__imp.events && __imp.events.length) || (__imp.queries && __imp.queries.length)) {
+    newTree.imports = __imp;
+  } else if (newTree.imports) {
+    delete newTree.imports;
+  }
   treeData = newTree;
   document.getElementById('npcTree').value = JSON.stringify(treeData, null, 2);
 
