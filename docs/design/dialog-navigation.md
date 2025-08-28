@@ -34,7 +34,7 @@ Menu-driven conversations that feel deliberate and human, built with plain JavaS
 
 - Reuse existing button styles from the HUD and editor for dialog choice buttons.
 - Layout: portrait stack — line text, then a vertical list of buttons; optional "Back" and "Close" appear contextually.
-- Keyboard: arrows/WASD to move focus; Enter to select; Esc to close.
+- Keyboard: arrows/WASD to move focus; Enter or Space to select; Esc to close.
 - Accessibility: ensure focus order matches visual order; no hidden focus traps.
 
 ## Data Model (ACK)
