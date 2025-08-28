@@ -46,6 +46,8 @@ Equipment isn't just about bigger numbers. It's about changing *how* you fight.
 *   **Armor:** Provides damage resistance, but can also have passive combat effects. A "Scavenger's Rig" might grant a small amount of Adrenaline at the start of combat. A "Juggernaut Plate" could make you immune to being interrupted while using a Special.
 *   **Gadgets (Accessories):** This is where things get wild. A "Stim-Pack" gadget could allow you to convert HP into Adrenaline in an emergency. A "Targeting Visor" could increase the critical hit chance of your specials. An "Adrenaline Charm" might double the rate at which Adrenaline builds.
 
+Some wasteland horrors shrug off ordinary steel. Enemies like the Sand Colossus won't take damage unless the party carries an artifact-grade weapon, making gear progression essential, while others such as the Dune Reaper simply hit harder the deeper you wander. Rare artifact blades lie buried in the wastes for those bold enough to seek them.
+
 > **Gizmo:** The data structures for this need to be clean. An item should just have a `modifiers` object. For example: `{"adrenaline_gen_mod": 1.2, "granted_special": "CLEAVE"}`. The combat system just iterates through the equipped items and applies the modifiers at the start of a fight. This makes it incredibly easy for us, and for modders, to add new gear, but we'll need profiling to ensure modifier checks stay cheap.
 
 ### UI/UX: Clarity in Chaos

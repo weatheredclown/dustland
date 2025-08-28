@@ -392,6 +392,13 @@ function doAttack(dmg, type = 'basic'){
   const mult  = 1 + adrPct * (attacker.adrDmgMod || 1);
   dealt = Math.round(dealt * mult);
 
+  const weapon = attacker.equip?.weapon;
+  const req = target.requires;
+  if (req && (!weapon || weapon.id !== req)){
+    dealt = 0;
+    log?.(`${attacker.name}'s attacks can't harm ${target.name}. Equip ${req}.`);
+  }
+
   // Immunity to basic
   if (type === 'basic' && Array.isArray(target.immune) && target.immune.includes('basic')){
     dealt = 0;
@@ -410,7 +417,6 @@ function doAttack(dmg, type = 'basic'){
   });
 
   // Adrenaline gain (based on weapon mods & generator mod)
-  const weapon   = attacker.equip?.weapon;
   const baseGain = (weapon?.mods?.ADR ?? 10) / 4;
   const gain     = Math.round(baseGain * (attacker.adrGenMod || 1));
   attacker.adr   = Math.min(attacker.maxAdr || 100, (attacker.adr ?? 0) + Math.max(0, gain));
@@ -461,6 +467,14 @@ function doAttack(dmg, type = 'basic'){
   }
 
   nextCombatant();
+}
+
+function testAttack(attacker, enemy, dmg = 1, type = 'basic'){
+  combatState.enemies = [enemy];
+  combatState.active = 0;
+  party.length = 0;
+  party.push(attacker);
+  doAttack(dmg, type);
 }
 
 function doSpecial(idx){
@@ -667,5 +681,5 @@ function getCombatLog(){
   return combatState.log.slice();
 }
 
-const combatExports = { openCombat, closeCombat, handleCombatKey, getCombatLog };
+const combatExports = { openCombat, closeCombat, handleCombatKey, getCombatLog, __testAttack: testAttack };
 Object.assign(globalThis, combatExports);
