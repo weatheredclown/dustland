@@ -8,6 +8,7 @@ bus?.on?.('combat:ended', () => { combatActive = false; });
 const buffs = [];              // 2c342c / 313831
 const tileColors = {0:'#1e271d',1:'#313831',2:'#1573ff',3:'#203320',4:'#777777',5:'#304326',6:'#4d5f4d',7:'#233223',8:'#8bd98d',9:'#000000'};// 2B382B / 203320
 let moveDelay = 0;
+const zones = globalThis.zoneEffects || [];
 let encounterCooldown = 0;
 
 function hexToHsv(hex) {
@@ -154,6 +155,39 @@ function onEnter(map,x,y,ctx){
   }
 }
 
+function applyZones(map,x,y){
+  for(const z of zones){
+    if((z.map||'world')!==map) continue;
+    if(x<z.x || y<z.y || x>=z.x+(z.w||0) || y>=z.y+(z.h||0)) continue;
+    if(typeof hasItem==='function'){
+      if(z.require && !hasItem(z.require)) continue;
+      if(z.negate && hasItem(z.negate)) continue;
+    } else {
+      if(z.require) continue;
+      if(z.negate) {}
+    }
+    const step = z.perStep || z.step;
+    if(step && typeof step.hp==='number'){
+      const delta = step.hp;
+      (party||[]).forEach(m=>{
+        const max = typeof m.maxHp==='number'?m.maxHp:m.hp;
+        m.hp = Math.max(0, Math.min(max, m.hp + delta));
+      });
+      renderParty?.(); updateHUD?.();
+      const msg = step.msg || (delta>0? 'You feel better.' : 'You take damage.');
+      log?.(msg);
+      if(typeof toast==='function') toast(msg);
+    }
+  }
+  if((party||[]).length && party.every(m=>m.hp<=0)){
+    log?.('Your party collapses and wakes at the entrance.');
+    if(typeof toast==='function') toast('Everyone is down!');
+    if(state.mapEntry) setPartyPos(state.mapEntry.x, state.mapEntry.y);
+    (party||[]).forEach(m=>{ m.hp = 1; });
+    renderParty?.(); updateHUD?.();
+  }
+}
+
 // ===== Interaction =====
 function canWalk(x,y){
   if(state.map==='creator') return false;
@@ -182,6 +216,7 @@ function move(dx,dy){
         setPartyPos(nx, ny);
         if(typeof footstepBump==='function') footstepBump();
         onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
+        applyZones(state.map, nx, ny);
         centerCamera(party.x,party.y,state.map); updateHUD();
         checkAggro();
         checkRandomEncounter();
