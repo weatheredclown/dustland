@@ -232,9 +232,13 @@ function checkRandomEncounter(){
   if(!bank || !bank.length) return;
   const dist = distanceToRoad(party.x, party.y);
   if(dist<=0) return;
-  const chance = Math.min(dist * 0.02, 0.5);
+  // Fewer encounters the farther you wander from the road
+  const chance = Math.max(0.02, 0.3 - dist * 0.01);
   if(Math.random() < chance){
-    const def = bank[Math.floor(Math.random()*bank.length)];
+    let pool = bank;
+    const hard = bank.filter(e => e.minDist && dist >= e.minDist);
+    if(hard.length) pool = hard;
+    const def = pool[Math.floor(Math.random() * pool.length)];
     return Dustland.actions.startCombat(def);
   }
 }
