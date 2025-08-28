@@ -896,7 +896,8 @@ test('fight choice triggers combat', () => {
   const npc = makeNPC('rival', 'world', 0, 0, '#fff', 'Rival', '', '', null, null, null, null, { combat: { DEF: 1 } });
   NPCS.push(npc);
   openDialog(npc);
-  const fightBtn = choicesEl.children.find(c => c.textContent === '(Fight)');
+  const fightBtn = [...choicesEl.children].find(c => c.textContent.startsWith('(Fight'));
+  assert.ok(fightBtn.textContent.includes('XP'));
   fightBtn.onclick();
   assert.ok(triggered);
   globalThis.Dustland.actions.startCombat = orig;
