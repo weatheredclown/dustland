@@ -23,12 +23,33 @@
   var scaleLabel = document.getElementById('scaleLabel');
   var mgBtn = document.getElementById('mgBtn');
   var mgStatus = document.getElementById('mgStatus');
+  var toneBtn = document.getElementById('toneBtn');
+  var toneStatus = document.getElementById('toneStatus');
+  var fxPulse = document.getElementById('fxPulse');
+  var fxPulseLabel = document.getElementById('fxPulseLabel');
+  var fxBits = document.getElementById('fxBits');
+  var fxBitsLabel = document.getElementById('fxBitsLabel');
+  var fxDown = document.getElementById('fxDown');
+  var fxDownLabel = document.getElementById('fxDownLabel');
+  var fxEcho = document.getElementById('fxEcho');
+  var fxEchoLabel = document.getElementById('fxEchoLabel');
+  var downloadJsonBtn = document.getElementById('downloadJsonBtn');
+  var loadJsonBtn = document.getElementById('loadJsonBtn');
+  var loadJsonInput = document.getElementById('loadJsonInput');
+  // Disable FX controls until Tone is ready
+  [document.getElementById('fxPulse'), document.getElementById('fxBits'), document.getElementById('fxDown'), document.getElementById('fxEcho')]
+    .forEach(function (el) { if (el) el.disabled = true; });
   var harmonyInput = document.getElementById('harmonyInput');
   var saveHarmonyBtn = document.getElementById('saveHarmonyBtn');
   var seedRows = document.getElementById('seedRows');
   var addSeedBtn = document.getElementById('addSeedBtn');
   var clearSeedBtn = document.getElementById('clearSeedBtn');
-  var saveSeedBtn = document.getElementById('saveSeedBtn');
+  // saveSeedBtn removed: motif edits auto-apply
+  var motifList = document.getElementById('motifList');
+  var motifModeEl = document.getElementById('motifMode');
+  var addMotifBtn = document.getElementById('addMotifBtn');
+  var dupMotifBtn = document.getElementById('dupMotifBtn');
+  var delMotifBtn = document.getElementById('delMotifBtn');
   var jsonOut = document.getElementById('jsonOut');
 
   // --- Globals & Engine ---
@@ -36,6 +57,7 @@
   var master = null; // GainNode
   var delay = null; // DelayNode
   var delayGain = null; // GainNode
+  var tone = { enabled: false, loading: false, ready: false, synths: null, fx: null };
   var playing = false;
   var scheduleTimer = 0;
   var lookahead = 0.05; // seconds
@@ -84,6 +106,12 @@
 
   // Universal seed for JSON config and Magenta basis (shared across moods)
   var globalSeed = [];
+  // Global motif sets: each motif is an array of seed notes for one bar
+  var motifs = [];
+  var selectedMotifIndex = -1; // for editing
+  var activeMotifIndex = -1;   // used in playback this bar
+  var motifMode = 'improv';    // 'repeat' | 'improv'
+  var motifBarMap = {};        // barIndex -> array of events (after variation)
 
   // Build mood UI
   MOODS.forEach(function (m) {
@@ -166,6 +194,11 @@
 
   // Drums
   function playKick(t) {
+    if (tone.enabled && tone.ready && tone.synths) {
+      var when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - ac.currentTime) : undefined;
+      tone.synths.kick.triggerAttackRelease('C2', 0.12, when);
+      return;
+    }
     var o = mkOsc('sine');
     var e = envGate(t, 0.001, 0.05, 0.0001, 0.08, 0.12);
     var g = e.gain;
@@ -180,6 +213,13 @@
   }
 
   function playSnare(t, tight) {
+    if (tone.enabled && tone.ready && tone.synths) {
+      var when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - ac.currentTime) : undefined;
+      tone.synths.snare.noise.type = 'white';
+      tone.synths.snare.envelope.decay = tight ? 0.05 : 0.12;
+      tone.synths.snare.triggerAttackRelease(when);
+      return;
+    }
     var s = mkNoise();
     var e = envGate(t, 0.001, 0.05, 0.0001, 0.1, tight ? 0.03 : 0.08);
     var hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.setValueAtTime(1200, t);
@@ -191,6 +231,12 @@
   }
 
   function playHat(t, open) {
+    if (tone.enabled && tone.ready && tone.synths) {
+      var when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - ac.currentTime) : undefined;
+      tone.synths.hat.envelope.decay = open ? 0.08 : 0.03;
+      tone.synths.hat.triggerAttackRelease(when);
+      return;
+    }
     var s = mkNoise();
     var e = envGate(t, 0.001, 0.02, 0.0001, 0.05, open ? 0.06 : 0.02);
     var hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.setValueAtTime(6000, t);
@@ -203,11 +249,18 @@
 
   // Instruments
   function playBassNote(midi, t, dur) {
+    if (tone.enabled && tone.ready && tone.synths) {
+      var f = hzFromMidi(midi);
+      var when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - ac.currentTime) : undefined;
+      tone.synths.bass.frequency.setValueAtTime(f, when);
+      tone.synths.bass.triggerAttackRelease(f, dur, when);
+      return;
+    }
     var f = hzFromMidi(midi);
     var o = mkOsc(music.bassWave, f, t);
     var e = envGate(t, 0.003, 0.06, 0.2, 0.06, dur * 0.9);
     var lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(1800, t);
-    var g = ac.createGain(); g.gain.setValueAtTime(0.25, t);
+    var g = ac.createGain(); g.gain.setValueAtTime(0.3, t);
     o.connect(e.gain).connect(lp).connect(g).connect(master);
     o.start(t);
     o.stop(t + dur + 0.1);
@@ -215,6 +268,13 @@
   }
 
   function playLeadNote(midi, t, dur) {
+    if (tone.enabled && tone.ready && tone.synths) {
+      var note = (window.mm && window.mm.pitchToNote ? window.mm.pitchToNote(midi) : undefined);
+      var when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - ac.currentTime) : undefined;
+      var n = note || hzFromMidi(midi);
+      tone.synths.lead.triggerAttackRelease(n, dur, when);
+      return;
+    }
     var f = hzFromMidi(midi);
     var o = mkOsc(music.leadWave, f, t);
     var e = envGate(t, 0.004, 0.05, 0.3, 0.1, dur * 0.85);
@@ -223,6 +283,26 @@
     o.start(t);
     o.stop(t + dur + 0.12);
     e.scheduleRelease(t + dur * 0.85);
+  }
+
+  // Simple chord stab at bar start to expose harmony changes
+  function playChordStab(degree, t) {
+    var root = midiFromDegree(music.key, music.scale, degree, -1);
+    var third = midiFromDegree(music.key, music.scale, degree + 2, -1);
+    var fifth = midiFromDegree(music.key, music.scale, degree + 4, -1);
+    var dur = secondsPer16th() * 3;
+    var g = ac.createGain();
+    g.gain.setValueAtTime(0.0, t);
+    g.gain.linearRampToValueAtTime(0.18, t + 0.005);
+    g.gain.linearRampToValueAtTime(0.0, t + dur);
+    var o1 = mkOsc('square', hzFromMidi(root), t);
+    var o2 = mkOsc('square', hzFromMidi(third), t);
+    var o3 = mkOsc('square', hzFromMidi(fifth), t);
+    o1.connect(g); o2.connect(g); o3.connect(g);
+    g.connect(master);
+    o1.start(t); o2.start(t); o3.start(t);
+    var stopAt = t + dur + 0.02;
+    o1.stop(stopAt); o2.stop(stopAt); o3.stop(stopAt);
   }
 
   // Timing helpers
@@ -244,15 +324,23 @@
     if (isSnare) playSnare(t, false);
     if (isHat) playHat(t, (music.density > 0.8) && (beatInBar % 4 === 2));
 
-    // Bass pattern: root or fifth of current chord degree
+    // On bar start, play a short chord stab to make harmony obvious
+    if (beatInBar === 0) {
+      playChordStab((music.harmony[ Math.floor(step / stepsPerBar) % music.harmony.length ] || 0), t);
+    }
+
+    // Bass pattern: root or fifth of current chord degree (more deterministic)
     var bar = Math.floor(step / stepsPerBar);
     var deg = (music.harmony[bar % music.harmony.length] || 0);
     var root = midiFromDegree(music.key, music.scale, deg, -2);
     var fifth = midiFromDegree(music.key, music.scale, deg + 4, -2);
-    var bassNote = (beatInBar % 8 === 0) ? root : (rnd() < 0.3 ? fifth : root);
+    var bassNote;
+    if (beatInBar % 8 === 0) bassNote = root; // strong downbeats
+    else if (beatInBar % 4 === 2) bassNote = fifth; // mid-beat accent
+    else bassNote = root;
     playBassNote(bassNote, t, secondsPer16th() * 2);
 
-    // Lead: prefer Magenta override for this bar; otherwise procedural
+    // Lead: prefer Magenta override for this bar; otherwise motif events for this bar; otherwise seed rows; fallback to procedural
     var stepInBar = beatInBar;
     var barIndex = Math.floor(step / stepsPerBar);
     var override = mg.leadOverride[barIndex];
@@ -261,12 +349,31 @@
         var ev = override[i];
         if (ev.step === stepInBar) playLeadNote(ev.midi, t, secondsPer16th() * (ev.durSteps || 2));
       }
-    } else {
-      if (rnd() < music.density) {
-        var pickDeg = deg + [0, 2, 4, 5, 7][randi(0, 4)] + (rnd() < 0.25 ? 7 : 0);
-        var leadMidi = midiFromDegree(music.key, music.scale, pickDeg, 0);
-        playLeadNote(leadMidi, t, secondsPer16th() * (rnd() < 0.3 ? 3 : 2));
+    } else if (motifBarMap[barIndex] && motifBarMap[barIndex].length) {
+      var mev = motifBarMap[barIndex];
+      for (var k = 0; k < mev.length; k++) {
+        var evm = mev[k];
+        if (evm.step === stepInBar) playLeadNote(evm.midi, t, secondsPer16th() * (evm.durSteps || 2));
       }
+    } else if (globalSeed && globalSeed.length) {
+      for (var j = 0; j < globalSeed.length; j++) {
+        var s = globalSeed[j];
+        if ((s.step|0) === stepInBar) {
+          var sd = (s.degree|0) + deg; // transpose by harmony degree
+          var lm = midiFromDegree(music.key, music.scale, sd, 0);
+          var ld = secondsPer16th() * Math.max(1, (s.dur|0) || 2);
+          playLeadNote(lm, t, ld);
+        }
+      }
+    } else {
+      // Tighter, scale-aware arpeggio with less randomness
+      var pattern = [0, 2, 4, 2];
+      if (music.density > 0.8) pattern = [0, 2, 4, 5];
+      var idx = Math.floor(stepInBar / 4) % pattern.length;
+      var pickDeg = deg + pattern[idx] + ((stepInBar % 8 === 6) ? 7 : 0);
+      var leadMidi = midiFromDegree(music.key, music.scale, pickDeg, 0);
+      // only play on eighths to reduce clutter
+      if (stepInBar % 2 === 0) playLeadNote(leadMidi, t, secondsPer16th() * 2);
     }
   }
 
@@ -323,7 +430,7 @@
   function loadMagenta() {
     if (mg.loading || mg.ready) { if (!mg.loading) setMgStatus('ready'); return; }
     mg.loading = true; setMgStatus('loading libs…');
-    loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.13.0/dist/tf.min.js')
+    loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.8.6/dist/tf.min.js')
       .then(function () { return loadScript('https://cdn.jsdelivr.net/npm/@magenta/music@1.23.1/dist/magentamusic.js'); })
       .then(function () {
         setMgStatus('initializing model…');
@@ -380,6 +487,13 @@
     var nextMood = MOODS.find(function (x) { return x.id === nextMoodId; });
     var a = seedToNoteSequenceDegrees(music.key, music.scale, (currMood && currMood.harmony && currMood.harmony[0]) || 0);
     var b = seedToNoteSequenceDegrees((nextMood && nextMood.key) || music.key, (nextMood && nextMood.scale) || music.scale, (nextMood && nextMood.harmony && nextMood.harmony[0]) || 0);
+    // Ensure inputs are quantized NoteSequences for the VAE
+    try {
+      if (window.mm && window.mm.sequences) {
+        if (!a.quantizationInfo) a = window.mm.sequences.quantizeNoteSequence(a, 4);
+        if (!b.quantizationInfo) b = window.mm.sequences.quantizeNoteSequence(b, 4);
+      }
+    } catch (e) { /* best-effort */ }
     setMgStatus('interpolating…');
     mg.vae.interpolate([a, b], 3)
       .then(function (out) {
@@ -427,6 +541,8 @@
           }
         }
       }
+      // Choose motif for this bar and prepare its events
+      chooseActiveMotifForBar(Math.floor(current16th / stepsPerBar));
       // prune old Magenta overrides
       var old = music.barCount - 2; if (mg.leadOverride[old]) delete mg.leadOverride[old];
     }
@@ -446,8 +562,10 @@
 
   function updateHud() {
     if (!playing) { nowStat.textContent = 'stopped'; return; }
-    nowStat.textContent = music.mood + ' @ ' + music.bpm + ' BPM';
     var bar = Math.floor(current16th / stepsPerBar);
+    var currDeg = (music.harmony[bar % music.harmony.length] || 0);
+    var motifName = (motifs[activeMotifIndex] && motifs[activeMotifIndex].name) || '';
+    nowStat.textContent = music.mood + ' @ ' + music.bpm + ' BPM  |  chord deg ' + currDeg + (motifName ? ('  |  motif ' + motifName) : '');
     var beat = (current16th % 16) / 4 + 1;
     barBeat.textContent = (bar + 1) + ' / ' + Math.floor(beat);
   }
@@ -459,6 +577,10 @@
       master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination);
       delay = ac.createDelay(0.5); delay.delayTime.value = 0.22;
       delayGain = ac.createGain(); delayGain.gain.value = 0.25;
+    }
+    if (tone.enabled && window.Tone && !tone.ready) {
+      // ensure Tone audio context is started
+      Tone.start().then(function(){ /* started */ }).catch(function(){});
     }
     // Sync to next whole 16th to keep changes musical
     var t = ac.currentTime + 0.05;
@@ -482,6 +604,13 @@
   };
   stopBtn.onclick = function () { stop(); };
   nextBtn.onclick = function () { if (playing) music.nextMood = music.nextMood || music.mood; };
+  // Apply current harmony edits when switching moods via click
+  moodList.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t && t.dataset && t.dataset.mood) {
+      persistHarmonyFromInput();
+    }
+  }, true);
 
   tempoEl.oninput = function () {
     var v = parseInt(tempoEl.value, 10);
@@ -501,6 +630,210 @@
   };
   seedEl.onchange = function () { setSeed(parseInt(seedEl.value || '1', 10)); };
   if (mgBtn) mgBtn.onclick = function () { loadMagenta(); };
+  if (toneBtn) toneBtn.onclick = function () { loadTone(); };
+
+  function loadTone() {
+    if (tone.loading || tone.ready) { if (!tone.loading) toneStatus && (toneStatus.textContent = 'Tone: ready'); return; }
+    tone.loading = true; if (toneStatus) toneStatus.textContent = 'Tone: loading…';
+    loadScript('https://cdn.jsdelivr.net/npm/tone/build/Tone.js')
+      .then(function () {
+        // build synth graph
+        var leadDelay = new Tone.FeedbackDelay(0.22, 0.3);
+        var crusher = new Tone.BitCrusher(6);
+        var color = new Tone.Filter(4000, 'lowpass');
+        var ping = new Tone.PingPongDelay(0.22, 0.25);
+        var lead = new Tone.Synth({ oscillator: { type: 'pulse', width: 0.5 }, envelope: { attack: 0.005, decay: 0.08, sustain: 0.3, release: 0.12 } }).connect(leadDelay).connect(crusher).connect(color).connect(ping).toDestination();
+        var bass = new Tone.MonoSynth({ oscillator: { type: 'square' }, filter: { type: 'lowpass', frequency: 900 }, envelope: { attack: 0.01, decay: 0.08, sustain: 0.2, release: 0.08 } }).toDestination();
+        var kick = new Tone.MembraneSynth({ pitchDecay: 0.02, octaves: 5, oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.12, sustain: 0.0, release: 0.06 } }).toDestination();
+        var snare = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.12, sustain: 0 } }).toDestination();
+        var hat = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.03, sustain: 0 } }).toDestination();
+        tone.synths = { lead: lead, bass: bass, kick: kick, snare: snare, hat: hat };
+        tone.fx = { crusher: crusher, color: color, ping: ping, delay: leadDelay };
+        tone.ready = true; tone.enabled = true; if (toneStatus) toneStatus.textContent = 'Tone: ready';
+        bindFxControls();
+      })
+      .catch(function (e) { tone.loading = false; if (toneStatus) toneStatus.textContent = 'Tone: failed (' + e.message + ')'; });
+  }
+
+  function bindFxControls() {
+    if (!tone.fx) return;
+    // Ensure obvious defaults
+    try {
+      tone.fx.ping.wet.value = parseFloat(fxEcho && fxEcho.value || '0.25');
+      tone.fx.crusher.bits = parseInt(fxBits && fxBits.value || '6', 10);
+      var ds = parseFloat(fxDown && fxDown.value || '0.3');
+      var freq = 1000 + ds * 7000;
+      tone.fx.color.frequency.setValueAtTime(freq, Tone.now());
+      if (tone.synths && tone.synths.lead.oscillator && tone.synths.lead.oscillator.width && fxPulse) {
+        tone.synths.lead.oscillator.width.value = parseFloat(fxPulse.value || '0.5');
+      }
+    } catch (e) {}
+    // Enable controls
+    [fxPulse, fxBits, fxDown, fxEcho].forEach(function (el) { if (el) el.disabled = false; });
+    if (fxPulse) fxPulse.oninput = function () {
+      var v = parseFloat(fxPulse.value || '0.5'); if (fxPulseLabel) fxPulseLabel.textContent = v.toFixed(2);
+      try { if (tone.synths && tone.synths.lead.oscillator && tone.synths.lead.oscillator.width) tone.synths.lead.oscillator.width.value = v; } catch (e) {}
+    };
+    if (fxBits) fxBits.oninput = function () {
+      var bits = parseInt(fxBits.value || '6', 10); if (fxBitsLabel) fxBitsLabel.textContent = bits + ' bits';
+      try { tone.fx.crusher.bits = bits; } catch (e) {}
+    };
+    if (fxDown) fxDown.oninput = function () {
+      var v = parseFloat(fxDown.value || '0.3'); if (fxDownLabel) fxDownLabel.textContent = v.toFixed(2);
+      try { var freq2 = 1000 + v * 7000; tone.fx.color.frequency.setValueAtTime(freq2, Tone.now()); } catch (e) {}
+    };
+    if (fxEcho) fxEcho.oninput = function () {
+      var v = parseFloat(fxEcho.value || '0.25'); if (fxEchoLabel) fxEchoLabel.textContent = v.toFixed(2);
+      try { tone.fx.ping.wet.value = v; } catch (e) {}
+    };
+  }
+
+  if (downloadJsonBtn) downloadJsonBtn.onclick = function () {
+    try {
+      var text = jsonOut && jsonOut.textContent ? jsonOut.textContent : JSON.stringify({});
+      var blob = new Blob([text], { type: 'application/json' });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'music-config.json';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    } catch (e) { console.error('download failed', e); }
+  };
+  if (loadJsonBtn && loadJsonInput) {
+    loadJsonBtn.onclick = function () { loadJsonInput.click(); };
+    loadJsonInput.onchange = function () {
+      var file = loadJsonInput.files && loadJsonInput.files[0]; if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var cfg = JSON.parse(String(reader.result || '{}'));
+          if (Array.isArray(cfg.seedNotes)) { globalSeed = cfg.seedNotes.slice(); }
+          if (Array.isArray(cfg.motifs)) {
+            motifs = [];
+            for (var i = 0; i < cfg.motifs.length; i++) {
+              var cm = cfg.motifs[i] || {};
+              var name = cm.name ? String(cm.name) : ('Motif ' + (i + 1));
+              var notes = Array.isArray(cm.notes) ? cm.notes.map(function (n) { return { step: (n.step|0), degree: (n.degree|0), dur: (n.dur|0) || 2 }; }) : [];
+              motifs.push({ id: 'motif' + (i + 1), name: name, notes: notes });
+            }
+            selectedMotifIndex = Math.min(Math.max(0, selectedMotifIndex), Math.max(0, motifs.length - 1));
+          }
+          if (cfg.motifMode === 'repeat' || cfg.motifMode === 'improv') motifMode = cfg.motifMode;
+          if (cfg.moods) {
+            MOODS.forEach(function (m) {
+              var mm = cfg.moods[m.id];
+              if (mm) {
+                if (mm.key) m.key = mm.key;
+                if (typeof mm.bpm === 'number') m.bpm = mm.bpm;
+                if (mm.scale) m.scale = mm.scale;
+                if (typeof mm.swing === 'number') m.swing = mm.swing;
+                if (typeof mm.density === 'number') m.density = mm.density;
+                if (mm.leadWave) m.leadWave = mm.leadWave;
+                if (mm.bassWave) m.bassWave = mm.bassWave;
+                if (Array.isArray(mm.harmony)) m.harmony = mm.harmony.slice();
+              }
+            });
+          }
+          // Refresh UI for current mood and seed rows
+          applyMood(music.mood);
+          ensureDefaultMotif();
+          renderMotifList();
+          loadSeedRows();
+          if (motifModeEl) motifModeEl.value = motifMode;
+          renderConfig();
+        } catch (e) { console.error('load json failed', e); }
+      };
+      reader.readAsText(file);
+    };
+  }
+
+  function persistHarmonyFromInput() {
+    if (!harmonyInput) return;
+    var txt = (harmonyInput.value || '').split(',');
+    var arr = [];
+    for (var i = 0; i < txt.length; i++) { var v = parseInt(txt[i], 10); if (!isNaN(v)) arr.push(v); }
+    if (arr.length) {
+      music.harmony = arr.slice();
+      var idx = MOODS.findIndex(function (x) { return x.id === music.mood; });
+      if (idx >= 0) MOODS[idx].harmony = arr.slice();
+      renderConfig();
+      if (moodInfo) moodInfo.textContent = 'Harmony set to [' + arr.join(',') + '] ' + (playing ? '(applies bar-by-bar)' : '');
+    }
+  }
+  if (harmonyInput) {
+    harmonyInput.addEventListener('blur', persistHarmonyFromInput);
+    harmonyInput.addEventListener('change', persistHarmonyFromInput);
+  }
+
+  // --- Motif helpers ---
+  function ensureDefaultMotif() {
+    if (motifs.length === 0) {
+      var base = (globalSeed && globalSeed.length) ? globalSeed.slice() : degreesSeedFallback(0);
+      motifs.push({ id: 'motif1', name: 'Motif A', notes: base.slice() });
+      selectedMotifIndex = 0;
+    }
+  }
+
+  function renderMotifList() {
+    if (!motifList) return;
+    while (motifList.firstChild) motifList.removeChild(motifList.firstChild);
+    for (var i = 0; i < motifs.length; i++) {
+      var m = motifs[i];
+      var btn = document.createElement('div');
+      btn.textContent = m.name || ('Motif ' + (i + 1));
+      btn.className = 'mood-btn' + (i === selectedMotifIndex ? ' active' : '');
+      (function (idx) { btn.onclick = function () { selectedMotifIndex = idx; loadSeedRows(); renderMotifList(); if (moodInfo) moodInfo.textContent = 'Selected ' + (motifs[idx].name || ('Motif ' + (idx + 1))); }; })(i);
+      // highlight currently playing motif
+      if (i === activeMotifIndex) { btn.style.outline = '1px solid var(--accent)'; btn.style.boxShadow = '0 0 8px rgba(158,247,160,.3)'; }
+      motifList.appendChild(btn);
+    }
+  }
+
+  function setMotifMode(mode) {
+    motifMode = (mode === 'repeat' || mode === 'improv') ? mode : 'improv';
+    if (motifModeEl) motifModeEl.value = motifMode;
+    if (moodInfo) moodInfo.textContent = (motifMode === 'repeat' ? 'Motif mode: Repeat selected' : 'Motif mode: Improvise between motifs');
+  }
+
+  function motifVariation(notes) {
+    // Return a shallow-varied copy of notes within the bar
+    var out = [];
+    for (var i = 0; i < notes.length; i++) out.push({ step: (notes[i].step|0), degree: (notes[i].degree|0), dur: (notes[i].dur|0) || 2 });
+    if (out.length) {
+      // 30%: nudge last note later by 1 step
+      if (rnd() < 0.3) { out[out.length - 1].step = Math.min(stepsPerBar - 1, out[out.length - 1].step + 1); }
+      // 25%: octave up last note
+      if (rnd() < 0.25) { out[out.length - 1].degree += 7; }
+    }
+    return out;
+  }
+
+  function chooseActiveMotifForBar(barIndex) {
+    ensureDefaultMotif();
+    if (motifs.length === 0) { activeMotifIndex = -1; return; }
+    if (motifMode === 'repeat') {
+      activeMotifIndex = (selectedMotifIndex >= 0 ? selectedMotifIndex : 0);
+    } else {
+      // improv: 60% repeat, 40% switch
+      if (activeMotifIndex < 0) activeMotifIndex = 0;
+      else if (rnd() < 0.4) {
+        var next = activeMotifIndex; var guard = 0;
+        while (motifs.length > 1 && next === activeMotifIndex && guard++ < 8) next = randi(0, motifs.length - 1);
+        activeMotifIndex = next;
+      }
+    }
+    // Build events for this bar and cache
+    var deg = (music.harmony[barIndex % music.harmony.length] || 0);
+    var base = motifs[activeMotifIndex].notes || [];
+    var varied = motifVariation(base);
+    var ns = { ticksPerQuarter: 220, totalQuantizedSteps: stepsPerBar, quantizationInfo: { stepsPerQuarter: 4 }, notes: [] };
+    for (var i = 0; i < varied.length; i++) {
+      var n = varied[i];
+      var midi = midiFromDegree(music.key, music.scale, n.degree + deg, 0);
+      var st = Math.max(0, Math.min(stepsPerBar - 1, (n.step|0)));
+      var en = Math.max(st + 1, Math.min(stepsPerBar, st + Math.max(1, (n.dur|0) || 2)));
+      ns.notes.push({ pitch: midi, quantizedStartStep: st, quantizedEndStep: en });
+    }
+    motifBarMap[barIndex] = eventsFromNoteSequence(ns);
+    renderMotifList();
+  }
 
   // --- Preset editor wiring ---
   function addSeedRow(step, degree, dur) {
@@ -512,7 +845,7 @@
     var d = document.createElement('input'); d.type = 'number'; d.placeholder = 'degree'; d.value = (degree != null ? degree : '');
     var u = document.createElement('input'); u.type = 'number'; u.placeholder = 'dur'; u.value = (dur != null ? dur : '');
     var del = document.createElement('button'); del.className = 'btn'; del.textContent = '×';
-    del.onclick = function () { seedRows.removeChild(row); };
+    del.onclick = function () { seedRows.removeChild(row); autoPersistMotifFromRows(); };
     row.appendChild(s); row.appendChild(d); row.appendChild(u); row.appendChild(del);
     seedRows.appendChild(row);
   }
@@ -529,15 +862,60 @@
     out.sort(function (a, b) { return a.step - b.step; });
     return out;
   }
+  // Auto-apply motif edits without an explicit save button
+  function autoPersistMotifFromRows() {
+    try {
+      var notes = readSeedRows();
+      ensureDefaultMotif();
+      if (selectedMotifIndex >= 0 && motifs[selectedMotifIndex]) motifs[selectedMotifIndex].notes = notes.slice();
+      // keep globalSeed in sync for backward compatibility
+      globalSeed = notes.slice();
+      renderConfig();
+      if (moodInfo) moodInfo.textContent = 'Motif updated (' + notes.length + ' notes).';
+    } catch (e) {}
+  }
   function loadSeedRows() {
     if (!seedRows) return;
     while (seedRows.firstChild) seedRows.removeChild(seedRows.firstChild);
-    var seed = globalSeed || [];
+    var seed;
+    ensureDefaultMotif();
+    if (selectedMotifIndex >= 0 && motifs[selectedMotifIndex]) seed = motifs[selectedMotifIndex].notes || [];
+    else seed = globalSeed || [];
     for (var i = 0; i < seed.length; i++) addSeedRow(seed[i].step, seed[i].degree, seed[i].dur);
   }
   if (addSeedBtn) addSeedBtn.onclick = function () { addSeedRow('', '', ''); };
   if (clearSeedBtn) clearSeedBtn.onclick = function () { while (seedRows.firstChild) seedRows.removeChild(seedRows.firstChild); };
-  if (saveSeedBtn) saveSeedBtn.onclick = function () { globalSeed = readSeedRows(); renderConfig(); };
+  // Auto-save hooks for motif edits
+  if (seedRows) {
+    try {
+      seedRows.addEventListener('input', autoPersistMotifFromRows, true);
+      seedRows.addEventListener('change', autoPersistMotifFromRows, true);
+      var mo = new MutationObserver(function () { autoPersistMotifFromRows(); });
+      mo.observe(seedRows, { childList: true });
+    } catch (e) {}
+  }
+  // no save button handler; autoPersistMotifFromRows handles changes
+  if (addMotifBtn) addMotifBtn.onclick = function () {
+    var idx = motifs.length + 1;
+    motifs.push({ id: 'motif' + idx, name: 'Motif ' + String.fromCharCode(64 + Math.min(26, idx)), notes: [] });
+    selectedMotifIndex = motifs.length - 1;
+    loadSeedRows(); renderMotifList(); renderConfig(); autoPersistMotifFromRows();
+  };
+  if (dupMotifBtn) dupMotifBtn.onclick = function () {
+    ensureDefaultMotif();
+    var src = (selectedMotifIndex >= 0 ? motifs[selectedMotifIndex] : motifs[0]);
+    motifs.push({ id: 'motif' + (motifs.length + 1), name: (src.name || 'Motif') + ' *', notes: (src.notes || []).map(function (n) { return { step: n.step, degree: n.degree, dur: n.dur }; }) });
+    selectedMotifIndex = motifs.length - 1;
+    loadSeedRows(); renderMotifList(); renderConfig(); autoPersistMotifFromRows();
+  };
+  if (delMotifBtn) delMotifBtn.onclick = function () {
+    if (motifs.length <= 1) return; // keep at least one
+    if (selectedMotifIndex < 0) return;
+    motifs.splice(selectedMotifIndex, 1);
+    selectedMotifIndex = Math.max(0, selectedMotifIndex - 1);
+    loadSeedRows(); renderMotifList(); renderConfig(); autoPersistMotifFromRows();
+  };
+  if (motifModeEl) motifModeEl.onchange = function () { setMotifMode(motifModeEl.value === 'repeat' ? 'repeat' : 'improv'); renderConfig(); };
   if (saveHarmonyBtn) saveHarmonyBtn.onclick = function () {
     var txt = (harmonyInput.value || '').split(',');
     var arr = [];
@@ -568,7 +946,9 @@
         harmony: m.harmony.slice()
       };
     }
-    var cfg = { seedNotes: globalSeed.slice(), moods: moodsObj };
+    var motifsObj = [];
+    for (var j = 0; j < motifs.length; j++) motifsObj.push({ name: motifs[j].name || ('Motif ' + (j + 1)), notes: (motifs[j].notes || []).slice() });
+    var cfg = { seedNotes: globalSeed.slice(), motifs: motifsObj, motifMode: motifMode, moods: moodsObj };
     try { jsonOut.textContent = JSON.stringify(cfg, null, 2); }
     catch (e) { jsonOut.textContent = '{ /* error building config: ' + e.message + ' */ }'; }
   }
@@ -578,8 +958,13 @@
   tempoEl.value = music.bpm;
   tempoLabel.textContent = music.bpm + ' BPM';
   keyEl.value = music.key;
+  ensureDefaultMotif();
+  setMotifMode('improv');
+  renderMotifList();
+  loadSeedRows();
 
   // HUD ticker
   setInterval(updateHud, 100);
 })();
+
 

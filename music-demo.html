@@ -58,8 +58,10 @@
             </div>
             <div class="btn-group" style="margin-top:6px">
               <button id="mgBtn" class="btn">Enable Magenta Transitions (optional)</button>
+              <button id="toneBtn" class="btn">Enable Tone Synths</button>
             </div>
             <div class="small" id="mgStatus">Magenta: disabled</div>
+            <div class="small" id="toneStatus">Tone: disabled</div>
           </div>
         </div>
 
@@ -70,6 +72,32 @@
         </fieldset>
 
         <fieldset style="margin-top:10px" class="card">
+          <legend>Chip FX</legend>
+          <div class="stat">
+            <div>Pulse Width</div>
+            <div>
+              <input id="fxPulse" type="range" min="0" max="1" step="0.01" value="0.5" />
+              <div class="small" id="fxPulseLabel">0.50</div>
+            </div>
+            <div>Bit Crush</div>
+            <div>
+              <input id="fxBits" type="range" min="2" max="8" step="1" value="6" />
+              <div class="small" id="fxBitsLabel">6 bits</div>
+            </div>
+            <div>Downsample</div>
+            <div>
+              <input id="fxDown" type="range" min="0" max="1" step="0.05" value="0.3" />
+              <div class="small" id="fxDownLabel">0.30</div>
+            </div>
+            <div>Echo</div>
+            <div>
+              <input id="fxEcho" type="range" min="0" max="1" step="0.05" value="0.25" />
+              <div class="small" id="fxEchoLabel">0.25</div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset style="margin-top:10px" class="card">
           <legend>Preset Pattern</legend>
           <label for="harmonyInput">Harmony (degrees by bar, comma-separated)</label>
           <input id="harmonyInput" placeholder="e.g. 0,3,5,3" />
@@ -77,20 +105,31 @@
             <button id="saveHarmonyBtn" class="btn">Save Harmony to Mood</button>
           </div>
           <details style="margin-top:6px">
-            <summary>Lead Seed (one per line: step degree dur)</summary>
+            <summary>Lead Motifs (global). Each motif is a 1‑bar seed set; playback repeats or switches with small variations.</summary>
+            <div class="stat" style="margin-bottom:6px">
+              <div>Mode</div>
+              <div>
+                <select id="motifMode">
+                  <option value="repeat">Repeat Selected</option>
+                  <option value="improv">Improvise Between Motifs</option>
+                </select>
+              </div>
+              <div>Motifs</div>
+              <div id="motifList" class="mood-list"></div>
+            </div>
+            <div class="small">Edit notes for the selected motif (one row per note: step degree dur). Changes auto-save.</div>
             <div id="seedRows" class="list" style="margin-top:6px"></div>
             <div class="btn-group" style="margin-top:6px">
-              <button id="addSeedBtn" class="btn">Add Seed Row</button>
-              <button id="clearSeedBtn" class="btn">Clear Seed</button>
-              <button id="saveSeedBtn" class="btn">Save Seed to Mood</button>
+              <button id="addSeedBtn" class="btn">Add Row</button>
+              <button id="clearSeedBtn" class="btn">Clear Notes</button>
             </div>
-            <div class="small">Example rows: 0 0 2  |  4 2 2  |  8 4 4</div>
+            <div class="btn-group" style="margin-top:6px">
+              <button id="addMotifBtn" class="btn">Add Motif</button>
+              <button id="dupMotifBtn" class="btn">Duplicate Motif</button>
+              <button id="delMotifBtn" class="btn">Delete Motif</button>
+            </div>
+            <div class="small">Example rows: [0/0/2] | [4/2/2] | [8/4/4]</div>
           </details>
-        </fieldset>
-
-        <fieldset style="margin-top:10px" class="card">
-          <legend>JSON Config</legend>
-          <pre id="jsonOut" style="white-space:pre-wrap; word-break:break-word; font-size:12px; margin:0"></pre>
         </fieldset>
 
         <div class="card" style="margin-top:10px">
@@ -104,6 +143,16 @@
           </div>
         </div>
 
+        <fieldset style="margin-top:10px" class="card">
+          <legend>JSON Config</legend>
+          <pre id="jsonOut" style="white-space:pre-wrap; word-break:break-word; font-size:12px; margin:0 0 6px 0"></pre>
+          <div class="btn-group">
+            <button id="downloadJsonBtn" class="btn">Download JSON</button>
+            <button id="loadJsonBtn" class="btn">Load JSON</button>
+            <input id="loadJsonInput" type="file" accept="application/json" style="display:none" />
+          </div>
+        </fieldset>
+
         <details style="margin-top:10px">
           <summary>About transitions and Magenta</summary>
           <div class="small" style="margin-top:6px">
@@ -113,7 +162,7 @@
             To keep this page fully local with no network dependencies, this demo avoids external libraries. We can add
             optional Magenta integration later if you want.
           </div>
-        $insert</details>
+        </details>
       </div>
     </div>
   </div>
@@ -122,5 +171,3 @@
 </body>
 
 </html>
-
-
