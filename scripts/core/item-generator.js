@@ -26,6 +26,15 @@ const ItemGen = {
     'Emitter',
     'Engine'
   ],
+  affixes: [
+    'of Fury',
+    'of Echoes',
+    'of Dread'
+  ],
+  miniQuestHooks: [
+    'lostArchive',
+    'metalPlague'
+  ],
   oddityLore: [
     'Whispers of a lost caravan.',
     'Hums a tune no one remembers.',
@@ -61,6 +70,14 @@ const ItemGen = {
     };
     if(type === 'oddity'){
       item.lore = this.pick(this.oddityLore, rng);
+    }
+    if(rank === 'vaulted'){
+      if(rng() < 0.5){
+        item.affix = this.pick(this.affixes, rng);
+        item.name += ` ${item.affix}`;
+      } else {
+        item.miniQuest = this.pick(this.miniQuestHooks, rng);
+      }
     }
     return item;
   }
