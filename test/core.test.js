@@ -1040,6 +1040,19 @@ test('handleDialogKey navigates dialog choices with WASD', () => {
   assert.deepStrictEqual(picked, ['Two', 'One']);
 });
 
+test('space selects dialog choice', () => {
+  NPCS.length = 0;
+  const npc = { id: 'nav', name: 'Nav', tree: { start: { text: '', choices: [ { label: 'One' } ] } } };
+  NPCS.push(npc);
+  openDialog(npc);
+  const picked = [];
+  choicesEl.children[0].click = () => picked.push('One');
+
+  handleDialogKey({ key: ' ' });
+
+  assert.deepStrictEqual(picked, ['One']);
+});
+
 test('party enforces maximum size of six', () => {
   party.length = 0;
   const members = [
