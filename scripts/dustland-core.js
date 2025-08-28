@@ -683,6 +683,14 @@ const quirks={
   'Desert Prophet':{desc:'Rare visions add hints.'}
 };
 const hiddenOrigins={ 'Rustborn':{desc:'You survived a machine womb. +1 PER, weird dialog tags.'} };
+const statInfo={
+  STR:{name:'Strength',benefit:'helps with DC checks'},
+  AGI:{name:'Agility',benefit:'speeds up movement'},
+  INT:{name:'Intelligence',benefit:'helps with DC checks'},
+  PER:{name:'Perception',benefit:'helps with DC checks'},
+  LCK:{name:'Luck',benefit:'boosts damage and healing'},
+  CHA:{name:'Charisma',benefit:'helps with DC checks'}
+};
 
 // Pool of placeholder names to auto-fill the creator
 function defaultDrifterName(n){ return 'Drifter '+n; }
@@ -724,7 +732,7 @@ function renderStep(){
   }
   if(step===2){
     ccHint.textContent='Distribute 6 points among stats.';
-    r.innerHTML=`<div class='grid'>${Object.keys(building.stats).map(k=>`<div class='field'><label>${k}</label><div class='range'><button data-k='${k}' data-d='-1'>−</button><div id='v_${k}' class='pill'>${building.stats[k]}</div><button data-k='${k}' data-d='1'>+</button></div></div>`).join('')}</div><div class='small'>Points left: <span id='pts'></span></div>`;
+    r.innerHTML=`<div class='grid'>${Object.keys(building.stats).map(k=>{const info=statInfo[k]||{name:k,benefit:'helps with DC checks'};return `<div class='field'><label title='${info.name}: ${info.benefit}'>${k}</label><div class='range'><button data-k='${k}' data-d='-1'>−</button><div id='v_${k}' class='pill'>${building.stats[k]}</div><button data-k='${k}' data-d='1'>+</button></div></div>`}).join('')}</div><div class='small'>Points left: <span id='pts'></span></div>`;
     let pool=6; const base=baseStats(); for(const k in base){ pool -= (building.stats[k]-base[k]); }
     const ptsEl=document.getElementById('pts'); function upd(){ ptsEl.textContent=pool; for(const k in building.stats){ document.getElementById('v_'+k).textContent=building.stats[k]; } } upd();
     r.querySelectorAll('button').forEach(b=> b.onclick=()=>{ const k=b.dataset.k, d=parseInt(b.dataset.d,10); if(d>0 && pool<=0) return; if(d<0 && building.stats[k]<=1) return; building.stats[k]+=d; pool-=d; upd(); });
