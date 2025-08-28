@@ -325,11 +325,12 @@ function moveChoice(dir){
 
 function handleCombatKey(e){
   if (!combatOverlay || !combatOverlay.classList.contains('shown')) return false;
-  if (e.key === 'Enter' && e.repeat) return false;
+  if ((e.key === 'Enter' || e.key === ' ') && e.repeat) return false;
   switch (e.key){
     case 'ArrowUp':    moveChoice(-1); return true;
     case 'ArrowDown':  moveChoice(1);  return true;
-    case 'Enter':      chooseOption(); return true;
+    case 'Enter':
+    case ' ':          chooseOption(); return true;
   }
   return false;
 }
