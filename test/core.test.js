@@ -1251,6 +1251,21 @@ test('combat menu can be clicked', async () => {
   assert.strictEqual(res.result, 'loot');
 });
 
+test('space selects combat option', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  party.addMember(m1);
+
+  const resultPromise = openCombat([
+    { name:'E1', hp:1 }
+  ]);
+
+  handleCombatKey({ key:' ' });
+  const res = await resultPromise;
+  assert.strictEqual(res.result, 'loot');
+});
+
 test('turn indicator updates with active member', async () => {
   party.length = 0;
   player.inv.length = 0;
