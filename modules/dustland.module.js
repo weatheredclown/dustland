@@ -37,14 +37,13 @@ const DUSTLAND_MODULE = (() => {
     { map: 'hall', x: hall.entryX - 1, y: hall.entryY, events:[{ when:'enter', effect:'toast', msg:'You smell rot.' }] }
   ];
 
-  const span = Math.max(typeof WORLD_W === 'number' ? WORLD_W : 0, typeof WORLD_H === 'number' ? WORLD_H : 0);
   const encounters = {
     world: [
-      { name: 'Rotwalker', HP: 6, DEF: 1, loot: 'water_flask', maxDist: Math.floor(span * 0.2) },
-      { name: 'Scavenger', HP: 5, DEF: 0, loot: 'raider_knife', maxDist: Math.floor(span * 0.3) },
-      { name: 'Sand Titan', HP: 20, DEF: 4, loot: 'artifact_blade', challenge: 9, minDist: Math.floor(span * 0.4) },
-      { name: 'Dune Reaper', HP: 75, DEF: 7, loot: 'artifact_blade', challenge: 32, minDist: Math.floor(span * 0.55), special: { cue: 'lashes the wind with scythes!', dmg: 10 } },
-      { name: 'Sand Colossus', HP: 80, DEF: 8, loot: 'artifact_blade', challenge: 36, minDist: Math.floor(span * 0.7), requires: 'artifact_blade', special: { cue: 'shakes the desert!', dmg: 12 } }
+      { name: 'Rotwalker', HP: 6, DEF: 1, loot: 'water_flask', maxDist: 24 },
+      { name: 'Scavenger', HP: 5, DEF: 0, loot: 'raider_knife', maxDist: 36 },
+      { name: 'Sand Titan', HP: 20, DEF: 4, loot: 'artifact_blade', challenge: 9, minDist: 30 },
+      { name: 'Dune Reaper', HP: 75, DEF: 7, loot: 'artifact_blade', challenge: 32, minDist: 40, special: { cue: 'lashes the wind with scythes!', dmg: 10 } },
+      { name: 'Sand Colossus', HP: 80, DEF: 8, loot: 'artifact_blade', challenge: 36, minDist: 44, requires: 'artifact_blade', special: { cue: 'shakes the desert!', dmg: 12 } }
     ]
   };
 
