@@ -68,6 +68,7 @@ const ItemGen = {
       stats: { power },
       scrap: Math.round(power / 2)
     };
+    if (noun === 'Mask') item.tags = ['mask'];
     if(type === 'oddity'){
       item.lore = this.pick(this.oddityLore, rng);
     }
