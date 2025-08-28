@@ -1,0 +1,126 @@
+﻿<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chiptune Dynamic Music Lab</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dustland.css" />
+  <style>
+    body { margin: 0; background: #000; color: var(--ink); font-family: 'Pixelify Sans', sans-serif; }
+    .wrap { padding: 16px; gap: 16px; display: flex; }
+    .panel { width: var(--panelW); }
+    .controls .btn { font-size: 14px; }
+    .small { font-size: 12px; color: var(--muted); }
+    .mood-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .mood-btn { cursor: pointer; padding: 6px 8px; border: 1px solid #283228; border-radius: 6px; background: #0e110e; text-align: center; }
+    .mood-btn.active { outline: 1px solid var(--accent); box-shadow: 0 0 8px #000, 0 0 8px rgba(158,247,160,.3); }
+    .stat { display: grid; grid-template-columns: 96px 1fr; gap: 6px; }
+    .stat div { padding: 2px 0; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <h1>Chiptune Dynamic Music Lab</h1>
+      <div class="content">
+        <div class="card">
+          <div class="controls">
+            <div class="btn-group">
+              <button id="startBtn" class="btn">Start</button>
+              <button id="stopBtn" class="btn">Stop</button>
+              <button id="nextBtn" class="btn">Transition Now</button>
+            </div>
+            <div style="margin-top:8px" class="stat">
+              <div>Tempo</div>
+              <div>
+                <input id="tempo" type="range" min="60" max="200" value="120" />
+                <div class="small" id="tempoLabel">120 BPM</div>
+              </div>
+              <div>Key</div>
+              <div>
+                <select id="key">
+                  <option value="C">C</option>
+                  <option value="D">D</option>
+                  <option value="E">E</option>
+                  <option value="F">F</option>
+                  <option value="G" selected>G</option>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                </select>
+              </div>
+              <div>Seed</div>
+              <div>
+                <input id="seed" type="number" min="0" max="999999" value="1234" />
+              </div>
+            </div>
+            <div class="btn-group" style="margin-top:6px">
+              <button id="mgBtn" class="btn">Enable Magenta Transitions (optional)</button>
+            </div>
+            <div class="small" id="mgStatus">Magenta: disabled</div>
+          </div>
+        </div>
+
+        <fieldset style="margin-top:10px" class="card">
+          <legend>Moods</legend>
+          <div class="mood-list" id="moodList"></div>
+          <div class="small" style="margin-top:6px" id="moodInfo">Pick a mood to switch at the next bar.</div>
+        </fieldset>
+
+        <fieldset style="margin-top:10px" class="card">
+          <legend>Preset Pattern</legend>
+          <label for="harmonyInput">Harmony (degrees by bar, comma-separated)</label>
+          <input id="harmonyInput" placeholder="e.g. 0,3,5,3" />
+          <div class="btn-group">
+            <button id="saveHarmonyBtn" class="btn">Save Harmony to Mood</button>
+          </div>
+          <details style="margin-top:6px">
+            <summary>Lead Seed (one per line: step degree dur)</summary>
+            <div id="seedRows" class="list" style="margin-top:6px"></div>
+            <div class="btn-group" style="margin-top:6px">
+              <button id="addSeedBtn" class="btn">Add Seed Row</button>
+              <button id="clearSeedBtn" class="btn">Clear Seed</button>
+              <button id="saveSeedBtn" class="btn">Save Seed to Mood</button>
+            </div>
+            <div class="small">Example rows: 0 0 2  |  4 2 2  |  8 4 4</div>
+          </details>
+        </fieldset>
+
+        <fieldset style="margin-top:10px" class="card">
+          <legend>JSON Config</legend>
+          <pre id="jsonOut" style="white-space:pre-wrap; word-break:break-word; font-size:12px; margin:0"></pre>
+        </fieldset>
+
+        <div class="card" style="margin-top:10px">
+          <div class="stat">
+            <div>Now</div>
+            <div id="nowStat">stopped</div>
+            <div>Bar/Beat</div>
+            <div id="barBeat">0 / 0</div>
+            <div>Scale</div>
+            <div id="scaleLabel">â€”</div>
+          </div>
+        </div>
+
+        <details style="margin-top:10px">
+          <summary>About transitions and Magenta</summary>
+          <div class="small" style="margin-top:6px">
+            This demo uses the Web Audio API to generate chip-style patterns in-browser. Mood changes are applied at bar
+            boundaries with a short fill and parameter morph for smooth transitions. Magenta.js can do sequence
+            generation, continuation, and even interpolate between melodies when its model checkpoints are available.
+            To keep this page fully local with no network dependencies, this demo avoids external libraries. We can add
+            optional Magenta integration later if you want.
+          </div>
+        $insert</details>
+      </div>
+    </div>
+  </div>
+
+  <script src="music-demo.js"></script>
+</body>
+
+</html>
+
+
