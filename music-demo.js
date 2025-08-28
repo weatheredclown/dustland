@@ -710,29 +710,31 @@
         var limiter = new Tone.Limiter(-1);
         limiter.connect(masterHP);
 
-        var leadPre = new Tone.Filter(3500, 'lowpass');
+        // Keep tones bright and crisp; light echo only
+        var leadPre = new Tone.Filter(10000, 'lowpass');
         var leadDelay = new Tone.FeedbackDelay(0.22, 0.3);
-        var crusher = new Tone.BitCrusher(6);
+        leadDelay.wet.value = 0.1;
+        var crusher = new Tone.BitCrusher(5);
         var ping = new Tone.PingPongDelay(0.22, 0.25);
+        ping.wet.value = 0.1;
 
         var lead = new Tone.Synth({
-          oscillator: { type: 'pulse', width: 0.5 },
-          envelope: { attack: 0.004, decay: 0.07, sustain: 0.28, release: 0.11 }
+          oscillator: { type: 'pulse', width: 0.25 },
+          envelope: { attack: 0.002, decay: 0.05, sustain: 0.2, release: 0.08 }
         }).connect(leadPre).connect(leadDelay).connect(crusher).connect(ping).connect(limiter);
 
         // PWM + vibrato movement
         try {
-          var pwm = new Tone.LFO({ frequency: 0.2, min: 0.42, max: 0.58 }).start();
+          var pwm = new Tone.LFO({ frequency: 0.8, min: 0.12, max: 0.5 }).start();
           pwm.connect(lead.oscillator.width);
-          var vibrato = new Tone.LFO({ frequency: 5.5, min: -4, max: 4 }).start();
-          vibrato.connect(lead.frequency);
+          // Vibrato removed to keep chip clarity; PWM provides motion
         } catch (e) { /* best-effort */ void e; }
 
         var bass = new Tone.MonoSynth({
           oscillator: { type: 'square' },
-          filter: { type: 'lowpass', Q: 8 },
-          filterEnvelope: { attack: 0.002, decay: 0.08, sustain: 0.15, release: 0.06, baseFrequency: 120, octaves: 3 },
-          envelope: { attack: 0.005, decay: 0.07, sustain: 0.18, release: 0.07 }
+          filter: { type: 'lowpass', Q: 0 },
+          filterEnvelope: { attack: 0.001, decay: 0.01, sustain: 1.0, release: 0.01, baseFrequency: 18000, octaves: 0 },
+          envelope: { attack: 0.002, decay: 0.06, sustain: 0.22, release: 0.06 }
         }).connect(limiter);
 
         var kick = new Tone.MembraneSynth({ pitchDecay: 0.02, octaves: 5, oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.12, sustain: 0.0, release: 0.06 } }).connect(limiter);
@@ -751,13 +753,13 @@
     if (!tone.fx) return;
     // Ensure obvious defaults
     try {
-      tone.fx.ping.wet.value = parseFloat(fxEcho && fxEcho.value || '0.25');
-      tone.fx.crusher.bits = parseInt(fxBits && fxBits.value || '6', 10);
-      var ds = parseFloat(fxDown && fxDown.value || '0.3');
-      var freq = 1000 + ds * 7000;
+      tone.fx.ping.wet.value = parseFloat(fxEcho && fxEcho.value || '0.10');
+      tone.fx.crusher.bits = parseInt(fxBits && fxBits.value || '5', 10);
+      var ds = parseFloat(fxDown && fxDown.value || '0.85');
+      var freq = 2000 + ds * 12000; // brighter range for chip bite
       tone.fx.color.frequency.setValueAtTime(freq, Tone.now());
       if (tone.synths && tone.synths.lead.oscillator && tone.synths.lead.oscillator.width && fxPulse) {
-        tone.synths.lead.oscillator.width.value = parseFloat(fxPulse.value || '0.5');
+        tone.synths.lead.oscillator.width.value = parseFloat(fxPulse.value || '0.25');
       }
     } catch (e) { /* ignore */ void e; }
     // Enable controls
@@ -767,15 +769,15 @@
       try { if (tone.synths && tone.synths.lead.oscillator && tone.synths.lead.oscillator.width) tone.synths.lead.oscillator.width.value = v; } catch (e) { /* ignore */ void e; }
     };
     if (fxBits) fxBits.oninput = function () {
-      var bits = parseInt(fxBits.value || '6', 10); if (fxBitsLabel) fxBitsLabel.textContent = bits + ' bits';
+      var bits = parseInt(fxBits.value || '5', 10); if (fxBitsLabel) fxBitsLabel.textContent = bits + ' bits';
       try { tone.fx.crusher.bits = bits; } catch (e) { /* ignore */ void e; }
     };
     if (fxDown) fxDown.oninput = function () {
-      var v = parseFloat(fxDown.value || '0.3'); if (fxDownLabel) fxDownLabel.textContent = v.toFixed(2);
-      try { var freq2 = 1000 + v * 7000; tone.fx.color.frequency.setValueAtTime(freq2, Tone.now()); } catch (e) { /* ignore */ void e; }
+      var v = parseFloat(fxDown.value || '0.85'); if (fxDownLabel) fxDownLabel.textContent = v.toFixed(2);
+      try { var freq2 = 2000 + v * 12000; tone.fx.color.frequency.setValueAtTime(freq2, Tone.now()); } catch (e) { /* ignore */ void e; }
     };
     if (fxEcho) fxEcho.oninput = function () {
-      var v = parseFloat(fxEcho.value || '0.25'); if (fxEchoLabel) fxEchoLabel.textContent = v.toFixed(2);
+      var v = parseFloat(fxEcho.value || '0.10'); if (fxEchoLabel) fxEchoLabel.textContent = v.toFixed(2);
       try { tone.fx.ping.wet.value = v; } catch (e) { /* ignore */ void e; }
     };
   }
