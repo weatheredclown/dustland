@@ -1438,21 +1438,25 @@ test('combat overlay leaves room for panel', async () => {
   assert.match(css, /:root\s*{[\s\S]*--panelW:\s*440px/);
 });
 
-test('distance to road increases encounter chance', () => {
-  const row = Array(6).fill(TILE.SAND);
+test('distance to road reduces encounter chance', () => {
+  const row = Array(31).fill(TILE.SAND);
   row[0] = TILE.ROAD;
   applyModule({ world: [row], encounters: { world: [ { name: 'Test', HP: 1, DEF: 0 } ] } });
   state.map = 'world';
-  setPartyPos(5, 0);
   let started = false;
   const origRand = Math.random;
-  Math.random = () => 0;
   const origStart = globalThis.Dustland.actions.startCombat;
   globalThis.Dustland.actions.startCombat = () => { started = true; return Promise.resolve({ result: 'flee' }); };
+  Math.random = () => 0.1;
+  setPartyPos(1, 0); // Near the road
+  checkRandomEncounter();
+  assert.ok(started);
+  started = false;
+  setPartyPos(25, 0); // Far from the road
   checkRandomEncounter();
   Math.random = origRand;
   globalThis.Dustland.actions.startCombat = origStart;
-  assert.ok(started);
+  assert.ok(!started);
 });
 
 test('no encounters occur on roads', () => {
@@ -1490,6 +1494,24 @@ test('random encounters award XP based on strength', async () => {
   assert.strictEqual(party[0].xp, 4);
   assert.strictEqual(party[1].xp, 4);
   party.length = 0;
+});
+
+test('distant encounters use hard enemy pool', () => {
+  const row = Array(30).fill(TILE.SAND);
+  row[0] = TILE.ROAD;
+  const hard = { name: 'Hard', HP: 10, DEF: 5, minDist: 15 };
+  applyModule({ world: [row], encounters: { world: [ { name: 'Soft', HP: 1, DEF: 0 }, hard ] } });
+  state.map = 'world';
+  setPartyPos(20, 0);
+  let chosen = null;
+  const origRand = Math.random;
+  Math.random = () => 0;
+  const origStart = globalThis.Dustland.actions.startCombat;
+  globalThis.Dustland.actions.startCombat = def => { chosen = def; return Promise.resolve({ result: 'flee' }); };
+  checkRandomEncounter();
+  Math.random = origRand;
+  globalThis.Dustland.actions.startCombat = origStart;
+  assert.strictEqual(chosen.name, 'Hard');
 });
 
 test('applyModule from dialog adds next fragment', async () => {
