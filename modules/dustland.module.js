@@ -84,6 +84,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Strange Vortex',
       title: 'A swirling vortex of dust and sand.',
       desc: 'You feel a strange pull towards it.',
+      portraitSheet: 'assets/portraits/dustland-module/strange_vortex_4.png',
       tree: {
         start: {
           text: 'A swirling vortex of dust and sand blocks your path.',
@@ -182,6 +183,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Rotwalker',
       title: 'Test Monster',
       desc: 'A shambler posted here for practice.',
+      portraitSheet: 'assets/portraits/dustland-module/rotwalker_4.png',
       tree: { start: { text: 'A rotwalker lurches at you.' } },
       combat: { HP: 6, ATK: 1, loot: 'water_flask', auto: true }
     },
@@ -194,6 +196,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Worn Sign',
       title: 'Warning',
       desc: 'Faded letters warn travelers.',
+      portraitSheet: 'assets/portraits/dustland-module/worn_sign_4.png',
       tree: { start: { text: 'Rust storms east. Shelter west.', choices: [ { label: '(Leave)', to: 'bye' } ] } }
     },
     {
@@ -409,6 +412,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Hidden Hermit',
       title: 'Lurker',
       desc: 'A hermit steps out when you return.',
+      portraitSheet: 'assets/portraits/dustland-module/hidden_hermit_4.png',
       tree: { start: { text: 'Didn\'t expect company twice.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       reveal: { flag: `visits@world@20,${midY + 2}`, op: '>=', value: 2 }
     },
@@ -471,6 +475,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Tess the Scout',
       title: 'Water Runner',
       desc: 'She checks the pump then the far ridge.',
+      portraitSheet: 'assets/portraits/dustland-module/tess_4.png',
       tree: { start: { text: 'Tess strides past on her rounds.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       loop: [ { x: 14, y: midY - 1 }, { x: 80, y: midY + 4 } ]
     },
@@ -483,6 +488,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Scrap Mutt',
       title: 'Mangy Hound',
       desc: 'A feral mutt snarling over junk.',
+      portraitSheet: 'assets/portraits/dustland-module/scrap_mutt_4.png',
       tree: { start: { text: 'The mutt bares its teeth.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       combat: { HP: 5, ATK: 1, loot: 'water_flask', auto: true }
     },
@@ -606,6 +612,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Rusty',
       title: 'Endurance Trainer',
       desc: 'A grizzled scavenger preaching survival.',
+      portraitSheet: 'assets/portraits/dustland-module/rusty_4.png',
       tree: {
         start: {
           text: 'Rusty studies your stance.',
@@ -631,6 +638,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Mira',
       title: 'Tricks Trainer',
       desc: 'A nimble tinkerer teaching odd moves.',
+      portraitSheet: 'assets/portraits/dustland-module/mira_4.png',
       tree: {
         start: {
           text: 'Mira twirls a coin.',
@@ -656,6 +664,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Nora',
       title: 'Worm Seller',
       desc: 'She trades memory worms for scrap.',
+      portraitSheet: 'assets/portraits/dustland-module/nora_4.png',
       tree: {
         start: {
           text: 'Fresh worms for fading sins.',
