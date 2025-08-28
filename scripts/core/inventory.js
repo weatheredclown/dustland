@@ -207,10 +207,15 @@ function useItem(invIndex){
   if(it.use.type==='heal'){
     const who = (party[selectedMember]||party[0]);
     if(!who){ log('No party member to heal.'); return false; }
+    const base   = it.use.amount;
+    const luck   = (who.stats?.LCK || 0) + (who._bonus?.LCK || 0);
+    const eff    = Math.max(0, luck - 4);
+    const bonus  = Math.floor(base * eff * 0.05);
     const before = who.hp;
-    who.hp = Math.min(who.hp + it.use.amount, who.maxHp);
+    who.hp = Math.min(who.hp + base + bonus, who.maxHp);
     const healed = who.hp - before;
     log(`${who.name} drinks ${it.name} (+${healed} HP).`);
+    if (bonus > 0) log('Lucky boost!');
     if (typeof toast === 'function') toast(`${who.name} +${healed} HP`);
     emit('sfx','tick');
     player.inv.splice(invIndex,1);

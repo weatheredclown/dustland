@@ -54,6 +54,7 @@ _______________________________________________________________________________
   - Movement speed improves with the leader's AGI, including equipment bonuses. Items like the Boots of Speed further reduce movement delay.
   - Special moves spend Adrenaline. Starter techniques include Power Strike,
     Stun Grenade, First Aid, Adrenal Surge, and Guard.
+  - Luck may boost attacks, soften incoming blows, and enhance healing from potions. Lucky moments are called out in the log.
 
 [ CHARACTER CREATION ]
   - Start a new game at boot if no save is present.
