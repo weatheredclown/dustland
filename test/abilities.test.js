@@ -50,6 +50,6 @@ test('defineSpecial registers special with fields and defaults', () => {
 
 test('starter specials load from data file', async () => {
   await new Promise((r) => setTimeout(r, 50));
-  assert.ok(globalThis.Specials.POWER_STRIKE);
-  assert.ok(globalThis.Specials.FIRST_AID);
+  const ids = ['POWER_STRIKE', 'STUN_GRENADE', 'FIRST_AID', 'ADRENAL_SURGE', 'GUARD_UP'];
+  ids.forEach((id) => assert.ok(globalThis.Specials[id]));
 });
