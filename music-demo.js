@@ -150,6 +150,49 @@
   }
   function hzFromMidi(m) { return 440 * Math.pow(2, (m - 69) / 12); }
 
+  // Groove helpers: dynamics, microtiming, and Euclidean distribution
+  function velocityForStep(step) {
+    var beatInBar = step % stepsPerBar;
+    if (beatInBar % 4 === 0) return 0.9;   // strong
+    if (beatInBar % 4 === 2) return 0.7;   // medium
+    if (beatInBar % 2 === 0) return 0.5;   // light
+    return 0.35;                            // off accents
+  }
+
+  function microtime(step) {
+    // deterministic tiny wobble for non-strong steps (±3ms)
+    var beatInBar = step % stepsPerBar;
+    if (beatInBar % 4 === 0) return 0;
+    var s = ((step * 1103515245 + rngState) >>> 0) / 4294967296;
+    return (s - 0.5) * 0.003;
+  }
+
+  function euclid(steps, pulses, rot) {
+    steps = Math.max(1, steps|0);
+    pulses = Math.max(0, Math.min(steps, pulses|0));
+    var pattern = [];
+    if (pulses === 0) { for (var z=0; z<steps; z++) pattern.push(0); return pattern; }
+    if (pulses === steps) { for (var y=0; y<steps; y++) pattern.push(1); return pattern; }
+    var counts = [], remainders = [], divisor = steps - pulses;
+    remainders[0] = pulses;
+    var level = 0;
+    while (true) {
+      counts[level] = Math.floor(divisor / remainders[level]);
+      remainders[level + 1] = divisor % remainders[level];
+      divisor = remainders[level];
+      level++;
+      if (remainders[level] <= 1) break;
+    }
+    counts[level] = divisor;
+    var r = function(l) {
+      if (l === -1) { pattern.push(0); }
+      else if (l === -2) { pattern.push(1); }
+      else { for (var i=0;i<counts[l];i++) r(l-1); if (remainders[l] !== 0) r(l-2); }
+    };
+    r(level);
+    var rotN = ((rot||0)%steps+steps)%steps; return pattern.slice(rotN).concat(pattern.slice(0,rotN));
+  }
+
   // Audio node helpers
   function envGate(time, attack, decay, sustain, release, duration) {
     // Returns { gain, scheduleRelease }
@@ -193,16 +236,16 @@
   }
 
   // Drums
-  function playKick(t) {
+  function playKick(t, vel) {
     if (tone.enabled && tone.ready && tone.synths) {
       var when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - ac.currentTime) : undefined;
-      tone.synths.kick.triggerAttackRelease('C2', 0.12, when);
+      tone.synths.kick.triggerAttackRelease('C2', 0.12, when, (vel != null ? vel : 0.9));
       return;
     }
     var o = mkOsc('sine');
     var e = envGate(t, 0.001, 0.05, 0.0001, 0.08, 0.12);
     var g = e.gain;
-    var k = ac.createGain(); k.gain.setValueAtTime(1.2, t);
+    var k = ac.createGain(); k.gain.setValueAtTime(((vel != null ? vel : 1) * 1.2), t);
     o.connect(g).connect(k).connect(master);
     // pitch drop
     o.frequency.setValueAtTime(120, t);
@@ -212,35 +255,35 @@
     e.scheduleRelease(t + 0.12);
   }
 
-  function playSnare(t, tight) {
+  function playSnare(t, tight, vel) {
     if (tone.enabled && tone.ready && tone.synths) {
       var when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - ac.currentTime) : undefined;
       tone.synths.snare.noise.type = 'white';
       tone.synths.snare.envelope.decay = tight ? 0.05 : 0.12;
-      tone.synths.snare.triggerAttackRelease(when);
+      tone.synths.snare.triggerAttackRelease(tight ? 0.06 : 0.12, when, (vel != null ? vel : 0.7));
       return;
     }
     var s = mkNoise();
     var e = envGate(t, 0.001, 0.05, 0.0001, 0.1, tight ? 0.03 : 0.08);
     var hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.setValueAtTime(1200, t);
-    var g = ac.createGain(); g.gain.setValueAtTime(tight ? 0.3 : 0.45, t);
+    var g = ac.createGain(); g.gain.setValueAtTime(((tight ? 0.3 : 0.45) * (vel != null ? vel : 1)), t);
     s.connect(hp).connect(e.gain).connect(g).connect(master);
     s.start(t);
     s.stop(t + 0.2);
     e.scheduleRelease(t + (tight ? 0.04 : 0.1));
   }
 
-  function playHat(t, open) {
+  function playHat(t, open, vel) {
     if (tone.enabled && tone.ready && tone.synths) {
       var when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - ac.currentTime) : undefined;
       tone.synths.hat.envelope.decay = open ? 0.08 : 0.03;
-      tone.synths.hat.triggerAttackRelease(when);
+      tone.synths.hat.triggerAttackRelease(open ? 0.06 : 0.03, when, (vel != null ? vel : 0.5));
       return;
     }
     var s = mkNoise();
     var e = envGate(t, 0.001, 0.02, 0.0001, 0.05, open ? 0.06 : 0.02);
     var hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.setValueAtTime(6000, t);
-    var g = ac.createGain(); g.gain.setValueAtTime(open ? 0.18 : 0.12, t);
+    var g = ac.createGain(); g.gain.setValueAtTime(((open ? 0.18 : 0.12) * (vel != null ? vel : 1)), t);
     s.connect(hp).connect(e.gain).connect(g).connect(master);
     s.start(t);
     s.stop(t + 0.15);
@@ -248,37 +291,37 @@
   }
 
   // Instruments
-  function playBassNote(midi, t, dur) {
+  function playBassNote(midi, t, dur, vel) {
     if (tone.enabled && tone.ready && tone.synths) {
       var f = hzFromMidi(midi);
       var when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - ac.currentTime) : undefined;
       tone.synths.bass.frequency.setValueAtTime(f, when);
-      tone.synths.bass.triggerAttackRelease(f, dur, when);
+      tone.synths.bass.triggerAttackRelease(f, dur, when, (vel != null ? vel * 0.9 : 0.9));
       return;
     }
     var f = hzFromMidi(midi);
     var o = mkOsc(music.bassWave, f, t);
     var e = envGate(t, 0.003, 0.06, 0.2, 0.06, dur * 0.9);
     var lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(1800, t);
-    var g = ac.createGain(); g.gain.setValueAtTime(0.3, t);
+    var g = ac.createGain(); g.gain.setValueAtTime(0.3 * (vel != null ? vel : 1), t);
     o.connect(e.gain).connect(lp).connect(g).connect(master);
     o.start(t);
     o.stop(t + dur + 0.1);
     e.scheduleRelease(t + dur * 0.9);
   }
 
-  function playLeadNote(midi, t, dur) {
+  function playLeadNote(midi, t, dur, vel) {
     if (tone.enabled && tone.ready && tone.synths) {
       var note = (window.mm && window.mm.pitchToNote ? window.mm.pitchToNote(midi) : undefined);
       var when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - ac.currentTime) : undefined;
       var n = note || hzFromMidi(midi);
-      tone.synths.lead.triggerAttackRelease(n, dur, when);
+      tone.synths.lead.triggerAttackRelease(n, dur, when, (vel != null ? vel : 0.7));
       return;
     }
     var f = hzFromMidi(midi);
     var o = mkOsc(music.leadWave, f, t);
     var e = envGate(t, 0.004, 0.05, 0.3, 0.1, dur * 0.85);
-    var g = ac.createGain(); g.gain.setValueAtTime(0.18, t);
+    var g = ac.createGain(); g.gain.setValueAtTime(0.18 * (vel != null ? vel : 1), t);
     o.connect(e.gain).connect(g).connect(delay).connect(delayGain).connect(master);
     o.start(t);
     o.stop(t + dur + 0.12);
@@ -313,24 +356,29 @@
     // Swing on off-16ths (every second 16th inside an 8th)
     var swing = music.swing;
     if (swing > 0 && (step % 2 === 1)) t += secondsPer16th() * swing;
+    // Microtiming wobble
+    var t2 = t + microtime(step);
+    var vel = velocityForStep(step);
 
     var beatInBar = step % stepsPerBar;
     var isKick = (beatInBar % 4 === 0);
     var isSnare = (beatInBar % 8 === 4);
-    var isHat = (beatInBar % 2 === 0);
+    // Euclidean hats per bar, rotated by bar index
+    var bar = Math.floor(step / stepsPerBar);
+    var hatPulses = Math.max(4, Math.round(music.density * 10));
+    var hatPattern = euclid(stepsPerBar, hatPulses, bar % stepsPerBar);
 
     // Density affects extra hits
-    if (isKick) playKick(t);
-    if (isSnare) playSnare(t, false);
-    if (isHat) playHat(t, (music.density > 0.8) && (beatInBar % 4 === 2));
+    if (isKick) playKick(t2, vel);
+    if (isSnare) playSnare(t2, false, vel);
+    if (hatPattern[beatInBar]) playHat(t2, (music.density > 0.8) && (beatInBar % 4 === 2), vel);
 
     // On bar start, play a short chord stab to make harmony obvious
     if (beatInBar === 0) {
-      playChordStab((music.harmony[ Math.floor(step / stepsPerBar) % music.harmony.length ] || 0), t);
+      playChordStab((music.harmony[ Math.floor(step / stepsPerBar) % music.harmony.length ] || 0), t2);
     }
 
     // Bass pattern: root or fifth of current chord degree (more deterministic)
-    var bar = Math.floor(step / stepsPerBar);
     var deg = (music.harmony[bar % music.harmony.length] || 0);
     var root = midiFromDegree(music.key, music.scale, deg, -2);
     var fifth = midiFromDegree(music.key, music.scale, deg + 4, -2);
@@ -338,7 +386,7 @@
     if (beatInBar % 8 === 0) bassNote = root; // strong downbeats
     else if (beatInBar % 4 === 2) bassNote = fifth; // mid-beat accent
     else bassNote = root;
-    playBassNote(bassNote, t, secondsPer16th() * 2);
+    playBassNote(bassNote, t2, secondsPer16th() * 2, vel);
 
     // Lead: prefer Magenta override for this bar; otherwise motif events for this bar; otherwise seed rows; fallback to procedural
     var stepInBar = beatInBar;
@@ -347,13 +395,13 @@
     if (override && override.length) {
       for (var i = 0; i < override.length; i++) {
         var ev = override[i];
-        if (ev.step === stepInBar) playLeadNote(ev.midi, t, secondsPer16th() * (ev.durSteps || 2));
+        if (ev.step === stepInBar) playLeadNote(ev.midi, t2, secondsPer16th() * (ev.durSteps || 2), vel);
       }
     } else if (motifBarMap[barIndex] && motifBarMap[barIndex].length) {
       var mev = motifBarMap[barIndex];
       for (var k = 0; k < mev.length; k++) {
         var evm = mev[k];
-        if (evm.step === stepInBar) playLeadNote(evm.midi, t, secondsPer16th() * (evm.durSteps || 2));
+        if (evm.step === stepInBar) playLeadNote(evm.midi, t2, secondsPer16th() * (evm.durSteps || 2), vel);
       }
     } else if (globalSeed && globalSeed.length) {
       for (var j = 0; j < globalSeed.length; j++) {
@@ -362,7 +410,7 @@
           var sd = (s.degree|0) + deg; // transpose by harmony degree
           var lm = midiFromDegree(music.key, music.scale, sd, 0);
           var ld = secondsPer16th() * Math.max(1, (s.dur|0) || 2);
-          playLeadNote(lm, t, ld);
+          playLeadNote(lm, t2, ld, vel);
         }
       }
     } else {
@@ -495,15 +543,36 @@
       }
     } catch (e) { /* best-effort */ }
     setMgStatus('interpolating…');
-    mg.vae.interpolate([a, b], 3)
+    mg.vae.interpolate([a, b], 5)
       .then(function (out) {
-        var mid = out && out[1] ? out[1] : out[0];
-        if (!mid) throw new Error('no sequence');
-        if (!mid.quantizationInfo && window.mm && window.mm.sequences) {
-          try { mid = window.mm.sequences.quantizeNoteSequence(mid, 4); } catch (e) {}
+        if (!out || !out.length) throw new Error('no sequences');
+        var barEvents = [];
+        for (var i = 1; i < out.length - 1; i++) { // use interior sequences
+          var seq = out[i];
+          if (!seq) continue;
+          if (!seq.quantizationInfo && window.mm && window.mm.sequences) {
+            try { seq = window.mm.sequences.quantizeNoteSequence(seq, 4); } catch (e) {}
+          }
+          // Split 2-bar sequence into two one-bar chunks
+          for (var off = 0; off <= stepsPerBar; off += stepsPerBar) {
+            var ns = { ticksPerQuarter: 220, totalQuantizedSteps: stepsPerBar, quantizationInfo: { stepsPerQuarter: 4 }, notes: [] };
+            var notes = seq.notes || [];
+            for (var j = 0; j < notes.length; j++) {
+              var q = notes[j];
+              var st = (q.quantizedStartStep|0) - off;
+              var en = (q.quantizedEndStep|0) - off;
+              if (st < 0 || st >= stepsPerBar) continue;
+              var adjEn = Math.max(st + 1, Math.min(stepsPerBar, en));
+              ns.notes.push({ pitch: q.pitch|0, quantizedStartStep: st, quantizedEndStep: adjEn, velocity: q.velocity || 100, isDrum: !!q.isDrum });
+            }
+            var ev = eventsFromNoteSequence(ns);
+            if (ev && ev.length) barEvents.push(ev);
+            if (barEvents.length >= 4) break; // cap to 4 bars
+          }
+          if (barEvents.length >= 4) break;
         }
-        mg.leadOverride[barIndex + 1] = eventsFromNoteSequence(mid);
-        setMgStatus('transition ready');
+        for (var k = 0; k < barEvents.length; k++) mg.leadOverride[barIndex + 1 + k] = barEvents[k];
+        setMgStatus('transition ready (' + barEvents.length + ' bars)');
       })
       .catch(function (e) { setMgStatus('interpolate failed: ' + e.message); });
   }
@@ -637,18 +706,43 @@
     tone.loading = true; if (toneStatus) toneStatus.textContent = 'Tone: loading…';
     loadScript('https://cdn.jsdelivr.net/npm/tone/build/Tone.js')
       .then(function () {
-        // build synth graph
+        // Build synth graph with master conditioning and subtle motion
+        var masterHP = new Tone.Filter(60, 'highpass');
+        masterHP.toDestination();
+        var limiter = new Tone.Limiter(-1);
+        limiter.connect(masterHP);
+
+        var leadPre = new Tone.Filter(3500, 'lowpass');
         var leadDelay = new Tone.FeedbackDelay(0.22, 0.3);
         var crusher = new Tone.BitCrusher(6);
-        var color = new Tone.Filter(4000, 'lowpass');
         var ping = new Tone.PingPongDelay(0.22, 0.25);
-        var lead = new Tone.Synth({ oscillator: { type: 'pulse', width: 0.5 }, envelope: { attack: 0.005, decay: 0.08, sustain: 0.3, release: 0.12 } }).connect(leadDelay).connect(crusher).connect(color).connect(ping).toDestination();
-        var bass = new Tone.MonoSynth({ oscillator: { type: 'square' }, filter: { type: 'lowpass', frequency: 900 }, envelope: { attack: 0.01, decay: 0.08, sustain: 0.2, release: 0.08 } }).toDestination();
-        var kick = new Tone.MembraneSynth({ pitchDecay: 0.02, octaves: 5, oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.12, sustain: 0.0, release: 0.06 } }).toDestination();
-        var snare = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.12, sustain: 0 } }).toDestination();
-        var hat = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.03, sustain: 0 } }).toDestination();
+
+        var lead = new Tone.Synth({
+          oscillator: { type: 'pulse', width: 0.5 },
+          envelope: { attack: 0.004, decay: 0.07, sustain: 0.28, release: 0.11 }
+        }).connect(leadPre).connect(leadDelay).connect(crusher).connect(ping).connect(limiter);
+
+        // PWM + vibrato movement
+        try {
+          var pwm = new Tone.LFO({ frequency: 0.2, min: 0.42, max: 0.58 }).start();
+          pwm.connect(lead.oscillator.width);
+          var vibrato = new Tone.LFO({ frequency: 5.5, min: -4, max: 4 }).start();
+          vibrato.connect(lead.frequency);
+        } catch (e) { /* best-effort */ }
+
+        var bass = new Tone.MonoSynth({
+          oscillator: { type: 'square' },
+          filter: { type: 'lowpass', Q: 8 },
+          filterEnvelope: { attack: 0.002, decay: 0.08, sustain: 0.15, release: 0.06, baseFrequency: 120, octaves: 3 },
+          envelope: { attack: 0.005, decay: 0.07, sustain: 0.18, release: 0.07 }
+        }).connect(limiter);
+
+        var kick = new Tone.MembraneSynth({ pitchDecay: 0.02, octaves: 5, oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.12, sustain: 0.0, release: 0.06 } }).connect(limiter);
+        var snare = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.12, sustain: 0 } }).connect(limiter);
+        var hat = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.03, sustain: 0 } }).connect(limiter);
+
         tone.synths = { lead: lead, bass: bass, kick: kick, snare: snare, hat: hat };
-        tone.fx = { crusher: crusher, color: color, ping: ping, delay: leadDelay };
+        tone.fx = { crusher: crusher, color: leadPre, ping: ping, delay: leadDelay, limiter: limiter, hp: masterHP };
         tone.ready = true; tone.enabled = true; if (toneStatus) toneStatus.textContent = 'Tone: ready';
         bindFxControls();
       })
