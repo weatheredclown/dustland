@@ -13,6 +13,25 @@
         opacity: 0.8;
     }
 
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+  background: #0e110e;
+  border: 1px solid #283228;
+  border-radius: 6px;
+  color: var(--ink);
+  padding: 4px 6px;
+  font: inherit;
+}
+
+input[type="range"] {
+  accent-color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+}
+
     html,
     body {
         height: 100%;
