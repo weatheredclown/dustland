@@ -1453,8 +1453,8 @@ test('combat overlay leaves room for panel', async () => {
   assert.match(css, /:root\s*{[\s\S]*--panelW:\s*440px/);
 });
 
-test('distance to road reduces encounter chance', () => {
-  const row = Array(31).fill(TILE.SAND);
+test('encounters blocked within 3 tiles of roads', () => {
+  const row = Array(20).fill(TILE.SAND);
   row[0] = TILE.ROAD;
   applyModule({ world: [row], encounters: { world: [ { name: 'Test', HP: 1, DEF: 0 } ] } });
   state.map = 'world';
@@ -1462,16 +1462,19 @@ test('distance to road reduces encounter chance', () => {
   const origRand = Math.random;
   const origStart = globalThis.Dustland.actions.startCombat;
   globalThis.Dustland.actions.startCombat = () => { started = true; return Promise.resolve({ result: 'flee' }); };
-  Math.random = () => 0.23;
-  setPartyPos(1, 0); // Near the road
+  Math.random = () => 0;
+  setPartyPos(2, 0); // within 3 tiles of road
   checkRandomEncounter();
-  assert.ok(started);
-  started = false;
-  setPartyPos(25, 0); // Far from the road
+  assert.ok(!started);
+  setPartyPos(4, 0); // beyond 3 tiles
+  checkRandomEncounter();
+  Math.random = () => 1;
+  checkRandomEncounter();
+  checkRandomEncounter();
   checkRandomEncounter();
   Math.random = origRand;
   globalThis.Dustland.actions.startCombat = origStart;
-  assert.ok(!started);
+  assert.ok(started);
 });
 
 test('no encounters occur on roads', () => {
@@ -1491,6 +1494,31 @@ test('no encounters occur on roads', () => {
   assert.ok(!started);
 });
 
+test('random encounters have a cooldown', async () => {
+  const row = Array(10).fill(TILE.SAND);
+  applyModule({ world: [row], encounters: { world: [ { name: 'Test', HP: 1, DEF: 0 } ] } });
+  state.map = 'world';
+  setPartyPos(5, 0);
+  let started = 0;
+  const origStart = globalThis.Dustland.actions.startCombat;
+  globalThis.Dustland.actions.startCombat = () => { started++; return Promise.resolve({ result: 'flee' }); };
+  const origRand = Math.random;
+  Math.random = () => 0;
+  await checkRandomEncounter();
+  checkRandomEncounter();
+  checkRandomEncounter();
+  checkRandomEncounter();
+  await checkRandomEncounter();
+  checkRandomEncounter();
+  checkRandomEncounter();
+  checkRandomEncounter();
+  Math.random = () => 1;
+  checkRandomEncounter();
+  Math.random = origRand;
+  globalThis.Dustland.actions.startCombat = origStart;
+  assert.strictEqual(started, 2);
+});
+
 test('random encounters award XP based on strength', async () => {
   const row = Array(2).fill(TILE.SAND);
   applyModule({ world: [row], encounters: { world: [ { name: 'Test', HP: 4, DEF: 0, challenge: 4 } ] } });
@@ -1504,6 +1532,10 @@ test('random encounters award XP based on strength', async () => {
   const origOpen = global.openCombat;
   global.openCombat = async () => ({ result: 'loot' });
   await checkRandomEncounter();
+  Math.random = () => 1;
+  checkRandomEncounter();
+  checkRandomEncounter();
+  checkRandomEncounter();
   Math.random = origRand;
   global.openCombat = origOpen;
   assert.strictEqual(party[0].xp, 4);
@@ -1523,6 +1555,10 @@ test('distant encounters use hard enemy pool', () => {
   Math.random = () => 0;
   const origStart = globalThis.Dustland.actions.startCombat;
   globalThis.Dustland.actions.startCombat = def => { chosen = def; return Promise.resolve({ result: 'flee' }); };
+  checkRandomEncounter();
+  Math.random = () => 1;
+  checkRandomEncounter();
+  checkRandomEncounter();
   checkRandomEncounter();
   Math.random = origRand;
   globalThis.Dustland.actions.startCombat = origStart;

@@ -8,6 +8,7 @@ bus?.on?.('combat:ended', () => { combatActive = false; });
 const buffs = [];              // 2c342c / 313831
 const tileColors = {0:'#1e271d',1:'#313831',2:'#1573ff',3:'#203320',4:'#777777',5:'#304326',6:'#4d5f4d',7:'#233223',8:'#8bd98d',9:'#000000'};// 2B382B / 203320
 let moveDelay = 0;
+let encounterCooldown = 0;
 
 function hexToHsv(hex) {
     // 1. Convert Hex to RGB
@@ -228,10 +229,14 @@ function distanceToRoad(x, y, map=state.map){
   return 999;
 }
 function checkRandomEncounter(){
+  if(encounterCooldown > 0){
+    encounterCooldown--;
+    return;
+  }
   const bank = enemyBanks[state.map];
   if(!bank || !bank.length) return;
   const dist = distanceToRoad(party.x, party.y);
-  if(dist <= 0) return;
+  if(dist <= 3) return;
   const span = Math.max(WORLD_W, WORLD_H);
   const chance = Math.max(0.02, 0.25 - (dist / span) * 0.23);
   if(Math.random() < chance){
@@ -240,6 +245,7 @@ function checkRandomEncounter(){
     const hard = pool.filter(e => e.minDist);
     if(hard.length) pool = hard;
     const def = pool[Math.floor(Math.random() * pool.length)];
+    encounterCooldown = 3 + Math.floor(Math.random() * 3);
     return Dustland.actions.startCombat(def);
   }
 }
