@@ -4,6 +4,11 @@ const enemyRow      = typeof document !== 'undefined' ? document.getElementById(
 const partyRow      = typeof document !== 'undefined' ? document.getElementById('combatParty') : null;
 const cmdMenu       = typeof document !== 'undefined' ? document.getElementById('combatCmd') : null;
 const turnIndicator = typeof document !== 'undefined' ? document.getElementById('turnIndicator') : null;
+const combatKeys    = {};
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('keyup', (e) => { combatKeys[e.key] = false; });
+}
 
 window.bossTelegraphFX = window.bossTelegraphFX || { intensity: 1, duration: 1000 };
 window.setBossTelegraphFX = (opts = {}) => {
@@ -136,6 +141,7 @@ function openCombat(enemies){
   if (!combatOverlay) return Promise.resolve({ result: 'flee' });
 
   return new Promise((resolve) => {
+    for (const k in combatKeys) combatKeys[k] = false;
     combatState.enemies = enemies.map(e => ({
       ...e,
       maxHp: e.maxHp || e.hp,
@@ -334,6 +340,8 @@ function moveChoice(dir){
 
 function handleCombatKey(e){
   if (!combatOverlay || !combatOverlay.classList.contains('shown')) return false;
+  if (e.repeat && !combatKeys[e.key]) return false;
+  combatKeys[e.key] = true;
   if ((e.key === 'Enter' || e.key === ' ') && e.repeat) return false;
   switch (e.key){
     case 'ArrowUp':    moveChoice(-1); return true;
