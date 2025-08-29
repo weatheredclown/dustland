@@ -14,10 +14,10 @@ We need to let editors tinker with module layouts without touching code. Each JS
    - After parsing `DATA`, run a `postLoad(module)` function to sprinkle custom logic (NPC scripts, quests, etc.).
    - Existing modules must be refactored so their gameplay logic lives in `postLoad` and the JSON stays clean.
 2. **Import / export scripts**
-   - Add `scripts/module-json.js` with commands:
+   - [x] Add `scripts/module-json.js` with commands:
      - `node scripts/module-json.js export modules/dustland.module.js` → writes `data/modules/dustland.json`.
      - `node scripts/module-json.js import modules/dustland.module.js` → injects JSON back into the multiline string.
-   - Wire npm aliases:
+   - [x] Wire npm aliases:
      - `npm run module:export -- <file>`
      - `npm run module:import -- <file>`
 3. **Module picker management**
@@ -27,8 +27,8 @@ We need to let editors tinker with module layouts without touching code. Each JS
      - `npm run module:add -- modules/foo.module.js`
      - `npm run module:remove -- modules/foo.module.js`
 4. **Directory layout**
-   - Store exported JSON under `data/modules/`.
-   - Keep procedural helpers in `scripts/`.
+   - [x] Store exported JSON under `data/modules/`.
+   - [x] Keep procedural helpers in `scripts/`.
 
 ## Remaining Work
 - Refactor each existing module to the new format.
