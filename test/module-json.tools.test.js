@@ -17,10 +17,14 @@ test('module-json export/import round trip', () => {
     execSync(`node scripts/module-json.js export ${moduleFile}`);
     const exported = JSON.parse(fs.readFileSync(jsonFile, 'utf8'));
     assert.strictEqual(exported.module, moduleFile);
+    assert.strictEqual(exported.name, 'tmp-test-module');
+    const { name } = exported;
     delete exported.module;
+    delete exported.name;
     assert.deepStrictEqual(exported, original);
     exported.hello = 'mars';
     exported.module = moduleFile;
+    exported.name = name;
     fs.writeFileSync(jsonFile, JSON.stringify(exported, null, 2));
     execSync(`node scripts/module-json.js import ${moduleFile}`);
     const updated = fs.readFileSync(moduleFile, 'utf8');
@@ -29,6 +33,7 @@ test('module-json export/import round trip', () => {
     const obj = JSON.parse(match[1]);
     assert.strictEqual(obj.hello, 'mars');
     assert.strictEqual(obj.module, undefined);
+    assert.strictEqual(obj.name, 'tmp-test-module');
   } finally {
     fs.rmSync(moduleFile, { force: true });
     fs.rmSync(jsonFile, { force: true });

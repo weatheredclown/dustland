@@ -27,6 +27,7 @@ if (cmd === 'export') {
   }
   const obj = JSON.parse(dataStr);
   obj.module = file;
+  obj.name = obj.name || `${baseName}-module`;
   fs.mkdirSync(path.dirname(jsonPath), { recursive: true });
   fs.writeFileSync(jsonPath, JSON.stringify(obj, null, 2));
   console.log(`Exported ${jsonPath}`);
