@@ -117,8 +117,8 @@ _______________________________________________________________________________
   - Gameplay logic is split into tiny systems: movement, collisions,
     interactions, and rendering order. This keeps cross-file conditionals
     low and makes adding new entities like bandits or doors easy.
-  - Useful entry points:
-      * genHall(), genWorld(), seedWorldContent()
+  - Useful entry points (see docs/hacking-guide.md for more):
+      * genWorld(), seedWorldContent()
       * makeNPC(), NPCS[], quests{}, itemDrops[]
       * renderParty(), renderInv(), renderQuests()
       * takeNearestItem(), interact(), move()
