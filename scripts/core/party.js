@@ -100,7 +100,7 @@ class Character {
   }
 }
 
-  class Party extends Array {
+class Party extends Array {
     constructor(...args){
       super(...args);
       this.map = globalThis.state ? globalThis.state.map : 'world';
@@ -108,14 +108,36 @@ class Character {
       this.y = 2;
       this.flags = {};
     }
+  push(...members){
+    const unique = members.filter(m => m && !this.includes(m));
+    return super.push(...unique);
+  }
+  unshift(...members){
+    const unique = members.filter(m => m && !this.includes(m));
+    return super.unshift(...unique);
+  }
+  setMembers(members){
+    const seen = new Set();
+    const unique = [];
+    (members||[]).forEach(m => {
+      if(m && !seen.has(m)){
+        seen.add(m);
+        unique.push(m);
+      }
+    });
+    super.splice(0, this.length, ...unique);
+    return this.length;
+  }
   addMember(member){
     if(this.length >= 6){
       log('Party is full.');
       return false;
     }
-    this.push(member);
+    if(this.includes(member)) return false;
+    super.push(member);
     member.applyEquipmentStats();
-    renderParty(); updateHUD();
+    if(typeof renderParty === 'function') renderParty();
+    if(typeof updateHUD === 'function') updateHUD();
     log(member.name+" joins the party.");
     return true;
   }
@@ -127,7 +149,8 @@ class Character {
       return false;
     }
     this.splice(idx,1);
-    renderParty(); updateHUD();
+    if(typeof renderParty === 'function') renderParty();
+    if(typeof updateHUD === 'function') updateHUD();
     if(typeof makeNPC==='function' && typeof NPCS !== 'undefined' && Array.isArray(NPCS)){
       const tree={ start:{ text:'', choices:[{label:'(Leave)', to:'bye'}] }, bye:{ text:'' } };
       const npc=makeNPC(member.id, this.map, this.x, this.y, '#fff', member.name, '', '', tree);

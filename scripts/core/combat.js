@@ -154,6 +154,7 @@ function openCombat(enemies){
     combatState.onComplete = resolve;
     combatState.fallen = [];
     combatState.log = [];
+    combatState.roster = Array.from(party);
 
     (party || []).forEach(m => {
       m.maxAdr = m.maxAdr || 100;
@@ -176,8 +177,16 @@ function closeCombat(result = 'flee'){
   if (cmdMenu) cmdMenu.style.display = 'none';
   if (turnIndicator) turnIndicator.textContent = '';
 
-  // Restore fallen to party with at least 1 HP
-  combatState.fallen.forEach(m => { m.hp = Math.max(1, m.hp || 0); party.push(m); });
+  if (combatState.roster) {
+    const fallenSet = new Set(combatState.fallen);
+    combatState.roster.forEach(m => {
+      if (fallenSet.has(m)) m.hp = Math.max(1, m.hp || 0);
+    });
+    party.setMembers(combatState.roster);
+    if (typeof renderParty === 'function') renderParty();
+    if (typeof updateHUD === 'function') updateHUD();
+    combatState.roster = null;
+  }
   combatState.fallen.length = 0;
 
   if(result === 'bruise' && state.mapEntry){
