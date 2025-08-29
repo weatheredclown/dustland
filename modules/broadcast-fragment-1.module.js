@@ -1,4 +1,5 @@
-const BROADCAST_FRAGMENT_1 = {
+const DATA = `
+{
   "seed": "broadcast-1",
   "name": "broadcast-fragment-1",
   "startMap": "world",
@@ -91,5 +92,11 @@ const BROADCAST_FRAGMENT_1 = {
   "buildings": [
     { "x": 100, "y": 20, "w": 1, "h": 1, "interiorId": "radio_shack", "boarded": false }
   ]
-};
-globalThis.BROADCAST_FRAGMENT_1 = BROADCAST_FRAGMENT_1;
+}
+`;
+
+function postLoad(module) {}
+
+globalThis.BROADCAST_FRAGMENT_1 = JSON.parse(DATA);
+globalThis.BROADCAST_FRAGMENT_1.postLoad = postLoad;
+
