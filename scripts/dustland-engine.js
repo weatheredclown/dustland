@@ -170,6 +170,7 @@ const sfxPool = Array.from({ length: 5 }, () => sfxBase.cloneNode());
 const sfxTimers = new Array(sfxPool.length).fill(0);
 let sfxIndex = 0;
 function playSfx(id){
+  const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
   if(!audioEnabled) return;
   if(id==='tick') return sfxTick();
   if(id==='damage') return sfxCrunch();
@@ -184,6 +185,7 @@ function playSfx(id){
   // Ignore playback aborts from rapid movement to avoid console noise
   a.play().catch(()=>{});
   sfxTimers[slot]=setTimeout(()=>a.pause(), meta.dur*1000);
+  if(globalThis.perfStats) globalThis.perfStats.sfx += ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - t0;
 }
 EventBus.on('sfx', playSfx);
 const fxOverlay = document.createElement('div');
@@ -262,7 +264,7 @@ function playWindChime(x, y) {
 function footstepBump(){
   bumpX = (Math.random()-0.5)*2;
   bumpY = (Math.random()-0.5)*2;
-  bumpEnd = performance.now() + 50;
+  bumpEnd = ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) + 50;
 }
 
 function pickupSparkle(x,y){
@@ -276,8 +278,9 @@ function draw(t){
   pulseAdrenaline(t);
   const dt=(t-_lastTime)||0; _lastTime=t;
   render(state, dt/1000);
-  const bx = bumpEnd > performance.now() ? bumpX : 0;
-  const by = bumpEnd > performance.now() ? bumpY : 0;
+  const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const bx = bumpEnd > now ? bumpX : 0;
+  const by = bumpEnd > now ? bumpY : 0;
   const fx = globalThis.fxConfig || {};
   if(fx.enabled === false){
     dctx.globalAlpha = 1;
@@ -952,7 +955,7 @@ disp.addEventListener('touchstart',e=>{
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
 requestAnimationFrame(draw);
-log('v0.7.19 — bandits may drop scrap.');
+log('v0.7.20 — add perf debug panel.');
 if (window.NanoDialog) NanoDialog.init();
 
 { // skip normal boot flow in ACK player mode

@@ -21,7 +21,9 @@
     state.busy=true;
     const job=state.queue.shift();
     setTimeout(()=>{
+      const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
       const p=aStar(job.map, job.start, job.goal, job.ignoreId);
+      if(globalThis.perfStats) globalThis.perfStats.path += ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - t0;
       state.cache.set(job.key, p);
       state.busy=false;
       process();
@@ -95,6 +97,7 @@
 
   // Step NPCs along their waypoint loops. Invoked after player moves.
   function tickPathAI(){
+    const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     const now = Date.now();
     for(const n of (typeof NPCS !== 'undefined' ? NPCS : [])){
       const pts=n.loop;
@@ -126,6 +129,7 @@
       const target=pts[st.idx];
       st.job=queue(n.map,{x:n.x,y:n.y},target,n.id);
     }
+    if(globalThis.perfStats) globalThis.perfStats.ai += ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - t0;
   }
   globalThis.Dustland = globalThis.Dustland || {};
   globalThis.Dustland.path = { queue, pathFor, tickPathAI };
