@@ -5,22 +5,31 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 
-test('dustland module adds slot shack with gambling options', () => {
+function loadModuleData() {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'dustland.module.js');
   const src = fs.readFileSync(file, 'utf8');
-  assert.match(src, /interiorId: 'slot_shack'/);
-  assert.match(src, /id: 'slots'/);
-  assert.match(src, /\(1 scrap\)/);
-  assert.match(src, /\(5 scrap\)/);
-  assert.match(src, /\(25 scrap\)/);
+  const DATA_START = 'const DATA = `\n';
+  const start = src.indexOf(DATA_START) + DATA_START.length;
+  const end = src.indexOf('`', start);
+  return JSON.parse(src.slice(start, end));
+}
+
+test('dustland module adds slot shack with gambling options', () => {
+  const data = loadModuleData();
+  assert.ok(data.buildings.some(b => b.interiorId === 'slot_shack'));
+  const slotNpc = data.npcs.find(n => n.id === 'slots');
+  assert.ok(slotNpc);
+  const labels = slotNpc.tree.start.choices.map(c => c.label);
+  assert.ok(labels.includes('(1 scrap)'));
+  assert.ok(labels.includes('(5 scrap)'));
+  assert.ok(labels.includes('(25 scrap)'));
 });
 
 test('slot machine drops cache after paying out 500 scrap net', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'dustland.module.js');
-  let src = fs.readFileSync(file, 'utf8');
-  src = src.replace(/updateHUD\?\.\(\);\n\s{2}\}/, 'updateHUD?.();\n  }\n  globalThis.pullSlots = pullSlots;');
+  const src = fs.readFileSync(file, 'utf8');
   const context = {
     WORLD_H: 20,
     WORLD_W: 120,
@@ -43,8 +52,10 @@ test('slot machine drops cache after paying out 500 scrap net', () => {
     if (i > -1) context.NPCS.splice(i, 1);
   };
   vm.runInNewContext(src, context);
-  const { pullSlots } = context;
-  for (let i = 0; i < 20; i++) pullSlots(25, [0, 10, 25, 35, 50]);
+  context.DUSTLAND_MODULE.postLoad(context.DUSTLAND_MODULE);
+  const slotNpc = context.DUSTLAND_MODULE.npcs.find(n => n.id === 'slots');
+  const play = slotNpc.tree.start.choices.find(c => c.label === '(25 scrap)').effects[0];
+  for (let i = 0; i < 20; i++) play();
   assert.strictEqual(context.NPCS.length, 0);
   assert(context.itemDrops.some(d => d.id === 'cache-vaulted'));
 });

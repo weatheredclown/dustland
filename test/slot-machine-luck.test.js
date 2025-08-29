@@ -17,26 +17,24 @@ test('leader luck above 7 boosts slot machine payout', async () => {
   globalThis.addToInv = () => {};
   globalThis.rng = () => 0;
   globalThis.applyModule = () => ({ start: {} });
-  const mod = vm.runInThisContext(code + '\nDUSTLAND_MODULE', { filename: 'dustland.module.js' });
-
-  const slotNpc = mod.npcs.find(n => n.id === 'slots');
+  vm.runInThisContext(code, { filename: 'dustland.module.js' });
+  globalThis.DUSTLAND_MODULE.postLoad(globalThis.DUSTLAND_MODULE);
+  const slotNpc = globalThis.DUSTLAND_MODULE.npcs.find(n => n.id === 'slots');
   globalThis.party = [{ stats: { LCK: 7 }, _bonus: { LCK: 0 }, name: 'Hero' }];
   globalThis.leader = () => party[0];
   const origRandom = Math.random;
   Math.random = () => 0;
 
-  // Luck at 7 does not influence outcome
-  slotNpc.tree.start.choices[0].effects[0]();
+  const play = slotNpc.tree.start.choices[0].effects[0];
+  play();
   assert.equal(player.scrap, 4);
 
-  // Luck above 7 can improve the result
   player.scrap = 5;
   party[0].stats.LCK = 8;
   logMessages.length = 0;
-  slotNpc.tree.start.choices[0].effects[0]();
+  play();
   assert.equal(player.scrap, 5);
   assert.ok(logMessages.some(m => m.includes('Lucky spin')));
 
   Math.random = origRandom;
 });
-

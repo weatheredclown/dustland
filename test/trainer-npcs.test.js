@@ -19,6 +19,12 @@ function setupParty(){
   return context;
 }
 
+const moduleSrc = await fs.readFile(new URL('../modules/dustland.module.js', import.meta.url), 'utf8');
+const DATA_START = 'const DATA = `\n';
+const start = moduleSrc.indexOf(DATA_START) + DATA_START.length;
+const end = moduleSrc.indexOf('`', start);
+const moduleData = JSON.parse(moduleSrc.slice(start, end));
+
 test('trainStat spends a point and raises stat', () => {
   const ctx = setupParty();
   const m = ctx.makeMember('id', 'Name', 'Role');
@@ -29,11 +35,9 @@ test('trainStat spends a point and raises stat', () => {
   assert.strictEqual(m.skillPoints, 0);
 });
 
-const moduleCode = await fs.readFile(new URL('../modules/dustland.module.js', import.meta.url), 'utf8');
-
 test('dustland module includes trainer NPCs', () => {
-  const trainerIds = moduleCode.match(/id: 'trainer_[^']+'/g) || [];
-  assert.ok(trainerIds.length >= 3);
-  const upgradeOpts = moduleCode.match(/\(Upgrade Skills\)/g) || [];
+  const trainerNpcs = moduleData.npcs.filter(n => n.id && n.id.startsWith('trainer_'));
+  assert.ok(trainerNpcs.length >= 3);
+  const upgradeOpts = trainerNpcs.flatMap(n => n.tree?.start?.choices || []).filter(c => c.label && c.label.includes('Upgrade Skills'));
   assert.ok(upgradeOpts.length >= 3);
 });
