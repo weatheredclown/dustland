@@ -2,6 +2,7 @@ function seedWorldContent() {}
 
 const DUSTLAND_MODULE = (() => {
   const midY = Math.floor(WORLD_H / 2);
+  let slotNetPayout = 0;
   function pullSlots(cost, payouts) {
     if (player.scrap < cost) {
       log('Not enough scrap.');
@@ -14,6 +15,19 @@ const DUSTLAND_MODULE = (() => {
       log(`The machine rattles and spits out ${reward} scrap.`);
     } else {
       log('The machine coughs and eats your scrap.');
+    }
+    slotNetPayout += reward - cost;
+    if (slotNetPayout >= 500) {
+      log('The machine sparks and collapses!');
+      const slotNpc = NPCS.find(n => n.id === 'slots');
+      const dropPos = slotNpc ? { map: slotNpc.map, x: slotNpc.x, y: slotNpc.y } : { map: party.map, x: party.x, y: party.y };
+      if (slotNpc) removeNPC(slotNpc);
+      const cache = SpoilsCache?.create?.('vaulted');
+      if (cache) {
+        const registered = registerItem?.(cache) || cache;
+        itemDrops?.push?.({ id: registered.id, ...dropPos });
+        globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target: slotNpc });
+      }
     }
     updateHUD?.();
   }
