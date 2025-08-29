@@ -25,21 +25,23 @@ function setup(){
   return { context, dom };
 }
 
-test('render trainer options', async () => {
-  const { context, dom } = setup();
-  await context.TrainerUI.showTrainer('power');
-  const buttons = dom.window.document.querySelectorAll('#trainer_ui button');
-  assert.strictEqual(buttons.length, 2);
-  assert.ok(buttons[0].textContent.includes('STR'));
-});
+  test('render trainer options with stat deltas', async () => {
+    const { context, dom } = setup();
+    const m = context.makeMember('id', 'Name', 'Role');
+    context.party.push(m);
+    await context.TrainerUI.showTrainer('power', 0);
+    const buttons = dom.window.document.querySelectorAll('#trainer_ui button');
+    assert.strictEqual(buttons.length, 2);
+    assert.ok(buttons[0].textContent.includes('4→5'));
+  });
 
 test('apply upgrade via click', async () => {
   const { context, dom } = setup();
   const m = context.makeMember('id', 'Name', 'Role');
   m.skillPoints = 1;
   context.party.push(m);
-  await context.TrainerUI.showTrainer('power');
-  const btn = dom.window.document.querySelector('#trainer_ui button');
+    await context.TrainerUI.showTrainer('power', 0);
+    const btn = dom.window.document.querySelector('#trainer_ui button');
   btn.click();
   assert.strictEqual(m.stats.STR, 5);
   assert.strictEqual(m.skillPoints, 0);
