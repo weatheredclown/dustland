@@ -35,3 +35,16 @@ test('no badge when no skill points', () => {
   const badge = document.querySelector('.spbadge');
   assert.strictEqual(badge, null);
 });
+
+test('badge updates without duplication on re-render', () => {
+  const { context, document } = setup();
+  const m = context.makeMember('id','Name','Role');
+  m.skillPoints = 1;
+  context.party.push(m);
+  context.renderParty();
+  m.skillPoints = 3;
+  context.renderParty();
+  const badges = document.querySelectorAll('.spbadge');
+  assert.strictEqual(badges.length, 1);
+  assert.strictEqual(String(badges[0].textContent), '3');
+});
