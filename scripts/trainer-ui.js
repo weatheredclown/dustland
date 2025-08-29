@@ -3,9 +3,10 @@
     return globalThis.TRAINER_UPGRADES || {};
   }
 
-  async function showTrainer(id, memberIndex){
+  async function showTrainer(id, memberIndex = 0){
     const data = loadTrainerData();
     const upgrades = data[id] || [];
+    const member = globalThis.party?.[memberIndex];
     let box = document.getElementById('trainer_ui');
     if(!box){
       box = document.createElement('div');
@@ -15,7 +16,13 @@
     box.innerHTML = '';
     upgrades.forEach(up => {
       const btn = document.createElement('button');
-      btn.textContent = `${up.label} (Cost:${up.cost})`;
+      if(member){
+        const base = up.stat === 'HP' ? member.maxHp : (member.stats[up.stat] || 0);
+        const after = base + (up.delta || 0);
+        btn.textContent = `${up.label} (Cost:${up.cost}) ${base}\u2192${after}`;
+      } else {
+        btn.textContent = `${up.label} (Cost:${up.cost})`;
+      }
       btn.addEventListener('click', () => {
         applyUpgrade(id, up.id, memberIndex);
       });
