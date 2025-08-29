@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
 
 function usage(){
   console.log('Usage: node scripts/module-json.js <export|import> <moduleFile>');
