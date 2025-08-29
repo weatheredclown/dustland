@@ -251,22 +251,24 @@
     <script defer src="./scripts/fx-debug.js"></script>
     <script defer src="./scripts/perf-debug.js"></script>
   <script>
-    const params = new URLSearchParams(location.search);
-    const isAck = params.get('ack-player') === '1';
-    if (isAck) {
-      UI.show('moduleLoader', 'flex');
-      const btns = document.getElementById('mainButtons');
-      const nanoBtn = document.getElementById('nanoToggle');
-      const audioBtn = document.getElementById('audioToggle');
-      btns.appendChild(nanoBtn);
-      btns.appendChild(audioBtn);
-      const settingsBtn = document.getElementById('settingsBtn');
-      if (settingsBtn) UI.hide('settingsBtn');
-    }
-    const modeScript = document.createElement('script');
-    modeScript.defer = true;
-    modeScript.src = isAck ? './scripts/ack-player.js' : './scripts/module-picker.js';
-    document.body.appendChild(modeScript);
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(location.search);
+      const isAck = params.get('ack-player') === '1';
+      if (isAck) {
+        UI.show('moduleLoader', 'flex');
+        const btns = document.getElementById('mainButtons');
+        const nanoBtn = document.getElementById('nanoToggle');
+        const audioBtn = document.getElementById('audioToggle');
+        btns.appendChild(nanoBtn);
+        btns.appendChild(audioBtn);
+        const settingsBtn = document.getElementById('settingsBtn');
+        if (settingsBtn) UI.hide('settingsBtn');
+      }
+      const modeScript = document.createElement('script');
+      modeScript.defer = true;
+      modeScript.src = isAck ? './scripts/ack-player.js' : './scripts/module-picker.js';
+      document.body.appendChild(modeScript);
+    });
   </script>
   <!-- Shop overlay -->
   <div class="overlay" id="shopOverlay" role="dialog" aria-modal="true" tabindex="-1">
