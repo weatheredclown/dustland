@@ -70,11 +70,52 @@ const DUSTLAND_MODULE = (() => {
 
   const encounters = {
     world: [
-      { name: 'Rotwalker', HP: 6, DEF: 1, loot: 'water_flask', maxDist: 24 },
-      { name: 'Scavenger', HP: 5, DEF: 0, loot: 'raider_knife', maxDist: 36 },
-      { name: 'Sand Titan', HP: 20, DEF: 4, loot: 'artifact_blade', challenge: 9, minDist: 30 },
-      { name: 'Dune Reaper', HP: 75, DEF: 7, loot: 'artifact_blade', challenge: 32, minDist: 40, special: { cue: 'lashes the wind with scythes!', dmg: 10 } },
-      { name: 'Sand Colossus', HP: 80, DEF: 8, loot: 'artifact_blade', challenge: 36, minDist: 44, requires: 'artifact_blade', special: { cue: 'shakes the desert!', dmg: 12 } }
+      {
+        name: 'Rotwalker',
+        HP: 6,
+        DEF: 1,
+        loot: 'water_flask',
+        maxDist: 24,
+        portraitSheet: 'assets/portraits/dustland-module/rotwalker_4.png'
+      },
+      {
+        name: 'Scavenger',
+        HP: 5,
+        DEF: 0,
+        loot: 'raider_knife',
+        maxDist: 36,
+        portraitSheet: 'assets/portraits/dustland-module/scavenger_4.png'
+      },
+      {
+        name: 'Sand Titan',
+        HP: 20,
+        DEF: 4,
+        loot: 'artifact_blade',
+        challenge: 9,
+        minDist: 30,
+        portraitSheet: 'assets/portraits/dustland-module/sand_titan.png'
+      },
+      {
+        name: 'Dune Reaper',
+        HP: 75,
+        DEF: 7,
+        loot: 'artifact_blade',
+        challenge: 32,
+        minDist: 40,
+        special: { cue: 'lashes the wind with scythes!', dmg: 10 },
+        portraitSheet: 'assets/portraits/dustland-module/dune_reaper_4.png'
+      },
+      {
+        name: 'Sand Colossus',
+        HP: 80,
+        DEF: 8,
+        loot: 'artifact_blade',
+        challenge: 36,
+        minDist: 44,
+        requires: 'artifact_blade',
+        special: { cue: 'shakes the desert!', dmg: 12 },
+        portraitSheet: 'assets/portraits/dustland-module/sand_colossus_4.png'
+      }
     ]
   };
 
@@ -536,6 +577,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Scavenger Rat',
       title: 'Vermin',
       desc: 'A giant rat rooting through scraps.',
+      portraitSheet: 'assets/portraits/dustland-module/scavenger_rat_4.png',
       tree: { start: { text: 'It hisses.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       combat: { HP: 4, ATK: 1, loot: 'water_flask', auto: true }
     },
@@ -548,6 +590,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Rust Bandit',
       title: 'Scav Raider',
       desc: 'A bandit prowling for easy loot.',
+      portraitSheet: 'assets/portraits/dustland-module/rust_bandit_4.png',
       tree: { start: { text: 'The bandit sizes you up.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       combat: { HP: 6, ATK: 1, loot: 'raider_knife', auto: true }
     },
@@ -560,6 +603,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Feral Nomad',
       title: 'Mad Drifter',
       desc: 'A wild-eyed drifter muttering to himself.',
+      portraitSheet: 'assets/portraits/dustland-module/feral_nomad_4.png',
       tree: { start: { text: 'He lunges without warning.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       combat: { HP: 6, ATK: 2, loot: 'medkit', auto: true }
     },
@@ -572,6 +616,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Waste Ghoul',
       title: 'Rotwalker',
       desc: 'A decayed wanderer hungry for flesh.',
+      portraitSheet: 'assets/portraits/dustland-module/waste_ghoul_4.png',
       tree: { start: { text: 'It shambles toward you.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       combat: { HP: 7, ATK: 2, loot: 'goggles', auto: true }
     },
@@ -584,6 +629,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Iron Brute',
       title: 'Challenge',
       desc: 'A hulking brute plated in scrap.',
+      portraitSheet: 'assets/portraits/dustland-module/iron_brute_4.png',
       tree: { start: { text: 'The brute roars.', choices: [ { label: '(Leave)', to: 'bye' } ] } },
       loop: [
         { x: 120, y: midY - 8 },
@@ -622,6 +668,7 @@ const DUSTLAND_MODULE = (() => {
       name: 'Brakk',
       title: 'Power Trainer',
       desc: 'A former arena champ teaching raw strength.',
+      portraitSheet: 'assets/portraits/dustland-module/brakk_4.png',
       tree: {
         start: {
           text: 'Brakk cracks his knuckles.',
@@ -637,7 +684,7 @@ const DUSTLAND_MODULE = (() => {
           ]
         }
       }
-    },
+      },
     {
       id: 'trainer_endurance',
       map: 'world',
@@ -722,23 +769,23 @@ const DUSTLAND_MODULE = (() => {
       map: 'slot_shack',
       x: 3,
       y: 2,
-      color: '#d4af37',
-      name: 'One-Armed Bandit',
-      title: 'Slot Machine',
-      desc: 'It wheezes, eager for scrap.',
-      portraitSheet: 'assets/portraits/crate_4.png',
-      tree: {
-        start: {
-          text: 'Lights sputter behind cracked glass.',
-          choices: [
-            { label: '(1 scrap)', to: 'start', effects: [() => pullSlots(1, [0, 1, 2])] },
-            { label: '(5 scrap)', to: 'start', effects: [() => pullSlots(5, [0, 3, 5, 6, 10])] },
-            { label: '(25 scrap)', to: 'start', effects: [() => pullSlots(25, [0, 10, 25, 35, 50])] },
-            { label: '(Leave)', to: 'bye' }
-          ]
+        color: '#d4af37',
+        name: 'One-Armed Bandit',
+        title: 'Slot Machine',
+        desc: 'It wheezes, eager for scrap.',
+        portraitSheet: 'assets/portraits/dustland-module/slot_machine.png',
+        tree: {
+          start: {
+            text: 'Lights sputter behind cracked glass.',
+            choices: [
+              { label: '(1 scrap)', to: 'start', effects: [() => pullSlots(1, [0, 1, 2])] },
+              { label: '(5 scrap)', to: 'start', effects: [() => pullSlots(5, [0, 3, 5, 6, 10])] },
+              { label: '(25 scrap)', to: 'start', effects: [() => pullSlots(25, [0, 10, 25, 35, 50])] },
+              { label: '(Leave)', to: 'bye' }
+            ]
+          }
         }
-      }
-    },
+      },
     {
       id: 'scrap_behemoth',
       map: 'world',
