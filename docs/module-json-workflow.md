@@ -11,7 +11,7 @@ This guide shows how to round-trip a module's data between its `*.module.js` fil
 ```sh
 npm run module:export -- modules/dustland.module.js
 ```
-This writes the module's JSON to `data/modules/dustland.json`.
+This writes the module's JSON to `data/modules/dustland.json` and includes a `module` field pointing back to the script.
 
 ## Import JSON back into the module
 After editing `data/modules/dustland.json`, inject the changes back:
@@ -27,3 +27,14 @@ The script replaces the `DATA` block inside `modules/dustland.module.js`.
 4. Launch `dustland.html?ack-player=1` and load the module to verify the change.
 
 Remove any temporary JSON files when finished to keep the working tree clean.
+
+## postLoad hooks
+Adventure Kit loads a module script when the JSON includes a `module` path. After the script loads, it calls the script's `postLoad(module)` method to apply procedural logic:
+
+```json
+{
+  "module": "modules/dustland.module.js"
+}
+```
+
+If the module exposes a different global variable name, provide `moduleVar` to hint the loader.

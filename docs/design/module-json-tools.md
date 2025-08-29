@@ -13,6 +13,7 @@ We need to let editors tinker with module layouts without touching code. Each JS
    - At the top of each module file, include `const DATA = \`{\n  ...\n}\`;` holding pure layout JSON.
    - After parsing `DATA`, run a `postLoad(module)` function to sprinkle custom logic (NPC scripts, quests, etc.).
    - Existing modules must be refactored so their gameplay logic lives in `postLoad` and the JSON stays clean.
+   - Exported JSON should record its `module` script so ACK can reload it for playtests.
 2. **Import / export scripts**
    - Add `scripts/module-json.js` with commands:
      - `node scripts/module-json.js export modules/dustland.module.js` → writes `data/modules/dustland.json`.
@@ -29,6 +30,6 @@ We need to let editors tinker with module layouts without touching code. Each JS
 ## Remaining Work
 - [ ] Refactor each existing module to the new format.
 - [x] Build automated tests for the import/export tools.
-- [ ] Verify Adventure Kit loads JSON modules and triggers `postLoad`.
+- [x] Verify Adventure Kit loads JSON modules and triggers `postLoad`.
 - [x] Document the workflow in `docs/` and update README.
 

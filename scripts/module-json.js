@@ -26,14 +26,17 @@ if (cmd === 'export') {
     process.exit(1);
   }
   const obj = JSON.parse(dataStr);
+  obj.module = file;
   fs.mkdirSync(path.dirname(jsonPath), { recursive: true });
   fs.writeFileSync(jsonPath, JSON.stringify(obj, null, 2));
   console.log(`Exported ${jsonPath}`);
 } else if (cmd === 'import') {
   const jsonText = fs.readFileSync(jsonPath, 'utf8');
-  JSON.parse(jsonText); // validate
+  const obj = JSON.parse(jsonText);
+  delete obj.module;
+  const cleanText = JSON.stringify(obj, null, 2);
   const text = fs.readFileSync(modulePath, 'utf8');
-  const newText = text.replace(/const DATA = `[\s\S]*?`;/, `const DATA = \`\n${jsonText}\n\`;`);
+  const newText = text.replace(/const DATA = `[\s\S]*?`;/, `const DATA = \`\n${cleanText}\n\`;`);
   fs.writeFileSync(modulePath, newText);
   console.log(`Updated ${modulePath}`);
 } else {
