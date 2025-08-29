@@ -29,6 +29,14 @@ We need to let editors tinker with module layouts without touching code. Each JS
 
 ## Remaining Work
 - [ ] Refactor each existing module to the new format.
+  - [x] broadcast-fragment-1
+  - [ ] broadcast-fragment-2
+  - [ ] broadcast-fragment-3
+  - [ ] echoes
+  - [ ] dustland
+  - [ ] lootbox-demo
+  - [ ] office
+  - [ ] mara-puzzle
 - [x] Build automated tests for the import/export tools.
 - [x] Verify Adventure Kit loads JSON modules and triggers `postLoad`.
 - [x] Document the workflow in `docs/` and update README.
