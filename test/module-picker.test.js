@@ -69,6 +69,7 @@ global.document = {
   getElementById: () => null
 };
 
+
 global.openCreator = () => {};
 global.showStart = () => {};
 
