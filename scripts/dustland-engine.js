@@ -706,7 +706,11 @@ party.forEach((m,i)=>{
 `<div class='row small'>${statLine(m.stats)}</div>`+
 `<div class='row stats'>HP ${m.hp}/${m.maxHp}  ADR ${m.adr}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div>`+
 `<div class='row'><div class='xpbar' data-xp='${m.xp}/${nextXP}'><div class='fill' style='width:${pct}%'></div></div></div>`+
-`<div class='row small'>WPN: ${wLabel}${wEq?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}  ARM: ${aLabel}${aEq?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}  TRK: ${tLabel}${tEq?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</div>`;
+`<div class='row small'>
+  <span class='equip-line'>WPN: ${wLabel}${wEq?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}</span>
+  <span class='equip-line'>ARM: ${aLabel}${aEq?` <button class="btn" data-a="unequip" data-slot="armor">Unequip</button>`:''}</span>
+  <span class='equip-line'>TRK: ${tLabel}${tEq?` <button class="btn" data-a="unequip" data-slot="trinket">Unequip</button>`:''}</span>
+</div>`;
   const portrait=c.querySelector('.portrait');
   if (typeof setPortraitDiv === 'function') {
     setPortraitDiv(portrait, m);
