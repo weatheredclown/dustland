@@ -1400,9 +1400,10 @@ function toggleQuestTextWrap() {
 // --- NPCs ---
 const npcPortraits = [null, ...Array.from({ length: 90 }, (_, i) => `assets/portraits/portrait_${1000 + i}.png`)];
 let npcPortraitIndex = 0;
+let npcPortraitPath = '';
 function setNpcPortrait() {
   const el = document.getElementById('npcPort');
-  const img = npcPortraits[npcPortraitIndex];
+  const img = npcPortraitPath || npcPortraits[npcPortraitIndex];
   if (el) el.style.backgroundImage = img ? `url(${img})` : '';
 }
 function applyCombatTree(tree) {
@@ -1518,6 +1519,7 @@ function startNewNPC() {
   document.getElementById('npcY').value = 0;
   renderLoopFields([]);
   npcPortraitIndex = 0;
+  npcPortraitPath = '';
   setNpcPortrait();
   document.getElementById('npcHidden').checked = false;
   document.getElementById('npcFlagType').value = 'visits';
@@ -1611,7 +1613,8 @@ function collectNPCFromForm() {
   if (combat) npc.combat = { DEF: 5 };
   if (shop) npc.shop = { markup: shopMarkup, inv: [] };
   if (hidden && flag) npc.hidden = true, npc.reveal = { flag, op, value: val };
-  if (npcPortraitIndex > 0) npc.portraitSheet = npcPortraits[npcPortraitIndex];
+  if (npcPortraitPath) npc.portraitSheet = npcPortraitPath;
+  else if (npcPortraitIndex > 0) npc.portraitSheet = npcPortraits[npcPortraitIndex];
   return npc;
 }
 
@@ -1671,7 +1674,12 @@ function editNPC(i) {
   document.getElementById('npcY').value = n.y;
   renderLoopFields(n.loop || []);
   npcPortraitIndex = npcPortraits.indexOf(n.portraitSheet);
-  if (npcPortraitIndex < 0) npcPortraitIndex = 0;
+  if (npcPortraitIndex < 0) {
+    npcPortraitIndex = 0;
+    npcPortraitPath = n.portraitSheet || '';
+  } else {
+    npcPortraitPath = '';
+  }
   setNpcPortrait();
   document.getElementById('npcHidden').checked = !!n.hidden;
   if (n.reveal?.flag?.startsWith('visits@')) {
@@ -2933,11 +2941,13 @@ document.getElementById('addTemplate').onclick = addTemplate;
 document.getElementById('delTemplate').onclick = deleteTemplate;
 document.getElementById('npcPrevP').onclick = () => {
   npcPortraitIndex = (npcPortraitIndex + npcPortraits.length - 1) % npcPortraits.length;
+  npcPortraitPath = '';
   setNpcPortrait();
   applyNPCChanges();
 };
 document.getElementById('npcNextP').onclick = () => {
   npcPortraitIndex = (npcPortraitIndex + 1) % npcPortraits.length;
+  npcPortraitPath = '';
   setNpcPortrait();
   applyNPCChanges();
 };
