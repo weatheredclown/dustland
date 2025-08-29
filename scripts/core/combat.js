@@ -52,7 +52,10 @@ function setPortraitDiv(el, obj){
         for(let i=0;i<s.length;i++){ h = (h * 31 + s.charCodeAt(i)) | 0; }
         frame = Math.abs(h) % 4;
       }else{
-        frame = Math.floor(Math.random() * 4);
+        if (typeof obj.portraitFrame !== 'number'){
+          obj.portraitFrame = Math.floor(Math.random() * 4);
+        }
+        frame = obj.portraitFrame;
       }
       const col = frame % 2;
       const row = Math.floor(frame / 2);
