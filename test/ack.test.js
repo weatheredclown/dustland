@@ -388,3 +388,14 @@ test('dialog text edited in tree editor is preserved', () => {
   closeNPCEditor();
   assert.strictEqual(moduleData.npcs[0].tree.start.text, 'welcome');
 });
+
+test('collectNPCFromForm retains custom portrait path', () => {
+  moduleData.npcs = [{
+    id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0,
+    tree: { start: { text: 'hi', choices: [] } },
+    portraitSheet: 'assets/portraits/grin_4.png'
+  }];
+  editNPC(0);
+  const npc = collectNPCFromForm();
+  assert.strictEqual(npc.portraitSheet, 'assets/portraits/grin_4.png');
+});

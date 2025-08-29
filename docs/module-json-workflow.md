@@ -31,7 +31,9 @@ Remove any temporary JSON files when finished to keep the working tree clean.
 ## Custom portraits
 Modules may reference portrait images by setting a `portraitSheet` field to a
 path under `assets/`. The `module-json` tooling keeps these relative paths
-intact during export and import:
+intact during export and import. When modules are loaded into Adventure Kit,
+these `portraitSheet` paths are preserved even if they fall outside the
+default portrait index:
 
 ```json
 { "portraitSheet": "assets/portraits/my_npc.png" }
