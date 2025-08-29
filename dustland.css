@@ -300,6 +300,7 @@ input[type="range"] {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
         gap: 6px;
+        align-content: start;
     }
 
     .tabwrap {
@@ -311,6 +312,10 @@ input[type="range"] {
         border: 1px dashed #2b382b;
         border-radius: 6px;
         background: #0c0f0c;
+    }
+
+    .equip-line {
+        white-space: nowrap;
     }
 
     .slot.better {
