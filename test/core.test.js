@@ -1168,6 +1168,22 @@ test('defeated enemies can drop spoils cache', async () => {
   assert.ok(logs.some(l => l.includes('Sealed Cache')));
 });
 
+test('bandits can drop scrap on defeat', async () => {
+  NPCS.length = 0;
+  party.length = 0;
+  player.inv.length = 0;
+  player.scrap = 0;
+  const m1 = new Character('p1','P1','Role');
+  party.addMember(m1);
+  const origRand = Math.random;
+  Math.random = () => 0;
+  const resultPromise = openCombat([{ id:'bandit', name:'Bandit', hp:1 }]);
+  handleCombatKey({ key:'Enter' });
+  await resultPromise;
+  Math.random = origRand;
+  assert.strictEqual(player.scrap, 1);
+});
+
 test('fallen party members are revived after combat', async () => {
   NPCS.length = 0;
   party.length = 0;

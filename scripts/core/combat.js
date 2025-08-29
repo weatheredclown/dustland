@@ -453,6 +453,13 @@ function doAttack(dmg, type = 'basic'){
     globalThis.EventBus?.emit?.('enemy:defeated', { target });
     if (target.loot) addToInv?.(target.loot);
 
+    // Bandits sometimes drop scrap
+    if (/bandit/i.test(target.id) && Math.random() < 0.5){
+      player.scrap = (player.scrap || 0) + 1;
+      updateHUD?.();
+      log?.('You find 1 scrap on the bandit.');
+    }
+
     // Special boss drop chance
     if (target.boss && Math.random() < 0.1){ addToInv?.('memory_worm'); }
 
