@@ -10,13 +10,14 @@ const moduleFile = path.join(modulesDir, 'tmp-test.module.js');
 const jsonFile = path.join(dataDir, 'tmp-test.json');
 
 test('module-json export/import round trip', () => {
-  const original = { hello: 'world' };
+  const original = { hello: 'world', portraitSheet: 'assets/portraits/custom.png' };
   const moduleContent = `const DATA = \`\n${JSON.stringify(original, null, 2)}\n\`;\nexport function postLoad() {}`;
   fs.writeFileSync(moduleFile, moduleContent);
   try {
     execSync(`node scripts/module-json.js export ${moduleFile}`);
     const exported = JSON.parse(fs.readFileSync(jsonFile, 'utf8'));
     assert.strictEqual(exported.module, moduleFile);
+    assert.strictEqual(exported.portraitSheet, 'assets/portraits/custom.png');
     delete exported.module;
     assert.deepStrictEqual(exported, original);
     exported.hello = 'mars';
@@ -28,6 +29,7 @@ test('module-json export/import round trip', () => {
     assert(match);
     const obj = JSON.parse(match[1]);
     assert.strictEqual(obj.hello, 'mars');
+    assert.strictEqual(obj.portraitSheet, 'assets/portraits/custom.png');
     assert.strictEqual(obj.module, undefined);
   } finally {
     fs.rmSync(moduleFile, { force: true });
