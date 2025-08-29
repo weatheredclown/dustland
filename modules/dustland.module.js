@@ -2,13 +2,22 @@ function seedWorldContent() {}
 
 const DUSTLAND_MODULE = (() => {
   const midY = Math.floor(WORLD_H / 2);
+  // Slot machine gambling; leader luck above 7 nudges rewards upward
   function pullSlots(cost, payouts) {
     if (player.scrap < cost) {
       log('Not enough scrap.');
       return;
     }
     player.scrap -= cost;
-    const reward = payouts[Math.floor(rng() * payouts.length)];
+    const lead = typeof leader === 'function' ? leader() : null;
+    const luck = (lead?.stats?.LCK || 0) + (lead?._bonus?.LCK || 0);
+    const eff = Math.max(0, luck - 7);
+    let idx = Math.floor(rng() * payouts.length);
+    if (eff > 0 && Math.random() < eff * 0.05) {
+      idx = Math.min(idx + 1, payouts.length - 1);
+      log('Lucky spin!');
+    }
+    const reward = payouts[idx];
     if (reward > 0) {
       player.scrap += reward;
       log(`The machine rattles and spits out ${reward} scrap.`);
