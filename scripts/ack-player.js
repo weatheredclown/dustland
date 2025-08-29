@@ -51,6 +51,37 @@ if (!moduleData && autoUrl) {
 
 async function loadModule(data) {
   moduleData = data;
+  if (typeof moduleData.module === 'string') {
+    try {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = moduleData.module;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+      const base = moduleData.module.match(/([^/]+)\.module\.js$/)?.[1] || '';
+      const guesses = [];
+      if (moduleData.moduleVar) guesses.push(moduleData.moduleVar);
+      if (base) {
+        const upper = base.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+        guesses.push(upper + '_MODULE', upper);
+      }
+      let modObj = null;
+      for (const name of guesses) {
+        if (globalThis[name]) { modObj = globalThis[name]; break; }
+      }
+      const hook = modObj?.postLoad || globalThis.postLoad;
+      if (typeof hook === 'function') {
+        try { hook(moduleData); }
+        catch (err) { console.error('postLoad error', err); }
+      }
+    } catch (err) {
+      console.error('module script error', err);
+    }
+    delete moduleData.module;
+    delete moduleData.moduleVar;
+  }
   UI.hide(loaderId);
   if (realOpenCreator) {
     window.openCreator = realOpenCreator;
