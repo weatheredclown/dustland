@@ -27,8 +27,8 @@ We need to let editors tinker with module layouts without touching code. Each JS
    - Keep procedural helpers in `scripts/`.
 
 ## Remaining Work
-- Refactor each existing module to the new format.
-- Build automated tests for the import/export tools.
-- Verify Adventure Kit loads JSON modules and triggers `postLoad`.
-- Document the workflow in `docs/` and update README.
+- [ ] Refactor each existing module to the new format.
+- [ ] Build automated tests for the import/export tools.
+- [ ] Verify Adventure Kit loads JSON modules and triggers `postLoad`.
+- [x] Document the workflow in `docs/` and update README.
 

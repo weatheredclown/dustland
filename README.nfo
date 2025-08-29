@@ -129,6 +129,9 @@ _______________________________________________________________________________
   - Items support `equip.flag` and `unequip` teleport/message effects.
   - Tiles: see TILE enum + colors[] + walkable[].
   - Maps can be specified as arrays of emoji strings using `tileEmoji` (numeric grids still load).
+  - Use `npm run module:export -- modules/dustland.module.js` to dump a module's layout
+    to `data/modules/dustland.json`; edit and run `npm run module:import -- modules/dustland.module.js`
+    to sync changes back.
   - Tests: run `npm install` to fetch dev deps like jsdom.
     Ensure system libs (libatk1.0-0, libatk-bridge2.0-0, libcups2, libdrm2,
     libxcomposite1, libxdamage1, libxfixes3, libxrandr2, libgbm1, libasound2,
