@@ -172,26 +172,28 @@
   <script defer src="./scripts/dustland-path.js"></script>
   <script defer src="./scripts/dustland-nano.js"></script>
   <script defer src="./scripts/dustland-engine.js"></script>
-  <script>
-    const params = new URLSearchParams(location.search);
-    const isAck = params.get('ack-player') === '1';
-    if (isAck) {
-      UI.show('moduleLoader', 'flex');
-      const btns = document.getElementById('mainButtons');
-      const nanoBtn = document.getElementById('nanoToggle');
-      const audioBtn = document.getElementById('audioToggle');
-      btns.appendChild(nanoBtn);
-      btns.appendChild(audioBtn);
-      const settingsBtn = document.getElementById('settingsBtn');
-      if (settingsBtn) UI.hide('settingsBtn');
-    }
-    if (isAck) {
-      const modeScript = document.createElement('script');
-      modeScript.defer = true;
-      modeScript.src = './scripts/ack-player.js';
-      document.body.appendChild(modeScript);
-    }
-  </script>
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(location.search);
+        const isAck = params.get('ack-player') === '1';
+        if (isAck) {
+          UI.show('moduleLoader', 'flex');
+          const btns = document.getElementById('mainButtons');
+          const nanoBtn = document.getElementById('nanoToggle');
+          const audioBtn = document.getElementById('audioToggle');
+          btns.appendChild(nanoBtn);
+          btns.appendChild(audioBtn);
+          const settingsBtn = document.getElementById('settingsBtn');
+          if (settingsBtn) UI.hide('settingsBtn');
+        }
+        if (isAck) {
+          const modeScript = document.createElement('script');
+          modeScript.defer = true;
+          modeScript.src = './scripts/ack-player.js';
+          document.body.appendChild(modeScript);
+        }
+      });
+    </script>
   <script type="module" src="./scripts/balance-tester-agent.js"></script>
 </body>
 </html>
