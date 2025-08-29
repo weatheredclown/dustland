@@ -1,6 +1,6 @@
 {
   "name": "dustland",
-  "version": "0.7.25",
+  "version": "0.7.26",
   "description": "Wasteland-style browser RPG with a CRT vibe",
   "type": "module",
   "main": "scripts/dustland-core.js",
@@ -9,7 +9,9 @@
     "test": "node --test",
     "lint": "eslint .",
     "module:export": "node scripts/module-json.js export",
-    "module:import": "node scripts/module-json.js import"
+    "module:import": "node scripts/module-json.js import",
+    "module:add": "node scripts/module-picker.js add",
+    "module:remove": "node scripts/module-picker.js remove"
   },
   "author": "",
   "license": "MIT",

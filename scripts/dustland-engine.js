@@ -966,7 +966,7 @@ disp.addEventListener('touchstart',e=>{
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
 requestAnimationFrame(draw);
-  log('v0.7.25 — trainer UI shows stat deltas.');
+  log('v0.7.26 — module picker reads JSON list.');
 if (window.NanoDialog) NanoDialog.init();
 
 { // skip normal boot flow in ACK player mode

@@ -68,6 +68,9 @@ global.document = {
   createElement: () => stubEl(),
   getElementById: () => null
 };
+const modulesText = await fs.readFile(new URL('../data/modules/modules.json', import.meta.url), 'utf8');
+global.MODULES = JSON.parse(modulesText);
+
 
 global.openCreator = () => {};
 global.showStart = () => {};

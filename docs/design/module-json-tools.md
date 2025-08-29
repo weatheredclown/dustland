@@ -21,9 +21,9 @@ We need to let editors tinker with module layouts without touching code. Each JS
      - `npm run module:export -- <file>`
      - `npm run module:import -- <file>`
 3. **Module picker management**
-   - Extend `scripts/module-picker.js` to read a JSON array of enabled modules.
-   - Provide `node scripts/module-picker.js add modules/foo.module.js` and `... remove ...`.
-   - Hook npm commands:
+   - [x] Extend `scripts/module-picker.js` to read a JSON array of enabled modules.
+   - [x] Provide `node scripts/module-picker.js add modules/foo.module.js` and `... remove ...`.
+   - [x] Hook npm commands:
      - `npm run module:add -- modules/foo.module.js`
      - `npm run module:remove -- modules/foo.module.js`
 4. **Directory layout**

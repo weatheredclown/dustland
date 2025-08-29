@@ -1,15 +1,36 @@
 // Splash screen allowing the player to pick a module.
 // Displays a pulsing title and swirling dust background with drifting particles.
-const MODULES = [
-  { id: 'dustland', name: 'Dustland', file: 'modules/dustland.module.js' },
-  { id: 'echoes', name: 'Echoes', file: 'modules/echoes.module.js' },
-  { id: 'office', name: 'Office', file: 'modules/office.module.js' },
-  { id: 'lootbox-demo', name: 'Loot Box Demo', file: 'modules/lootbox-demo.module.js' },
-  { id: 'broadcast', name: 'Broadcast Story', file: 'broadcast-story.js' },
-  { id: 'mara', name: 'Mara Puzzle', file: 'modules/mara-puzzle.module.js' },
-  { id: 'golden', name: 'Golden Sample', file: 'modules/golden.module.json' }
-];
 
+// When executed under Node (no `document`), act as a CLI to manage the module list.
+if (typeof document === 'undefined') {
+  const fs = require('fs');
+  const path = require('path');
+  const [cmd, file] = process.argv.slice(2);
+  if (!cmd || !file || !['add', 'remove'].includes(cmd)) {
+    console.log('Usage: node scripts/module-picker.js <add|remove> <moduleFile>');
+    process.exit(1);
+  }
+  const listPath = path.join('data', 'modules', 'modules.json');
+  let list = [];
+  try {
+    list = JSON.parse(fs.readFileSync(listPath, 'utf8'));
+  } catch {}
+  const id = path.basename(file).replace(/\.module\.(js|json)$/,'');
+  if (cmd === 'add') {
+    if (!list.some(m => m.id === id)) {
+      const name = id.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      list.push({ id, name, file });
+    }
+  } else {
+    list = list.filter(m => m.id !== id);
+  }
+  fs.mkdirSync(path.dirname(listPath), { recursive: true });
+  fs.writeFileSync(listPath, JSON.stringify(list, null, 2));
+  console.log(`Updated ${listPath}`);
+  process.exit(0);
+}
+
+const MODULES = globalThis.MODULES || [];
 const realOpenCreator = window.openCreator;
 const realShowStart = window.showStart;
 const realResetAll = window.resetAll;
@@ -222,4 +243,11 @@ function showModulePicker(){
   if (overlay.addEventListener) overlay.addEventListener('keydown', keyHandler);
 }
 
-showModulePicker();
+if (MODULES.length) {
+  showModulePicker();
+} else if (typeof fetch === 'function') {
+  fetch('data/modules/modules.json').then(r => r.json()).then(list => {
+    MODULES.push(...list);
+    showModulePicker();
+  });
+}
