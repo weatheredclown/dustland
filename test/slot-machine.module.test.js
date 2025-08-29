@@ -20,7 +20,7 @@ test('slot machine drops cache after paying out 500 scrap net', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'dustland.module.js');
   let src = fs.readFileSync(file, 'utf8');
-  src = src.replace(/updateHUD\?\.\(\);\n  }/, 'updateHUD?.();\n  }\n  globalThis.pullSlots = pullSlots;');
+  src = src.replace(/updateHUD\?\.\(\);\n\s{2}\}/, 'updateHUD?.();\n  }\n  globalThis.pullSlots = pullSlots;');
   const context = {
     WORLD_H: 20,
     WORLD_W: 120,
