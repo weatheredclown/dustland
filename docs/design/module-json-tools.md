@@ -28,7 +28,7 @@ We need to let editors tinker with module layouts without touching code. Each JS
 
 ## Remaining Work
 - [ ] Refactor each existing module to the new format.
-- [ ] Build automated tests for the import/export tools.
+- [x] Build automated tests for the import/export tools.
 - [ ] Verify Adventure Kit loads JSON modules and triggers `postLoad`.
 - [x] Document the workflow in `docs/` and update README.
 
