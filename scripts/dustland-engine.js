@@ -717,11 +717,18 @@ party.forEach((m,i)=>{
       portrait.style.backgroundPosition='center';
     }
   }
+  const existingBadge = portrait.querySelector('.spbadge');
   if(m.skillPoints>0){
-    const badge=document.createElement('div');
-    badge.className='spbadge';
-    badge.textContent=m.skillPoints;
-    portrait.appendChild(badge);
+    if(existingBadge){
+      existingBadge.textContent = m.skillPoints;
+    }else{
+      const badge=document.createElement('div');
+      badge.className='spbadge';
+      badge.textContent=m.skillPoints;
+      portrait.appendChild(badge);
+    }
+  }else if(existingBadge){
+    existingBadge.remove();
   }
   c.onclick=()=>selectMember(i);
   c.onfocus=()=>selectMember(i);
