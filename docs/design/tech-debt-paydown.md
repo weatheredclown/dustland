@@ -68,8 +68,8 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
   - [x] Build a tiny `ui.js` to listen for events.
   - [x] Keep old globals as shims during migration.
 - [ ] **Phase 3: Consolidate state**
-  - [ ] Create a `GameState` singleton.
-  - [ ] Provide accessors for state changes.
+  - [x] Create a `GameState` singleton.
+  - [x] Provide accessors for state changes.
 - [ ] **Phase 4: Lint for sanity**
   - [x] Add ESLint with a vanilla config.
   - [x] Expose `npm run lint`.
