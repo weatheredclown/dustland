@@ -1,0 +1,34 @@
+import assert from 'node:assert';
+import { test } from 'node:test';
+import fs from 'node:fs/promises';
+import vm from 'node:vm';
+import { makeDocument } from './test-harness.js';
+
+test('perf panel toggles and records stats', async () => {
+  const document = makeDocument();
+  const window = { document };
+  const sandbox = { window, document, performance: { now: () => 0 } };
+  sandbox.globalThis = sandbox;
+  sandbox.setInterval = (fn) => { fn(); return { unref(){} }; };
+  sandbox.clearInterval = () => {};
+  document.getElementById('perfBtn');
+  document.getElementById('perfPanel');
+  document.getElementById('perfClose');
+  document.getElementById('perfCanvas');
+  document.getElementById('perfSfx');
+  document.getElementById('perfPath');
+  document.getElementById('perfAI');
+  const code = await fs.readFile(new URL('../scripts/perf-debug.js', import.meta.url), 'utf8');
+  vm.runInNewContext(code, sandbox);
+  assert.ok(sandbox.perfStats, 'perfStats exists');
+  const btn = document.getElementById('perfBtn');
+  const panel = document.getElementById('perfPanel');
+  const close = document.getElementById('perfClose');
+  btn.dispatchEvent({ type:'click' });
+  assert.equal(panel.style.display, 'block');
+  close.dispatchEvent({ type:'click' });
+  assert.equal(panel.style.display, 'none');
+  sandbox.perfStats.sfx = 5;
+  sandbox._perfRecord();
+  assert.equal(sandbox.perfStats.sfx, 0);
+});
