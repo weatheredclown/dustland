@@ -1,8 +1,8 @@
-const BROADCAST_FRAGMENT_2 = {
+const DATA = `
+{
   "seed": "broadcast-2",
   "name": "broadcast-fragment-2",
   "startMap": "world",
-  // Positioned within WORLD_W bounds (max 119)
   "startPoint": { "x": 110, "y": 22 },
   "items": [
     { "id": "power_cell", "name": "Power Cell", "type": "quest" },
@@ -40,11 +40,11 @@ const BROADCAST_FRAGMENT_2 = {
           "choices": [ { "label": "(Take Fragment)", "to": "post_quest", "reward": "signal_fragment_2", "costItem": "power_cell", "costCount": 3 } ]
         },
         "post_quest": {
-            "text": "That was just one piece of it. The signal is a symphony! The next part seems to be coming from... a cave system to the north. It's strange, almost like it's underground.",
-            "choices": [
-                { "label": "I'll check it out.", "applyModule": "BROADCAST_FRAGMENT_3", "to": "bye" },
-                { "label": "I need a moment.", "to": "bye" }
-            ]
+          "text": "That was just one piece of it. The signal is a symphony! The next part seems to be coming from... a cave system to the north. It's strange, almost like it's underground.",
+          "choices": [
+            { "label": "I'll check it out.", "applyModule": "BROADCAST_FRAGMENT_3", "to": "bye" },
+            { "label": "I need a moment.", "to": "bye" }
+          ]
         }
       }
     },
@@ -75,5 +75,10 @@ const BROADCAST_FRAGMENT_2 = {
   "buildings": [
     { "x": 110, "y": 20, "w": 1, "h": 1, "interiorId": "comms_tower_base", "grid": [[8]] }
   ]
-};
-globalThis.BROADCAST_FRAGMENT_2 = BROADCAST_FRAGMENT_2;
+}
+`;
+
+function postLoad(module) {}
+
+globalThis.BROADCAST_FRAGMENT_2 = JSON.parse(DATA);
+globalThis.BROADCAST_FRAGMENT_2.postLoad = postLoad;

@@ -30,7 +30,7 @@ We need to let editors tinker with module layouts without touching code. Each JS
 ## Remaining Work
 - [ ] Refactor each existing module to the new format.
   - [x] broadcast-fragment-1
-  - [ ] broadcast-fragment-2
+  - [x] broadcast-fragment-2
   - [ ] broadcast-fragment-3
   - [ ] echoes
   - [ ] dustland
