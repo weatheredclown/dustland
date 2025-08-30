@@ -1,0 +1,235 @@
+# QA Checks
+
+This document lists QA checks for each completed item across design docs.
+For each item, run the described code verification.
+
+- **combat.md** — **Adrenaline Resource:** Implement the Adrenaline bar (`adr`) for all combatants in `scripts/core/party.js` and `scripts/core/combat.js`.
+  - Check: confirm implementation matches description.
+- **combat.md** — **Adrenaline Generation:** Basic attacks now generate Adrenaline. This value is determined by weapon stats via the `ADR` modifier.
+  - Check: confirm implementation matches description.
+- **combat.md** — **Special Move Framework:** In `scripts/core/abilities.js`, create a data structure for Specials that includes `adrenaline_cost`, `target_type` (single, aoe), `effect` (damage, stun, etc.), and `wind_up_time`.
+  - Check: confirm implementation matches description.
+- **combat.md** — **Equipment Modifiers:** Update the inventory system to apply combat modifiers from equipped items at the start of each battle.
+  - Check: confirm implementation matches description.
+- **combat.md** — **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
+  - Check: confirm implementation matches description.
+- **combat.md** — **New HUD:** Redesign the combat UI to include the Adrenaline bar, status effect icons, and improved health bar feedback.
+  - Check: confirm implementation matches description.
+- **combat.md** — **Player Health Panel:** Update the right-side player health panel to show damage being taken in real-time, with visual effects for critical health and passing out.
+  - Check: confirm implementation matches description.
+- **combat.md** — **Implement 5-10 Specials:** Added starter moves Power Strike, Stun Grenade, First Aid, Adrenal Surge, and Guard.
+  - Check: confirm implementation matches description.
+- **combat.md** — **Implement Equipment:** Create a set of weapons and armor with varied combat modifiers.
+  - Check: confirm implementation matches description.
+- **combat.md** — **Enemy Design:** Added four enemy types that require tactical use of specials (e.g., Shield Drone resists basic attacks, Reflective Slime counters them).
+  - Check: confirm implementation matches description.
+- **combat.md** — **HUD Playtest:** Ran quick usability tests with two players and tightened bar spacing and icon contrast based on feedback.
+  - Check: confirm implementation matches description.
+- **combat.md** — **Visual Effects:** Add VFX for Adrenaline gain, special move activations, and status effects.
+  - Check: confirm implementation matches description.
+- **combat.md** — **Sound Design:** Add SFX for specials, UI feedback, and enemy telegraphing.
+  - Check: confirm implementation matches description.
+- **combat.md** — **Playtesting:** Conduct extensive playtests to balance Adrenaline generation rates, special costs, and overall combat difficulty. Ensure the difficulty curve is challenging but fair.
+  - Check: confirm implementation matches description.
+- **combat.md** — **AI Improvements:** Enhance enemy AI to use their own specials and coordinate attacks.
+  - Check: confirm implementation matches description.
+- **combat.md** — **Telemetry:** Log combat stats during playtests to surface pacing issues and balance swings early.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — **Phase 1: Namespace the world**
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Introduce `globalThis.Dustland = {}`.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Move module exports into `Dustland.*` buckets.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Namespace event bus under `Dustland.eventBus`.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Namespace event flag helpers under `Dustland.eventFlags`.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Namespace path helpers under `Dustland.path`.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Namespace movement helpers under `Dustland.movement`.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Namespace inventory helpers under `Dustland.inventory`.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Namespace effects under `Dustland.effects`.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Namespace actions under `Dustland.actions`.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Update references and tests incrementally.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — **Phase 1.5: Reorganize the filesystem**
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — move core and JS files in root under a new scripts directory
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — **Phase 2: Untangle UI from logic**
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Replace direct DOM calls with event emissions.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Build a tiny `ui.js` to listen for events.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Keep old globals as shims during migration.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — **Phase 3: Consolidate state**
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Create a `GameState` singleton.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Provide accessors for state changes.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — **Phase 4: Lint for sanity**
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Add ESLint with a vanilla config.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Expose `npm run lint`.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — Run lint in CI and before commits.
+  - Check: confirm implementation matches description.
+- **tech-debt-paydown.md** — reorganize
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — Embed `xpCurve` array in `scripts/core/party.js` with sane defaults and expose it globally for mods.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — Implement XP tracking and level-up logic in the `Character` class. Automatically apply +10 max HP and grant one skill point upon level-up.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Data Structure:** Define the data structure for active and passive abilities. This should include cost, prerequisites (level, other abilities), and the actual effect (e.g., `damage_boost`, `aoe_attack`).
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Enemy Scaling:** Create a function in `scripts/core/npc.js` that applies level-up logic to enemy NPCs based on their level. This should include the standard +10 max HP and a method for allocating points into predefined stat builds.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Respec Logic:** Implement the "Memory Worm" token item. Create a function in `scripts/core/party.js` that consumes a token to reset a character's spent skill points.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Party Panel UI:** Add a compact XP bar below each character's health in the party panel. On hover, it should expand to show `currentXP / nextXP` values.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Skill Point Badge:** Create a small, glowing badge that appears over a character's portrait when they have unspent skill points. The badge should display the number of available points.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Mentor System:** Implement a simple event hook in the level-up function that can trigger a sound file and a brief on-screen text notification (a "bark"). This should be tied to a quest flag or a specific item to remain optional.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Mentor Bark Handler:** Listen for `mentor:bark` events to play a sound and display the text cue.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Trainer UI Mockup:** Design the "Upgrade Skills" dialog. It needs a list of available upgrades (stats and abilities), their costs, and a clear "before and after" preview for any selected stat change. See `docs/design/trainer-ui-mockup.md`.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Trainer UI Implementation:** Build the data-driven "Upgrade Skills" overlay showing upgrade costs and before/after stat changes.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Trainer NPCs:** Create at least three specialized trainer NPCs (e.g., Power, Endurance, Tricks) and place them in the world. Each trainer's `tree` object should include the **Upgrade Skills** dialog option and their unique list of available upgrades.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Enemy Presets:** Define enemy stat allocations per level in `scripts/core/presets.js`. For example, a "Scrapper" preset might allocate points into `STR` and `AGI`, while a "Bulwark" preset focuses on `DEF`.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Zone Population:** Populate the "Scrap Wastes" (Levels 1-5) with 5-7 on-level enemies and one or two higher-level "challenge" enemies off the main path. Ensure the zone layout naturally funnels players back toward a trainer NPC.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Boss Mechanics:** Implement the first boss with a telegraphed special move. This involves creating a visual cue (e.g., a "charging up" animation or effect) and a corresponding high-damage attack that triggers after a short delay.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Boss Visuals:** Add configurable CRT distortion and shake when a boss telegraphs a special move.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Respec Vendor:** Create a special vendor NPC who sells "Memory Worm" tokens for a high price (e.g., 500 scrap). This vendor should be placed in a mid-to-late game area.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Memory Worm Drops:** Make boss encounters occasionally drop "Memory Worm" tokens to complement vendor purchases. Implemented a 10% drop chance on boss defeat.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Progression Test Suite:** Write automated tests to verify:
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Playtest: The First Ding:** Run internal playtests focusing on the time it takes a new player to reach their first level-up. Target: under 10 minutes of active play.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Playtest: Trainer Flow:** Test the trainer UI for clarity and speed. A player should be able to spend a skill point and exit the dialog in under 15 seconds.
+  - Check: confirm implementation matches description.
+- **rpg-progression.md** — **Playtest: Zone Difficulty:** Evaluate the "Scrap Wastes" zone to ensure the difficulty curve feels fair but engaging. Check if players feel encouraged to tackle the optional high-level enemies.
+  - Check: confirm implementation matches description.
+- **wizard-framework.md** — **`Wizard` Component:** Create a generic, framework-free DOM component that takes a wizard configuration and manages the UI shell (title, step navigation, Next/Back buttons).
+  - Check: confirm implementation matches description.
+- **wizard-framework.md** — **State Management:** Implement a simple state store for the wizard to hold the data for the object being created.
+  - Check: confirm implementation matches description.
+- **wizard-framework.md** — **Step Component Library:** Build a small set of reusable step components:
+  - Check: confirm implementation matches description.
+- **wizard-framework.md** — `TextInputStep`: A simple text input field.
+  - Check: confirm implementation matches description.
+- **wizard-framework.md** — `AssetPickerStep`: A component to select an image/sprite from a directory.
+  - Check: confirm implementation matches description.
+- **wizard-framework.md** — `MapPlacementStep`: A component to select coordinates on a game map.
+  - Check: confirm implementation matches description.
+- **wizard-framework.md** — **Configuration:** Create the `NpcWizard` configuration object.
+  - Check: confirm implementation matches description.
+- **wizard-framework.md** — **Custom Steps:** Develop the specific step components needed for this wizard:
+  - Check: confirm implementation matches description.
+- **wizard-framework.md** — **Logic:** Write the final "commit" function for the wizard that takes the completed data and generates the new NPC and quest data objects, saving them to the appropriate module file.
+  - Check: confirm implementation matches description.
+- **module-json-tools.md** — Refactor each existing module to the new format.
+  - Check: confirm implementation matches description.
+- **module-json-tools.md** — broadcast-fragment-1
+  - Check: confirm implementation matches description.
+- **module-json-tools.md** — broadcast-fragment-2
+  - Check: confirm implementation matches description.
+- **module-json-tools.md** — broadcast-fragment-3
+  - Check: confirm implementation matches description.
+- **module-json-tools.md** — echoes
+  - Check: confirm implementation matches description.
+- **module-json-tools.md** — dustland
+  - Check: confirm implementation matches description.
+- **module-json-tools.md** — lootbox-demo
+  - Check: confirm implementation matches description.
+- **module-json-tools.md** — office
+  - Check: confirm implementation matches description.
+- **module-json-tools.md** — mara-puzzle
+  - Check: confirm implementation matches description.
+- **module-json-tools.md** — Build automated tests for the import/export tools.
+  - Check: confirm implementation matches description.
+- **module-json-tools.md** — Verify Adventure Kit loads JSON modules and triggers `postLoad`.
+  - Check: confirm implementation matches description.
+- **module-json-tools.md** — Document the workflow in `docs/` and update README.
+  - Check: confirm implementation matches description.
+- **spoils-caches.md** — Define `SpoilsCache` item type and rank data structure.
+  - Check: confirm implementation matches description.
+- **spoils-caches.md** — Implement drop roll tied to enemy `challenge` rating.
+  - Check: confirm implementation matches description.
+- **spoils-caches.md** — Create modular item generator for type, name, and stats.
+  - Check: confirm implementation matches description.
+- **spoils-caches.md** — Expose tier weight configuration for modding.
+  - Check: confirm implementation matches description.
+- **spoils-caches.md** — Add cache icons and quick-open animations.
+  - Check: confirm implementation matches description.
+- **spoils-caches.md** — Implement inventory UI for cache stacking and "Open All".
+  - Check: confirm implementation matches description.
+- **spoils-caches.md** — Populate adjective/noun pools for item names and tier stat tables.
+  - Check: confirm implementation matches description.
+- **spoils-caches.md** — Tune `baseRate` and tier weights for different enemy challenges.
+  - Check: confirm implementation matches description.
+- **spoils-caches.md** — Author lore snippets for oddity items.
+  - Check: confirm implementation matches description.
+- **spoils-caches.md** — Add affix or mini-quest hooks for Vaulted caches.
+  - Check: confirm implementation matches description.
+- **spoils-caches.md** — Write tests to verify drop odds and tier distribution across challenge levels.
+  - Check: confirm implementation matches description.
+- **spoils-caches.md** — Simulate 1,000 cache openings per tier to ensure stat ranges stay sane.
+  - Check: confirm implementation matches description.
+- **spoils-caches.md** — Run `node scripts/presubmit.js` to confirm no async snafus in cache UI — clean run.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — Outline the caravan's pursuit of the fading broadcast across the Dustland.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — **Define the Ghost Signal:** Write 3-bullet lore (as above) explaining the origin and nature of the signal. Is it benevolent, malevolent, or something in between?
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — **The Silencers:** Create a new faction, the "Silencers," who act as the primary antagonists. 3-bullet lore: Define their motivations, key members, and their methods for hunting the signal.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — **Modular Story Beats:** Design the first three "broadcast fragment" modules. Each should introduce a new location, a new set of characters, and a new piece of the central mystery.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — Detail Mara "Surveyor"—an ex-cartographer seeking the map she burned; arc: learns the signal isn't the only way home.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — Detail Jax "Patch"—a scavenger mechanic hoarding tech; arc: opens his toolkit to the crew.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — Detail Nyx "Speaker"—a poet tuning radio static into verse; arc: chooses between broadcasting or listening.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — Design and build Mara's dust storm navigation puzzle.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — Hook Mara's puzzle into the Broadcast Story sequence.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — Script Jax's timed repair sequence under combat pressure. Implemented in `jax-repair.module.js`.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — Create the data structure for "personas" that can be equipped by the main characters.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — Create the "echo chamber" interior and the script that triggers a vision when the Glinting Key is used.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — **Design a radio tower alignment puzzle that tunes the broadcast.**
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — **Design a dust storm navigation puzzle using wind chimes along ruined billboards:** Implemented in `mara-puzzle.module.js` with chime events and a dust storm effect.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — **Design a layered graffiti decoding puzzle to reveal a safe route before the sun bleeds out.**
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — Create a generic "dial" widget for puzzles like the radio tower.
+  - Check: confirm implementation matches description.
+- **plot-draft.md** — Develop a "sound-based navigation" system that can be used for the dust storm and other similar challenges.
+  - Check: confirm implementation matches description.
