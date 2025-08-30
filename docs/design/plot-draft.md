@@ -109,7 +109,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
    - A collapsed overpass hides directions beneath decades of gang tags; players cycle solvent sprays to reveal each era's markings and overlay them into a route.
    - Picking the wrong sequence bathes the wall in false sunlight and draws a quick Silencer ambush before resetting.
 - [ ] **Build Reusable Widgets:**
-    - [ ] Create a generic "dial" widget for puzzles like the radio tower.
+    - [x] Create a generic "dial" widget for puzzles like the radio tower.
     - [x] Develop a "sound-based navigation" system that can be used for the dust storm and other similar challenges.
 - [ ] **Flesh out the World:**
     - [ ] Design and build the first major hub city, where the caravan can rest, resupply, and find new quests.

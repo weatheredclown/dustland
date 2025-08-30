@@ -1838,29 +1838,25 @@ test('combat log records player and enemy actions', async () => {
   assert.ok(logEntries.some(e => e.type === 'enemy' && e.action === 'attack'));
 });
 
-test('enemy attacks random party member', async () => {
+test('enemy targets weakest party member', async () => {
   NPCS.length = 0;
   party.length = 0;
   const m1 = new Character('p1', 'P1', 'Role');
   const m2 = new Character('p2', 'P2', 'Role');
   m1.hp = m1.maxHp = 5;
-  m2.hp = m2.maxHp = 5;
+  m2.hp = m2.maxHp = 1;
   party.join(m1);
   party.join(m2);
-
-  const origRand = Math.random;
-  Math.random = () => 0.9; // force target index 1
 
   const resultPromise = openCombat([{ name: 'E1', hp: 3 }]);
   handleCombatKey({ key: 'Enter' }); // m1 attack
   handleCombatKey({ key: 'Enter' }); // m2 attack triggers enemy phase
 
-  Math.random = origRand;
+  await new Promise(r => setTimeout(r));
+  assert.strictEqual(m1.hp, 5);
+  assert.strictEqual(m2.hp, 0);
   closeCombat('flee');
   await resultPromise;
-
-  assert.strictEqual(m1.hp, 5);
-  assert.strictEqual(m2.hp, 4);
 });
 
 test('nearby combat NPCs join combat', async () => {

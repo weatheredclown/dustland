@@ -34,7 +34,7 @@ We need to let editors tinker with module layouts without touching code. Each JS
   - [x] broadcast-fragment-3
   - [ ] echoes
   - [x] dustland
-  - [ ] lootbox-demo
+  - [x] lootbox-demo
   - [ ] office
   - [x] mara-puzzle
 - [x] Build automated tests for the import/export tools.
