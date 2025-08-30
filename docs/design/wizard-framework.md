@@ -77,9 +77,9 @@ This wizard helps create a building with multiple interior rooms, like a house w
 - [x] **`Wizard` Component:** Create a generic, framework-free DOM component that takes a wizard configuration and manages the UI shell (title, step navigation, Next/Back buttons).
 - [x] **State Management:** Implement a simple state store for the wizard to hold the data for the object being created.
 - [ ] **Step Component Library:** Build a small set of reusable step components:
-    - `TextInputStep`: A simple text input field.
-    - `AssetPickerStep`: A component to select an image/sprite from a directory.
-    - `MapPlacementStep`: A component to select coordinates on a game map.
+    - [x] `TextInputStep`: A simple text input field.
+    - [x] `AssetPickerStep`: A component to select an image/sprite from a directory.
+    - [ ] `MapPlacementStep`: A component to select coordinates on a game map.
 
 #### **Phase 2: NPC & Quest Wizard**
 - [ ] **Configuration:** Create the `NpcWizard` configuration object.

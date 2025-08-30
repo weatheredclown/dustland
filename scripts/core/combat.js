@@ -644,10 +644,9 @@ function finishEnemyAttack(enemy, target){
 }
 
 function enemyAttack(){
-  // Enemies strike a random party member.
+  // Enemies focus the party member with the lowest HP.
   const enemy  = combatState.enemies[combatState.active];
-  const tgtIdx = Math.floor(Math.random() * ((party?.length) || 0));
-  const target = party[tgtIdx];
+  const target = (party || []).reduce((w, m) => w && w.hp <= m.hp ? w : m, null);
 
   if (!enemy || !target){ closeCombat('flee'); return; }
 
