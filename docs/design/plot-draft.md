@@ -66,6 +66,11 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 ---
 ### **Expanded Task List**
 
+#### **Phase 0: Writing Pass**
+- [ ] Draft a scene-by-scene outline with placeholder dialog for the caravan's opening leg.
+- [ ] Flesh out Mara, Jax, and Nyx arcs with at least two key conversations each.
+- [ ] Sketch early Silencer encounters with sample rival dialogue.
+
 #### **Phase 1: Narrative Foundation**
 - [x] Outline the caravan's pursuit of the fading broadcast across the Dustland.
   - The caravan catches the ghost of a broadcast near the Salt Flats and tracks its fading pulses by night.

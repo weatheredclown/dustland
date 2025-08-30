@@ -49,3 +49,11 @@ Runs standalone in a browser tab and should chirp out a tiny wasteland riff.
 - How many concurrent voices before we spike frame time?
 - Do we need per-biome instrument palettes?
 - Should seeds tie to NPC names for thematic callbacks?
+
+## Tasks
+
+- [ ] Prototype seeded melody generation with Magenta and Tone.
+- [ ] Expose mod hooks for seed and instrument parameters.
+- [ ] Add scale clamping to keep riffs musical.
+- [ ] Stress-test performance on mobile browsers.
+- [ ] Tie playback to the event bus via `music:seed`.
