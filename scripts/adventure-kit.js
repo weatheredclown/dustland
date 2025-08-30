@@ -455,20 +455,74 @@ function drawInterior() {
       intCtx.fillRect(x * sx, y * sy, sx, sy);
     }
   }
+  moduleData.npcs.filter(n => n.map === I.id).forEach(n => {
+    intCtx.fillStyle = n.color || '#fff';
+    intCtx.fillRect(n.x * sx, n.y * sy, sx, sy);
+  });
+  moduleData.items.filter(it => it.map === I.id).forEach(it => {
+    intCtx.strokeStyle = '#ff0';
+    intCtx.strokeRect(it.x * sx + 1, it.y * sy + 1, sx - 2, sy - 2);
+  });
+  if (selectedObj && selectedObj.obj.map === I.id) {
+    const o = selectedObj.obj;
+    intCtx.save();
+    intCtx.lineWidth = 2;
+    intCtx.strokeStyle = selectedObj.type === 'npc' ? (o.color || '#fff') : '#ff0';
+    intCtx.strokeRect(o.x * sx + 1, o.y * sy + 1, sx - 2, sy - 2);
+    intCtx.restore();
+  }
 }
 
+function interiorCanvasPos(e) {
+  const I = moduleData.interiors[editInteriorIdx];
+  const rect = intCanvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left) / (intCanvas.width / I.w));
+  const y = Math.floor((e.clientY - rect.top) / (intCanvas.height / I.h));
+  return { x, y };
+}
 function paintInterior(e){
   if(editInteriorIdx<0||!intPainting) return;
   const I=moduleData.interiors[editInteriorIdx];
-  const rect=intCanvas.getBoundingClientRect();
-  const x=Math.floor((e.clientX-rect.left)/(intCanvas.width/I.w));
-  const y=Math.floor((e.clientY-rect.top)/(intCanvas.height/I.h));
+  const { x, y } = interiorCanvasPos(e);
   I.grid[y][x]=intPaint;
   if(intPaint===TILE.DOOR){ I.entryX=x; I.entryY=y-1; }
   drawInterior();
 }
-intCanvas.addEventListener('mousedown',e=>{ intPainting=true; paintInterior(e); });
-intCanvas.addEventListener('mousemove',paintInterior);
+intCanvas.addEventListener('mousedown',e=>{
+  if(editInteriorIdx<0) return;
+  const { x, y } = interiorCanvasPos(e);
+  if(coordTarget){
+    document.getElementById(coordTarget.x).value = x;
+    document.getElementById(coordTarget.y).value = y;
+    coordTarget = null;
+    drawInterior();
+    return;
+  }
+  if(placingType){
+    const I=moduleData.interiors[editInteriorIdx];
+    if(placingType==='npc'){
+      document.getElementById('npcMap').value = I.id;
+      document.getElementById('npcX').value = x;
+      document.getElementById('npcY').value = y;
+      if(placingCb) placingCb();
+      document.getElementById('cancelNPC').style.display = 'none';
+    }else if(placingType==='item'){
+      document.getElementById('itemMap').value = I.id;
+      document.getElementById('itemX').value = x;
+      document.getElementById('itemY').value = y;
+      if(placingCb) placingCb();
+      document.getElementById('cancelItem').style.display = 'none';
+    }
+    placingType=null;
+    placingPos=null;
+    placingCb=null;
+    drawInterior();
+    return;
+  }
+  intPainting=true;
+  paintInterior(e);
+});
+intCanvas.addEventListener('mousemove',e=>{ if(intPainting) paintInterior(e); });
 intCanvas.addEventListener('mouseup',()=>{ intPainting=false; });
 intCanvas.addEventListener('mouseleave',()=>{ intPainting=false; });
 
@@ -1493,6 +1547,7 @@ function addNPC() {
   document.getElementById('addNPC').style.display = 'none';
   selectedObj = { type: 'npc', obj: npc };
   drawWorld();
+  drawInterior();
 }
 
 function cancelNPC() {
@@ -1502,6 +1557,7 @@ function cancelNPC() {
   document.getElementById('addNPC').style.display = 'block';
   document.getElementById('cancelNPC').style.display = 'none';
   drawWorld();
+  drawInterior();
   updateCursor();
 }
 
@@ -1513,6 +1569,7 @@ function applyNPCChanges() {
   renderNPCList();
   selectedObj = { type: 'npc', obj: npc };
   drawWorld();
+  drawInterior();
 }
 function editNPC(i) {
   const n = moduleData.npcs[i];
@@ -1685,6 +1742,7 @@ function addItem() {
   renderItemList();
   selectedObj = null;
   drawWorld();
+  drawInterior();
   showItemEditor(false);
 }
 
@@ -1695,6 +1753,7 @@ function cancelItem() {
   document.getElementById('addItem').style.display = 'block';
   document.getElementById('cancelItem').style.display = 'none';
   drawWorld();
+  drawInterior();
   updateCursor();
 }
 function editItem(i) {
@@ -2626,6 +2685,8 @@ document.getElementById('bldgEditor').addEventListener('change', applyBldgChange
 document.getElementById('npcFlagPick').onclick = () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY' }; };
 document.getElementById('portalPick').onclick = () => { coordTarget = { x: 'portalX', y: 'portalY' }; };
 document.getElementById('portalDestPick').onclick = () => { coordTarget = { x: 'portalToX', y: 'portalToY' }; };
+document.getElementById('npcPick').onclick = () => { coordTarget = { x: 'npcX', y: 'npcY' }; };
+document.getElementById('itemPick').onclick = () => { coordTarget = { x: 'itemX', y: 'itemY' }; };
 document.getElementById('save').onclick = saveModule;
 document.getElementById('load').onclick = () => document.getElementById('loadFile').click();
 document.getElementById('loadFile').addEventListener('change', e => {
