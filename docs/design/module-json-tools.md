@@ -35,7 +35,7 @@ We need to let editors tinker with module layouts without touching code. Each JS
   - [x] echoes
   - [x] dustland
   - [x] lootbox-demo
-    - [x] office
+  - [x] office
   - [x] mara-puzzle
 - [x] Build automated tests for the import/export tools.
 - [x] Verify Adventure Kit loads JSON modules and triggers `postLoad`.

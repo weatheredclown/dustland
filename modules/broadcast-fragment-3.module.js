@@ -65,6 +65,7 @@ const DATA = `
             }
           ]
         },
+        "accept": { "text": "The cave is patient.", "choices": [ { "label": "(Leave)", "to": "bye" } ] },
         "turnin": {
           "text": "You hear it now! The full song! The signal is not a what, but a where. It points to the Salt Flats. To the Observatory. Go.",
           "choices": [
@@ -131,6 +132,8 @@ const DATA = `
         }
       }
     },
+    { "id": "red_crystal", "map": "resonant_cave", "x": 2, "y": 5, "color": "#f88", "name": "Red Crystal", "tree": { "start": { "text": "A large, red crystal hums faintly.", "choices": [ { "label": "(Touch it)", "to": "bye", "effects": [ { "effect": "addFlag", "flag": "crystal_1_red" } ] } ] } } },
+    { "id": "blue_crystal", "map": "resonant_cave", "x": 8, "y": 5, "color": "#88f", "name": "Blue Crystal", "tree": { "start": { "text": "A large, blue crystal hums faintly.", "choices": [ { "label": "(Touch it)", "to": "bye", "if": { "flag": "crystal_1_red" }, "effects": [ { "effect": "addFlag", "flag": "crystal_2_blue" } ] } ] } } },
     {
       "id": "green_crystal",
       "map": "resonant_cave",
