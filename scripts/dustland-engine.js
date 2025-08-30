@@ -123,7 +123,18 @@ function setMobileControls(on){
           interact();
         }
       }));
-      mobileAB.appendChild(mk('B','B',takeNearestItem));
+      mobileAB.appendChild(mk('B','B',()=>{
+        const shop = document.getElementById('shopOverlay');
+        if(overlay?.classList?.contains('shown')){
+          closeDialog?.();
+        } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
+          handleCombatKey?.({ key:'Escape' });
+        } else if(shop?.classList?.contains('shown')){
+          shop.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape' }));
+        } else {
+          window.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape' }));
+        }
+      }));
       mobileWrap.appendChild(mobileAB);
     }
   } else {

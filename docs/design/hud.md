@@ -1,6 +1,8 @@
 # HUD Iterations
 
-Author: Priya "Gizmo" Sharma
+*By Priya "Gizmo" Sharma*
+
+> **Gizmo:** The HUD is a drifter's dashboard—responsive, accessible, and always within reach.
 
 ## Feedback
 Internal playtest sessions flagged two pain points:
