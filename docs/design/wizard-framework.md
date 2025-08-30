@@ -74,19 +74,19 @@ This wizard helps create a building with multiple interior rooms, like a house w
 ### **Expanded Task List**
 
 #### **Phase 1: Core Wizard Framework**
-- [ ] **`Wizard` Component:** Create a generic, framework-free DOM component that takes a wizard configuration and manages the UI shell (title, step navigation, Next/Back buttons).
-- [ ] **State Management:** Implement a simple state store for the wizard to hold the data for the object being created.
-- [ ] **Step Component Library:** Build a small set of reusable step components:
-    - `TextInputStep`: A simple text input field.
-    - `AssetPickerStep`: A component to select an image/sprite from a directory.
-    - `MapPlacementStep`: A component to select coordinates on a game map.
+- [x] **`Wizard` Component:** Create a generic, framework-free DOM component that takes a wizard configuration and manages the UI shell (title, step navigation, Next/Back buttons).
+- [x] **State Management:** Implement a simple state store for the wizard to hold the data for the object being created.
+- [x] **Step Component Library:** Build a small set of reusable step components:
+    - [x] `TextInputStep`: A simple text input field.
+    - [x] `AssetPickerStep`: A component to select an image/sprite from a directory.
+    - [x] `MapPlacementStep`: A component to select coordinates on a game map.
 
 #### **Phase 2: NPC & Quest Wizard**
-- [ ] **Configuration:** Create the `NpcWizard` configuration object.
-- [ ] **Custom Steps:** Develop the specific step components needed for this wizard:
+  - [x] **Configuration:** Create the `NpcWizard` configuration object.
+  - [x] **Custom Steps:** Develop the specific step components needed for this wizard:
     - `DialogueEditorStep`: A text area for writing dialogue.
-      - `ItemPickerStep`: A component to select an item from the presets defined in `presets.js`.
-- [ ] **Logic:** Write the final "commit" function for the wizard that takes the completed data and generates the new NPC and quest data objects, saving them to the appropriate module file.
+    - `ItemPickerStep`: A component to select an item from the presets defined in `presets.js`.
+  - [x] **Logic:** Write the final "commit" function for the wizard that takes the completed data and generates the new NPC and quest data objects, saving them to the appropriate module file.
 
 #### **Phase 3: Building & Interiors Wizard**
 - [ ] **Configuration:** Create the `BuildingWizard` configuration object.

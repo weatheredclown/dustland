@@ -1,12 +1,12 @@
 {
   "name": "dustland",
-  "version": "0.7.31",
+  "version": "0.7.39",
   "description": "Wasteland-style browser RPG with a CRT vibe",
   "type": "module",
   "main": "scripts/dustland-core.js",
   "scripts": {
     "serve": "http-server -p 8080",
-    "test": "node --test",
+    "test": "npm run lint && node --test",
     "lint": "eslint .",
     "module:export": "node scripts/module-json.js export",
     "module:import": "node scripts/module-json.js import"

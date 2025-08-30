@@ -79,7 +79,7 @@ _______________________________________________________________________________
   - modules/dustland.module.js
     * NPCs, items, world data, and quests for the core adventure.
   - modules/golden.module.json
-    * Sample module showcasing a fetch quest, stat gate, joinable NPC, timed spawn, event toasts, portal, chest loot drop, healing potion, and combat; default module for ACK player.
+    * Sample module showcasing a fetch quest, stat gate, joinable NPC, timed spawn, event toasts, portal, chest loot drop, healing potion, combat, and a deep branching dialog NPC; default module for ACK player.
   - adventure-kit.html / scripts/adventure-kit.js
     * Map/NPC/item/quest editor for making modules. Includes palette-based
       interior and building editors with customizable door placement.
@@ -145,6 +145,7 @@ _______________________________________________________________________________
   - World map editor includes a stamp icon for 16x16 terrain chunks.
   - NPC patrol routes are visualized with draggable waypoints and click-to-add/remove controls.
   - World palette tiles show names on hover.
+  - Interior editor shows NPC and item markers with click placement.
   - Ctrl+S downloads the current module; Ctrl+P launches playtest.
 
 [ LICENSE ]

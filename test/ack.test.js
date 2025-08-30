@@ -388,3 +388,9 @@ test('dialog text edited in tree editor is preserved', () => {
   closeNPCEditor();
   assert.strictEqual(moduleData.npcs[0].tree.start.text, 'welcome');
 });
+
+test('editNPC expands short hex colors', () => {
+  moduleData.npcs = [{ id: 'npc1', name: 'NPC', color: '#f33', map: 'world', x: 0, y: 0, tree: {} }];
+  editNPC(0);
+  assert.strictEqual(document.getElementById('npcColor').value, '#ff3333');
+});

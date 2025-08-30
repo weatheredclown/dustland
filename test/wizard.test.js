@@ -38,3 +38,21 @@ test('wizard preserves state and validates steps', async () => {
   wizard.next();
   assert.ok(finished);
 });
+
+test('asset picker step stores selection', async () => {
+  const document = makeDocument();
+  const containerEl = document.getElementById('w');
+  document.body.appendChild(containerEl);
+  const context = { window: { document }, document };
+  vm.createContext(context);
+  const wizCode = await fs.readFile(new URL('../components/wizard/wizard.js', import.meta.url), 'utf8');
+  vm.runInContext(wizCode, context);
+  const assetCode = await fs.readFile(new URL('../components/wizard/steps/asset-picker.js', import.meta.url), 'utf8');
+  vm.runInContext(assetCode, context);
+  const wizard = context.Dustland.Wizard(containerEl, [
+    context.Dustland.WizardSteps.assetPicker('Portrait', ['a.png', 'b.png'], 'portrait')
+  ], {});
+  document.querySelector('select').value = 'b.png';
+  wizard.next();
+  assert.strictEqual(wizard.getState().portrait, 'b.png');
+});

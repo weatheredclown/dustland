@@ -34,8 +34,8 @@ const combatState = {
   choice: 0,
   mode: 'command',
   onComplete: null,
-  fallen: [],
-  log: []
+  log: [],
+  startTime: 0
 };
 
 function recordCombatEvent(ev){
@@ -152,9 +152,11 @@ function openCombat(enemies){
     combatState.active = 0;
     combatState.choice = 0;
     combatState.onComplete = resolve;
-    combatState.fallen = [];
     combatState.log = [];
-    combatState.roster = Array.from(party);
+    combatState.startTime = Date.now();
+    recordCombatEvent({ type: 'system', action: 'start', time: combatState.startTime });
+    party.fallen = [];
+    party._roster = Array.from(party);
 
     (party || []).forEach(m => {
       m.maxAdr = m.maxAdr || 100;
@@ -177,17 +179,7 @@ function closeCombat(result = 'flee'){
   if (cmdMenu) cmdMenu.style.display = 'none';
   if (turnIndicator) turnIndicator.textContent = '';
 
-  if (combatState.roster) {
-    const fallenSet = new Set(combatState.fallen);
-    combatState.roster.forEach(m => {
-      if (fallenSet.has(m)) m.hp = Math.max(1, m.hp || 0);
-    });
-    party.setMembers(combatState.roster);
-    if (typeof renderParty === 'function') renderParty();
-    if (typeof updateHUD === 'function') updateHUD();
-    combatState.roster = null;
-  }
-  combatState.fallen.length = 0;
+  party.restore();
 
   if(result === 'bruise' && state.mapEntry){
     log?.('You wake up at the entrance.');
@@ -195,8 +187,11 @@ function closeCombat(result = 'flee'){
     setPartyPos?.(state.mapEntry.x, state.mapEntry.y);
   }
 
-  recordCombatEvent({ type: 'system', action: 'end', result });
+  const duration = Date.now() - combatState.startTime;
+  recordCombatEvent({ type: 'system', action: 'end', result, duration });
   globalThis.EventBus?.emit?.('combat:ended', { result });
+  globalThis.EventBus?.emit?.('combat:telemetry', { duration, log: combatState.log.slice() });
+  console.debug?.('combat telemetry', { duration, log: combatState.log });
   combatState.onComplete?.({ result });
   combatState.onComplete = null;
 
@@ -357,6 +352,7 @@ function handleCombatKey(e){
     case 'ArrowDown':  moveChoice(1);  return true;
     case 'Enter':
     case ' ':          chooseOption(); return true;
+    case 'Escape':     closeCombat('flee'); return true;
   }
   return false;
 }
@@ -514,7 +510,7 @@ function testAttack(attacker, enemy, dmg = 1, type = 'basic'){
   combatState.enemies = [enemy];
   combatState.active = 0;
   party.length = 0;
-  party.push(attacker);
+  party.join(attacker);
   doAttack(dmg, type);
 }
 
@@ -624,9 +620,7 @@ function finishEnemyAttack(enemy, target){
     log?.(`${target.name} falls!`);
     recordCombatEvent?.({ type: 'player', actor: target.name, action: 'fall', by: enemy.name });
     target.adr = 0; // lose adrenaline on defeat
-    combatState.fallen.push(target);
-    const idx = party.indexOf?.(target);
-    if (idx >= 0) party.splice(idx, 1); else party.splice(0, 1);
+    party.fall(target);
     renderCombat();
     if ((party?.length || 0) === 0){
       log?.('The party has fallen...');
@@ -650,10 +644,9 @@ function finishEnemyAttack(enemy, target){
 }
 
 function enemyAttack(){
-  // Enemies strike a random party member.
+  // Enemies focus the party member with the lowest HP.
   const enemy  = combatState.enemies[combatState.active];
-  const tgtIdx = Math.floor(Math.random() * ((party?.length) || 0));
-  const target = party[tgtIdx];
+  const target = (party || []).reduce((w, m) => w && w.hp <= m.hp ? w : m, null);
 
   if (!enemy || !target){ closeCombat('flee'); return; }
 

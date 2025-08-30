@@ -201,7 +201,9 @@ function setMap(id,label){
   state.map=id;
   party.map = id;
   state.mapEntry = null;
-  mapNameEl.textContent = label || mapLabel(id);
+  if (mapNameEl) {
+    mapNameEl.textContent = label || mapLabel(id);
+  }
   if(typeof centerCamera==='function') centerCamera(party.x,party.y,state.map);
   if(id==='world') setGameState(GAME_STATE.WORLD);
   else if(id==='creator') setGameState(GAME_STATE.CREATOR);
@@ -672,10 +674,26 @@ function setCreatorPortrait(){
   if(building) building.portraitSheet = img;
 }
 const specializations={
-  'Scavenger':{desc:'Finds better loot from ruins; starts with crowbar.', gear:[{id:'crowbar',name:'Crowbar',slot:'weapon',mods:{ATK:+1}}]},
-  'Gunslinger':{desc:'Higher chance to win quick fights; starts with pipe rifle.', gear:[{id:'pipe_rifle',name:'Pipe Rifle',slot:'weapon',mods:{ATK:+2}}]},
-  'Snakeoil Preacher':{desc:'Can sway naive foes; +1 CHA trinket.', gear:[{id:'tin_sun',name:'Tin Sun',slot:'trinket',mods:{LCK:+1}}]},
-  'Cogwitch':{desc:'Tinker checks succeed more often; starts with toolkit.', gear:[{id:'toolkit',name:'Toolkit',slot:'trinket',mods:{INT:+1}}]}
+  'Scavenger':{
+    desc:'Finds better loot from ruins; +1 PER and starts with crowbar.',
+    stats:{PER:+1},
+    gear:[{id:'crowbar',name:'Crowbar',slot:'weapon',mods:{ATK:+1}}]
+  },
+  'Gunslinger':{
+    desc:'Draws fast with +1 AGI and starts with pipe rifle.',
+    stats:{AGI:+1},
+    gear:[{id:'pipe_rifle',name:'Pipe Rifle',slot:'weapon',mods:{ATK:+2}}]
+  },
+  'Snakeoil Preacher':{
+    desc:'Silver tongue grants +1 CHA and a lucky Tin Sun trinket.',
+    stats:{CHA:+1},
+    gear:[{id:'tin_sun',name:'Tin Sun',slot:'trinket',mods:{LCK:+1}}]
+  },
+  'Cogwitch':{
+    desc:'Tinker checks succeed more often; +1 INT and a trusty toolkit.',
+    stats:{INT:+1},
+    gear:[{id:'toolkit',name:'Toolkit',slot:'trinket',mods:{INT:+1}}]
+  }
 };
 const classSpecials={
   Scavenger:['POWER_STRIKE'],
@@ -685,9 +703,21 @@ const classSpecials={
   Wanderer:['GUARD_UP']
 };
 const quirks={
-  'Lucky Lint':{desc:'+1 LCK. Occasionally avoid mishaps.'},
-  'Dust Allergy':{desc:'Random sneezes in dialog (harmless, funny).'},
-  'Desert Prophet':{desc:'Rare visions add hints.'}
+  'Lucky Lint':{
+    desc:'+1 LCK and start with a Lucky Coin.',
+    stats:{LCK:+1},
+    gear:[{id:'lucky_coin',name:'Lucky Coin',slot:'trinket',mods:{LCK:+1}}]
+  },
+  'Brutal Past':{
+    desc:'+1 STR and spiked knuckles for rough fights.',
+    stats:{STR:+1},
+    gear:[{id:'spiked_knuckles',name:'Spiked Knuckles',slot:'weapon',mods:{ATK:+1}}]
+  },
+  'Desert Prophet':{
+    desc:'+1 PER and a prophecy scroll that sharpens INT.',
+    stats:{PER:+1},
+    gear:[{id:'prophecy_scroll',name:'Prophecy Scroll',slot:'trinket',mods:{INT:+1}}]
+  }
 };
 const hiddenOrigins={ 'Rustborn':{desc:'You survived a machine womb. +1 PER, weird dialog tags.'} };
 const statInfo={
@@ -770,8 +800,17 @@ function finalizeCurrentMember(){
   const m=makeMember(building.id, building.name, building.spec||'Wanderer', {permanent:true, portraitSheet: building.portraitSheet});
   m.stats=building.stats; m.origin=building.origin; m.quirk=building.quirk;
   m.special = classSpecials[building.spec||'Wanderer'] || [];
-  addPartyMember(m);
-  const spec = specializations[building.spec]; if(spec){ spec.gear.forEach(g=> addToInv(g)); }
+  const spec = specializations[building.spec];
+  if(spec){
+    if(spec.stats){ for(const k in spec.stats){ m.stats[k]=(m.stats[k]||0)+spec.stats[k]; } }
+    if(spec.gear){ spec.gear.forEach(g=> addToInv(g)); }
+  }
+  const quirk=quirks[building.quirk];
+  if(quirk){
+    if(quirk.stats){ for(const k in quirk.stats){ m.stats[k]=(m.stats[k]||0)+quirk.stats[k]; } }
+    if(quirk.gear){ quirk.gear.forEach(g=> addToInv(g)); }
+  }
+  joinParty(m);
   built.push(m);
   building = null;
   return m;

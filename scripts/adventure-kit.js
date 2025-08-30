@@ -196,6 +196,28 @@ const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR'
 let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
 let treeData = {};
 let selectedObj = null;
+const mapSelect = document.getElementById('mapSelect');
+function updateMapSelect(selected = 'world') {
+  if (!mapSelect) return;
+  const maps = ['world', ...moduleData.interiors.map(I => I.id)];
+  mapSelect.innerHTML = maps.map(m => `<option value="${m}">${m}</option>`).join('');
+  mapSelect.value = selected;
+}
+function showMap(map) {
+  if (mapSelect && mapSelect.value !== map) mapSelect.value = map;
+  if (map === 'world') {
+    // world map is always visible
+  } else {
+    const idx = moduleData.interiors.findIndex(I => I.id === map);
+    if (idx >= 0) {
+      if (typeof showEditorTab === 'function') showEditorTab('interiors');
+      editInterior(idx);
+    }
+  }
+  drawWorld();
+  if (map !== 'world') drawInterior();
+}
+if (mapSelect) mapSelect.addEventListener('change', e => showMap(e.target.value));
 const intCanvas = document.getElementById('intCanvas');
 const intCtx = intCanvas.getContext('2d');
 const intPalette = document.getElementById('intPalette');
@@ -455,20 +477,74 @@ function drawInterior() {
       intCtx.fillRect(x * sx, y * sy, sx, sy);
     }
   }
+  moduleData.npcs.filter(n => n.map === I.id).forEach(n => {
+    intCtx.fillStyle = n.color || '#fff';
+    intCtx.fillRect(n.x * sx, n.y * sy, sx, sy);
+  });
+  moduleData.items.filter(it => it.map === I.id).forEach(it => {
+    intCtx.strokeStyle = '#ff0';
+    intCtx.strokeRect(it.x * sx + 1, it.y * sy + 1, sx - 2, sy - 2);
+  });
+  if (selectedObj && selectedObj.obj.map === I.id) {
+    const o = selectedObj.obj;
+    intCtx.save();
+    intCtx.lineWidth = 2;
+    intCtx.strokeStyle = selectedObj.type === 'npc' ? (o.color || '#fff') : '#ff0';
+    intCtx.strokeRect(o.x * sx + 1, o.y * sy + 1, sx - 2, sy - 2);
+    intCtx.restore();
+  }
 }
 
+function interiorCanvasPos(e) {
+  const I = moduleData.interiors[editInteriorIdx];
+  const rect = intCanvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left) / (intCanvas.width / I.w));
+  const y = Math.floor((e.clientY - rect.top) / (intCanvas.height / I.h));
+  return { x, y };
+}
 function paintInterior(e){
   if(editInteriorIdx<0||!intPainting) return;
   const I=moduleData.interiors[editInteriorIdx];
-  const rect=intCanvas.getBoundingClientRect();
-  const x=Math.floor((e.clientX-rect.left)/(intCanvas.width/I.w));
-  const y=Math.floor((e.clientY-rect.top)/(intCanvas.height/I.h));
+  const { x, y } = interiorCanvasPos(e);
   I.grid[y][x]=intPaint;
   if(intPaint===TILE.DOOR){ I.entryX=x; I.entryY=y-1; }
   drawInterior();
 }
-intCanvas.addEventListener('mousedown',e=>{ intPainting=true; paintInterior(e); });
-intCanvas.addEventListener('mousemove',paintInterior);
+intCanvas.addEventListener('mousedown',e=>{
+  if(editInteriorIdx<0) return;
+  const { x, y } = interiorCanvasPos(e);
+  if(coordTarget){
+    document.getElementById(coordTarget.x).value = x;
+    document.getElementById(coordTarget.y).value = y;
+    coordTarget = null;
+    drawInterior();
+    return;
+  }
+  if(placingType){
+    const I=moduleData.interiors[editInteriorIdx];
+    if(placingType==='npc'){
+      document.getElementById('npcMap').value = I.id;
+      document.getElementById('npcX').value = x;
+      document.getElementById('npcY').value = y;
+      if(placingCb) placingCb();
+      document.getElementById('cancelNPC').style.display = 'none';
+    }else if(placingType==='item'){
+      document.getElementById('itemMap').value = I.id;
+      document.getElementById('itemX').value = x;
+      document.getElementById('itemY').value = y;
+      if(placingCb) placingCb();
+      document.getElementById('cancelItem').style.display = 'none';
+    }
+    placingType=null;
+    placingPos=null;
+    placingCb=null;
+    drawInterior();
+    return;
+  }
+  intPainting=true;
+  paintInterior(e);
+});
+intCanvas.addEventListener('mousemove',e=>{ if(intPainting) paintInterior(e); });
 intCanvas.addEventListener('mouseup',()=>{ intPainting=false; });
 intCanvas.addEventListener('mouseleave',()=>{ intPainting=false; });
 
@@ -488,10 +564,12 @@ function showInteriorEditor(show) {
 
 function renderInteriorList() {
   const list = document.getElementById('intList');
-  list.innerHTML = moduleData.interiors.map((I, i) => `<div data-idx="${i}">${I.id}</div>`).join('');
+  const ints = moduleData.interiors.map((I, i) => ({ I, i })).sort((a, b) => a.I.id.localeCompare(b.I.id));
+  list.innerHTML = ints.map(({ I, i }) => `<div data-idx="${i}">${I.id}</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editInterior(parseInt(div.dataset.idx, 10)));
   updateInteriorOptions();
   refreshChoiceDropdowns();
+  updateMapSelect(mapSelect ? mapSelect.value : 'world');
 }
 
 function startNewInterior() {
@@ -1493,6 +1571,7 @@ function addNPC() {
   document.getElementById('addNPC').style.display = 'none';
   selectedObj = { type: 'npc', obj: npc };
   drawWorld();
+  drawInterior();
 }
 
 function cancelNPC() {
@@ -1502,6 +1581,7 @@ function cancelNPC() {
   document.getElementById('addNPC').style.display = 'block';
   document.getElementById('cancelNPC').style.display = 'none';
   drawWorld();
+  drawInterior();
   updateCursor();
 }
 
@@ -1513,14 +1593,23 @@ function applyNPCChanges() {
   renderNPCList();
   selectedObj = { type: 'npc', obj: npc };
   drawWorld();
+  drawInterior();
+}
+
+function expandHex(hex) {
+  if (typeof hex === 'string' && /^#[0-9a-fA-F]{3}$/.test(hex)) {
+    return '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+  }
+  return hex;
 }
 function editNPC(i) {
   const n = moduleData.npcs[i];
+  showMap(n.map);
   editNPCIdx = i;
   document.getElementById('npcId').value = n.id;
   document.getElementById('npcName').value = n.name;
   document.getElementById('npcDesc').value = n.desc || '';
-  document.getElementById('npcColor').value = n.color;
+  document.getElementById('npcColor').value = expandHex(n.color || '#ffffff');
   document.getElementById('npcMap').value = n.map;
   document.getElementById('npcX').value = n.x;
   document.getElementById('npcY').value = n.y;
@@ -1565,7 +1654,8 @@ function editNPC(i) {
 }
 function renderNPCList() {
   const list = document.getElementById('npcList');
-  list.innerHTML = moduleData.npcs.map((n, i) => `<div data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${n.questId ? ` [${n.questId}]` : ''}</div>`).join('');
+  const npcs = moduleData.npcs.map((n, i) => ({ n, i })).sort((a, b) => a.n.id.localeCompare(b.n.id));
+  list.innerHTML = npcs.map(({ n, i }) => `<div data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${n.questId ? ` [${n.questId}]` : ''}</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editNPC(parseInt(div.dataset.idx, 10)));
   updateQuestOptions();
   refreshChoiceDropdowns();
@@ -1685,6 +1775,7 @@ function addItem() {
   renderItemList();
   selectedObj = null;
   drawWorld();
+  drawInterior();
   showItemEditor(false);
 }
 
@@ -1695,10 +1786,12 @@ function cancelItem() {
   document.getElementById('addItem').style.display = 'block';
   document.getElementById('cancelItem').style.display = 'none';
   drawWorld();
+  drawInterior();
   updateCursor();
 }
 function editItem(i) {
   const it = moduleData.items[i];
+  showMap(it.map);
   editItemIdx = i;
   document.getElementById('itemName').value = it.name;
   document.getElementById('itemId').value = it.id;
@@ -1731,7 +1824,8 @@ function editItem(i) {
 }
 function renderItemList() {
   const list = document.getElementById('itemList');
-  list.innerHTML = moduleData.items.map((it, i) => `<div data-idx="${i}">${it.name} @${it.map} (${it.x},${it.y})</div>`).join('');
+  const items = moduleData.items.map((it, i) => ({ it, i })).sort((a, b) => a.it.name.localeCompare(b.it.name));
+  list.innerHTML = items.map(({ it, i }) => `<div data-idx="${i}">${it.name} @${it.map} (${it.x},${it.y})</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editItem(parseInt(div.dataset.idx, 10)));
   refreshChoiceDropdowns();
 }
@@ -1853,7 +1947,7 @@ function editTemplate(i){
   document.getElementById('templateId').value = t.id;
   document.getElementById('templateName').value = t.name;
   document.getElementById('templateDesc').value = t.desc;
-  document.getElementById('templateColor').value = t.color;
+  document.getElementById('templateColor').value = expandHex(t.color || '#ffffff');
   document.getElementById('templatePortrait').value = t.portraitSheet || '';
   document.getElementById('templateCombat').value = t.combat ? JSON.stringify(t.combat, null, 2) : '';
   document.getElementById('addTemplate').textContent = 'Update Template';
@@ -2139,12 +2233,14 @@ function cancelBldg() {
 }
 function renderBldgList() {
   const list = document.getElementById('bldgList');
-  list.innerHTML = moduleData.buildings.map((b, i) => `<div data-idx="${i}">Bldg @(${b.x},${b.y})</div>`).join('');
+  const bldgs = moduleData.buildings.map((b, i) => ({ b, i })).sort((a, b) => a.b.x - b.b.x || a.b.y - b.b.y);
+  list.innerHTML = bldgs.map(({ b, i }) => `<div data-idx="${i}">Bldg @(${b.x},${b.y})</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editBldg(parseInt(div.dataset.idx, 10)));
 }
 
 function editBldg(i) {
   const b = moduleData.buildings[i];
+  showMap('world');
   editBldgIdx = i;
   document.getElementById('bldgX').value = b.x;
   document.getElementById('bldgY').value = b.y;
@@ -2626,6 +2722,8 @@ document.getElementById('bldgEditor').addEventListener('change', applyBldgChange
 document.getElementById('npcFlagPick').onclick = () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY' }; };
 document.getElementById('portalPick').onclick = () => { coordTarget = { x: 'portalX', y: 'portalY' }; };
 document.getElementById('portalDestPick').onclick = () => { coordTarget = { x: 'portalToX', y: 'portalToY' }; };
+document.getElementById('npcPick').onclick = () => { coordTarget = { x: 'npcX', y: 'npcY' }; };
+document.getElementById('itemPick').onclick = () => { coordTarget = { x: 'itemX', y: 'itemY' }; };
 document.getElementById('save').onclick = saveModule;
 document.getElementById('load').onclick = () => document.getElementById('loadFile').click();
 document.getElementById('loadFile').addEventListener('change', e => {
@@ -3116,3 +3214,4 @@ if (document && typeof document.addEventListener === 'function') {
 }
 
 document.getElementById('playtestFloat')?.addEventListener('click', playtestModule);
+updateMapSelect();

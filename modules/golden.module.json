@@ -1,14 +1,60 @@
 {
   "seed": 1,
-  "start": { "map": "world", "x": 7, "y": 7 },
+  "start": {
+    "map": "world",
+    "x": 7,
+    "y": 7
+  },
   "items": [
-    { "id": "golden_coin", "name": "Golden Coin", "type": "quest", "value": 1 },
-    { "id": "thanks_medal", "name": "Thanks Medal", "type": "trinket", "slot": "trinket", "mods": { "LCK": 1 }, "value": 10 },
-    { "id": "bonus_potion", "name": "Healing Potion", "type": "consumable", "use": { "type": "heal", "amount": 5 }, "value": 5 },
-    { "map": "world", "x": 6, "y": 7, "id": "spare_potion", "name": "Spare Potion", "type": "consumable", "use": { "type": "heal", "amount": 5 }, "value": 5 }
+    {
+      "id": "golden_coin",
+      "name": "Golden Coin",
+      "type": "quest",
+      "value": 1
+    },
+    {
+      "id": "thanks_medal",
+      "name": "Thanks Medal",
+      "type": "trinket",
+      "slot": "trinket",
+      "mods": {
+        "LCK": 1
+      },
+      "value": 10
+    },
+    {
+      "id": "bonus_potion",
+      "name": "Healing Potion",
+      "type": "consumable",
+      "use": {
+        "type": "heal",
+        "amount": 5
+      },
+      "value": 5
+    },
+    {
+      "map": "world",
+      "x": 6,
+      "y": 7,
+      "id": "spare_potion",
+      "name": "Spare Potion",
+      "type": "consumable",
+      "use": {
+        "type": "heal",
+        "amount": 5
+      },
+      "value": 5
+    }
   ],
   "quests": [
-    { "id": "q_fetch", "title": "Fetch the Coin", "desc": "Retrieve the coin from the cabin.", "item": "golden_coin", "reward": "thanks_medal", "xp": 2 }
+    {
+      "id": "q_fetch",
+      "title": "Fetch the Coin",
+      "desc": "Retrieve the coin from the cabin.",
+      "item": "golden_coin",
+      "reward": "thanks_medal",
+      "xp": 2
+    }
   ],
   "npcs": [
     {
@@ -24,25 +70,59 @@
         "start": {
           "text": "My lucky coin is in the cabin. Can you fetch it?",
           "choices": [
-            { "label": "(Accept)", "to": "accept", "q": "accept" },
-            { "label": "(INT) Any advance?", "to": "advance", "check": { "stat": "INT", "dc": 5 } },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Accept)",
+              "to": "accept",
+              "q": "accept"
+            },
+            {
+              "label": "(INT) Any advance?",
+              "to": "advance",
+              "check": {
+                "stat": "INT",
+                "dc": 5
+              }
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "advance": {
           "text": "Sharp mind! Take this potion.",
-          "choices": [ { "label": "(Thanks)", "to": "accept", "reward": "bonus_potion", "q": "accept" } ]
+          "choices": [
+            {
+              "label": "(Thanks)",
+              "to": "accept",
+              "reward": "bonus_potion",
+              "q": "accept"
+            }
+          ]
         },
         "accept": {
           "text": "Please bring it soon.",
           "choices": [
-            { "label": "(I have the coin)", "to": "turnin", "q": "turnin" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(I have the coin)",
+              "to": "turnin",
+              "q": "turnin"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "turnin": {
           "text": "You found it! Here is your reward.",
-          "choices": [ { "label": "(Continue)", "to": "bye", "reward": "thanks_medal" } ]
+          "choices": [
+            {
+              "label": "(Continue)",
+              "to": "bye",
+              "reward": "thanks_medal"
+            }
+          ]
         }
       }
     },
@@ -58,17 +138,35 @@
         "start": {
           "text": "A locked chest sits here.",
           "choices": [
-            { "label": "(Open)", "to": "open", "once": true },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Open)",
+              "to": "open",
+              "once": true
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "open": {
           "text": "Inside is a shiny coin.",
-          "choices": [ { "label": "(Take Coin)", "to": "empty", "reward": "golden_coin" } ]
+          "choices": [
+            {
+              "label": "(Take Coin)",
+              "to": "empty",
+              "reward": "golden_coin"
+            }
+          ]
         },
         "empty": {
           "text": "The chest is empty.",
-          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
         }
       }
     },
@@ -82,9 +180,23 @@
       "title": "Pest",
       "desc": "It guards the cabin.",
       "tree": {
-        "start": { "text": "The rat snarls.", "choices": [ { "label": "(Leave)", "to": "bye" } ] }
+        "start": {
+          "text": "The rat snarls.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
       },
-      "combat": { "HP": 4, "ATK": 2, "DEF": 0, "loot": null, "auto": true }
+      "combat": {
+        "HP": 4,
+        "ATK": 2,
+        "DEF": 0,
+        "loot": null,
+        "auto": true
+      }
     },
     {
       "id": "bandit",
@@ -95,9 +207,23 @@
       "name": "Sneaky Bandit",
       "desc": "Blocks the path.",
       "tree": {
-        "start": { "text": "Hand over your loot!", "choices": [ { "label": "(Leave)", "to": "bye" } ] }
+        "start": {
+          "text": "Hand over your loot!",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
       },
-      "combat": { "HP": 6, "ATK": 3, "DEF": 1, "loot": null, "auto": true }
+      "combat": {
+        "HP": 6,
+        "ATK": 3,
+        "DEF": 1,
+        "loot": null,
+        "auto": true
+      }
     },
     {
       "id": "scout",
@@ -111,11 +237,30 @@
         "start": {
           "text": "Need a companion?",
           "choices": [
-            { "label": "(Join me)", "to": "join", "join": { "id": "scout", "name": "Scout", "role": "Guide" } },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Join me)",
+              "to": "join",
+              "join": {
+                "id": "scout",
+                "name": "Scout",
+                "role": "Guide"
+              }
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
-        "join": { "text": "Let's go.", "choices": [ { "label": "(Leave)", "to": "bye" } ] }
+        "join": {
+          "text": "Let's go.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
       }
     },
     {
@@ -126,8 +271,25 @@
       "color": "#caffc6",
       "name": "Traveling Trader",
       "desc": "Sells basic goods.",
-      "shop": { "markup": 2, "inv": [ { "id": "bonus_potion" } ] },
-      "tree": { "start": { "text": "Trade wares?", "choices": [ { "label": "(Leave)", "to": "bye" } ] } }
+      "shop": {
+        "markup": 2,
+        "inv": [
+          {
+            "id": "bonus_potion"
+          }
+        ]
+      },
+      "tree": {
+        "start": {
+          "text": "Trade wares?",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
     },
     {
       "id": "wanderer",
@@ -138,8 +300,22 @@
       "color": "#b8ffb6",
       "name": "Mysterious Wanderer",
       "desc": "Appears after you linger.",
-      "tree": { "start": { "text": "You finally noticed me.", "choices": [ { "label": "(Leave)", "to": "bye" } ] } },
-      "reveal": { "flag": "visits@world@7,7", "op": ">=", "value": 3 }
+      "tree": {
+        "start": {
+          "text": "You finally noticed me.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "reveal": {
+        "flag": "visits@world@7,7",
+        "op": ">=",
+        "value": 3
+      }
     },
     {
       "id": "dialog_tester",
@@ -153,12 +329,30 @@
         "start": {
           "text": "Pick a feature to test.",
           "choices": [
-            { "label": "(Check STR)", "to": "dc" },
-            { "label": "(Gain XP)", "to": "xp" },
-            { "label": "(Require Coin)", "to": "req_item" },
-            { "label": "(Need Trinket)", "to": "req_slot" },
-            { "label": "(Move Me)", "to": "move" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Check STR)",
+              "to": "dc"
+            },
+            {
+              "label": "(Gain XP)",
+              "to": "xp"
+            },
+            {
+              "label": "(Require Coin)",
+              "to": "req_item"
+            },
+            {
+              "label": "(Need Trinket)",
+              "to": "req_slot"
+            },
+            {
+              "label": "(Move Me)",
+              "to": "move"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "dc": {
@@ -167,7 +361,10 @@
             {
               "label": "(Roll)",
               "to": "start",
-              "check": { "stat": "STR", "dc": 5 },
+              "check": {
+                "stat": "STR",
+                "dc": 5
+              },
               "success": "Impressive!",
               "failure": "Not strong enough."
             }
@@ -214,9 +411,93 @@
             {
               "label": "(Step North)",
               "to": "start",
-              "goto": { "target": "npc", "rel": true, "y": -1 },
+              "goto": {
+                "target": "npc",
+                "rel": true,
+                "y": -1
+              },
               "success": "I moved north."
             }
+          ]
+        }
+      }
+    },
+    {
+      "id": "nyx",
+      "map": "world",
+      "x": 4,
+      "y": 15,
+      "color": "#ccf",
+      "name": "Nyx",
+      "desc": "A wanderer with layered stories.",
+      "tree": {
+        "start": {
+          "text": "Greetings, traveler. What do you seek?",
+          "choices": [
+            { "label": "Who are you?", "to": "who" },
+            { "label": "Tell me a tale", "to": "tale" },
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        },
+        "who": {
+          "text": "I am Nyx. Do you seek wisdom or power?",
+          "choices": [
+            { "label": "Wisdom", "to": "wisdom" },
+            { "label": "Power", "to": "power" },
+            { "label": "(Back)", "to": "start" }
+          ]
+        },
+        "wisdom": {
+          "text": "Wisdom requires patience. Proceed?",
+          "choices": [
+            { "label": "Yes", "to": "lesson" },
+            { "label": "No", "to": "start" }
+          ]
+        },
+        "lesson": {
+          "text": "The dust remembers those who listen. Ask further?",
+          "choices": [
+            { "label": "Tell me more", "to": "secret" },
+            { "label": "That's enough", "to": "start" }
+          ]
+        },
+        "secret": {
+          "text": "You carry the weight of forgotten tales.",
+          "choices": [
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        },
+        "power": {
+          "text": "Power corrupts. Do you still want it?",
+          "choices": [
+            { "label": "Yes", "to": "trial" },
+            { "label": "No", "to": "start" }
+          ]
+        },
+        "trial": {
+          "text": "Face the trial another time.",
+          "choices": [
+            { "label": "(Back)", "to": "start" }
+          ]
+        },
+        "tale": {
+          "text": "What kind of tale?",
+          "choices": [
+            { "label": "Heroic", "to": "heroic" },
+            { "label": "Tragic", "to": "tragic" },
+            { "label": "(Back)", "to": "start" }
+          ]
+        },
+        "heroic": {
+          "text": "A hero rose from dust.",
+          "choices": [
+            { "label": "(Back)", "to": "tale" }
+          ]
+        },
+        "tragic": {
+          "text": "The sand swallowed cities.",
+          "choices": [
+            { "label": "(Back)", "to": "tale" }
           ]
         }
       }
@@ -228,14 +509,38 @@
       "x": 6,
       "y": 6,
       "events": [
-        { "when": "enter", "effect": "toast", "msg": "A warm breeze soothes you." },
-        { "when": "enter", "effect": "modStat", "stat": "CHA", "delta": 1, "duration": 2 }
+        {
+          "when": "enter",
+          "effect": "toast",
+          "msg": "A warm breeze soothes you."
+        },
+        {
+          "when": "enter",
+          "effect": "modStat",
+          "stat": "CHA",
+          "delta": 1,
+          "duration": 2
+        }
       ]
     }
   ],
   "portals": [
-    { "map": "world", "x": 9, "y": 6, "toMap": "world", "toX": 1, "toY": 1 },
-    { "map": "world", "x": 1, "y": 1, "toMap": "world", "toX": 9, "toY": 6 }
+    {
+      "map": "world",
+      "x": 9,
+      "y": 6,
+      "toMap": "world",
+      "toX": 1,
+      "toY": 1
+    },
+    {
+      "map": "world",
+      "x": 1,
+      "y": 1,
+      "toMap": "world",
+      "toX": 9,
+      "toY": 6
+    }
   ],
   "interiors": [
     {
@@ -243,15 +548,22 @@
       "w": 7,
       "h": 5,
       "grid": [
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 0],
-        [0, 0, 0, 8, 0, 0, 0]
+        "🏝🏝🏝🏝🏝🏝🏝",
+        "🏝🪨🪨🪨🪨🪨🏝",
+        "🏝🪨🪨🪨🪨🪨🏝",
+        "🏝🪨🪨🪨🪨🪨🏝",
+        "🏝🏝🏝🚪🏝🏝🏝"
       ],
       "entryX": 3,
       "entryY": 3
     }
   ],
-  "buildings": [ { "x": 10, "y": 9, "interiorId": "cabin", "boarded": false } ]
+  "buildings": [
+    {
+      "x": 10,
+      "y": 9,
+      "interiorId": "cabin",
+      "boarded": false
+    }
+  ]
 }

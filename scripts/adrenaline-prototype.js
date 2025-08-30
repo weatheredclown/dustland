@@ -45,11 +45,18 @@ if (typeof window === 'undefined') {
     const enemy = { name: 'Target Dummy', hp: 40 };
     const resultPromise = openCombat([enemy]);
     let lastAdr = hero.adr;
+    let attacks = 0;
+    let loggedFull = false;
     const interval = setInterval(() => {
       handleCombatKey({ key: 'Enter' });
+      attacks++;
       if (hero.adr !== lastAdr) {
         lastAdr = hero.adr;
         console.log(`Adrenaline: ${hero.adr}`);
+        if (!loggedFull && hero.adr >= 100) {
+          loggedFull = true;
+          console.log(`Reached full adrenaline in ${attacks} attacks.`);
+        }
       }
     }, 0);
     const result = await resultPromise;

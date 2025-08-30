@@ -60,3 +60,28 @@ test('mobile A selects combat option when in combat', async () => {
   a.onclick();
   assert.deepStrictEqual(keys, ['Enter']);
 });
+
+test('mobile B closes dialog when overlay shown', async () => {
+  let closed = false;
+  const { context, document } = await setup({
+    closeDialog: () => { closed = true; },
+    overlay: null
+  });
+  document.getElementById('overlay').classList.add('shown');
+  context.overlay = document.getElementById('overlay');
+  const { B: b } = context.setMobileControls(true);
+  b.onclick();
+  assert.ok(closed);
+});
+
+test('mobile B flees combat', async () => {
+  const keys = [];
+  const { context, document } = await setup({
+    handleCombatKey: e => { keys.push(e.key); return true; },
+    overlay: null
+  });
+  document.getElementById('combatOverlay').classList.add('shown');
+  const { B: b } = context.setMobileControls(true);
+  b.onclick();
+  assert.deepStrictEqual(keys, ['Escape']);
+});

@@ -66,6 +66,11 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 ---
 ### **Expanded Task List**
 
+#### **Phase 0: Writing Pass**
+- [ ] Draft a scene-by-scene outline with placeholder dialog for the caravan's opening leg.
+- [ ] Flesh out Mara, Jax, and Nyx arcs with at least two key conversations each.
+- [ ] Sketch early Silencer encounters with sample rival dialogue.
+
 #### **Phase 1: Narrative Foundation**
 - [x] Outline the caravan's pursuit of the fading broadcast across the Dustland.
   - The caravan catches the ghost of a broadcast near the Salt Flats and tracks its fading pulses by night.
@@ -89,15 +94,15 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 - [x] Detail Nyx "Speaker"—a poet tuning radio static into verse; arc: chooses between broadcasting or listening.
 - [ ] **Implement Signature Encounters:**
     - [x] Design and build Mara's dust storm navigation puzzle.
-    - [ ] Hook Mara's puzzle into the Broadcast Story sequence.
-    - [ ] Script Jax's timed repair sequence under combat pressure.
+    - [x] Hook Mara's puzzle into the Broadcast Story sequence.
+    - [x] Script Jax's timed repair sequence under combat pressure. Implemented in `jax-repair.module.js`.
     - [ ] Write the dialogue and branching paths for Nyx's "conversational tuning" encounter.
 - [ ] **Doppelgänger System:**
-    - [ ] Create the data structure for "personas" that can be equipped by the main characters.
+    - [x] Create the data structure for "personas" that can be equipped by the main characters.
     - [ ] Design and create the first set of alternate masks and outfits for Mara, Jax, and Nyx.
 - [ ] **Implement Key Items:**
-    - [ ] Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.
-    - [ ] Create the "echo chamber" interior and the script that triggers a vision when the Glinting Key is used.
+    - [x] Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.
+      - [x] Create the "echo chamber" interior and the script that triggers a vision when the Glinting Key is used.
     - [ ] Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event.
 
 #### **Phase 3: Puzzle and World Building**
@@ -108,8 +113,9 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 - [x] **Design a layered graffiti decoding puzzle to reveal a safe route before the sun bleeds out.**
    - A collapsed overpass hides directions beneath decades of gang tags; players cycle solvent sprays to reveal each era's markings and overlay them into a route.
    - Picking the wrong sequence bathes the wall in false sunlight and draws a quick Silencer ambush before resetting.
+- [ ] Implement the layered graffiti decoding puzzle as an interactive module and hook it into the Broadcast Story sequence.
 - [ ] **Build Reusable Widgets:**
-    - [ ] Create a generic "dial" widget for puzzles like the radio tower.
+    - [x] Create a generic "dial" widget for puzzles like the radio tower.
     - [x] Develop a "sound-based navigation" system that can be used for the dust storm and other similar challenges.
 - [ ] **Flesh out the World:**
     - [ ] Design and build the first major hub city, where the caravan can rest, resupply, and find new quests.

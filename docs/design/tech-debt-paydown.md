@@ -50,7 +50,7 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
 
 ## Tasks
 
-- [ ] **Phase 1: Namespace the world**
+- [x] **Phase 1: Namespace the world**
   - [x] Introduce `globalThis.Dustland = {}`.
   - [x] Move module exports into `Dustland.*` buckets.
     - [x] Namespace event bus under `Dustland.eventBus`.
@@ -63,15 +63,15 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
   - [x] Update references and tests incrementally.
 - [x] **Phase 1.5: Reorganize the filesystem**
   - [x] move core and JS files in root under a new scripts directory
-- [ ] **Phase 2: Untangle UI from logic**
+- [x] **Phase 2: Untangle UI from logic**
   - [x] Replace direct DOM calls with event emissions.
   - [x] Build a tiny `ui.js` to listen for events.
   - [x] Keep old globals as shims during migration.
-- [ ] **Phase 3: Consolidate state**
+- [x] **Phase 3: Consolidate state**
   - [x] Create a `GameState` singleton.
   - [x] Provide accessors for state changes.
-- [ ] **Phase 4: Lint for sanity**
+- [x] **Phase 4: Lint for sanity**
   - [x] Add ESLint with a vanilla config.
   - [x] Expose `npm run lint`.
   - [x] Run lint in CI and before commits.
-  - [ ] re-oganize
+  - [x] reorganize

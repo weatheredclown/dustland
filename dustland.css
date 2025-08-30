@@ -1229,3 +1229,20 @@ input[type="range"] {
   75%{ transform:translate(-1px,0); }
   100%{ transform:translate(0,0); }
 }
+
+.signal-compass {
+  position:relative;
+  width:40px;
+  height:40px;
+  border:2px solid var(--accent);
+  border-radius:50%;
+}
+.signal-compass .arrow {
+  position:absolute;
+  bottom:50%;
+  left:50%;
+  width:2px;
+  height:16px;
+  background:var(--accent);
+  transform-origin:50% 100%;
+}

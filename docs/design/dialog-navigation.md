@@ -1,8 +1,10 @@
 # Dialog Navigation & State Machine
 
-- Author: Alex "Echo" Johnson
-- Date: 2025-08-28
-- Status: Draft
+*By Alex "Echo" Johnson*
+*Date: 2025-08-28*
+*Status: Draft*
+
+> **Echo:** Menu-driven conversations should feel deliberate and human—built with plain JavaScript and globals.
 
 ## Summary
 
@@ -255,10 +257,10 @@ function withImportTracking(ctx, recorder) {
 - Do we need per-node timeouts (auto-advance) for scripted scenes?
 - Should dialog rendering live in HUD or a dedicated overlay layer?
 
-## TODOs
+## Tasks
 
-- Persist LLM suggestions in ACK: Add a clear “Persist LLM nodes” control and per-choice “Accept suggestion” affordance that writes generated nodes/choices into the dialog JSON (removing volatile markers) and updates imports as needed.
-- Imports + validation enhancements: Extend imports generation (capture more effects/events and inferred queries) and add an editor validator that highlights unresolved `to` targets or missing imports with actionable UI hints.
+- [ ] Persist LLM suggestions in ACK: Add a clear “Persist LLM nodes” control and per-choice “Accept suggestion” affordance that writes generated nodes/choices into the dialog JSON (removing volatile markers) and updates imports as needed.
+- [ ] Imports + validation enhancements: Extend imports generation (capture more effects/events and inferred queries) and add an editor validator that highlights unresolved `to` targets or missing imports with actionable UI hints.
 
 ## Appendix: Minimal Runtime Sketch
 

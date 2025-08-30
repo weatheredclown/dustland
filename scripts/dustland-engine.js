@@ -2,6 +2,7 @@
 // ===== Rendering & Utilities =====
 
 // Logging
+const ENGINE_VERSION = '0.7.39';
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const apEl = document.getElementById('ap');
@@ -123,7 +124,18 @@ function setMobileControls(on){
           interact();
         }
       }));
-      mobileAB.appendChild(mk('B','B',takeNearestItem));
+      mobileAB.appendChild(mk('B','B',()=>{
+        const shop = document.getElementById('shopOverlay');
+        if(overlay?.classList?.contains('shown')){
+          closeDialog?.();
+        } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
+          handleCombatKey?.({ key:'Escape' });
+        } else if(shop?.classList?.contains('shown')){
+          shop.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape' }));
+        } else {
+          window.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape' }));
+        }
+      }));
       mobileWrap.appendChild(mobileAB);
     }
   } else {
@@ -667,7 +679,8 @@ function renderQuests(){
   shown.forEach(v=>{
     const div=document.createElement('div');
     div.className='q';
-    div.innerHTML=`<div><b>${v.title}</b></div><div class="small">${v.desc}</div><div class="status">${v.status}</div>`;
+    const progress = (v.item && v.count) ? ` (${Math.min(countItems(v.item), v.count)}/${v.count})` : '';
+    div.innerHTML=`<div><b>${v.title}${progress}</b></div><div class="small">${v.desc}</div><div class="status">${v.status}</div>`;
     q.appendChild(div);
   });
 }
@@ -966,7 +979,6 @@ disp.addEventListener('touchstart',e=>{
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
 requestAnimationFrame(draw);
-log('v0.7.31 — ACK player loads module scripts.');
 if (window.NanoDialog) NanoDialog.init();
 
 { // skip normal boot flow in ACK player mode

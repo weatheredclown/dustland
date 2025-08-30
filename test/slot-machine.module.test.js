@@ -26,6 +26,13 @@ test('dustland module adds slot shack with gambling options', () => {
   assert.ok(labels.includes('(25 scrap)'));
 });
 
+test('slot shack interior includes an exit door', () => {
+  const data = loadModuleData();
+  const interior = data.interiors.find(i => i.id === 'slot_shack');
+  assert.ok(interior);
+  assert.ok(interior.grid.some(row => row.includes('🚪')));
+});
+
 test('slot machine drops cache after paying out 500 scrap net', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'dustland.module.js');
