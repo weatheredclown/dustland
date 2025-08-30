@@ -93,7 +93,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
     - [ ] Script Jax's timed repair sequence under combat pressure.
     - [ ] Write the dialogue and branching paths for Nyx's "conversational tuning" encounter.
 - [ ] **Doppelgänger System:**
-    - [ ] Create the data structure for "personas" that can be equipped by the main characters.
+    - [x] Create the data structure for "personas" that can be equipped by the main characters.
     - [ ] Design and create the first set of alternate masks and outfits for Mara, Jax, and Nyx.
 - [ ] **Implement Key Items:**
     - [ ] Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.
