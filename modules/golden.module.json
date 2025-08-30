@@ -421,6 +421,86 @@
           ]
         }
       }
+    },
+    {
+      "id": "nyx",
+      "map": "world",
+      "x": 4,
+      "y": 15,
+      "color": "#ccf",
+      "name": "Nyx",
+      "desc": "A wanderer with layered stories.",
+      "tree": {
+        "start": {
+          "text": "Greetings, traveler. What do you seek?",
+          "choices": [
+            { "label": "Who are you?", "to": "who" },
+            { "label": "Tell me a tale", "to": "tale" },
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        },
+        "who": {
+          "text": "I am Nyx. Do you seek wisdom or power?",
+          "choices": [
+            { "label": "Wisdom", "to": "wisdom" },
+            { "label": "Power", "to": "power" },
+            { "label": "(Back)", "to": "start" }
+          ]
+        },
+        "wisdom": {
+          "text": "Wisdom requires patience. Proceed?",
+          "choices": [
+            { "label": "Yes", "to": "lesson" },
+            { "label": "No", "to": "start" }
+          ]
+        },
+        "lesson": {
+          "text": "The dust remembers those who listen. Ask further?",
+          "choices": [
+            { "label": "Tell me more", "to": "secret" },
+            { "label": "That's enough", "to": "start" }
+          ]
+        },
+        "secret": {
+          "text": "You carry the weight of forgotten tales.",
+          "choices": [
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        },
+        "power": {
+          "text": "Power corrupts. Do you still want it?",
+          "choices": [
+            { "label": "Yes", "to": "trial" },
+            { "label": "No", "to": "start" }
+          ]
+        },
+        "trial": {
+          "text": "Face the trial another time.",
+          "choices": [
+            { "label": "(Back)", "to": "start" }
+          ]
+        },
+        "tale": {
+          "text": "What kind of tale?",
+          "choices": [
+            { "label": "Heroic", "to": "heroic" },
+            { "label": "Tragic", "to": "tragic" },
+            { "label": "(Back)", "to": "start" }
+          ]
+        },
+        "heroic": {
+          "text": "A hero rose from dust.",
+          "choices": [
+            { "label": "(Back)", "to": "tale" }
+          ]
+        },
+        "tragic": {
+          "text": "The sand swallowed cities.",
+          "choices": [
+            { "label": "(Back)", "to": "tale" }
+          ]
+        }
+      }
     }
   ],
   "events": [
