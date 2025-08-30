@@ -114,6 +114,12 @@ test('arrow keys cycle module selection', () => {
   assert.ok(buttons[1].className.includes('selected'));
 });
 
+test('broadcast story points to first fragment', () => {
+  const broadcast = MODULES.find(m => m.id === 'broadcast');
+  assert.ok(broadcast);
+  assert.strictEqual(broadcast.file, 'modules/broadcast-fragment-1.module.js');
+});
+
 test('enter key loads selected module', () => {
   const overlay = bodyEl.children.find(c => c.id === 'modulePicker');
   overlay.dispatchEvent({ type: 'keydown', key: 'ArrowUp', preventDefault(){} });
