@@ -74,7 +74,7 @@ This wizard helps create a building with multiple interior rooms, like a house w
 ### **Expanded Task List**
 
 #### **Phase 1: Core Wizard Framework**
-- [ ] **`Wizard` Component:** Create a generic, framework-free DOM component that takes a wizard configuration and manages the UI shell (title, step navigation, Next/Back buttons).
+- [x] **`Wizard` Component:** Create a generic, framework-free DOM component that takes a wizard configuration and manages the UI shell (title, step navigation, Next/Back buttons).
 - [ ] **State Management:** Implement a simple state store for the wizard to hold the data for the object being created.
 - [ ] **Step Component Library:** Build a small set of reusable step components:
     - `TextInputStep`: A simple text input field.

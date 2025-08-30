@@ -89,7 +89,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 - [x] Detail Nyx "Speaker"—a poet tuning radio static into verse; arc: chooses between broadcasting or listening.
 - [ ] **Implement Signature Encounters:**
     - [x] Design and build Mara's dust storm navigation puzzle.
-    - [ ] Hook Mara's puzzle into the Broadcast Story sequence.
+    - [x] Hook Mara's puzzle into the Broadcast Story sequence.
     - [ ] Script Jax's timed repair sequence under combat pressure.
     - [ ] Write the dialogue and branching paths for Nyx's "conversational tuning" encounter.
 - [ ] **Doppelgänger System:**
