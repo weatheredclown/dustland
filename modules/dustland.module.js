@@ -209,6 +209,33 @@ const DATA = `
         "ATK": 5,
         "ADR": 20
       }
+    },
+    {
+      "map": "world",
+      "x": 60,
+      "y": 40,
+      "id": "signal_fragment_a",
+      "name": "Signal Fragment",
+      "type": "quest",
+      "tags": ["signal_fragment"]
+    },
+    {
+      "map": "world",
+      "x": 62,
+      "y": 42,
+      "id": "signal_fragment_b",
+      "name": "Signal Fragment",
+      "type": "quest",
+      "tags": ["signal_fragment"]
+    },
+    {
+      "map": "world",
+      "x": 64,
+      "y": 44,
+      "id": "signal_fragment_c",
+      "name": "Signal Fragment",
+      "type": "quest",
+      "tags": ["signal_fragment"]
     }
   ],
   "quests": [
@@ -292,6 +319,14 @@ const DATA = `
       "title": "Toll-Booth Etiquette",
       "desc": "You met the Duchess on the road.",
       "xp": 2
+    },
+    {
+      "id": "q_signal",
+      "title": "Broken Signal",
+      "desc": "Collect three signal fragments in the wastes.",
+      "item": "signal_fragment",
+      "count": 3,
+      "xp": 3
     }
   ],
   "npcs": [
@@ -940,6 +975,39 @@ const DATA = `
         "flag": "visits@world@20,47",
         "op": ">=",
         "value": 2
+      }
+    },
+    {
+      "id": "signal_tech",
+      "map": "world",
+      "x": 26,
+      "y": 43,
+      "color": "#9ef7a0",
+      "name": "Signal Tech",
+      "title": "Tinkerer",
+      "desc": "Fiddles with a busted radio.",
+      "questId": "q_signal",
+      "tree": {
+        "start": {
+          "text": "Radio's dead. Need fragments to spark it.",
+          "choices": [
+            { "label": "(Accept)", "to": "accept", "q": "accept" },
+            { "label": "(Turn in fragments)", "to": "turnin", "q": "turnin" },
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        },
+        "accept": {
+          "text": "Try the dunes; bits wash up there.",
+          "choices": [ { "label": "(Ok)", "to": "bye" } ]
+        },
+        "turnin": {
+          "text": "Got the pieces?",
+          "choices": [ { "label": "(Give fragments)", "to": "do_turnin" } ]
+        },
+        "do_turnin": {
+          "text": "Signal hums again. Nice work.",
+          "choices": [ { "label": "(Continue)", "to": "bye" } ]
+        }
       }
     },
     {

@@ -667,7 +667,8 @@ function renderQuests(){
   shown.forEach(v=>{
     const div=document.createElement('div');
     div.className='q';
-    div.innerHTML=`<div><b>${v.title}</b></div><div class="small">${v.desc}</div><div class="status">${v.status}</div>`;
+    const progress = (v.item && v.count) ? ` (${Math.min(countItems(v.item), v.count)}/${v.count})` : '';
+    div.innerHTML=`<div><b>${v.title}${progress}</b></div><div class="small">${v.desc}</div><div class="status">${v.status}</div>`;
     q.appendChild(div);
   });
 }
