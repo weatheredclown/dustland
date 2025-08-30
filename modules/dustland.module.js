@@ -236,6 +236,16 @@ const DATA = `
       "name": "Signal Fragment",
       "type": "quest",
       "tags": ["signal_fragment"]
+    },
+    {
+      "map": "hall",
+      "x": 14,
+      "y": 18,
+      "id": "glinting_key",
+      "name": "Glinting Key",
+      "type": "quest",
+      "tags": ["key"],
+      "use": { "effect": "vision" }
     }
   ],
   "quests": [
@@ -1750,6 +1760,20 @@ const DATA = `
       ],
       "entryX": 3,
       "entryY": 5
+    },
+    {
+      "id": "echo_chamber",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🪨🪨🪨🪨🪨",
+        "🪨⬜⬜⬜🪨",
+        "🪨⬜🌟⬜🪨",
+        "🪨⬜⬜⬜🪨",
+        "🪨🪨🪨🪨🪨"
+      ],
+      "entryX": 2,
+      "entryY": 2
     }
   ],
   "buildings": [
@@ -1849,6 +1873,17 @@ function postLoad(module) {
         if (choice.effects) choice.effects = handleCustomEffects(choice.effects);
       }
     }
+  }
+
+  const key = module.items?.find(i => i.use && i.use.effect === 'vision');
+  if (key) {
+    key.use = {
+      onUse() {
+        setMap('echo_chamber');
+        setPartyPos(2, 2);
+        log('A vision of a shining world surrounds you.');
+      }
+    };
   }
 }
 

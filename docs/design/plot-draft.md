@@ -97,7 +97,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
     - [ ] Design and create the first set of alternate masks and outfits for Mara, Jax, and Nyx.
 - [ ] **Implement Key Items:**
     - [x] Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.
-    - [ ] Create the "echo chamber" interior and the script that triggers a vision when the Glinting Key is used.
+      - [x] Create the "echo chamber" interior and the script that triggers a vision when the Glinting Key is used.
     - [ ] Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event.
 
 #### **Phase 3: Puzzle and World Building**
