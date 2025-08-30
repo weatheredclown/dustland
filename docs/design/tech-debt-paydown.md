@@ -50,7 +50,7 @@ Our CRT playground is scrappy by design, but a few lingering habits slow our bui
 
 ## Tasks
 
-- [ ] **Phase 1: Namespace the world**
+- [x] **Phase 1: Namespace the world**
   - [x] Introduce `globalThis.Dustland = {}`.
   - [x] Move module exports into `Dustland.*` buckets.
     - [x] Namespace event bus under `Dustland.eventBus`.
