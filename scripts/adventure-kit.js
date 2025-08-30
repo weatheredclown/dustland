@@ -1571,13 +1571,20 @@ function applyNPCChanges() {
   drawWorld();
   drawInterior();
 }
+
+function expandHex(hex) {
+  if (typeof hex === 'string' && /^#[0-9a-fA-F]{3}$/.test(hex)) {
+    return '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+  }
+  return hex;
+}
 function editNPC(i) {
   const n = moduleData.npcs[i];
   editNPCIdx = i;
   document.getElementById('npcId').value = n.id;
   document.getElementById('npcName').value = n.name;
   document.getElementById('npcDesc').value = n.desc || '';
-  document.getElementById('npcColor').value = n.color;
+  document.getElementById('npcColor').value = expandHex(n.color || '#ffffff');
   document.getElementById('npcMap').value = n.map;
   document.getElementById('npcX').value = n.x;
   document.getElementById('npcY').value = n.y;
@@ -1912,7 +1919,7 @@ function editTemplate(i){
   document.getElementById('templateId').value = t.id;
   document.getElementById('templateName').value = t.name;
   document.getElementById('templateDesc').value = t.desc;
-  document.getElementById('templateColor').value = t.color;
+  document.getElementById('templateColor').value = expandHex(t.color || '#ffffff');
   document.getElementById('templatePortrait').value = t.portraitSheet || '';
   document.getElementById('templateCombat').value = t.combat ? JSON.stringify(t.combat, null, 2) : '';
   document.getElementById('addTemplate').textContent = 'Update Template';
