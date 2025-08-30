@@ -1,11 +1,9 @@
-const BROADCAST_FRAGMENT_2 = {
+const DATA = `
+{
   "seed": "broadcast-2",
   "name": "broadcast-fragment-2",
   "startMap": "world",
-  "startPoint": {
-    "x": 110,
-    "y": 22
-  },
+  "startPoint": { "x": 110, "y": 22 },
   "items": [
     {
       "id": "power_cell",
@@ -199,6 +197,11 @@ const BROADCAST_FRAGMENT_2 = {
       ]
     }
   ]
-};
+}
+`;
 
-globalThis.BROADCAST_FRAGMENT_2 = BROADCAST_FRAGMENT_2;
+function postLoad(module) {}
+
+globalThis.BROADCAST_FRAGMENT_2 = JSON.parse(DATA);
+globalThis.BROADCAST_FRAGMENT_2.postLoad = postLoad;
+
