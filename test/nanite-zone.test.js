@@ -45,8 +45,8 @@ async function setupContext() {
   const m2 = new context.Character('b','B','');
   m1.maxHp = m2.maxHp = 1;
   m1.hp = m2.hp = 1;
-  context.party.addMember(m1);
-  context.party.addMember(m2);
+  context.party.join(m1);
+  context.party.join(m2);
 
   const moveCode = await fs.readFile(new URL('../scripts/core/movement.js', import.meta.url), 'utf8');
   vm.runInContext(moveCode, context);

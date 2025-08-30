@@ -119,7 +119,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, makeInteriorRoom, placeHut, TILE, getTile, healParty, buildings, world } = globalThis;
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, makeInteriorRoom, placeHut, TILE, getTile, healAll, buildings, world } = globalThis;
 const { findFreeDropTile, canWalk, move, calcMoveDelay, getMoveDelay } = globalThis.Dustland.movement;
 let interiors = globalThis.interiors;
 
@@ -162,7 +162,7 @@ test('createRNG produces deterministic sequences', () => {
   test('addToInv accepts item ids', () => {
     player.inv.length = 0;
     party.length = 0;
-    party.addMember(new Character('t', 'T', 't'));
+    party.join(new Character('t', 'T', 't'));
     registerItem({ id:'apple', name:'Apple' });
     addToInv('apple');
     assert.ok(player.inv.some(it=>it.id==='apple'));
@@ -171,7 +171,7 @@ test('createRNG produces deterministic sequences', () => {
   test('picking up an item logs once', () => {
     player.inv.length = 0;
     party.length = 0;
-    party.addMember(new Character('t', 'T', 't'));
+    party.join(new Character('t', 'T', 't'));
     const oldLog = global.log;
     const logs = [];
     global.log = (msg) => logs.push(msg);
@@ -185,7 +185,7 @@ test('cursed items reveal on unequip attempt and stay equipped', () => {
   party.length = 0;
   player.inv.length = 0;
   const mem = new Character('t1','Tester','Role');
-  party.addMember(mem);
+  party.join(mem);
   const cursed = normalizeItem({ id:'mask', name:'Mask', type:'armor', slot:'armor', cursed:true });
   addToInv(cursed);
   equipItem(0,0);
@@ -201,7 +201,7 @@ test('uncursed gear can be removed and triggers unequip effects', () => {
   player.inv.length = 0;
   state.map = 'world';
   const mem = new Character('t1','Tester','Role');
-  party.addMember(mem);
+  party.join(mem);
   const helm = normalizeItem({
     id: 'helm',
     name: 'Helm',
@@ -233,7 +233,7 @@ test('equipping teleport item moves party and logs message', () => {
   state.map = 'world';
   party.x = 0; party.y = 0;
   const mem = new Character('t2','Tele','Role');
-  party.addMember(mem);
+  party.join(mem);
   const tp = normalizeItem({ id:'warp_ring', name:'Warp Ring', type:'trinket', slot:'trinket', equip:{ teleport:{ map:'world', x:5, y:6 }, msg:'whoosh' } });
   addToInv(tp);
   equipItem(0,0);
@@ -308,7 +308,7 @@ test('walking regenerates leader HP', async () => {
   party.length = 0; player.inv.length = 0;
   const hero = new Character('h', 'Hero', 'Role');
   hero.hp = 5; hero.maxHp = 10;
-  party.addMember(hero);
+  party.join(hero);
   party.x = 0; party.y = 0;
 
   await move(1,0);
@@ -333,7 +333,7 @@ test('movement delay improves with agility and equipment', async () => {
   player.inv.length = 0;
   const hero = new Character('h', 'Hero', 'Role');
   hero.stats.AGI = 4;
-  party.addMember(hero);
+  party.join(hero);
   party.x = 0; party.y = 0;
 
   const firstMove = move(1,0);
@@ -359,7 +359,7 @@ test('movement delay respects move_delay_mod equipment', async () => {
   player.inv.length = 0;
   const hero = new Character('h', 'Hero', 'Role');
   hero.stats.AGI = 4;
-  party.addMember(hero);
+  party.join(hero);
   party.x = 0;
   party.y = 0;
 
@@ -415,7 +415,7 @@ test('useItem heals party member and consumes item', () => {
   party.length = 0; player.inv.length = 0;
   const m = new Character('h','Healer','Role');
   m.hp = 5; m.maxHp = 10;
-  party.addMember(m);
+  party.join(m);
   const tonic = registerItem({ id:'tonic', name:'Tonic', type:'consumable', use:{ type:'heal', amount:3 } });
   addToInv(tonic);
   useItem(0);
@@ -447,8 +447,8 @@ test('selected party member receives XP on dialog success', () => {
   party.length=0;
   const a=new Character('a','A','Role');
   const b=new Character('b','B','Role');
-  party.addMember(a);
-  party.addMember(b);
+  party.join(a);
+  party.join(b);
   setLeader(1);
   a.xp=0; b.xp=0;
   openDialog(NPCS[0]);
@@ -490,7 +490,7 @@ test('respec consumes memory worm and restores skill points', () => {
   c.lvl = 3;
   c.skillPoints = 0;
   c.stats.STR += 2;
-  party.addMember(c);
+  party.join(c);
   setLeader(0);
   registerItem({ id:'memory_worm', name:'Memory Worm', type:'token' });
   addToInv('memory_worm');
@@ -508,7 +508,7 @@ test('bosses can drop memory worms', async () => {
   party.length = 0;
   player.inv.length = 0;
   const m = new Character('p','P','Role');
-  party.addMember(m);
+  party.join(m);
   setLeader(0);
   registerItem({ id:'memory_worm', name:'Memory Worm', type:'token' });
   const origRand = Math.random;
@@ -526,7 +526,7 @@ test('boss memory worm drop respects probability', async () => {
   party.length = 0;
   player.inv.length = 0;
   const m = new Character('p','P','Role');
-  party.addMember(m);
+  party.join(m);
   setLeader(0);
   registerItem({ id:'memory_worm', name:'Memory Worm', type:'token' });
   const origRand = Math.random;
@@ -763,7 +763,7 @@ test('quest turn-in awards XP once', () => {
   NPCS.length = 0;
   party.length = 0;
   const char = new Character('g', 'Gil', 'Role');
-  party.addMember(char);
+  party.join(char);
   const quest = new Quest('q_xp', 'Quest', '', { xp: 4 });
   const npc = { quest };
   defaultQuestProcessor(npc, 'do_turnin');
@@ -860,7 +860,7 @@ test('joinParty copies current NPC portraitSheet', () => {
   party.length = 0;
   NPCS.length = 0;
   currentNPC = { id: 'j', name: 'Joker', portraitSheet: 'assets/portraits/portrait_1000.png' };
-  joinParty({ id: 'j', name: 'Joker', role: 'Trickster' });
+  dialogJoinParty({ id: 'j', name: 'Joker', role: 'Trickster' });
   assert.strictEqual(party[0].portraitSheet, 'assets/portraits/portrait_1000.png');
   currentNPC = null;
 });
@@ -1009,7 +1009,7 @@ test('onEnter triggers effects and temporary stat mod', async () => {
   party.x=0; party.y=0;
   party.length=0;
   const hero = new Character('h','Hero','Role');
-  party.addMember(hero);
+  party.join(hero);
   registerTileEvents([{map:'world', x:1, y:0, events:[{when:'enter', effect:'toast', msg:'You smell rot.'},{when:'enter', effect:'modStat', stat:'CHA', delta:-1, duration:2}]}]);
   const msgs=[];
   global.toast = (m)=>msgs.push(m);
@@ -1064,8 +1064,8 @@ test('party enforces maximum size of six', () => {
     new Character('f','F','Role'),
     new Character('g','G','Role')
   ];
-  members.slice(0,6).forEach(m=>assert.strictEqual(party.addMember(m), true));
-  assert.strictEqual(party.addMember(members[6]), false);
+  members.slice(0,6).forEach(m=>assert.strictEqual(party.join(m), true));
+  assert.strictEqual(party.join(members[6]), false);
   assert.strictEqual(party.length, 6);
 });
 
@@ -1079,7 +1079,7 @@ test('NPC is not removed when party is full', () => {
     new Character('e','E','Role'),
     new Character('f','F','Role')
   ];
-  members.forEach(m=>party.addMember(m));
+  members.forEach(m=>party.join(m));
 
   const npc = { id: 'r', name: 'Recruit', map:'world', x:1, y:0,
     tree: { start: { text: '', choices: [ { label: 'Join', join: { id:'r', name:'Recruit', role:'Role' } } ] } } };
@@ -1094,8 +1094,8 @@ test('cannot remove created party members', () => {
   party.length = 0; NPCS.length = 0;
   const base = new Character('a','A','Role', {permanent:true});
   const recruit = new Character('b','B','Role');
-  party.addMember(base); party.addMember(recruit);
-  assert.strictEqual(party.removeMember(base), false);
+  party.join(base); party.join(recruit);
+  assert.strictEqual(party.leave(base), false);
   assert.strictEqual(party.length, 2);
   assert.strictEqual(NPCS.length, 0);
 });
@@ -1105,8 +1105,8 @@ test('removed member becomes NPC at current location', () => {
   state.map = 'world'; party.map = 'world'; party.x = 0; party.y = 0;
   const base = new Character('a','A','Role', {permanent:true});
   const recruit = new Character('b','B','Role');
-  party.addMember(base); party.addMember(recruit);
-  assert.strictEqual(party.removeMember(recruit), true);
+  party.join(base); party.join(recruit);
+  assert.strictEqual(party.leave(recruit), true);
   assert.strictEqual(party.length, 1);
   const npc = NPCS.find(n=>n.id==='b');
   assert.ok(npc);
@@ -1123,8 +1123,8 @@ test('NPCs are removed individually during combat', async () => {
   party.length = 0;
   const m1 = new Character('p1','P1','Role');
   const m2 = new Character('p2','P2','Role');
-  party.addMember(m1);
-  party.addMember(m2);
+  party.join(m1);
+  party.join(m2);
   player.inv.length = 0;
 
   const resultPromise = openCombat([
@@ -1155,7 +1155,7 @@ test('defeated enemies can drop spoils cache', async () => {
   const origLog = global.log;
   global.log = (msg) => logs.push(msg);
   const m1 = new Character('p1','P1','Role');
-  party.addMember(m1);
+  party.join(m1);
   const origRoll = SpoilsCache.rollDrop;
   SpoilsCache.rollDrop = () => SpoilsCache.create('sealed');
   const resultPromise = openCombat([{ name:'E1', hp:1 }]);
@@ -1174,7 +1174,7 @@ test('bandits can drop scrap on defeat', async () => {
   player.inv.length = 0;
   player.scrap = 0;
   const m1 = new Character('p1','P1','Role');
-  party.addMember(m1);
+  party.join(m1);
   const origRand = Math.random;
   Math.random = () => 0;
   const resultPromise = openCombat([{ id:'bandit', name:'Bandit', hp:1 }]);
@@ -1190,7 +1190,7 @@ test('fallen party members are revived after combat', async () => {
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role');
   m1.hp = 1;
-  party.addMember(m1);
+  party.join(m1);
 
   const resultPromise = openCombat([
     { name:'E1', hp:3 }
@@ -1209,7 +1209,7 @@ test('falling resets adrenaline', async () => {
   const m1 = new Character('p1','P1','Role');
   m1.hp = 1;
   m1.adr = 30;
-  party.addMember(m1);
+  party.join(m1);
 
   const resultPromise = openCombat([
     { name:'E1', hp:3 }
@@ -1227,7 +1227,7 @@ test('combat hp bars update after damage', async () => {
   const m1 = new Character('p1','P1','Role');
   m1.hp = 2;
   m1.maxHp = 2;
-  party.addMember(m1);
+  party.join(m1);
 
   const resultPromise = openCombat([
     { name:'E1', hp:2, maxHp:2 }
@@ -1250,7 +1250,7 @@ test('enemy hp bar defaults maxHp to hp', async () => {
   const m1 = new Character('p1','P1','Role');
   m1.hp = 2;
   m1.maxHp = 2;
-  party.addMember(m1);
+  party.join(m1);
 
   const resultPromise = openCombat([
     { name:'E1', hp:2 }
@@ -1269,7 +1269,7 @@ test('combat menu can be clicked', async () => {
   party.length = 0;
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role');
-  party.addMember(m1);
+  party.join(m1);
 
   const resultPromise = openCombat([
     { name:'E1', hp:1 }
@@ -1284,7 +1284,7 @@ test('space selects combat option', async () => {
   party.length = 0;
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role');
-  party.addMember(m1);
+  party.join(m1);
 
   const resultPromise = openCombat([
     { name:'E1', hp:1 }
@@ -1299,7 +1299,7 @@ test('turn indicator updates with active member', async () => {
   party.length = 0;
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role', { special:['POWER_STRIKE'] });
-  party.addMember(m1);
+  party.join(m1);
   const resultPromise = openCombat([{ name:'E1', hp:1 }]);
   assert.strictEqual(turnIndicator.textContent, "P1's turn");
   closeCombat('flee');
@@ -1310,7 +1310,7 @@ test('party member receives class special', async () => {
   party.length = 0;
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role', { special:['POWER_STRIKE'] });
-  party.addMember(m1);
+  party.join(m1);
   await new Promise((r) => setTimeout(r, 50));
   assert.ok(m1.special.includes('POWER_STRIKE'));
 });
@@ -1319,7 +1319,7 @@ test('special ids resolve to objects in combat', async () => {
   party.length = 0;
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role', { special:['POWER_STRIKE'] });
-  party.addMember(m1);
+  party.join(m1);
   const resultPromise = openCombat([{ name:'E1', hp:1 }]);
   assert.strictEqual(typeof party[0].special[0], 'object');
   assert.strictEqual(party[0].special[0].id, 'POWER_STRIKE');
@@ -1333,7 +1333,7 @@ test('openCombat preserves adrenaline for party members', async () => {
   const m1 = new Character('p1','P1','Role');
   m1.adr = 50;
   m1.maxAdr = 150;
-  party.addMember(m1);
+  party.join(m1);
   const resultPromise = openCombat([{ name:'E1', hp:1 }]);
   assert.strictEqual(party[0].adr, 50);
   handleCombatKey({ key:'Enter' });
@@ -1345,7 +1345,7 @@ test('basic attack plays adrenaline fx', async () => {
   party.length = 0;
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role');
-  party.addMember(m1);
+  party.join(m1);
   const calls = [];
   global.playFX = (t) => calls.push(t);
   const resultPromise = openCombat([{ name:'E1', hp:1 }]);
@@ -1359,7 +1359,7 @@ test('special move triggers fx', async () => {
   party.length = 0;
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role', { special:[{ label:'Power Hit', dmg:2 }] });
-  party.addMember(m1);
+  party.join(m1);
   const calls = [];
   global.playFX = (t) => calls.push(t);
   const resultPromise = openCombat([{ name:'E1', hp:3 }]);
@@ -1376,7 +1376,7 @@ test('special applies cost and cooldown', async () => {
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role', { special:[{ id:'STRIKE', label:'Strike', dmg:2, adrCost:10, cooldown:2 }] });
   m1.adr = 20;
-  party.addMember(m1);
+  party.join(m1);
   const resultPromise = openCombat([{ name:'E1', hp:5 }]);
   handleCombatKey({ key:'ArrowDown' });
   handleCombatKey({ key:'Enter' });
@@ -1405,19 +1405,19 @@ test('adrenaline cools when walking at full health', async () => {
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role');
   m1.adr = 20;
-  party.addMember(m1);
+  party.join(m1);
   await move(1,0);
   assert.strictEqual(m1.adr, 18);
 });
 
-test('healParty restores HP and clears adrenaline', () => {
+test('healAll restores HP and clears adrenaline', () => {
   party.length = 0;
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role');
   m1.hp = 5;
   m1.adr = 30;
-  party.addMember(m1);
-  healParty();
+  party.join(m1);
+  healAll();
   assert.strictEqual(m1.hp, m1.maxHp);
   assert.strictEqual(m1.adr, 0);
 });
@@ -1437,7 +1437,7 @@ test('startCombat forwards portraitSheet', async () => {
 test('save serializes party when map method is shadowed', () => {
   party.length = 0;
   const m1 = new Character('p1','P1','Role');
-  party.addMember(m1);
+  party.join(m1);
   party.map = 'world';
   const store = {};
   const orig = global.localStorage;
@@ -1729,7 +1729,7 @@ test('basic attacks generate adrenaline from weapon stats', async () => {
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role');
   m1.equip.weapon = { mods: { ADR: 20 } };
-  party.addMember(m1);
+  party.join(m1);
   const resultPromise = openCombat([{ name:'E1', hp:2 }]);
   handleCombatKey({ key:'Enter' });
   assert.strictEqual(party[0].adr, 5);
@@ -1744,7 +1744,7 @@ test('equipment modifiers apply at battle start', async () => {
   const m1 = new Character('p1','P1','Role');
   m1.equip.weapon = { mods: { ADR: 10 } };
   m1.equip.trinket = { mods: { adrenaline_gen_mod: 2, granted_special: 'POWER_STRIKE' } };
-  party.addMember(m1);
+  party.join(m1);
   const resultPromise = openCombat([{ name: 'E1', hp: 2 }]);
   assert.strictEqual(m1.special.length, 1);
   handleCombatKey({ key: 'Enter' });
@@ -1758,7 +1758,7 @@ test('adrenaline boosts attack damage', async () => {
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role');
   m1.adr = 100;
-  party.addMember(m1);
+  party.join(m1);
   const resultPromise = openCombat([{ name: 'E1', hp: 3 }]);
   handleCombatKey({ key: 'Enter' });
   assert.strictEqual(combatState.enemies[0].hp, 1);
@@ -1772,7 +1772,7 @@ test('adrenaline damage modifiers amplify boost', async () => {
   const m1 = new Character('p1','P1','Role');
   m1.equip.trinket = { mods: { adrenaline_dmg_mod: 2 } };
   m1.adr = 100;
-  party.addMember(m1);
+  party.join(m1);
   const resultPromise = openCombat([{ name: 'E1', hp: 3 }]);
   handleCombatKey({ key: 'Enter' });
   const res = await resultPromise;
@@ -1783,7 +1783,7 @@ test('enemy immune to basic attacks requires specials', async () => {
   party.length = 0;
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role', { special:[{ label:'Power Hit', dmg:2 }] });
-  party.addMember(m1);
+  party.join(m1);
   const resultPromise = openCombat([{ name:'Shield', hp:5, immune:['basic'] }]);
   handleCombatKey({ key:'Enter' });
   assert.strictEqual(combatState.enemies[0].hp, 5);
@@ -1801,7 +1801,7 @@ test('enemy counters basic attacks', async () => {
   player.inv.length = 0;
 
   const m1 = new Character('p1', 'P1', 'Role');
-  party.addMember(m1);
+  party.join(m1);
 
   const resultPromise = openCombat([{ name: 'Mirror', hp: 3, counterBasic: { dmg: 1 } }]);
 
@@ -1823,7 +1823,7 @@ test('combat log records player and enemy actions', async () => {
   player.inv.length = 0;
 
   const m1 = new Character('p1', 'P1', 'Role');
-  party.addMember(m1);
+  party.join(m1);
 
   const resultPromise = openCombat([{ name: 'E1', hp: 2 }]);
 
@@ -1845,8 +1845,8 @@ test('enemy attacks random party member', async () => {
   const m2 = new Character('p2', 'P2', 'Role');
   m1.hp = m1.maxHp = 5;
   m2.hp = m2.maxHp = 5;
-  party.addMember(m1);
-  party.addMember(m2);
+  party.join(m1);
+  party.join(m2);
 
   const origRand = Math.random;
   Math.random = () => 0.9; // force target index 1

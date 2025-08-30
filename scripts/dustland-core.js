@@ -770,7 +770,7 @@ function finalizeCurrentMember(){
   const m=makeMember(building.id, building.name, building.spec||'Wanderer', {permanent:true, portraitSheet: building.portraitSheet});
   m.stats=building.stats; m.origin=building.origin; m.quirk=building.quirk;
   m.special = classSpecials[building.spec||'Wanderer'] || [];
-  addPartyMember(m);
+  joinParty(m);
   const spec = specializations[building.spec]; if(spec){ spec.gear.forEach(g=> addToInv(g)); }
   built.push(m);
   building = null;

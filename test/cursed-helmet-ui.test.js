@@ -13,7 +13,7 @@ test('cursed equipment keeps label after failed unequip', async () => {
   const invCode = await fs.readFile(new URL('../scripts/core/inventory.js', import.meta.url), 'utf8');
   vm.runInContext(invCode, context);
   const mem = new context.Character('hero', 'Hero', 'Role');
-  context.party.addMember(mem);
+  context.party.join(mem);
   context.registerItem({ id: 'helm', name: 'VR Helmet', type: 'armor', slot: 'armor', cursed: true });
   context.addToInv('helm');
   context.equipItem(0, 0);
