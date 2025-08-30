@@ -346,6 +346,7 @@ function handleCombatKey(e){
     case 'ArrowDown':  moveChoice(1);  return true;
     case 'Enter':
     case ' ':          chooseOption(); return true;
+    case 'Escape':     closeCombat('flee'); return true;
   }
   return false;
 }

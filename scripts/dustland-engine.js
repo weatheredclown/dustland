@@ -123,7 +123,18 @@ function setMobileControls(on){
           interact();
         }
       }));
-      mobileAB.appendChild(mk('B','B',takeNearestItem));
+      mobileAB.appendChild(mk('B','B',()=>{
+        const shop = document.getElementById('shopOverlay');
+        if(overlay?.classList?.contains('shown')){
+          closeDialog?.();
+        } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
+          handleCombatKey?.({ key:'Escape' });
+        } else if(shop?.classList?.contains('shown')){
+          shop.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape' }));
+        } else {
+          window.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape' }));
+        }
+      }));
       mobileWrap.appendChild(mobileAB);
     }
   } else {
@@ -966,7 +977,7 @@ disp.addEventListener('touchstart',e=>{
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
 requestAnimationFrame(draw);
-log('v0.7.32 — ACK player loads module scripts.');
+log('v0.7.33 — mobile B acts as escape.');
 if (window.NanoDialog) NanoDialog.init();
 
 { // skip normal boot flow in ACK player mode
