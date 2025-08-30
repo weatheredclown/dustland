@@ -43,6 +43,9 @@
     }
   };
 
+  Wizard.prototype.getState = function(){ return this.state; };
+  Wizard.prototype.setState = function(part){ Object.assign(this.state, part || {}); };
+
   function TextInputStep(opts){
     this.id = opts.id;
     this.label = opts.label || opts.id;
@@ -59,7 +62,29 @@
     el.appendChild(label);
   };
 
+  function AssetPickerStep(opts){
+    this.id = opts.id;
+    this.label = opts.label || opts.id;
+    this.assets = opts.assets || [];
+  }
+
+  AssetPickerStep.prototype.render = function(el, state){
+    const label = document.createElement('label');
+    label.textContent = this.label;
+    const select = document.createElement('select');
+    for (const a of this.assets){
+      const opt = document.createElement('option');
+      opt.value = a;
+      opt.textContent = a;
+      select.appendChild(opt);
+    }
+    select.onchange = () => { state[this.id] = select.value; };
+    label.appendChild(select);
+    el.appendChild(label);
+  };
+
   globalThis.Wizard = Wizard;
   globalThis.TextInputStep = TextInputStep;
+  globalThis.AssetPickerStep = AssetPickerStep;
 })();
 

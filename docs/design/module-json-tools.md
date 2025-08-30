@@ -33,7 +33,7 @@ We need to let editors tinker with module layouts without touching code. Each JS
   - [x] broadcast-fragment-2
   - [x] broadcast-fragment-3
   - [ ] echoes
-  - [ ] dustland
+  - [x] dustland
   - [ ] lootbox-demo
   - [ ] office
   - [x] mara-puzzle
