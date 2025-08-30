@@ -35,7 +35,8 @@ const combatState = {
   mode: 'command',
   onComplete: null,
   log: [],
-  startTime: 0
+  startTime: 0,
+  afterEnemy: null
 };
 
 function recordCombatEvent(ev){
@@ -342,6 +343,33 @@ function moveChoice(dir){
   updateChoice();
 }
 
+function attemptFlee(){
+  const partyPower = (party || []).reduce((s, m) => s + (m.lvl || 1), 0);
+  const enemyPower = (combatState.enemies || []).reduce((s, e) => s + (e.challenge || e.hp || 1), 0);
+  const chance = partyPower / (partyPower + enemyPower);
+  if (Math.random() < chance){
+    log?.('You fled the battle.');
+    closeCombat('flee');
+    return;
+  }
+  log?.("Couldn't escape!");
+  const nextIdx = combatState.active + 1;
+  combatState.afterEnemy = () => {
+    if (nextIdx >= (party?.length || 0)){
+      startPartyTurn();
+    } else {
+      combatState.phase = 'party';
+      combatState.active = nextIdx;
+      highlightActive();
+      openCommand();
+    }
+  };
+  combatState.phase = 'enemy';
+  combatState.active = 0;
+  highlightActive();
+  enemyAttack();
+}
+
 function handleCombatKey(e){
   if (!combatOverlay || !combatOverlay.classList.contains('shown')) return false;
   if (e.repeat && !combatKeys[e.key]) return false;
@@ -352,7 +380,7 @@ function handleCombatKey(e){
     case 'ArrowDown':  moveChoice(1);  return true;
     case 'Enter':
     case ' ':          chooseOption(); return true;
-    case 'Escape':     closeCombat('flee'); return true;
+    case 'Escape':     attemptFlee(); return true;
   }
   return false;
 }
@@ -366,11 +394,7 @@ function chooseOption(){
   if (combatState.mode === 'command'){
     const choice = opt.textContent.toLowerCase();
     cmdMenu.style.display = 'none';
-    if (choice === 'flee'){
-      log?.('You fled the battle.');
-      closeCombat('flee');
-      return;
-    }
+    if (choice === 'flee'){ attemptFlee(); return; }
     if (choice === 'attack') doAttack(1);
     else if (choice === 'special') openSpecialMenu();
     else if (choice === 'item') openItemMenu();
@@ -634,6 +658,13 @@ function finishEnemyAttack(enemy, target){
   player.hp = party[0] ? party[0].hp : player.hp;
   updateHUD?.();
   combatState.active++;
+
+  if (combatState.afterEnemy){
+    const cb = combatState.afterEnemy;
+    combatState.afterEnemy = null;
+    cb();
+    return;
+  }
 
   if (combatState.active < combatState.enemies.length){
     highlightActive();
