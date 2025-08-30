@@ -196,6 +196,28 @@ const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR'
 let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
 let treeData = {};
 let selectedObj = null;
+const mapSelect = document.getElementById('mapSelect');
+function updateMapSelect(selected = 'world') {
+  if (!mapSelect) return;
+  const maps = ['world', ...moduleData.interiors.map(I => I.id)];
+  mapSelect.innerHTML = maps.map(m => `<option value="${m}">${m}</option>`).join('');
+  mapSelect.value = selected;
+}
+function showMap(map) {
+  if (mapSelect && mapSelect.value !== map) mapSelect.value = map;
+  if (map === 'world') {
+    // world map is always visible
+  } else {
+    const idx = moduleData.interiors.findIndex(I => I.id === map);
+    if (idx >= 0) {
+      if (typeof showEditorTab === 'function') showEditorTab('interiors');
+      editInterior(idx);
+    }
+  }
+  drawWorld();
+  if (map !== 'world') drawInterior();
+}
+if (mapSelect) mapSelect.addEventListener('change', e => showMap(e.target.value));
 const intCanvas = document.getElementById('intCanvas');
 const intCtx = intCanvas.getContext('2d');
 const intPalette = document.getElementById('intPalette');
@@ -542,10 +564,12 @@ function showInteriorEditor(show) {
 
 function renderInteriorList() {
   const list = document.getElementById('intList');
-  list.innerHTML = moduleData.interiors.map((I, i) => `<div data-idx="${i}">${I.id}</div>`).join('');
+  const ints = moduleData.interiors.map((I, i) => ({ I, i })).sort((a, b) => a.I.id.localeCompare(b.I.id));
+  list.innerHTML = ints.map(({ I, i }) => `<div data-idx="${i}">${I.id}</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editInterior(parseInt(div.dataset.idx, 10)));
   updateInteriorOptions();
   refreshChoiceDropdowns();
+  updateMapSelect(mapSelect ? mapSelect.value : 'world');
 }
 
 function startNewInterior() {
@@ -1580,6 +1604,7 @@ function expandHex(hex) {
 }
 function editNPC(i) {
   const n = moduleData.npcs[i];
+  showMap(n.map);
   editNPCIdx = i;
   document.getElementById('npcId').value = n.id;
   document.getElementById('npcName').value = n.name;
@@ -1629,7 +1654,8 @@ function editNPC(i) {
 }
 function renderNPCList() {
   const list = document.getElementById('npcList');
-  list.innerHTML = moduleData.npcs.map((n, i) => `<div data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${n.questId ? ` [${n.questId}]` : ''}</div>`).join('');
+  const npcs = moduleData.npcs.map((n, i) => ({ n, i })).sort((a, b) => a.n.id.localeCompare(b.n.id));
+  list.innerHTML = npcs.map(({ n, i }) => `<div data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${n.questId ? ` [${n.questId}]` : ''}</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editNPC(parseInt(div.dataset.idx, 10)));
   updateQuestOptions();
   refreshChoiceDropdowns();
@@ -1765,6 +1791,7 @@ function cancelItem() {
 }
 function editItem(i) {
   const it = moduleData.items[i];
+  showMap(it.map);
   editItemIdx = i;
   document.getElementById('itemName').value = it.name;
   document.getElementById('itemId').value = it.id;
@@ -1797,7 +1824,8 @@ function editItem(i) {
 }
 function renderItemList() {
   const list = document.getElementById('itemList');
-  list.innerHTML = moduleData.items.map((it, i) => `<div data-idx="${i}">${it.name} @${it.map} (${it.x},${it.y})</div>`).join('');
+  const items = moduleData.items.map((it, i) => ({ it, i })).sort((a, b) => a.it.name.localeCompare(b.it.name));
+  list.innerHTML = items.map(({ it, i }) => `<div data-idx="${i}">${it.name} @${it.map} (${it.x},${it.y})</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editItem(parseInt(div.dataset.idx, 10)));
   refreshChoiceDropdowns();
 }
@@ -2205,12 +2233,14 @@ function cancelBldg() {
 }
 function renderBldgList() {
   const list = document.getElementById('bldgList');
-  list.innerHTML = moduleData.buildings.map((b, i) => `<div data-idx="${i}">Bldg @(${b.x},${b.y})</div>`).join('');
+  const bldgs = moduleData.buildings.map((b, i) => ({ b, i })).sort((a, b) => a.b.x - b.b.x || a.b.y - b.b.y);
+  list.innerHTML = bldgs.map(({ b, i }) => `<div data-idx="${i}">Bldg @(${b.x},${b.y})</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editBldg(parseInt(div.dataset.idx, 10)));
 }
 
 function editBldg(i) {
   const b = moduleData.buildings[i];
+  showMap('world');
   editBldgIdx = i;
   document.getElementById('bldgX').value = b.x;
   document.getElementById('bldgY').value = b.y;
@@ -3184,3 +3214,4 @@ if (document && typeof document.addEventListener === 'function') {
 }
 
 document.getElementById('playtestFloat')?.addEventListener('click', playtestModule);
+updateMapSelect();

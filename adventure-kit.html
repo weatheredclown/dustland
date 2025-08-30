@@ -46,6 +46,8 @@
 
     .list {
       font-size: 13px;
+      max-height: 200px;
+      overflow-y: auto;
     }
 
     .list div {
@@ -274,6 +276,7 @@
   <div class="ak-layout">
       <section class="card map-card" id="mapCard">
         <canvas id="map" width="640" height="480" aria-label="Map preview"></canvas>
+        <label>Map<select id="mapSelect"></select></label>
         <div class="btn-group" id="paletteGroup">
           <div id="paletteWrap">
             <div id="nanoStatus">
