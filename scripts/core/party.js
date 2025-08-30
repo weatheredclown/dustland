@@ -107,6 +107,7 @@ class Party extends Array {
       this.x = 2;
       this.y = 2;
       this.flags = {};
+      this.fallen = [];
     }
   push(...members){
     const unique = members.filter(m => m && !this.includes(m));
@@ -128,7 +129,7 @@ class Party extends Array {
     super.splice(0, this.length, ...unique);
     return this.length;
   }
-  addMember(member){
+  join(member){
     if(this.length >= 6){
       log('Party is full.');
       return false;
@@ -138,14 +139,14 @@ class Party extends Array {
     member.applyEquipmentStats();
     if(typeof renderParty === 'function') renderParty();
     if(typeof updateHUD === 'function') updateHUD();
-    log(member.name+" joins the party.");
+    log(member.name + ' joins the party.');
     return true;
   }
-  removeMember(member){
-    const idx=this.indexOf(member);
-    if(idx===-1) return false;
+  leave(member){
+    const idx = this.indexOf(member);
+    if(idx === -1) return false;
     if(member.permanent){
-      log(member.name+" refuses to leave.");
+      log(member.name + ' refuses to leave.');
       return false;
     }
     this.splice(idx,1);
@@ -158,6 +159,29 @@ class Party extends Array {
     }
     return true;
   }
+  fall(member){
+    const idx = this.indexOf(member);
+    if(idx >= 0){
+      this.fallen.push(member);
+      this.splice(idx,1);
+    }
+  }
+  restore(){
+    if(Array.isArray(this._roster)){
+      const fallenSet = new Set(this.fallen);
+      this._roster.forEach(m => { if(fallenSet.has(m)) m.hp = Math.max(1, m.hp || 0); });
+      this.setMembers(this._roster);
+      this._roster = null;
+    }
+    this.fallen.length = 0;
+    if(typeof renderParty === 'function') renderParty();
+    if(typeof updateHUD === 'function') updateHUD();
+  }
+  healAll(){
+    (this||[]).forEach(m=>{ m.hp = m.maxHp; m.adr = 0; });
+    player.hp = this[0] ? this[0].hp : player.hp;
+    renderParty?.(); updateHUD?.();
+  }
   leader(){ return this[selectedMember] || this[0]; }
 }
 
@@ -165,8 +189,11 @@ const party = new Party();
 let selectedMember = 0;
 
 function makeMember(id, name, role, opts){ return new Character(id, name, role, opts); }
-function addPartyMember(member){ return party.addMember(member); }
-function removePartyMember(member){ return party.removeMember(member); }
+function joinParty(member){ return party.join(member); }
+function leaveParty(member){ return party.leave(member); }
+function fall(member){ return party.fall(member); }
+function restore(){ return party.restore(); }
+function healAll(){ return party.healAll(); }
 function statLine(s){ return `STR ${s.STR}  AGI ${s.AGI}  INT ${s.INT}  PER ${s.PER}  LCK ${s.LCK}  CHA ${s.CHA}`; }
 function xpToNext(lvl){
   const prev = xpCurve[lvl-1] ?? 0;
@@ -232,11 +259,5 @@ function trainStat(stat, memberIndex = selectedMember){
   return true;
 }
 
-function healParty(){
-  (party||[]).forEach(m=>{ m.hp = m.maxHp; m.adr = 0; });
-  player.hp = party[0] ? party[0].hp : player.hp;
-  renderParty?.(); updateHUD?.();
-}
-
-const partyExports = { baseStats, Character, Party, party, makeMember, addPartyMember, removePartyMember, statLine, xpToNext, awardXP, applyEquipmentStats, applyCombatMods, leader, setLeader, respec, trainStat, healParty, selectedMember, xpCurve };
+const partyExports = { baseStats, Character, Party, party, makeMember, joinParty, leaveParty, fall, restore, healAll, statLine, xpToNext, awardXP, applyEquipmentStats, applyCombatMods, leader, setLeader, respec, trainStat, selectedMember, xpCurve };
 Object.assign(globalThis, partyExports);

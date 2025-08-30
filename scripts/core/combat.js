@@ -34,7 +34,6 @@ const combatState = {
   choice: 0,
   mode: 'command',
   onComplete: null,
-  fallen: [],
   log: []
 };
 
@@ -152,9 +151,9 @@ function openCombat(enemies){
     combatState.active = 0;
     combatState.choice = 0;
     combatState.onComplete = resolve;
-    combatState.fallen = [];
     combatState.log = [];
-    combatState.roster = Array.from(party);
+    party.fallen = [];
+    party._roster = Array.from(party);
 
     (party || []).forEach(m => {
       m.maxAdr = m.maxAdr || 100;
@@ -177,17 +176,7 @@ function closeCombat(result = 'flee'){
   if (cmdMenu) cmdMenu.style.display = 'none';
   if (turnIndicator) turnIndicator.textContent = '';
 
-  if (combatState.roster) {
-    const fallenSet = new Set(combatState.fallen);
-    combatState.roster.forEach(m => {
-      if (fallenSet.has(m)) m.hp = Math.max(1, m.hp || 0);
-    });
-    party.setMembers(combatState.roster);
-    if (typeof renderParty === 'function') renderParty();
-    if (typeof updateHUD === 'function') updateHUD();
-    combatState.roster = null;
-  }
-  combatState.fallen.length = 0;
+  party.restore();
 
   if(result === 'bruise' && state.mapEntry){
     log?.('You wake up at the entrance.');
@@ -514,7 +503,7 @@ function testAttack(attacker, enemy, dmg = 1, type = 'basic'){
   combatState.enemies = [enemy];
   combatState.active = 0;
   party.length = 0;
-  party.push(attacker);
+  party.join(attacker);
   doAttack(dmg, type);
 }
 
@@ -624,9 +613,7 @@ function finishEnemyAttack(enemy, target){
     log?.(`${target.name} falls!`);
     recordCombatEvent?.({ type: 'player', actor: target.name, action: 'fall', by: enemy.name });
     target.adr = 0; // lose adrenaline on defeat
-    combatState.fallen.push(target);
-    const idx = party.indexOf?.(target);
-    if (idx >= 0) party.splice(idx, 1); else party.splice(0, 1);
+    party.fall(target);
     renderCombat();
     if ((party?.length || 0) === 0){
       log?.('The party has fallen...');

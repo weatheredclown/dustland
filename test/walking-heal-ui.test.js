@@ -30,7 +30,7 @@ test('walking heals and updates party UI', async () => {
   context.checkRandomEncounter = () => {};
   const mem = new context.Character('h', 'Hero', 'Role');
   mem.hp = 5; mem.maxHp = 10;
-  context.party.addMember(mem);
+  context.party.join(mem);
   context.renderParty();
   const partyDiv = document.getElementById('party');
   assert.match(partyDiv.children[0].innerHTML, /HP 5\/10/);

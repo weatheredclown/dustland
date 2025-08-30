@@ -96,7 +96,7 @@ function processQuestFlag(c){
   if(c.q==='turnin') defaultQuestProcessor(currentNPC,'do_turnin');
 }
 
-function joinParty(join){
+function dialogJoinParty(join){
   if(!join) return;
   const opts = {};
   if(join.portraitSheet){
@@ -105,7 +105,7 @@ function joinParty(join){
     opts.portraitSheet = currentNPC.portraitSheet;
   }
   const m=makeMember(join.id, join.name, join.role, opts);
-  if(addPartyMember(m)){
+  if(joinParty(m)){
     removeNPC(currentNPC);
   }
 }
@@ -184,7 +184,7 @@ function advanceDialog(stateObj, choiceIdx){
       return finalize(choice.failure || 'You lack the required item.', false, true);
     }
     Dustland.actions.applyQuestReward(choice.reward);
-    joinParty(choice.join);
+    dialogJoinParty(choice.join);
     processQuestFlag(choice);
     runEffects(choice.effects);
     if(choice.goto){
@@ -215,7 +215,7 @@ function advanceDialog(stateObj, choiceIdx){
     }
 
     Dustland.actions.applyQuestReward(choice.reward);
-    joinParty(choice.join);
+    dialogJoinParty(choice.join);
     processQuestFlag(choice);
     runEffects(choice.effects);
     if(choice.goto){
@@ -234,7 +234,7 @@ function advanceDialog(stateObj, choiceIdx){
   }
 
   Dustland.actions.applyQuestReward(choice.reward);
-  joinParty(choice.join);
+  dialogJoinParty(choice.join);
   processQuestFlag(choice);
   runEffects(choice.effects);
 

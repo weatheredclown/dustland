@@ -16,7 +16,7 @@ function setup(){
     EventBus:{ on:()=>{}, emit:()=>{} },
     baseStats:()=>({STR:4,AGI:4,INT:4,PER:4,LCK:4,CHA:4}),
     makeMember:(id,name,role)=>({id,name,role,stats:{}}),
-    addPartyMember:m=>{ party.push(m); },
+    joinParty:m=>{ party.push(m); },
     addToInv:()=>{},
     rand:()=>0,
     log:()=>{},
