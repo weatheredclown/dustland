@@ -1,8 +1,10 @@
 # Dialog Navigation & State Machine
 
-- Author: Alex "Echo" Johnson
-- Date: 2025-08-28
-- Status: Draft
+*By Alex "Echo" Johnson*
+*Date: 2025-08-28*
+*Status: Draft*
+
+> **Echo:** Menu-driven conversations should feel deliberate and human—built with plain JavaScript and globals.
 
 ## Summary
 
