@@ -2,6 +2,7 @@
 // ===== Rendering & Utilities =====
 
 // Logging
+const ENGINE_VERSION = '0.7.34';
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const apEl = document.getElementById('ap');
@@ -978,7 +979,6 @@ disp.addEventListener('touchstart',e=>{
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
 requestAnimationFrame(draw);
-log('v0.7.33 — adds wizard scaffolding and combat telemetry.');
 if (window.NanoDialog) NanoDialog.init();
 
 { // skip normal boot flow in ACK player mode
