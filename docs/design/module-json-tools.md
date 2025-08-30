@@ -32,7 +32,7 @@ We need to let editors tinker with module layouts without touching code. Each JS
   - [x] broadcast-fragment-1
   - [x] broadcast-fragment-2
   - [x] broadcast-fragment-3
-  - [ ] echoes
+  - [x] echoes
   - [x] dustland
   - [x] lootbox-demo
   - [ ] office
