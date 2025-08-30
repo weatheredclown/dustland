@@ -1,6 +1,6 @@
 function seedWorldContent() {}
 
-const OFFICE_MODULE = (() => {
+const OFFICE_IMPL = (() => {
   const FLOOR_W = 20,
     // Expanded height to make room for an exterior elevator area
     FLOOR_H = 24;
@@ -593,7 +593,20 @@ const OFFICE_MODULE = (() => {
   };
 })();
 
+const DATA = `{
+  "seed": "office",
+  "name": "office"
+}`;
+
+function postLoad(module) {
+  Object.assign(module, OFFICE_IMPL);
+}
+
+globalThis.OFFICE_MODULE = JSON.parse(DATA);
+globalThis.OFFICE_MODULE.postLoad = postLoad;
+
 startGame = function () {
+  OFFICE_MODULE.postLoad?.(OFFICE_MODULE);
   if (OFFICE_MODULE.worldGen) {
     const { castleId } = applyModule(OFFICE_MODULE);
     const charm = registerItem({
