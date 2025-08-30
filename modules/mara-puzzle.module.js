@@ -41,11 +41,11 @@ const DATA = `{
     { "map": "dust_storm", "x": 10, "y": 18, "events": [{ "when": "enter", "effect": "dustStorm", "active": true }] },
     { "map": "dust_storm", "x": 10, "y": 10, "events": [
       { "when": "enter", "effect": "addSoundSource", "id": "chime1", "x": 10, "y": 10 },
-      { "when": "enter", "effect": "log", "msg": "A distant chime echoes." }
+      { "when": "enter", "effect": "log", "msg": "You hear a faint chime." }
     ] },
     { "map": "dust_storm", "x": 5, "y": 5, "events": [
       { "when": "enter", "effect": "addSoundSource", "id": "chime2", "x": 5, "y": 5 },
-      { "when": "enter", "effect": "log", "msg": "Wind rattles a chime." }
+      { "when": "enter", "effect": "log", "msg": "You hear a faint chime." }
     ] },
     { "map": "dust_storm", "x": 15, "y": 5, "events": [
       { "when": "enter", "effect": "addSoundSource", "id": "chime3", "x": 15, "y": 5 },
@@ -71,5 +71,6 @@ startGame = function () {
   setMap(s.map, 'Dust Storm');
   refreshUI();
   log('You are lost in a dust storm.');
+  log('Listen for chimes to find your way out.');
 };
 

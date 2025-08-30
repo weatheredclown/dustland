@@ -12,4 +12,6 @@ test('mara puzzle module defines startGame to launch dust storm', () => {
   assert.match(src, /applyModule\(MARA_PUZZLE\)/);
   assert.match(src, /setPartyPos\(s\.x, s\.y\)/);
   assert.match(src, /setMap\(s\.map/);
+  assert.match(src, /You hear a faint chime/);
+  assert.match(src, /Listen for chimes to find your way out/);
 });
