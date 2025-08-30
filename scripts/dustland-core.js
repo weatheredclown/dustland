@@ -201,7 +201,9 @@ function setMap(id,label){
   state.map=id;
   party.map = id;
   state.mapEntry = null;
-  mapNameEl.textContent = label || mapLabel(id);
+  if (mapNameEl) {
+    mapNameEl.textContent = label || mapLabel(id);
+  }
   if(typeof centerCamera==='function') centerCamera(party.x,party.y,state.map);
   if(id==='world') setGameState(GAME_STATE.WORLD);
   else if(id==='creator') setGameState(GAME_STATE.CREATOR);
