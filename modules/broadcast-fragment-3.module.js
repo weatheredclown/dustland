@@ -1,4 +1,5 @@
-const BROADCAST_FRAGMENT_3 = {
+const DATA = `
+{
   "seed": "broadcast-3",
   "name": "broadcast-fragment-3",
   "startMap": "world",
@@ -192,6 +193,11 @@ const BROADCAST_FRAGMENT_3 = {
       ]
     }
   ]
-};
+}
+`;
 
-globalThis.BROADCAST_FRAGMENT_3 = BROADCAST_FRAGMENT_3;
+function postLoad(module) {}
+
+globalThis.BROADCAST_FRAGMENT_3 = JSON.parse(DATA);
+globalThis.BROADCAST_FRAGMENT_3.postLoad = postLoad;
+
