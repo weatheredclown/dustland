@@ -90,7 +90,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 - [ ] **Implement Signature Encounters:**
     - [x] Design and build Mara's dust storm navigation puzzle.
     - [x] Hook Mara's puzzle into the Broadcast Story sequence.
-    - [ ] Script Jax's timed repair sequence under combat pressure.
+    - [x] Script Jax's timed repair sequence under combat pressure. Implemented in `jax-repair.module.js`.
     - [ ] Write the dialogue and branching paths for Nyx's "conversational tuning" encounter.
 - [ ] **Doppelgänger System:**
     - [x] Create the data structure for "personas" that can be equipped by the main characters.
