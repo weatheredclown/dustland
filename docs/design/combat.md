@@ -117,4 +117,4 @@ The prototype doesn't spend Adrenaline yet; it's a pacing probe. Once the gain c
 - [x] **Sound Design:** Add SFX for specials, UI feedback, and enemy telegraphing.
 - [ ] **Playtesting:** Conduct extensive playtests to balance Adrenaline generation rates, special costs, and overall combat difficulty. Ensure the difficulty curve is challenging but fair.
 - [ ] **AI Improvements:** Enhance enemy AI to use their own specials and coordinate attacks.
-- [ ] **Telemetry:** Log combat stats during playtests to surface pacing issues and balance swings early.
+- [x] **Telemetry:** Log combat stats during playtests to surface pacing issues and balance swings early.

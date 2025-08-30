@@ -1,7 +1,8 @@
 const BROADCAST_FILES = [
   'modules/broadcast-fragment-1.module.js',
   'modules/broadcast-fragment-2.module.js',
-  'modules/broadcast-fragment-3.module.js'
+  'modules/broadcast-fragment-3.module.js',
+  'modules/mara-puzzle.module.js'
 ];
 
 let fragmentsReady;

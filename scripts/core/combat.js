@@ -34,7 +34,8 @@ const combatState = {
   choice: 0,
   mode: 'command',
   onComplete: null,
-  log: []
+  log: [],
+  startTime: 0
 };
 
 function recordCombatEvent(ev){
@@ -152,6 +153,8 @@ function openCombat(enemies){
     combatState.choice = 0;
     combatState.onComplete = resolve;
     combatState.log = [];
+    combatState.startTime = Date.now();
+    recordCombatEvent({ type: 'system', action: 'start', time: combatState.startTime });
     party.fallen = [];
     party._roster = Array.from(party);
 
@@ -184,8 +187,11 @@ function closeCombat(result = 'flee'){
     setPartyPos?.(state.mapEntry.x, state.mapEntry.y);
   }
 
-  recordCombatEvent({ type: 'system', action: 'end', result });
+  const duration = Date.now() - combatState.startTime;
+  recordCombatEvent({ type: 'system', action: 'end', result, duration });
   globalThis.EventBus?.emit?.('combat:ended', { result });
+  globalThis.EventBus?.emit?.('combat:telemetry', { duration, log: combatState.log.slice() });
+  console.debug?.('combat telemetry', { duration, log: combatState.log });
   combatState.onComplete?.({ result });
   combatState.onComplete = null;
 

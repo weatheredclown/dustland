@@ -1,6 +1,6 @@
 function seedWorldContent() {}
 
-const MARA_PUZZLE = {
+const DATA = `{
   "seed": "mara-puzzle",
   "name": "mara-puzzle",
   "items": [],
@@ -48,7 +48,12 @@ const MARA_PUZZLE = {
   ],
   "buildings": [],
   "start": { "map": "dust_storm", "x": 10, "y": 18 }
-};
+}`;
+
+function postLoad(module) {}
+
+globalThis.MARA_PUZZLE = JSON.parse(DATA);
+globalThis.MARA_PUZZLE.postLoad = postLoad;
 
 startGame = function () {
   applyModule(MARA_PUZZLE);
@@ -58,3 +63,4 @@ startGame = function () {
   refreshUI();
   log('You are lost in a dust storm.');
 };
+
