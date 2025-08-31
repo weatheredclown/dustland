@@ -474,7 +474,7 @@ const OFFICE_IMPL = (() => {
       name: 'Vending Machine',
       desc: 'It flashes "TRADE".',
       portraitSheet: portraits.vending,
-      shop: true,
+      shop: { inv: [ { id: 'dusty_candy' } ] },
       vending: true,
       tree: { start: { text: 'The machine hums softly.', choices: [ { label: '(Leave)', to: 'bye' } ] } }
     },
@@ -568,6 +568,7 @@ const OFFICE_IMPL = (() => {
         { map: 'world', x: WORLD_MID - 4, y: WORLD_MIDY - 2, id: 'healing_potion1', name: 'Healing Potion', type: 'consumable', use: { type: 'heal', amount: 5 } },
         { map: 'world', x: WORLD_MID + 5, y: WORLD_MIDY + 3, id: 'healing_potion2', name: 'Healing Potion', type: 'consumable', use: { type: 'heal', amount: 5 } },
         { map: 'world', x: WORLD_MID - 6, y: WORLD_MIDY + 5, id: 'healing_potion3', name: 'Healing Potion', type: 'consumable', use: { type: 'heal', amount: 5 } },
+        { id: 'dusty_candy', name: 'Dusty Candy Bar', type: 'consumable', value: 2, use: { type: 'heal', amount: 1 } },
         { id: 'fae_token', name: 'Fae Token', type: 'trinket', slot: 'trinket', mods: { LCK: 1 } },
         { id: 'rat_tail', name: 'Rat Tail', type: 'quest' },
         { id: 'rusty_dagger', name: 'Rusty Dagger', type: 'weapon', slot: 'weapon', mods: { ATK: 1, ADR: 10 } },
@@ -633,6 +634,8 @@ startGame = function () {
     const s = OFFICE_MODULE.start;
     setPartyPos(s.x, s.y);
     setMap(s.map);
+    player.scrap = 10;
+    updateHUD();
     refreshUI();
     log('You arrive at the office.');
   } else {
