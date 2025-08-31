@@ -2913,6 +2913,20 @@ canvas.addEventListener('mousedown', ev => {
     updateCursor(x, y);
     return;
   }
+  if (currentMap !== 'world' && !coordTarget && !(overNpc || overItem || overEvent || overPortal)) {
+    hoverTile = { x, y };
+    const I = moduleData.interiors.find(i => i.id === currentMap);
+    if (I) {
+      setTile(currentMap, x, y, intPaint);
+      if (intPaint === TILE.DOOR) { I.entryX = x; I.entryY = y - 1; }
+      intPainting = true;
+      didPaint = true;
+      drawWorld();
+      drawInterior();
+      updateCursor(x, y);
+    }
+    return;
+  }
   hoverTarget = null;
   didDrag = false;
   if (coordTarget) {
@@ -3026,6 +3040,17 @@ canvas.addEventListener('mousemove', ev => {
     drawWorld();
     return;
   }
+  if (currentMap !== 'world' && intPainting) {
+    const I = moduleData.interiors.find(i => i.id === currentMap);
+    if (I) {
+      setTile(currentMap, x, y, intPaint);
+      if (intPaint === TILE.DOOR) { I.entryX = x; I.entryY = y - 1; }
+      didPaint = true;
+      drawWorld();
+      drawInterior();
+    }
+    return;
+  }
 
   // While placing, show ghost & bail
   if (placingType) {
@@ -3107,25 +3132,29 @@ canvas.addEventListener('mouseup', ev => {
   }
   if (ev.button !== 0) return;
   worldPainting = false;
+  intPainting = false;
   if (dragTarget) delete dragTarget._type;
   dragTarget = null;
   if (didPaint) {
-    redrawBuildings();
+    if (currentMap === 'world') redrawBuildings();
     drawWorld();
+    if (currentMap !== 'world') drawInterior();
   }
   updateCursor();
 });
 canvas.addEventListener('mouseleave', () => {
   if (panning) panning = false;
-  if (didPaint) {
+  if (didPaint && currentMap === 'world') {
     redrawBuildings();
   }
   worldPainting = false;
+  intPainting = false;
   if (dragTarget) delete dragTarget._type;
   dragTarget = null;
   hoverTile = null;
   didPaint = false;
   drawWorld();
+  if (currentMap !== 'world') drawInterior();
   updateCursor();
 });
 

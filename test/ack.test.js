@@ -266,6 +266,17 @@ test('painting over building restores tiles', () => {
   assert.strictEqual(world[5][5], TILE.BUILDING);
 });
 
+test('painting interior in main window', () => {
+  moduleData.interiors = [{ id:'room', w:2, h:2, grid:[[TILE.FLOOR,TILE.FLOOR],[TILE.FLOOR,TILE.FLOOR]] }];
+  interiors = { room: moduleData.interiors[0] };
+  showMap('room');
+  intPaint = TILE.WALL;
+  canvasEl._listeners.mousedown[0]({ clientX:0, clientY:0, button:0 });
+  canvasEl._listeners.mouseup[0]({ button:0 });
+  assert.strictEqual(interiors.room.grid[0][0], TILE.WALL);
+  showMap('world');
+});
+
 test('regenWorld creates empty map without buildings', () => {
   regenWorld();
   assert.strictEqual(globalThis.buildings.length, 0);
