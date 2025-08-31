@@ -806,9 +806,10 @@ function finalizeCurrentMember(){
   m.stats=building.stats; m.origin=building.origin; m.quirk=building.quirk;
   m.special = classSpecials[building.spec||'Wanderer'] || [];
   const spec = specializations[building.spec];
+  const specEquipIds=[];
   if(spec){
     if(spec.stats){ for(const k in spec.stats){ m.stats[k]=(m.stats[k]||0)+spec.stats[k]; } }
-    if(spec.gear){ spec.gear.forEach(g=> addToInv(g)); }
+    if(spec.gear){ spec.gear.forEach(g=>{ addToInv(g); if(g.slot) specEquipIds.push(g.id); }); }
   }
   const quirk=quirks[building.quirk];
   if(quirk){
@@ -816,6 +817,11 @@ function finalizeCurrentMember(){
     if(quirk.gear){ quirk.gear.forEach(g=> addToInv(g)); }
   }
   joinParty(m);
+  const idx=party.indexOf(m);
+  specEquipIds.forEach(id=>{
+    const invIdx=player.inv.findIndex(it=>it.id===id);
+    if(invIdx!==-1) equipItem(idx, invIdx);
+  });
   built.push(m);
   building = null;
   return m;
