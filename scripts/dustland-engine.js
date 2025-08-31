@@ -2,7 +2,7 @@
 // ===== Rendering & Utilities =====
 
 // Logging
-const ENGINE_VERSION = '0.7.40';
+const ENGINE_VERSION = '0.7.41';
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const apEl = document.getElementById('ap');
@@ -697,6 +697,7 @@ function renderParty(){
     p.querySelectorAll('.pcard').forEach((card,j)=>{
       card.classList.toggle('selected', j===selectedMember);
     });
+    if(Array.isArray(player?.inv)) renderInv?.();
   };
   const labelEquip=eq=>{
     if(!eq) return '—';
