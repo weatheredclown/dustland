@@ -306,7 +306,7 @@ function revealHiddenNPCs(){
       if(n.combat) opts.combat=n.combat;
       if(n.shop) opts.shop=n.shop;
       if(n.portraitSheet) opts.portraitSheet=n.portraitSheet;
-      const npc=makeNPC(n.id, n.map||'world', n.x, n.y, n.color||'#9ef7a0', n.name||n.id, n.title||'', n.desc||'', n.tree, quest, null, null, opts);
+      const npc=makeNPC(n.id, n.map||'world', n.x, n.y, n.color, n.name||n.id, n.title||'', n.desc||'', n.tree, quest, null, null, opts);
       if (Array.isArray(n.loop)) npc.loop = n.loop;
       if (typeof NPCS !== 'undefined') NPCS.push(npc);
       hiddenNPCs.splice(i,1);
@@ -433,7 +433,7 @@ function applyModule(data = {}, options = {}) {
     if (n.combat) opts.combat = n.combat;
     if (n.shop) opts.shop = n.shop;
     if (n.portraitSheet) opts.portraitSheet = n.portraitSheet;
-    const npc = makeNPC(n.id, n.map || 'world', n.x, n.y, n.color || '#9ef7a0', n.name || n.id, n.title || '', n.desc || '', tree, quest, null, null, opts);
+    const npc = makeNPC(n.id, n.map || 'world', n.x, n.y, n.color, n.name || n.id, n.title || '', n.desc || '', tree, quest, null, null, opts);
     if (Array.isArray(n.loop)) npc.loop = n.loop;
     if (typeof NPCS !== 'undefined') NPCS.push(npc);
   });

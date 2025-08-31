@@ -39,6 +39,20 @@ test('office module places Boots of Speed near forest entry', () => {
   assert.match(src, /mods: \{ AGI: 5, move_delay_mod: 0\.5 \}/);
 });
 
+test('office module uses object visuals for elevator and vending machine', () => {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const file = path.join(__dirname, '..', 'modules', 'office.module.js');
+  const src = fs.readFileSync(file, 'utf8');
+  assert.match(
+    src,
+    /const elevatorNPCs = \['floor1', 'floor2', 'floor3'\]\.map\(\(map\) => \({[\s\S]*?symbol: '\?',[\s\S]*?color: '#225a20'/
+  );
+  assert.match(
+    src,
+    /id: 'vending',[\s\S]*?symbol: '\?',[\s\S]*?color: '#225a20'/
+  );
+});
+
 test('startGame grants 10 scrap', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');

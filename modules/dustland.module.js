@@ -565,7 +565,7 @@ const DATA = `
       "map": "world",
       "x": 6,
       "y": 45,
-      "color": "#caffc6",
+      "color": "#225a20",
       "name": "Worn Sign",
       "title": "Warning",
       "desc": "Faded letters warn travelers.",

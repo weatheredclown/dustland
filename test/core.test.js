@@ -837,6 +837,13 @@ test('createNpcFactory applies loop points', () => {
   assert.deepStrictEqual(npc.loop, [{x:0,y:0},{x:1,y:0}]);
 });
 
+test('inanimate NPC defaults to dark green color', () => {
+  const npc = makeNPC('obj', 'world', 0, 0, undefined, 'Obj', '', '', {} , null, null, null, { symbol: '?' });
+  assert.strictEqual(npc.color, '#225a20');
+  const npc2 = makeNPC('char', 'world', 0, 0, undefined, 'Char', '', '', {}, null, null, null, {});
+  assert.strictEqual(npc2.color, '#9ef7a0');
+});
+
 test('openDialog displays portrait when sheet provided', () => {
   NPCS.length = 0;
   const tree = { start: { text: '', choices: [] } };
