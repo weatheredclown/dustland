@@ -2,7 +2,9 @@
 // ===== Rendering & Utilities =====
 
 // Logging
-const ENGINE_VERSION = '0.7.49';
+
+const ENGINE_VERSION = '0.7.50';
+
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const apEl = document.getElementById('ap');
