@@ -406,6 +406,10 @@ const DATA = `
               "q": "turnin"
             },
             {
+              "label": "(Use Glinting Key)",
+              "to": "glint_fail"
+            },
+            {
               "label": "(Leave)",
               "to": "bye"
             }
@@ -417,6 +421,15 @@ const DATA = `
             {
               "label": "(Okay)",
               "to": "bye"
+            }
+          ]
+        },
+        "glint_fail": {
+          "text": "Kesh squints at the glinting key. Shiny things aren't always the best in this place.",
+          "choices": [
+            {
+              "label": "(Back)",
+              "to": "start"
             }
           ]
         },
