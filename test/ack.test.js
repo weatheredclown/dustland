@@ -118,7 +118,7 @@ test('applyLoadedModule avoids duplicate buildings', () => {
 
 test('saveModule uses module name for download', () => {
   const origValidateSpawns = globalThis.validateSpawns;
-  globalThis.validateSpawns = () => true;
+  globalThis.validateSpawns = () => [];
   moduleNameInput.value = 'custom-name';
   const aEl = stubEl();
   const origCreate = document.createElement;
@@ -130,6 +130,19 @@ test('saveModule uses module name for download', () => {
   document.createElement = origCreate;
   global.URL = origURL;
   globalThis.validateSpawns = origValidateSpawns;
+});
+
+test('validateSpawns lists blocked spawns', () => {
+  genWorld(1);
+  setTile('world',0,0,TILE.WATER);
+  moduleData.start = { map:'world', x:0, y:0 };
+  moduleData.npcs = [{ id:'n1', map:'world', x:1, y:0 }];
+  setTile('world',1,0,TILE.WATER);
+  moduleData.items = [];
+  const issues = validateSpawns();
+  assert.strictEqual(issues.length,2);
+  assert.strictEqual(issues[0].type,'start');
+  assert.strictEqual(issues[1].type,'npc');
 });
 
 test('addTerrainFeature sprinkles noise', () => {
