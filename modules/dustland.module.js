@@ -157,7 +157,7 @@ const DATA = `
       "type": "consumable",
       "use": {
         "type": "heal",
-        "amount": 5
+        "amount": 10
       }
     },
     {

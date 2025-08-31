@@ -220,6 +220,8 @@ function useItem(invIndex){
     emit('sfx','tick');
     player.inv.splice(invIndex,1);
     notifyInventoryChanged();
+    player.hp = party[0] ? party[0].hp : player.hp;
+    if(typeof updateHUD === 'function') updateHUD();
     return true;
   }
   if(typeof it.use.onUse === 'function'){

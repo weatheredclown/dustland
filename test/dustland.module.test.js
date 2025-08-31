@@ -76,3 +76,9 @@ test('dustland module warns about hall monster', () => {
   exitdoor.processNode('start');
   assert.ok(exitdoor.tree.start.text.includes('rotwalker at the top of the hall'));
 });
+
+test('medkit heals for 10 HP', () => {
+  const data = loadModuleData();
+  const med = data.items.find(i => i.id === 'medkit');
+  assert.strictEqual(med.use?.amount, 10);
+});
