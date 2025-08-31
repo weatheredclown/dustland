@@ -5,6 +5,8 @@ const partyRow      = typeof document !== 'undefined' ? document.getElementById(
 const cmdMenu       = typeof document !== 'undefined' ? document.getElementById('combatCmd') : null;
 const turnIndicator = typeof document !== 'undefined' ? document.getElementById('turnIndicator') : null;
 const combatKeys    = {};
+// Track how many turns it takes to defeat each enemy type
+const enemyTurnStats = globalThis.enemyTurnStats || (globalThis.enemyTurnStats = {});
 
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('keyup', (e) => { combatKeys[e.key] = false; });
@@ -36,7 +38,8 @@ const combatState = {
   onComplete: null,
   log: [],
   startTime: 0,
-  afterEnemy: null
+  afterEnemy: null,
+  turns: 0
 };
 
 function recordCombatEvent(ev){
@@ -143,11 +146,13 @@ function openCombat(enemies){
 
   return new Promise((resolve) => {
     for (const k in combatKeys) combatKeys[k] = false;
+    combatState.turns = 1;
     combatState.enemies = enemies.map(e => ({
       ...e,
       maxHp: e.maxHp || e.hp,
       maxAdr: e.maxAdr || 100,
-      adr: e.adr ?? 0
+      adr: e.adr ?? 0,
+      spawnTurn: combatState.turns
     }));
     combatState.phase = 'party';
     combatState.active = 0;
@@ -521,6 +526,13 @@ function doAttack(dmg, type = 'basic'){
     log?.(`${target.name} is defeated!`);
     recordCombatEvent?.({ type: 'enemy', actor: target.name, action: 'defeated', by: attacker.name });
     globalThis.EventBus?.emit?.('enemy:defeated', { target });
+    const eid = target.id || target.name;
+    if (eid){
+      const turnsTaken = combatState.turns - (target.spawnTurn || 1) + 1;
+      const stats = enemyTurnStats[eid] || (enemyTurnStats[eid] = { total: 0, count: 0 });
+      stats.total += Math.max(1, turnsTaken);
+      stats.count += 1;
+    }
     if (target.loot) addToInv?.(target.loot);
 
     // Bandits sometimes drop scrap
@@ -783,6 +795,7 @@ function enemyAttack(){
 function startPartyTurn(){
   combatState.phase = 'party';
   combatState.active = 0;
+  combatState.turns++;
   highlightActive();
   openCommand();
 }
