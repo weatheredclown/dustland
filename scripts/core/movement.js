@@ -8,7 +8,7 @@ bus?.on?.('combat:ended', () => { combatActive = false; });
 const buffs = [];              // 2c342c / 313831
 const tileColors = {0:'#1e271d',1:'#313831',2:'#1573ff',3:'#203320',4:'#777777',5:'#304326',6:'#4d5f4d',7:'#233223',8:'#8bd98d',9:'#000000'};// 2B382B / 203320
 let moveDelay = 0;
-const zones = globalThis.zoneEffects || [];
+const zones = (globalThis.Dustland && globalThis.Dustland.zoneEffects) || [];
 let encounterCooldown = 0;
 
 function hexToHsv(hex) {

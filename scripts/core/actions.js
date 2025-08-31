@@ -30,9 +30,6 @@
     },
     startCombat(defender){
       if(typeof globalThis.startCombat==='function') return globalThis.startCombat(defender);
-    },
-    openShop(npc){
-      if(typeof globalThis.openShop==='function') return globalThis.openShop(npc);
     }
   };
   globalThis.Dustland = globalThis.Dustland || {};
