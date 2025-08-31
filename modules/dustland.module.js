@@ -550,6 +550,7 @@ const DATA = `
       "title": "Warning",
       "desc": "Faded letters warn travelers.",
       "portraitSheet": "assets/portraits/dustland-module/worn_sign_4.png",
+      "symbol": "?",
       "tree": {
         "start": {
           "text": "Rust storms east. Shelter west.",
@@ -1545,6 +1546,7 @@ const DATA = `
       "title": "Slot Machine",
       "desc": "It wheezes, eager for scrap.",
       "portraitSheet": "assets/portraits/dustland-module/slot_machine.png",
+      "symbol": "?",
       "tree": {
         "start": {
           "text": "Lights sputter behind cracked glass.",

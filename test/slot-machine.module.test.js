@@ -20,6 +20,7 @@ test('dustland module adds slot shack with gambling options', () => {
   assert.ok(data.buildings.some(b => b.interiorId === 'slot_shack'));
   const slotNpc = data.npcs.find(n => n.id === 'slots');
   assert.ok(slotNpc);
+  assert.strictEqual(slotNpc.symbol, '?');
   const labels = slotNpc.tree.start.choices.map(c => c.label);
   assert.ok(labels.includes('(1 scrap)'));
   assert.ok(labels.includes('(5 scrap)'));

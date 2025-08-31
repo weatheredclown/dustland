@@ -43,6 +43,9 @@ test('golden module json exposes core features', () => {
   assert.ok(mod.items.some((i) => i.use?.type === 'heal'), 'has healing item');
   assert.ok(mod.portals && mod.portals.length > 0, 'has portals');
 
+  const chest = mod.npcs.find(n => n.id === 'chest');
+  assert.strictEqual(chest.symbol, '?');
+
   const hut = mod.buildings.find((b) => b.interiorId === 'cabin');
   assert.strictEqual(hut.boarded, false, 'cabin is enterable');
   const w = hut.w || 6;

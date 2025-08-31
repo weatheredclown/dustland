@@ -568,7 +568,8 @@ function save(){
     quest:n.quest?{id:n.quest.id,status:n.quest.status}:null,
     loop:n.loop,
     portraitSheet:n.portraitSheet,
-    portraitLock:n.portraitLock
+    portraitLock:n.portraitLock,
+    symbol:n.symbol
   }));
   const questData = {};
   Object.keys(quests).forEach(k=>{

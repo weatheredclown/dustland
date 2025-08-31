@@ -803,7 +803,8 @@ test('createNpcFactory builds NPCs from definitions', () => {
     map: 'world',
     name: 'Tester',
     tree: '{"start":{"text":"hi","choices":[{"label":"bye","to":"bye"}]}}',
-    portraitSheet: 'assets/portraits/portrait_1000.png'
+    portraitSheet: 'assets/portraits/portrait_1000.png',
+    symbol: '?'
   }];
   const factory = createNpcFactory(defs);
   const npc = factory.t(2, 3);
@@ -813,6 +814,7 @@ test('createNpcFactory builds NPCs from definitions', () => {
   assert.strictEqual(npc.map, 'world');
   assert.strictEqual(npc.tree.start.text, 'hi');
   assert.strictEqual(npc.portraitSheet, 'assets/portraits/portrait_1000.png');
+  assert.strictEqual(npc.symbol, '?');
 });
 
 test('createNpcFactory defaults empty tree to dialog', () => {
@@ -834,6 +836,7 @@ test('openDialog displays portrait when sheet provided', () => {
   NPCS.length = 0;
   const tree = { start: { text: '', choices: [] } };
   const npc = makeNPC('p', 'world', 0, 0, '#fff', 'Port', '', '', tree, null, null, null, { portraitSheet: 'assets/portraits/kesh_4.png' });
+  assert.strictEqual(npc.symbol, '!');
   NPCS.push(npc);
   openDialog(npc);
   assert.ok(portEl.style.backgroundImage.includes('kesh_4.png'));

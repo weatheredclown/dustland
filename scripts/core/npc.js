@@ -1,8 +1,8 @@
 // ===== NPCs =====
 var Dustland = globalThis.Dustland;
 class NPC {
-  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null,portraitLock=true}) {
-    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,combat,shop,portraitSheet,portraitLock});
+  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null,portraitLock=true,symbol='!'}) {
+    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,combat,shop,portraitSheet,portraitLock,symbol});
     const capNode = (node) => {
       if (this.combat && node === 'do_fight') {
         closeDialog();
@@ -110,6 +110,7 @@ function createNpcFactory(defs) {
       if (n.shop) opts.shop = n.shop;
       if (n.portraitSheet) opts.portraitSheet = n.portraitSheet;
       if (n.portraitLock === false) opts.portraitLock = false;
+      if (n.symbol) opts.symbol = n.symbol;
       const npc = makeNPC(
         n.id,
         n.map || 'world',
