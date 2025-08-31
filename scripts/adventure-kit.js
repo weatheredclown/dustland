@@ -644,6 +644,21 @@ function confirmDialog(msg, onYes) {
   no.onclick = cleanup;
 }
 
+function setupListFilter(inputId, listId) {
+  const input = document.getElementById(inputId);
+  const list = document.getElementById(listId);
+  if (!input || !list) return;
+  const apply = () => {
+    const term = input.value.toLowerCase();
+    Array.from(list.children).forEach(ch => {
+      ch.style.display = ch.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+  };
+  input.addEventListener('input', apply);
+  new MutationObserver(apply).observe(list, { childList: true });
+  apply();
+}
+
 function regenWorld() {
   moduleData.seed = Date.now();
   genWorld(moduleData.seed, { buildings: [] });
@@ -1499,6 +1514,7 @@ function startNewNPC() {
   selectedObj = null;
   drawWorld();
   showNPCEditor(true);
+  document.getElementById('npcId').focus();
 }
 
 function beginPlaceNPC() {
@@ -1666,18 +1682,20 @@ function renderNPCList() {
 
 function deleteNPC() {
   if (editNPCIdx < 0) return;
-  moduleData.npcs.splice(editNPCIdx, 1);
-  editNPCIdx = -1;
-  document.getElementById('addNPC').style.display = 'block';
-  document.getElementById('cancelNPC').style.display = 'none';
-  document.getElementById('delNPC').style.display = 'none';
-  renderNPCList();
-  selectedObj = null;
-  drawWorld();
-  document.getElementById('npcId').value = nextId('npc', moduleData.npcs);
-  document.getElementById('npcDesc').value = '';
-  loadTreeEditor();
-  showNPCEditor(false);
+  confirmDialog('Delete this NPC?', () => {
+    moduleData.npcs.splice(editNPCIdx, 1);
+    editNPCIdx = -1;
+    document.getElementById('addNPC').style.display = 'block';
+    document.getElementById('cancelNPC').style.display = 'none';
+    document.getElementById('delNPC').style.display = 'none';
+    renderNPCList();
+    selectedObj = null;
+    drawWorld();
+    document.getElementById('npcId').value = nextId('npc', moduleData.npcs);
+    document.getElementById('npcDesc').value = '';
+    loadTreeEditor();
+    showNPCEditor(false);
+  });
 }
 
 function closeNPCEditor() {
@@ -1731,6 +1749,7 @@ function startNewItem() {
   selectedObj = null;
   drawWorld();
   showItemEditor(true);
+  document.getElementById('itemName').focus();
 }
 
 function beginPlaceItem() {
@@ -1835,15 +1854,17 @@ function renderItemList() {
 
 function deleteItem() {
   if (editItemIdx < 0) return;
-  moduleData.items.splice(editItemIdx, 1);
-  editItemIdx = -1;
-  document.getElementById('addItem').textContent = 'Add Item';
-  document.getElementById('delItem').style.display = 'none';
-  loadMods({});
-  renderItemList();
-  selectedObj = null;
-  drawWorld();
-  showItemEditor(false);
+  confirmDialog('Delete this item?', () => {
+    moduleData.items.splice(editItemIdx, 1);
+    editItemIdx = -1;
+    document.getElementById('addItem').textContent = 'Add Item';
+    document.getElementById('delItem').style.display = 'none';
+    loadMods({});
+    renderItemList();
+    selectedObj = null;
+    drawWorld();
+    showItemEditor(false);
+  });
 }
 
 // --- Encounters ---
@@ -1860,6 +1881,7 @@ function startNewEncounter(){
   document.getElementById('addEncounter').textContent = 'Add Enemy';
   document.getElementById('delEncounter').style.display = 'none';
   showEncounterEditor(true);
+  document.getElementById('encName').focus();
 }
 function collectEncounter(){
   const map = document.getElementById('encMap').value.trim() || 'world';
@@ -1898,12 +1920,14 @@ function renderEncounterList(){
 }
 function deleteEncounter(){
   if(editEncounterIdx < 0) return;
-  moduleData.encounters.splice(editEncounterIdx,1);
-  editEncounterIdx = -1;
-  document.getElementById('addEncounter').textContent = 'Add Enemy';
-  document.getElementById('delEncounter').style.display = 'none';
-  renderEncounterList();
-  showEncounterEditor(false);
+  confirmDialog('Delete this enemy?', () => {
+    moduleData.encounters.splice(editEncounterIdx,1);
+    editEncounterIdx = -1;
+    document.getElementById('addEncounter').textContent = 'Add Enemy';
+    document.getElementById('delEncounter').style.display = 'none';
+    renderEncounterList();
+    showEncounterEditor(false);
+  });
 }
 
 // --- NPC Templates ---
@@ -1965,12 +1989,14 @@ function renderTemplateList(){
 }
 function deleteTemplate(){
   if(editTemplateIdx < 0) return;
-  moduleData.templates.splice(editTemplateIdx,1);
-  editTemplateIdx = -1;
-  document.getElementById('addTemplate').textContent = 'Add Template';
-  document.getElementById('delTemplate').style.display = 'none';
-  renderTemplateList();
-  showTemplateEditor(false);
+  confirmDialog('Delete this template?', () => {
+    moduleData.templates.splice(editTemplateIdx,1);
+    editTemplateIdx = -1;
+    document.getElementById('addTemplate').textContent = 'Add Template';
+    document.getElementById('delTemplate').style.display = 'none';
+    renderTemplateList();
+    showTemplateEditor(false);
+  });
 }
 
 
@@ -2001,6 +2027,7 @@ function startNewEvent() {
   document.getElementById('addEvent').textContent = 'Add Event';
   document.getElementById('delEvent').style.display = 'none';
   showEventEditor(true);
+  document.getElementById('eventMap').focus();
 }
 
 function collectEvent() {
@@ -2068,14 +2095,16 @@ function renderEventList() {
 
 function deleteEvent() {
   if (editEventIdx < 0) return;
-  moduleData.events.splice(editEventIdx, 1);
-  editEventIdx = -1;
-  document.getElementById('addEvent').textContent = 'Add Event';
-  document.getElementById('delEvent').style.display = 'none';
-  renderEventList();
-  selectedObj = null;
-  drawWorld();
-  showEventEditor(false);
+  confirmDialog('Delete this event?', () => {
+    moduleData.events.splice(editEventIdx, 1);
+    editEventIdx = -1;
+    document.getElementById('addEvent').textContent = 'Add Event';
+    document.getElementById('delEvent').style.display = 'none';
+    renderEventList();
+    selectedObj = null;
+    drawWorld();
+    showEventEditor(false);
+  });
 }
 
 // --- Portals ---
@@ -2489,6 +2518,7 @@ function startNewQuest() {
   document.getElementById('addQuest').textContent = 'Add Quest';
   document.getElementById('delQuest').style.display = 'none';
   showQuestEditor(true);
+  document.getElementById('questId').focus();
 }
 function addQuest() {
   const id = document.getElementById('questId').value.trim();
@@ -2552,17 +2582,19 @@ function updateQuestOptions() {
 
 function deleteQuest() {
   if (editQuestIdx < 0) return;
-  const q = moduleData.quests[editQuestIdx];
-  moduleData.npcs.forEach(n => { if (n.questId === q.id) n.questId = ''; });
-  moduleData.quests.splice(editQuestIdx, 1);
-  editQuestIdx = -1;
-  document.getElementById('addQuest').textContent = 'Add Quest';
-  document.getElementById('delQuest').style.display = 'none';
-  renderQuestList();
-  renderNPCList();
-  updateQuestOptions();
-  document.getElementById('questId').value = nextId('quest', moduleData.quests);
-  showQuestEditor(false);
+  confirmDialog('Delete this quest?', () => {
+    const q = moduleData.quests[editQuestIdx];
+    moduleData.npcs.forEach(n => { if (n.questId === q.id) n.questId = ''; });
+    moduleData.quests.splice(editQuestIdx, 1);
+    editQuestIdx = -1;
+    document.getElementById('addQuest').textContent = 'Add Quest';
+    document.getElementById('delQuest').style.display = 'none';
+    renderQuestList();
+    renderNPCList();
+    updateQuestOptions();
+    document.getElementById('questId').value = nextId('quest', moduleData.quests);
+    showQuestEditor(false);
+  });
 }
 
 function applyLoadedModule(data) {
@@ -2705,6 +2737,12 @@ document.getElementById('npcNextP').onclick = () => {
   setNpcPortrait();
   applyNPCChanges();
 };
+
+setupListFilter('npcFilter','npcList');
+setupListFilter('itemFilter','itemList');
+setupListFilter('questFilter','questList');
+setupListFilter('eventFilter','eventList');
+setupListFilter('encFilter','encounterList');
 document.getElementById('delItem').onclick = deleteItem;
 document.getElementById('delBldg').onclick = deleteBldg;
 document.getElementById('newInterior').onclick = startNewInterior;

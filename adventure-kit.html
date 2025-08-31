@@ -328,11 +328,12 @@
       <div class="tabpanes">
         <fieldset class="card" id="npcCard" data-pane="npc">
           <legend>NPCs</legend>
+          <input id="npcFilter" placeholder="Filter NPCs..." />
           <div class="list" id="npcList"></div>
           <button class="btn" type="button" id="newNPC">+ NPC</button>
           <div id="npcEditor" style="display:none">
-          <label>ID<input id="npcId" /></label>
-          <label>Name<input id="npcName" /></label>
+          <label>ID<input id="npcId" placeholder="npc_id" /></label>
+          <label>Name<input id="npcName" placeholder="NPC name" /></label>
           <label>Description<textarea id="npcDesc" rows="2"></textarea></label>
           <label>Color<input id="npcColor" type="color" value="#9ef7a0" /></label>
           <label>Symbol<input id="npcSymbol" maxlength="1" value="!" /></label>
@@ -355,7 +356,7 @@
               <label>Map<input id="npcFlagMap" value="world" /></label>
               <label>X<input id="npcFlagX" type="number" min="0" /></label>
               <label>Y<input id="npcFlagY" type="number" min="0" /></label>
-              <button class="btn" type="button" id="npcFlagPick">Pick Tile</button>
+              <button class="btn" type="button" id="npcFlagPick" title="Click on the map to select a tile">Pick Tile</button>
             </div>
             <div id="revealParty" style="display:none">
               <label>Name<input id="npcFlagName" list="npcFlagList" /></label>
@@ -364,7 +365,7 @@
             <label>Op<select id="npcOp"><option value=">=">&ge;</option><option value=">">&gt;</option><option value="==">==</option><option value="!=">!=</option><option value="<=">&le;</option><option value="<">&lt;</option></select></label>
             <label>Value<input id="npcVal" type="number" value="1" /></label>
           </div>
-          <button class="btn" type="button" id="npcPick">Select on Map</button>
+          <button class="btn" type="button" id="npcPick" title="Click on the map to choose location">Select on Map</button>
           <label>Dialog<textarea id="npcDialog" rows="2"></textarea></label>
           <label>Quest<select id="npcQuest">
               <option value="">(none)</option>
@@ -396,17 +397,18 @@
       </fieldset>
       <fieldset class="card" id="itemCard" data-pane="items" style="display:none">
         <legend>Items</legend>
+        <input id="itemFilter" placeholder="Filter items..." />
         <div class="list" id="itemList"></div>
         <button class="btn" type="button" id="newItem">+ Item</button>
         <div id="itemEditor" style="display:none">
-          <label>Name<input id="itemName" /></label>
-          <label>ID<input id="itemId" /></label>
+          <label>Name<input id="itemName" placeholder="Item name" /></label>
+          <label>ID<input id="itemId" placeholder="item_id" /></label>
           <label>Type<input id="itemType" /></label>
           <label>Tags<input id="itemTags" /></label>
           <label>Map<input id="itemMap" value="world" /></label>
           <label>X<input id="itemX" type="number" min="0" /></label>
           <label>Y<input id="itemY" type="number" min="0" /></label>
-          <button class="btn" type="button" id="itemPick">Select on Map</button>
+          <button class="btn" type="button" id="itemPick" title="Click on the map to choose location">Select on Map</button>
           <label>Slot<select id="itemSlot">
               <option value="">(none)</option>
               <option value="weapon">Weapon</option>
@@ -473,23 +475,24 @@
           <label>Map<input id="portalMap" value="world" /></label>
           <label>X<input id="portalX" type="number" min="0" /></label>
           <label>Y<input id="portalY" type="number" min="0" /></label>
-          <button class="btn" type="button" id="portalPick">Select on Map</button>
+          <button class="btn" type="button" id="portalPick" title="Click on the map to choose location">Select on Map</button>
           <label>To Map<input id="portalToMap" value="world" /></label>
           <label>To X<input id="portalToX" type="number" min="0" /></label>
           <label>To Y<input id="portalToY" type="number" min="0" /></label>
-          <button class="btn" type="button" id="portalDestPick">Pick Destination</button>
+          <button class="btn" type="button" id="portalDestPick" title="Click on the map to choose destination">Pick Destination</button>
           <button class="btn" id="addPortal">Add Portal</button>
           <button class="btn" id="delPortal" style="display:none">Delete Portal</button>
         </div>
       </fieldset>
       <fieldset class="card" id="questCard" data-pane="quests" style="display:none">
         <legend>Quests</legend>
+        <input id="questFilter" placeholder="Filter quests..." />
         <div class="list" id="questList"></div>
         <button class="btn" type="button" id="newQuest">+ Quest</button>
         <div id="questEditor" style="display:none">
-          <label>ID<input id="questId" /></label>
-          <label>Title<input id="questTitle" /></label>
-          <label>Description<textarea id="questDesc" rows="2"></textarea></label>
+          <label>ID<input id="questId" placeholder="quest_id" /></label>
+          <label>Title<input id="questTitle" placeholder="Quest title" /></label>
+          <label>Description<textarea id="questDesc" rows="2" placeholder="Quest description"></textarea></label>
           <label>Required Item<input id="questItem" /></label>
           <label>Reward Item<input id="questReward" /></label>
           <label>XP Reward<input id="questXP" type="number" min="0" /></label>
@@ -502,20 +505,21 @@
       </fieldset>
       <fieldset class="card" id="eventCard" data-pane="events" style="display:none">
         <legend>Tile Events</legend>
+        <input id="eventFilter" placeholder="Filter events..." />
         <div class="list" id="eventList"></div>
         <button class="btn" type="button" id="newEvent">+ Event</button>
         <div id="eventEditor" style="display:none">
           <label>Map<input id="eventMap" value="world" /></label>
           <label>X<input id="eventX" type="number" min="0" /></label>
           <label>Y<input id="eventY" type="number" min="0" /></label>
-          <button class="btn" type="button" id="eventPick">Select on Map</button>
+          <button class="btn" type="button" id="eventPick" title="Click on the map to choose location">Select on Map</button>
           <label>Effect<select id="eventEffect">
               <option value="toast">Toast</option>
               <option value="log">Log</option>
               <option value="addFlag">Add Flag</option>
               <option value="modStat">Mod Stat</option>
             </select></label>
-          <label id="eventMsgWrap">Message<input id="eventMsg" /></label>
+          <label id="eventMsgWrap">Message<input id="eventMsg" placeholder="Event message" /></label>
           <label id="eventFlagWrap" style="display:none">Flag<input id="eventFlag" /></label>
           <div id="eventStatWrap" style="display:none">
             <label>Stat<select id="eventStat"></select></label>
@@ -528,11 +532,12 @@
       </fieldset>
       <fieldset class="card" id="encounterCard" data-pane="encounters" style="display:none">
         <legend>Encounters</legend>
+        <input id="encFilter" placeholder="Filter encounters..." />
         <div class="list" id="encounterList"></div>
         <button class="btn" type="button" id="newEncounter">+ Enemy</button>
         <div id="encounterEditor" style="display:none">
           <label>Map<input id="encMap" value="world" /></label>
-          <label>Name<input id="encName" /></label>
+          <label>Name<input id="encName" placeholder="Enemy name" /></label>
           <label>HP<input id="encHP" type="number" min="1" value="5" /></label>
           <label>DEF<input id="encDEF" type="number" min="0" value="0" /></label>
           <label>Loot<input id="encLoot" /></label>
