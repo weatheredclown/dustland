@@ -881,7 +881,9 @@ function runTests(){
 if (document.getElementById('saveBtn')) {
   document.getElementById('saveBtn').onclick=()=>save();
   document.getElementById('loadBtn').onclick=()=>{ load(); };
-  document.getElementById('resetBtn').onclick=()=>resetAll();
+  document.getElementById('resetBtn').onclick=()=>{
+    if (confirm('Reset game and return to character creation?')) resetAll();
+  };
   const nanoBtn=document.getElementById('nanoToggle');
   if(nanoBtn){
     const updateNano=()=>{ nanoBtn.textContent = `Nano Dialog: ${window.NanoDialog?.enabled ? 'On' : 'Off'}`; };
@@ -911,9 +913,15 @@ if (document.getElementById('saveBtn')) {
   const panelToggle=document.getElementById('panelToggle');
   const panel=document.querySelector('.panel');
   if(panelToggle && panel){
+    const open=globalThis.localStorage?.getItem('panel_open')==='1';
+    if(open){
+      panel.classList.add('show');
+      panelToggle.textContent='×';
+    }
     panelToggle.onclick=()=>{
-      const open=panel.classList.toggle('show');
-      panelToggle.textContent=open?'×':'☰';
+      const openState=panel.classList.toggle('show');
+      panelToggle.textContent=openState?'×':'☰';
+      globalThis.localStorage?.setItem('panel_open', openState?'1':'0');
     };
   }
 
@@ -930,6 +938,7 @@ if (document.getElementById('saveBtn')) {
     }
     const shop = document.getElementById('shopOverlay');
     if (shop?.classList?.contains('shown')) {
+      if (e.key === 'Escape') document.getElementById('closeShopBtn')?.click();
       return;
     }
     switch(e.key){
