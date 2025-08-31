@@ -127,6 +127,17 @@ let panning = false, panStartX = 0, panStartY = 0, panMouseX = 0, panMouseY = 0;
 const baseTileW = canvas.width / WORLD_W;
 const baseTileH = canvas.height / WORLD_H;
 
+function focusMap(x, y) {
+  if (currentMap !== 'world') return;
+  const viewW = WORLD_W / worldZoom;
+  const viewH = WORLD_H / worldZoom;
+  const maxPanX = WORLD_W - viewW;
+  const maxPanY = WORLD_H - viewH;
+  panX = clamp(x - viewW / 2, 0, maxPanX);
+  panY = clamp(y - viewH / 2, 0, maxPanY);
+}
+globalThis.focusMap = focusMap;
+
 let loopHover = null;
 const loopPlus = document.createElement('span');
 loopPlus.textContent = '+';
@@ -1642,6 +1653,7 @@ function expandHex(hex) {
 function editNPC(i) {
   const n = moduleData.npcs[i];
   showMap(n.map);
+  focusMap(n.x, n.y);
   editNPCIdx = i;
   document.getElementById('npcId').value = n.id;
   document.getElementById('npcName').value = n.name;
@@ -1833,6 +1845,7 @@ function cancelItem() {
 function editItem(i) {
   const it = moduleData.items[i];
   showMap(it.map);
+  focusMap(it.x, it.y);
   editItemIdx = i;
   document.getElementById('itemName').value = it.name;
   document.getElementById('itemId').value = it.id;
@@ -2292,6 +2305,7 @@ function renderBldgList() {
 function editBldg(i) {
   const b = moduleData.buildings[i];
   showMap('world');
+  focusMap(b.x + b.w / 2, b.y + b.h / 2);
   editBldgIdx = i;
   document.getElementById('bldgX').value = b.x;
   document.getElementById('bldgY').value = b.y;

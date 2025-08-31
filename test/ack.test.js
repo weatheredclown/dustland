@@ -410,3 +410,48 @@ test('NPC symbol is saved and restored', () => {
 test('loadMods accepts undefined', () => {
   assert.doesNotThrow(() => loadMods(undefined));
 });
+
+test('editing NPC centers map on its position', () => {
+  const prev = moduleData.npcs;
+  moduleData.npcs = [{ id: 'npc1', name: 'NPC', map: 'world', x: 80, y: 60, tree: {} }];
+  worldZoom = 3;
+  panX = 0;
+  panY = 0;
+  editNPC(0);
+  assert.strictEqual(panX, 60);
+  assert.strictEqual(panY, 45);
+  moduleData.npcs = prev;
+  worldZoom = 1;
+  panX = 0;
+  panY = 0;
+});
+
+test('editing item centers map on its position', () => {
+  const prev = moduleData.items;
+  moduleData.items = [{ id: 'it1', name: 'Item', map: 'world', x: 70, y: 10 }];
+  worldZoom = 3;
+  panX = 0;
+  panY = 0;
+  editItem(0);
+  assert.strictEqual(panX, 50);
+  assert.strictEqual(panY, 0);
+  moduleData.items = prev;
+  worldZoom = 1;
+  panX = 0;
+  panY = 0;
+});
+
+test('editing building centers map on its position', () => {
+  const prev = moduleData.buildings;
+  moduleData.buildings = [{ x: 30, y: 30, w: 10, h: 10 }];
+  worldZoom = 3;
+  panX = 0;
+  panY = 0;
+  editBldg(0);
+  assert.strictEqual(panX, 15);
+  assert.strictEqual(panY, 20);
+  moduleData.buildings = prev;
+  worldZoom = 1;
+  panX = 0;
+  panY = 0;
+});
