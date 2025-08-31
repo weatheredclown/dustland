@@ -671,7 +671,9 @@ function setupListFilter(inputId, listId) {
     });
   };
   input.addEventListener('input', apply);
-  new MutationObserver(apply).observe(list, { childList: true });
+  if (typeof MutationObserver !== 'undefined') {
+    new MutationObserver(apply).observe(list, { childList: true });
+  }
   apply();
 }
 
@@ -1530,7 +1532,8 @@ function startNewNPC() {
   selectedObj = null;
   drawWorld();
   showNPCEditor(true);
-  document.getElementById('npcId').focus();
+  const npcIdEl = document.getElementById('npcId');
+  if (npcIdEl && typeof npcIdEl.focus === 'function') npcIdEl.focus();
 }
 
 function beginPlaceNPC() {
