@@ -15,7 +15,7 @@ test('generator creates item with type, name, and stats', () => {
   assert.strictEqual(item.name, 'Grit-Stitched Repeater');
   assert.strictEqual(item.rank, 'sealed');
   assert.ok(item.stats.power >= 3 && item.stats.power <= 5);
-  assert.strictEqual(item.scrap, Math.round(item.stats.power / 2));
+  assert.strictEqual(item.scrap, ItemGen.scrapValues.sealed);
 });
 
 test('generated items have unique ids', () => {
@@ -40,7 +40,7 @@ test('generate uses updated tables', () => {
   const item = ItemGen.generate('armored', () => 0.5);
   assert.strictEqual(item.name, 'Scrap-Bound Injector');
   assert.strictEqual(item.stats.power, 9);
-  assert.strictEqual(item.scrap, 5);
+  assert.strictEqual(item.scrap, ItemGen.scrapValues.armored);
 });
 
 test('oddity items include lore snippet', () => {

@@ -238,6 +238,24 @@ const DATA = `
       "tags": ["signal_fragment"]
     },
     {
+      "id": "epic_blade",
+      "name": "Epic Blade",
+      "type": "weapon",
+      "slot": "weapon",
+      "rarity": "epic",
+      "mods": { "ATK": 5 },
+      "value": 500
+    },
+    {
+      "id": "epic_armor",
+      "name": "Epic Armor",
+      "type": "armor",
+      "slot": "armor",
+      "rarity": "epic",
+      "mods": { "DEF": 5 },
+      "value": 500
+    },
+    {
       "map": "hall",
       "x": 14,
       "y": 18,
@@ -1102,7 +1120,13 @@ const DATA = `
           ]
         }
       },
-      "shop": true
+      "shop": {
+        "markup": 1,
+        "inv": [
+          { "id": "epic_blade" },
+          { "id": "epic_armor" }
+        ]
+      }
     },
     {
       "id": "tess_patrol",
