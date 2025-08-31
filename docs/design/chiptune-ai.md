@@ -56,4 +56,4 @@ Runs standalone in a browser tab and should chirp out a tiny wasteland riff.
 - [ ] Expose mod hooks for seed and instrument parameters.
 - [ ] Add scale clamping to keep riffs musical.
 - [ ] Stress-test performance on mobile browsers.
-- [ ] Tie playback to the event bus via `music:seed`.
+ - [x] Tie playback to the event bus via `music:seed`.

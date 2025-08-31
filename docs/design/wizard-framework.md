@@ -89,7 +89,7 @@ This wizard helps create a building with multiple interior rooms, like a house w
   - [x] **Logic:** Write the final "commit" function for the wizard that takes the completed data and generates the new NPC and quest data objects, saving them to the appropriate module file.
 
 #### **Phase 3: Building & Interiors Wizard**
-- [ ] **Configuration:** Create the `BuildingWizard` configuration object.
+ - [x] **Configuration:** Create the `BuildingWizard` configuration object.
 - [ ] **Custom Steps:** Develop the specific step components:
     - `TilemapPickerStep`: A component to select a tilemap file.
     - `DoorLinkerStep`: The side-by-side view for connecting two interiors.
