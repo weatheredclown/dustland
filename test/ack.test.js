@@ -394,3 +394,7 @@ test('editNPC expands short hex colors', () => {
   editNPC(0);
   assert.strictEqual(document.getElementById('npcColor').value, '#ff3333');
 });
+
+test('loadMods accepts undefined', () => {
+  assert.doesNotThrow(() => loadMods(undefined));
+});
