@@ -1703,6 +1703,7 @@ const DATA = `
       {
         "name": "Rotwalker",
         "HP": 6,
+        "ATK": 2,
         "DEF": 1,
         "loot": "water_flask",
         "maxDist": 24,
@@ -1711,6 +1712,7 @@ const DATA = `
       {
         "name": "Scavenger",
         "HP": 5,
+        "ATK": 2,
         "DEF": 0,
         "loot": "raider_knife",
         "maxDist": 36,
@@ -1719,6 +1721,7 @@ const DATA = `
       {
         "name": "Sand Titan",
         "HP": 20,
+        "ATK": 6,
         "DEF": 4,
         "loot": "artifact_blade",
         "challenge": 9,
@@ -1727,7 +1730,8 @@ const DATA = `
       },
       {
         "name": "Dune Reaper",
-        "HP": 75,
+        "HP": 90,
+        "ATK": 8,
         "DEF": 7,
         "loot": "artifact_blade",
         "challenge": 32,
@@ -1740,7 +1744,8 @@ const DATA = `
       },
       {
         "name": "Sand Colossus",
-        "HP": 80,
+        "HP": 120,
+        "ATK": 10,
         "DEF": 8,
         "loot": "artifact_blade",
         "challenge": 36,

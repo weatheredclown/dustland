@@ -42,8 +42,8 @@ Specials are the heart of tactical combat. They're how the player turns the tide
 
 Equipment isn't just about bigger numbers. It's about changing *how* you fight.
 
-*   **Weapons:** Determine your basic attack speed, damage, and Adrenaline generation rate. A heavy hammer might generate more Adrenaline per hit, but a quick knife lets you build it faster with rapid strikes. Some rare weapons might even come with a unique Special move.
-*   **Armor:** Provides damage resistance, but can also have passive combat effects. A "Scavenger's Rig" might grant a small amount of Adrenaline at the start of combat. A "Juggernaut Plate" could make you immune to being interrupted while using a Special.
+*   **Weapons:** Determine your basic attack speed, damage, and Adrenaline generation rate. A heavy hammer might generate more Adrenaline per hit, but a quick knife lets you build it faster with rapid strikes. Some rare weapons might even come with a unique Special move. Melee attacks add your STR to the hit, while rifles and other ranged weapons lean on AGI.
+*   **Armor:** Provides damage resistance, but can also have passive combat effects. A "Scavenger's Rig" might grant a small amount of Adrenaline at the start of combat. A "Juggernaut Plate" could make you immune to being interrupted while using a Special. Its DEF subtracts from incoming damage before luck can save you.
 *   **Gadgets (Accessories):** This is where things get wild. A "Stim-Pack" gadget could allow you to convert HP into Adrenaline in an emergency. A "Targeting Visor" could increase the critical hit chance of your specials. An "Adrenaline Charm" might double the rate at which Adrenaline builds.
 
 Some wasteland horrors shrug off ordinary steel. Enemies like the Sand Colossus won't take damage unless the party carries an artifact-grade weapon, making gear progression essential, while others such as the Dune Reaper simply hit harder the deeper you wander. Rare artifact blades lie buried in the wastes for those bold enough to seek them.
