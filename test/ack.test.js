@@ -268,6 +268,17 @@ test('painting over building restores tiles', () => {
   assert.strictEqual(world[5][5], TILE.BUILDING);
 });
 
+test('painting interior in main window', () => {
+  moduleData.interiors = [{ id:'room', w:2, h:2, grid:[[TILE.FLOOR,TILE.FLOOR],[TILE.FLOOR,TILE.FLOOR]] }];
+  interiors = { room: moduleData.interiors[0] };
+  showMap('room');
+  intPaint = TILE.WALL;
+  canvasEl._listeners.mousedown[0]({ clientX:0, clientY:0, button:0 });
+  canvasEl._listeners.mouseup[0]({ button:0 });
+  assert.strictEqual(interiors.room.grid[0][0], TILE.WALL);
+  showMap('world');
+});
+
 test('regenWorld creates empty map without buildings', () => {
   regenWorld();
   assert.strictEqual(globalThis.buildings.length, 0);
@@ -449,4 +460,49 @@ test('dustland module JSON round trips through ACK', () => {
   } finally {
     fsSync.rmSync(jsonPath, { force: true });
   }
+});
+  
+test('editing NPC centers map on its position', () => {
+  const prev = moduleData.npcs;
+  moduleData.npcs = [{ id: 'npc1', name: 'NPC', map: 'world', x: 80, y: 60, tree: {} }];
+  worldZoom = 3;
+  panX = 0;
+  panY = 0;
+  editNPC(0);
+  assert.strictEqual(panX, 60);
+  assert.strictEqual(panY, 45);
+  moduleData.npcs = prev;
+  worldZoom = 1;
+  panX = 0;
+  panY = 0;
+});
+
+test('editing item centers map on its position', () => {
+  const prev = moduleData.items;
+  moduleData.items = [{ id: 'it1', name: 'Item', map: 'world', x: 70, y: 10 }];
+  worldZoom = 3;
+  panX = 0;
+  panY = 0;
+  editItem(0);
+  assert.strictEqual(panX, 50);
+  assert.strictEqual(panY, 0);
+  moduleData.items = prev;
+  worldZoom = 1;
+  panX = 0;
+  panY = 0;
+});
+
+test('editing building centers map on its position', () => {
+  const prev = moduleData.buildings;
+  moduleData.buildings = [{ x: 30, y: 30, w: 10, h: 10 }];
+  worldZoom = 3;
+  panX = 0;
+  panY = 0;
+  editBldg(0);
+  assert.strictEqual(panX, 15);
+  assert.strictEqual(panY, 20);
+  moduleData.buildings = prev;
+  worldZoom = 1;
+  panX = 0;
+  panY = 0;
 });
