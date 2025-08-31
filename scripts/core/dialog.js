@@ -5,11 +5,18 @@ const textEl=document.getElementById('dialogText');
 const nameEl=document.getElementById('npcName');
 const titleEl=document.getElementById('npcTitle');
 const portEl=document.getElementById('port');
+const persistBtn=document.getElementById('persistLLM');
 let currentNPC=null;
 Object.defineProperty(globalThis,'currentNPC',{get:()=>currentNPC,set:v=>{currentNPC=v;}});
 const dialogState={ tree:null, node:null };
 let selectedChoice=0;
 var Dustland = globalThis.Dustland;
+if(persistBtn){
+  persistBtn.onclick=function(){
+    persistLlmNodes(dialogState.tree);
+    renderDialog();
+  };
+}
 
 function dlgHighlightChoice(){
   [...choicesEl.children].forEach((c,i)=>{

@@ -259,7 +259,7 @@ function withImportTracking(ctx, recorder) {
 
 ## Tasks
 
-- [ ] Persist LLM suggestions in ACK: Add a clear “Persist LLM nodes” control and per-choice “Accept suggestion” affordance that writes generated nodes/choices into the dialog JSON (removing volatile markers) and updates imports as needed.
+- [x] Persist LLM suggestions in ACK: Add a clear “Persist LLM nodes” control and per-choice “Accept suggestion” affordance that writes generated nodes/choices into the dialog JSON (removing volatile markers) and updates imports as needed.
  - [x] Imports + validation enhancements: Extend imports generation (capture more effects/events and inferred queries) and add an editor validator that highlights unresolved `to` targets or missing imports with actionable UI hints.
 
 ## Appendix: Minimal Runtime Sketch
