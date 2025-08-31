@@ -398,7 +398,8 @@ const DATA = `
             {
               "label": "(Search for key)",
               "to": "accept",
-              "q": "accept"
+              "q": "accept",
+              "setFlag": { "flag": "q_hall_key_active", "op": "set", "value": 1 }
             },
             {
               "label": "(Use Rusted Key)",
@@ -407,7 +408,8 @@ const DATA = `
             },
             {
               "label": "(Use Glinting Key)",
-              "to": "glint_fail"
+              "to": "glint_fail",
+              "if": { "flag": "q_hall_key_active", "op": ">=", "value": 1 }
             },
             {
               "label": "(Leave)",
