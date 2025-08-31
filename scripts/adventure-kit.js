@@ -126,6 +126,7 @@ let worldZoom = 1, panX = 0, panY = 0;
 let panning = false, panStartX = 0, panStartY = 0, panMouseX = 0, panMouseY = 0;
 const baseTileW = canvas.width / WORLD_W;
 const baseTileH = canvas.height / WORLD_H;
+let problemRefs = [];
 
 function focusMap(x, y) {
   if (currentMap !== 'world') return;
@@ -489,6 +490,7 @@ function drawWorld() {
     }
     ctx.restore();
   }
+  renderProblems();
 }
 
 function drawInterior() {
@@ -1709,6 +1711,7 @@ function renderNPCList() {
   Array.from(list.children).forEach(div => div.onclick = () => editNPC(parseInt(div.dataset.idx, 10)));
   updateQuestOptions();
   refreshChoiceDropdowns();
+  renderProblems();
 }
 
 function deleteNPC() {
@@ -1882,6 +1885,7 @@ function renderItemList() {
   list.innerHTML = items.map(({ it, i }) => `<div data-idx="${i}">${it.name} @${it.map} (${it.x},${it.y})</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editItem(parseInt(div.dataset.idx, 10)));
   refreshChoiceDropdowns();
+  renderProblems();
 }
 
 function deleteItem() {
@@ -2696,15 +2700,39 @@ function validateSpawns(){
   const walkable={0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false};
   const issues=[];
   const s=moduleData.start;
-  if(!walkable[world[s.y][s.x]]) issues.push('Player start is on blocked tile');
-  moduleData.npcs.filter(n=>n.map==='world').forEach(n=>{ if(!walkable[world[n.y][n.x]]) issues.push('NPC '+(n.id||'')+' on blocked tile'); });
-  moduleData.items.filter(it=>it.map==='world').forEach(it=>{ if(!walkable[world[it.y][it.x]]) issues.push('Item '+it.id+' on blocked tile'); });
-  if(issues.length){ alert('Fix spawn locations:\n'+issues.join('\n')+'\nHint: water tiles are bright blue and block spawns.'); return false; }
-  return true;
+  if(!walkable[world[s.y][s.x]]) issues.push({ msg:'Player start on blocked tile', type:'start' });
+  moduleData.npcs.forEach((n,i)=>{ if(n.map==='world' && !walkable[world[n.y][n.x]]) issues.push({ msg:'NPC '+(n.id||'')+' on blocked tile', type:'npc', idx:i }); });
+  moduleData.items.forEach((it,i)=>{ if(it.map==='world' && !walkable[world[it.y][it.x]]) issues.push({ msg:'Item '+it.id+' on blocked tile', type:'item', idx:i }); });
+  return issues;
+}
+
+function renderProblems(issues){
+  issues = issues || validateSpawns();
+  const card = document.getElementById('problemCard');
+  const list = document.getElementById('problemList');
+  problemRefs = issues;
+  if(!issues.length){
+    card.style.display='none';
+    return;
+  }
+  card.style.display='block';
+  list.innerHTML = issues.map((p,i)=>`<div data-idx="${i}">${p.msg}</div>`).join('');
+  Array.from(list.children).forEach(div=>div.onclick=()=>{
+    const prob=problemRefs[parseInt(div.dataset.idx,10)];
+    if(prob.type==='npc') editNPC(prob.idx);
+    else if(prob.type==='item') editItem(prob.idx);
+    else if(prob.type==='start'){
+      showMap('world');
+      focusMap(moduleData.start.x,moduleData.start.y);
+      selectedObj=null;
+      drawWorld();
+    }
+  });
 }
 
 function saveModule() {
-  if(!validateSpawns()) return;
+  const issues = validateSpawns();
+  if(issues.length){ renderProblems(issues); return; }
   moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
   const bldgs = buildings.map(({ under, ...rest }) => rest);
   const ints = moduleData.interiors.map(I => ({...I, grid: gridToEmoji(I.grid)}));

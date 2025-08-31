@@ -54,6 +54,13 @@
       cursor: pointer;
     }
 
+    #problemCard {
+      border-color: #a00;
+    }
+    #problemCard .list div {
+      color: #f66;
+    }
+
     label {
       display: block;
       margin-top: 4px;
@@ -314,6 +321,10 @@
       <input type="file" id="loadFile" accept="application/json" style="display:none" />
     </section>
     <aside class="editor-panel" id="editorPanel" aria-hidden="false">
+      <fieldset class="card" id="problemCard" style="display:none;border-color:#a00">
+        <legend>Problems</legend>
+        <div class="list" id="problemList"></div>
+      </fieldset>
       <div class="tabs2" role="tablist" aria-label="Editors">
         <button class="tab2 active" type="button" data-tab="npc" role="tab" aria-selected="true">NPCs</button>
         <button class="tab2" type="button" data-tab="items" role="tab" aria-selected="false">Items</button>
