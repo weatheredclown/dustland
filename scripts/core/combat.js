@@ -476,7 +476,11 @@ function doAttack(dmg, type = 'basic'){
   }
 
   // Target defense
+  const preDef = dealt;
   dealt = Math.max(0, dealt - (target.DEF || 0));
+  if (preDef > 0 && dealt === 0) {
+    log?.(`${attacker.name}'s attack bounces off ${target.name} harmlessly.`);
+  }
 
   const luck = (attacker.stats?.LCK || 0) + (attacker._bonus?.LCK || 0);
   const eff  = Math.max(0, luck - 4);

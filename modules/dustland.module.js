@@ -1704,7 +1704,7 @@ const DATA = `
         "name": "Rotwalker",
         "HP": 6,
         "ATK": 2,
-        "DEF": 1,
+        "DEF": 0,
         "loot": "water_flask",
         "maxDist": 24,
         "portraitSheet": "assets/portraits/dustland-module/rotwalker_4.png"
