@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import { JSDOM } from 'jsdom';
 
 function setup(items, equipped){
-  const dom = new JSDOM('<div id="inv"></div>');
+  const dom = new JSDOM('<div id="inv"></div><div id="party"></div>');
   const equips = Array.isArray(equipped) ? equipped : [equipped];
   const bus = { emit: () => {} };
   const ctx = {
@@ -21,7 +21,10 @@ function setup(items, equipped){
     renderParty: () => {},
     updateHUD: () => {},
     EventBus: bus,
-    Dustland: { eventBus: bus }
+    Dustland: { eventBus: bus },
+    statLine: () => '',
+    xpToNext: () => 1,
+    unequipItem: () => {}
   };
   ctx.equipItem = (memberIndex, invIndex) => {
     const m = ctx.party[memberIndex];
@@ -37,7 +40,7 @@ function setup(items, equipped){
 async function loadRender(ctx){
   const full = await fs.readFile(new URL('../scripts/dustland-engine.js', import.meta.url), 'utf8');
   const start = full.indexOf('function calcItemValue');
-  const end = full.indexOf('function renderQuests');
+  const end = full.indexOf('function openShop');
   vm.runInContext(full.slice(start, end), ctx);
 }
 
@@ -82,6 +85,25 @@ test('leader change re-evaluates highlights', async () => {
   slots = ctx.document.querySelectorAll('.slot');
   assert.equal(slots.length, 1);
   assert.ok(slots[0].classList.contains('better'));
+});
+
+test('party selection refreshes item highlights', async () => {
+  const items = [
+    { name: 'Bronze Sword', slot: 'weapon', value: 3 }
+  ];
+  const eqs = [
+    { weapon: { name: 'Steel Sword', slot: 'weapon', value: 4 } },
+    { weapon: { name: 'Rusty Sword', slot: 'weapon', value: 1 } }
+  ];
+  const ctx = setup(items, eqs);
+  await loadRender(ctx);
+  ctx.renderParty();
+  ctx.renderInv();
+  let slot = ctx.document.querySelector('.slot');
+  assert.ok(!slot.classList.contains('better'));
+  ctx.document.querySelectorAll('.pcard')[1].click();
+  slot = ctx.document.querySelector('.slot');
+  assert.ok(slot.classList.contains('better'));
 });
 
 test('setLeader equips missing gear and suggests a single upgrade per slot', async () => {
