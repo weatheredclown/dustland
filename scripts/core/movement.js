@@ -279,7 +279,16 @@ function checkRandomEncounter(){
     if(!pool.length) return;
     const hard = pool.filter(e => e.minDist);
     if(hard.length) pool = hard;
-    const def = pool[Math.floor(Math.random() * pool.length)];
+    const base = pool[Math.floor(Math.random() * pool.length)];
+    const def = { ...base };
+    const id = def.id || def.name;
+    const stats = globalThis.enemyTurnStats?.[id];
+    // If this enemy consistently falls in one turn, escalate group size
+    let count = 1;
+    if (stats && stats.count >= 3 && (stats.total / stats.count) <= 1){
+      count = 2 + Math.floor(Math.random() * 2);
+    }
+    if (count > 1) def.count = count;
     encounterCooldown = 3 + Math.floor(Math.random() * 3);
     return Dustland.actions.startCombat(def);
   }

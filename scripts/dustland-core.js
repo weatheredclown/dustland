@@ -122,6 +122,7 @@ async function startCombat(defender){
     const { HP, portraitSheet, npc, name, ...rest } = def || {};
     return {
       ...rest,
+      id: def.id || def.name,
       name: name || npc?.name || 'Enemy',
       hp: def.hp ?? HP ?? 5,
       npc,
@@ -130,7 +131,9 @@ async function startCombat(defender){
     };
   };
 
-  const enemies = [toEnemy(defender)];
+  const enemies = [];
+  const copies = Math.max(1, defender.count || 1);
+  for(let i=0; i<copies; i++) enemies.push(toEnemy(defender));
   const px = party.x, py = party.y, map = party.map || state.map;
   for (const n of (typeof NPCS !== 'undefined' ? NPCS : [])) {
     if (!n.combat) continue;
