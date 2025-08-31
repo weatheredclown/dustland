@@ -413,14 +413,19 @@ test('interactAt picks up adjacent item', () => {
 
 test('useItem heals party member and consumes item', () => {
   party.length = 0; player.inv.length = 0;
+  let hudCalls = 0;
+  global.updateHUD = () => { hudCalls++; };
   const m = new Character('h','Healer','Role');
   m.hp = 5; m.maxHp = 10;
   party.join(m);
   const tonic = registerItem({ id:'tonic', name:'Tonic', type:'consumable', use:{ type:'heal', amount:3 } });
   addToInv(tonic);
+  hudCalls = 0;
   useItem(0);
   assert.strictEqual(m.hp, 8);
+  assert.strictEqual(player.hp, 8);
   assert.strictEqual(player.inv.length, 0);
+  assert.ok(hudCalls >= 1);
 });
 
 test('findFreeDropTile avoids water and party tiles', () => {
