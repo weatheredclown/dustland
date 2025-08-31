@@ -406,3 +406,7 @@ test('NPC symbol is saved and restored', () => {
   editNPC(0);
   assert.strictEqual(document.getElementById('npcSymbol').value, '?');
 });
+
+test('loadMods accepts undefined', () => {
+  assert.doesNotThrow(() => loadMods(undefined));
+});

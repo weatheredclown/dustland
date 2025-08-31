@@ -745,6 +745,7 @@ function newBuilding(){
 
 let step=1; let building=null; let built=[];
 function openCreator(){
+  if(!creator) return; // Gracefully skip when creator UI is absent
   if(!creatorMap.grid || creatorMap.grid.length===0) genCreatorMap();
   setPartyPos(creatorMap.entryX, creatorMap.entryY);
   setMap('creator','Creator');
