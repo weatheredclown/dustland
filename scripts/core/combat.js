@@ -169,6 +169,21 @@ function openCombat(enemies){
     renderCombat();
     updateHUD?.();
     combatOverlay.classList.add('shown');
+
+    const enemyNames = combatState.enemies.map(e => e.name || 'foe');
+    if (enemyNames.length) {
+      let msg;
+      if (enemyNames.length === 1) {
+        const name = enemyNames[0];
+        const article = /^[aeiou]/i.test(name) ? 'an' : 'a';
+        msg = `You encounter ${article} ${name}.`;
+      } else {
+        const last = enemyNames.pop();
+        msg = `You encounter ${enemyNames.join(', ')} and ${last}.`;
+      }
+      log?.(msg);
+    }
+
     globalThis.EventBus?.emit?.('combat:started');
     openCommand();
   });
