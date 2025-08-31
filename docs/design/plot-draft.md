@@ -67,9 +67,14 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 ### **Expanded Task List**
 
 #### **Phase 0: Writing Pass**
-- [ ] Draft a scene-by-scene outline with placeholder dialog for the caravan's opening leg.
+- [x] Draft a scene-by-scene outline with placeholder dialog for the caravan's opening leg.
 - [ ] Flesh out Mara, Jax, and Nyx arcs with at least two key conversations each.
 - [ ] Sketch early Silencer encounters with sample rival dialogue.
+
+### Opening Leg Outline
+1. **Campfire Departure** – *Mara:* "Dawn's thin. Pack up."
+2. **Rusted Bridge** – *Jax:* "Wheels hold, hearts hold."
+3. **Dunes at Dusk** – *Nyx:* "The signal hums when the sun bleeds."
 
 #### **Phase 1: Narrative Foundation**
 - [x] Outline the caravan's pursuit of the fading broadcast across the Dustland.
