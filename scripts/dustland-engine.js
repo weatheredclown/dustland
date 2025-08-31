@@ -2,7 +2,7 @@
 // ===== Rendering & Utilities =====
 
 // Logging
-const ENGINE_VERSION = '0.7.42';
+const ENGINE_VERSION = '0.7.43';
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const apEl = document.getElementById('ap');
@@ -416,7 +416,7 @@ function drawEntities(ctx, list, offX, offY){
     if(n.x>=camX&&n.y>=camY&&n.x<camX+vW&&n.y<camY+vH){
       const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
       ctx.fillStyle=n.color; ctx.fillRect(vx,vy,TS,TS);
-      ctx.fillStyle='#000'; ctx.fillText('!',vx+5,vy+12);
+      ctx.fillStyle='#000'; ctx.fillText(n.symbol || '!',vx+5,vy+12);
     }
   }
 }

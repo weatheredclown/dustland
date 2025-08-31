@@ -134,6 +134,7 @@
       "color": "#ddf",
       "name": "Dusty Chest",
       "desc": "Maybe it holds the coin.",
+      "symbol": "?",
       "tree": {
         "start": {
           "text": "A locked chest sits here.",

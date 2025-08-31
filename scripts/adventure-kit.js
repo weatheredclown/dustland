@@ -1462,6 +1462,7 @@ function startNewNPC() {
   document.getElementById('npcName').value = '';
   document.getElementById('npcDesc').value = '';
   document.getElementById('npcColor').value = '#9ef7a0';
+  document.getElementById('npcSymbol').value = '!';
   document.getElementById('npcMap').value = 'world';
   document.getElementById('npcX').value = 0;
   document.getElementById('npcY').value = 0;
@@ -1515,6 +1516,7 @@ function collectNPCFromForm() {
   const name = document.getElementById('npcName').value.trim();
   const desc = document.getElementById('npcDesc').value.trim();
   const color = document.getElementById('npcColor').value.trim() || '#fff';
+  const symbol = document.getElementById('npcSymbol').value.trim().charAt(0) || '!';
   const map = document.getElementById('npcMap').value.trim() || 'world';
   const x = parseInt(document.getElementById('npcX').value, 10) || 0;
   const y = parseInt(document.getElementById('npcY').value, 10) || 0;
@@ -1551,7 +1553,7 @@ function collectNPCFromForm() {
   document.getElementById('npcTree').value = JSON.stringify(tree, null, 2);
   loadTreeEditor();
 
-  const npc = { id, name, desc, color, map, x, y, tree, questId };
+  const npc = { id, name, desc, color, symbol, map, x, y, tree, questId };
   const pts = gatherLoopFields();
   if (pts.length >= 2) npc.loop = pts;
   if (combat) npc.combat = { DEF: 5 };
@@ -1610,6 +1612,7 @@ function editNPC(i) {
   document.getElementById('npcName').value = n.name;
   document.getElementById('npcDesc').value = n.desc || '';
   document.getElementById('npcColor').value = expandHex(n.color || '#ffffff');
+  document.getElementById('npcSymbol').value = n.symbol || '!';
   document.getElementById('npcMap').value = n.map;
   document.getElementById('npcX').value = n.x;
   document.getElementById('npcY').value = n.y;

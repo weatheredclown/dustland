@@ -395,6 +395,18 @@ test('editNPC expands short hex colors', () => {
   assert.strictEqual(document.getElementById('npcColor').value, '#ff3333');
 });
 
+test('NPC symbol is saved and restored', () => {
+  moduleData.npcs = [];
+  startNewNPC();
+  const symbolEl = document.getElementById('npcSymbol');
+  symbolEl.value = '?';
+  const npc = collectNPCFromForm();
+  assert.strictEqual(npc.symbol, '?');
+  moduleData.npcs = [npc];
+  editNPC(0);
+  assert.strictEqual(document.getElementById('npcSymbol').value, '?');
+});
+
 test('loadMods accepts undefined', () => {
   assert.doesNotThrow(() => loadMods(undefined));
 });
