@@ -709,7 +709,7 @@ function collectMods() {
   });
   return mods;
 }
-function loadMods(mods) {
+function loadMods(mods = {}) {
   const mb = document.getElementById('modBuilder');
   mb.innerHTML = '';
   MOD_TYPES.forEach(m => {
