@@ -449,12 +449,20 @@ function doAttack(dmg, type = 'basic'){
   const target = combatState.enemies[0];
   if (!attacker || !target){ nextCombatant?.(); return; }
 
-  let dealt = dmg;
+  const weapon = attacker.equip?.weapon;
+  const isRanged = weapon && /rifle|gun|bow|pistol/i.test(weapon.id || weapon.name || '');
+  const statName = isRanged ? 'AGI' : 'STR';
+  const statVal = (attacker.stats?.[statName] || 0) + (attacker._bonus?.[statName] || 0);
+  const statBonus = Math.max(0, statVal - 4);
+  const atkBonus  = attacker._bonus?.ATK || 0;
+  const base      = dmg + atkBonus + statBonus;
+  const minBase   = Math.max(1, base - 3);
+  let dealt       = Math.floor(Math.random() * (base - minBase + 1)) + minBase;
+
   const adrPct = Math.max(0, Math.min(1, (attacker.adr ?? 0) / (attacker.maxAdr || 100)));
   const mult  = 1 + adrPct * (attacker.adrDmgMod || 1);
   dealt = Math.round(dealt * mult);
 
-  const weapon = attacker.equip?.weapon;
   const req = target.requires;
   if (req && (!weapon || weapon.id !== req)){
     dealt = 0;
@@ -466,6 +474,9 @@ function doAttack(dmg, type = 'basic'){
     dealt = 0;
     log?.(`${target.name} shrugs off the attack.`);
   }
+
+  // Target defense
+  dealt = Math.max(0, dealt - (target.DEF || 0));
 
   const luck = (attacker.stats?.LCK || 0) + (attacker._bonus?.LCK || 0);
   const eff  = Math.max(0, luck - 4);
@@ -726,6 +737,7 @@ function enemyAttack(){
     setTimeout(() => {
       combatOverlay?.classList.remove('warning');
       let dmg = enemy.special.dmg || 5;
+      dmg = Math.max(0, dmg - (target._bonus?.DEF || 0));
       const luck = (target.stats?.LCK || 0) + (target._bonus?.LCK || 0);
       const eff  = Math.max(0, luck - 4);
       if (Math.random() < eff * 0.05 && dmg > 0){
@@ -742,12 +754,15 @@ function enemyAttack(){
   }
 
   // Basic enemy attack with guard mitigation + structured log
-  let dmg = 1;
+  const base = enemy.ATK || 1;
+  const minB = Math.max(1, base - 3);
+  let dmg = Math.floor(Math.random() * (base - minB + 1)) + minB;
   if (target.guard){
     target.guard = false;
     dmg = Math.max(0, dmg - 1);
     log?.(`${target.name} guards against the attack.`);
   }
+  dmg = Math.max(0, dmg - (target._bonus?.DEF || 0));
   const luck = (target.stats?.LCK || 0) + (target._bonus?.LCK || 0);
   const eff  = Math.max(0, luck - 4);
   if (Math.random() < eff * 0.05 && dmg > 0){

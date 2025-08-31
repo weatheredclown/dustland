@@ -84,7 +84,7 @@ test('failed flee grants enemy attack and advances turn', () => {
   a.hp = 10; b.hp = 10;
   const enemy = { name:'Goblin', hp:1, maxHp:1 };
   openCombat([enemy]);
-  const r = Math.random; Math.random = () => 1;
+  const r = Math.random; Math.random = () => 0.9;
   attemptFlee();
   Math.random = r;
   assert.strictEqual(a.hp, 9);

@@ -1623,11 +1623,13 @@ test('enemy requires a specific weapon', () => {
   const enemy = { name: 'Shellback', hp: 10, requires: 'artifact_blade' };
   const attacker = makeMember('a', 'A', 'Hero');
   attacker.equip = { weapon: { id: 'rusted_sword', mods: { ADR: 10 } } };
+  const r = Math.random; Math.random = () => 0;
   __testAttack(attacker, enemy, 5);
   assert.strictEqual(enemy.hp, 10);
   attacker.equip.weapon.id = 'artifact_blade';
   __testAttack(attacker, enemy, 5);
-  assert.strictEqual(enemy.hp, 5);
+  assert.strictEqual(enemy.hp, 8);
+  Math.random = r;
 });
 
 test('applyModule from dialog adds next fragment', async () => {
@@ -1792,13 +1794,15 @@ test('enemy immune to basic attacks requires specials', async () => {
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role', { special:[{ label:'Power Hit', dmg:2 }] });
   party.join(m1);
+  const r = Math.random; Math.random = () => 0;
   const resultPromise = openCombat([{ name:'Shield', hp:5, immune:['basic'] }]);
   handleCombatKey({ key:'Enter' });
   assert.strictEqual(combatState.enemies[0].hp, 5);
   handleCombatKey({ key:'ArrowDown' });
   handleCombatKey({ key:'Enter' });
   handleCombatKey({ key:'Enter' });
-  assert.strictEqual(combatState.enemies[0].hp, 3);
+  assert.strictEqual(combatState.enemies[0].hp, 4);
+  Math.random = r;
   closeCombat('flee');
   await resultPromise;
 });
@@ -1898,4 +1902,26 @@ test('shop npc opens dialog before trading', () => {
   assert.strictEqual(openedShop, 0);
   global.openShop = origOpenShop;
   closeDialog();
+});
+
+test('combat uses stats and equipment', () => {
+  const origRand = Math.random;
+  Math.random = () => 0;
+
+  const hero = new Character('h', 'Hero', 'fighter');
+  hero.stats.STR = 6;
+  hero.equip.weapon = { id: 'club', slot: 'weapon', mods: { ATK: 2 } };
+  hero.equip.armor = { id: 'vest', slot: 'armor', mods: { DEF: 2 } };
+  hero.applyEquipmentStats();
+
+  const dummy = { name: 'Dummy', hp: 10, DEF: 1 };
+  __testAttack(hero, dummy, 1);
+  assert.strictEqual(dummy.hp, 9);
+
+  openCombat([{ name: 'Gob', hp: 5, ATK: 7 }]);
+  enemyAttack();
+  assert.strictEqual(hero.hp, hero.maxHp - 2);
+  closeCombat('flee');
+
+  Math.random = origRand;
 });

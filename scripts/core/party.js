@@ -51,7 +51,7 @@ class Character {
     }
   }
   applyEquipmentStats(){
-    this._bonus = {ATK:0, DEF:0, LCK:0};
+    this._bonus = {};
     for(const k of ['weapon','armor','trinket']){
       const it=this.equip[k];
       if(it&&it.mods){
