@@ -31,7 +31,7 @@ test('exit door remarks on glinting key', async () => {
   ]);
 
   function stubEl() {
-    return { children: [], classList: { toggle() {} }, appendChild() {}, querySelector() {}, textContent: '', innerHTML: '' };
+    return { children: [], classList: { toggle() {} }, appendChild(c){ this.children.push(c); }, querySelector() {}, textContent: '', innerHTML: '', style: {} };
   }
   const overlay = stubEl();
   const choicesEl = stubEl();
@@ -40,6 +40,7 @@ test('exit door remarks on glinting key', async () => {
   const npcTitle = stubEl();
   const portEl = stubEl();
 
+  const flags = {};
   const context = {
     player: { inv: [{ id: 'glinting_key', tags: ['key'] }] },
     party: {},
@@ -50,6 +51,22 @@ test('exit door remarks on glinting key', async () => {
     dialogJoinParty: () => {},
     processQuestFlag: () => {},
     handleGoto: () => {},
+    setFlag: (flag, value) => { flags[flag] = { count: value }; },
+    flagValue: (flag) => flags[flag]?.count || 0,
+    checkFlagCondition: (cond) => {
+      const v = flags[cond.flag]?.count || 0;
+      const val = cond.value ?? 0;
+      switch (cond.op) {
+        case '>=': return v >= val;
+        case '>': return v > val;
+        case '<=': return v <= val;
+        case '<': return v < val;
+        case '!=': return v !== val;
+        case '=':
+        case '==': return v === val;
+      }
+      return false;
+    },
     document: {
       getElementById: (id) => ({ overlay, choices: choicesEl, dialogText, npcName, npcTitle, port: portEl }[id] || stubEl()),
       createElement: () => stubEl(),
@@ -64,6 +81,17 @@ test('exit door remarks on glinting key', async () => {
   vm.runInContext(modSrc, context);
 
   const exit = context.DUSTLAND_MODULE.npcs.find((n) => n.id === 'exitdoor');
+
+  const visibleChoices = () =>
+    exit.tree.start.choices.filter((c) => !c.if || context.checkFlagCondition(c.if));
+
+  assert.ok(!visibleChoices().some((c) => c.label === '(Use Glinting Key)'));
+
+  const accept = exit.tree.start.choices.find((c) => c.label === '(Search for key)');
+  context.setFlag(accept.setFlag.flag, accept.setFlag.value);
+
+  assert.ok(visibleChoices().some((c) => c.label === '(Use Glinting Key)'));
+
   const normalizeDialogTree = (tree) => {
     const out = {};
     for (const id in tree) {
