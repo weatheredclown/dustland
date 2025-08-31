@@ -3,16 +3,16 @@
 This document lists QA checks for each completed item across design docs.
 For each item, run the described code verification.
 
-- **combat.md** — **Adrenaline Resource:** Implement the Adrenaline bar (`adr`) for all combatants in `scripts/core/party.js` and `scripts/core/combat.js`.
-  - Check: confirm implementation matches description.
-- **combat.md** — **Adrenaline Generation:** Basic attacks now generate Adrenaline. This value is determined by weapon stats via the `ADR` modifier.
-  - Check: confirm implementation matches description.
-- **combat.md** — **Special Move Framework:** In `scripts/core/abilities.js`, create a data structure for Specials that includes `adrenaline_cost`, `target_type` (single, aoe), `effect` (damage, stun, etc.), and `wind_up_time`.
-  - Check: confirm implementation matches description.
-- **combat.md** — **Equipment Modifiers:** Update the inventory system to apply combat modifiers from equipped items at the start of each battle.
-  - Check: confirm implementation matches description.
-- **combat.md** — **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
-  - Check: confirm implementation matches description.
+- [x] **combat.md** — **Adrenaline Resource:** Implement the Adrenaline bar (`adr`) for all combatants in `scripts/core/party.js` and `scripts/core/combat.js`.
+   - Check: confirm implementation matches description.
+- [x] **combat.md** — **Adrenaline Generation:** Basic attacks now generate Adrenaline. This value is determined by weapon stats via the `ADR` modifier.
+   - Check: confirm implementation matches description.
+- [x] **combat.md** — **Special Move Framework:** In `scripts/core/abilities.js`, create a data structure for Specials that includes `adrenaline_cost`, `target_type` (single, aoe), `effect` (damage, stun, etc.), and `wind_up_time`.
+   - Check: confirm implementation matches description.
+- [x] **combat.md** — **Equipment Modifiers:** Update the inventory system to apply combat modifiers from equipped items at the start of each battle.
+   - Check: confirm implementation matches description.
+- [x] **combat.md** — **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
+   - Check: confirm implementation matches description.
 - **combat.md** — **New HUD:** Redesign the combat UI to include the Adrenaline bar, status effect icons, and improved health bar feedback.
   - Check: confirm implementation matches description.
 - **combat.md** — **Player Health Panel:** Update the right-side player health panel to show damage being taken in real-time, with visual effects for critical health and passing out.
