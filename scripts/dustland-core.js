@@ -581,6 +581,7 @@ function save(){
   const data={worldSeed, world, player, state, buildings, interiors, itemDrops, npcs:npcData, quests:questData, party:partyData};
   localStorage.setItem('dustland_crt', JSON.stringify(data));
   log('Game saved.');
+  if (typeof toast === 'function') toast('Game saved.');
 }
 function load(){
   const j=localStorage.getItem('dustland_crt');
@@ -626,6 +627,7 @@ function load(){
   setMap(state.map);
   refreshUI();
   log('Game loaded.');
+  if (typeof toast === 'function') toast('Game loaded.');
 }
 
 const startEl = document.getElementById('start');
@@ -646,6 +648,7 @@ function resetAll(){
   party.length=0; player.inv=[]; party.flags={}; player.scrap=0;
   state.map='creator'; openCreator();
   log('Reset. Back to character creation.');
+  if (typeof toast === 'function') toast('Game reset.');
 }
 Object.assign(globalThis, { showStart, hideStart, openCreator, closeCreator, resetAll });
 
