@@ -2,6 +2,8 @@ import assert from 'node:assert';
 import { test } from 'node:test';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
+import fsSync from 'node:fs';
+import { execSync } from 'node:child_process';
 
 function stubEl(){
   const el = {
@@ -422,6 +424,44 @@ test('loadMods accepts undefined', () => {
   assert.doesNotThrow(() => loadMods(undefined));
 });
 
+test('dustland module JSON round trips through ACK', () => {
+  const jsonPath = 'data/modules/dustland.json';
+  try {
+    execSync('node scripts/module-json.js export modules/dustland.module.js');
+    const original = JSON.parse(fsSync.readFileSync(jsonPath, 'utf8'));
+
+    const origValidate = globalThis.validateSpawns;
+    globalThis.validateSpawns = () => true;
+
+    let saved = '';
+    const origBlob = globalThis.Blob;
+    globalThis.Blob = class { constructor(parts) { this.text = parts.join(''); } };
+    const origURL = globalThis.URL;
+    globalThis.URL = {
+      createObjectURL(blob) { saved = blob.text; return ''; },
+      revokeObjectURL() {}
+    };
+    const origCreate = document.createElement;
+    document.createElement = tag => {
+      if (tag === 'a') return { href: '', download: '', click() {} };
+      return origCreate(tag);
+    };
+
+    applyLoadedModule(original);
+    saveModule();
+
+    document.createElement = origCreate;
+    globalThis.URL = origURL;
+    globalThis.Blob = origBlob;
+    globalThis.validateSpawns = origValidate;
+
+    const savedObj = JSON.parse(saved);
+    assert.deepStrictEqual(savedObj, original);
+  } finally {
+    fsSync.rmSync(jsonPath, { force: true });
+  }
+});
+  
 test('editing NPC centers map on its position', () => {
   const prev = moduleData.npcs;
   moduleData.npcs = [{ id: 'npc1', name: 'NPC', map: 'world', x: 80, y: 60, tree: {} }];

@@ -201,7 +201,7 @@ loopMinus.addEventListener('click', () => {
   showLoopControls(null);
 });
 
-const moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], encounters: [], templates: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) } };
+const moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], encounters: [], templates: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined };
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod'];
 let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
@@ -2631,23 +2631,29 @@ function deleteQuest() {
 }
 
 function applyLoadedModule(data) {
+  moduleData.module = data.module;
+  moduleData.moduleVar = data.moduleVar;
   moduleData.seed = data.seed || Date.now();
+  moduleData._origKeys = Object.keys(data);
   moduleData.name = data.name || 'adventure-module';
   moduleData.npcs = data.npcs || [];
   moduleData.items = data.items || [];
   moduleData.quests = data.quests || [];
   moduleData.buildings = data.buildings || [];
   moduleData.interiors = (data.interiors || []).map(I => {
-    const g = I.grid && typeof I.grid[0] === 'string' ? gridFromEmoji(I.grid) : I.grid;
-    return { ...I, grid: g };
+    let g = I.grid;
+    let orig;
+    if (g && typeof g[0] === 'string') { orig = g.slice(); g = gridFromEmoji(g); }
+    return { ...I, grid: g, _origGrid: orig };
   });
   moduleData.portals = data.portals || [];
   moduleData.events = data.events || [];
   moduleData.templates = data.templates || [];
+  moduleData.zones = data.zones || [];
   moduleData.encounters = [];
   if (data.encounters) {
     Object.entries(data.encounters).forEach(([map, list]) => {
-      list.forEach(e => moduleData.encounters.push({ map, name: e.name, HP: e.HP, DEF: e.DEF, loot: e.loot }));
+      list.forEach(e => moduleData.encounters.push({ map, ...e }));
     });
   }
   moduleData.start = data.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
@@ -2670,7 +2676,10 @@ function applyLoadedModule(data) {
     });
   }
   buildings.length = 0;
-  moduleData.buildings.forEach(b => placeHut(b.x, b.y, b));
+  moduleData.buildings.forEach(b => {
+    const nb = placeHut(b.x, b.y, b);
+    nb._origKeys = Object.keys(b);
+  });
   moduleData.buildings = [...buildings];
 
   drawWorld();
@@ -2706,13 +2715,30 @@ function validateSpawns(){
 function saveModule() {
   if(!validateSpawns()) return;
   moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
-  const bldgs = buildings.map(({ under, ...rest }) => rest);
-  const ints = moduleData.interiors.map(I => ({...I, grid: gridToEmoji(I.grid)}));
-  const enc = {};
-  (moduleData.encounters||[]).forEach(e => {
-    (enc[e.map] ||= []).push({ name: e.name, HP: e.HP, DEF: e.DEF, loot: e.loot });
+  const bldgs = moduleData.buildings.map(({ under, _origKeys, ...rest }) => {
+    const clean = {};
+    (_origKeys || Object.keys(rest)).forEach(k => { clean[k] = rest[k]; });
+    return clean;
   });
-  const data = { ...moduleData, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints };
+  const ints = moduleData.interiors.map(I => {
+    const { _origGrid, ...rest } = I;
+    return { ...rest, grid: _origGrid || gridToEmoji(I.grid) };
+  });
+  const enc = {};
+  (moduleData.encounters || []).forEach(e => {
+    const { map, ...rest } = e;
+    (enc[map] ||= []).push(rest);
+  });
+  const base = {};
+  (moduleData._origKeys || Object.keys(moduleData)).forEach(k => {
+    if (['buildings', 'interiors', 'encounters', 'world', '_origKeys'].includes(k)) return;
+    if (moduleData[k] !== undefined) base[k] = moduleData[k];
+  });
+  if (moduleData._origKeys?.includes('encounters')) base.encounters = enc;
+  if (moduleData._origKeys?.includes('world')) base.world = gridToEmoji(world);
+  if (moduleData._origKeys?.includes('buildings')) base.buildings = bldgs;
+  if (moduleData._origKeys?.includes('interiors')) base.interiors = ints;
+  const data = base;
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
