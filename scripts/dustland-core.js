@@ -915,7 +915,6 @@ const coreExports = {
   buildings,
   portals,
   tileEvents,
-  zoneEffects,
   enemyBanks,
   registerTileEvents,
   registerZoneEffects,
@@ -949,4 +948,7 @@ const coreExports = {
 };
 
 Object.assign(coreExports, { getGameState: () => gameState });
+globalThis.Dustland = globalThis.Dustland || {};
+globalThis.Dustland.zoneEffects = zoneEffects;
+Object.assign(globalThis.Dustland, coreExports);
 Object.assign(globalThis, coreExports);

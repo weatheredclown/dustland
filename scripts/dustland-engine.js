@@ -2,7 +2,7 @@
 // ===== Rendering & Utilities =====
 
 // Logging
-const ENGINE_VERSION = '0.7.47';
+const ENGINE_VERSION = '0.7.48';
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const apEl = document.getElementById('ap');
@@ -862,6 +862,9 @@ function openShop(npc) {
   closeShopBtn.onclick = close;
   shopOverlay.focus();
 }
+
+globalThis.Dustland = globalThis.Dustland || {};
+globalThis.Dustland.openShop = openShop;
 
 const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, openShop, playFX };
 Object.assign(globalThis, engineExports);

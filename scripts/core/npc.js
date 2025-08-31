@@ -19,7 +19,7 @@ class NPC {
         this.tree.sell.choices = items;
       } else if (this.shop && node === 'buy') {
         closeDialog();
-        Dustland.actions.openShop(this);
+        Dustland.openShop?.(this);
         return;
       }
     };
