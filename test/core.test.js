@@ -1587,6 +1587,25 @@ test('random encounters award XP based on strength', async () => {
   party.length = 0;
 });
 
+test('trivial enemies appear in groups', () => {
+  const row = Array(10).fill(TILE.SAND);
+  applyModule({ world: [row], encounters: { world: [ { name: 'Weak', HP: 1, DEF: 0 } ] } });
+  state.map = 'world';
+  setPartyPos(5, 0);
+  global.enemyTurnStats = { Weak: { total: 3, count: 3 } };
+  let captured;
+  const origRand = Math.random;
+  Math.random = () => 0;
+  const origStart = globalThis.Dustland.actions.startCombat;
+  globalThis.Dustland.actions.startCombat = def => { captured = def; return Promise.resolve({ result: 'flee' }); };
+  checkRandomEncounter();
+  Math.random = origRand;
+  globalThis.Dustland.actions.startCombat = origStart;
+  delete global.enemyTurnStats;
+  encounterCooldown = 0;
+  assert.ok(captured.count >= 2);
+});
+
 test('distant encounters use hard enemy pool', () => {
   const row = Array(30).fill(TILE.SAND);
   row[0] = TILE.ROAD;
