@@ -1,5 +1,7 @@
 // ===== NPCs =====
 var Dustland = globalThis.Dustland;
+const NPC_COLOR = '#9ef7a0';
+const OBJECT_COLOR = '#225a20';
 class NPC {
   constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null,portraitLock=true,symbol='!'}) {
     Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,combat,shop,portraitSheet,portraitLock,symbol});
@@ -74,6 +76,7 @@ function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNo
     }
     tree.sell = tree.sell || {text: 'What are you selling?', choices: []};
   }
+  color = color || (opts?.symbol && opts.symbol !== '!' ? OBJECT_COLOR : NPC_COLOR);
   return new NPC({id,map,x,y,color,name,title,desc,tree,quest,processNode,processChoice, ...(opts || {})});
 }
 
@@ -119,7 +122,7 @@ function createNpcFactory(defs) {
         n.map || 'world',
         x,
         y,
-        n.color || '#9ef7a0',
+        n.color,
         n.name || n.id,
         n.title || '',
         n.desc || '',

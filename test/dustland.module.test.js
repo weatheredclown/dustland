@@ -39,6 +39,7 @@ test('dustland module includes plot improvements', () => {
   assert.ok(sign);
   assert.ok(sign.tree.start.text.includes('Rust storms east'));
   assert.strictEqual(sign.symbol, '?');
+  assert.strictEqual(sign.color, '#225a20');
   const rumor = data.npcs.some(n => Object.values(n.tree || {}).some(node => node.text && node.text.includes('Radio crackles from the north; idol whispers from the south')));
   assert.ok(rumor);
 });
