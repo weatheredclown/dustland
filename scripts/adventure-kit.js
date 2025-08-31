@@ -197,6 +197,7 @@ let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, edit
 let treeData = {};
 let selectedObj = null;
 const mapSelect = document.getElementById('mapSelect');
+let currentMap = 'world';
 function updateMapSelect(selected = 'world') {
   if (!mapSelect) return;
   const maps = ['world', ...moduleData.interiors.map(I => I.id)];
@@ -204,16 +205,20 @@ function updateMapSelect(selected = 'world') {
   mapSelect.value = selected;
 }
 function showMap(map) {
+  currentMap = map;
   if (mapSelect && mapSelect.value !== map) mapSelect.value = map;
   if (map === 'world') {
-    // world map is always visible
+    editInteriorIdx = -1;
   } else {
     const idx = moduleData.interiors.findIndex(I => I.id === map);
     if (idx >= 0) {
-      if (typeof showEditorTab === 'function') showEditorTab('interiors');
       editInterior(idx);
+      if (typeof showEditorTab === 'function') showEditorTab('interiors');
     }
   }
+  worldZoom = map === 'world' ? worldZoom : 1;
+  panX = map === 'world' ? panX : 0;
+  panY = map === 'world' ? panY : 0;
   drawWorld();
   if (map !== 'world') drawInterior();
 }
@@ -277,24 +282,36 @@ function stampWorld(x, y, stamp) {
 window.stampWorld = stampWorld;
 
 function drawWorld() {
-  const W = WORLD_W, H = WORLD_H;
-  const sx = baseTileW * worldZoom;
-  const sy = baseTileH * worldZoom;
+  const map = currentMap;
+  let W = WORLD_W, H = WORLD_H;
+  let sx = baseTileW * worldZoom, sy = baseTileH * worldZoom;
   const pulse = 2 + Math.sin(Date.now() / 300) * 2;
+  let grid = world;
+  if (map !== 'world') {
+    const I = moduleData.interiors.find(i => i.id === map);
+    if (!I) return;
+    W = I.w; H = I.h; grid = I.grid;
+    sx = canvas.width / W * worldZoom;
+    sy = canvas.height / H * worldZoom;
+  }
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   for (let y = 0; y < H; y++) {
-    const py = (y - panY) * sy;
+    const py = (y - (map === 'world' ? panY : 0)) * sy;
     if (py + sy < 0 || py >= canvas.height) continue;
     for (let x = 0; x < W; x++) {
-      const px = (x - panX) * sx;
+      const px = (x - (map === 'world' ? panX : 0)) * sx;
       if (px + sx < 0 || px >= canvas.width) continue;
-      const t = world[y][x];
-      ctx.fillStyle = akColors[t] || '#000';
+      const t = grid[y][x];
+      if (map === 'world') {
+        ctx.fillStyle = akColors[t] || '#000';
+      } else {
+        ctx.fillStyle = t === TILE.WALL ? '#444' : t === TILE.DOOR ? '#8bd98d' : '#222';
+      }
       ctx.fillRect(px, py, sx, sy);
     }
   }
-  if (hoverTile) {
+  if (map === 'world' && hoverTile) {
     if (worldStamp) {
       ctx.globalAlpha = 0.5;
       for (let yy = 0; yy < worldStamp.length; yy++) {
@@ -312,11 +329,12 @@ function drawWorld() {
       ctx.fillRect((hoverTile.x - panX) * sx, (hoverTile.y - panY) * sy, sx, sy);
     }
   }
-  // Draw NPC markers
-  moduleData.npcs.filter(n => n.map === 'world').forEach(n => {
+  const pxoff = map === 'world' ? panX : 0;
+  const pyoff = map === 'world' ? panY : 0;
+  moduleData.npcs.filter(n => n.map === map).forEach(n => {
     const hovering = hoverTarget && hoverTarget.type === 'npc' && hoverTarget.obj === n;
-    const px = (n.x - panX) * sx;
-    const py = (n.y - panY) * sy;
+    const px = (n.x - pxoff) * sx;
+    const py = (n.y - pyoff) * sy;
     if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height) return;
     ctx.save();
     ctx.fillStyle = hovering ? '#fff' : (n.color || '#fff');
@@ -331,7 +349,7 @@ function drawWorld() {
     }
     ctx.restore();
   });
-  if (selectedObj && selectedObj.type === 'npc' && selectedObj.obj.loop) {
+  if (map === 'world' && selectedObj && selectedObj.type === 'npc' && selectedObj.obj.loop) {
     const pts = selectedObj.obj.loop;
     ctx.save();
     ctx.strokeStyle = '#0f0';
@@ -351,11 +369,10 @@ function drawWorld() {
     ctx.restore();
     positionLoopControls();
   }
-  // Draw Item markers
-  moduleData.items.filter(it => it.map === 'world').forEach(it => {
+  moduleData.items.filter(it => it.map === map).forEach(it => {
     const hovering = hoverTarget && hoverTarget.type === 'item' && hoverTarget.obj === it;
-    const px = (it.x - panX) * sx;
-    const py = (it.y - panY) * sy;
+    const px = (it.x - pxoff) * sx;
+    const py = (it.y - pyoff) * sy;
     if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height) return;
     ctx.save();
     ctx.strokeStyle = hovering ? '#fff' : '#ff0';
@@ -367,14 +384,13 @@ function drawWorld() {
     ctx.strokeRect(px + 1, py + 1, sx - 2, sy - 2);
     ctx.restore();
   });
-  // Draw Portal markers
-  moduleData.portals.filter(p => p.map === 'world').forEach(p => {
+  moduleData.portals.filter(p => p.map === map).forEach(p => {
     const hovering = hoverTarget && hoverTarget.type === 'portal' && hoverTarget.obj === p;
-    const px = (p.x - panX) * sx;
-    const py = (p.y - panY) * sy;
+    const px = (p.x - pxoff) * sx;
+    const py = (p.y - pyoff) * sy;
     if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height) return;
     ctx.save();
-    ctx.strokeStyle = hovering ? '#f0f' : '#f0f';
+    ctx.strokeStyle = '#f0f';
     if (hovering) {
       ctx.shadowColor = '#f0f';
       ctx.shadowBlur = 8;
@@ -383,14 +399,13 @@ function drawWorld() {
     ctx.strokeRect(px + 2, py + 2, sx - 4, sy - 4);
     ctx.restore();
   });
-  // Draw Tile Event markers
-  moduleData.events.filter(ev => ev.map === 'world').forEach(ev => {
+  moduleData.events.filter(ev => ev.map === map).forEach(ev => {
     const hovering = hoverTarget && hoverTarget.type === 'event' && hoverTarget.obj === ev;
-    const px = (ev.x - panX) * sx;
-    const py = (ev.y - panY) * sy;
+    const px = (ev.x - pxoff) * sx;
+    const py = (ev.y - pyoff) * sy;
     if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height) return;
     ctx.save();
-    ctx.fillStyle = hovering ? '#0ff' : '#0ff';
+    ctx.fillStyle = '#0ff';
     if (hovering) {
       ctx.shadowColor = '#0ff';
       ctx.shadowBlur = 8;
@@ -398,8 +413,7 @@ function drawWorld() {
     ctx.fillRect(px + sx / 4, py + sy / 4, sx / 2, sy / 2);
     ctx.restore();
   });
-  // Highlight hovered building
-  if (hoverTarget && hoverTarget.type === 'bldg') {
+  if (map === 'world' && hoverTarget && hoverTarget.type === 'bldg') {
     const b = hoverTarget.obj;
     ctx.save();
     ctx.strokeStyle = '#fff';
@@ -409,45 +423,47 @@ function drawWorld() {
     ctx.strokeRect((b.x - panX) * sx, (b.y - panY) * sy, b.w * sx, b.h * sy);
     ctx.restore();
   }
-  if (moduleData.start && moduleData.start.map === 'world') {
+  if (map === 'world' && moduleData.start && moduleData.start.map === 'world') {
     ctx.save();
     ctx.strokeStyle = '#f00';
     ctx.lineWidth = pulse;
     ctx.strokeRect((moduleData.start.x - panX) * sx + 1, (moduleData.start.y - panY) * sy + 1, sx - 2, sy - 2);
     ctx.restore();
   }
-  if (selectedObj && selectedObj.obj) {
+  if (selectedObj && selectedObj.obj && selectedObj.obj.map === map) {
     const o = selectedObj.obj;
     ctx.save();
     ctx.lineWidth = pulse;
-    if (selectedObj.type === 'npc' && o.map === 'world') {
+    if (selectedObj.type === 'npc') {
       ctx.strokeStyle = o.color || '#fff';
-      ctx.strokeRect((o.x - panX) * sx + 1, (o.y - panY) * sy + 1, sx - 2, sy - 2);
-    } else if (selectedObj.type === 'item' && o.map === 'world') {
+      ctx.strokeRect((o.x - pxoff) * sx + 1, (o.y - pyoff) * sy + 1, sx - 2, sy - 2);
+    } else if (selectedObj.type === 'item') {
       ctx.strokeStyle = '#ff0';
-      ctx.strokeRect((o.x - panX) * sx + 1, (o.y - panY) * sy + 1, sx - 2, sy - 2);
-    } else if (selectedObj.type === 'bldg') {
+      ctx.strokeRect((o.x - pxoff) * sx + 1, (o.y - pyoff) * sy + 1, sx - 2, sy - 2);
+    } else if (selectedObj.type === 'bldg' && map === 'world') {
       ctx.strokeStyle = '#fff';
       ctx.strokeRect((o.x - panX) * sx, (o.y - panY) * sy, o.w * sx, o.h * sy);
-    } else if (selectedObj.type === 'event' && o.map === 'world') {
+    } else if (selectedObj.type === 'event') {
       ctx.strokeStyle = '#0ff';
-      ctx.strokeRect((o.x - panX) * sx + 1, (o.y - panY) * sy + 1, sx - 2, sy - 2);
-    } else if (selectedObj.type === 'portal' && o.map === 'world') {
+      ctx.strokeRect((o.x - pxoff) * sx + 1, (o.y - pyoff) * sy + 1, sx - 2, sy - 2);
+    } else if (selectedObj.type === 'portal') {
       ctx.strokeStyle = '#f0f';
-      ctx.strokeRect((o.x - panX) * sx + 2, (o.y - panY) * sy + 2, sx - 4, sy - 4);
+      ctx.strokeRect((o.x - pxoff) * sx + 2, (o.y - pyoff) * sy + 2, sx - 4, sy - 4);
     }
     ctx.restore();
   }
   if (placingType && placingPos) {
     ctx.save();
     ctx.globalAlpha = 0.5;
+    const px = (placingPos.x - pxoff) * sx;
+    const py = (placingPos.y - pyoff) * sy;
     if (placingType === 'npc') {
       ctx.fillStyle = '#fff';
-      ctx.fillRect((placingPos.x - panX) * sx, (placingPos.y - panY) * sy, sx, sy);
+      ctx.fillRect(px, py, sx, sy);
     } else if (placingType === 'item') {
       ctx.strokeStyle = '#ff0';
-      ctx.strokeRect((placingPos.x - panX) * sx + 1, (placingPos.y - panY) * sy + 1, sx - 2, sy - 2);
-    } else if (placingType === 'bldg') {
+      ctx.strokeRect(px + 1, py + 1, sx - 2, sy - 2);
+    } else if (placingType === 'bldg' && map === 'world') {
       const bw = bldgGrid[0]?.length || 0;
       const bh = bldgGrid.length || 0;
       for (let yy = 0; yy < bh; yy++) {
@@ -2769,10 +2785,20 @@ document.getElementById('genQuestDialog').onclick = generateQuestTree;
 // --- Map interactions ---
 function canvasPos(ev) {
   const rect = canvas.getBoundingClientRect();
-  const sx = baseTileW * worldZoom, sy = baseTileH * worldZoom;
-  const x = clamp(Math.floor((ev.clientX - rect.left) / sx + panX), 0, WORLD_W - 1);
-  const y = clamp(Math.floor((ev.clientY - rect.top) / sy + panY), 0, WORLD_H - 1);
-  return { x, y };
+  if (currentMap === 'world') {
+    const sx = baseTileW * worldZoom, sy = baseTileH * worldZoom;
+    const x = clamp(Math.floor((ev.clientX - rect.left) / sx + panX), 0, WORLD_W - 1);
+    const y = clamp(Math.floor((ev.clientY - rect.top) / sy + panY), 0, WORLD_H - 1);
+    return { x, y };
+  } else {
+    const I = moduleData.interiors.find(i => i.id === currentMap);
+    if (!I) return { x: 0, y: 0 };
+    const sx = canvas.width / I.w;
+    const sy = canvas.height / I.h;
+    const x = clamp(Math.floor((ev.clientX - rect.left) / sx), 0, I.w - 1);
+    const y = clamp(Math.floor((ev.clientY - rect.top) / sy), 0, I.h - 1);
+    return { x, y };
+  }
 }
 
 function updateCursor(x, y) {
@@ -2780,7 +2806,7 @@ function updateCursor(x, y) {
     canvas.style.cursor = 'grabbing';
     return;
   }
-  if (worldPaint != null || worldStamp) {
+  if (currentMap === 'world' && (worldPaint != null || worldStamp)) {
     canvas.style.cursor = 'crosshair';
     return;
   }
@@ -2788,7 +2814,7 @@ function updateCursor(x, y) {
     canvas.style.cursor = 'grabbing';
     return;
   }
-  if (settingStart || placingType) {
+  if (currentMap === 'world' && (settingStart || placingType)) {
     canvas.style.cursor = 'crosshair';
     return;
   }
@@ -2797,19 +2823,19 @@ function updateCursor(x, y) {
     if (ht) { x = ht.x; y = ht.y; }
   }
   if (x != null && y != null) {
-    const overNpc = moduleData.npcs.some(n => n.map === 'world' && n.x === x && n.y === y);
-    const overItem = moduleData.items.some(it => it.map === 'world' && it.x === x && it.y === y);
-    const overBldg = moduleData.buildings.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
-    const overStart = moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y;
-    const overEvent = moduleData.events.some(ev => ev.map === 'world' && ev.x === x && ev.y === y);
-    const overPortal = moduleData.portals.some(p => p.map === 'world' && p.x === x && p.y === y);
+    const overNpc = moduleData.npcs.some(n => n.map === currentMap && n.x === x && n.y === y);
+    const overItem = moduleData.items.some(it => it.map === currentMap && it.x === x && it.y === y);
+    const overBldg = currentMap === 'world' && moduleData.buildings.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+    const overStart = currentMap === 'world' && moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y;
+    const overEvent = moduleData.events.some(ev => ev.map === currentMap && ev.x === x && ev.y === y);
+    const overPortal = moduleData.portals.some(p => p.map === currentMap && p.x === x && p.y === y);
     canvas.style.cursor = (overNpc || overItem || overBldg || overStart || overEvent || overPortal) ? 'grab' : 'pointer';
   } else {
     canvas.style.cursor = 'pointer';
   }
 }
 canvas.addEventListener('mousedown', ev => {
-  if (ev.button === 2) {
+  if (ev.button === 2 && currentMap === 'world') {
     showLoopControls(null);
     panning = true;
     panMouseX = ev.clientX;
@@ -2822,19 +2848,19 @@ canvas.addEventListener('mousedown', ev => {
   showLoopControls(null);
   if (ev.button !== 0) return;
   const { x, y } = canvasPos(ev);
-  const overNpc = moduleData.npcs.some(n => n.map === 'world' && n.x === x && n.y === y);
-  const overItem = moduleData.items.some(it => it.map === 'world' && it.x === x && it.y === y);
-  const overBldg = moduleData.buildings.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
-  const overStart = moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y;
-  const overEvent = moduleData.events.some(ev2 => ev2.map === 'world' && ev2.x === x && ev2.y === y);
-  const overPortal = moduleData.portals.some(p => p.map === 'world' && p.x === x && p.y === y);
-  if (worldStamp && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal)) {
+  const overNpc = moduleData.npcs.some(n => n.map === currentMap && n.x === x && n.y === y);
+  const overItem = moduleData.items.some(it => it.map === currentMap && it.x === x && it.y === y);
+  const overBldg = currentMap === 'world' && moduleData.buildings.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+  const overStart = currentMap === 'world' && moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y;
+  const overEvent = moduleData.events.some(ev2 => ev2.map === currentMap && ev2.x === x && ev2.y === y);
+  const overPortal = moduleData.portals.some(p => p.map === currentMap && p.x === x && p.y === y);
+  if (currentMap === 'world' && worldStamp && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal)) {
     stampWorld(x, y, worldStamp);
     drawWorld();
     updateCursor(x, y);
     return;
   }
-  if (worldPaint != null && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal)) {
+  if (currentMap === 'world' && worldPaint != null && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal)) {
     worldPainting = true;
     hoverTile = { x, y };
     addTerrainFeature(x, y, worldPaint);
@@ -2864,7 +2890,7 @@ canvas.addEventListener('mousedown', ev => {
       document.getElementById('itemY').value = y;
       if (placingCb) placingCb();
       document.getElementById('cancelItem').style.display = 'none';
-    } else if (placingType === 'bldg') {
+    } else if (placingType === 'bldg' && currentMap === 'world') {
       document.getElementById('bldgX').value = x;
       document.getElementById('bldgY').value = y;
       if (placingCb) placingCb();
@@ -2877,14 +2903,14 @@ canvas.addEventListener('mousedown', ev => {
     updateCursor(x, y);
     return;
   }
-  if (settingStart) {
+  if (settingStart && currentMap === 'world') {
     moduleData.start = { map: 'world', x, y };
     settingStart = false;
     drawWorld();
     updateCursor(x, y);
     return;
   }
-  if (moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y) {
+  if (currentMap === 'world' && moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y) {
     dragTarget = moduleData.start;
     dragTarget._type = 'start';
     updateCursor(x, y);
@@ -2898,19 +2924,19 @@ canvas.addEventListener('mousedown', ev => {
       return;
     }
   }
-  dragTarget = moduleData.npcs.find(n => n.map === 'world' && n.x === x && n.y === y);
+  dragTarget = moduleData.npcs.find(n => n.map === currentMap && n.x === x && n.y === y);
   if (dragTarget) {
     dragTarget._type = 'npc';
     updateCursor(x, y);
     return;
   }
-  dragTarget = moduleData.items.find(it => it.map === 'world' && it.x === x && it.y === y);
+  dragTarget = moduleData.items.find(it => it.map === currentMap && it.x === x && it.y === y);
   if (dragTarget) {
     dragTarget._type = 'item';
     updateCursor(x, y);
     return;
   }
-  dragTarget = moduleData.buildings.find(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+  dragTarget = currentMap === 'world' ? moduleData.buildings.find(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h) : null;
   if (dragTarget) {
     dragTarget._type = 'bldg';
     document.getElementById('bldgX').value = dragTarget.x;
@@ -2949,8 +2975,8 @@ canvas.addEventListener('mousemove', ev => {
   }
   const { x, y } = canvasPos(ev);
   hoverTile = { x, y };
-  if (worldStamp) drawWorld();
-  if (worldPainting && worldPaint != null) {
+  if (currentMap === 'world' && worldStamp) drawWorld();
+  if (currentMap === 'world' && worldPainting && worldPaint != null) {
     addTerrainFeature(x, y, worldPaint);
     didPaint = true;
     drawWorld();
@@ -3007,16 +3033,16 @@ canvas.addEventListener('mousemove', ev => {
 
   // Not dragging: update hover target highlighting
   let ht = null;
-  let obj = moduleData.npcs.find(n => n.map === 'world' && n.x === x && n.y === y);
+  let obj = moduleData.npcs.find(n => n.map === currentMap && n.x === x && n.y === y);
   if (obj) {
     ht = { obj, type: 'npc' };
-  } else if (obj = moduleData.items.find(it => it.map === 'world' && it.x === x && it.y === y)) {
+  } else if (obj = moduleData.items.find(it => it.map === currentMap && it.x === x && it.y === y)) {
     ht = { obj, type: 'item' };
-  } else if (obj = moduleData.buildings.find(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h)) {
+  } else if (obj = (currentMap === 'world' ? moduleData.buildings.find(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h) : null)) {
     ht = { obj, type: 'bldg' };
-  } else if (obj = moduleData.events.find(ev => ev.map === 'world' && ev.x === x && ev.y === y)) {
+  } else if (obj = moduleData.events.find(ev => ev.map === currentMap && ev.x === x && ev.y === y)) {
     ht = { obj, type: 'event' };
-  } else if (obj = moduleData.portals.find(p => p.map === 'world' && p.x === x && p.y === y)) {
+  } else if (obj = moduleData.portals.find(p => p.map === currentMap && p.x === x && p.y === y)) {
     ht = { obj, type: 'portal' };
   }
 
@@ -3075,31 +3101,31 @@ canvas.addEventListener('click', ev => {
     if (li >= 0) { showLoopControls({ idx: li, x: pts[li].x, y: pts[li].y }); return; }
   }
   showLoopControls(null);
-  let idx = moduleData.npcs.findIndex(n => n.map === 'world' && n.x === x && n.y === y);
+  let idx = moduleData.npcs.findIndex(n => n.map === currentMap && n.x === x && n.y === y);
   if (idx >= 0) {
     if (window.showEditorTab) window.showEditorTab('npc');
     editNPC(idx);
     return;
   }
-  idx = moduleData.items.findIndex(it => it.map === 'world' && it.x === x && it.y === y);
+  idx = moduleData.items.findIndex(it => it.map === currentMap && it.x === x && it.y === y);
   if (idx >= 0) {
     if (window.showEditorTab) window.showEditorTab('items');
     editItem(idx);
     return;
   }
-  idx = moduleData.buildings.findIndex(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+  idx = currentMap === 'world' ? moduleData.buildings.findIndex(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h) : -1;
   if (idx >= 0) {
     if (window.showEditorTab) window.showEditorTab('buildings');
     editBldg(idx);
     return;
   }
-  idx = moduleData.events.findIndex(ev => ev.map === 'world' && ev.x === x && ev.y === y);
+  idx = moduleData.events.findIndex(ev => ev.map === currentMap && ev.x === x && ev.y === y);
   if (idx >= 0) {
     if (window.showEditorTab) window.showEditorTab('events');
     editEvent(idx);
     return;
   }
-  idx = moduleData.portals.findIndex(p => p.map === 'world' && p.x === x && p.y === y);
+  idx = moduleData.portals.findIndex(p => p.map === currentMap && p.x === x && p.y === y);
   if (idx >= 0) {
     if (window.showEditorTab) window.showEditorTab('portals');
     editPortal(idx);
@@ -3108,6 +3134,7 @@ canvas.addEventListener('click', ev => {
 
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 canvas.addEventListener('wheel', ev => {
+  if (currentMap !== 'world') return;
   ev.preventDefault();
   const rect = canvas.getBoundingClientRect();
   const mx = ev.clientX - rect.left;
