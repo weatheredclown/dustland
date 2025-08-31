@@ -8,7 +8,10 @@ class NPC {
         closeDialog();
         Dustland.actions.startCombat({ ...this.combat, npc: this, name: this.name });
       } else if (this.shop && node === 'sell') {
-        const items = player.inv.map((it, idx) => ({label: `Sell ${it.name} (${Math.max(1, it.value || 0)} ${CURRENCY})`, to: 'sell', sellIndex: idx}));
+        const items = player.inv.map((it, idx) => {
+          const price = typeof it.scrap === 'number' ? it.scrap : Math.max(1, it.value || 0);
+          return { label: `Sell ${it.name} (${price} ${CURRENCY})`, to: 'sell', sellIndex: idx };
+        });
         this.tree.sell.text = items.length ? 'What are you selling?' : 'Nothing to sell.';
         items.push({label: '(Back)', to: 'start'});
         this.tree.sell.choices = items;
@@ -21,7 +24,7 @@ class NPC {
     const capChoice = (c) => {
       if (this.shop && typeof c.sellIndex === 'number') {
         const it = player.inv.splice(c.sellIndex, 1)[0];
-        const val = Math.max(1, it.value || 0);
+        const val = typeof it.scrap === 'number' ? it.scrap : Math.max(1, it.value || 0);
         player.scrap += val;
         renderInv?.(); updateHUD?.();
         textEl.textContent = `Sold ${it.name} for ${val} ${CURRENCY}.`;

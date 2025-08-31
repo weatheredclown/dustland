@@ -179,6 +179,7 @@ function normalizeItem(it){
     cursedKnown: !!it.cursedKnown,
     rarity: it.rarity || 'common',
     value: val,
+    scrap: typeof it.scrap === 'number' ? it.scrap : undefined,
     desc: it.desc || '',
   };
 }

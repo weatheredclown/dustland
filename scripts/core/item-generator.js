@@ -48,6 +48,12 @@ const ItemGen = {
     armored: { min: 7, max: 10 },
     vaulted: { min: 10, max: 15 }
   },
+  scrapValues: {
+    rusted: 5,
+    sealed: 20,
+    armored: 100,
+    vaulted: 500
+  },
   pick(list, rng){
     return list[Math.floor(rng() * list.length)];
   },
@@ -66,7 +72,7 @@ const ItemGen = {
       name: `${adj} ${noun}`,
       rank,
       stats: { power },
-      scrap: Math.round(power / 2)
+      scrap: this.scrapValues[rank] || this.scrapValues.rusted
     };
     item.tags = [noun.toLowerCase()];
     if(type === 'oddity'){

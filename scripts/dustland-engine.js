@@ -2,7 +2,7 @@
 // ===== Rendering & Utilities =====
 
 // Logging
-const ENGINE_VERSION = '0.7.44';
+const ENGINE_VERSION = '0.7.45';
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const apEl = document.getElementById('ap');
@@ -823,7 +823,7 @@ function openShop(npc) {
     player.inv.forEach((item, idx) => {
       const row = document.createElement('div');
       row.className = 'slot';
-      const price = Math.floor(item.value / markup);
+      const price = typeof item.scrap === 'number' ? item.scrap : Math.floor(item.value / markup);
       row.innerHTML = `<span>${item.name} - ${price} ${CURRENCY}</span><button class="btn">Sell</button>`;
       row.querySelector('button').onclick = () => {
         player.scrap += price;
