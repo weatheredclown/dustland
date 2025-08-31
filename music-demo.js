@@ -318,6 +318,9 @@
   }
 
   function playLeadNote(midi, t, dur, vel) {
+    if (typeof clampMidiToScale === 'function') {
+      midi = clampMidiToScale(midi, music.key, music.scale);
+    }
     if (tone.enabled && tone.ready && tone.synths) {
       var note = (window.mm && window.mm.pitchToNote ? window.mm.pitchToNote(midi) : undefined);
       var when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - ac.currentTime) : undefined;
