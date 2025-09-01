@@ -3,7 +3,18 @@ function seedWorldContent() {}
 const DATA = `{
   "seed": "mara-puzzle",
   "name": "mara-puzzle",
-  "items": [],
+  "items": [
+    {
+      "map": "dust_storm",
+      "x": 9,
+      "y": 9,
+      "id": "maze_sword",
+      "name": "Maze Sword",
+      "type": "weapon",
+      "slot": "weapon",
+      "mods": { "ATK": 10 }
+    }
+  ],
   "quests": [],
   "npcs": [],
   "interiors": [
