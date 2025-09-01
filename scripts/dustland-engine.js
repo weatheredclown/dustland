@@ -906,7 +906,10 @@ if (document.getElementById('saveBtn')) {
     const updateNano=()=>{
       nanoBtn.textContent = `Nano Dialog: ${window.NanoDialog?.enabled ? 'On' : 'Off'}`;
       const persist=document.getElementById('persistLLM');
-      if(persist) persist.style.display = window.NanoDialog?.enabled ? '' : 'none';
+      if(persist){
+        const ready=window.NanoDialog?.isReady?.();
+        persist.style.display = window.NanoDialog?.enabled && ready ? '' : 'none';
+      }
     };
     nanoBtn.onclick=()=>{
       if(window.NanoDialog){
@@ -917,6 +920,7 @@ if (document.getElementById('saveBtn')) {
       updateNano();
     };
     updateNano();
+    if(window.NanoDialog?.init) NanoDialog.init().then(updateNano);
   }
   const audioBtn=document.getElementById('audioToggle');
   if(audioBtn) audioBtn.onclick=()=>toggleAudio();
@@ -1015,7 +1019,6 @@ disp.addEventListener('touchstart',e=>{
 // ===== Boot =====
 if (typeof bootMap === 'function') bootMap(); // ensure a grid exists before first frame
 requestAnimationFrame(draw);
-if (window.NanoDialog) NanoDialog.init();
 
 { // skip normal boot flow in ACK player mode
   const params = new URLSearchParams(location.search);
