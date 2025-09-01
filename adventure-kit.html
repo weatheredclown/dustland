@@ -333,6 +333,7 @@
         <button class="tab2" type="button" data-tab="portals" role="tab" aria-selected="false">Portals</button>
         <button class="tab2" type="button" data-tab="quests" role="tab" aria-selected="false">Quests</button>
         <button class="tab2" type="button" data-tab="events" role="tab" aria-selected="false">Events</button>
+        <button class="tab2" type="button" data-tab="zones" role="tab" aria-selected="false">Zones</button>
         <button class="tab2" type="button" data-tab="encounters" role="tab" aria-selected="false">Encounters</button>
         <button class="tab2" type="button" data-tab="templates" role="tab" aria-selected="false">Templates</button>
         <button class="tab2" type="button" data-tab="wizards" role="tab" aria-selected="false">Wizards</button>
@@ -538,8 +539,27 @@
             <label>Delta<input id="eventDelta" type="number" /></label>
             <label>Duration<input id="eventDuration" type="number" min="0" /></label>
           </div>
-          <button class="btn" id="addEvent">Add Event</button>
-          <button class="btn" id="delEvent" style="display:none">Delete Event</button>
+        <button class="btn" id="addEvent">Add Event</button>
+        <button class="btn" id="delEvent" style="display:none">Delete Event</button>
+      </div>
+    </fieldset>
+      <fieldset class="card" id="zoneCard" data-pane="zones" style="display:none">
+        <legend>Zones</legend>
+        <div class="list" id="zoneList"></div>
+        <button class="btn" type="button" id="newZone">+ Zone</button>
+        <div id="zoneEditor" style="display:none">
+          <label>Map<input id="zoneMap" value="world" /></label>
+          <label>X<input id="zoneX" type="number" min="0" /></label>
+          <label>Y<input id="zoneY" type="number" min="0" /></label>
+          <label>W<input id="zoneW" type="number" min="1" value="1" /></label>
+          <label>H<input id="zoneH" type="number" min="1" value="1" /></label>
+          <label>HP/Step<input id="zoneHp" type="number" /></label>
+          <label>Message<input id="zoneMsg" /></label>
+          <label>Negate<input id="zoneNegate" /></label>
+          <label>Heal Mult<input id="zoneHealMult" type="number" step="0.1" min="0" /></label>
+          <label><input type="checkbox" id="zoneNoEnc" />No Encounters</label>
+          <button class="btn" id="addZone">Add Zone</button>
+          <button class="btn" id="delZone" style="display:none">Delete Zone</button>
         </div>
       </fieldset>
       <fieldset class="card" id="encounterCard" data-pane="encounters" style="display:none">

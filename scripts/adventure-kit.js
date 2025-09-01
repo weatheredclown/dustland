@@ -202,10 +202,10 @@ loopMinus.addEventListener('click', () => {
   showLoopControls(null);
 });
 
-const moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], encounters: [], templates: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined };
+const moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined };
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod'];
-let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
+let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editZoneIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
 let treeData = {};
 let selectedObj = null;
 const mapSelect = document.getElementById('mapSelect');
@@ -697,6 +697,7 @@ function regenWorld() {
   moduleData.interiors = [];
   moduleData.events = [];
   moduleData.portals = [];
+  moduleData.zones = [];
   moduleData.templates = [];
   for (const id in interiors) {
     if (id === 'creator') continue;
@@ -706,6 +707,7 @@ function regenWorld() {
   renderBldgList();
   renderEventList();
   renderPortalList();
+  renderZoneList();
   renderEncounterList();
   renderTemplateList();
   drawWorld();
@@ -725,6 +727,7 @@ function clearWorld() {
     moduleData.interiors = [];
     moduleData.portals = [];
     moduleData.events = [];
+    moduleData.zones = [];
     moduleData.encounters = [];
     moduleData.templates = [];
     buildings.length = 0;
@@ -738,6 +741,7 @@ function clearWorld() {
     renderInteriorList();
     renderEventList();
     renderPortalList();
+    renderZoneList();
     renderEncounterList();
     drawWorld();
   });
@@ -2143,6 +2147,101 @@ function deleteEvent() {
   });
 }
 
+// --- Zones ---
+function showZoneEditor(show) {
+  document.getElementById('zoneEditor').style.display = show ? 'block' : 'none';
+}
+
+function startNewZone() {
+  editZoneIdx = -1;
+  document.getElementById('zoneMap').value = 'world';
+  document.getElementById('zoneX').value = 0;
+  document.getElementById('zoneY').value = 0;
+  document.getElementById('zoneW').value = 1;
+  document.getElementById('zoneH').value = 1;
+  document.getElementById('zoneHp').value = 0;
+  document.getElementById('zoneMsg').value = '';
+  document.getElementById('zoneNegate').value = '';
+  document.getElementById('zoneHealMult').value = '';
+  document.getElementById('zoneNoEnc').checked = false;
+  document.getElementById('addZone').textContent = 'Add Zone';
+  document.getElementById('delZone').style.display = 'none';
+  showZoneEditor(true);
+}
+
+function collectZone() {
+  const map = document.getElementById('zoneMap').value.trim() || 'world';
+  const x = parseInt(document.getElementById('zoneX').value, 10) || 0;
+  const y = parseInt(document.getElementById('zoneY').value, 10) || 0;
+  const w = parseInt(document.getElementById('zoneW').value, 10) || 1;
+  const h = parseInt(document.getElementById('zoneH').value, 10) || 1;
+  const hp = parseInt(document.getElementById('zoneHp').value, 10);
+  const msg = document.getElementById('zoneMsg').value.trim();
+  const negate = document.getElementById('zoneNegate').value.trim();
+  const healMult = parseFloat(document.getElementById('zoneHealMult').value);
+  const noEnc = document.getElementById('zoneNoEnc').checked;
+  const entry = { map, x, y, w, h };
+  if (hp || msg) {
+    entry.perStep = {};
+    if (hp) entry.perStep.hp = hp;
+    if (msg) entry.perStep.msg = msg;
+  }
+  if (negate) entry.negate = negate;
+  if (!isNaN(healMult)) entry.healMult = healMult;
+  if (noEnc) entry.noEncounters = true;
+  return entry;
+}
+
+function addZone() {
+  const entry = collectZone();
+  if (!moduleData._origKeys) moduleData._origKeys = Object.keys(moduleData);
+  if (!moduleData._origKeys.includes('zones')) moduleData._origKeys.push('zones');
+  if (editZoneIdx >= 0) {
+    moduleData.zones[editZoneIdx] = entry;
+  } else {
+    moduleData.zones.push(entry);
+  }
+  editZoneIdx = -1;
+  document.getElementById('addZone').textContent = 'Add Zone';
+  document.getElementById('delZone').style.display = 'none';
+  renderZoneList();
+  showZoneEditor(false);
+}
+
+function editZone(i) {
+  const z = moduleData.zones[i];
+  editZoneIdx = i;
+  document.getElementById('zoneMap').value = z.map;
+  document.getElementById('zoneX').value = z.x;
+  document.getElementById('zoneY').value = z.y;
+  document.getElementById('zoneW').value = z.w;
+  document.getElementById('zoneH').value = z.h;
+  document.getElementById('zoneHp').value = z.perStep?.hp ?? '';
+  document.getElementById('zoneMsg').value = z.perStep?.msg || '';
+  document.getElementById('zoneNegate').value = z.negate || '';
+  document.getElementById('zoneHealMult').value = z.healMult ?? '';
+  document.getElementById('zoneNoEnc').checked = !!z.noEncounters;
+  document.getElementById('addZone').textContent = 'Update Zone';
+  document.getElementById('delZone').style.display = 'block';
+  showZoneEditor(true);
+}
+
+function renderZoneList() {
+  const list = document.getElementById('zoneList');
+  list.innerHTML = moduleData.zones.map((z, i) => `<div data-idx="${i}">${z.map} @(${z.x},${z.y},${z.w}x${z.h})</div>`).join('');
+  Array.from(list.children).forEach(div => div.onclick = () => editZone(parseInt(div.dataset.idx, 10)));
+}
+
+function deleteZone() {
+  if (editZoneIdx < 0) return;
+  moduleData.zones.splice(editZoneIdx, 1);
+  editZoneIdx = -1;
+  document.getElementById('addZone').textContent = 'Add Zone';
+  document.getElementById('delZone').style.display = 'none';
+  renderZoneList();
+  showZoneEditor(false);
+}
+
 // --- Portals ---
 function showPortalEditor(show) {
   document.getElementById('portalEditor').style.display = show ? 'block' : 'none';
@@ -2692,6 +2791,7 @@ function applyLoadedModule(data) {
   renderBldgList();
   renderInteriorList();
   renderPortalList();
+  renderZoneList();
   renderQuestList();
   renderEventList();
   renderEncounterList();
@@ -2804,6 +2904,9 @@ document.getElementById('cancelBldg').onclick = cancelBldg;
 document.getElementById('newEvent').onclick = startNewEvent;
 document.getElementById('addPortal').onclick = addPortal;
 document.getElementById('newPortal').onclick = startNewPortal;
+document.getElementById('newZone').onclick = startNewZone;
+document.getElementById('addZone').onclick = addZone;
+document.getElementById('delZone').onclick = deleteZone;
 document.getElementById('delNPC').onclick = deleteNPC;
 document.getElementById('closeNPC').onclick = closeNPCEditor;
 document.getElementById('newEncounter').onclick = startNewEncounter;
