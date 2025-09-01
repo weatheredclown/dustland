@@ -15,6 +15,7 @@ const hpGhost = document.getElementById('hpGhost');
 const adrBar = document.getElementById('adrBar');
 const adrFill = document.getElementById('adrFill');
 const statusIcons = document.getElementById('statusIcons');
+const weatherBanner = document.getElementById('weatherBanner');
 
 function log(msg){
   if (logEl) {
@@ -214,6 +215,17 @@ function playSfx(id){
   if(globalThis.perfStats) globalThis.perfStats.sfx += ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - t0;
 }
 EventBus.on('sfx', playSfx);
+EventBus.on('weather:change', w => {
+  if(!weatherBanner) return;
+  const txt = (w.icon ? w.icon + ' ' : '') + (w.desc || w.state);
+  weatherBanner.textContent = txt;
+  weatherBanner.hidden = false;
+});
+if(weatherBanner && globalThis.Dustland?.weather){
+  const w = globalThis.Dustland.weather.getWeather();
+  weatherBanner.textContent = (w.icon ? w.icon + ' ' : '') + (w.desc || w.state);
+  weatherBanner.hidden = false;
+}
 const fxOverlay = document.createElement('div');
 fxOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;opacity:0;transition:opacity .2s;z-index:200;';
 document.body.appendChild(fxOverlay);
