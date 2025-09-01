@@ -68,7 +68,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 
 #### **Phase 0: Writing Pass**
 - [x] Draft a scene-by-scene outline with placeholder dialog for the caravan's opening leg.
-- [ ] Flesh out Mara, Jax, and Nyx arcs with at least two key conversations each.
+- [x] Flesh out Mara, Jax, and Nyx arcs with at least two key conversations each.
 - [x] Sketch early Silencer encounters with sample rival dialogue.
 
 ### Opening Leg Outline
