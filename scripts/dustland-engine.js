@@ -59,6 +59,14 @@ globalThis.toggleAudio = toggleAudio;
 const isMobileUA = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 let mobileControlsEnabled = isMobileUA;
 let mobileWrap = null, mobilePad = null, mobileAB = null, mobileButtons = {};
+let panelToggle = null, panel = null;
+function closePanel(){
+  if(panel && panelToggle){
+    panel.classList.remove('show');
+    panelToggle.textContent='☰';
+    globalThis.localStorage?.setItem('panel_open','0');
+  }
+}
 function setMobileControls(on){
   mobileControlsEnabled = on;
   const btn=document.getElementById('mobileToggle');
@@ -135,7 +143,11 @@ function setMobileControls(on){
         } else if(shop?.classList?.contains('shown')){
           shop.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape' }));
         } else {
-          window.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape' }));
+          if(panel?.classList?.contains('show')){
+            closePanel();
+          } else {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape' }));
+          }
         }
       }));
       mobileWrap.appendChild(mobileAB);
@@ -915,8 +927,8 @@ if (document.getElementById('saveBtn')) {
     const closeBtn=document.getElementById('settingsClose');
     if(closeBtn) closeBtn.onclick=()=>{ settings.style.display='none'; };
   }
-  const panelToggle=document.getElementById('panelToggle');
-  const panel=document.querySelector('.panel');
+  panelToggle=document.getElementById('panelToggle');
+  panel=document.querySelector('.panel');
   if(panelToggle && panel){
     const open=globalThis.localStorage?.getItem('panel_open')==='1';
     if(open){
@@ -944,6 +956,11 @@ if (document.getElementById('saveBtn')) {
     const shop = document.getElementById('shopOverlay');
     if (shop?.classList?.contains('shown')) {
       if (e.key === 'Escape') document.getElementById('closeShopBtn')?.click();
+      return;
+    }
+    if((e.key==='b' || e.key==='B') && mobileControlsEnabled && panel?.classList?.contains('show')){
+      closePanel();
+      e.preventDefault();
       return;
     }
     switch(e.key){
