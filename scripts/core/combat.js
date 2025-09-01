@@ -211,8 +211,13 @@ function closeCombat(result = 'flee'){
   const duration = Date.now() - combatState.startTime;
   recordCombatEvent({ type: 'system', action: 'end', result, duration });
   globalThis.EventBus?.emit?.('combat:ended', { result });
-  globalThis.EventBus?.emit?.('combat:telemetry', { duration, log: combatState.log.slice() });
-  console.debug?.('combat telemetry', { duration, log: combatState.log });
+  const tele = { duration, log: combatState.log.slice() };
+  globalThis.EventBus?.emit?.('combat:telemetry', tele);
+  if(globalThis.Dustland){
+    const arr = globalThis.Dustland.combatTelemetry || (globalThis.Dustland.combatTelemetry = []);
+    arr.push(tele);
+  }
+  console.debug?.('combat telemetry', tele);
   combatState.onComplete?.({ result });
   combatState.onComplete = null;
 
