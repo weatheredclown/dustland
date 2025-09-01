@@ -11,6 +11,18 @@ let moveDelay = 0;
 const zones = (globalThis.Dustland && globalThis.Dustland.zoneEffects) || [];
 let encounterCooldown = 0;
 
+function zoneAttrs(map,x,y){
+  let healMult = 1;
+  let noEncounters = false;
+  for(const z of zones){
+    if((z.map||'world')!==map) continue;
+    if(x<z.x || y<z.y || x>=z.x+(z.w||0) || y>=z.y+(z.h||0)) continue;
+    if(z.noEncounters) noEncounters = true;
+    if(typeof z.healMult === 'number') healMult *= z.healMult;
+  }
+  return { healMult, noEncounters };
+}
+
 function hexToHsv(hex) {
     // 1. Convert Hex to RGB
     let r = 0, g = 0, b = 0;
@@ -155,6 +167,10 @@ function onEnter(map,x,y,ctx){
   }
 }
 
+function wait(){
+  return move(0,0);
+}
+
 function applyZones(map,x,y){
   for(const z of zones){
     if((z.map||'world')!==map) continue;
@@ -203,10 +219,18 @@ function move(dx,dy){
     return new Promise(resolve => {
       setTimeout(() => {
         Effects.tick({buffs});
+        const mods = zoneAttrs(state.map, nx, ny);
         if(actor){
-          actor.hp = Math.min(actor.hp + 1, actor.maxHp);
-          player.hp = actor.hp;
-          renderParty?.();
+          if(mods.healMult>1){
+            const healAmt = mods.healMult;
+            (party||[]).forEach(m=>{ m.hp = Math.min(m.hp + healAmt, m.maxHp); });
+            player.hp = actor.hp;
+            renderParty?.();
+          } else {
+            actor.hp = Math.min(actor.hp + 1, actor.maxHp);
+            player.hp = actor.hp;
+            renderParty?.();
+          }
         }
         (party||[]).forEach(m=>{
           if(m.hp >= m.maxHp){
@@ -264,6 +288,8 @@ function distanceToRoad(x, y, map=state.map){
   return 999;
 }
 function checkRandomEncounter(){
+  const mods = zoneAttrs(state.map, party.x, party.y);
+  if(mods.noEncounters) return;
   if(encounterCooldown > 0){
     encounterCooldown--;
     return;
@@ -400,9 +426,7 @@ function interact(){
   for(const [dx,dy] of dirs){
     if(interactAt(party.x+dx,party.y+dy)) return true;
   }
-  log('Nothing interesting.');
-  bus.emit('sfx','denied');
-  return false;
+  return wait();
 }
 
 const movementSystem = { canWalk, move };
@@ -419,6 +443,7 @@ const movement = {
   mapIdForState,
   canWalk,
   move,
+  wait,
   takeNearestItem,
   onEnter,
   buffs,
