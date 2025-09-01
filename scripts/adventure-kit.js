@@ -3318,6 +3318,33 @@ document.getElementById('eventStat').innerHTML = STAT_OPTS.map(s => `<option val
 renderEventList();
 loadTreeEditor();
 setPlaceholders();
+const wizardList = document.getElementById('wizardList');
+if (wizardList && globalThis.Dustland?.NpcWizard) {
+  const cfg = globalThis.Dustland.NpcWizard;
+  const btn = document.createElement('button');
+  btn.className = 'btn';
+  btn.textContent = cfg.title;
+  btn.addEventListener('click', () => openWizard(cfg));
+  wizardList.appendChild(btn);
+}
+
+function openWizard(cfg) {
+  const modal = document.getElementById('wizardModal');
+  const body = document.getElementById('wizardBody');
+  const title = document.getElementById('wizardTitle');
+  const next = document.getElementById('wizardNext');
+  const prev = document.getElementById('wizardPrev');
+  const close = document.getElementById('closeWizard');
+  title.textContent = cfg.title;
+  modal.style.display = 'block';
+  const wiz = Dustland.Wizard(body, cfg.steps, {
+    onComplete() { modal.style.display = 'none'; }
+  });
+  next.onclick = () => wiz.next();
+  prev.onclick = () => wiz.prev();
+  close.onclick = () => { modal.style.display = 'none'; };
+}
+
 function animate() {
   drawWorld();
   requestAnimationFrame(animate);

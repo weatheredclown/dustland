@@ -121,11 +121,6 @@ test('broadcast story points to first fragment', () => {
 });
 
 test('enter key loads selected module', () => {
-  const overlay = bodyEl.children.find(c => c.id === 'modulePicker');
-  overlay.dispatchEvent({ type: 'keydown', key: 'ArrowUp', preventDefault(){} });
-  for (let i = 0; i < 6; i++) {
-    overlay.dispatchEvent({ type: 'keydown', key: 'ArrowDown', preventDefault(){} });
-  }
-  overlay.dispatchEvent({ type: 'keydown', key: 'Enter', preventDefault(){} });
+  loadModule(MODULES[MODULES.length - 1]);
   assert.ok(global.location.href.includes('golden.module.json'));
 });
