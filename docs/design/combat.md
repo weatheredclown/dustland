@@ -102,7 +102,7 @@ The prototype doesn't spend Adrenaline yet; it's a pacing probe. Once the gain c
 - [x] **Adrenaline Generation:** Basic attacks now generate Adrenaline. This value is determined by weapon stats via the `ADR` modifier.
 - [x] **Special Move Framework:** In `scripts/core/abilities.js`, create a data structure for Specials that includes `adrenaline_cost`, `target_type` (single, aoe), `effect` (damage, stun, etc.), and `wind_up_time`.
 - [x] **Equipment Modifiers:** Update the inventory system to apply combat modifiers from equipped items at the start of each battle.
-- [ ] **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
+- [x] **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
 
 #### Phase 2: Content & UI
 - [x] **New HUD:** Redesign the combat UI to include the Adrenaline bar, status effect icons, and improved health bar feedback.
