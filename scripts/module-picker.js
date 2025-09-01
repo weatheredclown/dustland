@@ -7,6 +7,7 @@ const MODULES = [
   { id: 'lootbox-demo', name: 'Loot Box Demo', file: 'modules/lootbox-demo.module.js' },
   { id: 'broadcast', name: 'Broadcast Story', file: 'modules/broadcast-fragment-1.module.js' },
   { id: 'mara', name: 'Mara Puzzle', file: 'modules/mara-puzzle.module.js' },
+  { id: 'nyx', name: 'Nyx Tuning', file: 'modules/nyx-tuning.module.js' },
   { id: 'golden', name: 'Golden Sample', file: 'modules/golden.module.json' }
 ];
 

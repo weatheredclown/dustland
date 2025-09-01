@@ -335,6 +335,7 @@
         <button class="tab2" type="button" data-tab="events" role="tab" aria-selected="false">Events</button>
         <button class="tab2" type="button" data-tab="encounters" role="tab" aria-selected="false">Encounters</button>
         <button class="tab2" type="button" data-tab="templates" role="tab" aria-selected="false">Templates</button>
+        <button class="tab2" type="button" data-tab="wizards" role="tab" aria-selected="false">Wizards</button>
       </div>
       <div class="tabpanes">
         <fieldset class="card" id="npcCard" data-pane="npc">
@@ -569,9 +570,13 @@
           <label>Color<input id="templateColor" type="color" value="#9ef7a0" /></label>
           <label>Portrait<input id="templatePortrait" /></label>
           <label>Combat<textarea id="templateCombat" rows="2"></textarea></label>
-          <button class="btn" id="addTemplate">Add Template</button>
-          <button class="btn" id="delTemplate" style="display:none">Delete Template</button>
-        </div>
+        <button class="btn" id="addTemplate">Add Template</button>
+        <button class="btn" id="delTemplate" style="display:none">Delete Template</button>
+      </div>
+      </fieldset>
+      <fieldset class="card" id="wizardCard" data-pane="wizards" style="display:none">
+        <legend>Wizards</legend>
+        <div id="wizardList"></div>
       </fieldset>
       </div><!-- /.tabpanes -->
     </aside>
@@ -597,6 +602,19 @@
       <datalist id="choiceFlagList"></datalist>
     </div>
   </div>
+  <div id="wizardModal" class="modal">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div><b id="wizardTitle"></b></div>
+        <button class="btn" type="button" id="closeWizard">Close</button>
+      </div>
+      <div id="wizardBody"></div>
+      <div style="margin-top:8px;text-align:right">
+        <button class="btn" type="button" id="wizardPrev">Back</button>
+        <button class="btn" type="button" id="wizardNext">Next</button>
+      </div>
+    </div>
+  </div>
   <button id="playtestFloat" class="btn btn--primary" style="
     position:fixed; right:20px; bottom:20px; z-index:9999; border-radius:999px; padding:10px 14px;">
       ▶ Playtest
@@ -617,6 +635,13 @@
     <script defer src="./scripts/dustland-path.js"></script>
     <script defer src="./scripts/dustland-nano.js"></script>
     <script defer src="./scripts/dustland-engine.js"></script>
+    <script defer src="./components/wizard/wizard.js"></script>
+    <script defer src="./components/wizard/steps/text.js"></script>
+    <script defer src="./components/wizard/steps/asset-picker.js"></script>
+    <script defer src="./components/wizard/steps/map-placement.js"></script>
+    <script defer src="./components/wizard/steps/item-picker.js"></script>
+    <script defer src="./components/wizard/steps/confirm.js"></script>
+    <script defer src="./components/wizard/npc-wizard.js"></script>
     <script defer src="./scripts/adventure-kit.js"></script>
   </body>
 
