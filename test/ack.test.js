@@ -311,10 +311,10 @@ test('painting interior in main window', () => {
   moduleData.interiors = [{ id:'room', w:2, h:2, grid:[[TILE.FLOOR,TILE.FLOOR],[TILE.FLOOR,TILE.FLOOR]] }];
   interiors = { room: moduleData.interiors[0] };
   showMap('room');
-  intPaint = TILE.WALL;
+  worldButtons[2]._listeners.click[0]();
   canvasEl._listeners.mousedown[0]({ clientX:0, clientY:0, button:0 });
   canvasEl._listeners.mouseup[0]({ button:0 });
-  assert.strictEqual(interiors.room.grid[0][0], TILE.WALL);
+  assert.strictEqual(interiors.room.grid[0][0], TILE.WATER);
   showMap('world');
 });
 
