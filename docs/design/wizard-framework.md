@@ -93,7 +93,7 @@ This wizard helps create a building with multiple interior rooms, like a house w
 - - [ ] **Custom Steps:**
     - [x] `TilemapPickerStep`: A component to select a tilemap file.
     - [ ] `DoorLinkerStep`: The side-by-side view for connecting two interiors.
-- [ ] **Logic:** Write the "commit" function that generates the building and door objects with the correct linkages.
+ - [x] **Logic:** Write the "commit" function that generates the building and door objects with the correct linkages.
 
 #### **Phase 4: Integration & Testing**
 - [x] **Editor Integration:** Add a "Wizards" menu to the main editor UI that lists the available wizards.

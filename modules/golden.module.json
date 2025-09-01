@@ -502,6 +502,52 @@
           ]
         }
       }
+    },
+    {
+      "id": "mara",
+      "map": "world",
+      "x": 5,
+      "y": 14,
+      "color": "#fac",
+      "name": "Mara",
+      "desc": "Steely-eyed survivor.",
+      "tree": {
+        "start": {
+          "text": "The dust never settles, does it?",
+          "choices": [
+            { "label": "Stay sharp.", "to": "resolve" }
+          ]
+        },
+        "resolve": {
+          "text": "Always.",
+          "choices": [
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "jax",
+      "map": "world",
+      "x": 8,
+      "y": 14,
+      "color": "#acf",
+      "name": "Jax",
+      "desc": "Tinker with a grin.",
+      "tree": {
+        "start": {
+          "text": "Got a spare fuse?",
+          "choices": [
+            { "label": "Maybe later.", "to": "later" }
+          ]
+        },
+        "later": {
+          "text": "I'll hold you to that.",
+          "choices": [
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        }
+      }
     }
   ],
   "events": [
