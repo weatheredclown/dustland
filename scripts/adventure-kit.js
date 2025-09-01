@@ -2497,6 +2497,9 @@ if (worldPalette) {
       worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
       worldPaint = isOn ? null : parseInt(btn.dataset.tile, 10);
       worldStamp = null;
+      if (currentMap !== 'world' && worldPaint != null) {
+        intPaint = worldPaint;
+      }
       if (!isOn) {
         btn.classList.add('active');
         if (paletteLabel) {
