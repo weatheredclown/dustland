@@ -1707,12 +1707,21 @@ function editNPC(i) {
   showNPCEditor(true);
   selectedObj = { type: 'npc', obj: n };
   drawWorld();
+  renderNPCList();
 }
 function renderNPCList() {
   const list = document.getElementById('npcList');
   const npcs = moduleData.npcs.map((n, i) => ({ n, i })).sort((a, b) => a.n.id.localeCompare(b.n.id));
   list.innerHTML = npcs.map(({ n, i }) => `<div data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${n.questId ? ` [${n.questId}]` : ''}</div>`).join('');
-  Array.from(list.children).forEach(div => div.onclick = () => editNPC(parseInt(div.dataset.idx, 10)));
+  Array.from(list.children).forEach(div => {
+    const idx = parseInt(div.dataset.idx, 10);
+    div.onclick = () => editNPC(idx);
+    if (idx === editNPCIdx) {
+      div.style.outline = '1px solid #4f6b4f';
+      div.style.background = '#141a14';
+      div.scrollIntoView({ block: 'nearest' });
+    }
+  });
   updateQuestOptions();
   refreshChoiceDropdowns();
   renderProblems();
