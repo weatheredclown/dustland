@@ -38,6 +38,6 @@ We need to let editors tinker with module layouts without touching code. Each JS
   - [x] office
   - [x] mara-puzzle
 - [x] Build automated tests for the import/export tools.
-- [ ] Verify Adventure Kit loads JSON modules and triggers `postLoad`.
+- [x] Verify Adventure Kit loads JSON modules and triggers `postLoad`.
 - [x] Document the workflow in `docs/` and update README.
 
