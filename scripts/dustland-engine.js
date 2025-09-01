@@ -3,7 +3,7 @@
 
 // Logging
 
-const ENGINE_VERSION = '0.7.52';
+const ENGINE_VERSION = '0.7.53';
 
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
@@ -903,7 +903,11 @@ if (document.getElementById('saveBtn')) {
   };
   const nanoBtn=document.getElementById('nanoToggle');
   if(nanoBtn){
-    const updateNano=()=>{ nanoBtn.textContent = `Nano Dialog: ${window.NanoDialog?.enabled ? 'On' : 'Off'}`; };
+    const updateNano=()=>{
+      nanoBtn.textContent = `Nano Dialog: ${window.NanoDialog?.enabled ? 'On' : 'Off'}`;
+      const persist=document.getElementById('persistLLM');
+      if(persist) persist.style.display = window.NanoDialog?.enabled ? '' : 'none';
+    };
     nanoBtn.onclick=()=>{
       if(window.NanoDialog){
         NanoDialog.enabled=!NanoDialog.enabled;
