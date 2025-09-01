@@ -18,8 +18,13 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 - After touching combat, movement, or NPC logic, run `node scripts/balance-tester-agent.js` to exercise event-bus handlers and path queues.
 
 ## Commit conventions
-- Use concise messages with prefixes such as `feat:`, `fix:`, or `docs:`.
+- Use concise messages with prefixes such as `feat:`, `fix:`, `system:`, or `docs:`.
 - Commit directly to the main branch without creating new branches.
+
+## Versioning
+- Version numbers in `package.json` and `scripts/dustland-engine.js` are managed by a GitHub action.
+- Include `feat`, `fix`, or `system!` in commit messages to signal minor, patch, or major bumps.
+- Avoid manual edits to version fields.
 
 ## Documentation
 - Update README files or inline comments when behavior or APIs change.

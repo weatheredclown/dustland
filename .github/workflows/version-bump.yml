@@ -1,0 +1,26 @@
+name: Version Bump
+
+on:
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: version-bump
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    if: "!startsWith(github.event.head_commit.message, 'chore: bump version')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/version-bump.js
+
