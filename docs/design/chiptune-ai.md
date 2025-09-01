@@ -55,5 +55,5 @@ Runs standalone in a browser tab and should chirp out a tiny wasteland riff.
  - [x] Prototype seeded melody generation with Magenta and Tone.
 - [x] Expose mod hooks for seed and instrument parameters.
 - [x] Add scale clamping to keep riffs musical.
-- [ ] Stress-test performance on mobile browsers.
+ - [x] Stress-test performance on mobile browsers.
  - [x] Tie playback to the event bus via `music:seed`.
