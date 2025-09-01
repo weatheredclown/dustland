@@ -2824,6 +2824,18 @@ function validateSpawns(){
   return issues;
 }
 
+function onProblemClick(){
+  const prob=problemRefs[parseInt(this.dataset.idx,10)];
+  if(prob.type==='npc') editNPC(prob.idx);
+  else if(prob.type==='item') editItem(prob.idx);
+  else if(prob.type==='start'){
+    showMap('world');
+    focusMap(moduleData.start.x,moduleData.start.y);
+    selectedObj=null;
+    drawWorld();
+  }
+}
+
 function renderProblems(issues){
   issues = issues || validateSpawns();
   const card = document.getElementById('problemCard');
@@ -2834,18 +2846,11 @@ function renderProblems(issues){
     return;
   }
   card.style.display='block';
-  list.innerHTML = issues.map((p,i)=>`<div data-idx="${i}">${p.msg}</div>`).join('');
-  Array.from(list.children).forEach(div=>div.onclick=()=>{
-    const prob=problemRefs[parseInt(div.dataset.idx,10)];
-    if(prob.type==='npc') editNPC(prob.idx);
-    else if(prob.type==='item') editItem(prob.idx);
-    else if(prob.type==='start'){
-      showMap('world');
-      focusMap(moduleData.start.x,moduleData.start.y);
-      selectedObj=null;
-      drawWorld();
-    }
-  });
+  const html = issues.map((p,i)=>`<div data-idx="${i}">${p.msg}</div>`).join('');
+  if(list.innerHTML !== html){
+    list.innerHTML = html;
+    Array.from(list.children).forEach(div=>div.onclick=onProblemClick);
+  }
 }
 
 function saveModule() {
