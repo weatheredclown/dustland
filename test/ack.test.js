@@ -132,6 +132,32 @@ test('saveModule uses module name for download', () => {
   globalThis.validateSpawns = origValidateSpawns;
 });
 
+test('zones round-trip through saveModule', () => {
+  applyLoadedModule({ seed: 1 });
+  document.getElementById('zoneMap').value = 'world';
+  document.getElementById('zoneX').value = 0;
+  document.getElementById('zoneY').value = 0;
+  document.getElementById('zoneW').value = 1;
+  document.getElementById('zoneH').value = 1;
+  addZone();
+  const origValidate = globalThis.validateSpawns;
+  globalThis.validateSpawns = () => [];
+  let saved = '';
+  const origBlob = globalThis.Blob;
+  globalThis.Blob = class { constructor(parts) { this.text = parts.join(''); } };
+  const origURL = global.URL;
+  global.URL = { createObjectURL: blob => { saved = blob.text; return ''; }, revokeObjectURL() {} };
+  const origCreate = document.createElement;
+  document.createElement = tag => tag === 'a' ? { href: '', download: '', click() {} } : origCreate(tag);
+  saveModule();
+  const json = JSON.parse(saved);
+  assert.deepStrictEqual(json.zones, [{ map: 'world', x: 0, y: 0, w: 1, h: 1 }]);
+  document.createElement = origCreate;
+  global.URL = origURL;
+  globalThis.Blob = origBlob;
+  globalThis.validateSpawns = origValidate;
+});
+
 test('validateSpawns lists blocked spawns', () => {
   genWorld(1);
   setTile('world',0,0,TILE.WATER);
