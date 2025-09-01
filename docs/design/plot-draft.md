@@ -97,7 +97,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 - [x] Detail Mara "Surveyor"—an ex-cartographer seeking the map she burned; arc: learns the signal isn't the only way home.
 - [x] Detail Jax "Patch"—a scavenger mechanic hoarding tech; arc: opens his toolkit to the crew.
 - [x] Detail Nyx "Speaker"—a poet tuning radio static into verse; arc: chooses between broadcasting or listening.
-- [ ] **Implement Signature Encounters:**
+- [x] **Implement Signature Encounters:**
     - [x] Design and build Mara's dust storm navigation puzzle.
     - [x] Hook Mara's puzzle into the Broadcast Story sequence.
     - [x] Script Jax's timed repair sequence under combat pressure. Implemented in `jax-repair.module.js`.

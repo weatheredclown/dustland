@@ -2,12 +2,18 @@
 
 globalThis.Dustland = globalThis.Dustland || {};
 Dustland.wizards = Dustland.wizards || {};
-var step = (Dustland.WizardSteps && Dustland.WizardSteps.tilemapPicker)
-  ? [Dustland.WizardSteps.tilemapPicker('Tilemap', ['interior_a.tmx', 'interior_b.tmx'], 'tilemap')]
-  : [];
+var steps = [];
+if (Dustland.WizardSteps) {
+  if (Dustland.WizardSteps.tilemapPicker) {
+    steps.push(Dustland.WizardSteps.tilemapPicker('Tilemap', ['interior_a.tmx', 'interior_b.tmx'], 'tilemap'));
+  }
+  if (Dustland.WizardSteps.doorLinker) {
+    steps.push(Dustland.WizardSteps.doorLinker('entry', 'exit'));
+  }
+}
 Dustland.wizards.building = {
   name: 'BuildingWizard',
-  steps: step,
+  steps,
   commit(state){
     state = state || {};
     const id = (state.tilemap || 'interior').replace(/\.[^/.]+$/, '');
