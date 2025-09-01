@@ -32,7 +32,7 @@ _______________________________________________________________________________
 
 [ CONTROLS ]
   Movement .......... WASD / Arrow Keys
-  Interact/Take ..... E / Space / T (talk, use doors, take items)
+  Interact/Take/Wait ..... E / Space / T (space waits if nothing nearby)
   Inventory ......... I (click items to equip)
   Party ............. P          (radio button selects the acting member)
   Quests ............ Q
@@ -50,7 +50,7 @@ _______________________________________________________________________________
   - World buildings appear as black structures; their doors lead to
     simple interiors you can enter directly from the overworld.
   - Water is bright blue and is not walkable; items won’t spawn in water.
-  - Walking gradually restores HP for the selected party member.
+  - Walking or waiting gradually restores HP for the selected party member.
   - Movement speed improves with the leader's AGI, including equipment bonuses. Items like the Boots of Speed further reduce movement delay.
   - Special moves spend Adrenaline. Starter techniques include Power Strike,
     Stun Grenade, First Aid, Adrenal Surge, and Guard.
