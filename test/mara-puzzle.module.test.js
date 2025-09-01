@@ -15,3 +15,15 @@ test('mara puzzle module defines startGame to launch dust storm', () => {
   assert.match(src, /You hear a faint chime/);
   assert.match(src, /Listen for chimes to find your way out/);
 });
+
+test('mara puzzle module hides a powerful sword in the maze', () => {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const file = path.join(__dirname, '..', 'modules', 'mara-puzzle.module.js');
+  const src = fs.readFileSync(file, 'utf8');
+  const match = src.match(/const DATA = `([\s\S]*?)`;/);
+  assert.ok(match, 'DATA string not found');
+  const data = JSON.parse(match[1]);
+  const sword = data.items.find((it) => it.id === 'maze_sword');
+  assert.ok(sword, 'maze_sword not defined');
+  assert.equal(sword.mods.ATK, 10);
+});
