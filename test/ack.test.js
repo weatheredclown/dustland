@@ -545,3 +545,14 @@ test('editing building centers map on its position', () => {
   panX = 0;
   panY = 0;
 });
+
+test('collectNPCFromForm retains custom portrait path', () => {
+  moduleData.npcs = [{
+    id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0,
+    tree: { start: { text: 'hi', choices: [] } },
+    portraitSheet: 'assets/portraits/grin_4.png'
+  }];
+  editNPC(0);
+  const npc = collectNPCFromForm();
+  assert.strictEqual(npc.portraitSheet, 'assets/portraits/grin_4.png');
+});

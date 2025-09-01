@@ -28,6 +28,17 @@ The script replaces the `DATA` block inside `modules/dustland.module.js`.
 
 Remove any temporary JSON files when finished to keep the working tree clean.
 
+## Custom portraits
+Modules may reference portrait images by setting a `portraitSheet` field to a
+path under `assets/`. The `module-json` tooling keeps these relative paths
+intact during export and import. When modules are loaded into Adventure Kit,
+these `portraitSheet` paths are preserved even if they fall outside the
+default portrait index:
+
+```json
+{ "portraitSheet": "assets/portraits/my_npc.png" }
+```
+
 ## postLoad hooks
 Adventure Kit loads a module script when the JSON includes a `module` path. After the script loads, it calls the script's `postLoad(module)` method to apply procedural logic:
 
