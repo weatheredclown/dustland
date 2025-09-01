@@ -102,7 +102,7 @@ The prototype doesn't spend Adrenaline yet; it's a pacing probe. Once the gain c
 - [x] **Adrenaline Generation:** Basic attacks now generate Adrenaline. This value is determined by weapon stats via the `ADR` modifier.
 - [x] **Special Move Framework:** In `scripts/core/abilities.js`, create a data structure for Specials that includes `adrenaline_cost`, `target_type` (single, aoe), `effect` (damage, stun, etc.), and `wind_up_time`.
 - [x] **Equipment Modifiers:** Update the inventory system to apply combat modifiers from equipped items at the start of each battle.
-- [x] **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
+- [ ] **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
 
 #### Phase 2: Content & UI
 - [x] **New HUD:** Redesign the combat UI to include the Adrenaline bar, status effect icons, and improved health bar feedback.
@@ -110,11 +110,11 @@ The prototype doesn't spend Adrenaline yet; it's a pacing probe. Once the gain c
 - [x] **Implement 5-10 Specials:** Added starter moves Power Strike, Stun Grenade, First Aid, Adrenal Surge, and Guard.
  - [x] **Implement Equipment:** Create a set of weapons and armor with varied combat modifiers.
 - [x] **Enemy Design:** Added four enemy types that require tactical use of specials (e.g., Shield Drone resists basic attacks, Reflective Slime counters them).
-- [x] **HUD Playtest:** Ran quick usability tests with two players and tightened bar spacing and icon contrast based on feedback.
+- [ ] **HUD Playtest:** Ran quick usability tests with two players and tightened bar spacing and icon contrast based on feedback.
 
 #### Phase 3: Polish & Balancing
 - [x] **Visual Effects:** Add VFX for Adrenaline gain, special move activations, and status effects.
 - [x] **Sound Design:** Add SFX for specials, UI feedback, and enemy telegraphing.
-- [x] **Playtesting:** Conduct extensive playtests to balance Adrenaline generation rates, special costs, and overall combat difficulty. Ensure the difficulty curve is challenging but fair.
+- [ ] **Playtesting:** Conduct extensive playtests to balance Adrenaline generation rates, special costs, and overall combat difficulty. Ensure the difficulty curve is challenging but fair.
 - [x] **AI Improvements:** Enhance enemy AI to use their own specials and coordinate attacks.
-- [x] **Telemetry:** Log combat stats during playtests to surface pacing issues and balance swings early.
+- [ ] **Telemetry:** Log combat stats during playtests to surface pacing issues and balance swings early.

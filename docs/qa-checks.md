@@ -2,6 +2,7 @@
 
 This document lists QA checks for each completed item across design docs.
 For each item, run the described code verification.
+Validation tasks should remain unchecked unless the process yields at least one improvement.
 
 - [x] **combat.md** — **Adrenaline Resource:** Implement the Adrenaline bar (`adr`) for all combatants in `scripts/core/party.js` and `scripts/core/combat.js`.
    - Check: confirm implementation matches description.
@@ -11,7 +12,7 @@ For each item, run the described code verification.
    - Check: confirm implementation matches description.
 - [x] **combat.md** — **Equipment Modifiers:** Update the inventory system to apply combat modifiers from equipped items at the start of each battle.
    - Check: confirm implementation matches description.
-- [x] **combat.md** — **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
+- [ ] **combat.md** — **Adrenaline Prototype:** Script a small arena fight to validate Adrenaline gain pacing and HUD readability.
    - Check: confirm implementation matches description.
 - **combat.md** — **New HUD:** Redesign the combat UI to include the Adrenaline bar, status effect icons, and improved health bar feedback.
   - Check: confirm implementation matches description.
