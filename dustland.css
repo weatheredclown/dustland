@@ -991,13 +991,14 @@ input[type="range"] {
         width: 18px;
         height: 18px;
         border: 1px solid #273027;
-        border-radius: 50%;
+        border-radius: 4px;
         display: flex;
         align-items: center;
         justify-content: center;
         background: #0f120f;
         color: var(--accent);
-        font-weight: 700
+        font-weight: 700;
+        image-rendering: pixelated
     }
 
     .nano-badge.on {
@@ -1016,14 +1017,15 @@ input[type="range"] {
     }
 
     .nano-badge.busy {
-        animation: nano-spin 1s linear infinite;
-        background: #fe0;
-        color: #000
+        animation: nano-pulse 1s steps(2) infinite
     }
 
-    @keyframes nano-spin {
-        to {
-            transform: rotate(360deg)
+    @keyframes nano-pulse {
+        0%, 100% {
+            transform: scale(1)
+        }
+        50% {
+            transform: scale(1.2)
         }
     }
 
