@@ -54,7 +54,8 @@ test('panel toggle shows and hides panel', async () => {
     load: () => {},
     resetAll: () => {},
     console,
-    open: false
+    open: false,
+    overlay: { classList: { contains: () => false } }
   };
   vm.createContext(context);
   vm.runInContext(code, context);
@@ -62,5 +63,59 @@ test('panel toggle shows and hides panel', async () => {
   toggle.onclick();
   assert.ok(panel.classList.contains('show'));
   toggle.onclick();
+  assert.ok(!panel.classList.contains('show'));
+});
+
+test('b key closes panel on mobile', async () => {
+  const document = makeDocument();
+  const canvas = document.createElement('canvas');
+  canvas.id = 'game';
+  document.body.appendChild(document.getElementById('log'));
+  document.body.appendChild(document.getElementById('hp'));
+  document.body.appendChild(document.getElementById('ap'));
+  document.body.appendChild(document.getElementById('scrap'));
+  document.body.appendChild(canvas);
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+  document.body.appendChild(panel);
+  const toggleEl = document.getElementById('panelToggle');
+  document.body.appendChild(toggleEl);
+  document.body.appendChild(document.getElementById('saveBtn'));
+  document.body.appendChild(document.getElementById('loadBtn'));
+  document.body.appendChild(document.getElementById('resetBtn'));
+  document.body.appendChild(document.getElementById('settingsBtn'));
+  const settings = document.getElementById('settings');
+  document.body.appendChild(settings);
+  settings.appendChild(document.getElementById('settingsClose'));
+  let keyHandler;
+  const window = { document, AudioContext: AudioCtx, webkitAudioContext: AudioCtx, HTMLCanvasElement: class {}, addEventListener:(type,fn)=>{ if(type==='keydown') keyHandler=fn; }, removeEventListener:()=>{} };
+  window.HTMLCanvasElement.prototype.getContext = () => ({ });
+  const context = {
+    window,
+    document,
+    requestAnimationFrame: () => 0,
+    AudioContext: AudioCtx,
+    webkitAudioContext: AudioCtx,
+    Audio: class { constructor(){ this.addEventListener = () => {}; } cloneNode(){ return new this.constructor(); } },
+    EventBus: { on: () => {}, emit: () => {} },
+    NanoDialog: { enabled: true },
+    location: { hash: '' },
+    move: () => {},
+    interact: () => {},
+    takeNearestItem: () => {},
+    save: () => {},
+    load: () => {},
+    resetAll: () => {},
+    console,
+    open: false,
+    overlay: { classList: { contains: () => false } }
+  };
+  vm.createContext(context);
+  vm.runInContext(code, context);
+  const toggle = document.getElementById('panelToggle');
+  toggle.onclick();
+  assert.ok(panel.classList.contains('show'));
+  context.setMobileControls(true);
+  keyHandler({ key: 'b', preventDefault(){}, stopImmediatePropagation(){} });
   assert.ok(!panel.classList.contains('show'));
 });
