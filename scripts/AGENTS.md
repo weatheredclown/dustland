@@ -1,7 +1,7 @@
 # AGENTS
 
-Maintain engine versioning.
+Engine versioning is automated.
 
-- Increment the point version (patch number) in `package.json` with each change.
-- Mirror the updated version in `dustland-engine.js` so the engine log shows the latest build.
-- This helps indicate when a new build has deployed.
+- A GitHub action updates `package.json` and `dustland-engine.js` after merges.
+- Use commit messages (`feat`, `fix`, or `system!`) to signal minor, patch, or major bumps.
+- Avoid editing version numbers by hand.
