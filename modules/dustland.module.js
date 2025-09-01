@@ -1087,6 +1087,7 @@ const DATA = `
         }
       },
       "combat": {
+        "ATK": 4,
         "DEF": 5,
         "loot": "raider_knife"
       }
