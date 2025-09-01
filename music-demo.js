@@ -447,14 +447,18 @@
         }
       }
     } else {
-      // Tighter, scale-aware arpeggio with less randomness
-      var pattern = [0, 2, 4, 2];
-      if (music.density > 0.8) pattern = [0, 2, 4, 5];
-      var idx = Math.floor(stepInBar / 4) % pattern.length;
-      var pickDeg = deg + pattern[idx] + ((stepInBar % 8 === 6) ? 7 : 0);
-      var leadMidi = midiFromDegree(music.key, music.scale, pickDeg, 0);
-      // only play on eighths to reduce clutter
-      if (stepInBar % 2 === 0) playLeadNote(leadMidi, t, secondsPer16th() * 2);
+      // Broader, two-octave arpeggio with an upper octave overlay
+      var pattern = [0, 4, 7, 12, 7, 4, 0, 7];
+      var idx = Math.floor(stepInBar / 2) % pattern.length;
+      if (stepInBar % 2 === 0) {
+        var pickDeg = deg + pattern[idx];
+        var leadMidi = midiFromDegree(music.key, music.scale, pickDeg, 0);
+        var dur = secondsPer16th() * 2;
+        var mainVel = Math.min(1, vel + 0.2);
+        playLeadNote(leadMidi, t, dur, mainVel);
+        var upperMidi = midiFromDegree(music.key, music.scale, pickDeg, 1);
+        playLeadNote(upperMidi, t, dur, mainVel * 0.6);
+      }
     }
   }
 
