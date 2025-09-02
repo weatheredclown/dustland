@@ -86,7 +86,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { applyLoadedModule, TILE, setTile, placeHut, genWorld, addTerrainFeature, stampWorld, worldStamps, tileEmoji, gridToEmoji } = globalThis;
+const { applyLoadedModule, TILE, setTile, placeHut, genWorld, addTerrainFeature, stampWorld, worldStamps, tileEmoji, gridToEmoji, clearWorld } = globalThis;
 
 test('applyLoadedModule clears previous building tiles', () => {
   genWorld(123);
@@ -156,6 +156,33 @@ test('zones round-trip through saveModule', () => {
   global.URL = origURL;
   globalThis.Blob = origBlob;
   globalThis.validateSpawns = origValidate;
+});
+
+test('world paint persists through save/load', () => {
+  genWorld(1);
+  clearWorld();
+  setTile('world', 0, 0, TILE.ROCK);
+  const origValidate = globalThis.validateSpawns;
+  globalThis.validateSpawns = () => [];
+  let saved = '';
+  const origBlob = globalThis.Blob;
+  globalThis.Blob = class { constructor(parts) { this.text = parts.join(''); } };
+  const origURL = global.URL;
+  global.URL = { createObjectURL: blob => { saved = blob.text; return ''; }, revokeObjectURL() {} };
+  const origCreate = document.createElement;
+  document.createElement = tag => tag === 'a' ? { href: '', download: '', click() {} } : origCreate(tag);
+  saveModule();
+  document.createElement = origCreate;
+  global.URL = origURL;
+  globalThis.Blob = origBlob;
+  globalThis.validateSpawns = origValidate;
+  const json = JSON.parse(saved);
+  const rockEmoji = tileEmoji[TILE.ROCK];
+  assert.strictEqual(Array.from(json.world[0])[0], rockEmoji);
+  setTile('world', 0, 0, TILE.SAND);
+  applyLoadedModule(json);
+  assert.strictEqual(world[0][0], TILE.ROCK);
+  setTile('world', 0, 0, TILE.SAND);
 });
 
 test('validateSpawns lists blocked spawns', () => {
