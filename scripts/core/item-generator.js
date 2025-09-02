@@ -54,6 +54,18 @@ const ItemGen = {
     armored: 100,
     vaulted: 500
   },
+  calcScrap(item){
+    let total = 0;
+    const stats = item.stats || {};
+    for (const val of Object.values(stats)) {
+      if (typeof val === 'number') total += val;
+    }
+    const mods = item.mods || {};
+    for (const val of Object.values(mods)) {
+      if (typeof val === 'number') total += Math.abs(val);
+    }
+    return Math.max(1, Math.round(total / 2));
+  },
   pick(list, rng){
     return list[Math.floor(rng() * list.length)];
   },
@@ -72,8 +84,9 @@ const ItemGen = {
       name: `${adj} ${noun}`,
       rank,
       stats: { power },
-      scrap: this.scrapValues[rank] || this.scrapValues.rusted
+      scrap: 0
     };
+    item.scrap = this.calcScrap(item);
     item.tags = [noun.toLowerCase()];
     if(type === 'oddity'){
       item.lore = this.pick(this.oddityLore, rng);

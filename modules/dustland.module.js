@@ -77,8 +77,8 @@ const DATA = `
     },
     {
       "map": "world",
-      "x": 35,
-      "y": 51,
+      "x": 30,
+      "y": 52,
       "id": "rebar_club",
       "name": "Rebar Club",
       "type": "weapon",
@@ -102,8 +102,8 @@ const DATA = `
     },
     {
       "map": "world",
-      "x": 67,
-      "y": 50,
+      "x": 64,
+      "y": 53,
       "id": "goggles",
       "name": "Goggles",
       "type": "trinket",
@@ -217,7 +217,9 @@ const DATA = `
       "id": "signal_fragment_a",
       "name": "Signal Fragment",
       "type": "quest",
-      "tags": ["signal_fragment"]
+      "tags": [
+        "signal_fragment"
+      ]
     },
     {
       "map": "world",
@@ -226,7 +228,9 @@ const DATA = `
       "id": "signal_fragment_b",
       "name": "Signal Fragment",
       "type": "quest",
-      "tags": ["signal_fragment"]
+      "tags": [
+        "signal_fragment"
+      ]
     },
     {
       "map": "world",
@@ -235,7 +239,9 @@ const DATA = `
       "id": "signal_fragment_c",
       "name": "Signal Fragment",
       "type": "quest",
-      "tags": ["signal_fragment"]
+      "tags": [
+        "signal_fragment"
+      ]
     },
     {
       "id": "epic_blade",
@@ -243,7 +249,9 @@ const DATA = `
       "type": "weapon",
       "slot": "weapon",
       "rarity": "epic",
-      "mods": { "ATK": 5 },
+      "mods": {
+        "ATK": 5
+      },
       "value": 500
     },
     {
@@ -252,7 +260,9 @@ const DATA = `
       "type": "armor",
       "slot": "armor",
       "rarity": "epic",
-      "mods": { "DEF": 5 },
+      "mods": {
+        "DEF": 5
+      },
       "value": 500
     },
     {
@@ -262,8 +272,12 @@ const DATA = `
       "id": "glinting_key",
       "name": "Glinting Key",
       "type": "quest",
-      "tags": ["key"],
-      "use": { "effect": "vision" }
+      "tags": [
+        "key"
+      ],
+      "use": {
+        "effect": "vision"
+      }
     }
   ],
   "quests": [
@@ -417,7 +431,11 @@ const DATA = `
               "label": "(Search for key)",
               "to": "accept",
               "q": "accept",
-              "setFlag": { "flag": "q_hall_key_active", "op": "set", "value": 1 }
+              "setFlag": {
+                "flag": "q_hall_key_active",
+                "op": "set",
+                "value": 1
+              }
             },
             {
               "label": "(Use Rusted Key)",
@@ -427,7 +445,11 @@ const DATA = `
             {
               "label": "(Use Glinting Key)",
               "to": "glint_fail",
-              "if": { "flag": "q_hall_key_active", "op": ">=", "value": 1 }
+              "if": {
+                "flag": "q_hall_key_active",
+                "op": ">=",
+                "value": 1
+              }
             },
             {
               "label": "(Leave)",
@@ -869,7 +891,7 @@ const DATA = `
     {
       "id": "hermit",
       "map": "world",
-      "x": 68,
+      "x": 70,
       "y": 47,
       "color": "#9abf9a",
       "name": "The Shifting Hermit",
@@ -1035,22 +1057,48 @@ const DATA = `
         "start": {
           "text": "Radio's dead. Need fragments to spark it.",
           "choices": [
-            { "label": "(Accept)", "to": "accept", "q": "accept" },
-            { "label": "(Turn in fragments)", "to": "turnin", "q": "turnin" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Accept)",
+              "to": "accept",
+              "q": "accept"
+            },
+            {
+              "label": "(Turn in fragments)",
+              "to": "turnin",
+              "q": "turnin"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "accept": {
           "text": "Try the dunes; bits wash up there.",
-          "choices": [ { "label": "(Ok)", "to": "bye" } ]
+          "choices": [
+            {
+              "label": "(Ok)",
+              "to": "bye"
+            }
+          ]
         },
         "turnin": {
           "text": "Got the pieces?",
-          "choices": [ { "label": "(Give fragments)", "to": "do_turnin" } ]
+          "choices": [
+            {
+              "label": "(Give fragments)",
+              "to": "do_turnin"
+            }
+          ]
         },
         "do_turnin": {
           "text": "Signal hums again. Nice work.",
-          "choices": [ { "label": "(Continue)", "to": "bye" } ]
+          "choices": [
+            {
+              "label": "(Continue)",
+              "to": "bye"
+            }
+          ]
         }
       }
     },
@@ -1124,8 +1172,12 @@ const DATA = `
       "shop": {
         "markup": 1,
         "inv": [
-          { "id": "epic_blade" },
-          { "id": "epic_armor" }
+          {
+            "id": "epic_blade"
+          },
+          {
+            "id": "epic_armor"
+          }
         ]
       }
     },
@@ -1248,8 +1300,8 @@ const DATA = `
     {
       "id": "feral_nomad",
       "map": "world",
-      "x": 68,
-      "y": 47,
+      "x": 72,
+      "y": 48,
       "color": "#f77",
       "name": "Feral Nomad",
       "title": "Mad Drifter",
@@ -1303,25 +1355,38 @@ const DATA = `
     },
     {
       "id": "iron_brute",
-      "map": "world",
-      "x": 120,
-      "y": 37,
-      "color": "#f33",
       "name": "Iron Brute",
-      "title": "Challenge",
       "desc": "A hulking brute plated in scrap.",
-      "portraitSheet": "assets/portraits/dustland-module/iron_brute_4.png",
+      "color": "#ff3333",
+      "symbol": "!",
+      "map": "world",
+      "x": 116,
+      "y": 37,
       "tree": {
         "start": {
           "text": "The brute roars.",
           "choices": [
             {
+              "label": "(Fight)",
+              "to": "do_fight"
+            },
+            {
               "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "do_fight": {
+          "text": "",
+          "choices": [
+            {
+              "label": "(Continue)",
               "to": "bye"
             }
           ]
         }
       },
+      "questId": "",
       "loop": [
         {
           "x": 120,
@@ -1344,9 +1409,9 @@ const DATA = `
         "HP": 15,
         "ATK": 3,
         "DEF": 2,
-        "loot": "raider_knife",
-        "auto": true
-      }
+        "loot": "raider_knife"
+      },
+      "portraitSheet": "assets/portraits/dustland-module/iron_brute_4.png"
     },
     {
       "id": "stalker_patrol",
@@ -1637,26 +1702,38 @@ const DATA = `
     },
     {
       "id": "scrap_behemoth",
-      "map": "world",
-      "x": 120,
-      "y": 45,
-      "color": "#f33",
       "name": "Scrap Behemoth",
-      "title": "Wastes Boss",
       "desc": "A towering mass of twisted metal.",
-      "portraitSheet": "assets/portraits/portrait_1084.png",
-      "portraitLock": false,
+      "color": "#ff3333",
+      "symbol": "!",
+      "map": "world",
+      "x": 113,
+      "y": 45,
       "tree": {
         "start": {
           "text": "The behemoth looms.",
           "choices": [
             {
+              "label": "(Fight)",
+              "to": "do_fight"
+            },
+            {
               "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "do_fight": {
+          "text": "",
+          "choices": [
+            {
+              "label": "(Continue)",
               "to": "bye"
             }
           ]
         }
       },
+      "questId": "",
       "combat": {
         "HP": 30,
         "ATK": 3,
@@ -1668,7 +1745,8 @@ const DATA = `
           "dmg": 5,
           "delay": 1000
         }
-      }
+      },
+      "portraitSheet": "assets/portraits/portrait_1084.png"
     }
   ],
   "events": [
@@ -1699,6 +1777,7 @@ const DATA = `
       "negate": "mask"
     }
   ],
+  "name": "dustland-module",
   "encounters": {
     "world": [
       {
@@ -1760,6 +1839,35 @@ const DATA = `
       }
     ]
   },
+  "buildings": [
+    {
+      "x": 40,
+      "y": 42,
+      "w": 3,
+      "h": 3,
+      "doorX": 41,
+      "doorY": 44,
+      "interiorId": "slot_shack",
+      "boarded": false,
+      "grid": [
+        [
+          9,
+          9,
+          9
+        ],
+        [
+          9,
+          9,
+          9
+        ],
+        [
+          9,
+          8,
+          9
+        ]
+      ]
+    }
+  ],
   "interiors": [
     {
       "id": "hall",
@@ -1822,18 +1930,9 @@ const DATA = `
       "entryX": 2,
       "entryY": 2
     }
-  ],
-  "buildings": [
-    {
-      "x": 40,
-      "y": 43,
-      "w": 3,
-      "h": 3,
-      "interiorId": "slot_shack",
-      "boarded": false
-    }
   ]
-}`;
+}
+`;
 
 let slotNetPayout = 0;
 function pullSlots(cost, payouts) {
