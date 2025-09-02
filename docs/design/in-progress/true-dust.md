@@ -9,8 +9,8 @@ The Dustland opens its eyes with a whisper of grit and memory. "True Dust" drops
 - **Wild Fringe:** Rats and feral dogs gnaw at the outskirts, pushing newcomers to learn quick strikes and retreat paths.
 
 ## Nearby Threat: The Maw Complex
-- **Structure:** A sprawling office husk, its halls stitched together into an interior maze.
-- **Encounters:** Each room rolls random packs of vermin or undead with a chance for small loot chests.
+- **Structure:** An abandoned military bunker of four wide chambers (maw_1 through maw_4) linked by long corridors.
+- **Encounters:** Each sector rolls random packs of vermin, undead workers, or soldier remnants with a chance for small loot chests.
 - **Boss:** The final chamber holds a stitched zombie foreman. Defeating it drops a cracked radio.
 - **Radio Perk:** Equipping the radio triggers a static burst whenever the player nears a buried scrap cache. Waiting on the noise lets the player dig up materials.
 
@@ -26,7 +26,7 @@ The Dustland opens its eyes with a whisper of grit and memory. "True Dust" drops
 ## Implementation Checklist
 - [x] Map Stonegate as a 2x2 hub with wall segments, safe-zone trigger, and Rygar spawn point.
 - [x] Scatter rats and wild dogs outside the wall; ensure no spawn inside.
-- [ ] Build the Maw Complex interior with connected rooms, random encounter tables, and a foreman's desk containing the Mira note.
+- [x] Build the Maw Complex interior with four connected rooms, random encounter tables, and a foreman's desk containing the Mira note.
 - [ ] Script Rygar follower logic and pendant animations.
 - [x] Add Stonegate gossip NPCs referencing Mira's radio obsession and copper pendant.
 - [ ] Implement radio item: proximity handler for scrap caches and static toast.

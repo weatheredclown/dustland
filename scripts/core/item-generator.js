@@ -86,7 +86,7 @@ const ItemGen = {
       stats: { power },
       scrap: 0
     };
-    item.scrap = this.calcScrap(item);
+    item.scrap = this.scrapValues[rank] ?? this.calcScrap(item);
     item.tags = [noun.toLowerCase()];
     if(type === 'oddity'){
       item.lore = this.pick(this.oddityLore, rng);
