@@ -551,10 +551,13 @@ function showTab(which){
     inv.style.display=(which==='inv'?'grid':'none');
     partyEl.style.display=(which==='party'?'grid':'none');
     q.style.display=(which==='quests'?'grid':'none');
-    for(const el of [tInv,tP,tQ]) el.classList.remove('active');
-    if(which==='inv') tInv.classList.add('active');
-    if(which==='party') tP.classList.add('active');
-    if(which==='quests') tQ.classList.add('active');
+    for(const el of [tInv,tP,tQ]){
+      el.classList.remove('active');
+      if(el.setAttribute) el.setAttribute('aria-selected','false');
+    }
+    if(which==='inv'){ tInv.classList.add('active'); if(tInv.setAttribute) tInv.setAttribute('aria-selected','true'); }
+    if(which==='party'){ tP.classList.add('active'); if(tP.setAttribute) tP.setAttribute('aria-selected','true'); }
+    if(which==='quests'){ tQ.classList.add('active'); if(tQ.setAttribute) tQ.setAttribute('aria-selected','true'); }
   } else {
     console.error("showTab failed. Adventure Kit?");
   }
@@ -580,9 +583,18 @@ window.addEventListener('resize', updateTabsLayout);
 updateTabsLayout();
 
 if (document.getElementById('tabInv')) {
-  document.getElementById('tabInv').onclick=()=>showTab('inv');
-  document.getElementById('tabParty').onclick=()=>showTab('party');
-  document.getElementById('tabQuests').onclick=()=>showTab('quests');
+  const keyHandler = which => e => {
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); showTab(which); }
+  };
+  const tabInv=document.getElementById('tabInv');
+  const tabParty=document.getElementById('tabParty');
+  const tabQuests=document.getElementById('tabQuests');
+  tabInv.onclick=()=>showTab('inv');
+  tabParty.onclick=()=>showTab('party');
+  tabQuests.onclick=()=>showTab('quests');
+  tabInv.onkeydown=keyHandler('inv');
+  tabParty.onkeydown=keyHandler('party');
+  tabQuests.onkeydown=keyHandler('quests');
 } else {
   console.error("showTab setup failed. Adventure Kit?");
 }

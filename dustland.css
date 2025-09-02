@@ -302,6 +302,11 @@ input[type="range"] {
         outline: 1px solid #4f6b4f
     }
 
+    .tab:focus-visible {
+        outline: 2px solid #4f6b4f;
+        outline-offset: 2px;
+    }
+
     #inv {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
