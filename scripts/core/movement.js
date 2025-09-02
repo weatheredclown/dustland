@@ -14,13 +14,19 @@ let encounterCooldown = 0;
 function zoneAttrs(map,x,y){
   let healMult = 1;
   let noEncounters = false;
+  let spawns = null;
+  let minSteps = null;
+  let maxSteps = null;
   for(const z of zones){
     if((z.map||'world')!==map) continue;
     if(x<z.x || y<z.y || x>=z.x+(z.w||0) || y>=z.y+(z.h||0)) continue;
     if(z.noEncounters) noEncounters = true;
     if(typeof z.healMult === 'number') healMult *= z.healMult;
+    if(z.spawns) spawns = z.spawns;
+    if(typeof z.minSteps === 'number') minSteps = z.minSteps;
+    if(typeof z.maxSteps === 'number') maxSteps = z.maxSteps;
   }
-  return { healMult, noEncounters };
+  return { healMult, noEncounters, spawns, minSteps, maxSteps };
 }
 
 function hexToHsv(hex) {
@@ -294,6 +300,22 @@ function checkRandomEncounter(){
     encounterCooldown--;
     return;
   }
+  if(mods.spawns && mods.spawns.length){
+    let roll = Math.random();
+    let acc = 0;
+    let chosen = null;
+    for(const s of mods.spawns){
+      acc += s.prob || 0;
+      if(roll < acc){ chosen = s; break; }
+    }
+    if(chosen){
+      const min = mods.minSteps ?? 3;
+      const max = mods.maxSteps ?? 5;
+      encounterCooldown = min + Math.floor(Math.random() * (max - min + 1));
+      return Dustland.actions.startCombat({ ...chosen });
+    }
+    return;
+  }
   const bank = enemyBanks[state.map];
   if(!bank || !bank.length) return;
   const dist = distanceToRoad(party.x, party.y);
@@ -315,7 +337,9 @@ function checkRandomEncounter(){
       count = 2 + Math.floor(Math.random() * 2);
     }
     if (count > 1) def.count = count;
-    encounterCooldown = 3 + Math.floor(Math.random() * 3);
+    const min = mods.minSteps ?? 3;
+    const max = mods.maxSteps ?? 5;
+    encounterCooldown = min + Math.floor(Math.random() * (max - min + 1));
     return Dustland.actions.startCombat(def);
   }
 }
