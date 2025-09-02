@@ -118,3 +118,11 @@ The prototype doesn't spend Adrenaline yet; it's a pacing probe. Once the gain c
 - [x] **Playtesting:** Conduct extensive playtests to balance Adrenaline generation rates, special costs, and overall combat difficulty. Ensure the difficulty curve is challenging but fair.
 - [x] **AI Improvements:** Enhance enemy AI to use their own specials and coordinate attacks.
 - [x] **Telemetry:** Log combat stats during playtests to surface pacing issues and balance swings early.
+
+### Verification Instructions
+
+- **HUD Playtest**
+  1. Launch a mock combat encounter with the updated HUD.
+  2. Have two players complete the fight and watch their ability to track Adrenaline and health.
+  3. Note any spacing or contrast issues in the bars and icons.
+  4. Record feedback and adjust the HUD layout as needed.
