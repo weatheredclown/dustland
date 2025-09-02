@@ -2396,6 +2396,7 @@ function startNewBldg() {
   document.getElementById('bldgY').value = 0;
   document.getElementById('bldgW').value = 6;
   document.getElementById('bldgH').value = 5;
+  document.getElementById('bldgBoarded').checked = false;
   bldgGrid = Array.from({length:5},(_,yy)=>Array.from({length:6},(_,xx)=>TILE.BUILDING));
   bldgGrid[4][3]=TILE.DOOR;
   bldgPalette.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
@@ -2431,7 +2432,8 @@ function addBuilding() {
     interiorId = makeInteriorRoom();
     const I = interiors[interiorId]; I.id = interiorId; moduleData.interiors.push(I); renderInteriorList();
   }
-  const b = placeHut(x,y,{interiorId, grid:bldgGrid});
+  const boarded = document.getElementById('bldgBoarded').checked;
+  const b = placeHut(x,y,{interiorId, grid:bldgGrid, boarded});
   moduleData.buildings.push(b);
   editBldgIdx = moduleData.buildings.length - 1;
   renderBldgList();
@@ -2468,6 +2470,7 @@ function editBldg(i) {
   document.getElementById('bldgY').value = b.y;
   document.getElementById('bldgW').value = b.w;
   document.getElementById('bldgH').value = b.h;
+  document.getElementById('bldgBoarded').checked = !!b.boarded;
   bldgGrid = b.grid ? b.grid.map(r=>r.slice()) : Array.from({length:b.h},()=>Array.from({length:b.w},()=>TILE.BUILDING));
   updateInteriorOptions();
   document.getElementById('bldgInterior').value = b.interiorId || '';
@@ -2671,7 +2674,8 @@ function applyBldgChanges() {
   }
   const ob = moduleData.buildings[editBldgIdx];
   removeBuilding(ob);
-  const b = placeHut(x, y, { interiorId, grid: bldgGrid, boarded: ob.boarded });
+  const boarded = document.getElementById('bldgBoarded').checked;
+  const b = placeHut(x, y, { interiorId, grid: bldgGrid, boarded });
   moduleData.buildings[editBldgIdx] = b;
   selectedObj = { type: 'bldg', obj: b };
   placingType = null;

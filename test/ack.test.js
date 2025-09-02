@@ -644,3 +644,20 @@ test('collectNPCFromForm retains custom portrait path', () => {
   const npc = collectNPCFromForm();
   assert.strictEqual(npc.portraitSheet, 'assets/portraits/grin_4.png');
 });
+
+test('building boarded state round trips through editor', () => {
+  const prevModuleBldgs = moduleData.buildings;
+  const prevBuilds = globalThis.buildings.slice();
+  genWorld(1, { buildings: [] });
+  moduleData.buildings = [];
+  startNewBldg();
+  document.getElementById('bldgBoarded').checked = true;
+  addBuilding();
+  assert.strictEqual(moduleData.buildings[0].boarded, true);
+  editBldg(0);
+  document.getElementById('bldgBoarded').checked = false;
+  applyBldgChanges();
+  assert.strictEqual(moduleData.buildings[0].boarded, false);
+  moduleData.buildings = prevModuleBldgs;
+  globalThis.buildings = prevBuilds;
+});
