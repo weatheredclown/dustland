@@ -129,5 +129,4 @@ startGame = function(){
   const template = LOOTBOX_DEMO_MODULE.templates.find(t => t.id === 'training_dummy');
   const npc = makeNPC('training_dummy_1', 'demo_room', 5, Math.floor(6/2), template.color, template.name, '', template.desc, {}, null, null, null, { combat: { ...template.combat, HP: 5, challenge: 5 } });
   NPCS.push(npc);
-  refreshUI();
 };

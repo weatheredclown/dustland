@@ -91,5 +91,4 @@ startGame = function () {
   const s = TRUE_DUST.start;
   setMap(s.map, 'Stonegate');
   setPartyPos(s.x, s.y);
-  updateHUD?.();
 };

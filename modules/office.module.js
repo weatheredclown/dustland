@@ -638,8 +638,6 @@ startGame = function () {
     setPartyPos(s.x, s.y);
     setMap(s.map);
     player.scrap = 10;
-    updateHUD();
-    refreshUI();
     log('You arrive at the office.');
   } else {
     throw Error("Malformed or incomplete module: OFFICE_MODULE");

@@ -123,7 +123,6 @@ window.startGame = async function () {
   const start = moduleData && moduleData.start ? moduleData.start : { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   setPartyPos(start.x, start.y);
   setMap(start.map || 'world', 'Module');
-  refreshUI();
   log('Adventure begins.');
 };
 

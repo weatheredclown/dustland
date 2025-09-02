@@ -843,6 +843,7 @@ function watchModuleLoad(){
 function beginGame(){
   watchModuleLoad();
   startGame();
+  refreshUI();
 }
 
 if  (ccBack) ccBack.onclick=()=>{ if(step>1) { step--; renderStep(); } };

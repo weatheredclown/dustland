@@ -2042,8 +2042,4 @@ startGame = function () {
   const loc = s || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   setMap(loc.map, loc.map === 'world' ? 'Wastes' : 'Test Hall');
   setPartyPos(loc.x, loc.y);
-  renderInv();
-  renderQuests();
-  renderParty();
-  updateHUD();
 };

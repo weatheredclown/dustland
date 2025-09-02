@@ -40,7 +40,6 @@ startGame = function () {
   const s = JAX_REPAIR.start;
   setPartyPos(s.x, s.y);
   setMap(s.map, 'Repair Bay');
-  refreshUI();
   log('The generator sputters! Hold off the attack while Jax repairs it.');
   let time = 5;
   const timer = setInterval(() => {
