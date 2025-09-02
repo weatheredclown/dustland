@@ -7,7 +7,7 @@ import { makeDocument } from './test-harness.js';
 const full = await fs.readFile(new URL('../scripts/dustland-engine.js', import.meta.url), 'utf8');
 const code = full.split('// ===== Boot =====')[0];
 
-test('Persist LLM button toggles with Nano dialog mode', async () => {
+test('Persist LLM button hidden until Nano is ready', async () => {
   const document = makeDocument();
   const canvas = document.createElement('canvas');
   canvas.id = 'game';
@@ -34,7 +34,7 @@ test('Persist LLM button toggles with Nano dialog mode', async () => {
   const persistBtn = document.getElementById('persistLLM');
   document.body.appendChild(persistBtn);
 
-  const nano = { enabled: false, refreshIndicator: () => {} };
+  const nano = { enabled: false, isReady: () => false, refreshIndicator: () => {} };
   const window = {
     document,
     AudioContext: class {},
@@ -74,6 +74,10 @@ test('Persist LLM button toggles with Nano dialog mode', async () => {
   vm.runInContext(code, context);
 
   assert.strictEqual(persistBtn.style.display, 'none');
+  document.getElementById('nanoToggle').onclick();
+  assert.strictEqual(persistBtn.style.display, 'none');
+  nano.isReady = () => true;
+  document.getElementById('nanoToggle').onclick();
   document.getElementById('nanoToggle').onclick();
   assert.notStrictEqual(persistBtn.style.display, 'none');
 });
