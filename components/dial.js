@@ -6,7 +6,11 @@
     const display = document.createElement('div');
     display.className = 'dial';
     container.appendChild(display);
-    function render(){ display.textContent = state.value; }
+    const onChange = typeof opts.onChange === 'function' ? opts.onChange : null;
+    function render(){
+      display.textContent = state.value;
+      if (onChange) onChange(state.value);
+    }
     function clamp(v){ return Math.max(min, Math.min(max, v)); }
     function inc(delta){ state.value = clamp(state.value + delta); render(); }
     display.addEventListener('click', () => inc(1));
