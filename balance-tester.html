@@ -19,7 +19,7 @@
       </div>
     </div>
     <aside class="panel">
-      <h1>DUSTLAND // CRT v0.7.2</h1>
+      <h1 id="title">DUSTLAND // CRT</h1>
       <div class="content" id="log"></div>
       <div class="content">
         <div class="hud">
@@ -175,6 +175,7 @@
   <script defer src="./scripts/dustland-engine.js"></script>
     <script>
       window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('title').textContent += ' v' + ENGINE_VERSION;
         const params = new URLSearchParams(location.search);
         const isAck = params.get('ack-player') === '1';
         if (isAck) {
