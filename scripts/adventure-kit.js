@@ -1511,6 +1511,7 @@ function startNewNPC() {
   editNPCIdx = -1;
   document.getElementById('npcId').value = nextId('npc', moduleData.npcs);
   document.getElementById('npcName').value = '';
+  document.getElementById('npcTitle').value = '';
   document.getElementById('npcDesc').value = '';
   document.getElementById('npcColor').value = '#9ef7a0';
   document.getElementById('npcSymbol').value = '!';
@@ -1576,6 +1577,7 @@ function beginPlaceNPC() {
 function collectNPCFromForm() {
   const id = document.getElementById('npcId').value.trim();
   const name = document.getElementById('npcName').value.trim();
+  const title = document.getElementById('npcTitle').value.trim();
   const desc = document.getElementById('npcDesc').value.trim();
   const color = document.getElementById('npcColor').value.trim() || '#fff';
   const symbol = document.getElementById('npcSymbol').value.trim().charAt(0) || '!';
@@ -1615,7 +1617,7 @@ function collectNPCFromForm() {
   document.getElementById('npcTree').value = JSON.stringify(tree, null, 2);
   loadTreeEditor();
 
-  const npc = { id, name, desc, color, symbol, map, x, y, tree, questId };
+  const npc = { id, name, title, desc, color, symbol, map, x, y, tree, questId };
   const pts = gatherLoopFields();
   if (pts.length >= 2) npc.loop = pts;
   if (combat) {
@@ -1692,6 +1694,7 @@ function editNPC(i) {
   editNPCIdx = i;
   document.getElementById('npcId').value = n.id;
   document.getElementById('npcName').value = n.name;
+  document.getElementById('npcTitle').value = n.title || '';
   document.getElementById('npcDesc').value = n.desc || '';
   document.getElementById('npcColor').value = expandHex(n.color || '#ffffff');
   document.getElementById('npcSymbol').value = n.symbol || '!';

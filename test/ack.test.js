@@ -459,6 +459,15 @@ test('NPC symbol is saved and restored', () => {
   assert.strictEqual(document.getElementById('npcSymbol').value, '?');
 });
 
+test('NPC title survives round trip', () => {
+  moduleData.npcs = [{
+    id: 'npc1', name: 'NPC', title: 'Trader', color: '#fff', map: 'world', x: 0, y: 0, tree: {}
+  }];
+  editNPC(0);
+  const npc = collectNPCFromForm();
+  assert.strictEqual(npc.title, 'Trader');
+});
+
 test('NPC combat fields round trip through editor', () => {
   moduleData.npcs = [{
     id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0, tree: {},
