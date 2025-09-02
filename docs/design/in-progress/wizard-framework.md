@@ -98,4 +98,4 @@ This wizard helps create a building with multiple interior rooms, like a house w
 #### **Phase 4: Integration & Testing**
 - [x] **Editor Integration:** Add a "Wizards" menu to the main editor UI that lists the available wizards.
 - [x] **Playtest: Create an NPC:** Have a team member use the NPC wizard to create a complete quest NPC. Time how long it takes.
-- [ ] **Playtest: Create a Building:** Have a team member use the Building wizard to create a multi-room building. Check for broken door links.
+- [x] **Playtest: Create a Building:** Have a team member use the Building wizard to create a multi-room building. Check for broken door links.
