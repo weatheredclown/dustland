@@ -24,11 +24,11 @@ The Dustland opens its eyes with a whisper of grit and memory. "True Dust" drops
 3. **Bandit Purge:** Accept Mayor Ganton's deal, track the raiders along the road to Lakeside, and decide whether to expose his racket or keep the rifle.
 
 ## Implementation Checklist
-- [ ] Map Stonegate as a 2x2 hub with wall segments, safe-zone trigger, and Rygar spawn point.
-- [ ] Scatter rats and wild dogs outside the wall; ensure no spawn inside.
+- [x] Map Stonegate as a 2x2 hub with wall segments, safe-zone trigger, and Rygar spawn point.
+- [x] Scatter rats and wild dogs outside the wall; ensure no spawn inside.
 - [ ] Build the Maw Complex interior with connected rooms, random encounter tables, and a foreman's desk containing the Mira note.
 - [ ] Script Rygar follower logic and pendant animations.
-- [ ] Add Stonegate gossip NPCs referencing Mira's radio obsession and copper pendant.
+- [x] Add Stonegate gossip NPCs referencing Mira's radio obsession and copper pendant.
 - [ ] Implement radio item: proximity handler for scrap caches and static toast.
 - [ ] Place three diggable scrap caches aligned with radio static zones.
 - [ ] Define pulse rifle item rewarded by Mayor Ganton.
