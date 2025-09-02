@@ -3494,6 +3494,14 @@ if (wizardList && globalThis.Dustland?.NpcWizard) {
   btn.addEventListener('click', () => openWizard(cfg));
   wizardList.appendChild(btn);
 }
+if (wizardList && globalThis.Dustland?.BuildingWizard) {
+  const cfg = globalThis.Dustland.BuildingWizard;
+  const btn = document.createElement('button');
+  btn.className = 'btn';
+  btn.textContent = cfg.title;
+  btn.addEventListener('click', () => openWizard(cfg));
+  wizardList.appendChild(btn);
+}
 
 function openWizard(cfg) {
   const modal = document.getElementById('wizardModal');

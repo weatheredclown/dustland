@@ -1,7 +1,9 @@
 (function(){
-  function doorLinkerStep(entryKey, exitKey){
+  function doorLinkerStep(entryKey, exitKey, entryLabel, exitLabel){
     entryKey = entryKey || 'entry';
     exitKey = exitKey || 'exit';
+    entryLabel = entryLabel || 'World Entry';
+    exitLabel = exitLabel || 'Interior Exit';
     return {
       render(container, state){
         this.state = state;
@@ -39,8 +41,8 @@
           });
           return pane;
         }
-        wrap.appendChild(makePane('World Entry', entryKey));
-        wrap.appendChild(makePane('Interior Exit', exitKey));
+        wrap.appendChild(makePane(entryLabel, entryKey));
+        wrap.appendChild(makePane(exitLabel, exitKey));
         container.appendChild(wrap);
       },
       validate(){
