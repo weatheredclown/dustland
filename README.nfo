@@ -140,6 +140,7 @@ _______________________________________________________________________________
     The main game still runs from the repo download alone.
 
 [ FEATURE LOG ]
+  - Zones support spawn tables with probability and min/max steps between combat.
   - ACK player can fetch modules by URL, load local JSON, or auto-load via &module=URL (defaults to modules/golden.module.json).
   - World map editor supports mousewheel zoom and right-drag panning.
   - World map editor includes a stamp icon for 16x16 terrain chunks.
