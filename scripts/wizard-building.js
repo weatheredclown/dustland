@@ -16,11 +16,12 @@ Dustland.wizards.building = {
   steps,
   commit(state){
     state = state || {};
+    if(!state.entry || !state.exit) throw new Error('door links incomplete');
     const id = (state.tilemap || 'interior').replace(/\.[^/.]+$/, '');
     const building = { id, tilemap: state.tilemap };
     const doors = [
-      { from: 'world', to: id, x: state.entry?.x || 0, y: state.entry?.y || 0 },
-      { from: id, to: 'world', x: state.exit?.x || 0, y: state.exit?.y || 0 }
+      { from: 'world', to: id, x: Number(state.entry.x) || 0, y: Number(state.entry.y) || 0 },
+      { from: id, to: 'world', x: Number(state.exit.x) || 0, y: Number(state.exit.y) || 0 }
     ];
     return { buildings: [building], doors };
   }

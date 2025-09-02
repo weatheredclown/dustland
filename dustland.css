@@ -164,8 +164,8 @@ input[type="range"] {
 
     .status-row {
         display: flex;
-        gap: 2px;
-        margin-top: 4px;
+        gap: 1px;
+        margin-top: 2px;
         min-height: 8px
     }
 
@@ -173,7 +173,8 @@ input[type="range"] {
         width: 8px;
         height: 8px;
         background: #8bd98d;
-        border-radius: 2px
+        border-radius: 2px;
+        filter: contrast(1.2);
     }
 
     #game {

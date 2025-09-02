@@ -21,3 +21,17 @@ test('dial widget increments and clamps', async () => {
   dial.set(10);
   assert.strictEqual(dial.value(), 5);
 });
+
+test('dial widget triggers onChange callback', async () => {
+  const document = makeDocument();
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  const context = { window: { document }, document };
+  vm.createContext(context);
+  const code = await fs.readFile(new URL('../components/dial.js', import.meta.url), 'utf8');
+  vm.runInContext(code, context);
+  let value = 0;
+  const dial = context.Dustland.DialWidget(container, { min: 0, max: 5, onChange: v => { value = v; } });
+  dial.inc();
+  assert.strictEqual(value, 1);
+});
