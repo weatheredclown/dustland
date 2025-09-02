@@ -264,7 +264,18 @@ const officeFloorColors = ['#233223','#243424','#222a22'];
 const officeMaps = new Set(['floor1','floor2','floor3']);
 
 const tileChars = {0:'.',1:'^',2:'~',3:',',4:'=',5:'%',6:'#',7:'.',8:'+',9:'B'};
-const tileCharColors = {0:'#c4b357',1:'#bfbfbf',2:'#a3d9ff',3:'#8fcf8f',4:'#dddddd',5:'#b4c6b4',6:'#cccccc',7:'#dddddd',8:'#ffffff',9:'#ffffff'};
+const tileCharColors = {
+  0: lightenColor('#1e271d', 0.2),
+  1: lightenColor('#313831', 0.2),
+  2: lightenColor('#1573ff', 0.2),
+  3: lightenColor('#203320', 0.2),
+  4: lightenColor('#777777', 0.2),
+  5: lightenColor('#304326', 0.2),
+  6: lightenColor('#4d5f4d', 0.2),
+  7: lightenColor('#233223', 0.2),
+  8: lightenColor('#8bd98d', 0.2),
+  9: lightenColor('#000000', 0.2)
+};
 function jitterColor(hex, x, y) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -273,6 +284,15 @@ function jitterColor(hex, x, y) {
   const factor = 0.9 + (hash / 255) * 0.2;
   const adj = v => Math.max(0, Math.min(255, Math.floor(v * factor)));
   return `rgb(${adj(r)},${adj(g)},${adj(b)})`;
+}
+function lightenColor(hex, amt = 0.2) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const lr = Math.min(255, Math.round(r + (255 - r) * amt));
+  const lg = Math.min(255, Math.round(g + (255 - g) * amt));
+  const lb = Math.min(255, Math.round(b + (255 - b) * amt));
+  return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
 }
 globalThis.tileChars = tileChars;
 globalThis.jitterColor = jitterColor;
