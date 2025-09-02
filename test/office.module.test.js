@@ -39,6 +39,14 @@ test('office module places Boots of Speed near forest entry', () => {
   assert.match(src, /mods: \{ AGI: 5, move_delay_mod: 0\.5 \}/);
 });
 
+test('office module defines a powerful maze sword', () => {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const file = path.join(__dirname, '..', 'modules', 'office.module.js');
+  const src = fs.readFileSync(file, 'utf8');
+  assert.match(src, /id: 'maze_sword'/);
+  assert.match(src, /mods: \{ ATK: 10 \}/);
+});
+
 test('office module uses object visuals for elevator and vending machine', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
