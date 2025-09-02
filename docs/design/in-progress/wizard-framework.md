@@ -98,4 +98,10 @@ This wizard helps create a building with multiple interior rooms, like a house w
 #### **Phase 4: Integration & Testing**
 - [x] **Editor Integration:** Add a "Wizards" menu to the main editor UI that lists the available wizards.
 - [x] **Playtest: Create an NPC:** Have a team member use the NPC wizard to create a complete quest NPC. Time how long it takes.
-- [x] **Playtest: Create a Building:** Have a team member use the Building wizard to create a multi-room building. Check for broken door links.
+- [ ] **Playtest: Create a Building:** Have a team member use the Building wizard to create a multi-room building. Check for broken door links.
+    1. Open the editor's **Wizards** tab.
+    2. Click **Building Wizard**.
+    3. Select two interior maps, using **Next** to move between steps.
+    4. Click tiles in each pane to place the world entry/exit and the doors between rooms.
+    5. Press **Done** and verify the module data links all doors correctly.
+
