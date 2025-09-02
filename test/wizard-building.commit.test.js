@@ -30,3 +30,12 @@ test('BuildingWizard commit links doors', async () => {
     ]
   });
 });
+
+test('commit throws when door links missing', async () => {
+  const code = await fs.readFile(new URL('../scripts/wizard-building.js', import.meta.url), 'utf8');
+  const context = { Dustland: { WizardSteps: {}, wizards: {} } };
+  vm.createContext(context);
+  vm.runInContext(code, context);
+  const commit = context.Dustland.wizards.building.commit;
+  assert.throws(() => commit({ tilemap: 'a.tmx', entry: { x: 1, y: 2 } }));
+});

@@ -307,6 +307,7 @@ function postLoad(module) {
 
 globalThis.TRUE_DUST = JSON.parse(DATA);
 globalThis.TRUE_DUST.postLoad = postLoad;
+globalThis.TRUE_DUST.startRadio = startRadio;
 
 startGame = function () {
   applyModule(TRUE_DUST);

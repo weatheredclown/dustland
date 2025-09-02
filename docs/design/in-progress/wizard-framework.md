@@ -104,3 +104,4 @@ This wizard helps create a building with multiple interior rooms, like a house w
     3. Select two interior maps, using **Next** to move between steps.
     4. Click tiles in each pane to place the world entry/exit and the doors between rooms.
     5. Press **Done** and verify the module data links all doors correctly.
+
