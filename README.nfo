@@ -11,7 +11,7 @@ _______________________________________________________________________________
 |     ░       ░           ░                ░  ░      ░           ░    ░       |
 |                           D U S T L A N D   C R T                           |
 |                      Wasteland-style browser RPG (WIP)                      |
-|                               v0.7.2 .NFO                                   |
+|                               v0.16.0 .NFO                                  |
 |_____________________________________________________________________________|
 
 [ ABOUT ]
@@ -91,7 +91,7 @@ _______________________________________________________________________________
     * CRT styling and layout.
   - No external assets or libraries.
 
-[ KNOWN GOOD BEHAVIOR (v0.7.2) ]
+[ KNOWN GOOD BEHAVIOR (v0.16.0) ]
   - Stable boot: hall always renders before any modal (no blank canvas).
   - Items/NPCs draw before player (no sprite pop-under).
   - Loot from chests spawns on a nearby free tile (never under the player).
