@@ -263,6 +263,20 @@ const colors = {0:'#1e271d',1:'#313831',2:'#1573ff',3:'#203320',4:'#777777',5:'#
 const officeFloorColors = ['#233223','#243424','#222a22'];
 const officeMaps = new Set(['floor1','floor2','floor3']);
 
+const tileChars = {0:'.',1:'^',2:'~',3:',',4:'=',5:'%',6:'#',7:'.',8:'+',9:'B'};
+const tileCharColors = {0:'#c4b357',1:'#bfbfbf',2:'#a3d9ff',3:'#8fcf8f',4:'#dddddd',5:'#b4c6b4',6:'#cccccc',7:'#dddddd',8:'#ffffff',9:'#ffffff'};
+function jitterColor(hex, x, y) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const hash = (x * 73856093 ^ y * 19349663) & 255;
+  const factor = 0.9 + (hash / 255) * 0.2;
+  const adj = v => Math.max(0, Math.min(255, Math.floor(v * factor)));
+  return `rgb(${adj(r)},${adj(g)},${adj(b)})`;
+}
+globalThis.tileChars = tileChars;
+globalThis.jitterColor = jitterColor;
+
 // ===== Camera & CRT draw with ghosting =====
 const disp = document.getElementById('game');
 const dctx = disp.getContext('2d');
@@ -389,7 +403,13 @@ function render(gameState=state, dt){
           if(t===TILE.FLOOR && officeMaps.has(activeMap)){
             col = officeFloorColors[(gx+gy)%officeFloorColors.length];
           }
-          ctx.fillStyle = col; ctx.fillRect(vx*TS,vy*TS,TS,TS);
+          ctx.fillStyle = jitterColor(col, gx, gy);
+          ctx.fillRect(vx*TS,vy*TS,TS,TS);
+          const ch = tileChars[t];
+          if(ch){
+            ctx.fillStyle = tileCharColors[t];
+            ctx.fillText(ch, vx*TS+4, vy*TS+12);
+          }
           if(t===TILE.DOOR){
             ctx.strokeStyle='#9ef7a0';
             ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10);
