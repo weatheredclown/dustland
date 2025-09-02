@@ -31,6 +31,7 @@ test('Persist LLM button hidden until Nano is ready', async () => {
   document.body.appendChild(document.getElementById('nanoToggle'));
   document.body.appendChild(document.getElementById('audioToggle'));
   document.body.appendChild(document.getElementById('mobileToggle'));
+  document.body.appendChild(document.getElementById('tileCharToggle'));
   const persistBtn = document.getElementById('persistLLM');
   document.body.appendChild(persistBtn);
 
