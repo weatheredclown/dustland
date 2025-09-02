@@ -88,4 +88,20 @@ Here’s the roadmap. We’ll build the core systems first, get the player-facin
 - [ ] **Playtest: Zone Difficulty:** Evaluate the "Scrap Wastes" zone to ensure the difficulty curve feels fair but engaging. Check if players feel encouraged to tackle the optional high-level enemies.
     - Testers reported the zone as tough but fair; about two thirds attempted at least one optional enemy and enjoyed the challenge.
 
+### Verification Instructions
+
+- **Playtest: The First Ding**
+  1. Start a fresh save and defeat enemies until the first level-up.
+  2. Record time from first input to level-up; target is under ten minutes.
+
+- **Playtest: Trainer Flow**
+  1. Approach a trainer with one unspent skill point.
+  2. Select an upgrade and exit the dialog.
+  3. Measure time from opening the dialog to returning to movement; target under fifteen seconds.
+
+- **Playtest: Zone Difficulty**
+  1. Traverse the "Scrap Wastes" with baseline gear.
+  2. Engage standard and optional high-level enemies.
+  3. Collect player feedback on challenge and adjust enemy stats as needed.
+
 > **Clown:** This roadmap feels solid. It's a ladder of features we can build and test one rung at a time. And every rung is something a modder can hook into and twist. Let's get to it.

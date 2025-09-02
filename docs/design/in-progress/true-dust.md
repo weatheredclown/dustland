@@ -36,3 +36,22 @@ The Dustland opens its eyes with a whisper of grit and memory. "True Dust" drops
 - [ ] Design Lakeside dockhand scene: give pendant fragment when Rygar present; deliver warning note when absent.
 - [ ] Log quest updates for Rygar's Echo, Static Whisper, and Bandit Purge.
 - [x] Test Stonegate safety, radio range, bandit balance, and Lakeside branching outcomes.
+
+## Verification Instructions
+
+- **Stonegate Safety**
+  1. Spawn inside Stonegate and wait two minutes.
+  2. Verify no enemies appear within the walls.
+
+- **Radio Range**
+  1. Equip the cracked radio.
+  2. Walk the surrounding desert and confirm static bursts near all three scrap caches.
+
+- **Bandit Balance**
+  1. Fight the road bandit encounters with baseline gear.
+  2. Adjust stats if fights feel too easy or deadly.
+
+- **Lakeside Branching**
+  1. Clear the route to Lakeside with Rygar in party, then without him.
+  2. Confirm the dockhand gives the pendant fragment when Rygar is present and the warning note when absent.
+

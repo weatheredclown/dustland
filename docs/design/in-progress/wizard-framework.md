@@ -105,3 +105,14 @@ This wizard helps create a building with multiple interior rooms, like a house w
     4. Click tiles in each pane to place the world entry/exit and the doors between rooms.
     5. Press **Done** and verify the module data links all doors correctly.
 
+### Verification Instructions
+
+- **Playtest: Create an NPC**
+  1. Open the editor and run the NPC wizard.
+  2. Build a quest NPC from start to finish.
+  3. Note the time to completion and ensure the generated data loads in game.
+
+- **Playtest: Create a Building**
+  1. Use the Building wizard to assemble a multi-room structure.
+  2. Enter and exit each room to confirm door links work.
+  3. Record any broken links or placement issues.

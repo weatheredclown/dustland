@@ -132,6 +132,23 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 - [ ] **Puzzle Usability Testing:** Have players who are unfamiliar with the puzzles test them to ensure they are challenging but not frustrating. Implement quick resets based on their feedback.
 - [ ] **Modding Tools and Documentation:** Create a tutorial for the modding community that explains how to use the broadcast fragment system to create their own stories within the Dustland universe.
 
+### Verification Instructions
+
+- **Playtest the Narrative Arc**
+  1. Load the first three broadcast fragment modules in sequence.
+  2. Play through the full arc in one session.
+  3. Note pacing issues or confusing transitions and log them.
+
+- **Test Character Arcs**
+  1. Trigger each signature encounter for Mara, Jax, and Nyx.
+  2. Gather player feedback on clarity and engagement.
+  3. Adjust dialogue or mechanics based on observations.
+
+- **Puzzle Usability Testing**
+  1. Observe new players attempting each puzzle without guidance.
+  2. Track reset counts and moments of confusion.
+  3. Refine puzzle cues or reset flows to smooth rough spots.
+
 > **Team Review:**
 >
 > **Gizmo:** This is a solid plan. The modular approach is smart, and the focus on reusable systems will pay off in the long run. Let's make sure we document the data structures for the new systems as we build them.
