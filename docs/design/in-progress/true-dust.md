@@ -27,7 +27,7 @@ The Dustland opens its eyes with a whisper of grit and memory. "True Dust" drops
 - [x] Map Stonegate as a 2x2 hub with wall segments, safe-zone trigger, and Rygar spawn point.
 - [x] Scatter rats and wild dogs outside the wall; ensure no spawn inside.
 - [x] Build the Maw Complex interior with four connected rooms, random encounter tables, and a foreman's desk containing the Mira note.
-- [ ] Script Rygar follower logic and pendant animations.
+- [x] Script Rygar follower logic and pendant animations.
 - [x] Add Stonegate gossip NPCs referencing Mira's radio obsession and copper pendant.
 - [ ] Implement radio item: proximity handler for scrap caches and static toast.
 - [ ] Place three diggable scrap caches aligned with radio static zones.

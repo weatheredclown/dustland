@@ -229,7 +229,34 @@ const DATA = `{
   "start": { "map": "stonegate", "x": 2, "y": 3 }
 }`;
 
-function postLoad(module) {}
+function startPendant() {
+  if (startPendant._t) return;
+  startPendant._t = setInterval(() => {
+    const r = party.find(m => m.id === 'rygar');
+    if (!r) {
+      clearInterval(startPendant._t);
+      startPendant._t = null;
+      return;
+    }
+    if (typeof playFX === 'function') playFX('status');
+    if (typeof log === 'function') log("Rygar's pendant glints.");
+  }, 8000);
+}
+
+function postLoad(module) {
+  const rygar = module.npcs.find(n => n.id === 'rygar');
+  if (!rygar || !rygar.tree || !rygar.tree.start) return;
+  rygar.tree.start.choices.unshift({
+    label: 'Travel with us',
+    join: { id: 'rygar', name: 'Rygar', role: 'Guard' },
+    effects: [startPendant],
+    to: 'joined'
+  });
+  rygar.tree.joined = {
+    text: 'Rygar nods and falls in step.',
+    choices: [ { label: '(Leave)', to: 'bye' } ]
+  };
+}
 
 globalThis.TRUE_DUST = JSON.parse(DATA);
 globalThis.TRUE_DUST.postLoad = postLoad;
