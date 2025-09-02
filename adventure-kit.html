@@ -390,7 +390,14 @@
           </div>
           <label><input type="checkbox" id="npcCombat"> Combat NPC</label>
           <div id="combatOpts" style="display:none">
-            <p class="muted">(no combat options)</p>
+            <label>HP<input id="npcHP" type="number" min="1" value="5" /></label>
+            <label>ATK<input id="npcATK" type="number" min="0" value="0" /></label>
+            <label>DEF<input id="npcDEF" type="number" min="0" value="0" /></label>
+            <label>Loot<input id="npcLoot" /></label>
+            <label><input type="checkbox" id="npcBoss" /> Boss</label>
+            <label>Special Cue<input id="npcSpecialCue" /></label>
+            <label>Special DMG<input id="npcSpecialDmg" type="number" min="0" /></label>
+            <label>Special Delay<input id="npcSpecialDelay" type="number" min="0" /></label>
           </div>
           <label><input type="checkbox" id="npcShop"> Shop NPC</label>
           <div id="shopOpts" style="display:none">
