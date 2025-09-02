@@ -13,6 +13,26 @@ const modulePath = path.resolve(file);
 const baseName = path.basename(modulePath).replace(/\.module\.js$/, '');
 const jsonPath = path.join('data', 'modules', `${baseName}.json`);
 
+const tileEmoji = Object.freeze({
+  0:'\u{1F3DD}',
+  1:'\u{1FAA8}',
+  2:'\u{1F30A}',
+  3:'\u{1F33F}',
+  4:'\u{1F6E3}',
+  5:'\u{1F3DA}',
+  6:'\u{1F9F1}',
+  7:'\u{2B1C}',
+  8:'\u{1F6AA}',
+  9:'\u{1F3E0}'
+});
+const emojiTile = Object.freeze(Object.fromEntries(Object.entries(tileEmoji).map(([k,v])=>[v,+k])));
+function gridFromEmoji(rows){
+  return rows.map(r=> Array.from(r).map(ch=> emojiTile[ch] ?? 0));
+}
+function gridToEmoji(grid){
+  return grid.map(r=> r.map(t=> tileEmoji[t] || '').join(''));
+}
+
 function extractData(str){
   const match = str.match(/const DATA = `([\s\S]*?)`;/);
   return match ? match[1] : null;
@@ -26,6 +46,9 @@ if (cmd === 'export') {
     process.exit(1);
   }
   const obj = JSON.parse(dataStr);
+  if (Array.isArray(obj.world) && Array.isArray(obj.world[0]) && typeof obj.world[0][0] === 'number') {
+    obj.world = gridToEmoji(obj.world);
+  }
   obj.module = file;
   obj.name = obj.name || `${baseName}-module`;
   fs.mkdirSync(path.dirname(jsonPath), { recursive: true });
@@ -34,6 +57,9 @@ if (cmd === 'export') {
 } else if (cmd === 'import') {
   const jsonText = fs.readFileSync(jsonPath, 'utf8');
   const obj = JSON.parse(jsonText);
+  if (Array.isArray(obj.world) && typeof obj.world[0] === 'string') {
+    obj.world = gridFromEmoji(obj.world);
+  }
   delete obj.module;
   const cleanText = JSON.stringify(obj, null, 2);
   const text = fs.readFileSync(modulePath, 'utf8');
