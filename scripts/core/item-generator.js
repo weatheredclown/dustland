@@ -48,12 +48,6 @@ const ItemGen = {
     armored: { min: 7, max: 10 },
     vaulted: { min: 10, max: 15 }
   },
-  scrapValues: {
-    rusted: 5,
-    sealed: 20,
-    armored: 100,
-    vaulted: 500
-  },
   calcScrap(item){
     let total = 0;
     const stats = item.stats || {};
@@ -86,7 +80,7 @@ const ItemGen = {
       stats: { power },
       scrap: 0
     };
-    item.scrap = this.scrapValues[rank] ?? this.calcScrap(item);
+    item.scrap = this.calcScrap(item);
     item.tags = [noun.toLowerCase()];
     if(type === 'oddity'){
       item.lore = this.pick(this.oddityLore, rng);
