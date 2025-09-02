@@ -130,6 +130,39 @@ const DATA = `{
       "y": 3
     },
     {
+      "id": "cracked_radio",
+      "name": "Cracked Radio",
+      "type": "trinket",
+      "slot": "trinket"
+    },
+    {
+      "id": "scrap_cache_1",
+      "name": "Buried Cache",
+      "type": "spoils-cache",
+      "rank": "rusted",
+      "map": "stonegate",
+      "x": 0,
+      "y": 1
+    },
+    {
+      "id": "scrap_cache_2",
+      "name": "Buried Cache",
+      "type": "spoils-cache",
+      "rank": "rusted",
+      "map": "stonegate",
+      "x": 5,
+      "y": 4
+    },
+    {
+      "id": "scrap_cache_3",
+      "name": "Buried Cache",
+      "type": "spoils-cache",
+      "rank": "rusted",
+      "map": "stonegate",
+      "x": 2,
+      "y": 0
+    },
+    {
       "id": "pulse_rifle",
       "name": "Pulse Rifle",
       "type": "weapon",
@@ -243,6 +276,20 @@ function startPendant() {
   }, 8000);
 }
 
+function startRadio() {
+  if (startRadio._t) return;
+  const caches = TRUE_DUST.items.filter(i => i.id.startsWith('scrap_cache'));
+  startRadio._t = setInterval(() => {
+    const hasRadio = party.some(m => m.equip?.trinket?.id === 'cracked_radio');
+    if (!hasRadio) return;
+    const near = caches.some(c => party.map === c.map && Math.abs(party.x - c.x) <= 1 && Math.abs(party.y - c.y) <= 1);
+    if (near) {
+      if (typeof toast === 'function') toast('Static bursts from the radio.');
+      if (typeof log === 'function') log('The radio crackles with static.');
+    }
+  }, 1000);
+}
+
 function postLoad(module) {
   const rygar = module.npcs.find(n => n.id === 'rygar');
   if (!rygar || !rygar.tree || !rygar.tree.start) return;
@@ -266,4 +313,5 @@ startGame = function () {
   const s = TRUE_DUST.start;
   setMap(s.map, 'Stonegate');
   setPartyPos(s.x, s.y);
+  startRadio();
 };

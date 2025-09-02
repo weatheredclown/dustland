@@ -37,4 +37,8 @@ test('true dust module defines safe zone and spawns', () => {
   assert.strictEqual(note.map, 'maw_4');
   assert.strictEqual(note.x, 7);
   assert.strictEqual(note.y, 3);
+  const radio = data.items.find(i => i.id === 'cracked_radio');
+  assert.ok(radio && radio.slot === 'trinket');
+  const caches = data.items.filter(i => i.id.startsWith('scrap_cache'));
+  assert.strictEqual(caches.length, 3);
 });
