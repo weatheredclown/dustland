@@ -10,6 +10,12 @@ const tileColors = {0:'#1e271d',1:'#313831',2:'#1573ff',3:'#203320',4:'#777777',
 let moveDelay = 0;
 const zones = (globalThis.Dustland && globalThis.Dustland.zoneEffects) || [];
 let encounterCooldown = 0;
+let weatherSpeed = 1;
+let encounterBias = null;
+bus?.on?.('weather:change', w => {
+  weatherSpeed = typeof w?.speedMod === 'number' ? w.speedMod : 1;
+  encounterBias = w?.encounterBias || null;
+});
 
 function zoneAttrs(map,x,y){
   let healMult = 1;
@@ -96,6 +102,7 @@ function calcMoveDelay(tile, actor, map=state.map){
   let adjusted = base - agi * 10;
   const delayMod = actor?._bonus?.move_delay_mod || 0;
   if (delayMod) adjusted *= Math.max(0, 1 - delayMod);
+  adjusted *= weatherSpeed;
   return adjusted > 0 ? adjusted : 0;
 }
 
@@ -326,6 +333,11 @@ function checkRandomEncounter(){
   if(Math.random() < chance){
     let pool = bank.filter(e => (!e.minDist || dist >= e.minDist) && (!e.maxDist || dist <= e.maxDist));
     if(!pool.length) return;
+    if (encounterBias){
+      const tag = encounterBias.toLowerCase();
+      const biased = pool.filter(e => (e.tags && e.tags.includes(tag)) || (e.id && e.id.includes(tag)) || (e.name && e.name.toLowerCase().includes(tag)));
+      if (biased.length) pool = biased;
+    }
     const hard = pool.filter(e => e.minDist);
     if(hard.length) pool = hard;
     const base = pool[Math.floor(Math.random() * pool.length)];
