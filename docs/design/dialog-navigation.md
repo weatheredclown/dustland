@@ -9,6 +9,7 @@
 ## Summary
 
 Menu-driven conversations that feel deliberate and human, built with plain JavaScript and globals. This design introduces a small, testable dialog state machine that hooks into the event bus, reads conversation graphs from ACK-configured data, and renders choices using existing UI controls. It favors clear branches over clever magic and keeps persistent state minimal.
+Snappy verb-driven beats nod to DOS-era adventures so menus stay playful and to the point.
 
 ## Goals
 
