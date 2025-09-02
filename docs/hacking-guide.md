@@ -19,7 +19,7 @@ Dustland CRT uses plain JavaScript with globals and no build step. This guide li
 - `itemDrops` – ground items awaiting pickup.
 
 ## UI helpers
-- `renderParty()`, `renderInv()`, `renderQuests()` – refresh side panels.
+ - `refreshUI()` – refresh side panels.
 
 ## Interactions and movement
 - `takeNearestItem()` – pick up adjacent items.

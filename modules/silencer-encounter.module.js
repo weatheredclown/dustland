@@ -59,6 +59,5 @@ startGame = function () {
   var s = SILENCER_ENCOUNTER.start;
   setPartyPos(s.x, s.y);
   setMap(s.map, 'Arena');
-  refreshUI();
   log('A Silencer scout blocks your path.');
 };

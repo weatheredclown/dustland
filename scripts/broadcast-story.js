@@ -31,5 +31,4 @@ startGame = async function(){
   const pt = BROADCAST_FRAGMENT_1.startPoint || { x: 2, y: Math.floor(WORLD_H/2) };
   setPartyPos(pt.x, pt.y);
   setMap(map, map === 'world' ? 'Wastes' : map);
-  refreshUI();
 };

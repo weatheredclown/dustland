@@ -48,6 +48,5 @@ startGame = function () {
   const s = NYX_TUNING.start;
   setPartyPos(s.x, s.y);
   setMap(s.map, 'Nyx');
-  refreshUI();
   log('Nyx studies the static, awaiting your tone.');
 };

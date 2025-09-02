@@ -120,7 +120,7 @@ _______________________________________________________________________________
   - Useful entry points (see docs/hacking-guide.md for more):
       * genWorld(), seedWorldContent()
       * makeNPC(), NPCS[], quests{}, itemDrops[]
-      * renderParty(), renderInv(), renderQuests()
+      * refreshUI()
       * takeNearestItem(), interact(), move()
       * applyModule(data), openCreator()
       * uncurseItem(id)

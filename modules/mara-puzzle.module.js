@@ -80,7 +80,6 @@ startGame = function () {
   const s = MARA_PUZZLE.start;
   setPartyPos(s.x, s.y);
   setMap(s.map, 'Dust Storm');
-  refreshUI();
   log('You are lost in a dust storm.');
   log('Listen for chimes to find your way out.');
 };
