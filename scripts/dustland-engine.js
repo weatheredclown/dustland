@@ -160,6 +160,14 @@ function setMobileControls(on){
   return mobileButtons;
 }
 function toggleMobileControls(){ setMobileControls(!mobileControlsEnabled); }
+let tileCharsEnabled = true;
+function setTileChars(on){
+  tileCharsEnabled = on;
+  const btn=document.getElementById('tileCharToggle');
+  if(btn) btn.textContent = `ASCII Tiles: ${on ? 'On' : 'Off'}`;
+}
+function toggleTileChars(){ setTileChars(!tileCharsEnabled); }
+globalThis.toggleTileChars = toggleTileChars;
 function sfxTick(){
   if(!audioEnabled) return;
   const o=audioCtx.createOscillator();
@@ -405,10 +413,12 @@ function render(gameState=state, dt){
           }
           ctx.fillStyle = jitterColor(col, gx, gy);
           ctx.fillRect(vx*TS,vy*TS,TS,TS);
-          const ch = tileChars[t];
-          if(ch){
-            ctx.fillStyle = tileCharColors[t];
-            ctx.fillText(ch, vx*TS+4, vy*TS+12);
+          if(tileCharsEnabled){
+            const ch = tileChars[t];
+            if(ch){
+              ctx.fillStyle = tileCharColors[t];
+              ctx.fillText(ch, vx*TS+4, vy*TS+12);
+            }
           }
           if(t===TILE.DOOR){
             ctx.strokeStyle='#9ef7a0';
@@ -970,8 +980,11 @@ if (document.getElementById('saveBtn')) {
   if(audioBtn) audioBtn.onclick=()=>toggleAudio();
   const mobileBtn=document.getElementById('mobileToggle');
   if(mobileBtn) mobileBtn.onclick=()=>toggleMobileControls();
+  const tileCharBtn=document.getElementById('tileCharToggle');
+  if(tileCharBtn) tileCharBtn.onclick=()=>toggleTileChars();
   setAudio(audioEnabled);
   setMobileControls(mobileControlsEnabled);
+  setTileChars(tileCharsEnabled);
   const settingsBtn=document.getElementById('settingsBtn');
   const settings=document.getElementById('settings');
   if(settingsBtn && settings){
@@ -1024,6 +1037,7 @@ if (document.getElementById('saveBtn')) {
       case 't': case 'T': case 'g': case 'G': takeNearestItem(); break;
       case 'o': case 'O': toggleAudio(); break;
       case 'c': case 'C': toggleMobileControls(); break;
+      case 'j': case 'J': toggleTileChars(); break;
       case 'i': case 'I': showTab('inv'); break;
       case 'p': case 'P': showTab('party'); break;
       case 'q': if(!e.ctrlKey && !e.metaKey){ showTab('quests'); e.preventDefault(); } break;
