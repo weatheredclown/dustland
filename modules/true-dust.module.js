@@ -128,6 +128,13 @@ const DATA = `{
       "map": "maw_4",
       "x": 7,
       "y": 3
+    },
+    {
+      "id": "pulse_rifle",
+      "name": "Pulse Rifle",
+      "type": "weapon",
+      "slot": "weapon",
+      "mods": { "ATK": 4, "ADR": 25 }
     }
   ],
   "portals": [

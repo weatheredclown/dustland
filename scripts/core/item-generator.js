@@ -48,12 +48,7 @@ const ItemGen = {
     armored: { min: 7, max: 10 },
     vaulted: { min: 10, max: 15 }
   },
-  scrapValues: {
-    rusted: 5,
-    sealed: 20,
-    armored: 100,
-    vaulted: 500
-  },
+  scrapValues: {},
   calcScrap(item){
     let total = 0;
     const stats = item.stats || {};
