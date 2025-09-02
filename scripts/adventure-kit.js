@@ -2925,9 +2925,7 @@ function saveModule() {
     if (moduleData[k] !== undefined) base[k] = moduleData[k];
   });
   if (moduleData._origKeys?.includes('encounters')) base.encounters = enc;
-  const worldChanged = moduleData._origKeys?.includes('world') ||
-    world.some(row => row.some(t => t !== TILE.SAND && t !== TILE.BUILDING && t !== TILE.DOOR));
-  if (worldChanged) base.world = gridToEmoji(world);
+  base.world = gridToEmoji(world);
   if (moduleData._origKeys?.includes('buildings')) base.buildings = bldgs;
   if (moduleData._origKeys?.includes('interiors')) base.interiors = ints;
   const data = base;
