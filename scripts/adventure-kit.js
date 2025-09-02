@@ -1537,6 +1537,14 @@ function startNewNPC() {
   document.getElementById('npcTurnin').value = 'Thanks for helping.';
   toggleQuestTextWrap();
   document.getElementById('npcTree').value = '';
+  document.getElementById('npcHP').value = 5;
+  document.getElementById('npcATK').value = 0;
+  document.getElementById('npcDEF').value = 0;
+  document.getElementById('npcLoot').value = '';
+  document.getElementById('npcBoss').checked = false;
+  document.getElementById('npcSpecialCue').value = '';
+  document.getElementById('npcSpecialDmg').value = '';
+  document.getElementById('npcSpecialDelay').value = '';
   document.getElementById('npcCombat').checked = false;
   document.getElementById('npcShop').checked = false;
   document.getElementById('shopMarkup').value = 2;
@@ -1610,7 +1618,25 @@ function collectNPCFromForm() {
   const npc = { id, name, desc, color, symbol, map, x, y, tree, questId };
   const pts = gatherLoopFields();
   if (pts.length >= 2) npc.loop = pts;
-  if (combat) npc.combat = { DEF: 5 };
+  if (combat) {
+    const HP = parseInt(document.getElementById('npcHP').value, 10) || 1;
+    const ATK = parseInt(document.getElementById('npcATK').value, 10) || 0;
+    const DEF = parseInt(document.getElementById('npcDEF').value, 10) || 0;
+    const loot = document.getElementById('npcLoot').value.trim();
+    const boss = document.getElementById('npcBoss').checked;
+    const cue = document.getElementById('npcSpecialCue').value.trim();
+    const dmg = parseInt(document.getElementById('npcSpecialDmg').value, 10);
+    const delay = parseInt(document.getElementById('npcSpecialDelay').value, 10);
+    npc.combat = { HP, ATK, DEF };
+    if (loot) npc.combat.loot = loot;
+    if (boss) npc.combat.boss = true;
+    if (cue || !isNaN(dmg) || !isNaN(delay)) {
+      npc.combat.special = {};
+      if (cue) npc.combat.special.cue = cue;
+      if (!isNaN(dmg)) npc.combat.special.dmg = dmg;
+      if (!isNaN(delay)) npc.combat.special.delay = delay;
+    }
+  }
   if (shop) npc.shop = { markup: shopMarkup, inv: [] };
   if (hidden && flag) npc.hidden = true, npc.reveal = { flag, op, value: val };
   if (npcPortraitPath) npc.portraitSheet = npcPortraitPath;
@@ -1703,6 +1729,14 @@ function editNPC(i) {
   document.getElementById('npcTurnin').value = n.tree?.do_turnin?.text || 'Thanks for helping.';
   toggleQuestTextWrap();
   document.getElementById('npcTree').value = JSON.stringify(n.tree, null, 2);
+  document.getElementById('npcHP').value = n.combat?.HP ?? 1;
+  document.getElementById('npcATK').value = n.combat?.ATK ?? 0;
+  document.getElementById('npcDEF').value = n.combat?.DEF ?? 0;
+  document.getElementById('npcLoot').value = n.combat?.loot || '';
+  document.getElementById('npcBoss').checked = !!n.combat?.boss;
+  document.getElementById('npcSpecialCue').value = n.combat?.special?.cue || '';
+  document.getElementById('npcSpecialDmg').value = n.combat?.special?.dmg ?? '';
+  document.getElementById('npcSpecialDelay').value = n.combat?.special?.delay ?? '';
   document.getElementById('npcCombat').checked = !!n.combat;
   document.getElementById('npcShop').checked = !!n.shop;
   document.getElementById('shopMarkup').value = n.shop ? n.shop.markup || 2 : 2;

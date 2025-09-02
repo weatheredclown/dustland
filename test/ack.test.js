@@ -459,6 +459,30 @@ test('NPC symbol is saved and restored', () => {
   assert.strictEqual(document.getElementById('npcSymbol').value, '?');
 });
 
+test('NPC combat fields round trip through editor', () => {
+  moduleData.npcs = [{
+    id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0, tree: {},
+    combat: {
+      HP: 30,
+      ATK: 3,
+      DEF: 2,
+      loot: 'raider_knife',
+      boss: true,
+      special: { cue: 'crackles with energy!', dmg: 5, delay: 1000 }
+    }
+  }];
+  editNPC(0);
+  applyNPCChanges();
+  assert.deepStrictEqual(moduleData.npcs[0].combat, {
+    HP: 30,
+    ATK: 3,
+    DEF: 2,
+    loot: 'raider_knife',
+    boss: true,
+    special: { cue: 'crackles with energy!', dmg: 5, delay: 1000 }
+  });
+});
+
 test('loadMods accepts undefined', () => {
   assert.doesNotThrow(() => loadMods(undefined));
 });
