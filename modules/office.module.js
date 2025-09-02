@@ -576,6 +576,7 @@ const OFFICE_IMPL = (() => {
         { id: 'rusty_dagger', name: 'Rusty Dagger', type: 'weapon', slot: 'weapon', mods: { ATK: 1, ADR: 10 } },
         { id: 'ogre_tooth', name: 'Ogre Tooth', type: 'quest' },
         { id: 'rusty_mop', name: 'Rusty Mop', type: 'weapon', slot: 'weapon', mods: { ATK: 1, ADR: 10 } },
+        { id: 'maze_sword', name: 'Maze Sword', type: 'weapon', slot: 'weapon', mods: { ATK: 10 } },
       ],
       quests: [
         {
