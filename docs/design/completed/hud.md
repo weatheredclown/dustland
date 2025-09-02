@@ -15,4 +15,4 @@ Internal playtest sessions flagged two pain points:
 - Badge layout uses column flex with consistent gaps for clearer reading.
 
 ## Rationale
-Keeping the CRT vibe while boosting clarity and accessibility keeps our drifters' tools sharp wherever they roam.
+Keeping the CRT vibe while boosting clarity and accessibility keeps our drifters' tools sharp wherever they roam. Chunky panels and a 256-color palette wink at VGA adventure roots.

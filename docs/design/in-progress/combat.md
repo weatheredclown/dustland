@@ -6,7 +6,7 @@
 
 ### Core Philosophy: Push Forward or Die
 
-The core of this new system is **Adrenaline**. This isn't your typical mana bar. You don't start with it; you earn it. Every hit you land, every perfectly timed dodge, it builds your Adrenaline meter. It's a resource that fuels your most powerful abilities, your "Specials."
+The core of this new system is **Adrenaline**. This isn't your typical mana bar. You don't start with it; you earn it. Every hit you land, every perfectly timed dodge, it builds your Adrenaline meter. It's a resource that fuels your most powerful abilities, your "Specials." Rotoscoped-style cutaways can punctuate these Specials, echoing Flashback's fluidity without heavy sprites.
 
 This creates a simple, aggressive loop:
 1.  **Engage:** Basic attacks build Adrenaline.

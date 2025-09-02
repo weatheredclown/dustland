@@ -43,4 +43,4 @@ The dialog doesn't care how many entries exist; modders add new upgrades by exte
 2. Selecting an upgrade previews the change and grays out unaffordable options.
 3. Confirming applies the upgrade and deducts the points; cancel leaves everything untouched.
 
-Fast, clear, and hackable—exactly how our trainers like it.
+Fast, clear, and hackable—exactly how our trainers like it. Panels lean on a VGA-style palette to keep it crunchy.
