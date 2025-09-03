@@ -108,7 +108,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 - [ ] **Implement Key Items:**
     - [x] Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.
       - [x] Create the "echo chamber" interior and the script that triggers a vision when the Glinting Key is used.
-    - [ ] Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event.
+    - [x] Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event.
 
 #### **Phase 3: Puzzle and World Building**
 - [x] **Design a radio tower alignment puzzle that tunes the broadcast.**
@@ -119,7 +119,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
    - A collapsed overpass hides directions beneath decades of gang tags; players cycle solvent sprays to reveal each era's markings and overlay them into a route.
    - Picking the wrong sequence bathes the wall in false sunlight and draws a quick Silencer ambush before resetting.
 - [ ] Implement the layered graffiti decoding puzzle as an interactive module and hook it into the Broadcast Story sequence.
-- [ ] **Build Reusable Widgets:**
+- [x] **Build Reusable Widgets:**
     - [x] Create a generic "dial" widget for puzzles like the radio tower.
     - [x] Develop a "sound-based navigation" system that can be used for the dust storm and other similar challenges.
 - [ ] **Flesh out the World:**
@@ -131,6 +131,23 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 - [ ] **Test Character Arcs:** Get feedback on the signature encounters for each character to make sure they are both fun and effective at teaching the character's core mechanics.
 - [ ] **Puzzle Usability Testing:** Have players who are unfamiliar with the puzzles test them to ensure they are challenging but not frustrating. Implement quick resets based on their feedback.
 - [ ] **Modding Tools and Documentation:** Create a tutorial for the modding community that explains how to use the broadcast fragment system to create their own stories within the Dustland universe.
+
+### Verification Instructions
+
+- **Playtest the Narrative Arc**
+  1. Load the first three broadcast fragment modules in sequence.
+  2. Play through the full arc in one session.
+  3. Note pacing issues or confusing transitions and log them.
+
+- **Test Character Arcs**
+  1. Trigger each signature encounter for Mara, Jax, and Nyx.
+  2. Gather player feedback on clarity and engagement.
+  3. Adjust dialogue or mechanics based on observations.
+
+- **Puzzle Usability Testing**
+  1. Observe new players attempting each puzzle without guidance.
+  2. Track reset counts and moments of confusion.
+  3. Refine puzzle cues or reset flows to smooth rough spots.
 
 > **Team Review:**
 >

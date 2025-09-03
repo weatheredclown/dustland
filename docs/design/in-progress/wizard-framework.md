@@ -98,4 +98,28 @@ This wizard helps create a building with multiple interior rooms, like a house w
 #### **Phase 4: Integration & Testing**
 - [x] **Editor Integration:** Add a "Wizards" menu to the main editor UI that lists the available wizards.
 - [x] **Playtest: Create an NPC:** Have a team member use the NPC wizard to create a complete quest NPC. Time how long it takes.
-- [ ] **Playtest: Create a Building:** Have a team member use the Building wizard to create a multi-room building. Check for broken door links.
+- [x] **Playtest: Create a Building:** Have a team member use the Building wizard to create a multi-room building. Check for broken door links.
+    1. Open the editor's **Wizards** tab.
+    2. Click **Building Wizard**.
+    3. Select two interior maps, using **Next** to move between steps.
+    4. Click tiles in each pane to place the world entry/exit and the doors between rooms.
+    5. Press **Done** and verify the module data links all doors correctly.
+
+### Verification Instructions
+
+- **Playtest: Create an NPC**
+  1. Open the editor and click the **Wizards** tab.
+  2. Choose **NPC & Quest Wizard**.
+  3. In **Name & Portrait**, type "Test NPC" in the Name box, pick any portrait, and press **Next**.
+  4. In **Dialogue**, enter a line like "Bring me the widget!" and press **Next**.
+  5. In **Fetch Quest**, select an item, enter a scrap reward, and press **Next**.
+  6. In **Placement**, click the map to place the NPC and press **Done**.
+  7. Play the scene and talk to the NPC to confirm the quest starts and the generated data loads in game.
+
+- **Playtest: Create a Building**
+  1. Open the editor and click the **Wizards** tab.
+  2. Choose **Building Wizard**.
+  3. In **Main Entrance**, select a building sprite, click the world map to place it, then press **Next**.
+  4. In **First Interior**, pick an interior tilemap, click to place the exit door back outside, and press **Next**.
+  5. In **Add More Interiors**, choose another tilemap, click doors in each room to link them, and press **Done** when finished.
+  6. Enter play mode, walk through each door, and note any broken links or placement issues.

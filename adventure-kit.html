@@ -466,6 +466,7 @@
           </div>
           <canvas id="bldgCanvas" width="192" height="160" style="margin-top:4px"></canvas>
           <label>Interior<select id="bldgInterior"></select></label>
+          <label><input type="checkbox" id="bldgBoarded"> Boarded</label>
           <button class="btn" id="addBldg">Add Building</button>
           <button class="btn" type="button" id="cancelBldg" style="display:none">Cancel</button>
           <button class="btn" id="delBldg" style="display:none">Remove Building</button>
@@ -668,8 +669,11 @@
     <script defer src="./components/wizard/steps/asset-picker.js"></script>
     <script defer src="./components/wizard/steps/map-placement.js"></script>
     <script defer src="./components/wizard/steps/item-picker.js"></script>
+    <script defer src="./components/wizard/steps/tilemap-picker.js"></script>
+    <script defer src="./components/wizard/steps/door-linker.js"></script>
     <script defer src="./components/wizard/steps/confirm.js"></script>
     <script defer src="./components/wizard/npc-wizard.js"></script>
+    <script defer src="./scripts/wizard-building.js"></script>
     <script defer src="./scripts/adventure-kit.js"></script>
   </body>
 

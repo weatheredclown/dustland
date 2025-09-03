@@ -16,6 +16,7 @@
         name: state.name,
         portrait: state.portrait,
         dialogue: state.dialogue,
+        map: 'world',
         x: state.pos?.x,
         y: state.pos?.y
       };

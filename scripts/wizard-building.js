@@ -1,27 +1,42 @@
-// Basic Building Wizard config
+// Building Wizard config
 
 globalThis.Dustland = globalThis.Dustland || {};
 Dustland.wizards = Dustland.wizards || {};
 var steps = [];
 if (Dustland.WizardSteps) {
   if (Dustland.WizardSteps.tilemapPicker) {
-    steps.push(Dustland.WizardSteps.tilemapPicker('Tilemap', ['interior_a.tmx', 'interior_b.tmx'], 'tilemap'));
+    steps.push(Dustland.WizardSteps.tilemapPicker('Room 1 Map', ['interior_a.tmx', 'interior_b.tmx'], 'room1'));
+    steps.push(Dustland.WizardSteps.tilemapPicker('Room 2 Map', ['interior_a.tmx', 'interior_b.tmx'], 'room2'));
   }
   if (Dustland.WizardSteps.doorLinker) {
-    steps.push(Dustland.WizardSteps.doorLinker('entry', 'exit'));
+    steps.push(Dustland.WizardSteps.doorLinker('entry', 'exit', 'World Entry', 'Room 1 Exit'));
+    steps.push(Dustland.WizardSteps.doorLinker('room1door', 'room2door', 'Room 1 Door', 'Room 2 Door'));
+  }
+  if (Dustland.WizardSteps.confirm) {
+    steps.push(Dustland.WizardSteps.confirm('Done'));
   }
 }
-Dustland.wizards.building = {
+const BuildingWizard = {
   name: 'BuildingWizard',
+  title: 'Building Wizard',
   steps,
-  commit(state){
+  commit(state) {
     state = state || {};
-    const id = (state.tilemap || 'interior').replace(/\.[^/.]+$/, '');
-    const building = { id, tilemap: state.tilemap };
-    const doors = [
-      { from: 'world', to: id, x: state.entry?.x || 0, y: state.entry?.y || 0 },
-      { from: id, to: 'world', x: state.exit?.x || 0, y: state.exit?.y || 0 }
-    ];
-    return { buildings: [building], doors };
+    const id1 = (state.room1 || state.tilemap || 'interior').replace(/\.[^/.]+$/, '');
+    const buildings = [{ id: id1, tilemap: state.room1 || state.tilemap }];
+    const doors = [];
+    if (state.entry) doors.push({ from: 'world', to: id1, x: state.entry.x || 0, y: state.entry.y || 0 });
+    if (state.exit) doors.push({ from: id1, to: 'world', x: state.exit.x || 0, y: state.exit.y || 0 });
+    if (state.room2) {
+      const id2 = state.room2.replace(/\.[^/.]+$/, '');
+      buildings.push({ id: id2, tilemap: state.room2 });
+      if (state.room1door && state.room2door) {
+        doors.push({ from: id1, to: id2, x: state.room1door.x || 0, y: state.room1door.y || 0 });
+        doors.push({ from: id2, to: id1, x: state.room2door.x || 0, y: state.room2door.y || 0 });
+      }
+    }
+    return { buildings, doors };
   }
 };
+Dustland.BuildingWizard = BuildingWizard;
+Dustland.wizards.building = BuildingWizard;

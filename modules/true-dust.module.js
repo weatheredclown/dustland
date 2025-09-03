@@ -170,6 +170,11 @@ const DATA = `{
       "mods": { "ATK": 4, "ADR": 25 }
     }
   ],
+  "quests": [
+    { "id": "rygars_echo", "title": "Rygar's Echo", "desc": "Escort Rygar through the Maw Complex." },
+    { "id": "static_whisper", "title": "Static Whisper", "desc": "Use the radio to uncover three scrap caches." },
+    { "id": "bandit_purge", "title": "Bandit Purge", "desc": "Help Mayor Ganton clear the road to Lakeside." }
+  ],
   "portals": [
     { "map": "stonegate", "x": 5, "y": 3, "toMap": "maw_1", "toX": 0, "toY": 3 },
     { "map": "maw_1", "x": 0, "y": 3, "toMap": "stonegate", "toX": 5, "toY": 3 },
@@ -292,21 +297,24 @@ function startRadio() {
 
 function postLoad(module) {
   const rygar = module.npcs.find(n => n.id === 'rygar');
-  if (!rygar || !rygar.tree || !rygar.tree.start) return;
-  rygar.tree.start.choices.unshift({
-    label: 'Travel with us',
-    join: { id: 'rygar', name: 'Rygar', role: 'Guard' },
-    effects: [startPendant],
-    to: 'joined'
-  });
-  rygar.tree.joined = {
-    text: 'Rygar nods and falls in step.',
-    choices: [ { label: '(Leave)', to: 'bye' } ]
-  };
+  if (rygar && rygar.tree && rygar.tree.start) {
+    rygar.tree.start.choices.unshift({
+      label: 'Travel with us',
+      join: { id: 'rygar', name: 'Rygar', role: 'Guard' },
+      effects: [startPendant],
+      to: 'joined'
+    });
+    rygar.tree.joined = {
+      text: 'Rygar nods and falls in step.',
+      choices: [ { label: '(Leave)', to: 'bye' } ]
+    };
+  }
+  module.quests?.forEach(q => addQuest(q.id, q.title, q.desc, q));
 }
 
 globalThis.TRUE_DUST = JSON.parse(DATA);
 globalThis.TRUE_DUST.postLoad = postLoad;
+globalThis.TRUE_DUST.startRadio = startRadio;
 
 startGame = function () {
   applyModule(TRUE_DUST);
