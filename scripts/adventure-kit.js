@@ -262,6 +262,8 @@ let worldStamp = null;
 let worldPainting = false;
 let didPaint = false;
 const noiseToggle = document.getElementById('noiseToggle');
+const brushSizeSlider = document.getElementById('brushSize');
+const brushSizeLabel = document.getElementById('brushSizeLabel');
 let worldPaintNoise = true;
 let brushSize = 1;
 if (noiseToggle) {
@@ -270,6 +272,13 @@ if (noiseToggle) {
     noiseToggle.textContent = `Noise: ${worldPaintNoise ? 'On' : 'Off'}`;
   });
   noiseToggle.textContent = 'Noise: On';
+}
+if (brushSizeSlider) {
+  if (brushSizeLabel) brushSizeLabel.textContent = brushSizeSlider.value;
+  brushSizeSlider.addEventListener('input', () => {
+    brushSize = parseInt(brushSizeSlider.value, 10);
+    if (brushSizeLabel) brushSizeLabel.textContent = brushSizeSlider.value;
+  });
 }
 
 function addTerrainFeature(x, y, tile) {

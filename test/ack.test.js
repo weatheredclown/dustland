@@ -242,6 +242,23 @@ test('addTerrainFeature sprinkles noise', () => {
   assert.strictEqual(prev, TILE.SAND);
 });
 
+test('brushSize slider adjusts noise radius', () => {
+  genWorld(1);
+  for (let dy=-2; dy<=2; dy++) {
+    for (let dx=-2; dx<=2; dx++) {
+      setTile('world', 5+dx, 5+dy, TILE.SAND);
+    }
+  }
+  const slider = document.getElementById('brushSize');
+  slider.value = '2';
+  if (slider._listeners && slider._listeners.input) slider._listeners.input[0]();
+  const rnd = Math.random;
+  Math.random = () => 0;
+  addTerrainFeature(5,5,TILE.ROCK);
+  Math.random = rnd;
+  assert.strictEqual(world[3][5], TILE.ROCK);
+});
+
 test('stampWorld applies a stamp pattern', () => {
   genWorld(1);
   const stamp = worldStamps.cross;
