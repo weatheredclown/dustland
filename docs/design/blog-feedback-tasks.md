@@ -1,0 +1,108 @@
+# Blog Feedback Tasks
+
+*By Alex "Echo" Johnson*
+*Date: 2025-09-03*
+*Status: Draft*
+
+> **Echo:** Synth hum and dust whispers—community notes to weave into our caravans.
+
+- [ ] Add varied sandstorm patterns to intensify scavenging tension
+- [ ] Balance ammo availability so legendary weapons feel usable
+- [ ] Start players with a canteen or soften the hydration timer
+- [ ] Slow the oasis trader’s inventory reset for longer-term trading
+- [ ] Randomize or reduce bandit spawns at the canyon chokepoint
+- [ ] Adjust sun glare so mines remain visible during patrols
+- [ ] Keep publishing detailed changelogs highlighting module tweaks
+- [ ] Lengthen blade durability to match ranged gear longevity
+- [ ] Create more indoor dungeons similar to the underground silo
+- [ ] Make lightning strikes damage enemies during storms
+- [ ] Preserve sun position when looping across map edges
+- [ ] Have traders react to repeated deal cancellations
+- [ ] Add crafting recipes that use additional desert flora
+- [ ] Ensure companions respect hold-position orders under fire
+- [ ] Implement a screenshot mode
+- [ ] Refine the buggy repair mini-game to feel skill-based rather than random
+- [ ] Provide audio cues for nearby hidden supply crates
+- [ ] Add fast travel between discovered bunkers
+- [ ] Optimize the heat haze effect for lower-performance hardware
+- [ ] Include more story twists like the AI oasis caretaker reveal
+- [ ] Grant a small stamina boost when cleaning trap carcasses
+- [ ] Add a tutorial pop-up for signal beacon crafting
+- [ ] Slow fuel depot respawns to encourage strategic convoy runs
+- [ ] Continue adding lore snippets to ancient billboards
+- [ ] Give wind turbines tangible gameplay benefits
+- [ ] Expand documentation on event-bus quirks for modders
+- [ ] Fix dune race leaderboards desyncing after patches
+- [ ] Prevent the decoy drone from attracting allied NPCs
+- [ ] Add more tracks to the in-game radio playlist
+- [ ] Let crowbars open locked crates without explosives
+- [ ] Persist trail markers in co-op even if players log out
+- [ ] Swap modular armor plates without pausing the game
+- [ ] Introduce dyeable clothing options
+- [ ] Align night sky constellations with real-world positions
+- [ ] Add an auto-recording in-game journal for major choices
+- [ ] Smooth difficulty spikes in the relay tower hack’s final node
+- [ ] Allow players to cultivate healing herbs at base
+- [ ] Stop moles from respawning in previously dug tunnels
+- [ ] Keep global radio events coming to enliven the world
+- [ ] Prevent cleared blockades from respawning on highways
+- [ ] Provide a clearer oxygen tank UI during dust storms
+- [ ] Rebalance accuracy penalties for dual-wielded pistols
+- [ ] Fix rotating beam bugs in the co-op bridge puzzle
+- [ ] Let players annotate map grid tiles
+- [ ] Add more defensive structures for outposts beyond turrets
+- [ ] Taper late-game crafting cost spikes in the scrap economy
+- [ ] Stop the compass from pointing to hidden quests when navigation is off
+- [ ] Design additional unique creatures beyond the giant glass scorpion
+- [ ] Persist pinned quests across sessions
+- [ ] Publish roadmap blog posts alongside hotfixes
+- [ ] Let players craft protective tarps for solar panels
+- [ ] Make rare-spice cooking recipes worth the effort
+- [ ] Add more heartfelt encounters like the singing mutant
+- [ ] Provide sound cues for cracked stone hiding caches
+- [ ] Improve firewall guidance for LAN co-op setup
+- [ ] Fix cat companion pathfinding on ladders
+- [ ] Add a warning meter before generators overload
+- [ ] Dim the nighttime glow of glass shard collectibles
+- [ ] Offer unique faction perks earlier in the reputation system
+- [ ] Provide manual save points in story missions
+- [ ] Allow toggling or reducing recon drone camera sway
+- [ ] Make vehicle horns alert allied NPCs
+- [ ] Add more pre-war tech guild audio logs
+- [ ] Implement a player-death heat map for route planning
+- [ ] Let bandages be crafted from plant fibers to save cloth
+- [ ] Add more randomized side quests from NPCs
+- [ ] Show settlement growth progress bars during supply deliveries
+- [ ] Increase rewards for the feral children encounter
+- [ ] Record player choices during campfire storytelling
+- [ ] Explain wind-direction projectile arcs via tutorial or UI hint
+- [ ] Provide visual indicators for enemy awareness cones in stealth
+- [ ] Add a sand-sailing vehicle for open plains travel
+- [ ] Expand jamming tower scenarios for immersive radio crackle
+- [ ] Build on the forge’s ingot system to streamline crafting further
+- [ ] Add fallback paths to avoid impossible procedural cliffs
+- [ ] Allow players to sweep sand out of safehouses
+- [ ] Include more missions chasing relic thieves across dunes
+- [ ] Ensure destroyed beacons stay offline until rebuilt
+- [ ] Show required fuel before queuing items in the forge
+- [ ] Improve loot randomness to avoid repeated identical drops
+- [ ] Add more ancient-terminal decoding puzzles
+- [ ] Give injured NPCs more varied idle animations in camps
+- [ ] Normalize hover bike fuel use regardless of passenger weight
+- [ ] Expand the capital city’s interactive museum exhibits
+- [ ] Enable harvesting of materials from dead sandworms
+- [ ] Raise lockpicking difficulty even with titanium picks
+- [ ] Leave craters after meteor showers for exploration
+- [ ] Fix voice chat desync with the time-of-day filter in multiplayer
+- [ ] Add sight-based commentary from refugees during escort quests
+- [ ] Include more circuit board puzzle encounters
+- [ ] Increase random friendly drifter encounters for world flavor
+- [ ] Add late-game upgrades to the sandglass crafting station
+- [ ] Create additional humorous yet effective armor sets like cactus armor
+- [ ] Make storm prediction tech influence more gameplay systems
+- [ ] Improve ally pathfinding to avoid tarpits
+- [ ] Persist custom map markers between sessions
+- [ ] Add shared storage to safehouse workbenches
+- [ ] Surface sunscreen recipes earlier in the tech tree
+- [ ] Require more complex activation steps for ancient teleporters
+- [ ] Allow looting the final boss arena before credits roll
