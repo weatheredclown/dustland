@@ -22,7 +22,8 @@ const BuildingWizard = {
   steps,
   commit(state){
     state = state || {};
-    if (!state.room1door || !state.room2door) throw new Error('Missing door links');
+    if (!state.entry || !state.exit || !state.room1door || !state.room2door)
+      throw new Error('Missing door links');
     const id1 = (state.room1 || 'interior').replace(/\.[^/.]+$/, '');
     const id2 = (state.room2 || 'interior2').replace(/\.[^/.]+$/, '');
     const buildings = [

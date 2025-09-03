@@ -1049,6 +1049,12 @@ function addChoiceRow(container, ch = {}) {
     const div = document.createElement('div');
     div.dataset.adv = type;
     div.innerHTML = ADV_HTML[type] || '';
+    const del = document.createElement('button');
+    del.className = 'btn delAdv';
+    del.type = 'button';
+    del.textContent = 'x';
+    del.addEventListener('click', () => { div.remove(); refreshChoiceDropdowns(); updateTreeData(); });
+    div.prepend(del);
     opts.appendChild(div);
     refreshChoiceDropdowns();
     div.querySelectorAll('input,textarea,select').forEach(el => el.addEventListener('input', updateTreeData));
