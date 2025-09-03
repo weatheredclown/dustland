@@ -18,6 +18,20 @@ const DATA = `{
       "entryY": 3
     },
     {
+      "id": "lakeside",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🧱🧱🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🏝🚪🏝🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🧱🧱🧱🧱"
+      ],
+      "entryX": 2,
+      "entryY": 2
+    },
+    {
       "id": "maw_1",
       "w": 9,
       "h": 7,
@@ -117,6 +131,33 @@ const DATA = `{
           "choices": [ { "label": "(Leave)", "to": "bye" } ]
         }
       }
+    },
+    {
+      "id": "lakeside_dockhand",
+      "map": "lakeside",
+      "x": 2,
+      "y": 2,
+      "color": "#a9f59f",
+      "name": "Dockhand",
+      "title": "Lakeside",
+      "desc": "A dockhand watching the shore.",
+      "tree": {
+        "start": {
+          "text": "The dockhand studies the waves.",
+          "choices": [
+            { "label": "(Ask about Mira)", "to": "ask" },
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        },
+        "with_rygar": {
+          "text": "He hands Rygar a copper pendant fragment.",
+          "choices": [ { "label": "(Take fragment)", "to": "bye", "reward": "pendant_fragment" } ]
+        },
+        "without_rygar": {
+          "text": "He warns you someone matching Mira's description was dragged onto a night boat.",
+          "choices": [ { "label": "(Leave)", "to": "bye", "reward": "warning_note" } ]
+        }
+      }
     }
   ],
   "items": [
@@ -168,6 +209,16 @@ const DATA = `{
       "type": "weapon",
       "slot": "weapon",
       "mods": { "ATK": 4, "ADR": 25 }
+    },
+    {
+      "id": "pendant_fragment",
+      "name": "Pendant Fragment",
+      "type": "quest"
+    },
+    {
+      "id": "warning_note",
+      "name": "Warning Note",
+      "type": "quest"
     }
   ],
   "quests": [
@@ -177,6 +228,8 @@ const DATA = `{
   ],
   "portals": [
     { "map": "stonegate", "x": 5, "y": 3, "toMap": "maw_1", "toX": 0, "toY": 3 },
+    { "map": "stonegate", "x": 0, "y": 3, "toMap": "lakeside", "toX": 2, "toY": 2 },
+    { "map": "lakeside", "x": 2, "y": 2, "toMap": "stonegate", "toX": 0, "toY": 3 },
     { "map": "maw_1", "x": 0, "y": 3, "toMap": "stonegate", "toX": 5, "toY": 3 },
     { "map": "maw_1", "x": 8, "y": 3, "toMap": "maw_2", "toX": 0, "toY": 3 },
     { "map": "maw_2", "x": 0, "y": 3, "toMap": "maw_1", "toX": 8, "toY": 3 },
@@ -307,6 +360,14 @@ function postLoad(module) {
     rygar.tree.joined = {
       text: 'Rygar nods and falls in step.',
       choices: [ { label: '(Leave)', to: 'bye' } ]
+    };
+  }
+  const dock = module.npcs.find(n => n.id === 'lakeside_dockhand');
+  if (dock) {
+    dock.processNode = function (node) {
+      if (node === 'ask') {
+        dialogState.node = party.some(m => m.id === 'rygar') ? 'with_rygar' : 'without_rygar';
+      }
     };
   }
   module.quests?.forEach(q => addQuest(q.id, q.title, q.desc, q));

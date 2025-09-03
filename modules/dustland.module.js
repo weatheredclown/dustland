@@ -413,6 +413,35 @@ const DATA = `
       }
     },
     {
+      "id": "hidden_crate",
+      "map": "world",
+      "x": 12,
+      "y": 12,
+      "color": "#c8bba0",
+      "name": "Buried Crate",
+      "desc": "Sand conceals a supply crate.",
+      "hintSound": true,
+      "tree": {
+        "start": {
+          "text": "You sense something under the sand.",
+          "choices": [
+            { "label": "(Dig)", "to": "dig", "once": true },
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        },
+        "dig": {
+          "text": "You uncover a supply crate packed with scrap.",
+          "choices": [
+            { "label": "(Take Scrap)", "to": "empty", "reward": "SCRAP 5", "effects": [ { "effect": "removeSoundSource", "id": "hidden_crate" } ] }
+          ]
+        },
+        "empty": {
+          "text": "Just disturbed sand remains.",
+          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+        }
+      }
+    },
+    {
       "id": "tape_sage",
       "map": "hall",
       "x": 14,
@@ -2034,6 +2063,13 @@ function postLoad(module) {
       for (const choice of node.choices || []) {
         if (choice.effects) choice.effects = handleCustomEffects(choice.effects);
       }
+    }
+  }
+
+  for (const npc of module.npcs || []) {
+    const arr = globalThis.soundSources;
+    if (npc.hintSound && Array.isArray(arr)) {
+      arr.push({ id: npc.id, x: npc.x, y: npc.y, map: npc.map });
     }
   }
 

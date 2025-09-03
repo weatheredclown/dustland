@@ -373,11 +373,9 @@ function draw(t){
   }
   pctx.clearRect(0,0,prev.width,prev.height); pctx.drawImage(scene,0,0);
 
-  if (state.mapFlags && state.mapFlags.dustStorm) {
-    for (const source of soundSources) {
-      if (source.map === state.map) {
-        playWindChime(source.x, source.y);
-      }
+  for (const source of soundSources) {
+    if (source.map === state.map) {
+      playWindChime(source.x, source.y);
     }
   }
 
