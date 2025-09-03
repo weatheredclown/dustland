@@ -22,7 +22,7 @@
 - [ ] Ensure companions respect hold-position orders under fire
 - [ ] Implement a screenshot mode
 - [ ] Refine the buggy repair mini-game to feel skill-based rather than random
-- [ ] Provide audio cues for nearby hidden supply crates
+- [x] Provide audio cues for nearby hidden supply crates
 - [ ] Add fast travel between discovered bunkers
 - [ ] Optimize the heat haze effect for lower-performance hardware
 - [ ] Include more story twists like the AI oasis caretaker reveal
