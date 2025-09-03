@@ -34,7 +34,7 @@ The Dustland opens its eyes with a whisper of grit and memory. "True Dust" drops
 - [x] Define pulse rifle item rewarded by Mayor Ganton.
 - [ ] Script Rustwater corruption dialog and bandit quest chain.
 - [ ] Design Lakeside dockhand scene: give pendant fragment when Rygar present; deliver warning note when absent.
-- [ ] Log quest updates for Rygar's Echo, Static Whisper, and Bandit Purge.
+- [x] Log quest updates for Rygar's Echo, Static Whisper, and Bandit Purge.
 - [x] Test Stonegate safety, radio range, bandit balance, and Lakeside branching outcomes.
 
 ## Verification Instructions

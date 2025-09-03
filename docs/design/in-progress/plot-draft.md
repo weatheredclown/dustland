@@ -108,7 +108,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 - [ ] **Implement Key Items:**
     - [x] Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.
       - [x] Create the "echo chamber" interior and the script that triggers a vision when the Glinting Key is used.
-    - [ ] Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event.
+    - [x] Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event.
 
 #### **Phase 3: Puzzle and World Building**
 - [x] **Design a radio tower alignment puzzle that tunes the broadcast.**

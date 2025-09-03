@@ -413,6 +413,22 @@ const DATA = `
       }
     },
     {
+      "id": "tape_sage",
+      "map": "hall",
+      "x": 14,
+      "y": 18,
+      "color": "#b0c4de",
+      "name": "Archivist",
+      "title": "Memory Keeper",
+      "desc": "Curious about recorded tales.",
+      "tree": {
+        "start": {
+          "text": "Got anything on tape?",
+          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+        }
+      }
+    },
+    {
       "id": "exitdoor",
       "map": "hall",
       "x": 15,
@@ -2031,6 +2047,9 @@ function postLoad(module) {
       }
     };
   }
+
+  const sage = module.npcs?.find(n => n.id === 'tape_sage');
+  if (sage) sage.onMemoryTape = msg => { log('Archivist listens: ' + msg); };
 }
 
 globalThis.DUSTLAND_MODULE = JSON.parse(DATA);
