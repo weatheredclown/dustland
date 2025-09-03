@@ -3,7 +3,8 @@
 A checklist for turning community feedback into concrete updates.
 
 - [ ] **Collect and analyze feedback**
-  - [ ] Aggregate comments from the blog and social channels.
+  - [x] Aggregate comments from the blog and social channels.
+    - [x] collected in data/blog-comments.csv 
   - [ ] Tag items as bugs, balance issues, or feature requests.
   - [ ] Cross-reference design critiques like `docs/design/in-progress/retro-game-troll-critique.md` for narrative and quest gaps.
 - [ ] **Scope tasks**
