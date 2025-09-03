@@ -202,7 +202,7 @@ loopMinus.addEventListener('click', () => {
   showLoopControls(null);
 });
 
-const moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined };
+const moduleData = globalThis.moduleData || (globalThis.moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined });
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod'];
 let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editZoneIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
@@ -3632,6 +3632,15 @@ if (wizardList && globalThis.Dustland?.BuildingWizard) {
   wizardList.appendChild(btn);
 }
 
+function mergeWizardResult(res) {
+  if (!res) return;
+  Object.entries(res).forEach(([k, v]) => {
+    if (Array.isArray(moduleData[k])) moduleData[k].push(...v);
+    else moduleData[k] = v;
+  });
+  if (typeof applyModule === 'function') applyModule(moduleData, { fullReset: false });
+}
+
 function openWizard(cfg) {
   const modal = document.getElementById('wizardModal');
   const body = document.getElementById('wizardBody');
@@ -3642,10 +3651,19 @@ function openWizard(cfg) {
   title.textContent = cfg.title;
   modal.style.display = 'block';
   const wiz = Dustland.Wizard(body, cfg.steps, {
-    onComplete() { modal.style.display = 'none'; }
+    onComplete(state) {
+      if (cfg.commit) mergeWizardResult(cfg.commit(state));
+      modal.style.display = 'none';
+    }
   });
   next.onclick = () => wiz.next();
   prev.onclick = () => wiz.prev();
+  body.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      wiz.next();
+    }
+  });
   close.onclick = () => { modal.style.display = 'none'; };
 }
 
