@@ -21,7 +21,7 @@ _______________________________________________________________________________
   module player so you can craft and try your own wasteland tales. It’s
   still built to be easy to run and easy to hack. Tiny inline SFX add a bit of
   snap without requiring extra assets.
-  The terrain editor lets you paint features with organic noise.
+  The terrain editor lets you paint features with organic noise and adjustable brush sizes.
 
 [ HOW TO RUN ]
   - Play online: https://weatheredclown.github.io/dustland/dustland.html
