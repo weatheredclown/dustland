@@ -263,6 +263,7 @@ let worldPainting = false;
 let didPaint = false;
 const noiseToggle = document.getElementById('noiseToggle');
 let worldPaintNoise = true;
+let brushSize = 1;
 if (noiseToggle) {
   noiseToggle.addEventListener('click', () => {
     worldPaintNoise = !worldPaintNoise;
@@ -274,8 +275,8 @@ if (noiseToggle) {
 function addTerrainFeature(x, y, tile) {
   if (!setTile('world', x, y, tile)) return;
   if (!worldPaintNoise) return;
-  for (let dy = -1; dy <= 1; dy++) {
-    for (let dx = -1; dx <= 1; dx++) {
+  for (let dy = -brushSize; dy <= brushSize; dy++) {
+    for (let dx = -brushSize; dx <= brushSize; dx++) {
       if (dx || dy) {
         if (Math.random() < 0.3) setTile('world', x + dx, y + dy, tile);
       }
