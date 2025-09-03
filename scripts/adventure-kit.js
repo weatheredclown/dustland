@@ -542,16 +542,17 @@ function paintInterior(e){
 }
 intCanvas.addEventListener('mousedown',e=>{
   if(editInteriorIdx<0) return;
+  const I = moduleData.interiors[editInteriorIdx];
   const { x, y } = interiorCanvasPos(e);
   if(coordTarget){
     document.getElementById(coordTarget.x).value = x;
     document.getElementById(coordTarget.y).value = y;
+    if(coordTarget.map) document.getElementById(coordTarget.map).value = I.id;
     coordTarget = null;
     drawInterior();
     return;
   }
   if(placingType){
-    const I=moduleData.interiors[editInteriorIdx];
     if(placingType==='npc'){
       document.getElementById('npcMap').value = I.id;
       document.getElementById('npcX').value = x;
@@ -1628,7 +1629,7 @@ function startNewNPC() {
   document.getElementById('npcDesc').value = '';
   document.getElementById('npcColor').value = '#9ef7a0';
   document.getElementById('npcSymbol').value = '!';
-  document.getElementById('npcMap').value = 'world';
+  populateMapDropdown(document.getElementById('npcMap'), 'world');
   document.getElementById('npcX').value = 0;
   document.getElementById('npcY').value = 0;
   renderLoopFields([]);
@@ -1811,7 +1812,7 @@ function editNPC(i) {
   document.getElementById('npcDesc').value = n.desc || '';
   document.getElementById('npcColor').value = expandHex(n.color || '#ffffff');
   document.getElementById('npcSymbol').value = n.symbol || '!';
-  document.getElementById('npcMap').value = n.map;
+  populateMapDropdown(document.getElementById('npcMap'), n.map);
   document.getElementById('npcX').value = n.x;
   document.getElementById('npcY').value = n.y;
   renderLoopFields(n.loop || []);
@@ -3131,10 +3132,10 @@ document.getElementById('moduleName').value = moduleData.name;
 document.getElementById('npcEditor').addEventListener('change', applyNPCChanges);
 document.getElementById('bldgEditor').addEventListener('input', applyBldgChanges);
 document.getElementById('bldgEditor').addEventListener('change', applyBldgChanges);
-document.getElementById('npcFlagPick').onclick = () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY' }; };
+document.getElementById('npcFlagPick').onclick = () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY', map: 'npcFlagMap' }; };
 document.getElementById('portalPick').onclick = () => { coordTarget = { x: 'portalX', y: 'portalY' }; };
 document.getElementById('portalDestPick').onclick = () => { coordTarget = { x: 'portalToX', y: 'portalToY' }; };
-document.getElementById('npcPick').onclick = () => { coordTarget = { x: 'npcX', y: 'npcY' }; };
+document.getElementById('npcPick').onclick = () => { coordTarget = { x: 'npcX', y: 'npcY', map: 'npcMap' }; };
 document.getElementById('itemPick').onclick = () => { coordTarget = { x: 'itemX', y: 'itemY' }; };
 document.getElementById('save').onclick = saveModule;
 document.getElementById('load').onclick = () => document.getElementById('loadFile').click();
@@ -3284,6 +3285,7 @@ canvas.addEventListener('mousedown', ev => {
   if (coordTarget) {
     document.getElementById(coordTarget.x).value = x;
     document.getElementById(coordTarget.y).value = y;
+    if (coordTarget.map) document.getElementById(coordTarget.map).value = currentMap;
     coordTarget = null;
     canvas.style.cursor = '';
     drawWorld();
@@ -3291,6 +3293,7 @@ canvas.addEventListener('mousedown', ev => {
   }
   if (placingType) {
     if (placingType === 'npc') {
+      document.getElementById('npcMap').value = currentMap;
       document.getElementById('npcX').value = x;
       document.getElementById('npcY').value = y;
       if (placingCb) placingCb();
