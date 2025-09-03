@@ -855,6 +855,7 @@ function openShop(npc) {
   const closeShopBtn = document.getElementById('closeShopBtn');
   const shopBuy = document.getElementById('shopBuy');
   const shopSell = document.getElementById('shopSell');
+  const shopScrap = document.getElementById('shopScrap');
 
   if (!npc.shop) return;
   if (npc.shop === true) npc.shop = {};
@@ -873,7 +874,11 @@ function openShop(npc) {
     refreshFocusables();
     if (focusables.length) focusables[focusIdx].focus();
   }
+  function renderScrap() {
+    if (shopScrap) shopScrap.textContent = `${player.scrap} ${CURRENCY}`;
+  }
   function renderShop() {
+    renderScrap();
     shopBuy.innerHTML = '';
     shopSell.innerHTML = '';
 
