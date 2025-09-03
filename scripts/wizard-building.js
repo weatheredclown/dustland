@@ -20,22 +20,21 @@ const BuildingWizard = {
   name: 'BuildingWizard',
   title: 'Building Wizard',
   steps,
-  commit(state){
+  commit(state) {
     state = state || {};
-    if (!state.entry || !state.exit || !state.room1door || !state.room2door)
-      throw new Error('Missing door links');
-    const id1 = (state.room1 || 'interior').replace(/\.[^/.]+$/, '');
-    const id2 = (state.room2 || 'interior2').replace(/\.[^/.]+$/, '');
-    const buildings = [
-      { id: id1, tilemap: state.room1 },
-      { id: id2, tilemap: state.room2 }
-    ];
-    const doors = [
-      { from: 'world', to: id1, x: state.entry?.x || 0, y: state.entry?.y || 0 },
-      { from: id1, to: 'world', x: state.exit?.x || 0, y: state.exit?.y || 0 },
-      { from: id1, to: id2, x: state.room1door?.x || 0, y: state.room1door?.y || 0 },
-      { from: id2, to: id1, x: state.room2door?.x || 0, y: state.room2door?.y || 0 }
-    ];
+    const id1 = (state.room1 || state.tilemap || 'interior').replace(/\.[^/.]+$/, '');
+    const buildings = [{ id: id1, tilemap: state.room1 || state.tilemap }];
+    const doors = [];
+    if (state.entry) doors.push({ from: 'world', to: id1, x: state.entry.x || 0, y: state.entry.y || 0 });
+    if (state.exit) doors.push({ from: id1, to: 'world', x: state.exit.x || 0, y: state.exit.y || 0 });
+    if (state.room2) {
+      const id2 = state.room2.replace(/\.[^/.]+$/, '');
+      buildings.push({ id: id2, tilemap: state.room2 });
+      if (state.room1door && state.room2door) {
+        doors.push({ from: id1, to: id2, x: state.room1door.x || 0, y: state.room1door.y || 0 });
+        doors.push({ from: id2, to: id1, x: state.room2door.x || 0, y: state.room2door.y || 0 });
+      }
+    }
     return { buildings, doors };
   }
 };
