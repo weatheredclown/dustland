@@ -19,7 +19,7 @@ test('shop window height matches combat menu', async () => {
 });
 
 test('arrow keys in shop do not move the player', async () => {
-  const dom = new JSDOM('<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>');
+  const dom = new JSDOM('<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><div id="shopScrap"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>');
   global.window = dom.window;
   global.document = dom.window.document;
   global.requestAnimationFrame = () => {};
@@ -44,4 +44,30 @@ test('arrow keys in shop do not move the player', async () => {
   const evt = new dom.window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true });
   shopOverlay.dispatchEvent(evt);
   assert.strictEqual(moved, 0);
+});
+
+test('shop displays current scrap and updates after purchase', async () => {
+  const dom = new JSDOM('<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><div id="shopScrap"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>');
+  global.window = dom.window;
+  global.document = dom.window.document;
+  global.requestAnimationFrame = () => {};
+  global.log = () => {};
+  global.toast = () => {};
+  global.CURRENCY = 's';
+  global.player = { scrap: 7, inv: [] };
+  global.getItem = id => ({ id, name: id, value: 1 });
+  global.addToInv = () => true;
+  global.removeFromInv = () => {};
+  global.updateHUD = () => {};
+
+  const code = await fs.readFile(new URL('../scripts/dustland-engine.js', import.meta.url), 'utf8');
+  const openShopCode = extractOpenShop(code);
+  vm.runInThisContext(openShopCode);
+
+  openShop({ name: 'Shopkeep', shop: { inv: [ { id: 'potion' } ] } });
+  const scrapEl = document.getElementById('shopScrap');
+  assert.strictEqual(scrapEl.textContent, '7 s');
+  const buyBtn = document.querySelector('#shopBuy .slot button');
+  buyBtn.onclick();
+  assert.strictEqual(scrapEl.textContent, '5 s');
 });
