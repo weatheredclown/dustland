@@ -581,8 +581,15 @@
           <label>Map<input id="encMap" value="world" /></label>
           <label>Name<input id="encName" placeholder="Enemy name" /></label>
           <label>HP<input id="encHP" type="number" min="1" value="5" /></label>
+          <label>ATK<input id="encATK" type="number" min="1" value="1" /></label>
           <label>DEF<input id="encDEF" type="number" min="0" value="0" /></label>
-          <label>Loot<input id="encLoot" /></label>
+          <label>Min Dist<input id="encMinDist" type="number" min="0" /></label>
+          <label>Max Dist<input id="encMaxDist" type="number" min="0" /></label>
+          <label>Challenge<input id="encChallenge" type="number" min="0" /></label>
+          <label>Portrait<input id="encPortrait" /></label>
+          <label>Special Cue<input id="encSpecialCue" /></label>
+          <label>Special Dmg<input id="encSpecialDmg" type="number" min="1" /></label>
+          <label>Loot<select id="encLoot"></select></label>
           <button class="btn" id="addEncounter">Add Enemy</button>
           <button class="btn" type="button" id="cancelEncounter" style="display:none">Cancel</button>
           <button class="btn" id="delEncounter" style="display:none">Delete Enemy</button>
