@@ -121,6 +121,7 @@ globalThis.LOOTBOX_DEMO_MODULE = JSON.parse(DATA);
 globalThis.LOOTBOX_DEMO_MODULE.postLoad = postLoad;
 
 startGame = function(){
+  LOOTBOX_DEMO_MODULE.postLoad?.(LOOTBOX_DEMO_MODULE);
   applyModule(LOOTBOX_DEMO_MODULE);
   setFlag('dummy_challenge', 5);
   const s = LOOTBOX_DEMO_MODULE.start;
