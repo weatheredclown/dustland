@@ -445,7 +445,8 @@
           <label>ID<input id="itemId" placeholder="item_id" /></label>
           <label>Type<input id="itemType" /></label>
           <label>Description<textarea id="itemDesc" rows="2"></textarea></label>
-          <label>Tags<input id="itemTags" /></label>
+          <label>Tags<input id="itemTags" list="tagOptions" /></label>
+          <datalist id="tagOptions"></datalist>
           <label>Map<input id="itemMap" value="world" /></label>
           <div class="xy">
             <label>X<input id="itemX" type="number" min="0" /></label>
