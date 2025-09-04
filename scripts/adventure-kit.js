@@ -1717,6 +1717,7 @@ function startNewNPC() {
 }
 
 function beginPlaceNPC() {
+  clearPaletteSelection();
   placingType = 'npc';
   placingPos = null;
   placingCb = addNPC;
@@ -2001,6 +2002,7 @@ function startNewItem() {
 }
 
 function beginPlaceItem() {
+  clearPaletteSelection();
   placingType = 'item';
   placingPos = null;
   placingCb = addItem;
@@ -2616,6 +2618,7 @@ function startNewBldg() {
 }
 
 function beginPlaceBldg() {
+  clearPaletteSelection();
   placingType = 'bldg';
   placingPos = null;
   placingCb = addBuilding;
@@ -2754,6 +2757,14 @@ if (worldPalette) {
     });
   }
   worldPalette.querySelectorAll('button').forEach(bindPaletteBtn);
+}
+
+function clearPaletteSelection() {
+  if (worldPalette) worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  worldPaint = null;
+  worldStamp = null;
+  if (paletteLabel) paletteLabel.textContent = '';
+  updateCursor();
 }
 
 if (window.NanoPalette) {
