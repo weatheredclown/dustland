@@ -73,7 +73,8 @@
     const info=queryTile(x,y,map);
     if(info.tile===null) return false;
     if(!walkable[info.tile]) return false;
-    return info.entities.every(e=>e.id===ignoreId);
+    // treat unlocked doors as non-blocking
+    return info.entities.every(e=> e.id===ignoreId || (e.door && !e.locked));
   }
 
   function heuristic(a,b){
