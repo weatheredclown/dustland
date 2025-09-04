@@ -1285,6 +1285,8 @@ function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceSpawnTemplate').forEach(sel => populateTemplateDropdown(sel, sel.value));
   const encLoot = document.getElementById('encLoot');
   if (encLoot) populateItemDropdown(encLoot, encLoot.value);
+  const encTemplate = document.getElementById('encTemplate');
+  if (encTemplate) populateTemplateDropdown(encTemplate, encTemplate.value);
 }
 
 function renderTreeEditor() {
@@ -2124,41 +2126,23 @@ function showEncounterEditor(show){
 function startNewEncounter(){
   editEncounterIdx = -1;
   document.getElementById('encMap').value = 'world';
-  document.getElementById('encName').value = '';
-  document.getElementById('encHP').value = 5;
-  document.getElementById('encATK').value = 1;
-  document.getElementById('encDEF').value = 0;
   document.getElementById('encMinDist').value = '';
   document.getElementById('encMaxDist').value = '';
-  document.getElementById('encChallenge').value = '';
-  document.getElementById('encPortrait').value = '';
-  document.getElementById('encSpecialCue').value = '';
-  document.getElementById('encSpecialDmg').value = '';
+  const tmplSel = document.getElementById('encTemplate');
+  populateTemplateDropdown(tmplSel, '');
   populateItemDropdown(document.getElementById('encLoot'), '');
   document.getElementById('addEncounter').textContent = 'Add Enemy';
   document.getElementById('delEncounter').style.display = 'none';
   showEncounterEditor(true);
-  document.getElementById('encName').focus();
+  tmplSel.focus();
 }
 function collectEncounter(){
   const map = document.getElementById('encMap').value.trim() || 'world';
-  const name = document.getElementById('encName').value.trim() || 'Enemy';
-  const HP = parseInt(document.getElementById('encHP').value,10) || 1;
-  const ATK = parseInt(document.getElementById('encATK').value,10) || 1;
-  const DEF = parseInt(document.getElementById('encDEF').value,10) || 0;
+  const templateId = document.getElementById('encTemplate').value.trim();
   const minDist = parseInt(document.getElementById('encMinDist').value,10) || 0;
   const maxDist = parseInt(document.getElementById('encMaxDist').value,10) || 0;
-  const challenge = parseInt(document.getElementById('encChallenge').value,10) || 0;
-  const portraitSheet = document.getElementById('encPortrait').value.trim();
   const loot = document.getElementById('encLoot').value.trim();
-  const specialCue = document.getElementById('encSpecialCue').value.trim();
-  const specialDmg = parseInt(document.getElementById('encSpecialDmg').value,10) || 0;
-  const entry = { map, name, HP, ATK, DEF, loot, minDist, maxDist, challenge, portraitSheet };
-  if (specialCue || specialDmg) {
-    entry.special = {};
-    if (specialCue) entry.special.cue = specialCue;
-    if (specialDmg) entry.special.dmg = specialDmg;
-  }
+  const entry = { map, templateId, loot, minDist, maxDist };
   return entry;
 }
 function addEncounter(){
@@ -2175,16 +2159,9 @@ function editEncounter(i){
   const e = moduleData.encounters[i];
   editEncounterIdx = i;
   document.getElementById('encMap').value = e.map;
-  document.getElementById('encName').value = e.name;
-  document.getElementById('encHP').value = e.HP || 1;
-  document.getElementById('encATK').value = e.ATK || 1;
-  document.getElementById('encDEF').value = e.DEF || 0;
+  populateTemplateDropdown(document.getElementById('encTemplate'), e.templateId || '');
   document.getElementById('encMinDist').value = e.minDist || '';
   document.getElementById('encMaxDist').value = e.maxDist || '';
-  document.getElementById('encChallenge').value = e.challenge || '';
-  document.getElementById('encPortrait').value = e.portraitSheet || '';
-  document.getElementById('encSpecialCue').value = e.special?.cue || '';
-  document.getElementById('encSpecialDmg').value = e.special?.dmg || '';
   populateItemDropdown(document.getElementById('encLoot'), e.loot || '');
   document.getElementById('addEncounter').textContent = 'Update Enemy';
   document.getElementById('delEncounter').style.display = 'block';
@@ -2192,7 +2169,11 @@ function editEncounter(i){
 }
 function renderEncounterList(){
   const list = document.getElementById('encounterList');
-  list.innerHTML = moduleData.encounters.map((e,i)=>`<div data-idx="${i}">${e.map}: ${e.name}</div>`).join('');
+  list.innerHTML = moduleData.encounters.map((e,i)=>{
+    const t = moduleData.templates.find(t => t.id === e.templateId);
+    const name = t ? t.name : e.templateId;
+    return `<div data-idx="${i}">${e.map}: ${name}</div>`;
+  }).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editEncounter(parseInt(div.dataset.idx,10)));
 }
 function deleteEncounter(){
@@ -2218,7 +2199,14 @@ function startNewTemplate(){
   document.getElementById('templateDesc').value = '';
   document.getElementById('templateColor').value = '#9ef7a0';
   document.getElementById('templatePortrait').value = '';
-  document.getElementById('templateCombat').value = '';
+  document.getElementById('templateHP').value = 5;
+  document.getElementById('templateATK').value = 1;
+  document.getElementById('templateDEF').value = 0;
+  document.getElementById('templateChallenge').value = '';
+  document.getElementById('templateSpecialCue').value = '';
+  document.getElementById('templateSpecialDmg').value = '';
+  populateItemDropdown(document.getElementById('templateLoot'), '');
+  document.getElementById('templateRequires').value = '';
   document.getElementById('addTemplate').textContent = 'Add Template';
   document.getElementById('delTemplate').style.display = 'none';
   showTemplateEditor(true);
@@ -2229,9 +2217,22 @@ function collectTemplate(){
   const desc = document.getElementById('templateDesc').value.trim();
   const color = document.getElementById('templateColor').value.trim();
   const portraitSheet = document.getElementById('templatePortrait').value.trim();
-  let combat = null;
-  try { combat = JSON.parse(document.getElementById('templateCombat').value.trim() || 'null'); } catch (e) {
-    // ignore parse errors
+  const HP = parseInt(document.getElementById('templateHP').value,10) || 1;
+  const ATK = parseInt(document.getElementById('templateATK').value,10) || 1;
+  const DEF = parseInt(document.getElementById('templateDEF').value,10) || 0;
+  const challenge = parseInt(document.getElementById('templateChallenge').value,10) || 0;
+  const specialCue = document.getElementById('templateSpecialCue').value.trim();
+  const specialDmg = parseInt(document.getElementById('templateSpecialDmg').value,10) || 0;
+  const loot = document.getElementById('templateLoot').value.trim();
+  const requires = document.getElementById('templateRequires').value.trim();
+  const combat = { HP, ATK, DEF };
+  if (challenge) combat.challenge = challenge;
+  if (loot) combat.loot = loot;
+  if (requires) combat.requires = requires;
+  if (specialCue || specialDmg) {
+    combat.special = {};
+    if (specialCue) combat.special.cue = specialCue;
+    if (specialDmg) combat.special.dmg = specialDmg;
   }
   return { id, name, desc, color, portraitSheet, combat };
 }
@@ -2253,7 +2254,14 @@ function editTemplate(i){
   document.getElementById('templateDesc').value = t.desc;
   document.getElementById('templateColor').value = expandHex(t.color || '#ffffff');
   document.getElementById('templatePortrait').value = t.portraitSheet || '';
-  document.getElementById('templateCombat').value = t.combat ? JSON.stringify(t.combat, null, 2) : '';
+  document.getElementById('templateHP').value = t.combat?.HP || 1;
+  document.getElementById('templateATK').value = t.combat?.ATK || 1;
+  document.getElementById('templateDEF').value = t.combat?.DEF || 0;
+  document.getElementById('templateChallenge').value = t.combat?.challenge || '';
+  document.getElementById('templateSpecialCue').value = t.combat?.special?.cue || '';
+  document.getElementById('templateSpecialDmg').value = t.combat?.special?.dmg || '';
+  populateItemDropdown(document.getElementById('templateLoot'), t.combat?.loot || '');
+  document.getElementById('templateRequires').value = t.combat?.requires || '';
   document.getElementById('addTemplate').textContent = 'Update Template';
   document.getElementById('delTemplate').style.display = 'block';
   showTemplateEditor(true);
@@ -3140,7 +3148,8 @@ function playtestModule() {
   const ints = moduleData.interiors.map(I => ({...I, grid: gridToEmoji(I.grid)}));
   const enc = {};
   (moduleData.encounters||[]).forEach(e => {
-    (enc[e.map] ||= []).push({ name: e.name, HP: e.HP, DEF: e.DEF, loot: e.loot });
+    const { map, ...rest } = e;
+    (enc[map] ||= []).push(rest);
   });
   const data = { ...moduleData, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints };
   localStorage.setItem(PLAYTEST_KEY, JSON.stringify(data));

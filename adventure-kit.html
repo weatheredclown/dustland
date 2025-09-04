@@ -581,16 +581,9 @@
         <button class="btn" type="button" id="newEncounter">+ Enemy</button>
         <div id="encounterEditor" style="display:none">
           <label>Map<input id="encMap" value="world" /></label>
-          <label>Name<input id="encName" placeholder="Enemy name" /></label>
-          <label>HP<input id="encHP" type="number" min="1" value="5" /></label>
-          <label>ATK<input id="encATK" type="number" min="1" value="1" /></label>
-          <label>DEF<input id="encDEF" type="number" min="0" value="0" /></label>
+          <label>Template<select id="encTemplate"></select></label>
           <label>Min Dist<input id="encMinDist" type="number" min="0" /></label>
           <label>Max Dist<input id="encMaxDist" type="number" min="0" /></label>
-          <label>Challenge<input id="encChallenge" type="number" min="0" /></label>
-          <label>Portrait<input id="encPortrait" /></label>
-          <label>Special Cue<input id="encSpecialCue" /></label>
-          <label>Special Dmg<input id="encSpecialDmg" type="number" min="1" /></label>
           <label>Loot<select id="encLoot"></select></label>
           <button class="btn" id="addEncounter">Add Enemy</button>
           <button class="btn" type="button" id="cancelEncounter" style="display:none">Cancel</button>
@@ -608,7 +601,14 @@
           <label>Description<textarea id="templateDesc" rows="2"></textarea></label>
           <label>Color<input id="templateColor" type="color" value="#9ef7a0" /></label>
           <label>Portrait<input id="templatePortrait" /></label>
-          <label>Combat<textarea id="templateCombat" rows="2"></textarea></label>
+          <label>HP<input id="templateHP" type="number" min="1" value="5" /></label>
+          <label>ATK<input id="templateATK" type="number" min="1" value="1" /></label>
+          <label>DEF<input id="templateDEF" type="number" min="0" value="0" /></label>
+          <label>Challenge<input id="templateChallenge" type="number" min="0" /></label>
+          <label>Special Cue<input id="templateSpecialCue" /></label>
+          <label>Special Dmg<input id="templateSpecialDmg" type="number" min="1" /></label>
+          <label>Loot<select id="templateLoot"></select></label>
+          <label>Requires<input id="templateRequires" /></label>
         <button class="btn" id="addTemplate">Add Template</button>
         <button class="btn" id="delTemplate" style="display:none">Delete Template</button>
       </div>

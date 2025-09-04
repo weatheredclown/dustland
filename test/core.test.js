@@ -1500,7 +1500,7 @@ test('combat overlay leaves room for panel', async () => {
 test('encounters blocked within 3 tiles of roads', () => {
   const row = Array(20).fill(TILE.SAND);
   row[0] = TILE.ROAD;
-  applyModule({ world: [row], encounters: { world: [ { name: 'Test', HP: 1, DEF: 0 } ] } });
+  applyModule({ world: [row], templates:[{ id:'test', name:'Test', combat:{ HP:1, ATK:1, DEF:0 }}], encounters: { world: [ { templateId:'test' } ] } });
   state.map = 'world';
   let started = false;
   const origRand = Math.random;
@@ -1524,7 +1524,7 @@ test('encounters blocked within 3 tiles of roads', () => {
 test('no encounters occur on roads', () => {
   const row = Array(2).fill(TILE.SAND);
   row[0] = TILE.ROAD;
-  applyModule({ world: [row], encounters: { world: [ { name: 'Test', HP: 1, DEF: 0 } ] } });
+  applyModule({ world: [row], templates:[{ id:'test', name:'Test', combat:{ HP:1, ATK:1, DEF:0 }}], encounters: { world: [ { templateId:'test' } ] } });
   state.map = 'world';
   setPartyPos(0, 0);
   let started = false;
@@ -1540,7 +1540,7 @@ test('no encounters occur on roads', () => {
 
 test('random encounters have a cooldown', async () => {
   const row = Array(10).fill(TILE.SAND);
-  applyModule({ world: [row], encounters: { world: [ { name: 'Test', HP: 1, DEF: 0 } ] } });
+  applyModule({ world: [row], templates:[{ id:'test', name:'Test', combat:{ HP:1, ATK:1, DEF:0 }}], encounters: { world: [ { templateId:'test' } ] } });
   state.map = 'world';
   setPartyPos(5, 0);
   let started = 0;
@@ -1565,7 +1565,7 @@ test('random encounters have a cooldown', async () => {
 
 test('random encounters award XP based on strength', async () => {
   const row = Array(2).fill(TILE.SAND);
-  applyModule({ world: [row], encounters: { world: [ { name: 'Test', HP: 4, DEF: 0, challenge: 4 } ] } });
+  applyModule({ world: [row], templates:[{ id:'test', name:'Test', combat:{ HP:4, ATK:1, DEF:0, challenge:4 }}], encounters: { world: [ { templateId:'test' } ] } });
   state.map = 'world';
   party.length = 0;
   party.push(makeMember('a','A','Hero'));
@@ -1589,7 +1589,7 @@ test('random encounters award XP based on strength', async () => {
 
 test('trivial enemies appear in groups', () => {
   const row = Array(10).fill(TILE.SAND);
-  applyModule({ world: [row], encounters: { world: [ { name: 'Weak', HP: 1, DEF: 0 } ] } });
+  applyModule({ world: [row], templates:[{ id:'weak', name:'Weak', combat:{ HP:1, ATK:1, DEF:0 }}], encounters: { world: [ { templateId:'weak' } ] } });
   state.map = 'world';
   setPartyPos(5, 0);
   global.enemyTurnStats = { Weak: { total: 3, count: 3 } };
@@ -1609,8 +1609,8 @@ test('trivial enemies appear in groups', () => {
 test('distant encounters use hard enemy pool', () => {
   const row = Array(30).fill(TILE.SAND);
   row[0] = TILE.ROAD;
-  const hard = { name: 'Hard', HP: 10, DEF: 5, minDist: 15 };
-  applyModule({ world: [row], encounters: { world: [ { name: 'Soft', HP: 1, DEF: 0 }, hard ] } });
+  const hard = { templateId: 'hard', minDist: 15 };
+  applyModule({ world: [row], templates:[{ id:'soft', name:'Soft', combat:{ HP:1, ATK:1, DEF:0 } }, { id:'hard', name:'Hard', combat:{ HP:10, ATK:1, DEF:5 } }], encounters: { world: [ { templateId:'soft' }, hard ] } });
   state.map = 'world';
   setPartyPos(20, 0);
   let chosen = null;
@@ -1631,7 +1631,7 @@ test('distant encounters use hard enemy pool', () => {
 test('enemies respect max distance', () => {
   const row = Array(10).fill(TILE.SAND);
   row[0] = TILE.ROAD;
-  applyModule({ world: [row], encounters: { world: [ { name: 'Near', HP: 1, DEF: 0, maxDist: 2 } ] } });
+  applyModule({ world: [row], templates:[{ id:'near', name:'Near', combat:{ HP:1, ATK:1, DEF:0 }}], encounters: { world: [ { templateId:'near', maxDist: 2 } ] } });
   state.map = 'world';
   setPartyPos(5, 0);
   let started = false;
