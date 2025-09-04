@@ -428,6 +428,21 @@ test('useItem heals party member and consumes item', () => {
   assert.ok(hudCalls >= 1);
 });
 
+test('useItem boosts stat temporarily', () => {
+  party.length = 0; player.inv.length = 0; buffs.length = 0;
+  const m = new Character('b','Booster','Role');
+  m.stats.ATK = 1;
+  party.join(m);
+  const brew = registerItem({ id:'brew', name:'Battle Brew', type:'consumable', use:{ type:'boost', stat:'ATK', amount:2, duration:1, text:'You feel stronger.' } });
+  addToInv(brew);
+  const used = useItem(0);
+  assert.ok(used);
+  assert.strictEqual(m.stats.ATK, 3);
+  assert.strictEqual(player.inv.length, 0);
+  Effects.tick({ buffs });
+  assert.strictEqual(m.stats.ATK, 1);
+});
+
 test('findFreeDropTile avoids water and party tiles', () => {
   const W=120, H=90;
   const world = Array.from({length:H},()=>Array.from({length:W},()=>7));

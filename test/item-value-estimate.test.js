@@ -15,3 +15,8 @@ test('mod items with zero value are estimated', () => {
   const it = normalizeItem({ id: 'medal', name: 'Medal', mods: { LCK: 1 }, value: 0 });
   assert.strictEqual(it.value, 10);
 });
+
+test('boost items with zero value are estimated', () => {
+  const it = normalizeItem({ id: 'brew', name: 'Battle Brew', use: { type: 'boost', stat: 'ATK', amount: 2, duration: 3 }, value: 0 });
+  assert.strictEqual(it.value, 6);
+});
