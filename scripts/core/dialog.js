@@ -181,11 +181,13 @@ function advanceDialog(stateObj, choiceIdx){
   const res={next:null, text:null, close:false, success:true, retriable:false};
   const finalize=(text, ok, retriable=false)=>{ res.text=text||null; res.close=true; res.success=!!ok; res.retriable=!!retriable; stateObj.node=null; return res; };
 
-  if(choice.reqItem || choice.reqSlot){
+  if(choice.reqItem || choice.reqSlot || choice.reqTag){
     const requiredCount = choice.reqCount || 1;
     const hasEnough = choice.reqItem
       ? countItems(choice.reqItem) >= requiredCount
-      : player.inv.some(it => it.type === choice.reqSlot);
+      : choice.reqSlot
+        ? player.inv.some(it => it.type === choice.reqSlot)
+        : countItems(choice.reqTag) >= requiredCount;
 
     if(!hasEnough){
       return finalize(choice.failure || 'You lack the required item.', false, true);
@@ -201,11 +203,13 @@ function advanceDialog(stateObj, choiceIdx){
     return finalize(choice.success || '', true);
   }
 
-  if(choice.costItem || choice.costSlot){
+  if(choice.costItem || choice.costSlot || choice.costTag){
     const costCount = choice.costCount || 1;
     const hasEnough = choice.costItem
       ? countItems(choice.costItem) >= costCount
-      : player.inv.some(it => it.type === choice.costSlot);
+      : choice.costSlot
+        ? player.inv.some(it => it.type === choice.costSlot)
+        : countItems(choice.costTag) >= costCount;
 
     if(!hasEnough){
       return finalize(choice.failure || 'You lack the required item.', false, true);
@@ -217,8 +221,13 @@ function advanceDialog(stateObj, choiceIdx){
         if (itemIdx > -1) removeFromInv(itemIdx);
       }
     } else if (choice.costSlot) {
-      const itemIdx = player.inv.findIndex(it=> it.type===choice.costSlot);
+      const itemIdx = player.inv.findIndex(it => it.type === choice.costSlot);
       if (itemIdx > -1) removeFromInv(itemIdx);
+    } else if (choice.costTag) {
+      for (let i = 0; i < costCount; i++) {
+        const itemIdx = findItemIndex(choice.costTag);
+        if (itemIdx > -1) removeFromInv(itemIdx);
+      }
     }
 
     Dustland.actions.applyQuestReward(choice.reward);

@@ -614,6 +614,21 @@ test('advanceDialog respects costSlot', () => {
   assert.ok(!player.inv.some(it => it.type === 'trinket'));
 });
 
+test('advanceDialog handles costTag', () => {
+  player.inv.length = 0;
+  registerItem({ id: 'iron_key', name: 'Iron Key', type: 'quest', tags: ['key'] });
+  registerItem({ id: 'gem', name: 'Gem', type: 'quest' });
+  addToInv({ id: 'iron_key' });
+  const tree = {
+    start: { text: '', next: [{ label: 'Unlock', costTag: 'key', reward: 'gem' }] }
+  };
+  const dialog = { tree, node: 'start' };
+  const res = advanceDialog(dialog, 0);
+  assert.ok(res.success);
+  assert.ok(player.inv.some(it => it.id === 'gem'));
+  assert.ok(!player.inv.some(it => it.tags.includes('key')));
+});
+
 test('advanceDialog honours reqSlot', () => {
   player.inv.length = 0;
   const token = registerItem({ id: 'fae_token', name: 'Fae Token', type: 'trinket' });
@@ -662,6 +677,22 @@ test('advanceDialog matches reqItem case-insensitively', () => {
   advanceDialog(dialog, 0);
   assert.strictEqual(party.x, 7);
   assert.strictEqual(party.y, 8);
+});
+
+test('advanceDialog uses reqTag without consuming and allows goto', () => {
+  player.inv.length = 0;
+  registerItem({ id: 'access_card', name: 'Access Card', type: 'quest', tags: ['pass'] });
+  addToInv({ id: 'access_card' });
+  state.map = 'world';
+  party.x = 0; party.y = 0;
+  const tree = {
+    start: { text: '', next: [{ label: 'Enter', reqTag: 'pass', goto: { map: 'room', x: 9, y: 1 } }] }
+  };
+  const dialog = { tree, node: 'start' };
+  advanceDialog(dialog, 0);
+  assert.strictEqual(party.x, 9);
+  assert.strictEqual(party.y, 1);
+  assert.ok(player.inv.some(it => it.tags.includes('pass')));
 });
 
 test('advanceDialog goto can target NPC', () => {

@@ -126,6 +126,7 @@ _______________________________________________________________________________
       * uncurseItem(id)
   - NPC trees can be functions for dynamic dialog.
   - Dialog choices support `goto` targeting the player or NPC with optional relative coordinates.
+  - Dialog choices can require or consume items by ID, slot, or tag.
   - Items support `equip.flag` and `unequip` teleport/message effects.
   - Tiles: see TILE enum + colors[] + walkable[].
   - Maps can be specified as arrays of emoji strings using `tileEmoji` (numeric grids still load).
