@@ -1435,10 +1435,10 @@ function updateTreeData() {
           const value = valTxt ? parseInt(valTxt, 10) : undefined;
           c.setFlag = { flag: setFlagName, op, value };
         }
-        const spawnTemplate = chEl.querySelector('.choiceSpawnTemplate').value.trim();
+        const spawnTemplate = chEl.querySelector('.choiceSpawnTemplate')?.value.trim();
         if (spawnTemplate) {
-          const x = chEl.querySelector('.choiceSpawnX').value.trim();
-          const y = chEl.querySelector('.choiceSpawnY').value.trim();
+          const x = chEl.querySelector('.choiceSpawnX')?.value.trim() || '0';
+          const y = chEl.querySelector('.choiceSpawnY')?.value.trim() || '0';
           c.spawn = { templateId: spawnTemplate, x: parseInt(x, 10), y: parseInt(y, 10) };
         }
         choices.push(c);
@@ -3739,6 +3739,17 @@ function mergeWizardResult(res) {
     else moduleData[k] = v;
   });
   if (typeof applyModule === 'function') applyModule(moduleData, { fullReset: false });
+  // Refresh lists so wizard changes appear immediately.
+  if (typeof renderNPCList === 'function') renderNPCList();
+  if (typeof renderItemList === 'function') renderItemList();
+  if (typeof renderQuestList === 'function') renderQuestList();
+  if (typeof renderBldgList === 'function') renderBldgList();
+  if (typeof renderInteriorList === 'function') renderInteriorList();
+  if (typeof renderEventList === 'function') renderEventList();
+  if (typeof renderPortalList === 'function') renderPortalList();
+  if (typeof renderZoneList === 'function') renderZoneList();
+  if (typeof renderEncounterList === 'function') renderEncounterList();
+  if (typeof renderTemplateList === 'function') renderTemplateList();
 }
 
 function openWizard(cfg) {
