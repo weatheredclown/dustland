@@ -102,7 +102,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
     - [x] Hook Mara's puzzle into the Broadcast Story sequence.
     - [x] Script Jax's timed repair sequence under combat pressure. Implemented in `jax-repair.module.js`.
     - [x] Write the dialogue and branching paths for Nyx's "conversational tuning" encounter.
-- [ ] **Doppelgänger System:**
+- [x] **Doppelgänger System:**
     - [x] Create the data structure for "personas" that can be equipped by the main characters.
     - [x] Design and create the first set of alternate masks and outfits for Mara, Jax, and Nyx.
 - [ ] **Implement Key Items:**

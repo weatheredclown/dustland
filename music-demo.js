@@ -110,7 +110,8 @@
     { id: 'hopeful', name: 'Hopeful', info: 'Major lift, echoing arps.', key: 'G', bpm: 124, scale: 'major', swing: 0.04, density: 0.7, leadWave: 'triangle', bassWave: 'triangle', harmony: [0, 4, 5, 7], barStart: 'stab' },
     { id: 'triumphant', name: 'Triumphant', info: 'Bright cadence, driving hats.', key: 'G', bpm: 132, scale: 'major', swing: 0.05, density: 0.85, leadWave: 'square', bassWave: 'triangle', harmony: [0, 4, 5, 0], barStart: 'stab' },
     { id: 'melancholic', name: 'Melancholic', info: 'Bittersweet minor, wide intervals.', key: 'G', bpm: 110, scale: 'minor', swing: 0.02, density: 0.55, leadWave: 'triangle', bassWave: 'triangle', harmony: [0, 5, 3, 2], barStart: 'stab' },
-    { id: 'mystery', name: 'Mystery', info: 'Shadowy dorian feel, syncopation.', key: 'G', bpm: 96, scale: 'dorian', swing: 0.0, density: 0.4, leadWave: 'triangle', bassWave: 'square', harmony: [0, 2, 6, 2], barStart: 'stab' }
+    { id: 'mystery', name: 'Mystery', info: 'Shadowy dorian feel, syncopation.', key: 'G', bpm: 96, scale: 'dorian', swing: 0.0, density: 0.4, leadWave: 'triangle', bassWave: 'square', harmony: [0, 2, 6, 2], barStart: 'stab' },
+    { id: 'chill', name: 'Chill', info: 'Laid-back square leads with airy bass.', key: 'G', bpm: 88, scale: 'major', swing: 0.03, density: 0.4, leadWave: 'square', bassWave: 'triangle', harmony: [0, 4, 5, 4], barStart: 'stab' }
   ];
 
   // Universal seed for JSON config and Magenta basis (shared across moods)

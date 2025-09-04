@@ -41,4 +41,8 @@ test('true dust module defines safe zone and spawns', () => {
   assert.ok(radio && radio.slot === 'trinket');
   const caches = data.items.filter(i => i.id.startsWith('scrap_cache'));
   assert.strictEqual(caches.length, 3);
+  const ganton = data.npcs.find(n => n.id === 'ganton');
+  assert.ok(ganton && ganton.questId === 'bandit_purge');
+  assert.ok(ganton.tree.reward.choices.some(c => c.reward === 'pulse_rifle'));
+  assert.ok(data.npcs.some(n => n.id === 'bandit_leader'));
 });
