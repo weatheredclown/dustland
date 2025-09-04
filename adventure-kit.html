@@ -80,6 +80,18 @@
       border-radius: 4px;
     }
 
+    .xy {
+      display: flex;
+      gap: 4px;
+    }
+    .xy label {
+      display: flex;
+      flex-direction: column;
+    }
+    .xy input {
+      width: 60px;
+    }
+
     button.btn {
       margin-top: 6px;
       font-size: 14px;
@@ -353,8 +365,10 @@
           <label>Color<input id="npcColor" type="color" value="#9ef7a0" /></label>
           <label>Symbol<input id="npcSymbol" maxlength="1" value="!" /></label>
           <label>Map<select id="npcMap"></select></label>
-          <label>X<input id="npcX" type="number" min="0" /></label>
-          <label>Y<input id="npcY" type="number" min="0" /></label>
+          <div class="xy">
+            <label>X<input id="npcX" type="number" min="0" /></label>
+            <label>Y<input id="npcY" type="number" min="0" /></label>
+          </div>
           <label>Patrol Waypoints</label>
           <div id="npcLoopPts"></div>
           <button class="btn" type="button" id="addLoopPt">+ Waypoint</button>
@@ -370,8 +384,10 @@
             <label>Flag Type<select id="npcFlagType"><option value="visits">Visited Tile</option><option value="party">Party Flag</option></select></label>
             <div id="revealVisit">
               <label>Map<input id="npcFlagMap" value="world" /></label>
-              <label>X<input id="npcFlagX" type="number" min="0" /></label>
-              <label>Y<input id="npcFlagY" type="number" min="0" /></label>
+              <div class="xy">
+                <label>X<input id="npcFlagX" type="number" min="0" /></label>
+                <label>Y<input id="npcFlagY" type="number" min="0" /></label>
+              </div>
               <button class="btn" type="button" id="npcFlagPick" title="Click on the map to select a tile">Pick Tile</button>
             </div>
             <div id="revealParty" style="display:none">
@@ -430,8 +446,10 @@
           <label>Description<textarea id="itemDesc" rows="2"></textarea></label>
           <label>Tags<input id="itemTags" /></label>
           <label>Map<input id="itemMap" value="world" /></label>
-          <label>X<input id="itemX" type="number" min="0" /></label>
-          <label>Y<input id="itemY" type="number" min="0" /></label>
+          <div class="xy">
+            <label>X<input id="itemX" type="number" min="0" /></label>
+            <label>Y<input id="itemY" type="number" min="0" /></label>
+          </div>
           <button class="btn" type="button" id="itemPick" title="Click on the map to choose location">Select on Map</button>
           <label>Slot<select id="itemSlot">
               <option value="">(none)</option>
@@ -458,8 +476,10 @@
         <div class="list" id="bldgList"></div>
         <button class="btn" type="button" id="newBldg">+ Building</button>
         <div id="bldgEditor" style="display:none">
-          <label>X<input id="bldgX" type="number" min="0" /></label>
-          <label>Y<input id="bldgY" type="number" min="0" /></label>
+          <div class="xy">
+            <label>X<input id="bldgX" type="number" min="0" /></label>
+            <label>Y<input id="bldgY" type="number" min="0" /></label>
+          </div>
           <label>W<input id="bldgW" type="number" min="1" value="6" /></label>
           <label>H<input id="bldgH" type="number" min="1" value="5" /></label>
           <div id="bldgPalette">
@@ -498,12 +518,16 @@
         <button class="btn" type="button" id="newPortal">+ Portal</button>
         <div id="portalEditor" style="display:none">
           <label>Map<input id="portalMap" value="world" /></label>
-          <label>X<input id="portalX" type="number" min="0" /></label>
-          <label>Y<input id="portalY" type="number" min="0" /></label>
+          <div class="xy">
+            <label>X<input id="portalX" type="number" min="0" /></label>
+            <label>Y<input id="portalY" type="number" min="0" /></label>
+          </div>
           <button class="btn" type="button" id="portalPick" title="Click on the map to choose location">Select on Map</button>
           <label>To Map<input id="portalToMap" value="world" /></label>
-          <label>To X<input id="portalToX" type="number" min="0" /></label>
-          <label>To Y<input id="portalToY" type="number" min="0" /></label>
+          <div class="xy">
+            <label>To X<input id="portalToX" type="number" min="0" /></label>
+            <label>To Y<input id="portalToY" type="number" min="0" /></label>
+          </div>
           <button class="btn" type="button" id="portalDestPick" title="Click on the map to choose destination">Pick Destination</button>
           <button class="btn" id="addPortal">Add Portal</button>
           <button class="btn" id="delPortal" style="display:none">Delete Portal</button>
@@ -535,8 +559,10 @@
         <button class="btn" type="button" id="newEvent">+ Event</button>
         <div id="eventEditor" style="display:none">
           <label>Map<input id="eventMap" value="world" /></label>
-          <label>X<input id="eventX" type="number" min="0" /></label>
-          <label>Y<input id="eventY" type="number" min="0" /></label>
+          <div class="xy">
+            <label>X<input id="eventX" type="number" min="0" /></label>
+            <label>Y<input id="eventY" type="number" min="0" /></label>
+          </div>
           <button class="btn" type="button" id="eventPick" title="Click on the map to choose location">Select on Map</button>
           <label>Effect<select id="eventEffect">
               <option value="toast">Toast</option>
@@ -561,8 +587,10 @@
         <button class="btn" type="button" id="newZone">+ Zone</button>
         <div id="zoneEditor" style="display:none">
           <label>Map<input id="zoneMap" value="world" /></label>
-          <label>X<input id="zoneX" type="number" min="0" /></label>
-          <label>Y<input id="zoneY" type="number" min="0" /></label>
+          <div class="xy">
+            <label>X<input id="zoneX" type="number" min="0" /></label>
+            <label>Y<input id="zoneY" type="number" min="0" /></label>
+          </div>
           <label>W<input id="zoneW" type="number" min="1" value="1" /></label>
           <label>H<input id="zoneH" type="number" min="1" value="1" /></label>
           <label>HP/Step<input id="zoneHp" type="number" /></label>
