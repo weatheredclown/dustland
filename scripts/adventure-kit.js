@@ -1671,6 +1671,7 @@ function startNewNPC() {
   npcPortraitIndex = 0;
   npcPortraitPath = '';
   setNpcPortrait();
+  document.getElementById('npcPortraitLock').checked = true;
   document.getElementById('npcHidden').checked = false;
   document.getElementById('npcFlagType').value = 'visits';
   document.getElementById('npcFlagMap').value = 'world';
@@ -1741,6 +1742,7 @@ function collectNPCFromForm() {
   const shop = document.getElementById('npcShop').checked;
   const shopMarkup = parseInt(document.getElementById('shopMarkup').value, 10) || 2;
   const hidden = document.getElementById('npcHidden').checked;
+  const portraitLock = document.getElementById('npcPortraitLock').checked;
   const flag = getRevealFlag();
   const op = document.getElementById('npcOp').value;
   const val = parseInt(document.getElementById('npcVal').value, 10) || 0;
@@ -1792,6 +1794,7 @@ function collectNPCFromForm() {
   if (hidden && flag) npc.hidden = true, npc.reveal = { flag, op, value: val };
   if (npcPortraitPath) npc.portraitSheet = npcPortraitPath;
   else if (npcPortraitIndex > 0) npc.portraitSheet = npcPortraits[npcPortraitIndex];
+  if (!portraitLock) npc.portraitLock = false;
   return npc;
 }
 
@@ -1859,6 +1862,7 @@ function editNPC(i) {
     npcPortraitPath = '';
   }
   setNpcPortrait();
+  document.getElementById('npcPortraitLock').checked = n.portraitLock !== false;
   document.getElementById('npcHidden').checked = !!n.hidden;
   if (n.reveal?.flag?.startsWith('visits@')) {
     document.getElementById('npcFlagType').value = 'visits';
@@ -1969,6 +1973,7 @@ function startNewItem() {
   document.getElementById('itemName').value = '';
   document.getElementById('itemId').value = '';
   document.getElementById('itemType').value = '';
+  document.getElementById('itemDesc').value = '';
   document.getElementById('itemTags').value = '';
   document.getElementById('itemMap').value = 'world';
   document.getElementById('itemX').value = 0;
@@ -2006,6 +2011,7 @@ function addItem() {
   const name = document.getElementById('itemName').value.trim();
   const id = document.getElementById('itemId').value.trim();
   const type = document.getElementById('itemType').value.trim();
+  const desc = document.getElementById('itemDesc').value.trim();
   const tags = document.getElementById('itemTags').value.split(',').map(t=>t.trim()).filter(Boolean);
   const map = document.getElementById('itemMap').value.trim() || 'world';
   const x = parseInt(document.getElementById('itemX').value, 10) || 0;
@@ -2023,7 +2029,7 @@ function addItem() {
   } else {
     try { use = JSON.parse(document.getElementById('itemUse').value || 'null'); } catch (e) { use = null; }
   }
-  const item = { id, name, type, tags, map, x, y, slot, mods, value, use, equip };
+  const item = { id, name, desc, type, tags, map, x, y, slot, mods, value, use, equip };
   if (editItemIdx >= 0) {
     moduleData.items[editItemIdx] = item;
   } else {
@@ -2060,6 +2066,7 @@ function editItem(i) {
   document.getElementById('itemName').value = it.name;
   document.getElementById('itemId').value = it.id;
   document.getElementById('itemType').value = it.type || '';
+  document.getElementById('itemDesc').value = it.desc || '';
   document.getElementById('itemTags').value = (it.tags || []).join(',');
   document.getElementById('itemMap').value = it.map;
   document.getElementById('itemX').value = it.x;
