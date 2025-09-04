@@ -33,9 +33,10 @@ function stubEl(){
       if (!this._listeners || !this._listeners[type]) return;
       this._listeners[type] = this._listeners[type].filter(f => f !== fn);
     },
-    parentElement:{ appendChild(){}, querySelectorAll(){ return []; } },
+    parentElement:{ style:{}, appendChild(){}, querySelectorAll(){ return []; } },
     setAttribute(){},
     click(){},
+    focus(){},
   };
   Object.defineProperty(el,'innerHTML',{ get(){return this._innerHTML;}, set(v){ this._innerHTML=v; this.children=[]; }});
   return el;
@@ -725,6 +726,30 @@ test('closeItemEditor hides the item editor', () => {
   closeItemEditor();
   assert.strictEqual(editItemIdx, -1);
   assert.strictEqual(document.getElementById('itemEditor').style.display, 'none');
+  moduleData.items = prev;
+});
+
+test('equip editor shows only when slot set', () => {
+  const prev = moduleData.items;
+  moduleData.items = [];
+  startNewItem();
+  const equipWrap = document.getElementById('itemEquip').parentElement;
+  assert.strictEqual(equipWrap.style.display, 'none');
+  document.getElementById('itemName').value = 'NoSlot';
+  document.getElementById('itemId').value = 'noslot';
+  document.getElementById('itemEquip').value = '{"msg":"hi"}';
+  addItem();
+  assert.strictEqual(moduleData.items[0].equip, null);
+
+  startNewItem();
+  document.getElementById('itemSlot').value = 'weapon';
+  updateModsWrap();
+  assert.strictEqual(equipWrap.style.display, 'block');
+  document.getElementById('itemName').value = 'WithSlot';
+  document.getElementById('itemId').value = 'withslot';
+  document.getElementById('itemEquip').value = '{"msg":"hi"}';
+  addItem();
+  assert.deepStrictEqual(moduleData.items[1].equip, { msg: 'hi' });
   moduleData.items = prev;
 });
 
