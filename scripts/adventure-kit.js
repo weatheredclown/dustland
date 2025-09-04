@@ -963,7 +963,7 @@ function buildSpoofItemsFromPanel() {
   return out;
 }
 
-function startSpoofPlayback(tree, flags, items) {
+function startSpoofPlayback(tree, flags, items, locked = false) {
   if (!_origFlagValue) _origFlagValue = globalThis.flagValue;
   if (!_origCloseDialog) _origCloseDialog = globalThis.closeDialog;
   if (!_origHasItem) _origHasItem = globalThis.hasItem;
@@ -986,6 +986,7 @@ function startSpoofPlayback(tree, flags, items) {
     _origCloseDialog();
   };
   const npc = { id: 'ack_preview', map: state.map, x: party.x, y: party.y, color: '#9ef7a0', name: 'Preview', title: '', desc: '', tree };
+  if (locked && tree && tree.locked) npc.locked = true;
   openDialog(npc, 'start');
 }
 function stopSpoofPlayback() {
@@ -1001,7 +1002,8 @@ function playInGameWithSpoof() {
   let tree = null; try { tree = JSON.parse(txt); } catch (e) { alert('Invalid tree JSON'); return; }
   const flags = buildSpoofFlagsFromPanel() || parseSpoofFlags(document.getElementById('spoofFlags').value);
   const items = buildSpoofItemsFromPanel() || {};
-  startSpoofPlayback(tree, flags, items);
+  const locked = document.getElementById('npcLocked')?.checked;
+  startSpoofPlayback(tree, flags, items, locked);
 }
 const ADV_HTML = {
   reward: `<label>Reward<select class="choiceRewardType"><option value=""></option><option value="xp">XP</option><option value="scrap">Scrap</option><option value="item">Item</option></select>

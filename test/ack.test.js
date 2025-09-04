@@ -76,10 +76,14 @@ global.NanoPalette = {
   enabled: true
 };
 
+globalThis.party = { x: 0, y: 0 };
+vm.runInThisContext('var party = globalThis.party;');
+
 const files = [
   '../scripts/event-bus.js',
   '../scripts/core/movement.js',
   '../scripts/dustland-core.js',
+  '../scripts/core/dialog.js',
   '../scripts/adventure-kit.js'
 ];
 for (const f of files) {
@@ -880,6 +884,17 @@ test('updateTreeData captures NPC lock effects', () => {
     { effect: 'lockNPC', npcId: 'chest' },
     { effect: 'unlockNPC', npcId: 'door' }
   ]);
+});
+
+test('startSpoofPlayback shows locked node when npc locked', () => {
+  globalThis.closeDialog = () => {};
+  const tree = {
+    locked: { text: 'locked', choices: [{ label: '(Leave)', to: 'bye' }] },
+    start: { text: 'start', choices: [{ label: '(Leave)', to: 'bye' }] }
+  };
+  startSpoofPlayback(tree, {}, {}, true);
+  assert.strictEqual(document.getElementById('dialogText').textContent, 'locked');
+  stopSpoofPlayback();
 });
 test('updateTreeData captures NPC color effects', () => {
   treeData = {};
