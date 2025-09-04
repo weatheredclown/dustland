@@ -186,7 +186,7 @@ test('cursed items reveal on unequip attempt and stay equipped', () => {
   player.inv.length = 0;
   const mem = new Character('t1','Tester','Role');
   party.join(mem);
-  const cursed = normalizeItem({ id:'mask', name:'Mask', type:'armor', slot:'armor', cursed:true });
+  const cursed = normalizeItem({ id:'mask', name:'Mask', type:'armor', cursed:true });
   addToInv(cursed);
   equipItem(0,0);
   assert.strictEqual(mem.equip.armor.name,'Mask');
@@ -206,7 +206,6 @@ test('uncursed gear can be removed and triggers unequip effects', () => {
     id: 'helm',
     name: 'Helm',
     type: 'armor',
-    slot: 'armor',
     cursed: true,
     unequip: { teleport: { map: 'office', x: 1, y: 1 }, msg: 'back' }
   });
@@ -234,7 +233,7 @@ test('equipping teleport item moves party and logs message', () => {
   party.x = 0; party.y = 0;
   const mem = new Character('t2','Tele','Role');
   party.join(mem);
-  const tp = normalizeItem({ id:'warp_ring', name:'Warp Ring', type:'trinket', slot:'trinket', equip:{ teleport:{ map:'world', x:5, y:6 }, msg:'whoosh' } });
+  const tp = normalizeItem({ id:'warp_ring', name:'Warp Ring', type:'trinket', equip:{ teleport:{ map:'world', x:5, y:6 }, msg:'whoosh' } });
   addToInv(tp);
   equipItem(0,0);
   assert.strictEqual(party.x,5);
@@ -340,7 +339,7 @@ test('movement delay improves with agility and equipment', async () => {
   const baseDelay = getMoveDelay();
   await firstMove;
 
-  addToInv({ id:'agi_charm', name:'AGI Charm', type:'trinket', slot:'trinket', mods:{ AGI:2 } });
+  addToInv({ id:'agi_charm', name:'AGI Charm', type:'trinket', mods:{ AGI:2 } });
   equipItem(0,0);
 
   const secondMove = move(1,0);
@@ -367,7 +366,7 @@ test('movement delay respects move_delay_mod equipment', async () => {
   const baseDelay = getMoveDelay();
   await firstMove;
 
-  addToInv({ id:'speed_charm', name:'Speed Charm', type:'trinket', slot:'trinket', mods:{ move_delay_mod:0.5 } });
+  addToInv({ id:'speed_charm', name:'Speed Charm', type:'trinket', mods:{ move_delay_mod:0.5 } });
   equipItem(0,0);
 
   const secondMove = move(1,0);
@@ -603,7 +602,7 @@ test('advanceDialog respects goto with costItem', () => {
 
 test('advanceDialog respects costSlot', () => {
   player.inv.length = 0;
-  const trinket = registerItem({ id: 'river_trinket', name: 'Trinket', slot: 'trinket', type: 'trinket' });
+  const trinket = registerItem({ id: 'river_trinket', name: 'Trinket', type: 'trinket' });
   addToInv(trinket);
   const tree = {
     start: { text: '', next: [ { label: 'Pay', costSlot: 'trinket', to: 'end' } ] },
@@ -612,12 +611,12 @@ test('advanceDialog respects costSlot', () => {
   const dialog = { tree, node: 'start' };
   const res = advanceDialog(dialog, 0);
   assert.ok(res.success);
-  assert.ok(!player.inv.some(it => it.slot === 'trinket'));
+  assert.ok(!player.inv.some(it => it.type === 'trinket'));
 });
 
 test('advanceDialog honours reqSlot', () => {
   player.inv.length = 0;
-  const token = registerItem({ id: 'fae_token', name: 'Fae Token', slot: 'trinket', type: 'trinket' });
+  const token = registerItem({ id: 'fae_token', name: 'Fae Token', type: 'trinket' });
   const tree = {
     start: { text: '', next: [ { label: 'Enter', reqSlot: 'trinket', success: 'ok', to: 'end' }, { label: 'Leave', to: 'end' } ] },
     end: { text: '' }
@@ -631,7 +630,7 @@ test('advanceDialog honours reqSlot', () => {
   dialog = { tree, node: 'start' };
   res = advanceDialog(dialog, 0);
   assert.ok(res.success);
-  assert.ok(player.inv.some(it => it.slot === 'trinket'));
+  assert.ok(player.inv.some(it => it.type === 'trinket'));
 });
 
 test('advanceDialog uses reqItem without consuming and allows goto', () => {
@@ -764,7 +763,7 @@ test('placeHut uses custom grid and door', () => {
 test('quest turn-in grants reward item', () => {
   player.inv.length = 0;
   NPCS.length = 0;
-  registerItem({ id: 'cursed_vr_helmet', name: 'Cursed VR Helmet', type: 'armor', slot: 'armor' });
+  registerItem({ id: 'cursed_vr_helmet', name: 'Cursed VR Helmet', type: 'armor' });
   const quest = new Quest('q_reward', 'Quest', '', { reward: 'cursed_vr_helmet' });
   quest.status = 'active';
   const tree = {
@@ -1966,8 +1965,8 @@ test('combat uses stats and equipment', () => {
 
   const hero = new Character('h', 'Hero', 'fighter');
   hero.stats.STR = 6;
-  hero.equip.weapon = { id: 'club', slot: 'weapon', mods: { ATK: 2 } };
-  hero.equip.armor = { id: 'vest', slot: 'armor', mods: { DEF: 2 } };
+  hero.equip.weapon = { id: 'club', type: 'weapon', mods: { ATK: 2 } };
+  hero.equip.armor = { id: 'vest', type: 'armor', mods: { DEF: 2 } };
   hero.applyEquipmentStats();
 
   const dummy = { name: 'Dummy', hp: 10, DEF: 1 };

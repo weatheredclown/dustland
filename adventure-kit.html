@@ -443,7 +443,15 @@
         <div id="itemEditor" style="display:none">
           <label>Name<input id="itemName" placeholder="Item name" /></label>
           <label>ID<input id="itemId" placeholder="item_id" /></label>
-          <label>Type<input id="itemType" /></label>
+          <label>Type<select id="itemType">
+              <option value=""></option>
+              <option value="weapon">Weapon</option>
+              <option value="armor">Armor</option>
+              <option value="trinket">Trinket</option>
+              <option value="consumable">Consumable</option>
+              <option value="quest">Quest</option>
+              <option value="misc">Misc</option>
+            </select></label>
           <label>Description<textarea id="itemDesc" rows="2"></textarea></label>
           <label>Tags<input id="itemTags" list="tagOptions" /></label>
           <datalist id="tagOptions"></datalist>
@@ -453,12 +461,6 @@
             <label>Y<input id="itemY" type="number" min="0" /></label>
           </div>
           <button class="btn" type="button" id="itemPick" title="Click on the map to choose location">Select on Map</button>
-          <label>Slot<select id="itemSlot">
-              <option value="">(none)</option>
-              <option value="weapon">Weapon</option>
-              <option value="armor">Armor</option>
-              <option value="trinket">Trinket</option>
-            </select></label>
           <div id="modsWrap" style="display:none">
             <label>Mods</label>
             <div id="modBuilder"></div>

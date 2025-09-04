@@ -678,7 +678,7 @@ function renderInv(){
   if(member){
     for(const slot of ['weapon','armor','trinket']){
       const eq=member.equip[slot];
-      const candidates = others.filter(it => it.slot===slot && (!eq || calcItemValue(it)>calcItemValue(eq)));
+      const candidates = others.filter(it => it.type===slot && (!eq || calcItemValue(it)>calcItemValue(eq)));
       if(candidates.length){
         const max=Math.max(...candidates.map(it=>calcItemValue(it)));
         const best=candidates.filter(it=>calcItemValue(it)===max);
@@ -716,15 +716,15 @@ function renderInv(){
   others.forEach(it => {
     const row=document.createElement('div');
     row.className='slot';
-    if(it.slot && suggestions[it.slot]===it){
+    if(['weapon','armor','trinket'].includes(it.type) && suggestions[it.type]===it){
       row.classList.add('better');
     }
-    const baseLabel = it.name + (it.slot?` [${it.slot}]`:'');
+    const baseLabel = it.name + (['weapon','armor','trinket'].includes(it.type)?` [${it.type}]`:'');
     const label = (it.cursed && it.cursedKnown)? `${baseLabel} (cursed)` : baseLabel;
     row.innerHTML = `<div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
         <span>${label}</span>
         <span style="display:flex;gap:6px">
-          ${it.slot? `<button class="btn" data-a="equip">Equip</button>`:''}
+          ${['weapon','armor','trinket'].includes(it.type)? `<button class="btn" data-a="equip">Equip</button>`:''}
           ${it.use?  `<button class="btn" data-a="use">Use</button>`:''}
         </span>
       </div>`;
@@ -752,7 +752,7 @@ function renderInv(){
     if(equipBtn) equipBtn.onclick=()=> equipItem(selectedMember, player.inv.indexOf(it));
     const useBtn = row.querySelector('button[data-a="use"]');
     if(useBtn) useBtn.onclick=()=> useItem(player.inv.indexOf(it));
-    row.onclick=e=>{ if(e.target.tagName==='BUTTON') return; if(it.slot) equipItem(selectedMember, player.inv.indexOf(it)); };
+    row.onclick=e=>{ if(e.target.tagName==='BUTTON') return; if(['weapon','armor','trinket'].includes(it.type)) equipItem(selectedMember, player.inv.indexOf(it)); };
     inv.appendChild(row);
   });
 }

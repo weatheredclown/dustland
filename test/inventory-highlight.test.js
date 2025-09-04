@@ -30,7 +30,7 @@ function setup(items, equipped){
     const m = ctx.party[memberIndex];
     const it = ctx.player.inv[invIndex];
     if(!m || !it) return;
-    m.equip[it.slot] = it;
+    m.equip[it.type] = it;
     ctx.player.inv.splice(invIndex,1);
   };
   vm.createContext(ctx);
@@ -53,10 +53,10 @@ async function loadSetLeader(ctx){
 
 test('better items are highlighted', async () => {
   const items = [
-    { name: 'Shiny Blade', slot: 'weapon', value: 3, mods: { ATK: 2 } },
-    { name: 'Old Stick', slot: 'weapon', value: 1, mods: { ATK: 0 } }
+    { name: 'Shiny Blade', type: 'weapon', value: 3, mods: { ATK: 2 } },
+    { name: 'Old Stick', type: 'weapon', value: 1, mods: { ATK: 0 } }
   ];
-  const eq = { weapon: { name: 'Dull Knife', slot: 'weapon', value: 1, mods: { ATK: 1 } } };
+  const eq = { weapon: { name: 'Dull Knife', type: 'weapon', value: 1, mods: { ATK: 1 } } };
   const ctx = setup(items, eq);
   await loadRender(ctx);
   ctx.renderInv();
@@ -68,11 +68,11 @@ test('better items are highlighted', async () => {
 
 test('leader change re-evaluates highlights', async () => {
   const items = [
-    { name: 'Bronze Sword', slot: 'weapon', value: 3 }
+    { name: 'Bronze Sword', type: 'weapon', value: 3 }
   ];
   const eqs = [
-    { weapon: { name: 'Steel Sword', slot: 'weapon', value: 4 } },
-    { weapon: { name: 'Rusty Sword', slot: 'weapon', value: 1 } }
+    { weapon: { name: 'Steel Sword', type: 'weapon', value: 4 } },
+    { weapon: { name: 'Rusty Sword', type: 'weapon', value: 1 } }
   ];
   const ctx = setup(items, eqs);
   await loadRender(ctx);
@@ -89,11 +89,11 @@ test('leader change re-evaluates highlights', async () => {
 
 test('party selection refreshes item highlights', async () => {
   const items = [
-    { name: 'Bronze Sword', slot: 'weapon', value: 3 }
+    { name: 'Bronze Sword', type: 'weapon', value: 3 }
   ];
   const eqs = [
-    { weapon: { name: 'Steel Sword', slot: 'weapon', value: 4 } },
-    { weapon: { name: 'Rusty Sword', slot: 'weapon', value: 1 } }
+    { weapon: { name: 'Steel Sword', type: 'weapon', value: 4 } },
+    { weapon: { name: 'Rusty Sword', type: 'weapon', value: 1 } }
   ];
   const ctx = setup(items, eqs);
   await loadRender(ctx);
@@ -108,13 +108,13 @@ test('party selection refreshes item highlights', async () => {
 
 test('setLeader equips missing gear and suggests a single upgrade per slot', async () => {
   const items = [
-    { name: 'Axe', slot: 'weapon', value: 2 },
-    { name: 'Chain', slot: 'armor', value: 2 },
-    { name: 'Scale', slot: 'armor', value: 2 }
+    { name: 'Axe', type: 'weapon', value: 2 },
+    { name: 'Chain', type: 'armor', value: 2 },
+    { name: 'Scale', type: 'armor', value: 2 }
   ];
   const eqs = [
-    { weapon: { name: 'Spear', slot: 'weapon', value: 3 }, armor: { name: 'Cloth', slot: 'armor', value: 1 } },
-    { weapon: null, armor: { name: 'Tunic', slot: 'armor', value: 1 } }
+    { weapon: { name: 'Spear', type: 'weapon', value: 3 }, armor: { name: 'Cloth', type: 'armor', value: 1 } },
+    { weapon: null, armor: { name: 'Tunic', type: 'armor', value: 1 } }
   ];
   const ctx = setup(items, eqs);
   await loadRender(ctx);
