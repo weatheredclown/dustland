@@ -224,6 +224,46 @@ test('world base tiles persist through save/load', () => {
   setTile('world', 0, 0, TILE.SAND);
 });
 
+test('saveModule exports buildings, interiors, and encounters without _origKeys', () => {
+  const prevBldgs = moduleData.buildings;
+  const prevInts = moduleData.interiors;
+  const prevEnc = moduleData.encounters;
+  const prevInteriorMap = interiors;
+  const prevOrig = moduleData._origKeys;
+  const prevWorld = world;
+  genWorld(1);
+  moduleData.buildings = [{ x: 1, y: 1, w: 1, h: 1 }];
+  moduleData.interiors = [{ id: 'room', w: 1, h: 1, grid: [[TILE.FLOOR]] }];
+  interiors = { room: moduleData.interiors[0] };
+  moduleData.encounters = [{ map: 'world', templateId: 'test' }];
+  delete moduleData._origKeys;
+  const origValidate = globalThis.validateSpawns;
+  globalThis.validateSpawns = () => [];
+  let saved = '';
+  const origBlob = globalThis.Blob;
+  globalThis.Blob = class { constructor(parts) { this.text = parts.join(''); } };
+  const origURL = global.URL;
+  global.URL = { createObjectURL: blob => { saved = blob.text; return ''; }, revokeObjectURL() {} };
+  const origCreate = document.createElement;
+  document.createElement = tag => tag === 'a' ? { href: '', download: '', click() {} } : origCreate(tag);
+  saveModule();
+  document.createElement = origCreate;
+  global.URL = origURL;
+  globalThis.Blob = origBlob;
+  globalThis.validateSpawns = origValidate;
+  const json = JSON.parse(saved);
+  const floorEmoji = tileEmoji[TILE.FLOOR];
+  assert.deepStrictEqual(json.buildings, [{ x: 1, y: 1, w: 1, h: 1 }]);
+  assert.deepStrictEqual(json.interiors, [{ id: 'room', w: 1, h: 1, grid: [floorEmoji] }]);
+  assert.deepStrictEqual(json.encounters, { world: [{ templateId: 'test' }] });
+  moduleData.buildings = prevBldgs;
+  moduleData.interiors = prevInts;
+  moduleData.encounters = prevEnc;
+  interiors = prevInteriorMap;
+  if (prevOrig === undefined) delete moduleData._origKeys; else moduleData._origKeys = prevOrig;
+  world = prevWorld;
+});
+
 test('validateSpawns lists blocked spawns', () => {
   genWorld(1);
   setTile('world',0,0,TILE.WATER);

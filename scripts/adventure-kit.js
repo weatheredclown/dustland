@@ -3226,10 +3226,10 @@ function saveModule() {
     if (['buildings', 'interiors', 'encounters', 'world', '_origKeys'].includes(k)) return;
     if (moduleData[k] !== undefined) base[k] = moduleData[k];
   });
-  if (moduleData._origKeys?.includes('encounters')) base.encounters = enc;
+  if (moduleData._origKeys?.includes('encounters') || Object.keys(enc).length) base.encounters = enc;
   base.world = gridToEmoji(world);
-  if (moduleData._origKeys?.includes('buildings')) base.buildings = bldgs;
-  if (moduleData._origKeys?.includes('interiors')) base.interiors = ints;
+  if (moduleData._origKeys?.includes('buildings') || bldgs.length) base.buildings = bldgs;
+  if (moduleData._origKeys?.includes('interiors') || ints.length) base.interiors = ints;
   const data = base;
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
