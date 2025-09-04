@@ -1005,6 +1005,16 @@ if (document.getElementById('saveBtn')) {
   if(mobileBtn) mobileBtn.onclick=()=>toggleMobileControls();
   const tileCharBtn=document.getElementById('tileCharToggle');
   if(tileCharBtn) tileCharBtn.onclick=()=>toggleTileChars();
+  const shotBtn=document.getElementById('screenshotBtn');
+  if(shotBtn) shotBtn.onclick=()=>{
+    const canvas=document.getElementById('game');
+    if(!canvas) return;
+    const url=canvas.toDataURL('image/png');
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='dustland.png';
+    a.click();
+  };
   setAudio(audioEnabled);
   setMobileControls(mobileControlsEnabled);
   setTileChars(tileCharsEnabled);

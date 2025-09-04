@@ -20,7 +20,7 @@
 - [ ] Have traders react to repeated deal cancellations
 - [ ] Add crafting recipes that use additional desert flora
 - [ ] Ensure companions respect hold-position orders under fire
-- [ ] Implement a screenshot mode
+- [x] Implement a screenshot mode
 - [ ] Refine the buggy repair mini-game to feel skill-based rather than random
 - [x] Provide audio cues for nearby hidden supply crates
 - [ ] Add fast travel between discovered bunkers
