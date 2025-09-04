@@ -2101,11 +2101,16 @@ function updateUseWrap() {
   document.getElementById('itemUseWrap').style.display = type ? 'block' : 'none';
 }
 function updateItemMapWrap() {
-  const hasMap = !!document.getElementById('itemMap').value.trim();
+  const onMap = document.getElementById('itemOnMap').checked;
+  const mapWrap = document.getElementById('itemMapWrap');
   const xy = document.getElementById('itemXY');
   const pick = document.getElementById('itemPick');
-  if (xy) xy.style.display = hasMap ? 'flex' : 'none';
-  if (pick) pick.style.display = hasMap ? 'inline-block' : 'none';
+  const remove = document.getElementById('itemRemove');
+  if (mapWrap) mapWrap.style.display = onMap ? 'block' : 'none';
+  if (xy) xy.style.display = onMap ? 'flex' : 'none';
+  if (pick) pick.style.display = onMap ? 'inline-block' : 'none';
+  if (remove) remove.style.display = onMap ? 'inline-block' : 'none';
+  if (!onMap) document.getElementById('itemMap').value = '';
 }
 function startNewItem() {
   editItemIdx = -1;
@@ -2117,6 +2122,7 @@ function startNewItem() {
   document.getElementById('itemMap').value = '';
   document.getElementById('itemX').value = 0;
   document.getElementById('itemY').value = 0;
+  document.getElementById('itemOnMap').checked = false;
   updateModsWrap();
   loadMods({});
   document.getElementById('itemValue').value = 0;
@@ -2158,7 +2164,8 @@ function addItem() {
   const tags = document.getElementById('itemTags').value.split(',').map(t=>t.trim()).filter(Boolean);
   collectKnownTags(tags);
   updateTagOptions();
-  const map = document.getElementById('itemMap').value.trim();
+  const onMap = document.getElementById('itemOnMap').checked;
+  const map = onMap ? document.getElementById('itemMap').value.trim() : '';
   const x = parseInt(document.getElementById('itemX').value, 10) || 0;
   const y = parseInt(document.getElementById('itemY').value, 10) || 0;
   const isEquip = ['weapon', 'armor', 'trinket'].includes(type);
@@ -2184,7 +2191,7 @@ function addItem() {
   const useText = document.getElementById('itemUse').value.trim();
   if (use && useText) use.text = useText;
   const item = { id, name, desc, type, tags, mods, value, use, equip };
-  if (map) {
+  if (onMap && map) {
     item.map = map;
     item.x = x;
     item.y = y;
@@ -2217,6 +2224,23 @@ function cancelItem() {
   drawInterior();
   updateCursor();
 }
+
+function removeItemFromWorld() {
+  document.getElementById('itemOnMap').checked = false;
+  document.getElementById('itemMap').value = '';
+  if (editItemIdx >= 0) {
+    const it = moduleData.items[editItemIdx];
+    delete it.map;
+    delete it.x;
+    delete it.y;
+    if (selectedObj && selectedObj.type === 'item' && selectedObj.obj === it) {
+      selectedObj = null;
+    }
+    renderItemList();
+    drawWorld();
+  }
+  updateItemMapWrap();
+}
 function editItem(i) {
   const it = moduleData.items[i];
   if (it.map) {
@@ -2234,6 +2258,7 @@ function editItem(i) {
   document.getElementById('itemMap').value = it.map || '';
   document.getElementById('itemX').value = it.x || 0;
   document.getElementById('itemY').value = it.y || 0;
+  document.getElementById('itemOnMap').checked = !!it.map;
   updateItemMapWrap();
   updateModsWrap();
   loadMods(it.mods);
@@ -3383,11 +3408,14 @@ function playtestModule() {
 document.getElementById('clear').onclick = clearWorld;
 document.getElementById('addNPC').onclick = beginPlaceNPC;
 document.getElementById('addItem').onclick = () => {
+  const onMap = document.getElementById('itemOnMap').checked;
   const mapVal = document.getElementById('itemMap').value.trim();
-  if (editItemIdx >= 0 || !mapVal) addItem(); else beginPlaceItem();
+  if (editItemIdx >= 0 || !onMap || !mapVal) addItem(); else beginPlaceItem();
 };
 document.getElementById('newItem').onclick = startNewItem;
 document.getElementById('itemMap').addEventListener('input', updateItemMapWrap);
+document.getElementById('itemOnMap').addEventListener('change', updateItemMapWrap);
+document.getElementById('itemRemove').onclick = removeItemFromWorld;
 document.getElementById('newNPC').onclick = startNewNPC;
 document.getElementById('newBldg').onclick = startNewBldg;
 document.getElementById('newQuest').onclick = startNewQuest;
