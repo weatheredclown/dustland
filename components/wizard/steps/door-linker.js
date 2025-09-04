@@ -13,7 +13,7 @@
         function makePane(label, key){
           const pane = document.createElement('div');
           const p = document.createElement('p');
-          p.textContent = label;
+          p.textContent = label + ' - click to select a location.';
           const canvas = document.createElement('canvas');
           canvas.width = 160;
           canvas.height = 160;

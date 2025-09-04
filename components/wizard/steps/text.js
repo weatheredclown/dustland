@@ -6,6 +6,7 @@
         labelEl.textContent = label;
         const input = document.createElement('input');
         input.value = state[key] || '';
+        if (!state[key]) input.placeholder = 'Enter ' + label.toLowerCase();
         container.appendChild(labelEl);
         container.appendChild(input);
         this.input = input;
