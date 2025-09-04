@@ -557,6 +557,13 @@ test('node delete uses confirm dialog', () => {
   globalThis.updateTreeData = origUpdate;
 });
 
+test('confirm modal renders after dialog modal', async () => {
+  const html = await fs.readFile('adventure-kit.html', 'utf8');
+  const confirmIdx = html.indexOf('id="confirmModal"');
+  const dialogIdx = html.indexOf('id="dialogModal"');
+  assert.ok(confirmIdx > dialogIdx);
+});
+
 test('closing dialog editor persists dialog changes', () => {
   moduleData.npcs = [{
     id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0,
