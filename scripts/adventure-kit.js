@@ -3333,7 +3333,7 @@ document.getElementById('loadFile').addEventListener('change', e => {
   const reader = new FileReader();
   reader.onload = () => {
     try { applyLoadedModule(JSON.parse(reader.result)); }
-    catch (err) { alert('Invalid module'); }
+    catch (err) { alert('Invalid module: ' + err.message); }
   };
   reader.readAsText(file);
   e.target.value = '';
