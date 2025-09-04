@@ -158,6 +158,18 @@ test('zones round-trip through saveModule', () => {
   globalThis.validateSpawns = origValidate;
 });
 
+test('custom item tags update tag options', () => {
+  const dl = document.getElementById('tagOptions');
+  assert.ok(dl.innerHTML.includes('value="key"'));
+  moduleData.items = [];
+  document.getElementById('itemName').value = 'Mystic Key';
+  document.getElementById('itemId').value = 'mystic_key';
+  document.getElementById('itemTags').value = 'mystic';
+  addItem();
+  assert.ok(dl.innerHTML.includes('value="mystic"'));
+  moduleData.items = [];
+});
+
 test('world paint persists through save/load', () => {
   genWorld(1);
   clearWorld();

@@ -205,6 +205,32 @@ loopMinus.addEventListener('click', () => {
 const moduleData = globalThis.moduleData || (globalThis.moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined });
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod'];
+const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];
+const customTags = new Set();
+
+function allTags() {
+  return PRESET_TAGS.concat([...customTags]).sort();
+}
+
+function updateTagOptions() {
+  const dl = document.getElementById('tagOptions');
+  if (!dl) return;
+  dl.innerHTML = allTags().map(t => `<option value="${t}"></option>`).join('');
+}
+
+function collectKnownTags(tags = []) {
+  tags.forEach(t => {
+    if (t && !PRESET_TAGS.includes(t)) customTags.add(t);
+  });
+}
+
+function initTags() {
+  customTags.clear();
+  (moduleData.items || []).forEach(it => collectKnownTags(it.tags || []));
+  updateTagOptions();
+}
+
+initTags();
 let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editZoneIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
 let treeData = {};
 let selectedObj = null;
@@ -771,6 +797,7 @@ function clearWorld() {
     moduleData.zones = [];
     moduleData.encounters = [];
     moduleData.templates = [];
+    initTags();
     buildings.length = 0;
     portals.length = 0;
     globalThis.interiors = {};
@@ -2045,6 +2072,8 @@ function addItem() {
   const type = document.getElementById('itemType').value.trim();
   const desc = document.getElementById('itemDesc').value.trim();
   const tags = document.getElementById('itemTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  collectKnownTags(tags);
+  updateTagOptions();
   const map = document.getElementById('itemMap').value.trim() || 'world';
   const x = parseInt(document.getElementById('itemX').value, 10) || 0;
   const y = parseInt(document.getElementById('itemY').value, 10) || 0;
@@ -2099,6 +2128,8 @@ function editItem(i) {
   document.getElementById('itemId').value = it.id;
   document.getElementById('itemType').value = it.type || '';
   document.getElementById('itemDesc').value = it.desc || '';
+  collectKnownTags(it.tags || []);
+  updateTagOptions();
   document.getElementById('itemTags').value = (it.tags || []).join(',');
   document.getElementById('itemMap').value = it.map;
   document.getElementById('itemX').value = it.x;
@@ -3068,6 +3099,7 @@ function applyLoadedModule(data) {
   moduleData.name = data.name || 'adventure-module';
   moduleData.npcs = data.npcs || [];
   moduleData.items = data.items || [];
+  initTags();
   moduleData.quests = data.quests || [];
   moduleData.buildings = data.buildings || [];
   moduleData.interiors = (data.interiors || []).map(I => {
