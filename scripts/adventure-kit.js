@@ -1032,6 +1032,8 @@ const ADV_HTML = {
       <label>Unboard Door<select class="choiceUnboard"></select></label>`,
   npcLock: `<label>Lock NPC<select class="choiceLockNPC"></select></label>
       <label>Unlock NPC<select class="choiceUnlockNPC"></select></label>`,
+  npcColor: `<label>NPC<select class="choiceColorNPC"></select></label>
+      <label>Color<input type="color" class="choiceNPCColor"/></label>`,
   flagEff: `<fieldset class="choiceSubGroup"><legend>Flag Effect</legend>
         <label>Flag Name<input class="choiceSetFlagName" list="choiceFlagList"/></label>
         <label>Operation<select class="choiceSetFlagOp"><option value="set">Set</option><option value="add">Add</option><option value="clear">Clear</option></select></label>
@@ -1084,6 +1086,9 @@ function addChoiceRow(container, ch = {}) {
   const unlockEff = effs.find(e => e.effect === 'unlockNPC');
   const lockId = lockEff ? lockEff.npcId || '' : '';
   const unlockId = unlockEff ? unlockEff.npcId || '' : '';
+  const colorEff = effs.find(e => e.effect === 'npcColor');
+  const colorNpc = colorEff ? colorEff.npcId || '' : '';
+  const colorHex = colorEff ? colorEff.color || '' : '';
   const setFlagName = setFlag?.flag || '';
   const setFlagOp = setFlag?.op || 'set';
   const setFlagVal = setFlag?.value ?? '';
@@ -1106,6 +1111,7 @@ function addChoiceRow(container, ch = {}) {
         <option value="goto">Goto</option>
         <option value="doors">Doors</option>
         <option value="npcLock">NPC Lock</option>
+        <option value="npcColor">NPC Color</option>
         <option value="flagEff">Flag Effect</option>
         <option value="spawn">Spawn NPC</option>
         <option value="quest">Quest Tag</option>
@@ -1217,6 +1223,11 @@ function addChoiceRow(container, ch = {}) {
     addAdv('npcLock');
     if (lockId) row.querySelector('.choiceLockNPC').value = lockId;
     if (unlockId) row.querySelector('.choiceUnlockNPC').value = unlockId;
+  }
+  if (colorNpc || colorHex) {
+    addAdv('npcColor');
+    if (colorNpc) row.querySelector('.choiceColorNPC').value = colorNpc;
+    if (colorHex) row.querySelector('.choiceNPCColor').value = colorHex;
   }
   if (setFlagName) {
     addAdv('flagEff');
@@ -1335,6 +1346,7 @@ function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceUnboard').forEach(sel => populateInteriorDropdown(sel, sel.value));
   document.querySelectorAll('.choiceLockNPC').forEach(sel => populateNPCDropdown(sel, sel.value));
   document.querySelectorAll('.choiceUnlockNPC').forEach(sel => populateNPCDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceColorNPC').forEach(sel => populateNPCDropdown(sel, sel.value));
   document.querySelectorAll('.choiceSpawnTemplate').forEach(sel => populateTemplateDropdown(sel, sel.value));
   const encLoot = document.getElementById('encLoot');
   if (encLoot) populateItemDropdown(encLoot, encLoot.value);
@@ -1483,12 +1495,15 @@ function updateTreeData() {
       const unboardId = chEl.querySelector('.choiceUnboard')?.value.trim();
       const lockNpc = chEl.querySelector('.choiceLockNPC')?.value.trim();
       const unlockNpc = chEl.querySelector('.choiceUnlockNPC')?.value.trim();
+      const colorNpc = chEl.querySelector('.choiceColorNPC')?.value.trim();
+      const colorHex = chEl.querySelector('.choiceNPCColor')?.value.trim();
       if (flag) c.if = { flag, op, value: val != null && !Number.isNaN(val) ? val : 0 };
       const effs = [];
       if (boardId) effs.push({ effect: 'boardDoor', interiorId: boardId });
       if (unboardId) effs.push({ effect: 'unboardDoor', interiorId: unboardId });
       if (lockNpc) effs.push({ effect: 'lockNPC', npcId: lockNpc });
       if (unlockNpc) effs.push({ effect: 'unlockNPC', npcId: unlockNpc });
+      if (colorNpc && colorHex) effs.push({ effect: 'npcColor', npcId: colorNpc, color: colorHex });
       if (effs.length) c.effects = effs;
       if (setFlagName) {
         const op = chEl.querySelector('.choiceSetFlagOp').value;

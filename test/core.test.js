@@ -1034,6 +1034,14 @@ test('lock/unlock effects toggle npc access', () => {
   closeDialog();
   NPCS.length = 0;
 });
+test('npcColor effect changes NPC color', () => {
+  const npc = makeNPC('col', 'world', 0, 0, '#00ff00', 'Color', '', '', {});
+  NPCS.length = 0;
+  NPCS.push(npc);
+  Effects.apply([{ effect: 'npcColor', npcId: 'col', color: '#ff0000' }]);
+  assert.strictEqual(npc.color, '#ff0000');
+  NPCS.length = 0;
+});
 test('dialog choice applies object effects', () => {
   globalThis.buildings = [ { interiorId: 'castle', boarded: true } ];
   const tree = { start:{ text:'hi', choices:[ { label:'open', to:'bye', effects:[ { effect:'unboardDoor', interiorId:'castle' } ] } ] }, bye:{ text:'', choices:[] } };

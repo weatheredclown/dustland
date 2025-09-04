@@ -113,6 +113,15 @@
               if (n) n.locked = false;
             }
             break; }
+          case 'npcColor': {
+            if (eff.npcId && typeof eff.color === 'string' && typeof NPCS !== 'undefined') {
+              const n = NPCS.find(n => n.id === eff.npcId);
+              if (n) {
+                n.color = eff.color;
+                if (typeof render === 'function') render();
+              }
+            }
+            break; }
           case 'modStat': {
             const target = ctx.actor || ctx.player;
             if (target && target.stats && eff.stat) {
