@@ -2100,6 +2100,13 @@ function updateUseWrap() {
   document.getElementById('itemBoostDurWrap').style.display = boost ? 'block' : 'none';
   document.getElementById('itemUseWrap').style.display = type ? 'block' : 'none';
 }
+function updateItemMapWrap() {
+  const hasMap = !!document.getElementById('itemMap').value.trim();
+  const xy = document.getElementById('itemXY');
+  const pick = document.getElementById('itemPick');
+  if (xy) xy.style.display = hasMap ? 'flex' : 'none';
+  if (pick) pick.style.display = hasMap ? 'inline-block' : 'none';
+}
 function startNewItem() {
   editItemIdx = -1;
   document.getElementById('itemName').value = '';
@@ -2107,7 +2114,7 @@ function startNewItem() {
   document.getElementById('itemType').value = '';
   document.getElementById('itemDesc').value = '';
   document.getElementById('itemTags').value = '';
-  document.getElementById('itemMap').value = 'world';
+  document.getElementById('itemMap').value = '';
   document.getElementById('itemX').value = 0;
   document.getElementById('itemY').value = 0;
   updateModsWrap();
@@ -2121,6 +2128,7 @@ function startNewItem() {
   document.getElementById('itemBoostDuration').value = 0;
   document.getElementById('itemUse').value = '';
   updateUseWrap();
+  updateItemMapWrap();
   document.getElementById('addItem').textContent = 'Add Item';
   document.getElementById('cancelItem').style.display = 'none';
   document.getElementById('delItem').style.display = 'none';
@@ -2150,7 +2158,7 @@ function addItem() {
   const tags = document.getElementById('itemTags').value.split(',').map(t=>t.trim()).filter(Boolean);
   collectKnownTags(tags);
   updateTagOptions();
-  const map = document.getElementById('itemMap').value.trim() || 'world';
+  const map = document.getElementById('itemMap').value.trim();
   const x = parseInt(document.getElementById('itemX').value, 10) || 0;
   const y = parseInt(document.getElementById('itemY').value, 10) || 0;
   const isEquip = ['weapon', 'armor', 'trinket'].includes(type);
@@ -2175,7 +2183,12 @@ function addItem() {
   }
   const useText = document.getElementById('itemUse').value.trim();
   if (use && useText) use.text = useText;
-  const item = { id, name, desc, type, tags, map, x, y, mods, value, use, equip };
+  const item = { id, name, desc, type, tags, mods, value, use, equip };
+  if (map) {
+    item.map = map;
+    item.x = x;
+    item.y = y;
+  }
   if (editItemIdx >= 0) {
     moduleData.items[editItemIdx] = item;
   } else {
@@ -2206,8 +2219,10 @@ function cancelItem() {
 }
 function editItem(i) {
   const it = moduleData.items[i];
-  showMap(it.map);
-  focusMap(it.x, it.y);
+  if (it.map) {
+    showMap(it.map);
+    focusMap(it.x, it.y);
+  }
   editItemIdx = i;
   document.getElementById('itemName').value = it.name;
   document.getElementById('itemId').value = it.id;
@@ -2216,9 +2231,10 @@ function editItem(i) {
   collectKnownTags(it.tags || []);
   updateTagOptions();
   document.getElementById('itemTags').value = (it.tags || []).join(',');
-  document.getElementById('itemMap').value = it.map;
-  document.getElementById('itemX').value = it.x;
-  document.getElementById('itemY').value = it.y;
+  document.getElementById('itemMap').value = it.map || '';
+  document.getElementById('itemX').value = it.x || 0;
+  document.getElementById('itemY').value = it.y || 0;
+  updateItemMapWrap();
   updateModsWrap();
   loadMods(it.mods);
   document.getElementById('itemValue').value = it.value || 0;
@@ -2261,7 +2277,10 @@ function editItem(i) {
 function renderItemList() {
   const list = document.getElementById('itemList');
   const items = moduleData.items.map((it, i) => ({ it, i })).sort((a, b) => a.it.name.localeCompare(b.it.name));
-  list.innerHTML = items.map(({ it, i }) => `<div data-idx="${i}">${it.name} @${it.map} (${it.x},${it.y})</div>`).join('');
+  list.innerHTML = items.map(({ it, i }) => {
+    const loc = it.map ? ` @${it.map} (${it.x},${it.y})` : '';
+    return `<div data-idx="${i}">${it.name}${loc}</div>`;
+  }).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editItem(parseInt(div.dataset.idx, 10)));
   refreshChoiceDropdowns();
   renderProblems();
@@ -3363,8 +3382,12 @@ function playtestModule() {
 
 document.getElementById('clear').onclick = clearWorld;
 document.getElementById('addNPC').onclick = beginPlaceNPC;
-document.getElementById('addItem').onclick = () => { if (editItemIdx >= 0) addItem(); else beginPlaceItem(); };
+document.getElementById('addItem').onclick = () => {
+  const mapVal = document.getElementById('itemMap').value.trim();
+  if (editItemIdx >= 0 || !mapVal) addItem(); else beginPlaceItem();
+};
 document.getElementById('newItem').onclick = startNewItem;
+document.getElementById('itemMap').addEventListener('input', updateItemMapWrap);
 document.getElementById('newNPC').onclick = startNewNPC;
 document.getElementById('newBldg').onclick = startNewBldg;
 document.getElementById('newQuest').onclick = startNewQuest;
