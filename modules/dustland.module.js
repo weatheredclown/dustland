@@ -1823,65 +1823,45 @@ const DATA = `
     }
   ],
   "name": "dustland-module",
+  "templates": [
+    {
+      "id": "rotwalker",
+      "name": "Rotwalker",
+      "portraitSheet": "assets/portraits/dustland-module/rotwalker_4.png",
+      "combat": { "HP": 6, "ATK": 2, "DEF": 0 }
+    },
+    {
+      "id": "scavenger",
+      "name": "Scavenger",
+      "portraitSheet": "assets/portraits/dustland-module/scavenger_4.png",
+      "combat": { "HP": 5, "ATK": 2, "DEF": 0 }
+    },
+    {
+      "id": "sand_titan",
+      "name": "Sand Titan",
+      "portraitSheet": "assets/portraits/dustland-module/sand_titan.png",
+      "combat": { "HP": 20, "ATK": 6, "DEF": 4, "challenge": 9 }
+    },
+    {
+      "id": "dune_reaper",
+      "name": "Dune Reaper",
+      "portraitSheet": "assets/portraits/dustland-module/dune_reaper_4.png",
+      "combat": { "HP": 90, "ATK": 8, "DEF": 7, "challenge": 32, "special": { "cue": "lashes the wind with scythes!", "dmg": 10 } }
+    },
+    {
+      "id": "sand_colossus",
+      "name": "Sand Colossus",
+      "portraitSheet": "assets/portraits/dustland-module/sand_colossus_4.png",
+      "combat": { "HP": 120, "ATK": 10, "DEF": 8, "challenge": 36, "requires": "artifact_blade", "special": { "cue": "shakes the desert!", "dmg": 12 } }
+    }
+  ],
   "encounters": {
     "world": [
-      {
-        "name": "Rotwalker",
-        "HP": 6,
-        "ATK": 2,
-        "DEF": 0,
-        "loot": "water_flask",
-        "maxDist": 24,
-        "portraitSheet": "assets/portraits/dustland-module/rotwalker_4.png"
-      },
-      {
-        "name": "Scavenger",
-        "HP": 5,
-        "ATK": 2,
-        "DEF": 0,
-        "loot": "raider_knife",
-        "maxDist": 36,
-        "portraitSheet": "assets/portraits/dustland-module/scavenger_4.png"
-      },
-      {
-        "name": "Sand Titan",
-        "HP": 20,
-        "ATK": 6,
-        "DEF": 4,
-        "loot": "artifact_blade",
-        "challenge": 9,
-        "minDist": 30,
-        "portraitSheet": "assets/portraits/dustland-module/sand_titan.png"
-      },
-      {
-        "name": "Dune Reaper",
-        "HP": 90,
-        "ATK": 8,
-        "DEF": 7,
-        "loot": "artifact_blade",
-        "challenge": 32,
-        "minDist": 40,
-        "special": {
-          "cue": "lashes the wind with scythes!",
-          "dmg": 10
-        },
-        "portraitSheet": "assets/portraits/dustland-module/dune_reaper_4.png"
-      },
-      {
-        "name": "Sand Colossus",
-        "HP": 120,
-        "ATK": 10,
-        "DEF": 8,
-        "loot": "artifact_blade",
-        "challenge": 36,
-        "minDist": 44,
-        "requires": "artifact_blade",
-        "special": {
-          "cue": "shakes the desert!",
-          "dmg": 12
-        },
-        "portraitSheet": "assets/portraits/dustland-module/sand_colossus_4.png"
-      }
+      { "templateId": "rotwalker", "loot": "water_flask", "maxDist": 24 },
+      { "templateId": "scavenger", "loot": "raider_knife", "maxDist": 36 },
+      { "templateId": "sand_titan", "loot": "artifact_blade", "minDist": 30 },
+      { "templateId": "dune_reaper", "loot": "artifact_blade", "minDist": 40 },
+      { "templateId": "sand_colossus", "loot": "artifact_blade", "minDist": 44 }
     ]
   },
   "buildings": [

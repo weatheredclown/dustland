@@ -341,7 +341,13 @@ function checkRandomEncounter(){
     const hard = pool.filter(e => e.minDist);
     if(hard.length) pool = hard;
     const base = pool[Math.floor(Math.random() * pool.length)];
-    const def = { ...base };
+    let def;
+    if(base.templateId && typeof npcTemplates !== 'undefined'){
+      const t = npcTemplates.find(t => t.id === base.templateId);
+      def = { ...(t?.combat||{}), name: t?.name, portraitSheet: t?.portraitSheet, ...base };
+    } else {
+      def = { ...base };
+    }
     const id = def.id || def.name;
     const stats = globalThis.enemyTurnStats?.[id];
     // If this enemy consistently falls in one turn, escalate group size
