@@ -3402,7 +3402,8 @@ function playtestModule() {
     const { map, ...rest } = e;
     (enc[map] ||= []).push(rest);
   });
-  const data = { ...moduleData, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints };
+  const zones = moduleData.zones ? moduleData.zones.map(z => ({ ...z })) : [];
+  const data = { ...moduleData, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints, zones };
   localStorage.setItem(PLAYTEST_KEY, JSON.stringify(data));
   window.open('dustland.html?ack-player=1#play', '_blank');
 }

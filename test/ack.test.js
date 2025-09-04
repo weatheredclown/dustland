@@ -163,6 +163,26 @@ test('zones round-trip through saveModule', () => {
   globalThis.validateSpawns = origValidate;
 });
 
+test('playtestModule includes zones', () => {
+  applyLoadedModule({ seed: 1 });
+  document.getElementById('zoneMap').value = 'world';
+  document.getElementById('zoneX').value = 0;
+  document.getElementById('zoneY').value = 0;
+  document.getElementById('zoneW').value = 1;
+  document.getElementById('zoneH').value = 1;
+  addZone();
+  let saved = '';
+  const origLS = global.localStorage;
+  global.localStorage = { setItem: (k,v) => { saved = v; }, getItem: () => null, removeItem: () => {} };
+  const origOpen = global.open;
+  global.open = () => {};
+  playtestModule();
+  const json = JSON.parse(saved);
+  assert.deepStrictEqual(json.zones, [{ map: 'world', x: 0, y: 0, w: 1, h: 1 }]);
+  global.localStorage = origLS;
+  global.open = origOpen;
+});
+
 test('custom item tags update tag options', () => {
   const dl = document.getElementById('tagOptions');
   assert.ok(dl.innerHTML.includes('value="key"'));
