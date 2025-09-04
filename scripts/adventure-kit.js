@@ -2192,7 +2192,14 @@ function startNewTemplate(){
   document.getElementById('templateDesc').value = '';
   document.getElementById('templateColor').value = '#9ef7a0';
   document.getElementById('templatePortrait').value = '';
-  document.getElementById('templateCombat').value = '';
+  document.getElementById('templateHP').value = 5;
+  document.getElementById('templateATK').value = 1;
+  document.getElementById('templateDEF').value = 0;
+  document.getElementById('templateChallenge').value = '';
+  document.getElementById('templateSpecialCue').value = '';
+  document.getElementById('templateSpecialDmg').value = '';
+  populateItemDropdown(document.getElementById('templateLoot'), '');
+  document.getElementById('templateRequires').value = '';
   document.getElementById('addTemplate').textContent = 'Add Template';
   document.getElementById('delTemplate').style.display = 'none';
   showTemplateEditor(true);
@@ -2203,9 +2210,22 @@ function collectTemplate(){
   const desc = document.getElementById('templateDesc').value.trim();
   const color = document.getElementById('templateColor').value.trim();
   const portraitSheet = document.getElementById('templatePortrait').value.trim();
-  let combat = null;
-  try { combat = JSON.parse(document.getElementById('templateCombat').value.trim() || 'null'); } catch (e) {
-    // ignore parse errors
+  const HP = parseInt(document.getElementById('templateHP').value,10) || 1;
+  const ATK = parseInt(document.getElementById('templateATK').value,10) || 1;
+  const DEF = parseInt(document.getElementById('templateDEF').value,10) || 0;
+  const challenge = parseInt(document.getElementById('templateChallenge').value,10) || 0;
+  const specialCue = document.getElementById('templateSpecialCue').value.trim();
+  const specialDmg = parseInt(document.getElementById('templateSpecialDmg').value,10) || 0;
+  const loot = document.getElementById('templateLoot').value.trim();
+  const requires = document.getElementById('templateRequires').value.trim();
+  const combat = { HP, ATK, DEF };
+  if (challenge) combat.challenge = challenge;
+  if (loot) combat.loot = loot;
+  if (requires) combat.requires = requires;
+  if (specialCue || specialDmg) {
+    combat.special = {};
+    if (specialCue) combat.special.cue = specialCue;
+    if (specialDmg) combat.special.dmg = specialDmg;
   }
   return { id, name, desc, color, portraitSheet, combat };
 }
@@ -2227,7 +2247,14 @@ function editTemplate(i){
   document.getElementById('templateDesc').value = t.desc;
   document.getElementById('templateColor').value = expandHex(t.color || '#ffffff');
   document.getElementById('templatePortrait').value = t.portraitSheet || '';
-  document.getElementById('templateCombat').value = t.combat ? JSON.stringify(t.combat, null, 2) : '';
+  document.getElementById('templateHP').value = t.combat?.HP || 1;
+  document.getElementById('templateATK').value = t.combat?.ATK || 1;
+  document.getElementById('templateDEF').value = t.combat?.DEF || 0;
+  document.getElementById('templateChallenge').value = t.combat?.challenge || '';
+  document.getElementById('templateSpecialCue').value = t.combat?.special?.cue || '';
+  document.getElementById('templateSpecialDmg').value = t.combat?.special?.dmg || '';
+  populateItemDropdown(document.getElementById('templateLoot'), t.combat?.loot || '');
+  document.getElementById('templateRequires').value = t.combat?.requires || '';
   document.getElementById('addTemplate').textContent = 'Update Template';
   document.getElementById('delTemplate').style.display = 'block';
   showTemplateEditor(true);

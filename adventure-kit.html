@@ -599,7 +599,14 @@
           <label>Description<textarea id="templateDesc" rows="2"></textarea></label>
           <label>Color<input id="templateColor" type="color" value="#9ef7a0" /></label>
           <label>Portrait<input id="templatePortrait" /></label>
-          <label>Combat<textarea id="templateCombat" rows="2"></textarea></label>
+          <label>HP<input id="templateHP" type="number" min="1" value="5" /></label>
+          <label>ATK<input id="templateATK" type="number" min="1" value="1" /></label>
+          <label>DEF<input id="templateDEF" type="number" min="0" value="0" /></label>
+          <label>Challenge<input id="templateChallenge" type="number" min="0" /></label>
+          <label>Special Cue<input id="templateSpecialCue" /></label>
+          <label>Special Dmg<input id="templateSpecialDmg" type="number" min="1" /></label>
+          <label>Loot<select id="templateLoot"></select></label>
+          <label>Requires<input id="templateRequires" /></label>
         <button class="btn" id="addTemplate">Add Template</button>
         <button class="btn" id="delTemplate" style="display:none">Delete Template</button>
       </div>
