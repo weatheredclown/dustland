@@ -31,7 +31,7 @@
 - [ ] Slow fuel depot respawns to encourage strategic convoy runs
 - [ ] Continue adding lore snippets to ancient billboards
 - [ ] Give wind turbines tangible gameplay benefits
-- [ ] Expand documentation on event-bus quirks for modders
+- [x] Expand documentation on event-bus quirks for modders
 - [ ] Fix dune race leaderboards desyncing after patches
 - [ ] Prevent the decoy drone from attracting allied NPCs
 - [x] Add more tracks to the in-game radio playlist
