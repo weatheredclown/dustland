@@ -11,7 +11,11 @@
     const persona = state.personas[personaId];
     if (!persona) return;
     const member = state.party.find(m => m.id === memberId);
-    if (member) member.persona = personaId;
+    if (!member) return;
+    const prev = member.persona;
+    if (prev && prev !== personaId) globalThis.EventBus?.emit('persona:unequip', { memberId, personaId: prev });
+    member.persona = personaId;
+    globalThis.EventBus?.emit('persona:equip', { memberId, personaId });
   }
   Dustland.gameState = { getState, updateState, getDifficulty, setDifficulty, setPersona, getPersona, applyPersona };
 })();
