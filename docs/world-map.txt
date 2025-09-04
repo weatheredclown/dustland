@@ -1,0 +1,13 @@
+Dustland Caravan Route (ASCII draft)
+
+          [Start]
+             |
+             v
+   (A)-----(B)-----(C)
+    |                \
+    |                 \
+  Oasis             Observatory
+
+A: Salt Flats - first broadcast fragment
+B: Ruined Mall - second fragment
+C: Collapsed Observatory - third fragment
