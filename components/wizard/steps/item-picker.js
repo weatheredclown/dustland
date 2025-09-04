@@ -5,6 +5,11 @@
         const labelEl = document.createElement('label');
         labelEl.textContent = label;
         const select = document.createElement('select');
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Select ' + label.toLowerCase();
+        if (!state[key]) placeholder.selected = true;
+        select.appendChild(placeholder);
         (options || []).forEach(opt => {
           const o = document.createElement('option');
           if (typeof opt === 'string') {
