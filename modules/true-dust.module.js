@@ -133,6 +133,35 @@ const DATA = `{
       }
     },
     {
+      "id": "ganton",
+      "map": "stonegate",
+      "x": 1,
+      "y": 2,
+      "color": "#f99",
+      "name": "Mayor Ganton",
+      "title": "Rustwater",
+      "desc": "Rustwater's mayor eyes you shiftily.",
+      "questId": "bandit_purge",
+      "tree": {
+        "start": {
+          "text": "Bandits choke the road to Lakeside. Clear them and keep quiet.",
+          "choices": [
+            { "label": "(Take job)", "to": "accept", "q": "accept", "if": { "flag": "bandit_purge_active", "op": "<", "value": 1 }, "setFlag": { "flag": "bandit_purge_active", "op": "set", "value": 1 } },
+            { "label": "(Collect reward)", "to": "reward", "q": "turnin", "if": { "flag": "bandits_cleared", "op": ">=", "value": 1 } },
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        },
+        "accept": {
+          "text": "Don't ask questions. Just deal with them.",
+          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+        },
+        "reward": {
+          "text": "Ganton slips you a prototype rifle.",
+          "choices": [ { "label": "(Take rifle)", "to": "bye", "reward": "pulse_rifle" } ]
+        }
+      }
+    },
+    {
       "id": "lakeside_dockhand",
       "map": "lakeside",
       "x": 2,
@@ -158,6 +187,17 @@ const DATA = `{
           "choices": [ { "label": "(Leave)", "to": "bye", "reward": "warning_note" } ]
         }
       }
+    },
+    {
+      "id": "bandit_leader",
+      "map": "lakeside",
+      "x": 1,
+      "y": 1,
+      "color": "#f55",
+      "name": "Bandit Leader",
+      "desc": "A bandit blocks the road.",
+      "tree": { "start": { "text": "A bandit steps out, weapons drawn." } },
+      "combat": { "HP": 10, "ATK": 3, "DEF": 1, "loot": "scrap" }
     }
   ],
   "items": [
@@ -369,6 +409,10 @@ function postLoad(module) {
         dialogState.node = party.some(m => m.id === 'rygar') ? 'with_rygar' : 'without_rygar';
       }
     };
+  }
+  const bandit = module.npcs.find(n => n.id === 'bandit_leader');
+  if (bandit && bandit.combat) {
+    bandit.combat.effects = [() => setFlag('bandits_cleared', 1)];
   }
   module.quests?.forEach(q => addQuest(q.id, q.title, q.desc, q));
 }

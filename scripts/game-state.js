@@ -7,5 +7,11 @@
   function setDifficulty(mode){ state.difficulty = mode; }
   function setPersona(id, persona){ state.personas[id] = persona; }
   function getPersona(id){ return state.personas[id]; }
-  Dustland.gameState = { getState, updateState, getDifficulty, setDifficulty, setPersona, getPersona };
+  function applyPersona(memberId, personaId){
+    const persona = state.personas[personaId];
+    if (!persona) return;
+    const member = state.party.find(m => m.id === memberId);
+    if (member) member.persona = personaId;
+  }
+  Dustland.gameState = { getState, updateState, getDifficulty, setDifficulty, setPersona, getPersona, applyPersona };
 })();

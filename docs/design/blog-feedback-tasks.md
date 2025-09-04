@@ -34,7 +34,7 @@
 - [ ] Expand documentation on event-bus quirks for modders
 - [ ] Fix dune race leaderboards desyncing after patches
 - [ ] Prevent the decoy drone from attracting allied NPCs
-- [ ] Add more tracks to the in-game radio playlist
+- [x] Add more tracks to the in-game radio playlist
 - [ ] Let crowbars open locked crates without explosives
 - [ ] Persist trail markers in co-op even if players log out
 - [ ] Swap modular armor plates without pausing the game
