@@ -8,7 +8,6 @@ bus?.on?.('combat:ended', () => { combatActive = false; });
 const buffs = [];              // 2c342c / 313831
 const tileColors = {0:'#1e271d',1:'#313831',2:'#1573ff',3:'#203320',4:'#777777',5:'#304326',6:'#4d5f4d',7:'#233223',8:'#8bd98d',9:'#000000'};// 2B382B / 203320
 let moveDelay = 0;
-const zones = (globalThis.Dustland && globalThis.Dustland.zoneEffects) || [];
 let encounterCooldown = 0;
 let weatherSpeed = 1;
 let encounterBias = null;
@@ -23,6 +22,7 @@ function zoneAttrs(map,x,y){
   let spawns = null;
   let minSteps = null;
   let maxSteps = null;
+  const zones = globalThis.Dustland?.zoneEffects || [];
   for(const z of zones){
     if((z.map||'world')!==map) continue;
     if(x<z.x || y<z.y || x>=z.x+(z.w||0) || y>=z.y+(z.h||0)) continue;
@@ -187,6 +187,7 @@ function wait(){
 }
 
 function applyZones(map,x,y){
+  const zones = globalThis.Dustland?.zoneEffects || [];
   for(const z of zones){
     if((z.map||'world')!==map) continue;
     if(x<z.x || y<z.y || x>=z.x+(z.w||0) || y>=z.y+(z.h||0)) continue;
