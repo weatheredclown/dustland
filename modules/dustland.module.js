@@ -162,6 +162,36 @@ const DATA = `
     },
     {
       "map": "world",
+      "x": 34,
+      "y": 47,
+      "id": "adrenaline_shot",
+      "name": "Adrenaline Shot",
+      "type": "consumable",
+      "use": {
+        "type": "boost",
+        "stat": "ATK",
+        "amount": 2,
+        "duration": 3,
+        "text": "Power surges through you."
+      }
+    },
+    {
+      "map": "world",
+      "x": 36,
+      "y": 47,
+      "id": "armor_polish",
+      "name": "Armor Polish",
+      "type": "consumable",
+      "use": {
+        "type": "boost",
+        "stat": "DEF",
+        "amount": 2,
+        "duration": 3,
+        "text": "You feel protected."
+      }
+    },
+    {
+      "map": "world",
       "x": 18,
       "y": 43,
       "id": "valve",

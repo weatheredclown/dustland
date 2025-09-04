@@ -2027,7 +2027,11 @@ function updateModsWrap() {
 function updateUseWrap() {
   const type = document.getElementById('itemUseType').value;
   document.getElementById('itemUseAmtWrap').style.display = type === 'heal' ? 'block' : 'none';
-  document.getElementById('itemUseWrap').style.display = type ? 'none' : 'block';
+  const boost = type === 'boost';
+  document.getElementById('itemBoostStatWrap').style.display = boost ? 'block' : 'none';
+  document.getElementById('itemBoostAmtWrap').style.display = boost ? 'block' : 'none';
+  document.getElementById('itemBoostDurWrap').style.display = boost ? 'block' : 'none';
+  document.getElementById('itemUseWrap').style.display = type ? 'block' : 'none';
 }
 function startNewItem() {
   editItemIdx = -1;
@@ -2046,6 +2050,9 @@ function startNewItem() {
   document.getElementById('itemEquip').value = '';
   document.getElementById('itemUseType').value = '';
   document.getElementById('itemUseAmount').value = 0;
+  document.getElementById('itemBoostStat').value = '';
+  document.getElementById('itemBoostAmount').value = 0;
+  document.getElementById('itemBoostDuration').value = 0;
   document.getElementById('itemUse').value = '';
   updateUseWrap();
   document.getElementById('addItem').textContent = 'Add Item';
@@ -2092,9 +2099,16 @@ function addItem() {
   if (useType === 'heal') {
     const amt = parseInt(document.getElementById('itemUseAmount').value, 10) || 0;
     use = { type: 'heal', amount: amt };
-  } else {
-    try { use = JSON.parse(document.getElementById('itemUse').value || 'null'); } catch (e) { use = null; }
+  } else if (useType === 'boost') {
+    const stat = document.getElementById('itemBoostStat').value.trim();
+    const amt = parseInt(document.getElementById('itemBoostAmount').value, 10) || 0;
+    const dur = parseInt(document.getElementById('itemBoostDuration').value, 10) || 0;
+    use = { type: 'boost', stat, amount: amt, duration: dur };
+  } else if (useType) {
+    use = { type: useType };
   }
+  const useText = document.getElementById('itemUse').value.trim();
+  if (use && useText) use.text = useText;
   const item = { id, name, desc, type, tags, map, x, y, slot, mods, value, use, equip };
   if (editItemIdx >= 0) {
     moduleData.items[editItemIdx] = item;
@@ -2144,14 +2158,32 @@ function editItem(i) {
   loadMods(it.mods);
   document.getElementById('itemValue').value = it.value || 0;
   document.getElementById('itemEquip').value = it.equip ? JSON.stringify(it.equip, null, 2) : '';
-  if (it.use && it.use.type === 'heal') {
-    document.getElementById('itemUseType').value = 'heal';
-    document.getElementById('itemUseAmount').value = it.use.amount || 0;
-    document.getElementById('itemUse').value = '';
+  if (it.use) {
+    document.getElementById('itemUseType').value = it.use.type || '';
+    if (it.use.type === 'heal') {
+      document.getElementById('itemUseAmount').value = it.use.amount || 0;
+      document.getElementById('itemBoostStat').value = '';
+      document.getElementById('itemBoostAmount').value = 0;
+      document.getElementById('itemBoostDuration').value = 0;
+    } else if (it.use.type === 'boost') {
+      document.getElementById('itemUseAmount').value = 0;
+      document.getElementById('itemBoostStat').value = it.use.stat || '';
+      document.getElementById('itemBoostAmount').value = it.use.amount || 0;
+      document.getElementById('itemBoostDuration').value = it.use.duration || 0;
+    } else {
+      document.getElementById('itemUseAmount').value = 0;
+      document.getElementById('itemBoostStat').value = '';
+      document.getElementById('itemBoostAmount').value = 0;
+      document.getElementById('itemBoostDuration').value = 0;
+    }
+    document.getElementById('itemUse').value = it.use.text || '';
   } else {
     document.getElementById('itemUseType').value = '';
     document.getElementById('itemUseAmount').value = 0;
-    document.getElementById('itemUse').value = it.use ? JSON.stringify(it.use, null, 2) : '';
+    document.getElementById('itemBoostStat').value = '';
+    document.getElementById('itemBoostAmount').value = 0;
+    document.getElementById('itemBoostDuration').value = 0;
+    document.getElementById('itemUse').value = '';
   }
   updateUseWrap();
   document.getElementById('addItem').textContent = 'Update Item';
