@@ -116,7 +116,7 @@ window.worldStamps = worldStamps;
 const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
 
-let dragTarget = null, settingStart = false, hoverTarget = null, didDrag = false;
+let dragTarget = null, settingStart = false, hoverTarget = null, didDrag = false, dragOffsetX = 0, dragOffsetY = 0;
 let placingType = null, placingPos = null, placingCb = null;
 let hoverTile = null;
 var coordTarget = null;
@@ -433,6 +433,30 @@ function drawWorld() {
       ctx.shadowBlur = 8;
     }
     ctx.fillRect(px + sx / 4, py + sy / 4, sx / 2, sy / 2);
+    ctx.restore();
+  });
+  moduleData.zones.filter(z => z.map === map).forEach(z => {
+    const zx = (z.x - pxoff) * sx;
+    const zy = (z.y - pyoff) * sy;
+    const zw = z.w * sx;
+    const zh = z.h * sy;
+    if (zx + zw < 0 || zy + zh < 0 || zx > canvas.width || zy > canvas.height) return;
+    const hovering = hoverTarget && hoverTarget.type === 'zone' && hoverTarget.obj === z;
+    const selected = selectedObj && selectedObj.type === 'zone' && selectedObj.obj === z;
+    ctx.save();
+    ctx.strokeStyle = '#fa0';
+    if (hovering) {
+      ctx.shadowColor = '#fa0';
+      ctx.shadowBlur = 8;
+    }
+    if (hovering || selected) ctx.lineWidth = 2;
+    ctx.strokeRect(zx, zy, zw, zh);
+    if (selected) {
+      const hs = Math.max(6, Math.min(sx, sy));
+      ctx.fillStyle = '#fa0';
+      ctx.fillRect(zx - hs / 2, zy - hs / 2, hs, hs);
+      ctx.fillRect(zx + zw - hs / 2, zy + zh - hs / 2, hs, hs);
+    }
     ctx.restore();
   });
   if (map === 'world' && hoverTarget && hoverTarget.type === 'bldg') {
@@ -2344,6 +2368,8 @@ function startNewZone() {
   document.getElementById('addZone').textContent = 'Add Zone';
   document.getElementById('delZone').style.display = 'none';
   showZoneEditor(true);
+  selectedObj = null;
+  drawWorld();
 }
 
 function collectZone() {
@@ -2383,6 +2409,8 @@ function addZone() {
   document.getElementById('delZone').style.display = 'none';
   renderZoneList();
   showZoneEditor(false);
+  selectedObj = null;
+  drawWorld();
 }
 
 function editZone(i) {
@@ -2401,6 +2429,10 @@ function editZone(i) {
   document.getElementById('addZone').textContent = 'Update Zone';
   document.getElementById('delZone').style.display = 'block';
   showZoneEditor(true);
+  selectedObj = { type: 'zone', obj: z };
+  showMap(z.map);
+  focusMap(z.x + z.w / 2, z.y + z.h / 2);
+  drawWorld();
 }
 
 function renderZoneList() {
@@ -2417,6 +2449,8 @@ function deleteZone() {
   document.getElementById('delZone').style.display = 'none';
   renderZoneList();
   showZoneEditor(false);
+  selectedObj = null;
+  drawWorld();
 }
 
 // --- Portals ---
@@ -3235,7 +3269,15 @@ function updateCursor(x, y) {
     const overStart = currentMap === 'world' && moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y;
     const overEvent = moduleData.events.some(ev => ev.map === currentMap && ev.x === x && ev.y === y);
     const overPortal = moduleData.portals.some(p => p.map === currentMap && p.x === x && p.y === y);
-    canvas.style.cursor = (overNpc || overItem || overBldg || overStart || overEvent || overPortal) ? 'grab' : 'pointer';
+    let zoneCursor = null;
+    if (selectedObj && selectedObj.type === 'zone' && selectedObj.obj.map === currentMap) {
+      const z = selectedObj.obj;
+      const overTL = x >= z.x - 1 && x <= z.x && y >= z.y - 1 && y <= z.y;
+      const overBR = x >= z.x + z.w - 1 && x <= z.x + z.w && y >= z.y + z.h - 1 && y <= z.y + z.h;
+      if (overTL || overBR) zoneCursor = 'nwse-resize';
+      else if (x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h) zoneCursor = 'grab';
+    }
+    canvas.style.cursor = zoneCursor || (overNpc || overItem || overBldg || overStart || overEvent || overPortal ? 'grab' : 'pointer');
   } else {
     canvas.style.cursor = 'pointer';
   }
@@ -3260,13 +3302,14 @@ canvas.addEventListener('mousedown', ev => {
   const overStart = currentMap === 'world' && moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y;
   const overEvent = moduleData.events.some(ev2 => ev2.map === currentMap && ev2.x === x && ev2.y === y);
   const overPortal = moduleData.portals.some(p => p.map === currentMap && p.x === x && p.y === y);
-  if (currentMap === 'world' && worldStamp && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal)) {
+  const overZone = selectedObj && selectedObj.type === 'zone' && selectedObj.obj.map === currentMap && x >= selectedObj.obj.x && x < selectedObj.obj.x + selectedObj.obj.w && y >= selectedObj.obj.y && y < selectedObj.obj.y + selectedObj.obj.h;
+  if (currentMap === 'world' && worldStamp && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal || overZone)) {
     stampWorld(x, y, worldStamp);
     drawWorld();
     updateCursor(x, y);
     return;
   }
-  if (currentMap === 'world' && worldPaint != null && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal)) {
+  if (currentMap === 'world' && worldPaint != null && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal || overZone)) {
     worldPainting = true;
     hoverTile = { x, y };
     addTerrainFeature(x, y, worldPaint);
@@ -3275,7 +3318,7 @@ canvas.addEventListener('mousedown', ev => {
     updateCursor(x, y);
     return;
   }
-  if (currentMap !== 'world' && !coordTarget && !(overNpc || overItem || overEvent || overPortal)) {
+  if (currentMap !== 'world' && !coordTarget && !(overNpc || overItem || overEvent || overPortal || overZone)) {
     hoverTile = { x, y };
     const I = moduleData.interiors.find(i => i.id === currentMap);
     if (I) {
@@ -3338,6 +3381,31 @@ canvas.addEventListener('mousedown', ev => {
     updateCursor(x, y);
     return;
   }
+  if (selectedObj && selectedObj.type === 'zone' && selectedObj.obj.map === currentMap) {
+    const z = selectedObj.obj;
+    const nearTL = x >= z.x - 1 && x <= z.x && y >= z.y - 1 && y <= z.y;
+    const nearBR = x >= z.x + z.w - 1 && x <= z.x + z.w && y >= z.y + z.h - 1 && y <= z.y + z.h;
+    if (nearTL) {
+      dragTarget = z;
+      dragTarget._type = 'zoneTL';
+      dragOffsetX = z.x + z.w;
+      dragOffsetY = z.y + z.h;
+      updateCursor(x, y);
+      return;
+    } else if (nearBR) {
+      dragTarget = z;
+      dragTarget._type = 'zoneBR';
+      updateCursor(x, y);
+      return;
+    } else if (x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h) {
+      dragTarget = z;
+      dragTarget._type = 'zoneMove';
+      dragOffsetX = x - z.x;
+      dragOffsetY = y - z.y;
+      updateCursor(x, y);
+      return;
+    }
+  }
   if (selectedObj && selectedObj.type === 'npc' && selectedObj.obj.loop) {
     const idx = selectedObj.obj.loop.findIndex(p => p.x === x && p.y === y);
     if (idx >= 0) {
@@ -3375,6 +3443,7 @@ canvas.addEventListener('mousedown', ev => {
   document.getElementById('itemX').value = x; document.getElementById('itemY').value = y;
   document.getElementById('bldgX').value = x; document.getElementById('bldgY').value = y;
   document.getElementById('eventX').value = x; document.getElementById('eventY').value = y;
+  document.getElementById('zoneX').value = x; document.getElementById('zoneY').value = y;
   const px = document.getElementById('portalX');
   const py = document.getElementById('portalY');
   if (px && py) { px.value = x; py.value = y; }
@@ -3453,6 +3522,29 @@ canvas.addEventListener('mousemove', ev => {
       document.getElementById('npcY').value = y;
     } else if (dragTarget._type === 'start') {
       dragTarget.x = x; dragTarget.y = y;
+    } else if (dragTarget._type === 'zoneMove') {
+      dragTarget.x = x - dragOffsetX;
+      dragTarget.y = y - dragOffsetY;
+      document.getElementById('zoneX').value = dragTarget.x;
+      document.getElementById('zoneY').value = dragTarget.y;
+      renderZoneList();
+    } else if (dragTarget._type === 'zoneTL') {
+      const brx = dragOffsetX, bry = dragOffsetY;
+      dragTarget.x = Math.min(x, brx - 1);
+      dragTarget.y = Math.min(y, bry - 1);
+      dragTarget.w = brx - dragTarget.x;
+      dragTarget.h = bry - dragTarget.y;
+      document.getElementById('zoneX').value = dragTarget.x;
+      document.getElementById('zoneY').value = dragTarget.y;
+      document.getElementById('zoneW').value = dragTarget.w;
+      document.getElementById('zoneH').value = dragTarget.h;
+      renderZoneList();
+    } else if (dragTarget._type === 'zoneBR') {
+      dragTarget.w = Math.max(1, x - dragTarget.x + 1);
+      dragTarget.h = Math.max(1, y - dragTarget.y + 1);
+      document.getElementById('zoneW').value = dragTarget.w;
+      document.getElementById('zoneH').value = dragTarget.h;
+      renderZoneList();
     } else { // item
       dragTarget.x = x; dragTarget.y = y;
       renderItemList();
@@ -3475,6 +3567,8 @@ canvas.addEventListener('mousemove', ev => {
     ht = { obj, type: 'bldg' };
   } else if (obj = moduleData.events.find(ev => ev.map === currentMap && ev.x === x && ev.y === y)) {
     ht = { obj, type: 'event' };
+  } else if (obj = moduleData.zones.find(z => z.map === currentMap && x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h)) {
+    ht = { obj, type: 'zone' };
   } else if (obj = moduleData.portals.find(p => p.map === currentMap && p.x === x && p.y === y)) {
     ht = { obj, type: 'portal' };
   }
@@ -3560,6 +3654,12 @@ canvas.addEventListener('click', ev => {
   if (idx >= 0) {
     if (window.showEditorTab) window.showEditorTab('events');
     editEvent(idx);
+    return;
+  }
+  idx = moduleData.zones.findIndex(z => z.map === currentMap && x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h);
+  if (idx >= 0) {
+    if (window.showEditorTab) window.showEditorTab('zones');
+    editZone(idx);
     return;
   }
   idx = moduleData.portals.findIndex(p => p.map === currentMap && p.x === x && p.y === y);
