@@ -1013,9 +1013,11 @@ const ADV_HTML = {
       <label>Success<input class="choiceSuccess"/><span class="small">Shown if check passes.</span></label>
       <label>Failure<input class="choiceFailure"/><span class="small">Shown if check fails.</span></label>`,
   cost: `<label>Cost Item<select class="choiceCostItem"></select></label>
-      <label>Cost Slot<select class="choiceCostSlot"></select></label>`,
+      <label>Cost Slot<select class="choiceCostSlot"></select></label>
+      <label>Cost Tag<input class="choiceCostTag" list="tagOptions"/></label>`,
   req: `<label>Req Item<select class="choiceReqItem"></select></label>
-      <label>Req Slot<select class="choiceReqSlot"></select></label>`,
+      <label>Req Slot<select class="choiceReqSlot"></select></label>
+      <label>Req Tag<input class="choiceReqTag" list="tagOptions"/></label>`,
   join: `<fieldset class="choiceSubGroup"><legend>Join</legend>
         <label>ID<select class="choiceJoinId"></select></label>
         <label>Name<input class="choiceJoinName"/><span class="small">Name shown after joining.</span></label>
@@ -1055,7 +1057,7 @@ const ADV_HTML = {
 };
 
 function addChoiceRow(container, ch = {}) {
-  const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', reqItem = '', reqSlot = '', join = null, q = '', setFlag = null, spawn = null } = ch || {};
+  const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', costTag = '', reqItem = '', reqSlot = '', reqTag = '', join = null, q = '', setFlag = null, spawn = null } = ch || {};
   const cond = ch && ch.if ? ch.if : null;
   const ifOnce = ch && ch.ifOnce ? ch.ifOnce : null;
   const ifOnceNode = ifOnce?.node || '';
@@ -1184,15 +1186,17 @@ function addChoiceRow(container, ch = {}) {
     if (success) row.querySelector('.choiceSuccess').value = success;
     if (failure) row.querySelector('.choiceFailure').value = failure;
   }
-  if (costItem || costSlot) {
+  if (costItem || costSlot || costTag) {
     addAdv('cost');
     if (costItem) row.querySelector('.choiceCostItem').value = costItem;
     if (costSlot) row.querySelector('.choiceCostSlot').value = costSlot;
+    if (costTag) row.querySelector('.choiceCostTag').value = costTag;
   }
-  if (reqItem || reqSlot) {
+  if (reqItem || reqSlot || reqTag) {
     addAdv('req');
     if (reqItem) row.querySelector('.choiceReqItem').value = reqItem;
     if (reqSlot) row.querySelector('.choiceReqSlot').value = reqSlot;
+    if (reqTag) row.querySelector('.choiceReqTag').value = reqTag;
   }
   if (joinId || joinName || joinRole) {
     addAdv('join');
@@ -1414,8 +1418,10 @@ function updateTreeData() {
       const failure = chEl.querySelector('.choiceFailure')?.value.trim() || '';
       const costItem = chEl.querySelector('.choiceCostItem')?.value.trim() || '';
       const costSlot = chEl.querySelector('.choiceCostSlot')?.value.trim() || '';
+      const costTag = chEl.querySelector('.choiceCostTag')?.value.trim() || '';
       const reqItem = chEl.querySelector('.choiceReqItem')?.value.trim() || '';
       const reqSlot = chEl.querySelector('.choiceReqSlot')?.value.trim() || '';
+      const reqTag = chEl.querySelector('.choiceReqTag')?.value.trim() || '';
       const joinId = chEl.querySelector('.choiceJoinId')?.value.trim() || '';
       const joinName = chEl.querySelector('.choiceJoinName')?.value.trim() || '';
       const joinRole = chEl.querySelector('.choiceJoinRole')?.value.trim() || '';
@@ -1459,8 +1465,10 @@ function updateTreeData() {
         if (failure) c.failure = failure;
         if (costItem) c.costItem = costItem;
         if (costSlot) c.costSlot = costSlot;
+        if (costTag) c.costTag = costTag;
         if (reqItem) c.reqItem = reqItem;
         if (reqSlot) c.reqSlot = reqSlot;
+        if (reqTag) c.reqTag = reqTag;
         if (joinId || joinName || joinRole) c.join = { id: joinId, name: joinName, role: joinRole };
         if (gotoMap || gotoXTxt || gotoYTxt || gotoTarget === 'npc' || gotoRel) {
           const go = {};
