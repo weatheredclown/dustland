@@ -31,4 +31,6 @@
 
   globalThis.Dustland = globalThis.Dustland || {};
   Dustland.NpcWizard = NpcWizard;
+  Dustland.wizards = Dustland.wizards || {};
+  Dustland.wizards.npc = NpcWizard;
 })();

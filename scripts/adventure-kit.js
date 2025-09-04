@@ -3760,21 +3760,14 @@ renderEventList();
 loadTreeEditor();
 setPlaceholders();
 const wizardList = document.getElementById('wizardList');
-if (wizardList && globalThis.Dustland?.NpcWizard) {
-  const cfg = globalThis.Dustland.NpcWizard;
-  const btn = document.createElement('button');
-  btn.className = 'btn';
-  btn.textContent = cfg.title;
-  btn.addEventListener('click', () => openWizard(cfg));
-  wizardList.appendChild(btn);
-}
-if (wizardList && globalThis.Dustland?.BuildingWizard) {
-  const cfg = globalThis.Dustland.BuildingWizard;
-  const btn = document.createElement('button');
-  btn.className = 'btn';
-  btn.textContent = cfg.title;
-  btn.addEventListener('click', () => openWizard(cfg));
-  wizardList.appendChild(btn);
+if (wizardList && globalThis.Dustland?.wizards) {
+  Object.values(globalThis.Dustland.wizards).forEach(cfg => {
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.textContent = cfg.title;
+    btn.addEventListener('click', () => openWizard(cfg));
+    wizardList.appendChild(btn);
+  });
 }
 
 function mergeWizardResult(res) {

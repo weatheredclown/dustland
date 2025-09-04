@@ -21,6 +21,7 @@ test('NpcWizard config wires steps', async () => {
   vm.runInContext(npcCode, context);
   const cfg = context.Dustland.NpcWizard;
   assert.ok(cfg && cfg.steps && cfg.steps.length);
+  assert.strictEqual(context.Dustland.wizards.npc, cfg);
   const wiz = context.Dustland.Wizard(container, cfg.steps);
   document.querySelector('input').value = 'Bob';
   wiz.next();
