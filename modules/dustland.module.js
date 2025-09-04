@@ -474,8 +474,8 @@ const DATA = `
     {
       "id": "tape_sage",
       "map": "hall",
-      "x": 14,
-      "y": 18,
+      "x": 20,
+      "y": 15,
       "color": "#b0c4de",
       "name": "Archivist",
       "title": "Memory Keeper",
