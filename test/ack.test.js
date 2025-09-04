@@ -729,20 +729,21 @@ test('closeItemEditor hides the item editor', () => {
   moduleData.items = prev;
 });
 
-test('equip editor shows only when slot set', () => {
+test('equip editor shows only for equippable types', () => {
   const prev = moduleData.items;
   moduleData.items = [];
   startNewItem();
   const equipWrap = document.getElementById('itemEquip').parentElement;
   assert.strictEqual(equipWrap.style.display, 'none');
-  document.getElementById('itemName').value = 'NoSlot';
-  document.getElementById('itemId').value = 'noslot';
+  document.getElementById('itemName').value = 'NoType';
+  document.getElementById('itemId').value = 'notype';
+  document.getElementById('itemType').value = 'consumable';
   document.getElementById('itemEquip').value = '{"msg":"hi"}';
   addItem();
   assert.strictEqual(moduleData.items[0].equip, null);
 
   startNewItem();
-  document.getElementById('itemSlot').value = 'weapon';
+  document.getElementById('itemType').value = 'weapon';
   updateModsWrap();
   assert.strictEqual(equipWrap.style.display, 'block');
   document.getElementById('itemName').value = 'WithSlot';

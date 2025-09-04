@@ -3,7 +3,7 @@ const { on } = globalThis.EventBus;
 /**
  * @typedef {Object} Item
  * @property {string} name
- * @property {string} [slot]
+ * @property {string} type
  * @property {Object<string, number>} [mods]
  * @property {{type:string, amount?:number, onUse?:Function}} [use]
  * @property {string} [desc]
@@ -684,22 +684,22 @@ const specializations={
   'Scavenger':{
     desc:'Finds better loot from ruins; +1 PER and starts with crowbar.',
     stats:{PER:+1},
-    gear:[{id:'crowbar',name:'Crowbar',slot:'weapon',mods:{ATK:+1}}]
+    gear:[{id:'crowbar',name:'Crowbar',type:'weapon',mods:{ATK:+1}}]
   },
   'Gunslinger':{
     desc:'Draws fast with +1 AGI and starts with pipe rifle.',
     stats:{AGI:+1},
-    gear:[{id:'pipe_rifle',name:'Pipe Rifle',slot:'weapon',mods:{ATK:+2}}]
+    gear:[{id:'pipe_rifle',name:'Pipe Rifle',type:'weapon',mods:{ATK:+2}}]
   },
   'Snakeoil Preacher':{
     desc:'Silver tongue grants +1 CHA and a lucky Tin Sun trinket.',
     stats:{CHA:+1},
-    gear:[{id:'tin_sun',name:'Tin Sun',slot:'trinket',mods:{LCK:+1}}]
+    gear:[{id:'tin_sun',name:'Tin Sun',type:'trinket',mods:{LCK:+1}}]
   },
   'Cogwitch':{
     desc:'Tinker checks succeed more often; +1 INT and a trusty toolkit.',
     stats:{INT:+1},
-    gear:[{id:'toolkit',name:'Toolkit',slot:'trinket',mods:{INT:+1}}]
+    gear:[{id:'toolkit',name:'Toolkit',type:'trinket',mods:{INT:+1}}]
   }
 };
 const classSpecials={
@@ -713,17 +713,17 @@ const quirks={
   'Lucky Lint':{
     desc:'+1 LCK and start with a Lucky Coin.',
     stats:{LCK:+1},
-    gear:[{id:'lucky_coin',name:'Lucky Coin',slot:'trinket',mods:{LCK:+1}}]
+    gear:[{id:'lucky_coin',name:'Lucky Coin',type:'trinket',mods:{LCK:+1}}]
   },
   'Brutal Past':{
     desc:'+1 STR and spiked knuckles for rough fights.',
     stats:{STR:+1},
-    gear:[{id:'spiked_knuckles',name:'Spiked Knuckles',slot:'weapon',mods:{ATK:+1}}]
+    gear:[{id:'spiked_knuckles',name:'Spiked Knuckles',type:'weapon',mods:{ATK:+1}}]
   },
   'Desert Prophet':{
     desc:'+1 PER and a prophecy scroll that sharpens INT.',
     stats:{PER:+1},
-    gear:[{id:'prophecy_scroll',name:'Prophecy Scroll',slot:'trinket',mods:{INT:+1}}]
+    gear:[{id:'prophecy_scroll',name:'Prophecy Scroll',type:'trinket',mods:{INT:+1}}]
   }
 };
 const hiddenOrigins={ 'Rustborn':{desc:'You survived a machine womb. +1 PER, weird dialog tags.'} };
@@ -812,7 +812,7 @@ function finalizeCurrentMember(){
   const specEquipIds=[];
   if(spec){
     if(spec.stats){ for(const k in spec.stats){ m.stats[k]=(m.stats[k]||0)+spec.stats[k]; } }
-    if(spec.gear){ spec.gear.forEach(g=>{ addToInv(g); if(g.slot) specEquipIds.push(g.id); }); }
+  if(spec.gear){ spec.gear.forEach(g=>{ addToInv(g); if(['weapon','armor','trinket'].includes(g.type)) specEquipIds.push(g.id); }); }
   }
   const quirk=quirks[building.quirk];
   if(quirk){

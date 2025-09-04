@@ -4,6 +4,7 @@ const { emit } = globalThis.EventBus;
 
 const ITEMS = {}; // item definitions by id
 const itemDrops = []; // {map,x,y,id}
+const EQUIP_TYPES = ['weapon','armor','trinket'];
 function cloneItem(it){
   return {
     ...it,
@@ -70,8 +71,8 @@ function removeFromInv(invIndex) {
 
 function equipItem(memberIndex, invIndex){
   const m=party[memberIndex]; const it=player.inv[invIndex];
-  if(!m||!it||!it.slot){ log('Cannot equip that.'); return; }
-  const slot = it.slot;
+  if(!m||!it||!EQUIP_TYPES.includes(it.type)){ log('Cannot equip that.'); return; }
+  const slot = it.type;
   const prevEq = m.equip[slot];
   if(prevEq){
     if(prevEq.cursed){
@@ -171,13 +172,13 @@ function normalizeItem(it){
   if(!it) return null;
   const baseValue = typeof it.value === 'number' ? it.value : 0;
   const val = baseValue > 0 ? baseValue : estimateItemValue(it);
+  const type = it.type || it.slot || 'misc';
   return {
     id: it.id || '',
     name: it.name || 'Unknown',
-    type: it.type || 'misc',
+    type,
     rank: it.rank,
     tags: Array.isArray(it.tags) ? it.tags.map(t=>t.toLowerCase()) : [],
-    slot: it.slot || null,
     mods: it.mods ? { ...it.mods } : {},
     use: it.use || null,
     equip: it.equip || null,

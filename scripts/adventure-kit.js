@@ -1281,6 +1281,12 @@ function populateSlotDropdown(sel, selected = '') {
   sel.value = selected;
 }
 
+function populateTypeDropdown(sel, selected = '') {
+  const types = ['', 'weapon', 'armor', 'trinket', 'consumable', 'quest', 'misc'];
+  sel.innerHTML = types.map(t => `<option value="${t}">${t}</option>`).join('');
+  sel.value = selected;
+}
+
 function populateItemDropdown(sel, selected = '') {
   sel.innerHTML = '<option value=""></option>' + moduleData.items.map(it => `<option value="${it.id}">${it.id}</option>`).join('');
   sel.value = selected;
@@ -2041,12 +2047,12 @@ function showItemEditor(show) {
 }
 
 function updateModsWrap() {
-  const slot = document.getElementById('itemSlot').value;
-  document.getElementById('modsWrap').style.display =
-    ['weapon', 'armor', 'trinket'].includes(slot) ? 'block' : 'none';
+  const type = document.getElementById('itemType').value;
+  const isEquip = ['weapon', 'armor', 'trinket'].includes(type);
+  document.getElementById('modsWrap').style.display = isEquip ? 'block' : 'none';
   const equipWrap = document.getElementById('itemEquip').parentElement;
-  if (equipWrap) equipWrap.style.display = slot ? 'block' : 'none';
-  if (!slot) document.getElementById('itemEquip').value = '';
+  if (equipWrap) equipWrap.style.display = isEquip ? 'block' : 'none';
+  if (!isEquip) document.getElementById('itemEquip').value = '';
 }
 function updateUseWrap() {
   const type = document.getElementById('itemUseType').value;
@@ -2067,7 +2073,6 @@ function startNewItem() {
   document.getElementById('itemMap').value = 'world';
   document.getElementById('itemX').value = 0;
   document.getElementById('itemY').value = 0;
-  document.getElementById('itemSlot').value = '';
   updateModsWrap();
   loadMods({});
   document.getElementById('itemValue').value = 0;
@@ -2111,11 +2116,11 @@ function addItem() {
   const map = document.getElementById('itemMap').value.trim() || 'world';
   const x = parseInt(document.getElementById('itemX').value, 10) || 0;
   const y = parseInt(document.getElementById('itemY').value, 10) || 0;
-  const slot = document.getElementById('itemSlot').value || null;
+  const isEquip = ['weapon', 'armor', 'trinket'].includes(type);
   const mods = collectMods();
   const value = parseInt(document.getElementById('itemValue').value, 10) || 0;
   let equip = null;
-  if (slot) {
+  if (isEquip) {
     try { equip = JSON.parse(document.getElementById('itemEquip').value || 'null'); } catch (e) { equip = null; }
   }
   let use = null;
@@ -2133,7 +2138,7 @@ function addItem() {
   }
   const useText = document.getElementById('itemUse').value.trim();
   if (use && useText) use.text = useText;
-  const item = { id, name, desc, type, tags, map, x, y, slot, mods, value, use, equip };
+  const item = { id, name, desc, type, tags, map, x, y, mods, value, use, equip };
   if (editItemIdx >= 0) {
     moduleData.items[editItemIdx] = item;
   } else {
@@ -2177,7 +2182,6 @@ function editItem(i) {
   document.getElementById('itemMap').value = it.map;
   document.getElementById('itemX').value = it.x;
   document.getElementById('itemY').value = it.y;
-  document.getElementById('itemSlot').value = it.slot || '';
   updateModsWrap();
   loadMods(it.mods);
   document.getElementById('itemValue').value = it.value || 0;
@@ -3159,7 +3163,13 @@ function applyLoadedModule(data) {
   moduleData._origKeys = Object.keys(data);
   moduleData.name = data.name || 'adventure-module';
   moduleData.npcs = data.npcs || [];
-  moduleData.items = data.items || [];
+  moduleData.items = (data.items || []).map(it => {
+    if (it && it.slot && (!it.type || ['weapon','armor','trinket'].includes(it.slot))) {
+      it.type = it.type || it.slot;
+    }
+    delete it.slot;
+    return it;
+  });
   initTags();
   moduleData.quests = data.quests || [];
   moduleData.buildings = data.buildings || [];
@@ -3371,7 +3381,8 @@ document.getElementById('delInterior').onclick = deleteInterior;
 document.getElementById('delQuest').onclick = deleteQuest;
 document.getElementById('delEvent').onclick = deleteEvent;
 document.getElementById('delPortal').onclick = deletePortal;
-document.getElementById('itemSlot').addEventListener('change', updateModsWrap);
+populateTypeDropdown(document.getElementById('itemType'));
+document.getElementById('itemType').addEventListener('change', updateModsWrap);
 document.getElementById('itemUseType').addEventListener('change', updateUseWrap);
 document.getElementById('eventEffect').addEventListener('change', updateEventEffectFields);
 document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };

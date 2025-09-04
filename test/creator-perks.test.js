@@ -26,7 +26,7 @@ function setup(){
   vm.runInContext(code,context);
   const inv=context.player.inv;
   context.addToInv=i=>{ inv.push(i); };
-  context.equipItem=(mi,ii)=>{ const m=party[mi]; m.equip=m.equip||{weapon:null,armor:null,trinket:null}; m.equip[inv[ii].slot]=inv[ii]; inv.splice(ii,1); };
+  context.equipItem=(mi,ii)=>{ const m=party[mi]; m.equip=m.equip||{weapon:null,armor:null,trinket:null}; m.equip[inv[ii].type]=inv[ii]; inv.splice(ii,1); };
   return {context,inv};
 }
 

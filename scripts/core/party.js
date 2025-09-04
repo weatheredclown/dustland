@@ -210,7 +210,7 @@ function setLeader(idx){
   if(!m) return;
   for(const slot of ['weapon','armor','trinket']){
     if(!m.equip[slot] && Array.isArray(player?.inv)){
-      const candidates = player.inv.filter(it => it.slot === slot);
+      const candidates = player.inv.filter(it => it.type === slot);
       if(candidates.length){
         const max = Math.max(...candidates.map(it => calcItemValue(it)));
         const best = candidates.filter(it => calcItemValue(it) === max);

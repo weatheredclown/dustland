@@ -185,7 +185,7 @@ function advanceDialog(stateObj, choiceIdx){
     const requiredCount = choice.reqCount || 1;
     const hasEnough = choice.reqItem
       ? countItems(choice.reqItem) >= requiredCount
-      : player.inv.some(it => it.slot === choice.reqSlot);
+      : player.inv.some(it => it.type === choice.reqSlot);
 
     if(!hasEnough){
       return finalize(choice.failure || 'You lack the required item.', false, true);
@@ -205,7 +205,7 @@ function advanceDialog(stateObj, choiceIdx){
     const costCount = choice.costCount || 1;
     const hasEnough = choice.costItem
       ? countItems(choice.costItem) >= costCount
-      : player.inv.some(it => it.slot === choice.costSlot);
+      : player.inv.some(it => it.type === choice.costSlot);
 
     if(!hasEnough){
       return finalize(choice.failure || 'You lack the required item.', false, true);
@@ -217,7 +217,7 @@ function advanceDialog(stateObj, choiceIdx){
         if (itemIdx > -1) removeFromInv(itemIdx);
       }
     } else if (choice.costSlot) {
-      const itemIdx = player.inv.findIndex(it=> it.slot===choice.costSlot);
+      const itemIdx = player.inv.findIndex(it=> it.type===choice.costSlot);
       if (itemIdx > -1) removeFromInv(itemIdx);
     }
 

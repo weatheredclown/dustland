@@ -14,7 +14,7 @@ test('cursed equipment keeps label after failed unequip', async () => {
   vm.runInContext(invCode, context);
   const mem = new context.Character('hero', 'Hero', 'Role');
   context.party.join(mem);
-  context.registerItem({ id: 'helm', name: 'VR Helmet', type: 'armor', slot: 'armor', cursed: true });
+  context.registerItem({ id: 'helm', name: 'VR Helmet', type: 'armor', cursed: true });
   context.addToInv('helm');
   context.equipItem(0, 0);
   context.renderParty();
