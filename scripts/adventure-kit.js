@@ -1628,6 +1628,24 @@ function updateNPCOptSections() {
     document.getElementById('npcHidden').checked ? 'block' : 'none';
 }
 
+function updatePatrolSection() {
+  const patrol = document.getElementById('npcPatrol').checked;
+  const loopWrap = document.getElementById('npcLoopPts');
+  const addBtn = document.getElementById('addLoopPt');
+  if (loopWrap) loopWrap.style.display = patrol ? 'block' : 'none';
+  if (addBtn) addBtn.style.display = patrol ? 'block' : 'none';
+  if (patrol) {
+    if (selectedObj && selectedObj.type === 'npc') {
+      selectedObj.obj.loop = selectedObj.obj.loop || [{ x: selectedObj.obj.x, y: selectedObj.obj.y }];
+      renderLoopFields(selectedObj.obj.loop);
+    }
+  } else {
+    if (selectedObj && selectedObj.type === 'npc') delete selectedObj.obj.loop;
+    renderLoopFields([]);
+    showLoopControls(null);
+  }
+}
+
 function renderLoopFields(pts) {
   const wrap = document.getElementById('npcLoopPts');
   if (!wrap) return;
@@ -1721,6 +1739,8 @@ function startNewNPC() {
   document.getElementById('npcX').value = 0;
   document.getElementById('npcY').value = 0;
   renderLoopFields([]);
+  document.getElementById('npcPatrol').checked = false;
+  updatePatrolSection();
   npcPortraitIndex = 0;
   npcPortraitPath = '';
   setNpcPortrait();
@@ -1825,8 +1845,10 @@ function collectNPCFromForm() {
   loadTreeEditor();
 
   const npc = { id, name, title, desc, color, symbol, map, x, y, tree, questId };
-  const pts = gatherLoopFields();
-  if (pts.length >= 2) npc.loop = pts;
+  if (document.getElementById('npcPatrol').checked) {
+    const pts = gatherLoopFields();
+    if (pts.length >= 2) npc.loop = pts;
+  }
   if (combat) {
     const HP = parseInt(document.getElementById('npcHP').value, 10) || 1;
     const ATK = parseInt(document.getElementById('npcATK').value, 10) || 0;
@@ -1911,6 +1933,8 @@ function editNPC(i) {
   document.getElementById('npcX').value = n.x;
   document.getElementById('npcY').value = n.y;
   renderLoopFields(n.loop || []);
+  document.getElementById('npcPatrol').checked = Array.isArray(n.loop) && n.loop.length >= 2;
+  updatePatrolSection();
   npcPortraitIndex = npcPortraits.indexOf(n.portraitSheet);
   if (npcPortraitIndex < 0) {
     npcPortraitIndex = 0;
@@ -3355,6 +3379,11 @@ document.getElementById('npcFlagType').addEventListener('change', updateFlagBuil
 document.getElementById('npcEditor').addEventListener('input', applyNPCChanges);
 document.getElementById('moduleName').value = moduleData.name;
 document.getElementById('npcEditor').addEventListener('change', applyNPCChanges);
+document.getElementById('npcPatrol').addEventListener('change', () => {
+  updatePatrolSection();
+  applyNPCChanges();
+});
+updatePatrolSection();
 document.getElementById('bldgEditor').addEventListener('input', applyBldgChanges);
 document.getElementById('bldgEditor').addEventListener('change', applyBldgChanges);
 document.getElementById('npcFlagPick').onclick = () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY', map: 'npcFlagMap' }; };
@@ -3803,13 +3832,13 @@ canvas.addEventListener('click', ev => {
   if (didPaint) { didPaint = false; return; }
   if (didDrag) { didDrag = false; return; }
   const { x, y } = canvasPos(ev);
-  if (selectedObj && selectedObj.type === 'npc') {
+  if (selectedObj && selectedObj.type === 'npc' && selectedObj.obj.loop) {
     const npc = selectedObj.obj;
     if (x === npc.x && y === npc.y) {
       showLoopControls({ idx: 0, x: npc.x, y: npc.y });
       return;
     }
-    const pts = npc.loop || [];
+    const pts = npc.loop;
     const li = pts.findIndex(p => p.x === x && p.y === y);
     if (li >= 0) { showLoopControls({ idx: li, x: pts[li].x, y: pts[li].y }); return; }
   }
