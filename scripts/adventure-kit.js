@@ -1259,6 +1259,8 @@ function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceBoard').forEach(sel => populateInteriorDropdown(sel, sel.value));
   document.querySelectorAll('.choiceUnboard').forEach(sel => populateInteriorDropdown(sel, sel.value));
   document.querySelectorAll('.choiceSpawnTemplate').forEach(sel => populateTemplateDropdown(sel, sel.value));
+  const encLoot = document.getElementById('encLoot');
+  if (encLoot) populateItemDropdown(encLoot, encLoot.value);
 }
 
 function renderTreeEditor() {
@@ -2093,8 +2095,15 @@ function startNewEncounter(){
   document.getElementById('encMap').value = 'world';
   document.getElementById('encName').value = '';
   document.getElementById('encHP').value = 5;
+  document.getElementById('encATK').value = 1;
   document.getElementById('encDEF').value = 0;
-  document.getElementById('encLoot').value = '';
+  document.getElementById('encMinDist').value = '';
+  document.getElementById('encMaxDist').value = '';
+  document.getElementById('encChallenge').value = '';
+  document.getElementById('encPortrait').value = '';
+  document.getElementById('encSpecialCue').value = '';
+  document.getElementById('encSpecialDmg').value = '';
+  populateItemDropdown(document.getElementById('encLoot'), '');
   document.getElementById('addEncounter').textContent = 'Add Enemy';
   document.getElementById('delEncounter').style.display = 'none';
   showEncounterEditor(true);
@@ -2104,9 +2113,22 @@ function collectEncounter(){
   const map = document.getElementById('encMap').value.trim() || 'world';
   const name = document.getElementById('encName').value.trim() || 'Enemy';
   const HP = parseInt(document.getElementById('encHP').value,10) || 1;
+  const ATK = parseInt(document.getElementById('encATK').value,10) || 1;
   const DEF = parseInt(document.getElementById('encDEF').value,10) || 0;
+  const minDist = parseInt(document.getElementById('encMinDist').value,10) || 0;
+  const maxDist = parseInt(document.getElementById('encMaxDist').value,10) || 0;
+  const challenge = parseInt(document.getElementById('encChallenge').value,10) || 0;
+  const portraitSheet = document.getElementById('encPortrait').value.trim();
   const loot = document.getElementById('encLoot').value.trim();
-  return { map, name, HP, DEF, loot };
+  const specialCue = document.getElementById('encSpecialCue').value.trim();
+  const specialDmg = parseInt(document.getElementById('encSpecialDmg').value,10) || 0;
+  const entry = { map, name, HP, ATK, DEF, loot, minDist, maxDist, challenge, portraitSheet };
+  if (specialCue || specialDmg) {
+    entry.special = {};
+    if (specialCue) entry.special.cue = specialCue;
+    if (specialDmg) entry.special.dmg = specialDmg;
+  }
+  return entry;
 }
 function addEncounter(){
   const entry = collectEncounter();
@@ -2124,8 +2146,15 @@ function editEncounter(i){
   document.getElementById('encMap').value = e.map;
   document.getElementById('encName').value = e.name;
   document.getElementById('encHP').value = e.HP || 1;
+  document.getElementById('encATK').value = e.ATK || 1;
   document.getElementById('encDEF').value = e.DEF || 0;
-  document.getElementById('encLoot').value = e.loot || '';
+  document.getElementById('encMinDist').value = e.minDist || '';
+  document.getElementById('encMaxDist').value = e.maxDist || '';
+  document.getElementById('encChallenge').value = e.challenge || '';
+  document.getElementById('encPortrait').value = e.portraitSheet || '';
+  document.getElementById('encSpecialCue').value = e.special?.cue || '';
+  document.getElementById('encSpecialDmg').value = e.special?.dmg || '';
+  populateItemDropdown(document.getElementById('encLoot'), e.loot || '');
   document.getElementById('addEncounter').textContent = 'Update Enemy';
   document.getElementById('delEncounter').style.display = 'block';
   showEncounterEditor(true);
