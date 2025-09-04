@@ -2020,6 +2020,9 @@ function updateModsWrap() {
   const slot = document.getElementById('itemSlot').value;
   document.getElementById('modsWrap').style.display =
     ['weapon', 'armor', 'trinket'].includes(slot) ? 'block' : 'none';
+  const equipWrap = document.getElementById('itemEquip').parentElement;
+  if (equipWrap) equipWrap.style.display = slot ? 'block' : 'none';
+  if (!slot) document.getElementById('itemEquip').value = '';
 }
 function updateUseWrap() {
   const type = document.getElementById('itemUseType').value;
@@ -2081,7 +2084,9 @@ function addItem() {
   const mods = collectMods();
   const value = parseInt(document.getElementById('itemValue').value, 10) || 0;
   let equip = null;
-  try { equip = JSON.parse(document.getElementById('itemEquip').value || 'null'); } catch (e) { equip = null; }
+  if (slot) {
+    try { equip = JSON.parse(document.getElementById('itemEquip').value || 'null'); } catch (e) { equip = null; }
+  }
   let use = null;
   const useType = document.getElementById('itemUseType').value;
   if (useType === 'heal') {
