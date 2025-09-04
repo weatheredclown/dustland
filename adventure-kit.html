@@ -480,12 +480,14 @@
           <label>Description<textarea id="itemDesc" rows="2"></textarea></label>
           <label>Tags<input id="itemTags" list="tagOptions" /></label>
           <datalist id="tagOptions"></datalist>
-          <label>Map<input id="itemMap" placeholder="world" /></label>
+          <label><input id="itemOnMap" type="checkbox"/> On Map</label>
+          <label id="itemMapWrap">Map<input id="itemMap" placeholder="world" /></label>
           <div class="xy" id="itemXY">
             <label>X<input id="itemX" type="number" min="0" /></label>
             <label>Y<input id="itemY" type="number" min="0" /></label>
           </div>
           <button class="btn" type="button" id="itemPick" title="Click on the map to choose location">Select on Map</button>
+          <button class="btn" type="button" id="itemRemove" style="display:none">Remove from World</button>
           <div id="modsWrap" style="display:none">
             <label>Mods</label>
             <div id="modBuilder"></div>
