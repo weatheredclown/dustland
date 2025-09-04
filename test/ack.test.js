@@ -818,6 +818,15 @@ test('npc locked state round trips through editor', () => {
   moduleData.npcs = prev;
 });
 
+test('locked node scaffold added and not orphaned', () => {
+  startNewNPC();
+  document.getElementById('npcLocked').checked = true;
+  const npc = collectNPCFromForm();
+  assert.ok(npc.tree.locked, 'locked node created');
+  assert.ok(npc.tree.start, 'start node exists');
+  assert.strictEqual(document.getElementById('treeWarning').textContent, '');
+});
+
 test('updateTreeData captures NPC lock effects', () => {
   treeData = {};
   const wrap = document.getElementById('treeEditor');

@@ -1554,7 +1554,7 @@ function updateTreeData() {
     el.style.borderColor = (to && !treeData[to]) ? 'red' : '';
   });
 
-  // 2) Reachability from 'start' (orange outline for orphan nodes)
+  // 2) Reachability from 'start' (and 'locked' if enabled)
   const visited = new Set();
   const visit = id => {
     if (visited.has(id) || !treeData[id]) return;
@@ -1562,6 +1562,7 @@ function updateTreeData() {
     (treeData[id].choices || []).forEach(c => { if (c.to) visit(c.to); });
   };
   visit('start');
+  if (document.getElementById('npcLocked').checked) visit('locked');
 
   const orphans = [];
   Object.entries(nodeRefs).forEach(([id, nodeEl]) => {
@@ -1647,6 +1648,15 @@ function removeCombatTree(tree) {
   if (tree.start && Array.isArray(tree.start.choices))
     tree.start.choices = tree.start.choices.filter(c => c.to !== 'do_fight');
   delete tree.do_fight;
+}
+
+function onLockedToggle() {
+  if (document.getElementById('npcLocked').checked) {
+    if (!treeData.start) treeData.start = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
+    if (!treeData.locked) treeData.locked = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
+    renderTreeEditor();
+  }
+  updateTreeData();
 }
 function updateNPCOptSections() {
   document.getElementById('combatOpts').style.display =
@@ -1866,6 +1876,10 @@ function collectNPCFromForm() {
       tree = { start: { text: dialog, choices: [{ label: '(Leave)', to: 'bye' }] } };
     }
   }
+  if (locked && !tree.locked) {
+    tree.locked = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
+  }
+  if (!tree.start) tree.start = { text: dialog, choices: [{ label: '(Leave)', to: 'bye' }] };
   if (tree.start) tree.start.text = dialog;
   if (tree.accept) tree.accept.text = accept || tree.accept.text;
   if (tree.do_turnin) tree.do_turnin.text = turnin || tree.do_turnin.text;
@@ -3465,6 +3479,7 @@ document.getElementById('npcQuest').addEventListener('change', () => {
 document.getElementById('npcCombat').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcShop').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcHidden').addEventListener('change', updateNPCOptSections);
+document.getElementById('npcLocked').addEventListener('change', onLockedToggle);
 document.getElementById('genQuestDialog').onclick = generateQuestTree;
 
 // --- Map interactions ---
