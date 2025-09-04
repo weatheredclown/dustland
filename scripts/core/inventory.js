@@ -4,6 +4,7 @@ const { emit } = globalThis.EventBus;
 
 const ITEMS = {}; // item definitions by id
 const itemDrops = []; // {map,x,y,id}
+const EQUIP_TYPES = ['weapon','armor','trinket'];
 function cloneItem(it){
   return {
     ...it,
@@ -70,8 +71,8 @@ function removeFromInv(invIndex) {
 
 function equipItem(memberIndex, invIndex){
   const m=party[memberIndex]; const it=player.inv[invIndex];
-  if(!m||!it||!it.slot){ log('Cannot equip that.'); return; }
-  const slot = it.slot;
+  if(!m||!it||!EQUIP_TYPES.includes(it.type)){ log('Cannot equip that.'); return; }
+  const slot = it.type;
   const prevEq = m.equip[slot];
   if(prevEq){
     if(prevEq.cursed){
@@ -151,8 +152,15 @@ function uncurseItem(id){
 
 function estimateItemValue(it){
   let val = 0;
-  if(it.use && it.use.type==='heal'){
-    val += it.use.amount || 0;
+  if(it.use){
+    if(it.use.type==='heal'){
+      val += it.use.amount || 0;
+    }
+    if(it.use.type==='boost'){
+      const amt = it.use.amount || 0;
+      const dur = it.use.duration || 0;
+      val += amt * (dur || 1);
+    }
   }
   for(const v of Object.values(it.mods || {})){
     if(v>0) val += v*10;
@@ -164,13 +172,13 @@ function normalizeItem(it){
   if(!it) return null;
   const baseValue = typeof it.value === 'number' ? it.value : 0;
   const val = baseValue > 0 ? baseValue : estimateItemValue(it);
+  const type = it.type || it.slot || 'misc';
   return {
     id: it.id || '',
     name: it.name || 'Unknown',
-    type: it.type || 'misc',
+    type,
     rank: it.rank,
     tags: Array.isArray(it.tags) ? it.tags.map(t=>t.toLowerCase()) : [],
-    slot: it.slot || null,
     mods: it.mods ? { ...it.mods } : {},
     use: it.use || null,
     equip: it.equip || null,
@@ -223,6 +231,19 @@ function useItem(invIndex){
     notifyInventoryChanged();
     player.hp = party[0] ? party[0].hp : player.hp;
     if(typeof updateHUD === 'function') updateHUD();
+    return true;
+  }
+  if(it.use.type==='boost'){
+    const who = (party[selectedMember]||party[0]);
+    if(!who){ log('No party member to boost.'); return false; }
+    const buffList = globalThis.Dustland?.movement?.buffs;
+    globalThis.Dustland?.effects?.apply?.([{ effect:'modStat', stat: it.use.stat, delta: it.use.amount, duration: it.use.duration }], { actor: who, buffs: buffList });
+    const msg = it.use.text || `${who.name} feels different.`;
+    log(msg);
+    if(typeof toast==='function') toast(msg);
+    emit('sfx','tick');
+    player.inv.splice(invIndex,1);
+    notifyInventoryChanged();
     return true;
   }
   if(typeof it.use.onUse === 'function'){

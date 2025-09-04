@@ -135,7 +135,9 @@ function queryTile(x,y,map=mapIdForState()){
   if(tile===null) return {tile:null, walkable:false, entities:[], items:[]};
   const entities=(typeof NPCS !== 'undefined' ? NPCS : []).filter(n=> n.map===map && n.x===x && n.y===y);
   const items=itemDrops.filter(it=> it.map===map && it.x===x && it.y===y);
-  const walkableFlag=!!(walkable[tile] && entities.length===0 && items.length===0);
+  // doors allow passage when unlocked
+  const blocking=entities.some(e=> !(e.door && !e.locked));
+  const walkableFlag=!!(walkable[tile] && !blocking && items.length===0);
   return {tile, walkable:walkableFlag, entities, items};
 }
 // Find nearest free, walkable, unoccupied (and not water on world)

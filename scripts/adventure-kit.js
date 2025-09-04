@@ -1013,9 +1013,11 @@ const ADV_HTML = {
       <label>Success<input class="choiceSuccess"/><span class="small">Shown if check passes.</span></label>
       <label>Failure<input class="choiceFailure"/><span class="small">Shown if check fails.</span></label>`,
   cost: `<label>Cost Item<select class="choiceCostItem"></select></label>
-      <label>Cost Slot<select class="choiceCostSlot"></select></label>`,
+      <label>Cost Slot<select class="choiceCostSlot"></select></label>
+      <label>Cost Tag<input class="choiceCostTag" list="tagOptions"/></label>`,
   req: `<label>Req Item<select class="choiceReqItem"></select></label>
-      <label>Req Slot<select class="choiceReqSlot"></select></label>`,
+      <label>Req Slot<select class="choiceReqSlot"></select></label>
+      <label>Req Tag<input class="choiceReqTag" list="tagOptions"/></label>`,
   join: `<fieldset class="choiceSubGroup"><legend>Join</legend>
         <label>ID<select class="choiceJoinId"></select></label>
         <label>Name<input class="choiceJoinName"/><span class="small">Name shown after joining.</span></label>
@@ -1032,6 +1034,8 @@ const ADV_HTML = {
       <label>Unboard Door<select class="choiceUnboard"></select></label>`,
   npcLock: `<label>Lock NPC<select class="choiceLockNPC"></select></label>
       <label>Unlock NPC<select class="choiceUnlockNPC"></select></label>`,
+  npcColor: `<label>NPC<select class="choiceColorNPC"></select></label>
+      <label>Color<input type="color" class="choiceNPCColor"/></label>`,
   flagEff: `<fieldset class="choiceSubGroup"><legend>Flag Effect</legend>
         <label>Flag Name<input class="choiceSetFlagName" list="choiceFlagList"/></label>
         <label>Operation<select class="choiceSetFlagOp"><option value="set">Set</option><option value="add">Add</option><option value="clear">Clear</option></select></label>
@@ -1055,7 +1059,7 @@ const ADV_HTML = {
 };
 
 function addChoiceRow(container, ch = {}) {
-  const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', reqItem = '', reqSlot = '', join = null, q = '', setFlag = null, spawn = null } = ch || {};
+  const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', costTag = '', reqItem = '', reqSlot = '', reqTag = '', join = null, q = '', setFlag = null, spawn = null } = ch || {};
   const cond = ch && ch.if ? ch.if : null;
   const ifOnce = ch && ch.ifOnce ? ch.ifOnce : null;
   const ifOnceNode = ifOnce?.node || '';
@@ -1084,6 +1088,9 @@ function addChoiceRow(container, ch = {}) {
   const unlockEff = effs.find(e => e.effect === 'unlockNPC');
   const lockId = lockEff ? lockEff.npcId || '' : '';
   const unlockId = unlockEff ? unlockEff.npcId || '' : '';
+  const colorEff = effs.find(e => e.effect === 'npcColor');
+  const colorNpc = colorEff ? colorEff.npcId || '' : '';
+  const colorHex = colorEff ? colorEff.color || '' : '';
   const setFlagName = setFlag?.flag || '';
   const setFlagOp = setFlag?.op || 'set';
   const setFlagVal = setFlag?.value ?? '';
@@ -1106,6 +1113,7 @@ function addChoiceRow(container, ch = {}) {
         <option value="goto">Goto</option>
         <option value="doors">Doors</option>
         <option value="npcLock">NPC Lock</option>
+        <option value="npcColor">NPC Color</option>
         <option value="flagEff">Flag Effect</option>
         <option value="spawn">Spawn NPC</option>
         <option value="quest">Quest Tag</option>
@@ -1184,15 +1192,17 @@ function addChoiceRow(container, ch = {}) {
     if (success) row.querySelector('.choiceSuccess').value = success;
     if (failure) row.querySelector('.choiceFailure').value = failure;
   }
-  if (costItem || costSlot) {
+  if (costItem || costSlot || costTag) {
     addAdv('cost');
     if (costItem) row.querySelector('.choiceCostItem').value = costItem;
     if (costSlot) row.querySelector('.choiceCostSlot').value = costSlot;
+    if (costTag) row.querySelector('.choiceCostTag').value = costTag;
   }
-  if (reqItem || reqSlot) {
+  if (reqItem || reqSlot || reqTag) {
     addAdv('req');
     if (reqItem) row.querySelector('.choiceReqItem').value = reqItem;
     if (reqSlot) row.querySelector('.choiceReqSlot').value = reqSlot;
+    if (reqTag) row.querySelector('.choiceReqTag').value = reqTag;
   }
   if (joinId || joinName || joinRole) {
     addAdv('join');
@@ -1217,6 +1227,11 @@ function addChoiceRow(container, ch = {}) {
     addAdv('npcLock');
     if (lockId) row.querySelector('.choiceLockNPC').value = lockId;
     if (unlockId) row.querySelector('.choiceUnlockNPC').value = unlockId;
+  }
+  if (colorNpc || colorHex) {
+    addAdv('npcColor');
+    if (colorNpc) row.querySelector('.choiceColorNPC').value = colorNpc;
+    if (colorHex) row.querySelector('.choiceNPCColor').value = colorHex;
   }
   if (setFlagName) {
     addAdv('flagEff');
@@ -1281,6 +1296,12 @@ function populateSlotDropdown(sel, selected = '') {
   sel.value = selected;
 }
 
+function populateTypeDropdown(sel, selected = '') {
+  const types = ['', 'weapon', 'armor', 'trinket', 'consumable', 'quest', 'misc'];
+  sel.innerHTML = types.map(t => `<option value="${t}">${t}</option>`).join('');
+  sel.value = selected;
+}
+
 function populateItemDropdown(sel, selected = '') {
   sel.innerHTML = '<option value=""></option>' + moduleData.items.map(it => `<option value="${it.id}">${it.id}</option>`).join('');
   sel.value = selected;
@@ -1329,6 +1350,7 @@ function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceUnboard').forEach(sel => populateInteriorDropdown(sel, sel.value));
   document.querySelectorAll('.choiceLockNPC').forEach(sel => populateNPCDropdown(sel, sel.value));
   document.querySelectorAll('.choiceUnlockNPC').forEach(sel => populateNPCDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceColorNPC').forEach(sel => populateNPCDropdown(sel, sel.value));
   document.querySelectorAll('.choiceSpawnTemplate').forEach(sel => populateTemplateDropdown(sel, sel.value));
   const encLoot = document.getElementById('encLoot');
   if (encLoot) populateItemDropdown(encLoot, encLoot.value);
@@ -1408,8 +1430,10 @@ function updateTreeData() {
       const failure = chEl.querySelector('.choiceFailure')?.value.trim() || '';
       const costItem = chEl.querySelector('.choiceCostItem')?.value.trim() || '';
       const costSlot = chEl.querySelector('.choiceCostSlot')?.value.trim() || '';
+      const costTag = chEl.querySelector('.choiceCostTag')?.value.trim() || '';
       const reqItem = chEl.querySelector('.choiceReqItem')?.value.trim() || '';
       const reqSlot = chEl.querySelector('.choiceReqSlot')?.value.trim() || '';
+      const reqTag = chEl.querySelector('.choiceReqTag')?.value.trim() || '';
       const joinId = chEl.querySelector('.choiceJoinId')?.value.trim() || '';
       const joinName = chEl.querySelector('.choiceJoinName')?.value.trim() || '';
       const joinRole = chEl.querySelector('.choiceJoinRole')?.value.trim() || '';
@@ -1453,8 +1477,10 @@ function updateTreeData() {
         if (failure) c.failure = failure;
         if (costItem) c.costItem = costItem;
         if (costSlot) c.costSlot = costSlot;
+        if (costTag) c.costTag = costTag;
         if (reqItem) c.reqItem = reqItem;
         if (reqSlot) c.reqSlot = reqSlot;
+        if (reqTag) c.reqTag = reqTag;
         if (joinId || joinName || joinRole) c.join = { id: joinId, name: joinName, role: joinRole };
         if (gotoMap || gotoXTxt || gotoYTxt || gotoTarget === 'npc' || gotoRel) {
           const go = {};
@@ -1477,12 +1503,15 @@ function updateTreeData() {
       const unboardId = chEl.querySelector('.choiceUnboard')?.value.trim();
       const lockNpc = chEl.querySelector('.choiceLockNPC')?.value.trim();
       const unlockNpc = chEl.querySelector('.choiceUnlockNPC')?.value.trim();
+      const colorNpc = chEl.querySelector('.choiceColorNPC')?.value.trim();
+      const colorHex = chEl.querySelector('.choiceNPCColor')?.value.trim();
       if (flag) c.if = { flag, op, value: val != null && !Number.isNaN(val) ? val : 0 };
       const effs = [];
       if (boardId) effs.push({ effect: 'boardDoor', interiorId: boardId });
       if (unboardId) effs.push({ effect: 'unboardDoor', interiorId: unboardId });
       if (lockNpc) effs.push({ effect: 'lockNPC', npcId: lockNpc });
       if (unlockNpc) effs.push({ effect: 'unlockNPC', npcId: unlockNpc });
+      if (colorNpc && colorHex) effs.push({ effect: 'npcColor', npcId: colorNpc, color: colorHex });
       if (effs.length) c.effects = effs;
       if (setFlagName) {
         const op = chEl.querySelector('.choiceSetFlagOp').value;
@@ -1525,7 +1554,7 @@ function updateTreeData() {
     el.style.borderColor = (to && !treeData[to]) ? 'red' : '';
   });
 
-  // 2) Reachability from 'start' (orange outline for orphan nodes)
+  // 2) Reachability from 'start' (and 'locked' if enabled)
   const visited = new Set();
   const visit = id => {
     if (visited.has(id) || !treeData[id]) return;
@@ -1533,6 +1562,7 @@ function updateTreeData() {
     (treeData[id].choices || []).forEach(c => { if (c.to) visit(c.to); });
   };
   visit('start');
+  if (document.getElementById('npcLocked').checked) visit('locked');
 
   const orphans = [];
   Object.entries(nodeRefs).forEach(([id, nodeEl]) => {
@@ -1619,6 +1649,15 @@ function removeCombatTree(tree) {
     tree.start.choices = tree.start.choices.filter(c => c.to !== 'do_fight');
   delete tree.do_fight;
 }
+
+function onLockedToggle() {
+  if (document.getElementById('npcLocked').checked) {
+    if (!treeData.start) treeData.start = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
+    if (!treeData.locked) treeData.locked = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
+    renderTreeEditor();
+  }
+  updateTreeData();
+}
 function updateNPCOptSections() {
   document.getElementById('combatOpts').style.display =
     document.getElementById('npcCombat').checked ? 'block' : 'none';
@@ -1626,6 +1665,24 @@ function updateNPCOptSections() {
     document.getElementById('npcShop').checked ? 'block' : 'none';
   document.getElementById('revealOpts').style.display =
     document.getElementById('npcHidden').checked ? 'block' : 'none';
+}
+
+function updatePatrolSection() {
+  const patrol = document.getElementById('npcPatrol').checked;
+  const loopWrap = document.getElementById('npcLoopPts');
+  const addBtn = document.getElementById('addLoopPt');
+  if (loopWrap) loopWrap.style.display = patrol ? 'block' : 'none';
+  if (addBtn) addBtn.style.display = patrol ? 'block' : 'none';
+  if (patrol) {
+    if (selectedObj && selectedObj.type === 'npc') {
+      selectedObj.obj.loop = selectedObj.obj.loop || [{ x: selectedObj.obj.x, y: selectedObj.obj.y }];
+      renderLoopFields(selectedObj.obj.loop);
+    }
+  } else {
+    if (selectedObj && selectedObj.type === 'npc') delete selectedObj.obj.loop;
+    renderLoopFields([]);
+    showLoopControls(null);
+  }
 }
 
 function renderLoopFields(pts) {
@@ -1721,6 +1778,8 @@ function startNewNPC() {
   document.getElementById('npcX').value = 0;
   document.getElementById('npcY').value = 0;
   renderLoopFields([]);
+  document.getElementById('npcPatrol').checked = false;
+  updatePatrolSection();
   npcPortraitIndex = 0;
   npcPortraitPath = '';
   setNpcPortrait();
@@ -1817,6 +1876,10 @@ function collectNPCFromForm() {
       tree = { start: { text: dialog, choices: [{ label: '(Leave)', to: 'bye' }] } };
     }
   }
+  if (locked && !tree.locked) {
+    tree.locked = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
+  }
+  if (!tree.start) tree.start = { text: dialog, choices: [{ label: '(Leave)', to: 'bye' }] };
   if (tree.start) tree.start.text = dialog;
   if (tree.accept) tree.accept.text = accept || tree.accept.text;
   if (tree.do_turnin) tree.do_turnin.text = turnin || tree.do_turnin.text;
@@ -1825,8 +1888,10 @@ function collectNPCFromForm() {
   loadTreeEditor();
 
   const npc = { id, name, title, desc, color, symbol, map, x, y, tree, questId };
-  const pts = gatherLoopFields();
-  if (pts.length >= 2) npc.loop = pts;
+  if (document.getElementById('npcPatrol').checked) {
+    const pts = gatherLoopFields();
+    if (pts.length >= 2) npc.loop = pts;
+  }
   if (combat) {
     const HP = parseInt(document.getElementById('npcHP').value, 10) || 1;
     const ATK = parseInt(document.getElementById('npcATK').value, 10) || 0;
@@ -1911,6 +1976,8 @@ function editNPC(i) {
   document.getElementById('npcX').value = n.x;
   document.getElementById('npcY').value = n.y;
   renderLoopFields(n.loop || []);
+  document.getElementById('npcPatrol').checked = Array.isArray(n.loop) && n.loop.length >= 2;
+  updatePatrolSection();
   npcPortraitIndex = npcPortraits.indexOf(n.portraitSheet);
   if (npcPortraitIndex < 0) {
     npcPortraitIndex = 0;
@@ -2017,14 +2084,21 @@ function showItemEditor(show) {
 }
 
 function updateModsWrap() {
-  const slot = document.getElementById('itemSlot').value;
-  document.getElementById('modsWrap').style.display =
-    ['weapon', 'armor', 'trinket'].includes(slot) ? 'block' : 'none';
+  const type = document.getElementById('itemType').value;
+  const isEquip = ['weapon', 'armor', 'trinket'].includes(type);
+  document.getElementById('modsWrap').style.display = isEquip ? 'block' : 'none';
+  const equipWrap = document.getElementById('itemEquip').parentElement;
+  if (equipWrap) equipWrap.style.display = isEquip ? 'block' : 'none';
+  if (!isEquip) document.getElementById('itemEquip').value = '';
 }
 function updateUseWrap() {
   const type = document.getElementById('itemUseType').value;
   document.getElementById('itemUseAmtWrap').style.display = type === 'heal' ? 'block' : 'none';
-  document.getElementById('itemUseWrap').style.display = type ? 'none' : 'block';
+  const boost = type === 'boost';
+  document.getElementById('itemBoostStatWrap').style.display = boost ? 'block' : 'none';
+  document.getElementById('itemBoostAmtWrap').style.display = boost ? 'block' : 'none';
+  document.getElementById('itemBoostDurWrap').style.display = boost ? 'block' : 'none';
+  document.getElementById('itemUseWrap').style.display = type ? 'block' : 'none';
 }
 function startNewItem() {
   editItemIdx = -1;
@@ -2036,13 +2110,15 @@ function startNewItem() {
   document.getElementById('itemMap').value = 'world';
   document.getElementById('itemX').value = 0;
   document.getElementById('itemY').value = 0;
-  document.getElementById('itemSlot').value = '';
   updateModsWrap();
   loadMods({});
   document.getElementById('itemValue').value = 0;
   document.getElementById('itemEquip').value = '';
   document.getElementById('itemUseType').value = '';
   document.getElementById('itemUseAmount').value = 0;
+  document.getElementById('itemBoostStat').value = '';
+  document.getElementById('itemBoostAmount').value = 0;
+  document.getElementById('itemBoostDuration').value = 0;
   document.getElementById('itemUse').value = '';
   updateUseWrap();
   document.getElementById('addItem').textContent = 'Add Item';
@@ -2077,20 +2153,29 @@ function addItem() {
   const map = document.getElementById('itemMap').value.trim() || 'world';
   const x = parseInt(document.getElementById('itemX').value, 10) || 0;
   const y = parseInt(document.getElementById('itemY').value, 10) || 0;
-  const slot = document.getElementById('itemSlot').value || null;
+  const isEquip = ['weapon', 'armor', 'trinket'].includes(type);
   const mods = collectMods();
   const value = parseInt(document.getElementById('itemValue').value, 10) || 0;
   let equip = null;
-  try { equip = JSON.parse(document.getElementById('itemEquip').value || 'null'); } catch (e) { equip = null; }
+  if (isEquip) {
+    try { equip = JSON.parse(document.getElementById('itemEquip').value || 'null'); } catch (e) { equip = null; }
+  }
   let use = null;
   const useType = document.getElementById('itemUseType').value;
   if (useType === 'heal') {
     const amt = parseInt(document.getElementById('itemUseAmount').value, 10) || 0;
     use = { type: 'heal', amount: amt };
-  } else {
-    try { use = JSON.parse(document.getElementById('itemUse').value || 'null'); } catch (e) { use = null; }
+  } else if (useType === 'boost') {
+    const stat = document.getElementById('itemBoostStat').value.trim();
+    const amt = parseInt(document.getElementById('itemBoostAmount').value, 10) || 0;
+    const dur = parseInt(document.getElementById('itemBoostDuration').value, 10) || 0;
+    use = { type: 'boost', stat, amount: amt, duration: dur };
+  } else if (useType) {
+    use = { type: useType };
   }
-  const item = { id, name, desc, type, tags, map, x, y, slot, mods, value, use, equip };
+  const useText = document.getElementById('itemUse').value.trim();
+  if (use && useText) use.text = useText;
+  const item = { id, name, desc, type, tags, map, x, y, mods, value, use, equip };
   if (editItemIdx >= 0) {
     moduleData.items[editItemIdx] = item;
   } else {
@@ -2134,19 +2219,36 @@ function editItem(i) {
   document.getElementById('itemMap').value = it.map;
   document.getElementById('itemX').value = it.x;
   document.getElementById('itemY').value = it.y;
-  document.getElementById('itemSlot').value = it.slot || '';
   updateModsWrap();
   loadMods(it.mods);
   document.getElementById('itemValue').value = it.value || 0;
   document.getElementById('itemEquip').value = it.equip ? JSON.stringify(it.equip, null, 2) : '';
-  if (it.use && it.use.type === 'heal') {
-    document.getElementById('itemUseType').value = 'heal';
-    document.getElementById('itemUseAmount').value = it.use.amount || 0;
-    document.getElementById('itemUse').value = '';
+  if (it.use) {
+    document.getElementById('itemUseType').value = it.use.type || '';
+    if (it.use.type === 'heal') {
+      document.getElementById('itemUseAmount').value = it.use.amount || 0;
+      document.getElementById('itemBoostStat').value = '';
+      document.getElementById('itemBoostAmount').value = 0;
+      document.getElementById('itemBoostDuration').value = 0;
+    } else if (it.use.type === 'boost') {
+      document.getElementById('itemUseAmount').value = 0;
+      document.getElementById('itemBoostStat').value = it.use.stat || '';
+      document.getElementById('itemBoostAmount').value = it.use.amount || 0;
+      document.getElementById('itemBoostDuration').value = it.use.duration || 0;
+    } else {
+      document.getElementById('itemUseAmount').value = 0;
+      document.getElementById('itemBoostStat').value = '';
+      document.getElementById('itemBoostAmount').value = 0;
+      document.getElementById('itemBoostDuration').value = 0;
+    }
+    document.getElementById('itemUse').value = it.use.text || '';
   } else {
     document.getElementById('itemUseType').value = '';
     document.getElementById('itemUseAmount').value = 0;
-    document.getElementById('itemUse').value = it.use ? JSON.stringify(it.use, null, 2) : '';
+    document.getElementById('itemBoostStat').value = '';
+    document.getElementById('itemBoostAmount').value = 0;
+    document.getElementById('itemBoostDuration').value = 0;
+    document.getElementById('itemUse').value = '';
   }
   updateUseWrap();
   document.getElementById('addItem').textContent = 'Update Item';
@@ -3098,7 +3200,13 @@ function applyLoadedModule(data) {
   moduleData._origKeys = Object.keys(data);
   moduleData.name = data.name || 'adventure-module';
   moduleData.npcs = data.npcs || [];
-  moduleData.items = data.items || [];
+  moduleData.items = (data.items || []).map(it => {
+    if (it && it.slot && (!it.type || ['weapon','armor','trinket'].includes(it.slot))) {
+      it.type = it.type || it.slot;
+    }
+    delete it.slot;
+    return it;
+  });
   initTags();
   moduleData.quests = data.quests || [];
   moduleData.buildings = data.buildings || [];
@@ -3310,7 +3418,8 @@ document.getElementById('delInterior').onclick = deleteInterior;
 document.getElementById('delQuest').onclick = deleteQuest;
 document.getElementById('delEvent').onclick = deleteEvent;
 document.getElementById('delPortal').onclick = deletePortal;
-document.getElementById('itemSlot').addEventListener('change', updateModsWrap);
+populateTypeDropdown(document.getElementById('itemType'));
+document.getElementById('itemType').addEventListener('change', updateModsWrap);
 document.getElementById('itemUseType').addEventListener('change', updateUseWrap);
 document.getElementById('eventEffect').addEventListener('change', updateEventEffectFields);
 document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
@@ -3318,6 +3427,11 @@ document.getElementById('npcFlagType').addEventListener('change', updateFlagBuil
 document.getElementById('npcEditor').addEventListener('input', applyNPCChanges);
 document.getElementById('moduleName').value = moduleData.name;
 document.getElementById('npcEditor').addEventListener('change', applyNPCChanges);
+document.getElementById('npcPatrol').addEventListener('change', () => {
+  updatePatrolSection();
+  applyNPCChanges();
+});
+updatePatrolSection();
 document.getElementById('bldgEditor').addEventListener('input', applyBldgChanges);
 document.getElementById('bldgEditor').addEventListener('change', applyBldgChanges);
 document.getElementById('npcFlagPick').onclick = () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY', map: 'npcFlagMap' }; };
@@ -3365,6 +3479,7 @@ document.getElementById('npcQuest').addEventListener('change', () => {
 document.getElementById('npcCombat').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcShop').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcHidden').addEventListener('change', updateNPCOptSections);
+document.getElementById('npcLocked').addEventListener('change', onLockedToggle);
 document.getElementById('genQuestDialog').onclick = generateQuestTree;
 
 // --- Map interactions ---
@@ -3766,13 +3881,13 @@ canvas.addEventListener('click', ev => {
   if (didPaint) { didPaint = false; return; }
   if (didDrag) { didDrag = false; return; }
   const { x, y } = canvasPos(ev);
-  if (selectedObj && selectedObj.type === 'npc') {
+  if (selectedObj && selectedObj.type === 'npc' && selectedObj.obj.loop) {
     const npc = selectedObj.obj;
     if (x === npc.x && y === npc.y) {
       showLoopControls({ idx: 0, x: npc.x, y: npc.y });
       return;
     }
-    const pts = npc.loop || [];
+    const pts = npc.loop;
     const li = pts.findIndex(p => p.x === x && p.y === y);
     if (li >= 0) { showLoopControls({ idx: li, x: pts[li].x, y: pts[li].y }); return; }
   }

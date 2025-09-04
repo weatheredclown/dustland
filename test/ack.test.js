@@ -33,9 +33,10 @@ function stubEl(){
       if (!this._listeners || !this._listeners[type]) return;
       this._listeners[type] = this._listeners[type].filter(f => f !== fn);
     },
-    parentElement:{ appendChild(){}, querySelectorAll(){ return []; } },
+    parentElement:{ style:{}, appendChild(){}, querySelectorAll(){ return []; } },
     setAttribute(){},
     click(){},
+    focus(){},
   };
   Object.defineProperty(el,'innerHTML',{ get(){return this._innerHTML;}, set(v){ this._innerHTML=v; this.children=[]; }});
   return el;
@@ -728,6 +729,31 @@ test('closeItemEditor hides the item editor', () => {
   moduleData.items = prev;
 });
 
+test('equip editor shows only for equippable types', () => {
+  const prev = moduleData.items;
+  moduleData.items = [];
+  startNewItem();
+  const equipWrap = document.getElementById('itemEquip').parentElement;
+  assert.strictEqual(equipWrap.style.display, 'none');
+  document.getElementById('itemName').value = 'NoType';
+  document.getElementById('itemId').value = 'notype';
+  document.getElementById('itemType').value = 'consumable';
+  document.getElementById('itemEquip').value = '{"msg":"hi"}';
+  addItem();
+  assert.strictEqual(moduleData.items[0].equip, null);
+
+  startNewItem();
+  document.getElementById('itemType').value = 'weapon';
+  updateModsWrap();
+  assert.strictEqual(equipWrap.style.display, 'block');
+  document.getElementById('itemName').value = 'WithSlot';
+  document.getElementById('itemId').value = 'withslot';
+  document.getElementById('itemEquip').value = '{"msg":"hi"}';
+  addItem();
+  assert.deepStrictEqual(moduleData.items[1].equip, { msg: 'hi' });
+  moduleData.items = prev;
+});
+
 test('closeBldgEditor hides the building editor', () => {
   const prev = moduleData.buildings;
   moduleData.buildings = [{ x: 1, y: 1, w: 1, h: 1 }];
@@ -792,6 +818,15 @@ test('npc locked state round trips through editor', () => {
   moduleData.npcs = prev;
 });
 
+test('locked node scaffold added and not orphaned', () => {
+  startNewNPC();
+  document.getElementById('npcLocked').checked = true;
+  const npc = collectNPCFromForm();
+  assert.ok(npc.tree.locked, 'locked node created');
+  assert.ok(npc.tree.start, 'start node exists');
+  assert.strictEqual(document.getElementById('treeWarning').textContent, '');
+});
+
 test('updateTreeData captures NPC lock effects', () => {
   treeData = {};
   const wrap = document.getElementById('treeEditor');
@@ -825,5 +860,39 @@ test('updateTreeData captures NPC lock effects', () => {
   assert.deepStrictEqual(treeData.start.choices[0].effects, [
     { effect: 'lockNPC', npcId: 'chest' },
     { effect: 'unlockNPC', npcId: 'door' }
+  ]);
+});
+test('updateTreeData captures NPC color effects', () => {
+  treeData = {};
+  const wrap = document.getElementById('treeEditor');
+  const field = (value = '', checked = false) => ({ value, checked, style: {} });
+  const choiceEl = {
+    querySelector(sel) {
+      if (sel === '.choiceColorNPC') return field('friend');
+      if (sel === '.choiceNPCColor') return field('#ff0000');
+      if (sel === '.choiceLabel') return field('Color');
+      if (sel === '.choiceGotoTarget') return field('player');
+      if (sel === '.choiceGotoRel' || sel === '.choiceOnce' || sel === '.choiceIfOnceUsed') return field('', false);
+      return field('');
+    },
+    querySelectorAll() { return []; }
+  };
+  const nodeEl = {
+    classList: { contains: () => false },
+    style: {},
+    querySelector(sel) {
+      if (sel === '.nodeId') return field('start');
+      if (sel === '.nodeText') return field('hi');
+      return field('');
+    },
+    querySelectorAll(sel) {
+      if (sel === '.choices > div') return [choiceEl];
+      return [];
+    }
+  };
+  wrap.querySelectorAll = sel => sel === '.node' ? [nodeEl] : [];
+  updateTreeData();
+  assert.deepStrictEqual(treeData.start.choices[0].effects, [
+    { effect: 'npcColor', npcId: 'friend', color: '#ff0000' }
   ]);
 });

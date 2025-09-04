@@ -80,8 +80,10 @@ test('updateTreeData captures door board/unboard effects', () => {
         case '.choiceFailure':
         case '.choiceCostItem':
         case '.choiceCostSlot':
+        case '.choiceCostTag':
         case '.choiceReqItem':
         case '.choiceReqSlot':
+        case '.choiceReqTag':
         case '.choiceJoinId':
         case '.choiceJoinName':
         case '.choiceJoinRole':
@@ -148,8 +150,10 @@ test('updateTreeData captures scrap reward', () => {
         case '.choiceFailure':
         case '.choiceCostItem':
         case '.choiceCostSlot':
+        case '.choiceCostTag':
         case '.choiceReqItem':
         case '.choiceReqSlot':
+        case '.choiceReqTag':
         case '.choiceJoinId':
         case '.choiceJoinName':
         case '.choiceJoinRole':
