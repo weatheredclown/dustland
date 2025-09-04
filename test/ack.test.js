@@ -666,6 +666,38 @@ test('editing building centers map on its position', () => {
   panY = 0;
 });
 
+test('closeItemEditor hides the item editor', () => {
+  const prev = moduleData.items;
+  moduleData.items = [{ id: 'it1', name: 'Item', map: 'world', x: 0, y: 0 }];
+  editItem(0);
+  closeItemEditor();
+  assert.strictEqual(editItemIdx, -1);
+  assert.strictEqual(document.getElementById('itemEditor').style.display, 'none');
+  moduleData.items = prev;
+});
+
+test('closeBldgEditor hides the building editor', () => {
+  const prev = moduleData.buildings;
+  moduleData.buildings = [{ x: 1, y: 1, w: 1, h: 1 }];
+  editBldg(0);
+  closeBldgEditor();
+  assert.strictEqual(editBldgIdx, -1);
+  assert.strictEqual(document.getElementById('bldgEditor').style.display, 'none');
+  moduleData.buildings = prev;
+});
+
+test('closeInteriorEditor hides the interior editor', () => {
+  const prev = moduleData.interiors;
+  moduleData.interiors = [{ id: 'int1', w: 3, h: 3, grid: Array.from({ length: 3 }, () => Array(3).fill(TILE.FLOOR)) }];
+  interiors.int1 = moduleData.interiors[0];
+  editInterior(0);
+  closeInteriorEditor();
+  assert.strictEqual(editInteriorIdx, -1);
+  assert.strictEqual(document.getElementById('intEditor').style.display, 'none');
+  moduleData.interiors = prev;
+  delete interiors.int1;
+});
+
 test('collectNPCFromForm retains custom portrait path', () => {
   moduleData.npcs = [{
     id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0,

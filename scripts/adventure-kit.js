@@ -683,6 +683,12 @@ function deleteInterior() {
   renderInteriorList();
 }
 
+function closeInteriorEditor() {
+  editInteriorIdx = -1;
+  document.getElementById('delInterior').style.display = 'none';
+  showInteriorEditor(false);
+}
+
 function updateInteriorOptions() {
   const sel = document.getElementById('bldgInterior');
   if (!sel) return;
@@ -2143,6 +2149,19 @@ function deleteItem() {
   });
 }
 
+function closeItemEditor() {
+  editItemIdx = -1;
+  document.getElementById('addItem').textContent = 'Add Item';
+  document.getElementById('cancelItem').style.display = 'none';
+  document.getElementById('delItem').style.display = 'none';
+  loadMods({});
+  renderItemList();
+  selectedObj = null;
+  showItemEditor(false);
+  drawWorld();
+  drawInterior();
+}
+
 // --- Encounters ---
 function showEncounterEditor(show){
   document.getElementById('encounterEditor').style.display = show ? 'block' : 'none';
@@ -2933,6 +2952,19 @@ function deleteBldg() {
   showBldgEditor(false);
 }
 
+function closeBldgEditor() {
+  editBldgIdx = -1;
+  placingType = null;
+  placingPos = null;
+  selectedObj = null;
+  document.getElementById('addBldg').style.display = 'block';
+  document.getElementById('cancelBldg').style.display = 'none';
+  document.getElementById('delBldg').style.display = 'none';
+  renderBldgList();
+  showBldgEditor(false);
+  drawWorld();
+}
+
 // --- Quests ---
 function showQuestEditor(show) {
   document.getElementById('questEditor').style.display = show ? 'block' : 'none';
@@ -3210,6 +3242,9 @@ document.getElementById('addZone').onclick = addZone;
 document.getElementById('delZone').onclick = deleteZone;
 document.getElementById('delNPC').onclick = deleteNPC;
 document.getElementById('closeNPC').onclick = closeNPCEditor;
+document.getElementById('closeItem').onclick = closeItemEditor;
+document.getElementById('closeBldg').onclick = closeBldgEditor;
+document.getElementById('closeInterior').onclick = closeInteriorEditor;
 document.getElementById('newEncounter').onclick = startNewEncounter;
 document.getElementById('addEncounter').onclick = addEncounter;
 document.getElementById('cancelEncounter').onclick = () => { editEncounterIdx = -1; showEncounterEditor(false); };
