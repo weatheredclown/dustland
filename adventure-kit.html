@@ -81,9 +81,27 @@
     }
 
     input[type=checkbox] {
-      width: auto;
+      appearance: none;
+      width: 14px;
+      height: 14px;
       margin-top: 0;
       display: inline-block;
+      border: 1px solid #9ef7a0;
+      border-radius: 2px;
+      background: #1a2f1a;
+      position: relative;
+    }
+
+    input[type=checkbox]:checked::after {
+      content: '';
+      position: absolute;
+      top: 1px;
+      left: 4px;
+      width: 3px;
+      height: 7px;
+      border: solid #9ef7a0;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
     }
 
     .xy {
@@ -247,7 +265,8 @@
     }
 
     #treeEditor .choices details input[type=checkbox] {
-      width: auto;
+      width: 14px;
+      height: 14px;
     }
 
     #treeEditor .nodeHeader {
