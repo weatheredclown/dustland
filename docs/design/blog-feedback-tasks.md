@@ -55,7 +55,7 @@
 - [ ] Stop the compass from pointing to hidden quests when navigation is off
 - [ ] Design additional unique creatures beyond the giant glass scorpion
 - [ ] Persist pinned quests across sessions
-- [ ] Publish roadmap blog posts alongside hotfixes
+- [x] Publish roadmap blog posts alongside hotfixes
 - [ ] Let players craft protective tarps for solar panels
 - [ ] Make rare-spice cooking recipes worth the effort
 - [ ] Add more heartfelt encounters like the singing mutant
