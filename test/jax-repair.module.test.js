@@ -11,4 +11,5 @@ test('jax repair module defines countdown', () => {
   assert.match(src, /startGame\s*=\s*function/);
   assert.match(src, /Repair Bay/);
   assert.match(src, /setInterval/);
+  assert.match(src, /generator-meter/);
 });

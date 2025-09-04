@@ -101,6 +101,18 @@
               if (b) b.boarded = true;
             }
             break; }
+          case 'lockNPC': {
+            if (eff.npcId && typeof NPCS !== 'undefined') {
+              const n = NPCS.find(n => n.id === eff.npcId);
+              if (n) n.locked = true;
+            }
+            break; }
+          case 'unlockNPC': {
+            if (eff.npcId && typeof NPCS !== 'undefined') {
+              const n = NPCS.find(n => n.id === eff.npcId);
+              if (n) n.locked = false;
+            }
+            break; }
           case 'modStat': {
             const target = ctx.actor || ctx.player;
             if (target && target.stats && eff.stat) {

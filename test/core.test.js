@@ -1005,6 +1005,21 @@ test('board/unboard effects toggle building access', () => {
   assert.strictEqual(globalThis.buildings[0].boarded, true);
   globalThis.buildings.length = 0;
 });
+test('lock/unlock effects toggle npc access', () => {
+  const tree = { locked:{ text:'locked', choices:[{ label:'(Leave)', to:'bye' }] }, start:{ text:'open', choices:[{ label:'(Leave)', to:'bye' }] }, bye:{ text:'', choices:[] } };
+  const npc = makeNPC('ch', 'world', 0, 0, '#fff', 'Chest', '', '', tree);
+  NPCS.length = 0;
+  NPCS.push(npc);
+  Effects.apply([{ effect: 'lockNPC', npcId: 'ch' }]);
+  openDialog(npc);
+  assert.strictEqual(textEl.textContent, 'locked');
+  closeDialog();
+  Effects.apply([{ effect: 'unlockNPC', npcId: 'ch' }]);
+  openDialog(npc);
+  assert.strictEqual(textEl.textContent, 'open');
+  closeDialog();
+  NPCS.length = 0;
+});
 test('dialog choice applies object effects', () => {
   globalThis.buildings = [ { interiorId: 'castle', boarded: true } ];
   const tree = { start:{ text:'hi', choices:[ { label:'open', to:'bye', effects:[ { effect:'unboardDoor', interiorId:'castle' } ] } ] }, bye:{ text:'', choices:[] } };

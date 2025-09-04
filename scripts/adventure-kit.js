@@ -997,6 +997,8 @@ const ADV_HTML = {
       </fieldset>`,
   doors: `<label>Board Door<select class="choiceBoard"></select></label>
       <label>Unboard Door<select class="choiceUnboard"></select></label>`,
+  npcLock: `<label>Lock NPC<select class="choiceLockNPC"></select></label>
+      <label>Unlock NPC<select class="choiceUnlockNPC"></select></label>`,
   flagEff: `<fieldset class="choiceSubGroup"><legend>Flag Effect</legend>
         <label>Flag Name<input class="choiceSetFlagName" list="choiceFlagList"/></label>
         <label>Operation<select class="choiceSetFlagOp"><option value="set">Set</option><option value="add">Add</option><option value="clear">Clear</option></select></label>
@@ -1045,6 +1047,10 @@ function addChoiceRow(container, ch = {}) {
   const unboardEff = effs.find(e => e.effect === 'unboardDoor');
   const boardId = boardEff ? boardEff.interiorId || '' : '';
   const unboardId = unboardEff ? unboardEff.interiorId || '' : '';
+  const lockEff = effs.find(e => e.effect === 'lockNPC');
+  const unlockEff = effs.find(e => e.effect === 'unlockNPC');
+  const lockId = lockEff ? lockEff.npcId || '' : '';
+  const unlockId = unlockEff ? unlockEff.npcId || '' : '';
   const setFlagName = setFlag?.flag || '';
   const setFlagOp = setFlag?.op || 'set';
   const setFlagVal = setFlag?.value ?? '';
@@ -1066,6 +1072,7 @@ function addChoiceRow(container, ch = {}) {
         <option value="join">Join NPC</option>
         <option value="goto">Goto</option>
         <option value="doors">Doors</option>
+        <option value="npcLock">NPC Lock</option>
         <option value="flagEff">Flag Effect</option>
         <option value="spawn">Spawn NPC</option>
         <option value="quest">Quest Tag</option>
@@ -1172,6 +1179,11 @@ function addChoiceRow(container, ch = {}) {
     addAdv('doors');
     if (boardId) row.querySelector('.choiceBoard').value = boardId;
     if (unboardId) row.querySelector('.choiceUnboard').value = unboardId;
+  }
+  if (lockId || unlockId) {
+    addAdv('npcLock');
+    if (lockId) row.querySelector('.choiceLockNPC').value = lockId;
+    if (unlockId) row.querySelector('.choiceUnlockNPC').value = unlockId;
   }
   if (setFlagName) {
     addAdv('flagEff');
@@ -1282,6 +1294,8 @@ function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceRewardItem').forEach(sel => populateItemDropdown(sel, sel.value));
   document.querySelectorAll('.choiceBoard').forEach(sel => populateInteriorDropdown(sel, sel.value));
   document.querySelectorAll('.choiceUnboard').forEach(sel => populateInteriorDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceLockNPC').forEach(sel => populateNPCDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceUnlockNPC').forEach(sel => populateNPCDropdown(sel, sel.value));
   document.querySelectorAll('.choiceSpawnTemplate').forEach(sel => populateTemplateDropdown(sel, sel.value));
   const encLoot = document.getElementById('encLoot');
   if (encLoot) populateItemDropdown(encLoot, encLoot.value);
@@ -1426,15 +1440,19 @@ function updateTreeData() {
           c.ifOnce = { node: ifOnceNode, label: ifOnceLabel };
           if (ifOnceUsed) c.ifOnce.used = true;
         }
-        const boardId = chEl.querySelector('.choiceBoard')?.value.trim();
-        const unboardId = chEl.querySelector('.choiceUnboard')?.value.trim();
-        if (flag) c.if = { flag, op, value: val != null && !Number.isNaN(val) ? val : 0 };
-        const effs = [];
-        if (boardId) effs.push({ effect: 'boardDoor', interiorId: boardId });
-        if (unboardId) effs.push({ effect: 'unboardDoor', interiorId: unboardId });
-        if (effs.length) c.effects = effs;
-        if (setFlagName) {
-          const op = chEl.querySelector('.choiceSetFlagOp').value;
+      const boardId = chEl.querySelector('.choiceBoard')?.value.trim();
+      const unboardId = chEl.querySelector('.choiceUnboard')?.value.trim();
+      const lockNpc = chEl.querySelector('.choiceLockNPC')?.value.trim();
+      const unlockNpc = chEl.querySelector('.choiceUnlockNPC')?.value.trim();
+      if (flag) c.if = { flag, op, value: val != null && !Number.isNaN(val) ? val : 0 };
+      const effs = [];
+      if (boardId) effs.push({ effect: 'boardDoor', interiorId: boardId });
+      if (unboardId) effs.push({ effect: 'unboardDoor', interiorId: unboardId });
+      if (lockNpc) effs.push({ effect: 'lockNPC', npcId: lockNpc });
+      if (unlockNpc) effs.push({ effect: 'unlockNPC', npcId: unlockNpc });
+      if (effs.length) c.effects = effs;
+      if (setFlagName) {
+        const op = chEl.querySelector('.choiceSetFlagOp').value;
           const valTxt = chEl.querySelector('.choiceSetFlagValue').value.trim();
           const value = valTxt ? parseInt(valTxt, 10) : undefined;
           c.setFlag = { flag: setFlagName, op, value };
@@ -1675,6 +1693,7 @@ function startNewNPC() {
   setNpcPortrait();
   document.getElementById('npcPortraitLock').checked = true;
   document.getElementById('npcHidden').checked = false;
+  document.getElementById('npcLocked').checked = false;
   document.getElementById('npcFlagType').value = 'visits';
   document.getElementById('npcFlagMap').value = 'world';
   document.getElementById('npcFlagX').value = 0;
@@ -1745,6 +1764,7 @@ function collectNPCFromForm() {
   const shop = document.getElementById('npcShop').checked;
   const shopMarkup = parseInt(document.getElementById('shopMarkup').value, 10) || 2;
   const hidden = document.getElementById('npcHidden').checked;
+  const locked = document.getElementById('npcLocked').checked;
   const portraitLock = document.getElementById('npcPortraitLock').checked;
   const flag = getRevealFlag();
   const op = document.getElementById('npcOp').value;
@@ -1798,6 +1818,7 @@ function collectNPCFromForm() {
   if (npcPortraitPath) npc.portraitSheet = npcPortraitPath;
   else if (npcPortraitIndex > 0) npc.portraitSheet = npcPortraits[npcPortraitIndex];
   if (!portraitLock) npc.portraitLock = false;
+  if (locked) npc.locked = true;
   return npc;
 }
 
@@ -1867,6 +1888,7 @@ function editNPC(i) {
   setNpcPortrait();
   document.getElementById('npcPortraitLock').checked = n.portraitLock !== false;
   document.getElementById('npcHidden').checked = !!n.hidden;
+  document.getElementById('npcLocked').checked = !!n.locked;
   if (n.reveal?.flag?.startsWith('visits@')) {
     document.getElementById('npcFlagType').value = 'visits';
     const parts = n.reveal.flag.split('@');

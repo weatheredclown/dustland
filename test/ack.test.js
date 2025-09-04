@@ -693,3 +693,53 @@ test('building boarded state round trips through editor', () => {
   moduleData.buildings = prevModuleBldgs;
   globalThis.buildings = prevBuilds;
 });
+
+test('npc locked state round trips through editor', () => {
+  const prev = moduleData.npcs;
+  moduleData.npcs = [];
+  startNewNPC();
+  document.getElementById('npcLocked').checked = true;
+  addNPC();
+  assert.strictEqual(moduleData.npcs[0].locked, true);
+  editNPC(0);
+  document.getElementById('npcLocked').checked = false;
+  applyNPCChanges();
+  assert.strictEqual(moduleData.npcs[0].locked, undefined);
+  moduleData.npcs = prev;
+});
+
+test('updateTreeData captures NPC lock effects', () => {
+  treeData = {};
+  const wrap = document.getElementById('treeEditor');
+  const field = (value = '', checked = false) => ({ value, checked, style: {} });
+  const choiceEl = {
+    querySelector(sel) {
+      if (sel === '.choiceLockNPC') return field('chest');
+      if (sel === '.choiceUnlockNPC') return field('door');
+      if (sel === '.choiceLabel') return field('Lock');
+      if (sel === '.choiceGotoTarget') return field('player');
+      if (sel === '.choiceGotoRel' || sel === '.choiceOnce' || sel === '.choiceIfOnceUsed') return field('', false);
+      return field('');
+    },
+    querySelectorAll() { return []; }
+  };
+  const nodeEl = {
+    classList: { contains: () => false },
+    style: {},
+    querySelector(sel) {
+      if (sel === '.nodeId') return field('start');
+      if (sel === '.nodeText') return field('hi');
+      return field('');
+    },
+    querySelectorAll(sel) {
+      if (sel === '.choices > div') return [choiceEl];
+      return [];
+    }
+  };
+  wrap.querySelectorAll = sel => sel === '.node' ? [nodeEl] : [];
+  updateTreeData();
+  assert.deepStrictEqual(treeData.start.choices[0].effects, [
+    { effect: 'lockNPC', npcId: 'chest' },
+    { effect: 'unlockNPC', npcId: 'door' }
+  ]);
+});

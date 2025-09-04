@@ -35,7 +35,7 @@
 - [ ] Fix dune race leaderboards desyncing after patches
 - [ ] Prevent the decoy drone from attracting allied NPCs
 - [x] Add more tracks to the in-game radio playlist
-- [ ] Let crowbars open locked crates without explosives
+- [x] Let crowbars open locked crates without explosives
 - [ ] Persist trail markers in co-op even if players log out
 - [ ] Swap modular armor plates without pausing the game
 - [ ] Introduce dyeable clothing options
@@ -62,7 +62,7 @@
 - [ ] Provide sound cues for cracked stone hiding caches
 - [ ] Improve firewall guidance for LAN co-op setup
 - [ ] Fix cat companion pathfinding on ladders
-- [ ] Add a warning meter before generators overload
+- [x] Add a warning meter before generators overload
 - [ ] Dim the nighttime glow of glass shard collectibles
 - [ ] Offer unique faction perks earlier in the reputation system
 - [ ] Provide manual save points in story missions
