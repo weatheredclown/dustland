@@ -229,6 +229,8 @@ EventBus.on('weather:change', w => {
   weatherBanner.textContent = txt;
   weatherBanner.hidden = false;
 });
+EventBus.on('persona:equip', () => { renderParty(); updateHUD?.(); });
+EventBus.on('persona:unequip', () => { renderParty(); updateHUD?.(); });
 if(weatherBanner && globalThis.Dustland?.weather){
   const w = globalThis.Dustland.weather.getWeather();
   weatherBanner.textContent = (w.icon ? w.icon + ' ' : '') + (w.desc || w.state);
@@ -802,7 +804,10 @@ party.forEach((m,i)=>{
   const tLabel=labelEquip(tEq);
   const nextXP=xpToNext(m.lvl);
   const pct=Math.min(100,(m.xp/nextXP)*100);
-  c.innerHTML = `<div class='row'><div class='portrait'></div><div><b>${m.name}</b> — ${m.role} (Lv ${m.lvl})</div></div>`+
+  const persona = globalThis.Dustland?.gameState?.getPersona?.(m.persona);
+  const label = persona ? `${m.name} (${persona.label})` : m.name;
+  const portraitSrc = persona?.portrait || m.portraitSheet;
+  c.innerHTML = `<div class='row'><div class='portrait'></div><div><b>${label}</b> — ${m.role} (Lv ${m.lvl})</div></div>`+
 `<div class='row small'>${statLine(m.stats)}</div>`+
 `<div class='row stats'>HP ${m.hp}/${m.maxHp}  ADR ${m.adr}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div>`+
 `<div class='row'><div class='xpbar' data-xp='${m.xp}/${nextXP}'><div class='fill' style='width:${pct}%'></div></div></div>`+
@@ -813,10 +818,11 @@ party.forEach((m,i)=>{
 </div>`;
   const portrait=c.querySelector('.portrait');
   if (typeof setPortraitDiv === 'function') {
-    setPortraitDiv(portrait, m);
-  } else if (m.portraitSheet) {
-    portrait.style.backgroundImage=`url(${m.portraitSheet})`;
-    if(/_4\.[a-z]+$/i.test(m.portraitSheet)){
+    const temp = { ...m, portraitSheet: portraitSrc };
+    setPortraitDiv(portrait, temp);
+  } else if (portraitSrc) {
+    portrait.style.backgroundImage=`url(${portraitSrc})`;
+    if(/_4\.[a-z]+$/i.test(portraitSrc)){
       portrait.style.backgroundSize='200% 200%';
       portrait.style.backgroundPosition='0% 0%';
     }else{
