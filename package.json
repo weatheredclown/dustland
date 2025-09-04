@@ -1,6 +1,6 @@
 {
   "name": "dustland",
-  "version": "0.38.0",
+  "version": "0.39.0",
   "description": "Wasteland-style browser RPG with a CRT vibe",
   "type": "module",
   "main": "scripts/dustland-core.js",
