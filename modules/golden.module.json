@@ -44,6 +44,20 @@
         "amount": 5
       },
       "value": 5
+    },
+    {
+      "id": "makeshift_charge",
+      "name": "Makeshift Charge",
+      "type": "quest"
+    },
+    {
+      "map": "world",
+      "x": 8,
+      "y": 7,
+      "id": "chest_key",
+      "name": "Chest Key",
+      "type": "quest",
+      "tags": ["key"]
     }
   ],
   "quests": [
@@ -135,38 +149,40 @@
       "name": "Dusty Chest",
       "desc": "Maybe it holds the coin.",
       "symbol": "?",
+      "locked": true,
       "tree": {
-        "start": {
+        "locked": {
           "text": "A locked chest sits here.",
           "choices": [
-            {
-              "label": "(Open)",
-              "to": "open",
-              "once": true
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
+            { "label": "(Use Key)", "to": "open", "once": true, "reqItem": "chest_key", "effects": [ { "effect": "unlockNPC", "npcId": "chest" } ] },
+            { "label": "(Use Explosive)", "to": "open", "once": true, "reqItem": "makeshift_charge", "effects": [ { "effect": "unlockNPC", "npcId": "chest" } ] },
+            { "label": "(Pry with Crowbar)", "to": "crowbar_open", "once": true, "reqItem": "crowbar", "effects": [ { "effect": "unlockNPC", "npcId": "chest" } ] },
+            { "label": "(Leave)", "to": "bye" }
           ]
         },
         "open": {
-          "text": "Inside is a shiny coin.",
+          "text": "The chest creaks open, revealing a shiny coin.",
           "choices": [
-            {
-              "label": "(Take Coin)",
-              "to": "empty",
-              "reward": "golden_coin"
-            }
+            { "label": "(Take Coin)", "to": "empty", "reward": "golden_coin", "effects": [ { "effect": "addFlag", "flag": "chest_looted" } ] }
+          ]
+        },
+        "crowbar_open": {
+          "text": "The crowbar pops the lid with a squeal.",
+          "choices": [
+            { "label": "(Take Coin)", "to": "empty", "reward": "golden_coin", "effects": [ { "effect": "addFlag", "flag": "chest_looted" } ] }
           ]
         },
         "empty": {
           "text": "The chest is empty.",
           "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
+            { "label": "(Lock Chest)", "to": "locked_empty", "reqItem": "chest_key", "effects": [ { "effect": "lockNPC", "npcId": "chest" } ] },
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        },
+        "locked_empty": {
+          "text": "The chest is empty and locked.",
+          "choices": [
+            { "label": "(Leave)", "to": "bye" }
           ]
         }
       }

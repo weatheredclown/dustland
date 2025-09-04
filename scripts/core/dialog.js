@@ -324,6 +324,9 @@ function openDialog(npc, node='start'){
   const rawTree = typeof npc.tree === 'function' ? npc.tree() : npc.tree;
   dialogState.tree=normalizeDialogTree(rawTree||{});
   dialogState.node=node;
+  if(npc.locked && dialogState.tree.locked){
+    dialogState.node='locked';
+  }
   nameEl.textContent=npc.name;
   titleEl.textContent=npc.title;
 

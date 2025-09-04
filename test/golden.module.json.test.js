@@ -41,9 +41,24 @@ test('golden module json exposes core features', () => {
     'has hidden npc reveal'
   );
   assert.ok(mod.items.some((i) => i.use?.type === 'heal'), 'has healing item');
+  assert.ok(mod.items.some((i) => i.id === 'chest_key'), 'has chest key');
   assert.ok(mod.portals && mod.portals.length > 0, 'has portals');
 
-  const chest = mod.npcs.find(n => n.id === 'chest');
+  const chest = mod.npcs.find((n) => n.id === 'chest');
+  assert.ok(chest.locked, 'chest starts locked');
+  assert.ok(
+    (chest.tree.locked.choices || []).some((c) => c.reqItem === 'crowbar'),
+    'crowbar can open chest'
+  );
+  assert.ok(
+    (chest.tree.locked.choices || []).some((c) => c.reqItem === 'chest_key'),
+    'key can open chest'
+  );
+  assert.ok(
+    (chest.tree.empty.choices || []).some((c) => c.effects?.some((e) => e.effect === 'lockNPC')),
+    'chest can be relocked'
+  );
+
   assert.strictEqual(chest.symbol, '?');
 
   const hut = mod.buildings.find((b) => b.interiorId === 'cabin');
