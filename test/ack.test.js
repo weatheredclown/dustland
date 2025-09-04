@@ -171,6 +171,18 @@ test('custom item tags update tag options', () => {
   moduleData.items = [];
 });
 
+test('can add item without map placement', () => {
+  moduleData.items = [];
+  startNewItem();
+  document.getElementById('itemName').value = 'Reward';
+  document.getElementById('itemId').value = 'reward';
+  document.getElementById('itemMap').value = '';
+  addItem();
+  assert.strictEqual(moduleData.items.length, 1);
+  assert.ok(!('map' in moduleData.items[0]));
+  moduleData.items = [];
+});
+
 test('world paint persists through save/load', () => {
   genWorld(1);
   clearWorld();
