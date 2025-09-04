@@ -86,7 +86,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { applyLoadedModule, TILE, setTile, placeHut, genWorld, addTerrainFeature, stampWorld, worldStamps, tileEmoji, gridToEmoji, clearWorld } = globalThis;
+const { applyLoadedModule, TILE, setTile, placeHut, genWorld, addTerrainFeature, stampWorld, worldStamps, tileEmoji, gridToEmoji, clearWorld, beginPlaceNPC, beginPlaceItem, beginPlaceBldg } = globalThis;
 
 test('applyLoadedModule clears previous building tiles', () => {
   genWorld(123);
@@ -404,6 +404,21 @@ test('world palette selection stays highlighted and labels color', () => {
   canvasEl._listeners.mousedown[0]({ clientX:0, clientY:0, button:0 });
   canvasEl._listeners.mouseup[0]({ button:0 });
   assert.strictEqual(btn.classList.contains('active'), true);
+});
+
+test('beginPlace* clears world palette selection', () => {
+  const funcs = [beginPlaceNPC, beginPlaceItem, beginPlaceBldg];
+  for (const fn of funcs) {
+    worldPaint = TILE.ROCK;
+    worldStamp = worldStamps.hill;
+    worldButtons[1].classList.add('active');
+    paletteLabel.textContent = 'Rock';
+    fn();
+    assert.strictEqual(worldPaint, null);
+    assert.strictEqual(worldStamp, null);
+    assert.ok(!worldButtons.some(b => b.classList.contains('active')));
+    assert.strictEqual(paletteLabel.textContent, '');
+  }
 });
 
 test('clearWorld wipes tiles and data', () => {
