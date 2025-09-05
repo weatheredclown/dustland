@@ -244,10 +244,52 @@ function carveRoads(tiles, centers, edges, seed = 1) {
   return tiles;
 }
 
+function findRegionCenters(tiles) {
+  const h = tiles.length;
+  const w = tiles[0].length;
+  const seen = Array.from({ length: h }, () => Array(w).fill(false));
+  const centers = [];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (tiles[y][x] === TILE.WATER || seen[y][x]) continue;
+      const q = [[x, y]];
+      seen[y][x] = true;
+      let sx = 0, sy = 0, count = 0;
+      while (q.length) {
+        const [cx, cy] = q.pop();
+        sx += cx; sy += cy; count++;
+        const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        for (const [dx, dy] of dirs) {
+          const nx = cx + dx, ny = cy + dy;
+          if (ny >= 0 && ny < h && nx >= 0 && nx < w && tiles[ny][nx] !== TILE.WATER && !seen[ny][nx]) {
+            seen[ny][nx] = true;
+            q.push([nx, ny]);
+          }
+        }
+      }
+      centers.push({ x: sx / count, y: sy / count });
+    }
+  }
+  return centers;
+}
+
+function generateProceduralMap(seed, width, height, scale = 8, waterLevel = 0.5) {
+  const size = Math.max(width, height);
+  let field = generateHeightField(seed, size, scale);
+  let tiles = heightFieldToTiles(field, waterLevel);
+  tiles = refineTiles(tiles, 3);
+  tiles = markWalls(tiles);
+  const centers = findRegionCenters(tiles);
+  const edges = connectRegionCenters(centers);
+  carveRoads(tiles, centers, edges, seed);
+  return tiles.slice(0, height).map(r => r.slice(0, width));
+}
+
 globalThis.generateHeightField = generateHeightField;
 globalThis.heightFieldToTiles = heightFieldToTiles;
 globalThis.refineTiles = refineTiles;
 globalThis.markWalls = markWalls;
 globalThis.connectRegionCenters = connectRegionCenters;
 globalThis.carveRoads = carveRoads;
+globalThis.generateProceduralMap = generateProceduralMap;
 

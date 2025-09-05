@@ -780,6 +780,44 @@ function regenWorld() {
   drawWorld();
 }
 
+function generateProceduralWorld() {
+  confirmDialog('Replace the world map?', () => {
+    moduleData.seed = Date.now();
+    const tiles = generateProceduralMap(moduleData.seed, WORLD_W, WORLD_H);
+    world.length = 0;
+    for (let y = 0; y < WORLD_H; y++) {
+      world.push(tiles[y]);
+    }
+    moduleData.npcs = [];
+    moduleData.items = [];
+    moduleData.quests = [];
+    moduleData.buildings = [];
+    moduleData.interiors = [];
+    moduleData.portals = [];
+    moduleData.events = [];
+    moduleData.zones = [];
+    moduleData.encounters = [];
+    moduleData.templates = [];
+    initTags();
+    buildings.length = 0;
+    portals.length = 0;
+    globalThis.interiors = {};
+    interiors = globalThis.interiors;
+    renderNPCList();
+    renderItemList();
+    renderQuestList();
+    renderBldgList();
+    renderInteriorList();
+    renderEventList();
+    renderPortalList();
+    renderZoneList();
+    renderEncounterList();
+    renderTemplateList();
+    drawWorld();
+  });
+}
+globalThis.generateProceduralWorld = generateProceduralWorld;
+
 function clearWorld() {
   confirmDialog('Clear the world map?', () => {
     for (let y = 0; y < WORLD_H; y++) {
@@ -3409,6 +3447,7 @@ function playtestModule() {
 }
 
 document.getElementById('clear').onclick = clearWorld;
+document.getElementById('procGen').onclick = generateProceduralWorld;
 document.getElementById('addNPC').onclick = beginPlaceNPC;
 document.getElementById('addItem').onclick = () => {
   const onMap = document.getElementById('itemOnMap').checked;

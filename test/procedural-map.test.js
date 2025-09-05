@@ -124,3 +124,17 @@ test('carveRoads draws road between centers', () => {
   }
   assert.ok(found);
 });
+
+test('generateProceduralMap returns grid of requested size', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, WALL: 6, ROAD: 4 };
+  const grid = globalThis.generateProceduralMap(1, 10, 8);
+  assert.equal(grid.length, 8);
+  assert.equal(grid[0].length, 10);
+});
+
+test('generateProceduralMap is deterministic', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, WALL: 6, ROAD: 4 };
+  const a = globalThis.generateProceduralMap(42, 12, 12);
+  const b = globalThis.generateProceduralMap(42, 12, 12);
+  assert.deepEqual(a, b);
+});
