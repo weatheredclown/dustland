@@ -733,7 +733,7 @@ function confirmDialog(msg, onYes) {
   const no = document.getElementById('confirmNo');
   const tgt = document.addEventListener ? document : document.body;
   const onKey = e => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
       if (yes.onclick) yes.onclick(); else yes.click?.();
     } else if (e.key === 'Escape') {
       if (no.onclick) no.onclick(); else no.click?.();

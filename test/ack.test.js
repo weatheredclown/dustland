@@ -590,12 +590,27 @@ test('confirm modal renders after dialog modal', async () => {
 
 test('confirm dialog supports enter/escape shortcuts', () => {
   let called = 0;
+  const modal = document.getElementById('confirmModal');
   confirmDialog('ok?', () => { called++; });
+  assert.ok(modal.classList.contains('shown'));
   document.body._listeners.keydown[0]({ key: 'Enter' });
   assert.strictEqual(called, 1);
+  assert.ok(!modal.classList.contains('shown'));
   confirmDialog('ok?', () => { called++; });
+  assert.ok(modal.classList.contains('shown'));
   document.body._listeners.keydown[0]({ key: 'Escape' });
   assert.strictEqual(called, 1);
+  assert.ok(!modal.classList.contains('shown'));
+});
+
+test('confirm dialog space key acts like yes', () => {
+  let called = 0;
+  const modal = document.getElementById('confirmModal');
+  confirmDialog('ok?', () => { called++; });
+  assert.ok(modal.classList.contains('shown'));
+  document.body._listeners.keydown[0]({ key: ' ' });
+  assert.strictEqual(called, 1);
+  assert.ok(!modal.classList.contains('shown'));
 });
 
 test('closing dialog editor persists dialog changes', () => {
