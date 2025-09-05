@@ -25,3 +25,31 @@ test('heightFieldToTiles maps heights to tiles', () => {
     [2, 0]
   ]);
 });
+
+test('refineTiles smooths stray cells', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2 };
+  const grid = [
+    [2, 2, 2, 2, 2],
+    [2, 0, 0, 0, 2],
+    [2, 0, 2, 0, 2],
+    [2, 0, 0, 0, 2],
+    [2, 2, 2, 2, 2]
+  ];
+  const refined = globalThis.refineTiles(grid, 1);
+  assert.equal(refined[2][2], 0);
+});
+
+test('refineTiles removes isolated land', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2 };
+  const grid = [
+    [2, 2, 2],
+    [2, 0, 2],
+    [2, 2, 2]
+  ];
+  const refined = globalThis.refineTiles(grid, 1);
+  assert.deepEqual(refined, [
+    [2, 2, 2],
+    [2, 2, 2],
+    [2, 2, 2]
+  ]);
+});

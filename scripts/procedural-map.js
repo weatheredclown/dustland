@@ -122,6 +122,34 @@ function heightFieldToTiles(field, waterLevel) {
   return tiles;
 }
 
+function refineTiles(tiles, iterations = 1) {
+  let current = tiles.map(r => r.slice());
+  for (let i = 0; i < iterations; i++) {
+    const next = current.map(r => r.slice());
+    for (let y = 0; y < current.length; y++) {
+      for (let x = 0; x < current[y].length; x++) {
+        let land = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const ny = y + dy;
+            const nx = x + dx;
+            if (ny >= 0 && ny < current.length && nx >= 0 && nx < current[y].length) {
+              if (current[ny][nx] === TILE.SAND) land++;
+            }
+          }
+        }
+        if (land >= 5) next[y][x] = TILE.SAND;
+        else if (land <= 3) next[y][x] = TILE.WATER;
+        else next[y][x] = current[y][x];
+      }
+    }
+    current = next;
+  }
+  return current;
+}
+
 globalThis.generateHeightField = generateHeightField;
 globalThis.heightFieldToTiles = heightFieldToTiles;
+globalThis.refineTiles = refineTiles;
 
