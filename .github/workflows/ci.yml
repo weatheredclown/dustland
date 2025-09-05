@@ -1,10 +1,11 @@
+---
 name: CI
 
-on:
+'on':
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   page_build:
 
 permissions:
@@ -15,9 +16,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-    build:
-      if: "${{ github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'chore: bump version') }}"
-      runs-on: ubuntu-latest
+  build:
+    if: >-
+      ${{ github.event_name != 'push' ||
+          !startsWith(
+            github.event.head_commit.message,
+            'chore: bump version'
+          ) }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
