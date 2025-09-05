@@ -12,7 +12,7 @@
 - [ ] Slow the oasis trader’s inventory reset for longer-term trading
 - [ ] Randomize or reduce bandit spawns at the canyon chokepoint
 - [ ] Adjust sun glare so mines remain visible during patrols
-- [ ] Keep publishing detailed changelogs highlighting module tweaks
+- [x] Keep publishing detailed changelogs highlighting module tweaks
 - [ ] Lengthen blade durability to match ranged gear longevity
 - [ ] Create more indoor dungeons similar to the underground silo
 - [ ] Make lightning strikes damage enemies during storms

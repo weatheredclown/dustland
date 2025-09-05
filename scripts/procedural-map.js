@@ -328,7 +328,7 @@ async function exportMap(data, path = 'map.json') {
   fs.writeFileSync(path, JSON.stringify(data));
 }
 
-function generateProceduralMap(seed, width, height, scale = 4, falloff = 0) {
+function generateProceduralMap(seed, width, height, scale = 4, falloff = 0, features = { roads: true, ruins: true }) {
   const size = Math.max(width, height);
   let field = generateHeightField(seed, size, scale, falloff);
   let tiles = heightFieldToTiles(field);
@@ -336,11 +336,20 @@ function generateProceduralMap(seed, width, height, scale = 4, falloff = 0) {
   // Crop to requested dimensions before finding centers so roads stay in bounds
   tiles = tiles.slice(0, height).map(r => r.slice(0, width));
   field = field.slice(0, height).map(r => r.slice(0, width));
-  const centers = findRegionCenters(tiles);
-  const edges = connectRegionCenters(centers);
-  carveRoads(tiles, centers, edges, field, seed);
-  const { tiles: withRuins, ruins } = scatterRuins(tiles, seed);
-  return { tiles: withRuins, regions: centers, roads: edges, features: { ruins } };
+  let centers = [];
+  let edges = [];
+  if (features.roads) {
+    centers = findRegionCenters(tiles);
+    edges = connectRegionCenters(centers);
+    carveRoads(tiles, centers, edges, field, seed);
+  }
+  let feat = {};
+  if (features.ruins) {
+    const res = scatterRuins(tiles, seed);
+    tiles = res.tiles;
+    feat.ruins = res.ruins;
+  }
+  return { tiles, regions: centers, roads: edges, features: feat };
 }
 
 globalThis.generateHeightField = generateHeightField;

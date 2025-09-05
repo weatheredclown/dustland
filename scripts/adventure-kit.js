@@ -795,13 +795,21 @@ function regenWorld() {
   drawWorld();
 }
 
-function generateProceduralWorld() {
-  confirmDialog('Replace the world map?', () => {
-    moduleData.seed = Date.now();
-    const tiles = generateProceduralMap(moduleData.seed, WORLD_W, WORLD_H);
+function generateProceduralWorld(regen) {
+  confirmDialog(regen ? 'Regenerate the world map?' : 'Replace the world map?', () => {
+    moduleData.procGen = moduleData.procGen || {};
+    if (!regen) {
+      const seedVal = parseInt(document.getElementById('procSeed').value, 10);
+      moduleData.procGen.seed = Number.isFinite(seedVal) ? seedVal : Date.now();
+      moduleData.procGen.falloff = parseFloat(document.getElementById('procFalloff').value) || 0;
+      moduleData.procGen.roads = document.getElementById('procRoads').checked;
+      moduleData.procGen.ruins = document.getElementById('procRuins').checked;
+    }
+    const cfg = moduleData.procGen;
+    const map = generateProceduralMap(cfg.seed, WORLD_W, WORLD_H, 4, cfg.falloff, { roads: cfg.roads, ruins: cfg.ruins });
     world.length = 0;
     for (let y = 0; y < WORLD_H; y++) {
-      world.push(tiles[y]);
+      world.push(map.tiles[y]);
     }
     moduleData.npcs = [];
     moduleData.items = [];
@@ -3462,7 +3470,8 @@ function playtestModule() {
 }
 
 document.getElementById('clear').onclick = clearWorld;
-document.getElementById('procGen').onclick = generateProceduralWorld;
+document.getElementById('procGen').onclick = () => generateProceduralWorld(false);
+document.getElementById('procRegen').onclick = () => generateProceduralWorld(true);
 document.getElementById('addNPC').onclick = beginPlaceNPC;
 document.getElementById('addItem').onclick = () => {
   const onMap = document.getElementById('itemOnMap').checked;
