@@ -535,7 +535,7 @@ test('renderDialogPreview clears when no start node', () => {
 });
 
 test('node delete uses confirm dialog', () => {
-  treeData = { start: { text: '', choices: [] } };
+  setTreeData({ start: { text: '', choices: [] } });
   const wrap = document.getElementById('treeEditor');
   wrap.innerHTML = '';
   const origCreate = document.createElement;
@@ -651,7 +651,7 @@ test('dialog text edited in tree editor is preserved', () => {
   }];
   editNPC(0);
   const newTree = { start: { text: 'welcome', choices: [{ label: '(Leave)', to: 'bye' }] } };
-  treeData = newTree;
+  setTreeData(newTree);
   document.getElementById('npcTree').value = JSON.stringify(newTree);
   document.getElementById('npcDialog').value = '';
   const origUpdate = globalThis.updateTreeData;
@@ -660,6 +660,91 @@ test('dialog text edited in tree editor is preserved', () => {
   globalThis.updateTreeData = origUpdate;
   closeNPCEditor();
   assert.strictEqual(moduleData.npcs[0].tree.start.text, 'welcome');
+});
+
+test('renderTreeEditor reflects NPC-specific tree updates', () => {
+  moduleData.npcs = [
+    {
+      id: 'npc1', name: 'NPC1', color: '#fff', map: 'world', x: 0, y: 0,
+      tree: { start: { text: 'hi', choices: [{ label: 'open', to: 'bye' }] }, bye: { text: '', choices: [] } }
+    },
+    {
+      id: 'npc2', name: 'NPC2', color: '#fff', map: 'world', x: 1, y: 0,
+      tree: { start: { text: 'yo', choices: [{ label: 'open', to: 'bye' }] }, bye: { text: '', choices: [] } }
+    }
+  ];
+  editNPC(0);
+  const choiceEl = {
+    querySelector(sel) {
+      switch (sel) {
+        case '.choiceLabel': return { value: 'open' };
+        case '.choiceTo': return { value: 'bye', style: {} };
+        case '.choiceReqItem': return { value: 'key' };
+        case '.choiceRewardType':
+        case '.choiceRewardXP':
+        case '.choiceRewardScrap':
+        case '.choiceRewardItem':
+        case '.choiceStat':
+        case '.choiceDC':
+        case '.choiceSuccess':
+        case '.choiceFailure':
+        case '.choiceCostItem':
+        case '.choiceCostSlot':
+        case '.choiceCostTag':
+        case '.choiceReqSlot':
+        case '.choiceReqTag':
+        case '.choiceJoinId':
+        case '.choiceJoinName':
+        case '.choiceJoinRole':
+        case '.choiceGotoMap':
+        case '.choiceGotoX':
+        case '.choiceGotoY':
+        case '.choiceQ':
+        case '.choiceFlag':
+        case '.choiceOp':
+        case '.choiceVal':
+          return { value: '' };
+        case '.choiceOnce':
+          return { checked: false };
+        case '.choiceBoard':
+        case '.choiceUnboard':
+          return { value: '' };
+        default:
+          return { value: '' };
+      }
+    }
+  };
+  const nodeEl = {
+    querySelector(sel) {
+      switch (sel) {
+        case '.nodeId': return { value: 'start' };
+        case '.nodeText': return { value: 'hi' };
+        default: return { value: '' };
+      }
+    },
+    querySelectorAll(sel) { return sel === '.choices > div' ? [choiceEl] : []; },
+    classList: { contains() { return false; } },
+    style: {}
+  };
+  const treeWrap = stubEl();
+  treeWrap.querySelectorAll = sel => sel === '.node' ? [nodeEl] : [];
+  elements.treeEditor = treeWrap;
+  elements.npcTree = elements.npcTree || { value: '' };
+  elements.treeWarning = { textContent: '' };
+  updateTreeData();
+  const origLoad = globalThis.loadTreeEditor;
+  globalThis.loadTreeEditor = () => {};
+  applyNPCChanges();
+  globalThis.loadTreeEditor = origLoad;
+  assert.strictEqual(moduleData.npcs[0].tree.start.choices[0].reqItem, 'key');
+  elements.treeEditor = stubEl();
+  const origUpdate2 = globalThis.updateTreeData;
+  globalThis.updateTreeData = () => {};
+  editNPC(1);
+  assert.ok(!getTreeData().start.choices[0].reqItem);
+  editNPC(0);
+  assert.strictEqual(getTreeData().start.choices[0].reqItem, 'key');
+  globalThis.updateTreeData = origUpdate2;
 });
 
 test('editNPC expands short hex colors', () => {
@@ -910,7 +995,7 @@ test('locked node scaffold added and not orphaned', () => {
 });
 
 test('updateTreeData captures NPC lock effects', () => {
-  treeData = {};
+  setTreeData({});
   const wrap = document.getElementById('treeEditor');
   const field = (value = '', checked = false) => ({ value, checked, style: {} });
   const choiceEl = {
@@ -939,7 +1024,7 @@ test('updateTreeData captures NPC lock effects', () => {
   };
   wrap.querySelectorAll = sel => sel === '.node' ? [nodeEl] : [];
   updateTreeData();
-  assert.deepStrictEqual(treeData.start.choices[0].effects, [
+  assert.deepStrictEqual(getTreeData().start.choices[0].effects, [
     { effect: 'lockNPC', npcId: 'chest' },
     { effect: 'unlockNPC', npcId: 'door' }
   ]);
@@ -956,7 +1041,7 @@ test('startSpoofPlayback shows locked node when npc locked', () => {
   stopSpoofPlayback();
 });
 test('updateTreeData captures NPC color effects', () => {
-  treeData = {};
+  setTreeData({});
   const wrap = document.getElementById('treeEditor');
   const field = (value = '', checked = false) => ({ value, checked, style: {} });
   const choiceEl = {
@@ -985,7 +1070,7 @@ test('updateTreeData captures NPC color effects', () => {
   };
   wrap.querySelectorAll = sel => sel === '.node' ? [nodeEl] : [];
   updateTreeData();
-  assert.deepStrictEqual(treeData.start.choices[0].effects, [
+  assert.deepStrictEqual(getTreeData().start.choices[0].effects, [
     { effect: 'npcColor', npcId: 'friend', color: '#ff0000' }
   ]);
 });

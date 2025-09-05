@@ -125,16 +125,16 @@ test('updateTreeData captures door board/unboard effects', () => {
   elements['treeWarning'] = { textContent: '' };
 
   updateTreeData();
-  assert.deepStrictEqual(treeData.start.choices[0].effects, [ { effect: 'boardDoor', interiorId: 'castle' } ]);
+  assert.deepStrictEqual(getTreeData().start.choices[0].effects, [ { effect: 'boardDoor', interiorId: 'castle' } ]);
 
   boardSel.value = '';
   unboardSel.value = 'castle';
   updateTreeData();
-  assert.deepStrictEqual(treeData.start.choices[0].effects, [ { effect: 'unboardDoor', interiorId: 'castle' } ]);
+  assert.deepStrictEqual(getTreeData().start.choices[0].effects, [ { effect: 'unboardDoor', interiorId: 'castle' } ]);
 });
 
 test('updateTreeData captures scrap reward', () => {
-  treeData = {};
+  setTreeData({});
   const choiceEl = {
     querySelector(sel){
       switch(sel){
@@ -194,11 +194,11 @@ test('updateTreeData captures scrap reward', () => {
   elements['treeWarning'] = { textContent: '' };
 
   updateTreeData();
-  assert.strictEqual(treeData.start.choices[0].reward, 'SCRAP 2');
+  assert.strictEqual(getTreeData().start.choices[0].reward, 'SCRAP 2');
 });
 
 test('updateTreeData captures item reward without explicit type', () => {
-  treeData = {};
+  setTreeData({});
   const choiceEl = {
     querySelector(sel){
       switch(sel){
@@ -258,11 +258,76 @@ test('updateTreeData captures item reward without explicit type', () => {
   elements['treeWarning'] = { textContent: '' };
 
   updateTreeData();
-  assert.strictEqual(treeData.start.choices[0].reward, 'Reward');
+  assert.strictEqual(getTreeData().start.choices[0].reward, 'Reward');
+});
+
+test('updateTreeData captures required item', () => {
+  setTreeData({});
+  const choiceEl = {
+    querySelector(sel){
+      switch(sel){
+        case '.choiceLabel': return { value: 'open' };
+        case '.choiceTo': return { value: 'bye', style:{} };
+        case '.choiceRewardType':
+        case '.choiceRewardXP':
+        case '.choiceRewardScrap':
+        case '.choiceRewardItem':
+        case '.choiceStat':
+        case '.choiceDC':
+        case '.choiceSuccess':
+        case '.choiceFailure':
+        case '.choiceCostItem':
+        case '.choiceCostSlot':
+        case '.choiceCostTag':
+        case '.choiceReqSlot':
+        case '.choiceReqTag':
+        case '.choiceJoinId':
+        case '.choiceJoinName':
+        case '.choiceJoinRole':
+        case '.choiceGotoMap':
+        case '.choiceGotoX':
+        case '.choiceGotoY':
+        case '.choiceQ':
+        case '.choiceFlag':
+        case '.choiceOp':
+        case '.choiceVal':
+          return { value: '' };
+        case '.choiceReqItem':
+          return { value: 'key' };
+        case '.choiceOnce':
+          return { checked: false };
+        case '.choiceBoard':
+        case '.choiceUnboard':
+          return { value: '' };
+        default:
+          return { value: '' };
+      }
+    }
+  };
+  const nodeEl = {
+    querySelector(sel){
+      switch(sel){
+        case '.nodeId': return { value: 'start' };
+        case '.nodeText': return { value: 'hi' };
+        default: return { value: '' };
+      }
+    },
+    querySelectorAll(sel){ return sel === '.choices > div' ? [choiceEl] : []; },
+    classList:{ contains(){ return false; } },
+    style:{},
+  };
+  elements['treeEditor'] = {
+    querySelectorAll(sel){ return sel === '.node' ? [nodeEl] : []; }
+  };
+  elements['npcTree'] = { value: '' };
+  elements['treeWarning'] = { textContent: '' };
+
+  updateTreeData();
+  assert.strictEqual(getTreeData().start.choices[0].reqItem, 'key');
 });
 
 test('updateTreeData removes deleted nodes', () => {
-  treeData = { start: { text: '', choices: [] }, node1: { text: '', choices: [] } };
+  setTreeData({ start: { text: '', choices: [] }, node1: { text: '', choices: [] } });
   const nodeEl = {
     querySelector(sel){
       switch(sel){
@@ -281,5 +346,5 @@ test('updateTreeData removes deleted nodes', () => {
   elements['npcTree'] = { value: '' };
   elements['treeWarning'] = { textContent: '' };
   updateTreeData();
-  assert.deepStrictEqual(treeData, { start: { text: '', choices: [] } });
+  assert.deepStrictEqual(getTreeData(), { start: { text: '', choices: [] } });
 });
