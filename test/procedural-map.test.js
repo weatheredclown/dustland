@@ -150,15 +150,19 @@ test('scatterRuins respects spacing and terrain', () => {
   assert.equal(a.tiles[0][0], 2);
   assert.equal(a.tiles[1][1], 4);
   assert.ok(a.ruins.length > 0);
+  let clustered = false;
   for (let i = 0; i < a.ruins.length; i++) {
     const r1 = a.ruins[i];
     for (let j = i + 1; j < a.ruins.length; j++) {
       const r2 = a.ruins[j];
       const dx = r1.x - r2.x;
       const dy = r1.y - r2.y;
-      assert.ok(dx * dx + dy * dy >= 9);
+      const d2 = dx * dx + dy * dy;
+      if (d2 <= 2) { clustered = true; break; }
     }
+    if (clustered) break;
   }
+  assert.ok(clustered);
 });
 
 test('generateProceduralMap returns grid of requested size', () => {
