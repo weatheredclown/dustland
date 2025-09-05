@@ -243,26 +243,38 @@ function carveRoads(tiles, centers, edges, field, seed = 1) {
   return tiles;
 }
 
-function scatterRuins(tiles, seed = 1, radius = 3) {
+function scatterRuins(tiles, seed = 1, radius = 6) {
   const rand = mulberry32(typeof seed === 'string' ? hashString(seed) : seed);
   const h = tiles.length;
   const w = tiles[0].length;
+  const centers = [];
   const ruins = [];
   const r2 = radius * radius;
   for (let i = 0; i < w * h; i++) {
     const x = Math.floor(rand() * w);
     const y = Math.floor(rand() * h);
     const t = tiles[y][x];
-    if (t === TILE.WATER || t === TILE.ROAD) continue;
+    if (t === TILE.WATER || t === TILE.ROAD || t === TILE.RUIN) continue;
     let ok = true;
-    for (const r of ruins) {
-      const dx = r.x - x;
-      const dy = r.y - y;
+    for (const c of centers) {
+      const dx = c.x - x;
+      const dy = c.y - y;
       if (dx * dx + dy * dy < r2) { ok = false; break; }
     }
     if (!ok) continue;
     tiles[y][x] = TILE.RUIN;
+    centers.push({ x, y });
     ruins.push({ x, y });
+    const extra = 1 + Math.floor(rand() * 3);
+    for (let n = 0; n < extra; n++) {
+      const nx = x + Math.floor(rand() * 3) - 1;
+      const ny = y + Math.floor(rand() * 3) - 1;
+      if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+      const tt = tiles[ny][nx];
+      if (tt === TILE.WATER || tt === TILE.ROAD || tt === TILE.RUIN) continue;
+      tiles[ny][nx] = TILE.RUIN;
+      ruins.push({ x: nx, y: ny });
+    }
   }
   return { tiles, ruins };
 }
