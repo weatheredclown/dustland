@@ -75,7 +75,7 @@ Insights pulled from accessible community tutorials and open-source repos:
 - [x] When only one land region is detected, subdivide it into quadrants so roads generate even on fully connected land.
 
 ### Ruin Placement
-- [ ] Use Poisson-disk sampling to scatter ruin tiles while honoring spacing and terrain rules.
+- [x] Use Poisson-disk sampling to scatter ruin tiles while honoring spacing and terrain rules.
 
 ### Export
 - [ ] Serialize tile grid, regions, roads, and features to `map.json`.
