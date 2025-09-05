@@ -170,8 +170,43 @@ function markWalls(tiles) {
   return out;
 }
 
+function connectRegionCenters(centers) {
+  const edges = [];
+  if (!centers || centers.length < 2) return edges;
+  const connected = new Set([0]);
+  const remaining = new Set();
+  for (let i = 1; i < centers.length; i++) {
+    remaining.add(i);
+  }
+  function dist(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+  while (connected.size < centers.length) {
+    let bestA = -1;
+    let bestB = -1;
+    let bestDist = Infinity;
+    for (const a of connected) {
+      for (const b of remaining) {
+        const d = dist(centers[a], centers[b]);
+        if (d < bestDist) {
+          bestDist = d;
+          bestA = a;
+          bestB = b;
+        }
+      }
+    }
+    edges.push([bestA, bestB]);
+    connected.add(bestB);
+    remaining.delete(bestB);
+  }
+  return edges;
+}
+
 globalThis.generateHeightField = generateHeightField;
 globalThis.heightFieldToTiles = heightFieldToTiles;
 globalThis.refineTiles = refineTiles;
 globalThis.markWalls = markWalls;
+globalThis.connectRegionCenters = connectRegionCenters;
 

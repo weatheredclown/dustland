@@ -68,7 +68,7 @@ Insights pulled from accessible community tutorials and open-source repos:
 - [x] Mark walls along region borders.
 
 ### Road Graph
-- [ ] Connect region centers with a minimum spanning tree.
+- [x] Connect region centers with a minimum spanning tree.
 - [ ] Carve jittered paths via midpoint displacement or random walk and convert to road tiles.
 
 ### Ruin Placement
