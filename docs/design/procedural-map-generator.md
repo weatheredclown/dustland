@@ -82,9 +82,9 @@ Insights pulled from accessible community tutorials and open-source repos:
 
 ### Adventure Kit
 - [ ] Hook generator into a module `postLoad` and extend the existing **Generate** button to call it.
-- [ ] Surface seed, size, radial falloff, and feature toggles in the Adventure Kit UI.
-- [ ] Persist seed and config so rerolls reproduce the same map.
-- [ ] Add a **Regenerate** button that rebuilds the map without refreshing.
+- [x] Surface seed, size, radial falloff, and feature toggles in the Adventure Kit UI.
+- [x] Persist seed and config so rerolls reproduce the same map.
+- [x] Add a **Regenerate** button that rebuilds the map without refreshing.
 - [ ] Write tests to ensure deterministic regeneration through the kit.
 
 ## Risks & Mitigations

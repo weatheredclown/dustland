@@ -199,6 +199,21 @@ test('generateProceduralMap scatters ruins', () => {
   assert.ok(ruins > 0);
 });
 
+test('generateProceduralMap respects feature toggles', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, BRUSH: 3, ROCK: 5, ROAD: 4, RUIN: 6 };
+  const map = globalThis.generateProceduralMap(5, 16, 16, 4, 0, { roads: false, ruins: false });
+  let roads = 0;
+  let ruins = 0;
+  for (const row of map.tiles) {
+    for (const t of row) {
+      if (t === 4) roads++;
+      if (t === 6) ruins++;
+    }
+  }
+  assert.equal(roads, 0);
+  assert.equal(ruins, 0);
+});
+
 test('exportMap writes JSON file', async () => {
   const data = { tiles: [[1]], regions: [], roads: [], features: { ruins: [] } };
   const path = 'test-map.json';

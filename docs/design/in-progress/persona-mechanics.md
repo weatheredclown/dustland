@@ -83,7 +83,7 @@ Persona equips and other world moments should fire through the game's event bus.
 
 ## Tasks
 
-- [ ] Prototype persona equip UI at camps.
+- [x] Prototype persona equip UI at camps.
 - [x] Hook persona stat modifiers into combat calculations.
 - [ ] Draft first mask memory quest for Mara.
 - [x] Add portrait and label swap logic to the HUD.

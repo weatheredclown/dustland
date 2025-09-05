@@ -123,7 +123,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
     - [x] Create a generic "dial" widget for puzzles like the radio tower.
     - [x] Develop a "sound-based navigation" system that can be used for the dust storm and other similar challenges.
 - [ ] **Flesh out the World:**
-    - [ ] Design and build the first major hub city, where the caravan can rest, resupply, and find new quests.
+    - [x] Design and build the first major hub city, where the caravan can rest, resupply, and find new quests.
     - [x] Create a detailed world map that shows the planned route of the caravan and the locations of the first three broadcast fragments.
 
 #### **Phase 4: Testing and Integration**
