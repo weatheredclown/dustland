@@ -85,7 +85,7 @@ Persona equips and other world moments should fire through the game's event bus.
 
 - [x] Prototype persona equip UI at camps.
 - [x] Hook persona stat modifiers into combat calculations.
-- [ ] Draft first mask memory quest for Mara.
+- [x] Draft first mask memory quest for Mara.
 - [x] Add portrait and label swap logic to the HUD.
 - [ ] Extend ACK schema and editor with reusable profile definitions.
 - [ ] Implement profile runtime service for personas, buffs, and disguises.

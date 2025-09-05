@@ -17,7 +17,7 @@
 - [ ] Create more indoor dungeons similar to the underground silo
 - [ ] Make lightning strikes damage enemies during storms
 - [ ] Preserve sun position when looping across map edges
-- [ ] Have traders react to repeated deal cancellations
+- [x] Have traders react to repeated deal cancellations
 - [ ] Add crafting recipes that use additional desert flora
 - [ ] Ensure companions respect hold-position orders under fire
 - [x] Implement a screenshot mode

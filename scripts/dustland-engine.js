@@ -870,6 +870,7 @@ function openShop(npc) {
 
   let focusables = [];
   let focusIdx = 0;
+  let madePurchase = false;
   function refreshFocusables() {
     focusables = Array.from(shopOverlay.querySelectorAll('button'));
     if (focusIdx >= focusables.length) focusIdx = 0;
@@ -905,6 +906,7 @@ function openShop(npc) {
             }
             renderShop();
             updateHUD();
+            madePurchase = true;
           } else {
             log('Inventory is full.');
             if (typeof toast === 'function') toast('Inventory is full.');
@@ -928,6 +930,7 @@ function openShop(npc) {
         removeFromInv(idx);
         renderShop();
         updateHUD();
+        madePurchase = true;
       };
       shopSell.appendChild(row);
     });
@@ -937,6 +940,16 @@ function openShop(npc) {
   function close() {
     shopOverlay.classList.remove('shown');
     shopOverlay.removeEventListener('keydown', handleKey);
+    if (!madePurchase && npc) {
+      npc.cancelCount = (npc.cancelCount || 0) + 1;
+      if (npc.cancelCount >= 2) {
+        npc.tree.start.text = 'Buy or move on.';
+        if (typeof toast === 'function') toast(`${npc.name} eyes you warily.`);
+      }
+    } else if (npc) {
+      npc.cancelCount = 0;
+      npc.tree.start.text = 'Got goods to sell? I pay in scrap.';
+    }
   }
   function handleKey(e) {
     e.stopPropagation();

@@ -73,7 +73,7 @@ const DATA = `
               "label": "(Take Final Fragment)",
               "to": "bye",
               "reward": "signal_fragment_3",
-              "applyModule": "MARA_PUZZLE"
+              "applyModule": "GRAFFITI_PUZZLE"
             }
           ]
         }
