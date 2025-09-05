@@ -231,6 +231,30 @@ function carveRoads(tiles, centers, edges, seed = 1) {
   return tiles;
 }
 
+function scatterRuins(tiles, seed = 1, radius = 3) {
+  const rand = mulberry32(typeof seed === 'string' ? hashString(seed) : seed);
+  const h = tiles.length;
+  const w = tiles[0].length;
+  const ruins = [];
+  const r2 = radius * radius;
+  for (let i = 0; i < w * h; i++) {
+    const x = Math.floor(rand() * w);
+    const y = Math.floor(rand() * h);
+    const t = tiles[y][x];
+    if (t === TILE.WATER || t === TILE.ROAD) continue;
+    let ok = true;
+    for (const r of ruins) {
+      const dx = r.x - x;
+      const dy = r.y - y;
+      if (dx * dx + dy * dy < r2) { ok = false; break; }
+    }
+    if (!ok) continue;
+    tiles[y][x] = TILE.RUIN;
+    ruins.push({ x, y });
+  }
+  return tiles;
+}
+
 function findRegionCenters(tiles) {
   const h = tiles.length;
   const w = tiles[0].length;
@@ -291,6 +315,7 @@ function generateProceduralMap(seed, width, height, scale = 4, falloff = 0) {
   const centers = findRegionCenters(tiles);
   const edges = connectRegionCenters(centers);
   carveRoads(tiles, centers, edges, seed);
+  scatterRuins(tiles, seed);
   return tiles.slice(0, height).map(r => r.slice(0, width));
 }
 
@@ -300,5 +325,6 @@ globalThis.refineTiles = refineTiles;
 globalThis.findRegionCenters = findRegionCenters;
 globalThis.connectRegionCenters = connectRegionCenters;
 globalThis.carveRoads = carveRoads;
+globalThis.scatterRuins = scatterRuins;
 globalThis.generateProceduralMap = generateProceduralMap;
 
