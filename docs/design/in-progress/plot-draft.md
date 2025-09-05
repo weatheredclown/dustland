@@ -118,7 +118,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 - [x] **Design a layered graffiti decoding puzzle to reveal a safe route before the sun bleeds out.**
    - A collapsed overpass hides directions beneath decades of gang tags; players cycle solvent sprays to reveal each era's markings and overlay them into a route.
    - Picking the wrong sequence bathes the wall in false sunlight and draws a quick Silencer ambush before resetting.
-- [ ] Implement the layered graffiti decoding puzzle as an interactive module and hook it into the Broadcast Story sequence.
+- [x] Implement the layered graffiti decoding puzzle as an interactive module and hook it into the Broadcast Story sequence.
 - [x] **Build Reusable Widgets:**
     - [x] Create a generic "dial" widget for puzzles like the radio tower.
     - [x] Develop a "sound-based navigation" system that can be used for the dust storm and other similar challenges.
