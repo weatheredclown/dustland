@@ -111,7 +111,12 @@
       if(st.path.length){
         const step=st.path.shift();
         if(step){ n.x=step.x; n.y=step.y; n._lastMove=now; }
-        if(!st.path.length){ st.idx=(st.idx+1)%pts.length; }
+        if(!st.path.length){
+          st.idx=(st.idx+1)%pts.length;
+          const target=pts[st.idx];
+          // queue the next leg so patrols loop without pausing at endpoints
+          st.job=queue(n.map,{x:n.x,y:n.y},target,n.id);
+        }
         continue;
       }
       if(st.job){
@@ -122,7 +127,16 @@
           if(st.path.length){
             const step=st.path.shift();
             if(step){ n.x=step.x; n.y=step.y; n._lastMove=now; }
-            if(!st.path.length){ st.idx=(st.idx+1)%pts.length; }
+            if(!st.path.length){
+              st.idx=(st.idx+1)%pts.length;
+              const target=pts[st.idx];
+              // queue the next leg so patrols loop without pausing at endpoints
+              st.job=queue(n.map,{x:n.x,y:n.y},target,n.id);
+            }
+          } else {
+            st.idx=(st.idx+1)%pts.length;
+            const target=pts[st.idx];
+            st.job=queue(n.map,{x:n.x,y:n.y},target,n.id);
           }
         }
         continue;

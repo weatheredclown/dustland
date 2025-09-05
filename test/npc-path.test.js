@@ -66,3 +66,22 @@ test('NPC re-pathfinds after being moved', async () => {
   assert.deepStrictEqual(st.path, []);
   assert.strictEqual(st.job, null);
 });
+
+test('NPC loops back to start after final waypoint', async () => {
+  NPCS.length = 0;
+  NPCS.push({ id:'n3', map:'world', x:0, y:0, loop:[{x:0,y:0},{x:2,y:0}] });
+  party.x = 5; party.y = 5;
+  await import('../scripts/dustland-path.js');
+  window.Dustland.path.tickPathAI();
+  await Promise.resolve();
+  window.Dustland.path.tickPathAI();
+  NPCS[0]._lastMove = Date.now() - 211;
+  window.Dustland.path.tickPathAI();
+  await Promise.resolve();
+  NPCS[0]._lastMove = Date.now() - 211;
+  window.Dustland.path.tickPathAI();
+  await Promise.resolve();
+  NPCS[0]._lastMove = Date.now() - 211;
+  window.Dustland.path.tickPathAI();
+  assert.strictEqual(NPCS[0].x, 0);
+});
