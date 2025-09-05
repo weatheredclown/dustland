@@ -731,13 +731,23 @@ function confirmDialog(msg, onYes) {
   modal.classList.add('shown');
   const yes = document.getElementById('confirmYes');
   const no = document.getElementById('confirmNo');
+  const tgt = document.addEventListener ? document : document.body;
+  const onKey = e => {
+    if (e.key === 'Enter') {
+      if (yes.onclick) yes.onclick(); else yes.click?.();
+    } else if (e.key === 'Escape') {
+      if (no.onclick) no.onclick(); else no.click?.();
+    }
+  };
   const cleanup = () => {
     modal.classList.remove('shown');
     yes.onclick = null;
     no.onclick = null;
+    tgt.removeEventListener?.('keydown', onKey);
   };
   yes.onclick = () => { cleanup(); onYes(); };
   no.onclick = cleanup;
+  tgt.addEventListener?.('keydown', onKey);
 }
 
 function setupListFilter(inputId, listId) {
