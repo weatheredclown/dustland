@@ -588,6 +588,16 @@ test('confirm modal renders after dialog modal', async () => {
   assert.ok(confirmIdx > dialogIdx);
 });
 
+test('confirm dialog supports enter/escape shortcuts', () => {
+  let called = 0;
+  confirmDialog('ok?', () => { called++; });
+  document.body._listeners.keydown[0]({ key: 'Enter' });
+  assert.strictEqual(called, 1);
+  confirmDialog('ok?', () => { called++; });
+  document.body._listeners.keydown[0]({ key: 'Escape' });
+  assert.strictEqual(called, 1);
+});
+
 test('closing dialog editor persists dialog changes', () => {
   moduleData.npcs = [{
     id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0,
