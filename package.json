@@ -7,7 +7,7 @@
   "scripts": {
     "serve": "http-server -p 8080",
     "test": "npm run lint && node --test",
-    "lint": "eslint .",
+    "lint": "eslint . && yamllint .github/workflows/*.yml",
     "module:export": "node scripts/module-json.js export",
     "module:import": "node scripts/module-json.js import"
   },
@@ -17,6 +17,7 @@
     "eslint": "^8.57.1",
     "http-server": "^14.1.1",
     "jsdom": "^26.1.0",
-    "puppeteer": "^24.17.0"
+    "puppeteer": "^24.17.0",
+    "yaml-lint": "^1.7.0"
   }
 }
