@@ -61,7 +61,7 @@ Insights pulled from accessible community tutorials and open-source repos:
 
 ### Height Field
 - [x] Implement `generateHeightField(seed, size, scale)` using Simplex noise with radial falloff.
-- [ ] Convert heights to water or land tiles based on thresholds.
+- [x] Convert heights to water or land tiles based on thresholds.
 
 ### Tile Refinement
 - [ ] Smooth stray cells and grow land regions with cellular automata.

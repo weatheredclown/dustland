@@ -12,3 +12,16 @@ test('generateHeightField applies radial falloff', () => {
   const field = globalThis.generateHeightField(1, 3, 1);
   assert(field[1][1] > field[0][0]);
 });
+
+test('heightFieldToTiles maps heights to tiles', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2 };
+  const field = [
+    [0.1, 0.6],
+    [0.4, 0.8]
+  ];
+  const tiles = globalThis.heightFieldToTiles(field, 0.5);
+  assert.deepEqual(tiles, [
+    [2, 0],
+    [2, 0]
+  ]);
+});
