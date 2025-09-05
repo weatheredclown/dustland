@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import fs from 'node:fs';
 import '../scripts/procedural-map.js';
 
 test('generateHeightField is deterministic', () => {
@@ -146,22 +147,15 @@ test('scatterRuins respects spacing and terrain', () => {
   const a = globalThis.scatterRuins(base.map(r => r.slice()), 5, 3);
   const b = globalThis.scatterRuins(makeGrid(), 5, 3);
   assert.deepEqual(a, b);
-  const coords = [];
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const orig = base[y][x];
-      const t = a[y][x];
-      if (orig === 2 || orig === 4) {
-        assert.equal(t, orig);
-      }
-      if (t === 6) coords.push([x, y]);
-    }
-  }
-  assert.ok(coords.length > 0);
-  for (let i = 0; i < coords.length; i++) {
-    for (let j = i + 1; j < coords.length; j++) {
-      const dx = coords[i][0] - coords[j][0];
-      const dy = coords[i][1] - coords[j][1];
+  assert.equal(a.tiles[0][0], 2);
+  assert.equal(a.tiles[1][1], 4);
+  assert.ok(a.ruins.length > 0);
+  for (let i = 0; i < a.ruins.length; i++) {
+    const r1 = a.ruins[i];
+    for (let j = i + 1; j < a.ruins.length; j++) {
+      const r2 = a.ruins[j];
+      const dx = r1.x - r2.x;
+      const dy = r1.y - r2.y;
       assert.ok(dx * dx + dy * dy >= 9);
     }
   }
@@ -169,9 +163,9 @@ test('scatterRuins respects spacing and terrain', () => {
 
 test('generateProceduralMap returns grid of requested size', () => {
   globalThis.TILE = { SAND: 0, WATER: 2, BRUSH: 3, ROCK: 5, ROAD: 4, RUIN: 6 };
-  const grid = globalThis.generateProceduralMap(1, 10, 8);
-  assert.equal(grid.length, 8);
-  assert.equal(grid[0].length, 10);
+  const map = globalThis.generateProceduralMap(1, 10, 8);
+  assert.equal(map.tiles.length, 8);
+  assert.equal(map.tiles[0].length, 10);
 });
 
 test('generateProceduralMap is deterministic', () => {
@@ -183,9 +177,9 @@ test('generateProceduralMap is deterministic', () => {
 
 test('generateProceduralMap adds roads on single land region', () => {
   globalThis.TILE = { SAND: 0, WATER: 2, BRUSH: 3, ROCK: 5, ROAD: 4, RUIN: 6 };
-  const grid = globalThis.generateProceduralMap(2, 16, 16, 4, 0);
+  const map = globalThis.generateProceduralMap(2, 16, 16, 4, 0);
   let roads = 0;
-  for (const row of grid) {
+  for (const row of map.tiles) {
     for (const t of row) {
       if (t === 4) roads++;
     }
@@ -195,12 +189,21 @@ test('generateProceduralMap adds roads on single land region', () => {
 
 test('generateProceduralMap scatters ruins', () => {
   globalThis.TILE = { SAND: 0, WATER: 2, BRUSH: 3, ROCK: 5, ROAD: 4, RUIN: 6 };
-  const grid = globalThis.generateProceduralMap(3, 16, 16, 4, 0);
+  const map = globalThis.generateProceduralMap(3, 16, 16, 4, 0);
   let ruins = 0;
-  for (const row of grid) {
+  for (const row of map.tiles) {
     for (const t of row) {
       if (t === 6) ruins++;
     }
   }
   assert.ok(ruins > 0);
+});
+
+test('exportMap writes JSON file', async () => {
+  const data = { tiles: [[1]], regions: [], roads: [], features: { ruins: [] } };
+  const path = 'test-map.json';
+  await globalThis.exportMap(data, path);
+  const loaded = JSON.parse(fs.readFileSync(path, 'utf8'));
+  assert.deepEqual(loaded, data);
+  fs.unlinkSync(path);
 });

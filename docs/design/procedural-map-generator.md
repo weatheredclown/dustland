@@ -78,7 +78,7 @@ Insights pulled from accessible community tutorials and open-source repos:
 - [x] Use Poisson-disk sampling to scatter ruin tiles while honoring spacing and terrain rules.
 
 ### Export
-- [ ] Serialize tile grid, regions, roads, and features to `map.json`.
+- [x] Serialize tile grid, regions, roads, and features to `map.json`.
 
 ### Adventure Kit
 - [ ] Hook generator into a module `postLoad` and extend the existing **Generate** button to call it.
