@@ -110,5 +110,18 @@ function generateHeightField(seed, size, scale) {
   return grid;
 }
 
+function heightFieldToTiles(field, waterLevel) {
+  const tiles = [];
+  for (let y = 0; y < field.length; y++) {
+    const row = [];
+    for (let x = 0; x < field[y].length; x++) {
+      row.push(field[y][x] < waterLevel ? TILE.WATER : TILE.SAND);
+    }
+    tiles.push(row);
+  }
+  return tiles;
+}
+
 globalThis.generateHeightField = generateHeightField;
+globalThis.heightFieldToTiles = heightFieldToTiles;
 
