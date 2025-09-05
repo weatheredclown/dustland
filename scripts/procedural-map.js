@@ -149,7 +149,29 @@ function refineTiles(tiles, iterations = 1) {
   return current;
 }
 
+function markWalls(tiles) {
+  const out = tiles.map(r => r.slice());
+  for (let y = 0; y < tiles.length; y++) {
+    for (let x = 0; x < tiles[y].length; x++) {
+      if (tiles[y][x] !== TILE.SAND) continue;
+      const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      for (const d of dirs) {
+        const nx = x + d[0];
+        const ny = y + d[1];
+        if (ny >= 0 && ny < tiles.length && nx >= 0 && nx < tiles[y].length) {
+          if (tiles[ny][nx] === TILE.WATER) {
+            out[y][x] = TILE.WALL;
+            break;
+          }
+        }
+      }
+    }
+  }
+  return out;
+}
+
 globalThis.generateHeightField = generateHeightField;
 globalThis.heightFieldToTiles = heightFieldToTiles;
 globalThis.refineTiles = refineTiles;
+globalThis.markWalls = markWalls;
 

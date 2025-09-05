@@ -65,7 +65,7 @@ Insights pulled from accessible community tutorials and open-source repos:
 
 ### Tile Refinement
 - [x] Smooth stray cells and grow land regions with cellular automata.
-- [ ] Mark walls along region borders.
+- [x] Mark walls along region borders.
 
 ### Road Graph
 - [ ] Connect region centers with a minimum spanning tree.
