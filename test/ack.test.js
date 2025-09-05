@@ -36,7 +36,7 @@ function stubEl(){
     parentElement:{ style:{}, appendChild(){}, querySelectorAll(){ return []; } },
     setAttribute(){},
     click(){},
-    focus(){},
+    focus(){ document.activeElement = el; },
   };
   Object.defineProperty(el,'innerHTML',{ get(){return this._innerHTML;}, set(v){ this._innerHTML=v; this.children=[]; }});
   return el;
@@ -67,7 +67,8 @@ global.document = {
   getElementById: id => elements[id] || (elements[id] = stubEl()),
   createElement: () => stubEl(),
   querySelector: () => stubEl(),
-  querySelectorAll: () => []
+  querySelectorAll: () => [],
+  activeElement: null
 };
 
 global.NanoPalette = {
@@ -593,12 +594,12 @@ test('confirm dialog supports enter/escape shortcuts', () => {
   const modal = document.getElementById('confirmModal');
   confirmDialog('ok?', () => { called++; });
   assert.ok(modal.classList.contains('shown'));
-  document.body._listeners.keydown[0]({ key: 'Enter' });
+  document.body._listeners.keydown[0]({ key: 'Enter', preventDefault(){} });
   assert.strictEqual(called, 1);
   assert.ok(!modal.classList.contains('shown'));
   confirmDialog('ok?', () => { called++; });
   assert.ok(modal.classList.contains('shown'));
-  document.body._listeners.keydown[0]({ key: 'Escape' });
+  document.body._listeners.keydown[0]({ key: 'Escape', preventDefault(){} });
   assert.strictEqual(called, 1);
   assert.ok(!modal.classList.contains('shown'));
 });
@@ -608,9 +609,22 @@ test('confirm dialog space key acts like yes', () => {
   const modal = document.getElementById('confirmModal');
   confirmDialog('ok?', () => { called++; });
   assert.ok(modal.classList.contains('shown'));
-  document.body._listeners.keydown[0]({ key: ' ' });
+  document.body._listeners.keydown[0]({ key: ' ', preventDefault(){} });
   assert.strictEqual(called, 1);
   assert.ok(!modal.classList.contains('shown'));
+});
+
+test('confirm dialog focuses yes and restores prior focus', () => {
+  let called = 0;
+  const trigger = stubEl();
+  document.body.appendChild(trigger);
+  trigger.focus();
+  confirmDialog('ok?', () => { called++; });
+  const yes = document.getElementById('confirmYes');
+  assert.strictEqual(document.activeElement, yes);
+  document.body._listeners.keydown[0]({ key: 'Enter', preventDefault(){} });
+  assert.strictEqual(called, 1);
+  assert.strictEqual(document.activeElement, trigger);
 });
 
 test('closing dialog editor persists dialog changes', () => {
