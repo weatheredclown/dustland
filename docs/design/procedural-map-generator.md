@@ -69,7 +69,7 @@ Insights pulled from accessible community tutorials and open-source repos:
 
 ### Road Graph
 - [x] Connect region centers with a minimum spanning tree.
-- [ ] Carve jittered paths via midpoint displacement or random walk and convert to road tiles.
+- [x] Carve jittered paths via midpoint displacement or random walk and convert to road tiles.
 
 ### Ruin Placement
 - [ ] Use Poisson-disk sampling to scatter ruin tiles while honoring spacing and terrain rules.

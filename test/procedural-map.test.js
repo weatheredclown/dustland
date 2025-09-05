@@ -94,3 +94,33 @@ test('connectRegionCenters handles single region', () => {
   const edges = globalThis.connectRegionCenters([{ x: 1, y: 1 }]);
   assert.deepEqual(edges, []);
 });
+
+test('carveRoads draws road between centers', () => {
+  globalThis.TILE = { SAND: 0, ROAD: 4 };
+  const size = 5;
+  const tiles = Array.from({ length: size }, () => Array(size).fill(0));
+  const centers = [{ x: 0, y: 0 }, { x: 4, y: 4 }];
+  const edges = [[0, 1]];
+  const roaded = globalThis.carveRoads(tiles, centers, edges, 1);
+  assert.equal(roaded[0][0], 4);
+  assert.equal(roaded[4][4], 4);
+  const queue = [[0, 0]];
+  const seen = new Set(['0,0']);
+  let found = false;
+  const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  while (queue.length) {
+    const [x, y] = queue.shift();
+    if (x === 4 && y === 4) { found = true; break; }
+    for (const [dx, dy] of dirs) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+        if (roaded[ny][nx] === 4 && !seen.has(`${nx},${ny}`)) {
+          seen.add(`${nx},${ny}`);
+          queue.push([nx, ny]);
+        }
+      }
+    }
+  }
+  assert.ok(found);
+});

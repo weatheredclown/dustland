@@ -204,9 +204,50 @@ function connectRegionCenters(centers) {
   return edges;
 }
 
+function carveRoads(tiles, centers, edges, seed = 1) {
+  const rand = mulberry32(typeof seed === 'string' ? hashString(seed) : seed);
+  const h = tiles.length;
+  const w = tiles[0].length;
+  for (const [ai, bi] of edges) {
+    let x0 = Math.round(centers[ai].x);
+    let y0 = Math.round(centers[ai].y);
+    const x1 = Math.round(centers[bi].x);
+    const y1 = Math.round(centers[bi].y);
+    let dx = Math.abs(x1 - x0);
+    let sx = x0 < x1 ? 1 : -1;
+    let dy = -Math.abs(y1 - y0);
+    let sy = y0 < y1 ? 1 : -1;
+    let err = dx + dy;
+    while (x0 !== x1 || y0 !== y1) {
+      tiles[y0][x0] = TILE.ROAD;
+      if (rand() < 0.3) {
+        const jx = Math.max(0, Math.min(w - 1, x0 + (rand() < 0.5 ? -1 : 1)));
+        const jy = Math.max(0, Math.min(h - 1, y0 + (rand() < 0.5 ? -1 : 1)));
+        tiles[jy][jx] = TILE.ROAD;
+      }
+      const e2 = 2 * err;
+      const px = x0;
+      const py = y0;
+      if (e2 >= dy) { err += dy; x0 += sx; }
+      if (e2 <= dx) { err += dx; y0 += sy; }
+      if (px !== x0 && py !== y0) {
+        tiles[py][x0] = TILE.ROAD;
+      }
+    }
+    tiles[y0][x0] = TILE.ROAD;
+    if (rand() < 0.3) {
+      const jx = Math.max(0, Math.min(w - 1, x0 + (rand() < 0.5 ? -1 : 1)));
+      const jy = Math.max(0, Math.min(h - 1, y0 + (rand() < 0.5 ? -1 : 1)));
+      tiles[jy][jx] = TILE.ROAD;
+    }
+  }
+  return tiles;
+}
+
 globalThis.generateHeightField = generateHeightField;
 globalThis.heightFieldToTiles = heightFieldToTiles;
 globalThis.refineTiles = refineTiles;
 globalThis.markWalls = markWalls;
 globalThis.connectRegionCenters = connectRegionCenters;
+globalThis.carveRoads = carveRoads;
 
