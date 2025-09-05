@@ -60,22 +60,22 @@ Insights pulled from accessible community tutorials and open-source repos:
 ## Implementation Tasks
 
 ### Height Field
-- TODO: Implement `generateHeightField(seed, size, scale)` using Simplex noise with radial falloff.
-- TODO: Convert heights to water or land tiles based on thresholds.
+- [ ] Implement `generateHeightField(seed, size, scale)` using Simplex noise with radial falloff.
+- [ ] Convert heights to water or land tiles based on thresholds.
 
 ### Tile Refinement
-- TODO: Smooth stray cells and grow land regions with cellular automata.
-- TODO: Mark walls along region borders.
+- [ ] Smooth stray cells and grow land regions with cellular automata.
+- [ ] Mark walls along region borders.
 
 ### Road Graph
-- TODO: Connect region centers with a minimum spanning tree.
-- TODO: Carve jittered paths via midpoint displacement or random walk and convert to road tiles.
+- [ ] Connect region centers with a minimum spanning tree.
+- [ ] Carve jittered paths via midpoint displacement or random walk and convert to road tiles.
 
 ### Ruin Placement
-- TODO: Use Poisson-disk sampling to scatter ruin tiles while honoring spacing and terrain rules.
+- [ ] Use Poisson-disk sampling to scatter ruin tiles while honoring spacing and terrain rules.
 
 ### Export
-- TODO: Serialize tile grid, regions, roads, and features to `map.json`.
+- [ ] Serialize tile grid, regions, roads, and features to `map.json`.
 
 ## Risks & Mitigations
 
