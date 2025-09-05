@@ -597,20 +597,17 @@ function showTab(which){
   if(window.innerWidth >= TAB_BREAKPOINT) return;
   const inv=document.getElementById('inv'), partyEl=document.getElementById('party'), q=document.getElementById('quests');
   const tInv=document.getElementById('tabInv'), tP=document.getElementById('tabParty'), tQ=document.getElementById('tabQuests');
-  if (inv) {
-    inv.style.display=(which==='inv'?'grid':'none');
-    partyEl.style.display=(which==='party'?'grid':'none');
-    q.style.display=(which==='quests'?'grid':'none');
-    for(const el of [tInv,tP,tQ]){
-      el.classList.remove('active');
-      if(el.setAttribute) el.setAttribute('aria-selected','false');
-    }
-    if(which==='inv'){ tInv.classList.add('active'); if(tInv.setAttribute) tInv.setAttribute('aria-selected','true'); }
-    if(which==='party'){ tP.classList.add('active'); if(tP.setAttribute) tP.setAttribute('aria-selected','true'); }
-    if(which==='quests'){ tQ.classList.add('active'); if(tQ.setAttribute) tQ.setAttribute('aria-selected','true'); }
-  } else {
-    console.error("showTab failed. Adventure Kit?");
+  if (!inv) return;
+  inv.style.display=(which==='inv'?'grid':'none');
+  partyEl.style.display=(which==='party'?'grid':'none');
+  q.style.display=(which==='quests'?'grid':'none');
+  for(const el of [tInv,tP,tQ]){
+    el.classList.remove('active');
+    if(el.setAttribute) el.setAttribute('aria-selected','false');
   }
+  if(which==='inv'){ tInv.classList.add('active'); if(tInv.setAttribute) tInv.setAttribute('aria-selected','true'); }
+  if(which==='party'){ tP.classList.add('active'); if(tP.setAttribute) tP.setAttribute('aria-selected','true'); }
+  if(which==='quests'){ tQ.classList.add('active'); if(tQ.setAttribute) tQ.setAttribute('aria-selected','true'); }
 }
 
 function updateTabsLayout(){
@@ -645,8 +642,6 @@ if (document.getElementById('tabInv')) {
   tabInv.onkeydown=keyHandler('inv');
   tabParty.onkeydown=keyHandler('party');
   tabQuests.onkeydown=keyHandler('quests');
-} else {
-  console.error("showTab setup failed. Adventure Kit?");
 }
 // ===== Renderers =====
 function calcItemValue(it){
@@ -1107,7 +1102,6 @@ if (document.getElementById('saveBtn')) {
   });
 
 } else {
-  console.error("No save/load btns. Adventure Kit?");
   NanoDialog.enabled = false;
 }
 
