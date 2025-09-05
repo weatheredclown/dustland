@@ -1667,6 +1667,7 @@ function openDialogEditor() {
 }
 
 function closeDialogEditor() {
+  updateTreeData();
   document.getElementById('dialogModal').classList.remove('shown');
   const dlgEl = document.getElementById('npcDialog');
   const tree = getTreeData();
@@ -1942,7 +1943,6 @@ function collectNPCFromForm() {
   const flag = getRevealFlag();
   const op = document.getElementById('npcOp').value;
   const val = parseInt(document.getElementById('npcVal').value, 10) || 0;
-  updateTreeData();
   let tree = null;
   const treeTxt = document.getElementById('npcTree').value.trim();
   if (treeTxt) { try { tree = JSON.parse(treeTxt); } catch (e) { tree = null; } }

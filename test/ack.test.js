@@ -36,6 +36,7 @@ function stubEl(){
     parentElement:{ style:{}, appendChild(){}, querySelectorAll(){ return []; } },
     setAttribute(){},
     click(){},
+    dispatchEvent(){},
     focus(){ document.activeElement = el; },
   };
   Object.defineProperty(el,'innerHTML',{ get(){return this._innerHTML;}, set(v){ this._innerHTML=v; this.children=[]; }});
@@ -745,6 +746,35 @@ test('renderTreeEditor reflects NPC-specific tree updates', () => {
   editNPC(0);
   assert.strictEqual(getTreeData().start.choices[0].reqItem, 'key');
   globalThis.updateTreeData = origUpdate2;
+);
+test('advanced dialog choices persist after reopening editor', () => {
+  moduleData.npcs = [{
+    id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0,
+    tree: { start: { text: 'hi', choices: [{ label: '(Leave)', to: 'bye' }] } }
+  }];
+  editNPC(0);
+  const newTree = {
+    start: {
+      text: 'hi',
+      choices: [{
+        label: 'Go', to: 'end',
+        reward: 'XP 5',
+        goto: { map: 'world', x: 2, y: 1 }
+      }]
+    },
+    end: { text: '', choices: [{ label: '(Leave)', to: 'bye' }] }
+  };
+  treeData = newTree;
+  document.getElementById('npcTree').value = JSON.stringify(newTree);
+  const origUpdate = globalThis.updateTreeData;
+  globalThis.updateTreeData = () => {};
+  closeDialogEditor();
+  globalThis.updateTreeData = origUpdate;
+  openDialogEditor();
+  assert.strictEqual(treeData.start.choices[0].reward, 'XP 5');
+  assert.strictEqual(treeData.start.choices[0].goto.x, 2);
+  closeDialogEditor();
+  closeNPCEditor();
 });
 
 test('editNPC expands short hex colors', () => {
