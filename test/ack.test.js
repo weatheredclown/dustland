@@ -746,7 +746,7 @@ test('renderTreeEditor reflects NPC-specific tree updates', () => {
   editNPC(0);
   assert.strictEqual(getTreeData().start.choices[0].reqItem, 'key');
   globalThis.updateTreeData = origUpdate2;
-);
+});
 test('advanced dialog choices persist after reopening editor', () => {
   moduleData.npcs = [{
     id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0,
