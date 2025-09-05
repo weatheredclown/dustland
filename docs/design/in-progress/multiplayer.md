@@ -16,5 +16,5 @@ LAN-based peer-to-peer sessions let a host share their world. A small lobby list
 
 ## Tasks
 - [ ] Prototype world-state sync over WebSockets.
-- [ ] Build a lobby screen to list and join LAN sessions.
-- [ ] Draft player-facing firewall and port-forwarding guide.
+- [x] Build a lobby screen to list and join LAN sessions.
+- [x] Draft player-facing firewall and port-forwarding guide.

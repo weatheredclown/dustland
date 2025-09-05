@@ -2094,6 +2094,9 @@ function postLoad(module) {
     };
   }
 
+  // expose procedural map action for Adventure Kit
+  module.generateMap = regen => globalThis.generateProceduralWorld?.(regen);
+
   const sage = module.npcs?.find(n => n.id === 'tape_sage');
   if (sage) sage.onMemoryTape = msg => { log('Archivist listens: ' + msg); };
 }

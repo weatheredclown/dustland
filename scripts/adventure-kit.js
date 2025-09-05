@@ -3488,8 +3488,12 @@ function playtestModule() {
 }
 
 document.getElementById('clear').onclick = clearWorld;
-document.getElementById('procGen').onclick = () => generateProceduralWorld(false);
-document.getElementById('procRegen').onclick = () => generateProceduralWorld(true);
+function runGenerate(regen) {
+  if (typeof moduleData?.generateMap === 'function') moduleData.generateMap(regen);
+  else generateProceduralWorld(regen);
+}
+document.getElementById('procGen').onclick = () => runGenerate(false);
+document.getElementById('procRegen').onclick = () => runGenerate(true);
 document.getElementById('addNPC').onclick = beginPlaceNPC;
 document.getElementById('addItem').onclick = () => {
   const onMap = document.getElementById('itemOnMap').checked;
