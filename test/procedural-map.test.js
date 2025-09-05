@@ -8,22 +8,25 @@ test('generateHeightField is deterministic', () => {
   assert.deepEqual(a, b);
 });
 
-test('generateHeightField applies radial falloff', () => {
-  const field = globalThis.generateHeightField(1, 3, 1);
-  assert(field[1][1] > field[0][0]);
+test('generateHeightField supports radial falloff', () => {
+  const base = globalThis.generateHeightField(1, 5, 1);
+  const fall = globalThis.generateHeightField(1, 5, 1, 1);
+  assert.equal(base[2][2], fall[2][2]);
+  assert.ok(fall[0][0] < base[0][0]);
 });
 
-test('heightFieldToTiles maps heights to tiles', () => {
-  globalThis.TILE = { SAND: 0, WATER: 2 };
+test('heightFieldToTiles maps heights to elevation types', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, BRUSH: 3, ROCK: 5 };
   const field = [
-    [0.1, 0.6],
-    [0.4, 0.8]
+    [-0.7, -0.2, 0.3, 0.8]
   ];
-  const tiles = globalThis.heightFieldToTiles(field, 0.5);
-  assert.deepEqual(tiles, [
-    [2, 0],
-    [2, 0]
-  ]);
+  const tiles = globalThis.heightFieldToTiles(field);
+  assert.deepEqual(tiles, [[
+    2, // water
+    0, // sand
+    3, // brush
+    5  // rock
+  ]]);
 });
 
 test('refineTiles smooths stray cells', () => {
@@ -52,28 +55,6 @@ test('refineTiles removes isolated land', () => {
     [2, 2, 2],
     [2, 2, 2]
   ]);
-});
-
-test('markWalls marks coast tiles', () => {
-  globalThis.TILE = { SAND: 0, WATER: 2, WALL: 6 };
-  const grid = [
-    [2, 2, 2],
-    [2, 0, 2],
-    [2, 2, 2]
-  ];
-  const withWalls = globalThis.markWalls(grid);
-  assert.equal(withWalls[1][1], 6);
-});
-
-test('markWalls leaves interior land as sand', () => {
-  globalThis.TILE = { SAND: 0, WATER: 2, WALL: 6 };
-  const grid = [
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0]
-  ];
-  const withWalls = globalThis.markWalls(grid);
-  assert.deepEqual(withWalls, grid);
 });
 
 test('connectRegionCenters builds MST', () => {
@@ -126,14 +107,14 @@ test('carveRoads draws road between centers', () => {
 });
 
 test('generateProceduralMap returns grid of requested size', () => {
-  globalThis.TILE = { SAND: 0, WATER: 2, WALL: 6, ROAD: 4 };
+  globalThis.TILE = { SAND: 0, WATER: 2, BRUSH: 3, ROCK: 5, ROAD: 4 };
   const grid = globalThis.generateProceduralMap(1, 10, 8);
   assert.equal(grid.length, 8);
   assert.equal(grid[0].length, 10);
 });
 
 test('generateProceduralMap is deterministic', () => {
-  globalThis.TILE = { SAND: 0, WATER: 2, WALL: 6, ROAD: 4 };
+  globalThis.TILE = { SAND: 0, WATER: 2, BRUSH: 3, ROCK: 5, ROAD: 4 };
   const a = globalThis.generateProceduralMap(42, 12, 12);
   const b = globalThis.generateProceduralMap(42, 12, 12);
   assert.deepEqual(a, b);

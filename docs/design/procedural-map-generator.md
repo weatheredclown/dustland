@@ -8,7 +8,7 @@
 
 ## Summary
 
-Seeded 2D map generator that layers noise and region growth to draw terrain, water, roads, walls, and ruins with our existing tile palette. The generator outputs plain JSON the engine can load directly.
+Seeded 2D map generator that layers noise and region growth to draw terrain, water, roads, and ruins with our existing tile palette. The generator outputs plain JSON the engine can load directly and exposes tuning knobs—seed, scale, and optional radial falloff—through the Adventure Kit so designers can iterate without leaving the editor.
 
 ## Goals
 
@@ -17,7 +17,7 @@ Seeded 2D map generator that layers noise and region growth to draw terrain, wat
 - Plain JavaScript implementation with globals and no build step.
 - Configurable via parameters; no external authoring required.
 - Fast enough to generate a small map (<1s) in browser or Node.
-- Uses only current tiles (terrain, water, road, wall, ruins); no new biomes.
+- Uses only current tiles (terrain, water, road, ruins); no new biomes.
 
 ## Non-Goals
 
@@ -27,8 +27,8 @@ Seeded 2D map generator that layers noise and region growth to draw terrain, wat
 
 ## Algorithm Overview
 
-1. **Height field** – Generate a Simplex-noise height map blended with a radial falloff mask to bound the play area and mark water tiles.
-2. **Tile refinement** – Grow land regions and smooth stray cells with cellular automata; mark walls along region edges.
+1. **Height field** – Generate a Simplex-noise height map, optionally subtracting a radial falloff to bias edges toward water, then convert elevations into water, sand, brush, or rock tiles.
+2. **Tile refinement** – Grow land regions and smooth stray cells with cellular automata.
 3. **Road graph** – Connect region centers with a minimum spanning tree; jitter paths with midpoint displacement or a random-walk carve.
 4. **Ruin placement** – Scatter ruin tiles using Poisson-disk sampling and eligibility rules.
 5. **Export** – Emit a JSON tile map plus road and feature metadata.
@@ -36,10 +36,10 @@ Seeded 2D map generator that layers noise and region growth to draw terrain, wat
 ## Data Flow
 
 ```
-seed → height field → tiles → regions → roads → ruins → map.json
+seed → height field → tiles → regions → roads → ruins → map data
 ```
 
-- **Inputs:** seed, config (size, thresholds, feature toggles).
+- **Inputs:** seed, config (size, scale, radial falloff, thresholds, feature toggles).
 - **Outputs:** tile grid, region list, road list, feature list.
 
 ## Research Notes
@@ -53,19 +53,21 @@ Insights pulled from accessible community tutorials and open-source repos:
 
 ## Integration
 
-- Call `generateMap(seed, config)` during startup; the engine reads the returned `map.json`.
-- Optional parameters adjust noise scale and feature counts.
+- An Adventure Kit module's `postLoad` registers a `generateMap` action so the editor's **Generate** button calls it directly, replacing the current map without loading `map.json`.
+- The Adventure Kit UI exposes seed, size, radial falloff, and feature toggles so teams can reroll maps on the fly.
+- Modules persist their seed and config so rerolls reproduce the same layout.
 - Test helpers can inject a fixed seed to validate outputs.
+- Results apply directly to the in-memory map; exporting to `map.json` is optional for saved assets.
 
 ## Implementation Tasks
 
 ### Height Field
-- [x] Implement `generateHeightField(seed, size, scale)` using Simplex noise with radial falloff.
-- [x] Convert heights to water or land tiles based on thresholds.
+- [x] Implement `generateHeightField(seed, size, scale, falloff = 0)` using Simplex noise.
+- [x] Optionally apply a radial falloff (0–1) to push shoreline tiles toward water.
+- [x] Convert heights into water, sand, brush, or rock tiles based on thresholds.
 
 ### Tile Refinement
 - [x] Smooth stray cells and grow land regions with cellular automata.
-- [x] Mark walls along region borders.
 
 ### Road Graph
 - [x] Connect region centers with a minimum spanning tree.
@@ -77,6 +79,13 @@ Insights pulled from accessible community tutorials and open-source repos:
 ### Export
 - [ ] Serialize tile grid, regions, roads, and features to `map.json`.
 
+### Adventure Kit
+- [ ] Hook generator into a module `postLoad` and extend the existing **Generate** button to call it.
+- [ ] Surface seed, size, radial falloff, and feature toggles in the Adventure Kit UI.
+- [ ] Persist seed and config so rerolls reproduce the same map.
+- [ ] Add a **Regenerate** button that rebuilds the map without refreshing.
+- [ ] Write tests to ensure deterministic regeneration through the kit.
+
 ## Risks & Mitigations
 
 - **Repetition from poor seeds:** expose reseed option; allow seed overrides.
@@ -86,7 +95,7 @@ Insights pulled from accessible community tutorials and open-source repos:
 ## Open Questions
 
 - Should we support save/load of entire map seeds for sharing?
-- Do we need finer control over wall vs. ruin density?
+- Do we need finer control over ruin density or additional biomes?
 
 ## References
 
