@@ -232,7 +232,18 @@ function initTags() {
 
 initTags();
 let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editZoneIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
-let treeData = {};
+let currentTree = {};
+function getTreeData() {
+  return currentTree;
+}
+function setTreeData(tree) {
+  currentTree = tree;
+  const treeEl = document.getElementById('npcTree');
+  if (treeEl) treeEl.value = JSON.stringify(tree, null, 2);
+  if (editNPCIdx >= 0) moduleData.npcs[editNPCIdx].tree = tree;
+}
+globalThis.getTreeData = getTreeData;
+globalThis.setTreeData = setTreeData;
 let selectedObj = null;
 const mapSelect = document.getElementById('mapSelect');
 let currentMap = 'world';
@@ -1338,7 +1349,7 @@ function addChoiceRow(container, ch = {}) {
 }
 
 function populateChoiceDropdown(sel, selected = '') {
-  const keys = Object.keys(treeData);
+  const keys = Object.keys(getTreeData());
   sel.innerHTML = '<option value=""></option><option value="[new]">[new]</option>' + keys.map(k => `<option value="${k}">${k}</option>`).join('');
   if (selected && !keys.includes(selected)) {
     sel.innerHTML += `<option value="${selected}" selected>${selected}</option>`;
@@ -1425,7 +1436,7 @@ function renderTreeEditor() {
   const wrap = document.getElementById('treeEditor');
   if (!wrap) return;
   wrap.innerHTML = '';
-  Object.entries(treeData).forEach(([id, node]) => {
+  Object.entries(getTreeData()).forEach(([id, node]) => {
     const div = document.createElement('div');
     div.className = 'node';
     div.innerHTML = `<div class="nodeHeader"><button class="btn toggle" type="button">-</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="btn delNode" type="button" title="Delete node">&#128465;</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
@@ -1457,6 +1468,7 @@ function updateTreeData() {
   const newTree = {};
   const choiceRefs = [];
   const nodeRefs = {};
+  const oldTree = getTreeData();
 
   // Build tree from editor UI. Preserve collapsed nodes by keeping previous snapshot.
   wrap.querySelectorAll('.node').forEach(nodeEl => {
@@ -1467,7 +1479,7 @@ function updateTreeData() {
 
     // If collapsed, keep previous data for this node (don’t overwrite)
     if (nodeEl.classList.contains('collapsed')) {
-      if (treeData[id]) newTree[id] = treeData[id];
+      if (oldTree[id]) newTree[id] = oldTree[id];
       return;
     }
 
@@ -1524,7 +1536,7 @@ function updateTreeData() {
         let base = slug || 'node';
         let cand = base;
         let i = 1;
-        while (newTree[cand] || treeData[cand]) { cand = base + '-' + i++; }
+        while (newTree[cand] || oldTree[cand]) { cand = base + '-' + i++; }
         if (!newTree[cand]) newTree[cand] = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
         to = cand;
         populateChoiceDropdown(toEl, to);
@@ -1603,8 +1615,7 @@ function updateTreeData() {
   } else if (newTree.imports) {
     delete newTree.imports;
   }
-  treeData = newTree;
-  document.getElementById('npcTree').value = JSON.stringify(treeData, null, 2);
+  setTreeData(newTree);
 
   // Live preview + keep "to" dropdowns in sync with current node keys
   renderDialogPreview();
@@ -1614,15 +1625,15 @@ function updateTreeData() {
 
   // 1) Choice target validation: red border if target doesn't exist
   choiceRefs.forEach(({ to, el }) => {
-    el.style.borderColor = (to && !treeData[to]) ? 'red' : '';
+    el.style.borderColor = (to && !newTree[to]) ? 'red' : '';
   });
 
   // 2) Reachability from 'start' (and 'locked' if enabled)
   const visited = new Set();
   const visit = id => {
-    if (visited.has(id) || !treeData[id]) return;
+    if (visited.has(id) || !newTree[id]) return;
     visited.add(id);
-    (treeData[id].choices || []).forEach(c => { if (c.to) visit(c.to); });
+    (newTree[id].choices || []).forEach(c => { if (c.to) visit(c.to); });
   };
   visit('start');
   if (document.getElementById('npcLocked').checked) visit('locked');
@@ -1643,7 +1654,9 @@ function updateTreeData() {
 
 function loadTreeEditor() {
   let txt = document.getElementById('npcTree').value.trim();
-  try { treeData = txt ? JSON.parse(txt) : {}; } catch (e) { treeData = {}; }
+  let tree;
+  try { tree = txt ? JSON.parse(txt) : {}; } catch (e) { tree = {}; }
+  setTreeData(tree);
   renderTreeEditor();
   updateTreeData();
 }
@@ -1657,7 +1670,8 @@ function closeDialogEditor() {
   updateTreeData();
   document.getElementById('dialogModal').classList.remove('shown');
   const dlgEl = document.getElementById('npcDialog');
-  if (!dlgEl.value.trim()) dlgEl.value = treeData.start?.text || '';
+  const tree = getTreeData();
+  if (!dlgEl.value.trim()) dlgEl.value = tree.start?.text || '';
   applyNPCChanges();
 }
 
@@ -1667,8 +1681,10 @@ function toggleQuestDialogBtn() {
 }
 
 function addNode() {
-  const id = Object.keys(treeData).length ? 'node' + Object.keys(treeData).length : 'start';
-  treeData[id] = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
+  const tree = getTreeData();
+  const id = Object.keys(tree).length ? 'node' + Object.keys(tree).length : 'start';
+  tree[id] = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
+  setTreeData(tree);
   renderTreeEditor();
   updateTreeData();
 }
@@ -1716,8 +1732,10 @@ function removeCombatTree(tree) {
 
 function onLockedToggle() {
   if (document.getElementById('npcLocked').checked) {
-    if (!treeData.start) treeData.start = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
-    if (!treeData.locked) treeData.locked = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
+    const tree = getTreeData();
+    if (!tree.start) tree.start = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
+    if (!tree.locked) tree.locked = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
+    setTreeData(tree);
     renderTreeEditor();
   }
   updateTreeData();
