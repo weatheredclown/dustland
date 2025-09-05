@@ -1485,7 +1485,7 @@ function updateTreeData() {
       let reward = '';
       if (rewardType === 'xp' && xpTxt) reward = `XP ${parseInt(xpTxt, 10)}`;
       else if (rewardType === 'scrap' && scrapTxt) reward = `SCRAP ${parseInt(scrapTxt, 10)}`;
-      else if (rewardType === 'item' && itemReward) reward = itemReward;
+      else if ((rewardType === 'item' || (!rewardType && itemReward)) && itemReward) reward = itemReward;
       const stat = chEl.querySelector('.choiceStat')?.value.trim() || '';
       const dcTxt = chEl.querySelector('.choiceDC')?.value.trim() || '';
       const dc = dcTxt ? parseInt(dcTxt, 10) : undefined;
