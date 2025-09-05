@@ -1,12 +1,22 @@
 (function(){
   globalThis.Dustland = globalThis.Dustland || {};
-  const state = { party: [], world: {}, inventory: [], flags: {}, clock: 0, quests: [], difficulty: 'normal', personas: {} };
+  const state = { party: [], world: {}, inventory: [], flags: {}, clock: 0, quests: [], difficulty: 'normal', personas: {}, effectPacks: {} };
   function getState(){ return state; }
   function updateState(fn){ if (typeof fn === 'function') fn(state); }
   function getDifficulty(){ return state.difficulty; }
   function setDifficulty(mode){ state.difficulty = mode; }
   function setPersona(id, persona){ state.personas[id] = persona; }
   function getPersona(id){ return state.personas[id]; }
+  function addEffectPack(evt, list){
+    if(!evt || !Array.isArray(list)) return;
+    state.effectPacks[evt] = list;
+    globalThis.EventBus?.on(evt, payload => {
+      globalThis.Dustland?.effects?.apply(list, payload || {});
+    });
+  }
+  function loadEffectPacks(packs){
+    if(packs) Object.entries(packs).forEach(([evt, list]) => addEffectPack(evt, list));
+  }
   function applyPersona(memberId, personaId){
     const persona = state.personas[personaId];
     if (!persona) return;
@@ -21,5 +31,5 @@
     if (typeof renderParty === 'function') renderParty();
     if (typeof updateHUD === 'function') updateHUD();
   }
-  Dustland.gameState = { getState, updateState, getDifficulty, setDifficulty, setPersona, getPersona, applyPersona };
+  Dustland.gameState = { getState, updateState, getDifficulty, setDifficulty, setPersona, getPersona, applyPersona, addEffectPack, loadEffectPacks };
 })();
