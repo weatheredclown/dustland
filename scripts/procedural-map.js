@@ -86,23 +86,26 @@ function createNoise2D(seed) {
   };
 }
 
-function generateHeightField(seed, size, scale) {
+function generateHeightField(seed, size, scale, falloff = 0) {
+  // falloff (0-1) subtracts a radial gradient to bias edges toward water
   const seedNum = typeof seed === 'string' ? hashString(seed) : seed;
   const noise2D = createNoise2D(seedNum);
   const grid = [];
-  const half = size / 2;
-  const maxDist = Math.sqrt(2) * half;
+  const center = (size - 1) / 2;
+  const maxDist = Math.sqrt(2);
   for (let y = 0; y < size; y++) {
     const row = [];
     for (let x = 0; x < size; x++) {
       const nx = x / size * scale;
       const ny = y / size * scale;
-      let v = noise2D(nx, ny) * 0.5 + 0.5;
-      const dx = x - half;
-      const dy = y - half;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const falloff = 1 - dist / maxDist;
-      v *= Math.max(0, falloff);
+      // noise2D returns roughly [-1,1]
+      let v = noise2D(nx, ny);
+      if (falloff > 0) {
+        const dx = (x - center) / center;
+        const dy = (y - center) / center;
+        const dist = Math.sqrt(dx * dx + dy * dy) / maxDist;
+        v -= falloff * dist;
+      }
       row.push(v);
     }
     grid.push(row);
@@ -110,12 +113,16 @@ function generateHeightField(seed, size, scale) {
   return grid;
 }
 
-function heightFieldToTiles(field, waterLevel) {
+function heightFieldToTiles(field) {
   const tiles = [];
   for (let y = 0; y < field.length; y++) {
     const row = [];
     for (let x = 0; x < field[y].length; x++) {
-      row.push(field[y][x] < waterLevel ? TILE.WATER : TILE.SAND);
+      const v = field[y][x];
+      if (v > 0.62) row.push(TILE.ROCK);
+      else if (v < -0.62) row.push(TILE.WATER);
+      else if (v > 0.18) row.push(TILE.BRUSH);
+      else row.push(TILE.SAND);
     }
     tiles.push(row);
   }
@@ -135,12 +142,12 @@ function refineTiles(tiles, iterations = 1) {
             const ny = y + dy;
             const nx = x + dx;
             if (ny >= 0 && ny < current.length && nx >= 0 && nx < current[y].length) {
-              if (current[ny][nx] === TILE.SAND) land++;
+              if (current[ny][nx] !== TILE.WATER) land++;
             }
           }
         }
-        if (land >= 5) next[y][x] = TILE.SAND;
-        else if (land <= 3) next[y][x] = TILE.WATER;
+        if (current[y][x] === TILE.WATER && land >= 5) next[y][x] = TILE.SAND;
+        else if (current[y][x] !== TILE.WATER && land <= 3) next[y][x] = TILE.WATER;
         else next[y][x] = current[y][x];
       }
     }
@@ -149,26 +156,6 @@ function refineTiles(tiles, iterations = 1) {
   return current;
 }
 
-function markWalls(tiles) {
-  const out = tiles.map(r => r.slice());
-  for (let y = 0; y < tiles.length; y++) {
-    for (let x = 0; x < tiles[y].length; x++) {
-      if (tiles[y][x] !== TILE.SAND) continue;
-      const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-      for (const d of dirs) {
-        const nx = x + d[0];
-        const ny = y + d[1];
-        if (ny >= 0 && ny < tiles.length && nx >= 0 && nx < tiles[y].length) {
-          if (tiles[ny][nx] === TILE.WATER) {
-            out[y][x] = TILE.WALL;
-            break;
-          }
-        }
-      }
-    }
-  }
-  return out;
-}
 
 function connectRegionCenters(centers) {
   const edges = [];
@@ -273,12 +260,11 @@ function findRegionCenters(tiles) {
   return centers;
 }
 
-function generateProceduralMap(seed, width, height, scale = 8, waterLevel = 0.5) {
+function generateProceduralMap(seed, width, height, scale = 4, falloff = 0) {
   const size = Math.max(width, height);
-  let field = generateHeightField(seed, size, scale);
-  let tiles = heightFieldToTiles(field, waterLevel);
+  let field = generateHeightField(seed, size, scale, falloff);
+  let tiles = heightFieldToTiles(field);
   tiles = refineTiles(tiles, 3);
-  tiles = markWalls(tiles);
   const centers = findRegionCenters(tiles);
   const edges = connectRegionCenters(centers);
   carveRoads(tiles, centers, edges, seed);
@@ -288,7 +274,6 @@ function generateProceduralMap(seed, width, height, scale = 8, waterLevel = 0.5)
 globalThis.generateHeightField = generateHeightField;
 globalThis.heightFieldToTiles = heightFieldToTiles;
 globalThis.refineTiles = refineTiles;
-globalThis.markWalls = markWalls;
 globalThis.connectRegionCenters = connectRegionCenters;
 globalThis.carveRoads = carveRoads;
 globalThis.generateProceduralMap = generateProceduralMap;
