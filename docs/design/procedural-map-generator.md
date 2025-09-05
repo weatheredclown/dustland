@@ -64,7 +64,7 @@ Insights pulled from accessible community tutorials and open-source repos:
 - [x] Convert heights to water or land tiles based on thresholds.
 
 ### Tile Refinement
-- [ ] Smooth stray cells and grow land regions with cellular automata.
+- [x] Smooth stray cells and grow land regions with cellular automata.
 - [ ] Mark walls along region borders.
 
 ### Road Graph
