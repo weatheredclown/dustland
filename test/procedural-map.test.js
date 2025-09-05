@@ -87,9 +87,10 @@ test('carveRoads draws road between centers', () => {
   globalThis.TILE = { SAND: 0, ROAD: 4 };
   const size = 5;
   const tiles = Array.from({ length: size }, () => Array(size).fill(0));
+  const field = Array.from({ length: size }, () => Array(size).fill(0));
   const centers = [{ x: 0, y: 0 }, { x: 4, y: 4 }];
   const edges = [[0, 1]];
-  const roaded = globalThis.carveRoads(tiles, centers, edges, 1);
+  const roaded = globalThis.carveRoads(tiles, centers, edges, field, 1);
   assert.equal(roaded[0][0], 4);
   assert.equal(roaded[4][4], 4);
   const queue = [[0, 0]];
@@ -111,6 +112,25 @@ test('carveRoads draws road between centers', () => {
     }
   }
   assert.ok(found);
+});
+
+test('carveRoads favors contour paths', () => {
+  globalThis.TILE = { SAND: 0, ROAD: 4, WATER: 2 };
+  const tiles = [
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0]
+  ];
+  const field = [
+    [1, 1, 1],
+    [0.5, 0.5, 0.5],
+    [0, 0, 0]
+  ];
+  const centers = [{ x: 0, y: 0 }, { x: 2, y: 0 }];
+  const edges = [[0, 1]];
+  const roaded = globalThis.carveRoads(tiles, centers, edges, field, 1);
+  assert.equal(roaded[0][1], 4);
+  assert.notEqual(roaded[1][0], 4);
 });
 
 test('scatterRuins respects spacing and terrain', () => {

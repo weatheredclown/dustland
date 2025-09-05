@@ -191,34 +191,46 @@ function connectRegionCenters(centers) {
   return edges;
 }
 
-function carveRoads(tiles, centers, edges, seed = 1) {
+function carveRoads(tiles, centers, edges, field, seed = 1) {
   const rand = mulberry32(typeof seed === 'string' ? hashString(seed) : seed);
   const h = tiles.length;
   const w = tiles[0].length;
+  const weight = 10;
   for (const [ai, bi] of edges) {
     let x0 = Math.round(centers[ai].x);
     let y0 = Math.round(centers[ai].y);
     const x1 = Math.round(centers[bi].x);
     const y1 = Math.round(centers[bi].y);
-    let dx = Math.abs(x1 - x0);
-    let sx = x0 < x1 ? 1 : -1;
-    let dy = -Math.abs(y1 - y0);
-    let sy = y0 < y1 ? 1 : -1;
-    let err = dx + dy;
-    while (x0 !== x1 || y0 !== y1) {
+    let steps = 0;
+    const max = w * h;
+    while ((x0 !== x1 || y0 !== y1) && steps++ < max) {
       tiles[y0][x0] = TILE.ROAD;
+      const opts = [];
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          const nx = x0 + dx;
+          const ny = y0 + dy;
+          if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+          if (tiles[ny][nx] === TILE.WATER) continue;
+          const elev = Math.abs(field[ny][nx] - field[y0][x0]) * weight;
+          const dist = Math.abs(x1 - nx) + Math.abs(y1 - ny);
+          opts.push({ score: elev + dist + rand() * 0.01, nx, ny });
+        }
+      }
+      if (!opts.length) break;
+      opts.sort((a, b) => a.score - b.score);
+      const px = x0;
+      const py = y0;
+      x0 = opts[0].nx;
+      y0 = opts[0].ny;
+      if (px !== x0 && py !== y0) {
+        tiles[py][x0] = TILE.ROAD;
+      }
       if (rand() < 0.3) {
         const jx = Math.max(0, Math.min(w - 1, x0 + (rand() < 0.5 ? -1 : 1)));
         const jy = Math.max(0, Math.min(h - 1, y0 + (rand() < 0.5 ? -1 : 1)));
         tiles[jy][jx] = TILE.ROAD;
-      }
-      const e2 = 2 * err;
-      const px = x0;
-      const py = y0;
-      if (e2 >= dy) { err += dy; x0 += sx; }
-      if (e2 <= dx) { err += dx; y0 += sy; }
-      if (px !== x0 && py !== y0) {
-        tiles[py][x0] = TILE.ROAD;
       }
     }
     tiles[y0][x0] = TILE.ROAD;
@@ -314,7 +326,7 @@ function generateProceduralMap(seed, width, height, scale = 4, falloff = 0) {
   tiles = refineTiles(tiles, 3);
   const centers = findRegionCenters(tiles);
   const edges = connectRegionCenters(centers);
-  carveRoads(tiles, centers, edges, seed);
+  carveRoads(tiles, centers, edges, field, seed);
   scatterRuins(tiles, seed);
   return tiles.slice(0, height).map(r => r.slice(0, width));
 }
