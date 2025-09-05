@@ -320,6 +320,7 @@ function advanceDialog(stateObj, choiceIdx){
 const onceChoices = globalThis.usedOnceChoices || (globalThis.usedOnceChoices = new Set());
 
 function setPortrait(portEl, npc){
+  if(!portEl) return;
   if(!npc.portraitSheet){
     portEl.style.backgroundImage = '';
     portEl.style.background = npc.color || '#274227';

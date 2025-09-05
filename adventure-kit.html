@@ -480,12 +480,14 @@
           <label>Description<textarea id="itemDesc" rows="2"></textarea></label>
           <label>Tags<input id="itemTags" list="tagOptions" /></label>
           <datalist id="tagOptions"></datalist>
-          <label>Map<input id="itemMap" value="world" /></label>
-          <div class="xy">
+          <label><input id="itemOnMap" type="checkbox"/> On Map</label>
+          <label id="itemMapWrap">Map<input id="itemMap" placeholder="world" /></label>
+          <div class="xy" id="itemXY">
             <label>X<input id="itemX" type="number" min="0" /></label>
             <label>Y<input id="itemY" type="number" min="0" /></label>
           </div>
           <button class="btn" type="button" id="itemPick" title="Click on the map to choose location">Select on Map</button>
+          <button class="btn" type="button" id="itemRemove" style="display:none">Remove from World</button>
           <div id="modsWrap" style="display:none">
             <label>Mods</label>
             <div id="modBuilder"></div>
@@ -683,15 +685,6 @@
       </div><!-- /.tabpanes -->
     </aside>
   </div><!-- /.ak-layout -->
-  <div id="confirmModal" class="modal">
-    <div class="card" style="padding:12px;text-align:center">
-      <div id="confirmText" style="margin-bottom:8px"></div>
-      <div>
-        <button class="btn" id="confirmYes">Yes</button>
-        <button class="btn" id="confirmNo">Cancel</button>
-      </div>
-    </div>
-  </div>
   <div id="dialogModal" class="modal">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -714,6 +707,15 @@
       <div style="margin-top:8px;text-align:right">
         <button class="btn" type="button" id="wizardPrev">Back</button>
         <button class="btn" type="button" id="wizardNext">Next</button>
+      </div>
+    </div>
+  </div>
+  <div id="confirmModal" class="modal">
+    <div class="card" style="padding:12px;text-align:center">
+      <div id="confirmText" style="margin-bottom:8px"></div>
+      <div>
+        <button class="btn" id="confirmYes">Yes</button>
+        <button class="btn" id="confirmNo">Cancel</button>
       </div>
     </div>
   </div>

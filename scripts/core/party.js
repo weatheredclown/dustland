@@ -60,6 +60,12 @@ class Character {
         }
       }
     }
+    const persona = globalThis.Dustland?.gameState?.getPersona?.(this.persona);
+    if(persona && persona.mods){
+      for(const stat in persona.mods){
+        this._bonus[stat]=(this._bonus[stat]||0)+persona.mods[stat];
+      }
+    }
   }
   applyCombatMods(){
     this.adrGenMod = 1;

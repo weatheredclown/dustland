@@ -76,10 +76,14 @@ global.NanoPalette = {
   enabled: true
 };
 
+globalThis.party = { x: 0, y: 0 };
+vm.runInThisContext('var party = globalThis.party;');
+
 const files = [
   '../scripts/event-bus.js',
   '../scripts/core/movement.js',
   '../scripts/dustland-core.js',
+  '../scripts/core/dialog.js',
   '../scripts/adventure-kit.js'
 ];
 for (const f of files) {
@@ -159,6 +163,26 @@ test('zones round-trip through saveModule', () => {
   globalThis.validateSpawns = origValidate;
 });
 
+test('playtestModule includes zones', () => {
+  applyLoadedModule({ seed: 1 });
+  document.getElementById('zoneMap').value = 'world';
+  document.getElementById('zoneX').value = 0;
+  document.getElementById('zoneY').value = 0;
+  document.getElementById('zoneW').value = 1;
+  document.getElementById('zoneH').value = 1;
+  addZone();
+  let saved = '';
+  const origLS = global.localStorage;
+  global.localStorage = { setItem: (k,v) => { saved = v; }, getItem: () => null, removeItem: () => {} };
+  const origOpen = global.open;
+  global.open = () => {};
+  playtestModule();
+  const json = JSON.parse(saved);
+  assert.deepStrictEqual(json.zones, [{ map: 'world', x: 0, y: 0, w: 1, h: 1 }]);
+  global.localStorage = origLS;
+  global.open = origOpen;
+});
+
 test('custom item tags update tag options', () => {
   const dl = document.getElementById('tagOptions');
   assert.ok(dl.innerHTML.includes('value="key"'));
@@ -168,6 +192,18 @@ test('custom item tags update tag options', () => {
   document.getElementById('itemTags').value = 'mystic';
   addItem();
   assert.ok(dl.innerHTML.includes('value="mystic"'));
+  moduleData.items = [];
+});
+
+test('can add item without map placement', () => {
+  moduleData.items = [];
+  startNewItem();
+  document.getElementById('itemName').value = 'Reward';
+  document.getElementById('itemId').value = 'reward';
+  document.getElementById('itemMap').value = '';
+  addItem();
+  assert.strictEqual(moduleData.items.length, 1);
+  assert.ok(!('map' in moduleData.items[0]));
   moduleData.items = [];
 });
 
@@ -545,6 +581,13 @@ test('node delete uses confirm dialog', () => {
   globalThis.updateTreeData = origUpdate;
 });
 
+test('confirm modal renders after dialog modal', async () => {
+  const html = await fs.readFile('adventure-kit.html', 'utf8');
+  const confirmIdx = html.indexOf('id="confirmModal"');
+  const dialogIdx = html.indexOf('id="dialogModal"');
+  assert.ok(confirmIdx > dialogIdx);
+});
+
 test('closing dialog editor persists dialog changes', () => {
   moduleData.npcs = [{
     id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0,
@@ -861,6 +904,17 @@ test('updateTreeData captures NPC lock effects', () => {
     { effect: 'lockNPC', npcId: 'chest' },
     { effect: 'unlockNPC', npcId: 'door' }
   ]);
+});
+
+test('startSpoofPlayback shows locked node when npc locked', () => {
+  globalThis.closeDialog = () => {};
+  const tree = {
+    locked: { text: 'locked', choices: [{ label: '(Leave)', to: 'bye' }] },
+    start: { text: 'start', choices: [{ label: '(Leave)', to: 'bye' }] }
+  };
+  startSpoofPlayback(tree, {}, {}, true);
+  assert.strictEqual(document.getElementById('dialogText').textContent, 'locked');
+  stopSpoofPlayback();
 });
 test('updateTreeData captures NPC color effects', () => {
   treeData = {};

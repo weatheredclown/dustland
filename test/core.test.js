@@ -272,6 +272,23 @@ test('applyModule assigns NPC loops', () => {
   assert.deepStrictEqual(NPCS[0].loop, [{x:0,y:0},{x:1,y:0}]);
 });
 
+test('applyModule preserves locked npc state', () => {
+  NPCS.length = 0;
+  const world = [[7]];
+  const tree = {
+    locked: { text: 'locked', choices: [{ label: '(Leave)', to: 'bye' }] },
+    start: { text: 'open', choices: [{ label: '(Leave)', to: 'bye' }] },
+    bye: { text: '', choices: [] }
+  };
+  applyModule({ world, npcs: [{ id: 'ch', map: 'world', x: 0, y: 0, name: 'Chest', locked: true, tree }] });
+  const npc = NPCS[0];
+  assert.strictEqual(npc.locked, true);
+  openDialog(npc);
+  assert.strictEqual(textEl.textContent, 'locked');
+  closeDialog();
+  NPCS.length = 0;
+});
+
 test('applyModule reports successful load', () => {
   const logs = [];
   const origLog = global.log;
@@ -1002,14 +1019,24 @@ test('hidden NPC reveals after visit condition met', () => {
   Object.keys(worldFlags).forEach(k => delete worldFlags[k]);
   state.map = 'world';
   NPCS.length = 0;
-  applyModule({ npcs: [ { id: 'herm', map: 'world', x: 1, y: 1, name: 'Herm', hidden: true, reveal: { flag: 'visits@world@1,1', op: '>=', value: 2 } } ] });
+  const tree = {
+    locked: { text: 'locked', choices: [{ label: '(Leave)', to: 'bye' }] },
+    start: { text: '', choices: [{ label: '(Leave)', to: 'bye' }] },
+    bye: { text: '', choices: [] }
+  };
+  applyModule({ npcs: [ { id: 'herm', map: 'world', x: 1, y: 1, name: 'Herm', locked: true, tree, hidden: true, reveal: { flag: 'visits@world@1,1', op: '>=', value: 2 } } ] });
   assert.strictEqual(NPCS.length, 0);
   setPartyPos(1,1);
   assert.strictEqual(NPCS.length, 0);
   setPartyPos(0,0);
   setPartyPos(1,1);
   assert.strictEqual(NPCS.length, 1);
-  assert.strictEqual(NPCS[0].id, 'herm');
+  const herm = NPCS[0];
+  assert.strictEqual(herm.id, 'herm');
+  openDialog(herm);
+  assert.strictEqual(textEl.textContent, 'locked');
+  closeDialog();
+  NPCS.length = 0;
 });
 
 test('dialog choices can be gated by world flags', () => {

@@ -15,7 +15,11 @@
     const prev = member.persona;
     if (prev && prev !== personaId) globalThis.EventBus?.emit('persona:unequip', { memberId, personaId: prev });
     member.persona = personaId;
+    if (typeof member.applyEquipmentStats === 'function') member.applyEquipmentStats();
+    if (typeof member.applyCombatMods === 'function') member.applyCombatMods();
     globalThis.EventBus?.emit('persona:equip', { memberId, personaId });
+    if (typeof renderParty === 'function') renderParty();
+    if (typeof updateHUD === 'function') updateHUD();
   }
   Dustland.gameState = { getState, updateState, getDifficulty, setDifficulty, setPersona, getPersona, applyPersona };
 })();

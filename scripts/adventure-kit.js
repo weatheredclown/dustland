@@ -963,7 +963,7 @@ function buildSpoofItemsFromPanel() {
   return out;
 }
 
-function startSpoofPlayback(tree, flags, items) {
+function startSpoofPlayback(tree, flags, items, locked = false) {
   if (!_origFlagValue) _origFlagValue = globalThis.flagValue;
   if (!_origCloseDialog) _origCloseDialog = globalThis.closeDialog;
   if (!_origHasItem) _origHasItem = globalThis.hasItem;
@@ -986,6 +986,7 @@ function startSpoofPlayback(tree, flags, items) {
     _origCloseDialog();
   };
   const npc = { id: 'ack_preview', map: state.map, x: party.x, y: party.y, color: '#9ef7a0', name: 'Preview', title: '', desc: '', tree };
+  if (locked && tree && tree.locked) npc.locked = true;
   openDialog(npc, 'start');
 }
 function stopSpoofPlayback() {
@@ -1001,7 +1002,8 @@ function playInGameWithSpoof() {
   let tree = null; try { tree = JSON.parse(txt); } catch (e) { alert('Invalid tree JSON'); return; }
   const flags = buildSpoofFlagsFromPanel() || parseSpoofFlags(document.getElementById('spoofFlags').value);
   const items = buildSpoofItemsFromPanel() || {};
-  startSpoofPlayback(tree, flags, items);
+  const locked = document.getElementById('npcLocked')?.checked;
+  startSpoofPlayback(tree, flags, items, locked);
 }
 const ADV_HTML = {
   reward: `<label>Reward<select class="choiceRewardType"><option value=""></option><option value="xp">XP</option><option value="scrap">Scrap</option><option value="item">Item</option></select>
@@ -2100,6 +2102,18 @@ function updateUseWrap() {
   document.getElementById('itemBoostDurWrap').style.display = boost ? 'block' : 'none';
   document.getElementById('itemUseWrap').style.display = type ? 'block' : 'none';
 }
+function updateItemMapWrap() {
+  const onMap = document.getElementById('itemOnMap').checked;
+  const mapWrap = document.getElementById('itemMapWrap');
+  const xy = document.getElementById('itemXY');
+  const pick = document.getElementById('itemPick');
+  const remove = document.getElementById('itemRemove');
+  if (mapWrap) mapWrap.style.display = onMap ? 'block' : 'none';
+  if (xy) xy.style.display = onMap ? 'flex' : 'none';
+  if (pick) pick.style.display = onMap ? 'inline-block' : 'none';
+  if (remove) remove.style.display = onMap ? 'inline-block' : 'none';
+  if (!onMap) document.getElementById('itemMap').value = '';
+}
 function startNewItem() {
   editItemIdx = -1;
   document.getElementById('itemName').value = '';
@@ -2107,9 +2121,10 @@ function startNewItem() {
   document.getElementById('itemType').value = '';
   document.getElementById('itemDesc').value = '';
   document.getElementById('itemTags').value = '';
-  document.getElementById('itemMap').value = 'world';
+  document.getElementById('itemMap').value = '';
   document.getElementById('itemX').value = 0;
   document.getElementById('itemY').value = 0;
+  document.getElementById('itemOnMap').checked = false;
   updateModsWrap();
   loadMods({});
   document.getElementById('itemValue').value = 0;
@@ -2121,6 +2136,7 @@ function startNewItem() {
   document.getElementById('itemBoostDuration').value = 0;
   document.getElementById('itemUse').value = '';
   updateUseWrap();
+  updateItemMapWrap();
   document.getElementById('addItem').textContent = 'Add Item';
   document.getElementById('cancelItem').style.display = 'none';
   document.getElementById('delItem').style.display = 'none';
@@ -2150,7 +2166,8 @@ function addItem() {
   const tags = document.getElementById('itemTags').value.split(',').map(t=>t.trim()).filter(Boolean);
   collectKnownTags(tags);
   updateTagOptions();
-  const map = document.getElementById('itemMap').value.trim() || 'world';
+  const onMap = document.getElementById('itemOnMap').checked;
+  const map = onMap ? document.getElementById('itemMap').value.trim() : '';
   const x = parseInt(document.getElementById('itemX').value, 10) || 0;
   const y = parseInt(document.getElementById('itemY').value, 10) || 0;
   const isEquip = ['weapon', 'armor', 'trinket'].includes(type);
@@ -2175,7 +2192,12 @@ function addItem() {
   }
   const useText = document.getElementById('itemUse').value.trim();
   if (use && useText) use.text = useText;
-  const item = { id, name, desc, type, tags, map, x, y, mods, value, use, equip };
+  const item = { id, name, desc, type, tags, mods, value, use, equip };
+  if (onMap && map) {
+    item.map = map;
+    item.x = x;
+    item.y = y;
+  }
   if (editItemIdx >= 0) {
     moduleData.items[editItemIdx] = item;
   } else {
@@ -2204,10 +2226,29 @@ function cancelItem() {
   drawInterior();
   updateCursor();
 }
+
+function removeItemFromWorld() {
+  document.getElementById('itemOnMap').checked = false;
+  document.getElementById('itemMap').value = '';
+  if (editItemIdx >= 0) {
+    const it = moduleData.items[editItemIdx];
+    delete it.map;
+    delete it.x;
+    delete it.y;
+    if (selectedObj && selectedObj.type === 'item' && selectedObj.obj === it) {
+      selectedObj = null;
+    }
+    renderItemList();
+    drawWorld();
+  }
+  updateItemMapWrap();
+}
 function editItem(i) {
   const it = moduleData.items[i];
-  showMap(it.map);
-  focusMap(it.x, it.y);
+  if (it.map) {
+    showMap(it.map);
+    focusMap(it.x, it.y);
+  }
   editItemIdx = i;
   document.getElementById('itemName').value = it.name;
   document.getElementById('itemId').value = it.id;
@@ -2216,9 +2257,11 @@ function editItem(i) {
   collectKnownTags(it.tags || []);
   updateTagOptions();
   document.getElementById('itemTags').value = (it.tags || []).join(',');
-  document.getElementById('itemMap').value = it.map;
-  document.getElementById('itemX').value = it.x;
-  document.getElementById('itemY').value = it.y;
+  document.getElementById('itemMap').value = it.map || '';
+  document.getElementById('itemX').value = it.x || 0;
+  document.getElementById('itemY').value = it.y || 0;
+  document.getElementById('itemOnMap').checked = !!it.map;
+  updateItemMapWrap();
   updateModsWrap();
   loadMods(it.mods);
   document.getElementById('itemValue').value = it.value || 0;
@@ -2261,7 +2304,10 @@ function editItem(i) {
 function renderItemList() {
   const list = document.getElementById('itemList');
   const items = moduleData.items.map((it, i) => ({ it, i })).sort((a, b) => a.it.name.localeCompare(b.it.name));
-  list.innerHTML = items.map(({ it, i }) => `<div data-idx="${i}">${it.name} @${it.map} (${it.x},${it.y})</div>`).join('');
+  list.innerHTML = items.map(({ it, i }) => {
+    const loc = it.map ? ` @${it.map} (${it.x},${it.y})` : '';
+    return `<div data-idx="${i}">${it.name}${loc}</div>`;
+  }).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editItem(parseInt(div.dataset.idx, 10)));
   refreshChoiceDropdowns();
   renderProblems();
@@ -3356,15 +3402,23 @@ function playtestModule() {
     const { map, ...rest } = e;
     (enc[map] ||= []).push(rest);
   });
-  const data = { ...moduleData, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints };
+  const zones = moduleData.zones ? moduleData.zones.map(z => ({ ...z })) : [];
+  const data = { ...moduleData, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints, zones };
   localStorage.setItem(PLAYTEST_KEY, JSON.stringify(data));
   window.open('dustland.html?ack-player=1#play', '_blank');
 }
 
 document.getElementById('clear').onclick = clearWorld;
 document.getElementById('addNPC').onclick = beginPlaceNPC;
-document.getElementById('addItem').onclick = () => { if (editItemIdx >= 0) addItem(); else beginPlaceItem(); };
+document.getElementById('addItem').onclick = () => {
+  const onMap = document.getElementById('itemOnMap').checked;
+  const mapVal = document.getElementById('itemMap').value.trim();
+  if (editItemIdx >= 0 || !onMap || !mapVal) addItem(); else beginPlaceItem();
+};
 document.getElementById('newItem').onclick = startNewItem;
+document.getElementById('itemMap').addEventListener('input', updateItemMapWrap);
+document.getElementById('itemOnMap').addEventListener('change', updateItemMapWrap);
+document.getElementById('itemRemove').onclick = removeItemFromWorld;
 document.getElementById('newNPC').onclick = startNewNPC;
 document.getElementById('newBldg').onclick = startNewBldg;
 document.getElementById('newQuest').onclick = startNewQuest;
