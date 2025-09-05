@@ -408,6 +408,11 @@ function applyModule(data = {}, options = {}) {
     });
   }
 
+  // Effect packs
+  if (moduleData.effectPacks && globalThis.Dustland?.gameState?.loadEffectPacks) {
+    globalThis.Dustland.gameState.loadEffectPacks(moduleData.effectPacks);
+  }
+
   // Items
   if (typeof ITEMS !== 'undefined' && moduleData.items) {
     moduleData.items.forEach(it => {

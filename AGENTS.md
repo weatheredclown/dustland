@@ -28,6 +28,7 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 
 ## Documentation
 - Update README files or inline comments when behavior or APIs change.
+- Avoid referencing features that do not yet exist in the codebase; keep speculative ideas in design docs.
 - Extend this file whenever new best practices emerge during development.
 
 ## Design documentation

@@ -60,7 +60,7 @@
 - [ ] Make rare-spice cooking recipes worth the effort
 - [ ] Add more heartfelt encounters like the singing mutant
 - [ ] Provide sound cues for cracked stone hiding caches
-- [ ] Improve firewall guidance for LAN co-op setup
+- [x] Draft multiplayer co-op design doc
 - [ ] Fix cat companion pathfinding on ladders
 - [x] Add a warning meter before generators overload
 - [ ] Dim the nighttime glow of glass shard collectibles
