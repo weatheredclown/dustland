@@ -1054,6 +1054,16 @@ test('dialog choices can be gated by world flags', () => {
   assert.strictEqual(choicesEl.children.length, 2);
   closeDialog();
 });
+
+test('resetAll clears world flags', () => {
+  Object.keys(worldFlags).forEach(k => delete worldFlags[k]);
+  worldFlags.demo = { count: 1, time: Date.now() };
+  const origOpen = global.openCreator;
+  global.openCreator = () => {};
+  resetAll();
+  global.openCreator = origOpen;
+  assert.strictEqual(Object.keys(worldFlags).length, 0);
+});
 test('dialog choices can be gated by party flags', () => {
   party.flags = {};
   state.map = 'world';
