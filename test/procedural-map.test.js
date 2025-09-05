@@ -53,3 +53,25 @@ test('refineTiles removes isolated land', () => {
     [2, 2, 2]
   ]);
 });
+
+test('markWalls marks coast tiles', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, WALL: 6 };
+  const grid = [
+    [2, 2, 2],
+    [2, 0, 2],
+    [2, 2, 2]
+  ];
+  const withWalls = globalThis.markWalls(grid);
+  assert.equal(withWalls[1][1], 6);
+});
+
+test('markWalls leaves interior land as sand', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, WALL: 6 };
+  const grid = [
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0]
+  ];
+  const withWalls = globalThis.markWalls(grid);
+  assert.deepEqual(withWalls, grid);
+});
