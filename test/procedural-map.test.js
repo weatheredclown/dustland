@@ -76,6 +76,13 @@ test('connectRegionCenters handles single region', () => {
   assert.deepEqual(edges, []);
 });
 
+test('findRegionCenters subdivides large landmass', () => {
+  globalThis.TILE = { WATER: 2 };
+  const tiles = Array.from({ length: 4 }, () => Array(4).fill(1));
+  const centers = globalThis.findRegionCenters(tiles);
+  assert.ok(centers.length > 1);
+});
+
 test('carveRoads draws road between centers', () => {
   globalThis.TILE = { SAND: 0, ROAD: 4 };
   const size = 5;
@@ -118,4 +125,16 @@ test('generateProceduralMap is deterministic', () => {
   const a = globalThis.generateProceduralMap(42, 12, 12);
   const b = globalThis.generateProceduralMap(42, 12, 12);
   assert.deepEqual(a, b);
+});
+
+test('generateProceduralMap adds roads on single land region', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, BRUSH: 3, ROCK: 5, ROAD: 4 };
+  const grid = globalThis.generateProceduralMap(2, 16, 16, 4, 0);
+  let roads = 0;
+  for (const row of grid) {
+    for (const t of row) {
+      if (t === 4) roads++;
+    }
+  }
+  assert.ok(roads > 0);
 });

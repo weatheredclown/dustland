@@ -235,7 +235,7 @@ function findRegionCenters(tiles) {
   const h = tiles.length;
   const w = tiles[0].length;
   const seen = Array.from({ length: h }, () => Array(w).fill(false));
-  const centers = [];
+  let centers = [];
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       if (tiles[y][x] === TILE.WATER || seen[y][x]) continue;
@@ -257,6 +257,29 @@ function findRegionCenters(tiles) {
       centers.push({ x: sx / count, y: sy / count });
     }
   }
+  if (centers.length < 2) {
+    const hw = Math.floor(w / 2);
+    const hh = Math.floor(h / 2);
+    const quads = [
+      [0, 0, hw, hh],
+      [hw, 0, w, hh],
+      [0, hh, hw, h],
+      [hw, hh, w, h]
+    ];
+    const extra = [];
+    for (const [x0, y0, x1, y1] of quads) {
+      let sx = 0, sy = 0, count = 0;
+      for (let yy = y0; yy < y1; yy++) {
+        for (let xx = x0; xx < x1; xx++) {
+          if (tiles[yy][xx] !== TILE.WATER) {
+            sx += xx; sy += yy; count++;
+          }
+        }
+      }
+      if (count > 0) extra.push({ x: sx / count, y: sy / count });
+    }
+    if (extra.length > 1) centers = extra;
+  }
   return centers;
 }
 
@@ -274,6 +297,7 @@ function generateProceduralMap(seed, width, height, scale = 4, falloff = 0) {
 globalThis.generateHeightField = generateHeightField;
 globalThis.heightFieldToTiles = heightFieldToTiles;
 globalThis.refineTiles = refineTiles;
+globalThis.findRegionCenters = findRegionCenters;
 globalThis.connectRegionCenters = connectRegionCenters;
 globalThis.carveRoads = carveRoads;
 globalThis.generateProceduralMap = generateProceduralMap;
