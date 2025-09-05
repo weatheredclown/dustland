@@ -75,3 +75,22 @@ test('markWalls leaves interior land as sand', () => {
   const withWalls = globalThis.markWalls(grid);
   assert.deepEqual(withWalls, grid);
 });
+
+test('connectRegionCenters builds MST', () => {
+  const centers = [
+    { x: 0, y: 0 },
+    { x: 10, y: 0 },
+    { x: 0, y: 10 }
+  ];
+  const edges = globalThis.connectRegionCenters(centers);
+  edges.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  assert.deepEqual(edges, [
+    [0, 1],
+    [0, 2]
+  ]);
+});
+
+test('connectRegionCenters handles single region', () => {
+  const edges = globalThis.connectRegionCenters([{ x: 1, y: 1 }]);
+  assert.deepEqual(edges, []);
+});
