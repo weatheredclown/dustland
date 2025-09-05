@@ -6,11 +6,21 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
+    if: "!startsWith(github.event.head_commit.message, 'chore: bump version')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -19,3 +29,5 @@ jobs:
       - run: npm test
       - run: node scripts/presubmit.js
       - run: npm run lint
+      - run: node scripts/version-bump.js
+        if: github.event_name == 'push'
