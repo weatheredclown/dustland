@@ -324,11 +324,14 @@ function generateProceduralMap(seed, width, height, scale = 4, falloff = 0) {
   let field = generateHeightField(seed, size, scale, falloff);
   let tiles = heightFieldToTiles(field);
   tiles = refineTiles(tiles, 3);
+  // Crop to requested dimensions before finding centers so roads stay in bounds
+  tiles = tiles.slice(0, height).map(r => r.slice(0, width));
+  field = field.slice(0, height).map(r => r.slice(0, width));
   const centers = findRegionCenters(tiles);
   const edges = connectRegionCenters(centers);
   carveRoads(tiles, centers, edges, field, seed);
   scatterRuins(tiles, seed);
-  return tiles.slice(0, height).map(r => r.slice(0, width));
+  return tiles;
 }
 
 globalThis.generateHeightField = generateHeightField;
