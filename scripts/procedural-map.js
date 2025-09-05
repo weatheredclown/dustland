@@ -264,7 +264,7 @@ function scatterRuins(tiles, seed = 1, radius = 3) {
     tiles[y][x] = TILE.RUIN;
     ruins.push({ x, y });
   }
-  return tiles;
+  return { tiles, ruins };
 }
 
 function findRegionCenters(tiles) {
@@ -319,16 +319,27 @@ function findRegionCenters(tiles) {
   return centers;
 }
 
+async function exportMap(data, path = 'map.json') {
+  if (typeof window !== 'undefined') {
+    console.warn('exportMap requires Node.js');
+    return;
+  }
+  const fs = await import('node:fs');
+  fs.writeFileSync(path, JSON.stringify(data));
+}
+
 function generateProceduralMap(seed, width, height, scale = 4, falloff = 0) {
   const size = Math.max(width, height);
   let field = generateHeightField(seed, size, scale, falloff);
   let tiles = heightFieldToTiles(field);
   tiles = refineTiles(tiles, 3);
+  tiles = tiles.slice(0, height).map(r => r.slice(0, width));
+  field = field.slice(0, height).map(r => r.slice(0, width));
   const centers = findRegionCenters(tiles);
   const edges = connectRegionCenters(centers);
   carveRoads(tiles, centers, edges, field, seed);
-  scatterRuins(tiles, seed);
-  return tiles.slice(0, height).map(r => r.slice(0, width));
+  const { tiles: withRuins, ruins } = scatterRuins(tiles, seed);
+  return { tiles: withRuins, regions: centers, roads: edges, features: { ruins } };
 }
 
 globalThis.generateHeightField = generateHeightField;
@@ -338,5 +349,6 @@ globalThis.findRegionCenters = findRegionCenters;
 globalThis.connectRegionCenters = connectRegionCenters;
 globalThis.carveRoads = carveRoads;
 globalThis.scatterRuins = scatterRuins;
+globalThis.exportMap = exportMap;
 globalThis.generateProceduralMap = generateProceduralMap;
 
