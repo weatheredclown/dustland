@@ -60,7 +60,7 @@ Insights pulled from accessible community tutorials and open-source repos:
 ## Implementation Tasks
 
 ### Height Field
-- [ ] Implement `generateHeightField(seed, size, scale)` using Simplex noise with radial falloff.
+- [x] Implement `generateHeightField(seed, size, scale)` using Simplex noise with radial falloff.
 - [ ] Convert heights to water or land tiles based on thresholds.
 
 ### Tile Refinement
