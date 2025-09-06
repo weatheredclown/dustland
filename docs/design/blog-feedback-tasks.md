@@ -53,9 +53,9 @@
 - [ ] Let players annotate map grid tiles
 - [ ] Add more defensive structures for outposts beyond turrets
 - [ ] Taper late-game crafting cost spikes in the scrap economy
-- [ ] Stop the compass from pointing to hidden quests when navigation is off
+- [x] Stop the compass from pointing to hidden quests when navigation is off
 - [x] Design additional unique creatures beyond the giant glass scorpion
-- [ ] Persist pinned quests across sessions
+- [x] Persist pinned quests across sessions
 - [x] Publish roadmap blog posts alongside hotfixes
 - [ ] Create craftable protective tarps for solar panels
 - [ ] Make rare-spice cooking recipes worth the effort

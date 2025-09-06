@@ -8,6 +8,12 @@
     (parent || document.body).appendChild(el);
     return {
       update(pos, target){
+        const cfg = globalThis.ACK?.config?.navigation || {};
+        if (cfg.enabled === false && target?.hidden) {
+          el.style.display = 'none';
+          return;
+        }
+        el.style.display = '';
         const dx = (target.x || 0) - (pos.x || 0);
         const dy = (target.y || 0) - (pos.y || 0);
         const ang = Math.atan2(dy, dx);

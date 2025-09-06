@@ -591,7 +591,7 @@ function save(){
   const questData = {};
   Object.keys(quests).forEach(k=>{
     const q=quests[k];
-    questData[k]={title:q.title,desc:q.desc,status:q.status};
+    questData[k]={title:q.title,desc:q.desc,status:q.status,pinned:!!q.pinned};
   });
   const partyData = Array.from(party, p => ({
     id:p.id,name:p.name,role:p.role,lvl:p.lvl,xp:p.xp,skillPoints:p.skillPoints,stats:p.stats,equip:p.equip,hp:p.hp,ap:p.ap,map:p.map,x:p.x,y:p.y,maxHp:p.maxHp,portraitSheet:p.portraitSheet
@@ -616,7 +616,7 @@ function load(){
   Object.keys(quests).forEach(k=> delete quests[k]);
   Object.keys(d.quests||{}).forEach(id=>{
     const qd=d.quests[id];
-    const q=new Quest(id,qd.title,qd.desc); q.status=qd.status; quests[id]=q;
+    const q=new Quest(id,qd.title,qd.desc); q.status=qd.status; q.pinned=qd.pinned||false; quests[id]=q;
   });
 
   const npcFactory = createNpcFactory(d.npcs || []);

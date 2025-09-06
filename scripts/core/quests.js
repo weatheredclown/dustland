@@ -5,6 +5,7 @@ class Quest {
     this.title = title;
     this.desc = desc;
     this.status = 'available';
+    this.pinned = meta.pinned || false;
     Object.assign(this, meta);
   }
   complete() {
@@ -42,12 +43,28 @@ class QuestLog {
     const q = this.quests[id];
     if (q) q.complete();
   }
+  pin(id) {
+    const q = this.quests[id];
+    if (q && !q.pinned) {
+      q.pinned = true;
+      renderQuests();
+    }
+  }
+  unpin(id) {
+    const q = this.quests[id];
+    if (q && q.pinned) {
+      q.pinned = false;
+      renderQuests();
+    }
+  }
 }
 
 const questLog = new QuestLog();
 const quests = questLog.quests;
 function addQuest(id, title, desc, meta) { questLog.add(new Quest(id, title, desc, meta)); }
 function completeQuest(id) { questLog.complete(id); }
+function pinQuest(id) { questLog.pin(id); }
+function unpinQuest(id) { questLog.unpin(id); }
 
 // minimal core helpers so defaultQuestProcessor works even without content helpers loaded yet
 function defaultQuestProcessor(npc, nodeId) {
@@ -85,5 +102,5 @@ function defaultQuestProcessor(npc, nodeId) {
   }
 }
 
-const questExports = { Quest, QuestLog, questLog, quests, addQuest, completeQuest, defaultQuestProcessor };
+const questExports = { Quest, QuestLog, questLog, quests, addQuest, completeQuest, defaultQuestProcessor, pinQuest, unpinQuest };
 Object.assign(globalThis, questExports);
