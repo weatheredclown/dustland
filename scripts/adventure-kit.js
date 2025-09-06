@@ -1394,7 +1394,9 @@ function populateTypeDropdown(sel, selected = '') {
 }
 
 function populateItemDropdown(sel, selected = '') {
-  sel.innerHTML = '<option value=""></option>' + moduleData.items.map(it => `<option value="${it.id}">${it.id}</option>`).join('');
+  const ids = moduleData.items.map(it => it.id);
+  if (selected && !ids.includes(selected)) ids.push(selected);
+  sel.innerHTML = '<option value=""></option>' + ids.map(id => `<option value="${id}">${id}</option>`).join('');
   sel.value = selected;
 }
 
@@ -1520,10 +1522,12 @@ function updateTreeData() {
       const dc = dcTxt ? parseInt(dcTxt, 10) : undefined;
       const success = chEl.querySelector('.choiceSuccess')?.value.trim() || '';
       const failure = chEl.querySelector('.choiceFailure')?.value.trim() || '';
-      const costItem = chEl.querySelector('.choiceCostItem')?.value.trim() || '';
+      const costItemSel = chEl.querySelector('.choiceCostItem');
+      const costItem = costItemSel ? (costItemSel.value || costItemSel.dataset?.sel || '').trim() : '';
       const costSlot = chEl.querySelector('.choiceCostSlot')?.value.trim() || '';
       const costTag = chEl.querySelector('.choiceCostTag')?.value.trim() || '';
-      const reqItem = chEl.querySelector('.choiceReqItem')?.value.trim() || '';
+      const reqItemSel = chEl.querySelector('.choiceReqItem');
+      const reqItem = reqItemSel ? (reqItemSel.value || reqItemSel.dataset?.sel || '').trim() : '';
       const reqSlot = chEl.querySelector('.choiceReqSlot')?.value.trim() || '';
       const reqTag = chEl.querySelector('.choiceReqTag')?.value.trim() || '';
       const joinId = chEl.querySelector('.choiceJoinId')?.value.trim() || '';
