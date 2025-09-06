@@ -1366,7 +1366,7 @@ function addChoiceRow(container, ch = {}) {
 }
 
 function populateChoiceDropdown(sel, selected = '') {
-  const keys = Object.keys(getTreeData());
+  const keys = Object.keys(getTreeData()).filter(k => k !== 'imports');
   sel.innerHTML = '<option value=""></option><option value="[new]">[new]</option>' + keys.map(k => `<option value="${k}">${k}</option>`).join('');
   if (selected && !keys.includes(selected)) {
     sel.innerHTML += `<option value="${selected}" selected>${selected}</option>`;
@@ -1456,6 +1456,7 @@ function renderTreeEditor() {
   if (!wrap) return;
   wrap.innerHTML = '';
   Object.entries(getTreeData()).forEach(([id, node]) => {
+    if (id === 'imports') return;
     const div = document.createElement('div');
     div.className = 'node';
     div.innerHTML = `<div class="nodeHeader"><button class="btn toggle" type="button">-</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="btn delNode" type="button" title="Delete node">&#128465;</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
