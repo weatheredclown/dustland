@@ -3872,7 +3872,7 @@ canvas.addEventListener('mousedown', ev => {
     updateCursor(x, y);
     return;
   }
-  if (currentMap !== 'world' && !coordTarget && !(overNpc || overItem || overEvent || overPortal || overZone)) {
+  if (currentMap !== 'world' && !coordTarget && !placingType && !(overNpc || overItem || overEvent || overPortal || overZone)) {
     hoverTile = { x, y };
     const I = moduleData.interiors.find(i => i.id === currentMap);
     if (I) {
