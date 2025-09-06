@@ -719,7 +719,7 @@ const DATA = `
     },
     {
       "id": "party_nora",
-      "map": "hall",
+      "map": "world",
       "x": 15,
       "y": 21,
       "color": "#f66",
@@ -745,7 +745,7 @@ const DATA = `
     },
     {
       "id": "party_tess",
-      "map": "hall",
+      "map": "world",
       "x": 15,
       "y": 21,
       "color": "#f66",
