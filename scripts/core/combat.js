@@ -43,7 +43,6 @@ const combatState = {
 };
 
 function recordCombatEvent(ev){
-  // Store structured events for post-combat analysis.
   combatState.log.push(ev);
 }
 
@@ -496,13 +495,15 @@ function chooseOption(){
 
 function doAttack(dmg, type = 'basic'){
   const attacker = party[combatState.active];
-  const target = combatState.enemies[0];
-  if (!attacker || !target){ nextCombatant?.(); return; }
+  const weapon   = attacker?.equip?.weapon;
+  // Spread attacks hit all enemies for a percentage of base damage.
+  const spread   = weapon?.mods?.spread;
+  const targets  = spread ? [...combatState.enemies] : [combatState.enemies[0]];
+  if (!attacker || targets.length === 0){ nextCombatant?.(); return; }
 
-  const weapon = attacker.equip?.weapon;
   const isRanged = weapon && /rifle|gun|bow|pistol/i.test(weapon.id || weapon.name || '');
   const statName = isRanged ? 'AGI' : 'STR';
-  const statVal = (attacker.stats?.[statName] || 0) + (attacker._bonus?.[statName] || 0);
+  const statVal  = (attacker.stats?.[statName] || 0) + (attacker._bonus?.[statName] || 0);
   const statBonus = Math.max(0, statVal - 4);
   const atkBonus  = attacker._bonus?.ATK || 0;
   const base      = dmg + atkBonus + statBonus;
@@ -513,43 +514,6 @@ function doAttack(dmg, type = 'basic'){
   const mult  = 1 + adrPct * (attacker.adrDmgMod || 1);
   dealt = Math.round(dealt * mult);
 
-  const req = target.requires;
-  if (req && (!weapon || weapon.id !== req)){
-    dealt = 0;
-    log?.(`${attacker.name}'s attacks can't harm ${target.name}. Equip ${req}.`);
-  }
-
-  // Immunity to basic
-  if (type === 'basic' && Array.isArray(target.immune) && target.immune.includes('basic')){
-    dealt = 0;
-    log?.(`${target.name} shrugs off the attack.`);
-  }
-
-  // Target defense
-  const preDef = dealt;
-  dealt = Math.max(0, dealt - (target.DEF || 0));
-  if (preDef > 0 && dealt === 0) {
-    log?.(`${attacker.name}'s attack bounces off ${target.name} harmlessly.`);
-  }
-
-  const luck = (attacker.stats?.LCK || 0) + (attacker._bonus?.LCK || 0);
-  const eff  = Math.max(0, luck - 4);
-  if (Math.random() < eff * 0.05){
-    dealt += 1;
-    log?.('Lucky strike!');
-  }
-
-  target.hp -= dealt;
-
-  recordCombatEvent?.({
-    type: 'player',
-    actor: attacker.name,
-    action: 'attack',
-    target: target.name,
-    damage: dealt,
-    targetHp: target.hp
-  });
-
   // Adrenaline gain (based on weapon mods & generator mod)
   const baseGain = (weapon?.mods?.ADR ?? 10) / 4;
   const gain     = Math.round(baseGain * (attacker.adrGenMod || 1));
@@ -557,62 +521,109 @@ function doAttack(dmg, type = 'basic'){
   if (gain > 0 && typeof playFX === 'function') playFX('adrenaline');
 
   updateHUD?.();
-  if (dealt > 0) log?.(`${attacker.name} hits ${target.name} for ${dealt} damage.`);
 
-  // Enemy counter against basic attacks
-  if (type === 'basic' && target.counterBasic){
-    const cd = target.counterBasic.dmg || 1;
-    attacker.hp -= cd;
-    log?.(`${target.name} counters for ${cd} damage.`);
+  const perTarget = spread ? Math.max(0, Math.round(dealt * spread / 100)) : dealt;
+  const defeated = [];
+  for (const target of targets){
+    let tDmg = perTarget;
+
+    // Required weapon gate
+    const req = target.requires;
+    if (req && (!weapon || weapon.id !== req)){
+      tDmg = 0;
+      log?.(`${attacker.name}'s attacks can't harm ${target.name}. Equip ${req}.`);
+    }
+
+    // Immunity to basic attacks
+    if (type === 'basic' && Array.isArray(target.immune) && target.immune.includes('basic')){
+      tDmg = 0;
+      log?.(`${target.name} shrugs off the attack.`);
+    }
+
+    // Target defense
+    const preDef = tDmg;
+    tDmg = Math.max(0, tDmg - (target.DEF || 0));
+    if (preDef > 0 && tDmg === 0) {
+      log?.(`${attacker.name}'s attack bounces off ${target.name} harmlessly.`);
+    }
+
+    const luck = (attacker.stats?.LCK || 0) + (attacker._bonus?.LCK || 0);
+    const eff  = Math.max(0, luck - 4);
+    if (Math.random() < eff * 0.05){
+      tDmg += 1;
+      log?.('Lucky strike!');
+    }
+
+    target.hp -= tDmg;
+
+    recordCombatEvent?.({
+      type: 'player',
+      actor: attacker.name,
+      action: 'attack',
+      target: target.name,
+      damage: tDmg,
+      targetHp: target.hp
+    });
+
+    if (tDmg > 0) log?.(`${attacker.name} hits ${target.name} for ${tDmg} damage.`);
+
+    // Enemy counter against basic attacks
+    if (type === 'basic' && target.counterBasic){
+      const cd = target.counterBasic.dmg || 1;
+      attacker.hp -= cd;
+      log?.(`${target.name} counters for ${cd} damage.`);
+    }
+
+    if (target.hp <= 0){
+      log?.(`${target.name} is defeated!`);
+      recordCombatEvent?.({ type: 'enemy', actor: target.name, action: 'defeated', by: attacker.name });
+      globalThis.EventBus?.emit?.('enemy:defeated', { target });
+      const eid = target.id || target.name;
+      if (eid){
+        const turnsTaken = combatState.turns - (target.spawnTurn || 1) + 1;
+        const stats = enemyTurnStats[eid] || (enemyTurnStats[eid] = { total: 0, count: 0, quick: 0 });
+        stats.total += Math.max(1, turnsTaken);
+        stats.count += 1;
+        if (turnsTaken <= 1) stats.quick += 1;
+      }
+      if (target.loot) addToInv?.(target.loot);
+
+      // Bandits sometimes drop scrap
+      if (/bandit/i.test(target.id) && Math.random() < 0.5){
+        player.scrap = (player.scrap || 0) + 1;
+        updateHUD?.();
+        log?.('You find 1 scrap on the bandit.');
+      }
+
+      // Special boss drop chance
+      if (target.boss && Math.random() < 0.1){ addToInv?.('memory_worm'); }
+
+      // Spoils cache system (optional)
+      if (typeof SpoilsCache !== 'undefined'){
+        const cache = SpoilsCache.rollDrop?.(target.challenge);
+        if (cache){
+          const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
+          itemDrops?.push?.({ id: registered.id, map: party.map, x: party.x, y: party.y });
+          log?.(`The ground coughs up a ${registered.name}.`);
+          globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target });
+        }
+      }
+
+      if (target.npc) removeNPC?.(target.npc);
+
+      defeated.push(target);
+    }
   }
 
-  // Death & loot
-  if (target.hp <= 0){
-    log?.(`${target.name} is defeated!`);
-    recordCombatEvent?.({ type: 'enemy', actor: target.name, action: 'defeated', by: attacker.name });
-    globalThis.EventBus?.emit?.('enemy:defeated', { target });
-    const eid = target.id || target.name;
-    if (eid){
-      const turnsTaken = combatState.turns - (target.spawnTurn || 1) + 1;
-      const stats = enemyTurnStats[eid] || (enemyTurnStats[eid] = { total: 0, count: 0, quick: 0 });
-      stats.total += Math.max(1, turnsTaken);
-      stats.count += 1;
-      if (turnsTaken <= 1) stats.quick += 1;
-    }
-    if (target.loot) addToInv?.(target.loot);
+  if (defeated.length){
+    combatState.enemies = combatState.enemies.filter(e => !defeated.includes(e));
+  }
 
-    // Bandits sometimes drop scrap
-    if (/bandit/i.test(target.id) && Math.random() < 0.5){
-      player.scrap = (player.scrap || 0) + 1;
-      updateHUD?.();
-      log?.('You find 1 scrap on the bandit.');
-    }
-
-    // Special boss drop chance
-    if (target.boss && Math.random() < 0.1){ addToInv?.('memory_worm'); }
-
-    // Spoils cache system (optional)
-    if (typeof SpoilsCache !== 'undefined'){
-      const cache = SpoilsCache.rollDrop?.(target.challenge);
-      if (cache){
-        const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
-        itemDrops?.push?.({ id: registered.id, map: party.map, x: party.x, y: party.y });
-        log?.(`The ground coughs up a ${registered.name}.`);
-        globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target });
-      }
-    }
-
-    if (target.npc) removeNPC?.(target.npc);
-
-    combatState.enemies.shift();
-    renderCombat();
-    if (combatState.enemies.length === 0){
-      log?.('Victory!');
-      closeCombat('loot');
-      return;
-    }
-  } else {
-    renderCombat();
+  renderCombat();
+  if (combatState.enemies.length === 0){
+    log?.('Victory!');
+    closeCombat('loot');
+    return;
   }
 
   nextCombatant();
@@ -776,9 +787,10 @@ function enemyAttack(){
     const eid = enemy.id || enemy.name;
     if (eid){
       const turnsTaken = combatState.turns - (enemy.spawnTurn || 1) + 1;
-      const stats = enemyTurnStats[eid] || (enemyTurnStats[eid] = { total: 0, count: 0 });
+      const stats = enemyTurnStats[eid] || (enemyTurnStats[eid] = { total: 0, count: 0, quick: 0 });
       stats.total += Math.max(1, turnsTaken);
       stats.count += 1;
+      if (turnsTaken <= 1) stats.quick += 1;
     }
     if (enemy.loot) addToInv?.(enemy.loot);
     if (/bandit/i.test(enemy.id) && Math.random() < 0.5){
@@ -892,9 +904,8 @@ function startPartyTurn(){
 }
 
 function getCombatLog(){
-  // Return a copy of combat events for external analysis.
   return combatState.log.slice();
 }
 
-const combatExports = { openCombat, closeCombat, handleCombatKey, getCombatLog, addStatus, tickStatuses, __testAttack: testAttack };
+const combatExports = { openCombat, closeCombat, handleCombatKey, getCombatLog, addStatus, tickStatuses, __testAttack: testAttack, __combatState: combatState };
 Object.assign(globalThis, combatExports);
