@@ -2874,6 +2874,21 @@ function renderZoneList() {
   Array.from(list.children).forEach(div => div.onclick = () => editZone(parseInt(div.dataset.idx, 10)));
 }
 
+function updateZoneDims() {
+  if (editZoneIdx < 0) return;
+  const z = moduleData.zones[editZoneIdx];
+  z.x = parseInt(document.getElementById('zoneX').value, 10) || 0;
+  z.y = parseInt(document.getElementById('zoneY').value, 10) || 0;
+  z.w = Math.max(1, parseInt(document.getElementById('zoneW').value, 10) || 1);
+  z.h = Math.max(1, parseInt(document.getElementById('zoneH').value, 10) || 1);
+  renderZoneList();
+  drawWorld();
+}
+
+['zoneX', 'zoneY', 'zoneW', 'zoneH'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateZoneDims);
+});
+
 function deleteZone() {
   if (editZoneIdx < 0) return;
   moduleData.zones.splice(editZoneIdx, 1);

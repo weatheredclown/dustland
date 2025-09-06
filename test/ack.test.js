@@ -185,6 +185,26 @@ test('playtestModule includes zones', () => {
   global.open = origOpen;
 });
 
+test('zone field updates apply immediately', () => {
+  applyLoadedModule({ seed: 1, zones: [{ map: 'world', x: 0, y: 0, w: 1, h: 1 }] });
+  editZone(0);
+  const z = moduleData.zones[0];
+  let renders = 0;
+  const origDraw = global.drawWorld;
+  global.drawWorld = () => { renders++; };
+  const zx = document.getElementById('zoneX');
+  zx.value = 2;
+  zx._listeners.input[0]();
+  assert.strictEqual(z.x, 2);
+  const zw = document.getElementById('zoneW');
+  zw.value = 3;
+  zw._listeners.input[0]();
+  assert.strictEqual(z.w, 3);
+  assert.ok(renders >= 2);
+  assert.ok(document.getElementById('zoneList').innerHTML.includes('(2,0,3x1)'));
+  global.drawWorld = origDraw;
+});
+
 test('custom item tags update tag options', () => {
   const dl = document.getElementById('tagOptions');
   assert.ok(dl.innerHTML.includes('value="key"'));
