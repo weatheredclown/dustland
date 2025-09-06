@@ -88,3 +88,10 @@ test('generic portrait keeps frame once chosen', () => {
   context.setPortraitDiv(el2, npc);
   assert.strictEqual(el2.style.backgroundPosition, firstPos);
 });
+
+test('setPortraitDiv shows prompt when missing portrait', () => {
+  const {context,dom} = setup();
+  const el = dom.window.document.createElement('div');
+  context.setPortraitDiv(el, { prompt: 'rusted mech' });
+  assert.strictEqual(el.textContent, 'rusted mech');
+});
