@@ -13,6 +13,7 @@ const DATA = `{
       "y": 3,
       "color": "#f5e79f",
       "name": "Graffiti Wall",
+      "prompt": "Wall layered with faded graffiti and hidden marks",
       "tree": {
         "start": {
           "text": "Layers of paint hide a message.",

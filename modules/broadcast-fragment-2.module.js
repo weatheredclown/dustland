@@ -38,6 +38,7 @@ const DATA = `
       "name": "Echo",
       "title": "Tech Scavenger",
       "desc": "A young woman tinkering with a rusty control panel at the base of a huge comms tower.",
+      "prompt": "Young tinkerer repairing a rusted comm tower base",
       "questId": "q_silent_tower",
       "tree": {
         "start": {
@@ -106,6 +107,7 @@ const DATA = `
       "color": "#9ef7a0",
       "name": "Service Depot",
       "desc": "A rusty service depot.",
+      "prompt": "Rusty service depot littered with wires",
       "tree": {
         "start": {
           "text": "You find a Power Cell inside.",
@@ -128,6 +130,7 @@ const DATA = `
       "color": "#9ef7a0",
       "name": "Service Depot",
       "desc": "A rusty service depot.",
+      "prompt": "Rusty service depot littered with wires",
       "tree": {
         "start": {
           "text": "You find a Power Cell inside.",
@@ -150,6 +153,7 @@ const DATA = `
       "color": "#9ef7a0",
       "name": "Service Depot",
       "desc": "A rusty service depot.",
+      "prompt": "Rusty service depot littered with wires",
       "tree": {
         "start": {
           "text": "You find a Power Cell inside.",

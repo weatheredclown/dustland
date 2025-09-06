@@ -13,6 +13,7 @@ const DATA = `
       "color": "#a9f59f",
       "name": "Cache Guide",
       "desc": "An eager scavenger itching to teach you about spoils caches.",
+      "prompt": "Eager scavenger waving toward a loot cache",
       "tree": {
         "start": {
           "jump": [

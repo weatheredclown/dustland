@@ -12,6 +12,7 @@ const DATA = `{
       "color": "#f9f",
       "name": "Nyx",
       "desc": "Listens to static for hidden verses.",
+      "prompt": "Wanderer with headphones listening to static",
       "tree": {
         "start": {
           "text": "The static hums. Can you find the note?",

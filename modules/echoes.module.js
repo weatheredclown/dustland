@@ -26,6 +26,7 @@ const DATA = `
       "color": "#9ef7a0",
       "name": "Sparking Crate",
       "desc": "Faint humming echoes from inside.",
+      "prompt": "Crate sparking with bottled energy",
       "tree": {
         "start": {
           "text": "A crate vibrates with energy.",
@@ -47,6 +48,7 @@ const DATA = `
       "name": "Humming Door",
       "title": "To Workshop",
       "desc": "Its lock crackles for a Spark Key.",
+      "prompt": "Metal door glowing with static lock",
       "questId": "q_spark",
       "tree": {
         "start": {
@@ -69,6 +71,7 @@ const DATA = `
       "color": "#9ef7a0",
       "name": "Gear Crate",
       "desc": "Loose gears rattle within.",
+      "prompt": "Heavy crate packed with gears",
       "tree": {
         "start": {
           "text": "The crate is heavy with metal.",
@@ -90,6 +93,7 @@ const DATA = `
       "name": "Rust Door",
       "title": "To Archive",
       "desc": "Its hinges await a Cog Key.",
+      "prompt": "Rusted door with cracked hinges",
       "questId": "q_cog",
       "tree": {
         "start": {
@@ -113,6 +117,7 @@ const DATA = `
       "name": "Dust Rat",
       "title": "Menace",
       "desc": "A rat swollen with dust.",
+      "prompt": "Dust-swollen rat baring teeth",
       "tree": { "start": { "text": "The rat bares its teeth.", "choices": [ { "label": "(Leave)", "to": "bye" } ] } },
       "combat": { "HP": 5, "ATK": 2, "DEF": 1, "loot": "rat_tail" }
     },
@@ -125,6 +130,7 @@ const DATA = `
       "name": "Gear Ghoul",
       "title": "Guardian",
       "desc": "A whirring husk hungry for scraps.",
+      "prompt": "Whirring metal ghoul hungry for scrap",
       "questId": "q_beacon",
       "tree": { "start": { "text": "The ghoul clanks forward.", "choices": [ { "label": "(Fight)", "to": "do_fight", "q": "turnin" }, { "label": "(Leave)", "to": "bye" } ] } },
       "combat": { "HP": 8, "ATK": 3, "DEF": 2, "loot": "copper_cog" }
@@ -138,6 +144,7 @@ const DATA = `
       "name": "Hope Beacon",
       "title": "Lightbringer",
       "desc": "A small lamp pulsing warmly.",
+      "prompt": "Warm lamp shining hope",
       "tree": {
         "start": {
           "text": "The beacon glows, promising brighter days.",
