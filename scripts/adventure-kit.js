@@ -246,6 +246,7 @@ function setTreeData(tree) {
 }
 globalThis.getTreeData = getTreeData;
 globalThis.setTreeData = setTreeData;
+globalThis.treeData = currentTree;
 let selectedObj = null;
 const mapSelect = document.getElementById('mapSelect');
 let currentMap = 'world';
