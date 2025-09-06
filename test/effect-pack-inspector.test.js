@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 
-const file = path.join('scripts','effect-pack-inspector.js');
+const file = path.join('scripts','supporting','effect-pack-inspector.js');
 const src = fs.readFileSync(file, 'utf8');
 
 test('effectPackInspector fires loaded packs', () => {

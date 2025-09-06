@@ -8,8 +8,8 @@
     "serve": "http-server -p 8080",
     "test": "npm run lint && node --test",
     "lint": "eslint . && yamllint .github/workflows/*.yml",
-    "module:export": "node scripts/module-json.js export",
-    "module:import": "node scripts/module-json.js import"
+    "module:export": "node scripts/supporting/module-json.js export",
+    "module:import": "node scripts/supporting/module-json.js import"
   },
   "author": "",
   "license": "MIT",

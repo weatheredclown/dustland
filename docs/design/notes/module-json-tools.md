@@ -15,9 +15,9 @@ We need to let editors tinker with module layouts without touching code. Each JS
    - Existing modules must be refactored so their gameplay logic lives in `postLoad` and the JSON stays clean.
    - Exported JSON should record its `module` script so ACK can reload it for playtests.
 2. **Import / export scripts**
-   - Add `scripts/module-json.js` with commands:
-     - `node scripts/module-json.js export modules/dustland.module.js` → writes `data/modules/dustland.json`.
-     - `node scripts/module-json.js import modules/dustland.module.js` → injects JSON back into the multiline string.
+   - Add `scripts/supporting/module-json.js` with commands:
+     - `node scripts/supporting/module-json.js export modules/dustland.module.js` → writes `data/modules/dustland.json`.
+     - `node scripts/supporting/module-json.js import modules/dustland.module.js` → injects JSON back into the multiline string.
    - Wire npm aliases:
      - `npm run module:export -- <file>`
      - `npm run module:import -- <file>`

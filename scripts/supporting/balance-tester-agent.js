@@ -2,7 +2,7 @@
 
 // Wait for the game to be ready in the browser or set up a jsdom
 // environment when executed under Node.js. This allows the balance
-// tester to run headlessly via `node scripts/balance-tester-agent.js`.
+// tester to run headlessly via `node scripts/supporting/balance-tester-agent.js`.
 if (typeof window === 'undefined') {
   (async () => {
     const { JSDOM } = await import('jsdom');

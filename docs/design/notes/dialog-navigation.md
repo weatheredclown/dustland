@@ -117,7 +117,7 @@ Side effects are routed exclusively through `effects(ctx)` and/or separate event
 
 - `components/dialog.js` — runtime + state machine (plain JS, global `DLDialog`).
 - `components/hud.js` (existing) — renders choice list using existing button styles; subscribes to dialog events.
-- `scripts/balance-tester-agent.js` — can fire sample dialogs to exercise event-bus handlers.
+- `scripts/supporting/balance-tester-agent.js` — can fire sample dialogs to exercise event-bus handlers.
 - `adventure-kit.html` / `dustland.html` — load order: world → modules → dialogs.
 
 Global setup (order-sensitive):
@@ -181,7 +181,7 @@ Persistence
 
 Balance/test agents:
 
-- Extend `scripts/balance-tester-agent.js` to open sample dialogs and trace event flows, ensuring no path queue starvation.
+- Extend `scripts/supporting/balance-tester-agent.js` to open sample dialogs and trace event flows, ensuring no path queue starvation.
 
 ## Constraints & Guidelines
 

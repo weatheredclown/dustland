@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
 
 function runScript(args, cwd){
-  execFileSync('node', [path.join(repoRoot, 'scripts', 'module-json.js'), ...args], { cwd });
+  execFileSync('node', [path.join(repoRoot, 'scripts', 'supporting', 'module-json.js'), ...args], { cwd });
 }
 
 test('module-json export/import round trip', () => {

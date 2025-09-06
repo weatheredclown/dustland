@@ -64,6 +64,6 @@ Opening a cache now spits out a single trinket that snaps into the party's gear:
 #### Phase 4: Testing
 - [x] Write tests to verify drop odds and tier distribution across challenge levels.
  - [x] Simulate 1,000 cache openings per tier to ensure stat ranges stay sane.
- - [x] Run `node scripts/presubmit.js` to confirm no async snafus in cache UI — clean run.
+ - [x] Run `node scripts/supporting/presubmit.js` to confirm no async snafus in cache UI — clean run.
 
 > **Clown:** When players crack open a Vaulted Cache and a "Quantum Harmonica" drops, I want them to laugh, equip it, and blow something up with a punchline.

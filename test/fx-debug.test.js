@@ -14,7 +14,7 @@ test('damage flash checkbox updates fxConfig', async () => {
   sandbox.clearTimeout = clearTimeout;
   document.getElementById('fxPanel').appendChild(document.getElementById('fxDamageFlash'));
   document.getElementById('hpBar').classList.add('hurt');
-  const code = await fs.readFile(new URL('../scripts/fx-debug.js', import.meta.url), 'utf8');
+  const code = await fs.readFile(new URL('../scripts/supporting/fx-debug.js', import.meta.url), 'utf8');
   vm.runInNewContext(code, sandbox);
   const cb = document.getElementById('fxDamageFlash');
   cb.checked = false;
@@ -38,7 +38,7 @@ test('fx checkboxes apply classes and update config', async () => {
   document.getElementById('fxPanel').appendChild(document.getElementById('fxCrtShear'));
   document.getElementById('fxPanel').appendChild(document.getElementById('fxColorBleed'));
   const canvas = document.getElementById('game');
-  const code = await fs.readFile(new URL('../scripts/fx-debug.js', import.meta.url), 'utf8');
+  const code = await fs.readFile(new URL('../scripts/supporting/fx-debug.js', import.meta.url), 'utf8');
   vm.runInNewContext(code, sandbox);
   const scan = document.getElementById('fxScanlines');
   const shear = document.getElementById('fxCrtShear');
@@ -80,7 +80,7 @@ test('grayscale and adrenaline tint toggles update config and call updateHUD', a
   sandbox.clearTimeout = clearTimeout;
   document.getElementById('fxPanel').appendChild(document.getElementById('fxGrayscale'));
   document.getElementById('fxPanel').appendChild(document.getElementById('fxAdrTint'));
-  const code = await fs.readFile(new URL('../scripts/fx-debug.js', import.meta.url), 'utf8');
+  const code = await fs.readFile(new URL('../scripts/supporting/fx-debug.js', import.meta.url), 'utf8');
   vm.runInNewContext(code, sandbox);
   const gray = document.getElementById('fxGrayscale');
   const adr = document.getElementById('fxAdrTint');

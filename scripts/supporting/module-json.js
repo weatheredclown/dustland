@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 function usage(){
-  console.log('Usage: node scripts/module-json.js <export|import> <moduleFile>');
+  console.log('Usage: node scripts/supporting/module-json.js <export|import> <moduleFile>');
   process.exit(1);
 }
 

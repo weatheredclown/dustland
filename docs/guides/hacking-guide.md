@@ -35,5 +35,5 @@ Dustland CRT uses plain JavaScript with globals and no build step. This guide li
 
 ## Development tips
 - Run `npm test` to execute the test suite.
-- Run `node scripts/presubmit.js` to check HTML files for unsupported patterns.
+- Run `node scripts/supporting/presubmit.js` to check HTML files for unsupported patterns.
 
