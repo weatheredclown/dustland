@@ -260,20 +260,23 @@ function updateMapSelect(selected = 'world') {
 function showMap(map) {
   currentMap = map;
   if (mapSelect && mapSelect.value !== map) mapSelect.value = map;
+  let idx = -1;
   if (map === 'world') {
     editInteriorIdx = -1;
   } else {
-    const idx = moduleData.interiors.findIndex(I => I.id === map);
+    idx = moduleData.interiors.findIndex(I => I.id === map);
     if (idx >= 0) {
       editInterior(idx);
       if (typeof showEditorTab === 'function') showEditorTab('interiors');
+    } else {
+      editInteriorIdx = -1;
     }
   }
   worldZoom = map === 'world' ? worldZoom : 1;
   panX = map === 'world' ? panX : 0;
   panY = map === 'world' ? panY : 0;
   drawWorld();
-  if (map !== 'world') drawInterior();
+  if (idx >= 0) drawInterior();
 }
 if (mapSelect) mapSelect.addEventListener('change', e => showMap(e.target.value));
 const intCanvas = document.getElementById('intCanvas');
@@ -352,7 +355,7 @@ function drawWorld() {
   let grid = world;
   if (map !== 'world') {
     const I = moduleData.interiors.find(i => i.id === map);
-    if (!I) return;
+    if (!I || !Array.isArray(I.grid)) return;
     W = I.w; H = I.h; grid = I.grid;
     sx = canvas.width / W * worldZoom;
     sy = canvas.height / H * worldZoom;
@@ -362,10 +365,12 @@ function drawWorld() {
   for (let y = 0; y < H; y++) {
     const py = (y - (map === 'world' ? panY : 0)) * sy;
     if (py + sy < 0 || py >= canvas.height) continue;
+    const row = grid[y];
+    if (!row) continue;
     for (let x = 0; x < W; x++) {
       const px = (x - (map === 'world' ? panX : 0)) * sx;
       if (px + sx < 0 || px >= canvas.width) continue;
-      const t = grid[y][x];
+      const t = row[x];
       if (map === 'world') {
         ctx.fillStyle = akColors[t] || '#000';
       } else {
@@ -571,12 +576,15 @@ function drawWorld() {
 function drawInterior() {
   if (editInteriorIdx < 0) return;
   const I = moduleData.interiors[editInteriorIdx];
+  if (!I || !Array.isArray(I.grid)) return;
   const sx = intCanvas.width / I.w;
   const sy = intCanvas.height / I.h;
   intCtx.clearRect(0, 0, intCanvas.width, intCanvas.height);
   for (let y = 0; y < I.h; y++) {
+    const row = I.grid[y];
+    if (!row) continue;
     for (let x = 0; x < I.w; x++) {
-      const t = I.grid[y][x];
+      const t = row[x];
       intCtx.fillStyle = t === TILE.WALL ? '#444' : t === TILE.DOOR ? '#8bd98d' : '#222';
       intCtx.fillRect(x * sx, y * sy, sx, sy);
     }
