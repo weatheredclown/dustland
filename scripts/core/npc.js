@@ -3,8 +3,8 @@ var Dustland = globalThis.Dustland;
 const NPC_COLOR = '#9ef7a0';
 const OBJECT_COLOR = '#225a20';
 class NPC {
-  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false}) {
-    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,combat,shop,portraitSheet,portraitLock,symbol,door,locked});
+  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false,prompt=null}) {
+    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,combat,shop,portraitSheet,portraitLock,symbol,door,locked,prompt});
     // `door` marks an NPC tile as passable when unlocked
     const capNode = (node) => {
       if (this.combat && node === 'do_fight') {
@@ -117,6 +117,7 @@ function createNpcFactory(defs) {
       if (n.shop) opts.shop = n.shop;
       if (n.portraitSheet) opts.portraitSheet = n.portraitSheet;
       if (n.portraitLock === false) opts.portraitLock = false;
+      if (n.prompt) opts.prompt = n.prompt;
       if (n.symbol) opts.symbol = n.symbol;
       if (n.door) opts.door = n.door;
       if (typeof n.locked === 'boolean') opts.locked = n.locked;

@@ -39,6 +39,9 @@ default portrait index:
 { "portraitSheet": "assets/portraits/my_npc.png" }
 ```
 
+If an enemy lacks a `portraitSheet`, include a `prompt` field describing the desired art. The prompt text displays in game and helps track missing portraits.
+
+
 ## postLoad hooks
 Adventure Kit loads a module script when the JSON includes a `module` path. After the script loads, it calls the script's `postLoad(module)` method to apply procedural logic:
 

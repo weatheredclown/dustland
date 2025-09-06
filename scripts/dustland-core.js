@@ -119,7 +119,7 @@ async function startCombat(defender){
   }
 
   const toEnemy = (def) => {
-    const { HP, portraitSheet, npc, name, ...rest } = def || {};
+    const { HP, portraitSheet, prompt, npc, name, ...rest } = def || {};
     return {
       ...rest,
       id: def.id || def.name,
@@ -127,6 +127,7 @@ async function startCombat(defender){
       hp: def.hp ?? HP ?? 5,
       npc,
       portraitSheet: portraitSheet || npc?.portraitSheet,
+      prompt: prompt || npc?.prompt,
       special: rest.special
     };
   };

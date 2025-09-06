@@ -18,7 +18,7 @@ test('module-json export/import round trip', () => {
   try {
     const moduleFile = path.join(tmp, 'sample.module.js');
     const jsonFile = path.join(tmp, 'data', 'modules', 'sample.json');
-    const original = { hello: 'world', portraitSheet: 'assets/portraits/custom.png', world: [[0,1],[2,3]] };
+    const original = { hello: 'world', portraitSheet: 'assets/portraits/custom.png', prompt: 'rusted bot', world: [[0,1],[2,3]] };
     const moduleContent = `const DATA = \`\n${JSON.stringify(original, null, 2)}\n\`;\nexport function postLoad() {}`;
     fs.writeFileSync(moduleFile, moduleContent);
     runScript(['export', moduleFile], tmp);
@@ -27,6 +27,7 @@ test('module-json export/import round trip', () => {
     assert.strictEqual(exported.name, 'sample-module');
     const { name } = exported;
     assert.strictEqual(exported.portraitSheet, 'assets/portraits/custom.png');
+    assert.strictEqual(exported.prompt, 'rusted bot');
     assert.deepStrictEqual(exported.world, ['🏝🪨', '🌊🌿']);
     delete exported.module;
     delete exported.name;
@@ -42,6 +43,7 @@ test('module-json export/import round trip', () => {
     const obj = JSON.parse(match[1]);
     assert.strictEqual(obj.hello, 'mars');
     assert.strictEqual(obj.portraitSheet, 'assets/portraits/custom.png');
+    assert.strictEqual(obj.prompt, 'rusted bot');
     assert.deepStrictEqual(obj.world, [[0,1],[2,3]]);
     assert.strictEqual(obj.module, undefined);
     assert.strictEqual(obj.name, 'sample-module');

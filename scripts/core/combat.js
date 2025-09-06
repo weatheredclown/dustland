@@ -105,7 +105,13 @@ function setPortraitDiv(el, obj){
       el.style.backgroundPosition = 'center';
     }
   } else {
-    el.textContent = obj && obj.portrait ? obj.portrait : '@';
+    if (obj && obj.prompt) {
+      el.textContent = obj.prompt;
+    } else if (obj && obj.portrait) {
+      el.textContent = obj.portrait;
+    } else {
+      el.textContent = '@';
+    }
   }
 }
 
