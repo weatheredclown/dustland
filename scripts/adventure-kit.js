@@ -1703,7 +1703,7 @@ function updateTreeData() {
   });
 
   const warnEl = document.getElementById('treeWarning');
-  if (warnEl) warnEl.textContent = orphans.length ? `Orphan nodes: ${orphans.join(', ')}` : '';
+  if (warnEl) warnEl.textContent = orphans.length ? `⚠️ Orphan nodes: ${orphans.join(', ')}` : '';
 }
 
 function loadTreeEditor() {
@@ -3572,7 +3572,11 @@ function renderProblems(issues){
     return;
   }
   card.style.display='block';
-  const html = issues.map((p,i)=>`<div data-idx="${i}">${p.msg}</div>`).join('');
+  const html = issues.map((p,i)=>{
+    const icon = p.warn ? '⚠️' : '🛑';
+    const color = p.warn ? '#fc0' : '#f33';
+    return `<div data-idx="${i}" style="color:${color}">${icon} ${p.msg}</div>`;
+  }).join('');
   if(list.innerHTML !== html){
     list.innerHTML = html;
     Array.from(list.children).forEach(div=>div.onclick=onProblemClick);
