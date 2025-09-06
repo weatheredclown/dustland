@@ -748,6 +748,7 @@ test('renderTreeEditor reflects NPC-specific tree updates', () => {
   globalThis.updateTreeData = origUpdate2;
 });
 test('advanced dialog choices persist after reopening editor', () => {
+  moduleData.items = [{ id: 'reward' }];
   moduleData.npcs = [{
     id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0,
     tree: { start: { text: 'hi', choices: [{ label: '(Leave)', to: 'bye' }] } }
@@ -758,7 +759,7 @@ test('advanced dialog choices persist after reopening editor', () => {
       text: 'hi',
       choices: [{
         label: 'Go', to: 'end',
-        reward: 'XP 5',
+        reward: 'reward',
         goto: { map: 'world', x: 2, y: 1 }
       }]
     },
@@ -771,10 +772,12 @@ test('advanced dialog choices persist after reopening editor', () => {
   closeDialogEditor();
   globalThis.updateTreeData = origUpdate;
   openDialogEditor();
-  assert.strictEqual(getTreeData().start.choices[0].reward, 'XP 5');
-  assert.strictEqual(getTreeData().start.choices[0].goto.x, 2);
+  const tree = getTreeData();
+  assert.strictEqual(tree.start.choices[0].reward, 'XP 5');
+  assert.strictEqual(tree.start.choices[0].goto.x, 2);
   closeDialogEditor();
   closeNPCEditor();
+  moduleData.items = [];
 });
 
 test('editNPC expands short hex colors', () => {

@@ -378,17 +378,22 @@ function takeNearestItem() {
   for (const [dx, dy] of dirs) {
     const info = queryTile(party.x + dx, party.y + dy);
     if (info.items.length) {
-      if (player.inv.length >= getPartyInventoryCapacity()) {
-        log('Inventory is full.');
-        if (typeof toast === 'function') toast('Inventory is full.');
-        return false;
+      const drop = info.items[0];
+      if (drop.items) {
+        if (!pickupCache(drop)) return false;
+      } else {
+        if (player.inv.length >= getPartyInventoryCapacity()) {
+          log('Inventory is full.');
+          if (typeof toast === 'function') toast('Inventory is full.');
+          return false;
+        }
+        addToInv(getItem(drop.id));
       }
-      const it = info.items[0];
-      const idx = itemDrops.indexOf(it);
+      const idx = itemDrops.indexOf(drop);
       if (idx > -1) itemDrops.splice(idx, 1);
-      const def = ITEMS[it.id];
-      addToInv(getItem(it.id));
-      log('Took ' + (def ? def.name : it.id) + '.');
+      const def = ITEMS[drop.id];
+      const msg = drop.items ? `Took ${drop.items.length} items.` : 'Took ' + (def ? def.name : drop.id) + '.';
+      log(msg);
       updateHUD();
       if (typeof pickupSparkle === 'function') pickupSparkle(party.x + dx, party.y + dy);
       bus.emit('sfx', 'pickup');
@@ -410,17 +415,22 @@ function interactAt(x, y) {
     return true;
   }
   if (info.items.length) {
-    if (player.inv.length >= getPartyInventoryCapacity()) {
-      log('Inventory is full.');
-      if (typeof toast === 'function') toast('Inventory is full.');
-      return false;
+    const drop = info.items[0];
+    if (drop.items) {
+      if (!pickupCache(drop)) return false;
+    } else {
+      if (player.inv.length >= getPartyInventoryCapacity()) {
+        log('Inventory is full.');
+        if (typeof toast === 'function') toast('Inventory is full.');
+        return false;
+      }
+      addToInv(getItem(drop.id));
     }
-    const it = info.items[0];
-    const idx = itemDrops.indexOf(it);
+    const idx = itemDrops.indexOf(drop);
     if (idx > -1) itemDrops.splice(idx, 1);
-    const def = ITEMS[it.id];
-    addToInv(getItem(it.id));
-    log('Took ' + (def ? def.name : it.id) + '.');
+    const def = ITEMS[drop.id];
+    const msg = drop.items ? `Took ${drop.items.length} items.` : 'Took ' + (def ? def.name : drop.id) + '.';
+    log(msg);
     updateHUD();
     if (typeof pickupSparkle === 'function') pickupSparkle(x, y);
     bus.emit('sfx', 'pickup');
