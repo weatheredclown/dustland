@@ -4,6 +4,8 @@
     steps: [
       Dustland.WizardSteps.text('Name', 'name'),
       Dustland.WizardSteps.assetPicker('Portrait', ['portrait_1000.png', 'portrait_1001.png'], 'portrait'),
+      // Notes for artists to craft a portrait if one is missing
+      Dustland.WizardSteps.text('Portrait Prompt', 'prompt'),
       Dustland.WizardSteps.text('Dialogue', 'dialogue'),
       Dustland.WizardSteps.itemPicker('Fetch Item', ['tuned_crystal', 'signal_fragment_1'], 'questItem'),
       Dustland.WizardSteps.mapPlacement('pos'),
@@ -15,6 +17,7 @@
         id,
         name: state.name,
         portrait: state.portrait,
+        prompt: state.prompt,
         dialogue: state.dialogue,
         map: 'world',
         x: state.pos?.x,

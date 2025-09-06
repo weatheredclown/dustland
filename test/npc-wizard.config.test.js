@@ -27,6 +27,8 @@ test('NpcWizard config wires steps', async () => {
   wiz.next();
   document.querySelector('select').value = 'portrait_1000.png';
   wiz.next();
+  document.querySelector('input').value = 'rusted scavenger';
+  wiz.next();
   document.querySelector('input').value = 'Hello';
   wiz.next();
   document.querySelector('select').value = 'tuned_crystal';
@@ -34,5 +36,7 @@ test('NpcWizard config wires steps', async () => {
   wiz.getState().pos = { x: 0, y: 0 };
   wiz.next();
   wiz.next();
-  assert.strictEqual(wiz.getState().questItem, 'tuned_crystal');
+  const state = wiz.getState();
+  assert.strictEqual(state.prompt, 'rusted scavenger');
+  assert.strictEqual(state.questItem, 'tuned_crystal');
 });
