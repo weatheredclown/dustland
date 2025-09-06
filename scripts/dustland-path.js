@@ -2,7 +2,8 @@
 // Simple A* pathfinding with async queue for Dustland
 (function(){
   console.log('[Path] Script loaded');
-  const state = { queue: [], busy:false, cache:new Map() };
+  const MAX_CACHE = 256;
+  const state = { queue: [], busy:false, cache:new Map(), order: [] };
 
   function queue(map, start, goal, ignoreId){
     const key = `${map}@${start.x},${start.y}->${goal.x},${goal.y}`;
@@ -24,7 +25,12 @@
       const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
       const p=aStar(job.map, job.start, job.goal, job.ignoreId);
       if(globalThis.perfStats) globalThis.perfStats.path += ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - t0;
+      if(state.cache.size >= MAX_CACHE){
+        const oldest=state.order.shift();
+        if(oldest) state.cache.delete(oldest);
+      }
       state.cache.set(job.key, p);
+      state.order.push(job.key);
       state.busy=false;
       process();
     },0);
@@ -147,5 +153,5 @@
     if(globalThis.perfStats) globalThis.perfStats.ai += ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - t0;
   }
   globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.path = { queue, pathFor, tickPathAI };
+  globalThis.Dustland.path = { queue, pathFor, tickPathAI, MAX_CACHE };
 })();
