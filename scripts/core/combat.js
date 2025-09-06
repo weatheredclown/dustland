@@ -534,9 +534,10 @@ function doAttack(dmg, type = 'basic'){
     const eid = target.id || target.name;
     if (eid){
       const turnsTaken = combatState.turns - (target.spawnTurn || 1) + 1;
-      const stats = enemyTurnStats[eid] || (enemyTurnStats[eid] = { total: 0, count: 0 });
+      const stats = enemyTurnStats[eid] || (enemyTurnStats[eid] = { total: 0, count: 0, quick: 0 });
       stats.total += Math.max(1, turnsTaken);
       stats.count += 1;
+      if (turnsTaken <= 1) stats.quick += 1;
     }
     if (target.loot) addToInv?.(target.loot);
 

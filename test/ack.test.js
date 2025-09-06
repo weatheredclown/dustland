@@ -764,15 +764,15 @@ test('advanced dialog choices persist after reopening editor', () => {
     },
     end: { text: '', choices: [{ label: '(Leave)', to: 'bye' }] }
   };
-  treeData = newTree;
+  setTreeData(newTree);
   document.getElementById('npcTree').value = JSON.stringify(newTree);
   const origUpdate = globalThis.updateTreeData;
   globalThis.updateTreeData = () => {};
   closeDialogEditor();
   globalThis.updateTreeData = origUpdate;
   openDialogEditor();
-  assert.strictEqual(treeData.start.choices[0].reward, 'XP 5');
-  assert.strictEqual(treeData.start.choices[0].goto.x, 2);
+  assert.strictEqual(getTreeData().start.choices[0].reward, 'XP 5');
+  assert.strictEqual(getTreeData().start.choices[0].goto.x, 2);
   closeDialogEditor();
   closeNPCEditor();
 });
