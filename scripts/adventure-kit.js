@@ -618,8 +618,10 @@ function paintInterior(e){
   if(editInteriorIdx<0||!intPainting) return;
   const I=moduleData.interiors[editInteriorIdx];
   const { x, y } = interiorCanvasPos(e);
-  I.grid[y][x]=intPaint;
-  if(intPaint===TILE.DOOR){ I.entryX=x; I.entryY=y-1; }
+  if(x<0||y<0||x>=I.w||y>=I.h) return;
+  const row = I.grid[y] || (I.grid[y] = Array(I.w).fill(TILE.FLOOR));
+  row[x]=intPaint;
+  if(intPaint===TILE.DOOR){ I.entryX=x; I.entryY=Math.max(0,y-1); }
   drawInterior();
 }
 intCanvas.addEventListener('mousedown', e => {
