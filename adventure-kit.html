@@ -417,7 +417,7 @@
           <div id="revealOpts" style="display:none">
             <label>Flag Type<select id="npcFlagType"><option value="visits">Visited Tile</option><option value="party">Party Flag</option></select></label>
             <div id="revealVisit">
-              <label>Map<input id="npcFlagMap" value="world" /></label>
+              <label>Map<select id="npcFlagMap"></select></label>
               <div class="xy">
                 <label>X<input id="npcFlagX" type="number" min="0" /></label>
                 <label>Y<input id="npcFlagY" type="number" min="0" /></label>
@@ -487,7 +487,7 @@
           <label>Tags<input id="itemTags" list="tagOptions" /></label>
           <datalist id="tagOptions"></datalist>
           <label><input id="itemOnMap" type="checkbox"/> On Map</label>
-          <label id="itemMapWrap">Map<input id="itemMap" placeholder="world" /></label>
+          <label id="itemMapWrap">Map<select id="itemMap"></select></label>
           <div class="xy" id="itemXY">
             <label>X<input id="itemX" type="number" min="0" /></label>
             <label>Y<input id="itemY" type="number" min="0" /></label>
@@ -560,13 +560,13 @@
         <div class="list" id="portalList"></div>
         <button class="btn" type="button" id="newPortal">+ Portal</button>
         <div id="portalEditor" style="display:none">
-          <label>Map<input id="portalMap" value="world" /></label>
+          <label>Map<select id="portalMap"></select></label>
           <div class="xy">
             <label>X<input id="portalX" type="number" min="0" /></label>
             <label>Y<input id="portalY" type="number" min="0" /></label>
           </div>
           <button class="btn" type="button" id="portalPick" title="Click on the map to choose location">Select on Map</button>
-          <label>To Map<input id="portalToMap" value="world" /></label>
+          <label>To Map<select id="portalToMap"></select></label>
           <div class="xy">
             <label>To X<input id="portalToX" type="number" min="0" /></label>
             <label>To Y<input id="portalToY" type="number" min="0" /></label>
@@ -601,7 +601,7 @@
         <div class="list" id="eventList"></div>
         <button class="btn" type="button" id="newEvent">+ Event</button>
         <div id="eventEditor" style="display:none">
-          <label>Map<input id="eventMap" value="world" /></label>
+          <label>Map<select id="eventMap"></select></label>
           <div class="xy">
             <label>X<input id="eventX" type="number" min="0" /></label>
             <label>Y<input id="eventY" type="number" min="0" /></label>
@@ -629,7 +629,7 @@
         <div class="list" id="zoneList"></div>
         <button class="btn" type="button" id="newZone">+ Zone</button>
         <div id="zoneEditor" style="display:none">
-          <label>Map<input id="zoneMap" value="world" /></label>
+          <label>Map<select id="zoneMap"></select></label>
           <div class="xy">
             <label>X<input id="zoneX" type="number" min="0" /></label>
             <label>Y<input id="zoneY" type="number" min="0" /></label>
@@ -654,7 +654,7 @@
         <div class="list" id="encounterList"></div>
         <button class="btn" type="button" id="newEncounter">+ Enemy</button>
         <div id="encounterEditor" style="display:none">
-          <label>Map<input id="encMap" value="world" /></label>
+          <label>Map<select id="encMap"></select></label>
           <label>Template<select id="encTemplate"></select></label>
           <label>Min Dist<input id="encMinDist" type="number" min="0" /></label>
           <label>Max Dist<input id="encMaxDist" type="number" min="0" /></label>

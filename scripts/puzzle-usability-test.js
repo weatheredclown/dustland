@@ -1,6 +1,13 @@
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
 globalThis.applyModule = function(){};
 globalThis.state = {};
 globalThis.renderWorld = function(){};
+globalThis.startGame = function(){};
+globalThis.setPartyPos = function(){};
+globalThis.setMap = function(){};
+globalThis.log = function(){};
 
 function load(p){
   const resolved = require.resolve(p);
