@@ -617,6 +617,21 @@ test('advanceDialog respects goto with costItem', () => {
   assert.ok(!player.inv.some(it => it.id === 'key'));
 });
 
+test('advanceDialog costItem transitions to target node', () => {
+  player.inv.length = 0;
+  const coin = registerItem({ id: 'coin', name: 'Coin', type: 'quest' });
+  addToInv(coin);
+  const tree = {
+    start: { text: '', next: [{ label: 'Pay', costItem: 'coin', to: 'next' }] },
+    next: { text: '' }
+  };
+  const dialog = { tree, node: 'start' };
+  const res = advanceDialog(dialog, 0);
+  assert.strictEqual(res.next, 'next');
+  assert.strictEqual(dialog.node, 'next');
+  assert.ok(!player.inv.some(it => it.id === 'coin'));
+});
+
 test('advanceDialog respects costSlot', () => {
   player.inv.length = 0;
   const trinket = registerItem({ id: 'river_trinket', name: 'Trinket', type: 'trinket' });
@@ -679,6 +694,21 @@ test('advanceDialog uses reqItem without consuming and allows goto', () => {
   assert.strictEqual(party.x, 5);
   assert.strictEqual(party.y, 6);
   assert.ok(player.inv.some(it => it.id === 'pass'));
+});
+
+test('advanceDialog reqItem transitions to target node', () => {
+  player.inv.length = 0;
+  const key = registerItem({ id: 'magic_key', name: 'Magic Key', type: 'quest' });
+  addToInv(key);
+  const tree = {
+    locked: { text: '', next: [{ label: 'Unlock', reqItem: 'magic_key', to: 'start' }] },
+    start: { text: 'opened' }
+  };
+  const dialog = { tree, node: 'locked' };
+  const res = advanceDialog(dialog, 0);
+  assert.strictEqual(res.next, 'start');
+  assert.strictEqual(dialog.node, 'start');
+  assert.ok(player.inv.some(it => it.id === 'magic_key'));
 });
 
 test('advanceDialog matches reqItem case-insensitively', () => {
