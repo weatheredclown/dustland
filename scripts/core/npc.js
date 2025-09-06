@@ -3,8 +3,16 @@ var Dustland = globalThis.Dustland;
 const NPC_COLOR = '#9ef7a0';
 const OBJECT_COLOR = '#225a20';
 class NPC {
-  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false,prompt=null}) {
-    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,combat,shop,portraitSheet,portraitLock,symbol,door,locked,prompt});
+  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,quests=null,questDialogs=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false,prompt=null,questIdx=0}) {
+    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,quests,questDialogs,combat,shop,portraitSheet,portraitLock,symbol,door,locked,prompt,questIdx});
+    if (Array.isArray(this.quests) && !this.quest) {
+      this.quest = this.quests[this.questIdx] || null;
+    }
+    if (!this.tree) this.tree = { start: { text: '', choices: [{label: '(Leave)', to: 'bye'}] } };
+    if (Array.isArray(this.questDialogs) && this.questDialogs.length) {
+      this.tree.start.text = this.questDialogs[this.questIdx] || this.tree.start.text;
+    }
+    if (this.quest && !this.quest.status) this.quest.status = 'available';
     // `door` marks an NPC tile as passable when unlocked
     const capNode = (node) => {
       if (this.combat && node === 'do_fight') {
@@ -39,7 +47,7 @@ class NPC {
     };
     const userPN = processNode;
     this.processNode = (node) => {
-      if (quest) defaultQuestProcessor(this, node);
+      if (this.quest) defaultQuestProcessor(this, node);
       capNode(node);
       if (userPN) userPN.call(this, node);
     };
@@ -77,8 +85,9 @@ function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNo
     }
     tree.sell = tree.sell || {text: 'What are you selling?', choices: []};
   }
+  const q = quest || (opts?.quests ? opts.quests[0] : null);
   color = color || (opts?.symbol && opts.symbol !== '!' ? OBJECT_COLOR : NPC_COLOR);
-  return new NPC({id,map,x,y,color,name,title,desc,tree,quest,processNode,processChoice, ...(opts || {})});
+  return new NPC({id,map,x,y,color,name,title,desc,tree,quest:q,processNode,processChoice, ...(opts || {})});
 }
 
 function resolveNode(tree, nodeId) {
@@ -109,8 +118,10 @@ function createNpcFactory(defs) {
     npcFactory[n.id] = (x = n.x, y = n.y) => {
       let tree = n.tree;
       if (typeof tree === 'string') { try { tree = JSON.parse(tree); } catch (e) { tree = null; } }
+      const dlgArr = n.dialogs || (Array.isArray(n.dialog) ? n.dialog : null);
       if (!tree || !Object.keys(tree).length) {
-        tree = { start: { text: n.dialog || '', choices: [{label: '(Leave)', to: 'bye'}] } };
+        const txt = dlgArr ? dlgArr[0] : (n.dialog || '');
+        tree = { start: { text: txt, choices: [{label: '(Leave)', to: 'bye'}] } };
       }
       const opts = {};
       if (n.combat) opts.combat = n.combat;
@@ -121,6 +132,10 @@ function createNpcFactory(defs) {
       if (n.symbol) opts.symbol = n.symbol;
       if (n.door) opts.door = n.door;
       if (typeof n.locked === 'boolean') opts.locked = n.locked;
+      if (Array.isArray(n.quests)) {
+        opts.quests = n.quests.map(q => typeof q === 'string' ? (globalThis.quests?.[q] || null) : q).filter(Boolean);
+      }
+      if (dlgArr) opts.questDialogs = dlgArr;
       const npc = makeNPC(
         n.id,
         n.map || 'world',

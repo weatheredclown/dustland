@@ -94,6 +94,14 @@ function defaultQuestProcessor(npc, nodeId) {
         const xp = meta.xp ?? 5;
         party.forEach(p => awardXP(p, xp));
         if (meta.moveTo) { npc.x = meta.moveTo.x; npc.y = meta.moveTo.y; }
+        if (Array.isArray(npc.quests)) {
+          npc.questIdx = (npc.questIdx || 0) + 1;
+          npc.quest = npc.quests[npc.questIdx] || null;
+          if (npc.quest && !npc.quest.status) npc.quest.status = 'available';
+          if (Array.isArray(npc.questDialogs)) {
+            npc.tree.start.text = npc.questDialogs[npc.questIdx] || npc.tree.start.text;
+          }
+        }
       } else {
         const def = ITEMS[meta.item];
         textEl.textContent = `You don’t have ${def ? def.name : meta.item}.`;

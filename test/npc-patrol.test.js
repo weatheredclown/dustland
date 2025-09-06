@@ -12,6 +12,20 @@ function mkInput(document, id, value = '') {
   return el;
 }
 
+function mkSelect(document, id, values = []) {
+  const el = document.createElement('select');
+  el.id = id;
+  el.multiple = true;
+  values.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.selected = true;
+    el.appendChild(opt);
+  });
+  document.body.appendChild(el);
+  return el;
+}
+
 function mkCheckbox(document, id, checked = false) {
   const el = document.createElement('input');
   el.type = 'checkbox';
@@ -42,7 +56,7 @@ test('collectNPCFromForm uses patrol checkbox for loops', async () => {
   mkInput(document, 'npcX', '0');
   mkInput(document, 'npcY', '0');
   mkTextarea(document, 'npcDialog', 'hi');
-  mkInput(document, 'npcQuest', '');
+  mkSelect(document, 'npcQuests', []);
   mkTextarea(document, 'npcAccept', '');
   mkTextarea(document, 'npcTurnin', '');
   mkCheckbox(document, 'npcCombat', false);
