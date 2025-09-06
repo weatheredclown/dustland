@@ -3439,6 +3439,17 @@ function validateSpawns(){
   if(!walkable[world[s.y][s.x]]) issues.push({ msg:'Player start on blocked tile', type:'start' });
   moduleData.npcs.forEach((n,i)=>{ if(n.map==='world' && !walkable[world[n.y][n.x]]) issues.push({ msg:'NPC '+(n.id||'')+' on blocked tile', type:'npc', idx:i }); });
   moduleData.items.forEach((it,i)=>{ if(it.map==='world' && !walkable[world[it.y][it.x]]) issues.push({ msg:'Item '+it.id+' on blocked tile', type:'item', idx:i }); });
+  const unlocks=new Set();
+  moduleData.npcs.forEach(n=>{
+    Object.values(n.tree||{}).forEach(node=>{
+      (node.choices||[]).forEach(ch=>{
+        (ch.effects||[]).forEach(e=>{ if(e.effect==='unlockNPC' && e.npcId) unlocks.add(e.npcId); });
+      });
+    });
+  });
+  moduleData.npcs.forEach((n,i)=>{
+    if(n.locked && n.id && !unlocks.has(n.id)) issues.push({ msg:'Locked NPC '+n.id+' has no unlock', type:'npc', idx:i });
+  });
   return issues;
 }
 
