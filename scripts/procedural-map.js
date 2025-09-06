@@ -247,7 +247,7 @@ function scatterRuins(tiles, seed = 1, radius = 6) {
   const rand = mulberry32(typeof seed === 'string' ? hashString(seed) : seed);
   const h = tiles.length;
   const w = tiles[0].length;
-  const centers = [];
+  const hubs = [];
   const ruins = [];
   const r2 = radius * radius;
   for (let i = 0; i < w * h; i++) {
@@ -256,24 +256,34 @@ function scatterRuins(tiles, seed = 1, radius = 6) {
     const t = tiles[y][x];
     if (t === TILE.WATER || t === TILE.ROAD || t === TILE.RUIN) continue;
     let ok = true;
-    for (const c of centers) {
+    for (const c of hubs) {
       const dx = c.x - x;
       const dy = c.y - y;
       if (dx * dx + dy * dy < r2) { ok = false; break; }
     }
     if (!ok) continue;
-    tiles[y][x] = TILE.RUIN;
-    centers.push({ x, y });
-    ruins.push({ x, y });
-    const extra = 1 + Math.floor(rand() * 3);
-    for (let n = 0; n < extra; n++) {
-      const nx = x + Math.floor(rand() * 3) - 1;
-      const ny = y + Math.floor(rand() * 3) - 1;
-      if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-      const tt = tiles[ny][nx];
-      if (tt === TILE.WATER || tt === TILE.ROAD || tt === TILE.RUIN) continue;
-      tiles[ny][nx] = TILE.RUIN;
-      ruins.push({ x: nx, y: ny });
+    hubs.push({ x, y });
+    const groups = 2 + Math.floor(rand() * 3);
+    for (let g = 0; g < groups; g++) {
+      const angle = rand() * Math.PI * 2;
+      const dist = 2 + Math.floor(rand() * Math.max(1, radius / 2));
+      const cx = x + Math.round(Math.cos(angle) * dist);
+      const cy = y + Math.round(Math.sin(angle) * dist);
+      if (cx < 0 || cx >= w || cy < 0 || cy >= h) continue;
+      const ct = tiles[cy][cx];
+      if (ct === TILE.WATER || ct === TILE.ROAD || ct === TILE.RUIN) continue;
+      tiles[cy][cx] = TILE.RUIN;
+      ruins.push({ x: cx, y: cy });
+      const extra = 1 + Math.floor(rand() * 3);
+      for (let n = 0; n < extra; n++) {
+        const nx = cx + Math.floor(rand() * 3) - 1;
+        const ny = cy + Math.floor(rand() * 3) - 1;
+        if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+        const tt = tiles[ny][nx];
+        if (tt === TILE.WATER || tt === TILE.ROAD || tt === TILE.RUIN) continue;
+        tiles[ny][nx] = TILE.RUIN;
+        ruins.push({ x: nx, y: ny });
+      }
     }
   }
   return { tiles, ruins };
