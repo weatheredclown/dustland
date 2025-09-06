@@ -465,7 +465,7 @@ function interactAt(x, y) {
       }
       const b=buildings.find(b=> b.interiorId===state.map);
       if(b){
-        setPartyPos(b.doorX, b.doorY-1);
+        setPartyPos(b.doorX, b.doorY);
         setMap('world');
         log('You step back outside.');
         updateHUD();
