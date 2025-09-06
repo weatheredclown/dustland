@@ -236,6 +236,20 @@ const DATA = `
       "type": "quest"
     },
     {
+      "map": "world",
+      "x": 46,
+      "y": 80,
+      "id": "plant_fiber",
+      "name": "Plant Fiber",
+      "type": "quest"
+    },
+    {
+      "id": "bandage",
+      "name": "Bandage",
+      "type": "consumable",
+      "use": { "type": "heal", "amount": 6 }
+    },
+    {
       "id": "raider_knife",
       "name": "Raider Knife",
       "type": "weapon",
@@ -1991,6 +2005,12 @@ const DATA = `
       "combat": { "HP": 5, "ATK": 2, "DEF": 0 }
     },
     {
+      "id": "vine_creature",
+      "name": "Vine Creature",
+      "portraitSheet": "assets/portraits/dustland-module/vine_creature.png",
+      "combat": { "HP": 4, "ATK": 1, "DEF": 0 }
+    },
+    {
       "id": "sand_titan",
       "name": "Sand Titan",
       "portraitSheet": "assets/portraits/dustland-module/sand_titan.png",
@@ -2011,6 +2031,7 @@ const DATA = `
   ],
   "encounters": {
     "world": [
+      { "templateId": "vine_creature", "loot": "plant_fiber", "maxDist": 20 },
       { "templateId": "rotwalker", "loot": "water_flask", "maxDist": 24 },
       { "templateId": "scavenger", "loot": "raider_knife", "maxDist": 36 },
       { "templateId": "sand_titan", "loot": "artifact_blade", "minDist": 30 },
