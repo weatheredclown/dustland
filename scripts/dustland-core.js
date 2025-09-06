@@ -1,24 +1,40 @@
+/* global toast, log, EventBus */
 const { on } = globalThis.EventBus;
 
 /**
- * @typedef {Object} Item
+ * @typedef {object} GameItem
+ * @property {string} id
  * @property {string} name
  * @property {string} type
- * @property {Object<string, number>} [mods]
- * @property {{type:string, amount?:number, onUse?:Function}} [use]
+ * @property {{[key:string]: number}} [mods]
+ * @property {{type:string, amount?:number, duration?:number, stat?:string, text?:string, onUse?:Function}} [use]
  * @property {string} [desc]
  * @property {number} [rarity]
  * @property {number} [value]
  */
 
 /**
- * @typedef {Object} QuestState
+ * A party member character.
+ * @typedef {object} PartyMember
+ * @property {string} id
+ * @property {string} name
+ * @property {number} hp
+ * @property {number} maxHp
+ * @property {number} lvl
+ * @property {Record<string, number>} stats
+ * @property {{weapon:GameItem|null, armor:GameItem|null, trinket:GameItem|null}} equip
+ * @property {string} [origin]
+ * @property {string} [quirk]
+ */
+
+/**
+ * @typedef {object} QuestState
  * @property {string} id
  * @property {'available'|'active'|'completed'} status
  */
 
 /**
- * @typedef {Object} NPC
+ * @typedef {object} NPC
  * @property {string} id
  * @property {string} map
  * @property {number} x
@@ -26,12 +42,12 @@ const { on } = globalThis.EventBus;
  * @property {string} color
  * @property {string} name
  * @property {string} title
- * @property {Object<string, any>} tree
+ * @property {{[key:string]: any}} tree
  * @property {Quest} [quest]
  */
 
 /**
- * @typedef {Object} Quest
+ * @typedef {object} Quest
  * @property {string} id
  * @property {string} name
  * @property {'available'|'active'|'completed'} status
@@ -41,7 +57,7 @@ const { on } = globalThis.EventBus;
  */
 
 /**
- * @typedef {Object} Map
+ * @typedef {object} Map
  * @property {string} id
  * @property {number} w
  * @property {number} h
@@ -53,7 +69,7 @@ const { on } = globalThis.EventBus;
  */
 
 /**
- * @typedef {Object} Check
+ * @typedef {object} Check
  * @property {string} stat
  * @property {number} dc
  * @property {Function[]} [onSuccess]
@@ -109,7 +125,7 @@ class Dice {
  * Launch the menu-based combat interface. In non-browser environments the
  * player automatically flees. Nearby combat-enabled NPCs within two tiles
  * will join the defender.
- * @param {{HP?:number,DEF:number,loot?:Item,name?:string,npc?:NPC}} defender
+ * @param {{HP?:number,DEF:number,loot?:GameItem,name?:string,npc?:NPC}} defender
  * @returns {Promise<{result:'bruise'|'loot'|'flee'}>}
  */
 async function startCombat(defender){

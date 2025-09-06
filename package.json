@@ -19,6 +19,7 @@
     "jsdom": "^26.1.0",
     "puppeteer": "^24.17.0",
     "ws": "^8.18.3",
-    "yaml-lint": "^1.7.0"
+    "yaml-lint": "^1.7.0",
+    "eslint-plugin-jsdoc": "^48.0.3"
   }
 }

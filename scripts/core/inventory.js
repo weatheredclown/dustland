@@ -1,9 +1,33 @@
 // ===== Inventory / equipment =====
+
+/**
+ * @typedef {object} GameItem
+ * @property {string} id
+ * @property {string} name
+ * @property {string} type
+ * @property {{[key:string]: number}} [mods]
+ * @property {{type:string, amount?:number, duration?:number, stat?:string, text?:string, onUse?:Function}} [use]
+ * @property {string} [desc]
+ * @property {number} [rarity]
+ * @property {number} [value]
+ */
+
+/**
+ * @typedef {object} ItemDrop
+ * @property {string} map
+ * @property {number} x
+ * @property {number} y
+ * @property {string} [id]
+ * @property {string[]} [items]
+ */
+
 globalThis.Dustland = globalThis.Dustland || {};
 const { emit } = globalThis.EventBus;
 
-const ITEMS = {}; // item definitions by id
-const itemDrops = []; // {map,x,y,id}
+/** @type {Record<string, GameItem>} */
+const ITEMS = {};
+/** @type {ItemDrop[]} */
+const itemDrops = [];
 const EQUIP_TYPES = ['weapon','armor','trinket'];
 function cloneItem(it){
   return {
@@ -14,16 +38,28 @@ function cloneItem(it){
     equip: it.equip ? JSON.parse(JSON.stringify(it.equip)) : null
   };
 }
+/**
+ * @param {GameItem} item
+ * @returns {GameItem}
+ */
 function registerItem(item){
   const norm = normalizeItem(item);
   if(!norm.id) throw new Error('Item must have id');
   ITEMS[norm.id] = norm;
   return norm;
 }
+/**
+ * @param {string} id
+ * @returns {GameItem|null}
+ */
 function getItem(id){
   const it = ITEMS[id];
   return it ? cloneItem(it) : null;
 }
+/**
+ * @param {string|GameItem} def
+ * @returns {GameItem|null}
+ */
 function resolveItem(def){
   if(!def) return null;
   const id = typeof def === 'string' ? def : def.id;
@@ -38,6 +74,9 @@ function getPartyInventoryCapacity() {
   return party.length * 20;
 }
 
+/**
+ * @param {string|GameItem} item
+ */
 function dropItemNearParty(item) {
   const it = resolveItem(item);
   if (!it || !it.id) {
@@ -49,6 +88,10 @@ function dropItemNearParty(item) {
   if (typeof toast === 'function') toast(`Inventory full, ${base.name} was dropped.`);
 }
 
+/**
+ * @param {string|GameItem} item
+ * @returns {boolean}
+ */
 function addToInv(item) {
   if (player.inv.length >= getPartyInventoryCapacity()) {
     return false;
@@ -70,6 +113,10 @@ function removeFromInv(invIndex) {
 }
 
 // Drop multiple items from inventory as a single cache on the ground
+/**
+ * @param {number[]} indices
+ * @returns {number}
+ */
 function dropItems(indices) {
   if (!Array.isArray(indices) || indices.length === 0) return 0;
   const ids = indices.map(i => {
@@ -88,6 +135,10 @@ function dropItems(indices) {
 }
 
 // Add all items from a cache drop into inventory
+/**
+ * @param {ItemDrop} drop
+ * @returns {boolean}
+ */
 function pickupCache(drop) {
   const ids = Array.isArray(drop?.items) ? drop.items : (drop?.id ? [drop.id] : []);
   if (player.inv.length + ids.length > getPartyInventoryCapacity()) {
@@ -99,6 +150,10 @@ function pickupCache(drop) {
   return true;
 }
 
+/**
+ * @param {number} memberIndex
+ * @param {number} invIndex
+ */
 function equipItem(memberIndex, invIndex){
   const m=party[memberIndex]; const it=player.inv[invIndex];
   if(!m||!it||!EQUIP_TYPES.includes(it.type)){ log('Cannot equip that.'); return; }
@@ -134,6 +189,10 @@ function equipItem(memberIndex, invIndex){
   }
 }
 
+/**
+ * @param {number} memberIndex
+ * @param {string} slot
+ */
 function unequipItem(memberIndex, slot){
   const m=party[memberIndex];
   if(!m) return;
@@ -164,6 +223,10 @@ function unequipItem(memberIndex, slot){
 }
 
 // Remove curse flag from item with given id in inventory or equipped slots
+/**
+ * @param {string} id
+ * @returns {boolean}
+ */
 function uncurseItem(id){
   if(!id) return false;
   let found=false;
@@ -180,6 +243,10 @@ function uncurseItem(id){
   return found;
 }
 
+/**
+ * @param {GameItem} it
+ * @returns {number}
+ */
 function estimateItemValue(it){
   let val = 0;
   if(it.use){
