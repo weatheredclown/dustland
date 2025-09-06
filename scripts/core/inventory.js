@@ -246,6 +246,19 @@ function useItem(invIndex){
     notifyInventoryChanged();
     return true;
   }
+  if(it.use.type==='cleanse'){
+    const who = (party[selectedMember]||party[0]);
+    if(!who){ log('No party member to cleanse.'); return false; }
+    if(Array.isArray(who.statusEffects)){
+      who.statusEffects.length = 0;
+    }
+    log(`${who.name} feels purified.`);
+    if(typeof toast==='function') toast(`${who.name} is cleansed`);
+    emit('sfx','tick');
+    player.inv.splice(invIndex,1);
+    notifyInventoryChanged();
+    return true;
+  }
   if(typeof it.use.onUse === 'function'){
     const ok = it.use.onUse({player, party, log, toast});
     if(ok!==false){
