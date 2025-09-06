@@ -1481,6 +1481,7 @@ function renderTreeEditor() {
   wrap.querySelectorAll('input,textarea,select').forEach(el => el.addEventListener('input', updateTreeData));
   wrap.querySelectorAll('select').forEach(el => el.addEventListener('change', updateTreeData));
   wrap.querySelectorAll('input[type=checkbox]').forEach(el => el.addEventListener('change', updateTreeData));
+  refreshChoiceDropdowns();
 }
 
 function updateTreeData() {
