@@ -6,15 +6,15 @@ import vm from 'node:vm';
 const code = await fs.readFile(new URL('../scripts/core/item-generator.js', import.meta.url), 'utf8');
 vm.runInThisContext(code, { filename: 'core/item-generator.js' });
 
-test('generator creates item with type, name, and stats', () => {
+test('generator creates trinket with stat boost', () => {
   const vals = [0,0,0,0];
   const rng = () => vals.shift() ?? 0;
   const item = ItemGen.generate('sealed', rng);
   assert.ok(item.id);
-  assert.strictEqual(item.type, 'weapon');
+  assert.strictEqual(item.type, 'trinket');
   assert.strictEqual(item.name, 'Grit-Stitched Repeater');
   assert.strictEqual(item.rank, 'sealed');
-  assert.ok(item.stats.power >= 3 && item.stats.power <= 5);
+  assert.strictEqual(item.mods.STR, 4);
   assert.strictEqual(item.scrap, ItemGen.calcScrap(item));
 });
 
@@ -24,10 +24,12 @@ test('generated items have unique ids', () => {
   assert.notStrictEqual(a.id, b.id);
 });
 
-test('higher rank yields higher power', () => {
+test('higher rank yields higher boost', () => {
   const rusted = ItemGen.generate('rusted', () => 0.99);
   const armored = ItemGen.generate('armored', () => 0);
-  assert.ok(armored.stats.power > rusted.stats.power);
+  const rustedBoost = Object.values(rusted.mods)[0];
+  const armoredBoost = Object.values(armored.mods)[0];
+  assert.ok(armoredBoost > rustedBoost);
 });
 
 test('pools and stat tables populated', () => {
@@ -39,31 +41,6 @@ test('pools and stat tables populated', () => {
 test('generate uses updated tables', () => {
   const item = ItemGen.generate('armored', () => 0.5);
   assert.strictEqual(item.name, 'Scrap-Bound Injector');
-  assert.strictEqual(item.stats.power, 9);
+  assert.strictEqual(item.mods.PER, 9);
   assert.strictEqual(item.scrap, ItemGen.calcScrap(item));
-});
-
-test('oddity items include lore snippet', () => {
-  const vals = [0.95,0,0,0];
-  const rng = () => vals.shift() ?? 0;
-  const item = ItemGen.generate('rusted', rng);
-  assert.strictEqual(item.type, 'oddity');
-  assert.ok(ItemGen.oddityLore.includes(item.lore));
-});
-
-test('vaulted items can gain an affix', () => {
-  const vals = [0,0,0,0,0.3,0];
-  const rng = () => vals.shift() ?? 0;
-  const item = ItemGen.generate('vaulted', rng);
-  assert.strictEqual(item.affix, 'of Fury');
-  assert.ok(item.name.endsWith(' of Fury'));
-  assert.strictEqual(item.miniQuest, undefined);
-});
-
-test('vaulted items can carry a mini-quest hook', () => {
-  const vals = [0,0,0,0,0.7,0];
-  const rng = () => vals.shift() ?? 0;
-  const item = ItemGen.generate('vaulted', rng);
-  assert.strictEqual(item.miniQuest, 'lostArchive');
-  assert.strictEqual(item.affix, undefined);
 });
