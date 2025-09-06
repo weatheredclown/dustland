@@ -316,6 +316,18 @@ test('validateSpawns lists blocked spawns', () => {
   assert.strictEqual(issues[1].type,'npc');
 });
 
+test('validateSpawns flags locked NPC without unlock', () => {
+  genWorld(1);
+  moduleData.start = { map:'world', x:0, y:0 };
+  moduleData.items = [];
+  moduleData.npcs = [{ id:'door', map:'world', x:1, y:0, locked:true, tree:{ locked:{ text:'', choices:[{ label:'(Leave)', to:'bye' }] }, start:{ text:'', choices:[{ label:'(Leave)', to:'bye' }] }, bye:{ text:'', choices:[] } } }];
+  const issues = validateSpawns();
+  assert.strictEqual(issues.length,1);
+  assert.strictEqual(issues[0].msg,'Locked NPC door has no unlock');
+  assert.strictEqual(issues[0].type,'npc');
+  assert.strictEqual(issues[0].idx,0);
+});
+
 test('addTerrainFeature sprinkles noise', () => {
   genWorld(1);
   for (let dy=-1; dy<=1; dy++) {
