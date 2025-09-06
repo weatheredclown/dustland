@@ -233,11 +233,13 @@ function initTags() {
 initTags();
 let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editZoneIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
 let currentTree = {};
+globalThis.treeData = currentTree;
 function getTreeData() {
   return currentTree;
 }
 function setTreeData(tree) {
   currentTree = tree;
+  globalThis.treeData = currentTree;
   const treeEl = document.getElementById('npcTree');
   if (treeEl) treeEl.value = JSON.stringify(tree, null, 2);
   if (editNPCIdx >= 0) moduleData.npcs[editNPCIdx].tree = tree;
