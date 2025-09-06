@@ -1132,6 +1132,21 @@ test('lock/unlock effects toggle npc access', () => {
   closeDialog();
   NPCS.length = 0;
 });
+test('lockNPC duration unlocks after time', async () => {
+  const tree = { locked:{ text:'locked', choices:[{ label:'(Leave)', to:'bye' }] }, start:{ text:'open', choices:[{ label:'(Leave)', to:'bye' }] }, bye:{ text:'', choices:[] } };
+  const npc = makeNPC('ch', 'world', 0, 0, '#fff', 'Chest', '', '', tree);
+  NPCS.length = 0;
+  NPCS.push(npc);
+  Effects.apply([{ effect: 'lockNPC', npcId: 'ch', duration: 10 }]);
+  openDialog(npc);
+  assert.strictEqual(textEl.textContent, 'locked');
+  closeDialog();
+  await new Promise(r => setTimeout(r, 20));
+  openDialog(npc);
+  assert.strictEqual(textEl.textContent, 'open');
+  closeDialog();
+  NPCS.length = 0;
+});
 test('npcColor effect changes NPC color', () => {
   const npc = makeNPC('col', 'world', 0, 0, '#00ff00', 'Color', '', '', {});
   NPCS.length = 0;

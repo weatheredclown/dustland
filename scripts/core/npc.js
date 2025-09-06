@@ -3,8 +3,8 @@ var Dustland = globalThis.Dustland;
 const NPC_COLOR = '#9ef7a0';
 const OBJECT_COLOR = '#225a20';
 class NPC {
-  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,quests=null,questDialogs=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false,prompt=null,questIdx=0}) {
-    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,quests,questDialogs,combat,shop,portraitSheet,portraitLock,symbol,door,locked,prompt,questIdx});
+  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,quests=null,questDialogs=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false,prompt=null,unlockTime=null,questIdx=0}) {
+    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,quests,questDialogs,combat,shop,portraitSheet,portraitLock,symbol,door,locked,prompt,unlockTime,questIdx});
     if (Array.isArray(this.quests) && !this.quest) {
       this.quest = this.quests[this.questIdx] || null;
     }

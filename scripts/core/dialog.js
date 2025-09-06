@@ -346,6 +346,10 @@ function openDialog(npc, node='start'){
   const rawTree = typeof npc.tree === 'function' ? npc.tree() : npc.tree;
   dialogState.tree=normalizeDialogTree(rawTree||{});
   dialogState.node=node;
+  if(npc.unlockTime && Date.now() >= npc.unlockTime){
+    npc.locked = false;
+    npc.unlockTime = null;
+  }
   if(npc.locked && dialogState.tree.locked){
     dialogState.node='locked';
   }

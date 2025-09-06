@@ -104,13 +104,19 @@
           case 'lockNPC': {
             if (eff.npcId && typeof NPCS !== 'undefined') {
               const n = NPCS.find(n => n.id === eff.npcId);
-              if (n) n.locked = true;
+              if (n) {
+                n.locked = true;
+                if (typeof eff.duration === 'number' && eff.duration > 0) {
+                  n.unlockTime = Date.now() + eff.duration;
+                  setTimeout(() => { n.locked = false; n.unlockTime = null; }, eff.duration);
+                }
+              }
             }
             break; }
           case 'unlockNPC': {
             if (eff.npcId && typeof NPCS !== 'undefined') {
               const n = NPCS.find(n => n.id === eff.npcId);
-              if (n) n.locked = false;
+              if (n) { n.locked = false; n.unlockTime = null; }
             }
             break; }
           case 'npcColor': {
