@@ -1259,7 +1259,7 @@ function addChoiceRow(container, ch = {}) {
     if (rewardTypeSel) rewardTypeSel.value = isXP ? 'xp' : isScrap ? 'scrap' : 'item';
     if (xp) xp.value = xpVal;
     if (sc) sc.value = scrapVal;
-    if (ri) ri.value = itemVal;
+    if (ri) (ri.dataset || (ri.dataset = {})).sel = itemVal;
   }
   if (stat || dc || success || failure) {
     addAdv('stat');
@@ -1270,14 +1270,26 @@ function addChoiceRow(container, ch = {}) {
   }
   if (costItem || costSlot || costTag) {
     addAdv('cost');
-    if (costItem) row.querySelector('.choiceCostItem').value = costItem;
-    if (costSlot) row.querySelector('.choiceCostSlot').value = costSlot;
+    if (costItem) {
+      const el = row.querySelector('.choiceCostItem');
+      if (el) (el.dataset || (el.dataset = {})).sel = costItem;
+    }
+    if (costSlot) {
+      const el = row.querySelector('.choiceCostSlot');
+      if (el) (el.dataset || (el.dataset = {})).sel = costSlot;
+    }
     if (costTag) row.querySelector('.choiceCostTag').value = costTag;
   }
   if (reqItem || reqSlot || reqTag) {
     addAdv('req');
-    if (reqItem) row.querySelector('.choiceReqItem').value = reqItem;
-    if (reqSlot) row.querySelector('.choiceReqSlot').value = reqSlot;
+    if (reqItem) {
+      const el = row.querySelector('.choiceReqItem');
+      if (el) (el.dataset || (el.dataset = {})).sel = reqItem;
+    }
+    if (reqSlot) {
+      const el = row.querySelector('.choiceReqSlot');
+      if (el) (el.dataset || (el.dataset = {})).sel = reqSlot;
+    }
     if (reqTag) row.querySelector('.choiceReqTag').value = reqTag;
   }
   if (joinId || joinName || joinRole) {
@@ -1415,14 +1427,14 @@ function populateTemplateDropdown(sel, selected = '') {
 function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceTo').forEach(sel => populateChoiceDropdown(sel, sel.value));
   document.querySelectorAll('.choiceStat').forEach(sel => populateStatDropdown(sel, sel.value));
-  document.querySelectorAll('.choiceCostSlot').forEach(sel => populateSlotDropdown(sel, sel.value));
-  document.querySelectorAll('.choiceReqSlot').forEach(sel => populateSlotDropdown(sel, sel.value));
-  document.querySelectorAll('.choiceCostItem').forEach(sel => populateItemDropdown(sel, sel.value));
-  document.querySelectorAll('.choiceReqItem').forEach(sel => populateItemDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceCostSlot').forEach(sel => populateSlotDropdown(sel, sel.dataset.sel || sel.value));
+  document.querySelectorAll('.choiceReqSlot').forEach(sel => populateSlotDropdown(sel, sel.dataset.sel || sel.value));
+  document.querySelectorAll('.choiceCostItem').forEach(sel => populateItemDropdown(sel, sel.dataset.sel || sel.value));
+  document.querySelectorAll('.choiceReqItem').forEach(sel => populateItemDropdown(sel, sel.dataset.sel || sel.value));
   document.querySelectorAll('.choiceJoinId').forEach(sel => populateNPCDropdown(sel, sel.value));
   document.querySelectorAll('.choiceJoinRole').forEach(sel => populateRoleDropdown(sel, sel.value));
   document.querySelectorAll('.choiceGotoMap').forEach(sel => populateMapDropdown(sel, sel.value));
-  document.querySelectorAll('.choiceRewardItem').forEach(sel => populateItemDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceRewardItem').forEach(sel => populateItemDropdown(sel, sel.dataset.sel || sel.value));
   document.querySelectorAll('.choiceBoard').forEach(sel => populateInteriorDropdown(sel, sel.value));
   document.querySelectorAll('.choiceUnboard').forEach(sel => populateInteriorDropdown(sel, sel.value));
   document.querySelectorAll('.choiceLockNPC').forEach(sel => populateNPCDropdown(sel, sel.value));
