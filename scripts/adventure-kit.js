@@ -1111,7 +1111,8 @@ const ADV_HTML = {
   doors: `<label>Board Door<select class="choiceBoard"></select></label>
       <label>Unboard Door<select class="choiceUnboard"></select></label>`,
   npcLock: `<label>Lock NPC<select class="choiceLockNPC"></select></label>
-      <label>Unlock NPC<select class="choiceUnlockNPC"></select></label>`,
+      <label>Unlock NPC<select class="choiceUnlockNPC"></select></label>
+      <label>Lock Duration(ms)<input type="number" class="choiceLockDuration"/></label>`,
   npcColor: `<label>NPC<select class="choiceColorNPC"></select></label>
       <label>Color<input type="color" class="choiceNPCColor"/></label>`,
   flagEff: `<fieldset class="choiceSubGroup"><legend>Flag Effect</legend>
@@ -1165,6 +1166,7 @@ function addChoiceRow(container, ch = {}) {
   const lockEff = effs.find(e => e.effect === 'lockNPC');
   const unlockEff = effs.find(e => e.effect === 'unlockNPC');
   const lockId = lockEff ? lockEff.npcId || '' : '';
+  const lockDur = lockEff && typeof lockEff.duration === 'number' ? lockEff.duration : '';
   const unlockId = unlockEff ? unlockEff.npcId || '' : '';
   const colorEff = effs.find(e => e.effect === 'npcColor');
   const colorNpc = colorEff ? colorEff.npcId || '' : '';
@@ -1313,7 +1315,7 @@ function addChoiceRow(container, ch = {}) {
     if (boardId) row.querySelector('.choiceBoard').value = boardId;
     if (unboardId) row.querySelector('.choiceUnboard').value = unboardId;
   }
-  if (lockId || unlockId) {
+  if (lockId || unlockId || lockDur !== '') {
     addAdv('npcLock');
     if (lockId) {
       const el = row.querySelector('.choiceLockNPC');
@@ -1323,6 +1325,7 @@ function addChoiceRow(container, ch = {}) {
       const el = row.querySelector('.choiceUnlockNPC');
       if (el) (el.dataset || (el.dataset = {})).sel = unlockId;
     }
+    if (lockDur !== '') row.querySelector('.choiceLockDuration').value = lockDur;
   }
   if (colorNpc || colorHex) {
     addAdv('npcColor');
@@ -1610,6 +1613,8 @@ function updateTreeData() {
       const unboardId = chEl.querySelector('.choiceUnboard')?.value.trim();
       const lockSel = chEl.querySelector('.choiceLockNPC');
       const lockNpc = lockSel ? (lockSel.value || lockSel.dataset?.sel || '').trim() : '';
+      const lockDurTxt = chEl.querySelector('.choiceLockDuration')?.value.trim();
+      const lockDur = lockDurTxt ? parseInt(lockDurTxt, 10) : 0;
       const unlockSel = chEl.querySelector('.choiceUnlockNPC');
       const unlockNpc = unlockSel ? (unlockSel.value || unlockSel.dataset?.sel || '').trim() : '';
       const colorSel = chEl.querySelector('.choiceColorNPC');
@@ -1619,7 +1624,11 @@ function updateTreeData() {
       const effs = [];
       if (boardId) effs.push({ effect: 'boardDoor', interiorId: boardId });
       if (unboardId) effs.push({ effect: 'unboardDoor', interiorId: unboardId });
-      if (lockNpc) effs.push({ effect: 'lockNPC', npcId: lockNpc });
+      if (lockNpc) {
+        const obj = { effect: 'lockNPC', npcId: lockNpc };
+        if (!Number.isNaN(lockDur) && lockDur > 0) obj.duration = lockDur;
+        effs.push(obj);
+      }
       if (unlockNpc) effs.push({ effect: 'unlockNPC', npcId: unlockNpc });
       if (colorNpc && colorHex) effs.push({ effect: 'npcColor', npcId: colorNpc, color: colorHex });
       if (effs.length) c.effects = effs;

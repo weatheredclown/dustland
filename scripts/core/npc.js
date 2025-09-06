@@ -3,8 +3,8 @@ var Dustland = globalThis.Dustland;
 const NPC_COLOR = '#9ef7a0';
 const OBJECT_COLOR = '#225a20';
 class NPC {
-  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false,prompt=null}) {
-    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,combat,shop,portraitSheet,portraitLock,symbol,door,locked,prompt});
+  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false,prompt=null,unlockTime=null}) {
+    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,combat,shop,portraitSheet,portraitLock,symbol,door,locked,prompt,unlockTime});
     // `door` marks an NPC tile as passable when unlocked
     const capNode = (node) => {
       if (this.combat && node === 'do_fight') {
