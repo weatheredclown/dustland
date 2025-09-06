@@ -30,7 +30,7 @@ Seeded 2D map generator that layers noise and region growth to draw terrain, wat
 1. **Height field** – Generate a Simplex-noise height map, optionally subtracting a radial falloff to bias edges toward water, then convert elevations into water, sand, brush, or rock tiles.
 2. **Tile refinement** – Grow land regions and smooth stray cells with cellular automata.
 3. **Road graph** – Connect region centers with a minimum spanning tree; jitter paths with midpoint displacement or a random-walk carve. If only one land region exists, split the map into quadrants to seed multiple centers so roads still appear on contiguous terrain.
-4. **Ruin placement** – Seed ruin clusters with Poisson-disk sampling and fill nearby tiles to form small forts.
+4. **Ruin placement** – Seed spaced ruin hubs with Poisson-disk sampling and scatter smaller ruin clusters around each hub.
 5. **Export** – Emit a JSON tile map plus road and feature metadata.
 
 ## Data Flow
@@ -75,7 +75,7 @@ Insights pulled from accessible community tutorials and open-source repos:
 - [x] When only one land region is detected, subdivide it into quadrants so roads generate even on fully connected land.
 
 ### Ruin Placement
-- [x] Use Poisson-disk sampling to scatter ruin tiles while honoring spacing and terrain rules.
+- [x] Use Poisson-disk sampling to place spaced ruin hubs that each spawn smaller ruin clusters.
 
 ### Export
 - [x] Serialize tile grid, regions, roads, and features to `map.json`.

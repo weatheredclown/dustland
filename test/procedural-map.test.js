@@ -203,6 +203,50 @@ test('generateProceduralMap scatters ruins', () => {
   assert.ok(ruins > 0);
 });
 
+test('generateProceduralMap groups ruin clusters', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, BRUSH: 3, ROCK: 5, ROAD: 4, RUIN: 6 };
+  const map = globalThis.generateProceduralMap(7, 32, 32, 4, 0);
+  const tiles = map.tiles;
+  const h = tiles.length;
+  const w = tiles[0].length;
+  const seen = Array.from({ length: h }, () => Array(w).fill(false));
+  const centers = [];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (tiles[y][x] !== 6 || seen[y][x]) continue;
+      const q = [[x, y]];
+      seen[y][x] = true;
+      let sx = 0, sy = 0, count = 0;
+      while (q.length) {
+        const [cx, cy] = q.pop();
+        sx += cx; sy += cy; count++;
+        const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        for (const [dx, dy] of dirs) {
+          const nx = cx + dx, ny = cy + dy;
+          if (ny >= 0 && ny < h && nx >= 0 && nx < w && tiles[ny][nx] === 6 && !seen[ny][nx]) {
+            seen[ny][nx] = true;
+            q.push([nx, ny]);
+          }
+        }
+      }
+      centers.push({ x: sx / count, y: sy / count });
+    }
+  }
+  assert.ok(centers.length > 1);
+  let min = Infinity, max = 0;
+  for (let i = 0; i < centers.length; i++) {
+    for (let j = i + 1; j < centers.length; j++) {
+      const dx = centers[i].x - centers[j].x;
+      const dy = centers[i].y - centers[j].y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < min) min = d;
+      if (d > max) max = d;
+    }
+  }
+  assert.ok(min <= 5);
+  assert.ok(max >= 10);
+});
+
 test('generateProceduralMap respects feature toggles', () => {
   globalThis.TILE = { SAND: 0, WATER: 2, BRUSH: 3, ROCK: 5, ROAD: 4, RUIN: 6 };
   const map = globalThis.generateProceduralMap(5, 16, 16, 4, 0, { roads: false, ruins: false });
