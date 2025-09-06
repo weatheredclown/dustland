@@ -717,7 +717,7 @@ function resizeInterior(){
   const w=parseInt(document.getElementById('intW').value,10)||I.w;
   const h=parseInt(document.getElementById('intH').value,10)||I.h;
   const ng=Array.from({length:h},(_,y)=>Array.from({length:w},(_,x)=>{
-    if(y<I.h && x<I.w) return I.grid[y][x];
+    if(y<I.h && x<I.w && I.grid[y]) return I.grid[y][x];
     const edge=y===0||y===h-1||x===0||x===w-1; return edge?TILE.WALL:TILE.FLOOR;
   }));
   I.w=w; I.h=h; I.grid=ng;
