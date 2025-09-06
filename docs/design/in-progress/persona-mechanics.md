@@ -91,4 +91,4 @@ Persona equips and other world moments should fire through the game's event bus.
  - [x] Implement profile runtime service for personas, buffs, and disguises.
 - [x] Emit `persona:equip` and `persona:unequip` events on the global bus.
 - [x] Load/save effect packs in the save file and run them when subscribed events fire.
-- [ ] Build editor inspector for authoring and testing effect packs.
+- [x] Build editor inspector for authoring and testing effect packs.

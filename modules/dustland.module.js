@@ -228,6 +228,14 @@ const DATA = `
       ]
     },
     {
+      "map": "world",
+      "x": 44,
+      "y": 80,
+      "id": "cloth",
+      "name": "Cloth",
+      "type": "quest"
+    },
+    {
       "id": "raider_knife",
       "name": "Raider Knife",
       "type": "weapon",

@@ -20,5 +20,23 @@
     log('Crafted a signal beacon.');
   }
 
-  Dustland.workbench = { craftSignalBeacon };
+  function craftSolarTarp(){
+    const scrapCost = 3;
+    if ((player.scrap || 0) < scrapCost){
+      log('Need 3 scrap.');
+      return;
+    }
+    if (!hasItem('cloth')){
+      log('Need cloth.');
+      return;
+    }
+    player.scrap -= scrapCost;
+    const idx = findItemIndex('cloth');
+    if (idx >= 0) removeFromInv(idx);
+    addToInv('solar_tarp');
+    bus?.emit('craft:solar-tarp');
+    log('Crafted a solar panel tarp.');
+  }
+
+  Dustland.workbench = { craftSignalBeacon, craftSolarTarp };
 })();
