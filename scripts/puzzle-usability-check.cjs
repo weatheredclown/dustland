@@ -1,6 +1,9 @@
 globalThis.applyModule = function(){};
 globalThis.state = {};
 globalThis.renderWorld = function(){};
+globalThis.startGame = undefined;
+globalThis.setPartyPos = function(){};
+globalThis.centerCamera = function(){};
 
 function load(p){
   const resolved = require.resolve(p);

@@ -19,7 +19,7 @@
 
 ## Implementation Sketch
 - [x] Add `hydration` property to party members in `scripts/core/status.js`.
-- [ ] Broadcast `hydration:tick` from the world loop; listeners reduce the meter.
+ - [x] Broadcast `hydration:tick` from the world loop; listeners reduce the meter only in zones marked dry.
 - [ ] Update the HUD with a compact droplet meter next to stamina.
 - [ ] Seed a starter canteen in character creation via `data/items/starter.json`.
 

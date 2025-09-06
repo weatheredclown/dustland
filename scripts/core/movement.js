@@ -261,6 +261,7 @@ function move(dx,dy){
         centerCamera(party.x,party.y,state.map); updateHUD();
         checkAggro();
         checkRandomEncounter();
+        bus.emit('hydration:tick');
         bus.emit('sfx','step');
         // NPCs advance along paths after the player steps
         if (Dustland.path?.tickPathAI) Dustland.path.tickPathAI();
