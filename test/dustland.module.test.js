@@ -78,6 +78,17 @@ test('dustland module warns about hall monster', () => {
   assert.ok(exitdoor.tree.start.text.includes('rotwalker at the top of the hall'));
 });
 
+test('workshop building includes workbench NPC', () => {
+  const data = loadModuleData();
+  const building = data.buildings.find(b => b.interiorId === 'workshop');
+  assert.ok(building);
+  const npc = data.npcs.find(n => n.id === 'workbench');
+  assert.ok(npc);
+  assert.strictEqual(npc.map, 'workshop');
+  const hasCraft = npc.tree?.start?.choices?.some(c => c.label.includes('Craft signal beacon'));
+  assert.ok(hasCraft);
+});
+
 test('medkit heals for 10 HP', () => {
   const data = loadModuleData();
   const med = data.items.find(i => i.id === 'medkit');
