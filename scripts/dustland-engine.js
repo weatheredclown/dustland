@@ -458,7 +458,16 @@ function render(gameState=state, dt){
         if(it.map!==activeMap) continue;
         if(it.x>=camX&&it.y>=camY&&it.x<camX+vW&&it.y<camY+vH){
           const vx=(it.x-camX+offX)*TS, vy=(it.y-camY+offY)*TS;
-          ctx.fillStyle='#c8ffbf'; ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
+          if(Array.isArray(it.items) && it.items.length>1){
+            const a=0.7+0.3*Math.sin(Date.now()/300);
+            ctx.fillStyle='#ffb347';
+            ctx.globalAlpha=a;
+            ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
+            ctx.globalAlpha=1;
+          }else{
+            ctx.fillStyle='#c8ffbf';
+            ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
+          }
         }
       }
     }
@@ -652,11 +661,49 @@ function calcItemValue(it){
   }
   return score;
 }
+let dropMode=false;
+const dropSet=new Set();
 function renderInv(){
   const inv=document.getElementById('inv');
   inv.innerHTML='';
+  if(dropMode){
+    const ctrl=document.createElement('div');
+    ctrl.style.margin='4px 0';
+    const ok=document.createElement('button');
+    ok.className='btn';
+    ok.textContent='Drop Selected';
+    ok.onclick=()=>{ if(dropSet.size) dropItems(Array.from(dropSet)); dropMode=false; dropSet.clear(); renderInv(); updateHUD?.(); };
+    const cancel=document.createElement('button');
+    cancel.className='btn';
+    cancel.textContent='Cancel';
+    cancel.onclick=()=>{ dropMode=false; dropSet.clear(); renderInv(); };
+    ctrl.appendChild(ok); ctrl.appendChild(cancel);
+    inv.appendChild(ctrl);
+    if(player.inv.length===0){ inv.appendChild(Object.assign(document.createElement('div'),{className:'slot muted',textContent:'(empty)'})); return; }
+    player.inv.forEach((it,i)=>{
+      const row=document.createElement('div');
+      row.className='slot';
+      const cb=document.createElement('input');
+      cb.type='checkbox';
+      cb.onchange=()=>{ if(cb.checked) dropSet.add(i); else dropSet.delete(i); };
+      row.appendChild(cb);
+      const span=document.createElement('span');
+      span.textContent=it.name;
+      row.appendChild(span);
+      inv.appendChild(row);
+    });
+    return;
+  }
+  const ctrl=document.createElement('div');
+  ctrl.style.margin='4px 0';
+  const dropBtn=document.createElement('button');
+  dropBtn.className='btn';
+  dropBtn.textContent='Drop';
+  dropBtn.onclick=()=>{ dropMode=true; dropSet.clear(); renderInv(); };
+  ctrl.appendChild(dropBtn);
+  inv.appendChild(ctrl);
   if(player.inv.length===0){
-    inv.innerHTML='<div class="slot muted">(empty)</div>';
+    inv.appendChild(Object.assign(document.createElement('div'),{className:'slot muted',textContent:'(empty)'}));
     return;
   }
   const caches = {};

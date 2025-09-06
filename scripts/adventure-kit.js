@@ -238,12 +238,14 @@ function getTreeData() {
 }
 function setTreeData(tree) {
   currentTree = tree;
+  globalThis.treeData = currentTree;
   const treeEl = document.getElementById('npcTree');
   if (treeEl) treeEl.value = JSON.stringify(tree, null, 2);
   if (editNPCIdx >= 0) moduleData.npcs[editNPCIdx].tree = tree;
 }
 globalThis.getTreeData = getTreeData;
 globalThis.setTreeData = setTreeData;
+globalThis.treeData = currentTree;
 let selectedObj = null;
 const mapSelect = document.getElementById('mapSelect');
 let currentMap = 'world';
