@@ -679,9 +679,9 @@ const DATA = `
     },
     {
       "id": "party_mira",
-      "map": "hall",
-      "x": 15,
-      "y": 21,
+      "map": "world",
+      "x": 16,
+      "y": 45,
       "color": "#f66",
       "name": "Mira",
       "title": "Blade Dancer",
