@@ -1721,7 +1721,10 @@ function closeDialogEditor() {
 
 function toggleQuestDialogBtn() {
   const btn = document.getElementById('genQuestDialog');
-  btn.style.display = document.getElementById('npcQuest').value ? 'block' : 'none';
+  const sel = document.getElementById('npcQuests');
+  if (!btn || !sel) return;
+  const count = sel.selectedOptions ? sel.selectedOptions.length : 0;
+  btn.style.display = count ? 'block' : 'none';
 }
 
 function addNode() {
@@ -1734,9 +1737,13 @@ function addNode() {
 }
 
 function generateQuestTree() {
-  const quest = document.getElementById('npcQuest').value.trim();
+  const sel = document.getElementById('npcQuests');
+  if (!sel) return;
+  const opts = sel.selectedOptions || [];
+  const quest = opts[0]?.value?.trim();
   if (!quest) return;
-  const dialog = document.getElementById('npcDialog').value.trim();
+  const dialogLines = document.getElementById('npcDialog').value.trim().split('\n');
+  const dialog = dialogLines[0] || '';
   const accept = document.getElementById('npcAccept').value.trim();
   const turnin = document.getElementById('npcTurnin').value.trim();
   const tree = {
@@ -1750,7 +1757,10 @@ function generateQuestTree() {
 
 function toggleQuestTextWrap() {
   const wrap = document.getElementById('questTextWrap');
-  wrap.style.display = document.getElementById('npcQuest').value ? 'block' : 'none';
+  const sel = document.getElementById('npcQuests');
+  if (!wrap || !sel) return;
+  const count = sel.selectedOptions ? sel.selectedOptions.length : 0;
+  wrap.style.display = count ? 'block' : 'none';
 }
 
 // --- NPCs ---
@@ -1922,7 +1932,8 @@ function startNewNPC() {
   populateFlagList();
   updateFlagBuilder();
   document.getElementById('npcDialog').value = '';
-  document.getElementById('npcQuest').value = '';
+  const qs = document.getElementById('npcQuests');
+  if (qs) Array.from(qs.options || []).forEach(o => o.selected = false);
   document.getElementById('npcAccept').value = 'Good luck.';
   document.getElementById('npcTurnin').value = 'Thanks for helping.';
   toggleQuestTextWrap();
@@ -1974,8 +1985,9 @@ function collectNPCFromForm() {
   const map = document.getElementById('npcMap').value.trim() || 'world';
   const x = parseInt(document.getElementById('npcX').value, 10) || 0;
   const y = parseInt(document.getElementById('npcY').value, 10) || 0;
-  const dialog = document.getElementById('npcDialog').value.trim();
-  const questId = document.getElementById('npcQuest').value.trim();
+  const dialogLines = document.getElementById('npcDialog').value.trim().split('\n');
+  const questSel = document.getElementById('npcQuests');
+  const questIds = questSel ? Array.from(questSel.selectedOptions || []).map(o => o.value.trim()).filter(Boolean) : [];
   const accept = document.getElementById('npcAccept').value.trim();
   const turnin = document.getElementById('npcTurnin').value.trim();
   const combat = document.getElementById('npcCombat').checked;
@@ -1990,29 +2002,35 @@ function collectNPCFromForm() {
   let tree = null;
   const treeTxt = document.getElementById('npcTree').value.trim();
   if (treeTxt) { try { tree = JSON.parse(treeTxt); } catch (e) { tree = null; } }
+  const firstQuest = questIds[0];
+  const startDialog = dialogLines[0] || '';
   if (!tree || !Object.keys(tree).length) {
-    if (questId) {
+    if (firstQuest) {
       tree = {
-        start: { text: dialog, choices: [{ label: 'Accept quest', to: 'accept', q: 'accept' }, { label: 'Turn in', to: 'do_turnin', q: 'turnin' }, { label: '(Leave)', to: 'bye' }] },
+        start: { text: startDialog, choices: [{ label: 'Accept quest', to: 'accept', q: 'accept' }, { label: 'Turn in', to: 'do_turnin', q: 'turnin' }, { label: '(Leave)', to: 'bye' }] },
         accept: { text: accept || 'Good luck.', choices: [{ label: '(Leave)', to: 'bye' }] },
         do_turnin: { text: turnin || 'Thanks for helping.', choices: [{ label: '(Leave)', to: 'bye' }] }
       };
     } else {
-      tree = { start: { text: dialog, choices: [{ label: '(Leave)', to: 'bye' }] } };
+      tree = { start: { text: startDialog, choices: [{ label: '(Leave)', to: 'bye' }] } };
     }
   }
   if (locked && !tree.locked) {
     tree.locked = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
   }
-  if (!tree.start) tree.start = { text: dialog, choices: [{ label: '(Leave)', to: 'bye' }] };
-  if (tree.start) tree.start.text = dialog;
+  if (!tree.start) tree.start = { text: startDialog, choices: [{ label: '(Leave)', to: 'bye' }] };
+  if (tree.start) tree.start.text = startDialog;
   if (tree.accept) tree.accept.text = accept || tree.accept.text;
   if (tree.do_turnin) tree.do_turnin.text = turnin || tree.do_turnin.text;
   if (combat) applyCombatTree(tree); else removeCombatTree(tree);
   document.getElementById('npcTree').value = JSON.stringify(tree, null, 2);
   loadTreeEditor();
 
-  const npc = { id, name, title, desc, color, symbol, map, x, y, tree, questId };
+  const npc = { id, name, title, desc, color, symbol, map, x, y, tree };
+  if (questIds.length > 1) npc.quests = questIds;
+  else if (firstQuest) npc.questId = firstQuest;
+  if (dialogLines.length > 1) npc.dialogs = dialogLines;
+  else if (dialogLines[0]) npc.dialog = dialogLines[0];
   if (document.getElementById('npcPatrol').checked) {
     const pts = gatherLoopFields();
     if (pts.length >= 2) npc.loop = pts;
@@ -2129,8 +2147,13 @@ function editNPC(i) {
   document.getElementById('npcVal').value = n.reveal?.value ?? 1;
   populateFlagList();
   updateFlagBuilder();
-  document.getElementById('npcDialog').value = n.tree?.start?.text || '';
-  document.getElementById('npcQuest').value = n.questId || '';
+  document.getElementById('npcDialog').value = Array.isArray(n.dialogs) ? n.dialogs.join('\n') : (n.dialog || n.tree?.start?.text || '');
+  const qs = document.getElementById('npcQuests');
+  if (qs) {
+    Array.from(qs.options || []).forEach(o => {
+      o.selected = Array.isArray(n.quests) ? n.quests.includes(o.value) : n.questId === o.value;
+    });
+  }
   document.getElementById('npcAccept').value = n.tree?.accept?.text || 'Good luck.';
   document.getElementById('npcTurnin').value = n.tree?.do_turnin?.text || 'Thanks for helping.';
   toggleQuestTextWrap();
@@ -2160,7 +2183,10 @@ function editNPC(i) {
 function renderNPCList() {
   const list = document.getElementById('npcList');
   const npcs = moduleData.npcs.map((n, i) => ({ n, i })).sort((a, b) => a.n.id.localeCompare(b.n.id));
-  list.innerHTML = npcs.map(({ n, i }) => `<div data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${n.questId ? ` [${n.questId}]` : ''}</div>`).join('');
+  list.innerHTML = npcs.map(({ n, i }) => {
+    const q = Array.isArray(n.quests) ? n.quests.join(',') : (n.questId || '');
+    return `<div data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${q ? ` [${q}]` : ''}</div>`;
+  }).join('');
   Array.from(list.children).forEach(div => {
     const idx = parseInt(div.dataset.idx, 10);
     div.onclick = () => editNPC(idx);
@@ -2754,6 +2780,9 @@ function startNewZone() {
   document.getElementById('zoneNegate').value = '';
   document.getElementById('zoneHealMult').value = '';
   document.getElementById('zoneNoEnc').checked = false;
+  document.getElementById('zoneUseItem').value = '';
+  document.getElementById('zoneReward').value = '';
+  document.getElementById('zoneOnce').checked = false;
   document.getElementById('addZone').textContent = 'Add Zone';
   document.getElementById('delZone').style.display = 'none';
   showZoneEditor(true);
@@ -2772,6 +2801,9 @@ function collectZone() {
   const negate = document.getElementById('zoneNegate').value.trim();
   const healMult = parseFloat(document.getElementById('zoneHealMult').value);
   const noEnc = document.getElementById('zoneNoEnc').checked;
+  const useItemId = document.getElementById('zoneUseItem').value.trim();
+  const reward = document.getElementById('zoneReward').value.trim();
+  const once = document.getElementById('zoneOnce').checked;
   const entry = { map, x, y, w, h };
   if (hp || msg) {
     entry.perStep = {};
@@ -2781,6 +2813,11 @@ function collectZone() {
   if (negate) entry.negate = negate;
   if (!isNaN(healMult)) entry.healMult = healMult;
   if (noEnc) entry.noEncounters = true;
+  if (useItemId) {
+    entry.useItem = { id: useItemId };
+    if (reward) entry.useItem.reward = reward;
+    if (once) entry.useItem.once = true;
+  }
   return entry;
 }
 
@@ -2815,6 +2852,9 @@ function editZone(i) {
   document.getElementById('zoneNegate').value = z.negate || '';
   document.getElementById('zoneHealMult').value = z.healMult ?? '';
   document.getElementById('zoneNoEnc').checked = !!z.noEncounters;
+  document.getElementById('zoneUseItem').value = z.useItem?.id || '';
+  document.getElementById('zoneReward').value = z.useItem?.reward || '';
+  document.getElementById('zoneOnce').checked = !!z.useItem?.once;
   document.getElementById('addZone').textContent = 'Update Zone';
   document.getElementById('delZone').style.display = 'block';
   showZoneEditor(true);
@@ -3301,7 +3341,16 @@ function addQuest() {
   const npcId = document.getElementById('questNPC').value.trim();
   if (npcId) {
     const npc = moduleData.npcs.find(n => n.id === npcId);
-    if (npc) npc.questId = id;
+    if (npc) {
+      if (Array.isArray(npc.quests)) {
+        if (!npc.quests.includes(id)) npc.quests.push(id);
+      } else if (npc.questId) {
+        npc.quests = [npc.questId, id];
+        delete npc.questId;
+      } else {
+        npc.questId = id;
+      }
+    }
   }
   editQuestIdx = -1;
   document.getElementById('addQuest').textContent = 'Add Quest';
@@ -3326,17 +3375,19 @@ function editQuest(i) {
   document.getElementById('questItem').value = q.item || '';
   document.getElementById('questReward').value = q.reward || '';
   document.getElementById('questXP').value = q.xp || 0;
-  const npc = moduleData.npcs.find(n => n.questId === q.id);
+  const npc = moduleData.npcs.find(n => Array.isArray(n.quests) ? n.quests.includes(q.id) : n.questId === q.id);
   document.getElementById('questNPC').value = npc ? npc.id : '';
   document.getElementById('addQuest').textContent = 'Update Quest';
   document.getElementById('delQuest').style.display = 'block';
   showQuestEditor(true);
 }
 function updateQuestOptions() {
-  const sel = document.getElementById('npcQuest');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">(none)</option>' + moduleData.quests.map(q => `<option value="${q.id}">${q.title}</option>`).join('');
-  sel.value = cur;
+  const sel = document.getElementById('npcQuests');
+    if (sel) {
+      const cur = Array.from(sel.selectedOptions || []).map(o => o.value);
+      sel.innerHTML = moduleData.quests.map(q => `<option value="${q.id}">${q.title}</option>`).join('');
+      cur.forEach(v => { const opt = Array.from(sel.options || []).find(o => o.value === v); if (opt) opt.selected = true; });
+    }
   const npcSel = document.getElementById('questNPC');
   if (npcSel) {
     const npcCur = npcSel.value;
@@ -3349,7 +3400,13 @@ function deleteQuest() {
   if (editQuestIdx < 0) return;
   confirmDialog('Delete this quest?', () => {
     const q = moduleData.quests[editQuestIdx];
-    moduleData.npcs.forEach(n => { if (n.questId === q.id) n.questId = ''; });
+    moduleData.npcs.forEach(n => {
+      if (Array.isArray(n.quests)) {
+        n.quests = n.quests.filter(id => id !== q.id);
+      } else if (n.questId === q.id) {
+        n.questId = '';
+      }
+    });
     moduleData.quests.splice(editQuestIdx, 1);
     editQuestIdx = -1;
     document.getElementById('addQuest').textContent = 'Add Quest';
@@ -3661,10 +3718,11 @@ document.getElementById('dialogModal').addEventListener('click', e => { if (e.ta
 });
 
 // When quest selection changes, show/hide extra fields, update preview, and (optionally) auto-generate the quest scaffold
-document.getElementById('npcQuest').addEventListener('change', () => {
+const npcQuestEl = document.getElementById('npcQuests');
+if (npcQuestEl) npcQuestEl.addEventListener('change', () => {
   toggleQuestDialogBtn();
   toggleQuestTextWrap();
-  if (document.getElementById('npcQuest').value) {
+  if ((npcQuestEl.selectedOptions || []).length) {
     generateQuestTree();     // build start/accept/turn-in scaffold
   } else {
     renderDialogPreview();   // just refresh preview of whatever is in the editor

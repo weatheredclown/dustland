@@ -18,10 +18,10 @@
 4. **Perks & Gear:** Items and perks can slow drain or auto-refill over time.
 
 ## Implementation Sketch
-1. Add `hydration` property to party members in `scripts/core/status.js`.
-2. Broadcast `hydration:tick` from the world loop; listeners reduce the meter.
-3. Update the HUD with a compact droplet meter next to stamina.
-4. Seed a starter canteen in character creation via `data/items/starter.json`.
+- [x] Add `hydration` property to party members in `scripts/core/status.js`.
+- [ ] Broadcast `hydration:tick` from the world loop; listeners reduce the meter.
+- [ ] Update the HUD with a compact droplet meter next to stamina.
+- [ ] Seed a starter canteen in character creation via `data/items/starter.json`.
 
 > **Gizmo:** Keep values in `data/balance/hydration.json` so modders can adjust without touching code.
 

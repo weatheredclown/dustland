@@ -235,7 +235,25 @@ const tileEvents = [];
 const zoneEffects = [];
 const enemyBanks = {};
 function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
-function registerZoneEffects(list){ (list||[]).forEach(z => zoneEffects.push(z)); }
+function registerZoneEffects(list){
+  (list||[]).forEach(z => {
+    zoneEffects.push(z);
+    const id = z.useItem?.id;
+    if(id && globalThis.EventBus?.on){
+      globalThis.EventBus.on(`used:${id}`, () => {
+        const map = z.map || 'world';
+        if(party.map !== map) return;
+        const { x, y } = party;
+        if(x < z.x || y < z.y || x >= z.x + (z.w || 0) || y >= z.y + (z.h || 0)) return;
+        if(z.useItem.once && z.useItem._used) return;
+        if(z.useItem.reward){
+          globalThis.Dustland?.actions?.applyQuestReward(z.useItem.reward);
+        }
+        if(z.useItem.once) z.useItem._used = true;
+      });
+    }
+  });
+}
 const state = { map:'world', mapFlags: {} }; // default map
 const player = { hp:10, ap:2, inv:[], scrap:0 };
 if (typeof registerItem === 'function') {
@@ -437,8 +455,10 @@ function applyModule(data = {}, options = {}) {
     if (n.hidden && n.reveal) { hiddenNPCs.push(n); return; }
     let tree = n.tree;
     if (typeof tree === 'string') { try { tree = JSON.parse(tree); } catch (e) { tree = null; } }
+    const dlgArr = n.dialogs || (Array.isArray(n.dialog) ? n.dialog : null);
     if (!tree) {
-      tree = { start: { text: n.dialog || '', choices: [{ label: '(Leave)', to: 'bye' }] } };
+      const txt = dlgArr ? dlgArr[0] : (n.dialog || '');
+      tree = { start: { text: txt, choices: [{ label: '(Leave)', to: 'bye' }] } };
     }
     let quest = null;
     if (n.questId && quests[n.questId]) quest = quests[n.questId];
@@ -450,6 +470,10 @@ function applyModule(data = {}, options = {}) {
     if (n.symbol) opts.symbol = n.symbol;
     if (n.door) opts.door = n.door;
     if (typeof n.locked === 'boolean') opts.locked = n.locked;
+    if (Array.isArray(n.quests)) {
+      opts.quests = n.quests.map(id => quests[id]).filter(Boolean);
+    }
+    if (dlgArr) opts.questDialogs = dlgArr;
     const npc = makeNPC(n.id, n.map || 'world', n.x, n.y, n.color, n.name || n.id, n.title || '', n.desc || '', tree, quest, null, null, opts);
     if (Array.isArray(n.loop)) npc.loop = n.loop;
     if (typeof NPCS !== 'undefined') NPCS.push(npc);

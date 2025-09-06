@@ -18,10 +18,10 @@
 4. **UI:** World map highlights linked bunkers; select and confirm to jump.
 
 ## Implementation Sketch
-1. Add `data/bunkers.json` with coordinates and activation flags.
-2. Create `scripts/core/fast-travel.js` handling node graphs and fuel costs.
-3. Hook into map UI in `scripts/ui/world-map.js` to select destinations.
-4. Emit `travel:start` and `travel:end` events for mods.
+- [x] Add `data/bunkers.js` with coordinates and activation flags.
+- [ ] Create `scripts/core/fast-travel.js` handling node graphs and fuel costs.
+- [ ] Hook into map UI in `scripts/ui/world-map.js` to select destinations.
+- [ ] Emit `travel:start` and `travel:end` events for mods.
 
 > **Wing:** Make sure fuel costs scale with distance so speedrunners can't warp past the curve.
 

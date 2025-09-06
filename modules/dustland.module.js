@@ -2093,7 +2093,37 @@ const DATA = `
           9
         ]
       ]
+    },
+    {
+      "x": 117,
+      "y": 0,
+      "w": 3,
+      "h": 3,
+      "doorX": 118,
+      "doorY": 2,
+      "interiorId": "portal_hut",
+      "boarded": false,
+      "grid": [
+        [
+          9,
+          9,
+          9
+        ],
+        [
+          9,
+          9,
+          9
+        ],
+        [
+          9,
+          8,
+          9
+        ]
+      ]
     }
+  ],
+  "portals": [
+    { "map": "portal_hut", "x": 2, "y": 1, "toMap": "hall", "toX": 15, "toY": 18 }
   ],
   "interiors": [
     {
@@ -2150,6 +2180,20 @@ const DATA = `
       "grid": [
         "🧱🧱🧱🧱🧱",
         "🧱⬜⬜⬜🧱",
+        "🧱⬜⬜⬜🧱",
+        "🧱⬜⬜⬜🧱",
+        "🧱🧱🧱🚪🧱"
+      ],
+      "entryX": 2,
+      "entryY": 3
+    },
+    {
+      "id": "portal_hut",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🧱🧱🧱",
+        "🧱⬜🌀⬜🧱",
         "🧱⬜⬜⬜🧱",
         "🧱⬜⬜⬜🧱",
         "🧱🧱🧱🚪🧱"
@@ -2287,6 +2331,21 @@ function postLoad(module) {
 
   const sage = module.npcs?.find(n => n.id === 'tape_sage');
   if (sage) sage.onMemoryTape = msg => { log('Archivist listens: ' + msg); };
+
+  const bus = globalThis.Dustland?.eventBus;
+  if (bus) {
+    let turns = 0;
+    const doorX = 15, doorY = 18;
+    const open = () => {
+      setTile('hall', doorX, doorY, TILE.DOOR);
+      portals.push({ map: 'hall', x: doorX, y: doorY, toMap: 'world', toX: 2, toY: Math.floor(WORLD_H / 2) });
+      log('A door to the wastes grinds open.');
+    };
+    bus.on('sfx', id => {
+      if (id !== 'step' || state.map !== 'hall') return;
+      if (++turns === 100) open();
+    });
+  }
 }
 
 globalThis.DUSTLAND_MODULE = JSON.parse(DATA);

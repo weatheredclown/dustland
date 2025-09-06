@@ -253,14 +253,16 @@ function useItem(invIndex){
     const before = who.hp;
     who.hp = Math.min(who.hp + base + bonus, who.maxHp);
     const healed = who.hp - before;
-    log(`${who.name} drinks ${it.name} (+${healed} HP).`);
-    if (bonus > 0) log('Lucky boost!');
-    if (typeof toast === 'function') toast(`${who.name} +${healed} HP`);
+    const msg = it.use.text || `${who.name} drinks ${it.name} (+${healed} HP).`;
+    log(msg);
+    if (bonus > 0 && !it.use.text) log('Lucky boost!');
+    if (typeof toast === 'function') toast(it.use.text || `${who.name} +${healed} HP`);
     emit('sfx','tick');
     player.inv.splice(invIndex,1);
     notifyInventoryChanged();
     player.hp = party[0] ? party[0].hp : player.hp;
     if(typeof updateHUD === 'function') updateHUD();
+    emit(`used:${it.id}`, { item: it });
     return true;
   }
   if(it.use.type==='boost'){
@@ -274,6 +276,7 @@ function useItem(invIndex){
     emit('sfx','tick');
     player.inv.splice(invIndex,1);
     notifyInventoryChanged();
+    emit(`used:${it.id}`, { item: it });
     return true;
   }
   if(it.use.type==='cleanse'){
@@ -282,11 +285,13 @@ function useItem(invIndex){
     if(Array.isArray(who.statusEffects)){
       who.statusEffects.length = 0;
     }
-    log(`${who.name} feels purified.`);
-    if(typeof toast==='function') toast(`${who.name} is cleansed`);
+    const msg = it.use.text || `${who.name} feels purified.`;
+    log(msg);
+    if(typeof toast==='function') toast(it.use.text || `${who.name} is cleansed`);
     emit('sfx','tick');
     player.inv.splice(invIndex,1);
     notifyInventoryChanged();
+    emit(`used:${it.id}`, { item: it });
     return true;
   }
   if(typeof it.use.onUse === 'function'){
@@ -294,8 +299,11 @@ function useItem(invIndex){
     if(ok!==false){
         player.inv.splice(invIndex,1);
         notifyInventoryChanged();
-        if(typeof toast==='function') toast(`Used ${it.name}`);
+        const msg = it.use.text || `Used ${it.name}`;
+        log(msg);
+        if(typeof toast==='function') toast(msg);
         emit('sfx','tick');
+        emit(`used:${it.id}`, { item: it });
     }
     return !!ok;
   }

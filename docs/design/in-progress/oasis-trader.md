@@ -18,10 +18,10 @@
 4. **UI:** Timer tooltip shows next refresh; grudge state tints the trader portrait.
 
 ## Implementation Sketch
-1. Extend `scripts/core/trader.js` with `inventory` arrays and `grudge` fields.
-2. Store refresh schedules in `data/traders/<id>.json`.
-3. Update `scripts/ui/trade.js` to display timers and grudge indicators.
-4. Emit `trader:refresh` events for mods to hook into.
+- [x] Extend `scripts/core/trader.js` with `inventory` arrays and `grudge` fields.
+- [ ] Store refresh schedules in `data/traders/<id>.json`.
+- [ ] Update `scripts/ui/trade.js` to display timers and grudge indicators.
+- [ ] Emit `trader:refresh` events for mods to hook into.
 
 > **Clown:** Keep the JSON flat so mods can drop in new traders without rewriting logic.
 

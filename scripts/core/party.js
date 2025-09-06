@@ -24,6 +24,9 @@ class Character {
     this.cooldowns = {};
     this.guard = false;
     this.statusEffects = [];
+    if(globalThis.Dustland?.status?.init){
+      globalThis.Dustland.status.init(this);
+    }
   }
   xpToNext(){ return xpToNext(this.lvl); }
   awardXP(amt){
