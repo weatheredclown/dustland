@@ -106,6 +106,7 @@ const DATA = `{
       "name": "Rygar",
       "title": "Gatewatch",
       "desc": "Keeps watch over Stonegate's gate.",
+      "prompt": "Weathered gate guard with a copper pendant",
       "tree": {
         "start": {
           "text": "Stay sharp. The wastes bite.",
@@ -122,6 +123,7 @@ const DATA = `{
       "name": "Settler",
       "title": "Gossip",
       "desc": "Whispers about Mira's radio obsession.",
+      "prompt": "Chatty settler whispering rumors",
       "tree": {
         "start": {
           "text": [
@@ -141,6 +143,7 @@ const DATA = `{
       "name": "Mayor Ganton",
       "title": "Rustwater",
       "desc": "Rustwater's mayor eyes you shiftily.",
+      "prompt": "Shifty mayor in a rusted coat",
       "questId": "bandit_purge",
       "tree": {
         "start": {
@@ -170,6 +173,7 @@ const DATA = `{
       "name": "Dockhand",
       "title": "Lakeside",
       "desc": "A dockhand watching the shore.",
+      "prompt": "Weathered dockhand staring at the water",
       "tree": {
         "start": {
           "text": "The dockhand studies the waves.",
@@ -196,6 +200,7 @@ const DATA = `{
       "color": "#f55",
       "name": "Bandit Leader",
       "desc": "A bandit blocks the road.",
+      "prompt": "Road bandit in crude armor",
       "tree": { "start": { "text": "A bandit steps out, weapons drawn." } },
       "combat": { "HP": 10, "ATK": 3, "DEF": 1, "loot": "scrap" }
     }

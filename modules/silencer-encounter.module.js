@@ -13,6 +13,7 @@ const DATA = `{
       "y": 2,
       "name": "Silencer Scout",
       "desc": "A rival drifter watches your moves.",
+      "prompt": "Hooded drifter with goggles and a muffled scarf",
       "tree": {
         "start": {
           "text": "The Silencer narrows his eyes. You're after the signal too.",

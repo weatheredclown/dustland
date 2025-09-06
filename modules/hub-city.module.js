@@ -14,6 +14,7 @@ const DATA = `
       "color": "#9ef7a0",
       "name": "Quartermaster",
       "desc": "Stocks basic supplies for caravans.",
+      "prompt": "Rugged quartermaster with a grease-stained apron",
       "tree": { "start": { "text": "Need gear?", "choices": [ { "label": "(Leave)", "to": "bye" } ] } }
     }
   ],

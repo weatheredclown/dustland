@@ -468,6 +468,7 @@ const DATA = `
       "color": "#c8bba0",
       "name": "Buried Crate",
       "desc": "Sand conceals a supply crate.",
+      "prompt": "Crate half-buried under shifting sand",
       "hintSound": true,
       "tree": {
         "start": {
@@ -498,6 +499,7 @@ const DATA = `
       "name": "Archivist",
       "title": "Memory Keeper",
       "desc": "Curious about recorded tales.",
+      "prompt": "Elder hunched over reels of magnetic tape",
       "tree": {
         "start": {
           "text": "Got anything on tape?",
@@ -1223,6 +1225,7 @@ const DATA = `
       "name": "Signal Tech",
       "title": "Tinkerer",
       "desc": "Fiddles with a busted radio.",
+      "prompt": "Grease-streaked tinkerer fixing a busted radio",
       "questId": "q_signal",
       "tree": {
         "start": {
@@ -1880,6 +1883,7 @@ const DATA = `
       "name": "Workbench",
       "title": "Crafter",
       "desc": "Tools litter the surface.",
+      "prompt": "Cluttered workbench stacked with tools",
       "tree": {
         "start": {
           "text": "The workbench awaits projects.",

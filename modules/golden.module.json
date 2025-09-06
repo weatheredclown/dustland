@@ -79,6 +79,7 @@
       "color": "#cfa",
       "name": "Worried Villager",
       "desc": "Lost a coin in the cabin.",
+      "prompt": "Anxious villager clutching an empty coin pouch",
       "questId": "q_fetch",
       "tree": {
         "start": {
@@ -148,6 +149,7 @@
       "color": "#ddf",
       "name": "Dusty Chest",
       "desc": "Maybe it holds the coin.",
+      "prompt": "Dusty wooden chest bound by a metal lock",
       "symbol": "?",
       "locked": true,
       "tree": {
@@ -196,6 +198,7 @@
       "name": "Big Rat",
       "title": "Pest",
       "desc": "It guards the cabin.",
+      "prompt": "Large cabin rat with matted fur",
       "tree": {
         "start": {
           "text": "The rat snarls.",
@@ -223,6 +226,7 @@
       "color": "#f66",
       "name": "Sneaky Bandit",
       "desc": "Blocks the path.",
+      "prompt": "Sneaky bandit with a crooked dagger",
       "tree": {
         "start": {
           "text": "Hand over your loot!",
@@ -250,6 +254,7 @@
       "color": "#afa",
       "name": "Friendly Scout",
       "desc": "Offers to join your journey.",
+      "prompt": "Friendly scout with travel gear",
       "tree": {
         "start": {
           "text": "Need a companion?",
@@ -288,6 +293,7 @@
       "color": "#caffc6",
       "name": "Traveling Trader",
       "desc": "Sells basic goods.",
+      "prompt": "Traveling trader carrying a pack of goods",
       "shop": {
         "markup": 2,
         "inv": [
@@ -317,6 +323,7 @@
       "color": "#b8ffb6",
       "name": "Mysterious Wanderer",
       "desc": "Appears after you linger.",
+      "prompt": "Cloaked wanderer emerging from the dust",
       "tree": {
         "start": {
           "text": "You finally noticed me.",
@@ -342,6 +349,7 @@
       "color": "#fcc",
       "name": "Dialog Tester",
       "desc": "Demonstrates advanced dialog options.",
+      "prompt": "Curious tester with a worn notebook",
       "tree": {
         "start": {
           "text": "Pick a feature to test.",
@@ -447,6 +455,7 @@
       "color": "#ccf",
       "name": "Nyx",
       "desc": "A wanderer with layered stories.",
+      "prompt": "Story-laden wanderer with a calm gaze",
       "tree": {
         "start": {
           "text": "Greetings, traveler. What do you seek?",
@@ -527,6 +536,7 @@
       "color": "#fac",
       "name": "Mara",
       "desc": "Steely-eyed survivor.",
+      "prompt": "Steely survivor with determined eyes",
       "tree": {
         "start": {
           "text": "The dust never settles, does it?",
@@ -550,6 +560,7 @@
       "color": "#acf",
       "name": "Jax",
       "desc": "Tinker with a grin.",
+      "prompt": "Grinning tinkerer holding a spare fuse",
       "tree": {
         "start": {
           "text": "Got a spare fuse?",

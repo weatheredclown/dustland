@@ -35,6 +35,7 @@ const DATA = `
       "name": "The Hermit",
       "title": "Cave Dweller",
       "desc": "A man with eyes that seem to look through you, not at you.",
+      "prompt": "Gaunt hermit in a humming cavern",
       "questId": "q_resonant_cave",
       "tree": {
         "start": {
@@ -86,6 +87,7 @@ const DATA = `
       "y": 5,
       "color": "#f88",
       "name": "Red Crystal",
+      "prompt": "Glowing red crystal pulsing with energy",
       "tree": {
         "start": {
           "text": "A large, red crystal hums faintly.",
@@ -111,6 +113,7 @@ const DATA = `
       "y": 5,
       "color": "#88f",
       "name": "Blue Crystal",
+      "prompt": "Glowing blue crystal humming softly",
       "tree": {
         "start": {
           "text": "A large, blue crystal hums faintly.",
@@ -132,8 +135,8 @@ const DATA = `
         }
       }
     },
-    { "id": "red_crystal", "map": "resonant_cave", "x": 2, "y": 5, "color": "#f88", "name": "Red Crystal", "tree": { "start": { "text": "A large, red crystal hums faintly.", "choices": [ { "label": "(Touch it)", "to": "bye", "effects": [ { "effect": "addFlag", "flag": "crystal_1_red" } ] } ] } } },
-    { "id": "blue_crystal", "map": "resonant_cave", "x": 8, "y": 5, "color": "#88f", "name": "Blue Crystal", "tree": { "start": { "text": "A large, blue crystal hums faintly.", "choices": [ { "label": "(Touch it)", "to": "bye", "if": { "flag": "crystal_1_red" }, "effects": [ { "effect": "addFlag", "flag": "crystal_2_blue" } ] } ] } } },
+    { "id": "red_crystal", "map": "resonant_cave", "x": 2, "y": 5, "color": "#f88", "name": "Red Crystal", "prompt": "Glowing red crystal pulsing with energy", "tree": { "start": { "text": "A large, red crystal hums faintly.", "choices": [ { "label": "(Touch it)", "to": "bye", "effects": [ { "effect": "addFlag", "flag": "crystal_1_red" } ] } ] } } },
+    { "id": "blue_crystal", "map": "resonant_cave", "x": 8, "y": 5, "color": "#88f", "name": "Blue Crystal", "prompt": "Glowing blue crystal humming softly", "tree": { "start": { "text": "A large, blue crystal hums faintly.", "choices": [ { "label": "(Touch it)", "to": "bye", "if": { "flag": "crystal_1_red" }, "effects": [ { "effect": "addFlag", "flag": "crystal_2_blue" } ] } ] } } },
     {
       "id": "green_crystal",
       "map": "resonant_cave",
@@ -141,6 +144,7 @@ const DATA = `
       "y": 8,
       "color": "#8f8",
       "name": "Green Crystal",
+      "prompt": "Glowing green crystal thrumming in the dark",
       "tree": {
         "start": {
           "text": "A large, green crystal hums faintly.",

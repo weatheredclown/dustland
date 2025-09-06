@@ -19,6 +19,7 @@ const DATA = `{
       "y": 2,
       "color": "#ffa",
       "name": "Flicker of Mara",
+      "prompt": "Shimmering memory of a masked survivor",
       "tree": {
         "start": {
           "text": "The mask stirs with a buried memory.",

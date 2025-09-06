@@ -40,6 +40,7 @@ const DATA = `
       "name": "Sparks",
       "title": "Wasteland Listener",
       "desc": "An old man hunched over a crackling radio, his eyes wide with a strange light.",
+      "prompt": "A wiry scavenger hunched over a battered radio",
       "questId": "q_first_echo",
       "tree": {
         "start": {
@@ -105,6 +106,7 @@ const DATA = `
       "name": "Collapsed Hut",
       "title": "",
       "desc": "A pile of rubble. Something glints within.",
+      "prompt": "Collapsed hut with a crystal glinting in the rubble",
       "tree": {
         "start": {
           "text": "A collapsed hut. It looks like it was recently scavenged.",
