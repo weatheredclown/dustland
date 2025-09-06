@@ -19,7 +19,17 @@ test('combat events propagate between clients', async () => {
 
   function ctx(){
     const b = bus();
-    const env = { EventBus: b, Dustland: { eventBus: b }, setTimeout, clearTimeout, console, WebSocket: ws.WebSocket, WebSocketServer: ws.WebSocketServer };
+    const env = {
+      EventBus: b,
+      Dustland: { eventBus: b },
+      setTimeout,
+      clearTimeout,
+      setInterval,
+      clearInterval,
+      console,
+      WebSocket: ws.WebSocket,
+      WebSocketServer: ws.WebSocketServer
+    };
     vm.createContext(env);
     vm.runInContext(gs, env);
     vm.runInContext(sync, env);
