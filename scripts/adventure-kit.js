@@ -622,6 +622,7 @@ function paintInterior(e){
   const row = I.grid[y] || (I.grid[y] = Array(I.w).fill(TILE.FLOOR));
   row[x]=intPaint;
   if(intPaint===TILE.DOOR){ I.entryX=x; I.entryY=Math.max(0,y-1); }
+  delete I._origGrid;
   drawInterior();
 }
 intCanvas.addEventListener('mousedown', e => {
@@ -721,6 +722,7 @@ function resizeInterior(){
     const edge=y===0||y===h-1||x===0||x===w-1; return edge?TILE.WALL:TILE.FLOOR;
   }));
   I.w=w; I.h=h; I.grid=ng;
+  delete I._origGrid;
   drawInterior();
 }
 document.getElementById('intW').addEventListener('change',resizeInterior);
@@ -3876,6 +3878,7 @@ canvas.addEventListener('mousedown', ev => {
     if (I) {
       setTile(currentMap, x, y, intPaint);
       if (intPaint === TILE.DOOR) { I.entryX = x; I.entryY = y - 1; }
+      delete I._origGrid;
       intPainting = true;
       didPaint = true;
       drawWorld();
@@ -4031,6 +4034,7 @@ canvas.addEventListener('mousemove', ev => {
     if (I) {
       setTile(currentMap, x, y, intPaint);
       if (intPaint === TILE.DOOR) { I.entryX = x; I.entryY = y - 1; }
+      delete I._origGrid;
       didPaint = true;
       drawWorld();
       drawInterior();

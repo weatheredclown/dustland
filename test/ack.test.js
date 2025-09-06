@@ -307,6 +307,36 @@ test('world base tiles persist through save/load', () => {
   setTile('world', 0, 0, TILE.SAND);
 });
 
+test('interior paint persists through save/load', () => {
+  applyLoadedModule({ seed: 1, interiors: [{ id: 'room', w: 1, h: 1, grid: gridToEmoji([[TILE.FLOOR]]) }] });
+  showMap('room');
+  worldButtons[2]._listeners.click[0]();
+  canvasEl._listeners.mousedown[0]({ clientX: 0, clientY: 0, button: 0 });
+  canvasEl._listeners.mouseup[0]({ button: 0 });
+  canvasEl._listeners.click[0]({ clientX: 0, clientY: 0, button: 0 });
+  const origValidate = globalThis.validateSpawns;
+  globalThis.validateSpawns = () => [];
+  let saved = '';
+  const origBlob = globalThis.Blob;
+  globalThis.Blob = class { constructor(parts) { this.text = parts.join(''); } };
+  const origURL = global.URL;
+  global.URL = { createObjectURL: blob => { saved = blob.text; return ''; }, revokeObjectURL() {} };
+  const origCreate = document.createElement;
+  document.createElement = tag => tag === 'a' ? { href: '', download: '', click() {} } : origCreate(tag);
+  saveModule();
+  document.createElement = origCreate;
+  global.URL = origURL;
+  globalThis.Blob = origBlob;
+  globalThis.validateSpawns = origValidate;
+  const json = JSON.parse(saved);
+  const waterEmoji = tileEmoji[TILE.WATER];
+  assert.strictEqual(Array.from(json.interiors[0].grid[0])[0], waterEmoji);
+  setTile('room', 0, 0, TILE.FLOOR);
+  applyLoadedModule(json);
+  assert.strictEqual(interiors.room.grid[0][0], TILE.WATER);
+  showMap('world');
+});
+
 test('saveModule exports buildings, interiors, and encounters without _origKeys', () => {
   const prevBldgs = moduleData.buildings;
   const prevInts = moduleData.interiors;
