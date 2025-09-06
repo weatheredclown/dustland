@@ -57,12 +57,10 @@
 - [x] Design additional unique creatures beyond the giant glass scorpion
 - [ ] Persist pinned quests across sessions
 - [x] Publish roadmap blog posts alongside hotfixes
-- [x] Let players craft protective tarps for solar panels
+- [ ] Create craftable protective tarps for solar panels
 - [ ] Make rare-spice cooking recipes worth the effort
-- [ ] Add more heartfelt encounters like the singing mutant
-- [ ] Provide sound cues for cracked stone hiding caches
+- [ ] Add sound cues for cracked stone hiding caches
 - [x] Draft multiplayer co-op design doc
-- [ ] Fix cat companion pathfinding on ladders
 - [x] Add a warning meter before generators overload
 - [ ] Dim the nighttime glow of glass shard collectibles
 - [ ] Offer unique faction perks earlier in the reputation system
@@ -74,7 +72,6 @@
 - [x] Let bandages be crafted from plant fibers to save cloth
 - [ ] Add more randomized side quests from NPCs
 - [ ] Show settlement growth progress bars during supply deliveries
-- [ ] Increase rewards for the feral children encounter
 - [ ] Record player choices during campfire storytelling
 - [ ] Explain wind-direction projectile arcs via tutorial or UI hint
 - [ ] Provide visual indicators for enemy awareness cones in stealth
@@ -94,7 +91,6 @@
 - [ ] Enable harvesting of materials from dead sandworms
 - [ ] Raise lockpicking difficulty even with titanium picks
 - [ ] Leave craters after meteor showers for exploration
-- [ ] Fix voice chat desync with the time-of-day filter in multiplayer
 - [ ] Add sight-based commentary from refugees during escort quests
 - [ ] Include more circuit board puzzle encounters
 - [ ] Increase random friendly drifter encounters for world flavor
