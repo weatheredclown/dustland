@@ -45,7 +45,7 @@
 - [ ] Smooth difficulty spikes in the relay tower hack’s final node
 - [ ] Allow players to cultivate healing herbs at base
 - [ ] Stop moles from respawning in previously dug tunnels
-- [x] Keep global radio events coming to enliven the world
+- [ ] Keep global radio events coming to enliven the world
 - [ ] Prevent cleared blockades from respawning on highways
 - [ ] Provide a clearer oxygen tank UI during dust storms
 - [ ] Rebalance accuracy penalties for dual-wielded pistols
