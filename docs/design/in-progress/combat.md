@@ -79,10 +79,10 @@ The challenge should grow as the player masters the system.
 
 ### Adrenaline Prototype: Arena Script
 
-Run the Node-driven `scripts/adrenaline-prototype.js` to spot-check Adrenaline flow before UI work.
+Run the Node-driven `scripts/supporting/adrenaline-prototype.js` to spot-check Adrenaline flow before UI work.
 
 ```
-node scripts/adrenaline-prototype.js
+node scripts/supporting/adrenaline-prototype.js
 ```
 
 The script pits a lone hero against a dummy and logs `Adrenaline: <value>` whenever the meter changes.

@@ -18,7 +18,7 @@ test('perf panel toggles and records stats', async () => {
   document.getElementById('perfSfx');
   document.getElementById('perfPath');
   document.getElementById('perfAI');
-  const code = await fs.readFile(new URL('../scripts/perf-debug.js', import.meta.url), 'utf8');
+  const code = await fs.readFile(new URL('../scripts/supporting/perf-debug.js', import.meta.url), 'utf8');
   vm.runInNewContext(code, sandbox);
   assert.ok(sandbox.perfStats, 'perfStats exists');
   const btn = document.getElementById('perfBtn');

@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
 test('building wizard links rooms', async () => {
-  const code = await fs.readFile(new URL('../scripts/wizard-building.js', import.meta.url), 'utf8');
+  const code = await fs.readFile(new URL('../scripts/supporting/wizard-building.js', import.meta.url), 'utf8');
   const context = { Dustland: { WizardSteps: {}, wizards: {} } };
   vm.createContext(context);
   vm.runInContext(code, context);

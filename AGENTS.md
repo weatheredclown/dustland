@@ -10,12 +10,12 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 
 ## Testing
 - Run `npm test` after making changes; it invokes Node's built-in test runner.
-- Run `node scripts/presubmit.js` to check HTML files for unsupported fetch/import patterns.
+- Run `node scripts/supporting/presubmit.js` to check HTML files for unsupported fetch/import patterns.
 - Ensure the working tree is clean and tests pass before committing.
 - Before adding new tests, check for existing coverage and extend or modify tests instead of duplicating cases.
 - Prefer behavior-driven tests that validate outcomes instead of asserting internal implementation details.
 - Run `./install-deps.sh` once to install optional browser dependencies required by some tests.
-- After touching combat, movement, or NPC logic, run `node scripts/balance-tester-agent.js` to exercise event-bus handlers and path queues.
+- After touching combat, movement, or NPC logic, run `node scripts/supporting/balance-tester-agent.js` to exercise event-bus handlers and path queues.
 
 ## Commit conventions
 - Use concise messages with prefixes such as `feat:`, `fix:`, `system:`, or `docs:`.

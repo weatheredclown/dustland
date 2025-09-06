@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
 test('clampMidiToScale snaps notes to scale', async () => {
-  const code = await fs.readFile(new URL('../scripts/music-utils.js', import.meta.url), 'utf8');
+  const code = await fs.readFile(new URL('../scripts/supporting/music-utils.js', import.meta.url), 'utf8');
   const context = {};
   vm.createContext(context);
   vm.runInContext(code, context);

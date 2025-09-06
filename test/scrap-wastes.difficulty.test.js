@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
 test('scrap wastes has challenge mix', async () => {
-  const code = await fs.readFile(new URL('../scripts/zone-scrap-wastes.js', import.meta.url), 'utf8');
+  const code = await fs.readFile(new URL('../scripts/supporting/zone-scrap-wastes.js', import.meta.url), 'utf8');
   const context = {};
   vm.createContext(context);
   vm.runInContext(code, context);

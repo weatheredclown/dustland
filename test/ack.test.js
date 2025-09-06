@@ -932,7 +932,7 @@ test('loadMods accepts undefined', () => {
 test('dustland module JSON round trips through ACK', () => {
   const jsonPath = 'data/modules/dustland.json';
   try {
-    execSync('node scripts/module-json.js export modules/dustland.module.js');
+    execSync('node scripts/supporting/module-json.js export modules/dustland.module.js');
     const original = JSON.parse(fsSync.readFileSync(jsonPath, 'utf8'));
 
     const origValidate = globalThis.validateSpawns;

@@ -13,7 +13,7 @@ function bus(){
 
 test('world state broadcasts to client', async () => {
   const gs = await fs.readFile(new URL('../scripts/game-state.js', import.meta.url), 'utf8');
-  const sync = await fs.readFile(new URL('../scripts/multiplayer-sync.js', import.meta.url), 'utf8');
+  const sync = await fs.readFile(new URL('../scripts/supporting/multiplayer-sync.js', import.meta.url), 'utf8');
   const ws = await import('ws');
 
   const hostBus = bus();

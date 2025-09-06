@@ -11,7 +11,7 @@ test('memory tape records and plays back', () => {
     logs: [],
     log(m){ context.logs.push(m); }
   };
-  const code = fs.readFileSync(new URL('../scripts/memory-tape.js', import.meta.url), 'utf8');
+  const code = fs.readFileSync(new URL('../scripts/supporting/memory-tape.js', import.meta.url), 'utf8');
   vm.runInNewContext(code, context);
   context.log('hello');
   context.memoryTape.use.onUse({ log: context.log });

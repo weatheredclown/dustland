@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
 test('generateMelody is deterministic', async () => {
-  const code = await fs.readFile(new URL('../scripts/chiptune.js', import.meta.url), 'utf8');
+  const code = await fs.readFile(new URL('../scripts/supporting/chiptune.js', import.meta.url), 'utf8');
   const context = { Dustland: { eventBus: { on(){}, emit(){} } } };
   vm.createContext(context);
   vm.runInContext(code, context);

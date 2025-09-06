@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {extractTodos, markDone} from '../scripts/codex-todo-runner.js';
+import {extractTodos, markDone} from '../scripts/supporting/codex-todo-runner.js';
 
 test('extractTodos handles quoted text', () => {
   const content = '- [ ] **Implement 5-10 Specials:** Create a starter set of special moves (e.g., "Power Strike," "Stun Grenade," "First Aid").';

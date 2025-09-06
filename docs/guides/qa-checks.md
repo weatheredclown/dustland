@@ -196,7 +196,7 @@ Validation tasks should remain unchecked unless the process yields at least one 
   - Check: confirm implementation matches description.
 - **spoils-caches.md** — Simulate 1,000 cache openings per tier to ensure stat ranges stay sane.
   - Check: confirm implementation matches description.
-- **spoils-caches.md** — Run `node scripts/presubmit.js` to confirm no async snafus in cache UI — clean run.
+- **spoils-caches.md** — Run `node scripts/supporting/presubmit.js` to confirm no async snafus in cache UI — clean run.
   - Check: confirm implementation matches description.
 - **plot-draft.md** — Outline the caravan's pursuit of the fading broadcast across the Dustland.
   - Check: confirm implementation matches description.
