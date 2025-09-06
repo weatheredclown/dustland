@@ -5,6 +5,6 @@
 - `examples/` – sample code and legacy references like `PIT.BAS`.
 - `design/` – in-progress and completed design documents.
 - `roadmap/` – future milestones and release plans.
-- `team-bios.md` – contributor backgrounds.
-- `blog-feedback-todo.md` – open feedback tasks from the dev blog.
-- `world-map.txt` – early ASCII sketch of the overworld.
+- `team/` – contributor backgrounds.
+- `blog/` – open feedback tasks from the dev blog.
+- `world/` – early ASCII sketch of the overworld.
