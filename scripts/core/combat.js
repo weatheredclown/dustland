@@ -855,17 +855,49 @@ function enemyAttack(){
 
     setTimeout(() => {
       combatOverlay?.classList.remove('warning');
-      let dmg = enemy.special.dmg || 5;
-      dmg = Math.max(0, dmg - (target._bonus?.DEF || 0));
-      const luck = (target.stats?.LCK || 0) + (target._bonus?.LCK || 0);
-      const eff  = Math.max(0, luck - 4);
-      if (Math.random() < eff * 0.05 && dmg > 0){
-        dmg = Math.max(0, dmg - 1);
-        log?.('Lucky break!');
+
+      const targets = enemy.special.spread
+        ? [target, ...party.filter(m => m !== target)]
+        : [target];
+
+      for (const t of targets){
+        let dmg = enemy.special.dmg || 5;
+        dmg = Math.max(0, dmg - (t._bonus?.DEF || 0));
+        const luck = (t.stats?.LCK || 0) + (t._bonus?.LCK || 0);
+        const eff  = Math.max(0, luck - 4);
+        if (Math.random() < eff * 0.05 && dmg > 0){
+          dmg = Math.max(0, dmg - 1);
+          log?.('Lucky break!');
+        }
+        t.hp -= dmg;
+        if (enemy.special.stun){
+          t.stun = (t.stun || 0) + (enemy.special.stun | 0);
+        }
+        if (enemy.special.poison){
+          const p = enemy.special.poison;
+          addStatus?.(t, {
+            type: 'poison',
+            strength: p.strength || p.dmg || 1,
+            duration: p.duration || p.turns || 3
+          });
+        }
+        recordCombatEvent?.({ type: 'enemy', actor: enemy.name, action: 'special', target: t.name, damage: dmg, targetHp: t.hp });
+        log?.(`${enemy.name} hits ${t.name} for ${dmg} damage.`);
+        if (t !== target && t.hp <= 0){
+          log?.(`${t.name} falls!`);
+          recordCombatEvent?.({ type: 'player', actor: t.name, action: 'fall', by: enemy.name });
+          t.adr = 0;
+          party.fall(t);
+        }
       }
-      target.hp -= dmg;
-      recordCombatEvent?.({ type: 'enemy', actor: enemy.name, action: 'special', target: target.name, damage: dmg, targetHp: target.hp });
-      log?.(`${enemy.name} unleashes for ${dmg} damage.`);
+
+      if (party.length === 0){
+        log?.('The party has fallen...');
+        closeCombat('bruise');
+        return;
+      }
+
+      renderCombat();
       finishEnemyAttack(enemy, target);
     }, delay);
 

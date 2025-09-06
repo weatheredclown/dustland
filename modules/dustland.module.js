@@ -658,6 +658,84 @@ const DATA = `
       }
     },
     {
+      "id": "party_mira",
+      "map": "hall",
+      "x": 15,
+      "y": 21,
+      "color": "#f66",
+      "name": "Mira",
+      "title": "Blade Dancer",
+      "desc": "A lithe fighter ready to strike back.",
+      "portraitSheet": "assets/portraits/dustland-module/mira_4.png",
+      "tree": {
+        "start": {
+          "text": "Mira sizes you up.",
+          "choices": [
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        }
+      },
+      "combat": {
+        "HP": 8,
+        "ATK": 3,
+        "DEF": 1,
+        "counterBasic": { "dmg": 2 },
+        "auto": true
+      }
+    },
+    {
+      "id": "party_nora",
+      "map": "hall",
+      "x": 15,
+      "y": 21,
+      "color": "#f66",
+      "name": "Nora",
+      "title": "Storm Caller",
+      "desc": "Crackling energy dances across her gauntlet.",
+      "portraitSheet": "assets/portraits/dustland-module/nora_4.png",
+      "tree": {
+        "start": {
+          "text": "Nora steps forward, eyes sparking.",
+          "choices": [
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        }
+      },
+      "combat": {
+        "HP": 8,
+        "ATK": 2,
+        "DEF": 1,
+        "special": { "cue": "releases a stunning arc!", "dmg": 2, "stun": 1, "delay": 800 },
+        "auto": true
+      }
+    },
+    {
+      "id": "party_tess",
+      "map": "hall",
+      "x": 15,
+      "y": 21,
+      "color": "#f66",
+      "name": "Tess",
+      "title": "Venom Rogue",
+      "desc": "She twirls a dagger dripping with toxins.",
+      "portraitSheet": "assets/portraits/dustland-module/tess_4.png",
+      "tree": {
+        "start": {
+          "text": "Tess grins wickedly.",
+          "choices": [
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        }
+      },
+      "combat": {
+        "HP": 8,
+        "ATK": 2,
+        "DEF": 1,
+        "special": { "cue": "flings poisoned knives everywhere!", "dmg": 2, "poison": { "strength": 1, "duration": 3 }, "spread": true, "delay": 800 },
+        "auto": true
+      }
+    },
+    {
       "id": "road_sign",
       "map": "world",
       "x": 6,
