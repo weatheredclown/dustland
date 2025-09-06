@@ -26,6 +26,16 @@ const DATA = `
       ]
     },
     {
+      "id": "power_cell",
+      "name": "Power Cell",
+      "type": "quest"
+    },
+    {
+      "id": "signal_beacon",
+      "name": "Signal Beacon",
+      "type": "quest"
+    },
+    {
       "map": "world",
       "x": 8,
       "y": 45,
@@ -1776,6 +1786,30 @@ const DATA = `
       }
     },
     {
+      "id": "workbench",
+      "map": "workshop",
+      "x": 2,
+      "y": 2,
+      "color": "#bfa",
+      "name": "Workbench",
+      "title": "Crafter",
+      "desc": "Tools litter the surface.",
+      "tree": {
+        "start": {
+          "text": "The workbench awaits projects.",
+          "choices": [
+            { "label": "(Craft signal beacon)", "to": "craft" },
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        },
+        "craft": {
+          "text": "You piece together a beacon.",
+          "effects": [ { "effect": "craftSignalBeacon" } ],
+          "choices": [ { "label": "(Back)", "to": "start" } ]
+        }
+      }
+    },
+    {
       "id": "scrap_behemoth",
       "name": "Scrap Behemoth",
       "desc": "A towering mass of twisted metal.",
@@ -1921,6 +1955,33 @@ const DATA = `
           9
         ]
       ]
+    },
+    {
+      "x": 46,
+      "y": 42,
+      "w": 3,
+      "h": 3,
+      "doorX": 47,
+      "doorY": 44,
+      "interiorId": "workshop",
+      "boarded": false,
+      "grid": [
+        [
+          9,
+          9,
+          9
+        ],
+        [
+          9,
+          9,
+          9
+        ],
+        [
+          9,
+          8,
+          9
+        ]
+      ]
     }
   ],
   "interiors": [
@@ -1970,6 +2031,20 @@ const DATA = `
       ],
       "entryX": 3,
       "entryY": 5
+    },
+    {
+      "id": "workshop",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🧱🧱🧱",
+        "🧱⬜⬜⬜🧱",
+        "🧱⬜⬜⬜🧱",
+        "🧱⬜⬜⬜🧱",
+        "🧱🧱🧱🚪🧱"
+      ],
+      "entryX": 2,
+      "entryY": 3
     },
     {
       "id": "echo_chamber",
@@ -2049,6 +2124,8 @@ function handleCustomEffects(list) {
         return () => pullSlots(e.cost, e.payouts);
       case 'buyMemoryWorm':
         return buyMemoryWorm;
+      case 'craftSignalBeacon':
+        return () => Dustland.workbench?.craftSignalBeacon?.();
       default:
         return e;
     }

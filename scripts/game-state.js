@@ -2,10 +2,16 @@
   globalThis.Dustland = globalThis.Dustland || {};
   const state = { party: [], world: {}, inventory: [], flags: {}, clock: 0, quests: [], difficulty: 'normal', personas: {}, effectPacks: {} };
   function getState(){ return state; }
-  function updateState(fn){ if (typeof fn === 'function') fn(state); }
+  function updateState(fn){
+    if (typeof fn === 'function') fn(state);
+    globalThis.EventBus?.emit('state:changed', state);
+  }
   function getDifficulty(){ return state.difficulty; }
   function setDifficulty(mode){ state.difficulty = mode; }
-  function setPersona(id, persona){ state.personas[id] = persona; }
+  function setPersona(id, persona){
+    state.personas[id] = persona;
+    globalThis.Dustland?.profiles?.set?.(id, persona);
+  }
   function getPersona(id){ return state.personas[id]; }
   function addEffectPack(evt, list){
     if(!evt || !Array.isArray(list)) return;
@@ -23,8 +29,12 @@
     const member = state.party.find(m => m.id === memberId);
     if (!member) return;
     const prev = member.persona;
-    if (prev && prev !== personaId) globalThis.EventBus?.emit('persona:unequip', { memberId, personaId: prev });
+    if (prev && prev !== personaId) {
+      globalThis.Dustland?.profiles?.remove?.(member, prev);
+      globalThis.EventBus?.emit('persona:unequip', { memberId, personaId: prev });
+    }
     member.persona = personaId;
+    globalThis.Dustland?.profiles?.apply?.(member, personaId);
     if (typeof member.applyEquipmentStats === 'function') member.applyEquipmentStats();
     if (typeof member.applyCombatMods === 'function') member.applyCombatMods();
     globalThis.EventBus?.emit('persona:equip', { memberId, personaId });

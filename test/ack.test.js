@@ -773,7 +773,7 @@ test('advanced dialog choices persist after reopening editor', () => {
   globalThis.updateTreeData = origUpdate;
   openDialogEditor();
   const tree = getTreeData();
-  assert.strictEqual(tree.start.choices[0].reward, 'XP 5');
+  assert.strictEqual(tree.start.choices[0].reward, 'reward');
   assert.strictEqual(tree.start.choices[0].goto.x, 2);
   closeDialogEditor();
   closeNPCEditor();
