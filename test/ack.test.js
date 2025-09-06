@@ -53,6 +53,9 @@ const bodyEl = stubEl();
 const canvasEl = stubEl();
 canvasEl.width = 120;
 canvasEl.height = 90;
+const intCanvasEl = stubEl();
+intCanvasEl.width = 80;
+intCanvasEl.height = 80;
 const moduleNameInput = stubEl();
 const paletteLabel = stubEl();
 const worldButtons = Array.from({ length: 3 }, (_, i) => {
@@ -62,7 +65,7 @@ const worldButtons = Array.from({ length: 3 }, (_, i) => {
 });
 const worldPalette = stubEl();
 worldPalette.querySelectorAll = () => worldButtons;
-const elements = { map: canvasEl, moduleName: moduleNameInput, worldPalette, paletteLabel };
+const elements = { map: canvasEl, intCanvas: intCanvasEl, moduleName: moduleNameInput, worldPalette, paletteLabel };
 global.document = {
   body: bodyEl,
   getElementById: id => elements[id] || (elements[id] = stubEl()),
@@ -1069,6 +1072,21 @@ test('npc locked state round trips through editor', () => {
   applyNPCChanges();
   assert.strictEqual(moduleData.npcs[0].locked, undefined);
   moduleData.npcs = prev;
+});
+
+test('placing NPC on interior map', () => {
+  genWorld(1);
+  moduleData.npcs = [];
+  moduleData.interiors = [{ id: 'house', w: 4, h: 4, grid: Array.from({ length: 4 }, () => Array(4).fill(TILE.FLOOR)) }];
+  editInteriorIdx = 0;
+  startNewNPC();
+  document.getElementById('npcId').value = 'bob';
+  document.getElementById('npcName').value = 'Bob';
+  beginPlaceNPC();
+  const intCanvas = document.getElementById('intCanvas');
+  intCanvas._listeners.mousedown[0]({ clientX: 1, clientY: 1, stopPropagation(){}, preventDefault(){} });
+  assert.strictEqual(moduleData.npcs.length, 1);
+  assert.strictEqual(moduleData.npcs[0].map, 'house');
 });
 
 test('locked node scaffold added and not orphaned', () => {

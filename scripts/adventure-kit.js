@@ -614,8 +614,10 @@ function paintInterior(e){
   if(intPaint===TILE.DOOR){ I.entryX=x; I.entryY=y-1; }
   drawInterior();
 }
-intCanvas.addEventListener('mousedown',e=>{
-  if(editInteriorIdx<0) return;
+intCanvas.addEventListener('mousedown', e => {
+  e.stopPropagation();
+  e.preventDefault();
+  if (editInteriorIdx < 0) return;
   const I = moduleData.interiors[editInteriorIdx];
   const { x, y } = interiorCanvasPos(e);
   if(coordTarget){
