@@ -17,15 +17,28 @@ const adrFill = document.getElementById('adrFill');
 const statusIcons = document.getElementById('statusIcons');
 const weatherBanner = document.getElementById('weatherBanner');
 
-function log(msg){
+function log(msg, type){
   if (logEl) {
-    const p=document.createElement('div');
-    p.textContent=msg;
+    const p = document.createElement('div');
+    p.textContent = msg;
+    if (type === 'warn') p.style.color = '#fc0';
+    else if (type === 'error') p.style.color = '#f33';
     logEl.prepend(p);
   } else {
     console.log("Log: " + msg);
   }
 }
+
+const origWarn = console.warn;
+console.warn = function(...args) {
+  origWarn.apply(console, args);
+  log('⚠️ ' + args.join(' '), 'warn');
+};
+const origError = console.error;
+console.error = function(...args) {
+  origError.apply(console, args);
+  log('🛑 ' + args.join(' '), 'error');
+};
 
 // --- Toasts (lightweight) ---
 const toastHost = document.createElement('div');
@@ -1022,7 +1035,13 @@ const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, fo
 Object.assign(globalThis, engineExports);
 
 // ===== Minimal Unit Tests (#test) =====
-function assert(name, cond){ const msg = (cond? '✅ ':'❌ ') + name; log(msg); if(!cond) console.error('Test failed:', name); }
+function assert(name, cond){
+  if (cond) {
+    log('✅ ' + name);
+  } else {
+    console.error('Test failed: ' + name);
+  }
+}
 function runTests(){
   openCreator(); assert('Creator visible', creator.style.display==='flex');
   step=2; renderStep(); assert('Stat + buttons exist', ccRight.querySelectorAll('button[data-d="1"]').length>0);
