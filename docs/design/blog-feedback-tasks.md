@@ -27,7 +27,7 @@
 - [ ] Optimize the heat haze effect for lower-performance hardware
 - [ ] Include more story twists like the AI oasis caretaker reveal
 - [ ] Grant a small stamina boost when cleaning trap carcasses
-- [ ] Add a tutorial pop-up for signal beacon crafting
+ - [x] Add a tutorial pop-up for signal beacon crafting
 - [ ] Slow fuel depot respawns to encourage strategic convoy runs
 - [ ] Continue adding lore snippets to ancient billboards
 - [ ] Give wind turbines tangible gameplay benefits
