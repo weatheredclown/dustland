@@ -57,7 +57,7 @@
 - [ ] Design additional unique creatures beyond the giant glass scorpion
 - [ ] Persist pinned quests across sessions
 - [x] Publish roadmap blog posts alongside hotfixes
-- [ ] Let players craft protective tarps for solar panels
+- [x] Let players craft protective tarps for solar panels
 - [ ] Make rare-spice cooking recipes worth the effort
 - [ ] Add more heartfelt encounters like the singing mutant
 - [ ] Provide sound cues for cracked stone hiding caches

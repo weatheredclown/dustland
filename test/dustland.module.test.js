@@ -94,3 +94,11 @@ test('medkit heals for 10 HP', () => {
   const med = data.items.find(i => i.id === 'medkit');
   assert.strictEqual(med.use?.amount, 10);
 });
+
+test('cloth supplies can be found to the south', () => {
+  const data = loadModuleData();
+  const cloth = data.items.find(i => i.id === 'cloth');
+  assert.ok(cloth);
+  assert.strictEqual(cloth.map, 'world');
+  assert.ok(cloth.y > 60);
+});
