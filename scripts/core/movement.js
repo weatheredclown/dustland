@@ -255,6 +255,7 @@ function move(dx,dy){
           }
         });
         setPartyPos(nx, ny);
+        bus.emit('movement:player', { x: nx, y: ny, map: state.map });
         if(typeof footstepBump==='function') footstepBump();
         onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
         applyZones(state.map, nx, ny);
@@ -509,6 +510,7 @@ const movement = {
   checkRandomEncounter,
   distanceToRoad
 };
+bus?.on?.('movement:player', ({ x, y }) => { setPartyPos(x, y); });
 globalThis.Dustland = globalThis.Dustland || {};
 globalThis.Dustland.movement = movement;
 Object.assign(globalThis, movement);

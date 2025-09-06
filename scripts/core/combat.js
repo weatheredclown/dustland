@@ -42,9 +42,11 @@ const combatState = {
   turns: 0
 };
 
-function recordCombatEvent(ev){
+function recordCombatEvent(ev, relay = true){
   combatState.log.push(ev);
+  if(relay) globalThis.EventBus?.emit('combat:event', ev);
 }
+globalThis.EventBus?.on?.('combat:event', ev => recordCombatEvent(ev, false));
 
 function addStatus(target, status){
   if(!target || !status) return;
