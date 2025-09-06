@@ -1315,12 +1315,21 @@ function addChoiceRow(container, ch = {}) {
   }
   if (lockId || unlockId) {
     addAdv('npcLock');
-    if (lockId) row.querySelector('.choiceLockNPC').value = lockId;
-    if (unlockId) row.querySelector('.choiceUnlockNPC').value = unlockId;
+    if (lockId) {
+      const el = row.querySelector('.choiceLockNPC');
+      if (el) (el.dataset || (el.dataset = {})).sel = lockId;
+    }
+    if (unlockId) {
+      const el = row.querySelector('.choiceUnlockNPC');
+      if (el) (el.dataset || (el.dataset = {})).sel = unlockId;
+    }
   }
   if (colorNpc || colorHex) {
     addAdv('npcColor');
-    if (colorNpc) row.querySelector('.choiceColorNPC').value = colorNpc;
+    if (colorNpc) {
+      const el = row.querySelector('.choiceColorNPC');
+      if (el) (el.dataset || (el.dataset = {})).sel = colorNpc;
+    }
     if (colorHex) row.querySelector('.choiceNPCColor').value = colorHex;
   }
   if (setFlagName) {
@@ -1441,9 +1450,9 @@ function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceRewardItem').forEach(sel => populateItemDropdown(sel, sel.dataset.sel || sel.value));
   document.querySelectorAll('.choiceBoard').forEach(sel => populateInteriorDropdown(sel, sel.value));
   document.querySelectorAll('.choiceUnboard').forEach(sel => populateInteriorDropdown(sel, sel.value));
-  document.querySelectorAll('.choiceLockNPC').forEach(sel => populateNPCDropdown(sel, sel.value));
-  document.querySelectorAll('.choiceUnlockNPC').forEach(sel => populateNPCDropdown(sel, sel.value));
-  document.querySelectorAll('.choiceColorNPC').forEach(sel => populateNPCDropdown(sel, sel.value));
+  document.querySelectorAll('.choiceLockNPC').forEach(sel => populateNPCDropdown(sel, sel.dataset.sel || sel.value));
+  document.querySelectorAll('.choiceUnlockNPC').forEach(sel => populateNPCDropdown(sel, sel.dataset.sel || sel.value));
+  document.querySelectorAll('.choiceColorNPC').forEach(sel => populateNPCDropdown(sel, sel.dataset.sel || sel.value));
   document.querySelectorAll('.choiceSpawnTemplate').forEach(sel => populateTemplateDropdown(sel, sel.value));
   const encLoot = document.getElementById('encLoot');
   if (encLoot) populateItemDropdown(encLoot, encLoot.value);
@@ -1599,9 +1608,12 @@ function updateTreeData() {
         }
       const boardId = chEl.querySelector('.choiceBoard')?.value.trim();
       const unboardId = chEl.querySelector('.choiceUnboard')?.value.trim();
-      const lockNpc = chEl.querySelector('.choiceLockNPC')?.value.trim();
-      const unlockNpc = chEl.querySelector('.choiceUnlockNPC')?.value.trim();
-      const colorNpc = chEl.querySelector('.choiceColorNPC')?.value.trim();
+      const lockSel = chEl.querySelector('.choiceLockNPC');
+      const lockNpc = lockSel ? (lockSel.value || lockSel.dataset?.sel || '').trim() : '';
+      const unlockSel = chEl.querySelector('.choiceUnlockNPC');
+      const unlockNpc = unlockSel ? (unlockSel.value || unlockSel.dataset?.sel || '').trim() : '';
+      const colorSel = chEl.querySelector('.choiceColorNPC');
+      const colorNpc = colorSel ? (colorSel.value || colorSel.dataset?.sel || '').trim() : '';
       const colorHex = chEl.querySelector('.choiceNPCColor')?.value.trim();
       if (flag) c.if = { flag, op, value: val != null && !Number.isNaN(val) ? val : 0 };
       const effs = [];

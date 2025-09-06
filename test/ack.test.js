@@ -1107,3 +1107,37 @@ test('updateTreeData captures NPC color effects', () => {
     { effect: 'npcColor', npcId: 'friend', color: '#ff0000' }
   ]);
 });
+
+test('updateTreeData captures unlockNPC from dataset', () => {
+  setTreeData({});
+  const wrap = document.getElementById('treeEditor');
+  const field = (value = '', checked = false, dataset = {}) => ({ value, checked, dataset, style: {} });
+  const choiceEl = {
+    querySelector(sel) {
+      if (sel === '.choiceUnlockNPC') return field('', false, { sel: 'door' });
+      if (sel === '.choiceLabel') return field('Open');
+      if (sel === '.choiceGotoTarget') return field('player');
+      if (sel === '.choiceGotoRel' || sel === '.choiceOnce' || sel === '.choiceIfOnceUsed') return field('', false);
+      return field('');
+    },
+    querySelectorAll() { return []; }
+  };
+  const nodeEl = {
+    classList: { contains: () => false },
+    style: {},
+    querySelector(sel) {
+      if (sel === '.nodeId') return field('start');
+      if (sel === '.nodeText') return field('hi');
+      return field('');
+    },
+    querySelectorAll(sel) {
+      if (sel === '.choices > div') return [choiceEl];
+      return [];
+    }
+  };
+  wrap.querySelectorAll = sel => sel === '.node' ? [nodeEl] : [];
+  updateTreeData();
+  assert.deepStrictEqual(getTreeData().start.choices[0].effects, [
+    { effect: 'unlockNPC', npcId: 'door' }
+  ]);
+});
