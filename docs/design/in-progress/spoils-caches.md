@@ -26,12 +26,10 @@ Each cache carries a physical vibe that hints at its contents:
 > **Gizmo:** We'll expose `baseRate` and tier weights in a global object so mods can reskin the math without touching core files.
 
 ### Item Assembly
-Opening a cache triggers a generator that stitches gear on the fly:
-1. Pick a type: weapon, armor, gadget, or oddity.
-2. Mash a name from adjectives and nouns ("Grit-Stitched Repeater").
-3. Roll stats and scrap value based on cache rank. Vaulted caches can sprout weird affixes or mini-quests.
-
-> **Echo:** Oddities should come with tiny lore hooks. Even a busted compass can whisper about a lost caravan.
+Opening a cache now spits out a single trinket that snaps into the party's gear:
+1. Mash a name from adjectives and nouns ("Grit-Stitched Repeater").
+2. Roll a random attribute to boost (STR, AGI, INT, PER, LCK, or CHA).
+3. Determine the boost amount from the cache's rank.
 
 ### UI/UX
 - Cache icons show their rank at a glance—rust flakes, sealed seams, armored ribs, or quantum glow.
@@ -59,10 +57,9 @@ Opening a cache triggers a generator that stitches gear on the fly:
 - [x] Implement inventory UI for cache stacking and "Open All".
 
 #### Phase 3: Content & Balancing
-- [x] Populate adjective/noun pools for item names and tier stat tables.
- - [x] Tune `baseRate` and tier weights for different enemy challenges.
-- [x] Author lore snippets for oddity items.
-- [x] Add affix or mini-quest hooks for Vaulted caches.
+ - [x] Populate adjective/noun pools for item names and tier stat tables.
+  - [x] Tune `baseRate` and tier weights for different enemy challenges.
+ - [x] Write flavor snippets for trinket drops.
 
 #### Phase 4: Testing
 - [x] Write tests to verify drop odds and tier distribution across challenge levels.

@@ -1,7 +1,6 @@
 // ===== Item Generator =====
 let nextItemId = 1;
 const ItemGen = {
-  types: ['weapon','armor','gadget','oddity'],
   adjectives: [
     'Grit-Stitched',
     'Rusty',
@@ -26,22 +25,6 @@ const ItemGen = {
     'Emitter',
     'Engine'
   ],
-  affixes: [
-    'of Fury',
-    'of Echoes',
-    'of Dread'
-  ],
-  miniQuestHooks: [
-    'lostArchive',
-    'metalPlague'
-  ],
-  oddityLore: [
-    'Whispers of a lost caravan.',
-    'Hums a tune no one remembers.',
-    'Its needle spins toward a buried vault.',
-    'Smells faintly of ozone after a storm.',
-    'Vibrates near old world tech.'
-  ],
   statRanges: {
     rusted: { min: 1, max: 4 },
     sealed: { min: 4, max: 7 },
@@ -49,6 +32,7 @@ const ItemGen = {
     vaulted: { min: 10, max: 15 }
   },
   scrapValues: {},
+  statKeys: ['STR','AGI','INT','PER','LCK','CHA'],
   calcScrap(item){
     let total = 0;
     const stats = item.stats || {};
@@ -68,32 +52,22 @@ const ItemGen = {
     return min + Math.floor(rng() * (max - min + 1));
   },
   generate(rank='rusted', rng=Math.random){
-    const type = this.pick(this.types, rng);
     const adj = this.pick(this.adjectives, rng);
     const noun = this.pick(this.nouns, rng);
     const range = this.statRanges[rank] || this.statRanges.rusted;
-    const power = this.randRange(range.min, range.max, rng);
+    const amount = this.randRange(range.min, range.max, rng);
+    const stat = this.pick(this.statKeys, rng);
     const item = {
       id: `gen_${nextItemId++}`,
-      type,
+      type: 'trinket',
       name: `${adj} ${noun}`,
       rank,
-      stats: { power },
+      stats: {},
+      mods: { [stat]: amount },
       scrap: 0
     };
     item.scrap = this.scrapValues[rank] ?? this.calcScrap(item);
     item.tags = [noun.toLowerCase()];
-    if(type === 'oddity'){
-      item.lore = this.pick(this.oddityLore, rng);
-    }
-    if(rank === 'vaulted'){
-      if(rng() < 0.5){
-        item.affix = this.pick(this.affixes, rng);
-        item.name += ` ${item.affix}`;
-      } else {
-        item.miniQuest = this.pick(this.miniQuestHooks, rng);
-      }
-    }
     return item;
   }
 };
