@@ -235,7 +235,25 @@ const tileEvents = [];
 const zoneEffects = [];
 const enemyBanks = {};
 function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
-function registerZoneEffects(list){ (list||[]).forEach(z => zoneEffects.push(z)); }
+function registerZoneEffects(list){
+  (list||[]).forEach(z => {
+    zoneEffects.push(z);
+    const id = z.useItem?.id;
+    if(id && globalThis.EventBus?.on){
+      globalThis.EventBus.on(`used:${id}`, () => {
+        const map = z.map || 'world';
+        if(party.map !== map) return;
+        const { x, y } = party;
+        if(x < z.x || y < z.y || x >= z.x + (z.w || 0) || y >= z.y + (z.h || 0)) return;
+        if(z.useItem.once && z.useItem._used) return;
+        if(z.useItem.reward){
+          globalThis.Dustland?.actions?.applyQuestReward(z.useItem.reward);
+        }
+        if(z.useItem.once) z.useItem._used = true;
+      });
+    }
+  });
+}
 const state = { map:'world', mapFlags: {} }; // default map
 const player = { hp:10, ap:2, inv:[], scrap:0 };
 if (typeof registerItem === 'function') {

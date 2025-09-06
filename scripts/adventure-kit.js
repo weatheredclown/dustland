@@ -2771,6 +2771,9 @@ function startNewZone() {
   document.getElementById('zoneNegate').value = '';
   document.getElementById('zoneHealMult').value = '';
   document.getElementById('zoneNoEnc').checked = false;
+  document.getElementById('zoneUseItem').value = '';
+  document.getElementById('zoneReward').value = '';
+  document.getElementById('zoneOnce').checked = false;
   document.getElementById('addZone').textContent = 'Add Zone';
   document.getElementById('delZone').style.display = 'none';
   showZoneEditor(true);
@@ -2789,6 +2792,9 @@ function collectZone() {
   const negate = document.getElementById('zoneNegate').value.trim();
   const healMult = parseFloat(document.getElementById('zoneHealMult').value);
   const noEnc = document.getElementById('zoneNoEnc').checked;
+  const useItemId = document.getElementById('zoneUseItem').value.trim();
+  const reward = document.getElementById('zoneReward').value.trim();
+  const once = document.getElementById('zoneOnce').checked;
   const entry = { map, x, y, w, h };
   if (hp || msg) {
     entry.perStep = {};
@@ -2798,6 +2804,11 @@ function collectZone() {
   if (negate) entry.negate = negate;
   if (!isNaN(healMult)) entry.healMult = healMult;
   if (noEnc) entry.noEncounters = true;
+  if (useItemId) {
+    entry.useItem = { id: useItemId };
+    if (reward) entry.useItem.reward = reward;
+    if (once) entry.useItem.once = true;
+  }
   return entry;
 }
 
@@ -2832,6 +2843,9 @@ function editZone(i) {
   document.getElementById('zoneNegate').value = z.negate || '';
   document.getElementById('zoneHealMult').value = z.healMult ?? '';
   document.getElementById('zoneNoEnc').checked = !!z.noEncounters;
+  document.getElementById('zoneUseItem').value = z.useItem?.id || '';
+  document.getElementById('zoneReward').value = z.useItem?.reward || '';
+  document.getElementById('zoneOnce').checked = !!z.useItem?.once;
   document.getElementById('addZone').textContent = 'Update Zone';
   document.getElementById('delZone').style.display = 'block';
   showZoneEditor(true);
