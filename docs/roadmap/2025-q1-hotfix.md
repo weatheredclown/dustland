@@ -5,4 +5,4 @@ We shipped a quick hotfix addressing caravan inventory bugs and laid the groundw
 - Persona bonuses now influence combat stats.
 - Early map draft outlines the path to the first three broadcast fragments.
 
-More updates will follow as we expand the hub city and puzzle lineup.
+More updates will follow as we expand the puzzle lineup.

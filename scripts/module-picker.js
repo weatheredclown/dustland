@@ -9,7 +9,6 @@ const MODULES = [
   { id: 'mara', name: 'Mara Puzzle', file: 'modules/mara-puzzle.module.js' },
   { id: 'nyx', name: 'Nyx Tuning', file: 'modules/nyx-tuning.module.js' },
   { id: 'radio', name: 'Radio Tower', file: 'modules/radio-tower.module.js' },
-  { id: 'hub', name: 'Hub City', file: 'modules/hub-city.module.js' },
   { id: 'golden', name: 'Golden Sample', file: 'modules/golden.module.json' }
 ];
 

@@ -1,5 +1,8 @@
 # Changelog
 
+## 2025-09-06
+- Removed hub city module.
+
 ## 2025-09-05
 - Added configurable procedural map generation with regeneration support.
 - Introduced camp persona menu for equipping masks at rest stops.
