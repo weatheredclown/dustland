@@ -200,6 +200,12 @@ function advanceDialog(stateObj, choiceIdx){
       handleGoto(choice.goto);
       res.close=true; res.success=true; stateObj.node=null; return res;
     }
+    const nextId = choice.to || choice.id;
+    if (nextId) {
+      res.next = nextId;
+      stateObj.node = nextId;
+      return res;
+    }
     return finalize(choice.success || '', true);
   }
 
@@ -237,6 +243,12 @@ function advanceDialog(stateObj, choiceIdx){
     if(choice.goto){
       handleGoto(choice.goto);
       res.close=true; res.success=true; stateObj.node=null; return res;
+    }
+    const nextId = choice.to || choice.id;
+    if (nextId) {
+      res.next = nextId;
+      stateObj.node = nextId;
+      return res;
     }
     return finalize(choice.success || '', true);
   }
