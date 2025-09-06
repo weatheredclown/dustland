@@ -1,9 +1,39 @@
+/** @typedef {import('./inventory.js').GameItem} GameItem */
+
+/**
+ * @typedef {object} PartyMember
+ * @property {string} id
+ * @property {string} name
+ * @property {string} role
+ * @property {boolean} permanent
+ * @property {string|null} portraitSheet
+ * @property {number} lvl
+ * @property {number} xp
+ * @property {number} skillPoints
+ * @property {Record<string, number>} stats
+ * @property {{weapon:GameItem|null, armor:GameItem|null, trinket:GameItem|null}} equip
+ * @property {number} maxHp
+ * @property {number} hp
+ * @property {number} ap
+ * @property {number} maxAdr
+ * @property {number} adr
+ * @property {Record<string, number>} _bonus
+ * @property {Array<string|object>} special
+ * @property {number} adrGenMod
+ * @property {number} adrDmgMod
+ * @property {{[key:string]: number}} cooldowns
+ * @property {boolean} guard
+ * @property {object[]} statusEffects
+ * @property {string} [persona]
+ */
+
 const baseStats = () => ({STR:4, AGI:4, INT:4, PER:4, LCK:4, CHA:4});
 
 const xpCurve = [0,100,200,300,400,500,700,900,1100,1300,1500,1900,2300,2700,3100,3500,4300,5100,5900,6700];
 
 var bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
 
+/** @implements {PartyMember} */
 class Character {
   constructor(id, name, role, opts={}){
     this.id=id; this.name=name; this.role=role;

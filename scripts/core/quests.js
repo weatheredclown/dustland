@@ -1,5 +1,31 @@
 // ===== Quests =====
+
+/* global renderQuests, log, toast, EventBus, queueNanoDialogForNPCs, flagValue, textEl */
+/** @typedef {import('./inventory.js').GameItem} GameItem */
+
+/**
+ * @typedef {object} QuestData
+ * @property {string} id
+ * @property {string} title
+ * @property {string} desc
+ * @property {'available'|'active'|'completed'} status
+ * @property {boolean} [pinned]
+ * @property {string} [item]
+ * @property {number} [count]
+ * @property {string} [reqFlag]
+ * @property {string|GameItem} [reward]
+ * @property {number} [xp]
+ * @property {{x:number,y:number}} [moveTo]
+ * @property {Quest[]} [quests]
+ */
+
 class Quest {
+  /**
+   * @param {string} id
+   * @param {string} title
+   * @param {string} desc
+   * @param {QuestData} [meta]
+   */
   constructor(id, title, desc, meta = {}) {
     this.id = id;
     this.title = title;
@@ -21,7 +47,8 @@ class Quest {
 }
 
 class QuestLog {
-  constructor() { this.quests = {}; }
+  constructor() { /** @type {Record<string, Quest>} */ this.quests = {}; }
+  /** @param {Quest} quest */
   add(quest) {
     const existing = this.quests[quest.id];
     if (existing) {
@@ -39,10 +66,12 @@ class QuestLog {
     log('Quest added: ' + quest.title);
     queueNanoDialogForNPCs?.('start', 'quest update');
   }
+  /** @param {string} id */
   complete(id) {
     const q = this.quests[id];
     if (q) q.complete();
   }
+  /** @param {string} id */
   pin(id) {
     const q = this.quests[id];
     if (q && !q.pinned) {
@@ -50,6 +79,7 @@ class QuestLog {
       renderQuests();
     }
   }
+  /** @param {string} id */
   unpin(id) {
     const q = this.quests[id];
     if (q && q.pinned) {

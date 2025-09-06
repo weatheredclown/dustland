@@ -168,6 +168,10 @@ test('createRNG produces deterministic sequences', () => {
     assert.ok(player.inv.some(it=>it.id==='apple'));
   });
 
+  test('registerItem requires an id', () => {
+    assert.throws(() => registerItem({ name:'Nameless', type:'weapon' }), /id/);
+  });
+
   test('picking up an item logs once', () => {
     player.inv.length = 0;
     party.length = 0;
