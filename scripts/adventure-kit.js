@@ -3536,6 +3536,8 @@ function validateSpawns(){
   });
   moduleData.npcs.forEach((n,i)=>{
     if(n.locked && n.id && !unlocks.has(n.id)) issues.push({ msg:'Locked NPC '+n.id+' has no unlock', type:'npc', idx:i });
+    if(!n.portraitSheet) issues.push({ msg:'NPC '+(n.id||'')+' missing portrait', type:'npc', idx:i, warn:true });
+    if(!n.prompt) issues.push({ msg:'NPC '+(n.id||'')+' missing prompt', type:'npc', idx:i, warn:true });
   });
   return issues;
 }
@@ -3570,8 +3572,11 @@ function renderProblems(issues){
 }
 
 function saveModule() {
-  const issues = validateSpawns();
-  if(issues.length){ renderProblems(issues); return; }
+  const issues = validateSpawns() || [];
+  if(issues.length){
+    renderProblems(issues);
+    if(issues.some(i=>!i.warn)) return;
+  }
   moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
   const bldgs = moduleData.buildings.map(({ under, _origKeys, ...rest }) => {
     const clean = {};

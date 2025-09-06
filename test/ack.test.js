@@ -351,7 +351,7 @@ test('validateSpawns lists blocked spawns', () => {
   genWorld(1);
   setTile('world',0,0,TILE.WATER);
   moduleData.start = { map:'world', x:0, y:0 };
-  moduleData.npcs = [{ id:'n1', map:'world', x:1, y:0 }];
+  moduleData.npcs = [{ id:'n1', map:'world', x:1, y:0, portraitSheet:'assets/portraits/portrait_1000.png', prompt:'hi' }];
   setTile('world',1,0,TILE.WATER);
   moduleData.items = [];
   const issues = validateSpawns();
@@ -364,12 +364,50 @@ test('validateSpawns flags locked NPC without unlock', () => {
   genWorld(1);
   moduleData.start = { map:'world', x:0, y:0 };
   moduleData.items = [];
-  moduleData.npcs = [{ id:'door', map:'world', x:1, y:0, locked:true, tree:{ locked:{ text:'', choices:[{ label:'(Leave)', to:'bye' }] }, start:{ text:'', choices:[{ label:'(Leave)', to:'bye' }] }, bye:{ text:'', choices:[] } } }];
+  moduleData.npcs = [{ id:'door', map:'world', x:1, y:0, portraitSheet:'assets/portraits/portrait_1000.png', prompt:'hi', locked:true, tree:{ locked:{ text:'', choices:[{ label:'(Leave)', to:'bye' }] }, start:{ text:'', choices:[{ label:'(Leave)', to:'bye' }] }, bye:{ text:'', choices:[] } } }];
   const issues = validateSpawns();
   assert.strictEqual(issues.length,1);
   assert.strictEqual(issues[0].msg,'Locked NPC door has no unlock');
   assert.strictEqual(issues[0].type,'npc');
   assert.strictEqual(issues[0].idx,0);
+});
+
+test('validateSpawns warns on missing NPC portrait or prompt', () => {
+  genWorld(1);
+  moduleData.start = { map:'world', x:0, y:0 };
+  moduleData.items = [];
+  const prev = moduleData.npcs;
+  moduleData.npcs = [
+    { id:'npc1', map:'world', x:0, y:0, prompt:'hi' },
+    { id:'npc2', map:'world', x:1, y:0, portraitSheet:'assets/portraits/portrait_1000.png' }
+  ];
+  const issues = validateSpawns();
+  assert.strictEqual(issues.length,2);
+  assert.ok(issues.every(i=>i.warn));
+  assert.ok(issues.some(i=>i.msg==='NPC npc1 missing portrait'));
+  assert.ok(issues.some(i=>i.msg==='NPC npc2 missing prompt'));
+  moduleData.npcs = prev;
+});
+
+test('saveModule proceeds when NPCs only have warnings', () => {
+  genWorld(1);
+  moduleData.start = { map:'world', x:0, y:0 };
+  moduleData.items = [];
+  const prev = moduleData.npcs;
+  moduleData.npcs = [{ id:'npc1', map:'world', x:0, y:0, prompt:'hi' }];
+  let saved='';
+  const origBlob = globalThis.Blob;
+  globalThis.Blob = class { constructor(parts){ this.text = parts.join(''); } };
+  const origURL = globalThis.URL;
+  globalThis.URL = { createObjectURL(b){ saved = b.text; return ''; }, revokeObjectURL(){} };
+  const origCreate = document.createElement;
+  document.createElement = tag => tag === 'a' ? { href:'', download:'', click(){} } : origCreate(tag);
+  saveModule();
+  document.createElement = origCreate;
+  globalThis.URL = origURL;
+  globalThis.Blob = origBlob;
+  moduleData.npcs = prev;
+  assert.notStrictEqual(saved,'');
 });
 
 test('addTerrainFeature sprinkles noise', () => {
@@ -898,7 +936,7 @@ test('dustland module JSON round trips through ACK', () => {
     const original = JSON.parse(fsSync.readFileSync(jsonPath, 'utf8'));
 
     const origValidate = globalThis.validateSpawns;
-    globalThis.validateSpawns = () => true;
+    globalThis.validateSpawns = () => [];
 
     let saved = '';
     const origBlob = globalThis.Blob;
