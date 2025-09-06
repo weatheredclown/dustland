@@ -7,7 +7,7 @@
 > **Gizmo:** Clean pipelines turn even vintage BASIC dust into plug-and-play modules.
 
 ## Overview
-`PIT.BAS` is a 1980s-style text adventure in which the player falls into a cavern and must climb out. The current BASIC source lives in `docs/PIT.BAS` and runs standalone.
+`PIT.BAS` is a 1980s-style text adventure in which the player falls into a cavern and must climb out. The current BASIC source lives in `docs/examples/PIT.BAS` and runs standalone.
 
 This document sketches how to port that script into a Dustland module so the pit crawl slots into our world generator and event bus.
 
@@ -88,7 +88,7 @@ This document sketches how to port that script into a Dustland module so the pit
 
 ## Pipeline Notes
 - Hand-build the JSON map based on the room/item/NPC list.
-- Include the `docs/PIT.BAS` listing as an optional in-game artifact.
+- Include the `docs/examples/PIT.BAS` listing as an optional in-game artifact.
 - Validate the JSON with existing module tests before hand-tuning encounters.
 - Use existing RNG utilities to reproduce BASIC's randomness.
 - Document the process so future retro ports follow the same path.
