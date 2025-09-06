@@ -437,8 +437,10 @@ function applyModule(data = {}, options = {}) {
     if (n.hidden && n.reveal) { hiddenNPCs.push(n); return; }
     let tree = n.tree;
     if (typeof tree === 'string') { try { tree = JSON.parse(tree); } catch (e) { tree = null; } }
+    const dlgArr = n.dialogs || (Array.isArray(n.dialog) ? n.dialog : null);
     if (!tree) {
-      tree = { start: { text: n.dialog || '', choices: [{ label: '(Leave)', to: 'bye' }] } };
+      const txt = dlgArr ? dlgArr[0] : (n.dialog || '');
+      tree = { start: { text: txt, choices: [{ label: '(Leave)', to: 'bye' }] } };
     }
     let quest = null;
     if (n.questId && quests[n.questId]) quest = quests[n.questId];
@@ -450,6 +452,10 @@ function applyModule(data = {}, options = {}) {
     if (n.symbol) opts.symbol = n.symbol;
     if (n.door) opts.door = n.door;
     if (typeof n.locked === 'boolean') opts.locked = n.locked;
+    if (Array.isArray(n.quests)) {
+      opts.quests = n.quests.map(id => quests[id]).filter(Boolean);
+    }
+    if (dlgArr) opts.questDialogs = dlgArr;
     const npc = makeNPC(n.id, n.map || 'world', n.x, n.y, n.color, n.name || n.id, n.title || '', n.desc || '', tree, quest, null, null, opts);
     if (Array.isArray(n.loop)) npc.loop = n.loop;
     if (typeof NPCS !== 'undefined') NPCS.push(npc);
