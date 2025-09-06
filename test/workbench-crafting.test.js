@@ -42,3 +42,20 @@ test('craftSolarTarp uses cloth and scrap', () => {
   assert.ok(context.player.inv.some(i => i.id === 'solar_tarp'));
   assert.ok(!context.player.inv.some(i => i.id === 'cloth'));
 });
+
+test('craftBandage consumes plant fiber', () => { 
+  const context = {
+    Dustland: {},
+    EventBus: { emit: () => {} },
+    player: { scrap: 0, inv: [{ id: 'plant_fiber' }] },
+    addToInv: id => { context.player.inv.push({ id }); return true; },
+    hasItem: id => context.player.inv.some(i => i.id === id),
+    findItemIndex: id => context.player.inv.findIndex(i => i.id === id),
+    removeFromInv: idx => context.player.inv.splice(idx, 1),
+    log: () => {}
+  };
+  vm.runInNewContext(src, context);
+  context.Dustland.workbench.craftBandage();
+  assert.ok(context.player.inv.some(i => i.id === 'bandage'));
+  assert.ok(!context.player.inv.some(i => i.id === 'plant_fiber'));
+});

@@ -102,3 +102,26 @@ test('cloth supplies can be found to the south', () => {
   assert.strictEqual(cloth.map, 'world');
   assert.ok(cloth.y > 60);
 });
+
+test('plant fiber can be scavenged', () => {
+  const data = loadModuleData();
+  const fiber = data.items.find(i => i.id === 'plant_fiber');
+  assert.ok(fiber);
+  assert.strictEqual(fiber.map, 'world');
+});
+
+test('bandage heals more than water flask', () => {
+  const data = loadModuleData();
+  const bandage = data.items.find(i => i.id === 'bandage');
+  const flask = data.items.find(i => i.id === 'water_flask');
+  assert.ok(bandage.use.amount > flask.use.amount);
+});
+
+test('vine creature drops plant fiber', () => {
+  const data = loadModuleData();
+  const template = data.templates.find(t => t.id === 'vine_creature');
+  assert.ok(template);
+  const encounter = data.encounters.world.find(e => e.templateId === 'vine_creature');
+  assert.ok(encounter);
+  assert.strictEqual(encounter.loot, 'plant_fiber');
+});

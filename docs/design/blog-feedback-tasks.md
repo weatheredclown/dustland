@@ -54,7 +54,7 @@
 - [ ] Add more defensive structures for outposts beyond turrets
 - [ ] Taper late-game crafting cost spikes in the scrap economy
 - [ ] Stop the compass from pointing to hidden quests when navigation is off
-- [ ] Design additional unique creatures beyond the giant glass scorpion
+- [x] Design additional unique creatures beyond the giant glass scorpion
 - [ ] Persist pinned quests across sessions
 - [x] Publish roadmap blog posts alongside hotfixes
 - [x] Let players craft protective tarps for solar panels
@@ -71,7 +71,7 @@
 - [ ] Make vehicle horns alert allied NPCs
 - [ ] Add more pre-war tech guild audio logs
 - [ ] Implement a player-death heat map for route planning
-- [ ] Let bandages be crafted from plant fibers to save cloth
+- [x] Let bandages be crafted from plant fibers to save cloth
 - [ ] Add more randomized side quests from NPCs
 - [ ] Show settlement growth progress bars during supply deliveries
 - [ ] Increase rewards for the feral children encounter

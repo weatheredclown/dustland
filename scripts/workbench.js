@@ -38,5 +38,17 @@
     log('Crafted a solar panel tarp.');
   }
 
-  Dustland.workbench = { craftSignalBeacon, craftSolarTarp };
+  function craftBandage(){
+    if (!hasItem('plant_fiber')){
+      log('Need plant fiber.');
+      return;
+    }
+    const idx = findItemIndex('plant_fiber');
+    if (idx >= 0) removeFromInv(idx);
+    addToInv('bandage');
+    bus?.emit('craft:bandage');
+    log('Crafted a bandage.');
+  }
+
+  Dustland.workbench = { craftSignalBeacon, craftSolarTarp, craftBandage };
 })();

@@ -30,6 +30,11 @@ const playData = localStorage.getItem(PLAYTEST_KEY);
 if (playData) {
   try {
     moduleData = JSON.parse(playData);
+    if (moduleData.profiles && globalThis.Dustland?.profiles?.set) {
+      for (const id in moduleData.profiles) {
+        globalThis.Dustland.profiles.set(id, moduleData.profiles[id]);
+      }
+    }
     localStorage.removeItem(PLAYTEST_KEY);
     UI.hide(loaderId);
     if (realOpenCreator) {
@@ -52,6 +57,11 @@ if (!moduleData && autoUrl) {
 
 async function loadModule(data) {
   moduleData = data;
+  if (data.profiles && globalThis.Dustland?.profiles?.set) {
+    for (const id in data.profiles) {
+      globalThis.Dustland.profiles.set(id, data.profiles[id]);
+    }
+  }
   if (typeof moduleData.module === 'string') {
     try {
       await new Promise((resolve, reject) => {
