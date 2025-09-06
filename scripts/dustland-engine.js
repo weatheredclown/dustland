@@ -3,7 +3,7 @@
 
 // Logging
 
-const ENGINE_VERSION = '0.60.3';
+const ENGINE_VERSION = '0.61.0';
 
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
