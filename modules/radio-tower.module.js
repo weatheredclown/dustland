@@ -1,8 +1,8 @@
 const DATA = `{
   "name": "Radio Tower",
   "start": { "map": "tower", "x": 1, "y": 1 },
-  "maps": [
-    { "id": "tower", "w": 3, "h": 3, "grid": ["⬜⬜⬜","⬜🎚⬜","⬜⬜⬜"] }
+  "interiors": [
+    { "id": "tower", "w": 3, "h": 3, "grid": ["🧱🧱🧱","🧱⬜🧱","🧱🧱🧱"], "entryX": 1, "entryY": 1 }
   ],
   "events": [
     { "map": "tower", "x": 1, "y": 1, "events": [ { "when": "enter", "effect": "openRadio" } ] }
