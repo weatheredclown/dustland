@@ -34,7 +34,7 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm test
-      - run: node scripts/presubmit.js
+      - run: node scripts/support/presubmit.js
       - run: npm run lint
-      - run: node scripts/version-bump.js
+      - run: node scripts/support/version-bump.js
         if: github.event_name == 'page_build'
