@@ -28,7 +28,10 @@ const DATA = `
     {
       "id": "power_cell",
       "name": "Power Cell",
-      "type": "quest"
+      "type": "quest",
+      "map": "workshop",
+      "x": 3,
+      "y": 2
     },
     {
       "id": "signal_beacon",
