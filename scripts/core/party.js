@@ -23,6 +23,7 @@ class Character {
     this.adrDmgMod = 1;
     this.cooldowns = {};
     this.guard = false;
+    this.statusEffects = [];
   }
   xpToNext(){ return xpToNext(this.lvl); }
   awardXP(amt){

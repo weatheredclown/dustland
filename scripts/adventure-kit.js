@@ -234,17 +234,20 @@ function initTags() {
 initTags();
 let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editZoneIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
 let currentTree = {};
+globalThis.treeData = currentTree;
 function getTreeData() {
   return currentTree;
 }
 function setTreeData(tree) {
   currentTree = tree;
+  globalThis.treeData = currentTree;
   const treeEl = document.getElementById('npcTree');
   if (treeEl) treeEl.value = JSON.stringify(tree, null, 2);
   if (editNPCIdx >= 0) moduleData.npcs[editNPCIdx].tree = tree;
 }
 globalThis.getTreeData = getTreeData;
 globalThis.setTreeData = setTreeData;
+globalThis.treeData = currentTree;
 let selectedObj = null;
 const mapSelect = document.getElementById('mapSelect');
 let currentMap = 'world';
@@ -1248,17 +1251,17 @@ function addChoiceRow(container, ch = {}) {
     if (type) { addAdv(type); sel.value = ''; }
   });
 
+  let rewardTypeSel;
   if (reward) {
     addAdv('reward');
-    const rt = row.querySelector('.choiceRewardType');
+    rewardTypeSel = row.querySelector('.choiceRewardType');
     const xp = row.querySelector('.choiceRewardXP');
     const sc = row.querySelector('.choiceRewardScrap');
     const ri = row.querySelector('.choiceRewardItem');
-    if (rt) rt.value = isXP ? 'xp' : isScrap ? 'scrap' : 'item';
+    if (rewardTypeSel) rewardTypeSel.value = isXP ? 'xp' : isScrap ? 'scrap' : 'item';
     if (xp) xp.value = xpVal;
     if (sc) sc.value = scrapVal;
     if (ri) ri.value = itemVal;
-    if (rt) rt.dispatchEvent(new Event('change'));
   }
   if (stat || dc || success || failure) {
     addAdv('stat');
@@ -1347,6 +1350,7 @@ function addChoiceRow(container, ch = {}) {
   row.querySelectorAll('input[type=checkbox]').forEach(el => el.addEventListener('change', updateTreeData));
   row.querySelector('.delChoice').addEventListener('click', () => { row.remove(); updateTreeData(); });
   refreshChoiceDropdowns();
+  if (reward && rewardTypeSel) rewardTypeSel.dispatchEvent(new Event('change'));
 }
 
 function populateChoiceDropdown(sel, selected = '') {

@@ -69,6 +69,36 @@ function removeFromInv(invIndex) {
   notifyInventoryChanged();
 }
 
+// Drop multiple items from inventory as a single cache on the ground
+function dropItems(indices) {
+  if (!Array.isArray(indices) || indices.length === 0) return 0;
+  const ids = indices.map(i => {
+    const it = player.inv[i];
+    return it ? it.id : null;
+  }).filter(Boolean);
+  const sorted = [...indices].sort((a, b) => b - a);
+  for (const idx of sorted) {
+    if (idx >= 0) player.inv.splice(idx, 1);
+  }
+  if (ids.length) {
+    itemDrops.push({ items: ids, map: party.map, x: party.x, y: party.y });
+    notifyInventoryChanged();
+  }
+  return ids.length;
+}
+
+// Add all items from a cache drop into inventory
+function pickupCache(drop) {
+  const ids = Array.isArray(drop?.items) ? drop.items : (drop?.id ? [drop.id] : []);
+  if (player.inv.length + ids.length > getPartyInventoryCapacity()) {
+    log('Inventory is full.');
+    if (typeof toast === 'function') toast('Inventory is full.');
+    return false;
+  }
+  ids.forEach(id => addToInv(getItem(id)));
+  return true;
+}
+
 function equipItem(memberIndex, invIndex){
   const m=party[memberIndex]; const it=player.inv[invIndex];
   if(!m||!it||!EQUIP_TYPES.includes(it.type)){ log('Cannot equip that.'); return; }
@@ -246,6 +276,19 @@ function useItem(invIndex){
     notifyInventoryChanged();
     return true;
   }
+  if(it.use.type==='cleanse'){
+    const who = (party[selectedMember]||party[0]);
+    if(!who){ log('No party member to cleanse.'); return false; }
+    if(Array.isArray(who.statusEffects)){
+      who.statusEffects.length = 0;
+    }
+    log(`${who.name} feels purified.`);
+    if(typeof toast==='function') toast(`${who.name} is cleansed`);
+    emit('sfx','tick');
+    player.inv.splice(invIndex,1);
+    notifyInventoryChanged();
+    return true;
+  }
   if(typeof it.use.onUse === 'function'){
     const ok = it.use.onUse({player, party, log, toast});
     if(ok!==false){
@@ -260,6 +303,6 @@ function useItem(invIndex){
   return false;
 }
 
-const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty };
+const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache };
 globalThis.Dustland.inventory = inventoryExports;
 Object.assign(globalThis, inventoryExports);

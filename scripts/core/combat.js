@@ -43,8 +43,34 @@ const combatState = {
 };
 
 function recordCombatEvent(ev){
-  // Store structured events for post-combat analysis.
   combatState.log.push(ev);
+}
+
+function addStatus(target, status){
+  if(!target || !status) return;
+  target.statusEffects = target.statusEffects || [];
+  if(status.type === 'poison'){
+    target.statusEffects.push({ type:'poison', strength: status.strength|0, remaining: status.duration|0 });
+    log?.(`${target.name} is poisoned!`);
+  }
+}
+
+function tickStatuses(target){
+  if(!target || !Array.isArray(target.statusEffects)) return false;
+  for(let i=target.statusEffects.length-1;i>=0;i--){
+    const s = target.statusEffects[i];
+    if(s.type === 'poison'){
+      const dmg = Math.max(0, s.strength|0);
+      target.hp -= dmg;
+      log?.(`${target.name} takes ${dmg} poison damage.`);
+    }
+    s.remaining--;
+    if(s.remaining<=0){
+      target.statusEffects.splice(i,1);
+      if(s.type==='poison') log?.(`${target.name} is no longer poisoned.`);
+    }
+  }
+  return target.hp <= 0;
 }
 
 function setPortraitDiv(el, obj){
@@ -249,10 +275,23 @@ function highlightActive(){
 function openCommand(){
   if (combatState.phase !== 'party' || !cmdMenu) return;
 
+  const m = party[combatState.active];
+
+  if (m && tickStatuses(m)){
+    log?.(`${m.name} falls to poison.`);
+    party.fall(m);
+    renderCombat();
+    if ((party?.length || 0) === 0){
+      log?.('The party has fallen...');
+      closeCombat('bruise');
+      return;
+    }
+    nextCombatant();
+    return;
+  }
+
   cmdMenu.innerHTML = '';
   combatState.mode = 'command';
-
-  const m = party[combatState.active];
 
   // Tick down cooldowns at the start of the actor's command phase
   if (m && m.cooldowns){
@@ -487,13 +526,15 @@ function doAttack(dmg, type = 'basic'){
   const defeated = [];
   for (const target of targets){
     let tDmg = perTarget;
+
+    // Required weapon gate
     const req = target.requires;
     if (req && (!weapon || weapon.id !== req)){
       tDmg = 0;
       log?.(`${attacker.name}'s attacks can't harm ${target.name}. Equip ${req}.`);
     }
 
-    // Immunity to basic
+    // Immunity to basic attacks
     if (type === 'basic' && Array.isArray(target.immune) && target.immune.includes('basic')){
       tDmg = 0;
       log?.(`${target.name} shrugs off the attack.`);
@@ -540,9 +581,10 @@ function doAttack(dmg, type = 'basic'){
       const eid = target.id || target.name;
       if (eid){
         const turnsTaken = combatState.turns - (target.spawnTurn || 1) + 1;
-        const stats = enemyTurnStats[eid] || (enemyTurnStats[eid] = { total: 0, count: 0 });
+        const stats = enemyTurnStats[eid] || (enemyTurnStats[eid] = { total: 0, count: 0, quick: 0 });
         stats.total += Math.max(1, turnsTaken);
         stats.count += 1;
+        if (turnsTaken <= 1) stats.quick += 1;
       }
       if (target.loot) addToInv?.(target.loot);
 
@@ -738,6 +780,52 @@ function enemyAttack(){
 
   if (!enemy || !target){ closeCombat('flee'); return; }
 
+  if (tickStatuses(enemy)){
+    log?.(`${enemy.name} is defeated!`);
+    recordCombatEvent?.({ type:'enemy', actor: enemy.name, action:'defeated', by:'poison' });
+    globalThis.EventBus?.emit?.('enemy:defeated', { target: enemy });
+    const eid = enemy.id || enemy.name;
+    if (eid){
+      const turnsTaken = combatState.turns - (enemy.spawnTurn || 1) + 1;
+      const stats = enemyTurnStats[eid] || (enemyTurnStats[eid] = { total: 0, count: 0, quick: 0 });
+      stats.total += Math.max(1, turnsTaken);
+      stats.count += 1;
+      if (turnsTaken <= 1) stats.quick += 1;
+    }
+    if (enemy.loot) addToInv?.(enemy.loot);
+    if (/bandit/i.test(enemy.id) && Math.random() < 0.5){
+      player.scrap = (player.scrap || 0) + 1;
+      updateHUD?.();
+      log?.('You find 1 scrap on the bandit.');
+    }
+    if (enemy.boss && Math.random() < 0.1){ addToInv?.('memory_worm'); }
+    if (typeof SpoilsCache !== 'undefined'){
+      const cache = SpoilsCache.rollDrop?.(enemy.challenge);
+      if (cache){
+        const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
+        itemDrops?.push?.({ id: registered.id, map: party.map, x: party.x, y: party.y });
+        log?.(`The ground coughs up a ${registered.name}.`);
+        globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target: enemy });
+      }
+    }
+    if (enemy.npc) removeNPC?.(enemy.npc);
+
+    combatState.enemies.splice(combatState.active,1);
+    renderCombat();
+    if (combatState.enemies.length === 0){
+      log?.('Victory!');
+      closeCombat('loot');
+      return;
+    }
+    if (combatState.active < combatState.enemies.length){
+      highlightActive();
+      setTimeout(enemyAttack,300);
+    } else {
+      startPartyTurn();
+    }
+    return;
+  }
+
   // Stun skip
   if (enemy.stun > 0){
     log?.(`${enemy.name} is stunned and cannot act!`);
@@ -816,9 +904,8 @@ function startPartyTurn(){
 }
 
 function getCombatLog(){
-  // Return a copy of combat events for external analysis.
   return combatState.log.slice();
 }
 
-const combatExports = { openCombat, closeCombat, handleCombatKey, getCombatLog, __testAttack: testAttack, __combatState: combatState };
+const combatExports = { openCombat, closeCombat, handleCombatKey, getCombatLog, addStatus, tickStatuses, __testAttack: testAttack, __combatState: combatState };
 Object.assign(globalThis, combatExports);
