@@ -1697,7 +1697,7 @@ test('trivial enemies appear in groups', () => {
   applyModule({ world: [row], templates:[{ id:'weak', name:'Weak', combat:{ HP:1, ATK:1, DEF:0 }}], encounters: { world: [ { templateId:'weak' } ] } });
   state.map = 'world';
   setPartyPos(5, 0);
-  global.enemyTurnStats = { Weak: { total: 3, count: 3 } };
+  global.enemyTurnStats = { Weak: { total: 3, count: 3, quick: 3 } };
   let captured;
   const origRand = Math.random;
   Math.random = () => 0;
@@ -1708,7 +1708,7 @@ test('trivial enemies appear in groups', () => {
   globalThis.Dustland.actions.startCombat = origStart;
   delete global.enemyTurnStats;
   encounterCooldown = 0;
-  assert.ok(captured.count >= 2);
+  assert.strictEqual(captured.count, 3);
 });
 
 test('distant encounters use hard enemy pool', () => {

@@ -353,10 +353,10 @@ function checkRandomEncounter(){
     }
     const id = def.id || def.name;
     const stats = globalThis.enemyTurnStats?.[id];
-    // If this enemy consistently falls in one turn, escalate group size
+    // If this enemy consistently falls in a single turn, spawn them in triples
     let count = 1;
-    if (stats && stats.count >= 3 && (stats.total / stats.count) <= 1){
-      count = 2 + Math.floor(Math.random() * 2);
+    if (stats && stats.quick >= 3){
+      count = 3;
     }
     if (count > 1) def.count = count;
     const min = mods.minSteps ?? 3;
