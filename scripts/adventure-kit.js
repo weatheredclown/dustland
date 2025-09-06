@@ -621,20 +621,20 @@ intCanvas.addEventListener('mousedown',e=>{
   if(coordTarget){
     document.getElementById(coordTarget.x).value = x;
     document.getElementById(coordTarget.y).value = y;
-    if(coordTarget.map) document.getElementById(coordTarget.map).value = I.id;
+    if (coordTarget.map) populateMapDropdown(document.getElementById(coordTarget.map), I.id);
     coordTarget = null;
     drawInterior();
     return;
   }
   if(placingType){
     if(placingType==='npc'){
-      document.getElementById('npcMap').value = I.id;
+      populateMapDropdown(document.getElementById('npcMap'), I.id);
       document.getElementById('npcX').value = x;
       document.getElementById('npcY').value = y;
       if(placingCb) placingCb();
       document.getElementById('cancelNPC').style.display = 'none';
     }else if(placingType==='item'){
-      document.getElementById('itemMap').value = I.id;
+      populateMapDropdown(document.getElementById('itemMap'), I.id);
       document.getElementById('itemX').value = x;
       document.getElementById('itemY').value = y;
       if(placingCb) placingCb();
@@ -1923,7 +1923,7 @@ function startNewNPC() {
   document.getElementById('npcHidden').checked = false;
   document.getElementById('npcLocked').checked = false;
   document.getElementById('npcFlagType').value = 'visits';
-  document.getElementById('npcFlagMap').value = 'world';
+  populateMapDropdown(document.getElementById('npcFlagMap'), 'world');
   document.getElementById('npcFlagX').value = 0;
   document.getElementById('npcFlagY').value = 0;
   document.getElementById('npcFlagName').value = '';
@@ -2132,10 +2132,11 @@ function editNPC(i) {
   document.getElementById('npcPortraitLock').checked = n.portraitLock !== false;
   document.getElementById('npcHidden').checked = !!n.hidden;
   document.getElementById('npcLocked').checked = !!n.locked;
+  let flagMap = 'world';
   if (n.reveal?.flag?.startsWith('visits@')) {
     document.getElementById('npcFlagType').value = 'visits';
     const parts = n.reveal.flag.split('@');
-    document.getElementById('npcFlagMap').value = parts[1] || 'world';
+    flagMap = parts[1] || 'world';
     const [fx, fy] = (parts[2] || '0,0').split(',');
     document.getElementById('npcFlagX').value = fx;
     document.getElementById('npcFlagY').value = fy;
@@ -2143,6 +2144,7 @@ function editNPC(i) {
     document.getElementById('npcFlagType').value = 'party';
     document.getElementById('npcFlagName').value = n.reveal?.flag || '';
   }
+  populateMapDropdown(document.getElementById('npcFlagMap'), flagMap);
   document.getElementById('npcOp').value = n.reveal?.op || '>=';
   document.getElementById('npcVal').value = n.reveal?.value ?? 1;
   populateFlagList();
@@ -2253,6 +2255,8 @@ function updateUseWrap() {
 }
 function updateItemMapWrap() {
   const onMap = document.getElementById('itemOnMap').checked;
+  const mapEl = document.getElementById('itemMap');
+  populateMapDropdown(mapEl, mapEl.value || '');
   const mapWrap = document.getElementById('itemMapWrap');
   const xy = document.getElementById('itemXY');
   const pick = document.getElementById('itemPick');
@@ -2261,7 +2265,7 @@ function updateItemMapWrap() {
   if (xy) xy.style.display = onMap ? 'flex' : 'none';
   if (pick) pick.style.display = onMap ? 'inline-block' : 'none';
   if (remove) remove.style.display = onMap ? 'inline-block' : 'none';
-  if (!onMap) document.getElementById('itemMap').value = '';
+  if (!onMap) mapEl.value = '';
 }
 function startNewItem() {
   editItemIdx = -1;
@@ -2496,7 +2500,7 @@ function showEncounterEditor(show){
 }
 function startNewEncounter(){
   editEncounterIdx = -1;
-  document.getElementById('encMap').value = 'world';
+  populateMapDropdown(document.getElementById('encMap'), 'world');
   document.getElementById('encMinDist').value = '';
   document.getElementById('encMaxDist').value = '';
   const tmplSel = document.getElementById('encTemplate');
@@ -2529,7 +2533,7 @@ function addEncounter(){
 function editEncounter(i){
   const e = moduleData.encounters[i];
   editEncounterIdx = i;
-  document.getElementById('encMap').value = e.map;
+  populateMapDropdown(document.getElementById('encMap'), e.map);
   populateTemplateDropdown(document.getElementById('encTemplate'), e.templateId || '');
   document.getElementById('encMinDist').value = e.minDist || '';
   document.getElementById('encMaxDist').value = e.maxDist || '';
@@ -2670,7 +2674,7 @@ function updateEventEffectFields() {
 
 function startNewEvent() {
   editEventIdx = -1;
-  document.getElementById('eventMap').value = 'world';
+  populateMapDropdown(document.getElementById('eventMap'), 'world');
   document.getElementById('eventX').value = 0;
   document.getElementById('eventY').value = 0;
   document.getElementById('eventEffect').value = 'toast';
@@ -2721,7 +2725,7 @@ function addEvent() {
 function editEvent(i) {
   const e = moduleData.events[i];
   editEventIdx = i;
-  document.getElementById('eventMap').value = e.map;
+  populateMapDropdown(document.getElementById('eventMap'), e.map);
   document.getElementById('eventX').value = e.x;
   document.getElementById('eventY').value = e.y;
   const ev = e.events[0] || { effect: 'toast' };
@@ -2770,7 +2774,7 @@ function showZoneEditor(show) {
 
 function startNewZone() {
   editZoneIdx = -1;
-  document.getElementById('zoneMap').value = 'world';
+  populateMapDropdown(document.getElementById('zoneMap'), 'world');
   document.getElementById('zoneX').value = 0;
   document.getElementById('zoneY').value = 0;
   document.getElementById('zoneW').value = 1;
@@ -2842,7 +2846,7 @@ function addZone() {
 function editZone(i) {
   const z = moduleData.zones[i];
   editZoneIdx = i;
-  document.getElementById('zoneMap').value = z.map;
+  populateMapDropdown(document.getElementById('zoneMap'), z.map);
   document.getElementById('zoneX').value = z.x;
   document.getElementById('zoneY').value = z.y;
   document.getElementById('zoneW').value = z.w;
@@ -2889,10 +2893,10 @@ function showPortalEditor(show) {
 
 function startNewPortal() {
   editPortalIdx = -1;
-  document.getElementById('portalMap').value = 'world';
+  populateMapDropdown(document.getElementById('portalMap'), 'world');
   document.getElementById('portalX').value = 0;
   document.getElementById('portalY').value = 0;
-  document.getElementById('portalToMap').value = 'world';
+  populateMapDropdown(document.getElementById('portalToMap'), 'world');
   document.getElementById('portalToX').value = 0;
   document.getElementById('portalToY').value = 0;
   document.getElementById('addPortal').textContent = 'Add Portal';
@@ -2929,10 +2933,10 @@ function addPortal() {
 function editPortal(i) {
   const p = moduleData.portals[i];
   editPortalIdx = i;
-  document.getElementById('portalMap').value = p.map;
+  populateMapDropdown(document.getElementById('portalMap'), p.map);
   document.getElementById('portalX').value = p.x;
   document.getElementById('portalY').value = p.y;
-  document.getElementById('portalToMap').value = p.toMap;
+  populateMapDropdown(document.getElementById('portalToMap'), p.toMap);
   document.getElementById('portalToX').value = p.toX;
   document.getElementById('portalToY').value = p.toY;
   document.getElementById('addPortal').textContent = 'Update Portal';
@@ -3849,7 +3853,7 @@ canvas.addEventListener('mousedown', ev => {
   if (coordTarget) {
     document.getElementById(coordTarget.x).value = x;
     document.getElementById(coordTarget.y).value = y;
-    if (coordTarget.map) document.getElementById(coordTarget.map).value = currentMap;
+    if (coordTarget.map) populateMapDropdown(document.getElementById(coordTarget.map), currentMap);
     coordTarget = null;
     canvas.style.cursor = '';
     drawWorld();
@@ -3857,12 +3861,13 @@ canvas.addEventListener('mousedown', ev => {
   }
   if (placingType) {
     if (placingType === 'npc') {
-      document.getElementById('npcMap').value = currentMap;
+      populateMapDropdown(document.getElementById('npcMap'), currentMap);
       document.getElementById('npcX').value = x;
       document.getElementById('npcY').value = y;
       if (placingCb) placingCb();
       document.getElementById('cancelNPC').style.display = 'none';
     } else if (placingType === 'item') {
+      populateMapDropdown(document.getElementById('itemMap'), currentMap);
       document.getElementById('itemX').value = x;
       document.getElementById('itemY').value = y;
       if (placingCb) placingCb();

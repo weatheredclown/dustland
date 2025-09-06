@@ -209,6 +209,27 @@ test('can add item without map placement', () => {
   moduleData.items = [];
 });
 
+test('map fields use dropdown options', () => {
+  moduleData.npcs = [];
+  moduleData.items = [];
+  moduleData.interiors = [];
+  startNewNPC();
+  assert.ok(document.getElementById('npcFlagMap').innerHTML.includes('<option value="world">world</option>'));
+  startNewItem();
+  document.getElementById('itemOnMap').checked = true;
+  updateItemMapWrap();
+  assert.ok(document.getElementById('itemMap').innerHTML.includes('<option value="world">world</option>'));
+  startNewPortal();
+  assert.ok(document.getElementById('portalMap').innerHTML.includes('<option value="world">world</option>'));
+  assert.ok(document.getElementById('portalToMap').innerHTML.includes('<option value="world">world</option>'));
+  startNewEvent();
+  assert.ok(document.getElementById('eventMap').innerHTML.includes('<option value="world">world</option>'));
+  startNewZone();
+  assert.ok(document.getElementById('zoneMap').innerHTML.includes('<option value="world">world</option>'));
+  startNewEncounter();
+  assert.ok(document.getElementById('encMap').innerHTML.includes('<option value="world">world</option>'));
+});
+
 test('world paint persists through save/load', () => {
   genWorld(1);
   clearWorld();
