@@ -89,6 +89,13 @@ test('workshop building includes workbench NPC', () => {
   assert.ok(hasCraft);
 });
 
+test('power cell can be found in the workshop', () => {
+  const data = loadModuleData();
+  const cell = data.items.find(i => i.id === 'power_cell');
+  assert.ok(cell);
+  assert.strictEqual(cell.map, 'workshop');
+});
+
 test('medkit heals for 10 HP', () => {
   const data = loadModuleData();
   const med = data.items.find(i => i.id === 'medkit');
