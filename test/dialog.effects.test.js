@@ -326,6 +326,39 @@ test('updateTreeData captures required item', () => {
   assert.strictEqual(getTreeData().start.choices[0].reqItem, 'key');
 });
 
+test('updateTreeData uses dataset when reqItem option missing', () => {
+  setTreeData({});
+  const choiceEl = {
+    querySelector(sel) {
+      switch (sel) {
+        case '.choiceLabel': return { value: 'open' };
+        case '.choiceTo': return { value: 'bye', style: {} };
+        case '.choiceReqItem': return { value: '', dataset: { sel: 'key' } };
+        default: return { value: '' };
+      }
+    }
+  };
+  const nodeEl = {
+    querySelector(sel) {
+      switch (sel) {
+        case '.nodeId': return { value: 'start' };
+        case '.nodeText': return { value: 'hi' };
+        default: return { value: '' };
+      }
+    },
+    querySelectorAll(sel) { return sel === '.choices > div' ? [choiceEl] : []; },
+    classList: { contains() { return false; } },
+    style: {},
+  };
+  elements['treeEditor'] = {
+    querySelectorAll(sel) { return sel === '.node' ? [nodeEl] : []; }
+  };
+  elements['npcTree'] = { value: '' };
+  elements['treeWarning'] = { textContent: '' };
+  updateTreeData();
+  assert.strictEqual(getTreeData().start.choices[0].reqItem, 'key');
+});
+
 test('updateTreeData removes deleted nodes', () => {
   setTreeData({ start: { text: '', choices: [] }, node1: { text: '', choices: [] } });
   const nodeEl = {
