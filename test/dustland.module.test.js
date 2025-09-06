@@ -125,3 +125,12 @@ test('vine creature drops plant fiber', () => {
   assert.ok(encounter);
   assert.strictEqual(encounter.loot, 'plant_fiber');
 });
+
+test('northeast hut has portal to hall', () => {
+  const data = loadModuleData();
+  const hut = data.buildings.find(b => b.interiorId === 'portal_hut');
+  assert.ok(hut);
+  assert.ok(hut.x >= 117 && hut.y === 0);
+  const portal = data.portals.find(p => p.map === 'portal_hut' && p.toMap === 'hall');
+  assert.ok(portal);
+});
