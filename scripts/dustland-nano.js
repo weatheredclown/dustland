@@ -206,14 +206,15 @@
         };
         _state.cache.set(key, merged);
         // allow re-enqueue later for fresh variants
-        setTimeout(()=> _state.seenKeys.delete(key), 10000);
+        const t=setTimeout(()=> _state.seenKeys.delete(key), 10000);
+        t.unref?.();
         if (typeof toast === 'function') toast(`New dialog for ${job.npcId}`);
       }
     } catch(err){
       console.warn('[Nano] generation error', err);
     } finally{
       _setBusy(false);
-      setTimeout(_pump, 50);
+      setTimeout(_pump, 50).unref?.();
     }
   }
 
