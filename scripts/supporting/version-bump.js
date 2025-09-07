@@ -62,6 +62,9 @@ function main() {
   sh(`git add ${pkgPath} ${enginePath}`);
   sh(`git commit -m "chore: bump version to ${next}"`);
   sh(`git tag v${next}`);
+  // Discard incidental lockfile changes from install steps.
+  // These would otherwise block the rebase pull below.
+  sh('git checkout -- package-lock.json');
   sh('git pull --rebase');
   sh('git push');
   sh('git push --tags');
