@@ -187,7 +187,7 @@ const DATA = `
       "y": 3,
       "toMap": "whistle_room",
       "toX": 2,
-      "toY": 1
+      "toY": 2
     },
     {
       "map": "golden_gate",

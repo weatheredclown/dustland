@@ -438,40 +438,42 @@ function interactAt(x, y) {
     bus.emit('sfx', 'pickup');
     return true;
   }
-  if(x===party.x && y===party.y && info.tile===TILE.DOOR){
-    if(state.map==='world'){
-      const b=buildings.find(b=> b.doorX===x && b.doorY===y);
-      if(!b){ log('No entrance here.'); bus.emit('sfx','denied'); return true; }
-      if(b.boarded){ log('The doorway is boarded up from the outside.'); bus.emit('sfx','denied'); return true; }
-      const I=interiors[b.interiorId];
-      if(I){ setPartyPos(I.entryX, I.entryY); }
-      setMap(b.interiorId,'Interior');
-      log('You step inside.'); updateHUD();
+  if(x===party.x && y===party.y){
+    const p=portals.find(p=> p.map===state.map && p.x===x && p.y===y);
+    if(p){
+      const target=p.toMap;
+      const I=interiors[target];
+      const px = (typeof p.toX==='number') ? p.toX : (I?I.entryX:0);
+      const py = (typeof p.toY==='number') ? p.toY : (I?I.entryY:0);
+      setPartyPos(px, py);
+      setMap(target);
+      log(p.desc || 'You move through the doorway.');
+      updateHUD();
       bus.emit('sfx','confirm');
       return true;
     }
-    if(state.map!=='world'){
-      const p=portals.find(p=> p.map===state.map && p.x===x && p.y===y);
-      if(p){
-        const target=p.toMap;
-        const I=interiors[target];
-        const px = (typeof p.toX==='number') ? p.toX : (I?I.entryX:0);
-        const py = (typeof p.toY==='number') ? p.toY : (I?I.entryY:0);
-        setPartyPos(px, py);
-        setMap(target);
-        log(p.desc || 'You move through the doorway.');
-        updateHUD();
+    if(info.tile===TILE.DOOR){
+      if(state.map==='world'){
+        const b=buildings.find(b=> b.doorX===x && b.doorY===y);
+        if(!b){ log('No entrance here.'); bus.emit('sfx','denied'); return true; }
+        if(b.boarded){ log('The doorway is boarded up from the outside.'); bus.emit('sfx','denied'); return true; }
+        const I=interiors[b.interiorId];
+        if(I){ setPartyPos(I.entryX, I.entryY); }
+        setMap(b.interiorId,'Interior');
+        log('You step inside.'); updateHUD();
         bus.emit('sfx','confirm');
         return true;
       }
-      const b=buildings.find(b=> b.interiorId===state.map);
-      if(b){
-        setPartyPos(b.doorX, b.doorY);
-        setMap('world');
-        log('You step back outside.');
-        updateHUD();
-        bus.emit('sfx','confirm');
-        return true;
+      if(state.map!=='world'){
+        const b=buildings.find(b=> b.interiorId===state.map);
+        if(b){
+          setPartyPos(b.doorX, b.doorY);
+          setMap('world');
+          log('You step back outside.');
+          updateHUD();
+          bus.emit('sfx','confirm');
+          return true;
+        }
       }
     }
   }
