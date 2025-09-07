@@ -142,3 +142,27 @@ test('pit bas module logs entry message', () => {
   context.startGame();
   assert.deepStrictEqual(logs, ['You land in a shadowy cavern.']);
 });
+
+test('pit bas module defines basic npcs', () => {
+  const context = { Math };
+  context.globalThis = context;
+  context.applyModule = () => {};
+  context.setPartyPos = () => {};
+  context.setMap = () => {};
+  context.log = () => {};
+  vm.runInNewContext(src, context);
+  const ids = context.PIT_BAS_MODULE.npcs.map(n => n.id);
+  const expected = [
+    'bandit',
+    'troll',
+    'merchant',
+    'dead_adventurer',
+    'bees',
+    'wizard',
+    'magician',
+    'grue'
+  ];
+  expected.forEach(id => {
+    assert.ok(ids.includes(id));
+  });
+});

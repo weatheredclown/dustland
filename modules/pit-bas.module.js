@@ -108,7 +108,128 @@ const DATA = `
     }
   ],
   "quests": [],
-  "npcs": [],
+  "npcs": [
+    {
+      "id": "bandit",
+      "map": "bandit_room",
+      "x": 2,
+      "y": 2,
+      "color": "#f88",
+      "name": "Bandit",
+      "prompt": "Tattered bandit eyeing you warily",
+      "tree": {
+        "start": {
+          "text": "The bandit watches your every move.",
+          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+        }
+      }
+    },
+    {
+      "id": "troll",
+      "map": "troll_room",
+      "x": 2,
+      "y": 2,
+      "color": "#f88",
+      "name": "Troll",
+      "prompt": "Menacing troll blocking the path",
+      "tree": {
+        "start": {
+          "text": "The troll snarls but does not attack.",
+          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+        }
+      }
+    },
+    {
+      "id": "merchant",
+      "map": "merchant_room",
+      "x": 2,
+      "y": 2,
+      "color": "#a9f59f",
+      "name": "Merchant",
+      "prompt": "Wary merchant guarding his wares",
+      "tree": {
+        "start": {
+          "text": "The merchant adjusts his pack.",
+          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+        }
+      }
+    },
+    {
+      "id": "dead_adventurer",
+      "map": "dungeon",
+      "x": 2,
+      "y": 2,
+      "color": "#ffa",
+      "name": "Dead Adventurer",
+      "prompt": "Unmoving adventurer bound to a rack",
+      "tree": {
+        "start": {
+          "text": "The adventurer doesn't respond.",
+          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+        }
+      }
+    },
+    {
+      "id": "bees",
+      "map": "bee_room",
+      "x": 2,
+      "y": 2,
+      "color": "#ff0",
+      "name": "Bees",
+      "prompt": "Swarm of buzzing bees",
+      "tree": {
+        "start": {
+          "text": "The bees buzz around angrily.",
+          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+        }
+      }
+    },
+    {
+      "id": "wizard",
+      "map": "wizard_room",
+      "x": 2,
+      "y": 2,
+      "color": "#9ef7a0",
+      "name": "Wizard",
+      "prompt": "A robed wizard studying you",
+      "tree": {
+        "start": {
+          "text": "The wizard nods in greeting.",
+          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+        }
+      }
+    },
+    {
+      "id": "magician",
+      "map": "magician_book_room",
+      "x": 2,
+      "y": 2,
+      "color": "#9ef7a0",
+      "name": "Magician",
+      "prompt": "Magician flipping through a dusty tome",
+      "tree": {
+        "start": {
+          "text": "The magician whispers arcane words.",
+          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+        }
+      }
+    },
+    {
+      "id": "grue",
+      "map": "small_cavern",
+      "x": 2,
+      "y": 2,
+      "color": "#f88",
+      "name": "Grue",
+      "prompt": "Hungry grue lurking in the shadows",
+      "tree": {
+        "start": {
+          "text": "It is dark. You are likely to be eaten by a grue.",
+          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+        }
+      }
+    }
+  ],
   "mapLabels": {
     "cavern": "Cavern",
     "large_cavern": "Large Cavern",
