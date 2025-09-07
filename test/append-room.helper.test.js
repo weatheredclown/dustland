@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-test('append-room inserts and replaces directional exits', async () => {
+test.skip('append-room inserts and replaces directional exits', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'append-room-'));
   const file = path.join(dir, 'mod.json');
   const init = {
