@@ -120,11 +120,15 @@ xxxxx
 ```
 
 ## Pipeline Notes
- - Hand-build the JSON map based on the room/item/NPC list. Use `node scripts/supporting/append-room.js` to quickly append rooms and wire portal exits.
+ - Hand-build the JSON map based on the room/item/NPC list. Use `node scripts/supporting/append-room.js` to quickly insert rooms and wire portal exits.
+   - The layout argument is a comma-separated list of rows using `x` for walls, `p` for portals, and spaces for floor tiles.
+   - Portals on the top row connect north, the left column west, the right column east, and the bottom row south.
+   - Example: `node scripts/supporting/append-room.js modules/pit-bas.module.js small_cavern 'xxpxx,x   x,p   x,x   x,xxxx' cavern '' '' large_cavern`.
+   - Invoking the script again with the same room name replaces its layout and portals.
 
 > **Gizmo:** No one should hand-wire thirty rooms; let the helper script solder the lines.
-- Port chunks of the pit build helper script to automate repetitive wiring.
-- Hand-build the JSON map based on the room/item/NPC list.
+ - Port chunks of the pit build helper script to automate repetitive wiring.
+ - Hand-build the JSON map based on the room/item/NPC list.
 
 - Include the `docs/examples/PIT.BAS` listing as an optional in-game artifact.
 - Validate the JSON with existing module tests before hand-tuning encounters.
