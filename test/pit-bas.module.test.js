@@ -104,6 +104,7 @@ test('pit bas module initializes rooms and items', () => {
     'magician_book_room',
     'air_room',
     'maze_small_room',
+    'dead_end',
     'bee_room',
     'merchant_room',
     'flute_room'
@@ -114,6 +115,11 @@ test('pit bas module initializes rooms and items', () => {
   assert.ok(
     context.PIT_BAS_MODULE.portals.find(
       p => p.map === 'maze_small_room' && p.toMap === 'dead_end'
+    )
+  );
+  assert.ok(
+    context.PIT_BAS_MODULE.portals.find(
+      p => p.map === 'dead_end' && p.toMap === 'maze_small_room'
     )
   );
   assert.strictEqual(
@@ -127,6 +133,10 @@ test('pit bas module initializes rooms and items', () => {
   assert.strictEqual(
     context.PIT_BAS_MODULE.mapLabels.flute_room,
     'Flute Room'
+  );
+  assert.strictEqual(
+    context.PIT_BAS_MODULE.mapLabels.dead_end,
+    'Dead End'
   );
 });
 

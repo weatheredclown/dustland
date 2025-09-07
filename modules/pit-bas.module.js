@@ -261,7 +261,8 @@ const DATA = `
     "maze_small_room": "Maze Small Room",
     "bee_room": "Bee Room",
     "merchant_room": "Merchant Room",
-    "flute_room": "Flute Room"
+    "flute_room": "Flute Room",
+    "dead_end": "Dead End"
   },
   "portals": [
     {
@@ -1230,6 +1231,20 @@ const DATA = `
         "🚪🏝🏝🏝🚪",
         "🧱🏝🏝🏝🧱",
         "🧱🧱🧱🧱🧱"
+      ],
+      "entryX": 2,
+      "entryY": 2
+    },
+    {
+      "id": "dead_end",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🧱🧱🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🧱🚪🧱🧱"
       ],
       "entryX": 2,
       "entryY": 2
