@@ -86,6 +86,39 @@ This document sketches how to port that script into a Dustland module so the pit
 4. **UI Layer** – Use existing dialog panels; no bespoke UI widgets.
 5. **Save Hooks** – Store minimal progress flags so players can retry without replaying the intro.
 
+## Room Layout
+Rooms are sketched on a 5×5 grid using `x` for walls and `p` for portals. For example:
+
+```
+xxpxx
+x   x
+p   x
+x   x
+xxxx
+```
+
+The above layout yields exits to the west and north.
+
+Small cavern layout:
+
+```
+xxpxx
+x   x
+p   x
+x   x
+xxxx
+```
+
+Large cavern layout:
+
+```
+xxxxx
+x   p
+x   x
+x   x
+xxxxx
+```
+
 ## Pipeline Notes
  - Hand-build the JSON map based on the room/item/NPC list. Use `node scripts/supporting/append-room.js` to quickly append rooms and wire portal exits.
 
