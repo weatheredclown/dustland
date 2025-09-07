@@ -176,3 +176,41 @@ test('pit bas module defines basic npcs', () => {
     assert.ok(ids.includes(id));
   });
 });
+
+test('lightning room zaps without rod', () => {
+  const logs = [];
+  const context = { Math };
+  context.globalThis = context;
+  context.applyModule = () => {};
+  context.setPartyPos = (x, y) => { context.pos = { x, y }; };
+  context.setMap = map => { context.map = map; };
+  context.log = msg => logs.push(msg);
+  context.hasItem = () => false;
+  vm.runInNewContext(src, context);
+  context.PIT_BAS_MODULE.postLoad(context.PIT_BAS_MODULE);
+  logs.length = 0;
+  context.PIT_BAS_MODULE.effects.lightningZap();
+  assert.deepStrictEqual(logs, [
+    'A lightning bolt strikes! You tumble back to the cavern.'
+  ]);
+  assert.strictEqual(context.map, 'cavern');
+  assert.deepStrictEqual(context.pos, { x: 2, y: 2 });
+});
+
+test('lightning rod deflects bolt', () => {
+  const logs = [];
+  const context = { Math };
+  context.globalThis = context;
+  context.applyModule = () => {};
+  context.setPartyPos = () => {};
+  context.setMap = () => {};
+  context.log = msg => logs.push(msg);
+  context.hasItem = id => id === 'lightning_rod';
+  vm.runInNewContext(src, context);
+  context.PIT_BAS_MODULE.postLoad(context.PIT_BAS_MODULE);
+  logs.length = 0;
+  context.PIT_BAS_MODULE.effects.lightningZap();
+  assert.deepStrictEqual(logs, [
+    'The lightning rod hums and deflects the bolt.'
+  ]);
+});
