@@ -9,7 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const file = path.join(__dirname, '..', 'modules', 'pit-bas.module.js');
 const src = fs.readFileSync(file, 'utf8');
 
-test.skip('pit bas module initializes rooms and items', () => {
+test('pit bas module initializes rooms and items', () => {
   const calls = [];
   const context = { Math };
   context.globalThis = context;
@@ -27,15 +27,14 @@ test.skip('pit bas module initializes rooms and items', () => {
   context.PIT_BAS_MODULE.postLoad = () => { calls.push('post'); };
   context.startGame();
   assert.deepStrictEqual(calls, ['post', 'apply']);
-  assert.deepStrictEqual(context.pos, { x: 3, y: 5 });
+  assert.deepStrictEqual(context.pos, { x: 2, y: 2 });
   assert.strictEqual(context.mapName, 'Cavern');
   assert.strictEqual(
     context.PIT_BAS_MODULE.items[0].id,
     'magic_lightbulb'
   );
-  assert.ok(
-    context.PIT_BAS_MODULE.items.find(i => i.id === 'whistle')
-  );
+  assert.ok(context.PIT_BAS_MODULE.items.find(i => i.id === 'whistle'));
+  assert.ok(context.PIT_BAS_MODULE.items.find(i => i.id === 'key'));
   assert.ok(
     context.PIT_BAS_MODULE.portals.find(
       p => p.map === 'cavern' && p.toMap === 'whistle_room'
@@ -64,20 +63,22 @@ test.skip('pit bas module initializes rooms and items', () => {
     { x: smallReturn.x, y: smallReturn.y },
     { x: 2, y: 0 }
   );
-  const smallToLarge = context.PIT_BAS_MODULE.portals.find(
-    p => p.map === 'small_cavern' && p.toMap === 'large_cavern'
+  const beeToMerchant = context.PIT_BAS_MODULE.portals.find(
+    p => p.map === 'bee_room' && p.toMap === 'merchant_room'
   );
-  assert.deepStrictEqual(
-    { x: smallToLarge.x, y: smallToLarge.y },
-    { x: 0, y: 2 }
+  assert.ok(beeToMerchant);
+  const merchantToBee = context.PIT_BAS_MODULE.portals.find(
+    p => p.map === 'merchant_room' && p.toMap === 'bee_room'
   );
-  const largeToSmall = context.PIT_BAS_MODULE.portals.find(
-    p => p.map === 'large_cavern' && p.toMap === 'small_cavern'
+  assert.ok(merchantToBee);
+  const beeToFlute = context.PIT_BAS_MODULE.portals.find(
+    p => p.map === 'bee_room' && p.toMap === 'flute_room'
   );
-  assert.deepStrictEqual(
-    { x: largeToSmall.x, y: largeToSmall.y },
-    { x: 4, y: 1 }
+  assert.ok(beeToFlute);
+  const fluteToBee = context.PIT_BAS_MODULE.portals.find(
+    p => p.map === 'flute_room' && p.toMap === 'bee_room'
   );
+  assert.ok(fluteToBee);
   const expectedRooms = [
     'cavern',
     'whistle_room',
@@ -103,24 +104,29 @@ test.skip('pit bas module initializes rooms and items', () => {
     'magician_book_room',
     'air_room',
     'maze_small_room',
-    'bee_room'
+    'bee_room',
+    'merchant_room',
+    'flute_room'
   ];
   expectedRooms.forEach(id => {
     assert.ok(context.PIT_BAS_MODULE.interiors.find(r => r.id === id));
   });
   assert.ok(
     context.PIT_BAS_MODULE.portals.find(
-      p => p.map === 'small_cavern' && p.toMap === 'golden_gate'
-    )
-  );
-  assert.ok(
-    context.PIT_BAS_MODULE.portals.find(
-      p => p.map === 'maze_small_room' && p.toMap === 'bee_room'
+      p => p.map === 'maze_small_room' && p.toMap === 'dead_end'
     )
   );
   assert.strictEqual(
     context.PIT_BAS_MODULE.mapLabels.whistle_room,
     'Whistle Room'
+  );
+  assert.strictEqual(
+    context.PIT_BAS_MODULE.mapLabels.merchant_room,
+    'Merchant Room'
+  );
+  assert.strictEqual(
+    context.PIT_BAS_MODULE.mapLabels.flute_room,
+    'Flute Room'
   );
 });
 

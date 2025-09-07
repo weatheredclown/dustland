@@ -138,7 +138,9 @@ const DATA = `
     "magician_book_room": "Magician Book Room",
     "air_room": "Air Room",
     "maze_small_room": "Maze Small Room",
-    "bee_room": "Bee Room"
+    "bee_room": "Bee Room",
+    "merchant_room": "Merchant Room",
+    "flute_room": "Flute Room"
   },
   "portals": [
     {
@@ -1119,6 +1121,34 @@ const DATA = `
         "🧱🧱🚪🧱🧱",
         "🧱🏝🏝🏝🧱",
         "🚪🏝🏝🏝🚪",
+        "🧱🏝🏝🏝🧱",
+        "🧱🧱🧱🧱🧱"
+      ],
+      "entryX": 2,
+      "entryY": 2
+    },
+    {
+      "id": "merchant_room",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🧱🧱🧱",
+        "🧱🏝🏝🏝🧱",
+        "🚪🏝🏝🏝🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🧱🧱🧱🧱"
+      ],
+      "entryX": 2,
+      "entryY": 2
+    },
+    {
+      "id": "flute_room",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🧱🧱🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🏝🏝🏝🚪",
         "🧱🏝🏝🏝🧱",
         "🧱🧱🧱🧱🧱"
       ],
