@@ -1,6 +1,7 @@
 # Spoils Caches, v1
 
 *By Riley "Clown" Morgan*
+> **Priority:** 8 – Flavorful but optional.
 
 > **Clown:** Loot that drops like confetti is fun, but a mystery box with a buzzsaw edge? That's a party. After combat, let's give players Spoils Caches—clanking gifts from the wasteland that spill out whatever the war gods feel like today.
 

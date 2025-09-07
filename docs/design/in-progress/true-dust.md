@@ -1,5 +1,6 @@
 # True Dust Module
 *By Alex "Echo" Johnson*
+> **Priority:** 4 – Early narrative anchor.
 
 The Dustland opens its eyes with a whisper of grit and memory. "True Dust" drops the caravan at a tight knot of shelter — four squat blocks huddled inside a stone wall, a no-spawn sanctuary against the wastes.
 

@@ -1,6 +1,7 @@
 # Dynamic Weather: Dust and Echoes
 
 *By Alex "Echo" Johnson*
+> **Status:** Completed
 
 > **Echo:** The sky isn't just overhead—it's the tone poem of the wastes. Let it murmur, scream, or hold its breath.
 

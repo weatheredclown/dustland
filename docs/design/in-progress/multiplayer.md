@@ -1,6 +1,7 @@
 # Multiplayer Wasteland Trek
 
 *By Priya "Gizmo" Sharma*
+> **Priority:** 11 – Park until single-player solid.
 *Date: 2025-09-05*
 *Status: Draft*
 

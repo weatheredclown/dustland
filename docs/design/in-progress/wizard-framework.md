@@ -1,6 +1,7 @@
 # Creator Wizards: A Guided Workflow
 
 *By Priya "Gizmo" Sharma*
+> **Priority:** 10 – Useful later.
 
 > **Wing:** Our tools are sharp, but some tasks are still a marathon. Linking interiors, setting up quest flags, wiring up NPC dialogue—it's a lot of manual cross-referencing. If we want the community to build worlds alongside us, we need to pave the cowpaths.
 >

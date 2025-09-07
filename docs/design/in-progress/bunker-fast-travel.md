@@ -1,6 +1,7 @@
 # Bunker Fast Travel: Drift Between Havens
 
 *By Alex "Echo" Johnson*
+> **Priority:** 6 – Travel QoL.
 *Date: 2025-09-06*
 *Status: Draft*
 
