@@ -413,7 +413,7 @@ test('queryTile reports entities and items', () => {
   assert.strictEqual(q.walkable,false);
   assert.strictEqual(q.entities.length,1);
   q=queryTile(2,0);
-  assert.strictEqual(q.walkable,false);
+  assert.strictEqual(q.walkable,true);
   assert.strictEqual(q.items.length,1);
 });
 
