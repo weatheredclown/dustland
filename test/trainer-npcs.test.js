@@ -20,10 +20,10 @@ function setupParty(){
 }
 
 const moduleSrc = await fs.readFile(new URL('../modules/dustland.module.js', import.meta.url), 'utf8');
-const DATA_START = 'const DATA = `\n';
-const start = moduleSrc.indexOf(DATA_START) + DATA_START.length;
-const end = moduleSrc.indexOf('`', start);
-const moduleData = JSON.parse(moduleSrc.slice(start, end));
+const MARKER = 'const DATA = `';
+const start = moduleSrc.indexOf(MARKER);
+const end = moduleSrc.indexOf('`', start + MARKER.length);
+const moduleData = JSON.parse(moduleSrc.slice(start + MARKER.length, end));
 
 test('trainStat spends a point and raises stat', () => {
   const ctx = setupParty();

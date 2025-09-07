@@ -13,10 +13,10 @@ function loadModuleSrc() {
 
 function loadModuleData() {
   const src = loadModuleSrc();
-  const DATA_START = 'const DATA = `\n';
-  const start = src.indexOf(DATA_START) + DATA_START.length;
-  const end = src.indexOf('`', start);
-  return JSON.parse(src.slice(start, end));
+  const MARKER = 'const DATA = `';
+  const start = src.indexOf(MARKER);
+  const end = src.indexOf('`', start + MARKER.length);
+  return JSON.parse(src.slice(start + MARKER.length, end));
 }
 
 test('dustland module includes patrolling enemy', () => {
