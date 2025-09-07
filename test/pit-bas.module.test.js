@@ -131,7 +131,10 @@ test('pit bas module initializes rooms and items', () => {
     'dead_end',
     'bee_room',
     'merchant_room',
-    'flute_room'
+    'flute_room',
+    'north_south_passage',
+    'in_a_box',
+    'mirror_alice_room'
   ];
   expectedRooms.forEach(id => {
     assert.ok(context.PIT_BAS_MODULE.interiors.find(r => r.id === id));
