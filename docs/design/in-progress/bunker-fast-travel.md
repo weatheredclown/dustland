@@ -4,6 +4,14 @@
 *Date: 2025-09-06*
 *Status: Draft*
 
+## Status update
+As of 2025-09-07, only a static `data/bunkers.js` exists. Fast travel logic, UI hooks, and travel events remain unimplemented.
+
+### Open questions
+- Mechanics 2 mentions distance-based fuel costs; how will the system compute distance between bunkers?
+- Implementation Sketch references `scripts/ui/world-map.js`, but the project currently lacks a world map module—where should destination selection live?
+- Implementation Sketch calls for `travel:start` and `travel:end` events; what payloads should they carry to support mods?
+
 > **Echo:** The wastes sprawl, but our stories shouldn't drown in dead miles. Bunkers can hum with secret routes if we let them.
 
 ## Goals
