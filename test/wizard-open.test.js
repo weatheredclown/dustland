@@ -13,7 +13,8 @@ test('openWizard commits results and Enter triggers next', async () => {
   });
   const context = { document, window: { document }, Dustland: {}, applyModule(data){ context.applied = data; }, WORLD_H: 10 };
   vm.createContext(context);
-  const code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
+  let code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
+  code = code.replace(/\r\n/g, '\n');
   const moduleMatch = code.match(/const moduleData =[\s\S]*?\}\);/);
   const mergeMatch = code.match(/function mergeWizardResult[\s\S]*?}\n\n(?=function openWizard)/);
   const openMatch = code.match(/function openWizard[\s\S]*?}\n\n(?=function animate)/);

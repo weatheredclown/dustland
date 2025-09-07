@@ -17,7 +17,8 @@ test('all registered wizards appear in list', async () => {
     } }
   };
   vm.createContext(context);
-  const code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
+  let code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
+  code = code.replace(/\r\n/g, '\n');
   const match = code.match(/const wizardList[\s\S]*?}\n\nfunction mergeWizardResult/);
   vm.runInContext(match[0].replace(/\n\nfunction mergeWizardResult/, ''), context);
   const btns = list.querySelectorAll('button');
