@@ -137,7 +137,8 @@ function queryTile(x,y,map=mapIdForState()){
   const items=itemDrops.filter(it=> it.map===map && it.x===x && it.y===y);
   // doors allow passage when unlocked
   const blocking=entities.some(e=> !(e.door && !e.locked));
-  const walkableFlag=!!(walkable[tile] && !blocking && items.length===0);
+  // Ground items no longer block movement; allow walking onto item tiles
+  const walkableFlag=!!(walkable[tile] && !blocking);
   return {tile, walkable:walkableFlag, entities, items};
 }
 // Find nearest free, walkable, unoccupied (and not water on world)

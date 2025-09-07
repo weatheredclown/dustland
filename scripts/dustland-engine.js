@@ -409,7 +409,7 @@ function centerCamera(x,y,map){
 }
 
 // ===== Drawing Pipeline =====
-const renderOrder = ['tiles', 'items', 'entitiesBelow', 'player', 'entitiesAbove'];
+const renderOrder = ['tiles', 'items', 'portals', 'entitiesBelow', 'player', 'entitiesAbove'];
 
 function render(gameState=state, dt){
   const ctx = sctx;
@@ -423,6 +423,7 @@ function render(gameState=state, dt){
   const offY = Math.max(0, Math.floor((vH - H) / 2));
 
   const items = gameState.itemDrops || itemDrops;
+  const ps = gameState.portals || portals;
   const entities = gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : []);
   const pos = gameState.party || party;
 
@@ -481,6 +482,16 @@ function render(gameState=state, dt){
             ctx.fillStyle='#c8ffbf';
             ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
           }
+        }
+      }
+    }
+    else if(layer==='portals'){
+      for(const p of ps){
+        if(p.map!==activeMap) continue;
+        if(p.x>=camX&&p.y>=camY&&p.x<camX+vW&&p.y<camY+vH){
+          const vx=(p.x-camX+offX)*TS, vy=(p.y-camY+offY)*TS;
+          ctx.strokeStyle='#f0f';
+          ctx.strokeRect(vx+2,vy+2,TS-4,TS-4);
         }
       }
     }
