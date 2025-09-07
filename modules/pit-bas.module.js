@@ -298,6 +298,9 @@ const DATA = `
     "lightning_room": "Lightning Room",
     "magician_book_room": "Magician Book Room",
     "air_room": "Air Room",
+    "north_south_passage": "North/South Passage",
+    "in_a_box": "In-A-Box",
+    "mirror_alice_room": "Alice Room (Mirror)",
     "maze_2800": "Maze",
     "maze_2900": "Maze",
     "maze_3500": "Maze",
@@ -678,6 +681,54 @@ const DATA = `
       "toY": 2
     },
     {
+      "map": "wizard_room",
+      "x": 0,
+      "y": 2,
+      "toMap": "north_south_passage",
+      "toX": 2,
+      "toY": 4
+    },
+    {
+      "map": "north_south_passage",
+      "x": 2,
+      "y": 4,
+      "toMap": "wizard_room",
+      "toX": 0,
+      "toY": 2
+    },
+    {
+      "map": "north_south_passage",
+      "x": 2,
+      "y": 0,
+      "toMap": "roof_of_house",
+      "toX": 0,
+      "toY": 2
+    },
+    {
+      "map": "roof_of_house",
+      "x": 0,
+      "y": 2,
+      "toMap": "north_south_passage",
+      "toX": 2,
+      "toY": 0
+    },
+    {
+      "map": "wizard_room",
+      "x": 2,
+      "y": 4,
+      "toMap": "in_a_box",
+      "toX": 2,
+      "toY": 0
+    },
+    {
+      "map": "in_a_box",
+      "x": 2,
+      "y": 0,
+      "toMap": "wizard_room",
+      "toX": 2,
+      "toY": 4
+    },
+    {
       "map": "roof_of_house",
       "x": 2,
       "y": 3,
@@ -772,6 +823,22 @@ const DATA = `
       "toMap": "magician_book_room",
       "toX": 2,
       "toY": 3
+    },
+    {
+      "map": "magician_book_room",
+      "x": 4,
+      "y": 2,
+      "toMap": "in_a_box",
+      "toX": 2,
+      "toY": 4
+    },
+    {
+      "map": "in_a_box",
+      "x": 2,
+      "y": 4,
+      "toMap": "magician_book_room",
+      "toX": 4,
+      "toY": 2
     },
     {
       "map": "air_room",
@@ -1228,9 +1295,23 @@ const DATA = `
       "grid": [
         "🧱🧱🧱🧱🧱",
         "🧱🏝⬆️🏝🧱",
-        "🧱🏝🏝🏝🚪",
+        "🚪🏝🏝🏝🚪",
         "🧱🏝🏝🏝🧱",
-        "🧱🧱🧱🧱🧱"
+        "🧱🧱🚪🧱🧱"
+      ],
+      "entryX": 2,
+      "entryY": 2
+    },
+    {
+      "id": "north_south_passage",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🚪🧱🧱",
+        "🧱🏝🏝🏝🧱",
+        "🚪🏝🏝🏝🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🧱🚪🧱🧱"
       ],
       "entryX": 2,
       "entryY": 2
@@ -1242,7 +1323,7 @@ const DATA = `
       "grid": [
         "🧱🧱🧱🧱🧱",
         "🧱🏝⬆️🏝🧱",
-        "🧱🏝🏝🏝🧱",
+        "🚪🏝🏝🏝🧱",
         "🧱🏝⬇️🏝🧱",
         "🧱🧱🧱🧱🧱"
       ],
@@ -1251,6 +1332,20 @@ const DATA = `
     },
     {
       "id": "alice_room",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🧱🧱🧱",
+        "🧱🏝🏝🏝🧱",
+        "🚪🏝🏝🏝🚪",
+        "🧱🏝🏝🏝🧱",
+        "🧱🧱🧱🧱🧱"
+      ],
+      "entryX": 2,
+      "entryY": 2
+    },
+    {
+      "id": "mirror_alice_room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1284,9 +1379,23 @@ const DATA = `
       "grid": [
         "🧱🧱🧱🧱🧱",
         "🧱🏝🏝🏝🧱",
-        "🚪🏝🏝🏝🧱",
+        "🚪🏝🏝🏝🚪",
         "🧱🏝⬇️🏝🧱",
         "🧱🧱🧱🧱🧱"
+      ],
+      "entryX": 2,
+      "entryY": 2
+    },
+    {
+      "id": "in_a_box",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🚪🧱🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🧱🚪🧱🧱"
       ],
       "entryX": 2,
       "entryY": 2
