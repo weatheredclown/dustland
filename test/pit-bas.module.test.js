@@ -67,6 +67,46 @@ test('pit bas module initializes rooms and items', () => {
     { x: largeToSmall.x, y: largeToSmall.y },
     { x: 4, y: 1 }
   );
+  const expectedRooms = [
+    'cavern',
+    'whistle_room',
+    'small_cavern',
+    'large_cavern',
+    'golden_gate',
+    'dungeon',
+    'river_room',
+    'glass_room',
+    'bandit_room',
+    'green_house',
+    'river_bed',
+    'troll_room',
+    'trophy_room',
+    'rag_room',
+    'bright_room',
+    'pointless_room',
+    'white_room',
+    'whisper_room',
+    'wizard_room',
+    'alice_room',
+    'lightning_room',
+    'magician_book_room',
+    'air_room',
+    'maze_small_room',
+    'bee_room'
+  ];
+  expectedRooms.forEach(id => {
+    assert.ok(context.PIT_BAS_MODULE.interiors.find(r => r.id === id));
+  });
+  assert.ok(
+    context.PIT_BAS_MODULE.portals.find(
+      p => p.map === 'small_cavern' && p.toMap === 'golden_gate'
+    )
+  );
+  assert.ok(
+    context.PIT_BAS_MODULE.portals.find(
+      p => p.map === 'maze_small_room' && p.toMap === 'bee_room'
+    )
+  );
 });
 
 test('pit bas module logs entry message', () => {
