@@ -55,11 +55,13 @@ const coords = {
   U: [2, 1],
   D: [2, 3]
 };
+const opposite = { N: 'S', S: 'N', E: 'W', W: 'E', U: 'D', D: 'U' };
 
 Object.entries(links).forEach(([dir, target]) => {
   const [x, y] = coords[dir];
-  mod.portals.push({ map: id, x, y, toMap: target, toX: 2, toY: 2 });
-  mod.portals.push({ map: target, x: 2, y: 2, toMap: id, toX: x, toY: y });
+  const [tx, ty] = coords[opposite[dir]];
+  mod.portals.push({ map: id, x, y, toMap: target, toX: tx, toY: ty });
+  mod.portals.push({ map: target, x: tx, y: ty, toMap: id, toX: x, toY: y });
 });
 
 fs.writeFileSync(filePath, JSON.stringify(mod, null, 2));
