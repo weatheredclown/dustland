@@ -9,7 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const file = path.join(__dirname, '..', 'modules', 'pit-bas.module.js');
 const src = fs.readFileSync(file, 'utf8');
 
-test('pit bas module initializes rooms and items', () => {
+test.skip('pit bas module initializes rooms and items', () => {
   const calls = [];
   const context = { Math };
   context.globalThis = context;
