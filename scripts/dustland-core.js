@@ -393,6 +393,11 @@ function applyModule(data = {}, options = {}) {
     npcTemplates.length = 0;
     Object.keys(enemyBanks).forEach(k => delete enemyBanks[k]);
 
+    // Reset custom map labels
+    Object.keys(mapLabels).forEach(k => {
+      if (k !== 'world' && k !== 'creator') delete mapLabels[k];
+    });
+
     // Generate terrain based on config
     let generated = false;
     if (moduleData.worldGen) {
@@ -422,6 +427,9 @@ function applyModule(data = {}, options = {}) {
     const g = grid && typeof grid[0] === 'string' ? gridFromEmoji(grid) : grid;
     interiors[id] = { ...rest, grid: g };
   });
+
+  // Map labels
+  if (moduleData.mapLabels) Object.assign(mapLabels, moduleData.mapLabels);
 
   // Buildings
   if (moduleData.buildings) {
