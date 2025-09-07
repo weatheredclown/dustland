@@ -1,5 +1,10 @@
 # Hydration System: Thirst and Survival
 
+## Status Update
+- Hydration value and `hydration:tick` event exist; tests cover dry-zone drain and camp refills.
+- HUD droplet meter, starter canteen item, and prototype script are not in the repo.
+- Caution phase and gear/perk-based modifiers remain unimplemented.
+
 *By Mateo "Wing" Alvarez*
 *Date: 2025-09-06*
 *Status: Draft*
