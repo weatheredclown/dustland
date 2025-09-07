@@ -6,6 +6,7 @@
 - Caution phase and gear/perk-based modifiers remain unimplemented.
 
 *By Mateo "Wing" Alvarez*
+> **Priority:** 5 – Survival polish.
 *Date: 2025-09-06*
 *Status: Draft*
 

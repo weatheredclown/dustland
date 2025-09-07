@@ -1,6 +1,7 @@
 # RPG Progression, v2
 
 *By Mateo "Wing" Alvarez*
+> **Priority:** 2 – Progression ties into combat.
 
 > **Clown:** The first pass was a good sketch. This revision is where we ink the details and bake the chaos right into the core loop. Let's make a system that feels good to master and even better to break.
 

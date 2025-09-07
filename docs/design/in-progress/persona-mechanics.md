@@ -1,6 +1,7 @@
 # Persona Masks & Identity Shifts
 
 *By Alex "Echo" Johnson*
+> **Priority:** 9 – Defer until arcs playable.
 *Date: 2025-02-14*
 *Status: Draft*
 

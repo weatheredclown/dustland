@@ -1,6 +1,7 @@
 # Tech Debt Burn Down Plan
 
 *By Priya "Gizmo" Sharma*
+> **Priority:** 3 – Debt cleanup unlocks future work.
 
 Our CRT playground is scrappy by design, but a few lingering habits slow our builds and snarl debugging. This doc maps out the debt we can pay down without breaking our "just open the file" mantra.
 

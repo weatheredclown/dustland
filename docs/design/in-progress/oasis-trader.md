@@ -1,6 +1,7 @@
 # Oasis Trader: Barter and Trust
 
 *By Priya "Gizmo" Sharma*
+> **Priority:** 7 – Economy needs persistence.
 *Date: 2025-09-06*
 *Status: Draft*
 

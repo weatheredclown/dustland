@@ -1,6 +1,7 @@
 # Combat Design: The Razor's Edge
 
 *By Mateo "Wing" Alvarez*
+> **Priority:** 1 – Core loop overhaul.
 
 > **Wing:** The current system is a placeholder. It's a knife fight in a phone booth—claustrophobic and without nuance. We need to blow the doors off this thing. Combat should be a dance, not a stat check. Every choice needs to have weight, every second needs to count. We're building a system that rewards aggression, timing, and tactical thinking. It should feel dangerous, stylish, and above all, fun.
 
