@@ -119,6 +119,34 @@ x   x
 xxxxx
 ```
 
+## Room Connections
+
+- Cavern: north to Large Cavern; east to Whistle Room; south to Small Cavern
+- Large Cavern: south to Cavern; east to Small Cavern
+- Whistle Room: west to Cavern; east to Dungeon
+- Small Cavern: north to Cavern; west to Large Cavern; east to Golden Gate
+- Golden Gate: west to Small Cavern; east to Dungeon
+- Dungeon: west to Golden Gate and Whistle Room; east to River Room
+- River Room: west to Dungeon; east to Glass Room
+- Glass Room: west to River Room; east to Bandit Room
+- Bandit Room: west to Glass Room; east to Green House
+- Green House: west to Bandit Room; east to River Bed
+- River Bed: west to Green House; east to Troll Room
+- Troll Room: west to River Bed; east to Trophy Room
+- Trophy Room: west to Troll Room; east to Rag Room
+- Rag Room: west to Trophy Room; east to Bright Room
+- Bright Room: west to Rag Room; east to Pointless Room
+- Pointless Room: west to Bright Room; east to White Room
+- White Room: west to Pointless Room; east to Whisper Room
+- Whisper Room: west to White Room; east to Wizard Room
+- Wizard Room: west to Whisper Room; east to Alice Room
+- Alice Room: west to Wizard Room; east to Lightning Room
+- Lightning Room: west to Alice Room; east to Magician's Book Room
+- Magician's Book Room: west to Lightning Room; east to Air Room
+- Air Room: west to Magician's Book Room; east to Maze: Small Room
+- Maze: Small Room: west to Air Room; east to Bee Room
+- Bee Room: west to Maze: Small Room
+
 ## Pipeline Notes
  - Hand-build the JSON map based on the room/item/NPC list. Use `node scripts/supporting/append-room.js` to quickly append rooms and wire portal exits.
 
