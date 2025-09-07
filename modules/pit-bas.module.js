@@ -882,6 +882,14 @@ const DATA = `
       "toY": 2
     }
   ],
+  "events": [
+    {
+      "map": "lightning_room",
+      "x": 2,
+      "y": 2,
+      "events": [ { "when": "enter", "effect": "lightningZap" } ]
+    }
+  ],
   "interiors": [
     {
       "id": "cavern",
@@ -1339,6 +1347,16 @@ const DATA = `
 
 function postLoad(module) {
   log('You land in a shadowy cavern.');
+  module.effects = module.effects || {};
+  module.effects.lightningZap = () => {
+    if (hasItem('lightning_rod')) {
+      log('The lightning rod hums and deflects the bolt.');
+    } else {
+      log('A lightning bolt strikes! You tumble back to the cavern.');
+      setMap('cavern', 'Cavern');
+      setPartyPos(2, 2);
+    }
+  };
 }
 
 globalThis.PIT_BAS_MODULE = JSON.parse(DATA);
