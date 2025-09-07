@@ -34,7 +34,7 @@ const w = 5;
 const h = 5;
 const grid = Array.from({ length: h }, (_, y) =>
   Array.from({ length: w }, (_, x) =>
-    y === 0 || y === h - 1 || x === 0 || x === w - 1 ? '🧱' : '🏝'
+    y === 0 || y === h - 1 || x === 0 || x === w - 1 ? '🧱' : '⬜'
   )
 );
 
@@ -42,8 +42,8 @@ if (links.N) grid[0][2] = '🚪';
 if (links.E) grid[2][4] = '🚪';
 if (links.S) grid[4][2] = '🚪';
 if (links.W) grid[2][0] = '🚪';
-if (links.U) grid[1][2] = '⬆️';
-if (links.D) grid[3][2] = '⬇️';
+if (links.U) grid[1][2] = 'U';
+if (links.D) grid[3][2] = 'D';
 
 mod.interiors.push({ id, w, h, grid: grid.map(r => r.join('')), entryX: 2, entryY: 2 });
 
