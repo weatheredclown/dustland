@@ -343,6 +343,19 @@ const DATA = `
       "use": {
         "effect": "vision"
       }
+    },
+    {
+      "map": "hall",
+      "x": 16,
+      "y": 18,
+      "id": "wand",
+      "name": "Wand",
+      "type": "quest",
+      "use": {
+        "type": "heal",
+        "amount": 0,
+        "text": "You wave the wand."
+      }
     }
   ],
   "quests": [
@@ -1991,6 +2004,18 @@ const DATA = `
         "msg": "Nanite swarm!"
       },
       "negate": "mask"
+    },
+    {
+      "map": "hall",
+      "x": 16,
+      "y": 18,
+      "w": 2,
+      "h": 1,
+      "useItem": {
+        "id": "wand",
+        "reward": "scrap 5",
+        "once": true
+      }
     }
   ],
   "name": "dustland-module",
@@ -2328,6 +2353,7 @@ function postLoad(module) {
       }
     };
   }
+
 
   // expose procedural map action for Adventure Kit
   module.generateMap = regen => globalThis.generateProceduralWorld?.(regen);
