@@ -87,9 +87,12 @@ This document sketches how to port that script into a Dustland module so the pit
 5. **Save Hooks** – Store minimal progress flags so players can retry without replaying the intro.
 
 ## Pipeline Notes
+ - Hand-build the JSON map based on the room/item/NPC list. Use `node scripts/supporting/append-room.js` to quickly append rooms and wire portal exits.
+
 > **Gizmo:** No one should hand-wire thirty rooms; let the helper script solder the lines.
 - Port chunks of the pit build helper script to automate repetitive wiring.
 - Hand-build the JSON map based on the room/item/NPC list.
+
 - Include the `docs/examples/PIT.BAS` listing as an optional in-game artifact.
 - Validate the JSON with existing module tests before hand-tuning encounters.
 - Use existing RNG utilities to reproduce BASIC's randomness.
