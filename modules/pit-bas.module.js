@@ -7,7 +7,7 @@ const DATA = `
   "start": {
     "map": "cavern",
     "x": 3,
-    "y": 5
+    "y": 3
   },
   "items": [
     {
