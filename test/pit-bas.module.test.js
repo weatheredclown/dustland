@@ -138,6 +138,11 @@ test('pit bas module initializes rooms and items', () => {
     context.PIT_BAS_MODULE.mapLabels.dead_end,
     'Dead End'
   );
+  const listing = Buffer.from(
+    context.PIT_BAS_MODULE.listing,
+    'base64'
+  ).toString();
+  assert.ok(listing.startsWith('0 COLOR 15'));
 });
 
 test('pit bas module logs entry message', () => {
