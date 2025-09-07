@@ -29,15 +29,14 @@ const DATA = `
     {
       "id": "silver_medallion",
       "name": "Silver Medallion",
-      "type": "quest",
-      "map": "dungeon",
-      "x": 2,
-      "y": 2
+      "type": "quest"
     },
     {
       "id": "mace",
       "name": "Mace",
-      "type": "quest",
+      "type": "weapon",
+      "slot": "weapon",
+      "mods": { "ATK": 2, "ADR": 10 },
       "map": "dungeon",
       "x": 3,
       "y": 2
@@ -45,7 +44,9 @@ const DATA = `
     {
       "id": "axe",
       "name": "Axe",
-      "type": "quest",
+      "type": "weapon",
+      "slot": "weapon",
+      "mods": { "ATK": 3, "ADR": 10 },
       "map": "dungeon",
       "x": 1,
       "y": 2
@@ -117,14 +118,14 @@ const DATA = `
       "color": "#f88",
       "name": "Bandit",
       "prompt": "Tattered bandit eyeing you warily",
+      "desc": "It eyes your coin purse.",
+      "combat": { "HP": 6, "ATK": 2, "DEF": 1 },
       "tree": {
         "start": {
           "text": "The bandit watches your every move.",
           "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
+            { "label": "(Fight)", "to": "do_fight" },
+            { "label": "(Leave)", "to": "bye" }
           ]
         }
       }
@@ -137,14 +138,14 @@ const DATA = `
       "color": "#f88",
       "name": "Troll",
       "prompt": "Menacing troll blocking the path",
+      "desc": "A hulking troll blocks the way.",
+      "combat": { "HP": 8, "ATK": 3, "DEF": 2 },
       "tree": {
         "start": {
           "text": "The troll snarls but does not attack.",
           "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
+            { "label": "(Fight)", "to": "do_fight" },
+            { "label": "(Leave)", "to": "bye" }
           ]
         }
       }
@@ -181,10 +182,20 @@ const DATA = `
         "start": {
           "text": "The adventurer doesn't respond.",
           "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
+            { "label": "(Loot)", "to": "loot" },
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        },
+        "loot": {
+          "text": "You search the body and find a medallion.",
+          "choices": [
+            { "label": "(Take Medallion)", "to": "empty", "reward": "silver_medallion" }
+          ]
+        },
+        "empty": {
+          "text": "The body has nothing else.",
+          "choices": [
+            { "label": "(Leave)", "to": "bye" }
           ]
         }
       }
@@ -197,14 +208,14 @@ const DATA = `
       "color": "#ff0",
       "name": "Bees",
       "prompt": "Swarm of buzzing bees",
+      "desc": "A furious swarm.",
+      "combat": { "HP": 3, "ATK": 1, "DEF": 0 },
       "tree": {
         "start": {
           "text": "The bees buzz around angrily.",
           "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
+            { "label": "(Fight)", "to": "do_fight" },
+            { "label": "(Leave)", "to": "bye" }
           ]
         }
       }
@@ -257,14 +268,14 @@ const DATA = `
       "color": "#f88",
       "name": "Grue",
       "prompt": "Hungry grue lurking in the shadows",
+      "desc": "It hungers for light.",
+      "combat": { "HP": 10, "ATK": 4, "DEF": 2 },
       "tree": {
         "start": {
           "text": "It is dark. You are likely to be eaten by a grue.",
           "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
+            { "label": "(Fight)", "to": "do_fight" },
+            { "label": "(Leave)", "to": "bye" }
           ]
         }
       }
@@ -295,6 +306,7 @@ const DATA = `
     "wizard_room": "Wizard Room",
     "roof_of_house": "Roof Of House",
     "alice_room": "Alice Room",
+    "mirror_alice_room": "Mirror Alice Room",
     "lightning_room": "Lightning Room",
     "magician_book_room": "Magician Book Room",
     "air_room": "Air Room",
@@ -468,6 +480,22 @@ const DATA = `
       "toMap": "river_bed",
       "toX": 4,
       "toY": 2
+    },
+    {
+      "map": "dungeon",
+      "x": 2,
+      "y": 4,
+      "toMap": "troll_room",
+      "toX": 2,
+      "toY": 0
+    },
+    {
+      "map": "troll_room",
+      "x": 2,
+      "y": 0,
+      "toMap": "dungeon",
+      "toX": 2,
+      "toY": 4
     },
     {
       "map": "troll_room",
@@ -1244,7 +1272,7 @@ const DATA = `
         "🧱🏝⬆️🏝🧱",
         "🧱🏝🏝🏝🧱",
         "🧱🏝⬇️🏝🧱",
-        "🧱🧱🧱🧱🧱"
+        "🧱🏝⬇️🏝🧱"
       ],
       "entryX": 2,
       "entryY": 2
@@ -1257,6 +1285,20 @@ const DATA = `
         "🧱🧱🧱🧱🧱",
         "🧱🏝🏝🏝🧱",
         "🚪🏝🏝🏝🚪",
+        "🧱🏝🏝🏝🧱",
+        "🧱🧱🧱🧱🧱"
+      ],
+      "entryX": 2,
+      "entryY": 2
+    },
+    {
+      "id": "mirror_alice_room",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🧱🧱🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🏝🏝🏝🚪",
         "🧱🏝🏝🏝🧱",
         "🧱🧱🧱🧱🧱"
       ],

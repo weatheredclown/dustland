@@ -33,13 +33,19 @@ test('pit bas module initializes rooms and items', () => {
     context.PIT_BAS_MODULE.items[0].id,
     'magic_lightbulb'
   );
-  assert.ok(context.PIT_BAS_MODULE.items.find(i => i.id === 'whistle'));
-  assert.ok(context.PIT_BAS_MODULE.items.find(i => i.id === 'key'));
-  assert.ok(
-    context.PIT_BAS_MODULE.portals.find(
-      p => p.map === 'cavern' && p.toMap === 'whistle_room'
-    )
-  );
+    assert.ok(context.PIT_BAS_MODULE.items.find(i => i.id === 'whistle'));
+    assert.ok(context.PIT_BAS_MODULE.items.find(i => i.id === 'key'));
+    const mace = context.PIT_BAS_MODULE.items.find(i => i.id === 'mace');
+    const axe = context.PIT_BAS_MODULE.items.find(i => i.id === 'axe');
+    assert.strictEqual(mace.type, 'weapon');
+    assert.strictEqual(mace.slot, 'weapon');
+    assert.strictEqual(axe.type, 'weapon');
+    assert.strictEqual(axe.slot, 'weapon');
+    assert.ok(
+      context.PIT_BAS_MODULE.portals.find(
+        p => p.map === 'cavern' && p.toMap === 'whistle_room'
+      )
+    );
   assert.ok(
     context.PIT_BAS_MODULE.interiors.find(r => r.id === 'small_cavern')
   );
@@ -56,16 +62,26 @@ test('pit bas module initializes rooms and items', () => {
       p => p.map === 'whistle_room' && p.toMap === 'dungeon'
     )
   );
-  const smallReturn = context.PIT_BAS_MODULE.portals.find(
-    p => p.map === 'small_cavern' && p.toMap === 'cavern'
-  );
-  assert.deepStrictEqual(
-    { x: smallReturn.x, y: smallReturn.y },
-    { x: 2, y: 0 }
-  );
-  const beeToMerchant = context.PIT_BAS_MODULE.portals.find(
-    p => p.map === 'bee_room' && p.toMap === 'merchant_room'
-  );
+    const smallReturn = context.PIT_BAS_MODULE.portals.find(
+      p => p.map === 'small_cavern' && p.toMap === 'cavern'
+    );
+    assert.deepStrictEqual(
+      { x: smallReturn.x, y: smallReturn.y },
+      { x: 2, y: 0 }
+    );
+    assert.ok(
+      context.PIT_BAS_MODULE.portals.find(
+        p => p.map === 'dungeon' && p.toMap === 'troll_room'
+      )
+    );
+    assert.ok(
+      context.PIT_BAS_MODULE.portals.find(
+        p => p.map === 'troll_room' && p.toMap === 'dungeon'
+      )
+    );
+    const beeToMerchant = context.PIT_BAS_MODULE.portals.find(
+      p => p.map === 'bee_room' && p.toMap === 'merchant_room'
+    );
   assert.ok(beeToMerchant);
   const merchantToBee = context.PIT_BAS_MODULE.portals.find(
     p => p.map === 'merchant_room' && p.toMap === 'bee_room'
@@ -99,9 +115,10 @@ test('pit bas module initializes rooms and items', () => {
     'white_room',
     'whisper_room',
     'wizard_room',
-    'alice_room',
-    'lightning_room',
-    'magician_book_room',
+      'alice_room',
+      'mirror_alice_room',
+      'lightning_room',
+      'magician_book_room',
     'air_room',
     'maze_small_room',
     'dead_end',
@@ -130,18 +147,22 @@ test('pit bas module initializes rooms and items', () => {
     context.PIT_BAS_MODULE.mapLabels.merchant_room,
     'Merchant Room'
   );
-  assert.strictEqual(
-    context.PIT_BAS_MODULE.mapLabels.flute_room,
-    'Flute Room'
-  );
-  assert.strictEqual(
-    context.PIT_BAS_MODULE.mapLabels.dead_end,
-    'Dead End'
-  );
-  const listing = Buffer.from(
-    context.PIT_BAS_MODULE.listing,
-    'base64'
-  ).toString();
+    assert.strictEqual(
+      context.PIT_BAS_MODULE.mapLabels.flute_room,
+      'Flute Room'
+    );
+    assert.strictEqual(
+      context.PIT_BAS_MODULE.mapLabels.dead_end,
+      'Dead End'
+    );
+    assert.strictEqual(
+      context.PIT_BAS_MODULE.mapLabels.mirror_alice_room,
+      'Mirror Alice Room'
+    );
+    const listing = Buffer.from(
+      context.PIT_BAS_MODULE.listing,
+      'base64'
+    ).toString();
   assert.ok(listing.startsWith('0 COLOR 15'));
 });
 
@@ -180,6 +201,14 @@ test('pit bas module defines basic npcs', () => {
   expected.forEach(id => {
     assert.ok(ids.includes(id));
   });
+  const bandit = context.PIT_BAS_MODULE.npcs.find(n => n.id === 'bandit');
+  const troll = context.PIT_BAS_MODULE.npcs.find(n => n.id === 'troll');
+  const bees = context.PIT_BAS_MODULE.npcs.find(n => n.id === 'bees');
+  const grue = context.PIT_BAS_MODULE.npcs.find(n => n.id === 'grue');
+  [bandit, troll, bees, grue].forEach(n => assert.ok(n.combat));
+  const dead = context.PIT_BAS_MODULE.npcs.find(n => n.id === 'dead_adventurer');
+  assert.ok(dead.tree.start.choices.some(c => c.label === '(Loot)'));
+  assert.ok(dead.tree.loot.choices.some(c => c.reward === 'silver_medallion'));
 });
 
 test('lightning room zaps without rod', () => {

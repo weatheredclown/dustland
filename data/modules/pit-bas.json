@@ -26,15 +26,14 @@
     {
       "id": "silver_medallion",
       "name": "Silver Medallion",
-      "type": "quest",
-      "map": "dungeon",
-      "x": 2,
-      "y": 2
+      "type": "quest"
     },
     {
       "id": "mace",
       "name": "Mace",
-      "type": "quest",
+      "type": "weapon",
+      "slot": "weapon",
+      "mods": { "ATK": 2, "ADR": 10 },
       "map": "dungeon",
       "x": 3,
       "y": 2
@@ -42,7 +41,9 @@
     {
       "id": "axe",
       "name": "Axe",
-      "type": "quest",
+      "type": "weapon",
+      "slot": "weapon",
+      "mods": { "ATK": 3, "ADR": 10 },
       "map": "dungeon",
       "x": 1,
       "y": 2
@@ -128,12 +129,13 @@
     "white_room": "White Room",
     "shore": "Shore",
     "whisper_room": "Whisper Room",
-    "wizard_room": "Wizard Room",
-    "roof_of_house": "Roof Of House",
-    "alice_room": "Alice Room",
-    "lightning_room": "Lightning Room",
-    "magician_book_room": "Magician Book Room",
-    "air_room": "Air Room",
+      "wizard_room": "Wizard Room",
+      "roof_of_house": "Roof Of House",
+      "alice_room": "Alice Room",
+      "mirror_alice_room": "Mirror Alice Room",
+      "lightning_room": "Lightning Room",
+      "magician_book_room": "Magician Book Room",
+      "air_room": "Air Room",
     "maze_small_room": "Maze Small Room",
     "bee_room": "Bee Room",
     "merchant_room": "Merchant Room",
@@ -300,6 +302,22 @@
       "toMap": "river_bed",
       "toX": 4,
       "toY": 2
+    },
+    {
+      "map": "dungeon",
+      "x": 2,
+      "y": 4,
+      "toMap": "troll_room",
+      "toX": 2,
+      "toY": 0
+    },
+    {
+      "map": "troll_room",
+      "x": 2,
+      "y": 0,
+      "toMap": "dungeon",
+      "toX": 2,
+      "toY": 4
     },
     {
       "map": "troll_room",
@@ -1036,7 +1054,7 @@
         "🧱🏝⬆️🏝🧱",
         "🧱🏝🏝🏝🧱",
         "🧱🏝⬇️🏝🧱",
-        "🧱🧱🧱🧱🧱"
+        "🧱🏝⬇️🏝🧱"
       ],
       "entryX": 2,
       "entryY": 2
@@ -1049,6 +1067,20 @@
         "🧱🧱🧱🧱🧱",
         "🧱🏝🏝🏝🧱",
         "🚪🏝🏝🏝🚪",
+        "🧱🏝🏝🏝🧱",
+        "🧱🧱🧱🧱🧱"
+      ],
+      "entryX": 2,
+      "entryY": 2
+    },
+    {
+      "id": "mirror_alice_room",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🧱🧱🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🏝🏝🏝🚪",
         "🧱🏝🏝🏝🧱",
         "🧱🧱🧱🧱🧱"
       ],
