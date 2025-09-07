@@ -13,16 +13,22 @@ test('pit bas module initializes rooms and items', () => {
   const calls = [];
   const context = { Math };
   context.globalThis = context;
-  context.applyModule = () => { calls.push('apply'); };
+  context.mapLabels = { world: 'Wastes' };
+  context.applyModule = data => {
+    calls.push('apply');
+    if (data.mapLabels) Object.assign(context.mapLabels, data.mapLabels);
+  };
   context.setPartyPos = (x, y) => { context.pos = { x, y }; };
-  context.setMap = (map, name) => { context.mapName = name; };
+  context.setMap = (map, name) => {
+    context.mapName = name || context.mapLabels[map] || 'Interior';
+  };
   context.log = () => { calls.push('log'); };
   vm.runInNewContext(src, context);
   context.PIT_BAS_MODULE.postLoad = () => { calls.push('post'); };
   context.startGame();
   assert.deepStrictEqual(calls, ['post', 'apply']);
   assert.deepStrictEqual(context.pos, { x: 3, y: 5 });
-  assert.strictEqual(context.mapName, 'PIT.BAS');
+  assert.strictEqual(context.mapName, 'Cavern');
   assert.strictEqual(
     context.PIT_BAS_MODULE.items[0].id,
     'magic_lightbulb'
@@ -44,6 +50,11 @@ test('pit bas module initializes rooms and items', () => {
   assert.ok(
     context.PIT_BAS_MODULE.portals.find(
       p => p.map === 'cavern' && p.toMap === 'small_cavern'
+    )
+  );
+  assert.ok(
+    context.PIT_BAS_MODULE.portals.find(
+      p => p.map === 'whistle_room' && p.toMap === 'dungeon'
     )
   );
   const smallReturn = context.PIT_BAS_MODULE.portals.find(
@@ -106,6 +117,10 @@ test('pit bas module initializes rooms and items', () => {
     context.PIT_BAS_MODULE.portals.find(
       p => p.map === 'maze_small_room' && p.toMap === 'bee_room'
     )
+  );
+  assert.strictEqual(
+    context.PIT_BAS_MODULE.mapLabels.whistle_room,
+    'Whistle Room'
   );
 });
 

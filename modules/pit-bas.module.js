@@ -29,6 +29,33 @@ const DATA = `
   ],
   "quests": [],
   "npcs": [],
+  "mapLabels": {
+    "cavern": "Cavern",
+    "whistle_room": "Whistle Room",
+    "small_cavern": "Small Cavern",
+    "large_cavern": "Large Cavern",
+    "golden_gate": "Golden Gate",
+    "dungeon": "Dungeon",
+    "river_room": "River Room",
+    "glass_room": "Glass Room",
+    "bandit_room": "Bandit Room",
+    "green_house": "Green House",
+    "river_bed": "River Bed",
+    "troll_room": "Troll Room",
+    "trophy_room": "Trophy Room",
+    "rag_room": "Rag Room",
+    "bright_room": "Bright Room",
+    "pointless_room": "Pointless Room",
+    "white_room": "White Room",
+    "whisper_room": "Whisper Room",
+    "wizard_room": "Wizard Room",
+    "alice_room": "Alice Room",
+    "lightning_room": "Lightning Room",
+    "magician_book_room": "Magician Book Room",
+    "air_room": "Air Room",
+    "maze_small_room": "Maze Small Room",
+    "bee_room": "Bee Room"
+  },
   "portals": [
     {
       "map": "cavern",
@@ -44,6 +71,22 @@ const DATA = `
       "y": 1,
       "toMap": "cavern",
       "toX": 3,
+      "toY": 1
+    },
+    {
+      "map": "whistle_room",
+      "x": 2,
+      "y": 1,
+      "toMap": "dungeon",
+      "toX": 4,
+      "toY": 1
+    },
+    {
+      "map": "dungeon",
+      "x": 4,
+      "y": 1,
+      "toMap": "whistle_room",
+      "toX": 2,
       "toY": 1
     },
     {
@@ -438,7 +481,7 @@ const DATA = `
       "h": 4,
       "grid": [
         "🧱🧱🧱🧱",
-        "🧱🚪🏝🧱",
+        "🧱🚪🚪🧱",
         "🧱🏝🏝🧱",
         "🧱🧱🧱🧱"
       ],
@@ -784,5 +827,5 @@ startGame = function () {
   applyModule(PIT_BAS_MODULE);
   const s = PIT_BAS_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   setPartyPos(s.x, s.y);
-  setMap(s.map, s.map === 'world' ? 'Wastes' : 'PIT.BAS');
+  setMap(s.map, s.map === 'world' ? 'Wastes' : undefined);
 };
