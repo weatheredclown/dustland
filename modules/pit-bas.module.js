@@ -13,10 +13,22 @@ const DATA = `
       "map": "cavern",
       "x": 3,
       "y": 3
+    },
+    {
+      "id": "whistle",
+      "name": "Whistle",
+      "type": "quest",
+      "map": "whistle_room",
+      "x": 2,
+      "y": 2
     }
   ],
   "quests": [],
   "npcs": [],
+  "portals": [
+    { "map": "cavern", "x": 3, "y": 1, "toMap": "whistle_room", "toX": 1, "toY": 1 },
+    { "map": "whistle_room", "x": 1, "y": 1, "toMap": "cavern", "toX": 3, "toY": 1 }
+  ],
   "interiors": [
     {
       "id": "cavern",
@@ -33,6 +45,19 @@ const DATA = `
       ],
       "entryX": 3,
       "entryY": 5
+    },
+    {
+      "id": "whistle_room",
+      "w": 4,
+      "h": 4,
+      "grid": [
+        "🧱🧱🧱🧱",
+        "🧱🚪🏝🧱",
+        "🧱🏝🏝🧱",
+        "🧱🧱🧱🧱"
+      ],
+      "entryX": 1,
+      "entryY": 1
     }
   ],
   "buildings": []
