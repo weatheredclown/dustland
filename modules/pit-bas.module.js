@@ -6,8 +6,8 @@ const DATA = `
   "name": "pit-bas",
   "start": {
     "map": "cavern",
-    "x": 3,
-    "y": 3
+    "x": 2,
+    "y": 2
   },
   "items": [
     {
@@ -147,12 +147,12 @@ const DATA = `
       "y": 4,
       "toMap": "cavern",
       "toX": 2,
-      "toY": 2
+      "toY": 0
     },
     {
       "map": "cavern",
       "x": 2,
-      "y": 2,
+      "y": 0,
       "toMap": "large_cavern",
       "toX": 2,
       "toY": 4
@@ -163,12 +163,12 @@ const DATA = `
       "y": 0,
       "toMap": "cavern",
       "toX": 2,
-      "toY": 2
+      "toY": 4
     },
     {
       "map": "cavern",
       "x": 2,
-      "y": 2,
+      "y": 4,
       "toMap": "small_cavern",
       "toX": 2,
       "toY": 0
@@ -179,12 +179,12 @@ const DATA = `
       "y": 1,
       "toMap": "cavern",
       "toX": 2,
-      "toY": 2
+      "toY": 3
     },
     {
       "map": "cavern",
       "x": 2,
-      "y": 2,
+      "y": 3,
       "toMap": "whistle_room",
       "toX": 2,
       "toY": 1
@@ -194,12 +194,12 @@ const DATA = `
       "x": 0,
       "y": 2,
       "toMap": "large_cavern",
-      "toX": 2,
+      "toX": 4,
       "toY": 2
     },
     {
       "map": "large_cavern",
-      "x": 2,
+      "x": 4,
       "y": 2,
       "toMap": "golden_gate",
       "toX": 0,
@@ -210,12 +210,12 @@ const DATA = `
       "x": 0,
       "y": 2,
       "toMap": "whistle_room",
-      "toX": 2,
+      "toX": 4,
       "toY": 2
     },
     {
       "map": "whistle_room",
-      "x": 2,
+      "x": 4,
       "y": 2,
       "toMap": "dungeon",
       "toX": 0,
@@ -227,12 +227,12 @@ const DATA = `
       "y": 4,
       "toMap": "dungeon",
       "toX": 2,
-      "toY": 2
+      "toY": 0
     },
     {
       "map": "dungeon",
       "x": 2,
-      "y": 2,
+      "y": 0,
       "toMap": "river_room",
       "toX": 2,
       "toY": 4
@@ -242,12 +242,12 @@ const DATA = `
       "x": 4,
       "y": 2,
       "toMap": "dungeon",
-      "toX": 2,
+      "toX": 0,
       "toY": 2
     },
     {
       "map": "dungeon",
-      "x": 2,
+      "x": 0,
       "y": 2,
       "toMap": "glass_room",
       "toX": 4,
@@ -259,12 +259,12 @@ const DATA = `
       "y": 4,
       "toMap": "river_room",
       "toX": 2,
-      "toY": 2
+      "toY": 0
     },
     {
       "map": "river_room",
       "x": 2,
-      "y": 2,
+      "y": 0,
       "toMap": "bandit_room",
       "toX": 2,
       "toY": 4
@@ -274,12 +274,12 @@ const DATA = `
       "x": 0,
       "y": 2,
       "toMap": "river_room",
-      "toX": 2,
+      "toX": 4,
       "toY": 2
     },
     {
       "map": "river_room",
-      "x": 2,
+      "x": 4,
       "y": 2,
       "toMap": "green_house",
       "toX": 0,
@@ -290,12 +290,12 @@ const DATA = `
       "x": 4,
       "y": 2,
       "toMap": "river_room",
-      "toX": 2,
+      "toX": 0,
       "toY": 2
     },
     {
       "map": "river_room",
-      "x": 2,
+      "x": 0,
       "y": 2,
       "toMap": "river_bed",
       "toX": 4,
@@ -307,12 +307,12 @@ const DATA = `
       "y": 1,
       "toMap": "glass_room",
       "toX": 2,
-      "toY": 2
+      "toY": 3
     },
     {
       "map": "glass_room",
       "x": 2,
-      "y": 2,
+      "y": 3,
       "toMap": "troll_room",
       "toX": 2,
       "toY": 1
@@ -322,12 +322,12 @@ const DATA = `
       "x": 0,
       "y": 2,
       "toMap": "bandit_room",
-      "toX": 2,
+      "toX": 4,
       "toY": 2
     },
     {
       "map": "bandit_room",
-      "x": 2,
+      "x": 4,
       "y": 2,
       "toMap": "trophy_room",
       "toX": 0,
@@ -339,12 +339,12 @@ const DATA = `
       "y": 4,
       "toMap": "river_bed",
       "toX": 2,
-      "toY": 2
+      "toY": 0
     },
     {
       "map": "river_bed",
       "x": 2,
-      "y": 2,
+      "y": 0,
       "toMap": "drain",
       "toX": 2,
       "toY": 4
@@ -355,12 +355,12 @@ const DATA = `
       "y": 0,
       "toMap": "troll_room",
       "toX": 2,
-      "toY": 2
+      "toY": 4
     },
     {
       "map": "troll_room",
       "x": 2,
-      "y": 2,
+      "y": 4,
       "toMap": "rag_room",
       "toX": 2,
       "toY": 0
@@ -370,12 +370,12 @@ const DATA = `
       "x": 4,
       "y": 2,
       "toMap": "troll_room",
-      "toX": 2,
+      "toX": 0,
       "toY": 2
     },
     {
       "map": "troll_room",
-      "x": 2,
+      "x": 0,
       "y": 2,
       "toMap": "bright_room",
       "toX": 4,
@@ -386,12 +386,12 @@ const DATA = `
       "x": 4,
       "y": 2,
       "toMap": "drain",
-      "toX": 2,
+      "toX": 0,
       "toY": 2
     },
     {
       "map": "drain",
-      "x": 2,
+      "x": 0,
       "y": 2,
       "toMap": "rapid_water",
       "toX": 4,
@@ -403,12 +403,12 @@ const DATA = `
       "y": 3,
       "toMap": "bright_room",
       "toX": 2,
-      "toY": 2
+      "toY": 1
     },
     {
       "map": "bright_room",
       "x": 2,
-      "y": 2,
+      "y": 1,
       "toMap": "pointless_room",
       "toX": 2,
       "toY": 3
@@ -419,12 +419,12 @@ const DATA = `
       "y": 4,
       "toMap": "bright_room",
       "toX": 2,
-      "toY": 2
+      "toY": 0
     },
     {
       "map": "bright_room",
       "x": 2,
-      "y": 2,
+      "y": 0,
       "toMap": "white_room",
       "toX": 2,
       "toY": 4
@@ -434,12 +434,12 @@ const DATA = `
       "x": 4,
       "y": 2,
       "toMap": "rapid_water",
-      "toX": 2,
+      "toX": 0,
       "toY": 2
     },
     {
       "map": "rapid_water",
-      "x": 2,
+      "x": 0,
       "y": 2,
       "toMap": "shore",
       "toX": 4,
@@ -451,12 +451,12 @@ const DATA = `
       "y": 0,
       "toMap": "maze_2800",
       "toX": 2,
-      "toY": 2
+      "toY": 4
     },
     {
       "map": "maze_2800",
       "x": 2,
-      "y": 2,
+      "y": 4,
       "toMap": "whisper_room",
       "toX": 2,
       "toY": 0
@@ -466,12 +466,12 @@ const DATA = `
       "x": 4,
       "y": 2,
       "toMap": "maze_2900",
-      "toX": 2,
+      "toX": 0,
       "toY": 2
     },
     {
       "map": "maze_2900",
-      "x": 2,
+      "x": 0,
       "y": 2,
       "toMap": "whisper_room",
       "toX": 4,
@@ -482,12 +482,12 @@ const DATA = `
       "x": 0,
       "y": 2,
       "toMap": "rag_room",
-      "toX": 2,
+      "toX": 4,
       "toY": 2
     },
     {
       "map": "rag_room",
-      "x": 2,
+      "x": 4,
       "y": 2,
       "toMap": "whisper_room",
       "toX": 0,
@@ -498,12 +498,12 @@ const DATA = `
       "x": 4,
       "y": 2,
       "toMap": "white_room",
-      "toX": 2,
+      "toX": 0,
       "toY": 2
     },
     {
       "map": "white_room",
-      "x": 2,
+      "x": 0,
       "y": 2,
       "toMap": "wizard_room",
       "toX": 4,
@@ -515,12 +515,12 @@ const DATA = `
       "y": 3,
       "toMap": "shore",
       "toX": 2,
-      "toY": 2
+      "toY": 1
     },
     {
       "map": "shore",
       "x": 2,
-      "y": 2,
+      "y": 1,
       "toMap": "roof_of_house",
       "toX": 2,
       "toY": 3
@@ -530,12 +530,12 @@ const DATA = `
       "x": 4,
       "y": 2,
       "toMap": "shore",
-      "toX": 2,
+      "toX": 0,
       "toY": 2
     },
     {
       "map": "shore",
-      "x": 2,
+      "x": 0,
       "y": 2,
       "toMap": "alice_room",
       "toX": 4,
@@ -546,12 +546,12 @@ const DATA = `
       "x": 0,
       "y": 2,
       "toMap": "mirror_alice_room",
-      "toX": 2,
+      "toX": 4,
       "toY": 2
     },
     {
       "map": "mirror_alice_room",
-      "x": 2,
+      "x": 4,
       "y": 2,
       "toMap": "alice_room",
       "toX": 0,
@@ -563,12 +563,12 @@ const DATA = `
       "y": 3,
       "toMap": "wizard_room",
       "toX": 2,
-      "toY": 2
+      "toY": 1
     },
     {
       "map": "wizard_room",
       "x": 2,
-      "y": 2,
+      "y": 1,
       "toMap": "lightning_room",
       "toX": 2,
       "toY": 3
@@ -579,12 +579,12 @@ const DATA = `
       "y": 0,
       "toMap": "roof_of_house",
       "toX": 2,
-      "toY": 2
+      "toY": 4
     },
     {
       "map": "roof_of_house",
       "x": 2,
-      "y": 2,
+      "y": 4,
       "toMap": "lightning_room",
       "toX": 2,
       "toY": 0
@@ -595,12 +595,12 @@ const DATA = `
       "y": 3,
       "toMap": "5800",
       "toX": 2,
-      "toY": 2
+      "toY": 1
     },
     {
       "map": "5800",
       "x": 2,
-      "y": 2,
+      "y": 1,
       "toMap": "magician_book_room",
       "toX": 2,
       "toY": 3
@@ -610,12 +610,12 @@ const DATA = `
       "x": 4,
       "y": 2,
       "toMap": "magician_book_room",
-      "toX": 2,
+      "toX": 0,
       "toY": 2
     },
     {
       "map": "magician_book_room",
-      "x": 2,
+      "x": 0,
       "y": 2,
       "toMap": "air_room",
       "toX": 4,
@@ -627,12 +627,12 @@ const DATA = `
       "y": 0,
       "toMap": "dead_end",
       "toX": 2,
-      "toY": 2
+      "toY": 4
     },
     {
       "map": "dead_end",
       "x": 2,
-      "y": 2,
+      "y": 4,
       "toMap": "maze_small_room",
       "toX": 2,
       "toY": 0
@@ -642,12 +642,12 @@ const DATA = `
       "x": 4,
       "y": 2,
       "toMap": "maze_3700",
-      "toX": 2,
+      "toX": 0,
       "toY": 2
     },
     {
       "map": "maze_3700",
-      "x": 2,
+      "x": 0,
       "y": 2,
       "toMap": "maze_small_room",
       "toX": 4,
@@ -658,12 +658,12 @@ const DATA = `
       "x": 0,
       "y": 2,
       "toMap": "maze_3500",
-      "toX": 2,
+      "toX": 4,
       "toY": 2
     },
     {
       "map": "maze_3500",
-      "x": 2,
+      "x": 4,
       "y": 2,
       "toMap": "maze_small_room",
       "toX": 0,
@@ -675,12 +675,12 @@ const DATA = `
       "y": 0,
       "toMap": "maze_2900",
       "toX": 2,
-      "toY": 2
+      "toY": 4
     },
     {
       "map": "maze_2900",
       "x": 2,
-      "y": 2,
+      "y": 4,
       "toMap": "bee_room",
       "toX": 2,
       "toY": 0
@@ -690,12 +690,12 @@ const DATA = `
       "x": 4,
       "y": 2,
       "toMap": "merchant_room",
-      "toX": 2,
+      "toX": 0,
       "toY": 2
     },
     {
       "map": "merchant_room",
-      "x": 2,
+      "x": 0,
       "y": 2,
       "toMap": "bee_room",
       "toX": 4,
@@ -706,12 +706,12 @@ const DATA = `
       "x": 0,
       "y": 2,
       "toMap": "flute_room",
-      "toX": 2,
+      "toX": 4,
       "toY": 2
     },
     {
       "map": "flute_room",
-      "x": 2,
+      "x": 4,
       "y": 2,
       "toMap": "bee_room",
       "toX": 0,
