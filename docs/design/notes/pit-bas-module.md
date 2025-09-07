@@ -156,9 +156,8 @@ xxxxx
 
 ## Pipeline Notes
  - Hand-build the JSON map based on the room/item/NPC list. Use `node scripts/supporting/append-room.js` to quickly insert rooms and wire portal exits.
-   - The layout argument is a comma-separated list of rows using `x` for walls, `p` for portals, and spaces for floor tiles.
-   - Portals on the top row connect north, the left column west, the right column east, and the bottom row south.
-   - Example: `node scripts/supporting/append-room.js modules/pit-bas.module.js small_cavern 'xxpxx,x   x,p   x,x   x,xxxx' cavern '' '' large_cavern`.
+   - Specify connections as `<dir>:<room>` where `<dir>` is N, E, S, W, U, or D for up and down staircases.
+   - Example: `node scripts/supporting/append-room.js modules/pit-bas.module.js small_cavern N:cavern`.
    - Invoking the script again with the same room name replaces its layout and portals.
 
 > **Gizmo:** No one should hand-wire thirty rooms; let the helper script solder the lines.
@@ -177,35 +176,35 @@ xxxxx
 
 ```sh
 # Rooms
-node scripts/supporting/append-room.js modules/pit-bas.module.js cavern '<layout>' large_cavern '' small_cavern ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js large_cavern '<layout>' '' golden_gate cavern ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js small_cavern '<layout>' cavern '' '' ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js whistle_room '<layout>' '' dungeon cavern ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js golden_gate '<layout>' '' '' '' large_cavern
-node scripts/supporting/append-room.js modules/pit-bas.module.js dungeon '<layout>' river_room '' glass_room whistle_room
-node scripts/supporting/append-room.js modules/pit-bas.module.js river_room '<layout>' bandit_room green_house dungeon river_bed
-node scripts/supporting/append-room.js modules/pit-bas.module.js glass_room '<layout>' '' dungeon troll_room ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js bandit_room '<layout>' '' trophy_room river_room ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js green_house '<layout>' '' '' river_room ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js river_bed '<layout>' drain river_room '' ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js troll_room '<layout>' glass_room rag_room '' bright_room
-node scripts/supporting/append-room.js modules/pit-bas.module.js trophy_room '<layout>' '' '' '' bandit_room
-node scripts/supporting/append-room.js modules/pit-bas.module.js drain '<layout>' '' rapid_water river_bed ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js rag_room '<layout>' troll_room whisper_room '' ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js bright_room '<layout>' white_room troll_room pointless_room ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js rapid_water '<layout>' '' drain '' shore
-node scripts/supporting/append-room.js modules/pit-bas.module.js pointless_room '<layout>' '' '' bright_room ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js white_room '<layout>' '' wizard_room bright_room ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js shore '<layout>' roof_of_house rapid_water '' alice_room
-node scripts/supporting/append-room.js modules/pit-bas.module.js whisper_room '<layout>' maze_2800 maze_2900 '' rag_room
-node scripts/supporting/append-room.js modules/pit-bas.module.js wizard_room '<layout>' lightning_room north_south_passage in_a_box white_room
-node scripts/supporting/append-room.js modules/pit-bas.module.js roof_of_house '<layout>' lightning_room north_south_passage shore ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js alice_room '<layout>' '' shore '' mirror_alice_room
-node scripts/supporting/append-room.js modules/pit-bas.module.js lightning_room '<layout>' roof_of_house '' wizard_room ''
-node scripts/supporting/append-room.js modules/pit-bas.module.js magician_book_room '<layout>' '' '' '5800' air_room
-node scripts/supporting/append-room.js modules/pit-bas.module.js air_room '<layout>' '' magician_book_room '' west_hall
-node scripts/supporting/append-room.js modules/pit-bas.module.js maze_small_room '<layout>' dead_end maze_3700 '' maze_3500
-node scripts/supporting/append-room.js modules/pit-bas.module.js bee_room '<layout>' maze_2900 merchant_room '' flute_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js cavern N:large_cavern S:small_cavern
+node scripts/supporting/append-room.js modules/pit-bas.module.js large_cavern E:golden_gate S:cavern
+node scripts/supporting/append-room.js modules/pit-bas.module.js small_cavern N:cavern
+node scripts/supporting/append-room.js modules/pit-bas.module.js whistle_room E:dungeon S:cavern
+node scripts/supporting/append-room.js modules/pit-bas.module.js golden_gate W:large_cavern
+node scripts/supporting/append-room.js modules/pit-bas.module.js dungeon N:river_room S:glass_room W:whistle_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js river_room N:bandit_room E:green_house S:dungeon W:river_bed
+node scripts/supporting/append-room.js modules/pit-bas.module.js glass_room E:dungeon S:troll_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js bandit_room E:trophy_room S:river_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js green_house S:river_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js river_bed N:drain E:river_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js troll_room N:glass_room E:rag_room W:bright_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js trophy_room W:bandit_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js drain E:rapid_water S:river_bed
+node scripts/supporting/append-room.js modules/pit-bas.module.js rag_room N:troll_room E:whisper_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js bright_room N:white_room E:troll_room S:pointless_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js rapid_water E:drain W:shore
+node scripts/supporting/append-room.js modules/pit-bas.module.js pointless_room S:bright_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js white_room E:wizard_room S:bright_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js shore N:roof_of_house E:rapid_water W:alice_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js whisper_room N:maze_2800 E:maze_2900 W:rag_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js wizard_room N:lightning_room E:north_south_passage S:in_a_box W:white_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js roof_of_house N:lightning_room E:north_south_passage S:shore
+node scripts/supporting/append-room.js modules/pit-bas.module.js alice_room E:shore W:mirror_alice_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js lightning_room N:roof_of_house S:wizard_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js magician_book_room S:5800 W:air_room
+node scripts/supporting/append-room.js modules/pit-bas.module.js air_room E:magician_book_room W:west_hall
+node scripts/supporting/append-room.js modules/pit-bas.module.js maze_small_room N:dead_end E:maze_3700 W:maze_3500
+node scripts/supporting/append-room.js modules/pit-bas.module.js bee_room N:maze_2900 E:merchant_room W:flute_room
 
 # Items
 node -e "import fs from 'node:fs';const m=JSON.parse(fs.readFileSync('modules/pit-bas.module.js','utf8'));m.items.push({id:'magic_lightbulb',name:'Magic Lightbulb',type:'quest',map:'cavern',x:3,y:3});fs.writeFileSync('modules/pit-bas.module.js',JSON.stringify(m,null,2));"

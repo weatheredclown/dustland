@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-if (process.argv.length < 5) {
-  console.log('Usage: node scripts/supporting/append-room.js <file> <roomId> <targetRoom>');
-  console.log('   or: node scripts/supporting/append-room.js <file> <roomId> <layout> [north] [east] [south] [west]');
+if (process.argv.length < 4) {
+  console.log('Usage: node scripts/supporting/append-room.js <file> <roomId> [dir:target ...]');
+  console.log('Directions: N, E, S, W, U (up), D (down)');
   process.exit(1);
 }
 
@@ -21,61 +21,47 @@ function clearExisting() {
   mod.portals = mod.portals.filter(p => p.map !== id && p.toMap !== id);
 }
 
-if (args.length === 3) {
-  const target = args[2];
-  clearExisting();
-  mod.interiors.push({
-    id,
-    w: 4,
-    h: 4,
-    grid: ['🧱🧱🧱🧱', '🧱🚪🧱🧱', '🧱🧱🧱🧱', '🧱🧱🧱🧱'],
-    entryX: 1,
-    entryY: 1
-  });
-  mod.portals.push({ map: target, x: 1, y: 1, toMap: id, toX: 1, toY: 1 });
-  mod.portals.push({ map: id, x: 1, y: 1, toMap: target, toX: 1, toY: 1 });
-  fs.writeFileSync(filePath, JSON.stringify(mod, null, 2));
-  console.log(`Appended room ${id} linked with ${target}`);
-  process.exit(0);
-}
-
-const layout = args[2];
-const north = args[3];
-const east = args[4];
-const south = args[5];
-const west = args[6];
-
-const rows = layout.split(',');
-const h = rows.length;
-const w = rows[0].length;
-const grid = rows.map(r => r.split('').map(c => c === 'x' ? '🧱' : c === 'p' ? '🚪' : '🏝').join(''));
-
-clearExisting();
-mod.interiors.push({ id, w, h, grid, entryX: 1, entryY: 1 });
-
-const exits = { north: [], east: [], south: [], west: [] };
-rows.forEach((row, y) => {
-  row.split('').forEach((c, x) => {
-    if (c !== 'p') return;
-    if (y === 0) exits.north.push({ x, y });
-    else if (y === h - 1) exits.south.push({ x, y });
-    else if (x === 0) exits.west.push({ x, y });
-    else if (x === w - 1) exits.east.push({ x, y });
-  });
+const links = {};
+args.slice(2).filter(Boolean).forEach(arg => {
+  const [dir, target] = arg.split(':');
+  if (!dir || !target) return;
+  links[dir.toUpperCase()] = target;
 });
 
-function addPortal(dir, target) {
-  if (!target) return;
-  exits[dir].forEach(({ x, y }) => {
-    mod.portals.push({ map: id, x, y, toMap: target, toX: 1, toY: 1 });
-    mod.portals.push({ map: target, x: 1, y: 1, toMap: id, toX: x, toY: y });
-  });
-}
+clearExisting();
 
-addPortal('north', north);
-addPortal('east', east);
-addPortal('south', south);
-addPortal('west', west);
+const w = 5;
+const h = 5;
+const grid = Array.from({ length: h }, (_, y) =>
+  Array.from({ length: w }, (_, x) =>
+    y === 0 || y === h - 1 || x === 0 || x === w - 1 ? '🧱' : '🏝'
+  )
+);
+
+if (links.N) grid[0][2] = '🚪';
+if (links.E) grid[2][4] = '🚪';
+if (links.S) grid[4][2] = '🚪';
+if (links.W) grid[2][0] = '🚪';
+if (links.U) grid[1][2] = '⬆️';
+if (links.D) grid[3][2] = '⬇️';
+
+mod.interiors.push({ id, w, h, grid: grid.map(r => r.join('')), entryX: 2, entryY: 2 });
+
+const coords = {
+  N: [2, 0],
+  E: [4, 2],
+  S: [2, 4],
+  W: [0, 2],
+  U: [2, 1],
+  D: [2, 3]
+};
+
+Object.entries(links).forEach(([dir, target]) => {
+  const [x, y] = coords[dir];
+  mod.portals.push({ map: id, x, y, toMap: target, toX: 2, toY: 2 });
+  mod.portals.push({ map: target, x: 2, y: 2, toMap: id, toX: x, toY: y });
+});
 
 fs.writeFileSync(filePath, JSON.stringify(mod, null, 2));
 console.log(`Inserted room ${id}`);
+
