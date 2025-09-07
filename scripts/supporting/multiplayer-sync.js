@@ -30,6 +30,7 @@
           if (c.readyState === 1) c.send('{"type":"ping"}');
         });
       }, 5000);
+      hb.unref?.();
       wss.on('connection', ws => {
         ws.isAlive = true;
         ws.on('message', msg => {
@@ -46,12 +47,21 @@
     async connect(url){
       const WS = globalThis.WebSocket || (await import('ws')).WebSocket;
       let ws;
+      const sock = {
+        _reconnect: true,
+        _listeners: {},
+        on(evt, fn){ (sock._listeners[evt] = sock._listeners[evt] || []).push(fn); ws.on(evt, fn); },
+        send: (...a) => ws.send(...a),
+        close: () => { sock._reconnect = false; ws.close(); }
+      };
       const connect = () => {
         ws = new WS(url);
+        Object.entries(sock._listeners).forEach(([e, fns]) => fns.forEach(fn => ws.on(e, fn)));
         let lastPing = Date.now();
         const check = setInterval(() => {
           if (Date.now() - lastPing > 10000) ws.close();
         }, 2000);
+        check.unref?.();
         ws.onmessage = ev => {
           try {
             const data = JSON.parse(ev.data);
@@ -65,11 +75,11 @@
         };
         ws.onclose = () => {
           clearInterval(check);
-          setTimeout(connect, 100);
+          if (sock._reconnect) setTimeout(connect, 100).unref?.();
         };
       };
       connect();
-      return ws;
+      return sock;
     }
   };
   globalThis.Dustland.multiplayer = Multiplayer;
