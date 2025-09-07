@@ -169,6 +169,17 @@ xxxxx
 - Use existing RNG utilities to reproduce BASIC's randomness.
 - Document the process so future retro ports follow the same path.
 
+## Special Logic
+
+- Certain player names trigger inside jokes or alternate intros.
+- Moving through dark rooms without the magic lightbulb risks a random grue attack.
+- The Lightning Room strikes the player unless they carry the lightning rod; typing "DAMN" anywhere also summons a fatal bolt.
+- Bees guard the Bee Room's eastern exit unless the player carries honey; their hive hides a coin and a sign to the merchant.
+- The canteen can be filled with water, but drinking waterfall water kills the player.
+- The merchant trades the key for all valuables and resists theft or attack.
+- The magic wand responds to numerous "point wand at" commands; waving it in the wrong place can reveal passages or incinerate the player.
+- The troll menaces the player until they bring proper gear or magic.
+
 ## Open Questions
 - Once the original map ships, should we add optional side tunnels or alternate endings?
 
