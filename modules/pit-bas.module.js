@@ -27,7 +27,11 @@ const DATA = `
   "npcs": [],
   "portals": [
     { "map": "cavern", "x": 3, "y": 1, "toMap": "whistle_room", "toX": 1, "toY": 1 },
-    { "map": "whistle_room", "x": 1, "y": 1, "toMap": "cavern", "toX": 3, "toY": 1 }
+    { "map": "whistle_room", "x": 1, "y": 1, "toMap": "cavern", "toX": 3, "toY": 1 },
+    { "map": "cavern", "x": 3, "y": 5, "toMap": "small_cavern", "toX": 2, "toY": 1 },
+    { "map": "small_cavern", "x": 2, "y": 0, "toMap": "cavern", "toX": 3, "toY": 5 },
+    { "map": "small_cavern", "x": 0, "y": 2, "toMap": "large_cavern", "toX": 3, "toY": 1 },
+    { "map": "large_cavern", "x": 4, "y": 1, "toMap": "small_cavern", "toX": 1, "toY": 2 }
   ],
   "interiors": [
     {
@@ -58,6 +62,34 @@ const DATA = `
       ],
       "entryX": 1,
       "entryY": 1
+    },
+    {
+      "id": "small_cavern",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🚪🧱🧱",
+        "🧱🏝🏝🏝🧱",
+        "🚪🏝🏝🏝🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🧱🧱🧱🧱"
+      ],
+      "entryX": 2,
+      "entryY": 3
+    },
+    {
+      "id": "large_cavern",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🧱🧱🧱",
+        "🧱🏝🏝🏝🚪",
+        "🧱🏝🏝🏝🧱",
+        "🧱🏝🏝🏝🧱",
+        "🧱🧱🧱🧱🧱"
+      ],
+      "entryX": 2,
+      "entryY": 2
     }
   ],
   "buildings": []

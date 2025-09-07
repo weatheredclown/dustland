@@ -35,6 +35,38 @@ test('pit bas module initializes rooms and items', () => {
       p => p.map === 'cavern' && p.toMap === 'whistle_room'
     )
   );
+  assert.ok(
+    context.PIT_BAS_MODULE.interiors.find(r => r.id === 'small_cavern')
+  );
+  assert.ok(
+    context.PIT_BAS_MODULE.interiors.find(r => r.id === 'large_cavern')
+  );
+  assert.ok(
+    context.PIT_BAS_MODULE.portals.find(
+      p => p.map === 'cavern' && p.toMap === 'small_cavern'
+    )
+  );
+  const smallReturn = context.PIT_BAS_MODULE.portals.find(
+    p => p.map === 'small_cavern' && p.toMap === 'cavern'
+  );
+  assert.deepStrictEqual(
+    { x: smallReturn.x, y: smallReturn.y },
+    { x: 2, y: 0 }
+  );
+  const smallToLarge = context.PIT_BAS_MODULE.portals.find(
+    p => p.map === 'small_cavern' && p.toMap === 'large_cavern'
+  );
+  assert.deepStrictEqual(
+    { x: smallToLarge.x, y: smallToLarge.y },
+    { x: 0, y: 2 }
+  );
+  const largeToSmall = context.PIT_BAS_MODULE.portals.find(
+    p => p.map === 'large_cavern' && p.toMap === 'small_cavern'
+  );
+  assert.deepStrictEqual(
+    { x: largeToSmall.x, y: largeToSmall.y },
+    { x: 4, y: 1 }
+  );
 });
 
 test('pit bas module logs entry message', () => {
