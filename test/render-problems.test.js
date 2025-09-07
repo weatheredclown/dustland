@@ -7,7 +7,8 @@ import { JSDOM } from 'jsdom';
 test('renderProblems reuses DOM and handler', async () => {
   const dom = new JSDOM('<div id="problemCard"><div id="problemList"></div></div>');
   global.document = dom.window.document;
-  const code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
+  let code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
+  code = code.replace(/\r\n/g, '\n');
   const clickCode = code.match(/function onProblemClick\(\){[\s\S]*?\n}\n/)[0];
   const renderCode = code.match(/function renderProblems\(issues\){[\s\S]*?\n}\n/)[0];
   vm.runInThisContext('var problemRefs;\n' + clickCode + renderCode);

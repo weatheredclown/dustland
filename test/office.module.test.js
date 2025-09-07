@@ -11,10 +11,14 @@ function extractOpenShop(code) {
   return m && m[0];
 }
 
+function readNormalized(file) {
+  return fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+}
+
 test('office module boards castle and unboards via dialog', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
-  const src = fs.readFileSync(file, 'utf8');
+  const src = readNormalized(file);
   assert.match(
     src,
     /placeHut\(WORLD_MID \+ 3, WORLD_MIDY - 2, {\s*\n\s*interiorId: 'castle',\s*\n\s*boarded: true\s*\n\s*}\)/
@@ -26,14 +30,14 @@ test('office module boards castle and unboards via dialog', () => {
 test('startGame preserves generated world when applying module', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
-  const src = fs.readFileSync(file, 'utf8');
+  const src = readNormalized(file);
   assert.match(src, /applyModule\(OFFICE_MODULE\)/);
 });
 
 test('office module places Boots of Speed near forest entry', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
-  const src = fs.readFileSync(file, 'utf8');
+  const src = readNormalized(file);
   assert.match(src, /id: 'boots_of_speed'/);
   assert.match(src, /x: 3,\s*y: WORLD_MIDY/);
   assert.match(src, /mods: \{ AGI: 5, move_delay_mod: 0\.5 \}/);
@@ -42,7 +46,7 @@ test('office module places Boots of Speed near forest entry', () => {
 test('office module defines a powerful maze sword', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
-  const src = fs.readFileSync(file, 'utf8');
+  const src = readNormalized(file);
   assert.match(src, /id: 'maze_sword'/);
   assert.match(src, /mods: \{ ATK: 10 \}/);
 });
@@ -50,7 +54,7 @@ test('office module defines a powerful maze sword', () => {
 test('office module uses object visuals for elevator and vending machine', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
-  const src = fs.readFileSync(file, 'utf8');
+  const src = readNormalized(file);
   assert.match(
     src,
     /const elevatorNPCs = \['floor1', 'floor2', 'floor3'\]\.map\(\(map\) => \({[\s\S]*?symbol: '\?',[\s\S]*?color: '#225a20'/
@@ -64,7 +68,7 @@ test('office module uses object visuals for elevator and vending machine', () =>
 test('startGame grants 10 scrap', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
-  const src = fs.readFileSync(file, 'utf8');
+  const src = readNormalized(file);
   const fnMatch = src.match(/startGame = function \(\) {[\s\S]*?};\n/);
   assert(fnMatch);
   global.player = { scrap: 0 };
@@ -88,7 +92,7 @@ test('startGame grants 10 scrap', () => {
 test('office worker lends scrap when low and missing badge', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
-  const src = fs.readFileSync(file, 'utf8');
+  const src = readNormalized(file);
   const worker1Regex = /\{\s*id: 'worker1',[\s\S]*?\r?\n\s*\},\r?\n\s*\{\s*id: 'worker2'/;
   const match = src.match(worker1Regex);
   assert(match);
@@ -100,7 +104,7 @@ test('office worker lends scrap when low and missing badge', () => {
   global.portraits = { worker: '' };
   global.hasItem = () => false;
   vm.runInThisContext(
-    fs.readFileSync(path.join(__dirname, '..', 'scripts', 'core', 'actions.js'), 'utf8')
+    readNormalized(path.join(__dirname, '..', 'scripts', 'core', 'actions.js'))
   );
   const worker = vm.runInThisContext('(' + objSrc + ')');
   const tree = worker.tree();
@@ -114,7 +118,7 @@ test('office worker lends scrap when low and missing badge', () => {
 test('office worker hides loan if you have enough scrap', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
-  const src = fs.readFileSync(file, 'utf8');
+  const src = readNormalized(file);
   const worker1Regex = /\{\s*id: 'worker1',[\s\S]*?\r?\n\s*\},\r?\n\s*\{\s*id: 'worker2'/;
   const match = src.match(worker1Regex);
   assert(match);
@@ -132,7 +136,7 @@ test('office worker hides loan if you have enough scrap', () => {
 test('vending machine buys access card for scrap', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
-  const src = fs.readFileSync(file, 'utf8');
+  const src = readNormalized(file);
   const match = src.match(/\{\s*id: 'access_card'[\s\S]*?\}/);
   assert(match);
   const accessCard = vm.runInThisContext('(' + match[0] + ')');
@@ -152,7 +156,7 @@ test('vending machine buys access card for scrap', () => {
   global.addToInv = () => true;
   global.getItem = () => accessCard;
 
-  const eng = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'dustland-engine.js'), 'utf8');
+  const eng = readNormalized(path.join(__dirname, '..', 'scripts', 'dustland-engine.js'));
   const openShopCode = extractOpenShop(eng);
   vm.runInThisContext(openShopCode);
 
@@ -167,7 +171,7 @@ test('vending machine buys access card for scrap', () => {
 test('vending machine sells Dusty Candy Bar', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
-  const src = fs.readFileSync(file, 'utf8');
+  const src = readNormalized(file);
   const npcMatch = src.match(/id: 'vending',[\s\S]*?shop: \{ inv: \[ \{ id: 'dusty_candy' \} \] \}/);
   assert(npcMatch);
   const vending = { name: 'Vending Machine', vending: true, shop: { inv: [ { id: 'dusty_candy' } ] } };
@@ -187,7 +191,7 @@ test('vending machine sells Dusty Candy Bar', () => {
   global.removeFromInv = () => {};
   global.updateHUD = () => {};
   global.getItem = (id) => (id === candy.id ? candy : null);
-  const eng = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'dustland-engine.js'), 'utf8');
+  const eng = readNormalized(path.join(__dirname, '..', 'scripts', 'dustland-engine.js'));
   const openShopCode = extractOpenShop(eng);
   vm.runInThisContext(openShopCode);
   openShop(vending);
@@ -198,7 +202,7 @@ test('vending machine sells Dusty Candy Bar', () => {
 test('office worker hides loan if you still have your badge', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
-  const src = fs.readFileSync(file, 'utf8');
+  const src = readNormalized(file);
   const worker1Regex = /\{\s*id: 'worker1',[\s\S]*?\r?\n\s*\},\r?\n\s*\{\s*id: 'worker2'/;
   const match = src.match(worker1Regex);
   assert(match);
