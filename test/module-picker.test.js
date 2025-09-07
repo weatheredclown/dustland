@@ -120,6 +120,12 @@ test('broadcast story points to first fragment', () => {
   assert.strictEqual(broadcast.file, 'modules/broadcast-fragment-1.module.js');
 });
 
+test('pit module points to pit-bas', () => {
+  const pit = MODULES.find(m => m.id === 'pit');
+  assert.ok(pit);
+  assert.strictEqual(pit.file, 'modules/pit-bas.module.js');
+});
+
 test('enter key loads selected module', () => {
   loadModule(MODULES[MODULES.length - 1]);
   assert.ok(global.location.href.includes('golden.module.json'));
