@@ -4,7 +4,7 @@ import fs from 'node:fs';
 function sh(cmd) {
   console.log("$ " + cmd);
   const out = execSync(cmd, {encoding: 'utf8'}).trim();
-  console.log(out)
+  console.log(out);
   return out;
 }
 
