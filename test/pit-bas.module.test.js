@@ -63,7 +63,7 @@ test('pit bas module initializes rooms and items', () => {
     assert.strictEqual(axe.slot, 'weapon');
     const quest = context.PIT_BAS_MODULE.quests.find(q => q.id === 'q_treasure');
     assert.ok(quest);
-    assert.strictEqual(quest.item, 'treasure');
+    assert.strictEqual(quest.itemTag, 'treasure');
     assert.strictEqual(quest.count, 11);
     const merchant = context.PIT_BAS_MODULE.npcs.find(n => n.id === 'merchant');
     assert.strictEqual(merchant.questId, 'q_treasure');

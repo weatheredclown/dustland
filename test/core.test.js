@@ -859,6 +859,32 @@ test('quest turn-in grants reward item', () => {
   assert.ok(player.inv.some(it => it.id === 'cursed_vr_helmet'));
 });
 
+test('quest tag turn-in handles partial counts', () => {
+  player.inv.length = 0;
+  const msgs = [];
+  const origLog = global.log;
+  global.log = m => msgs.push(m);
+  registerItem({ id: 'ruby', name: 'Ruby', type: 'quest', tags: ['gem'] });
+  registerItem({ id: 'emerald', name: 'Emerald', type: 'quest', tags: ['gem'] });
+  registerItem({ id: 'sapphire', name: 'Sapphire', type: 'quest', tags: ['gem'] });
+  addToInv({ id: 'ruby' });
+  addToInv({ id: 'emerald' });
+  const quest = new Quest('q_tag', 'Quest', '', { itemTag: 'gem', count: 3 });
+  quest.status = 'active';
+  questLog.add(quest);
+  const npc = { quest };
+  defaultQuestProcessor(npc, 'do_turnin');
+  assert.strictEqual(quest.status, 'active');
+  assert.strictEqual(quest.progress, 2);
+  assert.strictEqual(countItems('gem'), 0);
+  assert.ok(msgs.some(m => m.includes('Ruby')) && msgs.some(m => m.includes('Emerald')));
+  addToInv({ id: 'sapphire' });
+  defaultQuestProcessor(npc, 'do_turnin');
+  assert.strictEqual(quest.status, 'completed');
+  global.log = origLog;
+  choicesEl.innerHTML = '';
+});
+
 test('quest turn-in awards XP once', () => {
   for (const k in quests) delete quests[k];
   NPCS.length = 0;

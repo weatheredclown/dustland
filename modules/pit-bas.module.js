@@ -146,7 +146,7 @@ const DATA = `
       "id": "q_treasure",
       "title": "Merchant's Hoard",
       "desc": "Collect all valuables for the merchant.",
-      "item": "treasure",
+      "itemTag": "treasure",
       "count": 11,
       "reward": "key"
     }

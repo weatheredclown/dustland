@@ -296,7 +296,8 @@ function advanceDialog(stateObj, choiceIdx){
   if (choice.q === 'accept' && currentNPC?.quest) {
     const meta = currentNPC.quest;
     const requiredCount = meta.count || 1;
-    const hasItems = !meta.item || countItems(meta.item) >= requiredCount;
+    const itemKey = meta.itemTag || meta.item;
+    const hasItems = !itemKey || countItems(itemKey) >= requiredCount;
     const hasFlag = !meta.reqFlag || (typeof flagValue === 'function' && flagValue(meta.reqFlag));
     if (meta.status === 'active' && hasItems && hasFlag) {
       res.next = prevNode;
@@ -436,8 +437,9 @@ function renderDialog(){
   if(currentNPC?.quest){
     const meta=currentNPC.quest;
     choices=choices.filter(({opt})=>{
+      const itemKey = meta.itemTag || meta.item;
       if(opt.q==='accept' && meta.status!=='available') return false;
-      if(opt.q==='turnin' && (meta.status!=='active' || (meta.item && !hasItem(meta.item)))) return false;
+      if(opt.q==='turnin' && (meta.status!=='active' || (itemKey && !hasItem(itemKey)))) return false;
       return true;
     });
   }
