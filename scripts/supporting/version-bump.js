@@ -68,6 +68,7 @@ function main() {
   // Discard incidental lockfile changes from install steps.
   // These would otherwise block the rebase pull below.
   sh('git checkout -- package-lock.json');
+  sh('git status');
   sh('git pull --rebase');
   sh('git push');
   sh('git push --tags');
