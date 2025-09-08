@@ -237,9 +237,11 @@ function closeCombat(result = 'flee'){
   party.restore();
 
   if(result === 'bruise' && state.mapEntry){
+    const entry = state.mapEntry;
     log?.('You wake up at the entrance.');
     if(typeof toast==='function') toast('You wake up at the entrance.');
-    setPartyPos?.(state.mapEntry.x, state.mapEntry.y);
+    if(typeof setMap==='function') setMap(entry.map);
+    setPartyPos?.(entry.x, entry.y);
   }
 
   const duration = Date.now() - combatState.startTime;

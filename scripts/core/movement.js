@@ -215,7 +215,11 @@ function applyZones(map,x,y){
   if((party||[]).length && party.every(m=>m.hp<=0)){
     log?.('Your party collapses and wakes at the entrance.');
     if(typeof toast==='function') toast('Everyone is down!');
-    if(state.mapEntry) setPartyPos(state.mapEntry.x, state.mapEntry.y);
+    if(state.mapEntry){
+      const entry = state.mapEntry;
+      if(typeof setMap==='function') setMap(entry.map);
+      setPartyPos(entry.x, entry.y);
+    }
     centerCamera?.(party.x, party.y, state.map);
     (party||[]).forEach(m=>{ m.hp = 1; });
     renderParty?.(); updateHUD?.();

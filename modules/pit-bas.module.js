@@ -1668,6 +1668,6 @@ startGame = function () {
   PIT_BAS_MODULE.postLoad?.(PIT_BAS_MODULE);
   applyModule(PIT_BAS_MODULE);
   const s = PIT_BAS_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-  setPartyPos(s.x, s.y);
   setMap(s.map, s.map === 'world' ? 'Wastes' : undefined);
+  setPartyPos(s.x, s.y);
 };
