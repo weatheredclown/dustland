@@ -34,13 +34,40 @@ test('pit bas module initializes rooms and items', () => {
     'magic_lightbulb'
   );
     assert.ok(context.PIT_BAS_MODULE.items.find(i => i.id === 'whistle'));
-    assert.ok(context.PIT_BAS_MODULE.items.find(i => i.id === 'key'));
+    const key = context.PIT_BAS_MODULE.items.find(i => i.id === 'key');
+    assert.ok(key && key.tags && key.tags.includes('key') && !key.map);
+    const treasureIds = [
+      'magic_lightbulb',
+      'whistle',
+      'silver_medallion',
+      'mace',
+      'axe',
+      'canteen',
+      'diamond_ring',
+      'air_tanks',
+      'sunglasses',
+      'bright_sphere',
+      'lightning_rod'
+    ];
+    treasureIds.forEach(id => {
+      const it = context.PIT_BAS_MODULE.items.find(i => i.id === id);
+      assert.ok(it && it.tags && it.tags.includes('treasure'));
+    });
     const mace = context.PIT_BAS_MODULE.items.find(i => i.id === 'mace');
     const axe = context.PIT_BAS_MODULE.items.find(i => i.id === 'axe');
     assert.strictEqual(mace.type, 'weapon');
     assert.strictEqual(mace.slot, 'weapon');
     assert.strictEqual(axe.type, 'weapon');
     assert.strictEqual(axe.slot, 'weapon');
+    const quest = context.PIT_BAS_MODULE.quests.find(q => q.id === 'q_treasure');
+    assert.ok(quest);
+    assert.strictEqual(quest.item, 'treasure');
+    assert.strictEqual(quest.count, 11);
+    const merchant = context.PIT_BAS_MODULE.npcs.find(n => n.id === 'merchant');
+    assert.strictEqual(merchant.questId, 'q_treasure');
+    assert.ok(merchant.tree.start.choices.some(c => c.q === 'turnin'));
+    const gate = context.PIT_BAS_MODULE.npcs.find(n => n.id === 'golden_gate_door');
+    assert.ok(gate && gate.locked && gate.door);
     assert.ok(
       context.PIT_BAS_MODULE.portals.find(
         p => p.map === 'cavern' && p.toMap === 'whistle_room'
@@ -220,6 +247,7 @@ test('pit bas module defines basic npcs', () => {
     'bandit',
     'troll',
     'merchant',
+    'golden_gate_door',
     'dead_adventurer',
     'bees',
     'wizard',

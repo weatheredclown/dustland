@@ -16,7 +16,8 @@ const DATA = `
       "type": "quest",
       "map": "cavern",
       "x": 3,
-      "y": 3
+      "y": 3,
+      "tags": ["treasure"]
     },
     {
       "id": "whistle",
@@ -24,12 +25,14 @@ const DATA = `
       "type": "quest",
       "map": "whistle_room",
       "x": 2,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "silver_medallion",
       "name": "Silver Medallion",
-      "type": "quest"
+      "type": "quest",
+      "tags": ["treasure"]
     },
     {
       "id": "mace",
@@ -39,7 +42,8 @@ const DATA = `
       "mods": { "ATK": 2, "ADR": 10 },
       "map": "dungeon",
       "x": 3,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "axe",
@@ -49,7 +53,8 @@ const DATA = `
       "mods": { "ATK": 3, "ADR": 10 },
       "map": "dungeon",
       "x": 1,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "canteen",
@@ -57,7 +62,8 @@ const DATA = `
       "type": "quest",
       "map": "river_room",
       "x": 2,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "diamond_ring",
@@ -65,15 +71,14 @@ const DATA = `
       "type": "quest",
       "map": "river_bed",
       "x": 2,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "key",
       "name": "Key",
       "type": "quest",
-      "map": "merchant_room",
-      "x": 2,
-      "y": 2
+      "tags": ["key"]
     },
     {
       "id": "air_tanks",
@@ -81,7 +86,8 @@ const DATA = `
       "type": "quest",
       "map": "air_room",
       "x": 2,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "sunglasses",
@@ -89,7 +95,8 @@ const DATA = `
       "type": "quest",
       "map": "rag_room",
       "x": 2,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "bright_sphere",
@@ -97,7 +104,8 @@ const DATA = `
       "type": "quest",
       "map": "bright_room",
       "x": 2,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "lightning_rod",
@@ -105,10 +113,20 @@ const DATA = `
       "type": "quest",
       "map": "roof_of_house",
       "x": 2,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     }
   ],
-  "quests": [],
+  "quests": [
+    {
+      "id": "q_treasure",
+      "title": "Merchant's Hoard",
+      "desc": "Collect all valuables for the merchant.",
+      "item": "treasure",
+      "count": 11,
+      "reward": "key"
+    }
+  ],
   "npcs": [
     {
       "id": "bandit",
@@ -158,15 +176,51 @@ const DATA = `
       "color": "#a9f59f",
       "name": "Merchant",
       "prompt": "Wary merchant guarding his wares",
+      "questId": "q_treasure",
       "tree": {
         "start": {
-          "text": "The merchant adjusts his pack.",
+          "text": "Bring me all valuables from the pit and I'll hand over the key.",
           "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
+            { "label": "(Accept)", "to": "accept", "q": "accept" },
+            { "label": "(Turn in valuables)", "to": "turnin", "q": "turnin" },
+            { "label": "(Leave)", "to": "bye" }
           ]
+        },
+        "accept": {
+          "text": "I'll be waiting.",
+          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+        },
+        "turnin": {
+          "text": "The merchant counts the haul and hands you a key.",
+          "choices": [ { "label": "(Take Key)", "to": "bye" } ]
+        }
+      }
+    },
+    {
+      "id": "golden_gate_door",
+      "map": "large_cavern",
+      "x": 4,
+      "y": 2,
+      "color": "#a9f59f",
+      "name": "Golden Gate",
+      "prompt": "Gate shimmering with golden light",
+      "door": true,
+      "locked": true,
+      "tree": {
+        "locked": {
+          "text": "The gate is locked.",
+          "choices": [
+            { "label": "(Use Key)", "to": "open", "once": true, "reqItem": "key", "effects": [ { "effect": "unlockNPC", "npcId": "golden_gate_door" } ] },
+            { "label": "(Leave)", "to": "bye" }
+          ]
+        },
+        "open": {
+          "text": "The gate swings open.",
+          "choices": [ { "label": "(Enter)", "to": "enter" } ]
+        },
+        "enter": {
+          "text": "You step through the golden gate.",
+          "choices": [ { "label": "(Continue)", "to": "bye", "goto": { "map": "golden_gate", "x": 2, "y": 2 } } ]
         }
       }
     },
