@@ -10,7 +10,6 @@ test('engine skips start when ack-player param present', () => {
   const html = `<!DOCTYPE html><body>
     <div id="log"></div>
     <div id="hp"></div>
-    <div id="ap"></div>
     <div id="scrap"></div>
     <canvas id="game"></canvas>
   </body>`;

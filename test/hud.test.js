@@ -42,7 +42,7 @@ function setup(html){
     setTimeout,
     clearTimeout,
     console,
-    player: { hp: 10, ap: 2, scrap: 0 },
+    player: { hp: 10, scrap: 0 },
     leader: () => ({ maxHp: 10, adr: 0, maxAdr: 100 }),
     buffs: []
   };
@@ -52,7 +52,7 @@ function setup(html){
   return context;
 }
 
-const HUD_HTML = `<body><canvas id="game"></canvas><div id="log"></div><div id="hp"></div><div id="ap"></div><div id="scrap"></div><div id="hpBar" class="hudbar"><div id="hpGhost"></div><div id="hpFill"></div></div><div id="adrBar" class="hudbar adr"><div id="adrFill"></div></div><div id="statusIcons"></div></body>`;
+const HUD_HTML = `<body><canvas id="game"></canvas><div id="log"></div><div id="hp"></div><div id="scrap"></div><div id="hpBar" class="hudbar"><div id="hpGhost"></div><div id="hpFill"></div></div><div id="adrBar" class="hudbar adr"><div id="adrFill"></div></div><div id="statusIcons"></div></body>`;
 
 test('hp bar flashes, updates aria values, and body gains critical/out classes', async () => {
   const ctx = setup(HUD_HTML);

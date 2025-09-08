@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import { createGameProxy } from './test-harness.js';
 
 test('applyPersona uses profile runtime service', async () => {
-  const party = [{ id:'m1', name:'M', role:'', lvl:1, hp:5, maxHp:5, adr:0, ap:2, stats:{}, equip:{weapon:null,armor:null,trinket:null}, _bonus:{} }];
+  const party = [{ id:'m1', name:'M', role:'', lvl:1, hp:5, maxHp:5, adr:0, stats:{}, equip:{weapon:null,armor:null,trinket:null}, _bonus:{} }];
   const { context } = createGameProxy(party);
   const gs = await fs.readFile(new URL('../scripts/game-state.js', import.meta.url), 'utf8');
   vm.runInContext(gs, context);

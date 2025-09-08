@@ -12,7 +12,7 @@ test('screenshot button downloads image', async () => {
   const canvas = document.getElementById('game');
   let captured = false;
   canvas.toDataURL = () => { captured = true; return 'data:image/png;base64,x'; };
-  ['log','hp','ap','scrap','saveBtn','loadBtn','resetBtn','settingsBtn','screenshotBtn','settingsClose'].forEach(id => {
+  ['log','hp','scrap','saveBtn','loadBtn','resetBtn','settingsBtn','screenshotBtn','settingsClose'].forEach(id => {
     document.body.appendChild(document.getElementById(id));
   });
   const panel = document.createElement('div');

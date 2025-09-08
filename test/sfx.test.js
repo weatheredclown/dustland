@@ -14,7 +14,6 @@ async function setup(playImpl = () => Promise.resolve()) {
     <div id="quests"></div>
     <div id="log"></div>
     <div id="hp"></div>
-    <div id="ap"></div>
     <div id="scrap"></div>
     <canvas id="game" width="64" height="64"></canvas>
   </body>`, { pretendToBeVisual: true });

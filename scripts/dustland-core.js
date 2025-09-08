@@ -158,8 +158,6 @@ async function startCombat(defender){
   }
 
   if(attacker){
-    attacker.ap = Math.max(0,(attacker.ap||0)-1);
-    player.ap = attacker.ap;
     player.hp = attacker.hp;
   }
   refreshUI();
@@ -255,7 +253,7 @@ function registerZoneEffects(list){
   });
 }
 const state = { map:'world', mapFlags: {} }; // default map
-const player = { hp:10, ap:2, inv:[], scrap:0 };
+const player = { hp:10, inv:[], scrap:0 };
 if (typeof registerItem === 'function') {
   registerItem({
     id: 'memory_worm',
@@ -618,7 +616,7 @@ function save(){
     questData[k]={title:q.title,desc:q.desc,status:q.status,pinned:!!q.pinned};
   });
   const partyData = Array.from(party, p => ({
-    id:p.id,name:p.name,role:p.role,lvl:p.lvl,xp:p.xp,skillPoints:p.skillPoints,stats:p.stats,equip:p.equip,hp:p.hp,ap:p.ap,map:p.map,x:p.x,y:p.y,maxHp:p.maxHp,portraitSheet:p.portraitSheet
+    id:p.id,name:p.name,role:p.role,lvl:p.lvl,xp:p.xp,skillPoints:p.skillPoints,stats:p.stats,equip:p.equip,hp:p.hp,map:p.map,x:p.x,y:p.y,maxHp:p.maxHp,portraitSheet:p.portraitSheet
   }));
   const data={worldSeed, world, player, state, buildings, interiors, itemDrops, npcs:npcData, quests:questData, party:partyData};
   localStorage.setItem('dustland_crt', JSON.stringify(data));
