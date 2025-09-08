@@ -781,18 +781,42 @@ function renderInv(){
   others.forEach(it => {
     const row=document.createElement('div');
     row.className='slot';
+    row.style.display='flex';
+    row.style.alignItems='center';
+    row.style.justifyContent='space-between';
+    row.style.gap='8px';
     if(['weapon','armor','trinket'].includes(it.type) && suggestions[it.type]===it){
       row.classList.add('better');
     }
     const baseLabel = it.name + (['weapon','armor','trinket'].includes(it.type)?` [${it.type}]`:'');
     const label = (it.cursed && it.cursedKnown)? `${baseLabel} (cursed)` : baseLabel;
-    row.innerHTML = `<div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
-        <span>${label}</span>
-        <span style="display:flex;gap:6px">
-          ${['weapon','armor','trinket'].includes(it.type)? `<button class="btn" data-a="equip" title="Equip" aria-label="Equip">⚙</button>`:''}
-          ${it.use?  `<button class="btn" data-a="use" title="Use" aria-label="Use">⚡</button>`:''}
-        </span>
-      </div>`;
+    const labelSpan=document.createElement('span');
+    labelSpan.textContent=label;
+    const btnWrap=document.createElement('span');
+    btnWrap.style.display='flex';
+    btnWrap.style.gap='6px';
+    if(['weapon','armor','trinket'].includes(it.type)){
+      const equipBtn=document.createElement('button');
+      equipBtn.className='btn';
+      equipBtn.dataset.a='equip';
+      equipBtn.title='Equip';
+      equipBtn.setAttribute('aria-label','Equip');
+      equipBtn.textContent='⚙';
+      equipBtn.onclick=()=> equipItem(selectedMember, player.inv.indexOf(it));
+      btnWrap.appendChild(equipBtn);
+    }
+    if(it.use){
+      const useBtn=document.createElement('button');
+      useBtn.className='btn';
+      useBtn.dataset.a='use';
+      useBtn.title='Use';
+      useBtn.setAttribute('aria-label','Use');
+      useBtn.textContent='⚡';
+      useBtn.onclick=()=> useItem(player.inv.indexOf(it));
+      btnWrap.appendChild(useBtn);
+    }
+    row.appendChild(labelSpan);
+    row.appendChild(btnWrap);
     const mods = Object.entries(it.mods || {})
       .map(([k, v]) => `${k} ${v >= 0 ? '+' : ''}${v}`)
       .join(' ');
@@ -813,10 +837,6 @@ function renderInv(){
       `Value: ${valueStr}`
     ].filter(Boolean).join('\n');
     row.title = tip;
-    const equipBtn = row.querySelector('button[data-a="equip"]');
-    if(equipBtn) equipBtn.onclick=()=> equipItem(selectedMember, player.inv.indexOf(it));
-    const useBtn = row.querySelector('button[data-a="use"]');
-    if(useBtn) useBtn.onclick=()=> useItem(player.inv.indexOf(it));
     row.onclick=e=>{ if(e.target.tagName==='BUTTON') return; if(['weapon','armor','trinket'].includes(it.type)) equipItem(selectedMember, player.inv.indexOf(it)); };
     inv.appendChild(row);
   });
