@@ -4,13 +4,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
+import { basicDom } from './dom-fixture.js';
 
 test('engine skips start when ack-player param present', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const html = `<!DOCTYPE html><body>
-    <div id="log"></div>
-    <div id="hp"></div>
-    <div id="scrap"></div>
+  const html = `<!DOCTYPE html><body>${basicDom}
     <canvas id="game"></canvas>
   </body>`;
   const dom = new JSDOM(html, { url: 'http://localhost/dustland.html?ack-player=1' });
