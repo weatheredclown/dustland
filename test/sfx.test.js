@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
 import { JSDOM } from 'jsdom';
+import { basicDom } from './dom-fixture.js';
 
 async function setup(playImpl = () => Promise.resolve()) {
   const dom = new JSDOM(`<!doctype html><body>
@@ -9,12 +10,7 @@ async function setup(playImpl = () => Promise.resolve()) {
       <button id="tabParty"></button>
       <button id="tabQuests"></button>
     </div>
-    <div id="inv"></div>
-    <div id="party"></div>
-    <div id="quests"></div>
-    <div id="log"></div>
-    <div id="hp"></div>
-    <div id="scrap"></div>
+${basicDom}
     <canvas id="game" width="64" height="64"></canvas>
   </body>`, { pretendToBeVisual: true });
   const { window } = dom;

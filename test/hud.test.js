@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import { JSDOM } from 'jsdom';
+import { basicDom } from './dom-fixture.js';
 
 const full = await fs.readFile(new URL('../scripts/dustland-engine.js', import.meta.url), 'utf8');
 const code = full.split('// ===== Boot =====')[0];
@@ -52,7 +53,7 @@ function setup(html){
   return context;
 }
 
-const HUD_HTML = `<body><canvas id="game"></canvas><div id="log"></div><div id="hp"></div><div id="scrap"></div><div id="hpBar" class="hudbar"><div id="hpGhost"></div><div id="hpFill"></div></div><div id="adrBar" class="hudbar adr"><div id="adrFill"></div></div><div id="statusIcons"></div></body>`;
+const HUD_HTML = `<body><canvas id="game"></canvas>${basicDom}<div id="hpBar" class="hudbar"><div id="hpGhost"></div><div id="hpFill"></div></div><div id="adrBar" class="hudbar adr"><div id="adrFill"></div></div><div id="statusIcons"></div></body>`;
 
 test('hp bar flashes, updates aria values, and body gains critical/out classes', async () => {
   const ctx = setup(HUD_HTML);

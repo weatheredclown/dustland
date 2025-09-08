@@ -3,9 +3,10 @@ import { test } from 'node:test';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import { JSDOM } from 'jsdom';
+import { basicDom } from './dom-fixture.js';
 
 function setup(items, equipped){
-  const dom = new JSDOM('<div id="inv"></div><div id="party"></div>');
+  const dom = new JSDOM(`<body>${basicDom}</body>`);
   const equips = Array.isArray(equipped) ? equipped : [equipped];
   const bus = { emit: () => {} };
   const ctx = {
