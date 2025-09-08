@@ -13,7 +13,8 @@
       "type": "quest",
       "map": "cavern",
       "x": 3,
-      "y": 3
+      "y": 3,
+      "tags": ["treasure"]
     },
     {
       "id": "whistle",
@@ -21,12 +22,14 @@
       "type": "quest",
       "map": "whistle_room",
       "x": 2,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "silver_medallion",
       "name": "Silver Medallion",
-      "type": "quest"
+      "type": "quest",
+      "tags": ["treasure"]
     },
     {
       "id": "mace",
@@ -36,7 +39,8 @@
       "mods": { "ATK": 2, "ADR": 10 },
       "map": "dungeon",
       "x": 3,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "axe",
@@ -46,7 +50,8 @@
       "mods": { "ATK": 3, "ADR": 10 },
       "map": "dungeon",
       "x": 1,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "canteen",
@@ -54,7 +59,8 @@
       "type": "quest",
       "map": "river_room",
       "x": 2,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "diamond_ring",
@@ -62,15 +68,14 @@
       "type": "quest",
       "map": "river_bed",
       "x": 2,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "key",
       "name": "Key",
       "type": "quest",
-      "map": "merchant_room",
-      "x": 2,
-      "y": 2
+      "tags": ["key"]
     },
     {
       "id": "air_tanks",
@@ -78,7 +83,8 @@
       "type": "quest",
       "map": "air_room",
       "x": 2,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "sunglasses",
@@ -86,7 +92,8 @@
       "type": "quest",
       "map": "rag_room",
       "x": 2,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "bright_sphere",
@@ -94,7 +101,8 @@
       "type": "quest",
       "map": "bright_room",
       "x": 2,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     },
     {
       "id": "lightning_rod",
@@ -102,10 +110,20 @@
       "type": "quest",
       "map": "roof_of_house",
       "x": 2,
-      "y": 2
+      "y": 2,
+      "tags": ["treasure"]
     }
   ],
-  "quests": [],
+  "quests": [
+    {
+      "id": "q_treasure",
+      "title": "Merchant's Hoard",
+      "desc": "Collect all valuables for the merchant.",
+      "item": "treasure",
+      "count": 11,
+      "reward": "key"
+    }
+  ],
   "npcs": [],
   "mapLabels": {
     "cavern": "Cavern",
