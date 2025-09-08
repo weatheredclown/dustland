@@ -1,6 +1,6 @@
 // ===== Quests =====
 
-/* global renderQuests, log, toast, EventBus, queueNanoDialogForNPCs, flagValue, textEl */
+/* global renderQuests, log, toast, EventBus, queueNanoDialogForNPCs, flagValue, textEl, choicesEl, closeDialog, player */
 /** @typedef {import('./inventory.js').GameItem} GameItem */
 
 /**
@@ -11,7 +11,9 @@
  * @property {'available'|'active'|'completed'} status
  * @property {boolean} [pinned]
  * @property {string} [item]
+ * @property {string} [itemTag]
  * @property {number} [count]
+ * @property {number} [progress]
  * @property {string} [reqFlag]
  * @property {string|GameItem} [reward]
  * @property {number} [xp]
@@ -106,16 +108,26 @@ function defaultQuestProcessor(npc, nodeId) {
     if (meta.status === 'available') questLog.add(meta);
     if (meta.status === 'active') {
       const requiredCount = meta.count || 1;
-      const hasItems = !meta.item || countItems(meta.item) >= requiredCount;
+      const itemKey = meta.itemTag || meta.item;
+      const have = itemKey ? countItems(itemKey) : 0;
+      const prev = meta.progress || 0;
+      const remaining = requiredCount - prev;
+      const turnIn = itemKey ? Math.min(have, remaining) : 0;
       const hasFlag = !meta.reqFlag || (typeof flagValue === 'function' && flagValue(meta.reqFlag));
+      if (!itemKey) meta.progress = requiredCount;
 
-      if (hasItems && hasFlag) {
-        if (meta.item) {
-          for (let i = 0; i < requiredCount; i++) {
-            const itemIdx = findItemIndex(meta.item);
-            if (itemIdx > -1) removeFromInv(itemIdx);
+      if (turnIn > 0) {
+        for (let i = 0; i < turnIn; i++) {
+          const idx = findItemIndex(itemKey);
+          if (idx > -1) {
+            log(`Turned in ${player.inv[idx].name}.`);
+            removeFromInv(idx);
           }
         }
+        meta.progress = prev + turnIn;
+      }
+
+      if (meta.progress >= requiredCount && hasFlag) {
         questLog.complete(meta.id);
         if (meta.reward) {
           const rewardIt = resolveItem(meta.reward);
@@ -133,8 +145,18 @@ function defaultQuestProcessor(npc, nodeId) {
           }
         }
       } else {
-        const def = ITEMS[meta.item];
-        textEl.textContent = `You don’t have ${def ? def.name : meta.item}.`;
+        const def = itemKey ? ITEMS[itemKey] : null;
+        textEl.textContent = meta.progress > 0
+          ? `That’s ${meta.progress}/${requiredCount}. Keep going.`
+          : `You don’t have ${def ? def.name : itemKey}.`;
+        if (typeof choicesEl !== 'undefined') {
+          choicesEl.innerHTML = '';
+          const cont = document.createElement('div');
+          cont.className = 'choice';
+          cont.textContent = '(Keep going)';
+          cont.onclick = () => closeDialog?.();
+          choicesEl.appendChild(cont);
+        }
       }
     }
   }
