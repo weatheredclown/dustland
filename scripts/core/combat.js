@@ -253,7 +253,6 @@ function closeCombat(result = 'flee'){
     const arr = globalThis.Dustland.combatTelemetry || (globalThis.Dustland.combatTelemetry = []);
     arr.push(tele);
   }
-  console.debug?.('combat telemetry', tele);
   combatState.onComplete?.({ result });
   combatState.onComplete = null;
 
