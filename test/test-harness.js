@@ -148,7 +148,7 @@ export function createGameProxy(party){
     party,
     selectedMember:0,
     state:{ map:'world' },
-    player:{ hp:10, ap:2, scrap:0 },
+    player:{ hp:10, scrap:0 },
     save:()=>{},
     load:()=>{},
     resetAll:()=>{},

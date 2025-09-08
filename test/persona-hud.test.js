@@ -6,7 +6,7 @@ import { createGameProxy } from './test-harness.js';
 
 test('renderParty reflects persona portrait and label', async () => {
   const party = [
-    { id:'mara', name:'Mara', role:'Scout', lvl:1, hp:5, maxHp:5, adr:0, ap:2, stats:{}, equip:{ weapon:null, armor:null, trinket:null }, _bonus:{}, portraitSheet:'assets/portraits/portrait_1000.png', xp:0 }
+    { id:'mara', name:'Mara', role:'Scout', lvl:1, hp:5, maxHp:5, adr:0, stats:{}, equip:{ weapon:null, armor:null, trinket:null }, _bonus:{}, portraitSheet:'assets/portraits/portrait_1000.png', xp:0 }
   ];
   const { context, document } = createGameProxy(party);
   const gs = await fs.readFile(new URL('../scripts/game-state.js', import.meta.url), 'utf8');

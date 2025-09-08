@@ -44,7 +44,6 @@ class Character {
     this.equip={weapon:null, armor:null, trinket:null};
     this.maxHp=10;
     this.hp=this.maxHp;
-    this.ap=2;
     this.maxAdr=100;
     this.adr=0;
     this._bonus={ATK:0, DEF:0, LCK:0};

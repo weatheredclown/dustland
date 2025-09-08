@@ -7,7 +7,6 @@ const ENGINE_VERSION = '0.82.0';
 
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
-const apEl = document.getElementById('ap');
 const scrEl = document.getElementById('scrap');
 const hpBar = document.getElementById('hpBar');
 const hpFill = document.getElementById('hpFill');
@@ -271,12 +270,12 @@ function playFX(type){
   playFX._t=setTimeout(()=>{ fxOverlay.style.opacity='0'; },200);
 }
 function hudBadge(msg){
-  const ap=document.getElementById('ap');
-  if(!ap) return;
+  const target = hpEl;
+  if(!target) return;
   const span=document.createElement('span');
   span.className='hudBadge';
   span.textContent=msg;
-  ap.parentElement.appendChild(span);
+  target.parentElement.appendChild(span);
   setTimeout(()=>span.remove(),1000);
 }
 
@@ -539,7 +538,6 @@ let activeTab = 'inv';
 function updateHUD(){
   const prevHp = updateHUD._lastHpVal ?? player.hp;
   hpEl.textContent = player.hp;
-  apEl.textContent = player.ap;
   if(scrEl) scrEl.textContent = player.scrap;
   const lead = typeof leader === 'function' ? leader() : null;
   const fx = globalThis.fxConfig;
@@ -875,7 +873,7 @@ party.forEach((m,i)=>{
   const portraitSrc = persona?.portrait || m.portraitSheet;
   c.innerHTML = `<div class='row'><div class='portrait'></div><div><b>${label}</b> — ${m.role} (Lv ${m.lvl})</div></div>`+
 `<div class='row small'>${statLine(m.stats)}</div>`+
-`<div class='row stats'>HP ${m.hp}/${m.maxHp}  ADR ${m.adr}  AP ${m.ap}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div>`+
+`<div class='row stats'>HP ${m.hp}/${m.maxHp}  ADR ${m.adr}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div>`+
 `<div class='row'><div class='xpbar' data-xp='${m.xp}/${nextXP}'><div class='fill' style='width:${pct}%'></div></div></div>`+
 `<div class='row small'>
   <span class='equip-line'>WPN: ${wLabel}${wEq?` <button class="btn" data-a="unequip" data-slot="weapon">Unequip</button>`:''}</span>

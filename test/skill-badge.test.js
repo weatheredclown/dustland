@@ -9,7 +9,7 @@ const partyCode = await fs.readFile(new URL('../scripts/core/party.js', import.m
 function setup(){
   const party=[];
   const { context, document } = createGameProxy(party);
-  const ids=['log','hp','ap','scrap','inv','party','quests','tabInv','tabParty','tabQuests','game'];
+  const ids=['log','hp','scrap','inv','party','quests','tabInv','tabParty','tabQuests','game'];
   ids.forEach(id=>document.body.appendChild(document.getElementById(id)));
   document.body.appendChild(document.querySelector('.tabs'));
   vm.runInContext(partyCode, context);

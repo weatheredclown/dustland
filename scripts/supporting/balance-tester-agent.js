@@ -13,7 +13,6 @@ if (typeof window === 'undefined') {
     const html = `<!DOCTYPE html><body>
       <div id="log"></div>
       <div id="hp"></div>
-      <div id="ap"></div>
       <div id="scrap"></div>
       <canvas id="game"></canvas>
       <div id="mapname"></div>

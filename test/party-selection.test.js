@@ -4,8 +4,8 @@ import { createGameProxy } from './test-harness.js';
 
 test('party panels handle click and focus selection', async () => {
   const party = [
-    { name:'A', role:'Hero', lvl:1, hp:5, maxHp:5, ap:2, skillPoints:0, stats:{}, equip:{ weapon:null, armor:null, trinket:null}, _bonus:{}, portraitSheet:null, xp:0 },
-    { name:'B', role:'Mage', lvl:1, hp:5, maxHp:5, ap:2, skillPoints:0, stats:{}, equip:{ weapon:null, armor:null, trinket:null}, _bonus:{}, portraitSheet:null, xp:0 }
+    { name:'A', role:'Hero', lvl:1, hp:5, maxHp:5, skillPoints:0, stats:{}, equip:{ weapon:null, armor:null, trinket:null}, _bonus:{}, portraitSheet:null, xp:0 },
+    { name:'B', role:'Mage', lvl:1, hp:5, maxHp:5, skillPoints:0, stats:{}, equip:{ weapon:null, armor:null, trinket:null}, _bonus:{}, portraitSheet:null, xp:0 }
   ];
   const { context, document } = createGameProxy(party);
   let selectedEvt = -1;
@@ -28,7 +28,7 @@ test('party panels handle click and focus selection', async () => {
 
 test('renderParty shows single frame from sprite sheet', () => {
   const party = [
-    { name:'Grin', role:'NPC', lvl:1, hp:5, maxHp:5, ap:2, skillPoints:0, stats:{}, equip:{ weapon:null, armor:null, trinket:null}, _bonus:{}, portraitSheet:'assets/portraits/grin_4.png', xp:0 }
+    { name:'Grin', role:'NPC', lvl:1, hp:5, maxHp:5, skillPoints:0, stats:{}, equip:{ weapon:null, armor:null, trinket:null}, _bonus:{}, portraitSheet:'assets/portraits/grin_4.png', xp:0 }
   ];
   const { context, document } = createGameProxy(party);
   context.renderParty();

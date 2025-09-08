@@ -13,7 +13,6 @@ test('Persist LLM button hidden until Nano is ready', async () => {
   canvas.id = 'game';
   document.body.appendChild(document.getElementById('log'));
   document.body.appendChild(document.getElementById('hp'));
-  document.body.appendChild(document.getElementById('ap'));
   document.body.appendChild(document.getElementById('scrap'));
   document.body.appendChild(canvas);
   const panel = document.createElement('div');

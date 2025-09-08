@@ -20,7 +20,6 @@ test('panel toggle shows and hides panel', async () => {
   canvas.id = 'game';
   document.body.appendChild(document.getElementById('log'));
   document.body.appendChild(document.getElementById('hp'));
-  document.body.appendChild(document.getElementById('ap'));
   document.body.appendChild(document.getElementById('scrap'));
   document.body.appendChild(canvas);
   const panel = document.createElement('div');
@@ -72,7 +71,6 @@ test('b key closes panel on mobile', async () => {
   canvas.id = 'game';
   document.body.appendChild(document.getElementById('log'));
   document.body.appendChild(document.getElementById('hp'));
-  document.body.appendChild(document.getElementById('ap'));
   document.body.appendChild(document.getElementById('scrap'));
   document.body.appendChild(canvas);
   const panel = document.createElement('div');
