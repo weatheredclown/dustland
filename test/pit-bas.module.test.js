@@ -167,13 +167,31 @@ test('pit bas module initializes rooms and items', () => {
     );
     assert.strictEqual(
       context.PIT_BAS_MODULE.mapLabels.mirror_alice_room,
-      'Mirror Alice Room'
+      'Alice Room (Mirror)'
     );
     const listing = Buffer.from(
       context.PIT_BAS_MODULE.listing,
       'base64'
     ).toString();
   assert.ok(listing.startsWith('0 COLOR 15'));
+});
+
+test('pit bas portals are not on walls', () => {
+  const context = { Math };
+  context.globalThis = context;
+  context.applyModule = () => {};
+  context.setPartyPos = () => {};
+  context.setMap = () => {};
+  context.log = () => {};
+  vm.runInNewContext(src, context);
+  const mod = context.PIT_BAS_MODULE;
+  const grids = Object.fromEntries(mod.interiors.map(i => [i.id, i.grid]));
+  mod.portals.forEach(p => {
+    const grid = grids[p.map];
+    if (!grid) return;
+    const tile = Array.from(grid[p.y])[p.x];
+    assert.notStrictEqual(tile, '🧱', `portal on wall at ${p.map} (${p.x},${p.y})`);
+  });
 });
 
 test('pit bas module logs entry message', () => {
