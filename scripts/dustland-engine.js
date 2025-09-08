@@ -789,8 +789,8 @@ function renderInv(){
     row.innerHTML = `<div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
         <span>${label}</span>
         <span style="display:flex;gap:6px">
-          ${['weapon','armor','trinket'].includes(it.type)? `<button class="btn" data-a="equip">Equip</button>`:''}
-          ${it.use?  `<button class="btn" data-a="use">Use</button>`:''}
+          ${['weapon','armor','trinket'].includes(it.type)? `<button class="btn" data-a="equip" title="Equip" aria-label="Equip">⚙</button>`:''}
+          ${it.use?  `<button class="btn" data-a="use" title="Use" aria-label="Use">⚡</button>`:''}
         </span>
       </div>`;
     const mods = Object.entries(it.mods || {})
