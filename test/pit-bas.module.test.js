@@ -276,3 +276,27 @@ test('lightning rod deflects bolt', () => {
     'The lightning rod hums and deflects the bolt.'
   ]);
 });
+
+test('river bed requires air tanks', () => {
+  const logs = [];
+  const context = { Math };
+  context.globalThis = context;
+  context.applyModule = () => {};
+  context.setPartyPos = (x, y) => { context.pos = { x, y }; };
+  context.setMap = map => { context.map = map; };
+  context.log = msg => logs.push(msg);
+  context.hasItem = () => false;
+  vm.runInNewContext(src, context);
+  context.PIT_BAS_MODULE.postLoad(context.PIT_BAS_MODULE);
+  logs.length = 0;
+  context.PIT_BAS_MODULE.effects.requireAirTanks();
+  assert.deepStrictEqual(logs, ['You need air tanks to go underwater.']);
+  assert.strictEqual(context.map, 'river_room');
+  assert.deepStrictEqual(context.pos, { x: 0, y: 2 });
+  const entries = context.PIT_BAS_MODULE.events.filter(e => e.map === 'river_bed');
+  assert.ok(entries.some(e => e.x === 4 && e.y === 2));
+  assert.ok(entries.some(e => e.x === 2 && e.y === 0));
+  entries.forEach(e => {
+    assert.ok(e.events.some(ev => ev.effect === 'requireAirTanks'));
+  });
+});
