@@ -14,7 +14,9 @@
       "map": "cavern",
       "x": 3,
       "y": 3,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "whistle",
@@ -23,35 +25,49 @@
       "map": "whistle_room",
       "x": 2,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "silver_medallion",
       "name": "Silver Medallion",
       "type": "quest",
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "mace",
       "name": "Mace",
       "type": "weapon",
       "slot": "weapon",
-      "mods": { "ATK": 2, "ADR": 10 },
+      "mods": {
+        "ATK": 2,
+        "ADR": 10
+      },
       "map": "dungeon",
       "x": 3,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "axe",
       "name": "Axe",
       "type": "weapon",
       "slot": "weapon",
-      "mods": { "ATK": 3, "ADR": 10 },
+      "mods": {
+        "ATK": 3,
+        "ADR": 10
+      },
       "map": "dungeon",
       "x": 1,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "canteen",
@@ -60,7 +76,9 @@
       "map": "river_room",
       "x": 2,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "diamond_ring",
@@ -69,13 +87,17 @@
       "map": "river_bed",
       "x": 2,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "key",
       "name": "Key",
       "type": "quest",
-      "tags": ["key"]
+      "tags": [
+        "key"
+      ]
     },
     {
       "id": "air_tanks",
@@ -84,7 +106,9 @@
       "map": "air_room",
       "x": 2,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "sunglasses",
@@ -93,7 +117,9 @@
       "map": "rag_room",
       "x": 2,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "bright_sphere",
@@ -102,7 +128,9 @@
       "map": "bright_room",
       "x": 2,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "lightning_rod",
@@ -111,7 +139,9 @@
       "map": "roof_of_house",
       "x": 2,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     }
   ],
   "quests": [
@@ -125,41 +155,6 @@
     }
   ],
   "npcs": [],
-  "mapLabels": {
-    "cavern": "Cavern",
-    "large_cavern": "Large Cavern",
-    "small_cavern": "Small Cavern",
-    "whistle_room": "Whistle Room",
-    "golden_gate": "Golden Gate",
-    "dungeon": "Dungeon",
-    "river_room": "River Room",
-    "glass_room": "Glass Room",
-    "bandit_room": "Bandit Room",
-    "green_house": "Green House",
-    "river_bed": "River Bed",
-    "troll_room": "Troll Room",
-    "trophy_room": "Trophy Room",
-    "drain": "Drain",
-    "rag_room": "Rag Room",
-    "bright_room": "Bright Room",
-    "rapid_water": "Rapid Water",
-    "pointless_room": "Pointless Room",
-    "white_room": "White Room",
-    "shore": "Shore",
-    "whisper_room": "Whisper Room",
-      "wizard_room": "Wizard Room",
-      "roof_of_house": "Roof Of House",
-      "alice_room": "Alice Room",
-      "mirror_alice_room": "Mirror Alice Room",
-      "lightning_room": "Lightning Room",
-      "magician_book_room": "Magician Book Room",
-      "air_room": "Air Room",
-    "maze_small_room": "Maze Small Room",
-    "bee_room": "Bee Room",
-    "merchant_room": "Merchant Room",
-    "flute_room": "Flute Room",
-    "dead_end": "Dead End"
-  },
   "portals": [
     {
       "map": "large_cavern",
@@ -757,6 +752,7 @@
   "interiors": [
     {
       "id": "cavern",
+      "label": "Cavern",
       "w": 5,
       "h": 5,
       "grid": [
@@ -771,6 +767,7 @@
     },
     {
       "id": "large_cavern",
+      "label": "Large Cavern",
       "w": 5,
       "h": 5,
       "grid": [
@@ -785,6 +782,7 @@
     },
     {
       "id": "small_cavern",
+      "label": "Small Cavern",
       "w": 5,
       "h": 5,
       "grid": [
@@ -799,6 +797,7 @@
     },
     {
       "id": "whistle_room",
+      "label": "Whistle Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -813,6 +812,7 @@
     },
     {
       "id": "golden_gate",
+      "label": "Golden Gate",
       "w": 5,
       "h": 5,
       "grid": [
@@ -827,6 +827,7 @@
     },
     {
       "id": "dungeon",
+      "label": "Dungeon",
       "w": 5,
       "h": 5,
       "grid": [
@@ -841,6 +842,7 @@
     },
     {
       "id": "river_room",
+      "label": "River Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -855,6 +857,7 @@
     },
     {
       "id": "glass_room",
+      "label": "Glass Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -869,6 +872,7 @@
     },
     {
       "id": "bandit_room",
+      "label": "Bandit Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -883,6 +887,7 @@
     },
     {
       "id": "green_house",
+      "label": "Green House",
       "w": 5,
       "h": 5,
       "grid": [
@@ -897,6 +902,7 @@
     },
     {
       "id": "river_bed",
+      "label": "River Bed",
       "w": 5,
       "h": 5,
       "grid": [
@@ -911,6 +917,7 @@
     },
     {
       "id": "troll_room",
+      "label": "Troll Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -925,6 +932,7 @@
     },
     {
       "id": "trophy_room",
+      "label": "Trophy Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -939,6 +947,7 @@
     },
     {
       "id": "drain",
+      "label": "Drain",
       "w": 5,
       "h": 5,
       "grid": [
@@ -953,6 +962,7 @@
     },
     {
       "id": "rag_room",
+      "label": "Rag Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -967,6 +977,7 @@
     },
     {
       "id": "bright_room",
+      "label": "Bright Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -981,6 +992,7 @@
     },
     {
       "id": "rapid_water",
+      "label": "Rapid Water",
       "w": 5,
       "h": 5,
       "grid": [
@@ -995,6 +1007,7 @@
     },
     {
       "id": "pointless_room",
+      "label": "Pointless Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1009,6 +1022,7 @@
     },
     {
       "id": "white_room",
+      "label": "White Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1023,6 +1037,7 @@
     },
     {
       "id": "shore",
+      "label": "Shore",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1037,6 +1052,7 @@
     },
     {
       "id": "whisper_room",
+      "label": "Whisper Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1051,6 +1067,7 @@
     },
     {
       "id": "wizard_room",
+      "label": "Wizard Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1065,6 +1082,7 @@
     },
     {
       "id": "roof_of_house",
+      "label": "Roof Of House",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1079,6 +1097,7 @@
     },
     {
       "id": "alice_room",
+      "label": "Alice Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1093,6 +1112,7 @@
     },
     {
       "id": "mirror_alice_room",
+      "label": "Mirror Alice Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1107,6 +1127,7 @@
     },
     {
       "id": "lightning_room",
+      "label": "Lightning Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1121,6 +1142,7 @@
     },
     {
       "id": "magician_book_room",
+      "label": "Magician Book Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1135,6 +1157,7 @@
     },
     {
       "id": "air_room",
+      "label": "Air Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1149,6 +1172,7 @@
     },
     {
       "id": "maze_small_room",
+      "label": "Maze Small Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1163,6 +1187,7 @@
     },
     {
       "id": "dead_end",
+      "label": "Dead End",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1177,6 +1202,7 @@
     },
     {
       "id": "bee_room",
+      "label": "Bee Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1191,6 +1217,7 @@
     },
     {
       "id": "merchant_room",
+      "label": "Merchant Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1205,6 +1232,7 @@
     },
     {
       "id": "flute_room",
+      "label": "Flute Room",
       "w": 5,
       "h": 5,
       "grid": [

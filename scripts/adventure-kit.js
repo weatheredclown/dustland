@@ -683,7 +683,7 @@ function showInteriorEditor(show) {
 function renderInteriorList() {
   const list = document.getElementById('intList');
   const ints = moduleData.interiors.map((I, i) => ({ I, i })).sort((a, b) => a.I.id.localeCompare(b.I.id));
-  list.innerHTML = ints.map(({ I, i }) => `<div data-idx="${i}">${I.id}</div>`).join('');
+  list.innerHTML = ints.map(({ I, i }) => `<div data-idx="${i}">${I.label || I.id}</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editInterior(parseInt(div.dataset.idx, 10)));
   updateInteriorOptions();
   refreshChoiceDropdowns();
@@ -705,6 +705,7 @@ function editInterior(i) {
   const I = moduleData.interiors[i];
   editInteriorIdx = i;
   document.getElementById('intId').value = I.id;
+  document.getElementById('intLabel').value = I.label || '';
   document.getElementById('intW').value = I.w;
   document.getElementById('intH').value = I.h;
   showInteriorEditor(true);
@@ -727,6 +728,17 @@ function resizeInterior(){
 }
 document.getElementById('intW').addEventListener('change',resizeInterior);
 document.getElementById('intH').addEventListener('change',resizeInterior);
+
+document.getElementById('intLabel').addEventListener('input', e => {
+  if (editInteriorIdx < 0) return;
+  const I = moduleData.interiors[editInteriorIdx];
+  const v = e.target.value.trim();
+  if (v) I.label = v; else delete I.label;
+  const div = document.querySelector(`#intList div[data-idx="${editInteriorIdx}"]`);
+  if (div) div.textContent = I.label || I.id;
+  updateInteriorOptions();
+  refreshChoiceDropdowns();
+});
 
 function deleteInterior() {
   if (editInteriorIdx < 0) return;

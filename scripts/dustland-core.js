@@ -215,7 +215,7 @@ globalThis.gridToEmoji = gridToEmoji;
 const mapNameEl = document.getElementById('mapname');
 const mapLabels = { world: 'Wastes', creator: 'Creator' };
 function mapLabel(id){
-  return mapLabels[id] || 'Interior';
+  return interiors[id]?.label || mapLabels[id] || 'Interior';
 }
 function setMap(id,label){
   state.map=id;
@@ -427,9 +427,6 @@ function applyModule(data = {}, options = {}) {
     const g = grid && typeof grid[0] === 'string' ? gridFromEmoji(grid) : grid;
     interiors[id] = { ...rest, grid: g };
   });
-
-  // Map labels
-  if (moduleData.mapLabels) Object.assign(mapLabels, moduleData.mapLabels);
 
   // Buildings
   if (moduleData.buildings) {

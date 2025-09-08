@@ -17,7 +17,9 @@ const DATA = `
       "map": "cavern",
       "x": 3,
       "y": 3,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "whistle",
@@ -26,35 +28,49 @@ const DATA = `
       "map": "whistle_room",
       "x": 2,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "silver_medallion",
       "name": "Silver Medallion",
       "type": "quest",
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "mace",
       "name": "Mace",
       "type": "weapon",
       "slot": "weapon",
-      "mods": { "ATK": 2, "ADR": 10 },
+      "mods": {
+        "ATK": 2,
+        "ADR": 10
+      },
       "map": "dungeon",
       "x": 3,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "axe",
       "name": "Axe",
       "type": "weapon",
       "slot": "weapon",
-      "mods": { "ATK": 3, "ADR": 10 },
+      "mods": {
+        "ATK": 3,
+        "ADR": 10
+      },
       "map": "dungeon",
       "x": 1,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "canteen",
@@ -63,7 +79,9 @@ const DATA = `
       "map": "river_room",
       "x": 2,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "diamond_ring",
@@ -72,13 +90,17 @@ const DATA = `
       "map": "river_bed",
       "x": 2,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "key",
       "name": "Key",
       "type": "quest",
-      "tags": ["key"]
+      "tags": [
+        "key"
+      ]
     },
     {
       "id": "air_tanks",
@@ -87,7 +109,9 @@ const DATA = `
       "map": "air_room",
       "x": 2,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "sunglasses",
@@ -96,7 +120,9 @@ const DATA = `
       "map": "rag_room",
       "x": 2,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "bright_sphere",
@@ -105,7 +131,9 @@ const DATA = `
       "map": "bright_room",
       "x": 2,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     },
     {
       "id": "lightning_rod",
@@ -114,7 +142,9 @@ const DATA = `
       "map": "roof_of_house",
       "x": 2,
       "y": 2,
-      "tags": ["treasure"]
+      "tags": [
+        "treasure"
+      ]
     }
   ],
   "quests": [
@@ -137,13 +167,23 @@ const DATA = `
       "name": "Bandit",
       "prompt": "Tattered bandit eyeing you warily",
       "desc": "It eyes your coin purse.",
-      "combat": { "HP": 6, "ATK": 2, "DEF": 1 },
+      "combat": {
+        "HP": 6,
+        "ATK": 2,
+        "DEF": 1
+      },
       "tree": {
         "start": {
           "text": "The bandit watches your every move.",
           "choices": [
-            { "label": "(Fight)", "to": "do_fight" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Fight)",
+              "to": "do_fight"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         }
       }
@@ -157,13 +197,23 @@ const DATA = `
       "name": "Troll",
       "prompt": "Menacing troll blocking the path",
       "desc": "A hulking troll blocks the way.",
-      "combat": { "HP": 8, "ATK": 3, "DEF": 2 },
+      "combat": {
+        "HP": 8,
+        "ATK": 3,
+        "DEF": 2
+      },
       "tree": {
         "start": {
           "text": "The troll snarls but does not attack.",
           "choices": [
-            { "label": "(Fight)", "to": "do_fight" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Fight)",
+              "to": "do_fight"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         }
       }
@@ -181,18 +231,39 @@ const DATA = `
         "start": {
           "text": "Bring me all valuables from the pit and I'll hand over the key.",
           "choices": [
-            { "label": "(Accept)", "to": "accept", "q": "accept" },
-            { "label": "(Turn in valuables)", "to": "turnin", "q": "turnin" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Accept)",
+              "to": "accept",
+              "q": "accept"
+            },
+            {
+              "label": "(Turn in valuables)",
+              "to": "turnin",
+              "q": "turnin"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "accept": {
           "text": "I'll be waiting.",
-          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
         },
         "turnin": {
           "text": "The merchant counts the haul and hands you a key.",
-          "choices": [ { "label": "(Take Key)", "to": "bye" } ]
+          "choices": [
+            {
+              "label": "(Take Key)",
+              "to": "bye"
+            }
+          ]
         }
       }
     },
@@ -210,17 +281,46 @@ const DATA = `
         "locked": {
           "text": "The gate is locked.",
           "choices": [
-            { "label": "(Use Key)", "to": "open", "once": true, "reqItem": "key", "effects": [ { "effect": "unlockNPC", "npcId": "golden_gate_door" } ] },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Use Key)",
+              "to": "open",
+              "once": true,
+              "reqItem": "key",
+              "effects": [
+                {
+                  "effect": "unlockNPC",
+                  "npcId": "golden_gate_door"
+                }
+              ]
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "open": {
           "text": "The gate swings open.",
-          "choices": [ { "label": "(Enter)", "to": "enter" } ]
+          "choices": [
+            {
+              "label": "(Enter)",
+              "to": "enter"
+            }
+          ]
         },
         "enter": {
           "text": "You step through the golden gate.",
-          "choices": [ { "label": "(Continue)", "to": "bye", "goto": { "map": "golden_gate", "x": 2, "y": 2 } } ]
+          "choices": [
+            {
+              "label": "(Continue)",
+              "to": "bye",
+              "goto": {
+                "map": "golden_gate",
+                "x": 2,
+                "y": 2
+              }
+            }
+          ]
         }
       }
     },
@@ -236,20 +336,33 @@ const DATA = `
         "start": {
           "text": "The adventurer doesn't respond.",
           "choices": [
-            { "label": "(Loot)", "to": "loot" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Loot)",
+              "to": "loot"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "loot": {
           "text": "You search the body and find a medallion.",
           "choices": [
-            { "label": "(Take Medallion)", "to": "empty", "reward": "silver_medallion" }
+            {
+              "label": "(Take Medallion)",
+              "to": "empty",
+              "reward": "silver_medallion"
+            }
           ]
         },
         "empty": {
           "text": "The body has nothing else.",
           "choices": [
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         }
       }
@@ -263,13 +376,23 @@ const DATA = `
       "name": "Bees",
       "prompt": "Swarm of buzzing bees",
       "desc": "A furious swarm.",
-      "combat": { "HP": 3, "ATK": 1, "DEF": 0 },
+      "combat": {
+        "HP": 3,
+        "ATK": 1,
+        "DEF": 0
+      },
       "tree": {
         "start": {
           "text": "The bees buzz around angrily.",
           "choices": [
-            { "label": "(Fight)", "to": "do_fight" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Fight)",
+              "to": "do_fight"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         }
       }
@@ -323,60 +446,28 @@ const DATA = `
       "name": "Grue",
       "prompt": "Hungry grue lurking in the shadows",
       "desc": "It hungers for light.",
-      "combat": { "HP": 10, "ATK": 4, "DEF": 2 },
+      "combat": {
+        "HP": 10,
+        "ATK": 4,
+        "DEF": 2
+      },
       "tree": {
         "start": {
           "text": "It is dark. You are likely to be eaten by a grue.",
           "choices": [
-            { "label": "(Fight)", "to": "do_fight" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Fight)",
+              "to": "do_fight"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         }
       }
     }
   ],
-  "mapLabels": {
-    "cavern": "Cavern",
-    "large_cavern": "Large Cavern",
-    "small_cavern": "Small Cavern",
-    "whistle_room": "Whistle Room",
-    "golden_gate": "Golden Gate",
-    "dungeon": "Dungeon",
-    "river_room": "River Room",
-    "glass_room": "Glass Room",
-    "bandit_room": "Bandit Room",
-    "green_house": "Green House",
-    "river_bed": "River Bed",
-    "troll_room": "Troll Room",
-    "trophy_room": "Trophy Room",
-    "drain": "Drain",
-    "rag_room": "Rag Room",
-    "bright_room": "Bright Room",
-    "rapid_water": "Rapid Water",
-    "pointless_room": "Pointless Room",
-    "white_room": "White Room",
-    "shore": "Shore",
-    "whisper_room": "Whisper Room",
-    "wizard_room": "Wizard Room",
-    "roof_of_house": "Roof Of House",
-    "alice_room": "Alice Room",
-    "mirror_alice_room": "Mirror Alice Room",
-    "lightning_room": "Lightning Room",
-    "magician_book_room": "Magician Book Room",
-    "air_room": "Air Room",
-    "north_south_passage": "North/South Passage",
-    "in_a_box": "In-A-Box",
-    "mirror_alice_room": "Alice Room (Mirror)",
-    "maze_2800": "Maze",
-    "maze_2900": "Maze",
-    "maze_3500": "Maze",
-    "maze_3700": "Maze",
-    "maze_small_room": "Maze Small Room",
-    "bee_room": "Bee Room",
-    "merchant_room": "Merchant Room",
-    "flute_room": "Flute Room",
-    "dead_end": "Dead End"
-  },
   "portals": [
     {
       "map": "large_cavern",
@@ -1072,24 +1163,40 @@ const DATA = `
       "map": "lightning_room",
       "x": 2,
       "y": 2,
-      "events": [ { "when": "enter", "effect": "lightningZap" } ]
+      "events": [
+        {
+          "when": "enter",
+          "effect": "lightningZap"
+        }
+      ]
     },
     {
       "map": "river_bed",
       "x": 4,
       "y": 2,
-      "events": [ { "when": "enter", "effect": "requireAirTanks" } ]
+      "events": [
+        {
+          "when": "enter",
+          "effect": "requireAirTanks"
+        }
+      ]
     },
     {
       "map": "river_bed",
       "x": 2,
       "y": 0,
-      "events": [ { "when": "enter", "effect": "requireAirTanks" } ]
+      "events": [
+        {
+          "when": "enter",
+          "effect": "requireAirTanks"
+        }
+      ]
     }
   ],
   "interiors": [
     {
       "id": "cavern",
+      "label": "Cavern",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1104,6 +1211,7 @@ const DATA = `
     },
     {
       "id": "large_cavern",
+      "label": "Large Cavern",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1118,6 +1226,7 @@ const DATA = `
     },
     {
       "id": "small_cavern",
+      "label": "Small Cavern",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1132,6 +1241,7 @@ const DATA = `
     },
     {
       "id": "whistle_room",
+      "label": "Whistle Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1146,6 +1256,7 @@ const DATA = `
     },
     {
       "id": "golden_gate",
+      "label": "Golden Gate",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1160,6 +1271,7 @@ const DATA = `
     },
     {
       "id": "dungeon",
+      "label": "Dungeon",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1174,6 +1286,7 @@ const DATA = `
     },
     {
       "id": "river_room",
+      "label": "River Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1188,6 +1301,7 @@ const DATA = `
     },
     {
       "id": "glass_room",
+      "label": "Glass Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1202,6 +1316,7 @@ const DATA = `
     },
     {
       "id": "bandit_room",
+      "label": "Bandit Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1216,6 +1331,7 @@ const DATA = `
     },
     {
       "id": "green_house",
+      "label": "Green House",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1230,6 +1346,7 @@ const DATA = `
     },
     {
       "id": "river_bed",
+      "label": "River Bed",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1244,6 +1361,7 @@ const DATA = `
     },
     {
       "id": "troll_room",
+      "label": "Troll Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1258,6 +1376,7 @@ const DATA = `
     },
     {
       "id": "trophy_room",
+      "label": "Trophy Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1272,6 +1391,7 @@ const DATA = `
     },
     {
       "id": "drain",
+      "label": "Drain",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1286,6 +1406,7 @@ const DATA = `
     },
     {
       "id": "rag_room",
+      "label": "Rag Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1300,6 +1421,7 @@ const DATA = `
     },
     {
       "id": "bright_room",
+      "label": "Bright Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1314,6 +1436,7 @@ const DATA = `
     },
     {
       "id": "rapid_water",
+      "label": "Rapid Water",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1328,6 +1451,7 @@ const DATA = `
     },
     {
       "id": "pointless_room",
+      "label": "Pointless Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1342,6 +1466,7 @@ const DATA = `
     },
     {
       "id": "white_room",
+      "label": "White Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1356,6 +1481,7 @@ const DATA = `
     },
     {
       "id": "shore",
+      "label": "Shore",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1370,6 +1496,7 @@ const DATA = `
     },
     {
       "id": "whisper_room",
+      "label": "Whisper Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1384,6 +1511,7 @@ const DATA = `
     },
     {
       "id": "wizard_room",
+      "label": "Wizard Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1398,6 +1526,7 @@ const DATA = `
     },
     {
       "id": "north_south_passage",
+      "label": "North/South Passage",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1412,6 +1541,7 @@ const DATA = `
     },
     {
       "id": "roof_of_house",
+      "label": "Roof Of House",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1426,6 +1556,7 @@ const DATA = `
     },
     {
       "id": "alice_room",
+      "label": "Alice Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1440,6 +1571,7 @@ const DATA = `
     },
     {
       "id": "mirror_alice_room",
+      "label": "Alice Room (Mirror)",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1454,6 +1586,7 @@ const DATA = `
     },
     {
       "id": "lightning_room",
+      "label": "Lightning Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1468,6 +1601,7 @@ const DATA = `
     },
     {
       "id": "magician_book_room",
+      "label": "Magician Book Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1482,6 +1616,7 @@ const DATA = `
     },
     {
       "id": "in_a_box",
+      "label": "In-A-Box",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1496,6 +1631,7 @@ const DATA = `
     },
     {
       "id": "air_room",
+      "label": "Air Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1510,6 +1646,7 @@ const DATA = `
     },
     {
       "id": "maze_2800",
+      "label": "Maze",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1524,6 +1661,7 @@ const DATA = `
     },
     {
       "id": "maze_2900",
+      "label": "Maze",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1538,6 +1676,7 @@ const DATA = `
     },
     {
       "id": "maze_3500",
+      "label": "Maze",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1552,6 +1691,7 @@ const DATA = `
     },
     {
       "id": "maze_3700",
+      "label": "Maze",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1566,6 +1706,7 @@ const DATA = `
     },
     {
       "id": "maze_small_room",
+      "label": "Maze Small Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1580,6 +1721,7 @@ const DATA = `
     },
     {
       "id": "dead_end",
+      "label": "Dead End",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1594,6 +1736,7 @@ const DATA = `
     },
     {
       "id": "bee_room",
+      "label": "Bee Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1608,6 +1751,7 @@ const DATA = `
     },
     {
       "id": "merchant_room",
+      "label": "Merchant Room",
       "w": 5,
       "h": 5,
       "grid": [
@@ -1622,6 +1766,7 @@ const DATA = `
     },
     {
       "id": "flute_room",
+      "label": "Flute Room",
       "w": 5,
       "h": 5,
       "grid": [
