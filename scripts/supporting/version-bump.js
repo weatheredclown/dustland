@@ -2,7 +2,10 @@ import {execSync} from 'node:child_process';
 import fs from 'node:fs';
 
 function sh(cmd) {
-  return execSync(cmd, {encoding: 'utf8'}).trim();
+  console.log("$ " + cmd);
+  const out = execSync(cmd, {encoding: 'utf8'}).trim();
+  console.log(out)
+  return out;
 }
 
 function getMessages(tag) {
