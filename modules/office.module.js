@@ -92,7 +92,7 @@ const OFFICE_IMPL = (() => {
     for (let x = 3; x < FLOOR_W - 3; x++) {
       if (x !== midX) grid[FLOOR_H - 5][x] = TILE.WALL;
     }
-    return { id: 'floor1', w: FLOOR_W, h: FLOOR_H, grid, entryX: midX, entryY: 2 };
+    return { id: 'floor1', label: 'Lobby', w: FLOOR_W, h: FLOOR_H, grid, entryX: midX, entryY: 2 };
   }
 
   function makeFloor2() {
@@ -105,7 +105,7 @@ const OFFICE_IMPL = (() => {
         grid[y][x] = TILE.WALL;
       }
     });
-    return { id: 'floor2', w: FLOOR_W, h: FLOOR_H, grid, entryX: midX, entryY: 2 };
+    return { id: 'floor2', label: 'Workspace', w: FLOOR_W, h: FLOOR_H, grid, entryX: midX, entryY: 2 };
   }
 
   function makeFloor3() {
@@ -120,7 +120,7 @@ const OFFICE_IMPL = (() => {
       }
     }
     grid[FLOOR_H - 6][midX] = TILE.DOOR;
-    return { id: 'floor3', w: FLOOR_W, h: FLOOR_H, grid, entryX: midX, entryY: 2 };
+    return { id: 'floor3', label: 'Executive Suite', w: FLOOR_W, h: FLOOR_H, grid, entryX: midX, entryY: 2 };
   }
 
   function makeCastle() {
@@ -162,7 +162,7 @@ const OFFICE_IMPL = (() => {
     }
     carve(1, 1);
     grid[1][1] = TILE.DOOR;
-    return { id: 'castle', w: W, h: H, grid, entryX: 1, entryY: 1 };
+    return { id: 'castle', label: 'Castle', w: W, h: H, grid, entryX: 1, entryY: 1 };
   }
 
   const floor1 = makeFloor1();
@@ -513,13 +513,6 @@ const OFFICE_IMPL = (() => {
     seed: Date.now(),
     worldGen: genForestWorld,
     start: { map: 'floor1', x: midX, y: FLOOR_H - 2 },
-    mapLabels: {
-      world: 'Forest',
-      floor1: 'Lobby',
-      floor2: 'Workspace',
-      floor3: 'Executive Suite',
-      castle: 'Castle'
-    },
     events: [
       {
         map: 'castle',

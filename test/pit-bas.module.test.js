@@ -13,14 +13,16 @@ test('pit bas module initializes rooms and items', () => {
   const calls = [];
   const context = { Math };
   context.globalThis = context;
-  context.mapLabels = { world: 'Wastes' };
-  context.applyModule = data => {
+  context.applyModule = () => {
     calls.push('apply');
-    if (data.mapLabels) Object.assign(context.mapLabels, data.mapLabels);
   };
   context.setPartyPos = (x, y) => { context.pos = { x, y }; };
   context.setMap = (map, name) => {
-    context.mapName = name || context.mapLabels[map] || 'Interior';
+    const label =
+      name ||
+      context.PIT_BAS_MODULE.interiors.find(r => r.id === map)?.label ||
+      'Interior';
+    context.mapName = label;
   };
   context.log = () => { calls.push('log'); };
   vm.runInNewContext(src, context);
@@ -176,26 +178,13 @@ test('pit bas module initializes rooms and items', () => {
       p => p.map === 'dead_end' && p.toMap === 'maze_small_room'
     )
   );
-  assert.strictEqual(
-    context.PIT_BAS_MODULE.mapLabels.whistle_room,
-    'Whistle Room'
-  );
-  assert.strictEqual(
-    context.PIT_BAS_MODULE.mapLabels.merchant_room,
-    'Merchant Room'
-  );
-    assert.strictEqual(
-      context.PIT_BAS_MODULE.mapLabels.flute_room,
-      'Flute Room'
-    );
-    assert.strictEqual(
-      context.PIT_BAS_MODULE.mapLabels.dead_end,
-      'Dead End'
-    );
-    assert.strictEqual(
-      context.PIT_BAS_MODULE.mapLabels.mirror_alice_room,
-      'Alice Room (Mirror)'
-    );
+  const getLabel = id =>
+    context.PIT_BAS_MODULE.interiors.find(r => r.id === id)?.label;
+  assert.strictEqual(getLabel('whistle_room'), 'Whistle Room');
+  assert.strictEqual(getLabel('merchant_room'), 'Merchant Room');
+  assert.strictEqual(getLabel('flute_room'), 'Flute Room');
+  assert.strictEqual(getLabel('dead_end'), 'Dead End');
+  assert.strictEqual(getLabel('mirror_alice_room'), 'Alice Room (Mirror)');
     const listing = Buffer.from(
       context.PIT_BAS_MODULE.listing,
       'base64'
