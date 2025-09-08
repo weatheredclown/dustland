@@ -1073,6 +1073,18 @@ const DATA = `
       "x": 2,
       "y": 2,
       "events": [ { "when": "enter", "effect": "lightningZap" } ]
+    },
+    {
+      "map": "river_bed",
+      "x": 4,
+      "y": 2,
+      "events": [ { "when": "enter", "effect": "requireAirTanks" } ]
+    },
+    {
+      "map": "river_bed",
+      "x": 2,
+      "y": 0,
+      "events": [ { "when": "enter", "effect": "requireAirTanks" } ]
     }
   ],
   "interiors": [
@@ -1638,6 +1650,13 @@ function postLoad(module) {
       log('A lightning bolt strikes! You tumble back to the cavern.');
       setMap('cavern', 'Cavern');
       setPartyPos(2, 2);
+    }
+  };
+  module.effects.requireAirTanks = () => {
+    if (!hasItem('air_tanks')) {
+      log('You need air tanks to go underwater.');
+      setMap('river_room', 'River Room');
+      setPartyPos(0, 2);
     }
   };
 }
