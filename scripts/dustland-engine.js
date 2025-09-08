@@ -630,15 +630,16 @@ function showTab(which){
   const tInv=document.getElementById('tabInv'), tP=document.getElementById('tabParty'), tQ=document.getElementById('tabQuests');
   if (!inv) return;
   inv.style.display=(which==='inv'?'grid':'none');
-  partyEl.style.display=(which==='party'?'grid':'none');
-  q.style.display=(which==='quests'?'grid':'none');
+  if(partyEl) partyEl.style.display=(which==='party'?'grid':'none');
+  if(q) q.style.display=(which==='quests'?'grid':'none');
   for(const el of [tInv,tP,tQ]){
+    if(!el) continue;
     el.classList.remove('active');
     if(el.setAttribute) el.setAttribute('aria-selected','false');
   }
-  if(which==='inv'){ tInv.classList.add('active'); if(tInv.setAttribute) tInv.setAttribute('aria-selected','true'); }
-  if(which==='party'){ tP.classList.add('active'); if(tP.setAttribute) tP.setAttribute('aria-selected','true'); }
-  if(which==='quests'){ tQ.classList.add('active'); if(tQ.setAttribute) tQ.setAttribute('aria-selected','true'); }
+  if(which==='inv' && tInv){ tInv.classList.add('active'); if(tInv.setAttribute) tInv.setAttribute('aria-selected','true'); }
+  if(which==='party' && tP){ tP.classList.add('active'); if(tP.setAttribute) tP.setAttribute('aria-selected','true'); }
+  if(which==='quests' && tQ){ tQ.classList.add('active'); if(tQ.setAttribute) tQ.setAttribute('aria-selected','true'); }
 }
 
 function updateTabsLayout(){
