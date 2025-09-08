@@ -1372,6 +1372,32 @@ test('fallen party members are revived after combat', async () => {
   assert.ok(party[0].hp >= 1);
 });
 
+test('bruise resets map to entry', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  state.map = 'whistle_room';
+  party.map = 'whistle_room';
+  party.x = 5; party.y = 5;
+  state.mapEntry = { map: 'cavern', x: 2, y: 2 };
+  const m1 = new Character('p1','P1','Role');
+  m1.hp = 1;
+  party.join(m1);
+
+  const resultPromise = openCombat([
+    { name: 'E1', hp: 3 }
+  ]);
+
+  handleCombatKey({ key: 'Enter' });
+  const res = await resultPromise;
+  assert.strictEqual(res.result, 'bruise');
+  assert.strictEqual(state.map, 'cavern');
+  assert.strictEqual(party.x, 2);
+  assert.strictEqual(party.y, 2);
+  state.map = 'world';
+  party.map = 'world';
+  state.mapEntry = null;
+});
+
 test('falling resets adrenaline', async () => {
   party.length = 0;
   player.inv.length = 0;
