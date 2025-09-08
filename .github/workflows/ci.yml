@@ -6,7 +6,6 @@ name: CI
     branches: [main]
   pull_request:
     branches: [main]
-  page_build:
 
 permissions:
   contents: write
@@ -26,12 +25,11 @@ jobs:
   build:
     needs: event-info
     if: >-
-      ${{ github.event_name != 'page_build' &&
-          (github.event_name != 'push' ||
-           !startsWith(
-             github.event.head_commit.message,
-             'chore: bump version'
-           )) }}
+      ${{ github.event_name != 'push' ||
+          !startsWith(
+            github.event.head_commit.message,
+            'chore: bump version'
+          ) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,16 +43,3 @@ jobs:
       - run: npm test
       - run: node scripts/supporting/presubmit.js
       - run: npm run lint
-
-  version-bump:
-    needs: event-info
-    if: github.event_name == 'page_build'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - run: node scripts/supporting/version-bump.js
