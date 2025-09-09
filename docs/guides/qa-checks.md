@@ -156,8 +156,6 @@ Validation tasks should remain unchecked unless the process yields at least one 
   - Check: confirm implementation matches description.
 - **module-json-tools.md** — broadcast-fragment-3
   - Check: confirm implementation matches description.
-- **module-json-tools.md** — echoes
-  - Check: confirm implementation matches description.
 - **module-json-tools.md** — dustland
   - Check: confirm implementation matches description.
 - **module-json-tools.md** — lootbox-demo
