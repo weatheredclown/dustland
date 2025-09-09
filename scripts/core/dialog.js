@@ -288,7 +288,11 @@ function advanceDialog(stateObj, choiceIdx){
         combat.HP = choice.spawn.challenge;
         combat.challenge = choice.spawn.challenge;
       }
-      const npc = makeNPC(id, state.map, x, y, template.color, template.name, '', template.desc, {}, null, null, null, { combat });
+      const npc = makeNPC(id, state.map, x, y, template.color, template.name, '', template.desc, {}, null, null, null, {
+        combat,
+        portraitSheet: template.portraitSheet,
+        portraitLock: template.portraitLock
+      });
       if (typeof NPCS !== 'undefined') NPCS.push(npc);
     }
   }

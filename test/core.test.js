@@ -1643,15 +1643,16 @@ test('healAll restores HP and clears adrenaline', () => {
   assert.strictEqual(m1.adr, 0);
 });
 
-test('startCombat forwards portraitSheet', async () => {
+test('startCombat forwards portrait fields', async () => {
   NPCS.length = 0;
   let captured;
   const orig = global.openCombat;
   global.openCombat = async (enemies) => { captured = enemies; return { result:'flee' }; };
-  const defender = { name:'R', HP:5, portraitSheet:'img.png' };
+  const defender = { name:'R', HP:5, portraitSheet:'img.png', portraitLock:false };
   const res = await global.startCombat(defender);
   global.openCombat = orig;
   assert.strictEqual(captured[0].portraitSheet, 'img.png');
+  assert.strictEqual(captured[0].portraitLock, false);
   assert.strictEqual(res.result, 'flee');
 });
 
@@ -1767,6 +1768,29 @@ test('random encounters have a cooldown', async () => {
   Math.random = origRand;
   globalThis.Dustland.actions.startCombat = origStart;
   assert.strictEqual(started, 2);
+});
+
+test('encounter templates forward portraitLock', async () => {
+  const row = Array(10).fill(TILE.SAND);
+  applyModule({
+    world: [row],
+    templates: [{ id: 'test', name: 'Test', portraitSheet: 'p.png', portraitLock: false, combat: { HP: 1, ATK: 1, DEF: 0 } }],
+    encounters: { world: [{ templateId: 'test' }] }
+  });
+  state.map = 'world';
+  encounterCooldown = 0;
+  setPartyPos(5, 0);
+  let captured;
+  const origStart = globalThis.Dustland.actions.startCombat;
+  globalThis.Dustland.actions.startCombat = def => { captured = def; return Promise.resolve({ result: 'flee' }); };
+  const origRand = Math.random;
+  Math.random = () => 0;
+  await checkRandomEncounter();
+  Math.random = origRand;
+  globalThis.Dustland.actions.startCombat = origStart;
+  assert.strictEqual(captured.portraitSheet, 'p.png');
+  assert.strictEqual(captured.portraitLock, false);
+  encounterCooldown = 0;
 });
 
 test('random encounters award XP based on strength', async () => {
