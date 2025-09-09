@@ -354,7 +354,7 @@ function checkRandomEncounter(){
     let def;
     if(base.templateId && typeof npcTemplates !== 'undefined'){
       const t = npcTemplates.find(t => t.id === base.templateId);
-      def = { ...(t?.combat||{}), name: t?.name, portraitSheet: t?.portraitSheet, ...base };
+      def = { ...(t?.combat||{}), name: t?.name, portraitSheet: t?.portraitSheet, portraitLock: t?.portraitLock, ...base };
     } else {
       def = { ...base };
     }
