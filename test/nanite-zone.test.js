@@ -67,3 +67,11 @@ test('mask negates zone damage', async () => {
   await ctx.move(1,0);
   assert.strictEqual(ctx.party[0].hp, 5);
 });
+
+test('equipped mask negates zone damage', async () => {
+  const ctx = await setupContext();
+  ctx.party[0].equip.armor = { id:'scrap_mask', tags:['mask'], type:'armor' };
+  ctx.party[0].hp = 5; ctx.party[0].maxHp = 5;
+  await ctx.move(1,0);
+  assert.strictEqual(ctx.party[0].hp, 5);
+});

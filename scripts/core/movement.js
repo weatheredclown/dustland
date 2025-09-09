@@ -188,18 +188,28 @@ function wait(){
   return move(0,0);
 }
 
+function hasItemOrEquipped(idOrTag){
+  const tag = typeof idOrTag === 'string' ? idOrTag.toLowerCase() : '';
+  if(typeof hasItem === 'function' && hasItem(idOrTag)) return true;
+  if(typeof leader === 'function'){
+    const l = leader();
+    if(l && l.equip){
+      for(const sl of ['weapon','armor','trinket']){
+        const it = l.equip[sl];
+        if(it && (it.id === idOrTag || (it.tags||[]).map(t=>t.toLowerCase()).includes(tag))) return true;
+      }
+    }
+  }
+  return false;
+}
+
 function applyZones(map,x,y){
   const zones = globalThis.Dustland?.zoneEffects || [];
   for(const z of zones){
     if((z.map||'world')!==map) continue;
     if(x<z.x || y<z.y || x>=z.x+(z.w||0) || y>=z.y+(z.h||0)) continue;
-    if(typeof hasItem==='function'){
-      if(z.require && !hasItem(z.require)) continue;
-      if(z.negate && hasItem(z.negate)) continue;
-    } else {
-      if(z.require) continue;
-      if(z.negate) { /* cannot verify inventory */ }
-    }
+    if(z.require && !hasItemOrEquipped(z.require)) continue;
+    if(z.negate && hasItemOrEquipped(z.negate)) continue;
     const step = z.perStep || z.step;
     if(step && typeof step.hp==='number'){
       const delta = step.hp;
