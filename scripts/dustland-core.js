@@ -709,6 +709,7 @@ function resetAll(){
   party.length=0; player.inv=[]; party.flags={}; player.scrap=0;
   Object.keys(worldFlags).forEach(k => delete worldFlags[k]);
   state.map='creator'; openCreator();
+  globalThis.Dustland?.inventory?.loadStarterItems?.();
   log('Reset. Back to character creation.');
   if (typeof toast === 'function') toast('Game reset.');
 }

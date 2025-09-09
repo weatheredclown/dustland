@@ -4,17 +4,17 @@
 
   function craftSignalBeacon(){
     const scrapCost = 5;
+    const fuelCost = 50;
     if ((player.scrap || 0) < scrapCost){
       log('Need 5 scrap.');
       return;
     }
-    if (!hasItem('power_cell')){
-      log('Need a power cell.');
+    if ((player.fuel || 0) < fuelCost){
+      log('Need 50 fuel.');
       return;
     }
     player.scrap -= scrapCost;
-    const idx = findItemIndex('power_cell');
-    if (idx >= 0) removeFromInv(idx);
+    player.fuel -= fuelCost;
     addToInv('signal_beacon');
     bus?.emit('craft:signal-beacon');
     log('Crafted a signal beacon.');

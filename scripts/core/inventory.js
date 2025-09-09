@@ -74,6 +74,17 @@ function getPartyInventoryCapacity() {
   return party.length * 20;
 }
 
+function loadStarterItems(){
+  try {
+    const items = globalThis.Dustland && globalThis.Dustland.starterItems;
+    if (Array.isArray(items)) {
+      items.forEach(it => addToInv(it));
+    }
+  } catch (e) {
+    // ignore load errors
+  }
+}
+
 /**
  * @param {string|GameItem} item
  */
@@ -93,14 +104,21 @@ function dropItemNearParty(item) {
  * @returns {boolean}
  */
 function addToInv(item) {
-  if (player.inv.length >= getPartyInventoryCapacity()) {
-    return false;
-  }
   const it = resolveItem(item);
   if (!it || !it.id) {
     throw new Error('Unknown item');
   }
   const base = cloneItem(ITEMS[it.id] || registerItem(it));
+  if (base.id === 'fuel_cell') {
+    player.fuel = (player.fuel || 0) + 50;
+    emit('item:picked', base);
+    notifyInventoryChanged();
+    if (typeof log === 'function') log('Fuel +50');
+    return true;
+  }
+  if (player.inv.length >= getPartyInventoryCapacity()) {
+    return false;
+  }
   player.inv.push(base);
   emit('item:picked', base);
   notifyInventoryChanged();
@@ -332,6 +350,24 @@ function useItem(invIndex){
     emit(`used:${it.id}`, { item: it });
     return true;
   }
+  if(it.use.type==='hydrate'){
+    const who = (party[selectedMember]||party[0]);
+    if(!who){ log('No party member to hydrate.'); return false; }
+    if(typeof who.hydration !== 'number') who.hydration = 0;
+    const before = who.hydration;
+    const amt = it.use.amount || 1;
+    const max = 2;
+    who.hydration = Math.min(max, before + amt);
+    const msg = it.use.text || `${who.name} drinks ${it.name}.`;
+    log(msg);
+    if(typeof toast==='function') toast(it.use.text || `${who.name} +${who.hydration - before} HYD`);
+    player.inv.splice(invIndex,1);
+    notifyInventoryChanged();
+    globalThis.updateHUD?.();
+    emit('sfx','tick');
+    emit(`used:${it.id}`, { item: it });
+    return true;
+  }
   if(it.use.type==='boost'){
     const who = (party[selectedMember]||party[0]);
     if(!who){ log('No party member to boost.'); return false; }
@@ -378,6 +414,6 @@ function useItem(invIndex){
   return false;
 }
 
-const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache };
+const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache, loadStarterItems };
 globalThis.Dustland.inventory = inventoryExports;
 Object.assign(globalThis, inventoryExports);

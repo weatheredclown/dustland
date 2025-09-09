@@ -1,3 +1,5 @@
+const bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
+
 class Trader {
   constructor(id, opts = {}){
     this.id = id;
@@ -11,6 +13,10 @@ class Trader {
 
   clearGrudge(){
     this.grudge = 0;
+  }
+
+  refresh(){
+    bus?.emit('trader:refresh', { trader: this });
   }
 }
 
