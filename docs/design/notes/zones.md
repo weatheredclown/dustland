@@ -13,7 +13,7 @@ Zones mark rectangular regions on a map that apply special effects while the par
 - `healMult`: multiplier for passive HP regen
 - `noEncounters`: disable random combat
 - `require`: item id needed for the effect
-- `negate`: item id that cancels the effect
+- `negate`: item id that cancels the effect if in inventory or equipped to the leader
 
 ## Example
 ```json

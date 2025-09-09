@@ -11,6 +11,7 @@ let moveDelay = 0;
 let encounterCooldown = 0;
 let weatherSpeed = 1;
 let encounterBias = null;
+const activeMsgZones = new Set();
 bus?.on?.('weather:change', w => {
   weatherSpeed = typeof w?.speedMod === 'number' ? w.speedMod : 1;
   encounterBias = w?.encounterBias || null;
@@ -187,18 +188,28 @@ function wait(){
   return move(0,0);
 }
 
+function hasItemOrEquipped(idOrTag){
+  const tag = typeof idOrTag === 'string' ? idOrTag.toLowerCase() : '';
+  if(typeof hasItem === 'function' && hasItem(idOrTag)) return true;
+  if(typeof leader === 'function'){
+    const l = leader();
+    if(l && l.equip){
+      for(const sl of ['weapon','armor','trinket']){
+        const it = l.equip[sl];
+        if(it && (it.id === idOrTag || (it.tags||[]).map(t=>t.toLowerCase()).includes(tag))) return true;
+      }
+    }
+  }
+  return false;
+}
+
 function applyZones(map,x,y){
   const zones = globalThis.Dustland?.zoneEffects || [];
   for(const z of zones){
     if((z.map||'world')!==map) continue;
     if(x<z.x || y<z.y || x>=z.x+(z.w||0) || y>=z.y+(z.h||0)) continue;
-    if(typeof hasItem==='function'){
-      if(z.require && !hasItem(z.require)) continue;
-      if(z.negate && hasItem(z.negate)) continue;
-    } else {
-      if(z.require) continue;
-      if(z.negate) { /* cannot verify inventory */ }
-    }
+    if(z.require && !hasItemOrEquipped(z.require)) continue;
+    if(z.negate && hasItemOrEquipped(z.negate)) continue;
     const step = z.perStep || z.step;
     if(step && typeof step.hp==='number'){
       const delta = step.hp;
@@ -224,6 +235,35 @@ function applyZones(map,x,y){
     (party||[]).forEach(m=>{ m.hp = 1; });
     renderParty?.(); updateHUD?.();
   }
+}
+
+function updateZoneMsgs(map,x,y){
+  const zones = globalThis.Dustland?.zoneEffects || [];
+  const current = [];
+  for(const z of zones){
+    if((z.map||'world')!==map) continue;
+    if(x<z.x || y<z.y || x>=z.x+(z.w||0) || y>=z.y+(z.h||0)) continue;
+    const step = z.perStep || z.step;
+    if(!step || !step.msg) continue;
+    const others = Object.keys(step).filter(k => k !== 'msg');
+    if(others.length) continue;
+    current.push(z);
+    if(!activeMsgZones.has(z)){
+      const msg = 'entering: ' + step.msg;
+      log?.(msg);
+      if(typeof toast==='function') toast(msg);
+    }
+  }
+  for(const z of activeMsgZones){
+    if(!current.includes(z)){
+      const step = z.perStep || z.step;
+      const msg = 'exiting: ' + (step?.msg || '');
+      log?.(msg);
+      if(typeof toast==='function') toast(msg);
+    }
+  }
+  activeMsgZones.clear();
+  current.forEach(z => activeMsgZones.add(z));
 }
 
 // ===== Interaction =====
@@ -260,6 +300,7 @@ function move(dx,dy){
           }
         });
         setPartyPos(nx, ny);
+        updateZoneMsgs(state.map, nx, ny);
         bus.emit('movement:player', { x: nx, y: ny, map: state.map });
         if(typeof footstepBump==='function') footstepBump();
         onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
@@ -354,7 +395,7 @@ function checkRandomEncounter(){
     let def;
     if(base.templateId && typeof npcTemplates !== 'undefined'){
       const t = npcTemplates.find(t => t.id === base.templateId);
-      def = { ...(t?.combat||{}), name: t?.name, portraitSheet: t?.portraitSheet, ...base };
+      def = { ...(t?.combat||{}), name: t?.name, portraitSheet: t?.portraitSheet, portraitLock: t?.portraitLock, ...base };
     } else {
       def = { ...base };
     }

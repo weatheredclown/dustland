@@ -135,7 +135,7 @@ async function startCombat(defender){
   }
 
   const toEnemy = (def) => {
-    const { HP, portraitSheet, prompt, npc, name, ...rest } = def || {};
+    const { HP, portraitSheet, portraitLock, prompt, npc, name, ...rest } = def || {};
     return {
       ...rest,
       id: def.id || def.name,
@@ -143,6 +143,7 @@ async function startCombat(defender){
       hp: def.hp ?? HP ?? 5,
       npc,
       portraitSheet: portraitSheet || npc?.portraitSheet,
+      portraitLock: portraitLock ?? npc?.portraitLock,
       prompt: prompt || npc?.prompt,
       special: rest.special
     };
@@ -157,7 +158,7 @@ async function startCombat(defender){
     if (n.map !== map) continue;
     const dist = Math.abs(n.x - px) + Math.abs(n.y - py);
     if (dist <= 2 && (!defender?.npc || n !== defender.npc)) {
-      enemies.push(toEnemy({ ...n.combat, npc: n, name: n.name, portraitSheet: n.portraitSheet }));
+      enemies.push(toEnemy({ ...n.combat, npc: n, name: n.name, portraitSheet: n.portraitSheet, portraitLock: n.portraitLock }));
     }
   }
 
