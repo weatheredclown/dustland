@@ -2,7 +2,6 @@
 // Displays a pulsing title and swirling dust background with drifting particles.
 const MODULES = [
   { id: 'dustland', name: 'Dustland', file: 'modules/dustland.module.js' },
-  { id: 'echoes', name: 'Echoes', file: 'modules/echoes.module.js' },
   { id: 'office', name: 'Office', file: 'modules/office.module.js' },
   { id: 'lootbox-demo', name: 'Loot Box Demo', file: 'modules/lootbox-demo.module.js' },
   { id: 'broadcast', name: 'Broadcast Story', file: 'modules/broadcast-fragment-1.module.js' },

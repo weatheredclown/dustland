@@ -4,9 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-test('echoes module doors require quests with matching keys', () => {
+test('echoes content requires matching key quests', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const file = path.join(__dirname, '..', 'modules', 'echoes.module.js');
+  const file = path.join(__dirname, '..', 'modules', 'dustland.module.js');
   const src = fs.readFileSync(file, 'utf8');
   assert.match(src, /"id": "q_spark"[\s\S]*"item": "spark_key"/);
   assert.match(src, /door_workshop[\s\S]*\(Search for Spark Key\)[\s\S]*"q": "accept"/);
