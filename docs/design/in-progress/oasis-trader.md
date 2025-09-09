@@ -22,9 +22,16 @@
 - [x] Extend `scripts/core/trader.js` with `inventory` arrays and `grudge` fields.
 - [ ] Store refresh schedules in `data/traders/<id>.json`.
 - [ ] Update `scripts/ui/trade.js` to display timers and grudge indicators.
-- [ ] Emit `trader:refresh` events for mods to hook into.
+- [x] Emit `trader:refresh` events for mods to hook into.
 
 > **Clown:** Keep the JSON flat so mods can drop in new traders without rewriting logic.
+
+## Dustland Integration
+- Replace static shop NPC in `dustland.module.js` with a traveling trader.
+- Give the trader an east-west patrol loop across the world map.
+- Stock begins with scavenged gear and upgrades across three refresh waves.
+- Raise prices roughly 300 scrap per stat point above crowbar and flak jacket drops.
+- Final wave sells top-tier gear well above 500 scrap.
 
 ## Risks
 - Long refresh timers may stall players lacking supplies.

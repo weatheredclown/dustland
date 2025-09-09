@@ -6,7 +6,7 @@
 *Status: Draft*
 
 ## Status update
-As of 2025-09-07, only a static `data/bunkers.js` exists. Fast travel logic, UI hooks, and travel events remain unimplemented.
+As of 2025-09-07, `data/bunkers.js` and core travel logic with events exist. UI hooks remain unimplemented.
 
 ### Open questions
 - Mechanics 2 mentions distance-based fuel costs; how will the system compute distance between bunkers?
@@ -28,9 +28,9 @@ As of 2025-09-07, only a static `data/bunkers.js` exists. Fast travel logic, UI 
 
 ## Implementation Sketch
 - [x] Add `data/bunkers.js` with coordinates and activation flags.
-- [ ] Create `scripts/core/fast-travel.js` handling node graphs and fuel costs.
+- [x] Create `scripts/core/fast-travel.js` handling node graphs and fuel costs.
 - [ ] Hook into map UI in `scripts/ui/world-map.js` to select destinations.
-- [ ] Emit `travel:start` and `travel:end` events for mods.
+- [x] Emit `travel:start` and `travel:end` events for mods.
 
 > **Wing:** Make sure fuel costs scale with distance so speedrunners can't warp past the curve.
 

@@ -2,7 +2,7 @@
 
 ## Status Update
 - Hydration value and `hydration:tick` event exist; tests cover dry-zone drain and camp refills.
-- HUD droplet meter, starter canteen item, and prototype script are not in the repo.
+- HUD droplet meter and prototype script are not in the repo.
 - Caution phase and gear/perk-based modifiers remain unimplemented.
 
 *By Mateo "Wing" Alvarez*
@@ -27,7 +27,7 @@
 - [x] Add `hydration` property to party members in `scripts/core/status.js`.
  - [x] Broadcast `hydration:tick` from the world loop; listeners reduce the meter only in zones marked dry.
 - [ ] Update the HUD with a compact droplet meter next to stamina.
-- [ ] Seed a starter canteen in character creation via `data/items/starter.json`.
+- [x] Seed a starter canteen in character creation via `data/items/starter.js`.
 
 > **Gizmo:** Keep values in `data/balance/hydration.json` so modders can adjust without touching code.
 

@@ -89,11 +89,10 @@ test('workshop building includes workbench NPC', () => {
   assert.ok(hasCraft);
 });
 
-test('power cell can be found in the workshop', () => {
+test('workshop no longer stores power cells', () => {
   const data = loadModuleData();
   const cell = data.items.find(i => i.id === 'power_cell');
-  assert.ok(cell);
-  assert.strictEqual(cell.map, 'workshop');
+  assert.ok(!cell);
 });
 
 test('medkit heals for 10 HP', () => {
@@ -140,4 +139,16 @@ test('northeast hut has portal to hall', () => {
   assert.ok(hut.x >= 117 && hut.y === 0);
   const portal = data.portals.find(p => p.map === 'portal_hut' && p.toMap === 'hall');
   assert.ok(portal);
+});
+
+test('trader patrols east-west with basic goods', () => {
+  const data = loadModuleData();
+  const trader = data.npcs.find(n => n.id === 'trader');
+  assert.ok(trader);
+  assert.deepStrictEqual(trader.loop, [
+    { x: 10, y: 44 },
+    { x: 110, y: 44 }
+  ]);
+  const invIds = trader.shop?.inv?.map(i => i.id);
+  assert.deepStrictEqual(invIds, ['pipe_rifle', 'leather_jacket']);
 });

@@ -6,6 +6,8 @@ Let's rectify that. Here is a properly expanded and improved version of `plot-dr
 
 # Plot Draft, v2
 
+This document outlines the narrative for the Dustland module.
+
 *By Alex "Echo" Johnson*
 
 > **Clown:** The first draft was a good skeleton. Now we flesh it out. Let's give this carnival ride some more loops and twists. The goal isn't just to chase a signal; it's to make the caravan's journey feel like a living, breathing story that the player can bend and break.
@@ -67,9 +69,9 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 ### **Expanded Task List**
 
 #### **Phase 0: Writing Pass**
-- [x] Draft a scene-by-scene outline with placeholder dialog for the caravan's opening leg.
-- [x] Flesh out Mara, Jax, and Nyx arcs with at least two key conversations each.
-- [x] Sketch early Silencer encounters with sample rival dialogue.
+- [ ] Draft a scene-by-scene outline with placeholder dialog for the caravan's opening leg.
+- [ ] Flesh out Mara, Jax, and Nyx arcs with at least two key conversations each.
+- [ ] Sketch early Silencer encounters with sample rival dialogue.
 
 ### Opening Leg Outline
 1. **Campfire Departure** – *Mara:* "Dawn's thin. Pack up."
@@ -77,60 +79,64 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 3. **Dunes at Dusk** – *Nyx:* "The signal hums when the sun bleeds."
 
 #### **Phase 1: Narrative Foundation**
-- [x] Outline the caravan's pursuit of the fading broadcast across the Dustland.
+- [ ] Outline the caravan's pursuit of the fading broadcast across the Dustland.
   - The caravan catches the ghost of a broadcast near the Salt Flats and tracks its fading pulses by night.
   - Ruined rail towns and dead malls scatter false echoes, but the crew rigs antennas and readings to keep the trail alive.
   - A final shiver of sound draws them to a collapsed observatory where the signal sinks beneath the horizon, promising deeper secrets.
-- [x] **Define the Ghost Signal:** Write 3-bullet lore (as above) explaining the origin and nature of the signal. Is it benevolent, malevolent, or something in between?
+- [ ] **Define the Ghost Signal:** Write 3-bullet lore (as above) explaining the origin and nature of the signal. Is it benevolent, malevolent, or something in between?
   - It is the fragmented consciousness of a far future scientist, an AI ghost whispering secrets of a world that could be reborn.
   - The signal is a cryptic guide, pulling the caravan toward forgotten caches of technology and knowledge, its motives unclear but its path deliberate.
   - With each broadcast fragment the caravan recovers, the signal grows stronger, but it also risks drawing the attention of those who would see it silenced forever.
-- [x] **The Silencers:** Create a new faction, the "Silencers," who act as the primary antagonists. 3-bullet lore: Define their motivations, key members, and their methods for hunting the signal.
+- [ ] **The Silencers:** Create a new faction, the "Silencers," who act as the primary antagonists. 3-bullet lore: Define their motivations, key members, and their methods for hunting the signal.
   - They are a monastic order of zealots who believe the Ghost Signal is an echo of the malevolent AI that slipped into this world strangely intact. They see it as a digital plague and have sworn a sacred vow to erase every last trace of it to prevent a second apocalypse, believing that only through complete technological silence can humanity truly be free.
   - Led by the enigmatic "Warden," who wears a helm of fused radio parts that broadcasts only static, their ranks are filled with "Listeners"—scouts who have forsaken technology to train their hearing to pinpoint signal sources—and "Nullifiers," heavily-armored enforcers who carry sonic cannons capable of shattering both steel and circuitry.
   - The Silencers hunt with relentless, calculated precision. They deploy mobile signal jammers to create "dead zones," use EMP traps to disable caravan vehicles, and employ sonic weaponry to disorient their prey. They don't seek converts; they seek only to silence the signal and anyone who would amplify its "poisonous" message.
-- [x] **Modular Story Beats:** Design the first three "broadcast fragment" modules. Each should introduce a new location, a new set of characters, and a new piece of the central mystery.
+- [ ] **Modular Story Beats:** Design the first three "broadcast fragment" modules. Each should introduce a new location, a new set of characters, and a new piece of the central mystery.
   - We are going to need to be able to link multiple world maps together in single module, or let character/inventory carry state across modules to tell this story
   - Broadcast fragments now load through script tags and each defines a `startMap` and `startPoint`. The module picker offers a single **Broadcast Story** option that bootstraps the sequence.
 
 #### **Phase 2: Character and Item Implementation**
-- [x] Detail Mara "Surveyor"—an ex-cartographer seeking the map she burned; arc: learns the signal isn't the only way home.
-- [x] Detail Jax "Patch"—a scavenger mechanic hoarding tech; arc: opens his toolkit to the crew.
-- [x] Detail Nyx "Speaker"—a poet tuning radio static into verse; arc: chooses between broadcasting or listening.
-- [x] **Implement Signature Encounters:**
-    - [x] Design and build Mara's dust storm navigation puzzle.
-    - [x] Hook Mara's puzzle into the Broadcast Story sequence.
-    - [x] Script Jax's timed repair sequence under combat pressure. Implemented in `jax-repair.module.js`.
-    - [x] Write the dialogue and branching paths for Nyx's "conversational tuning" encounter.
-- [x] **Doppelgänger System:**
-    - [x] Create the data structure for "personas" that can be equipped by the main characters.
-    - [x] Design and create the first set of alternate masks and outfits for Mara, Jax, and Nyx.
-- [x] **Implement Key Items:**
-    - [x] Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.
-      - [x] Create the "echo chamber" interior and the script that triggers a vision when the Glinting Key is used.
-    - [x] Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event.
+- [ ] Detail Mara "Surveyor"—an ex-cartographer seeking the map she burned; arc: learns the signal isn't the only way home.
+- [ ] Detail Jax "Patch"—a scavenger mechanic hoarding tech; arc: opens his toolkit to the crew.
+- [ ] Detail Nyx "Speaker"—a poet tuning radio static into verse; arc: chooses between broadcasting or listening.
+- [ ] **Implement Signature Encounters:**
+    - [ ] Design and build Mara's dust storm navigation puzzle.
+    - [ ] Hook Mara's puzzle into the Broadcast Story sequence.
+    - [ ] Script Jax's timed repair sequence under combat pressure. Implemented in `jax-repair.module.js`.
+    - [ ] Write the dialogue and branching paths for Nyx's "conversational tuning" encounter.
+- [ ] **Doppelgänger System:**
+    - [ ] Create the data structure for "personas" that can be equipped by the main characters.
+    - [ ] Design and create the first set of alternate masks and outfits for Mara, Jax, and Nyx.
+- [ ] **Implement Key Items:**
+    - [ ] Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.
+      - [ ] Create the "echo chamber" interior and the script that triggers a vision when the Glinting Key is used.
+    - [ ] Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event.
 
 #### **Phase 3: Puzzle and World Building**
-- [x] **Design a radio tower alignment puzzle that tunes the broadcast.**
+- [ ] **Design a radio tower alignment puzzle that tunes the broadcast.**
   - Rotating pitch, gain, and phase dials brings the broadcast into focus while Silencer patrols home in on failed attempts.
-- [x] **Implement the radio tower alignment puzzle with full UI and integration.**
-- [x] **Design a dust storm navigation puzzle using wind chimes along ruined billboards:** Implemented in `mara-puzzle.module.js` with chime events and a dust storm effect.
-- [x] **Design a layered graffiti decoding puzzle to reveal a safe route before the sun bleeds out.**
+- [ ] **Implement the radio tower alignment puzzle with full UI and integration.**
+- [ ] **Design a dust storm navigation puzzle using wind chimes along ruined billboards:** Implemented in `mara-puzzle.module.js` with chime events and a dust storm effect.
+- [ ] **Design a layered graffiti decoding puzzle to reveal a safe route before the sun bleeds out.**
    - A collapsed overpass hides directions beneath decades of gang tags; players cycle solvent sprays to reveal each era's markings and overlay them into a route.
    - Picking the wrong sequence bathes the wall in false sunlight and draws a quick Silencer ambush before resetting.
-- [x] Implement the layered graffiti decoding puzzle as an interactive module and hook it into the Broadcast Story sequence.
-- [x] **Build Reusable Widgets:**
-    - [x] Create a generic "dial" widget for puzzles like the radio tower.
-    - [x] Develop a "sound-based navigation" system that can be used for the dust storm and other similar challenges.
+- [ ] Implement the layered graffiti decoding puzzle as an interactive module and hook it into the Broadcast Story sequence.
+- [ ] **Build Reusable Widgets:**
+    - [ ] Create a generic "dial" widget for puzzles like the radio tower.
+    - [ ] Develop a "sound-based navigation" system that can be used for the dust storm and other similar challenges.
 - [ ] **Flesh out the World:**
     - [ ] Design the first major hub city, where the caravan can rest, resupply, and find new quests.
-    - [x] Create a detailed world map that shows the planned route of the caravan and the locations of the first three broadcast fragments.
+  - Map central bazaar interior and connect east and west gates to the world map.
+  - Move prototype hub content into the Dustland module and remove standalone hub files.
+  - Place trader, quest givers, and rest triggers in the hub.
+  - Integrate future features directly into Dustland instead of separate prototypes.
+    - [ ] Create a detailed world map that shows the planned route of the caravan and the locations of the first three broadcast fragments.
 
 #### **Phase 4: Testing and Integration**
-- [x] **Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace.
-  - [x] **Test Character Arcs:** Get feedback on the signature encounters for each character to make sure they are both fun and effective at teaching the character's core mechanics.
- - [x] **Puzzle Usability Testing:** Have players who are unfamiliar with the puzzles test them to ensure they are challenging but not frustrating. Implement quick resets based on their feedback.
-- [x] **Modding Tools and Documentation:** Create a tutorial for the modding community that explains how to use the broadcast fragment system to create their own stories within the Dustland universe.
+- [ ] **Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace.
+  - [ ] **Test Character Arcs:** Get feedback on the signature encounters for each character to make sure they are both fun and effective at teaching the character's core mechanics.
+ - [ ] **Puzzle Usability Testing:** Have players who are unfamiliar with the puzzles test them to ensure they are challenging but not frustrating. Implement quick resets based on their feedback.
+- [ ] **Modding Tools and Documentation:** Create a tutorial for the modding community that explains how to use the broadcast fragment system to create their own stories within the Dustland universe.
 
 ### Verification Instructions
 

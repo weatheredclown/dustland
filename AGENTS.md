@@ -51,3 +51,4 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 - Provide tests for state transitions and dialog navigation to catch regressions early.
 - Reflect game changes across all modules; new functionality should be configurable via the Adventure Kit (ACK).
 - Generate the world before applying modules; boot-order mistakes can duplicate rooms or overwrite interiors.
+- Avoid fetching local JSON files at runtime; browsers block `file:` requests. Embed data in JavaScript files instead.

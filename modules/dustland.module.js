@@ -26,16 +26,13 @@ const DATA = `
       ]
     },
     {
-      "id": "power_cell",
-      "name": "Power Cell",
-      "type": "quest",
-      "map": "workshop",
-      "x": 3,
-      "y": 2
-    },
-    {
       "id": "signal_beacon",
       "name": "Signal Beacon",
+      "type": "quest"
+    },
+    {
+      "id": "fuel_cell",
+      "name": "Fuel Cell",
       "type": "quest"
     },
     {
@@ -1373,15 +1370,15 @@ const DATA = `
           ]
         }
       },
+      "loop": [
+        { "x": 10, "y": 44 },
+        { "x": 110, "y": 44 }
+      ],
       "shop": {
         "markup": 1,
         "inv": [
-          {
-            "id": "epic_blade"
-          },
-          {
-            "id": "epic_armor"
-          }
+          { "id": "pipe_rifle" },
+          { "id": "leather_jacket" }
         ]
       }
     },
