@@ -1013,6 +1013,18 @@ const DATA = `
       "x": 2,
       "y": 0,
       "events": [ { "when": "enter", "effect": "requireAirTanks" } ]
+    },
+    {
+      "map": "small_cavern",
+      "x": 2,
+      "y": 2,
+      "events": [ { "when": "enter", "effect": "darkGrueCheck" } ]
+    },
+    {
+      "map": "dungeon",
+      "x": 2,
+      "y": 2,
+      "events": [ { "when": "enter", "effect": "darkGrueCheck" } ]
     }
   ],
   "interiors": [
@@ -1615,6 +1627,16 @@ function postLoad(module) {
       log('You need air tanks to go underwater.');
       setMap('river_room', 'River Room');
       setPartyPos(0, 2);
+    }
+  };
+  module.effects.darkGrueCheck = () => {
+    if (hasItem('magic_lightbulb')) return;
+    if (Math.random() < 0.5) {
+      log('It is dark. You are likely to be eaten by a grue.');
+      const g = module.npcs.find(n => n.id === 'grue');
+      if (g) {
+        openCombat([{ id: g.id, name: g.name, hp: g.combat.HP, ATK: g.combat.ATK, DEF: g.combat.DEF }]);
+      }
     }
   };
 }
