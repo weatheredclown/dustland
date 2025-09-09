@@ -466,7 +466,19 @@ function applyModule(data = {}, options = {}) {
   // Quests
   if (typeof quests !== 'undefined' && moduleData.quests) {
     moduleData.quests.forEach(q => {
-      quests[q.id] = new Quest(q.id, q.title, q.desc, { item: q.item, reward: q.reward, xp: q.xp, moveTo: q.moveTo });
+      quests[q.id] = new Quest(
+        q.id,
+        q.title,
+        q.desc,
+        {
+          item: q.item,
+          itemTag: q.itemTag,
+          count: q.count,
+          reward: q.reward,
+          xp: q.xp,
+          moveTo: q.moveTo
+        }
+      );
     });
   }
 

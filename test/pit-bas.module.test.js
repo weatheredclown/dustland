@@ -8,6 +8,8 @@ import vm from 'node:vm';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const file = path.join(__dirname, '..', 'modules', 'pit-bas.module.js');
 const src = fs.readFileSync(file, 'utf8');
+const questsFile = path.join(__dirname, '..', 'scripts', 'core', 'quests.js');
+const questsSrc = fs.readFileSync(questsFile, 'utf8');
 
 test('pit bas module initializes rooms and items', () => {
   const calls = [];
@@ -254,6 +256,80 @@ test('pit bas module defines basic npcs', () => {
   const dead = context.PIT_BAS_MODULE.npcs.find(n => n.id === 'dead_adventurer');
   assert.ok(dead.tree.start.choices.some(c => c.label === '(Loot)'));
   assert.ok(dead.tree.loot.choices.some(c => c.reward === 'silver_medallion'));
+});
+
+test('merchant quest requires all treasures', () => {
+  const modCtx = { Math };
+  modCtx.globalThis = modCtx;
+  vm.runInNewContext(src, modCtx);
+  const moduleData = modCtx.PIT_BAS_MODULE;
+  assert.ok(moduleData.quests && moduleData.quests.length);
+
+  const game = {
+    Math,
+    interiors: {},
+    buildings: [],
+    portals: [],
+    tileEvents: [],
+    itemDrops: [],
+    npcTemplates: [],
+    enemyBanks: {},
+    mapLabels: {},
+    world: [],
+    NPCS: [],
+    hiddenNPCs: [],
+    ITEMS: {},
+    quests: {},
+    party: [],
+    player: { inv: [] },
+    document: {
+      dispatchEvent: () => {},
+      defaultView: { CustomEvent: function(){}, Event: function(){} },
+      createElement: () => ({ className: '', textContent: '', onclick: null, appendChild: () => {} })
+    },
+    window: {},
+    EventBus: { on: () => {}, emit: () => {} },
+    revealHiddenNPCs: () => {},
+    log: () => {},
+    renderQuests: () => {},
+    queueNanoDialogForNPCs: () => {},
+    flagValue: () => true,
+    textEl: { textContent: '' },
+    choicesEl: { innerHTML: '', appendChild: () => {} },
+    closeDialog: () => {},
+    addToInv: () => {},
+    removeFromInv: () => {},
+    findItemIndex: () => -1,
+    resolveItem: () => null,
+    countItems: () => 0,
+    awardXP: () => {},
+    setRNGSeed: () => {},
+    genWorld: () => {},
+    gridFromEmoji: () => [],
+    placeHut: () => {},
+    registerTileEvents: () => {},
+    registerZoneEffects: () => {},
+    registerItem: def => def,
+    makeNPC: (id, map, x, y, color, name, title, desc, tree, quest) => ({ id, map, x, y, color, name, title, desc, tree, quest }),
+    getNextId: id => id,
+  };
+  game.globalThis = game;
+  vm.runInNewContext(questsSrc, game);
+  const coreFile = path.join(__dirname, '..', 'scripts', 'dustland-core.js');
+  const coreSrc = fs.readFileSync(coreFile, 'utf8');
+  const coreLines = coreSrc.split('\n');
+  const applySrc = coreLines.slice(373, 524).join('\n');
+  vm.runInNewContext(applySrc, game);
+  game.applyModule(moduleData, { fullReset: false });
+
+  const quest = game.quests['q_treasure'];
+  assert.strictEqual(quest.itemTag, 'treasure');
+  assert.strictEqual(quest.count, 11);
+  const merchant = game.NPCS.find(n => n.id === 'merchant');
+  game.defaultQuestProcessor(merchant, 'accept');
+  game.defaultQuestProcessor(merchant, 'do_turnin');
+  assert.strictEqual(quest.status, 'active');
+  assert.strictEqual(quest.progress || 0, 0);
 });
 
 test('lightning room zaps without rod', () => {
