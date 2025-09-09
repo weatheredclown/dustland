@@ -783,8 +783,9 @@ function renderInv(){
     row.className='slot';
     row.style.display='flex';
     row.style.alignItems='center';
-    row.style.justifyContent='space-between';
+    row.style.justifyContent='flex-start';
     row.style.gap='8px';
+    row.style.paddingRight='4px';
     if(['weapon','armor','trinket'].includes(it.type) && suggestions[it.type]===it){
       row.classList.add('better');
     }
@@ -795,6 +796,7 @@ function renderInv(){
     const btnWrap=document.createElement('span');
     btnWrap.style.display='flex';
     btnWrap.style.gap='6px';
+    btnWrap.style.marginLeft='auto';
     if(['weapon','armor','trinket'].includes(it.type)){
       const equipBtn=document.createElement('button');
       equipBtn.className='btn';
