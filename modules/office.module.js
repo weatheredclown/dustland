@@ -415,6 +415,7 @@ const OFFICE_IMPL = (() => {
       name: 'Giant Rat',
       desc: 'It bares its teeth.',
       portraitSheet: portraits.rat,
+      portraitLock: false,
       combat: { HP: 3, ATK: 1, DEF: 0, loot: 'rat_tail', auto: true },
       tree: {
         start: {
@@ -435,6 +436,7 @@ const OFFICE_IMPL = (() => {
       name: 'Bandit',
       desc: 'Lurks among the trees.',
       portraitSheet: portraits.bandit,
+      portraitLock: false,
       combat: { HP: 6, ATK: 2, DEF: 1, loot: 'rusty_dagger', auto: true },
       tree: {
         start: {
@@ -455,6 +457,7 @@ const OFFICE_IMPL = (() => {
       name: 'Forest Ogre',
       desc: 'Towering and enraged.',
       portraitSheet: portraits.ogre,
+      portraitLock: false,
       combat: { HP: 12, ATK: 4, DEF: 2, loot: 'ogre_tooth', auto: true },
       tree: {
         start: {
@@ -489,6 +492,7 @@ const OFFICE_IMPL = (() => {
       name: 'Rogue Janitor',
       desc: 'Wields a dripping mop.',
       portraitSheet: portraits.janitor,
+      portraitLock: false,
       tree: {
         start: {
           text: 'He blocks your path.',
