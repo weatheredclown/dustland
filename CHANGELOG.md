@@ -2,6 +2,7 @@
 
 ## 2025-09-06
 - Removed hub city module.
+- Replaced unequip text button with 🚫 emoji.
 
 ## 2025-09-05
 - Added configurable procedural map generation with regeneration support.
