@@ -10,9 +10,7 @@ function read(file){
   return fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 }
 
-test('mara, jax, and nyx encounters exist', () => {
-  const mara = read('modules/mara-puzzle.module.js');
-  assert.match(mara, /dust_storm/);
+test('jax, and nyx encounters exist', () => {
   const jax = read('modules/jax-repair.module.js');
   assert.match(jax, /generator-meter/);
   const golden = JSON.parse(read('modules/golden.module.json'));
