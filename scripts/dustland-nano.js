@@ -92,20 +92,20 @@
       return;
     }
     try {
-      const avail = await LanguageModel.availability({ outputLanguage: "en" });
+      const avail = await LanguageModel.availability({ output: { language: "en" } });
       console.log("[Nano] availability() returned:", avail);
 
       if (avail === "available") {
         console.log("[Nano] Creating session (model already available)...");
-        _state.session = await LanguageModel.create({ outputLanguage: "en" });
-        _state.ready = true; _state.failed=false; 
+        _state.session = await LanguageModel.create({ output: { language: "en" } });
+        _state.ready = true; _state.failed=false;
         _updateBadge();
 
       } else if (avail === "downloadable" || avail === "downloading") {
         console.log("[Nano] Downloading on-device model…");
         _showProgress(0);
         _state.session = await LanguageModel.create({
-          outputLanguage: "en",
+          output: { language: "en" },
           monitor(m){
             m.addEventListener("downloadprogress", (e)=>{
               const pct = e.total ? (e.loaded / e.total) * 100 : e.loaded * 100;
@@ -115,7 +115,7 @@
           }
         });
         _hideProgress();
-        _state.ready = true; _state.failed=false; 
+        _state.ready = true; _state.failed=false;
         _updateBadge();
 
       } else {

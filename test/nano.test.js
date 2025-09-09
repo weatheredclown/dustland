@@ -32,18 +32,24 @@ global.toast = noop;
 
 let lastPrompt = '';
 global.LanguageModel = {
-  availability: async () => 'available',
-  create: async () => ({
-    prompt: async (p) => {
-      lastPrompt = p;
-      if (p.includes('New 16x16 block')) {
-        const line = '🏝'.repeat(16);
-        const block = Array(16).fill(line).join('\n');
-        return block;
+  availability: async (opts) => {
+    assert.deepStrictEqual(opts, { output: { language: 'en' } });
+    return 'available';
+  },
+  create: async (opts) => {
+    assert.deepStrictEqual(opts, { output: { language: 'en' } });
+    return {
+      prompt: async (p) => {
+        lastPrompt = p;
+        if (p.includes('New 16x16 block')) {
+          const line = '🏝'.repeat(16);
+          const block = Array(16).fill(line).join('\n');
+          return block;
+        }
+        return `Lines:\nRust bites every gear, but we endure.\nKeep your scrap dry.\nNever trade hope for rust.\nChoices:\nAsk about wares|Got anything rare?\nInspect the stall|INT|8|XP 5|You spot a hidden coil.|You find only dust.\n`;
       }
-      return `Lines:\nRust bites every gear, but we endure.\nKeep your scrap dry.\nNever trade hope for rust.\nChoices:\nAsk about wares|Got anything rare?\nInspect the stall|INT|8|XP 5|You spot a hidden coil.|You find only dust.\n`;
-    }
-  })
+    };
+  }
 };
 
 test('NanoDialog generates lines and choices', async () => {
