@@ -692,6 +692,7 @@ const DATA = `
       "title": "Test Monster",
       "desc": "A shambler posted here for practice.",
       "portraitSheet": "assets/portraits/dustland-module/rotwalker_4.png",
+      "portraitLock": false,
       "tree": {
         "start": {
           "text": "A rotwalker lurches at you."
@@ -1424,6 +1425,7 @@ const DATA = `
       "title": "Mangy Hound",
       "desc": "A feral mutt snarling over junk.",
       "portraitSheet": "assets/portraits/dustland-module/scrap_mutt_4.png",
+      "portraitLock": false,
       "tree": {
         "start": {
           "text": "The mutt bares its teeth.",
@@ -1452,6 +1454,7 @@ const DATA = `
       "title": "Vermin",
       "desc": "A giant rat rooting through scraps.",
       "portraitSheet": "assets/portraits/dustland-module/scavenger_rat_4.png",
+      "portraitLock": false,
       "tree": {
         "start": {
           "text": "It hisses.",
@@ -1480,6 +1483,7 @@ const DATA = `
       "title": "Scav Raider",
       "desc": "A bandit prowling for easy loot.",
       "portraitSheet": "assets/portraits/dustland-module/rust_bandit_4.png",
+      "portraitLock": false,
       "tree": {
         "start": {
           "text": "The bandit sizes you up.",
@@ -1508,6 +1512,7 @@ const DATA = `
       "title": "Mad Drifter",
       "desc": "A wild-eyed drifter muttering to himself.",
       "portraitSheet": "assets/portraits/dustland-module/feral_nomad_4.png",
+      "portraitLock": false,
       "tree": {
         "start": {
           "text": "He lunges without warning.",
@@ -1536,6 +1541,7 @@ const DATA = `
       "title": "Rotwalker",
       "desc": "A decayed wanderer hungry for flesh.",
       "portraitSheet": "assets/portraits/dustland-module/waste_ghoul_4.png",
+      "portraitLock": false,
       "tree": {
         "start": {
           "text": "It shambles toward you.",
@@ -1612,7 +1618,8 @@ const DATA = `
         "DEF": 2,
         "loot": "raider_knife"
       },
-      "portraitSheet": "assets/portraits/dustland-module/iron_brute_4.png"
+      "portraitSheet": "assets/portraits/dustland-module/iron_brute_4.png",
+      "portraitLock": false
     },
     {
       "id": "stalker_patrol",
@@ -1972,7 +1979,8 @@ const DATA = `
           "delay": 1000
         }
       },
-      "portraitSheet": "assets/portraits/portrait_1084.png"
+      "portraitSheet": "assets/portraits/portrait_1084.png",
+      "portraitLock": false
     }
   ],
   "events": [
@@ -2021,36 +2029,42 @@ const DATA = `
       "id": "rotwalker",
       "name": "Rotwalker",
       "portraitSheet": "assets/portraits/dustland-module/rotwalker_4.png",
+      "portraitLock": false,
       "combat": { "HP": 6, "ATK": 2, "DEF": 0 }
     },
     {
       "id": "scavenger",
       "name": "Scavenger",
       "portraitSheet": "assets/portraits/dustland-module/scavenger_4.png",
+      "portraitLock": false,
       "combat": { "HP": 5, "ATK": 2, "DEF": 0 }
     },
     {
       "id": "vine_creature",
       "name": "Vine Creature",
       "portraitSheet": "assets/portraits/dustland-module/vine_creature_4.png",
+      "portraitLock": false,
       "combat": { "HP": 4, "ATK": 1, "DEF": 0 }
     },
     {
       "id": "sand_titan",
       "name": "Sand Titan",
       "portraitSheet": "assets/portraits/dustland-module/sand_titan.png",
+      "portraitLock": false,
       "combat": { "HP": 20, "ATK": 6, "DEF": 4, "challenge": 9 }
     },
     {
       "id": "dune_reaper",
       "name": "Dune Reaper",
       "portraitSheet": "assets/portraits/dustland-module/dune_reaper_4.png",
+      "portraitLock": false,
       "combat": { "HP": 90, "ATK": 8, "DEF": 7, "challenge": 32, "special": { "cue": "lashes the wind with scythes!", "dmg": 10 } }
     },
     {
       "id": "sand_colossus",
       "name": "Sand Colossus",
       "portraitSheet": "assets/portraits/dustland-module/sand_colossus_4.png",
+      "portraitLock": false,
       "combat": { "HP": 120, "ATK": 10, "DEF": 8, "challenge": 36, "requires": "artifact_blade", "special": { "cue": "shakes the desert!", "dmg": 12 } }
     }
   ],
