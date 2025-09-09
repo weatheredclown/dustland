@@ -11,6 +11,7 @@ let moveDelay = 0;
 let encounterCooldown = 0;
 let weatherSpeed = 1;
 let encounterBias = null;
+const activeMsgZones = new Set();
 bus?.on?.('weather:change', w => {
   weatherSpeed = typeof w?.speedMod === 'number' ? w.speedMod : 1;
   encounterBias = w?.encounterBias || null;
@@ -226,6 +227,35 @@ function applyZones(map,x,y){
   }
 }
 
+function updateZoneMsgs(map,x,y){
+  const zones = globalThis.Dustland?.zoneEffects || [];
+  const current = [];
+  for(const z of zones){
+    if((z.map||'world')!==map) continue;
+    if(x<z.x || y<z.y || x>=z.x+(z.w||0) || y>=z.y+(z.h||0)) continue;
+    const step = z.perStep || z.step;
+    if(!step || !step.msg) continue;
+    const others = Object.keys(step).filter(k => k !== 'msg');
+    if(others.length) continue;
+    current.push(z);
+    if(!activeMsgZones.has(z)){
+      const msg = 'entering: ' + step.msg;
+      log?.(msg);
+      if(typeof toast==='function') toast(msg);
+    }
+  }
+  for(const z of activeMsgZones){
+    if(!current.includes(z)){
+      const step = z.perStep || z.step;
+      const msg = 'exiting: ' + (step?.msg || '');
+      log?.(msg);
+      if(typeof toast==='function') toast(msg);
+    }
+  }
+  activeMsgZones.clear();
+  current.forEach(z => activeMsgZones.add(z));
+}
+
 // ===== Interaction =====
 function canWalk(x,y){
   if(state.map==='creator') return false;
@@ -260,6 +290,7 @@ function move(dx,dy){
           }
         });
         setPartyPos(nx, ny);
+        updateZoneMsgs(state.map, nx, ny);
         bus.emit('movement:player', { x: nx, y: ny, map: state.map });
         if(typeof footstepBump==='function') footstepBump();
         onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
