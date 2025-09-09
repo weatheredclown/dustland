@@ -2035,7 +2035,7 @@ const DATA = `
     {
       "id": "vine_creature",
       "name": "Vine Creature",
-      "portraitSheet": "assets/portraits/dustland-module/vine_creature.png",
+      "portraitSheet": "assets/portraits/dustland-module/vine_creature_4.png",
       "combat": { "HP": 4, "ATK": 1, "DEF": 0 }
     },
     {
