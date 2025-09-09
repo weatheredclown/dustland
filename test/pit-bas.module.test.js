@@ -317,3 +317,50 @@ test('river bed requires air tanks', () => {
     assert.ok(e.events.some(ev => ev.effect === 'requireAirTanks'));
   });
 });
+
+test('dark rooms can trigger grue attacks', () => {
+  const logs = [];
+  let foes;
+  const context = { Math: { random: () => 0.4 } };
+  context.globalThis = context;
+  context.applyModule = () => {};
+  context.openCombat = async enemies => {
+    foes = enemies;
+    return { result: 'flee' };
+  };
+  context.log = msg => logs.push(msg);
+  context.hasItem = () => false;
+  vm.runInNewContext(src, context);
+  context.PIT_BAS_MODULE.postLoad(context.PIT_BAS_MODULE);
+  logs.length = 0;
+  context.PIT_BAS_MODULE.effects.darkGrueCheck();
+  assert.deepStrictEqual(logs, [
+    'It is dark. You are likely to be eaten by a grue.'
+  ]);
+  assert.ok(foes && foes[0].id === 'grue');
+});
+
+test('light prevents grue attacks', () => {
+  const logs = [];
+  let foes = null;
+  const context = { Math: { random: () => 0.4 } };
+  context.globalThis = context;
+  context.applyModule = () => {};
+  context.openCombat = async enemies => {
+    foes = enemies;
+    return { result: 'flee' };
+  };
+  context.log = msg => logs.push(msg);
+  context.hasItem = id => id === 'magic_lightbulb';
+  vm.runInNewContext(src, context);
+  context.PIT_BAS_MODULE.postLoad(context.PIT_BAS_MODULE);
+  logs.length = 0;
+  context.PIT_BAS_MODULE.effects.darkGrueCheck();
+  assert.deepStrictEqual(logs, []);
+  assert.strictEqual(foes, null);
+  const entries = context.PIT_BAS_MODULE.events.filter(e =>
+    e.events.some(ev => ev.effect === 'darkGrueCheck')
+  );
+  assert.ok(entries.some(e => e.map === 'small_cavern'));
+  assert.ok(entries.some(e => e.map === 'dungeon'));
+});
