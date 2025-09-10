@@ -152,7 +152,8 @@
         "🧱🧱🧱🧱🧱"
       ],
       "entryX": 2,
-      "entryY": 2
+      "entryY": 2,
+      "desc": "You are standing in the abandoned west wing of Timberthrax Manor. There is a door to the east. There is a window to the west."
     },
     {
       "id": "ledge",
@@ -166,7 +167,8 @@
         "🧱🧱🧱🧱🧱"
       ],
       "entryX": 2,
-      "entryY": 2
+      "entryY": 2,
+      "desc": "You are standing on the ledge. The view is great up here! It looks like with a little bit of effort, you could get up onto the roof."
     },
     {
       "id": "main_upper_hall",
@@ -180,7 +182,8 @@
         "🧱🧱🧱🧱🧱"
       ],
       "entryX": 2,
-      "entryY": 2
+      "entryY": 2,
+      "desc": "You are standing in the main hallway of the upper floor. You can go east, west, or down. There is a switch on the wall."
     },
     {
       "id": "master_bedroom",
@@ -194,7 +197,8 @@
         "🧱🧱🧱🧱🧱"
       ],
       "entryX": 2,
-      "entryY": 2
+      "entryY": 2,
+      "desc": "You are in the master bedroom. A large bed dominates the southern half of the room and doors lead east and north."
     },
     {
       "id": "bathroom",
@@ -278,7 +282,8 @@
         "🧱🧱🧱🧱🧱"
       ],
       "entryX": 2,
-      "entryY": 2
+      "entryY": 2,
+      "desc": "You are in the kitchen. The floor shines like new—maybe Mr. CLEAN has been here. There is a large collection of knives here. Exits lead north, east, and down."
     },
     {
       "id": "living_room",
@@ -292,7 +297,8 @@
         "🧱🧱🧱🧱🧱"
       ],
       "entryX": 2,
-      "entryY": 2
+      "entryY": 2,
+      "desc": "This is the living room of Timberthrax Manor. On the wall hang many hunting trophies. There is also a large fireplace here big enough to climb into. Exits lead south and west."
     },
     {
       "id": "dining_room",
@@ -362,7 +368,8 @@
         "🧱🧱🧱🧱🧱"
       ],
       "entryX": 2,
-      "entryY": 2
+      "entryY": 2,
+      "desc": "You are in the garage. There is a washing machine here. You can go east."
     },
     {
       "id": "cellar",
@@ -376,7 +383,8 @@
         "🧱🧱🧱🧱🧱"
       ],
       "entryX": 2,
-      "entryY": 2
+      "entryY": 2,
+      "desc": "You are in the wine cellar. It is dark down here!"
     },
     {
       "id": "boiler_room",
