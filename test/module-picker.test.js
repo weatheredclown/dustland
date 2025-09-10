@@ -126,6 +126,12 @@ test('pit module points to pit-bas', () => {
   assert.strictEqual(pit.file, 'modules/pit-bas.module.js');
 });
 
+test('other module points to other-bas', () => {
+  const other = MODULES.find(m => m.id === 'other');
+  assert.ok(other);
+  assert.strictEqual(other.file, 'modules/other-bas.module.js');
+});
+
 test('enter key loads selected module', () => {
   loadModule(MODULES[MODULES.length - 1]);
   assert.ok(global.location.href.includes('golden.module.json'));
