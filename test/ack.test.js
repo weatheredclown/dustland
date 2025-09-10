@@ -253,6 +253,18 @@ test('map fields use dropdown options', () => {
   assert.ok(document.getElementById('encMap').innerHTML.includes('<option value="world">world</option>'));
 });
 
+test('item select on map populates map dropdown', () => {
+  genWorld(1);
+  moduleData.items = [];
+  startNewItem();
+  document.getElementById('itemOnMap').checked = true;
+  updateItemMapWrap();
+  document.getElementById('itemPick').onclick();
+  canvasEl._listeners.mousedown[0]({ clientX:3, clientY:2, button:0 });
+  assert.strictEqual(document.getElementById('itemMap').value, 'world');
+  moduleData.items = [];
+});
+
 test('world paint persists through save/load', () => {
   genWorld(1);
   clearWorld();
