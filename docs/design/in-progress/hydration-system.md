@@ -26,10 +26,12 @@
 ## Implementation Sketch
 - [x] Add `hydration` property to party members in `scripts/core/status.js`.
  - [x] Broadcast `hydration:tick` from the world loop; listeners reduce the meter only in zones marked dry.
-- [ ] Update the HUD with a compact droplet meter next to stamina.
+- [ ] Update the HUD with a compact droplet meter next to HP when not full (games that don't trigger this effect shouldn't have to worry about this as the meter should hide)
 - [x] Seed a starter canteen in character creation via `data/items/starter.js`.
 
 > **Gizmo:** Keep values in `data/balance/hydration.json` so modders can adjust without touching code.
+> **Wing:** we can put it in a stand-alone .js file, but it has to be source to allow for running locally
+> **Gizmo:** Oh right, I keep forgetting.
 
 ## Risks
 - Extra HUD elements could clutter small screens.
