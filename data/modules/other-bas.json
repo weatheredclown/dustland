@@ -1,0 +1,32 @@
+{
+  "seed": "other-bas",
+  "name": "other-bas",
+  "start": {
+    "map": "west_wing",
+    "x": 2,
+    "y": 2
+  },
+  "items": [],
+  "quests": [],
+  "npcs": [],
+  "events": [],
+  "interiors": [
+    {
+      "id": "west_wing",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🧱🧱🧱",
+        "🧱⬜⬜⬜🧱",
+        "🧱⬜⬜⬜🧱",
+        "🧱⬜⬜⬜🧱",
+        "🧱🧱🧱🧱🧱"
+      ],
+      "entryX": 2,
+      "entryY": 2
+    }
+  ],
+  "portals": [],
+  "buildings": [],
+  "module": "modules/other-bas.module.js"
+}
