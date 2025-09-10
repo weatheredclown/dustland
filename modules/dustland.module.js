@@ -556,6 +556,8 @@ const DATA = `
       "color": "#c8bba0",
       "name": "Buried Crate",
       "desc": "Sand conceals a supply crate.",
+      "portraitSheet": "assets/portraits/dustland-module/buried_crate_4.png",
+      "portraitLock": false,
       "prompt": "Crate half-buried under shifting sand",
       "hintSound": true,
       "tree": {
@@ -586,6 +588,8 @@ const DATA = `
       "color": "#b0c4de",
       "name": "Archivist",
       "title": "Memory Keeper",
+      "portraitSheet": "assets/portraits/dustland-module/archivist_4.png",
+      "portraitLock": false,
       "desc": "Curious about recorded tales.",
       "prompt": "Elder hunched over reels of magnetic tape",
       "tree": {
@@ -597,7 +601,7 @@ const DATA = `
     },
     {
       "id": "exitdoor",
-      "map": "hall",
+      "map": "hall",buried
       "x": 15,
       "y": 17,
       "color": "#a9f59f",
@@ -1315,6 +1319,8 @@ const DATA = `
       "title": "Tinkerer",
       "desc": "Fiddles with a busted radio.",
       "prompt": "Grease-streaked tinkerer fixing a busted radio",
+      "portraitSheet": "assets/portraits/dustland-module/signal_tech_4.png",
+      "portraitLock": true,
       "questId": "q_signal",
       "tree": {
         "start": {
