@@ -601,7 +601,7 @@ const DATA = `
     },
     {
       "id": "exitdoor",
-      "map": "hall",buried
+      "map": "hall",
       "x": 15,
       "y": 17,
       "color": "#a9f59f",
