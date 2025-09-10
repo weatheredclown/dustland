@@ -36,42 +36,58 @@ function inc(v, level) {
 }
 
 function main() {
-  let tag = '';
+  let stashed = false;
   try {
-    tag = sh('git describe --tags --abbrev=0');
-  } catch {
-    // no tags yet
+    if (sh('git status --porcelain')) {
+      sh('git stash push --include-untracked --quiet');
+      stashed = true;
+    }
+
+    let tag = '';
+    try {
+      tag = sh('git describe --tags --abbrev=0');
+    } catch {
+      // no tags yet
+    }
+    const messages = getMessages(tag);
+    if (!messages.length) {
+      console.log('No commits to release.');
+      return;
+    }
+
+    const pkgPath = 'package.json';
+    const enginePath = 'scripts/dustland-engine.js';
+    const pkg = JSON.parse(fs.readFileSync(pkgPath));
+    const next = inc(pkg.version, bumpFrom(messages));
+
+    pkg.version = next;
+    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+    const eng = fs.readFileSync(enginePath, 'utf8').replace(
+      /ENGINE_VERSION = '[^']+'/, `ENGINE_VERSION = '${next}'`
+    );
+    fs.writeFileSync(enginePath, eng);
+
+    sh('git config user.name "github-actions[bot]"');
+    sh('git config user.email "github-actions[bot]@users.noreply.github.com"');
+    sh(`git add ${pkgPath} ${enginePath}`);
+    sh(`git commit -m "chore: bump version to ${next}"`);
+    sh(`git tag v${next}`);
+    // Discard incidental lockfile changes from install steps.
+    // These would otherwise block the rebase pull below.
+    sh('git checkout -- package-lock.json');
+    sh('git status');
+    sh('git pull --rebase');
+    sh('git push');
+    sh('git push --tags');
+  } finally {
+    if (stashed) {
+      try {
+        sh('git stash pop --quiet');
+      } catch {
+        // leave stash if conflicts occur
+      }
+    }
   }
-  const messages = getMessages(tag);
-  if (!messages.length) {
-    console.log('No commits to release.');
-    return;
-  }
-
-  const pkgPath = 'package.json';
-  const enginePath = 'scripts/dustland-engine.js';
-  const pkg = JSON.parse(fs.readFileSync(pkgPath));
-  const next = inc(pkg.version, bumpFrom(messages));
-
-  pkg.version = next;
-  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
-  const eng = fs.readFileSync(enginePath, 'utf8').replace(
-    /ENGINE_VERSION = '[^']+'/, `ENGINE_VERSION = '${next}'`
-  );
-  fs.writeFileSync(enginePath, eng);
-
-  sh('git config user.name "github-actions[bot]"');
-  sh('git config user.email "github-actions[bot]@users.noreply.github.com"');
-  sh(`git add ${pkgPath} ${enginePath}`);
-  sh(`git commit -m "chore: bump version to ${next}"`);
-  sh(`git tag v${next}`);
-  // Discard incidental lockfile changes from install steps.
-  // These would otherwise block the rebase pull below.
-  sh('git checkout -- package-lock.json');
-  sh('git status');
-  sh('git pull --rebase');
-  sh('git push');
-  sh('git push --tags');
 }
 
 main();
