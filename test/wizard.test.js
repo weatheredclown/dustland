@@ -56,3 +56,26 @@ test('asset picker step stores selection', async () => {
   wizard.next();
   assert.strictEqual(wizard.getState().portrait, 'b.png');
 });
+
+test('item picker step captures reward', async () => {
+  const document = makeDocument();
+  const containerEl = document.getElementById('w');
+  document.body.appendChild(containerEl);
+  const context = { window: { document }, document };
+  vm.createContext(context);
+  const wizCode = await fs.readFile(new URL('../components/wizard/wizard.js', import.meta.url), 'utf8');
+  vm.runInContext(wizCode, context);
+  const itemCode = await fs.readFile(new URL('../components/wizard/steps/item-picker.js', import.meta.url), 'utf8');
+  vm.runInContext(itemCode, context);
+  const wizard = context.Dustland.Wizard(containerEl, [
+    context.Dustland.WizardSteps.itemPicker('Fetch Item', ['a', 'b'], 'item', 'scrap')
+  ], {});
+  const sel = document.querySelector('select');
+  sel.value = 'b';
+  const input = document.querySelector('input');
+  input.value = '7';
+  wizard.next();
+  const state = wizard.getState();
+  assert.strictEqual(state.item, 'b');
+  assert.strictEqual(state.scrap, 7);
+});
