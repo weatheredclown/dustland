@@ -26,6 +26,7 @@ test('NpcWizard commit builds module data', async () => {
     prompt: 'rusted scavenger',
     dialogue: 'Hi',
     questItem: 'widget',
+    scrapReward: 5,
     pos: { x: 1, y: 2 }
   })));
   assert.deepStrictEqual(mod, {
@@ -39,6 +40,6 @@ test('NpcWizard commit builds module data', async () => {
       x: 1,
       y: 2
     }],
-    quests: [{ id: 'bob_quest', giver: 'bob', item: 'widget' }]
+    quests: [{ id: 'bob_quest', giver: 'bob', item: 'widget', reward: 'SCRAP 5' }]
   });
 });

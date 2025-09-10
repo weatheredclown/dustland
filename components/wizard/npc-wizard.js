@@ -7,7 +7,7 @@
       // Notes for artists to craft a portrait if one is missing
       Dustland.WizardSteps.text('Portrait Prompt', 'prompt'),
       Dustland.WizardSteps.text('Dialogue', 'dialogue'),
-      Dustland.WizardSteps.itemPicker('Fetch Item', ['tuned_crystal', 'signal_fragment_1'], 'questItem'),
+      Dustland.WizardSteps.itemPicker('Fetch Item', ['tuned_crystal', 'signal_fragment_1'], 'questItem', 'scrapReward'),
       Dustland.WizardSteps.mapPlacement('pos'),
       Dustland.WizardSteps.confirm('Done')
     ],
@@ -31,7 +31,8 @@
       const quest = {
         id: id + '_quest',
         giver: id,
-        item: state.questItem
+        item: state.questItem,
+        reward: 'SCRAP ' + state.scrapReward
       };
       return { npcs: [npc], quests: [quest] };
     }
