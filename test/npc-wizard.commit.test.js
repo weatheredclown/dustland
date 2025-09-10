@@ -29,7 +29,16 @@ test('NpcWizard commit builds module data', async () => {
     pos: { x: 1, y: 2 }
   })));
   assert.deepStrictEqual(mod, {
-    npcs: [{ id: 'bob', name: 'Bob', portrait: 'p.png', prompt: 'rusted scavenger', dialogue: 'Hi', map: 'world', x: 1, y: 2 }],
+    npcs: [{
+      id: 'bob',
+      name: 'Bob',
+      portrait: 'p.png',
+      prompt: 'rusted scavenger',
+      tree: { start: { text: 'Hi', choices: [ { label: '(Leave)', to: 'bye' } ] } },
+      map: 'world',
+      x: 1,
+      y: 2
+    }],
     quests: [{ id: 'bob_quest', giver: 'bob', item: 'widget' }]
   });
 });
