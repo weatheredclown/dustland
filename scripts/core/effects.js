@@ -128,6 +128,34 @@
               }
             }
             break; }
+          case 'addItem': {
+            if ((eff.id || eff.item) && typeof addToInv === 'function') {
+              addToInv(eff.id || eff.item);
+            }
+            break; }
+          case 'removeItem': {
+            if (eff.id && typeof findItemIndex === 'function' && typeof removeFromInv === 'function') {
+              const idx = findItemIndex(eff.id);
+              if (idx !== -1) removeFromInv(idx);
+            }
+            break; }
+          case 'removeItemsByTag': {
+            if (eff.tag && Array.isArray(player?.inv) && typeof removeFromInv === 'function') {
+              for (let i = player.inv.length - 1; i >= 0; i--) {
+                const it = player.inv[i];
+                if (it.tags && it.tags.map(t => t.toLowerCase()).includes(eff.tag.toLowerCase())) {
+                  removeFromInv(i);
+                }
+              }
+            }
+            break; }
+          case 'replaceItem': {
+            if (eff.remove && typeof findItemIndex === 'function' && typeof removeFromInv === 'function') {
+              const idx = findItemIndex(eff.remove);
+              if (idx !== -1) removeFromInv(idx);
+            }
+            if (eff.add && typeof addToInv === 'function') addToInv(eff.add);
+            break; }
           case 'modStat': {
             const target = ctx.actor || ctx.player;
             if (target && target.stats && eff.stat) {
