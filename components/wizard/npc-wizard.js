@@ -18,7 +18,12 @@
         name: state.name,
         portrait: state.portrait,
         prompt: state.prompt,
-        dialogue: state.dialogue,
+        tree: {
+          start: {
+            text: state.dialogue,
+            choices: [ { label: '(Leave)', to: 'bye' } ]
+          }
+        },
         map: 'world',
         x: state.pos?.x,
         y: state.pos?.y

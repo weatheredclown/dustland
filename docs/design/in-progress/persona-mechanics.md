@@ -84,12 +84,15 @@ Persona equips and other world moments should fire through the game's event bus.
 
 ## Tasks
 
-- [x] Prototype persona equip UI at camps.
-- [x] Hook persona stat modifiers into combat calculations.
-- [x] Draft first mask memory quest for Mara.
-- [x] Add portrait and label swap logic to the HUD.
-- [x] Extend ACK schema and editor with reusable profile definitions.
- - [x] Implement profile runtime service for personas, buffs, and disguises.
-- [x] Emit `persona:equip` and `persona:unequip` events on the global bus.
-- [x] Load/save effect packs in the save file and run them when subscribed events fire.
-- [x] Build editor inspector for authoring and testing effect packs.
+- [ ] Prototype persona equip UI at camps (any loot cache mask should be equippable here and yield a persona).
+- [ ] Hook persona stat modifiers into combat calculations.
+- [ ] Draft first mask memory quest for dustland.
+  - [ ] create an NPC mask giver (name TBD)
+  - [ ] create quest to get a persona mask (anything with the mask attribute from a loot cache)
+  - [ ] add dialog to this NPC that explains the above lore about how these aren't just disguises
+- [ ] Add portrait and label swap logic to the HUD.
+- [ ] Extend ACK schema and editor with reusable profile definitions.
+ - [ ] Implement profile runtime service for personas, buffs, and disguises.
+- [ ] Emit `persona:equip` and `persona:unequip` events on the global bus.
+- [ ] ensure load/save store the equipped persona.
+- [ ] Build editor inspector for authoring and testing effect packs into ACK.
