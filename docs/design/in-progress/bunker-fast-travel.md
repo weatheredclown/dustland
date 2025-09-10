@@ -14,11 +14,11 @@ As of 2025-09-07, `data/bunkers.js` and core travel logic with events exist. UI 
   - Is there meant to be a world above the main map? are there a connected set of regions you can travel between that load entirely new modules and the "world map" is the map that connects them? perhaps a world map can be a bunch of thumbnail world maps shown on a.. perhaps a mercator projection or else just a stylized pixel art something.. but each module's world map could be a bunker travel location once unlocked.. it would be cool to load the js file, parse out the map data and render it as a thumbnail though.. then travelling to the new location would load in that new map world.. we have to make sure that world state transfers and is preserved across module changes.
   - let's build a POC module called two-worlds to verify everything works in the engine to support this:
   - Tasks:
-    - [ ] create a two worlds module added to module select
-    - [ ] create a world one module (not added to module select)
-    - [ ] create a world two module (not added to module select)
-    - [ ] in world one: add an NPC with item & item fetch quest
-    - [ ] in world two: add an NPC with item & item fetch quest
+    - [x] create a two worlds module added to module select
+    - [x] create a world one module (not added to module select)
+    - [x] create a world two module (not added to module select)
+    - [x] in world one: add an NPC with item & item fetch quest
+    - [x] in world two: add an NPC with item & item fetch quest
     - [ ] add a bunker in each world
     - [ ] in both worlds, add a relatively simple monster you can randomly encounter in order to grind on collecting power cells to have the fuel to get between worlds
     - [ ] finishing the world 1 item fetch quest should unlock fast travel to world two (and back again)
