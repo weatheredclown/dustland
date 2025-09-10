@@ -132,6 +132,12 @@ test('other module points to other-bas', () => {
   assert.strictEqual(other.file, 'modules/other-bas.module.js');
 });
 
+test('two-worlds module points to entry script', () => {
+  const tw = MODULES.find(m => m.id === 'two-worlds');
+  assert.ok(tw);
+  assert.strictEqual(tw.file, 'modules/two-worlds.module.js');
+});
+
 test('enter key loads selected module', () => {
   loadModule(MODULES[MODULES.length - 1]);
   assert.ok(global.location.href.includes('golden.module.json'));

@@ -7,6 +7,7 @@ const MODULES = [
   { id: 'broadcast', name: 'Broadcast Story', file: 'modules/broadcast-fragment-1.module.js' },
   { id: 'pit', name: 'PIT.BAS', file: 'modules/pit-bas.module.js' },
   { id: 'other', name: 'OTHER.BAS', file: 'modules/other-bas.module.js' },
+  { id: 'two-worlds', name: 'Two Worlds', file: 'modules/two-worlds.module.js' },
   { id: 'golden', name: 'Golden Sample', file: 'modules/golden.module.json' }
 ];
 
