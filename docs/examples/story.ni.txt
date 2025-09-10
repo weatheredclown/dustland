@@ -1,0 +1,2603 @@
+"starlight" by Timothy Laubach
+
+Include Simple Followers by Emily Short.
+Include the Standard Rules by Graham Nelson.
+
+use scoring.
+The maximum score is 200.
+
+Section 1 - Game Stages
+
+stage_name is a kind of value.  stage_names are WARBOT_ATTACK, DOOGUS_FINDS_YOU, LAUNCH_DRONES, FIX_WARBOT, GET_DISTRESS_CALL, WARPING_TO_DUCKSTAR, ARRIVE_AT_DUCKSTAR, ENTER_THE_DUCKSTAR, INVESTIGATE_THE_DUCKSTAR, TELEPORT_CAMERA, TELEPORT_TO_UNKNOWN, ON_THE_UNKNOWN_SHIP, LEARN_ABOUT_ZUUMONT, RESCUE_THE_SIMULATION, RESTORE_ZUUMONT, CIRCLE_THE_WAGONS, WARP_TROLLS_ATTACKING, SAVED_DUCKSTAR.
+
+Game stage is a stage_name variable.  Game Stage is WARBOT_ATTACK;
+
+Section 2 - Information on Directions
+
+Compass mode is a kind of value. The compass modes are nautical, either_mode, and earthbound.
+
+A room has a compass mode. a room is usually earthbound. 
+A direction has a compass mode. a direction is earthbound. 
+starboard, port, the fore, and the aft are nautical. 
+up, down, the inside and the outside are either_mode.
+
+The starboard is a direction. The starboard has opposite port. Understand "s" as starboard when the location is nautical.
+The port is a direction. The port has opposite starboard. Understand "p" as port when the location is nautical.
+The fore is a direction. The fore has opposite the aft. Understand "f" as fore when the location is nautical.
+The aft is a direction. The aft has opposite fore. Understand "a" as the aft when the location is nautical.
+Does the player mean going a nautical direction when the location is nautical: it is very likely.
+Does the player mean going south when the location is nautical: it is very unlikely.
+Index map with fore mapped as north. Index map with the aft mapped as south. Index map with port mapped as west. Index map with starboard mapped as east.
+[The verb to be abaft of implies the mapped-aft-of relation.]
+
+Before going a nautical direction when the location is not nautical, say "Nautical directions can only be used on board ship."
+
+before going a direction (called the dboy):
+	if the compass mode of the dboy is earthbound and the location is nautical:
+		let x be a list of directions;
+		add the list of nautical directions to x;
+		add the list of either_mode directions to x;
+		say "Compass directions make no sense on board ship, but you can use [x] instead." instead.
+	
+Section 3 - Pronouns & Grammar
+
+To say him-her for (P - a person):
+	if P is the player:
+		say "you";
+	otherwise if P is male:
+		say "him";
+	otherwise:
+		say "her";
+
+To say has-have for (P - a person):
+	if P is the player, say "have";
+	otherwise say "has";
+
+To say is-are for (P - a person):
+	if P is the player, say "are";
+	otherwise say "is".
+
+To say s for (P - a person):
+	if P is not the player, say "s".
+
+To say He-She for (P - a person): 
+	if P is plural begin;
+		say "They";
+	otherwise if P is the player;
+		say "You";
+	otherwise;
+		if P is female, say "She";
+		otherwise say "He";
+	end if.
+
+To say es for (P - a person):
+	if P is not the player, say "es".
+
+To say address for (P - a person):
+	if P is the player, say "you";
+	otherwise say "[P]";
+
+to say Address for (P - a person):
+	if P is the player, say "You";
+	otherwise say "[P]";
+
+To say he-she for (P - a person): 
+	if P is plural begin;
+		say "they";
+	otherwise if P is the player;
+		say "you";
+	otherwise;
+		if P is female, say "she";
+		otherwise say "he";
+	end if.
+
+To say his-her for (P - a person):
+	if P is plural begin;
+		say "their";
+	otherwise if P is the player;
+		say "your";
+	otherwise;
+		if P is female, say "her";
+		otherwise say "his";
+	end if.
+
+To say His-Her for (P - a person):
+	if P is plural begin;
+		say "Their";
+	otherwise if P is the player;
+		say "Your";
+	otherwise;
+		if P is female, say "Her";
+		otherwise say "His";
+	end if.
+
+Section 4 - Misc Technology
+
+a display is a kind of a thing.
+a photo viewer is a kind of a display.
+a photo viewer has a list of things called stored pictures.
+The description of a photo viewer is usually "A flat, rectangular 17-inch touch-screen panel displaying a [if number of entries of stored pictures is 0]screen saver[else if number of entries of stored pictures is 1]single photograph: [stored pictures][else if number of entries of stored pictures > 1]collection of photographs:   [stored pictures][end if]."
+
+Section 5 - Photography
+
+Photographing it with is an action applying to two visible things.
+Things can be picture taker.
+A camera is a kind of a thing that is a picture taker.
+A camera can be working or broken.  A camera is usually working.
+A camera has a photo viewer called a sync target.
+Understand "take picture of [things] with [camera]" or "take a picture of [things] with [a camera]" or "photograph [things] with [a camera]" as photographing it with.
+Things can be photographed or unphotographed. Things are usually unphotographed.
+Things can be viewed.
+
+instead of photographing when the player is not holding a working camera (this is the need a camera rule):
+	say "You don't have a camera."
+
+Understand "use [camera] on [things]" as photographing it with (with nouns reversed).
+
+To take a picture of (subject - a thing) with (y - a camera):
+	let x be the sync target of y;
+	if x is not nothing:
+		add the subject to the stored pictures of x;
+		if x is visible:
+			say "  In an instant, a picture of [the subject] shows up on [the x].";
+	if the subject is unphotographed and the subject is a bad pudding:
+		increase the score by 2;
+	now the subject is photographed.
+
+after photographing something with a camera (this is the took a picture rule):
+	say "[The second noun] makes a soft click as you take a picture of [the noun].";
+	take a picture of the noun with the second noun;
+
+Viewing is an action applying to one visible thing.
+
+[the basic accessibility rule does nothing if the player is enclosed by the tall cabinet.]
+
+Carry out viewing:
+	say "You see a picture of [the noun]:[line break] [the description of the noun][paragraph break]";
+	now the noun is viewed;
+
+instead of examining a photo viewer:
+	say "[The description of the noun][line break]";
+	say "You take a closer look at the unviewed photos on [the noun].";
+	let any pictures to view be false;
+	repeat with picture from the camera running through stored pictures of the noun:
+		if picture from the camera is not viewed:
+			now any pictures to view is true;
+			try viewing the picture from the camera;
+	if any pictures to view is false:
+		say "Nothing new to see.";
+
+Section 6 - Special Things & Properties
+
+A person has a list of stored actions called the current plan.  A person can be in need of an audience.
+
+To (doer - a person) performs their current action:
+	if the number of entries in current plan of doer is greater than 0:
+		if doer is enclosed by the location of the player or doer is not in need of an audience:
+			let the thing to do be entry 1 of the current plan of the doer;
+			remove entry 1 from the current plan of the doer;
+			try the thing to do;
+
+Every turn:
+	repeat with x running through the bored crew members:
+		have x be bored;
+	repeat with person in question running through people who are not the player:
+		if person in question is a leader:
+			try person in question leading;
+		the person in question performs their current action;
+
+Objects can be plural.
+
+A chair is a kind of a supporter. A chair is scenery. It is enterable.
+A chair can be empty or occupied.  A chair is usually empty.
+instead of entering a chair when the noun is supporting a person:
+	let x be the noun;
+	let y be a random thing on x;
+	say "You cannot sit on [the noun].  [Address for the y] [is-are for the y] already sitting there."
+
+definition: a person is seated:
+	if it is enclosed by a chair, yes;
+	no;
+
+When play begins:
+	repeat with seat running through chairs:
+		if the seat encloses anything:
+			now the seat is occupied;
+
+carry out an actor getting off a chair:
+	now the noun is empty;
+
+carry out an actor entering a chair:
+	now the noun is occupied;
+	
+A Pudding is a kind of thing. Pudding is edible. Bad Pudding is a kind of pudding. The description of bad pudding is usually "This… doesn't even look like pudding."
+
+Section 7 - aggregated movement notification
+
+[There is also an every turn component]
+a direction has a list of people called the moved people.
+
+to clear the movers from (x - a direction):
+	while the number of entries in the moved people of x is greater than 0:
+		remove entry 1 from the moved people of x;
+
+	[
+every turn:
+	repeat with zog running through directions:
+		if the number of entries of the moved people of zog is greater than 0:
+			say "[moved people of zog] arrive[if the number of entries of the moved people of zog is 1]s[end if] from [the opposite of zog].";
+			clear the movers from zog;
+	]
+
+
+[
+after an actor going when the actor is not the player:
+	if the room gone from is the location of the player:
+		continue the action;
+	otherwise:
+		if the location of the actor is the location of the player:
+			add the actor to the moved people of the noun;
+]
+
+Section 8 - Misc Actions
+
+Understand "lick [something]" as licking.  Licking is an action applying to one thing.
+Carry out an actor licking:
+	say "[The actor] lean[s for actor] over, stick[s for actor] out [his-her for the actor] tongue, and give[s for actor] [the noun] a big lick.  Perhaps that was delicious.";
+
+Understand "hug [something]" as hugging.  Hugging is an action applying to one thing.
+Carry out hugging:
+	say "You can't hug that."
+Instead of hugging a person:
+	say "You could give [the noun] a big hug, but it's not really the time for that."
+Instead of hugging the war bot:
+	say "I don't think that the war bot would appreciate a hug, no matter how well intentioned.";
+
+Understand "scan [person] with [something preferably held]" as scanning it with. Scanning it with is an action applying to two visible things.
+Check scanning it with:
+	if the second noun is not the medical scanner:
+		say "You can't scan anybody with that.";
+	otherwise:
+		say "You run the medical scanner over [the noun].  Perfectly healthy.".
+
+Understand "pudding [something]" as puddinging.
+puddinging is an action applying to one visible thing.
+Carry out an actor puddinging:
+	if the actor does not enclose a pudding:
+		say "[Address for the actor] [actor does-do] not have pudding.";
+	otherwise:
+		try the actor putting a random pudding enclosed by the actor on the noun; 
+
+Understand "pour [something] on [something]" or "splash [something] on [something]"  or "spill [something] on [something]" or "dump [something] on [something]" as putting it on.
+
+Instead of using pudding with the war bot:
+	try putting the noun on the second noun;
+
+Understand "frob [something]" as frobbing.  Frobbing is an action applying to one visible thing.
+Check frobbing: say "You frob that [noun] good.".
+Understand "frob [something] with [something]" as frobbing it.  Frobbing it is an action applying to two visible things.
+Check frobbing it: say "You are able to frob [the noun] with [the second noun]…. exquisitely.".
+
+Understand "enable [something]" or "activate [something]" as switching on.
+Understand "deactivate [something]" as switching off.
+
+Understand "use [something] on [something]" as using it with.  Using it with is an action applying to two visible things.
+
+Check using it with: say "You're not really sure how to use [the noun] on [the second noun].";
+
+Understand "use [something]" as using.  Using is an action applying to one visible thing.
+After an actor using, say "Can you be a bit more specific?".
+
+Understand "talk [person]" or "talk to [person]" as talking to.  Talking to is an action applying to one visible thing.
+	instead of talking to, say "[The noun] doesn't have anything to say to you.".
+Understand "attack" or "fire" or "open fire" as firing. Firing is an action applying to nothing.
+Understand "deploy [something]" or "release [something]" or "launch [something]" as launching.  Launching is an action applying to one thing.
+Understand "evade" or "evasive action" as evading.  Evading is an action applying to nothing.
+Carry out evading:
+	say "You're not really maneuverable enough to dodge incoming fire.".
+
+check an actor launching:
+  if the noun is not the drones, say "You can't launch that." instead.
+
+Understand "repair [something]" or "fix [something]" as fixing.  Fixing is an action applying to one thing.
+	instead of fixing, say "You're not sure how to go about fixing [the noun].".
+Understand "nod" as nodding.  Nodding is an action applying to nothing.
+	carry out an actor nodding: say "[The actor] nod[s].".
+Understand "jump to warp" or "fly ship" or "pilot" as jumping to warp.  jumping to warp is an action applying to nothing.
+check an actor jumping to warp:
+	if the harbinger one is warping:
+		say "You're already in warp.";
+	otherwise if the actor is not Wendy:
+		say "Only Wendy, the Runeglyph Navigator, can jump the ship to warp.";
+	otherwise if the player is not in the harbinger one:
+		say "You're not aboard your ship.";
+	otherwise if a ship is targeting the harbinger one:
+		say "We can't do that while we're under attack.";
+	otherwise:
+		say "There is no course currently laid in, and you're not sure where you should go next.";
+
+understand "where is my room" or "navigate to my room" or "show me to my room" or "help me find my room" as finding my room.  Finding my room is an action applying to nothing.
+
+understand "where is [any room]" or "navigate to [any room]" or "show me to [any room]" or "help me find [any room]" as guiding to.
+guiding to is an action applying to one thing.
+check guiding to:
+	if the actor is in the harbinger one:
+		if the location of the actor is the noun:
+			say "You are already in [the noun]";
+		otherwise:
+			now the red arrow is everywhere;
+			now the harbinger one is guiding;
+			now the destination room of the harbinger one is the noun;
+			now the description of the red arrow is "The red arrow appears on a small panel on the wall and points toward [the best route from the location of the player to the destination room of the Harbinger one].";
+			say "Route guidance to [the noun] appears on a small panel on the wall.  It points toward [the best route from the location of the player to the destination room of the Harbinger one].";
+	otherwise:
+		say "That's only possible on the Harbinger One.".
+
+Section 9 - Space Things, Ships, and Space Stations
+
+A space thing is a kind of region.
+All space things have text called a description.
+
+Alert level is a kind of value. The alert levels are green alert, yellow alert, and red alert.
+A ship is a kind of space thing.
+	All ships have an alert level.
+	A ship has a number called hit points. A ship normally has hit points 50.
+	A ship has a number called attack power.  A ship normally has attack power 25.
+
+A ship room is a kind of room.  a ship room is nautical.
+
+Understand "greet [anything]" as greeting.  Greeting is an action applying to one visible thing.
+	
+Carry out greeting:
+	say "You wave hello to [noun].".
+
+targeting relates various ships to one ship (called the target).
+The verb to target (he is targeting, he targets, they target, it is targeted) implies the targeting relation.
+
+A space station is a kind of a space thing.
+A space station has a room called a dock.  A space station can be hailed.  A space station can be dockable.
+
+The Griffled Duckstar Station is a space station.  The description of the Griffled Duckstar is "It is a mid-sized space station, cylindrical and not unexpectedly a ﬂat metallic grey.  One feature of Grifﬂed Duckstar Station stands out immediately. There is a huge microwave satellite dish at one end of it.  Nearly a third of the size of the station itself, the dish gives the station an unusually jaunty look, as if it were wearing some sort of a hat.".
+
+Empty Space is a space thing.  The description of Empty Space is "The vast airless emptiness of space.  Space without limit or measure.  The tiny points of light of a million distant stars twinkle faintly."
+
+Warp Space is a space thing.  The description of warp space is "Stars streak by in a cacaphony of rainbow hues.".
+
+The RONARD Core Ship is a ship.  The description of it is "The RONARD Core patrol ship.  It is a simple, pale blue hexagonal craft which effeciently holds about a dozen enforcement officers.".  The RONARD Core Ship can be active.
+
+The War Bot Attack Ship is a ship. The War Bot Attack Ship is targeting the Harbinger One. The description of the War Bot Attack Ship is "The ship is a huge grey-blue disk four times the size of the Harbinger One.  Bristling with weapons, the attack ship has a decidedly unfriendly appearance.".  The War Bot Attack Ship can be helping.
+
+There is a ship called the Harbinger One. The alert level of Harbinger One is red alert.  The Harbinger One has hit points 500.  The attack power of the Harbinger One is 200.
+The Harbinger One can be guiding.  The Harbinger One has a room called destination room.  The Harbinger One can be warping.
+
+Section 12 - Crew
+
+A crew member is a kind of a person.  A crew member has a chair called a preferred chair.  A crew member has text called a function. Persuasion rule for asking a crew member to try doing something: persuasion succeeds.  A crew member has text called a first name.
+
+Understand "crew member" as a crew member.
+
+Staci Starlight is a female crew member.  The first name of Staci is "Staci". The function of Staci is "Captain of the Harbinger One". Staci is in the Control Room. The description of Staci is "Staci Starlight, the captian of the Harbinger One.  At 16, [he-she for staci] [is-are for staci] slim, with large eyes, an open and trusting face, and [his-her for staci] chestnut brown hair is cut in a short pixie-like pageboy style.
+
+     Although tall for [his-her for staci] age, [his-her for staci] innocent appearance causes most to underestimate [his-her for staci] quick wit, keen intelligence, and unﬂappable determination. Only when one looks closely do they see the steely glint in [his-her for staci] gunmetal grey eyes.  [His-Her for staci] white bodysuit uniform bares the small blue-cross captain’s insignia on the collar."
+
+Wendy Millytopthought is a female crew member. The first name of Wendy is "Wendy". The function of Wendy is "Darvian Runeglyph Navigator". Wendy is on the Runeglyph Navigator's chair.  The description of Wendy is "Age 20.  [Address for Wendy] [has-have for wendy] a mop of curly rust red hair.  A perpetual smile curls at the sides of [his-her for wendy] slightly upturned mouth.  [His-Her for wendy] wide grin reveals straight white teeth and [his-her for wendy] smile wrinkles the freckles on the bridge of [his-her for wendy] nose.  [He-She for wendy] [is-are for wendy] wearing the white bodysuit that is the uniform aboard the Harbinger One."
+
+Gragnakus Mongaard is a male crew member.  The first name of Gragnakus is "Gragnakus". The function of Gragnakus is "Space Dwarf Science-Forge Officer".  He is on the science officer's chair. The description of gragnakus is "Gragnakus Mongaard, the Science-Forge officer of the Harbinger One, and a Space Dwarf.  [He-She for gragnakus] [is-are for gragnakus] really short, but also really broad.  A tangle of long black hair flows uninterupted into [his-her for gragnakus] long and tangled black beard.  [He-She for gragnakus] [is-are  for gragnakus] wearing a leather apron over the white body suit that is the uniform for the crew of the Harbinger One.  [if gragnakus is on the science chair]  [His-Her  for gragnakus] short stubby ﬁngers deftly work the controls on the sensor and shield arrays[end if]". Understand "Grag" as Gragnakus.
+
+Doogus Dungus is a male crew member.  The first name of Doogus is "Doogus". The function of Doogus is "Ship Treasurer".  He is on the high backed chair.  The description of Doogus Dungus is "White-haired caramel skinned Doogus, the ship’s treasurer.  [He-She for Doogus] would be older than the other three crew members, even if you added their ages together, and multiplied that sum by two. Unbent by age, [he-she for doogus] stand[s for doogus] tall as [he-she for doogus] scowl[s for doogus] at the world, [his-her for doogus] dark violet eyes taking in everything with a keen interest, [his-her for doogus] thin lips drawn into a frown under [his-her for doogus] large beaky nose".
+
+A communication pendant is carried by Doogus.  A calculation pad is carried by doogus.
+
+Understand "be [any crew member]" or "become [any crew member]" or "switch to [any crew member]" as switching to.  Switching to is an action applying to one visible thing.
+
+Carry out switching to anything:
+	say "You can't switch to [the noun].";
+
+Understand "switch back" as switching back.
+switching back is an action applying to nothing.
+
+carry out switching back:
+	try switching to the previous crew member;
+
+The previous crew member is a crew member that varies;
+
+understand "who am i" or "who" as introspection.
+introspection is an action applying to nothing.
+check introspection:
+	say "You are [Printed name of the player], [function of the player].";
+
+Carry out switching to a crew member:
+	if the noun is the player:
+		say "You are already [printed name of the noun].";
+	else:
+		now the previous crew member is the player;
+		say "You are now [the noun], [function of the noun].";
+		let the person you were be the player;
+		now the noun is not shadowing anyone;
+		now the player is the noun;
+		try looking;
+		if the game stage is GET_DISTRESS_CALL:
+			if the person you were is not enclosed by the preferred chair of the person you were:
+				plan for the person you were to go to the location of the preferred chair of the person you were;		
+				add the action of the person you were entering the preferred chair of the person you were to the current plan of the person you were;
+		rule succeeds;
+
+Carry out an actor distress listening:
+	if the game stage is GET_DISTRESS_CALL and the player is enclosed by the control room and the pending order description of Gragnakus is not "":
+		say the pending order description of gragnakus;
+	otherwise:
+		say "Who the what now?";
+
+instead of removing something from a crew member:
+	move the noun to the player;
+	say "[The second noun] hands you [the noun].";
+	rule succeeds.
+
+instead of giving something to a crew member:
+	move the noun to the second noun;
+	say "[The second noun] will hold on to [the noun] for you.";
+	rule succeeds.
+
+instead of answering a crew member that (text):
+	say "[The noun] is not sure what you mean.";
+
+after examining when the player is not doogus dungus and doogus dungus is enclosed by the location of the player for the first time:
+	say "Doogus mutters something about there being no profit in spending your time gazing at [the noun].";
+
+A crew member has a stored action called a pending order.
+A crew member has text called pending order description.  The pending order description of a crew member is usually "".
+A crew member has a list of stage_names called pending order valid stages.
+A crew member can be acknowledged.
+
+To clear the pending order for (whom - a person):
+	whom requests to do the action of waiting requested as "";
+	remove list of stage_names from the pending order valid stages of whom;
+	now whom is acknowledged;
+
+Section 13 - Crew Commands
+
+Understand "status", "report" or "status report" as reporting status.  Reporting status is an action applying to nothing.
+
+Understand "undock" as undocking. Undocking is an action applying to nothing.
+Understand "dock with [any space station]" as docking with. Docking with is an action applying to one visible thing. 
+
+Definition: A crew member is unacknowledged:
+	if it is not the player and it is visible and the pending order description of it is not "", yes;
+	no
+
+Check an actor reporting status:
+	let matches be a list of things;
+	if the actor is the player:
+		let found a thing be false;
+		repeat with x running through the visible crew members who are not the player:
+			try x reporting status;
+			now found a thing is true;
+		if found a thing is false:
+			say "Nobody here to report status.";
+	otherwise:
+		if the pending order description of the actor is "":
+			say "[The actor] says, 'Nothing to report.'";
+		otherwise:
+			now the actor is acknowledged;
+			say "[The actor] says, '[The pending order description of actor]'";
+
+Understand "yes" or "confirm" or "ack" or "acknowledge" as confirming an order. Confirming an order is an action applying to nothing.
+
+instead of an actor saying yes:
+	abide by the confirming an order rule.
+
+check an actor confirming an order (this is the confirming an order rule):
+	if the actor is a crew member:
+		if the actor is the player:
+			let found a thing be false; [found a thing is a truth state (that varies)]
+			repeat with x running through visible crew members who are not the player:
+				if the pending order description of x is not "" and x is acknowledged:
+					now found a thing is true;
+					try x confirming an order;
+			if found a thing is false:
+				say "No current orders to confirm.";
+		otherwise if the pending order description of the actor is "" or the actor is not acknowledged:
+			say "[The actor] [actor does-do] not have any pending orders.";
+		otherwise:
+			add the pending order of the actor to the current plan of the actor;
+			clear the pending order for the actor;
+			rule succeeds;
+
+To clear the pending orders for all of the crew:
+	repeat with x running through all crew members:
+		if the game stage is not listed in the pending order valid stages of x:
+			clear the pending order for x;
+
+To reset crew:
+	repeat with x running through all crew members:
+		now x is not a leader;
+		now x is not serving the master of x;
+		clear the pending order for x;
+		while the number of entries in the current plan of x is greater than 0:
+			remove entry 1 from the current plan of x;
+
+To (whom - a person) requests to do (next order - a stored action) requested as (description - text) during (valid times - list of stage_names):
+	if the pending order of whom is not the next order:
+		now the pending order description of whom is description;
+		now the pending order of whom is next order;
+		now the pending order valid stages of whom is valid times;
+		now whom is not acknowledged.
+
+To (whom - a person) requests to do (next order - a stored action) requested as (description - text):
+	let x be a list of stage_names;
+	add game stage to x;
+	whom requests to do next order requested as description during x.
+
+understand "have [person] fire" as fire ordering.  fire ordering is an action applying to one thing.
+Carry out fire ordering:
+	try the noun firing;
+
+Understand "play distress call" or "listen to distress call" or "listen to the distress call" as distress listening.  Distress listening is an action applying to nothing.
+
+Check an actor undocking:
+	if the actor is not in the harbinger one:
+		say "You must be in the Harbinger One to do that.";
+	otherwise if airless space is the room outside of the airlock:
+		say "You're not currently docked with a space station.";
+	otherwise if the actor is not Wendy:
+		say "[Address for Wendy] take[s for wendy] care of docking and undocking the Harbinger One.";
+	otherwise:
+		say "[Address for Wendy] undock[s for wendy] the Harbinger One.";
+		change the inside exit of the room outside of the airlock to nothing;
+		change the south exit of the room outside of the airlock to nothing;
+		change the outside exit of the airlock to airless space;
+		change the north exit of the airlock to airless space;
+
+check an actor docking with:
+	if the actor is not in the harbinger one:
+		say "You must be in the Harbinger One to do that.";
+	otherwise if the noun is the Griffled Duckstar and the Griffled Duckstar is not dockable:
+		say "You aren't within docking range of the Griffled Duckstar Station.";
+	otherwise if the actor is Wendy:
+		if the dock of the noun is the room outside of the airlock:
+			say "You're already docked with [the noun].";
+		otherwise if the noun is not hailed:
+			say "You should hail them before docking with them.  It's only polite.";
+		otherwise:
+			say "The Harbinger One docks with [the noun].  You can enter the station by going out through the airlock in the storage bay.  ";
+			change the north exit of the airlock to the dock of the noun;
+			change the outside exit of the airlock to the dock of the noun;
+			change the south exit of the dock of the noun to the airlock;
+			change the inside exit of the dock of the noun to the airlock;
+			now the noun is not hailed;
+			if the noun is the duckstar:
+				if the game stage is ARRIVE_AT_DUCKSTAR:
+					set game stage to ENTER_THE_DUCKSTAR;
+				let x be a list of crew members;
+				if wendy is not the player:
+					add wendy to x;
+					now wendy is shadowing the player;
+				if gragnakus is not the player:
+					add gragnakus to x;
+					now gragnakus is shadowing the player;
+				if staci is not the player:
+					add staci to x;
+					now staci is shadowing the player;
+				say "[X] will come with you to the station.";
+	otherwise:
+		say "Only [address for Wendy] can dock the Harbinger One with [the noun].";
+
+before an actor firing:
+	if the actor is not in the Harbinger One:
+		say "You must be in the Harbinger One to do that.";
+	otherwise:
+		if the actor is Gragnakus:
+			if a random thing supported by the science officer's chair is Gragnakus:
+				let x be a random ship that is targeting the harbinger one;
+				if x is not nothing:
+					if a random thing supported by the Captain's chair is not Staci Starlight:
+						say "[Address for Gragnakus] say[s for gragnakus], '[Address for Staci] might want to take a seat before I begin firing.  It could get bumpy in here.'";
+					otherwise:
+						Decrease the hit points of x by attack power of the harbinger one;
+						if the hit points of x <= 0:
+							say "Gragnakus fires the main weapon and it is a direct hit.  [The x] turns into a glowing red ﬁreball, the top and bottom of the craft bowing out wildly as the whole ship is engulfed in ﬂames, and then those ﬂames are pulled out into the vacuum of airless space and extinguished. In seconds, the light show is over, and all that remains of the attack cruiser is a cloud of charred space debris, no doubt containing several high value minerals great for salvaging.  [Address for Gragnakus] turn[s for Gragnakus] off the red alert.";
+							now x is not targeting the harbinger one;
+							now the alert level of the harbinger one is green alert;
+							if game stage is WARBOT_ATTACK:
+								set game stage to DOOGUS_FINDS_YOU;
+								if doogus is not the player:
+									plan for doogus to go to the control room;
+								delay boredom for Wendy by 2;
+							otherwise:
+								say "Firing at [the x].  Down to [hit points of x] hull integrity points.";
+				otherwise:
+					say "'There's nothing out there we should be firing at, Captain.'";
+			otherwise:
+				say "[Address for Gragnakus] can only do that while sitting in the science officer's chair.";
+		otherwise:
+			say "It's Gragnakus['] job to fire the weapons.".
+
+after doogus going fore when the game stage is DOOGUS_FINDS_YOU:
+	if doogus is enclosed by the location of the player:
+		say "Doogus Dungus, the cranky ship's Treasurer sweeps into the room.";
+		say "[He-She for doogus], as the ship's treasurer, point[s for doogus] out that now would be a good time to go back to the storage bay and [bold type]launch the salvage drones[roman type] in order to collect any valuable resources left after the explosion of the War Bot ship.";
+		try guiding to Storage Bay;
+		set game stage to LAUNCH_DRONES;
+		let the speaker be doogus;
+		if doogus is the player:
+			now the speaker is Gragnakus;
+		say "[The speaker] says, 'I've activated the ship-board navigation, in case you are having trouble remembering how to get to the storage bay.  Just follow the red arrows.'";
+
+the red arrow is a backdrop.
+
+Every turn when the game stage is DOOGUS_FINDS_YOU:
+	if doogus is enclosed by the location of the player:
+		say "[He-She for doogus], as the ship's treasurer, point[s for doogus] out that now would be a good time to go back to the storage bay and [bold type]launch the salvage drones[roman type] in order to collect any valuable resources left after the explosion of the War Bot ship.";
+		try guiding to Storage Bay;
+		set game stage to LAUNCH_DRONES;
+		let the speaker be doogus;
+		if doogus is the player:
+			now the speaker is Gragnakus;
+		say "[The speaker] says, 'I've activated the ship-board navigation, in case you are having trouble remembering how to get to the storage bay.  Just follow the red arrows.'";
+
+
+Understand "hail [any space station]" as hailing. hailing is an action applying to one visible thing.
+
+check an actor hailing:
+	if the noun is the duckstar and the game stage is ARRIVE_AT_DUCKSTAR:
+		say "Wendy opens a communication channel to the Griffled Duckstar Station.  Shortly, a man identifying himself as Dr. Petre, acting station administrator, responds to your hail.  He thanks you for answering his distress beacon and asks you to dock with the Duckstar as soon as possible.";
+		now the duckstar is hailed;
+
+Section 14 - Pathfinding
+
+pathfinding to it for is an action applying to two visible things.
+
+servitute relates various people to one person (called the master).
+The verb to serve (he is serving, he serves, they serve, it is served) implies the servitute relation.
+
+A person can be unexpectedly travelling.
+
+carry out an actor pathfinding to:
+	now the actor is not shadowing anyone;
+	let x be the location of the actor;
+	if the actor is not the second noun:
+		now the actor serves the second noun;
+	if x is not the noun:
+		let best direction be the best route from x to the noun;
+		if var-P is super annoying:
+			say "The high pitched voice of Var-P, the ship's computer says, '[the actor] is travelling to [the best direction], with the eventual goal of reaching [the noun], at the behest of [the printed name of the second noun].  [He-she for the actor] is currently in [the location of the actor].  Aren't these updates useful?";
+		try the actor going the best direction;
+		if the location of the actor is the noun:
+			if var-P is super annoying:
+				say "The high pitched voice of Var-P, the ship's computer says, '[the actor] stopped moving in [the noun].  [His-her for the actor] journey began at the behest of [the printed name of the second noun], who is in [the location of the second noun][if the location of the second noun is the location of the actor] also[end if].  Aren't these updates useful?";
+			try the actor completing a path;
+		otherwise:
+			if the actor is enclosed by the location of the player:
+				if the player is the second noun:
+					say "[The actor] is reporting to [the noun], as you requested.";
+				otherwise if the master of the actor is not nothing:
+					if the actor is unexpectedly travelling:
+						if the location of the actor is the noun:
+							say "[the actor] spots you and says, 'Oh Hi, [the first name of the player].  [first name of the master of the actor] sent me here.";
+						otherwise:
+							say "[the actor] spots you and says, 'Hello, [the first name of the player].  [first name of the master of the actor] asked me to [if the noun is the location of the second noun]come[else]go[end if] to [the noun].'"; [todo  -- grag asked me to go to grag's workshop]
+						now the actor is not unexpectedly travelling;
+				otherwise:
+					say "[The actor] is passing through with duties to attend to in [the noun].";
+			[Recurse without using the plan for, which resets the unexpectedness)]
+			let z be the action of the actor pathfinding to the noun for the second noun;
+			add z at entry 1 in the current plan of the actor;
+
+Completing a path is an action applying to nothing.
+
+carry out an actor completing a path:
+	if the master of the actor is not nothing:
+		if the actor is enclosed by the location of the master of the actor:
+			if the actor is enclosed by the location of the player:
+				say "[Address for the actor] says, 'Hi, [the first name of the master of the actor].  You called?'";
+				if the master of the actor is not the player:
+					say "[The master of the player] replies to [the actor], 'Yes.  I need you to [one of]double check a diagnostic.[or]check out a damaged system.[or]take an inventory of spare parts.[in random order]";
+		otherwise if the master of the actor is enclosed by the location of the player:
+			say "You hear a voice over the intercom, '[the first name of the actor] to [the first name of the master of the actor]… I am in [the location of the actor for the actor to the master of the actor].'";
+			if the master of the actor is not the player:
+				say "[The master of the actor] replies, 'Acknowledged,' into the intercom.";
+		otherwise if the actor is enclosed by the location of the player:
+			say "[Address for the actor] press[es for the actor] a button on the intercom and say[s for the actor] '[The first name of the actor] to [the first name of the master of the actor]… I am in the [location of the actor for the actor to the master of the actor].'";
+			if the master of the actor is not the player:
+				say "You hear the voice of [the master of the actor] over the intercom, 'Acknowledged.'";
+		now the actor is not serving the master of the actor;
+	[ When you get to where you're going, get started right away to avoid an awkward pause]
+	the actor performs their current action;
+
+Section 15 - Leading
+
+a person has a room called a destination.
+a person can be a leader.
+a person has a person called a follower.
+
+Finishing leading to is an action applying to one thing.
+
+Understand "lead me to [any room]" as leading by request. Leading by request is an action applying to one thing.
+
+carry out an actor leading by request:
+	let x be the actor;
+	if the actor is the player:
+		now x is available from the list of crew members enclosed by the location of the player;
+		if x is nothing:
+			say "There isn't anybody here that can help you.";
+			rule fails;
+	say "[X] says, 'Follow me, I'll take you to [the noun for x to the player].'";
+	x leads the player to the noun;
+
+Carry out an actor finishing leading to:
+	say "[The actor] has taken [address for the follower of the actor] to [the noun].";
+
+To (leader - a person) leads (follower - a person) to (destination - a room):
+	now the leader is a leader;
+	now the leader is not shadowing anyone;
+	[now the leader is shadowing nobody;]
+	now the follower of the leader is the follower;
+	now the destination of the leader is the destination;
+
+Leading is an action applying to nothing.
+Carry out an actor leading:
+	if the follower of the actor is enclosed by the destination of the actor:
+		now the actor is not a leader;
+		try the actor finishing leading to the destination of the actor;
+	otherwise if the follower of the actor is enclosed by the location of the actor:
+		let best direction be the best route from the location of the actor to the destination of the actor;
+		if the best direction is a direction:
+			try the actor going the best direction;			
+
+Section 16 - Boredom
+
+a crew member has a number called the bored time.
+a crew member has a number called how long until bored.  how long until bored of a crew member is usually 3.
+
+To delay boredom for (x - a crew member) by (y - number):
+	now the bored time of x is y + the turn count;
+
+after:
+	if the actor is a crew member:
+		delay boredom for the actor by how long until bored of the actor;
+	continue the action;
+
+Definition: a crew member is bored:
+	if it is the player:
+		no;
+	otherwise if the turn count is greater than the bored time of it and it is in the harbinger one:
+		if the game stage is LAUNCH_DRONES:
+			yes;
+		otherwise if the game stage is INVESTIGATE_THE_DUCKSTAR and it is doogus:
+			yes;
+	no;
+
+Doing a random crew thing is an action applying to nothing.
+Carry out an actor doing a random crew thing:
+	if the location of the actor is the location of the player:
+		say "[one of][The actor] runs a diagnostic.[or][The actor] enters some information into a data pad.[or][The actor] stiffles a yawn.[or][The actor] attends to [his-her for the actor] duties.[or][if the actor is doogus][The actor] searches for hidden cheese.[otherwise][The actor] checks the ship for damage.[end if][in random order]";
+	if a random chance of 1 in 2 succeeds:
+		let x be a random crew member that is not the actor;
+		let y be a random room in the harbinger one;
+		if x is not the player and x is in the harbinger one:
+			try the actor sending x to y;
+
+To have (x - a crew member) be bored:
+	let y be random room in the harbinger one;
+	if y is not the location of x:
+		if the location of x is the location of the player:
+			say "[X] has duties to attend to in [the y].";
+		plan for x to go to y;
+	add the action of x doing a random crew thing to the current plan of x;
+
+Section 17 - Game Stage Hints
+
+Table of Hint Givers
+Giver	Individual Hinter Table
+Wendy	Table of Wendy Hints
+Gragnakus	Table of Gragnakus Hints
+Staci	Table of Staci Hints
+Doogus	Table of Doogus Hints
+
+Table of Wendy Hints
+Speaker	specific responses table
+Staci	Table of Wendy Hints for Staci
+
+Table of Gragnakus Hints
+Speaker	specific responses table
+Staci	table of gragnakus hints for staci
+
+Table of Staci Hints
+Speaker	specific responses table
+Wendy	table of staci hints for wendy
+
+Table of Doogus Hints
+Speaker	specific responses table
+Staci	table of doogus hints for staci
+
+Table of Doogus Hints for Staci
+Stage	Response
+WARBOT_ATTACK	"This attack is eating into our profits.  Why don't you do something about it?"
+
+Table of Staci Hints for Wendy
+Stage	Response
+WARBOT_ATTACK	"Scary!"
+TELEPORT_TO_UNKNOWN	"We'd better be very cautious when we teleport over there, we have no idea what we're going to encounter.";
+
+Table of Gragnakus Hints for Staci
+Stage	Response
+LAUNCH_DRONES	"After you launch the drones from the storage bay, you'll be able to see them collecting debris on the view screen in the control room."
+
+Table of Wendy Hints for Staci
+Stage	Response
+WARBOT_ATTACK	"Look out Staci!  War Bot attack!  [if the player is seated]Have Gragnakus fire the weapons![otherwise]You'd better sit down before you're knocked off of your feet!"
+TELEPORT_TO_UNKNOWN	"I'll come with you to the mysterious ship.  You know… in case we get into trouble."
+
+To decide which text is a hint from (hint giver - a crew member) for (asker - a crew member):
+	if there is an Individual Hinter Table corresponding to a giver of hint giver in the Table of hint givers:
+		let x be the Individual Hinter Table corresponding to a giver of hint giver in the table of hint givers;
+		if there is a specific responses table corresponding to a speaker of asker in x:
+			let y be the specific responses table corresponding to a speaker of asker in x;
+			if there is a response corresponding to the stage of game stage in y:
+				decide on the response corresponding to the stage of game stage in y;
+	decide on "";
+
+To decide which text is game stage advice for (asker - a crew member):
+	let x be a hint from the noun for the asker;
+	if x is not "":
+		decide on x;
+	if the game stage is WARBOT_ATTACK:
+		decide on "We should fire back at that War Bot ship.";
+	otherwise if the game stage is LAUNCH_DRONES:
+		if the drones are enclosed by the storage bay:
+			decide on "We should launch the salvage drones to gather debris from the exploded War Bot ship.";
+		otherwise:
+			decide on "The drones should be back soon.  Maybe they'll bring back something interesting.";
+	otherwise if the game stage is DOOGUS_FINDS_YOU:
+		decide on "I'm sure that we could find some useful salvage in the debris of the exploded War Bot ship.";
+	otherwise if the game stage is FIX_WARBOT:
+		decide on "[if the war bot is evil]Perhaps fixing the War Bot was a bad idea.  Maybe if we take a closer look at it we could get an idea of how to deactivate it[otherwise]Maybe we can fix that salvaged War Bot.";
+	otherwise if the game stage is GET_DISTRESS_CALL:
+		decide on "I wonder what that distress call is about.";
+	otherwise if the game stage is WARPING_TO_DUCKSTAR:
+		decide on "We should arrive at The Griffled Duckstar Station soon.";
+	otherwise if the game stage is ARRIVE_AT_DUCKSTAR:
+		decide on "We should dock with the Duckstar.";
+	otherwise if the game stage is ENTER_THE_DUCKSTAR:
+		decide on "Let's go to the Duckstar.  We've docked, so we just have to go out throught the airlock.";
+	otherwise if the game stage is INVESTIGATE_THE_DUCKSTAR:
+		decide on "You should talk to Dr Petre.";
+	otherwise if the game stage is TELEPORT_CAMERA:
+		decide on "Let's figure out how we can use the teleporter.";
+	otherwise if the game stage is TELEPORT_TO_UNKNOWN:
+		decide on "[Address for staci] and [Address for wendy] should teleport over to the ship.  Hopefully whatever is found over there will explain what happened to Dr Zuumont.";
+	otherwise if the game stage is ON_THE_UNKNOWN_SHIP:
+		decide on "Let's look around.";
+	otherwise if the game stage is LEARN_ABOUT_ZUUMONT:
+		decide on "We should listen to what these guys are saying.";
+	otherwise if the game stage is RESCUE_THE_SIMULATION:
+		decide on "We need to rescue Dr Zuumont.";
+	otherwise if the game stage is RESTORE_ZUUMONT:
+		decide on "[If dr zuumont is dazed]We should put that helmet on the real Dr Zuumont and see what happens.[otherwise]I hope Dr Zuumont is able to stop the War Bot attack.";
+	otherwise if the game stage is CIRCLE_THE_WAGONS:
+		decide on "Hopefully we will be able to fend off the Warp Troll attack.";
+	otherwise if the game stage is WARP_TROLLS_ATTACKING:
+		decide on "The warp trolls are in the station.";
+	otherwise:
+		decide on "I'm not sure what to do next.";
+
+instead of an actor talking to a crew member:
+	if the pending order description of the noun is not "":
+		try the noun reporting status;
+	otherwise:
+		say "[The noun] says, '[game stage advice for the actor]'";
+
+Progressing is an action applying to nothing.
+
+To set game stage to (new stage - stage_name):
+	now the game stage is new stage;
+	clear the pending orders for all of the crew;
+	try progressing;
+
+Section 18 - Understanding
+
+Does the player mean hiding tall cabinet: it is very likely.
+Does the player mean smashing the transport unit with the small pry bar:  It is likely.
+Does the player mean smashing the transport unit with the large pry bar: It is likely.
+Does the player mean launching the drones: It is very likely;
+Does the player mean asking a person to try following the player: it is very likely.
+Does the player mean entering a chair (called the sit target):
+	if the number of things on the sit target is greater than 0:
+		it is very unlikely;
+	it is likely.
+Does the player mean asking a person to try entering a chair (called the sit target):
+	if the number of things on the sit target is greater than 0:
+		it is very unlikely;
+	it is likely.
+Does the player mean scanning a person with a medical scanner: it is very likely.
+Does the player mean entering the preferred chair of the player: It is very likely.
+Does the player mean photographing a camera with a camera: It is very unlikely.
+Does the player mean asking a person to try docking with a space station that is hailed: It is very likely.
+Does the player mean docking with a space station that is hailed: It is very likely.
+
+Section 66 - Gravity
+
+Gravity is a thing.  Gravity can be on or off. Gravity is on.
+
+Before someone (called the graviter) going when gravity is off:
+	if the location of the graviter is the location of the player:
+		say "[Address for the actor] floats toward [the noun].";
+
+after someone (called the graviter) going when gravity is off:
+	if the location of the actor is the location of the player:
+		say "[Address for the actor] floats in from [the opposite of the noun].";
+
+Part 1 - Warbot Attack
+
+After printing the banner text:
+	let x be the player;
+	now the player is staci;
+	remove x from play;
+	say "[paragraph break]Issue commands to your crew by saying '(crew member), action'.[line break]For example:  '[bold type]Gragnakus, fire[roman type]' --or-- '[bold type]Wendy, follow me[roman type]'.[line break]You can also switch to any crew member with 'switch to (crew member)'."
+
+Every Turn:
+	if a ship is targeting the Harbinger One:
+		if staci is not the player and staci is not seated:
+			staci requests to do the action of staci entering the preferred chair of staci requested as "Should I take a seat?";
+		gragnakus requests to do the action of gragnakus firing requested as "We're under attack by [the list of ships targeting the harbinger one].  Open fire?";
+		repeat with attacker running through the ships targeting the harbinger one:
+			Decrease the hit points of the harbinger one by attack power of the attacker;
+			say "The Harbinger One rocks from the attack by [the attacker].  Var-P, the Harbinger One's computer, calls out that the hull has [the hit points of the harbinger one] points of structural integrity remaining.";
+			if the hit points of the Harbinger One is 400 and the game stage is WARBOT_ATTACK:
+				try gragnakus reporting status;
+			if the hit points of the Harbinger One is 300 and the game stage is WARBOT_ATTACK:
+				say "Var-P suggests taking a seat in the Captain's chair and dealing with this emergency.";
+	if the hit points of the Harbinger One <= 0:
+		end the story saying "The Harbinger One explodes into a million tiny pieces of space debris.";
+
+Rule for printing room description details of the wrist camera:
+	if the wrist camera is broken, say " (broken)";
+
+The Control Room is a ship room in the Harbinger One. "You are in the control room of your ship, the Harbinger One.  This is a large, circular room, relatively bare with featureless pale grey metal walls.  Three chairs sit clustered together in the center of the room.  The front of the control room is dominated by a 7-foot tall view screen, showing what's outside of the ship.  There is a pair of double sliding doors in the aft of the room, and there is a single sliding door in the wall to the starboard side of the room.[if the alert level of the harbinger one is red alert]  The room is lit only by red emergency lighting.[end if][if the harbinger one is warping]  The lights in the room are dimmed to half strength as power in ship systems are diverted to the warp engine.".
+
+after looking in a room in the harbinger one when the harbinger one is guiding:
+	if the location of the player is the destination room of the harbinger one:
+		now the harbinger one is not guiding;
+		remove the red arrow from play;
+		say "A small display on the wall says, 'Route guidance deactivated.  You have reached your destination.'";
+	otherwise:
+		say "A red arrow on the wall points toward [the best route from the location of the player to the destination room of the Harbinger one].";
+	continue the action;	
+
+instead of answering the noun that "hello" when the game stage is WARBOT_ATTACK:
+	say "[The noun] looks at you, '[The first name of the actor], this isn't a good time to chat.  We're under attack!'";
+
+instead of answering the noun that "hello":
+	if the noun is gragnakus and the actor is wendy:
+		say "Gragnakus grins and waves.";
+	otherwise if the noun is gragnakus and the actor is staci:
+		say "Gragnakus regards you warmly.  '[one of]Hello, dear[or]Hi[in random order].'";
+	otherwise if the noun is gragnakus and the actor is doogus:
+		say "Gragnakus gives a perfunctory nod.";
+	otherwise if the noun is staci and the actor is wendy:
+		say "Staci smiles broadly and says hello.";
+	otherwise if the noun is staci and the actor is gragnakus:
+		say "Staci smiles and pats you on the head.";
+	otherwise if the noun is staci and the actor is doogus:
+		say "Staci smirks.";
+	otherwise if the noun is wendy and the actor is staci:
+		say "Wendy beams.  'Hi!  What are we doing today?'";
+	otherwise if the noun is wendy and the actor is gragnakus:
+		say "Wendy crinkles her nose, winks, then sticks her tongue out at you and laughs.";
+	otherwise if the noun is wendy and the actor is doogus:
+		say "Wendy nods with mock sagacity.";
+	otherwise if the noun is doogus:
+		say "Doogus nods curtly.";
+	otherwise:
+		say "[The noun] nods politely.";
+
+[After the Control Room to make the control room the starting room.. cheesy]
+airless space is a room in empty space.
+
+The view screen is scenery in the Control Room.
+The view screen has a space thing called a view subject.  The view subject of the view screen is empty space.
+
+To decide which object is the object on the screen:
+	let x be a random ship that is targeting the Harbinger One;
+	if x is nothing:
+		now x is the view subject of the view screen;
+		if x is Empty Space and anything is enclosed by airless space:
+			now x is a random thing in airless space;
+	decide on x;
+
+Instead of switching on the view screen:
+	let x be the object on the screen;
+	say "The view screen is already showing you [the x].  [The description of x][line break]";
+
+Instead of examining the view screen:
+	let x be the object on the screen;
+	say "The view screen is huge, taking up all of the front wall of the Control Room.  On the screen [if the x is plural]are[otherwise]is[end if] [the x].  [The description of x][line break]".
+
+The Captain's chair is a chair in the Control Room.  The preferred chair of Staci is the Captain's Chair.
+The Runeglyph Navigator's chair is a chair in the Control Room.  The preferred chair of Wendy is the navigator's chair. The description of the navigator's chair is "The Runeglyph Navigator's chair has a large touch sensitive display screen.  The display is linked directly to the ship navigation systems which can interface with the Runeglyph Network; the series of identiﬁed warp-space portals that link the interconnected planetary systems of the Eighty-Eight."
+
+The Science Officer's chair is a chair in the Control Room.  The preferred chair of Gragnakus is the science chair.  The description of the Science Officer's chair is "A solidly built chair placed in front of a bulky Dwarven computer workstation.";
+
+after entering the Captain's Chair:
+	Let L be {"FIRE", "STATUS REPORT", "CONFIRM", "JUMP TO WARP", "DOCK"};
+	say "You settle into your comfortable leather Captain's chair.  You are now ready to control the crew.  Issue orders to your crew by calling them by name.  Valid commands for your crew pertaining to controlling the ship are:[paragraph break]";
+	repeat with order running through L:
+		say "[order][line break]";
+	say "[line break]For instance: [bold type]Gragnakus, fire[roman type].";
+	repeat with x running through unacknowledged crew members:
+		try x reporting status;
+
+To say (noun - a thing) does-do:
+	say "[if the noun is the player]do[otherwise]does[end if]";
+
+carry out talking to:
+	say "[noun] has nothing to say to you at this time."
+
+Bad Pudding Heaven is a container.
+Runny Gruel Pudding, Lumpy Charcoal Pudding, the Looks Fine but Tastes Bad Pudding, and Stinkbomb Pudding are bad puddings in Bad Pudding Heaven.
+The description of Looks Fine but Tastes Bad Pudding is "It doesn't even look that different from actual pudding, both in the pleasing texture, and its yellow-white creamy color."
+
+[instead of firing if on the science officer's chair, say "Fire!".]
+
+Staci's Personal Office is a ship room in the Harbinger One. It is starboard of the control room. It is inside of the Control Room.  "This is [if the player is staci]your[otherwise]Staci Starlight's[end if] office space.  On the wall is a photo viewer screen.  Next to the screen is a small shelf containing various trophies and momentos from your journies through space.  There is a weathered wooden desk here.  On the desk sits an Edible Food Molecular Assembulator (EFMA).  [if the number of things enclosed by the assembulator > 0]It contains [the list of things enclosed by the assembulator]."
+
+To plan for (goer - a person) to go to (place - a room) for (master - a person):
+	if the master is not the player and the location of the player is not the location of the goer:
+		now the goer is unexpectedly travelling;
+	let x be the action of the goer pathfinding to the place for the master;
+	add x to the current plan of the goer;
+
+To plan for (goer - a person) to go to (place - a room):
+	plan for goer to go to the place for the goer;
+
+after going starboard in Staci's personal office when the game stage is LAUNCH_DRONES:
+	if wendy is not shadowing the player:
+		plan for wendy to go to Staci's Personal Office;
+	make no decision;
+
+Understand "trophies" or "momentos" as small shelf.
+
+The small shelf is scenery in Staci's Personal Office.  "Among other things on the shelf you see an honorary degree from the Elﬂight Scholars above proclaiming that Staci Starlight has demonstrated advanced skills in logic and deduction; earned when you helped the university uncover the whereabouts of an extremely important data card. Nobody but you had suspected that the president of the university may have had a motive to make sure that the information on that card would never be discovered.".
+
+There is a photo viewer called the photo viewer screen.  The photo viewer screen is in Staci's Personal Office.  It is scenery.
+
+There is a camera called a Wrist Camera.  The wrist camera is worn by Staci Starlight.  The sync target of the wrist camera is the photo viewer screen.  The description of the wrist camera is "A broad tan band with a round glass face.  There are actually two cameras for ease of picture taking, depending on the orientation of your wrist.  [if the wrist camera is broken]The camera was recently stepped on, so it isn't working right now.".
+
+Staci's desk is a scenery supporter in Staci's Personal Office.  The description of Staci's desk is "A long wooden desk, out of place on an advanced space ship like the Harbinger One.  The desk had been your grandfather's, but it became yours on the day when he mysteriously went missing."
+
+The Edible Food Molecular Assembulator is a scenery container on Staci's Desk. The Assembulator can be switched on or switched off. The Assembulator is switched off. The description of it is "The Edible Food Molecular Assembulator (EFMA) is a black box, about three feet wide and two feet tall and deep.  It has a whole array of buttons on top and a silver metal door on the front.  You bought it second-hand in almost working condition.  It is apparently programmed with specialty dessert items found across all of the Eighty-Eight.  With the current settings, you can turn this on to make pudding."
+
+Understand "EFMA" as the Assembulator.
+Instead of an actor using the assembulator:
+	abide by the making pudding rule.
+
+Instead of taking the Assembulator:
+	say "You wouldn't want to have to lug that all over the place."
+
+switching on the Assembulator is making pudding.
+
+instead of someone switching on the Assembulator:
+	abide by the making pudding rule;
+	
+instead of switching on the Assembulator:
+	abide by the making pudding rule;
+
+Understand "send for [any crew member]" or "summon [any crew member]" or "call to [any crew member]" or "call [any crew member]" as summoning.
+
+Understand "summon crew" as mass summoning.  Mass summoning is an action applying to nothing.
+
+Carry out mass summoning:
+	say "You say speak into your communicator, 'Attention crew of the Harbinger One, please come to [the location of the player].'";
+	repeat with x running through the npc crew members:
+		plan for x to go to the location of the player for the player;
+
+Summoning is an action applying to one visible thing.
+	
+Carry out an actor summoning:
+	if the noun is enclosed by the location of the player:
+		if the actor is the player:
+			say "[The noun] says, 'What can I do for you, [the first name of the actor]?'";
+		otherwise:
+			say "The voice of [the actor] comes over the intercom, '[The first name of the noun], I'm sorry to interrupt, but can you come to [the location of the actor] immediately?'";
+	otherwise:
+		say "[Address for the actor] go[es for the actor] over to an intercom on the wall and say, '[The first name of the noun], can you please meet me in [the location of the actor for the actor to the noun]?'[paragraph break]A moment later, the voice of [The noun] comes from the intercom, 'Ok [The first name of the actor], I'm on my way.'";
+	if the location of the noun is not the location of the actor:
+		plan for the noun to go to the location of the actor for the actor;
+
+Understand "send [any crew member] to [any room]" as sending it to.
+Sending it to is an action applying to two visible things.
+carry out an actor sending something to:
+	if the location of the noun is the second noun:
+		if the actor is the player:
+			say "[the noun] is already in the [second noun].";
+	otherwise:
+		if the actor is enclosed by the location of the noun:
+			if the actor is enclosed by the location of the player:
+				say "[Address for the actor] say[s for the actor], 'Hey, [the first name of the noun], can you go to [the second noun for the actor to the noun], please?'";
+		otherwise if the noun is enclosed by the location of the player:
+			say "You hear a voice over the intercom, '[the actor] to [the printed name of the noun]… Please report to [the second noun for the actor to the noun].'";
+		otherwise if the actor is enclosed by the location of the player:
+			say "[Address for the actor] press[es for the actor] a button on the intercom and say[s for the actor], '[The printed name of the actor] to [the printed name of the noun]… Can you please, [if the second noun is the location of the actor]report[otherwise]go[end if] to [the second noun for the actor to the noun].'";
+		if the noun is a leader:
+			if the actor is enclosed by the location of the player and the noun is enclosed by the location of the player:
+				say "[The noun] says, '";
+			otherwise if the actor is enclosed by the location of the player:
+				say "From over the intercom, you hear the voice of [the noun], '";
+			otherwise if the noun is enclosed by the location of the player:
+				say "[The noun] walks over to the intercom and says, '";
+			if the noun is visible or the actor is visible:
+				say "Sorry, [the first name of the actor], I'm taking [the first name of the follower of the noun] to [the destination of the noun for the noun to the actor].'";
+		otherwise:
+			now the noun serves the actor;
+			plan for the noun to go to the second noun for the master of the noun;
+
+Understand "go to [any room]" as going to.
+going to is an action applying to one visible thing.
+carry out an actor going to:
+	if the actor is the player:
+		say "If you aren't sure how to get to [the noun] you could ask the route guidance system to help you find it.";
+	otherwise:
+		try sending the actor to the noun.
+
+This is the making pudding rule:
+	now the Assembulator is switched off;
+ 	if anything is in bad pudding heaven:
+		let x be a random thing in bad pudding heaven;
+		move x to the Assembulator;
+		if x is not puddinged:
+			now x is puddinged;
+			increase the score by 1;
+		say "Whrrrr.  The Assembulator generates [the x], then turns itself off.";
+		if wendy is enclosed by Staci's personal office:
+			say "Wendy says, 'I hope this batch is better than the last one.'";
+	otherwise:
+		say "The Assembulator makes an unhappy sound and turns off.";
+	rule succeeds.
+
+instead of an actor eating bad pudding that is unphotographed:
+	abide by the no eating unphotographed things rule;
+
+This is the no eating unphotographed things rule:
+	say "You should take a picture of it first… You know… for posterity.";	
+
+instead of someone eating bad pudding:
+	say "[The actor] makes a terrible face after taking just a tiny taste of [the noun].  That didn't look pleasant.";
+	if the actor is unpuddinged:
+		increase the score by 10;
+		now the actor is puddinged;
+	rule succeeds.	
+
+instead of eating bad pudding:
+	say "Oh yuck! That's terrible.  It's awful.  You did not enjoy that at all." instead.
+
+War Bot Room is a ship room. It is in the War Bot Attack Ship. "Seven War Bots stand (because there are no seats on a War Bot attack cruiser) in their control room, thin yellow cables running from a port on the side of their neck and down into jacks on the ﬂoor of the ship. They are all shorter than you and painted the shocking red of a War Bot raiding party, the blocky roughly humanoid robots all ﬁx their varying number of large round illuminated violet eyes on the crew of the Harbinger One. You are struck by how different they all look. Built and rebuilt from scavenged robotic components after each successful raid it is impossible to tell what the original design of a War Bot may have looked like."
+
+The Forward End of the Corridor is a ship room in the Harbinger One. It is aft of the control room. "You are at the fore end of the wide, well lit passage that runs the length of the ship.  To the fore are double doors that lead into the Control Room.  Other doors lead port and starboard.  The corridor continues aft."
+
+The Middle of the Corridor is a ship room in the Harbinger One. It is aft of the forward end of the corridor.  "You are in the center of the ship.  You are half way between the control room to the fore and the engine room to the aft.  There are doors to the port and starboard."
+
+The Aft End of the Corridor is a ship room in the Harbinger One. It is aft of the middle of the corridor.  "You are at the aft end of the wide, well lit passage that runs the length of the ship.  At the end of the corridor is a heavy set of orange sliding double doors surrounded by a thick metal reinforced frame.  Fore, Aft, Port, or Starboard?"
+
+The Engine Room is a ship room in the Harbinger One. It is aft of the Aft End of the corridor. "The metallic smell of ozone blows over you as you step into the room.  It is Engine Room is small but uncluttered.  The room is lit by the blue lights that interfere the least with the sensitive systems in this part of the ship.  Fore?"
+
+Var-P the Warp Core Computer is backdrop in the Harbinger One. The description of Var-P is "The warp engine computer is a linked set of three computer cabinets covered in small clusters of blinking blue status lights.  It is connected by a think black shielded cable to a control console.  The computer is responsible for integrating information from ship sensors, star charts, and the warp engine, and runs a sophisticated Artiﬁcial Intelligence algorithm.  There are two buttons on the core."
+
+[Instead of saying hello to Var-P:
+	say "Var-P returns your greeting with a cheery, 'I hope you are well today.'"
+]
+Understand "computer" as Var-P.
+
+Var-P can be super annoying.  [Var-P is super annoying.]
+
+The green button is a part of the warp core.  The green button can be pressed.
+The blue button is a part of the warp core.  The blue button can be pressed.
+After pushing the green button:
+	say "You're not sure that anything happened, perhaps you should summon [a random crew member who is not the player] to come take a look at the warp core.";
+	now var-p is super annoying.
+
+After pushing the blue button:
+	say "The cooling fan of Var-P hums with a self-satisfied smugness.";
+	now var-p is not super annoying.
+
+after looking in the engine room when the engine room was not visited:
+	say "Var-P says, 'Hello, [printed name of player].  It is good to see you again.'";
+	continue the action;
+
+The control console is scenery in the Engine Room.  The description of the control console is "The console is a sleek black pane of glass at the top of a metal adjustable height pedestal.  The display shows the results of a recent analysis of the Kelembad asteroid field.  There look to be several promising unclaimed mining locations.".
+
+Gragnakus' Room is a ship room in the Harbinger One.  It is port of the middle of the corridor. "The smallest room in the ship.  No decorations adorn the wall.  There is nothing of note here but a small dwarven bed.  You can go Starboard."
+
+Gragnakus' small dwarven bed is a scenery supporter in Gragnakus' Room.  The description of it is "About the length of a space dwarf (lying down).  The bed is as hard as stone.[if the player is gragnakus]..  just how you like it."
+
+Doogus Dungus' Room is a ship room in the Harbinger One. It is port of the forward end of the corridor.  "The occupant of this room is clearly obsessively tidy.  There is a clean and simple desk here.  You can go starboard from here to go back to the corridor.  There is a high backed chair in front of the desk, looking as stern and severe as its owner."
+
+A high backed chair is a chair in Doogus Dungus' Room.  The preferred chair of Doogus Dungus is the high backed chair.
+
+Doogus Dungus' Desk is scenery in Doogus Dungus' Room.  The description of it is "An immaculate desk with a touch sensitive display built into the surface of the desk.  On the screen are spreadsheets outlining the financial records for the Harbinger One.".
+
+Gragnakus' Workshop is a ship room in the Harbinger One. It is port of the Aft End of the corridor. "There is a [if the workshop is damaged]neatly folded in half [end if]metal workbench here.  You can go Starboard."
+
+The workshop can be damaged.
+
+The small pry bar is in Gragnakus' Workshop.  The description of it is "A small metal pry bar, good for removing decorative wood paneling, or any other such small scale demolition.";
+
+Instead of using the small pry bar with The dangerous War Bot:
+	say "You can't really get close enough, and you're not sure where you could apply the pry bar in order to be effective.";
+
+after an actor using the small pry bar with:
+	say "That wouldn't really accomplish anything.";
+
+after an actor using the large pry bar with:
+	say "That wouldn't really accomplish anything that you wouldn't regret in the morning.";
+ 
+The metal workbench is scenery in Gragnakus' Workshop.  The description of it is "A long metal table good for doing delicate work with electronics as well as substantial repairs on heavy machinery.[if the workshop is damaged]  Well, it would be if it hadn't been ruined by a rogue War Bot.[end if]" 
+
+The Storage Bay is a ship room in the Harbinger One. It is starboard of the Aft End of the corridor. "The storage bay is just a large, featureless rectangular room ﬁlled with color coded crates of various sizes and a large airlock to the starboard, used to get crew and cargo in and out of the ship.  A set of rails run along the ceiling.  The door to the corridor is to the port side of the room, to the starboard is an airlock.  There is a yellow button on the wall."
+
+the yellow button is scenery in the storage bay.  The description of it is "The yellow button is marked 'Launch Drones.'  Pushing it will launch the salvage drones into space.". The yellow button can be pressed.
+
+instead of pushing the yellow button:
+	if the location of the salvage drones is airless space:
+		say "The drones have already been launched.";
+	else:
+		try launching the salvage drones.
+
+the rails are scenery in the storage bay.  The description of it is "The rails are a set of tracks that run along the ceiling.  The salvage drones slide along the rails and are used by the crew to position the drones to use their strong manipulator arms to pack and unpack cargo.".
+
+A large crate is a supporter in the storage bay.  It is not fixed in place.  The description of it is "The crate is as tall as a workbench, with a large flat surface on top.  It contains ore, mined from an asteroid in the Kelembad System.  The crate is extremely heavy, but is equipped with a magnetic levitation device that can be switched on in order to be able to push the crate from room to room."
+
+Instead of opening the crate:
+	say "You don't really have any use for a bunch of heavy ore."
+
+Instead of an actor taking the large crate:
+	say "The large crate is far to heavy to lift, especially being filled with all of that ore.  Perhaps you could push it.";
+
+Rule for printing room description details of a large crate:
+	if the levitation device is switched on, say " (levitating)";
+
+After switching on the levitation device:
+	now the large crate is pushable between rooms;
+	say "You switch the magnetic levitation device on.  The crate quietly lifts a few inches off the floor and hovers as if resting on a cushion of air.";
+
+After switching off the levitation device:
+	now the large crate is not pushable between rooms;
+	say "You switch the magnetic levitation device off.  With a loud thump, the crate of heavy ores drops to the ground.";
+
+The magnetic levitation device is a device.  It is a part of the large crate.
+
+The Airlock is a ship room in the Harbinger One.  It is starboard of the Storage Bay. The description of the airlock is "You look through the airlock and see [the room outside of the airlock].  You can go out, or go back to the storage bay by going to the port.".
+
+The AIrlock is inside of airless space.
+The Airlock is inside of the Duckstar Station Entryway.
+
+instead of going outside from the airlock when the location of the medical bag is not the location of the player and duckstar station entryway is the room outside of the airlock:
+	if the game stage is ENTER_THE_DUCKSTAR:
+		say "You should probably grab the medical bag from [the location of the medical bag] before heading out.";
+	otherwise:
+		continue the action;
+
+Salvage Drones are in the Storage Bay.  The salvage drones are fixed in place and plural.  The description of the Salvage Drones is "The salvage drones are black metal man sized capsules with ﬁve pairs of robotic arms ending in manipulator claws.  They are programmed by the crew of the Harbinger One to collect debris and minerals floating in space and store them in the Storage Bay.[if the salvage drones are in airless space]  The drones are picking through the debris field collecting anything valuable that they can detect.[end if]".
+
+Instead of an actor switching on or frobbing the salvage drones in the storage bay:
+	abide by the frob the salvage drones rule;
+
+carry out an actor launching the salvage drones in the storage bay (this is the frob the salvage drones rule):
+	say "[Address for the actor] slide[s for the actor] the drones along their ceiling track into the airlock and press the yellow button to launch[es for the actor] them into space.  You should go up to the control room to watch their progress on view screen.";
+	move the salvage drones to airless space;
+	the salvage drones return in ten turns from now;
+	rule succeeds.
+
+at the time when about to drop from warp:
+	say "The gentle rocking of the room begins to intensify as a low rumble begins to shake the very frame of the ship.  Air compressors kick in and begin blowing loudly to ﬁght against the pressure change as the ship falls from warp.  Red running lights come on at the base of all the walls of [the location of the player] as the shaking intensiﬁes.";
+
+at the time when arriving at duckstar:
+	Now the Harbinger One is not warping;
+	Now the view subject of the view screen is The Griffled Duckstar;
+	set game stage to ARRIVE_AT_DUCKSTAR;
+	now the Griffled Duckstar is dockable;
+	Wendy requests to do the action of wendy hailing the duckstar station requested as "We've arrived in the Clang System.  Hail the Duckstar Station?";
+	say "Your ears pop as you drop from warp.  Var-P announces, 'We have arrived at the Griffled Duckstar Station, a research station focusing on genetic research into pest resistant food crops.  The station was established ﬁve years ago by a Dr. Theodore Zuumont.  The crew compliment is 33, consisting entirely of scientists and technicians, no families. It’s located on the outskirts of The Savage Barren Zone, a desolate reach of space plagued by continuous War Bot attack.'".
+
+To say War Bot Description:
+	say "The War Bot is a red robot about the height of a Space Dwarf.";
+	if the war bot is unrepaired:
+		say "It is damaged beyond the point of being functional.";
+	otherwise if the war bot is switched off:
+		say "Now that it is fixed, you can turn it on.";
+	otherwise if the war bot is evil and the war bot is switched on:
+		say "The War Bot is thrashing about wildly, doing tremendous damage to the Workshop.  Maybe if you pour some kind of liquid on it, it will short out."
+
+instead of throwing pudding at the war bot:
+	abide by the putting pudding on the war bot rule;
+
+instead of putting pudding on the war bot:
+	abide by the putting pudding on the war bot rule;
+
+Instead of an actor jumping to warp when the game stage is GET_DISTRESS_CALL:
+	if the actor is wendy:
+		say "[Address for Wendy] tap[s for wendy] in a few commands into [his-her for Wendy] control console, then press[es for wendy] a key to make a ship-wide announcement.  'Attention, crew of the Harbinger One. Warp Engines are about to be engaged. Approximate travel time is 3 minutes across…'  [He-She for wendy] stop[s for wendy] to check a ﬁnal calculation result on [his-her for wendy] screen, '42 micro-jumps.'[paragraph break] With a ﬁnal press, the lights in the control room dim to half strength and a powerful buildup can be heard through the walls and felt through the deck plates as the warp engine engages. You feel something like what you imagine it might feel to be poured through a funnel.[paragraph break]A quick check of the ship status display indicates that the ship has made the jump, and that all systems on the Harbinger One are running normally.";
+		set game stage to WARPING_TO_DUCKSTAR;
+		now the view subject of the view screen is warp space;
+		now the harbinger one is warping;
+		arriving at duckstar in three turns from now;
+		about to drop from warp in two turns from now;
+		rule succeeds;
+	else:
+		continue the action;
+
+This is the putting pudding on the war bot rule:
+	if the war bot is unpuddinged:
+		now the war bot is puddinged;
+		increase the score by 40;
+	now the war bot is switched off;
+	move the noun to bad pudding heaven;
+	say "That worked, the war bot shorts out.";
+	if the game stage is FIX_WARBOT:
+		set game stage to GET_DISTRESS_CALL;
+		repeat with x running through all crew members who are not the player:
+			plan for x to go to the location of the preferred chair of x;
+			add the action of x entering the preferred chair of x to the current plan of x;
+		gragnakus requests to do the action of gragnakus nodding requested as "[one of]The distress call is a high priority alpha distress beacon from Grifﬂed Duckstar Station in the Clang system. They’re requesting immediate assistance from any ship outﬁtted with science or medical facilities.[or]Still seeing that distress call.[stopping]";
+		wendy requests to do the action of wendy jumping to warp requested as "Laid in a course for the location of the distress call.  Ready to jump to warp?";
+		say "The high-pitched computerized voice of Var-P comes over the ship intercom, 'Please come to the control room, we are getting a distress call.'";
+		try guiding to the Control Room;
+
+There is a thing called The War Bot.  The War Bot can be unrepaired, evil, or reprogrammed.  The War Bot can be switched on. The War Bot is unrepaired. The description of the War Bot is "[War Bot Description]".  
+
+Definition: The war bot is dangerous:
+	if the war bot is evil and the war bot is switched on, yes;
+	otherwise no;	
+
+Things can be puddinged or unpuddinged.  Things are usually unpuddinged.
+
+Understand "warbot" as the war bot.
+
+Instead of switching off the War Bot when the war bot is evil:
+	say "The War Bot is flailing too wildly to get close enough to switch off.";
+
+instead of an actor fixing the war bot:
+	say "The War Bot needs major work.  The best place to do that would be in [Gragnakus' Workshop].";
+
+Rule for printing room description details of the war bot:
+	if the war bot is evil and the war bot is switched on:
+    		say " (doing major damage to the room)" instead;
+	otherwise if the war bot is evil:
+		say " (fixed)" instead;
+	otherwise if the war bot is reprogrammed:
+		say " (reprogrammed)" instead;
+	otherwise:
+		say " (broken)" instead;
+
+instead of taking the war bot when the war bot is evil and the war bot is switched on:
+	say "That would be much to dangerous.";
+
+instead of switching on the war bot when the war bot is evil and the war bot is not in the workshop:
+	if the location of the war bot is the workshop:
+		if gragnakus is carrying the war bot:
+			try gragnakus dropping the war bot;
+			continue the action;
+	say "You should really only mess with the war bot in the workshop.";
+
+after switching on the war bot when the war bot is evil:
+	if gragnakus is carrying the war bot:
+		try gragnakus dropping the war bot;
+	say "The eyes of the War Bot glow an angry red.  It begins to flail its arms wildly, marching around the room and destroying equipment.  Boom! It's strong arms come down on the workbench, folding the metal surface neatly in half like a taco. Crunch! It lashes out and breaks the screen of a nearby wall display.  Smash! Bash! Two hand-held scanners are smashed to bits.";
+	now the workshop is damaged;
+
+instead of an actor fixing the war bot in Gragnakus' Workshop when the actor is not Gragnakus:
+	say "The only one with the expertise needed to work on the War Bot is [Gragnakus].";
+
+instead of an actor fixing the war bot in Gragnakus' Workshop:
+	if the war bot is unrepaired:
+		say "After a bit of effort, the War Bot is restored to working order.";
+		now the War Bot is evil;
+	otherwise:
+		say "The War Bot is now fully functional, there is no further fixing required.";
+	rule succeeds.
+
+Understand "ask about [text]" as asking about.  Asking about is an action applying to one topic.
+Check asking about: say "Nobody has anything interesting to say about that."
+
+Instead of an actor taking the war bot when the actor is not Gragnakus:
+	say "The War Bot would be too heavy for anybody but [Gragnakus] to lift.";
+
+instead of switching on the war bot when the war bot is unrepaired:
+	say "The War Bot needs to be fixed before it can be turned on.";
+
+At the time when the salvage drones return:
+	say "The salvage drones have completed their collecting and have returned to the storage bay.";
+	if game stage is LAUNCH_DRONES:
+		move the War Bot to the Storage Bay;
+		say "[bold type]*** The Salvage Drones brought back a damaged War Bot.[roman type]";
+		set game stage to FIX_WARBOT;
+	move the salvage drones to the storage bay.
+
+Wendy's Room is a ship room in the Harbinger One.  It is starboard of the forward of the corridor. "The decorative style here is a bit of a mix of everything.  Perhaps the high point of the room is the large bed covered in a huge number of stuffed animals.  A large painting hangs on the aft wall.  There is a door to the port."
+
+A medical bag is a container in Wendy's Room.  The description of it is "A small white bag with the looping blue insignia that indicates that it contains medical equipment.".  It is openable and closed.
+
+A bandage is in the medical bag.  The description of it is "A length of white gauze, useful for bandaging a wound.".  It is wearable.
+
+A medical scanner is a device in the medical bag.  The description of it is "Not very sophisticated, but pretty simple to use.  Turn it on and scan a person.  It will tell you if there is anything seriously wrong.". 
+
+Wendy's Painting is scenery in wendy's room.  The description of it is "A large mural of the surface of the Darvian Homeworld.  It is a vast expanse of craggy volcanic rock.  In the distance is a small patch of rain forest, nearly obscured by a thing yellow haze.";
+
+The Science Lab is a ship room in the Harbinger One. It is starboard of the middle of the corridor. "This is a mobile lab capable of analyzing and cataloging the huge numbers of strange and unknown plants and animals the ship’s four person crew encounter on their journeys throughout the cosmos.  The door is on the port side."
+
+Carry out finding my room:
+	if the player is gragnakus:
+		try guiding to Gragnakus' Room;
+	otherwise if the player is staci:
+		try guiding to Staci's Personal Office;
+	otherwise if the player is doogus:
+		try guiding to Doogus Dungus' Room;
+	otherwise:
+		try guiding to Wendy's Room; 
+
+[tell granakus to turn the ship, or target the war bot ship]
+[put the war bot ship on the screen]
+
+before going outside in the airlock:
+	if airless space is the room outside of the airlock:
+		say "You can not go out into airless space." instead;
+	otherwise:
+		continue the action;
+
+After going outside when the location of the player was the airlock:
+	if the game stage is ENTER_THE_DUCKSTAR:
+		now the game stage is INVESTIGATE_THE_DUCKSTAR;
+	continue the action;
+
+To say (place name - a room) for (speaker - a researcher) to (listener - a researcher):
+	say "[the place name]";
+
+To say (place name - a room) for (speaker - a crew member) to (listener - a crew member):
+	if the place name is Gragnakus' Room and the speaker is Gragnakus:
+		say "my room";
+	otherwise if the place name is Wendy's room and the speaker is wendy:
+		say "my room";
+	otherwise if the place name is Doogus Dungus' Room and the speaker is Doogus:
+		say "my room";
+	otherwise if the place name is Staci's Personal Office and the speaker is Staci:
+		say "my office";
+	otherwise if the place name is Gragnakus' Workshop and the speaker is Gragnakus:
+		say "my workshop";	
+	otherwise if the place name is Gragnakus' Room and the listener is Gragnakus:
+		say "your room";
+	otherwise if the place name is Wendy's room and the listener is wendy:
+		say "your room";
+	otherwise if the place name is Doogus Dungus' Room and the listener is Doogus:
+		say "your room";
+	otherwise if the place name is Staci's Personal Office and the listener is Staci:
+		say "your office";
+	otherwise if the place name is Gragnakus' Workshop and the listener is Gragnakus:
+		say "your workshop";
+	otherwise if the place name is Gragnakus' Room and the player is Gragnakus:
+		say "Gragnakus' Room";
+	otherwise if the place name is Wendy's room and the player is wendy:
+		say "Wendy's Room";
+	otherwise if the place name is Doogus Dungus' Room and the player is Doogus:
+		say "Doogus' Room";
+	otherwise if the place name is Staci's Personal Office and the player is Staci:
+		say "Staci's Office";
+	otherwise if the place name is Gragnakus' Workshop and the player is Gragnakus:
+		say "Gragnakus' Workshop";
+	otherwise:
+		say "[the place name]";
+
+Understand "your workshop" as Gragnakus' Workshop when the person asked is gragnakus.
+
+Understand "your office" as Staci's Personal Office when the person asked is Staci.
+
+The printed name of Wendy's Room is "[if the player is Wendy]your room[otherwise]Wendy's Room".
+The printed name of Gragnakus' Room is "[if the noun is Gragnakus]your room[otherwise]Gragnakus['] Room".
+The printed name of Doogus Dungus' Room is "[if the player is Doogus]your room[otherwise]Doogus Dungus['] Room".
+The printed name of Staci's Personal Office is "[if the player is Staci]your office[otherwise]Staci's Personal Office".
+The printed name of Gragnakus' Workshop is "[if the player is Gragnakus]your workshop[otherwise]Gragnakus['] Workshop".
+
+Part 2 - Duckstar Station
+
+Section 1 - Station
+
+The dock of The Griffled Duckstar is The Duckstar Station Entryway.
+
+Section 2 - Rooms
+
+The Duckstar Station Entryway is a room. It is in The Griffled Duckstar. "You are in the passage that links the space station with ships that have docked.  The passage is wide and well lit.  The walls, and ceiling all appear to be made of a polished white ceramic. The ﬂoor is covered in a black non-skid rubber material.  The station is to the north.  You can go into your ship through the airlock to the south.".
+
+There is a room called the West End of the First Floor Main Hall. It is in The Griffled Duckstar.  It is north of the Duckstar Station Entryway.  "A broad, well lit hallway.  The hall continues to the east, another passage leads south."
+
+There is a room called Bottom of the Ladderway.  It is in The Griffled Duckstar.  It is east of the room called the West End of the First Floor Main Hall.  "You are standing at the bottom of a ladder shaft.  A ladder on the wall run upwards from here to the top of the station.  Hallways lead east and west.".
+
+East End of the First Floor Main Hall is east of the room called Bottom of the Ladderway.  It is in The Griffled Duckstar.  "An uninteresting stretch of hallway.  There is a ladder here. You can go up, or you can go east or west."
+
+Duckstar East Airlock is east of the room called the East End of the First Floor Main Hall.  It is in The Griffled Duckstar.  "You are in the east airlock of the Griffled Duckstar Station.  The Harbinger One is docked at the west end of the station.  This airlock is much more crude and is likely used for cargo deliveries.  The bulkhead door is to the east."
+
+There is a room called Second Floor Ladderway.  It is in The Griffled Duckstar.  It is above the room called Bottom of the Ladderway. "By the ladder on the second floor, a pair of ladders run the length of the ship.  You can go up or down the ladder, and a doorway leads out of the ladderway to the east.  A sign next to the door reads 'Computer Research Level'.".
+
+The Computer Lab is east of the Second Floor Ladderway.   It is in the Griffled Duckstar.  "The computer lab is a long slightly curved room filled with rows of large computer cores, the size of filing cabinets.  A dense tangle of wires runs between all of the machines. Above everything hangs a large countdown timer displaying how long until the War Bot fleet  begins their invasion.  Between the rows of machines are haggared looking young researchers, working frantically at workstations or clustered around tablet displays.  The ladder is to the west, a storage room is to the east.";
+
+The Storage Room is east of the computer lab.  It is in the Griffled Duckstar.  "A dimly lit storage space filled with old computer cores; heavy calculation machines the size of filing cabinets, replaced by the faster and newer models in the lab.".
+
+Old computer cores are scenery in the storage room.  The description of it is "Dust, and heavy."
+
+The lab countdown timer is scenery in the computer lab.  The description of it is "A three foot tall count down timer with [time remaining] hours on the clock.  [if the main countdown timer is ticking]It is ticking downward.".
+
+The research workstations are scenery in the computer lab.  The description of it is "A brightly glowing screen showing a bunch of text scrolling by too quickly to read.".
+
+Understand "Kyrn'q" as young researchers.
+
+The young researchers are scenery in the computer lab.  The description of it is "What was once probably a fresh faced grad student, eager to change the world, is now a worn out and scruffy looking lab coat wearing researcher that looks like they haven't had a chance to shower… or even sleep… for several days.  They look up at you briefly with bloodshot red eyes before returning to studying their computer screen.";
+
+Instead of talking to the young researchers:
+	say "You don't want to interrupt them, they look quite busy.";
+
+There is a room called Third Floor Ladderway.  It is in The Griffled Duckstar.  It is above the room called Second Floor Ladderway.  "You are in the broad ladderway of the Griffled Duckstar.  This is the central conduit of the station and the only way that crew can move from floor to floor.  The ladder goes up and downwards from here. A doorway leads north.  A sign by the door reads 'Crew Deck'.".
+
+The Wood Panelled Hall is north of the Third Floor Ladderway. It is in the Griffled Duckstar. "The look of the crew deck is drastically different from that of the rest of the station that you have seen so far.  While the rest of the station is white, antiseptic, and sterile, the hall you stand in now seems to have a tropical resort theme. The walls are made of a rich wood paneling. Small decorative tables are regularly spaced along the wall, and on each sits a small lamp providing a warm glow. Palm fronds and bamboo accents decorate the walls. Immediately beside the entrance to the ladderway is a perch, and on it is a stuffed toucan.  The door to Dr Zuumont's room is to the north, or you can go south to the ladder."
+
+small decorative tables are scenery in the wood panelled hall.  Understand "small lamp" or "lamp" as small decorative tables.  The description of small decorative tables is "Delicate wooden tables made from dark stained wood, with elaborately carved table legs.  On each of the tables along the wall is a small lamp with a stained glass lamp shade.  The light shining through the glass provides a warm glow."
+
+The perch is scenery in the wood panelled hall.  Understand "stuffed toucan" or "toucan" as the perch.  The description of the perch is "A small wooden perch extends from the wood panelled wall.  On it sits a birhgtly colored stuffed toucan.  This decorative touch would be more appropriate in a sea-side cabana than an advanced scientiﬁc research facility."
+
+before Dr Riemoh leading when the player is in the wood panelled hall the first time:
+	say "As you walk down the hall, Dr Riemoh explains that she was the one who discovered Dr Zuumont in his quarters after his mysterious breakdown."
+
+Dr Zuumont's Quarters is north of the Wood Panelled Hall. It is in the Griffled Duckstar.  "The room is also decorated in the resort theme with woven grass sculptures and a tiki torch in the corner giving off a simulated ﬁre like glow. The room isn’t very large. [if dr zuumont is enclosed by dr zuumont's quarters and dr zuumont is dazed]Doctor Zuumont is sitting in a short wheeled chair in front of a simple metal desk.[otherwise]There is a short wheeled chair in front of a simple metal desk.[end if] The only other pieces of furniture the room contains are a dresser, a bed, and a painting."
+
+The loose wooden panel is scenery in Dr Zuumont's Quarters.  The description of it is "One of the panels on the wall right in front of Dr Zuumont's desk is loose and looks as though it has been tampered with.  Perhaps you could pry it off if you had some sort of a tool."
+
+The matter-to-energy transport unit is a thing. Understand "teleporter" as the matter-to-energy transport unit.  The unit can be active or inactive.  It is inactive.  The unit can be tested or untested.  It is untested. The description of it is "The gadget is a small black box, about the size of his hand. On the top is a metal half circle. There is a panel on the bottom about the size of a playing card, behind which are the maze of circuits that control the behavior of the device. It’s just a short range device only able to teleport a person or thing as far as a nearby ship."
+
+Dr Zuumont's painting is scenery in Dr Zuumont's Quarters.  The description of it is "A painting of a beach with a brilliant blue ocean reﬂecting a cloudless sky."
+
+Dr Zuumont's bed is a scenery supporter in Dr Zuumont's Quarters.  The description of it is "You notice that the bed has not been slept in.  A quick check reveals that there is nothing under the bed."
+
+Dr Zuumont's door is scenery in Dr Zuumont's Quarters.  The description of it is "No sign of forced entry."
+
+Dr Zuumont's dresser is scenery in Dr Zuumont's Quarters.  The description of it is "Nothing seems out of place.  Just a bunch of grey jumpsuits."
+
+A simple metal desk is a scenery supporter in Dr Zuumont's Quarters. The description of it is "You notice a small display screen built into the surface of the desk."
+
+Dr Zuumont's display screen is scenery.  It is on the simple metal desk.  The description of it is "On the screen is a report titled 'Doomsday Weapon Research: Arkleaf Industries'.  The report outlines several current areas of study being pursued by a Arkleaf Industries. A brief description of the company at the top reveals that it is a gigantic interplanetary company specializing in weapon sales and contract armies. The focus of the text is about  Arkleaf’s most ambitious projects: A moon destroying laser, atmosphere poisoner, sun extinguisher."
+
+A rolling chair is a chair in Dr Zuumont's Quarters.  The description of it is "A small rolling chair.  You notice that there is a charcoal scorch mark on the floor under the chair.";
+
+The charcoal scorch mark is scenery in Dr Zuumont's Quarters.  The description of it is "Hmm… Puzzling, this looks like the sort of mark you get when one activates a personal transport device… As you bend down to look at it you notice that one of the wooden panels on the wall is loose.";
+
+Fourth Floor Ladderway is above third floor ladderway.  It is in the Griffled Duckstar.  "You are at the top of the broad ladderway of the Griffled Duckstar.  This is the central conduit of the station and the only way that crew can move from floor to floor.  The ladder goes downwards from here. A doorway leads north.  A sign by the door reads 'Control Deck'.".
+
+To say screen contents:
+	if countdown timer is ticking:
+		say "a three foot tall countdown timer";
+	otherwise:
+		if the camera switch is switched off:
+			say "the video feed from surveilence cameras on the first deck.  ";
+			if the game stage is WARP_TROLLS_ATTACKING:
+				if the horde is in the warp troll hall:
+					say "A small line of fire can be seen along the airlock as the Warp Trolls slowly cut their way through.  A sparking point of the cutting torch gradually but relentlessly works it’s way down one side of the heavy door";
+				otherwise:
+					say "Static.  The Warp Trolls have disabled or destroyed the cameras";
+			otherwise:
+				if the West End of the First Floor Main Hall contains anything:		
+					say "The screen shows [the list of things contained by the west end]";
+				otherwise:
+					say "The halls are empty";
+		otherwise:
+			say "the video feed from outside of the ship.  ";
+			if the game stage is WARP_TROLLS_ATTACKING:
+				if the war bot ship is helping:
+					say "You can see the Harbinger One, the Warp Troll ship, and a huge looming War Bot Attack Ship.  War Bots can be seen walking across the surface of the station, fighting with Warp Trolls and largely turning them back toward their ship.";
+				otherwise if the phone is active:
+					say "One side of the Duckstar exterior and both the Warp Troll ship and the Harbinger One are plainly visible.  Also, there are a dozen Warp Trolls in heavy space suits walking up the side of the station.  They all are wearing squat round helmets that conceal their faces completely, which has the effect of making them appear even more menacing. The first climbers are nearly at the top already";
+				otherwise:
+					say "The large Warp Troll Ship is visible near the east airlock of the station.  The ship is dark, blocky, and heavy compared to the smoothly elegant curves of the Harbinger One";
+			otherwise if the RONARD Core Ship is active:
+				say "  You see the blue hexagonal shape of a RONARD Core patrol ship";
+			otherwise:
+				say "Empty space";
+
+There is a room called The Control Deck.  It is in The Griffled Duckstar.  It is north of the Fourth Floor Ladderway.  "This is a large, round room. The room is ringed in state of the art computer workstations, with screens and chairs in small cubicles against the walls all the way around the perimeter. In the center of the room is a large round table surrounded by eleven colorful chairs.  There is a large window on the ceiling, directly above the table. There is a ladder here, leading down.  On the wall opposite from the ladder is [screen contents]."
+
+The Duckstar video feed is scenery in the control deck.  The description of it is "You look at the wall mounted screen.  You see [screen contents]".
+
+The station control panel is a fixed in place thing in the control deck.  The description of it is "You see a gravity control lever and a switch that enables/disables the automated station docking systems.  There is an additional switch labeled 'exterior camera'.".
+the gravity control lever is a device.  It is part of the station control panel. The gravity control lever is switched on.
+the docking systems is a device.  It is part of the station control panel.  The docking systems are switched on.
+The camera switch is a device.  It is part of the station control panel.
+Understand "docking system" or "docking system switch" as the docking systems.
+Understand "exterior camera switch" or "exterior camera" as camera switch.
+
+Before an actor switching off the gravity control lever when the horde is in the griffled duckstar:
+	if gravity is on, say "It's too late for that." instead;
+
+After an actor switching off the gravity control lever:
+	if the horde is active:
+		say "[Address for the actor] press[es for the actor] a button on the panel to activate the ship-wide public address system.  'Attention station crew.  Artificial gravity is about to be disabled.'[paragraph break][He-She for actor] put[s for actor] [his-her for actor] hand on the gravity control lever, and pause[s for actor] for a moment to allow everyone to prepare as needed, then turn[s for actor] the setting down to zero.  Within moments everyone has the sensation of the floor dropping out from under them as if they’d been plunged into free fall.  [first time]A tablet display drifts upward past your face, spinning slowly end-over-end toward the ceiling.[only]";
+	otherwise:
+		say "[Address for the actor] switch[es for the actor] off [the noun].  Your stomach lurches as you float up into the air.";
+	if the game stage is not CIRCLE_THE_WAGONS and the game stage is not WARP_TROLLS_ATTACKING:
+		let x be available from the list of researchers;
+		if x is not nothing:
+			try x switching on the gravity control lever;
+
+After an actor switching on the gravity control lever:
+	say "[Address for the actor] switch[es for the actor] on [the noun].  Everything around you clatters to the floor as gravity is reenabled.";
+	now the gravity is on;
+
+The expensive table is scenery in The Control Deck.  "A large polished wooden table.  You are certain that it is very expensive.".
+
+There is a chair called the red chair.  it is in The Control Deck.
+There is a chair called the orange chair.  it is in The Control Deck.
+There is a chair called the yellow chair.  it is in The Control Deck.
+There is a chair called the green chair.  it is in The Control Deck.
+There is a chair called the blue chair.  it is in The Control Deck.
+There is a chair called the violet chair.  it is in The Control Deck.
+There is a chair called the indigo chair.  it is in The Control Deck.
+There is a chair called the magenta chair.  it is in The Control Deck.
+There is a chair called the cyan chair.  it is in The Control Deck.
+There is a chair called the black chair.  it is in The Control Deck.
+There is a chair called the white chair.  it is in The Control Deck.
+
+computer workstations are scenery in The Control Deck.  the description of the computer workstations is "These are obviously where the researchers on the station do most of their work.  They look far to expensive to be doing basic agricultural research."
+
+the main countdown timer is scenery in The Control Deck.  the main countdown timer can be ticking.  the main countdown timer is ticking.  The description of the main countdown timer is "A three foot tall count down timer with [time remaining] hours on the clock.  [if the main countdown timer is ticking]It is ticking downward.".
+
+the large window is scenery in The Control Deck.  The description of the large window is "Looking up at the ceiling, you see a large round window looking out into starry space.".
+
+Section 1Xx - Griffled Duckstar Actions
+
+Instead of switching on the unit:
+	try using the unit.
+
+Carry out using the transport unit with:
+	if the second noun is a crew member:
+		try the second noun using the transport unit;
+	otherwise:
+		say "You shouldn't just teleport random things with the matter-to-energy transport unit.";
+
+Instead of using the transport unit with the wrist camera:
+	move the wrist camera to the Interrogation Room;
+	say "You set the wrist camera to automatically take a picture in one minute, then place it in front of the matter-to-energy transport unit.  The teleporter emits an encouraging crackle of electricity.  A sharp, electrostatic smell ﬁlls the room, followed by a sharper, smokey smell. You look where the camera was, but now there’s nothing there.";
+	let x be the available from the list of crew members enclosed by the location of the player;
+	if x is not nothing:
+		say "[The first name of x] says, 'You didn't disintegrate it, did you?'";
+	say "You should be able to see what the camera has photographed by checking the display screen in [Staci's Office].";
+	now the transport unit is tested;
+	take a picture of the room from the unknown ship with the wrist camera;
+	set game stage to TELEPORT_TO_UNKNOWN;
+
+After viewing the unknown ship:
+	say "[bold type]The voice of Var-P announces, 'I’ve traced the signal from your camera. It is a sensor shielded ship. It’s just on the other side of the station.'[roman type]";
+
+After taking the helmet when on-screen zuumont is in the location of the player:
+	say "On-Screen Zuumont says, 'Great.  They transferred my mind into the ship's computer with that helmet.  You can use it to bring me back to my body.'"
+	
+Instead of an actor using the unit:
+	if the unit is active:
+		if the unit is untested:
+			say "You might want to use the matter-to-energy transporter on something else first.  Perhaps you have something that could be used to send back images of what is waiting for you.";
+		otherwise if the game stage is not TELEPORT_TO_UNKNOWN:
+			say "You have no further use of the teleporter."; 
+		otherwise if the actor is staci or the actor is wendy:
+			let x be available from {Staci, Wendy};
+			say "[X] says, 'Let's get over there and fine out who is behind this mess.'";
+			say "In one moment, [Address for Wendy] and [Address for staci] are standing in [Gragnakus' Workshop], and in the very next moment are somewhere else entirely.";
+			move x to the Interrogation Room;
+			move player to the interrogation room;
+			now x is shadowing the player;
+			if the player is in the interrogation room:
+				say "You take a step and hear an unsettling crunch, like the sound of a wrist camera sitting on the ﬂoor breaking after being stepped on by someone recently teleported.";
+			now the wrist camera is broken;
+			set game stage to ON_THE_UNKNOWN_SHIP;
+			rule succeeds;
+		otherwise:
+			say "Staci and Wendy should teleport to the unknown ship in order to investigate futher.";
+	otherwise:
+		say "The device is designed to be triggered remotely.  Perhaps [address for Gragnakus] could figure out how to modify it so that it can be activated locally.";
+		if gragnakus is not enclosed by the location of the player:
+			try summoning gragnakus;
+
+Understand "modify [something]" or "play with [something]" as fixing.
+
+instead of an actor fixing the unit when the unit is not active:
+	if the actor is gragnakus:
+		if the actor is enclosed by Gragnakus' Workshop:
+			if the crate is enclosed by the workshop:
+				if the levitation device is switched on:
+					say "The large crate would make a great workbench, but it's hovering four inches off of the ground, and might not be a very steady place to delicate work.";
+				otherwise:
+					if the unit is not on the large crate:
+						say "(first putting the matter to energy transport unit on the large crate)[line break]";
+						now the unit is fixed in place;
+						now the unit is on the large crate;
+					now the unit is active;
+					say "Some quick work on the transport unit gets it working and wiring it to the ship's power supply boosts its power output.  It should be able to send Staci and Wendy through at once.";
+					rule succeeds;
+			otherwise:
+				say "[Address for the actor] need[s for actor] some sort of an improvised workbench in order to perform repairs on the teleporter.";  
+		otherwise:
+			say "All of the tools required for that task are in [Gragnakus' Workshop].";
+	otherwise:
+		say "Gragnakus should be able to fix it[if the location of the player is not the workshop] in his workshop[end if].";
+
+Understand "pry [something]" as prying.  prying is an action applying to one visible thing.
+
+Carry out prying:
+	if the player is carrying the small pry bar:
+		say "(with the pry bar)[line break]";
+		if the noun is the loose wooden panel:
+			try using the small pry bar with the loose wooden panel;
+		otherwise:
+			say "You're not sure you could get the right leverage.";
+	otherwise:
+		say "You don't have the right tool for that.";
+
+Instead of an actor using the small pry bar with the loose wooden panel for the first time:
+	say "Inserting the pry bar between two panels of the wood covering the walls, [address for actor] begin[s for actor] to work the bar back and forth.  [He-She for actor] [is-are for actor] able to pry the panel loose and get [his-her for actor] ﬁngers behind it.  [He-She for actor] grab[s for actor] onto the panel and pull[s for actor] it away from the wall. As you suspected, there is a small matter-to-energy transport unit (a teleporter) inside the wall, just on the other side.  It is a device just big enough to be able to transport a single person.";
+	move the matter-to-energy transport unit to Dr Zuumont's Quarters;
+	set game stage to TELEPORT_CAMERA;
+	now the time remaining is nine;
+	increase the score by 50;
+	rule succeeds;
+
+instead of an actor talking to Dr Zuumont:
+	say "When [address for the actor] address[es for the actor] him by name he looks up brieﬂy, but doesn’t seem to really understand what is going on.";
+	rule succeeds;
+
+instead of an actor using the scanner with dr zuumont:
+	try the actor scanning dr zuumont with the scanner;
+
+After an actor scanning dr zuumont with scanner:
+	say "After [address for actor] scan[s for actor] Dr Zuumont, he looks at [him-her for actor] as if noticing [him-her for actor] for the ﬁrst time and says, 'Why, hello there. Can I help you, dear?'[paragraph break]He then turns back and resumes stares the wall."
+
+time remaining is a number that varies.  time remaining is eleven.
+
+Use maximum things understood at once of at least 50.
+
+Section 1 - Researchers
+
+A researcher is a kind of person.  A researcher has text called a full name.  A researcher has text called a first name.
+
+To say full name for (whom - a researcher):
+	if the full name of whom is "":
+		say "[Whom]";
+	otherwise:
+		say "[Full name of whom]";
+
+Dr Petre is a male researcher.  He is in the West End of the First Floor Main Hall.  The description of dr petre is "A broad faced space dwarf with a shock of uncombed white hair, thick silver eyebrows, and a long white mustache.  Strangely, he has no beard.  He is wearing a white lab coat".  The first name of Dr Petre is "Dr Petre".
+Dr Riemoh is a female researcher.  The full name of Riemoh is "Dr Lizbet Riemoh".  She is in the West End of the First Floor Main Hall. Understand "Lizbet" as Dr Riemoh.  The description of Dr Riemoh is "A severe looking tall, thin woman in her late ﬁfties, with upswept salt and pepper hair.  She is wearing a white lab coat.".  The first name of Dr Riemoh is "Lizbet".
+Scholar Ez is a male researcher. He is in the West End of the First Floor Main Hall.  The description of Scholar Ez is "A grey skinned man, an Elﬂight Scholar judging by his pointed ears, with a long serious face.  He is wearing a white lab coat.".  The first name of Scholar Ez is "Scholar Ez".
+Dr Zuumont is a male researcher.  He is on the rolling chair.  The full name of zuumont is "Dr Theodore Zuumont". Understand "Ted" or "Theodore" as Dr Zuumont.  The description of Dr Zuumont is "A heavy-set [if dazed]pale [end if]man in his late 50s wearing a grey jumpsuit.  He’s got grey hair shorn short and thinning on top.  [if dazed]  His watery eyes droop lazily as he sits staring listlessly at the wall.  He is not wearing a white lab coat.".  The first name of Dr Zuumont is "Ted".
+
+Dr Zuumont can be virtual, dazed, or healthy (this is his status property).  Dr Zuumont is dazed.
+
+Section 2 - Actions
+
+after looking in the West End of the First Floor Main Hall when the West End of the First Floor Main Hall was not visited:
+	say "Dr Petre says, 'Welcome to Grifﬂed Duckstar Station.'  He bow slightly.  'These are my colleagues, Dr Lizbet Riemoh and Scholar Ez. If you’ll follow me to the control deck, I’ll explain our situation.'";
+	Dr Petre leads the player to The Control Deck;
+	Now Dr Riemoh is shadowing Dr Petre;
+	Now Scholar Ez is shadowing Dr Petre;
+
+to pick a chair for (sitter - a person):
+	let x be a random empty chair in the location of the sitter;
+	if x is not nothing:
+		try sitter entering x;
+
+Instead of Dr Petre finishing leading to the The Control Deck:
+	say "Dr Petre says, 'Thank you for coming.  Please take a seat.'";
+	repeat with sitter running through the people in The Control Deck:
+		pick a chair for the sitter;
+	say "He clears his throat, he folds and unfolds his hands in front of him on the table for a minute, then says, 'Well… this is embarassing.  I'm not quite sure where to begin.  Normally Dr Zuumont would handle a situation such as this.  How about you ask me about what you would like to know first.'";
+	clear the movers from up; [hacky - don't report arrival after reporting sitting]
+
+Section 3 - Conversation
+
+instead of talking to a researcher:
+	say "[The noun] says to ask [him-her for the noun] about anything.";
+	rule succeeds.
+
+Current Researcher Responses is a table name that varies.  Current Researcher Responses is the table of researcher responses.
+
+Table of Warp Troll Attack Researcher Responses
+Topic	Knowledgeable	Response
+"RONARD core" or "RONARD"	Dr Petre	"RONARD (Regular Orbital Nebula 
+Advanced Response Defense) Core is the galactic peace keeping force that 
+patrols most of the Eighty-Eight.  Once they arrive, we will be safe."
+"weapons"	Scholar Ez	"We’ve just never had a reason to stock weapons on board the station.  Besides, none of us are trained soldiers."
+"warp trolls"	Dr Petre	"The Warp Trolls are going to attack.  We have to hold them off."
+
+Table of Researcher Responses
+Topic	Knowledgeable	Response
+"teleporter" or "transport unit" or "unit"	Dr Riemoh	"[if the transport unit is enclosed by Dr Zuumont's Quarters]I have no idea how something like that would have gotten here.  This could have been used to kidnap Dr Zuumont.  Perhaps someone took him and did something to him.[otherwise]I don't know what you mean."
+"ill" or "sick" or "sickness" or "breakdown"	Dr Riemoh	"Dr Zuumont went to his quarters.  When we went to check on him, we found him disorented and nearly catatonic.  Our limited ability to check his vital signs didn't reveal anything.  Perhaps you could take a look at him.  He is still in his quarters."
+"computer workstations" or "workstations"	dr petre	"Er.. Yes.  Sort of a dead give-away that we're not doing simple agricultural work here.  These workstations are required for the advanced weapons research we carry out on the station."
+"aggricultural research"	dr riemoh	"Although we claim to be a research facility developing new food crops, that is not, in fact what we do here at all.  This station is an advanced weapons research facility."
+"man"	Scholar Ez	"The most dangerous prey."
+"the eighty-eight" or "eighty-eight"	Dr Petre	"A series of interconnected star systems that make up the known universe."
+"research"	dr riemoh	"Our research is related to the collective programming that drives the War Bots.  Harnessing them, and perhaps controling the path of their destruction."
+"savage barren zone"	dr petre	"A 
+region of space dominated by the highest concentration of War Bots found in the 
+Eighty-Eight."
+"fleet" or "war bot fleet"	Scholar Ez	"The War Bot Fleet is a massive attack fleet capable of reducing a whole region of space to flaming ruins."
+"war bots" or "war bot"	Scholar Ez	"The War Bots 
+represent a powerful destructive force, capable of causing great damage."
+"distress call" or "the distress call" or "distress beacon"	Dr Petre	"Well… there's been an accident.  Err..  Perhaps not an accident, but a 'phenomena'?"
+"accident" or "phenomena"	Dr Riemoh	"Our lead researcher, the station administrator, is the brilliant Dr Theodore Zuumont.  He’s managed to build a system that can control the entire War Bot Fleet.  To have them attack any target we specify.  We were conducting our final test when he was struck ill."
+"target" or "the target"	Scholar Ez	"We've conducted our final test by commanding all the War Bot ships to attack the Terle System.  We never intended to harm them.  Dr Zuumont had the access codes to disable the countdown before it reached zero."
+"countdown timer" or "timer" or "countdown"	Dr Petre	"Our final test.  We set the War Bot Fleet to attack the Terle System when the count down reaches 0.  Of course we were going to stop the timer before it reached 0.  Once we verified that our systems all worked properly.  Then Dr Zuumont fell ill."
+"test" or "final test"	Dr Petre	"We set the fleet to attack the Terle System, just as a test.  We never intended to let the War Bots go through with the attack, but Dr Zuumont was the only one with the abort codes."
+"abort codes" or "computer access"	Dr Riemoh	"Our systems are very complex, and for security purposes, only Dr Zuumont has the computer access required to start and stop a test involving the entire War Bot Fleet."
+"terle" or "terle system"	Scholar Ez	"There are over a dozen highly 
+populated worlds in that region of space.  Allowing the War Bots to carry out the attack would result in a catestrophic loss of life.  All habitable planets would be wiped out."
+"fell ill" or "falling ill" or "illness" or "condition"	Scholar Ez	"Shortly after turning on the countdown for the final test, Dr Zuumont went to his quarters to lay down.  When I could not reach him on the station communication network, I went to check on him.  When I arrived he was confused and unable to focus.  We suspected he'd been drugged or had a stroke."
+"stroke" or "having a stroke" or "zuumont's stroke"	Dr Riemoh	"I did a medical scan, but it seemed to say that there was nothing wrong with him, but he does not remember any of us, let alone his security protocols or passwords."
+"relationship" or "relationship with dr zuumont"	Dr Riemoh	"He's my husband."
+"husband"	Dr Riemoh	"In addition to Dr Zuumont being the most brilliant man I know, he is also my husband."
+"drugged" or "drugs"	Dr Riemoh	"The medical scan did not indicate the presence of drugs in his system.  We have a strict policy about drugs on board the station, enforced by Dr Zuumont himself, so it seems highly unlikely that this could have been the cause."
+"lab coat" or "labcoat" or "coat"	Dr Riemoh	"Yes, that's funny.  Dr Zuumont should have a lab coat just the same as everyone else on the station.  He was wearing it when he went into his quarters, but now it's nowhere to be found."
+"quarters" or "his quarters" or "zuumont's quarters" or "dr zuumont's quarters"	Dr Petre	"Perhaps you would have better luck diagnosing Dr Zuumont's condition.  He is still in his quarters on the third level, his condition unchanged.  We've tried everything, and time is running out before the countdown reaches zero."
+"medical scanner" or "medical scan" or "scanner"	Scholar Ez	"Our medical equipment is not state of the art.  We were hoping that someone else might have better luck scanning Dr Zuumont to determine what is wrong.  Time is running out before the countdown reaches zero."
+"griffled duckstar" or "duckstar station" or "griffled duckstar station" or "station"	Dr Petre	"While the cover is that this station is a simple agricultural research outpost, our real work involves advanced weapons research and testing."
+"advanced weapons research" or "advanced weapons"	Dr Petre	"Dr Zuumont built a system that can control the devastating power of the War Bots.  Today we were to do our final test."
+"override" or "hacking" or "hack" or "stopping the test" or "shutdown"	Dr Petre	"Due to the design of the system, any attempt to disrupt the test will corrupt the War Bot programming core, leaving them to rampage randomly across the Eighty-Eight.  We need Dr Zuumont to shut down the test."
+"zuumont" or "theodore" or "dr zuumont" or "dr theodore zuumont"	Dr Petre	"Dr Zuumont is in his quarters.  He seems to have fallen ill."
+"system"	Scholar Ez	"Dr Zuumont was able to build a device which could reprogram the entire War Bot Fleet.  It is a shame that he fell ill just as we began our most critical and dangerous of tests."
+"control system"	Scholar Ez	"Dr Zuumont is the only one with the access codes in order to use the control system."
+"access codes"	Dr Petre	"Hopefully we can get the access codes if we can figure out what is wrong with Dr Zuumont."
+"warp trolls"	Dr Petre	"Beastly.  Simply beastly."
+
+ask count is a number that varies.
+
+To have (speaker - person) tell about (dialog - text):
+	say "[Speaker] says, '[dialog]'[line break]";
+	increase ask count by 1; [so far, just out of curiousity]
+
+Definition: a crew member is npc:
+	if it is not the player, yes;
+	otherwise no.
+
+Understand "my room" as Wendy's Room when the player is Wendy.
+Understand "my office" as Staci's Personal Office when the player is Staci.
+Understand "my room" as Doogus Dungus' Room when the player is Doogus.
+Understand "my room" as Gragnakus' Room when the player is Gragnakus.
+Understand "my workshop" as Gragnakus' Workshop when the player is Gragnakus.
+
+To decide which object is available from (L - list of people):
+	repeat with x running through L:
+		if x is enclosed by the location of the player and x is not the player:
+			decide on x;
+	decide on nothing;
+
+instead of getting off  a chair in The Control Deck for the first time:
+	let x be available from { gragnakus, doogus };
+	if x is not nothing:
+		say "As you get up, Dr Petre stops you and says, 'Dr Riemoh can lead you to Dr Zuumont's quarters.  Scholar Ez will take [x] to the computer lab.  Maybe [he-she for x] can help us disable the weapon system before the timer reaches zero.'";
+		Scholar Ez leads x to the computer lab;
+		now x is shadowing Scholar Ez;
+	else:
+		say "As you get up, Dr Petre stops you and says, ''Dr Riemoh can lead you to Dr Zuumont's quarters.'";
+	Dr Riemoh leads the player to Dr Zuumont's Quarters;
+	stop the action;
+
+Instead of asking about a topic listed in Current Researcher Responses:
+	if the knowledgeable entry is enclosed by the location of the player:
+		have knowledgeable entry tell about response entry;
+	otherwise if a researcher is enclosed by the location of the player:
+		say "[A random researcher in the location of the player] says that [Knowledgeable entry] would know about that.";
+	otherwise:
+		continue the action;
+
+After asking a researcher about a topic listed in the Current Researcher Responses:
+	if the Knowledgeable entry is the noun:
+		have knowledgeable entry tell about response entry;
+	otherwise:
+		say "[The noun] ponders for a moment, then says, 'I believe that [Knowledgeable entry] would know more about that.[if the knowledgeable entry is enclosed by the location of the noun]  [The Knowledgeable entry]?[end if]'[line break]";
+		if the knowledgeable entry is enclosed by the location of the noun:
+			have knowledgeable entry tell about response entry;
+
+Section 4 - Warp Troll Ship stuff
+
+A Warp Troll is a kind of a man.
+
+The Warp Troll Ship is a ship.
+
+The bulkhead door is a door.  It is east of the Duckstar East Airlock and north of the Warp Troll Hall.  It is closed and locked.
+
+The Interrogation Room is in the Warp Troll Ship.  "A spacious room, the surfaces of all the walls are showing a continuous video feed.  It is warm and humid here and there is a faintly unpleasant smell; stale and sharp like a caged wild animal.  Narrow corridors lead east and west from the room.";
+
+A small interrogation desk is a supporter in the Interrogation Room.  "In the corner is a small desk.  Next to the desk is a small uncomfortable looking chair.  On the far side of the room is [a tall cabinet]."
+
+The silver helmet is a wearable thing on the interrogation desk.  The description of it is "A silvery metalic helmet.  A row of red and green lights run down one of its sides.  The inside of the helmet is lined with a mesh of electrodes.  On the back is the triangular logo of Arkleaf Industries.  Below the logo is a series of interlinked etched circles.".
+
+A tall cabinet is an enterable transparent openable closed container in the interrogation room.  It is fixed in place.  The description of it is "A tall cabinet with a pair of vertical doors.  It's big enough that you could actually stand inside it and close the doors."
+
+After an actor opening the tall cabinet for the first time:
+	say "Inside the cabinet is a shelf of surgical equipment, a shelf of replacement computer parts, and a shelf of high energy food bars.[paragraph break]Suddenly, heavy footsteps can be heard from the narrow hallways leading east.  You had better hide.";
+	the warp trolls arrive late in three turns from now;
+
+At the time when the warp trolls arrive late:
+	if the interrogation room does not contain a warp troll:
+		end the story saying "A pair of tall, muscularly fearsome mercenaries enter the room.  Before you get a good look at them, they are upon you.  You stand little chance in a direct encounter such as this.";
+
+Understand "hide in/inside [something]" as hiding.  Hiding is an action applying to one thing.
+
+before entering in the tall cabinet:
+	if the helmet is enclosed by a crew member:
+		say "You drop the helmet before going into the cabinet.";
+		move the helmet to interrogation room;
+	continue the action;
+
+Carry out hiding:
+	repeat with x running through crew members in the location of the player:
+		try x entering the noun;
+	try closing the noun;
+
+Replacement computer parts is scenery in the tall cabinet.  Description of it is "Spare parts for an ancient computer system.".
+Surgical equipment is scenery in the tall cabinet. Description of it is "Equipment for doing very crude operations.".
+High energy food bars is scenery in the tall cabinet.  Description of it is "The sort of energy bar that packs a weeks worth of calories in seven bites.".
+
+before an actor taking scenery:
+	if the actor is enclosed by the tall cabinet:
+		say "You don't see a need to steal any of these things." instead;
+	otherwise:
+		continue the action;
+
+The description of a warp troll is "About nine feet tall and twice the width of a regular man, the warp troll is wearing a black military uniform with various bits of shiny black body armor on top.  He has vibrant yellow skin, and long black hair tied up in a pony tail.  He has a thick, broad nose, a heavy jaw, and a broad brow overhanging small hooded eyes."
+
+Aravt Soldat is a Warp Troll.  He is in the warp troll hall.
+Zuut Serzhant is a Warp Troll.  He is in the warp troll hall.
+
+Instead of unstrapping a person on the uncomfortable chair:
+	say "You unstrap [the noun].  [He-She for the noun] looks up at you gratefully.";
+	now the uncomfortable chair is not strapped.
+
+Instead of strapping down a person when the noun is on the uncomfortable chair:
+	say "You quickly fasten the arm and leg straps around the arms and legs of [the noun].  [He-She for the noun] squirms but is unable to escape.";
+	if the uncomfortable chair is not used:
+		increase the score by 10;
+		now the uncomfortable chair is used;	
+	now the uncomfortable chair is strapped;
+
+instead of an actor getting off the uncomfortable chair when the uncomfortable chair is strapped:
+	say "[Address for the actor] [if the player is the actor]try[otherwise]tries[end if] to get out of the rather uncomfortable chair, but can't because [he-she for the actor] [is-are for the actor] strapped down tightly."
+
+The walls video feed is scenery in the interrogation room.  The description of it is "The video feed on the walls is of a leafy green forest. The reﬂected light from the leaves give the ﬂoor and room a pale green hue.  The wall displays recreate audio as well, and the breeze that motivated the swaying of the limbs of the trees can be heard as a rustling in the leaves.  On one of the walls is a display control panel."
+
+Understand "wall" or "screen" as the display control panel when the player is in the warp troll ship.
+
+The display control panel is a device.  It is a part of the video walls.  The description of it is "A complicated control panel, the purpose of it is unclear.";
+
+Understand "surface" and "surfaces" as walls video feed.
+
+Instead of exiting when the interrogation room contains two warp trolls:
+	say "You don't feel like it would be safe to leave the cabinet with those monsters in the room.";
+
+Instead of switching to a crew member when the player is in the warp troll ship:
+	if the noun is in the warp troll ship:
+		continue the action;
+	say "There isn't a reason to switch to [the noun] right now.";
+
+On-screen Dr Zuumont is a man.  The description of On-screen Dr Zuumont is "A somewhat pixelated image of Dr Zuumont shimers on the display."
+
+Instead of an actor using the display control panel when the game stage is ON_THE_UNKNOWN_SHIP:
+	say "Without seeing someone operate it, or knowing what it does, [Address for the actor] wouldn't really be able to make the display control panel do anything."
+
+Instead of an actor switching on the display control panel:
+	try the actor using the display control panel;
+
+Instead of an actor using the display control panel when the game stage is RESCUE_THE_SIMULATION:
+	if the display control panel is switched off:
+		say "[Address for the actor] mimic[s for the actor] the actions you saw earlier.  Dr Zuumont appears, life size, on the wall screen.";
+		now the display control panel is switched on;
+		say "Dr Zuumont sees you and says, 'Thank goodness you're not one of those horrible Warp Trolls.  Quickly, you have to transfer me back into that silver helmet and get me back to my body.'";
+		let x be a random npc crew member enclosed by the location of the player;
+		say "[X] asks, 'And how do you suggest we do that?'";
+		if the helmet is not enclosed by a crew member:
+			say "On-Screen Dr Zuumont says, 'Start by picking up the helmet.'";
+		otherwise:
+			say "On-Screen Dr Zuumont says, 'Use the helmet on me.'";
+		move on-screen dr zuumont to the interrogation room;
+	otherwise:
+		say "There isn't anything else to do with the display control panel.".
+
+Before going in the interrogation room when on-screen dr zuumont is in the interrogation room:
+	say "Dr Zuumont shouts, 'Hey!  Don't leave me here!  What are you doing?'";
+
+Instead of talking to On-screen Dr Zuumont:
+	say "Dr Zuumont says, 'Use the helmet on me.'".
+
+Instead of using the helmet with on-screen dr zuumont:
+	say "You press the helmet against the screen and the image of Dr Zuumont disappears from the screen.  An instant later, a green light on the helmet begins flashing.";
+	now the helmet is mode b;
+	remove on-screen dr zuumont from play;
+
+Instead of a warp troll using the display control panel for the first time:
+	say "Aravt Soldat places an open hand, ﬁngers splayed wide, on a display control panel on one of the display screen walls.  You notice that his hand is huge, the size of a dinner plate.  The screen reacts to his touch, causing a menu to appear with a variety of choices too small for you to make out from across the room.  Leaving his hand in place, Aravt Soldat uses his other hand to stab at choices on the screen with a single ﬁnger.[paragraph break]After a minute of ﬁddling with the controls, he takes his hand down from the screen and the whole panel of options vanishes.";
+	move on-screen dr zuumont to the interrogation room.
+
+Yammering is an action applying to one visible thing.
+
+Carry out an actor yammering:
+	if the noun is complete:
+		say the description of the noun;
+	otherwise:
+		say "[The actor] says, '[the description of the noun]'"
+
+Instead of listening when the player is enclosed by the tall cabinet:
+	if the interrogation room contains two warp trolls:
+		say "You listen.";
+		the rule succeeds;
+	otherwise:
+		continue the action;
+
+Understand "watch" as watching.  Watching is an action applying to nothing.
+Carry out watching:
+	say "You watch.";
+
+A phrase object is a kind of thing.  A phrase object can be complete.
+
+Phrase A is a phrase object. The description of it is "'Aravt Soldat, report your findings.  How does the human fair in the mind cage?' asks one of the soliders in a deep growling voice.".  Phrase A is complete.
+Phrase B is a thing.  The description of it is "Zuut Serzhant, the transfer was a complete success, but we're finding the subject to be, as yet, uncooperative."
+Phrase C is a thing.  The description of it is "Bring him forth."
+Phrase D is a phrase object.  The description of it is "From the wall just next to the cabinet where you are hiding, a trembling male voice calls out, 'Hello? Was someone calling me?'  You recognize that it is the voice of Dr Zuumont.".  It is complete.
+Phrase E is a phrase object.  The description of it is "'Doctor,' Zuut Serzhant says.  Somehow the word comes out sounding like a threat.  'You will give us the frequencies you are using in order to communicate with the War Bot ﬂeet.'".  It is complete.
+Phrase F is a phrase object.  The description of it is "Look, whoever you are, I told your other friend that I don't have time for this.  I'm right in the middle of a very delicate experiment.  It is critical that I be allowed to return to my research station.".
+Phrase G is a phrase object.  The description of it is "We know about your experiments, Doctor".
+Phrase H is a phrase object.  The description of it is "Well, then you know that I must be allowed to at least contact my crew.  If you prevent me, many lives might be lost.".
+Phrase I is a phrase object.  The description of it is "We know this as well.  This loss of life that you refer to serves our purposes very well.  It is an excellent demonstration of what your research has produced.".
+Phrase J is a phrase object.  It is complete.  The description of it is "After a pause, you can here Dr Zuumont’s disbelieving stammering.  'But, but… The technology was never intended to be used for war.  It is the ultimate deterrent AGAINST war.  A weapon so sinister and extreme, its threat of use could settle conﬂicts before they lead to war."
+Phrase K is a phrase object.  It is complete.  The description of it is "'It is time you learn, Doctor. If you load a gun, someone is going to ﬁre it.'  He turns to Aravt Soldat.  'It seems as though the doctor is not yet compliant.  Have Aravt Eilinis 'convince' him that it is in his best interest to help us.'"
+Phrase L is a thing.  The description of it is "Yes, Zuut Serzhant.";
+
+Instead of a warp troll using the display control panel for the second time:
+	say "Aravt Soldat walks over to the control display on the opposite wall, presses a button then leaves the room as well.  You listen as the sound of footsteps recede.";
+	move aravt soldat to the warp troll hall;
+	now the description of the display control panel is "A control panel used to call up the Dr Zuumont simulation.";
+	remove On-screen dr zuumont from play;
+	let x be a random npc crew member enclosed by the cabinet;	
+	try x opening the cabinet;
+	try x exiting;
+	set game stage to RESCUE_THE_SIMULATION;
+	rule succeeds;
+
+After closing the tall cabinet when the tall cabinet contains two crew members:
+	say "You close the doors to the doors to the cabinet just in time.  You leave the door open just a crack so that you can peek out.  You discover that this leaves you with a pretty decent view of the room.  The footsteps draw closer, then two hulking brutes walk briskly into the room.";
+	try aravt going west;
+	try zuut going west;
+	add the action of Serzhant yammering phrase a to the current plan of aravt;
+	add the action of aravt yammering phrase b to the current plan of aravt;
+	add the action of Serzhant yammering phrase c to the current plan of aravt;
+	add the action of aravt using the display control panel to the current plan of aravt;
+	add the action of on-screen dr zuumont yammering phrase d to the current plan of aravt;
+	add the action of Serzhant yammering phrase e to the current plan of aravt;
+	add the action of on-screen yammering phrase f to the current plan of aravt;
+	add the action of Serzhant yammering phrase g to the current plan of aravt;
+	add the action of on-screen yammering phrase h to the current plan of aravt;
+	add the action of Serzhant yammering phrase i to the current plan of aravt;
+	add the action of on-screen yammering phrase j to the current plan of aravt;
+	add the action of Serzhant yammering phrase k to the current plan of aravt;
+	add the action of aravt yammering phrase l to the current plan of aravt;
+	add the action of serzhant going east to the current plan of aravt;
+	add the action of aravt using the display control panel to the current plan of aravt;
+	set game stage to LEARN_ABOUT_ZUUMONT;
+
+The circles are a part of the silver helmet.  The description of it is "Etched into the back of the helmet.".  The helmet can be mode a, mode b, or mode c.
+
+The triangular arkleaf industries logo is part of the silver helmet.  The description of it is "You recognize the logo for Arkleaf Industries, large a weapons and equipment manufacturer.";
+
+The rather uncomfortable chair is a chair in the interrogation room.  The description of it is "A small, uncomfortable looking, high backed chair.  Leather straps on the armrests and legs of the chair indicate that the occupants of the chair don’t always sit there willingly".  
+The rather uncomfortable chair can be strapped.  The rather uncomfortable chair can be used.
+Understand "strap [person] down" as strapping down.  Strapping down is an action applying to one thing.
+
+The warp troll hall is east of the interrogation room.  It is in the warp troll ship.
+
+Instead of going east in the interrogation room:
+	say "You hear deep voices speaking angrily at the end of the hall, you probably shouldn't venture that way.";
+
+After an actor switching to when the player is in the warp troll ship:
+	repeat with x running through npc crew members in the location of the player:
+		now x is shadowing the player;
+
+The Command Room is west of the interrogation room.  It is in the warp troll ship.  "A small room, dense with readouts and wires, containing several control panels which can be used to regulate and manipulate ship systems."
+
+Warp Troll Control panels are scenery in the Command room.  The description of it is "Panels that control several ship functions.  It seems likely that Wendy would be able to use these controls in order to make life fairly difficult for the occupants of the ship..  At least temporarily.".  The troll control panels can be mucked.
+
+Instead of an actor using the warp troll control panels:
+	if the game stage is not RESCUE_THE_SIMULATION:
+		say "Perhaps you shouldn't do that until you're ready to make a hasty departure.";
+	otherwise if the actor is wendy:
+		say "It's probably worth sabotaging the ships systems in as many ways as possible before leaving.  [Address for wendy] expertly rewire[s for wendy] the navigation sensors to a simulation mode that will report that they’re boxed in by asteroids. [He-She for wendy] change[s for wendy] the communication system to auto-translate to an obscure dialect of Darv, then locks in the preference and hides the setting. [He-She for wendy] also lower[s for wendy] the temperature thresholds on all the emergency ﬁre detection sensors on board the ship so that they’ll report the body heat given off by each of the crew as a ﬁre outbreak.[paragraph break]The interior lighting of the ship switches over to red alert emergency lighting.";
+		Now the troll control panels are mucked;
+		rule succeeds;
+	otherwise:
+		say "[Address for Wendy] should do that.";
+
+Understand "controls" as troll control panels.
+
+A short range matter-energy teleporter is in the Command room.  It is fixed in place.  The description of it is "This is likely where the return matter-transport was broadcast from.  You can use this to return to the Harbinger One.".  It is fixed in place.
+
+Instead of an actor using the teleporter:
+	if the game stage is ON_THE_UNKNOWN_SHIP:
+		say "You need to find out more about what happened to Dr Zuumont.";
+	otherwise if the wrist camera is not enclosed by a crew member:
+		say "Don't forget to grab your wrist camera.";
+	otherwise if the helmet is not enclosed by a crew member:
+		say "You should bring that silver helmet with you.";
+	otherwise if the helmet is not mode b:
+		say "You need to rescue Dr Zuumont.";
+	otherwise if the troll control panels are not mucked:
+		say "You should do as much damage to the ship's systems as you can before leaving.";
+	otherwise:
+		say "[Address for the actor] active[s for the actor] the short range matter-energy teleport.";
+		let x be available from {Staci, Wendy};
+		move x to the workshop;
+		move the player to the workshop;
+		say "When you appear, Gragnakus is trying to unfold his workbench with a large pry bar.";
+		increase the score by 15;
+		move the large pry bar to gragnakus;
+
+Understand the command "smash" as something new.
+
+Understand "destroy [something] with [something preferably held]" or "smash [something] with [something preferably held]" as smashing it with.  Smashing it with is an action applying to two things.
+
+After an actor smashing:
+	say "It doesn't seem like [address for the actor] should smash [the noun] with [the second noun]."
+
+The large pry bar is a thing.  The description of it is "A large, black metal heavy duty pry bar nearly the height of a Space Dwarf."
+
+Instead of an actor smashing the transport unit with the small pry bar:
+	say "The pry bar doesn't have enough weight to it in order to really give [the noun] a good smashing.";
+
+Instead of an actor smashing the transport unit with the large pry bar:
+	remove the transport unit from play;
+	increase the score by 5;
+	say "Without missing a beat, [address for the actor] raise[s for the actor] [his-her for the actor] heavy pry bar above [his-her for the actor] head and smash[es for the actor] down with a swift stroke, breaking the transport device to bits. [He-she for the actor] give[s for the actor] it a few more solid whacks with the metal bar just for good measure.";
+	let x be available from {Wendy, Staci};
+	say "[Address for Gragnakus] say[s for gragnakus], 'What happened over there?'";
+	say "[X] replies, 'It looks like a group of Warp Troll mercinaries used this silver helmet to steal Dr Zuumont's mind, with the goal of disrupting the War Bot experiment, and perhaps taking control of that technology.  We brought back the helmet, we just need to figure out how to use it to put his mind back in his body.'";
+	now the game stage is RESTORE_ZUUMONT;
+	Now Dr Riemoh is in need of an audience;
+	plan for Dr Riemoh to react;
+	rule succeeds;
+
+To plan for (dude - a person) to react:
+	add the action of the dude reacting to the current plan of the dude;
+
+After examining a person wearing the helmet:
+		say "[The noun] is wearing a silver helmet.  [if the noun is Dr Zuumont]The blinky lights on the helmet are flashing wildly.";
+
+After examining a person when gravity is off:
+	say "[He-she for the noun] is floating in zero gravity.";
+
+After an actor going north in the Control Deck when the game stage is CIRCLE_THE_WAGONS:
+	if the number of crew members in the control deck is 4:
+		increase the score by 10;
+		we continue to prep in 1 turn from now;
+	continue the action;
+
+At the time when we continue to prep:
+	say "Dr Petre says, 'We have broadcast a high priority alpha distress beacon asking for military assistance.  Almost immediately a RONARD Core vessel responded.  They’re on their way but doppler scans show that they’re three hours away.  We’ve got to hold out until then.'[paragraph break]";
+	let x be available from {Gragnakus, Staci, Wendy};
+	if x is not nothing:
+		say "[X] waves [address for doogus] over.  'Doogus Dungus, let me introduce you to the station executive staff.  This is Station Administrator Zuumont. Next to him is Chief Technologist Dr Lizbet Riemoh. This is Assistant Station Administrator Petre. And last, this is Scholar Ez, an Elflight Scholar (obviously).'";
+	the warp trolls attack in 4 turns from now;
+	gragnakus has an idea in 3 turns from now;
+	someone makes a suggestion in 2 turns from now;
+	gravity should go off in 1 turn from now;
+
+At the time when gravity should go off:
+	let x be available from { Doogus, Gragnakus };
+	if the gravity is on:
+		say "[X] suggests that now would be a good time to turn off the gravity.";
+
+At the time when Gragnakus has an idea:
+	say "Gragnakus has an idea.";
+	Gragnakus requests to do the action of gragnakus reacting requested as "I saw some really heavy unused computer servers in the storage room.  After you re-enable gravity, I suspect we could push them onto the Warp Trolls as they try to climb the ladder.  Permission to go to the Storage room?" during {CIRCLE_THE_WAGONS, WARP_TROLLS_ATTACKING};
+
+Instead of Gragnakus reacting when the horde is active:
+	increase the score by 25;
+	try gragnakus going south;
+	plan for gragnakus to go to the storage room for staci;
+
+At the time when someone makes a suggestion:
+	if the docking systems are switched on:
+		say "Dr Zuumont says, 'Make sure the station’s docking system is powered down, we don’t want to make this any easier for them than we have to.'";
+
+Turns until saved is a number that varies.
+
+Server drop count is a number that varies.
+
+To save the duckstar:
+	set game stage to SAVED_DUCKSTAR;
+	now the bulkhead door is closed;
+	now the bulkhead door is locked;
+	now the horde is not active;
+	now the war bot ship is not helping;
+	now the phone is not active;
+	say "Dr Zuumont is switching between various external views of the station on the main display when he suddenly calls out, 'The Warp Trolls… They’re disengaging their docking clamps.  They’re pulling away from the station.'[paragraph break]As the ship begins to pull away, arcs of energy flash out from the War Bot ship, nearly hitting it.  The War Bot ship begins moving away from the station as well.[paragraph break]'The War Bot ship is pursuing the Warp Troll vessel,' Dr Zuumont says, relief creeping into his voice.  The two ships pick up speed and are quickly out of sight.  The crew continue to look at the empty star-scape on the display for a while longer.[paragraph break]Scholar Ez, looking at a sensor readout display on his workstation says, 'Sensors picking up one ship returning.'[paragraph break][available from the list of all crew members] says, 'I’m really not sure which one I’m rooting for.'[paragraph break]In an instant, the preference is moot.  The ship that appears on the display is immediately recognizable.  It is a pale blue hexagonal ship of the RONARD Core.";
+	now the RONARD Core ship is active;
+	now the phone is ringing;
+
+Every turn when the game stage is WARP_TROLLS_ATTACKING:
+	if the phone is ringing:
+		increase the ring count of the phone by 1;
+		if the ring count of the phone is 4:
+			try Dr Zuumont answering the phone;
+	if the player is enclosed by the control deck and the turns until saved is greater than 0:
+		say "Scholar Ez looks at his workstation and says, 'Long range scans indicate that the RONARD Core ship will arrive in [turns until saved] time units.'[paragraph break]";
+	if the turns until saved is 0:
+		save the duckstar;
+	decrease turns until saved by 1;
+	if the horde is in the bottom of the ladderway:
+		say "Dr Petre says, 'The Warp Trolls have reached the second deck.[if the gravity is off]  When they reach deck four, turn on the gravity.'";
+		if gragnakus is in the storage room and gravity is on:
+			if the server drop count is 0:
+				say "A column of heavy metallic cubes appears at the edge of the open door on the second deck, then tips over, falling heavily onto the climbing Warp Trolls, knocking them from the rungs.  Stack after stack of the extremely heavy, dense compute cubes is pushed out of the doorway, making climbing the ladder impossible.";
+			otherwise if the server drop count is 3:
+				let x be available from {Staci, Wendy, Doogus};
+				say "A few of the mercenaries try squeezing off a few rounds with their rifles, but there are no targets other than the heavy falling computer cubes, which are dealing major damage to any Warp Troll unlucky enough to be below one as it falls.  The remaining Warp Trolls quickly spot the disadvantage of their position and disappear back out through the bottom deck doorway.  [X] speaks into [his-her for x] communicator, 'Great job, Gragnakus.  They’ve pulled back, at least for now.'";
+				remove the horde from play;
+				plan for Dr Riemoh to react;
+				the warp trolls call in 2 turns from now;
+			otherwise:
+				say "He then says, 'Gragnakus is dropping servers on them.  It's knocking them back to the first floor[if the server drop count is greater than 1] again[end if].";
+			increase the server drop count by 1;
+		otherwise:
+			move the horde to the second floor ladderway;
+	otherwise if the horde is in the second floor ladderway:
+		now the horde is in the third floor ladderway;
+		say "Dr Petre says, 'The Warp Trolls have reached the third deck!  They're almost here!'";
+	otherwise if the horde is in the third floor ladderway:
+		now the horde is in the fourth floor ladderway;
+		if gravity is off:
+			say "The lead mercinary reaches the top of the ladder way, you catch a glimpse of his golden eyes as Dr Petre says, 'Gravity! Now!'";
+			the warp trolls capture you in 1 turn from now;
+		otherwise:
+			end the story saying "The warp trolls rush into the control room and grab Dr Zuumont.  They drag him from the room then turn to the rest of you.  'You should fetch a high price on the slave market.'";
+
+At the time when the warp trolls capture you:
+	if gravity is off:
+		end the story saying "The warp trolls rush into the control room and grab Dr Zuumont.  They drag him from the room then turn to the rest of you.  'You should fetch a high price on the slave market.'";
+
+
+At the time when the warp trolls invade:
+	if the camera switch is not switched on:
+		end the story saying "A loud crash comes from the glass viewing window above you and Warp Trolls in space suits decent into the room as the atmosphere is vented into the vacuum of space.";
+
+At the time when the warp trolls call:
+	now the phone is ringing;
+	say "An incoming call indicator begins flashing on one of the workstations.  Type '[bold type]answer the call[roman type]' in order to answer.";
+	the warp trolls invade in 5 turns from now;
+
+The phone is a thing.  The phone can be ringing.  The phone can be active.  The phone has a number called the ring count;
+
+Understand "answer the call" as answering the phone.  Answering the phone is an action applying to nothing.
+
+Carry out an actor answering the phone:
+	if the phone is not ringing:
+		try distress listening;
+	otherwise:
+		now the phone is not ringing;
+		if the RONARD Core ship is active:
+			increase the score by 5;
+			say "This is when the cheering begins in earnest.  So much so that when [address for the actor] answer[s for the actor] the RONARD Core's call, [address for the actor] [has-have for the actor] to yell for quiet so that [he-she for the actor] can hear what they’re saying.[paragraph break]'Repeat that last transmission, RONARD vessel.  We had some celebration on this end,'[paragraph break]'Acknowledged Griffled Duckstar Station.  This is the Zonard Seven, saying again, what is your situation?' comes the reply from the RONARD ship.[paragraph break]'Some damage to the lower decks, but we are again in control of the station.  We sure are glad to see you.  Recommend you dock with us, we’ll fill you in.'[paragraph break]'Sounds good, Duckstar.  See you in a few.'[paragraph break]There is a scrabbling sound at the ladderway.  A winded Gragnakus is pulling himself off the ladder.[paragraph break]'Speaking of filling in, does somebody want to tell me what the blazes happened?'[paragraph break]'Yes, we can do that,' grins Dr Petre.";
+			move Gragnakus to the control deck;
+			end the story finally saying "You win.";
+		otherwise:
+			now the phone is active;		
+			say "[Address for the actor] punch[es for the actor] a few buttons and the display switches suddenly to a close up view of one of the yellow skinned Warp Trolls.  His rough skin and straggly black hair showing a touch of grey hinting that this is a more seasoned warrior.[paragraph break]He looks around, surveying the bedraggled crowd of assembled researchers and crew.  He begins in a deep growling voice, his accent tinged with the distinctive hiss that comes from someone who has too many teeth in their mouth.  'Greetings, I am Myangat Polkovnyk.  This is my operation.'[paragraph break]Dr Zuumont straightens up and addresses the screen.  'I’m Dr Zuumont, the station administrator.'[paragraph break]Too many teeth indeed…  Myangat Polkovnyk reveals them as a malevolent smile breaks across his face.  'I know who you are Dr Zuumont.'[paragraph break]The smile lingers for a moment longer, then is replaced by a dark intensity.  'You’ve made it… inconvenient… for us to take control of your station.  Our orders were to minimize casualties among the station crew if possible.  Our mission is to secure you, Dr Zuumont, and a demonstration of what your research is capable of accomplishing.  We nearly accomplished both with no loss of life, but… outside interference,' he says with a reference to you and your crew, 'has disrupted that plan.'[paragraph break]";
+			let x be available from the list of all crew members;
+			the warp trolls reach the window in 3 turns from now;
+			if the camera switch is switched off:
+				say "[X] mutters that [he-she for x] thinks that Myangat Polkovnyk is stalling.";
+				the call continues in 1 turns from now;
+			otherwise:
+				say "[X] shouts, 'Look at the video feed'";
+
+At the time when the warp trolls reach the window:
+	say "Staci takes a look at the large circular window in the ceiling of the control deck.  'They’re coming in through the window!' she calls out.[paragraph break]'That’s insane,' Dr Zuumont declares.  'If they break open the viewing portal, the atmosphere of the station would vent into space.'[paragraph break]'Not before they have a change to get you into an environment suit, I reckon,' observers Doogus.[paragraph break]'Fiends!'[paragraph break]";
+	the warp trolls start cutting in 1 turn from now;
+
+At the time when the warp trolls start cutting:
+	say "There’s a heavy scrapping sound that comes from above you.  You look up and see the first of the Warp Trolls walking across the thick circular viewing window in the ceiling.  He’s carrying a heavy cutting torch.[paragraph break]'They're here!' Dr Petre whispers as three more Warp Trolls appear at the window and kneel down to begin cutting through.";
+	the war bots appear in 1 turn from now;
+	now the heavy cutting torch is in the control deck;
+	now the first warp troll is in the control deck;
+
+The heavy cutting torch is scenery.  The description of it is "The sort of heavy cutting torch designed to be used by space dock crews during ship construction.".
+
+The first warp troll is scenery.  The description of it is "A Warp Troll wearing an armored space suit and carrying a heavy cutting torch.";
+
+At the time when the war bots appear:
+	say "In the places where the cutting torches contact the window, the glass gives off a fiery glow, instantly bathing the command deck in the orange-red colors of a sunset.  The crew of the Griffled Duckstar stand stock still as they watch the four Warp Trolls work on cutting their way in.[paragraph break]You wonder if you'd be better off taking your chances with the ladder when they come through the glass.  Or maybe with gravity disabled…[paragraph break]A brighter flare of light for a moment draws your attention back to the window.  Now there are only three Warp Trolls working on cutting through the large circular window.  In another moment there is a flash and there are only two.  The two remaining mercenaries don't notice what is happening around them.  They are either very intent on their work, or the peripheral vision on their helmets does not allow them to see what is happening.[paragraph break]";
+	say "'Maybe it’s the RONARD Core?' [a random researcher who is not Scholar Ez] begins to ask.[paragraph break]Scholar Ez double-checks the time,  'Their ship still won't arrive for another [turns until saved] time units.'[paragraph break]In that instant, a broad looming figure appears behind on of the two remaining Warp Trolls.  A shadow falls across him and he looks up.  A powerfully built pincer claw pounds the unprepared soldier, sending him flying from the station and into untethered space.";
+	the war bot  fights the warp troll on the roof in 1 turn from now;
+	now the war bot attack ship is helping;
+	move the shadow of the broad looming figure on the roof to the control deck;
+
+The shadow of the broad looming figure on the roof is scenery.  The description of it is "A bright red War Bot standing on the outside of the station, unaffected by the vaccuum of space."
+
+At the time when the war bot fights the warp troll on the roof:
+	let x be available from the list of all crew members;
+	say "The star light glints off of the War Bot standing on the outside of the station.  The robot approaches the single remaining cutter, still working on his spot of the window.  The Warp Troll finally notice what's going on around him, and looks up from his task before the War Bot has closed the distance between them.  He drops his cutting torch and unslings his rifle from his back.  As the War Bot approaches him in a plodding uneven gait, it plucks the torch from where it lay on the window and neatly crushes it with a single hand.  The Warp Troll begins firing, but the shots bounce harmlessly of his attacker.  Within moments, the battle moves beyond what’s visible from inside the station.[paragraph break][X] goes over to a scanner array and checks the readings.";
+	x requests to do the action of x reacting requested as "--";
+
+Instead of a crew member reporting status when the war bot attack ship is helping:
+	if the pending order description of the actor is not "":
+		say "[The actor] says, 'The instruments are showing a large War Bot carrier ship.  It must have just dropped from warp right next to us,' in wide-eyed surprise.  [He-She for the actor] runs [his-her for the actor] hand through [his-her for the actor] hair.  'We’re saved?'[paragraph break]Weapon fire can suddenly be heard from the bottom of the ladderway.  Gragnakus[’] voice bursts the intercom.  'Do you guys know what they’re firing at down there?'[paragraph break]'Yeah,  I think we do,' [the actor] responds.  'But I don’t think that you’re going to believe me.'[paragraph break]'What is it?' he asks.[paragraph break][He-She for the actor] pauses, contemplating how best to reply.  'War Bots.  There’s a whole ship full of them.  They’re fighting back the Warp Trolls.'[paragraph break]'Um,' he replies.  There is a long pause.  'Really?' he says in disbelief.  'Should we be more worried now?'[paragraph break]'No, I don’t think so.  I’m pretty sure that they’re saving the station.'[paragraph break]'Wow, ok.  Didn't see that coming.  We’ll just sit tight then.'";
+		increase the score by 2;
+		now the pending order description of the actor is "";
+	otherwise:
+		continue the action;
+
+Instead of going when the bulkhead door is open:
+	say "You reach a hand out to grab the top rung.  Shots fired by Warp Trolls watching from the bottom ricochet off the walls of the ladderway as you pull your arm quickly back in again.  'Yikes!'";
+
+At the time when the call continues:
+	let x be available from the list of all crew members;
+	let y be a random researcher who is not Dr Zuumont;
+	if the camera switch is switched on:
+		say "[X] says, 'The Warp Trolls are climbing the station, they're going to come in from the outside!'";
+	otherwise:
+		say "'Get to your point,' Dr Zuumont says sharply.[paragraph break]'My offer, doctor, is to your station crew.  I will grant them safe passage to depart aboard the ship docked with this station that had responded to your distress signal.  We will remain on board the station with you, and we will continue the test that you were running earlier.'[paragraph break]After a moment of stunned silence, Dr Zuumont turns from the screen to face the you all.  He takes a deep breath then announces, 'You all should go.  Leave me here and you all be safe.  The RONARD Core will be here shortly.  Leave my rescue to them.'[paragraph break]";
+		say "[X] says, 'I wonder what's going outside of the station.'";
+		the call continues more in 0 turn from now;
+
+At the time when the call continues more:
+	let x be available from the list of all crew members;
+	let y be a random researcher who is not Dr Zuumont;
+	if the camera switch is switched off:
+		say "[Y] steps forward from the group.  'Dr Zuumont, we’re not going to leave you.  If we leave, we give them all of our research and the technology that we’ve built.  Once they have you, it will be much harder for the RONARD Core to get you back than if we can just hold these raiders off until they arrive.  Besides, that’s making the big assumption that they’re telling us the truth about letting us go in the first place.'[paragraph break]";
+		say "Overwhelmed by curiousity, [X] walks over and flips the video feed to the exterior cameras.[paragraph break]";
+		now the camera switch is switched on;
+	say "[X] says, 'The Warp Trolls are climbing the station, they're going to come in from the outside!'";
+
+Every turn when the phone is ringing:
+	say "An incoming call indicator is flashing on one of the workstation terminals.  Type '[bold type]answer the call[roman type]' in order to answer.";
+
+Instead of Dr Riemoh reacting when the game stage is WARP_TROLLS_ATTACKING:
+	say "Dr Riemoh goes over the to control panel and begins to cycle through internal cameras.  Looking through all security vantage points on the bottom deck, every camera has been disabled.";
+	now the camera switch is switched off;
+
+Carry out an actor switching on the gravity control lever:
+	now gravity is on;
+	continue the action;
+
+Carry out an actor switching off the gravity control lever:
+	now gravity is off;
+	continue the action;
+
+After an actor switching on the gravity control lever when the horde is in the griffled duckstar station:
+	if the horde is in the second floor ladderway or the horde is in the third floor ladderway:
+		move the horde to the bottom of the ladderway;
+		say "[The actor] turn[s for the actor] on gravity.  Some Warp Trolls fall back down to the bottom of the ladderway, buying you a few more minutes." instead;
+	otherwise if the horde is in the fourth floor ladderway:
+		remove the horde from play;
+		the horde returns in 4 turns from now;
+		say "The lack of gravity and the fact that the lead Warp Troll is hanging in the dead center of the ladderway means that he can’t quickly bring his rifle to bear on you, but it’s evident that he’s trying.  You see a variety of things flashing across his face as his eyes scan the full picture of his surroundings in the moment that gravity again becomes a reality to be accounted for on the station.[paragraph break]You only fall a few inches to the floor of the control deck.  The mass of soldiers that were rocketing up the ladderway continue their momentum upwards for just a moment, then like a cloud of boomerangs, or a flock of birds deciding by some unseen signal to turn sharply mid-flight they all ark downward, bending away from the top of the ladder as you watch them drop.  A few were close enough to the rungs to grab on, but the others falling past them grab their fatigues, pulling them loose and down the shaft with them.[paragraph break]Those that are low enough to the ground to be unhurt by the fall are quickly flattened to the ground by their falling comrades.  After a cacophonous thunder of thumping and pounding, they’re all settled in a heap at the bottom of the ladder shaft.[paragraph break]Dr Petre says, 'It worked!'[paragraph break]A quick glance down the ladderway reveals that the Warp Trolls are going to need a bit of time to collect themselves before they can begin their next assault.";
+	otherwise:
+		continue the action;
+
+Instead of switching to a crew member when the horde is active:
+	say "Your attentions are best spent here.";
+
+At the time when the horde returns:
+	say "The Warp Trolls have cleared a path to the ladder and begun climbing up.[paragraph break][if gragnakus is in the storage room]From half way down the shaft, you hear Gragnakus say, 'My turn!'";
+	move the horde to the bottom of the ladderway;
+
+The horde is a thing.  The horde is in the warp troll hall.  The horde can be active.
+
+Carry out progressing when the game stage is CIRCLE_THE_WAGONS:
+	if the player is Gragnakus:
+		try switching to Staci;
+	now the horde is active;
+
+Carry out progressing when the game stage is SAVED_DUCKSTAR:
+	now the horde is not active;
+
+At the time when the warp trolls attack:
+	set game stage to WARP_TROLLS_ATTACKING;
+	now turns until saved is 35;
+	if the docking systems are switched on:
+		let z be a random person enclosed by the control deck;
+		say "The Warp Troll Ship docks with the Griffled Duckstar Station, the automated station docking systems bringing guiding them in to the east airlock.  [if z is not dr riemoh]Dr Riemoh sighs exasperatedly, '[the first name of z], I thought you were going to take care of that.'";
+		break through;
+	otherwise:
+		if the camera switch is switched on:
+			say "On the video feed of the space outside the station, you see the menacing Warp Troll Ship appear.  A boarding chute projects out from the Warp Troll ship and latches itself to a station airlock.  Through the walls of the station, a loud clang can be heard from the impact.";
+		otherwise:
+			say "Through the walls of the station, a loud clang can be heard from the impact of the boarding chute making contact with the airlock.";
+		the warp trolls break through in 3 turns from now;
+		say "Dr Petre says, 'They’re going to have to cut through the airlock and the closed shielding in order to gain entry.  That should buy us some time.'";
+
+To break through:
+	say "Scholar Ez calls out, 'They’re through the airlock.  Warp Trolls in the station.'";
+	now the bulkhead door is unlocked;
+	now the bulkhead door is open;
+	now the horde is in the east airlock;
+	if the camera switch is switched off:
+		say "On the internal video feed you can see that a large hole has now been cut through the sealed airlock door at the end of the hall.  As you watch, the metal cut from the doorway is pushed aside.  The first few Warp Trolls, tall, broad and menacing in heavy black riot gear come streaming through the hole.  They’re carrying fierce looking rifles.  The leading raider looks directly into the camera, clearly spotting it.  He raises his rifle and destroys the camera with a single shot, blacking the screen in an instant.  A moment later, the screen is filled with static.[paragraph break]";	
+	the warp trolls reach the ladder in 1 turn from now;
+	now the flashing red alert is in the duckstar station;
+	say "Dr Riemoh triggers a station-wide red alert.  The lights dim and red lighting panels spaced evenly along the walls begin slowly switching on and off.  A muted alarm buzz begins sounding, alternating between a deep bellow and a high pitched yelp.[paragraph break]";
+	if gravity is off:
+		say "Dr Petre pulls himself along strategically placed hand holds over to the top of the ladderway shaft.  He peers down the shaft, waiting for the first signs of invaders to appear.  'It won’t take them long reach the ladderway.  Once they start coming, we’ll want to wait as long as we possibly can before reactivating gravity in order to drop as many raiders as possible.'";
+	otherwise:
+		say "Dr Petre walks over to the ladderway and looks down.  'They should be here any second now.'";
+
+At the time when the warp trolls break through:
+	increase the score by 25;
+	break through;
+
+At the time when the warp trolls reach the ladder:
+	move the horde to the bottom of the ladderway;
+	if gravity is off:
+		say "Dr Petre says, 'They are entering the ladderway.  Get ready to reactivate gravity, they are moving quickly.'";
+	otherwise:
+		say "Dr Petre says, 'They're in the ladderway and moving quickly.'";
+
+Reacting is an action applying to nothing.
+
+Carry out Dr Petre reacting when the game stage is CIRCLE_THE_WAGONS:
+	say "Dr Petre urgently says, 'The Warp Troll Ship has uncloaked and is on the move.  Wendy slowed them down for a little while, but they’ll regain control of their ship's systems soon enough.  I suspect the Warp Trolls are going to go for a direct assault now that their plot has been foiled.  They'll come in through the bottom level of the station, so now would not be a safe time to be on the Harbinger One.  [The first name of the player], you should bring your crew up to the control deck.'[paragraph break]Request that your crew come to you with:  '[bold type]summon crew[roman type]'";
+
+Carry out Dr Riemoh reacting when the game stage is RESTORE_ZUUMONT:
+	say "Dr Riemoh says, 'What have you discovered?  Did learn anything from studying the teleportation device?'[line break]You quickly explain the situation to Dr Riemoh.";
+	try Dr Riemoh summoning Dr Petre;
+	now scholar ez is shadowing dr petre;
+	now Dr Riemoh is not in need of an audience;
+	say "Dr Zuumont looks up as if seeing Dr Riemoh for the first time and distractedly says, 'Oh, hi Lizbet… You look older.  What happened to your hair?'  He then goes back to staring straight ahead."
+
+Instead of Dr Petre completing a path when the game stage is RESTORE_ZUUMONT:
+	if the location of dr petre is the location of the player:
+		if the location of Dr Riemoh is the location of the player:
+			say "Dr Petre says, 'Hi, Lizbet.  You called?'";
+			say "Dr Riemoh says, 'I think you're going to want to see this.'";
+		otherwise:
+			say "Dr Petre looks around and notes that Dr Zuumont must be cured.  He then nods approvingly.";
+	now the actor is not serving the master of the actor;
+	the actor performs their current action;
+
+After Dr Zuumont wearing the silver helmet:
+	zuumont returns in two turns from now;
+
+at the time when zuumont returns:
+	if dr zuumont is dazed and dr zuumont is wearing the helmet:
+		say "The effect on Dr Zuumont is dramatic and immediate. As if he were attached to an air pump that was inﬂating him, he sits up straight. His shoulders unslump and the slack look in his face melts away as an awareness of his surroundings returns to his eyes. A healthy pinkness replaces the grayness of his complexion. Within seconds, the transformation is complete.[paragraph break]Dr Zuumont blinks twice, looks around at everyone, then grins. 'I’m back!'[paragraph break]Dr Riemoh kneels down so that she can look him directly in the eyes appraisingly. She lets out a breath she’d been holding and puts her arms around him in a brief hug. 'I’m glad to see you again, Dr Zuumont.' She stands and turns away to smooth out the pockets on her lab coat, choking down her obvious relief and emotion and quickly brushing away a single tear.[paragraph break]'Let’s not forget that we’ve still got plenty of work to do before we can consider this disaster averted.' Dr Riemoh claps twice to ensure that she’s got everyone’s attention. 'Back to the control deck everyone,' she says in a tone that brooks no argument. 'Our ﬁrst priority is to alter the War Bot home command.'[paragraph break]'I agree,' Dr Zuumont says as he removes the mind transfer head gear and hands it to you. 'We should cancel the experiment until we can deal with the Warp Trolls.' He stands up from the chair, a bit unsteadily at ﬁrst, but quickly ﬁnds his balance.";
+		move the helmet to the player;
+		now the Current Researcher Responses is the Table of Warp Troll Attack Researcher Responses;
+		now the time remaining is four;
+		Dr Zuumont leads the player to Computer Lab;
+		now Dr Riemoh is shadowing Dr Zuumont;
+		now Scholar Ez is shadowing Dr Zuumont;
+
+Instead of Dr Zuumont finishing leading to the computer lab:
+	let x be available from {staci, wendy};
+	say "Dr Zuumont turns to you and says, 'I haven't had a chance to thank you for rescuing me yet…'[paragraph break]The researchers closest to the elevator realize ﬁrst that it’s Dr Zuumont coming into the room and begin the clapping.  It doesn’t take long for the whole group to stop what they’re doing and gather around, continuing their round of applause. There’s even a whistle from the back of the group.[paragraph break]Dr Zuumont waits politely for the appreciation from his staff to die down, then holds up a hand. 'Thank you, all. I’ve been told that you all rallied around Dr Petre admirably when you learned that I was… compromised. Now, if someone would please bring me one of those tablets.'[paragraph break]A short dark haired woman wearing the same green jumpsuit and white lab coat as all the others rushes forward and gives Dr Zuumont her tablet.[paragraph break]'Thank you, Kyrn[']q,' he says as he takes the device from her.  He holds the camera squarely in front of his face and says, 'Initiate biometric authentication, Zuumont, Theodore.'[paragraph break]The display quickly emits three low beeps, then a high pitched chirp of acknowledgement. 'Authorization code: 'Druk nak nik doka shunak qua.'[paragraph break][x] whispers to you, 'Oh look, he speaks Darv.'[paragraph break]Dr Zuumont walks over to a workstation to conﬁrm that his commands have unlocked the War Bot control sequence for reprogramming. 'Now, let’s shift their home location back to the Savage Barren Zone. There’s still plenty of time to feed the reversed commands into their distributed consciousness before they’ve gone anywhere.'[paragraph break]Two or three of the station scientists gather around Dr Zuumont in order to assist him with the reprogramming.  After issuing the ﬁrst few commands, the large countdown timer shuts off.  Another round of clapping erupts.";
+	now the main countdown timer is not ticking;
+	move Dr Petre to the control deck;
+	needed on the bridge in 1 turn from now; 
+
+At the time when needed on the bridge:
+	try Dr Petre summoning Dr Zuumont;
+	Now Dr Petre is in need of an audience;
+	set game stage to CIRCLE_THE_WAGONS;
+	plan for Dr Petre to react;
+
+flashing red alert lights is backdrop.  it is not scenery.  The description of it is "The Duckstar is at red alert due to the ongoing warp troll attack.";
+
+Instead of an actor using the helmet with a person:
+	try the actor putting the helmet on the second noun.
+
+Instead of an actor putting the helmet on a person:
+	if the second noun is a crew member or the second noun is dazed:
+		move the helmet to the second noun;
+		try silently the second noun wearing the helmet;
+		if the second noun is wearing the helmet:
+			say "You put [the noun] gently on [the second noun]'s head.";
+			rule succeeds;
+		otherwise:
+			move the helmet to the actor;
+	otherwise:
+		say "You don't think that [the second noun] would enjoy wearing [the noun].";
+
+Instead of an actor smashing the transport unit with:
+	say "You don't really have a good tool for smashing [the noun].";
+
+Instead of going in Gragnakus' Workshop when the game stage is RESCUE_THE_SIMULATION:
+	if the transport unit is enclosed by the workshop:
+		say "You should smash the [transport unit] before leaving the room.  You don't want anybody following you through the teleporter to the Harbinger One.";
+		have the parser notice the transport unit;
+	otherwise:
+		continue the action;
+
+The readouts are scenery in the Command room.  The description of it is "Information scrolls past detailing the status of ship systems."
+
+After an actor using:
+	say "You aren't quite sure how to use [the noun] here.";
+
+Understand "unstrap [person]" as unstrapping.  Unstrapping is an action applying to one thing.
+
+Carry out unstrapping:
+	say "You aren't sure how to unstrap [the noun].";
+
+Carry out strapping down:
+	say "[The noun] is not somewhere that they could be strapped down.".
+
+The room from the unknown ship is a thing.  The description of it is "The picture reveals a spacious room, the walls are showing a video feed of a leafy green forest. The reﬂected light from the leaves give the ﬂoor and room a pale green hue.  Narrow corridors lead from the room, but there is no sign of any of the ships occupants anywhere around where the camera has landed.";
+
+Use memory economy.
+
+Part 3 - Magic - Not for release
+
+understand "chapter [number]" as cheating. cheating is an action applying to a number.
+check cheating:
+	say "cheater.";
+	if the number understood is 3:
+		set game stage to CIRCLE_THE_WAGONS;
+		now the war bot attack ship is not targeting the harbinger one;
+		now the alert level of the harbinger one is green alert;
+		repeat with x running through the crew members:
+			move x to the control deck;
+		repeat with x running through the researchers:
+			move x to the control deck;		
+		we continue to prep in 1 turn from now;
+	if the number understood is 2:
+		now the war bot attack ship is not targeting the harbinger one;
+		now the alert level of the harbinger one is green alert;
+		move the war bot to workshop;
+		now the war bot is evil;
+		reset crew;
+		arriving at duckstar in 0 turns from now;  
+
+boolean is a kind of a value.  the booleans are yes and no.  a boolean is usually no.
+
+debug ways is a boolean that varies. debug ways is no.
+
+understand "show exits" as toggling ways. toggling ways is an action applying to nothing.
+check toggling ways:
+	if debug ways is yes, now debug ways is no;
+	otherwise now debug ways is yes;
+	say "Showing exits: [debug ways].";
+
+After looking when debug ways is yes:
+	say "Exits:  ";
+	let valid exits be a list of direction;
+	repeat with destination running through adjacent rooms:
+		let destination direction be the best route from the location to destination;
+		add destination direction to valid exits;
+	say "[valid exits].";
+
+after an actor taking inventory:
+	if the actor is not the player:
+		say "[He-She for the actor] has [the list of things carried by the actor].";
+
+Understand "* [text]" as a mistake ("Noted.").
+
+Test bridge with "gragnakus, fire / sit / gragnakus, fire / stand / wendy, e".
+
+Test pudding with "turn on assembulator / take pudding / eat pudding / take a picture of pudding / eat pudding" in Staci's Personal Office.
+
+Test camera with "take a picture / wendy / take a picture of gragnakus / s / take a picture of me / x viewer" in the Control Room.
+
+Test giving with "wendy, follow me / s / turn on efma / take pudding / give pudding to wendy / take pudding" in the Control Room.
+
+Test drones with "launch drones / p / f / f / f / x screen / sit / gragnakus, fire / x screen" in the Storage Bay.
+
+Test warbot with "test drones / switch to gragnakus / wendy, follow me / a / a / a / s / fix war bot / wendy, take war bot / take war bot / p / p / drop war bot / wendy, fix war bot / x war bot / turn on war bot / fix war bot / x war bot / turn on war bot / x war bot / s / f / f / f / s / turn on efma / take pudding / p / a / a / a / p / throw pudding at war bot"
+
+Test warping with "test warbot / switch to staci / jump to warp / status report / status report / help me find the airlock / switch to gragnakus / a / a / a / s / s / out / switch to staci / wendy, jump to warp / talk to wendy / x screen / x screen / switch to gragnakus / out / in / switch to staci / wendy, dock with griffled / wendy, hail the duckstar / wendy, dock / a / a / a / s / s / out / switch to doogus / s / s / take bag / p / a / a / p / take bar / s / s / s / give bag to staci / give bar to staci / switch to staci / out / in"
+
+test zuumont with "s / s / d / n / n / pry panel / take unit / use unit" in the control deck.
+
+test teleport with "summon grag / z / z / z / grag, lead me to your workshop / s / s / d / d / w . s / in . p . p / p . drop teleporter . switch to grag . fix teleporter . s / s / push crate port . x crate . turn on device . push crate port / push crate port . fix unit . turn off device . l . fix unit / l . switch to staci . use unit . use unit on camera . use unit / w . use controls / e . open cabinet . hide inside / z . z . z . z . z . z . z . z . z . z . z . z . z . z / out . turn on screen . take helmet . use it on zuumont . w / use teleporter . wendy, use controls / use teleporter . e . take camera / w / use teleporter / s / smash it / grag, smash teleporter / s / s / s / out. n. e. u. u / n. n / put helmet on zuumont / watch . watch / s"
+
+test duckstar with "test warping / out / n / e / u / u / u / n / test zuumont / test teleport"
+
+Test chapter2 with "status / yes / wendy, dock / a / s / take bag / p / a / a / p / take bar / p / s / s / out / n / e / u / u / u / n / test zuumont"
+
+Test me with "test duckstar"
+
+
