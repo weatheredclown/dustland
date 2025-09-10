@@ -155,10 +155,11 @@ xxxxx
 - Bee Room: north to Maze; east to Merchant Room; southwest to Flute Room
 
 ## Pipeline Notes
- - Hand-build the JSON map based on the room/item/NPC list. Use `node scripts/supporting/append-room.js` to quickly insert rooms and wire portal exits.
-   - Specify connections as `<dir>:<room>` where `<dir>` is N, E, S, W, U, or D for up and down staircases.
-   - Example: `node scripts/supporting/append-room.js modules/pit-bas.module.js small_cavern N:cavern`.
-   - Invoking the script again with the same room name replaces its layout and portals.
+- Hand-build the JSON map based on the room/item/NPC list. Use `node scripts/supporting/append-room.js` to quickly insert rooms and wire portal exits.
+  - Specify connections as `<dir>:<room>` where `<dir>` is N, E, S, W, U, or D for up and down staircases.
+  - Example: `node scripts/supporting/append-room.js modules/pit-bas.module.js small_cavern N:cavern`.
+  - Invoking the script again with the same room name replaces its layout and portals.
+ - For individual tweaks, `node scripts/supporting/add-portal.js <file> <room> <dir> <target>` drops a 🚪 tile and links both rooms.
 
 > **Gizmo:** No one should hand-wire thirty rooms; let the helper script solder the lines.
  - Port chunks of the pit build helper script to automate repetitive wiring.
