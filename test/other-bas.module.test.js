@@ -13,3 +13,8 @@ test('other-bas module exposes listing and start map', () => {
   assert.ok(global.OTHER_BAS_MODULE.listing);
   assert.strictEqual(global.OTHER_BAS_MODULE.start.map, 'west_wing');
 });
+
+test('other-bas module includes rooms and items', () => {
+  assert.ok(global.OTHER_BAS_MODULE.interiors.find(r => r.id === 'garage'));
+  assert.ok(global.OTHER_BAS_MODULE.items.find(i => i.id === 'wrench'));
+});
