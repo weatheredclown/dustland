@@ -1,5 +1,8 @@
 # Changelog
 
+## 2025-09-09
+- Added overlay UI for equipping personas at camp.
+
 ## 2025-09-08
 - Added bunker flag for buildings, enabling fast travel via world map.
 

@@ -3,7 +3,13 @@
   const gs = globalThis.Dustland?.gameState;
   if (!bus || !gs?.applyPersona) return;
   const btn = document.getElementById('campBtn');
+  const overlay = document.getElementById('personaOverlay');
+  const list = document.getElementById('personaList');
+  const closeBtn = document.getElementById('closePersonaBtn');
   if (btn) btn.addEventListener('click', () => bus.emit('camp:open'));
+  if (closeBtn && overlay) {
+    closeBtn.addEventListener('click', () => overlay.classList.remove('shown'));
+  }
   bus.on('camp:open', () => {
     const pos = globalThis.party;
     const map = globalThis.state?.map || 'world';
@@ -28,10 +34,20 @@
     globalThis.log?.('You rest until healed.');
     const state = gs.getState?.() || {};
     const member = state.party && state.party[0];
-    if (!member) return;
+    if (!member || !overlay || !list) return;
     const ids = Object.keys(state.personas || {});
     if (!ids.length) return;
-    const choice = prompt(`Equip persona for ${member.name}`, ids.join(','));
-    if (choice && state.personas[choice]) gs.applyPersona(member.id, choice);
+    list.innerHTML = '';
+    ids.forEach(id => {
+      const b = document.createElement('button');
+      b.className = 'btn';
+      b.textContent = id;
+      b.addEventListener('click', () => {
+        overlay.classList.remove('shown');
+        gs.applyPersona(member.id, id);
+      }, { once: true });
+      list.appendChild(b);
+    });
+    overlay.classList.add('shown');
   });
 })();
