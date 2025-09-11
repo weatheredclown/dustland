@@ -6,13 +6,13 @@
 *Status: Draft*
 
 ## Status update
-As of 2025-09-07, `data/bunkers.js` and core travel logic with events exist. The world map overlay now shows thumbnails for each unlocked bunker and uses per-bunker save slots to preserve state across hops.
+As of 2025-09-07, bunkers derive from building data and core travel logic with events exists. The world map overlay now shows thumbnails for each unlocked bunker and uses per-bunker save slots to preserve state across hops.
 
 As of 2025-09-08, fuel costs apply a base price plus Manhattan distance, and travel events emit `{ fromId, toId, result }` payloads for mod hooks.
 
 ### Open questions
 - Mechanics 2 mentions distance-based fuel costs; how will the system compute distance between bunkers?
-  - Use the Manhattan distance between bunker coordinates in `data/bunkers.js`. Fuel cost scales as `BASE_COST + distance * FUEL_PER_TILE`, keeping math cheap on the grid.
+  - Use the Manhattan distance between bunker coordinates from building definitions. Fuel cost scales as `BASE_COST + distance * FUEL_PER_TILE`, keeping math cheap on the grid.
 - Implementation Sketch references `scripts/ui/world-map.js`, but the project currently lacks a world map module—where should destination selection live?
   - Destination selection lives in a new `scripts/ui/world-map.js` overlay. It renders each unlocked bunker's overworld as a clickable thumbnail built from module map data.
   - The map functions as a hub above individual modules. Choosing a thumbnail loads that module while preserving party state and active quests.
@@ -48,7 +48,7 @@ As of 2025-09-08, fuel costs apply a base price plus Manhattan distance, and tra
 4. **UI:** World map highlights linked bunkers; select and confirm to jump.
 
 ## Implementation Sketch
-- [x] Add `data/bunkers.js` with coordinates and activation flags.
+- [x] Read bunkers from building definitions with activation flags.
 - [x] Create `scripts/core/fast-travel.js` handling node graphs and fuel costs.
 - [x] Hook into map UI in `scripts/ui/world-map.js` to select destinations.
 - [x] Emit `travel:start` and `travel:end` events for mods.
