@@ -503,6 +503,12 @@ function interactAt(x, y) {
         const b=buildings.find(b=> b.doorX===x && b.doorY===y);
         if(!b){ log('No entrance here.'); bus.emit('sfx','denied'); return true; }
         if(b.boarded){ log('The doorway is boarded up from the outside.'); bus.emit('sfx','denied'); return true; }
+        if(b.bunker){
+          Dustland.fastTravel?.activateBunker?.(b.bunkerId);
+          if(typeof openWorldMap==='function') openWorldMap();
+          bus.emit('sfx','confirm');
+          return true;
+        }
         const I=interiors[b.interiorId];
         if(I){ setPartyPos(I.entryX, I.entryY); }
         setMap(b.interiorId,'Interior');

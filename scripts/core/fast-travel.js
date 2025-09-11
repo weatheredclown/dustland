@@ -64,5 +64,8 @@
   }
 
   globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.fastTravel = { fuelCost, travel, activateBunker, saveSlot, loadSlot };
+  globalThis.Dustland.fastTravel = { fuelCost, travel, activateBunker , saveSlot, loadSlot};
+  globalThis.openWorldMap = globalThis.openWorldMap || function(){
+    if(typeof log==='function') log('World map opened.');
+  };
 })();
