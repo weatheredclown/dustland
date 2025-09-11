@@ -1313,3 +1313,16 @@ test('updateTreeData captures unlockNPC from dataset', () => {
     { effect: 'unlockNPC', npcId: 'door' }
   ]);
 });
+
+test('computeSpawnHeat maps distance from roads', () => {
+  genWorld(0);
+  for(let y=0; y<WORLD_H; y++){
+    for(let x=0; x<WORLD_W; x++){
+      world[y][x] = TILE.SAND;
+    }
+  }
+  world[0][0] = TILE.ROAD;
+  computeSpawnHeat();
+  assert.strictEqual(spawnHeatMap[0][0], 0);
+  assert.strictEqual(spawnHeatMap[0][1], 1);
+});

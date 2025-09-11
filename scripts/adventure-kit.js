@@ -127,6 +127,9 @@ let panning = false, panStartX = 0, panStartY = 0, panMouseX = 0, panMouseY = 0;
 const baseTileW = canvas.width / WORLD_W;
 const baseTileH = canvas.height / WORLD_H;
 let problemRefs = [];
+let spawnHeat = false;
+var spawnHeatMap = null;
+var spawnHeatMax = 0;
 
 function focusMap(x, y) {
   if (currentMap !== 'world') return;
@@ -138,6 +141,41 @@ function focusMap(x, y) {
   panY = clamp(y - viewH / 2, 0, maxPanY);
 }
 globalThis.focusMap = focusMap;
+
+function computeSpawnHeat(){
+  const W = WORLD_W, H = WORLD_H;
+  const grid = Array.from({ length: H }, () => Array(W).fill(Infinity));
+  const q = [];
+  for(let y=0;y<H;y++){
+    for(let x=0;x<W;x++){
+      if(world[y][x] === TILE.ROAD){
+        grid[y][x] = 0;
+        q.push([x,y]);
+      }
+    }
+  }
+  const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+  let head = 0;
+  while(head < q.length){
+    const [x,y] = q[head++];
+    const d = grid[y][x] + 1;
+    for(const [dx,dy] of dirs){
+      const nx = x + dx, ny = y + dy;
+      if(nx>=0 && ny>=0 && nx<W && ny<H && grid[ny][nx] > d){
+        grid[ny][nx] = d;
+        q.push([nx,ny]);
+      }
+    }
+  }
+  spawnHeatMap = grid;
+  spawnHeatMax = 0;
+  for(let y=0;y<H;y++){
+    for(let x=0;x<W;x++){
+      const v = grid[y][x];
+      if(v !== Infinity && v > spawnHeatMax) spawnHeatMax = v;
+    }
+  }
+}
 
 let loopHover = null;
 const loopPlus = document.createElement('span');
@@ -360,6 +398,7 @@ function drawWorld() {
     sx = canvas.width / W * worldZoom;
     sy = canvas.height / H * worldZoom;
   }
+  if (map === 'world' && spawnHeat) computeSpawnHeat();
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   for (let y = 0; y < H; y++) {
@@ -377,6 +416,14 @@ function drawWorld() {
         ctx.fillStyle = t === TILE.WALL ? '#444' : t === TILE.DOOR ? '#8bd98d' : '#222';
       }
       ctx.fillRect(px, py, sx, sy);
+      if (map === 'world' && spawnHeat && spawnHeatMap && spawnHeatMax > 0) {
+        const d = spawnHeatMap[y][x];
+        if (d && d !== Infinity) {
+          const a = Math.min(1, d / spawnHeatMax) * 0.5;
+          ctx.fillStyle = 'rgba(255,0,0,' + a + ')';
+          ctx.fillRect(px, py, sx, sy);
+        }
+      }
     }
   }
   if (map === 'world' && hoverTile) {
@@ -3799,6 +3846,12 @@ document.getElementById('loadFile').addEventListener('change', e => {
 document.getElementById('setStart').onclick = () => { settingStart = true; };
 document.getElementById('resetStart').onclick = () => {
   moduleData.start = { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+  drawWorld();
+};
+const spawnHeatBtn = document.getElementById('spawnHeatBtn');
+if (spawnHeatBtn) spawnHeatBtn.onclick = () => {
+  spawnHeat = !spawnHeat;
+  spawnHeatBtn.textContent = `Spawn Heat: ${spawnHeat ? 'On' : 'Off'}`;
   drawWorld();
 };
 document.getElementById('addNode').onclick = addNode;
