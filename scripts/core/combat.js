@@ -595,7 +595,8 @@ function doAttack(dmg, type = 'basic'){
         stats.count += 1;
         if (turnsTaken <= 1) stats.quick += 1;
       }
-      if (target.loot) addToInv?.(target.loot);
+      // lootChance defaults to 1 (100%) if unspecified
+      if (target.loot && Math.random() < (target.lootChance ?? 1)) addToInv?.(target.loot);
 
       // Bandits sometimes drop scrap
       if (/bandit/i.test(target.id) && Math.random() < 0.5){
@@ -801,7 +802,8 @@ function enemyAttack(){
       stats.count += 1;
       if (turnsTaken <= 1) stats.quick += 1;
     }
-    if (enemy.loot) addToInv?.(enemy.loot);
+    // lootChance defaults to 1 (100%) if unspecified
+    if (enemy.loot && Math.random() < (enemy.lootChance ?? 1)) addToInv?.(enemy.loot);
     if (/bandit/i.test(enemy.id) && Math.random() < 0.5){
       player.scrap = (player.scrap || 0) + 1;
       updateHUD?.();
