@@ -81,6 +81,9 @@
           case 'log':
             if (typeof log === 'function') log(eff.msg || '');
             break;
+          case 'openWorkbench':
+            globalThis.Dustland?.openWorkbench?.();
+            break;
           case 'addFlag': {
             const p = ctx.party || globalThis.party;
             if (p) {
