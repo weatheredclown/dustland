@@ -123,7 +123,6 @@ function loadModule(moduleInfo){
       realResetAll();
       loadModule(moduleInfo);
     };
-    localStorage.removeItem('dustland_crt');
     openCreator();
   };
   document.body.appendChild(script);
