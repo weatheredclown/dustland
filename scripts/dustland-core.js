@@ -738,6 +738,12 @@ function load(){
   if (typeof toast === 'function') toast('Game loaded.');
 }
 
+function clearSave(){
+  localStorage.removeItem('dustland_crt');
+  log('Save cleared.');
+  if (typeof toast === 'function') toast('Save cleared.');
+}
+
 const startEl = document.getElementById('start');
 const startContinue = document.getElementById('startContinue');
 const startNew = document.getElementById('startNew');

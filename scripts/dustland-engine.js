@@ -1099,6 +1099,9 @@ function runTests(){
 if (document.getElementById('saveBtn')) {
   document.getElementById('saveBtn').onclick=()=>save();
   document.getElementById('loadBtn').onclick=()=>{ load(); };
+  document.getElementById('clearBtn').onclick=()=>{
+    if (confirm('Delete saved game?')) clearSave();
+  };
   document.getElementById('resetBtn').onclick=()=>{
     if (confirm('Reset game and return to character creation?')) resetAll();
   };
