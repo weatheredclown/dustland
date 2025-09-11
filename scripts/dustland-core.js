@@ -616,10 +616,24 @@ function placeHut(x,y,b={}){
     }
   }
   let interiorId, boarded;
-  interiorId = b.interiorId || makeInteriorRoom();
-  if(b.interiorId && !interiors[b.interiorId]) makeInteriorRoom(b.interiorId);
+  const bunker = !!b.bunker;
+  if (!bunker) {
+    interiorId = b.interiorId || makeInteriorRoom();
+    if (b.interiorId && !interiors[b.interiorId]) makeInteriorRoom(b.interiorId);
+  } else {
+    interiorId = null;
+  }
   boarded = b.boarded!==undefined ? b.boarded : rng()<0.3;
   const nb={x,y,w,h,doorX,doorY,interiorId,boarded,under,grid};
+  if (bunker) {
+    nb.bunker = true;
+    const bunkerId = b.bunkerId || `bunker_${x}_${y}`;
+    nb.bunkerId = bunkerId;
+    const bunkers = (globalThis.Dustland ||= {}).bunkers || (globalThis.Dustland.bunkers = []);
+    if (!bunkers.some(b => b.id === bunkerId)) {
+      bunkers.push({ id: bunkerId, x: doorX, y: doorY, active: !boarded });
+    }
+  }
   buildings.push(nb);
   return nb;
 }
