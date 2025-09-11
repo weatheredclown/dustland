@@ -144,6 +144,14 @@ function showModulePicker(){
   ackBtn.onclick = () => { window.location.href = 'adventure-kit.html'; };
   overlay.appendChild(ackBtn);
 
+  const mpBtn = document.createElement('div');
+  mpBtn.id = 'mpGlyph';
+  mpBtn.textContent = '⇆';
+  mpBtn.title = 'Multiplayer';
+  mpBtn.style = 'position:absolute;top:44px;right:10px;z-index:1;color:#0f0;font-size:24px;cursor:pointer';
+  mpBtn.onclick = () => { window.location.href = 'multiplayer.html'; };
+  overlay.appendChild(mpBtn);
+
   const canvas = document.createElement('canvas');
   canvas.id = 'dustParticles';
   // Background dust layer; z-index keeps UI elements in front.
