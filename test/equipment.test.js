@@ -43,3 +43,17 @@ test('adrenaline damage modifiers are applied', () => {
   c.applyCombatMods();
   assert.strictEqual(c.adrDmgMod, 1.2);
 });
+
+test('equipping item toasts stat changes', () => {
+  const prevToast = globalThis.toast;
+  const msgs = [];
+  globalThis.toast = msg => msgs.push(msg);
+  party.length = 0;
+  const m = new Character('id4', 'Hero', 'fighter');
+  party.push(m);
+  registerItem({ id: 'stat_hat', name: 'Stat Hat', type: 'armor', mods: { STR: 3, AGI: -1 } });
+  player.inv = [getItem('stat_hat')];
+  equipItem(0, 0);
+  assert.strictEqual(msgs[1], '+3 STR, -1 AGI');
+  globalThis.toast = prevToast;
+});

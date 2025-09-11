@@ -185,21 +185,29 @@ function equipItem(memberIndex, invIndex){
   if(!m||!it||!EQUIP_TYPES.includes(it.type)){ log('Cannot equip that.'); return; }
   const slot = it.type;
   const prevEq = m.equip[slot];
+  const before = { ...(m._bonus || {}) };
   if(prevEq){
     if(prevEq.cursed){
       prevEq.cursedKnown = true;
-        notifyInventoryChanged();
-        log(`${prevEq.name} is cursed and cannot be removed.`);
-        return;
-      }
-      player.inv.push(prevEq);
+      notifyInventoryChanged();
+      log(`${prevEq.name} is cursed and cannot be removed.`);
+      return;
     }
-    m.equip[slot]=it;
-    player.inv.splice(invIndex,1);
-    applyEquipmentStats(m);
-    notifyInventoryChanged();
-    log(`${m.name} equips ${it.name}.`);
-  if(typeof toast==='function') toast(`${m.name} equips ${it.name}`);
+    player.inv.push(prevEq);
+  }
+  m.equip[slot]=it;
+  player.inv.splice(invIndex,1);
+  applyEquipmentStats(m);
+  const after = m._bonus || {};
+  const deltas = [];
+  const stats = new Set([...Object.keys(before), ...Object.keys(after)]);
+  stats.forEach(stat => {
+    const diff = (after[stat] || 0) - (before[stat] || 0);
+    if(diff) deltas.push(`${diff>0?'+':''}${diff} ${stat}`);
+  });
+  notifyInventoryChanged();
+  log(`${m.name} equips ${it.name}.`);
+  if(typeof toast==='function'){ toast(`${m.name} equips ${it.name}`); if(deltas.length) toast(deltas.join(', ')); }
   emit('sfx','tick');
   if(it.equip && it.equip.teleport){
     const t=it.equip.teleport;
