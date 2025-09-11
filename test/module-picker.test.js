@@ -95,6 +95,14 @@ test('adventure kit glyph navigates to editor', () => {
   assert.strictEqual(global.location.href, 'adventure-kit.html');
 });
 
+test('multiplayer glyph navigates to multiplayer', () => {
+  const overlay = bodyEl.children.find(c => c.id === 'modulePicker');
+  const glyph = overlay.children.find(c => c.id === 'mpGlyph');
+  assert.ok(glyph);
+  glyph.onclick();
+  assert.strictEqual(global.location.href, 'multiplayer.html');
+});
+
 test('particles respawn at edges after aging', () => {
   const canvas = stubEl();
   const dust = startDust(canvas);
@@ -136,6 +144,12 @@ test('two-worlds module points to entry script', () => {
   const tw = MODULES.find(m => m.id === 'two-worlds');
   assert.ok(tw);
   assert.strictEqual(tw.file, 'modules/two-worlds.module.js');
+});
+
+test('true-dust module points to entry script', () => {
+  const td = MODULES.find(m => m.id === 'true-dust');
+  assert.ok(td);
+  assert.strictEqual(td.file, 'modules/true-dust.module.js');
 });
 
 test('enter key loads selected module', () => {

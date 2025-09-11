@@ -8,6 +8,7 @@ const MODULES = [
   { id: 'pit', name: 'PIT.BAS', file: 'modules/pit-bas.module.js' },
   { id: 'other', name: 'OTHER.BAS', file: 'modules/other-bas.module.js' },
   { id: 'two-worlds', name: 'Two Worlds', file: 'modules/two-worlds.module.js' },
+  { id: 'true-dust', name: 'True Dust', file: 'modules/true-dust.module.js' },
   { id: 'golden', name: 'Golden Sample', file: 'modules/golden.module.json' }
 ];
 

@@ -130,6 +130,11 @@ input[type="range"] {
         font-weight: 700
     }
 
+    .hud .hydration {
+        margin-left: 4px;
+        font-size: 12px;
+    }
+
     .hudbar {
         position: relative;
         width: 100%;

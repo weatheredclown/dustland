@@ -37,7 +37,7 @@ The Dustland opens its eyes with a whisper of grit and memory. "True Dust" drops
 - [x] Design Lakeside dockhand scene: give pendant fragment when Rygar present; deliver warning note when absent.
 - [x] Log quest updates for Rygar's Echo, Static Whisper, and Bandit Purge.
 - [x] Test Stonegate safety, radio range, bandit balance, and Lakeside branching outcomes.
-- [ ] wire up true dust to module select
+- [x] wire up true dust to module select
 
 ## Verification Instructions
 
