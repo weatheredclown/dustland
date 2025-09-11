@@ -3,7 +3,7 @@
   const refreshBtn = document.getElementById('refresh');
 
   function join(sess) {
-    alert('Joining ' + sess.name + ' at ' + sess.host + ':' + sess.port);
+    window.location.href = `dustland.html?host=${encodeURIComponent(sess.host)}&port=${sess.port}`;
   }
 
   function refresh() {
