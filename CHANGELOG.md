@@ -1,5 +1,8 @@
 # Changelog
 
+## 2025-09-11
+- Equipment now toasts stat changes when equipped.
+
 ## 2025-09-09
 - Added overlay UI for equipping personas at camp.
 
