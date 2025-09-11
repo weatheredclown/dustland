@@ -33,19 +33,14 @@
     list.style.display = 'flex';
     bunkers.filter(b => b.active && b.id !== fromId).forEach(b => {
       const info = moduleMap[b.id] || {};
-      const wrap = document.createElement('div');
-      wrap.style.margin = '4px';
-      const btn = document.createElement('button');
-      btn.textContent = info.name || b.id;
-      btn.style.display = 'block';
-      btn.style.marginTop = '4px';
-      btn.onclick = () => travel(fromId, b.id);
       ensureModule(b.id, moduleData => {
-        const thumb = renderThumb(moduleData);
-        wrap.appendChild(thumb);
-        wrap.appendChild(btn);
+        const thumb = renderThumb(moduleData, info);
+        thumb.style.margin = '4px';
+        thumb.style.cursor = 'pointer';
+        thumb.title = info.name || b.id;
+        thumb.onclick = () => travel(fromId, b.id);
+        list.appendChild(thumb);
       });
-      list.appendChild(wrap);
     });
     const cancel = document.createElement('button');
     cancel.textContent = 'Cancel';
@@ -67,7 +62,7 @@
     if(ft?.loadSlot?.(toId)){ close(); return; }
     ensureModule(toId, moduleData => {
       moduleData.postLoad?.(moduleData);
-      applyModule(moduleData, { fullReset: false });
+      applyModule(moduleData);
       const info = moduleMap[toId];
       if(info){
         setMap(info.map, info.name);
@@ -78,7 +73,7 @@
     });
   }
 
-  function renderThumb(moduleData){
+  function renderThumb(moduleData, info){
     const canvas = document.createElement('canvas');
     const world = moduleData?.world;
     const scale = 4;
@@ -87,9 +82,14 @@
       canvas.height = world.length * scale;
       const ctx = canvas.getContext('2d');
       world.forEach((row, y) => row.forEach((t, x) => {
-        ctx.fillStyle = t ? '#6b8' : '#000';
-        ctx.fillRect(x*scale, y*scale, scale, scale);
+        const hasTile = t !== undefined && t !== null;
+        ctx.fillStyle = hasTile ? '#6b8' : '#000';
+        ctx.fillRect(x * scale, y * scale, scale, scale);
       }));
+      if(info){
+        ctx.fillStyle = '#f00';
+        ctx.fillRect(info.x * scale, info.y * scale, scale, scale);
+      }
     }else{
       canvas.width = canvas.height = 32;
       const ctx = canvas.getContext('2d');

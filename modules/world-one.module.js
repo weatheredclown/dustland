@@ -4,18 +4,28 @@ const DATA = `
 {
   "seed": "world-one",
   "start": { "map": "world", "x": 2, "y": 2 },
+  "world": [
+    [0,0,0,0,0],
+    [0,0,0,0,0],
+    [0,0,0,0,0],
+    [0,0,0,0,0],
+    [0,0,0,0,0]
+  ],
   "items": [
     { "id": "fuel_cell", "name": "Fuel Cell", "type": "quest" },
     { "id": "rusty_gear", "name": "Rusty Gear", "type": "quest", "map": "world", "x": 3, "y": 2 }
   ],
+  "buildings": [
+    { "x": 4, "y": 2, "w": 1, "h": 1, "doorX": 4, "doorY": 2, "boarded": true, "bunker": true, "bunkerId": "alpha" }
+  ],
   "npcs": [
     {
-      "id": "gear_seeker",
+      "id": "npc_a",
       "map": "world",
       "x": 1,
       "y": 2,
       "color": "#cfa",
-      "name": "Gear Seeker",
+      "name": "NPC A",
       "desc": "Needs a rusty gear.",
       "prompt": "Wanderer fiddling with broken machine",
       "tree": {
