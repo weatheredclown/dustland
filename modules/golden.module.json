@@ -296,6 +296,7 @@
       "prompt": "Traveling trader carrying a pack of goods",
       "shop": {
         "markup": 2,
+        "refresh": 24,
         "inv": [
           {
             "id": "bonus_potion"

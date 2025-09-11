@@ -30,7 +30,7 @@
 - Interiors declare entry/exit events so transitions carry emotional beats.
 
 ### Action Items
-- [ ] Implement item narrative tagging in engine and Adventure Kit.
+- [x] Implement item narrative tagging in engine and Adventure Kit.
 - [ ] Extend quest definitions to support branching and persistence.
 - [ ] Add NPC memory storage and retrieval utilities.
 - [ ] Build event scheduler for world and NPC timelines.

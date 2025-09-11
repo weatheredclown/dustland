@@ -1975,6 +1975,7 @@ function startNewNPC() {
   document.getElementById('npcCombat').checked = false;
   document.getElementById('npcShop').checked = false;
   document.getElementById('shopMarkup').value = 2;
+  document.getElementById('shopRefresh').value = 0;
   updateNPCOptSections();
   document.getElementById('addNPC').style.display = 'block';
   document.getElementById('cancelNPC').style.display = 'none';
@@ -2019,6 +2020,7 @@ function collectNPCFromForm() {
   const combat = document.getElementById('npcCombat').checked;
   const shop = document.getElementById('npcShop').checked;
   const shopMarkup = parseInt(document.getElementById('shopMarkup').value, 10) || 2;
+  const shopRefresh = parseInt(document.getElementById('shopRefresh').value, 10) || 0;
   const hidden = document.getElementById('npcHidden').checked;
   const locked = document.getElementById('npcLocked').checked;
   const portraitLock = document.getElementById('npcPortraitLock').checked;
@@ -2080,7 +2082,7 @@ function collectNPCFromForm() {
       if (!isNaN(delay)) npc.combat.special.delay = delay;
     }
   }
-  if (shop) npc.shop = { markup: shopMarkup, inv: [] };
+  if (shop) npc.shop = { markup: shopMarkup, refresh: shopRefresh, inv: [] };
   if (hidden && flag) npc.hidden = true, npc.reveal = { flag, op, value: val };
   if (npcPortraitPath) npc.portraitSheet = npcPortraitPath;
   else if (npcPortraitIndex > 0) npc.portraitSheet = npcPortraits[npcPortraitIndex];
@@ -2197,6 +2199,7 @@ function editNPC(i) {
   document.getElementById('npcCombat').checked = !!n.combat;
   document.getElementById('npcShop').checked = !!n.shop;
   document.getElementById('shopMarkup').value = n.shop ? n.shop.markup || 2 : 2;
+  document.getElementById('shopRefresh').value = n.shop ? n.shop.refresh || 0 : 0;
   updateNPCOptSections();
   document.getElementById('addNPC').style.display = 'none';
   document.getElementById('cancelNPC').style.display = 'none';
@@ -2300,6 +2303,8 @@ function startNewItem() {
   document.getElementById('itemType').value = '';
   document.getElementById('itemDesc').value = '';
   document.getElementById('itemTags').value = '';
+  document.getElementById('itemNarrativeId').value = '';
+  document.getElementById('itemNarrativePrompt').value = '';
   document.getElementById('itemMap').value = '';
   document.getElementById('itemX').value = 0;
   document.getElementById('itemY').value = 0;
@@ -2345,6 +2350,8 @@ function addItem() {
   const tags = document.getElementById('itemTags').value.split(',').map(t=>t.trim()).filter(Boolean);
   collectKnownTags(tags);
   updateTagOptions();
+  const narrativeId = document.getElementById('itemNarrativeId').value.trim();
+  const narrativePrompt = document.getElementById('itemNarrativePrompt').value.trim();
   const onMap = document.getElementById('itemOnMap').checked;
   const map = onMap ? document.getElementById('itemMap').value.trim() : '';
   const x = parseInt(document.getElementById('itemX').value, 10) || 0;
@@ -2372,6 +2379,11 @@ function addItem() {
   const useText = document.getElementById('itemUse').value.trim();
   if (use && useText) use.text = useText;
   const item = { id, name, desc, type, tags, mods, value, use, equip };
+  if (narrativeId || narrativePrompt) {
+    item.narrative = {};
+    if (narrativeId) item.narrative.id = narrativeId;
+    if (narrativePrompt) item.narrative.prompt = narrativePrompt;
+  }
   if (onMap && map) {
     item.map = map;
     item.x = x;
@@ -2388,6 +2400,8 @@ function addItem() {
   document.getElementById('cancelItem').style.display = 'none';
   document.getElementById('delItem').style.display = 'none';
   loadMods({});
+  document.getElementById('itemNarrativeId').value = '';
+  document.getElementById('itemNarrativePrompt').value = '';
   renderItemList();
   selectedObj = null;
   drawWorld();
@@ -2436,6 +2450,8 @@ function editItem(i) {
   collectKnownTags(it.tags || []);
   updateTagOptions();
   document.getElementById('itemTags').value = (it.tags || []).join(',');
+  document.getElementById('itemNarrativeId').value = it.narrative ? it.narrative.id || '' : '';
+  document.getElementById('itemNarrativePrompt').value = it.narrative ? it.narrative.prompt || '' : '';
   document.getElementById('itemMap').value = it.map || '';
   document.getElementById('itemX').value = it.x || 0;
   document.getElementById('itemY').value = it.y || 0;
@@ -2513,6 +2529,8 @@ function closeItemEditor() {
   document.getElementById('cancelItem').style.display = 'none';
   document.getElementById('delItem').style.display = 'none';
   loadMods({});
+  document.getElementById('itemNarrativeId').value = '';
+  document.getElementById('itemNarrativePrompt').value = '';
   renderItemList();
   selectedObj = null;
   showItemEditor(false);

@@ -20,7 +20,7 @@
 
 ## Implementation Sketch
 - [x] Extend `scripts/core/trader.js` with `inventory` arrays and `grudge` fields.
-- [ ] Store refresh schedules in the module json and make editable by ACK.
+- [x] Store refresh schedules in the module json and make editable by ACK.
 - [ ] Update `scripts/ui/trade.js` to display timers and grudge indicators.
 - [x] Emit `trader:refresh` events for mods to hook into.
 

@@ -94,5 +94,5 @@ Persona equips and other world moments should fire through the game's event bus.
 - [ ] Extend ACK schema and editor with reusable profile definitions.
  - [ ] Implement profile runtime service for personas, buffs, and disguises.
 - [ ] Emit `persona:equip` and `persona:unequip` events on the global bus.
-- [ ] ensure load/save store the equipped persona.
+- [x] ensure load/save store the equipped persona.
 - [ ] Build editor inspector for authoring and testing effect packs into ACK.

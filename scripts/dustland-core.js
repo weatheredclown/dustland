@@ -664,7 +664,21 @@ function save(){
     questData[k]={title:q.title,desc:q.desc,status:q.status,pinned:!!q.pinned};
   });
   const partyData = Array.from(party, p => ({
-    id:p.id,name:p.name,role:p.role,lvl:p.lvl,xp:p.xp,skillPoints:p.skillPoints,stats:p.stats,equip:p.equip,hp:p.hp,map:p.map,x:p.x,y:p.y,maxHp:p.maxHp,portraitSheet:p.portraitSheet
+    id:p.id,
+    name:p.name,
+    role:p.role,
+    lvl:p.lvl,
+    xp:p.xp,
+    skillPoints:p.skillPoints,
+    stats:p.stats,
+    equip:p.equip,
+    hp:p.hp,
+    map:p.map,
+    x:p.x,
+    y:p.y,
+    maxHp:p.maxHp,
+    portraitSheet:p.portraitSheet,
+    persona:p.persona
   }));
   const data={worldSeed, world, player, state, buildings, interiors, itemDrops, npcs:npcData, quests:questData, party:partyData};
   localStorage.setItem('dustland_crt', JSON.stringify(data));
@@ -709,8 +723,14 @@ function load(){
     const mem=new Character(m.id,m.name,m.role);
     Object.assign(mem,m);
     mem.skillPoints = m.skillPoints || 0;
-    mem.applyEquipmentStats();
     party.push(mem);
+  });
+  Dustland.gameState.updateState(s=>{ s.party = party; });
+  party.forEach(mem => {
+    mem.applyEquipmentStats();
+    if(mem.persona) {
+      Dustland.gameState.applyPersona(mem.id, mem.persona);
+    }
   });
   setMap(state.map);
   refreshUI();
