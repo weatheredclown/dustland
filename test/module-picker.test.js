@@ -156,3 +156,18 @@ test('enter key loads selected module', () => {
   loadModule(MODULES[MODULES.length - 1]);
   assert.ok(global.location.href.includes('golden.module.json'));
 });
+
+test('loadModule preserves existing save data', () => {
+  const ls = {
+    data: { 'dustland_crt': 'foo' },
+    getItem(key){ return this.data[key] || null; },
+    setItem(key, val){ this.data[key] = val; },
+    removeItem(key){ delete this.data[key]; }
+  };
+  global.localStorage = ls;
+  loadModule(MODULES[0]);
+  const scriptEl = bodyEl.children.find(c => c.id === 'activeModuleScript');
+  assert.ok(scriptEl);
+  scriptEl.onload();
+  assert.strictEqual(ls.getItem('dustland_crt'), 'foo');
+});
