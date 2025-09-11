@@ -8,7 +8,9 @@ import { JSDOM } from 'jsdom';
 
 test('persona mods apply combat bonuses', async () => {
   const dom = new JSDOM('<body></body>');
-  const context = { window: dom.window, document: dom.window.document, console };
+  const listeners = {};
+  const bus = { on(evt,fn){ (listeners[evt]=listeners[evt]||[]).push(fn); }, emit(evt,p){ (listeners[evt]||[]).forEach(fn=>fn(p)); } };
+  const context = { window: dom.window, document: dom.window.document, console, EventBus: bus };
   vm.createContext(context);
   context.log = () => {};
   context.renderParty = () => {};
@@ -19,6 +21,7 @@ test('persona mods apply combat bonuses', async () => {
   vm.runInContext(partyJs, context);
   const personasJs = await fs.readFile(new URL('../scripts/core/personas.js', import.meta.url), 'utf8');
   vm.runInContext(personasJs, context);
+  bus.emit('item:picked', { tags:['mask'], persona:'mara.masked' });
   const { makeMember, joinParty } = context;
   const m = makeMember('mara', 'Mara', 'scout');
   joinParty(m);

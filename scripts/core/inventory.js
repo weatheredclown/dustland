@@ -304,6 +304,7 @@ function normalizeItem(it){
     value: val,
     scrap: typeof it.scrap === 'number' ? it.scrap : undefined,
     desc: it.desc || '',
+    persona: it.persona,
   };
 }
 
