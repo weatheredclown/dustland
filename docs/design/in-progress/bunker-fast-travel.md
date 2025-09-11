@@ -6,7 +6,7 @@
 *Status: Draft*
 
 ## Status update
-As of 2025-09-07, `data/bunkers.js` and core travel logic with events exist. UI hooks remain unimplemented.
+As of 2025-09-07, `data/bunkers.js` and core travel logic with events exist. A basic world map overlay now opens from bunkers, but thumbnails and deeper state persistence remain.
 
 ### Open questions
 - Mechanics 2 mentions distance-based fuel costs; how will the system compute distance between bunkers?
@@ -23,8 +23,8 @@ As of 2025-09-07, `data/bunkers.js` and core travel logic with events exist. UI 
     - [x] in world two: add an NPC with item & item fetch quest
     - [x] add a bunker in each world
     - [x] in both worlds, add a relatively simple monster you can randomly encounter in order to grind on collecting power cells to have the fuel to get between worlds
-    - [ ] finishing the world 1 item fetch quest should unlock fast travel to world two (and back again)
-    - [ ] going into the bunker and choosing to fast travel should trigger a newly implemented scripts/ui/world-map.js
+    - [x] finishing the world 1 item fetch quest should unlock fast travel to world two (and back again)
+    - [x] going into the bunker and choosing to fast travel should trigger a newly implemented scripts/ui/world-map.js
     - [ ] scripts/ui/world-map.js should be able to thumbnail a module's overworld (all modules unlocked for fast travel) and display them and allow for selection
     - [ ] fast travelling between worlds should load the new map world, party and open quests should be retained across the module load boundary
     - [ ] travelling back to the other world, completed quests/chosen dialog/taken item state should be preserved. perhaps a mechanism for this should be to generate a saved game when moving between maps and you travel back to a save of that map rather than a raw reload of the module from the JS file?
@@ -48,7 +48,7 @@ As of 2025-09-07, `data/bunkers.js` and core travel logic with events exist. UI 
 ## Implementation Sketch
 - [x] Add `data/bunkers.js` with coordinates and activation flags.
 - [x] Create `scripts/core/fast-travel.js` handling node graphs and fuel costs.
-- [ ] Hook into map UI in `scripts/ui/world-map.js` to select destinations.
+- [x] Hook into map UI in `scripts/ui/world-map.js` to select destinations.
 - [x] Emit `travel:start` and `travel:end` events for mods.
 
 > **Wing:** Make sure fuel costs scale with distance so speedrunners can't warp past the curve.

@@ -28,6 +28,7 @@ const DATA = `
         },
         "turnin": {
           "text": "Perfect fit! Thanks.",
+          "effects": [ { "effect": "activateBunker", "id": "beta" } ],
           "choices": [ { "label": "(Leave)", "to": "bye" } ]
         }
       }
@@ -46,6 +47,7 @@ const DATA = `
           "text": "Power hums faintly behind the panel.",
           "choices": [
             { "label": "(Activate)", "to": "activate" },
+            { "label": "(Fast travel)", "effects": [ { "effect": "openWorldMap", "id": "alpha" } ], "to": "bye" },
             { "label": "(Leave)", "to": "bye" }
           ]
         },
@@ -73,6 +75,9 @@ function postLoad(module){
   const handle = list => (list || []).map(e => {
     if (e && e.effect === 'activateBunker') {
       return () => Dustland.fastTravel?.activateBunker?.(e.id);
+    }
+    if (e && e.effect === 'openWorldMap') {
+      return () => Dustland.worldMap?.open?.(e.id);
     }
     return e;
   });
