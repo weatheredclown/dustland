@@ -1590,6 +1590,9 @@ const DATA = `
           },
           {
             "id": "leather_jacket"
+          },
+          {
+            "id": "water_flask"
           }
         ]
       }

@@ -150,5 +150,5 @@ test('trader patrols east-west with basic goods', () => {
     { x: 110, y: 44 }
   ]);
   const invIds = trader.shop?.inv?.map(i => i.id);
-  assert.deepStrictEqual(invIds, ['pipe_rifle', 'leather_jacket']);
+  assert.deepStrictEqual(invIds, ['pipe_rifle', 'leather_jacket', 'water_flask']);
 });
