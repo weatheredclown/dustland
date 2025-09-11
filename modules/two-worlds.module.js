@@ -1,8 +1,15 @@
 // Entry module that loads World One with a brief tutorial dialog.
 (function(){
+  let worldOneStart;
+  function startWrapper(){
+    worldOneStart?.();
+  }
+  startGame = startWrapper;
   const script = document.createElement('script');
   script.src = 'modules/world-one.module.js';
   script.onload = () => {
+    worldOneStart = startGame;
+    startGame = startWrapper;
     const heart = {
       name: 'Wistful Heart',
       tree: {
@@ -11,7 +18,7 @@
           choices: [
             { label: 'What are bunkers?', to: 'bunkers' },
             { label: 'How do I travel quickly?', to: 'travel' },
-            { label: '(Step into the wastes)', to: 'bye', effects: [ startGame ] }
+            { label: '(Step into the wastes)', to: 'bye', effects: [ startWrapper ] }
           ]
         },
         bunkers: {
