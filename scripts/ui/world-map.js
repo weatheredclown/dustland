@@ -30,13 +30,22 @@
     overlay.style.alignItems = 'center';
     overlay.style.justifyContent = 'center';
     const list = document.createElement('div');
+    list.style.display = 'flex';
     bunkers.filter(b => b.active && b.id !== fromId).forEach(b => {
       const info = moduleMap[b.id] || {};
+      const wrap = document.createElement('div');
+      wrap.style.margin = '4px';
       const btn = document.createElement('button');
       btn.textContent = info.name || b.id;
-      btn.style.margin = '4px';
+      btn.style.display = 'block';
+      btn.style.marginTop = '4px';
       btn.onclick = () => travel(fromId, b.id);
-      list.appendChild(btn);
+      ensureModule(b.id, moduleData => {
+        const thumb = renderThumb(moduleData);
+        wrap.appendChild(thumb);
+        wrap.appendChild(btn);
+      });
+      list.appendChild(wrap);
     });
     const cancel = document.createElement('button');
     cancel.textContent = 'Cancel';
@@ -52,7 +61,10 @@
   }
 
   function travel(fromId, toId){
-    if(!globalThis.Dustland?.fastTravel?.travel(fromId, toId)) return;
+    const ft = globalThis.Dustland?.fastTravel;
+    ft?.saveSlot?.(fromId);
+    if(!ft?.travel(fromId, toId)) return;
+    if(ft?.loadSlot?.(toId)){ close(); return; }
     ensureModule(toId, moduleData => {
       moduleData.postLoad?.(moduleData);
       applyModule(moduleData, { fullReset: false });
@@ -61,8 +73,33 @@
         setMap(info.map, info.name);
         setPartyPos(info.x, info.y);
       }
+      ft?.saveSlot?.(toId);
+      close();
     });
-    close();
+  }
+
+  function renderThumb(moduleData){
+    const canvas = document.createElement('canvas');
+    const world = moduleData?.world;
+    const scale = 4;
+    if(Array.isArray(world) && world[0]){
+      canvas.width = world[0].length * scale;
+      canvas.height = world.length * scale;
+      const ctx = canvas.getContext('2d');
+      world.forEach((row, y) => row.forEach((t, x) => {
+        ctx.fillStyle = t ? '#6b8' : '#000';
+        ctx.fillRect(x*scale, y*scale, scale, scale);
+      }));
+    }else{
+      canvas.width = canvas.height = 32;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#222';
+      ctx.fillRect(0,0,32,32);
+      ctx.fillStyle = '#fff';
+      ctx.fillText('?',12,20);
+    }
+    canvas.style.imageRendering = 'pixelated';
+    return canvas;
   }
 
   globalThis.Dustland = globalThis.Dustland || {};

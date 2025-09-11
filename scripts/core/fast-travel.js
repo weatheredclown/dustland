@@ -2,6 +2,7 @@
   const bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
   const bunkers = globalThis.Dustland?.bunkers || [];
   const FUEL_RATE = 1; // fuel cells per tile
+  const saveKey = id => `dustland_slot_${id}`;
 
   function distance(a, b){
     const dx = a.x - b.x;
@@ -38,6 +39,22 @@
     return true;
   }
 
+  function saveSlot(id){
+    if(!id || typeof save !== 'function' || !globalThis.localStorage) return;
+    save();
+    const data = localStorage.getItem('dustland_crt');
+    if(data) localStorage.setItem(saveKey(id), data);
+  }
+
+  function loadSlot(id){
+    if(!id || typeof load !== 'function' || !globalThis.localStorage) return false;
+    const data = localStorage.getItem(saveKey(id));
+    if(!data) return false;
+    localStorage.setItem('dustland_crt', data);
+    load();
+    return true;
+  }
+
   function activateBunker(id){
     const bunker = bunkers.find(b => b.id === id);
     if (bunker) {
@@ -47,7 +64,7 @@
   }
 
   globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.fastTravel = { fuelCost, travel, activateBunker };
+  globalThis.Dustland.fastTravel = { fuelCost, travel, activateBunker , saveSlot, loadSlot};
   globalThis.openWorldMap = globalThis.openWorldMap || function(){
     if(typeof log==='function') log('World map opened.');
   };
