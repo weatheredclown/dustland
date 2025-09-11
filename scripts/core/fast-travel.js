@@ -38,6 +38,14 @@
     return true;
   }
 
+  function activateBunker(id){
+    const bunker = bunkers.find(b => b.id === id);
+    if (bunker) {
+      bunker.active = true;
+      if (typeof log === 'function') log(`Bunker ${id} activated.`);
+    }
+  }
+
   globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.fastTravel = { fuelCost, travel };
+  globalThis.Dustland.fastTravel = { fuelCost, travel, activateBunker };
 })();
