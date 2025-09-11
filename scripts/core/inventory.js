@@ -10,6 +10,7 @@
  * @property {string} [desc]
  * @property {number} [rarity]
  * @property {number} [value]
+ * @property {{id:string, prompt?:string}} [narrative]
  */
 
 /**
@@ -35,7 +36,8 @@ function cloneItem(it){
     mods: { ...it.mods },
     tags: Array.isArray(it.tags) ? [...it.tags] : [],
     use: it.use ? JSON.parse(JSON.stringify(it.use)) : null,
-    equip: it.equip ? JSON.parse(JSON.stringify(it.equip)) : null
+    equip: it.equip ? JSON.parse(JSON.stringify(it.equip)) : null,
+    narrative: it.narrative ? { ...it.narrative } : null
   };
 }
 /**
@@ -112,6 +114,9 @@ function addToInv(item) {
   if (base.id === 'fuel_cell') {
     player.fuel = (player.fuel || 0) + 50;
     emit('item:picked', base);
+    if(base.narrative){
+      emit('item:narrative', { itemId: base.id, narrative: base.narrative });
+    }
     notifyInventoryChanged();
     if (typeof log === 'function') log('Fuel +50');
     return true;
@@ -121,6 +126,9 @@ function addToInv(item) {
   }
   player.inv.push(base);
   emit('item:picked', base);
+  if(base.narrative){
+    emit('item:narrative', { itemId: base.id, narrative: base.narrative });
+  }
   notifyInventoryChanged();
   return true;
 }
@@ -305,6 +313,7 @@ function normalizeItem(it){
     scrap: typeof it.scrap === 'number' ? it.scrap : undefined,
     desc: it.desc || '',
     persona: it.persona,
+    narrative: it.narrative ? { ...it.narrative } : null,
   };
 }
 

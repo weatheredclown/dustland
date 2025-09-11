@@ -112,6 +112,7 @@ const files = [
   '../scripts/core/combat.js',
   '../scripts/core/quests.js',
   '../scripts/core/npc.js',
+  '../scripts/game-state.js',
   '../scripts/dustland-core.js'
 ];
 for (const f of files) {
@@ -1690,6 +1691,27 @@ test('save/load preserves NPC loops', () => {
   load();
   global.localStorage = orig;
   assert.deepStrictEqual(NPCS[0].loop, [{x:0,y:0},{x:2,y:0}]);
+});
+
+test('save/load preserves persona assignments', () => {
+  party.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  party.join(m1);
+  Dustland.gameState.setPersona('mask', { id:'mask', label:'Mask' });
+  Dustland.gameState.applyPersona('p1','mask');
+  const store = {};
+  const orig = global.localStorage;
+  global.localStorage = {
+    setItem(k,v){ store[k]=v; },
+    getItem(k){ return store[k]; },
+    removeItem(k){ delete store[k]; }
+  };
+  save();
+  party[0].persona = undefined;
+  Dustland.gameState.updateState(s=>{ s.party = party; });
+  load();
+  global.localStorage = orig;
+  assert.strictEqual(party[0].persona, 'mask');
 });
 
 test('combat overlay sits behind the log panel', async () => {

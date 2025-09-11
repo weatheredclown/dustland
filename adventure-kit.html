@@ -453,6 +453,7 @@
           <label><input type="checkbox" id="npcShop"> Shop NPC</label>
           <div id="shopOpts" style="display:none">
             <label>Markup<input id="shopMarkup" type="number" min="1" value="2" /></label>
+            <label>Refresh<input id="shopRefresh" type="number" min="0" value="0" /></label>
           </div>
           <div id="treeWrap">
             <label>Dialog Tree</label>
@@ -486,6 +487,8 @@
           <label>Description<textarea id="itemDesc" rows="2"></textarea></label>
           <label>Tags<input id="itemTags" list="tagOptions" /></label>
           <datalist id="tagOptions"></datalist>
+          <label>Narrative ID<input id="itemNarrativeId" /></label>
+          <label>Narrative Prompt<input id="itemNarrativePrompt" /></label>
           <label><input id="itemOnMap" type="checkbox"/> On Map</label>
           <label id="itemMapWrap">Map<select id="itemMap"></select></label>
           <div class="xy" id="itemXY">

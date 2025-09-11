@@ -5,6 +5,7 @@ class Trader {
     this.id = id;
     this.inventory = Array.isArray(opts.inventory) ? [...opts.inventory] : [];
     this.grudge = opts.grudge || 0;
+    this.refresh = typeof opts.refresh === 'number' ? opts.refresh : 0;
   }
 
   addItem(item){
