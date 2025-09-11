@@ -85,8 +85,7 @@ test('workshop building includes workbench NPC', () => {
   const npc = data.npcs.find(n => n.id === 'workbench');
   assert.ok(npc);
   assert.strictEqual(npc.map, 'workshop');
-  const hasCraft = npc.tree?.start?.choices?.some(c => c.label.includes('Craft signal beacon'));
-  assert.ok(hasCraft);
+  assert.ok(npc.workbench);
 });
 
 test('workshop no longer stores power cells', () => {

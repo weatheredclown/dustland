@@ -2132,35 +2132,7 @@ const DATA = `
       "title": "Crafter",
       "desc": "Tools litter the surface.",
       "prompt": "Cluttered workbench stacked with tools",
-      "tree": {
-        "start": {
-          "text": "The workbench awaits projects.",
-          "choices": [
-            {
-              "label": "(Craft signal beacon)",
-              "to": "craft"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
-        },
-        "craft": {
-          "text": "You piece together a beacon.",
-          "effects": [
-            {
-              "effect": "craftSignalBeacon"
-            }
-          ],
-          "choices": [
-            {
-              "label": "(Back)",
-              "to": "start"
-            }
-          ]
-        }
-      }
+      "workbench": true
     },
     {
       "id": "scrap_behemoth",

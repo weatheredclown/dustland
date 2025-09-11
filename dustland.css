@@ -761,6 +761,35 @@ input[type="range"] {
   width: 100%;
 }
 
+#workbenchOverlay .workbench-window {
+  width: 300px;
+  background: #0f120f;
+  border: 1px solid #2b3b2b;
+  border-radius: 8px;
+  box-shadow: 0 0 20px #000;
+  max-height: min(480px, 92vh);
+  display: flex;
+  flex-direction: column;
+}
+
+#workbenchOverlay .workbench-window header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #2b3b2b;
+}
+
+#workbenchOverlay .slot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#workbenchOverlay .slot button {
+  margin-left: 8px;
+}
+
 .slot-list {
   display: flex;
   flex-direction: column;

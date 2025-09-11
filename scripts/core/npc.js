@@ -3,8 +3,8 @@ var Dustland = globalThis.Dustland;
 const NPC_COLOR = '#9ef7a0';
 const OBJECT_COLOR = '#225a20';
 class NPC {
-  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,quests=null,questDialogs=null,processNode=null,processChoice=null,combat=null,shop=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false,prompt=null,unlockTime=null,questIdx=0}) {
-    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,quests,questDialogs,combat,shop,portraitSheet,portraitLock,symbol,door,locked,prompt,unlockTime,questIdx});
+  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,quests=null,questDialogs=null,processNode=null,processChoice=null,combat=null,shop=false,workbench=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false,prompt=null,unlockTime=null,questIdx=0}) {
+    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,quests,questDialogs,combat,shop,workbench,portraitSheet,portraitLock,symbol,door,locked,prompt,unlockTime,questIdx});
     if (Array.isArray(this.quests) && !this.quest) {
       this.quest = this.quests[this.questIdx] || null;
     }
@@ -29,6 +29,10 @@ class NPC {
       } else if (this.shop && node === 'buy') {
         closeDialog();
         Dustland.openShop?.(this);
+        return;
+      } else if (this.workbench && node === 'start') {
+        closeDialog();
+        Dustland.openWorkbench?.();
         return;
       }
     };
@@ -126,6 +130,7 @@ function createNpcFactory(defs) {
       const opts = {};
       if (n.combat) opts.combat = n.combat;
       if (n.shop) opts.shop = n.shop;
+      if (n.workbench) opts.workbench = true;
       if (n.portraitSheet) opts.portraitSheet = n.portraitSheet;
       if (n.portraitLock === false) opts.portraitLock = false;
       if (n.prompt) opts.prompt = n.prompt;

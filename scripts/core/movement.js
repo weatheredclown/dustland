@@ -473,7 +473,11 @@ function interactAt(x, y) {
   const info = queryTile(x, y);
   if (info.entities.length) {
     const npc = info.entities[0];
-    openDialog(npc);
+    if (npc.workbench) {
+      Dustland.openWorkbench?.();
+    } else {
+      openDialog(npc);
+    }
     bus.emit('sfx', 'confirm');
     return true;
   }
