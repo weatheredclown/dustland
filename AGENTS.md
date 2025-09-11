@@ -12,6 +12,7 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 - Run `npm test` after making changes; it invokes Node's built-in test runner.
 - Run `node scripts/supporting/presubmit.js` to check HTML files for unsupported fetch/import patterns.
 - Ensure the working tree is clean and tests pass before committing.
+- Use `node scripts/supporting/placement-check.js <module-file>` to verify items and NPCs aren't placed on walls or water when editing modules.
 - Before adding new tests, check for existing coverage and extend or modify tests instead of duplicating cases.
 - Prefer behavior-driven tests that validate outcomes instead of asserting internal implementation details.
 - Run `./install-deps.sh` once to install optional browser dependencies required by some tests.
