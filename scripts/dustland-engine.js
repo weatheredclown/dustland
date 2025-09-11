@@ -11,6 +11,7 @@ const scrEl = document.getElementById('scrap');
 const hpBar = document.getElementById('hpBar');
 const hpFill = document.getElementById('hpFill');
 const hpGhost = document.getElementById('hpGhost');
+const hydEl = document.getElementById('hydrationMeter');
 const adrBar = document.getElementById('adrBar');
 const adrFill = document.getElementById('adrFill');
 const statusIcons = document.getElementById('statusIcons');
@@ -602,6 +603,17 @@ function updateHUD(){
           statusIcons.appendChild(s);
         }
       }
+    }
+  }
+  if(hydEl){
+    const h = player.hydration;
+    const maxHyd = 2;
+    if(typeof h === 'number' && h < maxHyd){
+      hydEl.textContent = '💧'.repeat(h);
+      hydEl.hidden = false;
+    }else{
+      hydEl.textContent = '';
+      hydEl.hidden = true;
     }
   }
   updateHUD._lastHpVal = player.hp;

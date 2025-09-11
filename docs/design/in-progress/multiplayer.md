@@ -19,4 +19,4 @@ LAN-based peer-to-peer sessions let a host share their world. A small lobby list
 - [x] Prototype world-state sync over WebSockets.
 - [x] Build a lobby screen to list and join LAN sessions.
 - [x] Draft player-facing firewall and port-forwarding guide.
-- [ ] create button in UI for multiplayer mode accessible from a glyph button under the pencil (adventure kit) in module select
+- [x] create button in UI for multiplayer mode accessible from a glyph button under the pencil (adventure kit) in module select
