@@ -90,15 +90,27 @@
             }
             break; }
           case 'unboardDoor': {
-            if (eff.interiorId && Array.isArray(globalThis.buildings)) {
-              const b = globalThis.buildings.find(b => b.interiorId === eff.interiorId);
-              if (b) b.boarded = false;
+            if ((eff.interiorId || eff.bunkerId) && Array.isArray(globalThis.buildings)) {
+              const b = globalThis.buildings.find(b => eff.interiorId ? b.interiorId === eff.interiorId : b.bunkerId === eff.bunkerId);
+              if (b) {
+                b.boarded = false;
+                if (b.bunkerId) {
+                  const bk = globalThis.Dustland?.bunkers?.find(u => u.id === b.bunkerId);
+                  if (bk) bk.active = true;
+                }
+              }
             }
             break; }
           case 'boardDoor': {
-            if (eff.interiorId && Array.isArray(globalThis.buildings)) {
-              const b = globalThis.buildings.find(b => b.interiorId === eff.interiorId);
-              if (b) b.boarded = true;
+            if ((eff.interiorId || eff.bunkerId) && Array.isArray(globalThis.buildings)) {
+              const b = globalThis.buildings.find(b => eff.interiorId ? b.interiorId === eff.interiorId : b.bunkerId === eff.bunkerId);
+              if (b) {
+                b.boarded = true;
+                if (b.bunkerId) {
+                  const bk = globalThis.Dustland?.bunkers?.find(u => u.id === b.bunkerId);
+                  if (bk) bk.active = false;
+                }
+              }
             }
             break; }
           case 'lockNPC': {

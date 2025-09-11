@@ -1,5 +1,8 @@
 # Changelog
 
+## 2025-09-08
+- Added bunker flag for buildings, enabling fast travel via world map.
+
 ## 2025-09-06
 - Removed hub city module.
 - Replaced unequip text button with 🚫 emoji.

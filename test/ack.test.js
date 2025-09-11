@@ -1140,6 +1140,27 @@ test('building boarded state round trips through editor', () => {
   globalThis.buildings = prevBuilds;
 });
 
+test('building bunker flag round trips through editor', () => {
+  const prevModuleBldgs = moduleData.buildings;
+  const prevBuilds = globalThis.buildings.slice();
+  globalThis.Dustland.bunkers = [];
+  genWorld(1, { buildings: [] });
+  moduleData.buildings = [];
+  startNewBldg();
+  document.getElementById('bldgBunker').checked = true;
+  addBuilding();
+  assert.strictEqual(moduleData.buildings[0].bunker, true);
+  assert.strictEqual(moduleData.buildings[0].interiorId, null);
+  assert.ok(globalThis.Dustland.bunkers.some(b => b.id === 'bunker_0_0'));
+  editBldg(0);
+  document.getElementById('bldgBunker').checked = false;
+  applyBldgChanges();
+  assert.ok(!moduleData.buildings[0].bunker);
+  assert.ok(moduleData.buildings[0].interiorId);
+  moduleData.buildings = prevModuleBldgs;
+  globalThis.buildings = prevBuilds;
+});
+
 test('npc locked state round trips through editor', () => {
   const prev = moduleData.npcs;
   moduleData.npcs = [];
