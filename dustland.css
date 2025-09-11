@@ -337,8 +337,8 @@ input[type="range"] {
     }
 
     .slot.better {
-        border-color: #5b7b5b;
-        background: #121712;
+        border-color: #00ff00;
+        background: #003300;
     }
 
     .slot.clickable {
