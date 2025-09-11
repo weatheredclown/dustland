@@ -590,11 +590,11 @@ const DATA = `
       "title": "Memory Keeper",
       "portraitSheet": "assets/portraits/dustland-module/archivist_4.png",
       "portraitLock": false,
-      "desc": "Curious about recorded tales.",
+      "desc": "Guardian of whispers, archiving the last songs of a fading world.",
       "prompt": "Elder hunched over reels of magnetic tape",
       "tree": {
         "start": {
-          "text": "Got anything on tape?",
+          "text": "The Archivist's eyes glimmer. 'Do you carry any memories worth saving?'",
           "choices": [ { "label": "(Leave)", "to": "bye" } ]
         }
       }
@@ -2683,4 +2683,5 @@ startGame = function () {
   const loc = s || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   setMap(loc.map, loc.map === 'world' ? 'Wastes' : 'Test Hall');
   setPartyPos(loc.x, loc.y);
+  log('The wind carries a lone melody, bittersweet and fading.');
 };

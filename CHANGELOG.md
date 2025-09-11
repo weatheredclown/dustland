@@ -1,5 +1,8 @@
 # Changelog
 
+## 2025-09-11
+- Added poetic greeting and enriched Archivist dialogue in Dustland module.
+
 ## 2025-09-08
 - Added bunker flag for buildings, enabling fast travel via world map.
 
