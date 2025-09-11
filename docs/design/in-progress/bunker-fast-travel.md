@@ -6,7 +6,7 @@
 *Status: Draft*
 
 ## Status update
-As of 2025-09-07, `data/bunkers.js` and core travel logic with events exist. A basic world map overlay now opens from bunkers, but thumbnails and deeper state persistence remain.
+As of 2025-09-07, `data/bunkers.js` and core travel logic with events exist. The world map overlay now shows thumbnails for each unlocked bunker and uses per-bunker save slots to preserve state across hops.
 
 ### Open questions
 - Mechanics 2 mentions distance-based fuel costs; how will the system compute distance between bunkers?
@@ -25,9 +25,9 @@ As of 2025-09-07, `data/bunkers.js` and core travel logic with events exist. A b
     - [x] in both worlds, add a relatively simple monster you can randomly encounter in order to grind on collecting power cells to have the fuel to get between worlds
     - [x] finishing the world 1 item fetch quest should unlock fast travel to world two (and back again)
     - [x] going into the bunker and choosing to fast travel should trigger a newly implemented scripts/ui/world-map.js
-    - [ ] scripts/ui/world-map.js should be able to thumbnail a module's overworld (all modules unlocked for fast travel) and display them and allow for selection
-    - [ ] fast travelling between worlds should load the new map world, party and open quests should be retained across the module load boundary
-    - [ ] travelling back to the other world, completed quests/chosen dialog/taken item state should be preserved. perhaps a mechanism for this should be to generate a saved game when moving between maps and you travel back to a save of that map rather than a raw reload of the module from the JS file?
+    - [x] scripts/ui/world-map.js should be able to thumbnail a module's overworld (all modules unlocked for fast travel) and display them and allow for selection
+    - [x] fast travelling between worlds should load the new map world, party and open quests should be retained across the module load boundary
+    - [x] travelling back to the other world, completed quests/chosen dialog/taken item state should be preserved. perhaps a mechanism for this should be to generate a saved game when moving between maps and you travel back to a save of that map rather than a raw reload of the module from the JS file?
 - Implementation Sketch calls for `travel:start` and `travel:end` events; what payloads should they carry to support mods?
   - `travel:start` emits `{ fromId, toId, cost }`.
   - `travel:end` emits `{ fromId, toId, result }` where `result` captures ambushes or story events.
