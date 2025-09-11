@@ -130,6 +130,17 @@ test('vine creature drops plant fiber', () => {
   const encounter = data.encounters.world.find(e => e.templateId === 'vine_creature');
   assert.ok(encounter);
   assert.strictEqual(encounter.loot, 'plant_fiber');
+  assert.strictEqual(encounter.lootChance, 0.25);
+});
+
+test('rotwalker drops water flask', () => {
+  const data = loadModuleData();
+  const template = data.templates.find(t => t.id === 'rotwalker');
+  assert.ok(template);
+  const encounter = data.encounters.world.find(e => e.templateId === 'rotwalker');
+  assert.ok(encounter);
+  assert.strictEqual(encounter.loot, 'water_flask');
+  assert.strictEqual(encounter.lootChance, 0.25);
 });
 
 test('northeast hut has portal to hall', () => {

@@ -2640,13 +2640,13 @@ const DATA = `
       {
         "templateId": "vine_creature",
         "loot": "plant_fiber",
-        "lootChance": 0.75,
+        "lootChance": 0.25,
         "maxDist": 20
       },
       {
         "templateId": "rotwalker",
         "loot": "water_flask",
-        "lootChance": 0.75,
+        "lootChance": 0.25,
         "maxDist": 24
       },
       {
