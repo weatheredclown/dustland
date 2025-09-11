@@ -21,8 +21,8 @@ As of 2025-09-07, `data/bunkers.js` and core travel logic with events exist. UI 
     - [x] create a world two module (not added to module select)
     - [x] in world one: add an NPC with item & item fetch quest
     - [x] in world two: add an NPC with item & item fetch quest
-    - [ ] add a bunker in each world
-    - [ ] in both worlds, add a relatively simple monster you can randomly encounter in order to grind on collecting power cells to have the fuel to get between worlds
+    - [x] add a bunker in each world
+    - [x] in both worlds, add a relatively simple monster you can randomly encounter in order to grind on collecting power cells to have the fuel to get between worlds
     - [ ] finishing the world 1 item fetch quest should unlock fast travel to world two (and back again)
     - [ ] going into the bunker and choosing to fast travel should trigger a newly implemented scripts/ui/world-map.js
     - [ ] scripts/ui/world-map.js should be able to thumbnail a module's overworld (all modules unlocked for fast travel) and display them and allow for selection
