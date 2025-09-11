@@ -10,6 +10,7 @@ Zones mark rectangular regions on a map that apply special effects while the par
 - `w`, `h`: width and height in tiles
 - `name`: optional label for editor use
 - `perStep`: `{ hp, msg }` applied each move or wait
+- `weather`: weather state or object applied on enter
 - `healMult`: multiplier for passive HP regen
 - `noEncounters`: disable random combat
 - `require`: item id needed for the effect
@@ -25,6 +26,7 @@ Zones mark rectangular regions on a map that apply special effects while the par
   "h": 3,
   "name": "Nanite swarm",
   "perStep": { "hp": -1, "msg": "Nanite swarm!" },
+  "weather": "dust",
   "negate": "mask"
 }
 ```
