@@ -13,6 +13,7 @@ test('renderParty reflects persona portrait and label', async () => {
   vm.runInContext(gs, context);
   const ps = await fs.readFile(new URL('../scripts/core/personas.js', import.meta.url), 'utf8');
   vm.runInContext(ps, context);
+  context.EventBus.emit('item:picked', { tags:['mask'], persona:'mara.masked' });
   context.Dustland.gameState.updateState(s => { s.party = party; });
   context.Dustland.gameState.applyPersona('mara', 'mara.masked');
   context.renderParty();

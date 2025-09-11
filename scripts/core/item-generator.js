@@ -68,6 +68,12 @@ const ItemGen = {
     };
     item.scrap = this.scrapValues[rank] ?? this.calcScrap(item);
     item.tags = [noun.toLowerCase()];
+    if(noun.toLowerCase() === 'mask'){
+      const plist = Object.keys(globalThis.Dustland?.personaTemplates || {});
+      if(plist.length){
+        item.persona = this.pick(plist, rng);
+      }
+    }
     return item;
   }
 };
