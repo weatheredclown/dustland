@@ -1,6 +1,8 @@
 (function () {
   const list = document.getElementById('sessions');
   const refreshBtn = document.getElementById('refresh');
+  const hostBtn = document.getElementById('host');
+  const HOST_PORT = 9000;
 
   function join(sess) {
     window.location.href = `dustland.html?host=${encodeURIComponent(sess.host)}&port=${sess.port}`;
@@ -27,6 +29,19 @@
       });
   }
 
+  async function host() {
+    const name = prompt('Session name?', 'LAN Game') || 'LAN Game';
+    hostBtn.disabled = true;
+    await globalThis.Dustland?.multiplayer?.startHost({ port: HOST_PORT });
+    fetch('http://localhost:7777/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, host: 'localhost', port: HOST_PORT })
+    }).catch(() => {});
+    window.location.href = `dustland.html?host=localhost&port=${HOST_PORT}`;
+  }
+
   refreshBtn.onclick = refresh;
+  hostBtn.onclick = host;
   refresh();
 })();
