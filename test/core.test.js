@@ -178,12 +178,17 @@ test('createRNG produces deterministic sequences', () => {
     party.length = 0;
     party.join(new Character('t', 'T', 't'));
     const oldLog = global.log;
+    const oldToast = global.toast;
     const logs = [];
+    const toasts = [];
     global.log = (msg) => logs.push(msg);
+    global.toast = (msg) => toasts.push(msg);
     registerItem({ id: 'stone', name: 'Stone' });
     addToInv('stone');
     assert.deepStrictEqual(logs, ['Picked up Stone']);
+    assert.deepStrictEqual(toasts, ['Picked up Stone']);
     global.log = oldLog;
+    global.toast = oldToast;
   });
 
 test('cursed items reveal on unequip attempt and stay equipped', () => {

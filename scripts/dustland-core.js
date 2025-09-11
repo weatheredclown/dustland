@@ -990,6 +990,7 @@ on('inventory:changed', () => {
 
 on('item:picked', (it) => {
   log?.(`Picked up ${it.name}`);
+  toast?.(`Picked up ${it.name}`);
 });
 
 on('mentor:bark', (evt) => {
