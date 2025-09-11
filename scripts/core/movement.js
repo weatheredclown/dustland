@@ -12,6 +12,8 @@ let encounterCooldown = 0;
 let weatherSpeed = 1;
 let encounterBias = null;
 const activeMsgZones = new Set();
+let lastWeatherZone = null;
+let prevWeather = null;
 bus?.on?.('weather:change', w => {
   weatherSpeed = typeof w?.speedMod === 'number' ? w.speedMod : 1;
   encounterBias = w?.encounterBias || null;
@@ -205,11 +207,13 @@ function hasItemOrEquipped(idOrTag){
 
 function applyZones(map,x,y){
   const zones = globalThis.Dustland?.zoneEffects || [];
+  let weatherZone = null;
   for(const z of zones){
     if((z.map||'world')!==map) continue;
     if(x<z.x || y<z.y || x>=z.x+(z.w||0) || y>=z.y+(z.h||0)) continue;
     if(z.require && !hasItemOrEquipped(z.require)) continue;
     if(z.negate && hasItemOrEquipped(z.negate)) continue;
+    if(z.weather) weatherZone = z;
     const step = z.perStep || z.step;
     if(step && typeof step.hp==='number'){
       const delta = step.hp;
@@ -222,6 +226,17 @@ function applyZones(map,x,y){
       log?.(msg);
       if(typeof toast==='function') toast(msg);
     }
+  }
+  if(weatherZone){
+    if(lastWeatherZone !== weatherZone){
+      if(!lastWeatherZone) prevWeather = globalThis.Dustland?.weather?.getWeather?.();
+      const w = weatherZone.weather;
+      globalThis.Dustland?.weather?.setWeather?.(typeof w === 'string' ? { state: w } : w);
+      lastWeatherZone = weatherZone;
+    }
+  } else if(lastWeatherZone){
+    if(prevWeather) globalThis.Dustland?.weather?.setWeather?.(prevWeather);
+    lastWeatherZone = null;
   }
   if((party||[]).length && party.every(m=>m.hp<=0)){
     log?.('Your party collapses and wakes at the entrance.');

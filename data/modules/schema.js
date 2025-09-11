@@ -222,7 +222,8 @@ globalThis.ACK_MODULE_SCHEMA = {
           "x": { "type": "number" },
           "y": { "type": "number" },
           "w": { "type": "number" },
-          "h": { "type": "number" }
+          "h": { "type": "number" },
+          "weather": { "type": ["string", "object"] }
         },
         "required": ["map", "x", "y", "w", "h"],
         "additionalProperties": true
@@ -238,6 +239,7 @@ globalThis.ACK_MODULE_SCHEMA = {
           "y": { "type": "number" },
           "w": { "type": "number" },
           "h": { "type": "number" },
+          "weather": { "type": ["string", "object"] },
           "spawns": {
             "type": "array",
             "items": {

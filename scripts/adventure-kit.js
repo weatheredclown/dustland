@@ -2807,6 +2807,7 @@ function startNewZone() {
   document.getElementById('zoneH').value = 1;
   document.getElementById('zoneHp').value = 0;
   document.getElementById('zoneMsg').value = '';
+  document.getElementById('zoneWeather').value = '';
   document.getElementById('zoneNegate').value = '';
   document.getElementById('zoneHealMult').value = '';
   document.getElementById('zoneNoEnc').checked = false;
@@ -2828,6 +2829,7 @@ function collectZone() {
   const h = parseInt(document.getElementById('zoneH').value, 10) || 1;
   const hp = parseInt(document.getElementById('zoneHp').value, 10);
   const msg = document.getElementById('zoneMsg').value.trim();
+  const weather = document.getElementById('zoneWeather').value.trim();
   const negate = document.getElementById('zoneNegate').value.trim();
   const healMult = parseFloat(document.getElementById('zoneHealMult').value);
   const noEnc = document.getElementById('zoneNoEnc').checked;
@@ -2840,6 +2842,7 @@ function collectZone() {
     if (hp) entry.perStep.hp = hp;
     if (msg) entry.perStep.msg = msg;
   }
+  if (weather) entry.weather = weather;
   if (negate) entry.negate = negate;
   if (!isNaN(healMult)) entry.healMult = healMult;
   if (noEnc) entry.noEncounters = true;
@@ -2879,6 +2882,7 @@ function editZone(i) {
   document.getElementById('zoneH').value = z.h;
   document.getElementById('zoneHp').value = z.perStep?.hp ?? '';
   document.getElementById('zoneMsg').value = z.perStep?.msg || '';
+  document.getElementById('zoneWeather').value = typeof z.weather === 'string' ? z.weather : z.weather?.state || '';
   document.getElementById('zoneNegate').value = z.negate || '';
   document.getElementById('zoneHealMult').value = z.healMult ?? '';
   document.getElementById('zoneNoEnc').checked = !!z.noEncounters;
