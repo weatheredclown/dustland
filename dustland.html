@@ -263,6 +263,8 @@
     <script defer src="./scripts/supporting/fx-debug.js"></script>
     <script defer src="./scripts/supporting/perf-debug.js"></script>
   <script>
+    disablePullToRefresh();
+    warnOnUnload();
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('title').textContent += ' v' + ENGINE_VERSION;
       const params = new URLSearchParams(location.search);
@@ -282,6 +284,22 @@
       modeScript.src = isAck ? './scripts/ack-player.js' : './scripts/module-picker.js';
       document.body.appendChild(modeScript);
     });
+    function disablePullToRefresh() {
+      let startY = 0;
+      document.addEventListener('touchstart', e => {
+        startY = e.touches[0].clientY;
+      }, {passive: true});
+      document.addEventListener('touchmove', e => {
+        const y = e.touches[0].clientY;
+        if (window.scrollY === 0 && y > startY) e.preventDefault();
+      }, {passive: false});
+    }
+    function warnOnUnload() {
+      window.addEventListener('beforeunload', e => {
+        e.preventDefault();
+        e.returnValue = '';
+      });
+    }
   </script>
   <!-- Persona overlay -->
   <div class="overlay" id="personaOverlay" role="dialog" aria-modal="true" tabindex="-1">

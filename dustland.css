@@ -38,6 +38,7 @@ input[type="range"] {
         margin: 0;
         background: radial-gradient(circle at top, #141614 0%, var(--bg) 70%);
         color: var(--ink);
+        overscroll-behavior-y: none;
         font: 14px/1.5 'Pixelify Sans', sans-serif;
     }
 
