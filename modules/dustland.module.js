@@ -247,7 +247,10 @@ const DATA = `
       "id": "bandage",
       "name": "Bandage",
       "type": "consumable",
-      "use": { "type": "heal", "amount": 6 }
+      "use": {
+        "type": "heal",
+        "amount": 6
+      }
     },
     {
       "id": "raider_knife",
@@ -564,19 +567,41 @@ const DATA = `
         "start": {
           "text": "You sense something under the sand.",
           "choices": [
-            { "label": "(Dig)", "to": "dig", "once": true },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Dig)",
+              "to": "dig",
+              "once": true
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "dig": {
           "text": "You uncover a supply crate packed with scrap.",
           "choices": [
-            { "label": "(Take Scrap)", "to": "empty", "reward": "SCRAP 5", "effects": [ { "effect": "removeSoundSource", "id": "hidden_crate" } ] }
+            {
+              "label": "(Take Scrap)",
+              "to": "empty",
+              "reward": "SCRAP 5",
+              "effects": [
+                {
+                  "effect": "removeSoundSource",
+                  "id": "hidden_crate"
+                }
+              ]
+            }
           ]
         },
         "empty": {
           "text": "Just disturbed sand remains.",
-          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
         }
       }
     },
@@ -595,7 +620,91 @@ const DATA = `
       "tree": {
         "start": {
           "text": "Got anything on tape?",
-          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            },
+            {
+              "label": "(Chat)",
+              "to": "_chat__mff7uw9d_start"
+            }
+          ]
+        },
+        "_chat__mff7uw9d_start": {
+          "text": "The Archivist peers up, tape spooling through his fingers. 'Every scrap of sound is a life. What do you bring?'",
+          "choices": [
+            {
+              "label": "Who are you?",
+              "to": "_chat__mff7uw9d_who"
+            },
+            {
+              "label": "Why tapes?",
+              "to": "_chat__mff7uw9d_why"
+            },
+            {
+              "label": "No stories today",
+              "to": "bye"
+            }
+          ]
+        },
+        "_chat__mff7uw9d_who": {
+          "text": "'Just a keeper of ghosts.' He taps a stack of reels. 'These hold the before-times.'",
+          "choices": [
+            {
+              "label": "Sounds lonely",
+              "to": "_chat__mff7uw9d_lonely"
+            },
+            {
+              "label": "Back",
+              "to": "_chat__mff7uw9d_start"
+            }
+          ]
+        },
+        "_chat__mff7uw9d_lonely": {
+          "text": "'Lonely? Maybe. But the past whispers company if you listen.'",
+          "choices": [
+            {
+              "label": "Back",
+              "to": "_chat__mff7uw9d_start"
+            }
+          ]
+        },
+        "_chat__mff7uw9d_why": {
+          "text": "'Tape endures where memory fades. Magnetics don't judge.'",
+          "choices": [
+            {
+              "label": "Got any stories?",
+              "to": "_chat__mff7uw9d_story"
+            },
+            {
+              "label": "Back",
+              "to": "_chat__mff7uw9d_start"
+            }
+          ]
+        },
+        "_chat__mff7uw9d_story": {
+          "text": "He feeds a reel into a rusty player. A raspy voice tells of caravans lost in sand.",
+          "choices": [
+            {
+              "label": "(Listen)",
+              "to": "_chat__mff7uw9d_listen"
+            },
+            {
+              "label": "(Enough)",
+              "to": "_chat__mff7uw9d_start"
+            }
+          ]
+        },
+        "_chat__mff7uw9d_listen": {
+          "text": "The tale winds down. 'Keep it,' he says, handing you the reel.",
+          "choices": [
+            {
+              "label": "(Thank him)",
+              "to": "bye",
+              "reward": "XP 5"
+            }
+          ]
         }
       }
     },
@@ -784,7 +893,10 @@ const DATA = `
         "start": {
           "text": "Mira sizes you up.",
           "choices": [
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         }
       },
@@ -792,7 +904,9 @@ const DATA = `
         "HP": 8,
         "ATK": 3,
         "DEF": 1,
-        "counterBasic": { "dmg": 2 },
+        "counterBasic": {
+          "dmg": 2
+        },
         "auto": true
       }
     },
@@ -810,7 +924,10 @@ const DATA = `
         "start": {
           "text": "Nora steps forward, eyes sparking.",
           "choices": [
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         }
       },
@@ -818,7 +935,12 @@ const DATA = `
         "HP": 8,
         "ATK": 2,
         "DEF": 1,
-        "special": { "cue": "releases a stunning arc!", "dmg": 2, "stun": 1, "delay": 800 },
+        "special": {
+          "cue": "releases a stunning arc!",
+          "dmg": 2,
+          "stun": 1,
+          "delay": 800
+        },
         "auto": true
       }
     },
@@ -836,7 +958,10 @@ const DATA = `
         "start": {
           "text": "Tess grins wickedly.",
           "choices": [
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         }
       },
@@ -844,7 +969,16 @@ const DATA = `
         "HP": 8,
         "ATK": 2,
         "DEF": 1,
-        "special": { "cue": "flings poisoned knives everywhere!", "dmg": 2, "poison": { "strength": 1, "duration": 3 }, "spread": true, "delay": 800 },
+        "special": {
+          "cue": "flings poisoned knives everywhere!",
+          "dmg": 2,
+          "poison": {
+            "strength": 1,
+            "duration": 3
+          },
+          "spread": true,
+          "delay": 800
+        },
         "auto": true
       }
     },
@@ -1439,14 +1573,24 @@ const DATA = `
         }
       },
       "loop": [
-        { "x": 10, "y": 44 },
-        { "x": 110, "y": 44 }
+        {
+          "x": 10,
+          "y": 44
+        },
+        {
+          "x": 110,
+          "y": 44
+        }
       ],
       "shop": {
         "markup": 1,
         "inv": [
-          { "id": "pipe_rifle" },
-          { "id": "leather_jacket" }
+          {
+            "id": "pipe_rifle"
+          },
+          {
+            "id": "leather_jacket"
+          }
         ]
       }
     },
@@ -1989,14 +2133,29 @@ const DATA = `
         "start": {
           "text": "The workbench awaits projects.",
           "choices": [
-            { "label": "(Craft signal beacon)", "to": "craft" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Craft signal beacon)",
+              "to": "craft"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "craft": {
           "text": "You piece together a beacon.",
-          "effects": [ { "effect": "craftSignalBeacon" } ],
-          "choices": [ { "label": "(Back)", "to": "start" } ]
+          "effects": [
+            {
+              "effect": "craftSignalBeacon"
+            }
+          ],
+          "choices": [
+            {
+              "label": "(Back)",
+              "to": "start"
+            }
+          ]
         }
       }
     },
@@ -2062,12 +2221,36 @@ const DATA = `
         "start": {
           "text": "A crate vibrates with energy.",
           "choices": [
-            { "label": "(Open)", "to": "open", "once": true },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Open)",
+              "to": "open",
+              "once": true
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
-        "open": { "text": "Inside you find a Spark Key.", "choices": [ { "label": "(Take Key)", "to": "empty", "reward": "spark_key" } ] },
-        "empty": { "text": "An empty crate.", "choices": [ { "label": "(Leave)", "to": "bye" } ] }
+        "open": {
+          "text": "Inside you find a Spark Key.",
+          "choices": [
+            {
+              "label": "(Take Key)",
+              "to": "empty",
+              "reward": "spark_key"
+            }
+          ]
+        },
+        "empty": {
+          "text": "An empty crate.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
       }
     },
     {
@@ -2085,13 +2268,45 @@ const DATA = `
         "start": {
           "text": "The door is sealed.",
           "choices": [
-            { "label": "(Search for Spark Key)", "to": "accept", "q": "accept" },
-            { "label": "(Use Spark Key)", "to": "do_turnin", "q": "turnin" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Search for Spark Key)",
+              "to": "accept",
+              "q": "accept"
+            },
+            {
+              "label": "(Use Spark Key)",
+              "to": "do_turnin",
+              "q": "turnin"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
-        "accept": { "text": "Its lock crackles for a Spark Key.", "choices": [ { "label": "(Leave)", "to": "bye" } ] },
-        "do_turnin": { "text": "The door slides aside.", "choices": [ { "label": "(Continue)", "to": "bye", "goto": { "map": "echoes_workshop", "x": 1, "y": 4 } } ] }
+        "accept": {
+          "text": "Its lock crackles for a Spark Key.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "do_turnin": {
+          "text": "The door slides aside.",
+          "choices": [
+            {
+              "label": "(Continue)",
+              "to": "bye",
+              "goto": {
+                "map": "echoes_workshop",
+                "x": 1,
+                "y": 4
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -2107,12 +2322,36 @@ const DATA = `
         "start": {
           "text": "The crate is heavy with metal.",
           "choices": [
-            { "label": "(Open)", "to": "open", "once": true },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Open)",
+              "to": "open",
+              "once": true
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
-        "open": { "text": "Among the gears is a Cog Key.", "choices": [ { "label": "(Take Key)", "to": "empty", "reward": "cog_key" } ] },
-        "empty": { "text": "Only scraps remain.", "choices": [ { "label": "(Leave)", "to": "bye" } ] }
+        "open": {
+          "text": "Among the gears is a Cog Key.",
+          "choices": [
+            {
+              "label": "(Take Key)",
+              "to": "empty",
+              "reward": "cog_key"
+            }
+          ]
+        },
+        "empty": {
+          "text": "Only scraps remain.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
       }
     },
     {
@@ -2130,13 +2369,45 @@ const DATA = `
         "start": {
           "text": "The door is locked tight.",
           "choices": [
-            { "label": "(Search for Cog Key)", "to": "accept", "q": "accept" },
-            { "label": "(Use Cog Key)", "to": "do_turnin", "q": "turnin" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Search for Cog Key)",
+              "to": "accept",
+              "q": "accept"
+            },
+            {
+              "label": "(Use Cog Key)",
+              "to": "do_turnin",
+              "q": "turnin"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
-        "accept": { "text": "Its hinges await a Cog Key.", "choices": [ { "label": "(Leave)", "to": "bye" } ] },
-        "do_turnin": { "text": "The door creaks open.", "choices": [ { "label": "(Continue)", "to": "bye", "goto": { "map": "echoes_archive", "x": 1, "y": 4 } } ] }
+        "accept": {
+          "text": "Its hinges await a Cog Key.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "do_turnin": {
+          "text": "The door creaks open.",
+          "choices": [
+            {
+              "label": "(Continue)",
+              "to": "bye",
+              "goto": {
+                "map": "echoes_archive",
+                "x": 1,
+                "y": 4
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -2149,8 +2420,23 @@ const DATA = `
       "title": "Menace",
       "desc": "A rat swollen with dust.",
       "prompt": "Dust-swollen rat baring teeth",
-      "tree": { "start": { "text": "The rat bares its teeth.", "choices": [ { "label": "(Leave)", "to": "bye" } ] } },
-      "combat": { "HP": 5, "ATK": 2, "DEF": 1, "loot": "rat_tail" }
+      "tree": {
+        "start": {
+          "text": "The rat bares its teeth.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "combat": {
+        "HP": 5,
+        "ATK": 2,
+        "DEF": 1,
+        "loot": "rat_tail"
+      }
     },
     {
       "id": "ghoul",
@@ -2163,8 +2449,28 @@ const DATA = `
       "desc": "A whirring husk hungry for scraps.",
       "prompt": "Whirring metal ghoul hungry for scrap",
       "questId": "q_beacon",
-      "tree": { "start": { "text": "The ghoul clanks forward.", "choices": [ { "label": "(Fight)", "to": "do_fight", "q": "turnin" }, { "label": "(Leave)", "to": "bye" } ] } },
-      "combat": { "HP": 8, "ATK": 3, "DEF": 2, "loot": "copper_cog" }
+      "tree": {
+        "start": {
+          "text": "The ghoul clanks forward.",
+          "choices": [
+            {
+              "label": "(Fight)",
+              "to": "do_fight",
+              "q": "turnin"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "combat": {
+        "HP": 8,
+        "ATK": 3,
+        "DEF": 2,
+        "loot": "copper_cog"
+      }
     },
     {
       "id": "beacon",
@@ -2180,13 +2486,30 @@ const DATA = `
         "start": {
           "text": "The beacon glows, promising brighter days.",
           "choices": [
-            { "label": "(Take Sun Charm)", "to": "reward", "reward": "sun_charm" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Take Sun Charm)",
+              "to": "reward",
+              "reward": "sun_charm"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "reward": {
           "text": "You pocket the charm. The light feels hopeful.",
-          "choices": [ { "label": "(Step outside)", "to": "bye", "goto": { "map": "world", "x": 2, "y": 45 } } ]
+          "choices": [
+            {
+              "label": "(Step outside)",
+              "to": "bye",
+              "goto": {
+                "map": "world",
+                "x": 2,
+                "y": 45
+              }
+            }
+          ]
         }
       }
     }
@@ -2238,52 +2561,112 @@ const DATA = `
       "name": "Rotwalker",
       "portraitSheet": "assets/portraits/dustland-module/rotwalker_4.png",
       "portraitLock": false,
-      "combat": { "HP": 6, "ATK": 2, "DEF": 0 }
+      "combat": {
+        "HP": 6,
+        "ATK": 2,
+        "DEF": 0
+      }
     },
     {
       "id": "scavenger",
       "name": "Scavenger",
       "portraitSheet": "assets/portraits/dustland-module/scavenger_4.png",
       "portraitLock": false,
-      "combat": { "HP": 5, "ATK": 2, "DEF": 0 }
+      "combat": {
+        "HP": 5,
+        "ATK": 2,
+        "DEF": 0
+      }
     },
     {
       "id": "vine_creature",
       "name": "Vine Creature",
       "portraitSheet": "assets/portraits/dustland-module/vine_creature_4.png",
       "portraitLock": false,
-      "combat": { "HP": 4, "ATK": 1, "DEF": 0 }
+      "combat": {
+        "HP": 4,
+        "ATK": 1,
+        "DEF": 0
+      }
     },
     {
       "id": "sand_titan",
       "name": "Sand Titan",
       "portraitSheet": "assets/portraits/dustland-module/sand_titan.png",
       "portraitLock": false,
-      "combat": { "HP": 20, "ATK": 6, "DEF": 4, "challenge": 9 }
+      "combat": {
+        "HP": 20,
+        "ATK": 6,
+        "DEF": 4,
+        "challenge": 9
+      }
     },
     {
       "id": "dune_reaper",
       "name": "Dune Reaper",
       "portraitSheet": "assets/portraits/dustland-module/dune_reaper_4.png",
       "portraitLock": false,
-      "combat": { "HP": 90, "ATK": 8, "DEF": 7, "challenge": 32, "special": { "cue": "lashes the wind with scythes!", "dmg": 10 } }
+      "combat": {
+        "HP": 90,
+        "ATK": 8,
+        "DEF": 7,
+        "challenge": 32,
+        "special": {
+          "cue": "lashes the wind with scythes!",
+          "dmg": 10
+        }
+      }
     },
     {
       "id": "sand_colossus",
       "name": "Sand Colossus",
       "portraitSheet": "assets/portraits/dustland-module/sand_colossus_4.png",
       "portraitLock": false,
-      "combat": { "HP": 120, "ATK": 10, "DEF": 8, "challenge": 36, "requires": "artifact_blade", "special": { "cue": "shakes the desert!", "dmg": 12 } }
+      "combat": {
+        "HP": 120,
+        "ATK": 10,
+        "DEF": 8,
+        "challenge": 36,
+        "requires": "artifact_blade",
+        "special": {
+          "cue": "shakes the desert!",
+          "dmg": 12
+        }
+      }
     }
   ],
   "encounters": {
     "world": [
-      { "templateId": "vine_creature", "loot": "plant_fiber", "maxDist": 20 },
-      { "templateId": "rotwalker", "loot": "water_flask", "maxDist": 24 },
-      { "templateId": "scavenger", "loot": "raider_knife", "maxDist": 36 },
-      { "templateId": "sand_titan", "loot": "artifact_blade", "minDist": 30 },
-      { "templateId": "dune_reaper", "loot": "artifact_blade", "minDist": 40 },
-      { "templateId": "sand_colossus", "loot": "artifact_blade", "minDist": 44 }
+      {
+        "templateId": "vine_creature",
+        "loot": "plant_fiber",
+        "maxDist": 20
+      },
+      {
+        "templateId": "rotwalker",
+        "loot": "water_flask",
+        "maxDist": 24
+      },
+      {
+        "templateId": "scavenger",
+        "loot": "raider_knife",
+        "maxDist": 36
+      },
+      {
+        "templateId": "sand_titan",
+        "loot": "artifact_blade",
+        "minDist": 30
+      },
+      {
+        "templateId": "dune_reaper",
+        "loot": "artifact_blade",
+        "minDist": 40
+      },
+      {
+        "templateId": "sand_colossus",
+        "loot": "artifact_blade",
+        "minDist": 44
+      }
     ]
   },
   "buildings": [
@@ -2397,7 +2780,14 @@ const DATA = `
     }
   ],
   "portals": [
-    { "map": "portal_hut", "x": 2, "y": 1, "toMap": "hall", "toX": 15, "toY": 18 }
+    {
+      "map": "portal_hut",
+      "x": 2,
+      "y": 1,
+      "toMap": "hall",
+      "toX": 15,
+      "toY": 18
+    }
   ],
   "interiors": [
     {

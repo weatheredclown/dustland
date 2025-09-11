@@ -49,6 +49,7 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 - Remove dead code promptly and consolidate shared operations.
 - Ensure new code works across environments and normalize user-facing data.
 - Provide tests for state transitions and dialog navigation to catch regressions early.
+- Use `scripts/supporting/dialog-utils.js` to append branching dialog to existing NPCs when expanding modules.
 - Reflect game changes across all modules; new functionality should be configurable via the Adventure Kit (ACK).
 - Generate the world before applying modules; boot-order mistakes can duplicate rooms or overwrite interiors.
 - Avoid fetching local JSON files at runtime; browsers block `file:` requests. Embed data in JavaScript files instead.
