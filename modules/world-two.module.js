@@ -4,18 +4,28 @@ const DATA = `
 {
   "seed": "world-two",
   "start": { "map": "world", "x": 2, "y": 2 },
+  "world": [
+    [0,0,0,0,0],
+    [0,0,0,0,0],
+    [0,0,0,0,0],
+    [0,0,0,0,0],
+    [0,0,0,0,0]
+  ],
   "items": [
     { "id": "fuel_cell", "name": "Fuel Cell", "type": "quest" },
     { "id": "shiny_cog", "name": "Shiny Cog", "type": "quest", "map": "world", "x": 2, "y": 3 }
   ],
+  "buildings": [
+    { "x": 4, "y": 2, "w": 1, "h": 1, "doorX": 4, "doorY": 2, "boarded": true, "bunker": true, "bunkerId": "beta" }
+  ],
   "npcs": [
     {
-      "id": "cog_hunter",
+      "id": "npc_b",
       "map": "world",
       "x": 2,
       "y": 1,
       "color": "#acf",
-      "name": "Cog Hunter",
+      "name": "NPC B",
       "desc": "Looking for a shiny cog.",
       "prompt": "Scavenger eyeing a broken robot",
       "tree": {
