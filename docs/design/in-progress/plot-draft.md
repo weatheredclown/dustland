@@ -38,6 +38,8 @@ Our story is nothing without the people who live it. These aren't just party mem
 
 ### **Key Items: The Tools of the Trade**
 
+The module seeds the caravan with thirty-seven oddments—rusted keys, makeshift weapons, and half-melted trinkets. Each object should unlock a story or moral choice, not just pad a stat block. Items become flashpoints for memories and dilemmas.
+
 The items our party finds shouldn't just be stat sticks. They should be story-telling devices, each with its own history and its own role to play in the narrative.
 
 * **The Signal Compass**: This isn't just a quest marker. It's a broken, glitchy piece of future tech that spins wildly, pointing not just to the next broadcast fragment, but also to places of emotional resonance—a character's lost home, a place of great tragedy, or a hidden oasis of hope.
@@ -47,6 +49,26 @@ The items our party finds shouldn't just be stat sticks. They should be story-te
 > **Gizmo:** Any item with a unique mechanic needs a custom UI. The Signal Compass needs a special display on the HUD, and the Memory Tape needs a clear interface for recording and playback. We need to flag these needs early to keep our UI pipeline clean.
 >
 > **Clown:** And let's make the sprites for these items kitbash-friendly. I want to see our modders turning the Glinting Key into a neon charm or the Signal Compass into a crystal dowsing rod.
+
+### **Branching Quests: Dust to Decisions**
+
+Fetch runs fade fast. Every mission in Dustland should fork. A rusted key might free a prisoner or unleash a rival. Choices carry weight, echoing across modules and altering who trusts the caravan.
+
+> **Wing:** Stakes crank tension. Let timers or rival factions press every fork so players feel the grit under their nails.
+
+### **NPC Memory and Growth**
+
+Forty-three NPCs wander our maps, but they shouldn't forget us after a single line. Each remembers favors and slights, opening or closing paths as the caravan rolls on. Help the water carrier and she'll cut prices later; ignore a plea and that face might vanish or turn hostile.
+
+> **Echo:** Dialogue should feel like a conversation, not a vending machine. Let their stories bend with ours.
+
+### **Living World Events**
+
+"You smell rot" was just a sniff. The Dustland needs roaming encounters, cascading crises, and temporal shifts. Ignore a whiff of decay and a plague might sweep a town. Night markets pop up then vanish, storms reroute travel, and traders chase the sun.
+
+### **Zones as Narrative Scaffolding**
+
+Zones, buildings, and portals are more than maps. Each transition should reveal secrets or emotional beats. Interiors hide echo chambers or lost kin, and gateways can reroute based on past choices.
 
 ### **Puzzles: The Riddles of the Road**
 
@@ -111,6 +133,8 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
     - [ ] Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.
       - [ ] Create the "echo chamber" interior and the script that triggers a vision when the Glinting Key is used.
     - [ ] Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event.
+    - [ ] Wire branching quest infrastructure so every mission supports at least two outcomes with lasting effects.
+    - [ ] Persist NPC relationships and states so conversations evolve based on past decisions.
 
 #### **Phase 3: Puzzle and World Building**
 - [ ] **Design a radio tower alignment puzzle that tunes the broadcast.**
@@ -121,6 +145,8 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
    - A collapsed overpass hides directions beneath decades of gang tags; players cycle solvent sprays to reveal each era's markings and overlay them into a route.
    - Picking the wrong sequence bathes the wall in false sunlight and draws a quick Silencer ambush before resetting.
 - [ ] Implement the layered graffiti decoding puzzle as an interactive module and hook it into the Broadcast Story sequence.
+- [ ] Introduce roaming encounter and event scheduler so the world reacts over time.
+- [ ] Link zones and portals to narrative flags, gating routes based on prior choices.
 - [ ] **Build Reusable Widgets:**
     - [ ] Create a generic "dial" widget for puzzles like the radio tower.
     - [ ] Develop a "sound-based navigation" system that can be used for the dust storm and other similar challenges.
