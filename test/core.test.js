@@ -1130,6 +1130,21 @@ test('resetAll clears world flags', () => {
   global.openCreator = origOpen;
   assert.strictEqual(Object.keys(worldFlags).length, 0);
 });
+test('resetAll leaves saved game intact', () => {
+  const store = { dustland_crt: '{}' };
+  const origOpen = global.openCreator;
+  const origLS = global.localStorage;
+  global.openCreator = () => {};
+  global.localStorage = {
+    removeItem: k => { delete store[k]; },
+    getItem: k => store[k] || null,
+    setItem: (k, v) => { store[k] = v; }
+  };
+  resetAll();
+  global.openCreator = origOpen;
+  global.localStorage = origLS;
+  assert.ok(store.dustland_crt, 'save should remain');
+});
 test('dialog choices can be gated by party flags', () => {
   party.flags = {};
   state.map = 'world';

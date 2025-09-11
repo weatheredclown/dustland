@@ -761,6 +761,7 @@ if (startNew) startNew.onclick = () => { hideStart(); resetAll(); };
 function resetAll(){
   party.length=0; player.inv=[]; party.flags={}; player.scrap=0;
   Object.keys(worldFlags).forEach(k => delete worldFlags[k]);
+  built = [];
   state.map='creator'; openCreator();
   globalThis.Dustland?.inventory?.loadStarterItems?.();
   log('Reset. Back to character creation.');
