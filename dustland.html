@@ -291,6 +291,7 @@
       }, {passive: true});
       document.addEventListener('touchmove', e => {
         const y = e.touches[0].clientY;
+        if (e.target.closest('.panel .content')) return;
         if (window.scrollY === 0 && y > startY) e.preventDefault();
       }, {passive: false});
     }
