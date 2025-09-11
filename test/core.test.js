@@ -1749,6 +1749,21 @@ test('save/load preserves persona assignments', () => {
   assert.strictEqual(party[0].persona, 'mask');
 });
 
+test('clearSave removes stored game data', () => {
+  const store = { dustland_crt: '{}' };
+  const orig = global.localStorage;
+  let removed = false;
+  global.localStorage = {
+    setItem(k, v){ store[k] = v; },
+    getItem(k){ return store[k]; },
+    removeItem(k){ removed = true; delete store[k]; }
+  };
+  clearSave();
+  assert.ok(removed);
+  assert.strictEqual(store.dustland_crt, undefined);
+  global.localStorage = orig;
+});
+
 test('combat overlay sits behind the log panel', async () => {
   const css = await fs.readFile(new URL('../dustland.css', import.meta.url), 'utf8');
   assert.match(css, /\.panel\s*{[\s\S]*z-index:\s*15/);

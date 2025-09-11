@@ -65,7 +65,7 @@ _______________________________________________________________________________
 [ SAVE DATA ]
   - Saved to localStorage under key: dustland_crt
   - “Reset” clears party/inventory and returns you to Creator.
-  - To fully wipe: clear the site’s localStorage from your browser.
+  - “Clear Save” removes the saved game from localStorage.
 
 [ PROJECT LAYOUT ]
   - dustland.html

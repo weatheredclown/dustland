@@ -1,5 +1,8 @@
 # Changelog
 
+## 2025-09-13
+- Added button to clear saved game data.
+
 ## 2025-09-12
 - Reduced random encounter enemy loot drops in Dustland by 25%.
 
