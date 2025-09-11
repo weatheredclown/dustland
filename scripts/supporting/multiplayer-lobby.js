@@ -24,20 +24,30 @@
         });
         if (!data.length) list.textContent = 'No sessions found';
       })
-      .catch(() => {
-        list.textContent = 'No sessions found';
+      .catch(err => {
+        list.textContent = 'Error: ' + (err?.message || err);
       });
   }
 
   async function host() {
     const name = prompt('Session name?', 'LAN Game') || 'LAN Game';
     hostBtn.disabled = true;
-    await globalThis.Dustland?.multiplayer?.startHost({ port: HOST_PORT });
-    fetch('http://localhost:7777/sessions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, host: 'localhost', port: HOST_PORT })
-    }).catch(() => {});
+    try {
+      await globalThis.Dustland?.multiplayer?.startHost({ port: HOST_PORT });
+    } catch (err) {
+      alert('Error: ' + (err?.message || err));
+      hostBtn.disabled = false;
+      return;
+    }
+    try {
+      await fetch('http://localhost:7777/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, host: 'localhost', port: HOST_PORT })
+      });
+    } catch (err) {
+      alert('Error: ' + (err?.message || err));
+    }
     window.location.href = `dustland.html?host=localhost&port=${HOST_PORT}`;
   }
 
