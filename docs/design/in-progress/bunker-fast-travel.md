@@ -8,6 +8,8 @@
 ## Status update
 As of 2025-09-07, `data/bunkers.js` and core travel logic with events exist. The world map overlay now shows thumbnails for each unlocked bunker and uses per-bunker save slots to preserve state across hops.
 
+As of 2025-09-08, fuel costs apply a base price plus Manhattan distance, and travel events emit `{ fromId, toId, result }` payloads for mod hooks.
+
 ### Open questions
 - Mechanics 2 mentions distance-based fuel costs; how will the system compute distance between bunkers?
   - Use the Manhattan distance between bunker coordinates in `data/bunkers.js`. Fuel cost scales as `BASE_COST + distance * FUEL_PER_TILE`, keeping math cheap on the grid.

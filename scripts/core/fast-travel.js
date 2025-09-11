@@ -1,20 +1,19 @@
 (function(){
   const bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
   const bunkers = globalThis.Dustland?.bunkers || [];
-  const FUEL_RATE = 1; // fuel cells per tile
+  const BASE_COST = 1;
+  const FUEL_PER_TILE = 1;
   const saveKey = id => `dustland_slot_${id}`;
 
   function distance(a, b){
-    const dx = a.x - b.x;
-    const dy = a.y - b.y;
-    return Math.sqrt(dx*dx + dy*dy);
+    return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
   }
 
   function fuelCost(fromId, toId){
     const from = bunkers.find(b => b.id === fromId);
     const to = bunkers.find(b => b.id === toId);
     if(!from || !to) return Infinity;
-    return Math.ceil(distance(from, to) * FUEL_RATE);
+    return BASE_COST + distance(from, to) * FUEL_PER_TILE;
   }
 
   function travel(fromId, toId){
@@ -28,14 +27,14 @@
       if(typeof log === 'function') log('Not enough fuel.');
       return false;
     }
-    bus?.emit('travel:start', { from: fromId, to: toId, cost });
+    bus?.emit('travel:start', { fromId, toId, cost });
     player.fuel -= cost;
     const party = globalThis.party;
     if(party){
       party.x = to.x;
       party.y = to.y;
     }
-    bus?.emit('travel:end', { from: fromId, to: toId, cost });
+    bus?.emit('travel:end', { fromId, toId, result: 'ok' });
     return true;
   }
 
