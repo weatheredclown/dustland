@@ -1,5 +1,8 @@
 # Changelog
 
+## 2025-09-12
+- Reduced random encounter enemy loot drops in Dustland by 25%.
+
 ## 2025-09-11
 - Equipment now toasts stat changes when equipped.
 

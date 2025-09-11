@@ -2640,31 +2640,37 @@ const DATA = `
       {
         "templateId": "vine_creature",
         "loot": "plant_fiber",
+        "lootChance": 0.75,
         "maxDist": 20
       },
       {
         "templateId": "rotwalker",
         "loot": "water_flask",
+        "lootChance": 0.75,
         "maxDist": 24
       },
       {
         "templateId": "scavenger",
         "loot": "raider_knife",
+        "lootChance": 0.75,
         "maxDist": 36
       },
       {
         "templateId": "sand_titan",
         "loot": "artifact_blade",
+        "lootChance": 0.75,
         "minDist": 30
       },
       {
         "templateId": "dune_reaper",
         "loot": "artifact_blade",
+        "lootChance": 0.75,
         "minDist": 40
       },
       {
         "templateId": "sand_colossus",
         "loot": "artifact_blade",
+        "lootChance": 0.75,
         "minDist": 44
       }
     ]
