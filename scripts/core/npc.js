@@ -62,6 +62,14 @@ class NPC {
       this.processChoice = (c) => { capChoice(c); };
     }
   }
+
+  remember(key, value){
+    Dustland.gameState?.rememberNPC?.(this.id, key, value);
+  }
+
+  recall(key){
+    return Dustland.gameState?.recallNPC?.(this.id, key);
+  }
 }
 
 function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNode, processChoice, opts) {

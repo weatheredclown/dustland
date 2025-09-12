@@ -32,7 +32,7 @@
 ### Action Items
 - [x] Implement item narrative tagging in engine and Adventure Kit.
 - [ ] Extend quest definitions to support branching and persistence.
-- [ ] Add NPC memory storage and retrieval utilities.
+ - [x] Add NPC memory storage and retrieval utilities.
 - [ ] Build event scheduler for world and NPC timelines.
 - [ ] Allow zones and portals to register and check narrative flags.
 

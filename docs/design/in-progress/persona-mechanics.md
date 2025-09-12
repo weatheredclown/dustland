@@ -85,7 +85,7 @@ Persona equips and other world moments should fire through the game's event bus.
 ## Tasks
 
 - [ ] Prototype persona equip UI at camps (any loot cache mask should be equippable here and yield a persona).
-- [ ] Hook persona stat modifiers into combat calculations.
+ - [x] Hook persona stat modifiers into combat calculations.
 - [ ] Draft first mask memory quest for dustland.
   - [ ] create an NPC mask giver (name TBD)
   - [ ] create quest to get a persona mask (anything with the mask attribute from a loot cache)
