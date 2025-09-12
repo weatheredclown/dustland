@@ -66,6 +66,27 @@ function removeIndex(arr, index) {
   arr.splice(index, 1);
 }
 
+function parseValue(str) {
+  if (str === 'true') return true;
+  if (str === 'false') return false;
+  if (str === 'null') return null;
+  const num = Number(str);
+  if (!isNaN(num)) return num;
+  return str;
+}
+
+function parseKeyValueArgs(args) {
+  const obj = {};
+  for (const arg of args) {
+    const eq = arg.indexOf('=');
+    if (eq === -1) continue;
+    const key = arg.slice(0, eq);
+    const val = arg.slice(eq + 1);
+    setByPath(obj, key, parseValue(val));
+  }
+  return obj;
+}
+
 export {
   readModule,
   getByPath,
@@ -73,5 +94,7 @@ export {
   appendByPath,
   ensureArray,
   findIndexById,
-  removeIndex
+  removeIndex,
+  parseValue,
+  parseKeyValueArgs
 };
