@@ -2,7 +2,7 @@
   const bunkers = globalThis.Dustland?.bunkers || [];
   const moduleMap = {
     alpha: { script: 'modules/world-one.module.js', global: 'WORLD_ONE_MODULE', name: 'World One', map: 'world', x: 4, y: 2 },
-    beta: { script: 'modules/world-two.module.js', global: 'WORLD_TWO_MODULE', name: 'World Two', map: 'world', x: 4, y: 2 }
+    beta: { script: 'modules/world-two.module.js', global: 'WORLD_TWO_MODULE', name: 'World Two', map: 'world', x: 6, y: 3 }
   };
 
   function ensureModule(id, cb){
