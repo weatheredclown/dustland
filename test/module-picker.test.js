@@ -160,6 +160,7 @@ test('true-dust module points to entry script', () => {
 
 test('enter key loads selected module', () => {
   const golden = MODULES.find(m => m.id === 'golden');
+  assert.ok(golden);
   loadModule(golden);
   assert.ok(global.location.href.includes('golden.module.json'));
 });
