@@ -1904,11 +1904,27 @@ const DATA = `
             {
               "label": "(Leave)",
               "to": "bye"
+            },
+            {
+              "label": "(Upgrade Skills)",
+              "to": "train",
+              "effects": [
+                {
+                  "effect": "showTrainer",
+                  "trainer": "power"
+                }
+              ]
             }
           ]
         },
         "train": {
-          "text": "Push your limits."
+          "text": "Push your limits.",
+          "choices": [
+            {
+              "label": "(Back)",
+              "to": "start"
+            }
+          ]
         }
       }
     },
@@ -1930,11 +1946,27 @@ const DATA = `
             {
               "label": "(Leave)",
               "to": "bye"
+            },
+            {
+              "label": "(Upgrade Skills)",
+              "to": "train",
+              "effects": [
+                {
+                  "effect": "showTrainer",
+                  "trainer": "endurance"
+                }
+              ]
             }
           ]
         },
         "train": {
-          "text": "Breathe deep and endure."
+          "text": "Breathe deep and endure.",
+          "choices": [
+            {
+              "label": "(Back)",
+              "to": "start"
+            }
+          ]
         }
       }
     },
@@ -1956,11 +1988,27 @@ const DATA = `
             {
               "label": "(Leave)",
               "to": "bye"
+            },
+            {
+              "label": "(Upgrade Skills)",
+              "to": "train",
+              "effects": [
+                {
+                  "effect": "showTrainer",
+                  "trainer": "tricks"
+                }
+              ]
             }
           ]
         },
         "train": {
-          "text": "Learn a new trick."
+          "text": "Learn a new trick.",
+          "choices": [
+            {
+              "label": "(Back)",
+              "to": "start"
+            }
+          ]
         }
       }
     },
