@@ -9,6 +9,7 @@
 As of 2025-09-07, bunkers derive from building data and core travel logic with events exists. The world map overlay now shows thumbnails for each unlocked bunker and uses per-bunker save slots to preserve state across hops.
 
 As of 2025-09-08, fuel costs apply a base price plus Manhattan distance, and travel events emit `{ fromId, toId, result }` payloads for mod hooks.
+Module items can now include a `fuel` field that grants that amount on pickup, easing fuel cell placement through the Adventure Kit.
 
 ### Open questions
 - Mechanics 2 mentions distance-based fuel costs; how will the system compute distance between bunkers?

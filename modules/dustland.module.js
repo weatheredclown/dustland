@@ -33,7 +33,8 @@ const DATA = `
     {
       "id": "fuel_cell",
       "name": "Fuel Cell",
-      "type": "quest"
+      "type": "quest",
+      "fuel": 50
     },
     {
       "map": "world",

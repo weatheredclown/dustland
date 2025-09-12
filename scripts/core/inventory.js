@@ -111,14 +111,15 @@ function addToInv(item) {
     throw new Error('Unknown item');
   }
   const base = cloneItem(ITEMS[it.id] || registerItem(it));
-  if (base.id === 'fuel_cell') {
-    player.fuel = (player.fuel || 0) + 50;
+  const fuel = typeof base.fuel === 'number' ? base.fuel : (base.id === 'fuel_cell' ? 50 : 0);
+  if (fuel > 0) {
+    player.fuel = (player.fuel || 0) + fuel;
     emit('item:picked', base);
-    if(base.narrative){
+    if (base.narrative) {
       emit('item:narrative', { itemId: base.id, narrative: base.narrative });
     }
     notifyInventoryChanged();
-    if (typeof log === 'function') log('Fuel +50');
+    if (typeof log === 'function') log('Fuel +' + fuel);
     return true;
   }
   if (player.inv.length >= getPartyInventoryCapacity()) {
@@ -319,6 +320,7 @@ function normalizeItem(it){
     rarity: it.rarity || 'common',
     value: val,
     scrap: typeof it.scrap === 'number' ? it.scrap : undefined,
+    fuel: typeof it.fuel === 'number' ? it.fuel : undefined,
     desc: it.desc || '',
     persona: it.persona,
     narrative: it.narrative ? { ...it.narrative } : null,
