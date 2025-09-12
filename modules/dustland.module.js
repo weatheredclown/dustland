@@ -2926,7 +2926,7 @@ function pullSlots(cost, payouts) {
   const luck = (lead?.stats?.LCK || 0) + (lead?._bonus?.LCK || 0);
   const eff = Math.max(0, luck - 7);
   let idx = Math.floor(rng() * payouts.length);
-  if (eff > 0 && Math.random() < eff * 0.05) {
+  if (eff > 0 && rng() < eff * 0.05) {
     idx = Math.min(idx + 1, payouts.length - 1);
     log('Lucky spin!');
   }
