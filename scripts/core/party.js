@@ -282,11 +282,13 @@ function respec(memberIndex=selectedMember){
 function trainStat(stat, memberIndex = selectedMember){
   const m = party[memberIndex];
   if(!m) return false;
-  if(m.skillPoints <= 0){
+  const lead = leader();
+  if(!lead || lead.skillPoints <= 0 || m.skillPoints <= 0){
     log('No skill points to spend.');
     return false;
   }
-  m.skillPoints -= 1;
+  lead.skillPoints -= 1;
+  if(m !== lead) m.skillPoints -= 1;
   if(stat === 'HP'){
     m.maxHp += 5;
     m.hp = m.maxHp;

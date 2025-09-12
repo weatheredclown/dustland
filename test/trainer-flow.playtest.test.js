@@ -9,7 +9,7 @@ const partyCode = await fs.readFile(new URL('../scripts/core/party.js', import.m
 const dataCode = await fs.readFile(new URL('../data/skills/trainer-upgrades.js', import.meta.url), 'utf8');
 
 function setup(){
-  const dom = new JSDOM('<!doctype html><body></body>', { url: 'https://example.com' });
+  const dom = new JSDOM('<!doctype html><body><div id="trainerOverlay"><div id="trainerLeader"></div><div id="trainerPoints"></div><button id="closeTrainerBtn"></button><div id="trainerChoices"></div></div></body>', { url: 'https://example.com' });
   const context = {
     ...dom.window,
     log: () => {},
@@ -28,11 +28,13 @@ function setup(){
 test('trainer upgrade flow stays under fifteen seconds', async () => {
   const { context, dom } = setup();
   const m = context.makeMember('id', 'Name', 'Role');
+  const lead = context.makeMember('lead', 'Lead', 'Role');
+  lead.skillPoints = 1;
   m.skillPoints = 1;
-  context.party.push(m);
+  context.party.push(lead); context.party.push(m);
   const start = Date.now();
-  await context.TrainerUI.showTrainer('power', 0);
-  const btn = dom.window.document.querySelector('#trainer_ui button');
+  await context.TrainerUI.showTrainer('power', 1);
+  const btn = dom.window.document.querySelector('#trainerChoices .choice');
   btn.click();
   const end = Date.now();
   assert.ok(end - start < 15000);

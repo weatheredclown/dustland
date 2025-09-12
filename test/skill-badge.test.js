@@ -13,6 +13,7 @@ function setup(){
   ids.forEach(id=>document.body.appendChild(document.getElementById(id)));
   document.body.appendChild(document.querySelector('.tabs'));
   vm.runInContext(partyCode, context);
+  context.updateHUD = () => {};
   return { context, document };
 }
 
@@ -47,4 +48,16 @@ test('badge updates without duplication on re-render', () => {
   const badges = document.querySelectorAll('.spbadge');
   assert.strictEqual(badges.length, 1);
   assert.strictEqual(String(badges[0].textContent), '3');
+});
+
+test('badge removed after training', () => {
+  const { context, document } = setup();
+  const m = context.makeMember('id','Name','Role');
+  m.skillPoints = 1;
+  context.party.push(m);
+  context.renderParty();
+  assert.ok(document.querySelector('.spbadge'));
+  context.trainStat('STR', 0);
+  const badgeAfter = document.querySelector('.spbadge');
+  assert.strictEqual(badgeAfter, null);
 });
