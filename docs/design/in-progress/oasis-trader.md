@@ -29,7 +29,7 @@
 ## Dustland Integration
 - [x] Replace static shop NPC in `dustland.module.js` with a traveling trader.
 - [x] Give the trader an east-west patrol loop across the world map.
-- [ ] Stock begins with scavenged gear and upgrades across three refresh waves.
+ - [x] Stock begins with scavenged gear and upgrades across three refresh waves.
 - [ ] Raise prices roughly 300 scrap per stat point above crowbar and flak jacket drops.
 - [ ] Final wave sells top-tier gear well above 500 scrap.
 
