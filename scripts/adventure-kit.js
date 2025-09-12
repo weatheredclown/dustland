@@ -2608,7 +2608,9 @@ function collectEncounter(){
   const minDist = parseInt(document.getElementById('encMinDist').value,10) || 0;
   const maxDist = parseInt(document.getElementById('encMaxDist').value,10) || 0;
   const loot = document.getElementById('encLoot').value.trim();
-  const entry = { map, templateId, loot, minDist, maxDist };
+  const entry = { map, templateId, minDist, maxDist };
+  const t = moduleData.templates.find(t => t.id === templateId);
+  if (loot && loot !== t?.combat?.loot) entry.loot = loot;
   return entry;
 }
 function addEncounter(){
@@ -2633,12 +2635,21 @@ function editEncounter(i){
   document.getElementById('delEncounter').style.display = 'block';
   showEncounterEditor(true);
 }
+
+function reconcileEncounterLoot(){
+  (moduleData.encounters || []).forEach(e => {
+    const t = moduleData.templates.find(t => t.id === e.templateId);
+    if (e.loot && t?.combat?.loot === e.loot) delete e.loot;
+  });
+}
 function renderEncounterList(){
+  reconcileEncounterLoot();
   const list = document.getElementById('encounterList');
   list.innerHTML = moduleData.encounters.map((e,i)=>{
     const t = moduleData.templates.find(t => t.id === e.templateId);
     const name = t ? t.name : e.templateId;
-    return `<div data-idx="${i}">${e.map}: ${name}</div>`;
+    const loot = e.loot || t?.combat?.loot;
+    return `<div data-idx="${i}">${e.map}: ${name}${loot ? ` [${loot}]` : ''}</div>`;
   }).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editEncounter(parseInt(div.dataset.idx,10)));
 }
@@ -2737,6 +2748,7 @@ function renderTemplateList(){
   list.innerHTML = moduleData.templates.map((t,i)=>`<div data-idx="${i}">${t.id}</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editTemplate(parseInt(div.dataset.idx,10)));
   refreshChoiceDropdowns();
+  renderEncounterList();
 }
 function deleteTemplate(){
   if(editTemplateIdx < 0) return;
@@ -3698,6 +3710,7 @@ function saveModule() {
     const { _origGrid, ...rest } = I;
     return { ...rest, grid: _origGrid || gridToEmoji(I.grid) };
   });
+  reconcileEncounterLoot();
   const enc = {};
   (moduleData.encounters || []).forEach(e => {
     const { map, ...rest } = e;
@@ -3725,6 +3738,7 @@ function playtestModule() {
   moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
   const bldgs = buildings.map(({ under, ...rest }) => rest);
   const ints = moduleData.interiors.map(I => ({...I, grid: gridToEmoji(I.grid)}));
+  reconcileEncounterLoot();
   const enc = {};
   (moduleData.encounters||[]).forEach(e => {
     const { map, ...rest } = e;

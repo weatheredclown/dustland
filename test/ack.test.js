@@ -389,6 +389,34 @@ test('saveModule exports buildings, interiors, and encounters without _origKeys'
   world = prevWorld;
 });
 
+test('encounter list shows loot and reconciles overrides', () => {
+  const prevGet = document.getElementById;
+  const prevTemplates = moduleData.templates;
+  const prevEncounters = moduleData.encounters;
+  const encMap = stubEl(); encMap.value = 'world';
+  const encTemplate = stubEl(); encTemplate.value = 'gob';
+  const encMinDist = stubEl(); encMinDist.value = '';
+  const encMaxDist = stubEl(); encMaxDist.value = '';
+  const encLoot = stubEl(); encLoot.value = 'coin';
+  const encounterList = stubEl();
+  document.getElementById = id => ({
+    encMap, encTemplate, encMinDist, encMaxDist, encLoot, encounterList
+  })[id] || stubEl();
+
+  moduleData.templates = [{ id: 'gob', name: 'Gob', combat: { loot: 'coin' } }];
+  const entry = collectEncounter();
+  assert.deepStrictEqual(entry, { map: 'world', templateId: 'gob', minDist: 0, maxDist: 0 });
+
+  moduleData.encounters = [{ map: 'world', templateId: 'gob', loot: 'coin' }];
+  renderEncounterList();
+  assert.strictEqual(moduleData.encounters[0].loot, undefined);
+  assert.strictEqual(encounterList.innerHTML, '<div data-idx="0">world: Gob [coin]</div>');
+
+  document.getElementById = prevGet;
+  moduleData.templates = prevTemplates;
+  moduleData.encounters = prevEncounters;
+});
+
 test('validateSpawns lists blocked spawns', () => {
   genWorld(1);
   setTile('world',0,0,TILE.WATER);
