@@ -448,6 +448,7 @@
             <label>ATK<input id="npcATK" type="number" min="0" value="0" /></label>
             <label>DEF<input id="npcDEF" type="number" min="0" value="0" /></label>
             <label>Loot<input id="npcLoot" /></label>
+            <label>Loot %<input id="npcLootChance" type="number" min="0" max="100" value="100" /></label>
             <label><input type="checkbox" id="npcBoss" /> Boss</label>
             <label>Special Cue<input id="npcSpecialCue" /></label>
             <label>Special DMG<input id="npcSpecialDmg" type="number" min="0" /></label>
@@ -668,6 +669,7 @@
           <label>Min Dist<input id="encMinDist" type="number" min="0" /></label>
           <label>Max Dist<input id="encMaxDist" type="number" min="0" /></label>
           <label>Loot<select id="encLoot"></select></label>
+          <label>Loot %<input id="encLootChance" type="number" min="0" max="100" value="100" /></label>
           <button class="btn" id="addEncounter">Add Enemy</button>
           <button class="btn" type="button" id="cancelEncounter" style="display:none">Cancel</button>
           <button class="btn" id="delEncounter" style="display:none">Delete Enemy</button>
@@ -691,6 +693,7 @@
           <label>Special Cue<input id="templateSpecialCue" /></label>
           <label>Special Dmg<input id="templateSpecialDmg" type="number" min="1" /></label>
           <label>Loot<select id="templateLoot"></select></label>
+          <label>Loot %<input id="templateLootChance" type="number" min="0" max="100" value="100" /></label>
           <label>Requires<input id="templateRequires" /></label>
         <button class="btn" id="addTemplate">Add Template</button>
         <button class="btn" id="delTemplate" style="display:none">Delete Template</button>

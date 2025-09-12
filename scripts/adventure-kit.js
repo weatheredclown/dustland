@@ -2015,6 +2015,7 @@ function startNewNPC() {
   document.getElementById('npcATK').value = 0;
   document.getElementById('npcDEF').value = 0;
   document.getElementById('npcLoot').value = '';
+  document.getElementById('npcLootChance').value = 100;
   document.getElementById('npcBoss').checked = false;
   document.getElementById('npcSpecialCue').value = '';
   document.getElementById('npcSpecialDmg').value = '';
@@ -2115,12 +2116,16 @@ function collectNPCFromForm() {
     const ATK = parseInt(document.getElementById('npcATK').value, 10) || 0;
     const DEF = parseInt(document.getElementById('npcDEF').value, 10) || 0;
     const loot = document.getElementById('npcLoot').value.trim();
+    const lootChancePct = parseFloat(document.getElementById('npcLootChance').value);
     const boss = document.getElementById('npcBoss').checked;
     const cue = document.getElementById('npcSpecialCue').value.trim();
     const dmg = parseInt(document.getElementById('npcSpecialDmg').value, 10);
     const delay = parseInt(document.getElementById('npcSpecialDelay').value, 10);
     npc.combat = { HP, ATK, DEF };
     if (loot) npc.combat.loot = loot;
+    if (!isNaN(lootChancePct) && lootChancePct >= 0 && lootChancePct < 100) {
+      npc.combat.lootChance = lootChancePct / 100;
+    }
     if (boss) npc.combat.boss = true;
     if (cue || !isNaN(dmg) || !isNaN(delay)) {
       npc.combat.special = {};
@@ -2239,6 +2244,7 @@ function editNPC(i) {
   document.getElementById('npcATK').value = n.combat?.ATK ?? 0;
   document.getElementById('npcDEF').value = n.combat?.DEF ?? 0;
   document.getElementById('npcLoot').value = n.combat?.loot || '';
+  document.getElementById('npcLootChance').value = n.combat?.lootChance != null ? Math.round(n.combat.lootChance * 100) : 100;
   document.getElementById('npcBoss').checked = !!n.combat?.boss;
   document.getElementById('npcSpecialCue').value = n.combat?.special?.cue || '';
   document.getElementById('npcSpecialDmg').value = n.combat?.special?.dmg ?? '';
@@ -2597,6 +2603,7 @@ function startNewEncounter(){
   const tmplSel = document.getElementById('encTemplate');
   populateTemplateDropdown(tmplSel, '');
   populateItemDropdown(document.getElementById('encLoot'), '');
+  document.getElementById('encLootChance').value = 100;
   document.getElementById('addEncounter').textContent = 'Add Enemy';
   document.getElementById('delEncounter').style.display = 'none';
   showEncounterEditor(true);
@@ -2608,7 +2615,11 @@ function collectEncounter(){
   const minDist = parseInt(document.getElementById('encMinDist').value,10) || 0;
   const maxDist = parseInt(document.getElementById('encMaxDist').value,10) || 0;
   const loot = document.getElementById('encLoot').value.trim();
+  const lootChancePct = parseFloat(document.getElementById('encLootChance').value);
   const entry = { map, templateId, loot, minDist, maxDist };
+  if (!isNaN(lootChancePct) && lootChancePct >= 0 && lootChancePct < 100) {
+    entry.lootChance = lootChancePct / 100;
+  }
   return entry;
 }
 function addEncounter(){
@@ -2629,6 +2640,7 @@ function editEncounter(i){
   document.getElementById('encMinDist').value = e.minDist || '';
   document.getElementById('encMaxDist').value = e.maxDist || '';
   populateItemDropdown(document.getElementById('encLoot'), e.loot || '');
+  document.getElementById('encLootChance').value = e.lootChance != null ? Math.round(e.lootChance * 100) : 100;
   document.getElementById('addEncounter').textContent = 'Update Enemy';
   document.getElementById('delEncounter').style.display = 'block';
   showEncounterEditor(true);
@@ -2672,6 +2684,7 @@ function startNewTemplate(){
   document.getElementById('templateSpecialCue').value = '';
   document.getElementById('templateSpecialDmg').value = '';
   populateItemDropdown(document.getElementById('templateLoot'), '');
+  document.getElementById('templateLootChance').value = 100;
   document.getElementById('templateRequires').value = '';
   document.getElementById('addTemplate').textContent = 'Add Template';
   document.getElementById('delTemplate').style.display = 'none';
@@ -2690,10 +2703,14 @@ function collectTemplate(){
   const specialCue = document.getElementById('templateSpecialCue').value.trim();
   const specialDmg = parseInt(document.getElementById('templateSpecialDmg').value,10) || 0;
   const loot = document.getElementById('templateLoot').value.trim();
+  const lootChancePct = parseFloat(document.getElementById('templateLootChance').value);
   const requires = document.getElementById('templateRequires').value.trim();
   const combat = { HP, ATK, DEF };
   if (challenge) combat.challenge = challenge;
   if (loot) combat.loot = loot;
+  if (!isNaN(lootChancePct) && lootChancePct >= 0 && lootChancePct < 100) {
+    combat.lootChance = lootChancePct / 100;
+  }
   if (requires) combat.requires = requires;
   if (specialCue || specialDmg) {
     combat.special = {};
@@ -2727,6 +2744,7 @@ function editTemplate(i){
   document.getElementById('templateSpecialCue').value = t.combat?.special?.cue || '';
   document.getElementById('templateSpecialDmg').value = t.combat?.special?.dmg || '';
   populateItemDropdown(document.getElementById('templateLoot'), t.combat?.loot || '');
+  document.getElementById('templateLootChance').value = t.combat?.lootChance != null ? Math.round(t.combat.lootChance * 100) : 100;
   document.getElementById('templateRequires').value = t.combat?.requires || '';
   document.getElementById('addTemplate').textContent = 'Update Template';
   document.getElementById('delTemplate').style.display = 'block';
