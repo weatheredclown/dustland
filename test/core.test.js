@@ -212,6 +212,7 @@ test('uncursed gear can be removed and triggers unequip effects', () => {
   state.map = 'world';
   const mem = new Character('t1','Tester','Role');
   party.join(mem);
+  interiors.office = { grid: [[0]], w:1, h:1 };
   const helm = normalizeItem({
     id: 'helm',
     name: 'Helm',
@@ -1456,6 +1457,7 @@ test('bruise resets map to entry', async () => {
   party.map = 'whistle_room';
   party.x = 5; party.y = 5;
   state.mapEntry = { map: 'cavern', x: 2, y: 2 };
+  interiors.cavern = { grid: [[0]], w:1, h:1 };
   const m1 = new Character('p1','P1','Role');
   m1.hp = 1;
   party.join(m1);

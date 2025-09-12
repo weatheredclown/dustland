@@ -217,6 +217,10 @@ function mapLabel(id){
   return interiors[id]?.label || mapLabels[id] || 'Interior';
 }
 function setMap(id,label){
+  if(typeof gridFor === 'function' && !gridFor(id)){
+    id = 'world';
+    label = label || mapLabel(id);
+  }
   state.map=id;
   party.map = id;
   state.mapEntry = null;
@@ -730,6 +734,12 @@ function load(){
     party.y = d.party[0].y ?? party.y;
   }
   party.map = state.map;
+  if(state.map === 'dust_storm'){
+    state.map = 'world';
+    party.map = 'world';
+    party.x = 10;
+    party.y = 18;
+  }
   const grid = typeof gridFor === 'function' ? gridFor(state.map) : null;
   const tile = typeof getTile === 'function' ? getTile(state.map, party.x, party.y) : null;
   if(!grid || tile === null){
