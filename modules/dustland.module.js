@@ -46,7 +46,10 @@ const DATA = `
       "mods": {
         "ATK": 2,
         "ADR": 15
-      }
+      },
+      "tags": [
+        "ranged"
+      ]
     },
     {
       "map": "world",
@@ -1901,11 +1904,27 @@ const DATA = `
             {
               "label": "(Leave)",
               "to": "bye"
+            },
+            {
+              "label": "(Upgrade Skills)",
+              "to": "train",
+              "effects": [
+                {
+                  "effect": "showTrainer",
+                  "trainer": "power"
+                }
+              ]
             }
           ]
         },
         "train": {
-          "text": "Push your limits."
+          "text": "Push your limits.",
+          "choices": [
+            {
+              "label": "(Back)",
+              "to": "start"
+            }
+          ]
         }
       }
     },
@@ -1927,11 +1946,27 @@ const DATA = `
             {
               "label": "(Leave)",
               "to": "bye"
+            },
+            {
+              "label": "(Upgrade Skills)",
+              "to": "train",
+              "effects": [
+                {
+                  "effect": "showTrainer",
+                  "trainer": "endurance"
+                }
+              ]
             }
           ]
         },
         "train": {
-          "text": "Breathe deep and endure."
+          "text": "Breathe deep and endure.",
+          "choices": [
+            {
+              "label": "(Back)",
+              "to": "start"
+            }
+          ]
         }
       }
     },
@@ -1953,11 +1988,27 @@ const DATA = `
             {
               "label": "(Leave)",
               "to": "bye"
+            },
+            {
+              "label": "(Upgrade Skills)",
+              "to": "train",
+              "effects": [
+                {
+                  "effect": "showTrainer",
+                  "trainer": "tricks"
+                }
+              ]
             }
           ]
         },
         "train": {
-          "text": "Learn a new trick."
+          "text": "Learn a new trick.",
+          "choices": [
+            {
+              "label": "(Back)",
+              "to": "start"
+            }
+          ]
         }
       }
     },
@@ -2888,7 +2939,7 @@ function pullSlots(cost, payouts) {
   const reward = payouts[idx];
   if (reward > 0) {
     player.scrap += reward;
-    log(`The machine rattles and spits out ${reward} scrap.`);
+    log('The machine rattles and spits out ' + reward + ' scrap.');
   } else {
     log('The machine coughs and eats your scrap.');
   }
@@ -2939,6 +2990,17 @@ function handleCustomEffects(list) {
 }
 
 function postLoad(module) {
+  // Shim trainer assignments for compatibility with older saves.
+  const trainers = [
+    { id: 'trainer_power', name: 'Brakk', trainer: 'power' },
+    { id: 'trainer_endurance', name: 'Rusty', trainer: 'endurance' },
+    { id: 'trainer_tricks', name: 'Mira', trainer: 'tricks' }
+  ];
+  for (const t of trainers) {
+    const npc = module.npcs?.find(n => n.id === t.id || n.name === t.name);
+    if (npc) npc.trainer = t.trainer;
+  }
+
   const exit = module.npcs?.find(n => n.id === 'exitdoor');
   if (exit) {
     exit.processNode = function (node) {

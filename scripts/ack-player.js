@@ -25,7 +25,7 @@ const urlBtn = document.getElementById('modUrlBtn');
 const fileInput = document.getElementById('modFile');
 const fileBtn = document.getElementById('modFileBtn');
 
-const params = new URLSearchParams(location.search);
+const params = globalThis.params || new URLSearchParams(location.search);
 const playData = localStorage.getItem(PLAYTEST_KEY);
 if (playData) {
   try {

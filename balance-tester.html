@@ -178,8 +178,9 @@
     <script>
       window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('title').textContent += ' v' + ENGINE_VERSION;
-        const params = new URLSearchParams(location.search);
-        const isAck = params.get('ack-player') === '1';
+        const urlParams = new URLSearchParams(location.search);
+        window.params = urlParams;
+        const isAck = urlParams.get('ack-player') === '1';
         if (isAck) {
           UI.show('moduleLoader', 'flex');
           const btns = document.getElementById('mainButtons');

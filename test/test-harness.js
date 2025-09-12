@@ -21,7 +21,7 @@ class Elem {
   constructor(tag='div'){
     this.tagName=tag.toUpperCase();
     this.children=[];
-    this.style={};
+    this.style={ _props:{}, setProperty(k,v){ this._props[k]=v; }, getPropertyValue(k){ return this._props[k]||''; } };
     this._className='';
     this.classList={
       classes:new Set(),
