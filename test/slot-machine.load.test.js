@@ -82,7 +82,7 @@ test('slot machine works after save and load', async () => {
   ctx.CURRENCY = 'scrap';
   ctx.player.scrap = 5;
   ctx.leader = () => null;
-  ctx.rng = () => 1;
+  ctx.rng = () => 0;
 
   const moduleSrc = await fs.readFile(new URL('../modules/dustland.module.js', import.meta.url), 'utf8');
   vm.runInContext(moduleSrc, ctx, { filename: 'dustland.module.js' });
@@ -98,7 +98,7 @@ test('slot machine works after save and load', async () => {
   ctx.player.scrap = 5;
   ctx.localStorage.getItem = k => saved;
   await ctx.load();
-  ctx.rng = () => 1;
+  ctx.rng = () => 0;
 
   const slotNpc = ctx.NPCS.find(n => n.id === 'slots');
   assert.ok(slotNpc, 'slot npc missing');

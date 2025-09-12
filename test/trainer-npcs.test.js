@@ -21,10 +21,12 @@ function setupParty(){
 }
 
 function buildNpc(def){
-  const context = { log: () => {}, Dustland: {}, closeDialog: () => {} };
+  const calls = [];
+  const context = { log: () => {}, Dustland: {}, closeDialog: () => {}, TrainerUI: { showTrainer: id => calls.push(id) } };
   vm.createContext(context);
   vm.runInContext(npcCode, context);
-  return context.makeNPC(def.id, def.map || 'world', def.x || 0, def.y || 0, def.color, def.name || def.id, def.title || '', def.desc || '', def.tree, null, null, null, { trainer: def.trainer });
+  const npc = context.makeNPC(def.id, def.map || 'world', def.x || 0, def.y || 0, def.color, def.name || def.id, def.title || '', def.desc || '', def.tree, null, null, null, { trainer: def.trainer });
+  return { npc, calls };
 }
 
 const moduleSrc = await fs.readFile(new URL('../modules/dustland.module.js', import.meta.url), 'utf8');
@@ -47,8 +49,11 @@ test('dustland module includes trainer NPCs', () => {
   const trainerNpcs = moduleData.npcs.filter(n => n.trainer);
   assert.ok(trainerNpcs.length >= 3);
   trainerNpcs.forEach(def => {
-    const npc = buildNpc(def);
+    const { npc, calls } = buildNpc(def);
     const labels = npc.tree.start.choices.map(c => c.label);
     assert.ok(labels.includes('(Upgrade Skills)'));
+    const choice = npc.tree.start.choices.find(c => c.to === 'train');
+    choice.effects[0]();
+    assert.deepStrictEqual(calls, [def.trainer]);
   });
 });
