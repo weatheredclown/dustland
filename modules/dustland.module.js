@@ -3048,7 +3048,7 @@ function postLoad(module) {
 globalThis.DUSTLAND_MODULE = JSON.parse(DATA);
 globalThis.DUSTLAND_MODULE.postLoad = postLoad;
 
-startGame = function () {
+globalThis.startGame = function () {
   DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE);
   const { start: s } = applyModule(DUSTLAND_MODULE) || {};
   const loc = s || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
