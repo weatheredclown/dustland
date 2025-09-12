@@ -46,7 +46,10 @@ const DATA = `
       "mods": {
         "ATK": 2,
         "ADR": 15
-      }
+      },
+      "tags": [
+        "ranged"
+      ]
     },
     {
       "map": "world",
@@ -2888,7 +2891,7 @@ function pullSlots(cost, payouts) {
   const reward = payouts[idx];
   if (reward > 0) {
     player.scrap += reward;
-    log(`The machine rattles and spits out ${reward} scrap.`);
+    log('The machine rattles and spits out ' + reward + ' scrap.');
   } else {
     log('The machine coughs and eats your scrap.');
   }

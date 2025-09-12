@@ -9,11 +9,17 @@ function setup(items, equipped){
   const dom = new JSDOM(`<body>${basicDom}</body>`);
   const equips = Array.isArray(equipped) ? equipped : [equipped];
   const bus = { emit: () => {} };
+  const party = equips.map(e => {
+    if(e && typeof e === 'object' && (e.equip || e.stats)){
+      return { equip: e.equip || e, stats: e.stats || {} };
+    }
+    return { equip: e };
+  });
   const ctx = {
     window: dom.window,
     document: dom.window.document,
     player: { inv: items },
-    party: equips.map(eq => ({ equip: eq })),
+    party,
     selectedMember: 0,
     SpoilsCache: { renderIcon: () => null, open: () => {}, openAll: () => {} },
     useItem: () => {},
@@ -105,6 +111,29 @@ test('party selection refreshes item highlights', async () => {
   ctx.document.querySelectorAll('.pcard')[1].click();
   slot = ctx.document.querySelector('.slot');
   assert.ok(slot.classList.contains('better'));
+});
+
+test('weapon suggestions respect member stats and weapon type', async () => {
+  const items = [
+    { name: 'Pipe Rifle', type: 'weapon', tags: ['ranged'], mods: { ATK: 2, ADR: 15 } },
+    { name: 'Crowbar', type: 'weapon', mods: { ATK: 1, ADR: 10 } }
+  ];
+  const eqs = [
+    { equip: {}, stats: { STR: 8, AGI: 4, INT: 4, PER: 4, LCK: 4, CHA: 4 } },
+    { equip: {}, stats: { STR: 4, AGI: 8, INT: 4, PER: 4, LCK: 4, CHA: 4 } }
+  ];
+  const ctx = setup(items, eqs);
+  await loadRender(ctx);
+  ctx.renderParty();
+  ctx.renderInv();
+  let slots = ctx.document.querySelectorAll('.slot');
+  assert.equal(slots.length, 2);
+  assert.ok(slots[1].classList.contains('better'));
+  assert.ok(!slots[0].classList.contains('better'));
+  ctx.document.querySelectorAll('.pcard')[1].click();
+  slots = ctx.document.querySelectorAll('.slot');
+  assert.ok(slots[0].classList.contains('better'));
+  assert.ok(!slots[1].classList.contains('better'));
 });
 
 test('setLeader equips missing gear and suggests a single upgrade per slot', async () => {
