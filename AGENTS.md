@@ -22,7 +22,7 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 - Use the command line tools in `scripts/module-tools` for all module JSON changes.
 - The tools mirror the Adventure Kit and provide CRUD commands for NPCs, buildings,
   zones, and nested data such as dialog trees and zone effects.
-- Review `docs/guides/module-json-tools.md` for usage details.
+- Review `docs/guides/module-cli-tools.md` for usage details.
 - If a change isn't supported, extend the tools and schema and update the guide before editing modules.
 
 ## Commit conventions

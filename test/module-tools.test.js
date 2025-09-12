@@ -35,14 +35,17 @@ test('add and edit npc via cli', () => {
   execFileSync('node', [
     'scripts/module-tools/add-npc.js',
     file,
-    '{"id":"n1","map":"world","x":1,"y":2}'
+    'id=n1',
+    'map=world',
+    'x=1',
+    'y=2'
   ]);
   execFileSync('node', [
     'scripts/module-tools/edit-npc.js',
     file,
     'n1',
     'tree.start.text',
-    '"hi"'
+    'hi'
   ]);
   const mod = readModule(file);
   assert.equal(mod.data.npcs[0].tree.start.text, 'hi');
@@ -55,14 +58,18 @@ test('add and edit zone via cli', () => {
   execFileSync('node', [
     'scripts/module-tools/add-zone.js',
     file,
-    '{"map":"world","x":0,"y":0,"w":1,"h":1}'
+    'map=world',
+    'x=0',
+    'y=0',
+    'w=1',
+    'h=1'
   ]);
   execFileSync('node', [
     'scripts/module-tools/edit-zone.js',
     file,
     '0',
     'perStep.msg',
-    '"ouch"'
+    'ouch'
   ]);
   const mod = readModule(file);
   assert.equal(mod.data.zones[0].perStep.msg, 'ouch');

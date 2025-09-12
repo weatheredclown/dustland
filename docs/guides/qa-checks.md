@@ -148,27 +148,27 @@ Validation tasks should remain unchecked unless the process yields at least one 
   - Check: confirm implementation matches description.
 - **wizard-framework.md** — **Logic:** Write the final "commit" function for the wizard that takes the completed data and generates the new NPC and quest data objects, saving them to the appropriate module file.
   - Check: confirm implementation matches description.
-- **module-json-tools.md** — Refactor each existing module to the new format.
+- **module-cli-tools.md** — Refactor each existing module to the new format.
   - Check: confirm implementation matches description.
-- **module-json-tools.md** — broadcast-fragment-1
+- **module-cli-tools.md** — broadcast-fragment-1
   - Check: confirm implementation matches description.
-- **module-json-tools.md** — broadcast-fragment-2
+- **module-cli-tools.md** — broadcast-fragment-2
   - Check: confirm implementation matches description.
-- **module-json-tools.md** — broadcast-fragment-3
+- **module-cli-tools.md** — broadcast-fragment-3
   - Check: confirm implementation matches description.
-- **module-json-tools.md** — dustland
+- **module-cli-tools.md** — dustland
   - Check: confirm implementation matches description.
-- **module-json-tools.md** — lootbox-demo
+- **module-cli-tools.md** — lootbox-demo
   - Check: confirm implementation matches description.
-- **module-json-tools.md** — office
+- **module-cli-tools.md** — office
   - Check: confirm implementation matches description.
-- **module-json-tools.md** — mara-puzzle
+- **module-cli-tools.md** — mara-puzzle
   - Check: confirm implementation matches description.
-- **module-json-tools.md** — Build automated tests for the import/export tools.
+- **module-cli-tools.md** — Build automated tests for the import/export tools.
   - Check: confirm implementation matches description.
-- **module-json-tools.md** — Verify Adventure Kit loads JSON modules and triggers `postLoad`.
+- **module-cli-tools.md** — Verify Adventure Kit loads JSON modules and triggers `postLoad`.
   - Check: confirm implementation matches description.
-- **module-json-tools.md** — Document the workflow in `docs/` and update README.
+- **module-cli-tools.md** — Document the workflow in `docs/` and update README.
   - Check: confirm implementation matches description.
 - **spoils-caches.md** — Define `SpoilsCache` item type and rank data structure.
   - Check: confirm implementation matches description.

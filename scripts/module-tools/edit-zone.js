@@ -1,8 +1,8 @@
-import { readModule, getByPath, setByPath } from './utils.js';
+import { readModule, getByPath, setByPath, parseValue } from './utils.js';
 
 const [file, indexStr, path, value] = process.argv.slice(2);
 if (!file || indexStr === undefined || !path || value === undefined) {
-  console.error('Usage: node scripts/module-tools/edit-zone.js <moduleFile> <index> <path> <jsonValue>');
+  console.error('Usage: node scripts/module-tools/edit-zone.js <moduleFile> <index> <path> <value>');
   process.exit(1);
 }
 const index = Number(indexStr);
@@ -12,5 +12,5 @@ if (!zones[index]) {
   console.error('Zone not found');
   process.exit(1);
 }
-setByPath(zones[index], path, JSON.parse(value));
+setByPath(zones[index], path, parseValue(value));
 mod.write(mod.data);
