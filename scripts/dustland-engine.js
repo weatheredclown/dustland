@@ -983,12 +983,13 @@ function openShop(npc) {
   }
   function renderShop() {
     renderScrap();
-    globalThis.Dustland?.updateTradeUI?.(npc);
+    globalThis.Dustland?.updateTradeUI?.(npc.shop);
     shopBuy.innerHTML = '';
     shopSell.innerHTML = '';
 
     const shopInv = npc.shop.inv || [];
-    const markup = npc.vending ? 1 : npc.shop.markup || 2;
+    const baseMarkup = npc.vending ? 1 : npc.shop.markup || 2;
+    const markup = baseMarkup * (npc.shop.grudge >= 3 ? 1.1 : 1);
 
     shopInv.forEach((it, idx) => {
       const item = getItem(it.id);
@@ -1004,6 +1005,7 @@ function openShop(npc) {
             if (!npc.vending) {
               npc.shop.inv.splice(idx, 1);
             }
+            npc.shop.grudge = 0;
             renderShop();
             updateHUD();
             madePurchase = true;
@@ -1041,6 +1043,8 @@ function openShop(npc) {
     shopOverlay.classList.remove('shown');
     shopOverlay.removeEventListener('keydown', handleKey);
     if (!madePurchase && npc) {
+      npc.shop.grudge = (npc.shop.grudge || 0) + 1;
+      globalThis.Dustland?.updateTradeUI?.(npc.shop);
       npc.cancelCount = (npc.cancelCount || 0) + 1;
       if (npc.cancelCount >= 2) {
         npc.tree.start.text = 'Buy or move on.';
@@ -1048,7 +1052,9 @@ function openShop(npc) {
       }
     } else if (npc) {
       npc.cancelCount = 0;
+      npc.shop.grudge = 0;
       npc.tree.start.text = 'Got goods to sell? I pay in scrap.';
+      globalThis.Dustland?.updateTradeUI?.(npc.shop);
     }
   }
   function handleKey(e) {

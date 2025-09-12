@@ -27,6 +27,7 @@ function zoneAttrs(map,x,y){
   let maxSteps = null;
   const zones = globalThis.Dustland?.zoneEffects || [];
   for(const z of zones){
+    if(z.if && !globalThis.checkFlagCondition?.(z.if)) continue;
     if((z.map||'world')!==map) continue;
     if(x<z.x || y<z.y || x>=z.x+(z.w||0) || y>=z.y+(z.h||0)) continue;
     if(z.noEncounters) noEncounters = true;
@@ -209,6 +210,7 @@ function applyZones(map,x,y){
   const zones = globalThis.Dustland?.zoneEffects || [];
   let weatherZone = null;
   for(const z of zones){
+    if(z.if && !globalThis.checkFlagCondition?.(z.if)) continue;
     if((z.map||'world')!==map) continue;
     if(x<z.x || y<z.y || x>=z.x+(z.w||0) || y>=z.y+(z.h||0)) continue;
     if(z.require && !hasItemOrEquipped(z.require)) continue;
@@ -256,6 +258,7 @@ function updateZoneMsgs(map,x,y){
   const zones = globalThis.Dustland?.zoneEffects || [];
   const current = [];
   for(const z of zones){
+    if(z.if && !globalThis.checkFlagCondition?.(z.if)) continue;
     if((z.map||'world')!==map) continue;
     if(x<z.x || y<z.y || x>=z.x+(z.w||0) || y>=z.y+(z.h||0)) continue;
     const step = z.perStep || z.step;
@@ -506,6 +509,11 @@ function interactAt(x, y) {
   if(x===party.x && y===party.y){
     const p=portals.find(p=> p.map===state.map && p.x===x && p.y===y);
     if(p){
+      if(p.if && !globalThis.checkFlagCondition?.(p.if)){
+        log(p.blockedMsg || 'It\'s locked.');
+        bus.emit('sfx','denied');
+        return true;
+      }
       const target=p.toMap;
       const I=interiors[target];
       const px = (typeof p.toX==='number') ? p.toX : (I?I.entryX:0);

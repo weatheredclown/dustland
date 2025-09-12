@@ -317,8 +317,7 @@ test('merchant quest requires all treasures', () => {
   vm.runInNewContext(questsSrc, game);
   const coreFile = path.join(__dirname, '..', 'scripts', 'dustland-core.js');
   const coreSrc = fs.readFileSync(coreFile, 'utf8');
-  const coreLines = coreSrc.split('\n');
-  const applySrc = coreLines.slice(377, 528).join('\n');
+  const applySrc = coreSrc.match(/function applyModule[\s\S]*?return moduleData;\n}/)[0];
   vm.runInNewContext(applySrc, game);
   game.applyModule(moduleData, { fullReset: false });
 

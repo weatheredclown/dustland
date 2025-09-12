@@ -12,6 +12,7 @@
     const y = party.y;
     let dry = false;
     for(const z of zones){
+      if(z.if && !globalThis.checkFlagCondition?.(z.if)) continue;
       if((z.map||'world')!==map) continue;
       if(x<z.x || y<z.y || x>=z.x+(z.w||0) || y>=z.y+(z.h||0)) continue;
       if(z.dry){ dry = true; break; }
