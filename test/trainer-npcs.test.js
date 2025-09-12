@@ -20,12 +20,27 @@ function setupParty(){
   return context;
 }
 
+function applyEffects(tree, ctx){
+  for (const node of Object.values(tree || {})) {
+    if (Array.isArray(node.effects)) {
+      node.effects = node.effects.map(e => e.effect === 'showTrainer' ? () => ctx.TrainerUI.showTrainer(e.trainer) : e);
+    }
+    for (const choice of node.choices || []) {
+      if (Array.isArray(choice.effects)) {
+        choice.effects = choice.effects.map(e => e.effect === 'showTrainer' ? () => ctx.TrainerUI.showTrainer(e.trainer) : e);
+      }
+    }
+  }
+}
+
 function buildNpc(def){
   const calls = [];
   const context = { log: () => {}, Dustland: {}, closeDialog: () => {}, TrainerUI: { showTrainer: id => calls.push(id) } };
   vm.createContext(context);
   vm.runInContext(npcCode, context);
-  const npc = context.makeNPC(def.id, def.map || 'world', def.x || 0, def.y || 0, def.color, def.name || def.id, def.title || '', def.desc || '', def.tree, null, null, null, { trainer: def.trainer });
+  const tree = JSON.parse(JSON.stringify(def.tree));
+  applyEffects(tree, context);
+  const npc = context.makeNPC(def.id, def.map || 'world', def.x || 0, def.y || 0, def.color, def.name || def.id, def.title || '', def.desc || '', tree, null, null, null, { trainer: def.trainer });
   return { npc, calls };
 }
 
