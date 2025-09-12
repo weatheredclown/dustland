@@ -48,6 +48,10 @@ const endIdx = lines.findIndex((l, i) => i > startIdx && l.trim() === '];');
 const entry = `  { id: '${base}', name: '${data.name || base}', file: 'modules/${base}.module.js' },`;
 const exists = lines.slice(startIdx, endIdx).some(l => l.includes(`file: 'modules/${base}.module.js'`));
 if (!exists) {
+  const lastIdx = endIdx - 1;
+  if (!lines[lastIdx].trim().endsWith(',')) {
+    lines[lastIdx] += ',';
+  }
   lines.splice(endIdx, 0, entry);
   fs.writeFileSync(pickerPath, lines.join('\n'));
   console.log(`Updated ${pickerPath}`);
