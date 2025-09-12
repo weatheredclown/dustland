@@ -1,6 +1,6 @@
 (function(){
   globalThis.Dustland = globalThis.Dustland || {};
-  const state = { party: [], world: {}, inventory: [], flags: {}, clock: 0, quests: [], difficulty: 'normal', personas: {}, effectPacks: {} };
+  const state = { party: [], world: {}, inventory: [], flags: {}, clock: 0, quests: [], difficulty: 'normal', personas: {}, effectPacks: {}, npcMemory: {} };
   function getState(){ return state; }
   function updateState(fn){
     if (typeof fn === 'function') fn(state);
@@ -23,6 +23,22 @@
   function loadEffectPacks(packs){
     if(packs) Object.entries(packs).forEach(([evt, list]) => addEffectPack(evt, list));
   }
+  function rememberNPC(id, key, value){
+    if(!id || !key) return;
+    const m = state.npcMemory[id] || (state.npcMemory[id] = {});
+    m[key] = value;
+  }
+  function recallNPC(id, key){
+    return state.npcMemory[id] ? state.npcMemory[id][key] : undefined;
+  }
+  function forgetNPC(id, key){
+    if(!id) return;
+    if(key){
+      if(state.npcMemory[id]) delete state.npcMemory[id][key];
+    }else{
+      delete state.npcMemory[id];
+    }
+  }
   function applyPersona(memberId, personaId){
     const persona = state.personas[personaId];
     if (!persona) return;
@@ -41,5 +57,5 @@
     if (typeof renderParty === 'function') renderParty();
     if (typeof updateHUD === 'function') updateHUD();
   }
-  Dustland.gameState = { getState, updateState, getDifficulty, setDifficulty, setPersona, getPersona, applyPersona, addEffectPack, loadEffectPacks };
+  Dustland.gameState = { getState, updateState, getDifficulty, setDifficulty, setPersona, getPersona, applyPersona, addEffectPack, loadEffectPacks, rememberNPC, recallNPC, forgetNPC };
 })();

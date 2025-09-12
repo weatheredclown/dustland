@@ -983,6 +983,7 @@ function openShop(npc) {
   }
   function renderShop() {
     renderScrap();
+    globalThis.Dustland?.updateTradeUI?.(npc);
     shopBuy.innerHTML = '';
     shopSell.innerHTML = '';
 
