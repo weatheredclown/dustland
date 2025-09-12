@@ -379,6 +379,11 @@ function incFlag(flag, amt=1){
 function applyModule(data = {}, options = {}) {
   const { fullReset = true } = options;
   let moduleData = data || {};
+  const moduleName = moduleData.name || '';
+  const dl = globalThis.Dustland ||= {};
+  dl.currentModule = moduleName;
+  (dl.moduleProps ||= {})[moduleName] = { ...(moduleData.props || {}) };
+  (dl.loadedModules ||= {})[moduleName] = moduleData;
 
   if (fullReset) {
     const seed = moduleData.seed || Date.now();
@@ -505,6 +510,8 @@ function applyModule(data = {}, options = {}) {
     if (n.portraitSheet) opts.portraitSheet = n.portraitSheet;
     if (n.portraitLock === false) opts.portraitLock = false;
     if (n.symbol) opts.symbol = n.symbol;
+    if (n.workbench) opts.workbench = n.workbench;
+    if (n.trainer) opts.trainer = n.trainer;
     if (n.door) opts.door = n.door;
     if (typeof n.locked === 'boolean') opts.locked = n.locked;
     if (Array.isArray(n.quests)) {
@@ -516,13 +523,13 @@ function applyModule(data = {}, options = {}) {
     if (typeof NPCS !== 'undefined') NPCS.push(npc);
   });
   revealHiddenNPCs();
-  const moduleName = moduleData.name || moduleData.id || 'module';
-  if (typeof log === 'function') log(`${moduleName} loaded successfully.`);
-  else console.log(`${moduleName} loaded successfully.`);
+  const nameForLog = moduleData.name || moduleData.id || 'module';
+  if (typeof log === 'function') log(`${nameForLog} loaded successfully.`);
+  else console.log(`${nameForLog} loaded successfully.`);
   if (typeof document !== 'undefined' && typeof document.dispatchEvent === 'function') {
     const CE = document.defaultView?.CustomEvent || globalThis.CustomEvent;
     const Ev = document.defaultView?.Event || globalThis.Event;
-    const evt = typeof CE === 'function' ? new CE('moduleLoaded', { detail: { name: moduleName } }) : new Ev('moduleLoaded');
+    const evt = typeof CE === 'function' ? new CE('moduleLoaded', { detail: { name: nameForLog } }) : new Ev('moduleLoaded');
     document.dispatchEvent(evt);
   }
   return moduleData;
@@ -632,11 +639,13 @@ function placeHut(x,y,b={}){
   const nb={x,y,w,h,doorX,doorY,interiorId,boarded,under,grid};
   if (bunker) {
     nb.bunker = true;
+    const moduleName = globalThis.Dustland?.currentModule || '';
     const bunkerId = b.bunkerId || `bunker_${x}_${y}`;
     nb.bunkerId = bunkerId;
     const bunkers = (globalThis.Dustland ||= {}).bunkers || (globalThis.Dustland.bunkers = []);
     if (!bunkers.some(b => b.id === bunkerId)) {
-      bunkers.push({ id: bunkerId, x: doorX, y: doorY, active: !boarded });
+      const entry = { id: bunkerId, x: doorX, y: doorY, map: 'world', module: moduleName, name: moduleName, active: !boarded };
+      bunkers.push(entry);
     }
   }
   buildings.push(nb);
