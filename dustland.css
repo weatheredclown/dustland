@@ -492,7 +492,8 @@ input[type="range"] {
         body.mobile-on #start,
         body.mobile-on #creator,
         body.mobile-on #moduleLoader,
-        body.mobile-on #shopOverlay {
+        body.mobile-on #shopOverlay,
+        body.mobile-on #trainerOverlay {
             bottom: var(--ctrlH);
             height: calc(100% - var(--ctrlH));
         }
