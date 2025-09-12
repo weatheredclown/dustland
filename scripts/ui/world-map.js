@@ -38,7 +38,14 @@
         thumb.style.margin = '4px';
         thumb.style.cursor = 'pointer';
         thumb.title = info.name || b.id;
-        thumb.onclick = () => travel(fromId, b.id);
+        thumb.onclick = () => {
+          const ft = globalThis.Dustland?.fastTravel;
+          const cost = ft?.fuelCost?.(fromId, b.id) || 0;
+          const fuel = globalThis.player?.fuel || 0;
+          const name = info.name || b.id;
+          if(fuel < cost){ alert(`Need ${cost} fuel to travel.`); return; }
+          if(confirm(`Travel to ${name} for ${cost} fuel?`)) travel(fromId, b.id);
+        };
         list.appendChild(thumb);
       });
     });
@@ -76,7 +83,7 @@
   function renderThumb(moduleData, info){
     const canvas = document.createElement('canvas');
     const world = moduleData?.world;
-    const scale = 4;
+    const scale = 1;
     if(Array.isArray(world) && world[0]){
       canvas.width = world[0].length * scale;
       canvas.height = world.length * scale;

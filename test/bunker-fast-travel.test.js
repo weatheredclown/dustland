@@ -24,8 +24,8 @@ test('entering bunker opens world map and activates fast travel', async () => {
   const state = { map:'world' };
   global.party = party;
   global.state = state;
-  let opened = false;
-  global.openWorldMap = () => { opened = true; };
+  let opened = null;
+  global.openWorldMap = id => { opened = id; };
   const handlers = {};
   const bus = { on:(e,f)=>{ (handlers[e]=handlers[e]||[]).push(f); }, emit:(e,p)=>{ (handlers[e]||[]).forEach(fn=>fn(p)); } };
   global.EventBus = bus;
@@ -57,7 +57,7 @@ test('entering bunker opens world map and activates fast travel', async () => {
 
   interactAt(0,0);
 
-  assert.strictEqual(opened, true);
+  assert.strictEqual(opened, 'bunker_0_0');
   assert.strictEqual(activated, 'bunker_0_0');
   assert.strictEqual(state.map, 'world');
 });
