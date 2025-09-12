@@ -264,8 +264,9 @@
     <script defer src="./scripts/supporting/fx-debug.js"></script>
     <script defer src="./scripts/supporting/perf-debug.js"></script>
   <script>
-    const params = new URLSearchParams(location.search);
-    const isAck = params.get('ack-player') === '1';
+    const urlParams = new URLSearchParams(location.search);
+    window.params = urlParams;
+    const isAck = urlParams.get('ack-player') === '1';
     if (!isAck) window.modulePickerPending = true;
     disablePullToRefresh();
     window.addEventListener('DOMContentLoaded', () => {
