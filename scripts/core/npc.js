@@ -105,7 +105,7 @@ function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNo
       tree.start.choices.unshift({
         label: '(Upgrade Skills)',
         to: 'train',
-        effects: [{ effect: 'showTrainer', trainer: opts.trainer }]
+        effects: [() => TrainerUI?.showTrainer?.(opts.trainer)]
       });
     }
     tree.train = tree.train || { text: '', choices: [{ label: '(Back)', to: 'start' }] };
