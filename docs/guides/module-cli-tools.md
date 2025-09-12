@@ -120,3 +120,198 @@ node scripts/module-tools/delete-zone.js <moduleFile> <index>
 ```
 
 Removes the zone at the given index.
+
+## Module schema reference
+
+The CLI tools operate on module files that follow a shared JSON schema. A
+complete module object looks like this:
+
+```json
+{
+  "seed": "unique seed or number",
+  "name": "optional module name",
+  "start": { "map": "map id", "x": 0, "y": 0 },
+  "items": [/* Item */],
+  "quests": [/* Quest */],
+  "npcs": [/* NPC */],
+  "events": [/* TileEvent */],
+  "portals": [/* Portal */],
+  "interiors": [/* Interior */],
+  "buildings": [/* Building */],
+  "zones": [/* Zone */],
+  "templates": [/* Template */]
+}
+```
+
+### Item
+
+```json
+{
+  "id": "string",
+  "name": "string",
+  "type": "weapon|armor|trinket|consumable|quest|spoils-cache",
+  "desc": "optional text",
+  "value": 0,
+  "map": "optional map id for placed items",
+  "x": 0,
+  "y": 0,
+  "slot": "equip slot",
+  "mods": { "STAT": 0 },
+  "tags": ["key", "tool"],
+  "use": { "type": "heal|custom", "amount": 0 }
+}
+```
+
+### Quest
+
+```json
+{
+  "id": "string",
+  "title": "string",
+  "desc": "string",
+  "item": "required item id",
+  "reward": "reward item id",
+  "xp": 0
+}
+```
+
+### NPC
+
+```json
+{
+  "id": "string",
+  "map": "map id",
+  "x": 0,
+  "y": 0,
+  "name": "string",
+  "desc": "optional description",
+  "prompt": "optional prompt text",
+  "color": "#rgb",
+  "symbol": "char",
+  "questId": "associated quest id",
+  "locked": false,
+  "tree": { /* DialogTree */ }
+}
+```
+
+#### DialogTree
+
+An object keyed by node id. Each node has text and choices.
+
+```json
+"start": {
+  "text": "string",
+  "choices": [ /* Choice */ ]
+}
+```
+
+#### Choice
+
+```json
+{
+  "label": "button text",
+  "to": "node id",
+  "q": "quest step",
+  "check": { "stat": "STR", "dc": 5 },
+  "once": true,
+  "reward": "item id",
+  "reqItem": "item id required to select",
+  "effects": [/* Effect */],
+  "if": { "flag": "story flag" }
+}
+```
+
+#### Effect
+
+All effects include an `effect` string; additional fields depend on the type.
+Common examples:
+
+```json
+{ "effect": "toast", "msg": "Shown message" }
+{ "effect": "modStat", "stat": "CHA", "delta": 1, "duration": 2 }
+{ "effect": "unlockNPC", "npcId": "id" }
+{ "effect": "lockNPC", "npcId": "id" }
+{ "effect": "addFlag", "flag": "story_flag" }
+{ "effect": "openWorldMap", "id": "dest" }
+```
+
+### TileEvent
+
+```json
+{
+  "map": "map id",
+  "x": 0,
+  "y": 0,
+  "events": [ { "when": "enter", "effect": "toast", "msg": "hi" } ]
+}
+```
+
+### Portal
+
+```json
+{
+  "map": "source map",
+  "x": 0,
+  "y": 0,
+  "toMap": "dest map",
+  "toX": 0,
+  "toY": 0
+}
+```
+
+### Interior
+
+```json
+{
+  "id": "interior id",
+  "w": 0,
+  "h": 0,
+  "grid": ["tile rows"],
+  "entryX": 0,
+  "entryY": 0
+}
+```
+
+### Building
+
+```json
+{
+  "x": 0,
+  "y": 0,
+  "interiorId": "interior id",
+  "boarded": false
+}
+```
+
+### Zone
+
+```json
+{
+  "map": "map id",
+  "x": 0,
+  "y": 0,
+  "w": 0,
+  "h": 0,
+  "perStep": { "hp": -1, "msg": "damage message" },
+  "negate": "item id to ignore perStep",
+  "useItem": { "id": "item id", "reward": "loot id", "once": true }
+}
+```
+
+### Template
+
+```json
+{
+  "id": "template id",
+  "name": "string",
+  "portraitSheet": "asset path",
+  "portraitLock": false,
+  "combat": {
+    "HP": 0,
+    "ATK": 0,
+    "DEF": 0,
+    "challenge": 0,
+    "special": { "cue": "text", "dmg": 0 }
+  }
+}
+```
