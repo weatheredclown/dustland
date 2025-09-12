@@ -18,6 +18,7 @@
  * @property {string|GameItem} [reward]
  * @property {number} [xp]
  * @property {{x:number,y:number}} [moveTo]
+ * @property {string} [outcome]
  * @property {Quest[]} [quests]
  */
 
@@ -36,9 +37,10 @@ class Quest {
     this.pinned = meta.pinned || false;
     Object.assign(this, meta);
   }
-  complete() {
+  complete(outcome) {
     if (this.status !== 'completed') {
       this.status = 'completed';
+      if (outcome) this.outcome = outcome;
       renderQuests();
       log('Quest completed: ' + this.title);
       if (typeof toast === 'function') toast(`QUEST COMPLETE: ${this.title}`);
@@ -68,10 +70,12 @@ class QuestLog {
     log('Quest added: ' + quest.title);
     queueNanoDialogForNPCs?.('start', 'quest update');
   }
-  /** @param {string} id */
-  complete(id) {
+  /** @param {string} id 
+   *  @param {string} [outcome]
+   */
+  complete(id, outcome) {
     const q = this.quests[id];
-    if (q) q.complete();
+    if (q) q.complete(outcome);
   }
   /** @param {string} id */
   pin(id) {
@@ -94,7 +98,7 @@ class QuestLog {
 const questLog = new QuestLog();
 const quests = questLog.quests;
 function addQuest(id, title, desc, meta) { questLog.add(new Quest(id, title, desc, meta)); }
-function completeQuest(id) { questLog.complete(id); }
+function completeQuest(id, outcome) { questLog.complete(id, outcome); }
 function pinQuest(id) { questLog.pin(id); }
 function unpinQuest(id) { questLog.unpin(id); }
 

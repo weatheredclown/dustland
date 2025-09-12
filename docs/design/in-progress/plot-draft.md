@@ -101,7 +101,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 3. **Dunes at Dusk** – *Nyx:* "The signal hums when the sun bleeds."
 
 #### **Phase 1: Narrative Foundation**
-- [ ] Outline the caravan's pursuit of the fading broadcast across the Dustland.
+- [x] Outline the caravan's pursuit of the fading broadcast across the Dustland.
   - The caravan catches the ghost of a broadcast near the Salt Flats and tracks its fading pulses by night.
   - Ruined rail towns and dead malls scatter false echoes, but the crew rigs antennas and readings to keep the trail alive.
   - A final shiver of sound draws them to a collapsed observatory where the signal sinks beneath the horizon, promising deeper secrets.
