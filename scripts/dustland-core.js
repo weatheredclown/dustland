@@ -660,7 +660,8 @@ function save(){
     loop:n.loop,
     portraitSheet:n.portraitSheet,
     portraitLock:n.portraitLock,
-    symbol:n.symbol
+    symbol:n.symbol,
+    trainer:n.trainer
   }));
   const questData = {};
   Object.keys(quests).forEach(k=>{
@@ -706,7 +707,13 @@ function load(){
     const qd=d.quests[id];
     const q=new Quest(id,qd.title,qd.desc); q.status=qd.status; q.pinned=qd.pinned||false; quests[id]=q;
   });
-
+  const moduleNpcs = globalThis.moduleData?.npcs || [];
+  (d.npcs || []).forEach(n => {
+    if (!n.trainer) {
+      const m = moduleNpcs.find(m => m.id === n.id || m.name === n.name);
+      if (m && m.trainer) n.trainer = m.trainer;
+    }
+  });
   const npcFactory = createNpcFactory(d.npcs || []);
   if (typeof NPCS !== 'undefined') NPCS.length = 0;
   (d.npcs||[]).forEach(n=>{

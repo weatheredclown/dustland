@@ -108,8 +108,8 @@ Validation tasks should remain unchecked unless the process yields at least one 
   - Check: confirm implementation matches description.
 - **rpg-progression.md** — **Trainer UI Implementation:** Build the data-driven "Upgrade Skills" overlay showing upgrade costs and before/after stat changes.
   - Check: confirm implementation matches description.
-- **rpg-progression.md** — **Trainer NPCs:** Create at least three specialized trainer NPCs (e.g., Power, Endurance, Tricks) and place them in the world. Each trainer's `tree` object should include the **Upgrade Skills** dialog option and their unique list of available upgrades.
-  - Check: confirm implementation matches description.
+ - **rpg-progression.md** — **Trainer NPCs:** Create at least three specialized trainer NPCs (e.g., Power, Endurance, Tricks) and place them in the world. Each trainer should define a `trainer` type so the dialog system injects the **Upgrade Skills** option and loads their unique upgrade list.
+   - Check: confirm implementation matches description.
 - **rpg-progression.md** — **Enemy Presets:** Define enemy stat allocations per level in `scripts/core/presets.js`. For example, a "Scrapper" preset might allocate points into `STR` and `AGI`, while a "Bulwark" preset focuses on `DEF`.
   - Check: confirm implementation matches description.
 - **rpg-progression.md** — **Zone Population:** Populate the "Scrap Wastes" (Levels 1-5) with 5-7 on-level enemies and one or two higher-level "challenge" enemies off the main path. Ensure the zone layout naturally funnels players back toward a trainer NPC.

@@ -22,7 +22,7 @@ Selecting a row highlights it and fills the preview. The point total updates in 
 
 ### Data Driven
 
-Each trainer owns a `tree` object that lists possible upgrades. The UI reads this object and renders rows automatically:
+Each trainer specifies a `trainer` type that maps to a list of upgrades. The UI reads from that list and renders rows automatically:
 
 ```
 const trainerTrees = {

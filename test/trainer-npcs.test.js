@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
 const partyCode = await fs.readFile(new URL('../scripts/core/party.js', import.meta.url), 'utf8');
+const npcCode = await fs.readFile(new URL('../scripts/core/npc.js', import.meta.url), 'utf8');
 
 function setupParty(){
   const bus = { emit: () => {} };
@@ -17,6 +18,13 @@ function setupParty(){
   vm.createContext(context);
   vm.runInContext(partyCode, context);
   return context;
+}
+
+function buildNpc(def){
+  const context = { log: () => {}, Dustland: {}, closeDialog: () => {} };
+  vm.createContext(context);
+  vm.runInContext(npcCode, context);
+  return context.makeNPC(def.id, def.map || 'world', def.x || 0, def.y || 0, def.color, def.name || def.id, def.title || '', def.desc || '', def.tree, null, null, null, { trainer: def.trainer });
 }
 
 const moduleSrc = await fs.readFile(new URL('../modules/dustland.module.js', import.meta.url), 'utf8');
@@ -36,8 +44,11 @@ test('trainStat spends a point and raises stat', () => {
 });
 
 test('dustland module includes trainer NPCs', () => {
-  const trainerNpcs = moduleData.npcs.filter(n => n.id && n.id.startsWith('trainer_'));
+  const trainerNpcs = moduleData.npcs.filter(n => n.trainer);
   assert.ok(trainerNpcs.length >= 3);
-  const upgradeOpts = trainerNpcs.flatMap(n => n.tree?.start?.choices || []).filter(c => c.label && c.label.includes('Upgrade Skills'));
-  assert.ok(upgradeOpts.length >= 3);
+  trainerNpcs.forEach(def => {
+    const npc = buildNpc(def);
+    const labels = npc.tree.start.choices.map(c => c.label);
+    assert.ok(labels.includes('(Upgrade Skills)'));
+  });
 });

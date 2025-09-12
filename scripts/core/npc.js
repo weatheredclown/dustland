@@ -3,8 +3,8 @@ var Dustland = globalThis.Dustland;
 const NPC_COLOR = '#9ef7a0';
 const OBJECT_COLOR = '#225a20';
 class NPC {
-  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,quests=null,questDialogs=null,processNode=null,processChoice=null,combat=null,shop=false,workbench=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false,prompt=null,unlockTime=null,questIdx=0}) {
-    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,quests,questDialogs,combat,shop,workbench,portraitSheet,portraitLock,symbol,door,locked,prompt,unlockTime,questIdx});
+  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,quests=null,questDialogs=null,processNode=null,processChoice=null,combat=null,shop=false,workbench=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false,prompt=null,unlockTime=null,questIdx=0,trainer=null}) {
+    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,quests,questDialogs,combat,shop,workbench,portraitSheet,portraitLock,symbol,door,locked,prompt,unlockTime,questIdx,trainer});
     if (Array.isArray(this.quests) && !this.quest) {
       this.quest = this.quests[this.questIdx] || null;
     }
@@ -97,6 +97,20 @@ function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNo
     }
     tree.sell = tree.sell || {text: 'What are you selling?', choices: []};
   }
+  if (opts?.trainer) {
+    tree = tree || {};
+    tree.start = tree.start || {text: '', choices: []};
+    tree.start.choices = tree.start.choices || [];
+    if (!tree.start.choices.some(c => c.to === 'train')) {
+      tree.start.choices.unshift({
+        label: '(Upgrade Skills)',
+        to: 'train',
+        effects: [{ effect: 'showTrainer', trainer: opts.trainer }]
+      });
+    }
+    tree.train = tree.train || { text: '', choices: [{ label: '(Back)', to: 'start' }] };
+    if (!tree.train.choices?.length) tree.train.choices = [{ label: '(Back)', to: 'start' }];
+  }
   const q = quest || (opts?.quests ? opts.quests[0] : null);
   color = color || (opts?.symbol && opts.symbol !== '!' ? OBJECT_COLOR : NPC_COLOR);
   return new NPC({id,map,x,y,color,name,title,desc,tree,quest:q,processNode,processChoice, ...(opts || {})});
@@ -145,6 +159,8 @@ function createNpcFactory(defs) {
       if (n.symbol) opts.symbol = n.symbol;
       if (n.door) opts.door = n.door;
       if (typeof n.locked === 'boolean') opts.locked = n.locked;
+      if (n.trainer) opts.trainer = n.trainer;
+      else if (n.id && n.id.startsWith('trainer_')) opts.trainer = n.id.split('_')[1];
       if (Array.isArray(n.quests)) {
         opts.quests = n.quests.map(q => typeof q === 'string' ? (globalThis.quests?.[q] || null) : q).filter(Boolean);
       }
