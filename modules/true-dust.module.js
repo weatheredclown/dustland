@@ -365,7 +365,10 @@ const DATA = `
       "mods": {
         "ATK": 4,
         "ADR": 25
-      }
+      },
+      "tags": [
+        "ranged"
+      ]
     },
     {
       "id": "pendant_fragment",

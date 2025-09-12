@@ -688,11 +688,17 @@ if (document.getElementById('tabInv')) {
   tabQuests.onkeydown=keyHandler('quests');
 }
 // ===== Renderers =====
-function calcItemValue(it){
+function calcItemValue(it, member){
   if(!it) return 0;
-  let score=it.value??0;
-  for(const v of Object.values(it.mods||{})){
-    score+=v;
+  const m = member || party[selectedMember] || party[0];
+  let score = it.value ?? 0;
+  for(const v of Object.values(it.mods || {})){
+    score += v;
+  }
+  if(it.type === 'weapon' && m && m.stats){
+    const isRanged = Array.isArray(it.tags) && it.tags.includes('ranged');
+    const stat = isRanged ? m.stats.AGI : m.stats.STR;
+    score += (stat || 0) * 2;
   }
   return score;
 }
