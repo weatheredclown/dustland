@@ -4,6 +4,15 @@ The `scripts/module-tools` directory provides commands for reading and editing
 module data. The underlying storage uses JSON today, but the CLI accepts
 parameter-based fields so the interface remains stable if the format changes.
 
+## Generate a module file
+
+```sh
+node scripts/supporting/json-to-module.js <path/to/module.json>
+```
+
+Creates `modules/<name>.module.js` with the JSON embedded in a `DATA` block and
+adds the module to the module picker.
+
 ## Read values
 
 ```sh
