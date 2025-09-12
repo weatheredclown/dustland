@@ -15,6 +15,7 @@ test('leader luck above 7 boosts slot machine payout', async () => {
   globalThis.log = (m) => logMessages.push(m);
   globalThis.updateHUD = () => {};
   globalThis.addToInv = () => {};
+  const origRng = globalThis.rng;
   globalThis.rng = () => 0;
   globalThis.applyModule = () => ({ start: {} });
   vm.runInThisContext(code, { filename: 'dustland.module.js' });
@@ -22,8 +23,6 @@ test('leader luck above 7 boosts slot machine payout', async () => {
   const slotNpc = globalThis.DUSTLAND_MODULE.npcs.find(n => n.id === 'slots');
   globalThis.party = [{ stats: { LCK: 7 }, _bonus: { LCK: 0 }, name: 'Hero' }];
   globalThis.leader = () => party[0];
-  const origRandom = Math.random;
-  Math.random = () => 0;
 
   const play = slotNpc.tree.start.choices[0].effects[0];
   play();
@@ -36,5 +35,5 @@ test('leader luck above 7 boosts slot machine payout', async () => {
   assert.equal(player.scrap, 5);
   assert.ok(logMessages.some(m => m.includes('Lucky spin')));
 
-  Math.random = origRandom;
+  globalThis.rng = origRng;
 });
