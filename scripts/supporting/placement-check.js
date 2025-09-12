@@ -47,4 +47,4 @@ function check(kind, obj) {
 (data.items || []).forEach(i => check('item', i));
 (data.npcs || []).forEach(n => check('npc', n));
 
-if (errors) process.exit(1);
+process.exit(errors ? 1 : 0);
