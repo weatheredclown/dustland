@@ -6,7 +6,7 @@ import './fast-timeouts.js';
 
 function stubEl(){
   const el = {
-    style:{},
+    style:{ _props:{}, setProperty(k,v){ this._props[k]=v; }, getPropertyValue(k){ return this._props[k]||''; } },
     classList:{
       _set:new Set(),
       toggle(c){ this._set.has(c)?this._set.delete(c):this._set.add(c); },

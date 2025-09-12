@@ -168,6 +168,23 @@ input[type="range"] {
         background: #f55
     }
 
+    .hudbar.adrwrap {
+      padding-right: 10px;
+      overflow: visible;
+      box-sizing: border-box;
+    }
+
+    .hudbar .adrpie {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1px solid #273027;
+      background: conic-gradient(#d98b8b var(--adr-angle,0deg), #273027 var(--adr-angle,0deg));
+    }
+
     .status-row {
         display: flex;
         gap: 1px;
