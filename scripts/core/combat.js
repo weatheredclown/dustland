@@ -516,8 +516,11 @@ function doAttack(dmg, type = 'basic'){
   const statBonus = Math.max(0, statVal - 4);
   const atkBonus  = attacker._bonus?.ATK || 0;
   const base      = dmg + atkBonus + statBonus;
-  const minBase   = Math.max(1, base - 3);
-  let dealt       = Math.floor(Math.random() * (base - minBase + 1)) + minBase;
+  let minBase = base > 3
+    ? Math.max(1, base - 3)
+    : Math.max(1, base - 3 + statBonus);
+  minBase     = Math.min(base, minBase);
+  let dealt   = Math.floor(Math.random() * (base - minBase + 1)) + minBase;
 
   const adrPct = Math.max(0, Math.min(1, (attacker.adr ?? 0) / (attacker.maxAdr || 100)));
   const mult  = 1 + adrPct * (attacker.adrDmgMod || 1);
