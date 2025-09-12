@@ -1893,20 +1893,11 @@ const DATA = `
       "title": "Power Trainer",
       "desc": "A former arena champ teaching raw strength.",
       "portraitSheet": "assets/portraits/dustland-module/brakk_4.png",
+      "trainer": "power",
       "tree": {
         "start": {
           "text": "Brakk cracks his knuckles.",
           "choices": [
-            {
-              "label": "(Upgrade Skills)",
-              "to": "train",
-              "effects": [
-                {
-                  "effect": "showTrainer",
-                  "trainer": "power"
-                }
-              ]
-            },
             {
               "label": "(Leave)",
               "to": "bye"
@@ -1914,13 +1905,7 @@ const DATA = `
           ]
         },
         "train": {
-          "text": "Push your limits.",
-          "choices": [
-            {
-              "label": "(Back)",
-              "to": "start"
-            }
-          ]
+          "text": "Push your limits."
         }
       }
     },
@@ -1934,20 +1919,11 @@ const DATA = `
       "title": "Endurance Trainer",
       "desc": "A grizzled scavenger preaching survival.",
       "portraitSheet": "assets/portraits/dustland-module/rusty_4.png",
+      "trainer": "endurance",
       "tree": {
         "start": {
           "text": "Rusty studies your stance.",
           "choices": [
-            {
-              "label": "(Upgrade Skills)",
-              "to": "train",
-              "effects": [
-                {
-                  "effect": "showTrainer",
-                  "trainer": "endurance"
-                }
-              ]
-            },
             {
               "label": "(Leave)",
               "to": "bye"
@@ -1955,13 +1931,7 @@ const DATA = `
           ]
         },
         "train": {
-          "text": "Breathe deep and endure.",
-          "choices": [
-            {
-              "label": "(Back)",
-              "to": "start"
-            }
-          ]
+          "text": "Breathe deep and endure."
         }
       }
     },
@@ -1975,20 +1945,11 @@ const DATA = `
       "title": "Tricks Trainer",
       "desc": "A nimble tinkerer teaching odd moves.",
       "portraitSheet": "assets/portraits/dustland-module/mira_4.png",
+      "trainer": "tricks",
       "tree": {
         "start": {
           "text": "Mira twirls a coin.",
           "choices": [
-            {
-              "label": "(Upgrade Skills)",
-              "to": "train",
-              "effects": [
-                {
-                  "effect": "showTrainer",
-                  "trainer": "tricks"
-                }
-              ]
-            },
             {
               "label": "(Leave)",
               "to": "bye"
@@ -1996,13 +1957,7 @@ const DATA = `
           ]
         },
         "train": {
-          "text": "Learn a new trick.",
-          "choices": [
-            {
-              "label": "(Back)",
-              "to": "start"
-            }
-          ]
+          "text": "Learn a new trick."
         }
       }
     },
