@@ -725,6 +725,22 @@ function load(){
     mem.skillPoints = m.skillPoints || 0;
     party.push(mem);
   });
+  if(d.party && d.party[0]){
+    party.x = d.party[0].x ?? party.x;
+    party.y = d.party[0].y ?? party.y;
+  }
+  party.map = state.map;
+  const grid = typeof gridFor === 'function' ? gridFor(state.map) : null;
+  const tile = typeof getTile === 'function' ? getTile(state.map, party.x, party.y) : null;
+  if(!grid || tile === null){
+    state.map = 'world';
+    party.map = 'world';
+    const wx = world?.[0]?.length ? Math.floor(world[0].length/2) : 0;
+    const wy = world?.length ? Math.floor(world.length/2) : 0;
+    setPartyPos(wx, wy);
+  } else {
+    setPartyPos(party.x, party.y);
+  }
   Dustland.gameState.updateState(s=>{ s.party = party; });
   party.forEach(mem => {
     mem.applyEquipmentStats();
