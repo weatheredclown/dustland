@@ -127,7 +127,7 @@ function loadModule(moduleInfo){
     };
     if (loadBtn) UI.show('loadBtn');
     globalThis.modulePickerPending = false;
-    warnOnUnload();
+    if (typeof warnOnUnload === 'function') warnOnUnload();
     openCreator();
   };
   document.body.appendChild(script);
