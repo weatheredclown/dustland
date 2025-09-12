@@ -65,6 +65,17 @@ test('office module uses object visuals for elevator and vending machine', () =>
   );
 });
 
+test('security guard persuasion can be retried', () => {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const file = path.join(__dirname, '..', 'modules', 'office.module.js');
+  const src = readNormalized(file);
+  const guardRegex = /\{\s*id: 'security',[\s\S]*?\r?\n\s*\},\r?\n\s*\{\s*id: 'worker1'/;
+  const match = src.match(guardRegex);
+  assert(match);
+  const objSrc = match[0].replace(/,\r?\n\s*\{\s*id: 'worker1'[\s\S]*/, '');
+  assert.doesNotMatch(objSrc, /once:\s*true/);
+});
+
 test('startGame grants 10 scrap', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
