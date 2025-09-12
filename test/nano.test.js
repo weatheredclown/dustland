@@ -99,3 +99,16 @@ test('NanoPalette uses stamp emoji examples by default', async () => {
   await window.NanoPalette.generate();
   assert.ok(lastPrompt.includes('🏝'.repeat(3)) && lastPrompt.includes('🪨'.repeat(3)), 'prompt contains emoji examples');
 });
+
+test('hides indicator when init fails', async () => {
+  const badge = { style: {}, classList: { toggle: () => {} }, textContent: '' };
+  const progress = { style: {}, classList: { toggle: () => {} } };
+  const wrap = {
+    style: {},
+    querySelector: (sel) => sel === '#nanoProgress' ? progress : sel === '#nanoBadge' ? badge : null
+  };
+  global.document.getElementById = (id) => id === 'nanoStatus' ? wrap : null;
+  delete global.LanguageModel;
+  await window.NanoDialog.init();
+  assert.strictEqual(wrap.style.display, 'none');
+});

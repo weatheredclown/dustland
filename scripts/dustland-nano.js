@@ -38,7 +38,7 @@
     seenKeys: new Set(), // avoid re-enqueue storms
   };
 
-  const _ui = { badge:null, progress:null };
+  const _ui = { wrap:null, badge:null, progress:null };
 
   function refreshIndicator(){ 
     _updateBadge(); 
@@ -50,6 +50,7 @@
     if(!wrap) {
       return;
     }
+    _ui.wrap=wrap;
     _ui.progress=wrap.querySelector('#nanoProgress');
     _ui.badge=wrap.querySelector('#nanoBadge');
   }
@@ -57,11 +58,15 @@
   function _updateBadge(){
     _ensureUI();
     if(!_ui.badge) return;
+    if(_state.failed){
+      if(_ui.wrap) _ui.wrap.style.display='none';
+      return;
+    }
+    if(_ui.wrap) _ui.wrap.style.display='';
     const on=_state.ready && (window.NanoDialog.enabled || window.NanoPalette.enabled);
-    _ui.badge.textContent = on ? '✓' : (_state.failed ? '!' : '✗');
+    _ui.badge.textContent = on ? '✓' : '✗';
     _ui.badge.classList.toggle('on', on);
-    _ui.badge.classList.toggle('off', !on && !_state.failed);
-    _ui.badge.classList.toggle('failed', _state.failed);
+    _ui.badge.classList.toggle('off', !on);
   }
 
   function _showProgress(p){
