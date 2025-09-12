@@ -1508,8 +1508,8 @@ test('combat hp bars update after damage', async () => {
   ]);
 
   handleCombatKey({ key:'Enter' });
-  const enemyHp = combatEnemies.children[0].children[1].children[0].style.width;
-  const memberHp = combatParty.children[0].children[1].children[0].style.width;
+  const enemyHp = combatEnemies.children[0].children[1].children[0].children[0].style.width;
+  const memberHp = combatParty.children[0].children[1].children[0].children[0].style.width;
   assert.strictEqual(enemyHp, '50%');
   assert.strictEqual(memberHp, '50%');
 
@@ -1531,7 +1531,7 @@ test('enemy hp bar defaults maxHp to hp', async () => {
   ]);
 
   handleCombatKey({ key:'Enter' });
-  const enemyHp = combatEnemies.children[0].children[1].children[0].style.width;
+  const enemyHp = combatEnemies.children[0].children[1].children[0].children[0].style.width;
   assert.strictEqual(enemyHp, '50%');
 
   handleCombatKey({ key:'Enter' });

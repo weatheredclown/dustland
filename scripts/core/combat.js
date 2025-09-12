@@ -130,15 +130,21 @@ function renderCombat(){
     setPortraitDiv(p, e);
     wrap.appendChild(p);
 
-    const hp  = document.createElement('div'); hp.className  = 'hudbar'; hp.style.width = '48px';
+    const bars = document.createElement('div');
+    bars.className = 'hudwrap';
+    bars.style.width = '48px';
+
+    const hp  = document.createElement('div'); hp.className  = 'hudbar'; hp.style.width = '34px';
     const hpf = document.createElement('div'); hpf.className = 'fill';
     hpf.style.width = Math.max(0, Math.min(100, (e.hp / (e.maxHp || 1)) * 100)) + '%';
-    hp.appendChild(hpf); wrap.appendChild(hp);
+    hp.appendChild(hpf); bars.appendChild(hp);
 
-    const adr  = document.createElement('div'); adr.className  = 'hudbar adr'; adr.style.width = '48px';
-    const adrf = document.createElement('div'); adrf.className = 'fill';
-    adrf.style.width = Math.max(0, Math.min(100, (e.adr / (e.maxAdr || 1)) * 100)) + '%';
-    adr.appendChild(adrf); wrap.appendChild(adr);
+    const adr  = document.createElement('div'); adr.className  = 'adr-circle';
+    const adrDeg = Math.max(0, Math.min(360, (e.adr / (e.maxAdr || 1)) * 360));
+    adr.style.background = `conic-gradient(#d98b8b 0deg ${adrDeg}deg, #273027 ${adrDeg}deg 360deg)`;
+    bars.appendChild(adr);
+
+    wrap.appendChild(bars);
 
     const lab = document.createElement('div'); lab.className = 'label'; lab.textContent = e.name || '';
     wrap.appendChild(lab);
@@ -156,15 +162,21 @@ function renderCombat(){
     setPortraitDiv(p, m);
     wrap.appendChild(p);
 
-    const hp  = document.createElement('div'); hp.className  = 'hudbar'; hp.style.width = '48px';
+    const bars = document.createElement('div');
+    bars.className = 'hudwrap';
+    bars.style.width = '48px';
+
+    const hp  = document.createElement('div'); hp.className  = 'hudbar'; hp.style.width = '34px';
     const hpf = document.createElement('div'); hpf.className = 'fill';
     hpf.style.width = Math.max(0, Math.min(100, (m.hp / (m.maxHp || 1)) * 100)) + '%';
-    hp.appendChild(hpf); wrap.appendChild(hp);
+    hp.appendChild(hpf); bars.appendChild(hp);
 
-    const adr  = document.createElement('div'); adr.className  = 'hudbar adr'; adr.style.width = '48px';
-    const adrf = document.createElement('div'); adrf.className = 'fill';
-    adrf.style.width = Math.max(0, Math.min(100, (m.adr / (m.maxAdr || 1)) * 100)) + '%';
-    adr.appendChild(adrf); wrap.appendChild(adr);
+    const adr  = document.createElement('div'); adr.className  = 'adr-circle';
+    const adrDeg = Math.max(0, Math.min(360, (m.adr / (m.maxAdr || 1)) * 360));
+    adr.style.background = `conic-gradient(#d98b8b 0deg ${adrDeg}deg, #273027 ${adrDeg}deg 360deg)`;
+    bars.appendChild(adr);
+
+    wrap.appendChild(bars);
 
     const lab = document.createElement('div'); lab.className = 'label'; lab.textContent = m.name || '';
     wrap.appendChild(lab);
