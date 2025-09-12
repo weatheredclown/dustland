@@ -807,6 +807,13 @@ input[type="range"] {
   margin-left: 8px;
 }
 
+#workbenchOverlay .slot ul {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  font-size: 12px;
+}
+
 .slot-list {
   display: flex;
   flex-direction: column;

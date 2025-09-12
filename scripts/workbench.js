@@ -70,48 +70,55 @@
         {
           name: 'Signal Beacon',
           craft: craftSignalBeacon,
-          missing(){
-            const m = [];
-            if ((player.scrap || 0) < 5) m.push('5 scrap');
-            if ((player.fuel || 0) < 50) m.push('50 fuel');
-            return m;
-          }
+          requirements: [
+            { label: 'Scrap', key: 'scrap', amount: 5, type: 'resource' },
+            { label: 'Fuel', key: 'fuel', amount: 50, type: 'resource' }
+          ]
         },
         {
           name: 'Solar Panel Tarp',
           craft: craftSolarTarp,
-          missing(){
-            const m = [];
-            if ((player.scrap || 0) < 3) m.push('3 scrap');
-            if (!hasItem('cloth')) m.push('cloth');
-            return m;
-          }
+          requirements: [
+            { label: 'Scrap', key: 'scrap', amount: 3, type: 'resource' },
+            { label: 'Cloth', key: 'cloth', amount: 1, type: 'item' }
+          ]
         },
         {
           name: 'Bandage',
           craft: craftBandage,
-          missing(){
-            const m = [];
-            if (!hasItem('plant_fiber')) m.push('plant fiber');
-            return m;
-          }
+          requirements: [
+            { label: 'Plant Fiber', key: 'plant_fiber', amount: 1, type: 'item' }
+          ]
         }
       ];
 
       recipes.forEach(r => {
         const row = document.createElement('div');
         row.className = 'slot';
-        const miss = r.missing();
-        if (miss.length === 0){
-          row.innerHTML = `<span>${r.name}</span><button class="btn">Craft</button>`;
-          const btn = row.querySelector('button');
+        const info = document.createElement('div');
+        const title = document.createElement('span');
+        title.textContent = r.name;
+        info.appendChild(title);
+        const reqList = document.createElement('ul');
+        let craftable = true;
+        r.requirements.forEach(req => {
+          const have = req.type === 'resource' ? (player[req.key] || 0) : countItems(req.key);
+          if (have < req.amount) craftable = false;
+          const li = document.createElement('li');
+          li.textContent = `${req.label}: ${have}/${req.amount}`;
+          reqList.appendChild(li);
+        });
+        info.appendChild(reqList);
+        row.appendChild(info);
+        if (craftable){
+          const btn = document.createElement('button');
+          btn.className = 'btn';
+          btn.textContent = 'Craft';
           btn.onclick = () => { r.craft(); renderRecipes(); };
-          list.appendChild(row);
+          row.appendChild(btn);
           focusables.push(btn);
-        } else {
-          row.innerHTML = `<span>${r.name} - need ${miss.join(', ')}</span>`;
-          list.appendChild(row);
         }
+        list.appendChild(row);
       });
       focusIdx = 0;
       focusCurrent();
