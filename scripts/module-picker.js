@@ -18,6 +18,8 @@ const realResetAll = window.resetAll;
 window.openCreator = () => {};
 window.showStart = () => {};
 window.resetAll = () => {};
+const loadBtn = document.getElementById('loadBtn');
+if (loadBtn) UI.hide('loadBtn');
 
 function startDust(canvas, getScale = () => 1){
   const ctx = canvas.getContext('2d');
@@ -123,6 +125,8 @@ function loadModule(moduleInfo){
       realResetAll();
       loadModule(moduleInfo);
     };
+    if (loadBtn) UI.show('loadBtn');
+    globalThis.modulePickerPending = false;
     openCreator();
   };
   document.body.appendChild(script);
