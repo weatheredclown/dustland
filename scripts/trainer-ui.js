@@ -3,53 +3,35 @@
     return globalThis.TRAINER_UPGRADES || {};
   }
 
-  async function showTrainer(id, memberIndex = 0){
+  function showTrainer(id, memberIndex = 0){
     const data = loadTrainerData();
     const upgrades = data[id] || [];
-    const overlay = document.getElementById('trainerOverlay');
-    if(!overlay) return null;
-    const choices = overlay.querySelector('#trainerChoices');
-    const leaderEl = overlay.querySelector('#trainerLeader');
-    const pointsEl = overlay.querySelector('#trainerPoints');
-    const closeBtn = overlay.querySelector('#closeTrainerBtn');
+    const npc = globalThis.currentNPC;
+    const trainNode = npc?.tree?.train;
+    if(!trainNode) return false;
     const member = globalThis.party?.[memberIndex];
     const lead = typeof leader === 'function' ? leader() : null;
-
-    if(leaderEl) leaderEl.textContent = lead ? `Leader: ${lead.name}` : '';
-    if(pointsEl) pointsEl.textContent = `Skill Points: ${lead?.skillPoints || 0}`;
-    if(closeBtn) closeBtn.onclick = hideTrainer;
-
-    choices.innerHTML = '';
-    upgrades.forEach(up => {
-      const btn = document.createElement('div');
-      btn.className = 'choice';
+    trainNode.text = `Skill Points: ${lead?.skillPoints || 0}`;
+    const choices = upgrades.map(up => {
+      let base = 0;
       if(member){
-        const base = up.stat === 'HP' ? member.maxHp : (member.stats[up.stat] || 0);
-        const after = base + (up.delta || 0);
-        btn.textContent = `${up.label} (Cost:${up.cost}) ${base}\u2192${after}`;
-      }else{
-        btn.textContent = `${up.label} (Cost:${up.cost})`;
+        base = up.stat === 'HP' ? member.maxHp : (member.stats[up.stat] || 0);
       }
-      btn.addEventListener('click', () => {
-        applyUpgrade(id, up.id, memberIndex);
-      });
-      choices.appendChild(btn);
+      const after = base + (up.delta || 0);
+      return {
+        label: `${up.label} (Cost:${up.cost}) ${base}\u2192${after}`,
+        to: 'train',
+        effects: [() => applyUpgrade(id, up.id, memberIndex)]
+      };
     });
-
-    function handleKey(e){
-      if(e.key === 'Escape'){ hideTrainer(); }
-    }
-    overlay.classList.add('shown');
-    overlay.tabIndex = -1;
-    overlay.addEventListener('keydown', handleKey);
-    overlay._handleKey = handleKey;
-    overlay.focus();
-    return overlay;
+    choices.push({ label: '(Back)', to: 'start' });
+    trainNode.choices = choices;
+    return true;
   }
 
   function applyUpgrade(trainerId, upgradeId, memberIndex){
     const data = loadTrainerData();
-    const up = (data?.[trainerId] || []).find(u => u.id === upgradeId);
+    const up = (data[trainerId] || []).find(u => u.id === upgradeId);
     if(!up) return false;
     if(up.type === 'stat'){
       const ok = trainStat(up.stat, memberIndex);
@@ -59,16 +41,6 @@
     return false;
   }
 
-  function hideTrainer(){
-    const overlay = document.getElementById('trainerOverlay');
-    if(!overlay) return;
-    overlay.classList.remove('shown');
-    if(overlay._handleKey){
-      overlay.removeEventListener('keydown', overlay._handleKey);
-      delete overlay._handleKey;
-    }
-  }
-
-  globalThis.TrainerUI = { showTrainer, applyUpgrade, hideTrainer };
+  globalThis.TrainerUI = { showTrainer, applyUpgrade };
 })();
 
