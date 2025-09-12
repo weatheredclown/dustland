@@ -158,6 +158,68 @@ test('collectNPCFromForm reads loot chance', async () => {
   assert.strictEqual(npc.combat.lootChance, 0.25);
 });
 
+test('collectNPCFromForm reads workbench checkbox', async () => {
+  const document = makeDocument();
+  // required fields with minimal values
+  mkInput(document, 'npcId', 'n');
+  mkInput(document, 'npcName', 'Name');
+  mkInput(document, 'npcTitle', '');
+  mkTextarea(document, 'npcDesc', '');
+  mkInput(document, 'npcColor', '#fff');
+  mkInput(document, 'npcSymbol', '!');
+  mkInput(document, 'npcMap', 'world');
+  mkInput(document, 'npcX', '0');
+  mkInput(document, 'npcY', '0');
+  mkTextarea(document, 'npcDialog', 'hi');
+  mkSelect(document, 'npcQuests', []);
+  mkTextarea(document, 'npcAccept', '');
+  mkTextarea(document, 'npcTurnin', '');
+  mkCheckbox(document, 'npcCombat', false);
+  mkCheckbox(document, 'npcShop', false);
+  mkCheckbox(document, 'npcWorkbench', false);
+  mkInput(document, 'shopMarkup', '2');
+  mkCheckbox(document, 'npcHidden', false);
+  mkCheckbox(document, 'npcLocked', false);
+  mkCheckbox(document, 'npcPortraitLock', true);
+  mkInput(document, 'npcOp', '>=');
+  mkInput(document, 'npcVal', '1');
+  mkTextarea(document, 'npcTree', '');
+  mkInput(document, 'npcHP', '5');
+  mkInput(document, 'npcATK', '0');
+  mkInput(document, 'npcDEF', '0');
+  mkInput(document, 'npcLoot', '');
+  mkCheckbox(document, 'npcBoss', false);
+  mkInput(document, 'npcSpecialCue', '');
+  mkInput(document, 'npcSpecialDmg', '');
+  mkInput(document, 'npcSpecialDelay', '');
+  mkCheckbox(document, 'npcPatrol', false);
+
+  const context = {
+    document,
+    npcPortraitPath: '',
+    npcPortraitIndex: 0,
+    npcPortraits: [],
+    updateTreeData() {},
+    applyCombatTree() {},
+    removeCombatTree() {},
+    loadTreeEditor() {},
+    getRevealFlag() { return ''; },
+    gatherLoopFields() { return []; }
+  };
+  vm.createContext(context);
+  const code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
+  const start = code.indexOf('function collectNPCFromForm');
+  const end = code.indexOf('// Add a new NPC', start);
+  vm.runInContext(code.slice(start, end), context);
+
+  const npc1 = context.collectNPCFromForm();
+  assert.ok(!('workbench' in npc1));
+
+  document.getElementById('npcWorkbench').checked = true;
+  const npc2 = context.collectNPCFromForm();
+  assert.strictEqual(npc2.workbench, true);
+});
+
 test('collectEncounter reads loot chance', async () => {
   const document = makeDocument();
   mkInput(document, 'encMap', 'world');
