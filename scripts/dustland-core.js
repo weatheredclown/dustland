@@ -708,20 +708,27 @@ function load(){
     const qd=d.quests[id];
     const q=new Quest(id,qd.title,qd.desc); q.status=qd.status; q.pinned=qd.pinned||false; quests[id]=q;
   });
-  const moduleNpcs = globalThis.moduleData?.npcs || [];
-  (d.npcs || []).forEach(n => {
-    if (!n.trainer) {
-      const m = moduleNpcs.find(m => m.id === n.id || m.name === n.name);
-      if (m && m.trainer) n.trainer = m.trainer;
-    }
-  });
-  const npcFactory = createNpcFactory(d.npcs || []);
   if (typeof NPCS !== 'undefined') NPCS.length = 0;
+  const moduleData = globalThis.moduleData;
+  moduleData?.postLoad?.(moduleData);
+  const moduleNpcs = moduleData?.npcs || [];
+  const npcFactory = createNpcFactory(moduleNpcs);
   (d.npcs||[]).forEach(n=>{
-    const f=npcFactory[n.id];
+    let f = npcFactory[n.id];
+    if(!f){
+      f = createNpcFactory([n])[n.id];
+    }
     if(f){
       const npc=f(n.x,n.y);
       npc.map=n.map;
+      npc.color = n.color ?? npc.color;
+      npc.name = n.name ?? npc.name;
+      npc.title = n.title ?? npc.title;
+      npc.desc = n.desc ?? npc.desc;
+      if (n.portraitSheet) npc.portraitSheet = n.portraitSheet;
+      if('portraitLock' in n) npc.portraitLock=n.portraitLock;
+      if (n.symbol) npc.symbol = n.symbol;
+      if(n.trainer) npc.trainer=n.trainer;
       if (Array.isArray(n.loop)) npc.loop = n.loop;
       if(n.quest){
         if(quests[n.quest.id]) npc.quest=quests[n.quest.id];
@@ -767,7 +774,6 @@ function load(){
     }
   });
   setMap(state.map);
-  globalThis.moduleData?.postLoad?.(globalThis.moduleData);
   refreshUI();
   log('Game loaded.');
   if (typeof toast === 'function') toast('Game loaded.');
