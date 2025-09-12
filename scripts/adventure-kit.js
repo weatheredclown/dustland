@@ -2022,6 +2022,7 @@ function startNewNPC() {
   document.getElementById('npcSpecialDelay').value = '';
   document.getElementById('npcCombat').checked = false;
   document.getElementById('npcShop').checked = false;
+  document.getElementById('npcWorkbench').checked = false;
   document.getElementById('shopMarkup').value = 2;
   document.getElementById('shopRefresh').value = 0;
   updateNPCOptSections();
@@ -2067,6 +2068,7 @@ function collectNPCFromForm() {
   const turnin = document.getElementById('npcTurnin').value.trim();
   const combat = document.getElementById('npcCombat').checked;
   const shop = document.getElementById('npcShop').checked;
+  const workbench = document.getElementById('npcWorkbench').checked;
   const shopMarkup = parseInt(document.getElementById('shopMarkup').value, 10) || 2;
   const shopRefresh = parseInt(document.getElementById('shopRefresh').value, 10) || 0;
   const hidden = document.getElementById('npcHidden').checked;
@@ -2135,6 +2137,7 @@ function collectNPCFromForm() {
     }
   }
   if (shop) npc.shop = { markup: shopMarkup, refresh: shopRefresh, inv: [] };
+  if (workbench) npc.workbench = true;
   if (hidden && flag) npc.hidden = true, npc.reveal = { flag, op, value: val };
   if (npcPortraitPath) npc.portraitSheet = npcPortraitPath;
   else if (npcPortraitIndex > 0) npc.portraitSheet = npcPortraits[npcPortraitIndex];
@@ -2251,6 +2254,7 @@ function editNPC(i) {
   document.getElementById('npcSpecialDelay').value = n.combat?.special?.delay ?? '';
   document.getElementById('npcCombat').checked = !!n.combat;
   document.getElementById('npcShop').checked = !!n.shop;
+  document.getElementById('npcWorkbench').checked = !!n.workbench;
   document.getElementById('shopMarkup').value = n.shop ? n.shop.markup || 2 : 2;
   document.getElementById('shopRefresh').value = n.shop ? n.shop.refresh || 0 : 0;
   updateNPCOptSections();
