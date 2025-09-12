@@ -6,7 +6,7 @@ import './fast-timeouts.js';
 
 function stubEl(){
   const el = {
-    style:{},
+    style:{ _props:{}, setProperty(k,v){ this._props[k]=v; }, getPropertyValue(k){ return this._props[k]||''; } },
     classList:{
       _set:new Set(),
       toggle(c){ this._set.has(c)?this._set.delete(c):this._set.add(c); },
@@ -1513,6 +1513,29 @@ test('combat hp bars update after damage', async () => {
   assert.strictEqual(enemyHp, '50%');
   assert.strictEqual(memberHp, '50%');
 
+  handleCombatKey({ key:'Enter' });
+  const res = await resultPromise;
+  assert.strictEqual(res.result, 'loot');
+});
+
+test('party adrenaline pie reflects adr percent', async () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const m1 = new Character('p1','P1','Role');
+  m1.hp = 2;
+  m1.maxHp = 2;
+  m1.adr = 50;
+  m1.maxAdr = 100;
+  party.join(m1);
+
+  const resultPromise = openCombat([
+    { name:'E1', hp:1, maxHp:1 }
+  ]);
+
+  const pie = combatParty.children[0].children[1].children[1];
+  assert.strictEqual(pie.style.getPropertyValue('--adr-angle'), '180deg');
+
+  handleCombatKey({ key:'Enter' });
   handleCombatKey({ key:'Enter' });
   const res = await resultPromise;
   assert.strictEqual(res.result, 'loot');

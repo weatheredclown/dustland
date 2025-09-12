@@ -156,15 +156,15 @@ function renderCombat(){
     setPortraitDiv(p, m);
     wrap.appendChild(p);
 
-    const hp  = document.createElement('div'); hp.className  = 'hudbar'; hp.style.width = '48px';
+    const hp  = document.createElement('div'); hp.className  = 'hudbar adrwrap'; hp.style.width = '48px';
     const hpf = document.createElement('div'); hpf.className = 'fill';
     hpf.style.width = Math.max(0, Math.min(100, (m.hp / (m.maxHp || 1)) * 100)) + '%';
-    hp.appendChild(hpf); wrap.appendChild(hp);
-
-    const adr  = document.createElement('div'); adr.className  = 'hudbar adr'; adr.style.width = '48px';
-    const adrf = document.createElement('div'); adrf.className = 'fill';
-    adrf.style.width = Math.max(0, Math.min(100, (m.adr / (m.maxAdr || 1)) * 100)) + '%';
-    adr.appendChild(adrf); wrap.appendChild(adr);
+    hp.appendChild(hpf);
+    const pie = document.createElement('div'); pie.className = 'adrpie';
+    const adrPct = Math.max(0, Math.min(100, ((m.adr || 0) / (m.maxAdr || 1)) * 100));
+    pie.style.setProperty('--adr-angle', (adrPct * 3.6) + 'deg');
+    hp.appendChild(pie);
+    wrap.appendChild(hp);
 
     const lab = document.createElement('div'); lab.className = 'label'; lab.textContent = m.name || '';
     wrap.appendChild(lab);

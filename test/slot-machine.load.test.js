@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 function stubEl(){
   const el = {
-    style:{},
+    style:{ _props:{}, setProperty(k,v){ this._props[k]=v; }, getPropertyValue(k){ return this._props[k]||''; } },
     classList:{ add(){}, remove(){}, toggle(){}, contains(){ return false; } },
     textContent:'',
     onclick:null,
@@ -82,7 +82,7 @@ test('slot machine works after save and load', async () => {
   ctx.CURRENCY = 'scrap';
   ctx.player.scrap = 5;
   ctx.leader = () => null;
-  ctx.rng = () => 0;
+  ctx.rng = () => 1;
 
   const moduleSrc = await fs.readFile(new URL('../modules/dustland.module.js', import.meta.url), 'utf8');
   vm.runInContext(moduleSrc, ctx, { filename: 'dustland.module.js' });
