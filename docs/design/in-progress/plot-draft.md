@@ -93,7 +93,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 #### **Phase 0: Writing Pass**
 - [ ] Draft a scene-by-scene outline with placeholder dialog for the caravan's opening leg.
 - [ ] Flesh out Mara, Jax, and Nyx arcs with at least two key conversations each.
-- [ ] Sketch early Silencer encounters with sample rival dialogue.
+- [x] Sketch early Silencer encounters with sample rival dialogue.
 
 ### Opening Leg Outline
 1. **Campfire Departure** – *Mara:* "Dawn's thin. Pack up."
@@ -113,7 +113,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
   - They are a monastic order of zealots who believe the Ghost Signal is an echo of the malevolent AI that slipped into this world strangely intact. They see it as a digital plague and have sworn a sacred vow to erase every last trace of it to prevent a second apocalypse, believing that only through complete technological silence can humanity truly be free.
   - Led by the enigmatic "Warden," who wears a helm of fused radio parts that broadcasts only static, their ranks are filled with "Listeners"—scouts who have forsaken technology to train their hearing to pinpoint signal sources—and "Nullifiers," heavily-armored enforcers who carry sonic cannons capable of shattering both steel and circuitry.
   - The Silencers hunt with relentless, calculated precision. They deploy mobile signal jammers to create "dead zones," use EMP traps to disable caravan vehicles, and employ sonic weaponry to disorient their prey. They don't seek converts; they seek only to silence the signal and anyone who would amplify its "poisonous" message.
-  - Draft the first encounter at a derelict relay where players choose to sneak past, negotiate, or clash with a Silencer patrol.
+  - [x] Draft the first encounter at a derelict relay where players choose to taunt, sneak past, negotiate, or clash with a Silencer patrol.
 
 > **Wing:** Early rival tension sets the pace—make their gear look repurposed and their tactics ruthless.
 

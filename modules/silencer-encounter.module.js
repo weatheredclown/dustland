@@ -1,8 +1,13 @@
 function seedWorldContent() {}
-const DATA = `{
+const DATA = `
+{
   "seed": "silencer-encounter",
   "name": "silencer-encounter",
-  "start": { "map": "arena", "x": 2, "y": 2 },
+  "start": {
+    "map": "arena",
+    "x": 2,
+    "y": 2
+  },
   "items": [],
   "quests": [],
   "npcs": [
@@ -16,15 +21,85 @@ const DATA = `{
       "prompt": "Hooded drifter with goggles and a muffled scarf",
       "tree": {
         "start": {
-          "text": "The Silencer narrows his eyes. You're after the signal too.",
+          "text": "A Silencer scout scans the relay. How do you approach?",
           "choices": [
-            { "label": "It's mine.", "to": "taunt" },
-            { "label": "Back away.", "to": "bye" }
+            {
+              "label": "Sneak past",
+              "to": "sneak"
+            },
+            {
+              "label": "Negotiate",
+              "to": "talk"
+            },
+            {
+              "label": "Clash",
+              "to": "fight"
+            },
+            {
+              "label": "Taunt",
+              "to": "taunt"
+            }
           ]
         },
         "taunt": {
-          "text": "We'll see who reaches it first, he replies.",
-          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+          "text": "You bark a challenge. The scout's visor tilts, amused.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye",
+              "effects": [
+                {
+                  "effect": "toast",
+                  "msg": "The scout bides his time."
+                }
+              ]
+            }
+          ]
+        },
+        "sneak": {
+          "text": "You slip past while his visor fogs.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye",
+              "effects": [
+                {
+                  "effect": "toast",
+                  "msg": "You avoid the scout."
+                }
+              ]
+            }
+          ]
+        },
+        "talk": {
+          "text": "State your business, he grates. You keep it brief and he lets you pass.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye",
+              "effects": [
+                {
+                  "effect": "toast",
+                  "msg": "The scout steps aside."
+                }
+              ]
+            }
+          ]
+        },
+        "fight": {
+          "text": "You reach for your weapon but the scout backs off, marking you.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye",
+              "effects": [
+                {
+                  "effect": "toast",
+                  "msg": "Conflict avoided—for now."
+                }
+              ]
+            }
+          ]
         }
       }
     }
@@ -48,7 +123,8 @@ const DATA = `{
   "events": [],
   "portals": [],
   "buildings": []
-}`;
+}
+`;
 
 function postLoad(module) {}
 
