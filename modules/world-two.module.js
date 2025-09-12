@@ -5,18 +5,20 @@ const DATA = `
   "seed": "world-two",
   "start": { "map": "world", "x": 2, "y": 2 },
   "world": [
-    [0,0,0,0,0],
-    [0,0,0,0,0],
-    [0,0,0,0,0],
-    [0,0,0,0,0],
-    [0,0,0,0,0]
+    [0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0]
   ],
   "items": [
     { "id": "fuel_cell", "name": "Fuel Cell", "type": "quest" },
     { "id": "shiny_cog", "name": "Shiny Cog", "type": "quest", "map": "world", "x": 2, "y": 3 }
   ],
   "buildings": [
-    { "x": 4, "y": 2, "w": 1, "h": 1, "doorX": 4, "doorY": 2, "boarded": true, "bunker": true, "bunkerId": "beta" }
+    { "x": 6, "y": 3, "w": 1, "h": 1, "doorX": 6, "doorY": 3, "boarded": true, "bunker": true, "bunkerId": "beta" }
   ],
   "npcs": [
     {
@@ -45,8 +47,8 @@ const DATA = `
     {
       "id": "bunker_beta",
       "map": "world",
-      "x": 4,
-      "y": 2,
+      "x": 6,
+      "y": 3,
       "color": "#aaa",
       "name": "Bunker Beta",
       "desc": "A flickering terminal awaits activation.",
