@@ -767,6 +767,7 @@ function load(){
     }
   });
   setMap(state.map);
+  globalThis.moduleData?.postLoad?.(globalThis.moduleData);
   refreshUI();
   log('Game loaded.');
   if (typeof toast === 'function') toast('Game loaded.');
