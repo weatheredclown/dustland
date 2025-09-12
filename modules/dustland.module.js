@@ -2939,6 +2939,17 @@ function handleCustomEffects(list) {
 }
 
 function postLoad(module) {
+  // Shim trainer assignments for compatibility with older saves.
+  const trainers = [
+    { id: 'trainer_power', name: 'Brakk', trainer: 'power' },
+    { id: 'trainer_endurance', name: 'Rusty', trainer: 'endurance' },
+    { id: 'trainer_tricks', name: 'Mira', trainer: 'tricks' }
+  ];
+  for (const t of trainers) {
+    const npc = module.npcs?.find(n => n.id === t.id || n.name === t.name);
+    if (npc) npc.trainer = t.trainer;
+  }
+
   const exit = module.npcs?.find(n => n.id === 'exitdoor');
   if (exit) {
     exit.processNode = function (node) {
