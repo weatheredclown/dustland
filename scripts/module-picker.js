@@ -10,6 +10,7 @@ const MODULES = [
   { id: 'two-worlds', name: 'Two Worlds', file: 'modules/two-worlds.module.js' },
   { id: 'true-dust', name: 'True Dust', file: 'modules/true-dust.module.js' },
   { id: 'golden', name: 'Golden Sample', file: 'modules/golden.module.json' }
+  { id: 'edge', name: 'bunker-trainer-workshop', file: 'modules/edge.module.js' },
 ];
 
 const realOpenCreator = window.openCreator;
