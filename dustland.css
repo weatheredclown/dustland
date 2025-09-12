@@ -1143,11 +1143,15 @@ input[type="range"] {
         border-bottom: 1px solid #1a1f1a;
         position: sticky;
         top: 0;
-        z-index: 2
+        z-index: 2;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x
     }
 
     .tab2 {
-        flex: 1;
+        flex: 0 0 auto;
         padding: 8px 10px;
         text-align: center;
         cursor: pointer;
