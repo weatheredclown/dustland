@@ -151,3 +151,11 @@ test('trader patrols east-west with basic goods', () => {
   const invIds = trader.shop?.inv?.map(i => i.id);
   assert.deepStrictEqual(invIds, ['pipe_rifle', 'leather_jacket', 'water_flask']);
 });
+
+test('vortex sends player to world map', () => {
+  const data = loadModuleData();
+  const vortex = data.npcs.find(n => n.id === 'dust_storm_entrance');
+  assert.ok(vortex);
+  const goto = vortex.tree.enter.choices[0].goto;
+  assert.deepStrictEqual(goto, { map: 'world', x: 10, y: 18 });
+});

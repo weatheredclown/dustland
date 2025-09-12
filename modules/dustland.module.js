@@ -542,7 +542,7 @@ const DATA = `
               "label": "(Continue)",
               "to": "bye",
               "goto": {
-                "map": "dust_storm",
+                "map": "world",
                 "x": 10,
                 "y": 18
               }

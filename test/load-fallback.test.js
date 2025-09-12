@@ -92,3 +92,31 @@ test('load() resets invalid position to world', () => {
   assert.strictEqual(party.map, 'world');
 });
 
+test('load() relocates dust_storm saves to world', () => {
+  const world = Array.from({ length: 20 }, () => Array(20).fill(0));
+  const save = {
+    worldSeed: 1,
+    world,
+    player: {},
+    state: { map: 'dust_storm' },
+    buildings: [],
+    interiors: {},
+    itemDrops: [],
+    npcs: [],
+    quests: {},
+    party: [{ id: 'p', name: 'P', role: 'lead', lvl:1, xp:0, skillPoints:0, stats:{}, equip:{}, hp:10, map:'dust_storm', x:2, y:3, maxHp:10 }]
+  };
+  global.localStorage.getItem = () => JSON.stringify(save);
+  load();
+  assert.strictEqual(state.map, 'world');
+  assert.strictEqual(party.map, 'world');
+  assert.strictEqual(party.x, 10);
+  assert.strictEqual(party.y, 18);
+});
+
+test('setMap falls back to world when map missing', () => {
+  setMap('missing');
+  assert.strictEqual(state.map, 'world');
+  assert.strictEqual(party.map, 'world');
+});
+
