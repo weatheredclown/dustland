@@ -4473,10 +4473,20 @@ animate();
 (function () {
   const panel = document.getElementById('editorPanel');
   if (!panel) return;
-  const tabs = Array.from(panel.querySelectorAll('.tab2'));
+  const tabList = panel.querySelector('.tabs2');
+  const tabs = Array.from(tabList.querySelectorAll('.tab2'));
   const panes = Array.from(panel.querySelectorAll('[data-pane]'));
   let current = 'npc';
   let wide = false;
+
+  if (tabList && tabList.addEventListener) {
+    tabList.addEventListener('wheel', e => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        tabList.scrollLeft += e.deltaY;
+      }
+    });
+  }
 
   function setLayout() {
     wide = panel.offsetWidth >= 960;
@@ -4494,6 +4504,10 @@ animate();
       t.classList.toggle('active', on);
       t.setAttribute('aria-selected', on ? 'true' : 'false');
     });
+    const active = tabs.find(t => t.dataset.tab === tabName);
+    if (active && active.scrollIntoView) {
+      active.scrollIntoView({block: 'nearest', inline: 'nearest'});
+    }
     if (!wide) {
       panes.forEach(p => p.style.display = (p.dataset.pane === tabName ? '' : 'none'));
     }
