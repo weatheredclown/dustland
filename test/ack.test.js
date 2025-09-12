@@ -943,6 +943,15 @@ test('NPC title survives round trip', () => {
   assert.strictEqual(npc.title, 'Trader');
 });
 
+test('NPC trainer fields round trip', () => {
+  moduleData.npcs = [{ id: 'trainer1', name: 'T', color: '#fff', map: 'world', x: 0, y: 0, tree: {}, trainer: 'power' }];
+  editNPC(0);
+  assert.ok(document.getElementById('npcTrainer').checked);
+  assert.strictEqual(document.getElementById('npcTrainerType').value, 'power');
+  const npc = collectNPCFromForm();
+  assert.strictEqual(npc.trainer, 'power');
+});
+
 test('NPC combat fields round trip through editor', () => {
   moduleData.npcs = [{
     id: 'npc1', name: 'NPC', color: '#fff', map: 'world', x: 0, y: 0, tree: {},

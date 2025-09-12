@@ -1874,6 +1874,8 @@ function updateNPCOptSections() {
     document.getElementById('npcShop').checked ? 'block' : 'none';
   document.getElementById('revealOpts').style.display =
     document.getElementById('npcHidden').checked ? 'block' : 'none';
+  document.getElementById('trainerOpts').style.display =
+    document.getElementById('npcTrainer').checked ? 'block' : 'none';
 }
 
 function updatePatrolSection() {
@@ -2024,6 +2026,8 @@ function startNewNPC() {
   document.getElementById('npcShop').checked = false;
   document.getElementById('shopMarkup').value = 2;
   document.getElementById('shopRefresh').value = 0;
+  document.getElementById('npcTrainer').checked = false;
+  document.getElementById('npcTrainerType').value = 'power';
   updateNPCOptSections();
   document.getElementById('addNPC').style.display = 'block';
   document.getElementById('cancelNPC').style.display = 'none';
@@ -2069,6 +2073,8 @@ function collectNPCFromForm() {
   const shop = document.getElementById('npcShop').checked;
   const shopMarkup = parseInt(document.getElementById('shopMarkup').value, 10) || 2;
   const shopRefresh = parseInt(document.getElementById('shopRefresh').value, 10) || 0;
+  const trainer = document.getElementById('npcTrainer').checked ?
+    document.getElementById('npcTrainerType').value.trim() : '';
   const hidden = document.getElementById('npcHidden').checked;
   const locked = document.getElementById('npcLocked').checked;
   const portraitLock = document.getElementById('npcPortraitLock').checked;
@@ -2135,6 +2141,7 @@ function collectNPCFromForm() {
     }
   }
   if (shop) npc.shop = { markup: shopMarkup, refresh: shopRefresh, inv: [] };
+  if (trainer) npc.trainer = trainer;
   if (hidden && flag) npc.hidden = true, npc.reveal = { flag, op, value: val };
   if (npcPortraitPath) npc.portraitSheet = npcPortraitPath;
   else if (npcPortraitIndex > 0) npc.portraitSheet = npcPortraits[npcPortraitIndex];
@@ -2253,6 +2260,8 @@ function editNPC(i) {
   document.getElementById('npcShop').checked = !!n.shop;
   document.getElementById('shopMarkup').value = n.shop ? n.shop.markup || 2 : 2;
   document.getElementById('shopRefresh').value = n.shop ? n.shop.refresh || 0 : 0;
+  document.getElementById('npcTrainer').checked = !!n.trainer;
+  document.getElementById('npcTrainerType').value = n.trainer || 'power';
   updateNPCOptSections();
   document.getElementById('addNPC').style.display = 'none';
   document.getElementById('cancelNPC').style.display = 'none';
@@ -3912,6 +3921,7 @@ if (npcQuestEl) npcQuestEl.addEventListener('change', () => {
 document.getElementById('npcCombat').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcShop').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcHidden').addEventListener('change', updateNPCOptSections);
+document.getElementById('npcTrainer').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcLocked').addEventListener('change', onLockedToggle);
 document.getElementById('genQuestDialog').onclick = generateQuestTree;
 
