@@ -3,22 +3,104 @@ function seedWorldContent() {}
 const DATA = `
 {
   "seed": "world-two",
-  "start": { "map": "world", "x": 2, "y": 2 },
+  "start": {
+    "map": "world",
+    "x": 2,
+    "y": 2
+  },
   "world": [
-    [0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0]
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
   ],
   "items": [
-    { "id": "fuel_cell", "name": "Fuel Cell", "type": "quest" },
-    { "id": "shiny_cog", "name": "Shiny Cog", "type": "quest", "map": "world", "x": 2, "y": 3 }
+    {
+      "id": "fuel_cell",
+      "name": "Fuel Cell",
+      "type": "quest",
+      "fuel": 50
+    },
+    {
+      "id": "shiny_cog",
+      "name": "Shiny Cog",
+      "type": "quest",
+      "map": "world",
+      "x": 2,
+      "y": 3
+    }
   ],
   "buildings": [
-    { "x": 6, "y": 3, "w": 1, "h": 1, "doorX": 6, "doorY": 3, "boarded": true, "bunker": true, "bunkerId": "beta" }
+    {
+      "x": 6,
+      "y": 3,
+      "w": 1,
+      "h": 1,
+      "doorX": 6,
+      "doorY": 3,
+      "boarded": true,
+      "bunker": true,
+      "bunkerId": "beta"
+    }
   ],
   "npcs": [
     {
@@ -34,13 +116,25 @@ const DATA = `
         "start": {
           "text": "I could use a shiny cog.",
           "choices": [
-            { "label": "(Give cog)", "to": "turnin", "reqItem": "shiny_cog" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Give cog)",
+              "to": "turnin",
+              "reqItem": "shiny_cog"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "turnin": {
           "text": "Great, thanks.",
-          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
         }
       }
     },
@@ -57,25 +151,62 @@ const DATA = `
         "start": {
           "text": "Power hums faintly behind the panel.",
           "choices": [
-            { "label": "(Activate)", "to": "activate" },
-            { "label": "(Fast travel)", "effects": [ { "effect": "openWorldMap", "id": "beta" } ], "to": "bye" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Activate)",
+              "to": "activate"
+            },
+            {
+              "label": "(Fast travel)",
+              "effects": [
+                {
+                  "effect": "openWorldMap",
+                  "id": "beta"
+                }
+              ],
+              "to": "bye"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "activate": {
           "text": "Beta bunker added to network.",
-          "effects": [ { "effect": "activateBunker", "id": "beta" } ],
-          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+          "effects": [
+            {
+              "effect": "activateBunker",
+              "id": "beta"
+            }
+          ],
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
         }
       }
     }
   ],
   "templates": [
-    { "id": "scrap_rat", "name": "Scrap Rat", "combat": { "HP": 3, "ATK": 1, "DEF": 0 } }
+    {
+      "id": "scrap_rat",
+      "name": "Scrap Rat",
+      "combat": {
+        "HP": 3,
+        "ATK": 1,
+        "DEF": 0
+      }
+    }
   ],
   "encounters": {
     "world": [
-      { "templateId": "scrap_rat", "loot": "fuel_cell", "maxDist": 5 }
+      {
+        "templateId": "scrap_rat",
+        "loot": "fuel_cell",
+        "maxDist": 5
+      }
     ]
   }
 }

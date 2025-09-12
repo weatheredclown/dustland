@@ -3,20 +3,76 @@ function seedWorldContent() {}
 const DATA = `
 {
   "seed": "world-one",
-  "start": { "map": "world", "x": 2, "y": 2 },
+  "start": {
+    "map": "world",
+    "x": 2,
+    "y": 2
+  },
   "world": [
-    [0,0,0,0,0],
-    [0,0,0,0,0],
-    [0,0,0,0,0],
-    [0,0,0,0,0],
-    [0,0,0,0,0]
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
   ],
   "items": [
-    { "id": "fuel_cell", "name": "Fuel Cell", "type": "quest" },
-    { "id": "rusty_gear", "name": "Rusty Gear", "type": "quest", "map": "world", "x": 3, "y": 2 }
+    {
+      "id": "fuel_cell",
+      "name": "Fuel Cell",
+      "type": "quest",
+      "fuel": 50
+    },
+    {
+      "id": "rusty_gear",
+      "name": "Rusty Gear",
+      "type": "quest",
+      "map": "world",
+      "x": 3,
+      "y": 2
+    }
   ],
   "buildings": [
-    { "x": 4, "y": 2, "w": 1, "h": 1, "doorX": 4, "doorY": 2, "boarded": true, "bunker": true, "bunkerId": "alpha" }
+    {
+      "x": 4,
+      "y": 2,
+      "w": 1,
+      "h": 1,
+      "doorX": 4,
+      "doorY": 2,
+      "boarded": true,
+      "bunker": true,
+      "bunkerId": "alpha"
+    }
   ],
   "npcs": [
     {
@@ -32,14 +88,31 @@ const DATA = `
         "start": {
           "text": "My rig is missing a rusty gear. Seen one?",
           "choices": [
-            { "label": "(Give gear)", "to": "turnin", "reqItem": "rusty_gear" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Give gear)",
+              "to": "turnin",
+              "reqItem": "rusty_gear"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "turnin": {
           "text": "Perfect fit! Thanks.",
-          "effects": [ { "effect": "activateBunker", "id": "beta" } ],
-          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+          "effects": [
+            {
+              "effect": "activateBunker",
+              "id": "beta"
+            }
+          ],
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
         }
       }
     },
@@ -56,25 +129,62 @@ const DATA = `
         "start": {
           "text": "Power hums faintly behind the panel.",
           "choices": [
-            { "label": "(Activate)", "to": "activate" },
-            { "label": "(Fast travel)", "effects": [ { "effect": "openWorldMap", "id": "alpha" } ], "to": "bye" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Activate)",
+              "to": "activate"
+            },
+            {
+              "label": "(Fast travel)",
+              "effects": [
+                {
+                  "effect": "openWorldMap",
+                  "id": "alpha"
+                }
+              ],
+              "to": "bye"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "activate": {
           "text": "Alpha bunker added to network.",
-          "effects": [ { "effect": "activateBunker", "id": "alpha" } ],
-          "choices": [ { "label": "(Leave)", "to": "bye" } ]
+          "effects": [
+            {
+              "effect": "activateBunker",
+              "id": "alpha"
+            }
+          ],
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
         }
       }
     }
   ],
   "templates": [
-    { "id": "scrap_rat", "name": "Scrap Rat", "combat": { "HP": 3, "ATK": 1, "DEF": 0 } }
+    {
+      "id": "scrap_rat",
+      "name": "Scrap Rat",
+      "combat": {
+        "HP": 3,
+        "ATK": 1,
+        "DEF": 0
+      }
+    }
   ],
   "encounters": {
     "world": [
-      { "templateId": "scrap_rat", "loot": "fuel_cell", "maxDist": 5 }
+      {
+        "templateId": "scrap_rat",
+        "loot": "fuel_cell",
+        "maxDist": 5
+      }
     ]
   }
 }

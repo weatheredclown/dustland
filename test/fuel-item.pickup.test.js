@@ -15,7 +15,20 @@ test('fuel cell pickup adds fuel instead of inventory', () => {
     log: () => {}
   };
   vm.runInNewContext(src, context);
-  context.addToInv({ id: 'fuel_cell', name: 'Fuel Cell', type: 'quest' });
+  context.addToInv({ id: 'fuel_cell', name: 'Fuel Cell', type: 'quest', fuel: 50 });
   assert.strictEqual(context.player.fuel, 50);
+  assert.strictEqual(context.player.inv.length, 0);
+});
+
+test('custom fuel item adds specified fuel', () => {
+  const context = {
+    EventBus: { emit: () => {} },
+    party: [],
+    player: { inv: [], fuel: 0 },
+    log: () => {}
+  };
+  vm.runInNewContext(src, context);
+  context.addToInv({ id: 'barrel', name: 'Fuel Barrel', type: 'quest', fuel: 30 });
+  assert.strictEqual(context.player.fuel, 30);
   assert.strictEqual(context.player.inv.length, 0);
 });

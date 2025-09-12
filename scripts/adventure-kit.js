@@ -2372,6 +2372,7 @@ function startNewItem() {
   document.getElementById('itemBoostAmount').value = 0;
   document.getElementById('itemBoostDuration').value = 0;
   document.getElementById('itemUse').value = '';
+  document.getElementById('itemFuel').value = 0;
   updateUseWrap();
   updateItemMapWrap();
   document.getElementById('addItem').textContent = 'Add Item';
@@ -2412,6 +2413,7 @@ function addItem() {
   const isEquip = ['weapon', 'armor', 'trinket'].includes(type);
   const mods = collectMods();
   const value = parseInt(document.getElementById('itemValue').value, 10) || 0;
+  const fuel = parseInt(document.getElementById('itemFuel').value, 10) || 0;
   let equip = null;
   if (isEquip) {
     try { equip = JSON.parse(document.getElementById('itemEquip').value || 'null'); } catch (e) { equip = null; }
@@ -2432,6 +2434,7 @@ function addItem() {
   const useText = document.getElementById('itemUse').value.trim();
   if (use && useText) use.text = useText;
   const item = { id, name, desc, type, tags, mods, value, use, equip };
+  if (fuel) item.fuel = fuel;
   if (narrativeId || narrativePrompt) {
     item.narrative = {};
     if (narrativeId) item.narrative.id = narrativeId;
@@ -2513,6 +2516,7 @@ function editItem(i) {
   updateModsWrap();
   loadMods(it.mods);
   document.getElementById('itemValue').value = it.value || 0;
+  document.getElementById('itemFuel').value = it.fuel || 0;
   document.getElementById('itemEquip').value = it.equip ? JSON.stringify(it.equip, null, 2) : '';
   if (it.use) {
     document.getElementById('itemUseType').value = it.use.type || '';
