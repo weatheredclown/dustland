@@ -9,33 +9,38 @@ const partyCode = await fs.readFile(new URL('../scripts/core/party.js', import.m
 const dataCode = await fs.readFile(new URL('../data/skills/trainer-upgrades.js', import.meta.url), 'utf8');
 
 function setup(){
-  const dom = new JSDOM('<!doctype html><body><div id="trainerOverlay"><div id="trainerLeader"></div><div id="trainerPoints"></div><button id="closeTrainerBtn"></button><div id="trainerChoices"></div></div></body>', { url: 'https://example.com' });
+  const dom = new JSDOM('<!doctype html><body></body>', { url: 'https://example.com' });
+  const bus = { emit: () => {} };
   const context = {
     ...dom.window,
     log: () => {},
     renderParty: () => {},
     updateHUD: () => {},
-    EventBus: { emit: () => {} }
+    EventBus: bus,
+    Dustland: { eventBus: bus },
+    player: {},
+    party: [],
+    state: {}
   };
-  context.localStorage = dom.window.localStorage;
   vm.createContext(context);
   vm.runInContext(dataCode, context);
   vm.runInContext(partyCode, context);
   vm.runInContext(trainerUiCode, context);
-  return { context, dom };
+  const npc = { id: 'npc', tree: { train: { text: '', choices: [] } } };
+  context.currentNPC = npc;
+  return { context, npc };
 }
 
-test('trainer upgrade flow stays under fifteen seconds', async () => {
-  const { context, dom } = setup();
+test('trainer upgrade flow stays under fifteen seconds', () => {
+  const { context, npc } = setup();
   const m = context.makeMember('id', 'Name', 'Role');
   const lead = context.makeMember('lead', 'Lead', 'Role');
   lead.skillPoints = 1;
   m.skillPoints = 1;
   context.party.push(lead); context.party.push(m);
   const start = Date.now();
-  await context.TrainerUI.showTrainer('power', 1);
-  const btn = dom.window.document.querySelector('#trainerChoices .choice');
-  btn.click();
+  context.TrainerUI.showTrainer('power', 1);
+  npc.tree.train.choices[0].effects[0]();
   const end = Date.now();
   assert.ok(end - start < 15000);
 });
