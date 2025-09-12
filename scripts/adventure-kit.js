@@ -2614,11 +2614,19 @@ function collectEncounter(){
   const templateId = document.getElementById('encTemplate').value.trim();
   const minDist = parseInt(document.getElementById('encMinDist').value,10) || 0;
   const maxDist = parseInt(document.getElementById('encMaxDist').value,10) || 0;
-  const loot = document.getElementById('encLoot').value.trim();
+  const lootSel = document.getElementById('encLoot').value.trim();
   const lootChancePct = parseFloat(document.getElementById('encLootChance').value);
-  const entry = { map, templateId, loot, minDist, maxDist };
-  if (!isNaN(lootChancePct) && lootChancePct >= 0 && lootChancePct < 100) {
-    entry.lootChance = lootChancePct / 100;
+  const t = globalThis.moduleData?.templates?.find(t => t.id === templateId);
+  const entry = { map, templateId, minDist, maxDist };
+  const tmplLoot = t?.combat?.loot || '';
+  if (lootSel) {
+    if (lootSel !== tmplLoot) entry.loot = lootSel;
+  } else if (tmplLoot) {
+    entry.loot = '';
+  }
+  if (!isNaN(lootChancePct)) {
+    const lc = Math.max(0, Math.min(lootChancePct, 100)) / 100;
+    if (lc !== (t?.combat?.lootChance ?? 1)) entry.lootChance = lc;
   }
   return entry;
 }
@@ -2639,8 +2647,11 @@ function editEncounter(i){
   populateTemplateDropdown(document.getElementById('encTemplate'), e.templateId || '');
   document.getElementById('encMinDist').value = e.minDist || '';
   document.getElementById('encMaxDist').value = e.maxDist || '';
-  populateItemDropdown(document.getElementById('encLoot'), e.loot || '');
-  document.getElementById('encLootChance').value = e.lootChance != null ? Math.round(e.lootChance * 100) : 100;
+  const t = moduleData.templates.find(t => t.id === e.templateId);
+  const lootVal = e.loot ?? t?.combat?.loot;
+  populateItemDropdown(document.getElementById('encLoot'), lootVal || '');
+  const lootChance = e.lootChance != null ? e.lootChance : t?.combat?.lootChance;
+  document.getElementById('encLootChance').value = lootChance != null ? Math.round(lootChance * 100) : 100;
   document.getElementById('addEncounter').textContent = 'Update Enemy';
   document.getElementById('delEncounter').style.display = 'block';
   showEncounterEditor(true);
@@ -2650,7 +2661,9 @@ function renderEncounterList(){
   list.innerHTML = moduleData.encounters.map((e,i)=>{
     const t = moduleData.templates.find(t => t.id === e.templateId);
     const name = t ? t.name : e.templateId;
-    return `<div data-idx="${i}">${e.map}: ${name}</div>`;
+    const loot = e.loot !== undefined ? e.loot : t?.combat?.loot;
+    const lootStr = loot ? ` - ${loot}` : '';
+    return `<div data-idx="${i}">${e.map}: ${name}${lootStr}</div>`;
   }).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editEncounter(parseInt(div.dataset.idx,10)));
 }
