@@ -260,6 +260,7 @@ function registerZoneEffects(list){
     const id = z.useItem?.id;
     if(id && globalThis.EventBus?.on){
       globalThis.EventBus.on(`used:${id}`, () => {
+        if(z.if && !globalThis.checkFlagCondition?.(z.if)) return;
         const map = z.map || 'world';
         if(party.map !== map) return;
         const { x, y } = party;

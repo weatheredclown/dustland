@@ -45,7 +45,8 @@
     const member = state.party.find(m => m.id === memberId);
     if (!member) return;
     const prev = member.persona;
-    if (prev && prev !== personaId) {
+    if (prev === personaId) return; // no change
+    if (prev) {
       globalThis.Dustland?.profiles?.remove?.(member, prev);
       globalThis.EventBus?.emit('persona:unequip', { memberId, personaId: prev });
     }

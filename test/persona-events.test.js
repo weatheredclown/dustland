@@ -16,6 +16,7 @@ test('applyPersona emits equip and unequip', async () => {
   gsApi.setPersona('mask2', {});
   gsApi.applyPersona('mara', 'mask1');
   gsApi.applyPersona('mara', 'mask2');
+  gsApi.applyPersona('mara', 'mask2');
   const plain = JSON.parse(JSON.stringify(events.filter(e => e.evt !== 'state:changed')));
   assert.deepStrictEqual(plain, [
     { evt: 'persona:equip', payload: { memberId: 'mara', personaId: 'mask1' } },

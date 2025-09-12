@@ -34,5 +34,5 @@
 - [ ] Extend quest definitions to support branching and persistence.
  - [x] Add NPC memory storage and retrieval utilities.
 - [ ] Build event scheduler for world and NPC timelines.
-- [ ] Allow zones and portals to register and check narrative flags.
+- [x] Allow zones and portals to register and check narrative flags.
 

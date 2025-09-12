@@ -16,6 +16,7 @@
     const zones = globalThis.Dustland?.zoneEffects || [];
     if (pos) {
       for (const z of zones) {
+        if(z.if && !globalThis.checkFlagCondition?.(z.if)) continue;
         if ((z.map || 'world') !== map) continue;
         if (pos.x < z.x || pos.y < z.y || pos.x >= z.x + (z.w || 0) || pos.y >= z.y + (z.h || 0)) continue;
         if (z.dry || (z.perStep?.hp < 0) || (z.step?.hp < 0)) {
