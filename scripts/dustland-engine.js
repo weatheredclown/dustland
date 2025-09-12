@@ -1243,7 +1243,7 @@ requestAnimationFrame(draw);
   const isAck = params.get('ack-player') === '1';
   if (location.hash.includes('test')) {
     runTests();
-  } else if (!isAck) {
+  } else if (!isAck && !globalThis.modulePickerPending) {
     const saveStr = globalThis.localStorage?.getItem('dustland_crt');
     if (saveStr) {
       showStart();

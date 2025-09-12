@@ -57,7 +57,13 @@ Object.assign(global, {
   location: { href: '' }
 });
 
-global.UI = { remove: () => {} };
+const hidden = [];
+const shown = [];
+global.UI = {
+  remove: () => {},
+  hide: id => hidden.push(id),
+  show: id => shown.push(id)
+};
 
 const bodyEl = stubEl();
 const headEl = stubEl();
@@ -66,7 +72,7 @@ global.document = {
   body: bodyEl,
   head: headEl,
   createElement: () => stubEl(),
-  getElementById: () => null
+  getElementById: id => id === 'loadBtn' ? stubEl() : null
 };
 
 
@@ -170,4 +176,9 @@ test('loadModule preserves existing save data', () => {
   assert.ok(scriptEl);
   scriptEl.onload();
   assert.strictEqual(ls.getItem('dustland_crt'), 'foo');
+  assert.ok(shown.includes('loadBtn'));
+});
+
+test('load button hidden until module loads', () => {
+  assert.ok(hidden.includes('loadBtn'));
 });
