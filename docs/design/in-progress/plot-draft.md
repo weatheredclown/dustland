@@ -148,7 +148,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 - [ ] Introduce roaming encounter and event scheduler so the world reacts over time.
 - [ ] Link zones and portals to narrative flags, gating routes based on prior choices.
 - [ ] **Build Reusable Widgets:**
-    - [ ] Create a generic "dial" widget for puzzles like the radio tower.
+    - [x] Create a generic "dial" widget for puzzles like the radio tower. Implemented in `scripts/ui/dial.js`.
     - [ ] Develop a "sound-based navigation" system that can be used for the dust storm and other similar challenges.
 - [ ] **Flesh out the World:**
     - [ ] Design the first major hub city, where the caravan can rest, resupply, and find new quests.
