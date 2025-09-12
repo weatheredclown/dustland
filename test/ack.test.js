@@ -1326,3 +1326,32 @@ test('computeSpawnHeat maps distance from roads', () => {
   assert.strictEqual(spawnHeatMap[0][0], 0);
   assert.strictEqual(spawnHeatMap[0][1], 1);
 });
+
+test('renderEncounterList shows loot and collectEncounter reconciles template loot', () => {
+  const prevTemplates = moduleData.templates;
+  const prevEncounters = moduleData.encounters;
+  moduleData.templates = [{ id: 'rat', name: 'Rat', combat: { loot: 'tail', lootChance: 0.5 } }];
+  moduleData.encounters = [
+    { map: 'world', templateId: 'rat' },
+    { map: 'world', templateId: 'rat', loot: 'fang' }
+  ];
+  renderEncounterList();
+  const html = document.getElementById('encounterList').innerHTML;
+  assert(html.includes('Rat - tail'));
+  assert(html.includes('Rat - fang'));
+  document.getElementById('encMap').value = 'world';
+  document.getElementById('encTemplate').value = 'rat';
+  document.getElementById('encMinDist').value = '';
+  document.getElementById('encMaxDist').value = '';
+  document.getElementById('encLoot').value = 'tail';
+  document.getElementById('encLootChance').value = '50';
+  const entry = collectEncounter();
+  assert.strictEqual(entry.loot, undefined);
+  assert.strictEqual(entry.lootChance, undefined);
+  document.getElementById('encLoot').value = '';
+  const entry2 = collectEncounter();
+  assert.strictEqual(entry2.loot, '');
+  moduleData.templates = prevTemplates;
+  moduleData.encounters = prevEncounters;
+  document.getElementById('encounterList').innerHTML = '';
+});
