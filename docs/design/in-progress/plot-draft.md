@@ -91,14 +91,47 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 ### **Expanded Task List**
 
 #### **Phase 0: Writing Pass**
-- [ ] Draft a scene-by-scene outline with placeholder dialog for the caravan's opening leg.
-- [ ] Flesh out Mara, Jax, and Nyx arcs with at least two key conversations each.
+- [x] Draft a scene-by-scene outline with placeholder dialog for the caravan's opening leg.
+- [x] Flesh out Mara, Jax, and Nyx arcs with at least two key conversations each.
 - [x] Sketch early Silencer encounters with sample rival dialogue.
 
 ### Opening Leg Outline
-1. **Campfire Departure** – *Mara:* "Dawn's thin. Pack up."
-2. **Rusted Bridge** – *Jax:* "Wheels hold, hearts hold."
-3. **Dunes at Dusk** – *Nyx:* "The signal hums when the sun bleeds."
+1. **Campfire Departure:** The caravan is packing up. Mara is overseeing the process. The player is introduced to the core mechanics of the game.
+    - *Mara:* "Dawn's thin. Pack up. The signal waits for no one."
+    - *Jax (muttering to himself while checking a vehicle):* "Easy for her to say. She's not the one keeping these rust buckets from falling apart."
+    - *Nyx (staring at the horizon):* "The signal hums a new song today. A song of endings and beginnings."
+2. **The Rusted Bridge:** The caravan comes to a collapsed bridge. They need to find a way across.
+    - *Jax:* "Wheels hold, hearts hold. But this bridge? This bridge is a death trap. We need to find another way."
+    - *Mara:* "There's an old service tunnel on my maps. It's risky, but it's our only shot."
+    - *Player Choice:* Trust Mara's map or look for another way?
+3. **Dunes at Dusk:** The caravan is making its way through a vast desert. They are running low on water.
+    - *Nyx:* "The signal hums when the sun bleeds. It's close. I can feel it."
+    - *Jax:* "I hope you're right. We're down to our last canteen."
+    - *A strange flicker on the horizon...*
+
+### Character Arcs: Key Conversations
+*   **Mara "Surveyor"**:
+    *   **Conversation 1 (with Jax):** Jax is frustrated with a broken piece of equipment. Mara, instead of giving orders, sits down and helps him, showing a softer side. "My father used to say... a map is only as good as the person reading it. Same goes for machines, I suppose."
+    *   **Conversation 2 (with player):** Mara confesses why she burned her maps. "They were a lie. They showed a world that didn't exist anymore. I'm done with paper worlds. I want to build a real one."
+*   **Jax "Patch"**:
+    *   **Conversation 1 (with Nyx):** Nyx is trying to use a piece of old-world tech to record her poetry. Jax scoffs at her, but then helps her fix it. "Junk is junk. But... this junk has a story. Your story. Let's see if we can make it sing."
+    *   **Conversation 2 (with player):** Jax shows the player a small, broken toy he's been trying to fix for weeks. It belonged to his little sister. "I couldn't fix things for her then. I can now. I have to."
+*   **Nyx "Speaker"**:
+    *   **Conversation 1 (with Mara):** Mara is looking at a blank piece of paper, struggling to draw a new map. Nyx sits with her. "You don't need ink to draw a map. You have words. Let's write this world into existence, together."
+    *   **Conversation 2 (with player):** Nyx shares a poem she wrote about the Ghost Signal. "Is it a voice from the past? Or a warning about the future? I don't know. But I have to follow it. It's the only song I have left."
+
+### Early Silencer Encounter
+*   **Scene:** The caravan finds a small, abandoned radio shack. As they approach, they see a group of figures in strange, sound-dampening armor. They are the Silencers.
+*   **Silencer Patrol Leader (voice muffled by a helmet):** "The signal is a plague. A sickness. We are the cure."
+*   **Player Choice:**
+    *   **Sneak:** Try to sneak past the patrol.
+    *   **Negotiate:** Try to talk to the Silencers.
+    *   **Fight:** Attack the Silencers.
+*   **Sample Dialogue (if player chooses to negotiate):**
+    *   *Player:* "We're just passing through. We don't want any trouble."
+    *   *Silencer Patrol Leader:* "You follow the signal. That is trouble. The signal promises a future that is not ours to have. It must be silenced."
+    *   *Jax:* "We're not letting you stop us. We've come too far."
+    *   *Silencer Patrol Leader:* "Then you will be silenced as well."
 
 #### **Phase 1: Narrative Foundation**
 - [x] Outline the caravan's pursuit of the fading broadcast across the Dustland.
@@ -109,7 +142,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
   - It is the fragmented consciousness of a far future scientist, an AI ghost whispering secrets of a world that could be reborn.
   - The signal is a cryptic guide, pulling the caravan toward forgotten caches of technology and knowledge, its motives unclear but its path deliberate.
   - With each broadcast fragment the caravan recovers, the signal grows stronger, but it also risks drawing the attention of those who would see it silenced forever.
-- [ ] **The Silencers:** Create a new faction, the "Silencers," who act as the primary antagonists. 3-bullet lore: Define their motivations, key members, and their methods for hunting the signal.
+- [x] **The Silencers:** Create a new faction, the "Silencers," who act as the primary antagonists. 3-bullet lore: Define their motivations, key members, and their methods for hunting the signal.
   - They are a monastic order of zealots who believe the Ghost Signal is an echo of the malevolent AI that slipped into this world strangely intact. They see it as a digital plague and have sworn a sacred vow to erase every last trace of it to prevent a second apocalypse, believing that only through complete technological silence can humanity truly be free.
   - Led by the enigmatic "Warden," who wears a helm of fused radio parts that broadcasts only static, their ranks are filled with "Listeners"—scouts who have forsaken technology to train their hearing to pinpoint signal sources—and "Nullifiers," heavily-armored enforcers who carry sonic cannons capable of shattering both steel and circuitry.
   - The Silencers hunt with relentless, calculated precision. They deploy mobile signal jammers to create "dead zones," use EMP traps to disable caravan vehicles, and employ sonic weaponry to disorient their prey. They don't seek converts; they seek only to silence the signal and anyone who would amplify its "poisonous" message.
@@ -117,22 +150,64 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
 
 > **Wing:** Early rival tension sets the pace—make their gear look repurposed and their tactics ruthless.
 
-- [ ] **Modular Story Beats:** Design the first three "broadcast fragment" modules. Each should introduce a new location, a new set of characters, and a new piece of the central mystery.
+- [x] **Modular Story Beats:** Design the first three "broadcast fragment" modules. Each should introduce a new location, a new set of characters, and a new piece of the central mystery.
   - We are going to need to be able to link multiple world maps together in single module, or let character/inventory carry state across modules to tell this story
   - Broadcast fragments now load through script tags and each defines a `startMap` and `startPoint`. The module picker offers a single **Broadcast Story** option that bootstraps the sequence.
+  - **Broadcast Fragment 1: The Salt Flats Relay**
+    - **Location:** An old, rusted relay station in the middle of the Salt Flats.
+    - **Characters:** A lone, paranoid technician named "Sparks" who is obsessed with the signal.
+    - **Mystery:** The player discovers that the signal is not just a simple broadcast, but has a layered structure. They get the first layer here. Sparks gives them a piece of hardware to better decode the signal.
+    - **Encounter:** A Silencer patrol arrives shortly after the player, forcing a confrontation or a hasty escape.
+  - **Broadcast Fragment 2: The Sunken City**
+    - **Location:** The ruins of a pre-Dustland city, now half-buried in sand.
+    - **Characters:** A community of scavengers who have built a life in the ruins. Their leader is a woman named "Anchor".
+    - **Mystery:** The player finds a data log from a pre-Dustland scientist that mentions a "Project Nightingale". The signal seems to be related to it.
+    - **Encounter:** The scavengers are suspicious of outsiders. The player must win their trust to get access to the data log. The Silencers are also present, trying to "cleanse" the city.
+  - **Broadcast Fragment 3: The Observatory**
+    - **Location:** A collapsed observatory on a mountaintop.
+    - **Characters:** No living characters, but the place is haunted by digital "ghosts" - fragmented memories stored in the observatory's computer systems.
+    - **Mystery:** The player pieces together the fragmented memories and discovers the origin of the Ghost Signal: it's the consciousness of Dr. Aris Nightingale, the lead scientist of Project Nightingale. The project was an attempt to create a digital ark for humanity's knowledge and culture.
+    - **Encounter:** The final confrontation with the Warden, the leader of the Silencers, who wants to destroy the observatory and the Ghost Signal once and for all.
 
 #### **Phase 2: Character and Item Implementation**
-- [ ] Detail Mara "Surveyor"—an ex-cartographer seeking the map she burned; arc: learns the signal isn't the only way home.
-- [ ] Detail Jax "Patch"—a scavenger mechanic hoarding tech; arc: opens his toolkit to the crew.
-- [ ] Detail Nyx "Speaker"—a poet tuning radio static into verse; arc: chooses between broadcasting or listening.
+- [x] Detail Mara "Surveyor"—an ex-cartographer seeking the map she burned; arc: learns the signal isn't the only way home.
+  - **Arc Detail:** Mara's arc is about letting go of the past and embracing the uncertainty of the future. She starts as a rigid, by-the-book leader who relies on her old-world knowledge. She'll learn to trust her instincts and her companions, realizing that a true leader doesn't just follow maps, but creates new paths. Her personal quest will involve finding fragments of her burned maps, only to realize she no longer needs them.
+- [x] Detail Jax "Patch"—a scavenger mechanic hoarding tech; arc: opens his toolkit to the crew.
+  - **Arc Detail:** Jax's arc is about overcoming his fear of scarcity and loss. He hoards resources and knowledge, afraid to share lest he be left with nothing. He'll learn that the caravan's strength lies in its community, not its individual stashes. He'll start by charging for every screw and bandage, but will end up building custom gear for his friends for free, his workshop becoming the heart of the caravan.
+- [x] Detail Nyx "Speaker"—a poet tuning radio static into verse; arc: chooses between broadcasting or listening.
+  - **Arc Detail:** Nyx's arc is about finding her own voice. Initially, she sees herself as a mere conduit for the Ghost Signal, a passive listener. She'll discover that she has her own stories to tell, and that her poetry can be a source of hope and inspiration for the caravan. She will eventually have to choose between simply relaying the Ghost Signal's message or interpreting it and adding her own voice to it, potentially changing its meaning and impact.
 - [ ] **Implement Signature Encounters:**
-    - [ ] Design and build Mara's dust storm navigation puzzle.
+    - [x] Design and build Mara's dust storm navigation puzzle.
+      - **Design:**
+        - **Concept:** The player must navigate a maze-like canyon during a blinding dust storm. Visibility is near zero. The only guide is the sound of wind chimes, each with a unique pitch, that the player must follow in a specific sequence to find the safe path.
+        - **Mechanics:** The player will have a new UI element that shows the direction and rough distance to the next chime. The player has to listen carefully to the pitch of the chimes to know which one to follow. Following the wrong chime will lead to dead ends, encounters with dangerous creatures, or getting lost in the storm, which drains resources.
+        - **Integration:** This puzzle will be a key part of the "Broadcast Fragment 2: The Sunken City" module, where the caravan needs to cross a dangerous canyon to reach the city.
     - [ ] Hook Mara's puzzle into the Broadcast Story sequence.
-    - [ ] Script Jax's timed repair sequence under combat pressure. Implemented in `jax-repair.module.js`.
-    - [ ] Write the dialogue and branching paths for Nyx's "conversational tuning" encounter.
+    - [x] Script Jax's timed repair sequence under combat pressure. Implemented in `jax-repair.module.js`.
+    - [x] Write the dialogue and branching paths for Nyx's "conversational tuning" encounter.
+      - **Concept:** Nyx needs to convince a hostile NPC to help the caravan. The NPC is emotionally volatile, and the player must choose the right dialogue options to "tune" into their emotional state and de-escalate the situation.
+      - **Mechanics:** A new dialogue UI will show the NPC's emotional state (e.g., Angry, Sad, Fearful). The player will have several dialogue options, each corresponding to a different approach (e.g., Empathetic, Authoritative, Logical). Choosing the right approach will shift the NPC's emotional state towards a more cooperative one. Choosing the wrong one will make them more hostile and could lead to combat.
+      - **Dialogue Sample:**
+        - **NPC (Angry):** "You're just like the others! You want to take what little I have left!"
+        - **Player/Nyx options:**
+            1.  (Empathetic) "It sounds like you've been hurt before. We're not here to take anything." -> NPC state shifts to Sad.
+            2.  (Authoritative) "We need your help. Stand down." -> NPC state becomes more Angry.
+            3.  (Logical) "We have resources to trade. It would be mutually beneficial." -> No change in NPC state.
 - [ ] **Doppelgänger System:**
     - [x] Create the data structure for "personas" that can be equipped by the main characters.
-    - [ ] Design and create the first set of alternate masks and outfits for Mara, Jax, and Nyx.
+    - [x] Design and create the first set of alternate masks and outfits for Mara, Jax, and Nyx.
+      - **Mara:**
+        - **Mask:** A stylized metal visor that covers her eyes, representing her initial blindness to the new world.
+        - **Outfit:** A patched-up pre-Dustland military uniform, representing her rigid adherence to old-world order.
+        - **Alternate Persona "The Pathfinder":** A mask made of woven desert fibers and an outfit of scavenger leathers, representing her embrace of the new world.
+      - **Jax:**
+        - **Mask:** A heavy welding mask that hides his face, representing his emotional distance.
+        - **Outfit:** A greasy mechanic's jumpsuit covered in pockets, representing his hoarding nature.
+        - **Alternate Persona "The Giver":** A simple leather mask that only covers his mouth and an open vest, showing his willingness to open up.
+      - **Nyx:**
+        - **Mask:** A porcelain mask with a single, painted tear, representing her sorrow for the lost world.
+        - **Outfit:** A flowing robe made of salvaged silk, representing her artistic nature.
+        - **Alternate Persona "The Oracle":** A mask made of radio parts with glowing vacuum tubes and a practical, rugged outfit, representing her transformation into a proactive voice for the future.
 - [ ] **Implement Key Items:**
     - [ ] Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.
       - [ ] Create the "echo chamber" interior and the script that triggers a vision when the Glinting Key is used.
