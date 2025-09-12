@@ -532,7 +532,7 @@ function interactAt(x, y) {
         if(b.boarded){ log('The doorway is boarded up from the outside.'); bus.emit('sfx','denied'); return true; }
         if(b.bunker){
           Dustland.fastTravel?.activateBunker?.(b.bunkerId);
-          if(typeof openWorldMap==='function') openWorldMap();
+          if(typeof openWorldMap==='function') openWorldMap(b.bunkerId);
           bus.emit('sfx','confirm');
           return true;
         }

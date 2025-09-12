@@ -1,5 +1,8 @@
 # Changelog
 
+## 2025-09-14
+- Bunker door now opens fast-travel map with fuel cost confirmation.
+
 ## 2025-09-13
 - Added button to clear saved game data.
 
