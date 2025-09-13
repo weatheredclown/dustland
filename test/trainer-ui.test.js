@@ -50,9 +50,9 @@ test('apply upgrade via effect', () => {
   context.party.push(lead); context.party.push(m);
   context.TrainerUI.showTrainer('power', 1);
   npc.tree.train.choices[0].effects[0]();
-  assert.strictEqual(m.stats.STR, 5);
-  assert.strictEqual(m.skillPoints, 0);
+  assert.strictEqual(lead.stats.STR, 5);
   assert.strictEqual(lead.skillPoints, 0);
+  assert.strictEqual(m.skillPoints, 1);
 });
 
 test('shows leader skill points in text', () => {
