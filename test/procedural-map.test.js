@@ -134,6 +134,20 @@ test('carveRoads favors contour paths', () => {
   assert.notEqual(roaded[1][0], 4);
 });
 
+test('carveRoads skips jitter over water', () => {
+  globalThis.TILE = { SAND: 0, ROAD: 4, WATER: 2 };
+  const tiles = [
+    [0, 0, 0],
+    [2, 2, 2],
+    [0, 0, 0]
+  ];
+  const field = Array.from({ length: 3 }, () => Array(3).fill(0));
+  const centers = [{ x: 0, y: 0 }, { x: 2, y: 0 }];
+  const edges = [[0, 1]];
+  const roaded = globalThis.carveRoads(tiles, centers, edges, field, 1);
+  assert.deepEqual(roaded[1], [2, 2, 2]);
+});
+
 test('scatterRuins respects spacing and terrain', () => {
   globalThis.TILE = { SAND: 0, WATER: 2, ROAD: 4, RUIN: 6 };
   const size = 10;

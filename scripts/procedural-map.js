@@ -224,20 +224,20 @@ function carveRoads(tiles, centers, edges, field, seed = 1) {
       const py = y0;
       x0 = opts[0].nx;
       y0 = opts[0].ny;
-      if (px !== x0 && py !== y0) {
+      if (px !== x0 && py !== y0 && tiles[py][x0] !== TILE.WATER) {
         tiles[py][x0] = TILE.ROAD;
       }
       if (rand() < 0.3) {
         const jx = Math.max(0, Math.min(w - 1, x0 + (rand() < 0.5 ? -1 : 1)));
         const jy = Math.max(0, Math.min(h - 1, y0 + (rand() < 0.5 ? -1 : 1)));
-        tiles[jy][jx] = TILE.ROAD;
+        if (tiles[jy][jx] !== TILE.WATER) tiles[jy][jx] = TILE.ROAD;
       }
     }
     tiles[y0][x0] = TILE.ROAD;
     if (rand() < 0.3) {
       const jx = Math.max(0, Math.min(w - 1, x0 + (rand() < 0.5 ? -1 : 1)));
       const jy = Math.max(0, Math.min(h - 1, y0 + (rand() < 0.5 ? -1 : 1)));
-      tiles[jy][jx] = TILE.ROAD;
+      if (tiles[jy][jx] !== TILE.WATER) tiles[jy][jx] = TILE.ROAD;
     }
   }
   return tiles;
