@@ -165,6 +165,21 @@ test('scatterRuins respects spacing and terrain', () => {
   assert.ok(clustered);
 });
 
+test('scatterRuins spreads hubs apart', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, ROAD: 4, RUIN: 6 };
+  const grid = Array.from({ length: 32 }, () => Array(32).fill(0));
+  const res = globalThis.scatterRuins(grid, 7);
+  const hubs = res.hubs;
+  for (let i = 0; i < hubs.length; i++) {
+    for (let j = i + 1; j < hubs.length; j++) {
+      const dx = hubs[i].x - hubs[j].x;
+      const dy = hubs[i].y - hubs[j].y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      assert.ok(d >= 12);
+    }
+  }
+});
+
 test('generateProceduralMap returns grid of requested size', () => {
   globalThis.TILE = { SAND: 0, WATER: 2, BRUSH: 3, ROCK: 5, ROAD: 4, RUIN: 6 };
   const map = globalThis.generateProceduralMap(1, 10, 8);

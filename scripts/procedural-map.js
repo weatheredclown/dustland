@@ -243,7 +243,7 @@ function carveRoads(tiles, centers, edges, field, seed = 1) {
   return tiles;
 }
 
-function scatterRuins(tiles, seed = 1, radius = 6) {
+function scatterRuins(tiles, seed = 1, radius = 12) {
   const rand = mulberry32(typeof seed === 'string' ? hashString(seed) : seed);
   const h = tiles.length;
   const w = tiles[0].length;
@@ -286,7 +286,7 @@ function scatterRuins(tiles, seed = 1, radius = 6) {
       }
     }
   }
-  return { tiles, ruins };
+  return { tiles, ruins, hubs };
 }
 
 function findRegionCenters(tiles) {
@@ -370,6 +370,7 @@ function generateProceduralMap(seed, width, height, scale = 4, falloff = 0, feat
     const res = scatterRuins(tiles, seed);
     tiles = res.tiles;
     feat.ruins = res.ruins;
+    feat.ruinHubs = res.hubs;
   }
   return { tiles, regions: centers, roads: edges, features: feat };
 }
