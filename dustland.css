@@ -402,7 +402,7 @@ input[type="range"] {
   height: 16px;
 }
 .xpbar:hover::after {
-  content: attr(data-xp);
+  content: attr(data-xp) ' xp';
   position: absolute;
   top: 50%;
   left: 50%;

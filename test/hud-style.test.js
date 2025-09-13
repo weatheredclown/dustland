@@ -19,3 +19,8 @@ test('status row spacing and icon contrast tweaked', async () => {
   assert.ok(hasRule(src, '.status-row', 'margin-top', '2px'));
   assert.ok(hasRule(src, '.status-row span', 'filter', 'contrast(1.2)'));
 });
+
+test('xp bar hover displays xp label', async () => {
+  const src = await fs.readFile(cssFile, 'utf8');
+  assert.ok(hasRule(src, '.xpbar:hover::after', 'content', "attr(data-xp) ' xp'"));
+});
