@@ -262,5 +262,32 @@ test('collectTemplate reads loot chance', async () => {
   vm.runInContext(code.slice(start, end), context);
   const t = context.collectTemplate();
   assert.strictEqual(t.combat.lootChance, 0.1);
+  assert.ok(!('challenge' in t.combat));
+});
+
+test('collectTemplate clamps challenge to 1-10', async () => {
+  const document = makeDocument();
+  mkInput(document, 'templateId', 't');
+  mkInput(document, 'templateName', 'T');
+  mkTextarea(document, 'templateDesc', '');
+  mkInput(document, 'templateColor', '#fff');
+  mkInput(document, 'templatePortrait', '');
+  mkInput(document, 'templateHP', '5');
+  mkInput(document, 'templateATK', '1');
+  mkInput(document, 'templateDEF', '0');
+  mkInput(document, 'templateChallenge', '42');
+  mkInput(document, 'templateSpecialCue', '');
+  mkInput(document, 'templateSpecialDmg', '0');
+  mkInput(document, 'templateLoot', '');
+  mkInput(document, 'templateLootChance', '100');
+  mkInput(document, 'templateRequires', '');
+  const context = { document };
+  vm.createContext(context);
+  const code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
+  const start = code.indexOf('function collectTemplate');
+  const end = code.indexOf('function addTemplate', start);
+  vm.runInContext(code.slice(start, end), context);
+  const t = context.collectTemplate();
+  assert.strictEqual(t.combat.challenge, 10);
 });
 
