@@ -23,7 +23,8 @@
     const data = loadTrainerData();
     const upgrades = data[id] || [];
     const npc = globalThis.currentNPC;
-    const trainNode = npc?.tree?.train;
+    const tree = (typeof dialogState === 'object' && dialogState?.tree) || npc?.tree;
+    const trainNode = tree?.train;
     if(!trainNode) return false;
     const member = globalThis.party?.[memberIndex];
     const lead = typeof leader === 'function' ? leader() : null;
@@ -42,6 +43,7 @@
     });
     choices.push({ label: '(Back)', to: 'start' });
     trainNode.choices = choices;
+    if(npc?.tree && npc.tree !== tree) npc.tree.train = trainNode;
     return true;
   }
 
