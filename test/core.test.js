@@ -1534,7 +1534,7 @@ test('combat hp bars update after damage', async () => {
   assert.strictEqual(res.result, 'loot');
 });
 
-test('party adrenaline pie reflects adr percent', async () => {
+test('party adrenaline bar reflects adr percent', async () => {
   party.length = 0;
   player.inv.length = 0;
   const m1 = new Character('p1','P1','Role');
@@ -1548,13 +1548,14 @@ test('party adrenaline pie reflects adr percent', async () => {
     { name:'E1', hp:1, maxHp:1 }
   ]);
 
-  const pie = combatParty.children[0].children[1].children[1];
-  assert.strictEqual(pie.style.getPropertyValue('--adr-angle'), '180deg');
-  if (typeof pie.getAttribute === 'function') {
-    assert.strictEqual(pie.getAttribute('role'), 'progressbar');
-    assert.strictEqual(pie.getAttribute('aria-valuenow'), '50');
-    assert.strictEqual(pie.getAttribute('aria-valuemax'), '100');
-    assert.strictEqual(pie.getAttribute('aria-valuemin'), '0');
+  const adr = combatParty.children[0].children[2];
+  const fill = adr.children[0];
+  assert.strictEqual(fill.style.width, '50%');
+  if (typeof adr.getAttribute === 'function') {
+    assert.strictEqual(adr.getAttribute('role'), 'progressbar');
+    assert.strictEqual(adr.getAttribute('aria-valuenow'), '50');
+    assert.strictEqual(adr.getAttribute('aria-valuemax'), '100');
+    assert.strictEqual(adr.getAttribute('aria-valuemin'), '0');
   }
 
   handleCombatKey({ key:'Enter' });
