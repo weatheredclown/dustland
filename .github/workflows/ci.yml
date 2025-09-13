@@ -15,7 +15,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  event-info:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "event_name=${{ github.event_name }}"
+          echo "head_commit_message=${{ github.event.head_commit.message || '' }}"
+
   build:
+    needs: event-info
     if: >-
       ${{ github.event_name != 'push' ||
           !startsWith(
@@ -35,4 +43,3 @@ jobs:
       - run: npm test
       - run: node scripts/supporting/presubmit.js
       - run: npm run lint
-
