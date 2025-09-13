@@ -37,18 +37,24 @@
     const member = state.party && state.party[0];
     if (!member || !overlay || !list) return;
     const ids = Object.keys(state.personas || {});
-    if (!ids.length) return;
     list.innerHTML = '';
-    ids.forEach(id => {
-      const b = document.createElement('button');
-      b.className = 'btn';
-      b.textContent = id;
-      b.addEventListener('click', () => {
-        overlay.classList.remove('shown');
-        gs.applyPersona(member.id, id);
-      }, { once: true });
-      list.appendChild(b);
-    });
+    if (!ids.length) {
+      const msg = document.createElement('div');
+      msg.className = 'muted';
+      msg.textContent = 'No masks available';
+      list.appendChild(msg);
+    } else {
+      ids.forEach(id => {
+        const b = document.createElement('button');
+        b.className = 'btn';
+        b.textContent = id;
+        b.addEventListener('click', () => {
+          overlay.classList.remove('shown');
+          gs.applyPersona(member.id, id);
+        }, { once: true });
+        list.appendChild(b);
+      });
+    }
     overlay.classList.add('shown');
   });
 })();

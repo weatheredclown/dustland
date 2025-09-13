@@ -1,5 +1,8 @@
 # Changelog
 
+## 2025-09-15
+- Camp interface now appears even when no masks are available.
+
 ## 2025-09-14
 - Bunker door now opens fast-travel map with fuel cost confirmation.
 
