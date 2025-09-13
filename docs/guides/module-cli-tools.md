@@ -152,6 +152,8 @@ complete module object looks like this:
 }
 ```
 
+- `challenge` is a 1–10 rating that boosts loot cache drop odds and tier.
+
 ### Item
 
 ```json
@@ -319,8 +321,9 @@ Common examples:
     "HP": 0,
     "ATK": 0,
     "DEF": 0,
-    "challenge": 0,
+    "challenge": 1,
     "special": { "cue": "text", "dmg": 0 }
   }
 }
 ```
+- `challenge` is a 1–10 rating that boosts loot cache drop odds and tier.

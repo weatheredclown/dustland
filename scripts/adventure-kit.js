@@ -2740,7 +2740,7 @@ function collectTemplate(){
   const HP = parseInt(document.getElementById('templateHP').value,10) || 1;
   const ATK = parseInt(document.getElementById('templateATK').value,10) || 1;
   const DEF = parseInt(document.getElementById('templateDEF').value,10) || 0;
-  const challenge = parseInt(document.getElementById('templateChallenge').value,10) || 0;
+  const challenge = parseInt(document.getElementById('templateChallenge').value,10);
   const specialCue = document.getElementById('templateSpecialCue').value.trim();
   const specialDmg = parseInt(document.getElementById('templateSpecialDmg').value,10) || 0;
   const loot = document.getElementById('templateLoot').value.trim();
@@ -2751,7 +2751,7 @@ function collectTemplate(){
   const scrapMax = parseInt(document.getElementById('templateScrapMax').value,10) || scrapMin;
   const requires = document.getElementById('templateRequires').value.trim();
   const combat = { HP, ATK, DEF };
-  if (challenge) combat.challenge = challenge;
+  if (challenge > 0) combat.challenge = Math.min(10, challenge); // higher values improve loot caches
   if (loot) combat.loot = loot;
   if (!isNaN(lootChancePct) && lootChancePct >= 0 && lootChancePct < 100) {
     combat.lootChance = lootChancePct / 100;
