@@ -1534,6 +1534,12 @@ test('party adrenaline pie reflects adr percent', async () => {
 
   const pie = combatParty.children[0].children[1].children[1];
   assert.strictEqual(pie.style.getPropertyValue('--adr-angle'), '180deg');
+  if (typeof pie.getAttribute === 'function') {
+    assert.strictEqual(pie.getAttribute('role'), 'progressbar');
+    assert.strictEqual(pie.getAttribute('aria-valuenow'), '50');
+    assert.strictEqual(pie.getAttribute('aria-valuemax'), '100');
+    assert.strictEqual(pie.getAttribute('aria-valuemin'), '0');
+  }
 
   handleCombatKey({ key:'Enter' });
   handleCombatKey({ key:'Enter' });
