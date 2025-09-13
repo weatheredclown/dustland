@@ -1364,3 +1364,64 @@ test('renderEncounterList shows loot and collectEncounter reconciles template lo
   moduleData.encounters = prevEncounters;
   document.getElementById('encounterList').innerHTML = '';
 });
+
+test('generateProceduralWorld preserves existing data', () => {
+  moduleData.procGen = { seed: 1, falloff: 0, roads: false, ruins: false };
+  moduleData.npcs = [{ id: 'npc1', name: 'NPC', map: 'world', x: 0, y: 0, tree: {} }];
+  moduleData.items = [{ id: 'item1', name: 'Item', map: 'world', x: 1, y: 1 }];
+  moduleData.quests = [{ id: 'quest1', title: 'Quest' }];
+  moduleData.buildings = [{ x: 1, y: 1, w: 1, h: 1 }];
+  moduleData.interiors = [{ id: 'room', w: 1, h: 1, grid: [[TILE.FLOOR]] }];
+  moduleData.portals = [{ map: 'world', x: 0, y: 0, target: 'room', tx: 0, ty: 0 }];
+  moduleData.events = [{ map: 'world', x: 0, y: 0, events: [{ effect: 'none' }] }];
+  moduleData.zones = [{ map: 'world', x: 0, y: 0, w: 1, h: 1, msg: 'hi' }];
+  moduleData.encounters = [{ map: 'world', templateId: 'tpl1' }];
+  moduleData.templates = [{ id: 'tpl1', name: 'T', w: 1, h: 1, grid: [[TILE.FLOOR]] }];
+  buildings.length = 0; buildings.push(...moduleData.buildings);
+  portals.length = 0; portals.push(...moduleData.portals);
+  globalThis.interiors = { room: moduleData.interiors[0] };
+
+  const snapshot = JSON.stringify({
+    npcs: moduleData.npcs,
+    items: moduleData.items,
+    quests: moduleData.quests,
+    buildings: moduleData.buildings,
+    interiors: moduleData.interiors,
+    portals: moduleData.portals,
+    events: moduleData.events,
+    zones: moduleData.zones,
+    encounters: moduleData.encounters,
+    templates: moduleData.templates,
+    gBuildings: buildings,
+    gPortals: portals,
+    gInteriors: globalThis.interiors
+  });
+
+  const origConfirm = globalThis.confirmDialog;
+  globalThis.confirmDialog = (msg, onYes) => onYes();
+  const origGen = globalThis.generateProceduralMap;
+  globalThis.generateProceduralMap = () => ({ tiles: Array.from({ length: WORLD_H }, () => Array(WORLD_W).fill(TILE.SAND)) });
+
+  generateProceduralWorld(true);
+
+  globalThis.generateProceduralMap = origGen;
+  globalThis.confirmDialog = origConfirm;
+
+  const snapshotAfter = JSON.stringify({
+    npcs: moduleData.npcs,
+    items: moduleData.items,
+    quests: moduleData.quests,
+    buildings: moduleData.buildings,
+    interiors: moduleData.interiors,
+    portals: moduleData.portals,
+    events: moduleData.events,
+    zones: moduleData.zones,
+    encounters: moduleData.encounters,
+    templates: moduleData.templates,
+    gBuildings: buildings,
+    gPortals: portals,
+    gInteriors: globalThis.interiors
+  });
+
+  assert.strictEqual(snapshotAfter, snapshot);
+});

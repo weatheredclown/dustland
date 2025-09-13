@@ -899,21 +899,7 @@ function generateProceduralWorld(regen) {
     for (let y = 0; y < WORLD_H; y++) {
       world.push(map.tiles[y]);
     }
-    moduleData.npcs = [];
-    moduleData.items = [];
-    moduleData.quests = [];
-    moduleData.buildings = [];
-    moduleData.interiors = [];
-    moduleData.portals = [];
-    moduleData.events = [];
-    moduleData.zones = [];
-    moduleData.encounters = [];
-    moduleData.templates = [];
     initTags();
-    buildings.length = 0;
-    portals.length = 0;
-    globalThis.interiors = {};
-    interiors = globalThis.interiors;
     renderNPCList();
     renderItemList();
     renderQuestList();
