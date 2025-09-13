@@ -1401,6 +1401,22 @@ test('bandits can drop scrap on defeat', async () => {
   assert.strictEqual(player.scrap, 1);
 });
 
+test('npc scrap config drops scrap', async () => {
+  NPCS.length = 0;
+  party.length = 0;
+  player.inv.length = 0;
+  player.scrap = 0;
+  const m1 = new Character('p1','P1','Role');
+  party.join(m1);
+  const origRand = Math.random;
+  Math.random = () => 0;
+  const resultPromise = openCombat([{ id:'rat', name:'Rat', hp:1, scrap:{ min:2, max:4 } }]);
+  handleCombatKey({ key:'Enter' });
+  await resultPromise;
+  Math.random = origRand;
+  assert.strictEqual(player.scrap, 2);
+});
+
 test('lootChance prevents drops on high rolls', async () => {
   NPCS.length = 0;
   party.length = 0;
