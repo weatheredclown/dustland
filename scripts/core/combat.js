@@ -629,8 +629,17 @@ function doAttack(dmg, type = 'basic'){
       // lootChance defaults to 1 (100%) if unspecified
       if (target.loot && Math.random() < (target.lootChance ?? 1)) addToInv?.(target.loot);
 
-      // Bandits sometimes drop scrap
-      if (/bandit/i.test(target.id) && Math.random() < 0.5){
+      if (typeof target.scrap === 'object' && Math.random() < (target.scrap.chance ?? 1)) {
+        const min = target.scrap.min ?? 1;
+        const max = target.scrap.max ?? min;
+        const amt = Math.floor(Math.random() * (max - min + 1)) + min;
+        if (amt > 0) {
+          player.scrap = (player.scrap || 0) + amt;
+          updateHUD?.();
+          const who = target.name || target.id || 'foe';
+          log?.(`You find ${amt} scrap on the ${who}.`);
+        }
+      } else if (/bandit/i.test(target.id) && Math.random() < 0.5){
         player.scrap = (player.scrap || 0) + 1;
         updateHUD?.();
         log?.('You find 1 scrap on the bandit.');
