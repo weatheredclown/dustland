@@ -4,6 +4,12 @@ const DATA = `
 {
   "seed": 1757710671980,
   "name": "bunker-trainer-workshop",
+  "props": {
+    "fastTravelModules": [
+      { "script": "modules/world-one.module.js", "global": "WORLD_ONE_MODULE" },
+      { "script": "modules/world-two.module.js", "global": "WORLD_TWO_MODULE" }
+    ]
+  },
   "npcs": [
     {
       "id": "workbench",
@@ -262,8 +268,7 @@ const DATA = `
           9
         ]
       ],
-      "bunker": true,
-      "bunkerId": "bunker_11_60"
+      "bunker": true
     },
     {
       "x": 105,
@@ -316,8 +321,7 @@ const DATA = `
           9
         ]
       ],
-      "bunker": true,
-      "bunkerId": "bunker_105_60"
+      "bunker": true
     }
   ],
   "interiors": [

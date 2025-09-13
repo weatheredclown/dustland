@@ -899,21 +899,7 @@ function generateProceduralWorld(regen) {
     for (let y = 0; y < WORLD_H; y++) {
       world.push(map.tiles[y]);
     }
-    moduleData.npcs = [];
-    moduleData.items = [];
-    moduleData.quests = [];
-    moduleData.buildings = [];
-    moduleData.interiors = [];
-    moduleData.portals = [];
-    moduleData.events = [];
-    moduleData.zones = [];
-    moduleData.encounters = [];
-    moduleData.templates = [];
     initTags();
-    buildings.length = 0;
-    portals.length = 0;
-    globalThis.interiors = {};
-    interiors = globalThis.interiors;
     renderNPCList();
     renderItemList();
     renderQuestList();
@@ -2700,6 +2686,12 @@ function deleteEncounter(){
 function showTemplateEditor(show){
   document.getElementById('templateEditor').style.display = show ? 'block' : 'none';
 }
+function toggleTemplateScrapFields(){
+  const show = document.getElementById('templateDropScrap').checked;
+  document.querySelectorAll('.templateScrapField').forEach(el => {
+    el.style.display = show ? 'inline-block' : 'none';
+  });
+}
 function startNewTemplate(){
   editTemplateIdx = -1;
   document.getElementById('templateId').value = nextId('template', moduleData.templates);
@@ -2715,9 +2707,14 @@ function startNewTemplate(){
   document.getElementById('templateSpecialDmg').value = '';
   populateItemDropdown(document.getElementById('templateLoot'), '');
   document.getElementById('templateLootChance').value = 100;
+  document.getElementById('templateDropScrap').checked = false;
+  document.getElementById('templateScrapChance').value = 100;
+  document.getElementById('templateScrapMin').value = 1;
+  document.getElementById('templateScrapMax').value = 1;
   document.getElementById('templateRequires').value = '';
   document.getElementById('addTemplate').textContent = 'Add Template';
   document.getElementById('delTemplate').style.display = 'none';
+  toggleTemplateScrapFields();
   showTemplateEditor(true);
 }
 function collectTemplate(){
@@ -2729,17 +2726,27 @@ function collectTemplate(){
   const HP = parseInt(document.getElementById('templateHP').value,10) || 1;
   const ATK = parseInt(document.getElementById('templateATK').value,10) || 1;
   const DEF = parseInt(document.getElementById('templateDEF').value,10) || 0;
-  const challenge = parseInt(document.getElementById('templateChallenge').value,10) || 0;
+  const challenge = parseInt(document.getElementById('templateChallenge').value,10);
   const specialCue = document.getElementById('templateSpecialCue').value.trim();
   const specialDmg = parseInt(document.getElementById('templateSpecialDmg').value,10) || 0;
   const loot = document.getElementById('templateLoot').value.trim();
   const lootChancePct = parseFloat(document.getElementById('templateLootChance').value);
+  const dropScrap = document.getElementById('templateDropScrap').checked;
+  const scrapChancePct = parseFloat(document.getElementById('templateScrapChance').value);
+  const scrapMin = parseInt(document.getElementById('templateScrapMin').value,10) || 0;
+  const scrapMax = parseInt(document.getElementById('templateScrapMax').value,10) || scrapMin;
   const requires = document.getElementById('templateRequires').value.trim();
   const combat = { HP, ATK, DEF };
-  if (challenge) combat.challenge = challenge;
+  if (challenge > 0) combat.challenge = Math.min(10, challenge); // higher values improve loot caches
   if (loot) combat.loot = loot;
   if (!isNaN(lootChancePct) && lootChancePct >= 0 && lootChancePct < 100) {
     combat.lootChance = lootChancePct / 100;
+  }
+  if (dropScrap) {
+    combat.scrap = { min: scrapMin, max: scrapMax };
+    if (!isNaN(scrapChancePct) && scrapChancePct >= 0 && scrapChancePct < 100) {
+      combat.scrap.chance = scrapChancePct / 100;
+    }
   }
   if (requires) combat.requires = requires;
   if (specialCue || specialDmg) {
@@ -2775,9 +2782,15 @@ function editTemplate(i){
   document.getElementById('templateSpecialDmg').value = t.combat?.special?.dmg || '';
   populateItemDropdown(document.getElementById('templateLoot'), t.combat?.loot || '');
   document.getElementById('templateLootChance').value = t.combat?.lootChance != null ? Math.round(t.combat.lootChance * 100) : 100;
+  const scrap = t.combat?.scrap;
+  document.getElementById('templateDropScrap').checked = !!scrap;
+  document.getElementById('templateScrapChance').value = scrap?.chance != null ? Math.round(scrap.chance * 100) : 100;
+  document.getElementById('templateScrapMin').value = scrap?.min ?? 1;
+  document.getElementById('templateScrapMax').value = scrap?.max ?? 1;
   document.getElementById('templateRequires').value = t.combat?.requires || '';
   document.getElementById('addTemplate').textContent = 'Update Template';
   document.getElementById('delTemplate').style.display = 'block';
+  toggleTemplateScrapFields();
   showTemplateEditor(true);
 }
 function renderTemplateList(){
@@ -3832,6 +3845,7 @@ document.getElementById('closeEncounter').onclick = () => showEncounterEditor(fa
 document.getElementById('newTemplate').onclick = startNewTemplate;
 document.getElementById('addTemplate').onclick = addTemplate;
 document.getElementById('delTemplate').onclick = deleteTemplate;
+document.getElementById('templateDropScrap').onchange = toggleTemplateScrapFields;
 document.getElementById('npcPrevP').onclick = () => {
   npcPortraitIndex = (npcPortraitIndex + npcPortraits.length - 1) % npcPortraits.length;
   npcPortraitPath = '';

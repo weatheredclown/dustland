@@ -224,26 +224,26 @@ function carveRoads(tiles, centers, edges, field, seed = 1) {
       const py = y0;
       x0 = opts[0].nx;
       y0 = opts[0].ny;
-      if (px !== x0 && py !== y0) {
+      if (px !== x0 && py !== y0 && tiles[py][x0] !== TILE.WATER) {
         tiles[py][x0] = TILE.ROAD;
       }
       if (rand() < 0.3) {
         const jx = Math.max(0, Math.min(w - 1, x0 + (rand() < 0.5 ? -1 : 1)));
         const jy = Math.max(0, Math.min(h - 1, y0 + (rand() < 0.5 ? -1 : 1)));
-        tiles[jy][jx] = TILE.ROAD;
+        if (tiles[jy][jx] !== TILE.WATER) tiles[jy][jx] = TILE.ROAD;
       }
     }
     tiles[y0][x0] = TILE.ROAD;
     if (rand() < 0.3) {
       const jx = Math.max(0, Math.min(w - 1, x0 + (rand() < 0.5 ? -1 : 1)));
       const jy = Math.max(0, Math.min(h - 1, y0 + (rand() < 0.5 ? -1 : 1)));
-      tiles[jy][jx] = TILE.ROAD;
+      if (tiles[jy][jx] !== TILE.WATER) tiles[jy][jx] = TILE.ROAD;
     }
   }
   return tiles;
 }
 
-function scatterRuins(tiles, seed = 1, radius = 6) {
+function scatterRuins(tiles, seed = 1, radius = 12) {
   const rand = mulberry32(typeof seed === 'string' ? hashString(seed) : seed);
   const h = tiles.length;
   const w = tiles[0].length;
@@ -286,7 +286,7 @@ function scatterRuins(tiles, seed = 1, radius = 6) {
       }
     }
   }
-  return { tiles, ruins };
+  return { tiles, ruins, hubs };
 }
 
 function findRegionCenters(tiles) {
@@ -370,6 +370,7 @@ function generateProceduralMap(seed, width, height, scale = 4, falloff = 0, feat
     const res = scatterRuins(tiles, seed);
     tiles = res.tiles;
     feat.ruins = res.ruins;
+    feat.ruinHubs = res.hubs;
   }
   return { tiles, regions: centers, roads: edges, features: feat };
 }

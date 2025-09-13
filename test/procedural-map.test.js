@@ -134,6 +134,20 @@ test('carveRoads favors contour paths', () => {
   assert.notEqual(roaded[1][0], 4);
 });
 
+test('carveRoads skips jitter over water', () => {
+  globalThis.TILE = { SAND: 0, ROAD: 4, WATER: 2 };
+  const tiles = [
+    [0, 0, 0],
+    [2, 2, 2],
+    [0, 0, 0]
+  ];
+  const field = Array.from({ length: 3 }, () => Array(3).fill(0));
+  const centers = [{ x: 0, y: 0 }, { x: 2, y: 0 }];
+  const edges = [[0, 1]];
+  const roaded = globalThis.carveRoads(tiles, centers, edges, field, 1);
+  assert.deepEqual(roaded[1], [2, 2, 2]);
+});
+
 test('scatterRuins respects spacing and terrain', () => {
   globalThis.TILE = { SAND: 0, WATER: 2, ROAD: 4, RUIN: 6 };
   const size = 10;
@@ -163,6 +177,21 @@ test('scatterRuins respects spacing and terrain', () => {
     if (clustered) break;
   }
   assert.ok(clustered);
+});
+
+test('scatterRuins spreads hubs apart', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, ROAD: 4, RUIN: 6 };
+  const grid = Array.from({ length: 32 }, () => Array(32).fill(0));
+  const res = globalThis.scatterRuins(grid, 7);
+  const hubs = res.hubs;
+  for (let i = 0; i < hubs.length; i++) {
+    for (let j = i + 1; j < hubs.length; j++) {
+      const dx = hubs[i].x - hubs[j].x;
+      const dy = hubs[i].y - hubs[j].y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      assert.ok(d >= 12);
+    }
+  }
 });
 
 test('generateProceduralMap returns grid of requested size', () => {
