@@ -131,11 +131,25 @@ function renderCombat(){
     wrap.appendChild(p);
 
     const hp  = document.createElement('div'); hp.className  = 'hudbar'; hp.style.width = '48px';
+    if (typeof hp.setAttribute === 'function') {
+      hp.setAttribute('role','progressbar');
+      hp.setAttribute('aria-label','Health');
+      hp.setAttribute('aria-valuemin','0');
+      hp.setAttribute('aria-valuemax', e.maxHp || 1);
+      hp.setAttribute('aria-valuenow', e.hp | 0);
+    }
     const hpf = document.createElement('div'); hpf.className = 'fill';
     hpf.style.width = Math.max(0, Math.min(100, (e.hp / (e.maxHp || 1)) * 100)) + '%';
     hp.appendChild(hpf); wrap.appendChild(hp);
 
     const adr  = document.createElement('div'); adr.className  = 'hudbar adr'; adr.style.width = '48px';
+    if (typeof adr.setAttribute === 'function') {
+      adr.setAttribute('role','progressbar');
+      adr.setAttribute('aria-label','Adrenaline');
+      adr.setAttribute('aria-valuemin','0');
+      adr.setAttribute('aria-valuemax', e.maxAdr || 1);
+      adr.setAttribute('aria-valuenow', e.adr | 0);
+    }
     const adrf = document.createElement('div'); adrf.className = 'fill';
     adrf.style.width = Math.max(0, Math.min(100, (e.adr / (e.maxAdr || 1)) * 100)) + '%';
     adr.appendChild(adrf); wrap.appendChild(adr);
@@ -157,10 +171,24 @@ function renderCombat(){
     wrap.appendChild(p);
 
     const hp  = document.createElement('div'); hp.className  = 'hudbar adrwrap'; hp.style.width = '48px';
+    if (typeof hp.setAttribute === 'function') {
+      hp.setAttribute('role','progressbar');
+      hp.setAttribute('aria-label','Health');
+      hp.setAttribute('aria-valuemin','0');
+      hp.setAttribute('aria-valuemax', m.maxHp || 1);
+      hp.setAttribute('aria-valuenow', m.hp | 0);
+    }
     const hpf = document.createElement('div'); hpf.className = 'fill';
     hpf.style.width = Math.max(0, Math.min(100, (m.hp / (m.maxHp || 1)) * 100)) + '%';
     hp.appendChild(hpf);
     const pie = document.createElement('div'); pie.className = 'adrpie';
+    if (typeof pie.setAttribute === 'function') {
+      pie.setAttribute('role','progressbar');
+      pie.setAttribute('aria-label','Adrenaline');
+      pie.setAttribute('aria-valuemin','0');
+      pie.setAttribute('aria-valuemax', m.maxAdr || 1);
+      pie.setAttribute('aria-valuenow', m.adr || 0);
+    }
     const adrPct = Math.max(0, Math.min(100, ((m.adr || 0) / (m.maxAdr || 1)) * 100));
     pie.style.setProperty('--adr-angle', (adrPct * 3.6) + 'deg');
     hp.appendChild(pie);
