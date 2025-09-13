@@ -115,9 +115,18 @@
 
   function renderThumb(moduleData, info){
     const canvas = document.createElement('canvas');
-    const world = moduleData?.world;
+    let world = moduleData?.world;
     const scale = 1;
     if(Array.isArray(world) && world[0]){
+      if(typeof world[0] === 'string'){
+        const gfe = globalThis.gridFromEmoji;
+        if(typeof gfe === 'function'){
+          world = gfe(world);
+          moduleData.world = world;
+        }else{
+          world = [];
+        }
+      }
       canvas.width = world[0].length * scale;
       canvas.height = world.length * scale;
       const ctx = canvas.getContext('2d');
