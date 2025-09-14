@@ -60,15 +60,41 @@
       overlay.style.flexDirection = 'column';
       overlay.style.alignItems = 'center';
       overlay.style.justifyContent = 'center';
-      const list = document.createElement('div');
-      list.style.display = 'flex';
-      bunkers.filter(b => b.active && b.id !== fromId).forEach(b => {
-        ensureModule(b, moduleData => {
-          const thumb = renderThumb(moduleData, b);
-          thumb.style.margin = '4px';
-          thumb.style.cursor = 'pointer';
-          thumb.title = b.name || b.id;
-          thumb.onclick = () => {
+
+      const svgNS = 'http://www.w3.org/2000/svg';
+      const width = 400;
+      const height = 300;
+      const svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('width', width);
+      svg.setAttribute('height', height);
+      svg.style.background = '#222';
+      svg.style.border = '2px solid #fff';
+
+      const dests = bunkers.filter(b => b.active && b.id !== fromId);
+      const pts = [];
+      dests.forEach((b, i) => {
+        ensureModule(b, () => {
+          const x = (i + 1) / (dests.length + 1) * width;
+          const y = height / 2;
+          if(i){
+            const p = pts[i - 1];
+            const line = document.createElementNS(svgNS, 'line');
+            line.setAttribute('x1', p.x);
+            line.setAttribute('y1', p.y);
+            line.setAttribute('x2', x);
+            line.setAttribute('y2', y);
+            line.setAttribute('stroke', '#888');
+            line.setAttribute('stroke-width', '2');
+            svg.appendChild(line);
+          }
+          const circle = document.createElementNS(svgNS, 'circle');
+          circle.setAttribute('cx', x);
+          circle.setAttribute('cy', y);
+          circle.setAttribute('r', 8);
+          circle.setAttribute('fill', '#fff');
+          circle.style.cursor = 'pointer';
+          circle.title = b.name || b.id;
+          circle.onclick = () => {
             const ft = globalThis.Dustland?.fastTravel;
             const cost = ft?.fuelCost?.(fromId, b.id) || 0;
             const fuel = globalThis.player?.fuel || 0;
@@ -76,14 +102,24 @@
             if(fuel < cost){ alert(`Need ${cost} fuel to travel.`); return; }
             if(confirm(`Travel to ${name} for ${cost} fuel?`)) travel(fromId, b);
           };
-          list.appendChild(thumb);
+          svg.appendChild(circle);
+
+          const text = document.createElementNS(svgNS, 'text');
+          text.setAttribute('x', x + 10);
+          text.setAttribute('y', y + 4);
+          text.setAttribute('fill', '#fff');
+          text.textContent = b.name || b.id;
+          svg.appendChild(text);
+
+          pts.push({ x, y });
         });
       });
+
+      overlay.appendChild(svg);
       const cancel = document.createElement('button');
       cancel.textContent = 'Cancel';
       cancel.style.marginTop = '8px';
       cancel.onclick = close;
-      overlay.appendChild(list);
       overlay.appendChild(cancel);
       document.body.appendChild(overlay);
     });
@@ -111,44 +147,6 @@
       ft?.saveSlot?.(dest.id);
       close();
     });
-  }
-
-  function renderThumb(moduleData, info){
-    const canvas = document.createElement('canvas');
-    let world = moduleData?.world;
-    const scale = 1;
-    if(Array.isArray(world) && world[0]){
-      if(typeof world[0] === 'string'){
-        const gfe = globalThis.gridFromEmoji;
-        if(typeof gfe === 'function'){
-          world = gfe(world);
-          moduleData.world = world;
-        }else{
-          world = [];
-        }
-      }
-      canvas.width = world[0].length * scale;
-      canvas.height = world.length * scale;
-      const ctx = canvas.getContext('2d');
-      world.forEach((row, y) => row.forEach((t, x) => {
-        const hasTile = t !== undefined && t !== null;
-        ctx.fillStyle = hasTile ? '#6b8' : '#000';
-        ctx.fillRect(x * scale, y * scale, scale, scale);
-      }));
-      if(info && info.x !== undefined && info.y !== undefined){
-        ctx.fillStyle = '#f00';
-        ctx.fillRect(info.x * scale, info.y * scale, scale, scale);
-      }
-    }else{
-      canvas.width = canvas.height = 32;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#222';
-      ctx.fillRect(0,0,32,32);
-      ctx.fillStyle = '#fff';
-      ctx.fillText('?',12,20);
-    }
-    canvas.style.imageRendering = 'pixelated';
-    return canvas;
   }
 
   globalThis.Dustland = globalThis.Dustland || {};

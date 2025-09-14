@@ -6,7 +6,7 @@
 *Status: Draft*
 
 ## Status update
-As of 2025-09-07, bunkers derive from building data and core travel logic with events exists. The world map overlay now shows thumbnails for each unlocked bunker and uses per-bunker save slots to preserve state across hops.
+As of 2025-09-07, bunkers derive from building data and core travel logic with events exists. The world map overlay now shows a simplified network of nodes for each unlocked bunker and uses per-bunker save slots to preserve state across hops.
 
 As of 2025-09-08, fuel costs apply a base price plus Manhattan distance, and travel events emit `{ fromId, toId, result }` payloads for mod hooks.
 Module items can now include a `fuel` field that grants that amount on pickup, easing fuel cell placement through the Adventure Kit.
@@ -15,8 +15,8 @@ Module items can now include a `fuel` field that grants that amount on pickup, e
 - Mechanics 2 mentions distance-based fuel costs; how will the system compute distance between bunkers?
   - Use the Manhattan distance between bunker coordinates from building definitions. Fuel cost scales as `BASE_COST + distance * FUEL_PER_TILE`, keeping math cheap on the grid.
 - Implementation Sketch references `scripts/ui/world-map.js`, but the project currently lacks a world map module—where should destination selection live?
-  - Destination selection lives in a new `scripts/ui/world-map.js` overlay. It renders each unlocked bunker's overworld as a clickable thumbnail built from module map data.
-  - The map functions as a hub above individual modules. Choosing a thumbnail loads that module while preserving party state and active quests.
+  - Destination selection lives in a new `scripts/ui/world-map.js` overlay. It draws a rectangular, subway-style map with connected nodes for each unlocked bunker.
+  - The map functions as a hub above individual modules. Choosing a node loads that module while preserving party state and active quests.
   - To verify cross-module travel, build a proof-of-concept `two-worlds` module:
   - Tasks:
     - [x] create a two worlds module added to module select
@@ -28,7 +28,7 @@ Module items can now include a `fuel` field that grants that amount on pickup, e
     - [x] in both worlds, add a relatively simple monster you can randomly encounter in order to grind on collecting power cells to have the fuel to get between worlds
     - [x] finishing the world 1 item fetch quest should unlock fast travel to world two (and back again)
     - [x] going into the bunker and choosing to fast travel should trigger a newly implemented scripts/ui/world-map.js
-    - [x] scripts/ui/world-map.js should be able to thumbnail a module's overworld (all modules unlocked for fast travel) and display them and allow for selection
+    - [x] scripts/ui/world-map.js should draw a rectangular subway-style map showing all unlocked fast travel nodes and allow for selection
     - [x] fast travelling between worlds should load the new map world, party and open quests should be retained across the module load boundary
     - [x] travelling back to the other world, completed quests/chosen dialog/taken item state should be preserved. perhaps a mechanism for this should be to generate a saved game when moving between maps and you travel back to a save of that map rather than a raw reload of the module from the JS file?
 - Implementation Sketch calls for `travel:start` and `travel:end` events; what payloads should they carry to support mods?
