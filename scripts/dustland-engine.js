@@ -498,13 +498,8 @@ function render(gameState=state, dt){
     else if(layer==='entitiesBelow'){ drawEntities(ctx, below, offX, offY); }
     else if(layer==='player'){
       const px=(pos.x-camX+offX)*TS, py=(pos.y-camY+offY)*TS;
-      const cx=px+TS/2, cy=py+TS/2;
-      const pulse=1+0.1*Math.sin(Date.now()/200);
-      const size=TS*pulse;
-      ctx.fillStyle='#d9ffbe';
-      ctx.fillRect(cx-size/2,cy-size/2,size,size);
-      ctx.fillStyle='#000';
-      ctx.fillText('@',cx-4,cy+4);
+      ctx.fillStyle='#d9ffbe'; ctx.fillRect(px,py,TS,TS);
+      ctx.fillStyle='#000'; ctx.fillText('@',px+4,py+12);
     }
     else if(layer==='entitiesAbove'){ drawEntities(ctx, above, offX, offY); }
   }
