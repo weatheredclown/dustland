@@ -530,6 +530,7 @@ function getNpcColor(n){
   if(n.shop) return '#ffee99';
   if(n.inanimate) return '#d4af37';
   if(n.questId || n.quests) return '#cc99ff';
+  if(n.combat?.auto) return '#f00';
   if((n.combat && !n.tree) || n.attackOnSight) return '#f88';
   return '#9ef7a0';
 }
