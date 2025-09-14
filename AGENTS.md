@@ -7,6 +7,7 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 - Keep functions small and avoid heavy frameworks.
 - Indent with two spaces and end statements with semicolons.
 - Prefer `camelCase` for variables and functions.
+- Use optional chaining (`?.`) and nullish coalescing (`??`) instead of `||` when defaulting values to preserve `0` and avoid crashes on missing properties.
 
 ## Testing
 - Run `npm test` after making changes; it invokes Node's built-in test runner.

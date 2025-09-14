@@ -6,11 +6,11 @@ class NPC {
   constructor({id,map,x,y,color,name,title,desc,tree,quest=null,quests=null,questDialogs=null,processNode=null,processChoice=null,combat=null,shop=false,workbench=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false,prompt=null,unlockTime=null,questIdx=0,trainer=null}) {
     Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,quests,questDialogs,combat,shop,workbench,portraitSheet,portraitLock,symbol,door,locked,prompt,unlockTime,questIdx,trainer});
     if (Array.isArray(this.quests) && !this.quest) {
-      this.quest = this.quests[this.questIdx] || null;
+      this.quest = this.quests[this.questIdx] ?? null;
     }
     if (!this.tree) this.tree = { start: { text: '', choices: [{label: '(Leave)', to: 'bye'}] } };
     if (Array.isArray(this.questDialogs) && this.questDialogs.length) {
-      this.tree.start.text = this.questDialogs[this.questIdx] || this.tree.start.text;
+      this.tree.start.text = this.questDialogs[this.questIdx] ?? this.tree.start.text;
     }
     if (this.quest && !this.quest.status) this.quest.status = 'available';
     // `door` marks an NPC tile as passable when unlocked
@@ -20,7 +20,7 @@ class NPC {
         Dustland.actions.startCombat({ ...this.combat, npc: this, name: this.name });
       } else if (this.shop && node === 'sell') {
         const items = player.inv.map((it, idx) => {
-          const price = typeof it.scrap === 'number' ? it.scrap : Math.max(1, it.value || 0);
+          const price = typeof it.scrap === 'number' ? it.scrap : Math.max(1, it.value ?? 0);
           return { label: `Sell ${it.name} (${price} ${CURRENCY})`, to: 'sell', sellIndex: idx };
         });
         this.tree.sell.text = items.length ? 'What are you selling?' : 'Nothing to sell.';
@@ -39,7 +39,7 @@ class NPC {
     const capChoice = (c) => {
       if (this.shop && typeof c.sellIndex === 'number') {
         const it = player.inv.splice(c.sellIndex, 1)[0];
-        const val = typeof it.scrap === 'number' ? it.scrap : Math.max(1, it.value || 0);
+        const val = typeof it.scrap === 'number' ? it.scrap : Math.max(1, it.value ?? 0);
         player.scrap += val;
         renderInv?.(); updateHUD?.();
         textEl.textContent = `Sold ${it.name} for ${val} ${CURRENCY}.`;
@@ -74,9 +74,9 @@ class NPC {
 
 function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNode, processChoice, opts) {
   if (opts?.combat) {
-    tree = tree || {};
-    tree.start = tree.start || {text: '', choices: []};
-    tree.start.choices = tree.start.choices || [];
+    tree = tree ?? {};
+    tree.start = tree.start ?? {text: '', choices: []};
+    tree.start.choices = tree.start.choices ?? [];
     let fightChoice = tree.start.choices.find(c => c.label === '(Fight)' || c.to === 'do_fight');
     if (fightChoice) {
       fightChoice.label = '(Fight)';
@@ -86,21 +86,21 @@ function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNo
       tree.start.choices.unshift(fightChoice);
     }
     tree.start.choices = tree.start.choices.filter(c => c === fightChoice || c.label !== '(Fight)');
-    tree.do_fight = tree.do_fight || {text: '', choices: [{label: '(Continue)', to: 'bye'}]};
+    tree.do_fight = tree.do_fight ?? {text: '', choices: [{label: '(Continue)', to: 'bye'}]};
   }
   if (opts?.shop) {
-    tree = tree || {};
-    tree.start = tree.start || {text: '', choices: []};
-    tree.start.choices = tree.start.choices || [];
+    tree = tree ?? {};
+    tree.start = tree.start ?? {text: '', choices: []};
+    tree.start.choices = tree.start.choices ?? [];
     if (!tree.start.choices.some(c => c.to === 'sell')) {
       tree.start.choices.push({label: '(Sell items)', to: 'sell'});
     }
-    tree.sell = tree.sell || {text: 'What are you selling?', choices: []};
+    tree.sell = tree.sell ?? {text: 'What are you selling?', choices: []};
   }
   if (opts?.trainer) {
-    tree = tree || {};
-    tree.start = tree.start || {text: '', choices: []};
-    tree.start.choices = tree.start.choices || [];
+    tree = tree ?? {};
+    tree.start = tree.start ?? {text: '', choices: []};
+    tree.start.choices = tree.start.choices ?? [];
     if (!tree.start.choices.some(c => c.to === 'train')) {
       tree.start.choices.unshift({
         label: '(Upgrade Skills)',
@@ -108,18 +108,18 @@ function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNo
         effects: [() => TrainerUI?.showTrainer?.(opts.trainer)]
       });
     }
-    tree.train = tree.train || { text: '', choices: [{ label: '(Back)', to: 'start' }] };
+    tree.train = tree.train ?? { text: '', choices: [{ label: '(Back)', to: 'start' }] };
     if (!tree.train.choices?.length) tree.train.choices = [{ label: '(Back)', to: 'start' }];
   }
-  const q = quest || (opts?.quests ? opts.quests[0] : null);
-  color = color || (opts?.symbol && opts.symbol !== '!' ? OBJECT_COLOR : NPC_COLOR);
-  return new NPC({id,map,x,y,color,name,title,desc,tree,quest:q,processNode,processChoice, ...(opts || {})});
+  const q = quest ?? (opts?.quests ? opts.quests[0] : null);
+  color = color ?? (opts?.symbol && opts.symbol !== '!' ? OBJECT_COLOR : NPC_COLOR);
+  return new NPC({id,map,x,y,color,name,title,desc,tree,quest:q,processNode,processChoice, ...(opts ?? {})});
 }
 
 function resolveNode(tree, nodeId) {
   const n = tree && tree[nodeId];
   if (!n) return null;
-  const choices = n.choices || [];
+  const choices = n.choices ?? [];
   return { ...n, choices };
 }
 
@@ -140,13 +140,13 @@ function removeNPC(npc) {
 
 function createNpcFactory(defs) {
   const npcFactory = {};
-  (defs || []).forEach(n => {
+  (defs ?? []).forEach(n => {
     npcFactory[n.id] = (x = n.x, y = n.y) => {
       let tree = n.tree;
       if (typeof tree === 'string') { try { tree = JSON.parse(tree); } catch (e) { tree = null; } }
-      const dlgArr = n.dialogs || (Array.isArray(n.dialog) ? n.dialog : null);
+      const dlgArr = n.dialogs ?? (Array.isArray(n.dialog) ? n.dialog : null);
       if (!tree || !Object.keys(tree).length) {
-        const txt = dlgArr ? dlgArr[0] : (n.dialog || '');
+        const txt = dlgArr ? dlgArr[0] : (n.dialog ?? '');
         tree = { start: { text: txt, choices: [{label: '(Leave)', to: 'bye'}] } };
       }
       const opts = {};
@@ -162,18 +162,18 @@ function createNpcFactory(defs) {
       if (n.trainer) opts.trainer = n.trainer;
       else if (n.id && n.id.startsWith('trainer_')) opts.trainer = n.id.split('_')[1];
       if (Array.isArray(n.quests)) {
-        opts.quests = n.quests.map(q => typeof q === 'string' ? (globalThis.quests?.[q] || null) : q).filter(Boolean);
+        opts.quests = n.quests.map(q => typeof q === 'string' ? (globalThis.quests?.[q] ?? null) : q).filter(Boolean);
       }
       if (dlgArr) opts.questDialogs = dlgArr;
       const npc = makeNPC(
         n.id,
-        n.map || 'world',
+        n.map ?? 'world',
         x,
         y,
         n.color,
-        n.name || n.id,
-        n.title || '',
-        n.desc || '',
+        n.name ?? n.id,
+        n.title ?? '',
+        n.desc ?? '',
         tree,
         null,
         null,
@@ -188,20 +188,20 @@ function createNpcFactory(defs) {
 }
 
 function scaleEnemy(npc, lvl = 1, build = []) {
-  npc.stats = npc.stats || (typeof baseStats === 'function' ? baseStats() : {});
+  npc.stats = npc.stats ?? (typeof baseStats === 'function' ? baseStats() : {});
   npc.maxHp = npc.maxHp ?? npc.hp ?? 10;
   npc.hp = npc.maxHp;
   for (let i = 1; i < lvl; i++) {
     npc.maxHp += 10;
     npc.hp = npc.maxHp;
     const stat = Array.isArray(build) && build.length ? build[(i - 1) % build.length] : null;
-    if (stat) npc.stats[stat] = (npc.stats[stat] || 0) + 1;
+    if (stat) npc.stats[stat] = (npc.stats[stat] ?? 0) + 1;
   }
   npc.lvl = lvl;
 }
 
 function scaleEnemyWithPreset(npc, lvl = 1, preset = '') {
-  const build = enemyPresets?.[preset] || [];
+  const build = enemyPresets?.[preset] ?? [];
   scaleEnemy(npc, lvl, build);
 }
 

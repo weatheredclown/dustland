@@ -2930,7 +2930,7 @@ function pullSlots(cost, payouts) {
   }
   player.scrap -= cost;
   const lead = typeof leader === 'function' ? leader() : null;
-  const luck = (lead?.stats?.LCK || 0) + (lead?._bonus?.LCK || 0);
+  const luck = (lead?.stats?.LCK ?? 0) + (lead?._bonus?.LCK ?? 0);
   const eff = Math.max(0, luck - 7);
   let idx = Math.floor(rng() * payouts.length);
   if (eff > 0 && rng() < eff * 0.05) {
@@ -2952,7 +2952,7 @@ function pullSlots(cost, payouts) {
     if (slotNpc) removeNPC(slotNpc);
     const cache = SpoilsCache?.create?.('vaulted');
     if (cache) {
-      const registered = registerItem?.(cache) || cache;
+      const registered = registerItem?.(cache) ?? cache;
       itemDrops?.push?.({ id: registered.id, ...dropPos });
       globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target: slotNpc });
     }
@@ -2973,7 +2973,7 @@ function buyMemoryWorm() {
 }
 
 function handleCustomEffects(list) {
-  return (list || []).map(e => {
+  return (list ?? []).map(e => {
     if (!e || typeof e !== 'object') return e;
     switch (e.effect) {
       case 'showTrainer':
@@ -3013,16 +3013,16 @@ function postLoad(module) {
       }
     };
   }
-  for (const npc of module.npcs || []) {
-    for (const node of Object.values(npc.tree || {})) {
+  for (const npc of module.npcs ?? []) {
+    for (const node of Object.values(npc.tree ?? {})) {
       if (node.effects) node.effects = handleCustomEffects(node.effects);
-      for (const choice of node.choices || []) {
+      for (const choice of node.choices ?? []) {
         if (choice.effects) choice.effects = handleCustomEffects(choice.effects);
       }
     }
   }
 
-  for (const npc of module.npcs || []) {
+  for (const npc of module.npcs ?? []) {
     const arr = globalThis.soundSources;
     if (npc.hintSound && Array.isArray(arr)) {
       arr.push({ id: npc.id, x: npc.x, y: npc.y, map: npc.map });
@@ -3068,8 +3068,8 @@ globalThis.DUSTLAND_MODULE.postLoad = postLoad;
 
 globalThis.startGame = function () {
   DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE);
-  const { start: s } = applyModule(DUSTLAND_MODULE) || {};
-  const loc = s || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+  const { start: s } = applyModule(DUSTLAND_MODULE) ?? {};
+  const loc = s ?? { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   setMap(loc.map, loc.map === 'world' ? 'Wastes' : 'Test Hall');
   setPartyPos(loc.x, loc.y);
 };

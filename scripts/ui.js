@@ -1,5 +1,5 @@
 (function(){
-  const bus = globalThis.Dustland?.eventBus || globalThis.EventBus;
+  const bus = globalThis.Dustland?.eventBus ?? globalThis.EventBus;
   if(!bus) return;
 
   function show(id, display=''){
@@ -48,7 +48,7 @@
   });
 
   const api = { show, hide, setText, setValue, remove };
-  globalThis.Dustland = globalThis.Dustland || {};
+  globalThis.Dustland = globalThis.Dustland ?? {};
   globalThis.Dustland.ui = api;
   globalThis.UI = api;
 })();

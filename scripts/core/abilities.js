@@ -4,13 +4,13 @@ const Specials = {};
 function defineAbility(id, data = {}){
   const ability = {
     id,
-    type: data.type || 'active',
-    cost: data.cost || 0,
+    type: data.type ?? 'active',
+    cost: data.cost ?? 0,
     prereq: {
-      level: data.prereq && data.prereq.level || 0,
-      abilities: data.prereq && data.prereq.abilities || []
+      level: data.prereq?.level ?? 0,
+      abilities: data.prereq?.abilities ?? []
     },
-    effect: data.effect || {}
+    effect: data.effect ?? {}
   };
   Abilities[id] = ability;
   return ability;
@@ -19,10 +19,10 @@ function defineAbility(id, data = {}){
 function defineSpecial(id, data = {}){
   const special = {
     id,
-    adrenaline_cost: data.adrenaline_cost || 0,
-    target_type: data.target_type || 'single',
-    effect: data.effect || {},
-    wind_up_time: data.wind_up_time || 0
+    adrenaline_cost: data.adrenaline_cost ?? 0,
+    target_type: data.target_type ?? 'single',
+    effect: data.effect ?? {},
+    wind_up_time: data.wind_up_time ?? 0
   };
   Specials[id] = special;
   return special;
