@@ -5,6 +5,7 @@ import vm from 'node:vm';
 
 const partyCode = await fs.readFile(new URL('../scripts/core/party.js', import.meta.url), 'utf8');
 const npcCode = await fs.readFile(new URL('../scripts/core/npc.js', import.meta.url), 'utf8');
+const effectsCode = await fs.readFile(new URL('../scripts/core/effects.js', import.meta.url), 'utf8');
 
 function setupParty(){
   const bus = { emit: () => {} };
@@ -20,28 +21,15 @@ function setupParty(){
   return context;
 }
 
-function applyEffects(tree, ctx){
-  for (const node of Object.values(tree || {})) {
-    if (Array.isArray(node.effects)) {
-      node.effects = node.effects.map(e => e.effect === 'showTrainer' ? () => ctx.TrainerUI.showTrainer(e.trainer) : e);
-    }
-    for (const choice of node.choices || []) {
-      if (Array.isArray(choice.effects)) {
-        choice.effects = choice.effects.map(e => e.effect === 'showTrainer' ? () => ctx.TrainerUI.showTrainer(e.trainer) : e);
-      }
-    }
-  }
-}
-
 function buildNpc(def){
   const calls = [];
   const context = { log: () => {}, Dustland: {}, closeDialog: () => {}, TrainerUI: { showTrainer: id => calls.push(id) } };
   vm.createContext(context);
   vm.runInContext(npcCode, context);
+  vm.runInContext(effectsCode, context);
   const tree = JSON.parse(JSON.stringify(def.tree));
-  applyEffects(tree, context);
   const npc = context.makeNPC(def.id, def.map || 'world', def.x || 0, def.y || 0, def.color, def.name || def.id, def.title || '', def.desc || '', tree, null, null, null, { trainer: def.trainer });
-  return { npc, calls };
+  return { npc, calls, context };
 }
 
 const moduleSrc = await fs.readFile(new URL('../modules/dustland.module.js', import.meta.url), 'utf8');
@@ -64,11 +52,11 @@ test('dustland module includes trainer NPCs', () => {
   const trainerNpcs = moduleData.npcs.filter(n => n.trainer);
   assert.ok(trainerNpcs.length >= 3);
   trainerNpcs.forEach(def => {
-    const { npc, calls } = buildNpc(def);
+    const { npc, calls, context } = buildNpc(def);
     const labels = npc.tree.start.choices.map(c => c.label);
     assert.ok(labels.includes('(Upgrade Skills)'));
     const choice = npc.tree.start.choices.find(c => c.to === 'train');
-    choice.effects[0]();
+    context.Dustland.effects.apply(choice.effects);
     assert.deepStrictEqual(calls, [def.trainer]);
   });
 });

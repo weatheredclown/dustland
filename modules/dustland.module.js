@@ -2976,8 +2976,6 @@ function handleCustomEffects(list) {
   return (list ?? []).map(e => {
     if (!e || typeof e !== 'object') return e;
     switch (e.effect) {
-      case 'showTrainer':
-        return () => TrainerUI?.showTrainer?.(e.trainer);
       case 'pullSlots':
         return () => pullSlots(e.cost, e.payouts);
       case 'buyMemoryWorm':
