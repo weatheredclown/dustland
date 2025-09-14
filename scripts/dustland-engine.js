@@ -498,8 +498,13 @@ function render(gameState=state, dt){
     else if(layer==='entitiesBelow'){ drawEntities(ctx, below, offX, offY); }
     else if(layer==='player'){
       const px=(pos.x-camX+offX)*TS, py=(pos.y-camY+offY)*TS;
-      ctx.fillStyle='#d9ffbe'; ctx.fillRect(px,py,TS,TS);
-      ctx.fillStyle='#000'; ctx.fillText('@',px+4,py+12);
+      const cx = px + TS/2, cy = py + TS/2;
+      ctx.fillStyle='#f0f';
+      ctx.beginPath(); ctx.arc(cx, cy, TS/2 - 2, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#f0f';
+      ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(cx, cy, TS/2 + 2, 0, Math.PI*2); ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.fillText('@',px+4,py+12);
     }
     else if(layer==='entitiesAbove'){ drawEntities(ctx, above, offX, offY); }
   }
@@ -519,13 +524,30 @@ function render(gameState=state, dt){
   ctx.strokeRect(0.5,0.5,vW*TS-1,vH*TS-1);
 }
 
+function getNpcColor(n){
+  if(n.overrideColor && n.color) return n.color;
+  if(n.trainer) return '#ffcc99';
+  if(n.shop) return '#ffee99';
+  if(n.inanimate) return '#d4af37';
+  if(n.questId || n.quests) return '#cc99ff';
+  if((n.combat && !n.tree) || n.attackOnSight) return '#f88';
+  return '#9ef7a0';
+}
+
+function getNpcSymbol(n){
+  if(n.symbol) return n.symbol;
+  if(n.inanimate) return '?';
+  if(n.questId || n.quests) return '★';
+  return '!';
+}
+
 function drawEntities(ctx, list, offX, offY){
   const { w:vW, h:vH } = getViewSize();
   for(const n of list){
     if(n.x>=camX&&n.y>=camY&&n.x<camX+vW&&n.y<camY+vH){
       const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
-      ctx.fillStyle=n.color; ctx.fillRect(vx,vy,TS,TS);
-      ctx.fillStyle='#000'; ctx.fillText(n.symbol || '!',vx+5,vy+12);
+      ctx.fillStyle=getNpcColor(n); ctx.fillRect(vx,vy,TS,TS);
+      ctx.fillStyle='#000'; ctx.fillText(getNpcSymbol(n),vx+5,vy+12);
     }
   }
 }

@@ -139,6 +139,7 @@
               const n = NPCS.find(n => n.id === eff.npcId);
               if (n) {
                 n.color = eff.color;
+                n.overrideColor = true;
                 if (typeof render === 'function') render();
               }
             }
