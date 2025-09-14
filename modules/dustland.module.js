@@ -520,7 +520,7 @@ const DATA = `
       "map": "world",
       "x": 10,
       "y": 10,
-      "color": "#f5d442",
+      "color": "#225a20",
       "name": "Strange Vortex",
       "title": "A swirling vortex of dust and sand.",
       "desc": "You feel a strange pull towards it.",
@@ -553,14 +553,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "?"
     },
     {
       "id": "hidden_crate",
       "map": "world",
       "x": 12,
       "y": 12,
-      "color": "#c8bba0",
+      "color": "#225a20",
       "name": "Buried Crate",
       "desc": "Sand conceals a supply crate.",
       "portraitSheet": "assets/portraits/dustland-module/buried_crate_4.png",
@@ -607,14 +608,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "?"
     },
     {
       "id": "tape_sage",
       "map": "hall",
       "x": 20,
       "y": 15,
-      "color": "#b0c4de",
+      "color": "#9ef7a0",
       "name": "Archivist",
       "title": "Memory Keeper",
       "portraitSheet": "assets/portraits/dustland-module/archivist_4.png",
@@ -710,14 +712,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "exitdoor",
       "map": "hall",
       "x": 15,
       "y": 17,
-      "color": "#a9f59f",
+      "color": "#9ef7a0",
       "name": "Caretaker Kesh",
       "title": "Hall Steward",
       "desc": "Weary caretaker guarding the hall's chained exit.",
@@ -789,14 +792,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "keycrate",
       "map": "hall",
       "x": 17,
       "y": 18,
-      "color": "#9ef7a0",
+      "color": "#225a20",
       "name": "Dusty Crate",
       "title": "",
       "desc": "A dusty crate that might hide something useful.",
@@ -836,14 +840,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "?"
     },
     {
       "id": "hallflavor",
       "map": "hall",
       "x": 11,
       "y": 17,
-      "color": "#b8ffb6",
+      "color": "#9ef7a0",
       "name": "Lone Drifter",
       "title": "Mutters",
       "desc": "A drifter muttering to themselves.",
@@ -858,14 +863,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "hall_rotwalker",
       "map": "hall",
       "x": 15,
       "y": 2,
-      "color": "#f88",
+      "color": "#f66",
       "name": "Rotwalker",
       "title": "Test Monster",
       "desc": "A shambler posted here for practice.",
@@ -881,7 +887,8 @@ const DATA = `
         "ATK": 1,
         "loot": "water_flask",
         "auto": true
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "party_mira",
@@ -912,7 +919,8 @@ const DATA = `
           "dmg": 2
         },
         "auto": true
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "party_nora",
@@ -946,7 +954,8 @@ const DATA = `
           "delay": 800
         },
         "auto": true
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "party_tess",
@@ -984,7 +993,8 @@ const DATA = `
           "delay": 800
         },
         "auto": true
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "road_sign",
@@ -1070,14 +1080,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "grin",
       "map": "world",
       "x": 22,
       "y": 45,
-      "color": "#caffc6",
+      "color": "#9ef7a0",
       "name": "Grin",
       "title": "Scav-for-Hire",
       "desc": "Lean scav with a crowbar and half a smile.",
@@ -1184,14 +1195,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "post",
       "map": "world",
       "x": 30,
       "y": 46,
-      "color": "#b8ffb6",
+      "color": "#9ef7a0",
       "name": "Postmaster Ivo",
       "title": "Courier of Dust",
       "desc": "Dusty courier seeking a lost parcel.",
@@ -1244,14 +1256,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "tower",
       "map": "world",
       "x": 48,
       "y": 43,
-      "color": "#a9f59f",
+      "color": "#9ef7a0",
       "name": "Rella",
       "title": "Radio Tech",
       "desc": "Tower technician with grease-stained hands.",
@@ -1290,14 +1303,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "hermit",
       "map": "world",
       "x": 70,
       "y": 47,
-      "color": "#9abf9a",
+      "color": "#9ef7a0",
       "name": "The Shifting Hermit",
       "title": "Pilgrim",
       "desc": "A cloaked hermit murmuring about rusted idols.",
@@ -1350,14 +1364,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "duchess",
       "map": "world",
       "x": 40,
       "y": 45,
-      "color": "#a9f59f",
+      "color": "#9ef7a0",
       "name": "Scrap Duchess",
       "title": "Toll-Queen",
       "desc": "A crown of bottlecaps; eyes like razors.",
@@ -1417,7 +1432,8 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "hidden_hermit",
@@ -1425,7 +1441,7 @@ const DATA = `
       "map": "world",
       "x": 20,
       "y": 47,
-      "color": "#b8ffb6",
+      "color": "#9ef7a0",
       "name": "Hidden Hermit",
       "title": "Lurker",
       "desc": "A hermit steps out when you return.",
@@ -1445,7 +1461,8 @@ const DATA = `
         "flag": "visits@world@20,47",
         "op": ">=",
         "value": 2
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "signal_tech",
@@ -1507,14 +1524,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "raider",
       "map": "world",
       "x": 56,
       "y": 44,
-      "color": "#f88",
+      "color": "#f66",
       "name": "Road Raider",
       "title": "Bandit",
       "desc": "Scarred scav looking for trouble.",
@@ -1545,14 +1563,15 @@ const DATA = `
         "ATK": 4,
         "DEF": 5,
         "loot": "raider_knife"
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "trader",
       "map": "world",
       "x": 34,
       "y": 44,
-      "color": "#caffc6",
+      "color": "#9ef7a0",
       "name": "Cass the Trader",
       "title": "Shopkeep",
       "desc": "A roving merchant weighing your wares.",
@@ -1599,7 +1618,8 @@ const DATA = `
             "id": "water_flask"
           }
         ]
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "tess_patrol",
@@ -1631,14 +1651,15 @@ const DATA = `
           "x": 80,
           "y": 49
         }
-      ]
+      ],
+      "symbol": "!"
     },
     {
       "id": "scrap_mutt",
       "map": "world",
       "x": 18,
       "y": 43,
-      "color": "#d88",
+      "color": "#f66",
       "name": "Scrap Mutt",
       "title": "Mangy Hound",
       "desc": "A feral mutt snarling over junk.",
@@ -1660,14 +1681,15 @@ const DATA = `
         "ATK": 1,
         "loot": "water_flask",
         "auto": true
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "scavenger_rat",
       "map": "world",
       "x": 32,
       "y": 48,
-      "color": "#c66",
+      "color": "#f66",
       "name": "Scavenger Rat",
       "title": "Vermin",
       "desc": "A giant rat rooting through scraps.",
@@ -1689,14 +1711,15 @@ const DATA = `
         "ATK": 1,
         "loot": "water_flask",
         "auto": true
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "rust_bandit",
       "map": "world",
       "x": 44,
       "y": 42,
-      "color": "#f88",
+      "color": "#f66",
       "name": "Rust Bandit",
       "title": "Scav Raider",
       "desc": "A bandit prowling for easy loot.",
@@ -1718,14 +1741,15 @@ const DATA = `
         "ATK": 1,
         "loot": "raider_knife",
         "auto": true
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "feral_nomad",
       "map": "world",
       "x": 72,
       "y": 48,
-      "color": "#f77",
+      "color": "#f66",
       "name": "Feral Nomad",
       "title": "Mad Drifter",
       "desc": "A wild-eyed drifter muttering to himself.",
@@ -1747,14 +1771,15 @@ const DATA = `
         "ATK": 2,
         "loot": "medkit",
         "auto": true
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "waste_ghoul",
       "map": "world",
       "x": 82,
       "y": 41,
-      "color": "#aa8",
+      "color": "#f66",
       "name": "Waste Ghoul",
       "title": "Rotwalker",
       "desc": "A decayed wanderer hungry for flesh.",
@@ -1776,13 +1801,14 @@ const DATA = `
         "ATK": 2,
         "loot": "goggles",
         "auto": true
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "iron_brute",
       "name": "Iron Brute",
       "desc": "A hulking brute plated in scrap.",
-      "color": "#ff3333",
+      "color": "#f66",
       "symbol": "!",
       "map": "world",
       "x": 116,
@@ -1844,7 +1870,7 @@ const DATA = `
       "map": "world",
       "x": 90,
       "y": 47,
-      "color": "#f55",
+      "color": "#f66",
       "name": "Grit Stalker",
       "title": "Wasteland Hunter",
       "desc": "A ruthless drifter prowling for prey.",
@@ -1885,14 +1911,15 @@ const DATA = `
         "DEF": 1,
         "loot": "raider_knife",
         "auto": true
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "trainer_power",
       "map": "world",
       "x": 6,
       "y": 44,
-      "color": "#ffcc99",
+      "color": "#9ef7a0",
       "name": "Brakk",
       "title": "Power Trainer",
       "desc": "A former arena champ teaching raw strength.",
@@ -1927,14 +1954,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "trainer_endurance",
       "map": "world",
       "x": 6,
       "y": 46,
-      "color": "#99ccff",
+      "color": "#9ef7a0",
       "name": "Rusty",
       "title": "Endurance Trainer",
       "desc": "A grizzled scavenger preaching survival.",
@@ -1969,14 +1997,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "trainer_tricks",
       "map": "world",
       "x": 6,
       "y": 48,
-      "color": "#cc99ff",
+      "color": "#9ef7a0",
       "name": "Mira",
       "title": "Tricks Trainer",
       "desc": "A nimble tinkerer teaching odd moves.",
@@ -2011,14 +2040,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "respec_vendor",
       "map": "world",
       "x": 94,
       "y": 50,
-      "color": "#ffee99",
+      "color": "#9ef7a0",
       "name": "Nora",
       "title": "Worm Seller",
       "desc": "She trades memory worms for scrap.",
@@ -2055,14 +2085,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "slots",
       "map": "slot_shack",
       "x": 3,
       "y": 2,
-      "color": "#d4af37",
+      "color": "#225a20",
       "name": "One-Armed Bandit",
       "title": "Slot Machine",
       "desc": "It wheezes, eager for scrap.",
@@ -2134,18 +2165,19 @@ const DATA = `
       "map": "workshop",
       "x": 2,
       "y": 2,
-      "color": "#bfa",
+      "color": "#225a20",
       "name": "Workbench",
       "title": "Crafter",
       "desc": "Tools litter the surface.",
       "prompt": "Cluttered workbench stacked with tools",
-      "workbench": true
+      "workbench": true,
+      "symbol": "?"
     },
     {
       "id": "scrap_behemoth",
       "name": "Scrap Behemoth",
       "desc": "A towering mass of twisted metal.",
-      "color": "#ff3333",
+      "color": "#f66",
       "symbol": "!",
       "map": "world",
       "x": 113,
@@ -2195,7 +2227,7 @@ const DATA = `
       "map": "echoes_atrium",
       "x": 3,
       "y": 2,
-      "color": "#9ef7a0",
+      "color": "#225a20",
       "name": "Sparking Crate",
       "desc": "Faint humming echoes from inside.",
       "prompt": "Crate sparking with bottled energy",
@@ -2233,14 +2265,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "?"
     },
     {
       "id": "door_workshop",
       "map": "echoes_atrium",
       "x": 14,
       "y": 4,
-      "color": "#a9f59f",
+      "color": "#225a20",
       "name": "Humming Door",
       "title": "To Workshop",
       "desc": "Its lock crackles for a Spark Key.",
@@ -2289,14 +2322,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "?"
     },
     {
       "id": "cogcrate",
       "map": "echoes_workshop",
       "x": 4,
       "y": 5,
-      "color": "#9ef7a0",
+      "color": "#225a20",
       "name": "Gear Crate",
       "desc": "Loose gears rattle within.",
       "prompt": "Heavy crate packed with gears",
@@ -2334,14 +2368,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "?"
     },
     {
       "id": "door_archive",
       "map": "echoes_workshop",
       "x": 14,
       "y": 4,
-      "color": "#a9f59f",
+      "color": "#225a20",
       "name": "Rust Door",
       "title": "To Archive",
       "desc": "Its hinges await a Cog Key.",
@@ -2390,14 +2425,15 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "?"
     },
     {
       "id": "rat",
       "map": "echoes_atrium",
       "x": 7,
       "y": 4,
-      "color": "#f88",
+      "color": "#f66",
       "name": "Dust Rat",
       "title": "Menace",
       "desc": "A rat swollen with dust.",
@@ -2418,14 +2454,15 @@ const DATA = `
         "ATK": 2,
         "DEF": 1,
         "loot": "rat_tail"
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "ghoul",
       "map": "echoes_archive",
       "x": 7,
       "y": 4,
-      "color": "#f88",
+      "color": "#f66",
       "name": "Gear Ghoul",
       "title": "Guardian",
       "desc": "A whirring husk hungry for scraps.",
@@ -2452,14 +2489,15 @@ const DATA = `
         "ATK": 3,
         "DEF": 2,
         "loot": "copper_cog"
-      }
+      },
+      "symbol": "!"
     },
     {
       "id": "beacon",
       "map": "echoes_archive",
       "x": 13,
       "y": 4,
-      "color": "#b8ffb6",
+      "color": "#225a20",
       "name": "Hope Beacon",
       "title": "Lightbringer",
       "desc": "A small lamp pulsing warmly.",
@@ -2493,7 +2531,8 @@ const DATA = `
             }
           ]
         }
-      }
+      },
+      "symbol": "?"
     }
   ],
   "events": [
