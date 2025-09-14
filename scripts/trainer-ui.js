@@ -45,6 +45,7 @@
     });
     choices.push({ label: '(Back)', to: 'start' });
     trainNode.choices = choices;
+    trainNode.next = choices;
     return true;
   }
 

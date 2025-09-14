@@ -50,6 +50,7 @@ test('uses npc tree when dialog state lacks train node', () => {
   assert.strictEqual(ok, true);
   assert.strictEqual(npc.tree.train.choices.length, 3);
   assert.strictEqual(context.dialogState.tree.train.choices.length, 3);
+  assert.strictEqual(context.dialogState.tree.train.next.length, 3);
 });
 
 test('apply upgrade via effect', () => {
