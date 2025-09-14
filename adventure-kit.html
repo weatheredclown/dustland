@@ -398,7 +398,8 @@
           <label>Name<input id="npcName" placeholder="NPC name" /></label>
           <label>Title<input id="npcTitle" placeholder="NPC title" /></label>
           <label>Description<textarea id="npcDesc" rows="2"></textarea></label>
-          <label>Color<input id="npcColor" type="color" value="#9ef7a0" /></label>
+          <label><input type="checkbox" id="npcColorOverride"> Override Color</label>
+          <label id="npcColorWrap" style="display:none">Color<input id="npcColor" type="color" value="#9ef7a0" /></label>
           <label>Symbol<input id="npcSymbol" maxlength="1" value="!" /></label>
           <label>Map<select id="npcMap"></select></label>
           <div class="xy">
@@ -417,6 +418,7 @@
           <label><input type="checkbox" id="npcPortraitLock" checked> Lock Portrait</label>
           <label><input type="checkbox" id="npcHidden"> Hidden NPC</label>
           <label><input type="checkbox" id="npcLocked"> Locked NPC</label>
+          <label><input type="checkbox" id="npcInanimate"> Inanimate</label>
           <div id="revealOpts" style="display:none">
             <label>Flag Type<select id="npcFlagType"><option value="visits">Visited Tile</option><option value="party">Party Flag</option></select></label>
             <div id="revealVisit">

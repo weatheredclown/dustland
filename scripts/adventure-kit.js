@@ -385,6 +385,23 @@ function stampWorld(x, y, stamp) {
 }
 window.stampWorld = stampWorld;
 
+function getNpcColor(n) {
+  if (n.overrideColor && n.color) return n.color;
+  if (n.trainer) return '#ffcc99';
+  if (n.shop) return '#ffee99';
+  if (n.inanimate) return '#d4af37';
+  if (n.questId || n.quests) return '#cc99ff';
+  if ((n.combat && !n.tree) || n.attackOnSight) return '#f88';
+  return '#9ef7a0';
+}
+
+function getNpcSymbol(n) {
+  if (n.symbol) return n.symbol;
+  if (n.inanimate) return '?';
+  if (n.questId || n.quests) return '★';
+  return '!';
+}
+
 function drawWorld() {
   const map = currentMap;
   let W = WORLD_W, H = WORLD_H;
@@ -452,12 +469,14 @@ function drawWorld() {
     const py = (n.y - pyoff) * sy;
     if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height) return;
     ctx.save();
-    ctx.fillStyle = hovering ? '#fff' : (n.color || '#fff');
+    ctx.fillStyle = hovering ? '#fff' : getNpcColor(n);
     if (hovering) {
       ctx.shadowColor = '#fff';
       ctx.shadowBlur = 8;
     }
     ctx.fillRect(px, py, sx, sy);
+    ctx.fillStyle = '#000';
+    ctx.fillText(getNpcSymbol(n), px + 4, py + 12);
     if (hovering) {
       ctx.strokeStyle = '#fff';
       ctx.strokeRect(px, py, sx, sy);
@@ -574,7 +593,7 @@ function drawWorld() {
     ctx.save();
     ctx.lineWidth = pulse;
     if (selectedObj.type === 'npc') {
-      ctx.strokeStyle = o.color || '#fff';
+      ctx.strokeStyle = getNpcColor(o);
       ctx.strokeRect((o.x - pxoff) * sx + 1, (o.y - pyoff) * sy + 1, sx - 2, sy - 2);
     } else if (selectedObj.type === 'item') {
       ctx.strokeStyle = '#ff0';
@@ -637,8 +656,10 @@ function drawInterior() {
     }
   }
   moduleData.npcs.filter(n => n.map === I.id).forEach(n => {
-    intCtx.fillStyle = n.color || '#fff';
+    intCtx.fillStyle = getNpcColor(n);
     intCtx.fillRect(n.x * sx, n.y * sy, sx, sy);
+    intCtx.fillStyle = '#000';
+    intCtx.fillText(getNpcSymbol(n), n.x * sx + 4, n.y * sy + 12);
   });
   moduleData.items.filter(it => it.map === I.id).forEach(it => {
     intCtx.strokeStyle = '#ff0';
@@ -648,7 +669,7 @@ function drawInterior() {
     const o = selectedObj.obj;
     intCtx.save();
     intCtx.lineWidth = 2;
-    intCtx.strokeStyle = selectedObj.type === 'npc' ? (o.color || '#fff') : '#ff0';
+    intCtx.strokeStyle = selectedObj.type === 'npc' ? getNpcColor(o) : '#ff0';
     intCtx.strokeRect(o.x * sx + 1, o.y * sy + 1, sx - 2, sy - 2);
     intCtx.restore();
   }
@@ -1120,7 +1141,7 @@ function startSpoofPlayback(tree, flags, items, locked = false) {
     stopSpoofPlayback();
     _origCloseDialog();
   };
-  const npc = { id: 'ack_preview', map: state.map, x: party.x, y: party.y, color: '#9ef7a0', name: 'Preview', title: '', desc: '', tree };
+  const npc = { id: 'ack_preview', map: state.map, x: party.x, y: party.y, name: 'Preview', title: '', desc: '', tree };
   if (locked && tree && tree.locked) npc.locked = true;
   openDialog(npc, 'start');
 }
@@ -1864,6 +1885,11 @@ function updateNPCOptSections() {
     document.getElementById('npcTrainer').checked ? 'block' : 'none';
 }
 
+function updateColorOverride(){
+  const wrap = document.getElementById('npcColorWrap');
+  wrap.style.display = document.getElementById('npcColorOverride').checked ? 'block' : 'none';
+}
+
 function updatePatrolSection() {
   const patrol = document.getElementById('npcPatrol').checked;
   const loopWrap = document.getElementById('npcLoopPts');
@@ -1970,6 +1996,8 @@ function startNewNPC() {
   document.getElementById('npcTitle').value = '';
   document.getElementById('npcDesc').value = '';
   document.getElementById('npcColor').value = '#9ef7a0';
+  document.getElementById('npcColorOverride').checked = false;
+  updateColorOverride();
   document.getElementById('npcSymbol').value = '!';
   populateMapDropdown(document.getElementById('npcMap'), 'world');
   document.getElementById('npcX').value = 0;
@@ -1983,6 +2011,7 @@ function startNewNPC() {
   document.getElementById('npcPortraitLock').checked = true;
   document.getElementById('npcHidden').checked = false;
   document.getElementById('npcLocked').checked = false;
+  document.getElementById('npcInanimate').checked = false;
   document.getElementById('npcFlagType').value = 'visits';
   populateMapDropdown(document.getElementById('npcFlagMap'), 'world');
   document.getElementById('npcFlagX').value = 0;
@@ -2046,6 +2075,7 @@ function collectNPCFromForm() {
   const name = document.getElementById('npcName').value.trim();
   const title = document.getElementById('npcTitle').value.trim();
   const desc = document.getElementById('npcDesc').value.trim();
+  const overrideColor = document.getElementById('npcColorOverride').checked;
   const color = document.getElementById('npcColor').value.trim() || '#fff';
   const symbol = document.getElementById('npcSymbol').value.trim().charAt(0) || '!';
   const map = document.getElementById('npcMap').value.trim() || 'world';
@@ -2064,6 +2094,7 @@ function collectNPCFromForm() {
   const trainer = document.getElementById('npcTrainer').checked ?
     document.getElementById('npcTrainerType').value.trim() : '';
   const hidden = document.getElementById('npcHidden').checked;
+  const inanimate = document.getElementById('npcInanimate').checked;
   const locked = document.getElementById('npcLocked').checked;
   const portraitLock = document.getElementById('npcPortraitLock').checked;
   const flag = getRevealFlag();
@@ -2096,7 +2127,8 @@ function collectNPCFromForm() {
   document.getElementById('npcTree').value = JSON.stringify(tree, null, 2);
   loadTreeEditor();
 
-  const npc = { id, name, title, desc, color, symbol, map, x, y, tree };
+  const npc = { id, name, title, desc, symbol, map, x, y, tree };
+  if (overrideColor) { npc.color = color; npc.overrideColor = true; }
   if (questIds.length > 1) npc.quests = questIds;
   else if (firstQuest) npc.questId = firstQuest;
   if (dialogLines.length > 1) npc.dialogs = dialogLines;
@@ -2132,6 +2164,7 @@ function collectNPCFromForm() {
   if (trainer) npc.trainer = trainer;
   if (workbench) npc.workbench = true;
   if (hidden && flag) npc.hidden = true, npc.reveal = { flag, op, value: val };
+  if (inanimate) npc.inanimate = true;
   if (npcPortraitPath) npc.portraitSheet = npcPortraitPath;
   else if (npcPortraitIndex > 0) npc.portraitSheet = npcPortraits[npcPortraitIndex];
   if (!portraitLock) npc.portraitLock = false;
@@ -2189,7 +2222,9 @@ function editNPC(i) {
   document.getElementById('npcName').value = n.name;
   document.getElementById('npcTitle').value = n.title || '';
   document.getElementById('npcDesc').value = n.desc || '';
-  document.getElementById('npcColor').value = expandHex(n.color || '#ffffff');
+  document.getElementById('npcColor').value = expandHex(n.color || '#9ef7a0');
+  document.getElementById('npcColorOverride').checked = !!n.overrideColor;
+  updateColorOverride();
   document.getElementById('npcSymbol').value = n.symbol || '!';
   populateMapDropdown(document.getElementById('npcMap'), n.map);
   document.getElementById('npcX').value = n.x;
@@ -2208,6 +2243,7 @@ function editNPC(i) {
   document.getElementById('npcPortraitLock').checked = n.portraitLock !== false;
   document.getElementById('npcHidden').checked = !!n.hidden;
   document.getElementById('npcLocked').checked = !!n.locked;
+  document.getElementById('npcInanimate').checked = !!n.inanimate;
   let flagMap = 'world';
   if (n.reveal?.flag?.startsWith('visits@')) {
     document.getElementById('npcFlagType').value = 'visits';
@@ -3940,6 +3976,7 @@ document.getElementById('npcCombat').addEventListener('change', updateNPCOptSect
 document.getElementById('npcShop').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcHidden').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcTrainer').addEventListener('change', updateNPCOptSections);
+document.getElementById('npcColorOverride').addEventListener('change', updateColorOverride);
 document.getElementById('npcLocked').addEventListener('change', onLockedToggle);
 document.getElementById('genQuestDialog').onclick = generateQuestTree;
 
