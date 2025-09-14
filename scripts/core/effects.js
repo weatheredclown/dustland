@@ -84,6 +84,9 @@
           case 'openWorkbench':
             globalThis.Dustland?.openWorkbench?.();
             break;
+          case 'showTrainer':
+            if (eff.trainer) TrainerUI?.showTrainer?.(eff.trainer);
+            break;
           case 'addFlag': {
             const p = ctx.party || globalThis.party;
             if (p) {
