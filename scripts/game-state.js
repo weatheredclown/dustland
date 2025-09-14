@@ -1,5 +1,5 @@
 (function(){
-  globalThis.Dustland = globalThis.Dustland || {};
+  globalThis.Dustland = globalThis.Dustland ?? {};
   const state = { party: [], world: {}, inventory: [], flags: {}, clock: 0, quests: [], difficulty: 'normal', personas: {}, effectPacks: {}, npcMemory: {} };
   function getState(){ return state; }
   function updateState(fn){
@@ -17,7 +17,7 @@
     if(!evt || !Array.isArray(list)) return;
     state.effectPacks[evt] = list;
     globalThis.EventBus?.on(evt, payload => {
-      globalThis.Dustland?.effects?.apply(list, payload || {});
+      globalThis.Dustland?.effects?.apply(list, payload ?? {});
     });
   }
   function loadEffectPacks(packs){
@@ -25,7 +25,7 @@
   }
   function rememberNPC(id, key, value){
     if(!id || !key) return;
-    const m = state.npcMemory[id] || (state.npcMemory[id] = {});
+    const m = state.npcMemory[id] ?? (state.npcMemory[id] = {});
     m[key] = value;
   }
   function recallNPC(id, key){

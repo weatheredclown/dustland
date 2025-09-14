@@ -1,6 +1,6 @@
 (function(){
   function ensureModule(info, cb){
-    const { script, global: globalName, module: moduleName } = info || {};
+    const { script, global: globalName, module: moduleName } = info ?? {};
     const loaded = globalThis.Dustland?.loadedModules?.[moduleName];
     if(loaded){ cb(loaded); return; }
     if(globalName && globalThis[globalName]){
@@ -23,22 +23,22 @@
   }
 
   function gatherBunkers(cb){
-    const result = (globalThis.Dustland?.bunkers || []).map(b => ({ ...b }));
-    const dl = globalThis.Dustland || {};
+    const result = (globalThis.Dustland?.bunkers ?? []).map(b => ({ ...b }));
+    const dl = globalThis.Dustland ?? {};
     const cur = dl.currentModule;
-    const mods = dl.moduleProps?.[cur]?.fastTravelModules || [];
+    const mods = dl.moduleProps?.[cur]?.fastTravelModules ?? [];
     let pending = mods.length;
     if(!pending){ cb(result); return; }
     mods.forEach(m => {
       ensureModule(m, moduleData => {
         if(moduleData){
-          (dl.moduleProps ||= {})[moduleData.name] = { ...(moduleData.props || {}), script: m.script, global: m.global };
-          (moduleData.buildings || []).forEach(b => {
-            if(b.bunker){
-              const id = b.bunkerId || `bunker_${b.x}_${b.y}`;
-              result.push({ id, x: b.doorX, y: b.doorY, map: 'world', module: moduleData.name, script: m.script, global: m.global, name: moduleData.name, active: b.boarded !== true });
-            }
-          });
+        (dl.moduleProps ||= {})[moduleData.name] = { ...(moduleData.props ?? {}), script: m.script, global: m.global };
+        (moduleData.buildings ?? []).forEach(b => {
+          if(b.bunker){
+            const id = b.bunkerId ?? `bunker_${b.x}_${b.y}`;
+            result.push({ id, x: b.doorX, y: b.doorY, map: 'world', module: moduleData.name, script: m.script, global: m.global, name: moduleData.name, active: b.boarded !== true });
+          }
+        });
         }
         if(--pending === 0) cb(result);
       });
@@ -93,12 +93,12 @@
           circle.setAttribute('r', 8);
           circle.setAttribute('fill', '#fff');
           circle.style.cursor = 'pointer';
-          circle.title = b.name || b.id;
+          circle.title = b.name ?? b.id;
           circle.onclick = () => {
             const ft = globalThis.Dustland?.fastTravel;
-            const cost = ft?.fuelCost?.(fromId, b.id) || 0;
-            const fuel = globalThis.player?.fuel || 0;
-            const name = b.name || b.id;
+            const cost = ft?.fuelCost?.(fromId, b.id) ?? 0;
+            const fuel = globalThis.player?.fuel ?? 0;
+            const name = b.name ?? b.id;
             if(fuel < cost){ alert(`Need ${cost} fuel to travel.`); return; }
             if(confirm(`Travel to ${name} for ${cost} fuel?`)) travel(fromId, b);
           };
@@ -108,7 +108,7 @@
           text.setAttribute('x', x + 10);
           text.setAttribute('y', y + 4);
           text.setAttribute('fill', '#fff');
-          text.textContent = b.name || b.id;
+          text.textContent = b.name ?? b.id;
           svg.appendChild(text);
 
           pts.push({ x, y });
@@ -149,6 +149,6 @@
     });
   }
 
-  globalThis.Dustland = globalThis.Dustland || {};
+  globalThis.Dustland = globalThis.Dustland ?? {};
   globalThis.Dustland.worldMap = { open, close };
 })();

@@ -21,7 +21,7 @@
 
   function showTrainer(id){
     const data = loadTrainerData();
-    const upgrades = data[id] || [];
+    const upgrades = data[id] ?? [];
     const npc = globalThis.currentNPC;
     const npcTree = npc?.tree;
     const dsTree = typeof dialogState === 'object' ? dialogState?.tree : null;
@@ -30,13 +30,13 @@
     if(dsTree && !dsTree.train) dsTree.train = trainNode;
     if(npcTree && !npcTree.train) npcTree.train = trainNode;
     const lead = typeof leader === 'function' ? leader() : null;
-    trainNode.text = `Skill Points: ${lead?.skillPoints || 0}`;
+    trainNode.text = `Skill Points: ${lead?.skillPoints ?? 0}`;
     const choices = upgrades.map(up => {
       let base = 0;
       if(lead){
-        base = up.stat === 'HP' ? lead.maxHp : (lead.stats[up.stat] || 0);
+        base = up.stat === 'HP' ? lead.maxHp : (lead?.stats?.[up.stat] ?? 0);
       }
-      const after = base + (up.delta || 0);
+      const after = base + (up.delta ?? 0);
       return {
         label: `${up.label} (Cost:${up.cost}) ${base}\u2192${after}`,
         to: 'train',
@@ -50,7 +50,7 @@
 
   function applyUpgrade(trainerId, upgradeId){
     const data = loadTrainerData();
-    const up = (data[trainerId] || []).find(u => u.id === upgradeId);
+    const up = (data[trainerId] ?? []).find(u => u.id === upgradeId);
     if(!up) return false;
     if(up.type === 'stat'){
       const ok = trainStat(up.stat);

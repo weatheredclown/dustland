@@ -55,7 +55,7 @@ const SpoilsCache = {
     return weights[0][0];
   },
   rollDrop(challenge, rng=Math.random){
-    const c = Math.max(1, challenge||1);
+    const c = Math.max(1, challenge ?? 1);
     const chance = Math.min(1, this.baseRate * c);
     if(rng() >= chance) return null;
     const rank = this.pickRank(c, rng);
@@ -66,7 +66,7 @@ const SpoilsCache = {
     if(!info || typeof document === 'undefined') return null;
     const el = document.createElement('div');
     el.className = `cache-icon ${rank}`;
-    el.textContent = info.icon || '';
+    el.textContent = info.icon ?? '';
     el.addEventListener('click', () => {
       el.classList.add('open');
       setTimeout(() => {
@@ -92,10 +92,10 @@ const SpoilsCache = {
         player.inv.push(item);
         notifyInventoryChanged?.();
       }
-      globalThis.log?.(`${item.name} found in ${this.ranks[rank]?.name || rank}.`);
+        globalThis.log?.(`${item.name} found in ${this.ranks[rank]?.name ?? rank}.`);
       globalThis.EventBus?.emit?.('spoils:opened', { rank, item });
     } else {
-      globalThis.log?.(`${this.ranks[rank]?.name || rank} opened.`);
+        globalThis.log?.(`${this.ranks[rank]?.name ?? rank} opened.`);
       globalThis.EventBus?.emit?.('spoils:opened', { rank });
     }
     return item;
@@ -107,7 +107,7 @@ const SpoilsCache = {
       opened++;
     }
     if(opened){
-      const name = this.ranks[rank]?.name || rank;
+        const name = this.ranks[rank]?.name ?? rank;
       globalThis.log?.(`Opened ${opened} ${name}${opened>1?'s':''}.`);
     }
     return opened;
