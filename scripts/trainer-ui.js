@@ -23,9 +23,12 @@
     const data = loadTrainerData();
     const upgrades = data[id] || [];
     const npc = globalThis.currentNPC;
-    const tree = (typeof dialogState === 'object' && dialogState?.tree) || npc?.tree;
-    const trainNode = tree?.train;
+    const npcTree = npc?.tree;
+    const dsTree = typeof dialogState === 'object' ? dialogState?.tree : null;
+    const trainNode = dsTree?.train || npcTree?.train;
     if(!trainNode) return false;
+    if(dsTree && !dsTree.train) dsTree.train = trainNode;
+    if(npcTree && !npcTree.train) npcTree.train = trainNode;
     const lead = typeof leader === 'function' ? leader() : null;
     trainNode.text = `Skill Points: ${lead?.skillPoints || 0}`;
     const choices = upgrades.map(up => {
@@ -42,7 +45,6 @@
     });
     choices.push({ label: '(Back)', to: 'start' });
     trainNode.choices = choices;
-    if(npc?.tree && npc.tree !== tree) npc.tree.train = trainNode;
     return true;
   }
 

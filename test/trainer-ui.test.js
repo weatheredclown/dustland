@@ -41,6 +41,17 @@ test('render trainer options with stat deltas', () => {
   assert.ok(choices[0].label.includes('4→5'));
 });
 
+test('uses npc tree when dialog state lacks train node', () => {
+  const { context, npc } = setup();
+  context.dialogState = { tree: {} };
+  const m = context.makeMember('id', 'Name', 'Role');
+  context.party.push(m);
+  const ok = context.TrainerUI.showTrainer('power', 0);
+  assert.strictEqual(ok, true);
+  assert.strictEqual(npc.tree.train.choices.length, 3);
+  assert.strictEqual(context.dialogState.tree.train.choices.length, 3);
+});
+
 test('apply upgrade via effect', () => {
   const { context, npc } = setup();
   const lead = context.makeMember('lead', 'Lead', 'Role');
