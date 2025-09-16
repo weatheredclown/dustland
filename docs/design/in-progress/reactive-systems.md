@@ -33,11 +33,10 @@
 - [x] Implement item narrative tagging in engine and Adventure Kit.
  - [x] Extend quest definitions to support branching and persistence.
  - [x] Add NPC memory storage and retrieval utilities.
-- [ ] Stand up the event scheduler core loop in `scripts/core/event-scheduler.js` (target < 250 LOC; reuse existing timer utilit
-ies).
-- [ ] Load world and NPC timeline definitions from module JSON via `scripts/module-loader.js` (target < 180 LOC; extend existing
- schema objects rather than inventing new parsers).
-- [ ] Emit schedule-driven events and add regression tests covering world + NPC triggers in `test/event-scheduler.test.js` (targ
-et < 200 LOC combining implementation and tests).
+- [ ] Build event scheduler for world and NPC timelines.
+  - [ ] Specify scheduler data structures (timeline entries, repeat rules, prerequisites) and document them for Adventure Kit authors.
+  - [ ] Implement a tick-driven scheduler service that queues world/NPC events, persists progress to saves, and survives map transitions.
+  - [ ] Add editor tooling to visualize upcoming events and allow designers to fast-forward or cancel entries during testing.
+  - [ ] Write automated tests covering chained events, missed ticks after load, and NPC reactions triggered by the scheduler.
 - [x] Allow zones and portals to register and check narrative flags.
 

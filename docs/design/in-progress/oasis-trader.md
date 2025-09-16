@@ -30,9 +30,14 @@
 - [x] Replace static shop NPC in `dustland.module.js` with a traveling trader.
 - [x] Give the trader an east-west patrol loop across the world map.
  - [x] Stock begins with scavenged gear and upgrades across three refresh waves.
-- [ ] Calibrate early-upgrade price bands in `data/traders/oasis.json` and `scripts/core/trader.js` so stat bumps cost 60–90 scrap (target < 200 LOC leveraging existing price helpers).
-- [ ] Teach the trader grudge meter to award stacked discounts for positive standings and surface the math in the trade UI (target < 220 LOC across logic and UI copy).
-- [ ] Define the premium gear weekly rotation tables and cap their prices at 2× top wasteland drops, plus add a regression test covering the refresh window (target < 240 LOC including data + test harness).
+- [ ] Tune prices so early upgrades land around 60–90 scrap per key stat bump, then ease discounts for players with positive grudge standings.
+  - [ ] Capture live pricing data from early-game encounters and existing vendors to establish scrap baselines.
+  - [ ] Update `scripts/core/trader.js` with a pricing curve that references item tiers, scarcity, and the trader's current grudge meter.
+  - [ ] Expand balance tests to assert the 60–90 scrap window for first-wave upgrades and validate discount stacking rules.
+- [ ] Reserve premium gear for end-of-week refreshes but keep sticker prices within twice the best wasteland drops so progression rewards skill instead of grind.
+  - [ ] Tag premium inventory entries in module data with refresh cadence and rarity tiers.
+  - [ ] Adjust the refresh scheduler so weekly rotations pull from the premium pool only after day seven while preserving daily partial refreshes.
+  - [ ] Surface upcoming premium stock in the trade UI and write tooltips that explain scarcity-driven pricing caps.
 
 ## Risks
 - Long refresh timers may stall players lacking supplies.
