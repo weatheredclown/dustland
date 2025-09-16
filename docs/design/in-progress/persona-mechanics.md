@@ -89,10 +89,25 @@ Persona equips and other world moments should fire through the game's event bus.
 - [ ] Draft first mask memory quest for dustland.
   - [x] create an NPC mask giver (name TBD)
   - [ ] create quest to get a persona mask (anything with the mask attribute from a loot cache)
+    - [ ] Outline quest beats (setup, retrieval, and return) so each stage ties into the persona's forgotten memories.
+    - [ ] Script quest data in a dedicated module file with journal updates, checkpoint triggers, and persona unlock rewards.
+    - [ ] Playtest the quest via Adventure Kit to ensure loot caches drop the correct mask variant and state persists after reloads.
   - [ ] add dialog to this NPC that explains the above lore about how these aren't just disguises
+    - [ ] Draft branching acceptance, declination, and completion lines that foreshadow later mask memories.
+    - [ ] Gate dialog branches using persona ownership flags so repeat conversations acknowledge prior progress.
+    - [ ] Record VO/text pass notes for narrative review and confirm the conversation flows in the in-game UI without clipping.
 - [x] Add portrait and label swap logic to the HUD.
 - [ ] Extend ACK schema and editor with reusable profile definitions.
- - [ ] Implement profile runtime service for personas, buffs, and disguises.
+  - [ ] Define a `profiles` collection in the ACK schema with validation on effect types, numeric ranges, and asset references.
+  - [ ] Add a migration utility that backfills empty `profiles` blocks for existing modules so older content keeps loading cleanly.
+  - [ ] Surface profile editors in Adventure Kit with previews of stat deltas and persona-specific restrictions.
+- [ ] Implement profile runtime service for personas, buffs, and disguises.
+  - [ ] Create `scripts/core/profile-service.js` to apply/remove profile effects and broadcast lifecycle events.
+  - [ ] Subscribe the service to `persona:equip`, quest, and environmental triggers so effect packs fire automatically.
+  - [ ] Cover the service with save/load and combat regression tests that ensure stacked modifiers resolve deterministically.
 - [x] Emit `persona:equip` and `persona:unequip` events on the global bus.
 - [x] ensure load/save store the equipped persona.
 - [ ] Build editor inspector for authoring and testing effect packs into ACK.
+  - [ ] Add an inspector panel that lets designers compose ordered effect packs and bind them to event keys.
+  - [ ] Provide a "test fire" sandbox that emits sample events against the active save to preview results without leaving ACK.
+  - [ ] Document the workflow in an Adventure Kit guide so modders understand how to author, preview, and ship packs.
