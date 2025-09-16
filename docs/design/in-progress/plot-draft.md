@@ -176,7 +176,7 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
   - **Arc Detail:** Jax's arc is about overcoming his fear of scarcity and loss. He hoards resources and knowledge, afraid to share lest he be left with nothing. He'll learn that the caravan's strength lies in its community, not its individual stashes. He'll start by charging for every screw and bandage, but will end up building custom gear for his friends for free, his workshop becoming the heart of the caravan.
 - [x] Detail Nyx "Speaker"—a poet tuning radio static into verse; arc: chooses between broadcasting or listening.
   - **Arc Detail:** Nyx's arc is about finding her own voice. Initially, she sees herself as a mere conduit for the Ghost Signal, a passive listener. She'll discover that she has her own stories to tell, and that her poetry can be a source of hope and inspiration for the caravan. She will eventually have to choose between simply relaying the Ghost Signal's message or interpreting it and adding her own voice to it, potentially changing its meaning and impact.
-- [ ] **Implement Signature Encounters:**
+- [ ] **Implement Signature Encounters** (remaining integration < 480 LOC):
     - [x] Design and build Mara's dust storm navigation puzzle.
       - **Design:**
         - **Concept:** The player must navigate a maze-like canyon during a blinding dust storm. Visibility is near zero. The only guide is the sound of wind chimes, each with a unique pitch, that the player must follow in a specific sequence to find the safe path.
