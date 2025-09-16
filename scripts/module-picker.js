@@ -200,6 +200,7 @@ function showModulePicker(){
       if (i === selectedIndex) {
         btn.className = 'btn selected';
         if (btn.focus) btn.focus();
+        btn.scrollIntoView?.({ block: 'nearest' });
       } else {
         btn.className = 'btn';
       }
@@ -216,6 +217,9 @@ function showModulePicker(){
     buttons.push(btn);
     buttonContainer.appendChild(btn);
   });
+  const btnHeight = buttons[0]?.offsetHeight || 32;
+  buttonContainer.style.maxHeight = `${(btnHeight + 8) * 5}px`;
+  buttonContainer.style.overflowY = 'auto';
   updateSelected();
 
   overlay.tabIndex = 0;

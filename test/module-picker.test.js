@@ -128,6 +128,13 @@ test('arrow keys cycle module selection', () => {
   assert.ok(buttons[1].className.includes('selected'));
 });
 
+test('module picker limits visible options and enables scrolling', () => {
+  const overlay = bodyEl.children.find(c => c.id === 'modulePicker');
+  const container = overlay.querySelector('#moduleButtons');
+  assert.strictEqual(container.style.overflowY, 'auto');
+  assert.strictEqual(container.style.maxHeight, '200px');
+});
+
 test('broadcast story points to first fragment', () => {
   const broadcast = MODULES.find(m => m.id === 'broadcast');
   assert.ok(broadcast);
