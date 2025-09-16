@@ -86,13 +86,33 @@ Persona equips and other world moments should fire through the game's event bus.
 
 - [x] Prototype persona equip UI at camps (any loot cache mask should be equippable here and yield a persona).
  - [x] Hook persona stat modifiers into combat calculations.
-- [ ] Draft first mask memory quest for dustland.
+- [ ] Draft first mask memory quest for dustland (< 600 LOC across quest data, dialog, and tests).
   - [x] create an NPC mask giver (name TBD)
-  - [ ] create quest to get a persona mask (anything with the mask attribute from a loot cache)
-  - [ ] add dialog to this NPC that explains the above lore about how these aren't just disguises
+  - [ ] Use `scripts/module-tools/quests.js add` to create the fetch quest and follow-up memory beats (target < 150 LOC by extendi
+ng existing quest schema fields).
+  - [ ] Script quest triggers and rewards in `modules/dustland.module.js` using CLI helpers so the mask item flows through the jo
+urnal (target < 160 LOC).
+  - [ ] add dialog to this NPC that explains the above lore about how these aren't just disguises while updating journal entri
+es (target < 180 LOC).
+  - [ ] Add `test/persona-memory.test.js` to cover quest acceptance, completion, and persona unlock persistence (target < 100 LOC
+ by leveraging existing quest harnesses).
 - [x] Add portrait and label swap logic to the HUD.
-- [ ] Extend ACK schema and editor with reusable profile definitions.
- - [ ] Implement profile runtime service for personas, buffs, and disguises.
+- [ ] Extend ACK schema and editor with reusable profile definitions (target < 500 LOC split across schema + UI updates).
+  - [ ] Expand `scripts/module-tools/schema.js` and related prompts to expose `profiles` arrays (target < 180 LOC).
+  - [ ] Update `scripts/adventure-kit.js` to render profile pickers inside character/item inspectors (target < 220 LOC).
+  - [ ] Document the new profile JSON in `docs/guides/module-cli-tools.md` (target < 80 LOC).
+- [ ] Implement profile runtime service for personas, buffs, and disguises (target < 600 LOC across runtime + tests).
+  - [ ] Expand `scripts/core/profiles.js` to support stacked effect packs, removal hooks, and save serialization (target < 200 LOC
+).
+  - [ ] Wire the service into persona equip/unequip flows and the event bus in `scripts/camp-persona.js` and `scripts/event-bus.js
+` (target < 180 LOC).
+  - [ ] Add regression coverage in `test/profile-service.test.js` for stacking, persistence, and reload handling (target < 180 LOC
+).
 - [x] Emit `persona:equip` and `persona:unequip` events on the global bus.
 - [x] ensure load/save store the equipped persona.
-- [ ] Build editor inspector for authoring and testing effect packs into ACK.
+- [ ] Build editor inspector for authoring and testing effect packs into ACK (target < 650 LOC including UI + tests).
+  - [ ] Add a `components/wizard/effect-pack-inspector.js` panel with sortable effect lists and preview controls (target < 300 LOC
+).
+  - [ ] Teach `scripts/adventure-kit.js` to open the inspector from persona, item, and zone dialogs (target < 200 LOC).
+  - [ ] Cover the inspector with UI regression in `test/effect-pack-inspector.test.js` (target < 120 LOC using existing DOM fixtu
+res).
