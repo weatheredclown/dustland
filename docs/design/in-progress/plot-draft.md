@@ -183,6 +183,9 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
         - **Mechanics:** The player will have a new UI element that shows the direction and rough distance to the next chime. The player has to listen carefully to the pitch of the chimes to know which one to follow. Following the wrong chime will lead to dead ends, encounters with dangerous creatures, or getting lost in the storm, which drains resources.
         - **Integration:** This puzzle will be a key part of the "Broadcast Fragment 2: The Sunken City" module, where the caravan needs to cross a dangerous canyon to reach the city.
     - [ ] Hook Mara's puzzle into the Broadcast Story sequence.
+      - [ ] Wire canyon entry and exit triggers so Broadcast Fragment 2 cannot advance until the puzzle is completed or the fallback path is triggered.
+      - [ ] Update the quest journal and broadcast tracker to reflect the player's success or failure state after the puzzle.
+      - [ ] Add automated coverage that verifies finishing the puzzle unlocks the subsequent Silencer encounter and persists across saves.
     - [x] Script Jax's timed repair sequence under combat pressure. Implemented in `jax-repair.module.js`.
     - [x] Write the dialogue and branching paths for Nyx's "conversational tuning" encounter.
       - **Concept:** Nyx needs to convince a hostile NPC to help the caravan. The NPC is emotionally volatile, and the player must choose the right dialogue options to "tune" into their emotional state and de-escalate the situation.
@@ -193,6 +196,14 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
             1.  (Empathetic) "It sounds like you've been hurt before. We're not here to take anything." -> NPC state shifts to Sad.
             2.  (Authoritative) "We need your help. Stand down." -> NPC state becomes more Angry.
             3.  (Logical) "We have resources to trade. It would be mutually beneficial." -> No change in NPC state.
+    - [ ] Integrate Jax's repair sequence into the Broadcast Story flow with clear consequences for success and failure.
+      - [ ] Gate the end of Broadcast Fragment 1 on repairing the caravan rig or triggering an alternate escape beat when the timer expires.
+      - [ ] Reward players with bespoke crafting parts on success and log the scrap debt path if they fail.
+      - [ ] Capture telemetry hooks so QA can verify encounter triggers during long-form playtests.
+    - [ ] Stage Nyx's conversational tuning encounter inside the Observatory fragment.
+      - [ ] Embed the dialogue module into the Observatory map with reputation checks that branch toward Silencer détente or escalation.
+      - [ ] Ensure outcomes toggle persona unlock flags and adjust caravan morale so later scenes react accordingly.
+      - [ ] Record reference audio/text annotations for localization to preserve cadence and tone.
 - [ ] **Doppelgänger System:**
     - [x] Create the data structure for "personas" that can be equipped by the main characters.
     - [x] Design and create the first set of alternate masks and outfits for Mara, Jax, and Nyx.
@@ -208,40 +219,99 @@ The challenges our party faces shouldn't just be about combat. The wasteland is 
         - **Mask:** A porcelain mask with a single, painted tear, representing her sorrow for the lost world.
         - **Outfit:** A flowing robe made of salvaged silk, representing her artistic nature.
         - **Alternate Persona "The Oracle":** A mask made of radio parts with glowing vacuum tubes and a practical, rugged outfit, representing her transformation into a proactive voice for the future.
+    - [ ] Wire persona swapping into the camp UI with preview and confirmation flows.
+      - [ ] Add a persona carousel to the camp equipment panel that displays stat deltas and lore snippets.
+      - [ ] Support keyboard, controller, and accessibility inputs so persona selection mirrors existing gear menus.
+    - [ ] Sync persona effects across module transitions via the profile service.
+      - [ ] Persist equipped persona IDs in the campaign save payload and reload them when the broadcast sequence swaps maps.
+      - [ ] Emit analytics events on auto-reapply to audit oddities during QA marathon sessions.
+    - [ ] Script first-time equip flashback beats for each persona.
+      - [ ] Draft short memory vignettes for Mara, Jax, and Nyx that play the first time a persona is equipped.
+      - [ ] Attach the cinematics to the mask memory quest and ensure repeats gracefully skip after initial viewing.
 - [ ] **Implement Key Items:**
     - [ ] Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.
       - [ ] Create the "echo chamber" interior and the script that triggers a vision when the Glinting Key is used.
+        - [ ] Compose ambient audio and shader cues that escalate as the player nears the focal relic.
+        - [ ] Lock exits during visions and add a reset hook so players can't soft-lock the story.
+      - [ ] Define HUD states for idle, signal ping, and resonance lock so the widget communicates urgency at a glance.
+      - [ ] Add a codex entry and tooltip copy that explains why certain compass pulses lead to emotional hotspots.
     - [ ] Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event.
+      - [ ] Build timeline capture logic that stores decision snapshots without inflating save sizes.
+      - [ ] Script at least one caravan NPC who changes behavior after reviewing a recording.
+      - [ ] Cover edge cases where the tape is empty or overwritten mid-conversation with fallback dialogue.
     - [ ] Wire branching quest infrastructure so every mission supports at least two outcomes with lasting effects.
+      - [ ] Extend quest definitions with outcome nodes, failure recovery hooks, and reward matrices.
+      - [ ] Update the journal UI so mutually exclusive branches clearly show which path the player chose.
+      - [ ] Add automated tests that simulate branch divergence across modules and confirm persistent world state.
     - [ ] Persist NPC relationships and states so conversations evolve based on past decisions.
+      - [ ] Define reputation buckets and serialization format for caravan-wide relationship tracking.
+      - [ ] Audit existing dialog trees and flag lines that should reference relationship shifts.
+      - [ ] Provide ACK tooling to visualize relationship deltas during authoring.
 
 #### **Phase 3: Puzzle and World Building**
 - [ ] **Design a radio tower alignment puzzle that tunes the broadcast.**
   - Rotating pitch, gain, and phase dials brings the broadcast into focus while Silencer patrols home in on failed attempts.
+    - [ ] Outline dial positions, fail states, and success thresholds in a design one-pager for systems and audio teams.
+    - [ ] Identify required art, UI, and SFX assets so production can slot them into the pipeline.
+    - [ ] Prototype a paper version of the puzzle to validate tension curve before building it in-engine.
 - [ ] **Implement the radio tower alignment puzzle with full UI and integration.**
+    - [ ] Build the dial widget variations (mouse/keyboard and controller) and hook them into the broadcast progression logic.
+    - [ ] Add Silencer response events when players stall or fail, including combat encounter triggers.
+    - [ ] Write tests that confirm the puzzle can be reset mid-session without duplicating rewards.
 - [ ] **Design a dust storm navigation puzzle using wind chimes along ruined billboards:** Implemented in `mara-puzzle.module.js` with chime events and a dust storm effect.
+    - [ ] Catalogue the audio palette and spatialization rules so future modules can reuse the navigation system.
+    - [ ] Document accessibility options (subtitles, vibration cues) required for players with limited audio perception.
 - [ ] **Design a layered graffiti decoding puzzle to reveal a safe route before the sun bleeds out.**
    - A collapsed overpass hides directions beneath decades of gang tags; players cycle solvent sprays to reveal each era's markings and overlay them into a route.
    - Picking the wrong sequence bathes the wall in false sunlight and draws a quick Silencer ambush before resetting.
+    - [ ] Break down graffiti layers, solvents, and failure penalties so encounter scripting has a clear checklist.
+    - [ ] Coordinate with art to source decal variants and emissive pass timing for the false sunlight effect.
 - [ ] Implement the layered graffiti decoding puzzle as an interactive module and hook it into the Broadcast Story sequence.
+    - [ ] Create the overpass map variant with interaction hotspots tied to each graffiti layer.
+    - [ ] Add quest hooks so completing the puzzle unlocks the safe route while failed attempts spawn Silencer skirmishes.
+    - [ ] Ensure save/load restores partially completed decoding steps without soft-locking progress.
 - [ ] Introduce roaming encounter and event scheduler so the world reacts over time.
+    - [ ] Integrate the scheduler from the reactive systems plan and author sample encounters that escalate over in-game days.
+    - [ ] Sync roaming encounters with broadcast progression to avoid narrative clashes.
+    - [ ] Provide debug commands to fast-forward time and inspect queued events during playtests.
 - [ ] Link zones and portals to narrative flags, gating routes based on prior choices.
+    - [ ] Audit existing zone definitions and add narrative flag requirements for key transitions.
+    - [ ] Update portal UI prompts to communicate why certain routes are locked or rerouted.
+    - [ ] Add regression tests that confirm flag checks persist when players reload near portals.
 - [ ] **Build Reusable Widgets:**
     - [x] Create a generic "dial" widget for puzzles like the radio tower. Implemented in `scripts/ui/dial.js`.
     - [ ] Develop a "sound-based navigation" system that can be used for the dust storm and other similar challenges.
+      - [ ] Extract the audio beacon logic into a reusable module with configurable pitch sets and timing windows.
+      - [ ] Provide visual fallback cues that designers can toggle for accessibility or alternate puzzle modes.
+      - [ ] Document how to drop the system into new maps via Adventure Kit tooling.
 - [ ] **Flesh out the World:**
     - [ ] Design the first major hub city, where the caravan can rest, resupply, and find new quests.
-  - Map central bazaar interior and connect east and west gates to the world map.
-  - Move prototype hub content into the Dustland module and remove standalone hub files.
-  - Place trader, quest givers, and rest triggers in the hub.
-  - Integrate future features directly into Dustland instead of separate prototypes.
+      - [ ] Map the central bazaar interior and connect east and west gates to the world map.
+      - [ ] Move prototype hub content into the Dustland module and retire the standalone hub builds.
+      - [ ] Place trader, quest-giver, and rest triggers with schedule data so the hub feels alive across day/night cycles.
+      - [ ] Integrate upcoming systems (personas, trader refreshes, hydration) to keep Dustland the single source of truth.
     - [ ] Create a detailed world map that shows the planned route of the caravan and the locations of the first three broadcast fragments.
+      - [ ] Draft the map layout with points of interest, travel routes, and Silencer patrol zones.
+      - [ ] Coordinate with UI to render the map in both the broadcast story flow and fast travel overlay.
+      - [ ] Add tooltips or legend entries that summarize each fragment location for players and modders.
 
 #### **Phase 4: Testing and Integration**
 - [ ] **Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace.
+  - [ ] Schedule cross-discipline play sessions and capture telemetry plus qualitative notes for each fragment.
+  - [ ] Log narrative pacing issues, blocked progression, or confusing transitions and prioritize fixes.
+  - [ ] Summarize findings in a post-playtest report and circulate to design, narrative, and engineering leads.
   - [ ] **Test Character Arcs:** Get feedback on the signature encounters for each character to make sure they are both fun and effective at teaching the character's core mechanics.
- - [ ] **Puzzle Usability Testing:** Have players who are unfamiliar with the puzzles test them to ensure they are challenging but not frustrating. Implement quick resets based on their feedback.
-- [ ] **Modding Tools and Documentation:** Create a tutorial for the modding community that explains how to use the broadcast fragment system to create their own stories within the Dustland universe.
+    - [ ] Prepare bespoke feedback forms focusing on mechanic clarity, narrative payoff, and difficulty curves.
+    - [ ] Record encounter-specific telemetry (success/failure counts, time to completion) for Mara, Jax, and Nyx sequences.
+    - [ ] Review results with character owners and schedule follow-up tuning passes.
+  - [ ] **Puzzle Usability Testing:** Have players who are unfamiliar with the puzzles test them to ensure they are challenging but not frustrating. Implement quick resets based on their feedback.
+    - [ ] Recruit a mix of accessibility and puzzle-focused testers for moderated sessions.
+    - [ ] Capture screen recordings and annotate confusing steps or failure spikes.
+    - [ ] Iterate on cueing, reset logic, and hint delivery based on observations.
+  - [ ] **Modding Tools and Documentation:** Create a tutorial for the modding community that explains how to use the broadcast fragment system to create their own stories within the Dustland universe.
+    - [ ] Outline the tutorial structure (requirements, step-by-step instructions, troubleshooting) before writing copy.
+    - [ ] Capture screenshots or short clips of the Adventure Kit workflow for each major step.
+    - [ ] Publish the tutorial alongside sample modules and update the docs index so creators can find it quickly.
 
 ### Verification Instructions
 
