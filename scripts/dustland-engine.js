@@ -16,6 +16,8 @@ const adrBar = document.getElementById('adrBar');
 const adrFill = document.getElementById('adrFill');
 const statusIcons = document.getElementById('statusIcons');
 const weatherBanner = document.getElementById('weatherBanner');
+const musicBus = globalThis.Dustland?.eventBus || globalThis.EventBus;
+let hudAdrMood = null;
 
 function log(msg, type){
   if (logEl) {
@@ -598,6 +600,31 @@ function updateHUD(){
     adrBar.setAttribute('aria-valuenow', lead.adr);
     adrBar.setAttribute('aria-valuemax', lead.maxAdr || 1);
     adrBar.setAttribute('aria-valuemin', 0);
+    if(musicBus){
+      const ratio = Math.max(0, Math.min(1, (lead.adr || 0) / (lead.maxAdr || 1)));
+      let nextMood = hudAdrMood;
+      if(hudAdrMood === 'adr_high'){
+        if(ratio < 0.6) nextMood = null;
+      } else if(hudAdrMood === 'adr_low'){
+        if(ratio > 0.35) nextMood = null;
+      } else {
+        if(ratio >= 0.75) nextMood = 'adr_high';
+        else if(ratio <= 0.2) nextMood = 'adr_low';
+        else nextMood = null;
+      }
+      if(nextMood !== hudAdrMood){
+        if(nextMood){
+          const priority = nextMood === 'adr_high' ? 50 : 35;
+          musicBus.emit('music:mood', { id: nextMood, source: 'adrenaline', priority });
+        } else {
+          musicBus.emit('music:mood', { id: null, source: 'adrenaline' });
+        }
+        hudAdrMood = nextMood;
+      }
+    }
+  } else if(musicBus && hudAdrMood){
+    musicBus.emit('music:mood', { id: null, source: 'adrenaline' });
+    hudAdrMood = null;
   }
   if(disp && fx){
     const filters = [];
@@ -1132,15 +1159,19 @@ function runTests(){
 }
 
 // ===== Input =====
-if (document.getElementById('saveBtn')) {
-  document.getElementById('saveBtn').onclick=()=>save();
-  document.getElementById('loadBtn').onclick=()=>{ load(); };
-  document.getElementById('clearBtn').onclick=()=>{
-    if (confirm('Delete saved game?')) clearSave();
-  };
-  document.getElementById('resetBtn').onclick=()=>{
-    if (confirm('Reset game and return to character creation?')) resetAll();
-  };
+  if (document.getElementById('saveBtn')) {
+    const saveBtn=document.getElementById('saveBtn');
+    if(saveBtn) saveBtn.onclick=()=>save();
+    const loadBtn=document.getElementById('loadBtn');
+    if(loadBtn) loadBtn.onclick=()=>{ load(); };
+    const clearBtn=document.getElementById('clearBtn');
+    if(clearBtn) clearBtn.onclick=()=>{
+      if (confirm('Delete saved game?')) clearSave();
+    };
+    const resetBtn=document.getElementById('resetBtn');
+    if(resetBtn) resetBtn.onclick=()=>{
+      if (confirm('Reset game and return to character creation?')) resetAll();
+    };
   const nanoBtn=document.getElementById('nanoToggle');
   if(nanoBtn){
     const updateNano=()=>{
@@ -1164,6 +1195,19 @@ if (document.getElementById('saveBtn')) {
   }
   const audioBtn=document.getElementById('audioToggle');
   if(audioBtn) audioBtn.onclick=()=>toggleAudio();
+  const musicBtn=document.getElementById('musicToggle');
+  if(musicBtn){
+    const updateMusicBtn=()=>{
+      const enabled = !!globalThis.Dustland?.music?.isEnabled?.();
+      musicBtn.textContent = `Music: ${enabled ? 'On' : 'Off'}`;
+    };
+    musicBtn.onclick=()=>{
+      globalThis.Dustland?.music?.toggleEnabled?.();
+      updateMusicBtn();
+    };
+    musicBus?.on?.('music:state', updateMusicBtn);
+    updateMusicBtn();
+  }
   const mobileBtn=document.getElementById('mobileToggle');
   if(mobileBtn) mobileBtn.onclick=()=>toggleMobileControls();
   const tileCharBtn=document.getElementById('tileCharToggle');

@@ -70,6 +70,7 @@
       <main>
         <button class="btn" id="nanoToggle">Nano Dialog</button>
         <button class="btn" id="audioToggle">Audio: On</button>
+        <button class="btn" id="musicToggle">Music: Off</button>
         <button class="btn" id="mobileToggle">Mobile Controls: Off</button>
         <button class="btn" id="tileCharToggle">ASCII Tiles: On</button>
         <button class="btn" id="settingsClose">Close</button>
@@ -158,6 +159,7 @@
   </div>
 
   <script defer src="./scripts/event-bus.js"></script>
+  <script defer src="./scripts/supporting/chiptune.js"></script>
   <script defer src="./scripts/ui.js"></script>
   <script defer src="./scripts/core/effects.js"></script>
   <script defer src="./scripts/core/inventory.js"></script>
@@ -186,8 +188,10 @@
           const btns = document.getElementById('mainButtons');
           const nanoBtn = document.getElementById('nanoToggle');
           const audioBtn = document.getElementById('audioToggle');
+          const musicBtn = document.getElementById('musicToggle');
           btns.appendChild(nanoBtn);
           btns.appendChild(audioBtn);
+          btns.appendChild(musicBtn);
           const settingsBtn = document.getElementById('settingsBtn');
           if (settingsBtn) UI.hide('settingsBtn');
         }
