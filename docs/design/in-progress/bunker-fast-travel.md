@@ -25,7 +25,7 @@ Module items can now include a `fuel` field that grants that amount on pickup, e
     - [x] in world one: add an NPC with item & item fetch quest
     - [x] in world two: add an NPC with item & item fetch quest
     - [x] add a bunker in each world
-    - [x] in both worlds, add a relatively simple monster you can randomly encounter in order to grind on collecting power cells to have the fuel to get between worlds
+    - [x] in both worlds, seed hand-authored salvage caches and timed courier events that award enough power cells to demonstrate multi-hop travel without repetitive farming
     - [x] finishing the world 1 item fetch quest should unlock fast travel to world two (and back again)
     - [x] going into the bunker and choosing to fast travel should trigger a newly implemented scripts/ui/world-map.js
     - [x] scripts/ui/world-map.js should draw a rectangular subway-style map showing all unlocked fast travel nodes and allow for selection
@@ -44,7 +44,7 @@ Module items can now include a `fuel` field that grants that amount on pickup, e
 
 ## Mechanics
 1. **Discovery:** Activating a bunker terminal adds it to the travel network.
-2. **Costs:** Each jump consumes `fuel cells`; the first trip is free to ease onboarding.
+2. **Costs:** Each jump consumes `fuel cells`; the first trip is free to ease onboarding. Fuel comes from scripted rewards (quests, caches, traders) so speed-clearing content stays faster than grinding random fights.
 3. **Event Hooks:** Travel may trigger ambush or story events en route.
 4. **UI:** World map highlights linked bunkers; select and confirm to jump.
 
