@@ -927,7 +927,7 @@ const DATA = `
       "map": "world",
       "x": 15,
       "y": 21,
-      "color": "#f66",
+      "color": "#ff0000",
       "name": "Nora",
       "title": "Storm Caller",
       "desc": "Crackling energy dances across her gauntlet.",
@@ -955,7 +955,8 @@ const DATA = `
         },
         "auto": true
       },
-      "symbol": "!"
+      "symbol": "!",
+      "overrideColor": true
     },
     {
       "id": "party_tess",
@@ -1689,7 +1690,7 @@ const DATA = `
       "map": "world",
       "x": 32,
       "y": 48,
-      "color": "#f66",
+      "color": "#ff0000",
       "name": "Scavenger Rat",
       "title": "Vermin",
       "desc": "A giant rat rooting through scraps.",
@@ -1712,7 +1713,8 @@ const DATA = `
         "loot": "water_flask",
         "auto": true
       },
-      "symbol": "!"
+      "symbol": "!",
+      "overrideColor": true
     },
     {
       "id": "rust_bandit",
