@@ -31,7 +31,13 @@
 - [x] Give the trader an east-west patrol loop across the world map.
  - [x] Stock begins with scavenged gear and upgrades across three refresh waves.
 - [ ] Tune prices so early upgrades land around 60–90 scrap per key stat bump, then ease discounts for players with positive grudge standings.
+  - [ ] Capture live pricing data from early-game encounters and existing vendors to establish scrap baselines.
+  - [ ] Update `scripts/core/trader.js` with a pricing curve that references item tiers, scarcity, and the trader's current grudge meter.
+  - [ ] Expand balance tests to assert the 60–90 scrap window for first-wave upgrades and validate discount stacking rules.
 - [ ] Reserve premium gear for end-of-week refreshes but keep sticker prices within twice the best wasteland drops so progression rewards skill instead of grind.
+  - [ ] Tag premium inventory entries in module data with refresh cadence and rarity tiers.
+  - [ ] Adjust the refresh scheduler so weekly rotations pull from the premium pool only after day seven while preserving daily partial refreshes.
+  - [ ] Surface upcoming premium stock in the trade UI and write tooltips that explain scarcity-driven pricing caps.
 
 ## Risks
 - Long refresh timers may stall players lacking supplies.
