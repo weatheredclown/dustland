@@ -86,10 +86,10 @@ Persona equips and other world moments should fire through the game's event bus.
 
 - [x] Prototype persona equip UI at camps (any loot cache mask should be equippable here and yield a persona).
  - [x] Hook persona stat modifiers into combat calculations.
-- [ ] Draft first mask memory quest for dustland.
+- [x] Draft first mask memory quest for dustland.
   - [x] create an NPC mask giver (name TBD)
-  - [ ] create quest to get a persona mask (anything with the mask attribute from a loot cache)
-  - [ ] add dialog to this NPC that explains the above lore about how these aren't just disguises
+  - [x] create quest to get a persona mask (anything with the mask attribute from a loot cache)
+  - [x] add dialog to this NPC that explains the above lore about how these aren't just disguises
 - [x] Add portrait and label swap logic to the HUD.
 - [ ] Extend ACK schema and editor with reusable profile definitions.
  - [ ] Implement profile runtime service for personas, buffs, and disguises.

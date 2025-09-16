@@ -286,14 +286,48 @@ const DATA = `
       "y": 5,
       "name": "Mask Hermit",
       "title": "Mask Giver",
-      "desc": "A cloaked figure offers a mask.",
+      "desc": "A cloaked hermit claims masks carry borrowed lives.",
       "tree": {
         "start": {
-          "text": "A cloaked figure offers a mask.",
+          "text": "The hermit traces glyphs across a blank mask, murmuring that personas are borrowed lives.",
           "choices": [
             {
-              "label": "(Take mask)",
-              "to": "give"
+              "label": "(Ask about the masks)",
+              "to": "lore"
+            },
+            {
+              "label": "(Accept the mask's memory)",
+              "to": "accept",
+              "q": "accept",
+              "if": {
+                "flag": "mask_memory_stage",
+                "op": "<",
+                "value": 1
+              },
+              "setFlag": {
+                "flag": "mask_memory_stage",
+                "op": "set",
+                "value": 1
+              }
+            },
+            {
+              "label": "(Offer recovered mask)",
+              "to": "do_turnin",
+              "q": "turnin",
+              "if": {
+                "flag": "mask_memory_stage",
+                "op": "=",
+                "value": 1
+              }
+            },
+            {
+              "label": "(Reflect on the persona)",
+              "to": "after",
+              "if": {
+                "flag": "mask_memory_stage",
+                "op": ">=",
+                "value": 2
+              }
             },
             {
               "label": "(Leave)",
@@ -301,17 +335,50 @@ const DATA = `
             }
           ]
         },
-        "give": {
-          "text": "The mask hums with strange energy.",
+        "give": null,
+        "lore": {
+          "text": "These aren't disguises, the hermit whispers. Slip one on and the past rides your pulse until you let go.",
           "choices": [
             {
-              "label": "(Thanks)",
-              "to": "bye",
-              "reward": "mara_mask"
+              "label": "(Back)",
+              "to": "start"
+            }
+          ]
+        },
+        "accept": {
+          "text": "Bring me any mask you dredge up from the caches around Stonegate. The persona bound to it will wake when we share the ritual.",
+          "choices": [
+            {
+              "label": "(I'll return)",
+              "to": "bye"
+            }
+          ]
+        },
+        "do_turnin": {
+          "text": "He turns the scavenged mask in his hands, listening for the echo trapped inside.",
+          "choices": [
+            {
+              "label": "(Channel the memory)",
+              "to": "after",
+              "setFlag": {
+                "flag": "mask_memory_stage",
+                "op": "set",
+                "value": 2
+              }
+            }
+          ]
+        },
+        "after": {
+          "text": "The hermit presses the awakened mask into your hands and urges you to rest at camp so it can choose whose face to wear.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
             }
           ]
         }
-      }
+      },
+      "questId": "mask_memory"
     }
   ],
   "items": [
@@ -405,6 +472,16 @@ const DATA = `
       "id": "bandit_purge",
       "title": "Bandit Purge",
       "desc": "Help Mayor Ganton clear the road to Lakeside."
+    },
+    {
+      "id": "mask_memory",
+      "title": "Echoes in the Mask",
+      "desc": "Recover a mask from buried caches for the Mask Hermit.",
+      "itemTag": "mask",
+      "count": 1,
+      "reward": "mara_mask",
+      "xp": 4,
+      "autoStart": false
     }
   ],
   "portals": [
@@ -700,7 +777,10 @@ function postLoad(module) {
   if (bandit && bandit.combat) {
     bandit.combat.effects = [() => setFlag('bandits_cleared', 1)];
   }
-  module.quests?.forEach(q => addQuest(q.id, q.title, q.desc, q));
+  module.quests?.forEach(q => {
+    if (q && q.autoStart === false) return;
+    addQuest(q.id, q.title, q.desc, q);
+  });
 }
 
 globalThis.TRUE_DUST = JSON.parse(DATA);
