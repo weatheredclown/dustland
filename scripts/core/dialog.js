@@ -374,11 +374,13 @@ function openDialog(npc, node='start'){
   }
 
   renderDialog();
+  globalThis.EventBus?.emit?.('music:mood', { id: 'dialog', source: 'dialog', priority: 60 });
   overlay.classList.add('shown');
   setGameState(GAME_STATE.DIALOG);
 }
 
 function closeDialog(){
+  globalThis.EventBus?.emit?.('music:mood', { id: null, source: 'dialog' });
   overlay.classList.remove('shown');
   currentNPC=null;
   dialogState.tree=null;

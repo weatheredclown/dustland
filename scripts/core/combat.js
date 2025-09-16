@@ -252,6 +252,7 @@ function openCombat(enemies){
     }
 
     globalThis.EventBus?.emit?.('combat:started');
+    globalThis.EventBus?.emit?.('music:mood', { id: 'combat', source: 'combat', priority: 90 });
     openCommand();
   });
 }
@@ -274,6 +275,7 @@ function closeCombat(result = 'flee'){
 
   const duration = Date.now() - combatState.startTime;
   recordCombatEvent({ type: 'system', action: 'end', result, duration });
+  globalThis.EventBus?.emit?.('music:mood', { id: null, source: 'combat' });
   globalThis.EventBus?.emit?.('combat:ended', { result });
   const tele = { duration, log: combatState.log.slice() };
   globalThis.EventBus?.emit?.('combat:telemetry', tele);
