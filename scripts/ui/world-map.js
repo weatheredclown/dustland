@@ -32,13 +32,36 @@
     mods.forEach(m => {
       ensureModule(m, moduleData => {
         if(moduleData){
-        (dl.moduleProps ||= {})[moduleData.name] = { ...(moduleData.props ?? {}), script: m.script, global: m.global };
-        (moduleData.buildings ?? []).forEach(b => {
-          if(b.bunker){
-            const id = b.bunkerId ?? `bunker_${b.x}_${b.y}`;
-            result.push({ id, x: b.doorX, y: b.doorY, map: 'world', module: moduleData.name, script: m.script, global: m.global, name: moduleData.name, active: b.boarded !== true });
+          const moduleName = moduleData.name || moduleData.seed || m.module || '';
+          if(moduleName && !moduleData.name) moduleData.name = moduleName;
+          if(moduleName){
+            (dl.moduleProps ||= {})[moduleName] = { ...(moduleData.props ?? {}), script: m.script, global: m.global };
           }
-        });
+          const ft = globalThis.Dustland?.fastTravel;
+          (moduleData.buildings ?? []).forEach(b => {
+            if(!b.bunker) return;
+            const id = b.bunkerId ?? `bunker_${b.x}_${b.y}`;
+            const doorX = typeof b.doorX === 'number' ? b.doorX : b.x + Math.floor((b.w ?? 1) / 2);
+            const doorY = typeof b.doorY === 'number' ? b.doorY : b.y + (b.h ?? 1) - 1;
+            const entry = {
+              id,
+              x: doorX,
+              y: doorY,
+              map: 'world',
+              module: moduleName || id,
+              script: m.script,
+              global: m.global,
+              name: moduleName || id,
+              active: b.boarded !== true
+            };
+            ft?.upsertBunkers?.([entry]);
+            const existing = result.find(r => r.id === id);
+            if(existing){
+              Object.assign(existing, entry);
+            } else {
+              result.push({ ...entry });
+            }
+          });
         }
         if(--pending === 0) cb(result);
       });
@@ -96,10 +119,23 @@
           circle.title = b.name ?? b.id;
           circle.onclick = () => {
             const ft = globalThis.Dustland?.fastTravel;
-            const cost = ft?.fuelCost?.(fromId, b.id) ?? 0;
+            const cost = ft?.fuelCost?.(fromId, b.id);
             const fuel = globalThis.player?.fuel ?? 0;
             const name = b.name ?? b.id;
-            if(fuel < cost){ alert(`Need ${cost} fuel to travel.`); return; }
+            if(!Number.isFinite(cost)){
+              const msg = 'Fast travel destination unavailable.';
+              if(typeof log === 'function') log(msg);
+              if(typeof toast === 'function') toast(msg);
+              globalThis.Dustland?.eventBus?.emit?.('sfx', 'denied');
+              return;
+            }
+            if(fuel < cost){
+              const msg = `Need ${cost} fuel to travel.`;
+              if(typeof log === 'function') log(msg);
+              if(typeof toast === 'function') toast(msg);
+              globalThis.Dustland?.eventBus?.emit?.('sfx', 'denied');
+              return;
+            }
             if(confirm(`Travel to ${name} for ${cost} fuel?`)) travel(fromId, b);
           };
           svg.appendChild(circle);
@@ -149,6 +185,10 @@
     });
   }
 
-  globalThis.Dustland = globalThis.Dustland ?? {};
-  globalThis.Dustland.worldMap = { open, close };
+  const dl = globalThis.Dustland = globalThis.Dustland ?? {};
+  const mapApi = dl.worldMap || {};
+  mapApi.open = open;
+  mapApi.close = close;
+  mapApi._gatherBunkers = gatherBunkers;
+  dl.worldMap = mapApi;
 })();

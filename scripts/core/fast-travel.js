@@ -1,6 +1,7 @@
 (function(){
-  const bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
-  const bunkers = globalThis.Dustland?.bunkers || [];
+  const dl = globalThis.Dustland = globalThis.Dustland || {};
+  const bus = dl.eventBus || globalThis.EventBus;
+  const bunkers = dl.bunkers || (dl.bunkers = []);
   const BASE_COST = 1;
   const FUEL_PER_TILE = 1;
   const saveKey = id => `dustland_slot_${id}`;
@@ -38,6 +39,20 @@
     return true;
   }
 
+  function upsertBunkers(list){
+    if(!Array.isArray(list) || !list.length) return bunkers;
+    list.forEach(entry => {
+      if(!entry || !entry.id) return;
+      const existing = bunkers.find(b => b.id === entry.id);
+      if(existing){
+        Object.assign(existing, entry);
+      } else {
+        bunkers.push({ ...entry });
+      }
+    });
+    return bunkers;
+  }
+
   function saveSlot(id){
     if(!id || typeof save !== 'function' || !globalThis.localStorage) return;
     save();
@@ -63,7 +78,7 @@
   }
 
   globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.fastTravel = { fuelCost, travel, activateBunker , saveSlot, loadSlot};
+  globalThis.Dustland.fastTravel = { fuelCost, travel, activateBunker , saveSlot, loadSlot, upsertBunkers };
   globalThis.openWorldMap = globalThis.openWorldMap || function(id){
     globalThis.Dustland?.worldMap?.open?.(id);
   };
