@@ -33,10 +33,19 @@
     }
     globalThis.updateHUD?.();
     globalThis.log?.('You rest until healed.');
-    const state = gs.getState?.() || {};
-    const member = state.party && state.party[0];
-    if (!member || !overlay || !list) return;
-    const ids = Object.keys(state.personas || {});
+    const ensurePartyState = () => {
+      const state = gs.getState?.();
+      if (!state) return null;
+      if ((!Array.isArray(state.party) || !state.party.length) && Array.isArray(globalThis.party)) {
+        gs.updateState?.(s => { s.party = globalThis.party; });
+      }
+      return gs.getState?.() || state;
+    };
+    const state = ensurePartyState() || {};
+    const member = state.party?.[0] ?? globalThis.party?.[0];
+    if (!member?.id || !overlay || !list) return;
+    const personas = state.personas || {};
+    const ids = Object.keys(personas);
     list.innerHTML = '';
     if (!ids.length) {
       const msg = document.createElement('div');
@@ -47,7 +56,7 @@
       ids.forEach(id => {
         const b = document.createElement('button');
         b.className = 'btn';
-        b.textContent = id;
+        b.textContent = personas[id]?.label || id;
         b.addEventListener('click', () => {
           overlay.classList.remove('shown');
           gs.applyPersona(member.id, id);
