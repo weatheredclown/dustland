@@ -289,7 +289,7 @@ const DATA = `
       "desc": "A cloaked hermit claims masks carry borrowed lives.",
       "tree": {
         "start": {
-          "text": "The hermit traces glyphs across a blank mask, murmuring that personas are borrowed lives.",
+          "text": "The hermit cradles a blank porcelain mask, whispering that personas are borrowed lives waiting for a new pulse.",
           "choices": [
             {
               "label": "(Ask about the masks)",
@@ -337,7 +337,7 @@ const DATA = `
         },
         "give": null,
         "lore": {
-          "text": "These aren't disguises, the hermit whispers. Slip one on and the past rides your pulse until you let go.",
+          "text": "These aren't disguises, the hermit explains. A persona rides with you, murmuring memories into your bones until you let go.",
           "choices": [
             {
               "label": "(Back)",
@@ -346,7 +346,7 @@ const DATA = `
           ]
         },
         "accept": {
-          "text": "Bring me any mask you dredge up from the caches around Stonegate. The persona bound to it will wake when we share the ritual.",
+          "text": "Bring me a mask dredged from the Stonegate caches. We'll wake the echo trapped within and see who it still remembers.",
           "choices": [
             {
               "label": "(I'll return)",
@@ -355,7 +355,7 @@ const DATA = `
           ]
         },
         "do_turnin": {
-          "text": "He turns the scavenged mask in his hands, listening for the echo trapped inside.",
+          "text": "He cups the scavenged mask and listens, asking the echo inside what name it still answers to.",
           "choices": [
             {
               "label": "(Channel the memory)",
@@ -369,7 +369,7 @@ const DATA = `
           ]
         },
         "after": {
-          "text": "The hermit presses the awakened mask into your hands and urges you to rest at camp so it can choose whose face to wear.",
+          "text": "The hermit presses the awakened mask into your hands. “Rest at camp,” he urges. “Let it choose whose face to wear before the memory fades.”",
           "choices": [
             {
               "label": "(Leave)",
@@ -476,7 +476,7 @@ const DATA = `
     {
       "id": "mask_memory",
       "title": "Echoes in the Mask",
-      "desc": "Recover a mask from buried caches for the Mask Hermit.",
+      "desc": "Salvage a buried mask near Stonegate so the hermit can wake the persona dreaming inside.",
       "itemTag": "mask",
       "count": 1,
       "reward": "mara_mask",
@@ -751,6 +751,135 @@ function startRadio() {
   }, 1000);
 }
 
+const MASK_QUEST_ID = 'mask_memory';
+const MASK_QUEST_FLAG = 'mask_memory_stage';
+const MASK_JOURNAL = [
+  'Salvage a buried mask near Stonegate so the hermit can wake the persona dreaming inside.',
+  'You recovered a dormant mask humming with borrowed life. Bring it to the hermit before the echo fades.',
+  'The mask is awake. Rest at camp so it can choose whose face to wear.'
+];
+const MASK_STAGE_TEXT = [
+  'The hermit cradles a blank porcelain mask, whispering that personas are borrowed lives waiting for a new pulse.',
+  'The hermit listens for distant echoes. “Find me a mask buried in this dust and we will wake whoever still clings to it.”',
+  'Static hums around your pack. “I hear the borrowed life you carry,” he says. “Bring it before the memory slips.”',
+  'The hermit watches the awakened mask tilt toward your camp, content to let the memory ride with you.'
+];
+const MASK_CHECKPOINTS = ['accepted', 'recovered', 'awakened'];
+let maskQuestSetupDone = false;
+let maskHermitTree = null;
+
+function updateMaskHermitStart(stage) {
+  if (!maskHermitTree?.start) return;
+  const idx = stage >= 0 ? stage + 1 : 0;
+  maskHermitTree.start.text = MASK_STAGE_TEXT[idx] || MASK_STAGE_TEXT[0];
+}
+
+function maskQuestCheckpoint(stage) {
+  const key = MASK_CHECKPOINTS[stage];
+  if (!key) return;
+  if (typeof log === 'function') log(`Checkpoint: mask quest ${key}.`);
+  globalThis.EventBus?.emit?.('quest:checkpoint', { questId: MASK_QUEST_ID, stage: key });
+}
+
+function setMaskQuestStage(stage) {
+  const quest = globalThis.quests?.[MASK_QUEST_ID];
+  if (!quest) return;
+  if (quest.progress === stage) {
+    updateMaskHermitStart(stage);
+    return;
+  }
+  quest.progress = stage;
+  const desc = MASK_JOURNAL[Math.min(stage, MASK_JOURNAL.length - 1)] || quest.desc;
+  quest.desc = desc;
+  if (typeof renderQuests === 'function') renderQuests();
+  updateMaskHermitStart(stage);
+  if (stage === 0 && typeof flagValue === 'function' && flagValue(MASK_QUEST_FLAG) < 1) {
+    globalThis.setFlag?.(MASK_QUEST_FLAG, 1);
+  }
+  if (stage === 2) {
+    globalThis.setFlag?.(MASK_QUEST_FLAG, 2);
+  }
+  maskQuestCheckpoint(stage);
+}
+
+function beginMaskQuest() {
+  const quest = globalThis.quests?.[MASK_QUEST_ID];
+  if (!quest) return;
+  if (quest.status !== 'active') {
+    globalThis.questLog?.add?.(quest);
+  }
+  setMaskQuestStage(0);
+}
+
+function handleMaskAcquired(item) {
+  const quest = globalThis.quests?.[MASK_QUEST_ID];
+  if (!quest || quest.status !== 'active' || quest.progress >= 1) return;
+  const tags = Array.isArray(item?.tags) ? item.tags.map(t => t.toLowerCase()) : [];
+  if (!tags.includes('mask')) return;
+  setMaskQuestStage(1);
+}
+
+function handleMaskQuestCompleted(evt) {
+  if (!evt?.quest || evt.quest.id !== MASK_QUEST_ID) return;
+  setMaskQuestStage(2);
+}
+
+function completeMaskQuest() {
+  setMaskQuestStage(2);
+}
+
+function syncMaskQuestState(module) {
+  const quest = globalThis.quests?.[MASK_QUEST_ID];
+  if (!quest) return;
+  if (quest.status === 'completed') {
+    setMaskQuestStage(2);
+    return;
+  }
+  if (quest.status === 'active') {
+    if (typeof flagValue === 'function' && flagValue(MASK_QUEST_FLAG) < 1) {
+      globalThis.setFlag?.(MASK_QUEST_FLAG, 1);
+    }
+    const hasMask = typeof countItems === 'function' ? countItems('mask') > 0 : false;
+    setMaskQuestStage(hasMask ? 1 : 0);
+    return;
+  }
+  quest.progress = -1;
+  if (!maskHermitTree) {
+    maskHermitTree = module.npcs?.find(n => n.id === 'mask_giver')?.tree || null;
+  }
+  updateMaskHermitStart(-1);
+}
+
+function setupMaskQuest(module) {
+  const quest = globalThis.quests?.[MASK_QUEST_ID];
+  if (!quest) return;
+  const hermit = module.npcs?.find(n => n.id === 'mask_giver');
+  if (!hermit?.tree?.start) return;
+  maskHermitTree = hermit.tree;
+  const accept = hermit.tree.start.choices?.find(c => c.q === 'accept');
+  if (accept) {
+    accept.effects = Array.isArray(accept.effects) ? accept.effects : [];
+    if (!accept.effects.includes(beginMaskQuest)) accept.effects.push(beginMaskQuest);
+  }
+  const turnin = hermit.tree.do_turnin?.choices?.find(c => c.to === 'after');
+  if (turnin) {
+    turnin.effects = Array.isArray(turnin.effects) ? turnin.effects : [];
+    if (!turnin.effects.includes(completeMaskQuest)) {
+      turnin.effects.push(completeMaskQuest);
+    }
+  }
+  if (!maskQuestSetupDone) {
+    maskQuestSetupDone = true;
+    globalThis.EventBus?.on?.('item:picked', handleMaskAcquired);
+    globalThis.EventBus?.on?.('quest:completed', handleMaskQuestCompleted);
+  }
+  if (typeof flagValue === 'function' && flagValue(MASK_QUEST_FLAG) >= 2) {
+    setMaskQuestStage(2);
+    return;
+  }
+  syncMaskQuestState(module);
+}
+
 function postLoad(module) {
   const rygar = module.npcs.find(n => n.id === 'rygar');
   if (rygar && rygar.tree && rygar.tree.start) {
@@ -777,6 +906,7 @@ function postLoad(module) {
   if (bandit && bandit.combat) {
     bandit.combat.effects = [() => setFlag('bandits_cleared', 1)];
   }
+  setupMaskQuest(module);
   module.quests?.forEach(q => {
     if (q && q.autoStart === false) return;
     addQuest(q.id, q.title, q.desc, q);
@@ -789,6 +919,7 @@ globalThis.TRUE_DUST.startRadio = startRadio;
 
 startGame = function () {
   applyModule(TRUE_DUST);
+  TRUE_DUST.postLoad?.(TRUE_DUST);
   const s = TRUE_DUST.start;
   setMap(s.map, 'Stonegate');
   setPartyPos(s.x, s.y);
