@@ -148,6 +148,58 @@ function focusMap(x, y) {
 }
 globalThis.focusMap = focusMap;
 
+function getWallGap(length, enabled) {
+  if (!enabled || length <= 0) return null;
+  const size = Math.min(2, length);
+  const start = Math.floor((length - size) / 2);
+  return { start, end: start + size };
+}
+
+function gapContains(index, gap) {
+  return !!gap && index >= gap.start && index < gap.end;
+}
+
+function renderZoneWalls(targetCtx, zone, pxoff, pyoff, sx, sy) {
+  if (!zone || !targetCtx) return;
+  const width = Math.max(1, Math.round(Number(zone.w) || 0));
+  const height = Math.max(1, Math.round(Number(zone.h) || 0));
+  if (!Number.isFinite(width) || !Number.isFinite(height)) return;
+  const baseX = Number(zone.x) || 0;
+  const baseY = Number(zone.y) || 0;
+  const zx = (baseX - pxoff) * sx;
+  const zy = (baseY - pyoff) * sy;
+  const entrances = typeof zone.entrances === 'object' && zone.entrances ? zone.entrances : {};
+  const northGap = getWallGap(width, entrances.north);
+  const southGap = getWallGap(width, entrances.south);
+  const westGap = getWallGap(height, entrances.west);
+  const eastGap = getWallGap(height, entrances.east);
+  targetCtx.save();
+  targetCtx.fillStyle = akColors[TILE.WALL] || '#4d5f4d';
+  for (let i = 0; i < width; i++) {
+    if (gapContains(i, northGap) || (height === 1 && gapContains(i, southGap))) continue;
+    targetCtx.fillRect(zx + i * sx, zy, sx, sy);
+  }
+  if (height > 1) {
+    const by = zy + (height - 1) * sy;
+    for (let i = 0; i < width; i++) {
+      if (gapContains(i, southGap)) continue;
+      targetCtx.fillRect(zx + i * sx, by, sx, sy);
+    }
+  }
+  for (let i = 0; i < height; i++) {
+    if (gapContains(i, westGap) || (width === 1 && gapContains(i, eastGap))) continue;
+    targetCtx.fillRect(zx, zy + i * sy, sx, sy);
+  }
+  if (width > 1) {
+    const rx = zx + (width - 1) * sx;
+    for (let i = 0; i < height; i++) {
+      if (gapContains(i, eastGap)) continue;
+      targetCtx.fillRect(rx, zy + i * sy, sx, sy);
+    }
+  }
+  targetCtx.restore();
+}
+
 function computeSpawnHeat(){
   const W = WORLD_W, H = WORLD_H;
   const grid = Array.from({ length: H }, () => Array(W).fill(Infinity));
@@ -563,6 +615,9 @@ function drawWorld() {
     if (zx + zw < 0 || zy + zh < 0 || zx > canvas.width || zy > canvas.height) return;
     const hovering = hoverTarget && hoverTarget.type === 'zone' && hoverTarget.obj === z;
     const selected = selectedObj && selectedObj.type === 'zone' && selectedObj.obj === z;
+    if (z.walled) {
+      renderZoneWalls(ctx, z, pxoff, pyoff, sx, sy);
+    }
     ctx.save();
     ctx.strokeStyle = '#fa0';
     if (hovering) {
@@ -2968,6 +3023,12 @@ function showZoneEditor(show) {
   document.getElementById('zoneEditor').style.display = show ? 'block' : 'none';
 }
 
+function updateZoneWallFields() {
+  const wrap = document.getElementById('zoneEntrancesWrap');
+  if (!wrap) return;
+  wrap.style.display = document.getElementById('zoneWalled').checked ? 'block' : 'none';
+}
+
 function startNewZone() {
   editZoneIdx = -1;
   populateMapDropdown(document.getElementById('zoneMap'), 'world');
@@ -2984,6 +3045,11 @@ function startNewZone() {
   document.getElementById('zoneUseItem').value = '';
   document.getElementById('zoneReward').value = '';
   document.getElementById('zoneOnce').checked = false;
+  document.getElementById('zoneWalled').checked = false;
+  ['North', 'South', 'East', 'West'].forEach(dir => {
+    document.getElementById('zoneEntrance' + dir).checked = false;
+  });
+  updateZoneWallFields();
   document.getElementById('addZone').textContent = 'Add Zone';
   document.getElementById('delZone').style.display = 'none';
   showZoneEditor(true);
@@ -3006,6 +3072,13 @@ function collectZone() {
   const useItemId = document.getElementById('zoneUseItem').value.trim();
   const reward = document.getElementById('zoneReward').value.trim();
   const once = document.getElementById('zoneOnce').checked;
+  const walled = document.getElementById('zoneWalled').checked;
+  const entrances = {
+    north: document.getElementById('zoneEntranceNorth').checked,
+    south: document.getElementById('zoneEntranceSouth').checked,
+    east: document.getElementById('zoneEntranceEast').checked,
+    west: document.getElementById('zoneEntranceWest').checked
+  };
   const entry = { map, x, y, w, h };
   if (hp || msg) {
     entry.perStep = {};
@@ -3016,6 +3089,14 @@ function collectZone() {
   if (negate) entry.negate = negate;
   if (!isNaN(healMult)) entry.healMult = healMult;
   if (noEnc) entry.noEncounters = true;
+  if (walled) {
+    entry.walled = true;
+    const enabled = Object.entries(entrances).reduce((acc, [dir, val]) => {
+      if (val) acc[dir] = true;
+      return acc;
+    }, {});
+    if (Object.keys(enabled).length) entry.entrances = enabled;
+  }
   if (useItemId) {
     entry.useItem = { id: useItemId };
     if (reward) entry.useItem.reward = reward;
@@ -3059,6 +3140,13 @@ function editZone(i) {
   document.getElementById('zoneUseItem').value = z.useItem?.id || '';
   document.getElementById('zoneReward').value = z.useItem?.reward || '';
   document.getElementById('zoneOnce').checked = !!z.useItem?.once;
+  document.getElementById('zoneWalled').checked = !!z.walled;
+  const entrances = typeof z.entrances === 'object' && z.entrances ? z.entrances : {};
+  document.getElementById('zoneEntranceNorth').checked = !!entrances.north;
+  document.getElementById('zoneEntranceSouth').checked = !!entrances.south;
+  document.getElementById('zoneEntranceEast').checked = !!entrances.east;
+  document.getElementById('zoneEntranceWest').checked = !!entrances.west;
+  updateZoneWallFields();
   document.getElementById('addZone').textContent = 'Update Zone';
   document.getElementById('delZone').style.display = 'block';
   showZoneEditor(true);
@@ -3088,6 +3176,8 @@ function updateZoneDims() {
 ['zoneX', 'zoneY', 'zoneW', 'zoneH'].forEach(id => {
   document.getElementById(id).addEventListener('input', updateZoneDims);
 });
+
+document.getElementById('zoneWalled').addEventListener('change', updateZoneWallFields);
 
 function deleteZone() {
   if (editZoneIdx < 0) return;
