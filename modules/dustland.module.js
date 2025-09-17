@@ -1993,7 +1993,13 @@ const DATA = `
             },
             {
               "label": "(Upgrade Skills)",
-              "to": "train"
+              "to": "train",
+              "effects": [
+                {
+                  "effect": "showTrainer",
+                  "trainer": "power"
+                }
+              ]
             }
           ]
         },
@@ -2030,7 +2036,13 @@ const DATA = `
             },
             {
               "label": "(Upgrade Skills)",
-              "to": "train"
+              "to": "train",
+              "effects": [
+                {
+                  "effect": "showTrainer",
+                  "trainer": "endurance"
+                }
+              ]
             }
           ]
         },
@@ -13839,12 +13851,12 @@ const DATA = `
       ]
     },
     {
-      "x": 116,
-      "y": 1,
+      "x": 117,
+      "y": 0,
       "w": 3,
       "h": 3,
-      "doorX": 117,
-      "doorY": 3,
+      "doorX": 118,
+      "doorY": 2,
       "interiorId": "portal_hut",
       "boarded": false,
       "grid": [

@@ -1302,6 +1302,8 @@ function addChoiceRow(container, ch = {}) {
   const isItem = reward && !isXP && !isScrap;
   const itemVal = isItem ? reward : '';
   const effs = Array.isArray(ch.effects) ? ch.effects : [];
+  const knownEffectTypes = ['boardDoor', 'unboardDoor', 'lockNPC', 'unlockNPC', 'npcColor'];
+  const extraEffects = effs.filter(e => !knownEffectTypes.includes(e?.effect));
   const boardEff = effs.find(e => e.effect === 'boardDoor');
   const unboardEff = effs.find(e => e.effect === 'unboardDoor');
   const boardId = boardEff ? boardEff.interiorId || '' : '';
@@ -1321,6 +1323,9 @@ function addChoiceRow(container, ch = {}) {
   const spawnX = spawn?.x ?? '';
   const spawnY = spawn?.y ?? '';
   const row = document.createElement('div');
+  const rowDataset = row.dataset || (row.dataset = {});
+  if (extraEffects.length) rowDataset.extraEffects = JSON.stringify(extraEffects);
+  else delete rowDataset.extraEffects;
   row.innerHTML = `<label>Label<input class="choiceLabel" value="${label}"/></label>
     <label>To<select class="choiceTo"></select></label>
     <button class="btn delChoice" type="button">x</button>
@@ -1764,7 +1769,12 @@ function updateTreeData() {
       const colorNpc = colorSel ? (colorSel.value || colorSel.dataset?.sel || '').trim() : '';
       const colorHex = chEl.querySelector('.choiceNPCColor')?.value.trim();
       if (flag) c.if = { flag, op, value: val != null && !Number.isNaN(val) ? val : 0 };
-      const effs = [];
+      const ds = chEl.dataset || {};
+      let extra = [];
+      if (ds.extraEffects) {
+        try { extra = JSON.parse(ds.extraEffects) || []; } catch (e) { extra = []; }
+      }
+      const effs = Array.isArray(extra) ? extra.filter(e => e && typeof e === 'object').map(e => ({ ...e })) : [];
       if (boardId) effs.push({ effect: 'boardDoor', interiorId: boardId });
       if (unboardId) effs.push({ effect: 'unboardDoor', interiorId: unboardId });
       if (lockNpc) {
@@ -2133,6 +2143,33 @@ function beginPlaceNPC() {
   drawWorld();
 }
 // Gather NPC form fields into an object
+function ensureTrainerChoiceEffect(tree, trainerId) {
+  if (!tree?.start) return;
+  const start = tree.start;
+  start.choices = Array.isArray(start.choices) ? start.choices : [];
+  let choice = start.choices.find(c => c?.to === 'train');
+  if (!choice) {
+    choice = { label: '(Upgrade Skills)', to: 'train' };
+    start.choices.unshift(choice);
+  }
+  const effects = Array.isArray(choice.effects) ? choice.effects.filter(e => e && typeof e === 'object') : [];
+  const existing = effects.find(e => e.effect === 'showTrainer');
+  if (existing) {
+    existing.trainer = trainerId;
+  } else {
+    effects.push({ effect: 'showTrainer', trainer: trainerId });
+  }
+  choice.effects = effects;
+}
+
+function removeTrainerChoiceEffect(tree) {
+  const choice = tree?.start?.choices?.find(c => c?.to === 'train');
+  if (!choice || !Array.isArray(choice.effects)) return;
+  const remaining = choice.effects.filter(e => e && e.effect !== 'showTrainer');
+  if (remaining.length) choice.effects = remaining;
+  else delete choice.effects;
+}
+
 function collectNPCFromForm() {
   const id = document.getElementById('npcId').value.trim();
   const name = document.getElementById('npcName').value.trim();
@@ -2186,6 +2223,34 @@ function collectNPCFromForm() {
   if (tree.start) tree.start.text = startDialog;
   if (tree.accept) tree.accept.text = accept || tree.accept.text;
   if (tree.do_turnin) tree.do_turnin.text = turnin || tree.do_turnin.text;
+  const ensureTrainerFn = typeof ensureTrainerChoiceEffect === 'function'
+    ? ensureTrainerChoiceEffect
+    : (treeArg, trainerId) => {
+      if (!treeArg?.start) return;
+      const start = treeArg.start;
+      start.choices = Array.isArray(start.choices) ? start.choices : [];
+      let choice = start.choices.find(c => c?.to === 'train');
+      if (!choice) {
+        choice = { label: '(Upgrade Skills)', to: 'train' };
+        start.choices.unshift(choice);
+      }
+      const effects = Array.isArray(choice.effects) ? choice.effects.filter(e => e && typeof e === 'object') : [];
+      const existing = effects.find(e => e.effect === 'showTrainer');
+      if (existing) existing.trainer = trainerId;
+      else effects.push({ effect: 'showTrainer', trainer: trainerId });
+      choice.effects = effects;
+    };
+  const removeTrainerFn = typeof removeTrainerChoiceEffect === 'function'
+    ? removeTrainerChoiceEffect
+    : treeArg => {
+      const choice = treeArg?.start?.choices?.find(c => c?.to === 'train');
+      if (!choice || !Array.isArray(choice.effects)) return;
+      const remaining = choice.effects.filter(e => e && e.effect !== 'showTrainer');
+      if (remaining.length) choice.effects = remaining;
+      else delete choice.effects;
+    };
+  if (trainer) ensureTrainerFn(tree, trainer);
+  else removeTrainerFn(tree);
   if (combat) applyCombatTree(tree); else removeCombatTree(tree);
   document.getElementById('npcTree').value = JSON.stringify(tree, null, 2);
   loadTreeEditor();
