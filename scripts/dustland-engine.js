@@ -1304,26 +1304,88 @@ function openShop(npc) {
     const baseMarkup = npc.vending ? 1 : npc.shop.markup || 2;
     const markup = baseMarkup * (npc.shop.grudge >= 3 ? 1.1 : 1);
 
-    shopInv.forEach((it, idx) => {
-      const item = getItem(it.id);
+    const normalizeForKey = (value, omitCount) => {
+      if (!value || typeof value !== 'object') {
+        return typeof value === 'function' ? value.toString() : value;
+      }
+      if (Array.isArray(value)) {
+        return value.map(v => normalizeForKey(v, false));
+      }
+      const out = {};
+      Object.keys(value).sort().forEach(key => {
+        if (omitCount && key === 'count') return;
+        out[key] = normalizeForKey(value[key], false);
+      });
+      return out;
+    };
+
+    const shopStacks = [];
+    const shopStackMap = new Map();
+    shopInv.forEach(entry => {
+      const item = getItem(entry.id);
       if (!item) return;
-      const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
+      const key = JSON.stringify({
+        item: normalizeForKey(item, true),
+        entry: normalizeForKey(entry, true)
+      });
+      let stack = shopStackMap.get(key);
+      if (!stack) {
+        stack = { item, qty: 0, entries: [] };
+        shopStackMap.set(key, stack);
+        shopStacks.push(stack);
+      }
+      const quantity = Math.max(1, Number.isFinite(entry?.count) ? entry.count : 1);
+      stack.qty += quantity;
+      stack.entries.push(entry);
+    });
+
+    const sellStacks = [];
+    const sellStackMap = new Map();
+    player.inv.forEach((item, idx) => {
+      if (!item || !item.id) return;
+      const key = JSON.stringify(normalizeForKey(item, true));
+      let stack = sellStackMap.get(key);
+      if (!stack) {
+        stack = { item, qty: 0, entries: [] };
+        sellStackMap.set(key, stack);
+        sellStacks.push(stack);
+      }
+      const quantity = Math.max(1, Number.isFinite(item?.count) ? item.count : 1);
+      stack.qty += quantity;
+      stack.entries.push({ idx, item });
+    });
+
+    const takeFromShopStack = (stack) => {
+      if (!stack) return;
+      for (let i = 0; i < stack.entries.length; i++) {
+        const entry = stack.entries[i];
+        if (!entry) continue;
+        const current = Math.max(1, Number.isFinite(entry?.count) ? entry.count : 1);
+        if (current > 1) {
+          entry.count = current - 1;
+          return;
+        }
+        const idx = npc.shop.inv.indexOf(entry);
+        if (idx !== -1) {
+          npc.shop.inv.splice(idx, 1);
+          return;
+        }
+      }
+    };
+
+    shopStacks.forEach(stack => {
+      const { item, qty } = stack;
       const row = document.createElement('div');
       row.className = 'slot';
       const price = Math.ceil(item.value * markup);
-      const name = qty > 1 ? `${item.name} x${qty}` : item.name;
+      const name = `${item.name} x${qty}`;
       row.innerHTML = `<span>${name} - ${price} ${CURRENCY}</span><button class="btn">Buy</button>`;
       row.querySelector('button').onclick = () => {
         if (player.scrap >= price) {
           if (addToInv(item)) {
             player.scrap -= price;
             if (!npc.vending) {
-              const current = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
-              if (current > 1) {
-                it.count = current - 1;
-              } else {
-                npc.shop.inv.splice(idx, 1);
-              }
+              takeFromShopStack(stack);
             }
             npc.shop.grudge = 0;
             renderShop();
@@ -1341,14 +1403,16 @@ function openShop(npc) {
       shopBuy.appendChild(row);
     });
 
-    player.inv.forEach((item, idx) => {
+    sellStacks.forEach(stack => {
+      const { item, qty } = stack;
       const row = document.createElement('div');
       row.className = 'slot';
       const price = typeof item.scrap === 'number' ? item.scrap : Math.floor(item.value / markup);
-      const qty = Math.max(1, Number.isFinite(item?.count) ? item.count : 1);
-      const name = qty > 1 ? `${item.name} x${qty}` : item.name;
+      const name = `${item.name} x${qty}`;
       row.innerHTML = `<span>${name} - ${price} ${CURRENCY}</span><button class="btn">Sell</button>`;
       row.querySelector('button').onclick = () => {
+        const target = stack.entries.find(({ idx, item: invItem }) => player.inv[idx] === invItem);
+        if (!target) return;
         player.scrap += price;
         const existing = npc.shop.inv.find(entry => entry?.id === item.id && Math.max(1, Number.isFinite(entry.count) ? entry.count : 1) < 256);
         if (existing) {
@@ -1357,7 +1421,7 @@ function openShop(npc) {
         } else {
           npc.shop.inv.push({ id: item.id, count: 1 });
         }
-        removeFromInv(idx);
+        removeFromInv(target.idx);
         renderShop();
         updateHUD();
         madePurchase = true;
