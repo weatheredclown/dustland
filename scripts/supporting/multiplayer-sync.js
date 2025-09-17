@@ -4,7 +4,18 @@
   const bus = globalThis.EventBus;
   const Multiplayer = {
     async startHost({ port = 7777 } = {}) {
-      const WSS = globalThis.WebSocketServer || (await import('ws')).WebSocketServer;
+      let WSS = globalThis.WebSocketServer;
+      if (!WSS) {
+        const isNode = typeof process !== 'undefined' && process.versions?.node;
+        if (!isNode) {
+          throw new Error('Multiplayer hosting is only supported in Node.js.');
+        }
+        try {
+          ({ WebSocketServer: WSS } = await import('ws'));
+        } catch (err) {
+          throw new Error('Missing optional dependency "ws". Run `npm install ws` to enable hosting.');
+        }
+      }
       const wss = new WSS({ port });
       let last = {};
       const broadcast = () => {
