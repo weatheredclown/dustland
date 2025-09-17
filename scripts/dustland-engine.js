@@ -1355,6 +1355,18 @@ function openShop(npc) {
       stack.entries.push({ idx, item });
     });
 
+    const compareStacks = (a, b) => {
+      const typeA = (a?.item?.type || '').toString().toLowerCase();
+      const typeB = (b?.item?.type || '').toString().toLowerCase();
+      if (typeA !== typeB) return typeA.localeCompare(typeB);
+      const nameA = (a?.item?.name || '').toString().toLowerCase();
+      const nameB = (b?.item?.name || '').toString().toLowerCase();
+      return nameA.localeCompare(nameB);
+    };
+
+    shopStacks.sort(compareStacks);
+    sellStacks.sort(compareStacks);
+
     const takeFromShopStack = (stack) => {
       if (!stack) return;
       for (let i = 0; i < stack.entries.length; i++) {
