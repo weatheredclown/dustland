@@ -10,6 +10,7 @@
     scanlines: false, // overlay horizontal scanlines
     crtShear: false, // slight screen skew effect
     colorBleed: false, // simple chromatic aberration
+    footstepBump: false, // camera shake when walking
     grayscale: false, // render world in grayscale
     adrenalineTint: true // green saturation scales with adrenaline
   };
