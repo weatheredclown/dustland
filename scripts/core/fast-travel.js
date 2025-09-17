@@ -6,6 +6,39 @@
   const FUEL_PER_TILE = 1;
   const saveKey = id => `dustland_slot_${id}`;
 
+  function moduleKey(moduleName){
+    const dl = globalThis.Dustland ?? {};
+    if(moduleName) return moduleName;
+    const loaded = dl.loadedModules?.[moduleName];
+    if(loaded?.name) return loaded.name;
+    if(loaded?.seed != null) return String(loaded.seed);
+    return 'module';
+  }
+
+  function networkFor(moduleName){
+    const dl = globalThis.Dustland ?? {};
+    const props = dl.moduleProps?.[moduleName] ?? {};
+    const scope = props.bunkerTravelScope || 'global';
+    if(scope === 'module'){
+      const key = moduleKey(moduleName);
+      return `module:${key}`;
+    }
+    return scope || 'global';
+  }
+
+  function normalize(entry){
+    if(!entry) return null;
+    const normalized = { ...entry };
+    if(!normalized.network){
+      const net = networkFor(normalized.module);
+      if(net) normalized.network = net;
+    }
+    if(!normalized.module && typeof normalized.module !== 'string'){
+      normalized.module = undefined;
+    }
+    return normalized;
+  }
+
   function distance(a, b){
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
   }
@@ -14,6 +47,9 @@
     const from = bunkers.find(b => b.id === fromId);
     const to = bunkers.find(b => b.id === toId);
     if(!from || !to) return Infinity;
+    const fromNet = from.network ?? 'global';
+    const toNet = to.network ?? 'global';
+    if(fromNet !== toNet) return Infinity;
     return BASE_COST + distance(from, to) * FUEL_PER_TILE;
   }
 
@@ -21,9 +57,16 @@
     const from = bunkers.find(b => b.id === fromId);
     const to = bunkers.find(b => b.id === toId);
     if(!from || !to || !from.active || !to.active) return false;
+    const fromNet = from.network ?? 'global';
+    const toNet = to.network ?? 'global';
+    if(fromNet !== toNet) return false;
     const cost = fuelCost(fromId, toId);
     const player = globalThis.player || {};
     player.fuel = player.fuel || 0;
+    if(!Number.isFinite(cost)){
+      if(typeof log === 'function') log('Fast travel destination unavailable.');
+      return false;
+    }
     if(player.fuel < cost){
       if(typeof log === 'function') log('Not enough fuel.');
       return false;
@@ -42,12 +85,13 @@
   function upsertBunkers(list){
     if(!Array.isArray(list) || !list.length) return bunkers;
     list.forEach(entry => {
-      if(!entry || !entry.id) return;
-      const existing = bunkers.find(b => b.id === entry.id);
+      const normalized = normalize(entry);
+      if(!normalized || !normalized.id) return;
+      const existing = bunkers.find(b => b.id === normalized.id);
       if(existing){
-        Object.assign(existing, entry);
+        Object.assign(existing, normalized);
       } else {
-        bunkers.push({ ...entry });
+        bunkers.push(normalized);
       }
     });
     return bunkers;
@@ -78,7 +122,7 @@
   }
 
   globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.fastTravel = { fuelCost, travel, activateBunker , saveSlot, loadSlot, upsertBunkers };
+  globalThis.Dustland.fastTravel = { fuelCost, travel, activateBunker , saveSlot, loadSlot, upsertBunkers, networkFor };
   globalThis.openWorldMap = globalThis.openWorldMap || function(id){
     globalThis.Dustland?.worldMap?.open?.(id);
   };
