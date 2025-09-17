@@ -11,6 +11,8 @@ const MODULES = [
   { id: 'true-dust', name: 'True Dust', file: 'modules/true-dust.module.js' },
   { id: 'golden', name: 'Golden Sample', file: 'modules/golden.module.json' },
   { id: 'edge', name: 'bunker-trainer-workshop', file: 'modules/edge.module.js' },
+  { id: 'engine-tech-demo', name: 'Engine Feature Showcase', file: 'modules/engine-tech-demo.module.js' },
+  { id: 'cli-demo', name: 'CLI Demo Adventure', file: 'modules/cli-demo.module.js' },
 ];
 
 const realOpenCreator = window.openCreator;
