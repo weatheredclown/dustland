@@ -21,7 +21,9 @@ class NPC {
       } else if (this.shop && node === 'sell') {
         const items = player.inv.map((it, idx) => {
           const price = typeof it.scrap === 'number' ? it.scrap : Math.max(1, it.value ?? 0);
-          return { label: `Sell ${it.name} (${price} ${CURRENCY})`, to: 'sell', sellIndex: idx };
+          const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
+          const name = qty > 1 ? `${it.name} x${qty}` : it.name;
+          return { label: `Sell ${name} (${price} ${CURRENCY})`, to: 'sell', sellIndex: idx };
         });
         this.tree.sell.text = items.length ? 'What are you selling?' : 'Nothing to sell.';
         items.push({label: '(Back)', to: 'start'});
@@ -38,9 +40,21 @@ class NPC {
     };
     const capChoice = (c) => {
       if (this.shop && typeof c.sellIndex === 'number') {
-        const it = player.inv.splice(c.sellIndex, 1)[0];
+        const it = player.inv[c.sellIndex];
+        if (!it) return false;
         const val = typeof it.scrap === 'number' ? it.scrap : Math.max(1, it.value ?? 0);
         player.scrap += val;
+        removeFromInv?.(c.sellIndex);
+        const shop = this.shop;
+        if (shop && Array.isArray(shop.inv)) {
+          const existing = shop.inv.find(entry => entry?.id === it.id && Math.max(1, Number.isFinite(entry.count) ? entry.count : 1) < 256);
+          if (existing) {
+            const current = Math.max(1, Number.isFinite(existing.count) ? existing.count : 1);
+            existing.count = Math.min(256, current + 1);
+          } else {
+            shop.inv.push({ id: it.id, count: 1 });
+          }
+        }
         renderInv?.(); updateHUD?.();
         textEl.textContent = `Sold ${it.name} for ${val} ${CURRENCY}.`;
         dialogState.node = 'sell';

@@ -38,12 +38,23 @@ test('mask memory quest updates journal and checkpoints', async () => {
     party: [{}, {}],
     player: { inv: [], scrap: 0 },
     addToInv: item => { context.player.inv.push(item); return true; },
-    removeFromInv: idx => { if (idx > -1) context.player.inv.splice(idx, 1); },
+    removeFromInv: (idx, qty = 1) => {
+      if (idx < 0) return;
+      const item = context.player.inv[idx];
+      if (!item) return;
+      const count = Number.isFinite(item?.count) ? item.count : 1;
+      if (count > qty) {
+        item.count = count - qty;
+      } else {
+        context.player.inv.splice(idx, 1);
+      }
+    },
     countItems: tag => {
       const needle = typeof tag === 'string' ? tag.toLowerCase() : '';
       return context.player.inv.reduce((sum, it) => {
         const tags = Array.isArray(it?.tags) ? it.tags.map(t => t.toLowerCase()) : [];
-        return sum + (it.id === tag || tags.includes(needle) ? 1 : 0);
+        const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
+        return sum + (it.id === tag || tags.includes(needle) ? qty : 0);
       }, 0);
     },
     findItemIndex: tag => {

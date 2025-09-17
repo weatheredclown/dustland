@@ -162,7 +162,16 @@ test('vending machine buys access card for scrap', () => {
   global.toast = () => {};
   global.CURRENCY = 's';
   global.player = { scrap: 0, inv: [accessCard] };
-  global.removeFromInv = (idx) => { player.inv.splice(idx, 1); };
+  global.removeFromInv = (idx, qty = 1) => {
+    const item = player.inv[idx];
+    if (!item) return;
+    const count = Number.isFinite(item?.count) ? item.count : 1;
+    if (count > qty) {
+      item.count = count - qty;
+    } else {
+      player.inv.splice(idx, 1);
+    }
+  };
   global.updateHUD = () => {};
   global.addToInv = () => true;
   global.getItem = () => accessCard;
