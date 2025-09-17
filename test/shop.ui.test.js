@@ -110,6 +110,51 @@ test('shop stacks identical buy items with counters', async () => {
   assert.deepStrictEqual(labels, ['Potion x3 - 8 s', 'Sword x2 - 20 s']);
 });
 
+test('shop sorts buy stacks by type then name', async () => {
+  const dom = new JSDOM('<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><div id="shopScrap"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>');
+  global.window = dom.window;
+  global.document = dom.window.document;
+  global.requestAnimationFrame = () => {};
+  global.log = () => {};
+  global.toast = () => {};
+  global.CURRENCY = 's';
+  global.player = { scrap: 50, inv: [] };
+  const itemDefs = {
+    axe: { id: 'axe', name: 'Axe', value: 5, type: 'weapon' },
+    bronze: { id: 'bronze', name: 'Bronze Plate', value: 6, type: 'armor' },
+    bandage: { id: 'bandage', name: 'Bandage', value: 3, type: 'misc' },
+    medkit: { id: 'medkit', name: 'Medkit', value: 4, type: 'misc' }
+  };
+  global.getItem = id => itemDefs[id] ? { ...itemDefs[id] } : null;
+  global.addToInv = () => true;
+  global.removeFromInv = () => {};
+  global.updateHUD = () => {};
+
+  const code = await fs.readFile(new URL('../scripts/dustland-engine.js', import.meta.url), 'utf8');
+  const openShopCode = extractOpenShop(code);
+  vm.runInThisContext(openShopCode);
+
+  openShop({
+    name: 'Shopkeep',
+    shop: {
+      inv: [
+        { id: 'axe' },
+        { id: 'medkit' },
+        { id: 'bronze' },
+        { id: 'bandage' }
+      ]
+    }
+  });
+
+  const labels = Array.from(document.querySelectorAll('#shopBuy .slot span')).map(el => el.textContent);
+  assert.deepStrictEqual(labels, [
+    'Bronze Plate x1 - 12 s',
+    'Bandage x1 - 6 s',
+    'Medkit x1 - 8 s',
+    'Axe x1 - 10 s'
+  ]);
+});
+
 test('shop stacks identical sell items and updates counts after selling', async () => {
   const dom = new JSDOM('<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><div id="shopScrap"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>');
   global.window = dom.window;
@@ -163,4 +208,43 @@ test('shop stacks identical sell items and updates counts after selling', async 
   updatedSellButtons[0].onclick();
   const afterPotionLabels = Array.from(document.querySelectorAll('#shopSell .slot span')).map(el => el.textContent);
   assert.deepStrictEqual(afterPotionLabels, ['Potion x2 - 3 s', 'Sword x1 - 5 s']);
+});
+
+test('shop sorts sell stacks by type then name', async () => {
+  const dom = new JSDOM('<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><div id="shopScrap"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>');
+  global.window = dom.window;
+  global.document = dom.window.document;
+  global.requestAnimationFrame = () => {};
+  global.log = () => {};
+  global.toast = () => {};
+  global.CURRENCY = 's';
+  global.player = {
+    scrap: 0,
+    inv: [
+      { id: 'blade', name: 'Blade', value: 10, type: 'weapon' },
+      { id: 'medkit', name: 'Medkit', value: 6, type: 'misc' },
+      { id: 'vest', name: 'Vest', value: 8, type: 'armor' },
+      { id: 'bandage', name: 'Bandage', value: 3, type: 'misc' },
+      { id: 'axe', name: 'Axe', value: 9, type: 'weapon' }
+    ]
+  };
+  global.getItem = id => ({ id, name: id, value: 1, type: 'misc' });
+  global.addToInv = () => true;
+  global.removeFromInv = () => {};
+  global.updateHUD = () => {};
+
+  const code = await fs.readFile(new URL('../scripts/dustland-engine.js', import.meta.url), 'utf8');
+  const openShopCode = extractOpenShop(code);
+  vm.runInThisContext(openShopCode);
+
+  openShop({ name: 'Shopkeep', shop: { inv: [] } });
+
+  const labels = Array.from(document.querySelectorAll('#shopSell .slot span')).map(el => el.textContent);
+  assert.deepStrictEqual(labels, [
+    'Vest x1 - 4 s',
+    'Bandage x1 - 1 s',
+    'Medkit x1 - 3 s',
+    'Axe x1 - 4 s',
+    'Blade x1 - 5 s'
+  ]);
 });
