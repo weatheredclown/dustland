@@ -1,5 +1,5 @@
 {
-  "seed": 1,
+  "seed": "engine-tech-demo",
   "start": {
     "map": "world",
     "x": 7,
@@ -57,7 +57,60 @@
       "id": "chest_key",
       "name": "Chest Key",
       "type": "quest",
-      "tags": ["key"]
+      "tags": [
+        "key"
+      ]
+    },
+    {
+      "id": "demo_blade",
+      "name": "Vector Blade",
+      "type": "weapon",
+      "slot": "weapon",
+      "value": 25,
+      "desc": "Balanced energy blade",
+      "mods": {
+        "ATK": 3,
+        "ADR": 15
+      },
+      "tags": [
+        "sharp",
+        "energy"
+      ]
+    },
+    {
+      "id": "demo_plating",
+      "name": "Adaptive Plating",
+      "type": "armor",
+      "slot": "body",
+      "value": 30,
+      "desc": "Reconfigurable chest armor",
+      "mods": {
+        "DEF": 3,
+        "HP": 6
+      },
+      "tags": [
+        "heavy"
+      ]
+    },
+    {
+      "id": "demo_cache",
+      "name": "Calibration Cache",
+      "type": "spoils-cache",
+      "rank": "polished",
+      "map": "world",
+      "x": 10,
+      "y": 5
+    },
+    {
+      "id": "demo_cell",
+      "name": "Fuel Cell",
+      "type": "quest",
+      "value": 0,
+      "fuel": 10,
+      "desc": "Powers the generator",
+      "map": "world",
+      "x": 11,
+      "y": 6
     }
   ],
   "quests": [
@@ -68,6 +121,14 @@
       "item": "golden_coin",
       "reward": "thanks_medal",
       "xp": 2
+    },
+    {
+      "id": "q_upgrade",
+      "title": "Forge an Upgrade",
+      "desc": "Use the workbench to craft an upgraded blade.",
+      "item": "demo_cell",
+      "reward": "demo_blade",
+      "xp": 4
     }
   ],
   "npcs": [
@@ -156,35 +217,107 @@
         "locked": {
           "text": "A locked chest sits here.",
           "choices": [
-            { "label": "(Use Key)", "to": "open", "once": true, "reqItem": "chest_key", "effects": [ { "effect": "unlockNPC", "npcId": "chest" } ] },
-            { "label": "(Use Explosive)", "to": "open", "once": true, "reqItem": "makeshift_charge", "effects": [ { "effect": "unlockNPC", "npcId": "chest" } ] },
-            { "label": "(Pry with Crowbar)", "to": "crowbar_open", "once": true, "reqItem": "crowbar", "effects": [ { "effect": "unlockNPC", "npcId": "chest" } ] },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Use Key)",
+              "to": "open",
+              "once": true,
+              "reqItem": "chest_key",
+              "effects": [
+                {
+                  "effect": "unlockNPC",
+                  "npcId": "chest"
+                }
+              ]
+            },
+            {
+              "label": "(Use Explosive)",
+              "to": "open",
+              "once": true,
+              "reqItem": "makeshift_charge",
+              "effects": [
+                {
+                  "effect": "unlockNPC",
+                  "npcId": "chest"
+                }
+              ]
+            },
+            {
+              "label": "(Pry with Crowbar)",
+              "to": "crowbar_open",
+              "once": true,
+              "reqItem": "crowbar",
+              "effects": [
+                {
+                  "effect": "unlockNPC",
+                  "npcId": "chest"
+                }
+              ]
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "open": {
           "text": "The chest creaks open, revealing a shiny coin.",
           "choices": [
-            { "label": "(Take Coin)", "to": "empty", "reward": "golden_coin", "effects": [ { "effect": "addFlag", "flag": "chest_looted" } ] }
+            {
+              "label": "(Take Coin)",
+              "to": "empty",
+              "reward": "golden_coin",
+              "effects": [
+                {
+                  "effect": "addFlag",
+                  "flag": "chest_looted"
+                }
+              ]
+            }
           ]
         },
         "crowbar_open": {
           "text": "The crowbar pops the lid with a squeal.",
           "choices": [
-            { "label": "(Take Coin)", "to": "empty", "reward": "golden_coin", "effects": [ { "effect": "addFlag", "flag": "chest_looted" } ] }
+            {
+              "label": "(Take Coin)",
+              "to": "empty",
+              "reward": "golden_coin",
+              "effects": [
+                {
+                  "effect": "addFlag",
+                  "flag": "chest_looted"
+                }
+              ]
+            }
           ]
         },
         "empty": {
           "text": "The chest is empty.",
           "choices": [
-            { "label": "(Lock Chest)", "to": "locked_empty", "reqItem": "chest_key", "effects": [ { "effect": "lockNPC", "npcId": "chest" } ] },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Lock Chest)",
+              "to": "locked_empty",
+              "reqItem": "chest_key",
+              "effects": [
+                {
+                  "effect": "lockNPC",
+                  "npcId": "chest"
+                }
+              ]
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "locked_empty": {
           "text": "The chest is empty and locked.",
           "choices": [
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         }
       }
@@ -378,6 +511,13 @@
             {
               "label": "(Leave)",
               "to": "bye"
+            },
+            {
+              "label": "(Flag Gate)",
+              "to": "flagged",
+              "if": {
+                "flag": "chest_looted"
+              }
             }
           ]
         },
@@ -445,6 +585,15 @@
               "success": "I moved north."
             }
           ]
+        },
+        "flagged": {
+          "text": "Only looters may enter this sub-dialog.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
         }
       }
     },
@@ -461,70 +610,129 @@
         "start": {
           "text": "Greetings, traveler. What do you seek?",
           "choices": [
-            { "label": "Who are you?", "to": "who" },
-            { "label": "Tell me a tale", "to": "tale" },
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "Who are you?",
+              "to": "who",
+              "reward": "demo_blade",
+              "effects": null
+            },
+            {
+              "label": "Tell me a tale",
+              "to": "tale"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "who": {
           "text": "I am Nyx. Do you seek wisdom or power?",
           "choices": [
-            { "label": "Wisdom", "to": "wisdom" },
-            { "label": "Power", "to": "power" },
-            { "label": "(Back)", "to": "start" }
+            {
+              "label": "Wisdom",
+              "to": "wisdom"
+            },
+            {
+              "label": "Power",
+              "to": "power"
+            },
+            {
+              "label": "(Back)",
+              "to": "start"
+            }
           ]
         },
         "wisdom": {
           "text": "Wisdom requires patience. Proceed?",
           "choices": [
-            { "label": "Yes", "to": "lesson" },
-            { "label": "No", "to": "start" }
+            {
+              "label": "Yes",
+              "to": "lesson"
+            },
+            {
+              "label": "No",
+              "to": "start"
+            }
           ]
         },
         "lesson": {
           "text": "The dust remembers those who listen. Ask further?",
           "choices": [
-            { "label": "Tell me more", "to": "secret" },
-            { "label": "That's enough", "to": "start" }
+            {
+              "label": "Tell me more",
+              "to": "secret"
+            },
+            {
+              "label": "That's enough",
+              "to": "start"
+            }
           ]
         },
         "secret": {
           "text": "You carry the weight of forgotten tales.",
           "choices": [
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         },
         "power": {
           "text": "Power corrupts. Do you still want it?",
           "choices": [
-            { "label": "Yes", "to": "trial" },
-            { "label": "No", "to": "start" }
+            {
+              "label": "Yes",
+              "to": "trial"
+            },
+            {
+              "label": "No",
+              "to": "start"
+            }
           ]
         },
         "trial": {
           "text": "Face the trial another time.",
           "choices": [
-            { "label": "(Back)", "to": "start" }
+            {
+              "label": "(Back)",
+              "to": "start"
+            }
           ]
         },
         "tale": {
           "text": "What kind of tale?",
           "choices": [
-            { "label": "Heroic", "to": "heroic" },
-            { "label": "Tragic", "to": "tragic" },
-            { "label": "(Back)", "to": "start" }
+            {
+              "label": "Heroic",
+              "to": "heroic"
+            },
+            {
+              "label": "Tragic",
+              "to": "tragic"
+            },
+            {
+              "label": "(Back)",
+              "to": "start"
+            }
           ]
         },
         "heroic": {
           "text": "A hero rose from dust.",
           "choices": [
-            { "label": "(Back)", "to": "tale" }
+            {
+              "label": "(Back)",
+              "to": "tale"
+            }
           ]
         },
         "tragic": {
           "text": "The sand swallowed cities.",
           "choices": [
-            { "label": "(Back)", "to": "tale" }
+            {
+              "label": "(Back)",
+              "to": "tale"
+            }
           ]
         }
       }
@@ -542,13 +750,19 @@
         "start": {
           "text": "The dust never settles, does it?",
           "choices": [
-            { "label": "Stay sharp.", "to": "resolve" }
+            {
+              "label": "Stay sharp.",
+              "to": "resolve"
+            }
           ]
         },
         "resolve": {
           "text": "Always.",
           "choices": [
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
           ]
         }
       }
@@ -566,13 +780,212 @@
         "start": {
           "text": "Got a spare fuse?",
           "choices": [
-            { "label": "Maybe later.", "to": "later" }
+            {
+              "label": "Maybe later.",
+              "to": "later"
+            }
           ]
         },
         "later": {
           "text": "I'll hold you to that.",
           "choices": [
-            { "label": "(Leave)", "to": "bye" }
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fabricator",
+      "map": "world",
+      "x": 6,
+      "y": 9,
+      "name": "Fabricator",
+      "desc": "Prototype workbench",
+      "prompt": "Prototype workbench humming with power",
+      "color": "#aef",
+      "symbol": "!",
+      "workbench": true,
+      "tree": {
+        "start": {
+          "text": "Slot in a fuel cell to craft upgrades.",
+          "choices": [
+            {
+              "label": "(Craft blade)",
+              "to": "craft",
+              "reqItem": "demo_cell",
+              "effects": null,
+              "reward": "demo_blade"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "craft": {
+          "text": "The blade forms instantly.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "coach",
+      "map": "world",
+      "x": 8,
+      "y": 9,
+      "name": "Combat Coach",
+      "desc": "Trainer for stat mods",
+      "prompt": "Trainer adjusting combat stances",
+      "color": "#fea",
+      "symbol": "T",
+      "trainer": "power",
+      "tree": {
+        "start": {
+          "text": "Train up?",
+          "choices": [
+            {
+              "label": "(Boost STR)",
+              "to": "train",
+              "effects": [
+                {
+                  "effect": "modStat",
+                  "stat": "STR",
+                  "delta": 1,
+                  "duration": 1
+                }
+              ]
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "train": {
+          "text": "Feel the surge!",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "relay",
+      "map": "world",
+      "x": 4,
+      "y": 9,
+      "name": "Transit Relay",
+      "desc": "Controls world map travel",
+      "prompt": "Relay console with blinking lights",
+      "color": "#aff",
+      "symbol": "#",
+      "tree": {
+        "start": {
+          "text": "Access fast-travel systems.",
+          "choices": [
+            {
+              "label": "(Sync Bunkers)",
+              "to": "sync",
+              "effects": [
+                {
+                  "effect": "activateBunker",
+                  "id": "feature_hub"
+                }
+              ]
+            },
+            {
+              "label": "(Open World Map)",
+              "to": "map",
+              "effects": [
+                {
+                  "effect": "openWorldMap",
+                  "id": "tech-demo"
+                }
+              ]
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "sync": {
+          "text": "Bunker network aligned.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "map": {
+          "text": "Routes displayed.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "engineer",
+      "map": "world",
+      "x": 5,
+      "y": 9,
+      "name": "Chief Engineer",
+      "desc": "Guides module tour",
+      "prompt": "Engineer juggling diagnostic tablets",
+      "color": "#cfc",
+      "questId": "q_upgrade",
+      "tree": {
+        "start": {
+          "text": "Ready to test the engine features?",
+          "choices": [
+            {
+              "label": "(Explain goals)",
+              "to": "explain"
+            },
+            {
+              "label": "(I have the cell)",
+              "to": "turnin",
+              "q": "turnin"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "explain": {
+          "text": "Collect the fuel cell, craft the blade, and try every station.",
+          "choices": [
+            {
+              "label": "(Back)",
+              "to": "start"
+            }
+          ]
+        },
+        "turnin": {
+          "text": "Excellent work!",
+          "choices": [
+            {
+              "label": "(Continue)",
+              "to": "bye",
+              "reward": "demo_plating"
+            }
           ]
         }
       }
@@ -597,6 +1010,17 @@
           "duration": 2
         }
       ]
+    },
+    {
+      "map": "world",
+      "x": 9,
+      "y": 9,
+      "events": [
+        {
+          "when": "enter",
+          "effect": "lightningZap"
+        }
+      ]
     }
   ],
   "portals": [
@@ -615,6 +1039,22 @@
       "toMap": "world",
       "toX": 9,
       "toY": 6
+    },
+    {
+      "map": "world",
+      "x": 10,
+      "y": 9,
+      "toMap": "cabin",
+      "toX": 3,
+      "toY": 4
+    },
+    {
+      "map": "cabin",
+      "x": 3,
+      "y": 4,
+      "toMap": "world",
+      "toX": 9,
+      "toY": 9
     }
   ],
   "interiors": [
@@ -639,6 +1079,116 @@
       "y": 9,
       "interiorId": "cabin",
       "boarded": false
+    },
+    {
+      "x": 12,
+      "y": 9,
+      "interiorId": "cabin",
+      "boarded": true
+    }
+  ],
+  "name": "Engine Feature Showcase",
+  "props": {
+    "fastTravelModules": [
+      {
+        "script": "modules/world-one.module.js",
+        "global": "WORLD_ONE_MODULE"
+      },
+      {
+        "script": "modules/world-two.module.js",
+        "global": "WORLD_TWO_MODULE"
+      }
+    ]
+  },
+  "zones": [
+    {
+      "map": "world",
+      "x": 3,
+      "y": 5,
+      "w": 4,
+      "h": 2,
+      "perStep": {
+        "hp": -1,
+        "msg": "Radiation sears your suit!"
+      },
+      "negate": "demo_plating"
+    },
+    {
+      "map": "world",
+      "x": 2,
+      "y": 9,
+      "w": 2,
+      "h": 1,
+      "useItem": {
+        "id": "demo_cell",
+        "reward": "demo_cache",
+        "once": true
+      }
+    }
+  ],
+  "templates": [
+    {
+      "id": "demo_droid",
+      "name": "Demo Droid",
+      "portraitSheet": "assets/portraits/dustland-module/scavenger_4.png",
+      "portraitLock": false,
+      "combat": {
+        "HP": 12,
+        "ATK": 4,
+        "DEF": 2,
+        "challenge": 5,
+        "special": {
+          "cue": "deploys a precision laser!",
+          "dmg": 3
+        },
+        "scrap": {
+          "min": 1,
+          "max": 3
+        }
+      }
+    }
+  ],
+  "encounters": {
+    "world": [
+      {
+        "templateId": "demo_droid",
+        "minDist": 1,
+        "maxDist": 4,
+        "loot": "demo_cache"
+      }
+    ]
+  },
+  "zoneEffects": [
+    {
+      "map": "world",
+      "x": 0,
+      "y": 0,
+      "w": 14,
+      "h": 14,
+      "spawns": [
+        {
+          "name": "Training Drone",
+          "HP": 6,
+          "ATK": 1,
+          "DEF": 0
+        },
+        {
+          "name": "Holo Bandit",
+          "HP": 8,
+          "ATK": 2,
+          "DEF": 1
+        }
+      ],
+      "minSteps": 2,
+      "maxSteps": 4
+    },
+    {
+      "map": "cabin",
+      "x": 0,
+      "y": 0,
+      "w": 7,
+      "h": 5,
+      "noEncounters": true
     }
   ]
 }

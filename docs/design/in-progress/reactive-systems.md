@@ -34,7 +34,7 @@
  - [x] Extend quest definitions to support branching and persistence.
  - [x] Add NPC memory storage and retrieval utilities.
 - [ ] Build event scheduler for world and NPC timelines.
-  - [ ] Specify scheduler data structures (timeline entries, repeat rules, prerequisites) and document them for Adventure Kit authors.
+  - [x] Specify scheduler data structures (timeline entries, repeat rules, prerequisites) and document them for Adventure Kit authors. (See `data/modules/schema.js` and `docs/guides/event-scheduler.md`.)
   - [ ] Implement a tick-driven scheduler service that queues world/NPC events, persists progress to saves, and survives map transitions.
   - [ ] Add editor tooling to visualize upcoming events and allow designers to fast-forward or cancel entries during testing.
   - [ ] Write automated tests covering chained events, missed ticks after load, and NPC reactions triggered by the scheduler.
