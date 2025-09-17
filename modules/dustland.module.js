@@ -1,4 +1,50 @@
-function seedWorldContent() {}
+function seedWorldContent() {
+  const west = 8;
+  const east = 21;
+  const north = 34;
+  const south = 42;
+  const gateCols = [14, 15];
+  const walkwayCols = [13, 14, 15];
+  const approachDepth = 3;
+  const walkwayRow = 38;
+
+  for (let x = west; x <= east; x++) {
+    setTile('world', x, north, TILE.WALL);
+    if (!gateCols.includes(x)) setTile('world', x, south, TILE.WALL);
+  }
+
+  for (let y = north; y <= south; y++) {
+    setTile('world', west, y, TILE.WALL);
+    setTile('world', east, y, TILE.WALL);
+  }
+
+  for (const gx of gateCols) {
+    for (let y = south; y <= south + approachDepth; y++) {
+      setTile('world', gx, y, TILE.ROAD);
+    }
+  }
+
+  for (let y = north + 1; y < south; y++) {
+    for (let x = west + 1; x < east; x++) {
+      const tile = getTile('world', x, y);
+      if (tile === TILE.BUILDING || tile === TILE.DOOR || tile === TILE.ROAD) continue;
+      setTile('world', x, y, TILE.SAND);
+    }
+  }
+
+  for (let x = west + 1; x < east; x++) {
+    setTile('world', x, walkwayRow, TILE.ROAD);
+  }
+
+  for (const col of walkwayCols) {
+    for (let y = north + 1; y < south; y++) {
+      setTile('world', col, y, TILE.ROAD);
+    }
+    for (let y = south + 1; y <= south + approachDepth; y++) {
+      setTile('world', col, y, TILE.ROAD);
+    }
+  }
+}
 
 const DATA = `
 {
@@ -1059,7 +1105,7 @@ const DATA = `
       "id": "pump",
       "map": "world",
       "x": 14,
-      "y": 44,
+      "y": 36,
       "color": "#9ef7a0",
       "name": "Nila the Pump-Keeper",
       "title": "Parched Farmer",
@@ -1992,8 +2038,8 @@ const DATA = `
     {
       "id": "trainer_power",
       "map": "world",
-      "x": 6,
-      "y": 44,
+      "x": 12,
+      "y": 38,
       "color": "#9ef7a0",
       "name": "Brakk",
       "title": "Power Trainer",
@@ -2035,8 +2081,8 @@ const DATA = `
     {
       "id": "trainer_endurance",
       "map": "world",
-      "x": 6,
-      "y": 46,
+      "x": 14,
+      "y": 38,
       "color": "#9ef7a0",
       "name": "Rusty",
       "title": "Endurance Trainer",
@@ -2078,8 +2124,8 @@ const DATA = `
     {
       "id": "trainer_tricks",
       "map": "world",
-      "x": 6,
-      "y": 48,
+      "x": 16,
+      "y": 38,
       "color": "#9ef7a0",
       "name": "Mira",
       "title": "Tricks Trainer",
@@ -2660,6 +2706,14 @@ const DATA = `
         "reward": "scrap 5",
         "once": true
       }
+    },
+    {
+      "map": "world",
+      "x": 9,
+      "y": 35,
+      "w": 12,
+      "h": 7,
+      "noEncounters": true
     }
   ],
   "name": "dustland-module",
@@ -2809,12 +2863,12 @@ const DATA = `
   },
   "buildings": [
     {
-      "x": 40,
-      "y": 42,
+      "x": 10,
+      "y": 35,
       "w": 3,
       "h": 3,
-      "doorX": 41,
-      "doorY": 44,
+      "doorX": 11,
+      "doorY": 37,
       "interiorId": "slot_shack",
       "boarded": false,
       "grid": [
@@ -2836,12 +2890,12 @@ const DATA = `
       ]
     },
     {
-      "x": 46,
-      "y": 42,
+      "x": 16,
+      "y": 35,
       "w": 3,
       "h": 3,
-      "doorX": 47,
-      "doorY": 44,
+      "doorX": 17,
+      "doorY": 37,
       "interiorId": "workshop",
       "boarded": false,
       "grid": [
@@ -2890,18 +2944,18 @@ const DATA = `
       ]
     },
     {
-      "x": 70,
-      "y": 42,
+      "x": 10,
+      "y": 39,
       "w": 3,
       "h": 3,
-      "doorX": 71,
-      "doorY": 44,
+      "doorX": 11,
+      "doorY": 39,
       "interiorId": "echoes_atrium",
       "boarded": false,
       "grid": [
         [
           9,
-          9,
+          8,
           9
         ],
         [
@@ -2909,9 +2963,36 @@ const DATA = `
           9,
           9
         ],
+        [
+          9,
+          9,
+          9
+        ]
+      ]
+    },
+    {
+      "x": 16,
+      "y": 39,
+      "w": 3,
+      "h": 3,
+      "doorX": 17,
+      "doorY": 39,
+      "interiorId": "town_house",
+      "boarded": false,
+      "grid": [
         [
           9,
           8,
+          9
+        ],
+        [
+          9,
+          9,
+          9
+        ],
+        [
+          9,
+          9,
           9
         ]
       ]
@@ -3067,6 +3148,20 @@ const DATA = `
       ],
       "entryX": 1,
       "entryY": 4
+    },
+    {
+      "id": "town_house",
+      "w": 5,
+      "h": 5,
+      "grid": [
+        "🧱🧱🧱🧱🧱",
+        "🧱⬜⬜⬜🧱",
+        "🧱⬜⬜⬜🧱",
+        "🧱⬜⬜⬜🧱",
+        "🧱🧱🚪🧱🧱"
+      ],
+      "entryX": 2,
+      "entryY": 3
     }
   ]
 }
