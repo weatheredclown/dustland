@@ -23,7 +23,7 @@
 10. **Wizard framework** – creator tooling valuable long-term, lower priority now.
 11. **Multiplayer prototype** – ambitious scope; defer until single-player stabilizes.
 
-*Dynamic Weather is complete and lives in `docs/design/completed/dynamic-weather.md`.*
+*Dynamic Weather is complete and lives in `docs/design/core-systems/dynamic-weather.md`.*
 
 ## Corrective Actions
 
