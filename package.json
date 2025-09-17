@@ -19,7 +19,9 @@
     "http-server": "^14.1.1",
     "jsdom": "^26.1.0",
     "puppeteer": "^24.17.0",
-    "ws": "^8.18.3",
     "yaml-lint": "^1.7.0"
+  },
+  "optionalDependencies": {
+    "ws": "^8.18.3"
   }
 }
