@@ -157,90 +157,291 @@ function refineTiles(tiles, iterations = 1) {
 }
 
 
-function connectRegionCenters(centers) {
-  const edges = [];
-  if (!centers || centers.length < 2) return edges;
-  const connected = new Set([0]);
-  const remaining = new Set();
-  for (let i = 1; i < centers.length; i++) {
-    remaining.add(i);
-  }
-  function dist(a, b) {
-    const dx = a.x - b.x;
-    const dy = a.y - b.y;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-  while (connected.size < centers.length) {
-    let bestA = -1;
-    let bestB = -1;
-    let bestDist = Infinity;
-    for (const a of connected) {
-      for (const b of remaining) {
-        const d = dist(centers[a], centers[b]);
-        if (d < bestDist) {
-          bestDist = d;
-          bestA = a;
-          bestB = b;
-        }
-      }
-    }
-    edges.push([bestA, bestB]);
-    connected.add(bestB);
-    remaining.delete(bestB);
-  }
-  return edges;
+function clampValue(v, min, max) {
+  if (v < min) return min;
+  if (v > max) return max;
+  return v;
 }
 
-function carveRoads(tiles, centers, edges, field, seed = 1) {
-  const rand = mulberry32(typeof seed === 'string' ? hashString(seed) : seed);
+function tileMatches(tile, key) {
+  const tileset = globalThis.TILE;
+  if (!tileset || typeof tileset[key] !== 'number') return false;
+  return tile === tileset[key];
+}
+
+function getRoadTile() {
+  const tileset = globalThis.TILE;
+  if (tileset && typeof tileset.ROAD === 'number') return tileset.ROAD;
+  if (tileset && typeof tileset.PATH === 'number') return tileset.PATH;
+  if (tileset && typeof tileset.SAND === 'number') return tileset.SAND;
+  return 0;
+}
+
+function isWater(tile) {
+  return tileMatches(tile, 'WATER');
+}
+
+function terrainCost(tile) {
+  if (tileMatches(tile, 'ROAD')) return 0.05;
+  if (tileMatches(tile, 'SAND')) return 1;
+  if (tileMatches(tile, 'BRUSH')) return 1.2;
+  if (tileMatches(tile, 'ROCK')) return 1.8;
+  if (tileMatches(tile, 'RUIN')) return 2.2;
+  if (tileMatches(tile, 'WATER')) return 5;
+  return 1.5;
+}
+
+function findNearestLand(x, y, tiles) {
   const h = tiles.length;
   const w = tiles[0].length;
-  const weight = 10;
-  for (const [ai, bi] of edges) {
-    let x0 = Math.round(centers[ai].x);
-    let y0 = Math.round(centers[ai].y);
-    const x1 = Math.round(centers[bi].x);
-    const y1 = Math.round(centers[bi].y);
-    let steps = 0;
-    const max = w * h;
-    while ((x0 !== x1 || y0 !== y1) && steps++ < max) {
-      tiles[y0][x0] = TILE.ROAD;
-      const opts = [];
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (dx === 0 && dy === 0) continue;
-          const nx = x0 + dx;
-          const ny = y0 + dy;
-          if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-          if (tiles[ny][nx] === TILE.WATER) continue;
-          const elev = Math.abs(field[ny][nx] - field[y0][x0]) * weight;
-          const dist = Math.abs(x1 - nx) + Math.abs(y1 - ny);
-          opts.push({ score: elev + dist + rand() * 0.01, nx, ny });
-        }
-      }
-      if (!opts.length) break;
-      opts.sort((a, b) => a.score - b.score);
-      const px = x0;
-      const py = y0;
-      x0 = opts[0].nx;
-      y0 = opts[0].ny;
-      if (px !== x0 && py !== y0 && tiles[py][x0] !== TILE.WATER) {
-        tiles[py][x0] = TILE.ROAD;
-      }
-      if (rand() < 0.3) {
-        const jx = Math.max(0, Math.min(w - 1, x0 + (rand() < 0.5 ? -1 : 1)));
-        const jy = Math.max(0, Math.min(h - 1, y0 + (rand() < 0.5 ? -1 : 1)));
-        if (tiles[jy][jx] !== TILE.WATER) tiles[jy][jx] = TILE.ROAD;
-      }
-    }
-    tiles[y0][x0] = TILE.ROAD;
-    if (rand() < 0.3) {
-      const jx = Math.max(0, Math.min(w - 1, x0 + (rand() < 0.5 ? -1 : 1)));
-      const jy = Math.max(0, Math.min(h - 1, y0 + (rand() < 0.5 ? -1 : 1)));
-      if (tiles[jy][jx] !== TILE.WATER) tiles[jy][jx] = TILE.ROAD;
+  const seen = new Set();
+  const queue = [[x, y]];
+  const dirs = [
+    [1, 0], [-1, 0], [0, 1], [0, -1],
+    [1, 1], [-1, 1], [1, -1], [-1, -1]
+  ];
+  while (queue.length > 0) {
+    const [cx, cy] = queue.shift();
+    const key = `${cx},${cy}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (cx < 0 || cy < 0 || cx >= w || cy >= h) continue;
+    if (!isWater(tiles[cy][cx])) return { x: cx, y: cy };
+    for (const [dx, dy] of dirs) {
+      queue.push([cx + dx, cy + dy]);
     }
   }
-  return tiles;
+  return { x: clampValue(x, 0, w - 1), y: clampValue(y, 0, h - 1) };
+}
+
+function deriveVirtualAnchors(tiles) {
+  const h = tiles.length;
+  const w = tiles[0].length;
+  let minX = Infinity, maxX = -1, minY = Infinity, maxY = -1;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (isWater(tiles[y][x])) continue;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (!isFinite(minX) || !isFinite(minY)) return [];
+  const midX = Math.round((minX + maxX) / 2);
+  const midY = Math.round((minY + maxY) / 2);
+  const candidates = [
+    [minX, midY],
+    [maxX, midY],
+    [midX, minY],
+    [midX, maxY]
+  ];
+  const anchors = [];
+  const seen = new Set();
+  for (const [cx, cy] of candidates) {
+    const snapped = findNearestLand(cx, cy, tiles);
+    const key = `${snapped.x},${snapped.y}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      anchors.push(snapped);
+    }
+  }
+  return anchors;
+}
+
+class MinHeap {
+  constructor() {
+    this.data = [];
+  }
+  push(node) {
+    this.data.push(node);
+    this.bubbleUp(this.data.length - 1);
+  }
+  bubbleUp(index) {
+    while (index > 0) {
+      const parent = index - 1 >> 1;
+      if (this.data[parent].cost <= this.data[index].cost) break;
+      const tmp = this.data[parent];
+      this.data[parent] = this.data[index];
+      this.data[index] = tmp;
+      index = parent;
+    }
+  }
+  pop() {
+    if (!this.data.length) return null;
+    const root = this.data[0];
+    const last = this.data.pop();
+    if (this.data.length) {
+      this.data[0] = last;
+      this.sinkDown(0);
+    }
+    return root;
+  }
+  sinkDown(index) {
+    const len = this.data.length;
+    for (let current = index; current < len;) {
+      let left = current * 2 + 1;
+      let right = left + 1;
+      let smallest = current;
+      if (left < len && this.data[left].cost < this.data[smallest].cost) smallest = left;
+      if (right < len && this.data[right].cost < this.data[smallest].cost) smallest = right;
+      if (smallest === current) break;
+      const tmp = this.data[current];
+      this.data[current] = this.data[smallest];
+      this.data[smallest] = tmp;
+      current = smallest;
+    }
+  }
+  get length() {
+    return this.data.length;
+  }
+}
+
+function buildPath(start, goal, tiles, field, preference) {
+  const h = tiles.length;
+  const w = tiles[0].length;
+  const total = w * h;
+  const startIdx = start.y * w + start.x;
+  const goalIdx = goal.y * w + goal.x;
+  const dist = new Float64Array(total);
+  const prev = new Int32Array(total);
+  const prevDir = new Int8Array(total);
+  dist.fill(Infinity);
+  prev.fill(-1);
+  prevDir.fill(-1);
+  const heap = new MinHeap();
+  dist[startIdx] = 0;
+  heap.push({ idx: startIdx, cost: 0 });
+  const dirs = [
+    [1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1],
+    [1, 1, Math.SQRT2], [-1, 1, Math.SQRT2], [1, -1, Math.SQRT2], [-1, -1, Math.SQRT2]
+  ];
+  while (heap.length > 0) {
+    const current = heap.pop();
+    if (current.idx === goalIdx) break;
+    if (current.cost !== dist[current.idx]) continue;
+    const cx = current.idx % w;
+    const cy = Math.floor(current.idx / w);
+    for (let dirIndex = 0; dirIndex < dirs.length; dirIndex++) {
+      const [dx, dy, len] = dirs[dirIndex];
+      const nx = cx + dx;
+      const ny = cy + dy;
+      if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+      const nIdx = ny * w + nx;
+      let step = len;
+      const tile = tiles[ny][nx];
+      const slope = Math.abs(field[ny][nx] - field[cy][cx]);
+      step += terrainCost(tile);
+      step += slope * 12;
+      if (preference[ny][nx]) step *= 0.35;
+      if (isWater(tile)) step += 8;
+      if (prevDir[current.idx] !== -1 && prevDir[current.idx] !== dirIndex) step += 0.25;
+      const newCost = current.cost + step;
+      if (newCost < dist[nIdx]) {
+        dist[nIdx] = newCost;
+        prev[nIdx] = current.idx;
+        prevDir[nIdx] = dirIndex;
+        heap.push({ idx: nIdx, cost: newCost });
+      }
+    }
+  }
+  if (!Number.isFinite(dist[goalIdx])) return null;
+  const path = [];
+  const bridges = [];
+  let cur = goalIdx;
+  while (cur !== -1) {
+    const x = cur % w;
+    const y = Math.floor(cur / w);
+    path.push({ x, y });
+    if (isWater(tiles[y][x])) bridges.push({ x, y });
+    cur = prev[cur];
+  }
+  path.reverse();
+  bridges.reverse();
+  return { path, cost: dist[goalIdx], bridges };
+}
+
+function connectRegionCenters(tiles, field, centers, seed = 1) {
+  const h = tiles.length;
+  if (!h) return { anchors: [], segments: [] };
+  const w = tiles[0].length;
+  const anchors = [];
+  if (Array.isArray(centers) && centers.length >= 2) {
+    for (const c of centers) {
+      const x = clampValue(Math.round(c.x), 0, w - 1);
+      const y = clampValue(Math.round(c.y), 0, h - 1);
+      anchors.push(findNearestLand(x, y, tiles));
+    }
+  } else {
+    anchors.push(...deriveVirtualAnchors(tiles));
+  }
+  if (anchors.length < 2) {
+    return { anchors, segments: [] };
+  }
+  const rng = mulberry32(typeof seed === 'string' ? hashString(seed) : seed);
+  const order = anchors.map((a, idx) => ({ ...a, idx })).sort((a, b) => a.x - b.x || a.y - b.y);
+  const connected = new Set([order[0].idx]);
+  const preference = Array.from({ length: h }, () => Array(w).fill(false));
+  const segments = [];
+  while (connected.size < anchors.length) {
+    let best = null;
+    for (const from of connected) {
+      for (let to = 0; to < anchors.length; to++) {
+        if (connected.has(to)) continue;
+        const plan = buildPath(anchors[from], anchors[to], tiles, field, preference);
+        if (!plan) continue;
+        if (!best || plan.cost < best.cost - 1e-6 || (Math.abs(plan.cost - best.cost) <= 1e-6 && rng() < 0.5)) {
+          best = { from, to, cost: plan.cost, path: plan.path, bridges: plan.bridges };
+        }
+      }
+    }
+    if (!best) break;
+    segments.push(best);
+    connected.add(best.to);
+    for (const step of best.path) {
+      preference[step.y][step.x] = true;
+    }
+  }
+  return { anchors, segments };
+}
+
+function carveRoads(tiles, network) {
+  const roadId = getRoadTile();
+  if (!network || !network.segments || !network.segments.length) {
+    return { anchors: network?.anchors ?? [], segments: [], crossroads: [] };
+  }
+  const h = tiles.length;
+  const usage = Array.from({ length: h }, () => Array(tiles[0].length).fill(0));
+  const carvedSegments = [];
+  for (const seg of network.segments) {
+    const path = [];
+    const bridges = [];
+    for (const step of seg.path) {
+      const { x, y } = step;
+      path.push({ x, y });
+      if (isWater(tiles[y][x])) bridges.push({ x, y });
+      tiles[y][x] = roadId;
+      usage[y][x]++;
+    }
+    carvedSegments.push({ from: seg.from, to: seg.to, path, bridges });
+  }
+  const crossroads = [];
+  const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  for (let y = 0; y < usage.length; y++) {
+    for (let x = 0; x < usage[y].length; x++) {
+      if (usage[y][x] > 1) {
+        crossroads.push({ x, y });
+        for (const [dx, dy] of dirs) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (ny < 0 || ny >= tiles.length || nx < 0 || nx >= tiles[0].length) continue;
+          if (isWater(tiles[ny][nx])) continue;
+          tiles[ny][nx] = roadId;
+        }
+      }
+    }
+  }
+  return { anchors: network.anchors, segments: carvedSegments, crossroads };
 }
 
 function scatterRuins(tiles, seed = 1, radius = 12) {
@@ -359,11 +560,12 @@ function generateProceduralMap(seed, width, height, scale = 4, falloff = 0, feat
   tiles = tiles.slice(0, height).map(r => r.slice(0, width));
   field = field.slice(0, height).map(r => r.slice(0, width));
   let centers = [];
-  let edges = [];
+  let roadData = { anchors: [], segments: [], crossroads: [] };
   if (features.roads) {
-    centers = findRegionCenters(tiles);
-    edges = connectRegionCenters(centers);
-    carveRoads(tiles, centers, edges, field, seed);
+    const regionCenters = findRegionCenters(tiles);
+    const planned = connectRegionCenters(tiles, field, regionCenters, seed);
+    roadData = carveRoads(tiles, planned);
+    centers = roadData.anchors;
   }
   let feat = {};
   if (features.ruins) {
@@ -372,7 +574,7 @@ function generateProceduralMap(seed, width, height, scale = 4, falloff = 0, feat
     feat.ruins = res.ruins;
     feat.ruinHubs = res.hubs;
   }
-  return { tiles, regions: centers, roads: edges, features: feat };
+  return { tiles, regions: centers, roads: roadData, features: feat };
 }
 
 globalThis.generateHeightField = generateHeightField;

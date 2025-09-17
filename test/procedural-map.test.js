@@ -58,23 +58,40 @@ test('refineTiles removes isolated land', () => {
   ]);
 });
 
-test('connectRegionCenters builds MST', () => {
-  const centers = [
-    { x: 0, y: 0 },
-    { x: 10, y: 0 },
-    { x: 0, y: 10 }
+test('connectRegionCenters plans bridges between islands', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, ROAD: 4 };
+  const tiles = [
+    [0, 2, 2, 2, 0],
+    [0, 2, 2, 2, 0],
+    [0, 2, 2, 2, 0]
   ];
-  const edges = globalThis.connectRegionCenters(centers);
-  edges.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-  assert.deepEqual(edges, [
-    [0, 1],
-    [0, 2]
-  ]);
+  const field = Array.from({ length: 3 }, (_, y) => Array.from({ length: 5 }, (_, x) => y * 0.1 + x * 0.01));
+  const centers = [{ x: 0, y: 1 }, { x: 4, y: 1 }];
+  const network = globalThis.connectRegionCenters(tiles, field, centers, 5);
+  assert.equal(network.anchors.length, 2);
+  assert.equal(network.segments.length, 1);
+  const seg = network.segments[0];
+  assert.ok(seg.bridges.length > 0);
+  const startAnchor = network.anchors[seg.from];
+  const endAnchor = network.anchors[seg.to];
+  assert.deepEqual(seg.path[0], startAnchor);
+  assert.deepEqual(seg.path[seg.path.length - 1], endAnchor);
 });
 
-test('connectRegionCenters handles single region', () => {
-  const edges = globalThis.connectRegionCenters([{ x: 1, y: 1 }]);
-  assert.deepEqual(edges, []);
+test('connectRegionCenters synthesizes anchors on single landmass', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, ROAD: 4 };
+  const tiles = [
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0]
+  ];
+  const field = Array.from({ length: 3 }, () => Array(3).fill(0));
+  const centers = [{ x: 1.2, y: 1.8 }];
+  const network = globalThis.connectRegionCenters(tiles, field, centers, 9);
+  assert.ok(network.anchors.length >= 2);
+  assert.ok(network.segments.length >= 1);
+  const unique = new Set(network.anchors.map(a => `${a.x},${a.y}`));
+  assert.equal(unique.size, network.anchors.length);
 });
 
 test('findRegionCenters subdivides large landmass', () => {
@@ -84,68 +101,23 @@ test('findRegionCenters subdivides large landmass', () => {
   assert.ok(centers.length > 1);
 });
 
-test('carveRoads draws road between centers', () => {
-  globalThis.TILE = { SAND: 0, ROAD: 4 };
-  const size = 5;
-  const tiles = Array.from({ length: size }, () => Array(size).fill(0));
-  const field = Array.from({ length: size }, () => Array(size).fill(0));
-  const centers = [{ x: 0, y: 0 }, { x: 4, y: 4 }];
-  const edges = [[0, 1]];
-  const roaded = globalThis.carveRoads(tiles, centers, edges, field, 1);
-  assert.equal(roaded[0][0], 4);
-  assert.equal(roaded[4][4], 4);
-  const queue = [[0, 0]];
-  const seen = new Set(['0,0']);
-  let found = false;
-  const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-  while (queue.length) {
-    const [x, y] = queue.shift();
-    if (x === 4 && y === 4) { found = true; break; }
-    for (const [dx, dy] of dirs) {
-      const nx = x + dx;
-      const ny = y + dy;
-      if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
-        if (roaded[ny][nx] === 4 && !seen.has(`${nx},${ny}`)) {
-          seen.add(`${nx},${ny}`);
-          queue.push([nx, ny]);
-        }
-      }
-    }
-  }
-  assert.ok(found);
-});
-
-test('carveRoads favors contour paths', () => {
-  globalThis.TILE = { SAND: 0, ROAD: 4, WATER: 2 };
-  const tiles = [
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0]
-  ];
-  const field = [
-    [1, 1, 1],
-    [0.5, 0.5, 0.5],
-    [0, 0, 0]
-  ];
-  const centers = [{ x: 0, y: 0 }, { x: 2, y: 0 }];
-  const edges = [[0, 1]];
-  const roaded = globalThis.carveRoads(tiles, centers, edges, field, 1);
-  assert.equal(roaded[0][1], 4);
-  assert.notEqual(roaded[1][0], 4);
-});
-
-test('carveRoads skips jitter over water', () => {
-  globalThis.TILE = { SAND: 0, ROAD: 4, WATER: 2 };
-  const tiles = [
-    [0, 0, 0],
-    [2, 2, 2],
-    [0, 0, 0]
-  ];
-  const field = Array.from({ length: 3 }, () => Array(3).fill(0));
-  const centers = [{ x: 0, y: 0 }, { x: 2, y: 0 }];
-  const edges = [[0, 1]];
-  const roaded = globalThis.carveRoads(tiles, centers, edges, field, 1);
-  assert.deepEqual(roaded[1], [2, 2, 2]);
+test('carveRoads paints paths and records crossroads', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, ROAD: 4 };
+  const tiles = Array.from({ length: 5 }, () => Array(5).fill(0));
+  const network = {
+    anchors: [{ x: 2, y: 2 }, { x: 2, y: 0 }, { x: 4, y: 2 }],
+    segments: [
+      { from: 0, to: 1, path: [{ x: 2, y: 2 }, { x: 2, y: 1 }, { x: 2, y: 0 }], bridges: [] },
+      { from: 0, to: 2, path: [{ x: 2, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 }], bridges: [] }
+    ]
+  };
+  const carved = globalThis.carveRoads(tiles, network);
+  assert.equal(tiles[2][2], 4);
+  assert.equal(tiles[1][2], 4);
+  assert.equal(tiles[2][3], 4);
+  assert.ok(carved.crossroads.some(pt => pt.x === 2 && pt.y === 2));
+  assert.equal(tiles[2][1], 4);
+  assert.deepEqual(carved.segments[0].path[0], { x: 2, y: 2 });
 });
 
 test('scatterRuins respects spacing and terrain', () => {
@@ -218,6 +190,10 @@ test('generateProceduralMap adds roads on single land region', () => {
     }
   }
   assert.ok(roads > 0);
+  assert.ok(Array.isArray(map.roads.segments));
+  assert.ok(map.roads.segments.length > 0);
+  assert.ok(map.roads.anchors.length >= 2);
+  assert.ok(Array.isArray(map.roads.crossroads));
 });
 
 test('generateProceduralMap scatters ruins', () => {
@@ -289,6 +265,7 @@ test('generateProceduralMap respects feature toggles', () => {
   }
   assert.equal(roads, 0);
   assert.equal(ruins, 0);
+  assert.deepEqual(map.roads, { anchors: [], segments: [], crossroads: [] });
 });
 
 test('exportMap writes JSON file', async () => {
