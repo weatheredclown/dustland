@@ -367,7 +367,7 @@ const DATA = `
     },
     {
       "map": "hall",
-      "x": 14,
+      "x": 9,
       "y": 18,
       "id": "glinting_key",
       "name": "Glinting Key",
@@ -382,7 +382,7 @@ const DATA = `
     {
       "map": "hall",
       "x": 16,
-      "y": 18,
+      "y": 8,
       "id": "wand",
       "name": "Wand",
       "type": "quest",
