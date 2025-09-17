@@ -1,50 +1,4 @@
-function seedWorldContent() {
-  const west = 8;
-  const east = 21;
-  const north = 34;
-  const south = 42;
-  const gateCols = [14, 15];
-  const walkwayCols = [13, 14, 15];
-  const approachDepth = 3;
-  const walkwayRow = 38;
-
-  for (let x = west; x <= east; x++) {
-    setTile('world', x, north, TILE.WALL);
-    if (!gateCols.includes(x)) setTile('world', x, south, TILE.WALL);
-  }
-
-  for (let y = north; y <= south; y++) {
-    setTile('world', west, y, TILE.WALL);
-    setTile('world', east, y, TILE.WALL);
-  }
-
-  for (const gx of gateCols) {
-    for (let y = south; y <= south + approachDepth; y++) {
-      setTile('world', gx, y, TILE.ROAD);
-    }
-  }
-
-  for (let y = north + 1; y < south; y++) {
-    for (let x = west + 1; x < east; x++) {
-      const tile = getTile('world', x, y);
-      if (tile === TILE.BUILDING || tile === TILE.DOOR || tile === TILE.ROAD) continue;
-      setTile('world', x, y, TILE.SAND);
-    }
-  }
-
-  for (let x = west + 1; x < east; x++) {
-    setTile('world', x, walkwayRow, TILE.ROAD);
-  }
-
-  for (const col of walkwayCols) {
-    for (let y = north + 1; y < south; y++) {
-      setTile('world', col, y, TILE.ROAD);
-    }
-    for (let y = south + 1; y <= south + approachDepth; y++) {
-      setTile('world', col, y, TILE.ROAD);
-    }
-  }
-}
+function seedWorldContent() {}
 
 const DATA = `
 {
@@ -2709,10 +2663,15 @@ const DATA = `
     },
     {
       "map": "world",
-      "x": 9,
-      "y": 35,
-      "w": 12,
-      "h": 7,
+      "x": 8,
+      "y": 32,
+      "w": 14,
+      "h": 11,
+      "walled": true,
+      "entrances": {
+        "south": true,
+        "east": true
+      },
       "noEncounters": true
     }
   ],
