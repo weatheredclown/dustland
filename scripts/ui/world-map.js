@@ -54,6 +54,8 @@
               name: moduleName || id,
               active: b.boarded !== true
             };
+            const network = ft?.networkFor?.(moduleName);
+            if(network) entry.network = network;
             ft?.upsertBunkers?.([entry]);
             const existing = result.find(r => r.id === id);
             if(existing){
@@ -93,7 +95,14 @@
       svg.style.background = '#222';
       svg.style.border = '2px solid #fff';
 
-      const dests = bunkers.filter(b => b.active && b.id !== fromId);
+      const ft = globalThis.Dustland?.fastTravel;
+      const origin = bunkers.find(b => b.id === fromId);
+      const originNet = origin?.network ?? (origin?.module ? ft?.networkFor?.(origin.module) : 'global');
+      const dests = bunkers.filter(b => {
+        if(!b.active || b.id === fromId) return false;
+        const destNet = b.network ?? (b.module ? ft?.networkFor?.(b.module) : 'global');
+        return (originNet ?? 'global') === (destNet ?? 'global');
+      });
       const pts = [];
       dests.forEach((b, i) => {
         ensureModule(b, () => {

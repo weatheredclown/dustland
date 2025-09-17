@@ -240,7 +240,7 @@ loopMinus.addEventListener('click', () => {
   showLoopControls(null);
 });
 
-const moduleData = globalThis.moduleData || (globalThis.moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined });
+const moduleData = globalThis.moduleData || (globalThis.moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {} });
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod', 'spread'];
 const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];
@@ -3648,6 +3648,7 @@ function deleteQuest() {
 function applyLoadedModule(data) {
   moduleData.module = data.module;
   moduleData.moduleVar = data.moduleVar;
+  moduleData.props = { ...(data.props || {}) };
   moduleData.seed = data.seed || Date.now();
   moduleData._origKeys = Object.keys(data);
   moduleData.name = data.name || 'adventure-module';
@@ -3680,6 +3681,9 @@ function applyLoadedModule(data) {
   }
   moduleData.start = data.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   document.getElementById('moduleName').value = moduleData.name;
+  const bunkerScope = moduleData.props?.bunkerTravelScope || 'global';
+  const scopeEl = document.getElementById('moduleBunkerScope');
+  if(scopeEl) scopeEl.value = bunkerScope;
   globalThis.interiors = {};
   interiors = globalThis.interiors;
   moduleData.interiors.forEach(I => { interiors[I.id] = I; });
@@ -3787,6 +3791,7 @@ function saveModule() {
     if(issues.some(i=>!i.warn)) return;
   }
   moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
+  const hasProps = Object.keys(moduleData.props || {}).length > 0;
   const bldgs = moduleData.buildings.map(({ under, _origKeys, ...rest }) => {
     const clean = {};
     (_origKeys || Object.keys(rest)).forEach(k => { clean[k] = rest[k]; });
@@ -3804,6 +3809,10 @@ function saveModule() {
   const base = {};
   (moduleData._origKeys || Object.keys(moduleData)).forEach(k => {
     if (['buildings', 'interiors', 'encounters', 'world', '_origKeys'].includes(k)) return;
+    if (k === 'props') {
+      if (hasProps) base.props = moduleData.props;
+      return;
+    }
     if (moduleData[k] !== undefined) base[k] = moduleData[k];
   });
   if (moduleData._origKeys?.includes('encounters') || Object.keys(enc).length) base.encounters = enc;
@@ -3829,12 +3838,24 @@ function playtestModule() {
     (enc[map] ||= []).push(rest);
   });
   const zones = moduleData.zones ? moduleData.zones.map(z => ({ ...z })) : [];
-  const data = { ...moduleData, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints, zones };
+  const hasProps = Object.keys(moduleData.props || {}).length > 0;
+  const moduleBase = { ...moduleData };
+  if(!hasProps) delete moduleBase.props;
+  const data = { ...moduleBase, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints, zones };
   localStorage.setItem(PLAYTEST_KEY, JSON.stringify(data));
   window.open('dustland.html?ack-player=1#play', '_blank');
 }
 
 document.getElementById('clear').onclick = clearWorld;
+const moduleBunkerScope = document.getElementById('moduleBunkerScope');
+if(moduleBunkerScope){
+  moduleBunkerScope.addEventListener('change', () => {
+    const scope = moduleBunkerScope.value || 'global';
+    moduleData.props = moduleData.props || {};
+    if(scope === 'global') delete moduleData.props.bunkerTravelScope;
+    else moduleData.props.bunkerTravelScope = scope;
+  });
+}
 function runGenerate(regen) {
   if (typeof moduleData?.generateMap === 'function') moduleData.generateMap(regen);
   else generateProceduralWorld(regen);

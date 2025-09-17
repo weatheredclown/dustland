@@ -644,7 +644,9 @@ function placeHut(x,y,b={}){
     nb.bunkerId = bunkerId;
     const bunkers = (globalThis.Dustland ||= {}).bunkers || (globalThis.Dustland.bunkers = []);
     if (!bunkers.some(b => b.id === bunkerId)) {
-      const entry = { id: bunkerId, x: doorX, y: doorY, map: 'world', module: moduleName, name: moduleName, active: !boarded };
+      const ft = globalThis.Dustland?.fastTravel;
+      const network = typeof ft?.networkFor === 'function' ? ft.networkFor(moduleName) : 'global';
+      const entry = { id: bunkerId, x: doorX, y: doorY, map: 'world', module: moduleName, name: moduleName, active: !boarded, network };
       bunkers.push(entry);
     }
   }
