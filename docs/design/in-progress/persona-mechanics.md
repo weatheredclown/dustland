@@ -88,14 +88,14 @@ Persona equips and other world moments should fire through the game's event bus.
  - [x] Hook persona stat modifiers into combat calculations.
 - [x] Draft first mask memory quest for dustland.
   - [x] create an NPC mask giver (name TBD)
-  - [ ] create quest to get a persona mask (anything with the mask attribute from a loot cache)
-    - [ ] Outline quest beats (setup, retrieval, and return) so each stage ties into the persona's forgotten memories.
-    - [ ] Script quest data in a dedicated module file with journal updates, checkpoint triggers, and persona unlock rewards.
-    - [ ] Playtest the quest via Adventure Kit to ensure loot caches drop the correct mask variant and state persists after reloads.
-  - [ ] add dialog to this NPC that explains the above lore about how these aren't just disguises
-    - [ ] Draft branching acceptance, declination, and completion lines that foreshadow later mask memories.
-    - [ ] Gate dialog branches using persona ownership flags so repeat conversations acknowledge prior progress.
-    - [ ] Record VO/text pass notes for narrative review and confirm the conversation flows in the in-game UI without clipping.
+  - [x] create quest to get a persona mask (anything with the mask attribute from a loot cache)
+    - [x] Outline quest beats (setup, retrieval, and return) so each stage ties into the persona's forgotten memories.
+    - [x] Script quest data in a dedicated module file with journal updates, checkpoint triggers, and persona unlock rewards.
+    - [x] Playtest the quest via Adventure Kit to ensure loot caches drop the correct mask variant and state persists after reloads.
+  - [x] add dialog to this NPC that explains the above lore about how these aren't just disguises
+    - [x] Draft branching acceptance, declination, and completion lines that foreshadow later mask memories.
+    - [x] Gate dialog branches using persona ownership flags so repeat conversations acknowledge prior progress.
+    - [x] Record VO/text pass notes for narrative review and confirm the conversation flows in the in-game UI without clipping.
 - [x] Add portrait and label swap logic to the HUD.
 - [ ] Extend ACK schema and editor with reusable profile definitions.
   - [ ] Define a `profiles` collection in the ACK schema with validation on effect types, numeric ranges, and asset references.
