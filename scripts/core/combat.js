@@ -258,8 +258,7 @@ function openCombat(enemies){
 }
 
 function closeCombat(result = 'flee'){
-  if (!combatOverlay) return;
-  combatOverlay.classList.remove('shown');
+  if (combatOverlay) combatOverlay.classList.remove('shown');
   if (cmdMenu) cmdMenu.style.display = 'none';
   if (turnIndicator) turnIndicator.textContent = '';
 
