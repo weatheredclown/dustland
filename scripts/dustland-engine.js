@@ -273,6 +273,7 @@ function toggleMobileControls(){ setMobileControls(!mobileControlsEnabled); }
 let tileCharsEnabled = true;
 let retroNpcArtEnabled = false;
 const retroNpcArtCache = new Map();
+let retroPlayerSprite = null;
 const DEFAULT_NPC_COLOR = '#9ef7a0';
 const xmlEscapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
 xmlEscapeMap['"'] = '&quot;';
@@ -294,6 +295,7 @@ function setRetroNpcArt(on, skipStorage){
   if(!skipStorage){
     globalThis.localStorage?.setItem('retroNpcArt', retroNpcArtEnabled ? '1' : '0');
   }
+  retroPlayerSprite = null;
   if(!retroNpcArtEnabled){
     retroNpcArtCache.clear();
   }
@@ -516,6 +518,55 @@ function getRetroNpcSprite(n){
   sprite.decoding = 'sync';
   sprite.src = url;
   retroNpcArtCache.set(key, sprite);
+  return sprite;
+}
+
+function buildRetroPlayerSvg(){
+  const base = '#0b141a';
+  const innerField = '#09121a';
+  const glowA = '#64f0ff';
+  const glowB = '#b78dff';
+  const blade = '#f6f3d7';
+  const accent = '#ff9d76';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="geometricPrecision">
+  <defs>
+    <radialGradient id="playerAura" cx="50%" cy="50%" r="60%">
+      <stop offset="0" stop-color="${glowA}" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="${innerField}" stop-opacity="0.05"/>
+    </radialGradient>
+    <linearGradient id="playerBlade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${blade}"/>
+      <stop offset="1" stop-color="${accent}"/>
+    </linearGradient>
+    <linearGradient id="playerCloak" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${glowA}" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="${glowB}" stop-opacity="0.8"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="${base}"/>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="6" fill="${innerField}" stroke="${glowA}" stroke-width="1.5" opacity="0.85"/>
+  <circle cx="16" cy="16" r="12" fill="url(#playerAura)"/>
+  <path d="M16 6l4.5 7.5-4.5 3.8-4.5-3.8z" fill="url(#playerCloak)" stroke="${glowA}" stroke-width="0.9" stroke-linejoin="round"/>
+  <path d="M11.2 14.5l-2.2 8.5 6.5 3 6.5-3-2.2-8.5" fill="none" stroke="${glowB}" stroke-width="1.1" stroke-linejoin="round"/>
+  <path d="M15.2 14.5l1.6-6.2 3.2 2.4-3.3 9.8" fill="url(#playerBlade)" stroke="${blade}" stroke-width="0.8" stroke-linejoin="round"/>
+  <path d="M16 21.5l4.8 2.2-4.8 2.8-4.8-2.8z" fill="#13263a" stroke="${glowA}" stroke-width="0.8"/>
+  <circle cx="16" cy="16" r="3.2" fill="#06111a" stroke="${blade}" stroke-width="0.8"/>
+  <circle cx="16" cy="16" r="1.2" fill="${glowA}"/>
+  <path d="M10 23.5l-1.8 1.2L8.6 27l3.2-1.3z" fill="${accent}" opacity="0.7"/>
+  <path d="M22 23.5l1.8 1.2-1.2 2.3-3.2-1.3z" fill="${accent}" opacity="0.7"/>
+</svg>`;
+}
+
+function getRetroPlayerSprite(){
+  const Img = globalThis.Image;
+  if(typeof Img !== 'function') return null;
+  if(retroPlayerSprite?.complete) return retroPlayerSprite;
+  const svg = buildRetroPlayerSvg();
+  const url = svgToDataUrl(svg);
+  const sprite = new Img();
+  sprite.decoding = 'sync';
+  sprite.src = url;
+  retroPlayerSprite = sprite;
   return sprite;
 }
 function sfxTick(){
@@ -941,13 +992,18 @@ function render(gameState=state, dt){
     else if(layer==='entitiesBelow'){ drawEntities(ctx, below, offX, offY); }
     else if(layer==='player'){
       const px=(pos.x-camX+offX)*TS, py=(pos.y-camY+offY)*TS;
-      const cx = px + TS/2, cy = py + TS/2;
-      ctx.fillStyle='#f0f';
-      ctx.beginPath(); ctx.arc(cx, cy, TS/2 - 2, 0, Math.PI*2); ctx.fill();
-      ctx.strokeStyle='#f0f';
-      ctx.lineWidth=2/RENDER_SCALE;
-      ctx.beginPath(); ctx.arc(cx, cy, TS/2 + 2, 0, Math.PI*2); ctx.stroke();
-      ctx.fillStyle='#fff'; ctx.fillText('@',px+4,py+12);
+      if(retroNpcArtEnabled){
+        const sprite = getRetroPlayerSprite();
+        if(sprite?.complete){
+          ctx.drawImage(sprite, px, py, TS, TS);
+        }else{
+          ctx.fillStyle='#64f0ff';
+          ctx.fillRect(px+4,py+4,TS-8,TS-8);
+        }
+      }else{
+        ctx.fillStyle='#f0f';
+        ctx.fillRect(px+4,py+4,TS-8,TS-8);
+      }
     }
     else if(layer==='entitiesAbove'){ drawEntities(ctx, above, offX, offY); }
   }
