@@ -80,8 +80,12 @@ const SpoilsCache = {
     if(!player?.inv) return null;
     const idx = player.inv.findIndex(c => c.type === 'spoils-cache' && c.rank === rank);
     if(idx === -1) return null;
-    player.inv.splice(idx,1);
-    notifyInventoryChanged?.();
+    if (typeof removeFromInv === 'function') {
+      removeFromInv(idx);
+    } else {
+      player.inv.splice(idx,1);
+      notifyInventoryChanged?.();
+    }
     const item = globalThis.ItemGen?.generate?.(rank, rng);
     if(item){
       if(typeof addToInv === 'function'){

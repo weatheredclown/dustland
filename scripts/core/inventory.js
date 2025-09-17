@@ -30,6 +30,31 @@ const ITEMS = {};
 /** @type {ItemDrop[]} */
 const itemDrops = [];
 const EQUIP_TYPES = ['weapon','armor','trinket'];
+const MAX_INV_STACK = 64;
+
+function isStackable(it){
+  return !!it && !EQUIP_TYPES.includes(it.type);
+}
+
+function getStackCount(it){
+  return Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
+}
+
+function setStackCount(it, count){
+  if(!it) return;
+  const next = Math.max(0, count|0);
+  if(next <= 1){
+    delete it.count;
+  } else {
+    it.count = next;
+  }
+}
+
+function getStackLimit(it){
+  if(!isStackable(it)) return 1;
+  const raw = Number.isFinite(it?.maxStack) ? it.maxStack : MAX_INV_STACK;
+  return Math.max(1, Math.min(MAX_INV_STACK, raw));
+}
 function cloneItem(it){
   return {
     ...it,
@@ -122,10 +147,49 @@ function addToInv(item) {
     if (typeof log === 'function') log('Fuel +' + fuel);
     return true;
   }
-  if (player.inv.length >= getPartyInventoryCapacity()) {
-    return false;
+  const capacity = getPartyInventoryCapacity();
+  const stackable = isStackable(base);
+  let quantity = Math.max(1, Number.isFinite(base.count) ? base.count : 1);
+  if (stackable) {
+    let remaining = quantity;
+    const stackPlan = [];
+    player.inv.forEach((invItem, idx) => {
+      if (!invItem || invItem.id !== base.id || !isStackable(invItem)) return;
+      const space = getStackLimit(invItem) - getStackCount(invItem);
+      if (space <= 0) return;
+      const add = Math.min(space, remaining);
+      if (add > 0) {
+        stackPlan.push({ idx, add });
+        remaining -= add;
+      }
+    });
+    const limit = getStackLimit(base);
+    const slotsNeeded = Math.ceil(Math.max(0, remaining) / Math.max(1, limit));
+    if (player.inv.length + slotsNeeded > capacity) {
+      return false;
+    }
+    stackPlan.forEach(({ idx, add }) => {
+      const target = player.inv[idx];
+      setStackCount(target, getStackCount(target) + add);
+      quantity -= add;
+    });
+    let leftover = quantity;
+    let usedBase = false;
+    while (leftover > 0) {
+      const toAdd = Math.min(getStackLimit(base), leftover);
+      const entry = !usedBase ? base : cloneItem(base);
+      setStackCount(entry, toAdd);
+      player.inv.push(entry);
+      leftover -= toAdd;
+      usedBase = true;
+    }
+  } else {
+    if (player.inv.length >= capacity) {
+      return false;
+    }
+    setStackCount(base, 1);
+    player.inv.push(base);
   }
-  player.inv.push(base);
   emit('item:picked', base);
   if(base.narrative){
     emit('item:narrative', { itemId: base.id, narrative: base.narrative });
@@ -134,7 +198,20 @@ function addToInv(item) {
   return true;
 }
 
-function removeFromInv(invIndex) {
+function removeFromInv(invIndex, quantity) {
+  if (invIndex < 0 || invIndex >= player.inv.length) return;
+  const it = player.inv[invIndex];
+  if (!it) return;
+  const stackable = isStackable(it);
+  const current = getStackCount(it);
+  const amt = stackable
+    ? (Number.isFinite(quantity) ? Math.max(1, quantity | 0) : 1)
+    : 1;
+  if (stackable && current > amt) {
+    setStackCount(it, current - amt);
+    notifyInventoryChanged();
+    return;
+  }
   player.inv.splice(invIndex, 1);
   notifyInventoryChanged();
 }
@@ -146,19 +223,23 @@ function removeFromInv(invIndex) {
  */
 function dropItems(indices) {
   if (!Array.isArray(indices) || indices.length === 0) return 0;
-  const ids = indices.map(i => {
+  const drops = [];
+  const counts = new Map();
+  indices.forEach(i => {
     const it = player.inv[i];
-    return it ? it.id : null;
-  }).filter(Boolean);
-  const sorted = [...indices].sort((a, b) => b - a);
+    if (!it || !it.id) return;
+    const qty = getStackCount(it);
+    counts.set(i, qty);
+    for (let n = 0; n < qty; n++) drops.push(it.id);
+  });
+  const sorted = Array.from(counts.keys()).sort((a, b) => b - a);
   for (const idx of sorted) {
-    if (idx >= 0) player.inv.splice(idx, 1);
+    removeFromInv(idx, counts.get(idx));
   }
-  if (ids.length) {
-    itemDrops.push({ items: ids, map: party.map, x: party.x, y: party.y });
-    notifyInventoryChanged();
+  if (drops.length) {
+    itemDrops.push({ items: drops, map: party.map, x: party.x, y: party.y });
   }
-  return ids.length;
+  return drops.length;
 }
 
 // Add all items from a cache drop into inventory
@@ -168,7 +249,30 @@ function dropItems(indices) {
  */
 function pickupCache(drop) {
   const ids = Array.isArray(drop?.items) ? drop.items : (drop?.id ? [drop.id] : []);
-  if (player.inv.length + ids.length > getPartyInventoryCapacity()) {
+  if (!ids.length) return true;
+  const capacity = getPartyInventoryCapacity();
+  const tempStacks = player.inv.map(it => ({ id: it.id, count: getStackCount(it), limit: getStackLimit(it), stackable: isStackable(it) }));
+  let needed = 0;
+  ids.forEach(id => {
+    const item = getItem(id);
+    if (!item) {
+      needed++;
+      return;
+    }
+    if (!isStackable(item)) {
+      needed++;
+      tempStacks.push({ id: item.id, count: 1, limit: 1, stackable: false });
+      return;
+    }
+    const stack = tempStacks.find(entry => entry.id === item.id && entry.stackable && entry.count < entry.limit);
+    if (stack) {
+      stack.count++;
+      return;
+    }
+    needed++;
+    tempStacks.push({ id: item.id, count: 1, limit: getStackLimit(item), stackable: true });
+  });
+  if (player.inv.length + needed > capacity) {
     log('Inventory is full.');
     if (typeof toast === 'function') toast('Inventory is full.');
     return false;
@@ -194,6 +298,7 @@ function equipItem(memberIndex, invIndex){
       log(`${prevEq.name} is cursed and cannot be removed.`);
       return;
     }
+    setStackCount(prevEq, 1);
     player.inv.push(prevEq);
   }
   m.equip[slot]=it;
@@ -240,6 +345,7 @@ function unequipItem(memberIndex, slot){
       return;
     }
     m.equip[slot]=null;
+    setStackCount(it, 1);
     player.inv.push(it);
     applyEquipmentStats(m);
     notifyInventoryChanged();
@@ -336,7 +442,7 @@ function countItems(idOrTag) {
   const tag = typeof idOrTag === 'string' ? idOrTag.toLowerCase() : '';
   return player.inv.reduce((count, it) => {
     if (it.id === idOrTag || it.tags.map(t => t.toLowerCase()).includes(tag)) {
-      return count + 1;
+      return count + getStackCount(it);
     }
     return count;
   }, 0);
@@ -363,8 +469,7 @@ function useItem(invIndex){
     if (bonus > 0 && !it.use.text) log('Lucky boost!');
     if (typeof toast === 'function') toast(it.use.text || `${who.name} +${healed} HP`);
     emit('sfx','tick');
-    player.inv.splice(invIndex,1);
-    notifyInventoryChanged();
+    removeFromInv(invIndex);
     player.hp = party[0] ? party[0].hp : player.hp;
     if(typeof updateHUD === 'function') updateHUD();
     emit(`used:${it.id}`, { item: it });
@@ -381,8 +486,7 @@ function useItem(invIndex){
     const msg = it.use.text || `${who.name} drinks ${it.name}.`;
     log(msg);
     if(typeof toast==='function') toast(it.use.text || `${who.name} +${who.hydration - before} HYD`);
-    player.inv.splice(invIndex,1);
-    notifyInventoryChanged();
+    removeFromInv(invIndex);
     globalThis.updateHUD?.();
     emit('sfx','tick');
     emit(`used:${it.id}`, { item: it });
@@ -397,8 +501,7 @@ function useItem(invIndex){
     log(msg);
     if(typeof toast==='function') toast(msg);
     emit('sfx','tick');
-    player.inv.splice(invIndex,1);
-    notifyInventoryChanged();
+    removeFromInv(invIndex);
     emit(`used:${it.id}`, { item: it });
     return true;
   }
@@ -427,8 +530,7 @@ function useItem(invIndex){
       globalThis.renderCombat?.();
     }
     emit('sfx','damage');
-    player.inv.splice(invIndex,1);
-    notifyInventoryChanged();
+    removeFromInv(invIndex);
     emit(`used:${it.id}`, { item: it });
     return true;
   }
@@ -442,16 +544,14 @@ function useItem(invIndex){
     log(msg);
     if(typeof toast==='function') toast(it.use.text || `${who.name} is cleansed`);
     emit('sfx','tick');
-    player.inv.splice(invIndex,1);
-    notifyInventoryChanged();
+    removeFromInv(invIndex);
     emit(`used:${it.id}`, { item: it });
     return true;
   }
   if(typeof it.use.onUse === 'function'){
     const ok = it.use.onUse({player, party, log, toast});
     if(ok!==false){
-        player.inv.splice(invIndex,1);
-        notifyInventoryChanged();
+        removeFromInv(invIndex);
         const msg = it.use.text || `Used ${it.name}`;
         log(msg);
         if(typeof toast==='function') toast(msg);

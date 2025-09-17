@@ -1016,6 +1016,7 @@ function renderInv(){
     inv.appendChild(ctrl);
     if(player.inv.length===0){ inv.appendChild(Object.assign(document.createElement('div'),{className:'slot muted',textContent:'(empty)'})); return; }
     player.inv.forEach((it,i)=>{
+      const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
       const row=document.createElement('div');
       row.className='slot';
       const cb=document.createElement('input');
@@ -1023,7 +1024,7 @@ function renderInv(){
       cb.onchange=()=>{ if(cb.checked) dropSet.add(i); else dropSet.delete(i); };
       row.appendChild(cb);
       const span=document.createElement('span');
-      span.textContent=it.name;
+      span.textContent=qty>1?`${it.name} x${qty}`:it.name;
       row.appendChild(span);
       inv.appendChild(row);
     });
@@ -1044,8 +1045,11 @@ function renderInv(){
   const caches = {};
   const others = [];
   player.inv.forEach(it => {
+    const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
     if(it.type === 'spoils-cache'){
-      (caches[it.rank] ||= []).push(it);
+      const bucket = caches[it.rank] || (caches[it.rank] = { items: [], total: 0 });
+      bucket.items.push(it);
+      bucket.total += qty;
     } else {
       others.push(it);
     }
@@ -1063,7 +1067,9 @@ function renderInv(){
       }
     }
   }
-  Object.entries(caches).forEach(([rank, items]) => {
+  Object.entries(caches).forEach(([rank, info]) => {
+    const items = info.items;
+    const total = info.total || items.length;
     const row=document.createElement('div');
     row.className='slot cache-slot';
     const icon = SpoilsCache.renderIcon(rank, () => {
@@ -1077,11 +1083,11 @@ function renderInv(){
       wrap.appendChild(icon);
       const count=document.createElement('span');
       count.className='cache-count';
-      count.textContent='x'+items.length;
+      count.textContent='x'+total;
       wrap.appendChild(count);
       row.appendChild(wrap);
     }
-    if(items.length>1){
+    if(total>1){
       const btn=document.createElement('button');
       btn.className='btn jitter';
       btn.textContent='Open All';
@@ -1091,6 +1097,7 @@ function renderInv(){
     inv.appendChild(row);
   });
   others.forEach(it => {
+    const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
     const row=document.createElement('div');
     row.className='slot';
     row.style.display='flex';
@@ -1130,6 +1137,12 @@ function renderInv(){
       btnWrap.appendChild(useBtn);
     }
     row.appendChild(labelSpan);
+    if(qty>1){
+      const countSpan=document.createElement('span');
+      countSpan.className='stack-count';
+      countSpan.textContent='x'+qty;
+      row.appendChild(countSpan);
+    }
     row.appendChild(btnWrap);
     const mods = Object.entries(it.mods || {})
       .map(([k, v]) => `${k} ${v >= 0 ? '+' : ''}${v}`)
@@ -1294,16 +1307,23 @@ function openShop(npc) {
     shopInv.forEach((it, idx) => {
       const item = getItem(it.id);
       if (!item) return;
+      const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
       const row = document.createElement('div');
       row.className = 'slot';
       const price = Math.ceil(item.value * markup);
-      row.innerHTML = `<span>${item.name} - ${price} ${CURRENCY}</span><button class="btn">Buy</button>`;
+      const name = qty > 1 ? `${item.name} x${qty}` : item.name;
+      row.innerHTML = `<span>${name} - ${price} ${CURRENCY}</span><button class="btn">Buy</button>`;
       row.querySelector('button').onclick = () => {
         if (player.scrap >= price) {
           if (addToInv(item)) {
             player.scrap -= price;
             if (!npc.vending) {
-              npc.shop.inv.splice(idx, 1);
+              const current = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
+              if (current > 1) {
+                it.count = current - 1;
+              } else {
+                npc.shop.inv.splice(idx, 1);
+              }
             }
             npc.shop.grudge = 0;
             renderShop();
@@ -1325,10 +1345,18 @@ function openShop(npc) {
       const row = document.createElement('div');
       row.className = 'slot';
       const price = typeof item.scrap === 'number' ? item.scrap : Math.floor(item.value / markup);
-      row.innerHTML = `<span>${item.name} - ${price} ${CURRENCY}</span><button class="btn">Sell</button>`;
+      const qty = Math.max(1, Number.isFinite(item?.count) ? item.count : 1);
+      const name = qty > 1 ? `${item.name} x${qty}` : item.name;
+      row.innerHTML = `<span>${name} - ${price} ${CURRENCY}</span><button class="btn">Sell</button>`;
       row.querySelector('button').onclick = () => {
         player.scrap += price;
-        npc.shop.inv.push({ id: item.id });
+        const existing = npc.shop.inv.find(entry => entry?.id === item.id && Math.max(1, Number.isFinite(entry.count) ? entry.count : 1) < 256);
+        if (existing) {
+          const current = Math.max(1, Number.isFinite(existing.count) ? existing.count : 1);
+          existing.count = Math.min(256, current + 1);
+        } else {
+          npc.shop.inv.push({ id: item.id, count: 1 });
+        }
         removeFromInv(idx);
         renderShop();
         updateHUD();

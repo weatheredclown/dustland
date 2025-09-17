@@ -163,7 +163,8 @@
               for (let i = player.inv.length - 1; i >= 0; i--) {
                 const it = player.inv[i];
                 if (it.tags && it.tags.map(t => t.toLowerCase()).includes(eff.tag.toLowerCase())) {
-                  removeFromInv(i);
+                  const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
+                  removeFromInv(i, qty);
                 }
               }
             }

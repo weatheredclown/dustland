@@ -1328,7 +1328,7 @@ input[type="range"] {
     opacity:0;
   }
 }
-.cache-count { margin-left:4px; font-weight:700; }
+.cache-count, .stack-count { margin-left:4px; font-weight:700; }
 .jitter { animation:jitter .3s infinite; }
 @keyframes jitter {
   0%{ transform:translate(0,0); }

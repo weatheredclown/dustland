@@ -20,9 +20,18 @@ test('workbench shows requirement counts for recipes you lack', async () => {
   global.player = { scrap: 0, fuel: 0, inv: [] };
   global.hasItem = id => player.inv.some(i => i.id === id);
   global.findItemIndex = id => player.inv.findIndex(i => i.id === id);
-  global.removeFromInv = idx => player.inv.splice(idx, 1);
+  global.removeFromInv = (idx, qty = 1) => {
+    const item = player.inv[idx];
+    if (!item) return;
+    const count = Number.isFinite(item?.count) ? item.count : 1;
+    if (count > qty) {
+      item.count = count - qty;
+    } else {
+      player.inv.splice(idx, 1);
+    }
+  };
   global.addToInv = id => { player.inv.push({ id }); return true; };
-  global.countItems = id => player.inv.filter(i => i.id === id).length;
+  global.countItems = id => player.inv.reduce((sum, it) => sum + (it.id === id ? Math.max(1, Number.isFinite(it?.count) ? it.count : 1) : 0), 0);
 
   Dustland.openWorkbench();
   const rows = dom.window.document.querySelectorAll('#workbenchRecipes .slot');
@@ -42,9 +51,18 @@ test('arrow keys in workbench do not bubble to window', async () => {
   global.player = { scrap: 5, fuel: 50, inv: [ { id: 'cloth' }, { id: 'plant_fiber' } ] };
   global.hasItem = id => player.inv.some(i => i.id === id);
   global.findItemIndex = id => player.inv.findIndex(i => i.id === id);
-  global.removeFromInv = idx => player.inv.splice(idx, 1);
+  global.removeFromInv = (idx, qty = 1) => {
+    const item = player.inv[idx];
+    if (!item) return;
+    const count = Number.isFinite(item?.count) ? item.count : 1;
+    if (count > qty) {
+      item.count = count - qty;
+    } else {
+      player.inv.splice(idx, 1);
+    }
+  };
   global.addToInv = id => { player.inv.push({ id }); return true; };
-  global.countItems = id => player.inv.filter(i => i.id === id).length;
+  global.countItems = id => player.inv.reduce((sum, it) => sum + (it.id === id ? Math.max(1, Number.isFinite(it?.count) ? it.count : 1) : 0), 0);
 
   let moved = 0;
   dom.window.addEventListener('keydown', () => { moved++; });

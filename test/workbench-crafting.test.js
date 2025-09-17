@@ -30,7 +30,16 @@ test('craftSolarTarp uses cloth and scrap', () => {
     addToInv: id => { context.player.inv.push({ id }); return true; },
     hasItem: id => context.player.inv.some(i => i.id === id),
     findItemIndex: id => context.player.inv.findIndex(i => i.id === id),
-    removeFromInv: idx => context.player.inv.splice(idx, 1),
+    removeFromInv: (idx, qty = 1) => {
+      const item = context.player.inv[idx];
+      if (!item) return;
+      const count = Number.isFinite(item?.count) ? item.count : 1;
+      if (count > qty) {
+        item.count = count - qty;
+      } else {
+        context.player.inv.splice(idx, 1);
+      }
+    },
     log: () => {}
   };
   vm.runInNewContext(src, context);
@@ -48,7 +57,16 @@ test('craftBandage consumes plant fiber', () => {
     addToInv: id => { context.player.inv.push({ id }); return true; },
     hasItem: id => context.player.inv.some(i => i.id === id),
     findItemIndex: id => context.player.inv.findIndex(i => i.id === id),
-    removeFromInv: idx => context.player.inv.splice(idx, 1),
+    removeFromInv: (idx, qty = 1) => {
+      const item = context.player.inv[idx];
+      if (!item) return;
+      const count = Number.isFinite(item?.count) ? item.count : 1;
+      if (count > qty) {
+        item.count = count - qty;
+      } else {
+        context.player.inv.splice(idx, 1);
+      }
+    },
     log: () => {}
   };
   vm.runInNewContext(src, context);
