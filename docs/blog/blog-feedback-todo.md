@@ -6,7 +6,7 @@ A checklist for turning community feedback into concrete updates.
   - [x] Aggregate comments from the blog and social channels.
     - [x] collected in data/blog-comments.csv 
   - [ ] Tag items as bugs, balance issues, or feature requests.
-  - [x] Cross-reference design critiques like `docs/design/in-progress/retro-game-troll-critique.md` for narrative and quest gaps.
+  - [x] Cross-reference design critiques like `docs/design/narrative-world/plot-draft.md` for narrative and quest gaps.
     - Comments 35, 49, 69, and 89 reinforce the critique's call for richer quests and dialogue.
 - [ ] **Scope tasks**
   - [ ] Convert high-priority items into issues with owners and estimates.
