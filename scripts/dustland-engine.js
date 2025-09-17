@@ -565,9 +565,33 @@ globalThis.jitterColor = jitterColor;
 
 // ===== Camera & CRT draw with ghosting =====
 const disp = document.getElementById('game');
-const dctx = disp.getContext('2d');
-const scene = document.createElement('canvas'); scene.width=disp.width; scene.height=disp.height; const sctx=scene.getContext('2d');
-const prev = document.createElement('canvas'); prev.width=disp.width; prev.height=disp.height; const pctx=prev.getContext('2d');
+const rawAttrWidth = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('width')) : NaN;
+const rawAttrHeight = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('height')) : NaN;
+const BASE_CANVAS_WIDTH = Number.isFinite(rawAttrWidth) && rawAttrWidth > 0 ? rawAttrWidth : (disp?.width && disp.width > 0 ? disp.width : 640);
+const BASE_CANVAS_HEIGHT = Number.isFinite(rawAttrHeight) && rawAttrHeight > 0 ? rawAttrHeight : (disp?.height && disp.height > 0 ? disp.height : 480);
+const RENDER_SCALE = 2;
+if(disp){
+  disp.width = Math.round(BASE_CANVAS_WIDTH * RENDER_SCALE);
+  disp.height = Math.round(BASE_CANVAS_HEIGHT * RENDER_SCALE);
+}
+const dctx = disp ? disp.getContext('2d') : null;
+const scene = document.createElement('canvas');
+scene.width = disp?.width || Math.round(BASE_CANVAS_WIDTH * RENDER_SCALE);
+scene.height = disp?.height || Math.round(BASE_CANVAS_HEIGHT * RENDER_SCALE);
+const sctx = scene.getContext('2d');
+const prev = document.createElement('canvas');
+prev.width = scene.width;
+prev.height = scene.height;
+const pctx = prev.getContext('2d');
+if(dctx){
+  dctx.imageSmoothingEnabled = false;
+}
+if(sctx){
+  sctx.imageSmoothingEnabled = false;
+}
+if(pctx){
+  pctx.imageSmoothingEnabled = false;
+}
 
 const CRT_CANVAS_MAX_SCALE = 3;
 const CRT_DESKTOP_BREAKPOINT = 900;
@@ -587,8 +611,8 @@ function setCanvasDimensions(width, height){
 
 function updateCanvasStretch(){
   if(!disp) return;
-  const baseWidth = disp.width || disp.clientWidth || 0;
-  const baseHeight = disp.height || disp.clientHeight || 0;
+  const baseWidth = BASE_CANVAS_WIDTH || disp.clientWidth || 0;
+  const baseHeight = BASE_CANVAS_HEIGHT || disp.clientHeight || 0;
   if(!baseWidth || !baseHeight){
     if(crtTube){
       crtTube.style.width = '';
@@ -639,11 +663,13 @@ if(typeof window !== 'undefined' && window.addEventListener){
 updateCanvasStretch();
 
 // Font init (prevents invisible glyphs on some canvases)
-sctx.font = '12px system-ui, sans-serif';
+sctx.font = `${12 / RENDER_SCALE}px system-ui, sans-serif`;
 
 let camX=0, camY=0, showMini=true;
 let _lastTime=0;
 let bumpX=0, bumpY=0, bumpEnd=0;
+const FOOTSTEP_BUMP_RANGE = 0.6;
+const FOOTSTEP_BUMP_DURATION_MS = 35;
 const sparkles=[];
 const soundSources = [];
 let lastChimeTime = 0;
@@ -669,9 +695,10 @@ function playWindChime(x, y) {
 }
 
 function footstepBump(){
-  bumpX = (Math.random()-0.5)*2;
-  bumpY = (Math.random()-0.5)*2;
-  bumpEnd = ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) + 50;
+  const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  bumpX = (Math.random()-0.5) * FOOTSTEP_BUMP_RANGE;
+  bumpY = (Math.random()-0.5) * FOOTSTEP_BUMP_RANGE;
+  bumpEnd = now + FOOTSTEP_BUMP_DURATION_MS;
 }
 
 function pickupSparkle(x,y){
@@ -725,8 +752,16 @@ const renderOrder = ['tiles', 'items', 'portals', 'entitiesBelow', 'player', 'en
 
 function render(gameState=state, dt){
   const ctx = sctx;
+  if(!ctx) return;
+  ctx.setTransform(1,0,0,1,0,0);
   ctx.fillStyle='#000';
-  ctx.fillRect(0,0,disp.width,disp.height);
+  ctx.fillRect(0,0,scene.width,scene.height);
+  ctx.save();
+  ctx.scale(RENDER_SCALE, RENDER_SCALE);
+  ctx.imageSmoothingEnabled = false;
+  ctx.font = `${12 / RENDER_SCALE}px system-ui, sans-serif`;
+  ctx.fillStyle='#000';
+  ctx.fillRect(0,0,BASE_CANVAS_WIDTH,BASE_CANVAS_HEIGHT);
 
   const activeMap = gameState.map || mapIdForState();
   const { W, H } = mapWH(activeMap);
@@ -814,7 +849,7 @@ function render(gameState=state, dt){
       ctx.fillStyle='#f0f';
       ctx.beginPath(); ctx.arc(cx, cy, TS/2 - 2, 0, Math.PI*2); ctx.fill();
       ctx.strokeStyle='#f0f';
-      ctx.lineWidth=2;
+      ctx.lineWidth=2/RENDER_SCALE;
       ctx.beginPath(); ctx.arc(cx, cy, TS/2 + 2, 0, Math.PI*2); ctx.stroke();
       ctx.fillStyle='#fff'; ctx.fillText('@',px+4,py+12);
     }
@@ -834,6 +869,7 @@ function render(gameState=state, dt){
   // UI border
   ctx.strokeStyle='#2a3b2a';
   ctx.strokeRect(0.5,0.5,vW*TS-1,vH*TS-1);
+  ctx.restore();
 }
 
 function getNpcColor(n){
