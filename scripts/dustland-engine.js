@@ -176,6 +176,12 @@ function setMobileControls(on){
 }
 function toggleMobileControls(){ setMobileControls(!mobileControlsEnabled); }
 let tileCharsEnabled = true;
+let retroNpcArtEnabled = false;
+const retroNpcArtCache = new Map();
+const DEFAULT_NPC_COLOR = '#9ef7a0';
+const xmlEscapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
+xmlEscapeMap['"'] = '&quot;';
+xmlEscapeMap["'"] = '&#39;';
 function setTileChars(on){
   tileCharsEnabled = on;
   const btn=document.getElementById('tileCharToggle');
@@ -183,6 +189,130 @@ function setTileChars(on){
 }
 function toggleTileChars(){ setTileChars(!tileCharsEnabled); }
 globalThis.toggleTileChars = toggleTileChars;
+function setRetroNpcArt(on, skipStorage){
+  retroNpcArtEnabled = !!on;
+  const cb = document.getElementById('retroNpcToggle');
+  if(cb) cb.checked = retroNpcArtEnabled;
+  if(typeof document !== 'undefined'){
+    document.body?.classList?.toggle('retro-npc-art', retroNpcArtEnabled);
+  }
+  if(!skipStorage){
+    globalThis.localStorage?.setItem('retroNpcArt', retroNpcArtEnabled ? '1' : '0');
+  }
+  if(!retroNpcArtEnabled){
+    retroNpcArtCache.clear();
+  }
+}
+
+function sanitizeRetroText(value, fallback){
+  const base = (value ?? '').toString().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const txt = base.slice(0, 7);
+  if(txt) return txt;
+  return (fallback ?? 'NPC').toString().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7) || 'NPC';
+}
+
+function normalizeColor(hex){
+  if(typeof hex !== 'string') return DEFAULT_NPC_COLOR;
+  let col = hex.trim();
+  if(col.startsWith('#')) col = col.slice(1);
+  if(col.length === 3){
+    col = col.split('').map(c=>c+c).join('');
+  }
+  if(col.length !== 6 || /[^0-9a-f]/i.test(col)) return DEFAULT_NPC_COLOR;
+  return '#' + col.toLowerCase();
+}
+
+function adjustColor(hex, pct){
+  const base = normalizeColor(hex);
+  const raw = base.slice(1);
+  const ratio = Math.max(-1, Math.min(1, pct));
+  const adjust = (channel)=>{
+    if(ratio >= 0){
+      return Math.round(channel + (255 - channel) * ratio);
+    }
+    return Math.round(channel + channel * ratio);
+  };
+  const r = parseInt(raw.slice(0,2),16);
+  const g = parseInt(raw.slice(2,4),16);
+  const b = parseInt(raw.slice(4,6),16);
+  const toHex = (v)=>Math.max(0, Math.min(255, v)).toString(16).padStart(2,'0');
+  return '#' + toHex(adjust(r)) + toHex(adjust(g)) + toHex(adjust(b));
+}
+
+function escapeXml(str){
+  const txt = (str ?? '').toString();
+  return txt.replace(/[&<>"']/g, ch => xmlEscapeMap[ch] || ch);
+}
+
+function svgToDataUrl(svg){
+  try{
+    if(typeof TextEncoder !== 'undefined' && typeof globalThis.btoa === 'function'){
+      const bytes = new TextEncoder().encode(svg);
+      let binary='';
+      for(let i=0;i<bytes.length;i++) binary += String.fromCharCode(bytes[i]);
+      return 'data:image/svg+xml;base64,' + globalThis.btoa(binary);
+    }
+  }catch(err){/* ignore encoding errors */}
+  if(typeof globalThis.btoa === 'function'){
+    try{ return 'data:image/svg+xml;base64,' + globalThis.btoa(svg); }
+    catch(err){/* ignore and fallback */}
+  }
+  if(typeof Buffer !== 'undefined'){
+    return 'data:image/svg+xml;base64,' + Buffer.from(svg,'utf8').toString('base64');
+  }
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+function buildRetroNpcSvg(n){
+  const base = normalizeColor(getNpcColor(n));
+  const glow = adjustColor(base, 0.2);
+  const highlight = adjustColor(base, 0.4);
+  const shadow = adjustColor(base, -0.45);
+  const accent = adjustColor(base, -0.2);
+  const symbol = (getNpcSymbol(n) || '!').trim() || '!';
+  const label = sanitizeRetroText(n.shortName || n.title || n.name, symbol);
+  const faceSymbol = escapeXml(symbol);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <defs>
+    <linearGradient id="retroGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${highlight}" stop-opacity="0.9"/>
+      <stop offset="0.6" stop-color="${base}" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="${shadow}" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" ry="6" fill="#050805"/>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="6" ry="6" fill="#101810" stroke="${glow}" stroke-width="1.5"/>
+  <rect x="3.5" y="5" width="25" height="18" rx="5" ry="5" fill="url(#retroGlow)" stroke="${shadow}" stroke-width="1"/>
+  <path d="M7 20h18l-2.5 7H9.5z" fill="${accent}" opacity="0.9"/>
+  <circle cx="16" cy="14.5" r="5.5" fill="${base}" stroke="${highlight}" stroke-width="1.2"/>
+  <circle cx="13.5" cy="13.5" r="1.2" fill="#050805"/>
+  <circle cx="18.5" cy="13.5" r="1.2" fill="#050805"/>
+  <path d="M12.5 17h7l-3.5 2.5z" fill="${shadow}" opacity="0.85"/>
+  <text x="16" y="16.5" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="11" fill="#050805" opacity="0.35">${faceSymbol}</text>
+  <text x="16" y="28" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="7" fill="${highlight}" letter-spacing="1">${label}</text>
+</svg>`;
+}
+
+function getRetroNpcSprite(n){
+  const Img = globalThis.Image;
+  if(typeof Img !== 'function') return null;
+  const keyParts = [
+    n.id ?? n.npcId ?? n.slug ?? n.key ?? n.name ?? n.title ?? `${n.map ?? ''}:${n.x ?? ''},${n.y ?? ''}`,
+    getNpcColor(n) ?? DEFAULT_NPC_COLOR,
+    getNpcSymbol(n) ?? '!',
+    n.map ?? ''
+  ];
+  const key = keyParts.join('|');
+  const cached = retroNpcArtCache.get(key);
+  if(cached) return cached;
+  const svg = buildRetroNpcSvg(n);
+  const url = svgToDataUrl(svg);
+  const sprite = new Img();
+  sprite.decoding = 'sync';
+  sprite.src = url;
+  retroNpcArtCache.set(key, sprite);
+  return sprite;
+}
 function sfxTick(){
   if(!audioEnabled) return;
   const o=audioCtx.createOscillator();
@@ -549,6 +679,13 @@ function drawEntities(ctx, list, offX, offY){
   for(const n of list){
     if(n.x>=camX&&n.y>=camY&&n.x<camX+vW&&n.y<camY+vH){
       const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
+      if(retroNpcArtEnabled){
+        const sprite = getRetroNpcSprite(n);
+        if(sprite?.complete){
+          ctx.drawImage(sprite, vx, vy, TS, TS);
+          continue;
+        }
+      }
       ctx.fillStyle=getNpcColor(n); ctx.fillRect(vx,vy,TS,TS);
       ctx.fillStyle='#000'; ctx.fillText(getNpcSymbol(n),vx+5,vy+12);
     }
@@ -1137,6 +1274,10 @@ function openShop(npc) {
 
 globalThis.Dustland = globalThis.Dustland || {};
 globalThis.Dustland.openShop = openShop;
+globalThis.Dustland.retroNpcArt = {
+  isEnabled: () => retroNpcArtEnabled,
+  setEnabled: setRetroNpcArt
+};
 
 const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, openShop, playFX };
 Object.assign(globalThis, engineExports);
@@ -1212,6 +1353,16 @@ function runTests(){
   if(mobileBtn) mobileBtn.onclick=()=>toggleMobileControls();
   const tileCharBtn=document.getElementById('tileCharToggle');
   if(tileCharBtn) tileCharBtn.onclick=()=>toggleTileChars();
+  const retroToggle=document.getElementById('retroNpcToggle');
+  if(retroToggle){
+    const saved = globalThis.localStorage?.getItem('retroNpcArt');
+    const initial = saved === '1' || (saved !== '0' && retroToggle.checked);
+    setRetroNpcArt(initial, true);
+    retroToggle.checked = retroNpcArtEnabled;
+    retroToggle.addEventListener('change', ()=>setRetroNpcArt(retroToggle.checked));
+  } else {
+    setRetroNpcArt(retroNpcArtEnabled, true);
+  }
   const shotBtn=document.getElementById('screenshotBtn');
   if(shotBtn) shotBtn.onclick=()=>{
     const canvas=document.getElementById('game');
