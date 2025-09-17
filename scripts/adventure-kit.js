@@ -116,6 +116,12 @@ window.worldStamps = worldStamps;
 const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
 
+function getCanvasScale(rect = canvas.getBoundingClientRect()) {
+  const scaleX = rect.width / canvas.width || 1;
+  const scaleY = rect.height / canvas.height || 1;
+  return { scaleX, scaleY };
+}
+
 let dragTarget = null, settingStart = false, hoverTarget = null, didDrag = false, dragOffsetX = 0, dragOffsetY = 0;
 let placingType = null, placingPos = null, placingCb = null;
 let hoverTile = null;
@@ -123,7 +129,7 @@ var coordTarget = null;
 function setCoordTarget(v){ coordTarget = v; }
 globalThis.setCoordTarget = setCoordTarget;
 let worldZoom = 1, panX = 0, panY = 0;
-let panning = false, panStartX = 0, panStartY = 0, panMouseX = 0, panMouseY = 0;
+let panning = false, panStartX = 0, panStartY = 0, panMouseX = 0, panMouseY = 0, panScaleX = 1, panScaleY = 1;
 const baseTileW = canvas.width / WORLD_W;
 const baseTileH = canvas.height / WORLD_H;
 let problemRefs = [];
@@ -194,8 +200,9 @@ document.body.appendChild(loopMinus);
 function positionLoopControls() {
   if (!loopHover) return;
   const rect = canvas.getBoundingClientRect();
-  const sx = baseTileW * worldZoom;
-  const sy = baseTileH * worldZoom;
+  const { scaleX, scaleY } = getCanvasScale(rect);
+  const sx = baseTileW * worldZoom * scaleX;
+  const sy = baseTileH * worldZoom * scaleY;
   const px = rect.left + (loopHover.x - panX) * sx;
   const py = rect.top + (loopHover.y - panY) * sy;
   loopPlus.style.left = px + 'px';
@@ -4005,18 +4012,23 @@ document.getElementById('genQuestDialog').onclick = generateQuestTree;
 // --- Map interactions ---
 function canvasPos(ev) {
   const rect = canvas.getBoundingClientRect();
+  const { scaleX, scaleY } = getCanvasScale(rect);
   if (currentMap === 'world') {
     const sx = baseTileW * worldZoom, sy = baseTileH * worldZoom;
-    const x = clamp(Math.floor((ev.clientX - rect.left) / sx + panX), 0, WORLD_W - 1);
-    const y = clamp(Math.floor((ev.clientY - rect.top) / sy + panY), 0, WORLD_H - 1);
+    const px = (ev.clientX - rect.left) / scaleX;
+    const py = (ev.clientY - rect.top) / scaleY;
+    const x = clamp(Math.floor(px / sx + panX), 0, WORLD_W - 1);
+    const y = clamp(Math.floor(py / sy + panY), 0, WORLD_H - 1);
     return { x, y };
   } else {
     const I = moduleData.interiors.find(i => i.id === currentMap);
     if (!I) return { x: 0, y: 0 };
     const sx = canvas.width / I.w;
     const sy = canvas.height / I.h;
-    const x = clamp(Math.floor((ev.clientX - rect.left) / sx), 0, I.w - 1);
-    const y = clamp(Math.floor((ev.clientY - rect.top) / sy), 0, I.h - 1);
+    const px = (ev.clientX - rect.left) / scaleX;
+    const py = (ev.clientY - rect.top) / scaleY;
+    const x = clamp(Math.floor(px / sx), 0, I.w - 1);
+    const y = clamp(Math.floor(py / sy), 0, I.h - 1);
     return { x, y };
   }
 }
@@ -4066,6 +4078,10 @@ canvas.addEventListener('mousedown', ev => {
   if (ev.button === 2 && currentMap === 'world') {
     showLoopControls(null);
     panning = true;
+    const rect = canvas.getBoundingClientRect();
+    const { scaleX, scaleY } = getCanvasScale(rect);
+    panScaleX = scaleX;
+    panScaleY = scaleY;
     panMouseX = ev.clientX;
     panMouseY = ev.clientY;
     panStartX = panX;
@@ -4235,8 +4251,8 @@ canvas.addEventListener('mousedown', ev => {
 });
 canvas.addEventListener('mousemove', ev => {
   if (panning) {
-    const dx = (ev.clientX - panMouseX) / (baseTileW * worldZoom);
-    const dy = (ev.clientY - panMouseY) / (baseTileH * worldZoom);
+    const dx = (ev.clientX - panMouseX) / (baseTileW * worldZoom * panScaleX);
+    const dy = (ev.clientY - panMouseY) / (baseTileH * worldZoom * panScaleY);
     const maxPanX = WORLD_W - WORLD_W / worldZoom;
     const maxPanY = WORLD_H - WORLD_H / worldZoom;
     panX = clamp(panStartX - dx, 0, maxPanX);
@@ -4457,8 +4473,9 @@ canvas.addEventListener('wheel', ev => {
   if (currentMap !== 'world') return;
   ev.preventDefault();
   const rect = canvas.getBoundingClientRect();
-  const mx = ev.clientX - rect.left;
-  const my = ev.clientY - rect.top;
+  const { scaleX, scaleY } = getCanvasScale(rect);
+  const mx = (ev.clientX - rect.left) / scaleX;
+  const my = (ev.clientY - rect.top) / scaleY;
   const tileX = panX + mx / (baseTileW * worldZoom);
   const tileY = panY + my / (baseTileH * worldZoom);
   const factor = ev.deltaY < 0 ? 1.25 : 0.8;
