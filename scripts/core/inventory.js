@@ -402,6 +402,36 @@ function useItem(invIndex){
     emit(`used:${it.id}`, { item: it });
     return true;
   }
+  if(it.use.type==='grenade'){
+    const combatState = globalThis.__combatState;
+    const enemies = Array.isArray(combatState?.enemies) ? combatState.enemies : [];
+    if(enemies.length === 0){ log('You can only use that in combat.'); return false; }
+    const who = (party[selectedMember]||party[0]);
+    if(!who){ log('No party member to throw that.'); return false; }
+    const dmg = Math.max(0, it.use.amount | 0);
+    const msg = it.use.text || `${who.name} hurls ${it.name}!`;
+    log(msg);
+    if(typeof toast==='function') toast(msg);
+    const label = it.use.label || it.name;
+    const ignoreDefense = !!it.use.ignoreDefense;
+    const aoe = globalThis.playerItemAOEDamage;
+    if (typeof aoe === 'function') {
+      aoe(who, dmg, { label, ignoreDefense });
+    } else {
+      for (const target of enemies){
+        const dealt = ignoreDefense ? dmg : Math.max(0, dmg - (target.DEF || 0));
+        target.hp -= dealt;
+        if (dealt > 0) log?.(`${who.name}'s ${label} hits ${target.name} for ${dealt} damage.`);
+        if (target.hp <= 0) target.hp = 0;
+      }
+      globalThis.renderCombat?.();
+    }
+    emit('sfx','damage');
+    player.inv.splice(invIndex,1);
+    notifyInventoryChanged();
+    emit(`used:${it.id}`, { item: it });
+    return true;
+  }
   if(it.use.type==='cleanse'){
     const who = (party[selectedMember]||party[0]);
     if(!who){ log('No party member to cleanse.'); return false; }
