@@ -263,15 +263,127 @@ function svgToDataUrl(svg){
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
+function getRetroNpcArchetype(n){
+  const hasQuest = !!(n?.questId || (Array.isArray(n?.quests) && n.quests.length));
+  if(n?.inanimate) return 'object';
+  if(n?.combat?.auto) return 'automaton';
+  if(n?.attackOnSight) return 'feral';
+  if(n?.combat && !n?.tree) return 'warrior';
+  if(n?.trainer) return 'trainer';
+  if(n?.shop) return 'merchant';
+  if(hasQuest) return 'quest';
+  return 'wanderer';
+}
+
+const retroSilhouettes = {
+  wanderer(colors, faceSymbol){
+    const { base, highlight, shadow, accent, edge } = colors;
+    return `<g>
+      <path d="M10.5 17.5l5.5-4 5.5 4v3.5h-11z" fill="${base}" stroke="${edge}" stroke-width="0.8" stroke-linejoin="round"/>
+      <path d="M12.5 21h7l1.2 4.5H11.3z" fill="${accent}" stroke="${edge}" stroke-width="0.8" stroke-linejoin="round"/>
+      <circle cx="16" cy="11.5" r="4" fill="${highlight}" stroke="${edge}" stroke-width="1"/>
+      <path d="M13.2 21.2h5.6l-0.6 3.3h-4.4z" fill="${shadow}" opacity="0.45"/>
+      <text x="16" y="19.2" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="7" fill="#050805" opacity="0.4">${faceSymbol}</text>
+    </g>`;
+  },
+  merchant(colors, faceSymbol){
+    const { base, highlight, shadow, accent, edge } = colors;
+    return `<g>
+      <path d="M9 17.5c1.5-3 4-5 7-5s5.5 2 7 5v4H9z" fill="${base}" stroke="${edge}" stroke-width="0.8" stroke-linejoin="round"/>
+      <path d="M11 21h10l1 4.5H10z" fill="${accent}" stroke="${edge}" stroke-width="0.8" stroke-linejoin="round"/>
+      <circle cx="16" cy="11.5" r="3.8" fill="${highlight}" stroke="${edge}" stroke-width="1"/>
+      <rect x="20" y="18" width="5" height="6" rx="1" fill="${highlight}" stroke="${edge}" stroke-width="0.8"/>
+      <circle cx="22.5" cy="20.2" r="0.9" fill="${shadow}"/>
+      <path d="M12 21l4-4.8 4 4.8" fill="none" stroke="${shadow}" stroke-width="1.1" stroke-linecap="round"/>
+      <text x="12.5" y="23.5" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6" fill="#050805" opacity="0.45">${faceSymbol}</text>
+    </g>`;
+  },
+  trainer(colors, faceSymbol){
+    const { base, highlight, shadow, accent, edge } = colors;
+    return `<g>
+      <path d="M7.5 17l4.5-5h8l4.5 5-3.5 1.2-0.8 6.8h-9.4l-0.8-6.8z" fill="${base}" stroke="${edge}" stroke-width="0.9" stroke-linejoin="round"/>
+      <path d="M8 17l-2-4 3.5-2.2 4 3.2" fill="none" stroke="${accent}" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M24 17l2-4-3.5-2.2-4 3.2" fill="none" stroke="${accent}" stroke-width="1.2" stroke-linecap="round"/>
+      <circle cx="16" cy="10.8" r="3.5" fill="${highlight}" stroke="${edge}" stroke-width="1"/>
+      <path d="M13.5 23.5h5l-0.3 2.5h-4.4z" fill="${shadow}" opacity="0.5"/>
+      <text x="16" y="19" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6.5" fill="#050805" opacity="0.5">${faceSymbol}</text>
+    </g>`;
+  },
+  warrior(colors, faceSymbol){
+    const { base, highlight, shadow, accent, edge } = colors;
+    return `<g>
+      <path d="M9 16.5l7-5.5 7 5.5-1 3H10z" fill="${base}" stroke="${edge}" stroke-width="0.9" stroke-linejoin="round"/>
+      <path d="M12 19h8l2 7H10z" fill="${accent}" stroke="${edge}" stroke-width="0.9" stroke-linejoin="round"/>
+      <rect x="22" y="13" width="1.8" height="12" rx="0.6" fill="${highlight}" stroke="${edge}" stroke-width="0.6"/>
+      <path d="M23.8 13h1.8l-0.9 3.5z" fill="${shadow}" opacity="0.6"/>
+      <circle cx="16" cy="10.5" r="3.6" fill="${highlight}" stroke="${edge}" stroke-width="1"/>
+      <path d="M12.5 21h7l-3.5 3.5z" fill="${shadow}" opacity="0.5"/>
+      <text x="16" y="19" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6.5" fill="#050805" opacity="0.45">${faceSymbol}</text>
+    </g>`;
+  },
+  feral(colors){
+    const { base, highlight, shadow, accent, edge } = colors;
+    return `<g>
+      <path d="M9 13l4-5h6l4 5-1 3 2 5-3.5 4-3.5-2-3.5 2-3.5-4 2-5z" fill="${base}" stroke="${edge}" stroke-width="0.9" stroke-linejoin="round"/>
+      <path d="M11 11l5-2.5L21 11" fill="none" stroke="${highlight}" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M12 20l-1.5 2.5L13 25l3-1 3 1 2.5-2.5L21 20" fill="${accent}" stroke="${edge}" stroke-width="0.9" stroke-linejoin="round"/>
+      <circle cx="14" cy="16" r="1.1" fill="#050805"/>
+      <circle cx="18" cy="16" r="1.1" fill="#050805"/>
+      <path d="M14 19h4l-2 1.8z" fill="${shadow}" opacity="0.6"/>
+    </g>`;
+  },
+  automaton(colors, faceSymbol){
+    const { base, highlight, shadow, accent, edge } = colors;
+    return `<g>
+      <rect x="11" y="9" width="10" height="9" rx="2" fill="${base}" stroke="${edge}" stroke-width="1"/>
+      <rect x="12" y="18" width="8" height="6" rx="1.5" fill="${accent}" stroke="${edge}" stroke-width="0.9"/>
+      <rect x="13.5" y="5.5" width="5" height="4" rx="1" fill="${highlight}" stroke="${edge}" stroke-width="0.9"/>
+      <circle cx="14.5" cy="13" r="1.2" fill="#050805"/>
+      <circle cx="17.5" cy="13" r="1.2" fill="#050805"/>
+      <rect x="9" y="12.5" width="2.5" height="6.5" rx="1" fill="${accent}" stroke="${edge}" stroke-width="0.8"/>
+      <rect x="20.5" y="12.5" width="2.5" height="6.5" rx="1" fill="${accent}" stroke="${edge}" stroke-width="0.8"/>
+      <text x="16" y="21.5" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6" fill="#050805" opacity="0.45">${faceSymbol}</text>
+    </g>`;
+  },
+  object(colors, faceSymbol){
+    const { base, highlight, shadow, edge } = colors;
+    return `<g>
+      <rect x="8" y="11" width="16" height="14" rx="2" fill="${base}" stroke="${edge}" stroke-width="1"/>
+      <path d="M8 17h16" stroke="${shadow}" stroke-width="1"/>
+      <path d="M14 11v14" stroke="${shadow}" stroke-width="1"/>
+      <path d="M8 12.5l6 4.5" stroke="${highlight}" stroke-width="0.8"/>
+      <path d="M24 12.5l-6 4.5" stroke="${highlight}" stroke-width="0.8"/>
+      <text x="16" y="25" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="7" fill="#050805" opacity="0.5">${faceSymbol}</text>
+    </g>`;
+  },
+  quest(colors, faceSymbol){
+    const { highlight, accent, edge } = colors;
+    const symbol = faceSymbol || '★';
+    return `<g>
+      <path d="M16 7l2.6 5.8 6.4 0.5-4.9 4 1.6 6.3-5.7-3.2-5.7 3.2 1.6-6.3-4.9-4 6.4-0.5z" fill="${highlight}" stroke="${edge}" stroke-width="1" stroke-linejoin="round"/>
+      <path d="M16 9.8l-1.8 3.9-4.3 0.3 3.3 2.7-1.1 4.3 3.9-2.2 3.9 2.2-1.1-4.3 3.3-2.7-4.3-0.3z" fill="${accent}" opacity="0.85"/>
+      <text x="16" y="19.5" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="7" fill="#050805" opacity="0.55">${symbol}</text>
+    </g>`;
+  }
+};
+
+function renderRetroNpcSilhouette(type, colors, faceSymbol){
+  const factory = retroSilhouettes[type] || retroSilhouettes.wanderer;
+  return factory(colors, faceSymbol);
+}
+
 function buildRetroNpcSvg(n){
   const base = normalizeColor(getNpcColor(n));
   const glow = adjustColor(base, 0.2);
   const highlight = adjustColor(base, 0.4);
   const shadow = adjustColor(base, -0.45);
   const accent = adjustColor(base, -0.2);
+  const edge = adjustColor(base, -0.65);
   const symbol = (getNpcSymbol(n) || '!').trim() || '!';
   const label = sanitizeRetroText(n.shortName || n.title || n.name, symbol);
   const faceSymbol = escapeXml(symbol);
+  const archetype = getRetroNpcArchetype(n);
+  const silhouette = renderRetroNpcSilhouette(archetype, { base, glow, highlight, shadow, accent, edge }, faceSymbol);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
   <defs>
     <linearGradient id="retroGlow" x1="0" y1="0" x2="1" y2="1">
@@ -283,12 +395,7 @@ function buildRetroNpcSvg(n){
   <rect width="32" height="32" rx="6" ry="6" fill="#050805"/>
   <rect x="1.5" y="1.5" width="29" height="29" rx="6" ry="6" fill="#101810" stroke="${glow}" stroke-width="1.5"/>
   <rect x="3.5" y="5" width="25" height="18" rx="5" ry="5" fill="url(#retroGlow)" stroke="${shadow}" stroke-width="1"/>
-  <path d="M7 20h18l-2.5 7H9.5z" fill="${accent}" opacity="0.9"/>
-  <circle cx="16" cy="14.5" r="5.5" fill="${base}" stroke="${highlight}" stroke-width="1.2"/>
-  <circle cx="13.5" cy="13.5" r="1.2" fill="#050805"/>
-  <circle cx="18.5" cy="13.5" r="1.2" fill="#050805"/>
-  <path d="M12.5 17h7l-3.5 2.5z" fill="${shadow}" opacity="0.85"/>
-  <text x="16" y="16.5" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="11" fill="#050805" opacity="0.35">${faceSymbol}</text>
+  ${silhouette}
   <text x="16" y="28" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="7" fill="${highlight}" letter-spacing="1">${label}</text>
 </svg>`;
 }
