@@ -6,8 +6,14 @@ const DATA = `
   "name": "bunker-trainer-workshop",
   "props": {
     "fastTravelModules": [
-      { "script": "modules/world-one.module.js", "global": "WORLD_ONE_MODULE" },
-      { "script": "modules/world-two.module.js", "global": "WORLD_TWO_MODULE" }
+      {
+        "script": "modules/world-one.module.js",
+        "global": "WORLD_ONE_MODULE"
+      },
+      {
+        "script": "modules/world-two.module.js",
+        "global": "WORLD_TWO_MODULE"
+      }
     ]
   },
   "npcs": [
@@ -83,6 +89,15 @@ const DATA = `
       "value": 0,
       "use": null,
       "equip": null
+    },
+    {
+      "id": "training_mask",
+      "name": "Training Mask",
+      "type": "armor",
+      "tags": [
+        "mask"
+      ],
+      "persona": "mara.masked"
     }
   ],
   "quests": [],
@@ -121,6 +136,12 @@ const DATA = `
         "minDist": 0,
         "maxDist": 0,
         "loot": "cloth"
+      },
+      {
+        "templateId": null,
+        "minDist": 0,
+        "maxDist": 0,
+        "loot": "training_mask"
       }
     ]
   },
