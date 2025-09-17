@@ -16,43 +16,61 @@
     .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
     .controls .btn { flex: 0 0 auto; }
     label { display: block; font-weight: 600; margin: 16px 0 8px; }
+    .hidden { display: none !important; }
+    .flow { margin-top: 16px; }
   </style>
 </head>
 <body>
   <h1>Dustland Multiplayer</h1>
   <p class="muted">Share codes with friends to sync a co-op session. Hosting works on GitHub Pages—no servers required. Keep this tab open while you play.</p>
 
-  <section class="section" id="hostSection">
-    <h2>Host a Session</h2>
-    <p class="muted">Start hosting, generate a host code, and share it with your friend. When they send back an answer code, paste it below to link them.</p>
+  <section class="section" id="modeSection">
+    <h2>Choose a Role</h2>
+    <p class="muted">Dustland uses peer-to-peer links. Decide whether you're hosting or joining to walk through the setup.</p>
     <div class="controls">
-      <button class="btn" id="startHost">Start Hosting</button>
-      <button class="btn" id="newInvite" disabled>Create Host Code</button>
+      <button class="btn" id="chooseHost">Host a Game</button>
+      <button class="btn" id="chooseJoin">Join a Game</button>
     </div>
-    <label for="hostCode">Host Code</label>
-    <textarea id="hostCode" readonly placeholder="Click Create Host Code"></textarea>
-    <label for="answerInput">Answer Code</label>
-    <textarea id="answerInput" placeholder="Paste the answer code from your friend"></textarea>
-    <div class="controls">
-      <button class="btn" id="linkPlayer" disabled>Link Player</button>
-      <button class="btn" id="copyHost" disabled>Copy Host Code</button>
+  </section>
+
+  <section class="section hidden" id="hostSection">
+    <h2>Host a Session</h2>
+    <p class="muted">We'll spin up a room and produce a host code. Share it with your friend, then paste their answer code to finish linking.</p>
+    <div id="hostCodeGroup" class="flow hidden">
+      <label for="hostCode">Host Code</label>
+      <textarea id="hostCode" readonly placeholder="Generating host code..."></textarea>
+      <div class="controls">
+        <button class="btn" id="copyHost" disabled>Copy Host Code</button>
+        <button class="btn" id="newInvite" disabled>Generate New Host Code</button>
+      </div>
+    </div>
+    <div id="hostAnswerGroup" class="flow hidden">
+      <label for="answerInput">Answer Code</label>
+      <textarea id="answerInput" placeholder="Paste the answer code from your friend" disabled></textarea>
+      <div class="controls">
+        <button class="btn" id="linkPlayer" disabled>Link Player</button>
+      </div>
     </div>
     <div class="peer-list" id="peerList">No players linked yet.</div>
     <div class="status" id="hostStatus"></div>
   </section>
 
-  <section class="section" id="joinSection">
+  <section class="section hidden" id="joinSection">
     <h2>Join a Session</h2>
-    <p class="muted">Paste the host code you received. We will generate an answer code—send it back to the host and wait for them to confirm.</p>
-    <label for="joinCode">Host Code</label>
-    <textarea id="joinCode" placeholder="Paste the host code"></textarea>
-    <div class="controls">
-      <button class="btn" id="connectBtn">Generate Answer</button>
+    <p class="muted">Paste the host code from your friend. Once it's in place we'll walk you through generating the answer to send back.</p>
+    <div id="joinCodeGroup" class="flow">
+      <label for="joinCode">Host Code</label>
+      <textarea id="joinCode" placeholder="Paste the host code"></textarea>
     </div>
-    <label for="answerCode">Your Answer</label>
-    <textarea id="answerCode" readonly placeholder="Answer code appears here"></textarea>
-    <div class="controls">
-      <button class="btn" id="copyAnswer" disabled>Copy Answer</button>
+    <div id="joinAnswerGroup" class="flow hidden">
+      <div class="controls">
+        <button class="btn" id="connectBtn" disabled>Generate Answer</button>
+      </div>
+      <label for="answerCode">Your Answer</label>
+      <textarea id="answerCode" readonly placeholder="Answer code appears here"></textarea>
+      <div class="controls">
+        <button class="btn" id="copyAnswer" disabled>Copy Answer</button>
+      </div>
     </div>
     <div class="status" id="joinStatus"></div>
   </section>
