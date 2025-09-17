@@ -3,7 +3,7 @@
   const bus = globalThis.EventBus;
   const base = globalThis.Dustland.multiplayer || {};
   const NET_FLAG = '__fromNet';
-  const EVENTS = ['movement:player', 'combat:event', 'combat:started', 'combat:ended'];
+  const EVENTS = ['movement:player', 'combat:event', 'combat:started', 'combat:ended', 'multiplayer:presence'];
 
   function bindEvent(evt, handler){
     if (!bus?.on) return () => {};
@@ -21,6 +21,19 @@
   async function startHost(opts){
     const room = await base.startHost?.(opts);
     if (!room) return room;
+
+    const emitPresence = (status, extra = {}) => {
+      bus?.emit?.('multiplayer:presence', Object.assign({ role: 'host', status }, extra));
+    };
+
+    const emitPeers = (peers) => {
+      const list = Array.isArray(peers) ? peers.map(p => ({ id: p?.id, status: p?.status })) : [];
+      emitPresence('peers', { peers: list });
+    };
+
+    emitPresence('started');
+    let stopPeerFeed = null;
+
     const removers = EVENTS.map(evt => bindEvent(evt, data => {
       if (data && data[NET_FLAG]) return;
       room.broadcast?.({ type: 'event', evt, data });
@@ -31,10 +44,25 @@
         room.broadcast?.(msg, fromId);
       }
     });
+
+    const baseOnPeers = typeof room.onPeers === 'function' ? room.onPeers.bind(room) : null;
+    if (baseOnPeers) {
+      stopPeerFeed = baseOnPeers(peers => emitPeers(peers));
+      room.onPeers = fn => {
+        if (typeof fn !== 'function') return () => {};
+        const remove = baseOnPeers(fn);
+        return () => remove?.();
+      };
+    } else {
+      emitPeers([]);
+    }
+
     const originalClose = room.close?.bind(room);
     room.close = () => {
       removers.forEach(off => off());
       stopMessage?.();
+      stopPeerFeed?.();
+      emitPresence('closed');
       originalClose?.();
     };
     return room;
@@ -43,6 +71,11 @@
   async function connect(opts){
     const socket = await base.connect?.(opts);
     if (!socket) return socket;
+    const emitPresence = (status, extra = {}) => {
+      bus?.emit?.('multiplayer:presence', Object.assign({ role: 'client', status }, extra));
+    };
+    emitPresence('started');
+    emitPresence('linking');
     const sendEvent = (evt, data) => {
       if (data && data[NET_FLAG]) return;
       socket.send?.({ type: 'event', evt, data });
@@ -55,10 +88,18 @@
         globalThis.Dustland.gameState?.updateState?.(state => Object.assign(state, msg));
       }
     });
+    if (socket?.ready?.then) {
+      socket.ready.then(() => {
+        emitPresence('linked');
+      }).catch(err => {
+        emitPresence('error', { reason: err?.message || err });
+      });
+    }
     const originalClose = socket.close?.bind(socket);
     socket.close = () => {
       removers.forEach(off => off());
       stopMessage?.();
+      emitPresence('closed');
       originalClose?.();
     };
     return socket;

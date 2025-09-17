@@ -42,6 +42,100 @@ console.error = function(...args) {
   log('🛑 ' + args.join(' '), 'error');
 };
 
+const multiplayerBus = globalThis.Dustland?.eventBus || globalThis.EventBus;
+if (multiplayerBus?.on) {
+  (function(){
+    let peerSnapshot = [];
+    let peerHash = '';
+
+    function normalizePeers(list){
+      if (!Array.isArray(list)) return [];
+      return list.map((peer, idx) => {
+        const id = peer?.id ?? `peer-${idx + 1}`;
+        const status = peer?.status ?? 'open';
+        const label = (typeof peer?.id === 'string' && peer.id) ? peer.id : `Player ${idx + 1}`;
+        return { id, status, label };
+      });
+    }
+
+    multiplayerBus.on('multiplayer:presence', info => {
+      if (!info || !info.status) return;
+      const fromNet = !!info.__fromNet;
+      switch (info.status) {
+        case 'started':
+          if (info.role === 'host') {
+            log(fromNet ? 'Multiplayer: Host is online.' : 'Multiplayer: Hosting session active. Share the host code to invite players.');
+            if (!fromNet) {
+              peerSnapshot = [];
+              peerHash = '';
+            }
+          } else if (info.role === 'client') {
+            log(fromNet ? 'Multiplayer: A player is preparing to link.' : 'Multiplayer: Preparing link to host…');
+          }
+          break;
+        case 'linking':
+          if (info.role === 'client') {
+            log(fromNet ? 'Multiplayer: Player submitted an answer code.' : 'Multiplayer: Waiting for host to accept your answer.');
+          }
+          break;
+        case 'linked':
+          if (info.role === 'client') {
+            log(fromNet ? 'Multiplayer: Player link confirmed.' : 'Multiplayer: Link confirmed.');
+          }
+          break;
+        case 'peers':
+          if (info.role === 'host') {
+            const peers = normalizePeers(info.peers);
+            const hash = JSON.stringify(peers.map(p => `${p.id}:${p.status}`));
+            if (hash === peerHash) break;
+            const prevById = new Map(peerSnapshot.map(p => [p.id, p]));
+            const nextById = new Map(peers.map(p => [p.id, p]));
+            peers.forEach(peer => {
+              if (!prevById.has(peer.id)) log(`Multiplayer: ${peer.label} linked.`);
+            });
+            peerSnapshot.forEach(peer => {
+              if (!nextById.has(peer.id)) log(`Multiplayer: ${peer.label} disconnected.`);
+            });
+            const remoteCount = peers.length;
+            const total = remoteCount + 1;
+            const label = total === 1 ? 'player' : 'players';
+            log(`Multiplayer: ${total} ${label} in session (host + ${remoteCount}).`);
+            peerSnapshot = peers;
+            peerHash = hash;
+          }
+          break;
+        case 'closed':
+          if (info.role === 'host') {
+            log(fromNet ? 'Multiplayer: Host disconnected.' : 'Multiplayer: Hosting stopped.');
+            peerSnapshot = [];
+            peerHash = '';
+          } else if (info.role === 'client') {
+            log(fromNet ? 'Multiplayer: Player connection closed.' : 'Multiplayer: Disconnected from host.');
+          } else {
+            log('Multiplayer: Connection closed.');
+          }
+          break;
+        case 'error': {
+          const reason = info.reason ?? info.message;
+          let detail = 'Unknown error';
+          if (reason !== undefined) {
+            if (typeof reason === 'string') detail = reason;
+            else {
+              try {
+                detail = JSON.stringify(reason);
+              } catch (err) {
+                detail = String(reason);
+              }
+            }
+          }
+          log(`Multiplayer error: ${detail}`);
+          break;
+        }
+      }
+    });
+  })();
+}
+
 // --- Toasts (lightweight) ---
 const toastHost = document.createElement('div');
 toastHost.style.cssText = 'position:fixed;left:50%;top:24px;transform:translateX(-50%);z-index:9999;pointer-events:none';
