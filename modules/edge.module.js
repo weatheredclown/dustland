@@ -114,7 +114,11 @@ const DATA = `
       "combat": {
         "HP": 5,
         "ATK": 1,
-        "DEF": 0
+        "DEF": 0,
+        "scrap": {
+          "min": 3,
+          "max": 5
+        }
       }
     }
   ],
