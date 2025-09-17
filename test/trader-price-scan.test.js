@@ -19,7 +19,7 @@ test('collectPricingData summarizes dustland traders and scrap', () => {
   const trader = moduleReport.vendors.find(v => v.name === 'Cass the Trader');
   assert.ok(trader);
   const ids = trader.items.map(it => it.id);
-  assert.deepStrictEqual(ids, ['pipe_rifle', 'leather_jacket', 'water_flask']);
+  assert.deepStrictEqual(ids, ['pipe_rifle', 'leather_jacket', 'water_flask', 'frag_grenade', 'incendiary_grenade']);
   const pipeRifle = trader.items.find(it => it.id === 'pipe_rifle');
   assert.ok(pipeRifle);
   assert.strictEqual(pipeRifle.price, 0);

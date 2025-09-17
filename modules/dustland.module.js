@@ -205,6 +205,37 @@ const DATA = `
       }
     },
     {
+      "id": "frag_grenade",
+      "name": "Frag Grenade",
+      "type": "consumable",
+      "use": {
+        "type": "grenade",
+        "amount": 6,
+        "text": "You pull the pin and lob the grenade!"
+      },
+      "scrap": 300,
+      "value": 300,
+      "tags": [
+        "grenade"
+      ]
+    },
+    {
+      "id": "incendiary_grenade",
+      "name": "Incendiary Grenade",
+      "type": "consumable",
+      "use": {
+        "type": "grenade",
+        "amount": 5,
+        "text": "Flames burst across the battlefield."
+      },
+      "scrap": 300,
+      "value": 300,
+      "tags": [
+        "grenade",
+        "fire"
+      ]
+    },
+    {
       "map": "world",
       "x": 18,
       "y": 43,
@@ -1625,6 +1656,12 @@ const DATA = `
           },
           {
             "id": "water_flask"
+          },
+          {
+            "id": "frag_grenade"
+          },
+          {
+            "id": "incendiary_grenade"
           }
         ]
       },
