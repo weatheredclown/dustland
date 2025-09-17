@@ -279,46 +279,49 @@ const retroSilhouettes = {
   wanderer(colors, faceSymbol){
     const { base, highlight, shadow, accent, edge } = colors;
     return `<g>
-      <path d="M10.5 17.5l5.5-4 5.5 4v3.5h-11z" fill="${base}" stroke="${edge}" stroke-width="0.8" stroke-linejoin="round"/>
-      <path d="M12.5 21h7l1.2 4.5H11.3z" fill="${accent}" stroke="${edge}" stroke-width="0.8" stroke-linejoin="round"/>
-      <circle cx="16" cy="11.5" r="4" fill="${highlight}" stroke="${edge}" stroke-width="1"/>
-      <path d="M13.2 21.2h5.6l-0.6 3.3h-4.4z" fill="${shadow}" opacity="0.45"/>
-      <text x="16" y="19.2" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="7" fill="#050805" opacity="0.4">${faceSymbol}</text>
+      <path d="M8.5 23l3.8-9 3.7-3 3.7 3 3.8 9H8.5z" fill="${base}" stroke="${edge}" stroke-width="0.85" stroke-linejoin="round"/>
+      <path d="M19.5 10.5L15 20.8l-3.5 2.2h8.6z" fill="${accent}" stroke="${edge}" stroke-width="0.75" stroke-linejoin="round"/>
+      <path d="M23.5 6.5l2.2-1 0.8 1.4-0.6 17.6" fill="none" stroke="${edge}" stroke-width="1" stroke-linecap="round"/>
+      <path d="M24.3 7.5l-0.6 15.5" stroke="${highlight}" stroke-width="0.9" stroke-linecap="round" opacity="0.6"/>
+      <circle cx="15.8" cy="10.2" r="3.6" fill="${highlight}" stroke="${edge}" stroke-width="1"/>
+      <path d="M11.3 19.8l-1.6 3.2h5.2z" fill="${shadow}" opacity="0.55"/>
+      <text x="15" y="18.8" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6.8" fill="#050805" opacity="0.45">${faceSymbol}</text>
     </g>`;
   },
   merchant(colors, faceSymbol){
     const { base, highlight, shadow, accent, edge } = colors;
     return `<g>
-      <path d="M9 17.5c1.5-3 4-5 7-5s5.5 2 7 5v4H9z" fill="${base}" stroke="${edge}" stroke-width="0.8" stroke-linejoin="round"/>
-      <path d="M11 21h10l1 4.5H10z" fill="${accent}" stroke="${edge}" stroke-width="0.8" stroke-linejoin="round"/>
-      <circle cx="16" cy="11.5" r="3.8" fill="${highlight}" stroke="${edge}" stroke-width="1"/>
-      <rect x="20" y="18" width="5" height="6" rx="1" fill="${highlight}" stroke="${edge}" stroke-width="0.8"/>
-      <circle cx="22.5" cy="20.2" r="0.9" fill="${shadow}"/>
-      <path d="M12 21l4-4.8 4 4.8" fill="none" stroke="${shadow}" stroke-width="1.1" stroke-linecap="round"/>
-      <text x="12.5" y="23.5" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6" fill="#050805" opacity="0.45">${faceSymbol}</text>
+      <rect x="6.5" y="12" width="8" height="11.5" rx="2" fill="${shadow}" stroke="${edge}" stroke-width="0.9"/>
+      <path d="M11 16l6.5-4 5 4 1.5 7.5H9.5z" fill="${base}" stroke="${edge}" stroke-width="0.85" stroke-linejoin="round"/>
+      <path d="M18 16.2l-2.4 5.5h6.8z" fill="${accent}" stroke="${edge}" stroke-width="0.75" stroke-linejoin="round"/>
+      <circle cx="17" cy="10.8" r="3.4" fill="${highlight}" stroke="${edge}" stroke-width="0.95"/>
+      <path d="M24 18.2l3 1.8-2 5-3.2-2.1z" fill="${highlight}" stroke="${edge}" stroke-width="0.85" stroke-linejoin="round"/>
+      <circle cx="25.7" cy="20.2" r="0.9" fill="${shadow}"/>
+      <text x="13.8" y="23.5" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6.2" fill="#050805" opacity="0.45">${faceSymbol}</text>
     </g>`;
   },
   trainer(colors, faceSymbol){
     const { base, highlight, shadow, accent, edge } = colors;
     return `<g>
-      <path d="M7.5 17l4.5-5h8l4.5 5-3.5 1.2-0.8 6.8h-9.4l-0.8-6.8z" fill="${base}" stroke="${edge}" stroke-width="0.9" stroke-linejoin="round"/>
-      <path d="M8 17l-2-4 3.5-2.2 4 3.2" fill="none" stroke="${accent}" stroke-width="1.2" stroke-linecap="round"/>
-      <path d="M24 17l2-4-3.5-2.2-4 3.2" fill="none" stroke="${accent}" stroke-width="1.2" stroke-linecap="round"/>
-      <circle cx="16" cy="10.8" r="3.5" fill="${highlight}" stroke="${edge}" stroke-width="1"/>
-      <path d="M13.5 23.5h5l-0.3 2.5h-4.4z" fill="${shadow}" opacity="0.5"/>
-      <text x="16" y="19" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6.5" fill="#050805" opacity="0.5">${faceSymbol}</text>
+      <path d="M8 20l2.5-7 5.5-2.5 5.5 2.5L24 20l-2.5 6.5h-11z" fill="${base}" stroke="${edge}" stroke-width="0.9" stroke-linejoin="round"/>
+      <path d="M9.5 15.5L6 12l3.5-2 4 4.2" fill="none" stroke="${accent}" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M22.5 15.5L26 12l-3.5-2-4 4.2" fill="none" stroke="${accent}" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M15.5 21h5.3l1.1 3.5h-7.5z" fill="${shadow}" opacity="0.55"/>
+      <circle cx="16" cy="9.8" r="3.3" fill="${highlight}" stroke="${edge}" stroke-width="0.95"/>
+      <path d="M16 7.2l1.8-2.2h1.6l-1.2 2.7" fill="${highlight}" stroke="${edge}" stroke-width="0.7" stroke-linejoin="round"/>
+      <text x="16" y="18.8" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6.3" fill="#050805" opacity="0.52">${faceSymbol}</text>
     </g>`;
   },
   warrior(colors, faceSymbol){
     const { base, highlight, shadow, accent, edge } = colors;
     return `<g>
-      <path d="M9 16.5l7-5.5 7 5.5-1 3H10z" fill="${base}" stroke="${edge}" stroke-width="0.9" stroke-linejoin="round"/>
-      <path d="M12 19h8l2 7H10z" fill="${accent}" stroke="${edge}" stroke-width="0.9" stroke-linejoin="round"/>
-      <rect x="22" y="13" width="1.8" height="12" rx="0.6" fill="${highlight}" stroke="${edge}" stroke-width="0.6"/>
-      <path d="M23.8 13h1.8l-0.9 3.5z" fill="${shadow}" opacity="0.6"/>
-      <circle cx="16" cy="10.5" r="3.6" fill="${highlight}" stroke="${edge}" stroke-width="1"/>
-      <path d="M12.5 21h7l-3.5 3.5z" fill="${shadow}" opacity="0.5"/>
-      <text x="16" y="19" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6.5" fill="#050805" opacity="0.45">${faceSymbol}</text>
+      <path d="M9.5 19.5l3.2-8.2L16 8l3.3 3.3 3.2 8.2-2 7.5h-8z" fill="${base}" stroke="${edge}" stroke-width="0.95" stroke-linejoin="round"/>
+      <path d="M12.5 21h7l0.8 4.5h-8.6z" fill="${accent}" stroke="${edge}" stroke-width="0.8" stroke-linejoin="round"/>
+      <circle cx="16" cy="10" r="3.4" fill="${highlight}" stroke="${edge}" stroke-width="1"/>
+      <path d="M23.5 9l4-0.5-1.2 13-3.6-2.2z" fill="${highlight}" stroke="${edge}" stroke-width="0.8" stroke-linejoin="round"/>
+      <path d="M25.7 9.2l-0.9 9" stroke="${shadow}" stroke-width="1" stroke-linecap="round"/>
+      <path d="M10.2 18.5l-4.2 2.5 4 4.2 3-2.1z" fill="${shadow}" stroke="${edge}" stroke-width="0.85" stroke-linejoin="round"/>
+      <text x="16" y="18.5" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6.5" fill="#050805" opacity="0.45">${faceSymbol}</text>
     </g>`;
   },
   feral(colors){
