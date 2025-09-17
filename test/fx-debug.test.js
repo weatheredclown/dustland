@@ -26,6 +26,26 @@ test('damage flash checkbox updates fxConfig', async () => {
   assert.equal(window.fxConfig.damageFlash, true);
 });
 
+test('footstep bump checkbox updates fxConfig', async () => {
+  const document = makeDocument();
+  const window = { document };
+  window.fxConfig = { footstepBump: false };
+  const sandbox = { window, document, fxConfig: window.fxConfig };
+  sandbox.globalThis = sandbox;
+  sandbox.setTimeout = setTimeout;
+  sandbox.clearTimeout = clearTimeout;
+  document.getElementById('fxPanel').appendChild(document.getElementById('fxFootstepBump'));
+  const code = await fs.readFile(new URL('../scripts/supporting/fx-debug.js', import.meta.url), 'utf8');
+  vm.runInNewContext(code, sandbox);
+  const cb = document.getElementById('fxFootstepBump');
+  cb.checked = true;
+  cb.dispatchEvent({ type:'change' });
+  assert.equal(window.fxConfig.footstepBump, true);
+  cb.checked = false;
+  cb.dispatchEvent({ type:'change' });
+  assert.equal(window.fxConfig.footstepBump, false);
+});
+
 test('fx checkboxes apply classes and update config', async () => {
   const document = makeDocument();
   const window = { document };

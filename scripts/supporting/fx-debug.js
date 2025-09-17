@@ -11,6 +11,7 @@
   const scanlines = document.getElementById('fxScanlines');
   const shear = document.getElementById('fxCrtShear');
   const colorBleed = document.getElementById('fxColorBleed');
+  const footstepBump = document.getElementById('fxFootstepBump');
   const grayscale = document.getElementById('fxGrayscale');
   const adrTint = document.getElementById('fxAdrTint');
   const canvas = document.getElementById('game');
@@ -60,6 +61,7 @@
     if(scanlines) scanlines.checked = !!globalThis.fxConfig.scanlines;
     if(shear) shear.checked = !!globalThis.fxConfig.crtShear;
     if(colorBleed) colorBleed.checked = !!globalThis.fxConfig.colorBleed;
+    if(footstepBump) footstepBump.checked = !!globalThis.fxConfig.footstepBump;
     if(grayscale) grayscale.checked = !!globalThis.fxConfig.grayscale;
     if(adrTint) adrTint.checked = globalThis.fxConfig.adrenalineTint !== false;
     applyFx();
@@ -89,6 +91,7 @@
   scanlines?.addEventListener('change', e => { globalThis.fxConfig.scanlines = e.target.checked; applyFx(); });
   shear?.addEventListener('change', e => { globalThis.fxConfig.crtShear = e.target.checked; applyFx(); });
   colorBleed?.addEventListener('change', e => { globalThis.fxConfig.colorBleed = e.target.checked; applyFx(); });
+  footstepBump?.addEventListener('change', e => { globalThis.fxConfig.footstepBump = e.target.checked; });
   grayscale?.addEventListener('change', e => { globalThis.fxConfig.grayscale = e.target.checked; globalThis.updateHUD?.(); });
   adrTint?.addEventListener('change', e => { globalThis.fxConfig.adrenalineTint = e.target.checked; globalThis.updateHUD?.(); });
 

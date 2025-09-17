@@ -695,6 +695,8 @@ function playWindChime(x, y) {
 }
 
 function footstepBump(){
+  const fx = globalThis.fxConfig;
+  if(!fx || !fx.footstepBump) return;
   const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
   bumpX = (Math.random()-0.5) * FOOTSTEP_BUMP_RANGE;
   bumpY = (Math.random()-0.5) * FOOTSTEP_BUMP_RANGE;
