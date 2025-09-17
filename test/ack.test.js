@@ -188,6 +188,29 @@ test('playtestModule includes zones', () => {
   global.open = origOpen;
 });
 
+test('zones can be walled with directional entrances', () => {
+  applyLoadedModule({ seed: 1 });
+  document.getElementById('zoneMap').value = 'world';
+  document.getElementById('zoneX').value = 2;
+  document.getElementById('zoneY').value = 3;
+  document.getElementById('zoneW').value = 4;
+  document.getElementById('zoneH').value = 5;
+  document.getElementById('zoneWalled').checked = true;
+  document.getElementById('zoneEntranceNorth').checked = true;
+  document.getElementById('zoneEntranceWest').checked = true;
+  addZone();
+  const zone = moduleData.zones[moduleData.zones.length - 1];
+  assert.deepStrictEqual(zone, {
+    map: 'world',
+    x: 2,
+    y: 3,
+    w: 4,
+    h: 5,
+    walled: true,
+    entrances: { north: true, west: true }
+  });
+});
+
 test('zone field updates apply immediately', () => {
   applyLoadedModule({ seed: 1, zones: [{ map: 'world', x: 0, y: 0, w: 1, h: 1 }] });
   editZone(0);

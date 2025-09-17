@@ -2316,3 +2316,43 @@ test('combat uses stats and equipment', () => {
 
   Math.random = origRand;
 });
+
+test('registerZoneEffects overlays walled zones onto map tiles', () => {
+  const baseX = 10;
+  const baseY = 5;
+  const width = 5;
+  const height = 4;
+  const grid = gridFor('world');
+  assert.ok(Array.isArray(grid));
+  assert.ok(grid.length > baseY + height);
+  assert.ok(Array.isArray(grid[0]));
+  assert.ok(grid[0].length > baseX + width);
+  const prevCells = [];
+  for (let dy = 0; dy < height; dy++) {
+    for (let dx = 0; dx < width; dx++) {
+      const x = baseX + dx;
+      const y = baseY + dy;
+      prevCells.push({ x, y, value: grid[y][x] });
+      grid[y][x] = TILE.SAND;
+    }
+  }
+  const prevZones = globalThis.Dustland.zoneEffects.length;
+  try {
+    registerZoneEffects([{ map: 'world', x: baseX, y: baseY, w: width, h: height, walled: true, entrances: { south: true, west: true } }]);
+    assert.deepStrictEqual(grid[baseY].slice(baseX, baseX + width), Array(width).fill(TILE.WALL));
+    const expectedBottom = [TILE.WALL, TILE.SAND, TILE.SAND, TILE.WALL, TILE.WALL];
+    assert.deepStrictEqual(grid[baseY + height - 1].slice(baseX, baseX + width), expectedBottom);
+    const leftSide = [];
+    const rightSide = [];
+    for (let dy = 0; dy < height; dy++) {
+      leftSide.push(grid[baseY + dy][baseX]);
+      rightSide.push(grid[baseY + dy][baseX + width - 1]);
+    }
+    assert.deepStrictEqual(leftSide, [TILE.WALL, TILE.SAND, TILE.SAND, TILE.WALL]);
+    assert.deepStrictEqual(rightSide, Array(height).fill(TILE.WALL));
+    assert.strictEqual(grid[baseY + 1][baseX + 2], TILE.SAND);
+  } finally {
+    prevCells.forEach(({ x, y, value }) => { grid[y][x] = value; });
+    globalThis.Dustland.zoneEffects.length = prevZones;
+  }
+});

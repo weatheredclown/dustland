@@ -242,7 +242,18 @@ globalThis.ACK_MODULE_SCHEMA = {
           "y": { "type": "number" },
           "w": { "type": "number" },
           "h": { "type": "number" },
-          "weather": { "type": ["string", "object"] }
+          "weather": { "type": ["string", "object"] },
+          "walled": { "type": "boolean" },
+          "entrances": {
+            "type": "object",
+            "properties": {
+              "north": { "type": "boolean" },
+              "south": { "type": "boolean" },
+              "east": { "type": "boolean" },
+              "west": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          }
         },
         "required": ["map", "x", "y", "w", "h"],
         "additionalProperties": true

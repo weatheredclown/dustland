@@ -254,9 +254,58 @@ const tileEvents = [];
 const zoneEffects = [];
 const enemyBanks = {};
 function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
+function computeZoneWallGap(length, enabled){
+  if(!enabled || length <= 0) return null;
+  const size = Math.min(2, length);
+  const start = Math.floor((length - size) / 2);
+  return { start, end: start + size };
+}
+function zoneGapContains(index, gap){
+  return !!gap && index >= gap.start && index < gap.end;
+}
+function applyZoneWalls(z){
+  if(!z || !z.walled || typeof setTile !== 'function') return;
+  const map = z.map || 'world';
+  const grid = typeof gridFor === 'function' ? gridFor(map) : null;
+  if(!grid) return;
+  const width = Math.max(1, Math.round(Number(z.w) || 0));
+  const height = Math.max(1, Math.round(Number(z.h) || 0));
+  if(!Number.isFinite(width) || !Number.isFinite(height)) return;
+  const baseX = Math.round(Number(z.x) || 0);
+  const baseY = Math.round(Number(z.y) || 0);
+  const entrances = typeof z.entrances === 'object' && z.entrances ? z.entrances : {};
+  const northGap = computeZoneWallGap(width, entrances.north);
+  const southGap = computeZoneWallGap(width, entrances.south);
+  const westGap = computeZoneWallGap(height, entrances.west);
+  const eastGap = computeZoneWallGap(height, entrances.east);
+  const wallTile = typeof TILE === 'object' && TILE ? TILE.WALL : 6;
+  for(let i=0;i<width;i++){
+    if(zoneGapContains(i, northGap) || (height === 1 && zoneGapContains(i, southGap))) continue;
+    setTile(map, baseX + i, baseY, wallTile);
+  }
+  if(height > 1){
+    const by = baseY + height - 1;
+    for(let i=0;i<width;i++){
+      if(zoneGapContains(i, southGap)) continue;
+      setTile(map, baseX + i, by, wallTile);
+    }
+  }
+  for(let i=0;i<height;i++){
+    if(zoneGapContains(i, westGap) || (width === 1 && zoneGapContains(i, eastGap))) continue;
+    setTile(map, baseX, baseY + i, wallTile);
+  }
+  if(width > 1){
+    const rx = baseX + width - 1;
+    for(let i=0;i<height;i++){
+      if(zoneGapContains(i, eastGap)) continue;
+      setTile(map, rx, baseY + i, wallTile);
+    }
+  }
+}
 function registerZoneEffects(list){
   (list||[]).forEach(z => {
     zoneEffects.push(z);
+    applyZoneWalls(z);
     const id = z.useItem?.id;
     if(id && globalThis.EventBus?.on){
       globalThis.EventBus.on(`used:${id}`, () => {
