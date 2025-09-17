@@ -3,57 +3,65 @@
   const bus = globalThis.EventBus;
   const base = globalThis.Dustland.multiplayer || {};
   const NET_FLAG = '__fromNet';
+  const EVENTS = ['movement:player', 'combat:event', 'combat:started', 'combat:ended'];
 
-  async function startHost(opts){
-    const wss = await base.startHost?.(opts);
-    if(!wss) return wss;
-    const broadcast = (obj, skip)=>{
-      const data = JSON.stringify(obj);
-      wss.clients.forEach(c=>{ if(c.readyState===1 && c!==skip) c.send(data); });
-    };
-    const relay = (evt,data)=>{ if(data && data[NET_FLAG]) return; broadcast({type:'event',evt,data}); };
-    bus?.on?.('movement:player', d=>relay('movement:player',d));
-    bus?.on?.('combat:event', d=>relay('combat:event',d));
-    bus?.on?.('combat:started', d=>relay('combat:started',d));
-    bus?.on?.('combat:ended', d=>relay('combat:ended',d));
-    wss.on('connection', ws=>{
-      ws.on('message', msg=>{
-        try{
-          const obj = JSON.parse(msg);
-          if(obj?.type==='event' && obj.evt){
-            obj.data = obj.data || {}; obj.data[NET_FLAG] = true;
-            bus?.emit?.(obj.evt, obj.data);
-            broadcast(obj, ws);
-          }
-        }catch{/* ignore */}
-      });
-    });
-    return wss;
+  function bindEvent(evt, handler){
+    if (!bus?.on) return () => {};
+    bus.on(evt, handler);
+    return () => bus?.off?.(evt, handler);
   }
 
-  async function connect(url){
-    const ws = await base.connect?.(url);
-    const send = obj=> ws?.send?.(JSON.stringify(obj));
-    const relay = (evt,data)=>{ if(data && data[NET_FLAG]) return; send({type:'event',evt,data}); };
-    bus?.on?.('movement:player', d=>relay('movement:player',d));
-    bus?.on?.('combat:event', d=>relay('combat:event',d));
-    bus?.on?.('combat:started', d=>relay('combat:started',d));
-    bus?.on?.('combat:ended', d=>relay('combat:ended',d));
-    const orig = ws.onmessage;
-    ws.onmessage = ev=>{
-      try{
-        const obj = JSON.parse(ev.data);
-        if(obj?.type==='event' && obj.evt){
-          obj.data = obj.data || {}; obj.data[NET_FLAG] = true;
-          bus?.emit?.(obj.evt, obj.data);
-        } else {
-          globalThis.Dustland.gameState?.updateState?.(s=>Object.assign(s,obj));
-        }
-      }catch{
-        if(typeof orig==='function') orig(ev);
+  function tagAndEmit(msg){
+    if (!msg?.evt) return;
+    const payload = msg.data || {};
+    payload[NET_FLAG] = true;
+    bus?.emit?.(msg.evt, payload);
+  }
+
+  async function startHost(opts){
+    const room = await base.startHost?.(opts);
+    if (!room) return room;
+    const removers = EVENTS.map(evt => bindEvent(evt, data => {
+      if (data && data[NET_FLAG]) return;
+      room.broadcast?.({ type: 'event', evt, data });
+    }));
+    const stopMessage = room.onMessage?.((msg, fromId) => {
+      if (msg?.type === 'event') {
+        tagAndEmit(msg);
+        room.broadcast?.(msg, fromId);
       }
+    });
+    const originalClose = room.close?.bind(room);
+    room.close = () => {
+      removers.forEach(off => off());
+      stopMessage?.();
+      originalClose?.();
     };
-    return ws;
+    return room;
+  }
+
+  async function connect(opts){
+    const socket = await base.connect?.(opts);
+    if (!socket) return socket;
+    const sendEvent = (evt, data) => {
+      if (data && data[NET_FLAG]) return;
+      socket.send?.({ type: 'event', evt, data });
+    };
+    const removers = EVENTS.map(evt => bindEvent(evt, data => sendEvent(evt, data)));
+    const stopMessage = socket.onMessage?.(msg => {
+      if (msg?.type === 'event') {
+        tagAndEmit(msg);
+      } else if (msg && typeof msg === 'object') {
+        globalThis.Dustland.gameState?.updateState?.(state => Object.assign(state, msg));
+      }
+    });
+    const originalClose = socket.close?.bind(socket);
+    socket.close = () => {
+      removers.forEach(off => off());
+      stopMessage?.();
+      originalClose?.();
+    };
+    return socket;
   }
 
   globalThis.Dustland.multiplayer = { startHost, connect };

@@ -6,43 +6,58 @@ import { makeDocument } from './test-harness.js';
 
 const code = await fs.readFile(new URL('../scripts/supporting/multiplayer-lobby.js', import.meta.url), 'utf8');
 
-test('refresh shows fetch error', async () => {
+function buildDom(){
   const document = makeDocument();
-  document.body.appendChild(document.getElementById('sessions'));
-  document.body.appendChild(document.getElementById('refresh'));
-  document.body.appendChild(document.getElementById('host'));
+  const body = document.body;
+  const config = {
+    startHost: 'button',
+    newInvite: 'button',
+    linkPlayer: 'button',
+    copyHost: 'button',
+    hostCode: 'textarea',
+    answerInput: 'textarea',
+    hostStatus: 'div',
+    peerList: 'div',
+    joinCode: 'textarea',
+    connectBtn: 'button',
+    answerCode: 'textarea',
+    copyAnswer: 'button',
+    joinStatus: 'div'
+  };
+  Object.entries(config).forEach(([id, tag]) => {
+    const el = document.createElement(tag);
+    if (tag === 'textarea') el.value = '';
+    el.id = id;
+    if (id === 'hostCode' || id === 'answerCode') el.readOnly = true;
+    body.appendChild(el);
+  });
+  return document;
+}
+
+test('start host surfaces errors and re-enables button', async () => {
+  const document = buildDom();
   const context = {
     document,
-    fetch: () => Promise.reject(new Error('boom')),
-    alert: () => {},
-    prompt: () => 'Game',
-    Dustland: { multiplayer: { startHost: async () => {} } },
-    window: { location: { href: '' } }
+    navigator: {},
+    Dustland: { multiplayer: { startHost: async () => { throw new Error('no rtc'); } } }
   };
   vm.createContext(context);
   vm.runInContext(code, context);
-  await new Promise(r => setTimeout(r));
-  assert.ok(document.getElementById('sessions').textContent.includes('boom'));
+  await document.getElementById('startHost').onclick();
+  assert.equal(document.getElementById('startHost').disabled, false);
+  assert.ok(document.getElementById('hostStatus').textContent.includes('no rtc'));
 });
 
-test('host shows start error', async () => {
-  const document = makeDocument();
-  document.body.appendChild(document.getElementById('sessions'));
-  document.body.appendChild(document.getElementById('refresh'));
-  document.body.appendChild(document.getElementById('host'));
-  const messages = [];
+test('generate answer handles invalid host code', async () => {
+  const document = buildDom();
   const context = {
     document,
-    fetch: () => Promise.resolve({ json: () => [] }),
-    alert: m => messages.push(m),
-    prompt: () => 'Game',
-    Dustland: { multiplayer: { startHost: async () => { throw new Error('no ws'); } } },
-    window: { location: { href: '' } }
+    navigator: {},
+    Dustland: { multiplayer: { connect: async () => { throw new Error('bad code'); } } }
   };
   vm.createContext(context);
   vm.runInContext(code, context);
-  await Promise.resolve();
-  await context.document.getElementById('host').onclick();
-  assert.ok(messages[0].includes('no ws'));
-  assert.equal(document.getElementById('host').disabled, false);
+  document.getElementById('joinCode').value = 'foo';
+  await document.getElementById('connectBtn').onclick();
+  assert.ok(document.getElementById('joinStatus').textContent.includes('bad code'));
 });

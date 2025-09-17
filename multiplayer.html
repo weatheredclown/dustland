@@ -2,14 +2,61 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Dustland Lobby</title>
+  <title>Dustland Link Exchange</title>
   <link rel="stylesheet" href="./dustland.css">
+  <style>
+    body { max-width: 780px; margin: 40px auto; padding: 0 20px; font-family: 'Pixelify Sans', sans-serif; }
+    h1, h2 { text-transform: uppercase; letter-spacing: 2px; }
+    textarea { width: 100%; box-sizing: border-box; min-height: 80px; font-family: monospace; font-size: 13px; padding: 8px; }
+    .row { margin-bottom: 24px; }
+    .status { font-size: 14px; color: #9ec2a4; margin-top: 8px; min-height: 20px; }
+    .muted { color: #9ea5a1; font-size: 14px; }
+    .peer-list { font-size: 14px; color: #d4f3d8; margin-top: 8px; }
+    .section { border: 1px solid #2f3b2f; padding: 16px; border-radius: 6px; background: rgba(15, 24, 15, 0.6); margin-bottom: 20px; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .controls .btn { flex: 0 0 auto; }
+    label { display: block; font-weight: 600; margin: 16px 0 8px; }
+  </style>
 </head>
 <body>
-  <h1>LAN Lobby</h1>
-  <button id="host">Host</button>
-  <button id="refresh">Refresh</button>
-  <ul id="sessions"></ul>
+  <h1>Dustland Multiplayer</h1>
+  <p class="muted">Share codes with friends to sync a co-op session. Hosting works on GitHub Pages—no servers required. Keep this tab open while you play.</p>
+
+  <section class="section" id="hostSection">
+    <h2>Host a Session</h2>
+    <p class="muted">Start hosting, generate a host code, and share it with your friend. When they send back an answer code, paste it below to link them.</p>
+    <div class="controls">
+      <button class="btn" id="startHost">Start Hosting</button>
+      <button class="btn" id="newInvite" disabled>Create Host Code</button>
+    </div>
+    <label for="hostCode">Host Code</label>
+    <textarea id="hostCode" readonly placeholder="Click Create Host Code"></textarea>
+    <label for="answerInput">Answer Code</label>
+    <textarea id="answerInput" placeholder="Paste the answer code from your friend"></textarea>
+    <div class="controls">
+      <button class="btn" id="linkPlayer" disabled>Link Player</button>
+      <button class="btn" id="copyHost" disabled>Copy Host Code</button>
+    </div>
+    <div class="peer-list" id="peerList">No players linked yet.</div>
+    <div class="status" id="hostStatus"></div>
+  </section>
+
+  <section class="section" id="joinSection">
+    <h2>Join a Session</h2>
+    <p class="muted">Paste the host code you received. We will generate an answer code—send it back to the host and wait for them to confirm.</p>
+    <label for="joinCode">Host Code</label>
+    <textarea id="joinCode" placeholder="Paste the host code"></textarea>
+    <div class="controls">
+      <button class="btn" id="connectBtn">Generate Answer</button>
+    </div>
+    <label for="answerCode">Your Answer</label>
+    <textarea id="answerCode" readonly placeholder="Answer code appears here"></textarea>
+    <div class="controls">
+      <button class="btn" id="copyAnswer" disabled>Copy Answer</button>
+    </div>
+    <div class="status" id="joinStatus"></div>
+  </section>
+
   <script defer src="./scripts/supporting/multiplayer-sync.js"></script>
   <script defer src="./scripts/multiplayer.js"></script>
   <script defer src="./scripts/supporting/multiplayer-lobby.js"></script>
