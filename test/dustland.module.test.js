@@ -30,7 +30,14 @@ test('dustland module includes patrolling enemy', () => {
     { x: 110, y: 39 },
     { x: 90, y: 39 }
   ]);
-  assert.deepStrictEqual(npc.combat, { HP: 7, ATK: 2, DEF: 1, loot: 'raider_knife', auto: true });
+  assert.deepStrictEqual(npc.combat, {
+    HP: 7,
+    ATK: 2,
+    DEF: 1,
+    loot: 'raider_knife',
+    scrap: { min: 3, max: 5 },
+    auto: true
+  });
 });
 
 test('dustland module includes plot improvements', () => {

@@ -886,6 +886,10 @@ const DATA = `
         "HP": 6,
         "ATK": 1,
         "loot": "water_flask",
+        "scrap": {
+          "min": 3,
+          "max": 5
+        },
         "auto": true
       },
       "symbol": "!"
@@ -1563,7 +1567,11 @@ const DATA = `
       "combat": {
         "ATK": 4,
         "DEF": 5,
-        "loot": "raider_knife"
+        "loot": "raider_knife",
+        "scrap": {
+          "min": 3,
+          "max": 5
+        }
       },
       "symbol": "!"
     },
@@ -1681,6 +1689,10 @@ const DATA = `
         "HP": 5,
         "ATK": 1,
         "loot": "water_flask",
+        "scrap": {
+          "min": 3,
+          "max": 5
+        },
         "auto": true
       },
       "symbol": "!"
@@ -1711,6 +1723,10 @@ const DATA = `
         "HP": 4,
         "ATK": 1,
         "loot": "water_flask",
+        "scrap": {
+          "min": 3,
+          "max": 5
+        },
         "auto": true
       },
       "symbol": "!",
@@ -1742,6 +1758,10 @@ const DATA = `
         "HP": 6,
         "ATK": 1,
         "loot": "raider_knife",
+        "scrap": {
+          "min": 3,
+          "max": 5
+        },
         "auto": true
       },
       "symbol": "!"
@@ -1772,6 +1792,10 @@ const DATA = `
         "HP": 6,
         "ATK": 2,
         "loot": "medkit",
+        "scrap": {
+          "min": 3,
+          "max": 5
+        },
         "auto": true
       },
       "symbol": "!"
@@ -1802,6 +1826,10 @@ const DATA = `
         "HP": 7,
         "ATK": 2,
         "loot": "goggles",
+        "scrap": {
+          "min": 3,
+          "max": 5
+        },
         "auto": true
       },
       "symbol": "!"
@@ -1862,7 +1890,11 @@ const DATA = `
         "HP": 15,
         "ATK": 3,
         "DEF": 2,
-        "loot": "raider_knife"
+        "loot": "raider_knife",
+        "scrap": {
+          "min": 3,
+          "max": 5
+        }
       },
       "portraitSheet": "assets/portraits/dustland-module/iron_brute_4.png",
       "portraitLock": false
@@ -1912,6 +1944,10 @@ const DATA = `
         "ATK": 2,
         "DEF": 1,
         "loot": "raider_knife",
+        "scrap": {
+          "min": 3,
+          "max": 5
+        },
         "auto": true
       },
       "symbol": "!"
@@ -2214,6 +2250,10 @@ const DATA = `
         "ATK": 3,
         "DEF": 2,
         "loot": "raider_knife",
+        "scrap": {
+          "min": 3,
+          "max": 5
+        },
         "boss": true,
         "special": {
           "cue": "crackles with energy!",
@@ -2455,7 +2495,11 @@ const DATA = `
         "HP": 5,
         "ATK": 2,
         "DEF": 1,
-        "loot": "rat_tail"
+        "loot": "rat_tail",
+        "scrap": {
+          "min": 3,
+          "max": 5
+        }
       },
       "symbol": "!"
     },
@@ -2490,7 +2534,11 @@ const DATA = `
         "HP": 8,
         "ATK": 3,
         "DEF": 2,
-        "loot": "copper_cog"
+        "loot": "copper_cog",
+        "scrap": {
+          "min": 3,
+          "max": 5
+        }
       },
       "symbol": "!"
     },
@@ -2587,7 +2635,11 @@ const DATA = `
       "combat": {
         "HP": 6,
         "ATK": 2,
-        "DEF": 0
+        "DEF": 0,
+        "scrap": {
+          "min": 3,
+          "max": 5
+        }
       }
     },
     {
@@ -2598,7 +2650,11 @@ const DATA = `
       "combat": {
         "HP": 5,
         "ATK": 2,
-        "DEF": 0
+        "DEF": 0,
+        "scrap": {
+          "min": 3,
+          "max": 5
+        }
       }
     },
     {
@@ -2609,7 +2665,11 @@ const DATA = `
       "combat": {
         "HP": 4,
         "ATK": 1,
-        "DEF": 0
+        "DEF": 0,
+        "scrap": {
+          "min": 3,
+          "max": 5
+        }
       }
     },
     {
@@ -2621,7 +2681,11 @@ const DATA = `
         "HP": 20,
         "ATK": 6,
         "DEF": 4,
-        "challenge": 9
+        "challenge": 9,
+        "scrap": {
+          "min": 3,
+          "max": 5
+        }
       }
     },
     {
@@ -2637,6 +2701,10 @@ const DATA = `
         "special": {
           "cue": "lashes the wind with scythes!",
           "dmg": 10
+        },
+        "scrap": {
+          "min": 3,
+          "max": 5
         }
       }
     },
@@ -2654,6 +2722,10 @@ const DATA = `
         "special": {
           "cue": "shakes the desert!",
           "dmg": 12
+        },
+        "scrap": {
+          "min": 3,
+          "max": 5
         }
       }
     }
