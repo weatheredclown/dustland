@@ -172,6 +172,7 @@ function setMobileControls(on){
     if(mobileWrap){ mobileWrap.remove(); mobileWrap=null; }
     mobilePad=null; mobileAB=null; mobileButtons={};
   }
+  updateCanvasStretch();
   return mobileButtons;
 }
 function toggleMobileControls(){ setMobileControls(!mobileControlsEnabled); }
@@ -567,6 +568,75 @@ const disp = document.getElementById('game');
 const dctx = disp.getContext('2d');
 const scene = document.createElement('canvas'); scene.width=disp.width; scene.height=disp.height; const sctx=scene.getContext('2d');
 const prev = document.createElement('canvas'); prev.width=disp.width; prev.height=disp.height; const pctx=prev.getContext('2d');
+
+const CRT_CANVAS_MAX_SCALE = 3;
+const CRT_DESKTOP_BREAKPOINT = 900;
+const crtTube = disp ? disp.parentElement : null;
+
+function setCanvasDimensions(width, height){
+  if(!disp) return;
+  const widthPx = `${Math.floor(width)}px`;
+  const heightPx = `${Math.floor(height)}px`;
+  disp.style.width = widthPx;
+  disp.style.height = heightPx;
+  if(crtTube){
+    crtTube.style.width = widthPx;
+    crtTube.style.height = heightPx;
+  }
+}
+
+function updateCanvasStretch(){
+  if(!disp) return;
+  const baseWidth = disp.width || disp.clientWidth || 0;
+  const baseHeight = disp.height || disp.clientHeight || 0;
+  if(!baseWidth || !baseHeight){
+    if(crtTube){
+      crtTube.style.width = '';
+      crtTube.style.height = '';
+    }
+    disp.style.width = '';
+    disp.style.height = '';
+    return;
+  }
+  const viewportWidth = (typeof window !== 'undefined' && typeof window.innerWidth === 'number') ? window.innerWidth : Number.POSITIVE_INFINITY;
+  if(viewportWidth < CRT_DESKTOP_BREAKPOINT){
+    setCanvasDimensions(baseWidth, baseHeight);
+    return;
+  }
+  const crtWrapCandidate = crtTube ? crtTube.parentElement : null;
+  const crtWrap = (crtWrapCandidate && crtWrapCandidate.classList?.contains('crt-wrap')) ? crtWrapCandidate : document.querySelector('.crt-wrap');
+  if(!crtWrap){
+    setCanvasDimensions(baseWidth, baseHeight);
+    return;
+  }
+  const wrapParent = crtWrap.parentElement;
+  const wrap = (wrapParent && wrapParent.classList?.contains('wrap')) ? wrapParent : document.querySelector('.wrap');
+  const availableWidth = Math.max(0, crtWrap.clientWidth || 0);
+  const availableHeight = Math.max(0, (wrap?.clientHeight || crtWrap.clientHeight || (typeof window !== 'undefined' && typeof window.innerHeight === 'number' ? window.innerHeight : baseHeight)));
+  if(!availableWidth || !availableHeight){
+    setCanvasDimensions(baseWidth, baseHeight);
+    return;
+  }
+  const maxWidth = baseWidth * CRT_CANVAS_MAX_SCALE;
+  const maxHeight = baseHeight * CRT_CANVAS_MAX_SCALE;
+  let targetWidth = Math.min(availableWidth, maxWidth);
+  let targetHeight = targetWidth * (baseHeight / baseWidth);
+  const heightLimit = Math.min(availableHeight, maxHeight);
+  if(targetHeight > heightLimit){
+    targetHeight = heightLimit;
+    targetWidth = targetHeight * (baseWidth / baseHeight);
+  }
+  if(!Number.isFinite(targetWidth) || !Number.isFinite(targetHeight) || targetWidth <= baseWidth || targetHeight <= baseHeight){
+    setCanvasDimensions(baseWidth, baseHeight);
+    return;
+  }
+  setCanvasDimensions(targetWidth, targetHeight);
+}
+
+if(typeof window !== 'undefined' && window.addEventListener){
+  window.addEventListener('resize', updateCanvasStretch);
+}
+updateCanvasStretch();
 
 // Font init (prevents invisible glyphs on some canvases)
 sctx.font = '12px system-ui, sans-serif';
@@ -966,6 +1036,7 @@ function updateTabsLayout(){
     if(tabs) tabs.style.display='flex';
     showTab(activeTab);
   }
+  updateCanvasStretch();
 }
 window.addEventListener('resize', updateTabsLayout);
 updateTabsLayout();
