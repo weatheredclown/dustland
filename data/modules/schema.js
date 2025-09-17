@@ -213,6 +213,25 @@ globalThis.ACK_MODULE_SCHEMA = {
         "additionalProperties": true
       }
     },
+    "schedules": {
+      "type": "object",
+      "properties": {
+        "world": { "$ref": "#/definitions/scheduleList" },
+        "npcs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "npcId": { "type": "string" },
+              "timeline": { "$ref": "#/definitions/scheduleList" }
+            },
+            "required": ["npcId", "timeline"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "zones": {
       "type": "array",
       "items": {
@@ -290,6 +309,151 @@ globalThis.ACK_MODULE_SCHEMA = {
     "dialogTree": {
       "type": "object",
       "additionalProperties": { "$ref": "#/definitions/dialogNode" }
+    },
+    "scheduleList": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/scheduleEntry" }
+    },
+    "scheduleEntry": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "event": { "type": "string" },
+        "payload": { "type": "object" },
+        "trigger": { "$ref": "#/definitions/scheduleTrigger" },
+        "repeat": { "$ref": "#/definitions/repeatRule" },
+        "prerequisites": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/schedulePrerequisite" }
+        },
+        "notes": { "type": "string" }
+      },
+      "required": ["event", "trigger"],
+      "additionalProperties": false
+    },
+    "scheduleTrigger": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "immediate" }
+          },
+          "required": ["type"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "time" },
+            "hour": { "type": "integer", "minimum": 0, "maximum": 23 },
+            "minute": { "type": "integer", "minimum": 0, "maximum": 59 },
+            "day": { "type": ["integer", "string"] }
+          },
+          "required": ["type", "hour"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "delay" },
+            "hours": { "type": "integer", "minimum": 0 },
+            "minutes": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["type"],
+          "anyOf": [
+            { "required": ["hours"] },
+            { "required": ["minutes"] }
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "afterEvent" },
+            "eventId": { "type": "string" },
+            "offsetHours": { "type": "integer", "minimum": 0 },
+            "offsetMinutes": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["type", "eventId"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "repeatRule": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": ["none", "interval", "daily", "weekly"]
+        },
+        "intervalHours": { "type": "integer", "minimum": 0 },
+        "intervalMinutes": { "type": "integer", "minimum": 0 },
+        "maxRuns": { "type": "integer", "minimum": 1 },
+        "days": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "skipIfActive": { "type": "boolean" }
+      },
+      "required": ["type"],
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "interval" } } },
+          "then": {
+            "anyOf": [
+              { "required": ["intervalHours"] },
+              { "required": ["intervalMinutes"] }
+            ]
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "weekly" } } },
+          "then": { "required": ["days"] }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "schedulePrerequisite": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "flag" },
+            "flag": { "type": "string" },
+            "value": { "type": ["boolean", "string", "number"] }
+          },
+          "required": ["type", "flag"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "questState" },
+            "questId": { "type": "string" },
+            "state": { "type": "string" }
+          },
+          "required": ["type", "questId", "state"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "eventComplete" },
+            "eventId": { "type": "string" }
+          },
+          "required": ["type", "eventId"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "script" },
+            "handler": { "type": "string" }
+          },
+          "required": ["type", "handler"],
+          "additionalProperties": false
+        }
+      ]
     },
     "dialogNode": {
       "type": "object",
