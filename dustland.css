@@ -989,6 +989,24 @@ input[type="range"] {
         gap: 8px
     }
 
+    #settings .field--toggle {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px
+    }
+
+    #settings .field--toggle label {
+        font-size: 14px;
+        color: #c8f7c9
+    }
+
+    #settings .field--toggle input[type=checkbox] {
+        width: 18px;
+        height: 18px;
+        accent-color: #9ef7a0;
+        cursor: pointer
+    }
+
     #fxPanel {
         position: fixed;
         top: 10px;

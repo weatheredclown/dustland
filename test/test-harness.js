@@ -36,6 +36,8 @@ class Elem {
     };
     this.listeners={};
     this.value='';
+    this.checked=false;
+    this.type='';
     this.textContent='';
   }
   appendChild(child){ this.children.push(child); child.parentElement=this; }
