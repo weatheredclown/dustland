@@ -2604,6 +2604,214 @@ const DATA = `
         }
       },
       "symbol": "?"
+    },
+    {
+      "id": "oc3abv_siltpack",
+      "map": "room_oc3abv",
+      "x": 24,
+      "y": 46,
+      "color": "#f66",
+      "name": "Siltpack Ravener",
+      "title": "Ambush Brood",
+      "desc": "Dust-choked hunters sniffing out living heat.",
+      "prompt": "Pack of dust-choked hunters ready to pounce",
+      "portraitSheet": "assets/portraits/dustland-module/scrap_mutt_4.png",
+      "portraitLock": false,
+      "symbol": "!",
+      "tree": {
+        "start": {
+          "text": "Dust-raw beasts skitter from the dunes, circling the entry.",
+          "choices": [
+            {
+              "label": "(Fight)",
+              "to": "do_fight"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "combat": {
+        "HP": 14,
+        "ATK": 4,
+        "DEF": 1,
+        "count": 3,
+        "requires": "tag:ranged",
+        "special": {
+          "cue": "spews toxic grit!",
+          "dmg": 3,
+          "poison": {
+            "strength": 2,
+            "duration": 3
+          },
+          "spread": true,
+          "delay": 600
+        },
+        "challenge": 18,
+        "loot": "frag_grenade",
+        "lootChance": 0.35,
+        "scrap": {
+          "min": 6,
+          "max": 9
+        }
+      }
+    },
+    {
+      "id": "oc3abv_grinders",
+      "map": "room_oc3abv",
+      "x": 24,
+      "y": 42,
+      "color": "#f66",
+      "name": "Grinder Matriarchs",
+      "title": "Shrapnel Choir",
+      "desc": "Armored shriekers plated in scavenged sawblades.",
+      "prompt": "Saw-edged matriarchs screaming for blood",
+      "portraitSheet": "assets/portraits/dustland-module/iron_brute_4.png",
+      "portraitLock": false,
+      "symbol": "!",
+      "tree": {
+        "start": {
+          "text": "Shrieking matriarchs rake the stone, demanding tribute.",
+          "choices": [
+            {
+              "label": "(Fight)",
+              "to": "do_fight"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "combat": {
+        "HP": 22,
+        "ATK": 5,
+        "DEF": 2,
+        "count": 4,
+        "requires": "artifact_blade",
+        "special": {
+          "cue": "unleashes a shrapnel howl!",
+          "dmg": 4,
+          "stun": 1,
+          "delay": 700
+        },
+        "challenge": 24,
+        "loot": "armor_polish",
+        "lootChance": 0.4,
+        "scrap": {
+          "min": 7,
+          "max": 11
+        }
+      }
+    },
+    {
+      "id": "oc3abv_glasspride",
+      "map": "room_oc3abv",
+      "x": 24,
+      "y": 38,
+      "color": "#f66",
+      "name": "Glasswing Pride",
+      "title": "Phase Predators",
+      "desc": "Shimmering beasts phasing between realities.",
+      "prompt": "Glassy predators rippling in and out of phase",
+      "portraitSheet": "assets/portraits/dustland-module/vine_creature_4.png",
+      "portraitLock": false,
+      "symbol": "!",
+      "tree": {
+        "start": {
+          "text": "Glasswing predators flicker through the air ahead.",
+          "choices": [
+            {
+              "label": "(Fight)",
+              "to": "do_fight"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "combat": {
+        "HP": 28,
+        "ATK": 6,
+        "DEF": 3,
+        "count": 5,
+        "requires": "wand",
+        "special": {
+          "cue": "rends reality with shrieking arcs!",
+          "dmg": 5,
+          "spread": true,
+          "delay": 650
+        },
+        "challenge": 32,
+        "loot": "adrenaline_shot",
+        "lootChance": 0.5,
+        "scrap": {
+          "min": 8,
+          "max": 12
+        }
+      }
+    },
+    {
+      "id": "oc3abv_sovereign",
+      "map": "room_oc3abv",
+      "x": 30,
+      "y": 3,
+      "color": "#ff3366",
+      "name": "Sovereign of Dust",
+      "title": "Warden of the Hollow",
+      "desc": "A colossal warform woven from every ruin the Dustland devoured.",
+      "prompt": "Towering dust-forged warform crowned with razorsand",
+      "portraitSheet": "assets/portraits/dustland-module/dune_reaper_4.png",
+      "portraitLock": false,
+      "symbol": "!",
+      "tree": {
+        "start": {
+          "text": "The Dustland Sovereign drifts above the altar, eyes blazing.",
+          "choices": [
+            {
+              "label": "(Fight)",
+              "to": "do_fight"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "combat": {
+        "HP": 160,
+        "ATK": 12,
+        "DEF": 6,
+        "boss": true,
+        "requires": [
+          "artifact_blade",
+          "epic_blade"
+        ],
+        "special": {
+          "cue": "erupts into a storm of razorsand!",
+          "dmg": 12,
+          "poison": {
+            "strength": 3,
+            "duration": 3
+          },
+          "stun": 1,
+          "spread": true,
+          "delay": 500
+        },
+        "challenge": 45,
+        "loot": "epic_armor",
+        "lootChance": 0.9,
+        "scrap": {
+          "min": 15,
+          "max": 25
+        }
+      }
     }
   ],
   "events": [
