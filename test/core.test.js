@@ -112,6 +112,7 @@ const files = [
   '../scripts/core/combat.js',
   '../scripts/core/quests.js',
   '../scripts/core/npc.js',
+  '../scripts/core/profiles.js',
   '../scripts/game-state.js',
   '../scripts/dustland-core.js'
 ];
@@ -1811,6 +1812,78 @@ test('save/load preserves persona assignments', () => {
   load();
   global.localStorage = orig;
   assert.strictEqual(party[0].persona, 'mask');
+});
+
+test('save/load retains effect packs and persona boosts', () => {
+  party.length = 0;
+  party.flags = {};
+  const member = new Character('p1', 'P1', 'Role');
+  party.join(member);
+  Dustland.gameState.updateState(s => { s.party = party; });
+  const persona = { id: 'boost', label: 'Boost', mods: { STR: 2 } };
+  Dustland.gameState.setPersona(persona.id, persona);
+  Dustland.gameState.applyPersona('p1', persona.id);
+  assert.strictEqual(party[0].stats.STR, 6);
+  const effectPack = { 'test:event': [{ effect: 'addFlag', flag: 'charged' }] };
+  Dustland.gameState.loadEffectPacks(effectPack);
+  const store = {};
+  const origStorage = global.localStorage;
+  global.localStorage = {
+    setItem(k, v){ store[k] = v; },
+    getItem(k){ return store[k]; },
+    removeItem(k){ delete store[k]; }
+  };
+  save();
+  Dustland.gameState.updateState(s => {
+    s.party = party;
+    s.effectPacks = {};
+    s.personas = {};
+  });
+  party[0].persona = undefined;
+  delete party.flags.charged;
+  const origBus = global.EventBus;
+  const origDustBus = global.Dustland.eventBus;
+  const listeners = new Map();
+  const freshBus = {
+    on(evt, handler){
+      if(!listeners.has(evt)) listeners.set(evt, new Set());
+      listeners.get(evt).add(handler);
+    },
+    off(evt, handler){
+      listeners.get(evt)?.delete(handler);
+    },
+    emit(evt, payload){
+      listeners.get(evt)?.forEach(fn => fn(payload));
+    }
+  };
+  global.EventBus = freshBus;
+  globalThis.EventBus = freshBus;
+  global.Dustland.eventBus = freshBus;
+  const origApply = Dustland.effects.apply;
+  const applied = [];
+  Dustland.effects.apply = (list, ctx) => {
+    applied.push(JSON.parse(JSON.stringify(list)));
+    return origApply.call(Dustland.effects, list, ctx);
+  };
+  try {
+    load();
+    const state = Dustland.gameState.getState();
+    assert.strictEqual(party[0].persona, 'boost');
+    assert.strictEqual(party[0].stats.STR, 6);
+    assert.strictEqual(party[0]._bonus.STR, 2);
+    assert.deepStrictEqual(state.effectPacks['test:event'], effectPack['test:event']);
+    assert.deepStrictEqual(state.personas.boost, persona);
+    delete party.flags.charged;
+    EventBus.emit('test:event', { party });
+    assert.ok(party.flags.charged);
+    assert.strictEqual(applied.length, 1);
+  } finally {
+    Dustland.effects.apply = origApply;
+    global.EventBus = origBus;
+    globalThis.EventBus = origBus;
+    global.Dustland.eventBus = origDustBus;
+    global.localStorage = origStorage;
+  }
 });
 
 test('load bypasses legacy loader for v2 saves', async () => {
