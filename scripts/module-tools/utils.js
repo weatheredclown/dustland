@@ -14,9 +14,24 @@ function readModule(file) {
   const start = text.indexOf(token);
   if (start === -1) throw new Error('DATA block not found');
   const jsonStart = start + token.length;
-  const jsonEnd = text.lastIndexOf('`');
+  let jsonEnd = -1;
+  let suffixStart = -1;
+  let searchFrom = jsonStart;
+  while (jsonEnd === -1 && searchFrom < text.length) {
+    const tick = text.indexOf('`', searchFrom);
+    if (tick === -1) break;
+    let cursor = tick + 1;
+    while (cursor < text.length && /\s/.test(text[cursor])) cursor += 1;
+    if (text[cursor] === ';') {
+      jsonEnd = tick;
+      suffixStart = tick;
+      break;
+    }
+    searchFrom = tick + 1;
+  }
+  if (jsonEnd === -1) throw new Error('DATA block end not found');
   const prefix = text.slice(0, jsonStart);
-  const suffix = text.slice(jsonEnd);
+  const suffix = text.slice(suffixStart);
   const jsonText = text.slice(jsonStart, jsonEnd);
   return {
     data: JSON.parse(jsonText),
