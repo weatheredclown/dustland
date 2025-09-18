@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="geometricPrecision">
+  <defs>
+    <linearGradient id="icon08-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1d180f" />
+      <stop offset="1" stop-color="#2f2311" />
+    </linearGradient>
+    <radialGradient id="icon08-glow" cx="50%" cy="50%" r="60%">
+      <stop offset="0" stop-color="#ffe6a0" stop-opacity="0.9" />
+      <stop offset="1" stop-color="#120d06" stop-opacity="0.12" />
+    </radialGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="url(#icon08-bg)" />
+  <rect x="1.5" y="1.5" width="29" height="29" rx="6" fill="#141007" stroke="#ffe6a0" stroke-width="1.5" opacity="0.88" />
+  <circle cx="16" cy="16" r="11.2" fill="url(#icon08-glow)" />
+  <path d="M13 8.5l3 1.1 3-1.1 3.2 5.9-3.2 5.2-3 1.3-3-1.3-3.2-5.2z" fill="#2c1e0b" stroke="#ffe6a0" stroke-width="0.9" />
+  <path d="M16 9.6l1.2 11.4-1.2 4-1.2-4z" fill="#fbd58d" />
+  <path d="M11 14.4l1.8 1.4-1.5 2.6-2-2.4z" fill="#e6bf71" />
+  <path d="M21 14.4l-1.8 1.4 1.5 2.6 2-2.4z" fill="#e6bf71" />
+  <path d="M13 22.5l3 4.8 3-4.8" fill="none" stroke="#fbd58d" stroke-width="1.1" stroke-linecap="round" />
+  <circle cx="16" cy="16" r="2.8" fill="#1b1207" stroke="#ffe6a0" stroke-width="0.8" />
+  <circle cx="16" cy="16" r="1.1" fill="#fbd58d" />
+</svg>
