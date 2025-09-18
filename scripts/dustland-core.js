@@ -769,6 +769,127 @@ function deepClone(value){
   return JSON.parse(JSON.stringify(value));
 }
 
+function deepEqual(a, b){
+  if(a === b) return true;
+  if(a == null || b == null) return a === b;
+  if(Array.isArray(a)){
+    if(!Array.isArray(b) || a.length !== b.length) return false;
+    for(let i = 0; i < a.length; i++){
+      if(!deepEqual(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  if(Array.isArray(b)) return false;
+  if(typeof a === 'object' && typeof b === 'object'){
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if(keysA.length !== keysB.length) return false;
+    for(const key of keysA){
+      if(!Object.prototype.hasOwnProperty.call(b, key)) return false;
+      if(!deepEqual(a[key], b[key])) return false;
+    }
+    return true;
+  }
+  return Number.isNaN(a) && Number.isNaN(b);
+}
+
+const SHOP_DEFAULTS = Object.freeze({
+  grudge: 0,
+  markup: 2,
+  refresh: 0,
+  refreshHours: 0,
+  waveIndex: 0,
+  vending: false
+});
+
+function getNpcTemplateDefinition(id){
+  if(!id) return null;
+  const moduleName = globalThis.Dustland?.currentModule;
+  if(moduleName){
+    const moduleData = globalThis.Dustland?.loadedModules?.[moduleName];
+    const found = moduleData?.npcs?.find(n => n.id === id);
+    if(found) return found;
+  }
+  if(Array.isArray(npcTemplates)){
+    const tmpl = npcTemplates.find(n => n?.id === id);
+    if(tmpl) return tmpl;
+  }
+  return null;
+}
+
+function normalizeShopData(entry){
+  if(!entry) return null;
+  const shop = entry.shop;
+  if(shop === true) return {};
+  if(shop && typeof shop === 'object') return shop;
+  return null;
+}
+
+function shopValuesEqual(key, current, base){
+  const defaultVal = Object.prototype.hasOwnProperty.call(SHOP_DEFAULTS, key) ? SHOP_DEFAULTS[key] : undefined;
+  const baseVal = base !== undefined ? base : defaultVal;
+  const currentVal = current !== undefined ? current : baseVal;
+  if(Array.isArray(currentVal) || Array.isArray(baseVal)) return deepEqual(currentVal, baseVal);
+  if((currentVal && typeof currentVal === 'object') || (baseVal && typeof baseVal === 'object')){
+    return deepEqual(currentVal, baseVal);
+  }
+  return currentVal === baseVal;
+}
+
+function serializeShopPatch(currentShop, baseShop){
+  const current = currentShop || null;
+  const base = baseShop || null;
+  if(!current && !base) return null;
+  const patch = {};
+  const currInv = Array.isArray(current?.inv) ? current.inv : [];
+  const baseInv = Array.isArray(base?.inv) ? base.inv : [];
+  if(!deepEqual(currInv, baseInv)){
+    patch.inv = deepClone(currInv);
+  }
+  const keys = new Set();
+  if(current) Object.keys(current).forEach(k => keys.add(k));
+  if(base) Object.keys(base).forEach(k => keys.add(k));
+  keys.delete('inv');
+  keys.forEach(key => {
+    const currVal = current ? current[key] : undefined;
+    const baseVal = base ? base[key] : undefined;
+    if(!shopValuesEqual(key, currVal, baseVal)){
+      patch[key] = deepClone(currVal);
+    }
+  });
+  return Object.keys(patch).length ? patch : null;
+}
+
+function serializeNpcPatch(npc, baseDefinition){
+  if(!npc) return null;
+  const template = baseDefinition || getNpcTemplateDefinition(npc.id);
+  const currentShop = normalizeShopData(npc);
+  const baseShop = normalizeShopData(template);
+  const shopPatch = serializeShopPatch(currentShop, baseShop);
+  if(!shopPatch) return null;
+  return { shop: shopPatch };
+}
+
+function applyNpcPatch(npc, patch){
+  if(!npc || !patch) return;
+  const savedShop = patch.shop;
+  if(savedShop && typeof savedShop === 'object'){
+    let target = npc.shop;
+    if(!target || target === true || typeof target !== 'object'){
+      target = {};
+      npc.shop = target;
+    }
+    if('inv' in savedShop){
+      const inv = Array.isArray(savedShop.inv) ? savedShop.inv.map(entry => deepClone(entry)) : deepClone(savedShop.inv);
+      target.inv = inv ?? [];
+    }
+    Object.keys(savedShop).forEach(key => {
+      if(key === 'inv') return;
+      target[key] = deepClone(savedShop[key]);
+    });
+  }
+}
+
 function gatherGameState(){
   const gs = globalThis.Dustland?.gameState;
   const raw = (gs && typeof gs.getState === 'function') ? gs.getState() : null;
@@ -984,6 +1105,7 @@ function loadLegacySave(d){
   const moduleData = globalThis.moduleData;
   moduleData?.postLoad?.(moduleData);
   const moduleNpcs = moduleData?.npcs || [];
+  const moduleNpcMap = new Map(moduleNpcs.map(n => [n.id, n]));
   const npcFactory = createNpcFactory(moduleNpcs);
   (d.npcs||[]).forEach(n=>{
     let f = npcFactory[n.id];
@@ -1006,6 +1128,9 @@ function loadLegacySave(d){
         if(quests[n.quest.id]) npc.quest=quests[n.quest.id];
         else if(npc.quest) npc.quest.status=n.quest.status;
       }
+      const baseDef = moduleNpcMap.get(n.id) || null;
+      const npcPatch = serializeNpcPatch(n, baseDef);
+      applyNpcPatch(npc, npcPatch || n);
       if (typeof NPCS !== 'undefined') NPCS.push(npc);
     }
   });
@@ -1094,6 +1219,7 @@ function loadModernSave(d){
   });
   if (typeof NPCS !== 'undefined') NPCS.length = 0;
   const moduleNpcs = moduleData?.npcs || [];
+  const moduleNpcMap = new Map(moduleNpcs.map(n => [n.id, n]));
   const npcFactory = createNpcFactory(moduleNpcs);
   (d.npcs||[]).forEach(n=>{
     let f = npcFactory[n.id];
@@ -1126,6 +1252,9 @@ function loadModernSave(d){
           npc.tree.start.text = npc.questDialogs[npc.questIdx] || npc.tree.start.text;
         }
       }
+      const baseDef = moduleNpcMap.get(n.id) || null;
+      const npcPatch = serializeNpcPatch(n, baseDef);
+      applyNpcPatch(npc, npcPatch || n);
       if (typeof NPCS !== 'undefined') NPCS.push(npc);
     }
   });
@@ -1524,6 +1653,8 @@ const coreExports = {
   creatorMap,
   genCreatorMap,
   applyModule,
+  serializeNpcPatch,
+  applyNpcPatch,
   genWorld,
   isWater,
   findNearestLand,
