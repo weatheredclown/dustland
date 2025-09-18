@@ -830,7 +830,7 @@ input[type="range"] {
         border-radius: 14px;
         box-shadow: 0 20px 80px rgba(0, 0, 0, .7);
         overflow: hidden;
-        font-size: 16px;
+        font-size: 1rem;
         line-height: 1.6
     }
 
@@ -840,11 +840,11 @@ input[type="range"] {
         justify-content: space-between;
         padding: 12px 16px;
         border-bottom: 1px solid #223022;
-        font-size: 18px
+        font-size: 1.125rem
     }
 
     #creator .small {
-        font-size: 14px
+        font-size: 0.875rem
     }
 
     #creator main {
@@ -892,7 +892,7 @@ input[type="range"] {
         align-items: center;
         justify-content: center;
         font-weight: 800;
-        font-size: 20px
+        font-size: 1.25rem
     }
 
     .grid {

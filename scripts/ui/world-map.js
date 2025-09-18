@@ -172,6 +172,7 @@
           text.setAttribute('x', x + 10);
           text.setAttribute('y', y + 4);
           text.setAttribute('fill', '#fff');
+          text.style.fontSize = '0.875rem';
           if(i === 0){
             text.style.fontWeight = 'bold';
             text.textContent = `Current: ${b.name ?? b.id}`;
