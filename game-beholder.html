@@ -682,16 +682,33 @@
           ctx.stroke();
         }
       }
-      function drawFloor(segment, depthIndex) {
+      function isWallTile(tile) {
+        if (!tile) return false;
+        return !tile.walkable;
+      }
+      function drawFloorSurface(segment, tile, depthIndex, offset) {
+        if (!tile) return;
         const zNear = segmentNearZ(segment.depth);
         const zFar = segmentFarZ(segment.depth);
-        const leftNear = projectPoint(-HALF_WIDTH, 0, zNear);
-        const rightNear = projectPoint(HALF_WIDTH, 0, zNear);
-        const rightFar = projectPoint(HALF_WIDTH, 0, zFar);
-        const leftFar = projectPoint(-HALF_WIDTH, 0, zFar);
-        const baseColor = tileColor(segment.tile, '#2c3145');
-        const shade = -0.18 - depthIndex * 0.06;
+        const leftEdge = offset - HALF_WIDTH;
+        const rightEdge = offset + HALF_WIDTH;
+        const leftNear = projectPoint(leftEdge, 0, zNear);
+        const rightNear = projectPoint(rightEdge, 0, zNear);
+        const rightFar = projectPoint(rightEdge, 0, zFar);
+        const leftFar = projectPoint(leftEdge, 0, zFar);
+        const baseColor = tileColor(tile, '#2c3145');
+        const offsetShade = Math.abs(offset) * 0.05;
+        const shade = -0.18 - depthIndex * 0.06 - offsetShade;
         drawPolygon([leftNear, rightNear, rightFar, leftFar], shadeColor(baseColor, shade));
+      }
+      function drawFloor(segment, depthIndex) {
+        drawFloorSurface(segment, segment.tile, depthIndex, 0);
+        if (segment.leftTile && !isWallTile(segment.leftTile)) {
+          drawFloorSurface(segment, segment.leftTile, depthIndex, -1);
+        }
+        if (segment.rightTile && !isWallTile(segment.rightTile)) {
+          drawFloorSurface(segment, segment.rightTile, depthIndex, 1);
+        }
       }
       function drawCeiling(segment, depthIndex) {
         const zNear = segmentNearZ(segment.depth);
