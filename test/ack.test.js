@@ -1409,27 +1409,46 @@ test('computeSpawnHeat maps distance from roads', () => {
 test('renderEncounterList shows loot and collectEncounter reconciles template loot', () => {
   const prevTemplates = moduleData.templates;
   const prevEncounters = moduleData.encounters;
-  moduleData.templates = [{ id: 'rat', name: 'Rat', combat: { loot: 'tail', lootChance: 0.5 } }];
+  moduleData.templates = [{ id: 'rat', name: 'Rat', combat: { lootTable: [{ item: 'tail', chance: 0.5 }] } }];
   moduleData.encounters = [
     { map: 'world', templateId: 'rat' },
-    { map: 'world', templateId: 'rat', loot: 'fang' }
+    { map: 'world', templateId: 'rat', lootTable: [{ item: 'fang', chance: 1 }] }
   ];
   renderEncounterList();
   const html = document.getElementById('encounterList').innerHTML;
-  assert(html.includes('Rat - tail'));
-  assert(html.includes('Rat - fang'));
+  assert(html.includes('Rat - 50% tail'));
+  assert(html.includes('Rat - 100% fang'));
   document.getElementById('encMap').value = 'world';
   document.getElementById('encTemplate').value = 'rat';
   document.getElementById('encMinDist').value = '';
   document.getElementById('encMaxDist').value = '';
-  document.getElementById('encLoot').value = 'tail';
-  document.getElementById('encLootChance').value = '50';
+  const encLootTable = document.getElementById('encLootTable');
+  encLootTable.children.length = 0;
+  const row = document.createElement('div');
+  row.className = 'lootRow';
+  const sel = document.createElement('select');
+  sel.className = 'lootItemSelect';
+  sel.value = 'tail';
+  const chance = document.createElement('input');
+  chance.className = 'lootChanceInput';
+  chance.value = '50';
+  row.appendChild(sel);
+  row.appendChild(chance);
+  row.querySelector = selName => {
+    if (selName === '.lootItemSelect') return sel;
+    if (selName === '.lootChanceInput') return chance;
+    return document.createElement('div');
+  };
+  encLootTable.appendChild(row);
+  const originalQuery = encLootTable.querySelectorAll;
+  encLootTable.querySelectorAll = selName => selName === '.lootRow' ? encLootTable.children : [];
   const entry = collectEncounter();
-  assert.strictEqual(entry.loot, undefined);
-  assert.strictEqual(entry.lootChance, undefined);
-  document.getElementById('encLoot').value = '';
+  assert.strictEqual(entry.lootTable, undefined);
+  encLootTable.children.length = 0;
+  encLootTable.querySelectorAll = () => [];
   const entry2 = collectEncounter();
-  assert.strictEqual(entry2.loot, '');
+  assert.deepStrictEqual(entry2.lootTable, []);
+  encLootTable.querySelectorAll = originalQuery;
   moduleData.templates = prevTemplates;
   moduleData.encounters = prevEncounters;
   document.getElementById('encounterList').innerHTML = '';

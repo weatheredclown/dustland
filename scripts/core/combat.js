@@ -666,6 +666,42 @@ function doAttack(dmg, type = 'basic'){
 }
 
 
+function normalizeLootDrop(entry) {
+  if (!entry) return null;
+  const rawItem = entry.item ?? entry.loot ?? entry.reward ?? entry.id;
+  if (!rawItem) return null;
+  let chance = entry.chance;
+  if (!Number.isFinite(chance)) chance = entry.lootChance;
+  if (!Number.isFinite(chance)) chance = entry.probability;
+  chance = Math.max(0, Math.min(Number(chance ?? 1), 1));
+  if (chance <= 0) return null;
+  return { item: rawItem, chance };
+}
+
+function rollEnemyLoot(target) {
+  const table = Array.isArray(target?.lootTable) ? target.lootTable : null;
+  if (table && table.length) {
+    const drops = table.map(normalizeLootDrop).filter(Boolean);
+    if (drops.length) {
+      const roll = Math.random();
+      let cumulative = 0;
+      for (const entry of drops) {
+        cumulative = Math.min(1, cumulative + entry.chance);
+        if (roll < cumulative) {
+          addToInv?.(entry.item);
+          return true;
+        }
+      }
+      return false;
+    }
+  }
+  if (target?.loot && Math.random() < (target.lootChance ?? 1)) {
+    addToInv?.(target.loot);
+    return true;
+  }
+  return false;
+}
+
 function handleEnemyDefeat(attacker, target, sourceLabel){
   if (!target) return false;
   const killer = sourceLabel || attacker?.name || 'You';
@@ -680,7 +716,7 @@ function handleEnemyDefeat(attacker, target, sourceLabel){
     stats.count += 1;
     if (turnsTaken <= 1) stats.quick += 1;
   }
-  if (target.loot && Math.random() < (target.lootChance ?? 1)) addToInv?.(target.loot);
+  rollEnemyLoot(target);
 
   if (typeof target.scrap === 'object' && Math.random() < (target.scrap.chance ?? 1)) {
     const min = target.scrap.min ?? 1;

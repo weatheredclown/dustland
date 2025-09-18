@@ -54,6 +54,50 @@
       cursor: pointer;
     }
 
+    .lootTableWrap {
+      margin-top: 4px;
+    }
+
+    .lootTableLabel {
+      font-size: 0.75rem;
+      opacity: 0.75;
+      margin-top: 4px;
+    }
+
+    .lootTableHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-top: 2px;
+    }
+
+    .lootTable {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .lootRow {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .lootRow select {
+      flex: 1;
+    }
+
+    .lootRow input {
+      width: 72px;
+    }
+
+    .lootRow .btn {
+      margin-top: 0;
+    }
+
     #problemCard {
       border-color: #a00;
     }
@@ -690,8 +734,12 @@
           <label>Template<select id="encTemplate"></select></label>
           <label>Min Dist<input id="encMinDist" type="number" min="0" /></label>
           <label>Max Dist<input id="encMaxDist" type="number" min="0" /></label>
-          <label>Loot<select id="encLoot"></select></label>
-          <label>Loot %<input id="encLootChance" type="number" min="0" max="100" value="100" /></label>
+          <div class="lootTableWrap">
+            <div class="lootTableLabel">Loot Table</div>
+            <div class="lootTableHeader"><span>Item</span><span>Chance %</span></div>
+            <div id="encLootTable" class="lootTable"></div>
+            <button class="btn" type="button" id="encAddLootRow">+ Loot Entry</button>
+          </div>
           <button class="btn" id="addEncounter">Add Enemy</button>
           <button class="btn" type="button" id="cancelEncounter" style="display:none">Cancel</button>
           <button class="btn" id="delEncounter" style="display:none">Delete Enemy</button>
@@ -714,8 +762,12 @@
           <label>Challenge (1-10)<span class="help" title="Higher values improve loot cache drops">(?)</span><input id="templateChallenge" type="number" min="1" max="10" /></label>
           <label>Special Cue<input id="templateSpecialCue" /></label>
           <label>Special Dmg<input id="templateSpecialDmg" type="number" min="1" /></label>
-          <label>Loot<select id="templateLoot"></select></label>
-          <label>Loot %<input id="templateLootChance" type="number" min="0" max="100" value="100" /></label>
+          <div class="lootTableWrap">
+            <div class="lootTableLabel">Loot Table</div>
+            <div class="lootTableHeader"><span>Item</span><span>Chance %</span></div>
+            <div id="templateLootTable" class="lootTable"></div>
+            <button class="btn" type="button" id="templateAddLootRow">+ Loot Entry</button>
+          </div>
           <label>Drop Scrap<input id="templateDropScrap" type="checkbox" /></label>
           <label class="templateScrapField" style="display:none">Scrap %<input id="templateScrapChance" type="number" min="0" max="100" value="100" /></label>
           <label class="templateScrapField" style="display:none">Min Scrap<input id="templateScrapMin" type="number" min="0" value="1" /></label>
