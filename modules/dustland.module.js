@@ -430,6 +430,21 @@ const DATA = `
         "type": "cleanse",
         "text": "You feel the toxins fade away."
       }
+    },
+    {
+      "id": "sunflare_bazooka",
+      "name": "Sunflare Bazooka",
+      "type": "weapon",
+      "rarity": "epic",
+      "mods": {
+        "ATK": 8,
+        "ADR": 45
+      },
+      "tags": [
+        "ranged",
+        "heavy"
+      ],
+      "desc": "Archivist rocket launcher packed with sunfire ordnance."
     }
   ],
   "quests": [
@@ -3202,7 +3217,7 @@ const DATA = `
           "min": 45,
           "max": 60
         },
-        "loot": "epic_blade",
+        "loot": "sunflare_bazooka",
         "lootChance": 1
       }
     }
@@ -14961,8 +14976,8 @@ function postLoad(module) {
         } else {
           arenaState.cleared = true;
           ensureBank(-1);
-          if (typeof log === 'function') log('The Cinder Tyrant collapses, showering the arena in blazing scrap!');
-          if (typeof toast === 'function') toast('Arena complete! The Cinder Tyrant drops an epic weapon.');
+          if (typeof log === 'function') log('The Cinder Tyrant collapses, showering the arena in blazing scrap and salvaging the Sunflare Bazooka!');
+          if (typeof toast === 'function') toast('Arena complete! The Cinder Tyrant drops the Sunflare Bazooka.');
         }
       } else {
         resetArena();
