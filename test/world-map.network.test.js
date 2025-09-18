@@ -22,6 +22,13 @@ test('open draws subway-style nodes for destinations', async () => {
   const overlay = document.body.children.find(c => c.id === 'worldMap');
   assert.ok(overlay);
   const circles = overlay.querySelectorAll('circle');
-  assert.strictEqual(circles.length, 1);
+  assert.strictEqual(circles.length, 2);
+  const [originCircle, destCircle] = circles;
+  assert.strictEqual(originCircle.fill, '#0ff');
+  assert.strictEqual(originCircle.r, 10);
+  assert.strictEqual(originCircle.style.cursor, 'default');
+  assert.strictEqual(destCircle.fill, '#fff');
+  assert.strictEqual(destCircle.r, 8);
+  assert.strictEqual(typeof destCircle.onclick, 'function');
 });
 
