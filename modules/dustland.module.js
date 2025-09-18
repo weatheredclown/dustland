@@ -2797,7 +2797,7 @@ const DATA = `
       "id": "oc3abv_siltpack",
       "map": "room_oc3abv",
       "x": 24,
-      "y": 46,
+      "y": 44,
       "color": "#f66",
       "name": "Siltpack Ravener",
       "title": "Ambush Brood",
@@ -2808,7 +2808,7 @@ const DATA = `
       "symbol": "!",
       "tree": {
         "start": {
-          "text": "Dust-raw beasts skitter from the dunes, circling the entry.",
+          "text": "Dust-raw beasts prowl the outer ring, sniffing for intruders.",
           "choices": [
             {
               "label": "(Fight)",
@@ -2850,7 +2850,7 @@ const DATA = `
       "id": "oc3abv_grinders",
       "map": "room_oc3abv",
       "x": 24,
-      "y": 42,
+      "y": 36,
       "color": "#f66",
       "name": "Grinder Matriarchs",
       "title": "Shrapnel Choir",
@@ -2898,8 +2898,8 @@ const DATA = `
     {
       "id": "oc3abv_glasspride",
       "map": "room_oc3abv",
-      "x": 24,
-      "y": 38,
+      "x": 26,
+      "y": 30,
       "color": "#f66",
       "name": "Glasswing Pride",
       "title": "Phase Predators",
