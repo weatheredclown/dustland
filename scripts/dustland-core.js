@@ -705,8 +705,16 @@ function placeHut(x,y,b={}){
 }
 
 // ===== Save/Load & Start =====
-function save(){
-  const npcData = (typeof NPCS !== 'undefined' ? NPCS : []).map(n=>({
+const SAVE_FORMAT = 'dustland.save.v2';
+
+function deepClone(value){
+  if(value == null) return value;
+  if(typeof structuredClone === 'function') return structuredClone(value);
+  return JSON.parse(JSON.stringify(value));
+}
+
+function serializeNPC(n){
+  return {
     id:n.id,
     map:n.map,
     x:n.x,
@@ -718,19 +726,23 @@ function save(){
     tree:n.tree,
     combat:n.combat,
     shop:n.shop,
+    workbench:n.workbench,
+    door:n.door,
+    prompt:n.prompt,
+    locked:n.locked,
+    overrideColor:!!n.overrideColor,
     quest:n.quest?{id:n.quest.id,status:n.quest.status}:null,
+    questIdx:typeof n.questIdx === 'number' ? n.questIdx : undefined,
     loop:n.loop,
     portraitSheet:n.portraitSheet,
     portraitLock:n.portraitLock,
     symbol:n.symbol,
     trainer:n.trainer
-  }));
-  const questData = {};
-  Object.keys(quests).forEach(k=>{
-    const q=quests[k];
-    questData[k]={title:q.title,desc:q.desc,status:q.status,pinned:!!q.pinned};
-  });
-  const partyData = Array.from(party, p => ({
+  };
+}
+
+function serializePartyMember(p){
+  return {
     id:p.id,
     name:p.name,
     role:p.role,
@@ -746,16 +758,113 @@ function save(){
     maxHp:p.maxHp,
     portraitSheet:p.portraitSheet,
     persona:p.persona
-  }));
-  const data={worldSeed, world, player, state, buildings, interiors, itemDrops, npcs:npcData, quests:questData, party:partyData};
-  localStorage.setItem('dustland_crt', JSON.stringify(data));
+  };
+}
+
+function serializeGameState(){
+  const gs = globalThis.Dustland?.gameState;
+  if(!gs || typeof gs.getState !== 'function') return null;
+  const raw = gs.getState();
+  return {
+    difficulty: raw.difficulty,
+    flags: deepClone(raw.flags || {}),
+    clock: raw.clock ?? 0,
+    personas: deepClone(raw.personas || {}),
+    effectPacks: deepClone(raw.effectPacks || {}),
+    npcMemory: deepClone(raw.npcMemory || {})
+  };
+}
+
+function save(){
+  const npcData = (typeof NPCS !== 'undefined' ? NPCS : []).map(serializeNPC);
+  const questData = {};
+  Object.keys(quests).forEach(k=>{
+    const q=quests[k];
+    questData[k]={title:q.title,desc:q.desc,status:q.status,pinned:!!q.pinned};
+  });
+  const partyMembers = Array.from(party, serializePartyMember);
+  const partyData = {
+    members: partyMembers,
+    map: party.map,
+    x: party.x,
+    y: party.y,
+    flags: deepClone(party.flags || {}),
+    fallen: deepClone(Array.isArray(party.fallen) ? party.fallen : [])
+  };
+  const playerData = deepClone(player);
+  if(!Array.isArray(playerData?.inv)) playerData.inv = [];
+  const stateData = deepClone(state);
+  const worldData = deepClone(world);
+  const interiorsData = deepClone(interiors);
+  const buildingsData = deepClone(buildings);
+  const itemDropData = deepClone(itemDrops);
+  const worldFlagData = deepClone(worldFlags);
+  const bunkerData = deepClone(globalThis.Dustland?.bunkers || []);
+  const saveData={
+    format: SAVE_FORMAT,
+    version: 2,
+    savedAt: Date.now(),
+    module: globalThis.Dustland?.currentModule ?? globalThis.moduleData?.name ?? globalThis.moduleData?.id ?? null,
+    worldSeed,
+    world: worldData,
+    player: playerData,
+    state: stateData,
+    buildings: buildingsData,
+    interiors: interiorsData,
+    itemDrops: itemDropData,
+    npcs:npcData,
+    quests:questData,
+    party:partyData,
+    worldFlags: worldFlagData,
+    bunkers: bunkerData,
+    gameState: serializeGameState()
+  };
+  localStorage.setItem('dustland_crt', JSON.stringify(saveData));
   log('Game saved.');
   if (typeof toast === 'function') toast('Game saved.');
 }
-function load(){
-  const j=localStorage.getItem('dustland_crt');
-  if(!j){ log('No save.'); return; }
-  const d=JSON.parse(j);
+
+function mergeBuildingState(saved){
+  const keyOf = b => `${b.x},${b.y},${b.interiorId || ''}`;
+  const existing = new Map(buildings.map(b => [keyOf(b), b]));
+  (saved||[]).forEach(sb => {
+    const key = keyOf(sb);
+    const target = existing.get(key);
+    if(target){
+      Object.assign(target, deepClone(sb));
+    }else{
+      buildings.push(deepClone(sb));
+    }
+  });
+}
+
+function applyGameStateSave(data){
+  if(!data || !globalThis.Dustland?.gameState) return;
+  const gs = globalThis.Dustland.gameState;
+  if(typeof gs.updateState === 'function'){
+    gs.updateState(state => {
+      state.flags = deepClone(data.flags || {});
+      state.clock = data.clock ?? 0;
+      state.npcMemory = deepClone(data.npcMemory || {});
+      state.effectPacks = {};
+      state.party = state.party || [];
+      state.personas = {};
+    });
+  }
+  if(typeof gs.setDifficulty === 'function' && data.difficulty){
+    gs.setDifficulty(data.difficulty);
+  }
+  if(data.effectPacks && typeof gs.loadEffectPacks === 'function'){
+    gs.loadEffectPacks(data.effectPacks);
+  }
+  if(data.personas && typeof gs.setPersona === 'function'){
+    Object.entries(data.personas).forEach(([id, persona]) => {
+      gs.setPersona(id, persona);
+    });
+  }
+}
+
+function loadLegacySave(d){
   worldSeed = d.worldSeed || Date.now();
   setRNGSeed(worldSeed);
   if(d.world){ world=d.world; } else { genWorld(worldSeed); }
@@ -838,6 +947,165 @@ function load(){
   refreshUI();
   log('Game loaded.');
   if (typeof toast === 'function') toast('Game loaded.');
+}
+
+function loadModernSave(d){
+  const moduleName = d.module ?? globalThis.Dustland?.currentModule ?? null;
+  const moduleData = (moduleName != null ? globalThis.Dustland?.loadedModules?.[moduleName] : null) || globalThis.moduleData;
+  party.length = 0;
+  party.flags = {};
+  party.fallen = [];
+  if(player && typeof player === 'object'){
+    Object.keys(player).forEach(k => { delete player[k]; });
+  }
+  if(moduleData){
+    try{ moduleData.postLoad?.(moduleData); }catch(err){ console.error(err); }
+    applyModule(moduleData, { fullReset: true });
+  }else{
+    genWorld(d.worldSeed || Date.now());
+  }
+  worldSeed = d.worldSeed || Date.now();
+  setRNGSeed(worldSeed);
+  if(Array.isArray(d.world)){
+    world.length = 0;
+    d.world.forEach(row => world.push(Array.isArray(row) ? [...row] : row));
+  }
+  if(d.interiors){
+    Object.keys(d.interiors).forEach(id => {
+      interiors[id] = deepClone(d.interiors[id]);
+    });
+  }
+  mergeBuildingState(d.buildings);
+  itemDrops.length = 0;
+  (d.itemDrops || []).forEach(it => itemDrops.push(deepClone(it)));
+  Object.keys(worldFlags).forEach(k => delete worldFlags[k]);
+  Object.entries(d.worldFlags || {}).forEach(([flag, val]) => {
+    worldFlags[flag] = deepClone(val);
+  });
+  Object.keys(quests).forEach(k=> delete quests[k]);
+  Object.keys(d.quests||{}).forEach(id=>{
+    const qd=d.quests[id];
+    const q=new Quest(id,qd.title,qd.desc); q.status=qd.status; q.pinned=qd.pinned||false; quests[id]=q;
+  });
+  if (typeof NPCS !== 'undefined') NPCS.length = 0;
+  const moduleNpcs = moduleData?.npcs || [];
+  const npcFactory = createNpcFactory(moduleNpcs);
+  (d.npcs||[]).forEach(n=>{
+    let f = npcFactory[n.id];
+    if(!f){
+      f = createNpcFactory([n])[n.id];
+    }
+    if(f){
+      const npc=f(n.x,n.y);
+      npc.map=n.map;
+      npc.color = n.color ?? npc.color;
+      npc.name = n.name ?? npc.name;
+      npc.title = n.title ?? npc.title;
+      npc.desc = n.desc ?? npc.desc;
+      if (n.portraitSheet) npc.portraitSheet = n.portraitSheet;
+      if('portraitLock' in n) npc.portraitLock=n.portraitLock;
+      if (n.symbol) npc.symbol = n.symbol;
+      if(n.trainer) npc.trainer=n.trainer;
+      if (Array.isArray(n.loop)) npc.loop = n.loop;
+      if(typeof n.locked === 'boolean') npc.locked = n.locked;
+      if(typeof n.overrideColor === 'boolean') npc.overrideColor = n.overrideColor;
+      if('prompt' in n) npc.prompt = n.prompt;
+      if(typeof n.questIdx === 'number') npc.questIdx = n.questIdx;
+      if(n.quest){
+        if(quests[n.quest.id]) npc.quest=quests[n.quest.id];
+        else if(npc.quest) npc.quest.status=n.quest.status;
+      }
+      if(Array.isArray(npc.quests) && typeof npc.questIdx === 'number'){
+        npc.quest = npc.quests[npc.questIdx] || npc.quest;
+        if(Array.isArray(npc.questDialogs) && npc.questDialogs.length){
+          npc.tree.start.text = npc.questDialogs[npc.questIdx] || npc.tree.start.text;
+        }
+      }
+      if (typeof NPCS !== 'undefined') NPCS.push(npc);
+    }
+  });
+  const partyData = d.party || {};
+  const members = Array.isArray(partyData.members) ? partyData.members : [];
+  members.forEach(m=>{
+    const mem=new Character(m.id,m.name,m.role);
+    Object.assign(mem,m);
+    mem.skillPoints = m.skillPoints || 0;
+    party.push(mem);
+  });
+  if(typeof partyData.x === 'number') party.x = partyData.x;
+  if(typeof partyData.y === 'number') party.y = partyData.y;
+  party.flags = deepClone(partyData.flags || {});
+  party.fallen = deepClone(Array.isArray(partyData.fallen) ? partyData.fallen : []);
+  Object.assign(player, d.player || {});
+  if(!Array.isArray(player.inv)) player.inv = [];
+  Object.keys(state).forEach(k => delete state[k]);
+  Object.assign(state, d.state || {});
+  state.map = state.map || 'world';
+  state.mapFlags = state.mapFlags || {};
+  if(Array.isArray(partyData.members) && partyData.members[0]){
+    party.x = partyData.members[0].x ?? party.x;
+    party.y = partyData.members[0].y ?? party.y;
+  }
+  party.map = state.map;
+  if(state.map === 'dust_storm'){
+    state.map = 'world';
+    party.map = 'world';
+    party.x = 10;
+    party.y = 18;
+  }
+  const grid = typeof gridFor === 'function' ? gridFor(state.map) : null;
+  const tile = typeof getTile === 'function' ? getTile(state.map, party.x, party.y) : null;
+  if(!grid || tile === null){
+    state.map = 'world';
+    party.map = 'world';
+    const wx = world?.[0]?.length ? Math.floor(world[0].length/2) : 0;
+    const wy = world?.length ? Math.floor(world.length/2) : 0;
+    setPartyPos(wx, wy);
+  } else {
+    setPartyPos(party.x, party.y);
+  }
+  if(globalThis.Dustland){
+    const bunkers = globalThis.Dustland.bunkers || (globalThis.Dustland.bunkers = []);
+    bunkers.length = 0;
+    if(Array.isArray(d.bunkers)){
+      if(globalThis.Dustland.fastTravel?.upsertBunkers){
+        globalThis.Dustland.fastTravel.upsertBunkers(d.bunkers);
+      }else{
+        d.bunkers.forEach(b => bunkers.push(deepClone(b)));
+      }
+    }
+  }
+  applyGameStateSave(d.gameState);
+  Dustland.gameState.updateState(s=>{ s.party = party; });
+  party.forEach(mem => {
+    mem.applyEquipmentStats();
+    if(mem.persona) {
+      Dustland.gameState.applyPersona(mem.id, mem.persona);
+    }
+  });
+  setMap(state.map);
+  refreshUI();
+  log('Game loaded.');
+  if (typeof toast === 'function') toast('Game loaded.');
+}
+
+function load(){
+  const j=localStorage.getItem('dustland_crt');
+  if(!j){ log('No save.'); return; }
+  let d;
+  try{
+    d = JSON.parse(j);
+  }catch(err){
+    console.error('Failed to parse save', err);
+    log('Failed to read save file.');
+    if (typeof toast === 'function') toast('Failed to read save file.');
+    return;
+  }
+  if(d && d.format === SAVE_FORMAT){
+    loadModernSave(d);
+    return;
+  }
+  loadLegacySave(d);
 }
 
 function clearSave(){
