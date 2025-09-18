@@ -1013,6 +1013,38 @@ input[type="range"] {
         gap: 8px
     }
 
+    #debugMenu {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .8);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 45
+    }
+
+    #debugMenu .win {
+        width: min(320px, 92vw);
+        background: #0b0d0b;
+        border: 1px solid #2a382a;
+        border-radius: 12px;
+        box-shadow: 0 20px 80px rgba(0, 0, 0, .7);
+        overflow: hidden
+    }
+
+    #debugMenu header {
+        padding: 10px 12px;
+        border-bottom: 1px solid #223022;
+        font-weight: 700
+    }
+
+    #debugMenu main {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px
+    }
+
     #settings .field--toggle {
         flex-direction: row;
         align-items: center;
