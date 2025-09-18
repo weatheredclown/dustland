@@ -529,6 +529,22 @@ const DATA = `
       "id": "q_beacon",
       "title": "Light the Beacon",
       "desc": "Defeat the Gear Ghoul and claim hope."
+    },
+    {
+      "id": "q_solar_alignment",
+      "title": "Align the Sun",
+      "desc": "Deliver the Sun Charm to the Archivist in the Hall so he can decode the broadcast.",
+      "item": "sun_charm",
+      "reward": "sun_charm",
+      "xp": 4
+    },
+    {
+      "id": "q_solar_signal",
+      "title": "Resonate the Signal",
+      "desc": "Recover Signal Fragment C for the Archivist so he can complete the broadcast.",
+      "item": "signal_fragment_c",
+      "reward": "epic_blade",
+      "xp": 8
     }
   ],
   "npcs": [
@@ -642,15 +658,25 @@ const DATA = `
       "prompt": "Elder hunched over reels of magnetic tape",
       "tree": {
         "start": {
-          "text": "Got anything on tape?",
+          "text": "The Archivist taps a reel. 'The Sun Charm hums with a lost broadcast. Bring it so I can hear the dawn.'",
           "choices": [
+            {
+              "label": "(Offer help decoding)",
+              "to": "accept",
+              "q": "accept"
+            },
+            {
+              "label": "(Deliver requested item)",
+              "to": "turnin",
+              "q": "turnin"
+            },
+            {
+              "label": "Ask about his tapes",
+              "to": "_chat__mff7uw9d_start"
+            },
             {
               "label": "(Leave)",
               "to": "bye"
-            },
-            {
-              "label": "(Chat)",
-              "to": "_chat__mff7uw9d_start"
             }
           ]
         },
@@ -728,9 +754,45 @@ const DATA = `
               "reward": "XP 5"
             }
           ]
+        },
+        "accept": {
+          "text": "The Archivist threads a fresh reel and nods. 'I'll be ready when you return.'",
+          "choices": [
+            {
+              "label": "(I'll be back)",
+              "to": "bye"
+            }
+          ]
+        },
+        "turnin": {
+          "text": "The Archivist extends both hands, waiting for the artifact.",
+          "choices": [
+            {
+              "label": "(Place it in his hands)",
+              "to": "do_turnin"
+            }
+          ]
+        },
+        "do_turnin": {
+          "text": "He sets the reels spinning, translating the tones into words of gratitude.",
+          "choices": [
+            {
+              "label": "(Continue)",
+              "to": "bye"
+            }
+          ]
         }
       },
-      "symbol": "!"
+      "symbol": "!",
+      "quests": [
+        "q_solar_alignment",
+        "q_solar_signal"
+      ],
+      "dialogs": [
+        "The Archivist taps a reel. 'The Sun Charm hums with a lost broadcast. Bring it so I can hear the dawn.'",
+        "The Archivist squints at the receiver. 'I traced the pattern, but Signal Fragment C will complete the chorus.'",
+        "The Archivist lets the reels spin freely. 'The message sings thanks to you. Stay and listen.'"
+      ]
     },
     {
       "id": "exitdoor",
