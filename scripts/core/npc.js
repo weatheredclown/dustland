@@ -3,8 +3,8 @@ var Dustland = globalThis.Dustland;
 const NPC_COLOR = '#9ef7a0';
 const OBJECT_COLOR = '#225a20';
 class NPC {
-  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,quests=null,questDialogs=null,processNode=null,processChoice=null,combat=null,shop=false,workbench=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false,prompt=null,unlockTime=null,questIdx=0,trainer=null}) {
-    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,quests,questDialogs,combat,shop,workbench,portraitSheet,portraitLock,symbol,door,locked,prompt,unlockTime,questIdx,trainer});
+  constructor({id,map,x,y,color,name,title,desc,tree,quest=null,quests=null,questDialogs=null,processNode=null,processChoice=null,combat=null,shop=false,workbench=false,portraitSheet=null,portraitLock=true,symbol='!',door=false,locked=false,prompt=null,unlockTime=null,questIdx=0,trainer=null,overrideColor=false}) {
+    Object.assign(this, {id,map,x,y,color,name,title,desc,tree,quest,quests,questDialogs,combat,shop,workbench,portraitSheet,portraitLock,symbol,door,locked,prompt,unlockTime,questIdx,trainer,overrideColor});
     if (Array.isArray(this.quests) && !this.quest) {
       this.quest = this.quests[this.questIdx] ?? null;
     }
@@ -175,6 +175,7 @@ function createNpcFactory(defs) {
       if (typeof n.locked === 'boolean') opts.locked = n.locked;
       if (n.trainer) opts.trainer = n.trainer;
       else if (n.id && n.id.startsWith('trainer_')) opts.trainer = n.id.split('_')[1];
+      if (typeof n.overrideColor === 'boolean') opts.overrideColor = n.overrideColor;
       if (Array.isArray(n.quests)) {
         opts.quests = n.quests.map(q => typeof q === 'string' ? (globalThis.quests?.[q] ?? null) : q).filter(Boolean);
       }

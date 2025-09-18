@@ -563,6 +563,7 @@ function applyModule(data = {}, options = {}) {
     if (n.trainer) opts.trainer = n.trainer;
     if (n.door) opts.door = n.door;
     if (typeof n.locked === 'boolean') opts.locked = n.locked;
+    if (typeof n.overrideColor === 'boolean') opts.overrideColor = n.overrideColor;
     if (Array.isArray(n.quests)) {
       opts.quests = n.quests.map(id => quests[id]).filter(Boolean);
     }
