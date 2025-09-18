@@ -421,6 +421,15 @@ const DATA = `
       "id": "copper_cog",
       "name": "Copper Cog",
       "type": "quest"
+    },
+    {
+      "id": "antidote",
+      "name": "Antidote",
+      "type": "consumable",
+      "use": {
+        "type": "cleanse",
+        "text": "You feel the toxins fade away."
+      }
     }
   ],
   "quests": [

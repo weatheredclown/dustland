@@ -50,6 +50,24 @@
     log('Crafted a bandage.');
   }
 
+  function craftAntidote(){
+    if (!hasItem('plant_fiber')){
+      log('Need plant fiber.');
+      return;
+    }
+    if (!hasItem('water_flask')){
+      log('Need a water flask.');
+      return;
+    }
+    let idx = findItemIndex('plant_fiber');
+    if (idx >= 0) removeFromInv(idx);
+    idx = findItemIndex('water_flask');
+    if (idx >= 0) removeFromInv(idx);
+    addToInv('antidote');
+    bus?.emit('craft:antidote');
+    log('Crafted an antidote.');
+  }
+
   function openWorkbench(){
     const overlay = document.getElementById('workbenchOverlay');
     const list = document.getElementById('workbenchRecipes');
@@ -88,6 +106,14 @@
           craft: craftBandage,
           requirements: [
             { label: 'Plant Fiber', key: 'plant_fiber', amount: 1, type: 'item' }
+          ]
+        },
+        {
+          name: 'Antidote',
+          craft: craftAntidote,
+          requirements: [
+            { label: 'Plant Fiber', key: 'plant_fiber', amount: 1, type: 'item' },
+            { label: 'Water Flask', key: 'water_flask', amount: 1, type: 'item' }
           ]
         }
       ];
@@ -151,6 +177,6 @@
     overlay.focus();
   }
 
-  Dustland.workbench = { craftSignalBeacon, craftSolarTarp, craftBandage };
+  Dustland.workbench = { craftSignalBeacon, craftSolarTarp, craftBandage, craftAntidote };
   Dustland.openWorkbench = openWorkbench;
 })();
