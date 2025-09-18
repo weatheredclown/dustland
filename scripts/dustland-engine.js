@@ -192,7 +192,7 @@ function setMobileControls(on){
       const mk=(name,t,fn)=>{
         const b=document.createElement('button');
         b.textContent=t;
-        b.style.cssText='width:48px;height:48px;border:2px solid #0f0;border-radius:8px;background:#000;color:#0f0;font-size:20px;user-select:none;outline:none;touch-action:manipulation;';
+        b.style.cssText='width:48px;height:48px;border:2px solid #0f0;border-radius:8px;background:#000;color:#0f0;font-size:1.25rem;user-select:none;outline:none;touch-action:manipulation;';
         b.onclick=fn;
         b.onpointerdown=()=>{
           b.style.background='#0f0';
@@ -337,7 +337,14 @@ function updateFontScaleUI(scale){
 function applyFontScale(scale){
   fontScale = scale;
   const rootStyle = getFontScaleRootStyle();
-  rootStyle?.setProperty('--font-scale', formatFontScale(scale));
+  const value = formatFontScale(scale);
+  rootStyle?.setProperty('--font-scale', value);
+  if(typeof document !== 'undefined'){
+    const bodyStyle = document.body?.style;
+    if(bodyStyle && bodyStyle !== rootStyle){
+      bodyStyle.setProperty('--font-scale', value);
+    }
+  }
   updateFontScaleUI(scale);
 }
 function setFontScale(scale, opts = {}){
@@ -938,7 +945,7 @@ if(typeof window !== 'undefined' && window.addEventListener){
 updateCanvasStretch();
 
 // Font init (prevents invisible glyphs on some canvases)
-sctx.font = `${12 / RENDER_SCALE}px system-ui, sans-serif`;
+sctx.font = `${(12 * fontScale) / RENDER_SCALE}px system-ui, sans-serif`;
 
 let camX=0, camY=0, showMini=true;
 let _lastTime=0;
@@ -1036,7 +1043,7 @@ function render(gameState=state, dt){
   ctx.save();
   ctx.scale(RENDER_SCALE, RENDER_SCALE);
   ctx.imageSmoothingEnabled = false;
-  ctx.font = `${12 / RENDER_SCALE}px system-ui, sans-serif`;
+  ctx.font = `${(12 * fontScale) / RENDER_SCALE}px system-ui, sans-serif`;
   ctx.fillStyle='#000';
   ctx.fillRect(0,0,BASE_CANVAS_WIDTH,BASE_CANVAS_HEIGHT);
 

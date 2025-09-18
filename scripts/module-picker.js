@@ -147,7 +147,7 @@ function showModulePicker(){
   ackBtn.id = 'ackGlyph';
   ackBtn.textContent = '✎';
   ackBtn.title = 'Adventure Kit';
-  ackBtn.style = 'position:absolute;top:10px;right:10px;z-index:1;color:#0f0;font-size:24px;cursor:pointer';
+  ackBtn.style = 'position:absolute;top:10px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer';
   ackBtn.onclick = () => { window.location.href = 'adventure-kit.html'; };
   overlay.appendChild(ackBtn);
 
@@ -155,7 +155,7 @@ function showModulePicker(){
   mpBtn.id = 'mpGlyph';
   mpBtn.textContent = '⇆';
   mpBtn.title = 'Multiplayer';
-  mpBtn.style = 'position:absolute;top:44px;right:10px;z-index:1;color:#0f0;font-size:24px;cursor:pointer';
+  mpBtn.style = 'position:absolute;top:44px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer';
   mpBtn.onclick = () => { window.location.href = 'multiplayer.html'; };
   overlay.appendChild(mpBtn);
 
@@ -168,7 +168,7 @@ function showModulePicker(){
   const title = document.createElement('div');
   title.id = 'gameTitle';
   title.textContent = 'Dustland CRT';
-  title.style = 'position:relative;z-index:1;color:#0f0;text-shadow:0 0 10px #0f0;font-size:32px;margin-bottom:20px;animation:pulse 2s infinite';
+  title.style = 'position:relative;z-index:1;color:#0f0;text-shadow:0 0 10px #0f0;font-size:2rem;margin-bottom:20px;animation:pulse 2s infinite';
 
   const win = document.createElement('div');
   win.className = 'win';

@@ -11,8 +11,8 @@
     body { margin: 0; background: #000; color: var(--ink); font-family: 'Pixelify Sans', sans-serif; }
     .wrap { padding: 16px; gap: 16px; display: flex; }
     .panel { width: var(--panelW); }
-    .controls .btn { font-size: 14px; }
-    .small { font-size: 12px; color: var(--muted); }
+    .controls .btn { font-size: 0.875rem; }
+    .small { font-size: 0.75rem; color: var(--muted); }
     .mood-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
     .mood-btn { cursor: pointer; padding: 6px 8px; border: 1px solid #283228; border-radius: 6px; background: #0e110e; text-align: center; }
     .mood-btn.active { outline: 1px solid var(--accent); box-shadow: 0 0 8px #000, 0 0 8px rgba(158,247,160,.3); }
@@ -201,7 +201,7 @@
 
         <fieldset style="margin-top:10px" class="card">
           <legend>JSON Config</legend>
-          <pre id="jsonOut" style="white-space:pre-wrap; word-break:break-word; font-size:12px; margin:0 0 6px 0"></pre>
+          <pre id="jsonOut" style="white-space:pre-wrap; word-break:break-word; font-size:0.75rem; margin:0 0 6px 0"></pre>
           <div class="btn-group">
             <button id="downloadJsonBtn" class="btn">Download JSON</button>
             <button id="loadJsonBtn" class="btn">Load JSON</button>
