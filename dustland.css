@@ -817,27 +817,34 @@ input[type="range"] {
 }
 
     #creator .win {
-        width: min(820px, 92vw);
+        width: min(900px, 94vw);
         background: #0b0d0b;
         border: 1px solid #2a382a;
         border-radius: 14px;
         box-shadow: 0 20px 80px rgba(0, 0, 0, .7);
-        overflow: hidden
+        overflow: hidden;
+        font-size: 16px;
+        line-height: 1.6
     }
 
     #creator header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 10px 12px;
-        border-bottom: 1px solid #223022
+        padding: 12px 16px;
+        border-bottom: 1px solid #223022;
+        font-size: 18px
+    }
+
+    #creator .small {
+        font-size: 14px
     }
 
     #creator main {
         display: grid;
-        grid-template-columns: 300px 1fr;
-        gap: 12px;
-        padding: 12px
+        grid-template-columns: 340px 1fr;
+        gap: 16px;
+        padding: 16px
     }
 
     @media (max-width: 600px) {
@@ -848,7 +855,7 @@ input[type="range"] {
     }
 
     .pbox {
-        height: 220px;
+        height: 260px;
         border: 1px solid #273027;
         border-radius: 10px;
         background: #0f120f;
@@ -869,15 +876,16 @@ input[type="range"] {
     }
 
     .p {
-        width: 120px;
-        height: 120px;
+        width: 140px;
+        height: 140px;
         border-radius: 50%;
         border: 2px solid #293629;
         background: #203320;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 800
+        font-weight: 800;
+        font-size: 20px
     }
 
     .grid {
