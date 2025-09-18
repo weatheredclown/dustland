@@ -941,7 +941,8 @@ const DATA = `
         },
         "auto": true
       },
-      "symbol": "!"
+      "symbol": "!",
+      "overrideColor": true
     },
     {
       "id": "party_nora",
