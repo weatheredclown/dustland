@@ -769,6 +769,77 @@ function deepClone(value){
   return JSON.parse(JSON.stringify(value));
 }
 
+function gatherGameState(){
+  const gs = globalThis.Dustland?.gameState;
+  const raw = (gs && typeof gs.getState === 'function') ? gs.getState() : null;
+  return {
+    flags: deepClone(raw?.flags || {}),
+    personas: deepClone(raw?.personas || {}),
+    effectPacks: deepClone(raw?.effectPacks || {}),
+    npcMemory: deepClone(raw?.npcMemory || {})
+  };
+}
+
+function applyGameState(data){
+  if(!data || !globalThis.Dustland?.gameState) return;
+  const gs = globalThis.Dustland.gameState;
+  const flags = deepClone(data.flags || {});
+  const personas = deepClone(data.personas || {});
+  const effectPacks = deepClone(data.effectPacks || {});
+  const npcMemory = deepClone(data.npcMemory || {});
+  const clock = data.clock ?? 0;
+
+  if(typeof gs.updateState === 'function'){
+    gs.updateState(state => {
+      state.flags = flags;
+      state.clock = clock;
+      state.npcMemory = npcMemory;
+      state.effectPacks = {};
+      state.personas = {};
+    });
+  }else if(typeof gs.getState === 'function'){
+    const state = gs.getState();
+    if(state){
+      state.flags = flags;
+      state.clock = clock;
+      state.npcMemory = npcMemory;
+      state.effectPacks = {};
+      state.personas = {};
+    }
+  }
+
+  if(typeof gs.setDifficulty === 'function' && data.difficulty){
+    gs.setDifficulty(data.difficulty);
+  }else if(typeof gs.getState === 'function' && data.difficulty){
+    const state = gs.getState();
+    if(state) state.difficulty = data.difficulty;
+  }
+
+  if(typeof gs.loadEffectPacks === 'function'){
+    gs.loadEffectPacks(effectPacks);
+  }else if(typeof gs.updateState === 'function'){
+    gs.updateState(state => { state.effectPacks = effectPacks; });
+  }else if(typeof gs.getState === 'function'){
+    const state = gs.getState();
+    if(state) state.effectPacks = effectPacks;
+  }
+
+  if(typeof gs.setPersona === 'function'){
+    Object.entries(personas).forEach(([id, persona]) => {
+      gs.setPersona(id, persona);
+    });
+  }else if(typeof gs.updateState === 'function'){
+    gs.updateState(state => { state.personas = personas; });
+  }else if(typeof gs.getState === 'function'){
+    const state = gs.getState();
+    if(state) state.personas = personas;
+  }
+}
+
+function applyGameStateSave(data){
+  applyGameState(data);
+}
+
 function serializeNPC(n){
   return {
     id:n.id,
@@ -821,13 +892,14 @@ function serializeGameState(){
   const gs = globalThis.Dustland?.gameState;
   if(!gs || typeof gs.getState !== 'function') return null;
   const raw = gs.getState();
+  const gathered = gatherGameState();
   return {
     difficulty: raw.difficulty,
-    flags: deepClone(raw.flags || {}),
+    flags: gathered.flags,
     clock: raw.clock ?? 0,
-    personas: deepClone(raw.personas || {}),
-    effectPacks: deepClone(raw.effectPacks || {}),
-    npcMemory: deepClone(raw.npcMemory || {})
+    personas: gathered.personas,
+    effectPacks: gathered.effectPacks,
+    npcMemory: gathered.npcMemory
   };
 }
 
@@ -892,32 +964,6 @@ function mergeBuildingState(saved){
       buildings.push(deepClone(sb));
     }
   });
-}
-
-function applyGameStateSave(data){
-  if(!data || !globalThis.Dustland?.gameState) return;
-  const gs = globalThis.Dustland.gameState;
-  if(typeof gs.updateState === 'function'){
-    gs.updateState(state => {
-      state.flags = deepClone(data.flags || {});
-      state.clock = data.clock ?? 0;
-      state.npcMemory = deepClone(data.npcMemory || {});
-      state.effectPacks = {};
-      state.party = state.party || [];
-      state.personas = {};
-    });
-  }
-  if(typeof gs.setDifficulty === 'function' && data.difficulty){
-    gs.setDifficulty(data.difficulty);
-  }
-  if(data.effectPacks && typeof gs.loadEffectPacks === 'function'){
-    gs.loadEffectPacks(data.effectPacks);
-  }
-  if(data.personas && typeof gs.setPersona === 'function'){
-    Object.entries(data.personas).forEach(([id, persona]) => {
-      gs.setPersona(id, persona);
-    });
-  }
 }
 
 function loadLegacySave(d){
@@ -995,8 +1041,11 @@ function loadLegacySave(d){
   Dustland.gameState.updateState(s=>{ s.party = party; });
   party.forEach(mem => {
     mem.applyEquipmentStats();
-    if(mem.persona) {
-      Dustland.gameState.applyPersona(mem.id, mem.persona);
+    const personaId = mem.persona;
+    if(personaId) {
+      globalThis.Dustland?.profiles?.remove?.(mem, personaId);
+      mem.persona = undefined;
+      Dustland.gameState.applyPersona(mem.id, personaId);
     }
   });
   setMap(state.map);
@@ -1131,12 +1180,15 @@ function loadModernSave(d){
       }
     }
   }
-  applyGameStateSave(d.gameState);
+  applyGameState(d.gameState);
   Dustland.gameState.updateState(s=>{ s.party = party; });
   party.forEach(mem => {
     mem.applyEquipmentStats();
-    if(mem.persona) {
-      Dustland.gameState.applyPersona(mem.id, mem.persona);
+    const personaId = mem.persona;
+    if(personaId) {
+      globalThis.Dustland?.profiles?.remove?.(mem, personaId);
+      mem.persona = undefined;
+      Dustland.gameState.applyPersona(mem.id, personaId);
     }
   });
   setMap(state.map);
@@ -1484,6 +1536,8 @@ const coreExports = {
   incFlag,
   flagValue,
   checkFlagCondition,
+  gatherGameState,
+  applyGameState,
   showStart,
   hideStart,
   openCreator,
