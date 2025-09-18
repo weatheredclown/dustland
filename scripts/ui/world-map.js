@@ -103,61 +103,88 @@
         const destNet = b.network ?? (b.module ? ft?.networkFor?.(b.module) : 'global');
         return (originNet ?? 'global') === (destNet ?? 'global');
       });
-      const pts = [];
-      dests.forEach((b, i) => {
-        ensureModule(b, () => {
-          const x = (i + 1) / (dests.length + 1) * width;
-          const y = height / 2;
-          if(i){
-            const p = pts[i - 1];
-            const line = document.createElementNS(svgNS, 'line');
-            line.setAttribute('x1', p.x);
-            line.setAttribute('y1', p.y);
-            line.setAttribute('x2', x);
-            line.setAttribute('y2', y);
-            line.setAttribute('stroke', '#888');
-            line.setAttribute('stroke-width', '2');
-            svg.appendChild(line);
+      let originNode = origin;
+      if(!originNode && fromId){
+        originNode = { id: fromId, name: fromId, active: true, _skipEnsure: true };
+      }
+      const nodes = dests.slice();
+      if(originNode) nodes.unshift(originNode);
+      const coords = nodes.map((_, idx) => ({
+        x: (idx + 1) / (nodes.length + 1) * width,
+        y: height / 2
+      }));
+      nodes.forEach((b, i) => {
+        const render = () => {
+          const { x, y } = coords[i] ?? { x: width / 2, y: height / 2 };
+          if(i > 0){
+            const prev = coords[i - 1];
+            if(prev){
+              const line = document.createElementNS(svgNS, 'line');
+              line.setAttribute('x1', prev.x);
+              line.setAttribute('y1', prev.y);
+              line.setAttribute('x2', x);
+              line.setAttribute('y2', y);
+              line.setAttribute('stroke', '#888');
+              line.setAttribute('stroke-width', '2');
+              svg.appendChild(line);
+            }
           }
           const circle = document.createElementNS(svgNS, 'circle');
           circle.setAttribute('cx', x);
           circle.setAttribute('cy', y);
-          circle.setAttribute('r', 8);
-          circle.setAttribute('fill', '#fff');
-          circle.style.cursor = 'pointer';
+          const isOrigin = i === 0;
+          circle.setAttribute('r', isOrigin ? 10 : 8);
+          circle.setAttribute('fill', isOrigin ? '#0ff' : '#fff');
+          if(isOrigin){
+            circle.setAttribute('stroke', '#fff');
+            circle.setAttribute('stroke-width', '2');
+            circle.style.cursor = 'default';
+          } else {
+            circle.style.cursor = 'pointer';
+          }
           circle.title = b.name ?? b.id;
-          circle.onclick = () => {
-            const ft = globalThis.Dustland?.fastTravel;
-            const cost = ft?.fuelCost?.(fromId, b.id);
-            const fuel = globalThis.player?.fuel ?? 0;
-            const name = b.name ?? b.id;
-            if(!Number.isFinite(cost)){
-              const msg = 'Fast travel destination unavailable.';
-              if(typeof log === 'function') log(msg);
-              if(typeof toast === 'function') toast(msg);
-              globalThis.Dustland?.eventBus?.emit?.('sfx', 'denied');
-              return;
-            }
-            if(fuel < cost){
-              const msg = `Need ${cost} fuel to travel.`;
-              if(typeof log === 'function') log(msg);
-              if(typeof toast === 'function') toast(msg);
-              globalThis.Dustland?.eventBus?.emit?.('sfx', 'denied');
-              return;
-            }
-            if(confirm(`Travel to ${name} for ${cost} fuel?`)) travel(fromId, b);
-          };
+          if(!isOrigin){
+            circle.onclick = () => {
+              const ft = globalThis.Dustland?.fastTravel;
+              const cost = ft?.fuelCost?.(fromId, b.id);
+              const fuel = globalThis.player?.fuel ?? 0;
+              const name = b.name ?? b.id;
+              if(!Number.isFinite(cost)){
+                const msg = 'Fast travel destination unavailable.';
+                if(typeof log === 'function') log(msg);
+                if(typeof toast === 'function') toast(msg);
+                globalThis.Dustland?.eventBus?.emit?.('sfx', 'denied');
+                return;
+              }
+              if(fuel < cost){
+                const msg = `Need ${cost} fuel to travel.`;
+                if(typeof log === 'function') log(msg);
+                if(typeof toast === 'function') toast(msg);
+                globalThis.Dustland?.eventBus?.emit?.('sfx', 'denied');
+                return;
+              }
+              if(confirm(`Travel to ${name} for ${cost} fuel?`)) travel(fromId, b);
+            };
+          }
           svg.appendChild(circle);
 
           const text = document.createElementNS(svgNS, 'text');
           text.setAttribute('x', x + 10);
           text.setAttribute('y', y + 4);
           text.setAttribute('fill', '#fff');
-          text.textContent = b.name ?? b.id;
+          if(i === 0){
+            text.style.fontWeight = 'bold';
+            text.textContent = `Current: ${b.name ?? b.id}`;
+          } else {
+            text.textContent = b.name ?? b.id;
+          }
           svg.appendChild(text);
-
-          pts.push({ x, y });
-        });
+        };
+        if(b?._skipEnsure){
+          render();
+        } else {
+          ensureModule(b, render);
+        }
       });
 
       overlay.appendChild(svg);
