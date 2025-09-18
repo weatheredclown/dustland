@@ -15,7 +15,7 @@ test('camp:open heals party and shows persona menu', async () => {
   const healAll = () => { healed = true; };
   const log = m => { msg = m; };
   const gs = {
-    getState: () => ({ party: [{ id: 'p1', name: 'Hero' }], personas: { a: {} } }),
+    getState: () => ({ party: [{ id: 'p1', name: 'Hero' }], personas: { a: { label: 'Mask A', portraitPrompt: 'AI prompt text' } } }),
     applyPersona: (pid, id) => { applied = id; }
   };
   const party = [{ id: 'p1', name: 'Hero', hydration: 0 }];
@@ -40,10 +40,52 @@ test('camp:open heals party and shows persona menu', async () => {
   assert.equal(msg, 'You rest until healed.');
   const overlay = document.getElementById('personaOverlay');
   assert.ok(overlay.classList.contains('shown'));
+  assert.match(document.getElementById('personaList').textContent, /AI prompt text/);
   const btn = document.querySelector('#personaList .btn');
   assert.ok(btn);
   btn.click();
   assert.equal(applied, 'a');
+  assert.ok(!overlay.classList.contains('shown'));
+});
+
+test('camp:open allows unequipping persona', async () => {
+  const dom = new JSDOM('<!doctype html><body><div class="overlay" id="personaOverlay"><div class="persona-window"><div id="personaList" class="persona-list"></div><button id="closePersonaBtn" class="btn"></button></div></div></body>', { pretendToBeVisual: true });
+  const { document } = dom.window;
+  const bus = new EventEmitter();
+  let healed = false;
+  let cleared = false;
+  const healAll = () => { healed = true; };
+  const gs = {
+    getState: () => ({ party: [{ id: 'p1', name: 'Hero', persona: 'a' }], personas: { a: { label: 'Mask A' } } }),
+    applyPersona: () => {},
+    clearPersona: () => { cleared = true; }
+  };
+  const party = [{ id: 'p1', name: 'Hero', hydration: 0, persona: 'a' }];
+  party.x = 0; party.y = 0;
+  const state = { map: 'world' };
+  const sandbox = {
+    EventBus: bus,
+    Dustland: { gameState: gs, zoneEffects: [] },
+    document,
+    healAll,
+    log: () => {},
+    party,
+    state,
+    updateHUD: () => {}
+  };
+  sandbox.globalThis = sandbox;
+  const code = await fs.readFile(new URL('../scripts/camp-persona.js', import.meta.url), 'utf8');
+  vm.runInNewContext(code, sandbox);
+  bus.emit('camp:open');
+  assert.ok(healed);
+  const overlay = document.getElementById('personaOverlay');
+  assert.ok(overlay.classList.contains('shown'));
+  const unequip = document.querySelector('[data-action="unequip"]');
+  assert.ok(unequip);
+  const equippedBtn = document.querySelector('[data-persona-id="a"]');
+  assert.ok(equippedBtn?.disabled);
+  unequip.click();
+  assert.ok(cleared);
   assert.ok(!overlay.classList.contains('shown'));
 });
 

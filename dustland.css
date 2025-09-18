@@ -778,6 +778,39 @@ input[type="range"] {
   width: 100%;
 }
 
+#personaOverlay .persona-card {
+  border: 1px solid #2b3b2b;
+  border-radius: 6px;
+  padding: 8px;
+  background: #141814;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#personaOverlay .persona-title {
+  font-weight: 600;
+  color: #eef0e8;
+}
+
+#personaOverlay .persona-status {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8fd3a5;
+}
+
+#personaOverlay .persona-prompt {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #c8d3c8;
+}
+
+#personaOverlay .persona-card .btn {
+  margin-top: 4px;
+}
+
 #workbenchOverlay .workbench-window {
   width: 300px;
   background: #0f120f;

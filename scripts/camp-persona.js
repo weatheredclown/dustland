@@ -46,7 +46,19 @@
     if (!member?.id || !overlay || !list) return;
     const personas = state.personas || {};
     const ids = Object.keys(personas);
+    const currentId = member.persona;
     list.innerHTML = '';
+    if (currentId && typeof gs.clearPersona === 'function') {
+      const unequip = document.createElement('button');
+      unequip.className = 'btn';
+      unequip.dataset.action = 'unequip';
+      unequip.textContent = 'Unequip mask';
+      unequip.addEventListener('click', () => {
+        overlay.classList.remove('shown');
+        gs.clearPersona(member.id);
+      }, { once: true });
+      list.appendChild(unequip);
+    }
     if (!ids.length) {
       const msg = document.createElement('div');
       msg.className = 'muted';
@@ -54,14 +66,40 @@
       list.appendChild(msg);
     } else {
       ids.forEach(id => {
+        const data = personas[id] || {};
+        const card = document.createElement('div');
+        card.className = 'persona-card';
+        const title = document.createElement('div');
+        title.className = 'persona-title';
+        title.textContent = data.label || id;
+        card.appendChild(title);
+        if (data.portraitPrompt) {
+          const prompt = document.createElement('p');
+          prompt.className = 'persona-prompt';
+          prompt.textContent = data.portraitPrompt;
+          card.appendChild(prompt);
+        }
+        if (currentId === id) {
+          const status = document.createElement('div');
+          status.className = 'persona-status';
+          status.textContent = 'Currently equipped';
+          card.appendChild(status);
+        }
         const b = document.createElement('button');
         b.className = 'btn';
-        b.textContent = personas[id]?.label || id;
-        b.addEventListener('click', () => {
-          overlay.classList.remove('shown');
-          gs.applyPersona(member.id, id);
-        }, { once: true });
-        list.appendChild(b);
+        b.dataset.personaId = id;
+        if (currentId === id) {
+          b.textContent = 'Equipped';
+          b.disabled = true;
+        } else {
+          b.textContent = 'Equip mask';
+          b.addEventListener('click', () => {
+            overlay.classList.remove('shown');
+            gs.applyPersona(member.id, id);
+          }, { once: true });
+        }
+        card.appendChild(b);
+        list.appendChild(card);
       });
     }
     overlay.classList.add('shown');
