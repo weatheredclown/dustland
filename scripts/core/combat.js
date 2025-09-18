@@ -580,9 +580,30 @@ function doAttack(dmg, type = 'basic'){
 
     // Required weapon gate
     const req = target.requires;
-    if (req && (!weapon || weapon.id !== req)){
-      tDmg = 0;
-      log?.(`${attacker.name}'s attacks can't harm ${target.name}. Equip ${req}.`);
+    if (req){
+      const reqList = Array.isArray(req) ? req : [req];
+      const weaponId = weapon?.id;
+      const weaponTags = Array.isArray(weapon?.tags) ? weapon.tags : [];
+      let meetsRequirement = false;
+      for (const entry of reqList){
+        if (typeof entry === 'string' && entry.startsWith('tag:')){
+          const tag = entry.slice(4);
+          if (weaponTags.includes(tag)){ meetsRequirement = true; break; }
+        } else if (entry && weaponId === entry){
+          meetsRequirement = true;
+          break;
+        }
+      }
+      if (!meetsRequirement){
+        const label = reqList
+          .map(entry => typeof entry === 'string' && entry.startsWith('tag:')
+            ? `${entry.slice(4)} weapon`
+            : entry)
+          .filter(Boolean)
+          .join(' or ') || 'the required weapon';
+        tDmg = 0;
+        log?.(`${attacker.name}'s attacks can't harm ${target.name}. Equip ${label}.`);
+      }
     }
 
     // Immunity to basic attacks
