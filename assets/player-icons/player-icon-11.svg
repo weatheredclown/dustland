@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="geometricPrecision">
+  <defs>
+    <linearGradient id="icon11-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f1020" />
+      <stop offset="1" stop-color="#191b38" />
+    </linearGradient>
+    <radialGradient id="icon11-glow" cx="50%" cy="50%" r="60%">
+      <stop offset="0" stop-color="#9dd4ff" stop-opacity="0.8" />
+      <stop offset="1" stop-color="#060714" stop-opacity="0.1" />
+    </radialGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="url(#icon11-bg)" />
+  <rect x="1.5" y="1.5" width="29" height="29" rx="6" fill="#070816" stroke="#9dd4ff" stroke-width="1.5" opacity="0.88" />
+  <circle cx="16" cy="16" r="11.1" fill="url(#icon11-glow)" />
+  <path d="M16 8.5l5.4 3.1v6.8L16 22.2l-5.4-3.8v-6.8z" fill="#0b1226" stroke="#a9daff" stroke-width="0.9" />
+  <path d="M16 10.9l3 1.7v4.4l-3 2.2-3-2.2v-4.4z" fill="#162243" />
+  <path d="M16 13l1.5 0.9v2.2L16 17l-1.5-0.9v-2.2z" fill="#6fbaff" />
+  <path d="M11.8 20l4.2 4.6 4.2-4.6" fill="none" stroke="#6fbaff" stroke-width="1.1" stroke-linecap="round" />
+  <circle cx="16" cy="24.4" r="1.3" fill="#6fbaff" />
+  <path d="M13.5 11.2l2.5 1.4-1.3 3-2.9-1.4z" fill="#23305a" />
+  <path d="M18.5 11.2l-2.5 1.4 1.3 3 2.9-1.4z" fill="#23305a" />
+</svg>
