@@ -15,7 +15,7 @@ test('camp:open heals party and shows persona menu', async () => {
   const healAll = () => { healed = true; };
   const log = m => { msg = m; };
   const gs = {
-    getState: () => ({ party: [{ id: 'p1', name: 'Hero' }], personas: { a: { label: 'Mask A', portraitPrompt: 'AI prompt text' } } }),
+    getState: () => ({ party: [{ id: 'p1', name: 'Hero' }], personas: { a: { label: 'Mask A', portraitPrompt: 'AI prompt text', mods: { STR: 2, AGI: -1 } } } }),
     applyPersona: (pid, id) => { applied = id; }
   };
   const party = [{ id: 'p1', name: 'Hero', hydration: 0 }];
@@ -40,7 +40,12 @@ test('camp:open heals party and shows persona menu', async () => {
   assert.equal(msg, 'You rest until healed.');
   const overlay = document.getElementById('personaOverlay');
   assert.ok(overlay.classList.contains('shown'));
-  assert.match(document.getElementById('personaList').textContent, /AI prompt text/);
+  const listText = document.getElementById('personaList').textContent;
+  assert.match(listText, /AI prompt text/);
+  assert.match(listText, /\+2 STR/);
+  assert.match(listText, /-1 AGI/);
+  const modsEl = document.querySelector('.persona-mods');
+  assert.ok(modsEl);
   const btn = document.querySelector('#personaList .btn');
   assert.ok(btn);
   btn.click();

@@ -807,6 +807,23 @@ input[type="range"] {
   color: #c8d3c8;
 }
 
+#personaOverlay .persona-mods {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  font-size: 0.75rem;
+  color: #d4e4d0;
+}
+
+#personaOverlay .persona-mods li {
+  background: #1d231d;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
 #personaOverlay .persona-card .btn {
   margin-top: 4px;
 }
