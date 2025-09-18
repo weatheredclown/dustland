@@ -1966,6 +1966,72 @@ test('loadModernSave reloads the current module before patching state', () => {
   }
 });
 
+test('loadModernSave can discard a mismatched saved world', () => {
+  const moduleData = { name:'patch_prompt', seed: 9090, world:[[1,2],[3,4]] };
+  applyModule(moduleData);
+  const saved = {
+    format: 'dustland.save.v2',
+    module: 'patch_prompt',
+    worldSeed: 9090,
+    world: [[9,9],[9,9]],
+    player: { inv: [] },
+    state: { map: 'world' },
+    buildings: [],
+    interiors: {},
+    itemDrops: [],
+    npcs: [],
+    quests: {},
+    party: { members: [], map: 'world', x: 0, y: 0, flags: {}, fallen: [] },
+    worldFlags: {},
+    bunkers: [],
+    gameState: { difficulty: 'normal', flags: {}, clock: 0, personas: {}, npcMemory: {}, effectPacks: {} }
+  };
+  const origConfirm = global.confirm;
+  let prompt = '';
+  let calls = 0;
+  global.confirm = msg => { calls++; prompt = msg; return true; };
+  try {
+    loadModernSave(saved);
+    assert.strictEqual(calls, 1);
+    assert.match(prompt, /Discard the world/);
+    assert.deepStrictEqual(world, [[1,2],[3,4]]);
+  } finally {
+    global.confirm = origConfirm;
+  }
+});
+
+test('loadModernSave keeps the saved world when discard is cancelled', () => {
+  const moduleData = { name:'keep_prompt', seed: 4545, world:[[0,0],[0,0]] };
+  applyModule(moduleData);
+  const saved = {
+    format: 'dustland.save.v2',
+    module: 'keep_prompt',
+    worldSeed: 4545,
+    world: [[5,5],[5,5]],
+    player: { inv: [] },
+    state: { map: 'world' },
+    buildings: [],
+    interiors: {},
+    itemDrops: [],
+    npcs: [],
+    quests: {},
+    party: { members: [], map: 'world', x: 1, y: 1, flags: {}, fallen: [] },
+    worldFlags: {},
+    bunkers: [],
+    gameState: { difficulty: 'normal', flags: {}, clock: 0, personas: {}, npcMemory: {}, effectPacks: {} }
+  };
+  const origConfirm = global.confirm;
+  let calls = 0;
+  global.confirm = () => { calls++; return false; };
+  try {
+    loadModernSave(saved);
+    assert.strictEqual(calls, 1);
+    assert.deepStrictEqual(world, [[5,5],[5,5]]);
+  } finally {
+    global.confirm = origConfirm;
+  }
+});
+
 test('loadModernSave restores bunkers and world flags', () => {
   const moduleData = { name:'flags_mod', seed: 4242, world:[[7,7],[7,7]] };
   applyModule(moduleData);

@@ -723,6 +723,26 @@ function isModernSavePayload(data){
   return Number.isFinite(ver) && ver >= 2;
 }
 
+function cloneWorldGrid(grid){
+  if(!Array.isArray(grid)) return [];
+  return grid.map(row => Array.isArray(row) ? [...row] : row);
+}
+
+function worldsDiffer(a, b){
+  if(!Array.isArray(a) || !Array.isArray(b)) return Array.isArray(a) !== Array.isArray(b);
+  if(a.length !== b.length) return true;
+  for(let y = 0; y < a.length; y++){
+    const rowA = a[y];
+    const rowB = b[y];
+    if(!Array.isArray(rowA) || !Array.isArray(rowB)) return true;
+    if(rowA.length !== rowB.length) return true;
+    for(let x = 0; x < rowA.length; x++){
+      if(rowA[x] !== rowB[x]) return true;
+    }
+  }
+  return false;
+}
+
 function resolveModuleName(rawModule){
   const seen = new Set();
   function inner(value){
@@ -1194,11 +1214,25 @@ function loadModernSave(d){
   }else{
     genWorld(d.worldSeed || Date.now());
   }
+  const moduleWorld = cloneWorldGrid(world);
   worldSeed = d.worldSeed || Date.now();
   setRNGSeed(worldSeed);
   if(Array.isArray(d.world)){
-    world.length = 0;
-    d.world.forEach(row => world.push(Array.isArray(row) ? [...row] : row));
+    let useSavedWorld = true;
+    if(moduleWorld.length && worldsDiffer(moduleWorld, d.world)){
+      const moduleLabel = moduleData?.title || moduleData?.displayName || moduleData?.name || moduleName || 'this module';
+      const prompt = `${moduleLabel} has a newer world layout. Discard the world stored in your save and load the updated map? Choose Cancel to keep your saved world.`;
+      const discard = typeof globalThis.confirm === 'function' ? globalThis.confirm(prompt) : false;
+      if(discard){
+        useSavedWorld = false;
+        log('Saved world discarded; using updated module map.');
+        if (typeof toast === 'function') toast('Using updated module map.');
+      }
+    }
+    if(useSavedWorld){
+      world.length = 0;
+      d.world.forEach(row => world.push(Array.isArray(row) ? [...row] : row));
+    }
   }
   if(d.interiors){
     Object.keys(d.interiors).forEach(id => {
