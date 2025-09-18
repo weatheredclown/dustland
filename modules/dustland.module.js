@@ -916,7 +916,7 @@ const DATA = `
       "map": "world",
       "x": 16,
       "y": 55,
-      "color": "#fF0000",
+      "color": "#ff0000",
       "name": "Mira",
       "title": "Blade Dancer",
       "desc": "A lithe fighter ready to strike back.",
