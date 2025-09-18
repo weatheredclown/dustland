@@ -648,11 +648,11 @@ function getRetroNpcSprite(n){
 }
 
 function buildRetroItemGlyphSvg(){
-  const base = '#050805';
   const inner = '#111b12';
   const glowA = '#c8ffbf';
   const glowB = '#64f0ff';
   const accent = '#ffe59a';
+  const shrink = 'translate(16 16) scale(0.75) translate(-16 -16)';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="geometricPrecision">
   <defs>
     <radialGradient id="retroItemGlyphAura" cx="50%" cy="45%" r="55%">
@@ -665,25 +665,25 @@ function buildRetroItemGlyphSvg(){
       <stop offset="1" stop-color="${glowB}" stop-opacity="0.65"/>
     </linearGradient>
   </defs>
-  <rect width="32" height="32" rx="6" fill="${base}"/>
-  <rect x="1.5" y="1.5" width="29" height="29" rx="6" fill="${inner}" stroke="${glowB}" stroke-width="1.5" opacity="0.92"/>
-  <circle cx="16" cy="14.5" r="10.5" fill="url(#retroItemGlyphAura)" opacity="0.85"/>
-  <path d="M11 12.5l2.8-4.2h4.4l2.8 4.2" fill="none" stroke="${glowB}" stroke-width="1.2" stroke-linecap="round"/>
-  <path d="M9.5 14h13l-1 11.2c-0.2 1.9-1.7 3.3-3.6 3.3h-3.8c-1.9 0-3.4-1.4-3.6-3.3z" fill="url(#retroItemGlyphBody)" stroke="${glowB}" stroke-width="1" stroke-linejoin="round"/>
-  <path d="M12.2 18.3h7.6" stroke="${accent}" stroke-width="1.2" stroke-linecap="round" opacity="0.85"/>
-  <circle cx="16" cy="21" r="1.5" fill="${accent}" stroke="${glowB}" stroke-width="0.7"/>
-  <path d="M12.7 22.8l-1 2.6" stroke="${accent}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>
-  <path d="M19.3 22.8l1 2.6" stroke="${accent}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>
+  <g transform="${shrink}">
+    <circle cx="16" cy="14.5" r="10.5" fill="url(#retroItemGlyphAura)" opacity="0.85"/>
+    <path d="M11 12.5l2.8-4.2h4.4l2.8 4.2" fill="none" stroke="${glowB}" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M9.5 14h13l-1 11.2c-0.2 1.9-1.7 3.3-3.6 3.3h-3.8c-1.9 0-3.4-1.4-3.6-3.3z" fill="url(#retroItemGlyphBody)" stroke="${glowB}" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M12.2 18.3h7.6" stroke="${accent}" stroke-width="1.2" stroke-linecap="round" opacity="0.85"/>
+    <circle cx="16" cy="21" r="1.5" fill="${accent}" stroke="${glowB}" stroke-width="0.7"/>
+    <path d="M12.7 22.8l-1 2.6" stroke="${accent}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>
+    <path d="M19.3 22.8l1 2.6" stroke="${accent}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>
+  </g>
 </svg>`;
 }
 
 function buildRetroItemCacheSvg(){
-  const base = '#050805';
   const inner = '#1a130a';
   const glowA = '#ffcd7a';
   const glowB = '#ff7f6a';
   const accent = '#fff4cc';
   const edge = '#7f3b16';
+  const shrink = 'translate(16 16) scale(0.75) translate(-16 -16)';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="geometricPrecision">
   <defs>
     <radialGradient id="retroItemCacheAura" cx="50%" cy="40%" r="60%">
@@ -699,17 +699,17 @@ function buildRetroItemCacheSvg(){
       <stop offset="1" stop-color="${glowB}" stop-opacity="0.75"/>
     </linearGradient>
   </defs>
-  <rect width="32" height="32" rx="6" fill="${base}"/>
-  <rect x="1.5" y="1.5" width="29" height="29" rx="6" fill="${inner}" stroke="${glowA}" stroke-width="1.5" opacity="0.93"/>
-  <circle cx="16" cy="15" r="11.5" fill="url(#retroItemCacheAura)" opacity="0.82"/>
-  <rect x="8" y="9.5" width="16" height="7.5" rx="2.5" fill="url(#retroItemCacheLid)" stroke="${edge}" stroke-width="1"/>
-  <rect x="9.5" y="14" width="13" height="9.5" rx="2.5" fill="url(#retroItemCacheFront)" stroke="${edge}" stroke-width="1"/>
-  <path d="M9.5 16.5h13" stroke="${edge}" stroke-width="1.1" stroke-linecap="round" opacity="0.85"/>
-  <path d="M14.5 9.5l-2 3" stroke="${edge}" stroke-width="1.1" stroke-linecap="round" opacity="0.75"/>
-  <path d="M17.5 9.5l2 3" stroke="${edge}" stroke-width="1.1" stroke-linecap="round" opacity="0.75"/>
-  <circle cx="16" cy="18.8" r="1.6" fill="${accent}" stroke="${edge}" stroke-width="0.8"/>
-  <path d="M12.2 20.8l-1.4 3" stroke="${accent}" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
-  <path d="M19.8 20.8l1.4 3" stroke="${accent}" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
+  <g transform="${shrink}">
+    <circle cx="16" cy="15" r="11.5" fill="url(#retroItemCacheAura)" opacity="0.82"/>
+    <rect x="8" y="9.5" width="16" height="7.5" rx="2.5" fill="url(#retroItemCacheLid)" stroke="${edge}" stroke-width="1"/>
+    <rect x="9.5" y="14" width="13" height="9.5" rx="2.5" fill="url(#retroItemCacheFront)" stroke="${edge}" stroke-width="1"/>
+    <path d="M9.5 16.5h13" stroke="${edge}" stroke-width="1.1" stroke-linecap="round" opacity="0.85"/>
+    <path d="M14.5 9.5l-2 3" stroke="${edge}" stroke-width="1.1" stroke-linecap="round" opacity="0.75"/>
+    <path d="M17.5 9.5l2 3" stroke="${edge}" stroke-width="1.1" stroke-linecap="round" opacity="0.75"/>
+    <circle cx="16" cy="18.8" r="1.6" fill="${accent}" stroke="${edge}" stroke-width="0.8"/>
+    <path d="M12.2 20.8l-1.4 3" stroke="${accent}" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
+    <path d="M19.8 20.8l1.4 3" stroke="${accent}" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
+  </g>
 </svg>`;
 }
 
