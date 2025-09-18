@@ -1656,7 +1656,7 @@ const DATA = `
       "portraitSheet": "assets/portraits/dustland-module/hidden_hermit_4.png",
       "tree": {
         "start": {
-          "text": "Didn't expect company twice.",
+          "text": "Didn't expect company twice. If you're trekking near those Ashen pits, remember Ashen Howlers hate getting stunned—clip on a Stun Gear Harness trinket and their chorus falls apart.",
           "choices": [
             {
               "label": "(Leave)",

@@ -52,7 +52,7 @@ const DATA = `
       "y": 45,
       "tree": {
         "start": {
-          "text": "",
+          "text": "Ashen Howlers layer their howls into solid walls if you let them. Stun gear short-circuits the chorus—equip a trinket like the Stun Gear Harness before you step into their pit.",
           "choices": [
             {
               "label": "(Leave)",
