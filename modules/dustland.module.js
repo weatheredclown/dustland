@@ -3041,6 +3041,107 @@ const DATA = `
           "max": 5
         }
       }
+    },
+    {
+      "id": "ashen_howler",
+      "name": "Ashen Howler",
+      "portraitSheet": "assets/portraits/dustland-module/scrap_mutt_4.png",
+      "portraitLock": false,
+      "combat": {
+        "HP": 36,
+        "ATK": 7,
+        "DEF": 3,
+        "challenge": 30,
+        "special": {
+          "cue": "lets loose a concussive howl!",
+          "dmg": 6,
+          "spread": true,
+          "stun": 1,
+          "delay": 550
+        },
+        "scrap": {
+          "min": 12,
+          "max": 16
+        }
+      }
+    },
+    {
+      "id": "slag_legionnaire",
+      "name": "Slag Legionnaire",
+      "portraitSheet": "assets/portraits/dustland-module/iron_brute_4.png",
+      "portraitLock": false,
+      "combat": {
+        "HP": 42,
+        "ATK": 8,
+        "DEF": 5,
+        "challenge": 34,
+        "special": {
+          "cue": "slams molten shields!",
+          "dmg": 8,
+          "stun": 1,
+          "delay": 600
+        },
+        "scrap": {
+          "min": 18,
+          "max": 24
+        }
+      }
+    },
+    {
+      "id": "venom_choirist",
+      "name": "Venom Choir",
+      "portraitSheet": "assets/portraits/dustland-module/vine_creature_4.png",
+      "portraitLock": false,
+      "combat": {
+        "HP": 50,
+        "ATK": 9,
+        "DEF": 6,
+        "challenge": 38,
+        "special": {
+          "cue": "chants a venomous chorus!",
+          "dmg": 9,
+          "delay": 600,
+          "poison": {
+            "strength": 3,
+            "duration": 4
+          },
+          "spread": true
+        },
+        "scrap": {
+          "min": 24,
+          "max": 32
+        }
+      }
+    },
+    {
+      "id": "cinder_tyrant",
+      "name": "Cinder Tyrant",
+      "portraitSheet": "assets/portraits/dustland-module/sand_colossus_4.png",
+      "portraitLock": false,
+      "combat": {
+        "HP": 190,
+        "ATK": 12,
+        "DEF": 8,
+        "challenge": 50,
+        "boss": true,
+        "special": {
+          "cue": "erupts in a cinder storm!",
+          "dmg": 14,
+          "delay": 500,
+          "spread": true,
+          "stun": 1,
+          "poison": {
+            "strength": 2,
+            "duration": 3
+          }
+        },
+        "scrap": {
+          "min": 45,
+          "max": 60
+        },
+        "loot": "epic_blade",
+        "lootChance": 1
+      }
     }
   ],
   "portals": [
@@ -3098,6 +3199,13 @@ const DATA = `
         "loot": "artifact_blade",
         "lootChance": 0.75,
         "minDist": 44
+      }
+    ],
+    "room_oc3abv": [
+      {
+        "templateId": "ashen_howler",
+        "count": 3,
+        "challenge": 32
       }
     ]
   },
@@ -14626,6 +14734,179 @@ function postLoad(module) {
       if (id !== 'step' || state.map !== 'hall') return;
       if (++turns === 100) open();
     });
+
+    const enemyBanksRef = globalThis.enemyBanks;
+    const adjustDefense = (enemy, delta) => {
+      if (!enemy || typeof delta !== 'number') return;
+      const current = typeof enemy.DEF === 'number' ? enemy.DEF : 0;
+      enemy.DEF = Math.max(0, current + delta);
+    };
+    const hasUpgrade = id => {
+      if (!id) return false;
+      const roster = Array.isArray(party) ? party : [];
+      for (const member of roster) {
+        const slots = member?.equip;
+        if (!slots) continue;
+        if (slots.weapon?.id === id || slots.armor?.id === id || slots.trinket?.id === id) {
+          return true;
+        }
+      }
+      if (typeof countItems === 'function' && countItems(id) > 0) return true;
+      if (typeof hasItem === 'function' && hasItem(id)) return true;
+      return false;
+    };
+    const waves = [
+      {
+        templateId: 'ashen_howler',
+        count: 3,
+        bankChallenge: 32,
+        announce: 'Ashen Howlers erupt from the pit, their throats crackling with static. Stun gear can short their chorus.',
+        toast: 'Wave 1: Ashen Howlers',
+        vulnerability: {
+          check: () => hasUpgrade('stun_baton'),
+          onMatch(enemy) { adjustDefense(enemy, -2); },
+          onMiss(enemy) { adjustDefense(enemy, 2); },
+          successMsg: 'Your stun weaponry rattles the pack and strips away their guard.',
+          failMsg: 'Without stun tech the howlers harden into concussion shields.'
+        }
+      },
+      {
+        templateId: 'slag_legionnaire',
+        count: 2,
+        bankChallenge: 38,
+        announce: 'Slag Legionnaires march in, slag-shields raised. Incendiaries will melt their plating.',
+        toast: 'Wave 2: Slag Legionnaires',
+        vulnerability: {
+          check: () => hasUpgrade('incendiary_grenade'),
+          onMatch(enemy) { adjustDefense(enemy, -3); },
+          onMiss(enemy) { adjustDefense(enemy, 2); },
+          successMsg: 'Incendiary reserves bubble their armor into brittle slag.',
+          failMsg: 'Without incendiaries the legionnaires lock their shields tight.'
+        }
+      },
+      {
+        templateId: 'venom_choirist',
+        count: 3,
+        bankChallenge: 44,
+        announce: 'The Venom Choir glides from the smoke, chanting toxins into the air. Artifact blades can sever the harmony.',
+        toast: 'Wave 3: Venom Choir',
+        vulnerability: {
+          check: () => hasUpgrade('artifact_blade'),
+          onMatch(enemy) { adjustDefense(enemy, -4); },
+          onMiss(enemy) { adjustDefense(enemy, 3); },
+          successMsg: 'The artifact blade hums and slices through their resonance armor.',
+          failMsg: 'Without the artifact blade their harmonic shell hardens.'
+        }
+      },
+      {
+        templateId: 'cinder_tyrant',
+        count: 1,
+        bankChallenge: 52,
+        announce: 'The Cinder Tyrant descends in a blaze, magma wings blotting the arena. Only the artifact blade keeps the flames at bay.',
+        toast: 'Final Wave: Cinder Tyrant',
+        vulnerability: {
+          check: () => hasUpgrade('artifact_blade'),
+          onMatch(enemy) { adjustDefense(enemy, -5); },
+          onMiss(enemy) { adjustDefense(enemy, 4); },
+          successMsg: 'Artifact steel melts through the Tyrant’s outer shell.',
+          failMsg: 'Without the artifact blade the Tyrant shrugs off every strike.'
+        }
+      }
+    ];
+    const arenaState = { wave: 0, engaged: false, pending: false, cleared: false };
+    const ensureBank = index => {
+      if (!enemyBanksRef) return;
+      const bank = enemyBanksRef.room_oc3abv || (enemyBanksRef.room_oc3abv = []);
+      bank.length = 0;
+      if (index >= 0 && waves[index]) {
+        const wave = waves[index];
+        const entry = { templateId: wave.templateId, count: wave.count ?? 1 };
+        if (wave.bankChallenge) entry.challenge = wave.bankChallenge;
+        bank.push(entry);
+      }
+    };
+    const buildEnemy = wave => {
+      const template = module.templates?.find(t => t.id === wave.templateId);
+      if (!template) return null;
+      const combat = template.combat ? JSON.parse(JSON.stringify(template.combat)) : {};
+      return {
+        id: template.id,
+        name: template.name,
+        portraitSheet: template.portraitSheet,
+        portraitLock: template.portraitLock,
+        ...combat
+      };
+    };
+    const startArenaWave = index => {
+      const wave = waves[index];
+      if (!wave) return;
+      const enemy = buildEnemy(wave);
+      if (!enemy) return;
+      ensureBank(index);
+      enemy.count = wave.count ?? 1;
+      if (wave.prompt) enemy.prompt = wave.prompt;
+      if (wave.vulnerability) {
+        const ready = wave.vulnerability.check();
+        if (ready) {
+          wave.vulnerability.onMatch?.(enemy);
+          if (wave.vulnerability.successMsg && typeof log === 'function') log(wave.vulnerability.successMsg);
+        } else {
+          wave.vulnerability.onMiss?.(enemy);
+          if (wave.vulnerability.failMsg && typeof log === 'function') log(wave.vulnerability.failMsg);
+        }
+      }
+      if (typeof log === 'function') log(wave.announce);
+      if (wave.toast && typeof toast === 'function') toast(wave.toast);
+      arenaState.engaged = true;
+      arenaState.pending = false;
+      arenaState.currentId = wave.templateId;
+      Dustland.actions?.startCombat?.(enemy);
+    };
+    const queueWaveStart = (delay = 0) => {
+      if (arenaState.pending || arenaState.engaged || arenaState.cleared) return;
+      if (state.map !== 'room_oc3abv') return;
+      arenaState.pending = true;
+      ensureBank(arenaState.wave);
+      setTimeout(() => {
+        arenaState.pending = false;
+        if (state.map !== 'room_oc3abv' || arenaState.engaged || arenaState.cleared) return;
+        startArenaWave(arenaState.wave);
+      }, Math.max(0, delay));
+    };
+    const resetArena = () => {
+      arenaState.wave = 0;
+      arenaState.pending = false;
+      arenaState.engaged = false;
+      arenaState.cleared = false;
+      ensureBank(0);
+    };
+
+    ensureBank(0);
+    bus.on('movement:player', ({ map }) => {
+      if (map !== 'room_oc3abv') return;
+      if (arenaState.cleared) return;
+      queueWaveStart();
+    });
+    bus.on('combat:ended', ({ result }) => {
+      if (!arenaState.engaged) return;
+      arenaState.engaged = false;
+      if (result === 'loot') {
+        arenaState.wave += 1;
+        if (arenaState.wave < waves.length) {
+          if (typeof log === 'function') log(`The arena shifts. Prepare for wave ${arenaState.wave + 1}.`);
+          queueWaveStart(600);
+        } else {
+          arenaState.cleared = true;
+          ensureBank(-1);
+          if (typeof log === 'function') log('The Cinder Tyrant collapses, showering the arena in blazing scrap!');
+          if (typeof toast === 'function') toast('Arena complete! The Cinder Tyrant drops an epic weapon.');
+        }
+      } else {
+        resetArena();
+        if (typeof log === 'function') log('The arena resets to its opening challenge.');
+      }
+    });
+    if (state.map === 'room_oc3abv') queueWaveStart(250);
   }
 }
 
