@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1" />
+  <title>Dustland: Neon Drift</title>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dustland.css" />
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    body.neon-slate {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Oxanium', 'Pixelify Sans', sans-serif;
+      color: #f4fbff;
+      background: radial-gradient(circle at top, rgba(24, 94, 177, 0.35), rgba(3, 6, 22, 0.96) 70%),
+        url('assets/portraits/dustland-module/slot_machine.png') right bottom/420px no-repeat fixed #030616;
+      position: relative;
+      overflow-x: hidden;
+    }
+    .neon-background {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -2;
+    }
+    .neon-background__glow,
+    .neon-background__grid {
+      position: absolute;
+      inset: -20%;
+    }
+    .neon-background__glow {
+      background: radial-gradient(circle at 20% 15%, rgba(57, 224, 255, 0.18), transparent 55%),
+        radial-gradient(circle at 85% 30%, rgba(199, 109, 255, 0.25), transparent 55%),
+        radial-gradient(circle at 50% 85%, rgba(38, 123, 255, 0.16), transparent 60%);
+      filter: blur(8px);
+      animation: aurora 16s ease-in-out infinite alternate;
+    }
+    .neon-background__grid {
+      background-image:
+        linear-gradient(rgba(18, 41, 88, 0.45) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(18, 41, 88, 0.45) 1px, transparent 1px);
+      background-size: 120px 120px;
+      transform: perspective(900px) rotateX(68deg);
+      top: 40%;
+      animation: drift 22s linear infinite;
+      opacity: 0.28;
+    }
+    @keyframes aurora {
+      from { transform: translate3d(-3%, -2%, 0) scale(1.02); }
+      to { transform: translate3d(3%, 2%, 0) scale(1.05); }
+    }
+    @keyframes drift {
+      from { background-position: 0 0, 0 0; }
+      to { background-position: 0 240px, 240px 0; }
+    }
+    .neon-shell {
+      position: relative;
+      width: min(1240px, 96vw);
+      margin: 0 auto;
+      padding: 28px 24px 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .neon-header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px 22px;
+      border-radius: 18px;
+      background: rgba(5, 12, 32, 0.72);
+      border: 1px solid rgba(115, 198, 255, 0.3);
+      box-shadow: 0 0 48px rgba(63, 193, 255, 0.22);
+      backdrop-filter: blur(6px);
+    }
+    .neon-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+    .neon-brand h1 {
+      margin: 0;
+      font-size: clamp(1.4rem, 4vw, 1.9rem);
+    }
+    .brand-glyph {
+      font-size: 1.6rem;
+      color: #6bdeff;
+      text-shadow: 0 0 18px rgba(117, 219, 255, 0.9);
+    }
+    .neon-tagline {
+      margin: 0;
+      font-size: 0.9rem;
+      color: rgba(201, 231, 255, 0.78);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .wrap.alt-wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);
+      gap: 24px;
+      align-items: stretch;
+    }
+    .playfield {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tube.alt-tube {
+      position: relative;
+      padding: 20px;
+      border-radius: 24px;
+      border: 2px solid rgba(90, 200, 255, 0.6);
+      box-shadow: 0 0 60px rgba(80, 180, 255, 0.4), inset 0 0 40px rgba(30, 120, 255, 0.32);
+      background: linear-gradient(160deg, rgba(6, 12, 32, 0.92), rgba(10, 24, 54, 0.75));
+    }
+    #game {
+      width: min(100%, 720px);
+      height: auto;
+      border-radius: 16px;
+      background: #050b1f;
+      border: 1px solid rgba(160, 230, 255, 0.18);
+      box-shadow: inset 0 0 20px rgba(30, 120, 255, 0.25);
+      image-rendering: pixelated;
+    }
+    .scanlines-overlay {
+      position: absolute;
+      inset: 20px;
+      border-radius: 16px;
+      pointer-events: none;
+      background-image: repeating-linear-gradient(transparent 0 2px, rgba(96, 215, 255, 0.08) 2px 4px);
+      mix-blend-mode: screen;
+      opacity: 0.25;
+      animation: flicker 9s ease-in-out infinite;
+    }
+    @keyframes flicker {
+      0%, 100% { opacity: 0.18; }
+      45% { opacity: 0.28; }
+      55% { opacity: 0.22; }
+      70% { opacity: 0.3; }
+    }
+    .panel.alt-panel {
+      background: rgba(4, 10, 28, 0.82);
+      border: 1px solid rgba(120, 200, 255, 0.34);
+      border-radius: 22px;
+      box-shadow: 0 0 52px rgba(45, 160, 255, 0.32);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 20px 22px 24px;
+      height: 100%;
+    }
+    .panel .content {
+      background: rgba(6, 18, 38, 0.6);
+      border: 1px solid rgba(98, 175, 255, 0.24);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: inset 0 0 18px rgba(30, 88, 155, 0.28);
+    }
+    .panel .content#log {
+      height: 200px;
+      overflow-y: auto;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    .alt-hud {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+    .badge.alt-badge {
+      background: rgba(8, 28, 52, 0.68);
+      border: 1px solid rgba(120, 210, 255, 0.4);
+      border-radius: 16px;
+      padding: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.7rem;
+      color: rgba(201, 233, 255, 0.84);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: inset 0 0 22px rgba(28, 118, 205, 0.25);
+    }
+    .badge.alt-badge .label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #f4fbff;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+    }
+    .badge.alt-badge .hudbar.alt-bar {
+      border-radius: 999px;
+      border: 1px solid rgba(120, 210, 255, 0.5);
+      background: rgba(8, 16, 32, 0.9);
+      height: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    .badge.alt-badge .hudbar.alt-bar .fill {
+      background: linear-gradient(90deg, #1fe8ff, #9d63ff);
+      height: 100%;
+      border-radius: 999px;
+    }
+    .badge.alt-badge .hudbar.alt-bar .ghost {
+      position: absolute;
+      inset: 0;
+      background: rgba(143, 211, 255, 0.2);
+      border-radius: 999px;
+      transform-origin: left;
+    }
+    .muted.alt-muted {
+      color: rgba(194, 222, 255, 0.72);
+      font-size: 0.82rem;
+      margin-top: 12px;
+      letter-spacing: 0.06em;
+    }
+    .tabs.alt-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .tabs.alt-tabs .tab {
+      background: rgba(10, 28, 52, 0.72);
+      border: 1px solid rgba(120, 210, 255, 0.4);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .tabs.alt-tabs .tab.active {
+      box-shadow: 0 0 20px rgba(90, 220, 255, 0.35);
+      transform: translateY(-1px);
+    }
+    .tabwrap.alt-tabwrap {
+      margin-top: 12px;
+      min-height: 160px;
+    }
+    .main-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+    body.neon-slate .btn {
+      background: linear-gradient(135deg, rgba(26, 88, 198, 0.8), rgba(167, 78, 255, 0.82));
+      border: 1px solid rgba(143, 219, 255, 0.6);
+      color: #f4fbff;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      border-radius: 999px;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    body.neon-slate .btn:hover {
+      box-shadow: 0 0 22px rgba(125, 215, 255, 0.45);
+      transform: translateY(-1px);
+    }
+    body.neon-slate .btn:focus-visible {
+      outline: 2px solid rgba(108, 233, 255, 0.75);
+      outline-offset: 3px;
+    }
+    #panelToggle.panel-toggle {
+      position: fixed;
+      bottom: 28px;
+      right: 30px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(8, 20, 46, 0.85);
+      border: 1px solid rgba(120, 200, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: #f4fbff;
+      box-shadow: 0 0 32px rgba(70, 180, 255, 0.38);
+      backdrop-filter: blur(4px);
+      z-index: 30;
+    }
+    #panelToggle.panel-toggle:hover {
+      box-shadow: 0 0 42px rgba(120, 230, 255, 0.5);
+    }
+    #nanoStatus {
+      position: fixed;
+      top: 20px;
+      left: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 40;
+    }
+    #nanoProgress {
+      width: 180px;
+      height: 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(120, 200, 255, 0.4);
+      background: rgba(5, 12, 28, 0.8);
+      overflow: hidden;
+    }
+    #nanoProgress::after {
+      content: '';
+      display: block;
+      width: 40%;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(130, 225, 255, 0.75), rgba(166, 91, 255, 0.75));
+      animation: nanoFlow 2.8s ease-in-out infinite;
+    }
+    @keyframes nanoFlow {
+      0%, 100% { transform: translateX(-60%); }
+      50% { transform: translateX(160%); }
+    }
+    #nanoBadge {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: rgba(9, 26, 48, 0.9);
+      border: 1px solid rgba(120, 200, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6fffe9;
+      font-size: 1rem;
+      box-shadow: 0 0 18px rgba(120, 200, 255, 0.35);
+    }
+    #moduleLoader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(3, 6, 18, 0.92);
+      z-index: 60;
+      transition: opacity 0.3s ease;
+    }
+    #moduleLoader.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .module-window {
+      width: min(420px, 90vw);
+      background: rgba(7, 14, 35, 0.95);
+      border-radius: 20px;
+      border: 1px solid rgba(120, 200, 255, 0.36);
+      box-shadow: 0 0 42px rgba(75, 190, 255, 0.32);
+      padding: 24px 26px;
+      text-align: center;
+    }
+    .module-window header {
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      color: #98e8ff;
+    }
+    .loader-bar {
+      position: relative;
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(120, 200, 255, 0.32);
+      background: rgba(6, 14, 32, 0.8);
+      margin: 16px 0 0;
+    }
+    .loader-bar span {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(39, 204, 255, 0.9), rgba(167, 87, 255, 0.9));
+      animation: progress 2.2s linear infinite;
+    }
+    @keyframes progress {
+      0% { transform: translateX(-100%); }
+      50% { transform: translateX(-10%); }
+      100% { transform: translateX(120%); }
+    }
+    body.neon-slate .win {
+      background: rgba(6, 14, 36, 0.94);
+      border: 1px solid rgba(120, 200, 255, 0.34);
+      border-radius: 18px;
+      box-shadow: 0 0 48px rgba(62, 190, 255, 0.3);
+    }
+    body.neon-slate .win header {
+      background: linear-gradient(90deg, rgba(34, 142, 255, 0.32), rgba(155, 74, 255, 0.32));
+      border-bottom: 1px solid rgba(120, 200, 255, 0.36);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      padding: 12px 16px;
+    }
+    body.neon-slate .win main {
+      padding: 16px;
+    }
+    body.neon-slate .overlay .dialog {
+      background: rgba(7, 12, 32, 0.96);
+      border: 1px solid rgba(120, 200, 255, 0.36);
+      border-radius: 18px;
+      box-shadow: 0 0 42px rgba(70, 180, 255, 0.32);
+    }
+    body.neon-slate .combat-window {
+      background: rgba(6, 16, 38, 0.96);
+      border: 1px solid rgba(120, 200, 255, 0.34);
+      border-radius: 18px;
+      box-shadow: 0 0 42px rgba(70, 180, 255, 0.32);
+    }
+    @media (max-width: 1080px) {
+      .wrap.alt-wrap {
+        grid-template-columns: 1fr;
+      }
+      .panel.alt-panel {
+        min-height: 520px;
+      }
+    }
+    @media (max-width: 760px) {
+      .neon-shell {
+        padding-bottom: 160px;
+      }
+      .tube.alt-tube {
+        padding: 14px;
+      }
+      #panelToggle.panel-toggle {
+        bottom: 18px;
+        right: 18px;
+      }
+      #nanoStatus {
+        top: 12px;
+        left: 12px;
+      }
+      .panel .content#log {
+        height: 160px;
+      }
+    }
+  </style>
+</head>
+<body class="neon-slate">
+  <div class="neon-background">
+    <div class="neon-background__glow"></div>
+    <div class="neon-background__grid"></div>
+  </div>
+  <div id="nanoStatus">
+    <div id="nanoProgress" class="nano-progress"></div>
+    <div id="nanoBadge" class="nano-badge off">✗</div>
+  </div>
+  <div class="neon-shell">
+    <header class="neon-header">
+      <div class="neon-brand">
+        <span class="brand-glyph">⚡</span>
+        <h1 id="title">Dustland // Neon Drift</h1>
+      </div>
+      <p class="neon-tagline">Boot the Dustland module instantly with a synthwave vibe.</p>
+    </header>
+    <div class="wrap alt-wrap">
+      <div class="playfield">
+        <div class="tube alt-tube">
+          <canvas id="game" width="640" height="480" class="glow" aria-label="Dustland Neon Drift"></canvas>
+          <div class="scanlines-overlay"></div>
+        </div>
+      </div>
+      <aside class="panel alt-panel">
+        <div class="panel-inner">
+          <div class="content" id="log"></div>
+          <div class="content">
+            <div class="hud alt-hud">
+              <div id="weatherBanner" class="weather-banner" hidden></div>
+              <div class="badge alt-badge">
+                <div class="label">HP <span id="hp">10</span><span id="hydrationMeter" class="hydration" hidden></span></div>
+                <div class="hudbar alt-bar" id="hpBar" role="progressbar" aria-label="Health" aria-valuemin="0" aria-valuemax="10" aria-valuenow="10">
+                  <div class="ghost" id="hpGhost"></div>
+                  <div class="fill" id="hpFill"></div>
+                </div>
+                <div class="status-row" id="statusIcons"></div>
+              </div>
+              <div class="badge alt-badge">
+                <div class="label">Adrenaline</div>
+                <div class="hudbar adr alt-bar" id="adrBar" role="progressbar" aria-label="Adrenaline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="fill" id="adrFill"></div></div>
+              </div>
+              <div class="badge alt-badge">Scrap: <span id="scrap">0</span></div>
+              <div class="badge alt-badge">Map: <span id="mapname">—</span></div>
+            </div>
+            <p class="muted alt-muted">Controls: <b>WASD/Arrows</b> move • <b>E/Space</b> interact &amp; take • <b>T/G</b> take item • <b>I</b> Inventory • <b>P</b> Party • <b>Q</b> Quests • <b>O</b> audio • <b>C</b> mobile controls • <b>M</b> minimap • <b>Esc</b> close</p>
+            <div class="tabs alt-tabs" role="tablist">
+              <div class="tab active" id="tabInv" role="tab" tabindex="0" aria-label="Inventory" aria-selected="true">Inventory</div>
+              <div class="tab" id="tabParty" role="tab" tabindex="0" aria-label="Party" aria-selected="false">Party</div>
+              <div class="tab" id="tabQuests" role="tab" tabindex="0" aria-label="Quests" aria-selected="false">Quests</div>
+            </div>
+            <div class="tabwrap alt-tabwrap" id="tabWrap">
+              <div id="inv"></div>
+              <div id="party" style="display:none"></div>
+              <div id="quests" style="display:none"></div>
+            </div>
+            <div class="main-buttons" id="mainButtons">
+              <button class="btn" id="saveBtn">Save</button>
+              <button class="btn" id="loadBtn">Load</button>
+              <button class="btn" id="clearBtn">Clear Save</button>
+              <button class="btn" id="resetBtn">Reset</button>
+              <button class="btn" id="settingsBtn">Settings</button>
+              <button class="btn" id="fxBtn">FX</button>
+              <button class="btn" id="perfBtn">Perf</button>
+              <button class="btn" id="campBtn">Camp</button>
+              <button class="btn" id="screenshotBtn" hidden>Screenshot</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div id="panelToggle" class="panel-toggle">☰</div>
+
+  <div id="moduleLoader">
+    <div class="module-window">
+      <header>Loading Neon Drift</header>
+      <main>
+        <p id="moduleLoaderText">Preparing Dustland module…</p>
+        <div class="loader-bar"><span></span></div>
+      </main>
+    </div>
+  </div>
+
+  <div id="start">
+    <div class="win">
+      <header>Neon Drift — Start</header>
+      <main>
+        <p class="muted">Continue your journey or surge into a fresh neon run?</p>
+        <div>
+          <button class="btn" id="startContinue">Continue</button>
+          <button class="btn" id="startNew">New Game</button>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true">
+    <div class="dialog">
+      <header>
+        <div class="portrait" id="port"></div>
+        <div><div id="npcName" style="font-weight:700"></div><div class="small" id="npcTitle"></div></div>
+      </header>
+      <main id="dialogText"></main>
+      <div class="choices" id="choices"></div>
+      <button id="persistLLM" class="btn small" style="display:none">Persist LLM</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="combatOverlay" role="dialog" aria-modal="true">
+    <div class="combat-window">
+      <div class="battlefield">
+        <div class="enemy-row" id="combatEnemies"></div>
+        <div class="party-row" id="combatParty"></div>
+      </div>
+      <div class="command-row">
+        <div class="turn" id="turnIndicator"></div>
+        <div class="cmd" id="combatCmd"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="creator" style="display:none">
+    <div class="win">
+      <header>
+        <div><b>Neon Drift: Party Creation</b> — <span id="ccStep">1</span>/5</div>
+        <div class="small">Create up to 3 drifters (or start now)</div>
+      </header>
+      <main>
+        <div class="pbox">
+          <div class="p" id="ccPortrait"></div>
+        </div>
+        <div id="ccRight"></div>
+      </main>
+      <div class="footer">
+        <div class="small" id="ccHint">Pick a name and portrait.</div>
+        <div class="right">
+          <button class="btn" id="ccLoad">Load Game</button>
+          <button class="btn" id="ccStart">Start Now</button>
+          <button class="btn" id="ccBack">Back</button>
+          <button class="btn btn--primary" id="ccNext">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="settings">
+    <div class="win">
+      <header>Settings</header>
+      <main>
+        <button class="btn" id="nanoToggle">Nano Dialog</button>
+        <button class="btn" id="audioToggle">Audio: On</button>
+        <button class="btn" id="musicToggle">Music: Off</button>
+        <button class="btn" id="mobileToggle">Mobile Controls: Off</button>
+        <button class="btn" id="tileCharToggle">ASCII Tiles: On</button>
+        <div class="field field--toggle">
+          <label for="retroNpcToggle">Retro NPC Portraits</label>
+          <input type="checkbox" id="retroNpcToggle" />
+        </div>
+        <button class="btn" id="settingsClose">Close</button>
+      </main>
+    </div>
+  </div>
+
+  <div id="fxPanel">
+    <div class="win">
+      <header>FX Debug</header>
+      <main>
+        <div class="field">
+          <label for="fxEnabled">FX Enabled</label>
+          <input type="checkbox" id="fxEnabled" />
+        </div>
+        <div class="field">
+          <label for="fxDamageFlash">Damage Flash</label>
+          <input type="checkbox" id="fxDamageFlash" />
+        </div>
+        <div class="field">
+          <label for="fxScanlines">Scanlines</label>
+          <input type="checkbox" id="fxScanlines" />
+        </div>
+        <div class="field">
+          <label for="fxCrtShear">CRT Shear</label>
+          <input type="checkbox" id="fxCrtShear" />
+        </div>
+        <div class="field">
+          <label for="fxColorBleed">Color Bleed</label>
+          <input type="checkbox" id="fxColorBleed" />
+        </div>
+        <div class="field">
+          <label for="fxFootstepBump">Footstep Camera Bump</label>
+          <input type="checkbox" id="fxFootstepBump" />
+        </div>
+        <div class="field">
+          <label for="fxGrayscale">Grayscale</label>
+          <input type="checkbox" id="fxGrayscale" />
+        </div>
+        <div class="field">
+          <label for="fxAdrTint">Adrenaline Tint</label>
+          <input type="checkbox" id="fxAdrTint" />
+        </div>
+        <div class="field">
+          <label for="fxPrevAlpha">Trail Alpha</label>
+          <input type="range" id="fxPrevAlpha" min="0" max="1" step="0.01" />
+        </div>
+        <div class="field">
+          <label for="fxSceneAlpha">Scene Alpha</label>
+          <input type="range" id="fxSceneAlpha" min="0" max="1" step="0.01" />
+        </div>
+        <div class="field">
+          <label for="fxOffsetX">Offset X</label>
+          <input type="number" id="fxOffsetX" step="1" />
+        </div>
+        <div class="field">
+          <label for="fxOffsetY">Offset Y</label>
+          <input type="number" id="fxOffsetY" step="1" />
+        </div>
+        <button class="btn" id="fxClose">Close</button>
+      </main>
+    </div>
+  </div>
+
+  <div id="perfPanel">
+    <div class="win">
+      <header>Perf Debug</header>
+      <main>
+        <canvas id="perfCanvas" width="300" height="80"></canvas>
+        <div>SFX: <span id="perfSfx">0</span>ms</div>
+        <div>Path: <span id="perfPath">0</span>ms</div>
+        <div>AI: <span id="perfAI">0</span>ms</div>
+        <button class="btn" id="perfClose">Close</button>
+      </main>
+    </div>
+  </div>
+
+  <script defer src="./scripts/event-bus.js"></script>
+  <script defer src="./scripts/supporting/multiplayer-sync.js"></script>
+  <script defer src="./scripts/multiplayer.js"></script>
+  <script defer src="./scripts/supporting/chiptune.js"></script>
+  <script defer src="./scripts/fx-config.js"></script>
+  <script defer src="./scripts/ui.js"></script>
+  <script defer src="./scripts/core/item-generator.js"></script>
+  <script defer src="./scripts/core/effects.js"></script>
+  <script defer src="./scripts/core/spoils-cache.js"></script>
+  <script defer src="./scripts/core/inventory.js"></script>
+  <script defer src="./scripts/core/equipment.js"></script>
+  <script defer src="./scripts/core/actions.js"></script>
+  <script defer src="./scripts/core/movement.js"></script>
+  <script defer src="./scripts/dialog-persist.js"></script>
+  <script defer src="./scripts/core/dialog.js"></script>
+  <script defer src="./scripts/core/combat.js"></script>
+  <script defer src="./scripts/core/party.js"></script>
+  <script defer src="./scripts/core/quests.js"></script>
+  <script defer src="./scripts/core/npc.js"></script>
+  <script defer src="./scripts/game-state.js"></script>
+  <script defer src="./scripts/core/personas.js"></script>
+  <script defer src="./scripts/dustland-core.js"></script>
+  <script defer src="./scripts/workbench.js"></script>
+  <script defer src="./components/dial.js"></script>
+  <script defer src="./data/skills/trainer-upgrades.js"></script>
+  <script defer src="./scripts/trainer-ui.js"></script>
+  <script defer src="./scripts/core/fast-travel.js"></script>
+  <script defer src="./scripts/ui/world-map.js"></script>
+  <script defer src="./scripts/core/event-flags.js"></script>
+  <script defer src="./scripts/dustland-path.js"></script>
+  <script defer src="./scripts/dustland-nano.js"></script>
+  <script defer src="./scripts/dustland-engine.js"></script>
+  <script defer src="./scripts/camp-persona.js"></script>
+  <script defer src="./scripts/version-log.js"></script>
+  <script defer src="./scripts/supporting/fx-debug.js"></script>
+  <script defer src="./scripts/supporting/perf-debug.js"></script>
+  <script defer>
+    window.params = new URLSearchParams(location.search);
+    window.modulePickerPending = false;
+
+    function disablePullToRefresh() {
+      let startY = 0;
+      document.addEventListener('touchstart', e => {
+        startY = e.touches[0].clientY;
+      }, { passive: true });
+      document.addEventListener('touchmove', e => {
+        const y = e.touches[0].clientY;
+        if (e.target.closest('.panel .content')) return;
+        if (window.scrollY === 0 && y > startY) e.preventDefault();
+      }, { passive: false });
+    }
+
+    function warnOnUnload() {
+      window.addEventListener('beforeunload', e => {
+        e.preventDefault();
+        e.returnValue = '';
+      });
+    }
+
+    function mountDustlandModule() {
+      const loader = document.getElementById('moduleLoader');
+      const loaderText = document.getElementById('moduleLoaderText');
+      if (loader) loader.classList.remove('hidden');
+      const script = document.createElement('script');
+      script.id = 'activeModuleScript';
+      script.src = 'modules/dustland.module.js';
+      script.onload = () => {
+        if (loader) {
+          loader.style.display = 'none';
+          loader.classList.add('hidden');
+        }
+        if (typeof warnOnUnload === 'function') warnOnUnload();
+        if (typeof openCreator === 'function') openCreator();
+      };
+      script.onerror = () => {
+        if (loaderText) loaderText.textContent = 'Failed to load modules/dustland.module.js';
+      };
+      document.body.appendChild(script);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      disablePullToRefresh();
+      const titleEl = document.getElementById('title');
+      if (titleEl && typeof ENGINE_VERSION !== 'undefined') {
+        titleEl.textContent += ' v' + ENGINE_VERSION;
+      }
+      mountDustlandModule();
+    });
+  </script>
+</body>
+</html>
