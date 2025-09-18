@@ -1263,10 +1263,17 @@ function pulseAdrenaline(t){
     disp.style.removeProperty('--fxBloom');
     return;
   }
+  const maxHp = lead.maxHp ?? lead.hp ?? 0;
+  const cappedMaxHp = maxHp > 0 ? maxHp : 1;
+  const hpVal = typeof lead.hp === 'number' ? Math.max(0, Math.min(cappedMaxHp, lead.hp)) : cappedMaxHp;
+  const hpRatio = hpVal / cappedMaxHp;
+  const lowHealthFactor = Math.max(0, 1 - Math.min(1, hpRatio / 0.5));
   const pulse = (Math.sin(t / 200) + 1) / 2;
   const intensity = ratio * pulse;
-  const blur = intensity * 4;
-  disp.style.setProperty('--fxBloom', `brightness(${1 + intensity}) blur(${blur}px)`);
+  const blur = intensity * 4 * lowHealthFactor;
+  const bloom = [`brightness(${1 + intensity})`];
+  if(blur > 0.1) bloom.push(`blur(${blur}px)`);
+  disp.style.setProperty('--fxBloom', bloom.join(' '));
 }
 
 function showTab(which){
