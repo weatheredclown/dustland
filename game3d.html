@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dustland 3D Prototype</title>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="dustland.css" />
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Oxanium', 'Segoe UI', sans-serif;
+      color: #eaf6ff;
+      background: radial-gradient(circle at 25% -10%, rgba(66, 197, 255, 0.25), transparent 55%),
+        radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.25), transparent 60%),
+        linear-gradient(160deg, rgba(5, 10, 24, 0.96), rgba(6, 12, 26, 0.88));
+    }
+    main.three-d-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 28px clamp(16px, 5vw, 42px) 64px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    @media (min-width: 1080px) {
+      main.three-d-layout {
+        flex-direction: row;
+        align-items: stretch;
+      }
+    }
+    .viewport {
+      flex: 1 1 60%;
+      background: linear-gradient(160deg, rgba(7, 14, 32, 0.95), rgba(6, 15, 38, 0.72));
+      border: 1px solid rgba(120, 200, 255, 0.32);
+      border-radius: 24px;
+      padding: clamp(16px, 3vw, 28px);
+      box-shadow: 0 0 60px rgba(80, 180, 255, 0.28);
+      position: relative;
+      overflow: hidden;
+    }
+    .viewport::before {
+      content: '';
+      position: absolute;
+      inset: 18px;
+      border-radius: 18px;
+      pointer-events: none;
+      border: 1px solid rgba(120, 200, 255, 0.18);
+      box-shadow: inset 0 0 22px rgba(60, 140, 220, 0.26);
+      opacity: 0.6;
+    }
+    .viewport canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 3 / 2;
+      filter: drop-shadow(0 18px 48px rgba(3, 6, 18, 0.9));
+    }
+    .hud {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 18px;
+      z-index: 1;
+    }
+    .hud-top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .hud-top h1 {
+      margin: 0;
+      font-size: clamp(1.2rem, 2.8vw, 1.8rem);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .hud-top .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .hud-top .meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(12, 24, 48, 0.6);
+      border: 1px solid rgba(120, 200, 255, 0.24);
+    }
+    .hud .tile-info {
+      font-size: 0.95rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: rgba(220, 240, 255, 0.86);
+    }
+    .map-select {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .map-select label {
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(180, 210, 255, 0.82);
+    }
+    .map-select select {
+      background: rgba(12, 28, 48, 0.7);
+      border: 1px solid rgba(120, 210, 255, 0.32);
+      color: #eaf6ff;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+    }
+    .control-pad {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      max-width: 420px;
+    }
+    .control-pad button {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(120, 220, 255, 0.35);
+      background: rgba(14, 32, 52, 0.72);
+      color: #eaf6ff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+    .control-pad button:focus-visible {
+      outline: 2px solid rgba(160, 240, 255, 0.72);
+      outline-offset: 2px;
+    }
+    .control-pad button:hover {
+      background: rgba(30, 80, 120, 0.85);
+      transform: translateY(-1px);
+    }
+    .control-pad button:active {
+      background: rgba(12, 48, 78, 0.95);
+      transform: translateY(1px);
+    }
+    .legend {
+      font-size: 0.8rem;
+      color: rgba(200, 230, 255, 0.72);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      margin-top: 12px;
+    }
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend .chip {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    aside.log-panel {
+      flex: 1 1 32%;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      background: rgba(6, 12, 28, 0.78);
+      border: 1px solid rgba(120, 200, 255, 0.32);
+      border-radius: 24px;
+      padding: clamp(18px, 3vw, 26px);
+      box-shadow: 0 0 46px rgba(60, 160, 240, 0.22);
+      min-width: 0;
+    }
+    .log-panel h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    #log {
+      flex: 1;
+      background: rgba(8, 18, 36, 0.75);
+      border: 1px solid rgba(120, 200, 255, 0.24);
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      overflow-y: auto;
+      max-height: clamp(240px, 40vh, 420px);
+    }
+    #log div {
+      margin-bottom: 8px;
+      opacity: 0.86;
+    }
+    #log div:last-child {
+      margin-bottom: 0;
+    }
+    .status-note {
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(173, 215, 255, 0.78);
+    }
+  </style>
+</head>
+<body>
+  <main class="three-d-layout">
+    <section class="viewport">
+      <canvas id="view"></canvas>
+      <div class="hud">
+        <div class="hud-top">
+          <h1 id="mapName">Dustland</h1>
+          <div class="meta">
+            <span>Facing <strong id="facing">north</strong></span>
+            <span>Turn <strong id="turn">0</strong></span>
+          </div>
+        </div>
+        <div class="tile-info" id="tileInfo">Loading terrain…</div>
+        <div class="map-select">
+          <label for="mapSelect">Location</label>
+          <select id="mapSelect"></select>
+        </div>
+        <div class="control-pad">
+          <button type="button" data-action="turn-left">Turn Left</button>
+          <button type="button" data-action="move-forward">Forward</button>
+          <button type="button" data-action="turn-right">Turn Right</button>
+          <button type="button" data-action="strafe-left">Strafe Left</button>
+          <button type="button" data-action="move-back">Step Back</button>
+          <button type="button" data-action="strafe-right">Strafe Right</button>
+          <button type="button" data-action="interact">Interact</button>
+          <button type="button" data-action="center">Center Camera</button>
+          <button type="button" data-action="reset">Reset Start</button>
+        </div>
+        <div class="legend">
+          <span><span class="chip" style="background:#f6ff85;"></span> Squad</span>
+          <span><span class="chip" style="background:#7dc4ff;"></span> Portal or Objective</span>
+          <span><span class="chip" style="background:#ffb347;"></span> Item</span>
+          <span><span class="chip" style="background:#9ef7a0;"></span> NPC</span>
+        </div>
+        <div class="status-note" id="status">Arrow keys move. Q/E rotate. Space interacts.</div>
+      </div>
+    </section>
+    <aside class="log-panel">
+      <h2>Expedition Log</h2>
+      <div id="log"></div>
+    </aside>
+  </main>
+  <script src="modules/dustland-module.js"></script>
+  <script>
+    (function(){
+      'use strict';
+      const DIRS = ['north', 'east', 'south', 'west'];
+      const DIR_VECTORS = {
+        north: { x: 0, y: -1 },
+        east: { x: 1, y: 0 },
+        south: { x: 0, y: 1 },
+        west: { x: -1, y: 0 }
+      };
+      const MAP_LABELS = {
+        world: 'Dustland Wastes',
+        hall: 'Hall of Records',
+        portal_hut: 'Portal Hut',
+        echo_chamber: 'Echo Chamber',
+        clinic: 'Makeshift Clinic',
+        drag_strip: 'Neon Drag Strip',
+        casino: 'Skyline Casino',
+        night_market: 'Night Market'
+      };
+      const INTERIOR_TILES = {
+        '⬜': { label: 'Floor', walkable: true, height: 0, topColor: '#2b2f3a', strokeColor: 'rgba(18, 28, 46, 0.45)' },
+        '🧱': { label: 'Wall', walkable: false, height: 2, topColor: '#6f3636' },
+        '🌿': { label: 'Ferns', walkable: true, height: 0, topColor: '#24352a', decoration: 'plant', decorationColor: '#4dff9a' },
+        '🌀': { label: 'Portal', walkable: true, height: 0, topColor: '#1c345e', decoration: 'portal', decorationColor: '#7dc4ff' },
+        '🚪': { label: 'Door', walkable: true, height: 1, topColor: '#805233', decoration: 'door', decorationColor: '#f5d27b' },
+        '🪨': { label: 'Rock', walkable: false, height: 2, topColor: '#4a4e57' },
+        '🌟': { label: 'Energy Node', walkable: true, height: 0, topColor: '#372861', decoration: 'spark', decorationColor: '#d9a6ff' }
+      };
+      const WORLD_TILES = {
+        0: { label: 'Void', walkable: false, height: 0, topColor: '#101421' },
+        1: { label: 'Water', walkable: false, height: 0, topColor: '#1d3f73' },
+        2: { label: 'Badlands', walkable: true, height: 0, topColor: '#534331' },
+        3: { label: 'Scrub', walkable: true, height: 0, topColor: '#324a33', decoration: 'grass', decorationColor: '#6de07f' },
+        4: { label: 'Ruins', walkable: false, height: 2, topColor: '#504057' },
+        5: { label: 'Roadway', walkable: true, height: 0, topColor: '#4a4a54' },
+        8: { label: 'Ridge', walkable: false, height: 3, topColor: '#6a3c28' },
+        9: { label: 'Decking', walkable: true, height: 0, topColor: '#656b74' },
+        default: { label: 'Unknown', walkable: false, height: 0, topColor: '#1a1a28' }
+      };
+      const TILE_W = 96;
+      const TILE_H = 48;
+      const ELEVATION = 36;
+      const MAX_LOG = 12;
+      const canvas = document.getElementById('view');
+      const ctx = canvas.getContext('2d');
+      const mapNameEl = document.getElementById('mapName');
+      const facingEl = document.getElementById('facing');
+      const turnEl = document.getElementById('turn');
+      const tileInfoEl = document.getElementById('tileInfo');
+      const statusEl = document.getElementById('status');
+      const mapSelectEl = document.getElementById('mapSelect');
+      const logEl = document.getElementById('log');
+      const controlPad = document.querySelector('.control-pad');
+      const state = {
+        module: null,
+        maps: {},
+        map: null,
+        mapId: null,
+        player: { x: 0, y: 0, facing: 0 },
+        turns: 0,
+        entities: { npcs: [], items: [] },
+        log: [],
+        viewRadius: 7
+      };
+      function clamp(v, a, b) {
+        return Math.max(a, Math.min(b, v));
+      }
+      function shadeColor(hex, lum) {
+        if (!hex || hex[0] !== '#') return hex;
+        const clean = hex.slice(1);
+        const num = parseInt(clean, 16);
+        let r = (num >> 16) & 0xff;
+        let g = (num >> 8) & 0xff;
+        let b = num & 0xff;
+        r = clamp(Math.round(r + (255 * lum)), 0, 255);
+        g = clamp(Math.round(g + (255 * lum)), 0, 255);
+        b = clamp(Math.round(b + (255 * lum)), 0, 255);
+        const toHex = value => value.toString(16).padStart(2, '0');
+        return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+      }
+      function logMessage(msg) {
+        state.log.unshift({ msg, turn: state.turns });
+        if (state.log.length > MAX_LOG) state.log.pop();
+        if (!logEl) return;
+        logEl.innerHTML = '';
+        for (const entry of state.log) {
+          const line = document.createElement('div');
+          line.textContent = `[${entry.turn}] ${entry.msg}`;
+          logEl.appendChild(line);
+        }
+        logEl.scrollTop = 0;
+      }
+      function buildMaps(module) {
+        const maps = {};
+        if (module.world) {
+          const keys = Object.keys(module.world)
+            .map(k => Number(k))
+            .filter(Number.isFinite)
+            .sort((a, b) => a - b);
+          const grid = keys.map(key => module.world[key].slice());
+          if (grid.length) {
+            maps.world = {
+              id: 'world',
+              type: 'world',
+              width: grid[0].length,
+              height: grid.length,
+              grid,
+              entryX: module.start?.map === 'world' ? module.start.x : Math.floor(grid[0].length / 2),
+              entryY: module.start?.map === 'world' ? module.start.y : Math.floor(grid.length / 2)
+            };
+          }
+        }
+        const interiors = module.interiors ? Object.values(module.interiors) : [];
+        for (const data of interiors) {
+          if (!data || !data.id || !Array.isArray(data.grid)) continue;
+          maps[data.id] = {
+            id: data.id,
+            type: 'interior',
+            width: data.w,
+            height: data.h,
+            grid: data.grid.map(row => Array.from(row)),
+            entryX: typeof data.entryX === 'number' ? data.entryX : Math.floor(data.w / 2),
+            entryY: typeof data.entryY === 'number' ? data.entryY : Math.floor(data.h / 2)
+          };
+        }
+        return maps;
+      }
+      function getTileData(map, x, y) {
+        if (!map) return null;
+        if (x < 0 || y < 0 || x >= map.width || y >= map.height) return null;
+        const raw = map.grid[y][x];
+        if (map.type === 'world') {
+          const hasTile = Object.prototype.hasOwnProperty.call(WORLD_TILES, raw);
+          const base = hasTile ? WORLD_TILES[raw] : WORLD_TILES.default;
+          return { ...base, value: raw };
+        }
+        const symbol = typeof raw === 'string' ? raw : String(raw);
+        const base = INTERIOR_TILES[symbol] || INTERIOR_TILES['⬜'];
+        return { ...base, value: symbol };
+      }
+      function projectIso(x, y) {
+        const dx = x - state.player.x;
+        const dy = y - state.player.y;
+        const baseX = canvas.width / 2;
+        const baseY = canvas.height * 0.45;
+        const isoX = baseX + (dx - dy) * (TILE_W / 2);
+        const isoY = baseY + (dx + dy) * (TILE_H / 2);
+        return { x: isoX, y: isoY };
+      }
+      function drawTileCell(entry) {
+        const { tile, isoX, isoY } = entry;
+        const heightLevels = tile.height || 0;
+        const halfW = TILE_W / 2;
+        const halfH = TILE_H / 2;
+        const topY = isoY - heightLevels * ELEVATION;
+        if (heightLevels > 0) {
+          ctx.beginPath();
+          ctx.moveTo(isoX + halfW, topY);
+          ctx.lineTo(isoX + halfW, isoY);
+          ctx.lineTo(isoX, isoY + halfH);
+          ctx.lineTo(isoX, topY + halfH);
+          ctx.closePath();
+          ctx.fillStyle = tile.rightColor || shadeColor(tile.topColor, -0.18);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(isoX - halfW, topY);
+          ctx.lineTo(isoX - halfW, isoY);
+          ctx.lineTo(isoX, isoY + halfH);
+          ctx.lineTo(isoX, topY + halfH);
+          ctx.closePath();
+          ctx.fillStyle = tile.leftColor || shadeColor(tile.topColor, -0.28);
+          ctx.fill();
+        }
+        ctx.beginPath();
+        ctx.moveTo(isoX, topY - halfH);
+        ctx.lineTo(isoX + halfW, topY);
+        ctx.lineTo(isoX, topY + halfH);
+        ctx.lineTo(isoX - halfW, topY);
+        ctx.closePath();
+        ctx.fillStyle = tile.topColor;
+        ctx.fill();
+        if (tile.strokeColor) {
+          ctx.strokeStyle = tile.strokeColor;
+          ctx.stroke();
+        }
+        if (tile.decoration) {
+          drawDecoration(isoX, topY, tile);
+        }
+      }
+      function drawDecoration(x, topY, tile) {
+        const halfW = TILE_W / 2;
+        const halfH = TILE_H / 2;
+        ctx.save();
+        if (tile.decoration === 'plant' || tile.decoration === 'grass') {
+          ctx.beginPath();
+          ctx.moveTo(x, topY - halfH / 2);
+          ctx.lineTo(x + halfW / 3, topY);
+          ctx.lineTo(x, topY + halfH / 2);
+          ctx.lineTo(x - halfW / 3, topY);
+          ctx.closePath();
+          ctx.fillStyle = tile.decorationColor || '#3bff9b';
+          ctx.fill();
+        } else if (tile.decoration === 'portal') {
+          ctx.strokeStyle = tile.decorationColor || '#7dc4ff';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.ellipse(x, topY, halfW / 2, halfH / 2, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.lineWidth = 1;
+        } else if (tile.decoration === 'door') {
+          ctx.fillStyle = tile.decorationColor || '#f2c165';
+          ctx.fillRect(x - halfW / 6, topY - halfH / 1.5, halfW / 3, halfH);
+        } else if (tile.decoration === 'spark') {
+          ctx.strokeStyle = tile.decorationColor || '#d4a2ff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x, topY - halfH / 2);
+          ctx.lineTo(x + halfW / 4, topY);
+          ctx.lineTo(x, topY + halfH / 2);
+          ctx.lineTo(x - halfW / 4, topY);
+          ctx.closePath();
+          ctx.stroke();
+          ctx.lineWidth = 1;
+        }
+        ctx.restore();
+      }
+      function drawMarker(x, y, color, symbol) {
+        const map = state.map;
+        if (!map) return;
+        const tile = getTileData(map, x, y) || { height: 0 };
+        const iso = projectIso(x, y);
+        const topY = iso.y - (tile.height || 0) * ELEVATION;
+        const halfW = TILE_W / 2.8;
+        const halfH = TILE_H / 2.8;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(iso.x, topY - halfH);
+        ctx.lineTo(iso.x + halfW, topY);
+        ctx.lineTo(iso.x, topY + halfH);
+        ctx.lineTo(iso.x - halfW, topY);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.9;
+        ctx.fill();
+        if (symbol) {
+          ctx.fillStyle = '#0b0f14';
+          ctx.font = 'bold 14px Oxanium, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(symbol, iso.x, topY + 1);
+        }
+        ctx.restore();
+      }
+      function drawPlayer() {
+        if (!state.map) return;
+        const player = state.player;
+        const tile = getTileData(state.map, player.x, player.y) || { height: 0 };
+        const iso = projectIso(player.x, player.y);
+        const topY = iso.y - (tile.height || 0) * ELEVATION;
+        const halfW = TILE_W / 2.6;
+        const halfH = TILE_H / 2.6;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(iso.x, topY - halfH);
+        ctx.lineTo(iso.x + halfW, topY);
+        ctx.lineTo(iso.x, topY + halfH);
+        ctx.lineTo(iso.x - halfW, topY);
+        ctx.closePath();
+        ctx.fillStyle = '#f6ff85';
+        ctx.fill();
+        ctx.strokeStyle = '#1f2616';
+        ctx.stroke();
+        const facing = DIRS[player.facing];
+        let arrowX = 0;
+        let arrowY = 0;
+        if (facing === 'north') arrowY = -halfH;
+        else if (facing === 'south') arrowY = halfH;
+        else if (facing === 'east') arrowX = halfW;
+        else arrowX = -halfW;
+        ctx.beginPath();
+        ctx.moveTo(iso.x, topY);
+        ctx.lineTo(iso.x + arrowX * 0.6, topY + arrowY * 0.6);
+        ctx.lineTo(iso.x, topY + arrowY * 0.2);
+        ctx.closePath();
+        ctx.fillStyle = '#15150f';
+        ctx.fill();
+        ctx.restore();
+      }
+      function drawFocus() {
+        const target = getFrontTile();
+        if (!target) return;
+        const map = state.map;
+        const tile = getTileData(map, target.x, target.y) || { height: 0 };
+        const iso = projectIso(target.x, target.y);
+        const topY = iso.y - (tile.height || 0) * ELEVATION;
+        const halfW = TILE_W / 2;
+        const halfH = TILE_H / 2;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(240, 250, 255, 0.45)';
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.moveTo(iso.x, topY - halfH);
+        ctx.lineTo(iso.x + halfW, topY);
+        ctx.lineTo(iso.x, topY + halfH);
+        ctx.lineTo(iso.x - halfW, topY);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+      }
+      function drawEntities() {
+        for (const item of state.entities.items) {
+          drawMarker(item.x, item.y, '#ffb347', '•');
+        }
+        for (const npc of state.entities.npcs) {
+          drawMarker(npc.x, npc.y, npc.color || '#9ef7a0', npc.symbol || '!');
+        }
+      }
+      function drawScene() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#050910';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (!state.map) return;
+        const player = state.player;
+        const map = state.map;
+        const radius = state.viewRadius;
+        const startX = clamp(player.x - radius, 0, map.width - 1);
+        const endX = clamp(player.x + radius, 0, map.width - 1);
+        const startY = clamp(player.y - radius, 0, map.height - 1);
+        const endY = clamp(player.y + radius, 0, map.height - 1);
+        const tiles = [];
+        for (let y = startY; y <= endY; y++) {
+          for (let x = startX; x <= endX; x++) {
+            const tile = getTileData(map, x, y);
+            if (!tile) continue;
+            const { x: isoX, y: isoY } = projectIso(x, y);
+            tiles.push({ x, y, tile, isoX, isoY });
+          }
+        }
+        tiles.sort((a, b) => {
+          const da = a.x + a.y;
+          const db = b.x + b.y;
+          if (da === db) return a.y - b.y;
+          return da - db;
+        });
+        for (const entry of tiles) drawTileCell(entry);
+        drawEntities();
+        drawPlayer();
+        drawFocus();
+      }
+      function updateEntities() {
+        if (!state.module || !state.mapId) return;
+        const module = state.module;
+        state.entities.npcs = (module.npcs || [])
+          .filter(n => n.map === state.mapId)
+          .map(n => ({ x: n.x, y: n.y, name: n.name, symbol: n.symbol, color: n.color }));
+        state.entities.items = (module.items || [])
+          .filter(item => item.map === state.mapId && typeof item.x === 'number' && typeof item.y === 'number')
+          .map(item => ({ x: item.x, y: item.y, name: item.name }));
+      }
+      function updateHud() {
+        if (!state.map) return;
+        const mapLabel = MAP_LABELS[state.mapId] || state.mapId;
+        mapNameEl.textContent = mapLabel;
+        facingEl.textContent = DIRS[state.player.facing];
+        turnEl.textContent = state.turns;
+        const tile = getTileData(state.map, state.player.x, state.player.y);
+        if (tile) {
+          tileInfoEl.textContent = `${tile.label} · (${state.player.x}, ${state.player.y})`;
+        } else {
+          tileInfoEl.textContent = `Unknown · (${state.player.x}, ${state.player.y})`;
+        }
+        if (mapSelectEl && mapSelectEl.value !== state.mapId) {
+          mapSelectEl.value = state.mapId;
+        }
+      }
+      function withinBounds(x, y) {
+        if (!state.map) return false;
+        return x >= 0 && y >= 0 && x < state.map.width && y < state.map.height;
+      }
+      function isWalkable(x, y) {
+        const tile = getTileData(state.map, x, y);
+        return tile ? !!tile.walkable : false;
+      }
+      function setMap(mapId, x, y) {
+        const next = state.maps[mapId];
+        if (!next) {
+          logMessage(`Map not found: ${mapId}`);
+          return;
+        }
+        state.map = next;
+        state.mapId = mapId;
+        const spawnX = typeof x === 'number' ? x : next.entryX;
+        const spawnY = typeof y === 'number' ? y : next.entryY;
+        state.player.x = clamp(spawnX, 0, next.width - 1);
+        state.player.y = clamp(spawnY, 0, next.height - 1);
+        updateEntities();
+        updateHud();
+        drawScene();
+      }
+      function resetStart() {
+        if (!state.module) return;
+        const start = state.module.start || { map: 'world', x: 0, y: 0 };
+        state.player.facing = 0;
+        state.turns = 0;
+        setMap(start.map, start.x, start.y);
+        updateHud();
+        logMessage('Returned to module starting location.');
+      }
+      function centerCamera() {
+        drawScene();
+      }
+      function movePlayer(dx, dy) {
+        if (!state.map) return;
+        const nx = state.player.x + dx;
+        const ny = state.player.y + dy;
+        if (!withinBounds(nx, ny) || !isWalkable(nx, ny)) {
+          logMessage('You bump into an obstacle.');
+          return;
+        }
+        state.player.x = nx;
+        state.player.y = ny;
+        state.turns += 1;
+        const foundItemIndex = state.entities.items.findIndex(it => it.x === nx && it.y === ny);
+        if (foundItemIndex >= 0) {
+          const [item] = state.entities.items.splice(foundItemIndex, 1);
+          logMessage(`You pick up ${item.name}.`);
+        } else {
+          logMessage(`Moved to (${nx}, ${ny}).`);
+        }
+        const npc = state.entities.npcs.find(n => n.x === nx && n.y === ny);
+        if (npc) {
+          logMessage(`You greet ${npc.name}.`);
+        }
+        updateHud();
+        drawScene();
+      }
+      function rotate(delta) {
+        state.player.facing = (state.player.facing + delta + DIRS.length) % DIRS.length;
+        state.turns += 1;
+        logMessage(`Facing ${DIRS[state.player.facing]}.`);
+        updateHud();
+        drawScene();
+      }
+      function getFrontTile(distance = 1) {
+        const facing = DIRS[state.player.facing];
+        const vec = DIR_VECTORS[facing];
+        const x = state.player.x + vec.x * distance;
+        const y = state.player.y + vec.y * distance;
+        if (!withinBounds(x, y)) return null;
+        return { x, y };
+      }
+      function strafe(direction) {
+        const facing = DIRS[state.player.facing];
+        let dx = 0;
+        let dy = 0;
+        if (facing === 'north') {
+          dx = direction === 'left' ? -1 : 1;
+        } else if (facing === 'south') {
+          dx = direction === 'left' ? 1 : -1;
+        } else if (facing === 'east') {
+          dy = direction === 'left' ? -1 : 1;
+        } else {
+          dy = direction === 'left' ? 1 : -1;
+        }
+        movePlayer(dx, dy);
+      }
+      function interact() {
+        const front = getFrontTile();
+        if (!front) {
+          logMessage('Nothing ahead to examine.');
+          return;
+        }
+        const npc = state.entities.npcs.find(n => n.x === front.x && n.y === front.y);
+        if (npc) {
+          logMessage(`You hail ${npc.name}.`);
+          return;
+        }
+        const tile = getTileData(state.map, front.x, front.y);
+        if (tile?.decoration === 'portal' || tile?.label === 'Door') {
+          logMessage('An unseen force hums beyond the doorway.');
+        } else if (tile) {
+          logMessage(`You study the ${tile.label.toLowerCase()}.`);
+        } else {
+          logMessage('Only wasteland stretches ahead.');
+        }
+      }
+      function handleKey(event) {
+        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        let handled = true;
+        switch (event.key) {
+          case 'ArrowUp':
+            moveForward();
+            break;
+          case 'ArrowDown':
+            moveBack();
+            break;
+          case 'ArrowLeft':
+            rotate(-1);
+            break;
+          case 'ArrowRight':
+            rotate(1);
+            break;
+          case 'q':
+          case 'Q':
+            rotate(-1);
+            break;
+          case 'e':
+          case 'E':
+            rotate(1);
+            break;
+          case 'a':
+          case 'A':
+            strafe('left');
+            break;
+          case 'd':
+          case 'D':
+            strafe('right');
+            break;
+          case ' ':
+            interact();
+            break;
+          case 'Enter':
+            interact();
+            break;
+          default:
+            handled = false;
+        }
+        if (handled) {
+          event.preventDefault();
+        }
+      }
+      function moveForward() {
+        const facing = DIRS[state.player.facing];
+        const vec = DIR_VECTORS[facing];
+        movePlayer(vec.x, vec.y);
+      }
+      function moveBack() {
+        const facing = DIRS[state.player.facing];
+        const vec = DIR_VECTORS[facing];
+        movePlayer(-vec.x, -vec.y);
+      }
+      function handleControlClick(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.dataset.action;
+        switch (action) {
+          case 'turn-left':
+            rotate(-1);
+            break;
+          case 'turn-right':
+            rotate(1);
+            break;
+          case 'move-forward':
+            moveForward();
+            break;
+          case 'move-back':
+            moveBack();
+            break;
+          case 'strafe-left':
+            strafe('left');
+            break;
+          case 'strafe-right':
+            strafe('right');
+            break;
+          case 'interact':
+            interact();
+            break;
+          case 'center':
+            centerCamera();
+            break;
+          case 'reset':
+            resetStart();
+            break;
+        }
+      }
+      function resizeCanvas() {
+        const ratio = window.devicePixelRatio || 1;
+        const containerWidth = canvas.parentElement.clientWidth;
+        const targetHeight = Math.min(Math.max(420, containerWidth * 0.6), window.innerHeight - 220);
+        canvas.style.width = `${containerWidth}px`;
+        canvas.style.height = `${targetHeight}px`;
+        canvas.width = Math.floor(containerWidth * ratio);
+        canvas.height = Math.floor(targetHeight * ratio);
+        drawScene();
+      }
+      function populateMaps() {
+        if (!mapSelectEl) return;
+        mapSelectEl.innerHTML = '';
+        const ids = Object.keys(state.maps).sort();
+        for (const id of ids) {
+          const option = document.createElement('option');
+          option.value = id;
+          option.textContent = MAP_LABELS[id] || id;
+          mapSelectEl.appendChild(option);
+        }
+      }
+
+      function handleMapChange(event) {
+        const id = event.target.value;
+        const map = state.maps[id];
+        if (!map) return;
+        setMap(id, map.entryX, map.entryY);
+        logMessage(`Viewing ${MAP_LABELS[id] || id}.`);
+      }
+      function withModuleReady(callback) {
+        if (globalThis.DUSTLAND_MODULE) {
+          callback(globalThis.DUSTLAND_MODULE);
+        } else {
+          globalThis.addEventListener('dustland-module-ready', event => {
+            const data = event.detail || globalThis.DUSTLAND_MODULE;
+            if (data) callback(data);
+          }, { once: true });
+        }
+      }
+      function startWithModule(module) {
+        state.module = module;
+        state.maps = buildMaps(module);
+        populateMaps();
+        const start = module.start || { map: 'world', x: 0, y: 0 };
+        if (!state.maps[start.map]) {
+          const fallbackId = Object.keys(state.maps)[0];
+          if (fallbackId) {
+            setMap(fallbackId, state.maps[fallbackId].entryX, state.maps[fallbackId].entryY);
+          }
+        } else {
+          setMap(start.map, start.x, start.y);
+        }
+        state.log = [];
+        logMessage(`Loaded module: ${module.name || 'Dustland Module'}.`);
+        updateHud();
+        drawScene();
+      }
+      window.addEventListener('keydown', handleKey);
+      if (controlPad) {
+        controlPad.addEventListener('click', handleControlClick);
+      }
+      if (mapSelectEl) {
+        mapSelectEl.addEventListener('change', handleMapChange);
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+      withModuleReady(startWithModule);
+      if (statusEl) {
+        statusEl.textContent = 'Arrow keys move. Q/E rotate. Space interacts.';
+      }
+    })();
+  </script>
+</body>
+</html>
