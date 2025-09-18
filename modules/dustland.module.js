@@ -445,6 +445,43 @@ const DATA = `
         "heavy"
       ],
       "desc": "Archivist rocket launcher packed with sunfire ordnance."
+    },
+    {
+      "id": "thornlash_whip",
+      "name": "Thornlash Whip",
+      "type": "weapon",
+      "mods": {
+        "ATK": 1,
+        "ADR": 12
+      }
+    },
+    {
+      "id": "sap_poultice",
+      "name": "Sap Poultice",
+      "type": "consumable",
+      "use": {
+        "type": "heal",
+        "amount": 5,
+        "text": "Sweet sap knits your wounds."
+      }
+    },
+    {
+      "id": "patchwork_plate",
+      "name": "Patchwork Plate",
+      "type": "armor",
+      "mods": {
+        "DEF": 1,
+        "HP": 2
+      }
+    },
+    {
+      "id": "corroded_hatchet",
+      "name": "Corroded Hatchet",
+      "type": "weapon",
+      "mods": {
+        "ATK": 2,
+        "ADR": 9
+      }
     }
   ],
   "quests": [
@@ -3277,6 +3314,30 @@ const DATA = `
         "loot": "artifact_blade",
         "lootChance": 0.75,
         "minDist": 44
+      },
+      {
+        "templateId": "vine_creature",
+        "loot": "thornlash_whip",
+        "lootChance": 0.18,
+        "maxDist": 20
+      },
+      {
+        "templateId": "vine_creature",
+        "loot": "sap_poultice",
+        "lootChance": 0.3,
+        "maxDist": 20
+      },
+      {
+        "templateId": "rotwalker",
+        "loot": "patchwork_plate",
+        "lootChance": 0.2,
+        "maxDist": 24
+      },
+      {
+        "templateId": "rotwalker",
+        "loot": "corroded_hatchet",
+        "lootChance": 0.16,
+        "maxDist": 24
       }
     ],
     "room_oc3abv": [
