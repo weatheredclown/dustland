@@ -2012,6 +2012,101 @@ function runTests(){
     const closeBtn=document.getElementById('settingsClose');
     if(closeBtn) closeBtn.onclick=()=>{ settings.style.display='none'; };
   }
+  const debugBtn=document.getElementById('debugBtn');
+  const debugMenu=document.getElementById('debugMenu');
+  if(debugBtn && debugMenu){
+    const debugClose=document.getElementById('debugClose');
+    const hideDebug=()=>{ debugMenu.style.display='none'; };
+    const showDebug=()=>{ debugMenu.style.display='flex'; };
+    debugBtn.onclick=showDebug;
+    debugClose?.addEventListener('click', hideDebug);
+    const attachHide=(btn)=>{ btn?.addEventListener('click', hideDebug); };
+    attachHide(document.getElementById('fxBtn'));
+    attachHide(document.getElementById('perfBtn'));
+    const exportBtn=document.getElementById('exportSaveBtn');
+    if(exportBtn){
+      exportBtn.addEventListener('click', ()=>{
+        if(typeof save === 'function') save();
+        const dataStr = globalThis.localStorage?.getItem('dustland_crt');
+        if(!dataStr){
+          const msg='No save data available to export.';
+          console.warn(msg);
+          globalThis.alert?.(msg);
+          return;
+        }
+        if(typeof Blob === 'undefined' || !globalThis.URL?.createObjectURL){
+          const msg='Export not supported in this environment.';
+          console.warn(msg);
+          globalThis.alert?.(msg);
+          return;
+        }
+        try{
+          const blob=new Blob([dataStr],{ type:'application/json' });
+          const url=globalThis.URL.createObjectURL(blob);
+          const link=document.createElement('a');
+          const stamp=new Date().toISOString().replace(/[:]/g,'-');
+          link.href=url;
+          link.download=`dustland-save-${stamp}.json`;
+          document.body.appendChild(link);
+          if(typeof link.click==='function') link.click();
+          else link.dispatchEvent?.({ type:'click' });
+          link.remove();
+          globalThis.URL.revokeObjectURL?.(url);
+          hideDebug();
+          log('Save exported.');
+          if(typeof toast === 'function') toast('Save exported.');
+        }catch(err){
+          console.error('Failed to export save', err);
+          const msg='Failed to export save.';
+          globalThis.alert?.(msg);
+        }
+      });
+    }
+    const importBtn=document.getElementById('importSaveBtn');
+    const importInput=document.getElementById('importSaveInput');
+    if(importBtn && importInput){
+      importBtn.addEventListener('click', ()=>{
+        importInput.value='';
+        if(typeof importInput.click==='function') importInput.click();
+        else importInput.dispatchEvent?.({ type:'click' });
+      });
+      importInput.addEventListener('change', ()=>{
+        const file=importInput.files?.[0];
+        if(!file) return;
+        if(typeof FileReader === 'undefined'){
+          const msg='Import not supported in this environment.';
+          console.warn(msg);
+          globalThis.alert?.(msg);
+          return;
+        }
+        const reader=new FileReader();
+        reader.onerror=()=>{
+          console.error('Failed to read save file', reader.error);
+          const msg='Failed to read save file.';
+          globalThis.alert?.(msg);
+        };
+        reader.onload=()=>{
+          try{
+            const text=typeof reader.result==='string'?reader.result:String(reader.result||'');
+            const parsed=JSON.parse(text);
+            if(typeof parsed!=='object' || !parsed){
+              throw new Error('Invalid save payload');
+            }
+            globalThis.localStorage?.setItem('dustland_crt', JSON.stringify(parsed));
+            hideDebug();
+            if(typeof load === 'function') load();
+            log('Save imported.');
+            if(typeof toast === 'function') toast('Save imported.');
+          }catch(err){
+            console.error('Failed to import save', err);
+            const msg='Failed to import save. Ensure the file is a valid Dustland save.';
+            globalThis.alert?.(msg);
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+  }
   panelToggle=document.getElementById('panelToggle');
   panel=document.querySelector('.panel');
   if(panelToggle && panel){
