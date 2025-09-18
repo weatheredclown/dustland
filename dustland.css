@@ -425,6 +425,15 @@ input[type="range"] {
         :root {
             --panelW: 840px;
         }
+    }
+
+    @media (min-width: 1980px) {
+        .panel {
+            width: 1280px;
+        }
+        :root {
+            --panelW: 1280px;
+        }
 
         .tabs {
             display: none;
