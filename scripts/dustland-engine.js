@@ -1142,7 +1142,7 @@ function drawEntities(ctx, list, offX, offY){
 Object.assign(window, { renderOrderSystem: { order: renderOrder, render } });
 
 // ===== HUD & Tabs =====
-const TAB_BREAKPOINT = 1600;
+const TAB_BREAKPOINT = 1980;
 let activeTab = 'inv';
 
 function updateHUD(){
