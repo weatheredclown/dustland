@@ -3976,6 +3976,7 @@ function applyLoadedModule(data) {
   moduleData.events = data.events || [];
   moduleData.templates = data.templates || [];
   moduleData.zones = data.zones || [];
+  moduleData.zoneEffects = (data.zoneEffects || []).map(z => ({ ...z }));
   moduleData.encounters = [];
   if (data.encounters) {
     Object.entries(data.encounters).forEach(([map, list]) => {
@@ -4119,6 +4120,9 @@ function saveModule() {
     if (moduleData[k] !== undefined) base[k] = moduleData[k];
   });
   if (moduleData._origKeys?.includes('encounters') || Object.keys(enc).length) base.encounters = enc;
+  if (moduleData._origKeys?.includes('zoneEffects') || (moduleData.zoneEffects && moduleData.zoneEffects.length)) {
+    base.zoneEffects = moduleData.zoneEffects.map(z => ({ ...z }));
+  }
   base.world = gridToEmoji(world);
   if (moduleData._origKeys?.includes('buildings') || bldgs.length) base.buildings = bldgs;
   if (moduleData._origKeys?.includes('interiors') || ints.length) base.interiors = ints;
@@ -4141,10 +4145,11 @@ function playtestModule() {
     (enc[map] ||= []).push(rest);
   });
   const zones = moduleData.zones ? moduleData.zones.map(z => ({ ...z })) : [];
+  const zoneEffects = moduleData.zoneEffects ? moduleData.zoneEffects.map(z => ({ ...z })) : [];
   const hasProps = Object.keys(moduleData.props || {}).length > 0;
   const moduleBase = { ...moduleData };
   if(!hasProps) delete moduleBase.props;
-  const data = { ...moduleBase, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints, zones };
+  const data = { ...moduleBase, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints, zones, zoneEffects };
   localStorage.setItem(PLAYTEST_KEY, JSON.stringify(data));
   window.open('dustland.html?ack-player=1#play', '_blank');
 }

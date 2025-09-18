@@ -1907,41 +1907,6 @@ const DATA = `
       "symbol": "!"
     },
     {
-      "id": "scavenger_rat",
-      "map": "world",
-      "x": 29,
-      "y": 66,
-      "color": "#ff0000",
-      "name": "Scavenger Rat",
-      "title": "Vermin",
-      "desc": "A giant rat rooting through scraps.",
-      "portraitSheet": "assets/portraits/dustland-module/scavenger_rat_4.png",
-      "portraitLock": false,
-      "tree": {
-        "start": {
-          "text": "It hisses.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
-        }
-      },
-      "combat": {
-        "HP": 4,
-        "ATK": 1,
-        "loot": "water_flask",
-        "scrap": {
-          "min": 3,
-          "max": 5
-        },
-        "auto": true
-      },
-      "symbol": "!",
-      "overrideColor": true
-    },
-    {
       "id": "rust_bandit",
       "map": "world",
       "x": 40,
@@ -14796,6 +14761,34 @@ const DATA = `
       "entryX": 25,
       "entryY": 47,
       "id": "room_oc3abv"
+    }
+  ],
+  "zoneEffects": [
+    {
+      "map": "world",
+      "x": 19,
+      "y": 56,
+      "w": 21,
+      "h": 21,
+      "minSteps": 1,
+      "maxSteps": 3,
+      "spawns": [
+        {
+          "id": "scavenger_rat",
+          "name": "Scavenger Rat",
+          "HP": 4,
+          "ATK": 1,
+          "DEF": 0,
+          "portraitSheet": "assets/portraits/dustland-module/scavenger_rat_4.png",
+          "loot": "water_flask",
+          "scrap": {
+            "min": 3,
+            "max": 5
+          },
+          "auto": true,
+          "prob": 1
+        }
+      ]
     }
   ]
 }
