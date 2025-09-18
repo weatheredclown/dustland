@@ -1,0 +1,2561 @@
+{
+  "generatedAt": "2025-09-18T20:24:26.533Z",
+  "taskCount": 122,
+  "tasks": [
+    {
+      "id": "docs/design/core-systems/reactive-systems.md:36",
+      "title": "Build event scheduler for world and NPC timelines.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Build event scheduler for world and NPC timelines."
+      ],
+      "source": {
+        "file": "docs/design/core-systems/reactive-systems.md",
+        "line": 36,
+        "headings": [
+          "Reactive Systems for Dustland",
+          "Zone and Portal Scaffolding",
+          "Action Items"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/core-systems/reactive-systems.md:38",
+      "title": "Implement a tick-driven scheduler service that queues world/NPC events, persists progress to saves, and survives map transitions.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Implement a tick-driven scheduler service that queues world/NPC events, persists progress to saves, and survives map transitions."
+      ],
+      "source": {
+        "file": "docs/design/core-systems/reactive-systems.md",
+        "line": 38,
+        "headings": [
+          "Reactive Systems for Dustland",
+          "Zone and Portal Scaffolding",
+          "Action Items"
+        ],
+        "ancestors": [
+          "Build event scheduler for world and NPC timelines."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/core-systems/reactive-systems.md:39",
+      "title": "Add editor tooling to visualize upcoming events and allow designers to fast-forward or cancel entries during testing.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Add editor tooling to visualize upcoming events and allow designers to fast-forward or cancel entries during testing."
+      ],
+      "source": {
+        "file": "docs/design/core-systems/reactive-systems.md",
+        "line": 39,
+        "headings": [
+          "Reactive Systems for Dustland",
+          "Zone and Portal Scaffolding",
+          "Action Items"
+        ],
+        "ancestors": [
+          "Build event scheduler for world and NPC timelines."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/core-systems/reactive-systems.md:40",
+      "title": "Write automated tests covering chained events, missed ticks after load, and NPC reactions triggered by the scheduler.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Write automated tests covering chained events, missed ticks after load, and NPC reactions triggered by the scheduler."
+      ],
+      "source": {
+        "file": "docs/design/core-systems/reactive-systems.md",
+        "line": 40,
+        "headings": [
+          "Reactive Systems for Dustland",
+          "Zone and Portal Scaffolding",
+          "Action Items"
+        ],
+        "ancestors": [
+          "Build event scheduler for world and NPC timelines."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/economy-progression/oasis-trader.md:33",
+      "title": "Tune prices so early upgrades land around 60–90 scrap per key stat bump, then ease discounts for players with positive grudge standings.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Tune prices so early upgrades land around 60–90 scrap per key stat bump, then ease discounts for players with positive grudge standings."
+      ],
+      "source": {
+        "file": "docs/design/economy-progression/oasis-trader.md",
+        "line": 33,
+        "headings": [
+          "Oasis Trader: Barter and Trust",
+          "Dustland Integration"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/economy-progression/oasis-trader.md:35",
+      "title": "Update `scripts/core/trader.js` with a pricing curve that references item tiers, scarcity, and the trader's current grudge meter.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Update `scripts/core/trader.js` with a pricing curve that references item tiers, scarcity, and the trader's current grudge meter."
+      ],
+      "source": {
+        "file": "docs/design/economy-progression/oasis-trader.md",
+        "line": 35,
+        "headings": [
+          "Oasis Trader: Barter and Trust",
+          "Dustland Integration"
+        ],
+        "ancestors": [
+          "Tune prices so early upgrades land around 60–90 scrap per key stat bump, then ease discounts for players with positive grudge standings."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/economy-progression/oasis-trader.md:36",
+      "title": "Expand balance tests to assert the 60–90 scrap window for first-wave upgrades and validate discount stacking rules.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Expand balance tests to assert the 60–90 scrap window for first-wave upgrades and validate discount stacking rules."
+      ],
+      "source": {
+        "file": "docs/design/economy-progression/oasis-trader.md",
+        "line": 36,
+        "headings": [
+          "Oasis Trader: Barter and Trust",
+          "Dustland Integration"
+        ],
+        "ancestors": [
+          "Tune prices so early upgrades land around 60–90 scrap per key stat bump, then ease discounts for players with positive grudge standings."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/economy-progression/oasis-trader.md:37",
+      "title": "Reserve premium gear for end-of-week refreshes but keep sticker prices within twice the best wasteland drops so progression rewards skill instead of grind.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Reserve premium gear for end-of-week refreshes but keep sticker prices within twice the best wasteland drops so progression rewards skill instead of grind."
+      ],
+      "source": {
+        "file": "docs/design/economy-progression/oasis-trader.md",
+        "line": 37,
+        "headings": [
+          "Oasis Trader: Barter and Trust",
+          "Dustland Integration"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/economy-progression/oasis-trader.md:38",
+      "title": "Tag premium inventory entries in module data with refresh cadence and rarity tiers.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Tag premium inventory entries in module data with refresh cadence and rarity tiers."
+      ],
+      "source": {
+        "file": "docs/design/economy-progression/oasis-trader.md",
+        "line": 38,
+        "headings": [
+          "Oasis Trader: Barter and Trust",
+          "Dustland Integration"
+        ],
+        "ancestors": [
+          "Reserve premium gear for end-of-week refreshes but keep sticker prices within twice the best wasteland drops so progression rewards skill instead of grind."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/economy-progression/oasis-trader.md:39",
+      "title": "Adjust the refresh scheduler so weekly rotations pull from the premium pool only after day seven while preserving daily partial refreshes.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Adjust the refresh scheduler so weekly rotations pull from the premium pool only after day seven while preserving daily partial refreshes."
+      ],
+      "source": {
+        "file": "docs/design/economy-progression/oasis-trader.md",
+        "line": 39,
+        "headings": [
+          "Oasis Trader: Barter and Trust",
+          "Dustland Integration"
+        ],
+        "ancestors": [
+          "Reserve premium gear for end-of-week refreshes but keep sticker prices within twice the best wasteland drops so progression rewards skill instead of grind."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/economy-progression/oasis-trader.md:40",
+      "title": "Surface upcoming premium stock in the trade UI and write tooltips that explain scarcity-driven pricing caps.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Surface upcoming premium stock in the trade UI and write tooltips that explain scarcity-driven pricing caps."
+      ],
+      "source": {
+        "file": "docs/design/economy-progression/oasis-trader.md",
+        "line": 40,
+        "headings": [
+          "Oasis Trader: Barter and Trust",
+          "Dustland Integration"
+        ],
+        "ancestors": [
+          "Reserve premium gear for end-of-week refreshes but keep sticker prices within twice the best wasteland drops so progression rewards skill instead of grind."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/persona-mechanics.md:100",
+      "title": "Extend ACK schema and editor with reusable profile definitions.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Extend ACK schema and editor with reusable profile definitions."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/persona-mechanics.md",
+        "line": 100,
+        "headings": [
+          "Persona Masks & Identity Shifts",
+          "Tasks"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/persona-mechanics.md:101",
+      "title": "Define a `profiles` collection in the ACK schema with validation on effect types, numeric ranges, and asset references.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Define a `profiles` collection in the ACK schema with validation on effect types, numeric ranges, and asset references."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/persona-mechanics.md",
+        "line": 101,
+        "headings": [
+          "Persona Masks & Identity Shifts",
+          "Tasks"
+        ],
+        "ancestors": [
+          "Extend ACK schema and editor with reusable profile definitions."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/persona-mechanics.md:102",
+      "title": "Add a migration utility that backfills empty `profiles` blocks for existing modules so older content keeps loading cleanly.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Add a migration utility that backfills empty `profiles` blocks for existing modules so older content keeps loading cleanly."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/persona-mechanics.md",
+        "line": 102,
+        "headings": [
+          "Persona Masks & Identity Shifts",
+          "Tasks"
+        ],
+        "ancestors": [
+          "Extend ACK schema and editor with reusable profile definitions."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/persona-mechanics.md:103",
+      "title": "Surface profile editors in Adventure Kit with previews of stat deltas and persona-specific restrictions.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Surface profile editors in Adventure Kit with previews of stat deltas and persona-specific restrictions."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/persona-mechanics.md",
+        "line": 103,
+        "headings": [
+          "Persona Masks & Identity Shifts",
+          "Tasks"
+        ],
+        "ancestors": [
+          "Extend ACK schema and editor with reusable profile definitions."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/persona-mechanics.md:104",
+      "title": "Implement profile runtime service for personas, buffs, and disguises.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Implement profile runtime service for personas, buffs, and disguises."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/persona-mechanics.md",
+        "line": 104,
+        "headings": [
+          "Persona Masks & Identity Shifts",
+          "Tasks"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/persona-mechanics.md:105",
+      "title": "Create `scripts/core/profile-service.js` to apply/remove profile effects and broadcast lifecycle events.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Create `scripts/core/profile-service.js` to apply/remove profile effects and broadcast lifecycle events."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/persona-mechanics.md",
+        "line": 105,
+        "headings": [
+          "Persona Masks & Identity Shifts",
+          "Tasks"
+        ],
+        "ancestors": [
+          "Implement profile runtime service for personas, buffs, and disguises."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/persona-mechanics.md:106",
+      "title": "Subscribe the service to `persona:equip`, quest, and environmental triggers so effect packs fire automatically.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Subscribe the service to `persona:equip`, quest, and environmental triggers so effect packs fire automatically."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/persona-mechanics.md",
+        "line": 106,
+        "headings": [
+          "Persona Masks & Identity Shifts",
+          "Tasks"
+        ],
+        "ancestors": [
+          "Implement profile runtime service for personas, buffs, and disguises."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/persona-mechanics.md:107",
+      "title": "Cover the service with save/load and combat regression tests that ensure stacked modifiers resolve deterministically.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Cover the service with save/load and combat regression tests that ensure stacked modifiers resolve deterministically."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/persona-mechanics.md",
+        "line": 107,
+        "headings": [
+          "Persona Masks & Identity Shifts",
+          "Tasks"
+        ],
+        "ancestors": [
+          "Implement profile runtime service for personas, buffs, and disguises."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/persona-mechanics.md:110",
+      "title": "Build editor inspector for authoring and testing effect packs into ACK.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Build editor inspector for authoring and testing effect packs into ACK."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/persona-mechanics.md",
+        "line": 110,
+        "headings": [
+          "Persona Masks & Identity Shifts",
+          "Tasks"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/persona-mechanics.md:111",
+      "title": "Add an inspector panel that lets designers compose ordered effect packs and bind them to event keys.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Add an inspector panel that lets designers compose ordered effect packs and bind them to event keys."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/persona-mechanics.md",
+        "line": 111,
+        "headings": [
+          "Persona Masks & Identity Shifts",
+          "Tasks"
+        ],
+        "ancestors": [
+          "Build editor inspector for authoring and testing effect packs into ACK."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/persona-mechanics.md:112",
+      "title": "Provide a \"test fire\" sandbox that emits sample events against the active save to preview results without leaving ACK.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Provide a \"test fire\" sandbox that emits sample events against the active save to preview results without leaving ACK."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/persona-mechanics.md",
+        "line": 112,
+        "headings": [
+          "Persona Masks & Identity Shifts",
+          "Tasks"
+        ],
+        "ancestors": [
+          "Build editor inspector for authoring and testing effect packs into ACK."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/persona-mechanics.md:113",
+      "title": "Document the workflow in an Adventure Kit guide so modders understand how to author, preview, and ship packs.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Document the workflow in an Adventure Kit guide so modders understand how to author, preview, and ship packs."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/persona-mechanics.md",
+        "line": 113,
+        "headings": [
+          "Persona Masks & Identity Shifts",
+          "Tasks"
+        ],
+        "ancestors": [
+          "Build editor inspector for authoring and testing effect packs into ACK."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:179",
+      "title": "**Implement Signature Encounters:**",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "**Implement Signature Encounters:**"
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 179,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:185",
+      "title": "Hook Mara's puzzle into the Broadcast Story sequence.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Hook Mara's puzzle into the Broadcast Story sequence."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 185,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Signature Encounters:**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:186",
+      "title": "Wire canyon entry and exit triggers so Broadcast Fragment 2 cannot advance until the puzzle is completed or the fallback path is triggered.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Wire canyon entry and exit triggers so Broadcast Fragment 2 cannot advance until the puzzle is completed or the fallback path is triggered."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 186,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Signature Encounters:**",
+          "Hook Mara's puzzle into the Broadcast Story sequence."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:187",
+      "title": "Update the quest journal and broadcast tracker to reflect the player's success or failure state after the puzzle.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Update the quest journal and broadcast tracker to reflect the player's success or failure state after the puzzle."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 187,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Signature Encounters:**",
+          "Hook Mara's puzzle into the Broadcast Story sequence."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:188",
+      "title": "Add automated coverage that verifies finishing the puzzle unlocks the subsequent Silencer encounter and persists across saves.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Add automated coverage that verifies finishing the puzzle unlocks the subsequent Silencer encounter and persists across saves."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 188,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Signature Encounters:**",
+          "Hook Mara's puzzle into the Broadcast Story sequence."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:199",
+      "title": "Integrate Jax's repair sequence into the Broadcast Story flow with clear consequences for success and failure.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Integrate Jax's repair sequence into the Broadcast Story flow with clear consequences for success and failure."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 199,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Signature Encounters:**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:200",
+      "title": "Gate the end of Broadcast Fragment 1 on repairing the caravan rig or triggering an alternate escape beat when the timer expires.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Gate the end of Broadcast Fragment 1 on repairing the caravan rig or triggering an alternate escape beat when the timer expires."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 200,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Signature Encounters:**",
+          "Integrate Jax's repair sequence into the Broadcast Story flow with clear consequences for success and failure."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:201",
+      "title": "Reward players with bespoke crafting parts on success and log the scrap debt path if they fail.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Reward players with bespoke crafting parts on success and log the scrap debt path if they fail."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 201,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Signature Encounters:**",
+          "Integrate Jax's repair sequence into the Broadcast Story flow with clear consequences for success and failure."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:202",
+      "title": "Capture telemetry hooks so QA can verify encounter triggers during long-form playtests.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Capture telemetry hooks so QA can verify encounter triggers during long-form playtests."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 202,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Signature Encounters:**",
+          "Integrate Jax's repair sequence into the Broadcast Story flow with clear consequences for success and failure."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:203",
+      "title": "Stage Nyx's conversational tuning encounter inside the Observatory fragment.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Stage Nyx's conversational tuning encounter inside the Observatory fragment."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 203,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Signature Encounters:**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:204",
+      "title": "Embed the dialogue module into the Observatory map with reputation checks that branch toward Silencer détente or escalation.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Embed the dialogue module into the Observatory map with reputation checks that branch toward Silencer détente or escalation."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 204,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Signature Encounters:**",
+          "Stage Nyx's conversational tuning encounter inside the Observatory fragment."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:205",
+      "title": "Ensure outcomes toggle persona unlock flags and adjust caravan morale so later scenes react accordingly.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Ensure outcomes toggle persona unlock flags and adjust caravan morale so later scenes react accordingly."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 205,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Signature Encounters:**",
+          "Stage Nyx's conversational tuning encounter inside the Observatory fragment."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:206",
+      "title": "Record reference audio/text annotations for localization to preserve cadence and tone.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Record reference audio/text annotations for localization to preserve cadence and tone."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 206,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Signature Encounters:**",
+          "Stage Nyx's conversational tuning encounter inside the Observatory fragment."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:207",
+      "title": "**Doppelgänger System:**",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "**Doppelgänger System:**"
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 207,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:222",
+      "title": "Wire persona swapping into the camp UI with preview and confirmation flows.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Wire persona swapping into the camp UI with preview and confirmation flows."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 222,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Doppelgänger System:**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:223",
+      "title": "Add a persona carousel to the camp equipment panel that displays stat deltas and lore snippets.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Add a persona carousel to the camp equipment panel that displays stat deltas and lore snippets."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 223,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Doppelgänger System:**",
+          "Wire persona swapping into the camp UI with preview and confirmation flows."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:224",
+      "title": "Support keyboard, controller, and accessibility inputs so persona selection mirrors existing gear menus.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Support keyboard, controller, and accessibility inputs so persona selection mirrors existing gear menus."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 224,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Doppelgänger System:**",
+          "Wire persona swapping into the camp UI with preview and confirmation flows."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:225",
+      "title": "Sync persona effects across module transitions via the profile service.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Sync persona effects across module transitions via the profile service."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 225,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Doppelgänger System:**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:226",
+      "title": "Persist equipped persona IDs in the campaign save payload and reload them when the broadcast sequence swaps maps.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Persist equipped persona IDs in the campaign save payload and reload them when the broadcast sequence swaps maps."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 226,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Doppelgänger System:**",
+          "Sync persona effects across module transitions via the profile service."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:227",
+      "title": "Emit analytics events on auto-reapply to audit oddities during QA marathon sessions.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Emit analytics events on auto-reapply to audit oddities during QA marathon sessions."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 227,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Doppelgänger System:**",
+          "Sync persona effects across module transitions via the profile service."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:228",
+      "title": "Script first-time equip flashback beats for each persona.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Script first-time equip flashback beats for each persona."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 228,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Doppelgänger System:**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:229",
+      "title": "Draft short memory vignettes for Mara, Jax, and Nyx that play the first time a persona is equipped.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Draft short memory vignettes for Mara, Jax, and Nyx that play the first time a persona is equipped."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 229,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Doppelgänger System:**",
+          "Script first-time equip flashback beats for each persona."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:230",
+      "title": "Attach the cinematics to the mask memory quest and ensure repeats gracefully skip after initial viewing.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Attach the cinematics to the mask memory quest and ensure repeats gracefully skip after initial viewing."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 230,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Doppelgänger System:**",
+          "Script first-time equip flashback beats for each persona."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:231",
+      "title": "**Implement Key Items:**",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "**Implement Key Items:**"
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 231,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:232",
+      "title": "Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 232,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:233",
+      "title": "Create the \"echo chamber\" interior and the script that triggers a vision when the Glinting Key is used.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Create the \"echo chamber\" interior and the script that triggers a vision when the Glinting Key is used."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 233,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**",
+          "Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:234",
+      "title": "Compose ambient audio and shader cues that escalate as the player nears the focal relic.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Compose ambient audio and shader cues that escalate as the player nears the focal relic."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 234,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**",
+          "Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.",
+          "Create the \"echo chamber\" interior and the script that triggers a vision when the Glinting Key is used."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:235",
+      "title": "Lock exits during visions and add a reset hook so players can't soft-lock the story.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Lock exits during visions and add a reset hook so players can't soft-lock the story."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 235,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**",
+          "Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance.",
+          "Create the \"echo chamber\" interior and the script that triggers a vision when the Glinting Key is used."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:236",
+      "title": "Define HUD states for idle, signal ping, and resonance lock so the widget communicates urgency at a glance.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Define HUD states for idle, signal ping, and resonance lock so the widget communicates urgency at a glance."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 236,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**",
+          "Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:237",
+      "title": "Add a codex entry and tooltip copy that explains why certain compass pulses lead to emotional hotspots.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Add a codex entry and tooltip copy that explains why certain compass pulses lead to emotional hotspots."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 237,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**",
+          "Build the custom UI for the Signal Compass, including its ability to point to locations of emotional resonance."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:238",
+      "title": "Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 238,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:239",
+      "title": "Build timeline capture logic that stores decision snapshots without inflating save sizes.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Build timeline capture logic that stores decision snapshots without inflating save sizes."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 239,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**",
+          "Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:240",
+      "title": "Script at least one caravan NPC who changes behavior after reviewing a recording.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Script at least one caravan NPC who changes behavior after reviewing a recording."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 240,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**",
+          "Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:241",
+      "title": "Cover edge cases where the tape is empty or overwritten mid-conversation with fallback dialogue.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Cover edge cases where the tape is empty or overwritten mid-conversation with fallback dialogue."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 241,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**",
+          "Implement the Memory Tape's recording and playback functionality, and create an NPC who reacts to a recorded event."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:242",
+      "title": "Wire branching quest infrastructure so every mission supports at least two outcomes with lasting effects.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Wire branching quest infrastructure so every mission supports at least two outcomes with lasting effects."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 242,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:243",
+      "title": "Extend quest definitions with outcome nodes, failure recovery hooks, and reward matrices.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Extend quest definitions with outcome nodes, failure recovery hooks, and reward matrices."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 243,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**",
+          "Wire branching quest infrastructure so every mission supports at least two outcomes with lasting effects."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:244",
+      "title": "Update the journal UI so mutually exclusive branches clearly show which path the player chose.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Update the journal UI so mutually exclusive branches clearly show which path the player chose."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 244,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**",
+          "Wire branching quest infrastructure so every mission supports at least two outcomes with lasting effects."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:245",
+      "title": "Add automated tests that simulate branch divergence across modules and confirm persistent world state.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Add automated tests that simulate branch divergence across modules and confirm persistent world state."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 245,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**",
+          "Wire branching quest infrastructure so every mission supports at least two outcomes with lasting effects."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:246",
+      "title": "Persist NPC relationships and states so conversations evolve based on past decisions.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Persist NPC relationships and states so conversations evolve based on past decisions."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 246,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:247",
+      "title": "Define reputation buckets and serialization format for caravan-wide relationship tracking.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Define reputation buckets and serialization format for caravan-wide relationship tracking."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 247,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**",
+          "Persist NPC relationships and states so conversations evolve based on past decisions."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:248",
+      "title": "Audit existing dialog trees and flag lines that should reference relationship shifts.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Audit existing dialog trees and flag lines that should reference relationship shifts."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 248,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**",
+          "Persist NPC relationships and states so conversations evolve based on past decisions."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:249",
+      "title": "Provide ACK tooling to visualize relationship deltas during authoring.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Provide ACK tooling to visualize relationship deltas during authoring."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 249,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 2: Character and Item Implementation**"
+        ],
+        "ancestors": [
+          "**Implement Key Items:**",
+          "Persist NPC relationships and states so conversations evolve based on past decisions."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:252",
+      "title": "**Design a radio tower alignment puzzle that tunes the broadcast.**",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "**Design a radio tower alignment puzzle that tunes the broadcast.**"
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 252,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:254",
+      "title": "Outline dial positions, fail states, and success thresholds in a design one-pager for systems and audio teams.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Outline dial positions, fail states, and success thresholds in a design one-pager for systems and audio teams."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 254,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Design a radio tower alignment puzzle that tunes the broadcast.**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:255",
+      "title": "Identify required art, UI, and SFX assets so production can slot them into the pipeline.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Identify required art, UI, and SFX assets so production can slot them into the pipeline."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 255,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Design a radio tower alignment puzzle that tunes the broadcast.**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:256",
+      "title": "Prototype a paper version of the puzzle to validate tension curve before building it in-engine.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Prototype a paper version of the puzzle to validate tension curve before building it in-engine."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 256,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Design a radio tower alignment puzzle that tunes the broadcast.**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:257",
+      "title": "**Implement the radio tower alignment puzzle with full UI and integration.**",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "**Implement the radio tower alignment puzzle with full UI and integration.**"
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 257,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:258",
+      "title": "Build the dial widget variations (mouse/keyboard and controller) and hook them into the broadcast progression logic.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Build the dial widget variations (mouse/keyboard and controller) and hook them into the broadcast progression logic."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 258,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Implement the radio tower alignment puzzle with full UI and integration.**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:259",
+      "title": "Add Silencer response events when players stall or fail, including combat encounter triggers.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Add Silencer response events when players stall or fail, including combat encounter triggers."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 259,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Implement the radio tower alignment puzzle with full UI and integration.**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:260",
+      "title": "Write tests that confirm the puzzle can be reset mid-session without duplicating rewards.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Write tests that confirm the puzzle can be reset mid-session without duplicating rewards."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 260,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Implement the radio tower alignment puzzle with full UI and integration.**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:261",
+      "title": "**Design a dust storm navigation puzzle using wind chimes along ruined billboards:** Implemented in `mara-puzzle.module.js` with chime events and a dust storm effect.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "**Design a dust storm navigation puzzle using wind chimes along ruined billboards:** Implemented in `mara-puzzle.module.js` with chime events and a dust storm effect."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 261,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:262",
+      "title": "Catalogue the audio palette and spatialization rules so future modules can reuse the navigation system.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Catalogue the audio palette and spatialization rules so future modules can reuse the navigation system."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 262,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Design a dust storm navigation puzzle using wind chimes along ruined billboards:** Implemented in `mara-puzzle.module.js` with chime events and a dust storm effect."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:263",
+      "title": "Document accessibility options (subtitles, vibration cues) required for players with limited audio perception.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Document accessibility options (subtitles, vibration cues) required for players with limited audio perception."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 263,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Design a dust storm navigation puzzle using wind chimes along ruined billboards:** Implemented in `mara-puzzle.module.js` with chime events and a dust storm effect."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:264",
+      "title": "**Design a layered graffiti decoding puzzle to reveal a safe route before the sun bleeds out.**",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "**Design a layered graffiti decoding puzzle to reveal a safe route before the sun bleeds out.**"
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 264,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:267",
+      "title": "Break down graffiti layers, solvents, and failure penalties so encounter scripting has a clear checklist.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Break down graffiti layers, solvents, and failure penalties so encounter scripting has a clear checklist."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 267,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Design a layered graffiti decoding puzzle to reveal a safe route before the sun bleeds out.**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:268",
+      "title": "Coordinate with art to source decal variants and emissive pass timing for the false sunlight effect.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Coordinate with art to source decal variants and emissive pass timing for the false sunlight effect."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 268,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Design a layered graffiti decoding puzzle to reveal a safe route before the sun bleeds out.**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:269",
+      "title": "Implement the layered graffiti decoding puzzle as an interactive module and hook it into the Broadcast Story sequence.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Implement the layered graffiti decoding puzzle as an interactive module and hook it into the Broadcast Story sequence."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 269,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:270",
+      "title": "Create the overpass map variant with interaction hotspots tied to each graffiti layer.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Create the overpass map variant with interaction hotspots tied to each graffiti layer."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 270,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "Implement the layered graffiti decoding puzzle as an interactive module and hook it into the Broadcast Story sequence."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:271",
+      "title": "Add quest hooks so completing the puzzle unlocks the safe route while failed attempts spawn Silencer skirmishes.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Add quest hooks so completing the puzzle unlocks the safe route while failed attempts spawn Silencer skirmishes."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 271,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "Implement the layered graffiti decoding puzzle as an interactive module and hook it into the Broadcast Story sequence."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:272",
+      "title": "Ensure save/load restores partially completed decoding steps without soft-locking progress.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Ensure save/load restores partially completed decoding steps without soft-locking progress."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 272,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "Implement the layered graffiti decoding puzzle as an interactive module and hook it into the Broadcast Story sequence."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:273",
+      "title": "Introduce roaming encounter and event scheduler so the world reacts over time.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Introduce roaming encounter and event scheduler so the world reacts over time."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 273,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:274",
+      "title": "Integrate the scheduler from the reactive systems plan and author sample encounters that escalate over in-game days.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Integrate the scheduler from the reactive systems plan and author sample encounters that escalate over in-game days."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 274,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "Introduce roaming encounter and event scheduler so the world reacts over time."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:275",
+      "title": "Sync roaming encounters with broadcast progression to avoid narrative clashes.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Sync roaming encounters with broadcast progression to avoid narrative clashes."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 275,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "Introduce roaming encounter and event scheduler so the world reacts over time."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:276",
+      "title": "Provide debug commands to fast-forward time and inspect queued events during playtests.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Provide debug commands to fast-forward time and inspect queued events during playtests."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 276,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "Introduce roaming encounter and event scheduler so the world reacts over time."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:277",
+      "title": "Link zones and portals to narrative flags, gating routes based on prior choices.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Link zones and portals to narrative flags, gating routes based on prior choices."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 277,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:278",
+      "title": "Audit existing zone definitions and add narrative flag requirements for key transitions.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Audit existing zone definitions and add narrative flag requirements for key transitions."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 278,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "Link zones and portals to narrative flags, gating routes based on prior choices."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:279",
+      "title": "Update portal UI prompts to communicate why certain routes are locked or rerouted.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Update portal UI prompts to communicate why certain routes are locked or rerouted."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 279,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "Link zones and portals to narrative flags, gating routes based on prior choices."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:280",
+      "title": "Add regression tests that confirm flag checks persist when players reload near portals.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Add regression tests that confirm flag checks persist when players reload near portals."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 280,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "Link zones and portals to narrative flags, gating routes based on prior choices."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:281",
+      "title": "**Build Reusable Widgets:**",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "**Build Reusable Widgets:**"
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 281,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:283",
+      "title": "Develop a \"sound-based navigation\" system that can be used for the dust storm and other similar challenges.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Develop a \"sound-based navigation\" system that can be used for the dust storm and other similar challenges."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 283,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Build Reusable Widgets:**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:284",
+      "title": "Extract the audio beacon logic into a reusable module with configurable pitch sets and timing windows.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Extract the audio beacon logic into a reusable module with configurable pitch sets and timing windows."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 284,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Build Reusable Widgets:**",
+          "Develop a \"sound-based navigation\" system that can be used for the dust storm and other similar challenges."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:285",
+      "title": "Provide visual fallback cues that designers can toggle for accessibility or alternate puzzle modes.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Provide visual fallback cues that designers can toggle for accessibility or alternate puzzle modes."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 285,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Build Reusable Widgets:**",
+          "Develop a \"sound-based navigation\" system that can be used for the dust storm and other similar challenges."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:286",
+      "title": "Document how to drop the system into new maps via Adventure Kit tooling.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Document how to drop the system into new maps via Adventure Kit tooling."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 286,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Build Reusable Widgets:**",
+          "Develop a \"sound-based navigation\" system that can be used for the dust storm and other similar challenges."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:287",
+      "title": "**Flesh out the World:**",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "**Flesh out the World:**"
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 287,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:288",
+      "title": "Design the first major hub city, where the caravan can rest, resupply, and find new quests.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Design the first major hub city, where the caravan can rest, resupply, and find new quests."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 288,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Flesh out the World:**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:289",
+      "title": "Map the central bazaar interior and connect east and west gates to the world map.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Map the central bazaar interior and connect east and west gates to the world map."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 289,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Flesh out the World:**",
+          "Design the first major hub city, where the caravan can rest, resupply, and find new quests."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:290",
+      "title": "Move prototype hub content into the Dustland module and retire the standalone hub builds.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Move prototype hub content into the Dustland module and retire the standalone hub builds."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 290,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Flesh out the World:**",
+          "Design the first major hub city, where the caravan can rest, resupply, and find new quests."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:291",
+      "title": "Place trader, quest-giver, and rest triggers with schedule data so the hub feels alive across day/night cycles.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Place trader, quest-giver, and rest triggers with schedule data so the hub feels alive across day/night cycles."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 291,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Flesh out the World:**",
+          "Design the first major hub city, where the caravan can rest, resupply, and find new quests."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:292",
+      "title": "Integrate upcoming systems (personas, trader refreshes, hydration) to keep Dustland the single source of truth.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Integrate upcoming systems (personas, trader refreshes, hydration) to keep Dustland the single source of truth."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 292,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Flesh out the World:**",
+          "Design the first major hub city, where the caravan can rest, resupply, and find new quests."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:293",
+      "title": "Create a detailed world map that shows the planned route of the caravan and the locations of the first three broadcast fragments.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Create a detailed world map that shows the planned route of the caravan and the locations of the first three broadcast fragments."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 293,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Flesh out the World:**"
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:294",
+      "title": "Draft the map layout with points of interest, travel routes, and Silencer patrol zones.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Draft the map layout with points of interest, travel routes, and Silencer patrol zones."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 294,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Flesh out the World:**",
+          "Create a detailed world map that shows the planned route of the caravan and the locations of the first three broadcast fragments."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:295",
+      "title": "Coordinate with UI to render the map in both the broadcast story flow and fast travel overlay.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Coordinate with UI to render the map in both the broadcast story flow and fast travel overlay."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 295,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Flesh out the World:**",
+          "Create a detailed world map that shows the planned route of the caravan and the locations of the first three broadcast fragments."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:296",
+      "title": "Add tooltips or legend entries that summarize each fragment location for players and modders.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Add tooltips or legend entries that summarize each fragment location for players and modders."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 296,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 3: Puzzle and World Building**"
+        ],
+        "ancestors": [
+          "**Flesh out the World:**",
+          "Create a detailed world map that shows the planned route of the caravan and the locations of the first three broadcast fragments."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:299",
+      "title": "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 299,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": []
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:300",
+      "title": "Schedule cross-discipline play sessions and capture telemetry plus qualitative notes for each fragment.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Schedule cross-discipline play sessions and capture telemetry plus qualitative notes for each fragment."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 300,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:301",
+      "title": "Log narrative pacing issues, blocked progression, or confusing transitions and prioritize fixes.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Log narrative pacing issues, blocked progression, or confusing transitions and prioritize fixes."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 301,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:302",
+      "title": "Summarize findings in a post-playtest report and circulate to design, narrative, and engineering leads.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Summarize findings in a post-playtest report and circulate to design, narrative, and engineering leads."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 302,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:303",
+      "title": "**Test Character Arcs:** Get feedback on the signature encounters for each character to make sure they are both fun and effective at teaching the character's core mechanics.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "**Test Character Arcs:** Get feedback on the signature encounters for each character to make sure they are both fun and effective at teaching the character's core mechanics."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 303,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:304",
+      "title": "Prepare bespoke feedback forms focusing on mechanic clarity, narrative payoff, and difficulty curves.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Prepare bespoke feedback forms focusing on mechanic clarity, narrative payoff, and difficulty curves."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 304,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace.",
+          "**Test Character Arcs:** Get feedback on the signature encounters for each character to make sure they are both fun and effective at teaching the character's core mechanics."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:305",
+      "title": "Record encounter-specific telemetry (success/failure counts, time to completion) for Mara, Jax, and Nyx sequences.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Record encounter-specific telemetry (success/failure counts, time to completion) for Mara, Jax, and Nyx sequences."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 305,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace.",
+          "**Test Character Arcs:** Get feedback on the signature encounters for each character to make sure they are both fun and effective at teaching the character's core mechanics."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:306",
+      "title": "Review results with character owners and schedule follow-up tuning passes.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Review results with character owners and schedule follow-up tuning passes."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 306,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace.",
+          "**Test Character Arcs:** Get feedback on the signature encounters for each character to make sure they are both fun and effective at teaching the character's core mechanics."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:307",
+      "title": "**Puzzle Usability Testing:** Have players who are unfamiliar with the puzzles test them to ensure they are challenging but not frustrating. Implement quick resets based on their feedback.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "**Puzzle Usability Testing:** Have players who are unfamiliar with the puzzles test them to ensure they are challenging but not frustrating. Implement quick resets based on their feedback."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 307,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:308",
+      "title": "Recruit a mix of accessibility and puzzle-focused testers for moderated sessions.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Recruit a mix of accessibility and puzzle-focused testers for moderated sessions."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 308,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace.",
+          "**Puzzle Usability Testing:** Have players who are unfamiliar with the puzzles test them to ensure they are challenging but not frustrating. Implement quick resets based on their feedback."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:309",
+      "title": "Capture screen recordings and annotate confusing steps or failure spikes.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Capture screen recordings and annotate confusing steps or failure spikes."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 309,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace.",
+          "**Puzzle Usability Testing:** Have players who are unfamiliar with the puzzles test them to ensure they are challenging but not frustrating. Implement quick resets based on their feedback."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:310",
+      "title": "Iterate on cueing, reset logic, and hint delivery based on observations.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Iterate on cueing, reset logic, and hint delivery based on observations."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 310,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace.",
+          "**Puzzle Usability Testing:** Have players who are unfamiliar with the puzzles test them to ensure they are challenging but not frustrating. Implement quick resets based on their feedback."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:311",
+      "title": "**Modding Tools and Documentation:** Create a tutorial for the modding community that explains how to use the broadcast fragment system to create their own stories within the Dustland universe.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "**Modding Tools and Documentation:** Create a tutorial for the modding community that explains how to use the broadcast fragment system to create their own stories within the Dustland universe."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 311,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:312",
+      "title": "Outline the tutorial structure (requirements, step-by-step instructions, troubleshooting) before writing copy.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Outline the tutorial structure (requirements, step-by-step instructions, troubleshooting) before writing copy."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 312,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace.",
+          "**Modding Tools and Documentation:** Create a tutorial for the modding community that explains how to use the broadcast fragment system to create their own stories within the Dustland universe."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:313",
+      "title": "Capture screenshots or short clips of the Adventure Kit workflow for each major step.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Capture screenshots or short clips of the Adventure Kit workflow for each major step."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 313,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace.",
+          "**Modding Tools and Documentation:** Create a tutorial for the modding community that explains how to use the broadcast fragment system to create their own stories within the Dustland universe."
+        ]
+      }
+    },
+    {
+      "id": "docs/design/narrative-world/plot-draft.md:314",
+      "title": "Publish the tutorial alongside sample modules and update the docs index so creators can find it quickly.",
+      "codexCommand": [
+        "codex",
+        "commit",
+        "Publish the tutorial alongside sample modules and update the docs index so creators can find it quickly."
+      ],
+      "source": {
+        "file": "docs/design/narrative-world/plot-draft.md",
+        "line": 314,
+        "headings": [
+          "Plot Draft, v2",
+          "Early Silencer Encounter",
+          "**Phase 4: Testing and Integration**"
+        ],
+        "ancestors": [
+          "**Playtest the Narrative Arc:** Conduct a full playthrough of the first three broadcast fragment modules to ensure the story flows logically and the mystery unfolds at a compelling pace.",
+          "**Modding Tools and Documentation:** Create a tutorial for the modding community that explains how to use the broadcast fragment system to create their own stories within the Dustland universe."
+        ]
+      }
+    }
+  ]
+}
