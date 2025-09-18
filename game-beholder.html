@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dustland Dungeon View</title>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="dustland.css" />
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Oxanium', 'Segoe UI', sans-serif;
+      color: #eaf6ff;
+      background: radial-gradient(circle at 20% -15%, rgba(104, 187, 255, 0.25), transparent 55%),
+        radial-gradient(circle at 85% 10%, rgba(173, 120, 255, 0.22), transparent 60%),
+        linear-gradient(155deg, rgba(6, 12, 26, 0.96), rgba(9, 16, 30, 0.88));
+    }
+    main.dungeon-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 28px clamp(16px, 5vw, 42px) 64px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    @media (min-width: 1080px) {
+      main.dungeon-layout {
+        flex-direction: row;
+        align-items: stretch;
+      }
+    }
+    .view-shell {
+      flex: 1 1 60%;
+      background: linear-gradient(180deg, rgba(8, 18, 42, 0.94), rgba(6, 14, 30, 0.82));
+      border: 1px solid rgba(120, 200, 255, 0.32);
+      border-radius: 26px;
+      padding: clamp(18px, 3vw, 28px);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 52px rgba(70, 160, 255, 0.28);
+    }
+    .view-shell::before {
+      content: '';
+      position: absolute;
+      inset: 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(140, 210, 255, 0.2);
+      pointer-events: none;
+      opacity: 0.6;
+      box-shadow: inset 0 0 22px rgba(60, 140, 220, 0.22);
+    }
+    canvas#viewport {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 18px;
+      background: #030712;
+      border: 1px solid rgba(140, 220, 255, 0.22);
+      box-shadow: inset 0 0 28px rgba(30, 90, 160, 0.28);
+    }
+    .hud {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 18px;
+      z-index: 1;
+    }
+    .hud-top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .hud-top h1 {
+      margin: 0;
+      font-size: clamp(1.2rem, 2.8vw, 1.8rem);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .hud-top .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .hud-top .meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(12, 24, 48, 0.62);
+      border: 1px solid rgba(120, 200, 255, 0.24);
+    }
+    .tile-info {
+      font-size: 0.95rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: rgba(220, 240, 255, 0.86);
+    }
+    .map-select {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .map-select label {
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(180, 210, 255, 0.82);
+    }
+    .map-select select {
+      background: rgba(12, 28, 48, 0.76);
+      border: 1px solid rgba(120, 210, 255, 0.32);
+      color: #eaf6ff;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+    }
+    .control-pad {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      max-width: 420px;
+    }
+    .control-pad button {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(120, 220, 255, 0.35);
+      background: rgba(14, 32, 52, 0.72);
+      color: #eaf6ff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+    .control-pad button:focus-visible {
+      outline: 2px solid rgba(160, 240, 255, 0.72);
+      outline-offset: 2px;
+    }
+    .control-pad button:hover {
+      background: rgba(30, 80, 120, 0.85);
+      transform: translateY(-1px);
+    }
+    .control-pad button:active {
+      background: rgba(12, 48, 78, 0.95);
+      transform: translateY(1px);
+    }
+    .status-note {
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(173, 215, 255, 0.78);
+    }
+    aside.log-panel {
+      flex: 1 1 32%;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      background: rgba(6, 12, 28, 0.82);
+      border: 1px solid rgba(120, 200, 255, 0.32);
+      border-radius: 24px;
+      padding: clamp(18px, 3vw, 26px);
+      box-shadow: 0 0 46px rgba(60, 160, 240, 0.22);
+      min-width: 0;
+    }
+    .log-panel h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    #log {
+      flex: 1;
+      background: rgba(8, 18, 36, 0.75);
+      border: 1px solid rgba(120, 200, 255, 0.24);
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      overflow-y: auto;
+      max-height: clamp(240px, 40vh, 420px);
+    }
+    #log div {
+      margin-bottom: 8px;
+      opacity: 0.86;
+    }
+    #log div:last-child {
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <main class="dungeon-layout">
+    <section class="view-shell">
+      <canvas id="viewport"></canvas>
+      <div class="hud">
+        <div class="hud-top">
+          <h1 id="mapName">Dustland</h1>
+          <div class="meta">
+            <span>Facing <strong id="facing">north</strong></span>
+            <span>Turn <strong id="turn">0</strong></span>
+          </div>
+        </div>
+        <div class="tile-info" id="tileInfo">Loading terrain…</div>
+        <div class="map-select">
+          <label for="mapSelect">Location</label>
+          <select id="mapSelect"></select>
+        </div>
+        <div class="control-pad">
+          <button type="button" data-action="turn-left">Turn Left</button>
+          <button type="button" data-action="move-forward">Forward</button>
+          <button type="button" data-action="turn-right">Turn Right</button>
+          <button type="button" data-action="strafe-left">Strafe Left</button>
+          <button type="button" data-action="move-back">Step Back</button>
+          <button type="button" data-action="strafe-right">Strafe Right</button>
+          <button type="button" data-action="interact">Interact</button>
+          <button type="button" data-action="center">Center View</button>
+          <button type="button" data-action="reset">Reset Start</button>
+        </div>
+        <div class="status-note" id="status">Arrow keys move. Q/E rotate. Space interacts.</div>
+      </div>
+    </section>
+    <aside class="log-panel">
+      <h2>Expedition Log</h2>
+      <div id="log"></div>
+    </aside>
+  </main>
+  <script src="modules/dustland-module.js"></script>
+  <script>
+    (function(){
+      'use strict';
+      const DIRS = ['north', 'east', 'south', 'west'];
+      const DIR_VECTORS = {
+        north: { x: 0, y: -1 },
+        east: { x: 1, y: 0 },
+        south: { x: 0, y: 1 },
+        west: { x: -1, y: 0 }
+      };
+      const MAP_LABELS = {
+        world: 'Dustland Wastes',
+        hall: 'Hall of Records',
+        portal_hut: 'Portal Hut',
+        echo_chamber: 'Echo Chamber',
+        clinic: 'Makeshift Clinic',
+        drag_strip: 'Neon Drag Strip',
+        casino: 'Skyline Casino',
+        night_market: 'Night Market'
+      };
+      const INTERIOR_TILES = {
+        '⬜': { label: 'Floor', walkable: true, height: 0, topColor: '#2b2f3a' },
+        '🧱': { label: 'Wall', walkable: false, height: 2, topColor: '#6f3636' },
+        '🌿': { label: 'Ferns', walkable: true, height: 0, topColor: '#24352a' },
+        '🌀': { label: 'Portal', walkable: true, height: 0, topColor: '#1c345e' },
+        '🚪': { label: 'Door', walkable: true, height: 1, topColor: '#805233' },
+        '🪨': { label: 'Rock', walkable: false, height: 2, topColor: '#4a4e57' },
+        '🌟': { label: 'Energy Node', walkable: true, height: 0, topColor: '#372861' }
+      };
+      const WORLD_TILES = {
+        0: { label: 'Void', walkable: false, height: 0, topColor: '#101421' },
+        1: { label: 'Water', walkable: false, height: 0, topColor: '#1d3f73' },
+        2: { label: 'Badlands', walkable: true, height: 0, topColor: '#534331' },
+        3: { label: 'Scrub', walkable: true, height: 0, topColor: '#324a33' },
+        4: { label: 'Ruins', walkable: false, height: 2, topColor: '#504057' },
+        5: { label: 'Roadway', walkable: true, height: 0, topColor: '#4a4a54' },
+        8: { label: 'Ridge', walkable: false, height: 3, topColor: '#6a3c28' },
+        9: { label: 'Decking', walkable: true, height: 0, topColor: '#656b74' },
+        default: { label: 'Unknown', walkable: false, height: 0, topColor: '#1a1a28' }
+      };
+      const MAX_LOG = 12;
+      const VIEW_DISTANCE = 6;
+      const HALF_WIDTH = 0.55;
+      const WALL_HEIGHT = 1.4;
+      const CAMERA_HEIGHT = 0.58;
+      const FOV = 70 * Math.PI / 180;
+      const canvas = document.getElementById('viewport');
+      const ctx = canvas.getContext('2d');
+      const mapNameEl = document.getElementById('mapName');
+      const facingEl = document.getElementById('facing');
+      const turnEl = document.getElementById('turn');
+      const tileInfoEl = document.getElementById('tileInfo');
+      const statusEl = document.getElementById('status');
+      const mapSelectEl = document.getElementById('mapSelect');
+      const logEl = document.getElementById('log');
+      const controlPad = document.querySelector('.control-pad');
+      const viewMetrics = {
+        focal: 600,
+        horizon: 240
+      };
+      const state = {
+        module: null,
+        maps: {},
+        map: null,
+        mapId: null,
+        player: { x: 0, y: 0, facing: 0 },
+        turns: 0,
+        entities: { npcs: [], items: [] },
+        log: []
+      };
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+      function shadeColor(hex, lum) {
+        if (!hex || hex[0] !== '#') return hex;
+        const clean = hex.slice(1);
+        const num = parseInt(clean, 16);
+        let r = (num >> 16) & 0xff;
+        let g = (num >> 8) & 0xff;
+        let b = num & 0xff;
+        r = clamp(Math.round(r + (255 * lum)), 0, 255);
+        g = clamp(Math.round(g + (255 * lum)), 0, 255);
+        b = clamp(Math.round(b + (255 * lum)), 0, 255);
+        const toHex = v => v.toString(16).padStart(2, '0');
+        return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+      }
+      function tileColor(tile, fallback) {
+        if (!tile) return fallback || '#39435a';
+        if (tile.topColor) return tile.topColor;
+        return fallback || '#39435a';
+      }
+      function logMessage(msg) {
+        state.log.unshift({ msg, turn: state.turns });
+        if (state.log.length > MAX_LOG) state.log.pop();
+        if (!logEl) return;
+        logEl.innerHTML = '';
+        for (const entry of state.log) {
+          const line = document.createElement('div');
+          line.textContent = `[${entry.turn}] ${entry.msg}`;
+          logEl.appendChild(line);
+        }
+        logEl.scrollTop = 0;
+      }
+      function buildMaps(module) {
+        const maps = {};
+        if (module.world) {
+          const keys = Object.keys(module.world)
+            .map(k => Number(k))
+            .filter(Number.isFinite)
+            .sort((a, b) => a - b);
+          const grid = keys.map(key => module.world[key].slice());
+          if (grid.length) {
+            maps.world = {
+              id: 'world',
+              type: 'world',
+              width: grid[0].length,
+              height: grid.length,
+              grid,
+              entryX: module.start?.map === 'world' ? module.start.x : Math.floor(grid[0].length / 2),
+              entryY: module.start?.map === 'world' ? module.start.y : Math.floor(grid.length / 2)
+            };
+          }
+        }
+        const interiors = module.interiors ? Object.values(module.interiors) : [];
+        for (const data of interiors) {
+          if (!data || !data.id || !Array.isArray(data.grid)) continue;
+          maps[data.id] = {
+            id: data.id,
+            type: 'interior',
+            width: data.w,
+            height: data.h,
+            grid: data.grid.map(row => Array.from(row)),
+            entryX: typeof data.entryX === 'number' ? data.entryX : Math.floor(data.w / 2),
+            entryY: typeof data.entryY === 'number' ? data.entryY : Math.floor(data.h / 2)
+          };
+        }
+        return maps;
+      }
+      function getTileData(map, x, y) {
+        if (!map) return null;
+        if (x < 0 || y < 0 || x >= map.width || y >= map.height) return null;
+        const raw = map.grid[y][x];
+        if (map.type === 'world') {
+          const hasTile = Object.prototype.hasOwnProperty.call(WORLD_TILES, raw);
+          const base = hasTile ? WORLD_TILES[raw] : WORLD_TILES.default;
+          return { ...base, value: raw };
+        }
+        const symbol = typeof raw === 'string' ? raw : String(raw);
+        const base = INTERIOR_TILES[symbol] || INTERIOR_TILES['⬜'];
+        return { ...base, value: symbol };
+      }
+      function updateEntities() {
+        if (!state.module || !state.mapId) return;
+        const module = state.module;
+        state.entities.npcs = (module.npcs || [])
+          .filter(n => n.map === state.mapId)
+          .map(n => ({ x: n.x, y: n.y, name: n.name, symbol: n.symbol, color: n.color }));
+        state.entities.items = (module.items || [])
+          .filter(item => item.map === state.mapId && typeof item.x === 'number' && typeof item.y === 'number')
+          .map(item => ({ x: item.x, y: item.y, name: item.name }));
+      }
+      function updateHud() {
+        if (!state.map) return;
+        const mapLabel = MAP_LABELS[state.mapId] || state.mapId;
+        mapNameEl.textContent = mapLabel;
+        facingEl.textContent = DIRS[state.player.facing];
+        turnEl.textContent = state.turns;
+        const tile = getTileData(state.map, state.player.x, state.player.y);
+        if (tile) {
+          tileInfoEl.textContent = `${tile.label} · (${state.player.x}, ${state.player.y})`;
+        } else {
+          tileInfoEl.textContent = `Unknown · (${state.player.x}, ${state.player.y})`;
+        }
+        if (mapSelectEl && mapSelectEl.value !== state.mapId) {
+          mapSelectEl.value = state.mapId;
+        }
+      }
+      function withinBounds(x, y) {
+        if (!state.map) return false;
+        return x >= 0 && y >= 0 && x < state.map.width && y < state.map.height;
+      }
+      function isWalkable(x, y) {
+        const tile = getTileData(state.map, x, y);
+        return tile ? !!tile.walkable : false;
+      }
+      function setMap(mapId, x, y) {
+        const next = state.maps[mapId];
+        if (!next) {
+          logMessage(`Map not found: ${mapId}`);
+          return;
+        }
+        state.map = next;
+        state.mapId = mapId;
+        const spawnX = typeof x === 'number' ? x : next.entryX;
+        const spawnY = typeof y === 'number' ? y : next.entryY;
+        state.player.x = clamp(spawnX, 0, next.width - 1);
+        state.player.y = clamp(spawnY, 0, next.height - 1);
+        updateEntities();
+        updateHud();
+        renderView();
+      }
+      function resetStart() {
+        if (!state.module) return;
+        const start = state.module.start || { map: 'world', x: 0, y: 0 };
+        state.player.facing = 0;
+        state.turns = 0;
+        setMap(start.map, start.x, start.y);
+        updateHud();
+        logMessage('Returned to module starting location.');
+      }
+      function centerCamera() {
+        renderView();
+      }
+      function movePlayer(dx, dy) {
+        if (!state.map) return;
+        const nx = state.player.x + dx;
+        const ny = state.player.y + dy;
+        if (!withinBounds(nx, ny) || !isWalkable(nx, ny)) {
+          logMessage('You bump into an obstacle.');
+          return;
+        }
+        state.player.x = nx;
+        state.player.y = ny;
+        state.turns += 1;
+        const foundItemIndex = state.entities.items.findIndex(it => it.x === nx && it.y === ny);
+        if (foundItemIndex >= 0) {
+          const [item] = state.entities.items.splice(foundItemIndex, 1);
+          logMessage(`You pick up ${item.name}.`);
+        } else {
+          logMessage(`Moved to (${nx}, ${ny}).`);
+        }
+        const npc = state.entities.npcs.find(n => n.x === nx && n.y === ny);
+        if (npc) {
+          logMessage(`You greet ${npc.name}.`);
+        }
+        updateHud();
+        renderView();
+      }
+      function rotate(delta) {
+        state.player.facing = (state.player.facing + delta + DIRS.length) % DIRS.length;
+        state.turns += 1;
+        logMessage(`Facing ${DIRS[state.player.facing]}.`);
+        updateHud();
+        renderView();
+      }
+      function getFrontTile(distance = 1) {
+        const facing = DIRS[state.player.facing];
+        const vec = DIR_VECTORS[facing];
+        const x = state.player.x + vec.x * distance;
+        const y = state.player.y + vec.y * distance;
+        if (!withinBounds(x, y)) return null;
+        return { x, y };
+      }
+      function strafe(direction) {
+        const facing = DIRS[state.player.facing];
+        let dx = 0;
+        let dy = 0;
+        if (facing === 'north') {
+          dx = direction === 'left' ? -1 : 1;
+        } else if (facing === 'south') {
+          dx = direction === 'left' ? 1 : -1;
+        } else if (facing === 'east') {
+          dy = direction === 'left' ? -1 : 1;
+        } else {
+          dy = direction === 'left' ? 1 : -1;
+        }
+        movePlayer(dx, dy);
+      }
+      function interact() {
+        const front = getFrontTile();
+        if (!front) {
+          logMessage('Nothing ahead to examine.');
+          return;
+        }
+        const npc = state.entities.npcs.find(n => n.x === front.x && n.y === front.y);
+        if (npc) {
+          logMessage(`You hail ${npc.name}.`);
+          return;
+        }
+        const tile = getTileData(state.map, front.x, front.y);
+        if (tile?.decoration === 'portal' || tile?.label === 'Door') {
+          logMessage('An unseen force hums beyond the doorway.');
+        } else if (tile) {
+          logMessage(`You study the ${tile.label.toLowerCase()}.`);
+        } else {
+          logMessage('Only wasteland stretches ahead.');
+        }
+      }
+      function moveForward() {
+        const facing = DIRS[state.player.facing];
+        const vec = DIR_VECTORS[facing];
+        movePlayer(vec.x, vec.y);
+      }
+      function moveBack() {
+        const facing = DIRS[state.player.facing];
+        const vec = DIR_VECTORS[facing];
+        movePlayer(-vec.x, -vec.y);
+      }
+      function handleKey(event) {
+        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) return;
+        let handled = true;
+        switch (event.key) {
+          case 'ArrowUp':
+            moveForward();
+            break;
+          case 'ArrowDown':
+            moveBack();
+            break;
+          case 'ArrowLeft':
+            rotate(-1);
+            break;
+          case 'ArrowRight':
+            rotate(1);
+            break;
+          case 'q':
+          case 'Q':
+            rotate(-1);
+            break;
+          case 'e':
+          case 'E':
+            rotate(1);
+            break;
+          case 'a':
+          case 'A':
+            strafe('left');
+            break;
+          case 'd':
+          case 'D':
+            strafe('right');
+            break;
+          case ' ':
+            interact();
+            break;
+          case 'Enter':
+            interact();
+            break;
+          default:
+            handled = false;
+        }
+        if (handled) {
+          event.preventDefault();
+        }
+      }
+      function handleControlClick(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.dataset.action;
+        switch (action) {
+          case 'turn-left':
+            rotate(-1);
+            break;
+          case 'turn-right':
+            rotate(1);
+            break;
+          case 'move-forward':
+            moveForward();
+            break;
+          case 'move-back':
+            moveBack();
+            break;
+          case 'strafe-left':
+            strafe('left');
+            break;
+          case 'strafe-right':
+            strafe('right');
+            break;
+          case 'interact':
+            interact();
+            break;
+          case 'center':
+            centerCamera();
+            break;
+          case 'reset':
+            resetStart();
+            break;
+        }
+      }
+      function relToWorld(rx, ry) {
+        const facing = DIRS[state.player.facing];
+        let dx = 0;
+        let dy = 0;
+        if (facing === 'north') {
+          dx = rx;
+          dy = -ry;
+        } else if (facing === 'south') {
+          dx = -rx;
+          dy = ry;
+        } else if (facing === 'east') {
+          dx = ry;
+          dy = rx;
+        } else {
+          dx = -ry;
+          dy = -rx;
+        }
+        return {
+          x: state.player.x + dx,
+          y: state.player.y + dy
+        };
+      }
+      function getRelativeTile(rx, ry) {
+        const coord = relToWorld(rx, ry);
+        if (!withinBounds(coord.x, coord.y)) return null;
+        return getTileData(state.map, coord.x, coord.y);
+      }
+      function getEntityAt(x, y) {
+        const npc = state.entities.npcs.find(n => n.x === x && n.y === y);
+        if (npc) return { type: 'npc', data: npc };
+        const item = state.entities.items.find(it => it.x === x && it.y === y);
+        if (item) return { type: 'item', data: item };
+        return null;
+      }
+      function segmentNearZ(depth) {
+        if (depth === 0) return 0.2;
+        return depth + 0.2;
+      }
+      function segmentFarZ(depth) {
+        return depth + 1.2;
+      }
+      function projectPoint(x, y, z) {
+        const viewZ = Math.max(z, 0.1);
+        const scale = viewMetrics.focal / viewZ;
+        const px = canvas.width / 2 + x * scale;
+        const py = viewMetrics.horizon - (y - CAMERA_HEIGHT) * scale;
+        return { x: px, y: py };
+      }
+      function drawPolygon(points, fillStyle, strokeStyle) {
+        if (!points.length) return;
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.closePath();
+        if (fillStyle) {
+          ctx.fillStyle = fillStyle;
+          ctx.fill();
+        }
+        if (strokeStyle) {
+          ctx.strokeStyle = strokeStyle;
+          ctx.stroke();
+        }
+      }
+      function drawFloor(segment, depthIndex) {
+        const zNear = segmentNearZ(segment.depth);
+        const zFar = segmentFarZ(segment.depth);
+        const leftNear = projectPoint(-HALF_WIDTH, 0, zNear);
+        const rightNear = projectPoint(HALF_WIDTH, 0, zNear);
+        const rightFar = projectPoint(HALF_WIDTH, 0, zFar);
+        const leftFar = projectPoint(-HALF_WIDTH, 0, zFar);
+        const baseColor = tileColor(segment.tile, '#2c3145');
+        const shade = -0.18 - depthIndex * 0.06;
+        drawPolygon([leftNear, rightNear, rightFar, leftFar], shadeColor(baseColor, shade));
+      }
+      function drawCeiling(segment, depthIndex) {
+        const zNear = segmentNearZ(segment.depth);
+        const zFar = segmentFarZ(segment.depth);
+        const leftNear = projectPoint(-HALF_WIDTH, WALL_HEIGHT, zNear);
+        const rightNear = projectPoint(HALF_WIDTH, WALL_HEIGHT, zNear);
+        const rightFar = projectPoint(HALF_WIDTH, WALL_HEIGHT, zFar);
+        const leftFar = projectPoint(-HALF_WIDTH, WALL_HEIGHT, zFar);
+        const baseColor = '#1c2438';
+        const shade = depthIndex * 0.04;
+        drawPolygon([leftNear, rightNear, rightFar, leftFar], shadeColor(baseColor, shade));
+      }
+      function drawSideWall(side, segment, tile, depthIndex) {
+        if (!tile || tile.walkable) {
+          drawOpenEdge(side, segment);
+          return;
+        }
+        const zNear = segmentNearZ(segment.depth);
+        const zFar = segmentFarZ(segment.depth);
+        const x = side === 'left' ? -HALF_WIDTH : HALF_WIDTH;
+        const bottomNear = projectPoint(x, 0, zNear);
+        const topNear = projectPoint(x, WALL_HEIGHT, zNear);
+        const topFar = projectPoint(x, WALL_HEIGHT, zFar);
+        const bottomFar = projectPoint(x, 0, zFar);
+        const baseColor = tileColor(tile, '#4a536d');
+        const shade = -0.1 - depthIndex * 0.08;
+        drawPolygon([bottomNear, topNear, topFar, bottomFar], shadeColor(baseColor, shade), 'rgba(40, 60, 100, 0.6)');
+      }
+      function drawOpenEdge(side, segment) {
+        const zNear = segmentNearZ(segment.depth);
+        const zFar = segmentFarZ(segment.depth);
+        const x = side === 'left' ? -HALF_WIDTH : HALF_WIDTH;
+        const nearPoint = projectPoint(x, 0, zNear);
+        const farPoint = projectPoint(x, 0, zFar);
+        ctx.beginPath();
+        ctx.moveTo(nearPoint.x, nearPoint.y);
+        ctx.lineTo(farPoint.x, farPoint.y);
+        ctx.strokeStyle = 'rgba(110, 170, 220, 0.25)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+      function drawFrontWall(segment, tile, depthIndex) {
+        if (!tile || tile.walkable) return;
+        const z = segmentFarZ(segment.depth);
+        const bottomLeft = projectPoint(-HALF_WIDTH, 0, z);
+        const bottomRight = projectPoint(HALF_WIDTH, 0, z);
+        const topRight = projectPoint(HALF_WIDTH, WALL_HEIGHT, z);
+        const topLeft = projectPoint(-HALF_WIDTH, WALL_HEIGHT, z);
+        const baseColor = tileColor(tile, '#48516a');
+        const shade = -0.05 - depthIndex * 0.08;
+        drawPolygon([bottomLeft, bottomRight, topRight, topLeft], shadeColor(baseColor, shade), 'rgba(50, 80, 120, 0.7)');
+      }
+      function drawEntityMarker(segment, entityInfo) {
+        if (!entityInfo) return;
+        const zNear = segmentNearZ(segment.depth);
+        const zFar = segmentFarZ(segment.depth);
+        const zMid = (zNear + zFar) / 2;
+        const point = projectPoint(0, 0.6, zMid);
+        ctx.save();
+        ctx.fillStyle = entityInfo.type === 'npc' ? '#9ef7a0' : '#ffb347';
+        ctx.font = `${Math.max(18, Math.round(canvas.width * 0.03))}px Oxanium, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const symbol = entityInfo.type === 'npc' ? '◎' : '◆';
+        ctx.globalAlpha = 0.85;
+        ctx.fillText(symbol, point.x, point.y);
+        ctx.restore();
+      }
+      function gatherSegments() {
+        const segments = [];
+        for (let depth = 0; depth < VIEW_DISTANCE; depth += 1) {
+          const baseCoord = relToWorld(0, depth);
+          if (!withinBounds(baseCoord.x, baseCoord.y)) break;
+          const tile = getTileData(state.map, baseCoord.x, baseCoord.y);
+          if (!tile) break;
+          const leftTile = getRelativeTile(-1, depth);
+          const rightTile = getRelativeTile(1, depth);
+          const frontCoord = relToWorld(0, depth + 1);
+          const frontTile = withinBounds(frontCoord.x, frontCoord.y) ? getTileData(state.map, frontCoord.x, frontCoord.y) : null;
+          const segment = {
+            depth,
+            tile,
+            leftTile,
+            rightTile,
+            frontTile,
+            coord: baseCoord,
+            blocksForward: !frontTile || !frontTile.walkable
+          };
+          segments.push(segment);
+          if (!tile.walkable && depth > 0) break;
+          if (segment.blocksForward) break;
+        }
+        return segments;
+      }
+      function drawReticle() {
+        const centerX = canvas.width / 2;
+        const centerY = viewMetrics.horizon + (canvas.height - viewMetrics.horizon) * 0.18;
+        ctx.strokeStyle = 'rgba(220, 240, 255, 0.32)';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(centerX - 12, centerY);
+        ctx.lineTo(centerX + 12, centerY);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY - 12);
+        ctx.lineTo(centerX, centerY + 12);
+        ctx.stroke();
+      }
+      function renderView() {
+        if (!ctx || !canvas.width) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const sky = ctx.createLinearGradient(0, 0, 0, viewMetrics.horizon);
+        sky.addColorStop(0, '#060b1e');
+        sky.addColorStop(1, '#101b35');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, canvas.width, viewMetrics.horizon);
+        const floor = ctx.createLinearGradient(0, viewMetrics.horizon, 0, canvas.height);
+        floor.addColorStop(0, '#10172b');
+        floor.addColorStop(1, '#050810');
+        ctx.fillStyle = floor;
+        ctx.fillRect(0, viewMetrics.horizon, canvas.width, canvas.height - viewMetrics.horizon);
+        const segments = gatherSegments();
+        for (let i = segments.length - 1; i >= 0; i--) {
+          drawFloor(segments[i], i);
+          drawCeiling(segments[i], i);
+        }
+        for (let i = segments.length - 1; i >= 0; i--) {
+          drawSideWall('left', segments[i], segments[i].leftTile, i);
+          drawSideWall('right', segments[i], segments[i].rightTile, i);
+        }
+        for (let i = segments.length - 1; i >= 0; i--) {
+          const entity = getEntityAt(segments[i].coord.x, segments[i].coord.y);
+          drawEntityMarker(segments[i], entity);
+        }
+        if (segments.length) {
+          const last = segments[segments.length - 1];
+          drawFrontWall(last, last.frontTile, segments.length - 1);
+        }
+        drawReticle();
+      }
+      function resizeCanvas() {
+        const ratio = window.devicePixelRatio || 1;
+        const containerWidth = canvas.parentElement.clientWidth;
+        const targetHeight = Math.min(Math.max(420, containerWidth * 0.75), window.innerHeight - 220);
+        canvas.style.width = `${containerWidth}px`;
+        canvas.style.height = `${targetHeight}px`;
+        canvas.width = Math.floor(containerWidth * ratio);
+        canvas.height = Math.floor(targetHeight * ratio);
+        viewMetrics.horizon = canvas.height * 0.52;
+        const halfWidth = canvas.width / 2;
+        viewMetrics.focal = halfWidth / Math.tan(FOV / 2);
+        renderView();
+      }
+      function populateMaps() {
+        if (!mapSelectEl) return;
+        mapSelectEl.innerHTML = '';
+        const ids = Object.keys(state.maps).sort();
+        for (const id of ids) {
+          const option = document.createElement('option');
+          option.value = id;
+          option.textContent = MAP_LABELS[id] || id;
+          mapSelectEl.appendChild(option);
+        }
+      }
+      function handleMapChange(event) {
+        const id = event.target.value;
+        const map = state.maps[id];
+        if (!map) return;
+        setMap(id, map.entryX, map.entryY);
+        logMessage(`Viewing ${MAP_LABELS[id] || id}.`);
+      }
+      function withModuleReady(callback) {
+        if (globalThis.DUSTLAND_MODULE) {
+          callback(globalThis.DUSTLAND_MODULE);
+        } else {
+          globalThis.addEventListener('dustland-module-ready', event => {
+            const data = event.detail || globalThis.DUSTLAND_MODULE;
+            if (data) callback(data);
+          }, { once: true });
+        }
+      }
+      function startWithModule(module) {
+        state.module = module;
+        state.maps = buildMaps(module);
+        populateMaps();
+        const start = module.start || { map: 'world', x: 0, y: 0 };
+        if (!state.maps[start.map]) {
+          const fallbackId = Object.keys(state.maps)[0];
+          if (fallbackId) {
+            setMap(fallbackId, state.maps[fallbackId].entryX, state.maps[fallbackId].entryY);
+          }
+        } else {
+          setMap(start.map, start.x, start.y);
+        }
+        state.log = [];
+        logMessage(`Loaded module: ${module.name || 'Dustland Module'}.`);
+        updateHud();
+        renderView();
+      }
+      window.addEventListener('keydown', handleKey);
+      if (controlPad) {
+        controlPad.addEventListener('click', handleControlClick);
+      }
+      if (mapSelectEl) {
+        mapSelectEl.addEventListener('change', handleMapChange);
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+      withModuleReady(startWithModule);
+      if (statusEl) {
+        statusEl.textContent = 'Arrow keys move. Q/E rotate. Space interacts.';
+      }
+    })();
+  </script>
+</body>
+</html>
