@@ -249,8 +249,7 @@ function applyZones(map,x,y){
       setPartyPos(entry.x, entry.y);
     }
     centerCamera?.(party.x, party.y, state.map);
-    (party||[]).forEach(m=>{ m.hp = 1; });
-    renderParty?.(); updateHUD?.();
+    party?.healAll?.();
   }
 }
 
