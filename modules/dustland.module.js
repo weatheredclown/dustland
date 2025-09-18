@@ -530,6 +530,22 @@ const DATA = `
         "ATK": 2,
         "ADR": 9
       }
+    },
+    {
+      "map": "room_oc3abv",
+      "x": 25,
+      "y": 46,
+      "id": "stun_gear",
+      "name": "Stun Gear Harness",
+      "type": "trinket",
+      "desc": "Insulated coils to diffuse concussive howls.",
+      "mods": {
+        "RES": 2
+      },
+      "tags": [
+        "stun",
+        "tech"
+      ]
     }
   ],
   "quests": [
@@ -14947,14 +14963,14 @@ function postLoad(module) {
         templateId: 'ashen_howler',
         count: 3,
         bankChallenge: 32,
-        announce: 'Ashen Howlers erupt from the pit, their throats crackling with static. Stun gear can short their chorus.',
+        announce: 'Ashen Howlers erupt from the pit, their throats crackling with static. Stun gear harnesses can short their chorus.',
         toast: 'Wave 1: Ashen Howlers',
         vulnerability: {
-          check: () => hasUpgrade('stun_baton'),
+          check: () => hasUpgrade('stun_gear') || hasUpgrade('stun_baton'),
           onMatch(enemy) { adjustDefense(enemy, -2); },
           onMiss(enemy) { adjustDefense(enemy, 2); },
-          successMsg: 'Your stun weaponry rattles the pack and strips away their guard.',
-          failMsg: 'Without stun tech the howlers harden into concussion shields.'
+          successMsg: 'Your stun harness crackles and rattles the pack, stripping away their guard.',
+          failMsg: 'Without stun insulation the howlers harden into concussion shields.'
         }
       },
       {
