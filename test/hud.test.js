@@ -112,3 +112,17 @@ test('adrenaline bloom pulses with adr ratio', async () => {
   const bloom2 = ctx.document.getElementById('game').style.getPropertyValue('--fxBloom');
   assert.equal(bloom2, '');
 });
+
+test('adrenaline blur only activates at low health', async () => {
+  const ctx = setup(HUD_HTML);
+  ctx.fxConfig.adrenalineTint = true;
+  ctx.leader = () => ({ maxHp: 10, hp: 10, adr: 50, maxAdr: 100 });
+  ctx.pulseAdrenaline(0);
+  const healthyBloom = ctx.document.getElementById('game').style.getPropertyValue('--fxBloom');
+  assert.ok(/brightness/.test(healthyBloom));
+  assert.ok(!/blur\(/.test(healthyBloom));
+  ctx.leader = () => ({ maxHp: 10, hp: 3, adr: 50, maxAdr: 100 });
+  ctx.pulseAdrenaline(0);
+  const lowHpBloom = ctx.document.getElementById('game').style.getPropertyValue('--fxBloom');
+  assert.ok(/blur\(/.test(lowHpBloom));
+});
