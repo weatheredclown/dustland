@@ -14,7 +14,7 @@ await import('../scripts/core/party.js');
 await import('../scripts/core/combat.js');
 await import('../scripts/core/inventory.js');
 
-const { addStatus, tickStatuses, registerItem, addToInv, useItem, makeMember, party } = globalThis;
+const { addStatus, tickStatuses, registerItem, addToInv, useItem, equipItem, makeMember, party } = globalThis;
 
 test('poison deals damage over time', () => {
   const foe = { name: 'Foe', hp: 10, maxHp: 10 };
@@ -39,4 +39,16 @@ test('cleanse item clears poison', () => {
   assert.ok(m1.statusEffects.length > 0);
   useItem(0);
   assert.strictEqual(m1.statusEffects.length, 0);
+});
+
+test('poison immunity prevents poison application', () => {
+  party.length = 0;
+  globalThis.player = { inv: [] };
+  const hero = makeMember('p2', 'P2', 'Role');
+  party.push(hero);
+  registerItem({ id: 'test_poison_plate', name: 'Test Plate', type: 'armor', mods: { poison_immune: 1 } });
+  addToInv('test_poison_plate');
+  equipItem(0, 0);
+  addStatus(hero, { type: 'poison', strength: 2, duration: 4 });
+  assert.strictEqual(hero.statusEffects.length, 0);
 });

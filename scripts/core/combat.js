@@ -48,10 +48,32 @@ function recordCombatEvent(ev, relay = true){
 }
 globalThis.EventBus?.on?.('combat:event', ev => recordCombatEvent(ev, false));
 
+function hasStatusImmunity(target, type){
+  if(!target || !type) return false;
+  const key = `${type}_immune`;
+  if((target._bonus?.[key] || 0) > 0) return true;
+  if(target.equip){
+    const slots = ['weapon', 'armor', 'trinket'];
+    for(const slot of slots){
+      const it = target.equip[slot];
+      if(!it) continue;
+      const tags = Array.isArray(it.tags) ? it.tags : [];
+      if(tags.some(t => typeof t === 'string' && t.toLowerCase() === key)) return true;
+      const mods = it.mods || {};
+      if(mods[key] || mods[`${type}Immune`]) return true;
+    }
+  }
+  return false;
+}
+
 function addStatus(target, status){
   if(!target || !status) return;
   target.statusEffects = target.statusEffects || [];
   if(status.type === 'poison'){
+    if(hasStatusImmunity(target, 'poison')){
+      log?.(`${target.name || 'Target'} resists the poison.`);
+      return;
+    }
     target.statusEffects.push({ type:'poison', strength: status.strength|0, remaining: status.duration|0 });
     log?.(`${target.name} is poisoned!`);
   }
