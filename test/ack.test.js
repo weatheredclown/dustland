@@ -1222,6 +1222,53 @@ test('placing NPC on interior map', () => {
   assert.strictEqual(moduleData.npcs[0].map, 'house');
 });
 
+test('interior painting respects brush size slider', () => {
+  const prevInteriors = moduleData.interiors;
+  const prevInteriorMap = globalThis.interiors;
+  const prevWorldPaint = worldPaint;
+  const prevIntPaint = intPaint;
+  moduleData.interiors = [{ id: 'house', w: 6, h: 6, grid: Array.from({ length: 6 }, () => Array(6).fill(TILE.FLOOR)) }];
+  globalThis.interiors = { house: moduleData.interiors[0] };
+  editInteriorIdx = 0;
+  showMap('house');
+  worldPaint = null;
+  intPaint = TILE.WALL;
+  const slider = document.getElementById('brushSize');
+  slider.value = '3';
+  if (slider._listeners?.input) slider._listeners.input[0]();
+  const intCanvas = document.getElementById('intCanvas');
+  intCanvas._listeners.mousedown[0]({ clientX: 45, clientY: 45, stopPropagation(){}, preventDefault(){} });
+  intCanvas._listeners.mouseup?.[0]?.();
+  const interior = moduleData.interiors[0];
+  assert.strictEqual(interior.grid[1][1], TILE.WALL);
+  assert.strictEqual(interior.grid[0][0], TILE.FLOOR);
+  interior.grid = Array.from({ length: 6 }, () => Array(6).fill(TILE.FLOOR));
+  const canvas = document.getElementById('map');
+  canvas._listeners.mousedown[0]({ button: 0, clientX: 41, clientY: 31, preventDefault(){}, stopPropagation(){} });
+  canvas._listeners.mouseup[0]({ button: 0 });
+  assert.strictEqual(interior.grid[0][0], TILE.WALL);
+  assert.strictEqual(interior.grid[4][4], TILE.WALL);
+  assert.strictEqual(interior.grid[5][5], TILE.FLOOR);
+  slider.value = '4';
+  if (slider._listeners?.input) slider._listeners.input[0]();
+  interior.grid = Array.from({ length: 6 }, () => Array(6).fill(TILE.FLOOR));
+  intPaint = TILE.DOOR;
+  canvas._listeners.mousedown[0]({ button: 0, clientX: 41, clientY: 31, preventDefault(){}, stopPropagation(){} });
+  canvas._listeners.mouseup[0]({ button: 0 });
+  assert.strictEqual(interior.grid[2][2], TILE.DOOR);
+  assert.strictEqual(interior.grid[1][2], TILE.FLOOR);
+  assert.strictEqual(interior.entryX, 2);
+  assert.strictEqual(interior.entryY, 1);
+  intPaint = prevIntPaint;
+  worldPaint = prevWorldPaint;
+  slider.value = '1';
+  if (slider._listeners?.input) slider._listeners.input[0]();
+  moduleData.interiors = prevInteriors;
+  globalThis.interiors = prevInteriorMap;
+  editInteriorIdx = -1;
+  showMap('world');
+});
+
 test('locked node scaffold added and not orphaned', () => {
   startNewNPC();
   document.getElementById('npcLocked').checked = true;

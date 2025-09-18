@@ -745,16 +745,40 @@ function interiorCanvasPos(e) {
   const y = Math.floor((e.clientY - rect.top) / (intCanvas.height / I.h));
   return { x, y };
 }
+function applyInteriorBrush(I, x, y, tile) {
+  if (!I || !Array.isArray(I.grid)) return false;
+  const radius = Math.max(0, (brushSize || 1) - 1);
+  let changed = false;
+  for (let dy = -radius; dy <= radius; dy++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      if (tile === TILE.DOOR && (dx || dy)) continue;
+      const tx = x + dx;
+      const ty = y + dy;
+      if (tx < 0 || ty < 0 || tx >= I.w || ty >= I.h) continue;
+      const row = I.grid[ty] || (I.grid[ty] = Array(I.w).fill(TILE.FLOOR));
+      if (row[tx] !== tile) {
+        row[tx] = tile;
+        changed = true;
+      }
+    }
+  }
+  if (tile === TILE.DOOR) {
+    I.entryX = x;
+    I.entryY = Math.max(0, y - 1);
+  }
+  return changed;
+}
+
 function paintInterior(e){
   if(editInteriorIdx<0||!intPainting) return;
   const I=moduleData.interiors[editInteriorIdx];
   const { x, y } = interiorCanvasPos(e);
   if(x<0||y<0||x>=I.w||y>=I.h) return;
-  const row = I.grid[y] || (I.grid[y] = Array(I.w).fill(TILE.FLOOR));
-  row[x]=intPaint;
-  if(intPaint===TILE.DOOR){ I.entryX=x; I.entryY=Math.max(0,y-1); }
-  delete I._origGrid;
-  drawInterior();
+  const painted = applyInteriorBrush(I, x, y, intPaint);
+  if(painted || intPaint===TILE.DOOR){
+    delete I._origGrid;
+    drawInterior();
+  }
 }
 intCanvas.addEventListener('mousedown', e => {
   e.stopPropagation();
@@ -4273,8 +4297,7 @@ canvas.addEventListener('mousedown', ev => {
     hoverTile = { x, y };
     const I = moduleData.interiors.find(i => i.id === currentMap);
     if (I) {
-      setTile(currentMap, x, y, intPaint);
-      if (intPaint === TILE.DOOR) { I.entryX = x; I.entryY = y - 1; }
+      applyInteriorBrush(I, x, y, intPaint);
       delete I._origGrid;
       intPainting = true;
       didPaint = true;
@@ -4429,8 +4452,7 @@ canvas.addEventListener('mousemove', ev => {
   if (currentMap !== 'world' && intPainting) {
     const I = moduleData.interiors.find(i => i.id === currentMap);
     if (I) {
-      setTile(currentMap, x, y, intPaint);
-      if (intPaint === TILE.DOOR) { I.entryX = x; I.entryY = y - 1; }
+      applyInteriorBrush(I, x, y, intPaint);
       delete I._origGrid;
       didPaint = true;
       drawWorld();
