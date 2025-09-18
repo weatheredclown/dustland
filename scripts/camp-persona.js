@@ -79,6 +79,21 @@
           prompt.textContent = data.portraitPrompt;
           card.appendChild(prompt);
         }
+        const mods = data.mods;
+        if (mods && typeof mods === 'object') {
+          const entries = Object.entries(mods).filter(([, value]) => typeof value === 'number' && value !== 0);
+          if (entries.length) {
+            const listEl = document.createElement('ul');
+            listEl.className = 'persona-mods';
+            for (const [stat, value] of entries) {
+              const item = document.createElement('li');
+              const prefix = value > 0 ? '+' : '';
+              item.textContent = `${prefix}${value} ${stat}`;
+              listEl.appendChild(item);
+            }
+            card.appendChild(listEl);
+          }
+        }
         if (currentId === id) {
           const status = document.createElement('div');
           status.className = 'persona-status';
