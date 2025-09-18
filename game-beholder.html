@@ -682,9 +682,12 @@
           ctx.stroke();
         }
       }
+      function isWaterTile(tile) {
+        return tile?.value === 1 || tile?.label === 'Water';
+      }
       function isWallTile(tile) {
         if (!tile) return false;
-        return !tile.walkable;
+        return !tile.walkable && !isWaterTile(tile);
       }
       function drawFloorSurface(segment, tile, depthIndex, offset) {
         if (!tile) return;
@@ -722,7 +725,7 @@
         drawPolygon([leftNear, rightNear, rightFar, leftFar], shadeColor(baseColor, shade));
       }
       function drawSideWall(side, segment, tile, depthIndex) {
-        if (!tile || tile.walkable) {
+        if (!tile || tile.walkable || isWaterTile(tile)) {
           drawOpenEdge(side, segment);
           return;
         }
@@ -751,7 +754,7 @@
         ctx.stroke();
       }
       function drawFrontWall(segment, tile, depthIndex) {
-        if (!tile || tile.walkable) return;
+        if (!tile || tile.walkable || isWaterTile(tile)) return;
         const z = segmentFarZ(segment.depth);
         const bottomLeft = projectPoint(-HALF_WIDTH, 0, z);
         const bottomRight = projectPoint(HALF_WIDTH, 0, z);
