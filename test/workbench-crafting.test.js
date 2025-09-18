@@ -101,3 +101,49 @@ test('craftAntidote consumes plant fiber and water flask', () => {
   assert.ok(!context.player.inv.some(i => i.id === 'plant_fiber'));
   assert.ok(!context.player.inv.some(i => i.id === 'water_flask'));
 });
+
+test('craftEnhancedItem upgrades weapons when you have five copies', () => {
+  const registry = new Map();
+  const context = {
+    Dustland: {},
+    EventBus: { emit: () => {} },
+    player: { scrap: 0, inv: [] },
+    log: () => {},
+    registerItem: def => {
+      registry.set(def.id, JSON.parse(JSON.stringify(def)));
+      return def;
+    },
+    getItem: id => {
+      const item = registry.get(id);
+      return item ? JSON.parse(JSON.stringify(item)) : null;
+    }
+  };
+  context.addToInv = item => {
+    const entry = typeof item === 'string' ? context.getItem(item) : item;
+    if (!entry) return false;
+    context.player.inv.push(JSON.parse(JSON.stringify(entry)));
+    return true;
+  };
+  context.findItemIndex = id => context.player.inv.findIndex(it => it.id === id);
+  context.removeFromInv = idx => {
+    if (idx >= 0) context.player.inv.splice(idx, 1);
+  };
+  context.countItems = id => context.player.inv.filter(it => it.id === id).length;
+
+  vm.runInNewContext(src, context);
+
+  context.registerItem({ id: 'pipe_blade', name: 'Pipe Blade', type: 'weapon', mods: { ATK: 2, ADR: 12 } });
+  for (let i = 0; i < 5; i += 1) {
+    context.player.inv.push(context.getItem('pipe_blade'));
+  }
+
+  context.Dustland.workbench.craftEnhancedItem('pipe_blade');
+
+  const enhanced = context.getItem('enhanced_pipe_blade');
+  assert.ok(enhanced, 'enhanced item should be registered');
+  assert.strictEqual(enhanced.mods.ATK, 4);
+  assert.strictEqual(enhanced.mods.ADR, 24);
+  assert.strictEqual(context.player.inv.filter(it => it.id === 'pipe_blade').length, 0);
+  assert.ok(context.player.inv.some(it => it.id === 'enhanced_pipe_blade'));
+  assert.strictEqual(context.player.inv.length, 1);
+});

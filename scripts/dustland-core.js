@@ -707,6 +707,62 @@ function placeHut(x,y,b={}){
 // ===== Save/Load & Start =====
 const SAVE_FORMAT = 'dustland.save.v2';
 
+function isModernSavePayload(data){
+  if(!data || typeof data !== 'object') return false;
+  const fmt = data.format;
+  if(fmt === SAVE_FORMAT) return true;
+  if(typeof fmt === 'string'){
+    const match = /^dustland\.save\.v(\d+)$/.exec(fmt);
+    if(match){
+      const ver = Number.parseInt(match[1], 10);
+      if(Number.isFinite(ver) && ver >= 2) return true;
+    }
+  }
+  const rawVer = data.version;
+  const ver = typeof rawVer === 'number' ? rawVer : (typeof rawVer === 'string' ? Number.parseInt(rawVer, 10) : NaN);
+  return Number.isFinite(ver) && ver >= 2;
+}
+
+function resolveModuleName(rawModule){
+  const seen = new Set();
+  function inner(value){
+    if(value == null) return null;
+    if(typeof value === 'string'){
+      const trimmed = value.trim();
+      if(!trimmed || trimmed === '[object Object]') return null;
+      if(trimmed.startsWith('{') || trimmed.startsWith('[')){
+        try{
+          const parsed = JSON.parse(trimmed);
+          return inner(parsed);
+        }catch(err){
+          return trimmed;
+        }
+      }
+      return trimmed;
+    }
+    if(typeof value !== 'object') return null;
+    if(seen.has(value)) return null;
+    seen.add(value);
+    if(typeof value.id === 'string' && value.id) return value.id;
+    if(typeof value.module === 'string' && value.module) return value.module;
+    if(typeof value.name === 'string' && value.name) return value.name;
+    if(value.module && typeof value.module === 'object'){
+      const nested = inner(value.module);
+      if(nested) return nested;
+    }
+    if(value.meta && typeof value.meta === 'object'){
+      const nestedMeta = inner(value.meta.module ?? value.meta);
+      if(nestedMeta) return nestedMeta;
+    }
+    if(value.data && typeof value.data === 'object'){
+      const nestedData = inner(value.data.module ?? value.data);
+      if(nestedData) return nestedData;
+    }
+    return null;
+  }
+  return inner(rawModule);
+}
+
 function deepClone(value){
   if(value == null) return value;
   if(typeof structuredClone === 'function') return structuredClone(value);
@@ -950,7 +1006,7 @@ function loadLegacySave(d){
 }
 
 function loadModernSave(d){
-  const moduleName = d.module ?? globalThis.Dustland?.currentModule ?? null;
+  const moduleName = resolveModuleName(d.module) ?? globalThis.Dustland?.currentModule ?? null;
   const moduleData = (moduleName != null ? globalThis.Dustland?.loadedModules?.[moduleName] : null) || globalThis.moduleData;
   party.length = 0;
   party.flags = {};
@@ -1101,7 +1157,7 @@ function load(){
     if (typeof toast === 'function') toast('Failed to read save file.');
     return;
   }
-  if(d && d.format === SAVE_FORMAT){
+  if(isModernSavePayload(d)){
     loadModernSave(d);
     return;
   }

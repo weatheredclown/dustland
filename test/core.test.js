@@ -1813,12 +1813,38 @@ test('save/load preserves persona assignments', () => {
   assert.strictEqual(party[0].persona, 'mask');
 });
 
+test('load bypasses legacy loader for v2 saves', async () => {
+  const fixture = await fs.readFile(new URL('./fixtures/dustland.save.v2.json', import.meta.url), 'utf8');
+  const store = { dustland_crt: fixture };
+  const origStorage = global.localStorage;
+  const origModern = global.loadModernSave;
+  const origLegacy = global.loadLegacySave;
+  let modernCalls = 0;
+  let legacyCalls = 0;
+  global.localStorage = {
+    setItem(k, v){ store[k] = v; },
+    getItem(k){ return store[k] ?? null; },
+    removeItem(k){ delete store[k]; }
+  };
+  global.loadModernSave = () => { modernCalls++; };
+  global.loadLegacySave = () => { legacyCalls++; };
+  try {
+    load();
+    assert.strictEqual(modernCalls, 1);
+    assert.strictEqual(legacyCalls, 0);
+  } finally {
+    global.loadModernSave = origModern;
+    global.loadLegacySave = origLegacy;
+    global.localStorage = origStorage;
+  }
+});
+
 test('loadModernSave reloads the current module before patching state', () => {
   const moduleData = { name:'reload_mod', seed: 777, world:[[7,7],[7,7]] };
   applyModule(moduleData);
   const saved = {
     format: 'dustland.save.v2',
-    module: 'reload_mod',
+    module: JSON.stringify({ id:'reload_mod', name:'Reload Module' }),
     worldSeed: 777,
     world: [[7,7],[7,7]],
     player: { inv: [] },
@@ -1842,6 +1868,7 @@ test('loadModernSave reloads the current module before patching state', () => {
   };
   const origApply = globalThis.applyModule;
   const origDustApply = globalThis.Dustland.applyModule;
+  const origCurrentModule = globalThis.Dustland.currentModule;
   const calls = [];
   function stubApply(data, opts){
     calls.push({ data, opts });
@@ -1849,6 +1876,7 @@ test('loadModernSave reloads the current module before patching state', () => {
   }
   globalThis.applyModule = stubApply;
   globalThis.Dustland.applyModule = stubApply;
+  globalThis.Dustland.currentModule = 'other_mod';
   try {
     global.localStorage.setItem('dustland_crt', JSON.stringify(saved));
     world.length = 0;
@@ -1860,6 +1888,7 @@ test('loadModernSave reloads the current module before patching state', () => {
   } finally {
     globalThis.applyModule = origApply;
     globalThis.Dustland.applyModule = origDustApply;
+    globalThis.Dustland.currentModule = origCurrentModule;
     global.localStorage = origStorage;
   }
 });
