@@ -447,6 +447,54 @@ const DATA = `
       "desc": "Archivist rocket launcher packed with sunfire ordnance."
     },
     {
+      "map": "world",
+      "x": 14,
+      "y": 45,
+      "id": "sealed_hazard_suit",
+      "name": "Sealed Hazard Suit",
+      "type": "armor",
+      "desc": "Reinforced suit with detox canisters. Grants poison immunity.",
+      "mods": {
+        "DEF": 4,
+        "poison_immune": 1
+      },
+      "tags": [
+        "poison_immune"
+      ]
+    },
+    {
+      "map": "world",
+      "x": 16,
+      "y": 45,
+      "id": "antitoxin_locket",
+      "name": "Antitoxin Locket",
+      "type": "trinket",
+      "desc": "A sealed charm that scrubs toxins from your blood.",
+      "mods": {
+        "LCK": 1,
+        "poison_immune": 1
+      },
+      "tags": [
+        "poison_immune"
+      ]
+    },
+    {
+      "map": "world",
+      "x": 18,
+      "y": 45,
+      "id": "venom_sensor_band",
+      "name": "Venom Sensor Band",
+      "type": "trinket",
+      "desc": "Sensor mesh that warns of toxins and purges venom.",
+      "mods": {
+        "PER": 1,
+        "poison_immune": 1
+      },
+      "tags": [
+        "poison_immune"
+      ]
+    },
+    {
       "id": "thornlash_whip",
       "name": "Thornlash Whip",
       "type": "weapon",
