@@ -3062,6 +3062,149 @@ const DATA = `
           ]
         }
       }
+    },
+    {
+      "id": "oc3abv_howler_south",
+      "map": "room_oc3abv",
+      "x": 3,
+      "y": 41,
+      "color": "#f66",
+      "name": "Ashen Howler Ambush",
+      "title": "Silt Tunnel Pack",
+      "desc": "Ember-furred predators stalking the cave mouth.",
+      "prompt": "Ember-furred howlers circle the entry tunnel",
+      "portraitSheet": "assets/portraits/dustland-module/scrap_mutt_4.png",
+      "portraitLock": false,
+      "symbol": "!",
+      "tree": {
+        "start": {
+          "text": "A pack of ashen howlers hunches low, ready to spring.",
+          "choices": [
+            {
+              "label": "(Fight)",
+              "to": "do_fight"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "combat": {
+        "HP": 28,
+        "ATK": 5,
+        "DEF": 2,
+        "count": 3,
+        "special": {
+          "cue": "lets loose a concussive howl!",
+          "dmg": 5,
+          "spread": true,
+          "stun": 1,
+          "delay": 600
+        },
+        "challenge": 22,
+        "scrap": {
+          "min": 6,
+          "max": 10
+        }
+      }
+    },
+    {
+      "id": "oc3abv_howler_mid",
+      "map": "room_oc3abv",
+      "x": 16,
+      "y": 32,
+      "color": "#f66",
+      "name": "Ashen Screamers",
+      "title": "Collapsed Gallery Pack",
+      "desc": "Howlers cling to the broken columns and shriek warnings through the cavern.",
+      "prompt": "Howlers prowl the collapsed gallery",
+      "portraitSheet": "assets/portraits/dustland-module/scrap_mutt_4.png",
+      "portraitLock": false,
+      "symbol": "!",
+      "tree": {
+        "start": {
+          "text": "Howlers cling to the shattered columns, shrieking for trespassers.",
+          "choices": [
+            {
+              "label": "(Fight)",
+              "to": "do_fight"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "combat": {
+        "HP": 32,
+        "ATK": 6,
+        "DEF": 3,
+        "count": 3,
+        "special": {
+          "cue": "lets loose a concussive howl!",
+          "dmg": 6,
+          "spread": true,
+          "stun": 1,
+          "delay": 550
+        },
+        "challenge": 26,
+        "scrap": {
+          "min": 8,
+          "max": 12
+        }
+      }
+    },
+    {
+      "id": "oc3abv_howler_north",
+      "map": "room_oc3abv",
+      "x": 22,
+      "y": 23,
+      "color": "#f66",
+      "name": "Ashen Alpha",
+      "title": "Upper Warrens",
+      "desc": "The pack's alpha prowls the upper warrens, eyes blazing with razorsand grit.",
+      "prompt": "Ashen alpha prowls the upper warrens",
+      "portraitSheet": "assets/portraits/dustland-module/scrap_mutt_4.png",
+      "portraitLock": false,
+      "symbol": "!",
+      "tree": {
+        "start": {
+          "text": "The howler alpha beats its cinder wings, rallying the last of the pack.",
+          "choices": [
+            {
+              "label": "(Fight)",
+              "to": "do_fight"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "combat": {
+        "HP": 48,
+        "ATK": 8,
+        "DEF": 4,
+        "count": 1,
+        "special": {
+          "cue": "shatters the cavern with a command howl!",
+          "dmg": 7,
+          "spread": true,
+          "stun": 1,
+          "delay": 500
+        },
+        "challenge": 30,
+        "loot": "adrenaline_shot",
+        "lootChance": 0.35,
+        "scrap": {
+          "min": 12,
+          "max": 16
+        }
+      }
     }
   ],
   "events": [
@@ -3402,13 +3545,6 @@ const DATA = `
         "loot": "corroded_hatchet",
         "lootChance": 0.16,
         "maxDist": 24
-      }
-    ],
-    "room_oc3abv": [
-      {
-        "templateId": "ashen_howler",
-        "count": 3,
-        "challenge": 32
       }
     ]
   },
