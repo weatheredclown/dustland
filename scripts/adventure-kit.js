@@ -1629,8 +1629,7 @@ function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceUnlockNPC').forEach(sel => populateNPCDropdown(sel, sel.dataset.sel || sel.value));
   document.querySelectorAll('.choiceColorNPC').forEach(sel => populateNPCDropdown(sel, sel.dataset.sel || sel.value));
   document.querySelectorAll('.choiceSpawnTemplate').forEach(sel => populateTemplateDropdown(sel, sel.value));
-  const encLoot = document.getElementById('encLoot');
-  if (encLoot) populateItemDropdown(encLoot, encLoot.value);
+  document.querySelectorAll('.lootItemSelect').forEach(sel => populateItemDropdown(sel, sel.value));
   const encTemplate = document.getElementById('encTemplate');
   if (encTemplate) populateTemplateDropdown(encTemplate, encTemplate.value);
 }
@@ -2783,6 +2782,139 @@ function closeItemEditor() {
 }
 
 // --- Encounters ---
+function clampChance(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 0;
+  return Math.max(0, Math.min(num, 1));
+}
+
+function clampPercent(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 0;
+  return Math.max(0, Math.min(num, 100));
+}
+
+function chanceToPercent(chance) {
+  return clampChance(chance) * 100;
+}
+
+function formatPercentValue(chance) {
+  if (chance == null) return '100';
+  const pct = chanceToPercent(chance);
+  const rounded = Math.round(pct * 10) / 10;
+  return Number.isInteger(rounded) ? String(Math.round(rounded)) : rounded.toFixed(1);
+}
+
+function percentToChance(pct) {
+  const chance = clampPercent(pct) / 100;
+  return Math.round(chance * 1000) / 1000;
+}
+
+function normalizeLootEntry(entry) {
+  if (!entry) return null;
+  const rawItem = entry.item ?? entry.loot ?? entry.reward ?? entry.id;
+  if (!rawItem) return null;
+  const item = typeof rawItem === 'string' ? rawItem.trim() : rawItem;
+  if (!item) return null;
+  let chance = entry.chance;
+  if (!Number.isFinite(chance)) chance = entry.lootChance;
+  if (!Number.isFinite(chance)) chance = entry.probability;
+  chance = clampChance(chance ?? 1);
+  return { item, chance };
+}
+
+function sanitizeLootTable(table) {
+  if (!Array.isArray(table)) return [];
+  return table.map(normalizeLootEntry).filter(entry => entry && entry.item && entry.chance > 0);
+}
+
+function lootTablesEqual(a, b) {
+  const left = sanitizeLootTable(a);
+  const right = sanitizeLootTable(b);
+  if (left.length !== right.length) return false;
+  return left.every((entry, idx) => {
+    const other = right[idx];
+    return !!other && entry.item === other.item && Math.abs(entry.chance - other.chance) < 0.001;
+  });
+}
+
+function collectLootTable(container) {
+  if (!container) return [];
+  const rows = Array.from(container.querySelectorAll('.lootRow')).map(row => {
+    const itemSel = row.querySelector('.lootItemSelect');
+    const chanceInput = row.querySelector('.lootChanceInput');
+    const val = itemSel?.value ?? '';
+    const item = typeof val === 'string' ? val.trim() : val;
+    return { item, chance: percentToChance(chanceInput?.value ?? 0) };
+  });
+  return sanitizeLootTable(rows);
+}
+
+function addLootTableRow(container, entry = {}) {
+  if (!container) return null;
+  const row = document.createElement('div');
+  row.className = 'lootRow';
+  const itemSelect = document.createElement('select');
+  itemSelect.className = 'lootItemSelect';
+  populateItemDropdown(itemSelect, entry.item || '');
+  const chanceInput = document.createElement('input');
+  chanceInput.type = 'number';
+  chanceInput.min = '0';
+  chanceInput.max = '100';
+  chanceInput.step = '0.1';
+  chanceInput.className = 'lootChanceInput';
+  chanceInput.value = formatPercentValue(entry.chance);
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'btn lootRemove';
+  removeBtn.textContent = 'Remove';
+  removeBtn.addEventListener('click', () => {
+    row.remove();
+  });
+  row.appendChild(itemSelect);
+  row.appendChild(chanceInput);
+  row.appendChild(removeBtn);
+  container.appendChild(row);
+  refreshChoiceDropdowns();
+  return row;
+}
+
+function setLootTable(container, table = []) {
+  if (!container) return;
+  container.innerHTML = '';
+  sanitizeLootTable(table).forEach(entry => addLootTableRow(container, entry));
+  if (!table || table.length === 0) refreshChoiceDropdowns();
+}
+
+function getTemplateLootTable(t) {
+  if (!t || !t.combat) return [];
+  if (Array.isArray(t.combat.lootTable)) return sanitizeLootTable(t.combat.lootTable);
+  if (t.combat.loot) {
+    return sanitizeLootTable([{ item: t.combat.loot, chance: t.combat.lootChance ?? 1 }]);
+  }
+  return [];
+}
+
+function getEncounterLootTable(entry, template) {
+  if (Array.isArray(entry?.lootTable)) return sanitizeLootTable(entry.lootTable);
+  if (entry?.loot !== undefined) {
+    if (!entry.loot) return [];
+    return sanitizeLootTable([{ item: entry.loot, chance: entry.lootChance ?? 1 }]);
+  }
+  return getTemplateLootTable(template);
+}
+
+function formatLootTableSummary(table) {
+  const rows = sanitizeLootTable(table);
+  if (!rows.length) return '';
+  return rows.map(entry => {
+    const pct = chanceToPercent(entry.chance);
+    const rounded = Math.round(pct * 10) / 10;
+    const label = Number.isInteger(rounded) ? Math.round(rounded) : rounded.toFixed(1);
+    return `${label}% ${entry.item}`;
+  }).join(', ');
+}
+
 function showEncounterEditor(show){
   document.getElementById('encounterEditor').style.display = show ? 'block' : 'none';
 }
@@ -2793,8 +2925,7 @@ function startNewEncounter(){
   document.getElementById('encMaxDist').value = '';
   const tmplSel = document.getElementById('encTemplate');
   populateTemplateDropdown(tmplSel, '');
-  populateItemDropdown(document.getElementById('encLoot'), '');
-  document.getElementById('encLootChance').value = 100;
+  setLootTable(document.getElementById('encLootTable'), []);
   document.getElementById('addEncounter').textContent = 'Add Enemy';
   document.getElementById('delEncounter').style.display = 'none';
   showEncounterEditor(true);
@@ -2805,19 +2936,14 @@ function collectEncounter(){
   const templateId = document.getElementById('encTemplate').value.trim();
   const minDist = parseInt(document.getElementById('encMinDist').value,10) || 0;
   const maxDist = parseInt(document.getElementById('encMaxDist').value,10) || 0;
-  const lootSel = document.getElementById('encLoot').value.trim();
-  const lootChancePct = parseFloat(document.getElementById('encLootChance').value);
   const t = globalThis.moduleData?.templates?.find(t => t.id === templateId);
   const entry = { map, templateId, minDist, maxDist };
-  const tmplLoot = t?.combat?.loot || '';
-  if (lootSel) {
-    if (lootSel !== tmplLoot) entry.loot = lootSel;
-  } else if (tmplLoot) {
-    entry.loot = '';
-  }
-  if (!isNaN(lootChancePct)) {
-    const lc = Math.max(0, Math.min(lootChancePct, 100)) / 100;
-    if (lc !== (t?.combat?.lootChance ?? 1)) entry.lootChance = lc;
+  const lootTable = collectLootTable(document.getElementById('encLootTable'));
+  const tmplTable = getTemplateLootTable(t);
+  if (lootTable.length) {
+    if (!lootTablesEqual(lootTable, tmplTable)) entry.lootTable = lootTable;
+  } else if (tmplTable.length) {
+    entry.lootTable = [];
   }
   return entry;
 }
@@ -2839,10 +2965,7 @@ function editEncounter(i){
   document.getElementById('encMinDist').value = e.minDist || '';
   document.getElementById('encMaxDist').value = e.maxDist || '';
   const t = moduleData.templates.find(t => t.id === e.templateId);
-  const lootVal = e.loot ?? t?.combat?.loot;
-  populateItemDropdown(document.getElementById('encLoot'), lootVal || '');
-  const lootChance = e.lootChance != null ? e.lootChance : t?.combat?.lootChance;
-  document.getElementById('encLootChance').value = lootChance != null ? Math.round(lootChance * 100) : 100;
+  setLootTable(document.getElementById('encLootTable'), getEncounterLootTable(e, t));
   document.getElementById('addEncounter').textContent = 'Update Enemy';
   document.getElementById('delEncounter').style.display = 'block';
   showEncounterEditor(true);
@@ -2852,8 +2975,8 @@ function renderEncounterList(){
   list.innerHTML = moduleData.encounters.map((e,i)=>{
     const t = moduleData.templates.find(t => t.id === e.templateId);
     const name = t ? t.name : e.templateId;
-    const loot = e.loot !== undefined ? e.loot : t?.combat?.loot;
-    const lootStr = loot ? ` - ${loot}` : '';
+    const summary = formatLootTableSummary(getEncounterLootTable(e, t));
+    const lootStr = summary ? ` - ${summary}` : '';
     return `<div data-idx="${i}">${e.map}: ${name}${lootStr}</div>`;
   }).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editEncounter(parseInt(div.dataset.idx,10)));
@@ -2893,8 +3016,7 @@ function startNewTemplate(){
   document.getElementById('templateChallenge').value = '';
   document.getElementById('templateSpecialCue').value = '';
   document.getElementById('templateSpecialDmg').value = '';
-  populateItemDropdown(document.getElementById('templateLoot'), '');
-  document.getElementById('templateLootChance').value = 100;
+  setLootTable(document.getElementById('templateLootTable'), []);
   document.getElementById('templateDropScrap').checked = false;
   document.getElementById('templateScrapChance').value = 100;
   document.getElementById('templateScrapMin').value = 1;
@@ -2917,8 +3039,6 @@ function collectTemplate(){
   const challenge = parseInt(document.getElementById('templateChallenge').value,10);
   const specialCue = document.getElementById('templateSpecialCue').value.trim();
   const specialDmg = parseInt(document.getElementById('templateSpecialDmg').value,10) || 0;
-  const loot = document.getElementById('templateLoot').value.trim();
-  const lootChancePct = parseFloat(document.getElementById('templateLootChance').value);
   const dropScrap = document.getElementById('templateDropScrap').checked;
   const scrapChancePct = parseFloat(document.getElementById('templateScrapChance').value);
   const scrapMin = parseInt(document.getElementById('templateScrapMin').value,10) || 0;
@@ -2926,10 +3046,8 @@ function collectTemplate(){
   const requires = document.getElementById('templateRequires').value.trim();
   const combat = { HP, ATK, DEF };
   if (challenge > 0) combat.challenge = Math.min(10, challenge); // higher values improve loot caches
-  if (loot) combat.loot = loot;
-  if (!isNaN(lootChancePct) && lootChancePct >= 0 && lootChancePct < 100) {
-    combat.lootChance = lootChancePct / 100;
-  }
+  const lootTable = collectLootTable(document.getElementById('templateLootTable'));
+  if (lootTable.length) combat.lootTable = lootTable;
   if (dropScrap) {
     combat.scrap = { min: scrapMin, max: scrapMax };
     if (!isNaN(scrapChancePct) && scrapChancePct >= 0 && scrapChancePct < 100) {
@@ -2968,8 +3086,7 @@ function editTemplate(i){
   document.getElementById('templateChallenge').value = t.combat?.challenge || '';
   document.getElementById('templateSpecialCue').value = t.combat?.special?.cue || '';
   document.getElementById('templateSpecialDmg').value = t.combat?.special?.dmg || '';
-  populateItemDropdown(document.getElementById('templateLoot'), t.combat?.loot || '');
-  document.getElementById('templateLootChance').value = t.combat?.lootChance != null ? Math.round(t.combat.lootChance * 100) : 100;
+  setLootTable(document.getElementById('templateLootTable'), getTemplateLootTable(t));
   const scrap = t.combat?.scrap;
   document.getElementById('templateDropScrap').checked = !!scrap;
   document.getElementById('templateScrapChance').value = scrap?.chance != null ? Math.round(scrap.chance * 100) : 100;
@@ -4083,13 +4200,23 @@ document.getElementById('closeBldg').onclick = closeBldgEditor;
 document.getElementById('closeInterior').onclick = closeInteriorEditor;
 document.getElementById('newEncounter').onclick = startNewEncounter;
 document.getElementById('addEncounter').onclick = addEncounter;
+document.getElementById('encAddLootRow').onclick = () => addLootTableRow(document.getElementById('encLootTable'));
 document.getElementById('cancelEncounter').onclick = () => { editEncounterIdx = -1; showEncounterEditor(false); };
 document.getElementById('delEncounter').onclick = deleteEncounter;
 document.getElementById('closeEncounter').onclick = () => showEncounterEditor(false);
 document.getElementById('newTemplate').onclick = startNewTemplate;
 document.getElementById('addTemplate').onclick = addTemplate;
+document.getElementById('templateAddLootRow').onclick = () => addLootTableRow(document.getElementById('templateLootTable'));
 document.getElementById('delTemplate').onclick = deleteTemplate;
 document.getElementById('templateDropScrap').onchange = toggleTemplateScrapFields;
+document.getElementById('encTemplate').addEventListener('change', () => {
+  const container = document.getElementById('encLootTable');
+  if (!container || container.querySelector('.lootRow')) return;
+  const tmplId = document.getElementById('encTemplate').value.trim();
+  const tmpl = moduleData.templates.find(t => t.id === tmplId);
+  const table = getTemplateLootTable(tmpl);
+  if (table.length) setLootTable(container, table);
+});
 document.getElementById('npcPrevP').onclick = () => {
   npcPortraitIndex = (npcPortraitIndex + npcPortraits.length - 1) % npcPortraits.length;
   npcPortraitPath = '';
