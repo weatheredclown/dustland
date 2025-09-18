@@ -76,3 +76,37 @@ test('arrow keys in workbench do not bubble to window', async () => {
   const buttons = dom.window.document.querySelectorAll('#workbenchRecipes .slot button');
   assert.strictEqual(buttons.length, 4);
 });
+
+test('workbench lists enhancement recipes when you have duplicate gear', async () => {
+  const dom = new JSDOM('<div id="workbenchOverlay"><div class="workbench-window"><header><button id="closeWorkbenchBtn"></button></header><div id="workbenchRecipes"></div></div></div>');
+  await loadWorkbench(dom);
+  const registry = new Map();
+  global.registerItem = def => { registry.set(def.id, JSON.parse(JSON.stringify(def))); return def; };
+  global.getItem = id => { const it = registry.get(id); return it ? JSON.parse(JSON.stringify(it)) : null; };
+  global.player = { scrap: 0, fuel: 0, inv: [] };
+  global.hasItem = id => player.inv.some(i => i.id === id);
+  global.findItemIndex = id => player.inv.findIndex(i => i.id === id);
+  global.removeFromInv = idx => { if (idx >= 0) player.inv.splice(idx, 1); };
+  global.addToInv = item => {
+    const entry = typeof item === 'string' ? global.getItem(item) : item;
+    if (!entry) return false;
+    player.inv.push(JSON.parse(JSON.stringify(entry)));
+    return true;
+  };
+  global.countItems = id => player.inv.filter(it => it.id === id).length;
+
+  global.registerItem({ id: 'pipe_blade', name: 'Pipe Blade', type: 'weapon', mods: { ATK: 2 } });
+  for (let i = 0; i < 5; i += 1) {
+    player.inv.push(global.getItem('pipe_blade'));
+  }
+
+  Dustland.openWorkbench();
+
+  const rows = Array.from(dom.window.document.querySelectorAll('#workbenchRecipes .slot'));
+  assert.ok(rows.length >= 5, 'expected enhancement recipe to be listed');
+  const enhancementRow = rows.find(row => /Enhanced Pipe Blade/i.test(row.textContent));
+  assert.ok(enhancementRow, 'missing enhanced recipe row');
+  assert.match(enhancementRow.textContent, /Pipe Blade: 5\/5/);
+  const buttons = enhancementRow.querySelectorAll('button');
+  assert.strictEqual(buttons.length, 1);
+});
