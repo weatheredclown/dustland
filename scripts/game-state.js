@@ -58,5 +58,18 @@
     if (typeof renderParty === 'function') renderParty();
     if (typeof updateHUD === 'function') updateHUD();
   }
-  Dustland.gameState = { getState, updateState, getDifficulty, setDifficulty, setPersona, getPersona, applyPersona, addEffectPack, loadEffectPacks, rememberNPC, recallNPC, forgetNPC };
+  function clearPersona(memberId){
+    const member = state.party.find(m => m.id === memberId);
+    if (!member) return;
+    const prev = member.persona;
+    if (!prev) return;
+    globalThis.Dustland?.profiles?.remove?.(member, prev);
+    member.persona = undefined;
+    if (typeof member.applyEquipmentStats === 'function') member.applyEquipmentStats();
+    if (typeof member.applyCombatMods === 'function') member.applyCombatMods();
+    globalThis.EventBus?.emit('persona:unequip', { memberId, personaId: prev });
+    if (typeof renderParty === 'function') renderParty();
+    if (typeof updateHUD === 'function') updateHUD();
+  }
+  Dustland.gameState = { getState, updateState, getDifficulty, setDifficulty, setPersona, getPersona, applyPersona, clearPersona, addEffectPack, loadEffectPacks, rememberNPC, recallNPC, forgetNPC };
 })();
