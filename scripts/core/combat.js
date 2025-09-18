@@ -74,8 +74,19 @@ function addStatus(target, status){
       log?.(`${target.name || 'Target'} resists the poison.`);
       return;
     }
-    target.statusEffects.push({ type:'poison', strength: status.strength|0, remaining: status.duration|0 });
-    log?.(`${target.name} is poisoned!`);
+    const rawStrength = status.strength ?? status.dmg ?? 0;
+    const rawDuration = status.duration ?? status.turns ?? status.remaining ?? 0;
+    const strength = Math.max(0, rawStrength | 0);
+    const duration = Math.max(0, rawDuration | 0);
+    const existing = target.statusEffects.find(s => s.type === 'poison');
+    if(existing){
+      existing.strength = Math.max(existing.strength | 0, strength);
+      existing.remaining = (existing.remaining | 0) + duration;
+      log?.(`${target.name || 'Target'} is further poisoned!`);
+      return;
+    }
+    target.statusEffects.push({ type:'poison', strength, remaining: duration });
+    log?.(`${target.name || 'Target'} is poisoned!`);
   }
 }
 

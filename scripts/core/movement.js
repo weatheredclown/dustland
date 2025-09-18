@@ -283,6 +283,26 @@ function updateZoneMsgs(map,x,y){
   current.forEach(z => activeMsgZones.add(z));
 }
 
+function applyStatusTicksOutOfCombat(actor){
+  if(combatActive) return;
+  const tick = typeof globalThis.tickStatuses === 'function' ? globalThis.tickStatuses : null;
+  if(!tick) return;
+  const roster = Array.isArray(party) ? party : [];
+  let changed = false;
+  for(const member of roster){
+    if(!member || !Array.isArray(member.statusEffects) || member.statusEffects.length === 0) continue;
+    const beforeHp = member.hp;
+    tick(member);
+    if(member.hp !== beforeHp) changed = true;
+  }
+  if(actor && typeof player === 'object' && player){
+    player.hp = actor.hp;
+  }
+  if(changed){
+    renderParty?.();
+  }
+}
+
 // ===== Interaction =====
 function canWalk(x,y){
   if(state.map==='creator') return false;
@@ -322,6 +342,7 @@ function move(dx,dy){
         if(typeof footstepBump==='function') footstepBump();
         onEnter(state.map, nx, ny, { player, party, state, actor, buffs });
         applyZones(state.map, nx, ny);
+        applyStatusTicksOutOfCombat(actor);
         centerCamera(party.x,party.y,state.map); updateHUD();
         checkAggro();
         checkRandomEncounter();
