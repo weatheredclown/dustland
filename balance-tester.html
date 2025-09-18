@@ -74,6 +74,11 @@
         <button class="btn" id="mobileToggle">Mobile Controls: Off</button>
         <button class="btn" id="tileCharToggle">ASCII Tiles: On</button>
         <div class="field">
+          <label for="fontScale">Font Scale</label>
+          <input type="range" id="fontScale" min="1" max="1.75" step="0.05" value="1" />
+          <div class="small" id="fontScaleValue">100%</div>
+        </div>
+        <div class="field">
           <label id="playerIconLabel">Player Icon</label>
           <div class="icon-picker" aria-labelledby="playerIconLabel">
             <button class="pill" type="button" id="playerIconPrev" aria-label="Previous player icon">&lt;</button>
