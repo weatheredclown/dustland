@@ -1770,8 +1770,12 @@ test('save serializes party when map method is shadowed', () => {
   assert.doesNotThrow(() => save());
   global.localStorage = orig;
   const saved = JSON.parse(store['dustland_crt']);
-  assert.strictEqual(saved.party[0].id, 'p1');
-  assert.strictEqual(saved.party.length, 1);
+  assert.strictEqual(saved.format, 'dustland.v2');
+  const savedParty = Array.isArray(saved.party) ? saved.party : saved.party?.members;
+  assert.ok(Array.isArray(savedParty));
+  assert.strictEqual(savedParty[0].id, 'p1');
+  assert.strictEqual(savedParty.length, 1);
+  assert.strictEqual(saved.party.map, 'world');
 });
 
 test('save/load preserves NPC loops', () => {
