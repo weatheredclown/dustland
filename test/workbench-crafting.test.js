@@ -49,7 +49,7 @@ test('craftSolarTarp uses cloth and scrap', () => {
   assert.ok(!context.player.inv.some(i => i.id === 'cloth'));
 });
 
-test('craftBandage consumes plant fiber', () => { 
+test('craftBandage consumes plant fiber', () => {
   const context = {
     Dustland: {},
     EventBus: { emit: () => {} },
@@ -73,4 +73,31 @@ test('craftBandage consumes plant fiber', () => {
   context.Dustland.workbench.craftBandage();
   assert.ok(context.player.inv.some(i => i.id === 'bandage'));
   assert.ok(!context.player.inv.some(i => i.id === 'plant_fiber'));
+});
+
+test('craftAntidote consumes plant fiber and water flask', () => {
+  const context = {
+    Dustland: {},
+    EventBus: { emit: () => {} },
+    player: { scrap: 0, inv: [{ id: 'plant_fiber' }, { id: 'water_flask' }] },
+    addToInv: id => { context.player.inv.push({ id }); return true; },
+    hasItem: id => context.player.inv.some(i => i.id === id),
+    findItemIndex: id => context.player.inv.findIndex(i => i.id === id),
+    removeFromInv: (idx, qty = 1) => {
+      const item = context.player.inv[idx];
+      if (!item) return;
+      const count = Number.isFinite(item?.count) ? item.count : 1;
+      if (count > qty) {
+        item.count = count - qty;
+      } else {
+        context.player.inv.splice(idx, 1);
+      }
+    },
+    log: () => {}
+  };
+  vm.runInNewContext(src, context);
+  context.Dustland.workbench.craftAntidote();
+  assert.ok(context.player.inv.some(i => i.id === 'antidote'));
+  assert.ok(!context.player.inv.some(i => i.id === 'plant_fiber'));
+  assert.ok(!context.player.inv.some(i => i.id === 'water_flask'));
 });
