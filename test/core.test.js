@@ -1770,8 +1770,9 @@ test('save serializes party when map method is shadowed', () => {
   assert.doesNotThrow(() => save());
   global.localStorage = orig;
   const saved = JSON.parse(store['dustland_crt']);
-  assert.strictEqual(saved.party[0].id, 'p1');
-  assert.strictEqual(saved.party.length, 1);
+  assert.strictEqual(saved.format, 'dustland.save.v2');
+  assert.strictEqual(saved.party.members[0].id, 'p1');
+  assert.strictEqual(saved.party.members.length, 1);
 });
 
 test('save/load preserves NPC loops', () => {
@@ -1810,6 +1811,117 @@ test('save/load preserves persona assignments', () => {
   load();
   global.localStorage = orig;
   assert.strictEqual(party[0].persona, 'mask');
+});
+
+test('loadModernSave reloads the current module before patching state', () => {
+  const moduleData = { name:'reload_mod', seed: 777, world:[[7,7],[7,7]] };
+  applyModule(moduleData);
+  const saved = {
+    format: 'dustland.save.v2',
+    module: 'reload_mod',
+    worldSeed: 777,
+    world: [[7,7],[7,7]],
+    player: { inv: [] },
+    state: { map: 'world' },
+    buildings: [],
+    interiors: {},
+    itemDrops: [],
+    npcs: [],
+    quests: {},
+    party: { members: [], map: 'world', x: 1, y: 1, flags: {}, fallen: [] },
+    worldFlags: {},
+    bunkers: [],
+    gameState: { difficulty: 'normal', flags: {}, clock: 0, personas: {}, npcMemory: {}, effectPacks: {} }
+  };
+  const store = {};
+  const origStorage = global.localStorage;
+  global.localStorage = {
+    setItem(k, v){ store[k] = v; },
+    getItem(k){ return store[k] ?? null; },
+    removeItem(k){ delete store[k]; }
+  };
+  const origApply = globalThis.applyModule;
+  const origDustApply = globalThis.Dustland.applyModule;
+  const calls = [];
+  function stubApply(data, opts){
+    calls.push({ data, opts });
+    return origApply(data, opts);
+  }
+  globalThis.applyModule = stubApply;
+  globalThis.Dustland.applyModule = stubApply;
+  try {
+    global.localStorage.setItem('dustland_crt', JSON.stringify(saved));
+    world.length = 0;
+    world.push([1,1,1]);
+    load();
+    assert.strictEqual(calls.length, 1);
+    assert.strictEqual(calls[0].opts?.fullReset, true);
+    assert.deepStrictEqual(world, [[7,7],[7,7]]);
+  } finally {
+    globalThis.applyModule = origApply;
+    globalThis.Dustland.applyModule = origDustApply;
+    global.localStorage = origStorage;
+  }
+});
+
+test('loadModernSave restores bunkers and world flags', () => {
+  const moduleData = { name:'flags_mod', seed: 4242, world:[[7,7],[7,7]] };
+  applyModule(moduleData);
+  const saved = {
+    format: 'dustland.save.v2',
+    module: 'flags_mod',
+    worldSeed: 4242,
+    world: [[7,7],[7,7]],
+    player: { inv: [] },
+    state: { map: 'world' },
+    buildings: [],
+    interiors: {},
+    itemDrops: [],
+    npcs: [],
+    quests: {},
+    party: { members: [], map: 'world', x: 2, y: 3, flags: {}, fallen: [] },
+    worldFlags: { beacon: { lit: true }, storm: false },
+    bunkers: [{ id: 'alpha', map: 'world', x: 5, y: 6, network: 'module:flags_mod' }],
+    gameState: { difficulty: 'normal', flags: {}, clock: 0, personas: {}, npcMemory: {}, effectPacks: {} }
+  };
+  const store = {};
+  const origStorage = global.localStorage;
+  global.localStorage = {
+    setItem(k, v){ store[k] = v; },
+    getItem(k){ return store[k] ?? null; },
+    removeItem(k){ delete store[k]; }
+  };
+  const dl = globalThis.Dustland;
+  const origFastTravel = dl.fastTravel;
+  const origBunkers = dl.bunkers;
+  const inserted = [];
+  dl.fastTravel = {
+    upsertBunkers(list){
+      dl.bunkers.push(...list.map(b => ({ ...b, fromUpsert: true })));
+      inserted.push(...list.map(b => ({ ...b })));
+      return dl.bunkers;
+    }
+  };
+  dl.bunkers = [{ id: 'stale', map: 'world', x: 0, y: 0, network: 'old' }];
+  const originalFlags = Object.entries(worldFlags).reduce((acc, [k, v]) => { acc[k] = v; return acc; }, {});
+  Object.keys(worldFlags).forEach(k => delete worldFlags[k]);
+  worldFlags.temporary = { count: 9 };
+  try {
+    global.localStorage.setItem('dustland_crt', JSON.stringify(saved));
+    load();
+    assert.deepStrictEqual(worldFlags.beacon, { lit: true });
+    assert.strictEqual(worldFlags.storm, false);
+    assert.strictEqual(worldFlags.temporary, undefined);
+    assert.ok(dl.bunkers.some(b => b.id === 'alpha'));
+    assert.ok(inserted.some(b => b.id === 'alpha'));
+    assert.ok(!dl.bunkers.some(b => b.id === 'stale'));
+  } finally {
+    dl.fastTravel = origFastTravel;
+    dl.bunkers = origBunkers;
+    Object.keys(worldFlags).forEach(k => delete worldFlags[k]);
+    Object.entries(originalFlags).forEach(([k, v]) => { worldFlags[k] = v; });
+    global.localStorage = origStorage;
+  }
 });
 
 test('clearSave removes stored game data', () => {
