@@ -1983,7 +1983,13 @@ function runTests(){
       case 'ArrowDown': case 's': case 'S': move(0,1); break;
       case 'ArrowLeft': case 'a': case 'A': move(-1,0); break;
       case 'ArrowRight': case 'd': case 'D': move(1,0); break;
-      case 'e': case 'E': case ' ': interact(); break;
+      case ' ': case 'Spacebar':
+        e.preventDefault();
+        interact();
+        break;
+      case 'e': case 'E':
+        interact();
+        break;
       case 't': case 'T': case 'g': case 'G': takeNearestItem(); break;
       case 'o': case 'O': toggleAudio(); break;
       case 'c': case 'C': toggleMobileControls(); break;
