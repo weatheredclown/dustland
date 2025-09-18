@@ -302,6 +302,57 @@ function setTileChars(on){
 }
 function toggleTileChars(){ setTileChars(!tileCharsEnabled); }
 globalThis.toggleTileChars = toggleTileChars;
+const FONT_SCALE_STORAGE_KEY = 'fontScale';
+const FONT_SCALE_MIN = 1;
+const FONT_SCALE_MAX = 1.75;
+const FONT_SCALE_DEFAULT = 1;
+let fontScale = FONT_SCALE_DEFAULT;
+function clampFontScale(value){
+  const num = Number.parseFloat(value);
+  if(!Number.isFinite(num)) return fontScale;
+  const snapped = Math.round(num * 100) / 100;
+  if(snapped < FONT_SCALE_MIN) return FONT_SCALE_MIN;
+  if(snapped > FONT_SCALE_MAX) return FONT_SCALE_MAX;
+  return snapped;
+}
+function formatFontScale(value){
+  const str = value.toFixed(2);
+  return str.replace(/(\.\d*?)0+$/, '$1').replace(/\.0$/, '').replace(/\.$/, '');
+}
+function getFontScaleRootStyle(){
+  if(typeof document === 'undefined') return null;
+  return document.documentElement?.style || document.body?.style || null;
+}
+function updateFontScaleUI(scale){
+  if(typeof document === 'undefined') return;
+  const slider = document.getElementById('fontScale');
+  if(slider){
+    slider.value = formatFontScale(scale);
+  }
+  const readout = document.getElementById('fontScaleValue');
+  if(readout){
+    readout.textContent = `${Math.round(scale * 100)}%`;
+  }
+}
+function applyFontScale(scale){
+  fontScale = scale;
+  const rootStyle = getFontScaleRootStyle();
+  rootStyle?.setProperty('--font-scale', formatFontScale(scale));
+  updateFontScaleUI(scale);
+}
+function setFontScale(scale, opts = {}){
+  const next = clampFontScale(scale);
+  applyFontScale(next);
+  if(!opts.skipStorage){
+    globalThis.localStorage?.setItem(FONT_SCALE_STORAGE_KEY, formatFontScale(next));
+  }
+}
+const savedFontScale = Number.parseFloat(globalThis.localStorage?.getItem(FONT_SCALE_STORAGE_KEY));
+if(Number.isFinite(savedFontScale)){
+  setFontScale(savedFontScale, { skipStorage: true });
+} else {
+  applyFontScale(fontScale);
+}
 function setRetroNpcArt(on, skipStorage){
   retroNpcArtEnabled = !!on;
   const cb = document.getElementById('retroNpcToggle');
@@ -1830,6 +1881,10 @@ globalThis.Dustland.retroNpcArt = {
   isEnabled: () => retroNpcArtEnabled,
   setEnabled: setRetroNpcArt
 };
+globalThis.Dustland.font = {
+  getScale: () => fontScale,
+  setScale: (value, opts) => setFontScale(value, opts)
+};
 
 const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, openShop, playFX };
 Object.assign(globalThis, engineExports);
@@ -1905,6 +1960,14 @@ function runTests(){
   if(mobileBtn) mobileBtn.onclick=()=>toggleMobileControls();
   const tileCharBtn=document.getElementById('tileCharToggle');
   if(tileCharBtn) tileCharBtn.onclick=()=>toggleTileChars();
+  const fontScaleSlider=document.getElementById('fontScale');
+  if(fontScaleSlider){
+    fontScaleSlider.addEventListener('input', ()=>{
+      const raw = Number.parseFloat(fontScaleSlider.value);
+      setFontScale(raw);
+    });
+    updateFontScaleUI(fontScale);
+  }
   const retroToggle=document.getElementById('retroNpcToggle');
   if(retroToggle){
     const saved = globalThis.localStorage?.getItem('retroNpcArt');

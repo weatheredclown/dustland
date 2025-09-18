@@ -5,6 +5,11 @@
         --accent: #9ef7a0;
         --muted: #7a8a7a;
         --panelW: 440px;
+        --font-scale: 1;
+    }
+
+    html {
+        font-size: calc(16px * var(--font-scale));
     }
 
     input::placeholder,
@@ -39,7 +44,9 @@ input[type="range"] {
         background: radial-gradient(circle at top, #141614 0%, var(--bg) 70%);
         color: var(--ink);
         overscroll-behavior-y: none;
-        font: 14px/1.5 'Pixelify Sans', sans-serif;
+        font-family: 'Pixelify Sans', sans-serif;
+        font-size: 0.875rem;
+        line-height: 1.5;
     }
 
     .wrap {
@@ -89,7 +96,7 @@ input[type="range"] {
     }
 
     .panel h1 {
-        font-size: 18px;
+        font-size: 1.125rem;
         margin: 0;
         padding: 10px 12px;
         background: #0f120f;
@@ -113,7 +120,7 @@ input[type="range"] {
 
     .weather-banner {
         text-align: center;
-        font-size: 13px;
+        font-size: 0.8125rem;
         margin-bottom: 4px
     }
 
@@ -133,7 +140,7 @@ input[type="range"] {
 
     .hud .hydration {
         margin-left: 4px;
-        font-size: 12px;
+        font-size: 0.75rem;
     }
 
     .hudbar {
@@ -282,7 +289,7 @@ input[type="range"] {
         color: var(--ink);
         cursor: pointer;
         transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
-        font-size: 14px;
+        font-size: 0.875rem;
         font-family: inherit;
     }
 
@@ -391,7 +398,7 @@ input[type="range"] {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #fff;
 }
 
@@ -472,7 +479,7 @@ input[type="range"] {
         #panelToggle {
             display: block;
             padding: 12px;
-            font-size: 24px;
+            font-size: 1.5rem;
         }
         :root { --ctrlH: 180px; }
         body.mobile-on .wrap { height: calc(100% - var(--ctrlH)); }
@@ -542,7 +549,7 @@ input[type="range"] {
   color:#0f120f;
   border-radius:8px;
   padding:2px 4px;
-  font-size:10px;
+  font-size: 0.625rem;
   line-height:1;
   box-shadow:0 0 4px #8bd98d;
 }
@@ -640,7 +647,7 @@ input[type="range"] {
   border-radius:6px;
   min-width:120px;
   font-family:system-ui, sans-serif;
-  font-size:14px;
+  font-size: 0.875rem;
   color:#fff;
   box-shadow:0 0 8px #000 inset;
 }
@@ -655,7 +662,7 @@ input[type="range"] {
     }
 
     .small {
-        font-size: 12px;
+        font-size: 0.75rem;
         color: #9ab09a
     }
 
@@ -804,7 +811,7 @@ input[type="range"] {
   list-style: none;
   margin: 4px 0 0;
   padding: 0;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .slot-list {
@@ -1005,7 +1012,7 @@ input[type="range"] {
     }
 
     #settings .field--toggle label {
-        font-size: 14px;
+        font-size: 0.875rem;
         color: #c8f7c9
     }
 
@@ -1029,7 +1036,7 @@ input[type="range"] {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
+        font-size: 1.125rem;
         line-height: 1
     }
 
@@ -1129,7 +1136,7 @@ input[type="range"] {
         gap: 6px;
         align-items: center;
         z-index: 40;
-        font-size: 12px
+        font-size: 0.75rem
     }
 
     .nano-progress {
@@ -1280,7 +1287,7 @@ input[type="range"] {
         border-radius: 6px;
         background: #121712;
         color: var(--ink);
-        font-size: 13px;
+        font-size: 0.8125rem;
         font-weight: 600;
     }
 
