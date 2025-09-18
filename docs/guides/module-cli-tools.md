@@ -130,6 +130,15 @@ node scripts/module-tools/delete-zone.js <moduleFile> <index>
 
 Removes the zone at the given index.
 
+## Delete an encounter
+
+```
+node scripts/module-tools/delete-encounter.js <moduleFile> <mapId>
+```
+
+Deletes the random encounter list for the specified map. If no encounter lists
+remain, the command removes the `encounters` section entirely.
+
 ## Module schema reference
 
 The CLI tools operate on module files that follow a shared JSON schema. A
