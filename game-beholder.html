@@ -803,6 +803,24 @@
         }
         return segments;
       }
+      function gatherExtraSideWalls(segments) {
+        const extras = [];
+        const maxDepth = Math.min(2, VIEW_DISTANCE - 1);
+        const seenDepths = new Set(segments.map(seg => seg.depth));
+        for (let depth = 1; depth <= maxDepth; depth += 1) {
+          if (seenDepths.has(depth)) continue;
+          const leftTile = getRelativeTile(-1, depth);
+          if (leftTile && !leftTile.walkable) {
+            extras.push({ side: 'left', depth, tile: leftTile });
+          }
+          const rightTile = getRelativeTile(1, depth);
+          if (rightTile && !rightTile.walkable) {
+            extras.push({ side: 'right', depth, tile: rightTile });
+          }
+        }
+        extras.sort((a, b) => b.depth - a.depth);
+        return extras;
+      }
       function drawReticle() {
         const centerX = canvas.width / 2;
         const centerY = viewMetrics.horizon + (canvas.height - viewMetrics.horizon) * 0.18;
@@ -831,6 +849,7 @@
         ctx.fillStyle = floor;
         ctx.fillRect(0, viewMetrics.horizon, canvas.width, canvas.height - viewMetrics.horizon);
         const segments = gatherSegments();
+        const extraSideWalls = gatherExtraSideWalls(segments);
         for (let i = segments.length - 1; i >= 0; i--) {
           drawFloor(segments[i], i);
           drawCeiling(segments[i], i);
@@ -838,6 +857,9 @@
         for (let i = segments.length - 1; i >= 0; i--) {
           drawSideWall('left', segments[i], segments[i].leftTile, i);
           drawSideWall('right', segments[i], segments[i].rightTile, i);
+        }
+        for (const extra of extraSideWalls) {
+          drawSideWall(extra.side, { depth: extra.depth }, extra.tile, extra.depth);
         }
         for (let i = segments.length - 1; i >= 0; i--) {
           const entity = getEntityAt(segments[i].coord.x, segments[i].coord.y);
