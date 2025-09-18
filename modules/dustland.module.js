@@ -75,8 +75,8 @@ const DATA = `
     },
     {
       "map": "world",
-      "x": 28,
-      "y": 41,
+      "x": 33,
+      "y": 19,
       "id": "crowbar",
       "name": "Crowbar",
       "type": "weapon",
@@ -88,7 +88,7 @@ const DATA = `
     {
       "map": "world",
       "x": 30,
-      "y": 52,
+      "y": 63,
       "id": "rebar_club",
       "name": "Rebar Club",
       "type": "weapon",
@@ -99,8 +99,8 @@ const DATA = `
     },
     {
       "map": "world",
-      "x": 52,
-      "y": 42,
+      "x": 77,
+      "y": 36,
       "id": "kevlar_scrap_vest",
       "name": "Kevlar Scrap Vest",
       "type": "armor",
@@ -110,8 +110,8 @@ const DATA = `
     },
     {
       "map": "world",
-      "x": 64,
-      "y": 53,
+      "x": 93,
+      "y": 19,
       "id": "goggles",
       "name": "Goggles",
       "type": "trinket",
@@ -143,8 +143,8 @@ const DATA = `
     },
     {
       "map": "world",
-      "x": 32,
-      "y": 47,
+      "x": 26,
+      "y": 69,
       "id": "water_flask",
       "name": "Water Flask",
       "type": "consumable",
@@ -167,8 +167,8 @@ const DATA = `
     },
     {
       "map": "world",
-      "x": 34,
-      "y": 47,
+      "x": 31,
+      "y": 70,
       "id": "adrenaline_shot",
       "name": "Adrenaline Shot",
       "type": "consumable",
@@ -182,8 +182,8 @@ const DATA = `
     },
     {
       "map": "world",
-      "x": 36,
-      "y": 47,
+      "x": 50,
+      "y": 32,
       "id": "armor_polish",
       "name": "Armor Polish",
       "type": "consumable",
@@ -236,16 +236,16 @@ const DATA = `
     },
     {
       "map": "world",
-      "x": 26,
-      "y": 48,
+      "x": 25,
+      "y": 56,
       "id": "lost_satchel",
       "name": "Lost Satchel",
       "type": "quest"
     },
     {
       "map": "world",
-      "x": 60,
-      "y": 44,
+      "x": 88,
+      "y": 17,
       "id": "rust_idol",
       "name": "Rust Idol",
       "type": "quest",
@@ -289,8 +289,8 @@ const DATA = `
     },
     {
       "map": "world",
-      "x": 110,
-      "y": 49,
+      "x": 98,
+      "y": 62,
       "id": "artifact_blade",
       "name": "Artifact Blade",
       "type": "weapon",
@@ -301,8 +301,8 @@ const DATA = `
     },
     {
       "map": "world",
-      "x": 60,
-      "y": 40,
+      "x": 65,
+      "y": 18,
       "id": "signal_fragment_a",
       "name": "Signal Fragment",
       "type": "quest",
@@ -312,8 +312,8 @@ const DATA = `
     },
     {
       "map": "world",
-      "x": 62,
-      "y": 42,
+      "x": 63,
+      "y": 22,
       "id": "signal_fragment_b",
       "name": "Signal Fragment",
       "type": "quest",
@@ -323,8 +323,8 @@ const DATA = `
     },
     {
       "map": "world",
-      "x": 64,
-      "y": 44,
+      "x": 88,
+      "y": 68,
       "id": "signal_fragment_c",
       "name": "Signal Fragment",
       "type": "quest",
@@ -1221,8 +1221,8 @@ const DATA = `
     {
       "id": "post",
       "map": "world",
-      "x": 30,
-      "y": 46,
+      "x": 31,
+      "y": 25,
       "color": "#9ef7a0",
       "name": "Postmaster Ivo",
       "title": "Courier of Dust",
@@ -1282,8 +1282,8 @@ const DATA = `
     {
       "id": "tower",
       "map": "world",
-      "x": 48,
-      "y": 43,
+      "x": 29,
+      "y": 19,
       "color": "#9ef7a0",
       "name": "Rella",
       "title": "Radio Tech",
@@ -1329,8 +1329,8 @@ const DATA = `
     {
       "id": "hermit",
       "map": "world",
-      "x": 70,
-      "y": 47,
+      "x": 80,
+      "y": 21,
       "color": "#9ef7a0",
       "name": "The Shifting Hermit",
       "title": "Pilgrim",
@@ -1390,8 +1390,8 @@ const DATA = `
     {
       "id": "duchess",
       "map": "world",
-      "x": 40,
-      "y": 45,
+      "x": 59,
+      "y": 27,
       "color": "#9ef7a0",
       "name": "Scrap Duchess",
       "title": "Toll-Queen",
@@ -1487,8 +1487,8 @@ const DATA = `
     {
       "id": "signal_tech",
       "map": "world",
-      "x": 26,
-      "y": 43,
+      "x": 23,
+      "y": 28,
       "color": "#9ef7a0",
       "name": "Signal Tech",
       "title": "Tinkerer",
@@ -1550,8 +1550,8 @@ const DATA = `
     {
       "id": "raider",
       "map": "world",
-      "x": 56,
-      "y": 44,
+      "x": 71,
+      "y": 27,
       "color": "#f66",
       "name": "Road Raider",
       "title": "Bandit",
@@ -1593,8 +1593,8 @@ const DATA = `
     {
       "id": "trader",
       "map": "world",
-      "x": 34,
-      "y": 44,
+      "x": 49,
+      "y": 25,
       "color": "#9ef7a0",
       "name": "Cass the Trader",
       "title": "Shopkeep",
@@ -1721,8 +1721,8 @@ const DATA = `
     {
       "id": "scavenger_rat",
       "map": "world",
-      "x": 32,
-      "y": 48,
+      "x": 29,
+      "y": 66,
       "color": "#ff0000",
       "name": "Scavenger Rat",
       "title": "Vermin",
@@ -1756,8 +1756,8 @@ const DATA = `
     {
       "id": "rust_bandit",
       "map": "world",
-      "x": 44,
-      "y": 42,
+      "x": 40,
+      "y": 24,
       "color": "#f66",
       "name": "Rust Bandit",
       "title": "Scav Raider",
@@ -1790,8 +1790,8 @@ const DATA = `
     {
       "id": "feral_nomad",
       "map": "world",
-      "x": 72,
-      "y": 48,
+      "x": 78,
+      "y": 27,
       "color": "#f66",
       "name": "Feral Nomad",
       "title": "Mad Drifter",
@@ -1862,8 +1862,8 @@ const DATA = `
       "color": "#f66",
       "symbol": "!",
       "map": "world",
-      "x": 116,
-      "y": 37,
+      "x": 92,
+      "y": 68,
       "tree": {
         "start": {
           "text": "The brute roars.",
@@ -2239,8 +2239,8 @@ const DATA = `
       "color": "#f66",
       "symbol": "!",
       "map": "world",
-      "x": 113,
-      "y": 45,
+      "x": 91,
+      "y": 62,
       "tree": {
         "start": {
           "text": "The behemoth looms.",
@@ -2933,9 +2933,9 @@ const DATA = `
       3,
       3,
       3,
-      1,
-      3,
-      3
+      9,
+      9,
+      9
     ],
     [
       0,
@@ -3057,7 +3057,7 @@ const DATA = `
       9,
       9,
       9,
-      3
+      9
     ],
     [
       3,
@@ -3178,8 +3178,8 @@ const DATA = `
       3,
       9,
       9,
-      9,
-      3
+      8,
+      9
     ],
     [
       3,
