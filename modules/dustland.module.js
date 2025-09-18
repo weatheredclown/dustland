@@ -322,9 +322,9 @@ const DATA = `
       ]
     },
     {
-      "map": "world",
-      "x": 88,
-      "y": 68,
+      "map": null,
+      "x": null,
+      "y": null,
       "id": "signal_fragment_c",
       "name": "Signal Fragment",
       "type": "quest",
@@ -542,7 +542,7 @@ const DATA = `
     {
       "id": "q_solar_alignment",
       "title": "Align the Sun",
-      "desc": "Deliver the Sun Charm to the Archivist in the Hall so he can decode the broadcast.",
+      "desc": "Deliver the Sun Charm to the Archivist in the Hall so he can decode the broadcast and chart a path to the missing fragment.",
       "item": "sun_charm",
       "reward": "sun_charm",
       "xp": 4
@@ -550,7 +550,7 @@ const DATA = `
     {
       "id": "q_solar_signal",
       "title": "Resonate the Signal",
-      "desc": "Recover Signal Fragment C for the Archivist so he can complete the broadcast.",
+      "desc": "Recover Signal Fragment C from the echo relay hidden in the far northeast so the Archivist can finish the broadcast and unlock the Epic Blade.",
       "item": "signal_fragment_c",
       "reward": "epic_blade",
       "xp": 8
@@ -765,7 +765,7 @@ const DATA = `
           ]
         },
         "accept": {
-          "text": "The Archivist threads a fresh reel and nods. 'I'll be ready when you return.'",
+          "text": "The Archivist threads a fresh reel and nods. 'I'll be ready when you return—the completed broadcast will temper the epic blade you'll need for the Sovereign.'",
           "choices": [
             {
               "label": "(I'll be back)",
@@ -783,7 +783,7 @@ const DATA = `
           ]
         },
         "do_turnin": {
-          "text": "He sets the reels spinning, translating the tones into words of gratitude.",
+          "text": "He sets the reels spinning, translating the tones into words of gratitude that harden into an epic blade's blueprint.",
           "choices": [
             {
               "label": "(Continue)",
@@ -1103,7 +1103,7 @@ const DATA = `
       "symbol": "?",
       "tree": {
         "start": {
-          "text": "Rust storms east. Shelter west.",
+          "text": "Rust storms east. Shelter west. Far northeast, a relay waits for the Sun Charm—Archivist sends seekers there for a blade of legend.",
           "choices": [
             {
               "label": "(Leave)",
@@ -1222,7 +1222,8 @@ const DATA = `
         "chat": {
           "text": [
             "Keep to the road. The sand eats soles and souls.",
-            "Stay off the dunes. Sand chews boots."
+            "Stay off the dunes. Sand chews boots.",
+            "If you're chasing Sun Charm whispers, the relay past the far northeast ruin spits out some epic blade."
           ],
           "choices": [
             {
@@ -1363,7 +1364,7 @@ const DATA = `
       "questId": "q_tower",
       "tree": {
         "start": {
-          "text": "Tower’s console fried. If you got a Toolkit and brains, lend both.",
+          "text": "Tower’s console fried. If you got a Toolkit and brains, lend both. Archivist keeps pinging me—Sun Charm wakes some relay far northeast that’s supposed to gift an edge against the Sovereign of Dust.",
           "choices": [
             {
               "label": "(Accept) I will help.",
@@ -1386,7 +1387,7 @@ const DATA = `
           ]
         },
         "accept": {
-          "text": "I owe you static and thanks.",
+          "text": "I owe you static and thanks. When the tower purrs again, follow its tone north; the Archivist tunes it toward that relay and the blade he keeps raving about.",
           "choices": [
             {
               "label": "(Ok)",
@@ -1429,7 +1430,7 @@ const DATA = `
           ]
         },
         "accept": {
-          "text": "The sand will guide or bury you.",
+          "text": "The sand will guide or bury you. Pilgrims whisper that the Sun Charm opens the far northeast ruin where the Archivist forges a blade fit for dust-born kings.",
           "choices": [
             {
               "label": "(Ok)",
@@ -1515,7 +1516,7 @@ const DATA = `
           ]
         },
         "rumors": {
-          "text": "Radio crackles from the north; idol whispers from the south.",
+          "text": "Radio crackles from the north; idol whispers from the south. Archivist’s Sun Charm is the key—wake that far-northeast relay and it spits an epic blade to cleave the Sovereign.",
           "choices": [
             {
               "label": "(Thanks)",
@@ -1570,7 +1571,7 @@ const DATA = `
       "questId": "q_signal",
       "tree": {
         "start": {
-          "text": "Radio's dead. Need fragments to spark it.",
+          "text": "Radio's dead. Need fragments to spark it. Archivist in the Test Hall swears the last shard hums in that northeast relay sealed behind the old tower.",
           "choices": [
             {
               "label": "(Accept)",
@@ -1589,7 +1590,7 @@ const DATA = `
           ]
         },
         "accept": {
-          "text": "Try the dunes; bits wash up there.",
+          "text": "Try the dunes; bits wash up there. When you nab the Sun Charm, take it northeast and wake the relay so the Archivist can catch the broadcast.",
           "choices": [
             {
               "label": "(Ok)",
@@ -1607,7 +1608,7 @@ const DATA = `
           ]
         },
         "do_turnin": {
-          "text": "Signal hums again. Nice work.",
+          "text": "Signal hums again. Nice work. Archivist said that resonance forges blades fit to carve dust-kings.",
           "choices": [
             {
               "label": "(Continue)",
@@ -2881,6 +2882,68 @@ const DATA = `
         "scrap": {
           "min": 15,
           "max": 25
+        }
+      }
+    },
+    {
+      "id": "echo_relay",
+      "map": "room_oc3abv",
+      "x": 25,
+      "y": 44,
+      "color": "#225a20",
+      "name": "Echo Relay",
+      "title": "Signal Lattice",
+      "desc": "Cracked relay thrumming with stored light.",
+      "prompt": "Cracked lattice humming with trapped signal",
+      "questId": "q_solar_signal",
+      "symbol": "?",
+      "tree": {
+        "start": {
+          "text": "A cracked relay trembles atop the altar. Archivist schematics are etched around a Sun Charm-shaped cradle.",
+          "choices": [
+            {
+              "label": "(Study the schematics)",
+              "to": "accept",
+              "q": "accept"
+            },
+            {
+              "label": "(Resonate Sun Charm)",
+              "to": "resonate",
+              "q": "turnin"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "accept": {
+          "text": "Diagrams glow faintly, tracing a path from the Archivist's hall to this relay. Only the Sun Charm's light will wake it.",
+          "choices": [
+            {
+              "label": "(Step back)",
+              "to": "bye"
+            }
+          ]
+        },
+        "resonate": {
+          "text": "The relay's coils flare when the Sun Charm draws close, begging to drink in its dawnlight.",
+          "choices": [
+            {
+              "label": "(Let the charm sing)",
+              "to": "grant",
+              "reward": "signal_fragment_c"
+            }
+          ]
+        },
+        "grant": {
+          "text": "Light floods the relay and condenses into a prismatic shard. Signal Fragment C thrums warm in your grip.",
+          "choices": [
+            {
+              "label": "(Pocket the fragment)",
+              "to": "bye"
+            }
+          ]
         }
       }
     }
