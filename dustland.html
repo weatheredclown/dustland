@@ -77,6 +77,17 @@
         <button class="btn" id="musicToggle">Music: Off</button>
         <button class="btn" id="mobileToggle">Mobile Controls: Off</button>
         <button class="btn" id="tileCharToggle">ASCII Tiles: On</button>
+        <div class="field">
+          <label id="playerIconLabel">Player Icon</label>
+          <div class="icon-picker" aria-labelledby="playerIconLabel">
+            <button class="pill" type="button" id="playerIconPrev" aria-label="Previous player icon">&lt;</button>
+            <div class="icon-picker__preview" id="playerIconPreview" role="img" aria-live="polite">
+              <img id="playerIconImage" src="" alt="" decoding="async" />
+            </div>
+            <button class="pill" type="button" id="playerIconNext" aria-label="Next player icon">&gt;</button>
+          </div>
+          <div class="small" id="playerIconName"></div>
+        </div>
         <div class="field field--toggle">
           <label for="retroNpcToggle">Retro NPC Portraits</label>
           <input type="checkbox" id="retroNpcToggle" />

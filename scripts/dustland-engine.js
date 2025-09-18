@@ -270,10 +270,27 @@ function setMobileControls(on){
   return mobileButtons;
 }
 function toggleMobileControls(){ setMobileControls(!mobileControlsEnabled); }
+const PLAYER_ICON_STORAGE_KEY = 'playerIconIndex';
+const playerIcons = [
+  { id:'saber-vanguard', label:'Saber Vanguard', path:'assets/player-icons/player-icon-01.svg' },
+  { id:'aegis-sentinel', label:'Aegis Sentinel', path:'assets/player-icons/player-icon-02.svg' },
+  { id:'iron-marauder', label:'Iron Marauder', path:'assets/player-icons/player-icon-03.svg' },
+  { id:'cobalt-mystic', label:'Cobalt Mystic', path:'assets/player-icons/player-icon-04.svg' },
+  { id:'verdant-scout', label:'Verdant Scout', path:'assets/player-icons/player-icon-05.svg' },
+  { id:'circuit-mechanist', label:'Circuit Mechanist', path:'assets/player-icons/player-icon-06.svg' },
+  { id:'gilded-gunslinger', label:'Gilded Gunslinger', path:'assets/player-icons/player-icon-07.svg' },
+  { id:'dust-nomad', label:'Dust Nomad', path:'assets/player-icons/player-icon-08.svg' },
+  { id:'veil-oracle', label:'Veil Oracle', path:'assets/player-icons/player-icon-09.svg' },
+  { id:'nightshade', label:'Nightshade', path:'assets/player-icons/player-icon-10.svg' },
+  { id:'glyph-weaver', label:'Glyph Weaver', path:'assets/player-icons/player-icon-11.svg' },
+  { id:'trailblazer', label:'Trailblazer', path:'assets/player-icons/player-icon-12.svg' }
+];
+let playerIconIndex = 0;
 let tileCharsEnabled = true;
 let retroNpcArtEnabled = false;
 const retroNpcArtCache = new Map();
 let retroPlayerSprite = null;
+let retroPlayerSpriteIndex = -1;
 const DEFAULT_NPC_COLOR = '#9ef7a0';
 const xmlEscapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
 xmlEscapeMap['"'] = '&quot;';
@@ -296,9 +313,56 @@ function setRetroNpcArt(on, skipStorage){
     globalThis.localStorage?.setItem('retroNpcArt', retroNpcArtEnabled ? '1' : '0');
   }
   retroPlayerSprite = null;
+  retroPlayerSpriteIndex = -1;
   if(!retroNpcArtEnabled){
     retroNpcArtCache.clear();
   }
+}
+
+function clampPlayerIconIndex(idx){
+  if(!playerIcons.length) return 0;
+  const total = playerIcons.length;
+  const raw = Number.isFinite(idx) ? Math.trunc(idx) : 0;
+  let next = raw % total;
+  if(next < 0) next += total;
+  return next;
+}
+
+function updatePlayerIconPreview(){
+  if(!playerIcons.length) return;
+  playerIconIndex = clampPlayerIconIndex(playerIconIndex);
+  const meta = playerIcons[playerIconIndex];
+  const preview = document.getElementById('playerIconPreview');
+  const nameEl = document.getElementById('playerIconName');
+  if(nameEl && meta){
+    nameEl.textContent = meta.label;
+  }
+  if(preview && meta){
+    if(typeof preview.setAttribute === 'function') preview.setAttribute('data-icon-id', meta.id);
+    else if(preview.dataset) preview.dataset.iconId = meta.id;
+    if(typeof preview.setAttribute === 'function') preview.setAttribute('aria-label', meta.label);
+    preview.title = meta.label;
+    const img = preview.querySelector('img');
+    if(img){
+      img.src = meta.path;
+      img.alt = '';
+    }
+  }
+}
+
+function setPlayerIcon(idx, opts = {}){
+  if(!playerIcons.length) return;
+  const next = clampPlayerIconIndex(idx);
+  const changed = next !== playerIconIndex;
+  playerIconIndex = next;
+  if(changed){
+    retroPlayerSprite = null;
+    retroPlayerSpriteIndex = -1;
+  }
+  if(!opts.skipStorage){
+    globalThis.localStorage?.setItem(PLAYER_ICON_STORAGE_KEY, String(playerIconIndex));
+  }
+  updatePlayerIconPreview();
 }
 
 function sanitizeRetroText(value, fallback){
@@ -560,13 +624,28 @@ function buildRetroPlayerSvg(){
 function getRetroPlayerSprite(){
   const Img = globalThis.Image;
   if(typeof Img !== 'function') return null;
-  if(retroPlayerSprite?.complete) return retroPlayerSprite;
+  const meta = playerIcons[clampPlayerIconIndex(playerIconIndex)];
+  if(meta){
+    if(retroPlayerSprite && retroPlayerSpriteIndex === playerIconIndex){
+      return retroPlayerSprite;
+    }
+    const sprite = new Img();
+    sprite.decoding = 'sync';
+    sprite.src = meta.path;
+    retroPlayerSprite = sprite;
+    retroPlayerSpriteIndex = playerIconIndex;
+    return sprite;
+  }
+  if(retroPlayerSprite && retroPlayerSpriteIndex === -2){
+    return retroPlayerSprite;
+  }
   const svg = buildRetroPlayerSvg();
   const url = svgToDataUrl(svg);
   const sprite = new Img();
   sprite.decoding = 'sync';
   sprite.src = url;
   retroPlayerSprite = sprite;
+  retroPlayerSpriteIndex = -2;
   return sprite;
 }
 function sfxTick(){
@@ -1836,6 +1915,13 @@ function runTests(){
   } else {
     setRetroNpcArt(retroNpcArtEnabled, true);
   }
+  const iconPrev=document.getElementById('playerIconPrev');
+  const iconNext=document.getElementById('playerIconNext');
+  const savedIcon = Number.parseInt(globalThis.localStorage?.getItem(PLAYER_ICON_STORAGE_KEY), 10);
+  if(Number.isFinite(savedIcon)) setPlayerIcon(savedIcon, { skipStorage: true });
+  else updatePlayerIconPreview();
+  if(iconPrev) iconPrev.onclick=()=>setPlayerIcon(playerIconIndex-1);
+  if(iconNext) iconNext.onclick=()=>setPlayerIcon(playerIconIndex+1);
   const shotBtn=document.getElementById('screenshotBtn');
   if(shotBtn) shotBtn.onclick=()=>{
     const canvas=document.getElementById('game');
