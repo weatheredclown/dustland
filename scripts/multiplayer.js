@@ -4,6 +4,7 @@
   const base = globalThis.Dustland.multiplayer || {};
   const NET_FLAG = '__fromNet';
   const EVENTS = ['movement:player', 'combat:event', 'combat:started', 'combat:ended', 'multiplayer:presence'];
+  let debugMovement = false;
 
   function bindEvent(evt, handler){
     if (!bus?.on) return () => {};
@@ -11,14 +12,33 @@
     return () => bus?.off?.(evt, handler);
   }
 
-  function tagAndEmit(msg){
+  function tagAndEmit(msg, fromId){
     if (!msg?.evt) return;
     const payload = msg.data || {};
+    if (debugMovement && msg.evt === 'movement:player') {
+      const info = {
+        from: typeof fromId === 'string' || typeof fromId === 'number' ? fromId : 'remote peer',
+        map: payload?.map,
+        x: payload?.x,
+        y: payload?.y
+      };
+      console.debug('[multiplayer] movement command received', info);
+    }
     payload[NET_FLAG] = true;
     bus?.emit?.(msg.evt, payload);
   }
 
+  function setDebugMode(mode){
+    if (mode && typeof mode === 'object') {
+      debugMovement = !!mode.movement;
+    } else {
+      debugMovement = !!mode;
+    }
+    return { movement: debugMovement };
+  }
+
   async function startHost(opts){
+    setDebugMode(opts?.debugMode);
     const room = await base.startHost?.(opts);
     if (!room) return room;
 
@@ -40,7 +60,7 @@
     }));
     const stopMessage = room.onMessage?.((msg, fromId) => {
       if (msg?.type === 'event') {
-        tagAndEmit(msg);
+        tagAndEmit(msg, fromId);
         room.broadcast?.(msg, fromId);
       }
     });
@@ -69,6 +89,7 @@
   }
 
   async function connect(opts){
+    setDebugMode(opts?.debugMode);
     const socket = await base.connect?.(opts);
     if (!socket) return socket;
     const emitPresence = (status, extra = {}) => {
@@ -105,5 +126,5 @@
     return socket;
   }
 
-  globalThis.Dustland.multiplayer = { startHost, connect };
+  globalThis.Dustland.multiplayer = { startHost, connect, setDebugMode };
 })();
