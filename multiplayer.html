@@ -18,6 +18,11 @@
     label { display: block; font-weight: 600; margin: 16px 0 8px; }
     .hidden { display: none !important; }
     .flow { margin-top: 16px; }
+    .invite-card { border: 1px solid #2f3b2f; padding: 12px; border-radius: 6px; background: rgba(12, 20, 12, 0.6); }
+    .invite-card + .invite-card { margin-top: 16px; }
+    .invite-card textarea { min-height: 72px; }
+    .invite-card label { margin: 12px 0 6px; }
+    .invite-card .status { margin-top: 8px; min-height: 20px; color: #9ec2a4; }
   </style>
 </head>
 <body>
@@ -36,21 +41,30 @@
   <section class="section hidden" id="hostSection">
     <h2>Host a Session</h2>
     <p class="muted">We'll spin up a room and produce a host code. Share it with your friend, then paste their answer code to finish linking.</p>
-    <div id="hostCodeGroup" class="flow hidden">
-      <label for="hostCode">Host Code</label>
-      <textarea id="hostCode" readonly placeholder="Generating host code..."></textarea>
+    <div id="inviteControls" class="flow">
       <div class="controls">
-        <button class="btn" id="copyHost" disabled>Copy Host Code</button>
-        <button class="btn" id="newInvite" disabled>Generate New Host Code</button>
+        <button class="btn" id="newInvite" disabled>Generate Host Code</button>
       </div>
+      <p class="muted">Each host code links one player. Generate invites ahead of time so everyone can join without waiting.</p>
     </div>
-    <div id="hostAnswerGroup" class="flow hidden">
-      <label for="answerInput">Answer Code</label>
-      <textarea id="answerInput" placeholder="Paste the answer code from your friend" disabled></textarea>
-      <div class="controls">
-        <button class="btn" id="linkPlayer" disabled>Link Player</button>
+    <div id="inviteDeck" class="flow hidden">
+      <p class="muted" id="inviteEmpty">No active invites yet. Generate a host code to begin.</p>
+    </div>
+    <template id="inviteTemplate">
+      <div class="invite-card">
+        <label>Host Code</label>
+        <textarea class="host-code" readonly placeholder="Host code appears here"></textarea>
+        <div class="controls">
+          <button class="btn copy-host">Copy Host Code</button>
+        </div>
+        <label>Answer Code</label>
+        <textarea class="answer-input" placeholder="Paste the answer code from your friend"></textarea>
+        <div class="controls">
+          <button class="btn link-player">Link Player</button>
+        </div>
+        <div class="status invite-status"></div>
       </div>
-    </div>
+    </template>
     <div class="peer-list" id="peerList">No players linked yet.</div>
     <div class="status" id="hostStatus"></div>
   </section>

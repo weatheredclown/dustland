@@ -67,7 +67,13 @@ class Elem {
     evt.target ??= this;
     (this.listeners[evt.type]||[]).forEach(fn=>fn.call(this, evt));
   }
-  remove(){ }
+  remove(){
+    const parent = this.parentElement;
+    if (!parent) return;
+    const idx = parent.children.indexOf(this);
+    if (idx !== -1) parent.children.splice(idx, 1);
+    this.parentElement = undefined;
+  }
 }
 
 class CanvasElem extends Elem {
