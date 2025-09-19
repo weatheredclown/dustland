@@ -1118,11 +1118,15 @@ function save(){
 function mergeBuildingState(saved){
   const keyOf = b => `${b.x},${b.y},${b.interiorId || ''}`;
   const existing = new Map(buildings.map(b => [keyOf(b), b]));
+  const structuralKeys = new Set(['x', 'y', 'w', 'h', 'doorX', 'doorY', 'grid', 'under']);
   (saved||[]).forEach(sb => {
     const key = keyOf(sb);
     const target = existing.get(key);
     if(target){
-      Object.assign(target, deepClone(sb));
+      Object.entries(sb).forEach(([prop, value]) => {
+        if (structuralKeys.has(prop)) return;
+        target[prop] = deepClone(value);
+      });
     }else{
       buildings.push(deepClone(sb));
     }
