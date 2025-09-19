@@ -1,17 +1,14 @@
 (function(){
   const hostBtn = document.getElementById('startHost');
   const newInviteBtn = document.getElementById('newInvite');
-  const linkBtn = document.getElementById('linkPlayer');
-  const copyHostBtn = document.getElementById('copyHost');
-  const hostCodeEl = document.getElementById('hostCode');
-  const answerInputEl = document.getElementById('answerInput');
   const hostStatusEl = document.getElementById('hostStatus');
   const peerListEl = document.getElementById('peerList');
   const modeSection = document.getElementById('modeSection');
   const hostSection = document.getElementById('hostSection');
   const joinSection = document.getElementById('joinSection');
-  const hostCodeGroup = document.getElementById('hostCodeGroup');
-  const hostAnswerGroup = document.getElementById('hostAnswerGroup');
+  const inviteDeckEl = document.getElementById('inviteDeck');
+  const inviteEmptyEl = document.getElementById('inviteEmpty');
+  const inviteTemplate = document.getElementById('inviteTemplate');
   const joinAnswerGroup = document.getElementById('joinAnswerGroup');
   const chooseHostBtn = document.getElementById('chooseHost');
   const chooseJoinBtn = document.getElementById('chooseJoin');
@@ -23,10 +20,10 @@
   const joinStatusEl = document.getElementById('joinStatus');
 
   let hostRoom = null;
-  let pendingTicket = null;
   let joinSocket = null;
   let removePeerWatcher = null;
   let enteredGame = false;
+  const invites = new Map();
 
   function setText(el, text){ if (el) el.textContent = text || ''; }
 
@@ -49,25 +46,28 @@
     peerListEl.textContent = 'Linked players: ' + peers.map(p => p.id).join(', ');
   }
 
-  function revealHostSteps(){
-    show(hostCodeGroup);
-    show(hostAnswerGroup);
-    answerInputEl?.removeAttribute('disabled');
+  function updateInviteVisibility(){
+    const hasInvites = invites.size > 0;
+    if (hasInvites) show(inviteDeckEl);
+    else hide(inviteDeckEl);
+    if (inviteEmptyEl) {
+      if (hasInvites) hide(inviteEmptyEl);
+      else show(inviteEmptyEl);
+    }
+  }
+
+  function clearInvites(){
+    invites.forEach(entry => entry.node?.remove?.());
+    invites.clear();
+    updateInviteVisibility();
   }
 
   function prepareHostView(){
     showOnly(hostSection);
-    if (hostCodeEl) hostCodeEl.value = '';
-    if (answerInputEl) {
-      answerInputEl.value = '';
-      answerInputEl.setAttribute('disabled', 'disabled');
-    }
-    if (copyHostBtn) copyHostBtn.disabled = true;
-    if (linkBtn) linkBtn.disabled = true;
     if (newInviteBtn) newInviteBtn.disabled = true;
-    hide(hostCodeGroup);
-    hide(hostAnswerGroup);
+    clearInvites();
     updatePeerList([]);
+    enteredGame = false;
   }
 
   function updateJoinAnswerVisibility(){
@@ -121,20 +121,71 @@
   async function startHosting(autoInvite){
     if (hostBtn) hostBtn.disabled = true;
     setText(hostStatusEl, 'Preparing host tools...');
+    removePeerWatcher?.();
+    removePeerWatcher = null;
+    hostRoom?.close?.();
+    hostRoom = null;
+    clearInvites();
     try {
       hostRoom = await globalThis.Dustland?.multiplayer?.startHost();
-      setText(hostStatusEl, 'Hosting active. Generating connection details...');
+      if (!hostRoom) throw new Error('Hosting unavailable.');
+      setText(hostStatusEl, 'Hosting active. Generate a host code for each friend.');
       if (newInviteBtn) newInviteBtn.disabled = false;
-      if (linkBtn) linkBtn.disabled = true;
-      if (copyHostBtn) copyHostBtn.disabled = true;
-      removePeerWatcher?.();
       removePeerWatcher = hostRoom?.onPeers?.(updatePeerList);
       updatePeerList([]);
       if (autoInvite) await createInvite();
     } catch (err) {
       if (hostBtn) hostBtn.disabled = false;
+      if (newInviteBtn) newInviteBtn.disabled = true;
       setText(hostStatusEl, 'Error: ' + (err?.message || err));
     }
+  }
+
+  function buildInviteCard(ticket){
+    const template = inviteTemplate?.content;
+    const node = template?.firstElementChild?.cloneNode(true);
+    if (!node) return null;
+    const hostField = node.querySelector('.host-code');
+    const answerField = node.querySelector('.answer-input');
+    const copyBtn = node.querySelector('.copy-host');
+    const linkBtn = node.querySelector('.link-player');
+    const statusEl = node.querySelector('.invite-status');
+    if (hostField) {
+      hostField.value = ticket.code || '';
+      hostField.readOnly = true;
+    }
+    if (copyBtn) {
+      copyBtn.onclick = () => copyToClipboard(hostField, statusEl, 'Host code copied.');
+    }
+    if (linkBtn) {
+      linkBtn.onclick = async () => {
+        const answer = answerField?.value?.trim();
+        if (!answer) {
+          setText(statusEl, 'Paste an answer code first.');
+          return;
+        }
+        linkBtn.disabled = true;
+        setText(statusEl, 'Linking player...');
+        try {
+          await hostRoom.acceptAnswer?.(ticket.id, answer);
+          setText(statusEl, 'Linked! Invite closed.');
+          invites.delete(ticket.id);
+          node.remove();
+          updateInviteVisibility();
+          setText(hostStatusEl, 'Player linked! Create another host code for the next friend.');
+          enterGame(hostStatusEl);
+        } catch (err) {
+          setText(statusEl, 'Error: ' + (err?.message || err));
+        } finally {
+          if (invites.has(ticket.id)) linkBtn.disabled = false;
+        }
+      };
+    }
+    invites.set(ticket.id, { node });
+    if (inviteDeckEl) inviteDeckEl.appendChild(node);
+    updateInviteVisibility();
+    answerField?.focus?.();
+    return node;
   }
 
   async function createInvite(){
@@ -142,51 +193,23 @@
       setText(hostStatusEl, 'Start hosting first.');
       return;
     }
+    if (newInviteBtn) newInviteBtn.disabled = true;
     try {
-      pendingTicket = await hostRoom.createOffer?.();
-      if (!pendingTicket || !pendingTicket.code) {
+      const ticket = await hostRoom.createOffer?.();
+      if (!ticket || !ticket.code) {
         setText(hostStatusEl, 'Failed to create host code.');
         return;
       }
-      hostCodeEl.value = pendingTicket.code;
-      revealHostSteps();
-      if (copyHostBtn) copyHostBtn.disabled = false;
-      if (linkBtn) linkBtn.disabled = false;
-      answerInputEl?.focus?.();
-      setText(hostStatusEl, 'Share this host code. Generating another replaces the previous invite.');
+      const card = buildInviteCard(ticket);
+      if (!card) {
+        setText(hostStatusEl, 'Host invite template missing.');
+        return;
+      }
+      setText(hostStatusEl, 'Share each host code once. Paste the answer next to the matching invite.');
     } catch (err) {
       setText(hostStatusEl, 'Error: ' + (err?.message || err));
-    }
-  }
-
-  async function linkPlayer(){
-    if (!hostRoom) {
-      setText(hostStatusEl, 'Start hosting first.');
-      return;
-    }
-    if (!pendingTicket) {
-      setText(hostStatusEl, 'Create a host code before linking players.');
-      return;
-    }
-    const answer = answerInputEl.value?.trim();
-    if (!answer) {
-      setText(hostStatusEl, 'Paste an answer code first.');
-      return;
-    }
-    try {
-      await hostRoom.acceptAnswer?.(pendingTicket.id, answer);
-      setText(hostStatusEl, 'Player linked! Create another host code for the next friend.');
-      answerInputEl.value = '';
-      hostCodeEl.value = '';
-      answerInputEl.setAttribute('disabled', 'disabled');
-      hide(hostCodeGroup);
-      hide(hostAnswerGroup);
-      if (copyHostBtn) copyHostBtn.disabled = true;
-      pendingTicket = null;
-      if (linkBtn) linkBtn.disabled = true;
-      enterGame(hostStatusEl);
-    } catch (err) {
-      setText(hostStatusEl, 'Error: ' + (err?.message || err));
+    } finally {
+      if (newInviteBtn && hostRoom) newInviteBtn.disabled = false;
     }
   }
 
@@ -220,9 +243,7 @@
 
   function init(){
     if (hostBtn) hostBtn.onclick = () => startHosting();
-    if (newInviteBtn) newInviteBtn.onclick = createInvite;
-    if (linkBtn) linkBtn.onclick = linkPlayer;
-    if (copyHostBtn) copyHostBtn.onclick = () => copyToClipboard(hostCodeEl, hostStatusEl, 'Host code copied.');
+    if (newInviteBtn) newInviteBtn.onclick = () => createInvite();
     if (connectBtn) connectBtn.onclick = generateAnswer;
     if (copyAnswerBtn) copyAnswerBtn.onclick = () => copyToClipboard(answerCodeEl, joinStatusEl, 'Answer code copied.');
     if (chooseHostBtn) chooseHostBtn.onclick = () => {
@@ -234,6 +255,7 @@
       updateJoinAnswerVisibility();
       setText(joinStatusEl, '');
     });
+    updateInviteVisibility();
     updateJoinAnswerVisibility();
   }
 
