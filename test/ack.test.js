@@ -288,6 +288,56 @@ test('item select on map populates map dropdown', () => {
   moduleData.items = [];
 });
 
+test('saveModule exports persona overrides for mask items', () => {
+  applyLoadedModule({ seed: 1 });
+  moduleData.items = [];
+  moduleData.personas = {};
+  const prevOrig = moduleData._origKeys ? [...moduleData._origKeys] : undefined;
+  startNewItem();
+  document.getElementById('itemName').value = 'Echo Mask';
+  document.getElementById('itemId').value = 'echo_mask';
+  document.getElementById('itemTags').value = 'mask, quest';
+  document.getElementById('itemPersonaId').value = 'mara.masked';
+  document.getElementById('itemPersonaLabel').value = 'Echo Mara';
+  document.getElementById('itemPersonaNext').onclick();
+  addItem();
+  assert.strictEqual(moduleData.items.length, 1);
+  assert.strictEqual(moduleData.items[0].persona, 'mara.masked');
+  assert.deepStrictEqual(moduleData.personas['mara.masked'], {
+    label: 'Echo Mara',
+    portrait: 'assets/portraits/portrait_1000.png'
+  });
+  const origValidate = globalThis.validateSpawns;
+  globalThis.validateSpawns = () => [];
+  let saved = '';
+  const origBlob = globalThis.Blob;
+  globalThis.Blob = class { constructor(parts) { this.text = parts.join(''); } };
+  const origURL = global.URL;
+  global.URL = { createObjectURL: blob => { saved = blob.text; return ''; }, revokeObjectURL() {} };
+  const origCreate = document.createElement;
+  document.createElement = tag => tag === 'a' ? { href: '', download: '', click() {} } : origCreate(tag);
+  moduleNameInput.value = 'mask-module';
+  moduleData.personas.unused = { label: 'Unused' };
+  saveModule();
+  document.createElement = origCreate;
+  global.URL = origURL;
+  globalThis.Blob = origBlob;
+  globalThis.validateSpawns = origValidate;
+  const json = JSON.parse(saved);
+  assert.deepStrictEqual(json.personas, {
+    'mara.masked': {
+      label: 'Echo Mara',
+      portrait: 'assets/portraits/portrait_1000.png'
+    }
+  });
+  assert.ok(!('unused' in moduleData.personas));
+  assert.ok(moduleData._origKeys?.includes('personas'));
+  moduleData.items = [];
+  moduleData.personas = {};
+  if (prevOrig === undefined) delete moduleData._origKeys;
+  else moduleData._origKeys = prevOrig;
+});
+
 test('world paint persists through save/load', () => {
   genWorld(1);
   clearWorld();

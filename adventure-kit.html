@@ -564,6 +564,17 @@
             <div id="modBuilder"></div>
           </div>
           <label>Equip<textarea id="itemEquip" rows="2"></textarea></label>
+          <div id="itemPersonaSection" style="display:none">
+            <label>Persona ID<input id="itemPersonaId" placeholder="mara.masked" /></label>
+            <label>Persona Label<input id="itemPersonaLabel" placeholder="Masked persona label" /></label>
+            <div class="portrait" id="itemPersonaPort"></div>
+            <div class="row" style="margin:8px 0">
+              <span class="pill" id="itemPersonaPrev">&lt;</span>
+              <span class="pill">Mask Portrait</span>
+              <span class="pill" id="itemPersonaNext">&gt;</span>
+            </div>
+            <label>Custom Portrait<input id="itemPersonaPortraitPath" placeholder="assets/portraits/custom.png" /></label>
+          </div>
           <label>Value<input id="itemValue" type="number" min="0" /></label>
           <label>Fuel<input id="itemFuel" type="number" min="0" /></label>
           <label>Use Type<select id="itemUseType"><option value="">(none)</option><option value="heal">Heal</option><option value="boost">Boost</option></select></label>

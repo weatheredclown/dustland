@@ -433,6 +433,12 @@ function applyModule(data = {}, options = {}) {
   dl.currentModule = moduleName;
   (dl.moduleProps ||= {})[moduleName] = { ...(moduleData.props || {}) };
   (dl.loadedModules ||= {})[moduleName] = moduleData;
+  const personaTemplates = dl.personaTemplates;
+  if (fullReset && personaTemplates) {
+    const base = dl._basePersonaTemplates || (dl._basePersonaTemplates = Object.fromEntries(Object.entries(personaTemplates).map(([id, def]) => [id, { ...def }])));
+    Object.keys(personaTemplates).forEach(id => delete personaTemplates[id]);
+    Object.entries(base).forEach(([id, def]) => { personaTemplates[id] = { ...def }; });
+  }
 
   if (fullReset) {
     const seed = moduleData.seed || Date.now();
@@ -504,6 +510,22 @@ function applyModule(data = {}, options = {}) {
     Object.entries(moduleData.encounters).forEach(([map, list]) => {
       enemyBanks[map] = list.map(e => ({ ...e }));
     });
+  }
+
+  if (personaTemplates && moduleData.personas) {
+    Object.entries(moduleData.personas).forEach(([id, def]) => {
+      const base = personaTemplates[id] ? { ...personaTemplates[id] } : { id };
+      personaTemplates[id] = { ...base, ...def, id: def.id || base.id || id };
+    });
+    const personaState = globalThis.Dustland?.gameState?.getState?.()?.personas;
+    if (personaState && globalThis.Dustland?.gameState?.setPersona) {
+      Object.keys(personaState).forEach(id => {
+        if (moduleData.personas[id]) {
+          const merged = { ...personaState[id], ...moduleData.personas[id], id };
+          globalThis.Dustland.gameState.setPersona(id, merged);
+        }
+      });
+    }
   }
 
   // Effect packs
