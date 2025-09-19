@@ -189,6 +189,17 @@ function setMobileControls(on){
       mobileWrap.id='mobileControls';
       mobileWrap.style.cssText='position:fixed;left:0;right:0;bottom:0;height:180px;display:flex;justify-content:space-between;padding:20px;z-index:1000;touch-action:manipulation;';
       document.body.appendChild(mobileWrap);
+      const tryCreatorNav = (btnId) => {
+        const creatorEl=document.getElementById('creator');
+        if(creatorEl?.style?.display==='flex'){
+          const btn=document.getElementById(btnId);
+          if(btn && !btn.disabled){
+            if(typeof btn.click==='function') btn.click(); else btn.onclick?.();
+          }
+          return true;
+        }
+        return false;
+      };
       const mk=(name,t,fn)=>{
         const b=document.createElement('button');
         b.textContent=t;
@@ -236,6 +247,9 @@ function setMobileControls(on){
       mobileAB=document.createElement('div');
       mobileAB.style.cssText='display:flex;gap:10px;user-select:none;';
       mobileAB.appendChild(mk('A','A',()=>{
+        if(tryCreatorNav('ccNext')){
+          return;
+        }
         if(overlay?.classList?.contains('shown')){
           handleDialogKey?.({ key:'Enter' });
         } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
@@ -246,6 +260,9 @@ function setMobileControls(on){
       }));
       mobileAB.appendChild(mk('B','B',()=>{
         const shop = document.getElementById('shopOverlay');
+        if(tryCreatorNav('ccBack')){
+          return;
+        }
         if(overlay?.classList?.contains('shown')){
           closeDialog?.();
         } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
