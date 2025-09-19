@@ -85,3 +85,33 @@ test('mobile B flees combat', async () => {
   b.onclick();
   assert.deepStrictEqual(keys, ['Escape']);
 });
+
+test('mobile A advances character creator', async () => {
+  let interacted = false;
+  let nextCalls = 0;
+  const { context, document } = await setup({
+    interact: () => { interacted = true; }
+  });
+  const creator = document.getElementById('creator');
+  creator.style.display = 'flex';
+  const nextBtn = document.getElementById('ccNext');
+  nextBtn.disabled = false;
+  nextBtn.onclick = () => { nextCalls += 1; };
+  const { A: a } = context.setMobileControls(true);
+  a.onclick();
+  assert.strictEqual(nextCalls, 1);
+  assert.ok(!interacted);
+});
+
+test('mobile B goes back in character creator', async () => {
+  let backCalls = 0;
+  const { context, document } = await setup();
+  const creator = document.getElementById('creator');
+  creator.style.display = 'flex';
+  const backBtn = document.getElementById('ccBack');
+  backBtn.disabled = false;
+  backBtn.onclick = () => { backCalls += 1; };
+  const { B: b } = context.setMobileControls(true);
+  b.onclick();
+  assert.strictEqual(backCalls, 1);
+});
