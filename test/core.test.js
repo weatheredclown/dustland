@@ -329,6 +329,39 @@ test('applyModule removes random huts when module supplies buildings', () => {
   assert.strictEqual(buildings.length, 1);
 });
 
+test('applyModule merges module personas into templates and state', async () => {
+  const personaSrc = await fs.readFile(new URL('../scripts/core/personas.js', import.meta.url), 'utf8');
+  vm.runInThisContext(personaSrc, { filename: '../scripts/core/personas.js' });
+  const dl = globalThis.Dustland;
+  const baseLabel = dl.personaTemplates['mara.masked'].label;
+  const basePortrait = dl.personaTemplates['mara.masked'].portrait;
+  dl.gameState.setPersona('mara.masked', { ...dl.personaTemplates['mara.masked'] });
+  applyModule({ seed: 1, world: [[TILE.SAND]] }, { fullReset: true });
+  applyModule({
+    seed: 1,
+    world: [[TILE.SAND]],
+    personas: {
+      'mara.masked': { label: 'Override Mara', portrait: 'assets/portraits/portrait_1005.png' },
+      'new.mask': { label: 'New Mask', portrait: 'assets/portraits/portrait_1006.png' }
+    }
+  }, { fullReset: true });
+  assert.strictEqual(dl.personaTemplates['mara.masked'].label, 'Override Mara');
+  assert.strictEqual(dl.personaTemplates['mara.masked'].portrait, 'assets/portraits/portrait_1005.png');
+  assert.deepStrictEqual(dl.personaTemplates['new.mask'], {
+    id: 'new.mask',
+    label: 'New Mask',
+    portrait: 'assets/portraits/portrait_1006.png'
+  });
+  const personaState = dl.gameState.getState().personas;
+  assert.strictEqual(personaState['mara.masked'].label, 'Override Mara');
+  assert.strictEqual(personaState['mara.masked'].portrait, 'assets/portraits/portrait_1005.png');
+  applyModule({ seed: 1, world: [[TILE.SAND]] }, { fullReset: true });
+  assert.strictEqual(dl.personaTemplates['mara.masked'].label, baseLabel);
+  assert.strictEqual(dl.personaTemplates['mara.masked'].portrait, basePortrait);
+  assert.ok(!dl.personaTemplates['new.mask']);
+  dl.gameState.setPersona('mara.masked', { ...dl.personaTemplates['mara.masked'] });
+});
+
 test('walking regenerates leader HP', async () => {
   const world = Array.from({length:5},()=>Array.from({length:5},()=>7));
   applyModule({world});

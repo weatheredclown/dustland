@@ -299,7 +299,7 @@ loopMinus.addEventListener('click', () => {
   showLoopControls(null);
 });
 
-const moduleData = globalThis.moduleData || (globalThis.moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {} });
+const moduleData = globalThis.moduleData || (globalThis.moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {} });
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod', 'spread'];
 const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];
@@ -1040,6 +1040,7 @@ function clearWorld() {
     moduleData.zones = [];
     moduleData.encounters = [];
     moduleData.templates = [];
+    moduleData.personas = {};
     initTags();
     buildings.length = 0;
     portals.length = 0;
@@ -1948,6 +1949,55 @@ function setNpcPortrait() {
   const img = npcPortraitPath || npcPortraits[npcPortraitIndex];
   if (el) el.style.backgroundImage = img ? `url(${img})` : '';
 }
+const personaPortraits = npcPortraits;
+let itemPersonaPortraitIndex = 0;
+let itemPersonaPortraitPath = '';
+function setItemPersonaPortrait() {
+  const el = document.getElementById('itemPersonaPort');
+  const img = itemPersonaPortraitPath || personaPortraits[itemPersonaPortraitIndex];
+  if (el) el.style.backgroundImage = img ? `url(${img})` : '';
+}
+function resetPersonaFields() {
+  const idEl = document.getElementById('itemPersonaId');
+  const labelEl = document.getElementById('itemPersonaLabel');
+  const pathEl = document.getElementById('itemPersonaPortraitPath');
+  if (idEl) idEl.value = '';
+  if (labelEl) labelEl.value = '';
+  if (pathEl) pathEl.value = '';
+  itemPersonaPortraitIndex = 0;
+  itemPersonaPortraitPath = '';
+  setItemPersonaPortrait();
+  updatePersonaSection();
+}
+function loadPersonaFields(personaId) {
+  const id = personaId || document.getElementById('itemPersonaId')?.value?.trim() || '';
+  const labelEl = document.getElementById('itemPersonaLabel');
+  const pathEl = document.getElementById('itemPersonaPortraitPath');
+  const data = (moduleData.personas || {})[id] || {};
+  if (labelEl) labelEl.value = data.label || '';
+  const stored = data.portrait || '';
+  const idx = personaPortraits.indexOf(stored);
+  if (idx > 0) {
+    itemPersonaPortraitIndex = idx;
+    itemPersonaPortraitPath = '';
+    if (pathEl) pathEl.value = '';
+  } else {
+    itemPersonaPortraitIndex = 0;
+    itemPersonaPortraitPath = stored || '';
+    if (pathEl) pathEl.value = stored || '';
+  }
+  setItemPersonaPortrait();
+  updatePersonaSection();
+}
+function updatePersonaSection() {
+  const wrap = document.getElementById('itemPersonaSection');
+  if (!wrap) return;
+  const tags = document.getElementById('itemTags')?.value || '';
+  const personaId = document.getElementById('itemPersonaId')?.value?.trim();
+  const tagList = tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+  const show = tagList.includes('mask') || !!personaId;
+  wrap.style.display = show ? 'block' : 'none';
+}
 function applyCombatTree(tree) {
   tree.start = tree.start || { text: '', choices: [] };
   if (!tree.start.choices.some(c => c.to === 'do_fight'))
@@ -2548,6 +2598,7 @@ function startNewItem() {
   document.getElementById('itemX').value = 0;
   document.getElementById('itemY').value = 0;
   document.getElementById('itemOnMap').checked = false;
+  resetPersonaFields();
   updateModsWrap();
   loadMods({});
   document.getElementById('itemValue').value = 0;
@@ -2630,6 +2681,21 @@ function addItem() {
     item.map = map;
     item.x = x;
     item.y = y;
+  }
+  const personaId = document.getElementById('itemPersonaId').value.trim();
+  const personaLabel = document.getElementById('itemPersonaLabel').value.trim();
+  const personaPathInput = document.getElementById('itemPersonaPortraitPath').value.trim();
+  if (personaId) {
+    item.persona = personaId;
+    const portrait = personaPathInput || (itemPersonaPortraitIndex > 0 ? personaPortraits[itemPersonaPortraitIndex] : '');
+    const store = moduleData.personas || (moduleData.personas = {});
+    const entry = { ...(store[personaId] || {}) };
+    if (personaLabel) entry.label = personaLabel;
+    else delete entry.label;
+    if (portrait) entry.portrait = portrait;
+    else delete entry.portrait;
+    if (Object.keys(entry).length) store[personaId] = entry;
+    else delete store[personaId];
   }
   if (editItemIdx >= 0) {
     moduleData.items[editItemIdx] = item;
@@ -2732,6 +2798,10 @@ function editItem(i) {
     document.getElementById('itemUse').value = '';
   }
   updateUseWrap();
+  document.getElementById('itemPersonaId').value = it.persona || '';
+  if (it.persona) loadPersonaFields(it.persona);
+  else resetPersonaFields();
+  updatePersonaSection();
   document.getElementById('addItem').textContent = 'Update Item';
   document.getElementById('delItem').style.display = 'block';
   document.getElementById('cancelItem').style.display = 'none';
@@ -3963,6 +4033,7 @@ function applyLoadedModule(data) {
     delete it.slot;
     return it;
   });
+  moduleData.personas = { ...(data.personas || {}) };
   initTags();
   moduleData.quests = data.quests || [];
   moduleData.buildings = data.buildings || [];
@@ -4095,6 +4166,17 @@ function saveModule() {
     if(issues.some(i=>!i.warn)) return;
   }
   moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
+  if (moduleData.personas) {
+    const used = new Set((moduleData.items || []).map(it => it.persona).filter(Boolean));
+    Object.keys(moduleData.personas).forEach(id => {
+      const entry = moduleData.personas[id];
+      if (!entry || Object.keys(entry).length === 0 || !used.has(id)) delete moduleData.personas[id];
+    });
+  }
+  const hasPersonas = moduleData.personas && Object.keys(moduleData.personas).length > 0;
+  if (hasPersonas && Array.isArray(moduleData._origKeys) && !moduleData._origKeys.includes('personas')) {
+    moduleData._origKeys.push('personas');
+  }
   const hasProps = Object.keys(moduleData.props || {}).length > 0;
   const bldgs = moduleData.buildings.map(({ under, _origKeys, ...rest }) => {
     const clean = {};
@@ -4117,6 +4199,7 @@ function saveModule() {
       if (hasProps) base.props = moduleData.props;
       return;
     }
+    if (k === 'personas' && !hasPersonas) return;
     if (moduleData[k] !== undefined) base[k] = moduleData[k];
   });
   if (moduleData._origKeys?.includes('encounters') || Object.keys(enc).length) base.encounters = enc;
@@ -4137,6 +4220,13 @@ function saveModule() {
 
 function playtestModule() {
   moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
+  if (moduleData.personas) {
+    const used = new Set((moduleData.items || []).map(it => it.persona).filter(Boolean));
+    Object.keys(moduleData.personas).forEach(id => {
+      const entry = moduleData.personas[id];
+      if (!entry || Object.keys(entry).length === 0 || !used.has(id)) delete moduleData.personas[id];
+    });
+  }
   const bldgs = buildings.map(({ under, ...rest }) => rest);
   const ints = moduleData.interiors.map(I => ({...I, grid: gridToEmoji(I.grid)}));
   const enc = {};
@@ -4250,6 +4340,27 @@ document.getElementById('delPortal').onclick = deletePortal;
 populateTypeDropdown(document.getElementById('itemType'));
 document.getElementById('itemType').addEventListener('change', updateModsWrap);
 document.getElementById('itemUseType').addEventListener('change', updateUseWrap);
+document.getElementById('itemTags').addEventListener('input', updatePersonaSection);
+document.getElementById('itemPersonaId').addEventListener('input', updatePersonaSection);
+document.getElementById('itemPersonaPortraitPath').addEventListener('input', e => {
+  itemPersonaPortraitPath = e.target.value.trim();
+  if (itemPersonaPortraitPath) itemPersonaPortraitIndex = 0;
+  setItemPersonaPortrait();
+});
+document.getElementById('itemPersonaPrev').onclick = () => {
+  itemPersonaPortraitIndex = (itemPersonaPortraitIndex + personaPortraits.length - 1) % personaPortraits.length;
+  itemPersonaPortraitPath = '';
+  const pathEl = document.getElementById('itemPersonaPortraitPath');
+  if (pathEl) pathEl.value = '';
+  setItemPersonaPortrait();
+};
+document.getElementById('itemPersonaNext').onclick = () => {
+  itemPersonaPortraitIndex = (itemPersonaPortraitIndex + 1) % personaPortraits.length;
+  itemPersonaPortraitPath = '';
+  const pathEl = document.getElementById('itemPersonaPortraitPath');
+  if (pathEl) pathEl.value = '';
+  setItemPersonaPortrait();
+};
 document.getElementById('eventEffect').addEventListener('change', updateEventEffectFields);
 document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
 document.getElementById('npcFlagType').addEventListener('change', updateFlagBuilder);
