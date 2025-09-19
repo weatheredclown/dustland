@@ -57,12 +57,34 @@ Object.assign(global, {
   location: { href: '' }
 });
 
+global.sessionStorage = {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {}
+};
+
 const hidden = [];
 const shown = [];
 global.UI = {
   remove: () => {},
   hide: id => hidden.push(id),
   show: id => shown.push(id)
+};
+
+const emittedEvents = [];
+const listeners = new Map();
+global.EventBus = {
+  on(evt, fn){
+    if (!listeners.has(evt)) listeners.set(evt, new Set());
+    listeners.get(evt).add(fn);
+  },
+  off(evt, fn){
+    listeners.get(evt)?.delete(fn);
+  },
+  emit(evt, payload){
+    emittedEvents.push({ evt, payload });
+    listeners.get(evt)?.forEach(fn => fn(payload));
+  }
 };
 
 const bodyEl = stubEl();
@@ -78,6 +100,7 @@ global.document = {
 
 global.openCreator = () => {};
 global.showStart = () => {};
+global.resetAll = () => {};
 
 const code = await fs.readFile(new URL('../scripts/module-picker.js', import.meta.url), 'utf8');
 vm.runInThisContext(code, { filename: '../scripts/module-picker.js' });
@@ -165,6 +188,16 @@ test('true-dust module points to entry script', () => {
   assert.strictEqual(td.file, 'modules/true-dust.module.js');
 });
 
+test('host module click broadcasts selection', () => {
+  emittedEvents.length = 0;
+  const overlay = bodyEl.children.find(c => c.id === 'modulePicker');
+  const buttons = overlay.querySelector('#moduleButtons').children;
+  buttons[0].onclick();
+  const evt = emittedEvents.find(e => e.evt === 'module-picker:select');
+  assert.ok(evt);
+  assert.strictEqual(evt.payload.moduleId, MODULES[0].id);
+});
+
 test('enter key loads selected module', () => {
   const golden = MODULES.find(m => m.id === 'golden');
   assert.ok(golden);
@@ -190,4 +223,86 @@ test('loadModule preserves existing save data', () => {
 
 test('load button hidden until module loads', () => {
   assert.ok(hidden.includes('loadBtn'));
+});
+
+test('client role waits for host selection broadcast', () => {
+  const body = stubEl();
+  const head = stubEl();
+  const loadBtn = stubEl();
+  const emitted = [];
+  const localListeners = new Map();
+  const disconnectRoles = [];
+  let removedRole = 0;
+  const context = {
+    requestAnimationFrame: () => {},
+    window: null,
+    innerWidth: 800,
+    innerHeight: 600,
+    addEventListener(){},
+    document: {
+      body,
+      head,
+      createElement: () => stubEl(),
+      getElementById: id => id === 'loadBtn' ? loadBtn : null
+    },
+    UI: { remove: () => {}, hide: () => {}, show: () => {} },
+    openCreator: () => {},
+    showStart: () => {},
+    resetAll: () => {},
+    EventBus: {
+      on(evt, fn){
+        if (!localListeners.has(evt)) localListeners.set(evt, new Set());
+        localListeners.get(evt).add(fn);
+      },
+      off(evt, fn){
+        localListeners.get(evt)?.delete(fn);
+      },
+      emit(evt, payload){
+        emitted.push({ evt, payload });
+        localListeners.get(evt)?.forEach(fn => fn(payload));
+      }
+    },
+    localStorage: { getItem: () => null },
+    sessionStorage: {
+      getItem: () => 'client',
+      setItem: () => {},
+      removeItem: key => { if (key === 'dustland.multiplayerRole') removedRole++; }
+    },
+    Dustland: { multiplayer: { disconnect: role => disconnectRoles.push(role) } },
+    location: { href: '' },
+    console,
+    Date,
+    Math,
+    setTimeout,
+    clearTimeout
+  };
+  context.window = context;
+  context.global = context;
+  vm.runInNewContext(code, context, { filename: '../scripts/module-picker.js' });
+
+  const overlay = body.children.find(c => c.id === 'modulePicker');
+  assert.ok(overlay);
+  const buttons = overlay.querySelector('#moduleButtons').children;
+  assert.ok(buttons[0].disabled);
+
+  const modules = vm.runInContext('MODULES', context);
+  assert.ok(Array.isArray(modules) && modules.length > 1);
+  const selection = {
+    moduleId: modules[1].id,
+    moduleName: modules[1].name,
+    moduleFile: modules[1].file,
+    __fromNet: true
+  };
+  context.EventBus.emit('module-picker:select', selection);
+  const scriptEl = body.children.find(c => c.id === 'activeModuleScript');
+  assert.ok(scriptEl);
+  assert.ok(String(scriptEl.src || '').includes(modules[1].file));
+  assert.ok(emitted.some(e => e.evt === 'module-picker:select'));
+
+  const leaveBtn = overlay.querySelector('#leaveMultiplayer');
+  assert.ok(leaveBtn);
+  leaveBtn.onclick();
+  assert.deepStrictEqual(disconnectRoles, ['client']);
+  assert.equal(removedRole, 1);
+  assert.strictEqual(context.location.href, 'dustland.html');
 });

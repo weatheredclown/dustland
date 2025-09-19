@@ -3,8 +3,11 @@
   const bus = globalThis.EventBus;
   const base = globalThis.Dustland.multiplayer || {};
   const NET_FLAG = '__fromNet';
-  const EVENTS = ['movement:player', 'combat:event', 'combat:started', 'combat:ended', 'multiplayer:presence'];
+  const EVENTS = ['movement:player', 'combat:event', 'combat:started', 'combat:ended', 'multiplayer:presence', 'module-picker:select'];
   let debugMovement = false;
+  let activeRole = null;
+  let activeRoom = null;
+  let activeSocket = null;
 
   function bindEvent(evt, handler){
     if (!bus?.on) return () => {};
@@ -41,6 +44,10 @@
     setDebugMode(opts?.debugMode);
     const room = await base.startHost?.(opts);
     if (!room) return room;
+
+    if (activeRoom && activeRoom !== room) {
+      try { activeRoom.close?.(); } catch (err) { /* ignore */ }
+    }
 
     const emitPresence = (status, extra = {}) => {
       bus?.emit?.('multiplayer:presence', Object.assign({ role: 'host', status }, extra));
@@ -84,7 +91,13 @@
       stopPeerFeed?.();
       emitPresence('closed');
       originalClose?.();
+      if (activeRoom === room) {
+        activeRoom = null;
+        if (activeRole === 'host') activeRole = null;
+      }
     };
+    activeRole = 'host';
+    activeRoom = room;
     return room;
   }
 
@@ -92,12 +105,16 @@
     setDebugMode(opts?.debugMode);
     const socket = await base.connect?.(opts);
     if (!socket) return socket;
+    if (activeSocket && activeSocket !== socket) {
+      try { activeSocket.close?.(); } catch (err) { /* ignore */ }
+    }
     const emitPresence = (status, extra = {}) => {
       bus?.emit?.('multiplayer:presence', Object.assign({ role: 'client', status }, extra));
     };
     emitPresence('started');
     emitPresence('linking');
     const sendEvent = (evt, data) => {
+      if (evt === 'module-picker:select') return;
       if (data && data[NET_FLAG]) return;
       socket.send?.({ type: 'event', evt, data });
     };
@@ -122,9 +139,36 @@
       stopMessage?.();
       emitPresence('closed');
       originalClose?.();
+      if (activeSocket === socket) {
+        activeSocket = null;
+        if (activeRole === 'client') activeRole = null;
+      }
     };
+    activeRole = 'client';
+    activeSocket = socket;
     return socket;
   }
 
-  globalThis.Dustland.multiplayer = { startHost, connect, setDebugMode };
+  function disconnect(role){
+    if (role && role !== activeRole) {
+      if (typeof base.disconnect === 'function') {
+        return base.disconnect(role);
+      }
+      return false;
+    }
+    if (activeRole === 'client' && activeSocket) {
+      activeSocket.close?.();
+      return true;
+    }
+    if (activeRole === 'host' && activeRoom) {
+      activeRoom.close?.();
+      return true;
+    }
+    if (typeof base.disconnect === 'function') {
+      return base.disconnect(role);
+    }
+    return false;
+  }
+
+  globalThis.Dustland.multiplayer = Object.assign({}, base, { startHost, connect, setDebugMode, disconnect });
 })();

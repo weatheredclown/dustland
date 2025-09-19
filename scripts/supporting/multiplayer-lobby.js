@@ -24,6 +24,17 @@
   let removePeerWatcher = null;
   let enteredGame = false;
   const invites = new Map();
+  function rememberRole(role){
+    try {
+      const store = globalThis.sessionStorage;
+      if (!store?.setItem) return;
+      if (!role) store.removeItem?.('dustland.multiplayerRole');
+      else store.setItem('dustland.multiplayerRole', role);
+    } catch (err) {
+      /* ignore */
+    }
+  }
+  rememberRole(null);
 
   function setText(el, text){ if (el) el.textContent = text || ''; }
 
@@ -91,11 +102,13 @@
     updateJoinAnswerVisibility();
     setText(joinStatusEl, 'Paste the host code to continue.');
     joinCodeEl?.focus?.();
+    rememberRole(null);
   }
 
-  function enterGame(statusEl){
+  function enterGame(statusEl, role){
     if (enteredGame) return;
     enteredGame = true;
+    if (role) rememberRole(role);
     setText(statusEl, 'Link confirmed! Loading Dustland...');
     setTimeout(() => { window.location.href = 'dustland.html'; }, 800);
   }
@@ -133,11 +146,13 @@
       if (newInviteBtn) newInviteBtn.disabled = false;
       removePeerWatcher = hostRoom?.onPeers?.(updatePeerList);
       updatePeerList([]);
+      rememberRole('host');
       if (autoInvite) await createInvite();
     } catch (err) {
       if (hostBtn) hostBtn.disabled = false;
       if (newInviteBtn) newInviteBtn.disabled = true;
       setText(hostStatusEl, 'Error: ' + (err?.message || err));
+      if (!hostRoom) rememberRole(null);
     }
   }
 
@@ -173,7 +188,7 @@
           node.remove();
           updateInviteVisibility();
           setText(hostStatusEl, 'Player linked! Create another host code for the next friend.');
-          enterGame(hostStatusEl);
+          enterGame(hostStatusEl, 'host');
         } catch (err) {
           setText(statusEl, 'Error: ' + (err?.message || err));
         } finally {
@@ -229,7 +244,7 @@
       copyAnswerBtn.disabled = !answerCodeEl.value;
       setText(joinStatusEl, 'Share your answer code with the host, then wait for them to link you.');
       joinSocket.ready?.then?.(() => {
-        enterGame(joinStatusEl);
+        enterGame(joinStatusEl, 'client');
       }).catch(err => {
         setText(joinStatusEl, 'Connection closed: ' + (err?.message || err));
       });

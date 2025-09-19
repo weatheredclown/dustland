@@ -14,6 +14,34 @@ const MODULES = [
   { id: 'cli-demo', name: 'CLI Demo Adventure', file: 'modules/cli-demo.module.js' },
 ];
 
+const NET_FLAG = '__fromNet';
+const pickerBus = globalThis.EventBus;
+let sessionRole = null;
+try {
+  sessionRole = globalThis.sessionStorage?.getItem?.('dustland.multiplayerRole') || null;
+} catch (err) {
+  sessionRole = null;
+}
+const isClient = sessionRole === 'client';
+
+function disconnectClient(){
+  try {
+    globalThis.Dustland?.multiplayer?.disconnect?.('client');
+  } catch (err) {
+    /* ignore */
+  }
+  try {
+    globalThis.sessionStorage?.removeItem?.('dustland.multiplayerRole');
+  } catch (err) {
+    /* ignore */
+  }
+  try {
+    window.location.href = 'dustland.html';
+  } catch (err) {
+    /* ignore */
+  }
+}
+
 const realOpenCreator = window.openCreator;
 const realShowStart = window.showStart;
 const realResetAll = window.resetAll;
@@ -103,6 +131,20 @@ function startDust(canvas, getScale = () => 1){
   }
   update();
   return { particles, update };
+}
+
+function broadcastModuleSelection(moduleInfo){
+  if (!moduleInfo || !pickerBus?.emit) return;
+  const payload = {
+    moduleId: moduleInfo.id,
+    moduleName: moduleInfo.name,
+    moduleFile: moduleInfo.file
+  };
+  try {
+    pickerBus.emit('module-picker:select', payload);
+  } catch (err) {
+    /* ignore */
+  }
 }
 
 function loadModule(moduleInfo){
@@ -195,7 +237,19 @@ function showModulePicker(){
 
   const buttonContainer = overlay.querySelector('#moduleButtons');
   const buttons = [];
-  let selectedIndex = 0;
+  let selectedIndex = isClient ? -1 : 0;
+
+  function pickModule(moduleInfo){
+    if (!moduleInfo) return;
+    const idx = MODULES.indexOf(moduleInfo);
+    if (idx >= 0) {
+      selectedIndex = idx;
+      updateSelected();
+    }
+    broadcastModuleSelection(moduleInfo);
+    if (!isClient) loadModule(moduleInfo);
+  }
+
   function updateSelected() {
     buttons.forEach((btn, i) => {
       if (i === selectedIndex) {
@@ -213,7 +267,13 @@ function showModulePicker(){
     btn.textContent = moduleInfo.name;
     btn.style.display = 'block';
     btn.style.margin = '4px 0';
-    btn.onclick = () => loadModule(moduleInfo);
+    if (isClient) {
+      btn.disabled = true;
+      btn.style.cursor = 'not-allowed';
+      btn.style.opacity = '0.65';
+    } else {
+      btn.onclick = () => pickModule(moduleInfo);
+    }
     btn.onfocus = () => { selectedIndex = i; updateSelected(); };
     buttons.push(btn);
     buttonContainer.appendChild(btn);
@@ -225,21 +285,57 @@ function showModulePicker(){
 
   overlay.tabIndex = 0;
   if (overlay.focus) overlay.focus();
-  const keyHandler = (e) => {
-    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-      e.preventDefault();
-      selectedIndex = (selectedIndex + 1) % buttons.length;
-      updateSelected();
-    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-      e.preventDefault();
-      selectedIndex = (selectedIndex - 1 + buttons.length) % buttons.length;
-      updateSelected();
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      loadModule(MODULES[selectedIndex]);
-    }
-  };
-  if (overlay.addEventListener) overlay.addEventListener('keydown', keyHandler);
+  if (!isClient) {
+    const keyHandler = (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        selectedIndex = (selectedIndex + 1) % buttons.length;
+        updateSelected();
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        selectedIndex = (selectedIndex - 1 + buttons.length) % buttons.length;
+        updateSelected();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        pickModule(MODULES[selectedIndex]);
+      }
+    };
+    if (overlay.addEventListener) overlay.addEventListener('keydown', keyHandler);
+  }
+
+  if (pickerBus?.on) {
+    pickerBus.on('module-picker:select', payload => {
+      if (!payload) return;
+      const moduleInfo = MODULES.find(m => m.id === payload.moduleId) ||
+        MODULES.find(m => m.file === payload.moduleFile);
+      if (!moduleInfo) return;
+      const idx = MODULES.indexOf(moduleInfo);
+      if (idx >= 0) {
+        selectedIndex = idx;
+        updateSelected();
+      }
+      if (isClient && payload[NET_FLAG]) {
+        loadModule(moduleInfo);
+      }
+    });
+  }
+
+  if (isClient) {
+    const waitingNotice = document.createElement('div');
+    waitingNotice.style = 'position:relative;z-index:1;margin-top:14px;text-align:center;color:#8fa48f;';
+    waitingNotice.textContent = 'Waiting for the host to pick a module.';
+    uiBox.appendChild(waitingNotice);
+
+    const actionRow = document.createElement('div');
+    actionRow.style = 'position:relative;z-index:1;margin-top:8px;text-align:center;';
+    const leaveBtn = document.createElement('button');
+    leaveBtn.id = 'leaveMultiplayer';
+    leaveBtn.className = 'btn';
+    leaveBtn.textContent = 'Leave Multiplayer';
+    leaveBtn.onclick = disconnectClient;
+    actionRow.appendChild(leaveBtn);
+    uiBox.appendChild(actionRow);
+  }
 }
 
 showModulePicker();

@@ -111,6 +111,7 @@ test('start host surfaces errors and re-enables button', async () => {
   const context = {
     document,
     navigator: {},
+    sessionStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
     Dustland: { multiplayer: { startHost: async () => { throw new Error('no rtc'); } } }
   };
   vm.createContext(context);
@@ -125,6 +126,7 @@ test('generate answer handles invalid host code', async () => {
   const context = {
     document,
     navigator: {},
+    sessionStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
     Dustland: { multiplayer: { connect: async () => { throw new Error('bad code'); } } }
   };
   vm.createContext(context);
@@ -153,6 +155,7 @@ test('host can juggle multiple invites', async () => {
   const context = {
     document,
     navigator: {},
+    sessionStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
     Dustland: { multiplayer: { startHost: async () => room } }
   };
   vm.createContext(context);
