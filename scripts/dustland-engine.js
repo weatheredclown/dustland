@@ -1702,21 +1702,305 @@ function renderInv(){
   });
 }
 function renderQuests(){
-  const q=document.getElementById('quests');
-  q.innerHTML='';
-  const shown=Object.values(quests).filter(v=> v.status!=='available');
-  if(shown.length===0){
-    q.innerHTML='<div class="q muted">(no quests)</div>';
+  const host=document.getElementById('quests');
+  if(!host) return;
+  host.innerHTML='';
+  const list=quests?Object.values(quests).filter(v=> v && v.status!=='available'):[];
+  if(list.length===0){
+    host.innerHTML='<div class="q muted">(no quests)</div>';
     return;
   }
-  shown.forEach(v=>{
-    const div=document.createElement('div');
-    div.className='q';
-    const progress = (v.item && v.count) ? ` (${Math.min(countItems(v.item), v.count)}/${v.count})` : '';
-    div.innerHTML=`<div><b>${v.title}${progress}</b></div><div class="small">${v.desc}</div><div class="status">${v.status}</div>`;
-    q.appendChild(div);
+  const partyLoc=questPartyLocation();
+  list.forEach(q=>{
+    const progress=questProgressInfo(q);
+    const target=questCompassTarget(q, partyLoc, progress);
+    const card=document.createElement('div');
+    card.className='q';
+    card.appendChild(renderQuestCompass(q, target, partyLoc));
+    const info=document.createElement('div');
+    info.className='quest-info';
+    const header=document.createElement('div');
+    header.className='quest-header';
+    const title=document.createElement('b');
+    title.className='quest-title';
+    title.textContent=q.title || q.id;
+    header.appendChild(title);
+    if(progress.required>0){
+      const prog=document.createElement('span');
+      prog.className='quest-progress';
+      prog.textContent=`${progress.total}/${progress.required}`;
+      header.appendChild(prog);
+    }
+    info.appendChild(header);
+    const desc=document.createElement('div');
+    desc.className='small quest-desc';
+    desc.textContent=questDescriptionText(q, progress, target);
+    info.appendChild(desc);
+    if(target && target.label && target.type!=='completed'){
+      const targetRow=document.createElement('div');
+      targetRow.className='small quest-target';
+      targetRow.textContent=questTargetText(target, partyLoc);
+      info.appendChild(targetRow);
+    }
+    const status=document.createElement('div');
+    status.className='status';
+    status.textContent=q.status || 'active';
+    info.appendChild(status);
+    card.appendChild(info);
+    host.appendChild(card);
   });
 }
+
+function questPartyLocation(){
+  const loc={ map:'world', x:0, y:0 };
+  const p=typeof party==='object' ? party : null;
+  if(p && typeof p.map==='string') loc.map=p.map;
+  else if(globalThis.state && typeof state.map==='string') loc.map=state.map;
+  if(p && typeof p.x==='number') loc.x=p.x;
+  else if(globalThis.state?.mapEntry && typeof state.mapEntry.x==='number') loc.x=state.mapEntry.x;
+  if(p && typeof p.y==='number') loc.y=p.y;
+  else if(globalThis.state?.mapEntry && typeof state.mapEntry.y==='number') loc.y=state.mapEntry.y;
+  return loc;
+}
+
+function questProgressInfo(q){
+  const required=Math.max(0, q.count || (q.item || q.itemTag ? 1 : 0));
+  const turnedIn=typeof q.progress==='number'?q.progress:0;
+  const countFn=typeof countItems==='function'?countItems:null;
+  let carried=0;
+  if(countFn){
+    if(q.item) carried=countFn(q.item);
+    else if(q.itemTag) carried=countFn(q.itemTag);
+  }
+  const total=Math.min(required, turnedIn + carried);
+  const need=Math.max(0, required - turnedIn);
+  const hasFlag=!q.reqFlag || (typeof flagValue==='function' ? !!flagValue(q.reqFlag) : true);
+  const ready=q.status==='active' && required>0 && ((turnedIn>=required) || (carried>=need && hasFlag));
+  return { required, turnedIn, carried, total, need, ready };
+}
+
+function questDescriptionText(q, progress, target){
+  if(q.status==='completed'){
+    if(q.outcome) return q.outcome;
+    return typeof q.desc==='string'?q.desc:'';
+  }
+  if(progress.ready){
+    const giver=Array.isArray(q.givers) && q.givers.length ? q.givers[0] : null;
+    const giverName=giver ? (giver.name || humanizeQuestId(giver.id)) : '';
+    const itemName=questItemName(q);
+    if(giverName && itemName) return `Return the ${itemName} to ${giverName}.`;
+    if(giverName) return `Return to ${giverName}.`;
+    if(itemName) return `Return the ${itemName}.`;
+  }
+  if(target && target.type==='offmap' && target.map){
+    return `Objective located in ${target.map}.`;
+  }
+  return typeof q.desc==='string'?q.desc:'';
+}
+
+function questTargetText(target, partyLoc){
+  if(!target) return '';
+  if(target.type==='npc'){
+    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` (${target.map})` : '';
+    return `Return to ${target.label || 'the quest giver'}${mapNote}`;
+  }
+  if(target.type==='item'){
+    const coords=(typeof target.x==='number' && typeof target.y==='number')?` (${target.x}, ${target.y})`:'';
+    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` — ${target.map}` : '';
+    const label=target.label || 'the objective';
+    return `Search near ${label}${coords}${mapNote}`;
+  }
+  if(target.type==='offmap'){
+    return target.map ? `Objective located in ${target.map}` : 'Objective located elsewhere';
+  }
+  return '';
+}
+
+function questCompassTarget(q, partyLoc, progress){
+  if(!q) return null;
+  if(q.status==='completed') return { type:'completed', label:q.title };
+  if(progress.ready){
+    const giver=Array.isArray(q.givers) && q.givers.length ? q.givers[0] : null;
+    if(giver){
+      const label=giver.name || humanizeQuestId(giver.id);
+      if(partyLoc && giver.map && partyLoc.map && giver.map!==partyLoc.map){
+        return { type:'offmap', map:giver.map, label };
+      }
+      return { type:'npc', map:giver.map || partyLoc?.map || 'world', x:giver.x, y:giver.y, label };
+    }
+  }
+  const itemTarget=findQuestItemTarget(q, partyLoc);
+  if(!itemTarget) return null;
+  if(partyLoc && itemTarget.map && partyLoc.map && itemTarget.map!==partyLoc.map){
+    return { type:'offmap', map:itemTarget.map, label:itemTarget.label };
+  }
+  return itemTarget;
+}
+
+function findQuestItemTarget(q, partyLoc){
+  const drops=Array.isArray(itemDrops)?itemDrops:[];
+  const matches=[];
+  if(q.item){
+    drops.forEach(drop=>{
+      if(!drop || drop.id!==q.item) return;
+      matches.push({ type:'item', map:drop.map || 'world', x:drop.x, y:drop.y, label:questItemName(q) || humanizeQuestId(drop.id) });
+    });
+    if(!matches.length && q.itemLocation){
+      matches.push({ type:'item', map:q.itemLocation.map || 'world', x:q.itemLocation.x, y:q.itemLocation.y, label:questItemName(q) });
+    }
+  } else if(q.itemTag){
+    const tag=String(q.itemTag).toLowerCase();
+    drops.forEach(drop=>{
+      if(!drop || !drop.id) return;
+      const def=(typeof ITEMS==='object' && ITEMS) ? ITEMS[drop.id] : null;
+      const tags=Array.isArray(def?.tags)?def.tags.map(t=>String(t).toLowerCase()):[];
+      if(tags.includes(tag) || drop.id===q.itemTag){
+        const label=def?.name || questItemName(q) || humanizeQuestId(drop.id);
+        matches.push({ type:'item', map:drop.map || 'world', x:drop.x, y:drop.y, label });
+      }
+    });
+  }
+  if(!matches.length) return null;
+  const currentMap=partyLoc?.map;
+  const sameMap=typeof currentMap==='string'?matches.filter(m=>!m.map || m.map===currentMap):matches;
+  const pool=sameMap.length?sameMap:matches;
+  if(typeof partyLoc?.x!=='number' || typeof partyLoc?.y!=='number') return pool[0];
+  let best=null;
+  let bestDist=Infinity;
+  pool.forEach(loc=>{
+    if(!loc) return;
+    const dx=(loc.x ?? 0) - partyLoc.x;
+    const dy=(loc.y ?? 0) - partyLoc.y;
+    const dist=Math.abs(dx)+Math.abs(dy);
+    if(dist<bestDist){ best=loc; bestDist=dist; }
+  });
+  return best || pool[0];
+}
+
+function renderQuestCompass(q, target, partyLoc){
+  const wrap=document.createElement('div');
+  wrap.className='quest-compass';
+  const canvas=document.createElement('canvas');
+  canvas.width=32;
+  canvas.height=32;
+  wrap.appendChild(canvas);
+  drawQuestCompass(canvas, target, partyLoc);
+  if(target){
+    if(target.type==='completed') wrap.title='Quest completed';
+    else if(target.label){
+      const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` (${target.map})` : '';
+      const prefix=target.type==='npc' ? 'Return to ' : target.type==='item' ? 'Search near ' : '';
+      wrap.title=`${prefix}${target.label}${mapNote}`.trim();
+    }
+  } else {
+    wrap.title='Explore to advance this quest.';
+  }
+  return wrap;
+}
+
+function drawQuestCompass(canvas, target, partyLoc){
+  const ctx=canvas.getContext && canvas.getContext('2d');
+  if(!ctx) return;
+  const size=canvas.width;
+  ctx.imageSmoothingEnabled=false;
+  ctx.clearRect(0,0,size,size);
+  ctx.fillStyle='#040704';
+  ctx.fillRect(0,0,size,size);
+  ctx.strokeStyle='#152415';
+  ctx.lineWidth=2;
+  ctx.strokeRect(1,1,size-2,size-2);
+  ctx.strokeStyle='#1f3a1f';
+  ctx.strokeRect(2,2,size-4,size-4);
+  ctx.beginPath();
+  ctx.strokeStyle='#2c522c';
+  ctx.lineWidth=3;
+  ctx.arc(size/2,size/2,size/2-5,0,Math.PI*2);
+  ctx.stroke();
+  if(!target){
+    ctx.fillStyle='#3f7b3f';
+    ctx.fillRect(size/2-2,size/2-2,4,4);
+    return;
+  }
+  if(target.type==='completed'){
+    ctx.strokeStyle='#7cff7c';
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.moveTo(size/2-7,size/2+1);
+    ctx.lineTo(size/2-1,size/2+6);
+    ctx.lineTo(size/2+7,size/2-6);
+    ctx.stroke();
+    return;
+  }
+  if(target.type==='offmap'){
+    ctx.strokeStyle='#6ad86a';
+    ctx.lineWidth=3;
+    ctx.strokeRect(size/2-6,size/2-6,12,12);
+    ctx.beginPath();
+    ctx.moveTo(size/2-4,size/2-4);
+    ctx.lineTo(size/2+4,size/2+4);
+    ctx.moveTo(size/2+4,size/2-4);
+    ctx.lineTo(size/2-4,size/2+4);
+    ctx.stroke();
+    return;
+  }
+  const px=partyLoc?.x ?? 0;
+  const py=partyLoc?.y ?? 0;
+  if(typeof target.x!=='number' || typeof target.y!=='number'){
+    ctx.fillStyle='#3f7b3f';
+    ctx.fillRect(size/2-2,size/2-2,4,4);
+    return;
+  }
+  const dx=target.x - px;
+  const dy=target.y - py;
+  if(dx===0 && dy===0){
+    ctx.fillStyle=target.type==='npc' ? '#7cff7c' : '#56d856';
+    ctx.fillRect(size/2-2,size/2-2,4,4);
+    return;
+  }
+  const ang=Math.atan2(dx, -dy);
+  const radius=size/2-7;
+  ctx.save();
+  ctx.translate(size/2,size/2);
+  ctx.rotate(ang);
+  ctx.strokeStyle=target.type==='npc' ? '#7cff7c' : '#56d856';
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(0,4);
+  ctx.lineTo(0,-radius);
+  ctx.stroke();
+  ctx.fillStyle=ctx.strokeStyle;
+  ctx.beginPath();
+  ctx.moveTo(0,-radius-2);
+  ctx.lineTo(3,-radius+3);
+  ctx.lineTo(-3,-radius+3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function questItemName(q){
+  if(!q) return '';
+  if(q.item){
+    const def=(typeof ITEMS==='object' && ITEMS) ? ITEMS[q.item] : null;
+    if(def && def.name) return def.name;
+    return humanizeQuestId(q.item);
+  }
+  if(q.itemTag){
+    const tag=String(q.itemTag).toLowerCase();
+    if(typeof ITEMS==='object' && ITEMS){
+      const match=Object.values(ITEMS).find(it=>Array.isArray(it?.tags) && it.tags.map(t=>String(t).toLowerCase()).includes(tag));
+      if(match && match.name) return match.name;
+    }
+    return humanizeQuestId(q.itemTag);
+  }
+  return '';
+}
+
+function humanizeQuestId(id){
+  if(!id) return '';
+  return String(id).replace(/[_-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+}
+
 function renderParty(){
   const p=document.getElementById('party');
   p.innerHTML='';
