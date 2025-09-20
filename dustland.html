@@ -19,49 +19,100 @@
       </div>
     </div>
     <aside class="panel">
-      <h1 id="title">DUSTLAND // CRT</h1>
-      <div class="content" id="log"></div>
-      <div class="content">
-        <div class="hud">
-          <div id="weatherBanner" class="weather-banner" hidden></div>
-          <div class="badge">
-            <div class="label">HP <span id="hp">10</span><span id="hydrationMeter" class="hydration" hidden></span></div>
-            <div class="hudbar" id="hpBar" role="progressbar" aria-label="Health" aria-valuemin="0" aria-valuemax="10" aria-valuenow="10">
-              <div class="ghost" id="hpGhost"></div>
-              <div class="fill" id="hpFill"></div>
+      <header class="panel__header">
+        <h1 id="title">DUSTLAND // CRT</h1>
+        <p class="panel__subtitle">Expedition Console</p>
+      </header>
+      <div class="panel__body">
+        <section class="panel-section panel-section--log">
+          <header class="panel-section__header">
+            <h2 class="panel-section__title">Signal Log</h2>
+          </header>
+          <div class="panel-section__content">
+            <div id="log"></div>
+          </div>
+        </section>
+        <section class="panel-section panel-section--status">
+          <header class="panel-section__header">
+            <h2 class="panel-section__title">Vitals</h2>
+            <div class="panel-section__meta">
+              <div id="weatherBanner" class="weather-banner" hidden></div>
             </div>
-            <div class="status-row" id="statusIcons"></div>
+          </header>
+          <div class="panel-section__content">
+            <div class="hud">
+              <div class="badge">
+                <div class="label">HP <span id="hp">10</span><span id="hydrationMeter" class="hydration" hidden></span></div>
+                <div class="hudbar" id="hpBar" role="progressbar" aria-label="Health" aria-valuemin="0" aria-valuemax="10" aria-valuenow="10">
+                  <div class="ghost" id="hpGhost"></div>
+                  <div class="fill" id="hpFill"></div>
+                </div>
+                <div class="status-row" id="statusIcons"></div>
+              </div>
+              <div class="badge">
+                <div class="label">Adrenaline</div>
+                <div class="hudbar adr" id="adrBar" role="progressbar" aria-label="Adrenaline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="fill" id="adrFill"></div></div>
+              </div>
+              <div class="badge">Scrap: <span id="scrap">0</span></div>
+              <div class="badge">Map: <span id="mapname">—</span></div>
+            </div>
           </div>
-          <div class="badge">
-            <div class="label">Adrenaline</div>
-            <div class="hudbar adr" id="adrBar" role="progressbar" aria-label="Adrenaline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="fill" id="adrFill"></div></div>
+        </section>
+        <section class="panel-section panel-section--controls">
+          <header class="panel-section__header">
+            <h2 class="panel-section__title">Controls</h2>
+          </header>
+          <div class="panel-section__content">
+            <div class="control-grid">
+              <div class="control-grid__item"><span class="control-grid__keys">WASD / Arrows</span><span class="control-grid__desc">Move</span></div>
+              <div class="control-grid__item"><span class="control-grid__keys">E / Space</span><span class="control-grid__desc">Interact, doors, take nearby</span></div>
+              <div class="control-grid__item"><span class="control-grid__keys">T / G</span><span class="control-grid__desc">Take item</span></div>
+              <div class="control-grid__item"><span class="control-grid__keys">I</span><span class="control-grid__desc">Inventory</span></div>
+              <div class="control-grid__item"><span class="control-grid__keys">P</span><span class="control-grid__desc">Party</span></div>
+              <div class="control-grid__item"><span class="control-grid__keys">Q</span><span class="control-grid__desc">Quests</span></div>
+              <div class="control-grid__item"><span class="control-grid__keys">O</span><span class="control-grid__desc">Audio</span></div>
+              <div class="control-grid__item"><span class="control-grid__keys">C</span><span class="control-grid__desc">Mobile controls</span></div>
+              <div class="control-grid__item"><span class="control-grid__keys">M</span><span class="control-grid__desc">Minimap</span></div>
+              <div class="control-grid__item"><span class="control-grid__keys">Esc</span><span class="control-grid__desc">Close menus</span></div>
+            </div>
           </div>
-          <div class="badge">Scrap: <span id="scrap">0</span></div>
-          <div class="badge">Map: <span id="mapname">—</span></div>
-        </div>
-        <p class="muted" style="margin-top:10px">Controls: <b>WASD/Arrows</b> move • <b>E/Space</b> interact/door & take nearby item • <b>T/G</b> take item • <b>I</b> Inventory • <b>P</b> Party • <b>Q</b> Quests • <b>O</b> audio • <b>C</b> mobile controls • <b>M</b> minimap • <b>Esc</b> close</p>
-        <div class="tabs" role="tablist">
-          <div class="tab active" id="tabInv" role="tab" tabindex="0" aria-label="Inventory" aria-selected="true">Inventory</div>
-          <div class="tab" id="tabParty" role="tab" tabindex="0" aria-label="Party" aria-selected="false">Party</div>
-          <div class="tab" id="tabQuests" role="tab" tabindex="0" aria-label="Quests" aria-selected="false">Quests</div>
-        </div>
-        <div class="tabwrap" id="tabWrap">
-          <div id="inv"></div>
-          <div id="party" style="display:none"></div>
-          <div id="quests" style="display:none"></div>
-        </div>
-        <div style="margin-top:8px" id="mainButtons">
-          <button class="btn" id="saveBtn">Save</button>
-          <button class="btn" id="loadBtn">Load</button>
-          <button class="btn" id="clearBtn">Clear Save</button>
-          <button class="btn" id="resetBtn">Reset</button>
-          <button class="btn" id="settingsBtn">Settings</button>
-          <button class="btn" id="debugBtn">Debug</button>
-          <button class="btn" id="campBtn">Camp</button>
-          <button class="btn" id="screenshotBtn" hidden>Screenshot</button>
-        </div>
-        </div>
-      </aside>
+        </section>
+        <section class="panel-section panel-section--tabs">
+          <header class="panel-section__header">
+            <h2 class="panel-section__title">Crew & Tasks</h2>
+          </header>
+          <div class="panel-section__content panel-section__content--flush">
+            <div class="tabs" role="tablist">
+              <div class="tab active" id="tabInv" role="tab" tabindex="0" aria-label="Inventory" aria-selected="true">Inventory</div>
+              <div class="tab" id="tabParty" role="tab" tabindex="0" aria-label="Party" aria-selected="false">Party</div>
+              <div class="tab" id="tabQuests" role="tab" tabindex="0" aria-label="Quests" aria-selected="false">Quests</div>
+            </div>
+            <div class="tabwrap" id="tabWrap">
+              <div id="inv"></div>
+              <div id="party" style="display:none"></div>
+              <div id="quests" style="display:none"></div>
+            </div>
+          </div>
+        </section>
+        <section class="panel-section panel-section--actions">
+          <header class="panel-section__header">
+            <h2 class="panel-section__title">Systems</h2>
+          </header>
+          <div class="panel-section__content">
+            <div id="mainButtons" class="button-grid">
+              <button class="btn" id="saveBtn">Save</button>
+              <button class="btn" id="loadBtn">Load</button>
+              <button class="btn" id="clearBtn">Clear Save</button>
+              <button class="btn" id="resetBtn">Reset</button>
+              <button class="btn" id="settingsBtn">Settings</button>
+              <button class="btn" id="debugBtn">Debug</button>
+              <button class="btn" id="campBtn">Camp</button>
+              <button class="btn" id="screenshotBtn" hidden>Screenshot</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </aside>
     </div>
 
   <div id="panelToggle">☰</div>
