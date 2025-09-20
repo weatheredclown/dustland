@@ -124,6 +124,28 @@ input[type="range"] {
         gap: 12px;
     }
 
+    .panel-section__toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        background: #101410;
+        color: var(--ink);
+    }
+
+    .panel-section__toggle:hover,
+    .panel-section__toggle:focus-visible {
+        background: #121812;
+        outline: none;
+    }
+
+    .panel-section__toggle-icon {
+        transition: transform 0.2s ease;
+    }
+
     .panel-section__title {
         margin: 0;
         font-size: 0.875rem;
@@ -145,6 +167,18 @@ input[type="range"] {
 
     .panel-section__content--flush {
         gap: 8px;
+    }
+
+    .panel-section--collapsed {
+        gap: 8px;
+    }
+
+    .panel-section--collapsed .panel-section__content {
+        display: none;
+    }
+
+    .panel-section--collapsed .panel-section__toggle-icon {
+        transform: rotate(180deg);
     }
 
     #panelToggle {
