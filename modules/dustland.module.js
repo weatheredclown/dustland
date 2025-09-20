@@ -708,6 +708,18 @@ const DATA = `
           "y": 17
         }
       ]
+    },
+    {
+      "id": "task_grudge_sour_routes",
+      "title": "Sour Cass's Routes",
+      "desc": "Tip off rival caravans to rile Cass and raise her grudge.",
+      "xp": 1
+    },
+    {
+      "id": "task_grudge_patch_wagon",
+      "title": "Patch Cass's Wagon",
+      "desc": "Deliver spare parts so Cass eases her grudge.",
+      "xp": 1
     }
   ],
   "npcs": [
@@ -1839,8 +1851,74 @@ const DATA = `
               "to": "sell"
             },
             {
+              "label": "(Task) Tip off rival caravans",
+              "to": "sabotage"
+            },
+            {
+              "label": "(Task) Deliver spare parts",
+              "to": "amends"
+            },
+            {
               "label": "(Leave)",
               "to": "bye"
+            }
+          ]
+        },
+        "sabotage": {
+          "text": "You whisper about Cass's route to rival caravans. It'll hurt her take, but she'll know who started it.",
+          "choices": [
+            {
+              "label": "(Complete task) Leak her manifest",
+              "to": "sabotage_done",
+              "effects": [
+                {
+                  "effect": "modTraderGrudge",
+                  "delta": 2,
+                  "toast": "Cass hears the rumor and her glare could cut steel."
+                }
+              ]
+            },
+            {
+              "label": "(Back)",
+              "to": "start"
+            }
+          ]
+        },
+        "sabotage_done": {
+          "text": "Rival runners sprint for Cass's clients. She clocks the timing and adds your name to her blacklist.",
+          "choices": [
+            {
+              "label": "(Continue)",
+              "to": "start"
+            }
+          ]
+        },
+        "amends": {
+          "text": "Cass's wagon creaks from the last ambush. Dropping spare parts could smooth things over.",
+          "choices": [
+            {
+              "label": "(Complete task) Drop off the repair crate",
+              "to": "amends_done",
+              "effects": [
+                {
+                  "effect": "modTraderGrudge",
+                  "delta": -2,
+                  "toast": "Cass inspects the parts, nodding as her grudge cools."
+                }
+              ]
+            },
+            {
+              "label": "(Back)",
+              "to": "start"
+            }
+          ]
+        },
+        "amends_done": {
+          "text": "Cass's crew installs the parts fast. She softens, at least until the next deal goes sideways.",
+          "choices": [
+            {
+              "label": "(Continue)",
+              "to": "start"
             }
           ]
         }
@@ -15313,6 +15391,32 @@ function pullSlots(cost, payouts) {
   updateHUD?.();
 }
 
+function adjustTraderGrudge(delta = 0, opts = {}) {
+  const roster = typeof NPCS !== 'undefined' && Array.isArray(NPCS) ? NPCS : [];
+  const trader = roster.find?.(n => n && n.id === 'trader');
+  const shop = trader?.shop;
+  if (!shop) return;
+  const current = Number.isFinite(shop.grudge) ? shop.grudge : 0;
+  const target = Number.isFinite(opts.set) ? opts.set : current + (Number.isFinite(delta) ? delta : 0);
+  let next = Number.isFinite(target) ? target : current;
+  if (Number.isFinite(opts.min)) next = Math.max(opts.min, next);
+  if (Number.isFinite(opts.max)) next = Math.min(opts.max, next);
+  next = Math.max(0, Math.round(next));
+  shop.grudge = next;
+  globalThis.Dustland?.updateTradeUI?.(shop);
+  const diff = next - current;
+  if (typeof opts.toast === 'string') {
+    if (typeof toast === 'function') toast(opts.toast);
+    else if (typeof log === 'function') log(opts.toast);
+  } else if (typeof opts.log === 'string' && typeof log === 'function') {
+    log(opts.log);
+  } else if (typeof log === 'function' && !opts.silent) {
+    if (diff > 0) log(`Cass's grudge rises to ${next}.`);
+    else if (diff < 0) log(`Cass's grudge falls to ${next}.`);
+    else log(`Cass's grudge holds at ${next}.`);
+  }
+}
+
 function buyMemoryWorm() {
   if (player.scrap < 500) {
     log('Not enough scrap.');
@@ -15335,6 +15439,8 @@ function handleCustomEffects(list) {
         return buyMemoryWorm;
       case 'craftSignalBeacon':
         return () => Dustland.workbench?.craftSignalBeacon?.();
+      case 'modTraderGrudge':
+        return () => adjustTraderGrudge(e.delta, e);
       default:
         return e;
     }
