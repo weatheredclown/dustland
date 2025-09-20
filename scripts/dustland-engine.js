@@ -2118,7 +2118,8 @@ function openShop(npc) {
 
     const shopInv = npc.shop.inv || [];
     const baseMarkup = npc.vending ? 1 : npc.shop.markup || 2;
-    const markup = baseMarkup * (npc.shop.grudge >= 3 ? 1.1 : 1);
+    const grudgeLevel = npc.shop.grudge ?? 0;
+    const TraderClass = globalThis.Dustland?.Trader;
 
     const normalizeForKey = (value, omitCount) => {
       if (!value || typeof value !== 'object') {
@@ -2205,7 +2206,19 @@ function openShop(npc) {
       const { item, qty } = stack;
       const row = document.createElement('div');
       row.className = 'slot';
-      const price = Math.ceil(item.value * markup);
+      const entry = stack.entries[0];
+      let price;
+      if (TraderClass?.calculatePrice) {
+        price = TraderClass.calculatePrice(item, {
+          entry,
+          markup: baseMarkup,
+          grudge: grudgeLevel
+        });
+      } else {
+        const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : (grudgeLevel <= 0 ? 0.96 : 1));
+        const baseValue = typeof item.value === 'number' ? item.value : 0;
+        price = Math.max(1, Math.ceil(baseValue * legacyMarkup));
+      }
       const name = `${item.name} x${qty}`;
       row.innerHTML = `<span>${name} - ${price} ${CURRENCY}</span><button class="btn">Buy</button>`;
       row.querySelector('button').onclick = () => {
@@ -2235,13 +2248,25 @@ function openShop(npc) {
       const { item, qty } = stack;
       const row = document.createElement('div');
       row.className = 'slot';
-      const price = typeof item.scrap === 'number' ? item.scrap : Math.floor(item.value / markup);
+      let sellPrice;
+      if (typeof item.scrap === 'number') {
+        sellPrice = item.scrap;
+      } else if (TraderClass?.resolveBaseValue && TraderClass?.basePriceFromValue) {
+        const baseValue = TraderClass.resolveBaseValue(item);
+        const basePrice = TraderClass.basePriceFromValue(baseValue);
+        const grudgeMult = TraderClass.resolveGrudgeMultiplier ? TraderClass.resolveGrudgeMultiplier(grudgeLevel) : 1;
+        const adjusted = basePrice * grudgeMult;
+        sellPrice = Math.max(1, Math.round(adjusted / Math.max(1, baseMarkup * 2)));
+      } else {
+        const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : 1);
+        sellPrice = Math.max(1, Math.floor((item.value || 0) / legacyMarkup));
+      }
       const name = `${item.name} x${qty}`;
-      row.innerHTML = `<span>${name} - ${price} ${CURRENCY}</span><button class="btn">Sell</button>`;
+      row.innerHTML = `<span>${name} - ${sellPrice} ${CURRENCY}</span><button class="btn">Sell</button>`;
       row.querySelector('button').onclick = () => {
         const target = stack.entries.find(({ idx, item: invItem }) => player.inv[idx] === invItem);
         if (!target) return;
-        player.scrap += price;
+        player.scrap += sellPrice;
         const existing = npc.shop.inv.find(entry => entry?.id === item.id && Math.max(1, Number.isFinite(entry.count) ? entry.count : 1) < 256);
         if (existing) {
           const current = Math.max(1, Number.isFinite(existing.count) ? existing.count : 1);
