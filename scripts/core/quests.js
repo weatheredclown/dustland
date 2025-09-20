@@ -18,8 +18,10 @@
  * @property {string|GameItem} [reward]
  * @property {number} [xp]
  * @property {{x:number,y:number}} [moveTo]
+ * @property {{map:string,x:number,y:number,name?:string,id?:string}[]} [givers]
+ * @property {{map:string,x:number,y:number}} [itemLocation]
  * @property {string} [outcome]
- * @property {Quest[]} [quests]
+  * @property {Quest[]} [quests]
  */
 
 class Quest {
@@ -35,7 +37,12 @@ class Quest {
     this.desc = desc;
     this.status = 'available';
     this.pinned = meta.pinned || false;
+    this.givers = Array.isArray(meta.givers) ? meta.givers.map(g => ({ ...g })) : [];
+    this.itemLocation = meta.itemLocation ? { ...meta.itemLocation } : null;
     Object.assign(this, meta);
+    if (!Array.isArray(this.givers)) this.givers = this.givers ? [{ ...this.givers }] : [];
+    if (this.itemLocation) this.itemLocation = { ...this.itemLocation };
+    if (typeof this.progress !== 'number') this.progress = 0;
   }
   complete(outcome) {
     if (this.status !== 'completed') {
