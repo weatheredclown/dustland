@@ -524,11 +524,12 @@ function buildReport(data) {
   lines.push('## Weapon Tiers');
   for (const [type, info] of Object.entries(weaponsByType)) {
     lines.push(`### ${type === 'ranged' ? 'Ranged' : 'Melee'} Weapons`);
-    const headers = ['Tier', 'Items', 'Avg ATK', 'Avg ADR', 'Avg Adr Gain', 'Adr Dmg Mod', 'Notable Tags'];
+    const headers = ['Tier', 'Items', 'Avg ATK', 'Avg ADR', 'Avg ADR Gain', 'ADR Dmg Mod', 'Notable Tags'];
     const rows = info.groups.map(group => {
       const avgAtk = formatNumber(group.avgMods.ATK || 0, 2);
       const avgAdr = formatNumber(group.avgMods.ADR || 10, 2);
-      const adrGain = formatNumber(((group.avgMods.ADR ?? 10) / 4), 2);
+      const adrGainValue = ((group.avgMods.ADR ?? 10) / 4) * (group.avgMods.adrenaline_gen_mod || 1);
+      const adrGain = formatNumber(adrGainValue, 2);
       const dmgMod = formatNumber(group.avgMods.adrenaline_dmg_mod || 1, 2);
       const tags = group.tags.length ? group.tags.join(', ') : '—';
       return [group.key, `${group.count}`, avgAtk, avgAdr, adrGain, dmgMod, tags];
@@ -539,7 +540,7 @@ function buildReport(data) {
 
   lines.push('## Armor Tiers');
   if (armorTiers.groups.length) {
-    const headers = ['Tier', 'Items', 'Avg DEF', 'Adr Gen Mod', 'Adr Dmg Mod'];
+    const headers = ['Tier', 'Items', 'Avg DEF', 'ADR Gen Mod', 'ADR Dmg Mod'];
     const rows = armorTiers.groups.map(group => {
       const avgDef = formatNumber(group.avgMods.DEF || 0, 2);
       const genMod = formatNumber(group.avgMods.adrenaline_gen_mod || 1, 2);
