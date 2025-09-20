@@ -1712,7 +1712,13 @@ function renderQuests(){
   shown.forEach(v=>{
     const div=document.createElement('div');
     div.className='q';
-    const progress = (v.item && v.count) ? ` (${Math.min(countItems(v.item), v.count)}/${v.count})` : '';
+    let progress = '';
+    if (v.item && typeof v.count === 'number') {
+      progress = ` (${Math.min(countItems(v.item), v.count)}/${v.count})`;
+    } else if (typeof v.count === 'number' && typeof v.progress === 'number') {
+      const cur = Math.min(v.progress, v.count);
+      progress = ` (${cur}/${v.count})`;
+    }
     div.innerHTML=`<div><b>${v.title}${progress}</b></div><div class="small">${v.desc}</div><div class="status">${v.status}</div>`;
     q.appendChild(div);
   });

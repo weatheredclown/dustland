@@ -20,6 +20,9 @@
  * @property {{x:number,y:number}} [moveTo]
  * @property {string} [outcome]
  * @property {Quest[]} [quests]
+ * @property {{npcId:string,nodeId:string}[]} [dialogNodes]
+ * @property {Record<string, boolean>} [dialogProgress]
+ * @property {string} [progressText]
  */
 
 class Quest {
@@ -36,6 +39,32 @@ class Quest {
     this.status = 'available';
     this.pinned = meta.pinned || false;
     Object.assign(this, meta);
+    if (!Number.isFinite(this.progress)) this.progress = 0;
+    const rawDialogNodes = Array.isArray(this.dialogNodes)
+      ? this.dialogNodes
+      : Array.isArray(meta.dialogNodes)
+        ? meta.dialogNodes
+        : [];
+    this.dialogNodes = rawDialogNodes
+      .map(normalizeDialogNode)
+      .filter(Boolean);
+    if (this.dialogNodes.length) {
+      if (!this.dialogProgress || typeof this.dialogProgress !== 'object') {
+        this.dialogProgress = {};
+      } else {
+        const keys = Object.keys(this.dialogProgress).filter(k => this.dialogProgress[k]);
+        this.dialogProgress = Object.fromEntries(keys.map(k => [k, true]));
+      }
+      if (typeof this.count !== 'number') this.count = this.dialogNodes.length;
+      const visited = Object.keys(this.dialogProgress).length;
+      if (!Number.isFinite(this.progress) || this.progress < visited) {
+        this.progress = visited;
+      }
+      this.requiresDialogNodes = true;
+    } else {
+      this.dialogProgress = {};
+      this.requiresDialogNodes = false;
+    }
   }
   complete(outcome) {
     if (this.status !== 'completed') {
@@ -102,6 +131,45 @@ function completeQuest(id, outcome) { questLog.complete(id, outcome); }
 function pinQuest(id) { questLog.pin(id); }
 function unpinQuest(id) { questLog.unpin(id); }
 
+function normalizeDialogNode(entry) {
+  if (!entry) return null;
+  if (typeof entry === 'string') {
+    const [npcPart = '', nodePart = 'start'] = entry.split('::');
+    const npcId = npcPart.trim();
+    const nodeId = (nodePart || 'start').trim() || 'start';
+    return npcId ? { npcId, nodeId } : null;
+  }
+  if (typeof entry === 'object') {
+    const npcId = (entry.npcId || entry.npc || entry.id || '').trim();
+    if (!npcId) return null;
+    const nodeRaw = entry.nodeId || entry.node || entry.to || 'start';
+    const nodeId = typeof nodeRaw === 'string' && nodeRaw.trim() ? nodeRaw.trim() : 'start';
+    return { npcId, nodeId };
+  }
+  return null;
+}
+
+function hasDialogGoals(meta) {
+  return Array.isArray(meta?.dialogNodes) && meta.dialogNodes.length > 0;
+}
+
+function trackQuestDialogNode(npcId, nodeId) {
+  if (!npcId || !nodeId) return;
+  Object.values(quests).forEach(q => {
+    if (!q || q.status !== 'active' || !hasDialogGoals(q)) return;
+    const target = q.dialogNodes.find(goal => goal.npcId === npcId && (goal.nodeId || 'start') === nodeId);
+    if (!target) return;
+    if (!q.dialogProgress || typeof q.dialogProgress !== 'object') q.dialogProgress = {};
+    const key = `${npcId}::${nodeId}`;
+    if (q.dialogProgress[key]) return;
+    q.dialogProgress[key] = true;
+    const required = typeof q.count === 'number' ? q.count : q.dialogNodes.length || 1;
+    const visited = Object.keys(q.dialogProgress).filter(k => q.dialogProgress[k]).length;
+    q.progress = Math.min(required, visited);
+    if (typeof renderQuests === 'function') renderQuests();
+  });
+}
+
 // minimal core helpers so defaultQuestProcessor works even without content helpers loaded yet
 function defaultQuestProcessor(npc, nodeId) {
   const meta = npc.quest;
@@ -118,7 +186,8 @@ function defaultQuestProcessor(npc, nodeId) {
       const remaining = requiredCount - prev;
       const turnIn = itemKey ? Math.min(have, remaining) : 0;
       const hasFlag = !meta.reqFlag || (typeof flagValue === 'function' && flagValue(meta.reqFlag));
-      if (!itemKey) meta.progress = requiredCount;
+      const dialogGoal = hasDialogGoals(meta);
+      if (!itemKey && !dialogGoal) meta.progress = requiredCount;
 
       if (turnIn > 0) {
         for (let i = 0; i < turnIn; i++) {
@@ -129,11 +198,11 @@ function defaultQuestProcessor(npc, nodeId) {
           }
         }
         meta.progress = prev + turnIn;
-      }
+        }
 
-      if (meta.progress >= requiredCount && hasFlag) {
-        questLog.complete(meta.id);
-        if (meta.reward) {
+        if (meta.progress >= requiredCount && hasFlag) {
+          questLog.complete(meta.id);
+          if (meta.reward) {
           const rewardIt = resolveItem(meta.reward);
           if (rewardIt) addToInv(rewardIt);
         }
@@ -150,9 +219,21 @@ function defaultQuestProcessor(npc, nodeId) {
         }
       } else {
         const def = itemKey ? ITEMS[itemKey] : null;
-        textEl.textContent = meta.progress > 0
-          ? `That’s ${meta.progress}/${requiredCount}. Keep going.`
-          : `You don’t have ${def ? def.name : itemKey}.`;
+        const progress = Math.min(meta.progress || 0, requiredCount);
+        let message = '';
+        if (dialogGoal) {
+          if (meta.progressText) message = meta.progressText;
+          else message = `You still need to finish earning that favor. (${progress}/${requiredCount})`;
+        } else if (itemKey) {
+          message = meta.progress > 0
+            ? `That’s ${meta.progress}/${requiredCount}. Keep going.`
+            : `You don’t have ${def ? def.name : itemKey}.`;
+        } else {
+          message = progress > 0
+            ? `That’s ${progress}/${requiredCount}. Keep going.`
+            : 'You’re not done yet.';
+        }
+        textEl.textContent = message;
         if (typeof choicesEl !== 'undefined') {
           choicesEl.innerHTML = '';
           const cont = document.createElement('div');
@@ -166,5 +247,5 @@ function defaultQuestProcessor(npc, nodeId) {
   }
 }
 
-const questExports = { Quest, QuestLog, questLog, quests, addQuest, completeQuest, defaultQuestProcessor, pinQuest, unpinQuest };
+const questExports = { Quest, QuestLog, questLog, quests, addQuest, completeQuest, defaultQuestProcessor, pinQuest, unpinQuest, trackQuestDialogNode };
 Object.assign(globalThis, questExports);
