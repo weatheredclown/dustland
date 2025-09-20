@@ -685,6 +685,29 @@ const DATA = `
       "desc": "Once the antidote works, bring Scout Bren a bandage so they can rejoin patrol duty.",
       "item": "bandage",
       "xp": 4
+    },
+    {
+      "id": "q_curry_favor",
+      "title": "Currying Favor",
+      "desc": "Earn the Duke of the Wastes' respect for the Hall.",
+      "count": 1,
+      "xp": 35,
+      "progressText": "The Duke has not pledged us his favor yet.",
+      "dialogNodes": [
+        {
+          "npcId": "duke_wastes",
+          "nodeId": "favor_granted"
+        }
+      ],
+      "givers": [
+        {
+          "id": "envoy_mahra",
+          "name": "Mahra",
+          "map": "hall",
+          "x": 14,
+          "y": 17
+        }
+      ]
     }
   ],
   "npcs": [
@@ -3333,6 +3356,134 @@ const DATA = `
           ]
         }
       }
+    },
+    {
+      "id": "envoy_mahra",
+      "map": "hall",
+      "x": 14,
+      "y": 17,
+      "color": "#9ef7a0",
+      "name": "Mahra",
+      "title": "Hall Envoy",
+      "desc": "An envoy wringing her hands over desert politics.",
+      "questId": "q_curry_favor",
+      "tree": {
+        "start": {
+          "text": "Mahra paces between supply crates. 'The Duke of the Wastes runs every caravan. If we want munitions, we need his favor. Will you go to his desert lair and win him over?'",
+          "choices": [
+            {
+              "label": "(Accept) I'll speak with the Duke.",
+              "to": "accept",
+              "q": "accept"
+            },
+            {
+              "label": "(Status) Any advice?",
+              "to": "status"
+            },
+            {
+              "label": "(Turn in) The Duke is on our side.",
+              "to": "turnin",
+              "q": "turnin"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "accept": {
+          "text": "Charm is his currency. Lead with confidence and he might trade favors for our help.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "status": {
+          "text": "He respects bold tongues. Impress him with your charisma and do not flinch.",
+          "choices": [
+            {
+              "label": "(Back)",
+              "to": "start"
+            }
+          ]
+        },
+        "turnin": {
+          "text": "You turned the Duke our way? That unlocks his munitions caches.",
+          "choices": [
+            {
+              "label": "(Take the grenades)",
+              "to": "post_quest",
+              "once": true,
+              "effects": [
+                {
+                  "effect": "addItem",
+                  "item": "frag_grenade"
+                },
+                {
+                  "effect": "addItem",
+                  "item": "frag_grenade"
+                },
+                {
+                  "effect": "addItem",
+                  "item": "frag_grenade"
+                }
+              ]
+            }
+          ]
+        },
+        "post_quest": {
+          "text": "Three frag grenades should remind the wastes who our friends are. We'll send word to the caravans.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "symbol": "!"
+    },
+    {
+      "id": "duke_wastes",
+      "map": "duke_lair",
+      "x": 3,
+      "y": 2,
+      "color": "#d4b26f",
+      "name": "Duke of the Wastes",
+      "title": "Desert Sovereign",
+      "desc": "The Duke lounges on a rusted throne surrounded by sand-bitten trophies.",
+      "tree": {
+        "start": {
+          "text": "A throne of rust looms over dunes of sand poured inside the lair.",
+          "choices": [
+            {
+              "label": "(Charm) Offer an alliance (CHA DC 12)",
+              "check": {
+                "stat": "CHA",
+                "dc": 12
+              },
+              "to": "favor_granted",
+              "failure": "The Duke waves you away."
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "favor_granted": {
+          "text": "The Duke taps a ring against his goblet before nodding. 'Send word to Mahra that my caravans will carry her grenades. Tell her I expect the Hall to answer when I call.'",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "symbol": "!"
     }
   ],
   "events": [
@@ -14845,6 +14996,21 @@ const DATA = `
           9
         ]
       ]
+    },
+    {
+      "x": 108,
+      "y": 62,
+      "w": 1,
+      "h": 1,
+      "doorX": 108,
+      "doorY": 62,
+      "interiorId": "duke_lair",
+      "boarded": false,
+      "grid": [
+        [
+          9
+        ]
+      ]
     }
   ],
   "interiors": [
@@ -15060,6 +15226,22 @@ const DATA = `
       "entryX": 25,
       "entryY": 47,
       "id": "room_oc3abv"
+    },
+    {
+      "id": "duke_lair",
+      "w": 7,
+      "h": 7,
+      "entryX": 3,
+      "entryY": 6,
+      "grid": [
+        "🧱🧱🧱🧱🧱🧱🧱",
+        "🧱⬜⬜⬜⬜⬜🧱",
+        "🧱⬜🪨⬜🪨⬜🧱",
+        "🧱⬜⬜⬜⬜⬜🧱",
+        "🧱⬜🪨⬜🪨⬜🧱",
+        "🧱⬜⬜⬜⬜⬜🧱",
+        "🧱🧱🧱🚪🧱🧱🧱"
+      ]
     }
   ],
   "zoneEffects": [

@@ -393,6 +393,9 @@ function closeDialog(){
 function renderDialog(){
   if(!dialogState.tree) return;
   currentNPC?.processNode?.(dialogState.node);
+  if(currentNPC?.id && dialogState.node && typeof trackQuestDialogNode === 'function'){
+    trackQuestDialogNode(currentNPC.id, dialogState.node);
+  }
   if(!dialogState.tree || !dialogState.node) return;
   let node=dialogState.tree[dialogState.node];
   if(!node){ closeDialog(); return; }
@@ -442,10 +445,17 @@ function renderDialog(){
 
   if(currentNPC?.quest){
     const meta=currentNPC.quest;
+    const itemKey = meta.itemTag || meta.item;
+    const hasDialogGoals = Array.isArray(meta.dialogNodes) && meta.dialogNodes.length > 0;
+    const progress = typeof meta.progress === 'number' ? meta.progress : 0;
+    const requiredCount = meta.count || (hasDialogGoals ? meta.dialogNodes.length || 1 : 1);
     choices=choices.filter(({opt})=>{
-      const itemKey = meta.itemTag || meta.item;
       if(opt.q==='accept' && meta.status!=='available') return false;
-      if(opt.q==='turnin' && (meta.status!=='active' || (itemKey && !hasItem(itemKey)))) return false;
+      if(opt.q==='turnin'){
+        if(meta.status!=='active') return false;
+        if(itemKey && !hasItem(itemKey)) return false;
+        if(!itemKey && hasDialogGoals && progress < requiredCount) return false;
+      }
       return true;
     });
   }
