@@ -22,7 +22,7 @@ test('collectPricingData summarizes dustland traders and scrap', () => {
   assert.deepStrictEqual(ids, ['pipe_rifle', 'leather_jacket', 'water_flask', 'frag_grenade', 'incendiary_grenade']);
   const pipeRifle = trader.items.find(it => it.id === 'pipe_rifle');
   assert.ok(pipeRifle);
-  assert.strictEqual(pipeRifle.price, 0);
+  assert.strictEqual(pipeRifle.price, 232);
   assert.ok(pipeRifle.needsValue);
 });
 

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import vm from 'node:vm';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -10,6 +11,28 @@ const DEFAULT_MODULES = [
   'modules/other-bas.module.js',
   'modules/pit-bas.module.js'
 ];
+
+let cachedTrader = null;
+
+function loadTraderClass(repoRoot){
+  if (cachedTrader) return cachedTrader;
+  const traderPath = path.resolve(repoRoot, 'scripts', 'core', 'trader.js');
+  const code = fs.readFileSync(traderPath, 'utf8');
+  const context = {
+    console,
+    Math,
+    JSON,
+    globalThis: {},
+    EventBus: { emit: () => {} }
+  };
+  context.globalThis = context;
+  context.Dustland = context.Dustland || {};
+  vm.createContext(context);
+  vm.runInContext(code, context, { filename: traderPath });
+  cachedTrader = context.Dustland?.Trader;
+  if (!cachedTrader) throw new Error('Unable to load Trader class');
+  return cachedTrader;
+}
 
 function resolveModulePath(candidate){
   if(!candidate) return null;
@@ -153,6 +176,7 @@ function collectScrapSources(data, threshold){
 export function collectPricingData(modulePaths, opts = {}){
   const threshold = typeof opts.challengeThreshold === 'number' ? opts.challengeThreshold : 10;
   const repoRoot = opts.repoRoot || REPO_ROOT;
+  const Trader = loadTraderClass(repoRoot);
   const modules = [];
   const allScrap = [];
   const allPrices = [];
@@ -179,7 +203,14 @@ export function collectPricingData(modulePaths, opts = {}){
         if(!entry || !entry.id) return;
         const itemData = items.get(entry.id);
         const baseValue = typeof itemData?.value === 'number' ? itemData.value : 0;
-        const price = Math.ceil(baseValue * baseMarkup);
+        let price = 0;
+        if (itemData) {
+          price = Trader.calculatePrice(itemData, {
+            entry,
+            markup: baseMarkup,
+            grudge: shop?.grudge ?? 0
+          });
+        }
         const modScore = calcModScore(itemData);
         const healValue = extractHealValue(itemData);
         const needsValue = !itemData ? true : (baseValue === 0 && (modScore !== 0 || (healValue ?? 0) > 0));
