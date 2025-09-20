@@ -61,8 +61,12 @@
         <section class="panel-section panel-section--controls">
           <header class="panel-section__header">
             <h2 class="panel-section__title">Controls</h2>
+            <button class="pill panel-section__toggle" type="button" id="controlsToggle" aria-expanded="true" aria-controls="controlsContent">
+              <span class="panel-section__toggle-icon" aria-hidden="true">▾</span>
+              <span class="panel-section__toggle-text">Hide</span>
+            </button>
           </header>
-          <div class="panel-section__content">
+          <div class="panel-section__content" id="controlsContent">
             <div class="control-grid">
               <div class="control-grid__item"><span class="control-grid__keys">WASD / Arrows</span><span class="control-grid__desc">Move</span></div>
               <div class="control-grid__item"><span class="control-grid__keys">E / Space</span><span class="control-grid__desc">Interact, doors, take nearby</span></div>
@@ -376,6 +380,7 @@
           const settingsBtn = document.getElementById('settingsBtn');
           if (settingsBtn) UI.hide('settingsBtn');
         }
+      setupControlsToggle();
       const modeScript = document.createElement('script');
       modeScript.defer = true;
       modeScript.src = isAck ? './scripts/ack-player.js' : './scripts/module-picker.js';
@@ -391,6 +396,24 @@
         if (e.target.closest('.panel .content')) return;
         if (window.scrollY === 0 && y > startY) e.preventDefault();
       }, {passive: false});
+    }
+    function setupControlsToggle() {
+      const section = document.querySelector('.panel-section--controls');
+      if (!section) return;
+      const toggle = section.querySelector('.panel-section__toggle');
+      const content = section.querySelector('.panel-section__content');
+      if (!toggle || !content) return;
+      const label = toggle.querySelector('.panel-section__toggle-text');
+      const setCollapsed = collapsed => {
+        section.classList.toggle('panel-section--collapsed', collapsed);
+        toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        if (label) label.textContent = collapsed ? 'Show' : 'Hide';
+      };
+      toggle.addEventListener('click', () => {
+        const nextCollapsed = !section.classList.contains('panel-section--collapsed');
+        setCollapsed(nextCollapsed);
+      });
+      setCollapsed(true);
     }
     function warnOnUnload() {
       window.addEventListener('beforeunload', e => {

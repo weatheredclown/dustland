@@ -1059,20 +1059,24 @@ function clearWorld() {
   });
 }
 
-function collectMods() {
+function collectMods(containerId = 'modBuilder') {
+  const wrap = document.getElementById(containerId);
+  if (!wrap) return {};
   const mods = {};
-  document.querySelectorAll('#modBuilder > label').forEach(label => {
+  wrap.querySelectorAll('label').forEach(label => {
     const chk = label.querySelector('input[type="checkbox"]');
+    const mod = chk?.getAttribute('data-mod');
+    if (!chk || !mod) return;
     if (chk.checked) {
-      const mod = chk.dataset.mod;
       const val = parseInt(label.querySelector('.modVal').value, 10);
-      if (mod && !isNaN(val)) mods[mod] = val;
+      if (!isNaN(val)) mods[mod] = val;
     }
   });
   return mods;
 }
-function loadMods(mods = {}) {
-  const mb = document.getElementById('modBuilder');
+function loadMods(mods = {}, containerId = 'modBuilder') {
+  const mb = document.getElementById(containerId);
+  if (!mb) return;
   mb.innerHTML = '';
   MOD_TYPES.forEach(m => {
     const label = document.createElement('label');
@@ -1081,8 +1085,7 @@ function loadMods(mods = {}) {
     label.style.gap = '4px';
     const chk = document.createElement('input');
     chk.type = 'checkbox';
-    chk.dataset = chk.dataset || {};
-    chk.dataset.mod = m;
+    chk.setAttribute('data-mod', m);
     const span = document.createElement('span');
     span.textContent = m;
     const inp = document.createElement('input');
@@ -3907,6 +3910,117 @@ function closeBldgEditor() {
 }
 
 // --- Quests ---
+function updateQuestRewardFields() {
+  const type = document.getElementById('questRewardType')?.value || '';
+  const showItem = type === 'item';
+  const showXP = type === 'xp';
+  const showScrap = type === 'scrap';
+  const showCustom = type === 'custom';
+  const toggle = (id, shouldShow, display = 'block') => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = shouldShow ? display : 'none';
+  };
+  toggle('questRewardItemWrap', showItem);
+  toggle('questRewardXPWrap', showXP);
+  toggle('questRewardScrapWrap', showScrap);
+  toggle('questRewardCustomWrap', showCustom);
+}
+function resetQuestRewardFields() {
+  const typeSel = document.getElementById('questRewardType');
+  if (!typeSel) return;
+  typeSel.value = '';
+  const itemId = document.getElementById('questRewardItemId');
+  if (itemId) itemId.value = '';
+  const xp = document.getElementById('questRewardXP');
+  if (xp) xp.value = 0;
+  const scrap = document.getElementById('questRewardScrap');
+  if (scrap) scrap.value = 0;
+  const customId = document.getElementById('questRewardCustomId');
+  if (customId) customId.value = '';
+  const customName = document.getElementById('questRewardCustomName');
+  if (customName) customName.value = '';
+  const customType = document.getElementById('questRewardCustomType');
+  if (customType) customType.value = '';
+  const customSlot = document.getElementById('questRewardCustomSlot');
+  if (customSlot) customSlot.value = '';
+  loadMods({}, 'questRewardMods');
+  updateQuestRewardFields();
+}
+function setQuestRewardFields(reward) {
+  resetQuestRewardFields();
+  const typeSel = document.getElementById('questRewardType');
+  if (!typeSel) return;
+  if (typeof reward === 'string') {
+    const trimmed = reward.trim();
+    if (/^xp\s*\d+/i.test(trimmed)) {
+      typeSel.value = 'xp';
+      const xp = document.getElementById('questRewardXP');
+      if (xp) xp.value = parseInt(trimmed.replace(/[^0-9]/g, ''), 10) || 0;
+    } else if (/^scrap\s*\d+/i.test(trimmed)) {
+      typeSel.value = 'scrap';
+      const scrap = document.getElementById('questRewardScrap');
+      if (scrap) scrap.value = parseInt(trimmed.replace(/[^0-9]/g, ''), 10) || 0;
+    } else {
+      typeSel.value = 'item';
+      const item = document.getElementById('questRewardItemId');
+      if (item) item.value = trimmed;
+    }
+  } else if (reward && typeof reward === 'object') {
+    typeSel.value = 'custom';
+    const customId = document.getElementById('questRewardCustomId');
+    if (customId) customId.value = reward.id || '';
+    const customName = document.getElementById('questRewardCustomName');
+    if (customName) customName.value = reward.name || '';
+    const customType = document.getElementById('questRewardCustomType');
+    if (customType) customType.value = reward.type || '';
+    const customSlot = document.getElementById('questRewardCustomSlot');
+    if (customSlot) customSlot.value = reward.slot || '';
+    loadMods(reward.mods || {}, 'questRewardMods');
+    maybeSyncQuestRewardSlot();
+  }
+  updateQuestRewardFields();
+}
+function buildQuestRewardFromInputs() {
+  const typeSel = document.getElementById('questRewardType');
+  if (!typeSel) return { ok: true, reward: undefined };
+  const type = typeSel.value;
+  if (!type) return { ok: true, reward: undefined };
+  if (type === 'item') {
+    const itemId = document.getElementById('questRewardItemId').value.trim();
+    if (!itemId) return { ok: false, error: 'Enter an item id for the reward.' };
+    return { ok: true, reward: itemId };
+  }
+  if (type === 'xp') {
+    const xp = parseInt(document.getElementById('questRewardXP').value, 10);
+    if (!Number.isFinite(xp) || xp < 0) return { ok: false, error: 'Enter an XP amount of 0 or more.' };
+    return { ok: true, reward: `XP ${xp}` };
+  }
+  if (type === 'scrap') {
+    const scrap = parseInt(document.getElementById('questRewardScrap').value, 10);
+    if (!Number.isFinite(scrap) || scrap < 0) return { ok: false, error: 'Enter a scrap amount of 0 or more.' };
+    return { ok: true, reward: `SCRAP ${scrap}` };
+  }
+  if (type === 'custom') {
+    const id = document.getElementById('questRewardCustomId').value.trim();
+    const name = document.getElementById('questRewardCustomName').value.trim();
+    const rewardType = document.getElementById('questRewardCustomType').value.trim();
+    const slot = document.getElementById('questRewardCustomSlot').value.trim();
+    if (!id || !name) return { ok: false, error: 'Custom rewards need an id and name.' };
+    const mods = collectMods('questRewardMods');
+    const reward = { id, name };
+    if (rewardType) reward.type = rewardType;
+    if (slot) reward.slot = slot;
+    if (Object.keys(mods).length) reward.mods = mods;
+    return { ok: true, reward };
+  }
+  return { ok: true, reward: undefined };
+}
+function maybeSyncQuestRewardSlot() {
+  const type = document.getElementById('questRewardCustomType')?.value || '';
+  const slot = document.getElementById('questRewardCustomSlot');
+  if (!slot) return;
+  if (!slot.value && ['weapon', 'armor', 'trinket'].includes(type)) slot.value = type;
+}
 function showQuestEditor(show) {
   document.getElementById('questEditor').style.display = show ? 'block' : 'none';
 }
@@ -3916,7 +4030,7 @@ function startNewQuest() {
   document.getElementById('questTitle').value = '';
   document.getElementById('questDesc').value = '';
   document.getElementById('questItem').value = '';
-  document.getElementById('questReward').value = '';
+  resetQuestRewardFields();
   document.getElementById('questXP').value = 0;
   document.getElementById('questNPC').value = '';
   document.getElementById('addQuest').textContent = 'Add Quest';
@@ -3929,9 +4043,16 @@ function addQuest() {
   const title = document.getElementById('questTitle').value.trim();
   const desc = document.getElementById('questDesc').value.trim();
   const item = document.getElementById('questItem').value.trim();
-  const reward = document.getElementById('questReward').value.trim();
-  const xp = parseInt(document.getElementById('questXP').value, 10) || 0;
-  const quest = { id, title, desc, item: item || undefined, reward: reward || undefined, xp };
+  const rewardResult = buildQuestRewardFromInputs();
+  if (!rewardResult.ok) {
+    alert(rewardResult.error);
+    return;
+  }
+  const xpValue = parseInt(document.getElementById('questXP').value, 10);
+  const xp = Number.isFinite(xpValue) ? xpValue : 0;
+  const quest = { id, title, desc, xp };
+  if (item) quest.item = item;
+  if (typeof rewardResult.reward !== 'undefined') quest.reward = rewardResult.reward;
   if (editQuestIdx >= 0) {
     moduleData.quests[editQuestIdx] = quest;
   } else {
@@ -3972,7 +4093,7 @@ function editQuest(i) {
   document.getElementById('questTitle').value = q.title;
   document.getElementById('questDesc').value = q.desc;
   document.getElementById('questItem').value = q.item || '';
-  document.getElementById('questReward').value = q.reward || '';
+  setQuestRewardFields(q.reward);
   document.getElementById('questXP').value = q.xp || 0;
   const npc = moduleData.npcs.find(n => Array.isArray(n.quests) ? n.quests.includes(q.id) : n.questId === q.id);
   document.getElementById('questNPC').value = npc ? npc.id : '';
@@ -4273,6 +4394,11 @@ document.getElementById('itemRemove').onclick = removeItemFromWorld;
 document.getElementById('newNPC').onclick = startNewNPC;
 document.getElementById('newBldg').onclick = startNewBldg;
 document.getElementById('newQuest').onclick = startNewQuest;
+document.getElementById('questRewardType').addEventListener('change', updateQuestRewardFields);
+const questRewardCustomType = document.getElementById('questRewardCustomType');
+if (questRewardCustomType) questRewardCustomType.addEventListener('change', () => {
+  maybeSyncQuestRewardSlot();
+});
 document.getElementById('addBldg').onclick = beginPlaceBldg;
 document.getElementById('addQuest').onclick = addQuest;
 document.getElementById('addEvent').onclick = addEvent;

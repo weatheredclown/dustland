@@ -75,6 +75,7 @@ class Quest {
       this.dialogProgress = {};
       this.requiresDialogNodes = false;
     }
+    if (this.itemLocation) this.itemLocation = { ...this.itemLocation };
   }
   complete(outcome) {
     if (this.status !== 'completed') {
