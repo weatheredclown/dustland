@@ -41,8 +41,8 @@
       "name": "Pipe Rifle",
       "type": "weapon",
       "mods": {
-        "ATK": 2,
-        "ADR": 15
+        "ATK": 3,
+        "ADR": 18
       },
       "tags": [
         "ranged"
@@ -79,7 +79,7 @@
       "type": "weapon",
       "mods": {
         "ATK": 1,
-        "ADR": 10
+        "ADR": 9
       }
     },
     {
@@ -90,8 +90,8 @@
       "name": "Rebar Club",
       "type": "weapon",
       "mods": {
-        "ATK": 1,
-        "ADR": 10
+        "ATK": 2,
+        "ADR": 12
       }
     },
     {
@@ -280,8 +280,8 @@
       "name": "Raider Knife",
       "type": "weapon",
       "mods": {
-        "ATK": 1,
-        "ADR": 10
+        "ATK": 3,
+        "ADR": 14
       }
     },
     {
@@ -293,7 +293,7 @@
       "type": "weapon",
       "mods": {
         "ATK": 5,
-        "ADR": 20
+        "ADR": 22
       }
     },
     {
@@ -335,7 +335,8 @@
       "type": "weapon",
       "rarity": "epic",
       "mods": {
-        "ATK": 5
+        "ATK": 6,
+        "ADR": 25
       },
       "value": 500
     },
@@ -434,8 +435,8 @@
       "type": "weapon",
       "rarity": "epic",
       "mods": {
-        "ATK": 8,
-        "ADR": 45
+        "ATK": 5,
+        "ADR": 35
       },
       "tags": [
         "ranged",
@@ -496,8 +497,8 @@
       "name": "Thornlash Whip",
       "type": "weapon",
       "mods": {
-        "ATK": 1,
-        "ADR": 12
+        "ATK": 3,
+        "ADR": 18
       }
     },
     {
@@ -515,7 +516,7 @@
       "name": "Patchwork Plate",
       "type": "armor",
       "mods": {
-        "DEF": 1,
+        "DEF": 3,
         "HP": 2
       }
     },
@@ -524,8 +525,8 @@
       "name": "Corroded Hatchet",
       "type": "weapon",
       "mods": {
-        "ATK": 2,
-        "ADR": 9
+        "ATK": 4,
+        "ADR": 16
       }
     },
     {

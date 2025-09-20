@@ -44,8 +44,8 @@ const DATA = `
       "name": "Pipe Rifle",
       "type": "weapon",
       "mods": {
-        "ATK": 2,
-        "ADR": 15
+        "ATK": 3,
+        "ADR": 18
       },
       "tags": [
         "ranged"
@@ -82,7 +82,7 @@ const DATA = `
       "type": "weapon",
       "mods": {
         "ATK": 1,
-        "ADR": 10
+        "ADR": 9
       }
     },
     {
@@ -93,8 +93,8 @@ const DATA = `
       "name": "Rebar Club",
       "type": "weapon",
       "mods": {
-        "ATK": 1,
-        "ADR": 10
+        "ATK": 2,
+        "ADR": 12
       }
     },
     {
@@ -283,8 +283,8 @@ const DATA = `
       "name": "Raider Knife",
       "type": "weapon",
       "mods": {
-        "ATK": 1,
-        "ADR": 10
+        "ATK": 3,
+        "ADR": 14
       }
     },
     {
@@ -296,7 +296,7 @@ const DATA = `
       "type": "weapon",
       "mods": {
         "ATK": 5,
-        "ADR": 20
+        "ADR": 22
       }
     },
     {
@@ -338,7 +338,8 @@ const DATA = `
       "type": "weapon",
       "rarity": "epic",
       "mods": {
-        "ATK": 5
+        "ATK": 6,
+        "ADR": 25
       },
       "value": 500
     },
@@ -437,8 +438,8 @@ const DATA = `
       "type": "weapon",
       "rarity": "epic",
       "mods": {
-        "ATK": 8,
-        "ADR": 45
+        "ATK": 5,
+        "ADR": 35
       },
       "tags": [
         "ranged",
@@ -499,8 +500,8 @@ const DATA = `
       "name": "Thornlash Whip",
       "type": "weapon",
       "mods": {
-        "ATK": 1,
-        "ADR": 12
+        "ATK": 3,
+        "ADR": 18
       }
     },
     {
@@ -518,7 +519,7 @@ const DATA = `
       "name": "Patchwork Plate",
       "type": "armor",
       "mods": {
-        "DEF": 1,
+        "DEF": 3,
         "HP": 2
       }
     },
@@ -527,8 +528,8 @@ const DATA = `
       "name": "Corroded Hatchet",
       "type": "weapon",
       "mods": {
-        "ATK": 2,
-        "ADR": 9
+        "ATK": 4,
+        "ADR": 16
       }
     },
     {
