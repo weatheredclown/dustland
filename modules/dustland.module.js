@@ -673,6 +673,20 @@ const DATA = `
       "xp": 8
     },
     {
+      "id": "q_antidote_aid",
+      "title": "Antidote Assembly",
+      "desc": "Collect water flasks and plant fiber, then craft an antidote at the workshop for Medic Lysa.",
+      "item": "antidote",
+      "xp": 5
+    },
+    {
+      "id": "q_scout_recon",
+      "title": "Scout's Return",
+      "desc": "Once the antidote works, bring Scout Bren a bandage so they can rejoin patrol duty.",
+      "item": "bandage",
+      "xp": 4
+    },
+    {
       "id": "q_curry_favor",
       "title": "Currying Favor",
       "desc": "Earn the Duke of the Wastes' respect for the Hall.",
@@ -683,6 +697,15 @@ const DATA = `
         {
           "npcId": "duke_wastes",
           "nodeId": "favor_granted"
+        }
+      ],
+      "givers": [
+        {
+          "id": "envoy_mahra",
+          "name": "Mahra",
+          "map": "hall",
+          "x": 14,
+          "y": 17
         }
       ]
     }
@@ -3183,6 +3206,154 @@ const DATA = `
         "scrap": {
           "min": 12,
           "max": 16
+        }
+      }
+    },
+    {
+      "id": "medic_lysa",
+      "map": "workshop",
+      "x": 1,
+      "y": 2,
+      "color": "#9ef7a0",
+      "name": "Medic Lysa",
+      "title": "Workshop Healer",
+      "desc": "A weary medic sorting salvaged herbs.",
+      "portraitSheet": "assets/portraits/dustland-module/mira_4.png",
+      "symbol": "!",
+      "questId": "q_antidote_aid",
+      "tree": {
+        "start": {
+          "text": "Lysa fans fumes from an improvised still. 'My scout's fading. I need an antidote brewed at this bench—water flasks and plant fiber will do.'",
+          "choices": [
+            {
+              "label": "(Accept) I'll gather the ingredients.",
+              "to": "accept",
+              "q": "accept"
+            },
+            {
+              "label": "(Hand Over Antidote)",
+              "to": "turnin",
+              "q": "turnin"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "accept": {
+          "text": "Bring one water flask and plant fiber to the workbench, then craft an antidote for Bren.",
+          "choices": [
+            {
+              "label": "(Ok)",
+              "to": "bye"
+            }
+          ]
+        },
+        "turnin": {
+          "text": "Did you brew the antidote? Bren doesn't have long.",
+          "choices": [
+            {
+              "label": "(Give Antidote)",
+              "to": "do_turnin",
+              "effects": [
+                {
+                  "effect": "unlockNPC",
+                  "npcId": "scout_bren"
+                },
+                {
+                  "effect": "toast",
+                  "msg": "Lysa rushes the antidote to Bren."
+                }
+              ]
+            }
+          ]
+        },
+        "do_turnin": {
+          "text": "She pours the cure between Bren's lips. The scout jolts awake, coughing but alert.",
+          "choices": [
+            {
+              "label": "(Continue)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "scout_bren",
+      "map": "workshop",
+      "x": 3,
+      "y": 2,
+      "color": "#9ef7a0",
+      "name": "Scout Bren",
+      "title": "Sandway Patrol",
+      "desc": "A scout slumped against the wall, breathing shallowly.",
+      "portraitSheet": "assets/portraits/dustland-module/nora_4.png",
+      "symbol": "!",
+      "questId": "q_scout_recon",
+      "locked": true,
+      "tree": {
+        "locked": {
+          "text": "Bren wheezes, skin ashen. They can't answer until the antidote works.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "start": {
+          "text": "Bren wipes the antidote foam from their chin and straightens up.",
+          "choices": [
+            {
+              "label": "(Accept) I'll fetch your supplies.",
+              "to": "accept",
+              "q": "accept"
+            },
+            {
+              "label": "(Hand Over Bandage)",
+              "to": "turnin",
+              "q": "turnin"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "accept": {
+          "text": "Lysa kept me alive, but I need one solid bandage before I head out. The workbench can spin plant fiber into one fast.",
+          "choices": [
+            {
+              "label": "(Ok)",
+              "to": "bye"
+            }
+          ]
+        },
+        "turnin": {
+          "text": "Got that bandage? I don't want to limp into the dunes bare-handed.",
+          "choices": [
+            {
+              "label": "(Give Bandage)",
+              "to": "do_turnin",
+              "effects": [
+                {
+                  "effect": "toast",
+                  "msg": "Bren wraps the bandage around their side."
+                }
+              ]
+            }
+          ]
+        },
+        "do_turnin": {
+          "text": "Perfect fit. I'll scout the relay routes again—stop by the map table once I signal back.",
+          "choices": [
+            {
+              "label": "(Continue)",
+              "to": "bye"
+            }
+          ]
         }
       }
     },
@@ -14834,6 +15005,7 @@ const DATA = `
       "doorX": 108,
       "doorY": 62,
       "interiorId": "duke_lair",
+      "boarded": false,
       "grid": [
         [
           9

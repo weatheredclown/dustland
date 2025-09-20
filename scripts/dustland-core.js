@@ -534,12 +534,15 @@ function applyModule(data = {}, options = {}) {
   }
 
   // Items
+  const questItemLocations = {};
   if (typeof ITEMS !== 'undefined' && moduleData.items) {
     moduleData.items.forEach(it => {
       const { map, x, y, ...def } = it;
       const registered = registerItem(def);
       if (map !== undefined && x !== undefined && y !== undefined) {
-        itemDrops.push({ id: registered.id, map: map || 'world', x, y });
+        const loc = { id: registered.id, map: map || 'world', x, y };
+        itemDrops.push(loc);
+        questItemLocations[registered.id] = { map: loc.map, x: loc.x, y: loc.y };
       }
     });
   }
@@ -557,13 +560,28 @@ function applyModule(data = {}, options = {}) {
           count: q.count,
           reward: q.reward,
           xp: q.xp,
-          moveTo: q.moveTo
+          moveTo: q.moveTo,
+          itemLocation: q.item && questItemLocations[q.item] ? questItemLocations[q.item] : null
         }
       );
     });
   }
 
   // NPCs
+  function registerQuestGiver(q, npcDef) {
+    if (!q || !npcDef) return;
+    if (!Array.isArray(q.givers)) q.givers = [];
+    const exists = q.givers.some(g => g && g.id === npcDef.id);
+    if (!exists) {
+      q.givers.push({
+        id: npcDef.id,
+        name: npcDef.name || npcDef.id,
+        map: npcDef.map || 'world',
+        x: npcDef.x,
+        y: npcDef.y
+      });
+    }
+  }
   (moduleData.npcs || []).forEach(n => {
     if (n.hidden && n.reveal) { hiddenNPCs.push(n); return; }
     let tree = n.tree;
@@ -574,7 +592,10 @@ function applyModule(data = {}, options = {}) {
       tree = { start: { text: txt, choices: [{ label: '(Leave)', to: 'bye' }] } };
     }
     let quest = null;
-    if (n.questId && quests[n.questId]) quest = quests[n.questId];
+    if (n.questId && quests[n.questId]) {
+      quest = quests[n.questId];
+      registerQuestGiver(quest, n);
+    }
     const opts = {};
     if (n.combat) opts.combat = n.combat;
     if (n.shop) opts.shop = n.shop;
@@ -587,7 +608,14 @@ function applyModule(data = {}, options = {}) {
     if (typeof n.locked === 'boolean') opts.locked = n.locked;
     if (typeof n.overrideColor === 'boolean') opts.overrideColor = n.overrideColor;
     if (Array.isArray(n.quests)) {
-      opts.quests = n.quests.map(id => quests[id]).filter(Boolean);
+      const questList = [];
+      n.quests.forEach(id => {
+        const q = quests[id];
+        if (!q) return;
+        registerQuestGiver(q, n);
+        questList.push(q);
+      });
+      if (questList.length) opts.quests = questList;
     }
     if (dlgArr) opts.questDialogs = dlgArr;
     const npc = makeNPC(n.id, n.map || 'world', n.x, n.y, n.color, n.name || n.id, n.title || '', n.desc || '', tree, quest, null, null, opts);

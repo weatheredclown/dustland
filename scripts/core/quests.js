@@ -18,6 +18,8 @@
  * @property {string|GameItem} [reward]
  * @property {number} [xp]
  * @property {{x:number,y:number}} [moveTo]
+ * @property {{map:string,x:number,y:number,name?:string,id?:string}[]} [givers]
+ * @property {{map:string,x:number,y:number}} [itemLocation]
  * @property {string} [outcome]
  * @property {Quest[]} [quests]
  * @property {{npcId:string,nodeId:string}[]} [dialogNodes]
@@ -38,7 +40,15 @@ class Quest {
     this.desc = desc;
     this.status = 'available';
     this.pinned = meta.pinned || false;
+    this.givers = Array.isArray(meta.givers) ? meta.givers.map(g => ({ ...g })) : [];
+    this.itemLocation = meta.itemLocation ? { ...meta.itemLocation } : null;
     Object.assign(this, meta);
+    if (Array.isArray(this.givers)) {
+      this.givers = this.givers.map(g => ({ ...g }));
+    } else {
+      this.givers = this.givers ? [{ ...this.givers }] : [];
+    }
+    if (this.itemLocation) this.itemLocation = { ...this.itemLocation };
     if (!Number.isFinite(this.progress)) this.progress = 0;
     const rawDialogNodes = Array.isArray(this.dialogNodes)
       ? this.dialogNodes
@@ -198,11 +208,11 @@ function defaultQuestProcessor(npc, nodeId) {
           }
         }
         meta.progress = prev + turnIn;
-        }
+      }
 
-        if (meta.progress >= requiredCount && hasFlag) {
-          questLog.complete(meta.id);
-          if (meta.reward) {
+      if (meta.progress >= requiredCount && hasFlag) {
+        questLog.complete(meta.id);
+        if (meta.reward) {
           const rewardIt = resolveItem(meta.reward);
           if (rewardIt) addToInv(rewardIt);
         }
@@ -217,7 +227,7 @@ function defaultQuestProcessor(npc, nodeId) {
             npc.tree.start.text = npc.questDialogs[npc.questIdx] || npc.tree.start.text;
           }
         }
-      } else {
+      } else if (meta.status === 'active') {
         const def = itemKey ? ITEMS[itemKey] : null;
         const progress = Math.min(meta.progress || 0, requiredCount);
         let message = '';
@@ -247,5 +257,6 @@ function defaultQuestProcessor(npc, nodeId) {
   }
 }
 
-const questExports = { Quest, QuestLog, questLog, quests, addQuest, completeQuest, defaultQuestProcessor, pinQuest, unpinQuest, trackQuestDialogNode };
+const questExports = { Quest, QuestLog, questLog, quests, addQuest, completeQuest, defaultQuestProcessor, pinQuest, unpinQuest,
+  trackQuestDialogNode };
 Object.assign(globalThis, questExports);
