@@ -665,7 +665,47 @@
           <label>Title<input id="questTitle" placeholder="Quest title" /></label>
           <label>Description<textarea id="questDesc" rows="2" placeholder="Quest description"></textarea></label>
           <label>Required Item/Tag<input id="questItem" /></label>
-          <label>Reward Item<input id="questReward" /></label>
+          <div id="questRewardEditor" style="margin-top:4px">
+            <label>Reward Type<select id="questRewardType">
+                <option value="">(none)</option>
+                <option value="item">Existing Item</option>
+                <option value="xp">XP</option>
+                <option value="scrap">Scrap</option>
+                <option value="custom">Custom Item</option>
+              </select></label>
+            <div id="questRewardItemWrap" style="display:none">
+              <label>Item ID<input id="questRewardItemId" placeholder="sun_charm" /></label>
+            </div>
+            <div id="questRewardXPWrap" style="display:none">
+              <label>XP Amount<input id="questRewardXP" type="number" min="0" value="0" /></label>
+            </div>
+            <div id="questRewardScrapWrap" style="display:none">
+              <label>Scrap Amount<input id="questRewardScrap" type="number" min="0" value="0" /></label>
+            </div>
+            <div id="questRewardCustomWrap" style="display:none">
+              <label>Custom Item ID<input id="questRewardCustomId" placeholder="reward_id" /></label>
+              <label>Name<input id="questRewardCustomName" placeholder="Reward name" /></label>
+              <label>Type<select id="questRewardCustomType">
+                  <option value=""></option>
+                  <option value="weapon">Weapon</option>
+                  <option value="armor">Armor</option>
+                  <option value="trinket">Trinket</option>
+                  <option value="consumable">Consumable</option>
+                  <option value="quest">Quest</option>
+                  <option value="misc">Misc</option>
+                </select></label>
+              <label>Slot<select id="questRewardCustomSlot">
+                  <option value=""></option>
+                  <option value="weapon">Weapon</option>
+                  <option value="armor">Armor</option>
+                  <option value="trinket">Trinket</option>
+                </select></label>
+              <div id="questRewardModsWrap" style="margin-top:4px">
+                <label>Mods</label>
+                <div id="questRewardMods"></div>
+              </div>
+            </div>
+          </div>
           <label>XP Reward<input id="questXP" type="number" min="0" /></label>
           <label>NPC<select id="questNPC">
               <option value="">(none)</option>
