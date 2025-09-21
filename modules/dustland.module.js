@@ -549,6 +549,13 @@ const DATA = `
       ]
     },
     {
+      "id": "travel_pass",
+      "name": "Travel Pass",
+      "type": "quest",
+      "desc": "Stamped permit waiving bunker fuel fees.",
+      "tags": [
+        "pass"
+      ],
       "id": "scavenger_warlord_rig",
       "name": "Scrap Warlord Rig",
       "type": "armor",
@@ -788,7 +795,7 @@ const DATA = `
     {
       "id": "q_postal",
       "title": "Lost Parcel",
-      "desc": "Find and return the Lost Satchel to Ivo.",
+      "desc": "Find and return the Lost Satchel to Ivo to earn his courier reward and a travel pass.",
       "item": "lost_satchel",
       "reward": {
         "id": "brass_stamp",
@@ -1714,11 +1721,21 @@ const DATA = `
           ]
         },
         "do_turnin": {
-          "text": "Mail moves again. Take this stamp. Worth more than water.",
+          "text": "Mail moves again. Take this stamp and a travel pass—couriers look out for their own.",
           "choices": [
             {
               "label": "(Ok)",
               "to": "bye"
+            }
+          ],
+          "effects": [
+            {
+              "effect": "addItem",
+              "id": "travel_pass"
+            },
+            {
+              "effect": "toast",
+              "msg": "Fast travel is now free with the courier's pass."
             }
           ]
         }
@@ -3770,6 +3787,216 @@ const DATA = `
         }
       },
       "symbol": "!"
+    },
+    {
+      "id": "bunker_waystation",
+      "map": "world",
+      "x": 36,
+      "y": 68,
+      "color": "#aaa",
+      "name": "Waystation Bunker",
+      "desc": "A sealed terminal waits among the dunes.",
+      "prompt": "Dusty bunker terminal",
+      "tree": {
+        "start": {
+          "text": "The terminal is dark behind layers of dust.",
+          "choices": [
+            {
+              "label": "(Restore power)",
+              "to": "activate",
+              "if": {
+                "flag": "bunker_waystation_online",
+                "op": "<",
+                "value": 1
+              },
+              "setFlag": {
+                "flag": "bunker_waystation_online",
+                "op": "set",
+                "value": 1
+              },
+              "effects": [
+                {
+                  "effect": "unboardDoor",
+                  "bunkerId": "dustland_waystation"
+                },
+                {
+                  "effect": "activateBunker",
+                  "id": "dustland_waystation"
+                }
+              ]
+            },
+            {
+              "label": "(Fast travel)",
+              "to": "bye",
+              "if": {
+                "flag": "bunker_waystation_online",
+                "op": ">=",
+                "value": 1
+              },
+              "effects": [
+                {
+                  "effect": "openWorldMap",
+                  "id": "dustland_waystation"
+                }
+              ]
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "activate": {
+          "text": "You patch the cabling and power surges through the console.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "symbol": "✦"
+    },
+    {
+      "id": "bunker_ridge",
+      "map": "world",
+      "x": 60,
+      "y": 50,
+      "color": "#aaa",
+      "name": "Ridge Bunker",
+      "desc": "An old transit hub overlooking the cracked ridge.",
+      "prompt": "Dusty bunker terminal",
+      "tree": {
+        "start": {
+          "text": "The console flickers, waiting for a reboot.",
+          "choices": [
+            {
+              "label": "(Restore power)",
+              "to": "activate",
+              "if": {
+                "flag": "bunker_ridge_online",
+                "op": "<",
+                "value": 1
+              },
+              "setFlag": {
+                "flag": "bunker_ridge_online",
+                "op": "set",
+                "value": 1
+              },
+              "effects": [
+                {
+                  "effect": "unboardDoor",
+                  "bunkerId": "dustland_ridge"
+                },
+                {
+                  "effect": "activateBunker",
+                  "id": "dustland_ridge"
+                }
+              ]
+            },
+            {
+              "label": "(Fast travel)",
+              "to": "bye",
+              "if": {
+                "flag": "bunker_ridge_online",
+                "op": ">=",
+                "value": 1
+              },
+              "effects": [
+                {
+                  "effect": "openWorldMap",
+                  "id": "dustland_ridge"
+                }
+              ]
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "activate": {
+          "text": "You rewire the junction and the bunker hums awake.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "symbol": "✦"
+    },
+    {
+      "id": "bunker_overlook",
+      "map": "world",
+      "x": 82,
+      "y": 44,
+      "color": "#aaa",
+      "name": "Overlook Bunker",
+      "desc": "A tower terminal jutting from the cracked highway.",
+      "prompt": "Dusty bunker terminal",
+      "tree": {
+        "start": {
+          "text": "A warning light blinks behind the grime-streaked glass.",
+          "choices": [
+            {
+              "label": "(Restore power)",
+              "to": "activate",
+              "if": {
+                "flag": "bunker_overlook_online",
+                "op": "<",
+                "value": 1
+              },
+              "setFlag": {
+                "flag": "bunker_overlook_online",
+                "op": "set",
+                "value": 1
+              },
+              "effects": [
+                {
+                  "effect": "unboardDoor",
+                  "bunkerId": "dustland_overlook"
+                },
+                {
+                  "effect": "activateBunker",
+                  "id": "dustland_overlook"
+                }
+              ]
+            },
+            {
+              "label": "(Fast travel)",
+              "to": "bye",
+              "if": {
+                "flag": "bunker_overlook_online",
+                "op": ">=",
+                "value": 1
+              },
+              "effects": [
+                {
+                  "effect": "openWorldMap",
+                  "id": "dustland_overlook"
+                }
+              ]
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "activate": {
+          "text": "Power reroutes through the old transit grid.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      },
+      "symbol": "✦"
     }
   ],
   "events": [
@@ -15297,6 +15524,42 @@ const DATA = `
           9
         ]
       ]
+    },
+    {
+      "x": 36,
+      "y": 68,
+      "w": 1,
+      "h": 1,
+      "doorX": 36,
+      "doorY": 68,
+      "interiorId": null,
+      "boarded": true,
+      "bunker": true,
+      "bunkerId": "dustland_waystation"
+    },
+    {
+      "x": 60,
+      "y": 50,
+      "w": 1,
+      "h": 1,
+      "doorX": 60,
+      "doorY": 50,
+      "interiorId": null,
+      "boarded": true,
+      "bunker": true,
+      "bunkerId": "dustland_ridge"
+    },
+    {
+      "x": 82,
+      "y": 44,
+      "w": 1,
+      "h": 1,
+      "doorX": 82,
+      "doorY": 44,
+      "interiorId": null,
+      "boarded": true,
+      "bunker": true,
+      "bunkerId": "dustland_overlook"
     }
   ],
   "interiors": [
@@ -15649,6 +15912,10 @@ function handleCustomEffects(list) {
         return () => Dustland.workbench?.craftSignalBeacon?.();
       case 'modTraderGrudge':
         return () => adjustTraderGrudge(e.delta, e);
+      case 'activateBunker':
+        return () => Dustland.fastTravel?.activateBunker?.(e.id);
+      case 'openWorldMap':
+        return () => Dustland.worldMap?.open?.(e.id);
       default:
         return e;
     }

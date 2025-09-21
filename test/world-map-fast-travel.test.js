@@ -105,3 +105,47 @@ test('module-scoped bunkers remain local', async () => {
   const cost = fastTravel.fuelCost('local_a', 'remote_a');
   assert.strictEqual(cost, Infinity);
 });
+
+test('travel pass removes fast travel fuel cost', () => {
+  const context = {
+    console,
+    EventBus: { emit(){}, on(){} },
+    log(){},
+    save(){},
+    load(){},
+    player: { fuel: 2, inv: [] },
+    party: {},
+    localStorage: {
+      getItem(){ return null; },
+      setItem(){},
+      removeItem(){}
+    },
+    hasItem(){ return false; }
+  };
+  context.globalThis = context;
+  context.Dustland = { eventBus: context.EventBus, bunkers: [] };
+
+  const fastTravelSrc = readFileSync(new URL('../scripts/core/fast-travel.js', import.meta.url), 'utf8');
+  vm.runInNewContext(fastTravelSrc, context);
+
+  const fastTravel = context.Dustland.fastTravel;
+  fastTravel.upsertBunkers([
+    { id: 'north', x: 0, y: 0, map: 'world', module: 'dustland', active: true },
+    { id: 'south', x: 3, y: 4, map: 'world', module: 'dustland', active: true }
+  ]);
+
+  const costWithoutPass = fastTravel.fuelCost('north', 'south');
+  assert.ok(costWithoutPass > 0, 'cost should require fuel before pass');
+  const travelWithoutPass = fastTravel.travel('north', 'south');
+  assert.strictEqual(travelWithoutPass, false);
+  assert.strictEqual(context.player.fuel, 2);
+
+  context.hasItem = id => id === 'travel_pass';
+  context.player.fuel = 0;
+
+  const costWithPass = fastTravel.fuelCost('north', 'south');
+  assert.strictEqual(costWithPass, 0);
+  const travelWithPass = fastTravel.travel('north', 'south');
+  assert.strictEqual(travelWithPass, true);
+  assert.strictEqual(context.player.fuel, 0);
+});
