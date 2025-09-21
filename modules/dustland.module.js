@@ -649,7 +649,7 @@ const DATA = `
       "desc": "Ceremonial armor woven with mnemonic threads for sermon-weaving.",
       "map": "echoes_atrium",
       "x": 6,
-      "y": 9,
+      "y": 5,
       "rarity": "legendary",
       "mods": {
         "DEF": 3,
@@ -669,7 +669,7 @@ const DATA = `
       "desc": "A reliquary that hums with persuasive echoes.",
       "map": "echoes_archive",
       "x": 5,
-      "y": 10,
+      "y": 5,
       "rarity": "legendary",
       "mods": {
         "CHA": 1,
@@ -689,7 +689,7 @@ const DATA = `
       "desc": "Cogwitch mantle anchored by gyroscopic bracework.",
       "map": "echoes_workshop",
       "x": 7,
-      "y": 8,
+      "y": 5,
       "rarity": "legendary",
       "mods": {
         "DEF": 3,
