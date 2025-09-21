@@ -19,19 +19,34 @@ test('leader luck above 7 boosts slot machine payout', async () => {
   globalThis.rng = () => 0;
   globalThis.applyModule = () => ({ start: {} });
   vm.runInThisContext(code, { filename: 'dustland.module.js' });
-  globalThis.DUSTLAND_MODULE.postLoad(globalThis.DUSTLAND_MODULE);
+  const behaviors = await fs.readFile(new URL('../scripts/core/module-behaviors.js', import.meta.url), 'utf8');
+  vm.runInThisContext(behaviors, { filename: 'module-behaviors.js' });
+  const effects = await fs.readFile(new URL('../scripts/core/effects.js', import.meta.url), 'utf8');
+  vm.runInThisContext(effects, { filename: 'effects.js' });
+  globalThis.Dustland = globalThis.Dustland || {};
+  globalThis.Dustland.actions = globalThis.Dustland.actions || {};
+  globalThis.Dustland.workbench = globalThis.Dustland.workbench || {};
+  globalThis.Dustland.fastTravel = globalThis.Dustland.fastTravel || {};
+  globalThis.Dustland.worldMap = globalThis.Dustland.worldMap || {};
+  globalThis.Dustland.eventBus = globalThis.Dustland.eventBus || { on() {}, off() {}, emit() {} };
+  globalThis.soundSources = [];
+  globalThis.state = { map: 'slot_shack' };
+  globalThis.itemDrops = [];
+  globalThis.NPCS = [{ id: 'slots', map: 'slot_shack', x: 3, y: 2 }];
+  globalThis.removeNPC = () => {};
+  globalThis.Dustland.behaviors.setup(globalThis.DUSTLAND_MODULE);
   const slotNpc = globalThis.DUSTLAND_MODULE.npcs.find(n => n.id === 'slots');
   globalThis.party = [{ stats: { LCK: 7 }, _bonus: { LCK: 0 }, name: 'Hero' }];
   globalThis.leader = () => party[0];
 
   const play = slotNpc.tree.start.choices[0].effects[0];
-  play();
+  globalThis.Dustland.effects.apply([play]);
   assert.equal(player.scrap, 4);
 
   player.scrap = 5;
   party[0].stats.LCK = 8;
   logMessages.length = 0;
-  play();
+  globalThis.Dustland.effects.apply([play]);
   assert.equal(player.scrap, 5);
   assert.ok(logMessages.some(m => m.includes('Lucky spin')));
 

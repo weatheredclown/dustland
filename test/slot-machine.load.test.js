@@ -48,6 +48,7 @@ test('slot machine works after save and load', async () => {
     renderQuests: () => {},
     updateHUD: () => {},
     centerCamera: () => {},
+    soundSources: [],
     globalThis: null
   };
   ctx.window = ctx;
@@ -58,6 +59,7 @@ test('slot machine works after save and load', async () => {
     '../scripts/event-bus.js',
     '../scripts/core/actions.js',
     '../scripts/core/effects.js',
+    '../scripts/core/module-behaviors.js',
     '../scripts/core/spoils-cache.js',
     '../scripts/core/abilities.js',
     '../scripts/core/party.js',
@@ -87,7 +89,6 @@ test('slot machine works after save and load', async () => {
   const moduleSrc = await fs.readFile(new URL('../modules/dustland.module.js', import.meta.url), 'utf8');
   vm.runInContext(moduleSrc, ctx, { filename: 'dustland.module.js' });
   ctx.moduleData = ctx.DUSTLAND_MODULE;
-  ctx.moduleData.postLoad(ctx.moduleData);
   ctx.applyModule(ctx.moduleData);
   ctx.player.scrap = 5;
 
@@ -104,7 +105,7 @@ test('slot machine works after save and load', async () => {
   assert.ok(slotNpc, 'slot npc missing');
   const play = slotNpc.tree.start.choices[0].effects[0];
   const before = ctx.player.scrap;
-  play();
+  ctx.Dustland.effects.apply([play]);
   const cost = 1;
   const reward = 2;
   assert.strictEqual(ctx.player.scrap, before - cost + reward);

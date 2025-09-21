@@ -53,6 +53,7 @@ test('dustland module includes plot improvements', () => {
 
 test('dustland module warns about hall monster', () => {
   const src = loadModuleSrc();
+  const behaviorsSrc = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'core', 'module-behaviors.js'), 'utf8');
   const context = {
     WORLD_H: 90,
     WORLD_W: 120,
@@ -65,22 +66,43 @@ test('dustland module warns about hall monster', () => {
     renderQuests: () => {},
     renderParty: () => {},
     updateHUD: () => {},
-    NPCS: [],
     log: () => {},
+    toast: () => {},
     rng: Math.random,
     removeNPC: () => {},
     SpoilsCache: { create: () => null },
     itemDrops: [],
     registerItem: () => {},
-    EventBus: { emit: () => {} },
-    party: { map: 'world', x: 0, y: 0 },
+    party: { map: 'hall', x: 0, y: 0 },
     setMap: () => {},
-    setPartyPos: () => {}
+    setPartyPos: () => {},
+    setTile: () => {},
+    state: { map: 'hall' },
+    portals: [],
+    enemyBanks: {},
+    Dustland: {
+      actions: { startCombat() {} },
+      workbench: {},
+      fastTravel: {},
+      worldMap: {},
+      eventBus: {
+        on() {},
+        off() {},
+        emit() {}
+      }
+    }
   };
+  context.EventBus = context.Dustland.eventBus;
+  context.NPCS = [];
+  context.clearTimeout = clearTimeout;
+  context.setTimeout = setTimeout;
   vm.runInNewContext(src, context);
-  context.DUSTLAND_MODULE.postLoad(context.DUSTLAND_MODULE);
+  vm.runInNewContext(behaviorsSrc, context);
+  const exitdoorData = context.DUSTLAND_MODULE.npcs.find(n => n.id === 'exitdoor');
+  const exitdoor = { id: exitdoorData.id, tree: JSON.parse(JSON.stringify(exitdoorData.tree)) };
+  context.NPCS.push(exitdoor);
+  context.Dustland.behaviors.setup(context.DUSTLAND_MODULE);
   context.NPCS.push({ id: 'hall_rotwalker' });
-  const exitdoor = context.DUSTLAND_MODULE.npcs.find(n => n.id === 'exitdoor');
   exitdoor.processNode('start');
   assert.ok(exitdoor.tree.start.text.includes('rotwalker at the top of the hall'));
 });

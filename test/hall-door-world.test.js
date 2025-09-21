@@ -58,18 +58,25 @@ test('hall door opens to world after 100 turns', async () => {
   global.setMap = setMap;
 
   const handlers = {};
-  const bus = { on:(e,f)=>{ (handlers[e]=handlers[e]||[]).push(f); }, emit:(e,p)=>{ (handlers[e]||[]).forEach(fn=>fn(p)); } };
-  global.Dustland = { eventBus: bus };
+  const bus = {
+    on(event, fn){ (handlers[event] = handlers[event] || []).push(fn); },
+    off(event, fn){ const list = handlers[event]; if (!list) return; const idx = list.indexOf(fn); if (idx > -1) list.splice(idx, 1); },
+    emit(event, payload){ (handlers[event] || []).slice().forEach(fn => fn(payload)); }
+  };
+  global.Dustland = { eventBus: bus, actions: { startCombat() {} }, workbench: {}, fastTravel: {}, worldMap: {} };
   global.EventBus = bus;
+  global.enemyBanks = {};
 
   const fs = await import('node:fs');
   const vm = await import('node:vm');
   const src = fs.readFileSync(new URL('../modules/dustland.module.js', import.meta.url), 'utf8');
   vm.runInThisContext(src);
+  const behaviors = fs.readFileSync(new URL('../scripts/core/module-behaviors.js', import.meta.url), 'utf8');
+  vm.runInThisContext(behaviors);
 
   const hall = global.DUSTLAND_MODULE.interiors.find(i => i.id === 'hall');
   interiors.hall = { ...hall, grid: gridFromEmoji(hall.grid) };
-  global.DUSTLAND_MODULE.postLoad(global.DUSTLAND_MODULE);
+  global.Dustland.behaviors.setup(global.DUSTLAND_MODULE);
 
   assert.strictEqual(getTile('hall', 15, 18), TILE.FLOOR);
   assert.strictEqual(portals.length, 0);

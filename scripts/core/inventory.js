@@ -605,6 +605,36 @@ function useItem(invIndex){
     emit(`used:${it.id}`, { item: it });
     return true;
   }
+  const effectList = [];
+  if (Array.isArray(it.use.effects)) {
+    for (const entry of it.use.effects) {
+      if (!entry) continue;
+      if (typeof entry === 'string') effectList.push({ effect: entry });
+      else if (typeof entry === 'object') effectList.push({ ...entry });
+    }
+  }
+  if (it.use.effect) {
+    if (typeof it.use.effect === 'string') {
+      const extra = {};
+      for (const [key, value] of Object.entries(it.use)) {
+        if (key === 'effect' || key === 'effects' || key === 'consume' || key === 'text' || key === 'toast') continue;
+        extra[key] = value;
+      }
+      effectList.push({ effect: it.use.effect, ...extra });
+    } else if (typeof it.use.effect === 'object') {
+      effectList.push({ ...it.use.effect });
+    }
+  }
+  if (effectList.length) {
+    globalThis.Dustland?.effects?.apply?.(effectList, { player, party, item: it });
+    if (it.use.consume !== false) removeFromInv(invIndex);
+    const msg = it.use.text || `Used ${it.name}`;
+    log(msg);
+    if (typeof toast === 'function') toast(it.use.toast || msg);
+    emit('sfx','tick');
+    emit(`used:${it.id}`, { item: it });
+    return true;
+  }
   if(typeof it.use.onUse === 'function'){
     const ok = it.use.onUse({player, party, log, toast});
     if(ok!==false){

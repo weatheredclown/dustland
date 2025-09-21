@@ -299,7 +299,7 @@ loopMinus.addEventListener('click', () => {
   showLoopControls(null);
 });
 
-const moduleData = globalThis.moduleData || (globalThis.moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {} });
+const moduleData = globalThis.moduleData || (globalThis.moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod', 'spread'];
 const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];
@@ -4169,6 +4169,7 @@ function applyLoadedModule(data) {
   moduleData.templates = data.templates || [];
   moduleData.zones = data.zones || [];
   moduleData.zoneEffects = (data.zoneEffects || []).map(z => ({ ...z }));
+  moduleData.behaviors = JSON.parse(JSON.stringify(data.behaviors || {}));
   moduleData.encounters = [];
   if (data.encounters) {
     Object.entries(data.encounters).forEach(([map, list]) => {

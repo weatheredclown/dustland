@@ -430,6 +430,8 @@ function applyModule(data = {}, options = {}) {
   let moduleData = data || {};
   const moduleName = moduleData.name || '';
   const dl = globalThis.Dustland ||= {};
+  dl.behaviors?.teardown?.();
+  dl.effects?.reset?.();
   dl.currentModule = moduleName;
   (dl.moduleProps ||= {})[moduleName] = { ...(moduleData.props || {}) };
   (dl.loadedModules ||= {})[moduleName] = moduleData;
@@ -620,9 +622,15 @@ function applyModule(data = {}, options = {}) {
     if (dlgArr) opts.questDialogs = dlgArr;
     const npc = makeNPC(n.id, n.map || 'world', n.x, n.y, n.color, n.name || n.id, n.title || '', n.desc || '', tree, quest, null, null, opts);
     if (Array.isArray(n.loop)) npc.loop = n.loop;
+    if (n.hintSound && Array.isArray(soundSources)) {
+      if (!soundSources.some(s => s.id === npc.id)) {
+        soundSources.push({ id: npc.id, x: npc.x, y: npc.y, map: npc.map });
+      }
+    }
     if (typeof NPCS !== 'undefined') NPCS.push(npc);
   });
   revealHiddenNPCs();
+  dl.behaviors?.setup?.(moduleData);
   const nameForLog = moduleData.name || moduleData.id || 'module';
   if (typeof log === 'function') log(`${nameForLog} loaded successfully.`);
   else console.log(`${nameForLog} loaded successfully.`);

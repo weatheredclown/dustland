@@ -3,6 +3,7 @@
   let dustStormCanvas = null;
   let dustStormCtx = null;
   let dustParticles = [];
+  let slotMachines = {};
 
   function createDustStorm() {
     if (dustStormCanvas) return;
@@ -49,6 +50,18 @@
     dustStormCanvas = null;
     dustStormCtx = null;
     dustParticles = [];
+  }
+
+  function getSlotState(id = 'slot_machine') {
+    const key = id || 'slot_machine';
+    if (!slotMachines[key]) slotMachines[key] = { net: 0, exhausted: false };
+    return slotMachines[key];
+  }
+
+  function invokeWorkbench(recipe) {
+    if (!recipe) return;
+    const fn = globalThis.Dustland?.workbench?.[recipe];
+    if (typeof fn === 'function') fn();
   }
 
   const Effects = {
@@ -158,6 +171,118 @@
               if (idx !== -1) removeFromInv(idx);
             }
             break; }
+          case 'teleport': {
+            const map = eff.map || state.map;
+            if (map && typeof setMap === 'function') {
+              if (typeof eff.label === 'string') setMap(map, eff.label);
+              else setMap(map);
+            }
+            const px = Number.isFinite(eff.x) ? eff.x : party?.x;
+            const py = Number.isFinite(eff.y) ? eff.y : party?.y;
+            if (Number.isFinite(px) && Number.isFinite(py) && typeof setPartyPos === 'function') {
+              setPartyPos(px, py);
+            }
+            if (typeof eff.log === 'string' && typeof log === 'function') log(eff.log);
+            if (typeof eff.toast === 'string' && typeof toast === 'function') toast(eff.toast);
+            break; }
+          case 'pullSlots': {
+            if (!player || typeof player.scrap !== 'number') break;
+            const cost = Number.isFinite(eff.cost) ? eff.cost : 0;
+            if (cost > 0 && player.scrap < cost) {
+              if (typeof log === 'function') log('Not enough scrap.');
+              break;
+            }
+            if (cost > 0) player.scrap -= cost;
+            const payouts = Array.isArray(eff.payouts) && eff.payouts.length ? eff.payouts : [0];
+            const lead = typeof leader === 'function' ? leader() : null;
+            const luck = (lead?.stats?.LCK ?? 0) + (lead?._bonus?.LCK ?? 0);
+            const effLuck = Math.max(0, luck - 7);
+            const roll = typeof rng === 'function' ? rng : Math.random;
+            let idx = Math.floor(roll() * payouts.length);
+            if (effLuck > 0 && roll() < effLuck * 0.05) {
+              idx = Math.min(idx + 1, payouts.length - 1);
+              if (typeof log === 'function') log('Lucky spin!');
+            }
+            const reward = Number.isFinite(payouts[idx]) ? payouts[idx] : 0;
+            if (reward > 0) {
+              player.scrap += reward;
+              if (typeof log === 'function') log(`The machine rattles and spits out ${reward} scrap.`);
+            } else if (typeof log === 'function') {
+              log('The machine coughs and eats your scrap.');
+            }
+            const machine = getSlotState(eff.npcId || eff.machineId || 'slot_machine');
+            machine.net += reward - cost;
+            const dropCfg = eff.drop;
+            if (!machine.exhausted && dropCfg) {
+              const threshold = Number.isFinite(dropCfg.threshold) ? dropCfg.threshold : 500;
+              if (machine.net >= threshold) {
+                machine.exhausted = true;
+                const roster = Array.isArray(NPCS) ? NPCS : [];
+                const npc = roster.find(n => n.id === (eff.npcId || eff.machineId)) || null;
+                const dropPos = npc ? { map: npc.map, x: npc.x, y: npc.y } : { map: party?.map ?? state.map, x: party?.x ?? 0, y: party?.y ?? 0 };
+                if (npc && typeof removeNPC === 'function') removeNPC(npc);
+                if (dropCfg.log && typeof log === 'function') log(dropCfg.log);
+                if (dropCfg.toast && typeof toast === 'function') toast(dropCfg.toast);
+                if (dropCfg.rank && typeof SpoilsCache?.create === 'function') {
+                  const cache = SpoilsCache.create(dropCfg.rank);
+                  const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
+                  itemDrops?.push?.({ id: registered.id, ...dropPos });
+                  globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target: npc });
+                }
+              }
+            }
+            if (typeof updateHUD === 'function') updateHUD();
+            break; }
+          case 'modTraderGrudge': {
+            const roster = Array.isArray(NPCS) ? NPCS : [];
+            const trader = roster.find(n => n && (n.id === (eff.npcId || 'trader')));
+            const shop = trader?.shop;
+            if (!shop) break;
+            const current = Number.isFinite(shop.grudge) ? shop.grudge : 0;
+            let target = Number.isFinite(eff.set) ? eff.set : current + (Number.isFinite(eff.delta) ? eff.delta : 0);
+            if (Number.isFinite(eff.min)) target = Math.max(eff.min, target);
+            if (Number.isFinite(eff.max)) target = Math.min(eff.max, target);
+            const next = Math.max(0, Math.round(Number.isFinite(target) ? target : current));
+            shop.grudge = next;
+            globalThis.Dustland?.updateTradeUI?.(shop);
+            const diff = next - current;
+            if (typeof eff.toast === 'string') {
+              if (typeof toast === 'function') toast(eff.toast);
+              else if (typeof log === 'function') log(eff.toast);
+            } else if (typeof eff.log === 'string' && typeof log === 'function') {
+              log(eff.log);
+            } else if (!eff.silent && typeof log === 'function') {
+              if (diff > 0) log(`Cass's grudge rises to ${next}.`);
+              else if (diff < 0) log(`Cass's grudge falls to ${next}.`);
+              else log(`Cass's grudge holds at ${next}.`);
+            }
+            break; }
+          case 'buyMemoryWorm': {
+            const cost = Number.isFinite(eff.cost) ? eff.cost : 500;
+            if (!player || (player.scrap ?? 0) < cost) {
+              if (typeof log === 'function') log('Not enough scrap.');
+              break;
+            }
+            player.scrap -= cost;
+            const itemId = eff.itemId || 'memory_worm';
+            if (typeof addToInv === 'function') addToInv(itemId);
+            if (typeof renderInv === 'function') renderInv();
+            if (typeof updateHUD === 'function') updateHUD();
+            if (typeof log === 'function') log(eff.log || 'Purchased Memory Worm.');
+            break; }
+          case 'craftSignalBeacon':
+            invokeWorkbench('craftSignalBeacon');
+            break;
+          case 'workbenchCraft':
+            invokeWorkbench(eff.recipe);
+            break;
+          case 'activateBunker':
+            globalThis.Dustland?.fastTravel?.activateBunker?.(eff.id);
+            break;
+          case 'openWorldMap': {
+            if (typeof globalThis.openWorldMap === 'function') globalThis.openWorldMap(eff.id);
+            else globalThis.Dustland?.worldMap?.open?.(eff.id);
+            break; }
           case 'removeItemsByTag': {
             if (eff.tag && Array.isArray(player?.inv) && typeof removeFromInv === 'function') {
               for (let i = player.inv.length - 1; i >= 0; i--) {
@@ -190,6 +315,9 @@
             break; }
         }
       }
+    },
+    reset() {
+      slotMachines = {};
     },
     tick(ctx = {}) {
       const list = ctx.buffs || [];
