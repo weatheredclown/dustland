@@ -655,7 +655,7 @@ const DATA = `
       "desc": "Ceremonial armor woven with mnemonic threads for sermon-weaving.",
       "map": "echoes_atrium",
       "x": 6,
-      "y": 9,
+      "y": 5,
       "rarity": "legendary",
       "mods": {
         "DEF": 3,
@@ -675,7 +675,7 @@ const DATA = `
       "desc": "A reliquary that hums with persuasive echoes.",
       "map": "echoes_archive",
       "x": 5,
-      "y": 10,
+      "y": 5,
       "rarity": "legendary",
       "mods": {
         "CHA": 1,
@@ -695,7 +695,7 @@ const DATA = `
       "desc": "Cogwitch mantle anchored by gyroscopic bracework.",
       "map": "echoes_workshop",
       "x": 7,
-      "y": 8,
+      "y": 5,
       "rarity": "legendary",
       "mods": {
         "DEF": 3,
@@ -756,7 +756,7 @@ const DATA = `
       "desc": "Self-stabilizing compass that hums toward safe footing.",
       "map": "world",
       "x": 22,
-      "y": 65,
+      "y": 68,
       "rarity": "legendary",
       "mods": {
         "PER": 1,
@@ -768,6 +768,15 @@ const DATA = `
           "role": "Wanderer"
         }
       }
+    },
+    {
+      "id": "travel_pass",
+      "name": "Travel Pass",
+      "type": "quest",
+      "desc": "Stamped permit waiving bunker fuel fees.",
+      "tags": [
+        "pass"
+      ]
     }
   ],
   "quests": [
@@ -4025,6 +4034,14 @@ const DATA = `
         "south": true,
         "east": true
       },
+      "noEncounters": true
+    },
+    {
+      "map": "room_oc3abv",
+      "x": 0,
+      "y": 0,
+      "w": 114,
+      "h": 50,
       "noEncounters": true
     }
   ],
