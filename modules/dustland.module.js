@@ -549,13 +549,6 @@ const DATA = `
       ]
     },
     {
-      "id": "travel_pass",
-      "name": "Travel Pass",
-      "type": "quest",
-      "desc": "Stamped permit waiving bunker fuel fees.",
-      "tags": [
-        "pass"
-      ],
       "id": "scavenger_warlord_rig",
       "name": "Scrap Warlord Rig",
       "type": "armor",
@@ -750,7 +743,7 @@ const DATA = `
       "desc": "Self-stabilizing compass that hums toward safe footing.",
       "map": "world",
       "x": 22,
-      "y": 65,
+      "y": 68,
       "rarity": "legendary",
       "mods": {
         "PER": 1,
@@ -762,6 +755,15 @@ const DATA = `
           "role": "Wanderer"
         }
       }
+    },
+    {
+      "id": "travel_pass",
+      "name": "Travel Pass",
+      "type": "quest",
+      "desc": "Stamped permit waiving bunker fuel fees.",
+      "tags": [
+        "pass"
+      ]
     }
   ],
   "quests": [
@@ -4067,6 +4069,14 @@ const DATA = `
         "south": true,
         "east": true
       },
+      "noEncounters": true
+    },
+    {
+      "map": "room_oc3abv",
+      "x": 0,
+      "y": 0,
+      "w": 114,
+      "h": 50,
       "noEncounters": true
     }
   ],
