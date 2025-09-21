@@ -42,6 +42,10 @@ const combatState = {
   turns: 0
 };
 
+function partyHasQuirk(name){
+  return Array.isArray(party) && party.some(m => m?.quirk === name);
+}
+
 function recordCombatEvent(ev, relay = true){
   combatState.log.push(ev);
   if(relay) globalThis.EventBus?.emit('combat:event', ev);
@@ -741,6 +745,9 @@ function handleEnemyDefeat(attacker, target, sourceLabel){
   log?.(`${target.name} is defeated!`);
   recordCombatEvent?.({ type: 'enemy', actor: target.name, action: 'defeated', by: killer });
   globalThis.EventBus?.emit?.('enemy:defeated', { target });
+  const luckyLint = partyHasQuirk('Lucky Lint');
+  const desertProphet = partyHasQuirk('Desert Prophet');
+  const killerHasBrutalPast = !!(attacker && attacker.quirk === 'Brutal Past');
   const eid = target.id || target.name;
   if (eid){
     const turnsTaken = combatState.turns - (target.spawnTurn || 1) + 1;
@@ -754,28 +761,63 @@ function handleEnemyDefeat(attacker, target, sourceLabel){
   if (typeof target.scrap === 'object' && Math.random() < (target.scrap.chance ?? 1)) {
     const min = target.scrap.min ?? 1;
     const max = target.scrap.max ?? min;
-    const amt = Math.floor(Math.random() * (max - min + 1)) + min;
+    let amt = Math.floor(Math.random() * (max - min + 1)) + min;
+    if (luckyLint) {
+      const bonus = Math.max(1, Math.round(amt * 0.5));
+      amt += bonus;
+    }
     if (amt > 0) {
       player.scrap = (player.scrap || 0) + amt;
       updateHUD?.();
       const who = target.name || target.id || 'foe';
       log?.(`You find ${amt} scrap on the ${who}.`);
+      if (luckyLint) log?.('Lucky Lint shakes loose extra scrap.');
     }
   } else if (/bandit/i.test(target.id) && Math.random() < 0.5){
-    player.scrap = (player.scrap || 0) + 1;
+    let amt = 1;
+    if (luckyLint) amt += 1;
+    player.scrap = (player.scrap || 0) + amt;
     updateHUD?.();
-    log?.('You find 1 scrap on the bandit.');
+    log?.(`You find ${amt} scrap on the bandit.`);
+    if (luckyLint && amt > 1) log?.('Lucky Lint shakes loose extra scrap.');
   }
 
   if (target.boss && Math.random() < 0.1){ addToInv?.('memory_worm'); }
 
   if (typeof SpoilsCache !== 'undefined'){
-    const cache = SpoilsCache.rollDrop?.(target.challenge);
+    const challenge = target.challenge ?? 1;
+    const cache = SpoilsCache.rollDrop?.(desertProphet ? challenge + 1 : challenge);
     if (cache){
       const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
       itemDrops?.push?.({ id: registered.id, map: party.map, x: party.x, y: party.y });
       log?.(`The ground coughs up a ${registered.name}.`);
+      if (desertProphet) log?.('A prophetic vision hinted at this cache.');
       globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target });
+    }
+  }
+
+  if (killerHasBrutalPast){
+    let healed = 0;
+    let adrGain = 0;
+    if (typeof attacker.maxHp === 'number' && typeof attacker.hp === 'number'){
+      const healAmt = Math.max(1, Math.round((attacker.maxHp || 0) * 0.05));
+      const before = attacker.hp;
+      attacker.hp = Math.min(attacker.maxHp, attacker.hp + healAmt);
+      healed = attacker.hp - before;
+    }
+    if (typeof attacker.maxAdr === 'number' && typeof attacker.adr === 'number'){
+      const beforeAdr = attacker.adr;
+      const gainAmt = 15;
+      attacker.adr = Math.min(attacker.maxAdr, attacker.adr + gainAmt);
+      adrGain = attacker.adr - beforeAdr;
+    }
+    const notes = [];
+    if (healed > 0) notes.push(`+${healed} HP`);
+    if (adrGain > 0) notes.push(`+${adrGain} ADR`);
+    if (notes.length){
+      log?.(`${attacker.name} draws on a brutal past (${notes.join(', ')}).`);
+      updateHUD?.();
+      renderCombat?.();
     }
   }
 
