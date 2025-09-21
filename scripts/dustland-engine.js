@@ -881,6 +881,7 @@ EventBus.on('weather:change', w => {
 });
 EventBus.on('persona:equip', () => { renderParty(); updateHUD?.(); });
 EventBus.on('persona:unequip', () => { renderParty(); updateHUD?.(); });
+EventBus.on('movement:player', updateQuestCompassTargets);
 if(weatherBanner && globalThis.Dustland?.weather){
   const w = globalThis.Dustland.weather.getWeather();
   weatherBanner.textContent = (w.icon ? w.icon + ' ' : '') + (w.desc || w.state);
@@ -1715,6 +1716,7 @@ function renderQuests(){
     const target=questCompassTarget(q, partyLoc, progress);
     const card=document.createElement('div');
     card.className='q';
+    card.dataset.questId=q.id || '';
     card.appendChild(renderQuestCompass(q, target, partyLoc));
     const info=document.createElement('div');
     info.className='quest-info';
@@ -1747,6 +1749,47 @@ function renderQuests(){
     info.appendChild(status);
     card.appendChild(info);
     host.appendChild(card);
+  });
+}
+
+function updateQuestCompassTargets(){
+  const questData=globalThis.quests;
+  if(!questData) return;
+  const host=document.getElementById('quests');
+  if(!host) return;
+  const partyLoc=questPartyLocation();
+  host.querySelectorAll('.q').forEach(card=>{
+    const questId=card.dataset?.questId;
+    if(!questId) return;
+    const q=questData[questId];
+    if(!q) return;
+    const progress=questProgressInfo(q);
+    const target=questCompassTarget(q, partyLoc, progress);
+    const compass=card.querySelector('.quest-compass');
+    if(compass){
+      const canvas=compass.querySelector('canvas');
+      if(canvas) drawQuestCompass(canvas, target, partyLoc);
+      compass.title=questCompassTooltip(target, partyLoc);
+    }
+    const desc=card.querySelector('.quest-desc');
+    if(desc) desc.textContent=questDescriptionText(q, progress, target);
+    const targetRow=card.querySelector('.quest-target');
+    if(target && target.label && target.type!=='completed'){
+      if(targetRow){
+        targetRow.textContent=questTargetText(target, partyLoc);
+      }else{
+        const info=card.querySelector('.quest-info');
+        const status=card.querySelector('.status');
+        if(info){
+          const row=document.createElement('div');
+          row.className='small quest-target';
+          row.textContent=questTargetText(target, partyLoc);
+          info.insertBefore(row, status || null);
+        }
+      }
+    }else if(targetRow){
+      targetRow.remove();
+    }
   });
 }
 
@@ -1876,24 +1919,28 @@ function findQuestItemTarget(q, partyLoc){
   return best || pool[0];
 }
 
+function questCompassTooltip(target, partyLoc){
+  if(!target) return 'Explore to advance this quest.';
+  if(target.type==='completed') return 'Quest completed';
+  if(target.label){
+    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` (${target.map})` : '';
+    const prefix=target.type==='npc' ? 'Return to ' : target.type==='item' ? 'Search near ' : '';
+    const text=`${prefix}${target.label}${mapNote}`.trim();
+    return text || 'Quest objective';
+  }
+  return 'Quest objective';
+}
+
 function renderQuestCompass(q, target, partyLoc){
   const wrap=document.createElement('div');
   wrap.className='quest-compass';
+  if(q?.id) wrap.dataset.questId=q.id;
   const canvas=document.createElement('canvas');
   canvas.width=32;
   canvas.height=32;
   wrap.appendChild(canvas);
   drawQuestCompass(canvas, target, partyLoc);
-  if(target){
-    if(target.type==='completed') wrap.title='Quest completed';
-    else if(target.label){
-      const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` (${target.map})` : '';
-      const prefix=target.type==='npc' ? 'Return to ' : target.type==='item' ? 'Search near ' : '';
-      wrap.title=`${prefix}${target.label}${mapNote}`.trim();
-    }
-  } else {
-    wrap.title='Explore to advance this quest.';
-  }
+  wrap.title=questCompassTooltip(target, partyLoc);
   return wrap;
 }
 
