@@ -39,6 +39,15 @@
     return normalized;
   }
 
+  function hasTravelPass(){
+    if(typeof hasItem === 'function' && hasItem('travel_pass')) return true;
+    const inv = globalThis.player?.inv;
+    if(Array.isArray(inv)){
+      return inv.some(it => it && it.id === 'travel_pass');
+    }
+    return false;
+  }
+
   function distance(a, b){
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
   }
@@ -50,6 +59,7 @@
     const fromNet = from.network ?? 'global';
     const toNet = to.network ?? 'global';
     if(fromNet !== toNet) return Infinity;
+    if(hasTravelPass()) return 0;
     return BASE_COST + distance(from, to) * FUEL_PER_TILE;
   }
 
