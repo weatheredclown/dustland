@@ -32,6 +32,56 @@ const itemDrops = [];
 const EQUIP_TYPES = ['weapon','armor','trinket'];
 const MAX_INV_STACK = 64;
 
+function cloneData(obj){
+  if(!obj) return null;
+  try {
+    return JSON.parse(JSON.stringify(obj));
+  } catch (err) {
+    if(Array.isArray(obj)){
+      return obj.map(entry => (entry && typeof entry === 'object') ? cloneData(entry) : entry);
+    }
+    const copy = {};
+    for(const key in obj){
+      copy[key] = obj[key];
+    }
+    return copy;
+  }
+}
+
+function listRequiredRoles(it){
+  if(!it?.equip?.requires) return [];
+  const req = it.equip.requires;
+  const roles = [];
+  if(typeof req.role === 'string' && req.role && !roles.includes(req.role)){
+    roles.push(req.role);
+  }
+  if(Array.isArray(req.roles)){
+    req.roles.forEach(role => {
+      if(typeof role === 'string' && role && !roles.includes(role)){
+        roles.push(role);
+      }
+    });
+  }
+  return roles;
+}
+
+function describeRequiredRoles(it){
+  const roles = listRequiredRoles(it);
+  if(roles.length === 0) return '';
+  if(roles.length === 1) return roles[0];
+  if(roles.length === 2) return roles.join(' or ');
+  return roles.slice(0, roles.length - 1).join(', ') + ', or ' + roles[roles.length - 1];
+}
+
+function canEquip(member, item){
+  if(!member || !item || !EQUIP_TYPES.includes(item.type)) return false;
+  const roles = listRequiredRoles(item);
+  if(roles.length && !roles.includes(member.role)){
+    return false;
+  }
+  return true;
+}
+
 function isStackable(it){
   return !!it && !EQUIP_TYPES.includes(it.type);
 }
@@ -288,6 +338,13 @@ function pickupCache(drop) {
 function equipItem(memberIndex, invIndex){
   const m=party[memberIndex]; const it=player.inv[invIndex];
   if(!m||!it||!EQUIP_TYPES.includes(it.type)){ log('Cannot equip that.'); return; }
+  if(!canEquip(m, it)){
+    const reqText = describeRequiredRoles(it);
+    const msg = reqText ? `${it.name} can only be equipped by ${reqText}.` : `${m.name} cannot equip ${it.name}.`;
+    log(msg);
+    if(typeof toast==='function') toast(msg);
+    return;
+  }
   const slot = it.type;
   const prevEq = m.equip[slot];
   const before = { ...(m._bonus || {}) };
@@ -419,8 +476,8 @@ function normalizeItem(it){
     tags: Array.isArray(it.tags) ? it.tags.map(t=>t.toLowerCase()) : [],
     mods: it.mods ? { ...it.mods } : {},
     use: it.use || null,
-    equip: it.equip || null,
-    unequip: it.unequip || null,
+    equip: cloneData(it.equip),
+    unequip: cloneData(it.unequip),
     cursed: !!it.cursed,
     cursedKnown: !!it.cursedKnown,
     rarity: it.rarity || 'common',
@@ -564,6 +621,6 @@ function useItem(invIndex){
   return false;
 }
 
-const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache, loadStarterItems };
+const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache, loadStarterItems, canEquip, describeRequiredRoles };
 globalThis.Dustland.inventory = inventoryExports;
 Object.assign(globalThis, inventoryExports);

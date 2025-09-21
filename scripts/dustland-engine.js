@@ -1,7 +1,7 @@
 
 // ===== Rendering & Utilities =====
 
-const ENGINE_VERSION = '0.182.0';
+const ENGINE_VERSION = '0.183.0';
 
 
 const logEl = document.getElementById('log');
@@ -1587,11 +1587,13 @@ function renderInv(){
     }
   });
   const member=party[selectedMember]||party[0];
+  const canEquipFn = typeof canEquip === 'function' ? canEquip : null;
+  const describeRoles = typeof describeRequiredRoles === 'function' ? describeRequiredRoles : () => '';
   const suggestions = {};
   if(member){
     for(const slot of ['weapon','armor','trinket']){
       const eq=member.equip[slot];
-      const candidates = others.filter(it => it.type===slot && (!eq || calcItemValue(it)>calcItemValue(eq)));
+      const candidates = others.filter(it => it.type===slot && (!eq || calcItemValue(it)>calcItemValue(eq)) && (!canEquipFn || canEquipFn(member, it)));
       if(candidates.length){
         const max=Math.max(...candidates.map(it=>calcItemValue(it)));
         const best=candidates.filter(it=>calcItemValue(it)===max);
@@ -1652,8 +1654,13 @@ function renderInv(){
       const equipBtn=document.createElement('button');
       equipBtn.className='btn';
       equipBtn.dataset.a='equip';
-      equipBtn.title='Equip';
-      equipBtn.setAttribute('aria-label','Equip');
+      const allowed = !member || !canEquipFn || canEquipFn(member, it);
+      const reqText = describeRoles(it);
+      equipBtn.title = allowed ? 'Equip' : (reqText ? `Only ${reqText} can equip` : 'Cannot equip');
+      equipBtn.setAttribute('aria-label', equipBtn.title);
+      if(!allowed){
+        equipBtn.disabled = true;
+      }
       equipBtn.textContent='⚙';
       equipBtn.onclick=()=> equipItem(selectedMember, player.inv.indexOf(it));
       btnWrap.appendChild(equipBtn);

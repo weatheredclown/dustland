@@ -1519,17 +1519,17 @@ const classSpecials={
 };
 const quirks={
   'Lucky Lint':{
-    desc:'+1 LCK and start with a Lucky Coin.',
+    desc:'+1 LCK, start with a Lucky Coin, and enemies drop extra scrap.',
     stats:{LCK:+1},
     gear:[{id:'lucky_coin',name:'Lucky Coin',type:'trinket',mods:{LCK:+1}}]
   },
   'Brutal Past':{
-    desc:'+1 STR and spiked knuckles for rough fights.',
+    desc:'+1 STR, spiked knuckles, and finishers restore adrenaline and grit.',
     stats:{STR:+1},
     gear:[{id:'spiked_knuckles',name:'Spiked Knuckles',type:'weapon',mods:{ATK:+1}}]
   },
   'Desert Prophet':{
-    desc:'+1 PER and a prophecy scroll that sharpens INT.',
+    desc:'+1 PER, a prophecy scroll, and visions uncover more spoils caches.',
     stats:{PER:+1},
     gear:[{id:'prophecy_scroll',name:'Prophecy Scroll',type:'trinket',mods:{INT:+1}}]
   }

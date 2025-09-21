@@ -555,7 +555,213 @@ const DATA = `
       "desc": "Stamped permit waiving bunker fuel fees.",
       "tags": [
         "pass"
-      ]
+      ],
+      "id": "scavenger_warlord_rig",
+      "name": "Scrap Warlord Rig",
+      "type": "armor",
+      "desc": "Heavy scavenger plating tuned for battle.",
+      "map": "world",
+      "x": 40,
+      "y": 24,
+      "rarity": "legendary",
+      "mods": {
+        "DEF": 5,
+        "HP": 6,
+        "adrenaline_gen_mod": 1.15
+      },
+      "equip": {
+        "requires": {
+          "role": "Scavenger"
+        }
+      }
+    },
+    {
+      "id": "scrapstorm_repeater",
+      "name": "Scrapstorm Repeater",
+      "type": "weapon",
+      "desc": "Custom repeater built from refit drone parts.",
+      "map": "world",
+      "x": 52,
+      "y": 55,
+      "rarity": "legendary",
+      "mods": {
+        "ATK": 5,
+        "ADR": 28,
+        "adrenaline_gen_mod": 1.2
+      },
+      "tags": [
+        "ranged"
+      ],
+      "equip": {
+        "requires": {
+          "role": "Scavenger"
+        }
+      }
+    },
+    {
+      "id": "gunslinger_longcoat",
+      "name": "Starfall Longcoat",
+      "type": "armor",
+      "desc": "Reinforced dustcloak lined with quickdraw servos.",
+      "map": "hall",
+      "x": 12,
+      "y": 15,
+      "rarity": "legendary",
+      "mods": {
+        "DEF": 3,
+        "AGI": 1,
+        "adrenaline_dmg_mod": 1.15
+      },
+      "equip": {
+        "requires": {
+          "role": "Gunslinger"
+        }
+      }
+    },
+    {
+      "id": "sunset_mirage",
+      "name": "Sunset Mirage",
+      "type": "weapon",
+      "desc": "Twinbarrel pistols refracting muzzle flashes into afterimages.",
+      "map": "world",
+      "x": 70,
+      "y": 60,
+      "rarity": "legendary",
+      "mods": {
+        "ATK": 6,
+        "ADR": 26,
+        "LCK": 1,
+        "adrenaline_gen_mod": 1.1
+      },
+      "tags": [
+        "ranged"
+      ],
+      "equip": {
+        "requires": {
+          "role": "Gunslinger"
+        }
+      }
+    },
+    {
+      "id": "preachers_relic_vestment",
+      "name": "Relic Vestments",
+      "type": "armor",
+      "desc": "Ceremonial armor woven with mnemonic threads for sermon-weaving.",
+      "map": "echoes_atrium",
+      "x": 6,
+      "y": 9,
+      "rarity": "legendary",
+      "mods": {
+        "DEF": 3,
+        "CHA": 2,
+        "LCK": 1
+      },
+      "equip": {
+        "requires": {
+          "role": "Snakeoil Preacher"
+        }
+      }
+    },
+    {
+      "id": "sermonic_relic",
+      "name": "Sermonic Reliquary",
+      "type": "trinket",
+      "desc": "A reliquary that hums with persuasive echoes.",
+      "map": "echoes_archive",
+      "x": 5,
+      "y": 10,
+      "rarity": "legendary",
+      "mods": {
+        "CHA": 1,
+        "LCK": 1,
+        "adrenaline_gen_mod": 1.2
+      },
+      "equip": {
+        "requires": {
+          "role": "Snakeoil Preacher"
+        }
+      }
+    },
+    {
+      "id": "cogwitch_gyrocloak",
+      "name": "Gyrocloak of Sparks",
+      "type": "armor",
+      "desc": "Cogwitch mantle anchored by gyroscopic bracework.",
+      "map": "echoes_workshop",
+      "x": 7,
+      "y": 8,
+      "rarity": "legendary",
+      "mods": {
+        "DEF": 3,
+        "INT": 2,
+        "adrenaline_gen_mod": 1.1
+      },
+      "equip": {
+        "requires": {
+          "role": "Cogwitch"
+        }
+      }
+    },
+    {
+      "id": "thaumic_spanner",
+      "name": "Thaumic Spanner",
+      "type": "trinket",
+      "desc": "A tuning spanner that channels stored charge into the wielder.",
+      "map": "room_oc3abv",
+      "x": 20,
+      "y": 38,
+      "rarity": "legendary",
+      "mods": {
+        "INT": 1,
+        "PER": 1,
+        "adrenaline_gen_mod": 1.25
+      },
+      "equip": {
+        "requires": {
+          "role": "Cogwitch"
+        }
+      }
+    },
+    {
+      "id": "wanderer_sandmantle",
+      "name": "Sandmantle of Echoes",
+      "type": "armor",
+      "desc": "Layered sandweave that cushions and sharpens a wanderer's instincts.",
+      "map": "world",
+      "x": 58,
+      "y": 30,
+      "rarity": "legendary",
+      "mods": {
+        "DEF": 3,
+        "AGI": 1,
+        "PER": 1,
+        "HP": 4
+      },
+      "equip": {
+        "requires": {
+          "role": "Wanderer"
+        }
+      }
+    },
+    {
+      "id": "wayfarer_gyroscope",
+      "name": "Wayfarer Gyroscope",
+      "type": "trinket",
+      "desc": "Self-stabilizing compass that hums toward safe footing.",
+      "map": "world",
+      "x": 22,
+      "y": 65,
+      "rarity": "legendary",
+      "mods": {
+        "PER": 1,
+        "LCK": 1,
+        "adrenaline_gen_mod": 1.1
+      },
+      "equip": {
+        "requires": {
+          "role": "Wanderer"
+        }
+      }
     }
   ],
   "quests": [
