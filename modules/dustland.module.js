@@ -2162,21 +2162,39 @@ const DATA = `
         "markup": 1,
         "inv": [
           {
-            "id": "pipe_rifle"
+            "id": "pipe_rifle",
+            "rarity": "common",
+            "cadence": "daily",
+            "refreshHours": 24
           },
           {
-            "id": "leather_jacket"
+            "id": "leather_jacket",
+            "rarity": "common",
+            "cadence": "daily",
+            "refreshHours": 24
           },
           {
-            "id": "water_flask"
+            "id": "water_flask",
+            "rarity": "common",
+            "cadence": "daily",
+            "refreshHours": 24
           },
           {
-            "id": "frag_grenade"
+            "id": "frag_grenade",
+            "rarity": "rare",
+            "cadence": "weekly",
+            "refreshHours": 168,
+            "scarcity": "scarce"
           },
           {
-            "id": "incendiary_grenade"
+            "id": "incendiary_grenade",
+            "rarity": "epic",
+            "cadence": "weekly",
+            "refreshHours": 168,
+            "scarcity": "rare"
           }
-        ]
+        ],
+        "refresh": 24
       },
       "symbol": "!"
     },
