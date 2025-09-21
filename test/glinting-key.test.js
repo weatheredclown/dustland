@@ -6,19 +6,51 @@ import vm from 'node:vm';
 // verify the Glinting Key transports the party and logs a vision
 
 test('glinting key triggers vision', async () => {
-  const code = await fs.readFile(new URL('../modules/dustland.module.js', import.meta.url), 'utf8');
+  const [moduleSrc, effectsSrc] = await Promise.all([
+    fs.readFile(new URL('../modules/dustland.module.js', import.meta.url), 'utf8'),
+    fs.readFile(new URL('../scripts/core/effects.js', import.meta.url), 'utf8')
+  ]);
   const context = {
     log(msg){ context.logged = msg; },
+    toast(){},
     setMap(map){ context.map = map; },
     setPartyPos(x, y){ context.pos = { x, y }; },
-    NPCS: []
+    NPCS: [],
+    soundSources: [],
+    player: { scrap: 0 },
+    party: { map: 'hall', x: 0, y: 0 },
+    state: { map: 'hall' },
+    Dustland: {},
+    document: {
+      body: { appendChild() {} },
+      createElement: () => ({
+        style: {},
+        getContext: () => ({
+          clearRect(){},
+          fillRect(){},
+          beginPath(){},
+          moveTo(){},
+          lineTo(){},
+          stroke(){},
+          save(){},
+          restore(){},
+          translate(){},
+          font: '',
+          fillText(){},
+          globalAlpha: 1
+        })
+      }),
+      querySelector: () => null,
+      getElementById: () => null
+    }
   };
+  context.window = context;
   vm.createContext(context);
-  vm.runInContext(code, context);
-  context.DUSTLAND_MODULE.postLoad(context.DUSTLAND_MODULE);
+  vm.runInContext(effectsSrc, context, { filename: 'effects.js' });
+  vm.runInContext(moduleSrc, context, { filename: 'dustland.module.js' });
   const key = context.DUSTLAND_MODULE.items.find(i => i.id === 'glinting_key');
-  assert.ok(key && key.use && typeof key.use.onUse === 'function');
-  key.use.onUse();
+  assert.ok(key && key.use && key.use.effect === 'teleport');
+  context.Dustland.effects.apply([key.use], { player: context.player, party: context.party });
   assert.strictEqual(context.map, 'echo_chamber');
   assert.deepEqual(context.pos, { x: 2, y: 2 });
   assert.strictEqual(context.logged, 'A vision of a shining world surrounds you.');

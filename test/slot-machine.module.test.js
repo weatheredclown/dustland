@@ -53,17 +53,24 @@ test('slot machine drops cache after paying out 500 scrap net', () => {
     registerItem: item => item,
     itemDrops: [],
     EventBus: { emit: () => {} },
-    party: { map: 'slot_shack', x: 3, y: 2 }
+    party: { map: 'slot_shack', x: 3, y: 2 },
+    Dustland: { actions: {}, workbench: {}, fastTravel: {}, worldMap: {}, eventBus: { on() {}, off() {}, emit() {} } },
+    soundSources: [],
+    state: { map: 'slot_shack' }
   };
   context.removeNPC = npc => {
     const i = context.NPCS.indexOf(npc);
     if (i > -1) context.NPCS.splice(i, 1);
   };
   vm.runInNewContext(src, context);
-  context.DUSTLAND_MODULE.postLoad(context.DUSTLAND_MODULE);
+  const behaviorsSrc = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'core', 'module-behaviors.js'), 'utf8');
+  vm.runInNewContext(behaviorsSrc, context);
+  const effectsSrc = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'core', 'effects.js'), 'utf8');
+  vm.runInNewContext(effectsSrc, context);
+  context.Dustland.behaviors.setup(context.DUSTLAND_MODULE);
   const slotNpc = context.DUSTLAND_MODULE.npcs.find(n => n.id === 'slots');
   const play = slotNpc.tree.start.choices.find(c => c.label === '(25 scrap)').effects[0];
-  for (let i = 0; i < 20; i++) play();
+  for (let i = 0; i < 20; i++) context.Dustland.effects.apply([play]);
   assert.strictEqual(context.NPCS.length, 0);
   assert(context.itemDrops.some(d => d.id === 'cache-vaulted'));
 });

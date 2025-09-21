@@ -157,7 +157,20 @@ globalThis.ACK_MODULE_SCHEMA = {
             "type": "object",
             "properties": {
               "type": { "type": "string" },
-              "amount": { "type": "number" }
+              "amount": { "type": "number" },
+              "effect": { "type": ["string", "object"] },
+              "effects": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    { "type": "string" },
+                    { "type": "object" }
+                  ]
+                }
+              },
+              "consume": { "type": "boolean" },
+              "text": { "type": "string" },
+              "toast": { "type": "string" }
             },
             "additionalProperties": true
           }
@@ -299,6 +312,63 @@ globalThis.ACK_MODULE_SCHEMA = {
         "items": { "type": "object" }
       }
     },
+    "behaviors": {
+      "type": "object",
+      "properties": {
+        "stepUnlocks": { "$ref": "#/definitions/stepUnlockList" },
+        "arenas": { "$ref": "#/definitions/arenaList" },
+        "memoryTapes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "npcId": { "type": "string" },
+              "log": { "type": "string" },
+              "logPrefix": { "type": "string" }
+            },
+            "required": ["npcId"],
+            "additionalProperties": false
+          }
+        },
+        "dialogMutations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "npcId": { "type": "string" },
+              "nodeId": { "type": "string" },
+              "defaultText": { "type": "string" },
+              "variants": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "condition": {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string" },
+                        "npcId": { "type": "string" },
+                        "flag": { "type": "string" },
+                        "op": { "type": "string" },
+                        "value": { "type": "number" }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": true
+                    },
+                    "text": { "type": "string" }
+                  },
+                  "required": ["text"],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": ["npcId", "nodeId"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "templates": {
       "type": "array",
       "items": { "type": "object" }
@@ -423,6 +493,95 @@ globalThis.ACK_MODULE_SCHEMA = {
         }
       ],
       "additionalProperties": false
+    },
+    "stepUnlockList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "map": { "type": "string" },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "steps": { "type": "number" },
+          "tile": { "type": ["string", "number"] },
+          "log": { "type": "string" },
+          "toast": { "type": "string" },
+          "portal": {
+            "type": "object",
+            "properties": {
+              "toMap": { "type": "string" },
+              "toX": { "type": "number" },
+              "toY": { "type": "number" }
+            },
+            "required": ["toMap", "toX", "toY"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["map", "x", "y", "steps"],
+        "additionalProperties": false
+      }
+    },
+    "arenaList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "map": { "type": "string" },
+          "bankId": { "type": "string" },
+          "entranceDelay": { "type": "number" },
+          "resetLog": { "type": "string" },
+          "reward": {
+            "type": "object",
+            "properties": {
+              "log": { "type": "string" },
+              "toast": { "type": "string" }
+            },
+            "additionalProperties": false
+          },
+          "waves": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "templateId": { "type": "string" },
+                "count": { "type": "number" },
+                "bankChallenge": { "type": "number" },
+                "announce": { "type": "string" },
+                "toast": { "type": "string" },
+                "prompt": { "type": "string" },
+                "vulnerability": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "oneOf": [
+                        { "type": "string" },
+                        { "type": "array", "items": { "type": "string" } }
+                      ]
+                    },
+                    "matchDef": { "type": "number" },
+                    "missDef": { "type": "number" },
+                    "defMod": {
+                      "type": "object",
+                      "properties": {
+                        "match": { "type": "number" },
+                        "miss": { "type": "number" }
+                      },
+                      "additionalProperties": false
+                    },
+                    "successLog": { "type": "string" },
+                    "failLog": { "type": "string" }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "required": ["templateId"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["map", "waves"],
+        "additionalProperties": false
+      }
     },
     "schedulePrerequisite": {
       "oneOf": [
