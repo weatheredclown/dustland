@@ -279,30 +279,8 @@ const OFFICE_IMPL = (() => {
       questId: 'q_card',
       tree: () =>
         flagValue('visited_forest')
-          ? {
-              start: {
-                text: 'Glad you made it back from the forest.',
-                choices: [ { label: '(Chat later)', to: 'bye' } ]
-              }
-            }
-          : {
-              start: {
-                text: 'Ready for the sim once you get the card.',
-                choices: [
-                  { label: '(Where do I get one?)', to: 'accept', q: 'accept' },
-                  { label: '(I have the card)', to: 'do_turnin', q: 'turnin' },
-                  { label: '(Leave)', to: 'bye' }
-                ]
-              },
-              accept: {
-                text: 'Security downstairs hoards spares.',
-                choices: [ { label: '(Thanks)', to: 'bye' } ]
-              },
-              do_turnin: {
-                text: 'Jen hands you a battered VR headset.',
-                choices: [ { label: '(Continue)', to: 'bye' } ]
-              }
-            }
+          ? { start: { text: 'Glad you made it back from the forest.' } }
+          : { start: { text: '' } }
     },
     {
       id: 'friend2',
@@ -329,35 +307,7 @@ const OFFICE_IMPL = (() => {
       portraitSheet: portraits.toll,
       questId: 'q_toll',
       tree: {
-        start: {
-          text: 'Pay a trinket to cross.',
-          choices: [
-            {
-              label: '(Accept quest)',
-              to: 'accept',
-              q: 'accept'
-            },
-            {
-              label: '(Pay)',
-              to: 'do_turnin',
-              q: 'turnin',
-              costSlot: 'trinket',
-              success: '',
-              failure: 'You have no trinket.'
-            },
-            { label: '(Leave)', to: 'bye' }
-          ]
-        },
-        accept: { text: 'Bring me a trinket and you may cross.', choices: [ { label: '(Leave)', to: 'bye' } ] },
-        do_turnin: {
-          text: 'The toll keeper steps aside.',
-          choices: [
-            {
-              label: '(Continue)',
-              to: 'bye'
-            }
-          ]
-        }
+        start: { text: 'Pay a trinket to cross.' }
       }
     },
     {
@@ -579,13 +529,41 @@ const OFFICE_IMPL = (() => {
           id: 'q_card',
           title: 'Access Granted',
           desc: 'Convince security to lend you an access card and join Jen in the sim.',
-          reward: 'cursed_vr_helmet'
+          reward: 'cursed_vr_helmet',
+          dialog: {
+            offer: {
+              text: 'Ready for the sim once you get the card.',
+              choice: { label: '(Where do I get one?)' }
+            },
+            accept: { text: 'Security downstairs hoards spares.' },
+            turnIn: {
+              text: 'Jen hands you a battered VR headset.',
+              choice: { label: '(I have the card)' }
+            },
+            completed: { text: 'Glad you made it back from the forest.' }
+          }
         },
         {
           id: 'q_toll',
           title: 'Bridge Tax',
           desc: 'Pay the Toll Keeper with a trinket.',
-          moveTo: { x: WORLD_MID + 2, y: WORLD_MIDY }
+          moveTo: { x: WORLD_MID + 2, y: WORLD_MIDY },
+          dialog: {
+            offer: {
+              text: 'Pay a trinket to cross.',
+              choice: { label: '(Accept quest)' }
+            },
+            accept: { text: 'Bring me a trinket and you may cross.' },
+            turnIn: {
+              text: 'The toll keeper steps aside.',
+              choice: {
+                label: '(Pay)',
+                costSlot: 'trinket',
+                success: '',
+                failure: 'You have no trinket.'
+              }
+            }
+          }
         }
       ],
     npcs,

@@ -954,14 +954,14 @@ test('turn-in choice appears immediately after accepting', () => {
   NPCS.push(npc);
 
   openDialog(npc);
-  let labels = choicesEl.children.map(c => c.textContent);
-  assert.ok(!labels.includes('turn in'));
+  let labels = choicesEl.children.map(c => c.textContent.toLowerCase());
+  assert.ok(!labels.some(l => l.includes('turn in')));
 
   // accept quest
   choicesEl.children[0].onclick();
 
-  labels = choicesEl.children.map(c => c.textContent);
-  assert.ok(labels.includes('turn in'));
+  labels = choicesEl.children.map(c => c.textContent.toLowerCase());
+  assert.ok(labels.some(l => l.includes('turn in')));
   closeDialog();
 });
 
