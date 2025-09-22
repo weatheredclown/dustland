@@ -368,7 +368,7 @@ const DATA = `
         "map": "echo_chamber",
         "x": 2,
         "y": 2,
-        "log": "A vision of a shining world surrounds you."
+        "log": "A vision of a shining world surrounds you. Press interact to leave."
       }
     },
     {
@@ -3850,6 +3850,15 @@ const DATA = `
       "toMap": "world",
       "toX": 110,
       "toY": 87
+    },
+    {
+      "map": "echo_chamber",
+      "x": 2,
+      "y": 2,
+      "toMap": "world",
+      "toX": 2,
+      "toY": 45,
+      "desc": "The vision releases you back to the wastes."
     }
   ],
   "encounters": {
