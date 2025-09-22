@@ -53,7 +53,7 @@ test('glinting key triggers vision', async () => {
   context.Dustland.effects.apply([key.use], { player: context.player, party: context.party });
   assert.strictEqual(context.map, 'echo_chamber');
   assert.deepEqual(context.pos, { x: 2, y: 2 });
-  assert.strictEqual(context.logged, 'A vision of a shining world surrounds you.');
+  assert.strictEqual(context.logged, 'A vision of a shining world surrounds you. Press interact to leave.');
 });
 
 test('exit door remarks on glinting key', async () => {
