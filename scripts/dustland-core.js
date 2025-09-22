@@ -563,7 +563,9 @@ function applyModule(data = {}, options = {}) {
           reward: q.reward,
           xp: q.xp,
           moveTo: q.moveTo,
-          itemLocation: q.item && questItemLocations[q.item] ? questItemLocations[q.item] : null
+          itemLocation: q.item && questItemLocations[q.item] ? questItemLocations[q.item] : null,
+          dialog: q.dialog,
+          progressText: q.progressText
         }
       );
     });

@@ -1910,7 +1910,7 @@ function toggleQuestDialogBtn() {
 function addNode() {
   const tree = getTreeData();
   const id = Object.keys(tree).length ? 'node' + Object.keys(tree).length : 'start';
-  tree[id] = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
+  tree[id] = { text: '', choices: [] };
   setTreeData(tree);
   renderTreeEditor();
   updateTreeData();
@@ -1926,11 +1926,9 @@ function generateQuestTree() {
   const dialog = dialogLines[0] || '';
   const accept = document.getElementById('npcAccept').value.trim();
   const turnin = document.getElementById('npcTurnin').value.trim();
-  const tree = {
-    start: { text: dialog, choices: [{ label: 'Accept quest', to: 'accept', q: 'accept' }, { label: 'Turn in', to: 'do_turnin', q: 'turnin' }, { label: '(Leave)', to: 'bye' }] },
-    accept: { text: accept || 'Good luck.', choices: [{ label: '(Leave)', to: 'bye' }] },
-    do_turnin: { text: turnin || 'Thanks for helping.', choices: [{ label: '(Leave)', to: 'bye' }] }
-  };
+  const tree = { start: { text: dialog } };
+  if (accept) tree.accept = { text: accept };
+  if (turnin) tree.do_turnin = { text: turnin };
   document.getElementById('npcTree').value = JSON.stringify(tree, null, 2);
   loadTreeEditor();
 }
@@ -2003,9 +2001,12 @@ function updatePersonaSection() {
 }
 function applyCombatTree(tree) {
   tree.start = tree.start || { text: '', choices: [] };
-  if (!tree.start.choices.some(c => c.to === 'do_fight'))
+  tree.start.choices = Array.isArray(tree.start.choices) ? tree.start.choices : [];
+  if (!tree.start.choices.some(c => c?.to === 'do_fight'))
     tree.start.choices.unshift({ label: '(Fight)', to: 'do_fight' });
-  tree.do_fight = tree.do_fight || { text: '', choices: [{ label: '(Continue)', to: 'bye' }] };
+  tree.do_fight = tree.do_fight || { text: '', choices: [] };
+  tree.do_fight.choices = Array.isArray(tree.do_fight.choices) ? tree.do_fight.choices : [];
+  if (!tree.do_fight.choices.length) tree.do_fight.choices.push({ label: '(Continue)', to: 'bye' });
 }
 function removeCombatTree(tree) {
   if (tree.start && Array.isArray(tree.start.choices))
@@ -2282,23 +2283,27 @@ function collectNPCFromForm() {
   const firstQuest = questIds[0];
   const startDialog = dialogLines[0] || '';
   if (!tree || !Object.keys(tree).length) {
-    if (firstQuest) {
-      tree = {
-        start: { text: startDialog, choices: [{ label: 'Accept quest', to: 'accept', q: 'accept' }, { label: 'Turn in', to: 'do_turnin', q: 'turnin' }, { label: '(Leave)', to: 'bye' }] },
-        accept: { text: accept || 'Good luck.', choices: [{ label: '(Leave)', to: 'bye' }] },
-        do_turnin: { text: turnin || 'Thanks for helping.', choices: [{ label: '(Leave)', to: 'bye' }] }
-      };
-    } else {
-      tree = { start: { text: startDialog, choices: [{ label: '(Leave)', to: 'bye' }] } };
-    }
+    tree = { start: { text: startDialog } };
   }
   if (locked && !tree.locked) {
-    tree.locked = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
+    tree.locked = { text: '' };
   }
-  if (!tree.start) tree.start = { text: startDialog, choices: [{ label: '(Leave)', to: 'bye' }] };
+  if (!tree.start) tree.start = { text: startDialog };
   if (tree.start) tree.start.text = startDialog;
   if (tree.accept) tree.accept.text = accept || tree.accept.text;
   if (tree.do_turnin) tree.do_turnin.text = turnin || tree.do_turnin.text;
+  if (firstQuest) {
+    const questMeta = moduleData.quests.find(q => q.id === firstQuest);
+    if (questMeta) {
+      questMeta.dialog = questMeta.dialog || {};
+      questMeta.dialog.offer = questMeta.dialog.offer || {};
+      if (startDialog) questMeta.dialog.offer.text = startDialog;
+      questMeta.dialog.accept = questMeta.dialog.accept || {};
+      questMeta.dialog.accept.text = accept || questMeta.dialog.accept.text || 'Good luck.';
+      questMeta.dialog.turnIn = questMeta.dialog.turnIn || {};
+      questMeta.dialog.turnIn.text = turnin || questMeta.dialog.turnIn.text || 'Thanks for helping.';
+    }
+  }
   const ensureTrainerFn = typeof ensureTrainerChoiceEffect === 'function'
     ? ensureTrainerChoiceEffect
     : (treeArg, trainerId) => {

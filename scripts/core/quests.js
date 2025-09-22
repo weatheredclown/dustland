@@ -42,7 +42,9 @@ class Quest {
     this.pinned = meta.pinned || false;
     this.givers = Array.isArray(meta.givers) ? meta.givers.map(g => ({ ...g })) : [];
     this.itemLocation = meta.itemLocation ? { ...meta.itemLocation } : null;
+    const rawDialog = meta.dialog ? JSON.parse(JSON.stringify(meta.dialog)) : null;
     Object.assign(this, meta);
+    this.dialog = rawDialog ?? (this.dialog ? JSON.parse(JSON.stringify(this.dialog)) : null);
     if (Array.isArray(this.givers)) {
       this.givers = this.givers.map(g => ({ ...g }));
     } else {

@@ -60,6 +60,16 @@ function handleDialogKey(e){
   return false;
 }
 
+function ensureLeaveOption(node) {
+  if (!node || node.noLeave) return;
+  const choices = Array.isArray(node.next) ? node.next.filter(Boolean) : [];
+  const hasExit = choices.some(opt => (opt?.to || opt?.id) === 'bye');
+  if (!hasExit) {
+    choices.push({ label: '(Leave)', to: 'bye', id: 'bye' });
+  }
+  node.next = choices;
+}
+
 function normalizeDialogTree(tree){
   const out={};
   for(const id in tree){
@@ -73,9 +83,124 @@ function normalizeDialogTree(tree){
       return obj;
     });
     const jump=(Array.isArray(n.jump)?n.jump:[]).map(j=>({to:j.to,if:j.if}));
-    out[id]={text:n.text||'',checks:n.checks||[],effects:n.effects||[],next,jump};
+    out[id]={text:n.text||'',checks:n.checks||[],effects:n.effects||[],next,jump,noLeave:!!n.noLeave};
+    ensureLeaveOption(out[id]);
   }
   return out;
+}
+
+function ensureNode(tree, id) {
+  if (!tree[id]) tree[id] = { text: '', checks: [], effects: [], next: [] };
+  const node = tree[id];
+  node.text = typeof node.text === 'string' ? node.text : '';
+  node.checks = Array.isArray(node.checks) ? node.checks : [];
+  node.effects = Array.isArray(node.effects) ? node.effects : [];
+  node.next = Array.isArray(node.next) ? node.next.filter(Boolean) : [];
+  return node;
+}
+
+function normalizeChoiceConfig(data, defaults) {
+  if (!data) return { ...defaults };
+  if (typeof data === 'string') return { ...defaults, label: data };
+  if (typeof data === 'object') {
+    const result = { ...defaults, ...data };
+    if (typeof data.choice === 'string' && !result.label) result.label = data.choice;
+    if (typeof data.text === 'string' && !result.label) result.label = data.text;
+    if (typeof data.label !== 'string' && typeof data.name === 'string') result.label = data.name;
+    delete result.choice;
+    return result;
+  }
+  return { ...defaults };
+}
+
+function normalizeDialogStage(data) {
+  if (!data) return { text: '' };
+  if (typeof data === 'string') return { text: data };
+  if (typeof data === 'object') {
+    const stage = {};
+    if (typeof data.text === 'string') stage.text = data.text;
+    else if (typeof data.dialog === 'string') stage.text = data.dialog;
+    else if (typeof data.description === 'string') stage.text = data.description;
+    if (data.choice !== undefined) stage.choice = normalizeChoiceConfig(data.choice, {});
+    else if (typeof data.label === 'string') stage.choice = normalizeChoiceConfig({ label: data.label }, {});
+    return stage;
+  }
+  return { text: '' };
+}
+
+function normalizeQuestDialogConfig(dialog) {
+  if (!dialog) return { offer: { text: '' }, accept: { text: '' }, turnIn: { text: '' }, active: { text: '' }, completed: { text: '' } };
+  const src = typeof dialog === 'string' ? { offer: dialog } : dialog;
+  const offer = normalizeDialogStage(src.offer ?? src.offerText ?? src.start ?? src.available ?? null);
+  if (!offer.choice) {
+    const raw = src.acceptLabel ?? src.offerChoice ?? null;
+    if (raw) offer.choice = normalizeChoiceConfig(raw, {});
+  }
+  const accept = normalizeDialogStage(src.accept ?? src.acceptText ?? null);
+  if (!accept.choice) {
+    const raw = src.acceptChoice ?? null;
+    if (raw) accept.choice = normalizeChoiceConfig(raw, {});
+  }
+  const turnIn = normalizeDialogStage(src.turnIn ?? src.turnin ?? src.turnInText ?? src.turninText ?? null);
+  if (!turnIn.choice) {
+    const raw = src.turnInChoice ?? src.turnInLabel ?? src.turninChoice ?? src.turninLabel ?? null;
+    if (raw) turnIn.choice = normalizeChoiceConfig(raw, {});
+  }
+  const active = normalizeDialogStage(src.active ?? src.activeText ?? src.progress ?? null);
+  const completed = normalizeDialogStage(src.completed ?? src.completedText ?? src.complete ?? src.completeText ?? null);
+  return {
+    offer,
+    accept,
+    turnIn,
+    active,
+    completed
+  };
+}
+
+function applyQuestDialog(tree, npc) {
+  const quest = npc?.quest;
+  if (!quest) return;
+  const qConfig = normalizeQuestDialogConfig(quest.dialog);
+  const offer = qConfig.offer || { text: '' };
+  const acceptCfg = qConfig.accept || { text: '' };
+  const turnCfg = qConfig.turnIn || { text: '' };
+  const activeCfg = qConfig.active || { text: '' };
+  const completedCfg = qConfig.completed || { text: '' };
+  const status = quest.status || 'available';
+
+  const startNode = ensureNode(tree, 'start');
+  const acceptNode = ensureNode(tree, 'accept');
+  const turnNode = ensureNode(tree, 'do_turnin');
+
+  const acceptChoiceDefaults = { label: '(Accept quest)' };
+  const turnChoiceDefaults = { label: '(Turn in quest)' };
+  const acceptChoiceConfig = acceptCfg.choice || offer.choice;
+  const turnChoiceConfig = turnCfg.choice;
+  const acceptChoice = normalizeChoiceConfig(acceptChoiceConfig, acceptChoiceDefaults);
+  const turnChoice = normalizeChoiceConfig(turnChoiceConfig, turnChoiceDefaults);
+
+  acceptNode.text = typeof acceptCfg.text === 'string' && acceptCfg.text ? acceptCfg.text : (acceptNode.text || 'Good luck.');
+  turnNode.text = typeof turnCfg.text === 'string' && turnCfg.text ? turnCfg.text : (turnNode.text || 'Thanks for helping.');
+
+  let stageText = '';
+  if (status === 'available') stageText = offer.text || '';
+  else if (status === 'active') stageText = activeCfg.text || offer.text || '';
+  else stageText = completedCfg.text || activeCfg.text || offer.text || '';
+  if (stageText) startNode.text = stageText;
+
+  const others = (startNode.next || []).filter(opt => opt && opt.q !== 'accept' && opt.q !== 'turnin');
+  const questChoices = [];
+  if (status === 'available') {
+    questChoices.push({ ...acceptChoice, to: 'accept', q: 'accept' });
+  }
+  if (Object.keys(turnChoice).length) {
+    questChoices.push({ ...turnChoice, to: 'do_turnin', q: 'turnin' });
+  }
+  startNode.next = [...questChoices, ...others];
+
+  ensureLeaveOption(startNode);
+  ensureLeaveOption(acceptNode);
+  ensureLeaveOption(turnNode);
 }
 
 function runEffects(effects){
@@ -350,6 +475,7 @@ function openDialog(npc, node='start'){
   currentNPC=npc;
   const rawTree = typeof npc.tree === 'function' ? npc.tree() : npc.tree;
   dialogState.tree=normalizeDialogTree(rawTree||{});
+  applyQuestDialog(dialogState.tree, npc);
   dialogState.node=node;
   if(npc.unlockTime && Date.now() >= npc.unlockTime){
     npc.locked = false;
