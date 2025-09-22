@@ -303,6 +303,7 @@ const moduleData = globalThis.moduleData || (globalThis.moduleData = { seed: Dat
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod', 'spread'];
 const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];
+const SIMPLE_DIALOG_NODES = new Set(['start', 'locked', 'accept', 'turnin', 'do_turnin', 'do_fight', 'train', 'bye']);
 const customTags = new Set();
 globalThis.treeData = globalThis.treeData || {};
 
@@ -314,6 +315,49 @@ function updateTagOptions() {
   const dl = document.getElementById('tagOptions');
   if (!dl) return;
   dl.innerHTML = allTags().map(t => `<option value="${t}"></option>`).join('');
+}
+
+function isComplexDialogTree(tree) {
+  if (!tree || typeof tree !== 'object') return false;
+  if (tree.imports && Object.keys(tree.imports).length) return true;
+  const keys = Object.keys(tree).filter(k => k !== 'imports');
+  if (!keys.length) return false;
+  for (const key of keys) {
+    if (!SIMPLE_DIALOG_NODES.has(key)) return true;
+  }
+  const start = tree.start;
+  if (!start) return false;
+  const choices = Array.isArray(start.choices) ? start.choices : [];
+  for (const choice of choices) {
+    if (!choice) continue;
+    const to = choice.to;
+    if (to && to !== 'bye' && !SIMPLE_DIALOG_NODES.has(to)) return true;
+    if (Array.isArray(choice.effects) && choice.effects.length) return true;
+    if (choice.q || choice.quest || choice.reqItem || choice.reqTag || choice.reqSlot || choice.costItem || choice.costTag || choice.costSlot || choice.reward || choice.stat || choice.goto || choice.join || choice.once || choice.spawn || choice.setFlag) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function updateDialogFieldVisibility(tree) {
+  const dialogEl = document.getElementById('npcDialog');
+  if (!dialogEl) return;
+  const wrap = dialogEl.parentElement;
+  const hint = document.getElementById('npcDialogHint');
+  let current = tree;
+  if (!current) {
+    const txt = document.getElementById('npcTree')?.value?.trim();
+    if (txt) {
+      try { current = JSON.parse(txt); } catch (e) { current = {}; }
+    } else {
+      current = {};
+    }
+  }
+  const complex = isComplexDialogTree(current);
+  if (wrap?.style) wrap.style.display = complex ? 'none' : 'block';
+  if (hint?.style) hint.style.display = complex ? 'block' : 'none';
+  if (complex) dialogEl.value = current?.start?.text || '';
 }
 
 function collectKnownTags(tags = []) {
@@ -341,6 +385,7 @@ function setTreeData(tree) {
   const treeEl = document.getElementById('npcTree');
   if (treeEl) treeEl.value = JSON.stringify(tree, null, 2);
   if (editNPCIdx >= 0) moduleData.npcs[editNPCIdx].tree = tree;
+  if (typeof updateDialogFieldVisibility === 'function') updateDialogFieldVisibility(tree);
 }
 globalThis.getTreeData = getTreeData;
 globalThis.setTreeData = setTreeData;
