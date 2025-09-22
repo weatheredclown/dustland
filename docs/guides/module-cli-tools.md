@@ -139,6 +139,17 @@ node scripts/module-tools/delete-encounter.js <moduleFile> <mapId>
 Deletes the random encounter list for the specified map. If no encounter lists
 remain, the command removes the `encounters` section entirely.
 
+## Clean up Dustland dialog
+
+```
+node scripts/module-tools/cleanup-dustland-dialog.js <moduleFile>
+```
+
+Moves the Archivist's quest dialog text into the quest entries and removes
+redundant explicit `(Leave)` options from NPC dialog trees. Run this against
+`modules/dustland.module.js` and the matching JSON in `data/modules/` to keep the
+two copies aligned.
+
 ## Module schema reference
 
 The CLI tools operate on module files that follow a shared JSON schema. A
