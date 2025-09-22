@@ -892,7 +892,12 @@ const DATA = `
       "desc": "Deliver the Sun Charm to the Archivist in the Hall so he can decode the broadcast and chart a path to the missing fragment.",
       "item": "sun_charm",
       "reward": "sun_charm",
-      "xp": 4
+      "xp": 4,
+      "dialog": {
+        "offer": "The Archivist taps a reel. 'The Sun Charm hums with a lost broadcast. Bring it so I can hear the dawn.'",
+        "active": "The Archivist taps a reel. 'The Sun Charm hums with a lost broadcast. Bring it so I can hear the dawn.'",
+        "completed": "The Archivist squints at the receiver. 'I traced the pattern, but Signal Fragment C will complete the chorus.'"
+      }
     },
     {
       "id": "q_solar_signal",
@@ -900,7 +905,12 @@ const DATA = `
       "desc": "Recover Signal Fragment C from the echo relay hidden in the far northeast so the Archivist can finish the broadcast and unlock the Epic Blade.",
       "item": "signal_fragment_c",
       "reward": "epic_blade",
-      "xp": 8
+      "xp": 8,
+      "dialog": {
+        "offer": "The Archivist squints at the receiver. 'I traced the pattern, but Signal Fragment C will complete the chorus.'",
+        "active": "The Archivist squints at the receiver. 'I traced the pattern, but Signal Fragment C will complete the chorus.'",
+        "completed": "The Archivist lets the reels spin freely. 'The message sings thanks to you. Stay and listen.'"
+      }
     },
     {
       "id": "q_antidote_aid",
@@ -970,10 +980,6 @@ const DATA = `
             {
               "label": "(Enter the vortex)",
               "to": "enter"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
@@ -1014,10 +1020,6 @@ const DATA = `
               "label": "(Dig)",
               "to": "dig",
               "once": true
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
@@ -1039,12 +1041,7 @@ const DATA = `
         },
         "empty": {
           "text": "Just disturbed sand remains.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "?"
@@ -1078,10 +1075,6 @@ const DATA = `
             {
               "label": "Ask about his tapes",
               "to": "_chat__mff7uw9d_start"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
@@ -1095,10 +1088,6 @@ const DATA = `
             {
               "label": "Why tapes?",
               "to": "_chat__mff7uw9d_why"
-            },
-            {
-              "label": "No stories today",
-              "to": "bye"
             }
           ]
         },
@@ -1162,12 +1151,7 @@ const DATA = `
         },
         "accept": {
           "text": "The Archivist threads a fresh reel and nods. 'I'll be ready when you return\u2014the completed broadcast will temper the epic blade you'll need for the Sovereign.'",
-          "choices": [
-            {
-              "label": "(I'll be back)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "turnin": {
           "text": "The Archivist extends both hands, waiting for the artifact.",
@@ -1180,23 +1164,13 @@ const DATA = `
         },
         "do_turnin": {
           "text": "He sets the reels spinning, translating the tones into words of gratitude that harden into an epic blade's blueprint.",
-          "choices": [
-            {
-              "label": "(Continue)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "!",
       "quests": [
         "q_solar_alignment",
         "q_solar_signal"
-      ],
-      "dialogs": [
-        "The Archivist taps a reel. 'The Sun Charm hums with a lost broadcast. Bring it so I can hear the dawn.'",
-        "The Archivist squints at the receiver. 'I traced the pattern, but Signal Fragment C will complete the chorus.'",
-        "The Archivist lets the reels spin freely. 'The message sings thanks to you. Stay and listen.'"
       ]
     },
     {
@@ -1237,21 +1211,12 @@ const DATA = `
                 "op": ">=",
                 "value": 1
               }
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "accept": {
           "text": "Try the crates. This hall sheltered survivors once. Don\u2019t scuff the floor.",
-          "choices": [
-            {
-              "label": "(Okay)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "glint_fail": {
           "text": "Kesh squints at the glinting key. Shiny things aren't always the best in this place.",
@@ -1298,10 +1263,6 @@ const DATA = `
               "label": "(Open)",
               "to": "open",
               "once": true
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
@@ -1317,12 +1278,7 @@ const DATA = `
         },
         "empty": {
           "text": "An empty crate.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "?"
@@ -1340,12 +1296,7 @@ const DATA = `
       "tree": {
         "start": {
           "text": "Dust gets in everything.",
-          "choices": [
-            {
-              "label": "(Nod)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "!"
@@ -1391,12 +1342,7 @@ const DATA = `
       "tree": {
         "start": {
           "text": "Mira sizes you up.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "combat": {
@@ -1424,12 +1370,7 @@ const DATA = `
       "tree": {
         "start": {
           "text": "Nora steps forward, eyes sparking.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "combat": {
@@ -1460,12 +1401,7 @@ const DATA = `
       "tree": {
         "start": {
           "text": "Tess grins wickedly.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "combat": {
@@ -1500,12 +1436,7 @@ const DATA = `
       "tree": {
         "start": {
           "text": "Rust storms east. Shelter west. Far northeast, a relay waits for the Sun Charm\u2014Archivist sends seekers there for a blade of legend.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       }
     },
@@ -1533,21 +1464,12 @@ const DATA = `
               "label": "(Hand Over Valve)",
               "to": "turnin",
               "q": "turnin"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "accept": {
           "text": "Bless. Try the roadside ruins.",
-          "choices": [
-            {
-              "label": "(Ok)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "turnin": {
           "text": "Let me see...",
@@ -1560,12 +1482,7 @@ const DATA = `
         },
         "do_turnin": {
           "text": "It fits! Water again. Take this.",
-          "choices": [
-            {
-              "label": "(Continue)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "!"
@@ -1608,10 +1525,6 @@ const DATA = `
             {
               "label": "(Chat)",
               "to": "chat"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
@@ -1621,12 +1534,7 @@ const DATA = `
             "Stay off the dunes. Sand chews boots.",
             "If you're chasing Sun Charm whispers, the relay past the far northeast ruin spits out some epic blade."
           ],
-          "choices": [
-            {
-              "label": "(Nod)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "rec": {
           "text": "Convince me. Or pay me.",
@@ -1710,21 +1618,12 @@ const DATA = `
               "label": "(Turn in Satchel)",
               "to": "turnin",
               "q": "turnin"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "accept": {
           "text": "Much obliged.",
-          "choices": [
-            {
-              "label": "(Ok)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "turnin": {
           "text": "You got it?",
@@ -1737,12 +1636,7 @@ const DATA = `
         },
         "do_turnin": {
           "text": "Mail moves again. Take this stamp and a travel pass\u2014couriers look out for their own.",
-          "choices": [
-            {
-              "label": "(Ok)",
-              "to": "bye"
-            }
-          ],
+          "choices": [],
           "effects": [
             {
               "effect": "addItem",
@@ -1785,21 +1679,12 @@ const DATA = `
               "success": "Static fades. The tower hums.",
               "failure": "You cross a wire and pop a fuse.",
               "q": "turnin"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "accept": {
           "text": "I owe you static and thanks. When the tower purrs again, follow its tone north; the Archivist tunes it toward that relay and the blade he keeps raving about.",
-          "choices": [
-            {
-              "label": "(Ok)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "!"
@@ -1828,21 +1713,12 @@ const DATA = `
               "label": "(Offer Rust Idol)",
               "to": "turnin",
               "q": "turnin"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "accept": {
           "text": "The sand will guide or bury you. Pilgrims whisper that the Sun Charm opens the far northeast ruin where the Archivist forges a blade fit for dust-born kings.",
-          "choices": [
-            {
-              "label": "(Ok)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "turnin": {
           "text": "Do you carry grace?",
@@ -1855,12 +1731,7 @@ const DATA = `
         },
         "do_turnin": {
           "text": "The idol warms. You are seen.",
-          "choices": [
-            {
-              "label": "(Ok)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "!"
@@ -1896,39 +1767,20 @@ const DATA = `
             {
               "label": "(Rumors)",
               "to": "rumors"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "pay": {
           "text": "Wise. Move along.",
-          "choices": [
-            {
-              "label": "(Ok)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "ref": {
           "text": "Brave. Or foolish.",
-          "choices": [
-            {
-              "label": "(Ok)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "rumors": {
           "text": "Radio crackles from the north; idol whispers from the south. Archivist\u2019s Sun Charm is the key\u2014wake that far-northeast relay and it spits an epic blade to cleave the Sovereign.",
-          "choices": [
-            {
-              "label": "(Thanks)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "!"
@@ -1947,12 +1799,7 @@ const DATA = `
       "tree": {
         "start": {
           "text": "Didn't expect company twice. If you're trekking near those Ashen pits, remember Ashen Howlers hate getting stunned\u2014clip on a Stun Gear Harness trinket and their chorus falls apart.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "reveal": {
@@ -1988,21 +1835,12 @@ const DATA = `
               "label": "(Turn in fragments)",
               "to": "turnin",
               "q": "turnin"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "accept": {
           "text": "Try the dunes; bits wash up there. When you nab the Sun Charm, take it northeast and wake the relay so the Archivist can catch the broadcast.",
-          "choices": [
-            {
-              "label": "(Ok)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "turnin": {
           "text": "Got the pieces?",
@@ -2015,12 +1853,7 @@ const DATA = `
         },
         "do_turnin": {
           "text": "Signal hums again. Nice work. Archivist said that resonance forges blades fit to carve dust-kings.",
-          "choices": [
-            {
-              "label": "(Continue)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "!"
@@ -2048,10 +1881,6 @@ const DATA = `
               },
               "success": "He grunts and lets you pass.",
               "failure": "He tightens his grip.",
-              "to": "bye"
-            },
-            {
-              "label": "(Leave)",
               "to": "bye"
             }
           ]
@@ -2089,10 +1918,6 @@ const DATA = `
             {
               "label": "(Sell items)",
               "to": "sell"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         }
@@ -2160,12 +1985,7 @@ const DATA = `
       "tree": {
         "start": {
           "text": "Tess strides past on her rounds.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "loop": [
@@ -2194,12 +2014,7 @@ const DATA = `
       "tree": {
         "start": {
           "text": "The mutt bares its teeth.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "combat": {
@@ -2228,12 +2043,7 @@ const DATA = `
       "tree": {
         "start": {
           "text": "The bandit sizes you up.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "combat": {
@@ -2262,12 +2072,7 @@ const DATA = `
       "tree": {
         "start": {
           "text": "He lunges without warning.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "combat": {
@@ -2296,12 +2101,7 @@ const DATA = `
       "tree": {
         "start": {
           "text": "It shambles toward you.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "combat": {
@@ -2332,21 +2132,12 @@ const DATA = `
             {
               "label": "(Fight)",
               "to": "do_fight"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "do_fight": {
           "text": "",
-          "choices": [
-            {
-              "label": "(Continue)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "questId": "",
@@ -2395,12 +2186,7 @@ const DATA = `
       "tree": {
         "start": {
           "text": "The stalker circles the wastes.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "loop": [
@@ -2450,10 +2236,6 @@ const DATA = `
           "text": "Brakk cracks his knuckles.",
           "choices": [
             {
-              "label": "(Leave)",
-              "to": "bye"
-            },
-            {
               "label": "(Upgrade Skills)",
               "to": "train",
               "effects": [
@@ -2493,10 +2275,6 @@ const DATA = `
           "text": "Rusty studies your stance.",
           "choices": [
             {
-              "label": "(Leave)",
-              "to": "bye"
-            },
-            {
               "label": "(Upgrade Skills)",
               "to": "train",
               "effects": [
@@ -2535,10 +2313,6 @@ const DATA = `
         "start": {
           "text": "Mira twirls a coin.",
           "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            },
             {
               "label": "(Upgrade Skills)",
               "to": "train",
@@ -2580,10 +2354,6 @@ const DATA = `
             {
               "label": "Buy Memory Worm (500 Scrap)",
               "to": "buy"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
@@ -2689,10 +2459,6 @@ const DATA = `
                   }
                 }
               ]
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         }
@@ -2727,21 +2493,12 @@ const DATA = `
             {
               "label": "(Fight)",
               "to": "do_fight"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "do_fight": {
           "text": "",
-          "choices": [
-            {
-              "label": "(Continue)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "questId": "",
@@ -2781,10 +2538,6 @@ const DATA = `
               "label": "(Open)",
               "to": "open",
               "once": true
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
@@ -2800,12 +2553,7 @@ const DATA = `
         },
         "empty": {
           "text": "An empty crate.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "?"
@@ -2834,21 +2582,12 @@ const DATA = `
               "label": "(Use Spark Key)",
               "to": "do_turnin",
               "q": "turnin"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "accept": {
           "text": "Its lock crackles for a Spark Key.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "do_turnin": {
           "text": "The door slides aside.",
@@ -2884,10 +2623,6 @@ const DATA = `
               "label": "(Open)",
               "to": "open",
               "once": true
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
@@ -2903,12 +2638,7 @@ const DATA = `
         },
         "empty": {
           "text": "Only scraps remain.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "?"
@@ -2937,21 +2667,12 @@ const DATA = `
               "label": "(Use Cog Key)",
               "to": "do_turnin",
               "q": "turnin"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "accept": {
           "text": "Its hinges await a Cog Key.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "do_turnin": {
           "text": "The door creaks open.",
@@ -2983,12 +2704,7 @@ const DATA = `
       "tree": {
         "start": {
           "text": "The rat bares its teeth.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "combat": {
@@ -3022,10 +2738,6 @@ const DATA = `
               "label": "(Fight)",
               "to": "do_fight",
               "q": "turnin"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         }
@@ -3060,10 +2772,6 @@ const DATA = `
               "label": "(Take Sun Charm)",
               "to": "reward",
               "reward": "sun_charm"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
@@ -3104,10 +2812,6 @@ const DATA = `
             {
               "label": "(Fight)",
               "to": "do_fight"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         }
@@ -3157,10 +2861,6 @@ const DATA = `
             {
               "label": "(Fight)",
               "to": "do_fight"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         }
@@ -3206,10 +2906,6 @@ const DATA = `
             {
               "label": "(Fight)",
               "to": "do_fight"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         }
@@ -3255,10 +2951,6 @@ const DATA = `
             {
               "label": "(Fight)",
               "to": "do_fight"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         }
@@ -3317,21 +3009,12 @@ const DATA = `
               "label": "(Resonate Sun Charm)",
               "to": "resonate",
               "q": "turnin"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "accept": {
           "text": "Diagrams glow faintly, tracing a path from the Archivist's hall to this relay. Only the Sun Charm's light will wake it.",
-          "choices": [
-            {
-              "label": "(Step back)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "resonate": {
           "text": "The relay's coils flare when the Sun Charm draws close, begging to drink in its dawnlight.",
@@ -3345,12 +3028,7 @@ const DATA = `
         },
         "grant": {
           "text": "Light floods the relay and condenses into a prismatic shard. Signal Fragment C thrums warm in your grip.",
-          "choices": [
-            {
-              "label": "(Pocket the fragment)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       }
     },
@@ -3374,10 +3052,6 @@ const DATA = `
             {
               "label": "(Fight)",
               "to": "do_fight"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         }
@@ -3421,10 +3095,6 @@ const DATA = `
             {
               "label": "(Fight)",
               "to": "do_fight"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         }
@@ -3468,10 +3138,6 @@ const DATA = `
             {
               "label": "(Fight)",
               "to": "do_fight"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         }
@@ -3522,21 +3188,12 @@ const DATA = `
               "label": "(Hand Over Antidote)",
               "to": "turnin",
               "q": "turnin"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "accept": {
           "text": "Bring one water flask and plant fiber to the workbench, then craft an antidote for Bren.",
-          "choices": [
-            {
-              "label": "(Ok)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "turnin": {
           "text": "Did you brew the antidote? Bren doesn't have long.",
@@ -3559,12 +3216,7 @@ const DATA = `
         },
         "do_turnin": {
           "text": "She pours the cure between Bren's lips. The scout jolts awake, coughing but alert.",
-          "choices": [
-            {
-              "label": "(Continue)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       }
     },
@@ -3584,12 +3236,7 @@ const DATA = `
       "tree": {
         "locked": {
           "text": "Bren wheezes, skin ashen. They can't answer until the antidote works.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "start": {
           "text": "Bren wipes the antidote foam from their chin and straightens up.",
@@ -3603,21 +3250,12 @@ const DATA = `
               "label": "(Hand Over Bandage)",
               "to": "turnin",
               "q": "turnin"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "accept": {
           "text": "Lysa kept me alive, but I need one solid bandage before I head out. The workbench can spin plant fiber into one fast.",
-          "choices": [
-            {
-              "label": "(Ok)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "turnin": {
           "text": "Got that bandage? I don't want to limp into the dunes bare-handed.",
@@ -3636,12 +3274,7 @@ const DATA = `
         },
         "do_turnin": {
           "text": "Perfect fit. I'll scout the relay routes again\u2014stop by the map table once I signal back.",
-          "choices": [
-            {
-              "label": "(Continue)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       }
     },
@@ -3672,21 +3305,12 @@ const DATA = `
               "label": "(Turn in) The Duke is on our side.",
               "to": "turnin",
               "q": "turnin"
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "accept": {
           "text": "Charm is his currency. Lead with confidence and he might trade favors for our help.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         },
         "status": {
           "text": "He respects bold tongues. Impress him with your charisma and do not flinch.",
@@ -3723,12 +3347,7 @@ const DATA = `
         },
         "post_quest": {
           "text": "Three frag grenades should remind the wastes who our friends are. We'll send word to the caravans.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "!"
@@ -3754,21 +3373,12 @@ const DATA = `
               },
               "to": "favor_granted",
               "failure": "The Duke waves you away."
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "favor_granted": {
           "text": "The Duke taps a ring against his goblet before nodding. 'Send word to Mahra that my caravans will carry her grenades. Tell her I expect the Hall to answer when I call.'",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "!"
@@ -3824,21 +3434,12 @@ const DATA = `
                   "id": "dustland_waystation"
                 }
               ]
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "activate": {
           "text": "You patch the cabling and power surges through the console.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "\u2726"
@@ -3894,21 +3495,12 @@ const DATA = `
                   "id": "dustland_ridge"
                 }
               ]
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "activate": {
           "text": "You rewire the junction and the bunker hums awake.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "\u2726"
@@ -3964,21 +3556,12 @@ const DATA = `
                   "id": "dustland_overlook"
                 }
               ]
-            },
-            {
-              "label": "(Leave)",
-              "to": "bye"
             }
           ]
         },
         "activate": {
           "text": "Power reroutes through the old transit grid.",
-          "choices": [
-            {
-              "label": "(Leave)",
-              "to": "bye"
-            }
-          ]
+          "choices": []
         }
       },
       "symbol": "\u2726"
