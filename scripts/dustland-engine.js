@@ -1568,13 +1568,22 @@ function renderInv(){
     ctrl.appendChild(ok); ctrl.appendChild(cancel);
     inv.appendChild(ctrl);
     if(player.inv.length===0){ inv.appendChild(Object.assign(document.createElement('div'),{className:'slot muted',textContent:'(empty)'})); return; }
-    player.inv.forEach((it,i)=>{
+    const dropEntries = player.inv.map((it, index) => ({ it, index }));
+    dropEntries.sort((a, b) => {
+      const nameA = a.it?.name || '';
+      const nameB = b.it?.name || '';
+      const cmp = nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+      if (cmp !== 0) return cmp;
+      return a.index - b.index;
+    });
+    dropEntries.forEach(({ it, index }) => {
       const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
       const row=document.createElement('div');
       row.className='slot';
       const cb=document.createElement('input');
       cb.type='checkbox';
-      cb.onchange=()=>{ if(cb.checked) dropSet.add(i); else dropSet.delete(i); };
+      cb.checked = dropSet.has(index);
+      cb.onchange=()=>{ if(cb.checked) dropSet.add(index); else dropSet.delete(index); };
       row.appendChild(cb);
       const span=document.createElement('span');
       span.textContent=qty>1?`${it.name} x${qty}`:it.name;
