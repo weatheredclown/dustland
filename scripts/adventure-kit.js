@@ -446,7 +446,7 @@ const paletteLabel = document.getElementById('paletteLabel');
 let worldPaint = null;
 let worldStamp = null;
 let worldPainting = false;
-let didPaint = false;
+let didPaint = false, didInteriorPaint = false;
 const noiseToggle = document.getElementById('noiseToggle');
 const brushSizeSlider = document.getElementById('brushSize');
 const brushSizeLabel = document.getElementById('brushSizeLabel');
@@ -821,6 +821,7 @@ function paintInterior(e){
   if(x<0||y<0||x>=I.w||y>=I.h) return;
   const painted = applyInteriorBrush(I, x, y, intPaint);
   if(painted || intPaint===TILE.DOOR){
+    didInteriorPaint = true;
     delete I._origGrid;
     drawInterior();
   }
@@ -859,12 +860,38 @@ intCanvas.addEventListener('mousedown', e => {
     drawInterior();
     return;
   }
+  const overNpc = moduleData.npcs.some(n => n.map === I.id && n.x === x && n.y === y);
+  const overItem = moduleData.items.some(it => it.map === I.id && it.x === x && it.y === y);
+  if (!coordTarget && !placingType && (overNpc || overItem)) {
+    return;
+  }
   intPainting=true;
   paintInterior(e);
 });
 intCanvas.addEventListener('mousemove',e=>{ if(intPainting) paintInterior(e); });
 intCanvas.addEventListener('mouseup',()=>{ intPainting=false; });
-intCanvas.addEventListener('mouseleave',()=>{ intPainting=false; });
+intCanvas.addEventListener('mouseleave',()=>{ intPainting=false; didInteriorPaint = false; });
+
+intCanvas.addEventListener('click', e => {
+  if (editInteriorIdx < 0) return;
+  if (didInteriorPaint) { didInteriorPaint = false; return; }
+  const I = moduleData.interiors[editInteriorIdx];
+  const { x, y } = interiorCanvasPos(e);
+  if (x < 0 || y < 0 || x >= I.w || y >= I.h) { didInteriorPaint = false; return; }
+  let idx = moduleData.npcs.findIndex(n => n.map === I.id && n.x === x && n.y === y);
+  if (idx >= 0) {
+    if (window.showEditorTab) window.showEditorTab('npc');
+    editNPC(idx);
+    didInteriorPaint = false;
+    return;
+  }
+  idx = moduleData.items.findIndex(it => it.map === I.id && it.x === x && it.y === y);
+  if (idx >= 0) {
+    if (window.showEditorTab) window.showEditorTab('items');
+    editItem(idx);
+  }
+  didInteriorPaint = false;
+});
 
 intPalette.querySelectorAll('button').forEach(btn=>{
   btn.addEventListener('click',()=>{
