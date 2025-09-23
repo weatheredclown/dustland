@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
@@ -63,5 +64,62 @@ test('movement events propagate between clients', async () => {
 
   s1.close();
   s2.close();
+  room.close();
+});
+
+test('remote party positions sync to peers', async () => {
+  const shared = { offers: new Map(), answers: new Map(), nextOffer: 1, nextAnswer: 1 };
+  const { env: hostEnv, bus: hostBus } = ctx(shared);
+  const { env: clientA, bus: busA } = ctx(shared);
+  const { env: clientB, bus: busB } = ctx(shared);
+
+  const room = await hostEnv.Dustland.multiplayer.startHost();
+
+  const ticketA = await room.createOffer();
+  const socketA = await clientA.Dustland.multiplayer.connect({ code: ticketA.code });
+  await room.acceptAnswer(ticketA.id, socketA.answer);
+  await socketA.ready;
+
+  const ticketB = await room.createOffer();
+  const socketB = await clientB.Dustland.multiplayer.connect({ code: ticketB.code });
+  await room.acceptAnswer(ticketB.id, socketB.answer);
+  await socketB.ready;
+
+  const hostUpdate = new Promise(resolve => {
+    hostBus.on('multiplayer:party-sync', list => {
+      if (Array.isArray(list) && list.some(p => p.id === ticketA.id && p.x === 4 && p.y === 7)) resolve();
+    });
+  });
+
+  const peerUpdate = new Promise(resolve => {
+    busB.on('multiplayer:party-sync', list => {
+      if (Array.isArray(list) && list.some(p => p.id === ticketA.id && p.x === 4 && p.y === 7)) resolve();
+    });
+  });
+
+  busA.emit('movement:player', { x: 4, y: 7, map: 'world' });
+
+  await hostUpdate;
+  await peerUpdate;
+
+  const hostSnapshot = hostEnv.Dustland.multiplayerParties.list();
+  const peerSnapshot = clientB.Dustland.multiplayerParties.list();
+  assert.ok(hostSnapshot.some(p => p.id === ticketA.id && p.x === 4 && p.y === 7));
+  assert.ok(peerSnapshot.some(p => p.id === ticketA.id && p.x === 4 && p.y === 7));
+
+  const clientHostUpdate = new Promise(resolve => {
+    busA.on('multiplayer:party-sync', list => {
+      if (Array.isArray(list) && list.some(p => p.id === 'host' && p.x === 9 && p.y === 2)) resolve();
+    });
+  });
+
+  hostBus.emit('movement:player', { x: 9, y: 2, map: 'world' });
+  await clientHostUpdate;
+
+  const clientView = clientA.Dustland.multiplayerParties.list();
+  assert.ok(clientView.some(p => p.id === 'host' && p.x === 9 && p.y === 2));
+
+  socketA.close();
+  socketB.close();
   room.close();
 });

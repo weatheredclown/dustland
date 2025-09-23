@@ -1170,6 +1170,7 @@ function render(gameState=state, dt){
   const ps = gameState.portals || portals;
   const entities = gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : []);
   const pos = gameState.party || party;
+  const remoteParties = globalThis.Dustland?.multiplayerParties?.list?.() || globalThis.Dustland?.multiplayerState?.remoteParties || [];
 
   // split entities into below/above
   const below = [], above = [];
@@ -1255,6 +1256,25 @@ function render(gameState=state, dt){
     }
     else if(layer==='entitiesBelow'){ drawEntities(ctx, below, offX, offY); }
     else if(layer==='player'){
+      if(Array.isArray(remoteParties) && remoteParties.length){
+        const now = Date.now();
+        for(const info of remoteParties){
+          if(!info || info.map !== activeMap) continue;
+          if(!Number.isFinite(info.x) || !Number.isFinite(info.y)) continue;
+          const rx=(info.x-camX+offX)*TS;
+          const ry=(info.y-camY+offY)*TS;
+          const age = info.updated ? Math.max(0, Math.min(8000, now - info.updated)) : 0;
+          const alpha = 0.35 + (Math.max(0, 8000 - age) / 8000) * 0.45;
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle='#64f0ff';
+          ctx.fillRect(rx+3,ry+3,TS-6,TS-6);
+          ctx.strokeStyle='#102c30';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(rx+3,ry+3,TS-6,TS-6);
+          ctx.restore();
+        }
+      }
       const px=(pos.x-camX+offX)*TS, py=(pos.y-camY+offY)*TS;
       if(retroNpcArtEnabled){
         const sprite = getRetroPlayerSprite();
