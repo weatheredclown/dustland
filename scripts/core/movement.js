@@ -611,7 +611,11 @@ const movement = {
   checkRandomEncounter,
   distanceToRoad
 };
-bus?.on?.('movement:player', ({ x, y }) => { setPartyPos(x, y); });
+bus?.on?.('movement:player', payload => {
+  if (!payload || payload.__fromNet) return;
+  const { x, y } = payload;
+  setPartyPos(x, y);
+});
 globalThis.Dustland = globalThis.Dustland || {};
 globalThis.Dustland.movement = movement;
 Object.assign(globalThis, movement);
