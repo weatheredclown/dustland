@@ -47,6 +47,54 @@ function stubEl(){
   return el;
 }
 
+function createBridgeState(){
+  return { listeners: new Map(), seq: 1 };
+}
+
+function cloneBridgePayload(payload){
+  if (!payload || typeof payload !== 'object') return payload;
+  try {
+    return JSON.parse(JSON.stringify(payload));
+  } catch (err) {
+    const copy = {};
+    Object.keys(payload).forEach(key => {
+      copy[key] = payload[key];
+    });
+    return copy;
+  }
+}
+
+function buildBridge(state, role){
+  return {
+    publish(evt, payload){
+      const listeners = state.listeners.get(evt);
+      if (!listeners) return;
+      const targets = Array.from(listeners);
+      targets.forEach(entry => {
+        if (!entry || entry.role === role) return;
+        try {
+          const copy = cloneBridgePayload(payload);
+          if (copy && typeof copy === 'object' && (entry.role?.includes?.('client') || entry.role?.includes?.('join'))){
+            copy.__fromNet = true;
+          }
+          entry.fn(copy);
+        } catch (err) {
+          /* ignore */
+        }
+      });
+    },
+    subscribe(evt, handler){
+      if (typeof handler !== 'function') return () => {};
+      if (!state.listeners.has(evt)) state.listeners.set(evt, new Set());
+      const set = state.listeners.get(evt);
+      const entry = { role, fn: handler };
+      set.add(entry);
+      return () => set.delete(entry);
+    },
+    getId(){ return role; }
+  };
+}
+
 global.requestAnimationFrame = () => {};
 Object.assign(global, {
   window: global,
@@ -61,6 +109,12 @@ global.sessionStorage = {
   getItem: () => null,
   setItem: () => {},
   removeItem: () => {}
+};
+
+const bridgeState = createBridgeState();
+global.Dustland = {
+  multiplayer: { disconnect: () => {} },
+  multiplayerBridge: buildBridge(bridgeState, 'host-main')
 };
 
 const hidden = [];
@@ -198,6 +252,80 @@ test('host module click broadcasts selection', () => {
   assert.strictEqual(evt.payload.moduleId, MODULES[0].id);
 });
 
+test('bridge relays host selection to joiner module picker', () => {
+  const sharedState = createBridgeState();
+  function makeContext(kind){
+    const body = stubEl();
+    const head = stubEl();
+    const loadBtn = stubEl();
+    const listeners = new Map();
+    const context = {
+      requestAnimationFrame: () => {},
+      window: null,
+      innerWidth: 800,
+      innerHeight: 600,
+      addEventListener(){},
+      document: {
+        body,
+        head,
+        createElement: () => stubEl(),
+        getElementById: id => id === 'loadBtn' ? loadBtn : null
+      },
+      UI: { remove: () => {}, hide: () => {}, show: () => {} },
+      openCreator: () => {},
+      showStart: () => {},
+      resetAll: () => {},
+      EventBus: {
+        on(evt, fn){
+          if (!listeners.has(evt)) listeners.set(evt, new Set());
+          listeners.get(evt).add(fn);
+        },
+        off(evt, fn){ listeners.get(evt)?.delete(fn); },
+        emit(evt, payload){ listeners.get(evt)?.forEach(fn => fn(payload)); }
+      },
+      localStorage: { getItem: () => null },
+      sessionStorage: {
+        getItem: () => kind === 'client' ? 'client' : null,
+        setItem: () => {},
+        removeItem: () => {}
+      },
+      Dustland: {
+        multiplayer: { disconnect: () => {} },
+        multiplayerBridge: buildBridge(sharedState, kind === 'client' ? 'join-game' : 'host-game')
+      },
+      location: { href: '' },
+      console,
+      Date,
+      Math,
+      setTimeout,
+      clearTimeout
+    };
+    context.window = context;
+    context.global = context;
+    return { context, body };
+  }
+
+  const host = makeContext('host');
+  vm.runInNewContext(code, host.context, { filename: '../scripts/module-picker.js' });
+  const joiner = makeContext('client');
+  vm.runInNewContext(code, joiner.context, { filename: '../scripts/module-picker.js' });
+
+  const hostModules = vm.runInContext('MODULES', host.context);
+  assert.ok(Array.isArray(hostModules) && hostModules.length > 2);
+  const target = hostModules[2];
+  const hostOverlay = host.body.children.find(c => c.id === 'modulePicker');
+  const hostButtons = hostOverlay.querySelector('#moduleButtons').children;
+  hostButtons[2].onclick();
+
+  const joinOverlay = joiner.body.children.find(c => c.id === 'modulePicker');
+  assert.ok(joinOverlay);
+  const joinButtons = joinOverlay.querySelector('#moduleButtons').children;
+  assert.ok(joinButtons[2].className.includes('selected'));
+  const scriptEl = joiner.body.children.find(c => c.id === 'activeModuleScript');
+  assert.ok(scriptEl);
+  assert.ok(String(scriptEl.src || '').includes(target.file));
+});
+
 test('enter key loads selected module', () => {
   const golden = MODULES.find(m => m.id === 'golden');
   assert.ok(golden);
@@ -233,6 +361,7 @@ test('client role waits for host selection broadcast', () => {
   const localListeners = new Map();
   const disconnectRoles = [];
   let removedRole = 0;
+  const joinBridgeState = createBridgeState();
   const context = {
     requestAnimationFrame: () => {},
     window: null,
@@ -268,7 +397,10 @@ test('client role waits for host selection broadcast', () => {
       setItem: () => {},
       removeItem: key => { if (key === 'dustland.multiplayerRole') removedRole++; }
     },
-    Dustland: { multiplayer: { disconnect: role => disconnectRoles.push(role) } },
+    Dustland: {
+      multiplayer: { disconnect: role => disconnectRoles.push(role) },
+      multiplayerBridge: buildBridge(joinBridgeState, 'client-context')
+    },
     location: { href: '' },
     console,
     Date,
