@@ -23,6 +23,21 @@
   let joinSocket = null;
   let removePeerWatcher = null;
   let enteredGame = false;
+  let gameFrame = null;
+  let gameFrameContainer = null;
+  const bus = globalThis.EventBus;
+  const mpBridge = globalThis.Dustland?.multiplayerBridge;
+  const BRIDGE_EVENT = 'module-picker:select';
+  const BRIDGE_FLAG = '__bridgeRelay';
+
+  function cloneData(data){
+    if (!data || typeof data !== 'object') return data;
+    const copy = {};
+    Object.keys(data).forEach(key => {
+      copy[key] = data[key];
+    });
+    return copy;
+  }
   const invites = new Map();
   function rememberRole(role){
     try {
@@ -110,7 +125,70 @@
     enteredGame = true;
     if (role) rememberRole(role);
     setText(statusEl, 'Link confirmed! Loading Dustland...');
-    setTimeout(() => { window.location.href = 'dustland.html'; }, 800);
+    hide(modeSection);
+    hide(hostSection);
+    hide(joinSection);
+    setTimeout(() => {
+      openGameFrame();
+      setText(statusEl, 'Dustland is running in this tab. Keep this page open while you play.');
+    }, 400);
+  }
+
+  function openGameFrame(){
+    if (gameFrame && gameFrameContainer) return gameFrame;
+    const container = document.createElement('div');
+    if (!container) return null;
+    container.id = 'mpGameFrame';
+    container.style = 'position:fixed;inset:0;z-index:60;background:#000;display:flex;flex-direction:column;';
+    const iframe = document.createElement('iframe');
+    if (iframe) {
+      iframe.id = 'mpGameFrameView';
+      iframe.src = 'dustland.html';
+      iframe.style = 'flex:1 1 auto;width:100%;height:100%;border:0;';
+      iframe.allow = 'fullscreen';
+      container.appendChild(iframe);
+    }
+    const notice = document.createElement('div');
+    if (notice) {
+      notice.textContent = 'Dustland is open. Keep this tab running to stay connected.';
+      notice.style = 'flex:0 0 auto;padding:10px 16px;background:rgba(12,20,12,0.88);color:#9ec2a4;font-size:0.875rem;border-top:1px solid #2f3b2f;text-align:center;';
+      container.appendChild(notice);
+    }
+    document.body?.appendChild?.(container);
+    if (document.body) document.body.style.overflow = 'hidden';
+    gameFrameContainer = container;
+    gameFrame = iframe;
+    setTimeout(() => {
+      try { gameFrame?.focus?.(); } catch (err) { /* ignore */ }
+    }, 250);
+    return gameFrame;
+  }
+
+  function setupModuleBridge(){
+    if (!mpBridge || !bus?.on) return;
+    const publish = typeof mpBridge.publish === 'function' ? mpBridge.publish.bind(mpBridge) : null;
+    const subscribe = typeof mpBridge.subscribe === 'function' ? mpBridge.subscribe.bind(mpBridge) : null;
+    if (!publish || !subscribe) return;
+    subscribe(BRIDGE_EVENT, payload => {
+      const data = cloneData(payload);
+      if (data && typeof data === 'object') data[BRIDGE_FLAG] = true;
+      try {
+        bus.emit?.(BRIDGE_EVENT, data);
+      } catch (err) {
+        /* ignore */
+      }
+    });
+    bus.on(BRIDGE_EVENT, payload => {
+      if (!publish) return;
+      if (payload && typeof payload === 'object' && payload[BRIDGE_FLAG]) return;
+      const data = cloneData(payload);
+      if (data && typeof data === 'object') delete data[BRIDGE_FLAG];
+      try {
+        publish(BRIDGE_EVENT, data);
+      } catch (err) {
+        /* ignore */
+      }
+    });
   }
 
   async function copyToClipboard(el, statusEl, success){
@@ -257,6 +335,7 @@
   }
 
   function init(){
+    setupModuleBridge();
     if (hostBtn) hostBtn.onclick = () => startHosting();
     if (newInviteBtn) newInviteBtn.onclick = () => createInvite();
     if (connectBtn) connectBtn.onclick = generateAnswer;

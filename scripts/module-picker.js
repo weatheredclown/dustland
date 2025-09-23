@@ -16,6 +16,7 @@ const MODULES = [
 
 const NET_FLAG = '__fromNet';
 const pickerBus = globalThis.EventBus;
+const mpBridge = globalThis.Dustland?.multiplayerBridge;
 let sessionRole = null;
 try {
   sessionRole = globalThis.sessionStorage?.getItem?.('dustland.multiplayerRole') || null;
@@ -142,6 +143,11 @@ function broadcastModuleSelection(moduleInfo){
   };
   try {
     pickerBus.emit('module-picker:select', payload);
+  } catch (err) {
+    /* ignore */
+  }
+  try {
+    mpBridge?.publish?.('module-picker:select', payload);
   } catch (err) {
     /* ignore */
   }
@@ -316,6 +322,16 @@ function showModulePicker(){
       }
       if (isClient && payload[NET_FLAG]) {
         loadModule(moduleInfo);
+      }
+    });
+  }
+
+  if (mpBridge?.subscribe && pickerBus?.emit) {
+    mpBridge.subscribe('module-picker:select', payload => {
+      try {
+        pickerBus.emit('module-picker:select', payload);
+      } catch (err) {
+        /* ignore */
       }
     });
   }
