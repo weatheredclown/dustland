@@ -578,6 +578,30 @@ function chooseOption(){
   }
 }
 
+function humanizeRequirementId(id){
+  if(!id) return '';
+  return String(id).replace(/[_-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function labelRequirement(entry){
+  if(!entry) return '';
+  if(typeof entry === 'string'){
+    if(entry.startsWith('tag:')){
+      const tag = entry.slice(4);
+      return `${tag.replace(/[_-]+/g, ' ')} weapon`.trim();
+    }
+    const items = (typeof ITEMS === 'object' && ITEMS) ? ITEMS : null;
+    const def = items ? items[entry] : null;
+    if(def?.name) return def.name;
+    return humanizeRequirementId(entry);
+  }
+  if(entry && typeof entry === 'object'){
+    if(entry.name) return entry.name;
+    if(entry.id) return labelRequirement(entry.id);
+  }
+  return humanizeRequirementId(entry);
+}
+
 function doAttack(dmg, type = 'basic'){
   const attacker = party[combatState.active];
   const weapon   = attacker?.equip?.weapon;
@@ -633,9 +657,7 @@ function doAttack(dmg, type = 'basic'){
       }
       if (!meetsRequirement){
         const label = reqList
-          .map(entry => typeof entry === 'string' && entry.startsWith('tag:')
-            ? `${entry.slice(4)} weapon`
-            : entry)
+          .map(labelRequirement)
           .filter(Boolean)
           .join(' or ') || 'the required weapon';
         tDmg = 0;
