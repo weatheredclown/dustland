@@ -2794,7 +2794,7 @@
       "map": "room_oc3abv",
       "x": 24,
       "y": 44,
-      "color": "#f66",
+      "color": "#ff0000",
       "name": "Siltpack Ravener",
       "title": "Ambush Brood",
       "desc": "Dust-choked hunters sniffing out living heat.",
@@ -2843,7 +2843,7 @@
       "map": "room_oc3abv",
       "x": 24,
       "y": 36,
-      "color": "#f66",
+      "color": "#ff0000",
       "name": "Grinder Matriarchs",
       "title": "Shrapnel Choir",
       "desc": "Armored shriekers plated in scavenged sawblades.",
@@ -2888,7 +2888,7 @@
       "map": "room_oc3abv",
       "x": 26,
       "y": 30,
-      "color": "#f66",
+      "color": "#ff0000",
       "name": "Glasswing Pride",
       "title": "Phase Predators",
       "desc": "Shimmering beasts phasing between realities.",
@@ -2933,7 +2933,7 @@
       "map": "room_oc3abv",
       "x": 30,
       "y": 3,
-      "color": "#ff3366",
+      "color": "#ff0000",
       "name": "Sovereign of Dust",
       "title": "Warden of the Hollow",
       "desc": "A colossal warform woven from every ruin the Dustland devoured.",
@@ -3034,7 +3034,7 @@
       "map": "room_oc3abv",
       "x": 3,
       "y": 41,
-      "color": "#f66",
+      "color": "#ff0000",
       "name": "Ashen Howler Ambush",
       "title": "Silt Tunnel Pack",
       "desc": "Ember-furred predators stalking the cave mouth.",
@@ -3077,7 +3077,7 @@
       "map": "room_oc3abv",
       "x": 16,
       "y": 32,
-      "color": "#f66",
+      "color": "#ff0000",
       "name": "Ashen Screamers",
       "title": "Collapsed Gallery Pack",
       "desc": "Howlers cling to the broken columns and shriek warnings through the cavern.",
@@ -3120,7 +3120,7 @@
       "map": "room_oc3abv",
       "x": 22,
       "y": 23,
-      "color": "#f66",
+      "color": "#ff0000",
       "name": "Ashen Alpha",
       "title": "Upper Warrens",
       "desc": "The pack's alpha prowls the upper warrens, eyes blazing with razorsand grit.",
@@ -4012,7 +4012,6 @@
       }
     ]
   },
-  "module": "modules/dustland.module.js",
   "encounters": {
     "world": [
       {
@@ -4646,5 +4645,6 @@
         "🧱🧱🧱🚪🧱🧱🧱"
       ]
     }
-  ]
+  ],
+  "module": "modules/dustland.module.js"
 }
