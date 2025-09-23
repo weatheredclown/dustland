@@ -2325,15 +2325,29 @@ test('enemies respect max distance', () => {
 
 test('enemy requires a specific weapon', () => {
   const enemy = { name: 'Shellback', hp: 10, requires: 'artifact_blade' };
+  if(!getItem('artifact_blade')){
+    registerItem({ id:'artifact_blade', name:'Artifact Blade', type:'weapon' });
+  }
   const attacker = makeMember('a', 'A', 'Hero');
   attacker.equip = { weapon: { id: 'rusted_sword', mods: { ADR: 10 } } };
-  const r = Math.random; Math.random = () => 0;
-  __testAttack(attacker, enemy, 5);
-  assert.strictEqual(enemy.hp, 10);
-  attacker.equip.weapon.id = 'artifact_blade';
-  __testAttack(attacker, enemy, 5);
-  assert.strictEqual(enemy.hp, 8);
-  Math.random = r;
+  const r = Math.random;
+  const logs = [];
+  const origLog = global.log;
+  Math.random = () => 0;
+  global.log = (msg) => { logs.push(msg); };
+  try {
+    __testAttack(attacker, enemy, 5);
+    assert.strictEqual(enemy.hp, 10);
+    assert.ok(logs.some(m => m.includes('Artifact Blade')));
+    assert.ok(!logs.some(m => m.includes('artifact_blade')));
+    logs.length = 0;
+    attacker.equip.weapon.id = 'artifact_blade';
+    __testAttack(attacker, enemy, 5);
+    assert.strictEqual(enemy.hp, 8);
+  } finally {
+    Math.random = r;
+    global.log = origLog;
+  }
 });
 
 test('applyModule from dialog adds next fragment', async () => {
