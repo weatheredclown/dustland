@@ -328,8 +328,12 @@ function showModulePicker(){
 
   if (mpBridge?.subscribe && pickerBus?.emit) {
     mpBridge.subscribe('module-picker:select', payload => {
+      let message = payload;
+      if (payload && typeof payload === 'object') {
+        message = { ...payload, [NET_FLAG]: true };
+      }
       try {
-        pickerBus.emit('module-picker:select', payload);
+        pickerBus.emit('module-picker:select', message);
       } catch (err) {
         /* ignore */
       }
