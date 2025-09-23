@@ -2686,6 +2686,7 @@ function runTests(){
         if (party.length>0){
           selectedMember = (selectedMember + 1) % party.length;
           renderParty();
+          if (typeof globalThis.renderInv === 'function') globalThis.renderInv();
           toast(`Leader: ${party[selectedMember].name}`);
         }
         break;
