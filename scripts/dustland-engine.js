@@ -305,6 +305,14 @@ const playerIcons = [
 ];
 let playerIconIndex = 0;
 let tileCharsEnabled = true;
+const FOG_OF_WAR_STORAGE_KEY = 'fogOfWarEnabled';
+let fogOfWarEnabled = true;
+const savedFogSetting = globalThis.localStorage?.getItem(FOG_OF_WAR_STORAGE_KEY);
+if(savedFogSetting === '0'){
+  fogOfWarEnabled = false;
+}else if(savedFogSetting === '1'){
+  fogOfWarEnabled = true;
+}
 let retroNpcArtEnabled = false;
 const retroNpcArtCache = new Map();
 let retroPlayerSprite = null;
@@ -323,6 +331,19 @@ function setTileChars(on){
 }
 function toggleTileChars(){ setTileChars(!tileCharsEnabled); }
 globalThis.toggleTileChars = toggleTileChars;
+function setFogOfWar(on, opts = {}){
+  fogOfWarEnabled = !!on;
+  if(typeof document !== 'undefined'){
+    const btn=document.getElementById('fogToggle');
+    if(btn) btn.textContent = `Fog of War: ${fogOfWarEnabled ? 'On' : 'Off'}`;
+  }
+  if(!opts.skipStorage){
+    globalThis.localStorage?.setItem(FOG_OF_WAR_STORAGE_KEY, fogOfWarEnabled ? '1' : '0');
+  }
+  return fogOfWarEnabled;
+}
+function toggleFogOfWar(){ setFogOfWar(!fogOfWarEnabled); }
+globalThis.toggleFogOfWar = toggleFogOfWar;
 const FONT_SCALE_STORAGE_KEY = 'fontScale';
 const FONT_SCALE_MIN = 1;
 const FONT_SCALE_MAX = 1.75;
@@ -1259,6 +1280,7 @@ function centerCamera(x,y,map){
 
 function shouldRenderFog(map){
   if(!map) return false;
+  if(!fogOfWarEnabled) return false;
   if(typeof mapSupportsFog === 'function') return mapSupportsFog(map);
   return map !== 'creator';
 }
@@ -2769,6 +2791,11 @@ globalThis.Dustland.retroNpcArt = {
   getLootGlyph: () => getRetroLootSprite(),
   getItemCacheGlyph: () => getRetroItemCacheSprite()
 };
+globalThis.Dustland.fogOfWar = {
+  isEnabled: () => fogOfWarEnabled,
+  setEnabled: (value, opts) => setFogOfWar(value, opts),
+  toggle: () => toggleFogOfWar()
+};
 globalThis.Dustland.font = {
   getScale: () => fontScale,
   setScale: (value, opts) => setFontScale(value, opts)
@@ -2848,6 +2875,8 @@ function runTests(){
   if(mobileBtn) mobileBtn.onclick=()=>toggleMobileControls();
   const tileCharBtn=document.getElementById('tileCharToggle');
   if(tileCharBtn) tileCharBtn.onclick=()=>toggleTileChars();
+  const fogBtn=document.getElementById('fogToggle');
+  if(fogBtn) fogBtn.onclick=()=>toggleFogOfWar();
   const fontScaleSlider=document.getElementById('fontScale');
   if(fontScaleSlider){
     fontScaleSlider.addEventListener('input', ()=>{
@@ -2893,6 +2922,7 @@ function runTests(){
   setAudio(audioEnabled);
   setMobileControls(mobileControlsEnabled);
   setTileChars(tileCharsEnabled);
+  setFogOfWar(fogOfWarEnabled, { skipStorage: true });
   const settingsBtn=document.getElementById('settingsBtn');
   const settings=document.getElementById('settings');
   if(settingsBtn && settings){
@@ -3069,6 +3099,7 @@ function runTests(){
       case 'o': case 'O': toggleAudio(); break;
       case 'c': case 'C': toggleMobileControls(); break;
       case 'j': case 'J': toggleTileChars(); break;
+      case 'f': case 'F': toggleFogOfWar(); break;
       case 'i': case 'I': showTab('inv'); break;
       case 'p': case 'P': showTab('party'); break;
       case 'q': if(!e.ctrlKey && !e.metaKey){ showTab('quests'); e.preventDefault(); } break;
