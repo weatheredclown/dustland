@@ -136,7 +136,10 @@ function canEquip(member, item){
 }
 
 function isStackable(it){
-  return !!it && !EQUIP_TYPES.includes(it.type);
+  if(!it) return false;
+  if(!EQUIP_TYPES.includes(it.type)) return true;
+  const rarity = typeof it.rarity === 'string' ? it.rarity.toLowerCase() : '';
+  return rarity === 'common';
 }
 
 function getStackCount(it){
@@ -606,10 +609,23 @@ function equipItem(memberIndex, invIndex){
       return;
     }
     setStackCount(prevEq, 1);
-    player.inv.push(prevEq);
+    if(!addExistingItemToInventory(prevEq)){
+      player.inv.push(prevEq);
+    }
   }
-  m.equip[slot]=it;
-  player.inv.splice(invIndex,1);
+  const stackable = isStackable(it);
+  const count = getStackCount(it);
+  const removeEntry = !stackable || count <= 1;
+  let equipped = it;
+  if(stackable && count > 1){
+    equipped = cloneItem(it);
+    setStackCount(equipped, 1);
+    setStackCount(it, count - 1);
+  }
+  if(removeEntry){
+    player.inv.splice(invIndex,1);
+  }
+  m.equip[slot]=equipped;
   applyEquipmentStats(m);
   const after = m._bonus || {};
   const deltas = [];
@@ -647,16 +663,19 @@ function unequipItem(memberIndex, slot){
   if(!it){ log('Nothing to unequip.'); return; }
   if(it.cursed){
     it.cursedKnown = true;
-      notifyInventoryChanged();
-      log(`${it.name} is cursed and won't come off!`);
-      return;
-    }
-    m.equip[slot]=null;
-    setStackCount(it, 1);
-    player.inv.push(it);
-    applyEquipmentStats(m);
     notifyInventoryChanged();
-    log(`${m.name} unequips ${it.name}.`);
+    log(`${it.name} is cursed and won't come off!`);
+    return;
+  }
+  m.equip[slot]=null;
+  setStackCount(it, 1);
+  const added = addExistingItemToInventory(it);
+  if(!added){
+    player.inv.push(it);
+  }
+  applyEquipmentStats(m);
+  notifyInventoryChanged();
+  log(`${m.name} unequips ${it.name}.`);
   if(typeof toast==='function') toast(`${m.name} unequips ${it.name}`);
   emit('sfx','tick');
   if(it.unequip && it.unequip.teleport){
@@ -732,7 +751,7 @@ function normalizeItem(it){
     unequip: cloneData(it.unequip),
     cursed: !!it.cursed,
     cursedKnown: !!it.cursedKnown,
-    rarity: it.rarity || 'common',
+    rarity: typeof it.rarity === 'string' ? it.rarity.toLowerCase() : 'common',
     value: val,
     scrap: typeof it.scrap === 'number' ? it.scrap : undefined,
     fuel: typeof it.fuel === 'number' ? it.fuel : undefined,

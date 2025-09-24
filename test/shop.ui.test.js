@@ -166,24 +166,31 @@ test('shop stacks identical sell items and updates counts after selling', async 
   global.player = {
     scrap: 0,
     inv: [
-      { id: 'potion', name: 'Potion', value: 6, type: 'misc', count: 3 },
-      { id: 'sword', name: 'Sword', value: 10, type: 'weapon' },
-      { id: 'sword', name: 'Sword', value: 10, type: 'weapon' }
+      { id: 'potion', name: 'Potion', value: 6, type: 'misc', rarity: 'common', count: 3 },
+      { id: 'sword', name: 'Sword', value: 10, type: 'weapon', rarity: 'common' },
+      { id: 'sword', name: 'Sword', value: 10, type: 'weapon', rarity: 'common' }
     ]
   };
   global.getItem = id => {
-    if (id === 'potion') return { id, name: 'Potion', value: 4, type: 'misc' };
-    if (id === 'sword') return { id, name: 'Sword', value: 10, type: 'weapon' };
+    if (id === 'potion') return { id, name: 'Potion', value: 4, type: 'misc', rarity: 'common' };
+    if (id === 'sword') return { id, name: 'Sword', value: 10, type: 'weapon', rarity: 'common' };
     return null;
   };
   global.addToInv = () => true;
   global.removeFromInv = idx => {
     const entry = global.player.inv[idx];
     if (!entry) return;
-    const stackable = entry.type !== 'weapon' && entry.type !== 'armor' && entry.type !== 'trinket';
+    const rarity = typeof entry.rarity === 'string' ? entry.rarity.toLowerCase() : 'common';
+    const isEquipment = entry.type === 'weapon' || entry.type === 'armor' || entry.type === 'trinket';
+    const stackable = !isEquipment || rarity === 'common';
     const current = Math.max(1, Number.isFinite(entry.count) ? entry.count : 1);
     if (stackable && current > 1) {
-      entry.count = current - 1;
+      const next = current - 1;
+      if (next <= 1) {
+        delete entry.count;
+      } else {
+        entry.count = next;
+      }
     } else {
       global.player.inv.splice(idx, 1);
     }
