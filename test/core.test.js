@@ -121,7 +121,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, makeInteriorRoom, placeHut, TILE, getTile, healAll, buildings, world } = globalThis;
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, loadModernSave, makeInteriorRoom, placeHut, TILE, getTile, healAll, buildings, world } = globalThis;
 const { findFreeDropTile, canWalk, move, calcMoveDelay, getMoveDelay } = globalThis.Dustland.movement;
 let interiors = globalThis.interiors;
 
@@ -1919,6 +1919,40 @@ test('save/load retains effect packs and persona boosts', () => {
   }
 });
 
+test('save/load preserves enhanced weapon base ids', () => {
+  const grid = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => 7));
+  applyModule({ world: grid, npcs: [] });
+  player.inv.length = 0;
+  party.length = 0;
+  const member = new Character('pc', 'PC', 'Wanderer');
+  party.join(member);
+  const store = {};
+  const origStorage = global.localStorage;
+  global.localStorage = {
+    setItem(k, v){ store[k] = v; },
+    getItem(k){ return store[k]; },
+    removeItem(k){ delete store[k]; }
+  };
+  try {
+    registerItem({ id: 'artifact_blade', name: 'Artifact Blade', type: 'weapon', mods: { ADR: 8 } });
+    registerItem({ id: 'enhanced_artifact_blade', name: 'Enhanced Artifact Blade', type: 'weapon', baseId: 'artifact_blade', mods: { ADR: 16 } });
+    addToInv('enhanced_artifact_blade');
+    assert.strictEqual(player.inv[0].baseId, 'artifact_blade');
+    save();
+    const saved = JSON.parse(store.dustland_crt);
+    assert.strictEqual(saved.player.inv[0].baseId, 'artifact_blade');
+    player.inv[0].baseId = undefined;
+    loadModernSave(saved);
+    const restored = player.inv.find(it => it.id === 'enhanced_artifact_blade');
+    assert.ok(restored, 'enhanced weapon should reload');
+    assert.strictEqual(restored.baseId, 'artifact_blade');
+  } finally {
+    player.inv.length = 0;
+    party.length = 0;
+    global.localStorage = origStorage;
+  }
+});
+
 test('load bypasses legacy loader for v2 saves', async () => {
   const fixture = await fs.readFile(new URL('./fixtures/dustland.save.v2.json', import.meta.url), 'utf8');
   const store = { dustland_crt: fixture };
@@ -2344,6 +2378,12 @@ test('enemy requires a specific weapon', () => {
     attacker.equip.weapon.id = 'artifact_blade';
     __testAttack(attacker, enemy, 5);
     assert.strictEqual(enemy.hp, 8);
+    enemy.hp = 10;
+    logs.length = 0;
+    attacker.equip.weapon = { id: 'enhanced_artifact_blade', baseId: 'artifact_blade', mods: { ADR: 10 } };
+    __testAttack(attacker, enemy, 5);
+    assert.strictEqual(enemy.hp, 8);
+    assert.ok(!logs.some(m => m.includes("can't harm")));
   } finally {
     Math.random = r;
     global.log = origLog;
