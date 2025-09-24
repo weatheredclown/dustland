@@ -794,6 +794,26 @@
         "heavy",
         "wand"
       ]
+    },
+    {
+      "id": "dawnforge_six_shooter",
+      "name": "Dawnforge Six-Shooter",
+      "type": "weapon",
+      "desc": "Hand-tuned revolver balanced for blazing draws.",
+      "rarity": "rare",
+      "mods": {
+        "ATK": 4,
+        "ADR": 20,
+        "LCK": 1
+      },
+      "tags": [
+        "ranged"
+      ],
+      "equip": {
+        "requires": {
+          "role": "Gunslinger"
+        }
+      }
     }
   ],
   "quests": [
