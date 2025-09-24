@@ -463,28 +463,39 @@ function takeNearestItem() {
   const dirs = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
   for (const [dx, dy] of dirs) {
     const info = queryTile(party.x + dx, party.y + dy);
-    if (info.items.length) {
-      const drop = info.items[0];
+    if (!info.items.length) continue;
+    const drops = info.items.slice();
+    let tookAny = false;
+    const messages = [];
+    for (const drop of drops) {
       if (drop.items) {
-        if (!pickupCache(drop)) return false;
+        if (!pickupCache(drop)) {
+          if (!tookAny) return false;
+          break;
+        }
+        tookAny = true;
+        messages.push(`Took ${drop.items.length} items.`);
       } else {
         if (player.inv.length >= getPartyInventoryCapacity()) {
           log('Inventory is full.');
           if (typeof toast === 'function') toast('Inventory is full.');
-          return false;
+          if (!tookAny) return false;
+          break;
         }
         addToInv(getItem(drop.id));
+        tookAny = true;
+        const def = ITEMS[drop.id];
+        messages.push('Took ' + (def ? def.name : drop.id) + '.');
       }
       const idx = itemDrops.indexOf(drop);
       if (idx > -1) itemDrops.splice(idx, 1);
-      const def = ITEMS[drop.id];
-      const msg = drop.items ? `Took ${drop.items.length} items.` : 'Took ' + (def ? def.name : drop.id) + '.';
-      log(msg);
-      updateHUD();
-      if (typeof pickupSparkle === 'function') pickupSparkle(party.x + dx, party.y + dy);
-      bus.emit('sfx', 'pickup');
-      return true;
     }
+    if (!tookAny) continue;
+    messages.forEach(msg => log(msg));
+    updateHUD();
+    if (typeof pickupSparkle === 'function') pickupSparkle(party.x + dx, party.y + dy);
+    bus.emit('sfx', 'pickup');
+    return true;
   }
   return false;
 }
