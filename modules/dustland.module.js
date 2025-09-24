@@ -15587,11 +15587,12 @@ globalThis.DUSTLAND_MODULE = JSON.parse(DATA);
 globalThis.DUSTLAND_MODULE.postLoad = postLoad;
 
 startGame = function () {
-  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE);
+  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'beforeApply' });
   applyModule(DUSTLAND_MODULE);
   const s = DUSTLAND_MODULE.start;
   if (s) {
     setPartyPos(s.x, s.y);
     setMap(s.map, 'dustland-module');
   }
+  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'afterApply' });
 };
