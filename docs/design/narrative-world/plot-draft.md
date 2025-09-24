@@ -62,6 +62,21 @@ Forty-three NPCs wander our maps, but they shouldn't forget us after a single li
 
 > **Echo:** Dialogue should feel like a conversation, not a vending machine. Let their stories bend with ours.
 
+### **Scout Loop: Tess on Patrol**
+
+Tess the Scout currently paces the map in `dustland.module.js` without a reason to wave players down. We anchor her patrol to the Hall's first supply chain so she becomes the player's primer on the existing pump quest, map reveals, and rumor log.
+
+- **First Contact:** When the caravan leaves Stonegate, Tess intercepts them near the pump. She invites the player to prep her next water run and points straight at Nila's `q_waterpump` fetch. Use the standard `openWorldMap` cue so she highlights the pump on the world map and explains that she walks this route every refresh.
+- **Player Choices:**
+  1. **Prep the Pump Run:** Tess asks if the player will make sure Nila's Valve keeps humming. This reuses the current `q_waterpump` flow—accepting here simply nudges the player into that quest, and she thanks them with the existing `toast`+scrap reward once the Valve turn-in completes. No new inventory rules.
+  2. **Scout the Ridge:** Tess marks the nearby `Scrap Mutt` encounter using the same `openWorldMap` prompt. Clearing that enemy toggles an `unlockNPC` event so the hidden hermit vendor steps out when the player returns, paying off the patrol without inventing companion combat.
+  3. **Trade Intel:** If the player declines the other options, Tess drops a rumor entry by branching to a `rumors` node that teases Silencer movement around the radio towers—matching how the Scrap Duchess shares leads today.
+- **State Tracking:** Gate the follow-up lines with simple module flags such as `tess_help_pump`, `tess_help_ridge`, or `tess_help_rumor`. Flags keep her dialogue cycling between favors on each world refresh, leaning entirely on systems we already ship.
+
+> **Gizmo:** Bake the map reveal and flag toggles into the patrol loop script so modders can swap in their own scout NPCs without touching engine code.
+>
+> **Wing:** Keep the timers tight. Early players shouldn't wait more than a couple of encounters to see Tess come back with news—or trouble.
+
 ### **Living World Events**
 
 "You smell rot" was just a sniff. The Dustland needs roaming encounters, cascading crises, and temporal shifts. Ignore a whiff of decay and a plague might sweep a town. Night markets pop up then vanish, storms reroute travel, and traders chase the sun.
