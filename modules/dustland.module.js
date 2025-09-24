@@ -3759,6 +3759,33 @@ const DATA = `
       }
     },
     {
+      "id": "glassstorm_titan",
+      "name": "Glassstorm Titan",
+      "portraitSheet": "assets/portraits/dustland-module/iron_brute_4.png",
+      "portraitLock": false,
+      "combat": {
+        "HP": 1250,
+        "ATK": 14,
+        "DEF": 20,
+        "challenge": 420,
+        "requires": "artifact_blade",
+        "noLuckyKill": true,
+        "boss": true,
+        "special": {
+          "cue": "raises a seismic maul for a crushing blow!",
+          "dmg": 16,
+          "delay": 1200,
+          "stun": 1
+        },
+        "loot": "medkit",
+        "lootChance": 1,
+        "scrap": {
+          "min": 18,
+          "max": 24
+        }
+      }
+    },
+    {
       "id": "ashen_howler",
       "name": "Ashen Howler",
       "portraitSheet": "assets/portraits/dustland-module/scrap_mutt_4.png",
@@ -4078,6 +4105,12 @@ const DATA = `
         "loot": "artifact_blade",
         "lootChance": 0.75,
         "minDist": 44
+      },
+      {
+        "templateId": "glassstorm_titan",
+        "loot": "medkit",
+        "lootChance": 1,
+        "minDist": 50
       },
       {
         "templateId": "vine_creature",
