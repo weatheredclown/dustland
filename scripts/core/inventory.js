@@ -534,6 +534,17 @@ function useItem(invIndex){
     if (bonus > 0 && !it.use.text) log('Lucky boost!');
     if (typeof toast === 'function') toast(it.use.text || `${who.name} +${healed} HP`);
     emit('sfx','tick');
+    if (it.id === 'wand'){
+      const label = it.use?.label || it.name;
+      const defeated = globalThis.defeatEnemiesByRequirement?.('wand', {
+        attacker: who,
+        label,
+        itemLabel: label
+      }) || [];
+      if (defeated.length){
+        emit('sfx','damage');
+      }
+    }
     maybeConsumeItem(it, invIndex);
     player.hp = party[0] ? party[0].hp : player.hp;
     if(typeof updateHUD === 'function') updateHUD();
