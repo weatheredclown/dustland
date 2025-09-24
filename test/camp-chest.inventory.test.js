@@ -11,21 +11,28 @@ const original = {
   player: global.player,
   party: global.party,
   log: global.log,
-  toast: global.toast
+  toast: global.toast,
+  applyEquipmentStats: global.applyEquipmentStats
 };
 
 const events = [];
 global.EventBus = { emit: (evt, payload) => events.push({ evt, payload }) };
 global.Dustland = global.Dustland || {};
 global.player = { inv: [], campChest: [], campChestUnlocked: false };
-global.party = { length: 1 };
+const party = [{ name: 'Hero', lvl: 1, equip: { weapon: null, armor: null, trinket: null } }];
+party.map = 'camp';
+party.x = 0;
+party.y = 0;
+global.party = party;
 global.log = () => {};
 global.toast = () => {};
+global.applyEquipmentStats = () => {};
 
 vm.runInThisContext(invCode, { filename: 'core/inventory.js' });
 
 registerItem({ id: 'medkit', name: 'Medkit', type: 'supply', maxStack: 3 });
-registerItem({ id: 'relic_blade', name: 'Relic Blade', type: 'weapon' });
+registerItem({ id: 'relic_blade', name: 'Relic Blade', type: 'weapon', rarity: 'rare' });
+registerItem({ id: 'rusted_blade', name: 'Rusted Blade', type: 'weapon', rarity: 'common' });
 
 test('storeCampChestItem requires unlocked chest', () => {
   player.inv = [getItem('medkit')];
@@ -71,6 +78,38 @@ test('withdrawCampChestItem merges stacks into inventory', () => {
   assert.equal(player.inv.length, 1);
   assert.equal(player.inv[0].count, 5);
   assert.equal(events.filter(e => e.evt === 'campChest:changed').length >= 2, true);
+});
+
+test('addToInv stacks common equipment', () => {
+  player.inv = [];
+  const first = addToInv('rusted_blade');
+  const second = addToInv('rusted_blade');
+  assert.equal(first, true);
+  assert.equal(second, true);
+  assert.equal(player.inv.length, 1);
+  assert.equal(player.inv[0].id, 'rusted_blade');
+  assert.equal(player.inv[0].count, 2);
+});
+
+test('equipItem consumes a single copy from equipment stacks', () => {
+  player.inv = [];
+  const hero = { name: 'Hero', lvl: 1, equip: { weapon: null, armor: null, trinket: null } };
+  global.party[0] = hero;
+  addToInv('rusted_blade');
+  addToInv('rusted_blade');
+  assert.equal(player.inv.length, 1);
+  const initialCount = Number.isFinite(player.inv[0].count) ? player.inv[0].count : 1;
+  assert.equal(initialCount, 2);
+  equipItem(0, 0);
+  assert.equal(hero.equip.weapon?.id, 'rusted_blade');
+  assert.equal(player.inv.length, 1);
+  const remaining = Number.isFinite(player.inv[0].count) ? player.inv[0].count : 1;
+  assert.equal(remaining, 1);
+  unequipItem(0, 'weapon');
+  assert.equal(hero.equip.weapon, null);
+  assert.equal(player.inv.length, 1);
+  const finalCount = Number.isFinite(player.inv[0].count) ? player.inv[0].count : 1;
+  assert.equal(finalCount, 2);
 });
 
 test('non-stackable items retain identity when stored', () => {
@@ -132,4 +171,5 @@ test.after(() => {
   if (original.party === undefined) delete global.party; else global.party = original.party;
   if (original.log === undefined) delete global.log; else global.log = original.log;
   if (original.toast === undefined) delete global.toast; else global.toast = original.toast;
+  if (original.applyEquipmentStats === undefined) delete global.applyEquipmentStats; else global.applyEquipmentStats = original.applyEquipmentStats;
 });
