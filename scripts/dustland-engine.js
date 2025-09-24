@@ -2727,6 +2727,20 @@ function runTests(){
   }
 
   window.addEventListener('keydown',(e)=>{
+    const game = globalThis.Dustland || (globalThis.Dustland = {});
+    const lockUntil = game.inputLockUntil;
+    if(typeof lockUntil === 'number' && lockUntil > Date.now()){
+      const lockedKey = typeof game.inputLockKey === 'string' ? game.inputLockKey : null;
+      if(!lockedKey){
+        return;
+      }
+      const incoming = typeof e.key === 'string' ? e.key.toLowerCase() : '';
+      if(incoming && incoming === lockedKey){
+        return;
+      }
+    } else if(game.inputLockKey){
+      game.inputLockKey = null;
+    }
     if(overlay?.classList.contains('shown')){
       if(e.key==='Escape') closeDialog();
       else if(handleDialogKey?.(e)) e.preventDefault();
@@ -2747,6 +2761,8 @@ function runTests(){
       e.preventDefault();
       return;
     }
+    const keyId = typeof e.key === 'string' ? e.key.toLowerCase() : '';
+    if(keyId) game.lastNonCombatKey = keyId;
     switch(e.key){
       case 'ArrowUp': case 'w': case 'W': move(0,-1); break;
       case 'ArrowDown': case 's': case 'S': move(0,1); break;

@@ -19,6 +19,16 @@ bus?.on?.('weather:change', w => {
   encounterBias = w?.encounterBias || null;
 });
 
+const RANDOM_COMBAT_INPUT_LOCK_MS = 333;
+
+function lockInput(ms = RANDOM_COMBAT_INPUT_LOCK_MS, key){
+  const game = globalThis.Dustland || (globalThis.Dustland = {});
+  const target = Date.now() + ms;
+  const current = typeof game.inputLockUntil === 'number' ? game.inputLockUntil : 0;
+  game.inputLockUntil = current > target ? current : target;
+  game.inputLockKey = typeof key === 'string' ? key.toLowerCase() : null;
+}
+
 function zoneAttrs(map,x,y){
   let healMult = 1;
   let noEncounters = false;
@@ -409,6 +419,7 @@ function checkRandomEncounter(){
       const min = mods.minSteps ?? 3;
       const max = mods.maxSteps ?? 5;
       encounterCooldown = min + Math.floor(Math.random() * (max - min + 1));
+      lockInput(undefined, globalThis.Dustland?.lastNonCombatKey);
       return Dustland.actions.startCombat({ ...chosen });
     }
     return;
@@ -448,6 +459,7 @@ function checkRandomEncounter(){
     const min = mods.minSteps ?? 3;
     const max = mods.maxSteps ?? 5;
     encounterCooldown = min + Math.floor(Math.random() * (max - min + 1));
+    lockInput(undefined, globalThis.Dustland?.lastNonCombatKey);
     return Dustland.actions.startCombat(def);
   }
 }
