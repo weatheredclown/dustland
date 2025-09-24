@@ -940,6 +940,58 @@ function serializeShopPatch(currentShop, baseShop){
   return Object.keys(patch).length ? patch : null;
 }
 
+function normalizeShopValueForKey(value){
+  if(value == null) return value;
+  if(Array.isArray(value)) return value.map(normalizeShopValueForKey);
+  if(typeof value === 'object'){
+    const out = {};
+    Object.keys(value).sort().forEach(key => {
+      out[key] = normalizeShopValueForKey(value[key]);
+    });
+    return out;
+  }
+  return value;
+}
+
+function shopEntryKey(entry){
+  if(!entry || typeof entry !== 'object') return null;
+  const normalized = {};
+  Object.keys(entry).sort().forEach(key => {
+    if(key === 'count') return;
+    normalized[key] = normalizeShopValueForKey(entry[key]);
+  });
+  try {
+    return JSON.stringify(normalized);
+  } catch (err) {
+    return null;
+  }
+}
+
+function ensureBaselineShopInventory(npc, baseDefinition){
+  if(!npc) return;
+  const baseShop = normalizeShopData(baseDefinition);
+  if(!baseShop) return;
+  const currentShop = normalizeShopData(npc);
+  if(!currentShop){
+    npc.shop = deepClone(baseShop);
+    return;
+  }
+  const target = currentShop;
+  if(!Array.isArray(target.inv)) target.inv = [];
+  const seen = new Set();
+  target.inv.forEach(entry => {
+    const key = shopEntryKey(entry);
+    if(key) seen.add(key);
+  });
+  const baseInv = Array.isArray(baseShop.inv) ? baseShop.inv : [];
+  baseInv.forEach(entry => {
+    const key = shopEntryKey(entry);
+    if(!key || seen.has(key)) return;
+    target.inv.push(deepClone(entry));
+    seen.add(key);
+  });
+}
+
 function serializeNpcPatch(npc, baseDefinition){
   if(!npc) return null;
   const template = baseDefinition || getNpcTemplateDefinition(npc.id);
@@ -1215,6 +1267,7 @@ function loadLegacySave(d){
       const baseDef = moduleNpcMap.get(n.id) || null;
       const npcPatch = serializeNpcPatch(n, baseDef);
       applyNpcPatch(npc, npcPatch || n);
+      ensureBaselineShopInventory(npc, baseDef);
       if (typeof NPCS !== 'undefined') NPCS.push(npc);
     }
   });
@@ -1353,6 +1406,7 @@ function loadModernSave(d){
       const baseDef = moduleNpcMap.get(n.id) || null;
       const npcPatch = serializeNpcPatch(n, baseDef);
       applyNpcPatch(npc, npcPatch || n);
+      ensureBaselineShopInventory(npc, baseDef);
       if (typeof NPCS !== 'undefined') NPCS.push(npc);
     }
   });

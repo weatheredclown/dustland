@@ -86,6 +86,25 @@ class NPC {
   }
 }
 
+function cloneShopData(shop){
+  if(shop === true) return true;
+  if(!shop || typeof shop !== 'object') return null;
+  if(typeof structuredClone === 'function'){
+    try {
+      return structuredClone(shop);
+    } catch (err) {
+      // fall back to JSON copy
+    }
+  }
+  try {
+    return JSON.parse(JSON.stringify(shop));
+  } catch (err) {
+    const clone = { ...shop };
+    if(Array.isArray(shop.inv)) clone.inv = shop.inv.map(entry => (entry && typeof entry === 'object') ? { ...entry } : entry);
+    return clone;
+  }
+}
+
 function makeNPC(id, map, x, y, color, name, title, desc, tree, quest, processNode, processChoice, opts) {
   if (opts?.combat) {
     tree = tree ?? {};
@@ -165,7 +184,7 @@ function createNpcFactory(defs) {
       }
       const opts = {};
       if (n.combat) opts.combat = n.combat;
-      if (n.shop) opts.shop = n.shop;
+      if (n.shop) opts.shop = cloneShopData(n.shop) ?? true;
       if (n.workbench) opts.workbench = true;
       if (n.portraitSheet) opts.portraitSheet = n.portraitSheet;
       if (n.portraitLock === false) opts.portraitLock = false;
