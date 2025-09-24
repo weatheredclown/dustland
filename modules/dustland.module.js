@@ -381,7 +381,8 @@ const DATA = `
       "use": {
         "type": "heal",
         "amount": 0,
-        "text": "You wave the wand."
+        "text": "You wave the wand.",
+        "consume": false
       }
     },
     {
