@@ -36,7 +36,8 @@ test('dustland module includes patrolling enemy', () => {
     DEF: 1,
     loot: 'raider_knife',
     scrap: { min: 3, max: 5 },
-    auto: true
+    auto: true,
+    challenge: 0
   });
 });
 
