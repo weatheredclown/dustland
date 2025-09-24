@@ -845,6 +845,16 @@ const DATA = `
           "role": "Gunslinger"
         }
       }
+    },
+    {
+      "id": "ridgeglass_charm",
+      "name": "Ridgeglass Charm",
+      "type": "trinket",
+      "value": 320,
+      "desc": "Ridgeglass beads catch the sun so the small packs peel off before they close in.",
+      "mods": {
+        "encounter_guard": 10
+      }
     }
   ],
   "quests": [
@@ -2083,8 +2093,33 @@ const DATA = `
       "portraitSheet": "assets/portraits/dustland-module/tess_4.png",
       "tree": {
         "start": {
-          "text": "Tess strides past on her rounds.",
-          "choices": []
+          "text": "Tess steadies her canteen, eyes tracking the dunes between each stride.",
+          "choices": [
+            {
+              "label": "Ask about your ridgeglass charm.",
+              "to": "offer_charm"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "offer_charm": {
+          "text": "She lifts a twist of ridgeglass beads. Clipped to your pack, it shimmers enough that the small packs break off. 320 scrap and it's yours.",
+          "choices": [
+            {
+              "label": "Let me see it.",
+              "to": "buy"
+            },
+            {
+              "label": "Maybe later.",
+              "to": "start"
+            }
+          ]
+        },
+        "bye": {
+          "text": "Stay sharp out there."
         }
       },
       "loop": [
@@ -2097,7 +2132,20 @@ const DATA = `
           "y": 49
         }
       ],
-      "symbol": "!"
+      "symbol": "!",
+      "shop": {
+        "markup": 1,
+        "refresh": 24,
+        "inv": [
+          {
+            "id": "ridgeglass_charm",
+            "rarity": "rare",
+            "cadence": "weekly",
+            "refreshHours": 168,
+            "scarcity": "scarce"
+          }
+        ]
+      }
     },
     {
       "id": "scrap_mutt",

@@ -2448,6 +2448,48 @@ test('distant encounters use hard enemy pool', () => {
   assert.strictEqual(chosen.name, 'Hard');
 });
 
+test('encounter guard trinket skips minor threats', () => {
+  const row = Array(20).fill(TILE.SAND);
+  applyModule({
+    world: [row],
+    templates: [
+      { id: 'midge', name: 'Midge Pack', combat: { HP: 2, ATK: 1, DEF: 0, challenge: 4 } },
+      { id: 'razor', name: 'Razor Pack', combat: { HP: 12, ATK: 3, DEF: 2, challenge: 14 } }
+    ],
+    encounters: { world: [ { templateId: 'midge' }, { templateId: 'razor' } ] }
+  });
+  state.map = 'world';
+  party.length = 0;
+  player.inv.length = 0;
+  const scout = new Character('scout', 'Scout', 'Wanderer');
+  party.join(scout);
+  setPartyPos(10, 0);
+  let seen = null;
+  const origRand = Math.random;
+  const origStart = globalThis.Dustland.actions.startCombat;
+  try {
+    Math.random = () => 0;
+    globalThis.Dustland.actions.startCombat = def => { seen = def; return Promise.resolve({ result: 'flee' }); };
+    encounterCooldown = 0;
+    checkRandomEncounter();
+    assert.ok(seen);
+    assert.strictEqual(seen.name, 'Midge Pack');
+    seen = null;
+    encounterCooldown = 0;
+    addToInv({ id: 'ridgeglass_test', name: 'Test Charm', type: 'trinket', mods: { encounter_guard: 10 } });
+    equipItem(0, 0);
+    checkRandomEncounter();
+  } finally {
+    Math.random = origRand;
+    globalThis.Dustland.actions.startCombat = origStart;
+  }
+  assert.ok(seen);
+  assert.strictEqual(seen.name, 'Razor Pack');
+  player.inv.length = 0;
+  party.length = 0;
+  encounterCooldown = 0;
+});
+
 test('enemies respect max distance', () => {
   const row = Array(10).fill(TILE.SAND);
   row[0] = TILE.ROAD;

@@ -428,9 +428,39 @@ function distanceToRoad(x, y, map=state.map){
   }
   return 999;
 }
+function resolveEncounterChallenge(entry){
+  if(!entry || typeof entry !== 'object') return null;
+  if(Number.isFinite(entry.challenge)) return entry.challenge;
+  const challenge = entry.combat && Number.isFinite(entry.combat.challenge)
+    ? entry.combat.challenge
+    : null;
+  if(Number.isFinite(challenge)) return challenge;
+  const templateId = entry.templateId;
+  if(templateId && typeof npcTemplates !== 'undefined' && Array.isArray(npcTemplates)){
+    const tpl = npcTemplates.find(t => t && t.id === templateId);
+    if(tpl && Number.isFinite(tpl.combat?.challenge)){
+      return tpl.combat.challenge;
+    }
+  }
+  return null;
+}
+
+function getEncounterGuard(){
+  if(typeof leader !== 'function') return null;
+  const lead = leader();
+  if(!lead) return null;
+  const bonus = lead?._bonus?.encounter_guard;
+  if(Number.isFinite(bonus)) return bonus;
+  const equipped = lead?.equip?.trinket?.mods?.encounter_guard;
+  if(Number.isFinite(equipped)) return equipped;
+  return null;
+}
+
 function checkRandomEncounter(){
   const mods = zoneAttrs(state.map, party.x, party.y);
   if(mods.noEncounters) return;
+  const minSteps = mods.minSteps ?? 3;
+  const maxSteps = mods.maxSteps ?? 5;
   if(encounterCooldown > 0){
     encounterCooldown--;
     return;
@@ -444,9 +474,7 @@ function checkRandomEncounter(){
       if(roll < acc){ chosen = s; break; }
     }
     if(chosen){
-      const min = mods.minSteps ?? 3;
-      const max = mods.maxSteps ?? 5;
-      encounterCooldown = min + Math.floor(Math.random() * (max - min + 1));
+      encounterCooldown = minSteps + Math.floor(Math.random() * (maxSteps - minSteps + 1));
       return Dustland.actions.startCombat({ ...chosen });
     }
     return;
@@ -467,6 +495,18 @@ function checkRandomEncounter(){
     }
     const hard = pool.filter(e => e.minDist);
     if(hard.length) pool = hard;
+    const guard = getEncounterGuard();
+    if(Number.isFinite(guard)){
+      pool = pool.filter(entry => {
+        const challenge = resolveEncounterChallenge(entry);
+        if(!Number.isFinite(challenge)) return true;
+        return challenge >= guard;
+      });
+      if(!pool.length){
+        encounterCooldown = minSteps + Math.floor(Math.random() * (maxSteps - minSteps + 1));
+        return;
+      }
+    }
     const base = pool[Math.floor(Math.random() * pool.length)];
     let def;
     if(base.templateId && typeof npcTemplates !== 'undefined'){
@@ -483,9 +523,7 @@ function checkRandomEncounter(){
       count = 3;
     }
     if (count > 1) def.count = count;
-    const min = mods.minSteps ?? 3;
-    const max = mods.maxSteps ?? 5;
-    encounterCooldown = min + Math.floor(Math.random() * (max - min + 1));
+    encounterCooldown = minSteps + Math.floor(Math.random() * (maxSteps - minSteps + 1));
     return Dustland.actions.startCombat(def);
   }
 }
