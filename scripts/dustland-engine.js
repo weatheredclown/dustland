@@ -1687,6 +1687,16 @@ function updateHUD(){
   }
   if(disp && fx){
     const filters = [];
+    if(lead && fx?.lowHpDesaturate !== false){
+      const maxHp = lead.maxHp || 1;
+      const ratio = maxHp > 0 ? Math.max(0, Math.min(1, player.hp / maxHp)) : 0;
+      const threshold = 0.35;
+      if(ratio < threshold){
+        const normalized = Math.min(1, (threshold - ratio) / threshold);
+        const gray = Math.min(1, normalized * normalized * 1.05);
+        if(gray > 0.01) filters.push(`grayscale(${gray.toFixed(3)})`);
+      }
+    }
     if(fx.grayscale) filters.push('grayscale(1)');
     if(fx.adrenalineTint && lead){
       const ratio = Math.max(0, Math.min(1, lead.adr / (lead.maxAdr || 1)));
