@@ -63,10 +63,10 @@ const RANK_MULTIPLIERS = Object.freeze({
   vaulted: 1.35
 });
 const RANK_BASE_VALUES = Object.freeze({
-  rusted: 12,
-  sealed: 18,
-  armored: 26,
-  vaulted: 36
+  rusted: 40,
+  sealed: 70,
+  armored: 110,
+  vaulted: 170
 });
 const SCARCITY_MULTIPLIERS = Object.freeze({
   abundant: 0.9,

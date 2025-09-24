@@ -961,6 +961,30 @@ input[type="range"] {
   border-bottom: 1px solid #2b3b2b;
 }
 
+.shop-filters {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 0;
+  flex-wrap: wrap;
+}
+
+.shop-filters label {
+  color: #c8d2c8;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.shop-filters select {
+  background: #111511;
+  color: #f0f6f0;
+  border: 1px solid #2b3b2b;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
 .shop-panels {
   display: flex;
   padding: 12px;
