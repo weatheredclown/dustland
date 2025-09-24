@@ -4,6 +4,9 @@ const DATA = `
 {
   "seed": "pit-bas",
   "name": "pit-bas",
+  "props": {
+    "portalLayout": true
+  },
   "start": {
     "map": "cavern",
     "x": 2,
