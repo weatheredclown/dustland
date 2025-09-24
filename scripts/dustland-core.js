@@ -150,15 +150,21 @@ async function startCombat(defender){
   };
 
   const enemies = [];
-  const copies = Math.max(1, defender.count || 1);
-  for(let i=0; i<copies; i++) enemies.push(toEnemy(defender));
+  const combatSources = [];
+  const addCombatSource = (source) => {
+    if(!source) return;
+    combatSources.push(source);
+    const copies = Math.max(1, source.count || 1);
+    for(let i=0; i<copies; i++) enemies.push(toEnemy(source));
+  };
+  addCombatSource(defender);
   const px = party.x, py = party.y, map = party.map || state.map;
   for (const n of (typeof NPCS !== 'undefined' ? NPCS : [])) {
     if (!n.combat) continue;
     if (n.map !== map) continue;
     const dist = Math.abs(n.x - px) + Math.abs(n.y - py);
     if (dist <= 2 && (!defender?.npc || n !== defender.npc)) {
-      enemies.push(toEnemy({ ...n.combat, npc: n, name: n.name, portraitSheet: n.portraitSheet, portraitLock: n.portraitLock }));
+      addCombatSource({ ...n.combat, npc: n, name: n.name, portraitSheet: n.portraitSheet, portraitLock: n.portraitLock });
     }
   }
 
@@ -167,9 +173,16 @@ async function startCombat(defender){
   if(result && result.result !== 'flee'){
     const avgLvl = party.reduce((s,m)=>s+(m.lvl||1),0)/(party.length||1);
     let xp = 0;
-    for(const e of enemies){
-      const str = e.challenge || e.hp || 1;
-      xp += Math.max(1, Math.ceil(str/avgLvl));
+    for(const src of combatSources){
+      if(!src) continue;
+      const override = Number.isFinite(src.xp) ? src.xp : null;
+      if(override!=null){
+        xp += override;
+        continue;
+      }
+      const count = Math.max(1, src.count || 1);
+      const str = src.challenge || src.hp || src.HP || 1;
+      xp += count * Math.max(1, Math.ceil(str/avgLvl));
     }
     party.forEach(m => awardXP(m, xp));
   }

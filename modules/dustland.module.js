@@ -2864,7 +2864,8 @@ const DATA = `
         "scrap": {
           "min": 6,
           "max": 9
-        }
+        },
+        "xp": 60
       }
     },
     {
@@ -2909,7 +2910,8 @@ const DATA = `
         "scrap": {
           "min": 7,
           "max": 11
-        }
+        },
+        "xp": 100
       }
     },
     {
@@ -2954,7 +2956,8 @@ const DATA = `
         "scrap": {
           "min": 8,
           "max": 12
-        }
+        },
+        "xp": 160
       }
     },
     {
@@ -3007,7 +3010,8 @@ const DATA = `
         "scrap": {
           "min": 15,
           "max": 25
-        }
+        },
+        "xp": 400
       }
     },
     {
@@ -3098,7 +3102,8 @@ const DATA = `
         "scrap": {
           "min": 6,
           "max": 10
-        }
+        },
+        "xp": 70
       }
     },
     {
@@ -3141,7 +3146,8 @@ const DATA = `
         "scrap": {
           "min": 8,
           "max": 12
-        }
+        },
+        "xp": 120
       }
     },
     {
@@ -3186,7 +3192,8 @@ const DATA = `
         "scrap": {
           "min": 12,
           "max": 16
-        }
+        },
+        "xp": 180
       }
     },
     {

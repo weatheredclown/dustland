@@ -285,8 +285,15 @@ function calcCombatXP(npc){
   const avgLvl=Math.max(1, party.reduce((s,m)=>s+(m.lvl||1),0)/(party.length||1));
   let xp=0;
   for(const e of enemies){
+    if(!e) continue;
+    const override = Number.isFinite(e.xp) ? e.xp : null;
+    if(override!=null){
+      xp+=override;
+      continue;
+    }
+    const count=Math.max(1, e.count||1);
     const str=e.challenge||e.hp||e.HP||1;
-    xp+=Math.max(1, Math.ceil(str/avgLvl));
+    xp+=count*Math.max(1, Math.ceil(str/avgLvl));
   }
   return xp;
 }
