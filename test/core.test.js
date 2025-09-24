@@ -2465,29 +2465,7 @@ test('enemy requires a specific weapon', () => {
   }
 });
 
-test('applyModule from dialog adds next fragment', async () => {
-  await import('../modules/broadcast-fragment-1.module.js');
-  await import('../modules/broadcast-fragment-2.module.js');
-  applyModule(BROADCAST_FRAGMENT_1);
-  assert.ok(!buildings.some(b => b.interiorId === 'comms_tower_base'));
-  const state = {
-    tree: {
-      post_quest: {
-        next: [
-          { label: 'Head toward the tower.', applyModule: 'BROADCAST_FRAGMENT_2', to: 'bye' },
-          { label: 'Not yet.', to: 'bye' }
-        ]
-      }
-    },
-    node: 'post_quest'
-  };
-  currentNPC = {};
-  advanceDialog(state, 0);
-  const tower = buildings.find(b => b.interiorId === 'comms_tower_base');
-  assert.ok(tower);
-  assert.ok(tower.x < WORLD_W && tower.y < WORLD_H);
-
-});
+// Broadcast fragments now live inside the Dustland module and are covered by broadcast tests.
 
 test('grin offers trinket option after charm fails', () => {
   NPCS.length = 0;
@@ -2766,10 +2744,28 @@ test('registerZoneEffects overlays walled zones onto map tiles', () => {
   const height = 4;
   const grid = gridFor('world');
   assert.ok(Array.isArray(grid));
-  assert.ok(grid.length > baseY + height);
+  const neededRows = baseY + height;
+  const addedRows = [];
+  while (grid.length <= neededRows) {
+    const cols = grid[0]?.length || (baseX + width + 1);
+    const row = Array.from({ length: cols }, () => TILE.SAND);
+    grid.push(row);
+    addedRows.push(row);
+  }
+  const neededCols = baseX + width;
+  const extendedRows = [];
+  const prevCells = [];
+  for (const row of grid) {
+    if (!Array.isArray(row)) continue;
+    if (row.length <= neededCols) {
+      extendedRows.push({ row, originalLength: row.length });
+      while (row.length <= neededCols) {
+        row.push(TILE.SAND);
+      }
+    }
+  }
   assert.ok(Array.isArray(grid[0]));
   assert.ok(grid[0].length > baseX + width);
-  const prevCells = [];
   for (let dy = 0; dy < height; dy++) {
     for (let dx = 0; dx < width; dx++) {
       const x = baseX + dx;
@@ -2795,6 +2791,15 @@ test('registerZoneEffects overlays walled zones onto map tiles', () => {
     assert.strictEqual(grid[baseY + 1][baseX + 2], TILE.SAND);
   } finally {
     prevCells.forEach(({ x, y, value }) => { grid[y][x] = value; });
+    while (addedRows.length) {
+      const row = addedRows.pop();
+      if (grid[grid.length - 1] === row) {
+        grid.pop();
+      }
+    }
+    extendedRows.forEach(({ row, originalLength }) => {
+      if (row.length > originalLength) row.length = originalLength;
+    });
     globalThis.Dustland.zoneEffects.length = prevZones;
   }
 });

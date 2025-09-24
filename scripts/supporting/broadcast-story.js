@@ -1,34 +1,25 @@
-const BROADCAST_FILES = [
-  'modules/broadcast-fragment-1.module.js',
-  'modules/broadcast-fragment-2.module.js',
-  'modules/broadcast-fragment-3.module.js',
-  'modules/mara-puzzle.module.js'
-];
+const MODULE_FILE = 'modules/dustland.module.js';
 
-let fragmentsReady;
-function loadFragments(){
-  fragmentsReady = new Promise(resolve => {
-    let loaded = 0;
-    BROADCAST_FILES.forEach(src => {
-      const s = document.createElement('script');
-      s.src = `${src}?_=${Date.now()}`;
-      s.onload = () => {
-        loaded++;
-        if(loaded === BROADCAST_FILES.length) resolve();
-      };
-      document.head.appendChild(s);
-    });
+let moduleReady;
+function loadDustland(){
+  moduleReady = new Promise(resolve => {
+    const s = document.createElement('script');
+    s.src = `${MODULE_FILE}?_=${Date.now()}`;
+    s.onload = () => resolve();
+    document.head.appendChild(s);
   });
 }
-loadFragments();
+loadDustland();
 
 seedWorldContent = () => {};
 
 startGame = async function(){
-  await fragmentsReady;
-  applyModule(BROADCAST_FRAGMENT_1);
-  const map = BROADCAST_FRAGMENT_1.startMap || 'world';
-  const pt = BROADCAST_FRAGMENT_1.startPoint || { x: 2, y: Math.floor(WORLD_H/2) };
-  setPartyPos(pt.x, pt.y);
-  setMap(map, map === 'world' ? 'Wastes' : map);
+  await moduleReady;
+  applyModule(DUSTLAND_MODULE);
+  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE);
+  // Spawn the party near the southwest broadcast door.
+  const entry = { map: 'world', x: 5, y: 80 };
+  setPartyPos(entry.x, entry.y);
+  setMap(entry.map, 'Wastes');
+  toast('Head north to the broadcast listening post.');
 };

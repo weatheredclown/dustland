@@ -212,10 +212,8 @@ test('module picker limits visible options and enables scrolling', () => {
   assert.strictEqual(container.style.maxHeight, '200px');
 });
 
-test('broadcast story points to first fragment', () => {
-  const broadcast = MODULES.find(m => m.id === 'broadcast');
-  assert.ok(broadcast);
-  assert.strictEqual(broadcast.file, 'modules/broadcast-fragment-1.module.js');
+test('broadcast fragments are surfaced inside Dustland instead of picker entries', () => {
+  assert.ok(!MODULES.some(m => m.file.includes('broadcast-fragment')));
 });
 
 test('pit module points to pit-bas', () => {

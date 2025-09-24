@@ -4,7 +4,6 @@ const MODULES = [
   { id: 'dustland', name: 'Dustland', file: 'modules/dustland.module.js' },
   { id: 'office', name: 'Office', file: 'modules/office.module.js' },
   { id: 'lootbox-demo', name: 'Loot Box Demo', file: 'modules/lootbox-demo.module.js' },
-  { id: 'broadcast', name: 'Broadcast Story', file: 'modules/broadcast-fragment-1.module.js' },
   { id: 'pit', name: 'PIT.BAS', file: 'modules/pit-bas.module.js' },
   { id: 'other', name: 'OTHER.BAS', file: 'modules/other-bas.module.js' },
   { id: 'two-worlds', name: 'Two Worlds', file: 'modules/two-worlds.module.js' },

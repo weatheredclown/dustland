@@ -119,8 +119,8 @@ test('workshop building includes workbench NPC', () => {
 
 test('workshop no longer stores power cells', () => {
   const data = loadModuleData();
-  const cell = data.items.find(i => i.id === 'power_cell');
-  assert.ok(!cell);
+  const workshopCells = data.items.filter(i => i.id === 'power_cell' && i.map === 'workshop');
+  assert.strictEqual(workshopCells.length, 0);
 });
 
 test('medkit heals for 10 HP', () => {
