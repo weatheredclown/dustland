@@ -16359,7 +16359,23 @@ function configureWorkbenchRecipes() {
 
 function postLoad(module, ctx = {}) {
   const phase = ctx?.phase;
+  const scheduleReconfigure = () => {
+    const scheduler = typeof globalThis.queueMicrotask === 'function'
+      ? globalThis.queueMicrotask.bind(globalThis)
+      : (fn => Promise.resolve().then(fn));
+    scheduler(() => {
+      try {
+        configureWorkbenchRecipes();
+      } catch (err) {
+        console.error('Failed to configure workbench recipes after apply:', err);
+      }
+    });
+  };
+
   if (!phase || phase === 'beforeApply') {
+    configureWorkbenchRecipes();
+    scheduleReconfigure();
+  } else if (phase === 'afterApply') {
     configureWorkbenchRecipes();
   }
 }
