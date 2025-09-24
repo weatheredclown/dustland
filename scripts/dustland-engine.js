@@ -2171,17 +2171,134 @@ function openShop(npc) {
   const shopBuy = document.getElementById('shopBuy');
   const shopSell = document.getElementById('shopSell');
   const shopScrap = document.getElementById('shopScrap');
+  const sellJunkBtn = document.getElementById('sellJunkBtn');
+  const sellCachesBtn = document.getElementById('sellCachesBtn');
+  const baseSellJunkLabel = sellJunkBtn?.textContent?.trim() || 'Sell Junk';
+  const baseSellCachesLabel = sellCachesBtn?.textContent?.trim() || 'Sell Caches';
+  const CACHE_SELL_MIN = Object.freeze({
+    rusted: 45,
+    sealed: 70,
+    armored: 105,
+    vaulted: 150,
+    default: 45
+  });
+  const DEFAULT_JUNK_TAGS = new Set(['junk', 'salvage']);
 
   if (!npc.shop) return;
   if (npc.shop === true) npc.shop = {};
   npc.shop.inv = npc.shop.inv || [];
   npc.shop.markup = npc.shop.markup || 2;
 
+  let currentBaseMarkup = npc.vending ? 1 : npc.shop.markup || 2;
+  let currentGrudgeLevel = npc.shop.grudge ?? 0;
+  let currentTrader = globalThis.Dustland?.Trader;
+
   shopName.textContent = npc.name;
 
   let focusables = [];
   let focusIdx = 0;
   let madePurchase = false;
+
+  function isCacheItem(item) {
+    return item?.type === 'spoils-cache';
+  }
+
+  function isJunkItem(item) {
+    if (!item || typeof item !== 'object') return false;
+    if (typeof globalThis.Dustland?.isJunkItem === 'function') {
+      const custom = globalThis.Dustland.isJunkItem(item, npc);
+      if (typeof custom === 'boolean') return custom;
+    }
+    if (isCacheItem(item)) return false;
+    const type = (item.type || '').toString().toLowerCase();
+    if (type === 'quest') return false;
+    if (item.junk === true) return true;
+    const tags = Array.isArray(item.tags) ? item.tags : [];
+    for (const raw of tags) {
+      const tag = (raw || '').toString().toLowerCase();
+      if (DEFAULT_JUNK_TAGS.has(tag)) return true;
+    }
+    return false;
+  }
+
+  function computeSellPrice(item) {
+    if (!item) return 0;
+    if (typeof item.scrap === 'number' && Number.isFinite(item.scrap)) {
+      const base = Math.max(0, Math.round(item.scrap));
+      if (isCacheItem(item)) {
+        const rankKey = (item.rank || '').toString().toLowerCase();
+        const minValue = CACHE_SELL_MIN[rankKey] ?? CACHE_SELL_MIN.default;
+        return Math.max(base, Math.round(minValue));
+      }
+      return base;
+    }
+    let sellPrice;
+    const trader = currentTrader;
+    if (trader?.resolveBaseValue && trader?.basePriceFromValue) {
+      const baseValue = trader.resolveBaseValue(item);
+      const basePrice = trader.basePriceFromValue(baseValue);
+      const grudgeMult = trader.resolveGrudgeMultiplier ? trader.resolveGrudgeMultiplier(currentGrudgeLevel) : 1;
+      const adjusted = basePrice * grudgeMult;
+      sellPrice = Math.max(1, Math.round(adjusted / Math.max(1, currentBaseMarkup * 2)));
+    } else {
+      const legacyMarkup = currentBaseMarkup * (currentGrudgeLevel >= 3 ? 1.1 : 1);
+      sellPrice = Math.max(1, Math.floor((item.value || 0) / legacyMarkup));
+    }
+    if (isCacheItem(item)) {
+      const rankKey = (item.rank || '').toString().toLowerCase();
+      const minValue = CACHE_SELL_MIN[rankKey] ?? CACHE_SELL_MIN.default;
+      if (typeof minValue === 'number') {
+        sellPrice = Math.max(sellPrice, Math.round(minValue));
+      }
+    }
+    return sellPrice;
+  }
+
+  function updateQuickSellButton(btn, baseLabel, count, total) {
+    if (!btn) return;
+    if (count > 0) {
+      const amount = Math.max(0, Math.round(total));
+      btn.disabled = false;
+      btn.textContent = `${baseLabel} (${amount} ${CURRENCY})`;
+    } else {
+      btn.disabled = true;
+      btn.textContent = baseLabel;
+    }
+  }
+
+  function quickSell(filterFn, summaryLabel) {
+    if (typeof filterFn !== 'function') return 0;
+    let sold = 0;
+    let scrapEarned = 0;
+    for (let i = player.inv.length - 1; i >= 0; i--) {
+      const item = player.inv[i];
+      if (!filterFn(item)) continue;
+      const price = computeSellPrice(item);
+      const qty = Math.max(1, Number.isFinite(item?.count) ? item.count : 1);
+      for (let n = 0; n < qty; n++) {
+        const existing = npc.shop.inv.find(entry => entry?.id === item.id && Math.max(1, Number.isFinite(entry.count) ? entry.count : 1) < 256);
+        if (existing) {
+          const current = Math.max(1, Number.isFinite(existing.count) ? existing.count : 1);
+          existing.count = Math.min(256, current + 1);
+        } else {
+          npc.shop.inv.push({ id: item.id, count: 1 });
+        }
+        player.scrap += price;
+        scrapEarned += price;
+        sold++;
+        removeFromInv(i);
+      }
+    }
+    if (!sold) return 0;
+    madePurchase = true;
+    renderShop();
+    updateHUD();
+    const message = `Sold ${sold} ${summaryLabel} for ${scrapEarned} ${CURRENCY}.`;
+    log(message);
+    if (typeof toast === 'function') toast(message);
+    return sold;
+  }
+
   function refreshFocusables() {
     focusables = Array.from(shopOverlay.querySelectorAll('button'));
     if (focusIdx >= focusables.length) focusIdx = 0;
@@ -2203,6 +2320,9 @@ function openShop(npc) {
     const baseMarkup = npc.vending ? 1 : npc.shop.markup || 2;
     const grudgeLevel = npc.shop.grudge ?? 0;
     const TraderClass = globalThis.Dustland?.Trader;
+    currentBaseMarkup = baseMarkup;
+    currentGrudgeLevel = grudgeLevel;
+    currentTrader = TraderClass;
 
     const normalizeForKey = (value, omitCount) => {
       if (!value || typeof value !== 'object') {
@@ -2266,6 +2386,11 @@ function openShop(npc) {
 
     shopStacks.sort(compareStacks);
     sellStacks.sort(compareStacks);
+
+    let junkCount = 0;
+    let junkTotal = 0;
+    let cacheCount = 0;
+    let cacheTotal = 0;
 
     const takeFromShopStack = (stack) => {
       if (!stack) return;
@@ -2331,19 +2456,7 @@ function openShop(npc) {
       const { item, qty } = stack;
       const row = document.createElement('div');
       row.className = 'slot';
-      let sellPrice;
-      if (typeof item.scrap === 'number') {
-        sellPrice = item.scrap;
-      } else if (TraderClass?.resolveBaseValue && TraderClass?.basePriceFromValue) {
-        const baseValue = TraderClass.resolveBaseValue(item);
-        const basePrice = TraderClass.basePriceFromValue(baseValue);
-        const grudgeMult = TraderClass.resolveGrudgeMultiplier ? TraderClass.resolveGrudgeMultiplier(grudgeLevel) : 1;
-        const adjusted = basePrice * grudgeMult;
-        sellPrice = Math.max(1, Math.round(adjusted / Math.max(1, baseMarkup * 2)));
-      } else {
-        const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : 1);
-        sellPrice = Math.max(1, Math.floor((item.value || 0) / legacyMarkup));
-      }
+      const sellPrice = computeSellPrice(item);
       const name = `${item.name} x${qty}`;
       row.innerHTML = `<span>${name} - ${sellPrice} ${CURRENCY}</span><button class="btn">Sell</button>`;
       row.querySelector('button').onclick = () => {
@@ -2362,8 +2475,18 @@ function openShop(npc) {
         updateHUD();
         madePurchase = true;
       };
+      if (isJunkItem(item)) {
+        junkCount += qty;
+        junkTotal += sellPrice * qty;
+      }
+      if (isCacheItem(item)) {
+        cacheCount += qty;
+        cacheTotal += sellPrice * qty;
+      }
       shopSell.appendChild(row);
     });
+    updateQuickSellButton(sellJunkBtn, baseSellJunkLabel, junkCount, junkTotal);
+    updateQuickSellButton(sellCachesBtn, baseSellCachesLabel, cacheCount, cacheTotal);
     focusCurrent();
   }
 
@@ -2397,6 +2520,17 @@ function openShop(npc) {
       focusCurrent();
       e.preventDefault();
     }
+  }
+
+  if (sellJunkBtn) {
+    sellJunkBtn.onclick = () => {
+      quickSell(isJunkItem, 'junk items');
+    };
+  }
+  if (sellCachesBtn) {
+    sellCachesBtn.onclick = () => {
+      quickSell(isCacheItem, 'caches');
+    };
   }
 
   renderShop();

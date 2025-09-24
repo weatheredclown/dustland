@@ -976,6 +976,18 @@ input[type="range"] {
   margin-left: 8px;
 }
 
+.shop-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.shop-actions .btn {
+  flex: 1;
+  min-width: 120px;
+}
+
 #personaOverlay .persona-window {
   width: 260px;
   background: #0f120f;

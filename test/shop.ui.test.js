@@ -9,6 +9,33 @@ function extractOpenShop(code) {
   return match && match[0];
 }
 
+const SHOP_HTML = `
+<div id="shopOverlay">
+  <div class="shop-window">
+    <header>
+      <div id="shopName"></div>
+      <div id="shopScrap"></div>
+      <div id="shopTimer"></div>
+      <div id="shopGrudge"></div>
+      <button id="closeShopBtn"></button>
+    </header>
+    <div class="shop-panels">
+      <div class="shop-inv">
+        <h2>Buy</h2>
+        <div id="shopBuy" class="slot-list"></div>
+      </div>
+      <div class="player-inv">
+        <h2>Sell</h2>
+        <div id="shopSellActions" class="shop-actions">
+          <button id="sellJunkBtn" class="btn">Sell Junk</button>
+          <button id="sellCachesBtn" class="btn">Sell Caches</button>
+        </div>
+        <div id="shopSell" class="slot-list"></div>
+      </div>
+    </div>
+  </div>
+</div>`;
+
 test('shop window height matches combat menu', async () => {
   const css = await fs.readFile(new URL('../dustland.css', import.meta.url), 'utf8');
   const combat = css.match(/#combatOverlay \.combat-window\s*{[^}]*height:\s*([^;]+);/);
@@ -19,7 +46,7 @@ test('shop window height matches combat menu', async () => {
 });
 
 test('arrow keys in shop do not move the player', async () => {
-  const dom = new JSDOM('<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><div id="shopScrap"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>');
+  const dom = new JSDOM(SHOP_HTML);
   global.window = dom.window;
   global.document = dom.window.document;
   global.requestAnimationFrame = () => {};
@@ -47,7 +74,7 @@ test('arrow keys in shop do not move the player', async () => {
 });
 
 test('shop displays current scrap and updates after purchase', async () => {
-  const dom = new JSDOM('<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><div id="shopScrap"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>');
+  const dom = new JSDOM(SHOP_HTML);
   global.window = dom.window;
   global.document = dom.window.document;
   global.requestAnimationFrame = () => {};
@@ -73,7 +100,7 @@ test('shop displays current scrap and updates after purchase', async () => {
 });
 
 test('shop stacks identical buy items with counters', async () => {
-  const dom = new JSDOM('<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><div id="shopScrap"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>');
+  const dom = new JSDOM(SHOP_HTML);
   global.window = dom.window;
   global.document = dom.window.document;
   global.requestAnimationFrame = () => {};
@@ -111,7 +138,7 @@ test('shop stacks identical buy items with counters', async () => {
 });
 
 test('shop sorts buy stacks by type then name', async () => {
-  const dom = new JSDOM('<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><div id="shopScrap"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>');
+  const dom = new JSDOM(SHOP_HTML);
   global.window = dom.window;
   global.document = dom.window.document;
   global.requestAnimationFrame = () => {};
@@ -156,7 +183,7 @@ test('shop sorts buy stacks by type then name', async () => {
 });
 
 test('shop stacks identical sell items and updates counts after selling', async () => {
-  const dom = new JSDOM('<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><div id="shopScrap"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>');
+  const dom = new JSDOM(SHOP_HTML);
   global.window = dom.window;
   global.document = dom.window.document;
   global.requestAnimationFrame = () => {};
@@ -211,7 +238,7 @@ test('shop stacks identical sell items and updates counts after selling', async 
 });
 
 test('shop sorts sell stacks by type then name', async () => {
-  const dom = new JSDOM('<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><div id="shopScrap"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>');
+  const dom = new JSDOM(SHOP_HTML);
   global.window = dom.window;
   global.document = dom.window.document;
   global.requestAnimationFrame = () => {};
@@ -247,4 +274,67 @@ test('shop sorts sell stacks by type then name', async () => {
     'Axe x1 - 4 s',
     'Blade x1 - 5 s'
   ]);
+});
+
+test('quick sell buttons offload junk and caches', async () => {
+  const dom = new JSDOM(SHOP_HTML);
+  global.window = dom.window;
+  global.document = dom.window.document;
+  global.requestAnimationFrame = () => {};
+  global.log = () => {};
+  global.toast = () => {};
+  global.CURRENCY = 's';
+  global.Dustland = {};
+  global.player = {
+    scrap: 0,
+    inv: [
+      { id: 'scrap_bits', name: 'Scrap Bits', type: 'misc', tags: ['junk'], scrap: 5, count: 2 },
+      { id: 'cache-rusted', name: 'Rusted Cache', type: 'spoils-cache', rank: 'rusted' },
+      { id: 'medkit', name: 'Medkit', type: 'consumable', value: 6 }
+    ]
+  };
+  global.getItem = id => ({ id, name: id, value: 1, type: 'misc' });
+  global.addToInv = () => true;
+  global.removeFromInv = idx => {
+    const entry = global.player.inv[idx];
+    if (!entry) return;
+    const stackable = entry.type !== 'weapon' && entry.type !== 'armor' && entry.type !== 'trinket';
+    const current = Math.max(1, Number.isFinite(entry.count) ? entry.count : 1);
+    if (stackable && current > 1) {
+      entry.count = current - 1;
+    } else {
+      global.player.inv.splice(idx, 1);
+    }
+  };
+  global.updateHUD = () => {};
+
+  const code = await fs.readFile(new URL('../scripts/dustland-engine.js', import.meta.url), 'utf8');
+  const openShopCode = extractOpenShop(code);
+  vm.runInThisContext(openShopCode);
+
+  const npc = { name: 'Shopkeep', shop: { inv: [] } };
+  openShop(npc);
+
+  const junkButton = document.getElementById('sellJunkBtn');
+  const cacheButton = document.getElementById('sellCachesBtn');
+  assert(junkButton);
+  assert(cacheButton);
+  assert.strictEqual(junkButton.disabled, false);
+  assert.strictEqual(junkButton.textContent, 'Sell Junk (10 s)');
+
+  const cacheLabelEl = Array.from(document.querySelectorAll('#shopSell .slot span')).find(el => el.textContent.includes('Rusted Cache'));
+  assert(cacheLabelEl);
+  assert.strictEqual(cacheLabelEl.textContent, 'Rusted Cache x1 - 45 s');
+  assert.strictEqual(cacheButton.textContent, 'Sell Caches (45 s)');
+
+  junkButton.onclick();
+  assert.strictEqual(global.player.scrap, 10);
+  assert.strictEqual(junkButton.disabled, true);
+  assert.strictEqual(global.player.inv.some(it => Array.isArray(it.tags) && it.tags.includes('junk')), false);
+
+  cacheButton.onclick();
+  assert.strictEqual(global.player.scrap, 55);
+  assert.strictEqual(cacheButton.disabled, true);
+  assert.strictEqual(global.player.inv.some(it => it.type === 'spoils-cache'), false);
+  delete global.Dustland;
 });
