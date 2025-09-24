@@ -469,10 +469,12 @@ function normalizeItem(it){
   const baseValue = typeof it.value === 'number' ? it.value : 0;
   const val = baseValue > 0 ? baseValue : estimateItemValue(it);
   const type = it.type || it.slot || 'misc';
+  const baseId = typeof it.baseId === 'string' && it.baseId ? it.baseId : undefined;
   return {
     id: it.id || '',
     name: it.name || 'Unknown',
     type,
+    baseId,
     rank: it.rank,
     tags: Array.isArray(it.tags) ? it.tags.map(t=>t.toLowerCase()) : [],
     mods: it.mods ? { ...it.mods } : {},

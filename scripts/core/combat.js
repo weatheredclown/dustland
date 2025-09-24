@@ -644,13 +644,14 @@ function doAttack(dmg, type = 'basic'){
     if (req){
       const reqList = Array.isArray(req) ? req : [req];
       const weaponId = weapon?.id;
+      const weaponBaseId = weapon?.baseId;
       const weaponTags = Array.isArray(weapon?.tags) ? weapon.tags : [];
       let meetsRequirement = false;
       for (const entry of reqList){
         if (typeof entry === 'string' && entry.startsWith('tag:')){
           const tag = entry.slice(4);
           if (weaponTags.includes(tag)){ meetsRequirement = true; break; }
-        } else if (entry && weaponId === entry){
+        } else if (entry && (weaponId === entry || weaponBaseId === entry)){
           meetsRequirement = true;
           break;
         }
