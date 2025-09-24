@@ -32,6 +32,7 @@ const ITEMS = {};
 const itemDrops = [];
 const EQUIP_TYPES = ['weapon','armor','trinket'];
 const MAX_INV_STACK = 64;
+const CAMP_CHEST_EVENT = 'campChest:changed';
 
 function cloneData(obj){
   if(!obj) return null;
@@ -198,6 +199,157 @@ function resolveItem(def){
 }
 function notifyInventoryChanged(){
   emit('inventory:changed');
+}
+
+function ensureCampChest(){
+  const p = globalThis.player || {};
+  if(!Array.isArray(p.campChest)){
+    p.campChest = [];
+  }
+  return p.campChest;
+}
+
+function emitCampChestChanged(){
+  const chest = ensureCampChest();
+  emit(CAMP_CHEST_EVENT, { chest: cloneData(chest) });
+}
+
+function isCampChestUnlocked(){
+  return !!globalThis.player?.campChestUnlocked;
+}
+
+function unlockCampChest(){
+  const p = globalThis.player;
+  if(!p) return false;
+  if(!p.campChestUnlocked){
+    p.campChestUnlocked = true;
+    ensureCampChest();
+    emitCampChestChanged();
+  }
+  return true;
+}
+
+function addExistingItemToInventory(item){
+  if(!item || !item.id) return false;
+  if(!Array.isArray(player.inv)) player.inv = [];
+  const capacity = getPartyInventoryCapacity();
+  if(isStackable(item)){
+    const limit = getStackLimit(item);
+    const total = getStackCount(item);
+    let remaining = total;
+    const stackPlan = [];
+    player.inv.forEach((invItem, idx) => {
+      if(!invItem || invItem.id !== item.id || !isStackable(invItem)) return;
+      const space = getStackLimit(invItem) - getStackCount(invItem);
+      if(space <= 0) return;
+      const add = Math.min(space, remaining);
+      if(add > 0){
+        stackPlan.push({ idx, add });
+        remaining -= add;
+      }
+    });
+    const neededSlots = Math.ceil(Math.max(0, remaining) / Math.max(1, limit));
+    if(player.inv.length + neededSlots > capacity){
+      return false;
+    }
+    let applied = 0;
+    stackPlan.forEach(({ idx, add }) => {
+      const target = player.inv[idx];
+      setStackCount(target, getStackCount(target) + add);
+      applied += add;
+    });
+    let leftover = total - applied;
+    if(leftover > 0){
+      const first = item;
+      const firstAdd = Math.min(limit, leftover);
+      setStackCount(first, firstAdd);
+      player.inv.push(first);
+      leftover -= firstAdd;
+      while(leftover > 0){
+        const extra = cloneItem(item);
+        const add = Math.min(limit, leftover);
+        setStackCount(extra, add);
+        player.inv.push(extra);
+        leftover -= add;
+      }
+    }
+  }else{
+    if(player.inv.length >= capacity){
+      return false;
+    }
+    player.inv.push(item);
+  }
+  notifyInventoryChanged();
+  return true;
+}
+
+function mergeIntoCampChest(item){
+  if(!item || !item.id) return;
+  const chest = ensureCampChest();
+  if(!isStackable(item)){
+    chest.push(item);
+    return;
+  }
+  const limit = getStackLimit(item);
+  let remaining = getStackCount(item);
+  for(const entry of chest){
+    if(!entry || entry.id !== item.id || !isStackable(entry)) continue;
+    const space = getStackLimit(entry) - getStackCount(entry);
+    if(space <= 0) continue;
+    const add = Math.min(space, remaining);
+    if(add > 0){
+      setStackCount(entry, getStackCount(entry) + add);
+      remaining -= add;
+    }
+    if(remaining <= 0) break;
+  }
+  if(remaining > 0){
+    const first = item;
+    const firstAdd = Math.min(limit, remaining);
+    setStackCount(first, firstAdd);
+    chest.push(first);
+    remaining -= firstAdd;
+    while(remaining > 0){
+      const extra = cloneItem(item);
+      const add = Math.min(limit, remaining);
+      setStackCount(extra, add);
+      chest.push(extra);
+      remaining -= add;
+    }
+  }
+}
+
+function storeCampChestItem(invIndex){
+  if(!isCampChestUnlocked()) return false;
+  if(!Array.isArray(player.inv)) player.inv = [];
+  if(invIndex < 0 || invIndex >= player.inv.length) return false;
+  const removed = player.inv.splice(invIndex, 1)[0];
+  if(!removed) return false;
+  mergeIntoCampChest(removed);
+  notifyInventoryChanged();
+  emitCampChestChanged();
+  return true;
+}
+
+function withdrawCampChestItem(chestIndex){
+  if(!isCampChestUnlocked()) return false;
+  const chest = ensureCampChest();
+  if(chestIndex < 0 || chestIndex >= chest.length) return false;
+  const removed = chest[chestIndex];
+  if(!removed) return false;
+  const toAdd = isStackable(removed) ? cloneItem(removed) : removed;
+  const added = addExistingItemToInventory(toAdd);
+  if(!added){
+    if(typeof log === 'function') log('Inventory full.');
+    return false;
+  }
+  chest.splice(chestIndex, 1);
+  emitCampChestChanged();
+  return true;
+}
+
+function getCampChest(){
+  return ensureCampChest();
 }
 function getPartyInventoryCapacity() {
   return party.length * 20;
@@ -723,6 +875,6 @@ function useItem(invIndex){
   return false;
 }
 
-const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache, loadStarterItems, canEquip, describeRequiredRoles, getEquipMinLevel, getEquipRestrictions };
+const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache, loadStarterItems, canEquip, describeRequiredRoles, getEquipMinLevel, getEquipRestrictions, getCampChest, isCampChestUnlocked, unlockCampChest, storeCampChestItem, withdrawCampChestItem };
 globalThis.Dustland.inventory = inventoryExports;
 Object.assign(globalThis, inventoryExports);

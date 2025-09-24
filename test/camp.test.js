@@ -212,3 +212,59 @@ test('camp:open toggles fast travel button and opens map', async () => {
   assert.ok(!overlay.classList.contains('shown'));
   assert.deepEqual(opened, ['camp']);
 });
+
+test('camp chest purchase unlocks storage and reopens overlay', async () => {
+  const dom = new JSDOM('<!doctype html><body><button id="campBtn"></button><div class="overlay" id="personaOverlay"><div class="persona-window"><div id="personaList" class="persona-list"></div><div class="persona-actions"><button id="campFastTravelBtn" class="btn"></button><button id="campChestBtn" class="btn"></button><button id="closePersonaBtn" class="btn"></button></div></div></div><div class="overlay" id="campChestOverlay"><div class="camp-chest-window"><header><button id="closeCampChestBtn" class="btn"></button></header><div id="campChestList"></div><div id="campChestInventoryList"></div></div></div></body>', { pretendToBeVisual: true });
+  const { document } = dom.window;
+  const bus = new EventEmitter();
+  const logs = [];
+  const chestItems = [];
+  let unlocked = false;
+  const inventory = {
+    getCampChest: () => chestItems,
+    isCampChestUnlocked: () => unlocked,
+    unlockCampChest: () => { unlocked = true; },
+    storeCampChestItem: () => false,
+    withdrawCampChestItem: () => false
+  };
+  const gs = {
+    getState: () => ({ party: [{ id: 'p1', name: 'Hero' }], personas: {} }),
+    applyPersona: () => {}
+  };
+  const sandbox = {
+    EventBus: bus,
+    Dustland: { gameState: gs, zoneEffects: [], inventory },
+    document,
+    healAll: () => {},
+    log: msg => logs.push(msg),
+    toast: msg => logs.push(`toast:${msg}`),
+    party: [{ id: 'p1', name: 'Hero', hydration: 0 }],
+    player: { scrap: 500, inv: [] },
+    state: { map: 'world' },
+    updateHUD: () => {}
+  };
+  sandbox.globalThis = sandbox;
+  const code = await fs.readFile(new URL('../scripts/camp-persona.js', import.meta.url), 'utf8');
+  vm.runInNewContext(code, sandbox);
+  bus.emit('camp:open');
+  const overlay = document.getElementById('personaOverlay');
+  const chestOverlay = document.getElementById('campChestOverlay');
+  const chestBtn = document.getElementById('campChestBtn');
+  const closeChestBtn = document.getElementById('closeCampChestBtn');
+  assert.ok(overlay.classList.contains('shown'));
+  assert.strictEqual(chestBtn.textContent, 'Buy Camp Chest (20,000 Scrap)');
+  chestBtn.click();
+  assert.ok(logs.includes('Not enough scrap.'));
+  assert.strictEqual(sandbox.player.scrap, 500);
+  logs.length = 0;
+  sandbox.player.scrap = 25000;
+  chestBtn.click();
+  assert.ok(unlocked);
+  assert.strictEqual(sandbox.player.scrap, 5000);
+  assert.ok(!overlay.classList.contains('shown'));
+  assert.ok(chestOverlay.classList.contains('shown'));
+  assert.ok(logs.includes('Camp chest assembled.'));
+  assert.strictEqual(chestBtn.textContent, 'Camp Chest');
+  closeChestBtn.click();
+  assert.ok(overlay.classList.contains('shown'));
+});

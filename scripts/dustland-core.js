@@ -337,7 +337,7 @@ function registerZoneEffects(list){
   });
 }
 const state = { map:'world', mapFlags: {} }; // default map
-const player = { hp:10, inv:[], scrap:0 };
+const player = { hp:10, inv:[], scrap:0, campChest: [], campChestUnlocked: false };
 if (typeof registerItem === 'function') {
   registerItem({
     id: 'memory_worm',
@@ -1437,6 +1437,8 @@ function loadModernSave(d){
   party.fallen = deepClone(Array.isArray(partyData.fallen) ? partyData.fallen : []);
   Object.assign(player, d.player || {});
   if(!Array.isArray(player.inv)) player.inv = [];
+  if(!Array.isArray(player.campChest)) player.campChest = [];
+  player.campChestUnlocked = !!player.campChestUnlocked;
   Object.keys(state).forEach(k => delete state[k]);
   Object.assign(state, d.state || {});
   state.map = state.map || 'world';
@@ -1531,7 +1533,7 @@ if (startContinue) startContinue.onclick = () => { load(); hideStart(); };
 if (startNew) startNew.onclick = () => { hideStart(); resetAll(); };
 
 function resetAll(){
-  party.length=0; player.inv=[]; party.flags={}; player.scrap=0;
+  party.length=0; player.inv=[]; party.flags={}; player.scrap=0; player.campChest=[]; player.campChestUnlocked=false;
   Object.keys(worldFlags).forEach(k => delete worldFlags[k]);
   built = [];
   state.map='creator'; openCreator();

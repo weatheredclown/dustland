@@ -431,7 +431,26 @@
       <div id="personaList" class="persona-list"></div>
       <div class="persona-actions">
         <button id="campFastTravelBtn" class="btn">Fast Travel</button>
+        <button id="campChestBtn" class="btn">Camp Chest</button>
         <button id="closePersonaBtn" class="btn">Close</button>
+      </div>
+    </div>
+  </div>
+  <div class="overlay" id="campChestOverlay" role="dialog" aria-modal="true" tabindex="-1">
+    <div class="camp-chest-window">
+      <header class="camp-chest-header">
+        <h2>Camp Chest</h2>
+        <button id="closeCampChestBtn" class="btn">Close</button>
+      </header>
+      <div class="camp-chest-panels">
+        <section class="camp-chest-panel">
+          <h3>Stored Items</h3>
+          <div id="campChestList" class="slot-list"></div>
+        </section>
+        <section class="camp-chest-panel">
+          <h3>Inventory</h3>
+          <div id="campChestInventoryList" class="slot-list"></div>
+        </section>
       </div>
     </div>
   </div>
