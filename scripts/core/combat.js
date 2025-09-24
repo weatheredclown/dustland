@@ -685,6 +685,12 @@ function doAttack(dmg, type = 'basic'){
       log?.('Lucky strike!');
     }
 
+    const instantKillChance = Math.min(0.25, Math.max(0, eff - 12) * 0.01);
+    if (tDmg > 0 && target.hp > 0 && instantKillChance > 0 && Math.random() < instantKillChance){
+      tDmg = Math.max(tDmg, target.hp);
+      log?.(`${attacker.name}'s incredible luck fells ${target.name} instantly!`);
+    }
+
     target.hp -= tDmg;
 
     recordCombatEvent?.({

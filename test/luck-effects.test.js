@@ -103,3 +103,18 @@ test('luck can reduce damage taken', () => {
   assert.ok(logMessages.some(m => m.includes('Luck')));
   closeCombat('flee');
 });
+
+test('extreme luck can instantly defeat enemies', () => {
+  logMessages.length = 0;
+  hero.stats.LCK = 20;
+  hero.hp = hero.maxHp;
+  const enemy = { name:'Brute', hp: 30, maxHp:30 };
+  const r = Math.random; Math.random = () => 0;
+  openCombat([enemy]);
+  doAttack(1);
+  Math.random = r;
+  assert.strictEqual(combatState.enemies.length, 0);
+  assert.ok(logMessages.some(m => m.includes('instantly')));
+  closeCombat('flee');
+  hero.stats.LCK = 10;
+});
