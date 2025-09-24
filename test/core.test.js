@@ -894,6 +894,59 @@ test('applyModule overwrites existing interiors', () => {
   assert.strictEqual(interiors.dup.h, 2);
 });
 
+test('applyModule assigns interior display names', () => {
+  const interiorsRef = globalThis.interiors;
+  const mapLabelsRef = globalThis.mapLabels;
+  const savedInteriors = {};
+  Object.entries(interiorsRef).forEach(([id, data]) => {
+    const clone = { ...data };
+    if (Array.isArray(data?.grid)) clone.grid = data.grid.map(row => [...row]);
+    savedInteriors[id] = clone;
+  });
+  const savedMapLabels = { ...mapLabelsRef };
+  const resetInteriors = () => { Object.keys(interiorsRef).forEach(k => delete interiorsRef[k]); };
+  const resetMapLabels = () => {
+    Object.keys(mapLabelsRef).forEach(k => {
+      if (k !== 'world' && k !== 'creator') delete mapLabelsRef[k];
+    });
+  };
+  try {
+    resetInteriors();
+    resetMapLabels();
+    applyModule({
+      interiors: [{ id: 'deep_room', w: 1, h: 1, grid: [[TILE.FLOOR]], label: 'Deep Room' }]
+    }, { fullReset: false });
+    assert.strictEqual(interiorsRef.deep_room.displayName, 'Deep Room');
+    assert.strictEqual(globalThis.mapLabel('deep_room'), 'Deep Room');
+
+    resetInteriors();
+    resetMapLabels();
+    applyModule({
+      interiors: [{ id: 'mystery_room', w: 1, h: 1, grid: [[TILE.FLOOR]] }]
+    }, { fullReset: false });
+    assert.strictEqual(interiorsRef.mystery_room.displayName, 'Mystery Room');
+    assert.strictEqual(globalThis.mapLabel('mystery_room'), 'Mystery Room');
+
+    resetInteriors();
+    resetMapLabels();
+    applyModule({
+      interiors: [{ id: 'silent_vault', w: 1, h: 1, grid: [[TILE.FLOOR]] }],
+      mapLabels: { silent_vault: 'Silent Vault' }
+    }, { fullReset: false });
+    assert.strictEqual(interiorsRef.silent_vault.displayName, 'Silent Vault');
+    assert.strictEqual(globalThis.mapLabel('silent_vault'), 'Silent Vault');
+  } finally {
+    resetInteriors();
+    Object.entries(savedInteriors).forEach(([id, data]) => {
+      const clone = { ...data };
+      if (Array.isArray(data?.grid)) clone.grid = data.grid.map(row => [...row]);
+      interiorsRef[id] = clone;
+    });
+    Object.keys(mapLabelsRef).forEach(k => { if (!(k in savedMapLabels)) delete mapLabelsRef[k]; });
+    Object.entries(savedMapLabels).forEach(([k, v]) => { mapLabelsRef[k] = v; });
+  }
+});
+
 test('makeInteriorRoom supports custom size', () => {
   const id = makeInteriorRoom('big', 20, 15);
   const I = interiors[id];

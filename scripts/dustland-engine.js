@@ -1961,6 +1961,21 @@ function questProgressInfo(q){
   return { required, turnedIn, carried, total, need, ready };
 }
 
+function questMapDisplayName(id){
+  if(!id) return '';
+  if(typeof mapLabel === 'function'){
+    const label = mapLabel(id);
+    if(label && typeof label === 'string' && label.trim()) return label;
+  }
+  if(typeof mapLabels === 'object' && mapLabels){
+    const alt = mapLabels[id];
+    if(typeof alt === 'string' && alt.trim()) return alt.trim();
+  }
+  const str = String(id).replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
+  if(!str) return '';
+  return str.replace(/\b\w/g,c=>c.toUpperCase());
+}
+
 function questDescriptionText(q, progress, target){
   if(q.status==='completed'){
     if(q.outcome) return q.outcome;
@@ -1975,7 +1990,8 @@ function questDescriptionText(q, progress, target){
     if(itemName) return `Return the ${itemName}.`;
   }
   if(target && target.type==='offmap' && target.map){
-    return `Objective located in ${target.map}.`;
+    const mapName = questMapDisplayName(target.map) || target.map;
+    return `Objective located in ${mapName}.`;
   }
   return typeof q.desc==='string'?q.desc:'';
 }
@@ -1983,17 +1999,18 @@ function questDescriptionText(q, progress, target){
 function questTargetText(target, partyLoc){
   if(!target) return '';
   if(target.type==='npc'){
-    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` (${target.map})` : '';
+    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` (${questMapDisplayName(target.map) || target.map})` : '';
     return `Return to ${target.label || 'the quest giver'}${mapNote}`;
   }
   if(target.type==='item'){
     const coords=(typeof target.x==='number' && typeof target.y==='number')?` (${target.x}, ${target.y})`:'';
-    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` — ${target.map}` : '';
+    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` — ${questMapDisplayName(target.map) || target.map}` : '';
     const label=target.label || 'the objective';
     return `Search near ${label}${coords}${mapNote}`;
   }
   if(target.type==='offmap'){
-    return target.map ? `Objective located in ${target.map}` : 'Objective located elsewhere';
+    const mapName = target.map ? (questMapDisplayName(target.map) || target.map) : '';
+    return mapName ? `Objective located in ${mapName}` : 'Objective located elsewhere';
   }
   return '';
 }
@@ -2063,7 +2080,7 @@ function questCompassTooltip(target, partyLoc){
   if(!target) return 'Explore to advance this quest.';
   if(target.type==='completed') return 'Quest completed';
   if(target.label){
-    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` (${target.map})` : '';
+    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` (${questMapDisplayName(target.map) || target.map})` : '';
     const prefix=target.type==='npc' ? 'Return to ' : target.type==='item' ? 'Search near ' : '';
     const text=`${prefix}${target.label}${mapNote}`.trim();
     return text || 'Quest objective';
