@@ -2204,6 +2204,38 @@ function openShop(npc) {
     const grudgeLevel = npc.shop.grudge ?? 0;
     const TraderClass = globalThis.Dustland?.Trader;
 
+    const resolveBuyPrice = (stack) => {
+      if (!stack?.item) return 0;
+      const entry = stack.entries?.[0];
+      if (TraderClass?.calculatePrice) {
+        return TraderClass.calculatePrice(stack.item, {
+          entry,
+          markup: baseMarkup,
+          grudge: grudgeLevel
+        });
+      }
+      const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : (grudgeLevel <= 0 ? 0.96 : 1));
+      const baseValue = typeof stack.item.value === 'number' ? stack.item.value : 0;
+      return Math.max(1, Math.ceil(baseValue * legacyMarkup));
+    };
+
+    const resolveSellPrice = (stack) => {
+      if (!stack?.item) return 0;
+      const { item } = stack;
+      if (typeof item.scrap === 'number') {
+        return item.scrap;
+      }
+      if (TraderClass?.resolveBaseValue && TraderClass?.basePriceFromValue) {
+        const baseValue = TraderClass.resolveBaseValue(item);
+        const basePrice = TraderClass.basePriceFromValue(baseValue);
+        const grudgeMult = TraderClass.resolveGrudgeMultiplier ? TraderClass.resolveGrudgeMultiplier(grudgeLevel) : 1;
+        const adjusted = basePrice * grudgeMult;
+        return Math.max(1, Math.round(adjusted / Math.max(1, baseMarkup * 2)));
+      }
+      const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : 1);
+      return Math.max(1, Math.floor((item.value || 0) / legacyMarkup));
+    };
+
     const normalizeForKey = (value, omitCount) => {
       if (!value || typeof value !== 'object') {
         return typeof value === 'function' ? value.toString() : value;
@@ -2255,13 +2287,27 @@ function openShop(npc) {
       stack.entries.push({ idx, item });
     });
 
-    const compareStacks = (a, b) => {
+    shopStacks.forEach(stack => {
+      stack.price = resolveBuyPrice(stack);
+    });
+    sellStacks.forEach(stack => {
+      stack.price = resolveSellPrice(stack);
+    });
+
+    const compareByTypeName = (a, b) => {
       const typeA = (a?.item?.type || '').toString().toLowerCase();
       const typeB = (b?.item?.type || '').toString().toLowerCase();
       if (typeA !== typeB) return typeA.localeCompare(typeB);
       const nameA = (a?.item?.name || '').toString().toLowerCase();
       const nameB = (b?.item?.name || '').toString().toLowerCase();
       return nameA.localeCompare(nameB);
+    };
+
+    const compareStacks = (a, b) => {
+      const priceA = Number.isFinite(a?.price) ? a.price : 0;
+      const priceB = Number.isFinite(b?.price) ? b.price : 0;
+      if (priceA !== priceB) return priceB - priceA;
+      return compareByTypeName(a, b);
     };
 
     shopStacks.sort(compareStacks);
@@ -2289,19 +2335,7 @@ function openShop(npc) {
       const { item, qty } = stack;
       const row = document.createElement('div');
       row.className = 'slot';
-      const entry = stack.entries[0];
-      let price;
-      if (TraderClass?.calculatePrice) {
-        price = TraderClass.calculatePrice(item, {
-          entry,
-          markup: baseMarkup,
-          grudge: grudgeLevel
-        });
-      } else {
-        const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : (grudgeLevel <= 0 ? 0.96 : 1));
-        const baseValue = typeof item.value === 'number' ? item.value : 0;
-        price = Math.max(1, Math.ceil(baseValue * legacyMarkup));
-      }
+      let price = Number.isFinite(stack.price) ? stack.price : resolveBuyPrice(stack);
       const name = `${item.name} x${qty}`;
       row.innerHTML = `<span>${name} - ${price} ${CURRENCY}</span><button class="btn">Buy</button>`;
       row.querySelector('button').onclick = () => {
@@ -2331,19 +2365,7 @@ function openShop(npc) {
       const { item, qty } = stack;
       const row = document.createElement('div');
       row.className = 'slot';
-      let sellPrice;
-      if (typeof item.scrap === 'number') {
-        sellPrice = item.scrap;
-      } else if (TraderClass?.resolveBaseValue && TraderClass?.basePriceFromValue) {
-        const baseValue = TraderClass.resolveBaseValue(item);
-        const basePrice = TraderClass.basePriceFromValue(baseValue);
-        const grudgeMult = TraderClass.resolveGrudgeMultiplier ? TraderClass.resolveGrudgeMultiplier(grudgeLevel) : 1;
-        const adjusted = basePrice * grudgeMult;
-        sellPrice = Math.max(1, Math.round(adjusted / Math.max(1, baseMarkup * 2)));
-      } else {
-        const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : 1);
-        sellPrice = Math.max(1, Math.floor((item.value || 0) / legacyMarkup));
-      }
+      let sellPrice = Number.isFinite(stack.price) ? stack.price : resolveSellPrice(stack);
       const name = `${item.name} x${qty}`;
       row.innerHTML = `<span>${name} - ${sellPrice} ${CURRENCY}</span><button class="btn">Sell</button>`;
       row.querySelector('button').onclick = () => {
