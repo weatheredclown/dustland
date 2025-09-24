@@ -1,5 +1,6 @@
 function seedWorldContent() {}
 
+(function(){
 const DATA = `
 {
   "seed": "world-one",
@@ -319,6 +320,8 @@ function postLoad(module){
   );
 }
 globalThis.WORLD_ONE_MODULE.postLoad = postLoad;
+
+})();
 
 startGame = function(){
   WORLD_ONE_MODULE.postLoad?.(WORLD_ONE_MODULE);
