@@ -2172,6 +2172,68 @@ test('loadModernSave restores bunkers and world flags', () => {
   }
 });
 
+test('loadModernSave ensures trader baseline goods return', () => {
+  const moduleData = {
+    name: 'shop_restore',
+    seed: 2024,
+    world: [[7, 7], [7, 7]],
+    npcs: [
+      {
+        id: 'trader',
+        map: 'world',
+        x: 0,
+        y: 0,
+        shop: {
+          markup: 1,
+          refresh: 24,
+          inv: [
+            { id: 'pipe_rifle', rarity: 'common', cadence: 'daily', refreshHours: 24 },
+            { id: 'minigun', rarity: 'legendary', cadence: 'weekly', refreshHours: 168 }
+          ]
+        }
+      }
+    ]
+  };
+  applyModule(moduleData);
+  const saved = {
+    format: 'dustland.save.v2',
+    module: 'shop_restore',
+    worldSeed: 2024,
+    world: [[7, 7], [7, 7]],
+    player: { inv: [] },
+    state: { map: 'world' },
+    buildings: [],
+    interiors: {},
+    itemDrops: [],
+    npcs: [
+      {
+        id: 'trader',
+        map: 'world',
+        x: 0,
+        y: 0,
+        shop: {
+          markup: 1,
+          refresh: 24,
+          inv: [
+            { id: 'pipe_rifle', rarity: 'common', cadence: 'daily', refreshHours: 24 }
+          ]
+        }
+      }
+    ],
+    quests: {},
+    party: { members: [], map: 'world', x: 0, y: 0, flags: {}, fallen: [] },
+    worldFlags: {},
+    bunkers: [],
+    gameState: { difficulty: 'normal', flags: {}, clock: 0, personas: {}, npcMemory: {}, effectPacks: {} }
+  };
+  loadModernSave(saved);
+  const trader = NPCS.find(n => n.id === 'trader');
+  assert.ok(trader);
+  const invIds = Array.isArray(trader.shop?.inv) ? trader.shop.inv.map(entry => entry.id) : [];
+  assert.ok(invIds.includes('minigun'));
+  assert.strictEqual(invIds.filter(id => id === 'pipe_rifle').length, 1);
+});
+
 test('clearSave removes stored game data', () => {
   const store = { dustland_crt: '{}' };
   const orig = global.localStorage;
