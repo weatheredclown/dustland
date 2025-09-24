@@ -1428,7 +1428,8 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true
+        "auto": true,
+        "challenge": 0
       },
       "symbol": "!"
     },
@@ -1455,7 +1456,8 @@ const DATA = `
         "counterBasic": {
           "dmg": 2
         },
-        "auto": true
+        "auto": true,
+        "challenge": 0
       },
       "symbol": "!",
       "overrideColor": true
@@ -1486,7 +1488,8 @@ const DATA = `
           "stun": 1,
           "delay": 800
         },
-        "auto": true
+        "auto": true,
+        "challenge": 0
       },
       "symbol": "!",
       "overrideColor": true
@@ -1521,7 +1524,8 @@ const DATA = `
           "spread": true,
           "delay": 800
         },
-        "auto": true
+        "auto": true,
+        "challenge": 0
       },
       "symbol": "!"
     },
@@ -1996,7 +2000,8 @@ const DATA = `
         "scrap": {
           "min": 3,
           "max": 5
-        }
+        },
+        "challenge": 0
       },
       "symbol": "!"
     },
@@ -2178,7 +2183,8 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true
+        "auto": true,
+        "challenge": 0
       },
       "symbol": "!"
     },
@@ -2207,7 +2213,8 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true
+        "auto": true,
+        "challenge": 0
       },
       "symbol": "!"
     },
@@ -2236,7 +2243,8 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true
+        "auto": true,
+        "challenge": 0
       },
       "symbol": "!"
     },
@@ -2265,7 +2273,8 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true
+        "auto": true,
+        "challenge": 0
       },
       "symbol": "!"
     },
@@ -2320,7 +2329,8 @@ const DATA = `
         "scrap": {
           "min": 3,
           "max": 5
-        }
+        },
+        "challenge": 0
       },
       "portraitSheet": "assets/portraits/dustland-module/iron_brute_4.png",
       "portraitLock": false
@@ -2369,7 +2379,8 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true
+        "auto": true,
+        "challenge": 0
       },
       "symbol": "!"
     },
@@ -2669,7 +2680,8 @@ const DATA = `
           "cue": "crackles with energy!",
           "dmg": 5,
           "delay": 1000
-        }
+        },
+        "challenge": 0
       },
       "portraitSheet": "assets/portraits/portrait_1084.png",
       "portraitLock": false
@@ -2868,7 +2880,8 @@ const DATA = `
         "scrap": {
           "min": 3,
           "max": 5
-        }
+        },
+        "challenge": 0
       },
       "symbol": "!"
     },
@@ -2903,7 +2916,8 @@ const DATA = `
         "scrap": {
           "min": 3,
           "max": 5
-        }
+        },
+        "challenge": 0
       },
       "symbol": "!"
     },
