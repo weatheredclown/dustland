@@ -1672,6 +1672,30 @@ function renderInv(){
   });
   const member=party[selectedMember]||party[0];
   const canEquipFn = typeof canEquip === 'function' ? canEquip : null;
+  const equipRestrictionsFn = typeof getEquipRestrictions === 'function' ? getEquipRestrictions : null;
+  const fallbackRestrictions = (member, item) => {
+    if(!member || !item || !['weapon','armor','trinket'].includes(item.type)) return null;
+    const atk = Number.isFinite(item?.mods?.ATK) ? item.mods.ATK : 0;
+    let minLevel = 1;
+    if(item.type === 'weapon'){
+      if(atk >= 13) minLevel = 7;
+      else if(atk >= 11) minLevel = 6;
+      else if(atk >= 9) minLevel = 5;
+      else if(atk >= 7) minLevel = 4;
+      else if(atk >= 5) minLevel = 3;
+    }
+    if(Number.isFinite(item?.equip?.minLevel)){
+      minLevel = Math.max(1, Math.floor(item.equip.minLevel));
+    }
+    const lvl = Number.isFinite(member?.lvl) ? member.lvl : 1;
+    const levelMet = lvl >= minLevel;
+    return {
+      allowed: levelMet,
+      levelRequired: minLevel,
+      levelMet,
+      reasons: (!levelMet && minLevel > 1) ? [`Requires level ${minLevel}.`] : []
+    };
+  };
   const describeRoles = typeof describeRequiredRoles === 'function' ? describeRequiredRoles : () => '';
   const suggestions = {};
   if(member){
@@ -1726,10 +1750,15 @@ function renderInv(){
     if(['weapon','armor','trinket'].includes(it.type) && suggestions[it.type]===it){
       row.classList.add('better');
     }
+    const restriction = member ? (equipRestrictionsFn ? equipRestrictionsFn(member, it) : fallbackRestrictions(member, it)) : null;
     const baseLabel = it.name + (['weapon','armor','trinket'].includes(it.type)?` [${it.type}]`:'');
     const label = (it.cursed && it.cursedKnown)? `${baseLabel} (cursed)` : baseLabel;
     const labelSpan=document.createElement('span');
     labelSpan.textContent=label;
+    if(restriction && !restriction.levelMet && restriction.levelRequired > 1){
+      row.classList.add('level-locked');
+      labelSpan.classList.add('level-locked-label');
+    }
     const btnWrap=document.createElement('span');
     btnWrap.style.display='flex';
     btnWrap.style.gap='6px';
@@ -1738,13 +1767,30 @@ function renderInv(){
       const equipBtn=document.createElement('button');
       equipBtn.className='btn';
       equipBtn.dataset.a='equip';
-      const allowed = !member || !canEquipFn || canEquipFn(member, it);
       const reqText = describeRoles(it);
-      equipBtn.title = allowed ? 'Equip' : (reqText ? `Only ${reqText} can equip` : 'Cannot equip');
-      equipBtn.setAttribute('aria-label', equipBtn.title);
-      if(!allowed){
-        equipBtn.disabled = true;
+      let allowed = true;
+      if(member){
+        if(restriction){
+          allowed = restriction.allowed;
+        } else if(canEquipFn){
+          allowed = canEquipFn(member, it);
+        }
       }
+      let title = 'Equip';
+      if(!allowed){
+        if(restriction?.reasons?.length){
+          title = restriction.reasons.join(' ');
+        } else if(reqText){
+          title = `Only ${reqText} can equip`;
+        } else {
+          title = 'Cannot equip';
+        }
+        equipBtn.disabled = true;
+      } else if(restriction && restriction.levelRequired > 1){
+        title = `Equip (requires level ${restriction.levelRequired})`;
+      }
+      equipBtn.title = title;
+      equipBtn.setAttribute('aria-label', title);
       equipBtn.textContent='⚙';
       equipBtn.onclick=()=> equipItem(selectedMember, player.inv.indexOf(it));
       btnWrap.appendChild(equipBtn);
@@ -1778,13 +1824,17 @@ function renderInv(){
         : String(v);
     })();
     const nameLine = baseLabel + ((it.cursed && it.cursedKnown)? ' (cursed)' : '');
+    const levelTip = restriction && restriction.levelRequired > 1
+      ? `Requires level ${restriction.levelRequired}`
+      : '';
     const tip = [
       nameLine,
       it.desc || '',
       mods ? `Mods: ${mods}` : '',
       use  ? `Use: ${use}`   : '',
       `Rarity: ${it.rarity}`,
-      `Value: ${valueStr}`
+      `Value: ${valueStr}`,
+      levelTip
     ].filter(Boolean).join('\n');
     row.title = tip;
     row.onclick=e=>{ if(e.target.tagName==='BUTTON') return; if(['weapon','armor','trinket'].includes(it.type)) equipItem(selectedMember, player.inv.indexOf(it)); };
