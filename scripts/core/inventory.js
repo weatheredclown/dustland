@@ -223,7 +223,14 @@ function unlockCampChest(){
   if(!p) return false;
   if(!p.campChestUnlocked){
     p.campChestUnlocked = true;
-    ensureCampChest();
+    const chest = ensureCampChest();
+    if(Array.isArray(chest) && chest.length === 0){
+      const medkit = getItem('medkit');
+      if(medkit){
+        setStackCount(medkit, 10);
+        mergeIntoCampChest(medkit);
+      }
+    }
     emitCampChestChanged();
   }
   return true;
