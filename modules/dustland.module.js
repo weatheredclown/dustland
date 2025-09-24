@@ -1428,8 +1428,7 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true,
-        "challenge": 0
+        "auto": true
       },
       "symbol": "!"
     },
@@ -1456,8 +1455,7 @@ const DATA = `
         "counterBasic": {
           "dmg": 2
         },
-        "auto": true,
-        "challenge": 0
+        "auto": true
       },
       "symbol": "!",
       "overrideColor": true
@@ -1488,8 +1486,7 @@ const DATA = `
           "stun": 1,
           "delay": 800
         },
-        "auto": true,
-        "challenge": 0
+        "auto": true
       },
       "symbol": "!",
       "overrideColor": true
@@ -1524,8 +1521,7 @@ const DATA = `
           "spread": true,
           "delay": 800
         },
-        "auto": true,
-        "challenge": 0
+        "auto": true
       },
       "symbol": "!"
     },
@@ -2000,8 +1996,7 @@ const DATA = `
         "scrap": {
           "min": 3,
           "max": 5
-        },
-        "challenge": 0
+        }
       },
       "symbol": "!"
     },
@@ -2183,8 +2178,7 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true,
-        "challenge": 0
+        "auto": true
       },
       "symbol": "!"
     },
@@ -2213,8 +2207,7 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true,
-        "challenge": 0
+        "auto": true
       },
       "symbol": "!"
     },
@@ -2243,8 +2236,7 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true,
-        "challenge": 0
+        "auto": true
       },
       "symbol": "!"
     },
@@ -2273,8 +2265,7 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true,
-        "challenge": 0
+        "auto": true
       },
       "symbol": "!"
     },
@@ -2329,8 +2320,7 @@ const DATA = `
         "scrap": {
           "min": 3,
           "max": 5
-        },
-        "challenge": 0
+        }
       },
       "portraitSheet": "assets/portraits/dustland-module/iron_brute_4.png",
       "portraitLock": false
@@ -2379,8 +2369,7 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true,
-        "challenge": 0
+        "auto": true
       },
       "symbol": "!"
     },
@@ -2680,8 +2669,7 @@ const DATA = `
           "cue": "crackles with energy!",
           "dmg": 5,
           "delay": 1000
-        },
-        "challenge": 0
+        }
       },
       "portraitSheet": "assets/portraits/portrait_1084.png",
       "portraitLock": false
@@ -2880,8 +2868,7 @@ const DATA = `
         "scrap": {
           "min": 3,
           "max": 5
-        },
-        "challenge": 0
+        }
       },
       "symbol": "!"
     },
@@ -2916,8 +2903,7 @@ const DATA = `
         "scrap": {
           "min": 3,
           "max": 5
-        },
-        "challenge": 0
+        }
       },
       "symbol": "!"
     },
@@ -7827,7 +7813,7 @@ const DATA = `
       0,
       0,
       0,
-      0,
+      4,
       4,
       0,
       0,
@@ -7932,6 +7918,7 @@ const DATA = `
       3,
       3,
       4,
+      4,
       0,
       0,
       0,
@@ -7949,8 +7936,7 @@ const DATA = `
       0,
       0,
       0,
-      0,
-      0,
+      4,
       4,
       0,
       0,
@@ -8051,7 +8037,8 @@ const DATA = `
       3,
       3,
       3,
-      3,
+      4,
+      4,
       4,
       0,
       0,
@@ -8063,7 +8050,6 @@ const DATA = `
       0,
       0,
       0,
-      0,
       3,
       3,
       3,
@@ -8073,7 +8059,7 @@ const DATA = `
       3,
       0,
       0,
-      0,
+      4,
       4,
       0,
       0,
@@ -8196,9 +8182,9 @@ const DATA = `
       3,
       3,
       0,
-      0,
       4,
-      0,
+      4,
+      4,
       0,
       0,
       0,
@@ -8295,7 +8281,7 @@ const DATA = `
       3,
       0,
       4,
-      0,
+      4,
       0,
       0,
       0,
@@ -8416,7 +8402,7 @@ const DATA = `
       3,
       0,
       4,
-      0,
+      4,
       0,
       0,
       0,
@@ -8537,7 +8523,7 @@ const DATA = `
       3,
       3,
       4,
-      0,
+      4,
       0,
       0,
       0,
@@ -8834,7 +8820,7 @@ const DATA = `
       0,
       0,
       0,
-      0,
+      4,
       4,
       0,
       0,
@@ -8957,7 +8943,7 @@ const DATA = `
       0,
       0,
       0,
-      0,
+      4,
       4,
       0,
       0,
@@ -9080,7 +9066,7 @@ const DATA = `
       0,
       0,
       0,
-      0,
+      4,
       4,
       0,
       0,
@@ -9203,7 +9189,7 @@ const DATA = `
       0,
       0,
       0,
-      0,
+      4,
       4,
       0,
       0,
@@ -9326,7 +9312,7 @@ const DATA = `
       0,
       0,
       0,
-      0,
+      4,
       4,
       0,
       0,
@@ -9449,7 +9435,7 @@ const DATA = `
       0,
       0,
       0,
-      0,
+      4,
       4,
       0,
       0,
@@ -9572,9 +9558,9 @@ const DATA = `
       0,
       0,
       0,
-      0,
       4,
-      0,
+      4,
+      4,
       0,
       0,
       0,
@@ -9697,7 +9683,7 @@ const DATA = `
       0,
       0,
       4,
-      0,
+      4,
       0,
       0,
       0,
@@ -9820,7 +9806,7 @@ const DATA = `
       0,
       0,
       4,
-      0,
+      4,
       0,
       0,
       0,
@@ -10675,7 +10661,7 @@ const DATA = `
       0,
       0,
       4,
-      0,
+      4,
       0,
       0,
       0,
@@ -10798,7 +10784,7 @@ const DATA = `
       0,
       0,
       4,
-      0,
+      4,
       0,
       0,
       0,
@@ -10921,7 +10907,7 @@ const DATA = `
       0,
       0,
       4,
-      0,
+      4,
       0,
       0,
       0,
@@ -11044,7 +11030,7 @@ const DATA = `
       0,
       0,
       4,
-      0,
+      4,
       0,
       0,
       0,
@@ -11167,7 +11153,7 @@ const DATA = `
       2,
       0,
       4,
-      0,
+      4,
       0,
       0,
       0,
@@ -11220,7 +11206,7 @@ const DATA = `
       0,
       0,
       4,
-      0,
+      4,
       0,
       0,
       3,
@@ -11290,7 +11276,7 @@ const DATA = `
       2,
       2,
       4,
-      0,
+      4,
       0,
       0,
       0,
@@ -11343,7 +11329,7 @@ const DATA = `
       0,
       0,
       4,
-      0,
+      4,
       0,
       0,
       3,
@@ -11413,7 +11399,7 @@ const DATA = `
       2,
       2,
       4,
-      0,
+      4,
       0,
       0,
       0,
@@ -11587,7 +11573,7 @@ const DATA = `
       0,
       0,
       0,
-      0,
+      4,
       4,
       0,
       0,
@@ -11710,9 +11696,9 @@ const DATA = `
       0,
       0,
       0,
-      0,
       4,
-      0,
+      4,
+      4,
       0,
       0,
       3,
@@ -11835,7 +11821,7 @@ const DATA = `
       0,
       0,
       4,
-      0,
+      4,
       0,
       0,
       3,
@@ -12079,9 +12065,9 @@ const DATA = `
       2,
       2,
       0,
-      0,
       4,
-      0,
+      4,
+      4,
       0,
       0,
       3,
@@ -12633,7 +12619,7 @@ const DATA = `
       0,
       0,
       4,
-      0,
+      4,
       5,
       5,
       3,
@@ -12754,7 +12740,7 @@ const DATA = `
       0,
       0,
       4,
-      0,
+      4,
       5,
       3,
       3,
@@ -12875,7 +12861,7 @@ const DATA = `
       0,
       0,
       4,
-      0,
+      4,
       3,
       3,
       5,
@@ -14497,7 +14483,7 @@ const DATA = `
       0,
       3,
       3,
-      3,
+      8,
       3,
       3,
       3,
