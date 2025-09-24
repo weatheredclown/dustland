@@ -2879,6 +2879,12 @@ function runTests(){
       if (e.key === 'Escape') document.getElementById('closeShopBtn')?.click();
       return;
     }
+    const target=e.target || document.activeElement;
+    const isTypingTarget=target?.matches?.('input:not([type]),input[type="text"],input[type="search"],input[type="email"],input[type="password"],input[type="number"],input[type="url"],input[type="tel"],textarea');
+    const isEditable=target?.isContentEditable;
+    if(isTypingTarget || isEditable){
+      return;
+    }
     if((e.key==='b' || e.key==='B') && mobileControlsEnabled && panel?.classList?.contains('show')){
       closePanel();
       e.preventDefault();
