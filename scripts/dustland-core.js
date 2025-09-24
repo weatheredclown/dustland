@@ -1500,22 +1500,22 @@ function setCreatorPortrait(){
 }
 const specializations={
   'Scavenger':{
-    desc:'Finds better loot from ruins; +1 PER and starts with crowbar.',
+    desc:'Scavenger: +1 PER, starts with a crowbar, and learns Power Strike for a heavy 3-damage swing (30 ADR, 1-turn cooldown).',
     stats:{PER:+1},
     gear:[{id:'crowbar',name:'Crowbar',type:'weapon',mods:{ATK:+1}}]
   },
   'Gunslinger':{
-    desc:'Draws fast with +1 AGI and starts with pipe rifle.',
+    desc:'Gunslinger: +1 AGI, starts with a pipe rifle, and tosses a Stun Grenade that deals 1 damage and stuns for a turn (40 ADR).',
     stats:{AGI:+1},
     gear:[{id:'pipe_rifle',name:'Pipe Rifle',type:'weapon',mods:{ATK:+2}}]
   },
   'Snakeoil Preacher':{
-    desc:'Silver tongue grants +1 CHA and a lucky Tin Sun trinket.',
+    desc:'Snakeoil Preacher: +1 CHA, carries the Tin Sun trinket, and patches wounds with First Aid for 4 HP (35 ADR).',
     stats:{CHA:+1},
     gear:[{id:'tin_sun',name:'Tin Sun',type:'trinket',mods:{LCK:+1}}]
   },
   'Cogwitch':{
-    desc:'Tinker checks succeed more often; +1 INT and a trusty toolkit.',
+    desc:'Cogwitch: +1 INT, starts with a toolkit, and charges Adrenal Surge to restore 50 adrenaline (0 ADR cost, 4-turn cooldown).',
     stats:{INT:+1},
     gear:[{id:'toolkit',name:'Toolkit',type:'trinket',mods:{INT:+1}}]
   }
@@ -1529,21 +1529,23 @@ const classSpecials={
 };
 const quirks={
   'Lucky Lint':{
-    desc:'+1 LCK, start with a Lucky Coin, and enemies drop extra scrap.',
+    desc:'Lucky Lint: +1 LCK, start with a Lucky Coin, and scrap rewards from combat increase.',
     stats:{LCK:+1},
     gear:[{id:'lucky_coin',name:'Lucky Coin',type:'trinket',mods:{LCK:+1}}]
   },
   'Brutal Past':{
-    desc:'+1 STR, spiked knuckles, and finishers restore adrenaline and grit.',
+    desc:'Brutal Past: +1 STR, start with spiked knuckles, and finishing foes restores 5% max HP and 15 adrenaline.',
     stats:{STR:+1},
     gear:[{id:'spiked_knuckles',name:'Spiked Knuckles',type:'weapon',mods:{ATK:+1}}]
   },
   'Desert Prophet':{
-    desc:'+1 PER, a prophecy scroll, and visions uncover more spoils caches.',
+    desc:'Desert Prophet: +1 PER, start with a prophecy scroll, and spoils caches appear more often after battles.',
     stats:{PER:+1},
     gear:[{id:'prophecy_scroll',name:'Prophecy Scroll',type:'trinket',mods:{INT:+1}}]
   }
 };
+const defaultSpecDesc='Wanderer: No specialization. Starts with Guard, reducing the next incoming hit by 1 damage.';
+const defaultQuirkDesc='Quirks grant optional bonuses. Pick one to preview its perks.';
 const hiddenOrigins={ 'Rustborn':{desc:'You survived a machine womb. +1 PER, weird dialog tags.'} };
 const statInfo={
   STR:{name:'Strength',benefit:'helps with DC checks'},
@@ -1602,13 +1604,39 @@ function renderStep(){
   }
   if(step===3){
     ccHint.textContent='Choose a specialization.';
-    r.innerHTML='<div class="grid">'+Object.entries(specializations).map(([k,v])=>`<div class='pill ${building.spec===k?'sel':''}' data-k='${k}' title='${v.desc}'>${k}</div>`).join('')+'</div>';
-    r.querySelectorAll('.pill').forEach(p=> p.onclick=()=>{ r.querySelectorAll('.pill').forEach(z=>z.classList.remove('sel')); p.classList.add('sel'); building.spec=p.dataset.k; });
+    r.innerHTML='<div class="grid">'+Object.entries(specializations).map(([k,v])=>`<div class='pill ${building.spec===k?'sel':''}' data-k='${k}' title='${v.desc}'>${k}</div>`).join('')+`</div><div class='field'><div class='small creator-desc' id='specDesc' aria-live='polite'></div></div>`;
+    const descEl=r.querySelector('#specDesc');
+    const pills=Array.from(r.querySelectorAll('.pill'));
+    function updateSpecSelection(key){
+      pills.forEach(z=>z.classList.toggle('sel',z.dataset.k===key));
+      if(key){
+        building.spec=key;
+      }else{
+        delete building.spec;
+      }
+      const spec=key?specializations[key]:null;
+      if(descEl) descEl.textContent=spec?.desc||defaultSpecDesc;
+    }
+    pills.forEach(p=>{ p.onclick=()=>{ updateSpecSelection(p.dataset.k); }; });
+    updateSpecSelection(building.spec||null);
   }
   if(step===4){
     ccHint.textContent='Pick a quirk.';
-    r.innerHTML='<div class="grid">'+Object.entries(quirks).map(([k,v])=>`<div class='pill ${building.quirk===k?'sel':''}' data-k='${k}' title='${v.desc}'>${k}</div>`).join('')+'</div>';
-    r.querySelectorAll('.pill').forEach(p=> p.onclick=()=>{ r.querySelectorAll('.pill').forEach(z=>z.classList.remove('sel')); p.classList.add('sel'); building.quirk=p.dataset.k; });
+    r.innerHTML='<div class="grid">'+Object.entries(quirks).map(([k,v])=>`<div class='pill ${building.quirk===k?'sel':''}' data-k='${k}' title='${v.desc}'>${k}</div>`).join('')+`</div><div class='field'><div class='small creator-desc' id='quirkDesc' aria-live='polite'></div></div>`;
+    const descEl=r.querySelector('#quirkDesc');
+    const pills=Array.from(r.querySelectorAll('.pill'));
+    function updateQuirkSelection(key){
+      pills.forEach(z=>z.classList.toggle('sel',z.dataset.k===key));
+      if(key){
+        building.quirk=key;
+      }else{
+        delete building.quirk;
+      }
+      const quirk=key?quirks[key]:null;
+      if(descEl) descEl.textContent=quirk?.desc||defaultQuirkDesc;
+    }
+    pills.forEach(p=>{ p.onclick=()=>{ updateQuirkSelection(p.dataset.k); }; });
+    updateQuirkSelection(building.quirk||null);
   }
   if(step===5){
     ccHint.textContent='A weird surge passes through the lights...';
