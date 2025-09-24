@@ -100,6 +100,15 @@ test('adrenaline tint and grayscale filters update based on config', async () =>
   assert.ok(/grayscale/.test(filt2));
 });
 
+test('low health applies a desaturation filter', async () => {
+  const ctx = setup(HUD_HTML);
+  ctx.updateHUD();
+  ctx.player.hp = 3;
+  ctx.updateHUD();
+  const filt = ctx.document.getElementById('game').style.getPropertyValue('--fxFilter');
+  assert.ok(/grayscale\(/.test(filt));
+});
+
 test('adrenaline pulse updates player fx with adr ratio', async () => {
   const ctx = setup(HUD_HTML);
   ctx.fxConfig.adrenalineTint = true;
