@@ -381,7 +381,8 @@ const DATA = `
       "use": {
         "type": "heal",
         "amount": 0,
-        "text": "You wave the wand."
+        "text": "You wave the wand.",
+        "consume": false
       }
     },
     {
@@ -776,6 +777,25 @@ const DATA = `
       "desc": "Stamped permit waiving bunker fuel fees.",
       "tags": [
         "pass"
+      ]
+    },
+    {
+      "id": "minigun",
+      "type": "weapon",
+      "baseId": "wand",
+      "rarity": "legendary",
+      "scrap": 10000,
+      "value": 40780,
+      "mods": {
+        "ATK": 10,
+        "ADR": 45
+      },
+      "name": "Helix Minigun",
+      "desc": "Bunker-forged rotary cannon that chews through anything.",
+      "tags": [
+        "ranged",
+        "heavy",
+        "wand"
       ]
     }
   ],
@@ -1966,6 +1986,12 @@ const DATA = `
             "cadence": "weekly",
             "refreshHours": 168,
             "scarcity": "rare"
+          },
+          {
+            "id": "minigun",
+            "rarity": "legendary",
+            "cadence": "weekly",
+            "refreshHours": 168
           }
         ],
         "refresh": 24
@@ -15542,17 +15568,56 @@ const DATA = `
 }
 `;
 
-function postLoad(module) {}
+const DUSTLAND_WAND_ID = 'wand';
+let ensureWandTurnHandler = null;
+
+function ensureWandInInventory(moduleName) {
+  const currentModule = globalThis.Dustland?.currentModule;
+  if (moduleName && currentModule && currentModule !== moduleName) return;
+  if (typeof hasItem !== 'function' || typeof addToInv !== 'function') return;
+  if (hasItem(DUSTLAND_WAND_ID)) return;
+  if (!globalThis.player || !Array.isArray(globalThis.player.inv)) return;
+  const wand = typeof getItem === 'function' ? getItem(DUSTLAND_WAND_ID) : null;
+  if (!wand) return;
+  addToInv(wand);
+}
+
+function postLoad(module) {
+  const moduleName = module?.name || 'dustland-module';
+  const bus = globalThis.EventBus;
+  if (ensureWandTurnHandler && typeof bus?.off === 'function') {
+    bus.off('movement:player', ensureWandTurnHandler);
+  }
+  ensureWandTurnHandler = () => ensureWandInInventory(moduleName);
+  bus?.on?.('movement:player', ensureWandTurnHandler);
+  const scheduleInitialCheck = () => {
+    if (typeof queueMicrotask === 'function') {
+      queueMicrotask(() => ensureWandInInventory(moduleName));
+      return;
+    }
+    if (typeof Promise !== 'undefined' && typeof Promise.resolve === 'function') {
+      Promise.resolve().then(() => ensureWandInInventory(moduleName));
+      return;
+    }
+    if (typeof globalThis.setTimeout === 'function') {
+      globalThis.setTimeout(() => ensureWandInInventory(moduleName), 0);
+      return;
+    }
+    ensureWandInInventory(moduleName);
+  };
+  scheduleInitialCheck();
+}
 
 globalThis.DUSTLAND_MODULE = JSON.parse(DATA);
 globalThis.DUSTLAND_MODULE.postLoad = postLoad;
 
 startGame = function () {
-  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE);
+  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'beforeApply' });
   applyModule(DUSTLAND_MODULE);
   const s = DUSTLAND_MODULE.start;
   if (s) {
     setPartyPos(s.x, s.y);
     setMap(s.map, 'dustland-module');
   }
+  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'afterApply' });
 };

@@ -1,7 +1,7 @@
 
 // ===== Rendering & Utilities =====
 
-const ENGINE_VERSION = '0.186.7';
+const ENGINE_VERSION = '0.189.2';
 
 
 const logEl = document.getElementById('log');
@@ -308,6 +308,7 @@ const retroNpcArtCache = new Map();
 let retroPlayerSprite = null;
 let retroPlayerSpriteIndex = -1;
 let retroItemSprite = null;
+let retroLootSprite = null;
 let retroItemCacheSprite = null;
 const DEFAULT_NPC_COLOR = '#9ef7a0';
 const xmlEscapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
@@ -391,6 +392,7 @@ function setRetroNpcArt(on, skipStorage){
   retroPlayerSprite = null;
   retroPlayerSpriteIndex = -1;
   retroItemSprite = null;
+  retroLootSprite = null;
   retroItemCacheSprite = null;
   if(!retroNpcArtEnabled){
     retroNpcArtCache.clear();
@@ -693,6 +695,38 @@ function buildRetroItemGlyphSvg(){
 </svg>`;
 }
 
+function buildRetroLootGlyphSvg(){
+  const inner = '#1a0d10';
+  const glowA = '#ff9472';
+  const glowB = '#ffd36a';
+  const accent = '#fff2c5';
+  const ember = '#ff6b5a';
+  const shrink = 'translate(16 16) scale(0.75) translate(-16 -16)';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="geometricPrecision">`
+  + `\n  <defs>`
+  + `\n    <radialGradient id="retroLootGlyphAura" cx="52%" cy="44%" r="56%">`
+  + `\n      <stop offset="0" stop-color="${glowB}" stop-opacity="0.95"/>`
+  + `\n      <stop offset="1" stop-color="${inner}" stop-opacity="0.1"/>`
+  + `\n    </radialGradient>`
+  + `\n    <linearGradient id="retroLootGlyphBody" x1="0" y1="0" x2="0" y2="1">`
+  + `\n      <stop offset="0" stop-color="${glowB}" stop-opacity="0.95"/>`
+  + `\n      <stop offset="0.6" stop-color="${glowA}" stop-opacity="0.85"/>`
+  + `\n      <stop offset="1" stop-color="${ember}" stop-opacity="0.8"/>`
+  + `\n    </linearGradient>`
+  + `\n  </defs>`
+  + `\n  <g transform="${shrink}">`
+  + `\n    <circle cx="16" cy="14.5" r="10.5" fill="url(#retroLootGlyphAura)" opacity="0.85"/>`
+  + `\n    <path d="M16 8.8l3.2 4.9-3.2 1.7-3.2-1.7z" fill="${accent}" stroke="${ember}" stroke-width="0.9" stroke-linejoin="round"/>`
+  + `\n    <path d="M11 13.8h10" stroke="${accent}" stroke-width="1.2" stroke-linecap="round" opacity="0.85"/>`
+  + `\n    <path d="M10 15.5h12l-1.2 10.4c-0.2 1.7-1.6 2.9-3.3 2.9h-3.9c-1.7 0-3.1-1.2-3.3-2.9z" fill="url(#retroLootGlyphBody)" stroke="${ember}" stroke-width="1" stroke-linejoin="round"/>`
+  + `\n    <path d="M12.4 19.4h7.2" stroke="${accent}" stroke-width="1" stroke-linecap="round" opacity="0.9"/>`
+  + `\n    <circle cx="16" cy="21.8" r="1.4" fill="${accent}" stroke="${ember}" stroke-width="0.7"/>`
+  + `\n    <path d="M12.6 22.9l-0.9 2.4" stroke="${accent}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>`
+  + `\n    <path d="M19.4 22.9l0.9 2.4" stroke="${accent}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>`
+  + `\n  </g>`
+  + `\n</svg>`;
+}
+
 function buildRetroItemCacheSvg(){
   const inner = '#1a130a';
   const glowA = '#ffcd7a';
@@ -803,6 +837,19 @@ function getRetroItemSprite(){
   sprite.decoding = 'sync';
   sprite.src = url;
   retroItemSprite = sprite;
+  return sprite;
+}
+
+function getRetroLootSprite(){
+  const Img = globalThis.Image;
+  if(typeof Img !== 'function') return null;
+  if(retroLootSprite) return retroLootSprite;
+  const svg = buildRetroLootGlyphSvg();
+  const url = svgToDataUrl(svg);
+  const sprite = new Img();
+  sprite.decoding = 'sync';
+  sprite.src = url;
+  retroLootSprite = sprite;
   return sprite;
 }
 
@@ -1218,8 +1265,10 @@ function render(gameState=state, dt){
         if(it.x>=camX&&it.y>=camY&&it.x<camX+vW&&it.y<camY+vH){
           const vx=(it.x-camX+offX)*TS, vy=(it.y-camY+offY)*TS;
           const multi = Array.isArray(it.items) && it.items.length>1;
+          const dropType = typeof it.dropType === 'string' ? it.dropType : (it.source === 'loot' ? 'loot' : 'world');
+          const isLoot = dropType === 'loot';
           if(retroNpcArtEnabled){
-            const sprite = multi ? getRetroItemCacheSprite() : getRetroItemSprite();
+            const sprite = multi ? getRetroItemCacheSprite() : (isLoot ? getRetroLootSprite() : getRetroItemSprite());
             if(sprite?.complete){
               if(multi){
                 const a=0.7+0.3*Math.sin(Date.now()/300);
@@ -1238,8 +1287,13 @@ function render(gameState=state, dt){
             ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
             ctx.globalAlpha=1;
           }else{
-            ctx.fillStyle='#c8ffbf';
+            ctx.fillStyle = isLoot ? '#ff7f6a' : '#c8ffbf';
             ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
+            if(isLoot){
+              ctx.strokeStyle = '#7f3b16';
+              ctx.lineWidth = 1;
+              ctx.strokeRect(vx+4,vy+4,TS-8,TS-8);
+            }
           }
         }
       }
@@ -2204,6 +2258,38 @@ function openShop(npc) {
     const grudgeLevel = npc.shop.grudge ?? 0;
     const TraderClass = globalThis.Dustland?.Trader;
 
+    const resolveBuyPrice = (stack) => {
+      if (!stack?.item) return 0;
+      const entry = stack.entries?.[0];
+      if (TraderClass?.calculatePrice) {
+        return TraderClass.calculatePrice(stack.item, {
+          entry,
+          markup: baseMarkup,
+          grudge: grudgeLevel
+        });
+      }
+      const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : (grudgeLevel <= 0 ? 0.96 : 1));
+      const baseValue = typeof stack.item.value === 'number' ? stack.item.value : 0;
+      return Math.max(1, Math.ceil(baseValue * legacyMarkup));
+    };
+
+    const resolveSellPrice = (stack) => {
+      if (!stack?.item) return 0;
+      const { item } = stack;
+      if (typeof item.scrap === 'number') {
+        return item.scrap;
+      }
+      if (TraderClass?.resolveBaseValue && TraderClass?.basePriceFromValue) {
+        const baseValue = TraderClass.resolveBaseValue(item);
+        const basePrice = TraderClass.basePriceFromValue(baseValue);
+        const grudgeMult = TraderClass.resolveGrudgeMultiplier ? TraderClass.resolveGrudgeMultiplier(grudgeLevel) : 1;
+        const adjusted = basePrice * grudgeMult;
+        return Math.max(1, Math.round(adjusted / Math.max(1, baseMarkup * 2)));
+      }
+      const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : 1);
+      return Math.max(1, Math.floor((item.value || 0) / legacyMarkup));
+    };
+
     const normalizeForKey = (value, omitCount) => {
       if (!value || typeof value !== 'object') {
         return typeof value === 'function' ? value.toString() : value;
@@ -2255,13 +2341,27 @@ function openShop(npc) {
       stack.entries.push({ idx, item });
     });
 
-    const compareStacks = (a, b) => {
+    shopStacks.forEach(stack => {
+      stack.price = resolveBuyPrice(stack);
+    });
+    sellStacks.forEach(stack => {
+      stack.price = resolveSellPrice(stack);
+    });
+
+    const compareByTypeName = (a, b) => {
       const typeA = (a?.item?.type || '').toString().toLowerCase();
       const typeB = (b?.item?.type || '').toString().toLowerCase();
       if (typeA !== typeB) return typeA.localeCompare(typeB);
       const nameA = (a?.item?.name || '').toString().toLowerCase();
       const nameB = (b?.item?.name || '').toString().toLowerCase();
       return nameA.localeCompare(nameB);
+    };
+
+    const compareStacks = (a, b) => {
+      const priceA = Number.isFinite(a?.price) ? a.price : 0;
+      const priceB = Number.isFinite(b?.price) ? b.price : 0;
+      if (priceA !== priceB) return priceB - priceA;
+      return compareByTypeName(a, b);
     };
 
     shopStacks.sort(compareStacks);
@@ -2289,19 +2389,7 @@ function openShop(npc) {
       const { item, qty } = stack;
       const row = document.createElement('div');
       row.className = 'slot';
-      const entry = stack.entries[0];
-      let price;
-      if (TraderClass?.calculatePrice) {
-        price = TraderClass.calculatePrice(item, {
-          entry,
-          markup: baseMarkup,
-          grudge: grudgeLevel
-        });
-      } else {
-        const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : (grudgeLevel <= 0 ? 0.96 : 1));
-        const baseValue = typeof item.value === 'number' ? item.value : 0;
-        price = Math.max(1, Math.ceil(baseValue * legacyMarkup));
-      }
+      let price = Number.isFinite(stack.price) ? stack.price : resolveBuyPrice(stack);
       const name = `${item.name} x${qty}`;
       row.innerHTML = `<span>${name} - ${price} ${CURRENCY}</span><button class="btn">Buy</button>`;
       row.querySelector('button').onclick = () => {
@@ -2331,19 +2419,7 @@ function openShop(npc) {
       const { item, qty } = stack;
       const row = document.createElement('div');
       row.className = 'slot';
-      let sellPrice;
-      if (typeof item.scrap === 'number') {
-        sellPrice = item.scrap;
-      } else if (TraderClass?.resolveBaseValue && TraderClass?.basePriceFromValue) {
-        const baseValue = TraderClass.resolveBaseValue(item);
-        const basePrice = TraderClass.basePriceFromValue(baseValue);
-        const grudgeMult = TraderClass.resolveGrudgeMultiplier ? TraderClass.resolveGrudgeMultiplier(grudgeLevel) : 1;
-        const adjusted = basePrice * grudgeMult;
-        sellPrice = Math.max(1, Math.round(adjusted / Math.max(1, baseMarkup * 2)));
-      } else {
-        const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : 1);
-        sellPrice = Math.max(1, Math.floor((item.value || 0) / legacyMarkup));
-      }
+      let sellPrice = Number.isFinite(stack.price) ? stack.price : resolveSellPrice(stack);
       const name = `${item.name} x${qty}`;
       row.innerHTML = `<span>${name} - ${sellPrice} ${CURRENCY}</span><button class="btn">Sell</button>`;
       row.querySelector('button').onclick = () => {
@@ -2413,6 +2489,7 @@ globalThis.Dustland.retroNpcArt = {
   isEnabled: () => retroNpcArtEnabled,
   setEnabled: setRetroNpcArt,
   getItemGlyph: () => getRetroItemSprite(),
+  getLootGlyph: () => getRetroLootSprite(),
   getItemCacheGlyph: () => getRetroItemCacheSprite()
 };
 globalThis.Dustland.font = {

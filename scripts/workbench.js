@@ -51,6 +51,10 @@
     })();
     def.id = enhancedId;
     def.name = buildEnhancedName(base.name || base.id || 'Item');
+    const baseId = base.baseId || base.id;
+    if (baseId) {
+      def.baseId = baseId;
+    }
     def.mods = {};
     Object.entries(base.mods || {}).forEach(([key, value]) => {
       def.mods[key] = typeof value === 'number' ? value * 2 : value;

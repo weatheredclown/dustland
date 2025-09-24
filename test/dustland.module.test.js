@@ -189,7 +189,14 @@ test('trader patrols east-west with basic goods', () => {
     { x: 110, y: 44 }
   ]);
   const invIds = trader.shop?.inv?.map(i => i.id);
-  assert.deepStrictEqual(invIds, ['pipe_rifle', 'leather_jacket', 'water_flask', 'frag_grenade', 'incendiary_grenade']);
+  assert.deepStrictEqual(invIds, [
+    'pipe_rifle',
+    'leather_jacket',
+    'water_flask',
+    'frag_grenade',
+    'incendiary_grenade',
+    'minigun'
+  ]);
 });
 
 test('vortex sends player to world map', () => {

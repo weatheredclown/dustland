@@ -20,6 +20,7 @@
  * @property {number} y
  * @property {string} [id]
  * @property {string[]} [items]
+ * @property {'world'|'loot'} [dropType]
  */
 
 globalThis.Dustland = globalThis.Dustland || {};
@@ -266,6 +267,11 @@ function removeFromInv(invIndex, quantity) {
   notifyInventoryChanged();
 }
 
+function maybeConsumeItem(it, invIndex) {
+  if (it?.use?.consume === false) return;
+  removeFromInv(invIndex);
+}
+
 // Drop multiple items from inventory as a single cache on the ground
 /**
  * @param {number[]} indices
@@ -468,10 +474,12 @@ function normalizeItem(it){
   const baseValue = typeof it.value === 'number' ? it.value : 0;
   const val = baseValue > 0 ? baseValue : estimateItemValue(it);
   const type = it.type || it.slot || 'misc';
+  const baseId = typeof it.baseId === 'string' && it.baseId ? it.baseId : undefined;
   return {
     id: it.id || '',
     name: it.name || 'Unknown',
     type,
+    baseId,
     rank: it.rank,
     tags: Array.isArray(it.tags) ? it.tags.map(t=>t.toLowerCase()) : [],
     mods: it.mods ? { ...it.mods } : {},
@@ -526,7 +534,18 @@ function useItem(invIndex){
     if (bonus > 0 && !it.use.text) log('Lucky boost!');
     if (typeof toast === 'function') toast(it.use.text || `${who.name} +${healed} HP`);
     emit('sfx','tick');
-    removeFromInv(invIndex);
+    if (it.id === 'wand'){
+      const label = it.use?.label || it.name;
+      const defeated = globalThis.defeatEnemiesByRequirement?.('wand', {
+        attacker: who,
+        label,
+        itemLabel: label
+      }) || [];
+      if (defeated.length){
+        emit('sfx','damage');
+      }
+    }
+    maybeConsumeItem(it, invIndex);
     player.hp = party[0] ? party[0].hp : player.hp;
     if(typeof updateHUD === 'function') updateHUD();
     emit(`used:${it.id}`, { item: it });
@@ -543,7 +562,7 @@ function useItem(invIndex){
     const msg = it.use.text || `${who.name} drinks ${it.name}.`;
     log(msg);
     if(typeof toast==='function') toast(it.use.text || `${who.name} +${who.hydration - before} HYD`);
-    removeFromInv(invIndex);
+    maybeConsumeItem(it, invIndex);
     globalThis.updateHUD?.();
     emit('sfx','tick');
     emit(`used:${it.id}`, { item: it });
@@ -558,7 +577,7 @@ function useItem(invIndex){
     log(msg);
     if(typeof toast==='function') toast(msg);
     emit('sfx','tick');
-    removeFromInv(invIndex);
+    maybeConsumeItem(it, invIndex);
     emit(`used:${it.id}`, { item: it });
     return true;
   }
@@ -587,7 +606,7 @@ function useItem(invIndex){
       globalThis.renderCombat?.();
     }
     emit('sfx','damage');
-    removeFromInv(invIndex);
+    maybeConsumeItem(it, invIndex);
     emit(`used:${it.id}`, { item: it });
     return true;
   }
@@ -601,7 +620,7 @@ function useItem(invIndex){
     log(msg);
     if(typeof toast==='function') toast(it.use.text || `${who.name} is cleansed`);
     emit('sfx','tick');
-    removeFromInv(invIndex);
+    maybeConsumeItem(it, invIndex);
     emit(`used:${it.id}`, { item: it });
     return true;
   }
@@ -627,7 +646,7 @@ function useItem(invIndex){
   }
   if (effectList.length) {
     globalThis.Dustland?.effects?.apply?.(effectList, { player, party, item: it });
-    if (it.use.consume !== false) removeFromInv(invIndex);
+    maybeConsumeItem(it, invIndex);
     const msg = it.use.text || `Used ${it.name}`;
     log(msg);
     if (typeof toast === 'function') toast(it.use.toast || msg);
@@ -638,7 +657,7 @@ function useItem(invIndex){
   if(typeof it.use.onUse === 'function'){
     const ok = it.use.onUse({player, party, log, toast});
     if(ok!==false){
-        removeFromInv(invIndex);
+        maybeConsumeItem(it, invIndex);
         const msg = it.use.text || `Used ${it.name}`;
         log(msg);
         if(typeof toast==='function') toast(msg);
