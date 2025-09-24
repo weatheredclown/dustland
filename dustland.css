@@ -1005,6 +1005,15 @@ input[type="range"] {
   gap: 8px;
 }
 
+#personaOverlay .persona-actions {
+  display: flex;
+  gap: 8px;
+}
+
+#personaOverlay .persona-actions .btn {
+  flex: 1;
+}
+
 #personaOverlay .persona-list .btn {
   width: 100%;
 }
