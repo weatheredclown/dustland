@@ -389,7 +389,9 @@ function revealFog(map, x, y, radius = FOG_RADIUS){
       const gx = x + dx;
       const gy = y + dy;
       if(gx<0 || gy<0 || gx>=W || gy>=H) continue;
-      const visibility = Math.max(0, 1 - (dist / denom));
+      let visibility = Math.max(0, 1 - (dist / denom)) * 2;
+      // const factor = 3;
+      // visibility = Math.round(visibility * factor) / factor;
       if(visibility <= 0) continue;
       const key = `${gx},${gy}`;
       const storedRaw = fogIsMap ? fog.get(key) : fog[key];
