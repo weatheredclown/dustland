@@ -300,6 +300,161 @@
       registerCleanup(() => { npc.processNode = baseProcess; });
     });
   }
+
+  function setupPortalLayout(moduleData) {
+    const flag = moduleData?.props?.portalLayout;
+    if (!flag) return;
+    const startMap = moduleData?.start?.map;
+    if (!startMap) return;
+    const portalList = Array.isArray(moduleData.portals) ? moduleData.portals : [];
+    if (!portalList.length) return;
+    const interiors = new Map();
+    const toEmojiGrid = globalThis.gridFromEmoji;
+    (moduleData.interiors || []).forEach(def => {
+      if (!def?.id) return;
+      let grid = def.grid;
+      if (Array.isArray(grid) && typeof grid[0] === 'string') {
+        grid = typeof toEmojiGrid === 'function' ? toEmojiGrid(grid) : grid.map(row => Array.from(row).map(() => globalThis.TILE?.FLOOR ?? 7));
+      } else if (Array.isArray(grid)) {
+        grid = grid.map(row => Array.from(row));
+      } else {
+        grid = null;
+      }
+      const h = grid?.length ?? Math.max(0, Number(def.h) || 0);
+      const w = grid?.[0]?.length ?? Math.max(0, Number(def.w) || 0);
+      if (!w || !h) return;
+      const entryX = typeof def.entryX === 'number' ? def.entryX : Math.floor(w / 2);
+      const entryY = typeof def.entryY === 'number' ? def.entryY : Math.max(0, Math.min(h - 1, Math.floor(h / 2)));
+      interiors.set(def.id, { id: def.id, w, h, entryX, entryY, grid });
+    });
+    if (!interiors.size || !interiors.has(startMap)) return;
+
+    function normalizePos(info, value, axis) {
+      if (typeof value === 'number') return value;
+      return axis === 'x' ? (typeof info.entryX === 'number' ? info.entryX : Math.floor(info.w / 2)) : (typeof info.entryY === 'number' ? info.entryY : Math.floor(info.h / 2));
+    }
+
+    function edgeDirection(info, x, y) {
+      if (!info) return null;
+      if (typeof x === 'number' && typeof y === 'number') {
+        if (y <= 0) return { dx: 0, dy: -1 };
+        if (y >= info.h - 1) return { dx: 0, dy: 1 };
+        if (x <= 0) return { dx: -1, dy: 0 };
+        if (x >= info.w - 1) return { dx: 1, dy: 0 };
+      }
+      return null;
+    }
+
+    const edges = new Map();
+    function pushEdge(from, data) {
+      if (!edges.has(from)) edges.set(from, []);
+      edges.get(from).push(data);
+    }
+
+    portalList.forEach(portal => {
+      if (!portal || !portal.map || !portal.toMap) return;
+      if (!interiors.has(portal.map) || !interiors.has(portal.toMap)) return;
+      const fromInfo = interiors.get(portal.map);
+      const toInfo = interiors.get(portal.toMap);
+      const fromX = normalizePos(fromInfo, portal.x, 'x');
+      const fromY = normalizePos(fromInfo, portal.y, 'y');
+      const toX = normalizePos(toInfo, portal.toX, 'x');
+      const toY = normalizePos(toInfo, portal.toY, 'y');
+      let dir = edgeDirection(fromInfo, portal.x, portal.y);
+      if (!dir) {
+        const rev = edgeDirection(toInfo, portal.toX, portal.toY);
+        if (rev) dir = { dx: -rev.dx, dy: -rev.dy };
+      }
+      if (!dir) return;
+      pushEdge(portal.map, { map: portal.toMap, dir, fromX, fromY, toX, toY });
+    });
+
+    if (!edges.size) return;
+
+    const placements = new Map();
+    placements.set(startMap, { x: 0, y: 0 });
+    const queue = [startMap];
+    while (queue.length) {
+      const current = queue.shift();
+      const basePos = placements.get(current);
+      const adj = edges.get(current) || [];
+      adj.forEach(edge => {
+        if (!interiors.has(edge.map)) return;
+        const next = placements.get(edge.map);
+        const nx = basePos.x + edge.fromX - edge.toX + edge.dir.dx;
+        const ny = basePos.y + edge.fromY - edge.toY + edge.dir.dy;
+        if (!next) {
+          placements.set(edge.map, { x: nx, y: ny });
+          queue.push(edge.map);
+        }
+      });
+    }
+
+    if (!placements.size) return;
+
+    const worldW = Number(globalThis.WORLD_W) || 120;
+    const worldH = Number(globalThis.WORLD_H) || 90;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    placements.forEach((pos, id) => {
+      const info = interiors.get(id);
+      if (!info) return;
+      minX = Math.min(minX, pos.x);
+      minY = Math.min(minY, pos.y);
+      maxX = Math.max(maxX, pos.x + info.w - 1);
+      maxY = Math.max(maxY, pos.y + info.h - 1);
+    });
+    if (!Number.isFinite(minX) || !Number.isFinite(minY)) return;
+    const width = maxX - minX + 1;
+    const height = maxY - minY + 1;
+    if (!width || !height || width > worldW || height > worldH) return;
+    const offsetX = Math.max(0, Math.floor((worldW - width) / 2) - minX);
+    const offsetY = Math.max(0, Math.floor((worldH - height) / 2) - minY);
+    const finalPlacement = new Map();
+    placements.forEach((pos, id) => {
+      finalPlacement.set(id, { x: pos.x + offsetX, y: pos.y + offsetY });
+    });
+
+    const filler = (globalThis.TILE && typeof globalThis.TILE.SAND === 'number') ? globalThis.TILE.SAND : 0;
+    const rendered = new Set();
+
+    function renderRoom(id) {
+      if (!id || rendered.has(id)) return;
+      const info = interiors.get(id);
+      const origin = finalPlacement.get(id);
+      if (!info || !origin || !Array.isArray(info.grid)) return;
+      for (let yy = 0; yy < info.h; yy++) {
+        for (let xx = 0; xx < info.w; xx++) {
+          const wx = origin.x + xx;
+          const wy = origin.y + yy;
+          if (wx < 0 || wy < 0 || wx >= worldW || wy >= worldH) continue;
+          if (typeof globalThis.setTile === 'function') globalThis.setTile('world', wx, wy, filler);
+        }
+      }
+      for (let yy = 0; yy < info.h; yy++) {
+        const row = info.grid[yy];
+        if (!row) continue;
+        for (let xx = 0; xx < info.w; xx++) {
+          const tile = row[xx];
+          if (tile == null) continue;
+          const wx = origin.x + xx;
+          const wy = origin.y + yy;
+          if (wx < 0 || wy < 0 || wx >= worldW || wy >= worldH) continue;
+          if (typeof globalThis.setTile === 'function') globalThis.setTile('world', wx, wy, tile);
+        }
+      }
+      rendered.add(id);
+    }
+
+    const origSetMap = typeof globalThis.setMap === 'function' ? globalThis.setMap : null;
+    if (!origSetMap) return;
+    globalThis.setMap = function(mapId, label) {
+      const result = origSetMap.apply(this, arguments);
+      renderRoom(mapId);
+      return result;
+    };
+    registerCleanup(() => { globalThis.setMap = origSetMap; });
+    renderRoom(startMap);
+  }
   function setup(moduleData) {
     teardown();
     if (!moduleData) return;
@@ -308,6 +463,7 @@
     setupArenas(behaviors.arenas, moduleData);
     setupMemoryTapes(behaviors.memoryTapes);
     setupDialogMutations(behaviors.dialogMutations);
+    setupPortalLayout(moduleData);
   }
 
   dl.behaviors = { setup, teardown };

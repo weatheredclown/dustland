@@ -52,6 +52,20 @@ function recordCombatEvent(ev, relay = true){
 }
 globalThis.EventBus?.on?.('combat:event', ev => recordCombatEvent(ev, false));
 
+function guardStrengthFor(member){
+  const rawLvl = Number(member?.lvl ?? 1);
+  const lvl = Number.isFinite(rawLvl) ? Math.max(1, Math.floor(rawLvl)) : 1;
+  const scaling = Math.floor((lvl - 1) / 3);
+  return 1 + scaling;
+}
+
+function enterGuardStance(member){
+  if (!member) return 0;
+  const value = guardStrengthFor(member);
+  member.guard = value;
+  return value;
+}
+
 function hasStatusImmunity(target, type){
   if(!target || !type) return false;
   const key = `${type}_immune`;
@@ -266,7 +280,7 @@ function openCombat(enemies){
     (party || []).forEach(m => {
       m.maxAdr = m.maxAdr || 100;
       m.applyCombatMods?.();
-      m.guard = false;
+      m.guard = 0;
       m.cooldowns = m.cooldowns || {};
     });
 
@@ -644,13 +658,14 @@ function doAttack(dmg, type = 'basic'){
     if (req){
       const reqList = Array.isArray(req) ? req : [req];
       const weaponId = weapon?.id;
+      const weaponBaseId = weapon?.baseId;
       const weaponTags = Array.isArray(weapon?.tags) ? weapon.tags : [];
       let meetsRequirement = false;
       for (const entry of reqList){
         if (typeof entry === 'string' && entry.startsWith('tag:')){
           const tag = entry.slice(4);
           if (weaponTags.includes(tag)){ meetsRequirement = true; break; }
-        } else if (entry && weaponId === entry){
+        } else if (entry && (weaponId === entry || weaponBaseId === entry)){
           meetsRequirement = true;
           break;
         }
@@ -685,7 +700,8 @@ function doAttack(dmg, type = 'basic'){
       log?.('Lucky strike!');
     }
 
-    const instantKillChance = Math.min(0.25, Math.max(0, eff - 12) * 0.01);
+    let instantKillChance = Math.min(0.25, Math.max(0, eff - 12) * 0.01);
+    if (target.noLuckyKill) instantKillChance = 0;
     if (tDmg > 0 && target.hp > 0 && instantKillChance > 0 && Math.random() < instantKillChance){
       tDmg = Math.max(tDmg, target.hp);
       log?.(`${attacker.name}'s incredible luck fells ${target.name} instantly!`);
@@ -906,6 +922,64 @@ function playerItemAOEDamage(attacker, baseDamage, opts = {}){
   return { defeated };
 }
 
+function defeatEnemiesByRequirement(requirement, opts = {}){
+  const reqList = Array.isArray(requirement)
+    ? requirement.filter(Boolean)
+    : [requirement].filter(Boolean);
+  if (reqList.length === 0) return [];
+
+  const enemies = combatState.enemies || [];
+  if (enemies.length === 0) return [];
+
+  const attacker = opts.attacker;
+  const itemLabel = opts.itemLabel || opts.label || 'item';
+  const sourceLabel = opts.sourceLabel
+    || (attacker?.name
+      ? `${attacker.name}'s ${opts.label || itemLabel}`.trim()
+      : (opts.label || itemLabel));
+
+  const defeated = [];
+
+  for (const enemy of enemies){
+    const enemyReq = Array.isArray(enemy.requires)
+      ? enemy.requires.filter(Boolean)
+      : enemy.requires
+        ? [enemy.requires]
+        : [];
+    const matches = enemyReq.some(entry => reqList.includes(entry));
+    if (!matches) continue;
+
+    const beforeHp = typeof enemy.hp === 'number' ? enemy.hp : 0;
+    enemy.hp = 0;
+
+    recordCombatEvent?.({
+      type: 'player',
+      actor: attacker?.name || 'You',
+      action: 'item',
+      item: itemLabel,
+      target: enemy.name,
+      damage: beforeHp,
+      targetHp: enemy.hp
+    });
+
+    if (handleEnemyDefeat(attacker, enemy, sourceLabel || itemLabel)){
+      defeated.push(enemy);
+    }
+  }
+
+  if (defeated.length === 0) return [];
+
+  combatState.enemies = combatState.enemies.filter(e => !defeated.includes(e));
+  renderCombat?.();
+
+  if (combatState.enemies.length === 0){
+    log?.('Victory!');
+    closeCombat('loot');
+  }
+
+  return defeated;
+}
+
 function testAttack(attacker, enemy, dmg = 1, type = 'basic'){
   combatState.enemies = [enemy];
   combatState.active = 0;
@@ -969,8 +1043,8 @@ function doSpecial(idx){
   }
 
   if (spec.guard){
-    m.guard = true;
-    log?.(`${m.name} takes a defensive stance.`);
+    const guardValue = enterGuardStance(m);
+    log?.(`${m.name} takes a defensive stance (${guardValue} guard).`);
     nextCombatant?.();
     return;
   }
@@ -1187,9 +1261,43 @@ function enemyAttack(){
   const minB = Math.max(1, base - 3);
   let dmg = Math.floor(Math.random() * (base - minB + 1)) + minB;
   if (target.guard){
-    target.guard = false;
-    dmg = Math.max(0, dmg - 1);
-    log?.(`${target.name} guards against the attack.`);
+    const guardValue = typeof target.guard === 'number' ? target.guard : guardStrengthFor(target);
+    target.guard = 0;
+    const blocked = Math.min(dmg, guardValue);
+    dmg = Math.max(0, dmg - guardValue);
+    log?.(`${target.name} guards against the attack, blocking ${blocked} damage.`);
+
+    const overflow = guardValue - blocked;
+    if (overflow > 0){
+      const beforeHp = typeof enemy.hp === 'number' ? enemy.hp : 0;
+      const reflected = Math.min(overflow, Math.max(beforeHp, 0));
+      enemy.hp = Math.max(0, beforeHp - overflow);
+      recordCombatEvent?.({
+        type: 'player',
+        actor: target.name,
+        action: 'guard-counter',
+        target: enemy.name,
+        damage: reflected,
+        targetHp: enemy.hp
+      });
+      log?.(`${enemy.name} is staggered by the counter and takes ${reflected} damage.`);
+      if (enemy.hp <= 0){
+        if (handleEnemyDefeat(target, enemy, `${target.name}'s guard`)){
+          combatState.enemies.splice(combatState.active,1);
+        }
+        renderCombat?.();
+        if (combatState.enemies.length === 0){
+          log?.('Victory!');
+          closeCombat('loot');
+        } else if (combatState.active < combatState.enemies.length){
+          highlightActive?.();
+          setTimeout(enemyAttack, 300);
+        } else {
+          startPartyTurn();
+        }
+        return;
+      }
+    }
   }
   dmg = Math.max(0, dmg - (target._bonus?.DEF || 0));
   const luck = (target.stats?.LCK || 0) + (target._bonus?.LCK || 0);
@@ -1217,5 +1325,5 @@ function getCombatLog(){
   return combatState.log.slice();
 }
 
-const combatExports = { openCombat, closeCombat, handleCombatKey, getCombatLog, addStatus, tickStatuses, __testAttack: testAttack, __combatState: combatState, playerItemAOEDamage };
+const combatExports = { openCombat, closeCombat, handleCombatKey, getCombatLog, addStatus, tickStatuses, __testAttack: testAttack, __combatState: combatState, __enemyAttack: enemyAttack, __enterGuardStance: enterGuardStance, playerItemAOEDamage, defeatEnemiesByRequirement };
 Object.assign(globalThis, combatExports);

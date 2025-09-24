@@ -121,7 +121,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, makeInteriorRoom, placeHut, TILE, getTile, healAll, buildings, world } = globalThis;
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, loadModernSave, makeInteriorRoom, placeHut, TILE, getTile, healAll, buildings, world } = globalThis;
 const { findFreeDropTile, canWalk, move, calcMoveDelay, getMoveDelay } = globalThis.Dustland.movement;
 let interiors = globalThis.interiors;
 
@@ -567,10 +567,12 @@ test('mentor bark plays sound and shows text', () => {
 test('respec consumes memory worm and restores skill points', () => {
   party.length = 0;
   player.inv.length = 0;
-  const c = new Character('m','M','Role');
+  const c = new Character('m','M','Wanderer');
   c.lvl = 3;
   c.skillPoints = 0;
   c.stats.STR += 2;
+  c.special = ['POWER_STRIKE'];
+  c._baseSpecial = ['POWER_STRIKE'];
   party.join(c);
   setLeader(0);
   registerItem({ id:'memory_worm', name:'Memory Worm', type:'token' });
@@ -582,6 +584,37 @@ test('respec consumes memory worm and restores skill points', () => {
   assert.strictEqual(findItemIndex('memory_worm'), -1);
   assert.deepStrictEqual(c.stats, baseStats());
   assert.strictEqual(c.skillPoints, 2);
+  assert.deepStrictEqual(c.special, ['GUARD_UP']);
+  assert.deepStrictEqual(c._baseSpecial, ['GUARD_UP']);
+  assert.strictEqual(c.role, 'Wanderer');
+});
+
+test('respec allows choosing new specialization and quirk', () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const c = new Character('m','M','Scavenger');
+  c.special = ['POWER_STRIKE'];
+  c._baseSpecial = ['POWER_STRIKE'];
+  c.quirk = 'Lucky Lint';
+  c.lvl = 4;
+  c.skillPoints = 0;
+  party.join(c);
+  setLeader(0);
+  registerItem({ id:'memory_worm', name:'Memory Worm', type:'token' });
+  addToInv('memory_worm');
+  assert.notStrictEqual(findItemIndex('memory_worm'), -1);
+  const ok = respec(0, { specialization: 'Cogwitch', quirk: 'Brutal Past' });
+  assert.ok(ok);
+  assert.strictEqual(findItemIndex('memory_worm'), -1);
+  assert.strictEqual(c.role, 'Cogwitch');
+  assert.strictEqual(c.quirk, 'Brutal Past');
+  assert.deepStrictEqual(c.special, ['ADRENAL_SURGE']);
+  assert.deepStrictEqual(c._baseSpecial, ['ADRENAL_SURGE']);
+  const expected = baseStats();
+  expected.INT += 1;
+  expected.STR += 1;
+  assert.deepStrictEqual(c.stats, expected);
+  assert.strictEqual(c.skillPoints, 3);
 });
 
 test('bosses can drop memory worms', async () => {
@@ -861,6 +894,59 @@ test('applyModule overwrites existing interiors', () => {
   assert.strictEqual(interiors.dup.h, 2);
 });
 
+test('applyModule assigns interior display names', () => {
+  const interiorsRef = globalThis.interiors;
+  const mapLabelsRef = globalThis.mapLabels;
+  const savedInteriors = {};
+  Object.entries(interiorsRef).forEach(([id, data]) => {
+    const clone = { ...data };
+    if (Array.isArray(data?.grid)) clone.grid = data.grid.map(row => [...row]);
+    savedInteriors[id] = clone;
+  });
+  const savedMapLabels = { ...mapLabelsRef };
+  const resetInteriors = () => { Object.keys(interiorsRef).forEach(k => delete interiorsRef[k]); };
+  const resetMapLabels = () => {
+    Object.keys(mapLabelsRef).forEach(k => {
+      if (k !== 'world' && k !== 'creator') delete mapLabelsRef[k];
+    });
+  };
+  try {
+    resetInteriors();
+    resetMapLabels();
+    applyModule({
+      interiors: [{ id: 'deep_room', w: 1, h: 1, grid: [[TILE.FLOOR]], label: 'Deep Room' }]
+    }, { fullReset: false });
+    assert.strictEqual(interiorsRef.deep_room.displayName, 'Deep Room');
+    assert.strictEqual(globalThis.mapLabel('deep_room'), 'Deep Room');
+
+    resetInteriors();
+    resetMapLabels();
+    applyModule({
+      interiors: [{ id: 'mystery_room', w: 1, h: 1, grid: [[TILE.FLOOR]] }]
+    }, { fullReset: false });
+    assert.strictEqual(interiorsRef.mystery_room.displayName, 'Mystery Room');
+    assert.strictEqual(globalThis.mapLabel('mystery_room'), 'Mystery Room');
+
+    resetInteriors();
+    resetMapLabels();
+    applyModule({
+      interiors: [{ id: 'silent_vault', w: 1, h: 1, grid: [[TILE.FLOOR]] }],
+      mapLabels: { silent_vault: 'Silent Vault' }
+    }, { fullReset: false });
+    assert.strictEqual(interiorsRef.silent_vault.displayName, 'Silent Vault');
+    assert.strictEqual(globalThis.mapLabel('silent_vault'), 'Silent Vault');
+  } finally {
+    resetInteriors();
+    Object.entries(savedInteriors).forEach(([id, data]) => {
+      const clone = { ...data };
+      if (Array.isArray(data?.grid)) clone.grid = data.grid.map(row => [...row]);
+      interiorsRef[id] = clone;
+    });
+    Object.keys(mapLabelsRef).forEach(k => { if (!(k in savedMapLabels)) delete mapLabelsRef[k]; });
+    Object.entries(savedMapLabels).forEach(([k, v]) => { mapLabelsRef[k] = v; });
+  }
+});
+
 test('makeInteriorRoom supports custom size', () => {
   const id = makeInteriorRoom('big', 20, 15);
   const I = interiors[id];
@@ -926,7 +1012,7 @@ test('quest tag turn-in handles partial counts', () => {
   choicesEl.innerHTML = '';
 });
 
-test('quest turn-in awards XP once', () => {
+test('quest turn-in enforces minimum XP baseline', () => {
   for (const k in quests) delete quests[k];
   NPCS.length = 0;
   party.length = 0;
@@ -935,7 +1021,20 @@ test('quest turn-in awards XP once', () => {
   const quest = new Quest('q_xp', 'Quest', '', { xp: 4 });
   const npc = { quest };
   defaultQuestProcessor(npc, 'do_turnin');
-  assert.strictEqual(char.xp, 4);
+  assert.strictEqual(char.xp, 10);
+});
+
+test('quest turn-in caps XP rewards at 100', () => {
+  for (const k in quests) delete quests[k];
+  NPCS.length = 0;
+  party.length = 0;
+  const char = new Character('g', 'Gil', 'Role');
+  party.join(char);
+  const quest = new Quest('q_xp_cap', 'Quest', '', { xp: 150 });
+  const npc = { quest };
+  defaultQuestProcessor(npc, 'do_turnin');
+  assert.strictEqual(char.lvl, 2);
+  assert.strictEqual(char.xp, 0);
 });
 
 test('turn-in choice appears immediately after accepting', () => {
@@ -1919,6 +2018,40 @@ test('save/load retains effect packs and persona boosts', () => {
   }
 });
 
+test('save/load preserves enhanced weapon base ids', () => {
+  const grid = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => 7));
+  applyModule({ world: grid, npcs: [] });
+  player.inv.length = 0;
+  party.length = 0;
+  const member = new Character('pc', 'PC', 'Wanderer');
+  party.join(member);
+  const store = {};
+  const origStorage = global.localStorage;
+  global.localStorage = {
+    setItem(k, v){ store[k] = v; },
+    getItem(k){ return store[k]; },
+    removeItem(k){ delete store[k]; }
+  };
+  try {
+    registerItem({ id: 'artifact_blade', name: 'Artifact Blade', type: 'weapon', mods: { ADR: 8 } });
+    registerItem({ id: 'enhanced_artifact_blade', name: 'Enhanced Artifact Blade', type: 'weapon', baseId: 'artifact_blade', mods: { ADR: 16 } });
+    addToInv('enhanced_artifact_blade');
+    assert.strictEqual(player.inv[0].baseId, 'artifact_blade');
+    save();
+    const saved = JSON.parse(store.dustland_crt);
+    assert.strictEqual(saved.player.inv[0].baseId, 'artifact_blade');
+    player.inv[0].baseId = undefined;
+    loadModernSave(saved);
+    const restored = player.inv.find(it => it.id === 'enhanced_artifact_blade');
+    assert.ok(restored, 'enhanced weapon should reload');
+    assert.strictEqual(restored.baseId, 'artifact_blade');
+  } finally {
+    player.inv.length = 0;
+    party.length = 0;
+    global.localStorage = origStorage;
+  }
+});
+
 test('load bypasses legacy loader for v2 saves', async () => {
   const fixture = await fs.readFile(new URL('./fixtures/dustland.save.v2.json', import.meta.url), 'utf8');
   const store = { dustland_crt: fixture };
@@ -2125,6 +2258,68 @@ test('loadModernSave restores bunkers and world flags', () => {
   }
 });
 
+test('loadModernSave ensures trader baseline goods return', () => {
+  const moduleData = {
+    name: 'shop_restore',
+    seed: 2024,
+    world: [[7, 7], [7, 7]],
+    npcs: [
+      {
+        id: 'trader',
+        map: 'world',
+        x: 0,
+        y: 0,
+        shop: {
+          markup: 1,
+          refresh: 24,
+          inv: [
+            { id: 'pipe_rifle', rarity: 'common', cadence: 'daily', refreshHours: 24 },
+            { id: 'minigun', rarity: 'legendary', cadence: 'weekly', refreshHours: 168 }
+          ]
+        }
+      }
+    ]
+  };
+  applyModule(moduleData);
+  const saved = {
+    format: 'dustland.save.v2',
+    module: 'shop_restore',
+    worldSeed: 2024,
+    world: [[7, 7], [7, 7]],
+    player: { inv: [] },
+    state: { map: 'world' },
+    buildings: [],
+    interiors: {},
+    itemDrops: [],
+    npcs: [
+      {
+        id: 'trader',
+        map: 'world',
+        x: 0,
+        y: 0,
+        shop: {
+          markup: 1,
+          refresh: 24,
+          inv: [
+            { id: 'pipe_rifle', rarity: 'common', cadence: 'daily', refreshHours: 24 }
+          ]
+        }
+      }
+    ],
+    quests: {},
+    party: { members: [], map: 'world', x: 0, y: 0, flags: {}, fallen: [] },
+    worldFlags: {},
+    bunkers: [],
+    gameState: { difficulty: 'normal', flags: {}, clock: 0, personas: {}, npcMemory: {}, effectPacks: {} }
+  };
+  loadModernSave(saved);
+  const trader = NPCS.find(n => n.id === 'trader');
+  assert.ok(trader);
+  const invIds = Array.isArray(trader.shop?.inv) ? trader.shop.inv.map(entry => entry.id) : [];
+  assert.ok(invIds.includes('minigun'));
+  assert.strictEqual(invIds.filter(id => id === 'pipe_rifle').length, 1);
+});
+
 test('clearSave removes stored game data', () => {
   const store = { dustland_crt: '{}' };
   const orig = global.localStorage;
@@ -2306,6 +2501,48 @@ test('distant encounters use hard enemy pool', () => {
   assert.strictEqual(chosen.name, 'Hard');
 });
 
+test('encounter guard trinket skips minor threats', () => {
+  const row = Array(20).fill(TILE.SAND);
+  applyModule({
+    world: [row],
+    templates: [
+      { id: 'midge', name: 'Midge Pack', combat: { HP: 2, ATK: 1, DEF: 0, challenge: 4 } },
+      { id: 'razor', name: 'Razor Pack', combat: { HP: 12, ATK: 3, DEF: 2, challenge: 14 } }
+    ],
+    encounters: { world: [ { templateId: 'midge' }, { templateId: 'razor' } ] }
+  });
+  state.map = 'world';
+  party.length = 0;
+  player.inv.length = 0;
+  const scout = new Character('scout', 'Scout', 'Wanderer');
+  party.join(scout);
+  setPartyPos(10, 0);
+  let seen = null;
+  const origRand = Math.random;
+  const origStart = globalThis.Dustland.actions.startCombat;
+  try {
+    Math.random = () => 0;
+    globalThis.Dustland.actions.startCombat = def => { seen = def; return Promise.resolve({ result: 'flee' }); };
+    encounterCooldown = 0;
+    checkRandomEncounter();
+    assert.ok(seen);
+    assert.strictEqual(seen.name, 'Midge Pack');
+    seen = null;
+    encounterCooldown = 0;
+    addToInv({ id: 'ridgeglass_test', name: 'Test Charm', type: 'trinket', mods: { encounter_guard: 10 } });
+    equipItem(0, 0);
+    checkRandomEncounter();
+  } finally {
+    Math.random = origRand;
+    globalThis.Dustland.actions.startCombat = origStart;
+  }
+  assert.ok(seen);
+  assert.strictEqual(seen.name, 'Razor Pack');
+  player.inv.length = 0;
+  party.length = 0;
+  encounterCooldown = 0;
+});
+
 test('enemies respect max distance', () => {
   const row = Array(10).fill(TILE.SAND);
   row[0] = TILE.ROAD;
@@ -2344,35 +2581,19 @@ test('enemy requires a specific weapon', () => {
     attacker.equip.weapon.id = 'artifact_blade';
     __testAttack(attacker, enemy, 5);
     assert.strictEqual(enemy.hp, 8);
+    enemy.hp = 10;
+    logs.length = 0;
+    attacker.equip.weapon = { id: 'enhanced_artifact_blade', baseId: 'artifact_blade', mods: { ADR: 10 } };
+    __testAttack(attacker, enemy, 5);
+    assert.strictEqual(enemy.hp, 8);
+    assert.ok(!logs.some(m => m.includes("can't harm")));
   } finally {
     Math.random = r;
     global.log = origLog;
   }
 });
 
-test('applyModule from dialog adds next fragment', async () => {
-  await import('../modules/broadcast-fragment-1.module.js');
-  await import('../modules/broadcast-fragment-2.module.js');
-  applyModule(BROADCAST_FRAGMENT_1);
-  assert.ok(!buildings.some(b => b.interiorId === 'comms_tower_base'));
-  const state = {
-    tree: {
-      post_quest: {
-        next: [
-          { label: 'Head toward the tower.', applyModule: 'BROADCAST_FRAGMENT_2', to: 'bye' },
-          { label: 'Not yet.', to: 'bye' }
-        ]
-      }
-    },
-    node: 'post_quest'
-  };
-  currentNPC = {};
-  advanceDialog(state, 0);
-  const tower = buildings.find(b => b.interiorId === 'comms_tower_base');
-  assert.ok(tower);
-  assert.ok(tower.x < WORLD_W && tower.y < WORLD_H);
-
-});
+// Broadcast fragments now live inside the Dustland module and are covered by broadcast tests.
 
 test('grin offers trinket option after charm fails', () => {
   NPCS.length = 0;
@@ -2651,10 +2872,28 @@ test('registerZoneEffects overlays walled zones onto map tiles', () => {
   const height = 4;
   const grid = gridFor('world');
   assert.ok(Array.isArray(grid));
-  assert.ok(grid.length > baseY + height);
+  const neededRows = baseY + height;
+  const addedRows = [];
+  while (grid.length <= neededRows) {
+    const cols = grid[0]?.length || (baseX + width + 1);
+    const row = Array.from({ length: cols }, () => TILE.SAND);
+    grid.push(row);
+    addedRows.push(row);
+  }
+  const neededCols = baseX + width;
+  const extendedRows = [];
+  const prevCells = [];
+  for (const row of grid) {
+    if (!Array.isArray(row)) continue;
+    if (row.length <= neededCols) {
+      extendedRows.push({ row, originalLength: row.length });
+      while (row.length <= neededCols) {
+        row.push(TILE.SAND);
+      }
+    }
+  }
   assert.ok(Array.isArray(grid[0]));
   assert.ok(grid[0].length > baseX + width);
-  const prevCells = [];
   for (let dy = 0; dy < height; dy++) {
     for (let dx = 0; dx < width; dx++) {
       const x = baseX + dx;
@@ -2680,6 +2919,15 @@ test('registerZoneEffects overlays walled zones onto map tiles', () => {
     assert.strictEqual(grid[baseY + 1][baseX + 2], TILE.SAND);
   } finally {
     prevCells.forEach(({ x, y, value }) => { grid[y][x] = value; });
+    while (addedRows.length) {
+      const row = addedRows.pop();
+      if (grid[grid.length - 1] === row) {
+        grid.pop();
+      }
+    }
+    extendedRows.forEach(({ row, originalLength }) => {
+      if (row.length > originalLength) row.length = originalLength;
+    });
     globalThis.Dustland.zoneEffects.length = prevZones;
   }
 });

@@ -51,6 +51,10 @@
     })();
     def.id = enhancedId;
     def.name = buildEnhancedName(base.name || base.id || 'Item');
+    const baseId = base.baseId || base.id;
+    if (baseId) {
+      def.baseId = baseId;
+    }
     def.mods = {};
     Object.entries(base.mods || {}).forEach(([key, value]) => {
       def.mods[key] = typeof value === 'number' ? value * 2 : value;
@@ -86,70 +90,64 @@
     return def;
   }
 
-  function craftSignalBeacon(){
-    const scrapCost = 5;
-    const fuelCost = 50;
-    if ((player.scrap || 0) < scrapCost){
-      log('Need 5 scrap.');
-      return;
-    }
-    if ((player.fuel || 0) < fuelCost){
-      log('Need 50 fuel.');
-      return;
-    }
-    player.scrap -= scrapCost;
-    player.fuel -= fuelCost;
-    addToInv('signal_beacon');
-    bus?.emit('craft:signal-beacon');
-    log('Crafted a signal beacon.');
+  const recipeRegistry = new Map();
+
+  function normalizeRequirement(req = {}) {
+    const key = req.key ?? req.id;
+    if (!key) return null;
+    const type = req.type === 'resource' ? 'resource' : 'item';
+    const amount = Number.isFinite(req.amount) ? req.amount : 1;
+    const label = req.label || String(key);
+    return { label, key, amount, type };
   }
 
-  function craftSolarTarp(){
-    const scrapCost = 3;
-    if ((player.scrap || 0) < scrapCost){
-      log('Need 3 scrap.');
-      return;
-    }
-    if (!hasItem('cloth')){
-      log('Need cloth.');
-      return;
-    }
-    player.scrap -= scrapCost;
-    const idx = findItemIndex('cloth');
-    if (idx >= 0) removeFromInv(idx);
-    addToInv('solar_tarp');
-    bus?.emit('craft:solar-tarp');
-    log('Crafted a solar panel tarp.');
+  function normalizeRecipe(def = {}) {
+    if (!def) return null;
+    const id = def.id ?? def.recipe ?? def.key;
+    const craft = typeof def.craft === 'function' ? def.craft : null;
+    if (!id || !craft) return null;
+    const name = def.name || def.label || String(id);
+    const requirements = Array.isArray(def.requirements)
+      ? def.requirements.map(normalizeRequirement).filter(Boolean)
+      : [];
+    return { id: String(id), name, craft, requirements };
   }
 
-  function craftBandage(){
-    if (!hasItem('plant_fiber')){
-      log('Need plant fiber.');
-      return;
-    }
-    const idx = findItemIndex('plant_fiber');
-    if (idx >= 0) removeFromInv(idx);
-    addToInv('bandage');
-    bus?.emit('craft:bandage');
-    log('Crafted a bandage.');
+  function setRecipes(list = []) {
+    recipeRegistry.clear();
+    list.forEach(def => {
+      const norm = normalizeRecipe(def);
+      if (norm) recipeRegistry.set(norm.id, norm);
+    });
+    return listRecipes();
   }
 
-  function craftAntidote(){
-    if (!hasItem('plant_fiber')){
-      log('Need plant fiber.');
-      return;
-    }
-    if (!hasItem('water_flask')){
-      log('Need a water flask.');
-      return;
-    }
-    let idx = findItemIndex('plant_fiber');
-    if (idx >= 0) removeFromInv(idx);
-    idx = findItemIndex('water_flask');
-    if (idx >= 0) removeFromInv(idx);
-    addToInv('antidote');
-    bus?.emit('craft:antidote');
-    log('Crafted an antidote.');
+  function registerRecipe(def) {
+    const norm = normalizeRecipe(def);
+    if (!norm) return null;
+    recipeRegistry.set(norm.id, norm);
+    return norm;
+  }
+
+  function unregisterRecipe(id) {
+    if (id == null) return;
+    recipeRegistry.delete(String(id));
+  }
+
+  function getRecipe(id) {
+    if (id == null) return null;
+    return recipeRegistry.get(String(id)) || null;
+  }
+
+  function listRecipes() {
+    return Array.from(recipeRegistry.values());
+  }
+
+  function craftRecipe(id) {
+    const recipe = getRecipe(id);
+    if (!recipe) return false;
+    const result = recipe.craft();
+    return result === undefined ? true : !!result;
   }
 
   function craftEnhancedItem(baseId){
@@ -236,54 +234,22 @@
     function renderRecipes(){
       list.innerHTML = '';
       focusables = [];
-      const recipes = [
-        {
-          name: 'Signal Beacon',
-          craft: craftSignalBeacon,
-          requirements: [
-            { label: 'Scrap', key: 'scrap', amount: 5, type: 'resource' },
-            { label: 'Fuel', key: 'fuel', amount: 50, type: 'resource' }
-          ]
-        },
-        {
-          name: 'Solar Panel Tarp',
-          craft: craftSolarTarp,
-          requirements: [
-            { label: 'Scrap', key: 'scrap', amount: 3, type: 'resource' },
-            { label: 'Cloth', key: 'cloth', amount: 1, type: 'item' }
-          ]
-        },
-        {
-          name: 'Bandage',
-          craft: craftBandage,
-          requirements: [
-            { label: 'Plant Fiber', key: 'plant_fiber', amount: 1, type: 'item' }
-          ]
-        },
-        {
-          name: 'Antidote',
-          craft: craftAntidote,
-          requirements: [
-            { label: 'Plant Fiber', key: 'plant_fiber', amount: 1, type: 'item' },
-            { label: 'Water Flask', key: 'water_flask', amount: 1, type: 'item' }
-          ]
-        }
-      ];
+      const baseRecipes = listRecipes();
       const enhancementRecipes = getEnhancementRecipes();
-      enhancementRecipes.forEach(r => recipes.push(r));
+      const recipes = [...baseRecipes, ...enhancementRecipes];
 
       recipes.forEach(r => {
         const row = document.createElement('div');
         row.className = 'slot';
         const info = document.createElement('div');
         const title = document.createElement('span');
-        title.textContent = r.name;
+        title.textContent = r.name || r.id || 'Recipe';
         info.appendChild(title);
         const reqList = document.createElement('ul');
         let craftable = true;
-        r.requirements.forEach(req => {
+        (Array.isArray(r.requirements) ? r.requirements : []).forEach(req => {
           const have = req.type === 'resource'
-            ? (player[req.key] || 0)
+            ? (player?.[req.key] || 0)
             : getItemCount(req.key);
           if (have < req.amount) craftable = false;
           const li = document.createElement('li');
@@ -296,7 +262,14 @@
           const btn = document.createElement('button');
           btn.className = 'btn';
           btn.textContent = 'Craft';
-          btn.onclick = () => { r.craft(); renderRecipes(); };
+          btn.onclick = () => {
+            if (r.id && typeof Dustland.workbench?.craft === 'function') {
+              Dustland.workbench.craft(r.id);
+            } else if (typeof r.craft === 'function') {
+              r.craft();
+            }
+            renderRecipes();
+          };
           row.appendChild(btn);
           focusables.push(btn);
         }
@@ -333,6 +306,14 @@
     overlay.focus();
   }
 
-  Dustland.workbench = { craftSignalBeacon, craftSolarTarp, craftBandage, craftAntidote, craftEnhancedItem };
+  Dustland.workbench = {
+    setRecipes,
+    registerRecipe,
+    unregisterRecipe,
+    getRecipe,
+    listRecipes,
+    craft: craftRecipe,
+    craftEnhancedItem
+  };
   Dustland.openWorkbench = openWorkbench;
 })();

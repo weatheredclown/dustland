@@ -4009,7 +4009,7 @@ function resetQuestRewardFields() {
   const itemId = document.getElementById('questRewardItemId');
   if (itemId) itemId.value = '';
   const xp = document.getElementById('questRewardXP');
-  if (xp) xp.value = 0;
+  if (xp) xp.value = 10;
   const scrap = document.getElementById('questRewardScrap');
   if (scrap) scrap.value = 0;
   const customId = document.getElementById('questRewardCustomId');
@@ -4108,7 +4108,7 @@ function startNewQuest() {
   document.getElementById('questDesc').value = '';
   document.getElementById('questItem').value = '';
   resetQuestRewardFields();
-  document.getElementById('questXP').value = 0;
+  document.getElementById('questXP').value = 10;
   document.getElementById('questNPC').value = '';
   document.getElementById('addQuest').textContent = 'Add Quest';
   document.getElementById('delQuest').style.display = 'none';
@@ -4126,7 +4126,10 @@ function addQuest() {
     return;
   }
   const xpValue = parseInt(document.getElementById('questXP').value, 10);
-  const xp = Number.isFinite(xpValue) ? xpValue : 0;
+  let xp = Number.isFinite(xpValue) ? xpValue : 10;
+  xp = Math.round(xp);
+  if (xp < 10) xp = 10;
+  else if (xp > 100) xp = 100;
   const quest = { id, title, desc, xp };
   if (item) quest.item = item;
   if (typeof rewardResult.reward !== 'undefined') quest.reward = rewardResult.reward;
@@ -4171,7 +4174,9 @@ function editQuest(i) {
   document.getElementById('questDesc').value = q.desc;
   document.getElementById('questItem').value = q.item || '';
   setQuestRewardFields(q.reward);
-  document.getElementById('questXP').value = q.xp || 0;
+  const questXP = typeof q.xp === 'number' ? q.xp : parseInt(q.xp, 10);
+  const sanitizedQuestXP = Number.isFinite(questXP) ? Math.min(Math.max(Math.round(questXP), 10), 100) : 10;
+  document.getElementById('questXP').value = sanitizedQuestXP;
   const npc = moduleData.npcs.find(n => Array.isArray(n.quests) ? n.quests.includes(q.id) : n.questId === q.id);
   document.getElementById('questNPC').value = npc ? npc.id : '';
   document.getElementById('addQuest').textContent = 'Update Quest';
@@ -4322,6 +4327,146 @@ function validateSpawns(){
     if(!n.portraitSheet) issues.push({ msg:'NPC '+(n.id||'')+' missing portrait', type:'npc', idx:i, warn:true });
     if(!n.prompt) issues.push({ msg:'NPC '+(n.id||'')+' missing prompt', type:'npc', idx:i, warn:true });
   });
+  const availableItems=new Set();
+  const availableTags=new Set();
+  const addTag=tag=>{
+    if(typeof tag!=='string') return;
+    const clean=tag.trim().toLowerCase();
+    if(clean) availableTags.add(clean);
+  };
+  const addTags=tags=>{
+    if(!tags) return;
+    if(Array.isArray(tags)) tags.forEach(addTag);
+    else addTag(tags);
+  };
+  const addItemId=id=>{
+    if(typeof id!=='string') return;
+    const clean=id.trim();
+    if(!clean || /\s/.test(clean)) return;
+    availableItems.add(clean);
+  };
+  const addItemEntry=entry=>{
+    if(!entry) return;
+    if(typeof entry==='string'){ addItemId(entry); return; }
+    if(typeof entry==='object'){
+      if(entry.id) addItemId(entry.id);
+      if(entry.item) addItemId(entry.item);
+      if(entry.baseId) addItemId(entry.baseId);
+      addTags(entry.tags);
+    }
+  };
+  const addReward=reward=>{
+    if(!reward) return;
+    if(Array.isArray(reward)){ reward.forEach(addReward); return; }
+    if(typeof reward==='string'){ addItemId(reward); return; }
+    if(typeof reward==='object'){
+      addItemEntry(reward);
+      if(reward.reward) addReward(reward.reward);
+      if(reward.items) addReward(reward.items);
+    }
+  };
+  const addEffects=effects=>{
+    if(!Array.isArray(effects)) return;
+    effects.forEach(e=>{
+      if(!e || typeof e!=='object') return;
+      if(e.effect==='addItem') addItemId(e.id||e.item);
+    });
+  };
+  (moduleData.items||[]).forEach(it=>{
+    addItemEntry(it);
+    addTags(it.tags);
+  });
+  (moduleData.quests||[]).forEach(q=>{ addReward(q.reward); });
+  (moduleData.npcs||[]).forEach(n=>{
+    if(n.shop?.inv) n.shop.inv.forEach(addItemEntry);
+    Object.values(n.tree||{}).forEach(node=>{
+      addEffects(node.effects);
+      (node.choices||[]).forEach(ch=>{
+        addReward(ch.reward);
+        addEffects(ch.effects);
+      });
+    });
+  });
+  (moduleData.events||[]).forEach(ev=>{
+    (ev.events||[]).forEach(e=>{ if(e.effect==='addItem') addItemId(e.id||e.item); });
+  });
+  const normReqList=req=>{
+    const out=[];
+    const push=entry=>{
+      if(!entry) return;
+      if(Array.isArray(entry)){ entry.forEach(push); return; }
+      if(typeof entry==='string'){
+        const str=entry.trim();
+        if(!str) return;
+        if(str.includes(',')) str.split(',').forEach(part=>push(part.trim()));
+        else out.push(str);
+        return;
+      }
+      out.push(entry);
+    };
+    push(req);
+    return out;
+  };
+  const hasRequirement=req=>{
+    if(!req) return false;
+    if(Array.isArray(req)) return req.some(hasRequirement);
+    if(typeof req==='string'){
+      const str=req.trim();
+      if(!str) return false;
+      if(str.startsWith('tag:')){
+        const tag=str.slice(4).trim().toLowerCase();
+        return tag ? availableTags.has(tag) : false;
+      }
+      return availableItems.has(str);
+    }
+    if(typeof req==='object'){
+      if(req.id && hasRequirement(req.id)) return true;
+      if(req.item && hasRequirement(req.item)) return true;
+      if(typeof req.tag==='string') return availableTags.has(req.tag.trim().toLowerCase());
+      if(Array.isArray(req.tags)) return req.tags.some(t=>typeof t==='string' && availableTags.has(t.trim().toLowerCase()));
+    }
+    return false;
+  };
+  const describeReq=req=>{
+    if(!req) return 'the required item';
+    if(typeof req==='string'){
+      if(req.startsWith('tag:')){
+        const tag=req.slice(4).trim();
+        return tag ? `an item tagged "${tag}"` : 'the required item';
+      }
+      return `"${req}"`;
+    }
+    if(typeof req==='object'){
+      if(typeof req.tag==='string' && req.tag.trim()) return `an item tagged "${req.tag.trim()}"`;
+      if(Array.isArray(req.tags)){
+        const tags=req.tags.map(t=>typeof t==='string'?t.trim():'').filter(Boolean);
+        if(tags.length) return `an item tagged "${tags.join('" or "')}"`;
+      }
+      if(typeof req.id==='string' && req.id.trim()) return `"${req.id.trim()}"`;
+      if(typeof req.item==='string' && req.item.trim()) return `"${req.item.trim()}"`;
+    }
+    return 'the required item';
+  };
+  const describeReqList=list=>{
+    const parts=list.map(describeReq).filter(Boolean);
+    if(!parts.length) return 'the required item';
+    if(parts.length===1) return parts[0];
+    return parts.slice(0,-1).join(', ')+' or '+parts[parts.length-1];
+  };
+  const checkCombatRequires=(entry,label,type,idx)=>{
+    const reqs=normReqList(entry?.combat?.requires);
+    if(!reqs.length) return;
+    if(reqs.some(hasRequirement)) return;
+    issues.push({ msg:`${label} requires ${describeReqList(reqs)} but the module has none`, type, idx });
+  };
+  (moduleData.npcs||[]).forEach((n,i)=>{
+    const label='Enemy '+(n.id||n.name||('NPC #'+(i+1)));
+    checkCombatRequires(n,label,'npc',i);
+  });
+  (moduleData.templates||[]).forEach((t,i)=>{
+    const label='Enemy template '+(t.id||t.name||('#'+(i+1)));
+    checkCombatRequires(t,label,'template',i);
+  });
   return issues;
 }
 
@@ -4329,6 +4474,7 @@ function onProblemClick(){
   const prob=problemRefs[parseInt(this.dataset.idx,10)];
   if(prob.type==='npc') editNPC(prob.idx);
   else if(prob.type==='item') editItem(prob.idx);
+  else if(prob.type==='template') editTemplate(prob.idx);
   else if(prob.type==='start'){
     showMap('world');
     focusMap(moduleData.start.x,moduleData.start.y);

@@ -45,12 +45,6 @@
     updateRemoteState();
   }
 
-  function removeRemoteParty(id){
-    if (!id) return;
-    if (!remoteParties.delete(id)) return;
-    updateRemoteState();
-  }
-
   function pruneRemoteParties(ids){
     const keep = new Set((ids || []).filter(id => typeof id === 'string'));
     let changed = false;

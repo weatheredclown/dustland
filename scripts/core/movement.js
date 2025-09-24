@@ -14,6 +14,89 @@ let encounterBias = null;
 const activeMsgZones = new Set();
 let lastWeatherZone = null;
 let prevWeather = null;
+const WORLD_LOOT_DECAY_TURNS = 200;
+let worldTurnCounter = 0;
+const ESSENTIAL_SUPPLY_RESTOCKS = Object.freeze([
+  { id: 'medkit', interval: 10, count: 1 },
+  { id: 'water_flask', interval: 10, count: 1 }
+]);
+const essentialRestockState = new Map();
+let essentialRestockCache = { module: null, data: null };
+
+function normalizePositiveInt(value, fallback){
+  const base = Number.isFinite(value) ? value : fallback;
+  if(!Number.isFinite(base)) return 1;
+  return Math.max(1, Math.round(base));
+}
+
+function getEssentialRestockConfig(){
+  const moduleName = globalThis.Dustland?.currentModule || null;
+  if(!moduleName) return null;
+  if(essentialRestockCache.module !== moduleName){
+    essentialRestockState.clear();
+    const config = new Map();
+    ESSENTIAL_SUPPLY_RESTOCKS.forEach(entry => {
+      config.set(entry.id, {
+        interval: normalizePositiveInt(entry.interval, 10),
+        count: normalizePositiveInt(entry.count, 1),
+        targets: new Map()
+      });
+    });
+    const moduleData = globalThis.Dustland?.loadedModules?.[moduleName];
+    const baseNpcs = Array.isArray(moduleData?.npcs) ? moduleData.npcs : [];
+    baseNpcs.forEach(baseNpc => {
+      const inv = Array.isArray(baseNpc?.shop?.inv) ? baseNpc.shop.inv : [];
+      inv.forEach(entry => {
+        const restock = config.get(entry?.id);
+        if(!restock) return;
+        if(!baseNpc.id) return;
+        restock.targets.set(baseNpc.id, { ...entry });
+      });
+    });
+    essentialRestockCache = { module: moduleName, data: config };
+  }
+  return essentialRestockCache.data;
+}
+
+function shopHasItem(shop, itemId){
+  if(!shop || shop === true) return false;
+  const inv = Array.isArray(shop.inv) ? shop.inv : [];
+  return inv.some(entry => {
+    if(!entry || entry.id !== itemId) return false;
+    const count = Number.isFinite(entry.count) ? entry.count : 1;
+    return count > 0;
+  });
+}
+
+function restockEssentialSupplies(turn){
+  const config = getEssentialRestockConfig();
+  if(!config) return;
+  const roster = Array.isArray(globalThis.NPCS) ? globalThis.NPCS : [];
+  if(!roster.length) return;
+  for(const [itemId, cfg] of config.entries()){
+    if(!cfg) continue;
+    const interval = Number.isFinite(cfg.interval) ? cfg.interval : 10;
+    const lastTurn = essentialRestockState.has(itemId) ? essentialRestockState.get(itemId) : 0;
+    if(turn - lastTurn < interval) continue;
+    if(roster.some(npc => shopHasItem(npc?.shop, itemId))) continue;
+    const targetIds = Array.from(cfg.targets?.keys() || []);
+    if(!targetIds.length) continue;
+    for(const npc of roster){
+      if(!npc || !targetIds.includes(npc.id)) continue;
+      const shop = npc.shop;
+      if(!shop || shop === true) continue;
+      if(!Array.isArray(shop.inv)) shop.inv = [];
+      const baseEntry = cfg.targets.get(npc.id) || { id: itemId };
+      const desired = Number.isFinite(baseEntry.count) ? baseEntry.count : cfg.count;
+      const restockEntry = { ...baseEntry, id: itemId };
+      restockEntry.count = normalizePositiveInt(desired, cfg.count);
+      shop.inv.push(restockEntry);
+      essentialRestockState.set(itemId, turn);
+      break;
+    }
+  }
+}
+
 bus?.on?.('weather:change', w => {
   weatherSpeed = typeof w?.speedMod === 'number' ? w.speedMod : 1;
   encounterBias = w?.encounterBias || null;
@@ -27,6 +110,42 @@ function lockInput(ms = RANDOM_COMBAT_INPUT_LOCK_MS, key){
   const current = typeof game.inputLockUntil === 'number' ? game.inputLockUntil : 0;
   game.inputLockUntil = current > target ? current : target;
   game.inputLockKey = typeof key === 'string' ? key.toLowerCase() : null;
+}
+
+function markWorldDropAges(beforeTurn){
+  if(!Array.isArray(itemDrops) || !itemDrops.length) return;
+  for(const drop of itemDrops){
+    if(!drop) continue;
+    const mapId = typeof drop.map === 'string' ? drop.map : 'world';
+    if(mapId !== 'world') continue;
+    if(!Number.isFinite(drop.worldTurn)) drop.worldTurn = beforeTurn;
+  }
+}
+
+function decayWorldLoot(now){
+  if(!Array.isArray(itemDrops) || !itemDrops.length) return;
+  for(let i=itemDrops.length-1;i>=0;i--){
+    const drop=itemDrops[i];
+    if(!drop) continue;
+    const mapId = typeof drop.map === 'string' ? drop.map : 'world';
+    if(mapId !== 'world') continue;
+    const born = Number.isFinite(drop.worldTurn) ? drop.worldTurn : (now - 1);
+    if(now - born >= WORLD_LOOT_DECAY_TURNS){
+      itemDrops.splice(i,1);
+    }
+  }
+}
+
+function advanceWorldTurn(){
+  const before = worldTurnCounter;
+  markWorldDropAges(before);
+  worldTurnCounter = before + 1;
+  const now = worldTurnCounter;
+  decayWorldLoot(now);
+  if(globalThis.Dustland){
+    globalThis.Dustland.worldTurns = now;
+  }
+  restockEssentialSupplies(now);
 }
 
 function zoneAttrs(map,x,y){
@@ -360,6 +479,7 @@ function move(dx,dy){
         bus.emit('sfx','step');
         // NPCs advance along paths after the player steps
         if (Dustland.path?.tickPathAI) Dustland.path.tickPathAI();
+        if(state.map === 'world') advanceWorldTurn();
         moveDelay = 0;
         resolve();
       }, moveDelay);
@@ -400,9 +520,39 @@ function distanceToRoad(x, y, map=state.map){
   }
   return 999;
 }
+function resolveEncounterChallenge(entry){
+  if(!entry || typeof entry !== 'object') return null;
+  if(Number.isFinite(entry.challenge)) return entry.challenge;
+  const challenge = entry.combat && Number.isFinite(entry.combat.challenge)
+    ? entry.combat.challenge
+    : null;
+  if(Number.isFinite(challenge)) return challenge;
+  const templateId = entry.templateId;
+  if(templateId && typeof npcTemplates !== 'undefined' && Array.isArray(npcTemplates)){
+    const tpl = npcTemplates.find(t => t && t.id === templateId);
+    if(tpl && Number.isFinite(tpl.combat?.challenge)){
+      return tpl.combat.challenge;
+    }
+  }
+  return null;
+}
+
+function getEncounterGuard(){
+  if(typeof leader !== 'function') return null;
+  const lead = leader();
+  if(!lead) return null;
+  const bonus = lead?._bonus?.encounter_guard;
+  if(Number.isFinite(bonus)) return bonus;
+  const equipped = lead?.equip?.trinket?.mods?.encounter_guard;
+  if(Number.isFinite(equipped)) return equipped;
+  return null;
+}
+
 function checkRandomEncounter(){
   const mods = zoneAttrs(state.map, party.x, party.y);
   if(mods.noEncounters) return;
+  const minSteps = mods.minSteps ?? 3;
+  const maxSteps = mods.maxSteps ?? 5;
   if(encounterCooldown > 0){
     encounterCooldown--;
     return;
@@ -416,9 +566,7 @@ function checkRandomEncounter(){
       if(roll < acc){ chosen = s; break; }
     }
     if(chosen){
-      const min = mods.minSteps ?? 3;
-      const max = mods.maxSteps ?? 5;
-      encounterCooldown = min + Math.floor(Math.random() * (max - min + 1));
+      encounterCooldown = minSteps + Math.floor(Math.random() * (maxSteps - minSteps + 1));
       lockInput(undefined, globalThis.Dustland?.lastNonCombatKey);
       return Dustland.actions.startCombat({ ...chosen });
     }
@@ -440,6 +588,18 @@ function checkRandomEncounter(){
     }
     const hard = pool.filter(e => e.minDist);
     if(hard.length) pool = hard;
+    const guard = getEncounterGuard();
+    if(Number.isFinite(guard)){
+      pool = pool.filter(entry => {
+        const challenge = resolveEncounterChallenge(entry);
+        if(!Number.isFinite(challenge)) return true;
+        return challenge >= guard;
+      });
+      if(!pool.length){
+        encounterCooldown = minSteps + Math.floor(Math.random() * (maxSteps - minSteps + 1));
+        return;
+      }
+    }
     const base = pool[Math.floor(Math.random() * pool.length)];
     let def;
     if(base.templateId && typeof npcTemplates !== 'undefined'){
@@ -456,9 +616,7 @@ function checkRandomEncounter(){
       count = 3;
     }
     if (count > 1) def.count = count;
-    const min = mods.minSteps ?? 3;
-    const max = mods.maxSteps ?? 5;
-    encounterCooldown = min + Math.floor(Math.random() * (max - min + 1));
+    encounterCooldown = minSteps + Math.floor(Math.random() * (maxSteps - minSteps + 1));
     lockInput(undefined, globalThis.Dustland?.lastNonCombatKey);
     return Dustland.actions.startCombat(def);
   }
@@ -496,8 +654,6 @@ function takeNearestItem() {
         }
         addToInv(getItem(drop.id));
         tookAny = true;
-        const def = ITEMS[drop.id];
-        messages.push('Took ' + (def ? def.name : drop.id) + '.');
       }
       const idx = itemDrops.indexOf(drop);
       if (idx > -1) itemDrops.splice(idx, 1);
@@ -541,9 +697,9 @@ function interactAt(x, y) {
     }
     const idx = itemDrops.indexOf(drop);
     if (idx > -1) itemDrops.splice(idx, 1);
-    const def = ITEMS[drop.id];
-    const msg = drop.items ? `Took ${drop.items.length} items.` : 'Took ' + (def ? def.name : drop.id) + '.';
-    log(msg);
+    if (drop.items) {
+      log(`Took ${drop.items.length} items.`);
+    }
     updateHUD();
     if (typeof pickupSparkle === 'function') pickupSparkle(x, y);
     bus.emit('sfx', 'pickup');
@@ -631,6 +787,8 @@ const movement = {
   buffs,
   calcMoveDelay,
   getMoveDelay: () => moveDelay,
+  getWorldTurns: () => worldTurnCounter,
+  WORLD_LOOT_DECAY_TURNS,
   checkRandomEncounter,
   distanceToRoad
 };
@@ -640,5 +798,6 @@ bus?.on?.('movement:player', payload => {
   setPartyPos(x, y);
 });
 globalThis.Dustland = globalThis.Dustland || {};
+globalThis.Dustland.worldTurns = worldTurnCounter;
 globalThis.Dustland.movement = movement;
 Object.assign(globalThis, movement);

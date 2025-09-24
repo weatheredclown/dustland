@@ -6,6 +6,9 @@ const DATA = `
 {
   "seed": "other-bas",
   "name": "other-bas",
+  "props": {
+    "portalLayout": true
+  },
   "start": {
     "map": "west_wing",
     "x": 2,

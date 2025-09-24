@@ -1,7 +1,7 @@
 
 // ===== Rendering & Utilities =====
 
-const ENGINE_VERSION = '0.188.0';
+const ENGINE_VERSION = '0.202.0';
 
 
 const logEl = document.getElementById('log');
@@ -372,6 +372,70 @@ function setFontScale(scale, opts = {}){
   if(!opts.skipStorage){
     globalThis.localStorage?.setItem(FONT_SCALE_STORAGE_KEY, formatFontScale(next));
   }
+}
+
+const FONT_FAMILY_STORAGE_KEY = 'fontFamily';
+const FONT_FAMILY_SAMPLE_TEXT = 'Sample: The wasteland is calling.';
+const FONT_FAMILY_OPTIONS = [
+  { id:'pixel', css:"'Pixelify Sans', sans-serif" },
+  { id:'oxanium', css:"'Oxanium', 'Pixelify Sans', sans-serif" },
+  { id:'atkinson', css:"'Atkinson Hyperlegible', 'Source Sans Pro', 'Arial', sans-serif" },
+  { id:'roboto', css:"'Roboto', 'Helvetica Neue', 'Arial', sans-serif" }
+];
+const FONT_FAMILY_DEFAULT = FONT_FAMILY_OPTIONS[0];
+let fontFamily = FONT_FAMILY_DEFAULT;
+
+function getFontFamilyOption(id){
+  if(!id) return FONT_FAMILY_DEFAULT;
+  for(let i=0;i<FONT_FAMILY_OPTIONS.length;i++){
+    const option = FONT_FAMILY_OPTIONS[i];
+    if(option.id === id) return option;
+  }
+  return FONT_FAMILY_DEFAULT;
+}
+
+function updateFontFamilyUI(id){
+  if(typeof document === 'undefined') return;
+  const option = getFontFamilyOption(id);
+  const select = document.getElementById('fontFamily');
+  if(select){
+    select.value = option.id;
+    select.style?.setProperty?.('font-family', option.css);
+  }
+  const sample = document.getElementById('fontFamilySample');
+  if(sample){
+    sample.textContent = FONT_FAMILY_SAMPLE_TEXT;
+    sample.style?.setProperty?.('font-family', option.css);
+  }
+}
+
+function applyFontFamily(option){
+  fontFamily = option || FONT_FAMILY_DEFAULT;
+  const style = getFontScaleRootStyle();
+  const value = fontFamily.css || FONT_FAMILY_DEFAULT.css;
+  style?.setProperty('--ui-font', value);
+  if(typeof document !== 'undefined'){
+    const bodyStyle = document.body?.style;
+    if(bodyStyle && bodyStyle !== style){
+      bodyStyle.setProperty('--ui-font', value);
+    }
+  }
+  updateFontFamilyUI(fontFamily.id);
+}
+
+function setFontFamily(id, opts = {}){
+  const option = getFontFamilyOption(id);
+  applyFontFamily(option);
+  if(!opts.skipStorage){
+    globalThis.localStorage?.setItem(FONT_FAMILY_STORAGE_KEY, option.id);
+  }
+}
+
+const savedFontFamily = globalThis.localStorage?.getItem(FONT_FAMILY_STORAGE_KEY);
+if(typeof savedFontFamily === 'string' && savedFontFamily){
+  setFontFamily(savedFontFamily, { skipStorage: true });
+} else {
+  applyFontFamily(fontFamily);
 }
 const savedFontScale = Number.parseFloat(globalThis.localStorage?.getItem(FONT_SCALE_STORAGE_KEY));
 if(Number.isFinite(savedFontScale)){
@@ -1672,6 +1736,30 @@ function renderInv(){
   });
   const member=party[selectedMember]||party[0];
   const canEquipFn = typeof canEquip === 'function' ? canEquip : null;
+  const equipRestrictionsFn = typeof getEquipRestrictions === 'function' ? getEquipRestrictions : null;
+  const fallbackRestrictions = (member, item) => {
+    if(!member || !item || !['weapon','armor','trinket'].includes(item.type)) return null;
+    const atk = Number.isFinite(item?.mods?.ATK) ? item.mods.ATK : 0;
+    let minLevel = 1;
+    if(item.type === 'weapon'){
+      if(atk >= 13) minLevel = 7;
+      else if(atk >= 11) minLevel = 6;
+      else if(atk >= 9) minLevel = 5;
+      else if(atk >= 7) minLevel = 4;
+      else if(atk >= 5) minLevel = 3;
+    }
+    if(Number.isFinite(item?.equip?.minLevel)){
+      minLevel = Math.max(1, Math.floor(item.equip.minLevel));
+    }
+    const lvl = Number.isFinite(member?.lvl) ? member.lvl : 1;
+    const levelMet = lvl >= minLevel;
+    return {
+      allowed: levelMet,
+      levelRequired: minLevel,
+      levelMet,
+      reasons: (!levelMet && minLevel > 1) ? [`Requires level ${minLevel}.`] : []
+    };
+  };
   const describeRoles = typeof describeRequiredRoles === 'function' ? describeRequiredRoles : () => '';
   const suggestions = {};
   if(member){
@@ -1726,10 +1814,15 @@ function renderInv(){
     if(['weapon','armor','trinket'].includes(it.type) && suggestions[it.type]===it){
       row.classList.add('better');
     }
+    const restriction = member ? (equipRestrictionsFn ? equipRestrictionsFn(member, it) : fallbackRestrictions(member, it)) : null;
     const baseLabel = it.name + (['weapon','armor','trinket'].includes(it.type)?` [${it.type}]`:'');
     const label = (it.cursed && it.cursedKnown)? `${baseLabel} (cursed)` : baseLabel;
     const labelSpan=document.createElement('span');
     labelSpan.textContent=label;
+    if(restriction && !restriction.levelMet && restriction.levelRequired > 1){
+      row.classList.add('level-locked');
+      labelSpan.classList.add('level-locked-label');
+    }
     const btnWrap=document.createElement('span');
     btnWrap.style.display='flex';
     btnWrap.style.gap='6px';
@@ -1738,13 +1831,30 @@ function renderInv(){
       const equipBtn=document.createElement('button');
       equipBtn.className='btn';
       equipBtn.dataset.a='equip';
-      const allowed = !member || !canEquipFn || canEquipFn(member, it);
       const reqText = describeRoles(it);
-      equipBtn.title = allowed ? 'Equip' : (reqText ? `Only ${reqText} can equip` : 'Cannot equip');
-      equipBtn.setAttribute('aria-label', equipBtn.title);
-      if(!allowed){
-        equipBtn.disabled = true;
+      let allowed = true;
+      if(member){
+        if(restriction){
+          allowed = restriction.allowed;
+        } else if(canEquipFn){
+          allowed = canEquipFn(member, it);
+        }
       }
+      let title = 'Equip';
+      if(!allowed){
+        if(restriction?.reasons?.length){
+          title = restriction.reasons.join(' ');
+        } else if(reqText){
+          title = `Only ${reqText} can equip`;
+        } else {
+          title = 'Cannot equip';
+        }
+        equipBtn.disabled = true;
+      } else if(restriction && restriction.levelRequired > 1){
+        title = `Equip (requires level ${restriction.levelRequired})`;
+      }
+      equipBtn.title = title;
+      equipBtn.setAttribute('aria-label', title);
       equipBtn.textContent='⚙';
       equipBtn.onclick=()=> equipItem(selectedMember, player.inv.indexOf(it));
       btnWrap.appendChild(equipBtn);
@@ -1778,13 +1888,17 @@ function renderInv(){
         : String(v);
     })();
     const nameLine = baseLabel + ((it.cursed && it.cursedKnown)? ' (cursed)' : '');
+    const levelTip = restriction && restriction.levelRequired > 1
+      ? `Requires level ${restriction.levelRequired}`
+      : '';
     const tip = [
       nameLine,
       it.desc || '',
       mods ? `Mods: ${mods}` : '',
       use  ? `Use: ${use}`   : '',
       `Rarity: ${it.rarity}`,
-      `Value: ${valueStr}`
+      `Value: ${valueStr}`,
+      levelTip
     ].filter(Boolean).join('\n');
     row.title = tip;
     row.onclick=e=>{ if(e.target.tagName==='BUTTON') return; if(['weapon','armor','trinket'].includes(it.type)) equipItem(selectedMember, player.inv.indexOf(it)); };
@@ -1911,6 +2025,21 @@ function questProgressInfo(q){
   return { required, turnedIn, carried, total, need, ready };
 }
 
+function questMapDisplayName(id){
+  if(!id) return '';
+  if(typeof mapLabel === 'function'){
+    const label = mapLabel(id);
+    if(label && typeof label === 'string' && label.trim()) return label;
+  }
+  if(typeof mapLabels === 'object' && mapLabels){
+    const alt = mapLabels[id];
+    if(typeof alt === 'string' && alt.trim()) return alt.trim();
+  }
+  const str = String(id).replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
+  if(!str) return '';
+  return str.replace(/\b\w/g,c=>c.toUpperCase());
+}
+
 function questDescriptionText(q, progress, target){
   if(q.status==='completed'){
     if(q.outcome) return q.outcome;
@@ -1925,7 +2054,8 @@ function questDescriptionText(q, progress, target){
     if(itemName) return `Return the ${itemName}.`;
   }
   if(target && target.type==='offmap' && target.map){
-    return `Objective located in ${target.map}.`;
+    const mapName = questMapDisplayName(target.map) || target.map;
+    return `Objective located in ${mapName}.`;
   }
   return typeof q.desc==='string'?q.desc:'';
 }
@@ -1933,17 +2063,18 @@ function questDescriptionText(q, progress, target){
 function questTargetText(target, partyLoc){
   if(!target) return '';
   if(target.type==='npc'){
-    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` (${target.map})` : '';
+    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` (${questMapDisplayName(target.map) || target.map})` : '';
     return `Return to ${target.label || 'the quest giver'}${mapNote}`;
   }
   if(target.type==='item'){
     const coords=(typeof target.x==='number' && typeof target.y==='number')?` (${target.x}, ${target.y})`:'';
-    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` — ${target.map}` : '';
+    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` — ${questMapDisplayName(target.map) || target.map}` : '';
     const label=target.label || 'the objective';
     return `Search near ${label}${coords}${mapNote}`;
   }
   if(target.type==='offmap'){
-    return target.map ? `Objective located in ${target.map}` : 'Objective located elsewhere';
+    const mapName = target.map ? (questMapDisplayName(target.map) || target.map) : '';
+    return mapName ? `Objective located in ${mapName}` : 'Objective located elsewhere';
   }
   return '';
 }
@@ -2013,7 +2144,7 @@ function questCompassTooltip(target, partyLoc){
   if(!target) return 'Explore to advance this quest.';
   if(target.type==='completed') return 'Quest completed';
   if(target.label){
-    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` (${target.map})` : '';
+    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` (${questMapDisplayName(target.map) || target.map})` : '';
     const prefix=target.type==='npc' ? 'Return to ' : target.type==='item' ? 'Search near ' : '';
     const text=`${prefix}${target.label}${mapNote}`.trim();
     return text || 'Quest objective';
@@ -2225,6 +2356,7 @@ function openShop(npc) {
   const shopBuy = document.getElementById('shopBuy');
   const shopSell = document.getElementById('shopSell');
   const shopScrap = document.getElementById('shopScrap');
+  const shopSlotFilter = document.getElementById('shopSlotFilter');
 
   if (!npc.shop) return;
   if (npc.shop === true) npc.shop = {};
@@ -2232,6 +2364,67 @@ function openShop(npc) {
   npc.shop.markup = npc.shop.markup || 2;
 
   shopName.textContent = npc.name;
+
+  const slotOrder = ['weapon', 'armor', 'trinket', 'consumable', 'spoils-cache', 'quest', 'misc'];
+  let slotFilter = '';
+  function resolveSlotKey(item) {
+    if (!item || typeof item !== 'object') return 'misc';
+    const slot = (item.slot || item.type || '').toString().trim().toLowerCase();
+    return slot || 'misc';
+  }
+  function formatSlotLabel(key) {
+    if (!key) return 'All Slots';
+    if (key === 'misc') return 'Other';
+    return key.split(/[-_]/).map(part => {
+      if (!part) return part;
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }).join(' ');
+  }
+  function sortSlotKeys(keys) {
+    return Array.from(keys).sort((a, b) => {
+      const idxA = slotOrder.indexOf(a);
+      const idxB = slotOrder.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+  }
+  function matchesSlotFilter(item) {
+    if (!slotFilter) return true;
+    return resolveSlotKey(item) === slotFilter;
+  }
+  function updateSlotFilterOptions(keys) {
+    if (!shopSlotFilter) return;
+    const target = [''].concat(keys);
+    const existing = Array.from(shopSlotFilter.options).map(opt => opt.value);
+    let needsUpdate = existing.length !== target.length;
+    if (!needsUpdate) {
+      for (let i = 0; i < target.length; i++) {
+        if (existing[i] !== target[i]) {
+          needsUpdate = true;
+          break;
+        }
+      }
+    }
+    if (needsUpdate) {
+      shopSlotFilter.innerHTML = '';
+      const allOpt = document.createElement('option');
+      allOpt.value = '';
+      allOpt.textContent = 'All Slots';
+      shopSlotFilter.appendChild(allOpt);
+      keys.forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = formatSlotLabel(key);
+        shopSlotFilter.appendChild(opt);
+      });
+    }
+    if (!target.includes(slotFilter)) {
+      slotFilter = '';
+    }
+    shopSlotFilter.value = slotFilter;
+  }
 
   let focusables = [];
   let focusIdx = 0;
@@ -2305,11 +2498,18 @@ function openShop(npc) {
       return out;
     };
 
+    const slotKeys = new Set();
+    const registerSlotKey = (item) => {
+      if (!item) return;
+      slotKeys.add(resolveSlotKey(item));
+    };
+
     const shopStacks = [];
     const shopStackMap = new Map();
     shopInv.forEach(entry => {
       const item = getItem(entry.id);
       if (!item) return;
+      registerSlotKey(item);
       const key = JSON.stringify({
         item: normalizeForKey(item, true),
         entry: normalizeForKey(entry, true)
@@ -2329,6 +2529,7 @@ function openShop(npc) {
     const sellStackMap = new Map();
     player.inv.forEach((item, idx) => {
       if (!item || !item.id) return;
+      registerSlotKey(item);
       const key = JSON.stringify(normalizeForKey(item, true));
       let stack = sellStackMap.get(key);
       if (!stack) {
@@ -2340,6 +2541,9 @@ function openShop(npc) {
       stack.qty += quantity;
       stack.entries.push({ idx, item });
     });
+
+    const slotList = sortSlotKeys(slotKeys);
+    updateSlotFilterOptions(slotList);
 
     shopStacks.forEach(stack => {
       stack.price = resolveBuyPrice(stack);
@@ -2387,6 +2591,7 @@ function openShop(npc) {
 
     shopStacks.forEach(stack => {
       const { item, qty } = stack;
+      if (!matchesSlotFilter(item)) return;
       const row = document.createElement('div');
       row.className = 'slot';
       let price = Number.isFinite(stack.price) ? stack.price : resolveBuyPrice(stack);
@@ -2417,6 +2622,7 @@ function openShop(npc) {
 
     sellStacks.forEach(stack => {
       const { item, qty } = stack;
+      if (!matchesSlotFilter(item)) return;
       const row = document.createElement('div');
       row.className = 'slot';
       let sellPrice = Number.isFinite(stack.price) ? stack.price : resolveSellPrice(stack);
@@ -2443,7 +2649,19 @@ function openShop(npc) {
     focusCurrent();
   }
 
+  if (shopSlotFilter) {
+    shopSlotFilter.onchange = () => {
+      slotFilter = shopSlotFilter.value;
+      focusIdx = 0;
+      renderShop();
+    };
+  }
+
   function close() {
+    slotFilter = '';
+    if (shopSlotFilter) {
+      shopSlotFilter.value = '';
+    }
     shopOverlay.classList.remove('shown');
     shopOverlay.removeEventListener('keydown', handleKey);
     if (!madePurchase && npc) {
@@ -2578,6 +2796,13 @@ function runTests(){
       setFontScale(raw);
     });
     updateFontScaleUI(fontScale);
+  }
+  const fontFamilySelect=document.getElementById('fontFamily');
+  if(fontFamilySelect){
+    fontFamilySelect.addEventListener('change', ()=>{
+      setFontFamily(fontFamilySelect.value);
+    });
+    updateFontFamilyUI(fontFamily.id);
   }
   const retroToggle=document.getElementById('retroNpcToggle');
   if(retroToggle){
@@ -2754,6 +2979,12 @@ function runTests(){
     const shop = document.getElementById('shopOverlay');
     if (shop?.classList?.contains('shown')) {
       if (e.key === 'Escape') document.getElementById('closeShopBtn')?.click();
+      return;
+    }
+    const target=e.target || document.activeElement;
+    const isTypingTarget=target?.matches?.('input:not([type]),input[type="text"],input[type="search"],input[type="email"],input[type="password"],input[type="number"],input[type="url"],input[type="tel"],textarea');
+    const isEditable=target?.isContentEditable;
+    if(isTypingTarget || isEditable){
       return;
     }
     if((e.key==='b' || e.key==='B') && mobileControlsEnabled && panel?.classList?.contains('show')){

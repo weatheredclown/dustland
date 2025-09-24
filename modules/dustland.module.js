@@ -381,7 +381,8 @@ const DATA = `
       "use": {
         "type": "heal",
         "amount": 0,
-        "text": "You wave the wand."
+        "text": "You wave the wand.",
+        "consume": false
       }
     },
     {
@@ -777,6 +778,83 @@ const DATA = `
       "tags": [
         "pass"
       ]
+    },
+    {
+      "id": "tuned_crystal",
+      "name": "Tuned Crystal",
+      "type": "quest"
+    },
+    {
+      "id": "signal_fragment_1",
+      "name": "Signal Fragment 1",
+      "type": "quest",
+      "desc": "A strange, humming piece of metal that seems to resonate with the radio waves."
+    },
+    {
+      "id": "power_cell",
+      "name": "Power Cell",
+      "type": "quest"
+    },
+    {
+      "id": "signal_fragment_2",
+      "name": "Signal Fragment 2",
+      "type": "quest",
+      "desc": "Another humming fragment. The resonance is stronger."
+    },
+    {
+      "id": "signal_fragment_3",
+      "name": "Signal Fragment 3",
+      "type": "quest",
+      "desc": "The final fragment. It hums with a powerful, clear energy."
+    },
+    {
+      "id": "minigun",
+      "type": "weapon",
+      "baseId": "wand",
+      "rarity": "legendary",
+      "scrap": 10000,
+      "value": 40780,
+      "mods": {
+        "ATK": 10,
+        "ADR": 45
+      },
+      "name": "Helix Minigun",
+      "desc": "Bunker-forged rotary cannon that chews through anything.",
+      "tags": [
+        "ranged",
+        "heavy",
+        "wand"
+      ]
+    },
+    {
+      "id": "dawnforge_six_shooter",
+      "name": "Dawnforge Six-Shooter",
+      "type": "weapon",
+      "desc": "Hand-tuned revolver balanced for blazing draws.",
+      "rarity": "rare",
+      "mods": {
+        "ATK": 4,
+        "ADR": 20,
+        "LCK": 1
+      },
+      "tags": [
+        "ranged"
+      ],
+      "equip": {
+        "requires": {
+          "role": "Gunslinger"
+        }
+      }
+    },
+    {
+      "id": "ridgeglass_charm",
+      "name": "Ridgeglass Charm",
+      "type": "trinket",
+      "value": 320,
+      "desc": "Ridgeglass beads catch the sun so the small packs peel off before they close in.",
+      "mods": {
+        "encounter_guard": 10
+      }
     }
   ],
   "quests": [
@@ -960,6 +1038,31 @@ const DATA = `
       "title": "Patch Cass's Wagon",
       "desc": "Deliver spare parts so Cass eases her grudge.",
       "xp": 1
+    },
+    {
+      "id": "q_first_echo",
+      "title": "The First Echo",
+      "desc": "Find the Tuned Crystal for Sparks to help him focus the Ghost Signal.",
+      "item": "tuned_crystal",
+      "reward": "signal_fragment_1",
+      "xp": 10
+    },
+    {
+      "id": "q_silent_tower",
+      "title": "The Silent Tower",
+      "desc": "Find 3 Power Cells to help Echo restore power to the comms tower.",
+      "item": "power_cell",
+      "count": 3,
+      "reward": "signal_fragment_2",
+      "xp": 20
+    },
+    {
+      "id": "q_resonant_cave",
+      "title": "The Resonant Cave",
+      "desc": "Follow the Hermit's instructions to activate the Resonant Crystals in the correct order.",
+      "reward": "signal_fragment_3",
+      "xp": 30,
+      "reqFlag": "cave_puzzle_complete"
     }
   ],
   "npcs": [
@@ -1954,6 +2057,12 @@ const DATA = `
             "refreshHours": 24
           },
           {
+            "id": "medkit",
+            "rarity": "common",
+            "cadence": "daily",
+            "refreshHours": 24
+          },
+          {
             "id": "frag_grenade",
             "rarity": "rare",
             "cadence": "weekly",
@@ -1966,6 +2075,12 @@ const DATA = `
             "cadence": "weekly",
             "refreshHours": 168,
             "scarcity": "rare"
+          },
+          {
+            "id": "minigun",
+            "rarity": "legendary",
+            "cadence": "weekly",
+            "refreshHours": 168
           }
         ],
         "refresh": 24
@@ -1984,8 +2099,33 @@ const DATA = `
       "portraitSheet": "assets/portraits/dustland-module/tess_4.png",
       "tree": {
         "start": {
-          "text": "Tess strides past on her rounds.",
-          "choices": []
+          "text": "Tess steadies her canteen, eyes tracking the dunes between each stride.",
+          "choices": [
+            {
+              "label": "Ask about your ridgeglass charm.",
+              "to": "offer_charm"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "offer_charm": {
+          "text": "She lifts a twist of ridgeglass beads. Clipped to your pack, it shimmers enough that the small packs break off. 320 scrap and it's yours.",
+          "choices": [
+            {
+              "label": "Let me see it.",
+              "to": "buy"
+            },
+            {
+              "label": "Maybe later.",
+              "to": "start"
+            }
+          ]
+        },
+        "bye": {
+          "text": "Stay sharp out there."
         }
       },
       "loop": [
@@ -1998,7 +2138,20 @@ const DATA = `
           "y": 49
         }
       ],
-      "symbol": "!"
+      "symbol": "!",
+      "shop": {
+        "markup": 1,
+        "refresh": 24,
+        "inv": [
+          {
+            "id": "ridgeglass_charm",
+            "rarity": "rare",
+            "cadence": "weekly",
+            "refreshHours": 168,
+            "scarcity": "scarce"
+          }
+        ]
+      }
     },
     {
       "id": "scrap_mutt",
@@ -2838,7 +2991,8 @@ const DATA = `
         "scrap": {
           "min": 6,
           "max": 9
-        }
+        },
+        "xp": 60
       }
     },
     {
@@ -2883,7 +3037,8 @@ const DATA = `
         "scrap": {
           "min": 7,
           "max": 11
-        }
+        },
+        "xp": 100
       }
     },
     {
@@ -2928,7 +3083,8 @@ const DATA = `
         "scrap": {
           "min": 8,
           "max": 12
-        }
+        },
+        "xp": 160
       }
     },
     {
@@ -2981,7 +3137,8 @@ const DATA = `
         "scrap": {
           "min": 15,
           "max": 25
-        }
+        },
+        "xp": 400
       }
     },
     {
@@ -3072,7 +3229,8 @@ const DATA = `
         "scrap": {
           "min": 6,
           "max": 10
-        }
+        },
+        "xp": 70
       }
     },
     {
@@ -3115,7 +3273,8 @@ const DATA = `
         "scrap": {
           "min": 8,
           "max": 12
-        }
+        },
+        "xp": 120
       }
     },
     {
@@ -3160,7 +3319,8 @@ const DATA = `
         "scrap": {
           "min": 12,
           "max": 16
-        }
+        },
+        "xp": 180
       }
     },
     {
@@ -3565,6 +3725,403 @@ const DATA = `
         }
       },
       "symbol": "✦"
+    },
+    {
+      "id": "sparks",
+      "map": "radio_shack",
+      "x": 3,
+      "y": 2,
+      "name": "Sparks",
+      "color": "#a9f59f",
+      "title": "Wasteland Listener",
+      "desc": "An old man hunched over a crackling radio, his eyes wide with a strange light.",
+      "prompt": "A wiry scavenger hunched over a battered radio",
+      "questId": "q_first_echo",
+      "tree": {
+        "start": {
+          "text": "The signal... it's so faint. A whisper in a hurricane. I need something to focus the receiver. A crystal. A tuned crystal. There's one in the ruins to the east. Bring it to me!",
+          "choices": [
+            {
+              "label": "(Accept) I'll find your crystal.",
+              "to": "accept",
+              "q": "accept"
+            },
+            {
+              "label": "(Turn in) I have the Tuned Crystal.",
+              "to": "turnin",
+              "q": "turnin"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "accept": {
+          "text": "Hurry! The ghosts don't wait forever.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "turnin": {
+          "text": "Yes, yes! This is it! Let me just... *static crackles* ... there! A fragment... a piece of the song! Take it. It's the key.",
+          "choices": [
+            {
+              "label": "(Take Fragment)",
+              "to": "post_quest",
+              "reward": "signal_fragment_1"
+            }
+          ]
+        },
+        "post_quest": {
+          "text": "The signal is stronger now, but it's moving. It points through the north door toward the old comms tower. Follow it when you're ready.",
+          "choices": [
+            {
+              "label": "(Head North) I'll follow the signal.",
+              "to": "bye",
+              "effects": [
+                {
+                  "effect": "toast",
+                  "msg": "Sparks nods toward the door to the north."
+                }
+              ]
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "crystal_ruin",
+      "map": "radio_shack",
+      "x": 5,
+      "y": 3,
+      "name": "Collapsed Hut",
+      "color": "#9ef7a0",
+      "desc": "A pile of rubble. Something glints within.",
+      "prompt": "Collapsed hut with a crystal glinting in the rubble",
+      "tree": {
+        "start": {
+          "text": "A collapsed hut. It looks like it was recently scavenged.",
+          "choices": [
+            {
+              "label": "(Search the rubble)",
+              "to": "search",
+              "once": true
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "search": {
+          "text": "Among the debris, you find a strange, perfectly formed crystal.",
+          "choices": [
+            {
+              "label": "(Take Tuned Crystal)",
+              "to": "empty",
+              "reward": "tuned_crystal"
+            }
+          ]
+        },
+        "empty": {
+          "text": "There's nothing else of interest here.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "echo_scavenger",
+      "map": "comms_tower_base",
+      "x": 4,
+      "y": 4,
+      "name": "Echo",
+      "color": "#a9f59f",
+      "title": "Tech Scavenger",
+      "desc": "A young woman tinkering with a rusty control panel at the base of a huge comms tower.",
+      "prompt": "Young tinkerer repairing a rusted comm tower base",
+      "questId": "q_silent_tower",
+      "tree": {
+        "start": {
+          "text": "Almost got it... this old tower wants to sing again, I know it. But the generators are dead. I need three more power cells to get it online. There are some old service depots around here, maybe you can find some?",
+          "choices": [
+            {
+              "label": "(Accept) I'll find them.",
+              "to": "accept",
+              "q": "accept"
+            },
+            {
+              "label": "(Turn in) I have 3 Power Cells.",
+              "to": "turnin",
+              "q": "turnin",
+              "reqItem": "power_cell",
+              "reqCount": 3
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "accept": {
+          "text": "Thanks! Be careful out there.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "turnin": {
+          "text": "You found them! Amazing! Let's plug these in... *The tower hums to life, and a clear, melodic signal plays for a moment before fading.* It's beautiful... Here, I recorded the fragment for you.",
+          "choices": [
+            {
+              "label": "(Take Fragment)",
+              "to": "post_quest",
+              "reward": "signal_fragment_2",
+              "costItem": "power_cell",
+              "costCount": 3
+            }
+          ]
+        },
+        "post_quest": {
+          "text": "That was just one piece of it. The signal is a symphony! The next part hums behind the northern door, down into a cave system. It's strange, almost like it's underground.",
+          "choices": [
+            {
+              "label": "(Head North) I'll check it out.",
+              "to": "bye",
+              "effects": [
+                {
+                  "effect": "toast",
+                  "msg": "Echo gestures toward the tower ladder leading north."
+                }
+              ]
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "depot1",
+      "map": "comms_tower_base",
+      "x": 1,
+      "y": 7,
+      "name": "Service Depot",
+      "color": "#9ef7a0",
+      "desc": "A rusty service depot.",
+      "prompt": "Rusty service depot littered with wires",
+      "tree": {
+        "start": {
+          "text": "You find a Power Cell inside.",
+          "choices": [
+            {
+              "label": "(Take Cell)",
+              "to": "bye",
+              "reward": "power_cell",
+              "once": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "depot2",
+      "map": "comms_tower_base",
+      "x": 7,
+      "y": 7,
+      "name": "Service Depot",
+      "color": "#9ef7a0",
+      "desc": "A rusty service depot.",
+      "prompt": "Rusty service depot littered with wires",
+      "tree": {
+        "start": {
+          "text": "You find a Power Cell inside.",
+          "choices": [
+            {
+              "label": "(Take Cell)",
+              "to": "bye",
+              "reward": "power_cell",
+              "once": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "depot3",
+      "map": "comms_tower_base",
+      "x": 1,
+      "y": 2,
+      "name": "Service Depot",
+      "color": "#9ef7a0",
+      "desc": "A rusty service depot.",
+      "prompt": "Rusty service depot littered with wires",
+      "tree": {
+        "start": {
+          "text": "You find a Power Cell inside.",
+          "choices": [
+            {
+              "label": "(Take Cell)",
+              "to": "bye",
+              "reward": "power_cell",
+              "once": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "cave_hermit",
+      "map": "resonant_cave",
+      "x": 5,
+      "y": 1,
+      "name": "The Hermit",
+      "color": "#9abf9a",
+      "title": "Cave Dweller",
+      "desc": "A man with eyes that seem to look through you, not at you.",
+      "prompt": "Gaunt hermit in a humming cavern",
+      "questId": "q_resonant_cave",
+      "tree": {
+        "start": {
+          "text": "You feel the hum, don't you? This cave sings. The stones remember the signal's song. To hear it, you must play along. Red, Blue, then Green. Touch the crystals in that order.",
+          "choices": [
+            {
+              "label": "(Accept) I will listen.",
+              "to": "accept",
+              "q": "accept"
+            },
+            {
+              "label": "(Complete) I have activated the crystals.",
+              "to": "turnin",
+              "q": "turnin"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "accept": {
+          "text": "The cave is patient.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "turnin": {
+          "text": "You hear it now! The full song! The signal is not a what, but a where. It points to the Salt Flats. To the Observatory. Go.",
+          "choices": [
+            {
+              "label": "(Take Final Fragment)",
+              "to": "bye",
+              "reward": "signal_fragment_3",
+              "applyModule": "GRAFFITI_PUZZLE"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "red_crystal",
+      "map": "resonant_cave",
+      "x": 2,
+      "y": 5,
+      "name": "Red Crystal",
+      "color": "#f88",
+      "prompt": "Glowing red crystal pulsing with energy",
+      "tree": {
+        "start": {
+          "text": "A large, red crystal hums faintly.",
+          "choices": [
+            {
+              "label": "(Touch it)",
+              "to": "bye",
+              "effects": [
+                {
+                  "effect": "addFlag",
+                  "flag": "crystal_1_red"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "blue_crystal",
+      "map": "resonant_cave",
+      "x": 8,
+      "y": 5,
+      "name": "Blue Crystal",
+      "color": "#88f",
+      "prompt": "Glowing blue crystal humming softly",
+      "tree": {
+        "start": {
+          "text": "A large, blue crystal hums faintly.",
+          "choices": [
+            {
+              "label": "(Touch it)",
+              "to": "bye",
+              "if": {
+                "flag": "crystal_1_red"
+              },
+              "effects": [
+                {
+                  "effect": "addFlag",
+                  "flag": "crystal_2_blue"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "green_crystal",
+      "map": "resonant_cave",
+      "x": 5,
+      "y": 8,
+      "name": "Green Crystal",
+      "color": "#8f8",
+      "prompt": "Glowing green crystal thrumming in the dark",
+      "tree": {
+        "start": {
+          "text": "A large, green crystal hums faintly.",
+          "choices": [
+            {
+              "label": "(Touch it)",
+              "to": "bye",
+              "if": {
+                "flag": "crystal_2_blue"
+              },
+              "effects": [
+                {
+                  "effect": "addFlag",
+                  "flag": "cave_puzzle_complete"
+                }
+              ]
+            }
+          ]
+        }
+      }
     }
   ],
   "events": [
@@ -3733,6 +4290,33 @@ const DATA = `
       }
     },
     {
+      "id": "glassstorm_titan",
+      "name": "Glassstorm Titan",
+      "portraitSheet": "assets/portraits/dustland-module/iron_brute_4.png",
+      "portraitLock": false,
+      "combat": {
+        "HP": 1250,
+        "ATK": 14,
+        "DEF": 20,
+        "challenge": 420,
+        "requires": "artifact_blade",
+        "noLuckyKill": true,
+        "boss": true,
+        "special": {
+          "cue": "raises a seismic maul for a crushing blow!",
+          "dmg": 16,
+          "delay": 1200,
+          "stun": 1
+        },
+        "loot": "medkit",
+        "lootChance": 1,
+        "scrap": {
+          "min": 18,
+          "max": 24
+        }
+      }
+    },
+    {
       "id": "ashen_howler",
       "name": "Ashen Howler",
       "portraitSheet": "assets/portraits/dustland-module/scrap_mutt_4.png",
@@ -3859,6 +4443,38 @@ const DATA = `
       "toX": 2,
       "toY": 45,
       "desc": "The vision releases you back to the wastes."
+    },
+    {
+      "map": "radio_shack",
+      "x": 3,
+      "y": 0,
+      "toMap": "comms_tower_base",
+      "toX": 4,
+      "toY": 7
+    },
+    {
+      "map": "comms_tower_base",
+      "x": 4,
+      "y": 8,
+      "toMap": "radio_shack",
+      "toX": 3,
+      "toY": 1
+    },
+    {
+      "map": "comms_tower_base",
+      "x": 4,
+      "y": 0,
+      "toMap": "resonant_cave",
+      "toX": 5,
+      "toY": 9
+    },
+    {
+      "map": "resonant_cave",
+      "x": 5,
+      "y": 10,
+      "toMap": "comms_tower_base",
+      "toX": 4,
+      "toY": 1
     }
   ],
   "zoneEffects": [
@@ -4043,15 +4659,29 @@ const DATA = `
       },
       {
         "templateId": "dune_reaper",
-        "loot": "artifact_blade",
-        "lootChance": 0.75,
-        "minDist": 40
+        "minDist": 40,
+        "lootTable": [
+          {
+            "item": "artifact_blade",
+            "chance": 0.75
+          },
+          {
+            "item": "glinting_key",
+            "chance": 0.25
+          }
+        ]
       },
       {
         "templateId": "sand_colossus",
         "loot": "artifact_blade",
         "lootChance": 0.75,
         "minDist": 44
+      },
+      {
+        "templateId": "glassstorm_titan",
+        "loot": "medkit",
+        "lootChance": 1,
+        "minDist": 50
       },
       {
         "templateId": "vine_creature",
@@ -15306,6 +15936,16 @@ const DATA = `
       "boarded": true,
       "bunker": true,
       "bunkerId": "dustland_overlook"
+    },
+    {
+      "x": 5,
+      "y": 80,
+      "w": 1,
+      "h": 1,
+      "doorX": 5,
+      "doorY": 80,
+      "interiorId": "radio_shack",
+      "boarded": false
     }
   ],
   "interiors": [
@@ -15537,22 +16177,203 @@ const DATA = `
         "🧱⬜⬜⬜⬜⬜🧱",
         "🧱🧱🧱🚪🧱🧱🧱"
       ]
+    },
+    {
+      "id": "radio_shack",
+      "w": 7,
+      "h": 5,
+      "entryX": 3,
+      "entryY": 3,
+      "grid": [
+        "🏝🏝🏝🚪🏝🏝🏝",
+        "🏝⬜⬜⬜⬜⬜🏝",
+        "🏝⬜⬜⬜⬜⬜🏝",
+        "🏝⬜⬜⬜⬜⬜🏝",
+        "🏝🏝🏝🚪🏝🏝🏝"
+      ]
+    },
+    {
+      "id": "comms_tower_base",
+      "w": 9,
+      "h": 9,
+      "entryX": 4,
+      "entryY": 7,
+      "grid": [
+        "🏝🏝🏝🏝🚪🏝🏝🏝🏝",
+        "🏝⬜⬜⬜⬜⬜⬜⬜🏝",
+        "🏝⬜🪨🪨🪨🪨🪨⬜🏝",
+        "🏝⬜🪨🏠🏠🏠🪨⬜🏝",
+        "🏝⬜🪨🏠⬜🏠🪨⬜🏝",
+        "🏝⬜🪨🏠🏠🏠🪨⬜🏝",
+        "🏝⬜🪨🪨🪨🪨🪨⬜🏝",
+        "🏝⬜⬜⬜⬜⬜⬜⬜🏝",
+        "🏝🏝🏝🏝🚪🏝🏝🏝🏝"
+      ]
+    },
+    {
+      "id": "resonant_cave",
+      "w": 11,
+      "h": 11,
+      "entryX": 5,
+      "entryY": 9,
+      "grid": [
+        "🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨",
+        "🪨⬜⬜⬜⬜⬜⬜⬜⬜⬜🪨",
+        "🪨⬜🪨🪨⬜⬜⬜🪨🪨⬜🪨",
+        "🪨⬜🪨⬜⬜⬜⬜⬜🪨⬜🪨",
+        "🪨⬜⬜⬜🪨⬜🪨⬜⬜⬜🪨",
+        "🪨⬜⬜🪨⬜⬜⬜🪨⬜⬜🪨",
+        "🪨⬜⬜⬜⬜🪨⬜⬜⬜⬜🪨",
+        "🪨⬜🪨⬜⬜⬜⬜⬜🪨⬜🪨",
+        "🪨⬜🪨🪨⬜⬜⬜🪨🪨⬜🪨",
+        "🪨⬜⬜⬜⬜⬜⬜⬜⬜⬜🪨",
+        "🪨🪨🪨🪨🪨🚪🪨🪨🪨🪨🪨"
+      ]
     }
   ]
 }
 `;
 
-function postLoad(module) {}
+function configureWorkbenchRecipes() {
+  const workbench = globalThis.Dustland?.workbench;
+  if (!workbench) return;
+  const bus = globalThis.EventBus;
+  const logFn = typeof globalThis.log === 'function' ? (...args) => globalThis.log(...args) : null;
+  const hasItemFn = typeof globalThis.hasItem === 'function' ? globalThis.hasItem.bind(globalThis) : () => false;
+  const findItemIndexFn = typeof globalThis.findItemIndex === 'function' ? globalThis.findItemIndex.bind(globalThis) : () => -1;
+  const removeFromInvFn = typeof globalThis.removeFromInv === 'function' ? globalThis.removeFromInv.bind(globalThis) : () => {};
+  const addToInvFn = typeof globalThis.addToInv === 'function' ? globalThis.addToInv.bind(globalThis) : () => false;
+
+  function logMessage(msg) {
+    if (logFn) logFn(msg);
+  }
+
+  function craftSignalBeacon() {
+    const actor = globalThis.player;
+    if (!actor) return false;
+    const scrapCost = 5;
+    const fuelCost = 50;
+    const scrap = Number(actor.scrap) || 0;
+    const fuel = Number(actor.fuel) || 0;
+    if (scrap < scrapCost) { logMessage('Need 5 scrap.'); return false; }
+    if (fuel < fuelCost) { logMessage('Need 50 fuel.'); return false; }
+    actor.scrap = scrap - scrapCost;
+    actor.fuel = fuel - fuelCost;
+    addToInvFn('signal_beacon');
+    bus?.emit('craft:signal-beacon');
+    logMessage('Crafted a signal beacon.');
+    return true;
+  }
+
+  function craftSolarTarp() {
+    const actor = globalThis.player;
+    if (!actor) return false;
+    const scrapCost = 3;
+    const scrap = Number(actor.scrap) || 0;
+    if (scrap < scrapCost) { logMessage('Need 3 scrap.'); return false; }
+    if (!hasItemFn('cloth')) { logMessage('Need cloth.'); return false; }
+    actor.scrap = scrap - scrapCost;
+    const idx = findItemIndexFn('cloth');
+    if (idx >= 0) removeFromInvFn(idx);
+    addToInvFn('solar_tarp');
+    bus?.emit('craft:solar-tarp');
+    logMessage('Crafted a solar panel tarp.');
+    return true;
+  }
+
+  function craftBandage() {
+    if (!hasItemFn('plant_fiber')) { logMessage('Need plant fiber.'); return false; }
+    const idx = findItemIndexFn('plant_fiber');
+    if (idx >= 0) removeFromInvFn(idx);
+    addToInvFn('bandage');
+    bus?.emit('craft:bandage');
+    logMessage('Crafted a bandage.');
+    return true;
+  }
+
+  function craftAntidote() {
+    if (!hasItemFn('plant_fiber')) { logMessage('Need plant fiber.'); return false; }
+    if (!hasItemFn('water_flask')) { logMessage('Need a water flask.'); return false; }
+    let idx = findItemIndexFn('plant_fiber');
+    if (idx >= 0) removeFromInvFn(idx);
+    idx = findItemIndexFn('water_flask');
+    if (idx >= 0) removeFromInvFn(idx);
+    addToInvFn('antidote');
+    bus?.emit('craft:antidote');
+    logMessage('Crafted an antidote.');
+    return true;
+  }
+
+  const recipes = [
+    {
+      id: 'signal_beacon',
+      name: 'Signal Beacon',
+      craft: craftSignalBeacon,
+      requirements: [
+        { label: 'Scrap', key: 'scrap', amount: 5, type: 'resource' },
+        { label: 'Fuel', key: 'fuel', amount: 50, type: 'resource' }
+      ]
+    },
+    {
+      id: 'solar_tarp',
+      name: 'Solar Panel Tarp',
+      craft: craftSolarTarp,
+      requirements: [
+        { label: 'Scrap', key: 'scrap', amount: 3, type: 'resource' },
+        { label: 'Cloth', key: 'cloth', amount: 1, type: 'item' }
+      ]
+    },
+    {
+      id: 'bandage',
+      name: 'Bandage',
+      craft: craftBandage,
+      requirements: [
+        { label: 'Plant Fiber', key: 'plant_fiber', amount: 1, type: 'item' }
+      ]
+    },
+    {
+      id: 'antidote',
+      name: 'Antidote',
+      craft: craftAntidote,
+      requirements: [
+        { label: 'Plant Fiber', key: 'plant_fiber', amount: 1, type: 'item' },
+        { label: 'Water Flask', key: 'water_flask', amount: 1, type: 'item' }
+      ]
+    }
+  ];
+
+  if (typeof workbench.setRecipes === 'function') {
+    workbench.setRecipes(recipes);
+  } else {
+    if (typeof workbench.listRecipes === 'function' && typeof workbench.unregisterRecipe === 'function') {
+      const current = workbench.listRecipes();
+      if (Array.isArray(current)) current.forEach(r => { if (r?.id) workbench.unregisterRecipe(r.id); });
+    }
+    if (typeof workbench.registerRecipe === 'function') {
+      recipes.forEach(def => workbench.registerRecipe(def));
+    } else {
+      recipes.forEach(def => { workbench[def.id] = def.craft; });
+    }
+  }
+}
+
+function postLoad(module, ctx = {}) {
+  const phase = ctx?.phase;
+  if (!phase || phase === 'beforeApply') {
+    configureWorkbenchRecipes();
+  }
+}
 
 globalThis.DUSTLAND_MODULE = JSON.parse(DATA);
 globalThis.DUSTLAND_MODULE.postLoad = postLoad;
 
 startGame = function () {
-  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE);
+  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'beforeApply' });
   applyModule(DUSTLAND_MODULE);
   const s = DUSTLAND_MODULE.start;
   if (s) {
     setPartyPos(s.x, s.y);
     setMap(s.map, 'dustland-module');
   }
+  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'afterApply' });
 };

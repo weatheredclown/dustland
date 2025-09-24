@@ -60,8 +60,18 @@
 
   function invokeWorkbench(recipe) {
     if (!recipe) return;
-    const fn = globalThis.Dustland?.workbench?.[recipe];
-    if (typeof fn === 'function') fn();
+    const workbench = globalThis.Dustland?.workbench;
+    if (!workbench) return;
+    if (typeof recipe === 'string') {
+      if (typeof workbench.craft === 'function') {
+        workbench.craft(recipe);
+      } else {
+        const fn = workbench[recipe];
+        if (typeof fn === 'function') fn();
+      }
+    } else if (typeof recipe === 'function') {
+      recipe();
+    }
   }
 
   const Effects = {
@@ -252,9 +262,11 @@
             } else if (typeof eff.log === 'string' && typeof log === 'function') {
               log(eff.log);
             } else if (!eff.silent && typeof log === 'function') {
-              if (diff > 0) log(`Cass's grudge rises to ${next}.`);
-              else if (diff < 0) log(`Cass's grudge falls to ${next}.`);
-              else log(`Cass's grudge holds at ${next}.`);
+              const name = eff.label || shop?.name || trader?.name || 'Trader';
+              const possessive = /s$/i.test(name) ? `${name}'` : `${name}'s`;
+              if (diff > 0) log(`${possessive} grudge rises to ${next}.`);
+              else if (diff < 0) log(`${possessive} grudge falls to ${next}.`);
+              else log(`${possessive} grudge holds at ${next}.`);
             }
             break; }
           case 'buyMemoryWorm': {
@@ -270,9 +282,6 @@
             if (typeof updateHUD === 'function') updateHUD();
             if (typeof log === 'function') log(eff.log || 'Purchased Memory Worm.');
             break; }
-          case 'craftSignalBeacon':
-            invokeWorkbench('craftSignalBeacon');
-            break;
           case 'workbenchCraft':
             invokeWorkbench(eff.recipe);
             break;

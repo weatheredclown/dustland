@@ -119,8 +119,8 @@ test('workshop building includes workbench NPC', () => {
 
 test('workshop no longer stores power cells', () => {
   const data = loadModuleData();
-  const cell = data.items.find(i => i.id === 'power_cell');
-  assert.ok(!cell);
+  const workshopCells = data.items.filter(i => i.id === 'power_cell' && i.map === 'workshop');
+  assert.strictEqual(workshopCells.length, 0);
 });
 
 test('medkit heals for 10 HP', () => {
@@ -189,7 +189,15 @@ test('trader patrols east-west with basic goods', () => {
     { x: 110, y: 44 }
   ]);
   const invIds = trader.shop?.inv?.map(i => i.id);
-  assert.deepStrictEqual(invIds, ['pipe_rifle', 'leather_jacket', 'water_flask', 'frag_grenade', 'incendiary_grenade']);
+  assert.deepStrictEqual(invIds, [
+    'pipe_rifle',
+    'leather_jacket',
+    'water_flask',
+    'medkit',
+    'frag_grenade',
+    'incendiary_grenade',
+    'minigun'
+  ]);
 });
 
 test('vortex sends player to world map', () => {

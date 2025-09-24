@@ -10,10 +10,14 @@ function setup(items, equipped){
   const equips = Array.isArray(equipped) ? equipped : [equipped];
   const bus = { emit: () => {} };
   const party = equips.map(e => {
-    if(e && typeof e === 'object' && (e.equip || e.stats)){
-      return { equip: e.equip || e, stats: e.stats || {} };
+    if(e && typeof e === 'object'){
+      const equip = e.equip || e;
+      const stats = e.stats || {};
+      const lvl = Number.isFinite(e.lvl) ? e.lvl : 1;
+      const role = typeof e.role === 'string' ? e.role : 'scavenger';
+      return { equip, stats, lvl, role };
     }
-    return { equip: e };
+    return { equip: e, lvl: 1, role: 'scavenger' };
   });
   const ctx = {
     window: dom.window,
@@ -154,4 +158,27 @@ test('setLeader equips missing gear and suggests a single upgrade per slot', asy
   assert.ok(ctx.party[1].equip.weapon);
   const better = ctx.document.querySelectorAll('.slot.better');
   assert.equal(better.length, 1);
+});
+
+test('strong weapons are level locked until requirement met', async () => {
+  const items = [
+    { name: 'Epic Blade', type: 'weapon', mods: { ATK: 8 } }
+  ];
+  const eq = { equip: { weapon: null, armor: null, trinket: null }, stats: { STR: 8 }, lvl: 1 };
+  const ctx = setup(items, eq);
+  await loadRender(ctx);
+  ctx.party[0].lvl = 1;
+  ctx.renderInv();
+  let slot = ctx.document.querySelector('.slot');
+  assert.ok(slot.classList.contains('level-locked'));
+  const equipBtn = slot.querySelector('button[data-a="equip"]');
+  assert.ok(equipBtn?.disabled);
+  assert.match(equipBtn?.title || '', /Requires level/);
+  ctx.party[0].lvl = 6;
+  ctx.renderInv();
+  slot = ctx.document.querySelector('.slot');
+  assert.ok(!slot.classList.contains('level-locked'));
+  const readyBtn = slot.querySelector('button[data-a="equip"]');
+  assert.ok(readyBtn && !readyBtn.disabled);
+  assert.match(readyBtn.title, /Equip/);
 });
