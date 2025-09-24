@@ -388,6 +388,38 @@ function dropItemNearParty(item) {
 }
 
 /**
+ * Attempt to automatically collect a loot drop near the party.
+ * @param {ItemDrop} drop
+ * @returns {boolean}
+ */
+function tryAutoPickup(drop) {
+  if (!drop || drop.dropType !== 'loot') return false;
+  if (!player || !Array.isArray(player.inv)) return false;
+  if (!party) return false;
+  const mapId = typeof drop.map === 'string' ? drop.map : 'world';
+  if (mapId !== party.map) return false;
+  if (drop.x !== party.x || drop.y !== party.y) return false;
+  let took = false;
+  const messages = [];
+  if (Array.isArray(drop.items) && drop.items.length) {
+    took = pickupCache(drop);
+    if (took) messages.push(`Took ${drop.items.length} items.`);
+  } else if (drop.id) {
+    const item = getItem(drop.id);
+    if (!item) return false;
+    took = addToInv(item);
+  }
+  if (!took) return false;
+  const idx = itemDrops.indexOf(drop);
+  if (idx > -1) itemDrops.splice(idx, 1);
+  messages.forEach(msg => { if (typeof log === 'function') log(msg); });
+  if (typeof updateHUD === 'function') updateHUD();
+  if (typeof pickupSparkle === 'function') pickupSparkle(drop.x, drop.y);
+  globalThis.EventBus?.emit?.('sfx', 'pickup');
+  return true;
+}
+
+/**
  * @param {string|GameItem} item
  * @returns {boolean}
  */
@@ -882,6 +914,6 @@ function useItem(invIndex){
   return false;
 }
 
-const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache, loadStarterItems, canEquip, describeRequiredRoles, getEquipMinLevel, getEquipRestrictions, getCampChest, isCampChestUnlocked, unlockCampChest, storeCampChestItem, withdrawCampChestItem };
+const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache, tryAutoPickup, loadStarterItems, canEquip, describeRequiredRoles, getEquipMinLevel, getEquipRestrictions, getCampChest, isCampChestUnlocked, unlockCampChest, storeCampChestItem, withdrawCampChestItem };
 globalThis.Dustland.inventory = inventoryExports;
 Object.assign(globalThis, inventoryExports);
