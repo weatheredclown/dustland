@@ -522,8 +522,6 @@ function takeNearestItem() {
         }
         addToInv(getItem(drop.id));
         tookAny = true;
-        const def = ITEMS[drop.id];
-        messages.push('Took ' + (def ? def.name : drop.id) + '.');
       }
       const idx = itemDrops.indexOf(drop);
       if (idx > -1) itemDrops.splice(idx, 1);
@@ -567,9 +565,9 @@ function interactAt(x, y) {
     }
     const idx = itemDrops.indexOf(drop);
     if (idx > -1) itemDrops.splice(idx, 1);
-    const def = ITEMS[drop.id];
-    const msg = drop.items ? `Took ${drop.items.length} items.` : 'Took ' + (def ? def.name : drop.id) + '.';
-    log(msg);
+    if (drop.items) {
+      log(`Took ${drop.items.length} items.`);
+    }
     updateHUD();
     if (typeof pickupSparkle === 'function') pickupSparkle(x, y);
     bus.emit('sfx', 'pickup');
