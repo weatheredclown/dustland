@@ -477,6 +477,10 @@ function applyModule(data = {}, options = {}) {
       if (k !== 'world' && k !== 'creator') delete mapLabels[k];
     });
 
+    if (globalThis.Dustland?.workbench?.setRecipes) {
+      globalThis.Dustland.workbench.setRecipes([]);
+    }
+
     // Generate terrain based on config
     let generated = false;
     if (moduleData.worldGen) {
