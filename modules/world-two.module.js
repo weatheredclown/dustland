@@ -283,6 +283,20 @@ function postLoad(module){
     });
   });
 
+  function activateBunkerWhenReady(id, attempts){
+    if (!id || attempts <= 0) return;
+    const ft = globalThis.Dustland?.fastTravel;
+    if (ft?.activateBunker) {
+      ft.activateBunker(id);
+      return;
+    }
+    if (typeof setTimeout === 'function') {
+      setTimeout(() => activateBunkerWhenReady(id, attempts - 1), 50);
+    }
+  }
+
+  activateBunkerWhenReady('beta', 20);
+
   const timers = module._timers || (module._timers = {});
   function ensureCourier(flag, dropFactory, messageFactory, intervalMs){
     if (!flag || typeof setTimeout !== 'function') return;
