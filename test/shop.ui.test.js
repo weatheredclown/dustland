@@ -107,10 +107,10 @@ test('shop stacks identical buy items with counters', async () => {
   });
 
   const labels = Array.from(document.querySelectorAll('#shopBuy .slot span')).map(el => el.textContent);
-  assert.deepStrictEqual(labels, ['Potion x3 - 8 s', 'Sword x2 - 20 s']);
+  assert.deepStrictEqual(labels, ['Sword x2 - 20 s', 'Potion x3 - 8 s']);
 });
 
-test('shop sorts buy stacks by type then name', async () => {
+test('shop sorts buy stacks by value high to low', async () => {
   const dom = new JSDOM('<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><div id="shopScrap"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>');
   global.window = dom.window;
   global.document = dom.window.document;
@@ -149,9 +149,9 @@ test('shop sorts buy stacks by type then name', async () => {
   const labels = Array.from(document.querySelectorAll('#shopBuy .slot span')).map(el => el.textContent);
   assert.deepStrictEqual(labels, [
     'Bronze Plate x1 - 12 s',
-    'Bandage x1 - 6 s',
+    'Axe x1 - 10 s',
     'Medkit x1 - 8 s',
-    'Axe x1 - 10 s'
+    'Bandage x1 - 6 s'
   ]);
 });
 
@@ -197,20 +197,20 @@ test('shop stacks identical sell items and updates counts after selling', async 
   openShop({ name: 'Shopkeep', shop: { inv: [] } });
 
   const initialLabels = Array.from(document.querySelectorAll('#shopSell .slot span')).map(el => el.textContent);
-  assert.deepStrictEqual(initialLabels, ['Potion x3 - 3 s', 'Sword x2 - 5 s']);
+  assert.deepStrictEqual(initialLabels, ['Sword x2 - 5 s', 'Potion x3 - 3 s']);
 
   const sellButtons = Array.from(document.querySelectorAll('#shopSell .slot button'));
-  sellButtons[1].onclick();
+  sellButtons[0].onclick();
   const afterSwordLabels = Array.from(document.querySelectorAll('#shopSell .slot span')).map(el => el.textContent);
-  assert.deepStrictEqual(afterSwordLabels, ['Potion x3 - 3 s', 'Sword x1 - 5 s']);
+  assert.deepStrictEqual(afterSwordLabels, ['Sword x1 - 5 s', 'Potion x3 - 3 s']);
 
   const updatedSellButtons = Array.from(document.querySelectorAll('#shopSell .slot button'));
-  updatedSellButtons[0].onclick();
+  updatedSellButtons[1].onclick();
   const afterPotionLabels = Array.from(document.querySelectorAll('#shopSell .slot span')).map(el => el.textContent);
-  assert.deepStrictEqual(afterPotionLabels, ['Potion x2 - 3 s', 'Sword x1 - 5 s']);
+  assert.deepStrictEqual(afterPotionLabels, ['Sword x1 - 5 s', 'Potion x2 - 3 s']);
 });
 
-test('shop sorts sell stacks by type then name', async () => {
+test('shop sorts sell stacks by value high to low', async () => {
   const dom = new JSDOM('<div id="shopOverlay"><div class="shop-window"><header><div id="shopName"></div><div id="shopScrap"></div><button id="closeShopBtn"></button></header><div class="shop-panels"><div id="shopBuy" class="slot-list"></div><div id="shopSell" class="slot-list"></div></div></div></div>');
   global.window = dom.window;
   global.document = dom.window.document;
@@ -241,10 +241,10 @@ test('shop sorts sell stacks by type then name', async () => {
 
   const labels = Array.from(document.querySelectorAll('#shopSell .slot span')).map(el => el.textContent);
   assert.deepStrictEqual(labels, [
+    'Blade x1 - 5 s',
     'Vest x1 - 4 s',
-    'Bandage x1 - 1 s',
-    'Medkit x1 - 3 s',
     'Axe x1 - 4 s',
-    'Blade x1 - 5 s'
+    'Medkit x1 - 3 s',
+    'Bandage x1 - 1 s'
   ]);
 });
