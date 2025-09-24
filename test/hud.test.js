@@ -100,29 +100,31 @@ test('adrenaline tint and grayscale filters update based on config', async () =>
   assert.ok(/grayscale/.test(filt2));
 });
 
-test('adrenaline bloom pulses with adr ratio', async () => {
+test('adrenaline pulse updates player fx with adr ratio', async () => {
   const ctx = setup(HUD_HTML);
   ctx.fxConfig.adrenalineTint = true;
   ctx.leader = () => ({ maxHp: 10, adr: 50, maxAdr: 100 });
   ctx.pulseAdrenaline(0);
-  const bloom1 = ctx.document.getElementById('game').style.getPropertyValue('--fxBloom');
-  assert.ok(/brightness/.test(bloom1));
+  assert.ok(ctx.playerAdrenalineFx.intensity > 0);
+  assert.ok(ctx.playerAdrenalineFx.scale > 1);
+  assert.ok(ctx.playerAdrenalineFx.hueShift > 0);
   ctx.leader = () => ({ maxHp: 10, adr: 0, maxAdr: 100 });
   ctx.pulseAdrenaline(0);
-  const bloom2 = ctx.document.getElementById('game').style.getPropertyValue('--fxBloom');
-  assert.equal(bloom2, '');
+  assert.equal(ctx.playerAdrenalineFx.intensity, 0);
+  assert.equal(ctx.playerAdrenalineFx.scale, 1);
+  assert.equal(ctx.playerAdrenalineFx.hueShift, 0);
 });
 
-test('adrenaline blur only activates at low health', async () => {
+test('adrenaline pulse ignores hp when active', async () => {
   const ctx = setup(HUD_HTML);
   ctx.fxConfig.adrenalineTint = true;
   ctx.leader = () => ({ maxHp: 10, hp: 10, adr: 50, maxAdr: 100 });
   ctx.pulseAdrenaline(0);
-  const healthyBloom = ctx.document.getElementById('game').style.getPropertyValue('--fxBloom');
-  assert.ok(/brightness/.test(healthyBloom));
-  assert.ok(!/blur\(/.test(healthyBloom));
+  const healthyFx = { ...ctx.playerAdrenalineFx };
   ctx.leader = () => ({ maxHp: 10, hp: 3, adr: 50, maxAdr: 100 });
   ctx.pulseAdrenaline(0);
-  const lowHpBloom = ctx.document.getElementById('game').style.getPropertyValue('--fxBloom');
-  assert.ok(/blur\(/.test(lowHpBloom));
+  assert.equal(ctx.playerAdrenalineFx.intensity, healthyFx.intensity);
+  assert.equal(ctx.playerAdrenalineFx.scale, healthyFx.scale);
+  assert.equal(ctx.playerAdrenalineFx.hueShift, healthyFx.hueShift);
+  assert.equal(ctx.playerAdrenalineFx.glow, healthyFx.glow);
 });
