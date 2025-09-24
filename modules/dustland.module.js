@@ -807,6 +807,7 @@ const DATA = `
       "type": "quest",
       "desc": "The final fragment. It hums with a powerful, clear energy."
     },
+    {
       "id": "minigun",
       "type": "weapon",
       "baseId": "wand",
