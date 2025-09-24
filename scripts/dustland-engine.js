@@ -1,7 +1,7 @@
 
 // ===== Rendering & Utilities =====
 
-const ENGINE_VERSION = '0.191.0';
+const ENGINE_VERSION = '0.192.0';
 
 
 const logEl = document.getElementById('log');
