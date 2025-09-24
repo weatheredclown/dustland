@@ -6,6 +6,7 @@
         --muted: #7a8a7a;
         --panelW: 440px;
         --font-scale: 1;
+        --ui-font: 'Pixelify Sans', sans-serif;
     }
 
     html {
@@ -44,7 +45,7 @@ input[type="range"] {
         background: radial-gradient(circle at top, #141614 0%, var(--bg) 70%);
         color: var(--ink);
         overscroll-behavior-y: none;
-        font-family: 'Pixelify Sans', sans-serif;
+        font-family: var(--ui-font, 'Pixelify Sans', sans-serif);
         font-size: 0.875rem;
         line-height: 1.5;
     }

@@ -373,6 +373,70 @@ function setFontScale(scale, opts = {}){
     globalThis.localStorage?.setItem(FONT_SCALE_STORAGE_KEY, formatFontScale(next));
   }
 }
+
+const FONT_FAMILY_STORAGE_KEY = 'fontFamily';
+const FONT_FAMILY_SAMPLE_TEXT = 'Sample: The wasteland is calling.';
+const FONT_FAMILY_OPTIONS = [
+  { id:'pixel', css:"'Pixelify Sans', sans-serif" },
+  { id:'oxanium', css:"'Oxanium', 'Pixelify Sans', sans-serif" },
+  { id:'atkinson', css:"'Atkinson Hyperlegible', 'Source Sans Pro', 'Arial', sans-serif" },
+  { id:'roboto', css:"'Roboto', 'Helvetica Neue', 'Arial', sans-serif" }
+];
+const FONT_FAMILY_DEFAULT = FONT_FAMILY_OPTIONS[0];
+let fontFamily = FONT_FAMILY_DEFAULT;
+
+function getFontFamilyOption(id){
+  if(!id) return FONT_FAMILY_DEFAULT;
+  for(let i=0;i<FONT_FAMILY_OPTIONS.length;i++){
+    const option = FONT_FAMILY_OPTIONS[i];
+    if(option.id === id) return option;
+  }
+  return FONT_FAMILY_DEFAULT;
+}
+
+function updateFontFamilyUI(id){
+  if(typeof document === 'undefined') return;
+  const option = getFontFamilyOption(id);
+  const select = document.getElementById('fontFamily');
+  if(select){
+    select.value = option.id;
+    select.style?.setProperty?.('font-family', option.css);
+  }
+  const sample = document.getElementById('fontFamilySample');
+  if(sample){
+    sample.textContent = FONT_FAMILY_SAMPLE_TEXT;
+    sample.style?.setProperty?.('font-family', option.css);
+  }
+}
+
+function applyFontFamily(option){
+  fontFamily = option || FONT_FAMILY_DEFAULT;
+  const style = getFontScaleRootStyle();
+  const value = fontFamily.css || FONT_FAMILY_DEFAULT.css;
+  style?.setProperty('--ui-font', value);
+  if(typeof document !== 'undefined'){
+    const bodyStyle = document.body?.style;
+    if(bodyStyle && bodyStyle !== style){
+      bodyStyle.setProperty('--ui-font', value);
+    }
+  }
+  updateFontFamilyUI(fontFamily.id);
+}
+
+function setFontFamily(id, opts = {}){
+  const option = getFontFamilyOption(id);
+  applyFontFamily(option);
+  if(!opts.skipStorage){
+    globalThis.localStorage?.setItem(FONT_FAMILY_STORAGE_KEY, option.id);
+  }
+}
+
+const savedFontFamily = globalThis.localStorage?.getItem(FONT_FAMILY_STORAGE_KEY);
+if(typeof savedFontFamily === 'string' && savedFontFamily){
+  setFontFamily(savedFontFamily, { skipStorage: true });
+} else {
+  applyFontFamily(fontFamily);
+}
 const savedFontScale = Number.parseFloat(globalThis.localStorage?.getItem(FONT_SCALE_STORAGE_KEY));
 if(Number.isFinite(savedFontScale)){
   setFontScale(savedFontScale, { skipStorage: true });
@@ -2715,6 +2779,13 @@ function runTests(){
       setFontScale(raw);
     });
     updateFontScaleUI(fontScale);
+  }
+  const fontFamilySelect=document.getElementById('fontFamily');
+  if(fontFamilySelect){
+    fontFamilySelect.addEventListener('change', ()=>{
+      setFontFamily(fontFamilySelect.value);
+    });
+    updateFontFamilyUI(fontFamily.id);
   }
   const retroToggle=document.getElementById('retroNpcToggle');
   if(retroToggle){
