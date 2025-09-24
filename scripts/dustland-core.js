@@ -578,6 +578,8 @@ function applyModule(data = {}, options = {}) {
           moveTo: q.moveTo,
           itemLocation: q.item && questItemLocations[q.item] ? questItemLocations[q.item] : null,
           dialog: q.dialog,
+          dialogNodes: q.dialogNodes,
+          reqFlag: q.reqFlag,
           progressText: q.progressText
         }
       );
