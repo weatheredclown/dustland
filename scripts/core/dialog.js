@@ -223,9 +223,10 @@ function resolveCheck(check, actor=leader(), rng=Math.random){
 
 
 function processQuestFlag(c){
-  if(!currentNPC?.quest || !c?.q) return;
-  if(c.q==='accept') defaultQuestProcessor(currentNPC,'accept');
-  if(c.q==='turnin') defaultQuestProcessor(currentNPC,'do_turnin');
+  if(!currentNPC?.quest || !c?.q) return null;
+  if(c.q==='accept') return defaultQuestProcessor(currentNPC,'accept');
+  if(c.q==='turnin') return defaultQuestProcessor(currentNPC,'do_turnin');
+  return null;
 }
 
 function dialogJoinParty(join){
@@ -395,7 +396,18 @@ function advanceDialog(stateObj, choiceIdx){
 
   Dustland.actions.applyQuestReward(choice.reward);
   dialogJoinParty(choice.join);
-  processQuestFlag(choice);
+  const questResult = processQuestFlag(choice);
+  if (questResult?.blocked) {
+    const msg = typeof questResult.message === 'string' && questResult.message
+      ? questResult.message
+      : 'You’re not done yet.';
+    res.text = msg;
+    res.success = false;
+    res.retriable = true;
+    res.next = prevNode;
+    stateObj.node = prevNode;
+    return res;
+  }
   runEffects(choice.effects);
 
   if (choice.setFlag) {

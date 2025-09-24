@@ -121,7 +121,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, loadModernSave, makeInteriorRoom, placeHut, TILE, getTile, healAll, buildings, world } = globalThis;
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, loadModernSave, makeInteriorRoom, placeHut, TILE, getTile, healAll, buildings, world, questLog } = globalThis;
 const { findFreeDropTile, canWalk, move, calcMoveDelay, getMoveDelay } = globalThis.Dustland.movement;
 let interiors = globalThis.interiors;
 
@@ -1062,6 +1062,59 @@ test('turn-in choice appears immediately after accepting', () => {
   labels = choicesEl.children.map(c => c.textContent.toLowerCase());
   assert.ok(labels.some(l => l.includes('turn in')));
   closeDialog();
+});
+
+test('quest turn-in without required items skips choice effects', () => {
+  player.inv.length = 0;
+  NPCS.length = 0;
+  for (const k in quests) delete quests[k];
+  for (const k in questLog.quests) delete questLog.quests[k];
+
+  const originalHasItem = global.hasItem;
+  const originalCountItems = global.countItems;
+  global.hasItem = () => true;
+  global.countItems = () => 0;
+
+  const quest = new Quest('q_antidote', 'Quest', '', { item: 'antidote' });
+  quest.status = 'active';
+  questLog.add(quest);
+
+  const tree = {
+    start: { text: '', choices: [
+      { label: 'turn in', to: 'do_turnin', q: 'turnin', effects: [{ effect: 'unlockNPC', npcId: 'target_scout' }] }
+    ] },
+    do_turnin: { text: 'Thanks for the cure.', choices: [] }
+  };
+  const npc = makeNPC('medic', 'world', 0, 0, '#fff', 'Medic', '', '', tree, quest);
+  NPCS.push(npc);
+
+  const target = makeNPC('target_scout', 'world', 1, 0, '#fff', 'Scout', '', '', { start: { text: '', choices: [] } }, null);
+  target.locked = true;
+  NPCS.push(target);
+
+  const originalEffects = Dustland.effects.apply;
+  let effectCalled = false;
+  Dustland.effects.apply = (list, ctx) => {
+    effectCalled = true;
+    if (typeof originalEffects === 'function') originalEffects.call(Dustland.effects, list, ctx);
+  };
+
+  openDialog(npc);
+  assert.ok(choicesEl.children[0].textContent.toLowerCase().includes('turn in'));
+
+  choicesEl.children[0].onclick();
+
+  assert.strictEqual(effectCalled, false);
+  assert.strictEqual(target.locked, true);
+  assert.strictEqual(quest.status, 'active');
+  assert.ok(/you don['’]t have/i.test(textEl.textContent));
+
+  Dustland.effects.apply = originalEffects;
+  global.hasItem = originalHasItem;
+  global.countItems = originalCountItems;
+  closeDialog();
+  NPCS.length = 0;
+  delete questLog.quests[quest.id];
 });
 
 test('createNpcFactory builds NPCs from definitions', () => {
