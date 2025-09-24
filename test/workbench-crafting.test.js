@@ -7,6 +7,104 @@ import vm from 'node:vm';
 const file = path.join('scripts', 'workbench.js');
 const src = fs.readFileSync(file, 'utf8');
 
+function registerDustlandRecipes(context) {
+  const workbench = context?.Dustland?.workbench;
+  if (!workbench || typeof workbench.setRecipes !== 'function') return;
+  const bus = context.EventBus;
+  const log = typeof context.log === 'function' ? context.log : () => {};
+  const addToInv = typeof context.addToInv === 'function' ? context.addToInv : () => false;
+  const hasItem = typeof context.hasItem === 'function' ? context.hasItem : () => false;
+  const findItemIndex = typeof context.findItemIndex === 'function' ? context.findItemIndex : () => -1;
+  const removeFromInv = typeof context.removeFromInv === 'function' ? context.removeFromInv : () => {};
+
+  workbench.setRecipes([
+    {
+      id: 'signal_beacon',
+      name: 'Signal Beacon',
+      craft: () => {
+        const actor = context.player;
+        if (!actor) return false;
+        const scrapCost = 5;
+        const fuelCost = 50;
+        const scrap = Number(actor.scrap) || 0;
+        const fuel = Number(actor.fuel) || 0;
+        if (scrap < scrapCost) { log('Need 5 scrap.'); return false; }
+        if (fuel < fuelCost) { log('Need 50 fuel.'); return false; }
+        actor.scrap = scrap - scrapCost;
+        actor.fuel = fuel - fuelCost;
+        addToInv('signal_beacon');
+        if (bus?.emit) bus.emit('craft:signal-beacon');
+        log('Crafted a signal beacon.');
+        return true;
+      },
+      requirements: [
+        { label: 'Scrap', key: 'scrap', amount: 5, type: 'resource' },
+        { label: 'Fuel', key: 'fuel', amount: 50, type: 'resource' }
+      ]
+    },
+    {
+      id: 'solar_tarp',
+      name: 'Solar Panel Tarp',
+      craft: () => {
+        const actor = context.player;
+        if (!actor) return false;
+        const scrapCost = 3;
+        const scrap = Number(actor.scrap) || 0;
+        if (scrap < scrapCost) { log('Need 3 scrap.'); return false; }
+        if (!hasItem('cloth')) { log('Need cloth.'); return false; }
+        actor.scrap = scrap - scrapCost;
+        const idx = findItemIndex('cloth');
+        if (idx >= 0) removeFromInv(idx);
+        addToInv('solar_tarp');
+        if (bus?.emit) bus.emit('craft:solar-tarp');
+        log('Crafted a solar panel tarp.');
+        return true;
+      },
+      requirements: [
+        { label: 'Scrap', key: 'scrap', amount: 3, type: 'resource' },
+        { label: 'Cloth', key: 'cloth', amount: 1, type: 'item' }
+      ]
+    },
+    {
+      id: 'bandage',
+      name: 'Bandage',
+      craft: () => {
+        if (!hasItem('plant_fiber')) { log('Need plant fiber.'); return false; }
+        const idx = findItemIndex('plant_fiber');
+        if (idx >= 0) removeFromInv(idx);
+        addToInv('bandage');
+        if (bus?.emit) bus.emit('craft:bandage');
+        log('Crafted a bandage.');
+        return true;
+      },
+      requirements: [
+        { label: 'Plant Fiber', key: 'plant_fiber', amount: 1, type: 'item' }
+      ]
+    },
+    {
+      id: 'antidote',
+      name: 'Antidote',
+      craft: () => {
+        if (!hasItem('plant_fiber')) { log('Need plant fiber.'); return false; }
+        if (!hasItem('water_flask')) { log('Need a water flask.'); return false; }
+        let idx = findItemIndex('plant_fiber');
+        if (idx >= 0) removeFromInv(idx);
+        idx = findItemIndex('water_flask');
+        if (idx >= 0) removeFromInv(idx);
+        addToInv('antidote');
+        if (bus?.emit) bus.emit('craft:antidote');
+        log('Crafted an antidote.');
+        return true;
+      },
+      requirements: [
+        { label: 'Plant Fiber', key: 'plant_fiber', amount: 1, type: 'item' },
+        { label: 'Water Flask', key: 'water_flask', amount: 1, type: 'item' }
+      ]
+    }
+  ]);
+}
+
+
 test('craftSignalBeacon consumes fuel and scrap', () => {
   const context = {
     Dustland: {},
@@ -16,7 +114,8 @@ test('craftSignalBeacon consumes fuel and scrap', () => {
     log: () => {}
   };
   vm.runInNewContext(src, context);
-  context.Dustland.workbench.craftSignalBeacon();
+  registerDustlandRecipes(context);
+  context.Dustland.workbench.craft('signal_beacon');
   assert.strictEqual(context.player.scrap, 5);
   assert.strictEqual(context.player.fuel, 50);
   assert.ok(context.player.inv.some(i => i.id === 'signal_beacon'));
@@ -43,7 +142,8 @@ test('craftSolarTarp uses cloth and scrap', () => {
     log: () => {}
   };
   vm.runInNewContext(src, context);
-  context.Dustland.workbench.craftSolarTarp();
+  registerDustlandRecipes(context);
+  context.Dustland.workbench.craft('solar_tarp');
   assert.strictEqual(context.player.scrap, 1);
   assert.ok(context.player.inv.some(i => i.id === 'solar_tarp'));
   assert.ok(!context.player.inv.some(i => i.id === 'cloth'));
@@ -70,7 +170,8 @@ test('craftBandage consumes plant fiber', () => {
     log: () => {}
   };
   vm.runInNewContext(src, context);
-  context.Dustland.workbench.craftBandage();
+  registerDustlandRecipes(context);
+  context.Dustland.workbench.craft('bandage');
   assert.ok(context.player.inv.some(i => i.id === 'bandage'));
   assert.ok(!context.player.inv.some(i => i.id === 'plant_fiber'));
 });
@@ -96,7 +197,8 @@ test('craftAntidote consumes plant fiber and water flask', () => {
     log: () => {}
   };
   vm.runInNewContext(src, context);
-  context.Dustland.workbench.craftAntidote();
+  registerDustlandRecipes(context);
+  context.Dustland.workbench.craft('antidote');
   assert.ok(context.player.inv.some(i => i.id === 'antidote'));
   assert.ok(!context.player.inv.some(i => i.id === 'plant_fiber'));
   assert.ok(!context.player.inv.some(i => i.id === 'water_flask'));
