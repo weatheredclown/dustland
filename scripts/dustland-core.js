@@ -226,8 +226,21 @@ globalThis.gridToEmoji = gridToEmoji;
 
 const mapNameEl = document.getElementById('mapname');
 const mapLabels = { world: 'Wastes', creator: 'Creator' };
+function formatMapName(id){
+  if(id==null) return 'Interior';
+  const str=String(id).trim();
+  if(!str) return 'Interior';
+  const spaced=str.replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
+  if(!spaced) return 'Interior';
+  return spaced.replace(/\b\w/g,c=>c.toUpperCase());
+}
 function mapLabel(id){
-  return interiors[id]?.label || mapLabels[id] || 'Interior';
+  if(!id) return '';
+  const meta = interiors[id];
+  const display = typeof meta?.displayName === 'string' ? meta.displayName.trim() : '';
+  const label = typeof meta?.label === 'string' ? meta.label.trim() : '';
+  const stored = typeof mapLabels[id] === 'string' ? mapLabels[id].trim() : '';
+  return display || label || stored || formatMapName(id);
 }
 function setMap(id,label){
   if(typeof gridFor === 'function' && !gridFor(id)){
@@ -501,11 +514,36 @@ function applyModule(data = {}, options = {}) {
   }
 
   // Interiors
+  const cleanName = value => typeof value === 'string' ? value.trim() : '';
+  const moduleMapLabels = moduleData.mapLabels || {};
   (moduleData.interiors || []).forEach(I => {
-    const { id, grid, ...rest } = I;
+    if(!I || !I.id) return;
+    const { id, grid, displayName: rawDisplayName, label: rawLabel, ...rest } = I;
     const g = grid && typeof grid[0] === 'string' ? gridFromEmoji(grid) : grid;
-    interiors[id] = { ...rest, grid: g };
+    const storedLabel = cleanName(mapLabels[id]);
+    const moduleLabel = cleanName(moduleMapLabels[id]);
+    const labelText = cleanName(rawLabel);
+    const displayText = cleanName(rawDisplayName);
+    const displayName = displayText || labelText || moduleLabel || storedLabel || formatMapName(id);
+    const finalLabel = labelText || moduleLabel || displayName;
+    const interiorData = { ...rest, grid: g };
+    if(finalLabel) interiorData.label = finalLabel;
+    if(displayName) interiorData.displayName = displayName;
+    interiors[id] = interiorData;
+    if(displayName) mapLabels[id] = displayName;
   });
+  if(moduleData.mapLabels){
+    Object.entries(moduleData.mapLabels).forEach(([key, value]) => {
+      const label = cleanName(value);
+      if(!label) return;
+      mapLabels[key] = label;
+      const interior = interiors[key];
+      if(interior){
+        if(!cleanName(interior.displayName)) interior.displayName = label;
+        if(!cleanName(interior.label)) interior.label = label;
+      }
+    });
+  }
 
   // Buildings
   if (moduleData.buildings) {
