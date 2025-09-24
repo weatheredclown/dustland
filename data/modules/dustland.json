@@ -774,6 +774,25 @@
       "tags": [
         "pass"
       ]
+    },
+    {
+      "id": "minigun",
+      "type": "weapon",
+      "baseId": "wand",
+      "rarity": "legendary",
+      "scrap": 10000,
+      "value": 40780,
+      "mods": {
+        "ATK": 10,
+        "ADR": 45
+      },
+      "name": "Helix Minigun",
+      "desc": "Bunker-forged rotary cannon that chews through anything.",
+      "tags": [
+        "ranged",
+        "heavy",
+        "wand"
+      ]
     }
   ],
   "quests": [
@@ -1963,6 +1982,12 @@
             "cadence": "weekly",
             "refreshHours": 168,
             "scarcity": "rare"
+          },
+          {
+            "id": "minigun",
+            "rarity": "legendary",
+            "cadence": "weekly",
+            "refreshHours": 168
           }
         ],
         "refresh": 24
