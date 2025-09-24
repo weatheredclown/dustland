@@ -46,7 +46,7 @@ vm.runInThisContext(invCode, { filename: 'core/inventory.js' });
 registerItem({ id:'mystic_key', name:'Mystic Key', type:'consumable', use:{ type:'heal', amount:0, text:'The key glows.' } });
 registerZoneEffects([{ map:'world', x:0, y:0, w:1, h:1, useItem:{ id:'mystic_key', reward:'scrap 5', once:true } }]);
 
-registerItem({ id:'wand', name:'Wand', type:'consumable', use:{ type:'heal', amount:0, text:'You wave the wand.' } });
+registerItem({ id:'wand', name:'Wand', type:'consumable', use:{ type:'heal', amount:0, text:'You wave the wand.', consume:false } });
 registerZoneEffects([{ map:'world', x:1, y:0, w:1, h:1, useItem:{ id:'wand', reward:'scrap 5', once:true } }]);
 
 test('zone rewards on item use and only once', () => {
@@ -72,4 +72,6 @@ test('wand triggers zone reward and logs use', () => {
   useItem(0);
   assert.strictEqual(player.scrap, 5);
   assert.ok(logs.includes('You wave the wand.'));
+  assert.strictEqual(player.inv.length, 1);
+  assert.strictEqual(player.inv[0].id, 'wand');
 });
