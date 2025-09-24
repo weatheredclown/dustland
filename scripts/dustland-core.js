@@ -352,7 +352,10 @@ function registerZoneEffects(list){
 const FOG_RADIUS = 5;
 
 function mapSupportsFog(map){
-  return map && map !== 'creator';
+  if(!map || map === 'creator') return false;
+  const interiorMaps = (typeof interiors === 'object' && interiors) ? interiors : null;
+  if(interiorMaps && Object.prototype.hasOwnProperty.call(interiorMaps, map)) return false;
+  return true;
 }
 
 function ensureFogMap(map){
