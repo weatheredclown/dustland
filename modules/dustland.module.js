@@ -15543,7 +15543,45 @@ const DATA = `
 }
 `;
 
-function postLoad(module) {}
+const DUSTLAND_WAND_ID = 'wand';
+let ensureWandTurnHandler = null;
+
+function ensureWandInInventory(moduleName) {
+  const currentModule = globalThis.Dustland?.currentModule;
+  if (moduleName && currentModule && currentModule !== moduleName) return;
+  if (typeof hasItem !== 'function' || typeof addToInv !== 'function') return;
+  if (hasItem(DUSTLAND_WAND_ID)) return;
+  if (!globalThis.player || !Array.isArray(globalThis.player.inv)) return;
+  const wand = typeof getItem === 'function' ? getItem(DUSTLAND_WAND_ID) : null;
+  if (!wand) return;
+  addToInv(wand);
+}
+
+function postLoad(module) {
+  const moduleName = module?.name || 'dustland-module';
+  const bus = globalThis.EventBus;
+  if (ensureWandTurnHandler && typeof bus?.off === 'function') {
+    bus.off('movement:player', ensureWandTurnHandler);
+  }
+  ensureWandTurnHandler = () => ensureWandInInventory(moduleName);
+  bus?.on?.('movement:player', ensureWandTurnHandler);
+  const scheduleInitialCheck = () => {
+    if (typeof queueMicrotask === 'function') {
+      queueMicrotask(() => ensureWandInInventory(moduleName));
+      return;
+    }
+    if (typeof Promise !== 'undefined' && typeof Promise.resolve === 'function') {
+      Promise.resolve().then(() => ensureWandInInventory(moduleName));
+      return;
+    }
+    if (typeof globalThis.setTimeout === 'function') {
+      globalThis.setTimeout(() => ensureWandInInventory(moduleName), 0);
+      return;
+    }
+    ensureWandInInventory(moduleName);
+  };
+  scheduleInitialCheck();
+}
 
 globalThis.DUSTLAND_MODULE = JSON.parse(DATA);
 globalThis.DUSTLAND_MODULE.postLoad = postLoad;
