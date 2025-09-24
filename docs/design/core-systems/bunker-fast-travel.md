@@ -31,15 +31,15 @@ that map rather than a raw reload of the module from the JS file?
 4. **UI:** World map highlights linked bunkers; select and confirm to jump.
 
 ## Implementation Sketch
-- [ ] Create `scripts/core/fast-travel.js` handling node graphs and fuel costs.
-- [ ] Hook into map UI in `scripts/ui/world-map.js` to select destinations.
+- [x] Create `scripts/core/fast-travel.js` handling node graphs and fuel costs.
+- [x] Hook into map UI in `scripts/ui/world-map.js` to select destinations.
 - [ ] Emit `travel:start` and `travel:end` events for mods.
-  - [ ] Use the Manhattan distance between bunker coordinates from building definitions. Fuel cost scales as `BASE_COST + distance * FUEL_PER_TILE`, keeping math cheap on the grid.
+  - [x] Use the Manhattan distance between bunker coordinates from building definitions. Fuel cost scales as `BASE_COST + distance * FUEL_PER_TILE`, keeping math cheap on the grid.
   - [ ] Implementation Sketch references `scripts/ui/world-map.js`
   - [ ] fast travel Destination selection lives in a new `scripts/ui/world-map.js` overlay. It draws a rectangular, subway-style map with connected nodes for each unlocked bunker.
   - [ ] The map functions as a hub above individual modules. Choosing a node loads that module while preserving party state and active quests.
   - [ ] To verify cross-module travel, build a proof-of-concept `two-worlds` module:
-    - [ ] create a two worlds module added to module select
+    - [x] create a two worlds module added to module select
     - [ ] create a world one module (not added to module select)
     - [ ] create a world two module (not added to module select)
     - [ ] in world one: add an NPC with item & item fetch quest
