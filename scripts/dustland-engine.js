@@ -18,8 +18,6 @@ const weatherBanner = document.getElementById('weatherBanner');
 const musicBus = globalThis.Dustland?.eventBus || globalThis.EventBus;
 let hudAdrMood = null;
 
-const FOG_EDGE_ALPHA = 0.35;
-const FOG_VISITED_ALPHA = 0.68;
 const FOG_UNSEEN_ALPHA = 0.94;
 
 function log(msg, type){
@@ -1284,7 +1282,8 @@ function renderFog(ctx, map, offX, offY, viewW, viewH){
     visitedLookup = fogState;
   }
   const rawRadius = Number(globalThis.FOG_RADIUS);
-  const radius = Math.max(1, Number.isFinite(rawRadius) ? Math.floor(rawRadius) : 5);
+  const radius = Math.max(1, Number.isFinite(rawRadius) ? rawRadius : 5);
+  const denom = radius + 1;
   ctx.fillStyle = '#000';
   for(let vy=0; vy<viewH; vy++){
     for(let vx=0; vx<viewW; vx++){
@@ -1293,14 +1292,18 @@ function renderFog(ctx, map, offX, offY, viewW, viewH){
       if(gx<0 || gy<0 || gx>=W || gy>=H) continue;
       const key = `${gx},${gy}`;
       const dist = Math.max(Math.abs(gx - px), Math.abs(gy - py));
-      let alpha = 0;
-      if(dist <= radius){
-        const falloff = dist / radius;
-        alpha = falloff * FOG_EDGE_ALPHA;
-      }else{
-        const visited = visitedLookup ? (visitedIsMap ? visitedLookup.has(key) : !!visitedLookup[key]) : false;
-        alpha = visited ? FOG_VISITED_ALPHA : FOG_UNSEEN_ALPHA;
+      let stored = 0;
+      if(visitedLookup){
+        const storedRaw = visitedIsMap ? visitedLookup.get(key) : visitedLookup[key];
+        stored = typeof storedRaw === 'number' ? storedRaw : (storedRaw ? 1 : 0);
       }
+      let brightness = stored;
+      if(dist <= radius){
+        const current = Math.max(0, 1 - (dist / denom));
+        if(current > brightness) brightness = current;
+      }
+      brightness = Math.max(0, Math.min(1, brightness));
+      const alpha = (1 - brightness) * FOG_UNSEEN_ALPHA;
       if(alpha <= 0) continue;
       ctx.globalAlpha = alpha;
       ctx.fillRect(vx*TS,vy*TS,TS,TS);

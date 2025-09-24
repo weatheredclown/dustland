@@ -375,14 +375,30 @@ function revealFog(map, x, y, radius = FOG_RADIUS){
   if(!Number.isFinite(W) || !Number.isFinite(H)) return;
   const fog = ensureFogMap(map);
   if(!fog) return;
-  const span = Math.max(1, Math.floor(radius));
+  const effectiveRadius = Math.max(1, Number.isFinite(radius) ? radius : FOG_RADIUS);
+  const span = Math.max(1, Math.ceil(effectiveRadius));
+  const denom = effectiveRadius + 1;
+  const fogIsMap = fog instanceof Map;
   for(let dy=-span; dy<=span; dy++){
     for(let dx=-span; dx<=span; dx++){
-      if(Math.max(Math.abs(dx), Math.abs(dy)) > span) continue;
+      const dist = Math.max(Math.abs(dx), Math.abs(dy));
+      if(dist > effectiveRadius) continue;
       const gx = x + dx;
       const gy = y + dy;
       if(gx<0 || gy<0 || gx>=W || gy>=H) continue;
-      fog[`${gx},${gy}`] = 1;
+      const visibility = Math.max(0, 1 - (dist / denom));
+      if(visibility <= 0) continue;
+      const key = `${gx},${gy}`;
+      const storedRaw = fogIsMap ? fog.get(key) : fog[key];
+      const stored = typeof storedRaw === 'number' ? storedRaw : (storedRaw ? 1 : 0);
+      if(visibility > stored || typeof storedRaw !== 'number'){
+        const next = Math.min(1, Math.max(stored, visibility));
+        if(fogIsMap){
+          fog.set(key, next);
+        }else{
+          fog[key] = next;
+        }
+      }
     }
   }
 }
