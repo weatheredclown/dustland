@@ -373,7 +373,7 @@ function initTags() {
 }
 
 initTags();
-let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editZoneIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
+let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editZoneIdx = -1, editArenaIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
 let currentTree = {};
 globalThis.treeData = currentTree;
 function getTreeData() {
@@ -1705,6 +1705,7 @@ function refreshChoiceDropdowns() {
   document.querySelectorAll('.choiceUnlockNPC').forEach(sel => populateNPCDropdown(sel, sel.dataset.sel || sel.value));
   document.querySelectorAll('.choiceColorNPC').forEach(sel => populateNPCDropdown(sel, sel.dataset.sel || sel.value));
   document.querySelectorAll('.choiceSpawnTemplate').forEach(sel => populateTemplateDropdown(sel, sel.value));
+  document.querySelectorAll('.arenaWaveTemplate').forEach(sel => populateTemplateDropdown(sel, sel.value));
   document.querySelectorAll('.lootItemSelect').forEach(sel => populateItemDropdown(sel, sel.value));
   const encTemplate = document.getElementById('encTemplate');
   if (encTemplate) populateTemplateDropdown(encTemplate, encTemplate.value);
@@ -3374,6 +3375,305 @@ function deleteEvent() {
   });
 }
 
+// --- Arenas ---
+function arenaList(create = false) {
+  if (!moduleData.behaviors) {
+    if (!create) return null;
+    moduleData.behaviors = {};
+  }
+  let list = moduleData.behaviors.arenas;
+  if (!Array.isArray(list)) {
+    if (!create) return null;
+    list = moduleData.behaviors.arenas = [];
+  }
+  return list;
+}
+
+function ensureBehaviorKey() {
+  if (Array.isArray(moduleData._origKeys) && !moduleData._origKeys.includes('behaviors')) {
+    moduleData._origKeys.push('behaviors');
+  }
+}
+
+function cleanupBehaviors() {
+  if (!moduleData.behaviors) return;
+  if (Array.isArray(moduleData.behaviors.arenas) && moduleData.behaviors.arenas.length === 0) {
+    delete moduleData.behaviors.arenas;
+  }
+  if (moduleData.behaviors && Object.keys(moduleData.behaviors).length === 0) {
+    delete moduleData.behaviors;
+    if (Array.isArray(moduleData._origKeys)) {
+      const idx = moduleData._origKeys.indexOf('behaviors');
+      if (idx >= 0) moduleData._origKeys.splice(idx, 1);
+    }
+  }
+}
+
+function showArenaEditor(show) {
+  const editor = document.getElementById('arenaEditor');
+  if (editor) editor.style.display = show ? 'block' : 'none';
+}
+
+function updateArenaWaveHeaders() {
+  const waves = document.querySelectorAll('#arenaWaveContainer .arenaWave');
+  waves.forEach((div, idx) => {
+    const title = div.querySelector('.arenaWaveTitle');
+    if (title) title.textContent = `Wave ${idx + 1}`;
+  });
+}
+
+function addArenaWaveBlock(entry = {}) {
+  const container = document.getElementById('arenaWaveContainer');
+  if (!container) return null;
+  const div = document.createElement('div');
+  div.className = 'arenaWave';
+  div.innerHTML = `
+    <div class="arenaWaveHeader">
+      <span class="arenaWaveTitle"></span>
+      <button class="btn arenaWaveRemove" type="button">Remove</button>
+    </div>
+    <label>Template<select class="arenaWaveTemplate"></select></label>
+    <div class="xy">
+      <label>Count<input type="number" class="arenaWaveCount" min="1" /></label>
+      <label>Challenge<input type="number" class="arenaWaveChallenge" min="0" /></label>
+    </div>
+    <label>Announce<textarea rows="2" class="arenaWaveAnnounce"></textarea></label>
+    <label>Toast<input class="arenaWaveToast" /></label>
+    <label>Prompt<input class="arenaWavePrompt" /></label>
+    <details class="arenaWaveVuln">
+      <summary>Vulnerability</summary>
+      <label>Items<input class="arenaWaveItems" placeholder="item ids, comma separated" /></label>
+      <div class="xy">
+        <label>Match DEF<input type="number" class="arenaWaveMatchDef" /></label>
+        <label>Miss DEF<input type="number" class="arenaWaveMissDef" /></label>
+      </div>
+      <div class="xy">
+        <label>Match DEF Mod<input type="number" class="arenaWaveDefMatch" /></label>
+        <label>Miss DEF Mod<input type="number" class="arenaWaveDefMiss" /></label>
+      </div>
+      <label>Success Log<textarea rows="2" class="arenaWaveSuccess"></textarea></label>
+      <label>Fail Log<textarea rows="2" class="arenaWaveFail"></textarea></label>
+    </details>
+  `;
+  container.appendChild(div);
+  const remove = div.querySelector('.arenaWaveRemove');
+  if (remove) {
+    remove.addEventListener('click', () => {
+      div.remove();
+      updateArenaWaveHeaders();
+    });
+  }
+  const templateSel = div.querySelector('.arenaWaveTemplate');
+  if (templateSel) populateTemplateDropdown(templateSel, entry.templateId || '');
+  const countInput = div.querySelector('.arenaWaveCount');
+  if (countInput) countInput.value = entry.count ?? '';
+  const challengeInput = div.querySelector('.arenaWaveChallenge');
+  if (challengeInput) challengeInput.value = entry.bankChallenge ?? '';
+  const announceInput = div.querySelector('.arenaWaveAnnounce');
+  if (announceInput) announceInput.value = entry.announce || '';
+  const toastInput = div.querySelector('.arenaWaveToast');
+  if (toastInput) toastInput.value = entry.toast || '';
+  const promptInput = div.querySelector('.arenaWavePrompt');
+  if (promptInput) promptInput.value = entry.prompt || '';
+  const vuln = entry.vulnerability || {};
+  const itemsInput = div.querySelector('.arenaWaveItems');
+  if (itemsInput) {
+    if (Array.isArray(vuln.items)) itemsInput.value = vuln.items.join(', ');
+    else itemsInput.value = vuln.items || '';
+  }
+  const matchDefInput = div.querySelector('.arenaWaveMatchDef');
+  if (matchDefInput) matchDefInput.value = vuln.matchDef ?? '';
+  const missDefInput = div.querySelector('.arenaWaveMissDef');
+  if (missDefInput) missDefInput.value = vuln.missDef ?? '';
+  const defMatchInput = div.querySelector('.arenaWaveDefMatch');
+  if (defMatchInput) defMatchInput.value = vuln.defMod?.match ?? '';
+  const defMissInput = div.querySelector('.arenaWaveDefMiss');
+  if (defMissInput) defMissInput.value = vuln.defMod?.miss ?? '';
+  const successInput = div.querySelector('.arenaWaveSuccess');
+  if (successInput) successInput.value = vuln.successLog || '';
+  const failInput = div.querySelector('.arenaWaveFail');
+  if (failInput) failInput.value = vuln.failLog || '';
+  if (div.querySelector('.arenaWaveVuln')) {
+    const details = div.querySelector('.arenaWaveVuln');
+    if (vuln.items || vuln.matchDef != null || vuln.missDef != null || vuln.defMod || vuln.successLog || vuln.failLog) {
+      details.open = true;
+    }
+  }
+  updateArenaWaveHeaders();
+  refreshChoiceDropdowns();
+  return div;
+}
+
+function setArenaWaves(list = []) {
+  const container = document.getElementById('arenaWaveContainer');
+  if (!container) return;
+  container.innerHTML = '';
+  if (Array.isArray(list) && list.length) {
+    list.forEach(entry => addArenaWaveBlock(entry));
+  } else {
+    addArenaWaveBlock({});
+  }
+}
+
+function startNewArena() {
+  editArenaIdx = -1;
+  const mapSel = document.getElementById('arenaMap');
+  if (mapSel) populateMapDropdown(mapSel, 'world');
+  document.getElementById('arenaBankId').value = '';
+  document.getElementById('arenaDelay').value = '';
+  document.getElementById('arenaResetLog').value = '';
+  document.getElementById('arenaRewardLog').value = '';
+  document.getElementById('arenaRewardToast').value = '';
+  setArenaWaves([]);
+  document.getElementById('addArena').textContent = 'Add Arena';
+  document.getElementById('delArena').style.display = 'none';
+  document.getElementById('cancelArena').style.display = 'inline-block';
+  showArenaEditor(true);
+  if (mapSel) mapSel.focus();
+  if (window.showEditorTab) window.showEditorTab('arenas');
+}
+
+function collectArena() {
+  const mapSel = document.getElementById('arenaMap');
+  const map = mapSel?.value.trim() || 'world';
+  const bankId = document.getElementById('arenaBankId').value.trim();
+  const delayRaw = document.getElementById('arenaDelay').value.trim();
+  const resetLog = document.getElementById('arenaResetLog').value.trim();
+  const rewardLog = document.getElementById('arenaRewardLog').value.trim();
+  const rewardToast = document.getElementById('arenaRewardToast').value.trim();
+  const waves = [];
+  document.querySelectorAll('#arenaWaveContainer .arenaWave').forEach(div => {
+    const templateSel = div.querySelector('.arenaWaveTemplate');
+    const templateId = templateSel?.value.trim();
+    if (!templateId) return;
+    const wave = { templateId };
+    const countVal = parseInt(div.querySelector('.arenaWaveCount')?.value, 10);
+    if (Number.isFinite(countVal) && countVal > 0) wave.count = countVal;
+    const challengeVal = parseInt(div.querySelector('.arenaWaveChallenge')?.value, 10);
+    if (Number.isFinite(challengeVal)) wave.bankChallenge = challengeVal;
+    const announce = div.querySelector('.arenaWaveAnnounce')?.value.trim();
+    if (announce) wave.announce = announce;
+    const toast = div.querySelector('.arenaWaveToast')?.value.trim();
+    if (toast) wave.toast = toast;
+    const prompt = div.querySelector('.arenaWavePrompt')?.value.trim();
+    if (prompt) wave.prompt = prompt;
+    const vuln = {};
+    const itemsStr = div.querySelector('.arenaWaveItems')?.value.trim() || '';
+    if (itemsStr) {
+      const parts = itemsStr.split(',').map(str => str.trim()).filter(Boolean);
+      if (parts.length === 1) vuln.items = parts[0];
+      else if (parts.length > 1) vuln.items = parts;
+    }
+    const matchDef = parseFloat(div.querySelector('.arenaWaveMatchDef')?.value);
+    if (Number.isFinite(matchDef)) vuln.matchDef = matchDef;
+    const missDef = parseFloat(div.querySelector('.arenaWaveMissDef')?.value);
+    if (Number.isFinite(missDef)) vuln.missDef = missDef;
+    const defMatch = parseFloat(div.querySelector('.arenaWaveDefMatch')?.value);
+    const defMiss = parseFloat(div.querySelector('.arenaWaveDefMiss')?.value);
+    if (Number.isFinite(defMatch) || Number.isFinite(defMiss)) {
+      const mod = {};
+      if (Number.isFinite(defMatch)) mod.match = defMatch;
+      if (Number.isFinite(defMiss)) mod.miss = defMiss;
+      if (Object.keys(mod).length) vuln.defMod = mod;
+    }
+    const success = div.querySelector('.arenaWaveSuccess')?.value.trim();
+    if (success) vuln.successLog = success;
+    const fail = div.querySelector('.arenaWaveFail')?.value.trim();
+    if (fail) vuln.failLog = fail;
+    if (Object.keys(vuln).length) wave.vulnerability = vuln;
+    waves.push(wave);
+  });
+  if (!waves.length) {
+    alert('Add at least one wave with an enemy template.');
+    return null;
+  }
+  const arena = { map, waves };
+  if (bankId) arena.bankId = bankId;
+  const delay = parseInt(delayRaw, 10);
+  if (Number.isFinite(delay) && delay >= 0) arena.entranceDelay = delay;
+  if (resetLog) arena.resetLog = resetLog;
+  if (rewardLog || rewardToast) {
+    arena.reward = {};
+    if (rewardLog) arena.reward.log = rewardLog;
+    if (rewardToast) arena.reward.toast = rewardToast;
+  }
+  return arena;
+}
+
+function addArena() {
+  const arena = collectArena();
+  if (!arena) return;
+  const list = arenaList(true);
+  if (!list) return;
+  if (editArenaIdx >= 0) list[editArenaIdx] = arena;
+  else list.push(arena);
+  ensureBehaviorKey();
+  editArenaIdx = -1;
+  document.getElementById('addArena').textContent = 'Add Arena';
+  document.getElementById('cancelArena').style.display = 'none';
+  document.getElementById('delArena').style.display = 'none';
+  renderArenaList();
+  showArenaEditor(false);
+}
+
+function editArena(idx) {
+  const list = Array.isArray(moduleData.behaviors?.arenas) ? moduleData.behaviors.arenas : [];
+  const arena = list[idx];
+  if (!arena) return;
+  editArenaIdx = idx;
+  populateMapDropdown(document.getElementById('arenaMap'), arena.map || 'world');
+  document.getElementById('arenaBankId').value = arena.bankId || '';
+  document.getElementById('arenaDelay').value = arena.entranceDelay ?? '';
+  document.getElementById('arenaResetLog').value = arena.resetLog || '';
+  document.getElementById('arenaRewardLog').value = arena.reward?.log || '';
+  document.getElementById('arenaRewardToast').value = arena.reward?.toast || '';
+  setArenaWaves(arena.waves || []);
+  document.getElementById('addArena').textContent = 'Update Arena';
+  document.getElementById('cancelArena').style.display = 'inline-block';
+  document.getElementById('delArena').style.display = 'inline-block';
+  showArenaEditor(true);
+  if (window.showEditorTab) window.showEditorTab('arenas');
+}
+
+function deleteArena() {
+  if (editArenaIdx < 0) return;
+  confirmDialog('Delete this arena?', () => {
+    const list = arenaList();
+    if (!list) return;
+    list.splice(editArenaIdx, 1);
+    editArenaIdx = -1;
+    document.getElementById('addArena').textContent = 'Add Arena';
+    document.getElementById('cancelArena').style.display = 'none';
+    document.getElementById('delArena').style.display = 'none';
+    renderArenaList();
+    showArenaEditor(false);
+    cleanupBehaviors();
+  });
+}
+
+function cancelArena() {
+  editArenaIdx = -1;
+  document.getElementById('addArena').textContent = 'Add Arena';
+  document.getElementById('cancelArena').style.display = 'none';
+  document.getElementById('delArena').style.display = 'none';
+  showArenaEditor(false);
+}
+
+function renderArenaList() {
+  const listEl = document.getElementById('arenaList');
+  if (!listEl) return;
+  const list = Array.isArray(moduleData.behaviors?.arenas) ? moduleData.behaviors.arenas : [];
+  listEl.innerHTML = list.map((arena, idx) => {
+    const waveCount = Array.isArray(arena.waves) ? arena.waves.length : 0;
+    const reward = arena.reward?.toast || arena.reward?.log || '';
+    const rewardStr = reward ? ` - ${reward}` : '';
+    return `<div data-idx="${idx}">${arena.map || 'world'} (${waveCount} waves)${rewardStr}</div>`;
+  }).join('');
+  Array.from(listEl.children).forEach(div => {
+    div.onclick = () => editArena(parseInt(div.dataset.idx, 10));
+  });
+}
+
 // --- Zones ---
 function showZoneEditor(show) {
   document.getElementById('zoneEditor').style.display = show ? 'block' : 'none';
@@ -4296,6 +4596,7 @@ function applyLoadedModule(data) {
   renderZoneList();
   renderQuestList();
   renderEventList();
+  renderArenaList();
   renderEncounterList();
   renderTemplateList();
   updateQuestOptions();
@@ -4305,6 +4606,7 @@ function applyLoadedModule(data) {
   showBldgEditor(false);
   showInteriorEditor(false);
   showQuestEditor(false);
+  showArenaEditor(false);
 }
 
 function validateSpawns(){
@@ -4643,6 +4945,11 @@ document.getElementById('closeNPC').onclick = closeNPCEditor;
 document.getElementById('closeItem').onclick = closeItemEditor;
 document.getElementById('closeBldg').onclick = closeBldgEditor;
 document.getElementById('closeInterior').onclick = closeInteriorEditor;
+document.getElementById('newArena').onclick = startNewArena;
+document.getElementById('addArena').onclick = addArena;
+document.getElementById('arenaAddWave').onclick = () => addArenaWaveBlock({});
+document.getElementById('cancelArena').onclick = cancelArena;
+document.getElementById('delArena').onclick = deleteArena;
 document.getElementById('newEncounter').onclick = startNewEncounter;
 document.getElementById('addEncounter').onclick = addEncounter;
 document.getElementById('encAddLootRow').onclick = () => addLootTableRow(document.getElementById('encLootTable'));
@@ -4679,6 +4986,7 @@ setupListFilter('npcFilter','npcList');
 setupListFilter('itemFilter','itemList');
 setupListFilter('questFilter','questList');
 setupListFilter('eventFilter','eventList');
+setupListFilter('arenaFilter','arenaList');
 setupListFilter('encFilter','encounterList');
 document.getElementById('delItem').onclick = deleteItem;
 document.getElementById('delBldg').onclick = deleteBldg;

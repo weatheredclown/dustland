@@ -108,14 +108,42 @@
     if (!Array.isArray(list) || !list.length) return;
     const bus = dl.eventBus || globalThis.EventBus;
     if (!bus?.on) return;
-    list.forEach(cfg => {
+    list.forEach((cfg, index) => {
       if (!cfg || !Array.isArray(cfg.waves) || !cfg.waves.length) return;
       const arenaMap = cfg.map;
       if (!arenaMap) return;
       const bankId = cfg.bankId || arenaMap;
       const enemyBanksRef = globalThis.enemyBanks;
       if (!enemyBanksRef) return;
-      const state = { wave: 0, engaged: false, pending: false, cleared: false };
+      const globalState = (typeof globalThis.state === 'object' && globalThis.state) ? globalThis.state : null;
+      const arenaStore = globalState ? (globalState.arenas ||= {}) : null;
+      const arenaKey = `${arenaMap || 'arena'}:${cfg.bankId || ''}:${index}`;
+      const saved = arenaStore ? arenaStore[arenaKey] : null;
+      const arenaState = { wave: 0, engaged: false, pending: false, cleared: false };
+      if (saved) {
+        if (typeof saved.wave === 'number' && Number.isFinite(saved.wave)) {
+          const clamped = Math.max(0, Math.min(cfg.waves.length, Math.floor(saved.wave)));
+          arenaState.wave = clamped;
+        }
+        if (saved.cleared) {
+          arenaState.cleared = true;
+          arenaState.wave = cfg.waves.length;
+        }
+      }
+      if (!arenaState.cleared && arenaState.wave >= cfg.waves.length) {
+        arenaState.wave = cfg.waves.length;
+        arenaState.cleared = true;
+      }
+
+      function persistArenaState() {
+        if (!arenaStore || !globalState) return;
+        if (!arenaState.cleared && arenaState.wave <= 0) {
+          delete arenaStore[arenaKey];
+          if (Object.keys(arenaStore).length === 0) delete globalState.arenas;
+          return;
+        }
+        arenaStore[arenaKey] = { wave: arenaState.wave, cleared: !!arenaState.cleared };
+      }
 
       function ensureBank(index) {
         const bank = enemyBanksRef[bankId] || (enemyBanksRef[bankId] = []);
@@ -167,54 +195,63 @@
         applyVulnerability(wave, enemy);
         if (typeof wave.announce === 'string' && typeof globalThis.log === 'function') globalThis.log(wave.announce);
         if (typeof wave.toast === 'string' && typeof globalThis.toast === 'function') globalThis.toast(wave.toast);
-        state.engaged = true;
-        state.pending = false;
-        state.currentId = wave.templateId;
+        arenaState.engaged = true;
+        arenaState.pending = false;
+        arenaState.currentId = wave.templateId;
         globalThis.Dustland?.actions?.startCombat?.(enemy);
       }
 
       function queueWaveStart(delay = 0) {
-        if (state.pending || state.engaged || state.cleared) return;
+        if (arenaState.pending || arenaState.engaged || arenaState.cleared) return;
         if (globalThis.state?.map !== arenaMap) return;
-        state.pending = true;
-        ensureBank(state.wave);
+        arenaState.pending = true;
+        ensureBank(arenaState.wave);
         const timer = setTimeout(() => {
-          state.pending = false;
-          if (globalThis.state?.map !== arenaMap || state.engaged || state.cleared) return;
-          startWave(state.wave);
+          arenaState.pending = false;
+          if (globalThis.state?.map !== arenaMap || arenaState.engaged || arenaState.cleared) return;
+          startWave(arenaState.wave);
         }, Math.max(0, delay));
         timers.push(timer);
       }
 
       function resetArena() {
-        state.wave = 0;
-        state.pending = false;
-        state.engaged = false;
-        state.cleared = false;
+        arenaState.wave = 0;
+        arenaState.pending = false;
+        arenaState.engaged = false;
+        arenaState.cleared = false;
         ensureBank(0);
+        persistArenaState();
       }
 
-      ensureBank(0);
+      if (arenaState.cleared) {
+        ensureBank(-1);
+      } else {
+        ensureBank(arenaState.wave);
+      }
+      persistArenaState();
 
       const movementHandler = payload => {
         if (!payload || payload.map !== arenaMap) return;
-        if (state.cleared) return;
+        if (arenaState.cleared) return;
         queueWaveStart();
       };
 
       const combatHandler = ({ result }) => {
-        if (!state.engaged) return;
-        state.engaged = false;
+        if (!arenaState.engaged) return;
+        arenaState.engaged = false;
         if (result === 'loot') {
-          state.wave += 1;
-          if (state.wave < cfg.waves.length) {
-            if (typeof globalThis.log === 'function') globalThis.log(`The arena shifts. Prepare for wave ${state.wave + 1}.`);
+          arenaState.wave += 1;
+          if (arenaState.wave < cfg.waves.length) {
+            if (typeof globalThis.log === 'function') globalThis.log(`The arena shifts. Prepare for wave ${arenaState.wave + 1}.`);
+            persistArenaState();
             queueWaveStart(600);
           } else {
-            state.cleared = true;
+            arenaState.cleared = true;
+            arenaState.wave = cfg.waves.length;
             ensureBank(-1);
             if (cfg.reward?.log && typeof globalThis.log === 'function') globalThis.log(cfg.reward.log);
             if (cfg.reward?.toast && typeof globalThis.toast === 'function') globalThis.toast(cfg.reward.toast);
+            persistArenaState();
           }
         } else {
           resetArena();
