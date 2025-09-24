@@ -926,7 +926,7 @@ test('quest tag turn-in handles partial counts', () => {
   choicesEl.innerHTML = '';
 });
 
-test('quest turn-in awards XP once', () => {
+test('quest turn-in enforces minimum XP baseline', () => {
   for (const k in quests) delete quests[k];
   NPCS.length = 0;
   party.length = 0;
@@ -935,7 +935,20 @@ test('quest turn-in awards XP once', () => {
   const quest = new Quest('q_xp', 'Quest', '', { xp: 4 });
   const npc = { quest };
   defaultQuestProcessor(npc, 'do_turnin');
-  assert.strictEqual(char.xp, 4);
+  assert.strictEqual(char.xp, 10);
+});
+
+test('quest turn-in caps XP rewards at 100', () => {
+  for (const k in quests) delete quests[k];
+  NPCS.length = 0;
+  party.length = 0;
+  const char = new Character('g', 'Gil', 'Role');
+  party.join(char);
+  const quest = new Quest('q_xp_cap', 'Quest', '', { xp: 150 });
+  const npc = { quest };
+  defaultQuestProcessor(npc, 'do_turnin');
+  assert.strictEqual(char.lvl, 2);
+  assert.strictEqual(char.xp, 0);
 });
 
 test('turn-in choice appears immediately after accepting', () => {

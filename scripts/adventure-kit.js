@@ -4009,7 +4009,7 @@ function resetQuestRewardFields() {
   const itemId = document.getElementById('questRewardItemId');
   if (itemId) itemId.value = '';
   const xp = document.getElementById('questRewardXP');
-  if (xp) xp.value = 0;
+  if (xp) xp.value = 10;
   const scrap = document.getElementById('questRewardScrap');
   if (scrap) scrap.value = 0;
   const customId = document.getElementById('questRewardCustomId');
@@ -4108,7 +4108,7 @@ function startNewQuest() {
   document.getElementById('questDesc').value = '';
   document.getElementById('questItem').value = '';
   resetQuestRewardFields();
-  document.getElementById('questXP').value = 0;
+  document.getElementById('questXP').value = 10;
   document.getElementById('questNPC').value = '';
   document.getElementById('addQuest').textContent = 'Add Quest';
   document.getElementById('delQuest').style.display = 'none';
@@ -4126,7 +4126,10 @@ function addQuest() {
     return;
   }
   const xpValue = parseInt(document.getElementById('questXP').value, 10);
-  const xp = Number.isFinite(xpValue) ? xpValue : 0;
+  let xp = Number.isFinite(xpValue) ? xpValue : 10;
+  xp = Math.round(xp);
+  if (xp < 10) xp = 10;
+  else if (xp > 100) xp = 100;
   const quest = { id, title, desc, xp };
   if (item) quest.item = item;
   if (typeof rewardResult.reward !== 'undefined') quest.reward = rewardResult.reward;
@@ -4171,7 +4174,9 @@ function editQuest(i) {
   document.getElementById('questDesc').value = q.desc;
   document.getElementById('questItem').value = q.item || '';
   setQuestRewardFields(q.reward);
-  document.getElementById('questXP').value = q.xp || 0;
+  const questXP = typeof q.xp === 'number' ? q.xp : parseInt(q.xp, 10);
+  const sanitizedQuestXP = Number.isFinite(questXP) ? Math.min(Math.max(Math.round(questXP), 10), 100) : 10;
+  document.getElementById('questXP').value = sanitizedQuestXP;
   const npc = moduleData.npcs.find(n => Array.isArray(n.quests) ? n.quests.includes(q.id) : n.questId === q.id);
   document.getElementById('questNPC').value = npc ? npc.id : '';
   document.getElementById('addQuest').textContent = 'Update Quest';
