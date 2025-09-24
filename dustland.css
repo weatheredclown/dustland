@@ -46,8 +46,11 @@ input[type="range"] {
         color: var(--ink);
         overscroll-behavior-y: none;
         font-family: var(--ui-font, 'Pixelify Sans', sans-serif);
-        font-size: 0.875rem;
         line-height: 1.5;
+    }
+
+    body {
+        font-size: 0.875rem;
     }
 
     .wrap {
