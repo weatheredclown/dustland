@@ -15543,33 +15543,44 @@ const DATA = `
 }
 `;
 
-function ensureWandInInventory(module) {
-  if (!module) return;
-  const inv = globalThis.player?.inv;
-  if (!Array.isArray(inv)) return;
-  const alreadyHas = typeof hasItem === 'function'
-    ? hasItem('wand')
-    : inv.some(entry => entry && entry.id === 'wand');
-  if (alreadyHas) return;
-  const wandSource = Array.isArray(module.items)
-    ? module.items.find(it => it && it.id === 'wand')
-    : null;
-  if (!wandSource) return;
-  if (typeof addToInv === 'function' && addToInv(wandSource)) {
-    return;
-  }
-  const wandItem = (typeof getItem === 'function' ? getItem('wand') : null)
-    || JSON.parse(JSON.stringify(wandSource));
-  if (!wandItem.id) wandItem.id = 'wand';
-  inv.push(wandItem);
-  globalThis.EventBus?.emit?.('item:picked', wandItem);
-  globalThis.EventBus?.emit?.('inventory:changed');
+const DUSTLAND_WAND_ID = 'wand';
+let ensureWandTurnHandler = null;
+
+function ensureWandInInventory(moduleName) {
+  const currentModule = globalThis.Dustland?.currentModule;
+  if (moduleName && currentModule && currentModule !== moduleName) return;
+  if (typeof hasItem !== 'function' || typeof addToInv !== 'function') return;
+  if (hasItem(DUSTLAND_WAND_ID)) return;
+  if (!globalThis.player || !Array.isArray(globalThis.player.inv)) return;
+  const wand = typeof getItem === 'function' ? getItem(DUSTLAND_WAND_ID) : null;
+  if (!wand) return;
+  addToInv(wand);
 }
 
-function postLoad(module, context = {}) {
-  const phase = typeof context?.phase === 'string' ? context.phase : 'afterApply';
-  if (phase !== 'afterApply') return;
-  ensureWandInInventory(module);
+function postLoad(module) {
+  const moduleName = module?.name || 'dustland-module';
+  const bus = globalThis.EventBus;
+  if (ensureWandTurnHandler && typeof bus?.off === 'function') {
+    bus.off('movement:player', ensureWandTurnHandler);
+  }
+  ensureWandTurnHandler = () => ensureWandInInventory(moduleName);
+  bus?.on?.('movement:player', ensureWandTurnHandler);
+  const scheduleInitialCheck = () => {
+    if (typeof queueMicrotask === 'function') {
+      queueMicrotask(() => ensureWandInInventory(moduleName));
+      return;
+    }
+    if (typeof Promise !== 'undefined' && typeof Promise.resolve === 'function') {
+      Promise.resolve().then(() => ensureWandInInventory(moduleName));
+      return;
+    }
+    if (typeof globalThis.setTimeout === 'function') {
+      globalThis.setTimeout(() => ensureWandInInventory(moduleName), 0);
+      return;
+    }
+    ensureWandInInventory(moduleName);
+  };
+  scheduleInitialCheck();
 }
 
 globalThis.DUSTLAND_MODULE = JSON.parse(DATA);
