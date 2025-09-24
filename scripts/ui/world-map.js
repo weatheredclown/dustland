@@ -59,7 +59,9 @@
             ft?.upsertBunkers?.([entry]);
             const existing = result.find(r => r.id === id);
             if(existing){
+              const wasActive = existing.active === true;
               Object.assign(existing, entry);
+              if(wasActive) existing.active = true;
             } else {
               result.push({ ...entry });
             }
