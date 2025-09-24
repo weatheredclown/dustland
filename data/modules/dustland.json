@@ -4067,9 +4067,17 @@
       },
       {
         "templateId": "dune_reaper",
-        "loot": "artifact_blade",
-        "lootChance": 0.75,
-        "minDist": 40
+        "minDist": 40,
+        "lootTable": [
+          {
+            "item": "artifact_blade",
+            "chance": 0.75
+          },
+          {
+            "item": "glinting_key",
+            "chance": 0.25
+          }
+        ]
       },
       {
         "templateId": "sand_colossus",
