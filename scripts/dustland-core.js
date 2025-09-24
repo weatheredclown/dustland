@@ -1574,9 +1574,9 @@ const specializations={
     gear:[{id:'crowbar',name:'Crowbar',type:'weapon',mods:{ATK:+1}}]
   },
   'Gunslinger':{
-    desc:'Gunslinger: +1 AGI, starts with a pipe rifle, and tosses a Stun Grenade that deals 1 damage and stuns for a turn (40 ADR).',
+    desc:'Gunslinger: +1 AGI, starts with the Dawnforge Six-Shooter, and tosses a Stun Grenade that deals 1 damage and stuns for a turn (40 ADR).',
     stats:{AGI:+1},
-    gear:[{id:'pipe_rifle',name:'Pipe Rifle',type:'weapon',mods:{ATK:+2}}]
+    gear:[{id:'dawnforge_six_shooter',name:'Dawnforge Six-Shooter',type:'weapon',mods:{ATK:+3,ADR:+4,LCK:+1}}]
   },
   'Snakeoil Preacher':{
     desc:'Snakeoil Preacher: +1 CHA, carries the Tin Sun trinket, and patches wounds with First Aid for 4 HP (35 ADR).',

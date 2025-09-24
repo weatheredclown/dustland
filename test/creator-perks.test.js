@@ -38,8 +38,8 @@ test('specialization and quirk bonuses apply',()=>{
   assert.strictEqual(member.stats.AGI,5);
   assert.strictEqual(member.stats.LCK,5);
   const ids=inv.map(i=>i.id);
-  assert(!ids.includes('pipe_rifle'));
+  assert(!ids.includes('dawnforge_six_shooter'));
   assert(ids.includes('lucky_coin'));
-  assert.strictEqual(context.party[0].equip.weapon.id,'pipe_rifle');
+  assert.strictEqual(context.party[0].equip.weapon.id,'dawnforge_six_shooter');
   assert.strictEqual(context.party[0].equip.trinket,null);
 });
