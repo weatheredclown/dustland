@@ -22,11 +22,22 @@ test('collectPricingData summarizes dustland traders and scrap', () => {
   const trader = moduleReport.vendors.find(v => v.name === 'Cass the Trader');
   assert.ok(trader);
   const ids = trader.items.map(it => it.id);
-  assert.deepStrictEqual(ids, ['pipe_rifle', 'leather_jacket', 'water_flask', 'frag_grenade', 'incendiary_grenade']);
+  assert.deepStrictEqual(ids, [
+    'pipe_rifle',
+    'leather_jacket',
+    'water_flask',
+    'frag_grenade',
+    'incendiary_grenade',
+    'minigun'
+  ]);
   const pipeRifle = trader.items.find(it => it.id === 'pipe_rifle');
   assert.ok(pipeRifle);
   assert.strictEqual(pipeRifle.price, 232);
   assert.ok(pipeRifle.needsValue);
+  const minigun = trader.items.find(it => it.id === 'minigun');
+  assert.ok(minigun);
+  assert.strictEqual(minigun.price, 10000);
+  assert.ok(!minigun.needsValue);
 
   let moduleData;
   try {
@@ -43,7 +54,11 @@ test('collectPricingData summarizes dustland traders and scrap', () => {
     assert.ok(entry.cadence, `Missing cadence on ${entry.id}`);
     if (entry.cadence === 'weekly') {
       assert.strictEqual(entry.refreshHours, 168);
-      assert.ok(entry.rarity === 'rare' || entry.rarity === 'epic');
+      assert.ok(
+        entry.rarity === 'rare' ||
+        entry.rarity === 'epic' ||
+        entry.rarity === 'legendary'
+      );
     } else {
       assert.strictEqual(entry.refreshHours, 24);
     }
@@ -55,5 +70,6 @@ test('formatReport emits readable summary', () => {
   const text = formatReport(report);
   assert.ok(text.includes('Cass the Trader'));
   assert.ok(text.includes('pipe_rifle'));
+  assert.ok(text.includes('minigun'));
   assert.ok(text.includes('Scrap: min 3'));
 });

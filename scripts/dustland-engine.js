@@ -1,7 +1,7 @@
 
 // ===== Rendering & Utilities =====
 
-const ENGINE_VERSION = '0.186.7';
+const ENGINE_VERSION = '0.196.0';
 
 
 const logEl = document.getElementById('log');
@@ -308,6 +308,7 @@ const retroNpcArtCache = new Map();
 let retroPlayerSprite = null;
 let retroPlayerSpriteIndex = -1;
 let retroItemSprite = null;
+let retroLootSprite = null;
 let retroItemCacheSprite = null;
 const DEFAULT_NPC_COLOR = '#9ef7a0';
 const xmlEscapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
@@ -391,6 +392,7 @@ function setRetroNpcArt(on, skipStorage){
   retroPlayerSprite = null;
   retroPlayerSpriteIndex = -1;
   retroItemSprite = null;
+  retroLootSprite = null;
   retroItemCacheSprite = null;
   if(!retroNpcArtEnabled){
     retroNpcArtCache.clear();
@@ -693,6 +695,38 @@ function buildRetroItemGlyphSvg(){
 </svg>`;
 }
 
+function buildRetroLootGlyphSvg(){
+  const inner = '#1a0d10';
+  const glowA = '#ff9472';
+  const glowB = '#ffd36a';
+  const accent = '#fff2c5';
+  const ember = '#ff6b5a';
+  const shrink = 'translate(16 16) scale(0.75) translate(-16 -16)';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="geometricPrecision">`
+  + `\n  <defs>`
+  + `\n    <radialGradient id="retroLootGlyphAura" cx="52%" cy="44%" r="56%">`
+  + `\n      <stop offset="0" stop-color="${glowB}" stop-opacity="0.95"/>`
+  + `\n      <stop offset="1" stop-color="${inner}" stop-opacity="0.1"/>`
+  + `\n    </radialGradient>`
+  + `\n    <linearGradient id="retroLootGlyphBody" x1="0" y1="0" x2="0" y2="1">`
+  + `\n      <stop offset="0" stop-color="${glowB}" stop-opacity="0.95"/>`
+  + `\n      <stop offset="0.6" stop-color="${glowA}" stop-opacity="0.85"/>`
+  + `\n      <stop offset="1" stop-color="${ember}" stop-opacity="0.8"/>`
+  + `\n    </linearGradient>`
+  + `\n  </defs>`
+  + `\n  <g transform="${shrink}">`
+  + `\n    <circle cx="16" cy="14.5" r="10.5" fill="url(#retroLootGlyphAura)" opacity="0.85"/>`
+  + `\n    <path d="M16 8.8l3.2 4.9-3.2 1.7-3.2-1.7z" fill="${accent}" stroke="${ember}" stroke-width="0.9" stroke-linejoin="round"/>`
+  + `\n    <path d="M11 13.8h10" stroke="${accent}" stroke-width="1.2" stroke-linecap="round" opacity="0.85"/>`
+  + `\n    <path d="M10 15.5h12l-1.2 10.4c-0.2 1.7-1.6 2.9-3.3 2.9h-3.9c-1.7 0-3.1-1.2-3.3-2.9z" fill="url(#retroLootGlyphBody)" stroke="${ember}" stroke-width="1" stroke-linejoin="round"/>`
+  + `\n    <path d="M12.4 19.4h7.2" stroke="${accent}" stroke-width="1" stroke-linecap="round" opacity="0.9"/>`
+  + `\n    <circle cx="16" cy="21.8" r="1.4" fill="${accent}" stroke="${ember}" stroke-width="0.7"/>`
+  + `\n    <path d="M12.6 22.9l-0.9 2.4" stroke="${accent}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>`
+  + `\n    <path d="M19.4 22.9l0.9 2.4" stroke="${accent}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>`
+  + `\n  </g>`
+  + `\n</svg>`;
+}
+
 function buildRetroItemCacheSvg(){
   const inner = '#1a130a';
   const glowA = '#ffcd7a';
@@ -803,6 +837,19 @@ function getRetroItemSprite(){
   sprite.decoding = 'sync';
   sprite.src = url;
   retroItemSprite = sprite;
+  return sprite;
+}
+
+function getRetroLootSprite(){
+  const Img = globalThis.Image;
+  if(typeof Img !== 'function') return null;
+  if(retroLootSprite) return retroLootSprite;
+  const svg = buildRetroLootGlyphSvg();
+  const url = svgToDataUrl(svg);
+  const sprite = new Img();
+  sprite.decoding = 'sync';
+  sprite.src = url;
+  retroLootSprite = sprite;
   return sprite;
 }
 
@@ -1218,8 +1265,10 @@ function render(gameState=state, dt){
         if(it.x>=camX&&it.y>=camY&&it.x<camX+vW&&it.y<camY+vH){
           const vx=(it.x-camX+offX)*TS, vy=(it.y-camY+offY)*TS;
           const multi = Array.isArray(it.items) && it.items.length>1;
+          const dropType = typeof it.dropType === 'string' ? it.dropType : (it.source === 'loot' ? 'loot' : 'world');
+          const isLoot = dropType === 'loot';
           if(retroNpcArtEnabled){
-            const sprite = multi ? getRetroItemCacheSprite() : getRetroItemSprite();
+            const sprite = multi ? getRetroItemCacheSprite() : (isLoot ? getRetroLootSprite() : getRetroItemSprite());
             if(sprite?.complete){
               if(multi){
                 const a=0.7+0.3*Math.sin(Date.now()/300);
@@ -1238,8 +1287,13 @@ function render(gameState=state, dt){
             ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
             ctx.globalAlpha=1;
           }else{
-            ctx.fillStyle='#c8ffbf';
+            ctx.fillStyle = isLoot ? '#ff7f6a' : '#c8ffbf';
             ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
+            if(isLoot){
+              ctx.strokeStyle = '#7f3b16';
+              ctx.lineWidth = 1;
+              ctx.strokeRect(vx+4,vy+4,TS-8,TS-8);
+            }
           }
         }
       }
@@ -1618,6 +1672,30 @@ function renderInv(){
   });
   const member=party[selectedMember]||party[0];
   const canEquipFn = typeof canEquip === 'function' ? canEquip : null;
+  const equipRestrictionsFn = typeof getEquipRestrictions === 'function' ? getEquipRestrictions : null;
+  const fallbackRestrictions = (member, item) => {
+    if(!member || !item || !['weapon','armor','trinket'].includes(item.type)) return null;
+    const atk = Number.isFinite(item?.mods?.ATK) ? item.mods.ATK : 0;
+    let minLevel = 1;
+    if(item.type === 'weapon'){
+      if(atk >= 13) minLevel = 7;
+      else if(atk >= 11) minLevel = 6;
+      else if(atk >= 9) minLevel = 5;
+      else if(atk >= 7) minLevel = 4;
+      else if(atk >= 5) minLevel = 3;
+    }
+    if(Number.isFinite(item?.equip?.minLevel)){
+      minLevel = Math.max(1, Math.floor(item.equip.minLevel));
+    }
+    const lvl = Number.isFinite(member?.lvl) ? member.lvl : 1;
+    const levelMet = lvl >= minLevel;
+    return {
+      allowed: levelMet,
+      levelRequired: minLevel,
+      levelMet,
+      reasons: (!levelMet && minLevel > 1) ? [`Requires level ${minLevel}.`] : []
+    };
+  };
   const describeRoles = typeof describeRequiredRoles === 'function' ? describeRequiredRoles : () => '';
   const suggestions = {};
   if(member){
@@ -1672,10 +1750,15 @@ function renderInv(){
     if(['weapon','armor','trinket'].includes(it.type) && suggestions[it.type]===it){
       row.classList.add('better');
     }
+    const restriction = member ? (equipRestrictionsFn ? equipRestrictionsFn(member, it) : fallbackRestrictions(member, it)) : null;
     const baseLabel = it.name + (['weapon','armor','trinket'].includes(it.type)?` [${it.type}]`:'');
     const label = (it.cursed && it.cursedKnown)? `${baseLabel} (cursed)` : baseLabel;
     const labelSpan=document.createElement('span');
     labelSpan.textContent=label;
+    if(restriction && !restriction.levelMet && restriction.levelRequired > 1){
+      row.classList.add('level-locked');
+      labelSpan.classList.add('level-locked-label');
+    }
     const btnWrap=document.createElement('span');
     btnWrap.style.display='flex';
     btnWrap.style.gap='6px';
@@ -1684,13 +1767,30 @@ function renderInv(){
       const equipBtn=document.createElement('button');
       equipBtn.className='btn';
       equipBtn.dataset.a='equip';
-      const allowed = !member || !canEquipFn || canEquipFn(member, it);
       const reqText = describeRoles(it);
-      equipBtn.title = allowed ? 'Equip' : (reqText ? `Only ${reqText} can equip` : 'Cannot equip');
-      equipBtn.setAttribute('aria-label', equipBtn.title);
-      if(!allowed){
-        equipBtn.disabled = true;
+      let allowed = true;
+      if(member){
+        if(restriction){
+          allowed = restriction.allowed;
+        } else if(canEquipFn){
+          allowed = canEquipFn(member, it);
+        }
       }
+      let title = 'Equip';
+      if(!allowed){
+        if(restriction?.reasons?.length){
+          title = restriction.reasons.join(' ');
+        } else if(reqText){
+          title = `Only ${reqText} can equip`;
+        } else {
+          title = 'Cannot equip';
+        }
+        equipBtn.disabled = true;
+      } else if(restriction && restriction.levelRequired > 1){
+        title = `Equip (requires level ${restriction.levelRequired})`;
+      }
+      equipBtn.title = title;
+      equipBtn.setAttribute('aria-label', title);
       equipBtn.textContent='⚙';
       equipBtn.onclick=()=> equipItem(selectedMember, player.inv.indexOf(it));
       btnWrap.appendChild(equipBtn);
@@ -1724,13 +1824,17 @@ function renderInv(){
         : String(v);
     })();
     const nameLine = baseLabel + ((it.cursed && it.cursedKnown)? ' (cursed)' : '');
+    const levelTip = restriction && restriction.levelRequired > 1
+      ? `Requires level ${restriction.levelRequired}`
+      : '';
     const tip = [
       nameLine,
       it.desc || '',
       mods ? `Mods: ${mods}` : '',
       use  ? `Use: ${use}`   : '',
       `Rarity: ${it.rarity}`,
-      `Value: ${valueStr}`
+      `Value: ${valueStr}`,
+      levelTip
     ].filter(Boolean).join('\n');
     row.title = tip;
     row.onclick=e=>{ if(e.target.tagName==='BUTTON') return; if(['weapon','armor','trinket'].includes(it.type)) equipItem(selectedMember, player.inv.indexOf(it)); };
@@ -2171,6 +2275,7 @@ function openShop(npc) {
   const shopBuy = document.getElementById('shopBuy');
   const shopSell = document.getElementById('shopSell');
   const shopScrap = document.getElementById('shopScrap');
+  const shopSlotFilter = document.getElementById('shopSlotFilter');
 
   if (!npc.shop) return;
   if (npc.shop === true) npc.shop = {};
@@ -2178,6 +2283,67 @@ function openShop(npc) {
   npc.shop.markup = npc.shop.markup || 2;
 
   shopName.textContent = npc.name;
+
+  const slotOrder = ['weapon', 'armor', 'trinket', 'consumable', 'spoils-cache', 'quest', 'misc'];
+  let slotFilter = '';
+  function resolveSlotKey(item) {
+    if (!item || typeof item !== 'object') return 'misc';
+    const slot = (item.slot || item.type || '').toString().trim().toLowerCase();
+    return slot || 'misc';
+  }
+  function formatSlotLabel(key) {
+    if (!key) return 'All Slots';
+    if (key === 'misc') return 'Other';
+    return key.split(/[-_]/).map(part => {
+      if (!part) return part;
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }).join(' ');
+  }
+  function sortSlotKeys(keys) {
+    return Array.from(keys).sort((a, b) => {
+      const idxA = slotOrder.indexOf(a);
+      const idxB = slotOrder.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+  }
+  function matchesSlotFilter(item) {
+    if (!slotFilter) return true;
+    return resolveSlotKey(item) === slotFilter;
+  }
+  function updateSlotFilterOptions(keys) {
+    if (!shopSlotFilter) return;
+    const target = [''].concat(keys);
+    const existing = Array.from(shopSlotFilter.options).map(opt => opt.value);
+    let needsUpdate = existing.length !== target.length;
+    if (!needsUpdate) {
+      for (let i = 0; i < target.length; i++) {
+        if (existing[i] !== target[i]) {
+          needsUpdate = true;
+          break;
+        }
+      }
+    }
+    if (needsUpdate) {
+      shopSlotFilter.innerHTML = '';
+      const allOpt = document.createElement('option');
+      allOpt.value = '';
+      allOpt.textContent = 'All Slots';
+      shopSlotFilter.appendChild(allOpt);
+      keys.forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = formatSlotLabel(key);
+        shopSlotFilter.appendChild(opt);
+      });
+    }
+    if (!target.includes(slotFilter)) {
+      slotFilter = '';
+    }
+    shopSlotFilter.value = slotFilter;
+  }
 
   let focusables = [];
   let focusIdx = 0;
@@ -2204,6 +2370,38 @@ function openShop(npc) {
     const grudgeLevel = npc.shop.grudge ?? 0;
     const TraderClass = globalThis.Dustland?.Trader;
 
+    const resolveBuyPrice = (stack) => {
+      if (!stack?.item) return 0;
+      const entry = stack.entries?.[0];
+      if (TraderClass?.calculatePrice) {
+        return TraderClass.calculatePrice(stack.item, {
+          entry,
+          markup: baseMarkup,
+          grudge: grudgeLevel
+        });
+      }
+      const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : (grudgeLevel <= 0 ? 0.96 : 1));
+      const baseValue = typeof stack.item.value === 'number' ? stack.item.value : 0;
+      return Math.max(1, Math.ceil(baseValue * legacyMarkup));
+    };
+
+    const resolveSellPrice = (stack) => {
+      if (!stack?.item) return 0;
+      const { item } = stack;
+      if (typeof item.scrap === 'number') {
+        return item.scrap;
+      }
+      if (TraderClass?.resolveBaseValue && TraderClass?.basePriceFromValue) {
+        const baseValue = TraderClass.resolveBaseValue(item);
+        const basePrice = TraderClass.basePriceFromValue(baseValue);
+        const grudgeMult = TraderClass.resolveGrudgeMultiplier ? TraderClass.resolveGrudgeMultiplier(grudgeLevel) : 1;
+        const adjusted = basePrice * grudgeMult;
+        return Math.max(1, Math.round(adjusted / Math.max(1, baseMarkup * 2)));
+      }
+      const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : 1);
+      return Math.max(1, Math.floor((item.value || 0) / legacyMarkup));
+    };
+
     const normalizeForKey = (value, omitCount) => {
       if (!value || typeof value !== 'object') {
         return typeof value === 'function' ? value.toString() : value;
@@ -2219,11 +2417,18 @@ function openShop(npc) {
       return out;
     };
 
+    const slotKeys = new Set();
+    const registerSlotKey = (item) => {
+      if (!item) return;
+      slotKeys.add(resolveSlotKey(item));
+    };
+
     const shopStacks = [];
     const shopStackMap = new Map();
     shopInv.forEach(entry => {
       const item = getItem(entry.id);
       if (!item) return;
+      registerSlotKey(item);
       const key = JSON.stringify({
         item: normalizeForKey(item, true),
         entry: normalizeForKey(entry, true)
@@ -2243,6 +2448,7 @@ function openShop(npc) {
     const sellStackMap = new Map();
     player.inv.forEach((item, idx) => {
       if (!item || !item.id) return;
+      registerSlotKey(item);
       const key = JSON.stringify(normalizeForKey(item, true));
       let stack = sellStackMap.get(key);
       if (!stack) {
@@ -2255,13 +2461,30 @@ function openShop(npc) {
       stack.entries.push({ idx, item });
     });
 
-    const compareStacks = (a, b) => {
+    const slotList = sortSlotKeys(slotKeys);
+    updateSlotFilterOptions(slotList);
+
+    shopStacks.forEach(stack => {
+      stack.price = resolveBuyPrice(stack);
+    });
+    sellStacks.forEach(stack => {
+      stack.price = resolveSellPrice(stack);
+    });
+
+    const compareByTypeName = (a, b) => {
       const typeA = (a?.item?.type || '').toString().toLowerCase();
       const typeB = (b?.item?.type || '').toString().toLowerCase();
       if (typeA !== typeB) return typeA.localeCompare(typeB);
       const nameA = (a?.item?.name || '').toString().toLowerCase();
       const nameB = (b?.item?.name || '').toString().toLowerCase();
       return nameA.localeCompare(nameB);
+    };
+
+    const compareStacks = (a, b) => {
+      const priceA = Number.isFinite(a?.price) ? a.price : 0;
+      const priceB = Number.isFinite(b?.price) ? b.price : 0;
+      if (priceA !== priceB) return priceB - priceA;
+      return compareByTypeName(a, b);
     };
 
     shopStacks.sort(compareStacks);
@@ -2287,21 +2510,10 @@ function openShop(npc) {
 
     shopStacks.forEach(stack => {
       const { item, qty } = stack;
+      if (!matchesSlotFilter(item)) return;
       const row = document.createElement('div');
       row.className = 'slot';
-      const entry = stack.entries[0];
-      let price;
-      if (TraderClass?.calculatePrice) {
-        price = TraderClass.calculatePrice(item, {
-          entry,
-          markup: baseMarkup,
-          grudge: grudgeLevel
-        });
-      } else {
-        const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : (grudgeLevel <= 0 ? 0.96 : 1));
-        const baseValue = typeof item.value === 'number' ? item.value : 0;
-        price = Math.max(1, Math.ceil(baseValue * legacyMarkup));
-      }
+      let price = Number.isFinite(stack.price) ? stack.price : resolveBuyPrice(stack);
       const name = `${item.name} x${qty}`;
       row.innerHTML = `<span>${name} - ${price} ${CURRENCY}</span><button class="btn">Buy</button>`;
       row.querySelector('button').onclick = () => {
@@ -2329,21 +2541,10 @@ function openShop(npc) {
 
     sellStacks.forEach(stack => {
       const { item, qty } = stack;
+      if (!matchesSlotFilter(item)) return;
       const row = document.createElement('div');
       row.className = 'slot';
-      let sellPrice;
-      if (typeof item.scrap === 'number') {
-        sellPrice = item.scrap;
-      } else if (TraderClass?.resolveBaseValue && TraderClass?.basePriceFromValue) {
-        const baseValue = TraderClass.resolveBaseValue(item);
-        const basePrice = TraderClass.basePriceFromValue(baseValue);
-        const grudgeMult = TraderClass.resolveGrudgeMultiplier ? TraderClass.resolveGrudgeMultiplier(grudgeLevel) : 1;
-        const adjusted = basePrice * grudgeMult;
-        sellPrice = Math.max(1, Math.round(adjusted / Math.max(1, baseMarkup * 2)));
-      } else {
-        const legacyMarkup = baseMarkup * (grudgeLevel >= 3 ? 1.1 : 1);
-        sellPrice = Math.max(1, Math.floor((item.value || 0) / legacyMarkup));
-      }
+      let sellPrice = Number.isFinite(stack.price) ? stack.price : resolveSellPrice(stack);
       const name = `${item.name} x${qty}`;
       row.innerHTML = `<span>${name} - ${sellPrice} ${CURRENCY}</span><button class="btn">Sell</button>`;
       row.querySelector('button').onclick = () => {
@@ -2367,7 +2568,19 @@ function openShop(npc) {
     focusCurrent();
   }
 
+  if (shopSlotFilter) {
+    shopSlotFilter.onchange = () => {
+      slotFilter = shopSlotFilter.value;
+      focusIdx = 0;
+      renderShop();
+    };
+  }
+
   function close() {
+    slotFilter = '';
+    if (shopSlotFilter) {
+      shopSlotFilter.value = '';
+    }
     shopOverlay.classList.remove('shown');
     shopOverlay.removeEventListener('keydown', handleKey);
     if (!madePurchase && npc) {
@@ -2413,6 +2626,7 @@ globalThis.Dustland.retroNpcArt = {
   isEnabled: () => retroNpcArtEnabled,
   setEnabled: setRetroNpcArt,
   getItemGlyph: () => getRetroItemSprite(),
+  getLootGlyph: () => getRetroLootSprite(),
   getItemCacheGlyph: () => getRetroItemCacheSprite()
 };
 globalThis.Dustland.font = {

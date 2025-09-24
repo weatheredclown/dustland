@@ -429,7 +429,29 @@
     <div class="persona-window">
       <h2>Equip Persona</h2>
       <div id="personaList" class="persona-list"></div>
-      <button id="closePersonaBtn" class="btn">Close</button>
+      <div class="persona-actions">
+        <button id="campFastTravelBtn" class="btn">Fast Travel</button>
+        <button id="campChestBtn" class="btn">Camp Chest</button>
+        <button id="closePersonaBtn" class="btn">Close</button>
+      </div>
+    </div>
+  </div>
+  <div class="overlay" id="campChestOverlay" role="dialog" aria-modal="true" tabindex="-1">
+    <div class="camp-chest-window">
+      <header class="camp-chest-header">
+        <h2>Camp Chest</h2>
+        <button id="closeCampChestBtn" class="btn">Close</button>
+      </header>
+      <div class="camp-chest-panels">
+        <section class="camp-chest-panel">
+          <h3>Stored Items</h3>
+          <div id="campChestList" class="slot-list"></div>
+        </section>
+        <section class="camp-chest-panel">
+          <h3>Inventory</h3>
+          <div id="campChestInventoryList" class="slot-list"></div>
+        </section>
+      </div>
     </div>
   </div>
   <!-- Workbench overlay -->
@@ -452,6 +474,12 @@
         <div id="shopGrudge"></div>
         <button id="closeShopBtn" class="btn">Close</button>
       </header>
+      <div class="shop-filters">
+        <label for="shopSlotFilter">Slot</label>
+        <select id="shopSlotFilter">
+          <option value="">All Slots</option>
+        </select>
+      </div>
       <div class="shop-panels">
         <div class="shop-inv">
           <h2>Buy</h2>

@@ -50,7 +50,11 @@ const DATA = `
       "id": "fuel_cell",
       "name": "Fuel Cell",
       "type": "quest",
-      "fuel": 50
+      "fuel": 50,
+      "map": "world",
+      "x": 0,
+      "y": 1,
+      "desc": "Packaged fuel cell tucked under debris."
     },
     {
       "id": "rusty_gear",
@@ -59,6 +63,33 @@ const DATA = `
       "map": "world",
       "x": 3,
       "y": 2
+    },
+    {
+      "id": "alpha_cache_one",
+      "name": "Salvage Cache (Alpha)",
+      "type": "quest",
+      "map": "world",
+      "x": 1,
+      "y": 3,
+      "fuel": 8,
+      "desc": "Hand-packed power cells ready for bunker jumps."
+    },
+    {
+      "id": "alpha_cache_two",
+      "name": "Salvage Cache (Alpha East)",
+      "type": "quest",
+      "map": "world",
+      "x": 3,
+      "y": 4,
+      "fuel": 6,
+      "desc": "Cache of scavenged cells near the bunker."
+    },
+    {
+      "id": "alpha_fuel",
+      "name": "Alpha Fuel Reserve",
+      "type": "quest",
+      "fuel": 12,
+      "desc": "Power cells gifted by the grateful mechanic."
     }
   ],
   "buildings": [
@@ -103,8 +134,25 @@ const DATA = `
           "text": "Perfect fit! Thanks.",
           "effects": [
             {
+              "effect": "toast",
+              "id": null,
+              "msg": "The bunker door slides open."
+            },
+            {
+              "effect": "unboardDoor",
+              "bunkerId": "alpha"
+            },
+            {
               "effect": "activateBunker",
-              "id": "beta"
+              "id": "alpha"
+            },
+            {
+              "effect": "addItem",
+              "id": "alpha_fuel"
+            },
+            {
+              "effect": "toast",
+              "msg": "Fuel +12 from the repaired rig."
             }
           ],
           "choices": [
@@ -186,6 +234,16 @@ const DATA = `
         "maxDist": 5
       }
     ]
+  },
+  "name": "world-one-module",
+  "props": {
+    "fastTravelModules": [
+      {
+        "script": "modules/world-two.module.js",
+        "global": "WORLD_TWO_MODULE",
+        "module": "world-two"
+      }
+    ]
   }
 }
 `;
@@ -209,6 +267,56 @@ function postLoad(module){
       });
     });
   });
+
+  const timers = module._timers || (module._timers = {});
+  function ensureCourier(flag, dropFactory, messageFactory, intervalMs){
+    if (!flag || typeof setTimeout !== 'function') return;
+    if (timers[flag]) return;
+    const interval = Math.max(1000, intervalMs || 20000);
+    party.flags = party.flags || {};
+    const last = Number(party.flags[flag]) || 0;
+    const now = Date.now();
+    const initialDelay = last ? Math.max(0, interval - (now - last)) : interval;
+    function schedule(delay){
+      timers[flag] = setTimeout(() => {
+        timers[flag] = null;
+        const drop = typeof dropFactory === 'function' ? dropFactory() : { ...dropFactory };
+        let added = false;
+        if (typeof addToInv === 'function') {
+          added = addToInv(drop);
+        }
+        if (!added && typeof dropItemNearParty === 'function') {
+          dropItemNearParty(drop);
+        }
+        party.flags[flag] = Date.now();
+        const msg = typeof messageFactory === 'function' ? messageFactory(drop) : messageFactory;
+        if (msg) {
+          if (typeof log === 'function') log(msg);
+          if (typeof toast === 'function') toast(msg);
+        }
+        Dustland.eventBus?.emit?.('courier:delivered', {
+          module: module.seed || module.name || 'world-one',
+          flag,
+          item: drop
+        });
+        schedule(interval);
+      }, Math.max(0, delay));
+    }
+    schedule(initialDelay);
+  }
+
+  ensureCourier(
+    'world_one_courier',
+    () => ({
+      id: 'world_one_courier_drop',
+      name: 'Courier Drop (Alpha Line)',
+      type: 'quest',
+      fuel: 8,
+      desc: 'Emergency cells routed to keep Alpha online.'
+    }),
+    drop => `Courier drop delivered ${drop.fuel ?? 0} fuel to Alpha.`,
+    20000
+  );
 }
 globalThis.WORLD_ONE_MODULE.postLoad = postLoad;
 

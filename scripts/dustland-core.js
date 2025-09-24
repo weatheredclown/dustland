@@ -150,15 +150,21 @@ async function startCombat(defender){
   };
 
   const enemies = [];
-  const copies = Math.max(1, defender.count || 1);
-  for(let i=0; i<copies; i++) enemies.push(toEnemy(defender));
+  const combatSources = [];
+  const addCombatSource = (source) => {
+    if(!source) return;
+    combatSources.push(source);
+    const copies = Math.max(1, source.count || 1);
+    for(let i=0; i<copies; i++) enemies.push(toEnemy(source));
+  };
+  addCombatSource(defender);
   const px = party.x, py = party.y, map = party.map || state.map;
   for (const n of (typeof NPCS !== 'undefined' ? NPCS : [])) {
     if (!n.combat) continue;
     if (n.map !== map) continue;
     const dist = Math.abs(n.x - px) + Math.abs(n.y - py);
     if (dist <= 2 && (!defender?.npc || n !== defender.npc)) {
-      enemies.push(toEnemy({ ...n.combat, npc: n, name: n.name, portraitSheet: n.portraitSheet, portraitLock: n.portraitLock }));
+      addCombatSource({ ...n.combat, npc: n, name: n.name, portraitSheet: n.portraitSheet, portraitLock: n.portraitLock });
     }
   }
 
@@ -167,9 +173,16 @@ async function startCombat(defender){
   if(result && result.result !== 'flee'){
     const avgLvl = party.reduce((s,m)=>s+(m.lvl||1),0)/(party.length||1);
     let xp = 0;
-    for(const e of enemies){
-      const str = e.challenge || e.hp || 1;
-      xp += Math.max(1, Math.ceil(str/avgLvl));
+    for(const src of combatSources){
+      if(!src) continue;
+      const override = Number.isFinite(src.xp) ? src.xp : null;
+      if(override!=null){
+        xp += override;
+        continue;
+      }
+      const count = Math.max(1, src.count || 1);
+      const str = src.challenge || src.hp || src.HP || 1;
+      xp += count * Math.max(1, Math.ceil(str/avgLvl));
     }
     party.forEach(m => awardXP(m, xp));
   }
@@ -324,7 +337,7 @@ function registerZoneEffects(list){
   });
 }
 const state = { map:'world', mapFlags: {} }; // default map
-const player = { hp:10, inv:[], scrap:0 };
+const player = { hp:10, inv:[], scrap:0, campChest: [], campChestUnlocked: false };
 if (typeof registerItem === 'function') {
   registerItem({
     id: 'memory_worm',
@@ -940,6 +953,58 @@ function serializeShopPatch(currentShop, baseShop){
   return Object.keys(patch).length ? patch : null;
 }
 
+function normalizeShopValueForKey(value){
+  if(value == null) return value;
+  if(Array.isArray(value)) return value.map(normalizeShopValueForKey);
+  if(typeof value === 'object'){
+    const out = {};
+    Object.keys(value).sort().forEach(key => {
+      out[key] = normalizeShopValueForKey(value[key]);
+    });
+    return out;
+  }
+  return value;
+}
+
+function shopEntryKey(entry){
+  if(!entry || typeof entry !== 'object') return null;
+  const normalized = {};
+  Object.keys(entry).sort().forEach(key => {
+    if(key === 'count') return;
+    normalized[key] = normalizeShopValueForKey(entry[key]);
+  });
+  try {
+    return JSON.stringify(normalized);
+  } catch (err) {
+    return null;
+  }
+}
+
+function ensureBaselineShopInventory(npc, baseDefinition){
+  if(!npc) return;
+  const baseShop = normalizeShopData(baseDefinition);
+  if(!baseShop) return;
+  const currentShop = normalizeShopData(npc);
+  if(!currentShop){
+    npc.shop = deepClone(baseShop);
+    return;
+  }
+  const target = currentShop;
+  if(!Array.isArray(target.inv)) target.inv = [];
+  const seen = new Set();
+  target.inv.forEach(entry => {
+    const key = shopEntryKey(entry);
+    if(key) seen.add(key);
+  });
+  const baseInv = Array.isArray(baseShop.inv) ? baseShop.inv : [];
+  baseInv.forEach(entry => {
+    const key = shopEntryKey(entry);
+    if(!key || seen.has(key)) return;
+    target.inv.push(deepClone(entry));
+    seen.add(key);
+  });
+}
+
 function serializeNpcPatch(npc, baseDefinition){
   if(!npc) return null;
   const template = baseDefinition || getNpcTemplateDefinition(npc.id);
@@ -1215,6 +1280,7 @@ function loadLegacySave(d){
       const baseDef = moduleNpcMap.get(n.id) || null;
       const npcPatch = serializeNpcPatch(n, baseDef);
       applyNpcPatch(npc, npcPatch || n);
+      ensureBaselineShopInventory(npc, baseDef);
       if (typeof NPCS !== 'undefined') NPCS.push(npc);
     }
   });
@@ -1353,6 +1419,7 @@ function loadModernSave(d){
       const baseDef = moduleNpcMap.get(n.id) || null;
       const npcPatch = serializeNpcPatch(n, baseDef);
       applyNpcPatch(npc, npcPatch || n);
+      ensureBaselineShopInventory(npc, baseDef);
       if (typeof NPCS !== 'undefined') NPCS.push(npc);
     }
   });
@@ -1370,6 +1437,8 @@ function loadModernSave(d){
   party.fallen = deepClone(Array.isArray(partyData.fallen) ? partyData.fallen : []);
   Object.assign(player, d.player || {});
   if(!Array.isArray(player.inv)) player.inv = [];
+  if(!Array.isArray(player.campChest)) player.campChest = [];
+  player.campChestUnlocked = !!player.campChestUnlocked;
   Object.keys(state).forEach(k => delete state[k]);
   Object.assign(state, d.state || {});
   state.map = state.map || 'world';
@@ -1464,7 +1533,7 @@ if (startContinue) startContinue.onclick = () => { load(); hideStart(); };
 if (startNew) startNew.onclick = () => { hideStart(); resetAll(); };
 
 function resetAll(){
-  party.length=0; player.inv=[]; party.flags={}; player.scrap=0;
+  party.length=0; player.inv=[]; party.flags={}; player.scrap=0; player.campChest=[]; player.campChestUnlocked=false;
   Object.keys(worldFlags).forEach(k => delete worldFlags[k]);
   built = [];
   state.map='creator'; openCreator();
@@ -1500,22 +1569,22 @@ function setCreatorPortrait(){
 }
 const specializations={
   'Scavenger':{
-    desc:'Finds better loot from ruins; +1 PER and starts with crowbar.',
+    desc:'Scavenger: +1 PER, starts with a crowbar, and learns Power Strike for a heavy 3-damage swing (30 ADR, 1-turn cooldown).',
     stats:{PER:+1},
     gear:[{id:'crowbar',name:'Crowbar',type:'weapon',mods:{ATK:+1}}]
   },
   'Gunslinger':{
-    desc:'Draws fast with +1 AGI and starts with pipe rifle.',
+    desc:'Gunslinger: +1 AGI, starts with a pipe rifle, and tosses a Stun Grenade that deals 1 damage and stuns for a turn (40 ADR).',
     stats:{AGI:+1},
     gear:[{id:'pipe_rifle',name:'Pipe Rifle',type:'weapon',mods:{ATK:+2}}]
   },
   'Snakeoil Preacher':{
-    desc:'Silver tongue grants +1 CHA and a lucky Tin Sun trinket.',
+    desc:'Snakeoil Preacher: +1 CHA, carries the Tin Sun trinket, and patches wounds with First Aid for 4 HP (35 ADR).',
     stats:{CHA:+1},
     gear:[{id:'tin_sun',name:'Tin Sun',type:'trinket',mods:{LCK:+1}}]
   },
   'Cogwitch':{
-    desc:'Tinker checks succeed more often; +1 INT and a trusty toolkit.',
+    desc:'Cogwitch: +1 INT, starts with a toolkit, and charges Adrenal Surge to restore 50 adrenaline (0 ADR cost, 4-turn cooldown).',
     stats:{INT:+1},
     gear:[{id:'toolkit',name:'Toolkit',type:'trinket',mods:{INT:+1}}]
   }
@@ -1529,21 +1598,23 @@ const classSpecials={
 };
 const quirks={
   'Lucky Lint':{
-    desc:'+1 LCK, start with a Lucky Coin, and enemies drop extra scrap.',
+    desc:'Lucky Lint: +1 LCK, start with a Lucky Coin, and scrap rewards from combat increase.',
     stats:{LCK:+1},
     gear:[{id:'lucky_coin',name:'Lucky Coin',type:'trinket',mods:{LCK:+1}}]
   },
   'Brutal Past':{
-    desc:'+1 STR, spiked knuckles, and finishers restore adrenaline and grit.',
+    desc:'Brutal Past: +1 STR, start with spiked knuckles, and finishing foes restores 5% max HP and 15 adrenaline.',
     stats:{STR:+1},
     gear:[{id:'spiked_knuckles',name:'Spiked Knuckles',type:'weapon',mods:{ATK:+1}}]
   },
   'Desert Prophet':{
-    desc:'+1 PER, a prophecy scroll, and visions uncover more spoils caches.',
+    desc:'Desert Prophet: +1 PER, start with a prophecy scroll, and spoils caches appear more often after battles.',
     stats:{PER:+1},
     gear:[{id:'prophecy_scroll',name:'Prophecy Scroll',type:'trinket',mods:{INT:+1}}]
   }
 };
+const defaultSpecDesc='Wanderer: No specialization. Starts with Guard, reducing the next incoming hit by 1 damage.';
+const defaultQuirkDesc='Quirks grant optional bonuses. Pick one to preview its perks.';
 const hiddenOrigins={ 'Rustborn':{desc:'You survived a machine womb. +1 PER, weird dialog tags.'} };
 const statInfo={
   STR:{name:'Strength',benefit:'helps with DC checks'},
@@ -1602,13 +1673,39 @@ function renderStep(){
   }
   if(step===3){
     ccHint.textContent='Choose a specialization.';
-    r.innerHTML='<div class="grid">'+Object.entries(specializations).map(([k,v])=>`<div class='pill ${building.spec===k?'sel':''}' data-k='${k}' title='${v.desc}'>${k}</div>`).join('')+'</div>';
-    r.querySelectorAll('.pill').forEach(p=> p.onclick=()=>{ r.querySelectorAll('.pill').forEach(z=>z.classList.remove('sel')); p.classList.add('sel'); building.spec=p.dataset.k; });
+    r.innerHTML='<div class="grid">'+Object.entries(specializations).map(([k,v])=>`<div class='pill ${building.spec===k?'sel':''}' data-k='${k}' title='${v.desc}'>${k}</div>`).join('')+`</div><div class='field'><div class='small creator-desc' id='specDesc' aria-live='polite'></div></div>`;
+    const descEl=r.querySelector('#specDesc');
+    const pills=Array.from(r.querySelectorAll('.pill'));
+    function updateSpecSelection(key){
+      pills.forEach(z=>z.classList.toggle('sel',z.dataset.k===key));
+      if(key){
+        building.spec=key;
+      }else{
+        delete building.spec;
+      }
+      const spec=key?specializations[key]:null;
+      if(descEl) descEl.textContent=spec?.desc||defaultSpecDesc;
+    }
+    pills.forEach(p=>{ p.onclick=()=>{ updateSpecSelection(p.dataset.k); }; });
+    updateSpecSelection(building.spec||null);
   }
   if(step===4){
     ccHint.textContent='Pick a quirk.';
-    r.innerHTML='<div class="grid">'+Object.entries(quirks).map(([k,v])=>`<div class='pill ${building.quirk===k?'sel':''}' data-k='${k}' title='${v.desc}'>${k}</div>`).join('')+'</div>';
-    r.querySelectorAll('.pill').forEach(p=> p.onclick=()=>{ r.querySelectorAll('.pill').forEach(z=>z.classList.remove('sel')); p.classList.add('sel'); building.quirk=p.dataset.k; });
+    r.innerHTML='<div class="grid">'+Object.entries(quirks).map(([k,v])=>`<div class='pill ${building.quirk===k?'sel':''}' data-k='${k}' title='${v.desc}'>${k}</div>`).join('')+`</div><div class='field'><div class='small creator-desc' id='quirkDesc' aria-live='polite'></div></div>`;
+    const descEl=r.querySelector('#quirkDesc');
+    const pills=Array.from(r.querySelectorAll('.pill'));
+    function updateQuirkSelection(key){
+      pills.forEach(z=>z.classList.toggle('sel',z.dataset.k===key));
+      if(key){
+        building.quirk=key;
+      }else{
+        delete building.quirk;
+      }
+      const quirk=key?quirks[key]:null;
+      if(descEl) descEl.textContent=quirk?.desc||defaultQuirkDesc;
+    }
+    pills.forEach(p=>{ p.onclick=()=>{ updateQuirkSelection(p.dataset.k); }; });
+    updateQuirkSelection(building.quirk||null);
   }
   if(step===5){
     ccHint.textContent='A weird surge passes through the lights...';

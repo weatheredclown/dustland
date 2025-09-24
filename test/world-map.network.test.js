@@ -14,7 +14,9 @@ test('open draws subway-style nodes for destinations', async () => {
   const context = { document, window: { document }, Dustland: { bunkers: [
     { id: 'home', active: true },
     { id: 'outpost', active: true }
-  ] } };
+  ], fastTravel: {
+    fuelCost(){ return 4; }
+  } } };
   vm.createContext(context);
   const code = await fs.readFile(new URL('../scripts/ui/world-map.js', import.meta.url), 'utf8');
   vm.runInContext(code, context);

@@ -516,6 +516,17 @@ input[type="range"] {
         background: #003300;
     }
 
+    .slot.level-locked {
+        border-color: #7a2d2d;
+        background: #210808;
+        color: #ffb8b8;
+    }
+
+    .slot.level-locked .level-locked-label {
+        color: #ff9d9d;
+        font-weight: 600;
+    }
+
     .slot.clickable {
         cursor: pointer;
     }
@@ -950,6 +961,30 @@ input[type="range"] {
   border-bottom: 1px solid #2b3b2b;
 }
 
+.shop-filters {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 0;
+  flex-wrap: wrap;
+}
+
+.shop-filters label {
+  color: #c8d2c8;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.shop-filters select {
+  background: #111511;
+  color: #f0f6f0;
+  border: 1px solid #2b3b2b;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
 .shop-panels {
   display: flex;
   padding: 12px;
@@ -994,6 +1029,15 @@ input[type="range"] {
   gap: 8px;
 }
 
+#personaOverlay .persona-actions {
+  display: flex;
+  gap: 8px;
+}
+
+#personaOverlay .persona-actions .btn {
+  flex: 1;
+}
+
 #personaOverlay .persona-list .btn {
   width: 100%;
 }
@@ -1036,6 +1080,63 @@ input[type="range"] {
   padding: 0;
   font-size: 0.75rem;
   color: #d4e4d0;
+}
+
+#campChestOverlay .camp-chest-window {
+  width: min(680px, 94vw);
+  max-height: 80vh;
+  background: #0f120f;
+  border: 1px solid #2b3b2b;
+  border-radius: 10px;
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.7);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#campChestOverlay .camp-chest-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#campChestOverlay .camp-chest-panels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+#campChestOverlay .camp-chest-panel {
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+#campChestOverlay .camp-chest-panel h3 {
+  margin: 0;
+}
+
+#campChestOverlay .camp-chest-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#campChestOverlay .camp-chest-name {
+  flex: 1;
+  min-width: 0;
+}
+
+#campChestOverlay .camp-chest-empty {
+  font-style: italic;
+  color: #9aa79a;
+}
+
+#campChestOverlay .camp-chest-row .btn {
+  flex-shrink: 0;
 }
 
 #personaOverlay .persona-mods li {

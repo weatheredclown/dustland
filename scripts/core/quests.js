@@ -219,7 +219,11 @@ function defaultQuestProcessor(npc, nodeId) {
           const rewardIt = resolveItem(meta.reward);
           if (rewardIt) addToInv(rewardIt);
         }
-        const xp = meta.xp ?? 5;
+        let xp = typeof meta.xp === 'number' ? meta.xp : Number.parseInt(meta.xp, 10);
+        if (!Number.isFinite(xp)) xp = 10;
+        xp = Math.round(xp);
+        if (xp < 10) xp = 10;
+        else if (xp > 100) xp = 100;
         party.forEach(p => awardXP(p, xp));
         if (meta.moveTo) { npc.x = meta.moveTo.x; npc.y = meta.moveTo.y; }
         if (Array.isArray(npc.quests)) {

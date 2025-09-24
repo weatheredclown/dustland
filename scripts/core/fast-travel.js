@@ -4,6 +4,7 @@
   const bunkers = dl.bunkers || (dl.bunkers = []);
   const BASE_COST = 1;
   const FUEL_PER_TILE = 1;
+  const CAMP_NODE_ID = 'camp';
   const saveKey = id => `dustland_slot_${id}`;
 
   function moduleKey(moduleName){
@@ -55,19 +56,23 @@
   function fuelCost(fromId, toId){
     const from = bunkers.find(b => b.id === fromId);
     const to = bunkers.find(b => b.id === toId);
-    if(!from || !to) return Infinity;
-    const fromNet = from.network ?? 'global';
+    const fromIsCamp = fromId === CAMP_NODE_ID;
+    if((!from && !fromIsCamp) || !to) return Infinity;
+    const fromNet = fromIsCamp ? 'global' : (from.network ?? 'global');
     const toNet = to.network ?? 'global';
     if(fromNet !== toNet) return Infinity;
     if(hasTravelPass()) return 0;
-    return BASE_COST + distance(from, to) * FUEL_PER_TILE;
+    const dist = fromIsCamp ? 0 : distance(from, to);
+    return BASE_COST + dist * FUEL_PER_TILE;
   }
 
   function travel(fromId, toId){
     const from = bunkers.find(b => b.id === fromId);
     const to = bunkers.find(b => b.id === toId);
-    if(!from || !to || !from.active || !to.active) return false;
-    const fromNet = from.network ?? 'global';
+    const fromIsCamp = fromId === CAMP_NODE_ID;
+    if((!from && !fromIsCamp) || !to || !to.active) return false;
+    if(from && !from.active) return false;
+    const fromNet = fromIsCamp ? 'global' : (from.network ?? 'global');
     const toNet = to.network ?? 'global';
     if(fromNet !== toNet) return false;
     const cost = fuelCost(fromId, toId);

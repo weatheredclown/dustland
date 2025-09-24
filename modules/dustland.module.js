@@ -381,7 +381,8 @@ const DATA = `
       "use": {
         "type": "heal",
         "amount": 0,
-        "text": "You wave the wand."
+        "text": "You wave the wand.",
+        "consume": false
       }
     },
     {
@@ -805,6 +806,24 @@ const DATA = `
       "name": "Signal Fragment 3",
       "type": "quest",
       "desc": "The final fragment. It hums with a powerful, clear energy."
+    },
+      "id": "minigun",
+      "type": "weapon",
+      "baseId": "wand",
+      "rarity": "legendary",
+      "scrap": 10000,
+      "value": 40780,
+      "mods": {
+        "ATK": 10,
+        "ADR": 45
+      },
+      "name": "Helix Minigun",
+      "desc": "Bunker-forged rotary cannon that chews through anything.",
+      "tags": [
+        "ranged",
+        "heavy",
+        "wand"
+      ]
     }
   ],
   "quests": [
@@ -2019,6 +2038,12 @@ const DATA = `
             "cadence": "weekly",
             "refreshHours": 168,
             "scarcity": "rare"
+          },
+          {
+            "id": "minigun",
+            "rarity": "legendary",
+            "cadence": "weekly",
+            "refreshHours": 168
           }
         ],
         "refresh": 24
@@ -2891,7 +2916,8 @@ const DATA = `
         "scrap": {
           "min": 6,
           "max": 9
-        }
+        },
+        "xp": 60
       }
     },
     {
@@ -2936,7 +2962,8 @@ const DATA = `
         "scrap": {
           "min": 7,
           "max": 11
-        }
+        },
+        "xp": 100
       }
     },
     {
@@ -2981,7 +3008,8 @@ const DATA = `
         "scrap": {
           "min": 8,
           "max": 12
-        }
+        },
+        "xp": 160
       }
     },
     {
@@ -3034,7 +3062,8 @@ const DATA = `
         "scrap": {
           "min": 15,
           "max": 25
-        }
+        },
+        "xp": 400
       }
     },
     {
@@ -3125,7 +3154,8 @@ const DATA = `
         "scrap": {
           "min": 6,
           "max": 10
-        }
+        },
+        "xp": 70
       }
     },
     {
@@ -3168,7 +3198,8 @@ const DATA = `
         "scrap": {
           "min": 8,
           "max": 12
-        }
+        },
+        "xp": 120
       }
     },
     {
@@ -3213,7 +3244,8 @@ const DATA = `
         "scrap": {
           "min": 12,
           "max": 16
-        }
+        },
+        "xp": 180
       }
     },
     {
@@ -4183,6 +4215,33 @@ const DATA = `
       }
     },
     {
+      "id": "glassstorm_titan",
+      "name": "Glassstorm Titan",
+      "portraitSheet": "assets/portraits/dustland-module/iron_brute_4.png",
+      "portraitLock": false,
+      "combat": {
+        "HP": 1250,
+        "ATK": 14,
+        "DEF": 20,
+        "challenge": 420,
+        "requires": "artifact_blade",
+        "noLuckyKill": true,
+        "boss": true,
+        "special": {
+          "cue": "raises a seismic maul for a crushing blow!",
+          "dmg": 16,
+          "delay": 1200,
+          "stun": 1
+        },
+        "loot": "medkit",
+        "lootChance": 1,
+        "scrap": {
+          "min": 18,
+          "max": 24
+        }
+      }
+    },
+    {
       "id": "ashen_howler",
       "name": "Ashen Howler",
       "portraitSheet": "assets/portraits/dustland-module/scrap_mutt_4.png",
@@ -4525,15 +4584,29 @@ const DATA = `
       },
       {
         "templateId": "dune_reaper",
-        "loot": "artifact_blade",
-        "lootChance": 0.75,
-        "minDist": 40
+        "minDist": 40,
+        "lootTable": [
+          {
+            "item": "artifact_blade",
+            "chance": 0.75
+          },
+          {
+            "item": "glinting_key",
+            "chance": 0.25
+          }
+        ]
       },
       {
         "templateId": "sand_colossus",
         "loot": "artifact_blade",
         "lootChance": 0.75,
         "minDist": 44
+      },
+      {
+        "templateId": "glassstorm_titan",
+        "loot": "medkit",
+        "lootChance": 1,
+        "minDist": 50
       },
       {
         "templateId": "vine_creature",
@@ -16086,17 +16159,15 @@ const DATA = `
 }
 `;
 
-function postLoad(module) {}
-
 globalThis.DUSTLAND_MODULE = JSON.parse(DATA);
-globalThis.DUSTLAND_MODULE.postLoad = postLoad;
 
 startGame = function () {
-  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE);
+  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'beforeApply' });
   applyModule(DUSTLAND_MODULE);
   const s = DUSTLAND_MODULE.start;
   if (s) {
     setPartyPos(s.x, s.y);
     setMap(s.map, 'dustland-module');
   }
+  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'afterApply' });
 };

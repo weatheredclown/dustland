@@ -143,7 +143,9 @@ test('craftEnhancedItem upgrades weapons when you have five copies', () => {
   assert.ok(enhanced, 'enhanced item should be registered');
   assert.strictEqual(enhanced.mods.ATK, 4);
   assert.strictEqual(enhanced.mods.ADR, 24);
+  assert.strictEqual(enhanced.baseId, 'pipe_blade');
   assert.strictEqual(context.player.inv.filter(it => it.id === 'pipe_blade').length, 0);
   assert.ok(context.player.inv.some(it => it.id === 'enhanced_pipe_blade'));
+  assert.ok(context.player.inv.every(it => it.baseId === 'pipe_blade'));
   assert.strictEqual(context.player.inv.length, 1);
 });

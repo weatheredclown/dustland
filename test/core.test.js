@@ -121,7 +121,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, makeInteriorRoom, placeHut, TILE, getTile, healAll, buildings, world } = globalThis;
+const { clamp, createRNG, addToInv, equipItem, unequipItem, normalizeItem, player, party, state, Character, advanceDialog, applyModule, createNpcFactory, openDialog, closeDialog, NPCS, itemDrops, setLeader, resolveCheck, queryTile, interactAt, registerItem, getItem, setRNGSeed, useItem, registerTileEvents, buffs, handleDialogKey, worldFlags, makeNPC, Effects, openCombat, handleCombatKey, uncurseItem, save, loadModernSave, makeInteriorRoom, placeHut, TILE, getTile, healAll, buildings, world } = globalThis;
 const { findFreeDropTile, canWalk, move, calcMoveDelay, getMoveDelay } = globalThis.Dustland.movement;
 let interiors = globalThis.interiors;
 
@@ -926,7 +926,7 @@ test('quest tag turn-in handles partial counts', () => {
   choicesEl.innerHTML = '';
 });
 
-test('quest turn-in awards XP once', () => {
+test('quest turn-in enforces minimum XP baseline', () => {
   for (const k in quests) delete quests[k];
   NPCS.length = 0;
   party.length = 0;
@@ -935,7 +935,20 @@ test('quest turn-in awards XP once', () => {
   const quest = new Quest('q_xp', 'Quest', '', { xp: 4 });
   const npc = { quest };
   defaultQuestProcessor(npc, 'do_turnin');
-  assert.strictEqual(char.xp, 4);
+  assert.strictEqual(char.xp, 10);
+});
+
+test('quest turn-in caps XP rewards at 100', () => {
+  for (const k in quests) delete quests[k];
+  NPCS.length = 0;
+  party.length = 0;
+  const char = new Character('g', 'Gil', 'Role');
+  party.join(char);
+  const quest = new Quest('q_xp_cap', 'Quest', '', { xp: 150 });
+  const npc = { quest };
+  defaultQuestProcessor(npc, 'do_turnin');
+  assert.strictEqual(char.lvl, 2);
+  assert.strictEqual(char.xp, 0);
 });
 
 test('turn-in choice appears immediately after accepting', () => {
@@ -1919,6 +1932,40 @@ test('save/load retains effect packs and persona boosts', () => {
   }
 });
 
+test('save/load preserves enhanced weapon base ids', () => {
+  const grid = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => 7));
+  applyModule({ world: grid, npcs: [] });
+  player.inv.length = 0;
+  party.length = 0;
+  const member = new Character('pc', 'PC', 'Wanderer');
+  party.join(member);
+  const store = {};
+  const origStorage = global.localStorage;
+  global.localStorage = {
+    setItem(k, v){ store[k] = v; },
+    getItem(k){ return store[k]; },
+    removeItem(k){ delete store[k]; }
+  };
+  try {
+    registerItem({ id: 'artifact_blade', name: 'Artifact Blade', type: 'weapon', mods: { ADR: 8 } });
+    registerItem({ id: 'enhanced_artifact_blade', name: 'Enhanced Artifact Blade', type: 'weapon', baseId: 'artifact_blade', mods: { ADR: 16 } });
+    addToInv('enhanced_artifact_blade');
+    assert.strictEqual(player.inv[0].baseId, 'artifact_blade');
+    save();
+    const saved = JSON.parse(store.dustland_crt);
+    assert.strictEqual(saved.player.inv[0].baseId, 'artifact_blade');
+    player.inv[0].baseId = undefined;
+    loadModernSave(saved);
+    const restored = player.inv.find(it => it.id === 'enhanced_artifact_blade');
+    assert.ok(restored, 'enhanced weapon should reload');
+    assert.strictEqual(restored.baseId, 'artifact_blade');
+  } finally {
+    player.inv.length = 0;
+    party.length = 0;
+    global.localStorage = origStorage;
+  }
+});
+
 test('load bypasses legacy loader for v2 saves', async () => {
   const fixture = await fs.readFile(new URL('./fixtures/dustland.save.v2.json', import.meta.url), 'utf8');
   const store = { dustland_crt: fixture };
@@ -2123,6 +2170,68 @@ test('loadModernSave restores bunkers and world flags', () => {
     Object.entries(originalFlags).forEach(([k, v]) => { worldFlags[k] = v; });
     global.localStorage = origStorage;
   }
+});
+
+test('loadModernSave ensures trader baseline goods return', () => {
+  const moduleData = {
+    name: 'shop_restore',
+    seed: 2024,
+    world: [[7, 7], [7, 7]],
+    npcs: [
+      {
+        id: 'trader',
+        map: 'world',
+        x: 0,
+        y: 0,
+        shop: {
+          markup: 1,
+          refresh: 24,
+          inv: [
+            { id: 'pipe_rifle', rarity: 'common', cadence: 'daily', refreshHours: 24 },
+            { id: 'minigun', rarity: 'legendary', cadence: 'weekly', refreshHours: 168 }
+          ]
+        }
+      }
+    ]
+  };
+  applyModule(moduleData);
+  const saved = {
+    format: 'dustland.save.v2',
+    module: 'shop_restore',
+    worldSeed: 2024,
+    world: [[7, 7], [7, 7]],
+    player: { inv: [] },
+    state: { map: 'world' },
+    buildings: [],
+    interiors: {},
+    itemDrops: [],
+    npcs: [
+      {
+        id: 'trader',
+        map: 'world',
+        x: 0,
+        y: 0,
+        shop: {
+          markup: 1,
+          refresh: 24,
+          inv: [
+            { id: 'pipe_rifle', rarity: 'common', cadence: 'daily', refreshHours: 24 }
+          ]
+        }
+      }
+    ],
+    quests: {},
+    party: { members: [], map: 'world', x: 0, y: 0, flags: {}, fallen: [] },
+    worldFlags: {},
+    bunkers: [],
+    gameState: { difficulty: 'normal', flags: {}, clock: 0, personas: {}, npcMemory: {}, effectPacks: {} }
+  };
+  loadModernSave(saved);
+  const trader = NPCS.find(n => n.id === 'trader');
+  assert.ok(trader);
+  const invIds = Array.isArray(trader.shop?.inv) ? trader.shop.inv.map(entry => entry.id) : [];
+  assert.ok(invIds.includes('minigun'));
+  assert.strictEqual(invIds.filter(id => id === 'pipe_rifle').length, 1);
 });
 
 test('clearSave removes stored game data', () => {
@@ -2344,6 +2453,12 @@ test('enemy requires a specific weapon', () => {
     attacker.equip.weapon.id = 'artifact_blade';
     __testAttack(attacker, enemy, 5);
     assert.strictEqual(enemy.hp, 8);
+    enemy.hp = 10;
+    logs.length = 0;
+    attacker.equip.weapon = { id: 'enhanced_artifact_blade', baseId: 'artifact_blade', mods: { ADR: 10 } };
+    __testAttack(attacker, enemy, 5);
+    assert.strictEqual(enemy.hp, 8);
+    assert.ok(!logs.some(m => m.includes("can't harm")));
   } finally {
     Math.random = r;
     global.log = origLog;
