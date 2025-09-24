@@ -894,6 +894,28 @@ test('applyModule overwrites existing interiors', () => {
   assert.strictEqual(interiors.dup.h, 2);
 });
 
+test('mapSupportsFog disables fog inside interiors', () => {
+  const savedInteriors = {};
+  Object.entries(interiors).forEach(([id, data]) => {
+    const clone = { ...data };
+    if (Array.isArray(data?.grid)) clone.grid = data.grid.map(row => [...row]);
+    savedInteriors[id] = clone;
+  });
+  try {
+    interiors.fog_test = { w: 1, h: 1, grid: [[TILE.FLOOR]], entryX: 0, entryY: 0 };
+    assert.strictEqual(globalThis.mapSupportsFog('world'), true);
+    assert.strictEqual(globalThis.mapSupportsFog('fog_test'), false);
+    assert.strictEqual(globalThis.mapSupportsFog('creator'), false);
+  } finally {
+    Object.keys(interiors).forEach(k => delete interiors[k]);
+    Object.entries(savedInteriors).forEach(([id, data]) => {
+      const clone = { ...data };
+      if (Array.isArray(data?.grid)) clone.grid = data.grid.map(row => [...row]);
+      interiors[id] = clone;
+    });
+  }
+});
+
 test('applyModule assigns interior display names', () => {
   const interiorsRef = globalThis.interiors;
   const mapLabelsRef = globalThis.mapLabels;
