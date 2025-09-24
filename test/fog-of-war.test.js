@@ -56,7 +56,7 @@ test('revealFog stores gradient visibility and preserves the brightest value', a
   assert.ok(fog, 'fog state created for map');
   assert.strictEqual(typeof fog['5,5'], 'number');
   assert.strictEqual(fog['5,5'], 1);
-  assert.ok(fog['7,5'] > 0 && fog['7,5'] < 1, 'edge tiles record partial visibility');
+  assert.ok(fog['8,5'] > 0 && fog['8,5'] < 1, 'edge tiles record partial visibility');
   assert.strictEqual(fog['9,5'], undefined, 'tiles outside radius stay unseen');
 
   const previous = fog['7,5'];
