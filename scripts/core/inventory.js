@@ -74,13 +74,64 @@ function describeRequiredRoles(it){
   return roles.slice(0, roles.length - 1).join(', ') + ', or ' + roles[roles.length - 1];
 }
 
+function inferMinLevelFromStats(it){
+  if(!it || it.type !== 'weapon') return 1;
+  const atk = Number.isFinite(it.mods?.ATK) ? it.mods.ATK : 0;
+  if(atk >= 13) return 7;
+  if(atk >= 11) return 6;
+  if(atk >= 9) return 5;
+  if(atk >= 7) return 4;
+  if(atk >= 5) return 3;
+  return 1;
+}
+
+function getEquipMinLevel(item){
+  if(!item || !EQUIP_TYPES.includes(item.type)) return 1;
+  const raw = item.equip?.minLevel;
+  if(Number.isFinite(raw)){
+    return Math.max(1, Math.floor(raw));
+  }
+  return inferMinLevelFromStats(item);
+}
+
+function getEquipRestrictions(member, item){
+  const result = {
+    allowed: false,
+    levelRequired: 1,
+    levelMet: true,
+    roles: [],
+    roleMet: true,
+    reasons: []
+  };
+  if(!item || !EQUIP_TYPES.includes(item.type)){
+    result.allowed = false;
+    result.reasons.push('Cannot equip that.');
+    return result;
+  }
+  const roles = listRequiredRoles(item);
+  result.roles = roles;
+  const minLevel = getEquipMinLevel(item);
+  result.levelRequired = minLevel;
+  const hasMember = !!member;
+  const level = hasMember && Number.isFinite(member?.lvl) ? member.lvl : 1;
+  const levelMet = !hasMember || level >= minLevel;
+  result.levelMet = levelMet;
+  if(!levelMet && minLevel > 1){
+    result.reasons.push(`Requires level ${minLevel}.`);
+  }
+  const roleMet = !hasMember || roles.length === 0 || roles.includes(member.role);
+  result.roleMet = roleMet;
+  if(!roleMet && roles.length){
+    const reqText = describeRequiredRoles(item);
+    result.reasons.push(reqText ? `Only ${reqText} can equip.` : 'Cannot equip.');
+  }
+  result.allowed = hasMember ? (levelMet && roleMet) : false;
+  return result;
+}
+
 function canEquip(member, item){
   if(!member || !item || !EQUIP_TYPES.includes(item.type)) return false;
-  const roles = listRequiredRoles(item);
-  if(roles.length && !roles.includes(member.role)){
-    return false;
-  }
-  return true;
+  return getEquipRestrictions(member, item).allowed;
 }
 
 function isStackable(it){
@@ -344,9 +395,11 @@ function pickupCache(drop) {
 function equipItem(memberIndex, invIndex){
   const m=party[memberIndex]; const it=player.inv[invIndex];
   if(!m||!it||!EQUIP_TYPES.includes(it.type)){ log('Cannot equip that.'); return; }
-  if(!canEquip(m, it)){
-    const reqText = describeRequiredRoles(it);
-    const msg = reqText ? `${it.name} can only be equipped by ${reqText}.` : `${m.name} cannot equip ${it.name}.`;
+  const restrictions = getEquipRestrictions(m, it);
+  if(!restrictions.allowed){
+    const msg = restrictions.reasons.length
+      ? `${it.name}: ${restrictions.reasons.join(' ')}`
+      : `${m.name} cannot equip ${it.name}.`;
     log(msg);
     if(typeof toast==='function') toast(msg);
     return;
@@ -670,6 +723,6 @@ function useItem(invIndex){
   return false;
 }
 
-const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache, loadStarterItems, canEquip, describeRequiredRoles };
+const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache, loadStarterItems, canEquip, describeRequiredRoles, getEquipMinLevel, getEquipRestrictions };
 globalThis.Dustland.inventory = inventoryExports;
 Object.assign(globalThis, inventoryExports);

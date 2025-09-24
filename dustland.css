@@ -516,6 +516,17 @@ input[type="range"] {
         background: #003300;
     }
 
+    .slot.level-locked {
+        border-color: #7a2d2d;
+        background: #210808;
+        color: #ffb8b8;
+    }
+
+    .slot.level-locked .level-locked-label {
+        color: #ff9d9d;
+        font-weight: 600;
+    }
+
     .slot.clickable {
         cursor: pointer;
     }
