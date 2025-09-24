@@ -14,10 +14,47 @@ let encounterBias = null;
 const activeMsgZones = new Set();
 let lastWeatherZone = null;
 let prevWeather = null;
+const WORLD_LOOT_DECAY_TURNS = 200;
+let worldTurnCounter = 0;
 bus?.on?.('weather:change', w => {
   weatherSpeed = typeof w?.speedMod === 'number' ? w.speedMod : 1;
   encounterBias = w?.encounterBias || null;
 });
+
+function markWorldDropAges(beforeTurn){
+  if(!Array.isArray(itemDrops) || !itemDrops.length) return;
+  for(const drop of itemDrops){
+    if(!drop) continue;
+    const mapId = typeof drop.map === 'string' ? drop.map : 'world';
+    if(mapId !== 'world') continue;
+    if(!Number.isFinite(drop.worldTurn)) drop.worldTurn = beforeTurn;
+  }
+}
+
+function decayWorldLoot(now){
+  if(!Array.isArray(itemDrops) || !itemDrops.length) return;
+  for(let i=itemDrops.length-1;i>=0;i--){
+    const drop=itemDrops[i];
+    if(!drop) continue;
+    const mapId = typeof drop.map === 'string' ? drop.map : 'world';
+    if(mapId !== 'world') continue;
+    const born = Number.isFinite(drop.worldTurn) ? drop.worldTurn : (now - 1);
+    if(now - born >= WORLD_LOOT_DECAY_TURNS){
+      itemDrops.splice(i,1);
+    }
+  }
+}
+
+function advanceWorldTurn(){
+  const before = worldTurnCounter;
+  markWorldDropAges(before);
+  worldTurnCounter = before + 1;
+  const now = worldTurnCounter;
+  decayWorldLoot(now);
+  if(globalThis.Dustland){
+    globalThis.Dustland.worldTurns = now;
+  }
+}
 
 function zoneAttrs(map,x,y){
   let healMult = 1;
@@ -350,6 +387,7 @@ function move(dx,dy){
         bus.emit('sfx','step');
         // NPCs advance along paths after the player steps
         if (Dustland.path?.tickPathAI) Dustland.path.tickPathAI();
+        if(state.map === 'world') advanceWorldTurn();
         moveDelay = 0;
         resolve();
       }, moveDelay);
@@ -619,6 +657,8 @@ const movement = {
   buffs,
   calcMoveDelay,
   getMoveDelay: () => moveDelay,
+  getWorldTurns: () => worldTurnCounter,
+  WORLD_LOOT_DECAY_TURNS,
   checkRandomEncounter,
   distanceToRoad
 };
@@ -628,5 +668,6 @@ bus?.on?.('movement:player', payload => {
   setPartyPos(x, y);
 });
 globalThis.Dustland = globalThis.Dustland || {};
+globalThis.Dustland.worldTurns = worldTurnCounter;
 globalThis.Dustland.movement = movement;
 Object.assign(globalThis, movement);
