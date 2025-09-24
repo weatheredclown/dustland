@@ -6,9 +6,17 @@
   const overlay = document.getElementById('personaOverlay');
   const list = document.getElementById('personaList');
   const closeBtn = document.getElementById('closePersonaBtn');
+  const fastTravelBtn = document.getElementById('campFastTravelBtn');
   if (btn) btn.addEventListener('click', () => bus.emit('camp:open'));
   if (closeBtn && overlay) {
     closeBtn.addEventListener('click', () => overlay.classList.remove('shown'));
+  }
+  if (fastTravelBtn && overlay) {
+    fastTravelBtn.addEventListener('click', () => {
+      if (fastTravelBtn.disabled) return;
+      overlay.classList.remove('shown');
+      globalThis.openWorldMap?.('camp');
+    });
   }
   bus.on('camp:open', () => {
     const pos = globalThis.party;
@@ -26,6 +34,12 @@
       }
     }
     globalThis.healAll?.();
+    if (fastTravelBtn) {
+      const bunkers = globalThis.Dustland?.bunkers ?? [];
+      const hasDestinations = bunkers.some(b => b?.active);
+      fastTravelBtn.disabled = !hasDestinations;
+      fastTravelBtn.title = hasDestinations ? '' : 'Activate a bunker to fast travel.';
+    }
     if (Array.isArray(pos)) {
       for (const m of pos) {
         if (typeof m.hydration === 'number') m.hydration = 2;

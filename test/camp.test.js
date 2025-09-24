@@ -173,3 +173,42 @@ test('camp:open blocked in dry or damaging zones', async () => {
   assert.equal(party[0].hydration, 1);
   assert.equal(msg, "You can't camp here.");
 });
+
+test('camp:open toggles fast travel button and opens map', async () => {
+  const dom = new JSDOM('<!doctype html><body><div class="overlay" id="personaOverlay"><div class="persona-window"><div id="personaList" class="persona-list"></div><div class="persona-actions"><button id="campFastTravelBtn" class="btn"></button><button id="closePersonaBtn" class="btn"></button></div></div></div></body>', { pretendToBeVisual: true });
+  const { document } = dom.window;
+  const bus = new EventEmitter();
+  const gs = {
+    getState: () => ({ party: [{ id: 'p1', name: 'Hero' }], personas: {} }),
+    applyPersona: () => {}
+  };
+  const party = [{ id: 'p1', name: 'Hero', hydration: 0 }];
+  party.x = 0; party.y = 0;
+  const state = { map: 'world' };
+  const opened = [];
+  const sandbox = {
+    EventBus: bus,
+    Dustland: { gameState: gs, zoneEffects: [], bunkers: [] },
+    document,
+    healAll: () => {},
+    log: () => {},
+    openWorldMap: id => opened.push(id),
+    party,
+    state,
+    updateHUD: () => {}
+  };
+  sandbox.globalThis = sandbox;
+  const code = await fs.readFile(new URL('../scripts/camp-persona.js', import.meta.url), 'utf8');
+  vm.runInNewContext(code, sandbox);
+  const overlay = document.getElementById('personaOverlay');
+  const fastBtn = document.getElementById('campFastTravelBtn');
+  bus.emit('camp:open');
+  assert.ok(overlay.classList.contains('shown'));
+  assert.ok(fastBtn.disabled);
+  sandbox.Dustland.bunkers.push({ id: 'alpha', active: true });
+  bus.emit('camp:open');
+  assert.ok(!fastBtn.disabled);
+  fastBtn.click();
+  assert.ok(!overlay.classList.contains('shown'));
+  assert.deepEqual(opened, ['camp']);
+});
