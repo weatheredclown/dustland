@@ -102,13 +102,27 @@ test('withdrawCampChestItem fails when inventory full', () => {
   global.log = () => {};
 });
 
-test('unlockCampChest marks state and emits change', () => {
+test('unlockCampChest seeds medkits and emits change once', () => {
   events.length = 0;
   player.campChestUnlocked = false;
+  player.campChest = [];
   const result = unlockCampChest();
   assert.equal(result, true);
   assert.equal(player.campChestUnlocked, true);
   assert.equal(events.some(e => e.evt === 'campChest:changed'), true);
+  assert.equal(player.campChest.length > 0, true);
+  const medkitCounts = player.campChest.map(it => Number.isFinite(it?.count) ? it.count : 1);
+  const totalMedkits = medkitCounts.reduce((sum, qty) => sum + qty, 0);
+  assert.equal(totalMedkits, 10);
+  assert.equal(player.campChest.every(it => it?.id === 'medkit'), true);
+  const snapshotCounts = [...medkitCounts];
+  const snapshotIds = player.campChest.map(it => it?.id);
+  events.length = 0;
+  const repeat = unlockCampChest();
+  assert.equal(repeat, true);
+  assert.deepEqual(player.campChest.map(it => Number.isFinite(it?.count) ? it.count : 1), snapshotCounts);
+  assert.deepEqual(player.campChest.map(it => it?.id), snapshotIds);
+  assert.equal(events.length, 0);
 });
 
 test.after(() => {
