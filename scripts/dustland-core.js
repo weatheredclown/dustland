@@ -349,7 +349,45 @@ function registerZoneEffects(list){
     }
   });
 }
-const state = { map:'world', mapFlags: {} }; // default map
+const FOG_RADIUS = 5;
+
+function mapSupportsFog(map){
+  return map && map !== 'creator';
+}
+
+function ensureFogMap(map){
+  if(!mapSupportsFog(map)) return null;
+  state.fog = state.fog || {};
+  let entry = state.fog[map];
+  if(!entry || typeof entry !== 'object' || Array.isArray(entry)){
+    entry = {};
+    state.fog[map] = entry;
+  }
+  return entry;
+}
+
+function revealFog(map, x, y, radius = FOG_RADIUS){
+  if(!mapSupportsFog(map)) return;
+  if(!Number.isFinite(x) || !Number.isFinite(y)) return;
+  const dims = typeof mapWH === 'function' ? mapWH(map) : null;
+  const W = Number.isFinite(dims?.W) ? dims.W : null;
+  const H = Number.isFinite(dims?.H) ? dims.H : null;
+  if(!Number.isFinite(W) || !Number.isFinite(H)) return;
+  const fog = ensureFogMap(map);
+  if(!fog) return;
+  const span = Math.max(1, Math.floor(radius));
+  for(let dy=-span; dy<=span; dy++){
+    for(let dx=-span; dx<=span; dx++){
+      if(Math.max(Math.abs(dx), Math.abs(dy)) > span) continue;
+      const gx = x + dx;
+      const gy = y + dy;
+      if(gx<0 || gy<0 || gx>=W || gy>=H) continue;
+      fog[`${gx},${gy}`] = 1;
+    }
+  }
+}
+
+const state = { map:'world', mapFlags: {}, fog: {} }; // default map
 const player = { hp:10, inv:[], scrap:0, campChest: [], campChestUnlocked: false };
 if (typeof registerItem === 'function') {
   registerItem({
@@ -365,6 +403,7 @@ function setPartyPos(x, y){
   if(!state.mapEntry || state.mapEntry.map !== state.map){
     state.mapEntry = { map: state.map, x: party.x, y: party.y };
   }
+  if(mapSupportsFog(state.map)) revealFog(state.map, party.x, party.y);
   incFlag(`visits@${state.map}@${party.x},${party.y}`);
 }
 const worldFlags = {};
@@ -473,6 +512,7 @@ function applyModule(data = {}, options = {}) {
     setRNGSeed(seed);
 
     // Clear core collections
+    state.fog = {};
     Object.keys(interiors).forEach(k => delete interiors[k]);
     buildings.length = 0;
     portals.length = 0;
@@ -706,6 +746,7 @@ function applyModule(data = {}, options = {}) {
 function genWorld(seed=Date.now(), data={}){
   setRNGSeed(seed);
   // Preserve the world array reference for consumers by clearing then repopulating
+  state.fog = {};
   world.length = 0;
   for(let y=0; y<WORLD_H; y++){
     const row = [];
@@ -1286,6 +1327,7 @@ function loadLegacySave(d){
   if(d.world){ world=d.world; } else { genWorld(worldSeed); }
   Object.assign(player,d.player);
   Object.assign(state,d.state);
+  state.fog = state.fog || {};
   buildings.length=0; (d.buildings||[]).forEach(b=> buildings.push(b));
   interiors={}; Object.keys(d.interiors||{}).forEach(k=> interiors[k]=d.interiors[k]);
   itemDrops.length=0; (d.itemDrops||[]).forEach(i=> itemDrops.push(i));
@@ -1487,6 +1529,7 @@ function loadModernSave(d){
   Object.assign(state, d.state || {});
   state.map = state.map || 'world';
   state.mapFlags = state.mapFlags || {};
+  state.fog = state.fog || {};
   if(Array.isArray(partyData.members) && partyData.members[0]){
     party.x = partyData.members[0].x ?? party.x;
     party.y = partyData.members[0].y ?? party.y;
@@ -1580,6 +1623,7 @@ function resetAll(){
   party.length=0; player.inv=[]; party.flags={}; player.scrap=0; player.campChest=[]; player.campChestUnlocked=false;
   Object.keys(worldFlags).forEach(k => delete worldFlags[k]);
   built = [];
+  state.fog = {};
   state.map='creator'; openCreator();
   globalThis.Dustland?.inventory?.loadStarterItems?.();
   log('Reset. Back to character creation.');
@@ -1908,6 +1952,7 @@ const coreExports = {
   TS,
   WORLD_W,
   WORLD_H,
+  FOG_RADIUS,
   world,
   interiors,
   buildings,
@@ -1921,6 +1966,8 @@ const coreExports = {
   GAME_STATE,
   setGameState,
   setPartyPos,
+  mapSupportsFog,
+  revealFog,
   doorPulseUntil,
   lastInteract,
   creatorMap,

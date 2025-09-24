@@ -18,6 +18,10 @@ const weatherBanner = document.getElementById('weatherBanner');
 const musicBus = globalThis.Dustland?.eventBus || globalThis.EventBus;
 let hudAdrMood = null;
 
+const FOG_EDGE_ALPHA = 0.35;
+const FOG_VISITED_ALPHA = 0.68;
+const FOG_UNSEEN_ALPHA = 0.94;
+
 function log(msg, type){
   if (logEl) {
     const p = document.createElement('div');
@@ -1255,6 +1259,56 @@ function centerCamera(x,y,map){
   camY = clamp(y - Math.floor(vH/2), 0, Math.max(0, (H||vH) - vH));
 }
 
+function shouldRenderFog(map){
+  if(!map) return false;
+  if(typeof mapSupportsFog === 'function') return mapSupportsFog(map);
+  return map !== 'creator';
+}
+
+function renderFog(ctx, map, offX, offY, viewW, viewH){
+  if(!ctx || !shouldRenderFog(map)) return;
+  const dims = typeof mapWH === 'function' ? mapWH(map) : null;
+  const W = Number.isFinite(dims?.W) ? dims.W : null;
+  const H = Number.isFinite(dims?.H) ? dims.H : null;
+  if(!Number.isFinite(W) || !Number.isFinite(H)) return;
+  const px = Number.isFinite(party?.x) ? party.x : null;
+  const py = Number.isFinite(party?.y) ? party.y : null;
+  if(!Number.isFinite(px) || !Number.isFinite(py)) return;
+  const fogState = (state?.fog && typeof state.fog === 'object') ? state.fog[map] : null;
+  let visitedLookup = null;
+  let visitedIsMap = false;
+  if(fogState instanceof Map){
+    visitedLookup = fogState;
+    visitedIsMap = true;
+  }else if(fogState && typeof fogState === 'object'){
+    visitedLookup = fogState;
+  }
+  const rawRadius = Number(globalThis.FOG_RADIUS);
+  const radius = Math.max(1, Number.isFinite(rawRadius) ? Math.floor(rawRadius) : 5);
+  ctx.fillStyle = '#000';
+  for(let vy=0; vy<viewH; vy++){
+    for(let vx=0; vx<viewW; vx++){
+      const gx = camX + vx - offX;
+      const gy = camY + vy - offY;
+      if(gx<0 || gy<0 || gx>=W || gy>=H) continue;
+      const key = `${gx},${gy}`;
+      const dist = Math.max(Math.abs(gx - px), Math.abs(gy - py));
+      let alpha = 0;
+      if(dist <= radius){
+        const falloff = dist / radius;
+        alpha = falloff * FOG_EDGE_ALPHA;
+      }else{
+        const visited = visitedLookup ? (visitedIsMap ? visitedLookup.has(key) : !!visitedLookup[key]) : false;
+        alpha = visited ? FOG_VISITED_ALPHA : FOG_UNSEEN_ALPHA;
+      }
+      if(alpha <= 0) continue;
+      ctx.globalAlpha = alpha;
+      ctx.fillRect(vx*TS,vy*TS,TS,TS);
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
 // ===== Drawing Pipeline =====
 const renderOrder = ['tiles', 'items', 'portals', 'entitiesBelow', 'player', 'entitiesAbove'];
 
@@ -1419,6 +1473,8 @@ function render(gameState=state, dt){
     }
     sparkles.length = 0;
   }
+
+  renderFog(ctx, activeMap, offX, offY, vW, vH);
 
   // UI border
   ctx.strokeStyle='#2a3b2a';
