@@ -15542,17 +15542,45 @@ const DATA = `
 }
 `;
 
-function postLoad(module) {}
+function ensureWandInInventory(module) {
+  if (!module) return;
+  const inv = globalThis.player?.inv;
+  if (!Array.isArray(inv)) return;
+  const alreadyHas = typeof hasItem === 'function'
+    ? hasItem('wand')
+    : inv.some(entry => entry && entry.id === 'wand');
+  if (alreadyHas) return;
+  const wandSource = Array.isArray(module.items)
+    ? module.items.find(it => it && it.id === 'wand')
+    : null;
+  if (!wandSource) return;
+  if (typeof addToInv === 'function' && addToInv(wandSource)) {
+    return;
+  }
+  const wandItem = (typeof getItem === 'function' ? getItem('wand') : null)
+    || JSON.parse(JSON.stringify(wandSource));
+  if (!wandItem.id) wandItem.id = 'wand';
+  inv.push(wandItem);
+  globalThis.EventBus?.emit?.('item:picked', wandItem);
+  globalThis.EventBus?.emit?.('inventory:changed');
+}
+
+function postLoad(module, context = {}) {
+  const phase = typeof context?.phase === 'string' ? context.phase : 'afterApply';
+  if (phase !== 'afterApply') return;
+  ensureWandInInventory(module);
+}
 
 globalThis.DUSTLAND_MODULE = JSON.parse(DATA);
 globalThis.DUSTLAND_MODULE.postLoad = postLoad;
 
 startGame = function () {
-  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE);
+  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'beforeApply' });
   applyModule(DUSTLAND_MODULE);
   const s = DUSTLAND_MODULE.start;
   if (s) {
     setPartyPos(s.x, s.y);
     setMap(s.map, 'dustland-module');
   }
+  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'afterApply' });
 };
