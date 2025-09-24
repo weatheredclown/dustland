@@ -20,6 +20,7 @@
  * @property {number} y
  * @property {string} [id]
  * @property {string[]} [items]
+ * @property {'world'|'loot'} [dropType]
  */
 
 globalThis.Dustland = globalThis.Dustland || {};

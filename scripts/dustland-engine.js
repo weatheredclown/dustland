@@ -308,6 +308,7 @@ const retroNpcArtCache = new Map();
 let retroPlayerSprite = null;
 let retroPlayerSpriteIndex = -1;
 let retroItemSprite = null;
+let retroLootSprite = null;
 let retroItemCacheSprite = null;
 const DEFAULT_NPC_COLOR = '#9ef7a0';
 const xmlEscapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
@@ -391,6 +392,7 @@ function setRetroNpcArt(on, skipStorage){
   retroPlayerSprite = null;
   retroPlayerSpriteIndex = -1;
   retroItemSprite = null;
+  retroLootSprite = null;
   retroItemCacheSprite = null;
   if(!retroNpcArtEnabled){
     retroNpcArtCache.clear();
@@ -693,6 +695,38 @@ function buildRetroItemGlyphSvg(){
 </svg>`;
 }
 
+function buildRetroLootGlyphSvg(){
+  const inner = '#1a0d10';
+  const glowA = '#ff9472';
+  const glowB = '#ffd36a';
+  const accent = '#fff2c5';
+  const ember = '#ff6b5a';
+  const shrink = 'translate(16 16) scale(0.75) translate(-16 -16)';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="geometricPrecision">`
+  + `\n  <defs>`
+  + `\n    <radialGradient id="retroLootGlyphAura" cx="52%" cy="44%" r="56%">`
+  + `\n      <stop offset="0" stop-color="${glowB}" stop-opacity="0.95"/>`
+  + `\n      <stop offset="1" stop-color="${inner}" stop-opacity="0.1"/>`
+  + `\n    </radialGradient>`
+  + `\n    <linearGradient id="retroLootGlyphBody" x1="0" y1="0" x2="0" y2="1">`
+  + `\n      <stop offset="0" stop-color="${glowB}" stop-opacity="0.95"/>`
+  + `\n      <stop offset="0.6" stop-color="${glowA}" stop-opacity="0.85"/>`
+  + `\n      <stop offset="1" stop-color="${ember}" stop-opacity="0.8"/>`
+  + `\n    </linearGradient>`
+  + `\n  </defs>`
+  + `\n  <g transform="${shrink}">`
+  + `\n    <circle cx="16" cy="14.5" r="10.5" fill="url(#retroLootGlyphAura)" opacity="0.85"/>`
+  + `\n    <path d="M16 8.8l3.2 4.9-3.2 1.7-3.2-1.7z" fill="${accent}" stroke="${ember}" stroke-width="0.9" stroke-linejoin="round"/>`
+  + `\n    <path d="M11 13.8h10" stroke="${accent}" stroke-width="1.2" stroke-linecap="round" opacity="0.85"/>`
+  + `\n    <path d="M10 15.5h12l-1.2 10.4c-0.2 1.7-1.6 2.9-3.3 2.9h-3.9c-1.7 0-3.1-1.2-3.3-2.9z" fill="url(#retroLootGlyphBody)" stroke="${ember}" stroke-width="1" stroke-linejoin="round"/>`
+  + `\n    <path d="M12.4 19.4h7.2" stroke="${accent}" stroke-width="1" stroke-linecap="round" opacity="0.9"/>`
+  + `\n    <circle cx="16" cy="21.8" r="1.4" fill="${accent}" stroke="${ember}" stroke-width="0.7"/>`
+  + `\n    <path d="M12.6 22.9l-0.9 2.4" stroke="${accent}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>`
+  + `\n    <path d="M19.4 22.9l0.9 2.4" stroke="${accent}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>`
+  + `\n  </g>`
+  + `\n</svg>`;
+}
+
 function buildRetroItemCacheSvg(){
   const inner = '#1a130a';
   const glowA = '#ffcd7a';
@@ -803,6 +837,19 @@ function getRetroItemSprite(){
   sprite.decoding = 'sync';
   sprite.src = url;
   retroItemSprite = sprite;
+  return sprite;
+}
+
+function getRetroLootSprite(){
+  const Img = globalThis.Image;
+  if(typeof Img !== 'function') return null;
+  if(retroLootSprite) return retroLootSprite;
+  const svg = buildRetroLootGlyphSvg();
+  const url = svgToDataUrl(svg);
+  const sprite = new Img();
+  sprite.decoding = 'sync';
+  sprite.src = url;
+  retroLootSprite = sprite;
   return sprite;
 }
 
@@ -1218,8 +1265,10 @@ function render(gameState=state, dt){
         if(it.x>=camX&&it.y>=camY&&it.x<camX+vW&&it.y<camY+vH){
           const vx=(it.x-camX+offX)*TS, vy=(it.y-camY+offY)*TS;
           const multi = Array.isArray(it.items) && it.items.length>1;
+          const dropType = typeof it.dropType === 'string' ? it.dropType : (it.source === 'loot' ? 'loot' : 'world');
+          const isLoot = dropType === 'loot';
           if(retroNpcArtEnabled){
-            const sprite = multi ? getRetroItemCacheSprite() : getRetroItemSprite();
+            const sprite = multi ? getRetroItemCacheSprite() : (isLoot ? getRetroLootSprite() : getRetroItemSprite());
             if(sprite?.complete){
               if(multi){
                 const a=0.7+0.3*Math.sin(Date.now()/300);
@@ -1238,8 +1287,13 @@ function render(gameState=state, dt){
             ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
             ctx.globalAlpha=1;
           }else{
-            ctx.fillStyle='#c8ffbf';
+            ctx.fillStyle = isLoot ? '#ff7f6a' : '#c8ffbf';
             ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
+            if(isLoot){
+              ctx.strokeStyle = '#7f3b16';
+              ctx.lineWidth = 1;
+              ctx.strokeRect(vx+4,vy+4,TS-8,TS-8);
+            }
           }
         }
       }
@@ -2413,6 +2467,7 @@ globalThis.Dustland.retroNpcArt = {
   isEnabled: () => retroNpcArtEnabled,
   setEnabled: setRetroNpcArt,
   getItemGlyph: () => getRetroItemSprite(),
+  getLootGlyph: () => getRetroLootSprite(),
   getItemCacheGlyph: () => getRetroItemCacheSprite()
 };
 globalThis.Dustland.font = {
