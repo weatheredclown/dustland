@@ -33,6 +33,16 @@ function gridToEmoji(grid){
   return grid.map(r=> r.map(t=> tileEmoji[t] || '').join(''));
 }
 
+function worldIsNumeric(grid){
+  if (!Array.isArray(grid) || !grid.length) return false;
+  return grid.every(row => Array.isArray(row) && row.every(cell => typeof cell === 'number'));
+}
+
+function worldIsEmoji(grid){
+  if (!Array.isArray(grid) || !grid.length) return false;
+  return grid.every(row => typeof row === 'string');
+}
+
 function extractData(str){
   const match = str.match(/const DATA = `([\s\S]*?)`;/);
   return match ? match[1] : null;
@@ -46,7 +56,7 @@ if (cmd === 'export') {
     process.exit(1);
   }
   const obj = JSON.parse(dataStr);
-  if (Array.isArray(obj.world) && Array.isArray(obj.world[0]) && typeof obj.world[0][0] === 'number') {
+  if (worldIsNumeric(obj.world)) {
     obj.world = gridToEmoji(obj.world);
   }
   obj.module = file;
@@ -57,7 +67,7 @@ if (cmd === 'export') {
 } else if (cmd === 'import') {
   const jsonText = fs.readFileSync(jsonPath, 'utf8');
   const obj = JSON.parse(jsonText);
-  if (Array.isArray(obj.world) && typeof obj.world[0] === 'string') {
+  if (worldIsEmoji(obj.world)) {
     obj.world = gridFromEmoji(obj.world);
   }
   delete obj.module;

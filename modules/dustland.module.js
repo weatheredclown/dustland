@@ -807,6 +807,7 @@ const DATA = `
       "type": "quest",
       "desc": "The final fragment. It hums with a powerful, clear energy."
     },
+    {
       "id": "minigun",
       "type": "weapon",
       "baseId": "wand",
@@ -2021,6 +2022,12 @@ const DATA = `
           },
           {
             "id": "water_flask",
+            "rarity": "common",
+            "cadence": "daily",
+            "refreshHours": 24
+          },
+          {
+            "id": "medkit",
             "rarity": "common",
             "cadence": "daily",
             "refreshHours": 24
