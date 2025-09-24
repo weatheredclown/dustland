@@ -26,6 +26,7 @@ test('collectPricingData summarizes dustland traders and scrap', () => {
     'pipe_rifle',
     'leather_jacket',
     'water_flask',
+    'medkit',
     'frag_grenade',
     'incendiary_grenade',
     'minigun'

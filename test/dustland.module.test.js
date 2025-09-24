@@ -193,6 +193,7 @@ test('trader patrols east-west with basic goods', () => {
     'pipe_rifle',
     'leather_jacket',
     'water_flask',
+    'medkit',
     'frag_grenade',
     'incendiary_grenade',
     'minigun'

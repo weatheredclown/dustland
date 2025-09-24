@@ -16,6 +16,87 @@ let lastWeatherZone = null;
 let prevWeather = null;
 const WORLD_LOOT_DECAY_TURNS = 200;
 let worldTurnCounter = 0;
+const ESSENTIAL_SUPPLY_RESTOCKS = Object.freeze([
+  { id: 'medkit', interval: 10, count: 1 },
+  { id: 'water_flask', interval: 10, count: 1 }
+]);
+const essentialRestockState = new Map();
+let essentialRestockCache = { module: null, data: null };
+
+function normalizePositiveInt(value, fallback){
+  const base = Number.isFinite(value) ? value : fallback;
+  if(!Number.isFinite(base)) return 1;
+  return Math.max(1, Math.round(base));
+}
+
+function getEssentialRestockConfig(){
+  const moduleName = globalThis.Dustland?.currentModule || null;
+  if(!moduleName) return null;
+  if(essentialRestockCache.module !== moduleName){
+    essentialRestockState.clear();
+    const config = new Map();
+    ESSENTIAL_SUPPLY_RESTOCKS.forEach(entry => {
+      config.set(entry.id, {
+        interval: normalizePositiveInt(entry.interval, 10),
+        count: normalizePositiveInt(entry.count, 1),
+        targets: new Map()
+      });
+    });
+    const moduleData = globalThis.Dustland?.loadedModules?.[moduleName];
+    const baseNpcs = Array.isArray(moduleData?.npcs) ? moduleData.npcs : [];
+    baseNpcs.forEach(baseNpc => {
+      const inv = Array.isArray(baseNpc?.shop?.inv) ? baseNpc.shop.inv : [];
+      inv.forEach(entry => {
+        const restock = config.get(entry?.id);
+        if(!restock) return;
+        if(!baseNpc.id) return;
+        restock.targets.set(baseNpc.id, { ...entry });
+      });
+    });
+    essentialRestockCache = { module: moduleName, data: config };
+  }
+  return essentialRestockCache.data;
+}
+
+function shopHasItem(shop, itemId){
+  if(!shop || shop === true) return false;
+  const inv = Array.isArray(shop.inv) ? shop.inv : [];
+  return inv.some(entry => {
+    if(!entry || entry.id !== itemId) return false;
+    const count = Number.isFinite(entry.count) ? entry.count : 1;
+    return count > 0;
+  });
+}
+
+function restockEssentialSupplies(turn){
+  const config = getEssentialRestockConfig();
+  if(!config) return;
+  const roster = Array.isArray(globalThis.NPCS) ? globalThis.NPCS : [];
+  if(!roster.length) return;
+  for(const [itemId, cfg] of config.entries()){
+    if(!cfg) continue;
+    const interval = Number.isFinite(cfg.interval) ? cfg.interval : 10;
+    const lastTurn = essentialRestockState.has(itemId) ? essentialRestockState.get(itemId) : 0;
+    if(turn - lastTurn < interval) continue;
+    if(roster.some(npc => shopHasItem(npc?.shop, itemId))) continue;
+    const targetIds = Array.from(cfg.targets?.keys() || []);
+    if(!targetIds.length) continue;
+    for(const npc of roster){
+      if(!npc || !targetIds.includes(npc.id)) continue;
+      const shop = npc.shop;
+      if(!shop || shop === true) continue;
+      if(!Array.isArray(shop.inv)) shop.inv = [];
+      const baseEntry = cfg.targets.get(npc.id) || { id: itemId };
+      const desired = Number.isFinite(baseEntry.count) ? baseEntry.count : cfg.count;
+      const restockEntry = { ...baseEntry, id: itemId };
+      restockEntry.count = normalizePositiveInt(desired, cfg.count);
+      shop.inv.push(restockEntry);
+      essentialRestockState.set(itemId, turn);
+      break;
+    }
+  }
+}
+
 bus?.on?.('weather:change', w => {
   weatherSpeed = typeof w?.speedMod === 'number' ? w.speedMod : 1;
   encounterBias = w?.encounterBias || null;
@@ -54,6 +135,7 @@ function advanceWorldTurn(){
   if(globalThis.Dustland){
     globalThis.Dustland.worldTurns = now;
   }
+  restockEssentialSupplies(now);
 }
 
 function zoneAttrs(map,x,y){

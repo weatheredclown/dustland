@@ -2047,6 +2047,12 @@ const DATA = `
             "refreshHours": 24
           },
           {
+            "id": "medkit",
+            "rarity": "common",
+            "cadence": "daily",
+            "refreshHours": 24
+          },
+          {
             "id": "frag_grenade",
             "rarity": "rare",
             "cadence": "weekly",
