@@ -833,7 +833,9 @@ function handleEnemyDefeat(attacker, target, sourceLabel){
     const cache = SpoilsCache.rollDrop?.(desertProphet ? challenge + 1 : challenge);
     if (cache){
       const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
-      itemDrops?.push?.({ id: registered.id, map: party.map, x: party.x, y: party.y, dropType: 'loot' });
+      const drop = { id: registered.id, map: party.map, x: party.x, y: party.y, dropType: 'loot' };
+      itemDrops?.push?.(drop);
+      tryAutoPickup?.(drop);
       log?.(`The ground coughs up a ${registered.name}.`);
       if (desertProphet) log?.('A prophetic vision hinted at this cache.');
       globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target });
@@ -1155,7 +1157,9 @@ function enemyAttack(){
       const cache = SpoilsCache.rollDrop?.(enemy.challenge);
       if (cache){
         const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
-        itemDrops?.push?.({ id: registered.id, map: party.map, x: party.x, y: party.y, dropType: 'loot' });
+        const drop = { id: registered.id, map: party.map, x: party.x, y: party.y, dropType: 'loot' };
+        itemDrops?.push?.(drop);
+        tryAutoPickup?.(drop);
         log?.(`The ground coughs up a ${registered.name}.`);
         globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target: enemy });
       }

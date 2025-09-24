@@ -1567,7 +1567,8 @@ test('defeated enemies can drop spoils cache', async () => {
   SpoilsCache.rollDrop = origRoll;
   global.log = origLog;
   assert.strictEqual(res.result, 'loot');
-  assert.strictEqual(itemDrops.length, 1);
+  assert.strictEqual(itemDrops.length, 0);
+  assert.ok(player.inv.some(it => it?.id === 'cache-sealed'));
   assert.ok(logs.some(l => l.includes('Sealed Cache')));
 });
 

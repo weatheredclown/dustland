@@ -43,6 +43,38 @@ test('pickupCache fails if inventory full', () => {
   assert.strictEqual(player.inv.length, getPartyInventoryCapacity());
 });
 
+test('tryAutoPickup collects loot drops when inventory has room', () => {
+  player.inv = [];
+  itemDrops.length = 0;
+  const drop = { id: 'a', map: 'world', x: 0, y: 0, dropType: 'loot' };
+  itemDrops.push(drop);
+  const ok = tryAutoPickup(drop);
+  assert.ok(ok);
+  assert.strictEqual(player.inv.length, 1);
+  assert.strictEqual(itemDrops.length, 0);
+});
+
+test('tryAutoPickup collects loot caches when capacity allows', () => {
+  player.inv = [];
+  itemDrops.length = 0;
+  const drop = { items: ['a', 'b'], map: 'world', x: 0, y: 0, dropType: 'loot' };
+  const ok = tryAutoPickup(drop);
+  assert.ok(ok);
+  assert.strictEqual(player.inv.length, 2);
+  assert.strictEqual(itemDrops.length, 0);
+});
+
+test('tryAutoPickup leaves loot on the ground when inventory is full', () => {
+  player.inv = Array.from({ length: getPartyInventoryCapacity() }, (_, i) => ({ id: 'full' + i }));
+  itemDrops.length = 0;
+  const drop = { id: 'a', map: 'world', x: 0, y: 0, dropType: 'loot' };
+  itemDrops.push(drop);
+  const ok = tryAutoPickup(drop);
+  assert.strictEqual(ok, false);
+  assert.strictEqual(itemDrops.length, 1);
+  assert.strictEqual(player.inv.length, getPartyInventoryCapacity());
+});
+
 test.after(() => {
   if(orig.EventBus === undefined) delete global.EventBus; else global.EventBus = orig.EventBus;
   if(orig.player === undefined) delete global.player; else global.player = orig.player;
