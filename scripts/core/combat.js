@@ -907,6 +907,64 @@ function playerItemAOEDamage(attacker, baseDamage, opts = {}){
   return { defeated };
 }
 
+function defeatEnemiesByRequirement(requirement, opts = {}){
+  const reqList = Array.isArray(requirement)
+    ? requirement.filter(Boolean)
+    : [requirement].filter(Boolean);
+  if (reqList.length === 0) return [];
+
+  const enemies = combatState.enemies || [];
+  if (enemies.length === 0) return [];
+
+  const attacker = opts.attacker;
+  const itemLabel = opts.itemLabel || opts.label || 'item';
+  const sourceLabel = opts.sourceLabel
+    || (attacker?.name
+      ? `${attacker.name}'s ${opts.label || itemLabel}`.trim()
+      : (opts.label || itemLabel));
+
+  const defeated = [];
+
+  for (const enemy of enemies){
+    const enemyReq = Array.isArray(enemy.requires)
+      ? enemy.requires.filter(Boolean)
+      : enemy.requires
+        ? [enemy.requires]
+        : [];
+    const matches = enemyReq.some(entry => reqList.includes(entry));
+    if (!matches) continue;
+
+    const beforeHp = typeof enemy.hp === 'number' ? enemy.hp : 0;
+    enemy.hp = 0;
+
+    recordCombatEvent?.({
+      type: 'player',
+      actor: attacker?.name || 'You',
+      action: 'item',
+      item: itemLabel,
+      target: enemy.name,
+      damage: beforeHp,
+      targetHp: enemy.hp
+    });
+
+    if (handleEnemyDefeat(attacker, enemy, sourceLabel || itemLabel)){
+      defeated.push(enemy);
+    }
+  }
+
+  if (defeated.length === 0) return [];
+
+  combatState.enemies = combatState.enemies.filter(e => !defeated.includes(e));
+  renderCombat?.();
+
+  if (combatState.enemies.length === 0){
+    log?.('Victory!');
+    closeCombat('loot');
+  }
+
+  return defeated;
+}
+
 function testAttack(attacker, enemy, dmg = 1, type = 'basic'){
   combatState.enemies = [enemy];
   combatState.active = 0;
@@ -1218,5 +1276,5 @@ function getCombatLog(){
   return combatState.log.slice();
 }
 
-const combatExports = { openCombat, closeCombat, handleCombatKey, getCombatLog, addStatus, tickStatuses, __testAttack: testAttack, __combatState: combatState, playerItemAOEDamage };
+const combatExports = { openCombat, closeCombat, handleCombatKey, getCombatLog, addStatus, tickStatuses, __testAttack: testAttack, __combatState: combatState, playerItemAOEDamage, defeatEnemiesByRequirement };
 Object.assign(globalThis, combatExports);
