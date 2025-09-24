@@ -98,6 +98,35 @@
       margin-top: 0;
     }
 
+    .arenaWave {
+      border: 1px solid #2b3b2b;
+      border-radius: 6px;
+      background: #0c100c;
+      padding: 6px;
+      margin-top: 6px;
+    }
+
+    .arenaWaveHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+
+    .arenaWaveRemove {
+      font-size: 0.75rem;
+      padding: 2px 6px;
+    }
+
+    .arenaWave details {
+      margin-top: 6px;
+      border-top: 1px solid #2b3b2b;
+      padding-top: 4px;
+    }
+
     #problemCard {
       border-color: #a00;
     }
@@ -433,6 +462,7 @@
         <button class="tab2" type="button" data-tab="portals" role="tab" aria-selected="false">Portals</button>
         <button class="tab2" type="button" data-tab="quests" role="tab" aria-selected="false">Quests</button>
         <button class="tab2" type="button" data-tab="events" role="tab" aria-selected="false">Events</button>
+        <button class="tab2" type="button" data-tab="arenas" role="tab" aria-selected="false">Arenas</button>
         <button class="tab2" type="button" data-tab="zones" role="tab" aria-selected="false">Zones</button>
         <button class="tab2" type="button" data-tab="encounters" role="tab" aria-selected="false">Encounters</button>
         <button class="tab2" type="button" data-tab="templates" role="tab" aria-selected="false">Templates</button>
@@ -744,6 +774,27 @@
         <button class="btn" id="delEvent" style="display:none">Delete Event</button>
       </div>
     </fieldset>
+      <fieldset class="card" id="arenaCard" data-pane="arenas" style="display:none">
+        <legend>Arenas</legend>
+        <input id="arenaFilter" placeholder="Filter arenas..." />
+        <div class="list" id="arenaList"></div>
+        <button class="btn" type="button" id="newArena">+ Arena</button>
+        <div id="arenaEditor" style="display:none">
+          <label>Map<select id="arenaMap"></select></label>
+          <label>Bank ID<input id="arenaBankId" placeholder="Defaults to map id" /></label>
+          <label>Entrance Delay (ms)<input id="arenaDelay" type="number" min="0" /></label>
+          <label>Reset Log<textarea id="arenaResetLog" rows="2"></textarea></label>
+          <label>Reward Log<textarea id="arenaRewardLog" rows="2"></textarea></label>
+          <label>Reward Toast<input id="arenaRewardToast" /></label>
+          <div id="arenaWaveContainer"></div>
+          <button class="btn" type="button" id="arenaAddWave">+ Wave</button>
+          <div class="btn-group">
+            <button class="btn btn--primary" id="addArena">Add Arena</button>
+            <button class="btn" type="button" id="cancelArena" style="display:none">Cancel</button>
+            <button class="btn" id="delArena" style="display:none">Delete Arena</button>
+          </div>
+        </div>
+      </fieldset>
       <fieldset class="card" id="zoneCard" data-pane="zones" style="display:none">
         <legend>Zones</legend>
         <div class="list" id="zoneList"></div>
