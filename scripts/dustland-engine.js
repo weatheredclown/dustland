@@ -2275,6 +2275,7 @@ function openShop(npc) {
   const shopBuy = document.getElementById('shopBuy');
   const shopSell = document.getElementById('shopSell');
   const shopScrap = document.getElementById('shopScrap');
+  const shopSlotFilter = document.getElementById('shopSlotFilter');
 
   if (!npc.shop) return;
   if (npc.shop === true) npc.shop = {};
@@ -2282,6 +2283,67 @@ function openShop(npc) {
   npc.shop.markup = npc.shop.markup || 2;
 
   shopName.textContent = npc.name;
+
+  const slotOrder = ['weapon', 'armor', 'trinket', 'consumable', 'spoils-cache', 'quest', 'misc'];
+  let slotFilter = '';
+  function resolveSlotKey(item) {
+    if (!item || typeof item !== 'object') return 'misc';
+    const slot = (item.slot || item.type || '').toString().trim().toLowerCase();
+    return slot || 'misc';
+  }
+  function formatSlotLabel(key) {
+    if (!key) return 'All Slots';
+    if (key === 'misc') return 'Other';
+    return key.split(/[-_]/).map(part => {
+      if (!part) return part;
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }).join(' ');
+  }
+  function sortSlotKeys(keys) {
+    return Array.from(keys).sort((a, b) => {
+      const idxA = slotOrder.indexOf(a);
+      const idxB = slotOrder.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+  }
+  function matchesSlotFilter(item) {
+    if (!slotFilter) return true;
+    return resolveSlotKey(item) === slotFilter;
+  }
+  function updateSlotFilterOptions(keys) {
+    if (!shopSlotFilter) return;
+    const target = [''].concat(keys);
+    const existing = Array.from(shopSlotFilter.options).map(opt => opt.value);
+    let needsUpdate = existing.length !== target.length;
+    if (!needsUpdate) {
+      for (let i = 0; i < target.length; i++) {
+        if (existing[i] !== target[i]) {
+          needsUpdate = true;
+          break;
+        }
+      }
+    }
+    if (needsUpdate) {
+      shopSlotFilter.innerHTML = '';
+      const allOpt = document.createElement('option');
+      allOpt.value = '';
+      allOpt.textContent = 'All Slots';
+      shopSlotFilter.appendChild(allOpt);
+      keys.forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = formatSlotLabel(key);
+        shopSlotFilter.appendChild(opt);
+      });
+    }
+    if (!target.includes(slotFilter)) {
+      slotFilter = '';
+    }
+    shopSlotFilter.value = slotFilter;
+  }
 
   let focusables = [];
   let focusIdx = 0;
@@ -2355,11 +2417,18 @@ function openShop(npc) {
       return out;
     };
 
+    const slotKeys = new Set();
+    const registerSlotKey = (item) => {
+      if (!item) return;
+      slotKeys.add(resolveSlotKey(item));
+    };
+
     const shopStacks = [];
     const shopStackMap = new Map();
     shopInv.forEach(entry => {
       const item = getItem(entry.id);
       if (!item) return;
+      registerSlotKey(item);
       const key = JSON.stringify({
         item: normalizeForKey(item, true),
         entry: normalizeForKey(entry, true)
@@ -2379,6 +2448,7 @@ function openShop(npc) {
     const sellStackMap = new Map();
     player.inv.forEach((item, idx) => {
       if (!item || !item.id) return;
+      registerSlotKey(item);
       const key = JSON.stringify(normalizeForKey(item, true));
       let stack = sellStackMap.get(key);
       if (!stack) {
@@ -2390,6 +2460,9 @@ function openShop(npc) {
       stack.qty += quantity;
       stack.entries.push({ idx, item });
     });
+
+    const slotList = sortSlotKeys(slotKeys);
+    updateSlotFilterOptions(slotList);
 
     shopStacks.forEach(stack => {
       stack.price = resolveBuyPrice(stack);
@@ -2437,6 +2510,7 @@ function openShop(npc) {
 
     shopStacks.forEach(stack => {
       const { item, qty } = stack;
+      if (!matchesSlotFilter(item)) return;
       const row = document.createElement('div');
       row.className = 'slot';
       let price = Number.isFinite(stack.price) ? stack.price : resolveBuyPrice(stack);
@@ -2467,6 +2541,7 @@ function openShop(npc) {
 
     sellStacks.forEach(stack => {
       const { item, qty } = stack;
+      if (!matchesSlotFilter(item)) return;
       const row = document.createElement('div');
       row.className = 'slot';
       let sellPrice = Number.isFinite(stack.price) ? stack.price : resolveSellPrice(stack);
@@ -2493,7 +2568,19 @@ function openShop(npc) {
     focusCurrent();
   }
 
+  if (shopSlotFilter) {
+    shopSlotFilter.onchange = () => {
+      slotFilter = shopSlotFilter.value;
+      focusIdx = 0;
+      renderShop();
+    };
+  }
+
   function close() {
+    slotFilter = '';
+    if (shopSlotFilter) {
+      shopSlotFilter.value = '';
+    }
     shopOverlay.classList.remove('shown');
     shopOverlay.removeEventListener('keydown', handleKey);
     if (!madePurchase && npc) {
