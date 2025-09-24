@@ -186,82 +186,88 @@ function trackQuestDialogNode(npcId, nodeId) {
 // minimal core helpers so defaultQuestProcessor works even without content helpers loaded yet
 function defaultQuestProcessor(npc, nodeId) {
   const meta = npc.quest;
-  if (!meta) return;
+  if (!meta) return null;
   if (nodeId === 'accept') {
     if (meta.status === 'available') questLog.add(meta);
-  } else if (nodeId === 'do_turnin') {
-    if (meta.status === 'available') questLog.add(meta);
-    if (meta.status === 'active') {
-      const requiredCount = meta.count || 1;
-      const itemKey = meta.itemTag || meta.item;
-      const have = itemKey ? countItems(itemKey) : 0;
-      const prev = meta.progress || 0;
-      const remaining = requiredCount - prev;
-      const turnIn = itemKey ? Math.min(have, remaining) : 0;
-      const hasFlag = !meta.reqFlag || (typeof flagValue === 'function' && flagValue(meta.reqFlag));
-      const dialogGoal = hasDialogGoals(meta);
-      if (!itemKey && !dialogGoal) meta.progress = requiredCount;
+    return { handled: true };
+  }
+  if (nodeId !== 'do_turnin') return null;
 
-      if (turnIn > 0) {
-        for (let i = 0; i < turnIn; i++) {
-          const idx = findItemIndex(itemKey);
-          if (idx > -1) {
-            log(`Turned in ${player.inv[idx].name}.`);
-            removeFromInv(idx);
-          }
-        }
-        meta.progress = prev + turnIn;
-      }
+  if (meta.status === 'available') questLog.add(meta);
+  if (meta.status !== 'active') {
+    return { handled: true, blocked: true };
+  }
 
-      if (meta.progress >= requiredCount && hasFlag) {
-        questLog.complete(meta.id);
-        if (meta.reward) {
-          const rewardIt = resolveItem(meta.reward);
-          if (rewardIt) addToInv(rewardIt);
-        }
-        let xp = typeof meta.xp === 'number' ? meta.xp : Number.parseInt(meta.xp, 10);
-        if (!Number.isFinite(xp)) xp = 10;
-        xp = Math.round(xp);
-        if (xp < 10) xp = 10;
-        else if (xp > 100) xp = 100;
-        party.forEach(p => awardXP(p, xp));
-        if (meta.moveTo) { npc.x = meta.moveTo.x; npc.y = meta.moveTo.y; }
-        if (Array.isArray(npc.quests)) {
-          npc.questIdx = (npc.questIdx || 0) + 1;
-          npc.quest = npc.quests[npc.questIdx] || null;
-          if (npc.quest && !npc.quest.status) npc.quest.status = 'available';
-          if (Array.isArray(npc.questDialogs)) {
-            npc.tree.start.text = npc.questDialogs[npc.questIdx] || npc.tree.start.text;
-          }
-        }
-      } else if (meta.status === 'active') {
-        const def = itemKey ? ITEMS[itemKey] : null;
-        const progress = Math.min(meta.progress || 0, requiredCount);
-        let message = '';
-        if (dialogGoal) {
-          if (meta.progressText) message = meta.progressText;
-          else message = `You still need to finish earning that favor. (${progress}/${requiredCount})`;
-        } else if (itemKey) {
-          message = meta.progress > 0
-            ? `That’s ${meta.progress}/${requiredCount}. Keep going.`
-            : `You don’t have ${def ? def.name : itemKey}.`;
-        } else {
-          message = progress > 0
-            ? `That’s ${progress}/${requiredCount}. Keep going.`
-            : 'You’re not done yet.';
-        }
-        textEl.textContent = message;
-        if (typeof choicesEl !== 'undefined') {
-          choicesEl.innerHTML = '';
-          const cont = document.createElement('div');
-          cont.className = 'choice';
-          cont.textContent = '(Keep going)';
-          cont.onclick = () => closeDialog?.();
-          choicesEl.appendChild(cont);
-        }
+  const requiredCount = meta.count || 1;
+  const itemKey = meta.itemTag || meta.item;
+  const have = itemKey ? countItems(itemKey) : 0;
+  const prev = meta.progress || 0;
+  const remaining = requiredCount - prev;
+  const turnIn = itemKey ? Math.min(have, remaining) : 0;
+  const hasFlag = !meta.reqFlag || (typeof flagValue === 'function' && flagValue(meta.reqFlag));
+  const dialogGoal = hasDialogGoals(meta);
+  if (!itemKey && !dialogGoal) meta.progress = requiredCount;
+
+  if (turnIn > 0) {
+    for (let i = 0; i < turnIn; i++) {
+      const idx = findItemIndex(itemKey);
+      if (idx > -1) {
+        log(`Turned in ${player.inv[idx].name}.`);
+        removeFromInv(idx);
       }
     }
+    meta.progress = prev + turnIn;
   }
+
+  if (meta.progress >= requiredCount && hasFlag) {
+    questLog.complete(meta.id);
+    if (meta.reward) {
+      const rewardIt = resolveItem(meta.reward);
+      if (rewardIt) addToInv(rewardIt);
+    }
+    let xp = typeof meta.xp === 'number' ? meta.xp : Number.parseInt(meta.xp, 10);
+    if (!Number.isFinite(xp)) xp = 10;
+    xp = Math.round(xp);
+    if (xp < 10) xp = 10;
+    else if (xp > 100) xp = 100;
+    party.forEach(p => awardXP(p, xp));
+    if (meta.moveTo) { npc.x = meta.moveTo.x; npc.y = meta.moveTo.y; }
+    if (Array.isArray(npc.quests)) {
+      npc.questIdx = (npc.questIdx || 0) + 1;
+      npc.quest = npc.quests[npc.questIdx] || null;
+      if (npc.quest && !npc.quest.status) npc.quest.status = 'available';
+      if (Array.isArray(npc.questDialogs)) {
+        npc.tree.start.text = npc.questDialogs[npc.questIdx] || npc.tree.start.text;
+      }
+    }
+    return { handled: true, completed: true };
+  }
+
+  const def = itemKey ? ITEMS[itemKey] : null;
+  const progress = Math.min(meta.progress || 0, requiredCount);
+  let message = '';
+  if (dialogGoal) {
+    if (meta.progressText) message = meta.progressText;
+    else message = `You still need to finish earning that favor. (${progress}/${requiredCount})`;
+  } else if (itemKey) {
+    message = meta.progress > 0
+      ? `That’s ${meta.progress}/${requiredCount}. Keep going.`
+      : `You don’t have ${def ? def.name : itemKey}.`;
+  } else {
+    message = progress > 0
+      ? `That’s ${progress}/${requiredCount}. Keep going.`
+      : 'You’re not done yet.';
+  }
+  if (typeof textEl !== 'undefined' && textEl) textEl.textContent = message;
+  if (typeof choicesEl !== 'undefined' && choicesEl && typeof document !== 'undefined') {
+    choicesEl.innerHTML = '';
+    const cont = document.createElement('div');
+    cont.className = 'choice';
+    cont.textContent = '(Keep going)';
+    cont.onclick = () => closeDialog?.();
+    choicesEl.appendChild(cont);
+  }
+  return { handled: true, blocked: true, message };
 }
 
 const questExports = { Quest, QuestLog, questLog, quests, addQuest, completeQuest, defaultQuestProcessor, pinQuest, unpinQuest,
