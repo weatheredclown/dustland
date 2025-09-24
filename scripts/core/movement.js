@@ -102,6 +102,16 @@ bus?.on?.('weather:change', w => {
   encounterBias = w?.encounterBias || null;
 });
 
+const RANDOM_COMBAT_INPUT_LOCK_MS = 333;
+
+function lockInput(ms = RANDOM_COMBAT_INPUT_LOCK_MS, key){
+  const game = globalThis.Dustland || (globalThis.Dustland = {});
+  const target = Date.now() + ms;
+  const current = typeof game.inputLockUntil === 'number' ? game.inputLockUntil : 0;
+  game.inputLockUntil = current > target ? current : target;
+  game.inputLockKey = typeof key === 'string' ? key.toLowerCase() : null;
+}
+
 function markWorldDropAges(beforeTurn){
   if(!Array.isArray(itemDrops) || !itemDrops.length) return;
   for(const drop of itemDrops){
@@ -557,6 +567,7 @@ function checkRandomEncounter(){
     }
     if(chosen){
       encounterCooldown = minSteps + Math.floor(Math.random() * (maxSteps - minSteps + 1));
+      lockInput(undefined, globalThis.Dustland?.lastNonCombatKey);
       return Dustland.actions.startCombat({ ...chosen });
     }
     return;
@@ -606,6 +617,7 @@ function checkRandomEncounter(){
     }
     if (count > 1) def.count = count;
     encounterCooldown = minSteps + Math.floor(Math.random() * (maxSteps - minSteps + 1));
+    lockInput(undefined, globalThis.Dustland?.lastNonCombatKey);
     return Dustland.actions.startCombat(def);
   }
 }
