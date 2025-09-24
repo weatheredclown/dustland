@@ -51,7 +51,7 @@ class Character {
     this.adrGenMod = 1;
     this.adrDmgMod = 1;
     this.cooldowns = {};
-    this.guard = false;
+    this.guard = 0;
     this.statusEffects = [];
     if(globalThis.Dustland?.status?.init){
       globalThis.Dustland.status.init(this);
