@@ -1094,6 +1094,15 @@ globalThis.jitterColor = jitterColor;
 
 // ===== Camera & CRT draw with ghosting =====
 const disp = document.getElementById('game');
+const playerAdrenalineFx = {
+  intensity: 0,
+  scale: 1,
+  hueShift: 0,
+  saturation: 1,
+  brightness: 1,
+  glow: 0
+};
+globalThis.playerAdrenalineFx = playerAdrenalineFx;
 const rawAttrWidth = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('width')) : NaN;
 const rawAttrHeight = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('height')) : NaN;
 const BASE_CANVAS_WIDTH = Number.isFinite(rawAttrWidth) && rawAttrWidth > 0 ? rawAttrWidth : (disp?.width && disp.width > 0 ? disp.width : 640);
@@ -1280,7 +1289,10 @@ function centerCamera(x,y,map){
 
 function shouldRenderFog(map){
   if(!map) return false;
-  if(!fogOfWarEnabled) return false;
+  const enabled = typeof fogOfWarEnabled === 'boolean'
+    ? fogOfWarEnabled
+    : (typeof globalThis?.fogOfWarEnabled === 'boolean' ? globalThis.fogOfWarEnabled : true);
+  if(!enabled) return false;
   if(typeof mapSupportsFog === 'function') return mapSupportsFog(map);
   return map !== 'creator';
 }
@@ -1473,18 +1485,77 @@ function render(gameState=state, dt){
         }
       }
       const px=(pos.x-camX+offX)*TS, py=(pos.y-camY+offY)*TS;
+      const fxState = playerAdrenalineFx;
+      const fxIntensity = fxState?.intensity ?? 0;
+      const fxScale = fxState?.scale ?? 1;
+      const fxHue = fxState?.hueShift ?? 0;
+      const fxSat = fxState?.saturation ?? 1;
+      const fxBright = fxState?.brightness ?? 1;
+      const fxGlow = fxState?.glow ?? 0;
+      const hasPulse = fxIntensity > 0.0001 || fxGlow > 0.0001 || Math.abs(fxScale - 1) > 0.0001;
+      const centerX = px + TS / 2;
+      const centerY = py + TS / 2;
+      if(hasPulse && typeof ctx.save === 'function'){
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        const glowRadius = (TS / 2) * (1.15 + fxGlow * 0.55);
+        const innerRadius = TS * 0.2;
+        const hue = (fxHue + 200) % 360;
+        const alpha = Math.min(0.65, 0.25 + fxGlow * 0.55);
+        const grad = typeof ctx.createRadialGradient === 'function'
+          ? ctx.createRadialGradient(0, 0, innerRadius, 0, 0, glowRadius)
+          : null;
+        if(grad && typeof grad.addColorStop === 'function'){
+          grad.addColorStop(0, `hsla(${hue}, 90%, 74%, ${alpha})`);
+          grad.addColorStop(1, `hsla(${hue}, 90%, 50%, 0)`);
+          ctx.fillStyle = grad;
+        } else {
+          ctx.fillStyle = `hsla(${hue}, 90%, 60%, ${alpha})`;
+        }
+        if(typeof ctx.beginPath === 'function') ctx.beginPath();
+        if(typeof ctx.arc === 'function') ctx.arc(0, 0, glowRadius, 0, Math.PI * 2);
+        if(typeof ctx.fill === 'function') ctx.fill();
+        ctx.restore();
+      }
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      if(hasPulse && Math.abs(fxScale - 1) > 0.0001) ctx.scale(fxScale, fxScale);
+      ctx.translate(-TS / 2, -TS / 2);
+      let prevFilter = null;
+      let appliedFilter = false;
+      if(hasPulse && typeof ctx.filter === 'string'){
+        const filterParts = [];
+        if(Math.abs(fxHue) > 0.001) filterParts.push(`hue-rotate(${fxHue}deg)`);
+        if(Math.abs(fxSat - 1) > 0.001) filterParts.push(`saturate(${fxSat})`);
+        if(Math.abs(fxBright - 1) > 0.001) filterParts.push(`brightness(${fxBright})`);
+        if(filterParts.length){
+          prevFilter = ctx.filter;
+          ctx.filter = filterParts.join(' ');
+          appliedFilter = true;
+        }
+      }
       if(retroNpcArtEnabled){
         const sprite = getRetroPlayerSprite();
         if(sprite?.complete){
-          ctx.drawImage(sprite, px, py, TS, TS);
+          ctx.drawImage(sprite, 0, 0, TS, TS);
         }else{
           ctx.fillStyle='#64f0ff';
-          ctx.fillRect(px+4,py+4,TS-8,TS-8);
+          ctx.fillRect(4,4,TS-8,TS-8);
         }
       }else{
-        ctx.fillStyle='#f0f';
-        ctx.fillRect(px+4,py+4,TS-8,TS-8);
+        if(hasPulse){
+          const hue = (300 + fxHue) % 360;
+          const light = Math.min(78, 62 + fxGlow * 18);
+          ctx.fillStyle = `hsl(${hue}, 90%, ${light}%)`;
+        }else{
+          ctx.fillStyle='#f0f';
+        }
+        ctx.fillRect(4,4,TS-8,TS-8);
       }
+      if(appliedFilter){
+        ctx.filter = prevFilter || 'none';
+      }
+      ctx.restore();
     }
     else if(layer==='entitiesAbove'){ drawEntities(ctx, above, offX, offY); }
   }
@@ -1657,27 +1728,32 @@ function updateHUD(){
   updateHUD._lastHpVal = player.hp;
 }
 
+function resetPlayerAdrenalineFx(){
+  playerAdrenalineFx.intensity = 0;
+  playerAdrenalineFx.scale = 1;
+  playerAdrenalineFx.hueShift = 0;
+  playerAdrenalineFx.saturation = 1;
+  playerAdrenalineFx.brightness = 1;
+  playerAdrenalineFx.glow = 0;
+  if(disp?.style?.removeProperty) disp.style.removeProperty('--fxBloom');
+}
+
 function pulseAdrenaline(t){
-  if(!disp || typeof leader !== 'function') return;
+  if(typeof leader !== 'function'){ resetPlayerAdrenalineFx(); return; }
   const lead = leader();
   const fx = globalThis.fxConfig;
-  if(!lead || fx?.adrenalineTint === false) return;
+  if(!lead || fx?.adrenalineTint === false){ resetPlayerAdrenalineFx(); return; }
   const ratio = Math.max(0, Math.min(1, lead.adr / (lead.maxAdr || 1)));
-  if(ratio <= 0){
-    disp.style.removeProperty('--fxBloom');
-    return;
-  }
-  const maxHp = lead.maxHp ?? lead.hp ?? 0;
-  const cappedMaxHp = maxHp > 0 ? maxHp : 1;
-  const hpVal = typeof lead.hp === 'number' ? Math.max(0, Math.min(cappedMaxHp, lead.hp)) : cappedMaxHp;
-  const hpRatio = hpVal / cappedMaxHp;
-  const lowHealthFactor = Math.max(0, 1 - Math.min(1, hpRatio / 0.5));
+  if(ratio <= 0){ resetPlayerAdrenalineFx(); return; }
   const pulse = (Math.sin(t / 200) + 1) / 2;
   const intensity = ratio * pulse;
-  const blur = intensity * 4 * lowHealthFactor;
-  const bloom = [`brightness(${1 + intensity})`];
-  if(blur > 0.1) bloom.push(`blur(${blur}px)`);
-  disp.style.setProperty('--fxBloom', bloom.join(' '));
+  const hue = 40 + ratio * 160;
+  playerAdrenalineFx.intensity = intensity;
+  playerAdrenalineFx.scale = 1 + intensity * 0.35;
+  playerAdrenalineFx.hueShift = hue;
+  playerAdrenalineFx.saturation = 1 + ratio * 1.2;
+  playerAdrenalineFx.brightness = 1 + intensity * 0.45;
+  playerAdrenalineFx.glow = ratio * 0.6 + intensity * 0.4;
 }
 
 function showTab(which){
