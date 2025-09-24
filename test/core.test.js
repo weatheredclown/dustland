@@ -567,10 +567,12 @@ test('mentor bark plays sound and shows text', () => {
 test('respec consumes memory worm and restores skill points', () => {
   party.length = 0;
   player.inv.length = 0;
-  const c = new Character('m','M','Role');
+  const c = new Character('m','M','Wanderer');
   c.lvl = 3;
   c.skillPoints = 0;
   c.stats.STR += 2;
+  c.special = ['POWER_STRIKE'];
+  c._baseSpecial = ['POWER_STRIKE'];
   party.join(c);
   setLeader(0);
   registerItem({ id:'memory_worm', name:'Memory Worm', type:'token' });
@@ -582,6 +584,37 @@ test('respec consumes memory worm and restores skill points', () => {
   assert.strictEqual(findItemIndex('memory_worm'), -1);
   assert.deepStrictEqual(c.stats, baseStats());
   assert.strictEqual(c.skillPoints, 2);
+  assert.deepStrictEqual(c.special, ['GUARD_UP']);
+  assert.deepStrictEqual(c._baseSpecial, ['GUARD_UP']);
+  assert.strictEqual(c.role, 'Wanderer');
+});
+
+test('respec allows choosing new specialization and quirk', () => {
+  party.length = 0;
+  player.inv.length = 0;
+  const c = new Character('m','M','Scavenger');
+  c.special = ['POWER_STRIKE'];
+  c._baseSpecial = ['POWER_STRIKE'];
+  c.quirk = 'Lucky Lint';
+  c.lvl = 4;
+  c.skillPoints = 0;
+  party.join(c);
+  setLeader(0);
+  registerItem({ id:'memory_worm', name:'Memory Worm', type:'token' });
+  addToInv('memory_worm');
+  assert.notStrictEqual(findItemIndex('memory_worm'), -1);
+  const ok = respec(0, { specialization: 'Cogwitch', quirk: 'Brutal Past' });
+  assert.ok(ok);
+  assert.strictEqual(findItemIndex('memory_worm'), -1);
+  assert.strictEqual(c.role, 'Cogwitch');
+  assert.strictEqual(c.quirk, 'Brutal Past');
+  assert.deepStrictEqual(c.special, ['ADRENAL_SURGE']);
+  assert.deepStrictEqual(c._baseSpecial, ['ADRENAL_SURGE']);
+  const expected = baseStats();
+  expected.INT += 1;
+  expected.STR += 1;
+  assert.deepStrictEqual(c.stats, expected);
+  assert.strictEqual(c.skillPoints, 3);
 });
 
 test('bosses can drop memory worms', async () => {

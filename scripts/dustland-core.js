@@ -343,7 +343,7 @@ if (typeof registerItem === 'function') {
     id: 'memory_worm',
     name: 'Memory Worm',
     type: 'token',
-    desc: 'Resets a character\'s spent skill points.'
+    desc: 'Resets a character\'s spent skill points and lets them choose a new specialization and perk.'
   });
 }
 function setPartyPos(x, y){
@@ -1613,6 +1613,21 @@ const quirks={
     gear:[{id:'prophecy_scroll',name:'Prophecy Scroll',type:'trinket',mods:{INT:+1}}]
   }
 };
+
+function cloneSpecialList(entry){
+  if(Array.isArray(entry)){
+    return entry.map(sp => (sp && typeof sp === 'object') ? { ...sp } : sp);
+  }
+  if(!entry) return [];
+  return [(entry && typeof entry === 'object') ? { ...entry } : entry];
+}
+
+function listSpecializations(){ return Object.keys(specializations); }
+function getSpecialization(id){ return id ? specializations[id] || null : null; }
+function getClassSpecials(id){ return cloneSpecialList(classSpecials[id]); }
+function listQuirks(){ return Object.keys(quirks); }
+function getQuirk(id){ return id ? quirks[id] || null : null; }
+
 const defaultSpecDesc='Wanderer: No specialization. Starts with Guard, reducing the next incoming hit by 1 damage.';
 const defaultQuirkDesc='Quirks grant optional bonuses. Pick one to preview its perks.';
 const hiddenOrigins={ 'Rustborn':{desc:'You survived a machine womb. +1 PER, weird dialog tags.'} };
@@ -1720,19 +1735,38 @@ function renderStep(){
 function finalizeCurrentMember(){
   if(!building) return null;
   if(!building.name || !building.name.trim()) building.name = defaultDrifterName(built.length+1);
-  const m=makeMember(building.id, building.name, building.spec||'Wanderer', {permanent:true, portraitSheet: building.portraitSheet});
-  m.stats=building.stats; m.origin=building.origin; m.quirk=building.quirk;
-  m.special = classSpecials[building.spec||'Wanderer'] || [];
-  const spec = specializations[building.spec];
+  const specId = building.spec || 'Wanderer';
+  const m=makeMember(building.id, building.name, specId, {permanent:true, portraitSheet: building.portraitSheet});
+  m.stats=building.stats;
+  m.origin=building.origin;
+  m.quirk=building.quirk;
+  m.special = getClassSpecials(specId);
+  m._baseSpecial = [...m.special];
+  const spec = getSpecialization(specId);
   const specEquipIds=[];
   if(spec){
-    if(spec.stats){ for(const k in spec.stats){ m.stats[k]=(m.stats[k]||0)+spec.stats[k]; } }
-  if(spec.gear){ spec.gear.forEach(g=>{ addToInv(g); if(['weapon','armor','trinket'].includes(g.type)) specEquipIds.push(g.id); }); }
+    if(spec.stats){
+      for(const k in spec.stats){
+        m.stats[k]=(m.stats[k]||0)+spec.stats[k];
+      }
+    }
+    if(spec.gear){
+      spec.gear.forEach(g=>{
+        addToInv(g);
+        if(['weapon','armor','trinket'].includes(g.type)) specEquipIds.push(g.id);
+      });
+    }
   }
-  const quirk=quirks[building.quirk];
-  if(quirk){
-    if(quirk.stats){ for(const k in quirk.stats){ m.stats[k]=(m.stats[k]||0)+quirk.stats[k]; } }
-    if(quirk.gear){ quirk.gear.forEach(g=> addToInv(g)); }
+  const quirkDef=getQuirk(building.quirk);
+  if(quirkDef){
+    if(quirkDef.stats){
+      for(const k in quirkDef.stats){
+        m.stats[k]=(m.stats[k]||0)+quirkDef.stats[k];
+      }
+    }
+    if(quirkDef.gear){
+      quirkDef.gear.forEach(g=> addToInv(g));
+    }
   }
   joinParty(m);
   const idx=party.indexOf(m);
@@ -1868,7 +1902,12 @@ const coreExports = {
   hideStart,
   openCreator,
   closeCreator,
-  resetAll
+  resetAll,
+  listSpecializations,
+  getSpecialization,
+  getClassSpecials,
+  listQuirks,
+  getQuirk
 };
 
 Object.assign(coreExports, { getGameState: () => gameState });

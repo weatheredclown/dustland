@@ -262,20 +262,72 @@ function setLeader(idx){
   if(typeof renderInv === 'function') renderInv();
 }
 
-function respec(memberIndex=selectedMember){
+function respec(memberIndex=selectedMember, options){
   const m = party[memberIndex];
   if(!m) return false;
   const tokenIdx = typeof findItemIndex==='function' ? findItemIndex('memory_worm') : -1;
   if(tokenIdx===-1){
-    log('Need a Memory Worm token.');
+    if(typeof log === 'function') log('Need a Memory Worm token.');
     return false;
   }
   removeFromInv(tokenIdx);
+  const opts = (options && typeof options === 'object') ? options : {};
+  const prevRole = m.role;
+  const prevQuirk = m.quirk ?? null;
+  const explicitSpec = typeof opts.specialization === 'string' ? opts.specialization : null;
+  let specId = explicitSpec ?? (typeof m.role === 'string' ? m.role : null) ?? 'Wanderer';
+  let specData = typeof getSpecialization === 'function' ? getSpecialization(specId) : null;
+  if(explicitSpec && !specData && specId !== 'Wanderer'){
+    specId = 'Wanderer';
+    specData = typeof getSpecialization === 'function' ? getSpecialization(specId) : null;
+  }
+  const rawSpecials = typeof getClassSpecials === 'function' ? getClassSpecials(specId) : [];
+  const specSpecials = Array.isArray(rawSpecials) ? rawSpecials : [];
+  const applySpec = explicitSpec !== null || specData || specId === 'Wanderer';
+  const quirkProvided = Object.prototype.hasOwnProperty.call(opts, 'quirk');
+  let quirkId = quirkProvided ? (typeof opts.quirk === 'string' ? opts.quirk : null) : (typeof m.quirk === 'string' ? m.quirk : null);
+  let quirkData = quirkId && typeof getQuirk === 'function' ? getQuirk(quirkId) : null;
+  if(quirkProvided && quirkId && !quirkData){
+    quirkId = null;
+    quirkData = null;
+  }
   m.stats = baseStats();
-  m.skillPoints = m.lvl - 1;
+  if(applySpec && specData?.stats){
+    for(const [stat, delta] of Object.entries(specData.stats)){
+      m.stats[stat] = (m.stats[stat] || 0) + delta;
+    }
+  }
+  if(quirkData?.stats){
+    for(const [stat, delta] of Object.entries(quirkData.stats)){
+      m.stats[stat] = (m.stats[stat] || 0) + delta;
+    }
+  }
+  m.skillPoints = Math.max(0, (m.lvl|0) - 1);
+  if(applySpec){
+    m.role = specId;
+    if(Array.isArray(specSpecials)){
+      m.special = specSpecials;
+      m._baseSpecial = [...specSpecials];
+    }
+  }
+  if(quirkProvided || quirkData || (typeof m.quirk === 'string' && !quirkProvided)){
+    m.quirk = quirkId || null;
+  }
   m.applyEquipmentStats();
-  renderParty(); updateHUD();
-  log(`${m.name} respecs their skills.`);
+  renderParty?.();
+  updateHUD?.();
+  if(typeof log === 'function'){
+    const changes = [];
+    if(applySpec && prevRole !== m.role) changes.push(`now a ${m.role}`);
+    if((quirkProvided || quirkData) && prevQuirk !== (m.quirk ?? null)){
+      changes.push(m.quirk ? `took the ${m.quirk} perk` : 'shed their perk');
+    }
+    if(changes.length){
+      log(`${m.name} respecs their skills and ${changes.join(' and ')}.`);
+    }else{
+      log(`${m.name} respecs their skills.`);
+    }
+  }
   return true;
 }
 
