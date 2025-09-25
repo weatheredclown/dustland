@@ -9,13 +9,15 @@ function extractOpenShop(code) {
   return match && match[0];
 }
 
-test('shop window height matches combat menu', async () => {
+test('shop window uses expanded height and keeps scroll bounds', async () => {
   const css = await fs.readFile(new URL('../dustland.css', import.meta.url), 'utf8');
-  const combat = css.match(/#combatOverlay \.combat-window\s*{[^}]*height:\s*([^;]+);/);
-  const shop = css.match(/\.shop-window\s*{[^}]*max-height:\s*([^;]+);/);
-  assert.ok(combat && shop);
+  const height = css.match(/\.shop-window\s*{[^}]*height:\s*([^;]+);/);
+  const maxHeight = css.match(/\.shop-window\s*{[^}]*max-height:\s*([^;]+);/);
+  assert.ok(height && maxHeight);
   const norm = s => s.replace(/\s+/g, '');
-  assert.strictEqual(norm(shop[1]), norm(combat[1]));
+  const expected = norm('min(620px, 92vh)');
+  assert.strictEqual(norm(height[1]), expected);
+  assert.strictEqual(norm(maxHeight[1]), expected);
 });
 
 test('arrow keys in shop do not move the player', async () => {
