@@ -30,14 +30,14 @@
       "title": "Trail Briefing",
       "desc": "Talk to Rowan and inspect the humming stones.",
       "reward": "starter_kit",
-      "xp": 2
+      "xp": 6
     },
     {
       "id": "coded_stone",
       "title": "Decode the Stone",
       "desc": "Use the cipher wheel Rowan gave you to decode the humming stone.",
       "reward": "camp_rations",
-      "xp": 4
+      "xp": 12
     }
   ],
   "npcs": [
