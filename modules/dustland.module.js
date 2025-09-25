@@ -3469,6 +3469,20 @@ const DATA = `
               "label": "(Hand Over Bandage)",
               "to": "turnin",
               "q": "turnin"
+            },
+            {
+              "label": "(Recruit) Patrol the dunes with me.",
+              "join": {
+                "id": "bren",
+                "name": "Bren",
+                "role": "Scout"
+              },
+              "success": "Bren falls in beside you, eyes already scanning the dunes.",
+              "if": {
+                "flag": "scout_bren_recovered",
+                "op": ">=",
+                "value": 1
+              }
             }
           ]
         },
@@ -3487,7 +3501,12 @@ const DATA = `
                   "effect": "toast",
                   "msg": "Bren wraps the bandage around their side."
                 }
-              ]
+              ],
+              "setFlag": {
+                "flag": "scout_bren_recovered",
+                "op": "set",
+                "value": 1
+              }
             }
           ]
         },
