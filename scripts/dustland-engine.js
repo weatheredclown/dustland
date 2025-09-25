@@ -1836,6 +1836,32 @@ function calcItemValue(it, member){
 }
 let dropMode=false;
 const dropSet=new Set();
+let invSlotFilter='';
+
+const inventorySlotOrder=['weapon','armor','trinket','consumable','spoils-cache','quest','misc'];
+function resolveInventorySlotKey(item){
+  if(!item||typeof item!=='object') return 'misc';
+  const slot=(item.slot||item.type||'').toString().trim().toLowerCase();
+  return slot||'misc';
+}
+function formatInventorySlotLabel(key){
+  if(!key) return 'All Slots';
+  if(key==='misc') return 'Other';
+  return key.split(/[-_]/).map(part=>{
+    if(!part) return part;
+    return part.charAt(0).toUpperCase()+part.slice(1);
+  }).join(' ');
+}
+function sortInventorySlotKeys(keys){
+  return Array.from(keys).sort((a,b)=>{
+    const idxA=inventorySlotOrder.indexOf(a);
+    const idxB=inventorySlotOrder.indexOf(b);
+    if(idxA!==-1&&idxB!==-1) return idxA-idxB;
+    if(idxA!==-1) return -1;
+    if(idxB!==-1) return 1;
+    return a.localeCompare(b);
+  });
+}
 function renderInv(){
   const inv=document.getElementById('inv');
   inv.innerHTML='';
@@ -1878,12 +1904,48 @@ function renderInv(){
     return;
   }
   const ctrl=document.createElement('div');
+  ctrl.style.display='flex';
+  ctrl.style.flexWrap='wrap';
+  ctrl.style.gap='8px';
+  ctrl.style.alignItems='center';
   ctrl.style.margin='4px 0';
   const dropBtn=document.createElement('button');
   dropBtn.className='btn';
   dropBtn.textContent='Drop';
   dropBtn.onclick=()=>{ dropMode=true; dropSet.clear(); renderInv(); };
   ctrl.appendChild(dropBtn);
+
+  const slotKeys=new Set();
+  player.inv.forEach(it=>{ slotKeys.add(resolveInventorySlotKey(it)); });
+  const sortedKeys=sortInventorySlotKeys(slotKeys);
+  if(sortedKeys.length){
+    if(!sortedKeys.includes(invSlotFilter)) invSlotFilter='';
+  }else if(invSlotFilter){
+    invSlotFilter='';
+  }
+  const filterLabel=document.createElement('label');
+  filterLabel.htmlFor='inventorySlotFilter';
+  filterLabel.style.display='flex';
+  filterLabel.style.alignItems='center';
+  filterLabel.style.gap='6px';
+  filterLabel.textContent='Slot';
+  const filterSelect=document.createElement('select');
+  filterSelect.id='inventorySlotFilter';
+  const allOption=document.createElement('option');
+  allOption.value='';
+  allOption.textContent=formatInventorySlotLabel('');
+  filterSelect.appendChild(allOption);
+  sortedKeys.forEach(key=>{
+    const opt=document.createElement('option');
+    opt.value=key;
+    opt.textContent=formatInventorySlotLabel(key);
+    filterSelect.appendChild(opt);
+  });
+  filterSelect.value=invSlotFilter;
+  filterSelect.onchange=()=>{ invSlotFilter=filterSelect.value; renderInv(); };
+  filterLabel.appendChild(filterSelect);
+  ctrl.appendChild(filterLabel);
+
   inv.appendChild(ctrl);
   if(player.inv.length===0){
     inv.appendChild(Object.assign(document.createElement('div'),{className:'slot muted',textContent:'(empty)'}));
@@ -1892,6 +1954,8 @@ function renderInv(){
   const caches = {};
   const others = [];
   player.inv.forEach(it => {
+    const slotKey=resolveInventorySlotKey(it);
+    if(invSlotFilter && slotKey!==invSlotFilter) return;
     const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
     if(it.type === 'spoils-cache'){
       const bucket = caches[it.rank] || (caches[it.rank] = { items: [], total: 0 });
