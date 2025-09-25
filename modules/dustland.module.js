@@ -1444,7 +1444,8 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true
+        "auto": true,
+        "challenge": 6
       },
       "symbol": "!"
     },
@@ -1472,7 +1473,8 @@ const DATA = `
         "counterBasic": {
           "dmg": 2
         },
-        "auto": true
+        "auto": true,
+        "challenge": 15
       },
       "symbol": "!",
       "overrideColor": true
@@ -1504,7 +1506,8 @@ const DATA = `
           "stun": 1,
           "delay": 800
         },
-        "auto": true
+        "auto": true,
+        "challenge": 14
       },
       "symbol": "!",
       "overrideColor": true
@@ -1540,7 +1543,8 @@ const DATA = `
           "spread": true,
           "delay": 800
         },
-        "auto": true
+        "auto": true,
+        "challenge": 14
       },
       "symbol": "!"
     },
@@ -2024,7 +2028,9 @@ const DATA = `
         "scrap": {
           "min": 3,
           "max": 5
-        }
+        },
+        "HP": 16,
+        "challenge": 16
       },
       "symbol": "!"
     },
@@ -2209,7 +2215,8 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true
+        "auto": true,
+        "challenge": 10
       },
       "symbol": "!"
     },
@@ -2239,7 +2246,8 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true
+        "auto": true,
+        "challenge": 11
       },
       "symbol": "!"
     },
@@ -2269,7 +2277,8 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true
+        "auto": true,
+        "challenge": 12
       },
       "symbol": "!"
     },
@@ -2299,7 +2308,8 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true
+        "auto": true,
+        "challenge": 13
       },
       "symbol": "!"
     },
@@ -2355,7 +2365,8 @@ const DATA = `
         "scrap": {
           "min": 3,
           "max": 5
-        }
+        },
+        "challenge": 18
       },
       "portraitSheet": "assets/portraits/dustland-module/iron_brute_4.png",
       "portraitLock": false
@@ -2406,7 +2417,7 @@ const DATA = `
           "max": 5
         },
         "auto": true,
-        "challenge": 0
+        "challenge": 14
       },
       "symbol": "!"
     },
@@ -2712,7 +2723,8 @@ const DATA = `
           "cue": "crackles with energy!",
           "dmg": 5,
           "delay": 1000
-        }
+        },
+        "challenge": 22
       },
       "portraitSheet": "assets/portraits/portrait_1084.png",
       "portraitLock": false
@@ -2911,7 +2923,8 @@ const DATA = `
         "scrap": {
           "min": 3,
           "max": 5
-        }
+        },
+        "challenge": 9
       },
       "symbol": "!"
     },
@@ -2946,7 +2959,8 @@ const DATA = `
         "scrap": {
           "min": 3,
           "max": 5
-        }
+        },
+        "challenge": 15
       },
       "symbol": "!"
     },
@@ -3035,7 +3049,7 @@ const DATA = `
           "min": 6,
           "max": 9
         },
-        "xp": 60
+        "xp": 54
       }
     },
     {
@@ -3081,7 +3095,7 @@ const DATA = `
           "min": 7,
           "max": 11
         },
-        "xp": 100
+        "xp": 96
       }
     },
     {
@@ -3181,7 +3195,7 @@ const DATA = `
           "min": 15,
           "max": 25
         },
-        "xp": 400
+        "xp": 225
       }
     },
     {
@@ -3273,7 +3287,7 @@ const DATA = `
           "min": 6,
           "max": 10
         },
-        "xp": 70
+        "xp": 66
       }
     },
     {
@@ -3317,7 +3331,7 @@ const DATA = `
           "min": 8,
           "max": 12
         },
-        "xp": 120
+        "xp": 78
       }
     },
     {
@@ -3363,7 +3377,7 @@ const DATA = `
           "min": 12,
           "max": 16
         },
-        "xp": 180
+        "xp": 90
       }
     },
     {
