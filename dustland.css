@@ -1688,27 +1688,29 @@ input[type="range"] {
     }
 
     .ak-layout {
+        --ak-map-max: 640px;
+        --ak-panel-min: 360px;
         display: grid;
         grid-template-columns: minmax(0, 1fr);
         gap: 16px;
         padding: 16px;
         box-sizing: border-box;
         align-items: flex-start;
-        justify-items: center;
+        justify-items: stretch;
         width: 100%;
-        max-width: 1280px;
         margin: 0 auto;
     }
 
     .map-card {
-        width: min(640px, 100%);
+        width: min(var(--ak-map-max, 640px), 100%);
+        max-width: var(--ak-map-max, 640px);
     }
 
     .map-card canvas {
         width: 100%;
         height: auto;
         display: block;
-        max-width: 640px;
+        max-width: var(--ak-map-max, 640px);
     }
 
     .editor-panel {
@@ -1728,7 +1730,7 @@ input[type="range"] {
 
     @media (min-width: 1100px) {
         .ak-layout {
-            grid-template-columns: minmax(0, 640px) minmax(0, 1fr);
+            grid-template-columns: minmax(360px, var(--ak-map-max, 640px)) minmax(var(--ak-panel-min, 360px), 1fr);
             justify-items: stretch;
         }
 
