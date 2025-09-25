@@ -224,6 +224,8 @@ test('collectEncounter reads loot chance', async () => {
   const document = makeDocument();
   mkInput(document, 'encMap', 'world');
   mkInput(document, 'encTemplate', 't');
+  mkInput(document, 'encLocationMode', 'distance');
+  mkInput(document, 'encZone', '');
   mkInput(document, 'encMinDist', '0');
   mkInput(document, 'encMaxDist', '0');
   const lootTable = document.getElementById('encLootTable');
@@ -246,6 +248,7 @@ test('collectEncounter reads loot chance', async () => {
   vm.runInContext(code.slice(start, end), context);
   const e = context.collectEncounter();
   assert.ok(Array.isArray(e.lootTable));
+  assert.strictEqual(e.mode, 'distance');
   const drops = JSON.parse(JSON.stringify(e.lootTable));
   assert.deepStrictEqual(drops, [{ item: 'rat_tail', chance: 0.3 }]);
 });

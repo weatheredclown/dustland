@@ -554,6 +554,45 @@ function getEncounterGuard(){
   return null;
 }
 
+function getEncounterMode(entry){
+  if(!entry || typeof entry !== 'object') return 'distance';
+  if(entry.mode === 'zone') return 'zone';
+  if(entry.mode === 'distance') return 'distance';
+  if(entry.zoneTag) return 'zone';
+  return 'distance';
+}
+
+function pointInZone(map, x, y, zone){
+  if(!zone) return false;
+  const zoneMap = zone.map || 'world';
+  if(zoneMap !== map) return false;
+  const w = Number.isFinite(zone.w) ? zone.w : 0;
+  const h = Number.isFinite(zone.h) ? zone.h : 0;
+  if(w <= 0 || h <= 0) return false;
+  return x >= zone.x && y >= zone.y && x < zone.x + w && y < zone.y + h;
+}
+
+function encounterMatchesLocation(entry, map, x, y, dist){
+  const mode = getEncounterMode(entry);
+  if(mode === 'zone'){
+    const rawTag = typeof entry.zoneTag === 'string' ? entry.zoneTag.trim() : '';
+    if(!rawTag) return false;
+    const zones = globalThis.Dustland?.zoneEffects || [];
+    for(const z of zones){
+      const tag = typeof z.tag === 'string' ? z.tag.trim() : '';
+      const id = typeof z.id === 'string' ? z.id.trim() : '';
+      if(tag !== rawTag && id !== rawTag) continue;
+      if(pointInZone(map, x, y, z)) return true;
+    }
+    return false;
+  }
+  const min = Number.isFinite(entry.minDist) ? entry.minDist : null;
+  const max = Number.isFinite(entry.maxDist) ? entry.maxDist : null;
+  if(min !== null && dist < min) return false;
+  if(max !== null && dist > max) return false;
+  return true;
+}
+
 function checkRandomEncounter(){
   const mods = zoneAttrs(state.map, party.x, party.y);
   if(mods.noEncounters) return;
@@ -585,14 +624,14 @@ function checkRandomEncounter(){
   const span = Math.max(WORLD_W, WORLD_H);
   const chance = Math.max(0.02, 0.25 - (dist / span) * 0.23);
   if(Math.random() < chance){
-    let pool = bank.filter(e => (!e.minDist || dist >= e.minDist) && (!e.maxDist || dist <= e.maxDist));
+    let pool = bank.filter(entry => encounterMatchesLocation(entry, state.map, party.x, party.y, dist));
     if(!pool.length) return;
     if (encounterBias){
       const tag = encounterBias.toLowerCase();
       const biased = pool.filter(e => (e.tags && e.tags.includes(tag)) || (e.id && e.id.includes(tag)) || (e.name && e.name.toLowerCase().includes(tag)));
       if (biased.length) pool = biased;
     }
-    const hard = pool.filter(e => e.minDist);
+    const hard = pool.filter(e => e.mode !== 'zone' && e.minDist);
     if(hard.length) pool = hard;
     const guard = getEncounterGuard();
     if(Number.isFinite(guard)){

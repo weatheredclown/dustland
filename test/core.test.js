@@ -2636,6 +2636,32 @@ test('enemies respect max distance', () => {
   assert.ok(!started);
 });
 
+test('zone-tagged encounters trigger only inside tagged zone', () => {
+  const row = Array(6).fill(TILE.SAND);
+  applyModule({
+    world: [row],
+    zones: [{ map: 'world', x: 3, y: 0, w: 1, h: 1, tag: 'ambush' }],
+    templates: [{ id: 'zone_enemy', name: 'Stalker', combat: { HP: 2, ATK: 1, DEF: 0 } }],
+    encounters: { world: [{ templateId: 'zone_enemy', mode: 'zone', zoneTag: 'ambush' }] }
+  });
+  state.map = 'world';
+  let started = false;
+  const origStart = globalThis.Dustland.actions.startCombat;
+  const origRand = Math.random;
+  Math.random = () => 0;
+  globalThis.Dustland.actions.startCombat = () => { started = true; return Promise.resolve({ result: 'flee' }); };
+  encounterCooldown = 0;
+  setPartyPos(1, 0);
+  checkRandomEncounter();
+  assert.ok(!started);
+  encounterCooldown = 0;
+  setPartyPos(3, 0);
+  checkRandomEncounter();
+  Math.random = origRand;
+  globalThis.Dustland.actions.startCombat = origStart;
+  assert.ok(started);
+});
+
 test('enemy requires a specific weapon', () => {
   const enemy = { name: 'Shellback', hp: 10, requires: 'artifact_blade' };
   if(!getItem('artifact_blade')){
