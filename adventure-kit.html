@@ -801,6 +801,7 @@
         <button class="btn" type="button" id="newZone">+ Zone</button>
         <div id="zoneEditor" style="display:none">
           <label>Map<select id="zoneMap"></select></label>
+          <label>Tag<input id="zoneTag" /></label>
           <div class="xy">
             <label>X<input id="zoneX" type="number" min="0" /></label>
             <label>Y<input id="zoneY" type="number" min="0" /></label>
@@ -834,9 +835,14 @@
         <button class="btn" type="button" id="newEncounter">+ Enemy</button>
         <div id="encounterEditor" style="display:none">
           <label>Map<select id="encMap"></select></label>
+          <label>Location<select id="encLocationMode">
+            <option value="distance">Distance from road</option>
+            <option value="zone">Zone tag</option>
+          </select></label>
           <label>Template<select id="encTemplate"></select></label>
           <label>Min Dist<input id="encMinDist" type="number" min="0" /></label>
           <label>Max Dist<input id="encMaxDist" type="number" min="0" /></label>
+          <label id="encZoneWrap">Zone<select id="encZone"></select></label>
           <div class="lootTableWrap">
             <div class="lootTableLabel">Loot Table</div>
             <div class="lootTableHeader"><span>Item</span><span>Chance %</span></div>

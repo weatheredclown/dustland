@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import fsSync from 'node:fs';
 import { execSync } from 'node:child_process';
+import { makeDocument } from './test-harness.js';
 
 function stubEl(){
   const el = {
@@ -1492,16 +1493,36 @@ test('renderEncounterList shows loot and collectEncounter reconciles template lo
   encLootTable.appendChild(row);
   const originalQuery = encLootTable.querySelectorAll;
   encLootTable.querySelectorAll = selName => selName === '.lootRow' ? encLootTable.children : [];
+  document.getElementById('encLocationMode').value = 'distance';
   const entry = collectEncounter();
   assert.strictEqual(entry.lootTable, undefined);
   encLootTable.children.length = 0;
   encLootTable.querySelectorAll = () => [];
+  document.getElementById('encLocationMode').value = 'distance';
   const entry2 = collectEncounter();
   assert.deepStrictEqual(entry2.lootTable, []);
   encLootTable.querySelectorAll = originalQuery;
   moduleData.templates = prevTemplates;
   moduleData.encounters = prevEncounters;
   document.getElementById('encounterList').innerHTML = '';
+});
+
+test('collectEncounter stores zone tag when zone mode selected', async () => {
+  const document = makeDocument();
+  document.getElementById('encMap').value = 'world';
+  document.getElementById('encTemplate').value = 't';
+  document.getElementById('encLocationMode').value = 'zone';
+  document.getElementById('encZone').value = 'hotspot';
+  const context = { document, moduleData: { templates: [] } };
+  vm.createContext(context);
+  const code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
+  const start = code.indexOf('function clampChance');
+  const end = code.indexOf('function addEncounter', start);
+  vm.runInContext(code.slice(start, end), context);
+  const entry = context.collectEncounter();
+  assert.strictEqual(entry.mode, 'zone');
+  assert.strictEqual(entry.zoneTag, 'hotspot');
+  assert.ok(!('minDist' in entry));
 });
 
 test('generateProceduralWorld preserves existing data', () => {

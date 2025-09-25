@@ -3066,14 +3066,105 @@ function formatLootTableSummary(table) {
   }).join(', ');
 }
 
+function getEncounterLocationMode() {
+  const mode = document.getElementById('encLocationMode')?.value;
+  return mode === 'zone' ? 'zone' : 'distance';
+}
+
+function populateEncounterZoneDropdown(map, selectedTag = '') {
+  const select = document.getElementById('encZone');
+  if (!select) return false;
+  const zones = (moduleData.zones || []).filter(z => (z.map || 'world') === map && typeof z.tag === 'string' && z.tag.trim());
+  select.innerHTML = '';
+  let found = false;
+  if (zones.length) {
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Select a zone';
+    placeholder.disabled = true;
+    select.appendChild(placeholder);
+    zones.forEach(z => {
+      const opt = document.createElement('option');
+      opt.value = z.tag;
+      opt.textContent = formatZoneSummary(z);
+      if (selectedTag && selectedTag === z.tag) {
+        opt.selected = true;
+        found = true;
+      }
+      select.appendChild(opt);
+    });
+    if (!found) {
+      placeholder.selected = !selectedTag;
+    } else {
+      placeholder.selected = false;
+    }
+    if (selectedTag && !found) {
+      placeholder.selected = false;
+      const fallback = document.createElement('option');
+      fallback.value = selectedTag;
+      fallback.textContent = `${selectedTag} (missing)`;
+      fallback.selected = true;
+      select.appendChild(fallback);
+    }
+    select.disabled = false;
+    return true;
+  } else {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'No tagged zones';
+    opt.disabled = true;
+    opt.selected = true;
+    select.appendChild(opt);
+    select.disabled = true;
+    return false;
+  }
+}
+
+function updateEncounterLocationMode() {
+  const mode = getEncounterLocationMode();
+  const minInput = document.getElementById('encMinDist');
+  const maxInput = document.getElementById('encMaxDist');
+  const minLabel = (minInput?.parentElement && minInput.parentElement.style) ? minInput.parentElement : minInput;
+  const maxLabel = (maxInput?.parentElement && maxInput.parentElement.style) ? maxInput.parentElement : maxInput;
+  const zoneWrap = document.getElementById('encZoneWrap');
+  const mapSel = document.getElementById('encMap');
+  const zoneSel = document.getElementById('encZone');
+  let hasZones = false;
+  if (mode === 'zone' && mapSel) {
+    hasZones = populateEncounterZoneDropdown(mapSel.value || 'world', zoneSel ? zoneSel.value : '');
+  }
+  if (minLabel?.style) minLabel.style.display = mode === 'distance' ? '' : 'none';
+  if (maxLabel?.style) maxLabel.style.display = mode === 'distance' ? '' : 'none';
+  if (zoneWrap) zoneWrap.style.display = mode === 'zone' ? '' : 'none';
+  if (zoneSel) zoneSel.disabled = mode === 'zone' ? !hasZones : true;
+}
+
+function formatEncounterLocation(entry) {
+  if (!entry || typeof entry !== 'object') return '';
+  const mode = entry.mode === 'zone' || (entry.zoneTag && !entry.mode) ? 'zone' : 'distance';
+  if (mode === 'zone') {
+    if (entry.zoneTag) return `Zone: ${entry.zoneTag}`;
+    return 'Zone encounter';
+  }
+  const pieces = [];
+  if (Number.isFinite(entry.minDist)) pieces.push(`≥${entry.minDist}`);
+  if (Number.isFinite(entry.maxDist)) pieces.push(`≤${entry.maxDist}`);
+  if (!pieces.length) return '';
+  return `Dist ${pieces.join(' ')}`;
+}
+
 function showEncounterEditor(show){
   document.getElementById('encounterEditor').style.display = show ? 'block' : 'none';
 }
 function startNewEncounter(){
   editEncounterIdx = -1;
-  populateMapDropdown(document.getElementById('encMap'), 'world');
+  const mapSel = document.getElementById('encMap');
+  populateMapDropdown(mapSel, 'world');
+  populateEncounterZoneDropdown(mapSel.value || 'world', '');
+  document.getElementById('encLocationMode').value = 'distance';
   document.getElementById('encMinDist').value = '';
   document.getElementById('encMaxDist').value = '';
+  document.getElementById('encZone').value = '';
   const tmplSel = document.getElementById('encTemplate');
   populateTemplateDropdown(tmplSel, '');
   setLootTable(document.getElementById('encLootTable'), []);
@@ -3081,14 +3172,25 @@ function startNewEncounter(){
   document.getElementById('delEncounter').style.display = 'none';
   showEncounterEditor(true);
   tmplSel.focus();
+  updateEncounterLocationMode();
 }
 function collectEncounter(){
   const map = document.getElementById('encMap').value.trim() || 'world';
   const templateId = document.getElementById('encTemplate').value.trim();
-  const minDist = parseInt(document.getElementById('encMinDist').value,10) || 0;
-  const maxDist = parseInt(document.getElementById('encMaxDist').value,10) || 0;
+  const mode = getEncounterLocationMode();
+  const minDist = parseInt(document.getElementById('encMinDist').value,10);
+  const maxDist = parseInt(document.getElementById('encMaxDist').value,10);
+  const zoneTag = document.getElementById('encZone').value.trim();
   const t = globalThis.moduleData?.templates?.find(t => t.id === templateId);
-  const entry = { map, templateId, minDist, maxDist };
+  const entry = { map, templateId };
+  if (mode === 'zone') {
+    entry.mode = 'zone';
+    if (zoneTag) entry.zoneTag = zoneTag;
+  } else {
+    entry.mode = 'distance';
+    if (!Number.isNaN(minDist)) entry.minDist = minDist;
+    if (!Number.isNaN(maxDist)) entry.maxDist = maxDist;
+  }
   const lootTable = collectLootTable(document.getElementById('encLootTable'));
   const tmplTable = getTemplateLootTable(t);
   if (lootTable.length) {
@@ -3111,15 +3213,21 @@ function addEncounter(){
 function editEncounter(i){
   const e = moduleData.encounters[i];
   editEncounterIdx = i;
-  populateMapDropdown(document.getElementById('encMap'), e.map);
+  const mapSel = document.getElementById('encMap');
+  populateMapDropdown(mapSel, e.map);
+  populateEncounterZoneDropdown(mapSel.value || 'world', e.zoneTag || '');
   populateTemplateDropdown(document.getElementById('encTemplate'), e.templateId || '');
-  document.getElementById('encMinDist').value = e.minDist || '';
-  document.getElementById('encMaxDist').value = e.maxDist || '';
+  const mode = e.mode === 'zone' || (e.zoneTag && !e.mode) ? 'zone' : 'distance';
+  document.getElementById('encLocationMode').value = mode;
+  document.getElementById('encMinDist').value = Number.isFinite(e.minDist) ? e.minDist : '';
+  document.getElementById('encMaxDist').value = Number.isFinite(e.maxDist) ? e.maxDist : '';
+  document.getElementById('encZone').value = e.zoneTag || '';
   const t = moduleData.templates.find(t => t.id === e.templateId);
   setLootTable(document.getElementById('encLootTable'), getEncounterLootTable(e, t));
   document.getElementById('addEncounter').textContent = 'Update Enemy';
   document.getElementById('delEncounter').style.display = 'block';
   showEncounterEditor(true);
+  updateEncounterLocationMode();
 }
 function renderEncounterList(){
   const list = document.getElementById('encounterList');
@@ -3128,7 +3236,9 @@ function renderEncounterList(){
     const name = t ? t.name : e.templateId;
     const summary = formatLootTableSummary(getEncounterLootTable(e, t));
     const lootStr = summary ? ` - ${summary}` : '';
-    return `<div data-idx="${i}">${e.map}: ${name}${lootStr}</div>`;
+    const location = formatEncounterLocation(e);
+    const locStr = location ? ` [${location}]` : '';
+    return `<div data-idx="${i}">${e.map}: ${name}${locStr}${lootStr}</div>`;
   }).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editEncounter(parseInt(div.dataset.idx,10)));
 }
@@ -3688,6 +3798,7 @@ function updateZoneWallFields() {
 function startNewZone() {
   editZoneIdx = -1;
   populateMapDropdown(document.getElementById('zoneMap'), 'world');
+  document.getElementById('zoneTag').value = '';
   document.getElementById('zoneX').value = 0;
   document.getElementById('zoneY').value = 0;
   document.getElementById('zoneW').value = 1;
@@ -3715,6 +3826,7 @@ function startNewZone() {
 
 function collectZone() {
   const map = document.getElementById('zoneMap').value.trim() || 'world';
+  const tag = document.getElementById('zoneTag').value.trim();
   const x = parseInt(document.getElementById('zoneX').value, 10) || 0;
   const y = parseInt(document.getElementById('zoneY').value, 10) || 0;
   const w = parseInt(document.getElementById('zoneW').value, 10) || 1;
@@ -3736,6 +3848,7 @@ function collectZone() {
     west: document.getElementById('zoneEntranceWest').checked
   };
   const entry = { map, x, y, w, h };
+  if (tag) entry.tag = tag;
   if (hp || msg) {
     entry.perStep = {};
     if (hp) entry.perStep.hp = hp;
@@ -3783,6 +3896,7 @@ function editZone(i) {
   const z = moduleData.zones[i];
   editZoneIdx = i;
   populateMapDropdown(document.getElementById('zoneMap'), z.map);
+  document.getElementById('zoneTag').value = z.tag || '';
   document.getElementById('zoneX').value = z.x;
   document.getElementById('zoneY').value = z.y;
   document.getElementById('zoneW').value = z.w;
@@ -3812,10 +3926,23 @@ function editZone(i) {
   drawWorld();
 }
 
+function formatZoneSummary(z) {
+  if (!z) return '';
+  const coords = `@(${z.x},${z.y},${z.w}x${z.h})`;
+  if (z.tag) return `${z.tag} - ${z.map} ${coords}`;
+  return `${z.map} ${coords}`;
+}
+
 function renderZoneList() {
   const list = document.getElementById('zoneList');
-  list.innerHTML = moduleData.zones.map((z, i) => `<div data-idx="${i}">${z.map} @(${z.x},${z.y},${z.w}x${z.h})</div>`).join('');
+  list.innerHTML = moduleData.zones.map((z, i) => `<div data-idx="${i}">${formatZoneSummary(z)}</div>`).join('');
   Array.from(list.children).forEach(div => div.onclick = () => editZone(parseInt(div.dataset.idx, 10)));
+  const encMap = document.getElementById('encMap');
+  if (encMap) {
+    const encZone = document.getElementById('encZone');
+    const selectedTag = encZone ? encZone.value : '';
+    populateEncounterZoneDropdown(encMap.value || 'world', selectedTag);
+  }
 }
 
 function updateZoneDims() {
@@ -4969,6 +5096,14 @@ document.getElementById('encTemplate').addEventListener('change', () => {
   const table = getTemplateLootTable(tmpl);
   if (table.length) setLootTable(container, table);
 });
+document.getElementById('encLocationMode').addEventListener('change', updateEncounterLocationMode);
+document.getElementById('encMap').addEventListener('change', () => {
+  const mapSel = document.getElementById('encMap');
+  const zoneSel = document.getElementById('encZone');
+  populateEncounterZoneDropdown(mapSel.value || 'world', zoneSel ? zoneSel.value : '');
+  updateEncounterLocationMode();
+});
+updateEncounterLocationMode();
 document.getElementById('npcPrevP').onclick = () => {
   npcPortraitIndex = (npcPortraitIndex + npcPortraits.length - 1) % npcPortraits.length;
   npcPortraitPath = '';
