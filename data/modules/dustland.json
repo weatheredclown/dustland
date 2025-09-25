@@ -875,7 +875,7 @@
           "LCK": 1
         }
       },
-      "xp": 4
+      "xp": 12
     },
     {
       "id": "q_recruit_grin",
@@ -896,7 +896,7 @@
           "LCK": 1
         }
       },
-      "xp": 4
+      "xp": 12
     },
     {
       "id": "q_tower",
@@ -912,7 +912,7 @@
           "PER": 1
         }
       },
-      "xp": 5
+      "xp": 15
     },
     {
       "id": "q_idol",
@@ -928,13 +928,13 @@
           "CHA": 1
         }
       },
-      "xp": 5
+      "xp": 15
     },
     {
       "id": "q_toll",
       "title": "Toll-Booth Etiquette",
       "desc": "You met the Duchess on the road.",
-      "xp": 2
+      "xp": 6
     },
     {
       "id": "q_signal",
@@ -942,7 +942,7 @@
       "desc": "Collect three signal fragments in the wastes.",
       "item": "signal_fragment",
       "count": 3,
-      "xp": 3
+      "xp": 9
     },
     {
       "id": "q_spark",
@@ -967,7 +967,7 @@
       "desc": "Deliver the Sun Charm to the Archivist in the Hall so he can decode the broadcast and chart a path to the missing fragment.",
       "item": "sun_charm",
       "reward": "sun_charm",
-      "xp": 4,
+      "xp": 12,
       "dialog": {
         "offer": "The Archivist taps a reel. 'The Sun Charm hums with a lost broadcast. Bring it so I can hear the dawn.'",
         "active": "The Archivist taps a reel. 'The Sun Charm hums with a lost broadcast. Bring it so I can hear the dawn.'",
@@ -980,7 +980,7 @@
       "desc": "Recover Signal Fragment C from the echo relay hidden in the far northeast so the Archivist can finish the broadcast and unlock the Epic Blade.",
       "item": "signal_fragment_c",
       "reward": "epic_blade",
-      "xp": 8,
+      "xp": 24,
       "dialog": {
         "offer": "The Archivist squints at the receiver. 'I traced the pattern, but Signal Fragment C will complete the chorus.'",
         "active": "The Archivist squints at the receiver. 'I traced the pattern, but Signal Fragment C will complete the chorus.'",
@@ -992,21 +992,21 @@
       "title": "Antidote Assembly",
       "desc": "Collect water flasks and plant fiber, then craft an antidote at the workshop for Medic Lysa.",
       "item": "antidote",
-      "xp": 5
+      "xp": 15
     },
     {
       "id": "q_scout_recon",
       "title": "Scout's Return",
       "desc": "Once the antidote works, bring Scout Bren a bandage so they can rejoin patrol duty.",
       "item": "bandage",
-      "xp": 4
+      "xp": 12
     },
     {
       "id": "q_curry_favor",
       "title": "Currying Favor",
       "desc": "Earn the Duke of the Wastes' respect for the Hall.",
       "count": 1,
-      "xp": 35,
+      "xp": 105,
       "progressText": "The Duke has not pledged us his favor yet.",
       "dialogNodes": [
         {
@@ -1028,13 +1028,13 @@
       "id": "task_grudge_sour_routes",
       "title": "Sour Cass's Routes",
       "desc": "Tip off rival caravans to rile Cass and raise her grudge.",
-      "xp": 1
+      "xp": 3
     },
     {
       "id": "task_grudge_patch_wagon",
       "title": "Patch Cass's Wagon",
       "desc": "Deliver spare parts so Cass eases her grudge.",
-      "xp": 1
+      "xp": 3
     },
     {
       "id": "q_first_echo",
@@ -1042,7 +1042,7 @@
       "desc": "Find the Tuned Crystal for Sparks to help him focus the Ghost Signal.",
       "item": "tuned_crystal",
       "reward": "signal_fragment_1",
-      "xp": 10
+      "xp": 30
     },
     {
       "id": "q_silent_tower",
@@ -1051,14 +1051,14 @@
       "item": "power_cell",
       "count": 3,
       "reward": "signal_fragment_2",
-      "xp": 20
+      "xp": 60
     },
     {
       "id": "q_resonant_cave",
       "title": "The Resonant Cave",
       "desc": "Follow the Hermit's instructions to activate the Resonant Crystals in the correct order.",
       "reward": "signal_fragment_3",
-      "xp": 30,
+      "xp": 90,
       "reqFlag": "cave_puzzle_complete"
     }
   ],
