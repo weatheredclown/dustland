@@ -1075,6 +1075,7 @@ const DATA = `
       "name": "Strange Vortex",
       "title": "A swirling vortex of dust and sand.",
       "desc": "You feel a strange pull towards it.",
+      "prompt": "Churning vortex of dust twisting in midair",
       "portraitSheet": "assets/portraits/dustland-module/strange_vortex_4.png",
       "tree": {
         "start": {
@@ -1285,6 +1286,7 @@ const DATA = `
       "name": "Caretaker Kesh",
       "title": "Hall Steward",
       "desc": "Weary caretaker guarding the hall's chained exit.",
+      "prompt": "Tired steward leaning on a chained bunker door",
       "portraitSheet": "assets/portraits/kesh_4.png",
       "questId": "q_hall_key",
       "tree": {
@@ -1356,6 +1358,7 @@ const DATA = `
       "name": "Dusty Crate",
       "title": "",
       "desc": "A dusty crate that might hide something useful.",
+      "prompt": "Splintered crate half-collapsed under dust",
       "portraitSheet": "assets/portraits/crate_4.png",
       "portraitLock": false,
       "tree": {
@@ -1395,6 +1398,7 @@ const DATA = `
       "name": "Lone Drifter",
       "title": "Mutters",
       "desc": "A drifter muttering to themselves.",
+      "prompt": "Road-weary drifter whispering to the dust",
       "portraitSheet": "assets/portraits/drifter_4.png",
       "tree": {
         "start": {
@@ -1413,6 +1417,7 @@ const DATA = `
       "name": "Rotwalker",
       "title": "Test Monster",
       "desc": "A shambler posted here for practice.",
+      "prompt": "Rotting training ghoul chained in the hall",
       "portraitSheet": "assets/portraits/dustland-module/rotwalker_4.png",
       "portraitLock": false,
       "tree": {
@@ -1441,6 +1446,7 @@ const DATA = `
       "name": "Mira",
       "title": "Blade Dancer",
       "desc": "A lithe fighter ready to strike back.",
+      "prompt": "Scarred warrior with twin blades poised to strike",
       "portraitSheet": "assets/portraits/dustland-module/mira_4.png",
       "tree": {
         "start": {
@@ -1469,6 +1475,7 @@ const DATA = `
       "name": "Nora",
       "title": "Storm Caller",
       "desc": "Crackling energy dances across her gauntlet.",
+      "prompt": "Focused stormcaster with a crackling gauntlet",
       "portraitSheet": "assets/portraits/dustland-module/nora_4.png",
       "tree": {
         "start": {
@@ -1500,6 +1507,7 @@ const DATA = `
       "name": "Tess",
       "title": "Venom Rogue",
       "desc": "She twirls a dagger dripping with toxins.",
+      "prompt": "Dagger-wielding rogue balancing a vial of poison",
       "portraitSheet": "assets/portraits/dustland-module/tess_4.png",
       "tree": {
         "start": {
@@ -1534,6 +1542,7 @@ const DATA = `
       "name": "Worn Sign",
       "title": "Warning",
       "desc": "Faded letters warn travelers.",
+      "prompt": "Sun-bleached warning sign rattling on a pole",
       "portraitSheet": "assets/portraits/dustland-module/worn_sign_4.png",
       "symbol": "?",
       "tree": {
@@ -1552,6 +1561,7 @@ const DATA = `
       "name": "Nila the Pump-Keeper",
       "title": "Parched Farmer",
       "desc": "Sunburnt hands, hopeful eyes. Smells faintly of mud.",
+      "prompt": "Dust-caked farmer gripping a cracked pump handle",
       "portraitSheet": "assets/portraits/mara_4.png",
       "questId": "q_waterpump",
       "tree": {
@@ -1599,6 +1609,7 @@ const DATA = `
       "name": "Grin",
       "title": "Scav-for-Hire",
       "desc": "Lean scav with a crowbar and half a smile.",
+      "prompt": "Lean scavenger twirling a prybar with a crooked grin",
       "portraitSheet": "assets/portraits/grin_4.png",
       "questId": "q_recruit_grin",
       "tree": {
@@ -1706,6 +1717,7 @@ const DATA = `
       "name": "Postmaster Ivo",
       "title": "Courier of Dust",
       "desc": "Dusty courier seeking a lost parcel.",
+      "prompt": "Weathered courier clutching a bundle of worn letters",
       "portraitSheet": "assets/portraits/ivo_4.png",
       "questId": "q_postal",
       "tree": {
@@ -1763,6 +1775,7 @@ const DATA = `
       "name": "Rella",
       "title": "Radio Tech",
       "desc": "Tower technician with grease-stained hands.",
+      "prompt": "Focused radio tech tightening wires on a battered console",
       "portraitSheet": "assets/portraits/rella_4.png",
       "questId": "q_tower",
       "tree": {
@@ -1801,6 +1814,7 @@ const DATA = `
       "name": "The Shifting Hermit",
       "title": "Pilgrim",
       "desc": "A cloaked hermit murmuring about rusted idols.",
+      "prompt": "Hooded hermit clutching a rust-streaked idol",
       "portraitSheet": "assets/portraits/pilgrim_4.png",
       "questId": "q_idol",
       "tree": {
@@ -1848,6 +1862,7 @@ const DATA = `
       "name": "Scrap Duchess",
       "title": "Toll-Queen",
       "desc": "A crown of bottlecaps; eyes like razors.",
+      "prompt": "Scrap-armored matriarch demanding toll at a barricade",
       "portraitSheet": "assets/portraits/scrap_4.png",
       "questId": "q_toll",
       "tree": {
@@ -1898,6 +1913,7 @@ const DATA = `
       "name": "Hidden Hermit",
       "title": "Lurker",
       "desc": "A hermit steps out when you return.",
+      "prompt": "Weathered hermit peering from shadowed dunes",
       "portraitSheet": "assets/portraits/dustland-module/hidden_hermit_4.png",
       "tree": {
         "start": {
@@ -1970,6 +1986,7 @@ const DATA = `
       "name": "Road Raider",
       "title": "Bandit",
       "desc": "Scarred scav looking for trouble.",
+      "prompt": "Scarred highway raider leveling a rusted rifle",
       "portraitSheet": "assets/portraits/raider_4.png",
       "portraitLock": false,
       "tree": {
@@ -2009,6 +2026,7 @@ const DATA = `
       "name": "Cass the Trader",
       "title": "Shopkeep",
       "desc": "A roving merchant weighing your wares.",
+      "prompt": "Nomad trader arranging scrap goods on a tarp",
       "portraitSheet": "assets/portraits/cass_4.png",
       "tree": {
         "start": {
@@ -2096,6 +2114,7 @@ const DATA = `
       "name": "Tess the Scout",
       "title": "Water Runner",
       "desc": "She checks the pump then the far ridge.",
+      "prompt": "Desert scout balancing canteens and ridgeglass charms",
       "portraitSheet": "assets/portraits/dustland-module/tess_4.png",
       "tree": {
         "start": {
@@ -2162,6 +2181,7 @@ const DATA = `
       "name": "Scrap Mutt",
       "title": "Mangy Hound",
       "desc": "A feral mutt snarling over junk.",
+      "prompt": "Patchwork metal hound with glowing eyes over a scrap pile",
       "portraitSheet": "assets/portraits/dustland-module/scrap_mutt_4.png",
       "portraitLock": false,
       "tree": {
@@ -2191,6 +2211,7 @@ const DATA = `
       "name": "Rust Bandit",
       "title": "Scav Raider",
       "desc": "A bandit prowling for easy loot.",
+      "prompt": "Rust-scarred raider brandishing a jagged machete",
       "portraitSheet": "assets/portraits/dustland-module/rust_bandit_4.png",
       "portraitLock": false,
       "tree": {
@@ -2220,6 +2241,7 @@ const DATA = `
       "name": "Feral Nomad",
       "title": "Mad Drifter",
       "desc": "A wild-eyed drifter muttering to himself.",
+      "prompt": "Wild-eyed nomad clutching scavenged charms",
       "portraitSheet": "assets/portraits/dustland-module/feral_nomad_4.png",
       "portraitLock": false,
       "tree": {
@@ -2249,6 +2271,7 @@ const DATA = `
       "name": "Waste Ghoul",
       "title": "Rotwalker",
       "desc": "A decayed wanderer hungry for flesh.",
+      "prompt": "Decayed ghoul dragging chains through toxic dust",
       "portraitSheet": "assets/portraits/dustland-module/waste_ghoul_4.png",
       "portraitLock": false,
       "tree": {
@@ -2273,6 +2296,7 @@ const DATA = `
       "id": "iron_brute",
       "name": "Iron Brute",
       "desc": "A hulking brute plated in scrap.",
+      "prompt": "Towering brute encased in welded scrap armor",
       "color": "#f66",
       "symbol": "!",
       "map": "world",
@@ -2334,6 +2358,7 @@ const DATA = `
       "name": "Grit Stalker",
       "title": "Wasteland Hunter",
       "desc": "A ruthless drifter prowling for prey.",
+      "prompt": "Cloaked hunter stalking the dunes with a hooked spear",
       "portraitSheet": "assets/portraits/portrait_1079.png",
       "portraitLock": false,
       "tree": {
@@ -2383,6 +2408,7 @@ const DATA = `
       "name": "Brakk",
       "title": "Power Trainer",
       "desc": "A former arena champ teaching raw strength.",
+      "prompt": "Muscular arena veteran demonstrating crushing strikes",
       "portraitSheet": "assets/portraits/dustland-module/brakk_4.png",
       "trainer": "power",
       "tree": {
@@ -2422,6 +2448,7 @@ const DATA = `
       "name": "Rusty",
       "title": "Endurance Trainer",
       "desc": "A grizzled scavenger preaching survival.",
+      "prompt": "Weathered survivor wrapped in patched leathers",
       "portraitSheet": "assets/portraits/dustland-module/rusty_4.png",
       "trainer": "endurance",
       "tree": {
@@ -2461,6 +2488,7 @@ const DATA = `
       "name": "Mira",
       "title": "Tricks Trainer",
       "desc": "A nimble tinkerer teaching odd moves.",
+      "prompt": "Quick-handed tinkerer juggling coins and gadgets",
       "portraitSheet": "assets/portraits/dustland-module/mira_4.png",
       "trainer": "tricks",
       "tree": {
@@ -2500,6 +2528,7 @@ const DATA = `
       "name": "Nora",
       "title": "Worm Seller",
       "desc": "She trades memory worms for scrap.",
+      "prompt": "Mystic merchant offering jars of glowing worms",
       "portraitSheet": "assets/portraits/dustland-module/nora_4.png",
       "tree": {
         "start": {
@@ -2541,6 +2570,7 @@ const DATA = `
       "name": "One-Armed Bandit",
       "title": "Slot Machine",
       "desc": "It wheezes, eager for scrap.",
+      "prompt": "Rusted slot machine flickering with failing bulbs",
       "portraitSheet": "assets/portraits/dustland-module/slot_machine.png",
       "symbol": "?",
       "tree": {
@@ -2635,6 +2665,7 @@ const DATA = `
       "id": "scrap_behemoth",
       "name": "Scrap Behemoth",
       "desc": "A towering mass of twisted metal.",
+      "prompt": "Colossal golem of fused scrap towering over the dunes",
       "color": "#f66",
       "symbol": "!",
       "map": "world",
@@ -3333,6 +3364,7 @@ const DATA = `
       "name": "Medic Lysa",
       "title": "Workshop Healer",
       "desc": "A weary medic sorting salvaged herbs.",
+      "prompt": "Tired field medic grinding herbs beside a jury-rigged still",
       "portraitSheet": "assets/portraits/dustland-module/mira_4.png",
       "symbol": "!",
       "questId": "q_antidote_aid",
@@ -3390,6 +3422,7 @@ const DATA = `
       "name": "Scout Bren",
       "title": "Sandway Patrol",
       "desc": "A scout slumped against the wall, breathing shallowly.",
+      "prompt": "Dusty scout clutching ribs while propped against a workbench",
       "portraitSheet": "assets/portraits/dustland-module/nora_4.png",
       "symbol": "!",
       "questId": "q_scout_recon",
@@ -3448,6 +3481,7 @@ const DATA = `
       "name": "Mahra",
       "title": "Hall Envoy",
       "desc": "An envoy wringing her hands over desert politics.",
+      "prompt": "Nervous envoy clutching a ledger among supply crates",
       "questId": "q_curry_favor",
       "tree": {
         "start": {
@@ -3522,6 +3556,7 @@ const DATA = `
       "name": "Duke of the Wastes",
       "title": "Desert Sovereign",
       "desc": "The Duke lounges on a rusted throne surrounded by sand-bitten trophies.",
+      "prompt": "Regal wasteland warlord reclining on a rusted throne",
       "tree": {
         "start": {
           "text": "A throne of rust looms over dunes of sand poured inside the lair.",
