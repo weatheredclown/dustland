@@ -152,24 +152,54 @@ test('bandage heals more than water flask', () => {
   assert.ok(bandage.use.amount > flask.use.amount);
 });
 
-test('vine creature drops plant fiber', () => {
+test('vine creature rolls loot table for scavenged supplies', () => {
   const data = loadModuleData();
   const template = data.templates.find(t => t.id === 'vine_creature');
   assert.ok(template);
   const encounter = data.encounters.world.find(e => e.templateId === 'vine_creature');
   assert.ok(encounter);
-  assert.strictEqual(encounter.loot, 'plant_fiber');
-  assert.strictEqual(encounter.lootChance, 0.25);
+  assert.ok(Array.isArray(encounter.lootTable));
+  const loot = Object.fromEntries(encounter.lootTable.map(entry => [entry.item, entry.chance]));
+  assert.deepStrictEqual(Object.keys(loot).sort(), [
+    'plant_fiber',
+    'sap_poultice',
+    'thornlash_whip'
+  ].sort());
+  assert.strictEqual(loot.plant_fiber, 0.25);
+  assert.strictEqual(loot.sap_poultice, 0.3);
+  assert.strictEqual(loot.thornlash_whip, 0.18);
 });
 
-test('rotwalker drops water flask', () => {
+test('rotwalker rolls loot table for salvage', () => {
   const data = loadModuleData();
   const template = data.templates.find(t => t.id === 'rotwalker');
   assert.ok(template);
   const encounter = data.encounters.world.find(e => e.templateId === 'rotwalker');
   assert.ok(encounter);
-  assert.strictEqual(encounter.loot, 'water_flask');
-  assert.strictEqual(encounter.lootChance, 0.25);
+  assert.ok(Array.isArray(encounter.lootTable));
+  const loot = Object.fromEntries(encounter.lootTable.map(entry => [entry.item, entry.chance]));
+  assert.deepStrictEqual(Object.keys(loot).sort(), [
+    'corroded_hatchet',
+    'patchwork_plate',
+    'water_flask'
+  ].sort());
+  assert.strictEqual(loot.corroded_hatchet, 0.16);
+  assert.strictEqual(loot.patchwork_plate, 0.2);
+  assert.strictEqual(loot.water_flask, 0.25);
+});
+
+test('sand titan can drop artifact blade or fuel cell', () => {
+  const data = loadModuleData();
+  const encounter = data.encounters.world.find(e => e.templateId === 'sand_titan');
+  assert.ok(encounter);
+  assert.ok(Array.isArray(encounter.lootTable));
+  const loot = Object.fromEntries(encounter.lootTable.map(entry => [entry.item, entry.chance]));
+  assert.deepStrictEqual(Object.keys(loot).sort(), [
+    'artifact_blade',
+    'fuel_cell'
+  ].sort());
+  assert.strictEqual(loot.artifact_blade, 0.75);
+  assert.strictEqual(loot.fuel_cell, 0.25);
 });
 
 test('northeast hut has portal to hall', () => {
