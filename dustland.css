@@ -947,7 +947,8 @@ input[type="range"] {
     }
 
 .shop-window {
-  width: 600px;
+  width: min(calc(640px + (var(--font-scale) - 1) * 420px), 96vw);
+  max-width: 1100px;
   background: #0f120f;
   border: 1px solid #2b3b2b;
   border-radius: 8px;
@@ -995,6 +996,19 @@ input[type="range"] {
   gap: 24px;
   flex: 1;
   min-height: 0;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 800px) {
+  .shop-panels {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .shop-inv,
+  .player-inv {
+    padding: 0;
+  }
 }
 
 .shop-inv, .player-inv {
