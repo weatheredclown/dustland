@@ -1269,6 +1269,7 @@ input[type="range"] {
   margin-top: 8px;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 
     #creator .win {
