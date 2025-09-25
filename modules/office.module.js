@@ -605,8 +605,8 @@ startGame = function () {
       const interior = interiors[castleId];
       const ix = Math.floor(interior.w / 2);
       const iy = Math.floor(interior.h / 2);
-      itemDrops.push({ id: charm.id, map: castleId, x: ix, y: iy });
-      itemDrops.push({ id: stim.id, map: castleId, x: ix + 1, y: iy });
+      itemDrops.push({ id: charm.id, map: castleId, x: ix, y: iy, dropType: 'world' });
+      itemDrops.push({ id: stim.id, map: castleId, x: ix + 1, y: iy, dropType: 'world' });
     }
     const s = OFFICE_MODULE.start;
     setPartyPos(s.x, s.y);

@@ -112,12 +112,20 @@ function lockInput(ms = RANDOM_COMBAT_INPUT_LOCK_MS, key){
   game.inputLockKey = typeof key === 'string' ? key.toLowerCase() : null;
 }
 
-function markWorldDropAges(beforeTurn){
+function getDropType(drop){
+  if(!drop) return null;
+  const type = typeof drop.dropType === 'string' ? drop.dropType : (drop.source === 'loot' ? 'loot' : 'world');
+  return type;
+}
+
+function isLootDrop(drop){
+  return getDropType(drop) === 'loot';
+}
+
+function markLootDropAges(beforeTurn){
   if(!Array.isArray(itemDrops) || !itemDrops.length) return;
   for(const drop of itemDrops){
-    if(!drop) continue;
-    const mapId = typeof drop.map === 'string' ? drop.map : 'world';
-    if(mapId !== 'world') continue;
+    if(!isLootDrop(drop)) continue;
     if(!Number.isFinite(drop.worldTurn)) drop.worldTurn = beforeTurn;
   }
 }
@@ -126,9 +134,7 @@ function decayWorldLoot(now){
   if(!Array.isArray(itemDrops) || !itemDrops.length) return;
   for(let i=itemDrops.length-1;i>=0;i--){
     const drop=itemDrops[i];
-    if(!drop) continue;
-    const mapId = typeof drop.map === 'string' ? drop.map : 'world';
-    if(mapId !== 'world') continue;
+    if(!isLootDrop(drop)) continue;
     const born = Number.isFinite(drop.worldTurn) ? drop.worldTurn : (now - 1);
     if(now - born >= WORLD_LOOT_DECAY_TURNS){
       itemDrops.splice(i,1);
@@ -138,7 +144,7 @@ function decayWorldLoot(now){
 
 function advanceWorldTurn(){
   const before = worldTurnCounter;
-  markWorldDropAges(before);
+  markLootDropAges(before);
   worldTurnCounter = before + 1;
   const now = worldTurnCounter;
   decayWorldLoot(now);

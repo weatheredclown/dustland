@@ -657,6 +657,7 @@ function applyModule(data = {}, options = {}) {
       const registered = registerItem(def);
       if (map !== undefined && x !== undefined && y !== undefined) {
         const loc = { id: registered.id, map: map || 'world', x, y };
+        loc.dropType = 'world';
         itemDrops.push(loc);
         questItemLocations[registered.id] = { map: loc.map, x: loc.x, y: loc.y };
       }

@@ -2369,7 +2369,8 @@ const DATA = `
           "min": 3,
           "max": 5
         },
-        "auto": true
+        "auto": true,
+        "challenge": 0
       },
       "symbol": "!"
     },
