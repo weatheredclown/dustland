@@ -1654,10 +1654,17 @@ function populateTypeDropdown(sel, selected = '') {
 }
 
 function populateItemDropdown(sel, selected = '') {
-  const ids = moduleData.items.map(it => it.id);
-  if (selected && !ids.includes(selected)) ids.push(selected);
-  sel.innerHTML = '<option value=""></option>' + ids.map(id => `<option value="${id}">${id}</option>`).join('');
-  sel.value = selected;
+  const selectedId = typeof selected === 'string' ? selected.trim() : '';
+  const ids = Array.isArray(moduleData?.items)
+    ? moduleData.items
+      .map(it => typeof it?.id === 'string' ? it.id : '')
+      .filter(Boolean)
+    : [];
+  const uniqueIds = new Set(ids);
+  if (selectedId) uniqueIds.add(selectedId);
+  const sortedIds = Array.from(uniqueIds).sort((a, b) => a.localeCompare(b));
+  sel.innerHTML = '<option value=""></option>' + sortedIds.map(id => `<option value="${id}">${id}</option>`).join('');
+  sel.value = selectedId;
 }
 
 function populateNPCDropdown(sel, selected = '') {
