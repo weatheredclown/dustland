@@ -495,9 +495,31 @@ input[type="range"] {
 
     #inv {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 6px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 8px;
         align-content: start;
+    }
+
+    #inv > .inventory-controls {
+        grid-column: 1 / -1;
+    }
+
+    .inventory-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin: 4px 0;
+    }
+
+    .inventory-filter {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .inventory-filter select {
+        min-width: 140px;
     }
 
     .tabwrap {
@@ -509,6 +531,42 @@ input[type="range"] {
         border: 1px dashed #2b382b;
         border-radius: 6px;
         background: #0c0f0c;
+    }
+
+    .inventory-slot {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        column-gap: 8px;
+        row-gap: 4px;
+        align-items: start;
+        padding-right: 4px;
+        min-width: 0;
+    }
+
+    .inventory-slot .inventory-label {
+        grid-column: 1;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .inventory-slot .stack-count {
+        grid-column: 1;
+        justify-self: start;
+    }
+
+    .inventory-slot .inventory-actions {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: flex-end;
+        align-content: flex-start;
+        min-width: 0;
+    }
+
+    .inventory-slot .inventory-actions .btn {
+        flex: 0 0 auto;
     }
 
     .equip-line {

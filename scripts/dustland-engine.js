@@ -1867,7 +1867,7 @@ function renderInv(){
   inv.innerHTML='';
   if(dropMode){
     const ctrl=document.createElement('div');
-    ctrl.style.margin='4px 0';
+    ctrl.className='inventory-controls';
     const ok=document.createElement('button');
     ok.className='btn';
     ok.textContent='Drop Selected';
@@ -1904,11 +1904,7 @@ function renderInv(){
     return;
   }
   const ctrl=document.createElement('div');
-  ctrl.style.display='flex';
-  ctrl.style.flexWrap='wrap';
-  ctrl.style.gap='8px';
-  ctrl.style.alignItems='center';
-  ctrl.style.margin='4px 0';
+  ctrl.className='inventory-controls';
   const dropBtn=document.createElement('button');
   dropBtn.className='btn';
   dropBtn.textContent='Drop';
@@ -1925,9 +1921,7 @@ function renderInv(){
   }
   const filterLabel=document.createElement('label');
   filterLabel.htmlFor='inventorySlotFilter';
-  filterLabel.style.display='flex';
-  filterLabel.style.alignItems='center';
-  filterLabel.style.gap='6px';
+  filterLabel.className='inventory-filter';
   filterLabel.textContent='Slot';
   const filterSelect=document.createElement('select');
   filterSelect.id='inventorySlotFilter';
@@ -2036,12 +2030,7 @@ function renderInv(){
   others.forEach(it => {
     const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
     const row=document.createElement('div');
-    row.className='slot';
-    row.style.display='flex';
-    row.style.alignItems='center';
-    row.style.justifyContent='flex-start';
-    row.style.gap='8px';
-    row.style.paddingRight='4px';
+    row.className='slot inventory-slot';
     if(['weapon','armor','trinket'].includes(it.type) && suggestions[it.type]===it){
       row.classList.add('better');
     }
@@ -2049,15 +2038,14 @@ function renderInv(){
     const baseLabel = it.name + (['weapon','armor','trinket'].includes(it.type)?` [${it.type}]`:'');
     const label = (it.cursed && it.cursedKnown)? `${baseLabel} (cursed)` : baseLabel;
     const labelSpan=document.createElement('span');
+    labelSpan.className='inventory-label';
     labelSpan.textContent=label;
     if(restriction && !restriction.levelMet && restriction.levelRequired > 1){
       row.classList.add('level-locked');
       labelSpan.classList.add('level-locked-label');
     }
-    const btnWrap=document.createElement('span');
-    btnWrap.style.display='flex';
-    btnWrap.style.gap='6px';
-    btnWrap.style.marginLeft='auto';
+    const btnWrap=document.createElement('div');
+    btnWrap.className='inventory-actions';
     if(['weapon','armor','trinket'].includes(it.type)){
       const equipBtn=document.createElement('button');
       equipBtn.className='btn';
