@@ -855,6 +855,11 @@ const DATA = `
       "mods": {
         "encounter_guard": 10
       }
+    },
+    {
+      "id": "magnetic_tape",
+      "name": "Magnetic Tape",
+      "type": "quest"
     }
   ],
   "quests": [
@@ -1249,7 +1254,13 @@ const DATA = `
             {
               "label": "(Thank him)",
               "to": "bye",
-              "reward": "XP 5"
+              "reward": "XP 5",
+              "effects": [
+                {
+                  "effect": "addItem",
+                  "id": "magnetic_tape"
+                }
+              ]
             }
           ]
         },
