@@ -87,18 +87,21 @@ test('world loot decays after configured turns', async () => {
   assert.strictEqual(typeof move, 'function');
 
   const worldDrop = { id: 'loot-cache', map: 'world', x: party.x, y: party.y, dropType: 'loot' };
-  const interiorDrop = { id: 'safe-cache', map: 'bunker', x: 1, y: 1 };
-  globalThis.itemDrops.push(worldDrop, interiorDrop);
+  const interiorLoot = { id: 'safe-cache', map: 'bunker', x: 1, y: 1, dropType: 'loot' };
+  const placedDrop = { id: 'placed-cache', map: 'bunker', x: 2, y: 1, dropType: 'world' };
+  globalThis.itemDrops.push(worldDrop, interiorLoot, placedDrop);
 
   for (let i = 0; i < WORLD_LOOT_DECAY_TURNS - 1; i++) {
     await move(0, 0);
   }
   assert.ok(globalThis.itemDrops.includes(worldDrop));
-  assert.ok(globalThis.itemDrops.includes(interiorDrop));
+  assert.ok(globalThis.itemDrops.includes(interiorLoot));
+  assert.ok(globalThis.itemDrops.includes(placedDrop));
   assert.strictEqual(getWorldTurns(), WORLD_LOOT_DECAY_TURNS - 1);
 
   await move(0, 0);
   assert.ok(!globalThis.itemDrops.includes(worldDrop));
-  assert.ok(globalThis.itemDrops.includes(interiorDrop));
+  assert.ok(!globalThis.itemDrops.includes(interiorLoot));
+  assert.ok(globalThis.itemDrops.includes(placedDrop));
   assert.strictEqual(getWorldTurns(), WORLD_LOOT_DECAY_TURNS);
 });

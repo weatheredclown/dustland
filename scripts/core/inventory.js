@@ -385,7 +385,7 @@ function dropItemNearParty(item) {
     throw new Error('Unknown item');
   }
   const base = cloneItem(ITEMS[it.id] || registerItem(it));
-  itemDrops.push({ id: base.id, map: party.map, x: party.x, y: party.y });
+  itemDrops.push({ id: base.id, map: party.map, x: party.x, y: party.y, dropType: 'loot' });
   log(`Inventory full, ${base.name} was dropped.`);
   if (typeof toast === 'function') toast(`Inventory full, ${base.name} was dropped.`);
 }
@@ -538,7 +538,7 @@ function dropItems(indices) {
     removeFromInv(idx, counts.get(idx));
   }
   if (drops.length) {
-    itemDrops.push({ items: drops, map: party.map, x: party.x, y: party.y });
+    itemDrops.push({ items: drops, map: party.map, x: party.x, y: party.y, dropType: 'loot' });
   }
   return drops.length;
 }

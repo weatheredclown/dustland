@@ -236,7 +236,7 @@
                 if (dropCfg.rank && typeof SpoilsCache?.create === 'function') {
                   const cache = SpoilsCache.create(dropCfg.rank);
                   const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
-                  itemDrops?.push?.({ id: registered.id, ...dropPos });
+                  itemDrops?.push?.({ id: registered.id, ...dropPos, dropType: 'loot' });
                   globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target: npc });
                 }
               }
