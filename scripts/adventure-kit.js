@@ -5804,8 +5804,11 @@ animate();
   const tabList = panel.querySelector('.tabs2');
   const tabs = Array.from(tabList.querySelectorAll('.tab2'));
   const panes = Array.from(panel.querySelectorAll('[data-pane]'));
+  const layout = document.querySelector('.ak-layout');
+  const mapCard = document.getElementById('mapCard');
   let current = 'npc';
   let wide = false;
+  let sizingRaf = 0;
 
   if (tabList && tabList.addEventListener) {
     tabList.addEventListener('wheel', e => {
@@ -5814,6 +5817,50 @@ animate();
         tabList.scrollLeft += e.deltaY;
       }
     });
+  }
+
+  function scheduleSizing() {
+    if (!layout || !mapCard) return;
+    if (sizingRaf) return;
+    if (typeof requestAnimationFrame !== 'function') {
+      updateResponsiveSizing();
+      return;
+    }
+    sizingRaf = requestAnimationFrame(() => {
+      sizingRaf = 0;
+      updateResponsiveSizing();
+    });
+  }
+
+  function updateResponsiveSizing() {
+    if (!layout || !mapCard) return;
+    if (typeof window === 'undefined') return;
+    if (window.innerWidth < 1100) {
+      layout.style.removeProperty('--ak-panel-min');
+      layout.style.removeProperty('--ak-map-max');
+      return;
+    }
+    const styles = window.getComputedStyle(layout);
+    const padLeft = parseFloat(styles.paddingLeft) || 0;
+    const padRight = parseFloat(styles.paddingRight) || 0;
+    const gap = parseFloat(styles.columnGap || styles.gap) || 0;
+    const layoutWidth = Math.max(0, layout.clientWidth - padLeft - padRight);
+    const trackSpace = Math.max(0, layoutWidth - gap);
+    if (!trackSpace) {
+      layout.style.removeProperty('--ak-panel-min');
+      layout.style.removeProperty('--ak-map-max');
+      return;
+    }
+    const mapMin = 360;
+    const mapMaxDefault = 640;
+    const panelMinBase = 360;
+    const tabsWidth = tabList ? (tabList.scrollWidth + 32) : panelMinBase;
+    const maxPanelSpace = Math.max(panelMinBase, trackSpace - mapMin);
+    const panelMin = Math.min(Math.max(panelMinBase, tabsWidth), maxPanelSpace);
+    const remaining = Math.max(trackSpace - panelMin, mapMin);
+    const mapMax = Math.max(mapMin, Math.min(mapMaxDefault, remaining));
+    layout.style.setProperty('--ak-panel-min', panelMin + 'px');
+    layout.style.setProperty('--ak-map-max', mapMax + 'px');
   }
 
   function setLayout() {
@@ -5839,16 +5886,32 @@ animate();
     if (!wide) {
       panes.forEach(p => p.style.display = (p.dataset.pane === tabName ? '' : 'none'));
     }
+    scheduleSizing();
   }
 
   tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.tab)));
-  if (typeof ResizeObserver === 'function') {
-    const ro = new ResizeObserver(setLayout);
-    ro.observe(panel);
-  } else if (typeof window !== 'undefined' && window.addEventListener) {
-    window.addEventListener('resize', setLayout);
+
+  function handleResize() {
+    setLayout();
+    scheduleSizing();
   }
-  setLayout();
+
+  if (typeof ResizeObserver === 'function') {
+    const ro = new ResizeObserver(handleResize);
+    ro.observe(panel);
+    if (layout) ro.observe(layout);
+    if (mapCard) ro.observe(mapCard);
+    if (tabList) ro.observe(tabList);
+  } else if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('resize', handleResize);
+  }
+
+  if (typeof MutationObserver === 'function' && tabList) {
+    const mo = new MutationObserver(scheduleSizing);
+    mo.observe(tabList, {childList: true, subtree: true, characterData: true});
+  }
+
+  handleResize();
   if (typeof window !== 'undefined') {
     window.showEditorTab = show;
   }
