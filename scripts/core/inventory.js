@@ -51,19 +51,21 @@ function cloneData(obj){
 }
 
 function listRequiredRoles(it){
-  if(!it?.equip?.requires) return [];
-  const req = it.equip.requires;
   const roles = [];
-  if(typeof req.role === 'string' && req.role && !roles.includes(req.role)){
-    roles.push(req.role);
-  }
-  if(Array.isArray(req.roles)){
-    req.roles.forEach(role => {
-      if(typeof role === 'string' && role && !roles.includes(role)){
-        roles.push(role);
-      }
-    });
-  }
+  const seen = new Set();
+  const req = it?.equip?.requires;
+  if(!req) return roles;
+  const addRole = value => {
+    if(typeof value !== 'string') return;
+    const name = value.trim();
+    if(!name) return;
+    const key = name.toLowerCase();
+    if(seen.has(key)) return;
+    seen.add(key);
+    roles.push(name);
+  };
+  addRole(req.role);
+  if(Array.isArray(req.roles)) req.roles.forEach(addRole);
   return roles;
 }
 
@@ -120,7 +122,8 @@ function getEquipRestrictions(member, item){
   if(!levelMet && minLevel > 1){
     result.reasons.push(`Requires level ${minLevel}.`);
   }
-  const roleMet = !hasMember || roles.length === 0 || roles.includes(member.role);
+  const memberRole = typeof member?.role === 'string' ? member.role.trim().toLowerCase() : '';
+  const roleMet = !hasMember || roles.length === 0 || (memberRole && roles.some(role => role.toLowerCase() === memberRole));
   result.roleMet = roleMet;
   if(!roleMet && roles.length){
     const reqText = describeRequiredRoles(item);

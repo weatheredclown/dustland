@@ -140,6 +140,30 @@ test('weapon suggestions respect member stats and weapon type', async () => {
   assert.ok(!slots[1].classList.contains('better'));
 });
 
+test('role requirements are case-insensitive for equip highlights', async () => {
+  const whip = () => ({ name: 'Thornlash Whip', type: 'weapon', mods: { ATK: 3, ADR: 18 } });
+  const sixShooter = () => ({
+    name: 'Dawnforge Six-Shooter',
+    type: 'weapon',
+    tags: ['ranged'],
+    mods: { ATK: 4, ADR: 20, LCK: 1 },
+    equip: { requires: { role: 'Gunslinger' } }
+  });
+  const items = [whip(), sixShooter()];
+  const eq = {
+    equip: { weapon: whip() },
+    stats: { STR: 1, AGI: 20, INT: 4, PER: 4, LCK: 4, CHA: 4 },
+    role: 'gunslinger'
+  };
+  const ctx = setup(items, eq);
+  await loadRender(ctx);
+  ctx.renderInv();
+  const slots = ctx.document.querySelectorAll('.slot');
+  assert.equal(slots.length, 2);
+  assert.ok(!slots[0].classList.contains('better'));
+  assert.ok(slots[1].classList.contains('better'));
+});
+
 test('setLeader equips missing gear and suggests a single upgrade per slot', async () => {
   const items = [
     { name: 'Axe', type: 'weapon', value: 2 },
