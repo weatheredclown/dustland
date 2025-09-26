@@ -47,7 +47,7 @@
   | `dust_rat` | 3 |
 
 ### Gear-Gate Resistance System
-- [ ] **Implement resist penalties.** In `scripts/core/combat.js`, extract the existing weapon requirement check into a helper and add support for a new optional `resists` array on enemies. Each entry must support the object shape:
+- [x] **Implement resist penalties.** In `scripts/core/combat.js`, extract the existing weapon requirement check into a helper and add support for a new optional `resists` array on enemies. Each entry must support the object shape:
   ```js
   {
     requiresAll: [/* requirement tokens using existing string format, e.g. 'artifact_blade' or 'tag:ranged' */],
@@ -56,14 +56,14 @@
   }
   ```
   During `doAttack`, after handling hard `requires`, multiply `tDmg` by `multiplier` (rounded down) for every `resists` entry whose `requiresAll` test fails, logging `message` once per entry that fires.
-- [ ] **Convert late-game gear checks to resistances.** Replace the existing `combat.requires` fields in `data/modules/dustland.json` (and synced module output) for these enemies with the listed `resists` payloads, keeping other combat stats unchanged:
+- [x] **Convert late-game gear checks to resistances.** Replace the existing `combat.requires` fields in `data/modules/dustland.json` (and synced module output) for these enemies with the listed `resists` payloads, keeping other combat stats unchanged:
   | Enemy ID | `resists` payload |
   | --- | --- |
   | `oc3abv_siltpack` | `[ { "requiresAll": ["tag:ranged"], "multiplier": 0.2, "message": "The Ravener's carapace disperses the blow." } ]` |
   | `oc3abv_grinders` | `[ { "requiresAll": ["artifact_blade"], "multiplier": 0.15, "message": "Sawblades deflect the strike without artifact steel." } ]` |
   | `oc3abv_glasspride` | `[ { "requiresAll": ["wand"], "multiplier": 0.2, "message": "Glasswing hides behind mirrored wards, cutting the damage." } ]` |
   | `sovereign_of_dust` | `[ { "requiresAll": ["artifact_blade", "epic_blade"], "multiplier": 0.1, "message": "The Sovereign diffuses attacks lacking tempered blades." } ]` |
-- [ ] **Re-run balance reporting.** After applying the data and combat-engine changes, execute `node scripts/supporting/balance-tester-agent.js` and `npm test`. Then regenerate `docs/balance/dustland-balance-report.md` using `node scripts/supporting/balance-tester-agent.js --write-report docs/balance/dustland-balance-report.md` so the published numbers match the new tuning.
+- [x] **Re-run balance reporting.** After applying the data and combat-engine changes, execute `node scripts/supporting/balance-tester-agent.js` and `npm test`. Then regenerate `docs/balance/dustland-balance-report.md` using `node scripts/supporting/balance-tester-agent.js --write-report docs/balance/dustland-balance-report.md` so the published numbers match the new tuning.
 
 ## Expected Outcomes
 - Level 4 melee parties move from 8.32 → ~11 average damage while ranged drop from 11.85 → ~10.5, landing within 10% of each other.
