@@ -85,6 +85,14 @@ function parseValue(str) {
   if (str === 'true') return true;
   if (str === 'false') return false;
   if (str === 'null') return null;
+  const trimmed = typeof str === 'string' ? str.trim() : str;
+  if (typeof trimmed === 'string' && (trimmed.startsWith('{') || trimmed.startsWith('['))) {
+    try {
+      return JSON.parse(trimmed);
+    } catch (err) {
+      // fall through to other parsing attempts
+    }
+  }
   const num = Number(str);
   if (!isNaN(num)) return num;
   return str;

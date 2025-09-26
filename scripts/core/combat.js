@@ -616,6 +616,51 @@ function labelRequirement(entry){
   return humanizeRequirementId(entry);
 }
 
+function normalizeRequirementList(req){
+  if(!req) return [];
+  if(Array.isArray(req)) return req.filter(entry => entry !== null && entry !== undefined);
+  return [req].filter(entry => entry !== null && entry !== undefined);
+}
+
+function matchesWeaponRequirement(entry, weapon){
+  if(!entry) return false;
+  if(typeof entry === 'string'){
+    if(entry === 'unarmed') return !weapon;
+    if(entry.startsWith('tag:')){
+      const tag = entry.slice(4);
+      const tags = Array.isArray(weapon?.tags) ? weapon.tags : [];
+      return tags.includes(tag);
+    }
+    if(!weapon) return false;
+    const id = entry;
+    if(weapon.id === id || weapon.baseId === id) return true;
+    return false;
+  }
+  if(entry && typeof entry === 'object'){
+    if(entry.id) return matchesWeaponRequirement(entry.id, weapon);
+    if(entry.tag) return matchesWeaponRequirement(`tag:${entry.tag}`, weapon);
+    if(Array.isArray(entry.tags)){
+      return entry.tags.some(tag => matchesWeaponRequirement(`tag:${tag}`, weapon));
+    }
+  }
+  return false;
+}
+
+function evaluateWeaponRequirements(requirements, weapon, mode = 'any'){
+  const entries = normalizeRequirementList(requirements);
+  if(entries.length === 0){
+    return { entries, met: true, matched: [], missing: [] };
+  }
+  const matched = [];
+  const missing = [];
+  for(const entry of entries){
+    if(matchesWeaponRequirement(entry, weapon)) matched.push(entry);
+    else missing.push(entry);
+  }
+  const met = mode === 'all' ? missing.length === 0 : matched.length > 0;
+  return { entries, met, matched, missing };
+}
+
 function doAttack(dmg, type = 'basic'){
   const attacker = party[combatState.active];
   const weapon   = attacker?.equip?.weapon;
@@ -654,29 +699,45 @@ function doAttack(dmg, type = 'basic'){
     let tDmg = perTarget;
 
     // Required weapon gate
-    const req = target.requires;
-    if (req){
-      const reqList = Array.isArray(req) ? req : [req];
-      const weaponId = weapon?.id;
-      const weaponBaseId = weapon?.baseId;
-      const weaponTags = Array.isArray(weapon?.tags) ? weapon.tags : [];
-      let meetsRequirement = false;
-      for (const entry of reqList){
-        if (typeof entry === 'string' && entry.startsWith('tag:')){
-          const tag = entry.slice(4);
-          if (weaponTags.includes(tag)){ meetsRequirement = true; break; }
-        } else if (entry && (weaponId === entry || weaponBaseId === entry)){
-          meetsRequirement = true;
-          break;
+    const hardReq = evaluateWeaponRequirements(target.requires, weapon, 'any');
+    if (hardReq.entries.length && !hardReq.met){
+      const label = hardReq.entries
+        .map(labelRequirement)
+        .filter(Boolean)
+        .join(' or ') || 'the required weapon';
+      tDmg = 0;
+      log?.(`${attacker.name}'s attacks can't harm ${target.name}. Equip ${label}.`);
+    }
+
+    // Resistance penalties when requirements aren't satisfied
+    const resistEntries = Array.isArray(target.resists) ? target.resists.filter(Boolean) : [];
+    if (resistEntries.length){
+      for (const resist of resistEntries){
+        if (!resist || typeof resist !== 'object') continue;
+        const check = evaluateWeaponRequirements(resist.requiresAll, weapon, 'all');
+        if (!check.entries.length) continue;
+        if (check.met) continue;
+        const rawMultiplier = typeof resist.multiplier === 'number'
+          ? resist.multiplier
+          : Number(resist.multiplier);
+        const multiplier = Number.isFinite(rawMultiplier)
+          ? Math.max(0, Math.min(1, rawMultiplier))
+          : 0;
+        tDmg = Math.floor(tDmg * multiplier);
+        const message = resist.message;
+        if (message){
+          log?.(message);
+        } else {
+          const missingLabel = check.entries
+            .map(labelRequirement)
+            .filter(Boolean)
+            .join(' and ');
+          if (missingLabel){
+            log?.(`${target.name} resists attacks lacking ${missingLabel}.`);
+          } else {
+            log?.(`${target.name} resists the attack.`);
+          }
         }
-      }
-      if (!meetsRequirement){
-        const label = reqList
-          .map(labelRequirement)
-          .filter(Boolean)
-          .join(' or ') || 'the required weapon';
-        tDmg = 0;
-        log?.(`${attacker.name}'s attacks can't harm ${target.name}. Equip ${label}.`);
       }
     }
 
@@ -925,9 +986,7 @@ function playerItemAOEDamage(attacker, baseDamage, opts = {}){
 }
 
 function defeatEnemiesByRequirement(requirement, opts = {}){
-  const reqList = Array.isArray(requirement)
-    ? requirement.filter(Boolean)
-    : [requirement].filter(Boolean);
+  const reqList = normalizeRequirementList(requirement);
   if (reqList.length === 0) return [];
 
   const enemies = combatState.enemies || [];
@@ -943,12 +1002,8 @@ function defeatEnemiesByRequirement(requirement, opts = {}){
   const defeated = [];
 
   for (const enemy of enemies){
-    const enemyReq = Array.isArray(enemy.requires)
-      ? enemy.requires.filter(Boolean)
-      : enemy.requires
-        ? [enemy.requires]
-        : [];
-    const matches = enemyReq.some(entry => reqList.includes(entry));
+    const enemyReq = normalizeRequirementList(enemy.requires);
+    const matches = reqList.length > 0 && enemyReq.some(entry => reqList.includes(entry));
     if (!matches) continue;
 
     const beforeHp = typeof enemy.hp === 'number' ? enemy.hp : 0;

@@ -28,7 +28,8 @@ node scripts/module-tools/set.js <moduleFile> <path> <value>
 ```
 
 Updates the field at `path` with `value`. Numbers and booleans are converted
-automatically; everything else is treated as a string.
+automatically; strings that start with `{` or `[` are parsed as JSON so you can
+set objects and arrays directly.
 
 Example:
 

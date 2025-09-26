@@ -3031,7 +3031,15 @@ const DATA = `
         "ATK": 4,
         "DEF": 1,
         "count": 3,
-        "requires": "tag:ranged",
+        "resists": [
+          {
+            "requiresAll": [
+              "tag:ranged"
+            ],
+            "multiplier": 0.2,
+            "message": "The Ravener's carapace disperses the blow."
+          }
+        ],
         "special": {
           "cue": "spews toxic grit!",
           "dmg": 3,
@@ -3081,7 +3089,15 @@ const DATA = `
         "ATK": 5,
         "DEF": 2,
         "count": 4,
-        "requires": "artifact_blade",
+        "resists": [
+          {
+            "requiresAll": [
+              "artifact_blade"
+            ],
+            "multiplier": 0.15,
+            "message": "Sawblades deflect the strike without artifact steel."
+          }
+        ],
         "special": {
           "cue": "unleashes a shrapnel howl!",
           "dmg": 4,
@@ -3127,7 +3143,15 @@ const DATA = `
         "ATK": 6,
         "DEF": 3,
         "count": 5,
-        "requires": "wand",
+        "resists": [
+          {
+            "requiresAll": [
+              "wand"
+            ],
+            "multiplier": 0.2,
+            "message": "Glasswing hides behind mirrored wards, cutting the damage."
+          }
+        ],
         "special": {
           "cue": "rends reality with shrieking arcs!",
           "dmg": 5,
@@ -3173,9 +3197,15 @@ const DATA = `
         "ATK": 12,
         "DEF": 6,
         "boss": true,
-        "requires": [
-          "artifact_blade",
-          "epic_blade"
+        "resists": [
+          {
+            "requiresAll": [
+              "artifact_blade",
+              "epic_blade"
+            ],
+            "multiplier": 0.1,
+            "message": "The Sovereign diffuses attacks lacking tempered blades."
+          }
         ],
         "special": {
           "cue": "erupts into a storm of razorsand!",
