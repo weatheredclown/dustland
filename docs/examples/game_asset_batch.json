@@ -1,0 +1,24 @@
+[
+  {
+    "name": "ui_button_start",
+    "prompt": "isometric pixel art start button, neon edges, retro game interface",
+    "negative_prompt": "blurry, photo, 3d render",
+    "width": 512,
+    "height": 512,
+    "steps": 28,
+    "cfg_scale": 6.5,
+    "sampler": "euler",
+    "scheduler": "normal",
+    "seed": 123456
+  },
+  {
+    "name": "enemy_drone",
+    "prompt": "top-down sprite of a hostile drone with rusted metal panels, glowing red eye",
+    "width": 640,
+    "height": 640,
+    "steps": 32,
+    "cfg_scale": 7.5,
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras"
+  }
+]
