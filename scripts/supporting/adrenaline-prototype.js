@@ -48,7 +48,9 @@ if (typeof window === 'undefined') {
       const line = String(msg ?? '').trim();
       if (!line) return;
       arenaLog.push(line);
-      console.log(line);
+      if (options.liveLog) {
+        console.log(line);
+      }
     };
 
     const result = await runArena(hero, enemy, options);
@@ -83,7 +85,8 @@ function parseArgs(argv) {
     enemyChallenge: 1,
     turnDelay: 40,
     seed: 'prototype',
-    showLog: false
+    showLog: false,
+    liveLog: false
   };
 
   for (const raw of argv) {
@@ -114,6 +117,7 @@ function parseArgs(argv) {
       case 'delay': opts.turnDelay = toNumber(value, opts.turnDelay); break;
       case 'seed': opts.seed = value || opts.seed; break;
       case 'show-log': opts.showLog = true; break;
+      case 'live-log': opts.liveLog = true; break;
     }
   }
 
@@ -143,6 +147,7 @@ function printUsage() {
     `  --delay=MS              Delay between hero attacks in ms (default: 40)\n` +
     `  --seed=VALUE            Seed the RNG for repeatable runs (default: prototype)\n` +
     `  --show-log              Print the recorded combat log after the summary\n` +
+    `  --live-log              Stream the full combat log during the run\n` +
     `  --help                  Show this message\n`);
 }
 
