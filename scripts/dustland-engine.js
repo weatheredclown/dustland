@@ -1349,6 +1349,41 @@ function renderFog(ctx, map, offX, offY, viewW, viewH){
 // ===== Drawing Pipeline =====
 const renderOrder = ['tiles', 'items', 'portals', 'entitiesBelow', 'player', 'entitiesAbove'];
 
+function skinManager(){
+  return globalThis.DustlandSkin || globalThis.Dustland?.skin || null;
+}
+
+function drawSkinSprite(ctx, sprite, dx, dy, size = TS){
+  if(!ctx || !sprite || !sprite.image) return false;
+  const img = sprite.image;
+  if(!img.complete || !(img.naturalWidth || img.width) || !(img.naturalHeight || img.height)) return false;
+  const sx = Number.isFinite(sprite.sx) ? sprite.sx : 0;
+  const sy = Number.isFinite(sprite.sy) ? sprite.sy : 0;
+  const sw = Number.isFinite(sprite.sw) ? sprite.sw : (img.naturalWidth || img.width);
+  const sh = Number.isFinite(sprite.sh) ? sprite.sh : (img.naturalHeight || img.height);
+  if(!sw || !sh) return false;
+  const scale = Number.isFinite(sprite.scale) ? sprite.scale : 1;
+  const dwRaw = Number.isFinite(sprite.dw) ? sprite.dw : Number.isFinite(sprite.displayWidth) ? sprite.displayWidth : null;
+  const dhRaw = Number.isFinite(sprite.dh) ? sprite.dh : Number.isFinite(sprite.displayHeight) ? sprite.displayHeight : null;
+  const dw = dwRaw ?? (size * scale);
+  const dh = dhRaw ?? (size * scale);
+  if(!dw || !dh) return false;
+  let destX = dx;
+  let destY = dy;
+  const alignRaw = typeof sprite.align === 'string' ? sprite.align.toLowerCase() : (typeof sprite.anchor === 'string' ? sprite.anchor.toLowerCase() : null);
+  if(alignRaw === 'center' || alignRaw === 'middle'){
+    destX += (size - dw) / 2;
+    destY += (size - dh) / 2;
+  } else if(alignRaw === 'bottom'){
+    destX += (size - dw) / 2;
+    destY += size - dh;
+  }
+  const offX = Number.isFinite(sprite.offsetX) ? sprite.offsetX : Number.isFinite(sprite.dx) ? sprite.dx : 0;
+  const offY = Number.isFinite(sprite.offsetY) ? sprite.offsetY : Number.isFinite(sprite.dy) ? sprite.dy : 0;
+  ctx.drawImage(img, sx, sy, sw, sh, destX + offX, destY + offY, dw, dh);
+  return true;
+}
+
 function render(gameState=state, dt){
   const ctx = sctx;
   if(!ctx) return;
@@ -1373,6 +1408,7 @@ function render(gameState=state, dt){
   const entities = gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : []);
   const pos = gameState.party || party;
   const remoteParties = globalThis.Dustland?.multiplayerParties?.list?.() || globalThis.Dustland?.multiplayerState?.remoteParties || [];
+  const skin = skinManager();
 
   // split entities into below/above
   const below = [], above = [];
@@ -1388,12 +1424,19 @@ function render(gameState=state, dt){
           const gx = camX + vx - offX, gy = camY + vy - offY;
           if(gx<0||gy<0||gx>=W||gy>=H) continue;
           const t = getTile(activeMap,gx,gy); if(t===null) continue;
-          let col = colors[t];
-          if(t===TILE.FLOOR && officeMaps.has(activeMap)){
-            col = officeFloorColors[(gx+gy)%officeFloorColors.length];
+          const tileSprite = skin?.getTileSprite?.(t);
+          let tileDrawn = false;
+          if(tileSprite){
+            tileDrawn = drawSkinSprite(ctx, tileSprite, vx*TS, vy*TS, TS);
           }
-          ctx.fillStyle = jitterColor(col, gx, gy);
-          ctx.fillRect(vx*TS,vy*TS,TS,TS);
+          if(!tileDrawn){
+            let col = colors[t];
+            if(t===TILE.FLOOR && officeMaps.has(activeMap)){
+              col = officeFloorColors[(gx+gy)%officeFloorColors.length];
+            }
+            ctx.fillStyle = jitterColor(col, gx, gy);
+            ctx.fillRect(vx*TS,vy*TS,TS,TS);
+          }
           if(tileCharsEnabled){
             const ch = tileChars[t];
             if(ch){
@@ -1422,6 +1465,20 @@ function render(gameState=state, dt){
           const multi = Array.isArray(it.items) && it.items.length>1;
           const dropType = typeof it.dropType === 'string' ? it.dropType : (it.source === 'loot' ? 'loot' : 'world');
           const isLoot = dropType === 'loot';
+          const skinItemSprite = skin?.getItemSprite?.(it, { dropType, multi });
+          if(skinItemSprite){
+            if(multi){
+              const a=0.7+0.3*Math.sin(Date.now()/300);
+              ctx.save();
+              ctx.globalAlpha=a;
+              drawSkinSprite(ctx, skinItemSprite, vx, vy, TS);
+              ctx.restore();
+            }else{
+              drawSkinSprite(ctx, skinItemSprite, vx, vy, TS);
+            }
+            ctx.globalAlpha = 1;
+            continue;
+          }
           if(retroNpcArtEnabled){
             const sprite = multi ? getRetroItemCacheSprite() : (isLoot ? getRetroLootSprite() : getRetroItemSprite());
             if(sprite?.complete){
@@ -1463,7 +1520,7 @@ function render(gameState=state, dt){
         }
       }
     }
-    else if(layer==='entitiesBelow'){ drawEntities(ctx, below, offX, offY); }
+    else if(layer==='entitiesBelow'){ drawEntities(ctx, below, offX, offY, skin); }
     else if(layer==='player'){
       if(Array.isArray(remoteParties) && remoteParties.length){
         const now = Date.now();
@@ -1474,6 +1531,14 @@ function render(gameState=state, dt){
           const ry=(info.y-camY+offY)*TS;
           const age = info.updated ? Math.max(0, Math.min(8000, now - info.updated)) : 0;
           const alpha = 0.35 + (Math.max(0, 8000 - age) / 8000) * 0.45;
+          const remoteSprite = skin?.getRemotePartySprite?.(info);
+          if(remoteSprite){
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            const drawn = drawSkinSprite(ctx, remoteSprite, rx, ry, TS);
+            ctx.restore();
+            if(drawn) continue;
+          }
           ctx.save();
           ctx.globalAlpha = alpha;
           ctx.fillStyle='#64f0ff';
@@ -1534,30 +1599,37 @@ function render(gameState=state, dt){
           appliedFilter = true;
         }
       }
-      if(retroNpcArtEnabled){
-        const sprite = getRetroPlayerSprite();
-        if(sprite?.complete){
-          ctx.drawImage(sprite, 0, 0, TS, TS);
+      const skinPlayerSprite = skin?.getPlayerSprite?.(globalThis.player || pos, { mode: hasPulse ? 'adrenaline' : 'default', state: pos, fx: fxState });
+      let playerDrawn = false;
+      if(skinPlayerSprite){
+        playerDrawn = drawSkinSprite(ctx, skinPlayerSprite, 0, 0, TS);
+      }
+      if(!playerDrawn){
+        if(retroNpcArtEnabled){
+          const sprite = getRetroPlayerSprite();
+          if(sprite?.complete){
+            ctx.drawImage(sprite, 0, 0, TS, TS);
+          }else{
+            ctx.fillStyle='#64f0ff';
+            ctx.fillRect(4,4,TS-8,TS-8);
+          }
         }else{
-          ctx.fillStyle='#64f0ff';
+          if(hasPulse){
+            const hue = (300 + fxHue) % 360;
+            const light = Math.min(78, 62 + fxGlow * 18);
+            ctx.fillStyle = `hsl(${hue}, 90%, ${light}%)`;
+          }else{
+            ctx.fillStyle='#f0f';
+          }
           ctx.fillRect(4,4,TS-8,TS-8);
         }
-      }else{
-        if(hasPulse){
-          const hue = (300 + fxHue) % 360;
-          const light = Math.min(78, 62 + fxGlow * 18);
-          ctx.fillStyle = `hsl(${hue}, 90%, ${light}%)`;
-        }else{
-          ctx.fillStyle='#f0f';
-        }
-        ctx.fillRect(4,4,TS-8,TS-8);
       }
       if(appliedFilter){
         ctx.filter = prevFilter || 'none';
       }
       ctx.restore();
     }
-    else if(layer==='entitiesAbove'){ drawEntities(ctx, above, offX, offY); }
+    else if(layer==='entitiesAbove'){ drawEntities(ctx, above, offX, offY, skin); }
   }
 
   if(sparkles.length){
@@ -1573,8 +1645,15 @@ function render(gameState=state, dt){
   renderFog(ctx, activeMap, offX, offY, vW, vH);
 
   // UI border
-  ctx.strokeStyle='#2a3b2a';
-  ctx.strokeRect(0.5,0.5,vW*TS-1,vH*TS-1);
+  const mapFrame = skin?.getMapFrame?.();
+  const frameColor = mapFrame?.color ?? mapFrame?.strokeStyle ?? '#2a3b2a';
+  const frameWidthRaw = mapFrame?.lineWidth ?? mapFrame?.width ?? mapFrame?.strokeWidth;
+  const frameWidth = Number.isFinite(frameWidthRaw) ? frameWidthRaw : Number.parseFloat(typeof frameWidthRaw === 'string' ? frameWidthRaw : '') || 1;
+  const halfWidth = frameWidth / 2;
+  ctx.strokeStyle = frameColor;
+  ctx.lineWidth = frameWidth;
+  ctx.strokeRect(halfWidth, halfWidth, vW*TS - frameWidth, vH*TS - frameWidth);
+  ctx.lineWidth = 1;
   ctx.restore();
 }
 
@@ -1596,11 +1675,16 @@ function getNpcSymbol(n){
   return '!';
 }
 
-function drawEntities(ctx, list, offX, offY){
+function drawEntities(ctx, list, offX, offY, skin){
   const { w:vW, h:vH } = getViewSize();
   for(const n of list){
     if(n.x>=camX&&n.y>=camY&&n.x<camX+vW&&n.y<camY+vH){
       const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
+      const entitySprite = skin?.getEntitySprite?.(n);
+      if(entitySprite){
+        const drawn = drawSkinSprite(ctx, entitySprite, vx, vy, TS);
+        if(drawn) continue;
+      }
       if(retroNpcArtEnabled){
         const sprite = getRetroNpcSprite(n);
         if(sprite?.complete){

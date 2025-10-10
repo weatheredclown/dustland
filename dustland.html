@@ -13,105 +13,105 @@
     <div id="nanoBadge" class="nano-badge off">✗</div>
   </div>
   <div class="wrap">
-    <div class="crt-wrap" style="flex:1;display:flex;align-items:center;justify-content:center">
-      <div class="tube">
+    <div class="crt-wrap" style="flex:1;display:flex;align-items:center;justify-content:center" data-skin-slot="crt">
+      <div class="tube" data-skin-slot="crt-tube">
         <canvas id="game" width="640" height="480" class="glow" aria-label="Dustland CRT"></canvas>
       </div>
     </div>
-    <aside class="panel">
-      <header class="panel__header">
-        <h1 id="title">DUSTLAND // CRT</h1>
-        <p class="panel__subtitle">Expedition Console</p>
+    <aside class="panel" data-skin-slot="main-panel">
+      <header class="panel__header" data-skin-slot="panel-header">
+        <h1 id="title" data-skin-label="panel-title">DUSTLAND // CRT</h1>
+        <p class="panel__subtitle" data-skin-label="panel-subtitle">Expedition Console</p>
       </header>
-      <div class="panel__body">
-        <section class="panel-section panel-section--log">
-          <header class="panel-section__header">
-            <h2 class="panel-section__title">Signal Log</h2>
+      <div class="panel__body" data-skin-slot="panel-body">
+        <section class="panel-section panel-section--log" data-skin-slot="signal-log">
+          <header class="panel-section__header" data-skin-slot="signal-log-header">
+            <h2 class="panel-section__title" data-skin-label="section-title">Signal Log</h2>
           </header>
-          <div class="panel-section__content">
-            <div id="log"></div>
+          <div class="panel-section__content" data-skin-slot="signal-log-body">
+            <div id="log" data-skin-slot="signal-log-feed"></div>
           </div>
         </section>
-        <section class="panel-section panel-section--status">
-          <header class="panel-section__header">
-            <h2 class="panel-section__title">Vitals</h2>
+        <section class="panel-section panel-section--status" data-skin-slot="vitals">
+          <header class="panel-section__header" data-skin-slot="vitals-header">
+            <h2 class="panel-section__title" data-skin-label="section-title">Vitals</h2>
             <div class="panel-section__meta">
-              <div id="weatherBanner" class="weather-banner" hidden></div>
+              <div id="weatherBanner" class="weather-banner" data-skin-label="weather" hidden></div>
             </div>
           </header>
-          <div class="panel-section__content">
-            <div class="hud">
-              <div class="badge">
-                <div class="label">HP <span id="hp">10</span><span id="hydrationMeter" class="hydration" hidden></span></div>
+          <div class="panel-section__content" data-skin-slot="vitals-body">
+            <div class="hud" data-skin-slot="hud">
+              <div class="badge" data-skin-slot="hud-badge">
+                <div class="label" data-skin-label="hud-label">HP <span id="hp">10</span><span id="hydrationMeter" class="hydration" hidden></span></div>
                 <div class="hudbar" id="hpBar" role="progressbar" aria-label="Health" aria-valuemin="0" aria-valuemax="10" aria-valuenow="10">
                   <div class="ghost" id="hpGhost"></div>
                   <div class="fill" id="hpFill"></div>
                 </div>
                 <div class="status-row" id="statusIcons"></div>
               </div>
-              <div class="badge">
-                <div class="label">Adrenaline</div>
+              <div class="badge" data-skin-slot="hud-badge">
+                <div class="label" data-skin-label="hud-label">Adrenaline</div>
                 <div class="hudbar adr" id="adrBar" role="progressbar" aria-label="Adrenaline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="fill" id="adrFill"></div></div>
               </div>
-              <div class="badge">Scrap: <span id="scrap">0</span></div>
-              <div class="badge">Map: <span id="mapname">—</span></div>
+              <div class="badge" data-skin-slot="hud-badge">Scrap: <span id="scrap">0</span></div>
+              <div class="badge" data-skin-slot="hud-badge">Map: <span id="mapname">—</span></div>
             </div>
           </div>
         </section>
-        <section class="panel-section panel-section--controls">
-          <header class="panel-section__header">
-            <h2 class="panel-section__title">Controls</h2>
-            <button class="pill panel-section__toggle" type="button" id="controlsToggle" aria-expanded="true" aria-controls="controlsContent">
+        <section class="panel-section panel-section--controls" data-skin-slot="controls">
+          <header class="panel-section__header" data-skin-slot="controls-header">
+            <h2 class="panel-section__title" data-skin-label="section-title">Controls</h2>
+            <button class="pill panel-section__toggle" type="button" id="controlsToggle" aria-expanded="true" aria-controls="controlsContent" data-skin-slot="controls-toggle" data-skin-label="button-label">
               <span class="panel-section__toggle-icon" aria-hidden="true">▾</span>
               <span class="panel-section__toggle-text">Hide</span>
             </button>
           </header>
-          <div class="panel-section__content" id="controlsContent">
-            <div class="control-grid">
-              <div class="control-grid__item"><span class="control-grid__keys">WASD / Arrows</span><span class="control-grid__desc">Move</span></div>
-              <div class="control-grid__item"><span class="control-grid__keys">E / Space</span><span class="control-grid__desc">Interact, doors, take nearby</span></div>
-              <div class="control-grid__item"><span class="control-grid__keys">T / G</span><span class="control-grid__desc">Take item</span></div>
-              <div class="control-grid__item"><span class="control-grid__keys">I</span><span class="control-grid__desc">Inventory</span></div>
-              <div class="control-grid__item"><span class="control-grid__keys">P</span><span class="control-grid__desc">Party</span></div>
-              <div class="control-grid__item"><span class="control-grid__keys">Q</span><span class="control-grid__desc">Quests</span></div>
-              <div class="control-grid__item"><span class="control-grid__keys">O</span><span class="control-grid__desc">Audio</span></div>
-              <div class="control-grid__item"><span class="control-grid__keys">C</span><span class="control-grid__desc">Mobile controls</span></div>
-              <div class="control-grid__item"><span class="control-grid__keys">M</span><span class="control-grid__desc">Minimap</span></div>
-              <div class="control-grid__item"><span class="control-grid__keys">Esc</span><span class="control-grid__desc">Close menus</span></div>
+          <div class="panel-section__content" id="controlsContent" data-skin-slot="controls-body">
+            <div class="control-grid" data-skin-slot="controls-grid">
+              <div class="control-grid__item" data-skin-slot="control-item"><span class="control-grid__keys" data-skin-label="control-keys">WASD / Arrows</span><span class="control-grid__desc" data-skin-label="control-desc">Move</span></div>
+              <div class="control-grid__item" data-skin-slot="control-item"><span class="control-grid__keys" data-skin-label="control-keys">E / Space</span><span class="control-grid__desc" data-skin-label="control-desc">Interact, doors, take nearby</span></div>
+              <div class="control-grid__item" data-skin-slot="control-item"><span class="control-grid__keys" data-skin-label="control-keys">T / G</span><span class="control-grid__desc" data-skin-label="control-desc">Take item</span></div>
+              <div class="control-grid__item" data-skin-slot="control-item"><span class="control-grid__keys" data-skin-label="control-keys">I</span><span class="control-grid__desc" data-skin-label="control-desc">Inventory</span></div>
+              <div class="control-grid__item" data-skin-slot="control-item"><span class="control-grid__keys" data-skin-label="control-keys">P</span><span class="control-grid__desc" data-skin-label="control-desc">Party</span></div>
+              <div class="control-grid__item" data-skin-slot="control-item"><span class="control-grid__keys" data-skin-label="control-keys">Q</span><span class="control-grid__desc" data-skin-label="control-desc">Quests</span></div>
+              <div class="control-grid__item" data-skin-slot="control-item"><span class="control-grid__keys" data-skin-label="control-keys">O</span><span class="control-grid__desc" data-skin-label="control-desc">Audio</span></div>
+              <div class="control-grid__item" data-skin-slot="control-item"><span class="control-grid__keys" data-skin-label="control-keys">C</span><span class="control-grid__desc" data-skin-label="control-desc">Mobile controls</span></div>
+              <div class="control-grid__item" data-skin-slot="control-item"><span class="control-grid__keys" data-skin-label="control-keys">M</span><span class="control-grid__desc" data-skin-label="control-desc">Minimap</span></div>
+              <div class="control-grid__item" data-skin-slot="control-item"><span class="control-grid__keys" data-skin-label="control-keys">Esc</span><span class="control-grid__desc" data-skin-label="control-desc">Close menus</span></div>
             </div>
           </div>
         </section>
-        <section class="panel-section panel-section--tabs">
-          <header class="panel-section__header">
-            <h2 class="panel-section__title">Crew & Tasks</h2>
+        <section class="panel-section panel-section--tabs" data-skin-slot="crew-tabs">
+          <header class="panel-section__header" data-skin-slot="crew-tabs-header">
+            <h2 class="panel-section__title" data-skin-label="section-title">Crew &amp; Tasks</h2>
           </header>
-          <div class="panel-section__content panel-section__content--flush">
-            <div class="tabs" role="tablist">
-              <div class="tab active" id="tabInv" role="tab" tabindex="0" aria-label="Inventory" aria-selected="true">Inventory</div>
-              <div class="tab" id="tabParty" role="tab" tabindex="0" aria-label="Party" aria-selected="false">Party</div>
-              <div class="tab" id="tabQuests" role="tab" tabindex="0" aria-label="Quests" aria-selected="false">Quests</div>
+          <div class="panel-section__content panel-section__content--flush" data-skin-slot="crew-tabs-body">
+            <div class="tabs" role="tablist" data-skin-slot="tabs">
+              <div class="tab active" id="tabInv" role="tab" tabindex="0" aria-label="Inventory" aria-selected="true" data-skin-slot="tab" data-skin-label="tab">Inventory</div>
+              <div class="tab" id="tabParty" role="tab" tabindex="0" aria-label="Party" aria-selected="false" data-skin-slot="tab" data-skin-label="tab">Party</div>
+              <div class="tab" id="tabQuests" role="tab" tabindex="0" aria-label="Quests" aria-selected="false" data-skin-slot="tab" data-skin-label="tab">Quests</div>
             </div>
-            <div class="tabwrap" id="tabWrap">
+            <div class="tabwrap" id="tabWrap" data-skin-slot="tabwrap">
               <div id="inv"></div>
               <div id="party" style="display:none"></div>
               <div id="quests" style="display:none"></div>
             </div>
           </div>
         </section>
-        <section class="panel-section panel-section--actions">
-          <header class="panel-section__header">
-            <h2 class="panel-section__title">Systems</h2>
+        <section class="panel-section panel-section--actions" data-skin-slot="systems">
+          <header class="panel-section__header" data-skin-slot="systems-header">
+            <h2 class="panel-section__title" data-skin-label="section-title">Systems</h2>
           </header>
-          <div class="panel-section__content">
-            <div id="mainButtons" class="button-grid">
-              <button class="btn" id="saveBtn">Save</button>
-              <button class="btn" id="loadBtn">Load</button>
-              <button class="btn" id="clearBtn">Clear Save</button>
-              <button class="btn" id="resetBtn">Reset</button>
-              <button class="btn" id="settingsBtn">Settings</button>
-              <button class="btn" id="debugBtn">Debug</button>
-              <button class="btn" id="campBtn">Camp</button>
-              <button class="btn" id="screenshotBtn" hidden>Screenshot</button>
+          <div class="panel-section__content" data-skin-slot="systems-body">
+            <div id="mainButtons" class="button-grid" data-skin-slot="button-grid">
+              <button class="btn" id="saveBtn" data-skin-label="button-label">Save</button>
+              <button class="btn" id="loadBtn" data-skin-label="button-label">Load</button>
+              <button class="btn" id="clearBtn" data-skin-label="button-label">Clear Save</button>
+              <button class="btn" id="resetBtn" data-skin-label="button-label">Reset</button>
+              <button class="btn" id="settingsBtn" data-skin-label="button-label">Settings</button>
+              <button class="btn" id="debugBtn" data-skin-label="button-label">Debug</button>
+              <button class="btn" id="campBtn" data-skin-label="button-label">Camp</button>
+              <button class="btn" id="screenshotBtn" data-skin-label="button-label" hidden>Screenshot</button>
             </div>
           </div>
         </section>
@@ -119,222 +119,223 @@
     </aside>
     </div>
 
-  <div id="panelToggle">☰</div>
+  <div id="panelToggle" data-skin-slot="panel-toggle" data-skin-label="icon">☰</div>
 
   <!-- Settings Panel -->
   <div id="settings">
-    <div class="win">
-      <header>Settings</header>
-      <main>
-        <button class="btn" id="nanoToggle">Nano Dialog</button>
-        <button class="btn" id="audioToggle">Audio: On</button>
-        <button class="btn" id="musicToggle">Music: Off</button>
-        <button class="btn" id="mobileToggle">Mobile Controls: Off</button>
-        <button class="btn" id="tileCharToggle">ASCII Tiles: On</button>
-        <button class="btn" id="fogToggle">Fog of War: On</button>
+    <div class="win" data-skin-slot="settings-window">
+      <header data-skin-slot="settings-window-header" data-skin-label="window-title">Settings</header>
+      <main data-skin-slot="settings-window-body">
+        <button class="btn" id="nanoToggle" data-skin-label="button-label">Nano Dialog</button>
+        <button class="btn" id="audioToggle" data-skin-label="button-label">Audio: On</button>
+        <button class="btn" id="musicToggle" data-skin-label="button-label">Music: Off</button>
+        <button class="btn" id="mobileToggle" data-skin-label="button-label">Mobile Controls: Off</button>
+        <button class="btn" id="tileCharToggle" data-skin-label="button-label">ASCII Tiles: On</button>
+        <button class="btn" id="fogToggle" data-skin-label="button-label">Fog of War: On</button>
         <div class="field">
-          <label for="fontScale">Font Scale</label>
+          <label for="fontScale" data-skin-label="field-label">Font Scale</label>
           <input type="range" id="fontScale" min="1" max="1.75" step="0.05" value="1" />
-          <div class="small" id="fontScaleValue">100%</div>
+          <div class="small" id="fontScaleValue" data-skin-label="field-note">100%</div>
         </div>
         <div class="field">
-          <label for="fontFamily">UI Font</label>
+          <label for="fontFamily" data-skin-label="field-label">UI Font</label>
           <select id="fontFamily">
             <option value="pixel">Pixelify Sans (Retro)</option>
             <option value="oxanium">Oxanium (Tech)</option>
             <option value="atkinson">Atkinson Hyperlegible (Readable)</option>
             <option value="roboto">Roboto (Modern)</option>
           </select>
-          <div class="small" id="fontFamilySample">Sample: The wasteland is calling.</div>
+          <div class="small" id="fontFamilySample" data-skin-label="field-note">Sample: The wasteland is calling.</div>
         </div>
         <div class="field">
-          <label id="playerIconLabel">Player Icon</label>
-          <div class="icon-picker" aria-labelledby="playerIconLabel">
-            <button class="pill" type="button" id="playerIconPrev" aria-label="Previous player icon">&lt;</button>
-            <div class="icon-picker__preview" id="playerIconPreview" role="img" aria-live="polite">
+          <label id="playerIconLabel" data-skin-label="field-label">Player Icon</label>
+          <div class="icon-picker" aria-labelledby="playerIconLabel" data-skin-slot="icon-picker">
+            <button class="pill" type="button" id="playerIconPrev" aria-label="Previous player icon" data-skin-label="button-label">&lt;</button>
+            <div class="icon-picker__preview" id="playerIconPreview" role="img" aria-live="polite" data-skin-slot="icon-preview">
               <img id="playerIconImage" src="" alt="" decoding="async" />
             </div>
-            <button class="pill" type="button" id="playerIconNext" aria-label="Next player icon">&gt;</button>
+            <button class="pill" type="button" id="playerIconNext" aria-label="Next player icon" data-skin-label="button-label">&gt;</button>
           </div>
-          <div class="small" id="playerIconName"></div>
+          <div class="small" id="playerIconName" data-skin-label="field-note"></div>
         </div>
         <div class="field field--toggle">
-          <label for="retroNpcToggle">Retro NPC Portraits</label>
+          <label for="retroNpcToggle" data-skin-label="field-label">Retro NPC Portraits</label>
           <input type="checkbox" id="retroNpcToggle" />
         </div>
-        <button class="btn" id="settingsClose">Close</button>
+        <button class="btn" id="settingsClose" data-skin-label="button-label">Close</button>
       </main>
     </div>
   </div>
 
   <!-- Debug Menu -->
   <div id="debugMenu">
-    <div class="win">
-      <header>Debug Tools</header>
-      <main>
-        <button class="btn" id="fxBtn">FX Tools</button>
-        <button class="btn" id="perfBtn">Performance Graph</button>
-        <button class="btn" id="exportSaveBtn">Export Save</button>
-        <button class="btn" id="importSaveBtn">Import Save</button>
+    <div class="win" data-skin-slot="debug-window">
+      <header data-skin-slot="debug-window-header" data-skin-label="window-title">Debug Tools</header>
+      <main data-skin-slot="debug-window-body">
+        <button class="btn" id="fxBtn" data-skin-label="button-label">FX Tools</button>
+        <button class="btn" id="perfBtn" data-skin-label="button-label">Performance Graph</button>
+        <button class="btn" id="exportSaveBtn" data-skin-label="button-label">Export Save</button>
+        <button class="btn" id="importSaveBtn" data-skin-label="button-label">Import Save</button>
         <input type="file" id="importSaveInput" accept="application/json" hidden />
-        <button class="btn" id="debugClose">Close</button>
+        <button class="btn" id="debugClose" data-skin-label="button-label">Close</button>
       </main>
     </div>
   </div>
 
   <!-- FX Debug Panel -->
   <div id="fxPanel">
-    <div class="win">
-      <header>FX Debug</header>
-      <main>
+    <div class="win" data-skin-slot="fx-window">
+      <header data-skin-slot="fx-window-header" data-skin-label="window-title">FX Debug</header>
+      <main data-skin-slot="fx-window-body">
         <div class="field">
-          <label for="fxEnabled">FX Enabled</label>
+          <label for="fxEnabled" data-skin-label="field-label">FX Enabled</label>
           <input type="checkbox" id="fxEnabled" />
         </div>
         <div class="field">
-          <label for="fxDamageFlash">Damage Flash</label>
+          <label for="fxDamageFlash" data-skin-label="field-label">Damage Flash</label>
           <input type="checkbox" id="fxDamageFlash" />
         </div>
         <div class="field">
-          <label for="fxScanlines">Scanlines</label>
+          <label for="fxScanlines" data-skin-label="field-label">Scanlines</label>
           <input type="checkbox" id="fxScanlines" />
         </div>
         <div class="field">
-          <label for="fxCrtShear">CRT Shear</label>
+          <label for="fxCrtShear" data-skin-label="field-label">CRT Shear</label>
           <input type="checkbox" id="fxCrtShear" />
         </div>
         <div class="field">
-          <label for="fxColorBleed">Color Bleed</label>
+          <label for="fxColorBleed" data-skin-label="field-label">Color Bleed</label>
           <input type="checkbox" id="fxColorBleed" />
         </div>
         <div class="field">
-          <label for="fxFootstepBump">Footstep Camera Bump</label>
+          <label for="fxFootstepBump" data-skin-label="field-label">Footstep Camera Bump</label>
           <input type="checkbox" id="fxFootstepBump" />
         </div>
         <div class="field">
-          <label for="fxGrayscale">Grayscale</label>
+          <label for="fxGrayscale" data-skin-label="field-label">Grayscale</label>
           <input type="checkbox" id="fxGrayscale" />
         </div>
         <div class="field">
-          <label for="fxAdrTint">Adrenaline Tint</label>
+          <label for="fxAdrTint" data-skin-label="field-label">Adrenaline Tint</label>
           <input type="checkbox" id="fxAdrTint" />
         </div>
         <div class="field">
-          <label for="fxPrevAlpha">Trail Alpha</label>
+          <label for="fxPrevAlpha" data-skin-label="field-label">Trail Alpha</label>
           <input type="range" id="fxPrevAlpha" min="0" max="1" step="0.01" />
         </div>
         <div class="field">
-          <label for="fxSceneAlpha">Scene Alpha</label>
+          <label for="fxSceneAlpha" data-skin-label="field-label">Scene Alpha</label>
           <input type="range" id="fxSceneAlpha" min="0" max="1" step="0.01" />
         </div>
         <div class="field">
-          <label for="fxOffsetX">Offset X</label>
+          <label for="fxOffsetX" data-skin-label="field-label">Offset X</label>
           <input type="number" id="fxOffsetX" step="1" />
         </div>
         <div class="field">
-          <label for="fxOffsetY">Offset Y</label>
+          <label for="fxOffsetY" data-skin-label="field-label">Offset Y</label>
           <input type="number" id="fxOffsetY" step="1" />
         </div>
-        <button class="btn" id="fxClose">Close</button>
+        <button class="btn" id="fxClose" data-skin-label="button-label">Close</button>
       </main>
     </div>
   </div>
 
   <!-- Performance Debug Panel -->
   <div id="perfPanel">
-    <div class="win">
-      <header>Perf Debug</header>
-      <main>
+    <div class="win" data-skin-slot="perf-window">
+      <header data-skin-slot="perf-window-header" data-skin-label="window-title">Perf Debug</header>
+      <main data-skin-slot="perf-window-body">
         <canvas id="perfCanvas" width="300" height="80"></canvas>
-        <div>SFX: <span id="perfSfx">0</span>ms</div>
-        <div>Path: <span id="perfPath">0</span>ms</div>
-        <div>AI: <span id="perfAI">0</span>ms</div>
-        <button class="btn" id="perfClose">Close</button>
+        <div data-skin-label="field-note">SFX: <span id="perfSfx">0</span>ms</div>
+        <div data-skin-label="field-note">Path: <span id="perfPath">0</span>ms</div>
+        <div data-skin-label="field-note">AI: <span id="perfAI">0</span>ms</div>
+        <button class="btn" id="perfClose" data-skin-label="button-label">Close</button>
       </main>
     </div>
   </div>
 
   <!-- Start Menu -->
   <div id="start">
-    <div class="win">
-      <header>Dustland — Start</header>
-      <main>
-        <p class="muted">Continue your journey or start a new game?</p>
-        <div>
-          <button class="btn" id="startContinue">Continue</button>
-          <button class="btn" id="startNew">New Game</button>
+    <div class="win" data-skin-slot="start-window">
+      <header data-skin-slot="start-window-header" data-skin-label="window-title">Dustland — Start</header>
+      <main data-skin-slot="start-window-body">
+        <p class="muted" data-skin-label="body-text">Continue your journey or start a new game?</p>
+        <div data-skin-slot="start-window-actions">
+          <button class="btn" id="startContinue" data-skin-label="button-label">Continue</button>
+          <button class="btn" id="startNew" data-skin-label="button-label">New Game</button>
         </div>
       </main>
     </div>
   </div>
 
   <!-- Dialog overlay -->
-  <div class="overlay" id="overlay" role="dialog" aria-modal="true">
-    <div class="dialog">
-      <header>
-        <div class="portrait" id="port"></div>
-        <div><div id="npcName" style="font-weight:700"></div><div class="small" id="npcTitle"></div></div>
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" data-skin-slot="dialog-overlay">
+    <div class="dialog" data-skin-slot="dialog-window">
+      <header data-skin-slot="dialog-header">
+        <div class="portrait" id="port" data-skin-slot="dialog-portrait"></div>
+        <div><div id="npcName" style="font-weight:700" data-skin-label="dialog-name"></div><div class="small" id="npcTitle" data-skin-label="dialog-title"></div></div>
       </header>
-      <main id="dialogText"></main>
-      <div class="choices" id="choices"></div>
-      <button id="persistLLM" class="btn small" style="display:none">Persist LLM</button>
+      <main id="dialogText" data-skin-slot="dialog-body"></main>
+      <div class="choices" id="choices" data-skin-slot="dialog-choices"></div>
+      <button id="persistLLM" class="btn small" style="display:none" data-skin-label="button-label">Persist LLM</button>
     </div>
   </div>
 
   <!-- Combat overlay -->
-  <div class="overlay" id="combatOverlay" role="dialog" aria-modal="true">
-    <div class="combat-window">
-      <div class="battlefield">
-        <div class="enemy-row" id="combatEnemies"></div>
-        <div class="party-row" id="combatParty"></div>
+  <div class="overlay" id="combatOverlay" role="dialog" aria-modal="true" data-skin-slot="combat-overlay">
+    <div class="combat-window" data-skin-slot="combat-window">
+      <div class="battlefield" data-skin-slot="combat-battlefield">
+        <div class="enemy-row" id="combatEnemies" data-skin-slot="combat-enemy-row"></div>
+        <div class="party-row" id="combatParty" data-skin-slot="combat-party-row"></div>
       </div>
-      <div class="command-row">
-        <div class="turn" id="turnIndicator"></div>
-        <div class="cmd" id="combatCmd"></div>
+      <div class="command-row" data-skin-slot="combat-command-row">
+        <div class="turn" id="turnIndicator" data-skin-label="combat-turn"></div>
+        <div class="cmd" id="combatCmd" data-skin-slot="combat-command"></div>
       </div>
     </div>
   </div>
 
   <!-- Character Creator -->
   <div id="creator" style="display:none">
-    <div class="win">
-      <header>
-        <div><b>Dustland: Party Creation</b> — <span id="ccStep">1</span>/5</div>
-        <div class="small">Create up to 3 drifters (or start now)</div>
+    <div class="win" data-skin-slot="creator-window">
+      <header data-skin-slot="creator-window-header">
+        <div data-skin-label="window-title"><b>Dustland: Party Creation</b> — <span id="ccStep">1</span>/5</div>
+        <div class="small" data-skin-label="field-note">Create up to 3 drifters (or start now)</div>
       </header>
-      <main>
-        <div class="pbox">
-          <div class="p" id="ccPortrait"></div>
+      <main data-skin-slot="creator-window-body">
+        <div class="pbox" data-skin-slot="creator-portrait-frame">
+          <div class="p" id="ccPortrait" data-skin-slot="creator-portrait"></div>
         </div>
-        <div id="ccRight"></div>
+        <div id="ccRight" data-skin-slot="creator-fields"></div>
       </main>
-      <div class="footer">
-        <div class="small" id="ccHint">Pick a name and portrait.</div>
-        <div class="right">
-          <button class="btn" id="ccLoad">Load Game</button>
-          <button class="btn" id="ccStart">Start Now</button>
-          <button class="btn" id="ccBack">Back</button>
-          <button class="btn btn--primary" id="ccNext">Next</button>
+      <div class="footer" data-skin-slot="creator-window-footer">
+        <div class="small" id="ccHint" data-skin-label="field-note">Pick a name and portrait.</div>
+        <div class="right" data-skin-slot="creator-window-actions">
+          <button class="btn" id="ccLoad" data-skin-label="button-label">Load Game</button>
+          <button class="btn" id="ccStart" data-skin-label="button-label">Start Now</button>
+          <button class="btn" id="ccBack" data-skin-label="button-label">Back</button>
+          <button class="btn btn--primary" id="ccNext" data-skin-label="button-label">Next</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Module Loader -->
-  <div id="moduleLoader" style="position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:40">
-    <div class="win" style="width:min(420px,92vw);background:#0b0d0b;border:1px solid #2a382a;border-radius:12px;box-shadow:0 20px 80px rgba(0,0,0,.7);overflow:hidden">
-      <header style="padding:10px 12px;border-bottom:1px solid #223022;font-weight:700">Load Adventure Module</header>
-      <main style="padding:12px">
-        <p class="muted" style="margin-bottom:8px">Load a module from the web or a local JSON file.</p>
+  <div id="moduleLoader" style="position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:40" data-skin-slot="module-loader-overlay">
+    <div class="win" style="width:min(420px,92vw);overflow:hidden" data-skin-slot="module-loader-window">
+      <header style="padding:10px 12px;border-bottom:1px solid #223022;font-weight:700" data-skin-label="window-title">Load Adventure Module</header>
+      <main style="padding:12px" data-skin-slot="module-loader-body">
+        <p class="muted" style="margin-bottom:8px" data-skin-label="body-text">Load a module from the web or a local JSON file.</p>
         <input type="text" id="modUrl" value="modules/golden.module.json" style="width:100%" />
-        <button class="btn" id="modUrlBtn" style="margin-top:8px">Load from URL</button>
+        <button class="btn" id="modUrlBtn" style="margin-top:8px" data-skin-label="button-label">Load from URL</button>
         <hr style="margin:12px 0" />
         <input type="file" id="modFile" accept="application/json" />
-        <button class="btn" id="modFileBtn" style="margin-top:8px">Load from File</button>
+        <button class="btn" id="modFileBtn" style="margin-top:8px" data-skin-label="button-label">Load from File</button>
       </main>
     </div>
   </div>
 
+    <script defer src="./scripts/ui/skin-manager.js"></script>
     <script defer src="./scripts/event-bus.js"></script>
     <script defer src="./scripts/supporting/multiplayer-bridge.js"></script>
     <script defer src="./scripts/supporting/multiplayer-sync.js"></script>
@@ -436,69 +437,69 @@
     }
   </script>
   <!-- Persona overlay -->
-  <div class="overlay" id="personaOverlay" role="dialog" aria-modal="true" tabindex="-1">
-    <div class="persona-window">
-      <h2>Equip Persona</h2>
-      <div id="personaList" class="persona-list"></div>
-      <div class="persona-actions">
-        <button id="campFastTravelBtn" class="btn">Fast Travel</button>
-        <button id="campChestBtn" class="btn">Camp Chest</button>
-        <button id="closePersonaBtn" class="btn">Close</button>
+  <div class="overlay" id="personaOverlay" role="dialog" aria-modal="true" tabindex="-1" data-skin-slot="persona-overlay">
+    <div class="persona-window" data-skin-slot="persona-window">
+      <h2 data-skin-label="window-title">Equip Persona</h2>
+      <div id="personaList" class="persona-list" data-skin-slot="persona-list"></div>
+      <div class="persona-actions" data-skin-slot="persona-actions">
+        <button id="campFastTravelBtn" class="btn" data-skin-label="button-label">Fast Travel</button>
+        <button id="campChestBtn" class="btn" data-skin-label="button-label">Camp Chest</button>
+        <button id="closePersonaBtn" class="btn" data-skin-label="button-label">Close</button>
       </div>
     </div>
   </div>
-  <div class="overlay" id="campChestOverlay" role="dialog" aria-modal="true" tabindex="-1">
-    <div class="camp-chest-window">
-      <header class="camp-chest-header">
-        <h2>Camp Chest</h2>
-        <button id="closeCampChestBtn" class="btn">Close</button>
+  <div class="overlay" id="campChestOverlay" role="dialog" aria-modal="true" tabindex="-1" data-skin-slot="camp-chest-overlay">
+    <div class="camp-chest-window" data-skin-slot="camp-chest-window">
+      <header class="camp-chest-header" data-skin-slot="camp-chest-header">
+        <h2 data-skin-label="window-title">Camp Chest</h2>
+        <button id="closeCampChestBtn" class="btn" data-skin-label="button-label">Close</button>
       </header>
-      <div class="camp-chest-panels">
-        <section class="camp-chest-panel">
-          <h3>Stored Items</h3>
-          <div id="campChestList" class="slot-list"></div>
+      <div class="camp-chest-panels" data-skin-slot="camp-chest-panels">
+        <section class="camp-chest-panel" data-skin-slot="camp-chest-storage">
+          <h3 data-skin-label="section-subtitle">Stored Items</h3>
+          <div id="campChestList" class="slot-list" data-skin-slot="camp-chest-stored"></div>
         </section>
-        <section class="camp-chest-panel">
-          <h3>Inventory</h3>
-          <div id="campChestInventoryList" class="slot-list"></div>
+        <section class="camp-chest-panel" data-skin-slot="camp-chest-inventory">
+          <h3 data-skin-label="section-subtitle">Inventory</h3>
+          <div id="campChestInventoryList" class="slot-list" data-skin-slot="camp-chest-inventory-list"></div>
         </section>
       </div>
     </div>
   </div>
   <!-- Workbench overlay -->
-  <div class="overlay" id="workbenchOverlay" role="dialog" aria-modal="true" tabindex="-1">
-    <div class="workbench-window">
-      <header>
-        <div>Workbench</div>
-        <button id="closeWorkbenchBtn" class="btn">Close</button>
+  <div class="overlay" id="workbenchOverlay" role="dialog" aria-modal="true" tabindex="-1" data-skin-slot="workbench-overlay">
+    <div class="workbench-window" data-skin-slot="workbench-window">
+      <header data-skin-slot="workbench-header">
+        <div data-skin-label="window-title">Workbench</div>
+        <button id="closeWorkbenchBtn" class="btn" data-skin-label="button-label">Close</button>
       </header>
-      <div id="workbenchRecipes" class="slot-list"></div>
+      <div id="workbenchRecipes" class="slot-list" data-skin-slot="workbench-recipes"></div>
     </div>
   </div>
   <!-- Shop overlay -->
-  <div class="overlay" id="shopOverlay" role="dialog" aria-modal="true" tabindex="-1">
-    <div class="shop-window">
-      <header>
-        <div id="shopName"></div>
-        <div id="shopScrap"></div>
-        <div id="shopTimer"></div>
-        <div id="shopGrudge"></div>
-        <button id="closeShopBtn" class="btn">Close</button>
+  <div class="overlay" id="shopOverlay" role="dialog" aria-modal="true" tabindex="-1" data-skin-slot="shop-overlay">
+    <div class="shop-window" data-skin-slot="shop-window">
+      <header data-skin-slot="shop-header">
+        <div id="shopName" data-skin-label="window-title"></div>
+        <div id="shopScrap" data-skin-label="field-note"></div>
+        <div id="shopTimer" data-skin-label="field-note"></div>
+        <div id="shopGrudge" data-skin-label="field-note"></div>
+        <button id="closeShopBtn" class="btn" data-skin-label="button-label">Close</button>
       </header>
-      <div class="shop-filters">
-        <label for="shopSlotFilter">Slot</label>
+      <div class="shop-filters" data-skin-slot="shop-filters">
+        <label for="shopSlotFilter" data-skin-label="field-label">Slot</label>
         <select id="shopSlotFilter">
           <option value="">All Slots</option>
         </select>
       </div>
-      <div class="shop-panels">
-        <div class="shop-inv">
-          <h2>Buy</h2>
-          <div id="shopBuy" class="slot-list"></div>
+      <div class="shop-panels" data-skin-slot="shop-panels">
+        <div class="shop-inv" data-skin-slot="shop-buy">
+          <h2 data-skin-label="section-title">Buy</h2>
+          <div id="shopBuy" class="slot-list" data-skin-slot="shop-buy-list"></div>
         </div>
-        <div class="player-inv">
-          <h2>Sell</h2>
-          <div id="shopSell" class="slot-list"></div>
+        <div class="player-inv" data-skin-slot="shop-sell">
+          <h2 data-skin-label="section-title">Sell</h2>
+          <div id="shopSell" class="slot-list" data-skin-slot="shop-sell-list"></div>
         </div>
       </div>
     </div>
