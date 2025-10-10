@@ -1,0 +1,92 @@
+{
+  "base_prompt": "Dustland CRT interface skin asset, {slot_title}, cohesive UI kit, highly detailed, {style_prompt}",
+  "lighting_prompt": "soft emissive lighting, volumetric glow, subtle scanlines",
+  "palette_prompt": "color palette: {style_palette}",
+  "negative_prompt": "lowres, noisy, watermark, distorted text, asymmetrical layout, extra limbs",
+  "cfg_scale": 7.5,
+  "steps": 32,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "styles": [
+    {
+      "id": "emerald-grid",
+      "label": "Emerald Grid",
+      "prompt": "emerald green phosphor, analog circuitry traces, brushed gunmetal, glowing teal indicators",
+      "palette": "jade greens, forest shadows, amber status lights",
+      "negative_prompt": "red, magenta, purple"
+    },
+    {
+      "id": "sunset-vapor",
+      "label": "Sunset Vapor",
+      "prompt": "sunset oranges, violet haze, vaporwave gradients, chrome edges, holographic shimmer",
+      "palette": "amber to rose gradients, indigo shadows, cyan glints",
+      "negative_prompt": "muddy brown, desaturated"
+    }
+  ],
+  "assets": [
+    {
+      "slot": "panel_background",
+      "title": "Primary panel backdrop",
+      "filename": "{style_id}_panel",
+      "prompt": "tileable panel background with beveled corners, layered circuitry mesh, center kept low contrast",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "slot": "panel_header",
+      "title": "Panel header overlay",
+      "filename": "{style_id}_panel_header",
+      "prompt": "horizontal overlay strip for UI panel headers, glowing trim, space for title text",
+      "width": 1024,
+      "height": 320
+    },
+    {
+      "slot": "button_default",
+      "title": "Primary button",
+      "filename": "{style_id}_button_default",
+      "prompt": "rectangular button face, tactile surface, embossed edges, subtle highlight, idle state",
+      "width": 640,
+      "height": 256
+    },
+    {
+      "slot": "button_hover",
+      "title": "Button hover state",
+      "filename": "{style_id}_button_hover",
+      "prompt": "hover state of the button with brighter rim lighting and animated energy bands",
+      "width": 640,
+      "height": 256
+    },
+    {
+      "slot": "hud_badge",
+      "title": "HUD badge background",
+      "filename": "{style_id}_hud_badge",
+      "prompt": "capsule badge for vitals readout, layered glass, indicator tick marks, beveled frame",
+      "width": 512,
+      "height": 320
+    },
+    {
+      "slot": "dialog_background",
+      "title": "Dialog window background",
+      "filename": "{style_id}_dialog",
+      "prompt": "dialogue window shell with curved corners, translucent display glass, interior glow",
+      "width": 1280,
+      "height": 960
+    },
+    {
+      "slot": "inventory_slot",
+      "title": "Inventory slot",
+      "filename": "{style_id}_inventory_slot",
+      "prompt": "inventory slot frame with luminous border, recessed inner cavity, subtle scratches",
+      "width": 640,
+      "height": 320
+    },
+    {
+      "slot": "map_frame",
+      "title": "Map frame edge",
+      "filename": "{style_id}_map_frame",
+      "prompt": "tiling edge segment for CRT map frame, mechanical brackets, repeating geometry",
+      "width": 512,
+      "height": 256
+    }
+  ]
+}
