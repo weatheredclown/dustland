@@ -79,6 +79,22 @@ Generated files land in ComfyUI's `output/` directory. Group them by style
 (`emerald-grid`, `sunset-vapor`, etc.) and update your Dustland skin manifest to
 point at the new textures.
 
+## Troubleshooting missing nodes
+
+- ComfyUI must be restarted after copying new Python files into `custom_nodes/`;
+  the loader only scans for node definitions during startup. If the workflow
+  still reports `SkinStyleJSONLoader` as missing, quit and relaunch the app so
+  it imports `skin_style_nodes.py` again.【F:scripts/comfyui/skin_style_nodes.py†L15-L253】
+- Verify both `skin_style_nodes.py` and `game_asset_batch_nodes.py` live in the
+  same folder under `ComfyUI/custom_nodes/` (for example,
+  `ComfyUI/custom_nodes/dustland_skin_batch/`). Each file declares the
+  `NODE_CLASS_MAPPINGS` needed for ComfyUI to register the nodes referenced in
+  the example workflow.【F:scripts/comfyui/skin_style_nodes.py†L15-L253】【F:scripts/comfyui/game_asset_batch_nodes.py†L19-L233】
+- Check ComfyUI's console output during startup; successful registration prints
+  entries such as `Loaded Dustland Skin Style JSON Loader`. If no Dustland nodes
+  appear in the log, confirm the folder path and file permissions.
+
+
 ## Integrating with Dustland
 
 After rendering, wire the images into a `DustlandSkin` definition. Populate:
