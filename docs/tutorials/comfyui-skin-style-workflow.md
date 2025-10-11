@@ -30,7 +30,7 @@ The repository includes:
 
 | File | Purpose |
 | --- | --- |
-| `scripts/comfyui/skin_style_nodes.py` | Custom node that expands a skin template into per-style prompts. |
+| `scripts/comfyui/dustland_skin_batch/` | Custom node that expands a skin template into per-style prompts. |
 | `docs/examples/skin_style_plan.json` | Sample template covering the core UI assets with two style variants. |
 | `docs/examples/comfyui-skin-style-workflow.json` | Importable ComfyUI workflow wiring the loader, renderer, and preview. |
 
@@ -58,11 +58,11 @@ quickly audition new looks without editing files.【F:scripts/comfyui/skin_style
 
 ## Running the ComfyUI workflow
 
-1. Copy the node scripts into ComfyUI:
-   - `scripts/comfyui/game_asset_batch_nodes.py`
-   - `scripts/comfyui/skin_style_nodes.py`
-   Place them under `ComfyUI/custom_nodes/dustland_skin_batch/` (or any folder
-   inside `custom_nodes/`), then restart ComfyUI so it registers the nodes.
+1. Copy the custom node directories into ComfyUI:
+   - `scripts/comfyui/dustland_game_assets/`
+   - `scripts/comfyui/dustland_skin_batch/`
+   Place them under `ComfyUI/custom_nodes/`, then restart ComfyUI so it
+   registers the new nodes.
 2. Import `docs/examples/comfyui-skin-style-workflow.json` through the ComfyUI
    sidebar (`Load` → `Workflow`).【F:docs/examples/comfyui-skin-style-workflow.json†L1-L81】
 3. Copy `docs/examples/skin_style_plan.json` into ComfyUI's `input/` directory.
@@ -85,11 +85,10 @@ point at the new textures.
   the loader only scans for node definitions during startup. If the workflow
   still reports `SkinStyleJSONLoader` as missing, quit and relaunch the app so
   it imports `skin_style_nodes.py` again.【F:scripts/comfyui/skin_style_nodes.py†L15-L253】
-- Verify both `skin_style_nodes.py` and `game_asset_batch_nodes.py` live in the
-  same folder under `ComfyUI/custom_nodes/` (for example,
-  `ComfyUI/custom_nodes/dustland_skin_batch/`). Each file declares the
-  `NODE_CLASS_MAPPINGS` needed for ComfyUI to register the nodes referenced in
-  the example workflow.【F:scripts/comfyui/skin_style_nodes.py†L15-L253】【F:scripts/comfyui/game_asset_batch_nodes.py†L19-L233】
+- Verify both the `dustland_skin_batch` and `dustland_game_assets`
+  directories were copied into `ComfyUI/custom_nodes/`. Each `__init__.py` file
+  declares the `NODE_CLASS_MAPPINGS` needed for ComfyUI to register the nodes
+  referenced in the example workflow.
 - Check ComfyUI's console output during startup; successful registration prints
   entries such as `Loaded Dustland Skin Style JSON Loader`. If no Dustland nodes
   appear in the log, confirm the folder path and file permissions.
