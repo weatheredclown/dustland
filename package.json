@@ -20,6 +20,5 @@
     "jsdom": "^26.1.0",
     "puppeteer": "^24.17.0",
     "yaml-lint": "^1.7.0"
-  },
-  "optionalDependencies": {}
+  }
 }

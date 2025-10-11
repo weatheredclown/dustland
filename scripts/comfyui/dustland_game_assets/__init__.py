@@ -237,7 +237,7 @@ class GameAssetBatchRenderer:
 
       image = self._decode_latent(vae, latent_out)
       save_results = saver.save_images(image, filename_prefix=asset.name)
-      filenames.extend(result["filename"] for result in save_results)
+      filenames.extend(result["filename"] for result in save_results["ui"]["images"])
 
       if len(images) < batch_preview_limit:
         images.append(image)
