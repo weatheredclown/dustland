@@ -12,9 +12,9 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
+import random
 
 import comfy.sd
-import comfy.utils
 import folder_paths
 import nodes
 import torch
@@ -116,7 +116,7 @@ class GameAssetJSONLoader:
     sampler = str(raw.get("sampler", defaults["sampler"]))
     scheduler = str(raw.get("scheduler", defaults["scheduler"]))
     seed_value = raw.get("seed")
-    seed = int(seed_value if seed_value is not None else comfy.utils.random_seed())
+    seed = int(seed_value if seed_value is not None else random.randint(0, 2**32 - 1))
     return GameAssetPrompt(
         name=name,
         prompt=prompt,
