@@ -101,13 +101,18 @@ class SkinStyleJSONLoader:
   def _read_json(self, json_source: str) -> Any:
     text = json_source.strip()
     if not text:
-      raise ValueError("JSON source is empty")
+      text = "skin_style_plan.json"
     if text.startswith("{") or text.startswith("["):
       return json.loads(text)
     search_path = folder_paths.get_full_path("input", text)
-    candidate = Path(search_path) if search_path else Path(json_source).expanduser()
+    candidate = Path(search_path) if search_path else Path(text).expanduser()
     if not candidate.exists():
-      raise FileNotFoundError(f"Could not find JSON file at {candidate}")
+      script_dir = Path(__file__).parent
+      node_candidate = script_dir / Path(text).name
+      if node_candidate.exists():
+        candidate = node_candidate
+    if not candidate.exists():
+      raise FileNotFoundError(f"Could not find JSON file at {text}")
     return json.loads(candidate.read_text(encoding="utf-8"))
 
   def _parse_style_overrides(self, overrides: str) -> List[Dict[str, Any]]:
