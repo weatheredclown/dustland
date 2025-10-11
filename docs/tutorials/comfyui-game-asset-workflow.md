@@ -27,7 +27,7 @@ in one run.
 
 | File | Purpose |
 | --- | --- |
-| `scripts/comfyui/game_asset_batch_nodes.py` | Custom ComfyUI nodes that power the workflow. Copy this file into your ComfyUI `custom_nodes` directory. |
+| `scripts/comfyui/dustland_game_assets/` | Custom ComfyUI nodes that power the workflow. Copy this directory into your ComfyUI `custom_nodes` directory. |
 | `docs/examples/comfyui-game-asset-workflow.json` | A ready-to-import workflow that wires the custom nodes together. |
 | `docs/examples/game_asset_batch.json` | Sample asset description demonstrating the JSON schema. |
 
@@ -53,8 +53,8 @@ contains two assets you can experiment with immediately.
 
 ## Installation and usage
 
-1. Copy `game_asset_batch_nodes.py` into your ComfyUI installation under
-   `custom_nodes/dustland_game_assets/` (or another folder of your choice).
+1. Copy the `scripts/comfyui/dustland_game_assets` directory from this
+   repository into your ComfyUI installation under `custom_nodes/`.
    Restart ComfyUI so it discovers the new nodes.
 2. Download `comfyui-game-asset-workflow.json` and import it through the
    ComfyUI sidebar (`Load` → `Workflow`).
