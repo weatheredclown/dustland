@@ -9,11 +9,11 @@ prompts while reusing the shared asset definitions from the template.
 from __future__ import annotations
 
 import json
+import random
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
 
-import comfy.utils
 import folder_paths
 
 
@@ -295,7 +295,7 @@ class SkinStyleJSONLoader:
     if seed_value is None and asset.get("seed_offset") is not None and defaults.get("seed") is not None:
       seed_value = int(defaults["seed"]) + int(asset["seed_offset"])
     if seed_value is None:
-      seed_value = comfy.utils.random_seed()
+      seed_value = random.randint(0, 2**32 - 1)
     else:
       seed_value = int(seed_value)
     return seed_value + style_index * 101 + asset_index
