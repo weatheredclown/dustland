@@ -71,6 +71,12 @@ class SkinStyleJSONLoader:
                     "placeholder": "Optional overrides: style_id | prompt | negative",
                 },
             ),
+            "manifest_filename_prefix": (
+                "STRING",
+                {
+                    "default": "skin_manifest"
+                }
+            ),
             "fallback_width": (
                 "INT",
                 {"default": 1024, "min": 64, "max": 4096, "step": 8},
@@ -304,6 +310,7 @@ class SkinStyleJSONLoader:
       self,
       json_source: str,
       styles_override: str,
+      manifest_filename_prefix: str,
       fallback_width: int,
       fallback_height: int,
       fallback_steps: int,
@@ -378,6 +385,24 @@ class SkinStyleJSONLoader:
         summary_lines.append(f"{style_id}: {slot} → {name} ({width}×{height})")
 
     summary = "\n".join(summary_lines)
+
+    prompts_by_style = {}
+    for p in prompts:
+        if p.style_id not in prompts_by_style:
+            prompts_by_style[p.style_id] = []
+        prompts_by_style[p.style_id].append(p)
+
+    output_dir = Path(folder_paths.get_output_directory())
+    manifest_paths = []
+    for style_id, style_prompts in prompts_by_style.items():
+        manifest = {p.slot: f"{p.name}.png" for p in style_prompts}
+        manifest_filename = f"{manifest_filename_prefix}_{style_id}.json"
+        manifest_path = output_dir / manifest_filename
+        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        manifest_paths.append(str(manifest_path))
+
+    summary += "\n\nSaved manifests:\n" + "\n".join(manifest_paths)
+
     return (prompts, summary)
 
 

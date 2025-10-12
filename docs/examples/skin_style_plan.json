@@ -2,7 +2,7 @@
   "base_prompt": "Dustland CRT interface skin asset, {slot_title}, cohesive UI kit, highly detailed, {style_prompt}",
   "lighting_prompt": "soft emissive lighting, volumetric glow, subtle scanlines",
   "palette_prompt": "color palette: {style_palette}",
-  "negative_prompt": "lowres, noisy, watermark, distorted text, asymmetrical layout, extra limbs",
+  "negative_prompt": "lowres, noisy, watermark, distorted text, asymmetrical layout, extra limbs, photorealism, photograph",
   "cfg_scale": 7.5,
   "steps": 32,
   "sampler": "dpmpp_2m",
@@ -27,66 +27,415 @@
     {
       "slot": "panel_background",
       "title": "Primary panel backdrop",
-      "filename": "{style_id}_panel",
-      "prompt": "tileable panel background with beveled corners, layered circuitry mesh, center kept low contrast",
-      "width": 1024,
-      "height": 1024
+      "prompt": "Tileable texture for a primary info panel, with subtle edge lighting and no prominent seams.",
+      "width": 512,
+      "height": 512
     },
     {
-      "slot": "panel_header",
+      "slot": "panel_header_overlay",
       "title": "Panel header overlay",
-      "filename": "{style_id}_panel_header",
-      "prompt": "horizontal overlay strip for UI panel headers, glowing trim, space for title text",
-      "width": 1024,
-      "height": 320
+      "prompt": "Horizontal strip for panel headers with alpha for rounded corners and trim.",
+      "width": 512,
+      "height": 160
+    },
+    {
+      "slot": "panel_body_wallpaper",
+      "title": "Panel body wallpaper",
+      "prompt": "Soft, low-contrast tileable fill for the interior of panels.",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "slot": "section_background",
+      "title": "Collapsible section background",
+      "prompt": "Tileable card texture for section containers, with a neutral center and slightly brighter border.",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "slot": "section_header_badge",
+      "title": "Section header badge",
+      "prompt": "Optional flourish behind section titles, with a left-aligned accent.",
+      "width": 256,
+      "height": 96
+    },
+    {
+      "slot": "signal_log_feed_card",
+      "title": "Signal log feed card",
+      "prompt": "Background for a scrolling signal log, with darker corners and subtle scanlines for depth.",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "slot": "control_tile_card",
+      "title": "Control tile card",
+      "prompt": "Background for a control hint tile, with a faint border and metallic highlights.",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "slot": "tab_idle",
+      "title": "Tab idle state",
+      "prompt": "Rounded tab background for an inactive tab.",
+      "width": 200,
+      "height": 80
+    },
+    {
+      "slot": "tab_active",
+      "title": "Tab active state",
+      "prompt": "Highlighted treatment for the current tab, with a centered and bright label area.",
+      "width": 200,
+      "height": 80
     },
     {
       "slot": "button_default",
-      "title": "Primary button",
-      "filename": "{style_id}_button_default",
-      "prompt": "rectangular button face, tactile surface, embossed edges, subtle highlight, idle state",
-      "width": 640,
-      "height": 256
+      "title": "Button (default)",
+      "prompt": "Primary button face in a neutral, idle state.",
+      "width": 240,
+      "height": 80
     },
     {
       "slot": "button_hover",
-      "title": "Button hover state",
-      "filename": "{style_id}_button_hover",
-      "prompt": "hover state of the button with brighter rim lighting and animated energy bands",
-      "width": 640,
-      "height": 256
+      "title": "Button (hover)",
+      "prompt": "Brighter, highlighted version of the primary button for a hover state.",
+      "width": 240,
+      "height": 80
     },
     {
-      "slot": "hud_badge",
+      "slot": "button_pressed",
+      "title": "Button (pressed)",
+      "prompt": "Darkened or indented variant of the primary button for active clicks.",
+      "width": 240,
+      "height": 80
+    },
+    {
+      "slot": "pill_toggle_button",
+      "title": "Pill toggle button",
+      "prompt": "Capsule-style control for small toggles like previous/next.",
+      "width": 200,
+      "height": 72
+    },
+    {
+      "slot": "panel_toggle_chip",
+      "title": "Panel toggle chip",
+      "prompt": "Small square chip for the slide-out panel toggle, with a glowing rim.",
+      "width": 96,
+      "height": 96
+    },
+    {
+      "slot": "hud_badge_background",
       "title": "HUD badge background",
-      "filename": "{style_id}_hud_badge",
-      "prompt": "capsule badge for vitals readout, layered glass, indicator tick marks, beveled frame",
-      "width": 512,
-      "height": 320
+      "prompt": "Card backing for HP, Adrenaline, and Scrap readouts.",
+      "width": 220,
+      "height": 140
+    },
+    {
+      "slot": "hud_bar_fill",
+      "title": "HUD bar fill",
+      "prompt": "Gradient or texture for the inside of progress bars like HP.",
+      "width": 256,
+      "height": 32
+    },
+    {
+      "slot": "hud_bar_ghost_fill",
+      "title": "HUD bar ghost fill",
+      "prompt": "Faded 'recent damage' overlay that trails behind the primary bar fill.",
+      "width": 256,
+      "height": 32
+    },
+    {
+      "slot": "weather_badge",
+      "title": "Weather badge",
+      "prompt": "Capsule highlight for weather alerts.",
+      "width": 200,
+      "height": 80
+    },
+    {
+      "slot": "status_icon_glyphs",
+      "title": "Status icon glyphs",
+      "prompt": "A set of small, monochrome icons for status effects like poisoned or buffed.",
+      "width": 256,
+      "height": 32
+    },
+    {
+      "slot": "inventory_slot_frame",
+      "title": "Inventory slot frame",
+      "prompt": "Frame for each inventory entry, with corner flourishes and a lightly textured background.",
+      "width": 320,
+      "height": 160
+    },
+    {
+      "slot": "quest_card_background",
+      "title": "Quest card background",
+      "prompt": "Background for quest entries, with space for an icon on the left and text on the right.",
+      "width": 360,
+      "height": 220
+    },
+    {
+      "slot": "party_card_background",
+      "title": "Party card background",
+      "prompt": "Tileable background for party member cards.",
+      "width": 360,
+      "height": 220
+    },
+    {
+      "slot": "slot_highlight_better",
+      "title": "Slot highlight (better item)",
+      "prompt": "Semi-transparent green glow overlay for an item that is an upgrade.",
+      "width": 320,
+      "height": 160
+    },
+    {
+      "slot": "slot_highlight_locked",
+      "title": "Slot highlight (level locked)",
+      "prompt": "Semi-transparent reddish overlay indicating a level-locked item.",
+      "width": 320,
+      "height": 160
+    },
+    {
+      "slot": "modal_backdrop",
+      "title": "Modal window backdrop",
+      "prompt": "9-slice friendly base texture for pop-up windows.",
+      "width": 640,
+      "height": 480
+    },
+    {
+      "slot": "modal_header_bar",
+      "title": "Modal header bar",
+      "prompt": "Header strip for modal windows, with an accent line for separation.",
+      "width": 640,
+      "height": 120
+    },
+    {
+      "slot": "modal_body_fill",
+      "title": "Modal body fill",
+      "prompt": "Subtle background for modal window interiors.",
+      "width": 640,
+      "height": 480
     },
     {
       "slot": "dialog_background",
       "title": "Dialog window background",
-      "filename": "{style_id}_dialog",
-      "prompt": "dialogue window shell with curved corners, translucent display glass, interior glow",
-      "width": 1280,
-      "height": 960
+      "prompt": "Custom shell for the NPC dialog overlay.",
+      "width": 720,
+      "height": 520
     },
     {
-      "slot": "inventory_slot",
-      "title": "Inventory slot",
-      "filename": "{style_id}_inventory_slot",
-      "prompt": "inventory slot frame with luminous border, recessed inner cavity, subtle scratches",
+      "slot": "dialog_portrait_frame",
+      "title": "Dialog portrait frame",
+      "prompt": "Frame for NPC portraits with an inner bevel.",
+      "width": 96,
+      "height": 96
+    },
+    {
+      "slot": "dialog_choice_button",
+      "title": "Dialog choice button",
+      "prompt": "Background for selectable dialogue options, idle and hover states.",
+      "width": 560,
+      "height": 120
+    },
+    {
+      "slot": "overlay_vignette",
+      "title": "Overlay vignette",
+      "prompt": "Screen-wide transparent overlay to tint the world when modals are open.",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "slot": "combat_background",
+      "title": "Combat window background",
+      "prompt": "Shell for the combat overlay, including outer frame and interior gradient.",
+      "width": 720,
+      "height": 540
+    },
+    {
+      "slot": "combat_command_card",
+      "title": "Combat command card",
+      "prompt": "Background for combat command prompts.",
+      "width": 320,
+      "height": 160
+    },
+    {
+      "slot": "persona_background",
+      "title": "Persona window background",
+      "prompt": "Texture for the persona selector panel.",
+      "width": 360,
+      "height": 480
+    },
+    {
+      "slot": "camp_chest_panel",
+      "title": "Camp chest panel",
+      "prompt": "Background for camp chest inventory panes.",
+      "width": 360,
+      "height": 480
+    },
+    {
+      "slot": "workbench_panel",
+      "title": "Workbench panel",
+      "prompt": "Background for the crafting window.",
+      "width": 360,
+      "height": 480
+    },
+    {
+      "slot": "shop_panel",
+      "title": "Shop panel (buy/sell)",
+      "prompt": "Background for shop inventory lists.",
+      "width": 400,
+      "height": 520
+    },
+    {
+      "slot": "shop_header",
+      "title": "Shop header strip",
+      "prompt": "Header area for the shop containing name, scrap, and timer.",
       "width": 640,
-      "height": 320
+      "height": 120
     },
     {
-      "slot": "map_frame",
-      "title": "Map frame edge",
-      "filename": "{style_id}_map_frame",
-      "prompt": "tiling edge segment for CRT map frame, mechanical brackets, repeating geometry",
+      "slot": "tile_atlas",
+      "title": "Tile atlas",
+      "prompt": "A sprite sheet grid of 64x64 world tiles: sand, rock, water, brush, road, ruin, wall, floor, door, building.",
       "width": 512,
-      "height": 256
+      "height": 512
+    },
+    {
+      "slot": "door_highlight",
+      "title": "Door highlight overlay",
+      "prompt": "Optional additive overlay to draw on top of door tiles.",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "slot": "map_frame_corners",
+      "title": "Map frame corners",
+      "prompt": "Optional ornaments for the outer frame of the gameplay viewport.",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "slot": "map_frame_edge",
+      "title": "Map frame edge",
+      "prompt": "Tileable edge texture for viewport borders.",
+      "width": 16,
+      "height": 128
+    },
+    {
+        "slot": "player_icon_default",
+        "title": "Player icon - default",
+        "prompt": "Icon for the player character, default state. Clear at 16x16.",
+        "width": 128,
+        "height": 128
+      },
+      {
+        "slot": "player_icon_adrenaline",
+        "title": "Player icon - adrenaline",
+        "prompt": "Icon for the player character, adrenaline state. Clear at 16x16.",
+        "width": 128,
+        "height": 128
+      },
+      {
+        "slot": "npc_friendly_icon",
+        "title": "NPC friendly icon",
+        "prompt": "Icon for a friendly NPC. Clear at 16x16.",
+        "width": 128,
+        "height": 128
+      },
+      {
+        "slot": "npc_hostile_icon",
+        "title": "NPC hostile icon",
+        "prompt": "Icon for a hostile NPC. Clear at 16x16.",
+        "width": 128,
+        "height": 128
+      },
+      {
+        "slot": "npc_quest_giver_icon",
+        "title": "NPC quest giver icon",
+        "prompt": "Icon for a quest-giving NPC. Clear at 16x16.",
+        "width": 128,
+        "height": 128
+      },
+      {
+        "slot": "trainer_icon",
+        "title": "Trainer icon",
+        "prompt": "Icon for a skill trainer NPC. Clear at 16x16.",
+        "width": 128,
+        "height": 128
+      },
+      {
+        "slot": "shopkeeper_icon",
+        "title": "Shopkeeper icon",
+        "prompt": "Icon for a shopkeeper NPC. Clear at 16x16.",
+        "width": 128,
+        "height": 128
+      },
+      {
+        "slot": "remote_party_icon",
+        "title": "Remote party icon",
+        "prompt": "Ghostly icon for a remote multiplayer party member. Clear at 16x16.",
+        "width": 128,
+        "height": 128
+      },
+      {
+        "slot": "loot_drop_icon",
+        "title": "Loot drop icon",
+        "prompt": "Icon for a loot drop on the ground. Clear at 16x16.",
+        "width": 96,
+        "height": 96
+      },
+      {
+        "slot": "world_item_icon",
+        "title": "World item icon",
+        "prompt": "Icon for a single item on the ground. Clear at 16x16.",
+        "width": 96,
+        "height": 96
+      },
+      {
+        "slot": "stack_icon",
+        "title": "Stack/multi-drop icon",
+        "prompt": "Icon for a stack of items on the ground. Clear at 16x16.",
+        "width": 96,
+        "height": 96
+      },
+      {
+        "slot": "inventory_glyph_set",
+        "title": "Inventory item glyph set",
+        "prompt": "A set of simple glyphs for inventory categories: weapon, armor, consumable, quest, junk.",
+        "width": 480,
+        "height": 96
+    },
+    {
+      "slot": "panel_title_accent",
+      "title": "Panel title accent",
+      "prompt": "An underline or emblem to sit behind main panel titles.",
+      "width": 480,
+      "height": 120
+    },
+    {
+      "slot": "section_title_accent",
+      "title": "Section title accent",
+      "prompt": "A decorative underline for section titles.",
+      "width": 320,
+      "height": 100
+    },
+    {
+      "slot": "hud_label_chips",
+      "title": "HUD label chips",
+      "prompt": "Background chips for HUD labels like HP and ADR.",
+      "width": 200,
+      "height": 80
+    },
+    {
+      "slot": "weather_text_treatment",
+      "title": "Weather text treatment",
+      "prompt": "Optional artistic text treatment for the weather badge.",
+      "width": 200,
+      "height": 80
+    },
+    {
+      "slot": "button_label_overlay",
+      "title": "Button label overlay",
+      "prompt": "An emissive overlay to apply on top of button text.",
+      "width": 240,
+      "height": 80
     }
   ]
 }
