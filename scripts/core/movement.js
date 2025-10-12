@@ -486,6 +486,12 @@ function move(dx,dy){
         // NPCs advance along paths after the player steps
         if (Dustland.path?.tickPathAI) Dustland.path.tickPathAI();
         if(state.map === 'world') advanceWorldTurn();
+        if (typeof leaderHasLootVacuum === 'function' && leaderHasLootVacuum()) {
+          let sweeps = 0;
+          while (takeNearestItem({ vacuum: true }) && sweeps < 5) {
+            sweeps++;
+          }
+        }
         moveDelay = 0;
         resolve();
       }, moveDelay);
@@ -674,7 +680,8 @@ function adjacentNPC(){
   }
   return null;
 }
-function takeNearestItem() {
+function takeNearestItem(opts) {
+  const useVacuumFx = !!(opts && opts.vacuum);
   const dirs = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
   for (const [dx, dy] of dirs) {
     const info = queryTile(party.x + dx, party.y + dy);
@@ -706,7 +713,11 @@ function takeNearestItem() {
     if (!tookAny) continue;
     messages.forEach(msg => log(msg));
     updateHUD();
-    if (typeof pickupSparkle === 'function') pickupSparkle(party.x + dx, party.y + dy);
+    if (useVacuumFx && (dx !== 0 || dy !== 0)) {
+      globalThis.pickupVacuum?.(party.x + dx, party.y + dy, party.x, party.y);
+    } else if (typeof pickupSparkle === 'function') {
+      pickupSparkle(party.x + dx, party.y + dy);
+    }
     bus.emit('sfx', 'pickup');
     return true;
   }

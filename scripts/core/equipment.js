@@ -29,4 +29,11 @@
     type: 'armor',
     mods: { DEF: 3, adrenaline_gen_mod: 0.9 }
   });
+  registerItem({
+    id: 'suction_relay',
+    name: 'Suction Relay',
+    type: 'trinket',
+    desc: 'Leader-only trinket that vacuums nearby loot into the party.',
+    tags: ['loot_vacuum']
+  });
 })();
