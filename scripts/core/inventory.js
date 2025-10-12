@@ -33,6 +33,8 @@ const itemDrops = [];
 const EQUIP_TYPES = ['weapon','armor','trinket'];
 const MAX_INV_STACK = 64;
 const CAMP_CHEST_EVENT = 'campChest:changed';
+const LOOT_VACUUM_TAG = 'loot_vacuum';
+const LOOT_VACUUM_IDS = new Set(['suction_relay']);
 
 function cloneData(obj){
   if(!obj) return null;
@@ -368,6 +370,48 @@ function getPartyInventoryCapacity() {
   return party.length * 20;
 }
 
+function getLeaderMember(){
+  if (typeof leader === 'function') {
+    try {
+      const member = leader();
+      if (member) return member;
+    } catch (err) {
+      // ignore leader lookup errors
+    }
+  }
+  if (party && typeof party.leader === 'function') {
+    try {
+      const member = party.leader();
+      if (member) return member;
+    } catch (err) {
+      // ignore leader lookup errors
+    }
+  }
+  if (Array.isArray(party) && party.length) {
+    return party[0];
+  }
+  return null;
+}
+
+function isLootVacuumItem(it){
+  if (!it) return false;
+  const tags = Array.isArray(it.tags) ? it.tags : [];
+  if (tags.some(tag => typeof tag === 'string' && tag.toLowerCase() === LOOT_VACUUM_TAG)) {
+    return true;
+  }
+  const id = typeof it.id === 'string' ? it.id.toLowerCase() : '';
+  if (id && LOOT_VACUUM_IDS.has(id)) return true;
+  const baseId = typeof it.baseId === 'string' ? it.baseId.toLowerCase() : '';
+  if (baseId && LOOT_VACUUM_IDS.has(baseId)) return true;
+  return false;
+}
+
+function leaderHasLootVacuum(){
+  const lead = getLeaderMember();
+  if (!lead || !lead.equip) return false;
+  return isLootVacuumItem(lead.equip.trinket);
+}
+
 function loadStarterItems(){
   try {
     const items = globalThis.Dustland && globalThis.Dustland.starterItems;
@@ -404,7 +448,12 @@ function tryAutoPickup(drop) {
   if (!party) return false;
   const mapId = typeof drop.map === 'string' ? drop.map : 'world';
   if (mapId !== party.map) return false;
-  if (drop.x !== party.x || drop.y !== party.y) return false;
+  const dx = typeof drop.x === 'number' ? drop.x - party.x : 0;
+  const dy = typeof drop.y === 'number' ? drop.y - party.y : 0;
+  const distance = Math.abs(dx) + Math.abs(dy);
+  const sameTile = distance === 0;
+  const vacuumActive = !sameTile && distance === 1 && leaderHasLootVacuum();
+  if (!sameTile && !vacuumActive) return false;
   let took = false;
   const messages = [];
   if (Array.isArray(drop.items) && drop.items.length) {
@@ -418,9 +467,13 @@ function tryAutoPickup(drop) {
   if (!took) return false;
   const idx = itemDrops.indexOf(drop);
   if (idx > -1) itemDrops.splice(idx, 1);
+  if (vacuumActive) {
+    globalThis.pickupVacuum?.(drop.x, drop.y, party.x, party.y);
+  } else if (typeof pickupSparkle === 'function') {
+    pickupSparkle(drop.x, drop.y);
+  }
   messages.forEach(msg => { if (typeof log === 'function') log(msg); });
   if (typeof updateHUD === 'function') updateHUD();
-  if (typeof pickupSparkle === 'function') pickupSparkle(drop.x, drop.y);
   globalThis.EventBus?.emit?.('sfx', 'pickup');
   return true;
 }
@@ -936,6 +989,6 @@ function useItem(invIndex){
   return false;
 }
 
-const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache, tryAutoPickup, loadStarterItems, canEquip, describeRequiredRoles, getEquipMinLevel, getEquipRestrictions, getCampChest, isCampChestUnlocked, unlockCampChest, storeCampChestItem, withdrawCampChestItem };
+const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache, tryAutoPickup, loadStarterItems, canEquip, describeRequiredRoles, getEquipMinLevel, getEquipRestrictions, getCampChest, isCampChestUnlocked, unlockCampChest, storeCampChestItem, withdrawCampChestItem, leaderHasLootVacuum, isLootVacuumItem };
 globalThis.Dustland.inventory = inventoryExports;
 Object.assign(globalThis, inventoryExports);
