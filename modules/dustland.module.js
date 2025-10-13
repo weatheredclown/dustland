@@ -860,6 +860,17 @@ const DATA = `
       "id": "magnetic_tape",
       "name": "Magnetic Tape",
       "type": "quest"
+    },
+    {
+      "map": "world",
+      "x": 11,
+      "y": 45,
+      "id": "suction_relay",
+      "name": "Suction Relay",
+      "type": "trinket",
+      "tags": [
+        "loot_vacuum"
+      ]
     }
   ],
   "quests": [
