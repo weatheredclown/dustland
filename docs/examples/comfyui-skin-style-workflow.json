@@ -16,7 +16,7 @@
         {"name": "CLIP", "type": "CLIP", "links": [2], "shape": 3, "slot_index": 1},
         {"name": "VAE", "type": "VAE", "links": [3], "shape": 3, "slot_index": 2}
       ],
-      "widgets_values": ["sd15.safetensors"]
+      "widgets_values": ["v1-5-pruned-emaonly-fp16.safetensors"]
     },
     {
       "id": 2,
