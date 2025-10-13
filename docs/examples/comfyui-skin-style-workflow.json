@@ -96,9 +96,7 @@
         "ver": "0.3.64",
         "Node name for S&R": "CheckpointLoaderSimple"
       },
-      "widgets_values": [
-        "v1-5-pruned-emaonly-fp16.safetensors"
-      ]
+      "widgets_values": ["v1-5-pruned-emaonly-fp16.safetensors"]
     },
     {
       "id": 2,

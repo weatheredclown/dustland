@@ -1,7 +1,7 @@
 
 // ===== Rendering & Utilities =====
 
-const ENGINE_VERSION = '0.214.0';
+const ENGINE_VERSION = '0.217.0';
 
 
 const logEl = document.getElementById('log');
@@ -1209,6 +1209,7 @@ let bumpX=0, bumpY=0, bumpEnd=0;
 const FOOTSTEP_BUMP_RANGE = 0.6;
 const FOOTSTEP_BUMP_DURATION_MS = 35;
 const sparkles=[];
+const vacuumTrails=[];
 const soundSources = [];
 let lastChimeTime = 0;
 
@@ -1243,6 +1244,19 @@ function footstepBump(){
 
 function pickupSparkle(x,y){
   sparkles.push({x,y});
+}
+
+function pickupVacuum(fromX, fromY, toX, toY){
+  const now = Date.now();
+  const fx = {
+    fromX,
+    fromY,
+    toX: typeof toX === 'number' ? toX : fromX,
+    toY: typeof toY === 'number' ? toY : fromY,
+    start: now,
+    end: now + 350
+  };
+  vacuumTrails.push(fx);
 }
 
 function draw(t){
@@ -1630,6 +1644,55 @@ function render(gameState=state, dt){
       ctx.restore();
     }
     else if(layer==='entitiesAbove'){ drawEntities(ctx, above, offX, offY, skin); }
+  }
+
+  if(vacuumTrails.length){
+    const now = Date.now();
+    const active = [];
+    for(const fx of vacuumTrails){
+      const start = typeof fx.start === 'number' ? fx.start : now;
+      const end = typeof fx.end === 'number' ? fx.end : start + 300;
+      const duration = Math.max(1, end - start);
+      const elapsed = now - start;
+      if (elapsed >= duration){
+        continue;
+      }
+      const progress = Math.max(0, Math.min(1, elapsed / duration));
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const fromX = typeof fx.fromX === 'number' ? fx.fromX : 0;
+      const fromY = typeof fx.fromY === 'number' ? fx.fromY : 0;
+      const toX = typeof fx.toX === 'number' ? fx.toX : fromX;
+      const toY = typeof fx.toY === 'number' ? fx.toY : fromY;
+      const worldX = fromX + (toX - fromX) * eased;
+      const worldY = fromY + (toY - fromY) * eased;
+      const px = (worldX - camX + offX) * TS;
+      const py = (worldY - camY + offY) * TS;
+      if(px + TS < 0 || py + TS < 0 || px > BASE_CANVAS_WIDTH || py > BASE_CANVAS_HEIGHT){
+        active.push(fx);
+        continue;
+      }
+      const basePx = (fromX - camX + offX) * TS + TS / 2;
+      const basePy = (fromY - camY + offY) * TS + TS / 2;
+      const targetPx = px + TS / 2;
+      const targetPy = py + TS / 2;
+      ctx.save();
+      ctx.globalAlpha = 0.35 + 0.45 * (1 - progress);
+      ctx.strokeStyle = 'rgba(158,247,160,0.6)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(basePx, basePy);
+      ctx.lineTo(targetPx, targetPy);
+      ctx.stroke();
+      const radius = Math.max(3, (1 - progress) * TS * 0.25 + TS * 0.15);
+      ctx.fillStyle = '#9ef7a0';
+      ctx.beginPath();
+      ctx.arc(targetPx, targetPy, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      active.push(fx);
+    }
+    vacuumTrails.length = 0;
+    vacuumTrails.push(...active);
   }
 
   if(sparkles.length){
@@ -3023,7 +3086,7 @@ globalThis.Dustland.font = {
   setScale: (value, opts) => setFontScale(value, opts)
 };
 
-const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, openShop, playFX };
+const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, pickupVacuum, openShop, playFX };
 Object.assign(globalThis, engineExports);
 
 // ===== Minimal Unit Tests (#test) =====

@@ -860,6 +860,17 @@ const DATA = `
       "id": "magnetic_tape",
       "name": "Magnetic Tape",
       "type": "quest"
+    },
+    {
+      "map": "world",
+      "x": 11,
+      "y": 45,
+      "id": "suction_relay",
+      "name": "Suction Relay",
+      "type": "trinket",
+      "tags": [
+        "loot_vacuum"
+      ]
     }
   ],
   "quests": [
@@ -3425,7 +3436,7 @@ const DATA = `
       "questId": "q_antidote_aid",
       "tree": {
         "start": {
-          "text": "Lysa fans fumes from an improvised still. 'My scout's fading. I need an antidote brewed at this bench—water flasks and plant fiber will do.'",
+          "text": "Lysa fans fumes from an improvised still. 'My scout's fading. I need an antidote brewed at this bench—water flasks and plant fiber will do. I've stashed spare supplies if you're short.'",
           "choices": [
             {
               "label": "(Accept) I'll gather the ingredients.",
@@ -3436,6 +3447,10 @@ const DATA = `
               "label": "(Hand Over Antidote)",
               "to": "turnin",
               "q": "turnin"
+            },
+            {
+              "label": "Show me your supplies.",
+              "to": "buy"
             }
           ]
         },
@@ -3459,6 +3474,10 @@ const DATA = `
                   "msg": "Lysa rushes the antidote to Bren."
                 }
               ]
+            },
+            {
+              "label": "I'd like to buy supplies.",
+              "to": "buy"
             }
           ]
         },
@@ -3466,6 +3485,30 @@ const DATA = `
           "text": "She pours the cure between Bren's lips. The scout jolts awake, coughing but alert.",
           "choices": []
         }
+      },
+      "shop": {
+        "markup": 1,
+        "refresh": 24,
+        "inv": [
+          {
+            "id": "plant_fiber",
+            "rarity": "common",
+            "cadence": "daily",
+            "refreshHours": 24
+          },
+          {
+            "id": "water_flask",
+            "rarity": "common",
+            "cadence": "daily",
+            "refreshHours": 24
+          },
+          {
+            "id": "cloth",
+            "rarity": "common",
+            "cadence": "daily",
+            "refreshHours": 24
+          }
+        ]
       }
     },
     {

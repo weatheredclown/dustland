@@ -5,12 +5,13 @@ import vm from 'node:vm';
 
 const invCode = await fs.readFile(new URL('../scripts/core/inventory.js', import.meta.url), 'utf8');
 
-const orig = { EventBus: global.EventBus, player: global.player, party: global.party, log: global.log, toast: global.toast };
+const orig = { EventBus: global.EventBus, player: global.player, party: global.party, log: global.log, toast: global.toast, pickupVacuum: global.pickupVacuum, leader: global.leader };
 global.EventBus = { emit(){} };
 global.player = { inv: [] };
 global.party = { map:'world', x:0, y:0, length:1 };
 global.log = () => {};
 global.toast = () => {};
+global.pickupVacuum = () => {};
 vm.runInThisContext(invCode, { filename: 'core/inventory.js' });
 
 registerItem({ id:'a', name:'A', type:'misc' });
@@ -64,7 +65,27 @@ test('tryAutoPickup collects loot caches when capacity allows', () => {
   assert.strictEqual(itemDrops.length, 0);
 });
 
+test('tryAutoPickup vacuums adjacent loot when leader equipped', () => {
+  player.inv = [];
+  itemDrops.length = 0;
+  const leaderMember = { equip: { trinket: { id: 'suction_relay', tags: ['loot_vacuum'] } } };
+  global.leader = () => leaderMember;
+  let effectCount = 0;
+  const prevVacuum = global.pickupVacuum;
+  global.pickupVacuum = () => { effectCount++; };
+  const drop = { id: 'a', map: 'world', x: 1, y: 0, dropType: 'loot' };
+  itemDrops.push(drop);
+  const ok = tryAutoPickup(drop);
+  assert.ok(ok);
+  assert.strictEqual(player.inv.length, 1);
+  assert.strictEqual(itemDrops.length, 0);
+  assert.ok(effectCount >= 1);
+  global.pickupVacuum = typeof prevVacuum === 'function' ? prevVacuum : () => {};
+  global.leader = orig.leader;
+});
+
 test('tryAutoPickup leaves loot on the ground when inventory is full', () => {
+  global.leader = orig.leader;
   player.inv = Array.from({ length: getPartyInventoryCapacity() }, (_, i) => ({ id: 'full' + i }));
   itemDrops.length = 0;
   const drop = { id: 'a', map: 'world', x: 0, y: 0, dropType: 'loot' };
@@ -81,4 +102,6 @@ test.after(() => {
   if(orig.party === undefined) delete global.party; else global.party = orig.party;
   if(orig.log === undefined) delete global.log; else global.log = orig.log;
   if(orig.toast === undefined) delete global.toast; else global.toast = orig.toast;
+  if(orig.pickupVacuum === undefined) delete global.pickupVacuum; else global.pickupVacuum = orig.pickupVacuum;
+  if(orig.leader === undefined) delete global.leader; else global.leader = orig.leader;
 });
