@@ -22,6 +22,7 @@ import random
 import sys
 import urllib.request
 import urllib.parse
+import urllib.error
 import uuid
 import websocket
 from dataclasses import dataclass, field
@@ -335,6 +336,7 @@ class SkinStylePromptGenerator:
             "width": width,
             "height": height,
         }
+        metadata["manifest_filename"] = f"{manifest_prefix}_{style_id}.json"
         prompts.append(SkinAssetPrompt(
             name=name,
             prompt=prompt,
@@ -391,6 +393,79 @@ def get_history(prompt_id: str, host: str, port: int):
     with urllib.request.urlopen(url) as response:
         return json.loads(response.read())
 
+
+def _download_image(
+    *,
+    host: str,
+    port: int,
+    filename: str,
+    subfolder: str,
+    image_type: str,
+    destination: Path,
+) -> Path:
+  query = urllib.parse.urlencode({
+      "filename": filename,
+      "subfolder": subfolder or "",
+      "type": image_type or "output",
+  })
+  url = f"http://{host}:{port}/view?{query}"
+  with urllib.request.urlopen(url) as response:
+    data = response.read()
+  destination.parent.mkdir(parents=True, exist_ok=True)
+  destination.write_bytes(data)
+  return destination
+
+
+def download_images_for_prompt(
+    prompt_id: str,
+    asset_prompt: SkinAssetPrompt,
+    host: str,
+    port: int,
+    output_dir: Path,
+) -> List[Path]:
+  try:
+    history = get_history(prompt_id, host, port)
+  except urllib.error.URLError as exc:
+    print(f"Warning: Failed to fetch history for prompt {prompt_id}: {exc}")
+    return []
+
+  prompt_history = history.get(prompt_id) or {}
+  outputs = prompt_history.get("outputs", {})
+  saved_paths: List[Path] = []
+
+  for node_output in outputs.values():
+    images = node_output.get("images")
+    if not images:
+      continue
+    if not isinstance(images, list):
+      continue
+    for index, image in enumerate(images):
+      if not isinstance(image, dict):
+        continue
+      filename = image.get("filename")
+      if not filename:
+        continue
+      subfolder = image.get("subfolder", "")
+      image_type = image.get("type", "output")
+      ext = Path(filename).suffix or ".png"
+      suffix = "" if len(images) == 1 else f"_{index + 1:02d}"
+      destination = output_dir / f"{asset_prompt.name}{suffix}{ext}"
+      try:
+        saved_path = _download_image(
+            host=host,
+            port=port,
+            filename=filename,
+            subfolder=subfolder,
+            image_type=image_type,
+            destination=destination,
+        )
+      except urllib.error.URLError as exc:
+        print(f"Warning: Failed to download image '{filename}' for prompt {prompt_id}: {exc}")
+        continue
+      saved_paths.append(saved_path)
+
+  return saved_paths
+
 # --- Main script ---
 
 def get_single_asset_workflow() -> dict:
@@ -441,15 +516,36 @@ def get_single_asset_workflow() -> dict:
 def main():
     """Main entry point for the script."""
     parser = argparse.ArgumentParser(description="Run a Dustland skin style workflow.")
-    parser.add_argument("style_plan_file", type=Path, help="Path to the skin style plan JSON file.")
+    parser.add_argument(
+        "workflow_file",
+        type=Path,
+        nargs="?",
+        help="Optional path to the ComfyUI workflow JSON file. Defaults to the built-in template.",
+    )
+    parser.add_argument(
+        "style_plan_file",
+        type=Path,
+        nargs="?",
+        help="Path to the skin style plan JSON file.",
+    )
     parser.add_argument("--host", type=str, default="127.0.0.1", help="ComfyUI server host.")
     parser.add_argument("--port", type=int, default=8188, help="ComfyUI server port.")
     parser.add_argument("--output-dir", type=Path, default=Path("ComfyUI/output"), help="Directory to save manifests.")
     parser.add_argument("--checkpoint", type=str, default="v1-5-pruned-emaonly-fp16.safetensors", help="Name of the checkpoint file to use.")
     args = parser.parse_args()
 
+    if args.style_plan_file is None:
+        if args.workflow_file is None:
+            parser.error("the following arguments are required: style_plan_file")
+        args.style_plan_file = args.workflow_file
+        args.workflow_file = None
+
     if not args.style_plan_file.exists():
         print(f"Error: Style plan file not found at {args.style_plan_file}", file=sys.stderr)
+        sys.exit(1)
+
+    if args.workflow_file and not args.workflow_file.exists():
+        print(f"Error: Workflow file not found at {args.workflow_file}", file=sys.stderr)
         sys.exit(1)
 
     client_id = str(uuid.uuid4())
@@ -471,7 +567,20 @@ def main():
     print(summary)
     print("-----------------------")
 
-    workflow_template = get_single_asset_workflow()
+    manifest_files: Dict[str, str] = {}
+    for prompt in prompts:
+        manifest_name = prompt.metadata.get("manifest_filename") if isinstance(prompt.metadata, dict) else None
+        if manifest_name and prompt.style_id not in manifest_files:
+            manifest_files[prompt.style_id] = manifest_name
+
+    if args.workflow_file:
+        try:
+            workflow_template = json.loads(args.workflow_file.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            print(f"Error: Failed to parse workflow JSON at {args.workflow_file}: {exc}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        workflow_template = get_single_asset_workflow()
 
     for asset_prompt in prompts:
         wf = json.loads(json.dumps(workflow_template)) # Deep copy
@@ -492,6 +601,7 @@ def main():
         prompt_id = queue_prompt(wf, args.host, args.port, client_id)['prompt_id']
         print(f"\nQueued prompt for asset '{asset_prompt.name}' ({asset_prompt.width}x{asset_prompt.height}) with ID: {prompt_id}")
 
+        downloaded = []
         while True:
             out = ws.recv()
             if isinstance(out, str):
@@ -499,6 +609,12 @@ def main():
                 if message['type'] == 'executing':
                     data = message['data']
                     if data['node'] is None and data['prompt_id'] == prompt_id:
+                        if not downloaded:
+                            downloaded = download_images_for_prompt(prompt_id, asset_prompt, args.host, args.port, args.output_dir)
+                            for path in downloaded:
+                                print(f"Saved image to {path}")
+                            if not downloaded:
+                                print("Warning: No images were downloaded for this asset. Check the SaveImage node configuration.")
                         print(f"Finished generating asset '{asset_prompt.name}'.")
                         break
                     # Optional: print progress
@@ -507,6 +623,35 @@ def main():
 
     ws.close()
     print("\nAll assets generated successfully. Script finished.")
+
+    if manifest_files:
+        repo_root = Path.cwd()
+        manifest_lines = []
+        for style_id, filename in sorted(manifest_files.items()):
+            manifest_path = args.output_dir / filename
+            try:
+                manifest_rel = manifest_path.relative_to(repo_root)
+            except ValueError:
+                manifest_rel = manifest_path
+            manifest_lines.append((style_id, manifest_rel.as_posix()))
+
+        print("\nPreview tip:")
+        print("  1. Run `npm run serve` from the repository root.")
+        print("  2. Open http://localhost:8080/dustland.html in a browser.")
+        print("  3. In the developer console, pick a style and run:")
+        for style_id, manifest_rel in manifest_lines:
+            print(f"\n     // {style_id}")
+            print("     (() => {")
+            print(f"       const manifestUrl = '{manifest_rel}';")
+            print("       fetch(manifestUrl).then(r => r.json()).then(manifest => {")
+            print("         const baseDir = manifestUrl.includes('/') ? manifestUrl.slice(0, manifestUrl.lastIndexOf('/')) : '';")
+            print("         const slots = Object.fromEntries(Object.entries(manifest).map(([slot, file]) => {")
+            print("           const src = baseDir ? `${baseDir}/${file}` : file;")
+            print("           return [slot, { backgroundImage: `url(${src})` }];")
+            print("         }));")
+            print("         Dustland.skin.applySkin({ id: 'preview', ui: { slots } });")
+            print("       });")
+            print("     })();")
 
 
 if __name__ == "__main__":
