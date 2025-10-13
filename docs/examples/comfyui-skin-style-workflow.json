@@ -1,36 +1,227 @@
 {
+  "id": "fccb6b00-32ba-453a-8b4f-5836480b66f5",
+  "revision": 0,
   "last_node_id": 5,
-  "last_link_id": 6,
+  "last_link_id": 12,
   "nodes": [
+    {
+      "id": 4,
+      "type": "PreviewImage",
+      "pos": [
+        120,
+        40
+      ],
+      "size": [
+        320,
+        300
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 12
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.64",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
     {
       "id": 1,
       "type": "CheckpointLoaderSimple",
-      "pos": [-820, -120],
-      "size": [300, 200],
+      "pos": [
+        -820,
+        -120
+      ],
+      "size": [
+        300,
+        200
+      ],
       "flags": {},
       "order": 0,
       "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {"name": "MODEL", "type": "MODEL", "links": [1], "shape": 3, "slot_index": 0},
-        {"name": "CLIP", "type": "CLIP", "links": [2], "shape": 3, "slot_index": 1},
-        {"name": "VAE", "type": "VAE", "links": [3], "shape": 3, "slot_index": 2}
+      "inputs": [
+        {
+          "localized_name": "ckpt_name",
+          "name": "ckpt_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "ckpt_name"
+          },
+          "link": null
+        }
       ],
-      "widgets_values": ["sd15.safetensors"]
+      "outputs": [
+        {
+          "localized_name": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            1,
+            9
+          ]
+        },
+        {
+          "localized_name": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "slot_index": 1,
+          "links": [
+            2,
+            8
+          ]
+        },
+        {
+          "localized_name": "VAE",
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 2,
+          "links": [
+            3,
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.64",
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "v1-5-pruned-emaonly-fp16.safetensors"
+      ]
     },
     {
       "id": 2,
       "type": "SkinStyleJSONLoader",
-      "pos": [-820, 200],
-      "size": [400, 360],
+      "pos": [
+        -820,
+        200
+      ],
+      "size": [
+        400,
+        360
+      ],
       "flags": {},
       "order": 1,
       "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {"name": "assets", "type": "GAME_ASSET_LIST", "links": [4], "shape": 3, "slot_index": 0},
-        {"name": "summary", "type": "STRING", "links": [6], "shape": 3, "slot_index": 1}
+      "inputs": [
+        {
+          "localized_name": "json_source",
+          "name": "json_source",
+          "type": "STRING",
+          "widget": {
+            "name": "json_source"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "styles_override",
+          "name": "styles_override",
+          "type": "STRING",
+          "widget": {
+            "name": "styles_override"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "manifest_filename_prefix",
+          "name": "manifest_filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "manifest_filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fallback_width",
+          "name": "fallback_width",
+          "type": "INT",
+          "widget": {
+            "name": "fallback_width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fallback_height",
+          "name": "fallback_height",
+          "type": "INT",
+          "widget": {
+            "name": "fallback_height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fallback_steps",
+          "name": "fallback_steps",
+          "type": "INT",
+          "widget": {
+            "name": "fallback_steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fallback_cfg",
+          "name": "fallback_cfg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fallback_cfg"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fallback_sampler",
+          "name": "fallback_sampler",
+          "type": "STRING",
+          "widget": {
+            "name": "fallback_sampler"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fallback_scheduler",
+          "name": "fallback_scheduler",
+          "type": "STRING",
+          "widget": {
+            "name": "fallback_scheduler"
+          },
+          "link": null
+        }
       ],
+      "outputs": [
+        {
+          "localized_name": "assets",
+          "name": "assets",
+          "type": "GAME_ASSET_LIST",
+          "slot_index": 0,
+          "links": [
+            4,
+            10
+          ]
+        },
+        {
+          "localized_name": "summary",
+          "name": "summary",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": [
+            6,
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SkinStyleJSONLoader"
+      },
       "widgets_values": [
         "skin_style_plan.json",
         "",
@@ -39,65 +230,193 @@
         32,
         7.5,
         "dpmpp_2m",
+        "karras",
         "karras"
       ]
     },
     {
-      "id": 3,
-      "type": "GameAssetBatchRenderer",
-      "pos": [-360, 20],
-      "size": [380, 340],
-      "flags": {},
-      "order": 2,
-      "mode": 0,
-      "inputs": [
-        {"name": "model", "type": "MODEL", "link": 1, "slot_index": 0},
-        {"name": "clip", "type": "CLIP", "link": 2, "slot_index": 1},
-        {"name": "vae", "type": "VAE", "link": 3, "slot_index": 2},
-        {"name": "assets", "type": "GAME_ASSET_LIST", "link": 4, "slot_index": 3}
-      ],
-      "outputs": [
-        {"name": "preview", "type": "IMAGE", "links": [5], "shape": 3, "slot_index": 0},
-        {"name": "filenames", "type": "STRING", "links": [], "shape": 3, "slot_index": 1}
-      ],
-      "widgets_values": ["", 4]
-    },
-    {
-      "id": 4,
-      "type": "PreviewImage",
-      "pos": [120, 40],
-      "size": [320, 300],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [
-        {"name": "images", "type": "IMAGE", "link": 5, "slot_index": 0}
-      ],
-      "outputs": [],
-      "widgets_values": []
-    },
-    {
       "id": 5,
       "type": "Note",
-      "pos": [-340, 320],
-      "size": [320, 200],
+      "pos": [
+        -363.8336181640625,
+        411.49041748046875
+      ],
+      "size": [
+        320,
+        200
+      ],
       "flags": {},
       "order": 4,
       "mode": 0,
       "inputs": [
-        {"name": "text", "type": "STRING", "link": 6, "slot_index": 0}
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 11
+        }
       ],
       "outputs": [],
-      "widgets_values": ["Skin batch summary"]
+      "properties": {},
+      "widgets_values": [
+        "Skin batch summary"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 3,
+      "type": "GameAssetBatchRenderer",
+      "pos": [
+        -360,
+        20
+      ],
+      "size": [
+        380,
+        340
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 9
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 8
+        },
+        {
+          "localized_name": "vae",
+          "name": "vae",
+          "type": "VAE",
+          "link": 7
+        },
+        {
+          "localized_name": "assets",
+          "name": "assets",
+          "type": "GAME_ASSET_LIST",
+          "link": 10
+        },
+        {
+          "localized_name": "base_negative_prompt",
+          "name": "base_negative_prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "base_negative_prompt"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "batch_preview_limit",
+          "name": "batch_preview_limit",
+          "type": "INT",
+          "widget": {
+            "name": "batch_preview_limit"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "preview",
+          "name": "preview",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            5,
+            12
+          ]
+        },
+        {
+          "localized_name": "filenames",
+          "name": "filenames",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GameAssetBatchRenderer"
+      },
+      "widgets_values": [
+        "",
+        4
+      ]
     }
   ],
   "links": [
-    [1, 1, 0, 3, 0],
-    [2, 1, 1, 3, 1],
-    [3, 1, 2, 3, 2],
-    [4, 2, 0, 3, 3],
-    [5, 3, 0, 4, 0],
-    [6, 2, 1, 5, 0]
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      7,
+      1,
+      2,
+      3,
+      2,
+      "VAE"
+    ],
+    [
+      8,
+      1,
+      1,
+      3,
+      1,
+      "CLIP"
+    ],
+    [
+      9,
+      1,
+      0,
+      3,
+      0,
+      "MODEL"
+    ],
+    [
+      10,
+      2,
+      0,
+      3,
+      3,
+      "GAME_ASSET_LIST"
+    ],
+    [
+      11,
+      2,
+      1,
+      5,
+      0,
+      "STRING"
+    ],
+    [
+      12,
+      3,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ]
   ],
-  "groups": []
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.8671232876712329,
+      "offset": [
+        1137.577672459189,
+        281.66666666666663
+      ]
+    }
+  },
+  "version": 0.4
 }
