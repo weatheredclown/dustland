@@ -58,6 +58,27 @@ class _SafeFormatDict(dict):
 class SkinStylePromptGenerator:
   """Expand a Dustland skin template into prompts for every requested style."""
 
+  def _deep_merge_dicts(self, base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]:
+    merged: Dict[str, Any] = dict(base)
+    for key, value in overlay.items():
+      if key not in merged:
+        merged[key] = value
+        continue
+      existing = merged[key]
+      if isinstance(existing, dict) and isinstance(value, dict):
+        merged[key] = self._deep_merge_dicts(existing, value)
+      elif isinstance(existing, list) and isinstance(value, list):
+        merged[key] = existing + value
+      else:
+        merged[key] = value
+    return merged
+
+  def _merge_template_entries(self, entries: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
+    merged: Dict[str, Any] = {}
+    for entry in entries:
+      merged = self._deep_merge_dicts(merged, entry)
+    return merged
+
   def _parse_style_overrides(self, overrides: str) -> List[Dict[str, Any]]:
     results: List[Dict[str, Any]] = []
     for raw_line in overrides.splitlines():
@@ -258,8 +279,13 @@ class SkinStylePromptGenerator:
   ) -> Tuple[List[SkinAssetPrompt], str]:
 
     raw = json.loads(style_plan_source)
+    if isinstance(raw, list):
+      object_entries = [item for item in raw if isinstance(item, dict)]
+      if not object_entries:
+        raise TypeError("Skin template JSON must be an object; received an array without objects")
+      raw = self._merge_template_entries(object_entries)
     if not isinstance(raw, dict):
-      raise TypeError("Skin template JSON must be an object")
+      raise TypeError(f"Skin template JSON must be an object; received {type(raw).__name__}")
 
     styles = self._ensure_styles(raw, styles_override)
     assets = raw.get("assets")
@@ -267,17 +293,19 @@ class SkinStylePromptGenerator:
       raise ValueError("Skin template must include an 'assets' array")
 
     defaults = {
-        "width": raw.get("width") or raw.get("default_width"),
-        "height": raw.get("height") or raw.get("default_height"),
-        "steps": raw.get("steps") or raw.get("default_steps"),
-        "cfg_scale": raw.get("cfg_scale") or raw.get("cfg"),
-        "sampler": raw.get("sampler"),
-        "scheduler": raw.get("scheduler"),
+        "width": raw.get("width") or raw.get("default_width") or fallback_width,
+        "height": raw.get("height") or raw.get("default_height") or fallback_height,
+        "steps": raw.get("steps") or raw.get("default_steps") or fallback_steps,
+        "cfg_scale": raw.get("cfg_scale") or raw.get("cfg") or fallback_cfg,
+        "sampler": raw.get("sampler") or fallback_sampler,
+        "scheduler": raw.get("scheduler") or fallback_scheduler,
         "seed": raw.get("seed"),
     }
 
     prompts: List[SkinAssetPrompt] = []
     summary_lines: List[str] = []
+
+    manifest_prefix = str(raw.get("manifest_filename_prefix") or manifest_filename_prefix)
 
     for style_index, style in enumerate(styles):
       style_id = style["id"]
@@ -336,7 +364,7 @@ class SkinStylePromptGenerator:
     output_dir.mkdir(parents=True, exist_ok=True)
     for style_id, style_prompts in prompts_by_style.items():
         manifest = {p.slot: f"{p.name}.png" for p in style_prompts}
-        manifest_filename = f"{manifest_filename_prefix}_{style_id}.json"
+        manifest_filename = f"{manifest_prefix}_{style_id}.json"
         manifest_path = output_dir / manifest_filename
         manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
         manifest_paths.append(str(manifest_path))

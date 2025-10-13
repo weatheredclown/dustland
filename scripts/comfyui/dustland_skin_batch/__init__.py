@@ -123,6 +123,27 @@ class SkinStyleJSONLoader:
       raise FileNotFoundError(f"Could not find JSON file at {text}")
     return json.loads(candidate.read_text(encoding="utf-8"))
 
+  def _deep_merge_dicts(self, base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]:
+    merged = dict(base)
+    for key, value in overlay.items():
+      if key in merged:
+        existing = merged[key]
+        if isinstance(existing, dict) and isinstance(value, dict):
+          merged[key] = self._deep_merge_dicts(existing, value)
+        elif isinstance(existing, list) and isinstance(value, list):
+          merged[key] = [*existing, *value]
+        else:
+          merged[key] = value
+      else:
+        merged[key] = value
+    return merged
+
+  def _merge_template_entries(self, entries: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
+    merged: Dict[str, Any] = {}
+    for entry in entries:
+      merged = self._deep_merge_dicts(merged, entry)
+    return merged
+
   def _parse_style_overrides(self, overrides: str) -> List[Dict[str, Any]]:
     results: List[Dict[str, Any]] = []
     for raw_line in overrides.splitlines():
@@ -323,12 +344,9 @@ class SkinStyleJSONLoader:
     raw = self._read_json(json_source)
     if isinstance(raw, list):
       object_entries = [item for item in raw if isinstance(item, dict)]
-      if len(object_entries) == 1:
-        raw = object_entries[0]
-      elif not object_entries:
+      if not object_entries:
         raise TypeError("Skin template JSON must be an object; received an array without objects")
-      else:
-        raise TypeError("Skin template JSON must be an object; received multiple objects in an array")
+      raw = self._merge_template_entries(object_entries)
     if not isinstance(raw, dict):
       raise TypeError(f"Skin template JSON must be an object; received {type(raw).__name__}")
 
@@ -349,6 +367,8 @@ class SkinStyleJSONLoader:
 
     prompts: List[SkinAssetPrompt] = []
     summary_lines: List[str] = []
+
+    manifest_prefix = str(raw.get("manifest_filename_prefix") or manifest_filename_prefix)
 
     for style_index, style in enumerate(styles):
       style_id = style["id"]
@@ -406,7 +426,7 @@ class SkinStyleJSONLoader:
     manifest_paths = []
     for style_id, style_prompts in prompts_by_style.items():
         manifest = {p.slot: f"{p.name}.png" for p in style_prompts}
-        manifest_filename = f"{manifest_filename_prefix}_{style_id}.json"
+        manifest_filename = f"{manifest_prefix}_{style_id}.json"
         manifest_path = output_dir / manifest_filename
         manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
         manifest_paths.append(str(manifest_path))
