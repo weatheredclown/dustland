@@ -104,8 +104,10 @@ class SkinStyleJSONLoader:
         }
     }
 
-  def _read_json(self, json_source: str) -> Any:
-    text = json_source.strip()
+  def _read_json(self, json_source: Any) -> Any:
+    if isinstance(json_source, (dict, list)):
+      return json_source
+    text = str(json_source).strip()
     if not text:
       text = "skin_style_plan.json"
     if text.startswith("{") or text.startswith("["):
@@ -319,8 +321,16 @@ class SkinStyleJSONLoader:
       fallback_scheduler: str,
   ):
     raw = self._read_json(json_source)
+    if isinstance(raw, list):
+      object_entries = [item for item in raw if isinstance(item, dict)]
+      if len(object_entries) == 1:
+        raw = object_entries[0]
+      elif not object_entries:
+        raise TypeError("Skin template JSON must be an object; received an array without objects")
+      else:
+        raise TypeError("Skin template JSON must be an object; received multiple objects in an array")
     if not isinstance(raw, dict):
-      raise TypeError("Skin template JSON must be an object")
+      raise TypeError(f"Skin template JSON must be an object; received {type(raw).__name__}")
 
     styles = self._ensure_styles(raw, styles_override)
     assets = raw.get("assets")
