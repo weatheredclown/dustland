@@ -223,12 +223,12 @@
       "widgets_values": [
         "skin_style_plan.json",
         "",
+        "skin-style-",
         1024,
         1024,
         32,
         7.5,
         "dpmpp_2m",
-        "karras",
         "karras"
       ]
     },
