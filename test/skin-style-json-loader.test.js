@@ -129,3 +129,109 @@ tmpdir.cleanup()
 
   assert.match(result, /success/);
 });
+
+test('SkinStyleJSONLoader accepts plain asset arrays', () => {
+  const pythonScript = String.raw`
+import json
+import pathlib
+import sys
+import tempfile
+import types
+
+tmpdir = tempfile.TemporaryDirectory()
+sys.modules['folder_paths'] = types.SimpleNamespace(
+    get_full_path=lambda category, name: None,
+    get_output_directory=lambda: tmpdir.name,
+)
+
+from scripts.comfyui.dustland_skin_batch import SkinStyleJSONLoader
+
+loader = SkinStyleJSONLoader()
+json_source = json.dumps([
+    {
+        "name": "ui_button_start",
+        "prompt": "pixel start button",
+        "negative_prompt": "blurry",
+        "width": 512,
+        "height": 256
+    },
+    {
+        "name": "enemy_drone",
+        "prompt": "hostile drone sprite",
+        "width": 640,
+        "height": 640
+    }
+])
+
+prompts, summary = loader.load(json_source, "", "manifest", 256, 256, 20, 6.5, "sampler", "scheduler")
+assert len(prompts) == 2, prompts
+assert all(p.style_id == 'default' for p in prompts)
+names = {p.name for p in prompts}
+assert 'default-ui-button-start' in names
+assert 'default-enemy-drone' in names
+slots = {p.slot for p in prompts}
+assert 'ui_button_start' in slots
+assert 'enemy_drone' in slots
+
+manifest_path = pathlib.Path(tmpdir.name) / 'manifest_default.json'
+assert manifest_path.exists(), manifest_path
+
+tmpdir.cleanup()
+`;
+
+  const result = execFileSync('python3', ['-'], {
+    cwd: repoRoot,
+    input: pythonScript,
+    encoding: 'utf8',
+  });
+
+  assert.strictEqual(result.trim(), '');
+});
+
+test('SkinStyleJSONLoader loads the documented game asset batch example', () => {
+  const examplePath = path.join(repoRoot, 'docs/examples/game_asset_batch.json');
+  const escapedPath = examplePath.replace(/\\/g, '\\\\');
+  const pythonScript = String.raw`
+import json
+import pathlib
+import sys
+import tempfile
+import types
+
+tmpdir = tempfile.TemporaryDirectory()
+sys.modules['folder_paths'] = types.SimpleNamespace(
+    get_full_path=lambda category, name: None,
+    get_output_directory=lambda: tmpdir.name,
+)
+
+from scripts.comfyui.dustland_skin_batch import SkinStyleJSONLoader
+
+loader = SkinStyleJSONLoader()
+json_source = r'${escapedPath}'
+prompts, summary = loader.load(json_source, "", "manifest", 256, 256, 30, 7.0, "sampler", "scheduler")
+assert len(prompts) == 2, prompts
+first, second = prompts
+assert first.slot == 'ui_button_start'
+assert first.width == 512 and first.height == 512
+assert first.steps == 28 and abs(first.cfg_scale - 6.5) < 1e-6
+assert first.sampler == 'euler' and first.scheduler == 'normal'
+assert second.slot == 'enemy_drone'
+assert second.width == 640 and second.height == 640
+manifest_path = pathlib.Path(tmpdir.name) / 'manifest_default.json'
+assert manifest_path.exists(), manifest_path
+manifest = json.loads(manifest_path.read_text())
+assert manifest['ui_button_start'].endswith('.png')
+assert manifest['enemy_drone'].endswith('.png')
+assert 'Saved manifests:' in summary
+print('success')
+tmpdir.cleanup()
+`;
+
+  const result = execFileSync('python3', ['-'], {
+    cwd: repoRoot,
+    input: pythonScript,
+    encoding: 'utf8',
+  });
+
+  assert.strictEqual(result.trim(), 'success');
+});

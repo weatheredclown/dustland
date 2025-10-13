@@ -346,7 +346,23 @@ class SkinStyleJSONLoader:
       object_entries = [item for item in raw if isinstance(item, dict)]
       if not object_entries:
         raise TypeError("Skin template JSON must be an object; received an array without objects")
-      raw = self._merge_template_entries(object_entries)
+
+      template_keys = {
+          "assets",
+          "styles",
+          "base_prompt",
+          "lighting_prompt",
+          "palette_prompt",
+          "manifest_filename_prefix",
+      }
+      contains_template = any(
+          any(key in entry for key in template_keys) for entry in object_entries
+      )
+
+      if contains_template:
+        raw = self._merge_template_entries(object_entries)
+      else:
+        raw = {"assets": object_entries}
     if not isinstance(raw, dict):
       raise TypeError(f"Skin template JSON must be an object; received {type(raw).__name__}")
 
