@@ -120,7 +120,6 @@ manifest_path = pathlib.Path(tmpdir.name) / 'alpha' / 'custom_alpha.json'
 assert manifest_path.exists(), manifest_path
 manifest = json.loads(manifest_path.read_text())
 assert manifest['panel'] == f"alpha/{target.metadata['file_stem']}.png"
-assert target.metadata.get('description') == 'Panel'
 print('success')
 tmpdir.cleanup()
 `;

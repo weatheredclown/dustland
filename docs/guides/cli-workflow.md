@@ -48,11 +48,10 @@ python scripts/run-skin-workflow.py docs/examples/comfyui-skin-style-workflow.js
 
 The script will then connect to the ComfyUI server, queue the prompt, and print progress messages to the console. When each asset finishes rendering, the CLI downloads the resulting PNG into the directory provided by `--output-dir` (default `ComfyUI/output`) and writes/updates the per-style manifest JSON alongside the images.
 
-> **Automatic slot discovery**: the CLI now scans the repository for `data-skin-slot` attributes (and the nearby `data-skin-label`
-> and `aria-label` hints) before the run. Any new UI slots automatically add placeholder entries with human-readable
-> descriptions so fresh Dustland builds pick up new background or overlay assets—and ship with accessible alt-text—without
-> manual bookkeeping. You can still provide explicit overrides in your style plan JSON to customise prompts, sizes, filenames,
-> or descriptions for specific slots.
+> **Automatic slot discovery**: the CLI now scans the repository for `data-skin-slot` attributes before the run. Any new UI slots
+> automatically add placeholder entries to the generation plan so fresh Dustland builds pick up new background or overlay assets
+> without manual bookkeeping. You can still provide explicit overrides in your style plan JSON to customise prompts, sizes, or
+> filenames for specific slots.
 
 ## Previewing the skin inside Dustland
 
