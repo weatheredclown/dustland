@@ -538,6 +538,13 @@
     return img;
   }
 
+  function toFiniteNumber(...values){
+    for(const value of values){
+      if(Number.isFinite(value)) return value;
+    }
+    return null;
+  }
+
   function createSprite(entry, context){
     if(!entry) return null;
     const base = typeof entry === 'string' ? { src: entry } : entry;
@@ -547,16 +554,58 @@
     const image = loadImage(src);
     if(!image) return null;
     const frame = base.frame || {};
-    const sx = Number.isFinite(base.x) ? base.x : Number.isFinite(frame.x) ? frame.x : 0;
-    const sy = Number.isFinite(base.y) ? base.y : Number.isFinite(frame.y) ? frame.y : 0;
-    const sw = Number.isFinite(base.w) ? base.w : Number.isFinite(base.width) ? base.width : Number.isFinite(frame.w) ? frame.w : Number.isFinite(frame.width) ? frame.width : (context?.tileWidth || context?.tileSize || image.naturalWidth || image.width);
-    const sh = Number.isFinite(base.h) ? base.h : Number.isFinite(base.height) ? base.height : Number.isFinite(frame.h) ? frame.h : Number.isFinite(frame.height) ? frame.height : (context?.tileHeight || context?.tileSize || sw);
+    const tileWidth = toFiniteNumber(base.tileWidth, frame.tileWidth, context?.tileWidth, context?.tileSize);
+    const tileHeight = toFiniteNumber(base.tileHeight, frame.tileHeight, context?.tileHeight, context?.tileSize);
+    const sw = toFiniteNumber(base.w, base.width, frame.w, frame.width, tileWidth, context?.tileWidth, context?.tileSize, image.naturalWidth, image.width) || 0;
+    const sh = toFiniteNumber(base.h, base.height, frame.h, frame.height, tileHeight, context?.tileHeight, context?.tileSize, sw) || 0;
+    const resolvedWidth = sw || (image.naturalWidth || image.width);
+    const resolvedHeight = sh || (image.naturalHeight || image.height);
+    const columns = toFiniteNumber(base.columns, frame.columns, context?.columns, context?.cols, context?.tileColumns, context?.tileCols);
+    const index = toFiniteNumber(base.index, frame.index, base.tileIndex, frame.tileIndex);
+    const col = (() => {
+      const direct = toFiniteNumber(base.col, base.column, frame.col, frame.column);
+      if(direct != null) return direct;
+      if(index != null){
+        const cellWidth = sw || resolvedWidth;
+        if(!cellWidth) return index;
+        const totalCols = columns || Math.floor((image.naturalWidth || image.width || 0) / cellWidth) || 0;
+        if(totalCols > 0) return index % totalCols;
+      }
+      return null;
+    })();
+    const row = (() => {
+      const direct = toFiniteNumber(base.row, base.rows, frame.row, frame.rows);
+      if(direct != null) return direct;
+      if(index != null){
+        const cellWidth = sw || resolvedWidth;
+        const cellHeight = sh || resolvedHeight;
+        if(!cellWidth || !cellHeight) return 0;
+        const totalCols = columns || Math.floor((image.naturalWidth || image.width || 0) / cellWidth) || 0;
+        if(totalCols > 0) return Math.floor(index / totalCols);
+      }
+      return null;
+    })();
+    let sx = toFiniteNumber(base.x, frame.x, base.sx, frame.sx);
+    let sy = toFiniteNumber(base.y, frame.y, base.sy, frame.sy);
+    const cellWidth = sw || (tileWidth || resolvedWidth);
+    const cellHeight = sh || (tileHeight || resolvedHeight);
+    if(sx == null && col != null && cellWidth){
+      sx = col * cellWidth;
+    }
+    if(sy == null && row != null && cellHeight){
+      sy = row * cellHeight;
+    }
+    if(!Number.isFinite(sx)) sx = 0;
+    if(!Number.isFinite(sy)) sy = 0;
+    const spriteWidth = sw || cellWidth;
+    const spriteHeight = sh || cellHeight;
+    if(!Number.isFinite(spriteWidth) || !Number.isFinite(spriteHeight)) return null;
     const sprite = {
       image,
       sx,
       sy,
-      sw,
-      sh
+      sw: spriteWidth,
+      sh: spriteHeight
     };
     if(Number.isFinite(base.scale)) sprite.scale = base.scale;
     if(Number.isFinite(base.dw)) sprite.dw = base.dw;
