@@ -281,6 +281,30 @@ class SkinStylePromptGenerator:
         "width": width,
         "height": height,
     }
+    slot_label_value = asset.get("slot_label") or asset.get("label")
+    if slot_label_value:
+      context["slot_label"] = slot_label_value
+      context["slot_label_title"] = self._humanize_label(str(slot_label_value))
+    aria_labels = asset.get("aria_labels")
+    primary_aria_label = None
+    if isinstance(aria_labels, (list, tuple)):
+      for value in aria_labels:
+        text = str(value).strip()
+        if text:
+          primary_aria_label = text
+          break
+    elif isinstance(aria_labels, str):
+      primary_aria_label = aria_labels.strip()
+    if primary_aria_label:
+      context["slot_aria_label"] = primary_aria_label
+    slot_description = asset.get("description") or asset.get("slot_description")
+    if not slot_description and primary_aria_label:
+      slot_description = primary_aria_label
+    if not slot_description and context.get("slot_label_title"):
+      slot_description = f"{context['slot_title']} ({context['slot_label_title']})"
+    if not slot_description:
+      slot_description = context["slot_title"]
+    context["slot_description"] = slot_description
     for key, value in data.items():
       if isinstance(value, (str, int, float)):
         context[f"global_{key}"] = value
@@ -435,6 +459,21 @@ class SkinStylePromptGenerator:
             "width": width,
             "height": height,
         }
+        if context.get("slot_description"):
+          metadata["description"] = context["slot_description"]
+        for meta_key in ("slot_label", "slot_label_title", "slot_aria_label"):
+          if context.get(meta_key):
+            metadata[meta_key] = context[meta_key]
+        slot_labels = asset.get("slot_labels")
+        if isinstance(slot_labels, (list, tuple)):
+          metadata["slot_labels"] = [str(v).strip() for v in slot_labels if str(v).strip()]
+        elif isinstance(slot_labels, str) and slot_labels.strip():
+          metadata["slot_labels"] = [slot_labels.strip()]
+        aria_labels = asset.get("aria_labels")
+        if isinstance(aria_labels, (list, tuple)):
+          metadata["aria_labels"] = [str(v).strip() for v in aria_labels if str(v).strip()]
+        elif isinstance(aria_labels, str) and aria_labels.strip():
+          metadata["aria_labels"] = [aria_labels.strip()]
         metadata["manifest_filename"] = f"{style_dir}/{manifest_prefix}_{style_id}.json"
         metadata["style_directory"] = style_dir
         metadata["file_stem"] = file_stem
