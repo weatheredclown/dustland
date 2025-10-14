@@ -94,6 +94,8 @@
         --skin-dialog-choice-border: 1px solid #253525;
         --skin-dialog-choice-hover-bg: #111711;
         --skin-dialog-choice-hover-border: #5c8a5c;
+        --skin-dialog-choice-selected-bg: #162616;
+        --skin-dialog-choice-selected-border: #76b676;
         --skin-combat-window-bg-color: #0b0d0b;
         --skin-combat-window-border: 1px solid #2a382a;
         --skin-combat-window-radius: 10px;
@@ -1025,8 +1027,9 @@ input[type="range"] {
     }
 
     .choice.sel {
-        border-color: var(--skin-dialog-choice-hover-border, #5c8a5c);
-        background: var(--skin-dialog-choice-hover-bg, #111711)
+        border-color: var(--skin-dialog-choice-selected-border, #76b676);
+        background: var(--skin-dialog-choice-selected-bg, #162616);
+        box-shadow: 0 0 8px rgba(118, 182, 118, 0.35);
     }
 
 /* Combat UI */
