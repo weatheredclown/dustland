@@ -122,12 +122,28 @@ class SkinStylePromptGenerator:
     return normalized
 
   def _slugify(self, value: str) -> str:
-    cleaned = [ch.lower() if ch.isalnum() else "-" for ch in value]
+    cleaned = []
+    for ch in value:
+      if ch.isalnum() or ch in {"-", "_"}:
+        cleaned.append(ch.lower())
+      else:
+        cleaned.append("-")
     slug = "".join(cleaned)
     while "--" in slug:
       slug = slug.replace("--", "-")
     slug = slug.strip("-")
     return slug or "style"
+
+  def _slugify_path(self, value: str) -> str:
+    parts = []
+    for segment in str(value).split("/"):
+      segment = segment.strip()
+      if not segment:
+        continue
+      slug = self._slugify(segment)
+      if slug:
+        parts.append(slug)
+    return "/".join(parts)
 
   def _segmentize(self, value: Any) -> List[str]:
     if value is None:
@@ -308,6 +324,8 @@ class SkinStylePromptGenerator:
 
     manifest_prefix = str(raw.get("manifest_filename_prefix") or manifest_filename_prefix)
 
+    style_directories: Dict[str, str] = {}
+
     for style_index, style in enumerate(styles):
       style_id = style["id"]
       for asset_index, asset in enumerate(assets):
@@ -326,9 +344,20 @@ class SkinStylePromptGenerator:
         scheduler = str(self._resolve_numeric(asset, style, defaults, "scheduler", fallback_scheduler))
         seed = self._resolve_seed(asset, style, defaults, style_index, asset_index)
         slot = context["slot"]
-        filename_template = asset.get("filename") or "{style_id}_{slot}"
-        name = self._format(str(filename_template), context)
-        name = self._slugify(name)
+        style_dir = style_directories.setdefault(style_id, self._slugify(str(style.get("directory") or style_id)))
+
+        filename_template = asset.get("filename")
+        if filename_template:
+          raw_name = self._format(str(filename_template), context) or slot
+        else:
+          raw_name = slot
+        stem = self._slugify_path(raw_name)
+        if not stem:
+          stem = self._slugify(slot) or slot
+        if not stem.startswith(style_dir + "/"):
+          stem = f"{style_dir}/{stem}"
+        file_stem = stem.split("/")[-1]
+        name = stem
         metadata = {
             "slot": slot,
             "style_id": style_id,
@@ -336,7 +365,9 @@ class SkinStylePromptGenerator:
             "width": width,
             "height": height,
         }
-        metadata["manifest_filename"] = f"{manifest_prefix}_{style_id}.json"
+        metadata["manifest_filename"] = f"{style_dir}/{manifest_prefix}_{style_id}.json"
+        metadata["style_directory"] = style_dir
+        metadata["file_stem"] = file_stem
         prompts.append(SkinAssetPrompt(
             name=name,
             prompt=prompt,
@@ -365,9 +396,17 @@ class SkinStylePromptGenerator:
     manifest_paths = []
     output_dir.mkdir(parents=True, exist_ok=True)
     for style_id, style_prompts in prompts_by_style.items():
-        manifest = {p.slot: f"{p.name}.png" for p in style_prompts}
+        style_dir = style_directories.get(style_id) or self._slugify(style_id)
+        manifest_dir = (output_dir / style_dir)
+        manifest_dir.mkdir(parents=True, exist_ok=True)
+        manifest = {}
+        for p in style_prompts:
+            file_stem = p.metadata.get("file_stem") if isinstance(p.metadata, dict) else None
+            if not file_stem:
+                file_stem = Path(p.name).name
+            manifest[p.slot] = f"{style_dir}/{file_stem}.png"
         manifest_filename = f"{manifest_prefix}_{style_id}.json"
-        manifest_path = output_dir / manifest_filename
+        manifest_path = manifest_dir / manifest_filename
         manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
         manifest_paths.append(str(manifest_path))
 
@@ -568,10 +607,15 @@ def main():
     print("-----------------------")
 
     manifest_files: Dict[str, str] = {}
+    style_dirs: Dict[str, str] = {}
     for prompt in prompts:
-        manifest_name = prompt.metadata.get("manifest_filename") if isinstance(prompt.metadata, dict) else None
+        metadata = prompt.metadata if isinstance(prompt.metadata, dict) else {}
+        manifest_name = metadata.get("manifest_filename")
         if manifest_name and prompt.style_id not in manifest_files:
             manifest_files[prompt.style_id] = manifest_name
+        style_dir = metadata.get("style_directory")
+        if style_dir and prompt.style_id not in style_dirs:
+            style_dirs[prompt.style_id] = style_dir
 
     if args.workflow_file:
         try:
@@ -624,34 +668,34 @@ def main():
     ws.close()
     print("\nAll assets generated successfully. Script finished.")
 
-    if manifest_files:
-        repo_root = Path.cwd()
-        manifest_lines = []
-        for style_id, filename in sorted(manifest_files.items()):
-            manifest_path = args.output_dir / filename
-            try:
-                manifest_rel = manifest_path.relative_to(repo_root)
-            except ValueError:
-                manifest_rel = manifest_path
-            manifest_lines.append((style_id, manifest_rel.as_posix()))
+    if style_dirs:
+        repo_root = Path.cwd().resolve()
+        output_dir = args.output_dir.resolve()
+        try:
+            base_dir_rel = output_dir.relative_to(repo_root)
+            base_dir_str = base_dir_rel.as_posix()
+        except ValueError:
+            base_dir_str = output_dir.as_posix()
 
         print("\nPreview tip:")
-        print("  1. Run `npm run serve` from the repository root.")
-        print("  2. Open http://localhost:8080/dustland.html in a browser.")
-        print("  3. In the developer console, pick a style and run:")
-        for style_id, manifest_rel in manifest_lines:
+        print("  1. Open dustland.html directly in your browser (double-click works).")
+        print("  2. Open Settings, enter one of these style IDs, then press Enter or click Load Skin:")
+        for style_id in sorted(style_dirs):
+            print(f"     • {style_id}")
+        print("  3. Or run one of these in the developer console:")
+        for style_id in sorted(style_dirs):
             print(f"\n     // {style_id}")
-            print("     (() => {")
-            print(f"       const manifestUrl = '{manifest_rel}';")
-            print("       fetch(manifestUrl).then(r => r.json()).then(manifest => {")
-            print("         const baseDir = manifestUrl.includes('/') ? manifestUrl.slice(0, manifestUrl.lastIndexOf('/')) : '';")
-            print("         const slots = Object.fromEntries(Object.entries(manifest).map(([slot, file]) => {")
-            print("           const src = baseDir ? `${baseDir}/${file}` : file;")
-            print("           return [slot, { backgroundImage: `url(${src})` }];")
-            print("         }));")
-            print("         Dustland.skin.applySkin({ id: 'preview', ui: { slots } });")
-            print("       });")
-            print("     })();")
+            print(f"     Dustland.skin.loadGeneratedSkin('{style_id}', {{ baseDir: '{base_dir_str}' }});")
+            print(f"     // loadSkin('{style_id}') works as a shortcut.")
+            manifest_name = manifest_files.get(style_id)
+            if manifest_name:
+                manifest_path = (args.output_dir / manifest_name).resolve()
+                try:
+                    manifest_rel = manifest_path.relative_to(repo_root)
+                    manifest_hint = manifest_rel.as_posix()
+                except ValueError:
+                    manifest_hint = manifest_path.as_posix()
+                print(f"     // Manifest: {manifest_hint}")
 
 
 if __name__ == "__main__":

@@ -46,7 +46,7 @@ prompts, summary = loader.load(json_source, "", "manifest", 64, 64, 10, 7.0, "sa
 assert len(prompts) == 1, prompts
 prompt = prompts[0]
 assert prompt.slot == "panel_background"
-manifest_path = pathlib.Path(tmpdir.name) / "manifest_alpha.json"
+manifest_path = pathlib.Path(tmpdir.name) / "alpha" / "manifest_alpha.json"
 assert manifest_path.exists(), manifest_path
 manifest = json.loads(manifest_path.read_text())
 assert manifest["panel_background"] == f"{prompt.name}.png"
@@ -115,7 +115,7 @@ prompts, summary = generator.generate(
 assert len(prompts) == 1, prompts
 prompt = prompts[0]
 assert prompt.width == 128 and prompt.height == 128
-manifest_path = pathlib.Path(tmpdir.name) / 'custom_alpha.json'
+manifest_path = pathlib.Path(tmpdir.name) / 'alpha' / 'custom_alpha.json'
 assert manifest_path.exists(), manifest_path
 print('success')
 tmpdir.cleanup()
@@ -167,13 +167,13 @@ prompts, summary = loader.load(json_source, "", "manifest", 256, 256, 20, 6.5, "
 assert len(prompts) == 2, prompts
 assert all(p.style_id == 'default' for p in prompts)
 names = {p.name for p in prompts}
-assert 'default-ui-button-start' in names
-assert 'default-enemy-drone' in names
+assert 'default/ui_button_start' in names
+assert 'default/enemy_drone' in names
 slots = {p.slot for p in prompts}
 assert 'ui_button_start' in slots
 assert 'enemy_drone' in slots
 
-manifest_path = pathlib.Path(tmpdir.name) / 'manifest_default.json'
+manifest_path = pathlib.Path(tmpdir.name) / 'default' / 'manifest_default.json'
 assert manifest_path.exists(), manifest_path
 
 tmpdir.cleanup()
@@ -217,11 +217,11 @@ assert first.steps == 28 and abs(first.cfg_scale - 6.5) < 1e-6
 assert first.sampler == 'euler' and first.scheduler == 'normal'
 assert second.slot == 'enemy_drone'
 assert second.width == 640 and second.height == 640
-manifest_path = pathlib.Path(tmpdir.name) / 'manifest_default.json'
+manifest_path = pathlib.Path(tmpdir.name) / 'default' / 'manifest_default.json'
 assert manifest_path.exists(), manifest_path
 manifest = json.loads(manifest_path.read_text())
-assert manifest['ui_button_start'].endswith('.png')
-assert manifest['enemy_drone'].endswith('.png')
+assert manifest['ui_button_start'].endswith('/ui_button_start.png')
+assert manifest['enemy_drone'].endswith('/enemy_drone.png')
 assert 'Saved manifests:' in summary
 print('success')
 tmpdir.cleanup()

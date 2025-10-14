@@ -75,9 +75,11 @@ quickly audition new looks without editing files.【F:scripts/comfyui/skin_style
    Preview images show the first few renders, while the `Note` node displays the
    summary emitted by the loader.【F:scripts/comfyui/skin_style_nodes.py†L187-L253】【F:docs/examples/comfyui-skin-style-workflow.json†L48-L118】
 
-Generated files land in ComfyUI's `output/` directory. Group them by style
-(`emerald-grid`, `sunset-vapor`, etc.) and update your Dustland skin manifest to
-point at the new textures.
+Generated files land in ComfyUI's `output/` directory inside per-style folders
+(`output/emerald-grid/`, `output/sunset-vapor/`, etc.). Each folder includes a
+manifest plus the generated PNGs, so you can drop them into the repository and
+preview them immediately with `Dustland.skin.loadGeneratedSkin('emerald-grid')`
+or the new **Load Skin** control in the Settings menu.
 
 ## Troubleshooting missing nodes
 
