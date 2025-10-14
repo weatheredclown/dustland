@@ -186,12 +186,28 @@ class SkinStyleJSONLoader:
     return normalized
 
   def _slugify(self, value: str) -> str:
-    cleaned = [ch.lower() if ch.isalnum() else "-" for ch in value]
+    cleaned = []
+    for ch in value:
+      if ch.isalnum() or ch in {"-", "_"}:
+        cleaned.append(ch.lower())
+      else:
+        cleaned.append("-")
     slug = "".join(cleaned)
     while "--" in slug:
       slug = slug.replace("--", "-")
     slug = slug.strip("-")
     return slug or "style"
+
+  def _slugify_path(self, value: str) -> str:
+    parts = []
+    for segment in str(value).split("/"):
+      segment = segment.strip()
+      if not segment:
+        continue
+      slug = self._slugify(segment)
+      if slug:
+        parts.append(slug)
+    return "/".join(parts)
 
   def _segmentize(self, value: Any) -> List[str]:
     if value is None:
@@ -386,6 +402,8 @@ class SkinStyleJSONLoader:
 
     manifest_prefix = str(raw.get("manifest_filename_prefix") or manifest_filename_prefix)
 
+    style_directories: Dict[str, str] = {}
+
     for style_index, style in enumerate(styles):
       style_id = style["id"]
       for asset_index, asset in enumerate(assets):
@@ -403,9 +421,19 @@ class SkinStyleJSONLoader:
         scheduler = str(self._resolve_numeric(asset, style, defaults, "scheduler", fallback_scheduler))
         seed = self._resolve_seed(asset, style, defaults, style_index, asset_index)
         slot = context["slot"]
-        filename_template = asset.get("filename") or "{style_id}_{slot}"
-        name = self._format(str(filename_template), context)
-        name = self._slugify(name)
+        style_dir = style_directories.setdefault(style_id, self._slugify(str(style.get("directory") or style_id)))
+        filename_template = asset.get("filename")
+        if filename_template:
+          raw_name = self._format(str(filename_template), context) or slot
+        else:
+          raw_name = slot
+        stem = self._slugify_path(raw_name)
+        if not stem:
+          stem = self._slugify(slot) or slot
+        if not stem.startswith(style_dir + "/"):
+          stem = f"{style_dir}/{stem}"
+        file_stem = stem.split("/")[-1]
+        name = stem
         metadata = {
             "slot": slot,
             "style_id": style_id,
@@ -413,6 +441,9 @@ class SkinStyleJSONLoader:
             "width": width,
             "height": height,
         }
+        metadata["manifest_filename"] = f"{style_dir}/{manifest_prefix}_{style_id}.json"
+        metadata["style_directory"] = style_dir
+        metadata["file_stem"] = file_stem
         prompts.append(SkinAssetPrompt(
             name=name,
             prompt=prompt,
@@ -441,9 +472,17 @@ class SkinStyleJSONLoader:
     output_dir = Path(folder_paths.get_output_directory())
     manifest_paths = []
     for style_id, style_prompts in prompts_by_style.items():
-        manifest = {p.slot: f"{p.name}.png" for p in style_prompts}
+        style_dir = style_directories.get(style_id) or self._slugify(style_id)
+        manifest_dir = output_dir / style_dir
+        manifest_dir.mkdir(parents=True, exist_ok=True)
+        manifest = {}
+        for p in style_prompts:
+            file_stem = p.metadata.get("file_stem") if isinstance(p.metadata, dict) else None
+            if not file_stem:
+                file_stem = Path(p.name).name
+            manifest[p.slot] = f"{style_dir}/{file_stem}.png"
         manifest_filename = f"{manifest_prefix}_{style_id}.json"
-        manifest_path = output_dir / manifest_filename
+        manifest_path = manifest_dir / manifest_filename
         manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
         manifest_paths.append(str(manifest_path))
 

@@ -1114,6 +1114,10 @@ input[type="range"] {
         color: #9ab09a
     }
 
+    .small.is-error {
+        color: #f78b8b
+    }
+
     .crt-wrap {
         position: relative;
         perspective: 1200px
@@ -1666,6 +1670,17 @@ input[type="range"] {
         height: 18px;
         accent-color: #9ef7a0;
         cursor: pointer
+    }
+
+    #settings .field__row {
+        display: flex;
+        align-items: center;
+        gap: 8px
+    }
+
+    #settings .field__row input[type=text] {
+        flex: 1 1 auto;
+        min-width: 0
     }
 
     #settings .icon-picker {

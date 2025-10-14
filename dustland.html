@@ -162,6 +162,14 @@
           <label for="retroNpcToggle" data-skin-label="field-label">Retro NPC Portraits</label>
           <input type="checkbox" id="retroNpcToggle" />
         </div>
+        <div class="field">
+          <label for="skinPreviewName" data-skin-label="field-label">Skin Preview</label>
+          <div class="field__row">
+            <input type="text" id="skinPreviewName" placeholder="emerald-grid" autocomplete="off" />
+            <button class="btn" type="button" id="skinPreviewLoad" data-skin-label="button-label">Load Skin</button>
+          </div>
+          <div class="small" id="skinPreviewStatus" data-skin-label="field-note"></div>
+        </div>
         <button class="btn" id="settingsClose" data-skin-label="button-label">Close</button>
       </main>
     </div>

@@ -3187,6 +3187,41 @@ function runTests(){
   } else {
     setRetroNpcArt(retroNpcArtEnabled, true);
   }
+  const skinPreviewInput=document.getElementById('skinPreviewName');
+  const skinPreviewButton=document.getElementById('skinPreviewLoad');
+  const skinPreviewStatus=document.getElementById('skinPreviewStatus');
+  if(skinPreviewInput && skinPreviewButton){
+    const updateSkinStatus=(text,isError=false)=>{
+      if(!skinPreviewStatus) return;
+      skinPreviewStatus.textContent=text || '';
+      skinPreviewStatus.classList.toggle('is-error', !!isError);
+    };
+    const loadPreview=()=>{
+      const styleId=skinPreviewInput.value.trim();
+      if(!styleId){
+        updateSkinStatus('Enter a style ID to preview.', true);
+        return;
+      }
+      try{
+        const loaded=globalThis.Dustland?.skin?.loadGeneratedSkin?.(styleId);
+        if(loaded) updateSkinStatus(`Previewing "${styleId}".`);
+        else updateSkinStatus(`No assets found for "${styleId}".`, true);
+      }catch(err){
+        console.error('Failed to load skin preview', err);
+        updateSkinStatus('Failed to load skin preview.', true);
+      }
+    };
+    skinPreviewButton.addEventListener('click', loadPreview);
+    skinPreviewInput.addEventListener('keydown', evt=>{
+      if(evt.key==='Enter'){
+        evt.preventDefault();
+        loadPreview();
+      }
+    });
+  } else if(skinPreviewStatus){
+    skinPreviewStatus.textContent='';
+    skinPreviewStatus.classList.remove('is-error');
+  }
   const iconPrev=document.getElementById('playerIconPrev');
   const iconNext=document.getElementById('playerIconNext');
   const savedIcon = Number.parseInt(globalThis.localStorage?.getItem(PLAYER_ICON_STORAGE_KEY), 10);

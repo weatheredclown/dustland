@@ -189,6 +189,156 @@
     }, { once: true });
   }
 
+  const generatedConfigs = new Map();
+
+  function toForwardSlashes(value){
+    return typeof value === 'string' ? value.replace(/\\/g, '/') : '';
+  }
+
+  function normalizeBaseDir(value){
+    if(!value) return '';
+    const text = toForwardSlashes(String(value)).replace(/\/+/g, '/');
+    return text.replace(/\/+$/g, '').replace(/\s+$/g, '').trim();
+  }
+
+  function normalizeStyleDir(value){
+    if(!value) return '';
+    let text = toForwardSlashes(String(value)).replace(/\/+/g, '/');
+    text = text.replace(/^\s+/g, '').replace(/\s+$/g, '');
+    return text.replace(/^\/+/g, '').replace(/\/+$/g, '');
+  }
+
+  function normalizeFilePath(value){
+    if(!value) return '';
+    let text = toForwardSlashes(String(value)).replace(/\/+/g, '/');
+    text = text.replace(/^\.\//, '');
+    text = text.replace(/^\/+/g, '').replace(/\/+$/g, '');
+    return text;
+  }
+
+  function normalizeExtension(ext){
+    if(!ext) return '.png';
+    const text = String(ext).trim();
+    if(!text) return '.png';
+    return text.startsWith('.') ? text : `.${text}`;
+  }
+
+  function discoverSlotNames(){
+    const slots = new Set();
+    const nodes = document.querySelectorAll('[data-skin-slot]');
+    nodes.forEach(node => {
+      const name = node?.getAttribute?.('data-skin-slot');
+      if(name) slots.add(name);
+    });
+    return Array.from(slots);
+  }
+
+  function cloneGeneratedConfig(config){
+    if(!config) return null;
+    const slots = config.slots;
+    let slotsCopy = null;
+    if(Array.isArray(slots)) slotsCopy = [...slots];
+    else if(slots && typeof slots === 'object') slotsCopy = { ...slots };
+    const manifest = config.manifest && typeof config.manifest === 'object' ? { ...config.manifest } : null;
+    return {
+      baseDir: config.baseDir,
+      styleDir: config.styleDir,
+      extension: config.extension,
+      manifest,
+      slots: slotsCopy
+    };
+  }
+
+  function defaultGeneratedConfig(name){
+    const styleDir = normalizeStyleDir(name || 'preview');
+    return {
+      baseDir: 'ComfyUI/output',
+      styleDir,
+      extension: '.png',
+      manifest: null,
+      slots: null
+    };
+  }
+
+  function normalizeGeneratedOverride(name, input){
+    const result = {};
+    if(!input || typeof input !== 'object') return result;
+    if(typeof input.baseDir === 'string' && input.baseDir.trim()){
+      result.baseDir = normalizeBaseDir(input.baseDir.trim());
+    }
+    if(typeof input.styleDir === 'string' && input.styleDir.trim()){
+      result.styleDir = normalizeStyleDir(input.styleDir.trim());
+    }
+    if(typeof input.extension === 'string' && input.extension.trim()){
+      result.extension = normalizeExtension(input.extension.trim());
+    }
+    if('manifest' in input){
+      const manifest = input.manifest;
+      if(manifest && typeof manifest === 'object' && !Array.isArray(manifest)) result.manifest = { ...manifest };
+      else result.manifest = null;
+    }
+    if('slots' in input){
+      const slots = input.slots;
+      if(Array.isArray(slots)) result.slots = [...slots];
+      else if(slots && typeof slots === 'object') result.slots = { ...slots };
+      else result.slots = null;
+    }
+    return result;
+  }
+
+  function mergeGeneratedConfig(base, override){
+    const baseCopy = cloneGeneratedConfig(base) || defaultGeneratedConfig('preview');
+    const merged = {
+      baseDir: override.baseDir ?? baseCopy.baseDir,
+      styleDir: override.styleDir ?? baseCopy.styleDir,
+      extension: override.extension ?? baseCopy.extension,
+      manifest: ('manifest' in override) ? override.manifest : baseCopy.manifest,
+      slots: ('slots' in override) ? override.slots : baseCopy.slots
+    };
+    merged.baseDir = normalizeBaseDir(merged.baseDir);
+    merged.styleDir = normalizeStyleDir(merged.styleDir || baseCopy.styleDir);
+    merged.extension = normalizeExtension(merged.extension);
+    if(merged.manifest && typeof merged.manifest === 'object') merged.manifest = { ...merged.manifest };
+    if(Array.isArray(merged.slots)) merged.slots = [...merged.slots];
+    else if(merged.slots && typeof merged.slots === 'object') merged.slots = { ...merged.slots };
+    else merged.slots = merged.slots ?? null;
+    return merged;
+  }
+
+  function buildGeneratedSkin(name, config){
+    const styleId = typeof name === 'string' ? name.trim() : '';
+    if(!styleId) return null;
+    const merged = mergeGeneratedConfig(defaultGeneratedConfig(styleId), config || {});
+    const slotEntries = (() => {
+      if(merged.manifest && typeof merged.manifest === 'object') return Object.entries(merged.manifest);
+      if(Array.isArray(merged.slots)) return merged.slots.map(slot => [slot, null]);
+      if(merged.slots && typeof merged.slots === 'object') return Object.entries(merged.slots);
+      return discoverSlotNames().map(slot => [slot, null]);
+    })();
+    const slotStyles = {};
+    const styleDir = merged.styleDir;
+    const baseDir = merged.baseDir;
+    const extension = merged.extension;
+    for(const [rawSlot, rawFile] of slotEntries){
+      const slotName = typeof rawSlot === 'string' ? rawSlot.trim() : '';
+      if(!slotName) continue;
+      const explicit = typeof rawFile === 'string' && rawFile.trim();
+      let relative = explicit ? rawFile.trim() : `${slotName}${extension}`;
+      relative = normalizeFilePath(relative);
+      if(!relative) continue;
+      let withinBase = relative;
+      if(styleDir && !withinBase.startsWith(`${styleDir}/`)) withinBase = `${styleDir}/${withinBase}`;
+      const url = baseDir ? `${baseDir}/${withinBase}` : withinBase;
+      slotStyles[slotName] = { backgroundImage: `url(${url})` };
+    }
+    if(!Object.keys(slotStyles).length) return null;
+    return {
+      id: `generated-${styleDir || styleId}`,
+      label: styleId,
+      ui: { slots: slotStyles }
+    };
+  }
+
   function cloneSkin(skin){
     if(!skin) return null;
     if(typeof structuredClone === 'function'){
@@ -676,9 +826,47 @@
     }
   }
 
+  function registerGeneratedSkin(name, input = {}){
+    const styleId = typeof name === 'string' ? name.trim() : '';
+    if(!styleId) return null;
+    const overrides = normalizeGeneratedOverride(styleId, input);
+    const merged = mergeGeneratedConfig(defaultGeneratedConfig(styleId), overrides);
+    generatedConfigs.set(styleId, merged);
+    return cloneGeneratedConfig(merged);
+  }
+
+  function loadGeneratedSkin(name, input = {}){
+    const styleId = typeof name === 'string' ? name.trim() : '';
+    if(!styleId) return null;
+    const stored = generatedConfigs.get(styleId) || defaultGeneratedConfig(styleId);
+    const overrides = normalizeGeneratedOverride(styleId, input);
+    const merged = mergeGeneratedConfig(stored, overrides);
+    generatedConfigs.set(styleId, merged);
+    const skin = buildGeneratedSkin(styleId, merged);
+    if(!skin) return null;
+    registerSkin(skin);
+    applySkin(skin);
+    return cloneSkin(skin);
+  }
+
+  function listGeneratedSkins(){
+    return Array.from(generatedConfigs.keys());
+  }
+
+  function getGeneratedSkinConfig(name){
+    const styleId = typeof name === 'string' ? name.trim() : '';
+    if(!styleId) return null;
+    const stored = generatedConfigs.get(styleId);
+    return stored ? cloneGeneratedConfig(stored) : null;
+  }
+
   const api = {
     applySkin,
     registerSkin,
+    registerGeneratedSkin,
+    loadGeneratedSkin,
+    listGeneratedSkins,
+    getGeneratedSkinConfig,
     getRegisteredSkin(id){ return registry.get(id) ? cloneSkin(registry.get(id)) : null; },
     getCurrentSkin(){ return state.currentSkin ? cloneSkin(state.currentSkin) : null; },
     getTileSprite,
@@ -695,6 +883,7 @@
   globalThis.Dustland = globalThis.Dustland || {};
   globalThis.Dustland.skin = api;
   globalThis.DustlandSkin = api;
+  globalThis.loadSkin = globalThis.loadSkin || ((name, options) => api.loadGeneratedSkin(name, options));
 
   resetSkin(false);
 })();

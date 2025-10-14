@@ -48,24 +48,16 @@ The script will then connect to the ComfyUI server, queue the prompt, and print 
 
 ## Previewing the skin inside Dustland
 
-The CLI prints a snippet you can paste into the browser console for a quick in-game preview. The steps are:
+The CLI now prints the relative skin directories and a call to the new helper, `Dustland.skin.loadGeneratedSkin()`. Previewing a render no longer requires `fetch()` calls (which fail on `file:` origins). Instead:
 
-1. Run `npm run serve` from the repository root.
-2. Open <http://localhost:8080/dustland.html>.
-3. Copy one of the snippets emitted at the end of the CLI run (each snippet references a generated manifest) and paste it into the developer console. The snippet fetches the manifest, points each slot at its generated PNG, and calls `Dustland.skin.applySkin()` so you can inspect the skin immediately.
+1. Double-click `dustland.html` to open it directly in your browser.
+2. Open **Settings**, type the style ID reported by the CLI (for example `emerald-grid`), then press **Enter** or click **Load Skin**.
+3. Alternatively, paste one of the console snippets the CLI prints, e.g.
 
-If you prefer to construct your own preview, you can replicate the generated snippet manually:
+   ```js
+   Dustland.skin.loadGeneratedSkin('emerald-grid', { baseDir: 'ComfyUI/output' });
+   // Shortcut helper:
+   loadSkin('emerald-grid');
+   ```
 
-```js
-const manifestUrl = 'ComfyUI/output/skin_manifest_emerald-grid.json';
-fetch(manifestUrl)
-  .then(r => r.json())
-  .then(manifest => {
-    const baseDir = manifestUrl.includes('/') ? manifestUrl.slice(0, manifestUrl.lastIndexOf('/')) : '';
-    const slots = Object.fromEntries(Object.entries(manifest).map(([slot, file]) => {
-      const src = baseDir ? `${baseDir}/${file}` : file;
-      return [slot, { backgroundImage: `url(${src})` }];
-    }));
-    Dustland.skin.applySkin({ id: 'preview', ui: { slots } });
-  });
-```
+Generated PNGs are grouped under `ComfyUI/output/<style-id>/`. Each folder now contains its manifest (for example `ComfyUI/output/emerald-grid/skin_manifest_emerald-grid.json`) so you can still inspect the mapping or wire it into automation scripts when needed.
