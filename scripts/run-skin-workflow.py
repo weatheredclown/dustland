@@ -18,7 +18,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
+import re
 import sys
 import textwrap
 import urllib.request
@@ -26,6 +28,7 @@ import urllib.parse
 import urllib.error
 import uuid
 import websocket
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
@@ -59,6 +62,132 @@ class _SafeFormatDict(dict):
 
 class SkinStylePromptGenerator:
   """Expand a Dustland skin template into prompts for every requested style."""
+
+  _SLOT_ATTR_RE = re.compile(r"data-skin-slot\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
+  _LABEL_ATTR_RE = re.compile(r"data-skin-label\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
+  _ARIA_LABEL_RE = re.compile(r"aria-label\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
+  _TITLE_ATTR_RE = re.compile(r"title\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
+  _DEFAULT_SLOT_PROMPT = "Dustland CRT UI skin slot"
+
+  def __init__(self) -> None:
+    repo_root = Path(__file__).resolve().parent.parent
+    self._repo_root = repo_root
+
+  def _iter_repo_files(self, root: Path) -> Iterable[Path]:
+    skip_dirs = {".git", "node_modules", "__pycache__", "ComfyUI", ".venv"}
+    for dirpath, dirnames, filenames in os.walk(root):
+      dirnames[:] = [d for d in dirnames if d not in skip_dirs and not d.startswith('.')]
+      for name in filenames:
+        path = Path(dirpath, name)
+        if path.suffix.lower() in {".html", ".htm", ".js"}:
+          yield path
+
+  def _discover_skin_slots(self) -> List[Dict[str, Any]]:
+    slots: "OrderedDict[str, Dict[str, Any]]" = OrderedDict()
+    for path in self._iter_repo_files(self._repo_root):
+      try:
+        text = path.read_text(encoding="utf-8")
+      except (OSError, UnicodeDecodeError):
+        continue
+      for match in self._SLOT_ATTR_RE.finditer(text):
+        slot = match.group(1).strip()
+        if not slot:
+          continue
+        tag_start = text.rfind("<", 0, match.start())
+        tag_end = text.find(">", match.end())
+        label_value = ""
+        aria_label = ""
+        title_attr = ""
+        if tag_start != -1 and tag_end != -1:
+          tag_text = text[tag_start:tag_end]
+          label_match = self._LABEL_ATTR_RE.search(tag_text)
+          if label_match:
+            label_value = label_match.group(1).strip()
+          aria_match = self._ARIA_LABEL_RE.search(tag_text)
+          if aria_match:
+            aria_label = aria_match.group(1).strip()
+          title_match = self._TITLE_ATTR_RE.search(tag_text)
+          if title_match:
+            title_attr = title_match.group(1).strip()
+        info = slots.setdefault(slot, {
+            "slot": slot,
+            "labels": [],
+            "aria_labels": [],
+            "titles": [],
+        })
+        if label_value and label_value not in info["labels"]:
+          info["labels"].append(label_value)
+        if aria_label and aria_label not in info["aria_labels"]:
+          info["aria_labels"].append(aria_label)
+        if title_attr and title_attr not in info["titles"]:
+          info["titles"].append(title_attr)
+    return list(slots.values())
+
+  def _humanize_slot(self, slot: str) -> str:
+    text = slot.replace('-', ' ').replace('_', ' ')
+    text = re.sub(r"\s+", " ", text).strip()
+    return text.title() if text else slot
+
+  def _humanize_label(self, label: str) -> str:
+    text = label.replace('-', ' ').replace('_', ' ')
+    text = re.sub(r"\s+", " ", text).strip()
+    if not text:
+      return label
+    return text.title()
+
+  def _build_slot_description(self, title: str, labels: List[str], aria_labels: List[str], title_attrs: List[str]) -> str:
+    description_parts: List[str] = []
+    seen: set[str] = set()
+
+    def add_part(value: str) -> None:
+      text = value.strip()
+      if not text:
+        return
+      key = text.casefold()
+      if key in seen:
+        return
+      seen.add(key)
+      description_parts.append(text)
+
+    add_part(title)
+    for value in aria_labels:
+      add_part(value)
+    for value in title_attrs:
+      add_part(value)
+    for value in labels:
+      human = self._humanize_label(value)
+      add_part(human)
+    if not description_parts:
+      return title
+    if len(description_parts) == 1:
+      return description_parts[0]
+    return " – ".join(description_parts)
+
+  def _auto_slot_assets(self) -> List[Dict[str, Any]]:
+    assets: List[Dict[str, Any]] = []
+    for slot_info in self._discover_skin_slots():
+      slot = slot_info.get("slot")
+      if not slot:
+        continue
+      title = self._humanize_slot(slot)
+      labels = list(slot_info.get("labels") or [])
+      aria_labels = list(slot_info.get("aria_labels") or [])
+      title_attrs = list(slot_info.get("titles") or [])
+      description = self._build_slot_description(title or slot, labels, aria_labels, title_attrs)
+      prompt = f"{self._DEFAULT_SLOT_PROMPT}: {description}" if description else f"{self._DEFAULT_SLOT_PROMPT}: {title or slot}"
+      asset_entry: Dict[str, Any] = {
+          "slot": slot,
+          "title": title or slot,
+          "prompt": prompt,
+          "description": description,
+      }
+      if labels:
+        asset_entry["slot_label"] = labels[0]
+        asset_entry["slot_labels"] = labels
+      if aria_labels:
+        asset_entry["aria_labels"] = aria_labels
+      assets.append(asset_entry)
+    return assets
 
   def _deep_merge_dicts(self, base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]:
     merged: Dict[str, Any] = dict(base)
@@ -230,6 +359,30 @@ class SkinStylePromptGenerator:
         "width": width,
         "height": height,
     }
+    slot_label_value = asset.get("slot_label") or asset.get("label")
+    if slot_label_value:
+      context["slot_label"] = slot_label_value
+      context["slot_label_title"] = self._humanize_label(str(slot_label_value))
+    aria_labels = asset.get("aria_labels")
+    primary_aria_label = None
+    if isinstance(aria_labels, (list, tuple)):
+      for value in aria_labels:
+        text = str(value).strip()
+        if text:
+          primary_aria_label = text
+          break
+    elif isinstance(aria_labels, str):
+      primary_aria_label = aria_labels.strip()
+    if primary_aria_label:
+      context["slot_aria_label"] = primary_aria_label
+    slot_description = asset.get("description") or asset.get("slot_description")
+    if not slot_description and primary_aria_label:
+      slot_description = primary_aria_label
+    if not slot_description and context.get("slot_label_title"):
+      slot_description = f"{context['slot_title']} ({context['slot_label_title']})"
+    if not slot_description:
+      slot_description = context["slot_title"]
+    context["slot_description"] = slot_description
     for key, value in data.items():
       if isinstance(value, (str, int, float)):
         context[f"global_{key}"] = value
@@ -306,9 +459,27 @@ class SkinStylePromptGenerator:
       raise TypeError(f"Skin template JSON must be an object; received {type(raw).__name__}")
 
     styles = self._ensure_styles(raw, styles_override)
-    assets = raw.get("assets")
-    if not assets or not isinstance(assets, Iterable):
+    auto_assets = self._auto_slot_assets()
+    assets_input = raw.get("assets")
+    asset_entries: "OrderedDict[str, Dict[str, Any]]" = OrderedDict()
+    if isinstance(assets_input, Iterable):
+      for asset in assets_input:
+        if not isinstance(asset, dict):
+          continue
+        slot_name = str(asset.get("slot") or asset.get("id") or asset.get("name") or "").strip()
+        if not slot_name:
+          continue
+        normalized = dict(asset)
+        normalized["slot"] = slot_name
+        asset_entries[slot_name] = normalized
+    if not asset_entries:
       raise ValueError("Skin template must include an 'assets' array")
+    for asset in auto_assets:
+      slot_name = asset.get("slot")
+      if not slot_name or slot_name in asset_entries:
+        continue
+      asset_entries[slot_name] = asset
+    assets = list(asset_entries.values())
 
     defaults = {
         "width": raw.get("width") or raw.get("default_width") or fallback_width,
@@ -366,9 +537,25 @@ class SkinStylePromptGenerator:
             "width": width,
             "height": height,
         }
+        if context.get("slot_description"):
+          metadata["description"] = context["slot_description"]
+        for meta_key in ("slot_label", "slot_label_title", "slot_aria_label"):
+          if context.get(meta_key):
+            metadata[meta_key] = context[meta_key]
+        slot_labels = asset.get("slot_labels")
+        if isinstance(slot_labels, (list, tuple)):
+          metadata["slot_labels"] = [str(v).strip() for v in slot_labels if str(v).strip()]
+        elif isinstance(slot_labels, str) and slot_labels.strip():
+          metadata["slot_labels"] = [slot_labels.strip()]
+        aria_labels = asset.get("aria_labels")
+        if isinstance(aria_labels, (list, tuple)):
+          metadata["aria_labels"] = [str(v).strip() for v in aria_labels if str(v).strip()]
+        elif isinstance(aria_labels, str) and aria_labels.strip():
+          metadata["aria_labels"] = [aria_labels.strip()]
         metadata["manifest_filename"] = f"{style_dir}/{manifest_prefix}_{style_id}.json"
         metadata["style_directory"] = style_dir
         metadata["file_stem"] = file_stem
+        metadata["relative_path"] = f"{style_dir}/{file_stem}.png"
         prompts.append(SkinAssetPrompt(
             name=name,
             prompt=prompt,
@@ -572,6 +759,7 @@ def main():
     parser.add_argument("--port", type=int, default=8188, help="ComfyUI server port.")
     parser.add_argument("--output-dir", type=Path, default=Path("ComfyUI/output"), help="Directory to save manifests.")
     parser.add_argument("--checkpoint", type=str, default="v1-5-pruned-emaonly-fp16.safetensors", help="Name of the checkpoint file to use.")
+    parser.add_argument("--force-regen", action="store_true", help="Regenerate assets even when the target PNG already exists.")
     args = parser.parse_args()
 
     if args.style_plan_file is None:
@@ -628,6 +816,16 @@ def main():
         workflow_template = get_single_asset_workflow()
 
     for asset_prompt in prompts:
+        metadata = asset_prompt.metadata if isinstance(asset_prompt.metadata, dict) else {}
+        relative_path = metadata.get("relative_path")
+        expected_path = None
+        if relative_path:
+            expected_path = args.output_dir / Path(relative_path)
+        else:
+            expected_path = args.output_dir / f"{asset_prompt.name}.png"
+        if expected_path and not args.force_regen and expected_path.exists():
+            print(f"\nSkipping asset '{asset_prompt.name}' (already exists at {expected_path}). Use --force-regen to regenerate.")
+            continue
         wf = json.loads(json.dumps(workflow_template)) # Deep copy
 
         # Populate the workflow template with the asset data

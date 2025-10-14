@@ -112,11 +112,15 @@ prompts, summary = generator.generate(
     fallback_scheduler='scheduler',
 )
 
-assert len(prompts) == 1, prompts
-prompt = prompts[0]
-assert prompt.width == 128 and prompt.height == 128
+assert len(prompts) >= 1, prompts
+target = next((p for p in prompts if p.slot == 'panel'), None)
+assert target is not None, prompts
+assert target.width == 128 and target.height == 128
 manifest_path = pathlib.Path(tmpdir.name) / 'alpha' / 'custom_alpha.json'
 assert manifest_path.exists(), manifest_path
+manifest = json.loads(manifest_path.read_text())
+assert manifest['panel'] == f"alpha/{target.metadata['file_stem']}.png"
+assert target.metadata.get('description') == 'Panel'
 print('success')
 tmpdir.cleanup()
 `;
@@ -128,6 +132,71 @@ tmpdir.cleanup()
   });
 
   assert.match(result, /success/);
+});
+
+test('run-skin-workflow auto slots expose label-driven descriptions', () => {
+  const pythonScript = String.raw`
+import importlib.util
+import json
+import pathlib
+import tempfile
+import types
+import sys
+import typing
+
+tmpdir = tempfile.TemporaryDirectory()
+sys.modules['websocket'] = types.SimpleNamespace(WebSocket=type('WebSocket', (), {}))
+sys.modules['typing'] = typing
+script_path = pathlib.Path('scripts/run-skin-workflow.py')
+spec = importlib.util.spec_from_file_location('run_skin_workflow', script_path)
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+
+generator = module.SkinStylePromptGenerator()
+template = json.dumps({
+    "styles": [{"id": "alpha"}],
+    "assets": [
+        {
+            "slot": "panel_background",
+            "prompt": "panel texture",
+            "width": 64,
+            "height": 64
+        }
+    ]
+})
+
+prompts, summary = generator.generate(
+    style_plan_source=template,
+    manifest_filename_prefix='autogen',
+    output_dir=pathlib.Path(tmpdir.name),
+    fallback_width=64,
+    fallback_height=64,
+    fallback_steps=10,
+    fallback_cfg=6.5,
+    fallback_sampler='sampler',
+    fallback_scheduler='scheduler',
+)
+
+target = next((p for p in prompts if p.slot == 'controls-toggle'), None)
+assert target is not None, 'controls-toggle slot not discovered'
+metadata = target.metadata or {}
+assert metadata.get('description'), metadata
+assert 'Controls Toggle' in metadata['description']
+assert metadata.get('slot_label_title') == 'Button Label', metadata
+assert 'button-label' in metadata.get('slot_labels', []), metadata
+assert 'Button Label' in target.prompt, target.prompt
+print(metadata['description'])
+tmpdir.cleanup()
+`;
+
+  const result = execFileSync('python3', ['-'], {
+    cwd: repoRoot,
+    input: pythonScript,
+    encoding: 'utf8',
+  });
+
+  assert.match(result, /Controls Toggle/);
 });
 
 test('SkinStyleJSONLoader accepts plain asset arrays', () => {

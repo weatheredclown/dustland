@@ -35,6 +35,8 @@ python scripts/run-skin-workflow.py <path_to_workflow.json> <path_to_style_plan.
 - `style_plan_file`: The path to the skin style plan JSON file. An example is provided at `docs/examples/skin_style_plan.json`.
 - `--host`: (Optional) The hostname of the ComfyUI server. Defaults to `127.0.0.1`.
 - `--port`: (Optional) The port number of the ComfyUI server. Defaults to `8188`.
+- `--force-regen`: (Optional) Regenerate PNGs even if they already exist on disk. By default the CLI now skips any assets that
+  are already present so you can incrementally fill in missing renders without wasting compute time.
 
 ### Example
 
@@ -45,6 +47,12 @@ python scripts/run-skin-workflow.py docs/examples/comfyui-skin-style-workflow.js
 ```
 
 The script will then connect to the ComfyUI server, queue the prompt, and print progress messages to the console. When each asset finishes rendering, the CLI downloads the resulting PNG into the directory provided by `--output-dir` (default `ComfyUI/output`) and writes/updates the per-style manifest JSON alongside the images.
+
+> **Automatic slot discovery**: the CLI now scans the repository for `data-skin-slot` attributes (and the nearby `data-skin-label`
+> and `aria-label` hints) before the run. Any new UI slots automatically add placeholder entries with human-readable
+> descriptions so fresh Dustland builds pick up new background or overlay assets—and ship with accessible alt-text—without
+> manual bookkeeping. You can still provide explicit overrides in your style plan JSON to customise prompts, sizes, filenames,
+> or descriptions for specific slots.
 
 ## Previewing the skin inside Dustland
 
