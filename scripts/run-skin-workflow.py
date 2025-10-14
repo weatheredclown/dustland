@@ -18,7 +18,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
+import re
 import sys
 import textwrap
 import urllib.request
@@ -26,6 +28,7 @@ import urllib.parse
 import urllib.error
 import uuid
 import websocket
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
@@ -59,6 +62,54 @@ class _SafeFormatDict(dict):
 
 class SkinStylePromptGenerator:
   """Expand a Dustland skin template into prompts for every requested style."""
+
+  _SLOT_ATTR_RE = re.compile(r"data-skin-slot\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
+  _DEFAULT_SLOT_PROMPT = "Dustland CRT UI skin slot"
+
+  def __init__(self) -> None:
+    repo_root = Path(__file__).resolve().parent.parent
+    self._repo_root = repo_root
+
+  def _iter_repo_files(self, root: Path) -> Iterable[Path]:
+    skip_dirs = {".git", "node_modules", "__pycache__", "ComfyUI", ".venv"}
+    for dirpath, dirnames, filenames in os.walk(root):
+      dirnames[:] = [d for d in dirnames if d not in skip_dirs and not d.startswith('.')]
+      for name in filenames:
+        path = Path(dirpath, name)
+        if path.suffix.lower() in {".html", ".htm", ".js"}:
+          yield path
+
+  def _discover_skin_slots(self) -> List[str]:
+    slots: "OrderedDict[str, None]" = OrderedDict()
+    for path in self._iter_repo_files(self._repo_root):
+      try:
+        text = path.read_text(encoding="utf-8")
+      except (OSError, UnicodeDecodeError):
+        continue
+      for match in self._SLOT_ATTR_RE.finditer(text):
+        slot = match.group(1).strip()
+        if not slot:
+          continue
+        slots.setdefault(slot, None)
+    return list(slots.keys())
+
+  def _humanize_slot(self, slot: str) -> str:
+    text = slot.replace('-', ' ').replace('_', ' ')
+    text = re.sub(r"\s+", " ", text).strip()
+    return text.title() if text else slot
+
+  def _auto_slot_assets(self) -> List[Dict[str, Any]]:
+    assets: List[Dict[str, Any]] = []
+    for slot in self._discover_skin_slots():
+      if not slot:
+        continue
+      title = self._humanize_slot(slot)
+      assets.append({
+          "slot": slot,
+          "title": title or slot,
+          "prompt": f"{self._DEFAULT_SLOT_PROMPT}: {title or slot}",
+      })
+    return assets
 
   def _deep_merge_dicts(self, base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]:
     merged: Dict[str, Any] = dict(base)
@@ -306,9 +357,27 @@ class SkinStylePromptGenerator:
       raise TypeError(f"Skin template JSON must be an object; received {type(raw).__name__}")
 
     styles = self._ensure_styles(raw, styles_override)
-    assets = raw.get("assets")
-    if not assets or not isinstance(assets, Iterable):
+    auto_assets = self._auto_slot_assets()
+    assets_input = raw.get("assets")
+    asset_entries: "OrderedDict[str, Dict[str, Any]]" = OrderedDict()
+    if isinstance(assets_input, Iterable):
+      for asset in assets_input:
+        if not isinstance(asset, dict):
+          continue
+        slot_name = str(asset.get("slot") or asset.get("id") or asset.get("name") or "").strip()
+        if not slot_name:
+          continue
+        normalized = dict(asset)
+        normalized["slot"] = slot_name
+        asset_entries[slot_name] = normalized
+    if not asset_entries:
       raise ValueError("Skin template must include an 'assets' array")
+    for asset in auto_assets:
+      slot_name = asset.get("slot")
+      if not slot_name or slot_name in asset_entries:
+        continue
+      asset_entries[slot_name] = asset
+    assets = list(asset_entries.values())
 
     defaults = {
         "width": raw.get("width") or raw.get("default_width") or fallback_width,
@@ -369,6 +438,7 @@ class SkinStylePromptGenerator:
         metadata["manifest_filename"] = f"{style_dir}/{manifest_prefix}_{style_id}.json"
         metadata["style_directory"] = style_dir
         metadata["file_stem"] = file_stem
+        metadata["relative_path"] = f"{style_dir}/{file_stem}.png"
         prompts.append(SkinAssetPrompt(
             name=name,
             prompt=prompt,
@@ -572,6 +642,7 @@ def main():
     parser.add_argument("--port", type=int, default=8188, help="ComfyUI server port.")
     parser.add_argument("--output-dir", type=Path, default=Path("ComfyUI/output"), help="Directory to save manifests.")
     parser.add_argument("--checkpoint", type=str, default="v1-5-pruned-emaonly-fp16.safetensors", help="Name of the checkpoint file to use.")
+    parser.add_argument("--force-regen", action="store_true", help="Regenerate assets even when the target PNG already exists.")
     args = parser.parse_args()
 
     if args.style_plan_file is None:
@@ -628,6 +699,16 @@ def main():
         workflow_template = get_single_asset_workflow()
 
     for asset_prompt in prompts:
+        metadata = asset_prompt.metadata if isinstance(asset_prompt.metadata, dict) else {}
+        relative_path = metadata.get("relative_path")
+        expected_path = None
+        if relative_path:
+            expected_path = args.output_dir / Path(relative_path)
+        else:
+            expected_path = args.output_dir / f"{asset_prompt.name}.png"
+        if expected_path and not args.force_regen and expected_path.exists():
+            print(f"\nSkipping asset '{asset_prompt.name}' (already exists at {expected_path}). Use --force-regen to regenerate.")
+            continue
         wf = json.loads(json.dumps(workflow_template)) # Deep copy
 
         # Populate the workflow template with the asset data

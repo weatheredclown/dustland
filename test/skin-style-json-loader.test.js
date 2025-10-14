@@ -112,11 +112,14 @@ prompts, summary = generator.generate(
     fallback_scheduler='scheduler',
 )
 
-assert len(prompts) == 1, prompts
-prompt = prompts[0]
-assert prompt.width == 128 and prompt.height == 128
+assert len(prompts) >= 1, prompts
+target = next((p for p in prompts if p.slot == 'panel'), None)
+assert target is not None, prompts
+assert target.width == 128 and target.height == 128
 manifest_path = pathlib.Path(tmpdir.name) / 'alpha' / 'custom_alpha.json'
 assert manifest_path.exists(), manifest_path
+manifest = json.loads(manifest_path.read_text())
+assert manifest['panel'] == f"alpha/{target.metadata['file_stem']}.png"
 print('success')
 tmpdir.cleanup()
 `;
