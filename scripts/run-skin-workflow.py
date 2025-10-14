@@ -64,6 +64,7 @@ class SkinStylePromptGenerator:
   """Expand a Dustland skin template into prompts for every requested style."""
 
   _SLOT_ATTR_RE = re.compile(r"data-skin-slot\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
+  _ATTR_RE = re.compile(r"([^\s=<]+)\s*=\s*(['\"])(.*?)\2", re.IGNORECASE | re.DOTALL)
   _DEFAULT_SLOT_PROMPT = "Dustland CRT UI skin slot"
 
   def __init__(self) -> None:
@@ -79,8 +80,8 @@ class SkinStylePromptGenerator:
         if path.suffix.lower() in {".html", ".htm", ".js"}:
           yield path
 
-  def _discover_skin_slots(self) -> List[str]:
-    slots: "OrderedDict[str, None]" = OrderedDict()
+  def _discover_skin_slots(self) -> List[Dict[str, Any]]:
+    slots: "OrderedDict[str, Dict[str, Any]]" = OrderedDict()
     for path in self._iter_repo_files(self._repo_root):
       try:
         text = path.read_text(encoding="utf-8")
@@ -90,25 +91,86 @@ class SkinStylePromptGenerator:
         slot = match.group(1).strip()
         if not slot:
           continue
-        slots.setdefault(slot, None)
-    return list(slots.keys())
+        entry = slots.setdefault(slot, {"slot": slot})
+        tag_start = text.rfind("<", 0, match.start())
+        tag_end = text.find(">", match.end())
+        tag_text = text[tag_start:tag_end + 1] if tag_start != -1 and tag_end != -1 else ""
+        if tag_text:
+          for attr, _, raw_value in self._ATTR_RE.findall(tag_text):
+            value = raw_value.strip()
+            if not value:
+              continue
+            attr_lower = attr.lower()
+            if attr_lower == "data-skin-label":
+              labels = entry.setdefault("slot_labels", [])
+              if value not in labels:
+                labels.append(value)
+            elif attr_lower == "aria-label":
+              aria = entry.setdefault("aria_labels", [])
+              if value not in aria:
+                aria.append(value)
+            elif attr_lower == "data-skin-description" and not entry.get("description"):
+              entry["description"] = value
+            elif attr_lower == "data-skin-title" and value:
+              entry["title"] = value
+        if not entry.get("title"):
+          entry["title"] = self._humanize_slot(slot)
+    results: List[Dict[str, Any]] = []
+    for entry in slots.values():
+      labels = entry.get("slot_labels") or []
+      if labels and not entry.get("slot_label"):
+        entry["slot_label"] = labels[0]
+      if entry.get("slot_label") and not entry.get("slot_label_title"):
+        entry["slot_label_title"] = self._humanize_label(entry["slot_label"])
+      aria_labels = entry.get("aria_labels") or []
+      if aria_labels and not entry.get("slot_aria_label"):
+        entry["slot_aria_label"] = aria_labels[0]
+      results.append(entry)
+    return results
 
   def _humanize_slot(self, slot: str) -> str:
     text = slot.replace('-', ' ').replace('_', ' ')
     text = re.sub(r"\s+", " ", text).strip()
     return text.title() if text else slot
 
+  def _humanize_label(self, label: str) -> str:
+    return self._humanize_slot(label)
+
   def _auto_slot_assets(self) -> List[Dict[str, Any]]:
     assets: List[Dict[str, Any]] = []
-    for slot in self._discover_skin_slots():
+    for info in self._discover_skin_slots():
+      slot = info.get("slot")
       if not slot:
         continue
-      title = self._humanize_slot(slot)
-      assets.append({
+      title = info.get("title") or self._humanize_slot(slot)
+      prompt_base = f"{self._DEFAULT_SLOT_PROMPT}: {title or slot}"
+      suffix_parts: List[str] = []
+      if info.get("slot_label_title"):
+        suffix_parts.append(info["slot_label_title"])
+      if info.get("description") and info["description"] not in {title}:
+        suffix_parts.append(info["description"])
+      if info.get("slot_aria_label"):
+        suffix_parts.append(info["slot_aria_label"])
+      suffix_text = ""
+      if suffix_parts:
+        suffix_text = ", ".join(dict.fromkeys(suffix_parts))
+      prompt = prompt_base if not suffix_text else f"{prompt_base} — {suffix_text}"
+      asset: Dict[str, Any] = {
           "slot": slot,
           "title": title or slot,
-          "prompt": f"{self._DEFAULT_SLOT_PROMPT}: {title or slot}",
-      })
+          "prompt": prompt,
+      }
+      if info.get("slot_label"):
+        asset["slot_label"] = info["slot_label"]
+      if info.get("slot_labels"):
+        asset["slot_labels"] = info["slot_labels"]
+      if info.get("slot_aria_label"):
+        asset["slot_aria_label"] = info["slot_aria_label"]
+      if info.get("aria_labels"):
+        asset["aria_labels"] = info["aria_labels"]
+      if info.get("description"):
+        asset["description"] = info["description"]
+      assets.append(asset)
     return assets
 
   def _deep_merge_dicts(self, base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]:
