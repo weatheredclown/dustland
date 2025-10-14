@@ -52,12 +52,19 @@ The CLI now prints the relative skin directories and a call to the new helper, `
 
 1. Double-click `dustland.html` to open it directly in your browser.
 2. Open **Settings**, type the style ID reported by the CLI (for example `emerald-grid`), then press **Enter** or click **Load Skin**.
-3. Alternatively, paste one of the console snippets the CLI prints, e.g.
+3. Alternatively, paste one of the console snippets the CLI prints. The script now inlines the manifest mapping so each UI slot points at the correct generated PNG:
 
    ```js
-   Dustland.skin.loadGeneratedSkin('emerald-grid', { baseDir: 'ComfyUI/output' });
+   Dustland.skin.loadGeneratedSkin('emerald-grid', {
+     baseDir: 'ComfyUI/output',
+     manifest: {
+       "panel_background": "emerald-grid/panel_background.png",
+       "panel_header_overlay": "emerald-grid/panel_header_overlay.png"
+       // ...more slots trimmed for brevity...
+     }
+   });
    // Shortcut helper:
    loadSkin('emerald-grid');
    ```
 
-Generated PNGs are grouped under `ComfyUI/output/<style-id>/`. Each folder now contains its manifest (for example `ComfyUI/output/emerald-grid/skin_manifest_emerald-grid.json`) so you can still inspect the mapping or wire it into automation scripts when needed.
+Generated PNGs are grouped under `ComfyUI/output/<style-id>/`. Each folder now contains its manifest (for example `ComfyUI/output/emerald-grid/skin_manifest_emerald-grid.json`) which the CLI reads to assemble the preview snippet. You can still inspect the JSON directly or feed it into automation scripts when needed.
