@@ -20,6 +20,7 @@ import argparse
 import json
 import random
 import sys
+import textwrap
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -677,6 +678,21 @@ def main():
         except ValueError:
             base_dir_str = output_dir.as_posix()
 
+        manifest_payloads: Dict[str, Dict[str, str]] = {}
+        for style_id, manifest_name in manifest_files.items():
+            manifest_path = (args.output_dir / manifest_name).resolve()
+            try:
+                manifest_text = manifest_path.read_text(encoding="utf-8")
+                manifest_json = json.loads(manifest_text)
+                if isinstance(manifest_json, dict):
+                    manifest_payloads[style_id] = manifest_json
+                else:
+                    print(f"Warning: Manifest at {manifest_path} was not an object; skipping preview helper.")
+            except FileNotFoundError:
+                print(f"Warning: Manifest file missing at {manifest_path}; preview helper will omit manifest data.")
+            except json.JSONDecodeError as exc:
+                print(f"Warning: Failed to parse manifest JSON at {manifest_path}: {exc}")
+
         print("\nPreview tip:")
         print("  1. Open dustland.html directly in your browser (double-click works).")
         print("  2. Open Settings, enter one of these style IDs, then press Enter or click Load Skin:")
@@ -685,7 +701,16 @@ def main():
         print("  3. Or run one of these in the developer console:")
         for style_id in sorted(style_dirs):
             print(f"\n     // {style_id}")
-            print(f"     Dustland.skin.loadGeneratedSkin('{style_id}', {{ baseDir: '{base_dir_str}' }});")
+            manifest_json = manifest_payloads.get(style_id)
+            if manifest_json:
+                manifest_args = json.dumps(manifest_json, indent=2, sort_keys=True)
+                manifest_block = textwrap.indent(manifest_args, "       ")
+                print(f"     Dustland.skin.loadGeneratedSkin('{style_id}', {{ baseDir: '{base_dir_str}', manifest:")
+                print(manifest_block)
+                print("     });")
+            else:
+                print(f"     Dustland.skin.loadGeneratedSkin('{style_id}', {{ baseDir: '{base_dir_str}' }});")
+                print("     // Tip: Pass the manifest object above so each slot maps to the generated file.")
             print(f"     // loadSkin('{style_id}') works as a shortcut.")
             manifest_name = manifest_files.get(style_id)
             if manifest_name:

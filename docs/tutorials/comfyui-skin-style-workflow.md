@@ -78,8 +78,10 @@ quickly audition new looks without editing files.【F:scripts/comfyui/skin_style
 Generated files land in ComfyUI's `output/` directory inside per-style folders
 (`output/emerald-grid/`, `output/sunset-vapor/`, etc.). Each folder includes a
 manifest plus the generated PNGs, so you can drop them into the repository and
-preview them immediately with `Dustland.skin.loadGeneratedSkin('emerald-grid')`
-or the new **Load Skin** control in the Settings menu.
+preview them immediately with `Dustland.skin.loadGeneratedSkin('emerald-grid',
+{ manifest: {/*...*/} })` or the new **Load Skin** control in the Settings
+menu. The CLI helper prints the manifest payload for you after each batch so
+slots such as `panel_header_overlay` point at the freshly rendered textures.
 
 ## Troubleshooting missing nodes
 
