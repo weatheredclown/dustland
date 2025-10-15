@@ -26,7 +26,7 @@ fi
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # Path to the nodes to be copied, relative to this script's location
-NODES_SOURCE_PATH="$SCRIPT_DIR/../../scripts/comfyui"
+NODES_SOURCE_PATH="$SCRIPT_DIR/../custom_nodes"
 
 # Copy the directories
 echo "Copying dustland_game_assets..."
