@@ -119,6 +119,10 @@ class SkinStyleJSONLoader:
       node_candidate = script_dir / Path(text).name
       if node_candidate.exists():
         candidate = node_candidate
+      else:
+        examples_candidate = script_dir.parent / "examples" / Path(text).name
+        if examples_candidate.exists():
+          candidate = examples_candidate
     if not candidate.exists():
       raise FileNotFoundError(f"Could not find JSON file at {text}")
     return json.loads(candidate.read_text(encoding="utf-8"))
