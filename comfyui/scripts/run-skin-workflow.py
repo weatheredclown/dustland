@@ -569,8 +569,17 @@ class SkinStylePromptGenerator:
             prompts_by_style[p.style_id] = []
         prompts_by_style[p.style_id].append(p)
 
-    manifest_paths = []
+    manifest_paths: List[str] = []
+    manifest_script_paths: List[str] = []
     output_dir.mkdir(parents=True, exist_ok=True)
+    output_dir_resolved = output_dir.resolve()
+    try:
+        repo_root = Path.cwd().resolve()
+        base_dir_rel = output_dir_resolved.relative_to(repo_root)
+        manifest_base_dir = base_dir_rel.as_posix()
+    except ValueError:
+        manifest_base_dir = output_dir_resolved.as_posix()
+
     for style_id, style_prompts in prompts_by_style.items():
         style_dir = style_directories.get(style_id) or self._slugify(style_id)
         manifest_dir = (output_dir / style_dir)
@@ -583,10 +592,46 @@ class SkinStylePromptGenerator:
             manifest[p.slot] = f"{style_dir}/{file_stem}.png"
         manifest_filename = f"{manifest_prefix}_{style_id}.json"
         manifest_path = manifest_dir / manifest_filename
-        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        manifest_json = json.dumps(manifest, indent=2)
+        manifest_path.write_text(manifest_json, encoding="utf-8")
         manifest_paths.append(str(manifest_path))
 
+        manifest_js_filename = f"{manifest_prefix}_{style_id}.js"
+        manifest_js_path = manifest_dir / manifest_js_filename
+        manifest_js_payload = json.dumps(manifest, separators=(",", ":"), sort_keys=True)
+        manifest_js_payload = manifest_js_payload.replace("\\", "\\\\").replace("'", "\\'")
+        manifest_js_content = textwrap.dedent(
+            """
+            (function(){
+              const registry = globalThis.DustlandGeneratedSkinManifests = globalThis.DustlandGeneratedSkinManifests || {};
+              const styleId = %(style_id)s;
+              const entry = {
+                baseDir: %(base_dir)s,
+                styleDir: %(style_dir)s,
+                manifest: JSON.parse('%(manifest)s')
+              };
+              registry[styleId] = entry;
+              try {
+                globalThis.Dustland?.skin?.registerGeneratedSkin?.(styleId, {
+                  baseDir: entry.baseDir,
+                  styleDir: entry.styleDir,
+                  manifest: entry.manifest
+                });
+              } catch (err) { void err; }
+            })();
+            """
+        ).strip() % {
+            "style_id": json.dumps(style_id),
+            "base_dir": json.dumps(manifest_base_dir),
+            "style_dir": json.dumps(style_dir),
+            "manifest": manifest_js_payload,
+        }
+        manifest_js_path.write_text(manifest_js_content + "\n", encoding="utf-8")
+        manifest_script_paths.append(str(manifest_js_path))
+
     summary += "\n\nSaved manifests:\n" + "\n".join(manifest_paths)
+    if manifest_script_paths:
+        summary += "\n\nSaved manifest scripts:\n" + "\n".join(manifest_script_paths)
 
     return (prompts, summary)
 
