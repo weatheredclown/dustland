@@ -31,7 +31,7 @@ import websocket
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 
 # --- Logic repurposed from the SkinStyleJSONLoader custom node ---
@@ -197,6 +197,8 @@ class SkinStylePromptGenerator:
     for entry in entries:
       merged = self._deep_merge_dicts(merged, entry)
     return merged
+
+
 
   def _parse_style_overrides(self, overrides: str) -> List[Dict[str, Any]]:
     results: List[Dict[str, Any]] = []
@@ -726,6 +728,155 @@ def download_images_for_prompt(
 
   return saved_paths
 
+
+class WorkflowConfigurationError(RuntimeError):
+  """Raised when a ComfyUI workflow template is missing required nodes."""
+
+
+def _as_node_id(node_id: Any) -> Optional[str]:
+  if node_id is None:
+    return None
+  if isinstance(node_id, str):
+    return node_id
+  if isinstance(node_id, (int, float)):
+    return str(int(node_id))
+  return str(node_id)
+
+
+def _iter_linked_node_ids(value: Any) -> Iterable[str]:
+  if isinstance(value, list):
+    if value and isinstance(value[0], (str, int, float)):
+      linked = _as_node_id(value[0])
+      if linked is not None:
+        yield linked
+    for item in value:
+      if isinstance(item, (list, dict)):
+        yield from _iter_linked_node_ids(item)
+  elif isinstance(value, dict):
+    for item in value.values():
+      yield from _iter_linked_node_ids(item)
+
+
+def _linked_node_id(value: Any) -> Optional[str]:
+  for node_id in _iter_linked_node_ids(value):
+    return node_id
+  return None
+
+
+def _node_depends_on(workflow: Dict[str, Dict[str, Any]], start_id: str, target_id: str, visited: Optional[Set[str]] = None) -> bool:
+  start_id = _as_node_id(start_id) or ""
+  target_id = _as_node_id(target_id) or ""
+  if not start_id or not target_id:
+    return False
+  if start_id == target_id:
+    return True
+  if visited is None:
+    visited = set()
+  if start_id in visited:
+    return False
+  visited.add(start_id)
+  node = workflow.get(start_id)
+  if not node:
+    return False
+  inputs = node.get("inputs", {})
+  for linked in _iter_linked_node_ids(inputs):
+    if _node_depends_on(workflow, linked, target_id, visited):
+      return True
+  return False
+
+
+def _find_primary_sampler_node(workflow: Dict[str, Dict[str, Any]]) -> Optional[str]:
+  for node_id, node in workflow.items():
+    class_type = node.get("class_type")
+    if isinstance(class_type, str) and class_type.lower().startswith("ksampler"):
+      return _as_node_id(node_id)
+  return None
+
+
+def _find_connected_save_image_node(workflow: Dict[str, Dict[str, Any]], sampler_id: str) -> Optional[str]:
+  for node_id, node in workflow.items():
+    if node.get("class_type") == "SaveImage":
+      node_id_str = _as_node_id(node_id)
+      if node_id_str and _node_depends_on(workflow, node_id_str, sampler_id):
+        return node_id_str
+  return None
+
+
+def _ensure_inputs(node: Dict[str, Any]) -> Dict[str, Any]:
+  inputs = node.get("inputs")
+  if not isinstance(inputs, dict):
+    inputs = {}
+    node["inputs"] = inputs
+  return inputs
+
+
+def apply_asset_prompt_to_workflow(workflow: Dict[str, Dict[str, Any]], asset_prompt: SkinAssetPrompt, checkpoint_name: str) -> List[str]:
+  sampler_id = _find_primary_sampler_node(workflow)
+  if not sampler_id:
+    raise WorkflowConfigurationError("Unable to find a KSampler node in the workflow template.")
+
+  warnings: List[str] = []
+  sampler_node = workflow[sampler_id]
+  sampler_inputs = _ensure_inputs(sampler_node)
+
+  sampler_inputs["seed"] = asset_prompt.seed
+  sampler_inputs["steps"] = asset_prompt.steps
+  sampler_inputs["cfg"] = asset_prompt.cfg_scale
+  sampler_inputs["sampler_name"] = asset_prompt.sampler
+  sampler_inputs["scheduler"] = asset_prompt.scheduler
+
+  model_node_id = _linked_node_id(sampler_inputs.get("model"))
+  if model_node_id:
+    model_node = workflow.get(model_node_id)
+    if model_node:
+      model_inputs = _ensure_inputs(model_node)
+      model_inputs["ckpt_name"] = checkpoint_name
+    else:
+      warnings.append(f"Model node '{model_node_id}' referenced by the sampler was not found in the workflow.")
+  else:
+    warnings.append("Sampler node does not reference a checkpoint loader; checkpoint override skipped.")
+
+  positive_node_id = _linked_node_id(sampler_inputs.get("positive"))
+  if not positive_node_id:
+    raise WorkflowConfigurationError("Sampler node is missing a 'positive' input reference.")
+  positive_node = workflow.get(positive_node_id)
+  if not positive_node:
+    raise WorkflowConfigurationError(f"Positive prompt node '{positive_node_id}' referenced by the sampler is missing from the workflow.")
+  positive_inputs = _ensure_inputs(positive_node)
+  positive_inputs["text"] = asset_prompt.prompt
+
+  negative_node_id = _linked_node_id(sampler_inputs.get("negative"))
+  if not negative_node_id:
+    raise WorkflowConfigurationError("Sampler node is missing a 'negative' input reference.")
+  negative_node = workflow.get(negative_node_id)
+  if not negative_node:
+    raise WorkflowConfigurationError(f"Negative prompt node '{negative_node_id}' referenced by the sampler is missing from the workflow.")
+  negative_inputs = _ensure_inputs(negative_node)
+  negative_inputs["text"] = asset_prompt.negative_prompt
+
+  latent_node_id = _linked_node_id(sampler_inputs.get("latent_image"))
+  if latent_node_id:
+    latent_node = workflow.get(latent_node_id)
+    if latent_node:
+      latent_inputs = _ensure_inputs(latent_node)
+      latent_inputs["width"] = asset_prompt.width
+      latent_inputs["height"] = asset_prompt.height
+    else:
+      warnings.append(f"Latent image node '{latent_node_id}' referenced by the sampler is missing from the workflow; size overrides skipped.")
+  else:
+    warnings.append("Sampler node is missing a latent image reference; size overrides skipped.")
+
+  save_node_id = _find_connected_save_image_node(workflow, sampler_id)
+  if save_node_id:
+    save_node = workflow[save_node_id]
+    save_inputs = _ensure_inputs(save_node)
+    save_inputs["filename_prefix"] = asset_prompt.name
+  else:
+    warnings.append("Unable to locate a SaveImage node connected to the sampler; generated files may use default names.")
+
+  return warnings
+
+
 # --- Main script ---
 
 def get_single_asset_workflow() -> dict:
@@ -860,19 +1011,13 @@ def main():
             print(f"\nSkipping asset '{asset_prompt.name}' (already exists at {expected_path}). Use --force-regen to regenerate.")
             continue
         wf = json.loads(json.dumps(workflow_template)) # Deep copy
-
-        # Populate the workflow template with the asset data
-        wf["4"]["inputs"]["ckpt_name"] = args.checkpoint
-        wf["5"]["inputs"]["text"] = asset_prompt.prompt
-        wf["6"]["inputs"]["text"] = asset_prompt.negative_prompt
-        wf["7"]["inputs"]["width"] = asset_prompt.width
-        wf["7"]["inputs"]["height"] = asset_prompt.height
-        wf["3"]["inputs"]["seed"] = asset_prompt.seed
-        wf["3"]["inputs"]["steps"] = asset_prompt.steps
-        wf["3"]["inputs"]["cfg"] = asset_prompt.cfg_scale
-        wf["3"]["inputs"]["sampler_name"] = asset_prompt.sampler
-        wf["3"]["inputs"]["scheduler"] = asset_prompt.scheduler
-        wf["9"]["inputs"]["filename_prefix"] = asset_prompt.name
+        try:
+          warnings = apply_asset_prompt_to_workflow(wf, asset_prompt, args.checkpoint)
+        except WorkflowConfigurationError as exc:
+          print(f"Error: {exc}", file=sys.stderr)
+          sys.exit(1)
+        for warning in warnings:
+          print(f"Warning: {warning}")
 
         prompt_id = queue_prompt(wf, args.host, args.port, client_id)['prompt_id']
         print(f"\nQueued prompt for asset '{asset_prompt.name}' ({asset_prompt.width}x{asset_prompt.height}) with ID: {prompt_id}")
