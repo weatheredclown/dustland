@@ -27,9 +27,9 @@ in one run.
 
 | File | Purpose |
 | --- | --- |
-| `scripts/comfyui/dustland_game_assets/` | Custom ComfyUI nodes that power the workflow. Copy this directory into your ComfyUI `custom_nodes` directory. |
-| `docs/examples/comfyui-game-asset-workflow.json` | A ready-to-import workflow that wires the custom nodes together. |
-| `docs/examples/game_asset_batch.json` | Sample asset description demonstrating the JSON schema. |
+| `comfyui/custom_nodes/dustland_game_assets/` | Custom ComfyUI nodes that power the workflow. Copy this directory into your ComfyUI `custom_nodes` directory. |
+| `comfyui/examples/comfyui-game-asset-workflow.json` | A ready-to-import workflow that wires the custom nodes together. |
+| `comfyui/examples/game_asset_batch.json` | Sample asset description demonstrating the JSON schema. |
 
 ## JSON schema
 
@@ -48,15 +48,15 @@ Each asset entry may include the following fields:
 | `seed` | No | Seed value; random when omitted. |
 
 Place the JSON file inside ComfyUI's `input` directory or paste its contents
-into the loader node. The sample in [`docs/examples/game_asset_batch.json`](../examples/game_asset_batch.json)
-contains two assets you can experiment with immediately.
+into the loader node. The sample in [`comfyui/examples/game_asset_batch.json`](../../examples/game_asset_batch.json)
+contains two assets you can experiment with immediately.【F:comfyui/examples/game_asset_batch.json†L1-L80】
 
 ## Installation and usage
 
-1. Copy the `scripts/comfyui/dustland_game_assets` directory from this
+1. Copy the `comfyui/custom_nodes/dustland_game_assets` directory from this
    repository into your ComfyUI installation under `custom_nodes/`.
    Restart ComfyUI so it discovers the new nodes.
-2. Download `comfyui-game-asset-workflow.json` and import it through the
+2. Download `comfyui/examples/comfyui-game-asset-workflow.json` and import it through the
    ComfyUI sidebar (`Load` → `Workflow`).
 3. Place your asset JSON file inside ComfyUI's `input` directory. Update the
    **JSON Loader** node's `json_source` field to either the filename or paste

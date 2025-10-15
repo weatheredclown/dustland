@@ -8,10 +8,10 @@ necessary because the ComfyUI web UI does not natively support iterating over
 the list of assets produced by the `SkinStyleJSONLoader` node.
 
 Usage:
-  python scripts/run-skin-workflow.py <style_plan.json> [--host <host>] [--port <port>]
+  python comfyui/scripts/run-skin-workflow.py <style_plan.json> [--host <host>] [--port <port>]
 
 Example:
-  python scripts/run-skin-workflow.py docs/examples/skin_style_plan.json
+  python comfyui/scripts/run-skin-workflow.py comfyui/examples/skin_style_plan.json
 """
 
 from __future__ import annotations
@@ -68,7 +68,11 @@ class SkinStylePromptGenerator:
   _DEFAULT_SLOT_PROMPT = "Dustland CRT UI skin slot"
 
   def __init__(self) -> None:
-    repo_root = Path(__file__).resolve().parent.parent
+    script_path = Path(__file__).resolve()
+    repo_root = next(
+        (candidate for candidate in script_path.parents if (candidate / "package.json").exists()),
+        script_path.parents[2],
+    )
     self._repo_root = repo_root
 
   def _iter_repo_files(self, root: Path) -> Iterable[Path]:

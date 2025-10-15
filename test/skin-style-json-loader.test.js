@@ -22,7 +22,7 @@ sys.modules['folder_paths'] = types.SimpleNamespace(
     get_output_directory=lambda: tmpdir.name,
 )
 
-from scripts.comfyui.dustland_skin_batch import SkinStyleJSONLoader
+from comfyui.custom_nodes.dustland_skin_batch import SkinStyleJSONLoader
 
 loader = SkinStyleJSONLoader()
 json_source = json.dumps([
@@ -76,7 +76,7 @@ import typing
 tmpdir = tempfile.TemporaryDirectory()
 sys.modules['websocket'] = types.SimpleNamespace(WebSocket=type('WebSocket', (), {}))
 sys.modules['typing'] = typing
-script_path = pathlib.Path('scripts/run-skin-workflow.py')
+script_path = pathlib.Path('comfyui/scripts/run-skin-workflow.py')
 spec = importlib.util.spec_from_file_location('run_skin_workflow', script_path)
 module = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = module
@@ -146,7 +146,7 @@ import typing
 tmpdir = tempfile.TemporaryDirectory()
 sys.modules['websocket'] = types.SimpleNamespace(WebSocket=type('WebSocket', (), {}))
 sys.modules['typing'] = typing
-script_path = pathlib.Path('scripts/run-skin-workflow.py')
+script_path = pathlib.Path('comfyui/scripts/run-skin-workflow.py')
 spec = importlib.util.spec_from_file_location('run_skin_workflow', script_path)
 module = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = module
@@ -212,7 +212,7 @@ sys.modules['folder_paths'] = types.SimpleNamespace(
     get_output_directory=lambda: tmpdir.name,
 )
 
-from scripts.comfyui.dustland_skin_batch import SkinStyleJSONLoader
+from comfyui.custom_nodes.dustland_skin_batch import SkinStyleJSONLoader
 
 loader = SkinStyleJSONLoader()
 json_source = json.dumps([
@@ -256,8 +256,8 @@ tmpdir.cleanup()
   assert.strictEqual(result.trim(), '');
 });
 
-test('SkinStyleJSONLoader loads the documented game asset batch example', () => {
-  const examplePath = path.join(repoRoot, 'docs/examples/game_asset_batch.json');
+  test('SkinStyleJSONLoader loads the documented game asset batch example', () => {
+    const examplePath = path.join(repoRoot, 'comfyui/examples/game_asset_batch.json');
   const escapedPath = examplePath.replace(/\\/g, '\\\\');
   const pythonScript = String.raw`
 import json
@@ -272,7 +272,7 @@ sys.modules['folder_paths'] = types.SimpleNamespace(
     get_output_directory=lambda: tmpdir.name,
 )
 
-from scripts.comfyui.dustland_skin_batch import SkinStyleJSONLoader
+from comfyui.custom_nodes.dustland_skin_batch import SkinStyleJSONLoader
 
 loader = SkinStyleJSONLoader()
 json_source = r'${escapedPath}'
