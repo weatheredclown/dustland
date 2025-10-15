@@ -223,6 +223,54 @@
     return text.startsWith('.') ? text : `.${text}`;
   }
 
+  function isPlainObject(value){
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function buildAssetUrl(path, baseDir, styleDir){
+    if(!path) return '';
+    const raw = String(path).trim();
+    if(/^([a-z]+:|data:|blob:)/i.test(raw)) return raw;
+    let relative = normalizeFilePath(raw);
+    if(!relative) return '';
+    if(styleDir && !relative.startsWith(`${styleDir}/`)){
+      relative = `${styleDir}/${relative}`;
+    }
+    return baseDir ? `${baseDir}/${relative}` : relative;
+  }
+
+  function rewriteSpriteEntry(entry, baseDir, styleDir){
+    if(entry == null) return entry;
+    if(typeof entry === 'string'){
+      return buildAssetUrl(entry, baseDir, styleDir);
+    }
+    if(Array.isArray(entry)){
+      return entry.map(item => rewriteSpriteEntry(item, baseDir, styleDir));
+    }
+    if(!isPlainObject(entry)) return entry;
+    const copy = {};
+    for(const [key, value] of Object.entries(entry)){
+      if(key === 'variants'){
+        copy.variants = rewriteSpriteEntry(value, baseDir, styleDir);
+        continue;
+      }
+      if(key === 'frame' && isPlainObject(value)){
+        const frameCopy = { ...value };
+        if(typeof frameCopy.src === 'string'){
+          frameCopy.src = buildAssetUrl(frameCopy.src, baseDir, styleDir);
+        }
+        copy.frame = frameCopy;
+        continue;
+      }
+      if((key === 'src' || key === 'atlas') && typeof value === 'string'){
+        copy[key] = buildAssetUrl(value, baseDir, styleDir);
+        continue;
+      }
+      copy[key] = rewriteSpriteEntry(value, baseDir, styleDir);
+    }
+    return copy;
+  }
+
   function discoverSlotNames(){
     const slots = new Set();
     const nodes = document.querySelectorAll('[data-skin-slot]');
@@ -305,38 +353,129 @@
     return merged;
   }
 
+  const RESERVED_SLOT_KEYS = new Set(['ui', 'tiles', 'icons', 'map', 'meta', 'id', 'label', 'version', 'info', 'slots']);
+
+  function mergeStyleObject(target, source, baseDir, styleDir){
+    const next = { ...target };
+    for(const [prop, raw] of Object.entries(source)){
+      if(typeof raw === 'string' && prop.toLowerCase().includes('image')){
+        const trimmed = raw.trim();
+        if(trimmed.startsWith('url(')){
+          next[prop] = trimmed;
+        } else {
+          const url = buildAssetUrl(trimmed, baseDir, styleDir);
+          next[prop] = url ? `url(${url})` : raw;
+        }
+      } else {
+        next[prop] = raw;
+      }
+    }
+    return next;
+  }
+
+  function applySlotDefinition(slotStyles, slotName, definition, baseDir, styleDir, extension){
+    if(!slotName) return;
+    let next = slotStyles[slotName] ? { ...slotStyles[slotName] } : {};
+    if(definition == null){
+      const url = buildAssetUrl(`${slotName}${extension}`, baseDir, styleDir);
+      if(url) next.backgroundImage = `url(${url})`;
+    } else if(typeof definition === 'string'){
+      const url = buildAssetUrl(definition, baseDir, styleDir);
+      if(url) next.backgroundImage = `url(${url})`;
+    } else if(isPlainObject(definition)){
+      next = mergeStyleObject(next, definition, baseDir, styleDir);
+    }
+    if(Object.keys(next).length) slotStyles[slotName] = next;
+  }
+
+  function extractManifestSections(manifest){
+    const result = {
+      slots: null,
+      uiVars: null,
+      tiles: null,
+      icons: null,
+      map: null,
+      meta: null,
+      id: null,
+      label: null
+    };
+    if(!isPlainObject(manifest)) return result;
+    const slots = {};
+    let hasSlots = false;
+    if(isPlainObject(manifest.ui)){
+      if(isPlainObject(manifest.ui.vars)) result.uiVars = { ...manifest.ui.vars };
+      if(isPlainObject(manifest.ui.slots)){
+        for(const [slotName, value] of Object.entries(manifest.ui.slots)){
+          slots[slotName] = value;
+          hasSlots = true;
+        }
+      }
+    }
+    if(isPlainObject(manifest.slots)){
+      for(const [slotName, value] of Object.entries(manifest.slots)){
+        slots[slotName] = value;
+        hasSlots = true;
+      }
+    }
+    for(const [key, value] of Object.entries(manifest)){
+      if(RESERVED_SLOT_KEYS.has(key)) continue;
+      if(typeof value === 'string' || isPlainObject(value)){
+        slots[key] = value;
+        hasSlots = true;
+      }
+    }
+    result.slots = hasSlots ? slots : null;
+    if(manifest.tiles) result.tiles = manifest.tiles;
+    if(manifest.icons) result.icons = manifest.icons;
+    if(manifest.map) result.map = manifest.map;
+    if(manifest.meta) result.meta = manifest.meta;
+    if(typeof manifest.id === 'string') result.id = manifest.id.trim();
+    if(typeof manifest.label === 'string') result.label = manifest.label.trim();
+    return result;
+  }
+
   function buildGeneratedSkin(name, config){
     const styleId = typeof name === 'string' ? name.trim() : '';
     if(!styleId) return null;
     const merged = mergeGeneratedConfig(defaultGeneratedConfig(styleId), config || {});
-    const slotEntries = (() => {
-      if(merged.manifest && typeof merged.manifest === 'object') return Object.entries(merged.manifest);
-      if(Array.isArray(merged.slots)) return merged.slots.map(slot => [slot, null]);
-      if(merged.slots && typeof merged.slots === 'object') return Object.entries(merged.slots);
-      return discoverSlotNames().map(slot => [slot, null]);
-    })();
-    const slotStyles = {};
+    const manifestSections = extractManifestSections(merged.manifest);
     const styleDir = merged.styleDir;
     const baseDir = merged.baseDir;
     const extension = merged.extension;
-    for(const [rawSlot, rawFile] of slotEntries){
-      const slotName = typeof rawSlot === 'string' ? rawSlot.trim() : '';
-      if(!slotName) continue;
-      const explicit = typeof rawFile === 'string' && rawFile.trim();
-      let relative = explicit ? rawFile.trim() : `${slotName}${extension}`;
-      relative = normalizeFilePath(relative);
-      if(!relative) continue;
-      let withinBase = relative;
-      if(styleDir && !withinBase.startsWith(`${styleDir}/`)) withinBase = `${styleDir}/${withinBase}`;
-      const url = baseDir ? `${baseDir}/${withinBase}` : withinBase;
-      slotStyles[slotName] = { backgroundImage: `url(${url})` };
+    const slotStyles = {};
+    if(Array.isArray(merged.slots)){
+      merged.slots.forEach(slot => {
+        const slotName = typeof slot === 'string' ? slot.trim() : '';
+        if(slotName) applySlotDefinition(slotStyles, slotName, null, baseDir, styleDir, extension);
+      });
+    } else if(isPlainObject(merged.slots)){
+      for(const [slotName, value] of Object.entries(merged.slots)){
+        const name = typeof slotName === 'string' ? slotName.trim() : String(slotName ?? '');
+        if(name) applySlotDefinition(slotStyles, name, value, baseDir, styleDir, extension);
+      }
+    } else if(!manifestSections.slots){
+      discoverSlotNames().forEach(slot => applySlotDefinition(slotStyles, slot, null, baseDir, styleDir, extension));
     }
-    if(!Object.keys(slotStyles).length) return null;
-    return {
-      id: `generated-${styleDir || styleId}`,
-      label: styleId,
-      ui: { slots: slotStyles }
+    if(manifestSections.slots){
+      for(const [slotName, value] of Object.entries(manifestSections.slots)){
+        applySlotDefinition(slotStyles, String(slotName).trim(), value, baseDir, styleDir, extension);
+      }
+    }
+    const ui = {};
+    if(manifestSections.uiVars) ui.vars = { ...manifestSections.uiVars };
+    if(Object.keys(slotStyles).length) ui.slots = slotStyles;
+    const skin = {
+      id: manifestSections.id || `generated-${styleDir || styleId}`,
+      label: manifestSections.label || styleId
     };
+    if(Object.keys(ui).length) skin.ui = ui;
+    if(manifestSections.tiles) skin.tiles = rewriteSpriteEntry(manifestSections.tiles, baseDir, styleDir);
+    if(manifestSections.icons) skin.icons = rewriteSpriteEntry(manifestSections.icons, baseDir, styleDir);
+    if(manifestSections.map) skin.map = rewriteSpriteEntry(manifestSections.map, baseDir, styleDir);
+    if(manifestSections.meta) skin.meta = { ...manifestSections.meta };
+    const hasVisuals = skin.ui || skin.tiles || skin.icons || skin.map;
+    if(!hasVisuals) return null;
+    return skin;
   }
 
   function cloneSkin(skin){
@@ -662,9 +801,69 @@
     return null;
   }
 
-  function getTileSprite(tileId){
+  function cloneSpriteBase(entry){
+    if(!isPlainObject(entry)) return entry;
+    const clone = {};
+    for(const [key, value] of Object.entries(entry)){
+      if(key === 'variants') continue;
+      if(isPlainObject(value)) clone[key] = { ...value };
+      else if(Array.isArray(value)) clone[key] = value.map(item => (isPlainObject(item) ? { ...item } : item));
+      else clone[key] = value;
+    }
+    return clone;
+  }
+
+  function mergeVariantEntry(base, variant){
+    if(!isPlainObject(base)) return variant;
+    const merged = { ...base };
+    if(typeof variant === 'string'){
+      merged.src = variant;
+      return merged;
+    }
+    if(!isPlainObject(variant)) return merged;
+    if(isPlainObject(variant.frame)){
+      merged.frame = { ...(isPlainObject(merged.frame) ? merged.frame : {}), ...variant.frame };
+    }
+    for(const [key, value] of Object.entries(variant)){
+      if(key === 'frame' || key === 'variants') continue;
+      merged[key] = value;
+    }
+    return merged;
+  }
+
+  function selectVariantIndex(count, context, tileId){
+    if(!Number.isFinite(count) || count <= 0) return 0;
+    const x = Number.isFinite(context?.x) ? context.x : 0;
+    const y = Number.isFinite(context?.y) ? context.y : 0;
+    const seed = Number.isFinite(context?.seed) ? context.seed : 0;
+    let h = Math.imul(x | 0, 0x45d9f3b);
+    h = Math.imul(h ^ Math.imul((y | 0) ^ 0x27d4eb2d, 0x165667b1), 0x27d4eb2d);
+    h ^= Math.imul(seed | 0, 0x9e3779b9);
+    const tileSalt = typeof tileId === 'number' ? tileId : (String(tileId).length & 0xffffffff);
+    h = Math.imul(h ^ tileSalt, 0x9e3779b1);
+    h ^= h >>> 16;
+    const idx = Math.abs(h) % count;
+    return Number.isFinite(idx) ? idx : 0;
+  }
+
+  function resolveTileVariant(def, context, tileId){
+    if(Array.isArray(def) && def.length){
+      const idx = selectVariantIndex(def.length, context, tileId);
+      const entry = def[idx] ?? def[0];
+      return { entry, cacheKey: `arr:${idx}` };
+    }
+    if(isPlainObject(def) && Array.isArray(def.variants) && def.variants.length){
+      const base = cloneSpriteBase(def);
+      const idx = selectVariantIndex(def.variants.length, context, tileId);
+      const variantEntry = def.variants[idx] ?? def.variants[0];
+      const merged = mergeVariantEntry(base, variantEntry);
+      return { entry: merged, cacheKey: `obj:${idx}` };
+    }
+    return { entry: def, cacheKey: 'base' };
+  }
+
+  function getTileSprite(tileId, context = {}){
     const key = String(tileId);
-    if(tileSpriteCache.has(key)) return tileSpriteCache.get(key);
     const skin = state.currentSkin;
     if(!skin?.tiles){
       tileSpriteCache.set(key, null);
@@ -675,8 +874,11 @@
       tileSpriteCache.set(key, null);
       return null;
     }
-    const sprite = createSprite(def, skin.tiles);
-    tileSpriteCache.set(key, sprite || null);
+    const variant = resolveTileVariant(def, context, tileId);
+    const cacheKey = variant.cacheKey ? `${key}|${variant.cacheKey}` : key;
+    if(tileSpriteCache.has(cacheKey)) return tileSpriteCache.get(cacheKey);
+    const sprite = createSprite(variant.entry, skin.tiles);
+    tileSpriteCache.set(cacheKey, sprite || null);
     return sprite || null;
   }
 
@@ -833,6 +1035,23 @@
 
   const SPRITE_META_KEYS = new Set(['src','atlas','frame','x','y','w','h','width','height','scale','offsetX','offsetY','dx','dy','align','anchor','dw','dh','displayWidth','displayHeight']);
 
+  function preloadTileDefinition(entry){
+    if(!entry) return;
+    if(typeof entry === 'string'){
+      loadImage(entry);
+      return;
+    }
+    if(Array.isArray(entry)){
+      entry.forEach(preloadTileDefinition);
+      return;
+    }
+    if(!isPlainObject(entry)) return;
+    if(typeof entry.src === 'string') loadImage(entry.src);
+    if(typeof entry.atlas === 'string') loadImage(entry.atlas);
+    if(entry.frame && typeof entry.frame === 'object' && typeof entry.frame.src === 'string') loadImage(entry.frame.src);
+    if(entry.variants) preloadTileDefinition(entry.variants);
+  }
+
   function preloadIconGroup(group){
     if(!group) return;
     if(Array.isArray(group)){
@@ -857,13 +1076,7 @@
     if(skin.tiles){
       if(skin.tiles.atlas) loadImage(skin.tiles.atlas);
       const defs = skin.tiles.map || skin.tiles.tiles || {};
-      for(const value of Object.values(defs)){
-        if(typeof value === 'string') loadImage(value);
-        else if(value && typeof value === 'object'){
-          if(value.src) loadImage(value.src);
-          if(value.atlas) loadImage(value.atlas);
-        }
-      }
+      for(const value of Object.values(defs)) preloadTileDefinition(value);
     }
     if(skin.icons){
       if(skin.icons.atlas) loadImage(skin.icons.atlas);

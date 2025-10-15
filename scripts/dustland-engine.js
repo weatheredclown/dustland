@@ -331,6 +331,13 @@ function setTileChars(on){
 }
 function toggleTileChars(){ setTileChars(!tileCharsEnabled); }
 globalThis.toggleTileChars = toggleTileChars;
+if(typeof EventBus?.on === 'function'){
+  EventBus.on('skin:changed', ({ skin }) => {
+    if(skin?.tiles && tileCharsEnabled){
+      setTileChars(false);
+    }
+  });
+}
 function setFogOfWar(on, opts = {}){
   fogOfWarEnabled = !!on;
   if(typeof document !== 'undefined'){
@@ -1438,7 +1445,7 @@ function render(gameState=state, dt){
           const gx = camX + vx - offX, gy = camY + vy - offY;
           if(gx<0||gy<0||gx>=W||gy>=H) continue;
           const t = getTile(activeMap,gx,gy); if(t===null) continue;
-          const tileSprite = skin?.getTileSprite?.(t);
+          const tileSprite = skin?.getTileSprite?.(t, { x: gx, y: gy, map: activeMap });
           let tileDrawn = false;
           if(tileSprite){
             tileDrawn = drawSkinSprite(ctx, tileSprite, vx*TS, vy*TS, TS);
