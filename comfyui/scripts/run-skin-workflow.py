@@ -928,6 +928,83 @@ def get_single_asset_workflow() -> dict:
     }
 
 
+def _normalize_workflow_template(data: Any) -> Dict[str, Dict[str, Any]]:
+  """Convert a ComfyUI workflow export into the prompt dictionary format.
+
+  The CLI historically operated on the simplified dictionary structure used
+  by the `/prompt` API. Recent JSON exports from the ComfyUI UI wrap nodes in
+  a `{"nodes": [...]}` payload. This helper preserves backwards
+  compatibility by accepting either form and normalizing the structure.
+  """
+
+  if isinstance(data, dict):
+    if all(
+        isinstance(node, dict) and "class_type" in node
+        for node in data.values()
+    ):
+      # Already in prompt dictionary format.
+      return {str(node_id): dict(node) for node_id, node in data.items()}
+
+    nodes = data.get("nodes")
+    links = data.get("links") or []
+    if isinstance(nodes, list):
+      link_sources: Dict[int, Tuple[str, int]] = {}
+      if isinstance(links, list):
+        for entry in links:
+          if not isinstance(entry, list) or len(entry) < 5:
+            continue
+          link_id, source_node, source_slot = entry[0], entry[1], entry[2]
+          link_sources[int(link_id)] = (str(source_node), int(source_slot))
+
+      normalised: Dict[str, Dict[str, Any]] = {}
+      for node in nodes:
+        if not isinstance(node, dict):
+          continue
+        node_id = node.get("id")
+        class_type = node.get("type") or node.get("class_type")
+        if node_id is None or class_type is None:
+          continue
+
+        inputs: Dict[str, Any] = {}
+        widget_values = list(node.get("widgets_values") or [])
+        widget_iter = iter(widget_values)
+
+        for input_entry in node.get("inputs") or []:
+          if not isinstance(input_entry, dict):
+            continue
+          name = input_entry.get("name")
+          if not name:
+            continue
+          link_id = input_entry.get("link")
+          if link_id is not None:
+            source = link_sources.get(int(link_id))
+            if source is not None:
+              inputs[name] = [source[0], source[1]]
+            continue
+
+          if "value" in input_entry:
+            inputs[name] = input_entry["value"]
+            continue
+
+          # Widgets are serialised in the same order as the inputs in
+          # ComfyUI's JSON export. Pull the next value if available.
+          try:
+            widget_value = next(widget_iter)
+          except StopIteration:
+            widget_value = None
+          inputs[name] = widget_value
+
+        normalised[str(node_id)] = {
+            "class_type": str(class_type),
+            "inputs": inputs,
+        }
+
+      if normalised:
+        return normalised
+
+  raise TypeError("Workflow JSON must be a prompt dictionary or a nodes export")
+
+
 def main():
     """Main entry point for the script."""
     parser = argparse.ArgumentParser(description="Run a Dustland skin style workflow.")
@@ -996,11 +1073,29 @@ def main():
 
     if args.workflow_file:
         try:
-            workflow_template = json.loads(args.workflow_file.read_text(encoding="utf-8"))
+            raw_workflow = json.loads(args.workflow_file.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
             print(f"Error: Failed to parse workflow JSON at {args.workflow_file}: {exc}", file=sys.stderr)
             sys.exit(1)
+        try:
+            workflow_template = _normalize_workflow_template(raw_workflow)
+        except TypeError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            sys.exit(1)
     else:
+        workflow_template = get_single_asset_workflow()
+
+    sampler_id = _find_primary_sampler_node(workflow_template)
+    if not sampler_id:
+        has_batch_renderer = any(
+            isinstance(node, dict) and node.get("class_type") == "GameAssetBatchRenderer"
+            for node in workflow_template.values()
+        )
+        reason = "GameAssetBatchRenderer" if has_batch_renderer else "a KSampler"
+        print(
+            f"Warning: Workflow template is missing {reason}; using built-in single-asset workflow instead.",
+            file=sys.stderr,
+        )
         workflow_template = get_single_asset_workflow()
 
     for asset_prompt in prompts:
