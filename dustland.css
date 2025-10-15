@@ -184,7 +184,7 @@ input[type="range"] {
     }
 
     canvas {
-        background: #000;
+        background: transparent;
         border: var(--skin-crt-border, 1px solid #2a382a);
         border-radius: var(--skin-crt-radius, 8px);
         box-shadow: var(--skin-crt-shadow, 0 0 0 2px #000 inset, 0 0 40px #000);
