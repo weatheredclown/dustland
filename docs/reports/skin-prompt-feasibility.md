@@ -13,3 +13,6 @@ This audit reviews the prompts defined in the sample skin style plan to identify
 ## Recommendations
 * Break multi-sprite requests (`tile_atlas`, glyph rows) into per-tile/per-icon prompts so each render can be guided, reviewed, and upscaled independently.
 * Consider ControlNet grid guides or vector overpainting pipelines if we must keep sprite sheets in a single pass; otherwise, prefer assembling atlases manually from individually validated tiles.
+
+## Follow-up
+* Updated `comfyui/examples/skin_style_plan.json` to replace multi-sprite prompts with discrete tile and icon slots so art can be generated and approved one asset at a time.
