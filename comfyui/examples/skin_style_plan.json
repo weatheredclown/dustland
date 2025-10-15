@@ -151,11 +151,60 @@
       "height": 80
     },
     {
-      "slot": "status_icon_glyphs",
-      "title": "Status icon glyphs",
-      "prompt": "A set of small, monochrome icons for status effects like poisoned or buffed.",
-      "width": 256,
-      "height": 32
+      "slot": "status_icon_poisoned",
+      "title": "Status icon - poisoned",
+      "prompt": "Single monochrome poison status glyph, bold silhouette, readable at 32x32.",
+      "width": 96,
+      "height": 96
+    },
+    {
+      "slot": "status_icon_buffed",
+      "title": "Status icon - buffed",
+      "prompt": "Single monochrome buff status glyph with upward energy motif, readable at 32x32.",
+      "width": 96,
+      "height": 96
+    },
+    {
+      "slot": "status_icon_bleeding",
+      "title": "Status icon - bleeding",
+      "prompt": "Single monochrome bleeding status glyph with sharp droplet motif, readable at 32x32.",
+      "width": 96,
+      "height": 96
+    },
+    {
+      "slot": "status_icon_stunned",
+      "title": "Status icon - stunned",
+      "prompt": "Single monochrome stunned status glyph with jagged starburst, readable at 32x32.",
+      "width": 96,
+      "height": 96
+    },
+    {
+      "slot": "status_icon_cursed",
+      "title": "Status icon - cursed",
+      "prompt": "Single monochrome cursed status glyph with arcane rune silhouette, readable at 32x32.",
+      "width": 96,
+      "height": 96
+    },
+    {
+      "slot": "status_icon_shielded",
+      "title": "Status icon - shielded",
+      "prompt": "Single monochrome shielded status glyph with protective shield outline, readable at 32x32.",
+      "width": 96,
+      "height": 96
+    },
+    {
+      "slot": "status_icon_burning",
+      "title": "Status icon - burning",
+      "prompt": "Single monochrome burning status glyph with flame silhouette, readable at 32x32.",
+      "width": 96,
+      "height": 96
+    },
+    {
+      "slot": "status_icon_frozen",
+      "title": "Status icon - frozen",
+      "prompt": "Single monochrome frozen status glyph with crystalline snowflake, readable at 32x32.",
+      "width": 96,
+      "height": 96
     },
     {
       "slot": "inventory_slot_frame",
@@ -291,11 +340,74 @@
       "height": 120
     },
     {
-      "slot": "tile_atlas",
-      "title": "Tile atlas",
-      "prompt": "A sprite sheet grid of 64x64 world tiles: sand, rock, water, brush, road, ruin, wall, floor, door, building.",
-      "width": 512,
-      "height": 512
+      "slot": "tile_sand",
+      "title": "Tile - sand",
+      "prompt": "Single 64x64 sand terrain tile with clean edges for atlas assembly.",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "slot": "tile_rock",
+      "title": "Tile - rock",
+      "prompt": "Single 64x64 rocky terrain tile with clean edges for atlas assembly.",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "slot": "tile_water",
+      "title": "Tile - water",
+      "prompt": "Single 64x64 water terrain tile with gentle animation-ready highlights and clean borders.",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "slot": "tile_brush",
+      "title": "Tile - brush",
+      "prompt": "Single 64x64 brush or scrub terrain tile with crisp perimeter separation.",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "slot": "tile_road",
+      "title": "Tile - road",
+      "prompt": "Single 64x64 road terrain tile with defined edges for seamless tiling.",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "slot": "tile_ruin",
+      "title": "Tile - ruin",
+      "prompt": "Single 64x64 ruined terrain tile featuring broken masonry with clear borders.",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "slot": "tile_wall",
+      "title": "Tile - wall",
+      "prompt": "Single 64x64 wall tile for structures, rendered as a square with clean silhouette.",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "slot": "tile_floor",
+      "title": "Tile - floor",
+      "prompt": "Single 64x64 interior floor tile with subtle texture and sharp outline.",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "slot": "tile_door",
+      "title": "Tile - door",
+      "prompt": "Single 64x64 doorway tile, front-facing, centered, and ready to drop into the atlas.",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "slot": "tile_building",
+      "title": "Tile - building",
+      "prompt": "Single 64x64 building roof tile with readable silhouette and hard edges.",
+      "width": 64,
+      "height": 64
     },
     {
       "slot": "door_highlight",
@@ -396,12 +508,40 @@
         "height": 96
       },
       {
-        "slot": "inventory_glyph_set",
-        "title": "Inventory item glyph set",
-        "prompt": "A set of simple glyphs for inventory categories: weapon, armor, consumable, quest, junk.",
-        "width": 480,
-        "height": 96
-    },
+        "slot": "inventory_glyph_weapon",
+        "title": "Inventory glyph - weapon",
+        "prompt": "Single high-contrast glyph representing the weapon category, readable at 48x48.",
+        "width": 128,
+        "height": 128
+      },
+      {
+        "slot": "inventory_glyph_armor",
+        "title": "Inventory glyph - armor",
+        "prompt": "Single high-contrast glyph representing the armor category, readable at 48x48.",
+        "width": 128,
+        "height": 128
+      },
+      {
+        "slot": "inventory_glyph_consumable",
+        "title": "Inventory glyph - consumable",
+        "prompt": "Single high-contrast glyph representing the consumable category, readable at 48x48.",
+        "width": 128,
+        "height": 128
+      },
+      {
+        "slot": "inventory_glyph_quest",
+        "title": "Inventory glyph - quest",
+        "prompt": "Single high-contrast glyph representing the quest category, readable at 48x48.",
+        "width": 128,
+        "height": 128
+      },
+      {
+        "slot": "inventory_glyph_junk",
+        "title": "Inventory glyph - junk",
+        "prompt": "Single high-contrast glyph representing the junk category, readable at 48x48.",
+        "width": 128,
+        "height": 128
+      },
     {
       "slot": "panel_title_accent",
       "title": "Panel title accent",
