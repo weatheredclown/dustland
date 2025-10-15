@@ -418,9 +418,9 @@ function drawTilePreviewSprite(canvas, sprite){
 
 function collectTilePreviewEntries(){
   const manager=skinManager();
+  if(!manager?.getTileSprite) return [];
   const skin=manager?.getCurrentSkin?.();
-  if(!skin?.tiles) return [];
-  const defs=skin.tiles.map || skin.tiles.tiles || {};
+  const defs=skin?.tiles?.map || skin?.tiles?.tiles || {};
   const seen=new Set();
   const entries=[];
   const numericEntries=[];
