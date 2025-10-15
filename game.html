@@ -618,6 +618,7 @@
         <button class="btn" id="musicToggle">Music: Off</button>
         <button class="btn" id="mobileToggle">Mobile Controls: Off</button>
         <button class="btn" id="tileCharToggle">ASCII Tiles: On</button>
+        <button class="btn" id="tilePreviewBtn">Tile Preview</button>
         <button class="btn" id="fogToggle">Fog of War: On</button>
         <div class="field">
           <label for="fontScale">Font Scale</label>
@@ -641,6 +642,19 @@
         </div>
         <button class="btn" id="settingsClose">Close</button>
       </main>
+    </div>
+  </div>
+
+  <div id="tilePreview" role="dialog" aria-modal="true" aria-hidden="true" style="display:none">
+    <div class="win tile-preview">
+      <header>Tile Preview</header>
+      <main>
+        <div class="tile-preview__grid" id="tilePreviewGrid"></div>
+        <div class="small tile-preview__empty" id="tilePreviewEmpty">Load a skin with terrain tiles to preview them here.</div>
+      </main>
+      <div class="footer">
+        <button class="btn" id="tilePreviewClose">Close</button>
+      </div>
     </div>
   </div>
 
