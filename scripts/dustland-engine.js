@@ -1408,19 +1408,26 @@ function drawSkinSprite(ctx, sprite, dx, dy, size = TS){
 function render(gameState=state, dt){
   const ctx = sctx;
   if(!ctx) return;
+
+  const activeMap = gameState.map || mapIdForState();
+  const dims = mapWH(activeMap) || {};
+  const { w:vWRaw, h:vHRaw } = getViewSize();
+  const vW = Number.isFinite(vWRaw) ? vWRaw : VIEW_W;
+  const vH = Number.isFinite(vHRaw) ? vHRaw : VIEW_H;
+  const W = Number.isFinite(dims.W) ? dims.W : vW;
+  const H = Number.isFinite(dims.H) ? dims.H : vH;
+  const mapSmallerThanView = W < vW || H < vH;
+
   ctx.setTransform(1,0,0,1,0,0);
-  ctx.fillStyle='#000';
-  ctx.fillRect(0,0,scene.width,scene.height);
+  if(mapSmallerThanView){ ctx.clearRect(0,0,scene.width,scene.height); }
+  else { ctx.fillStyle='#000'; ctx.fillRect(0,0,scene.width,scene.height); }
   ctx.save();
   ctx.scale(RENDER_SCALE, RENDER_SCALE);
   ctx.imageSmoothingEnabled = false;
   ctx.font = `${(12 * fontScale) / RENDER_SCALE}px system-ui, sans-serif`;
-  ctx.fillStyle='#000';
-  ctx.fillRect(0,0,BASE_CANVAS_WIDTH,BASE_CANVAS_HEIGHT);
+  if(mapSmallerThanView){ ctx.clearRect(0,0,BASE_CANVAS_WIDTH,BASE_CANVAS_HEIGHT); }
+  else { ctx.fillStyle='#000'; ctx.fillRect(0,0,BASE_CANVAS_WIDTH,BASE_CANVAS_HEIGHT); }
 
-  const activeMap = gameState.map || mapIdForState();
-  const { W, H } = mapWH(activeMap);
-  const { w:vW, h:vH } = getViewSize();
   const offX = Math.max(0, Math.floor((vW - W) / 2));
   const offY = Math.max(0, Math.floor((vH - H) / 2));
 
