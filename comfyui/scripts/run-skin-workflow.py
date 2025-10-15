@@ -949,12 +949,33 @@ def _normalize_workflow_template(data: Any) -> Dict[str, Dict[str, Any]]:
     links = data.get("links") or []
     if isinstance(nodes, list):
       link_sources: Dict[int, Tuple[str, int]] = {}
+
+      def _coerce_int(value: Any) -> Optional[int]:
+        if isinstance(value, bool):
+          return int(value)
+        if isinstance(value, (int, float)):
+          return int(value)
+        if isinstance(value, str):
+          text = value.strip()
+          if not text:
+            return None
+          try:
+            return int(text)
+          except ValueError:
+            return None
+        return None
+
       if isinstance(links, list):
         for entry in links:
           if not isinstance(entry, list) or len(entry) < 5:
             continue
           link_id, source_node, source_slot = entry[0], entry[1], entry[2]
-          link_sources[int(link_id)] = (str(source_node), int(source_slot))
+          link_id_int = _coerce_int(link_id)
+          source_slot_int = _coerce_int(source_slot)
+          source_node_id = _as_node_id(source_node)
+          if link_id_int is None or source_node_id is None or source_slot_int is None:
+            continue
+          link_sources[link_id_int] = (source_node_id, source_slot_int)
 
       normalised: Dict[str, Dict[str, Any]] = {}
       for node in nodes:
@@ -976,8 +997,9 @@ def _normalize_workflow_template(data: Any) -> Dict[str, Dict[str, Any]]:
           if not name:
             continue
           link_id = input_entry.get("link")
-          if link_id is not None:
-            source = link_sources.get(int(link_id))
+          link_id_int = _coerce_int(link_id)
+          if link_id_int is not None:
+            source = link_sources.get(link_id_int)
             if source is not None:
               inputs[name] = [source[0], source[1]]
             continue
