@@ -776,7 +776,7 @@ def _node_depends_on(workflow: Dict[str, Dict[str, Any]], start_id: str, target_
     return False
   visited.add(start_id)
   node = workflow.get(start_id)
-  if not node:
+  if not isinstance(node, dict):
     return False
   inputs = node.get("inputs", {})
   for linked in _iter_linked_node_ids(inputs):
@@ -787,6 +787,8 @@ def _node_depends_on(workflow: Dict[str, Dict[str, Any]], start_id: str, target_
 
 def _find_primary_sampler_node(workflow: Dict[str, Dict[str, Any]]) -> Optional[str]:
   for node_id, node in workflow.items():
+    if not isinstance(node, dict):
+      continue
     class_type = node.get("class_type")
     if isinstance(class_type, str) and class_type.lower().startswith("ksampler"):
       return _as_node_id(node_id)
@@ -795,6 +797,8 @@ def _find_primary_sampler_node(workflow: Dict[str, Dict[str, Any]]) -> Optional[
 
 def _find_connected_save_image_node(workflow: Dict[str, Dict[str, Any]], sampler_id: str) -> Optional[str]:
   for node_id, node in workflow.items():
+    if not isinstance(node, dict):
+      continue
     if node.get("class_type") == "SaveImage":
       node_id_str = _as_node_id(node_id)
       if node_id_str and _node_depends_on(workflow, node_id_str, sampler_id):
