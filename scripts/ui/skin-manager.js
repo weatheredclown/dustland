@@ -163,6 +163,8 @@
     outline: 'outline'
   };
 
+  const TILE_SLOT_PATTERN = /^tile[-_:]?(.+)$/i;
+
   const ALL_VAR_NAMES = Array.from(new Set(Object.values(UI_VAR_MAP).flatMap(section => Object.values(section))));
 
   const registry = new Map();
@@ -443,33 +445,70 @@
     const baseDir = merged.baseDir;
     const extension = merged.extension;
     const slotStyles = {};
+    const tileSlotDefinitions = new Map();
+    function handleSlotDefinition(slotName, definition){
+      const name = typeof slotName === 'string' ? slotName.trim() : String(slotName ?? '');
+      if(!name) return;
+      const tileKey = parseTileSlotName(name);
+      if(tileKey){
+        tileSlotDefinitions.set(tileKey, definition);
+        return;
+      }
+      applySlotDefinition(slotStyles, name, definition, baseDir, styleDir, extension);
+    }
     if(Array.isArray(merged.slots)){
-      merged.slots.forEach(slot => {
-        const slotName = typeof slot === 'string' ? slot.trim() : '';
-        if(slotName) applySlotDefinition(slotStyles, slotName, null, baseDir, styleDir, extension);
-      });
+      merged.slots.forEach(slot => handleSlotDefinition(slot, null));
     } else if(isPlainObject(merged.slots)){
       for(const [slotName, value] of Object.entries(merged.slots)){
-        const name = typeof slotName === 'string' ? slotName.trim() : String(slotName ?? '');
-        if(name) applySlotDefinition(slotStyles, name, value, baseDir, styleDir, extension);
+        handleSlotDefinition(slotName, value);
       }
     } else if(!manifestSections.slots){
-      discoverSlotNames().forEach(slot => applySlotDefinition(slotStyles, slot, null, baseDir, styleDir, extension));
+      discoverSlotNames().forEach(slot => handleSlotDefinition(slot, null));
     }
     if(manifestSections.slots){
       for(const [slotName, value] of Object.entries(manifestSections.slots)){
-        applySlotDefinition(slotStyles, String(slotName).trim(), value, baseDir, styleDir, extension);
+        handleSlotDefinition(slotName, value);
       }
     }
     const ui = {};
     if(manifestSections.uiVars) ui.vars = { ...manifestSections.uiVars };
     if(Object.keys(slotStyles).length) ui.slots = slotStyles;
+    let tileConfig = null;
+    if(manifestSections.tiles){
+      tileConfig = rewriteSpriteEntry(manifestSections.tiles, baseDir, styleDir);
+      if(typeof tileConfig === 'string') tileConfig = { atlas: tileConfig };
+      else if(!isPlainObject(tileConfig)) tileConfig = {};
+    }
+    if(tileSlotDefinitions.size){
+      if(!isPlainObject(tileConfig)) tileConfig = {};
+      const existingSource = isPlainObject(tileConfig.map) ? tileConfig.map : (isPlainObject(tileConfig.tiles) ? tileConfig.tiles : {});
+      const tileMap = { ...existingSource };
+      for(const [tileKey, definition] of tileSlotDefinitions){
+        if(definition == null) continue;
+        const lowerKey = tileKey.toLowerCase();
+        const upperKey = lowerKey.toUpperCase();
+        const tileId = tileIdByName(tileKey);
+        const idKey = tileId == null ? null : String(tileId);
+        if(Object.prototype.hasOwnProperty.call(tileMap, lowerKey) || Object.prototype.hasOwnProperty.call(tileMap, upperKey) || (idKey != null && Object.prototype.hasOwnProperty.call(tileMap, idKey))){
+          continue;
+        }
+        const rewritten = rewriteSpriteEntry(definition, baseDir, styleDir);
+        if(rewritten == null) continue;
+        tileMap[lowerKey] = rewritten;
+      }
+      const hasEntries = Object.keys(tileMap).length > 0;
+      if(hasEntries || (isPlainObject(existingSource) && Object.keys(existingSource).length)){
+        if(isPlainObject(tileConfig.map)) tileConfig.map = tileMap;
+        else if(isPlainObject(tileConfig.tiles)) tileConfig.tiles = tileMap;
+        else if(hasEntries) tileConfig.map = tileMap;
+      }
+    }
     const skin = {
       id: manifestSections.id || `generated-${styleDir || styleId}`,
       label: manifestSections.label || styleId
     };
     if(Object.keys(ui).length) skin.ui = ui;
-    if(manifestSections.tiles) skin.tiles = rewriteSpriteEntry(manifestSections.tiles, baseDir, styleDir);
+    if(hasTileMapEntries(tileConfig)) skin.tiles = tileConfig;
     if(manifestSections.icons) skin.icons = rewriteSpriteEntry(manifestSections.icons, baseDir, styleDir);
     if(manifestSections.map) skin.map = rewriteSpriteEntry(manifestSections.map, baseDir, styleDir);
     if(manifestSections.meta) skin.meta = { ...manifestSections.meta };
@@ -767,6 +806,31 @@
       if(Object.prototype.hasOwnProperty.call(source, upper)) return source[upper];
     }
     return null;
+  }
+
+  function parseTileSlotName(name){
+    if(typeof name !== 'string') return null;
+    const match = name.trim().match(TILE_SLOT_PATTERN);
+    if(!match) return null;
+    const slug = match[1]?.trim();
+    if(!slug) return null;
+    return slug.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase();
+  }
+
+  function tileIdByName(name){
+    if(!name) return null;
+    const tiles = globalThis.TILE;
+    if(!tiles || typeof tiles !== 'object') return null;
+    const upper = String(name).replace(/[^a-z0-9]+/gi, '_').toUpperCase();
+    if(Object.prototype.hasOwnProperty.call(tiles, upper)) return tiles[upper];
+    return null;
+  }
+
+  function hasTileMapEntries(config){
+    if(!isPlainObject(config)) return false;
+    if(isPlainObject(config.map) && Object.keys(config.map).length) return true;
+    if(isPlainObject(config.tiles) && Object.keys(config.tiles).length) return true;
+    return false;
   }
 
   function tileName(id){
