@@ -131,6 +131,7 @@
         <button class="btn" id="musicToggle" data-skin-label="button-label">Music: Off</button>
         <button class="btn" id="mobileToggle" data-skin-label="button-label">Mobile Controls: Off</button>
         <button class="btn" id="tileCharToggle" data-skin-label="button-label">ASCII Tiles: On</button>
+        <button class="btn" id="tilePreviewBtn" data-skin-label="button-label">Tile Preview</button>
         <button class="btn" id="fogToggle" data-skin-label="button-label">Fog of War: On</button>
         <div class="field">
           <label for="fontScale" data-skin-label="field-label">Font Scale</label>
@@ -172,6 +173,19 @@
         </div>
         <button class="btn" id="settingsClose" data-skin-label="button-label">Close</button>
       </main>
+    </div>
+  </div>
+
+  <div id="tilePreview" role="dialog" aria-modal="true" aria-hidden="true" style="display:none">
+    <div class="win tile-preview" data-skin-slot="tile-preview-window">
+      <header data-skin-slot="tile-preview-header" data-skin-label="window-title">Tile Preview</header>
+      <main data-skin-slot="tile-preview-body">
+        <div class="tile-preview__grid" id="tilePreviewGrid" data-skin-slot="tile-preview-grid"></div>
+        <div class="small tile-preview__empty" id="tilePreviewEmpty" data-skin-label="field-note">Load a skin with terrain tiles to preview them here.</div>
+      </main>
+      <div class="footer" data-skin-slot="tile-preview-footer">
+        <button class="btn" id="tilePreviewClose" data-skin-label="button-label">Close</button>
+      </div>
     </div>
   </div>
 

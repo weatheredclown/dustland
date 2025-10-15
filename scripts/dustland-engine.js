@@ -305,6 +305,8 @@ const playerIcons = [
 ];
 let playerIconIndex = 0;
 let tileCharsEnabled = true;
+let tileCharsLocked = false;
+let tileCharsBeforeLock = true;
 const FOG_OF_WAR_STORAGE_KEY = 'fogOfWarEnabled';
 let fogOfWarEnabled = true;
 const savedFogSetting = globalThis.localStorage?.getItem(FOG_OF_WAR_STORAGE_KEY);
@@ -324,20 +326,184 @@ const DEFAULT_NPC_COLOR = '#9ef7a0';
 const xmlEscapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
 xmlEscapeMap['"'] = '&quot;';
 xmlEscapeMap["'"] = '&#39;';
-function setTileChars(on){
-  tileCharsEnabled = on;
+function updateTileCharButton(){
   const btn=document.getElementById('tileCharToggle');
-  if(btn) btn.textContent = `ASCII Tiles: ${on ? 'On' : 'Off'}`;
+  if(!btn) return;
+  if(tileCharsLocked){
+    btn.textContent='ASCII Tiles: Skin';
+    btn.disabled=true;
+    btn.setAttribute?.('aria-disabled','true');
+    btn.title=btn.title && btn.title.includes('Tile skins') ? btn.title : 'Tile skins provide their own terrain artwork.';
+  }else{
+    btn.textContent=`ASCII Tiles: ${tileCharsEnabled ? 'On' : 'Off'}`;
+    btn.disabled=false;
+    btn.removeAttribute?.('aria-disabled');
+    if(btn.title && btn.title.includes('Tile skins')) btn.removeAttribute?.('title');
+  }
 }
-function toggleTileChars(){ setTileChars(!tileCharsEnabled); }
+function applyTileCharState(on){
+  const next=tileCharsLocked?false:!!on;
+  tileCharsEnabled=next;
+  updateTileCharButton();
+}
+function setTileChars(on){
+  applyTileCharState(on);
+}
+function toggleTileChars(){
+  if(tileCharsLocked) return;
+  applyTileCharState(!tileCharsEnabled);
+}
 globalThis.toggleTileChars = toggleTileChars;
+function setTileCharLock(locked){
+  const next=!!locked;
+  if(next===tileCharsLocked){
+    updateTileCharButton();
+    return;
+  }
+  tileCharsLocked=next;
+  if(tileCharsLocked){
+    tileCharsBeforeLock=tileCharsEnabled;
+    applyTileCharState(false);
+  }else{
+    applyTileCharState(tileCharsBeforeLock);
+  }
+}
+
+let tilePreviewOverlay=null;
+let tilePreviewGrid=null;
+let tilePreviewEmpty=null;
+let tilePreviewOpen=false;
+
+function prettifyTileLabel(name){
+  if(!name) return '';
+  return String(name)
+    .replace(/[_-]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim()
+    .replace(/\b\w/g,ch=>ch.toUpperCase());
+}
+
+function tileLabelForId(id){
+  if(typeof id==='number'){
+    const tiles=globalThis.TILE;
+    if(tiles && typeof tiles==='object'){
+      for(const [name,value] of Object.entries(tiles)){
+        if(value===id) return prettifyTileLabel(name);
+      }
+    }
+    return `Tile ${id}`;
+  }
+  if(typeof id==='string' && id){
+    return prettifyTileLabel(id);
+  }
+  return 'Tile';
+}
+
+function drawTilePreviewSprite(canvas, sprite){
+  if(!canvas || !sprite) return;
+  const ctx=canvas.getContext?.('2d');
+  if(!ctx) return;
+  ctx.imageSmoothingEnabled=false;
+  const size=canvas.width || (typeof TS==='number' ? TS : 16);
+  const render=()=>{
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawSkinSprite(ctx, sprite, 0, 0, size);
+  };
+  if(sprite?.image?.complete){
+    render();
+  }else if(sprite?.image){
+    sprite.image.addEventListener('load', render, { once:true });
+  }
+}
+
+function collectTilePreviewEntries(){
+  const manager=skinManager();
+  const skin=manager?.getCurrentSkin?.();
+  if(!skin?.tiles) return [];
+  const defs=skin.tiles.map || skin.tiles.tiles || {};
+  const seen=new Set();
+  const entries=[];
+  const numericEntries=[];
+  const tiles=globalThis.TILE;
+  if(tiles && typeof tiles==='object'){
+    for(const [name,id] of Object.entries(tiles)){
+      if(!Number.isFinite(id)) continue;
+      const key=`num:${id}`;
+      if(seen.has(key)) continue;
+      const sprite=manager?.getTileSprite?.(id,{ x:0, y:0, seed:0, preview:true });
+      if(!sprite) continue;
+      seen.add(key);
+      numericEntries.push({ id, label: tileLabelForId(id), sprite, numeric:true });
+    }
+  }
+  for(const rawKey of Object.keys(defs)){
+    const numericValue=Number.parseInt(rawKey,10);
+    const isNumeric=Number.isFinite(numericValue);
+    const cacheKey=isNumeric?`num:${numericValue}`:`name:${String(rawKey).toLowerCase()}`;
+    if(seen.has(cacheKey)) continue;
+    const tileId=isNumeric?numericValue:rawKey;
+    const sprite=manager?.getTileSprite?.(tileId,{ x:0, y:0, seed:0, preview:true });
+    if(!sprite) continue;
+    seen.add(cacheKey);
+    const label=isNumeric?tileLabelForId(numericValue):tileLabelForId(rawKey);
+    entries.push({ id: tileId, label, sprite, numeric:isNumeric });
+  }
+  const extraEntries=entries.filter(e=>!e.numeric).sort((a,b)=>a.label.localeCompare(b.label));
+  const numericExtras=entries.filter(e=>e.numeric);
+  return [...numericEntries, ...numericExtras, ...extraEntries];
+}
+
+function renderTilePreview(){
+  if(!tilePreviewGrid) return;
+  const entries=collectTilePreviewEntries();
+  const size=typeof TS==='number' && TS>0 ? TS : 16;
+  tilePreviewGrid.innerHTML='';
+  if(!entries.length){
+    if(tilePreviewEmpty) tilePreviewEmpty.hidden=false;
+    return;
+  }
+  if(tilePreviewEmpty) tilePreviewEmpty.hidden=true;
+  for(const entry of entries){
+    const item=document.createElement('div');
+    item.className='tile-preview__item';
+    const canvas=document.createElement('canvas');
+    canvas.width=size;
+    canvas.height=size;
+    canvas.className='tile-preview__canvas';
+    canvas.style.width=`${size*2}px`;
+    canvas.style.height=`${size*2}px`;
+    drawTilePreviewSprite(canvas, entry.sprite);
+    const label=document.createElement('div');
+    label.className='tile-preview__label';
+    label.textContent=entry.numeric ? `${entry.label} (#${entry.id})` : entry.label;
+    item.appendChild(canvas);
+    item.appendChild(label);
+    tilePreviewGrid.appendChild(item);
+  }
+}
+
+function openTilePreview(){
+  if(!tilePreviewOverlay || !tilePreviewGrid) return;
+  renderTilePreview();
+  tilePreviewOverlay.style.display='flex';
+  tilePreviewOverlay.setAttribute?.('aria-hidden','false');
+  tilePreviewOpen=true;
+}
+
+function closeTilePreview(){
+  if(!tilePreviewOverlay) return;
+  tilePreviewOverlay.style.display='none';
+  tilePreviewOverlay.setAttribute?.('aria-hidden','true');
+  tilePreviewOpen=false;
+}
 if(typeof EventBus?.on === 'function'){
   EventBus.on('skin:changed', ({ skin }) => {
-    if(skin?.tiles && tileCharsEnabled){
-      setTileChars(false);
-    }
+    setTileCharLock(!!skin?.tiles);
+    if(tilePreviewOpen) renderTilePreview();
   });
 }
+const initialSkin=skinManager()?.getCurrentSkin?.();
+setTileCharLock(!!initialSkin?.tiles);
 function setFogOfWar(on, opts = {}){
   fogOfWarEnabled = !!on;
   if(typeof document !== 'undefined'){
@@ -3167,6 +3333,24 @@ function runTests(){
   if(mobileBtn) mobileBtn.onclick=()=>toggleMobileControls();
   const tileCharBtn=document.getElementById('tileCharToggle');
   if(tileCharBtn) tileCharBtn.onclick=()=>toggleTileChars();
+  const tilePreviewBtn=document.getElementById('tilePreviewBtn');
+  tilePreviewOverlay=document.getElementById('tilePreview');
+  tilePreviewGrid=document.getElementById('tilePreviewGrid');
+  tilePreviewEmpty=document.getElementById('tilePreviewEmpty');
+  const tilePreviewClose=document.getElementById('tilePreviewClose');
+  if(tilePreviewBtn) tilePreviewBtn.addEventListener('click', ()=>openTilePreview());
+  if(tilePreviewClose) tilePreviewClose.addEventListener('click', ()=>closeTilePreview());
+  if(tilePreviewOverlay){
+    tilePreviewOverlay.addEventListener('click', evt=>{
+      if(evt.target===tilePreviewOverlay) closeTilePreview();
+    });
+    tilePreviewOverlay.setAttribute?.('aria-hidden', tilePreviewOverlay.style.display==='flex' ? 'false' : 'true');
+  }
+  if(document?.addEventListener){
+    document.addEventListener('keydown', evt=>{
+      if(evt.key==='Escape' && tilePreviewOpen) closeTilePreview();
+    });
+  }
   const fogBtn=document.getElementById('fogToggle');
   if(fogBtn) fogBtn.onclick=()=>toggleFogOfWar();
   const fontScaleSlider=document.getElementById('fontScale');
