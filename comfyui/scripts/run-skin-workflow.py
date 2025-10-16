@@ -32,6 +32,18 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
+try:
+  from PIL import Image
+except ImportError:  # pragma: no cover - optional dependency
+  Image = None
+
+if Image is not None:
+  _PIL_RESAMPLE = getattr(Image, "Resampling", Image).LANCZOS if hasattr(getattr(Image, "Resampling", Image), "LANCZOS") else Image.LANCZOS
+else:
+  _PIL_RESAMPLE = None
+
+_PIL_WARNING_EMITTED = False
+
 
 # --- Logic repurposed from the SkinStyleJSONLoader custom node ---
 
@@ -43,6 +55,9 @@ class SkinAssetPrompt:
   negative_prompt: str
   width: int
   height: int
+  render_width: int
+  render_height: int
+  render_scale: float
   steps: int
   cfg_scale: float
   sampler: str
@@ -393,6 +408,40 @@ class SkinStylePromptGenerator:
       return int(defaults[key])
     return int(fallback)
 
+  def _round_to_multiple(self, value: float, multiple: int) -> int:
+    if multiple <= 1:
+      return max(1, int(round(value)))
+    return max(multiple, int(round(value / multiple) * multiple))
+
+  def _compute_render_dimensions(
+      self,
+      width: int,
+      height: int,
+      min_render_edge: int,
+      max_render_edge: int,
+  ) -> Tuple[int, int, float]:
+    min_render_edge = max(64, int(min_render_edge or 0))
+    max_render_edge = max(min_render_edge, int(max_render_edge or min_render_edge))
+    target_width = max(1, int(width))
+    target_height = max(1, int(height))
+    base_scale = 1.0
+    shortest = min(target_width, target_height)
+    longest = max(target_width, target_height)
+    if shortest < min_render_edge:
+      up_scale = min_render_edge / shortest
+      max_scale = max_render_edge / longest if longest else up_scale
+      base_scale = max(1.0, min(up_scale, max_scale))
+    render_width = self._round_to_multiple(target_width * base_scale, 8)
+    render_height = self._round_to_multiple(target_height * base_scale, 8)
+    render_width = min(render_width, self._round_to_multiple(max_render_edge, 8))
+    render_height = min(render_height, self._round_to_multiple(max_render_edge, 8))
+    if render_width < 64:
+      render_width = 64
+    if render_height < 64:
+      render_height = 64
+    scale = max(render_width / max(1, target_width), render_height / max(1, target_height))
+    return render_width, render_height, scale
+
   def _resolve_numeric(self, asset: Dict[str, Any], style: Dict[str, Any], defaults: Dict[str, Any], key: str, fallback: Any):
     for source in (asset, style, defaults):
       if key in source and source[key] is not None:
@@ -436,6 +485,8 @@ class SkinStylePromptGenerator:
       fallback_cfg: float = 7.0,
       fallback_sampler: str = "dpmpp_2m",
       fallback_scheduler: str = "karras",
+      min_render_edge: int = 768,
+      max_render_edge: int = 1152,
   ) -> Tuple[List[SkinAssetPrompt], str]:
 
     raw = json.loads(style_plan_source)
@@ -492,6 +543,12 @@ class SkinStylePromptGenerator:
           continue
         width = self._resolve_dimension(asset, defaults, "width", fallback_width)
         height = self._resolve_dimension(asset, defaults, "height", fallback_height)
+        render_width, render_height, render_scale = self._compute_render_dimensions(
+            width,
+            height,
+            min_render_edge,
+            max_render_edge,
+        )
         context = self._build_context(raw, style, asset, style_index, asset_index, width, height)
         prompt, negative_prompt = self._collect_prompts(raw, style, asset, context)
         if not prompt:
@@ -542,12 +599,18 @@ class SkinStylePromptGenerator:
         metadata["style_directory"] = style_dir
         metadata["file_stem"] = file_stem
         metadata["relative_path"] = f"{style_dir}/{file_stem}.png"
+        metadata["render_width"] = render_width
+        metadata["render_height"] = render_height
+        metadata["render_scale"] = render_scale
         prompts.append(SkinAssetPrompt(
             name=name,
             prompt=prompt,
             negative_prompt=negative_prompt,
             width=width,
             height=height,
+            render_width=render_width,
+            render_height=render_height,
+            render_scale=render_scale,
             steps=steps,
             cfg_scale=cfg_scale,
             sampler=sampler,
@@ -557,7 +620,12 @@ class SkinStylePromptGenerator:
             style_id=style_id,
             metadata=metadata,
         ))
-        summary_lines.append(f"{style_id}: {slot} → {name} ({width}×{height})")
+        if (render_width, render_height) != (width, height):
+          summary_lines.append(
+              f"{style_id}: {slot} → {name} ({width}×{height} via {render_width}×{render_height})"
+          )
+        else:
+          summary_lines.append(f"{style_id}: {slot} → {name} ({width}×{height})")
 
     summary = "\n".join(summary_lines)
 
@@ -605,8 +673,14 @@ def _print_prompt_block(title: str, text: str) -> None:
 
 def _describe_asset_prompt(asset_prompt: SkinAssetPrompt) -> None:
   """Emit a human-readable summary of the full prompt being queued."""
+  target_dims = f"{asset_prompt.width}x{asset_prompt.height}"
+  render_dims = f"{asset_prompt.render_width}x{asset_prompt.render_height}"
+  render_suffix = ""
+  if render_dims != target_dims:
+    scale_text = f"×{asset_prompt.render_scale:.2f}" if asset_prompt.render_scale != 1 else ""
+    render_suffix = f" (render {render_dims}{scale_text})"
   print(
-      f"Queued prompt for asset '{asset_prompt.name}' ({asset_prompt.width}x{asset_prompt.height}) "
+      f"Queued prompt for asset '{asset_prompt.name}' ({target_dims}{render_suffix}) "
       f"style='{asset_prompt.style_id}' seed={asset_prompt.seed} steps={asset_prompt.steps} "
       f"cfg={asset_prompt.cfg_scale} sampler='{asset_prompt.sampler}' scheduler='{asset_prompt.scheduler}'"
   )
@@ -640,6 +714,33 @@ def _download_image(
   destination.parent.mkdir(parents=True, exist_ok=True)
   destination.write_bytes(data)
   return destination
+
+
+def _ensure_target_dimensions(
+    path: Path,
+    target_width: int,
+    target_height: int,
+    render_width: int,
+    render_height: int,
+) -> bool:
+  global _PIL_WARNING_EMITTED
+  if (target_width, target_height) == (render_width, render_height):
+    return False
+  if Image is None:
+    if not _PIL_WARNING_EMITTED:
+      print("Warning: Pillow is not installed; skipping automatic resizing of renders.")
+      _PIL_WARNING_EMITTED = True
+    return False
+  try:
+    with Image.open(path) as img:
+      if img.width == target_width and img.height == target_height:
+        return False
+      resized = img.resize((target_width, target_height), resample=_PIL_RESAMPLE or Image.LANCZOS)
+      resized.save(path)
+      return True
+  except Exception as exc:
+    print(f"Warning: Failed to resize image {path}: {exc}")
+    return False
 
 
 def download_images_for_prompt(
@@ -688,6 +789,17 @@ def download_images_for_prompt(
       except urllib.error.URLError as exc:
         print(f"Warning: Failed to download image '{filename}' for prompt {prompt_id}: {exc}")
         continue
+      resized = _ensure_target_dimensions(
+          saved_path,
+          asset_prompt.width,
+          asset_prompt.height,
+          asset_prompt.render_width,
+          asset_prompt.render_height,
+      )
+      if resized:
+        print(
+            f"  Resized {saved_path.name} to {asset_prompt.width}x{asset_prompt.height} (from {asset_prompt.render_width}x{asset_prompt.render_height})"
+        )
       saved_paths.append(saved_path)
 
   return saved_paths
@@ -827,8 +939,8 @@ def apply_asset_prompt_to_workflow(workflow: Dict[str, Dict[str, Any]], asset_pr
     latent_node = workflow.get(latent_node_id)
     if latent_node:
       latent_inputs = _ensure_inputs(latent_node)
-      latent_inputs["width"] = asset_prompt.width
-      latent_inputs["height"] = asset_prompt.height
+      latent_inputs["width"] = asset_prompt.render_width
+      latent_inputs["height"] = asset_prompt.render_height
     else:
       warnings.append(f"Latent image node '{latent_node_id}' referenced by the sampler is missing from the workflow; size overrides skipped.")
   else:
