@@ -18,11 +18,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import os
 import random
-import re
 import sys
-import textwrap
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -484,8 +483,6 @@ class SkinStylePromptGenerator:
     prompts: List[SkinAssetPrompt] = []
     summary_lines: List[str] = []
 
-    manifest_prefix = str(raw.get("manifest_filename_prefix") or manifest_filename_prefix)
-
     style_directories: Dict[str, str] = {}
 
     for style_index, style in enumerate(styles):
@@ -542,7 +539,6 @@ class SkinStylePromptGenerator:
           metadata["aria_labels"] = [str(v).strip() for v in aria_labels if str(v).strip()]
         elif isinstance(aria_labels, str) and aria_labels.strip():
           metadata["aria_labels"] = [aria_labels.strip()]
-        metadata["manifest_filename"] = f"{style_dir}/{manifest_prefix}_{style_id}.json"
         metadata["style_directory"] = style_dir
         metadata["file_stem"] = file_stem
         metadata["relative_path"] = f"{style_dir}/{file_stem}.png"
@@ -571,69 +567,16 @@ class SkinStylePromptGenerator:
             prompts_by_style[p.style_id] = []
         prompts_by_style[p.style_id].append(p)
 
-    manifest_paths: List[str] = []
-    manifest_script_paths: List[str] = []
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_dir_resolved = output_dir.resolve()
-    try:
-        repo_root = Path.cwd().resolve()
-        base_dir_rel = output_dir_resolved.relative_to(repo_root)
-        manifest_base_dir = base_dir_rel.as_posix()
-    except ValueError:
-        manifest_base_dir = output_dir_resolved.as_posix()
-
-    for style_id, style_prompts in prompts_by_style.items():
+    asset_directories: List[str] = []
+    for style_id in prompts_by_style:
         style_dir = style_directories.get(style_id) or self._slugify(style_id)
-        manifest_dir = (output_dir / style_dir)
-        manifest_dir.mkdir(parents=True, exist_ok=True)
-        manifest = {}
-        for p in style_prompts:
-            file_stem = p.metadata.get("file_stem") if isinstance(p.metadata, dict) else None
-            if not file_stem:
-                file_stem = Path(p.name).name
-            manifest[p.slot] = f"{style_dir}/{file_stem}.png"
-        manifest_filename = f"{manifest_prefix}_{style_id}.json"
-        manifest_path = manifest_dir / manifest_filename
-        manifest_json = json.dumps(manifest, indent=2)
-        manifest_path.write_text(manifest_json, encoding="utf-8")
-        manifest_paths.append(str(manifest_path))
+        target_dir = (output_dir / style_dir)
+        target_dir.mkdir(parents=True, exist_ok=True)
+        asset_directories.append(target_dir.as_posix())
 
-        manifest_js_filename = f"{manifest_prefix}_{style_id}.js"
-        manifest_js_path = manifest_dir / manifest_js_filename
-        manifest_js_payload = json.dumps(manifest, separators=(",", ":"), sort_keys=True)
-        manifest_js_payload = manifest_js_payload.replace("\\", "\\\\").replace("'", "\\'")
-        manifest_js_content = textwrap.dedent(
-            """
-            (function(){
-              const registry = globalThis.DustlandGeneratedSkinManifests = globalThis.DustlandGeneratedSkinManifests || {};
-              const styleId = %(style_id)s;
-              const entry = {
-                baseDir: %(base_dir)s,
-                styleDir: %(style_dir)s,
-                manifest: JSON.parse('%(manifest)s')
-              };
-              registry[styleId] = entry;
-              try {
-                globalThis.Dustland?.skin?.registerGeneratedSkin?.(styleId, {
-                  baseDir: entry.baseDir,
-                  styleDir: entry.styleDir,
-                  manifest: entry.manifest
-                });
-              } catch (err) { void err; }
-            })();
-            """
-        ).strip() % {
-            "style_id": json.dumps(style_id),
-            "base_dir": json.dumps(manifest_base_dir),
-            "style_dir": json.dumps(style_dir),
-            "manifest": manifest_js_payload,
-        }
-        manifest_js_path.write_text(manifest_js_content + "\n", encoding="utf-8")
-        manifest_script_paths.append(str(manifest_js_path))
-
-    summary += "\n\nSaved manifests:\n" + "\n".join(manifest_paths)
-    if manifest_script_paths:
-        summary += "\n\nSaved manifest scripts:\n" + "\n".join(manifest_script_paths)
+    if asset_directories:
+        summary += "\n\nAsset directories:\n" + "\n".join(asset_directories)
 
     return (prompts, summary)
 
@@ -1044,7 +987,7 @@ def main():
     )
     parser.add_argument("--host", type=str, default="127.0.0.1", help="ComfyUI server host.")
     parser.add_argument("--port", type=int, default=8188, help="ComfyUI server port.")
-    parser.add_argument("--output-dir", type=Path, default=Path("ComfyUI/output"), help="Directory to save manifests.")
+    parser.add_argument("--output-dir", type=Path, default=Path("ComfyUI/output"), help="Directory to save rendered PNGs.")
     parser.add_argument("--checkpoint", type=str, default="v1-5-pruned-emaonly-fp16.safetensors", help="Name of the checkpoint file to use.")
     parser.add_argument("--force-regen", action="store_true", help="Regenerate assets even when the target PNG already exists.")
     args = parser.parse_args()
@@ -1082,13 +1025,9 @@ def main():
     print(summary)
     print("-----------------------")
 
-    manifest_files: Dict[str, str] = {}
     style_dirs: Dict[str, str] = {}
     for prompt in prompts:
         metadata = prompt.metadata if isinstance(prompt.metadata, dict) else {}
-        manifest_name = metadata.get("manifest_filename")
-        if manifest_name and prompt.style_id not in manifest_files:
-            manifest_files[prompt.style_id] = manifest_name
         style_dir = metadata.get("style_directory")
         if style_dir and prompt.style_id not in style_dirs:
             style_dirs[prompt.style_id] = style_dir
@@ -1175,21 +1114,6 @@ def main():
         except ValueError:
             base_dir_str = output_dir.as_posix()
 
-        manifest_payloads: Dict[str, Dict[str, str]] = {}
-        for style_id, manifest_name in manifest_files.items():
-            manifest_path = (args.output_dir / manifest_name).resolve()
-            try:
-                manifest_text = manifest_path.read_text(encoding="utf-8")
-                manifest_json = json.loads(manifest_text)
-                if isinstance(manifest_json, dict):
-                    manifest_payloads[style_id] = manifest_json
-                else:
-                    print(f"Warning: Manifest at {manifest_path} was not an object; skipping preview helper.")
-            except FileNotFoundError:
-                print(f"Warning: Manifest file missing at {manifest_path}; preview helper will omit manifest data.")
-            except json.JSONDecodeError as exc:
-                print(f"Warning: Failed to parse manifest JSON at {manifest_path}: {exc}")
-
         print("\nPreview tip:")
         print("  1. Open dustland.html directly in your browser (double-click works).")
         print("  2. Open Settings, enter one of these style IDs, then press Enter or click Load Skin:")
@@ -1198,26 +1122,17 @@ def main():
         print("  3. Or run one of these in the developer console:")
         for style_id in sorted(style_dirs):
             print(f"\n     // {style_id}")
-            manifest_json = manifest_payloads.get(style_id)
-            if manifest_json:
-                manifest_args = json.dumps(manifest_json, indent=2, sort_keys=True)
-                manifest_block = textwrap.indent(manifest_args, "       ")
-                print(f"     Dustland.skin.loadGeneratedSkin('{style_id}', {{ baseDir: '{base_dir_str}', manifest:")
-                print(manifest_block)
-                print("     });")
+            style_dir = style_dirs.get(style_id) or style_id
+            args_list = {"baseDir": base_dir_str, "styleDir": style_dir}
+            snippet = json.dumps(args_list, indent=2)
+            indented = "\n".join(f"       {line}" for line in snippet.splitlines())
+            print(f"     Dustland.skin.loadGeneratedSkin('{style_id}', {{")
+            print(indented)
+            print("     });")
+            if base_dir_str.rstrip('/') == 'ComfyUI/output' and style_dir == style_id:
+                print(f"     // loadSkin('{style_id}') works when you keep the default output path.")
             else:
-                print(f"     Dustland.skin.loadGeneratedSkin('{style_id}', {{ baseDir: '{base_dir_str}' }});")
-                print("     // Tip: Pass the manifest object above so each slot maps to the generated file.")
-            print(f"     // loadSkin('{style_id}') works as a shortcut.")
-            manifest_name = manifest_files.get(style_id)
-            if manifest_name:
-                manifest_path = (args.output_dir / manifest_name).resolve()
-                try:
-                    manifest_rel = manifest_path.relative_to(repo_root)
-                    manifest_hint = manifest_rel.as_posix()
-                except ValueError:
-                    manifest_hint = manifest_path.as_posix()
-                print(f"     // Manifest: {manifest_hint}")
+                print(f"     // Update baseDir/styleDir if you move the renders.")
 
 
 if __name__ == "__main__":

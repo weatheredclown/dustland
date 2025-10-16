@@ -404,8 +404,6 @@ class SkinStyleJSONLoader:
     prompts: List[SkinAssetPrompt] = []
     summary_lines: List[str] = []
 
-    manifest_prefix = str(raw.get("manifest_filename_prefix") or manifest_filename_prefix)
-
     style_directories: Dict[str, str] = {}
 
     for style_index, style in enumerate(styles):
@@ -445,7 +443,6 @@ class SkinStyleJSONLoader:
             "width": width,
             "height": height,
         }
-        metadata["manifest_filename"] = f"{style_dir}/{manifest_prefix}_{style_id}.json"
         metadata["style_directory"] = style_dir
         metadata["file_stem"] = file_stem
         prompts.append(SkinAssetPrompt(
@@ -474,23 +471,15 @@ class SkinStyleJSONLoader:
         prompts_by_style[p.style_id].append(p)
 
     output_dir = Path(folder_paths.get_output_directory())
-    manifest_paths = []
-    for style_id, style_prompts in prompts_by_style.items():
+    asset_directories: List[str] = []
+    for style_id in prompts_by_style:
         style_dir = style_directories.get(style_id) or self._slugify(style_id)
-        manifest_dir = output_dir / style_dir
-        manifest_dir.mkdir(parents=True, exist_ok=True)
-        manifest = {}
-        for p in style_prompts:
-            file_stem = p.metadata.get("file_stem") if isinstance(p.metadata, dict) else None
-            if not file_stem:
-                file_stem = Path(p.name).name
-            manifest[p.slot] = f"{style_dir}/{file_stem}.png"
-        manifest_filename = f"{manifest_prefix}_{style_id}.json"
-        manifest_path = manifest_dir / manifest_filename
-        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-        manifest_paths.append(str(manifest_path))
+        target_dir = output_dir / style_dir
+        target_dir.mkdir(parents=True, exist_ok=True)
+        asset_directories.append(target_dir.as_posix())
 
-    summary += "\n\nSaved manifests:\n" + "\n".join(manifest_paths)
+    if asset_directories:
+        summary += "\n\nAsset directories:\n" + "\n".join(asset_directories)
 
     return (prompts, summary)
 

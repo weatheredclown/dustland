@@ -111,3 +111,26 @@ test('loadGeneratedSkin builds tile sprites from tile_* manifest slots', () => {
   assert.equal(rockSprite.image._src, 'ComfyUI/output/emerald-grid/rock.png');
 });
 
+test('loadGeneratedSkin infers tile sprites when slots omit manifest paths', () => {
+  const sandbox = createSkinSandbox();
+  const skinApi = loadSkinManager(sandbox);
+  assert.ok(skinApi, 'skin API should be available');
+
+  const styleId = 'emerald-grid';
+
+  const result = skinApi.loadGeneratedSkin(styleId, {
+    baseDir: 'ComfyUI/output',
+    styleDir: styleId,
+    slots: {
+      tile_sand: null,
+      tile_rock: null
+    }
+  });
+
+  assert.ok(result?.tiles, 'generated skin should include tiles');
+  const tileMap = result.tiles.map || result.tiles.tiles;
+  assert.ok(tileMap, 'tile map should exist');
+  assert.equal(tileMap.sand, 'ComfyUI/output/emerald-grid/tile_sand.png');
+  assert.equal(tileMap.rock, 'ComfyUI/output/emerald-grid/tile_rock.png');
+});
+

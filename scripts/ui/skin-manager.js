@@ -444,6 +444,16 @@
     const styleDir = merged.styleDir;
     const baseDir = merged.baseDir;
     const extension = merged.extension;
+    const normalizedExtension = typeof extension === 'string' ? extension : '';
+    const normalizedExtensionLower = normalizedExtension.toLowerCase();
+    function defaultSlotFilename(name){
+      const base = typeof name === 'string' ? name.trim() : '';
+      if(!base) return null;
+      if(!normalizedExtension) return base;
+      const lower = base.toLowerCase();
+      if(lower.endsWith(normalizedExtensionLower)) return base;
+      return `${base}${normalizedExtension}`;
+    }
     const slotStyles = {};
     const tileSlotDefinitions = new Map();
     function handleSlotDefinition(slotName, definition){
@@ -451,7 +461,14 @@
       if(!name) return;
       const tileKey = parseTileSlotName(name);
       if(tileKey){
-        tileSlotDefinitions.set(tileKey, definition);
+        let effectiveDefinition = definition;
+        if(effectiveDefinition == null){
+          effectiveDefinition = defaultSlotFilename(name);
+        }
+        if(effectiveDefinition != null){
+          tileSlotDefinitions.set(tileKey, effectiveDefinition);
+        }
+        applySlotDefinition(slotStyles, name, definition, baseDir, styleDir, extension);
         return;
       }
       applySlotDefinition(slotStyles, name, definition, baseDir, styleDir, extension);
