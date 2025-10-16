@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+import math
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
 import random
@@ -29,6 +30,8 @@ class GameAssetPrompt:
   negative_prompt: str
   width: int
   height: int
+  render_width: int
+  render_height: int
   steps: int
   cfg_scale: float
   sampler: str
@@ -97,6 +100,37 @@ class GameAssetJSONLoader:
       raise FileNotFoundError(f"Could not find JSON file at {candidate}")
     return json.loads(candidate.read_text(encoding="utf-8"))
 
+  def _round_to_multiple(self, value: float, multiple: int = 8) -> int:
+    if multiple <= 0:
+      return max(1, int(round(value)))
+    return max(multiple, int(math.ceil(float(value) / multiple) * multiple))
+
+  def _constrain_render_dimensions(
+      self,
+      width: float,
+      height: float,
+      target_width: int,
+      target_height: int,
+      min_side: float,
+      max_side: float,
+      multiple: int,
+  ) -> tuple[int, int]:
+    render_width = float(width)
+    render_height = float(height)
+    longest = max(render_width, render_height)
+    if min_side and longest < min_side:
+      scale = float(min_side) / longest
+      render_width *= scale
+      render_height *= scale
+      longest = max(render_width, render_height)
+    if max_side and longest > max_side:
+      scale = float(max_side) / longest
+      render_width *= scale
+      render_height *= scale
+    render_width = max(target_width, self._round_to_multiple(render_width, multiple))
+    render_height = max(target_height, self._round_to_multiple(render_height, multiple))
+    return int(render_width), int(render_height)
+
   def _normalize_asset(
       self,
       raw: Dict[str, Any],
@@ -117,12 +151,35 @@ class GameAssetJSONLoader:
     scheduler = str(raw.get("scheduler", defaults["scheduler"]))
     seed_value = raw.get("seed")
     seed = int(seed_value if seed_value is not None else random.randint(0, 2**32 - 1))
+    render_multiple = int(raw.get("render_multiple", defaults["render_multiple"]))
+    render_scale = float(raw.get("render_scale", defaults["render_scale"]))
+    min_render = raw.get("min_render_size", defaults["min_render_size"]) or 0
+    max_render = raw.get("max_render_size", defaults["max_render_size"]) or 0
+    render_width = raw.get("render_width")
+    render_height = raw.get("render_height")
+    if render_width is None and render_height is None:
+      render_width = width * render_scale
+      render_height = height * render_scale
+    else:
+      render_width = float(render_width or width)
+      render_height = float(render_height or height)
+    render_width, render_height = self._constrain_render_dimensions(
+        render_width,
+        render_height,
+        width,
+        height,
+        float(min_render) if min_render else 0.0,
+        float(max_render) if max_render else 0.0,
+        render_multiple,
+    )
     return GameAssetPrompt(
         name=name,
         prompt=prompt,
         negative_prompt=negative_prompt,
         width=width,
         height=height,
+        render_width=render_width,
+        render_height=render_height,
         steps=steps,
         cfg_scale=cfg_scale,
         sampler=sampler,
@@ -148,6 +205,7 @@ class GameAssetJSONLoader:
     else:
       raise TypeError("JSON root must be an object or an array")
 
+    template_defaults = data if isinstance(data, dict) else {}
     defaults = {
         "width": fallback_width,
         "height": fallback_height,
@@ -155,6 +213,10 @@ class GameAssetJSONLoader:
         "cfg": fallback_cfg,
         "sampler": fallback_sampler,
         "scheduler": fallback_scheduler,
+        "render_scale": template_defaults.get("render_scale", 1.0),
+        "min_render_size": template_defaults.get("min_render_size", 0),
+        "max_render_size": template_defaults.get("max_render_size", 0),
+        "render_multiple": template_defaults.get("render_multiple", 8),
     }
 
     normalized = [self._normalize_asset(asset, idx, defaults) for idx, asset in enumerate(assets)]
@@ -203,6 +265,20 @@ class GameAssetBatchRenderer:
     latent, = latent_builder.generate(width, height, 1)
     return latent
 
+  def _resize_image(self, image: torch.Tensor, width: int, height: int) -> torch.Tensor:
+    current_height = image.shape[1]
+    current_width = image.shape[2]
+    if current_width == width and current_height == height:
+      return image
+    antialiased = torch.nn.functional.interpolate(
+        image.permute(0, 3, 1, 2),
+        size=(height, width),
+        mode="bicubic",
+        align_corners=False,
+        antialias=True,
+    )
+    return antialiased.permute(0, 2, 3, 1)
+
   def render(
       self,
       model,
@@ -221,7 +297,7 @@ class GameAssetBatchRenderer:
       negative_prompt = "\n".join(filter(None, [base_negative_prompt.strip(), asset.negative_prompt.strip()]))
       negative = self._get_conditioning(clip, negative_prompt) if negative_prompt else self._get_conditioning(clip, "")
 
-      latent = self._build_latent(asset.width, asset.height)
+      latent = self._build_latent(asset.render_width, asset.render_height)
       sampler = nodes.common_ksampler
       latent_out = sampler(
           model=model,
@@ -236,6 +312,7 @@ class GameAssetBatchRenderer:
       )[0]
 
       image = self._decode_latent(vae, latent_out)
+      image = self._resize_image(image, asset.width, asset.height)
       save_results = saver.save_images(image, filename_prefix=asset.name)
       filenames.extend(result["filename"] for result in save_results["ui"]["images"])
 
