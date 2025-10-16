@@ -14,9 +14,13 @@ use the new art set immediately.【F:scripts/ui/skin-manager.js†L5-L343】【F
 To ship a full reskin you provide:
 
 - Texture and sprite assets that match the sizes in the [UI skin asset
-  specification](../../../docs/design/ui-skin-asset-spec.md).【F:docs/design/ui-skin-asset-spec.md†L1-L119】
-- A manifest object (or module) that wires those assets into the fields the
-  skin manager expects (`skin.ui`, `skin.tiles`, `skin.icons`, etc.).【F:scripts/ui/skin-manager.js†L200-L343】【F:scripts/ui/skin-manager.js†L360-L463】
+  specification](../../../docs/design/ui-skin-asset-spec.md). Save each render as
+  `<slot-name>.png` inside a folder named after the skin ID (for example
+  `emerald-grid/panel_background.png`). The runtime automatically resolves tile,
+  UI, and HUD art from that layout.【F:scripts/ui/skin-manager.js†L240-L463】
+- Optional overrides for CSS variables or atlas metadata when you need more than
+  the default `<slot>.png` lookup. You can register those overrides with
+  `Dustland.skin.registerSkin()` the same way handcrafted skins do.【F:scripts/ui/skin-manager.js†L1124-L1196】
 
 ## Skin style workflow overview
 
@@ -76,12 +80,20 @@ quickly audition new looks without editing files.【F:comfyui/custom_nodes/dustl
     summary emitted by the loader.【F:comfyui/custom_nodes/dustland_skin_batch/__init__.py†L187-L253】【F:comfyui/examples/comfyui-skin-style-workflow.json†L48-L118】
 
 Generated files land in ComfyUI's `output/` directory inside per-style folders
-(`output/emerald-grid/`, `output/sunset-vapor/`, etc.). Each folder includes a
-manifest plus the generated PNGs, so you can drop them into the repository and
-preview them immediately with `Dustland.skin.loadGeneratedSkin('emerald-grid',
-{ manifest: {/*...*/} })` or the new **Load Skin** control in the Settings
-menu. The CLI helper prints the manifest payload for you after each batch so
-slots such as `panel_header_overlay` point at the freshly rendered textures.
+(`output/emerald-grid/`, `output/sunset-vapor/`, etc.). Each folder now contains
+only the rendered PNGs; no manifest is required. Drop the folder into
+`ComfyUI/output/` inside the Dustland repo and preview it with the **Load Skin**
+control or by calling:
+
+```js
+Dustland.skin.loadGeneratedSkin('emerald-grid', {
+  baseDir: 'ComfyUI/output',
+  styleDir: 'emerald-grid'
+});
+```
+
+The CLI prints the helper call for every style so you can copy-paste it while
+ComfyUI is still running.
 
 ## Troubleshooting missing nodes
 

@@ -3389,101 +3389,25 @@ function runTests(){
   const skinPreviewButton=document.getElementById('skinPreviewLoad');
   const skinPreviewStatus=document.getElementById('skinPreviewStatus');
   if(skinPreviewInput && skinPreviewButton){
-    const manifestLoads=new Map();
     const DEFAULT_GENERATED_SKIN_BASE_DIR='ComfyUI/output';
-    const normalizeManifestEntry=input=>{
-      if(!input || typeof input!=='object') return null;
-      const entry={};
-      if(typeof input.baseDir==='string' && input.baseDir.trim()) entry.baseDir=input.baseDir.trim().replace(/\\/g,'/').replace(/\/+$/,'');
-      if(typeof input.styleDir==='string' && input.styleDir.trim()) entry.styleDir=input.styleDir.trim().replace(/\\/g,'/').replace(/^\/+|\/+$/g,'');
-      const manifest=input.manifest;
-      if(manifest && typeof manifest==='object' && !Array.isArray(manifest)) entry.manifest=manifest;
-      return Object.keys(entry).length?entry:null;
-    };
-    const registerManifestEntry=(styleId, entry)=>{
-      if(!styleId || !entry) return;
-      try{
-        globalThis.Dustland?.skin?.registerGeneratedSkin?.(styleId, {
-          baseDir: entry.baseDir,
-          styleDir: entry.styleDir,
-          manifest: entry.manifest
-        });
-      }catch(err){ void err; }
-    };
-    const loadManifestScript=(styleId, baseDirHint, styleDirHint)=>{
-      const immediate=normalizeManifestEntry(globalThis.DustlandGeneratedSkinManifests?.[styleId]);
-      if(immediate){
-        registerManifestEntry(styleId, immediate);
-        return Promise.resolve(immediate);
-      }
-      if(manifestLoads.has(styleId)) return manifestLoads.get(styleId);
-      const doc=typeof document!=='undefined'?document:null;
-      if(!doc?.createElement) return Promise.reject(new Error('Document is not available'));
-      const target=doc.head || doc.documentElement || doc.body;
-      if(!target) return Promise.reject(new Error('Unable to attach manifest script'));
-      const baseDir=(typeof baseDirHint==='string' && baseDirHint.trim()?baseDirHint.trim():DEFAULT_GENERATED_SKIN_BASE_DIR)
-        .replace(/\\/g,'/').replace(/\/+$/,'');
-      const styleDir=(typeof styleDirHint==='string' && styleDirHint.trim()?styleDirHint.trim():styleId)
-        .replace(/\\/g,'/').replace(/^\/+|\/+$/g,'');
-      const fileName=`skin_manifest_${styleId}.js`;
-      const parts=[];
-      if(baseDir) parts.push(baseDir);
-      if(styleDir) parts.push(styleDir);
-      parts.push(fileName);
-      const scriptSrc=parts.join('/');
-      const scriptId=`skinManifest:${styleId}`;
-      const existing=doc.getElementById?.(scriptId);
-      if(existing) existing.remove?.();
-      const script=doc.createElement('script');
-      script.id=scriptId;
-      script.async=true;
-      script.src=scriptSrc;
-      const promise=new Promise((resolve,reject)=>{
-        script.onload=()=>{
-          const loaded=normalizeManifestEntry(globalThis.DustlandGeneratedSkinManifests?.[styleId]);
-          if(loaded){
-            registerManifestEntry(styleId, loaded);
-            resolve(loaded);
-          }else{
-            reject(new Error('Manifest script loaded without data'));
-          }
-        };
-        script.onerror=evt=>{
-          script.remove?.();
-          reject(evt instanceof Error?evt:new Error('Failed to load manifest script'));
-        };
-      });
-      manifestLoads.set(styleId, promise.finally(()=>manifestLoads.delete(styleId)));
-      target.appendChild(script);
-      return manifestLoads.get(styleId);
-    };
     const updateSkinStatus=(text,isError=false)=>{
       if(!skinPreviewStatus) return;
       skinPreviewStatus.textContent=text || '';
       skinPreviewStatus.classList.toggle('is-error', !!isError);
     };
-    const applySkin=(styleId, entry)=>{
+    const buildOverrides=(styleId)=>{
       const manager=globalThis.Dustland?.skin;
-      if(!manager?.loadGeneratedSkin) return false;
-      const normalized=normalizeManifestEntry(entry);
-      if(normalized) registerManifestEntry(styleId, normalized);
-      const options=normalized?{
-        baseDir: normalized.baseDir,
-        styleDir: normalized.styleDir,
-        manifest: normalized.manifest
-      }:undefined;
-      try{
-        const loaded=manager.loadGeneratedSkin(styleId, options);
-        if(loaded){
-          updateSkinStatus(`Previewing "${styleId}".`);
-          return true;
-        }
-      }catch(err){
-        console.error('Failed to load skin preview', err);
-        updateSkinStatus('Failed to load skin preview.', true);
-        return true;
+      const stored=manager?.getGeneratedSkinConfig?.(styleId);
+      const overrides={};
+      if(stored && typeof stored==='object'){
+        if(typeof stored.baseDir==='string' && stored.baseDir.trim()) overrides.baseDir=stored.baseDir;
+        if(typeof stored.styleDir==='string' && stored.styleDir.trim()) overrides.styleDir=stored.styleDir;
+        if(typeof stored.extension==='string' && stored.extension.trim()) overrides.extension=stored.extension;
+        if(Object.prototype.hasOwnProperty.call(stored,'slots')) overrides.slots=stored.slots;
       }
-      return false;
+      if(!('baseDir' in overrides)) overrides.baseDir=DEFAULT_GENERATED_SKIN_BASE_DIR;
+      if(!('styleDir' in overrides)) overrides.styleDir=styleId;
+      return overrides;
     };
     const loadPreview=()=>{
       const styleId=skinPreviewInput.value.trim();
@@ -3492,21 +3416,19 @@ function runTests(){
         return;
       }
       const manager=globalThis.Dustland?.skin;
+      if(!manager?.loadGeneratedSkin){
+        updateSkinStatus('Skin preview unavailable.', true);
+        return;
+      }
+      updateSkinStatus('Loading skin preview…');
       try{
-        const stored=normalizeManifestEntry(manager?.getGeneratedSkinConfig?.(styleId));
-        if(applySkin(styleId, stored)) return;
-        const cached=normalizeManifestEntry(globalThis.DustlandGeneratedSkinManifests?.[styleId]);
-        if(applySkin(styleId, cached)) return;
-        const baseDirHint=stored?.baseDir || cached?.baseDir || DEFAULT_GENERATED_SKIN_BASE_DIR;
-        const styleDirHint=stored?.styleDir || cached?.styleDir || null;
-        updateSkinStatus('Loading skin manifest…');
-        loadManifestScript(styleId, baseDirHint, styleDirHint).then(entry=>{
-          if(applySkin(styleId, entry)) return;
+        const overrides=buildOverrides(styleId);
+        const loaded=manager.loadGeneratedSkin(styleId, overrides);
+        if(loaded){
+          updateSkinStatus(`Previewing "${styleId}".`);
+        }else{
           updateSkinStatus(`No assets found for "${styleId}".`, true);
-        }).catch(err=>{
-          console.error('Failed to load skin manifest', err);
-          updateSkinStatus(`No assets found for "${styleId}".`, true);
-        });
+        }
       }catch(err){
         console.error('Failed to load skin preview', err);
         updateSkinStatus('Failed to load skin preview.', true);

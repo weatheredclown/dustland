@@ -46,7 +46,7 @@ To run the example workflow with the example style plan, use the following comma
 python comfyui/scripts/run-skin-workflow.py comfyui/examples/comfyui-skin-style-workflow.json comfyui/examples/skin_style_plan.json
 ```
 
-The script will then connect to the ComfyUI server, queue the prompt, and print progress messages to the console. When each asset finishes rendering, the CLI downloads the resulting PNG into the directory provided by `--output-dir` (default `ComfyUI/output`) and writes/updates the per-style manifest JSON alongside the images.
+The script will then connect to the ComfyUI server, queue the prompt, and print progress messages to the console. When each asset finishes rendering, the CLI downloads the resulting PNG into the directory provided by `--output-dir` (default `ComfyUI/output`).
 
 > **Automatic slot discovery**: the CLI now scans the repository for `data-skin-slot` attributes before the run. Any new UI slots
 > automatically add placeholder entries to the generation plan so fresh Dustland builds pick up new background or overlay assets
@@ -55,23 +55,19 @@ The script will then connect to the ComfyUI server, queue the prompt, and print 
 
 ## Previewing the skin inside Dustland
 
-The CLI now prints the relative skin directories and a call to the new helper, `Dustland.skin.loadGeneratedSkin()`. Previewing a render no longer requires `fetch()` calls (which fail on `file:` origins). Instead:
+The CLI now prints the relative skin directories alongside a helper call to `Dustland.skin.loadGeneratedSkin()`. Previewing a render no longer requires manifest files or script tags. Instead:
 
 1. Double-click `dustland.html` to open it directly in your browser.
 2. Open **Settings**, type the style ID reported by the CLI (for example `emerald-grid`), then press **Enter** or click **Load Skin**.
-3. Alternatively, paste one of the console snippets the CLI prints. The script now inlines the manifest mapping so each UI slot points at the correct generated PNG:
+3. Alternatively, paste one of the console snippets the CLI prints. Each snippet simply points the skin manager at your output directory:
 
    ```js
    Dustland.skin.loadGeneratedSkin('emerald-grid', {
      baseDir: 'ComfyUI/output',
-     manifest: {
-       "panel_background": "emerald-grid/panel_background.png",
-       "panel_header_overlay": "emerald-grid/panel_header_overlay.png"
-       // ...more slots trimmed for brevity...
-     }
+     styleDir: 'emerald-grid'
    });
-   // Shortcut helper:
+   // Shortcut helper when using the default output path:
    loadSkin('emerald-grid');
    ```
 
-Generated PNGs are grouped under `ComfyUI/output/<style-id>/`. Each folder now contains its manifest (for example `ComfyUI/output/emerald-grid/skin_manifest_emerald-grid.json`) which the CLI reads to assemble the preview snippet. You can still inspect the JSON directly or feed it into automation scripts when needed.
+Generated PNGs are grouped under `ComfyUI/output/<style-id>/`. The CLI writes each slot as `<slot-name>.png`, so the game can look up terrain and UI art by combining the selected skin ID with the expected filename (for example `emerald-grid/tile_sand.png`). No additional manifest files are required—the in-game Tile Preview resolves the same filenames you would ship with the skin.

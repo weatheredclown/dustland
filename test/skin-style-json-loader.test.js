@@ -46,10 +46,10 @@ prompts, summary = loader.load(json_source, "", "manifest", 64, 64, 10, 7.0, "sa
 assert len(prompts) == 1, prompts
 prompt = prompts[0]
 assert prompt.slot == "panel_background"
-manifest_path = pathlib.Path(tmpdir.name) / "alpha" / "manifest_alpha.json"
-assert manifest_path.exists(), manifest_path
-manifest = json.loads(manifest_path.read_text())
-assert manifest["panel_background"] == f"{prompt.name}.png"
+asset_dir = pathlib.Path(tmpdir.name) / "alpha"
+assert asset_dir.exists() and asset_dir.is_dir(), asset_dir
+manifest_path = asset_dir / "manifest_alpha.json"
+assert not manifest_path.exists(), manifest_path
 print("success")
 tmpdir.cleanup()
 `;
@@ -116,10 +116,12 @@ assert len(prompts) >= 1, prompts
 target = next((p for p in prompts if p.slot == 'panel'), None)
 assert target is not None, prompts
 assert target.width == 128 and target.height == 128
-manifest_path = pathlib.Path(tmpdir.name) / 'alpha' / 'custom_alpha.json'
-assert manifest_path.exists(), manifest_path
-manifest = json.loads(manifest_path.read_text())
-assert manifest['panel'] == f"alpha/{target.metadata['file_stem']}.png"
+asset_dir = pathlib.Path(tmpdir.name) / 'alpha'
+assert asset_dir.exists() and asset_dir.is_dir(), asset_dir
+manifest_path = asset_dir / 'custom_alpha.json'
+assert not manifest_path.exists(), manifest_path
+assert 'Asset directories' in summary
+assert asset_dir.as_posix() in summary
 print('success')
 tmpdir.cleanup()
 `;
@@ -242,7 +244,10 @@ assert 'ui_button_start' in slots
 assert 'enemy_drone' in slots
 
 manifest_path = pathlib.Path(tmpdir.name) / 'default' / 'manifest_default.json'
-assert manifest_path.exists(), manifest_path
+asset_dir = manifest_path.parent
+assert asset_dir.exists() and asset_dir.is_dir(), asset_dir
+assert not manifest_path.exists(), manifest_path
+assert 'Asset directories' in summary
 
 tmpdir.cleanup()
 `;
@@ -286,11 +291,10 @@ assert first.sampler == 'euler' and first.scheduler == 'normal'
 assert second.slot == 'enemy_drone'
 assert second.width == 640 and second.height == 640
 manifest_path = pathlib.Path(tmpdir.name) / 'default' / 'manifest_default.json'
-assert manifest_path.exists(), manifest_path
-manifest = json.loads(manifest_path.read_text())
-assert manifest['ui_button_start'].endswith('/ui_button_start.png')
-assert manifest['enemy_drone'].endswith('/enemy_drone.png')
-assert 'Saved manifests:' in summary
+asset_dir = manifest_path.parent
+assert asset_dir.exists() and asset_dir.is_dir(), asset_dir
+assert not manifest_path.exists(), manifest_path
+assert 'Asset directories' in summary
 print('success')
 tmpdir.cleanup()
 `;
