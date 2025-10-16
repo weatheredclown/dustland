@@ -7,6 +7,9 @@
   "steps": 32,
   "sampler": "dpmpp_2m",
   "scheduler": "karras",
+  "render_scale": 2.0,
+  "min_render_size": 1024,
+  "max_render_size": 1536,
   "styles": [
     {
       "id": "emerald-grid",

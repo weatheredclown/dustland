@@ -48,6 +48,10 @@ python comfyui/scripts/run-skin-workflow.py comfyui/examples/comfyui-skin-style-
 
 The script will then connect to the ComfyUI server, queue the prompt, and print progress messages to the console. When each asset finishes rendering, the CLI downloads the resulting PNG into the directory provided by `--output-dir` (default `ComfyUI/output`).
 
+The generator now renders UI textures at a super-sampled resolution before downscaling to the target `width`/`height`. Plan
+fields such as `render_scale`, `min_render_size`, and `max_render_size` control this oversampling step and appear in the CLI
+output so you can confirm which assets are rendered above their final size.【F:comfyui/scripts/run-skin-workflow.py†L538-L632】
+
 > **Automatic slot discovery**: the CLI now scans the repository for `data-skin-slot` attributes before the run. Any new UI slots
 > automatically add placeholder entries to the generation plan so fresh Dustland builds pick up new background or overlay assets
 > without manual bookkeeping. You can still provide explicit overrides in your style plan JSON to customise prompts, sizes, or
