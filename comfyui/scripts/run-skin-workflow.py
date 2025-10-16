@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import os
 import random
@@ -31,6 +32,16 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+
+try:
+  from PIL import Image
+  try:
+    _PIL_RESAMPLING = Image.Resampling.LANCZOS  # type: ignore[attr-defined]
+  except AttributeError:
+    _PIL_RESAMPLING = Image.LANCZOS  # type: ignore[attr-defined]
+except ImportError:  # pragma: no cover - optional dependency
+  Image = None
+  _PIL_RESAMPLING = None
 
 
 # --- Logic repurposed from the SkinStyleJSONLoader custom node ---
@@ -58,6 +69,52 @@ class _SafeFormatDict(dict):
   def __missing__(self, key: str) -> str:
     return "{" + key + "}"
 
+
+def _round_up_to_multiple(value: float, multiple: int = 8) -> int:
+  if multiple <= 0:
+    return int(round(value))
+  if value <= 0:
+    return multiple
+  return int(math.ceil(value / multiple) * multiple)
+
+
+def enhance_prompt_render_sizes(
+    prompts: Iterable[SkinAssetPrompt],
+    *,
+    min_side: int,
+    max_side: int,
+) -> None:
+  if min_side <= 0 and max_side <= 0:
+    return
+  for prompt in prompts:
+    metadata = prompt.metadata if isinstance(prompt.metadata, dict) else {}
+    target_width = int(metadata.get("target_width") or prompt.width)
+    target_height = int(metadata.get("target_height") or prompt.height)
+    metadata.setdefault("target_width", target_width)
+    metadata.setdefault("target_height", target_height)
+    longest = max(target_width, target_height)
+    if longest <= 0:
+      metadata["render_width"] = prompt.width
+      metadata["render_height"] = prompt.height
+      prompt.metadata = metadata
+      continue
+    scale = 1.0
+    if min_side > 0 and longest < min_side:
+      scale = max(scale, min_side / longest)
+    if max_side > 0 and longest * scale > max_side:
+      scale = min(scale, max_side / longest)
+    scale = max(scale, 1.0)
+    render_width = target_width
+    render_height = target_height
+    if scale > 1.0001:
+      render_width = _round_up_to_multiple(round(target_width * scale), 8)
+      render_height = _round_up_to_multiple(round(target_height * scale), 8)
+    prompt.width = int(render_width)
+    prompt.height = int(render_height)
+    metadata["render_width"] = prompt.width
+    metadata["render_height"] = prompt.height
+    metadata["render_scale"] = scale
+    prompt.metadata = metadata
 
 class SkinStylePromptGenerator:
   """Expand a Dustland skin template into prompts for every requested style."""
@@ -586,6 +643,8 @@ class SkinStylePromptGenerator:
             "style_name": context.get("style_name"),
             "width": width,
             "height": height,
+            "target_width": width,
+            "target_height": height,
         }
         if context.get("slot_description"):
           metadata["description"] = context["slot_description"]
@@ -668,8 +727,14 @@ def _print_prompt_block(title: str, text: str) -> None:
 
 def _describe_asset_prompt(asset_prompt: SkinAssetPrompt) -> None:
   """Emit a human-readable summary of the full prompt being queued."""
+  metadata = asset_prompt.metadata if isinstance(asset_prompt.metadata, dict) else {}
+  target_width = int(metadata.get("target_width") or asset_prompt.width)
+  target_height = int(metadata.get("target_height") or asset_prompt.height)
+  size_text = f"{asset_prompt.width}x{asset_prompt.height}"
+  if (asset_prompt.width, asset_prompt.height) != (target_width, target_height):
+    size_text = f"{asset_prompt.width}x{asset_prompt.height}→{target_width}x{target_height}"
   print(
-      f"Queued prompt for asset '{asset_prompt.name}' ({asset_prompt.width}x{asset_prompt.height}) "
+      f"Queued prompt for asset '{asset_prompt.name}' ({size_text}) "
       f"style='{asset_prompt.style_id}' seed={asset_prompt.seed} steps={asset_prompt.steps} "
       f"cfg={asset_prompt.cfg_scale} sampler='{asset_prompt.sampler}' scheduler='{asset_prompt.scheduler}'"
   )
@@ -754,6 +819,37 @@ def download_images_for_prompt(
       saved_paths.append(saved_path)
 
   return saved_paths
+
+
+_PIL_WARNING_EMITTED = False
+
+
+def downscale_images_to_target(paths: Iterable[Path], asset_prompt: SkinAssetPrompt) -> None:
+  global _PIL_WARNING_EMITTED
+  if not paths:
+    return
+  metadata = asset_prompt.metadata if isinstance(asset_prompt.metadata, dict) else {}
+  target_width = int(metadata.get("target_width") or 0)
+  target_height = int(metadata.get("target_height") or 0)
+  if not target_width or not target_height:
+    return
+  if asset_prompt.width == target_width and asset_prompt.height == target_height:
+    return
+  if Image is None or _PIL_RESAMPLING is None:
+    if not _PIL_WARNING_EMITTED:
+      print("Warning: Pillow is not installed; skipping post-processing downscale.")
+      _PIL_WARNING_EMITTED = True
+    return
+  for path in paths:
+    try:
+      with Image.open(path) as img:
+        if img.width == target_width and img.height == target_height:
+          continue
+        resized = img.resize((target_width, target_height), _PIL_RESAMPLING)
+        resized.save(path)
+      print(f"Resized {path} to {target_width}x{target_height}")
+    except Exception as exc:  # pragma: no cover - filesystem errors
+      print(f"Warning: Failed to resize {path}: {exc}")
 
 
 class WorkflowConfigurationError(RuntimeError):
@@ -1072,6 +1168,18 @@ def main():
     parser.add_argument("--host", type=str, default="127.0.0.1", help="ComfyUI server host.")
     parser.add_argument("--port", type=int, default=8188, help="ComfyUI server port.")
     parser.add_argument("--output-dir", type=Path, default=Path("ComfyUI/output"), help="Directory to save rendered PNGs.")
+    parser.add_argument(
+        "--min-render-side",
+        type=int,
+        default=512,
+        help="Upscale assets whose longest side falls below this size before sampling. Set to 0 to disable.",
+    )
+    parser.add_argument(
+        "--max-render-side",
+        type=int,
+        default=1024,
+        help="Clamp the longest render side after upscaling. Set to 0 for no limit.",
+    )
     parser.add_argument("--checkpoint", type=str, default="v1-5-pruned-emaonly-fp16.safetensors", help="Name of the checkpoint file to use.")
     parser.add_argument("--force-regen", action="store_true", help="Regenerate assets even when the target PNG already exists.")
     args = parser.parse_args()
@@ -1108,6 +1216,12 @@ def main():
     print("--- Generation Plan ---")
     print(summary)
     print("-----------------------")
+
+    enhance_prompt_render_sizes(
+        prompts,
+        min_side=args.min_render_side,
+        max_side=args.max_render_side,
+    )
 
     style_dirs: Dict[str, str] = {}
     for prompt in prompts:
@@ -1180,6 +1294,7 @@ def main():
                             downloaded = download_images_for_prompt(prompt_id, asset_prompt, args.host, args.port, args.output_dir)
                             for path in downloaded:
                                 print(f"Saved image to {path}")
+                            downscale_images_to_target(downloaded, asset_prompt)
                             if not downloaded:
                                 print("Warning: No images were downloaded for this asset. Check the SaveImage node configuration.")
                         print(f"Finished generating asset '{asset_prompt.name}'.")
