@@ -115,7 +115,11 @@ prompts, summary = generator.generate(
 assert len(prompts) >= 1, prompts
 target = next((p for p in prompts if p.slot == 'panel'), None)
 assert target is not None, prompts
-assert target.width == 128 and target.height == 128
+assert target.target_width == 128 and target.target_height == 128
+assert target.width >= target.target_width
+assert target.height >= target.target_height
+assert target.metadata.get('render_width') == target.width
+assert target.metadata.get('render_height') == target.height
 asset_dir = pathlib.Path(tmpdir.name) / 'alpha'
 assert asset_dir.exists() and asset_dir.is_dir(), asset_dir
 manifest_path = asset_dir / 'custom_alpha.json'
@@ -285,11 +289,13 @@ prompts, summary = loader.load(json_source, "", "manifest", 256, 256, 30, 7.0, "
 assert len(prompts) == 2, prompts
 first, second = prompts
 assert first.slot == 'ui_button_start'
-assert first.width == 512 and first.height == 512
+assert first.target_width == 512 and first.target_height == 512
+assert first.width >= first.target_width and first.height >= first.target_height
 assert first.steps == 28 and abs(first.cfg_scale - 6.5) < 1e-6
 assert first.sampler == 'euler' and first.scheduler == 'normal'
 assert second.slot == 'enemy_drone'
-assert second.width == 640 and second.height == 640
+assert second.target_width == 640 and second.target_height == 640
+assert second.width >= second.target_width and second.height >= second.target_height
 manifest_path = pathlib.Path(tmpdir.name) / 'default' / 'manifest_default.json'
 asset_dir = manifest_path.parent
 assert asset_dir.exists() and asset_dir.is_dir(), asset_dir
