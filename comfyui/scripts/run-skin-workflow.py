@@ -584,13 +584,34 @@ class SkinStylePromptGenerator:
 # --- ComfyUI API interaction ---
 
 def queue_prompt(prompt: dict, host: str, port: int, client_id: str):
-    """Send a prompt to the ComfyUI server."""
-    url = f"http://{host}:{port}/prompt"
-    headers = {"Content-Type": "application/json"}
-    data = json.dumps({"prompt": prompt, "client_id": client_id}).encode('utf-8')
-    req = urllib.request.Request(url, data=data, headers=headers)
-    with urllib.request.urlopen(req) as response:
-        return json.loads(response.read())
+  """Send a prompt to the ComfyUI server."""
+  url = f"http://{host}:{port}/prompt"
+  headers = {"Content-Type": "application/json"}
+  data = json.dumps({"prompt": prompt, "client_id": client_id}).encode('utf-8')
+  req = urllib.request.Request(url, data=data, headers=headers)
+  with urllib.request.urlopen(req) as response:
+    return json.loads(response.read())
+
+def _print_prompt_block(title: str, text: str) -> None:
+  """Pretty-print a positive or negative prompt section."""
+  print(f"  {title}:")
+  clean = (text or "").strip()
+  if not clean:
+    print("    (empty)")
+    return
+  for line in clean.splitlines():
+    print(f"    {line}")
+
+
+def _describe_asset_prompt(asset_prompt: SkinAssetPrompt) -> None:
+  """Emit a human-readable summary of the full prompt being queued."""
+  print(
+      f"Queued prompt for asset '{asset_prompt.name}' ({asset_prompt.width}x{asset_prompt.height}) "
+      f"style='{asset_prompt.style_id}' seed={asset_prompt.seed} steps={asset_prompt.steps} "
+      f"cfg={asset_prompt.cfg_scale} sampler='{asset_prompt.sampler}' scheduler='{asset_prompt.scheduler}'"
+  )
+  _print_prompt_block("Positive prompt", asset_prompt.prompt)
+  _print_prompt_block("Negative prompt", asset_prompt.negative_prompt)
 
 def get_history(prompt_id: str, host: str, port: int):
     """Get the history for a given prompt ID."""
@@ -1080,7 +1101,9 @@ def main():
           print(f"Warning: {warning}")
 
         prompt_id = queue_prompt(wf, args.host, args.port, client_id)['prompt_id']
-        print(f"\nQueued prompt for asset '{asset_prompt.name}' ({asset_prompt.width}x{asset_prompt.height}) with ID: {prompt_id}")
+        print("\n--- Prompt Details ---")
+        _describe_asset_prompt(asset_prompt)
+        print(f"  Prompt ID: {prompt_id}")
 
         downloaded = []
         while True:
