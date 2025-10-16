@@ -424,6 +424,60 @@ class SkinStylePromptGenerator:
       seed_value = int(seed_value)
     return seed_value + style_index * 101 + asset_index
 
+  def _classify_asset_kind(self, slot: str, width: int, height: int) -> str:
+    slot_lower = (slot or "").lower()
+    max_dim = max(width, height)
+    min_dim = min(width, height)
+
+    icon_keywords = ("icon", "chip", "badge", "toggle", "pill", "button")
+    background_keywords = ("background", "wallpaper", "panel", "header", "card")
+
+    if max_dim <= 128 or any(keyword in slot_lower for keyword in icon_keywords):
+      return "icon"
+    if min_dim >= 512 or any(keyword in slot_lower for keyword in background_keywords):
+      return "background"
+    return "mid"
+
+  def _apply_quality_presets(
+      self,
+      *,
+      slot: str,
+      width: int,
+      height: int,
+      steps: int,
+      cfg_scale: float,
+      sampler: str,
+      scheduler: str,
+  ) -> Tuple[int, float, str, str]:
+    """Nudge sampling defaults toward crisp UI art."""
+
+    kind = self._classify_asset_kind(slot, width, height)
+
+    sampler_normalized = (sampler or "").strip().lower()
+    scheduler_normalized = (scheduler or "").strip().lower()
+
+    if sampler_normalized in {"", "euler", "euler_a", "dpmpp_2m"}:
+      sampler = "dpmpp_2m_sde"
+    elif sampler_normalized == "heun":
+      sampler = "dpmpp_2m_sde"
+
+    if scheduler_normalized in {"", "normal", "exponential", "lms"}:
+      scheduler = "karras"
+
+    max_dim = max(width, height)
+
+    if kind == "icon":
+      steps = max(steps, 36)
+      cfg_scale = min(max(cfg_scale, 5.5), 7.5)
+    elif kind == "background":
+      steps = max(steps, 40 if max_dim >= 768 else 36)
+      cfg_scale = min(max(cfg_scale, 6.0), 8.5)
+    else:
+      steps = max(steps, 34)
+      cfg_scale = min(max(cfg_scale, 5.8), 8.0)
+
+    return steps, cfg_scale, sampler, scheduler
+
   def generate(
       self,
       style_plan_source: str,
@@ -501,6 +555,15 @@ class SkinStylePromptGenerator:
         cfg_scale = float(self._resolve_numeric(asset, style, defaults, "cfg_scale", fallback_cfg))
         sampler = str(self._resolve_numeric(asset, style, defaults, "sampler", fallback_sampler))
         scheduler = str(self._resolve_numeric(asset, style, defaults, "scheduler", fallback_scheduler))
+        steps, cfg_scale, sampler, scheduler = self._apply_quality_presets(
+            slot=slot,
+            width=width,
+            height=height,
+            steps=steps,
+            cfg_scale=cfg_scale,
+            sampler=sampler,
+            scheduler=scheduler,
+        )
         seed = self._resolve_seed(asset, style, defaults, style_index, asset_index)
         slot = context["slot"]
         style_dir = style_directories.setdefault(style_id, self._slugify(str(style.get("directory") or style_id)))
