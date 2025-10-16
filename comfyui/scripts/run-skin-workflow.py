@@ -43,6 +43,8 @@ class SkinAssetPrompt:
   negative_prompt: str
   width: int
   height: int
+  target_width: int
+  target_height: int
   steps: int
   cfg_scale: float
   sampler: str
@@ -65,6 +67,9 @@ class SkinStylePromptGenerator:
   _SLOT_ATTR_RE = re.compile(r"data-skin-slot\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
   _ATTR_RE = re.compile(r"([^\s=<]+)\s*=\s*(['\"])(.*?)\2", re.IGNORECASE | re.DOTALL)
   _DEFAULT_SLOT_PROMPT = "Dustland CRT UI skin slot"
+  _MIN_RENDER_DIMENSION = 768
+  _MAX_RENDER_DIMENSION = 1280
+  _MAX_UPSCALE_FACTOR = 12.0
 
   def __init__(self) -> None:
     script_path = Path(__file__).resolve()
@@ -138,6 +143,29 @@ class SkinStylePromptGenerator:
 
   def _humanize_label(self, label: str) -> str:
     return self._humanize_slot(label)
+
+  def _round_to_multiple(self, value: float, multiple: int = 8) -> int:
+    if multiple <= 0:
+      return max(1, int(round(value)))
+    return max(multiple, int(round(value / multiple) * multiple))
+
+  def _calculate_render_dimensions(self, width: int, height: int) -> Tuple[int, int]:
+    width = max(8, int(width))
+    height = max(8, int(height))
+    min_dim = min(width, height)
+    max_dim = max(width, height)
+    scale = 1.0
+    if min_dim < self._MIN_RENDER_DIMENSION:
+      scale = max(scale, self._MIN_RENDER_DIMENSION / max(1, min_dim))
+    scale = min(scale, self._MAX_UPSCALE_FACTOR)
+    if max_dim * scale > self._MAX_RENDER_DIMENSION:
+      scale = min(scale, self._MAX_RENDER_DIMENSION / max_dim)
+    scale = max(1.0, scale)
+    render_width = self._round_to_multiple(width * scale)
+    render_height = self._round_to_multiple(height * scale)
+    render_width = max(width, render_width)
+    render_height = max(height, render_height)
+    return render_width, render_height
 
   def _auto_slot_assets(self) -> List[Dict[str, Any]]:
     assets: List[Dict[str, Any]] = []
@@ -544,9 +572,10 @@ class SkinStylePromptGenerator:
       for asset_index, asset in enumerate(assets):
         if not isinstance(asset, dict):
           continue
-        width = self._resolve_dimension(asset, defaults, "width", fallback_width)
-        height = self._resolve_dimension(asset, defaults, "height", fallback_height)
-        context = self._build_context(raw, style, asset, style_index, asset_index, width, height)
+        target_width = self._resolve_dimension(asset, defaults, "width", fallback_width)
+        target_height = self._resolve_dimension(asset, defaults, "height", fallback_height)
+        render_width, render_height = self._calculate_render_dimensions(target_width, target_height)
+        context = self._build_context(raw, style, asset, style_index, asset_index, target_width, target_height)
         prompt, negative_prompt = self._collect_prompts(raw, style, asset, context)
         if not prompt:
           raise ValueError(f"Asset '{asset.get('slot')}' for style '{style_id}' produced an empty prompt")
@@ -584,8 +613,10 @@ class SkinStylePromptGenerator:
             "slot": slot,
             "style_id": style_id,
             "style_name": context.get("style_name"),
-            "width": width,
-            "height": height,
+            "width": target_width,
+            "height": target_height,
+            "render_width": render_width,
+            "render_height": render_height,
         }
         if context.get("slot_description"):
           metadata["description"] = context["slot_description"]
@@ -609,8 +640,10 @@ class SkinStylePromptGenerator:
             name=name,
             prompt=prompt,
             negative_prompt=negative_prompt,
-            width=width,
-            height=height,
+            width=render_width,
+            height=render_height,
+            target_width=target_width,
+            target_height=target_height,
             steps=steps,
             cfg_scale=cfg_scale,
             sampler=sampler,
@@ -620,7 +653,12 @@ class SkinStylePromptGenerator:
             style_id=style_id,
             metadata=metadata,
         ))
-        summary_lines.append(f"{style_id}: {slot} → {name} ({width}×{height})")
+        if render_width != target_width or render_height != target_height:
+          summary_lines.append(
+              f"{style_id}: {slot} → {name} ({target_width}×{target_height}, render {render_width}×{render_height})"
+          )
+        else:
+          summary_lines.append(f"{style_id}: {slot} → {name} ({target_width}×{target_height})")
 
     summary = "\n".join(summary_lines)
 
@@ -668,8 +706,11 @@ def _print_prompt_block(title: str, text: str) -> None:
 
 def _describe_asset_prompt(asset_prompt: SkinAssetPrompt) -> None:
   """Emit a human-readable summary of the full prompt being queued."""
+  dims = f"{asset_prompt.target_width}x{asset_prompt.target_height}"
+  if asset_prompt.target_width != asset_prompt.width or asset_prompt.target_height != asset_prompt.height:
+    dims = f"{dims} (render {asset_prompt.width}x{asset_prompt.height})"
   print(
-      f"Queued prompt for asset '{asset_prompt.name}' ({asset_prompt.width}x{asset_prompt.height}) "
+      f"Queued prompt for asset '{asset_prompt.name}' ({dims}) "
       f"style='{asset_prompt.style_id}' seed={asset_prompt.seed} steps={asset_prompt.steps} "
       f"cfg={asset_prompt.cfg_scale} sampler='{asset_prompt.sampler}' scheduler='{asset_prompt.scheduler}'"
   )
@@ -703,6 +744,31 @@ def _download_image(
   destination.parent.mkdir(parents=True, exist_ok=True)
   destination.write_bytes(data)
   return destination
+
+
+_PIL_WARNING_EMITTED = False
+
+
+def _maybe_resize_image(path: Path, target_width: int, target_height: int) -> None:
+  global _PIL_WARNING_EMITTED
+  if target_width <= 0 or target_height <= 0:
+    return
+  try:
+    from PIL import Image
+  except ImportError:
+    if not _PIL_WARNING_EMITTED:
+      print(
+          "Warning: Pillow is required to resize generated images to their target dimensions. "
+          "Install it with `pip install pillow`.",
+          file=sys.stderr,
+      )
+      _PIL_WARNING_EMITTED = True
+    return
+  with Image.open(path) as img:
+    if img.width == target_width and img.height == target_height:
+      return
+    resized = img.resize((target_width, target_height), Image.LANCZOS)
+    resized.save(path)
 
 
 def download_images_for_prompt(
@@ -752,6 +818,16 @@ def download_images_for_prompt(
         print(f"Warning: Failed to download image '{filename}' for prompt {prompt_id}: {exc}")
         continue
       saved_paths.append(saved_path)
+
+  if saved_paths:
+    target_w = getattr(asset_prompt, "target_width", asset_prompt.width)
+    target_h = getattr(asset_prompt, "target_height", asset_prompt.height)
+    if target_w != asset_prompt.width or target_h != asset_prompt.height:
+      for path in saved_paths:
+        try:
+          _maybe_resize_image(path, target_w, target_h)
+        except Exception as exc:
+          print(f"Warning: Failed to resize image {path} to {target_w}x{target_h}: {exc}")
 
   return saved_paths
 

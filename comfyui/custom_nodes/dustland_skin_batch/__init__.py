@@ -26,6 +26,8 @@ class SkinAssetPrompt:
   negative_prompt: str
   width: int
   height: int
+  target_width: int
+  target_height: int
   steps: int
   cfg_scale: float
   sampler: str
@@ -50,6 +52,8 @@ class SkinStyleJSONLoader:
   RETURN_TYPES = ("GAME_ASSET_LIST", "STRING")
   RETURN_NAMES = ("assets", "summary")
   FUNCTION = "load"
+  _MIN_RENDER_DIMENSION = 768
+  _MAX_UPSCALE_FACTOR = 12.0
 
   @classmethod
   def INPUT_TYPES(cls):
@@ -273,6 +277,27 @@ class SkinStyleJSONLoader:
     negative = "\n".join(dict.fromkeys(seg for seg in negative_segments if seg))
     return positive, negative
 
+  def _round_to_multiple(self, value: float, multiple: int = 8) -> int:
+    if multiple <= 0:
+      return max(1, int(round(value)))
+    return max(multiple, int(round(value / multiple) * multiple))
+
+  def _calculate_render_dimensions(self, width: int, height: int) -> Tuple[int, int]:
+    width = max(8, int(width))
+    height = max(8, int(height))
+    min_dim = min(width, height)
+    max_dim = max(width, height)
+    scale = 1.0
+    if min_dim < self._MIN_RENDER_DIMENSION:
+      scale = max(scale, self._MIN_RENDER_DIMENSION / max(1, min_dim))
+    scale = min(scale, self._MAX_UPSCALE_FACTOR)
+    scale = max(1.0, scale)
+    render_width = self._round_to_multiple(width * scale)
+    render_height = self._round_to_multiple(height * scale)
+    render_width = max(width, render_width)
+    render_height = max(height, render_height)
+    return render_width, render_height
+
   def _build_context(
       self,
       data: Dict[str, Any],
@@ -411,9 +436,10 @@ class SkinStyleJSONLoader:
       for asset_index, asset in enumerate(assets):
         if not isinstance(asset, dict):
           continue
-        width = self._resolve_dimension(asset, defaults, "width", fallback_width)
-        height = self._resolve_dimension(asset, defaults, "height", fallback_height)
-        context = self._build_context(raw, style, asset, style_index, asset_index, width, height)
+        target_width = self._resolve_dimension(asset, defaults, "width", fallback_width)
+        target_height = self._resolve_dimension(asset, defaults, "height", fallback_height)
+        render_width, render_height = self._calculate_render_dimensions(target_width, target_height)
+        context = self._build_context(raw, style, asset, style_index, asset_index, target_width, target_height)
         prompt, negative_prompt = self._collect_prompts(raw, style, asset, context)
         if not prompt:
           raise ValueError(f"Asset '{asset.get('slot')}' for style '{style_id}' produced an empty prompt")
@@ -440,8 +466,10 @@ class SkinStyleJSONLoader:
             "slot": slot,
             "style_id": style_id,
             "style_name": context.get("style_name"),
-            "width": width,
-            "height": height,
+            "width": target_width,
+            "height": target_height,
+            "render_width": render_width,
+            "render_height": render_height,
         }
         metadata["style_directory"] = style_dir
         metadata["file_stem"] = file_stem
@@ -449,8 +477,10 @@ class SkinStyleJSONLoader:
             name=name,
             prompt=prompt,
             negative_prompt=negative_prompt,
-            width=width,
-            height=height,
+            width=render_width,
+            height=render_height,
+            target_width=target_width,
+            target_height=target_height,
             steps=steps,
             cfg_scale=cfg_scale,
             sampler=sampler,
@@ -460,7 +490,12 @@ class SkinStyleJSONLoader:
             style_id=style_id,
             metadata=metadata,
         ))
-        summary_lines.append(f"{style_id}: {slot} → {name} ({width}×{height})")
+        if render_width != target_width or render_height != target_height:
+          summary_lines.append(
+              f"{style_id}: {slot} → {name} ({target_width}×{target_height}, render {render_width}×{render_height})"
+          )
+        else:
+          summary_lines.append(f"{style_id}: {slot} → {name} ({target_width}×{target_height})")
 
     summary = "\n".join(summary_lines)
 

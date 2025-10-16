@@ -18,6 +18,41 @@ import comfy.sd
 import folder_paths
 import nodes
 import torch
+import torch.nn.functional as F
+import inspect
+
+
+def _round_to_multiple(value: float, multiple: int = 8) -> int:
+  if multiple <= 0:
+    return max(1, int(round(value)))
+  return max(multiple, int(round(value / multiple) * multiple))
+
+
+def _calculate_render_dimensions(width: int, height: int, *, min_dimension: int = 768, max_upscale: float = 12.0) -> tuple[int, int]:
+  width = max(8, int(width))
+  height = max(8, int(height))
+  min_dim = min(width, height)
+  scale = 1.0
+  if min_dim < min_dimension:
+    scale = max(scale, min_dimension / max(1, min_dim))
+  scale = min(scale, max_upscale)
+  scale = max(1.0, scale)
+  render_width = _round_to_multiple(width * scale)
+  render_height = _round_to_multiple(height * scale)
+  render_width = max(width, render_width)
+  render_height = max(height, render_height)
+  return render_width, render_height
+
+
+def _interpolate_kwargs() -> dict:
+  params = inspect.signature(F.interpolate).parameters
+  kwargs = {"mode": "bicubic", "align_corners": False}
+  if "antialias" in params:
+    kwargs["antialias"] = True
+  return kwargs
+
+
+_INTERPOLATE_KWARGS = _interpolate_kwargs()
 
 
 @dataclass
@@ -29,6 +64,8 @@ class GameAssetPrompt:
   negative_prompt: str
   width: int
   height: int
+  target_width: int
+  target_height: int
   steps: int
   cfg_scale: float
   sampler: str
@@ -109,8 +146,9 @@ class GameAssetJSONLoader:
       raise KeyError(f"Asset #{index + 1} is missing a 'prompt'") from exc
     name = raw.get("name") or raw.get("filename") or f"asset_{index:03d}"
     negative_prompt = raw.get("negative_prompt") or raw.get("negativePrompt") or ""
-    width = int(raw.get("width", defaults["width"]))
-    height = int(raw.get("height", defaults["height"]))
+    target_width = int(raw.get("width", defaults["width"]))
+    target_height = int(raw.get("height", defaults["height"]))
+    render_width, render_height = _calculate_render_dimensions(target_width, target_height)
     steps = int(raw.get("steps", defaults["steps"]))
     cfg_scale = float(raw.get("cfg_scale", raw.get("cfgScale", defaults["cfg"])))
     sampler = str(raw.get("sampler", defaults["sampler"]))
@@ -121,8 +159,10 @@ class GameAssetJSONLoader:
         name=name,
         prompt=prompt,
         negative_prompt=negative_prompt,
-        width=width,
-        height=height,
+        width=render_width,
+        height=render_height,
+        target_width=target_width,
+        target_height=target_height,
         steps=steps,
         cfg_scale=cfg_scale,
         sampler=sampler,
@@ -203,6 +243,18 @@ class GameAssetBatchRenderer:
     latent, = latent_builder.generate(width, height, 1)
     return latent
 
+  def _resize_image(self, image: torch.Tensor, width: int, height: int) -> torch.Tensor:
+    if not isinstance(image, torch.Tensor):
+      return image
+    if image.ndim != 4:
+      return image
+    _, current_height, current_width, _ = image.shape
+    if current_width == width and current_height == height:
+      return image
+    tensor = image.permute(0, 3, 1, 2)
+    resized = F.interpolate(tensor, size=(height, width), **_INTERPOLATE_KWARGS)
+    return resized.permute(0, 2, 3, 1)
+
   def render(
       self,
       model,
@@ -236,6 +288,7 @@ class GameAssetBatchRenderer:
       )[0]
 
       image = self._decode_latent(vae, latent_out)
+      image = self._resize_image(image, asset.target_width, asset.target_height)
       save_results = saver.save_images(image, filename_prefix=asset.name)
       filenames.extend(result["filename"] for result in save_results["ui"]["images"])
 
