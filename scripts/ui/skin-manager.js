@@ -463,7 +463,8 @@
       if(tileKey){
         let effectiveDefinition = definition;
         if(effectiveDefinition == null){
-          effectiveDefinition = defaultSlotFilename(name);
+        const transformedKey = tileKey.replace(/-/g, '_');
+        effectiveDefinition = `${transformedKey}_tile${extension}`;
         }
         if(effectiveDefinition != null){
           tileSlotDefinitions.set(tileKey, effectiveDefinition);
