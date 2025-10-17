@@ -555,6 +555,7 @@ class SkinStylePromptGenerator:
         cfg_scale = float(self._resolve_numeric(asset, style, defaults, "cfg_scale", fallback_cfg))
         sampler = str(self._resolve_numeric(asset, style, defaults, "sampler", fallback_sampler))
         scheduler = str(self._resolve_numeric(asset, style, defaults, "scheduler", fallback_scheduler))
+        slot = context["slot"]
         steps, cfg_scale, sampler, scheduler = self._apply_quality_presets(
             slot=slot,
             width=width,
@@ -565,7 +566,6 @@ class SkinStylePromptGenerator:
             scheduler=scheduler,
         )
         seed = self._resolve_seed(asset, style, defaults, style_index, asset_index)
-        slot = context["slot"]
         style_dir = style_directories.setdefault(style_id, self._slugify(str(style.get("directory") or style_id)))
 
         filename_template = asset.get("filename")
