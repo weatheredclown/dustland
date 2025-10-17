@@ -474,10 +474,7 @@
       if(!name) return;
       const tileKey = parseTileSlotName(name);
       if(tileKey){
-        let effectiveDefinition = definition;
-        if(effectiveDefinition == null){
-          effectiveDefinition = defaultTileFilename(tileKey) ?? defaultSlotFilename(name);
-        }
+        let effectiveDefinition = definition ?? defaultTileFilename(tileKey) ?? defaultSlotFilename(name);
         if(effectiveDefinition != null){
           tileSlotDefinitions.set(tileKey, effectiveDefinition);
         }
