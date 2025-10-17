@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import os
 import random
@@ -32,6 +33,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
+try:
+  from PIL import Image
+  _PIL_RESAMPLING = getattr(getattr(Image, "Resampling", Image), "LANCZOS", Image.LANCZOS)
+except ImportError:  # pragma: no cover - optional dependency
+  Image = None
+  _PIL_RESAMPLING = None
+
+_PIL_WARNING_EMITTED = False
+
 
 # --- Logic repurposed from the SkinStyleJSONLoader custom node ---
 
@@ -43,6 +53,9 @@ class SkinAssetPrompt:
   negative_prompt: str
   width: int
   height: int
+  target_width: int
+  target_height: int
+  render_scale: float
   steps: int
   cfg_scale: float
   sampler: str
@@ -57,6 +70,59 @@ class _SafeFormatDict(dict):
   """Dictionary that leaves unknown placeholders intact when formatting."""
   def __missing__(self, key: str) -> str:
     return "{" + key + "}"
+
+
+def _round_up_to_multiple(value: float, multiple: int = 8) -> int:
+  if multiple <= 0:
+    return max(1, int(math.ceil(value)))
+  if value <= 0:
+    return multiple
+  return int(math.ceil(value / multiple) * multiple)
+
+
+def enhance_prompt_render_sizes(
+    prompts: Iterable[SkinAssetPrompt],
+    *,
+    min_side: int,
+    max_side: int,
+) -> None:
+  if min_side <= 0 and max_side <= 0:
+    return
+  for prompt in prompts:
+    metadata = prompt.metadata if isinstance(prompt.metadata, dict) else {}
+    target_width = int(metadata.get("target_width") or getattr(prompt, "target_width", 0) or prompt.width)
+    target_height = int(metadata.get("target_height") or getattr(prompt, "target_height", 0) or prompt.height)
+    metadata.setdefault("target_width", target_width)
+    metadata.setdefault("target_height", target_height)
+    longest_target = max(target_width, target_height)
+    if longest_target <= 0:
+      continue
+    existing_scale = 1.0
+    if target_width > 0 and target_height > 0:
+      existing_scale = max(prompt.width / target_width, prompt.height / target_height)
+    min_scale = 1.0
+    if min_side > 0 and longest_target < min_side:
+      min_scale = max(min_scale, min_side / longest_target)
+    scale = max(existing_scale, min_scale)
+    if max_side > 0 and longest_target:
+      max_scale_limit = max_side / longest_target
+      if max_scale_limit < 1.0:
+        max_scale_limit = 1.0
+      scale = min(scale, max_scale_limit)
+    scale = max(scale, 1.0)
+    render_width = _round_up_to_multiple(target_width * scale)
+    render_height = _round_up_to_multiple(target_height * scale)
+    render_width = max(render_width, target_width)
+    render_height = max(render_height, target_height)
+    prompt.width = render_width
+    prompt.height = render_height
+    prompt.target_width = target_width
+    prompt.target_height = target_height
+    prompt.render_scale = scale
+    metadata["render_width"] = render_width
+    metadata["render_height"] = render_height
+    metadata["render_scale"] = scale
+    prompt.metadata = metadata
 
 
 class SkinStylePromptGenerator:
@@ -138,6 +204,75 @@ class SkinStylePromptGenerator:
 
   def _humanize_label(self, label: str) -> str:
     return self._humanize_slot(label)
+
+  def _round_to_multiple(self, value: float, multiple: int = 8) -> int:
+    if multiple <= 0:
+      return max(1, int(round(value)))
+    return max(multiple, int(math.ceil(float(value) / multiple) * multiple))
+
+  def _constrain_render_dimensions(
+      self,
+      render_width: float,
+      render_height: float,
+      base_width: int,
+      base_height: int,
+      min_render: float,
+      max_render: float,
+      render_multiple: int,
+  ) -> Tuple[int, int]:
+    render_width = max(float(base_width), float(render_width))
+    render_height = max(float(base_height), float(render_height))
+    longest = max(render_width, render_height)
+    if min_render and longest < min_render:
+      scale = float(min_render) / longest
+      render_width *= scale
+      render_height *= scale
+      longest = max(render_width, render_height)
+    if max_render and longest > max_render:
+      scale = float(max_render) / longest
+      render_width *= scale
+      render_height *= scale
+    render_width = self._round_to_multiple(render_width, render_multiple)
+    render_height = self._round_to_multiple(render_height, render_multiple)
+    render_width = max(base_width, int(render_width))
+    render_height = max(base_height, int(render_height))
+    return render_width, render_height
+
+  def _resolve_render_dimensions(
+      self,
+      asset: Dict[str, Any],
+      style: Dict[str, Any],
+      defaults: Dict[str, Any],
+      base_width: int,
+      base_height: int,
+  ) -> Tuple[int, int, float]:
+    render_width = self._resolve_numeric(asset, style, defaults, "render_width", None)
+    render_height = self._resolve_numeric(asset, style, defaults, "render_height", None)
+    render_scale = float(self._resolve_numeric(asset, style, defaults, "render_scale", 1.0) or 1.0)
+    min_render = self._resolve_numeric(asset, style, defaults, "min_render_size", 0) or 0
+    max_render = self._resolve_numeric(asset, style, defaults, "max_render_size", 0) or 0
+    render_multiple = int(self._resolve_numeric(asset, style, defaults, "render_multiple", 8) or 8)
+
+    if render_width is None and render_height is None:
+      render_width = base_width * render_scale
+      render_height = base_height * render_scale
+    else:
+      render_width = float(render_width or base_width)
+      render_height = float(render_height or base_height)
+
+    render_width, render_height = self._constrain_render_dimensions(
+        float(render_width),
+        float(render_height),
+        base_width,
+        base_height,
+        float(min_render) if min_render else 0.0,
+        float(max_render) if max_render else 0.0,
+        render_multiple,
+    )
+    scale = 1.0
+    if base_width > 0 and base_height > 0:
+      scale = max(render_width / base_width, render_height / base_height)
+    return render_width, render_height, max(scale, 1.0)
 
   def _auto_slot_assets(self) -> List[Dict[str, Any]]:
     assets: List[Dict[str, Any]] = []
@@ -532,6 +667,12 @@ class SkinStylePromptGenerator:
         "sampler": raw.get("sampler") or fallback_sampler,
         "scheduler": raw.get("scheduler") or fallback_scheduler,
         "seed": raw.get("seed"),
+        "render_scale": raw.get("render_scale") or raw.get("default_render_scale") or 1.0,
+        "min_render_size": raw.get("min_render_size") or raw.get("render_min_size") or 0,
+        "max_render_size": raw.get("max_render_size") or raw.get("render_max_size") or 0,
+        "render_multiple": raw.get("render_multiple") or raw.get("render_step") or 8,
+        "render_width": raw.get("render_width"),
+        "render_height": raw.get("render_height"),
     }
 
     prompts: List[SkinAssetPrompt] = []
@@ -544,28 +685,46 @@ class SkinStylePromptGenerator:
       for asset_index, asset in enumerate(assets):
         if not isinstance(asset, dict):
           continue
-        width = self._resolve_dimension(asset, defaults, "width", fallback_width)
-        height = self._resolve_dimension(asset, defaults, "height", fallback_height)
-        context = self._build_context(raw, style, asset, style_index, asset_index, width, height)
+        target_width = self._resolve_dimension(asset, defaults, "width", fallback_width)
+        target_height = self._resolve_dimension(asset, defaults, "height", fallback_height)
+        render_width, render_height, render_scale = self._resolve_render_dimensions(
+            asset,
+            style,
+            defaults,
+            target_width,
+            target_height,
+        )
+        context = self._build_context(
+            raw,
+            style,
+            asset,
+            style_index,
+            asset_index,
+            target_width,
+            target_height,
+        )
+        context["render_width"] = render_width
+        context["render_height"] = render_height
+        context["render_scale"] = render_scale
         prompt, negative_prompt = self._collect_prompts(raw, style, asset, context)
         if not prompt:
           raise ValueError(f"Asset '{asset.get('slot')}' for style '{style_id}' produced an empty prompt")
 
+        slot = context["slot"]
         steps = int(self._resolve_numeric(asset, style, defaults, "steps", fallback_steps))
         cfg_scale = float(self._resolve_numeric(asset, style, defaults, "cfg_scale", fallback_cfg))
         sampler = str(self._resolve_numeric(asset, style, defaults, "sampler", fallback_sampler))
         scheduler = str(self._resolve_numeric(asset, style, defaults, "scheduler", fallback_scheduler))
         steps, cfg_scale, sampler, scheduler = self._apply_quality_presets(
             slot=slot,
-            width=width,
-            height=height,
+            width=target_width,
+            height=target_height,
             steps=steps,
             cfg_scale=cfg_scale,
             sampler=sampler,
             scheduler=scheduler,
         )
         seed = self._resolve_seed(asset, style, defaults, style_index, asset_index)
-        slot = context["slot"]
         style_dir = style_directories.setdefault(style_id, self._slugify(str(style.get("directory") or style_id)))
 
         filename_template = asset.get("filename")
@@ -584,8 +743,11 @@ class SkinStylePromptGenerator:
             "slot": slot,
             "style_id": style_id,
             "style_name": context.get("style_name"),
-            "width": width,
-            "height": height,
+            "width": target_width,
+            "height": target_height,
+            "render_width": render_width,
+            "render_height": render_height,
+            "render_scale": render_scale,
         }
         if context.get("slot_description"):
           metadata["description"] = context["slot_description"]
@@ -609,8 +771,11 @@ class SkinStylePromptGenerator:
             name=name,
             prompt=prompt,
             negative_prompt=negative_prompt,
-            width=width,
-            height=height,
+            width=render_width,
+            height=render_height,
+            target_width=target_width,
+            target_height=target_height,
+            render_scale=render_scale,
             steps=steps,
             cfg_scale=cfg_scale,
             sampler=sampler,
@@ -620,7 +785,12 @@ class SkinStylePromptGenerator:
             style_id=style_id,
             metadata=metadata,
         ))
-        summary_lines.append(f"{style_id}: {slot} → {name} ({width}×{height})")
+        if render_width != target_width or render_height != target_height:
+          summary_lines.append(
+              f"{style_id}: {slot} → {name} ({target_width}×{target_height}, render {render_width}×{render_height})"
+          )
+        else:
+          summary_lines.append(f"{style_id}: {slot} → {name} ({target_width}×{target_height})")
 
     summary = "\n".join(summary_lines)
 
@@ -668,8 +838,14 @@ def _print_prompt_block(title: str, text: str) -> None:
 
 def _describe_asset_prompt(asset_prompt: SkinAssetPrompt) -> None:
   """Emit a human-readable summary of the full prompt being queued."""
+  target_dims = f"{asset_prompt.target_width}x{asset_prompt.target_height}"
+  render_dims = f"{asset_prompt.width}x{asset_prompt.height}"
+  render_suffix = ""
+  if render_dims != target_dims:
+    scale_text = f"×{asset_prompt.render_scale:.2f}" if asset_prompt.render_scale != 1 else ""
+    render_suffix = f" (render {render_dims}{scale_text})"
   print(
-      f"Queued prompt for asset '{asset_prompt.name}' ({asset_prompt.width}x{asset_prompt.height}) "
+      f"Queued prompt for asset '{asset_prompt.name}' ({target_dims}{render_suffix}) "
       f"style='{asset_prompt.style_id}' seed={asset_prompt.seed} steps={asset_prompt.steps} "
       f"cfg={asset_prompt.cfg_scale} sampler='{asset_prompt.sampler}' scheduler='{asset_prompt.scheduler}'"
   )
@@ -753,7 +929,49 @@ def download_images_for_prompt(
         continue
       saved_paths.append(saved_path)
 
+  if saved_paths:
+    downscale_images_to_target(saved_paths, asset_prompt)
+
   return saved_paths
+
+
+def downscale_images_to_target(paths: Iterable[Path], asset_prompt: SkinAssetPrompt) -> None:
+  global _PIL_WARNING_EMITTED
+  paths = list(paths)
+  if not paths:
+    return
+  target_width = getattr(asset_prompt, "target_width", 0) or 0
+  target_height = getattr(asset_prompt, "target_height", 0) or 0
+  if target_width <= 0 or target_height <= 0:
+    metadata = asset_prompt.metadata if isinstance(asset_prompt.metadata, dict) else {}
+    target_width = int(metadata.get("target_width") or 0)
+    target_height = int(metadata.get("target_height") or 0)
+  if target_width <= 0 or target_height <= 0:
+    return
+  if asset_prompt.width == target_width and asset_prompt.height == target_height:
+    return
+  if Image is None or _PIL_RESAMPLING is None:
+    if not _PIL_WARNING_EMITTED:
+      print("Warning: Pillow is not installed; skipping post-processing downscale.")
+      _PIL_WARNING_EMITTED = True
+    return
+  metadata = asset_prompt.metadata if isinstance(asset_prompt.metadata, dict) else {}
+  source_width = int(metadata.get("render_width") or asset_prompt.width or target_width)
+  source_height = int(metadata.get("render_height") or asset_prompt.height or target_height)
+  for path in paths:
+    try:
+      with Image.open(path) as img:
+        if img.width == target_width and img.height == target_height:
+          continue
+        resized = img.resize((target_width, target_height), _PIL_RESAMPLING)
+        resized.save(path)
+      if (source_width, source_height) != (target_width, target_height):
+        print(
+            f"  Resized {path.name} to {target_width}x{target_height} "
+            f"(from {source_width}x{source_height})"
+        )
+    except Exception as exc:  # pragma: no cover - filesystem errors
+      print(f"Warning: Failed to resize {path}: {exc}")
 
 
 class WorkflowConfigurationError(RuntimeError):
@@ -1072,6 +1290,18 @@ def main():
     parser.add_argument("--host", type=str, default="127.0.0.1", help="ComfyUI server host.")
     parser.add_argument("--port", type=int, default=8188, help="ComfyUI server port.")
     parser.add_argument("--output-dir", type=Path, default=Path("ComfyUI/output"), help="Directory to save rendered PNGs.")
+    parser.add_argument(
+        "--min-render-side",
+        type=int,
+        default=768,
+        help="Upscale assets whose longest side falls below this size before sampling. Set to 0 to disable.",
+    )
+    parser.add_argument(
+        "--max-render-side",
+        type=int,
+        default=1536,
+        help="Clamp the longest render side after upscaling. Set to 0 for no limit.",
+    )
     parser.add_argument("--checkpoint", type=str, default="v1-5-pruned-emaonly-fp16.safetensors", help="Name of the checkpoint file to use.")
     parser.add_argument("--force-regen", action="store_true", help="Regenerate assets even when the target PNG already exists.")
     args = parser.parse_args()
@@ -1104,6 +1334,12 @@ def main():
 
     generator = SkinStylePromptGenerator()
     prompts, summary = generator.generate(style_plan_source=style_plan_content, output_dir=args.output_dir)
+
+    enhance_prompt_render_sizes(
+        prompts,
+        min_side=args.min_render_side,
+        max_side=args.max_render_side,
+    )
 
     print("--- Generation Plan ---")
     print(summary)

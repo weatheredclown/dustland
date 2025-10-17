@@ -48,6 +48,8 @@ python comfyui/scripts/run-skin-workflow.py comfyui/examples/comfyui-skin-style-
 
 The script will then connect to the ComfyUI server, queue the prompt, and print progress messages to the console. When each asset finishes rendering, the CLI downloads the resulting PNG into the directory provided by `--output-dir` (default `ComfyUI/output`).
 
+The generator renders each texture at an oversampled resolution before downscaling to its target `width` and `height`. Style plans control this pass with fields such as `render_scale`, `min_render_size`, and `render_multiple`, while the CLI exposes global `--min-render-side` and `--max-render-side` overrides for quick experiments.【F:comfyui/scripts/run-skin-workflow.py†L57-L146】【F:comfyui/scripts/run-skin-workflow.py†L1272-L1302】 When Pillow is available the script automatically downsizes the saved PNGs back to their target dimensions so the game receives pixel-perfect assets.【F:comfyui/scripts/run-skin-workflow.py†L884-L932】
+
 > **Automatic slot discovery**: the CLI now scans the repository for `data-skin-slot` attributes before the run. Any new UI slots
 > automatically add placeholder entries to the generation plan so fresh Dustland builds pick up new background or overlay assets
 > without manual bookkeeping. You can still provide explicit overrides in your style plan JSON to customise prompts, sizes, or
