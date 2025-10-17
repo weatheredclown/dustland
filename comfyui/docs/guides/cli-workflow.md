@@ -70,4 +70,4 @@ The CLI now prints the relative skin directories alongside a helper call to `Dus
    loadSkin('emerald-grid');
    ```
 
-Generated PNGs are grouped under `ComfyUI/output/<style-id>/`. The CLI writes each slot as `<slot-name>.png`, so the game can look up terrain and UI art by combining the selected skin ID with the expected filename (for example `emerald-grid/tile_sand.png`). No additional manifest files are required—the in-game Tile Preview resolves the same filenames you would ship with the skin.
+Generated PNGs are grouped under `ComfyUI/output/<style-id>/`. UI slots render as `<slot-name>.png`, while terrain tiles are exported as `<tile-name>_tile.png` (for example `emerald-grid/sand_tile.png`). No additional manifest files are required—the in-game Tile Preview resolves the same filenames you would ship with the skin.
