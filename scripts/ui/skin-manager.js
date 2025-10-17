@@ -465,7 +465,7 @@
       if(!slug) return null;
       const sanitized = slug.replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '');
       if(!sanitized) return null;
-      return appendDefaultExtension(`${sanitized.toLowerCase()}_tile`);
+      return appendDefaultExtension(`tile_${sanitized.toLowerCase()}`);
     }
     const slotStyles = {};
     const tileSlotDefinitions = new Map();
