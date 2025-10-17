@@ -715,6 +715,7 @@ class SkinStylePromptGenerator:
         cfg_scale = float(self._resolve_numeric(asset, style, defaults, "cfg_scale", fallback_cfg))
         sampler = str(self._resolve_numeric(asset, style, defaults, "sampler", fallback_sampler))
         scheduler = str(self._resolve_numeric(asset, style, defaults, "scheduler", fallback_scheduler))
+        slot = context["slot"]
         steps, cfg_scale, sampler, scheduler = self._apply_quality_presets(
             slot=slot,
             width=target_width,
