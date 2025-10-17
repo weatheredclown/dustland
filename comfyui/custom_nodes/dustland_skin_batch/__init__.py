@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import random
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
@@ -26,6 +27,9 @@ class SkinAssetPrompt:
   negative_prompt: str
   width: int
   height: int
+  target_width: int
+  target_height: int
+  render_scale: float
   steps: int
   cfg_scale: float
   sampler: str
@@ -273,6 +277,75 @@ class SkinStyleJSONLoader:
     negative = "\n".join(dict.fromkeys(seg for seg in negative_segments if seg))
     return positive, negative
 
+  def _round_to_multiple(self, value: float, multiple: int = 8) -> int:
+    if multiple <= 0:
+      return max(1, int(round(value)))
+    return max(multiple, int(math.ceil(float(value) / multiple) * multiple))
+
+  def _constrain_render_dimensions(
+      self,
+      render_width: float,
+      render_height: float,
+      base_width: int,
+      base_height: int,
+      min_render: float,
+      max_render: float,
+      render_multiple: int,
+  ) -> Tuple[int, int]:
+    render_width = max(float(base_width), float(render_width))
+    render_height = max(float(base_height), float(render_height))
+    longest = max(render_width, render_height)
+    if min_render and longest < min_render:
+      scale = float(min_render) / longest
+      render_width *= scale
+      render_height *= scale
+      longest = max(render_width, render_height)
+    if max_render and longest > max_render:
+      scale = float(max_render) / longest
+      render_width *= scale
+      render_height *= scale
+    render_width = self._round_to_multiple(render_width, render_multiple)
+    render_height = self._round_to_multiple(render_height, render_multiple)
+    render_width = max(base_width, int(render_width))
+    render_height = max(base_height, int(render_height))
+    return render_width, render_height
+
+  def _resolve_render_dimensions(
+      self,
+      asset: Dict[str, Any],
+      style: Dict[str, Any],
+      defaults: Dict[str, Any],
+      base_width: int,
+      base_height: int,
+  ) -> Tuple[int, int, float]:
+    render_width = self._resolve_numeric(asset, style, defaults, "render_width", None)
+    render_height = self._resolve_numeric(asset, style, defaults, "render_height", None)
+    render_scale = float(self._resolve_numeric(asset, style, defaults, "render_scale", 1.0) or 1.0)
+    min_render = self._resolve_numeric(asset, style, defaults, "min_render_size", 0) or 0
+    max_render = self._resolve_numeric(asset, style, defaults, "max_render_size", 0) or 0
+    render_multiple = int(self._resolve_numeric(asset, style, defaults, "render_multiple", 8) or 8)
+
+    if render_width is None and render_height is None:
+      render_width = base_width * render_scale
+      render_height = base_height * render_scale
+    else:
+      render_width = float(render_width or base_width)
+      render_height = float(render_height or base_height)
+
+    render_width, render_height = self._constrain_render_dimensions(
+        float(render_width),
+        float(render_height),
+        base_width,
+        base_height,
+        float(min_render) if min_render else 0.0,
+        float(max_render) if max_render else 0.0,
+        render_multiple,
+    )
+    scale = 1.0
+    if base_width > 0 and base_height > 0:
+      scale = max(render_width / base_width, render_height / base_height)
+    return render_width, render_height, max(scale, 1.0)
+
   def _build_context(
       self,
       data: Dict[str, Any],
@@ -399,6 +472,12 @@ class SkinStyleJSONLoader:
         "sampler": raw.get("sampler") or fallback_sampler,
         "scheduler": raw.get("scheduler") or fallback_scheduler,
         "seed": raw.get("seed"),
+        "render_scale": raw.get("render_scale") or raw.get("default_render_scale") or 1.0,
+        "min_render_size": raw.get("min_render_size") or raw.get("render_min_size") or 0,
+        "max_render_size": raw.get("max_render_size") or raw.get("render_max_size") or 0,
+        "render_multiple": raw.get("render_multiple") or raw.get("render_step") or 8,
+        "render_width": raw.get("render_width"),
+        "render_height": raw.get("render_height"),
     }
 
     prompts: List[SkinAssetPrompt] = []
@@ -411,9 +490,27 @@ class SkinStyleJSONLoader:
       for asset_index, asset in enumerate(assets):
         if not isinstance(asset, dict):
           continue
-        width = self._resolve_dimension(asset, defaults, "width", fallback_width)
-        height = self._resolve_dimension(asset, defaults, "height", fallback_height)
-        context = self._build_context(raw, style, asset, style_index, asset_index, width, height)
+        target_width = self._resolve_dimension(asset, defaults, "width", fallback_width)
+        target_height = self._resolve_dimension(asset, defaults, "height", fallback_height)
+        render_width, render_height, render_scale = self._resolve_render_dimensions(
+            asset,
+            style,
+            defaults,
+            target_width,
+            target_height,
+        )
+        context = self._build_context(
+            raw,
+            style,
+            asset,
+            style_index,
+            asset_index,
+            target_width,
+            target_height,
+        )
+        context["render_width"] = render_width
+        context["render_height"] = render_height
+        context["render_scale"] = render_scale
         prompt, negative_prompt = self._collect_prompts(raw, style, asset, context)
         if not prompt:
           raise ValueError(f"Asset '{asset.get('slot')}' for style '{style_id}' produced an empty prompt")
@@ -440,8 +537,10 @@ class SkinStyleJSONLoader:
             "slot": slot,
             "style_id": style_id,
             "style_name": context.get("style_name"),
-            "width": width,
-            "height": height,
+            "width": target_width,
+            "height": target_height,
+            "render_width": render_width,
+            "render_height": render_height,
         }
         metadata["style_directory"] = style_dir
         metadata["file_stem"] = file_stem
@@ -449,8 +548,11 @@ class SkinStyleJSONLoader:
             name=name,
             prompt=prompt,
             negative_prompt=negative_prompt,
-            width=width,
-            height=height,
+            width=render_width,
+            height=render_height,
+            target_width=target_width,
+            target_height=target_height,
+            render_scale=render_scale,
             steps=steps,
             cfg_scale=cfg_scale,
             sampler=sampler,
@@ -460,7 +562,12 @@ class SkinStyleJSONLoader:
             style_id=style_id,
             metadata=metadata,
         ))
-        summary_lines.append(f"{style_id}: {slot} → {name} ({width}×{height})")
+        if render_width != target_width or render_height != target_height:
+          summary_lines.append(
+              f"{style_id}: {slot} → {name} ({target_width}×{target_height}, render {render_width}×{render_height})"
+          )
+        else:
+          summary_lines.append(f"{style_id}: {slot} → {name} ({target_width}×{target_height})")
 
     summary = "\n".join(summary_lines)
 
