@@ -130,7 +130,7 @@ test('loadGeneratedSkin infers tile sprites when slots omit manifest paths', () 
   assert.ok(result?.tiles, 'generated skin should include tiles');
   const tileMap = result.tiles.map || result.tiles.tiles;
   assert.ok(tileMap, 'tile map should exist');
-  assert.equal(tileMap.sand, 'ComfyUI/output/emerald-grid/tile_sand.png');
-  assert.equal(tileMap.rock, 'ComfyUI/output/emerald-grid/tile_rock.png');
+  assert.equal(tileMap.sand, 'ComfyUI/output/emerald-grid/sand_tile.png');
+  assert.equal(tileMap.rock, 'ComfyUI/output/emerald-grid/rock_tile.png');
 });
 
