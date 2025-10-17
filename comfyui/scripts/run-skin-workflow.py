@@ -131,6 +131,7 @@ class SkinStylePromptGenerator:
   _SLOT_ATTR_RE = re.compile(r"data-skin-slot\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
   _ATTR_RE = re.compile(r"([^\s=<]+)\s*=\s*(['\"])(.*?)\2", re.IGNORECASE | re.DOTALL)
   _DEFAULT_SLOT_PROMPT = "Dustland CRT UI skin slot"
+  _TILE_SLOT_RE = re.compile(r"^tile[-_:]?(.+)$", re.IGNORECASE)
 
   def __init__(self) -> None:
     script_path = Path(__file__).resolve()
@@ -398,6 +399,20 @@ class SkinStylePromptGenerator:
       if slug:
         parts.append(slug)
     return "/".join(parts)
+
+  def _infer_tile_stem(self, slot: str) -> Optional[str]:
+    if not slot:
+      return None
+    match = self._TILE_SLOT_RE.match(slot.strip())
+    if not match:
+      return None
+    slug = match.group(1).strip()
+    if not slug:
+      return None
+    sanitized = re.sub(r"[^a-z0-9]+", "_", slug, flags=re.IGNORECASE).strip("_")
+    if not sanitized:
+      return None
+    return f"{sanitized.lower()}_tile"
 
   def _segmentize(self, value: Any) -> List[str]:
     if value is None:
@@ -715,7 +730,6 @@ class SkinStylePromptGenerator:
         cfg_scale = float(self._resolve_numeric(asset, style, defaults, "cfg_scale", fallback_cfg))
         sampler = str(self._resolve_numeric(asset, style, defaults, "sampler", fallback_sampler))
         scheduler = str(self._resolve_numeric(asset, style, defaults, "scheduler", fallback_scheduler))
-        slot = context["slot"]
         steps, cfg_scale, sampler, scheduler = self._apply_quality_presets(
             slot=slot,
             width=target_width,
@@ -733,11 +747,15 @@ class SkinStylePromptGenerator:
           raw_name = self._format(str(filename_template), context) or slot
         else:
           raw_name = slot
-        stem = self._slugify_path(raw_name)
-        if not stem:
-          stem = self._slugify(slot) or slot
-        if not stem.startswith(style_dir + "/"):
-          stem = f"{style_dir}/{stem}"
+        tile_stem = None if filename_template else self._infer_tile_stem(slot)
+        if tile_stem:
+          stem = f"{style_dir}/{tile_stem}"
+        else:
+          stem = self._slugify_path(raw_name)
+          if not stem:
+            stem = self._slugify(slot) or slot
+          if not stem.startswith(style_dir + "/"):
+            stem = f"{style_dir}/{stem}"
         file_stem = stem.split("/")[-1]
         name = stem
         metadata = {

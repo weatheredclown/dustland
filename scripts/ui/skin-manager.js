@@ -446,13 +446,26 @@
     const extension = merged.extension;
     const normalizedExtension = typeof extension === 'string' ? extension : '';
     const normalizedExtensionLower = normalizedExtension.toLowerCase();
+    function appendDefaultExtension(base){
+      if(!base) return null;
+      if(!normalizedExtension) return base;
+      const trimmed = String(base).trim();
+      if(!trimmed) return null;
+      const lower = trimmed.toLowerCase();
+      if(lower.endsWith(normalizedExtensionLower)) return trimmed;
+      return `${trimmed}${normalizedExtension}`;
+    }
     function defaultSlotFilename(name){
       const base = typeof name === 'string' ? name.trim() : '';
       if(!base) return null;
-      if(!normalizedExtension) return base;
-      const lower = base.toLowerCase();
-      if(lower.endsWith(normalizedExtensionLower)) return base;
-      return `${base}${normalizedExtension}`;
+      return appendDefaultExtension(base);
+    }
+    function defaultTileFilename(tileKey){
+      const slug = typeof tileKey === 'string' ? tileKey.trim() : '';
+      if(!slug) return null;
+      const sanitized = slug.replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '');
+      if(!sanitized) return null;
+      return appendDefaultExtension(`${sanitized.toLowerCase()}_tile`);
     }
     const slotStyles = {};
     const tileSlotDefinitions = new Map();
@@ -463,13 +476,13 @@
       if(tileKey){
         let effectiveDefinition = definition;
         if(effectiveDefinition == null){
-        const transformedKey = tileKey.replace(/-/g, '_');
-        effectiveDefinition = `${transformedKey}_tile${extension}`;
+          effectiveDefinition = defaultTileFilename(tileKey) ?? defaultSlotFilename(name);
         }
         if(effectiveDefinition != null){
           tileSlotDefinitions.set(tileKey, effectiveDefinition);
         }
-        applySlotDefinition(slotStyles, name, definition, baseDir, styleDir, extension);
+        const appliedDefinition = effectiveDefinition ?? definition;
+        applySlotDefinition(slotStyles, name, appliedDefinition, baseDir, styleDir, extension);
         return;
       }
       applySlotDefinition(slotStyles, name, definition, baseDir, styleDir, extension);
