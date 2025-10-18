@@ -134,3 +134,22 @@ test('loadGeneratedSkin infers tile sprites when slots omit manifest paths', () 
   assert.equal(tileMap.rock, 'ComfyUI/output/emerald-grid/rock_tile.png');
 });
 
+test('loadGeneratedSkin derives tile atlas entries without slot manifests', () => {
+  const sandbox = createSkinSandbox();
+  const skinApi = loadSkinManager(sandbox);
+  assert.ok(skinApi, 'skin API should be available');
+
+  const styleId = 'emerald-grid';
+
+  const result = skinApi.loadGeneratedSkin(styleId, {
+    baseDir: 'ComfyUI/output',
+    styleDir: styleId
+  });
+
+  assert.ok(result?.tiles, 'generated skin should include tiles');
+  const tileMap = result.tiles.map || result.tiles.tiles;
+  assert.ok(tileMap, 'tile map should exist');
+  assert.equal(tileMap.sand, 'ComfyUI/output/emerald-grid/sand_tile.png');
+  assert.equal(tileMap.rock, 'ComfyUI/output/emerald-grid/rock_tile.png');
+});
+
