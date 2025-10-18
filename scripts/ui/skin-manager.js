@@ -498,6 +498,18 @@
         handleSlotDefinition(slotName, value);
       }
     }
+    const tileEnum = globalThis?.TILE;
+    if(tileEnum && typeof tileEnum === 'object'){
+      for(const name of Object.keys(tileEnum)){
+        if(typeof name !== 'string' || !name.trim()) continue;
+        const slotCandidate = `tile_${name}`;
+        const tileKey = parseTileSlotName(slotCandidate);
+        if(!tileKey || tileSlotDefinitions.has(tileKey)) continue;
+        const fallback = defaultTileFilename(tileKey) ?? defaultSlotFilename(slotCandidate);
+        if(fallback == null) continue;
+        tileSlotDefinitions.set(tileKey, fallback);
+      }
+    }
     const ui = {};
     if(manifestSections.uiVars) ui.vars = { ...manifestSections.uiVars };
     if(Object.keys(slotStyles).length) ui.slots = slotStyles;
