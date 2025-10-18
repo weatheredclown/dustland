@@ -24,6 +24,20 @@
       "prompt": "sunset oranges, violet haze, vaporwave gradients, chrome edges, holographic shimmer",
       "palette": "amber to rose gradients, indigo shadows, cyan glints",
       "negative_prompt": "muddy brown, desaturated"
+    },
+    {
+      "id": "ega-dos-1990",
+      "label": "16-Color EGA DOS (1990)",
+      "prompt": "16-color EGA, 1990s DOS pixel art, dithered gradients, sharp edges, blocky",
+      "palette": "classic 16-color EGA palette, vibrant magenta, cyan, yellow, sharp contrast",
+      "negative_prompt": "smooth gradients, anti-aliasing, modern, high-resolution"
+    },
+    {
+      "id": "snes-colorful",
+      "label": "Colorful Super Nintendo",
+      "prompt": "colorful Super Nintendo pixel art, 16-bit, vibrant, detailed sprites,Mode 7, tile-based",
+      "palette": "rich and varied SNES palette, bright primaries, lush greens, deep blues",
+      "negative_prompt": "dull colors, low-contrast, realistic, 3D"
     }
   ],
   "assets": [
