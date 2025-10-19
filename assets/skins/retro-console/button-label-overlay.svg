@@ -1,1 +1,9 @@
-<svg width="240" height="80" viewBox="0 0 240 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="240" height="80" fill="white" opacity="0.1"/></svg>
+<svg width="240" height="80" viewBox="0 0 240 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="vignette-button-label-overlay" cx="0.5" cy="0.5" r="0.75">
+      <stop offset="0" stop-color="#0A0B2E" stop-opacity="0.09000000000000001"/>
+      <stop offset="1" stop-color="#05060F" stop-opacity="0.45"/>
+    </radialGradient>
+  </defs>
+<rect width="240" height="80" fill="url(#vignette-button-label-overlay)"/>
+</svg>

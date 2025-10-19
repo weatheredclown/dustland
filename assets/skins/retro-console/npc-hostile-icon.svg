@@ -1,1 +1,32 @@
-<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="64" cy="64" r="50" fill="red"/></svg>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-npc-hostile-icon" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#E52B20"/>
+      <stop offset="1" stop-color="#FF7F3F"/>
+    </linearGradient>
+    <linearGradient id="shine-npc-hostile-icon" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.65"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid-npc-hostile-icon" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#FFFFFF" fill-opacity="0.05"/>
+      <rect width="4" height="4" fill="#000000" fill-opacity="0.12"/>
+      <rect x="4" y="4" width="4" height="4" fill="#000000" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="spark-npc-hostile-icon" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <circle cx="64" cy="64" r="64" fill="#05060F"/>
+    <circle cx="64" cy="64" r="60" fill="url(#grad-npc-hostile-icon)" stroke="#FEDA4A" stroke-width="6"/>
+    <circle cx="64" cy="64" r="54.00" fill="url(#grid-npc-hostile-icon)" fill-opacity="0.3"/>
+    <circle cx="64" cy="40.00" r="12.00" fill="#FFFFFF" fill-opacity="0.85"/>
+    <g fill="#3A042E"><circle cx="37.00" cy="52.00" r="10.80"/><circle cx="91.00" cy="52.00" r="10.80"/></g>
+    <path d="M28.00 79.00Q64.00 52.00 100.00 79.00" stroke="#3A042E" stroke-width="6" stroke-linecap="round"/>
+    
+    <path d="M48.43,24.58L34.73,34.97 39.71,51.42 25.60,41.60 11.49,51.42 16.47,34.97 2.77,24.58 19.96,24.23 25.60,8.00 31.24,24.23Z" fill="#E52B20" stroke="#7C041B" stroke-width="3"/>
+  
+</svg>

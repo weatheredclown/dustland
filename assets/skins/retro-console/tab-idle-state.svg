@@ -1,1 +1,28 @@
-<svg width="200" height="80" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="80" rx="10" fill="#404040"/></svg>
+<svg width="200" height="80" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-tab-idle-state" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#0A0B2E"/>
+      <stop offset="1" stop-color="#1C1F3A"/>
+    </linearGradient>
+    <linearGradient id="shine-tab-idle-state" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.6"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.15"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid-tab-idle-state" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#FFFFFF" fill-opacity="0.05"/>
+      <rect width="4" height="4" fill="#000000" fill-opacity="0.12"/>
+      <rect x="4" y="4" width="4" height="4" fill="#000000" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="spark-tab-idle-state" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <rect x="2" y="2" width="196.00" height="76.00" rx="32.00" fill="url(#grad-tab-idle-state)" stroke="#38A7FF" stroke-width="4"/>
+    <rect x="10" y="10" width="180.00" height="60.00" rx="26.00" fill="url(#grid-tab-idle-state)" fill-opacity="0.3"/>
+    <rect x="10" y="10" width="180.00" height="60.00" rx="26.00" fill="url(#shine-tab-idle-state)"/>
+    <path d="M188.35,28.09L174.65,39.46 179.05,56.71 164.00,47.20 148.95,56.71 153.35,39.46 139.65,28.09 157.42,26.94 164.00,10.40 170.58,26.94Z" fill="#B085FF" stroke="#F3A400" stroke-width="2.5"/>
+  
+</svg>

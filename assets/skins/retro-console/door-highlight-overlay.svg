@@ -1,1 +1,12 @@
-<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" fill="yellow" opacity="0.3"/></svg>
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="door-door-highlight-overlay" cx="0.5" cy="0.5" r="0.65">
+      <stop offset="0" stop-color="#FEDA4A" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#FF7F3F" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <rect width="64" height="64" fill="url(#door-door-highlight-overlay)"/>
+    <path d="M53.30,25.08L40.52,34.77 45.17,50.12 32.00,40.96 18.83,50.12 23.48,34.77 10.70,25.08 26.73,24.75 32.00,9.60 37.27,24.75Z" fill="#FEDA4A" fill-opacity="0.65"/>
+  
+</svg>

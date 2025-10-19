@@ -1,1 +1,32 @@
-<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="64" cy="64" r="50" fill="brown"/></svg>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-shopkeeper-icon" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FEDA4A"/>
+      <stop offset="1" stop-color="#FF7F3F"/>
+    </linearGradient>
+    <linearGradient id="shine-shopkeeper-icon" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.65"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid-shopkeeper-icon" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#FFFFFF" fill-opacity="0.05"/>
+      <rect width="4" height="4" fill="#000000" fill-opacity="0.12"/>
+      <rect x="4" y="4" width="4" height="4" fill="#000000" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="spark-shopkeeper-icon" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <circle cx="64" cy="64" r="64" fill="#05060F"/>
+    <circle cx="64" cy="64" r="58" fill="url(#grad-shopkeeper-icon)" stroke="#E52B20" stroke-width="6"/>
+    <circle cx="64" cy="64" r="52.20" fill="url(#grid-shopkeeper-icon)" fill-opacity="0.35"/>
+    <path d="M11.80 29.20H116.20L98.80 0.20H29.20Z" fill="#E52B20" stroke="#8C1C1C" stroke-width="4"/>
+    <circle cx="43.70" cy="49.50" r="9.28" fill="#0D1B4C"/>
+    <circle cx="84.30" cy="49.50" r="9.28" fill="#0D1B4C"/>
+    <path d="M23.40 75.60Q52.40 93.00 64.00 75.60Q75.60 93.00 104.60 75.60" stroke="#733511" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path d="M124.46,24.83L112.33,35.23 116.04,50.77 102.40,42.44 88.76,50.77 92.47,35.23 80.34,24.83 96.26,23.55 102.40,8.80 108.54,23.55Z" fill="#FEDA4A" stroke="#F3A400" stroke-width="3"/>
+  
+</svg>

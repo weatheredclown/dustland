@@ -1,1 +1,9 @@
-<svg width="640" height="480" viewBox="0 0 640 480" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="640" height="480" fill="#1C1C1C" rx="15"/></svg>
+<svg width="640" height="480" viewBox="0 0 640 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="vignette-modal-window-backdrop" cx="0.5" cy="0.5" r="0.75">
+      <stop offset="0" stop-color="#0A0B2E" stop-opacity="0.15000000000000002"/>
+      <stop offset="1" stop-color="#05060F" stop-opacity="0.75"/>
+    </radialGradient>
+  </defs>
+<rect width="640" height="480" fill="url(#vignette-modal-window-backdrop)"/>
+</svg>

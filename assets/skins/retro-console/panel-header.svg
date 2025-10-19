@@ -1,3 +1,12 @@
 <svg width="512" height="160" viewBox="0 0 512 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="512" height="160" fill="#333333"/>
+  <defs>
+    <linearGradient id="accent-panel-header" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FEDA4A"/>
+      <stop offset="1" stop-color="#FF7F3F"/>
+    </linearGradient>
+  </defs>
+
+    <rect width="512" height="160" rx="102.4" fill="url(#accent-panel-header)"/>
+    <path d="M309.26,62.70L274.26,85.93 288.92,125.30 256.00,99.20 223.08,125.30 237.74,85.93 202.74,62.70 244.71,64.47 256.00,24.00 267.29,64.47Z" fill="#FFFFFF" fill-opacity="0.85"/>
+  
 </svg>

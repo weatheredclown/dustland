@@ -1,1 +1,29 @@
-<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="64" cy="64" r="50" fill="lightblue"/></svg>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-player-icon-default" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#38A7FF"/>
+      <stop offset="1" stop-color="#B085FF"/>
+    </linearGradient>
+    <linearGradient id="shine-player-icon-default" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.7"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid-player-icon-default" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#FFFFFF" fill-opacity="0.05"/>
+      <rect width="4" height="4" fill="#000000" fill-opacity="0.12"/>
+      <rect x="4" y="4" width="4" height="4" fill="#000000" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="spark-player-icon-default" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <circle cx="64" cy="64" r="66" fill="#05060F"/>
+    <circle cx="64" cy="64" r="62" fill="#00F6FF" fill-opacity="0.3"/>
+    <circle cx="64" cy="64" r="60" fill="url(#grad-player-icon-default)" stroke="#38A7FF" stroke-width="6"/>
+    <circle cx="64" cy="64" r="51.00" fill="url(#grid-player-icon-default)" fill-opacity="0.35"/>
+    <path d="M98.24,52.88L79.98,69.19 85.16,93.12 64.00,80.80 42.84,93.12 48.02,69.19 29.76,52.88 54.13,50.41 64.00,28.00 73.87,50.41Z" fill="#FEDA4A" stroke="#F3A400" stroke-width="3"/>
+  
+</svg>

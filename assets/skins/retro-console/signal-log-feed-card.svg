@@ -1,1 +1,28 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="#202020"/></svg>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-signal-log-feed-card" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#0A0B2E"/>
+      <stop offset="1" stop-color="#6D24B2"/>
+    </linearGradient>
+    <linearGradient id="shine-signal-log-feed-card" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.5"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.15"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid-signal-log-feed-card" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#FFFFFF" fill-opacity="0.05"/>
+      <rect width="4" height="4" fill="#000000" fill-opacity="0.12"/>
+      <rect x="4" y="4" width="4" height="4" fill="#000000" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="spark-signal-log-feed-card" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <rect x="4" y="4" width="504.00" height="504.00" rx="61.44" fill="url(#grad-signal-log-feed-card)" stroke="#38A7FF" stroke-width="4"/>
+    <rect x="12" y="12" width="488.00" height="488.00" rx="57.44" fill="url(#grid-signal-log-feed-card)" fill-opacity="0.3"/>
+    <rect x="12.00" y="102.4" width="16.27" height="307.20" rx="4" fill="#00F6FF"/><rect x="52.67" y="153.6" width="16.27" height="204.80" rx="4" fill="#00F6FF"/><rect x="93.33" y="153.6" width="16.27" height="204.80" rx="4" fill="#00F6FF"/><rect x="134.00" y="102.4" width="16.27" height="307.20" rx="4" fill="#00F6FF"/><rect x="174.67" y="153.6" width="16.27" height="204.80" rx="4" fill="#00F6FF"/><rect x="215.33" y="153.6" width="16.27" height="204.80" rx="4" fill="#00F6FF"/><rect x="256.00" y="102.4" width="16.27" height="307.20" rx="4" fill="#00F6FF"/><rect x="296.67" y="153.6" width="16.27" height="204.80" rx="4" fill="#00F6FF"/><rect x="337.33" y="153.6" width="16.27" height="204.80" rx="4" fill="#00F6FF"/><rect x="378.00" y="102.4" width="16.27" height="307.20" rx="4" fill="#00F6FF"/><rect x="418.67" y="153.6" width="16.27" height="204.80" rx="4" fill="#00F6FF"/><rect x="459.33" y="153.6" width="16.27" height="204.80" rx="4" fill="#00F6FF"/>
+    <path d="M469.29,132.28L449.81,148.11 456.27,172.36 435.20,158.72 414.13,172.36 420.59,148.11 401.11,132.28 426.17,130.93 435.20,107.52 444.23,130.93Z" fill="#FEDA4A" stroke="#F3A400" stroke-width="2"/>
+  
+</svg>

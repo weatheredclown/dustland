@@ -1,1 +1,39 @@
-<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="64" cy="64" r="50" fill="gray" opacity="0.5"/></svg>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-remote-party-icon" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#1F2F98"/>
+      <stop offset="1" stop-color="#0A0B2E"/>
+    </linearGradient>
+    <linearGradient id="shine-remote-party-icon" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.5"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid-remote-party-icon" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#FFFFFF" fill-opacity="0.05"/>
+      <rect width="4" height="4" fill="#000000" fill-opacity="0.12"/>
+      <rect x="4" y="4" width="4" height="4" fill="#000000" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="spark-remote-party-icon" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <rect x="4" y="4" width="120.00" height="120.00" rx="32" fill="url(#grad-remote-party-icon)" stroke="#38A7FF" stroke-width="4"/>
+    <rect x="12" y="12" width="104.00" height="104.00" rx="25.6" fill="url(#grid-remote-party-icon)" fill-opacity="0.3"/>
+    <g>
+      <circle cx="32.00" cy="74.24" r="23.04" fill="#FFFFFF" fill-opacity="0.9" stroke="#38A7FF" stroke-width="3"/>
+      <circle cx="32.00" cy="62.72" r="9.22" fill="#FEDA4A" fill-opacity="0.9"/>
+    </g>
+<g>
+      <circle cx="64.00" cy="53.76" r="23.04" fill="#FFFFFF" fill-opacity="0.9" stroke="#38A7FF" stroke-width="3"/>
+      <circle cx="64.00" cy="42.24" r="9.22" fill="#FEDA4A" fill-opacity="0.9"/>
+    </g>
+<g>
+      <circle cx="96.00" cy="74.24" r="23.04" fill="#FFFFFF" fill-opacity="0.9" stroke="#38A7FF" stroke-width="3"/>
+      <circle cx="96.00" cy="62.72" r="9.22" fill="#FEDA4A" fill-opacity="0.9"/>
+    </g>
+    <path d="M118.54,22.44L113.06,26.98 114.82,33.88 108.80,30.08 102.78,33.88 104.54,26.98 99.06,22.44 106.17,21.98 108.80,15.36 111.43,21.98Z" fill="#FF7F3F" stroke="#F36228" stroke-width="2"/>
+  
+</svg>

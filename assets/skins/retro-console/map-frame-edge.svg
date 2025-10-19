@@ -1,1 +1,13 @@
-<svg width="16" height="128" viewBox="0 0 16 128" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="16" height="128" fill="#444444"/></svg>
+<svg width="16" height="128" viewBox="0 0 16 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="edge-map-frame-edge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1F2F98"/>
+      <stop offset="1" stop-color="#0A0B2E"/>
+    </linearGradient>
+  </defs>
+
+    <rect width="16" height="128" fill="#05060F"/>
+    <rect x="2" y="2" width="12.00" height="124.00" fill="url(#edge-map-frame-edge)"/>
+    <rect x="6.00" y="12.80" width="4" height="102.40" fill="#FFFFFF" fill-opacity="0.12"/>
+  
+</svg>

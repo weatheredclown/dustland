@@ -1,1 +1,28 @@
-<svg width="256" height="96" viewBox="0 0 256 96" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="256" height="96" fill="#4A4A4A"/></svg>
+<svg width="256" height="96" viewBox="0 0 256 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-section-header-badge" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#B085FF"/>
+      <stop offset="1" stop-color="#6D24B2"/>
+    </linearGradient>
+    <linearGradient id="shine-section-header-badge" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.6"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid-section-header-badge" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#FFFFFF" fill-opacity="0.05"/>
+      <rect width="4" height="4" fill="#000000" fill-opacity="0.12"/>
+      <rect x="4" y="4" width="4" height="4" fill="#000000" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="spark-section-header-badge" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <rect x="2" y="2" width="252.00" height="92.00" rx="30.72" fill="url(#grad-section-header-badge)" stroke="#38A7FF" stroke-width="4"/>
+    <rect x="10" y="10" width="236.00" height="76.00" rx="22.72" fill="url(#shine-section-header-badge)"/>
+    <rect x="10" y="10" width="236.00" height="76.00" rx="22.72" fill="url(#grid-section-header-badge)" fill-opacity="0.32"/>
+    <path d="M157.22,38.51L141.15,52.27 146.06,72.85 128.00,61.82 109.94,72.85 114.85,52.27 98.78,38.51 119.87,36.82 128.00,17.28 136.13,36.82Z" fill="#FEDA4A" stroke="#F3A400" stroke-width="3"/>
+  
+</svg>

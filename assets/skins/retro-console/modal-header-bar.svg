@@ -1,1 +1,12 @@
-<svg width="640" height="120" viewBox="0 0 640 120" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="640" height="120" fill="#2A2A2A"/></svg>
+<svg width="640" height="120" viewBox="0 0 640 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="accent-modal-header-bar" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FEDA4A"/>
+      <stop offset="1" stop-color="#FF7F3F"/>
+    </linearGradient>
+  </defs>
+
+    <rect width="640" height="120" rx="128" fill="url(#accent-modal-header-bar)"/>
+    <path d="M359.94,47.02L333.70,64.45 344.69,93.98 320.00,74.40 295.31,93.98 306.30,64.45 280.06,47.02 311.54,48.35 320.00,18.00 328.46,48.35Z" fill="#FFFFFF" fill-opacity="0.85"/>
+  
+</svg>

@@ -1,1 +1,30 @@
-<svg width="200" height="72" viewBox="0 0 200 72" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="72" rx="36" fill="#4F4F4F"/></svg>
+<svg width="200" height="72" viewBox="0 0 200 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-pill-toggle-button" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#38B653"/>
+      <stop offset="1" stop-color="#71FFB2"/>
+    </linearGradient>
+    <linearGradient id="shine-pill-toggle-button" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.75"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid-pill-toggle-button" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#FFFFFF" fill-opacity="0.05"/>
+      <rect width="4" height="4" fill="#000000" fill-opacity="0.12"/>
+      <rect x="4" y="4" width="4" height="4" fill="#000000" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="spark-pill-toggle-button" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <rect x="2" y="2" width="196.00" height="68.00" rx="23.04" fill="url(#grad-pill-toggle-button)" stroke="#38A7FF" stroke-width="4"/>
+    <rect x="6" y="6" width="188.00" height="60.00" rx="19.04" fill="url(#grid-pill-toggle-button)" fill-opacity="0.35"/>
+    <rect x="6" y="6" width="188.00" height="60.00" rx="19.04" fill="url(#shine-pill-toggle-button)"/>
+    <g transform="translate(6 6)" opacity="0.85"><path d="M4.80 4.80H183.20" stroke="#00F6FF" stroke-width="2" stroke-linecap="round" stroke-dasharray="8 6"/><path d="M4.80 30.00H185.12" stroke="#00F6FF" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 6"/><circle cx="5.28" cy="30.00" r="4" fill="#FEDA4A" stroke="#00F6FF" stroke-width="2"/><circle cx="185.12" cy="30.00" r="4" fill="#00F6FF" stroke="#00F6FF" stroke-width="2"/><path d="M94.00 55.20V3.84" stroke="#00F6FF" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 4"/><circle cx="94.00" cy="3.84" r="3" fill="#FF7F3F" stroke="#00F6FF" stroke-width="1.5"/><rect x="38.64" y="3.84" width="0.90" height="52.32" fill="#05060F" stroke="#00F6FF" stroke-width="1.5" rx="0.45"/><circle cx="38.64" cy="15.00" r="2.4" fill="#00F6FF"/><circle cx="38.64" cy="45.00" r="2.4" fill="#FF7F3F"/><rect x="72.48" y="3.84" width="0.90" height="52.32" fill="#05060F" stroke="#00F6FF" stroke-width="1.5" rx="0.45"/><circle cx="72.48" cy="15.00" r="2.4" fill="#00F6FF"/><circle cx="72.48" cy="45.00" r="2.4" fill="#FF7F3F"/><path d="M4.80 55.20L18.00 57.12" stroke="#00F6FF" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="4 4"/><path d="M183.20 4.80L170.00 2.88" stroke="#00F6FF" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="4 4"/><rect x="5.28" y="13.20" width="7.20" height="7.20" rx="6" fill="#05060F" stroke="#00F6FF" stroke-width="2"/><rect x="6.58" y="14.50" width="4.61" height="4.61" rx="4" fill="#00F6FF" fill-opacity="0.35" stroke="#00F6FF" stroke-opacity="0.6" stroke-width="1.4"/><path d="M8.88 20.40V21.70" stroke="#00F6FF" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3"/><path d="M12.48 16.80H13.78" stroke="#00F6FF" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3"/><path d="M10.52,16.27L9.56,17.02 9.90,18.20 8.88,17.52 7.86,18.20 8.20,17.02 7.24,16.27 8.46,16.22 8.88,15.07 9.30,16.22Z" fill="#FEDA4A" fill-opacity="0.65" stroke="#F3A400" stroke-width="1.5"/><rect x="175.52" y="37.20" width="7.20" height="7.20" rx="6" fill="#05060F" stroke="#00F6FF" stroke-width="2"/><rect x="176.82" y="38.50" width="4.61" height="4.61" rx="4" fill="#FF7F3F" fill-opacity="0.35" stroke="#FF7F3F" stroke-opacity="0.6" stroke-width="1.4"/><path d="M179.12 44.40V45.70" stroke="#00F6FF" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3"/><path d="M182.72 40.80H184.02" stroke="#00F6FF" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3"/><path d="M180.76,40.27L179.80,41.02 180.14,42.20 179.12,41.52 178.10,42.20 178.44,41.02 177.48,40.27 178.70,40.22 179.12,39.07 179.54,40.22Z" fill="#FEDA4A" fill-opacity="0.65" stroke="#F3A400" stroke-width="1.5"/></g>
+    <g transform="translate(6 6)"><path d="M35.37,19.04L28.52,24.82 30.66,33.52 23.04,28.80 15.42,33.52 17.56,24.82 10.71,19.04 19.65,18.38 23.04,10.08 26.43,18.38Z" fill="#FEDA4A" stroke="#F3A400" stroke-width="2"/></g>
+    <rect x="160.40" y="14.40" width="32.40" height="32.40" rx="6.48" fill="#FEDA4A" stroke="#F0B400" stroke-width="3.24"/><rect x="165.80" y="19.80" width="21.60" height="21.60" rx="4.32" fill="#FFEF9A"/><rect x="166.88" y="25.20" width="5.40" height="5.40" fill="#E52B20" fill-opacity="0.8"/><rect x="172.28" y="25.20" width="5.40" height="5.40" fill="#E52B20" fill-opacity="0.8"/><rect x="177.68" y="25.20" width="5.40" height="5.40" fill="#E52B20" fill-opacity="0.8"/><rect x="166.88" y="30.60" width="5.40" height="5.40" fill="#E52B20" fill-opacity="0.8"/><rect x="172.28" y="30.60" width="5.40" height="5.40" fill="#E52B20" fill-opacity="0.8"/><rect x="177.68" y="30.60" width="5.40" height="5.40" fill="#E52B20" fill-opacity="0.8"/><rect x="172.28" y="36.00" width="5.40" height="5.40" fill="#E52B20" fill-opacity="0.8"/><rect x="172.28" y="41.40" width="5.40" height="5.40" fill="#E52B20" fill-opacity="0.8"/>
+  
+</svg>

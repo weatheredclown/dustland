@@ -1,1 +1,18 @@
-<svg width="200" height="80" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="80" fill="#333333" rx="40"/></svg>
+<svg width="200" height="80" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="weather-weather-badge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#38A7FF"/>
+      <stop offset="1" stop-color="#1F2F98"/>
+    </linearGradient>
+  </defs>
+
+    <rect width="200" height="80" rx="16" fill="url(#weather-weather-badge)" stroke="#38A7FF" stroke-width="4"/>
+    <path d="M72.17,24.04L64.57,29.48 67.52,38.36 60.00,32.80 52.48,38.36 55.43,29.48 47.83,24.04 57.18,24.12 60.00,15.20 62.82,24.12Z" fill="#FEDA4A" stroke="#F3A400" stroke-width="2"/>
+    <ellipse cx="110.00000000000001" cy="48" rx="64" ry="20.8" fill="#FFFFFF" fill-opacity="0.92" stroke="#D6E4FF" stroke-width="3"/>
+    <g stroke="#38A7FF" stroke-width="4" stroke-linecap="round">
+      <line x1="60" y1="60" x2="48" y2="73.60000000000001"/>
+      <line x1="88" y1="62.400000000000006" x2="76" y2="76"/>
+      <line x1="115.99999999999999" y1="60.8" x2="104" y2="75.19999999999999"/>
+    </g>
+  
+</svg>
