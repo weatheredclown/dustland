@@ -41,11 +41,21 @@ function createSkinSandbox(){
     setTimeout,
     clearTimeout,
     Image: FakeImage,
+    fetch(){
+      return Promise.resolve({
+        ok: true,
+        blob: async () => ({})
+      });
+    },
     document: {
       readyState: 'complete',
       documentElement: { style: { setProperty(){}, removeProperty(){} } },
       body: { style: { setProperty(){}, removeProperty(){} } },
       querySelectorAll(){ return []; }
+    },
+    URL: {
+      createObjectURL(){ return 'blob:mock-url'; },
+      revokeObjectURL(){ }
     },
     localStorage: {
       getItem(){ return null; },
@@ -151,5 +161,24 @@ test('loadGeneratedSkin derives tile atlas entries without slot manifests', () =
   assert.ok(tileMap, 'tile map should exist');
   assert.equal(tileMap.sand, 'ComfyUI/output/emerald-grid/sand_tile.png');
   assert.equal(tileMap.rock, 'ComfyUI/output/emerald-grid/rock_tile.png');
+});
+
+test('loadGeneratedSkin loads packaged retro-console assets without overrides', () => {
+  const sandbox = createSkinSandbox();
+  const skinApi = loadSkinManager(sandbox);
+  assert.ok(skinApi, 'skin API should be available');
+
+  const result = skinApi.loadGeneratedSkin('retro-console');
+
+  assert.ok(result, 'packaged skin should load');
+  assert.equal(result.id, 'retro-console');
+  const panelSlot = result.ui?.slots?.['main-panel'];
+  assert.ok(panelSlot, 'retro-console skin should define main panel slot');
+  assert.equal(panelSlot.backgroundImage, 'url(assets/skins/retro-console/primary-panel-backdrop.svg)');
+
+  const storedConfig = skinApi.getGeneratedSkinConfig('retro-console');
+  assert.ok(storedConfig, 'packaged config should be stored');
+  assert.equal(storedConfig.baseDir, 'assets/skins');
+  assert.equal(storedConfig.extension, '.svg');
 });
 

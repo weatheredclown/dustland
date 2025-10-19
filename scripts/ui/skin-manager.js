@@ -192,6 +192,85 @@
   }
 
   const generatedConfigs = new Map();
+  const PACKAGED_GENERATED_SKINS = {
+    'retro-console': {
+      baseDir: 'assets/skins',
+      styleDir: 'retro-console',
+      extension: '.svg',
+      manifest: {
+        id: 'retro-console',
+        label: 'Retro Console',
+        slots: {
+          'main-panel': 'primary-panel-backdrop.svg',
+          'panel-header': 'panel-header-overlay.svg',
+          'panel-body': 'panel-body-wallpaper.svg',
+          'collapsible-section': 'collapsible-section-background.svg',
+          'section-header-badge': 'section-header-badge.svg',
+          'signal-log-feed': 'signal-log-feed-card.svg',
+          'control-item': 'control-tile-card.svg',
+          tab: 'tab-idle-state.svg',
+          'tab:active': 'tab-active-state.svg',
+          button: {
+            backgroundImage: 'url(assets/skins/retro-console/button-default.svg)'
+          },
+          'button:hover': {
+            backgroundImage: 'url(assets/skins/retro-console/button-hover.svg)'
+          },
+          'button:active': {
+            backgroundImage: 'url(assets/skins/retro-console/button-pressed.svg)'
+          },
+          'pill-toggle': 'pill-toggle-button.svg',
+          'panel-toggle': 'panel-toggle-chip.svg',
+          'hud-badge': 'hud-badge-background.svg',
+          'hud-bar-fill': 'hud-bar-fill.svg',
+          'hud-bar-ghost': 'hud-bar-ghost-fill.svg',
+          'weather-badge': 'weather-badge.svg',
+          'status-icons': 'status-icon-glyphs.svg',
+          'inventory-slot': 'inventory-slot-frame.svg',
+          'quest-card': 'quest-card-background.svg',
+          'party-card': 'party-card-background.svg',
+          'slot-highlight-better': 'slot-highlight-better-item.svg',
+          'slot-highlight-locked': 'slot-highlight-level-locked.svg',
+          'modal-window': 'modal-window-backdrop.svg',
+          'modal-header': 'modal-header-bar.svg',
+          'modal-body': 'modal-body-fill.svg',
+          'dialog-window': 'dialog-window-background.svg',
+          'dialog-portrait': 'dialog-portrait-frame.svg',
+          'dialog-choice': 'dialog-choice-button.svg',
+          overlay: 'overlay-vignette.svg',
+          'combat-window': 'combat-window-background.svg',
+          'combat-command-card': 'combat-command-card.svg',
+          'persona-window': 'persona-window-background.svg',
+          'camp-chest-panel': 'camp-chest-panel.svg',
+          'workbench-panel': 'workbench-panel.svg',
+          'shop-panel': 'shop-panel.svg',
+          'shop-header': 'shop-header-strip.svg',
+          'tile-atlas': 'tile-atlas.svg',
+          'door-highlight': 'door-highlight-overlay.svg',
+          'map-frame-corner': 'map-frame-corners.svg',
+          'map-frame-edge': 'map-frame-edge.svg',
+          'player-icon': 'player-icon-default.svg',
+          'player-icon-adrenaline': 'player-icon-adrenaline.svg',
+          'npc-friendly-icon': 'npc-friendly-icon.svg',
+          'npc-hostile-icon': 'npc-hostile-icon.svg',
+          'npc-quest-giver-icon': 'npc-quest-giver-icon.svg',
+          'trainer-icon': 'trainer-icon.svg',
+          'shopkeeper-icon': 'shopkeeper-icon.svg',
+          'remote-party-icon': 'remote-party-icon.svg',
+          'loot-drop-icon': 'loot-drop-icon.svg',
+          'world-item-icon': 'world-item-icon.svg',
+          'stack-multi-drop-icon': 'stack-multi-drop-icon.svg',
+          'inventory-item-glyphs': 'inventory-item-glyph-set.svg',
+          'panel-title-accent': 'panel-title-accent.svg',
+          'section-title-accent': 'section-title-accent.svg',
+          'hud-label-chip': 'hud-label-chips.svg',
+          'weather-text-treatment': 'weather-text-treatment.svg',
+          'button-label-overlay': 'button-label-overlay.svg'
+        }
+      },
+      slots: null
+    }
+  };
 
   function toForwardSlashes(value){
     return typeof value === 'string' ? value.replace(/\\/g, '/') : '';
@@ -283,6 +362,16 @@
     return Array.from(slots);
   }
 
+  function getPackagedGeneratedConfig(name){
+    const styleId = typeof name === 'string' ? name.trim() : '';
+    if(!styleId) return null;
+    const direct = PACKAGED_GENERATED_SKINS[styleId];
+    if(direct) return cloneGeneratedConfig(direct);
+    const lower = styleId.toLowerCase();
+    if(lower !== styleId && PACKAGED_GENERATED_SKINS[lower]) return cloneGeneratedConfig(PACKAGED_GENERATED_SKINS[lower]);
+    return null;
+  }
+
   function cloneGeneratedConfig(config){
     if(!config) return null;
     const slots = config.slots;
@@ -300,6 +389,8 @@
   }
 
   function defaultGeneratedConfig(name){
+    const packaged = getPackagedGeneratedConfig(name);
+    if(packaged) return packaged;
     const styleDir = normalizeStyleDir(name || 'preview');
     return {
       baseDir: 'ComfyUI/output',
@@ -1241,7 +1332,8 @@
     const styleId = typeof name === 'string' ? name.trim() : '';
     if(!styleId) return null;
     const stored = generatedConfigs.get(styleId);
-    return stored ? cloneGeneratedConfig(stored) : null;
+    if(stored) return cloneGeneratedConfig(stored);
+    return getPackagedGeneratedConfig(styleId);
   }
 
   const api = {
