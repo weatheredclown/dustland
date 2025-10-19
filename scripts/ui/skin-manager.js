@@ -218,10 +218,10 @@
     return text;
   }
 
-  function normalizeExtension(ext){
-    if(!ext) return '.png';
+  function normalizeExtension(ext, styleDir = ''){
+    if(!ext) return styleDir.toLowerCase().includes('svg') ? '.svg' : '.png';
     const text = String(ext).trim();
-    if(!text) return '.png';
+    if(!text) return styleDir.toLowerCase().includes('svg') ? '.svg' : '.png';
     return text.startsWith('.') ? text : `.${text}`;
   }
 
@@ -320,7 +320,7 @@
       result.styleDir = normalizeStyleDir(input.styleDir.trim());
     }
     if(typeof input.extension === 'string' && input.extension.trim()){
-      result.extension = normalizeExtension(input.extension.trim());
+      result.extension = normalizeExtension(input.extension.trim(), input.styleDir);
     }
     if('manifest' in input){
       const manifest = input.manifest;
@@ -347,7 +347,7 @@
     };
     merged.baseDir = normalizeBaseDir(merged.baseDir);
     merged.styleDir = normalizeStyleDir(merged.styleDir || baseCopy.styleDir);
-    merged.extension = normalizeExtension(merged.extension);
+    merged.extension = normalizeExtension(merged.extension, merged.styleDir);
     if(merged.manifest && typeof merged.manifest === 'object') merged.manifest = { ...merged.manifest };
     if(Array.isArray(merged.slots)) merged.slots = [...merged.slots];
     else if(merged.slots && typeof merged.slots === 'object') merged.slots = { ...merged.slots };
@@ -748,11 +748,29 @@
     if(imageCache.has(src)) return imageCache.get(src);
     const img = new Image();
     img.decoding = 'async';
-    img.src = src;
     imageCache.set(src, img);
     img.addEventListener('error', () => {
       imageCache.delete(src);
     }, { once: true });
+
+    if (src && src.toLowerCase().endsWith('.svg')) {
+      fetch(src)
+        .then(response => {
+          if (!response.ok) throw new Error(`[SkinManager] HTTP error ${response.status} for ${src}`);
+          return response.blob();
+        })
+        .then(blob => {
+          const url = URL.createObjectURL(blob);
+          img.addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
+          img.src = url;
+        })
+        .catch(err => {
+          console.error(err);
+          imageCache.delete(src);
+        });
+    } else {
+      img.src = src;
+    }
     return img;
   }
 
