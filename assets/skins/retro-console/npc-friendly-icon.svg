@@ -1,1 +1,32 @@
-<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="64" cy="64" r="50" fill="lightgreen"/></svg>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-npc-friendly-icon" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#38B653"/>
+      <stop offset="1" stop-color="#71FFB2"/>
+    </linearGradient>
+    <linearGradient id="shine-npc-friendly-icon" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.65"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid-npc-friendly-icon" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#FFFFFF" fill-opacity="0.05"/>
+      <rect width="4" height="4" fill="#000000" fill-opacity="0.12"/>
+      <rect x="4" y="4" width="4" height="4" fill="#000000" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="spark-npc-friendly-icon" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <circle cx="64" cy="64" r="64" fill="#05060F"/>
+    <circle cx="64" cy="64" r="60" fill="url(#grad-npc-friendly-icon)" stroke="#38A7FF" stroke-width="6"/>
+    <circle cx="64" cy="64" r="54.00" fill="url(#grid-npc-friendly-icon)" fill-opacity="0.3"/>
+    <circle cx="64" cy="40.00" r="12.00" fill="#FFFFFF" fill-opacity="0.85"/>
+    <g fill="#0D1B4C"><circle cx="43.00" cy="49.00" r="9.60"/><circle cx="85.00" cy="49.00" r="9.60"/></g>
+    <path d="M28.00 76.00Q64.00 94.00 100.00 76.00" stroke="#0D1B4C" stroke-width="6" stroke-linecap="round"/>
+    
+    <path d="M128.08,23.66L112.67,35.34 118.27,53.84 102.40,42.80 86.53,53.84 92.13,35.34 76.72,23.66 96.05,23.26 102.40,5.00 108.75,23.26Z" fill="#FEDA4A" stroke="#F3A400" stroke-width="3"/>
+  
+</svg>

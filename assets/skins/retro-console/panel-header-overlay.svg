@@ -1,1 +1,9 @@
-<svg width="512" height="160" viewBox="0 0 512 160" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="160" fill="#383838"/></svg>
+<svg width="512" height="160" viewBox="0 0 512 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="vignette-panel-header-overlay" cx="0.5" cy="0.5" r="0.75">
+      <stop offset="0" stop-color="#6D24B2" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#05060F" stop-opacity="0.65"/>
+    </radialGradient>
+  </defs>
+<rect width="512" height="160" fill="url(#vignette-panel-header-overlay)"/>
+</svg>

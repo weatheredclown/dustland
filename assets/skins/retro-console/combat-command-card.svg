@@ -1,1 +1,31 @@
-<svg width="320" height="160" viewBox="0 0 320 160" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="160" fill="#282828" rx="10"/></svg>
+<svg width="320" height="160" viewBox="0 0 320 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-combat-command-card" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#0A0B2E"/>
+      <stop offset="1" stop-color="#1F2F98"/>
+    </linearGradient>
+    <linearGradient id="shine-combat-command-card" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.55"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid-combat-command-card" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#FFFFFF" fill-opacity="0.05"/>
+      <rect width="4" height="4" fill="#000000" fill-opacity="0.12"/>
+      <rect x="4" y="4" width="4" height="4" fill="#000000" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="spark-combat-command-card" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <rect x="2" y="2" width="316.00" height="156.00" rx="25.60" fill="url(#grad-combat-command-card)" stroke="#38A7FF" stroke-width="4"/>
+    <rect x="10" y="10" width="300.00" height="140.00" rx="17.60" fill="url(#grid-combat-command-card)" fill-opacity="0.3"/>
+    <rect x="10" y="10" width="300.00" height="40.00" rx="20.48" fill="#E52B20" fill-opacity="0.85"/>
+    <rect x="10" y="10" width="300.00" height="140.00" rx="17.60" fill="url(#shine-combat-command-card)"/>
+    <g><path d="M11.20 11.20H288.80" stroke="#00F6FF" stroke-width="2" stroke-linecap="round" stroke-dasharray="8 6"/><path d="M11.20 70.00H293.28" stroke="#00F6FF" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 6"/><circle cx="12.32" cy="70.00" r="4" fill="#FEDA4A" stroke="#00F6FF" stroke-width="2"/><circle cx="293.28" cy="70.00" r="4" fill="#00F6FF" stroke="#00F6FF" stroke-width="2"/><path d="M150.00 128.80V8.96" stroke="#00F6FF" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 4"/><circle cx="150.00" cy="8.96" r="3" fill="#FF7F3F" stroke="#00F6FF" stroke-width="1.5"/><rect x="65.20" y="8.96" width="2.10" height="122.08" fill="#05060F" stroke="#00F6FF" stroke-width="1.5" rx="1.05"/><circle cx="65.20" cy="35.00" r="2.4" fill="#00F6FF"/><circle cx="65.20" cy="105.00" r="2.4" fill="#FF7F3F"/><rect x="119.20" y="8.96" width="2.10" height="122.08" fill="#05060F" stroke="#00F6FF" stroke-width="1.5" rx="1.05"/><circle cx="119.20" cy="35.00" r="2.4" fill="#00F6FF"/><circle cx="119.20" cy="105.00" r="2.4" fill="#FF7F3F"/><path d="M11.20 128.80L42.00 133.28" stroke="#00F6FF" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="4 4"/><path d="M288.80 11.20L258.00 6.72" stroke="#00F6FF" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="4 4"/><rect x="12.32" y="30.80" width="16.80" height="16.80" rx="6" fill="#05060F" stroke="#00F6FF" stroke-width="2"/><rect x="15.34" y="33.82" width="10.75" height="10.75" rx="4" fill="#00F6FF" fill-opacity="0.35" stroke="#00F6FF" stroke-opacity="0.6" stroke-width="1.4"/><path d="M20.72 47.60V50.62" stroke="#00F6FF" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3"/><path d="M29.12 39.20H32.14" stroke="#00F6FF" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3"/><path d="M24.55,37.95L22.32,39.72 23.09,42.46 20.72,40.88 18.35,42.46 19.12,39.72 16.89,37.95 19.73,37.84 20.72,35.17 21.71,37.84Z" fill="#FEDA4A" fill-opacity="0.65" stroke="#F3A400" stroke-width="1.5"/><rect x="270.88" y="86.80" width="16.80" height="16.80" rx="6" fill="#05060F" stroke="#00F6FF" stroke-width="2"/><rect x="273.90" y="89.82" width="10.75" height="10.75" rx="4" fill="#FF7F3F" fill-opacity="0.35" stroke="#FF7F3F" stroke-opacity="0.6" stroke-width="1.4"/><path d="M279.28 103.60V106.62" stroke="#00F6FF" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3"/><path d="M287.68 95.20H290.70" stroke="#00F6FF" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3"/><path d="M283.11,93.95L280.88,95.72 281.65,98.46 279.28,96.88 276.91,98.46 277.68,95.72 275.45,93.95 278.29,93.84 279.28,91.17 280.27,93.84Z" fill="#FEDA4A" fill-opacity="0.65" stroke="#F3A400" stroke-width="1.5"/></g>
+    <path d="M284.17,20.04L277.33,25.73 279.52,34.36 272.00,29.60 264.48,34.36 266.67,25.73 259.83,20.04 268.71,19.47 272.00,11.20 275.29,19.47Z" fill="#FEDA4A" stroke="#F3A400" stroke-width="2"/>
+    <rect x="25.60" y="116.00" width="32.00" height="32.00" rx="6.40" fill="#FEDA4A" stroke="#F0B400" stroke-width="3.20"/><rect x="30.93" y="121.33" width="21.33" height="21.33" rx="4.27" fill="#FFEF9A"/><rect x="32.00" y="126.67" width="5.33" height="5.33" fill="#E52B20" fill-opacity="0.8"/><rect x="37.33" y="126.67" width="5.33" height="5.33" fill="#E52B20" fill-opacity="0.8"/><rect x="42.67" y="126.67" width="5.33" height="5.33" fill="#E52B20" fill-opacity="0.8"/><rect x="32.00" y="132.00" width="5.33" height="5.33" fill="#E52B20" fill-opacity="0.8"/><rect x="37.33" y="132.00" width="5.33" height="5.33" fill="#E52B20" fill-opacity="0.8"/><rect x="42.67" y="132.00" width="5.33" height="5.33" fill="#E52B20" fill-opacity="0.8"/><rect x="37.33" y="137.33" width="5.33" height="5.33" fill="#E52B20" fill-opacity="0.8"/><rect x="37.33" y="142.67" width="5.33" height="5.33" fill="#E52B20" fill-opacity="0.8"/>
+  
+</svg>

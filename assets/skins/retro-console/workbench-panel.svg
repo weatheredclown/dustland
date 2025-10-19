@@ -1,1 +1,33 @@
-<svg width="360" height="480" viewBox="0 0 360 480" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="480" fill="#222222" rx="10"/></svg>
+<svg width="360" height="480" viewBox="0 0 360 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-workbench-panel" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FF7F3F"/>
+      <stop offset="1" stop-color="#E52B20"/>
+    </linearGradient>
+    <linearGradient id="shine-workbench-panel" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.5"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid-workbench-panel" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#FFFFFF" fill-opacity="0.05"/>
+      <rect width="4" height="4" fill="#000000" fill-opacity="0.12"/>
+      <rect x="4" y="4" width="4" height="4" fill="#000000" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="spark-workbench-panel" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <rect x="4" y="4" width="352.00" height="472.00" rx="36.00" fill="url(#grad-workbench-panel)" stroke="#FEDA4A" stroke-width="4"/>
+    <rect x="14" y="14" width="332.00" height="452.00" rx="32.00" fill="url(#grid-workbench-panel)" fill-opacity="0.28"/>
+    <g stroke="#05060F" stroke-width="4" stroke-linecap="round">
+      <line x1="64.80" y1="345.60" x2="295.20" y2="345.60"/>
+      <line x1="115.20" y1="201.60" x2="115.20" y2="345.60"/>
+      <line x1="244.80" y1="201.60" x2="244.80" y2="345.60"/>
+    </g>
+    <path d="M95.61,124.39L78.50,138.85 83.84,160.61 64.80,148.80 45.76,160.61 51.10,138.85 33.99,124.39 56.34,122.75 64.80,102.00 73.26,122.75Z" fill="#FEDA4A" stroke="#F3A400" stroke-width="2"/>
+    <rect x="237.60" y="86.40" width="72.00" height="72.00" rx="14.40" fill="#FEDA4A" stroke="#F0B400" stroke-width="7.20"/><rect x="249.60" y="98.40" width="48.00" height="48.00" rx="9.60" fill="#FFEF9A"/><rect x="252.00" y="110.40" width="12.00" height="12.00" fill="#E52B20" fill-opacity="0.8"/><rect x="264.00" y="110.40" width="12.00" height="12.00" fill="#E52B20" fill-opacity="0.8"/><rect x="276.00" y="110.40" width="12.00" height="12.00" fill="#E52B20" fill-opacity="0.8"/><rect x="252.00" y="122.40" width="12.00" height="12.00" fill="#E52B20" fill-opacity="0.8"/><rect x="264.00" y="122.40" width="12.00" height="12.00" fill="#E52B20" fill-opacity="0.8"/><rect x="276.00" y="122.40" width="12.00" height="12.00" fill="#E52B20" fill-opacity="0.8"/><rect x="264.00" y="134.40" width="12.00" height="12.00" fill="#E52B20" fill-opacity="0.8"/><rect x="264.00" y="146.40" width="12.00" height="12.00" fill="#E52B20" fill-opacity="0.8"/>
+  
+</svg>

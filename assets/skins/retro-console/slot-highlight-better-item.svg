@@ -1,1 +1,27 @@
-<svg width="320" height="160" viewBox="0 0 320 160" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="160" fill="#4CAF50" opacity="0.3" rx="10"/></svg>
+<svg width="320" height="160" viewBox="0 0 320 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-slot-highlight-better-item" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#38B653"/>
+      <stop offset="1" stop-color="#71FFB2"/>
+    </linearGradient>
+    <linearGradient id="shine-slot-highlight-better-item" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.45"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid-slot-highlight-better-item" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#FFFFFF" fill-opacity="0.05"/>
+      <rect width="4" height="4" fill="#000000" fill-opacity="0.12"/>
+      <rect x="4" y="4" width="4" height="4" fill="#000000" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="spark-slot-highlight-better-item" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <rect x="1" y="1" width="318.00" height="158.00" rx="25.60" fill="url(#grad-slot-highlight-better-item)" stroke="#38A7FF" stroke-width="2"/>
+    <rect x="6" y="6" width="308.00" height="148.00" rx="21.60" fill="url(#shine-slot-highlight-better-item)"/>
+    <rect x="6" y="6" width="308.00" height="148.00" rx="21.60" fill="url(#grid-slot-highlight-better-item)" fill-opacity="0.28"/>
+  <path d="M193.48,69.12L175.22,84.94 180.69,108.48 160.00,96.00 139.31,108.48 144.78,84.94 126.52,69.12 150.60,67.06 160.00,44.80 169.40,67.06Z" fill="#FEDA4A" stroke="#F3A400" stroke-width="3"/>
+</svg>

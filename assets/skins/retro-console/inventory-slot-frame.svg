@@ -1,1 +1,28 @@
-<svg width="320" height="160" viewBox="0 0 320 160" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="160" stroke="#555555" stroke-width="2" rx="10"/></svg>
+<svg width="320" height="160" viewBox="0 0 320 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-inventory-slot-frame" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#1C1F3A"/>
+      <stop offset="1" stop-color="#0A0B2E"/>
+    </linearGradient>
+    <linearGradient id="shine-inventory-slot-frame" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.4"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid-inventory-slot-frame" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#FFFFFF" fill-opacity="0.05"/>
+      <rect width="4" height="4" fill="#000000" fill-opacity="0.12"/>
+      <rect x="4" y="4" width="4" height="4" fill="#000000" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="spark-inventory-slot-frame" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <rect x="2" y="2" width="316.00" height="156.00" rx="28.80" fill="#05060F" stroke="#38A7FF" stroke-width="4"/>
+    <rect x="10" y="10" width="300.00" height="140.00" rx="22.80" fill="url(#grad-inventory-slot-frame)"/>
+    <rect x="10" y="10" width="300.00" height="140.00" rx="22.80" fill="url(#grid-inventory-slot-frame)" fill-opacity="0.25"/>
+    <path d="M187.39,71.10L172.17,83.96 176.93,103.30 160.00,92.80 143.07,103.30 147.83,83.96 132.61,71.10 152.48,69.64 160.00,51.20 167.52,69.64Z" fill="#FEDA4A" stroke="#F3A400" stroke-width="3"/>
+  
+</svg>

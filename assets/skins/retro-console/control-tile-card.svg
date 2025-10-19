@@ -1,1 +1,31 @@
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="256" height="256" fill="#333333"/></svg>
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-control-tile-card" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#38A7FF"/>
+      <stop offset="1" stop-color="#1F2F98"/>
+    </linearGradient>
+    <linearGradient id="shine-control-tile-card" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.55"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid-control-tile-card" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#FFFFFF" fill-opacity="0.05"/>
+      <rect width="4" height="4" fill="#000000" fill-opacity="0.12"/>
+      <rect x="4" y="4" width="4" height="4" fill="#000000" fill-opacity="0.08"/>
+    </pattern>
+    <radialGradient id="spark-control-tile-card" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+    <rect x="2" y="2" width="252.00" height="252.00" rx="40.96" fill="url(#grad-control-tile-card)" stroke="#38A7FF" stroke-width="4"/>
+    <rect x="10" y="10" width="236.00" height="236.00" rx="32.96" fill="url(#grid-control-tile-card)" fill-opacity="0.3"/>
+    <rect x="10" y="10" width="236.00" height="56.32" rx="32.77" fill="#FEDA4A" fill-opacity="0.85"/>
+    <rect x="10" y="10" width="236.00" height="236.00" rx="32.96" fill="url(#shine-control-tile-card)"/>
+    <g><path d="M18.88 18.88H217.12" stroke="#00F6FF" stroke-width="2" stroke-linecap="round" stroke-dasharray="8 6"/><path d="M18.88 118.00H224.67" stroke="#00F6FF" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 6"/><circle cx="20.77" cy="118.00" r="4" fill="#FEDA4A" stroke="#00F6FF" stroke-width="2"/><circle cx="224.67" cy="118.00" r="4" fill="#00F6FF" stroke="#00F6FF" stroke-width="2"/><path d="M118.00 217.12V15.10" stroke="#00F6FF" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 4"/><circle cx="118.00" cy="15.10" r="3" fill="#FF7F3F" stroke="#00F6FF" stroke-width="1.5"/><rect x="61.36" y="15.10" width="3.54" height="205.79" fill="#05060F" stroke="#00F6FF" stroke-width="1.5" rx="1.77"/><circle cx="61.36" cy="59.00" r="2.4" fill="#00F6FF"/><circle cx="61.36" cy="177.00" r="2.4" fill="#FF7F3F"/><rect x="103.84" y="15.10" width="3.54" height="205.79" fill="#05060F" stroke="#00F6FF" stroke-width="1.5" rx="1.77"/><circle cx="103.84" cy="59.00" r="2.4" fill="#00F6FF"/><circle cx="103.84" cy="177.00" r="2.4" fill="#FF7F3F"/><path d="M18.88 217.12L70.80 224.67" stroke="#00F6FF" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="4 4"/><path d="M217.12 18.88L165.20 11.33" stroke="#00F6FF" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="4 4"/><rect x="20.77" y="51.92" width="28.32" height="28.32" rx="6" fill="#05060F" stroke="#00F6FF" stroke-width="2"/><rect x="25.87" y="57.02" width="18.12" height="18.12" rx="4" fill="#00F6FF" fill-opacity="0.35" stroke="#00F6FF" stroke-opacity="0.6" stroke-width="1.4"/><path d="M34.93 80.24V85.34" stroke="#00F6FF" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3"/><path d="M49.09 66.08H54.19" stroke="#00F6FF" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3"/><path d="M41.39,63.98L37.62,66.96 38.92,71.58 34.93,68.91 30.93,71.58 32.23,66.96 28.46,63.98 33.26,63.79 34.93,59.28 36.59,63.79Z" fill="#FEDA4A" fill-opacity="0.65" stroke="#F3A400" stroke-width="1.5"/><rect x="186.91" y="146.32" width="28.32" height="28.32" rx="6" fill="#05060F" stroke="#00F6FF" stroke-width="2"/><rect x="192.01" y="151.42" width="18.12" height="18.12" rx="4" fill="#FF7F3F" fill-opacity="0.35" stroke="#FF7F3F" stroke-opacity="0.6" stroke-width="1.4"/><path d="M201.07 174.64V179.74" stroke="#00F6FF" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3"/><path d="M215.23 160.48H220.33" stroke="#00F6FF" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 3"/><path d="M207.54,158.38L203.77,161.36 205.07,165.98 201.07,163.31 197.08,165.98 198.38,161.36 194.61,158.38 199.41,158.19 201.07,153.68 202.74,158.19Z" fill="#FEDA4A" fill-opacity="0.65" stroke="#F3A400" stroke-width="1.5"/></g>
+    <path d="M237.08,27.46L226.12,36.56 229.64,50.36 217.60,42.75 205.56,50.36 209.08,36.56 198.12,27.46 212.33,26.54 217.60,13.31 222.87,26.54Z" fill="#FEDA4A" stroke="#F3A400" stroke-width="2"/>
+    <rect x="20.48" y="194.05" width="51.20" height="51.20" rx="10.24" fill="#FEDA4A" stroke="#F0B400" stroke-width="5.12"/><rect x="29.01" y="202.58" width="34.13" height="34.13" rx="6.83" fill="#FFEF9A"/><rect x="30.72" y="211.11" width="8.53" height="8.53" fill="#E52B20" fill-opacity="0.8"/><rect x="39.25" y="211.11" width="8.53" height="8.53" fill="#E52B20" fill-opacity="0.8"/><rect x="47.79" y="211.11" width="8.53" height="8.53" fill="#E52B20" fill-opacity="0.8"/><rect x="30.72" y="219.65" width="8.53" height="8.53" fill="#E52B20" fill-opacity="0.8"/><rect x="39.25" y="219.65" width="8.53" height="8.53" fill="#E52B20" fill-opacity="0.8"/><rect x="47.79" y="219.65" width="8.53" height="8.53" fill="#E52B20" fill-opacity="0.8"/><rect x="39.25" y="228.18" width="8.53" height="8.53" fill="#E52B20" fill-opacity="0.8"/><rect x="39.25" y="236.71" width="8.53" height="8.53" fill="#E52B20" fill-opacity="0.8"/>
+  
+</svg>
