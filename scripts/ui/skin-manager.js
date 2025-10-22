@@ -266,6 +266,23 @@
           'hud-label-chip': 'hud-label-chips.svg',
           'weather-text-treatment': 'weather-text-treatment.svg',
           'button-label-overlay': 'button-label-overlay.svg'
+        },
+        tiles: {
+          atlas: 'tile-atlas.svg',
+          tileWidth: 64,
+          tileHeight: 64,
+          map: {
+            sand: { frame: { col: 0, row: 0, w: 64, h: 64 } },
+            rock: { frame: { col: 1, row: 0, w: 64, h: 64 } },
+            water: { frame: { col: 2, row: 0, w: 64, h: 64 } },
+            brush: { frame: { col: 3, row: 0, w: 64, h: 64 } },
+            road: { frame: { col: 4, row: 0, w: 64, h: 64 } },
+            ruin: { frame: { col: 5, row: 0, w: 64, h: 64 } },
+            wall: { frame: { col: 6, row: 0, w: 64, h: 64 } },
+            floor: { frame: { col: 7, row: 0, w: 64, h: 64 } },
+            door: { frame: { col: 0, row: 1, w: 64, h: 64 } },
+            building: { frame: { col: 1, row: 1, w: 64, h: 64 } }
+          }
         }
       },
       slots: null
