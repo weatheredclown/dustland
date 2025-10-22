@@ -1,0 +1,22 @@
+// @ts-nocheck
+globalThis.TRAINER_UPGRADE_SCHEMA = {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Trainer Skill Upgrades",
+  "type": "object",
+  "additionalProperties": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "cost": { "type": "number" },
+        "type": { "type": "string" },
+        "stat": { "type": "string" },
+        "delta": { "type": "number" }
+      },
+      "required": ["id", "label", "cost", "type"],
+      "additionalProperties": false
+    }
+  }
+};

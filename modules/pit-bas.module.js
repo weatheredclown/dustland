@@ -1,5 +1,5 @@
-function seedWorldContent() {}
-
+// @ts-nocheck
+function seedWorldContent() { }
 const DATA = `
 {
   "seed": "pit-bas",
@@ -1612,38 +1612,38 @@ const DATA = `
   ]
 }
 `;
-
 function postLoad(module) {
-  log('You land in a shadowy cavern.');
-  module.effects = module.effects || {};
-  module.effects.lightningZap = () => {
-    if (hasItem('lightning_rod')) {
-      log('The lightning rod hums and deflects the bolt.');
-    } else {
-      log('A lightning bolt strikes! You tumble back to the cavern.');
-      setMap('cavern', 'Cavern');
-      setPartyPos(2, 2);
-    }
-  };
-  module.effects.requireAirTanks = () => {
-    if (!hasItem('air_tanks')) {
-      log('You need air tanks to go underwater.');
-      setMap('river_room', 'River Room');
-      setPartyPos(0, 2);
-    }
-  };
-  module.effects.darkGrueCheck = () => {
-    if (hasItem('magic_lightbulb')) return;
-    if (Math.random() < 0.5) {
-      log('It is dark. You are likely to be eaten by a grue.');
-      const g = module.npcs.find(n => n.id === 'grue');
-      if (g) {
-        openCombat([{ id: g.id, name: g.name, hp: g.combat.HP, ATK: g.combat.ATK, DEF: g.combat.DEF }]);
-      }
-    }
-  };
+    log('You land in a shadowy cavern.');
+    module.effects = module.effects || {};
+    module.effects.lightningZap = () => {
+        if (hasItem('lightning_rod')) {
+            log('The lightning rod hums and deflects the bolt.');
+        }
+        else {
+            log('A lightning bolt strikes! You tumble back to the cavern.');
+            setMap('cavern', 'Cavern');
+            setPartyPos(2, 2);
+        }
+    };
+    module.effects.requireAirTanks = () => {
+        if (!hasItem('air_tanks')) {
+            log('You need air tanks to go underwater.');
+            setMap('river_room', 'River Room');
+            setPartyPos(0, 2);
+        }
+    };
+    module.effects.darkGrueCheck = () => {
+        if (hasItem('magic_lightbulb'))
+            return;
+        if (Math.random() < 0.5) {
+            log('It is dark. You are likely to be eaten by a grue.');
+            const g = module.npcs.find(n => n.id === 'grue');
+            if (g) {
+                openCombat([{ id: g.id, name: g.name, hp: g.combat.HP, ATK: g.combat.ATK, DEF: g.combat.DEF }]);
+            }
+        }
+    };
 }
-
 globalThis.PIT_BAS_MODULE = JSON.parse(DATA);
 globalThis.PIT_BAS_MODULE.listing = `
 MCBDT0xPUiAxNTogQ0xTCjEgS0VZIE9GRjogQkVHSU4gPSAxOiBHT1NVQiAzODAwMAoyIElOUFVUICJX
@@ -2837,11 +2837,10 @@ MAo2MDAwMCBGT1IgWCA9IDEgVE8gMzEKNjAwMTAgQ09MT1IgWAo2MDAxNSBQUklOVCBYOwo2MDAyMCBO
 RVhUIFgKCg==
 `;
 globalThis.PIT_BAS_MODULE.postLoad = postLoad;
-
 startGame = function () {
-  PIT_BAS_MODULE.postLoad?.(PIT_BAS_MODULE);
-  applyModule(PIT_BAS_MODULE);
-  const s = PIT_BAS_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-  setMap(s.map, s.map === 'world' ? 'Wastes' : undefined);
-  setPartyPos(s.x, s.y);
+    PIT_BAS_MODULE.postLoad?.(PIT_BAS_MODULE);
+    applyModule(PIT_BAS_MODULE);
+    const s = PIT_BAS_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+    setMap(s.map, s.map === 'world' ? 'Wastes' : undefined);
+    setPartyPos(s.x, s.y);
 };

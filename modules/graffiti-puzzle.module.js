@@ -1,5 +1,5 @@
-function seedWorldContent() {}
-
+// @ts-nocheck
+function seedWorldContent() { }
 const DATA = `{
   "seed": "graffiti-puzzle",
   "name": "graffiti-puzzle",
@@ -55,17 +55,14 @@ const DATA = `{
   "buildings": [],
   "start": { "map": "graffiti", "x": 3, "y": 5 }
 }`;
-
-function postLoad(module) {}
-
+function postLoad(module) { }
 globalThis.GRAFFITI_PUZZLE = JSON.parse(DATA);
 globalThis.GRAFFITI_PUZZLE.postLoad = postLoad;
-
 startGame = function () {
-  applyModule(GRAFFITI_PUZZLE);
-  const s = GRAFFITI_PUZZLE.start;
-  state.map = s.map;
-  state.x = s.x;
-  state.y = s.y;
-  renderWorld();
+    applyModule(GRAFFITI_PUZZLE);
+    const s = GRAFFITI_PUZZLE.start;
+    state.map = s.map;
+    state.x = s.x;
+    state.y = s.y;
+    renderWorld();
 };

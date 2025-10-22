@@ -1,7 +1,6 @@
-function seedWorldContent() {}
-
-function postLoad() {}
-
+// @ts-nocheck
+function seedWorldContent() { }
+function postLoad() { }
 const DATA = `
 {
   "seed": "other-bas",
@@ -944,7 +943,6 @@ const DATA = `
   "buildings": []
 }
 `;
-
 globalThis.OTHER_BAS_MODULE = JSON.parse(DATA);
 globalThis.OTHER_BAS_MODULE.listing = `MCBDTFM6S0VZIE9GRjpDT0xPUiAxNQ0KMTAgUFJJTlQgIkhFUkUgQkVHSU5T
 globalThis.OTHER_BAS_MODULE.postLoad = postLoad;
@@ -2270,11 +2268,10 @@ VVQgIzEsSUEkLElCJCxJQyQsSUQkLElFJCxJRkYkLElHJCxJSCQsSUkkLElK
 JCxJSyQsSUwkLElNJCxJTiQsSU8kLElQJCxJUSQsSVIkLElTJCxJVCQsSVUk
 LElNQSQsSU5EJA0KNDU1MzAgQ0xPU0UgIzENCjQ1NTQwIENMUzpBJD0iTE9P
 SyINCjQ1OTk5IFJFVFVSTg0KGg==`;
-
 startGame = function () {
-  OTHER_BAS_MODULE.postLoad?.(OTHER_BAS_MODULE);
-  applyModule(OTHER_BAS_MODULE);
-  const s = OTHER_BAS_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-  setMap(s.map, s.map === 'world' ? 'Wastes' : undefined);
-  setPartyPos(s.x, s.y);
+    OTHER_BAS_MODULE.postLoad?.(OTHER_BAS_MODULE);
+    applyModule(OTHER_BAS_MODULE);
+    const s = OTHER_BAS_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+    setMap(s.map, s.map === 'world' ? 'Wastes' : undefined);
+    setPartyPos(s.x, s.y);
 };

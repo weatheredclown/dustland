@@ -1,19 +1,20 @@
+// @ts-nocheck
 globalThis.PROFILE_SCHEMA = {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Profiles",
-  "type": "object",
-  "additionalProperties": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Profiles",
     "type": "object",
-    "properties": {
-      "mods": {
+    "additionalProperties": {
         "type": "object",
-        "additionalProperties": { "type": "number" }
-      },
-      "effects": {
-        "type": "array",
-        "items": { "type": "object" }
-      }
-    },
-    "additionalProperties": false
-  }
+        "properties": {
+            "mods": {
+                "type": "object",
+                "additionalProperties": { "type": "number" }
+            },
+            "effects": {
+                "type": "array",
+                "items": { "type": "object" }
+            }
+        },
+        "additionalProperties": false
+    }
 };

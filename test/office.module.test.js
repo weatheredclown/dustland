@@ -192,7 +192,7 @@ test('vending machine sells Dusty Candy Bar', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const file = path.join(__dirname, '..', 'modules', 'office.module.js');
   const src = readNormalized(file);
-  const npcMatch = src.match(/id: 'vending',[\s\S]*?shop: \{ inv: \[ \{ id: 'dusty_candy' \} \] \}/);
+  const npcMatch = src.match(/id:\s*'vending',[\s\S]*?shop:\s*\{\s*inv:\s*\[\s*\{\s*id:\s*'dusty_candy'\s*\}\s*\]\s*\}/);
   assert(npcMatch);
   const vending = { name: 'Vending Machine', vending: true, shop: { inv: [ { id: 'dusty_candy' } ] } };
   const itemMatch = src.match(/\{ id: 'dusty_candy',[\s\S]*?\}\s*\},/);

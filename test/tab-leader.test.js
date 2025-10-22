@@ -27,8 +27,8 @@ test('Tab cycles leader without triggering NPC start events', async () => {
   vm.createContext(ctx);
   const full = await fs.readFile(new URL('../scripts/dustland-engine.js', import.meta.url), 'utf8');
   const start = full.indexOf("window.addEventListener('keydown'");
-  const end = full.indexOf('\n  });', start) + 5;
-  vm.runInContext(full.slice(start, end), ctx);
+  const handler = full.slice(start, full.indexOf('\n    });', start) + '\n    });'.length);
+  vm.runInContext(handler, ctx);
   ctx.window.addEventListener('keydown', e => {
     if (e.key === 'Tab') ctx.NanoDialog.queueForNPC();
   });

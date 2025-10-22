@@ -1,5 +1,5 @@
-function seedWorldContent() {}
-
+// @ts-nocheck
+function seedWorldContent() { }
 const DATA = `
 {
   "seed": "dustland",
@@ -16394,163 +16394,186 @@ const DATA = `
   ]
 }
 `;
-
 function configureWorkbenchRecipes() {
-  const workbench = globalThis.Dustland?.workbench;
-  if (!workbench) return;
-  const bus = globalThis.EventBus;
-  const logFn = typeof globalThis.log === 'function' ? (...args) => globalThis.log(...args) : null;
-  const hasItemFn = typeof globalThis.hasItem === 'function' ? globalThis.hasItem.bind(globalThis) : () => false;
-  const findItemIndexFn = typeof globalThis.findItemIndex === 'function' ? globalThis.findItemIndex.bind(globalThis) : () => -1;
-  const removeFromInvFn = typeof globalThis.removeFromInv === 'function' ? globalThis.removeFromInv.bind(globalThis) : () => {};
-  const addToInvFn = typeof globalThis.addToInv === 'function' ? globalThis.addToInv.bind(globalThis) : () => false;
-
-  function logMessage(msg) {
-    if (logFn) logFn(msg);
-  }
-
-  function craftSignalBeacon() {
-    const actor = globalThis.player;
-    if (!actor) return false;
-    const scrapCost = 5;
-    const fuelCost = 50;
-    const scrap = Number(actor.scrap) || 0;
-    const fuel = Number(actor.fuel) || 0;
-    if (scrap < scrapCost) { logMessage('Need 5 scrap.'); return false; }
-    if (fuel < fuelCost) { logMessage('Need 50 fuel.'); return false; }
-    actor.scrap = scrap - scrapCost;
-    actor.fuel = fuel - fuelCost;
-    addToInvFn('signal_beacon');
-    bus?.emit('craft:signal-beacon');
-    logMessage('Crafted a signal beacon.');
-    return true;
-  }
-
-  function craftSolarTarp() {
-    const actor = globalThis.player;
-    if (!actor) return false;
-    const scrapCost = 3;
-    const scrap = Number(actor.scrap) || 0;
-    if (scrap < scrapCost) { logMessage('Need 3 scrap.'); return false; }
-    if (!hasItemFn('cloth')) { logMessage('Need cloth.'); return false; }
-    actor.scrap = scrap - scrapCost;
-    const idx = findItemIndexFn('cloth');
-    if (idx >= 0) removeFromInvFn(idx);
-    addToInvFn('solar_tarp');
-    bus?.emit('craft:solar-tarp');
-    logMessage('Crafted a solar panel tarp.');
-    return true;
-  }
-
-  function craftBandage() {
-    if (!hasItemFn('plant_fiber')) { logMessage('Need plant fiber.'); return false; }
-    const idx = findItemIndexFn('plant_fiber');
-    if (idx >= 0) removeFromInvFn(idx);
-    addToInvFn('bandage');
-    bus?.emit('craft:bandage');
-    logMessage('Crafted a bandage.');
-    return true;
-  }
-
-  function craftAntidote() {
-    if (!hasItemFn('plant_fiber')) { logMessage('Need plant fiber.'); return false; }
-    if (!hasItemFn('water_flask')) { logMessage('Need a water flask.'); return false; }
-    let idx = findItemIndexFn('plant_fiber');
-    if (idx >= 0) removeFromInvFn(idx);
-    idx = findItemIndexFn('water_flask');
-    if (idx >= 0) removeFromInvFn(idx);
-    addToInvFn('antidote');
-    bus?.emit('craft:antidote');
-    logMessage('Crafted an antidote.');
-    return true;
-  }
-
-  const recipes = [
-    {
-      id: 'signal_beacon',
-      name: 'Signal Beacon',
-      craft: craftSignalBeacon,
-      requirements: [
-        { label: 'Scrap', key: 'scrap', amount: 5, type: 'resource' },
-        { label: 'Fuel', key: 'fuel', amount: 50, type: 'resource' }
-      ]
-    },
-    {
-      id: 'solar_tarp',
-      name: 'Solar Panel Tarp',
-      craft: craftSolarTarp,
-      requirements: [
-        { label: 'Scrap', key: 'scrap', amount: 3, type: 'resource' },
-        { label: 'Cloth', key: 'cloth', amount: 1, type: 'item' }
-      ]
-    },
-    {
-      id: 'bandage',
-      name: 'Bandage',
-      craft: craftBandage,
-      requirements: [
-        { label: 'Plant Fiber', key: 'plant_fiber', amount: 1, type: 'item' }
-      ]
-    },
-    {
-      id: 'antidote',
-      name: 'Antidote',
-      craft: craftAntidote,
-      requirements: [
-        { label: 'Plant Fiber', key: 'plant_fiber', amount: 1, type: 'item' },
-        { label: 'Water Flask', key: 'water_flask', amount: 1, type: 'item' }
-      ]
+    const workbench = globalThis.Dustland?.workbench;
+    if (!workbench)
+        return;
+    const bus = globalThis.EventBus;
+    const logFn = typeof globalThis.log === 'function' ? (...args) => globalThis.log(...args) : null;
+    const hasItemFn = typeof globalThis.hasItem === 'function' ? globalThis.hasItem.bind(globalThis) : () => false;
+    const findItemIndexFn = typeof globalThis.findItemIndex === 'function' ? globalThis.findItemIndex.bind(globalThis) : () => -1;
+    const removeFromInvFn = typeof globalThis.removeFromInv === 'function' ? globalThis.removeFromInv.bind(globalThis) : () => { };
+    const addToInvFn = typeof globalThis.addToInv === 'function' ? globalThis.addToInv.bind(globalThis) : () => false;
+    function logMessage(msg) {
+        if (logFn)
+            logFn(msg);
     }
-  ];
-
-  if (typeof workbench.setRecipes === 'function') {
-    workbench.setRecipes(recipes);
-  } else {
-    if (typeof workbench.listRecipes === 'function' && typeof workbench.unregisterRecipe === 'function') {
-      const current = workbench.listRecipes();
-      if (Array.isArray(current)) current.forEach(r => { if (r?.id) workbench.unregisterRecipe(r.id); });
+    function craftSignalBeacon() {
+        const actor = globalThis.player;
+        if (!actor)
+            return false;
+        const scrapCost = 5;
+        const fuelCost = 50;
+        const scrap = Number(actor.scrap) || 0;
+        const fuel = Number(actor.fuel) || 0;
+        if (scrap < scrapCost) {
+            logMessage('Need 5 scrap.');
+            return false;
+        }
+        if (fuel < fuelCost) {
+            logMessage('Need 50 fuel.');
+            return false;
+        }
+        actor.scrap = scrap - scrapCost;
+        actor.fuel = fuel - fuelCost;
+        addToInvFn('signal_beacon');
+        bus?.emit('craft:signal-beacon');
+        logMessage('Crafted a signal beacon.');
+        return true;
     }
-    if (typeof workbench.registerRecipe === 'function') {
-      recipes.forEach(def => workbench.registerRecipe(def));
-    } else {
-      recipes.forEach(def => { workbench[def.id] = def.craft; });
+    function craftSolarTarp() {
+        const actor = globalThis.player;
+        if (!actor)
+            return false;
+        const scrapCost = 3;
+        const scrap = Number(actor.scrap) || 0;
+        if (scrap < scrapCost) {
+            logMessage('Need 3 scrap.');
+            return false;
+        }
+        if (!hasItemFn('cloth')) {
+            logMessage('Need cloth.');
+            return false;
+        }
+        actor.scrap = scrap - scrapCost;
+        const idx = findItemIndexFn('cloth');
+        if (idx >= 0)
+            removeFromInvFn(idx);
+        addToInvFn('solar_tarp');
+        bus?.emit('craft:solar-tarp');
+        logMessage('Crafted a solar panel tarp.');
+        return true;
     }
-  }
+    function craftBandage() {
+        if (!hasItemFn('plant_fiber')) {
+            logMessage('Need plant fiber.');
+            return false;
+        }
+        const idx = findItemIndexFn('plant_fiber');
+        if (idx >= 0)
+            removeFromInvFn(idx);
+        addToInvFn('bandage');
+        bus?.emit('craft:bandage');
+        logMessage('Crafted a bandage.');
+        return true;
+    }
+    function craftAntidote() {
+        if (!hasItemFn('plant_fiber')) {
+            logMessage('Need plant fiber.');
+            return false;
+        }
+        if (!hasItemFn('water_flask')) {
+            logMessage('Need a water flask.');
+            return false;
+        }
+        let idx = findItemIndexFn('plant_fiber');
+        if (idx >= 0)
+            removeFromInvFn(idx);
+        idx = findItemIndexFn('water_flask');
+        if (idx >= 0)
+            removeFromInvFn(idx);
+        addToInvFn('antidote');
+        bus?.emit('craft:antidote');
+        logMessage('Crafted an antidote.');
+        return true;
+    }
+    const recipes = [
+        {
+            id: 'signal_beacon',
+            name: 'Signal Beacon',
+            craft: craftSignalBeacon,
+            requirements: [
+                { label: 'Scrap', key: 'scrap', amount: 5, type: 'resource' },
+                { label: 'Fuel', key: 'fuel', amount: 50, type: 'resource' }
+            ]
+        },
+        {
+            id: 'solar_tarp',
+            name: 'Solar Panel Tarp',
+            craft: craftSolarTarp,
+            requirements: [
+                { label: 'Scrap', key: 'scrap', amount: 3, type: 'resource' },
+                { label: 'Cloth', key: 'cloth', amount: 1, type: 'item' }
+            ]
+        },
+        {
+            id: 'bandage',
+            name: 'Bandage',
+            craft: craftBandage,
+            requirements: [
+                { label: 'Plant Fiber', key: 'plant_fiber', amount: 1, type: 'item' }
+            ]
+        },
+        {
+            id: 'antidote',
+            name: 'Antidote',
+            craft: craftAntidote,
+            requirements: [
+                { label: 'Plant Fiber', key: 'plant_fiber', amount: 1, type: 'item' },
+                { label: 'Water Flask', key: 'water_flask', amount: 1, type: 'item' }
+            ]
+        }
+    ];
+    if (typeof workbench.setRecipes === 'function') {
+        workbench.setRecipes(recipes);
+    }
+    else {
+        if (typeof workbench.listRecipes === 'function' && typeof workbench.unregisterRecipe === 'function') {
+            const current = workbench.listRecipes();
+            if (Array.isArray(current))
+                current.forEach(r => { if (r?.id)
+                    workbench.unregisterRecipe(r.id); });
+        }
+        if (typeof workbench.registerRecipe === 'function') {
+            recipes.forEach(def => workbench.registerRecipe(def));
+        }
+        else {
+            recipes.forEach(def => { workbench[def.id] = def.craft; });
+        }
+    }
 }
-
 function postLoad(module, ctx = {}) {
-  const phase = ctx?.phase;
-  const scheduleReconfigure = () => {
-    const scheduler = typeof globalThis.queueMicrotask === 'function'
-      ? globalThis.queueMicrotask.bind(globalThis)
-      : (fn => Promise.resolve().then(fn));
-    scheduler(() => {
-      try {
+    const phase = ctx?.phase;
+    const scheduleReconfigure = () => {
+        const scheduler = typeof globalThis.queueMicrotask === 'function'
+            ? globalThis.queueMicrotask.bind(globalThis)
+            : (fn => Promise.resolve().then(fn));
+        scheduler(() => {
+            try {
+                configureWorkbenchRecipes();
+            }
+            catch (err) {
+                console.error('Failed to configure workbench recipes after apply:', err);
+            }
+        });
+    };
+    if (!phase || phase === 'beforeApply') {
         configureWorkbenchRecipes();
-      } catch (err) {
-        console.error('Failed to configure workbench recipes after apply:', err);
-      }
-    });
-  };
-
-  if (!phase || phase === 'beforeApply') {
-    configureWorkbenchRecipes();
-    scheduleReconfigure();
-  } else if (phase === 'afterApply') {
-    configureWorkbenchRecipes();
-  }
+        scheduleReconfigure();
+    }
+    else if (phase === 'afterApply') {
+        configureWorkbenchRecipes();
+    }
 }
-
 globalThis.DUSTLAND_MODULE = JSON.parse(DATA);
 globalThis.DUSTLAND_MODULE.postLoad = postLoad;
-
 startGame = function () {
-  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'beforeApply' });
-  applyModule(DUSTLAND_MODULE);
-  const s = DUSTLAND_MODULE.start;
-  if (s) {
-    setPartyPos(s.x, s.y);
-    setMap(s.map, 'dustland-module');
-  }
-  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'afterApply' });
+    DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'beforeApply' });
+    applyModule(DUSTLAND_MODULE);
+    const s = DUSTLAND_MODULE.start;
+    if (s) {
+        setPartyPos(s.x, s.y);
+        setMap(s.map, 'dustland-module');
+    }
+    DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'afterApply' });
 };
