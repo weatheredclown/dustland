@@ -16,8 +16,8 @@ test('openWizard commits results and Enter triggers next', async () => {
   let code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
   code = code.replace(/\r\n/g, '\n');
   const moduleMatch = code.match(/const moduleData =[\s\S]*?\}\);/);
-  const mergeMatch = code.match(/function mergeWizardResult[\s\S]*?}\n\n(?=function openWizard)/);
-  const openMatch = code.match(/function openWizard[\s\S]*?}\n\n(?=function animate)/);
+  const mergeMatch = code.match(/function mergeWizardResult[\s\S]*?}\s*(?=function openWizard)/);
+  const openMatch = code.match(/function openWizard[\s\S]*?}\s*(?=function animate)/);
   vm.runInContext(moduleMatch[0] + '\n' + mergeMatch[0] + openMatch[0], context);
   let nextCalls = 0;
   context.Dustland.Wizard = (container, steps, opts) => ({

@@ -1,1 +1,5 @@
-core/presets.js
+components/**/*.js
+modules/**/*.js
+data/**/*.js
+scripts/**/*.js
+music-demo.js

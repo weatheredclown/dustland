@@ -9,8 +9,8 @@ test('renderProblems reuses DOM and handler', async () => {
   global.document = dom.window.document;
   let code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
   code = code.replace(/\r\n/g, '\n');
-  const clickCode = code.match(/function onProblemClick\(\){[\s\S]*?\n}\n/)[0];
-  const renderCode = code.match(/function renderProblems\(issues\){[\s\S]*?\n}\n/)[0];
+  const clickCode = code.match(/function onProblemClick\s*\(\)\s*\{[\s\S]*?\n}\n/)[0];
+  const renderCode = code.match(/function renderProblems\s*\(issues\)\s*\{[\s\S]*?\n}\n/)[0];
   vm.runInThisContext('var problemRefs;\n' + clickCode + renderCode);
   const issues = [{ msg:'Player start on blocked tile', type:'start' }];
   renderProblems(issues);

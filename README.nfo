@@ -25,8 +25,9 @@ _______________________________________________________________________________
 
 [ HOW TO RUN ]
   - Play online: https://weatheredclown.github.io/dustland/dustland.html
-  - Run locally: open dustland.html (no build step; works offline)
+  - Run locally: open dustland.html (checked-in JS build; works offline)
   - Build modules: adventure-kit.html
+  - Build TypeScript: npm run build (regenerates runtime JS from ts-src/)
   - Play modules: dustland.html?ack-player=1 (load module URLs or local JSON)
   - Tip: use a modern Chromium, Firefox, or Safari
 
@@ -70,6 +71,9 @@ _______________________________________________________________________________
 [ PROJECT LAYOUT ]
   - dustland.html
     * Entry point wiring up the canvas, UI, and scripts.
+  - ts-src/
+    * TypeScript sources for runtime code; npm run build writes JS back into the
+      runtime folders.
   - scripts/dustland-core.js
     * Game state, dialog system, inventory & equipment.
   - scripts/core/*.js
@@ -113,7 +117,8 @@ _______________________________________________________________________________
       * A module load error likely occurred. Check the console for exceptions.
 
 [ HACKING NOTES ]
-  - Plain JS scripts with globals; no build step or framework.
+  - TypeScript sources live in ts-src/ and emit global-style JS; run `npm run build`
+    before committing to refresh outputs. No bundler or server required.
   - Gameplay logic is split into tiny systems: movement, collisions,
     interactions, and rendering order. This keeps cross-file conditionals
     low and makes adding new entities like bandits or doors easy.

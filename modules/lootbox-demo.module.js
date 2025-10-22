@@ -1,5 +1,5 @@
-function seedWorldContent() {}
-
+// @ts-nocheck
+function seedWorldContent() { }
 const DATA = `
 {
   "seed": "lootbox-demo",
@@ -77,58 +77,56 @@ const DATA = `
     }
   ]
 }`;
-
-function postLoad(module){
-  let sawDrop = false;
-  Dustland.eventFlags.watch('spoils:opened', 'cache_opened');
-  Dustland.eventBus.on('spoils:drop', () => { sawDrop = true; });
-  Dustland.eventBus.on('combat:ended', ({ result }) => {
-    if(result === 'loot'){
-      incFlag('dummy_defeated');
-      if(!sawDrop) Dustland.eventBus.emit('mentor:bark', { text:'Better luck next time', sound:'mentor' });
-      sawDrop = false;
-    }
-  });
-  Dustland.eventBus.on('spoils:opened', () => {
-    Dustland.eventBus.emit('mentor:bark', { text:'Good job', sound:'mentor' });
-  });
-
-  // Map effect strings to real functions
-  module.npcs?.forEach(n => {
-    for (const key in n.tree){
-      const node = n.tree[key];
-      (node.choices || []).forEach(ch => {
-        if (Array.isArray(ch.effects)){
-          ch.effects = ch.effects.map(e => e === 'clear_cache'
-            ? () => Dustland.eventFlags.clear('cache_opened')
-            : e === 'inc_challenge'
-              ? () => incFlag('dummy_challenge')
-              : e);
+function postLoad(module) {
+    let sawDrop = false;
+    Dustland.eventFlags.watch('spoils:opened', 'cache_opened');
+    Dustland.eventBus.on('spoils:drop', () => { sawDrop = true; });
+    Dustland.eventBus.on('combat:ended', ({ result }) => {
+        if (result === 'loot') {
+            incFlag('dummy_defeated');
+            if (!sawDrop)
+                Dustland.eventBus.emit('mentor:bark', { text: 'Better luck next time', sound: 'mentor' });
+            sawDrop = false;
         }
-        if (ch.spawn && ch.spawn.challenge){
-          if (ch.spawn.challenge.flag){
-            ch.spawn.challenge = flagValue(ch.spawn.challenge.flag);
-          } else if (ch.spawn.challenge.add){
-            const [f, amt] = ch.spawn.challenge.add;
-            ch.spawn.challenge = flagValue(f) + amt;
-          }
+    });
+    Dustland.eventBus.on('spoils:opened', () => {
+        Dustland.eventBus.emit('mentor:bark', { text: 'Good job', sound: 'mentor' });
+    });
+    // Map effect strings to real functions
+    module.npcs?.forEach(n => {
+        for (const key in n.tree) {
+            const node = n.tree[key];
+            (node.choices || []).forEach(ch => {
+                if (Array.isArray(ch.effects)) {
+                    ch.effects = ch.effects.map(e => e === 'clear_cache'
+                        ? () => Dustland.eventFlags.clear('cache_opened')
+                        : e === 'inc_challenge'
+                            ? () => incFlag('dummy_challenge')
+                            : e);
+                }
+                if (ch.spawn && ch.spawn.challenge) {
+                    if (ch.spawn.challenge.flag) {
+                        ch.spawn.challenge = flagValue(ch.spawn.challenge.flag);
+                    }
+                    else if (ch.spawn.challenge.add) {
+                        const [f, amt] = ch.spawn.challenge.add;
+                        ch.spawn.challenge = flagValue(f) + amt;
+                    }
+                }
+            });
         }
-      });
-    }
-  });
+    });
 }
-
 globalThis.LOOTBOX_DEMO_MODULE = JSON.parse(DATA);
 globalThis.LOOTBOX_DEMO_MODULE.postLoad = postLoad;
-
-startGame = function(){
-  LOOTBOX_DEMO_MODULE.postLoad?.(LOOTBOX_DEMO_MODULE);
-  applyModule(LOOTBOX_DEMO_MODULE);
-  setFlag('dummy_challenge', 5);
-  const s = LOOTBOX_DEMO_MODULE.start;
-  setPartyPos(s.x, s.y);
-  setMap(s.map, 'Loot Box Demo');
-  const template = LOOTBOX_DEMO_MODULE.templates.find(t => t.id === 'training_dummy');
-  const npc = makeNPC('training_dummy_1', 'demo_room', 5, Math.floor(6/2), template.color, template.name, '', template.desc, {}, null, null, null, { combat: { ...template.combat, HP: 5, challenge: 5 } });
-  NPCS.push(npc);
+startGame = function () {
+    LOOTBOX_DEMO_MODULE.postLoad?.(LOOTBOX_DEMO_MODULE);
+    applyModule(LOOTBOX_DEMO_MODULE);
+    setFlag('dummy_challenge', 5);
+    const s = LOOTBOX_DEMO_MODULE.start;
+    setPartyPos(s.x, s.y);
+    setMap(s.map, 'Loot Box Demo');
+    const template = LOOTBOX_DEMO_MODULE.templates.find(t => t.id === 'training_dummy');
+    const npc = makeNPC('training_dummy_1', 'demo_room', 5, Math.floor(6 / 2), template.color, template.name, '', template.desc, {}, null, null, null, { combat: { ...template.combat, HP: 5, challenge: 5 } });
+    NPCS.push(npc);
 };

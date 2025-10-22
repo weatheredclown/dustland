@@ -9,5 +9,5 @@ test('portal layer renders above items', async () => {
   const renderOrder = vm.runInNewContext(orderSnippet + '; renderOrder;');
   assert.ok(renderOrder.includes('portals'));
   assert.ok(renderOrder.indexOf('portals') > renderOrder.indexOf('items'));
-  assert.match(code, /layer==='portals'/);
+  assert.match(code, /layer\s*===\s*'portals'/);
 });

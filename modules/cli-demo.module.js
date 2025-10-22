@@ -1,5 +1,5 @@
-function seedWorldContent() {}
-
+// @ts-nocheck
+function seedWorldContent() { }
 const DATA = `
 {
   "seed": "cli-demo-seed",
@@ -165,18 +165,15 @@ const DATA = `
   "templates": []
 }
 `;
-
-function postLoad(module) {}
-
+function postLoad(module) { }
 globalThis.CLI_DEMO_MODULE = JSON.parse(DATA);
 globalThis.CLI_DEMO_MODULE.postLoad = postLoad;
-
 startGame = function () {
-  CLI_DEMO_MODULE.postLoad?.(CLI_DEMO_MODULE);
-  applyModule(CLI_DEMO_MODULE);
-  const s = CLI_DEMO_MODULE.start;
-  if (s) {
-    setPartyPos(s.x, s.y);
-    setMap(s.map, 'CLI Demo Adventure');
-  }
+    CLI_DEMO_MODULE.postLoad?.(CLI_DEMO_MODULE);
+    applyModule(CLI_DEMO_MODULE);
+    const s = CLI_DEMO_MODULE.start;
+    if (s) {
+        setPartyPos(s.x, s.y);
+        setMap(s.map, 'CLI Demo Adventure');
+    }
 };

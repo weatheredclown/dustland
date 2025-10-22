@@ -1,7 +1,7 @@
-function seedWorldContent() {}
-
-(function(){
-const DATA = `
+// @ts-nocheck
+function seedWorldContent() { }
+(function () {
+    const DATA = `
 {
   "seed": "world-one",
   "start": {
@@ -248,85 +248,81 @@ const DATA = `
   }
 }
 `;
-
-globalThis.WORLD_ONE_MODULE = JSON.parse(DATA);
-function postLoad(module){
-  const handle = list => (list || []).map(e => {
-    if (e && e.effect === 'activateBunker') {
-      return () => Dustland.fastTravel?.activateBunker?.(e.id);
-    }
-    if (e && e.effect === 'openWorldMap') {
-      return () => Dustland.worldMap?.open?.(e.id);
-    }
-    return e;
-  });
-  module.npcs?.forEach(n => {
-    Object.values(n.tree || {}).forEach(node => {
-      if (node.effects) node.effects = handle(node.effects);
-      node.choices?.forEach(c => {
-        if (c.effects) c.effects = handle(c.effects);
-      });
-    });
-  });
-
-  const timers = module._timers || (module._timers = {});
-  function ensureCourier(flag, dropFactory, messageFactory, intervalMs){
-    if (!flag || typeof setTimeout !== 'function') return;
-    if (timers[flag]) return;
-    const interval = Math.max(1000, intervalMs || 20000);
-    party.flags = party.flags || {};
-    const last = Number(party.flags[flag]) || 0;
-    const now = Date.now();
-    const initialDelay = last ? Math.max(0, interval - (now - last)) : interval;
-    function schedule(delay){
-      timers[flag] = setTimeout(() => {
-        timers[flag] = null;
-        const drop = typeof dropFactory === 'function' ? dropFactory() : { ...dropFactory };
-        let added = false;
-        if (typeof addToInv === 'function') {
-          added = addToInv(drop);
-        }
-        if (!added && typeof dropItemNearParty === 'function') {
-          dropItemNearParty(drop);
-        }
-        party.flags[flag] = Date.now();
-        const msg = typeof messageFactory === 'function' ? messageFactory(drop) : messageFactory;
-        if (msg) {
-          if (typeof log === 'function') log(msg);
-          if (typeof toast === 'function') toast(msg);
-        }
-        Dustland.eventBus?.emit?.('courier:delivered', {
-          module: module.seed || module.name || 'world-one',
-          flag,
-          item: drop
+    globalThis.WORLD_ONE_MODULE = JSON.parse(DATA);
+    function postLoad(module) {
+        const handle = list => (list || []).map(e => {
+            if (e && e.effect === 'activateBunker') {
+                return () => Dustland.fastTravel?.activateBunker?.(e.id);
+            }
+            if (e && e.effect === 'openWorldMap') {
+                return () => Dustland.worldMap?.open?.(e.id);
+            }
+            return e;
         });
-        schedule(interval);
-      }, Math.max(0, delay));
+        module.npcs?.forEach(n => {
+            Object.values(n.tree || {}).forEach(node => {
+                if (node.effects)
+                    node.effects = handle(node.effects);
+                node.choices?.forEach(c => {
+                    if (c.effects)
+                        c.effects = handle(c.effects);
+                });
+            });
+        });
+        const timers = module._timers || (module._timers = {});
+        function ensureCourier(flag, dropFactory, messageFactory, intervalMs) {
+            if (!flag || typeof setTimeout !== 'function')
+                return;
+            if (timers[flag])
+                return;
+            const interval = Math.max(1000, intervalMs || 20000);
+            party.flags = party.flags || {};
+            const last = Number(party.flags[flag]) || 0;
+            const now = Date.now();
+            const initialDelay = last ? Math.max(0, interval - (now - last)) : interval;
+            function schedule(delay) {
+                timers[flag] = setTimeout(() => {
+                    timers[flag] = null;
+                    const drop = typeof dropFactory === 'function' ? dropFactory() : { ...dropFactory };
+                    let added = false;
+                    if (typeof addToInv === 'function') {
+                        added = addToInv(drop);
+                    }
+                    if (!added && typeof dropItemNearParty === 'function') {
+                        dropItemNearParty(drop);
+                    }
+                    party.flags[flag] = Date.now();
+                    const msg = typeof messageFactory === 'function' ? messageFactory(drop) : messageFactory;
+                    if (msg) {
+                        if (typeof log === 'function')
+                            log(msg);
+                        if (typeof toast === 'function')
+                            toast(msg);
+                    }
+                    Dustland.eventBus?.emit?.('courier:delivered', {
+                        module: module.seed || module.name || 'world-one',
+                        flag,
+                        item: drop
+                    });
+                    schedule(interval);
+                }, Math.max(0, delay));
+            }
+            schedule(initialDelay);
+        }
+        ensureCourier('world_one_courier', () => ({
+            id: 'world_one_courier_drop',
+            name: 'Courier Drop (Alpha Line)',
+            type: 'quest',
+            fuel: 8,
+            desc: 'Emergency cells routed to keep Alpha online.'
+        }), drop => `Courier drop delivered ${drop.fuel ?? 0} fuel to Alpha.`, 20000);
     }
-    schedule(initialDelay);
-  }
-
-  ensureCourier(
-    'world_one_courier',
-    () => ({
-      id: 'world_one_courier_drop',
-      name: 'Courier Drop (Alpha Line)',
-      type: 'quest',
-      fuel: 8,
-      desc: 'Emergency cells routed to keep Alpha online.'
-    }),
-    drop => `Courier drop delivered ${drop.fuel ?? 0} fuel to Alpha.`,
-    20000
-  );
-}
-globalThis.WORLD_ONE_MODULE.postLoad = postLoad;
-
+    globalThis.WORLD_ONE_MODULE.postLoad = postLoad;
 })();
-
-startGame = function(){
-  WORLD_ONE_MODULE.postLoad?.(WORLD_ONE_MODULE);
-  applyModule(WORLD_ONE_MODULE);
-  const s = WORLD_ONE_MODULE.start;
-  setPartyPos(s.x, s.y);
-  setMap(s.map, 'World One');
+startGame = function () {
+    WORLD_ONE_MODULE.postLoad?.(WORLD_ONE_MODULE);
+    applyModule(WORLD_ONE_MODULE);
+    const s = WORLD_ONE_MODULE.start;
+    setPartyPos(s.x, s.y);
+    setMap(s.map, 'World One');
 };

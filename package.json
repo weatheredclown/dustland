@@ -5,20 +5,28 @@
   "type": "module",
   "main": "scripts/dustland-core.js",
   "scripts": {
+    "build": "npm run build:ts && npm run build:sync",
+    "build:ts": "tsc --project tsconfig.json",
+    "build:sync": "node build-tools/sync-ts-output.js",
+    "build:watch": "tsc --project tsconfig.json --watch",
     "serve": "http-server -p 8080",
+    "pretest": "npm run build",
     "test": "npm run lint && node --test",
-    "lint": "eslint . && yamllint .github/workflows/*.yml",
+    "lint": "eslint ts-src test --ext .ts,.js && yamllint .github/workflows/*.yml",
     "module:export": "node scripts/supporting/module-json.js export",
     "module:import": "node scripts/supporting/module-json.js import"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.16.1",
+    "@typescript-eslint/parser": "^7.16.1",
     "eslint": "^8.57.1",
     "eslint-plugin-jsdoc": "^48.0.3",
     "http-server": "^14.1.1",
     "jsdom": "^26.1.0",
     "puppeteer": "^24.17.0",
+    "typescript": "~5.5.4",
     "yaml-lint": "^1.7.0"
   }
 }

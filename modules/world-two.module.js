@@ -1,7 +1,7 @@
-function seedWorldContent() {}
-
-(function(){
-const DATA = `
+// @ts-nocheck
+function seedWorldContent() { }
+(function () {
+    const DATA = `
 {
   "seed": "world-two",
   "start": {
@@ -263,99 +263,94 @@ const DATA = `
   }
 }
 `;
-
-globalThis.WORLD_TWO_MODULE = JSON.parse(DATA);
-function postLoad(module){
-  const handle = list => (list || []).map(e => {
-    if (e && e.effect === 'activateBunker') {
-      return () => Dustland.fastTravel?.activateBunker?.(e.id);
-    }
-    if (e && e.effect === 'openWorldMap') {
-      return () => Dustland.worldMap?.open?.(e.id);
-    }
-    return e;
-  });
-  module.npcs?.forEach(n => {
-    Object.values(n.tree || {}).forEach(node => {
-      if (node.effects) node.effects = handle(node.effects);
-      node.choices?.forEach(c => {
-        if (c.effects) c.effects = handle(c.effects);
-      });
-    });
-  });
-
-  function activateBunkerWhenReady(id, attempts){
-    if (!id || attempts <= 0) return;
-    const ft = globalThis.Dustland?.fastTravel;
-    if (ft?.activateBunker) {
-      ft.activateBunker(id);
-      return;
-    }
-    if (typeof setTimeout === 'function') {
-      setTimeout(() => activateBunkerWhenReady(id, attempts - 1), 50);
-    }
-  }
-
-  activateBunkerWhenReady('beta', 20);
-
-  const timers = module._timers || (module._timers = {});
-  function ensureCourier(flag, dropFactory, messageFactory, intervalMs){
-    if (!flag || typeof setTimeout !== 'function') return;
-    if (timers[flag]) return;
-    const interval = Math.max(1000, intervalMs || 22000);
-    party.flags = party.flags || {};
-    const last = Number(party.flags[flag]) || 0;
-    const now = Date.now();
-    const initialDelay = last ? Math.max(0, interval - (now - last)) : interval;
-    function schedule(delay){
-      timers[flag] = setTimeout(() => {
-        timers[flag] = null;
-        const drop = typeof dropFactory === 'function' ? dropFactory() : { ...dropFactory };
-        let added = false;
-        if (typeof addToInv === 'function') {
-          added = addToInv(drop);
-        }
-        if (!added && typeof dropItemNearParty === 'function') {
-          dropItemNearParty(drop);
-        }
-        party.flags[flag] = Date.now();
-        const msg = typeof messageFactory === 'function' ? messageFactory(drop) : messageFactory;
-        if (msg) {
-          if (typeof log === 'function') log(msg);
-          if (typeof toast === 'function') toast(msg);
-        }
-        Dustland.eventBus?.emit?.('courier:delivered', {
-          module: module.seed || module.name || 'world-two',
-          flag,
-          item: drop
+    globalThis.WORLD_TWO_MODULE = JSON.parse(DATA);
+    function postLoad(module) {
+        const handle = list => (list || []).map(e => {
+            if (e && e.effect === 'activateBunker') {
+                return () => Dustland.fastTravel?.activateBunker?.(e.id);
+            }
+            if (e && e.effect === 'openWorldMap') {
+                return () => Dustland.worldMap?.open?.(e.id);
+            }
+            return e;
         });
-        schedule(interval);
-      }, Math.max(0, delay));
+        module.npcs?.forEach(n => {
+            Object.values(n.tree || {}).forEach(node => {
+                if (node.effects)
+                    node.effects = handle(node.effects);
+                node.choices?.forEach(c => {
+                    if (c.effects)
+                        c.effects = handle(c.effects);
+                });
+            });
+        });
+        function activateBunkerWhenReady(id, attempts) {
+            if (!id || attempts <= 0)
+                return;
+            const ft = globalThis.Dustland?.fastTravel;
+            if (ft?.activateBunker) {
+                ft.activateBunker(id);
+                return;
+            }
+            if (typeof setTimeout === 'function') {
+                setTimeout(() => activateBunkerWhenReady(id, attempts - 1), 50);
+            }
+        }
+        activateBunkerWhenReady('beta', 20);
+        const timers = module._timers || (module._timers = {});
+        function ensureCourier(flag, dropFactory, messageFactory, intervalMs) {
+            if (!flag || typeof setTimeout !== 'function')
+                return;
+            if (timers[flag])
+                return;
+            const interval = Math.max(1000, intervalMs || 22000);
+            party.flags = party.flags || {};
+            const last = Number(party.flags[flag]) || 0;
+            const now = Date.now();
+            const initialDelay = last ? Math.max(0, interval - (now - last)) : interval;
+            function schedule(delay) {
+                timers[flag] = setTimeout(() => {
+                    timers[flag] = null;
+                    const drop = typeof dropFactory === 'function' ? dropFactory() : { ...dropFactory };
+                    let added = false;
+                    if (typeof addToInv === 'function') {
+                        added = addToInv(drop);
+                    }
+                    if (!added && typeof dropItemNearParty === 'function') {
+                        dropItemNearParty(drop);
+                    }
+                    party.flags[flag] = Date.now();
+                    const msg = typeof messageFactory === 'function' ? messageFactory(drop) : messageFactory;
+                    if (msg) {
+                        if (typeof log === 'function')
+                            log(msg);
+                        if (typeof toast === 'function')
+                            toast(msg);
+                    }
+                    Dustland.eventBus?.emit?.('courier:delivered', {
+                        module: module.seed || module.name || 'world-two',
+                        flag,
+                        item: drop
+                    });
+                    schedule(interval);
+                }, Math.max(0, delay));
+            }
+            schedule(initialDelay);
+        }
+        ensureCourier('world_two_courier', () => ({
+            id: 'world_two_courier_drop',
+            name: 'Courier Drop (Beta Line)',
+            type: 'quest',
+            fuel: 10,
+            desc: 'Beta line couriers stash fuel near the terminal.'
+        }), drop => `Courier drop delivered ${drop.fuel ?? 0} fuel to Beta.`, 22000);
     }
-    schedule(initialDelay);
-  }
-
-  ensureCourier(
-    'world_two_courier',
-    () => ({
-      id: 'world_two_courier_drop',
-      name: 'Courier Drop (Beta Line)',
-      type: 'quest',
-      fuel: 10,
-      desc: 'Beta line couriers stash fuel near the terminal.'
-    }),
-    drop => `Courier drop delivered ${drop.fuel ?? 0} fuel to Beta.`,
-    22000
-  );
-}
-globalThis.WORLD_TWO_MODULE.postLoad = postLoad;
-
+    globalThis.WORLD_TWO_MODULE.postLoad = postLoad;
 })();
-
-startGame = function(){
-  WORLD_TWO_MODULE.postLoad?.(WORLD_TWO_MODULE);
-  applyModule(WORLD_TWO_MODULE);
-  const s = WORLD_TWO_MODULE.start;
-  setPartyPos(s.x, s.y);
-  setMap(s.map, 'World Two');
+startGame = function () {
+    WORLD_TWO_MODULE.postLoad?.(WORLD_TWO_MODULE);
+    applyModule(WORLD_TWO_MODULE);
+    const s = WORLD_TWO_MODULE.start;
+    setPartyPos(s.x, s.y);
+    setMap(s.map, 'World Two');
 };

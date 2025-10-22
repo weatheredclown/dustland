@@ -1,3 +1,4 @@
+// @ts-nocheck
 const DATA = `
 {
   "seed": "true-dust",
@@ -722,206 +723,212 @@ const DATA = `
   }
 }
 `;
-
 function startPendant() {
-  if (startPendant._t) return;
-  startPendant._t = setInterval(() => {
-    const r = party.find(m => m.id === 'rygar');
-    if (!r) {
-      clearInterval(startPendant._t);
-      startPendant._t = null;
-      return;
-    }
-    if (typeof playFX === 'function') playFX('status');
-    if (typeof log === 'function') log("Rygar's pendant glints.");
-  }, 8000);
+    if (startPendant._t)
+        return;
+    startPendant._t = setInterval(() => {
+        const r = party.find(m => m.id === 'rygar');
+        if (!r) {
+            clearInterval(startPendant._t);
+            startPendant._t = null;
+            return;
+        }
+        if (typeof playFX === 'function')
+            playFX('status');
+        if (typeof log === 'function')
+            log("Rygar's pendant glints.");
+    }, 8000);
 }
-
 function startRadio() {
-  if (startRadio._t) return;
-  const caches = TRUE_DUST.items.filter(i => i.id.startsWith('scrap_cache'));
-  startRadio._t = setInterval(() => {
-    const hasRadio = party.some(m => m.equip?.trinket?.id === 'cracked_radio');
-    if (!hasRadio) return;
-    const near = caches.some(c => party.map === c.map && Math.abs(party.x - c.x) <= 1 && Math.abs(party.y - c.y) <= 1);
-    if (near) {
-      if (typeof toast === 'function') toast('Static bursts from the radio.');
-      if (typeof log === 'function') log('The radio crackles with static.');
-    }
-  }, 1000);
+    if (startRadio._t)
+        return;
+    const caches = TRUE_DUST.items.filter(i => i.id.startsWith('scrap_cache'));
+    startRadio._t = setInterval(() => {
+        const hasRadio = party.some(m => m.equip?.trinket?.id === 'cracked_radio');
+        if (!hasRadio)
+            return;
+        const near = caches.some(c => party.map === c.map && Math.abs(party.x - c.x) <= 1 && Math.abs(party.y - c.y) <= 1);
+        if (near) {
+            if (typeof toast === 'function')
+                toast('Static bursts from the radio.');
+            if (typeof log === 'function')
+                log('The radio crackles with static.');
+        }
+    }, 1000);
 }
-
 const MASK_QUEST_ID = 'mask_memory';
 const MASK_QUEST_FLAG = 'mask_memory_stage';
 const MASK_JOURNAL = [
-  'Salvage a buried mask near Stonegate so the hermit can wake the persona dreaming inside.',
-  'You recovered a dormant mask humming with borrowed life. Bring it to the hermit before the echo fades.',
-  'The mask is awake. Rest at camp so it can choose whose face to wear.'
+    'Salvage a buried mask near Stonegate so the hermit can wake the persona dreaming inside.',
+    'You recovered a dormant mask humming with borrowed life. Bring it to the hermit before the echo fades.',
+    'The mask is awake. Rest at camp so it can choose whose face to wear.'
 ];
 const MASK_STAGE_TEXT = [
-  'The hermit cradles a blank porcelain mask, whispering that personas are borrowed lives waiting for a new pulse.',
-  'The hermit listens for distant echoes. “Find me a mask buried in this dust and we will wake whoever still clings to it.”',
-  'Static hums around your pack. “I hear the borrowed life you carry,” he says. “Bring it before the memory slips.”',
-  'The hermit watches the awakened mask tilt toward your camp, content to let the memory ride with you.'
+    'The hermit cradles a blank porcelain mask, whispering that personas are borrowed lives waiting for a new pulse.',
+    'The hermit listens for distant echoes. “Find me a mask buried in this dust and we will wake whoever still clings to it.”',
+    'Static hums around your pack. “I hear the borrowed life you carry,” he says. “Bring it before the memory slips.”',
+    'The hermit watches the awakened mask tilt toward your camp, content to let the memory ride with you.'
 ];
 const MASK_CHECKPOINTS = ['accepted', 'recovered', 'awakened'];
 let maskQuestSetupDone = false;
 let maskHermitTree = null;
-
 function updateMaskHermitStart(stage) {
-  if (!maskHermitTree?.start) return;
-  const idx = stage >= 0 ? stage + 1 : 0;
-  maskHermitTree.start.text = MASK_STAGE_TEXT[idx] || MASK_STAGE_TEXT[0];
+    if (!maskHermitTree?.start)
+        return;
+    const idx = stage >= 0 ? stage + 1 : 0;
+    maskHermitTree.start.text = MASK_STAGE_TEXT[idx] || MASK_STAGE_TEXT[0];
 }
-
 function maskQuestCheckpoint(stage) {
-  const key = MASK_CHECKPOINTS[stage];
-  if (!key) return;
-  if (typeof log === 'function') log(`Checkpoint: mask quest ${key}.`);
-  globalThis.EventBus?.emit?.('quest:checkpoint', { questId: MASK_QUEST_ID, stage: key });
+    const key = MASK_CHECKPOINTS[stage];
+    if (!key)
+        return;
+    if (typeof log === 'function')
+        log(`Checkpoint: mask quest ${key}.`);
+    globalThis.EventBus?.emit?.('quest:checkpoint', { questId: MASK_QUEST_ID, stage: key });
 }
-
 function setMaskQuestStage(stage) {
-  const quest = globalThis.quests?.[MASK_QUEST_ID];
-  if (!quest) return;
-  if (quest.progress === stage) {
+    const quest = globalThis.quests?.[MASK_QUEST_ID];
+    if (!quest)
+        return;
+    if (quest.progress === stage) {
+        updateMaskHermitStart(stage);
+        return;
+    }
+    quest.progress = stage;
+    const desc = MASK_JOURNAL[Math.min(stage, MASK_JOURNAL.length - 1)] || quest.desc;
+    quest.desc = desc;
+    if (typeof renderQuests === 'function')
+        renderQuests();
     updateMaskHermitStart(stage);
-    return;
-  }
-  quest.progress = stage;
-  const desc = MASK_JOURNAL[Math.min(stage, MASK_JOURNAL.length - 1)] || quest.desc;
-  quest.desc = desc;
-  if (typeof renderQuests === 'function') renderQuests();
-  updateMaskHermitStart(stage);
-  if (stage === 0 && typeof flagValue === 'function' && flagValue(MASK_QUEST_FLAG) < 1) {
-    globalThis.setFlag?.(MASK_QUEST_FLAG, 1);
-  }
-  if (stage === 2) {
-    globalThis.setFlag?.(MASK_QUEST_FLAG, 2);
-  }
-  maskQuestCheckpoint(stage);
+    if (stage === 0 && typeof flagValue === 'function' && flagValue(MASK_QUEST_FLAG) < 1) {
+        globalThis.setFlag?.(MASK_QUEST_FLAG, 1);
+    }
+    if (stage === 2) {
+        globalThis.setFlag?.(MASK_QUEST_FLAG, 2);
+    }
+    maskQuestCheckpoint(stage);
 }
-
 function beginMaskQuest() {
-  const quest = globalThis.quests?.[MASK_QUEST_ID];
-  if (!quest) return;
-  if (quest.status !== 'active') {
-    globalThis.questLog?.add?.(quest);
-  }
-  setMaskQuestStage(0);
+    const quest = globalThis.quests?.[MASK_QUEST_ID];
+    if (!quest)
+        return;
+    if (quest.status !== 'active') {
+        globalThis.questLog?.add?.(quest);
+    }
+    setMaskQuestStage(0);
 }
-
 function handleMaskAcquired(item) {
-  const quest = globalThis.quests?.[MASK_QUEST_ID];
-  if (!quest || quest.status !== 'active' || quest.progress >= 1) return;
-  const tags = Array.isArray(item?.tags) ? item.tags.map(t => t.toLowerCase()) : [];
-  if (!tags.includes('mask')) return;
-  setMaskQuestStage(1);
+    const quest = globalThis.quests?.[MASK_QUEST_ID];
+    if (!quest || quest.status !== 'active' || quest.progress >= 1)
+        return;
+    const tags = Array.isArray(item?.tags) ? item.tags.map(t => t.toLowerCase()) : [];
+    if (!tags.includes('mask'))
+        return;
+    setMaskQuestStage(1);
 }
-
 function handleMaskQuestCompleted(evt) {
-  if (!evt?.quest || evt.quest.id !== MASK_QUEST_ID) return;
-  setMaskQuestStage(2);
+    if (!evt?.quest || evt.quest.id !== MASK_QUEST_ID)
+        return;
+    setMaskQuestStage(2);
 }
-
 function completeMaskQuest() {
-  setMaskQuestStage(2);
+    setMaskQuestStage(2);
 }
-
 function syncMaskQuestState(module) {
-  const quest = globalThis.quests?.[MASK_QUEST_ID];
-  if (!quest) return;
-  if (quest.status === 'completed') {
-    setMaskQuestStage(2);
-    return;
-  }
-  if (quest.status === 'active') {
-    if (typeof flagValue === 'function' && flagValue(MASK_QUEST_FLAG) < 1) {
-      globalThis.setFlag?.(MASK_QUEST_FLAG, 1);
+    const quest = globalThis.quests?.[MASK_QUEST_ID];
+    if (!quest)
+        return;
+    if (quest.status === 'completed') {
+        setMaskQuestStage(2);
+        return;
     }
-    const hasMask = typeof countItems === 'function' ? countItems('mask') > 0 : false;
-    setMaskQuestStage(hasMask ? 1 : 0);
-    return;
-  }
-  quest.progress = -1;
-  if (!maskHermitTree) {
-    maskHermitTree = module.npcs?.find(n => n.id === 'mask_giver')?.tree || null;
-  }
-  updateMaskHermitStart(-1);
+    if (quest.status === 'active') {
+        if (typeof flagValue === 'function' && flagValue(MASK_QUEST_FLAG) < 1) {
+            globalThis.setFlag?.(MASK_QUEST_FLAG, 1);
+        }
+        const hasMask = typeof countItems === 'function' ? countItems('mask') > 0 : false;
+        setMaskQuestStage(hasMask ? 1 : 0);
+        return;
+    }
+    quest.progress = -1;
+    if (!maskHermitTree) {
+        maskHermitTree = module.npcs?.find(n => n.id === 'mask_giver')?.tree || null;
+    }
+    updateMaskHermitStart(-1);
 }
-
 function setupMaskQuest(module) {
-  const quest = globalThis.quests?.[MASK_QUEST_ID];
-  if (!quest) return;
-  const hermit = module.npcs?.find(n => n.id === 'mask_giver');
-  if (!hermit?.tree?.start) return;
-  maskHermitTree = hermit.tree;
-  const accept = hermit.tree.start.choices?.find(c => c.q === 'accept');
-  if (accept) {
-    accept.effects = Array.isArray(accept.effects) ? accept.effects : [];
-    if (!accept.effects.includes(beginMaskQuest)) accept.effects.push(beginMaskQuest);
-  }
-  const turnin = hermit.tree.do_turnin?.choices?.find(c => c.to === 'after');
-  if (turnin) {
-    turnin.effects = Array.isArray(turnin.effects) ? turnin.effects : [];
-    if (!turnin.effects.includes(completeMaskQuest)) {
-      turnin.effects.push(completeMaskQuest);
+    const quest = globalThis.quests?.[MASK_QUEST_ID];
+    if (!quest)
+        return;
+    const hermit = module.npcs?.find(n => n.id === 'mask_giver');
+    if (!hermit?.tree?.start)
+        return;
+    maskHermitTree = hermit.tree;
+    const accept = hermit.tree.start.choices?.find(c => c.q === 'accept');
+    if (accept) {
+        accept.effects = Array.isArray(accept.effects) ? accept.effects : [];
+        if (!accept.effects.includes(beginMaskQuest))
+            accept.effects.push(beginMaskQuest);
     }
-  }
-  if (!maskQuestSetupDone) {
-    maskQuestSetupDone = true;
-    globalThis.EventBus?.on?.('item:picked', handleMaskAcquired);
-    globalThis.EventBus?.on?.('quest:completed', handleMaskQuestCompleted);
-  }
-  if (typeof flagValue === 'function' && flagValue(MASK_QUEST_FLAG) >= 2) {
-    setMaskQuestStage(2);
-    return;
-  }
-  syncMaskQuestState(module);
+    const turnin = hermit.tree.do_turnin?.choices?.find(c => c.to === 'after');
+    if (turnin) {
+        turnin.effects = Array.isArray(turnin.effects) ? turnin.effects : [];
+        if (!turnin.effects.includes(completeMaskQuest)) {
+            turnin.effects.push(completeMaskQuest);
+        }
+    }
+    if (!maskQuestSetupDone) {
+        maskQuestSetupDone = true;
+        globalThis.EventBus?.on?.('item:picked', handleMaskAcquired);
+        globalThis.EventBus?.on?.('quest:completed', handleMaskQuestCompleted);
+    }
+    if (typeof flagValue === 'function' && flagValue(MASK_QUEST_FLAG) >= 2) {
+        setMaskQuestStage(2);
+        return;
+    }
+    syncMaskQuestState(module);
 }
-
 function postLoad(module) {
-  const rygar = module.npcs.find(n => n.id === 'rygar');
-  if (rygar && rygar.tree && rygar.tree.start) {
-    rygar.tree.start.choices.unshift({
-      label: 'Travel with us',
-      join: { id: 'rygar', name: 'Rygar', role: 'Guard' },
-      effects: [startPendant],
-      to: 'joined'
+    const rygar = module.npcs.find(n => n.id === 'rygar');
+    if (rygar && rygar.tree && rygar.tree.start) {
+        rygar.tree.start.choices.unshift({
+            label: 'Travel with us',
+            join: { id: 'rygar', name: 'Rygar', role: 'Guard' },
+            effects: [startPendant],
+            to: 'joined'
+        });
+        rygar.tree.joined = {
+            text: 'Rygar nods and falls in step.',
+            choices: [{ label: '(Leave)', to: 'bye' }]
+        };
+    }
+    const dock = module.npcs.find(n => n.id === 'lakeside_dockhand');
+    if (dock) {
+        dock.processNode = function (node) {
+            if (node === 'ask') {
+                dialogState.node = party.some(m => m.id === 'rygar') ? 'with_rygar' : 'without_rygar';
+            }
+        };
+    }
+    const bandit = module.npcs.find(n => n.id === 'bandit_leader');
+    if (bandit && bandit.combat) {
+        bandit.combat.effects = [() => setFlag('bandits_cleared', 1)];
+    }
+    setupMaskQuest(module);
+    module.quests?.forEach(q => {
+        if (q && q.autoStart === false)
+            return;
+        addQuest(q.id, q.title, q.desc, q);
     });
-    rygar.tree.joined = {
-      text: 'Rygar nods and falls in step.',
-      choices: [ { label: '(Leave)', to: 'bye' } ]
-    };
-  }
-  const dock = module.npcs.find(n => n.id === 'lakeside_dockhand');
-  if (dock) {
-    dock.processNode = function (node) {
-      if (node === 'ask') {
-        dialogState.node = party.some(m => m.id === 'rygar') ? 'with_rygar' : 'without_rygar';
-      }
-    };
-  }
-  const bandit = module.npcs.find(n => n.id === 'bandit_leader');
-  if (bandit && bandit.combat) {
-    bandit.combat.effects = [() => setFlag('bandits_cleared', 1)];
-  }
-  setupMaskQuest(module);
-  module.quests?.forEach(q => {
-    if (q && q.autoStart === false) return;
-    addQuest(q.id, q.title, q.desc, q);
-  });
 }
-
 globalThis.TRUE_DUST = JSON.parse(DATA);
 globalThis.TRUE_DUST.postLoad = postLoad;
 globalThis.TRUE_DUST.startRadio = startRadio;
-
 startGame = function () {
-  applyModule(TRUE_DUST);
-  TRUE_DUST.postLoad?.(TRUE_DUST);
-  const s = TRUE_DUST.start;
-  setMap(s.map, 'Stonegate');
-  setPartyPos(s.x, s.y);
-  startRadio();
+    applyModule(TRUE_DUST);
+    TRUE_DUST.postLoad?.(TRUE_DUST);
+    const s = TRUE_DUST.start;
+    setMap(s.map, 'Stonegate');
+    setPartyPos(s.x, s.y);
+    startRadio();
 };
