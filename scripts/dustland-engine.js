@@ -1695,8 +1695,11 @@ function render(gameState = state, dt) {
     }
     for (const layer of renderOrder) {
         if (layer === 'tiles') {
-            for (let vy = 0; vy < VIEW_H; vy++) {
-                for (let vx = 0; vx < VIEW_W; vx++) {
+            const perf = (typeof performance !== 'undefined' && performance.now) ? performance : null;
+            const measureTiles = !!globalThis.perfStats;
+            const tileStart = measureTiles ? (perf ? perf.now() : Date.now()) : 0;
+            for (let vy = 0; vy < vH; vy++) {
+                for (let vx = 0; vx < vW; vx++) {
                     const gx = camX + vx - offX, gy = camY + vy - offY;
                     if (gx < 0 || gy < 0 || gx >= W || gy >= H)
                         continue;
@@ -1734,6 +1737,9 @@ function render(gameState = state, dt) {
                         }
                     }
                 }
+            }
+            if (measureTiles && globalThis.perfStats) {
+                globalThis.perfStats.tiles += (perf ? perf.now() : Date.now()) - tileStart;
             }
         }
         else if (layer === 'items') {

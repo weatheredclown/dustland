@@ -7,20 +7,22 @@
     const sfxLabel = document.getElementById('perfSfx');
     const pathLabel = document.getElementById('perfPath');
     const aiLabel = document.getElementById('perfAI');
+    const tileLabel = document.getElementById('perfTiles');
     const ctx = canvas?.getContext('2d');
     const width = canvas?.width || 0;
     const height = canvas?.height || 0;
     const hist = {
         sfx: Array(width).fill(0),
         path: Array(width).fill(0),
-        ai: Array(width).fill(0)
+        ai: Array(width).fill(0),
+        tiles: Array(width).fill(0)
     };
-    const stats = globalThis.perfStats = { sfx: 0, path: 0, ai: 0 };
+    const stats = globalThis.perfStats = { sfx: 0, path: 0, ai: 0, tiles: 0 };
     function draw() {
         if (!ctx)
             return;
         ctx.clearRect(0, 0, width, height);
-        const max = Math.max(...hist.sfx, ...hist.path, ...hist.ai, 1);
+        const max = Math.max(...hist.sfx, ...hist.path, ...hist.ai, ...hist.tiles, 1);
         const scale = height / max;
         ctx.strokeStyle = '#f33';
         ctx.beginPath();
@@ -34,6 +36,10 @@
         ctx.beginPath();
         hist.ai.forEach((v, i) => { const y = height - v * scale; i ? ctx.lineTo(i, y) : ctx.moveTo(i, y); });
         ctx.stroke();
+        ctx.strokeStyle = '#ff0';
+        ctx.beginPath();
+        hist.tiles.forEach((v, i) => { const y = height - v * scale; i ? ctx.lineTo(i, y) : ctx.moveTo(i, y); });
+        ctx.stroke();
     }
     function record() {
         hist.sfx.push(stats.sfx);
@@ -42,14 +48,18 @@
         hist.path.shift();
         hist.ai.push(stats.ai);
         hist.ai.shift();
+        hist.tiles.push(stats.tiles);
+        hist.tiles.shift();
         if (sfxLabel)
             sfxLabel.textContent = stats.sfx.toFixed(2);
         if (pathLabel)
             pathLabel.textContent = stats.path.toFixed(2);
         if (aiLabel)
             aiLabel.textContent = stats.ai.toFixed(2);
+        if (tileLabel)
+            tileLabel.textContent = stats.tiles.toFixed(2);
         draw();
-        stats.sfx = stats.path = stats.ai = 0;
+        stats.sfx = stats.path = stats.ai = stats.tiles = 0;
     }
     globalThis._perfRecord = record;
     setInterval(record, 1000).unref?.();
