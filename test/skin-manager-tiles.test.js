@@ -175,6 +175,22 @@ test('loadGeneratedSkin loads packaged retro-console assets without overrides', 
   const panelSlot = result.ui?.slots?.['main-panel'];
   assert.ok(panelSlot, 'retro-console skin should define main panel slot');
   assert.equal(panelSlot.backgroundImage, 'url(assets/skins/retro-console/primary-panel-backdrop.svg)');
+  assert.ok(result.tiles, 'retro-console skin should expose tile map');
+  assert.equal(result.tiles.atlas, 'assets/skins/retro-console/tile-atlas.svg');
+
+  const sandSprite = skinApi.getTileSprite(sandbox.TILE.SAND, { x: 1, y: 2 });
+  assert.ok(sandSprite, 'sand tile sprite should resolve for packaged skin');
+  assert.equal(sandSprite.sx, 0);
+  assert.equal(sandSprite.sy, 0);
+  assert.equal(sandSprite.sw, 64);
+  assert.equal(sandSprite.sh, 64);
+
+  const doorSprite = skinApi.getTileSprite(sandbox.TILE.DOOR, { x: 3, y: 4 });
+  assert.ok(doorSprite, 'door tile sprite should resolve for packaged skin');
+  assert.equal(doorSprite.sx, 0);
+  assert.equal(doorSprite.sy, 64);
+  assert.equal(doorSprite.sw, 64);
+  assert.equal(doorSprite.sh, 64);
 
   const storedConfig = skinApi.getGeneratedSkinConfig('retro-console');
   assert.ok(storedConfig, 'packaged config should be stored');
