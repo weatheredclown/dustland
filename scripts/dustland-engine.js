@@ -1660,24 +1660,14 @@ function render(gameState = state, dt) {
     const H = Number.isFinite(dims.H) ? dims.H : vH;
     const mapSmallerThanView = W < vW || H < vH;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    if (mapSmallerThanView) {
-        ctx.clearRect(0, 0, scene.width, scene.height);
-    }
-    else {
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, scene.width, scene.height);
-    }
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, scene.width, scene.height);
     ctx.save();
     ctx.scale(RENDER_SCALE, RENDER_SCALE);
     ctx.imageSmoothingEnabled = false;
     ctx.font = `${(12 * fontScale) / RENDER_SCALE}px system-ui, sans-serif`;
-    if (mapSmallerThanView) {
-        ctx.clearRect(0, 0, BASE_CANVAS_WIDTH, BASE_CANVAS_HEIGHT);
-    }
-    else {
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, BASE_CANVAS_WIDTH, BASE_CANVAS_HEIGHT);
-    }
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, BASE_CANVAS_WIDTH, BASE_CANVAS_HEIGHT);
     const offX = Math.max(0, Math.floor((vW - W) / 2));
     const offY = Math.max(0, Math.floor((vH - H) / 2));
     const items = gameState.itemDrops || itemDrops;
