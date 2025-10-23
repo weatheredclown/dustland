@@ -1,26 +1,20 @@
 (function () {
-    function ensureDustland() {
-        if (!globalThis.Dustland) {
-            globalThis.Dustland = {};
-        }
-        return globalThis.Dustland;
-    }
-    function ensureWizardSteps(dustland) {
-        if (!dustland.WizardSteps) {
-            dustland.WizardSteps = {};
-        }
-        return dustland.WizardSteps;
-    }
-    function confirmStep(message = 'Review your choices.') {
+    function confirmStep(message) {
+        const text = message && message.trim() !== '' ? message : 'Review your choices.';
         return {
             render(container) {
-                const paragraph = document.createElement('p');
-                paragraph.textContent = message;
-                container.appendChild(paragraph);
+                const p = document.createElement('p');
+                p.textContent = text;
+                container.appendChild(p);
             }
         };
     }
-    const dustland = ensureDustland();
-    const wizardSteps = ensureWizardSteps(dustland);
+    const dustland = globalThis.Dustland ||
+        (globalThis.Dustland = {});
+    let wizardSteps = dustland.WizardSteps;
+    if (!wizardSteps) {
+        wizardSteps = {};
+        dustland.WizardSteps = wizardSteps;
+    }
     wizardSteps.confirm = confirmStep;
 })();

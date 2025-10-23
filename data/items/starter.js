@@ -1,9 +1,7 @@
 (function () {
-    if (!globalThis.Dustland) {
-        globalThis.Dustland = {};
-    }
-    const dustland = globalThis.Dustland;
-    dustland.starterItems = [
+    const dustland = globalThis.Dustland ||
+        (globalThis.Dustland = {});
+    const starterItems = [
         {
             id: 'starter_canteen',
             name: 'Canteen',
@@ -11,4 +9,5 @@
             use: { type: 'hydrate', amount: 2, text: 'You take a drink.' }
         }
     ];
+    dustland.starterItems = starterItems;
 })();
