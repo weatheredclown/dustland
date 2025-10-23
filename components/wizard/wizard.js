@@ -1,50 +1,54 @@
-// @ts-nocheck
 (function () {
-    function Wizard(container, steps, opts = {}) {
+    function ensureDustland() {
+        if (!globalThis.Dustland) {
+            globalThis.Dustland = {};
+        }
+        return globalThis.Dustland;
+    }
+    function createWizard(container, steps, opts = {}) {
         let index = 0;
-        const state = opts.initialState || {};
-        const onComplete = opts.onComplete || function () { };
-        function render() {
+        const state = (opts.initialState ?? {});
+        const onComplete = opts.onComplete ?? (() => undefined);
+        const render = () => {
             container.innerHTML = '';
             const step = steps[index];
             step?.render(container, state);
-        }
-        function next() {
+        };
+        const next = () => {
             const step = steps[index];
-            if (step?.validate && step.validate(state) === false)
+            if (step?.validate && step.validate(state) === false) {
                 return false;
+            }
             step?.onComplete?.(state);
-            index++;
+            index += 1;
             if (index >= steps.length) {
                 onComplete(state);
                 return true;
             }
             render();
             return true;
-        }
-        function prev() {
-            if (index === 0)
+        };
+        const prev = () => {
+            if (index === 0) {
                 return false;
-            index--;
+            }
+            index -= 1;
             render();
             return true;
-        }
-        function goTo(i) {
-            if (i < 0 || i >= steps.length)
+        };
+        const goTo = (i) => {
+            if (i < 0 || i >= steps.length) {
                 return false;
+            }
             index = i;
             render();
             return true;
-        }
-        function getState() {
-            return state;
-        }
-        function current() {
-            return index;
-        }
+        };
+        const getState = () => state;
+        const current = () => index;
         render();
         return { next, prev, goTo, getState, current };
     }
-    globalThis.Dustland = globalThis.Dustland || {};
-    globalThis.Dustland.Wizard = Wizard;
+    const dustland = ensureDustland();
+    dustland.Wizard = createWizard;
 })();
