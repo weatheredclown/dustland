@@ -1,7 +1,7 @@
-// @ts-nocheck
 (function(){
-  globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.starterItems = [
+  const dustland = (globalThis.Dustland ??= {} as DustlandNamespace);
+
+  const starterItems: StarterItem[] = [
     {
       id: 'starter_canteen',
       name: 'Canteen',
@@ -9,4 +9,6 @@
       use: { type: 'hydrate', amount: 2, text: 'You take a drink.' }
     }
   ];
+
+  dustland.starterItems = starterItems;
 })();

@@ -1,27 +1,31 @@
-// @ts-nocheck
 (function () {
-    function textStep(label, key) {
+    const textStep = (label, key) => {
+        let input = null;
         return {
             render(container, state) {
                 const labelEl = document.createElement('label');
                 labelEl.textContent = label;
-                const input = document.createElement('input');
-                input.value = state[key] || '';
-                if (!state[key])
-                    input.placeholder = 'Enter ' + label.toLowerCase();
+                input = document.createElement('input');
+                const value = state[key];
+                input.value = typeof value === 'string' ? value : value != null ? String(value) : '';
+                if (value === undefined || value === null || value === '' || value === 0 || value === false) {
+                    input.placeholder = `Enter ${label.toLowerCase()}`;
+                }
                 container.appendChild(labelEl);
                 container.appendChild(input);
-                this.input = input;
             },
             validate() {
-                return this.input && this.input.value.trim() !== '';
+                return Boolean(input?.value.trim());
             },
             onComplete(state) {
-                state[key] = this.input.value;
+                if (!input) {
+                    return;
+                }
+                state[key] = input.value;
             }
         };
-    }
-    globalThis.Dustland = globalThis.Dustland || {};
-    globalThis.Dustland.WizardSteps = globalThis.Dustland.WizardSteps || {};
-    globalThis.Dustland.WizardSteps.text = textStep;
+    };
+    const dustland = (globalThis.Dustland ?? (globalThis.Dustland = {}));
+    const steps = (dustland.WizardSteps ?? (dustland.WizardSteps = {}));
+    steps.text = textStep;
 })();

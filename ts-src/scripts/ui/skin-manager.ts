@@ -267,6 +267,24 @@
           'hud-label-chip': 'hud-label-chips.svg',
           'weather-text-treatment': 'weather-text-treatment.svg',
           'button-label-overlay': 'button-label-overlay.svg'
+        },
+        tiles: {
+          atlas: 'tile-atlas.svg',
+          tileWidth: 64,
+          tileHeight: 64,
+          columns: 8,
+          map: {
+            sand: { index: 0 },
+            rock: { index: 1 },
+            water: { index: 2 },
+            brush: { index: 3 },
+            road: { index: 4 },
+            ruin: { index: 5 },
+            wall: { index: 6 },
+            floor: { index: 7 },
+            door: { index: 8 },
+            building: { index: 9 }
+          }
         }
       },
       slots: null

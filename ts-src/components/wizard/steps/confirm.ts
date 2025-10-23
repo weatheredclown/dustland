@@ -1,17 +1,13 @@
-// @ts-nocheck
 (function(){
-  function confirmStep(message){
-    message = message || 'Review your choices.';
-    return {
-      render(container){
-        const p = document.createElement('p');
-        p.textContent = message;
-        container.appendChild(p);
-      }
-    };
-  }
+  const confirmStep: NonNullable<WizardStepsRegistry['confirm']> = (message = 'Review your choices.') => ({
+    render(container: HTMLElement, _state: WizardState) {
+      const paragraph = document.createElement('p');
+      paragraph.textContent = message;
+      container.appendChild(paragraph);
+    }
+  });
 
-  globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.WizardSteps = globalThis.Dustland.WizardSteps || {};
-  globalThis.Dustland.WizardSteps.confirm = confirmStep;
+  const dustland = (globalThis.Dustland ??= {} as DustlandNamespace);
+  const steps = (dustland.WizardSteps ??= {} as WizardStepsRegistry);
+  steps.confirm = confirmStep;
 })();
