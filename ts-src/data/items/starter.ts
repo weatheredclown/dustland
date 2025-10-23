@@ -1,7 +1,13 @@
-// @ts-nocheck
+type DustlandWithStarterItems = NonNullable<typeof globalThis.Dustland> & {
+  starterItems: StarterItem[];
+};
+
 (function(){
-  globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.starterItems = [
+  if(!globalThis.Dustland){
+    globalThis.Dustland = {};
+  }
+  const dustland = globalThis.Dustland as DustlandWithStarterItems;
+  dustland.starterItems = [
     {
       id: 'starter_canteen',
       name: 'Canteen',

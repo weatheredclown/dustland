@@ -1,5 +1,4 @@
-// @ts-nocheck
-globalThis.TRAINER_UPGRADE_SCHEMA = {
+const trainerUpgradeSchema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Trainer Skill Upgrades",
     "type": "object",
@@ -20,3 +19,4 @@ globalThis.TRAINER_UPGRADE_SCHEMA = {
         }
     }
 };
+globalThis.TRAINER_UPGRADE_SCHEMA = trainerUpgradeSchema;
