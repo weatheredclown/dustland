@@ -1,26 +1,18 @@
-type StarterItem = {
-  id: string;
-  name: string;
-  type: 'misc';
-  use: {
-    type: 'hydrate';
-    amount: number;
-    text: string;
-  };
-};
-
-const starterItems: StarterItem[] = [
-  {
-    id: 'starter_canteen',
-    name: 'Canteen',
-    type: 'misc',
-    use: { type: 'hydrate', amount: 2, text: 'You take a drink.' }
-  }
-];
-
-type StarterItemsNamespace = DustlandNamespace & {
+type DustlandWithStarterItems = NonNullable<typeof globalThis.Dustland> & {
   starterItems: StarterItem[];
 };
 
-const dustland = (globalThis.Dustland ??= {}) as StarterItemsNamespace;
-dustland.starterItems = starterItems;
+(function(){
+  if(!globalThis.Dustland){
+    globalThis.Dustland = {};
+  }
+  const dustland = globalThis.Dustland as DustlandWithStarterItems;
+  dustland.starterItems = [
+    {
+      id: 'starter_canteen',
+      name: 'Canteen',
+      type: 'misc',
+      use: { type: 'hydrate', amount: 2, text: 'You take a drink.' }
+    }
+  ];
+})();

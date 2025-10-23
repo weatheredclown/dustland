@@ -1,10 +1,14 @@
-const starterItems = [
-    {
-        id: 'starter_canteen',
-        name: 'Canteen',
-        type: 'misc',
-        use: { type: 'hydrate', amount: 2, text: 'You take a drink.' }
+(function () {
+    if (!globalThis.Dustland) {
+        globalThis.Dustland = {};
     }
-];
-const dustland = (globalThis.Dustland ?? (globalThis.Dustland = {}));
-dustland.starterItems = starterItems;
+    const dustland = globalThis.Dustland;
+    dustland.starterItems = [
+        {
+            id: 'starter_canteen',
+            name: 'Canteen',
+            type: 'misc',
+            use: { type: 'hydrate', amount: 2, text: 'You take a drink.' }
+        }
+    ];
+})();
