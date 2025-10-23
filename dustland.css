@@ -1242,6 +1242,7 @@ input[type="range"] {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 
 .shop-window .slot {
@@ -1435,6 +1436,7 @@ input[type="range"] {
   margin-top: 8px;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 
     #creator .win {
