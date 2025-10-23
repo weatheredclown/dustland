@@ -1,55 +1,68 @@
-// @ts-nocheck
 (function(){
-  function Wizard(container, steps, opts = {}){
-    let index = 0;
-    const state = opts.initialState || {};
-    const onComplete = opts.onComplete || function(){};
+  function ensureDustland(): DustlandNamespace {
+    if (!globalThis.Dustland) {
+      globalThis.Dustland = {};
+    }
+    return globalThis.Dustland as DustlandNamespace;
+  }
 
-    function render(){
+  function createWizard<S extends WizardState = WizardState>(
+    container: HTMLElement,
+    steps: WizardStep<S>[],
+    opts: WizardOptions<S> = {}
+  ): WizardInstance<S> {
+    let index = 0;
+    const state = (opts.initialState ?? {}) as S;
+    const onComplete = opts.onComplete ?? (() => undefined);
+
+    const render = (): void => {
       container.innerHTML = '';
       const step = steps[index];
       step?.render(container, state);
-    }
+    };
 
-    function next(){
+    const next = (): boolean => {
       const step = steps[index];
-      if(step?.validate && step.validate(state) === false) return false;
+      if (step?.validate && step.validate(state) === false) {
+        return false;
+      }
       step?.onComplete?.(state);
-      index++;
-      if(index >= steps.length){
+      index += 1;
+      if (index >= steps.length) {
         onComplete(state);
         return true;
       }
       render();
       return true;
-    }
+    };
 
-    function prev(){
-      if(index === 0) return false;
-      index--;
+    const prev = (): boolean => {
+      if (index === 0) {
+        return false;
+      }
+      index -= 1;
       render();
       return true;
-    }
+    };
 
-    function goTo(i){
-      if(i < 0 || i >= steps.length) return false;
+    const goTo = (i: number): boolean => {
+      if (i < 0 || i >= steps.length) {
+        return false;
+      }
       index = i;
       render();
       return true;
-    }
+    };
 
-    function getState(){
-      return state;
-    }
+    const getState = (): S => state;
 
-    function current(){
-      return index;
-    }
+    const current = (): number => index;
 
     render();
+
     return { next, prev, goTo, getState, current };
   }
 
-  globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.Wizard = Wizard;
+  const dustland = ensureDustland();
+  dustland.Wizard = createWizard;
 })();

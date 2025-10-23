@@ -1,16 +1,26 @@
-// @ts-nocheck
 (function () {
-    function confirmStep(message) {
-        message = message || 'Review your choices.';
+    function ensureDustland() {
+        if (!globalThis.Dustland) {
+            globalThis.Dustland = {};
+        }
+        return globalThis.Dustland;
+    }
+    function ensureWizardSteps(dustland) {
+        if (!dustland.WizardSteps) {
+            dustland.WizardSteps = {};
+        }
+        return dustland.WizardSteps;
+    }
+    function confirmStep(message = 'Review your choices.') {
         return {
             render(container) {
-                const p = document.createElement('p');
-                p.textContent = message;
-                container.appendChild(p);
+                const paragraph = document.createElement('p');
+                paragraph.textContent = message;
+                container.appendChild(paragraph);
             }
         };
     }
-    globalThis.Dustland = globalThis.Dustland || {};
-    globalThis.Dustland.WizardSteps = globalThis.Dustland.WizardSteps || {};
-    globalThis.Dustland.WizardSteps.confirm = confirmStep;
+    const dustland = ensureDustland();
+    const wizardSteps = ensureWizardSteps(dustland);
+    wizardSteps.confirm = confirmStep;
 })();
