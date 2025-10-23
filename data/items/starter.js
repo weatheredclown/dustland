@@ -1,7 +1,9 @@
-// @ts-nocheck
 (function () {
-    globalThis.Dustland = globalThis.Dustland || {};
-    globalThis.Dustland.starterItems = [
+    if (!globalThis.Dustland) {
+        globalThis.Dustland = {};
+    }
+    const dustland = globalThis.Dustland;
+    dustland.starterItems = [
         {
             id: 'starter_canteen',
             name: 'Canteen',
