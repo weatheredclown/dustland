@@ -1057,7 +1057,7 @@ function testAttack(attacker, enemy, dmg = 1, type = 'basic') {
     combatState.enemies = [enemy];
     combatState.active = 0;
     party.length = 0;
-    party.join(attacker);
+    party.addMember(attacker);
     doAttack(dmg, type);
 }
 function doSpecial(idx) {
