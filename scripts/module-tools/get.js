@@ -1,4 +1,4 @@
-// @ts-nocheck
+import process from 'node:process';
 import { readModule, getByPath } from './utils.js';
 const [file, path] = process.argv.slice(2);
 if (!file) {
@@ -6,5 +6,6 @@ if (!file) {
     process.exit(1);
 }
 const mod = readModule(file);
-const value = getByPath(mod.data, path);
+const data = mod.data;
+const value = getByPath(data, path);
 console.log(JSON.stringify(value, null, 2));
