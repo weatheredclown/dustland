@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Basic dialog tree validator
 globalThis.Dustland = globalThis.Dustland || {};
 (function () {

@@ -1,7 +1,7 @@
-// @ts-nocheck
 const Abilities = {};
 const Specials = {};
 function defineAbility(id, data = {}) {
+    const effect = data.effect ?? {};
     const ability = {
         id,
         type: data.type ?? 'active',
@@ -10,17 +10,18 @@ function defineAbility(id, data = {}) {
             level: data.prereq?.level ?? 0,
             abilities: data.prereq?.abilities ?? []
         },
-        effect: data.effect ?? {}
+        effect: typeof effect === 'object' ? effect : {}
     };
     Abilities[id] = ability;
     return ability;
 }
 function defineSpecial(id, data = {}) {
+    const effect = data.effect ?? {};
     const special = {
         id,
         adrenaline_cost: data.adrenaline_cost ?? 0,
         target_type: data.target_type ?? 'single',
-        effect: data.effect ?? {},
+        effect: typeof effect === 'object' ? effect : {},
         wind_up_time: data.wind_up_time ?? 0
     };
     Specials[id] = special;

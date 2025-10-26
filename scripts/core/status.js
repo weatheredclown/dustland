@@ -1,6 +1,5 @@
-// @ts-nocheck
 (function () {
-    var bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
+    const bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
     function init(member) {
         if (typeof member.hydration !== 'number')
             member.hydration = 2;
@@ -9,10 +8,10 @@
         const party = globalThis.party;
         if (!Array.isArray(party))
             return;
-        const zones = globalThis.Dustland?.zoneEffects || [];
+        const zones = (globalThis.Dustland?.zoneEffects || []);
         const map = party.map || 'world';
-        const x = party.x;
-        const y = party.y;
+        const x = party.x ?? 0;
+        const y = party.y ?? 0;
         let dry = false;
         for (const z of zones) {
             if (z.if && !globalThis.checkFlagCondition?.(z.if))

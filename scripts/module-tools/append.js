@@ -1,4 +1,4 @@
-// @ts-nocheck
+/// <reference types="node" />
 import { readModule, appendByPath, parseValue, parseKeyValueArgs } from './utils.js';
 const [file, path, ...values] = process.argv.slice(2);
 if (!file || !path || values.length === 0) {
@@ -6,6 +6,7 @@ if (!file || !path || values.length === 0) {
     process.exit(1);
 }
 const mod = readModule(file);
+const data = mod.data;
 let val;
 if (values.length === 1 && !values[0].includes('=')) {
     val = parseValue(values[0]);
@@ -13,5 +14,5 @@ if (values.length === 1 && !values[0].includes('=')) {
 else {
     val = parseKeyValueArgs(values);
 }
-appendByPath(mod.data, path, val);
-mod.write(mod.data);
+appendByPath(data, path, val);
+mod.write(data);

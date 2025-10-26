@@ -140,7 +140,7 @@ class Character {
         });
     }
 }
-class Party extends Array {
+class PartyRoster extends Array {
     getState() {
         return this;
     }
@@ -249,10 +249,10 @@ class Party extends Array {
     }
     leader() { return this[selectedMember] || this[0]; }
 }
-Party.prototype.join = function (member) {
+PartyRoster.prototype.join = function (member) {
     return this.addMember(member);
 };
-const party = new Party();
+const party = new PartyRoster();
 const globalSelection = globalThis.selectedMember;
 let selectedMember = typeof globalSelection === 'number' ? globalSelection : 0;
 try {
@@ -415,5 +415,5 @@ function trainStat(stat, memberIndex = selectedMember) {
     safeLog(`${m.name} trains ${stat}.`);
     return true;
 }
-const partyExports = { baseStats, Character, Party, party, makeMember, joinParty, leaveParty, fall, restore, healAll, statLine, xpToNext, awardXP, applyEquipmentStats, applyCombatMods, leader, setLeader, respec, trainStat, selectedMember, xpCurve };
+const partyExports = { baseStats, Character, Party: PartyRoster, party, makeMember, joinParty, leaveParty, fall, restore, healAll, statLine, xpToNext, awardXP, applyEquipmentStats, applyCombatMods, leader, setLeader, respec, trainStat, selectedMember, xpCurve };
 Object.assign(globalThis, partyExports);

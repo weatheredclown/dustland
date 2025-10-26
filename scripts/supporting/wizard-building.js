@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Building Wizard config
 globalThis.Dustland = globalThis.Dustland || {};
 Dustland.wizards = Dustland.wizards || {};

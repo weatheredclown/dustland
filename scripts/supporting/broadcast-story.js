@@ -1,4 +1,3 @@
-// @ts-nocheck
 const MODULE_FILE = 'modules/dustland.module.js';
 let moduleReady;
 function loadDustland() {
@@ -10,14 +9,18 @@ function loadDustland() {
     });
 }
 loadDustland();
-seedWorldContent = () => { };
-startGame = async function () {
+globalThis.seedWorldContent = () => { };
+globalThis.startGame = async function startBroadcastStory() {
     await moduleReady;
-    applyModule(DUSTLAND_MODULE);
-    DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE);
+    const globals = globalThis;
+    const moduleData = globals.DUSTLAND_MODULE;
+    if (!moduleData)
+        return;
+    globals.applyModule?.(moduleData);
+    moduleData.postLoad?.(moduleData);
     // Spawn the party near the southwest broadcast door.
     const entry = { map: 'world', x: 5, y: 80 };
-    setPartyPos(entry.x, entry.y);
-    setMap(entry.map, 'Wastes');
-    toast('Head north to the broadcast listening post.');
+    globals.setPartyPos?.(entry.x, entry.y);
+    globals.setMap?.(entry.map, 'Wastes');
+    globals.toast?.('Head north to the broadcast listening post.');
 };

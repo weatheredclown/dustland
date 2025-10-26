@@ -1,4 +1,4 @@
-// @ts-nocheck
+/// <reference types="node" />
 import { readModule, getByPath } from './utils.js';
 const [file, path] = process.argv.slice(2);
 if (!file || !path) {
@@ -6,10 +6,11 @@ if (!file || !path) {
     process.exit(1);
 }
 const mod = readModule(file);
+const data = mod.data;
 const parts = path.split('.');
 const key = parts.pop();
 const parentPath = parts.join('.');
-const parent = parentPath ? getByPath(mod.data, parentPath) : mod.data;
+const parent = parentPath ? getByPath(data, parentPath) : data;
 if (parent == null) {
     console.error('Parent path not found');
     process.exit(1);
@@ -29,4 +30,4 @@ if (Array.isArray(parent)) {
 else {
     delete parent[key];
 }
-mod.write(mod.data);
+mod.write(data);
