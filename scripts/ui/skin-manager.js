@@ -1,142 +1,142 @@
 // @ts-nocheck
 /* global EventBus */
 (function () {
-    const UI_VAR_MAP = {
-        panel: {
-            backgroundColor: '--skin-panel-bg-color',
-            backgroundImage: '--skin-panel-bg-image',
-            border: '--skin-panel-border',
-            radius: '--skin-panel-radius',
-            shadow: '--skin-panel-shadow'
-        },
-        panelHeader: {
-            backgroundColor: '--skin-panel-header-bg-color',
-            backgroundImage: '--skin-panel-header-bg-image',
-            border: '--skin-panel-header-border',
-            shadow: '--skin-panel-header-shadow'
-        },
-        panelBody: {
-            background: '--skin-panel-body-bg'
-        },
-        panelTitle: {
-            color: '--skin-panel-title-color'
-        },
-        panelSubtitle: {
-            color: '--skin-panel-subtitle-color'
-        },
-        panelToggle: {
-            backgroundColor: '--skin-panel-toggle-bg',
-            border: '--skin-panel-toggle-border',
-            radius: '--skin-panel-toggle-radius',
-            color: '--skin-panel-toggle-color'
-        },
-        section: {
-            backgroundColor: '--skin-section-bg-color',
-            backgroundImage: '--skin-section-bg-image',
-            border: '--skin-section-border',
-            radius: '--skin-section-radius',
-            shadow: '--skin-section-shadow',
-            titleColor: '--skin-section-title-color'
-        },
-        log: {
-            backgroundColor: '--skin-log-bg-color',
-            border: '--skin-log-border',
-            shadow: '--skin-log-shadow'
-        },
-        controlItem: {
-            backgroundColor: '--skin-control-item-bg-color',
-            border: '--skin-control-item-border',
-            radius: '--skin-control-item-radius',
-            keyColor: '--skin-control-keys-color',
-            descColor: '--skin-control-desc-color'
-        },
-        button: {
-            backgroundColor: '--skin-button-bg-color',
-            backgroundImage: '--skin-button-bg-image',
-            border: '--skin-button-border',
-            color: '--skin-button-color',
-            radius: '--skin-button-radius',
-            shadow: '--skin-button-shadow',
-            hoverBackground: '--skin-button-hover-bg-color',
-            hoverBorder: '--skin-button-hover-border',
-            activeBackground: '--skin-button-active-bg-color'
-        },
-        pill: {
-            backgroundColor: '--skin-pill-bg-color',
-            border: '--skin-pill-border',
-            color: '--skin-pill-color'
-        },
-        tab: {
-            backgroundColor: '--skin-tab-bg-color',
-            border: '--skin-tab-border',
-            radius: '--skin-tab-radius',
-            color: '--skin-tab-color',
-            activeOutline: '--skin-tab-active-outline'
-        },
-        badge: {
-            backgroundColor: '--skin-badge-bg-color',
-            border: '--skin-badge-border'
-        },
-        hud: {
-            labelColor: '--skin-hud-label-color',
-            barBackground: '--skin-hudbar-bg-color',
-            barFill: '--skin-hudbar-fill-color',
-            barGhost: '--skin-hudbar-ghost-color'
-        },
-        weather: {
-            backgroundColor: '--skin-weather-bg-color',
-            border: '--skin-weather-border'
-        },
-        slot: {
-            backgroundColor: '--skin-slot-bg-color',
-            border: '--skin-slot-border',
-            radius: '--skin-slot-radius'
-        },
-        pcard: {
-            backgroundColor: '--skin-pcard-bg-color',
-            border: '--skin-pcard-border'
-        },
-        quest: {
-            backgroundColor: '--skin-quest-bg-color',
-            border: '--skin-quest-border'
-        },
-        window: {
-            backgroundColor: '--skin-window-bg-color',
-            backgroundImage: '--skin-window-bg-image',
-            border: '--skin-window-border',
-            radius: '--skin-window-radius',
-            shadow: '--skin-window-shadow'
-        },
-        windowHeader: {
-            backgroundColor: '--skin-window-header-bg-color',
-            backgroundImage: '--skin-window-header-bg-image',
-            border: '--skin-window-header-border',
-            color: '--skin-window-title-color'
-        },
-        dialog: {
-            backgroundColor: '--skin-dialog-bg-color',
-Â           backgroundImage: '--skin-dialog-bg-image',
-            border: '--skin-dialog-border',
-            radius: '--skin-dialog-radius',
-            headerBackground: '--skin-dialog-header-bg',
-            choiceBackground: '--skin-dialog-choice-bg',
-            choiceBorder: '--skin-dialog-choice-border',
-            choiceHoverBackground: '--skin-dialog-choice-hover-bg',
-            choiceHoverBorder: '--skin-dialog-choice-hover-border'
-        },
-        overlay: {
-            background: '--skin-overlay-backdrop'
-        },
-        combatWindow: {
-            backgroundColor: '--skin-combat-window-bg-color',
-            border: '--skin-combat-window-border',
-            radius: '--skin-combat-window-radius',
-            shadow: '--skin-combat-window-shadow'
-        },
-        mapFrame: {
-            color: '--skin-map-frame-color',
-            width: '--skin-map-frame-width'
-        }
+    const UI_VAR_MAP = {
+        panel: {
+            backgroundColor: '--skin-panel-bg-color',
+            backgroundImage: '--skin-panel-bg-image',
+            border: '--skin-panel-border',
+            radius: '--skin-panel-radius',
+            shadow: '--skin-panel-shadow'
+        },
+        panelHeader: {
+            backgroundColor: '--skin-panel-header-bg-color',
+            backgroundImage: '--skin-panel-header-bg-image',
+            border: '--skin-panel-header-border',
+            shadow: '--skin-panel-header-shadow'
+        },
+        panelBody: {
+            background: '--skin-panel-body-bg'
+        },
+        panelTitle: {
+            color: '--skin-panel-title-color'
+        },
+        panelSubtitle: {
+            color: '--skin-panel-subtitle-color'
+        },
+        panelToggle: {
+            backgroundColor: '--skin-panel-toggle-bg',
+            border: '--skin-panel-toggle-border',
+            radius: '--skin-panel-toggle-radius',
+            color: '--skin-panel-toggle-color'
+        },
+        section: {
+            backgroundColor: '--skin-section-bg-color',
+            backgroundImage: '--skin-section-bg-image',
+            border: '--skin-section-border',
+            radius: '--skin-section-radius',
+            shadow: '--skin-section-shadow',
+            titleColor: '--skin-section-title-color'
+        },
+        log: {
+            backgroundColor: '--skin-log-bg-color',
+            border: '--skin-log-border',
+            shadow: '--skin-log-shadow'
+        },
+        controlItem: {
+            backgroundColor: '--skin-control-item-bg-color',
+            border: '--skin-control-item-border',
+            radius: '--skin-control-item-radius',
+            keyColor: '--skin-control-keys-color',
+            descColor: '--skin-control-desc-color'
+        },
+        button: {
+            backgroundColor: '--skin-button-bg-color',
+            backgroundImage: '--skin-button-bg-image',
+            border: '--skin-button-border',
+            color: '--skin-button-color',
+            radius: '--skin-button-radius',
+            shadow: '--skin-button-shadow',
+            hoverBackground: '--skin-button-hover-bg-color',
+            hoverBorder: '--skin-button-hover-border',
+            activeBackground: '--skin-button-active-bg-color'
+        },
+        pill: {
+            backgroundColor: '--skin-pill-bg-color',
+            border: '--skin-pill-border',
+            color: '--skin-pill-color'
+        },
+        tab: {
+            backgroundColor: '--skin-tab-bg-color',
+            border: '--skin-tab-border',
+            radius: '--skin-tab-radius',
+            color: '--skin-tab-color',
+            activeOutline: '--skin-tab-active-outline'
+        },
+        badge: {
+            backgroundColor: '--skin-badge-bg-color',
+            border: '--skin-badge-border'
+        },
+        hud: {
+            labelColor: '--skin-hud-label-color',
+            barBackground: '--skin-hudbar-bg-color',
+            barFill: '--skin-hudbar-fill-color',
+            barGhost: '--skin-hudbar-ghost-color'
+        },
+        weather: {
+            backgroundColor: '--skin-weather-bg-color',
+            border: '--skin-weather-border'
+        },
+        slot: {
+            backgroundColor: '--skin-slot-bg-color',
+            border: '--skin-slot-border',
+            radius: '--skin-slot-radius'
+        },
+        pcard: {
+            backgroundColor: '--skin-pcard-bg-color',
+            border: '--skin-pcard-border'
+        },
+        quest: {
+            backgroundColor: '--skin-quest-bg-color',
+            border: '--skin-quest-border'
+        },
+        window: {
+            backgroundColor: '--skin-window-bg-color',
+            backgroundImage: '--skin-window-bg-image',
+            border: '--skin-window-border',
+            radius: '--skin-window-radius',
+            shadow: '--skin-window-shadow'
+        },
+        windowHeader: {
+            backgroundColor: '--skin-window-header-bg-color',
+            backgroundImage: '--skin-window-header-bg-image',
+            border: '--skin-window-header-border',
+            color: '--skin-window-title-color'
+        },
+        dialog: {
+            backgroundColor: '--skin-dialog-bg-color',
+            backgroundImage: '--skin-dialog-bg-image',
+            border: '--skin-dialog-border',
+            radius: '--skin-dialog-radius',
+            headerBackground: '--skin-dialog-header-bg',
+            choiceBackground: '--skin-dialog-choice-bg',
+            choiceBorder: '--skin-dialog-choice-border',
+            choiceHoverBackground: '--skin-dialog-choice-hover-bg',
+            choiceHoverBorder: '--skin-dialog-choice-hover-border'
+        },
+        overlay: {
+            background: '--skin-overlay-backdrop'
+        },
+        combatWindow: {
+            backgroundColor: '--skin-combat-window-bg-color',
+            border: '--skin-combat-window-border',
+            radius: '--skin-combat-window-radius',
+            shadow: '--skin-combat-window-shadow'
+        },
+        mapFrame: {
+            color: '--skin-map-frame-color',
+            width: '--skin-map-frame-width'
+        }
     };
     const SLOT_PROP_MAP = {
         background: 'background',
@@ -261,6 +261,23 @@
                     'hud-label-chip': 'hud-label-chips.svg',
                     'weather-text-treatment': 'weather-text-treatment.svg',
                     'button-label-overlay': 'button-label-overlay.svg'
+                },
+                tiles: {
+                    atlas: 'tile-atlas.svg',
+                    tileWidth: 64,
+                    tileHeight: 64,
+                    map: {
+                        sand: { frame: { col: 0, row: 0, w: 64, h: 64 } },
+                        rock: { frame: { col: 1, row: 0, w: 64, h: 64 } },
+                        water: { frame: { col: 2, row: 0, w: 64, h: 64 } },
+                        brush: { frame: { col: 3, row: 0, w: 64, h: 64 } },
+                        road: { frame: { col: 4, row: 0, w: 64, h: 64 } },
+                        ruin: { frame: { col: 5, row: 0, w: 64, h: 64 } },
+                        wall: { frame: { col: 6, row: 0, w: 64, h: 64 } },
+                        floor: { frame: { col: 7, row: 0, w: 64, h: 64 } },
+                        door: { frame: { col: 0, row: 1, w: 64, h: 64 } },
+                        building: { frame: { col: 1, row: 1, w: 64, h: 64 } }
+                    }
                 }
             },
             slots: null
@@ -369,7 +386,7 @@
         if (lower !== styleId && PACKAGED_GENERATED_SKINS[lower])
             return cloneGeneratedConfig(PACKAGED_GENERATED_SKINS[lower]);
         return null;
-    }  
+    }
     function cloneGeneratedConfig(config) {
         if (!config)
             return null;
@@ -667,6 +684,9 @@
                 const rewritten = rewriteSpriteEntry(definition, baseDir, styleDir);
                 if (rewritten == null)
                     continue;
+                if (lowerKey === 'atlas' && typeof rewritten === 'string' && !Object.prototype.hasOwnProperty.call(tileConfig, 'atlas')) {
+                    tileConfig.atlas = rewritten;
+                }
                 tileMap[lowerKey] = rewritten;
             }
             const hasEntries = Object.keys(tileMap).length > 0;

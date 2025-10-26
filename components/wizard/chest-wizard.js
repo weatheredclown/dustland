@@ -1,20 +1,28 @@
-// @ts-nocheck
-(function () {
-    const ChestWizard = {
+(() => {
+    const toChestSlug = (value) => value.trim().toLowerCase().replace(/\s+/g, '_');
+    const dustlandChestWizard = (globalThis.Dustland ?? (globalThis.Dustland = {}));
+    const wizardStepsChest = (dustlandChestWizard.WizardSteps ?? (dustlandChestWizard.WizardSteps = {}));
+    const { text, mapPlacement, confirm } = wizardStepsChest;
+    if (!text || !mapPlacement || !confirm) {
+        console.warn('Chest wizard skipped initialization because required steps are missing.');
+        return;
+    }
+    const chestWizard = {
         title: 'Chest Wizard',
         steps: [
-            Dustland.WizardSteps.text('Chest Name', 'name'),
-            Dustland.WizardSteps.text('Key Name', 'keyName'),
-            Dustland.WizardSteps.text('Loot Name', 'lootName'),
-            Dustland.WizardSteps.mapPlacement('chestPos'),
-            Dustland.WizardSteps.mapPlacement('keyPos'),
-            Dustland.WizardSteps.confirm('Done')
+            text('Chest Name', 'name'),
+            text('Key Name', 'keyName'),
+            text('Loot Name', 'lootName'),
+            mapPlacement('chestPos'),
+            mapPlacement('keyPos'),
+            confirm('Done')
         ],
         commit(state) {
-            const baseId = state.name.toLowerCase().replace(/\s+/g, '_');
+            const baseName = state.name ?? '';
+            const baseId = toChestSlug(baseName);
             const chestId = baseId;
-            const keyId = baseId + '_key';
-            const lootId = baseId + '_loot';
+            const keyId = `${baseId}_key`;
+            const lootId = `${baseId}_loot`;
             const key = {
                 map: 'world',
                 x: state.keyPos?.x,
@@ -49,7 +57,7 @@
                     open: {
                         text: 'The chest creaks open, revealing ' + state.lootName + '.',
                         choices: [
-                            { label: '(Take ' + state.lootName + ')', to: 'empty', reward: lootId, effects: [{ effect: 'addFlag', flag: chestId + '_looted' }] }
+                            { label: '(Take ' + state.lootName + ')', to: 'empty', reward: lootId, effects: [{ effect: 'addFlag', flag: `${chestId}_looted` }] }
                         ]
                     },
                     empty: {
@@ -70,8 +78,7 @@
             return { items: [key, loot], npcs: [chest] };
         }
     };
-    globalThis.Dustland = globalThis.Dustland || {};
-    Dustland.ChestWizard = ChestWizard;
-    Dustland.wizards = Dustland.wizards || {};
-    Dustland.wizards.chest = ChestWizard;
+    dustlandChestWizard.ChestWizard = chestWizard;
+    const dustlandWizards = (dustlandChestWizard.wizards ?? (dustlandChestWizard.wizards = {}));
+    dustlandWizards.chest = chestWizard;
 })();
