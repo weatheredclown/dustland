@@ -1,4 +1,4 @@
-// @ts-nocheck
+/// <reference types="node" />
 import { readModule, appendByPath, ensureArray, parseKeyValueArgs } from './utils.js';
 import { validate } from './schema.js';
 
@@ -8,8 +8,9 @@ if (!file || fields.length === 0) {
   process.exit(1);
 }
 const mod = readModule(file);
+const data = mod.data as Record<string, unknown>;
 const zone = parseKeyValueArgs(fields);
 validate('zone', zone);
-ensureArray(mod.data, 'zones');
-appendByPath(mod.data, 'zones', zone);
-mod.write(mod.data);
+ensureArray(data, 'zones');
+appendByPath(data, 'zones', zone);
+mod.write(data);

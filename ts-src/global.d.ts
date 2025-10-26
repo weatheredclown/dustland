@@ -77,6 +77,36 @@ declare global {
     apply: (list?: unknown[], ctx?: Record<string, unknown>) => void;
   }
 
+  interface DustlandZoneEffect {
+    if?: unknown;
+    map?: string;
+    x?: number;
+    y?: number;
+    w?: number;
+    h?: number;
+    dry?: boolean;
+    [key: string]: unknown;
+  }
+
+  interface DustlandWeatherState {
+    state: string;
+    icon: string;
+    desc: string;
+    speedMod: number;
+    encounterBias: unknown;
+    [key: string]: unknown;
+  }
+
+  interface DustlandDialogChoice {
+    to?: string;
+    [key: string]: unknown;
+  }
+
+  interface DustlandDialogNode {
+    choices?: DustlandDialogChoice[];
+    [key: string]: unknown;
+  }
+
   type ProfileStatMap = Record<string, number>;
 
   interface DustlandProfile {
@@ -128,6 +158,17 @@ declare global {
     personaTemplates?: Record<string, DustlandPersonaTemplate>;
     gameState?: DustlandGameState;
     eventBus?: DustlandEventBus;
+    zoneEffects?: DustlandZoneEffect[];
+    weather?: {
+      getWeather?: () => DustlandWeatherState;
+      setWeather?: (next: Partial<DustlandWeatherState>) => DustlandWeatherState;
+    };
+    status?: { init?: (member: PartyMember) => void };
+    actions?: Record<string, unknown>;
+    validateDialogTree?: (tree: Record<string, DustlandDialogNode>) => string[];
+    effectPackInspector?: { load: (text: string) => void; fire: (evt: string) => void };
+    BuildingWizard?: unknown;
+    updateTradeUI?: (trader: unknown) => void;
     [key: string]: unknown;
   }
 
@@ -146,11 +187,71 @@ declare global {
     [key: string]: unknown;
   }
 
+  interface PartyMember {
+    hydration?: number;
+    [key: string]: unknown;
+  }
+
+  interface Party extends Array<PartyMember> {
+    map?: string;
+    x?: number;
+    y?: number;
+    flags?: Record<string, number>;
+    [key: string]: unknown;
+  }
+
+  interface DustlandNpc {
+    map?: string;
+    x?: number;
+    y?: number;
+    onMemoryTape?: (recording: string | null) => void;
+    [key: string]: unknown;
+  }
+
+  interface MemoryTapeItem {
+    recording?: string | null;
+    [key: string]: unknown;
+  }
+
+  function registerItem<T>(item: T): T;
+
   interface GlobalThis {
     Dustland?: DustlandNamespace;
     ACK?: AckGlobal;
     TRAINER_UPGRADE_SCHEMA?: JsonSchema;
     TRAINER_UPGRADES?: TrainerUpgradeMap;
     EventBus?: DustlandEventBus;
+    party?: Party;
+    player?: { scrap?: number; [key: string]: unknown };
+    CURRENCY?: string;
+    NPCS?: DustlandNpc[];
+    DUSTLAND_MODULE?: { postLoad?: (moduleData: unknown) => void };
+    applyModule?: (moduleData: unknown) => void;
+    setPartyPos?: (x: number, y: number) => void;
+    setMap?: (map: string, label?: string) => void;
+    toast?: (message: string) => void;
+    updateHUD?: () => void;
+    checkFlagCondition?: (condition: unknown) => boolean;
+    leader?: () => unknown;
+    awardXP?: (target: unknown, amount: number) => void;
+    resolveItem?: (reward: unknown) => { name?: string } | null;
+    addToInv?: (item: unknown) => boolean;
+    dropItemNearParty?: (item: unknown) => void;
+    startCombat?: (defender: unknown) => unknown;
+    log?: (message: string, type?: string) => void;
+    ENGINE_VERSION: string;
+    WORLD_W?: number;
+    WORLD_H?: number;
+    clamp: (value: number, min: number, max: number) => number;
+    incFlag?: (flag: string, delta?: number) => void;
+    flagValue?: (flag: string) => number;
+    ItemGen?: {
+      statRanges: Record<string, { min: number; max: number }>;
+      generate(rank: string): { stats: { power: number } };
+    };
+    seedWorldContent?: () => void;
+    startGame?: () => void;
+    memoryTape?: MemoryTapeItem;
+    openDialog?: (dialog: unknown) => void;
   }
 }

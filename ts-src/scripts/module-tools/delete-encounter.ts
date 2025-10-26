@@ -1,4 +1,4 @@
-// @ts-nocheck
+/// <reference types="node" />
 import { readModule } from './utils.js';
 
 const [file, map] = process.argv.slice(2);
@@ -8,7 +8,8 @@ if (!file || !map) {
 }
 
 const mod = readModule(file);
-const { encounters } = mod.data;
+const data = mod.data as Record<string, unknown>;
+const encounters = (data.encounters as Record<string, unknown> | undefined) || {};
 if (!encounters || typeof encounters !== 'object') {
   console.error('Module has no encounters to modify.');
   process.exit(1);
@@ -21,7 +22,7 @@ if (!(map in encounters)) {
 
 delete encounters[map];
 if (Object.keys(encounters).length === 0) {
-  delete mod.data.encounters;
+  delete data.encounters;
 }
 
-mod.write(mod.data);
+mod.write(data);

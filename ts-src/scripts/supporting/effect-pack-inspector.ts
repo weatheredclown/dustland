@@ -1,4 +1,3 @@
-// @ts-nocheck
 (function(){
   globalThis.Dustland = globalThis.Dustland || {};
   const bus = globalThis.EventBus;
@@ -8,7 +7,7 @@
     try {
       packs = JSON.parse(text) || {};
     } catch(e){
-      log?.('Invalid effect pack');
+      globalThis.log?.('Invalid effect pack', undefined);
       packs = {};
     }
   }
