@@ -1,6 +1,32 @@
-// @ts-nocheck
 import fs from 'node:fs';
 import path from 'node:path';
+
+type ModulePortal = {
+  map: string;
+  x: number;
+  y: number;
+  toMap: string;
+  toX: number;
+  toY: number;
+};
+
+type ModuleInterior = {
+  id: string;
+  w: number;
+  h: number;
+  grid: string[];
+  entryX: number;
+  entryY: number;
+};
+
+type ModuleFile = {
+  interiors?: ModuleInterior[];
+  portals?: ModulePortal[];
+  [key: string]: unknown;
+};
+
+type LinkDirection = 'N' | 'E' | 'S' | 'W' | 'U' | 'D';
+type TileSymbol = '🧱' | '⬜' | '🚪' | 'U' | 'D';
 
 if (process.argv.length < 4) {
   console.log('Usage: node scripts/supporting/append-room.js <file> <roomId> [dir:target ...]');
@@ -12,29 +38,39 @@ const args = process.argv.slice(2);
 const file = args[0];
 const id = args[1];
 const filePath = path.resolve(file);
-const mod = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+const moduleFile = JSON.parse(fs.readFileSync(filePath, 'utf8')) as ModuleFile & {
+  interiors: ModuleInterior[] | undefined;
+  portals: ModulePortal[] | undefined;
+};
 
-mod.interiors = mod.interiors || [];
-mod.portals = mod.portals || [];
+moduleFile.interiors = moduleFile.interiors ?? [];
+moduleFile.portals = moduleFile.portals ?? [];
+
+const ensuredModuleFile = moduleFile as ModuleFile & {
+  interiors: ModuleInterior[];
+  portals: ModulePortal[];
+};
 
 function clearExisting() {
-  mod.interiors = mod.interiors.filter(r => r.id !== id);
-  mod.portals = mod.portals.filter(p => p.map !== id && p.toMap !== id);
+  ensuredModuleFile.interiors = ensuredModuleFile.interiors.filter(r => r.id !== id);
+  ensuredModuleFile.portals = ensuredModuleFile.portals.filter(p => p.map !== id && p.toMap !== id);
 }
 
-const links = {};
-args.slice(2).filter(Boolean).forEach(arg => {
+const links: Partial<Record<LinkDirection, string>> = {};
+for (const arg of args.slice(2)) {
+  if (!arg) continue;
   const [dir, target] = arg.split(':');
-  if (!dir || !target) return;
-  links[dir.toUpperCase()] = target;
-});
+  if (!dir || !target) continue;
+  const direction = dir.toUpperCase() as LinkDirection;
+  links[direction] = target;
+}
 
 clearExisting();
 
 const w = 5;
 const h = 5;
-const grid = Array.from({ length: h }, (_, y) =>
-  Array.from({ length: w }, (_, x) =>
+const grid: TileSymbol[][] = Array.from({ length: h }, (_, y) =>
+  Array.from({ length: w }, (_, x): TileSymbol =>
     y === 0 || y === h - 1 || x === 0 || x === w - 1 ? '🧱' : '⬜'
   )
 );
@@ -46,9 +82,9 @@ if (links.W) grid[2][0] = '🚪';
 if (links.U) grid[1][2] = 'U';
 if (links.D) grid[3][2] = 'D';
 
-mod.interiors.push({ id, w, h, grid: grid.map(r => r.join('')), entryX: 2, entryY: 2 });
+ensuredModuleFile.interiors.push({ id, w, h, grid: grid.map(r => r.join('')), entryX: 2, entryY: 2 });
 
-const coords = {
+const coords: Record<LinkDirection, [number, number]> = {
   N: [2, 0],
   E: [4, 2],
   S: [2, 4],
@@ -56,15 +92,17 @@ const coords = {
   U: [2, 1],
   D: [2, 3]
 };
-const opposite = { N: 'S', S: 'N', E: 'W', W: 'E', U: 'D', D: 'U' };
+const opposite: Record<LinkDirection, LinkDirection> = { N: 'S', S: 'N', E: 'W', W: 'E', U: 'D', D: 'U' };
 
-Object.entries(links).forEach(([dir, target]) => {
-  const [x, y] = coords[dir];
-  const [tx, ty] = coords[opposite[dir]];
-  mod.portals.push({ map: id, x, y, toMap: target, toX: tx, toY: ty });
-  mod.portals.push({ map: target, x: tx, y: ty, toMap: id, toX: x, toY: y });
-});
+for (const direction of Object.keys(links) as LinkDirection[]) {
+  const target = links[direction];
+  if (!target) continue;
+  const [x, y] = coords[direction];
+  const [tx, ty] = coords[opposite[direction]];
+  ensuredModuleFile.portals.push({ map: id, x, y, toMap: target, toX: tx, toY: ty });
+  ensuredModuleFile.portals.push({ map: target, x: tx, y: ty, toMap: id, toX: x, toY: y });
+}
 
-fs.writeFileSync(filePath, JSON.stringify(mod, null, 2));
+fs.writeFileSync(filePath, JSON.stringify(ensuredModuleFile, null, 2));
 console.log(`Inserted room ${id}`);
 

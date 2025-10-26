@@ -1,5 +1,4 @@
-// @ts-nocheck
-globalThis.ACK_MODULE_SCHEMA = {
+const ackModuleSchema = {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Adventure Kit Module",
   "type": "object",
@@ -739,4 +738,13 @@ globalThis.ACK_MODULE_SCHEMA = {
       "additionalProperties": true
     }
   }
-};
+} as const;
+
+declare global {
+  // eslint-disable-next-line no-var
+  var ACK_MODULE_SCHEMA: typeof ackModuleSchema;
+}
+
+globalThis.ACK_MODULE_SCHEMA = ackModuleSchema;
+
+export {};

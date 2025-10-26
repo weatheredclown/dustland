@@ -1,5 +1,4 @@
-// @ts-nocheck
-globalThis.ACK_MODULE_SCHEMA = {
+const ackModuleSchema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Adventure Kit Module",
     "type": "object",
@@ -740,3 +739,5 @@ globalThis.ACK_MODULE_SCHEMA = {
         }
     }
 };
+globalThis.ACK_MODULE_SCHEMA = ackModuleSchema;
+export {};

@@ -152,5 +152,36 @@ declare global {
     TRAINER_UPGRADE_SCHEMA?: JsonSchema;
     TRAINER_UPGRADES?: TrainerUpgradeMap;
     EventBus?: DustlandEventBus;
+    selectedMember?: number;
   }
+
+  function log(message: string, type?: string): void;
+  function toast(message: string): void;
+  function renderParty(): void;
+  function updateHUD(): void;
+  function hudBadge(message: string): void;
+  function hasItem(itemId: string): boolean;
+  function makeNPC(
+    id: string,
+    map: string,
+    x: number,
+    y: number,
+    color: string,
+    name: string,
+    title: string,
+    desc: string,
+    tree: Record<string, unknown>,
+    quest?: unknown,
+    processNode?: unknown,
+    processChoice?: unknown,
+    opts?: unknown
+  ): unknown;
+  function renderInv(): void;
+  function calcItemValue(item: unknown, member?: unknown): number;
+  function equipItem(memberIndex: number, itemIndex: number): void;
+  function findItemIndex(id: string): number;
+  function removeFromInv(index: number, quantity?: number): void;
+  function getSpecialization(id: string): unknown;
+  function getClassSpecials(id: string): unknown;
+  function getQuirk(id: string): unknown;
 }
