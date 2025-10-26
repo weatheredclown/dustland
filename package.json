@@ -22,7 +22,7 @@
     "@typescript-eslint/eslint-plugin": "^7.16.1",
     "@typescript-eslint/parser": "^7.16.1",
     "eslint": "^8.57.1",
-    "eslint-plugin-jsdoc": "^48.0.3",
+    "eslint-plugin-jsdoc": "^61.1.8",
     "http-server": "^14.1.1",
     "jsdom": "^26.1.0",
     "@types/node": "^22.7.5",
