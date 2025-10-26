@@ -1,4 +1,3 @@
-// @ts-nocheck
 import fs from 'node:fs';
 import path from 'node:path';
 if (process.argv.length < 4) {
@@ -10,20 +9,24 @@ const args = process.argv.slice(2);
 const file = args[0];
 const id = args[1];
 const filePath = path.resolve(file);
-const mod = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-mod.interiors = mod.interiors || [];
-mod.portals = mod.portals || [];
+const moduleFile = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+moduleFile.interiors = moduleFile.interiors ?? [];
+moduleFile.portals = moduleFile.portals ?? [];
+const ensuredModuleFile = moduleFile;
 function clearExisting() {
-    mod.interiors = mod.interiors.filter(r => r.id !== id);
-    mod.portals = mod.portals.filter(p => p.map !== id && p.toMap !== id);
+    ensuredModuleFile.interiors = ensuredModuleFile.interiors.filter(r => r.id !== id);
+    ensuredModuleFile.portals = ensuredModuleFile.portals.filter(p => p.map !== id && p.toMap !== id);
 }
 const links = {};
-args.slice(2).filter(Boolean).forEach(arg => {
+for (const arg of args.slice(2)) {
+    if (!arg)
+        continue;
     const [dir, target] = arg.split(':');
     if (!dir || !target)
-        return;
-    links[dir.toUpperCase()] = target;
-});
+        continue;
+    const direction = dir.toUpperCase();
+    links[direction] = target;
+}
 clearExisting();
 const w = 5;
 const h = 5;
@@ -40,7 +43,7 @@ if (links.U)
     grid[1][2] = 'U';
 if (links.D)
     grid[3][2] = 'D';
-mod.interiors.push({ id, w, h, grid: grid.map(r => r.join('')), entryX: 2, entryY: 2 });
+ensuredModuleFile.interiors.push({ id, w, h, grid: grid.map(r => r.join('')), entryX: 2, entryY: 2 });
 const coords = {
     N: [2, 0],
     E: [4, 2],
@@ -50,11 +53,14 @@ const coords = {
     D: [2, 3]
 };
 const opposite = { N: 'S', S: 'N', E: 'W', W: 'E', U: 'D', D: 'U' };
-Object.entries(links).forEach(([dir, target]) => {
-    const [x, y] = coords[dir];
-    const [tx, ty] = coords[opposite[dir]];
-    mod.portals.push({ map: id, x, y, toMap: target, toX: tx, toY: ty });
-    mod.portals.push({ map: target, x: tx, y: ty, toMap: id, toX: x, toY: y });
-});
-fs.writeFileSync(filePath, JSON.stringify(mod, null, 2));
+for (const direction of Object.keys(links)) {
+    const target = links[direction];
+    if (!target)
+        continue;
+    const [x, y] = coords[direction];
+    const [tx, ty] = coords[opposite[direction]];
+    ensuredModuleFile.portals.push({ map: id, x, y, toMap: target, toX: tx, toY: ty });
+    ensuredModuleFile.portals.push({ map: target, x: tx, y: ty, toMap: id, toX: x, toY: y });
+}
+fs.writeFileSync(filePath, JSON.stringify(ensuredModuleFile, null, 2));
 console.log(`Inserted room ${id}`);
