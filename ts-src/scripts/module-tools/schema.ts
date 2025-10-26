@@ -1,16 +1,21 @@
-// @ts-nocheck
-export const schema = {
-  npc: ['id', 'map', 'x', 'y'],
-  building: ['x', 'y', 'interiorId'],
-  zone: ['map', 'x', 'y', 'w', 'h']
+const schema = {
+  npc: ['id', 'map', 'x', 'y'] as const,
+  building: ['x', 'y', 'interiorId'] as const,
+  zone: ['map', 'x', 'y', 'w', 'h'] as const
 };
 
-export function validate(type, obj) {
-  const req = schema[type];
-  if (!req) return;
-  for (const key of req) {
+type SchemaKey = keyof typeof schema;
+
+type Validatable = Record<string, unknown>;
+
+function validate(type: SchemaKey, obj: Validatable): void {
+  const required = schema[type];
+  if (!required) return;
+  for (const key of required) {
     if (obj[key] === undefined) {
-      throw new Error(`Missing field ${key} in ${type}`);
+      throw new Error(`Missing field ${key as string} in ${type}`);
     }
   }
 }
+
+export { schema, validate };

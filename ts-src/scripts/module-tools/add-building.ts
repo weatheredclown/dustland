@@ -1,4 +1,5 @@
-// @ts-nocheck
+import process from 'node:process';
+
 import { readModule, appendByPath, ensureArray, parseKeyValueArgs } from './utils.js';
 import { validate } from './schema.js';
 
@@ -8,8 +9,9 @@ if (!file || fields.length === 0) {
   process.exit(1);
 }
 const mod = readModule(file);
+const data = mod.data as Record<string, unknown>;
 const building = parseKeyValueArgs(fields);
 validate('building', building);
-ensureArray(mod.data, 'buildings');
-appendByPath(mod.data, 'buildings', building);
-mod.write(mod.data);
+ensureArray(data, 'buildings');
+appendByPath(data, 'buildings', building);
+mod.write(data);
