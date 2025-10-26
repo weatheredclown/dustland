@@ -1,4 +1,4 @@
-// @ts-nocheck
+import process from 'node:process';
 import { readModule, appendByPath, ensureArray, parseKeyValueArgs } from './utils.js';
 import { validate } from './schema.js';
 const [file, ...fields] = process.argv.slice(2);
@@ -7,8 +7,9 @@ if (!file || fields.length === 0) {
     process.exit(1);
 }
 const mod = readModule(file);
+const data = mod.data;
 const npc = parseKeyValueArgs(fields);
 validate('npc', npc);
-ensureArray(mod.data, 'npcs');
-appendByPath(mod.data, 'npcs', npc);
-mod.write(mod.data);
+ensureArray(data, 'npcs');
+appendByPath(data, 'npcs', npc);
+mod.write(data);

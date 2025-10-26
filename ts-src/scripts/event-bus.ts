@@ -1,29 +1,44 @@
 // Tiny event bus for pub/sub communication
 
-// Global namespace for game modules
-globalThis.Dustland = globalThis.Dustland || {};
-
 type EventHandler = (payload: unknown) => void;
 
+interface EventBus {
+  on(evt: string, handler: EventHandler): void;
+  off(evt: string, handler: EventHandler): void;
+  emit(evt: string, payload: unknown): void;
+}
+
+type DustlandGlobal = {
+  eventBus?: EventBus;
+  [key: string]: unknown;
+};
+
 (function(){
-  const listeners = new Map<string, Set<EventHandler>>();
+  const globalScope = globalThis as typeof globalThis & {
+    Dustland?: DustlandGlobal;
+    EventBus?: EventBus;
+  };
 
-  function on(evt: string, handler: EventHandler){
-    if(!listeners.has(evt)) listeners.set(evt, new Set());
-    listeners.get(evt)?.add(handler);
-  }
+  const dustlandNamespace = (globalScope.Dustland ?? {}) as DustlandGlobal;
+  globalScope.Dustland = dustlandNamespace;
 
-  function off(evt: string, handler: EventHandler){
-    listeners.get(evt)?.delete(handler);
-  }
+  const listeners = new Map<string, Set<EventHandler>>();
 
-  function emit(evt: string, payload?: unknown){
-    listeners.get(evt)?.forEach(fn => fn(payload));
-  }
+  function on(evt: string, handler: EventHandler): void {
+    if(!listeners.has(evt)) listeners.set(evt, new Set<EventHandler>());
+    listeners.get(evt)?.add(handler);
+  }
 
-  const bus = { on, off, emit };
-  // Expose under Dustland namespace and keep a legacy shim
-  globalThis.Dustland.eventBus = bus;
-  (globalThis as Record<string, unknown>).EventBus = bus;
+  function off(evt: string, handler: EventHandler): void {
+    listeners.get(evt)?.delete(handler);
+  }
+
+  function emit(evt: string, payload: unknown): void {
+    listeners.get(evt)?.forEach(fn => fn(payload));
+  }
+
+  const bus: EventBus = { on, off, emit };
+  // Expose under Dustland namespace and keep a legacy shim
+  dustlandNamespace.eventBus = bus;
+  globalScope.EventBus = bus;
 })();
-

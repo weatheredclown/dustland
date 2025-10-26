@@ -127,7 +127,7 @@ async function runBalanceTest() {
         applyModule(moduleData);
         console.log('Balance test checkpoint: module loaded');
         // Create a party
-        party.join(makeMember('player1', 'Test Player', 'Wanderer'));
+        party.addMember(makeMember('player1', 'Test Player', 'Wanderer'));
         setLeader(0);
         setPartyPos(2, 2);
         setMap('world', 'Test');

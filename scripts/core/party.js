@@ -1,35 +1,18 @@
-// @ts-nocheck
-/** @typedef {import('./inventory.js').GameItem} GameItem */
-/**
- * @typedef {object} PartyMember
- * @property {string} id
- * @property {string} name
- * @property {string} role
- * @property {boolean} permanent
- * @property {string|null} portraitSheet
- * @property {number} lvl
- * @property {number} xp
- * @property {number} skillPoints
- * @property {Record<string, number>} stats
- * @property {{weapon:GameItem|null, armor:GameItem|null, trinket:GameItem|null}} equip
- * @property {number} maxHp
- * @property {number} hp
- * @property {number} ap
- * @property {number} maxAdr
- * @property {number} adr
- * @property {Record<string, number>} _bonus
- * @property {Array<string|object>} special
- * @property {number} adrGenMod
- * @property {number} adrDmgMod
- * @property {{[key:string]: number}} cooldowns
- * @property {boolean} guard
- * @property {object[]} statusEffects
- * @property {string} [persona]
- */
-const baseStats = () => ({ STR: 4, AGI: 4, INT: 4, PER: 4, LCK: 4, CHA: 4 });
+const baseStats = () => ({
+    STR: 4,
+    AGI: 4,
+    INT: 4,
+    PER: 4,
+    LCK: 4,
+    CHA: 4,
+});
 const xpCurve = [0, 100, 200, 300, 400, 500, 700, 900, 1100, 1300, 1500, 1900, 2300, 2700, 3100, 3500, 4300, 5100, 5900, 6700];
-var bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
-/** @implements {PartyMember} */
+const eventBus = globalThis.Dustland?.eventBus ?? globalThis.EventBus ?? { emit() { } };
+const safeLog = (message, type) => {
+    if (typeof log === 'function')
+        log(message, type);
+};
+const getNPCList = () => globalThis.NPCS;
 class Character {
     constructor(id, name, role, opts = {}) {
         this.id = id;
@@ -44,6 +27,7 @@ class Character {
         this.equip = { weapon: null, armor: null, trinket: null };
         this.maxHp = 10;
         this.hp = this.maxHp;
+        this.ap = 0;
         this.maxAdr = 100;
         this.adr = 0;
         this._bonus = { ATK: 0, DEF: 0, LCK: 0 };
@@ -60,18 +44,20 @@ class Character {
     xpToNext() { return xpToNext(this.lvl); }
     awardXP(amt) {
         this.xp += amt;
-        log(`${this.name} gains ${amt} XP.`);
+        safeLog(`${this.name} gains ${amt} XP.`);
         if (typeof toast === 'function')
             toast(`${this.name} +${amt} XP`);
-        bus.emit('xp:gained', { character: this, amount: amt });
-        bus.emit('sfx', 'tick');
+        eventBus.emit('xp:gained', { character: this, amount: amt });
+        eventBus.emit('sfx', 'tick');
         while (this.xp >= this.xpToNext()) {
             this.xp -= this.xpToNext();
             this.lvl++;
             this.levelUp();
         }
-        renderParty();
-        updateHUD();
+        if (typeof renderParty === 'function')
+            renderParty();
+        if (typeof updateHUD === 'function')
+            updateHUD();
     }
     levelUp() {
         this.maxHp += 10;
@@ -79,27 +65,34 @@ class Character {
         this.skillPoints += 1;
         if (typeof hudBadge === 'function')
             hudBadge('+1 Skill Point');
-        bus.emit('character:leveled-up', { character: this });
-        bus.emit('sfx', 'tick');
-        log(`${this.name} leveled up to ${this.lvl}! (+10 HP, +1 SP)`);
+        eventBus.emit('character:leveled-up', { character: this });
+        eventBus.emit('sfx', 'tick');
+        safeLog(`${this.name} leveled up to ${this.lvl}! (+10 HP, +1 SP)`);
         if ((party.flags && party.flags.mentor) || (typeof hasItem === 'function' && hasItem('mentor_token'))) {
-            bus.emit('mentor:bark', { text: 'Another scar, another lesson learned.', sound: 'mentor' });
+            eventBus.emit('mentor:bark', { text: 'Another scar, another lesson learned.', sound: 'mentor' });
         }
     }
     applyEquipmentStats() {
         this._bonus = {};
-        for (const k of ['weapon', 'armor', 'trinket']) {
-            const it = this.equip[k];
+        const slots = ['weapon', 'armor', 'trinket'];
+        for (const slot of slots) {
+            const it = this.equip[slot];
             if (it && it.mods) {
                 for (const stat in it.mods) {
-                    this._bonus[stat] = (this._bonus[stat] || 0) + it.mods[stat];
+                    const value = it.mods[stat];
+                    if (typeof value === 'number') {
+                        this._bonus[stat] = (this._bonus[stat] || 0) + value;
+                    }
                 }
             }
         }
-        const persona = globalThis.Dustland?.gameState?.getPersona?.(this.persona);
+        const persona = globalThis.Dustland?.gameState?.getPersona?.(this.persona ?? null);
         if (persona && persona.mods) {
             for (const stat in persona.mods) {
-                this._bonus[stat] = (this._bonus[stat] || 0) + persona.mods[stat];
+                const value = persona.mods[stat];
+                if (typeof value === 'number') {
+                    this._bonus[stat] = (this._bonus[stat] || 0) + value;
+                }
             }
         }
     }
@@ -110,14 +103,17 @@ class Character {
             this._baseSpecial = [...this.special];
         }
         this.special = [...(this._baseSpecial || [])];
-        for (const k of ['weapon', 'armor', 'trinket']) {
-            const it = this.equip[k];
+        const slots = ['weapon', 'armor', 'trinket'];
+        for (const slot of slots) {
+            const it = this.equip[slot];
             if (it && it.mods) {
-                if (typeof it.mods.adrenaline_gen_mod === 'number') {
-                    this.adrGenMod *= it.mods.adrenaline_gen_mod;
+                const gen = it.mods.adrenaline_gen_mod;
+                if (typeof gen === 'number') {
+                    this.adrGenMod *= gen;
                 }
-                if (typeof it.mods.adrenaline_dmg_mod === 'number') {
-                    this.adrDmgMod *= it.mods.adrenaline_dmg_mod;
+                const dmg = it.mods.adrenaline_dmg_mod;
+                if (typeof dmg === 'number') {
+                    this.adrDmgMod *= dmg;
                 }
                 const grant = it.mods.granted_special;
                 if (grant) {
@@ -131,12 +127,13 @@ class Character {
         // Resolve special IDs to inline objects for combat
         this.special = this.special.map((raw, idx) => {
             if (typeof raw === 'string') {
-                const base = globalThis.Specials?.[raw];
+                const specials = globalThis.Specials;
+                const base = specials?.[raw];
                 return base ? { ...base } : { id: raw };
             }
             if (raw && typeof raw === 'object') {
                 if (!raw.id)
-                    raw.id = raw.name || raw.label || `special_${idx}`;
+                    raw.id = (raw.name ?? raw.label ?? `special_${idx}`);
                 return raw;
             }
             return raw;
@@ -144,13 +141,19 @@ class Character {
     }
 }
 class Party extends Array {
+    getState() {
+        return this;
+    }
     constructor(...args) {
         super(...args);
-        this.map = globalThis.state ? globalThis.state.map : 'world';
-        this.x = 2;
-        this.y = 2;
-        this.flags = {};
-        this.fallen = [];
+        const state = this.getState();
+        const worldState = globalThis.state;
+        state.map = worldState?.map ?? 'world';
+        state.x = 2;
+        state.y = 2;
+        state.flags = {};
+        state.fallen = [];
+        state._roster = null;
     }
     push(...members) {
         const unique = members.filter(m => m && !this.includes(m));
@@ -172,9 +175,9 @@ class Party extends Array {
         super.splice(0, this.length, ...unique);
         return this.length;
     }
-    join(member) {
+    addMember(member) {
         if (this.length >= 6) {
-            log('Party is full.');
+            safeLog('Party is full.');
             return false;
         }
         if (this.includes(member))
@@ -185,15 +188,16 @@ class Party extends Array {
             renderParty();
         if (typeof updateHUD === 'function')
             updateHUD();
-        log(member.name + ' joins the party.');
+        safeLog(member.name + ' joins the party.');
         return true;
     }
     leave(member) {
+        const state = this.getState();
         const idx = this.indexOf(member);
         if (idx === -1)
             return false;
         if (member.permanent) {
-            log(member.name + ' refuses to leave.');
+            safeLog(member.name + ' refuses to leave.');
             return false;
         }
         this.splice(idx, 1);
@@ -201,73 +205,107 @@ class Party extends Array {
             renderParty();
         if (typeof updateHUD === 'function')
             updateHUD();
-        if (typeof makeNPC === 'function' && typeof NPCS !== 'undefined' && Array.isArray(NPCS)) {
+        const npcs = getNPCList();
+        if (typeof makeNPC === 'function' && Array.isArray(npcs)) {
             const tree = { start: { text: '', choices: [{ label: '(Leave)', to: 'bye' }] }, bye: { text: '' } };
-            const npc = makeNPC(member.id, this.map, this.x, this.y, '#fff', member.name, '', '', tree);
-            NPCS.push(npc);
+            const npc = makeNPC(member.id, state.map, state.x, state.y, '#fff', member.name, '', '', tree, undefined, undefined, undefined, undefined);
+            npcs.push(npc);
         }
         return true;
     }
     fall(member) {
+        const state = this.getState();
         const idx = this.indexOf(member);
         if (idx >= 0) {
-            this.fallen.push(member);
+            state.fallen.push(member);
             this.splice(idx, 1);
         }
     }
     restore() {
-        if (Array.isArray(this._roster)) {
-            const fallenSet = new Set(this.fallen);
-            this._roster.forEach(m => { if (fallenSet.has(m))
+        const state = this.getState();
+        if (Array.isArray(state._roster)) {
+            const fallenSet = new Set(state.fallen);
+            state._roster.forEach(m => { if (fallenSet.has(m))
                 m.hp = Math.max(1, m.hp || 0); });
-            this.setMembers(this._roster);
-            this._roster = null;
+            this.setMembers(state._roster);
+            state._roster = null;
         }
-        this.fallen.length = 0;
+        state.fallen.length = 0;
         if (typeof renderParty === 'function')
             renderParty();
         if (typeof updateHUD === 'function')
             updateHUD();
     }
     healAll() {
-        (this || []).forEach(m => { m.hp = m.maxHp; m.adr = 0; });
-        player.hp = this[0] ? this[0].hp : player.hp;
-        renderParty?.();
-        updateHUD?.();
+        this.forEach(m => { m.hp = m.maxHp; m.adr = 0; });
+        const playerState = globalThis.player;
+        if (this[0] && playerState) {
+            playerState.hp = this[0].hp;
+        }
+        if (typeof renderParty === 'function')
+            renderParty();
+        if (typeof updateHUD === 'function')
+            updateHUD();
     }
     leader() { return this[selectedMember] || this[0]; }
 }
+Party.prototype.join = function (member) {
+    return this.addMember(member);
+};
 const party = new Party();
-let selectedMember = 0;
-function makeMember(id, name, role, opts) { return new Character(id, name, role, opts); }
-function joinParty(member) { return party.join(member); }
-function leaveParty(member) { return party.leave(member); }
-function fall(member) { return party.fall(member); }
-function restore() { return party.restore(); }
-function healAll() { return party.healAll(); }
-function statLine(s) { return `STR ${s.STR}  AGI ${s.AGI}  INT ${s.INT}  PER ${s.PER}  LCK ${s.LCK}  CHA ${s.CHA}`; }
+const globalSelection = globalThis.selectedMember;
+let selectedMember = typeof globalSelection === 'number' ? globalSelection : 0;
+try {
+    Object.defineProperty(globalThis, 'selectedMember', {
+        get: () => selectedMember,
+        set: (value) => {
+            if (typeof value === 'number' && Number.isFinite(value)) {
+                selectedMember = value;
+            }
+        },
+        configurable: true,
+    });
+}
+catch {
+    globalThis.selectedMember = selectedMember;
+}
+const makeMember = (id, name, role, opts) => new Character(id, name, role, opts);
+const joinParty = (member) => party.addMember(member);
+const leaveParty = (member) => party.leave(member);
+const fall = (member) => { party.fall(member); };
+const restore = () => { party.restore(); };
+const healAll = () => { party.healAll(); };
+const statLine = (s) => `STR ${s.STR}  AGI ${s.AGI}  INT ${s.INT}  PER ${s.PER}  LCK ${s.LCK}  CHA ${s.CHA}`;
 function xpToNext(lvl) {
     const prev = xpCurve[lvl - 1] ?? 0;
     const next = xpCurve[lvl] ?? (prev + 10 * lvl);
     return next - prev;
 }
-function awardXP(who, amt) { who.awardXP(amt); }
-function applyEquipmentStats(m) { m.applyEquipmentStats(); }
-function applyCombatMods(m) { m.applyCombatMods(); }
-function leader() { return party.leader(); }
+const awardXP = (who, amt) => { who.awardXP(amt); };
+const applyEquipmentStats = (m) => { m.applyEquipmentStats(); };
+const applyCombatMods = (m) => { m.applyCombatMods(); };
+const leader = () => party.leader();
 function setLeader(idx) {
     selectedMember = idx;
     const m = party[selectedMember];
     if (!m)
         return;
-    for (const slot of ['weapon', 'armor', 'trinket']) {
-        if (!m.equip[slot] && Array.isArray(player?.inv)) {
-            const candidates = player.inv.filter(it => it.type === slot);
+    const slots = ['weapon', 'armor', 'trinket'];
+    const playerState = globalThis.player;
+    const inventory = Array.isArray(playerState?.inv) ? playerState.inv : null;
+    if (!inventory) {
+        if (typeof renderInv === 'function')
+            renderInv();
+        return;
+    }
+    for (const slot of slots) {
+        if (!m.equip[slot]) {
+            const candidates = inventory.filter(it => it.type === slot);
             if (candidates.length) {
-                const max = Math.max(...candidates.map(it => calcItemValue(it)));
-                const best = candidates.filter(it => calcItemValue(it) === max);
+                const max = Math.max(...candidates.map(it => calcItemValue(it, m)));
+                const best = candidates.filter(it => calcItemValue(it, m) === max);
                 const choice = best[Math.floor(Math.random() * best.length)];
-                const invIdx = player.inv.indexOf(choice);
+                const invIdx = inventory.indexOf(choice);
                 if (invIdx !== -1)
                     equipItem(selectedMember, invIdx);
             }
@@ -282,16 +320,15 @@ function respec(memberIndex = selectedMember, options) {
         return false;
     const tokenIdx = typeof findItemIndex === 'function' ? findItemIndex('memory_worm') : -1;
     if (tokenIdx === -1) {
-        if (typeof log === 'function')
-            log('Need a Memory Worm token.');
+        safeLog('Need a Memory Worm token.');
         return false;
     }
-    removeFromInv(tokenIdx);
+    removeFromInv(tokenIdx, 1);
     const opts = (options && typeof options === 'object') ? options : {};
     const prevRole = m.role;
     const prevQuirk = m.quirk ?? null;
     const explicitSpec = typeof opts.specialization === 'string' ? opts.specialization : null;
-    let specId = explicitSpec ?? (typeof m.role === 'string' ? m.role : null) ?? 'Wanderer';
+    let specId = explicitSpec ?? m.role ?? 'Wanderer';
     let specData = typeof getSpecialization === 'function' ? getSpecialization(specId) : null;
     if (explicitSpec && !specData && specId !== 'Wanderer') {
         specId = 'Wanderer';
@@ -299,7 +336,7 @@ function respec(memberIndex = selectedMember, options) {
     }
     const rawSpecials = typeof getClassSpecials === 'function' ? getClassSpecials(specId) : [];
     const specSpecials = Array.isArray(rawSpecials) ? rawSpecials : [];
-    const applySpec = explicitSpec !== null || specData || specId === 'Wanderer';
+    const applySpec = explicitSpec !== null || !!specData || specId === 'Wanderer';
     const quirkProvided = Object.prototype.hasOwnProperty.call(opts, 'quirk');
     let quirkId = quirkProvided ? (typeof opts.quirk === 'string' ? opts.quirk : null) : (typeof m.quirk === 'string' ? m.quirk : null);
     let quirkData = quirkId && typeof getQuirk === 'function' ? getQuirk(quirkId) : null;
@@ -310,12 +347,16 @@ function respec(memberIndex = selectedMember, options) {
     m.stats = baseStats();
     if (applySpec && specData?.stats) {
         for (const [stat, delta] of Object.entries(specData.stats)) {
-            m.stats[stat] = (m.stats[stat] || 0) + delta;
+            if (typeof delta === 'number') {
+                m.stats[stat] = (m.stats[stat] || 0) + delta;
+            }
         }
     }
     if (quirkData?.stats) {
         for (const [stat, delta] of Object.entries(quirkData.stats)) {
-            m.stats[stat] = (m.stats[stat] || 0) + delta;
+            if (typeof delta === 'number') {
+                m.stats[stat] = (m.stats[stat] || 0) + delta;
+            }
         }
     }
     m.skillPoints = Math.max(0, (m.lvl | 0) - 1);
@@ -330,21 +371,21 @@ function respec(memberIndex = selectedMember, options) {
         m.quirk = quirkId || null;
     }
     m.applyEquipmentStats();
-    renderParty?.();
-    updateHUD?.();
-    if (typeof log === 'function') {
-        const changes = [];
-        if (applySpec && prevRole !== m.role)
-            changes.push(`now a ${m.role}`);
-        if ((quirkProvided || quirkData) && prevQuirk !== (m.quirk ?? null)) {
-            changes.push(m.quirk ? `took the ${m.quirk} perk` : 'shed their perk');
-        }
-        if (changes.length) {
-            log(`${m.name} respecs their skills and ${changes.join(' and ')}.`);
-        }
-        else {
-            log(`${m.name} respecs their skills.`);
-        }
+    if (typeof renderParty === 'function')
+        renderParty();
+    if (typeof updateHUD === 'function')
+        updateHUD();
+    const changes = [];
+    if (applySpec && prevRole !== m.role)
+        changes.push(`now a ${m.role}`);
+    if ((quirkProvided || quirkData) && prevQuirk !== (m.quirk ?? null)) {
+        changes.push(m.quirk ? `took the ${m.quirk} perk` : 'shed their perk');
+    }
+    if (changes.length) {
+        safeLog(`${m.name} respecs their skills and ${changes.join(' and ')}.`);
+    }
+    else {
+        safeLog(`${m.name} respecs their skills.`);
     }
     return true;
 }
@@ -354,7 +395,7 @@ function trainStat(stat, memberIndex = selectedMember) {
         return false;
     const lead = leader();
     if (!lead || lead.skillPoints <= 0 || m.skillPoints <= 0) {
-        log('No skill points to spend.');
+        safeLog('No skill points to spend.');
         return false;
     }
     lead.skillPoints -= 1;
@@ -367,9 +408,11 @@ function trainStat(stat, memberIndex = selectedMember) {
     else {
         m.stats[stat] = (m.stats[stat] || 0) + 1;
     }
-    renderParty();
-    updateHUD();
-    log(`${m.name} trains ${stat}.`);
+    if (typeof renderParty === 'function')
+        renderParty();
+    if (typeof updateHUD === 'function')
+        updateHUD();
+    safeLog(`${m.name} trains ${stat}.`);
     return true;
 }
 const partyExports = { baseStats, Character, Party, party, makeMember, joinParty, leaveParty, fall, restore, healAll, statLine, xpToNext, awardXP, applyEquipmentStats, applyCombatMods, leader, setLeader, respec, trainStat, selectedMember, xpCurve };

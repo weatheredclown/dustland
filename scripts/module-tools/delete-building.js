@@ -1,4 +1,4 @@
-// @ts-nocheck
+import process from 'node:process';
 import { readModule, getByPath, removeIndex } from './utils.js';
 const [file, indexStr] = process.argv.slice(2);
 if (!file || indexStr === undefined) {
@@ -7,10 +7,11 @@ if (!file || indexStr === undefined) {
 }
 const index = Number(indexStr);
 const mod = readModule(file);
-const buildings = getByPath(mod.data, 'buildings') || [];
-if (!buildings[index]) {
+const data = mod.data;
+const buildings = getByPath(data, 'buildings');
+if (!Array.isArray(buildings) || buildings[index] === undefined) {
     console.error('Building not found');
     process.exit(1);
 }
 removeIndex(buildings, index);
-mod.write(mod.data);
+mod.write(data);

@@ -1,4 +1,4 @@
-// @ts-nocheck
+import process from 'node:process';
 import { readModule, setByPath, parseValue } from './utils.js';
 const [file, path, value] = process.argv.slice(2);
 if (!file || !path || value === undefined) {
@@ -6,5 +6,6 @@ if (!file || !path || value === undefined) {
     process.exit(1);
 }
 const mod = readModule(file);
-setByPath(mod.data, path, parseValue(value));
-mod.write(mod.data);
+const data = mod.data;
+setByPath(data, path, parseValue(value));
+mod.write(data);
