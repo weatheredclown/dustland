@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// @ts-nocheck
 import fs from 'node:fs';
 import path from 'node:path';
 import { parseValue } from './utils.js';
@@ -17,18 +16,35 @@ for (const arg of args) {
     }
     const key = arg.slice(0, eq);
     const value = parseValue(arg.slice(eq + 1));
-    if (key in defaults) {
-        defaults[key] = value;
+    if (key === 'x' || key === 'y') {
+        if (typeof value === 'number' || typeof value === 'string') {
+            defaults[key] = value;
+        }
+        else {
+            console.error(`${key} must be a number`);
+            process.exit(1);
+        }
+    }
+    else if (key === 'seed' || key === 'name' || key === 'map') {
+        if (typeof value === 'string' || typeof value === 'number') {
+            defaults[key] = String(value);
+        }
+        else {
+            console.error(`${key} must be a string`);
+            process.exit(1);
+        }
     }
     else {
         console.error(`Unknown option: ${key}`);
         process.exit(1);
     }
 }
+const parsedX = typeof defaults.x === 'number' ? defaults.x : Number(defaults.x);
+const parsedY = typeof defaults.y === 'number' ? defaults.y : Number(defaults.y);
 const start = {
     map: defaults.map,
-    x: Number.isFinite(defaults.x) ? defaults.x : Number(defaults.x) || 0,
-    y: Number.isFinite(defaults.y) ? defaults.y : Number(defaults.y) || 0
+    x: Number.isFinite(parsedX) ? parsedX : 0,
+    y: Number.isFinite(parsedY) ? parsedY : 0
 };
 const moduleData = {
     seed: defaults.seed,
