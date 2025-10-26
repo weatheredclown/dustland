@@ -1,8 +1,7 @@
-// @ts-nocheck
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 function sh(cmd) {
-    console.log("$ " + cmd);
+    console.log(`$ ${cmd}`);
     const out = execSync(cmd, { encoding: 'utf8' }).trim();
     console.log(out);
     return out;
@@ -54,7 +53,7 @@ function main() {
         }
         const pkgPath = 'package.json';
         const enginePath = 'scripts/dustland-engine.js';
-        const pkg = JSON.parse(fs.readFileSync(pkgPath));
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
         const next = inc(pkg.version, bumpFrom(messages));
         pkg.version = next;
         fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');

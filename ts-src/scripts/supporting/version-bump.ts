@@ -1,22 +1,23 @@
-// @ts-nocheck
 import {execSync} from 'node:child_process';
 import fs from 'node:fs';
 
-function sh(cmd) {
-  console.log("$ " + cmd);
+type SemverLevel = 'major' | 'minor' | 'patch';
+
+function sh(cmd: string): string {
+  console.log(`$ ${cmd}`);
   const out = execSync(cmd, {encoding: 'utf8'}).trim();
   console.log(out);
   return out;
 }
 
-function getMessages(tag) {
+function getMessages(tag?: string): string[] {
   const range = tag ? `${tag}..HEAD` : 'HEAD';
   const out = sh(`git log ${range} --pretty=%s`);
   return out ? out.split('\n').filter(Boolean) : [];
 }
 
-function bumpFrom(messages) {
-  let level = 'patch';
+function bumpFrom(messages: string[]): SemverLevel {
+  let level: SemverLevel = 'patch';
   for (const raw of messages) {
     const msg = raw.toLowerCase();
     if (/^system(?:\(.+\))?!:/.test(msg) || msg.includes('breaking change')) {
@@ -29,14 +30,19 @@ function bumpFrom(messages) {
   return level;
 }
 
-function inc(v, level) {
+function inc(v: string, level: SemverLevel): string {
   const parts = v.split('.').map(Number);
   if (level === 'major') return `${parts[0] + 1}.0.0`;
   if (level === 'minor') return `${parts[0]}.${parts[1] + 1}.0`;
   return `${parts[0]}.${parts[1]}.${parts[2] + 1}`;
 }
 
-function main() {
+interface PackageJSON {
+  version: string;
+  [key: string]: unknown;
+}
+
+function main(): void {
   let stashed = false;
   try {
     if (sh('git status --porcelain')) {
@@ -58,7 +64,7 @@ function main() {
 
     const pkgPath = 'package.json';
     const enginePath = 'scripts/dustland-engine.js';
-    const pkg = JSON.parse(fs.readFileSync(pkgPath));
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as PackageJSON;
     const next = inc(pkg.version, bumpFrom(messages));
 
     pkg.version = next;
