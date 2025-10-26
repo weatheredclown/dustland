@@ -1111,8 +1111,8 @@ const DATA = `
               "to": "bye",
               "goto": {
                 "map": "world",
-                "x": 10,
-                "y": 18
+                "x": 12,
+                "y": 78
               }
             }
           ]
@@ -1153,6 +1153,10 @@ const DATA = `
               "effects": [
                 {
                   "effect": "removeSoundSource",
+                  "id": "hidden_crate"
+                },
+                {
+                  "effect": "removeNpc",
                   "id": "hidden_crate"
                 }
               ]

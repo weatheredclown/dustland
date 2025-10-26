@@ -105,6 +105,32 @@
                                 soundSources.splice(index, 1);
                         }
                         break;
+                    case 'removeNpc': {
+                        const roster = Array.isArray(NPCS) ? NPCS : [];
+                        const ids = [];
+                        if (typeof eff.id === 'string')
+                            ids.push(eff.id);
+                        if (typeof eff.npcId === 'string')
+                            ids.push(eff.npcId);
+                        if (Array.isArray(eff.ids)) {
+                            for (const entry of eff.ids) {
+                                if (typeof entry === 'string')
+                                    ids.push(entry);
+                            }
+                        }
+                        if (!ids.length) {
+                            const activeNPC = globalThis.currentNPC;
+                            if (activeNPC?.id)
+                                ids.push(activeNPC.id);
+                        }
+                        const uniqueIds = Array.from(new Set(ids));
+                        for (const id of uniqueIds) {
+                            const npc = roster.find(n => n?.id === id) || null;
+                            if (npc && typeof removeNPC === 'function')
+                                removeNPC(npc);
+                        }
+                        break;
+                    }
                     case 'toast':
                         if (typeof toast === 'function')
                             toast(eff.msg || '');

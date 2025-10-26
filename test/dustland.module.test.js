@@ -236,5 +236,5 @@ test('vortex sends player to world map', () => {
   const vortex = data.npcs.find(n => n.id === 'dust_storm_entrance');
   assert.ok(vortex);
   const goto = vortex.tree.enter.choices[0].goto;
-  assert.deepStrictEqual(goto, { map: 'world', x: 10, y: 18 });
+  assert.deepStrictEqual(goto, { map: 'world', x: 12, y: 78 });
 });

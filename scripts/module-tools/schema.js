@@ -1,16 +1,16 @@
-// @ts-nocheck
-export const schema = {
+const schema = {
     npc: ['id', 'map', 'x', 'y'],
     building: ['x', 'y', 'interiorId'],
     zone: ['map', 'x', 'y', 'w', 'h']
 };
-export function validate(type, obj) {
-    const req = schema[type];
-    if (!req)
+function validate(type, obj) {
+    const required = schema[type];
+    if (!required)
         return;
-    for (const key of req) {
+    for (const key of required) {
         if (obj[key] === undefined) {
             throw new Error(`Missing field ${key} in ${type}`);
         }
     }
 }
+export { schema, validate };
