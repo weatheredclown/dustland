@@ -1,32 +1,52 @@
-// @ts-nocheck
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
-function loadModule(path) {
-  const text = fs.readFileSync(path, 'utf8');
+interface ModuleData {
+  seed?: string | number;
+  start?: {
+    map?: string;
+    x?: number;
+    y?: number;
+  };
+  items?: Array<{ id?: string; name?: string }>;
+  quests?: Array<{ id?: string; title?: string }>;
+  npcs?: Array<{ id?: string; name?: string; tree?: Record<string, unknown> }>;
+  events?: unknown[];
+  zones?: unknown[];
+  buildings?: unknown[];
+  portals?: unknown[];
+  interiors?: unknown[];
+}
+
+function loadModule(modulePath: string): ModuleData {
+  const text = fs.readFileSync(modulePath, 'utf8');
   const match = text.match(/const DATA = `([\s\S]*?)`;/);
   if (!match) {
     throw new Error('No DATA string found');
   }
-  return JSON.parse(match[1]);
+  return JSON.parse(match[1]) as ModuleData;
 }
 
-function summarize(mod) {
-  const lines = [];
+function displayName(primary?: string, fallbackId?: string): string {
+  return primary ?? fallbackId ?? '(unknown)';
+}
+
+function summarize(mod: ModuleData): string {
+  const lines: string[] = [];
   lines.push(`seed: ${mod.seed}`);
   if (mod.start) {
     lines.push(`start: ${mod.start.map} (${mod.start.x},${mod.start.y})`);
   }
   if (Array.isArray(mod.items)) {
     lines.push(`items: ${mod.items.length}`);
-    const names = mod.items.map(i => i.name || i.id);
+    const names = mod.items.map(item => displayName(item.name, item.id));
     if (names.length) {
       lines.push(`  ${names.join(', ')}`);
     }
   }
   if (Array.isArray(mod.quests)) {
     lines.push(`quests: ${mod.quests.length}`);
-    const titles = mod.quests.map(q => q.title || q.id);
+    const titles = mod.quests.map(quest => displayName(quest.title, quest.id));
     if (titles.length) {
       lines.push(`  ${titles.join(', ')}`);
     }
@@ -35,7 +55,7 @@ function summarize(mod) {
     lines.push(`npcs: ${mod.npcs.length}`);
     mod.npcs.forEach(n => {
       const nodes = n.tree ? Object.keys(n.tree).length : 0;
-      lines.push(`  ${n.name || n.id} (${nodes})`);
+      lines.push(`  ${displayName(n.name, n.id)} (${nodes})`);
     });
   }
   if (Array.isArray(mod.events)) {

@@ -1,13 +1,13 @@
-// @ts-nocheck
 import fs from 'node:fs';
 import path from 'node:path';
 function usage() {
     console.log('Usage: node scripts/supporting/module-json.js <export|import> <moduleFile>');
     process.exit(1);
 }
-const [cmd, file] = process.argv.slice(2);
-if (!cmd || !file)
+const args = process.argv.slice(2);
+if (args.length < 2)
     usage();
+const [cmd, file] = args;
 const modulePath = path.resolve(file);
 const baseName = path.basename(modulePath).replace(/\.module\.js$/, '');
 const jsonPath = path.join('data', 'modules', `${baseName}.json`);
@@ -21,22 +21,22 @@ const tileEmoji = Object.freeze({
     6: '\u{1F9F1}',
     7: '\u{2B1C}',
     8: '\u{1F6AA}',
-    9: '\u{1F3E0}'
+    9: '\u{1F3E0}',
 });
-const emojiTile = Object.freeze(Object.fromEntries(Object.entries(tileEmoji).map(([k, v]) => [v, +k])));
+const emojiTile = Object.freeze(Object.fromEntries(Object.entries(tileEmoji).map(([key, value]) => [value, Number(key)])));
 function gridFromEmoji(rows) {
-    return rows.map(r => Array.from(r).map(ch => emojiTile[ch] ?? 0));
+    return rows.map(row => Array.from(row).map(ch => emojiTile[ch] ?? 0));
 }
 function gridToEmoji(grid) {
-    return grid.map(r => r.map(t => tileEmoji[t] || '').join(''));
+    return grid.map(row => row.map(tile => tileEmoji[tile] ?? '').join(''));
 }
 function worldIsNumeric(grid) {
-    if (!Array.isArray(grid) || !grid.length)
+    if (!Array.isArray(grid) || grid.length === 0)
         return false;
     return grid.every(row => Array.isArray(row) && row.every(cell => typeof cell === 'number'));
 }
 function worldIsEmoji(grid) {
-    if (!Array.isArray(grid) || !grid.length)
+    if (!Array.isArray(grid) || grid.length === 0)
         return false;
     return grid.every(row => typeof row === 'string');
 }
