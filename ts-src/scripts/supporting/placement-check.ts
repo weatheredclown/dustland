@@ -1,4 +1,3 @@
-// @ts-nocheck
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -19,24 +18,38 @@ if (path.extname(moduleFile) === '.js') {
   json = match[1];
 }
 
-const data = JSON.parse(json);
-const grids = {};
+type PlacementEntity = {
+  id?: string;
+  x?: number;
+  y?: number;
+  map?: string;
+};
+
+type ModuleData = {
+  interiors?: Array<{id?: string; grid?: string[]}>;
+  items?: Array<PlacementEntity>;
+  npcs?: Array<PlacementEntity>;
+};
+
+const data = JSON.parse(json) as ModuleData;
+const grids: Record<string, string[]> = {};
 (data.interiors || []).forEach(int => {
+  if (!int?.id || !Array.isArray(int.grid)) return;
   grids[int.id] = int.grid;
 });
 const interiorIds = new Set(Object.keys(grids));
 
-function tileAt(map, x, y) {
+function tileAt(map: string, x: number, y: number): string | null {
   const grid = grids[map];
   if (!grid) return null;
   const row = grid[y];
-  if (!row) return null;
+  if (typeof row !== 'string') return null;
   const cells = Array.from(row);
-  return cells[x] || null;
+  return cells[x] ?? null;
 }
 
 let errors = 0;
-function check(kind, obj) {
+function check(kind: string, obj: PlacementEntity): void {
   if (typeof obj.x !== 'number' || typeof obj.y !== 'number') return;
   if (!obj.map) return;
   const tile = tileAt(obj.map, obj.x, obj.y);

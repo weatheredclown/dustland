@@ -1,4 +1,3 @@
-// @ts-nocheck
 import fs from 'node:fs';
 import path from 'node:path';
 const moduleFile = process.argv[2];
@@ -19,6 +18,8 @@ if (path.extname(moduleFile) === '.js') {
 const data = JSON.parse(json);
 const grids = {};
 (data.interiors || []).forEach(int => {
+    if (!int?.id || !Array.isArray(int.grid))
+        return;
     grids[int.id] = int.grid;
 });
 const interiorIds = new Set(Object.keys(grids));
@@ -27,10 +28,10 @@ function tileAt(map, x, y) {
     if (!grid)
         return null;
     const row = grid[y];
-    if (!row)
+    if (typeof row !== 'string')
         return null;
     const cells = Array.from(row);
-    return cells[x] || null;
+    return cells[x] ?? null;
 }
 let errors = 0;
 function check(kind, obj) {

@@ -193,7 +193,7 @@ _eventBus?: DustlandEventBus;
   }
 
   interface Party extends Array<PartyMember> {
-    map?: string;
+    map: any;
     x?: number;
     y?: number;
     flags?: Record<string, number>;
@@ -282,7 +282,7 @@ Section   }
   function equipItem(memberIndex: number, itemIndex: number): void;
   function findItemIndex(id: string): number;
   function removeFromInv(index: number, quantity?: number): void;
-New   function getSpecialization(id: string): unknown;
+  function getSpecialization(id: string): unknown;
   function getClassSpecials(id: string): unknown;
   function getQuirk(id: string): unknown;
 }

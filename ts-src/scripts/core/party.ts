@@ -106,6 +106,7 @@ type CharacterOptions = {
 };
 
 class Character implements PartyMember {
+  [key: string]: unknown;
   id: string;
   name: string;
   role: string;
