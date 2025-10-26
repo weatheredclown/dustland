@@ -1,17 +1,13 @@
-// @ts-nocheck
 // Tiny event bus for pub/sub communication
-// Global namespace for game modules
-globalThis.Dustland = globalThis.Dustland || {};
-/**
- * Simple pub/sub bus.
- * @typedef {(payload:any)=>void} EventHandler
- */
 (function () {
+    const globalScope = globalThis;
+    const dustlandNamespace = (globalScope.Dustland ?? {});
+    globalScope.Dustland = dustlandNamespace;
     const listeners = new Map();
     function on(evt, handler) {
         if (!listeners.has(evt))
             listeners.set(evt, new Set());
-        listeners.get(evt).add(handler);
+        listeners.get(evt)?.add(handler);
     }
     function off(evt, handler) {
         listeners.get(evt)?.delete(handler);
@@ -21,6 +17,6 @@ globalThis.Dustland = globalThis.Dustland || {};
     }
     const bus = { on, off, emit };
     // Expose under Dustland namespace and keep a legacy shim
-    globalThis.Dustland.eventBus = bus;
-    globalThis.EventBus = bus;
+    dustlandNamespace.eventBus = bus;
+    globalScope.EventBus = bus;
 })();
