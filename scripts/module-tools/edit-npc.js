@@ -1,4 +1,4 @@
-// @ts-nocheck
+/// <reference types="node" />
 import { readModule, getByPath, setByPath, findIndexById, parseValue } from './utils.js';
 const [file, id, path, value] = process.argv.slice(2);
 if (!file || !id || !path || value === undefined) {
@@ -6,11 +6,12 @@ if (!file || !id || !path || value === undefined) {
     process.exit(1);
 }
 const mod = readModule(file);
-const npcs = getByPath(mod.data, 'npcs') || [];
+const data = mod.data;
+const npcs = getByPath(data, 'npcs') || [];
 const idx = findIndexById(npcs, id);
 if (idx === -1) {
     console.error('NPC not found');
     process.exit(1);
 }
 setByPath(npcs[idx], path, parseValue(value));
-mod.write(mod.data);
+mod.write(data);

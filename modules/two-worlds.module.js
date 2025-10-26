@@ -1,16 +1,15 @@
-// @ts-nocheck
 // Entry module that loads World One with a brief tutorial dialog.
 (function () {
     let worldOneStart;
     function startWrapper() {
         worldOneStart?.();
     }
-    startGame = startWrapper;
+    globalThis.startGame = startWrapper;
     const script = document.createElement('script');
     script.src = 'modules/world-one.module.js';
     script.onload = () => {
-        worldOneStart = startGame;
-        startGame = startWrapper;
+        worldOneStart = typeof globalThis.startGame === 'function' ? globalThis.startGame : undefined;
+        globalThis.startGame = startWrapper;
         const heart = {
             name: 'Wistful Heart',
             tree: {

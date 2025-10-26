@@ -1,26 +1,29 @@
-// @ts-nocheck
 const originalLog = globalThis.log;
 let lastLogMsg = '';
 let recording = null;
-globalThis.log = function (msg) {
+globalThis.log = function memoryTapeLog(msg, type) {
     lastLogMsg = msg;
     if (originalLog)
-        originalLog(msg);
+        originalLog(msg, type);
 };
 const memoryTape = registerItem({
     id: 'memory_tape',
     name: 'Memory Tape',
     type: 'quest',
     use: {
-        onUse({ log }) {
+        onUse({ log: itemLog }) {
             if (!recording) {
                 recording = lastLogMsg;
-                log('Memory Tape recorded: ' + (recording || 'static'));
+                itemLog('Memory Tape recorded: ' + (recording || 'static'));
             }
             else {
-                log('Memory Tape plays: ' + (recording || 'static'));
-                const npc = (NPCS || []).find(n => n.map === party.map && n.x === party.x && n.y === party.y && typeof n.onMemoryTape === 'function');
-                npc?.onMemoryTape(recording);
+                itemLog('Memory Tape plays: ' + (recording || 'static'));
+                const globals = globalThis;
+                const npc = (globals.NPCS ?? []).find(n => (n?.map === globals.party?.map &&
+                    n?.x === globals.party?.x &&
+                    n?.y === globals.party?.y &&
+                    typeof n?.onMemoryTape === 'function'));
+                npc?.onMemoryTape?.(recording);
             }
             memoryTape.recording = recording;
         }

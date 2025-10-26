@@ -1,4 +1,3 @@
-// @ts-nocheck
 (function () {
     globalThis.Dustland = globalThis.Dustland || {};
     function watch(evt, flag) {
@@ -13,6 +12,7 @@
         const v = typeof flagValue === 'function' ? flagValue(flag) : 0;
         if (v)
             incFlag?.(flag, -v);
+        const party = globalThis.party;
         if (party?.flags)
             delete party.flags[flag];
     }

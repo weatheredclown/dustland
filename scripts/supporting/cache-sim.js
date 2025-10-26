@@ -1,13 +1,17 @@
 #!/usr/bin/env node
-// @ts-nocheck
+/// <reference types="node" />
 import './core/item-generator.js';
-const ranges = ItemGen.statRanges;
+const itemGen = globalThis.ItemGen;
+if (!itemGen) {
+    throw new Error('Item generator not available');
+}
+const ranges = itemGen.statRanges;
 for (const rank of Object.keys(ranges)) {
     let min = Infinity;
     let max = -Infinity;
     const { min: expectedMin, max: expectedMax } = ranges[rank];
     for (let i = 0; i < 1000; i++) {
-        const item = ItemGen.generate(rank);
+        const item = itemGen.generate(rank);
         const power = item.stats.power;
         if (power < min)
             min = power;

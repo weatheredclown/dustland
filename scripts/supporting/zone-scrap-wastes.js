@@ -1,4 +1,3 @@
-// @ts-nocheck
 globalThis.scrapWastesZone = {
     enemies: [
         { name: 'Rust Flea', level: 1 },

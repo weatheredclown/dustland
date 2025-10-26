@@ -50,7 +50,7 @@ type PartyState = {
   _roster: Character[] | null;
 };
 
-type PartyWithState = Party & PartyState;
+type PartyWithState = PartyRoster & PartyState;
 
 interface PartyMember {
   id: string;
@@ -106,6 +106,7 @@ type CharacterOptions = {
 };
 
 class Character implements PartyMember {
+  [key: string]: unknown;
   id: string;
   name: string;
   role: string;
@@ -249,7 +250,7 @@ class Character implements PartyMember {
   }
 }
 
-class Party extends Array<Character> {
+class PartyRoster extends Array<Character> {
   private getState(): PartyState {
     return this as unknown as PartyState;
   }
@@ -349,11 +350,11 @@ class Party extends Array<Character> {
   leader(): Character | undefined { return this[selectedMember] || this[0]; }
 }
 
-(Party.prototype as unknown as { join: (member: Character) => boolean }).join = function(this: Party, member: Character): boolean {
+(PartyRoster.prototype as unknown as { join: (member: Character) => boolean }).join = function(this: PartyRoster, member: Character): boolean {
   return this.addMember(member);
 };
 
-const party = new Party() as PartyWithState;
+const party = new PartyRoster() as PartyWithState;
 const globalSelection = (globalThis as { selectedMember?: number }).selectedMember;
 let selectedMember = typeof globalSelection === 'number' ? globalSelection : 0;
 try {
@@ -510,5 +511,5 @@ function trainStat(stat: keyof StatMap | 'HP', memberIndex = selectedMember): bo
   return true;
 }
 
-const partyExports = { baseStats, Character, Party, party, makeMember, joinParty, leaveParty, fall, restore, healAll, statLine, xpToNext, awardXP, applyEquipmentStats, applyCombatMods, leader, setLeader, respec, trainStat, selectedMember, xpCurve };
+const partyExports = { baseStats, Character, Party: PartyRoster, party, makeMember, joinParty, leaveParty, fall, restore, healAll, statLine, xpToNext, awardXP, applyEquipmentStats, applyCombatMods, leader, setLeader, respec, trainStat, selectedMember, xpCurve };
 Object.assign(globalThis, partyExports);
