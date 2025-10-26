@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { readModule, getByPath, setByPath, parseValue } from './utils.js';
+import { readModule, getByPath, setByPath, parseValue, type ModuleDocument, type ModuleEntity } from './utils.js';
 
 const [file, indexStr, path, value] = process.argv.slice(2);
 if (!file || indexStr === undefined || !path || value === undefined) {
@@ -7,12 +7,13 @@ if (!file || indexStr === undefined || !path || value === undefined) {
   process.exit(1);
 }
 const index = Number(indexStr);
-const mod = readModule(file);
-const data = mod.data as Record<string, unknown>;
-const buildings = (getByPath(data, 'buildings') as Record<string, unknown>[]) || [];
-if (!buildings[index]) {
+const mod = readModule<ModuleDocument>(file);
+const data = mod.data;
+const buildingsValue = getByPath(data, 'buildings');
+if (!Array.isArray(buildingsValue) || !buildingsValue[index]) {
   console.error('Building not found');
   process.exit(1);
 }
+const buildings = buildingsValue as ModuleEntity[];
 setByPath(buildings[index], path, parseValue(value));
 mod.write(data);

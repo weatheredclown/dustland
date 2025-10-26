@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { readModule, getByPath } from './utils.js';
+import { readModule, getByPath, type ModuleDocument, type JsonObject } from './utils.js';
 
 const [file, path] = process.argv.slice(2);
 if (!file || !path) {
@@ -7,8 +7,8 @@ if (!file || !path) {
   process.exit(1);
 }
 
-const mod = readModule(file);
-const data = mod.data as Record<string, unknown>;
+const mod = readModule<ModuleDocument>(file);
+const data = mod.data;
 const parts = path.split('.');
 const key = parts.pop();
 const parentPath = parts.join('.');
@@ -30,7 +30,7 @@ if (Array.isArray(parent)) {
   }
   parent.splice(index, 1);
 } else {
-  delete (parent as Record<string, unknown>)[key];
+  delete (parent as JsonObject)[key as keyof JsonObject];
 }
 
 mod.write(data);

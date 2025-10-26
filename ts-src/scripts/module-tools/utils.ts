@@ -1,16 +1,41 @@
 import fs from 'node:fs';
 
-type ModuleData = {
-  data: unknown;
-  write: (data: unknown) => void;
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+type JsonArray = JsonValue[];
+interface JsonObject {
+  [key: string]: JsonValue;
+}
+
+type ModuleEntity = JsonObject;
+
+interface ModuleDocument extends JsonObject {
+  seed?: string;
+  name?: string;
+  start?: JsonObject;
+  items?: ModuleEntity[];
+  quests?: ModuleEntity[];
+  npcs?: ModuleEntity[];
+  events?: ModuleEntity[];
+  portals?: ModuleEntity[];
+  interiors?: ModuleEntity[];
+  buildings?: ModuleEntity[];
+  zones?: ModuleEntity[];
+  templates?: ModuleEntity[];
+  encounters?: JsonObject;
+}
+
+type ModuleData<TData extends JsonValue> = {
+  data: TData;
+  write: (data: TData) => void;
 };
 
-function readModule(file: string): ModuleData {
+function readModule<TData extends JsonValue = ModuleDocument>(file: string): ModuleData<TData> {
   const text = fs.readFileSync(file, 'utf8');
   if (file.endsWith('.json')) {
     return {
-      data: JSON.parse(text),
-      write(data: unknown) {
+      data: JSON.parse(text) as TData,
+      write(data: TData) {
         fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
       }
     };
@@ -39,26 +64,29 @@ function readModule(file: string): ModuleData {
   const suffix = text.slice(suffixStart);
   const jsonText = text.slice(jsonStart, jsonEnd);
   return {
-    data: JSON.parse(jsonText),
-    write(data: unknown) {
+    data: JSON.parse(jsonText) as TData,
+    write(data: TData) {
       const newJson = '\n' + JSON.stringify(data, null, 2) + '\n';
       fs.writeFileSync(file, prefix + newJson + suffix);
     }
   };
 }
 
-function getByPath<T>(obj: T, path: string | undefined): unknown {
+function getByPath<T extends JsonValue>(obj: T, path: string | undefined): JsonValue | undefined {
   if (!path) return obj;
-  return path.split('.').reduce<unknown>((o, k) => {
-    if (o == null) return undefined;
-    if (typeof o !== 'object') return undefined;
-    return (o as Record<string, unknown>)[k];
-  }, obj as unknown);
+  return path.split('.').reduce<JsonValue | undefined>((o, k) => {
+    if (o == null || typeof o !== 'object') return undefined;
+    if (Array.isArray(o)) {
+      const index = Number(k);
+      return Number.isInteger(index) ? o[index] : undefined;
+    }
+    return (o as JsonObject)[k];
+  }, obj);
 }
 
-function setByPath(obj: Record<string, unknown> | unknown[], path: string, value: unknown): void {
+function setByPath(obj: JsonObject | JsonArray, path: string, value: JsonValue): void {
   const parts = path.split('.');
-  let cur: Record<string, unknown> | unknown[] = obj;
+  let cur: JsonObject | JsonArray = obj;
   for (let i = 0; i < parts.length - 1; i++) {
     const key = parts[i];
     if (Array.isArray(cur)) {
@@ -69,12 +97,13 @@ function setByPath(obj: Record<string, unknown> | unknown[], path: string, value
       if (cur[index] === undefined) {
         cur[index] = isNaN(Number(parts[i + 1])) ? {} : [];
       }
-      cur = cur[index] as Record<string, unknown> | unknown[];
+      cur = cur[index] as JsonObject | JsonArray;
     } else {
-      if (cur[key] === undefined) {
+      const existing = cur[key];
+      if (existing === undefined) {
         cur[key] = isNaN(Number(parts[i + 1])) ? {} : [];
       }
-      cur = cur[key] as Record<string, unknown> | unknown[];
+      cur = (cur[key] as JsonObject | JsonArray);
     }
   }
   if (Array.isArray(cur)) {
@@ -84,17 +113,17 @@ function setByPath(obj: Record<string, unknown> | unknown[], path: string, value
     }
     cur[index] = value;
   } else {
-    cur[parts[parts.length - 1]] = value;
+    (cur as JsonObject)[parts[parts.length - 1]] = value;
   }
 }
 
-function appendByPath(obj: Record<string, unknown>, path: string, value: unknown): void {
+function appendByPath(obj: JsonObject, path: string, value: JsonValue): void {
   const target = getByPath(obj, path);
   if (!Array.isArray(target)) throw new Error('Target is not an array');
   target.push(value);
 }
 
-function ensureArray(obj: Record<string, unknown>, path: string): void {
+function ensureArray(obj: JsonObject, path: string): void {
   if (!Array.isArray(getByPath(obj, path))) {
     setByPath(obj, path, []);
   }
@@ -104,19 +133,19 @@ function findIndexById<T extends { id?: string }>(arr: T[], id: string): number 
   return arr.findIndex(e => e.id === id);
 }
 
-function removeIndex(arr: unknown[], index: number): void {
+function removeIndex<T>(arr: T[], index: number): void {
   if (index < 0 || index >= arr.length) throw new Error('Index out of range');
   arr.splice(index, 1);
 }
 
-function parseValue(str: unknown): unknown {
+function parseValue(str: string): JsonValue {
   if (str === 'true') return true;
   if (str === 'false') return false;
   if (str === 'null') return null;
-  const trimmed = typeof str === 'string' ? str.trim() : str;
-  if (typeof trimmed === 'string' && (trimmed.startsWith('{') || trimmed.startsWith('['))) {
+  const trimmed = str.trim();
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
     try {
-      return JSON.parse(trimmed);
+      return JSON.parse(trimmed) as JsonValue;
     } catch (err) {
       // fall through to other parsing attempts
     }
@@ -126,8 +155,8 @@ function parseValue(str: unknown): unknown {
   return str;
 }
 
-function parseKeyValueArgs(args: string[]): Record<string, unknown> {
-  const obj: Record<string, unknown> = {};
+function parseKeyValueArgs(args: string[]): JsonObject {
+  const obj: JsonObject = {};
   for (const arg of args) {
     const eq = arg.indexOf('=');
     if (eq === -1) continue;
@@ -148,4 +177,14 @@ export {
   removeIndex,
   parseValue,
   parseKeyValueArgs
+};
+
+export type {
+  JsonArray,
+  JsonObject,
+  JsonPrimitive,
+  JsonValue,
+  ModuleEntity,
+  ModuleDocument,
+  ModuleData
 };

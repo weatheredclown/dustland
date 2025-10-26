@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { readModule } from './utils.js';
+import { readModule, type ModuleDocument, type JsonObject } from './utils.js';
 
 const [file, map] = process.argv.slice(2);
 if (!file || !map) {
@@ -7,10 +7,10 @@ if (!file || !map) {
   process.exit(1);
 }
 
-const mod = readModule(file);
-const data = mod.data as Record<string, unknown>;
-const encounters = (data.encounters as Record<string, unknown> | undefined) || {};
-if (!encounters || typeof encounters !== 'object') {
+const mod = readModule<ModuleDocument>(file);
+const data = mod.data;
+const encounters = (data.encounters as JsonObject | undefined) || {};
+if (!encounters || typeof encounters !== 'object' || Array.isArray(encounters)) {
   console.error('Module has no encounters to modify.');
   process.exit(1);
 }

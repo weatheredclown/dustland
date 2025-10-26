@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
-import { parseValue } from './utils.js';
+import { parseValue, type ModuleDocument, type ModuleEntity } from './utils.js';
 
 type Defaults = {
   seed: string;
@@ -15,21 +15,6 @@ type ModuleStart = {
   map: string;
   x: number;
   y: number;
-};
-
-type ModuleData = {
-  seed: string;
-  name: string;
-  start: ModuleStart;
-  items: unknown[];
-  quests: unknown[];
-  npcs: unknown[];
-  events: unknown[];
-  portals: unknown[];
-  interiors: unknown[];
-  buildings: unknown[];
-  zones: unknown[];
-  templates: unknown[];
 };
 
 const [file, ...args] = process.argv.slice(2);
@@ -76,19 +61,19 @@ const start: ModuleStart = {
   y: Number.isFinite(parsedY) ? parsedY : 0
 };
 
-const moduleData: ModuleData = {
+const moduleData: ModuleDocument = {
   seed: defaults.seed,
   name: defaults.name,
   start,
-  items: [],
-  quests: [],
-  npcs: [],
-  events: [],
-  portals: [],
-  interiors: [],
-  buildings: [],
-  zones: [],
-  templates: []
+  items: [] as ModuleEntity[],
+  quests: [] as ModuleEntity[],
+  npcs: [] as ModuleEntity[],
+  events: [] as ModuleEntity[],
+  portals: [] as ModuleEntity[],
+  interiors: [] as ModuleEntity[],
+  buildings: [] as ModuleEntity[],
+  zones: [] as ModuleEntity[],
+  templates: [] as ModuleEntity[]
 };
 
 fs.mkdirSync(path.dirname(file), { recursive: true });

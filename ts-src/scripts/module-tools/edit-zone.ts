@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { readModule, getByPath, setByPath, parseValue } from './utils.js';
+import { readModule, getByPath, setByPath, parseValue, type ModuleDocument, type ModuleEntity } from './utils.js';
 
 const [file, indexStr, path, value] = process.argv.slice(2);
 if (!file || indexStr === undefined || !path || value === undefined) {
@@ -7,12 +7,13 @@ if (!file || indexStr === undefined || !path || value === undefined) {
   process.exit(1);
 }
 const index = Number(indexStr);
-const mod = readModule(file);
-const data = mod.data as Record<string, unknown>;
-const zones = (getByPath(data, 'zones') as Record<string, unknown>[]) || [];
-if (!zones[index]) {
+const mod = readModule<ModuleDocument>(file);
+const data = mod.data;
+const zonesValue = getByPath(data, 'zones');
+if (!Array.isArray(zonesValue) || !zonesValue[index]) {
   console.error('Zone not found');
   process.exit(1);
 }
+const zones = zonesValue as ModuleEntity[];
 setByPath(zones[index], path, parseValue(value));
 mod.write(data);
