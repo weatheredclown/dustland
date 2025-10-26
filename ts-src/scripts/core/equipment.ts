@@ -1,4 +1,3 @@
-// @ts-nocheck
 (function(){
   registerItem({
     id: 'pipe_blade',

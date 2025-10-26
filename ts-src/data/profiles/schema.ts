@@ -42,5 +42,5 @@ interface ProfileGlobals extends GlobalThis {
   PROFILE_SCHEMA?: ProfileSchema;
 }
 
-const profileGlobals = globalThis as ProfileGlobals;
+const profileGlobals = globalThis as unknown as ProfileGlobals;
 profileGlobals.PROFILE_SCHEMA = profileSchema;

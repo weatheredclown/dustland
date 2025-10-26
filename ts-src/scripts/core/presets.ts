@@ -1,4 +1,3 @@
-// @ts-nocheck
 const enemyPresets = {
   Scrapper: ['STR', 'AGI'],
   Bulwark: ['DEF', 'DEF']

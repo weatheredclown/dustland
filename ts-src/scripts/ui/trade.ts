@@ -1,4 +1,3 @@
-// @ts-nocheck
 (function(){
   const timerEl = typeof document !== 'undefined' ? document.getElementById('shopTimer') : null;
   const grudgeEl = typeof document !== 'undefined' ? document.getElementById('shopGrudge') : null;

@@ -1,9 +1,11 @@
-// @ts-nocheck
 // Basic dialog tree validator
 
 globalThis.Dustland = globalThis.Dustland || {};
 (function(){
-  function validateDialogTree(tree){
+  type DialogChoice = { to?: string };
+  type DialogNode = { choices?: DialogChoice[] };
+
+  function validateDialogTree(tree: Record<string, DialogNode> | undefined){
     const errors = [];
     for (const [nodeId, node] of Object.entries(tree || {})){
       (node.choices || []).forEach(ch => {

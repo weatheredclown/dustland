@@ -1,16 +1,36 @@
-// @ts-nocheck
 (function(){
-  var bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
-  function init(member){
+  type PartyMember = {
+    hydration?: number;
+    [key: string]: unknown;
+  };
+
+  type PartyState = PartyMember[] & {
+    map?: string;
+    x?: number;
+    y?: number;
+  };
+
+  type ZoneEffect = {
+    if?: unknown;
+    map?: string;
+    x?: number;
+    y?: number;
+    w?: number;
+    h?: number;
+    dry?: boolean;
+  };
+
+  const bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
+  function init(member: PartyMember){
     if(typeof member.hydration !== 'number') member.hydration = 2;
   }
   bus?.on?.('hydration:tick', () => {
-    const party = globalThis.party;
+    const party = (globalThis as { party?: PartyState }).party;
     if(!Array.isArray(party)) return;
-    const zones = globalThis.Dustland?.zoneEffects || [];
+    const zones = (globalThis.Dustland?.zoneEffects || []) as ZoneEffect[];
     const map = party.map || 'world';
-    const x = party.x;
-    const y = party.y;
+    const x = party.x ?? 0;
+    const y = party.y ?? 0;
     let dry = false;
     for(const z of zones){
       if(z.if && !globalThis.checkFlagCondition?.(z.if)) continue;

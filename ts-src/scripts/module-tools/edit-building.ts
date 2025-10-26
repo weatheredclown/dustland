@@ -1,4 +1,4 @@
-// @ts-nocheck
+/// <reference types="node" />
 import { readModule, getByPath, setByPath, parseValue } from './utils.js';
 
 const [file, indexStr, path, value] = process.argv.slice(2);
@@ -8,10 +8,11 @@ if (!file || indexStr === undefined || !path || value === undefined) {
 }
 const index = Number(indexStr);
 const mod = readModule(file);
-const buildings = getByPath(mod.data, 'buildings') || [];
+const data = mod.data as Record<string, unknown>;
+const buildings = (getByPath(data, 'buildings') as Record<string, unknown>[]) || [];
 if (!buildings[index]) {
   console.error('Building not found');
   process.exit(1);
 }
 setByPath(buildings[index], path, parseValue(value));
-mod.write(mod.data);
+mod.write(data);

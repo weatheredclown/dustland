@@ -1,29 +1,38 @@
-// @ts-nocheck
 (function(){
   const Actions = {
     applyQuestReward(reward){
       if(!reward) return;
+      const globals = globalThis as {
+          leader?: () => unknown;
+          awardXP?: (target: unknown, amount: number) => void;
+          toast?: (message: string) => void;
+          player?: { scrap?: number };
+          CURRENCY?: string;
+          resolveItem?: (reward: unknown) => { name?: string } | null;
+          addToInv?: (item: unknown) => boolean;
+          dropItemNearParty?: (item: unknown) => void;
+        };
       if(typeof reward==='string' && /^xp\s*\d+/i.test(reward)){
         const amt = parseInt(reward.replace(/[^0-9]/g,''),10)||0;
-        if(typeof leader==='function' && typeof awardXP==='function'){
-          awardXP(leader(), amt);
+        if(typeof globals.leader==='function' && typeof globals.awardXP==='function'){
+          globals.awardXP(globals.leader(), amt);
         }
-        if(typeof toast==='function') toast(`+${amt} XP`);
+        if(typeof globals.toast==='function') globals.toast(`+${amt} XP`);
       } else if (typeof reward==='string' && /^scrap\s*\d+/i.test(reward)) {
         const amt = parseInt(reward.replace(/[^0-9]/g,''),10)||0;
-        if (typeof player === 'object') {
-          player.scrap = (player.scrap || 0) + amt;
+        if (typeof globalThis === 'object' && globals.player) {
+          globals.player.scrap = (globals.player.scrap || 0) + amt;
         }
         if(typeof updateHUD==='function') updateHUD();
-        if(typeof toast==='function') toast(`+${amt} ${CURRENCY||'Scrap'}`);
+        if(typeof globals.toast==='function') globals.toast(`+${amt} ${globals.CURRENCY||'Scrap'}`);
       } else {
-        const item = typeof resolveItem === 'function' ? resolveItem(reward) : null;
+        const item = typeof globals.resolveItem === 'function' ? globals.resolveItem(reward) : null;
         if (item) {
-          if (typeof addToInv === 'function') {
-            if (!addToInv(item)) {
-              if (typeof dropItemNearParty === 'function') dropItemNearParty(item);
+          if (typeof globals.addToInv === 'function') {
+            if (!globals.addToInv(item)) {
+              if (typeof globals.dropItemNearParty === 'function') globals.dropItemNearParty(item);
             } else {
-              if (typeof toast === 'function') toast(`Received ${item.name}`);
+              if (typeof globals.toast === 'function') globals.toast(`Received ${item.name}`);
             }
           }
         }
