@@ -1,4 +1,5 @@
-// @ts-nocheck
+import process from 'node:process';
+
 import { readModule, getByPath, findIndexById, removeIndex } from './utils.js';
 
 const [file, id] = process.argv.slice(2);
@@ -7,11 +8,18 @@ if (!file || !id) {
   process.exit(1);
 }
 const mod = readModule(file);
-const npcs = getByPath(mod.data, 'npcs') || [];
+const data = mod.data as Record<string, unknown>;
+const npcsValue = getByPath<Record<string, unknown>>(data, 'npcs');
+if (!Array.isArray(npcsValue)) {
+  console.error('NPC not found');
+  process.exit(1);
+}
+type NpcRecord = { id?: string; [key: string]: unknown };
+const npcs = npcsValue as NpcRecord[];
 const idx = findIndexById(npcs, id);
 if (idx === -1) {
   console.error('NPC not found');
   process.exit(1);
 }
 removeIndex(npcs, idx);
-mod.write(mod.data);
+mod.write(data);
