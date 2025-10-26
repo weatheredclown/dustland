@@ -1,12 +1,16 @@
-// @ts-nocheck
 import fs from 'node:fs';
 
-function readModule(file) {
+type ModuleData = {
+  data: unknown;
+  write: (data: unknown) => void;
+};
+
+function readModule(file: string): ModuleData {
   const text = fs.readFileSync(file, 'utf8');
   if (file.endsWith('.json')) {
     return {
       data: JSON.parse(text),
-      write(data) {
+      write(data: unknown) {
         fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
       }
     };
@@ -36,53 +40,76 @@ function readModule(file) {
   const jsonText = text.slice(jsonStart, jsonEnd);
   return {
     data: JSON.parse(jsonText),
-    write(data) {
+    write(data: unknown) {
       const newJson = '\n' + JSON.stringify(data, null, 2) + '\n';
       fs.writeFileSync(file, prefix + newJson + suffix);
     }
   };
 }
 
-function getByPath(obj, path) {
+function getByPath<T>(obj: T, path: string | undefined): unknown {
   if (!path) return obj;
-  return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
+  return path.split('.').reduce<unknown>((o, k) => {
+    if (o == null) return undefined;
+    if (typeof o !== 'object') return undefined;
+    return (o as Record<string, unknown>)[k];
+  }, obj as unknown);
 }
 
-function setByPath(obj, path, value) {
+function setByPath(obj: Record<string, unknown> | unknown[], path: string, value: unknown): void {
   const parts = path.split('.');
-  let cur = obj;
+  let cur: Record<string, unknown> | unknown[] = obj;
   for (let i = 0; i < parts.length - 1; i++) {
     const key = parts[i];
-    if (cur[key] === undefined) {
-      cur[key] = isNaN(Number(parts[i + 1])) ? {} : [];
+    if (Array.isArray(cur)) {
+      const index = Number(key);
+      if (!Number.isInteger(index)) {
+        throw new Error(`Invalid array index: ${key}`);
+      }
+      if (cur[index] === undefined) {
+        cur[index] = isNaN(Number(parts[i + 1])) ? {} : [];
+      }
+      cur = cur[index] as Record<string, unknown> | unknown[];
+    } else {
+      if (cur[key] === undefined) {
+        cur[key] = isNaN(Number(parts[i + 1])) ? {} : [];
+      }
+      cur = cur[key] as Record<string, unknown> | unknown[];
     }
-    cur = cur[key];
   }
-  cur[parts[parts.length - 1]] = value;
+  if (Array.isArray(cur)) {
+    const index = Number(parts[parts.length - 1]);
+    if (!Number.isInteger(index)) {
+      throw new Error(`Invalid array index: ${parts[parts.length - 1]}`);
+    }
+    cur[index] = value;
+  } else {
+    cur[parts[parts.length - 1]] = value;
+  }
 }
 
-function appendByPath(obj, path, value) {
+function appendByPath(obj: Record<string, unknown>, path: string, value: unknown): void {
   const target = getByPath(obj, path);
   if (!Array.isArray(target)) throw new Error('Target is not an array');
   target.push(value);
 }
 
-function ensureArray(obj, path) {
+function ensureArray(obj: Record<string, unknown>, path: string): void {
   if (!Array.isArray(getByPath(obj, path))) {
     setByPath(obj, path, []);
   }
 }
 
-function findIndexById(arr, id) {
+function findIndexById<T extends { id?: string }>(arr: T[], id: string): number {
   return arr.findIndex(e => e.id === id);
 }
 
-function removeIndex(arr, index) {
+function removeIndex(arr: unknown[], index: number): void {
   if (index < 0 || index >= arr.length) throw new Error('Index out of range');
   arr.splice(index, 1);
 }
 
-function parseValue(str) {
+function parseValue(str: unknown): unknown {
   if (str === 'true') return true;
   if (str === 'false') return false;
   if (str === 'null') return null;
@@ -99,8 +126,8 @@ function parseValue(str) {
   return str;
 }
 
-function parseKeyValueArgs(args) {
-  const obj = {};
+function parseKeyValueArgs(args: string[]): Record<string, unknown> {
+  const obj: Record<string, unknown> = {};
   for (const arg of args) {
     const eq = arg.indexOf('=');
     if (eq === -1) continue;

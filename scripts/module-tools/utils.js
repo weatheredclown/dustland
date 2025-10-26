@@ -1,4 +1,3 @@
-// @ts-nocheck
 import fs from 'node:fs';
 function readModule(file) {
     const text = fs.readFileSync(file, 'utf8');
@@ -48,19 +47,46 @@ function readModule(file) {
 function getByPath(obj, path) {
     if (!path)
         return obj;
-    return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
+    return path.split('.').reduce((o, k) => {
+        if (o == null)
+            return undefined;
+        if (typeof o !== 'object')
+            return undefined;
+        return o[k];
+    }, obj);
 }
 function setByPath(obj, path, value) {
     const parts = path.split('.');
     let cur = obj;
     for (let i = 0; i < parts.length - 1; i++) {
         const key = parts[i];
-        if (cur[key] === undefined) {
-            cur[key] = isNaN(Number(parts[i + 1])) ? {} : [];
+        if (Array.isArray(cur)) {
+            const index = Number(key);
+            if (!Number.isInteger(index)) {
+                throw new Error(`Invalid array index: ${key}`);
+            }
+            if (cur[index] === undefined) {
+                cur[index] = isNaN(Number(parts[i + 1])) ? {} : [];
+            }
+            cur = cur[index];
         }
-        cur = cur[key];
+        else {
+            if (cur[key] === undefined) {
+                cur[key] = isNaN(Number(parts[i + 1])) ? {} : [];
+            }
+            cur = cur[key];
+        }
     }
-    cur[parts[parts.length - 1]] = value;
+    if (Array.isArray(cur)) {
+        const index = Number(parts[parts.length - 1]);
+        if (!Number.isInteger(index)) {
+            throw new Error(`Invalid array index: ${parts[parts.length - 1]}`);
+        }
+        cur[index] = value;
+    }
+    else {
+        cur[parts[parts.length - 1]] = value;
+    }
 }
 function appendByPath(obj, path, value) {
     const target = getByPath(obj, path);
