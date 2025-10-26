@@ -684,6 +684,9 @@
                 const rewritten = rewriteSpriteEntry(definition, baseDir, styleDir);
                 if (rewritten == null)
                     continue;
+                if (lowerKey === 'atlas' && typeof rewritten === 'string' && !Object.prototype.hasOwnProperty.call(tileConfig, 'atlas')) {
+                    tileConfig.atlas = rewritten;
+                }
                 tileMap[lowerKey] = rewritten;
             }
             const hasEntries = Object.keys(tileMap).length > 0;
