@@ -31,21 +31,14 @@ function defineSpecial(id, data = {}){
 
 Object.assign(globalThis, { Abilities, defineAbility, Specials, defineSpecial });
 
-(async () => {
-  try {
-    if (typeof process !== 'undefined' && process.cwd) {
-      const fs = await import('node:fs/promises');
-      const txt = await fs.readFile(process.cwd() + '/data/moves/starter.json', 'utf8');
-      const moves = JSON.parse(txt);
-      moves.forEach((m) => { Specials[m.id] = m; });
-    } else if (typeof fetch === 'function') {
-      const res = await fetch('data/moves/starter.json');
-      if (res.ok) {
-        const moves = await res.json();
-        moves.forEach((m) => { Specials[m.id] = m; });
-      }
-    }
-  } catch (e) {
-    // ignore load errors
-  }
-})();
+const STARTER_SPECIALS = [
+  { id: 'POWER_STRIKE', label: 'Power Strike', dmg: 3, adrCost: 30, cooldown: 1 },
+  { id: 'STUN_GRENADE', label: 'Stun Grenade', dmg: 1, stun: 1, adrCost: 40, cooldown: 3 },
+  { id: 'FIRST_AID', label: 'First Aid', heal: 4, adrCost: 35, cooldown: 2 },
+  { id: 'ADRENAL_SURGE', label: 'Adrenal Surge', adrGain: 50, adrCost: 0, cooldown: 4 },
+  { id: 'GUARD_UP', label: 'Guard', guard: true, adrCost: 20, cooldown: 2 }
+];
+
+for (const special of STARTER_SPECIALS) {
+  Specials[special.id] = special;
+}
