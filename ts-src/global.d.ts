@@ -73,11 +73,61 @@ declare global {
 
   type JsonSchema = Record<string, unknown>;
 
+  interface DustlandEffectsApi {
+    apply: (list?: unknown[], ctx?: Record<string, unknown>) => void;
+  }
+
+  type ProfileStatMap = Record<string, number>;
+
+  interface DustlandProfile {
+    mods?: ProfileStatMap;
+    effects?: unknown[];
+    [key: string]: unknown;
+  }
+
+  interface ProfiledEntity {
+    stats?: ProfileStatMap;
+    _bonus?: ProfileStatMap;
+    [key: string]: unknown;
+  }
+
+  interface DustlandProfilesApi {
+    set: (id: string, data?: DustlandProfile) => void;
+    get: (id: string) => DustlandProfile | undefined;
+    apply: (target: ProfiledEntity | undefined, id: string) => void;
+    remove: (target: ProfiledEntity | undefined, id: string) => void;
+  }
+
+  interface DustlandPersonaTemplate {
+    id: string;
+    label: string;
+    portrait: string;
+    portraitPrompt?: string;
+    mods?: ProfileStatMap;
+    [key: string]: unknown;
+  }
+
+  interface DustlandGameState {
+    setPersona?: (id: string, template: DustlandPersonaTemplate) => void;
+    [key: string]: unknown;
+  }
+
+  interface DustlandEventBus {
+    on?: (event: string, handler: (...args: unknown[]) => void) => void;
+    emit?: (event: string, payload?: unknown) => void;
+    [key: string]: unknown;
+  }
+
   interface DustlandNamespace {
     starterItems?: StarterItem[];
     Wizard?: WizardFactory;
     WizardSteps?: WizardStepsRegistry;
     wizards?: Record<string, WizardDefinition>;
+    effects?: DustlandEffectsApi;
+    profiles?: DustlandProfilesApi;
+    personaTemplates?: Record<string, DustlandPersonaTemplate>;
+    gameState?: DustlandGameState;
+    eventBus?: DustlandEventBus;
     [key: string]: unknown;
   }
 
@@ -101,5 +151,6 @@ declare global {
     ACK?: AckGlobal;
     TRAINER_UPGRADE_SCHEMA?: JsonSchema;
     TRAINER_UPGRADES?: TrainerUpgradeMap;
+    EventBus?: DustlandEventBus;
   }
 }

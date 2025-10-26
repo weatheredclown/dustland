@@ -1,31 +1,50 @@
-// @ts-nocheck
 // ===== Profiles =====
 (function(){
-  globalThis.Dustland = globalThis.Dustland || {};
-  const profiles = {};
-  function set(id, data){ if(id) profiles[id] = data || {}; }
-  function get(id){ return profiles[id]; }
-  function apply(target, id){
-    const p = profiles[id];
-    if(!p || !target) return;
-    if(p.mods){
-      target._bonus = target._bonus || {};
-      for(const stat in p.mods){
-        target._bonus[stat] = (target._bonus[stat] || 0) + p.mods[stat];
-        target.stats && (target.stats[stat] = (target.stats[stat]||0) + p.mods[stat]);
+  if(!globalThis.Dustland) globalThis.Dustland = {};
+  const dustland = globalThis.Dustland;
+  const registry: Record<string, DustlandProfile> = {};
+
+  function set(id: string, data: DustlandProfile = {}): void {
+    if(!id) return;
+    registry[id] = data;
+  }
+
+  function get(id: string): DustlandProfile | undefined {
+    if(!id) return undefined;
+    return registry[id];
+  }
+
+  function apply(target: ProfiledEntity | undefined, id: string): void {
+    if(!target) return;
+    const profile = get(id);
+    if(!profile) return;
+
+    if(profile.mods){
+      if(!target._bonus) target._bonus = {};
+      const bonus = target._bonus;
+      for(const [stat, delta] of Object.entries(profile.mods)){
+        if(typeof delta !== 'number') continue;
+        bonus[stat] = (bonus[stat] ?? 0) + delta;
+        if(target.stats) target.stats[stat] = (target.stats[stat] ?? 0) + delta;
       }
     }
-    if(p.effects && globalThis.Dustland.effects){
-      globalThis.Dustland.effects.apply(p.effects, { actor: target });
+
+    if(profile.effects && dustland.effects?.apply){
+      dustland.effects.apply(profile.effects, { actor: target });
     }
   }
-  function remove(target, id){
-    const p = profiles[id];
-    if(!p || !target || !p.mods) return;
-    for(const stat in p.mods){
-      if(target.stats) target.stats[stat] = (target.stats[stat]||0) - p.mods[stat];
-      if(target._bonus) target._bonus[stat] = (target._bonus[stat]||0) - p.mods[stat];
+
+  function remove(target: ProfiledEntity | undefined, id: string): void {
+    if(!target) return;
+    const profile = get(id);
+    if(!profile?.mods) return;
+
+    for(const [stat, delta] of Object.entries(profile.mods)){
+      if(typeof delta !== 'number') continue;
+      if(target.stats) target.stats[stat] = (target.stats[stat] ?? 0) - delta;
+      if(target._bonus) target._bonus[stat] = (target._bonus[stat] ?? 0) - delta;
     }
   }
-  Dustland.profiles = { set, get, apply, remove };
+
+  dustland.profiles = { set, get, apply, remove };
 })();
