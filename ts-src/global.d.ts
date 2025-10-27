@@ -161,10 +161,9 @@ declare global {
   }
 
   interface DustlandEventBus {
-    on?: (event: string, handler: (...args: unknown[]) => void) => void;
-    off?: (event: string, handler: (...args: unknown[]) => void) => void;
-    emit?: (event: string, payload?: unknown) => void;
-    [key: string]: unknown;
+    on(event: string, handler: (...args: unknown[]) => void): void;
+    off(event: string, handler: (...args: unknown[]) => void): void;
+    emit(event: string, payload?: unknown): void;
   }
 
   interface DustlandNamespace {
@@ -336,6 +335,40 @@ declare global {
     memoryTape?: MemoryTapeItem;
     openDialog?: (dialog: unknown) => void;
     selectedMember?: number;
+    tileEmoji?: Readonly<Record<number, string>>;
+    emojiTile?: Readonly<Record<string, number>>;
+    gridFromEmoji?: (rows: string[]) => number[][];
+    gridToEmoji?: (grid: number[][]) => string[];
+    getViewSize?: () => { w: number; h: number };
+    showStart?: () => void;
+    hideStart?: () => void;
+    openCreator?: () => void;
+    closeCreator?: () => void;
+    resetAll?: () => void;
+    moduleData?: DustlandModuleInstance | null;
+    modulePickerPending?: boolean;
+    perfStats?: { tiles?: number; sfx?: number; [key: string]: number | undefined };
+    fxConfig?: Record<string, unknown> | null;
+    DustlandSkin?: unknown;
+    fogOfWarEnabled?: boolean;
+    toggleAudio?: () => void;
+    toggleTileChars?: () => void;
+    toggleFogOfWar?: () => void;
+    tileChars?: Readonly<Record<number | string, string>>;
+    jitterColor?: (hex: string, x: number, y: number) => string;
+    playerAdrenalineFx?: {
+      intensity: number;
+      scale: number;
+      hueShift: number;
+      saturation: number;
+      brightness: number;
+      glow: number;
+    };
+    footstepBump?: () => void;
+    pickupSparkle?: (x: number, y: number) => void;
+    pickupVacuum?: (fromX: number, fromY: number, toX?: number, toY?: number) => void;
+    openShop?: (shop: unknown) => void;
+    playFX?: (type: string) => void;
   }
 
   function log(message: string, type?: string): void;
@@ -367,6 +400,7 @@ declare global {
   function getSpecialization(id: string): unknown;
   function getClassSpecials(id: string): unknown;
   function getQuirk(id: string): unknown;
+  function renderQuests(): void;
   function applyModule(moduleData: unknown): void;
   function setPartyPos(x: number, y: number): void;
   function setMap(map: string, label?: string): void;
