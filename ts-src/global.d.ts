@@ -77,6 +77,22 @@ declare global {
     apply: (list?: unknown[], ctx?: Record<string, unknown>) => void;
   }
 
+  interface DustlandInventoryApi {
+    getCampChest?: () => unknown[];
+    withdrawCampChestItem?: (index: number) => boolean | void;
+    storeCampChestItem?: (index: number) => boolean | void;
+    isCampChestUnlocked?: () => boolean;
+    unlockCampChest?: () => void;
+  }
+
+  interface DustlandUiApi {
+    show: (id: string, display?: string) => void;
+    hide: (id: string) => void;
+    setText: (id: string, text: string) => void;
+    setValue: (id: string, value: string) => void;
+    remove: (id: string) => void;
+  }
+
   interface DustlandZoneEffect {
     if?: unknown;
     map?: string;
@@ -85,6 +101,8 @@ declare global {
     w?: number;
     h?: number;
     dry?: boolean;
+    perStep?: { hp?: number; [key: string]: unknown };
+    step?: { hp?: number; [key: string]: unknown };
     [key: string]: unknown;
   }
 
@@ -137,8 +155,18 @@ declare global {
     [key: string]: unknown;
   }
 
+  interface DustlandGameSnapshot {
+    party?: Party;
+    personas?: Record<string, DustlandPersonaTemplate>;
+    [key: string]: unknown;
+  }
+
   interface DustlandGameState {
     setPersona?: (id: string, template: DustlandPersonaTemplate) => void;
+    applyPersona?: (memberId: string, personaId: string) => void;
+    clearPersona?: (memberId: string) => void;
+    getState?: () => DustlandGameSnapshot | undefined;
+    updateState?: (updater: (state: DustlandGameSnapshot) => void) => void;
     [key: string]: unknown;
   }
 
@@ -268,6 +296,7 @@ declare global {
     WizardSteps?: WizardStepsRegistry;
     wizards?: Record<string, WizardDefinition>;
     effects?: DustlandEffectsApi;
+    inventory?: DustlandInventoryApi;
     profiles?: DustlandProfilesApi;
     personaTemplates?: Record<string, DustlandPersonaTemplate>;
     gameState?: DustlandGameState;
@@ -288,6 +317,7 @@ declare global {
     effectPackInspector?: { load: (text: string) => void; fire: (evt: string) => void };
     BuildingWizard?: unknown;
     updateTradeUI?: (trader: unknown) => void;
+    bunkers?: Array<{ id?: string; active?: boolean; [key: string]: unknown }>;
     [key: string]: unknown;
   }
 
@@ -395,6 +425,7 @@ declare global {
   interface GlobalThis {
     Dustland?: DustlandNamespace;
     ACK?: AckGlobal;
+    UI?: DustlandUiApi;
     TRAINER_UPGRADE_SCHEMA?: JsonSchema;
     TRAINER_UPGRADES?: TrainerUpgradeMap;
     eventBus?: DustlandEventBus;
@@ -406,6 +437,7 @@ declare global {
     DUSTLAND_MODULE?: DustlandModuleInstance;
     LOOTBOX_DEMO_MODULE?: DustlandModuleInstance;
     applyModule?: (moduleData: unknown) => void;
+    loadModule?: (moduleData: unknown) => Promise<void> | void;
     setPartyPos?: (x: number, y: number) => void;
     setMap?: (map: string, label?: string) => void;
     toast?: (message: string) => void;
@@ -469,6 +501,11 @@ declare global {
     pickupVacuum?: (fromX: number, fromY: number, toX?: number, toY?: number) => void;
     openShop?: (shop: unknown) => void;
     playFX?: (type: string) => void;
+    postLoad?: (moduleData: DustlandModuleInstance) => void;
+    openWorldMap?: (source?: string) => void;
+    healAll?: () => void;
+    params?: URLSearchParams;
+    state?: { map?: string; [key: string]: unknown };
   }
 
   function log(message: string, type?: string): void;
