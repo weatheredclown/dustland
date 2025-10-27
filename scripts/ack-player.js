@@ -1,145 +1,171 @@
-// @ts-nocheck
-// ACK Module Player (ESM)
-// Loads a module JSON and starts the game using its data.
-// use globals from core and engine
-// Prevent the engine from auto-starting the creator or start menu
-window.showStart = () => { };
-let realOpenCreator = null;
-function captureOpenCreator() {
-    if (typeof window.openCreator === 'function') {
-        realOpenCreator = window.openCreator;
-        window.openCreator = () => { };
+(() => {
+    const globals = globalThis;
+    const dustland = globals.Dustland;
+    // ACK Module Player (ESM)
+    // Loads a module JSON and starts the game using its data.
+    // use globals from core and engine
+    // Prevent the engine from auto-starting the creator or start menu
+    window.showStart = () => { };
+    let realOpenCreator = null;
+    function captureOpenCreator() {
+        if (typeof window.openCreator === 'function') {
+            realOpenCreator = window.openCreator;
+            window.openCreator = () => { };
+        }
+        else {
+            setTimeout(captureOpenCreator, 0);
+        }
     }
-    else {
-        setTimeout(captureOpenCreator, 0);
-    }
-}
-captureOpenCreator();
-let moduleData = null;
-const PLAYTEST_KEY = 'ack_playtest';
-const loaderId = 'moduleLoader';
-const urlInput = document.getElementById('modUrl');
-const urlBtn = document.getElementById('modUrlBtn');
-const fileInput = document.getElementById('modFile');
-const fileBtn = document.getElementById('modFileBtn');
-const params = globalThis.params || new URLSearchParams(location.search);
-const playData = localStorage.getItem(PLAYTEST_KEY);
-if (playData) {
-    try {
-        moduleData = JSON.parse(playData);
-        if (moduleData.profiles && globalThis.Dustland?.profiles?.set) {
-            for (const id in moduleData.profiles) {
-                globalThis.Dustland.profiles.set(id, moduleData.profiles[id]);
+    captureOpenCreator();
+    let moduleData = null;
+    const PLAYTEST_KEY = 'ack_playtest';
+    const loaderId = 'moduleLoader';
+    const urlInput = document.getElementById('modUrl');
+    const urlBtn = document.getElementById('modUrlBtn');
+    const fileInput = document.getElementById('modFile');
+    const fileBtn = document.getElementById('modFileBtn');
+    const paramsSource = globals.params;
+    const params = paramsSource instanceof URLSearchParams
+        ? paramsSource
+        : new URLSearchParams(location.search);
+    const playData = localStorage.getItem(PLAYTEST_KEY);
+    if (playData) {
+        try {
+            const parsed = JSON.parse(playData);
+            moduleData = parsed;
+            if (parsed.profiles && dustland?.profiles?.set) {
+                for (const id of Object.keys(parsed.profiles)) {
+                    const profile = parsed.profiles[id];
+                    if (profile)
+                        dustland.profiles.set(id, profile);
+                }
+            }
+            localStorage.removeItem(PLAYTEST_KEY);
+            globals.UI?.hide(loaderId);
+            if (realOpenCreator) {
+                window.openCreator = realOpenCreator;
+                realOpenCreator();
             }
         }
-        localStorage.removeItem(PLAYTEST_KEY);
-        UI.hide(loaderId);
+        catch (e) {
+            localStorage.removeItem(PLAYTEST_KEY);
+        }
+    }
+    const autoUrl = params.get('module');
+    if (!moduleData && autoUrl) {
+        globals.UI?.setValue('modUrl', autoUrl);
+        fetch(autoUrl)
+            .then((response) => response.json())
+            .then((data) => loadAckModule(data))
+            .catch((err) => alert('Invalid module:' + err));
+    }
+    const loadAckModule = async (data) => {
+        moduleData = data;
+        const profiles = data.profiles;
+        if (profiles && dustland?.profiles?.set) {
+            for (const id of Object.keys(profiles)) {
+                const profile = profiles[id];
+                if (profile)
+                    dustland.profiles.set(id, profile);
+            }
+        }
+        const scriptUrl = typeof moduleData?.module === 'string' ? moduleData.module : null;
+        if (scriptUrl) {
+            try {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = scriptUrl;
+                    script.onload = () => resolve();
+                    script.onerror = () => reject(new Error(`Failed to load ${scriptUrl}`));
+                    document.head.appendChild(script);
+                });
+                const base = scriptUrl.match(/([^/]+)\.module\.js$/)?.[1] ?? '';
+                const guesses = [];
+                if (moduleData?.moduleVar)
+                    guesses.push(moduleData.moduleVar);
+                if (base) {
+                    const upper = base.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+                    guesses.push(`${upper}_MODULE`, upper);
+                }
+                let modObj = null;
+                for (const name of guesses) {
+                    const candidate = globals[name];
+                    if (candidate) {
+                        modObj = candidate;
+                        break;
+                    }
+                }
+                const hook = typeof modObj === 'object' && modObj !== null && 'postLoad' in modObj
+                    ? modObj.postLoad
+                    : globals.postLoad;
+                if (typeof hook === 'function' && moduleData) {
+                    try {
+                        hook(moduleData);
+                    }
+                    catch (err) {
+                        console.error('postLoad error', err);
+                    }
+                }
+            }
+            catch (err) {
+                console.error('module script error', err);
+            }
+            if (moduleData) {
+                delete moduleData.module;
+                delete moduleData.moduleVar;
+            }
+        }
+        globals.UI?.hide(loaderId);
         if (realOpenCreator) {
             window.openCreator = realOpenCreator;
             realOpenCreator();
         }
-    }
-    catch (e) {
-        localStorage.removeItem(PLAYTEST_KEY);
-    }
-}
-const autoUrl = params.get('module');
-if (!moduleData && autoUrl) {
-    UI.setValue('modUrl', autoUrl);
-    fetch(autoUrl)
-        .then((r) => r.json())
-        .then((data) => loadModule(data))
-        .catch((err) => alert('Invalid module:' + err));
-}
-async function loadModule(data) {
-    moduleData = data;
-    if (data.profiles && globalThis.Dustland?.profiles?.set) {
-        for (const id in data.profiles) {
-            globalThis.Dustland.profiles.set(id, data.profiles[id]);
-        }
-    }
-    if (typeof moduleData.module === 'string') {
-        try {
-            await new Promise((resolve, reject) => {
-                const s = document.createElement('script');
-                s.src = moduleData.module;
-                s.onload = resolve;
-                s.onerror = reject;
-                document.head.appendChild(s);
-            });
-            const base = moduleData.module.match(/([^/]+)\.module\.js$/)?.[1] || '';
-            const guesses = [];
-            if (moduleData.moduleVar)
-                guesses.push(moduleData.moduleVar);
-            if (base) {
-                const upper = base.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
-                guesses.push(upper + '_MODULE', upper);
+    };
+    globals.loadModule = loadAckModule;
+    if (urlBtn && urlInput) {
+        urlBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim();
+            if (!url)
+                return;
+            try {
+                const res = await fetch(url);
+                const data = (await res.json());
+                await loadAckModule(data);
             }
-            let modObj = null;
-            for (const name of guesses) {
-                if (globalThis[name]) {
-                    modObj = globalThis[name];
-                    break;
-                }
+            catch (err) {
+                alert('Invalid module:' + err);
             }
-            const hook = modObj?.postLoad || globalThis.postLoad;
-            if (typeof hook === 'function') {
+        });
+    }
+    if (fileBtn && fileInput) {
+        fileBtn.addEventListener('click', () => {
+            const file = fileInput.files?.[0];
+            if (!file)
+                return;
+            const reader = new FileReader();
+            reader.onload = () => {
                 try {
-                    hook(moduleData);
+                    const text = typeof reader.result === 'string' ? reader.result : '';
+                    if (!text)
+                        throw new Error('Empty file');
+                    const data = JSON.parse(text);
+                    void loadAckModule(data);
                 }
                 catch (err) {
-                    console.error('postLoad error', err);
+                    alert('Invalid module:' + err);
                 }
-            }
-        }
-        catch (err) {
-            console.error('module script error', err);
-        }
-        delete moduleData.module;
-        delete moduleData.moduleVar;
+            };
+            reader.readAsText(file);
+        });
     }
-    UI.hide(loaderId);
-    if (realOpenCreator) {
-        window.openCreator = realOpenCreator;
-        realOpenCreator();
-    }
-}
-urlBtn.onclick = async () => {
-    const url = urlInput.value.trim();
-    if (!url)
-        return;
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        await loadModule(data);
-    }
-    catch (err) {
-        alert('Invalid module:' + err);
-    }
-};
-fileBtn.onclick = () => {
-    const file = fileInput.files[0];
-    if (!file)
-        return;
-    const reader = new FileReader();
-    reader.onload = () => {
-        try {
-            loadModule(JSON.parse(reader.result));
-        }
-        catch (err) {
-            alert('Invalid module:' + err);
-        }
+    // After party creation, start the loaded module
+    window.startGame = async function () {
+        applyModule(moduleData ?? {});
+        const worldHeight = typeof globals.WORLD_H === 'number' ? globals.WORLD_H : 0;
+        const fallbackStart = { map: 'world', x: 2, y: Math.floor(worldHeight / 2) };
+        const start = moduleData?.start ?? fallbackStart;
+        setPartyPos(start.x, start.y);
+        setMap(start.map || 'world', 'Module');
+        log('Adventure begins.');
     };
-    reader.readAsText(file);
-};
-// After party creation, start the loaded module
-window.startGame = async function () {
-    if (moduleData)
-        applyModule(moduleData);
-    else
-        applyModule({});
-    const start = moduleData && moduleData.start ? moduleData.start : { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-    setPartyPos(start.x, start.y);
-    setMap(start.map || 'world', 'Module');
-    log('Adventure begins.');
-};
+})();

@@ -1,7 +1,8 @@
-// @ts-nocheck
 (function () {
-    const bus = globalThis.EventBus;
-    const gs = globalThis.Dustland?.gameState;
+    const globals = globalThis;
+    const bus = globals.EventBus;
+    const dustland = globals.Dustland;
+    const gs = dustland?.gameState;
     if (!bus || !gs?.applyPersona)
         return;
     const btn = document.getElementById('campBtn');
@@ -14,7 +15,7 @@
     const chestList = document.getElementById('campChestList');
     const chestInvList = document.getElementById('campChestInventoryList');
     const closeChestBtn = document.getElementById('closeCampChestBtn');
-    const inventory = globalThis.Dustland?.inventory;
+    const inventory = dustland?.inventory;
     const CAMP_CHEST_COST = 20000;
     let reopenPersonaAfterChest = false;
     if (btn)
@@ -27,10 +28,10 @@
             if (fastTravelBtn.disabled)
                 return;
             overlay.classList.remove('shown');
-            globalThis.openWorldMap?.('camp');
+            globals.openWorldMap?.('camp');
         });
     }
-    const formatScrap = value => {
+    const formatScrap = (value) => {
         if (typeof value !== 'number')
             return String(value ?? '');
         try {
@@ -40,7 +41,7 @@
             return String(value);
         }
     };
-    const describeItem = it => {
+    const describeItem = (it) => {
         if (!it)
             return '';
         const name = it.name || it.id || 'Unknown item';
@@ -50,9 +51,12 @@
     function renderCampChest() {
         if (!inventory || !chestList || !chestInvList)
             return;
-        const chestItems = inventory.getCampChest?.() || [];
+        const chestItemsRaw = inventory.getCampChest?.() ?? [];
+        const chestItems = Array.isArray(chestItemsRaw)
+            ? chestItemsRaw
+            : [];
         chestList.innerHTML = '';
-        if (!Array.isArray(chestItems) || chestItems.length === 0) {
+        if (chestItems.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'camp-chest-empty';
             empty.textContent = 'Chest empty';
@@ -72,15 +76,16 @@
                 takeBtn.addEventListener('click', () => {
                     const ok = inventory.withdrawCampChestItem?.(idx);
                     renderCampChest();
-                    if (ok) {
-                        globalThis.renderInv?.();
+                    if (ok && typeof renderInv === 'function') {
+                        renderInv();
                     }
                 });
                 row.appendChild(takeBtn);
                 chestList.appendChild(row);
             });
         }
-        const inv = Array.isArray(globalThis.player?.inv) ? globalThis.player.inv : [];
+        const invRaw = globals.player?.inv;
+        const inv = Array.isArray(invRaw) ? invRaw : [];
         chestInvList.innerHTML = '';
         if (inv.length === 0) {
             const empty = document.createElement('div');
@@ -102,8 +107,8 @@
                 storeBtn.addEventListener('click', () => {
                     const ok = inventory.storeCampChestItem?.(idx);
                     renderCampChest();
-                    if (ok) {
-                        globalThis.renderInv?.();
+                    if (ok && typeof renderInv === 'function') {
+                        renderInv();
                     }
                 });
                 row.appendChild(storeBtn);
@@ -156,20 +161,20 @@
                 return;
             const unlocked = inventory.isCampChestUnlocked?.();
             if (!unlocked) {
-                const player = globalThis.player || {};
-                const scrap = Number.isFinite(player.scrap) ? player.scrap : 0;
+                const player = (globals.player ?? {});
+                const scrap = Number.isFinite(player.scrap) ? Number(player.scrap) : 0;
                 if (scrap < CAMP_CHEST_COST) {
-                    globalThis.log?.('Not enough scrap.');
-                    if (typeof globalThis.toast === 'function')
-                        globalThis.toast('Not enough scrap.');
+                    globals.log?.('Not enough scrap.');
+                    if (typeof globals.toast === 'function')
+                        globals.toast('Not enough scrap.');
                     return;
                 }
                 player.scrap = scrap - CAMP_CHEST_COST;
                 inventory.unlockCampChest?.();
-                globalThis.updateHUD?.();
-                globalThis.log?.('Camp chest assembled.');
-                if (typeof globalThis.toast === 'function')
-                    globalThis.toast('Camp chest assembled.');
+                globals.updateHUD?.();
+                globals.log?.('Camp chest assembled.');
+                if (typeof globals.toast === 'function')
+                    globals.toast('Camp chest assembled.');
                 updateCampChestButton();
                 const fromPersona = overlay?.classList.contains('shown');
                 if (fromPersona)
@@ -199,52 +204,56 @@
     bus.on('camp:open', () => {
         closeCampChest(false);
         updateCampChestButton();
-        const pos = globalThis.party;
-        const map = globalThis.state?.map || 'world';
-        const zones = globalThis.Dustland?.zoneEffects || [];
+        const pos = globals.party;
+        const map = globals.state?.map || 'world';
+        const zones = dustland?.zoneEffects ?? [];
         if (pos) {
             for (const z of zones) {
-                if (z.if && !globalThis.checkFlagCondition?.(z.if))
+                if (z.if && !globals.checkFlagCondition?.(z.if))
                     continue;
                 if ((z.map || 'world') !== map)
                     continue;
                 if (pos.x < z.x || pos.y < z.y || pos.x >= z.x + (z.w || 0) || pos.y >= z.y + (z.h || 0))
                     continue;
                 if (z.dry || (z.perStep?.hp < 0) || (z.step?.hp < 0)) {
-                    globalThis.log?.("You can't camp here.");
+                    globals.log?.("You can't camp here.");
                     return;
                 }
             }
         }
-        globalThis.healAll?.();
+        globals.healAll?.();
         if (fastTravelBtn) {
-            const bunkers = globalThis.Dustland?.bunkers ?? [];
+            const bunkers = dustland?.bunkers ?? [];
             const hasDestinations = bunkers.some(b => b?.active);
             fastTravelBtn.disabled = !hasDestinations;
             fastTravelBtn.title = hasDestinations ? '' : 'Activate a bunker to fast travel.';
         }
-        if (Array.isArray(pos)) {
-            for (const m of pos) {
-                if (typeof m.hydration === 'number')
-                    m.hydration = 2;
+        if (pos) {
+            for (const memberState of pos) {
+                if (typeof memberState.hydration === 'number')
+                    memberState.hydration = 2;
             }
         }
-        globalThis.updateHUD?.();
-        globalThis.log?.('You rest until healed.');
+        globals.updateHUD?.();
+        globals.log?.('You rest until healed.');
         const ensurePartyState = () => {
-            const state = gs.getState?.();
+            const state = gs.getState?.() ?? null;
             if (!state)
                 return null;
-            if ((!Array.isArray(state.party) || !state.party.length) && Array.isArray(globalThis.party)) {
-                gs.updateState?.(s => { s.party = globalThis.party; });
+            if ((!Array.isArray(state.party) || state.party.length === 0) && Array.isArray(globals.party)) {
+                gs.updateState?.((draft) => {
+                    if (globals.party)
+                        draft.party = globals.party;
+                });
             }
-            return gs.getState?.() || state;
+            const refreshed = gs.getState?.() ?? state;
+            return refreshed;
         };
-        const state = ensurePartyState() || {};
-        const member = state.party?.[0] ?? globalThis.party?.[0];
+        const state = ensurePartyState() ?? {};
+        const member = state.party?.[0] ?? globals.party?.[0];
         if (!member?.id || !overlay || !list)
             return;
-        const personas = state.personas || {};
+        const personas = state.personas ?? {};
         const ids = Object.keys(personas);
         const currentId = member.persona;
         list.innerHTML = '';
@@ -255,7 +264,7 @@
             unequip.textContent = 'Unequip mask';
             unequip.addEventListener('click', () => {
                 overlay.classList.remove('shown');
-                gs.clearPersona(member.id);
+                gs.clearPersona?.(member.id);
             }, { once: true });
             list.appendChild(unequip);
         }
@@ -267,7 +276,7 @@
         }
         else {
             ids.forEach(id => {
-                const data = personas[id] || {};
+                const data = personas[id] ?? {};
                 const card = document.createElement('div');
                 card.className = 'persona-card';
                 const title = document.createElement('div');
@@ -312,7 +321,7 @@
                     b.textContent = 'Equip mask';
                     b.addEventListener('click', () => {
                         overlay.classList.remove('shown');
-                        gs.applyPersona(member.id, id);
+                        gs.applyPersona?.(member.id, id);
                     }, { once: true });
                 }
                 card.appendChild(b);
