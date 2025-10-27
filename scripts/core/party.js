@@ -124,12 +124,14 @@ class Character {
                 if (typeof dmg === 'number') {
                     this.adrDmgMod *= dmg;
                 }
-                const grant = it.mods.granted_special;
-                if (grant) {
-                    if (Array.isArray(grant))
-                        this.special.push(...grant);
-                    else
-                        this.special.push(grant);
+                const grantRaw = it.mods.granted_special;
+                if (grantRaw) {
+                    if (Array.isArray(grantRaw)) {
+                        this.special.push(...grantRaw);
+                    }
+                    else if (typeof grantRaw === 'string' || typeof grantRaw === 'object') {
+                        this.special.push(grantRaw);
+                    }
                 }
             }
         }

@@ -1,112 +1,164 @@
 // @ts-nocheck
 /* global toast, log, EventBus */
-const { on } = globalThis.EventBus;
 
-/**
- * @typedef {object} GameItem
- * @property {string} id
- * @property {string} name
- * @property {string} type
- * @property {{[key:string]: number}} [mods]
- * @property {{type:string, amount?:number, duration?:number, stat?:string, text?:string, onUse?:Function}} [use]
- * @property {string} [desc]
- * @property {number} [rarity]
- * @property {number} [value]
- */
+const coreEventBus = (globalThis.EventBus ?? globalThis.eventBus) as DustlandEventBus | undefined;
+const { on } = coreEventBus ?? { on: () => undefined };
 
-/**
- * A party member character.
- * @typedef {object} PartyMember
- * @property {string} id
- * @property {string} name
- * @property {number} hp
- * @property {number} maxHp
- * @property {number} lvl
- * @property {Record<string, number>} stats
- * @property {{weapon:GameItem|null, armor:GameItem|null, trinket:GameItem|null}} equip
- * @property {string} [origin]
- * @property {string} [quirk]
- */
+type GameItemUse = {
+  type: string;
+  amount?: number;
+  duration?: number;
+  stat?: string;
+  text?: string;
+  onUse?: (...args: unknown[]) => unknown;
+};
 
-/**
- * @typedef {object} QuestState
- * @property {string} id
- * @property {'available'|'active'|'completed'} status
- */
+type GameItem = {
+  id: string;
+  name: string;
+  type: string;
+  mods?: Record<string, number>;
+  use?: GameItemUse;
+  desc?: string;
+  rarity?: number;
+  value?: number;
+};
 
-/**
- * @typedef {object} NPC
- * @property {string} id
- * @property {string} map
- * @property {number} x
- * @property {number} y
- * @property {string} color
- * @property {string} name
- * @property {string} title
- * @property {{[key:string]: any}} tree
- * @property {Quest} [quest]
- */
+type PartyEquipmentSlots = {
+  weapon: GameItem | null;
+  armor: GameItem | null;
+  trinket: GameItem | null;
+};
 
-/**
- * @typedef {object} Quest
- * @property {string} id
- * @property {string} name
- * @property {'available'|'active'|'completed'} status
- * @property {string} [desc]
- * @property {Function} [onStart]
- * @property {Function} [onComplete]
- */
+type PartyMember = {
+  id: string;
+  name: string;
+  hp: number;
+  maxHp: number;
+  lvl: number;
+  stats: Record<string, number>;
+  equip: PartyEquipmentSlots;
+  origin?: string;
+  quirk?: string;
+};
 
-/**
- * @typedef {object} Map
- * @property {string} id
- * @property {number} w
- * @property {number} h
- * @property {number[][]} grid
- * @property {number} [entryX]
- * @property {number} [entryY]
- * @property {string} [name]
- * @property {{name:string,HP?:number,DEF?:number,loot?:string}[]} [enemies]
- */
+type QuestStatus = 'available' | 'active' | 'completed';
 
-/**
- * @typedef {object} Check
- * @property {string} stat
- * @property {number} dc
- * @property {Function[]} [onSuccess]
- * @property {Function[]} [onFail]
- */
+type QuestState = {
+  id: string;
+  status: QuestStatus;
+};
+
+type Quest = {
+  id: string;
+  name: string;
+  status: QuestStatus;
+  desc?: string;
+  onStart?: (...args: unknown[]) => unknown;
+  onComplete?: (...args: unknown[]) => unknown;
+};
+
+type NPC = {
+  id: string;
+  map: string;
+  x: number;
+  y: number;
+  color: string;
+  name: string;
+  title: string;
+  tree: Record<string, unknown>;
+  quest?: Quest;
+};
+
+type DustlandMapEnemy = {
+  name: string;
+  HP?: number;
+  DEF?: number;
+  loot?: string;
+  [key: string]: unknown;
+};
+
+type DustlandMap = {
+  id: string;
+  w: number;
+  h: number;
+  grid: number[][];
+  entryX?: number;
+  entryY?: number;
+  name?: string;
+  enemies?: DustlandMapEnemy[];
+};
+
+type CheckHandler = (...args: unknown[]) => unknown;
+
+type Check = {
+  stat: string;
+  dc: number;
+  onSuccess?: CheckHandler[];
+  onFail?: CheckHandler[];
+};
+
+type CombatParticipant = {
+  id?: string;
+  name: string;
+  hp: number;
+  npc?: NPC;
+  portraitSheet?: string;
+  portraitLock?: boolean;
+  prompt?: string;
+  special?: unknown;
+  [key: string]: unknown;
+};
+
+type CombatSource = CombatTarget & {
+  id?: string;
+  hp?: number;
+  portraitSheet?: string;
+  portraitLock?: boolean;
+  prompt?: string;
+  special?: unknown;
+  count?: number;
+  xp?: number;
+  challenge?: number;
+};
 
 // ===== Core helpers =====
 const ROLL_SIDES = 12;
-const DC = Object.freeze({ TALK:8, REPAIR:9 });
+const DC = Object.freeze({ TALK: 8, REPAIR: 9 });
 const CURRENCY = 'Scrap';
 
 // Placeholder; actual content provided by modules (e.g. Dustland)
-function seedWorldContent(){}
+function seedWorldContent(): void {}
 
 let worldSeed = Date.now();
-function createRNG(seed){
-  return function(){
+function createRNG(seed: number): () => number {
+  return function rngInstance(): number {
     seed |= 0;
     seed = (seed + 0x6D2B79F5) | 0;
-    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
-    t = (t + Math.imul(t ^ t >>> 7, 61 | t)) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
 let rng = createRNG(worldSeed);
-function setRNGSeed(seed){ worldSeed = seed >>> 0; rng = createRNG(worldSeed); }
-const rand = (n)=> Math.floor(rng()*n);
-function nextId(prefix, arr) {
-  let i = 1; while (arr.some(o => o.id === prefix + i)) i++; return prefix + i;
+function setRNGSeed(seed: number): void {
+  worldSeed = seed >>> 0;
+  rng = createRNG(worldSeed);
 }
-const clamp = (v,a,b)=> {
-  if(a > b){ [a,b] = [b,a]; }
+const rand = (n: number): number => Math.floor(rng() * n);
+function nextId(prefix: string, arr: { id: string }[]): string {
+  let i = 1;
+  while (arr.some(o => o.id === prefix + i)) i++;
+  return prefix + i;
+}
+const clamp = (v: number, a: number, b: number): number => {
+  if (a > b) {
+    [a, b] = [b, a];
+  }
   return Math.max(a, Math.min(b, v));
 };
 
-function refreshUI(){
+function refreshUI(): void {
   renderInv?.();
   renderQuests?.();
   renderParty?.();
@@ -114,10 +166,16 @@ function refreshUI(){
 }
 
 class Dice {
-  static skill(character, stat, add=0, sides=ROLL_SIDES, rng=Math.random){
-    const base = (character?.stats?.[stat] || 0);
-    const roll = Math.floor(rng()*sides)+1;
-    return roll + Math.floor(base/2) + add;
+  static skill(
+      character: { stats?: Record<string, number> } | null,
+      stat: string,
+      add = 0,
+      sides = ROLL_SIDES,
+      roller: () => number = Math.random
+  ): number {
+    const base = character?.stats?.[stat] || 0;
+    const roll = Math.floor(roller() * sides) + 1;
+    return roll + Math.floor(base / 2) + add;
   }
 }
 
@@ -129,19 +187,19 @@ class Dice {
  * @param {{HP?:number,DEF:number,loot?:GameItem,name?:string,npc?:NPC}} defender
  * @returns {Promise<{result:'bruise'|'loot'|'flee'}>}
  */
-async function startCombat(defender){
+async function startCombat(defender: CombatTarget): Promise<CombatOutcome> {
   const attacker = party.leader?.() || null;
-  if(typeof openCombat !== 'function' || typeof document === 'undefined'){
-    return { result:'flee' };
+  if (typeof openCombat !== 'function' || typeof document === 'undefined') {
+    return { result: 'flee' };
   }
 
-  const toEnemy = (def) => {
+  const toEnemy = (def: CombatSource | null | undefined): CombatParticipant => {
     const { HP, portraitSheet, portraitLock, prompt, npc, name, ...rest } = def || {};
     return {
       ...rest,
-      id: def.id || def.name,
+      id: def?.id || def?.name,
       name: name || npc?.name || 'Enemy',
-      hp: def.hp ?? HP ?? 5,
+      hp: (def as CombatSource | undefined)?.hp ?? HP ?? 5,
       npc,
       portraitSheet: portraitSheet || npc?.portraitSheet,
       portraitLock: portraitLock ?? npc?.portraitLock,
@@ -150,13 +208,13 @@ async function startCombat(defender){
     };
   };
 
-  const enemies = [];
-  const combatSources = [];
-  const addCombatSource = (source) => {
-    if(!source) return;
+  const enemies: CombatParticipant[] = [];
+  const combatSources: CombatSource[] = [];
+  const addCombatSource = (source: CombatSource | null | undefined): void => {
+    if (!source) return;
     combatSources.push(source);
     const copies = Math.max(1, source.count || 1);
-    for(let i=0; i<copies; i++) enemies.push(toEnemy(source));
+    for (let i = 0; i < copies; i++) enemies.push(toEnemy(source));
   };
   addCombatSource(defender);
   const px = party.x, py = party.y, map = party.map || state.map;
@@ -169,30 +227,31 @@ async function startCombat(defender){
     }
   }
 
-  const result = await openCombat(enemies);
+  const result = await openCombat(enemies) as CombatOutcome | null | undefined;
+  const combatResult: CombatOutcome = result ?? { result: 'flee' };
 
-  if(result && result.result !== 'flee'){
-    const avgLvl = party.reduce((s,m)=>s+(m.lvl||1),0)/(party.length||1);
+  if (result && result.result !== 'flee') {
+    const avgLvl = party.reduce((s, m) => s + (m.lvl || 1), 0) / (party.length || 1);
     let xp = 0;
-    for(const src of combatSources){
-      if(!src) continue;
+    for (const src of combatSources) {
+      if (!src) continue;
       const override = Number.isFinite(src.xp) ? src.xp : null;
-      if(override!=null){
+      if (override != null) {
         xp += override;
         continue;
       }
       const count = Math.max(1, src.count || 1);
       const str = src.challenge || src.hp || src.HP || 1;
-      xp += count * Math.max(1, Math.ceil(str/avgLvl));
+      xp += count * Math.max(1, Math.ceil(str / avgLvl));
     }
     party.forEach(m => awardXP(m, xp));
   }
 
-  if(attacker){
+  if (attacker) {
     player.hp = attacker.hp;
   }
   refreshUI();
-  return result;
+  return combatResult;
 }
 
 // ===== Tiles =====

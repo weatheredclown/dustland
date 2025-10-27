@@ -166,6 +166,102 @@ declare global {
     emit(event: string, payload?: unknown): void;
   }
 
+  interface GameItemUse {
+    type: string;
+    amount?: number;
+    duration?: number;
+    stat?: string;
+    text?: string;
+    onUse?: (...args: unknown[]) => unknown;
+  }
+
+  interface GameItem {
+    id: string;
+    name: string;
+    type: string;
+    mods?: Record<string, number>;
+    use?: GameItemUse;
+    desc?: string;
+    rarity?: number;
+    value?: number;
+    [key: string]: unknown;
+  }
+
+  type QuestStatus = 'available' | 'active' | 'completed';
+
+  interface QuestState {
+    id: string;
+    status: QuestStatus;
+  }
+
+  interface Quest {
+    id: string;
+    name: string;
+    status: QuestStatus;
+    desc?: string;
+    onStart?: (...args: unknown[]) => unknown;
+    onComplete?: (...args: unknown[]) => unknown;
+    [key: string]: unknown;
+  }
+
+  interface DustlandMapEnemy {
+    name: string;
+    HP?: number;
+    DEF?: number;
+    loot?: string;
+    [key: string]: unknown;
+  }
+
+  interface DustlandMap {
+    id: string;
+    w: number;
+    h: number;
+    grid: number[][];
+    entryX?: number;
+    entryY?: number;
+    name?: string;
+    enemies?: DustlandMapEnemy[];
+    [key: string]: unknown;
+  }
+
+  type DustlandCheckHandler = (...args: unknown[]) => unknown;
+
+  interface DustlandCheck {
+    stat: string;
+    dc: number;
+    onSuccess?: DustlandCheckHandler[];
+    onFail?: DustlandCheckHandler[];
+    [key: string]: unknown;
+  }
+
+  type CombatResult = 'bruise' | 'loot' | 'flee';
+
+  interface CombatOutcome {
+    result: CombatResult;
+    [key: string]: unknown;
+  }
+
+  interface CombatTarget {
+    HP?: number;
+    DEF: number;
+    loot?: GameItem;
+    name?: string;
+    npc?: DustlandNpc;
+    [key: string]: unknown;
+  }
+
+  interface CombatParticipant {
+    id?: string;
+    name: string;
+    hp: number;
+    npc?: DustlandNpc;
+    portraitSheet?: string;
+    portraitLock?: boolean;
+    prompt?: string;
+    special?: unknown;
+    [key: string]: unknown;
+  }
+
   interface DustlandNamespace {
     starterItems?: StarterItem[];
     Wizard?: WizardFactory;
@@ -221,10 +317,7 @@ declare global {
         [key: string]: unknown;
       };
 
-  interface PartyItem {
-    id: string;
-    name: string;
-    type: string;
+  interface PartyItem extends GameItem {
     mods?: {
       [key: string]: unknown;
       adrenaline_gen_mod?: number;
@@ -279,9 +372,15 @@ declare global {
   }
 
   interface DustlandNpc {
+    id?: string;
     map?: string;
     x?: number;
     y?: number;
+    color?: string;
+    name?: string;
+    title?: string;
+    tree?: Record<string, unknown>;
+    quest?: Quest;
     onMemoryTape?: (recording: string | null) => void;
     [key: string]: unknown;
   }
@@ -317,7 +416,7 @@ declare global {
     resolveItem?: (reward: unknown) => { name?: string } | null;
     addToInv?: (item: unknown) => boolean;
     dropItemNearParty?: (item: unknown) => void;
-    startCombat?: (defender: unknown) => unknown;
+    startCombat?: (defender: CombatTarget) => Promise<CombatOutcome> | CombatOutcome;
     log?: (message: string, type?: string) => void;
     ENGINE_VERSION: string;
     WORLD_W?: number;
@@ -334,6 +433,7 @@ declare global {
     startGame?: () => void;
     memoryTape?: MemoryTapeItem;
     openDialog?: (dialog: unknown) => void;
+    openCombat?: (enemies: CombatParticipant[]) => Promise<CombatOutcome | null | undefined>;
     selectedMember?: number;
     tileEmoji?: Readonly<Record<number, string>>;
     emojiTile?: Readonly<Record<string, number>>;

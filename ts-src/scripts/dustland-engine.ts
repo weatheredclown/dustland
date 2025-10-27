@@ -4,24 +4,23 @@
 
 const ENGINE_VERSION = '0.227.1';
 
-
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const scrEl = document.getElementById('scrap');
-const hpBar = document.getElementById('hpBar');
-const hpFill = document.getElementById('hpFill');
-const hpGhost = document.getElementById('hpGhost');
+const hpBar = document.getElementById('hpBar') as HTMLElement | null;
+const hpFill = document.getElementById('hpFill') as HTMLElement | null;
+const hpGhost = document.getElementById('hpGhost') as HTMLElement | null;
 const hydEl = document.getElementById('hydrationMeter');
-const adrBar = document.getElementById('adrBar');
-const adrFill = document.getElementById('adrFill');
+const adrBar = document.getElementById('adrBar') as HTMLElement | null;
+const adrFill = document.getElementById('adrFill') as HTMLElement | null;
 const statusIcons = document.getElementById('statusIcons');
 const weatherBanner = document.getElementById('weatherBanner');
-const musicBus = globalThis.Dustland?.eventBus || globalThis.EventBus;
-let hudAdrMood = null;
+const musicBus: DustlandEventBus | undefined = globalThis.Dustland?.eventBus || globalThis.EventBus;
+let hudAdrMood: 'adr_high' | 'adr_low' | null = null;
 
 const FOG_UNSEEN_ALPHA = 0.94;
 
-function log(msg, type){
+function log(msg: string, type?: 'warn' | 'error' | string){
   if (logEl) {
     const p = document.createElement('div');
     p.textContent = msg;
@@ -32,6 +31,22 @@ function log(msg, type){
     console.log("Log: " + msg);
   }
 }
+
+type MultiplayerPeer = {
+  id: string;
+  status: string;
+  label: string;
+};
+
+type MultiplayerPresenceEvent = {
+  status?: string;
+  role?: 'host' | 'client' | string;
+  peers?: unknown;
+  reason?: unknown;
+  message?: unknown;
+  __fromNet?: boolean;
+  [key: string]: unknown;
+};
 
 const origWarn = console.warn;
 console.warn = function(...args) {
@@ -47,20 +62,22 @@ console.error = function(...args) {
 const multiplayerBus = globalThis.Dustland?.eventBus || globalThis.EventBus;
 if (multiplayerBus?.on) {
   (function(){
-    let peerSnapshot = [];
+    let peerSnapshot: MultiplayerPeer[] = [];
     let peerHash = '';
 
-    function normalizePeers(list){
+    function normalizePeers(list: unknown): MultiplayerPeer[] {
       if (!Array.isArray(list)) return [];
       return list.map((peer, idx) => {
-        const id = peer?.id ?? `peer-${idx + 1}`;
-        const status = peer?.status ?? 'open';
-        const label = (typeof peer?.id === 'string' && peer.id) ? peer.id : `Player ${idx + 1}`;
+        const rawId = (peer as { id?: unknown })?.id;
+        const rawStatus = (peer as { status?: unknown })?.status;
+        const id = typeof rawId === 'string' && rawId ? rawId : `peer-${idx + 1}`;
+        const status = typeof rawStatus === 'string' && rawStatus ? rawStatus : 'open';
+        const label = typeof rawId === 'string' && rawId ? rawId : `Player ${idx + 1}`;
         return { id, status, label };
       });
     }
 
-    multiplayerBus.on('multiplayer:presence', info => {
+    multiplayerBus.on('multiplayer:presence', (info: MultiplayerPresenceEvent) => {
       if (!info || !info.status) return;
       const fromNet = !!info.__fromNet;
       switch (info.status) {
@@ -160,26 +177,26 @@ function toast(msg) {
 // tiny sfx and hud feedback
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let audioEnabled = true;
-function setAudio(on){
+function setAudio(on: boolean){
   audioEnabled = on;
   const btn=document.getElementById('audioToggle');
   if(btn) btn.textContent = `Audio: ${on ? 'On' : 'Off'}`;
   if(on) audioCtx.resume?.(); else audioCtx.suspend?.();
 }
-function toggleAudio(){ setAudio(!audioEnabled); }
+function toggleAudio(): void { setAudio(!audioEnabled); }
 globalThis.toggleAudio = toggleAudio;
 const isMobileUA = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 let mobileControlsEnabled = isMobileUA;
-let mobileWrap = null, mobilePad = null, mobileAB = null, mobileButtons = {};
-let panelToggle = null, panel = null;
-function closePanel(){
+let mobileWrap: HTMLElement | null = null, mobilePad: HTMLElement | null = null, mobileAB: HTMLElement | null = null, mobileButtons: Record<string, HTMLElement> = {};
+let panelToggle: HTMLElement | null = null, panel: HTMLElement | null = null;
+function closePanel(): void {
   if(panel && panelToggle){
     panel.classList.remove('show');
     panelToggle.textContent='☰';
     globalThis.localStorage?.setItem('panel_open','0');
   }
 }
-function setMobileControls(on){
+function setMobileControls(on: boolean){
   mobileControlsEnabled = on;
   const btn=document.getElementById('mobileToggle');
   if(btn) btn.textContent = `Mobile Controls: ${on ? 'On' : 'Off'}`;

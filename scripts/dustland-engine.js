@@ -1,6 +1,6 @@
 // @ts-nocheck
 // ===== Rendering & Utilities =====
-const ENGINE_VERSION = '0.228.29';
+const ENGINE_VERSION = '0.227.1';
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const scrEl = document.getElementById('scrap');
@@ -48,13 +48,15 @@ if (multiplayerBus?.on) {
             if (!Array.isArray(list))
                 return [];
             return list.map((peer, idx) => {
-                const id = peer?.id ?? `peer-${idx + 1}`;
-                const status = peer?.status ?? 'open';
-                const label = (typeof peer?.id === 'string' && peer.id) ? peer.id : `Player ${idx + 1}`;
+                const rawId = peer?.id;
+                const rawStatus = peer?.status;
+                const id = typeof rawId === 'string' && rawId ? rawId : `peer-${idx + 1}`;
+                const status = typeof rawStatus === 'string' && rawStatus ? rawStatus : 'open';
+                const label = typeof rawId === 'string' && rawId ? rawId : `Player ${idx + 1}`;
                 return { id, status, label };
             });
         }
-        multiplayerBus.on('multiplayer:presence', info => {
+        multiplayerBus.on('multiplayer:presence', (info) => {
             if (!info || !info.status)
                 return;
             const fromNet = !!info.__fromNet;
