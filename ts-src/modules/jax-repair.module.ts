@@ -1,6 +1,3 @@
-// @ts-nocheck
-function seedWorldContent() {}
-
 const DATA = `{
   "seed": "jax-repair",
   "name": "jax-repair",
@@ -31,16 +28,34 @@ const DATA = `{
   "start": { "map": "repair_bay", "x": 3, "y": 5 }
 }`;
 
-function postLoad(module) {}
+type JaxRepairModule = DustlandModuleInstance & {
+  postLoad?: (moduleData: DustlandModuleInstance) => void;
+};
 
-globalThis.JAX_REPAIR = JSON.parse(DATA);
-globalThis.JAX_REPAIR.postLoad = postLoad;
+declare global {
+  interface GlobalThis {
+    JAX_REPAIR?: JaxRepairModule;
+  }
+}
 
-startGame = function () {
-  applyModule(JAX_REPAIR);
-  const s = JAX_REPAIR.start;
-  setPartyPos(s.x, s.y);
-  setMap(s.map, 'Repair Bay');
+function seedWorldContent(): void {}
+globalThis.seedWorldContent = seedWorldContent;
+
+function postLoad(module: DustlandModuleInstance): void {}
+
+const moduleData = JSON.parse(DATA) as JaxRepairModule;
+moduleData.postLoad = postLoad;
+globalThis.JAX_REPAIR = moduleData;
+
+globalThis.startGame = function startGame(): void {
+  const jaxModule = globalThis.JAX_REPAIR;
+  if (!jaxModule) return;
+  applyModule(jaxModule);
+  const start = jaxModule.start;
+  if (start) {
+    setPartyPos(start.x, start.y);
+    setMap(start.map, 'Repair Bay');
+  }
   log('The generator sputters! Hold off the attack while Jax repairs it.');
   const meter = document.createElement('div');
   meter.id = 'generator-meter';
@@ -54,25 +69,27 @@ startGame = function () {
   fill.style.height = '100%';
   fill.style.background = '#f00';
   meter.appendChild(fill);
-  document.body.appendChild(meter);
+  document.body?.appendChild(meter);
   const max = 5;
   let time = max;
-  function update(){
+  const update = (): void => {
     const ratio = time / max;
-    fill.style.width = (ratio * 100) + '%';
+    fill.style.width = `${ratio * 100}%`;
     if (ratio < 0.4) fill.style.background = '#ff0';
     if (ratio < 0.2) fill.style.background = '#f00';
-  }
+  };
   update();
-  const timer = setInterval(() => {
-    time--;
+  const timer = window.setInterval(() => {
+    time -= 1;
     update();
     if (time <= 0) {
-      clearInterval(timer);
+      window.clearInterval(timer);
       meter.remove();
       log('Repair complete!');
     } else {
-      log(time + '...');
+      log(`${time}...`);
     }
   }, 1000);
 };
+
+export {};

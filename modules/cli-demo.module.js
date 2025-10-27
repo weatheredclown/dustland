@@ -1,5 +1,5 @@
-// @ts-nocheck
 function seedWorldContent() { }
+globalThis.seedWorldContent = seedWorldContent;
 const DATA = `
 {
   "seed": "cli-demo-seed",
@@ -166,14 +166,19 @@ const DATA = `
 }
 `;
 function postLoad(module) { }
-globalThis.CLI_DEMO_MODULE = JSON.parse(DATA);
-globalThis.CLI_DEMO_MODULE.postLoad = postLoad;
-startGame = function () {
-    CLI_DEMO_MODULE.postLoad?.(CLI_DEMO_MODULE);
-    applyModule(CLI_DEMO_MODULE);
-    const s = CLI_DEMO_MODULE.start;
+const moduleData = JSON.parse(DATA);
+moduleData.postLoad = postLoad;
+globalThis.CLI_DEMO_MODULE = moduleData;
+globalThis.startGame = function startGame() {
+    const cliModule = globalThis.CLI_DEMO_MODULE;
+    if (!cliModule)
+        return;
+    cliModule.postLoad?.(cliModule);
+    applyModule(cliModule);
+    const s = cliModule.start;
     if (s) {
         setPartyPos(s.x, s.y);
         setMap(s.map, 'CLI Demo Adventure');
     }
 };
+export {};

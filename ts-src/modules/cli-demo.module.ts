@@ -1,5 +1,15 @@
-// @ts-nocheck
-function seedWorldContent() {}
+type CliDemoModule = DustlandModuleInstance & {
+  postLoad?: (moduleData: DustlandModuleInstance) => void;
+};
+
+declare global {
+  interface GlobalThis {
+    CLI_DEMO_MODULE?: CliDemoModule;
+  }
+}
+
+function seedWorldContent(): void {}
+globalThis.seedWorldContent = seedWorldContent;
 
 const DATA = `
 {
@@ -167,17 +177,22 @@ const DATA = `
 }
 `;
 
-function postLoad(module) {}
+function postLoad(module: DustlandModuleInstance): void {}
 
-globalThis.CLI_DEMO_MODULE = JSON.parse(DATA);
-globalThis.CLI_DEMO_MODULE.postLoad = postLoad;
+const moduleData = JSON.parse(DATA) as CliDemoModule;
+moduleData.postLoad = postLoad;
+globalThis.CLI_DEMO_MODULE = moduleData;
 
-startGame = function () {
-  CLI_DEMO_MODULE.postLoad?.(CLI_DEMO_MODULE);
-  applyModule(CLI_DEMO_MODULE);
-  const s = CLI_DEMO_MODULE.start;
+globalThis.startGame = function startGame(): void {
+  const cliModule = globalThis.CLI_DEMO_MODULE;
+  if (!cliModule) return;
+  cliModule.postLoad?.(cliModule);
+  applyModule(cliModule);
+  const s = cliModule.start;
   if (s) {
     setPartyPos(s.x, s.y);
     setMap(s.map, 'CLI Demo Adventure');
   }
 };
+
+export {};
