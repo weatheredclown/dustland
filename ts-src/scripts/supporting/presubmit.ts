@@ -1,10 +1,9 @@
 #!/usr/bin/env node
-/// <reference types="node" />
 import fs from 'node:fs';
 import path from 'node:path';
 
-function getHtmlFiles(dir) {
-  const out = [];
+function getHtmlFiles(dir: string): string[] {
+  const out: string[] = [];
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const ent of entries) {
     const p = path.join(dir, ent.name);
@@ -19,8 +18,8 @@ function getHtmlFiles(dir) {
 }
 
 const htmlFiles = getHtmlFiles('.');
-const allowModules = new Set(['balance-tester.html']);
-const patterns = [
+const allowModules = new Set<string>(['balance-tester.html']);
+const patterns: Array<{regex: RegExp; message: string}> = [
   {regex: /\bfetch\s*\(/, message: 'fetch() usage'},
   {regex: /\brequire\s*\(/, message: 'require() usage'},
   {regex: /<script[^>]*src=["'][^"']+\.json["'][^>]*>/i, message: 'script tag loading JSON file'},

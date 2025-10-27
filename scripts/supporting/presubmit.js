@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/// <reference types="node" />
 import fs from 'node:fs';
 import path from 'node:path';
 function getHtmlFiles(dir) {
