@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
+import process from 'process';
 
 function usage(): never {
   console.log('Usage: node scripts/supporting/json-to-module.js <moduleJson>');

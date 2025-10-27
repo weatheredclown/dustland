@@ -1,4 +1,4 @@
-import process from 'node:process';
+import process from 'process';
 import { readModule, appendByPath, ensureArray, parseKeyValueArgs } from './utils.js';
 import { validate } from './schema.js';
 const [file, ...fields] = process.argv.slice(2);
