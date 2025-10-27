@@ -1,17 +1,18 @@
-// @ts-nocheck
 (function () {
-    const dl = globalThis.Dustland = globalThis.Dustland || {};
-    const bus = dl.eventBus || globalThis.EventBus;
-    const bunkers = dl.bunkers || (dl.bunkers = []);
+    const globalScope = globalThis;
+    const dl = (globalScope.Dustland || (globalScope.Dustland = {}));
+    const bus = dl.eventBus ?? globalScope.EventBus;
+    const bunkers = dl.bunkers ?? (dl.bunkers = []);
     const BASE_COST = 1;
     const FUEL_PER_TILE = 1;
     const CAMP_NODE_ID = 'camp';
-    const saveKey = id => `dustland_slot_${id}`;
+    const saveKey = (id) => `dustland_slot_${id}`;
     function moduleKey(moduleName) {
-        const dl = globalThis.Dustland ?? {};
+        const runtime = globalScope.Dustland ?? {};
         if (moduleName)
             return moduleName;
-        const loaded = dl.loadedModules?.[moduleName];
+        const key = moduleName ?? 'undefined';
+        const loaded = runtime.loadedModules?.[key];
         if (loaded?.name)
             return loaded.name;
         if (loaded?.seed != null)
@@ -19,8 +20,8 @@
         return 'module';
     }
     function networkFor(moduleName) {
-        const dl = globalThis.Dustland ?? {};
-        const props = dl.moduleProps?.[moduleName] ?? {};
+        const runtime = globalScope.Dustland ?? {};
+        const props = runtime.moduleProps?.[moduleName ?? ''] ?? {};
         const scope = props.bunkerTravelScope || 'global';
         if (scope === 'module') {
             const key = moduleKey(moduleName);
@@ -32,6 +33,12 @@
         if (!entry)
             return null;
         const normalized = { ...entry };
+        if (normalized.id == null) {
+            return null;
+        }
+        if (typeof normalized.id !== 'string') {
+            normalized.id = String(normalized.id);
+        }
         if (!normalized.network) {
             const net = networkFor(normalized.module);
             if (net)
@@ -43,16 +50,21 @@
         return normalized;
     }
     function hasTravelPass() {
-        if (typeof hasItem === 'function' && hasItem('travel_pass'))
+        const hasItemFn = globalScope.hasItem;
+        if (typeof hasItemFn === 'function' && hasItemFn('travel_pass'))
             return true;
-        const inv = globalThis.player?.inv;
+        const inv = globalScope.player?.inv;
         if (Array.isArray(inv)) {
             return inv.some(it => it && it.id === 'travel_pass');
         }
         return false;
     }
     function distance(a, b) {
-        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+        const ax = a.x ?? 0;
+        const ay = a.y ?? 0;
+        const bx = b.x ?? 0;
+        const by = b.y ?? 0;
+        return Math.abs(ax - bx) + Math.abs(ay - by);
     }
     function fuelCost(fromId, toId) {
         const from = bunkers.find(b => b.id === fromId);
@@ -82,21 +94,21 @@
         if (fromNet !== toNet)
             return false;
         const cost = fuelCost(fromId, toId);
-        const player = globalThis.player || {};
+        const player = (globalScope.player || (globalScope.player = {}));
         player.fuel = player.fuel || 0;
         if (!Number.isFinite(cost)) {
-            if (typeof log === 'function')
-                log('Fast travel destination unavailable.');
+            if (typeof globalScope.log === 'function')
+                globalScope.log('Fast travel destination unavailable.');
             return false;
         }
         if (player.fuel < cost) {
-            if (typeof log === 'function')
-                log('Not enough fuel.');
+            if (typeof globalScope.log === 'function')
+                globalScope.log('Not enough fuel.');
             return false;
         }
         bus?.emit('travel:start', { fromId, toId, cost });
         player.fuel -= cost;
-        const party = globalThis.party;
+        const party = globalScope.party;
         if (party) {
             party.x = to.x;
             party.y = to.y;
@@ -122,34 +134,38 @@
         return bunkers;
     }
     function saveSlot(id) {
-        if (!id || typeof save !== 'function' || !globalThis.localStorage)
+        const saveFn = globalScope.save;
+        const storage = globalScope.localStorage;
+        if (!id || typeof saveFn !== 'function' || !storage)
             return;
-        save();
-        const data = localStorage.getItem('dustland_crt');
+        saveFn();
+        const data = storage.getItem('dustland_crt');
         if (data)
-            localStorage.setItem(saveKey(id), data);
+            storage.setItem(saveKey(id), data);
     }
     function loadSlot(id) {
-        if (!id || typeof load !== 'function' || !globalThis.localStorage)
+        const loadFn = globalScope.load;
+        const storage = globalScope.localStorage;
+        if (!id || typeof loadFn !== 'function' || !storage)
             return false;
-        const data = localStorage.getItem(saveKey(id));
+        const data = storage.getItem(saveKey(id));
         if (!data)
             return false;
-        localStorage.setItem('dustland_crt', data);
-        load();
+        storage.setItem('dustland_crt', data);
+        loadFn();
         return true;
     }
     function activateBunker(id) {
         const bunker = bunkers.find(b => b.id === id);
         if (bunker) {
             bunker.active = true;
-            if (typeof log === 'function')
-                log(`Bunker ${id} activated.`);
+            if (typeof globalScope.log === 'function')
+                globalScope.log(`Bunker ${id} activated.`);
         }
     }
-    globalThis.Dustland = globalThis.Dustland || {};
-    globalThis.Dustland.fastTravel = { fuelCost, travel, activateBunker, saveSlot, loadSlot, upsertBunkers, networkFor };
-    globalThis.openWorldMap = globalThis.openWorldMap || function (id) {
-        globalThis.Dustland?.worldMap?.open?.(id);
+    globalScope.Dustland = dl;
+    dl.fastTravel = { fuelCost, travel, activateBunker, saveSlot, loadSlot, upsertBunkers, networkFor };
+    globalScope.openWorldMap = globalScope.openWorldMap || function (id) {
+        dl.worldMap?.open?.(id);
     };
 })();
