@@ -1,8 +1,8 @@
-// @ts-nocheck
 (function () {
+    const trainerGlobals = globalThis;
     function loadTrainerData() {
-        if (!globalThis.TRAINER_UPGRADES) {
-            globalThis.TRAINER_UPGRADES = {
+        if (!trainerGlobals.TRAINER_UPGRADES) {
+            trainerGlobals.TRAINER_UPGRADES = {
                 power: [
                     { id: 'str', label: 'STR +1', cost: 1, type: 'stat', stat: 'STR', delta: 1 },
                     { id: 'agi', label: 'AGI +1', cost: 1, type: 'stat', stat: 'AGI', delta: 1 }
@@ -17,14 +17,15 @@
                 ]
             };
         }
-        return globalThis.TRAINER_UPGRADES;
+        return trainerGlobals.TRAINER_UPGRADES;
     }
     function showTrainer(id) {
         const data = loadTrainerData();
         const upgrades = data[id] ?? [];
-        const npc = globalThis.currentNPC;
+        const npc = trainerGlobals.currentNPC ?? null;
         const npcTree = npc?.tree;
-        const dsTree = typeof dialogState === 'object' ? dialogState?.tree : null;
+        const dialogStateTree = typeof trainerGlobals.dialogState === 'object' ? trainerGlobals.dialogState?.tree ?? null : null;
+        const dsTree = dialogStateTree;
         const trainNode = dsTree?.train || npcTree?.train;
         if (!trainNode)
             return false;
@@ -32,7 +33,7 @@
             dsTree.train = trainNode;
         if (npcTree && !npcTree.train)
             npcTree.train = trainNode;
-        const lead = typeof leader === 'function' ? leader() : null;
+        const lead = typeof trainerGlobals.leader === 'function' ? trainerGlobals.leader() ?? null : null;
         trainNode.text = `Skill Points: ${lead?.skillPoints ?? 0}`;
         const choices = upgrades.map(up => {
             let base = 0;
@@ -57,12 +58,15 @@
         if (!up)
             return false;
         if (up.type === 'stat') {
-            const ok = trainStat(up.stat);
+            const stat = up.stat;
+            if (!stat)
+                return false;
+            const ok = typeof trainerGlobals.trainStat === 'function' ? trainerGlobals.trainStat(stat) : false;
             if (ok)
                 showTrainer(trainerId);
             return ok;
         }
         return false;
     }
-    globalThis.TrainerUI = { showTrainer, applyUpgrade };
+    trainerGlobals.TrainerUI = { showTrainer, applyUpgrade };
 })();

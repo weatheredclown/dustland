@@ -1,28 +1,29 @@
-// @ts-nocheck
 // ===== Spoils Cache =====
-const SpoilsCache = {
-    ranks: {
-        rusted: {
-            name: 'Rusted Cache',
-            desc: 'Hinges squeal; expect scraps and makeshift tools.',
-            icon: '🥫'
-        },
-        sealed: {
-            name: 'Sealed Cache',
-            desc: 'Intact plating and corporate wax. Solid baseline loot.',
-            icon: '📦'
-        },
-        armored: {
-            name: 'Armored Cache',
-            desc: 'Reinforced with ex-military alloy. High-grade hardware.',
-            icon: '🛡️'
-        },
-        vaulted: {
-            name: 'Vaulted Cache',
-            desc: 'Quantum locks and glowing seams. Legendary rarities.',
-            icon: '💠'
-        }
+const spoilsGlobals = globalThis;
+const spoilsRanks = {
+    rusted: {
+        name: 'Rusted Cache',
+        desc: 'Hinges squeal; expect scraps and makeshift tools.',
+        icon: '🥫'
     },
+    sealed: {
+        name: 'Sealed Cache',
+        desc: 'Intact plating and corporate wax. Solid baseline loot.',
+        icon: '📦'
+    },
+    armored: {
+        name: 'Armored Cache',
+        desc: 'Reinforced with ex-military alloy. High-grade hardware.',
+        icon: '🛡️'
+    },
+    vaulted: {
+        name: 'Vaulted Cache',
+        desc: 'Quantum locks and glowing seams. Legendary rarities.',
+        icon: '💠'
+    }
+};
+const SpoilsCache = {
+    ranks: spoilsRanks,
     baseRate: 0.08,
     tierWeights: {
         1: [['rusted', 0.8], ['sealed', 0.2]],
@@ -83,41 +84,43 @@ const SpoilsCache = {
         return el;
     },
     open(rank, rng = Math.random) {
-        if (!player?.inv)
+        const playerInv = spoilsGlobals.player?.inv;
+        if (!playerInv)
             return null;
-        const idx = player.inv.findIndex(c => c.type === 'spoils-cache' && c.rank === rank);
+        const idx = playerInv.findIndex(c => c.type === 'spoils-cache' && c.rank === rank);
         if (idx === -1)
             return null;
-        if (typeof removeFromInv === 'function') {
-            removeFromInv(idx);
+        if (typeof spoilsGlobals.removeFromInv === 'function') {
+            spoilsGlobals.removeFromInv(idx);
         }
         else {
-            player.inv.splice(idx, 1);
-            notifyInventoryChanged?.();
+            playerInv.splice(idx, 1);
+            spoilsGlobals.notifyInventoryChanged?.();
         }
-        const item = globalThis.ItemGen?.generate?.(rank, rng);
+        const item = spoilsGlobals.ItemGen?.generate?.(rank, rng) ?? null;
         if (item) {
-            if (typeof addToInv === 'function') {
-                if (!addToInv(item)) {
-                    if (typeof dropItemNearParty === 'function')
-                        dropItemNearParty(item);
+            if (typeof spoilsGlobals.addToInv === 'function') {
+                if (!spoilsGlobals.addToInv(item)) {
+                    if (typeof spoilsGlobals.dropItemNearParty === 'function')
+                        spoilsGlobals.dropItemNearParty(item);
                 }
             }
             else {
-                player.inv.push(item);
-                notifyInventoryChanged?.();
+                playerInv.push(item);
+                spoilsGlobals.notifyInventoryChanged?.();
             }
-            globalThis.log?.(`${item.name} found in ${this.ranks[rank]?.name ?? rank}.`);
-            globalThis.EventBus?.emit?.('spoils:opened', { rank, item });
+            spoilsGlobals.log?.(`${item.name ?? 'Item'} found in ${this.ranks[rank]?.name ?? rank}.`);
+            spoilsGlobals.EventBus?.emit?.('spoils:opened', { rank, item });
         }
         else {
-            globalThis.log?.(`${this.ranks[rank]?.name ?? rank} opened.`);
-            globalThis.EventBus?.emit?.('spoils:opened', { rank });
+            spoilsGlobals.log?.(`${this.ranks[rank]?.name ?? rank} opened.`);
+            spoilsGlobals.EventBus?.emit?.('spoils:opened', { rank });
         }
         return item;
     },
     openAll(rank, rng = Math.random) {
-        if (!player?.inv)
+        const playerInv = spoilsGlobals.player?.inv;
+        if (!playerInv)
             return 0;
         let opened = 0;
         while (this.open(rank, rng)) {
@@ -125,7 +128,7 @@ const SpoilsCache = {
         }
         if (opened) {
             const name = this.ranks[rank]?.name ?? rank;
-            globalThis.log?.(`Opened ${opened} ${name}${opened > 1 ? 's' : ''}.`);
+            spoilsGlobals.log?.(`Opened ${opened} ${name}${opened > 1 ? 's' : ''}.`);
         }
         return opened;
     }
