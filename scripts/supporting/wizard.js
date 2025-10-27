@@ -1,21 +1,20 @@
-// @ts-nocheck
-(function () {
-    function Wizard(config) {
-        this.title = config.title || 'Wizard';
-        this.steps = config.steps || [];
-        this.state = {};
+class Wizard {
+    constructor(config) {
+        this.title = config.title ?? 'Wizard';
+        this.steps = config.steps ?? [];
+        this.state = (config.initialState ?? {});
         this.current = 0;
-        this.onComplete = null;
+        this.onComplete = config.onComplete ?? null;
+        this.stepEl = null;
     }
-    Wizard.prototype.render = function (container) {
-        this.container = container || document.body;
+    render(container) {
         const wrap = document.createElement('div');
         wrap.className = 'wizard';
         const titleEl = document.createElement('h2');
         titleEl.textContent = this.title;
         wrap.appendChild(titleEl);
-        this.stepEl = document.createElement('div');
-        wrap.appendChild(this.stepEl);
+        const stepEl = document.createElement('div');
+        wrap.appendChild(stepEl);
         const nav = document.createElement('div');
         const back = document.createElement('button');
         back.textContent = 'Back';
@@ -24,66 +23,84 @@
         nav.appendChild(back);
         nav.appendChild(next);
         wrap.appendChild(nav);
-        back.onclick = () => { if (this.current > 0) {
-            this.current--;
-            this.showStep();
-        } };
+        back.onclick = () => {
+            if (this.current > 0) {
+                this.current--;
+                this.showStep();
+            }
+        };
         next.onclick = () => {
             if (this.current < this.steps.length - 1) {
                 this.current++;
                 this.showStep();
             }
             else {
-                this.onComplete && this.onComplete(this.state);
+                this.onComplete?.(this.state);
             }
         };
-        this.container.appendChild(wrap);
-        this.wrap = wrap;
+        (container ?? document.body).appendChild(wrap);
+        this.stepEl = stepEl;
         this.showStep();
-    };
-    Wizard.prototype.showStep = function () {
+    }
+    showStep() {
+        if (!this.stepEl)
+            return;
         const step = this.steps[this.current];
         this.stepEl.innerHTML = '';
-        if (step && typeof step.render === 'function') {
-            step.render(this.stepEl, this.state);
-        }
-    };
-    Wizard.prototype.getState = function () { return this.state; };
-    Wizard.prototype.setState = function (part) { Object.assign(this.state, part || {}); };
-    function TextInputStep(opts) {
-        this.id = opts.id;
-        this.label = opts.label || opts.id;
+        step?.render(this.stepEl, this.state);
     }
-    TextInputStep.prototype.render = function (el, state) {
+    getState() {
+        return this.state;
+    }
+    setState(part) {
+        if (!part)
+            return;
+        Object.assign(this.state, part);
+    }
+}
+class TextInputStep {
+    constructor(opts) {
+        this.id = opts.id;
+        this.label = opts.label ?? opts.id;
+    }
+    render(container, state) {
         const label = document.createElement('label');
         label.textContent = this.label;
         const input = document.createElement('input');
         input.type = 'text';
-        input.value = state[this.id] || '';
-        input.oninput = () => { state[this.id] = input.value; };
+        const existing = state[this.id];
+        input.value = typeof existing === 'string' ? existing : '';
+        input.oninput = () => {
+            state[this.id] = input.value;
+        };
         label.appendChild(input);
-        el.appendChild(label);
-    };
-    function AssetPickerStep(opts) {
-        this.id = opts.id;
-        this.label = opts.label || opts.id;
-        this.assets = opts.assets || [];
+        container.appendChild(label);
     }
-    AssetPickerStep.prototype.render = function (el, state) {
+}
+class AssetPickerStep {
+    constructor(opts) {
+        this.id = opts.id;
+        this.label = opts.label ?? opts.id;
+        this.assets = opts.assets ?? [];
+    }
+    render(container, state) {
         const label = document.createElement('label');
         label.textContent = this.label;
         const select = document.createElement('select');
-        for (const a of this.assets) {
-            const opt = document.createElement('option');
-            opt.value = a;
-            opt.textContent = a;
-            select.appendChild(opt);
+        for (const asset of this.assets) {
+            const option = document.createElement('option');
+            option.value = asset;
+            option.textContent = asset;
+            select.appendChild(option);
         }
-        select.onchange = () => { state[this.id] = select.value; };
+        select.onchange = () => {
+            state[this.id] = select.value;
+        };
         label.appendChild(select);
-        el.appendChild(label);
-    };
-    globalThis.Wizard = Wizard;
-    globalThis.TextInputStep = TextInputStep;
-    globalThis.AssetPickerStep = AssetPickerStep;
-})();
+        container.appendChild(label);
+    }
+}
+const wizardGlobal = globalThis;
+wizardGlobal.Wizard = Wizard;
+wizardGlobal.TextInputStep = TextInputStep;
+wizardGlobal.AssetPickerStep = AssetPickerStep;
