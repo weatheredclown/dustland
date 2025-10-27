@@ -1,91 +1,160 @@
-// @ts-nocheck
-(function(){
-  function Wizard(config){
-    this.title = config.title || 'Wizard';
-    this.steps = config.steps || [];
-    this.state = {};
+interface WizardConfig<S extends WizardState = WizardState> {
+  title?: string;
+  steps?: WizardStep<S>[];
+  initialState?: S;
+  onComplete?: (state: S) => void;
+}
+
+class Wizard<S extends WizardState = WizardState> {
+  title: string;
+  steps: WizardStep<S>[];
+  state: S;
+  current: number;
+  onComplete: ((state: S) => void) | null;
+  private stepEl: HTMLDivElement | null;
+
+  constructor(config: WizardConfig<S>) {
+    this.title = config.title ?? 'Wizard';
+    this.steps = config.steps ?? [];
+    this.state = (config.initialState ?? {}) as S;
     this.current = 0;
-    this.onComplete = null;
+    this.onComplete = config.onComplete ?? null;
+    this.stepEl = null;
   }
 
-  Wizard.prototype.render = function(container){
-    this.container = container || document.body;
+  render(container?: HTMLElement): void {
     const wrap = document.createElement('div');
     wrap.className = 'wizard';
+
     const titleEl = document.createElement('h2');
     titleEl.textContent = this.title;
     wrap.appendChild(titleEl);
-    this.stepEl = document.createElement('div');
-    wrap.appendChild(this.stepEl);
+
+    const stepEl = document.createElement('div');
+    wrap.appendChild(stepEl);
+
     const nav = document.createElement('div');
-    const back = document.createElement('button'); back.textContent = 'Back';
-    const next = document.createElement('button'); next.textContent = 'Next';
-    nav.appendChild(back); nav.appendChild(next);
+    const back = document.createElement('button');
+    back.textContent = 'Back';
+    const next = document.createElement('button');
+    next.textContent = 'Next';
+    nav.appendChild(back);
+    nav.appendChild(next);
     wrap.appendChild(nav);
-    back.onclick = () => { if (this.current > 0){ this.current--; this.showStep(); } };
+
+    back.onclick = () => {
+      if (this.current > 0) {
+        this.current--;
+        this.showStep();
+      }
+    };
+
     next.onclick = () => {
-      if (this.current < this.steps.length - 1){
+      if (this.current < this.steps.length - 1) {
         this.current++;
         this.showStep();
       } else {
-        this.onComplete && this.onComplete(this.state);
+        this.onComplete?.(this.state);
       }
     };
-    this.container.appendChild(wrap);
-    this.wrap = wrap;
-    this.showStep();
-  };
 
-  Wizard.prototype.showStep = function(){
+    (container ?? document.body).appendChild(wrap);
+    this.stepEl = stepEl;
+    this.showStep();
+  }
+
+  showStep(): void {
+    if (!this.stepEl) return;
     const step = this.steps[this.current];
     this.stepEl.innerHTML = '';
-    if (step && typeof step.render === 'function'){
-      step.render(this.stepEl, this.state);
-    }
-  };
-
-  Wizard.prototype.getState = function(){ return this.state; };
-  Wizard.prototype.setState = function(part){ Object.assign(this.state, part || {}); };
-
-  function TextInputStep(opts){
-    this.id = opts.id;
-    this.label = opts.label || opts.id;
+    step?.render(this.stepEl, this.state);
   }
 
-  TextInputStep.prototype.render = function(el, state){
+  getState(): S {
+    return this.state;
+  }
+
+  setState(part?: Partial<S>): void {
+    if (!part) return;
+    Object.assign(this.state, part);
+  }
+}
+
+interface TextInputStepOptions {
+  id: string;
+  label?: string;
+}
+
+class TextInputStep implements WizardStep {
+  private readonly id: string;
+  private readonly label: string;
+
+  constructor(opts: TextInputStepOptions) {
+    this.id = opts.id;
+    this.label = opts.label ?? opts.id;
+  }
+
+  render(container: HTMLElement, state: WizardState): void {
     const label = document.createElement('label');
     label.textContent = this.label;
+
     const input = document.createElement('input');
     input.type = 'text';
-    input.value = state[this.id] || '';
-    input.oninput = () => { state[this.id] = input.value; };
-    label.appendChild(input);
-    el.appendChild(label);
-  };
+    const existing = state[this.id];
+    input.value = typeof existing === 'string' ? existing : '';
+    input.oninput = () => {
+      state[this.id] = input.value;
+    };
 
-  function AssetPickerStep(opts){
+    label.appendChild(input);
+    container.appendChild(label);
+  }
+}
+
+interface AssetPickerStepOptions {
+  id: string;
+  label?: string;
+  assets?: string[];
+}
+
+class AssetPickerStep implements WizardStep {
+  private readonly id: string;
+  private readonly label: string;
+  private readonly assets: string[];
+
+  constructor(opts: AssetPickerStepOptions) {
     this.id = opts.id;
-    this.label = opts.label || opts.id;
-    this.assets = opts.assets || [];
+    this.label = opts.label ?? opts.id;
+    this.assets = opts.assets ?? [];
   }
 
-  AssetPickerStep.prototype.render = function(el, state){
+  render(container: HTMLElement, state: WizardState): void {
     const label = document.createElement('label');
     label.textContent = this.label;
+
     const select = document.createElement('select');
-    for (const a of this.assets){
-      const opt = document.createElement('option');
-      opt.value = a;
-      opt.textContent = a;
-      select.appendChild(opt);
+    for (const asset of this.assets) {
+      const option = document.createElement('option');
+      option.value = asset;
+      option.textContent = asset;
+      select.appendChild(option);
     }
-    select.onchange = () => { state[this.id] = select.value; };
+
+    select.onchange = () => {
+      state[this.id] = select.value;
+    };
+
     label.appendChild(select);
-    el.appendChild(label);
-  };
+    container.appendChild(label);
+  }
+}
 
-  globalThis.Wizard = Wizard;
-  globalThis.TextInputStep = TextInputStep;
-  globalThis.AssetPickerStep = AssetPickerStep;
-})();
+const wizardGlobal = globalThis as typeof globalThis & {
+  Wizard?: typeof Wizard;
+  TextInputStep?: typeof TextInputStep;
+  AssetPickerStep?: typeof AssetPickerStep;
+};
 
+wizardGlobal.Wizard = Wizard;
+wizardGlobal.TextInputStep = TextInputStep;
+wizardGlobal.AssetPickerStep = AssetPickerStep;
