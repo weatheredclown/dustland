@@ -1,4 +1,4 @@
-// @ts-nocheck
+/// <reference types="node" />
 import fs from 'node:fs';
 import path from 'node:path';
 const moduleFile = process.argv[2];

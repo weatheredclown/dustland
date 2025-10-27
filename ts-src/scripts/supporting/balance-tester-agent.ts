@@ -1,5 +1,45 @@
-// @ts-nocheck
+/// <reference types="node" />
 // This script is loaded into balance-tester.html and runs the game balance simulation.
+
+const runtimeGlobal = globalThis as typeof globalThis & Record<string, any>;
+
+type BalanceParty = Array<any> & {
+  addMember(member: any): boolean;
+  x: number;
+  y: number;
+};
+
+type RuntimeBindings = typeof runtimeGlobal & {
+  party?: BalanceParty;
+  makeMember?: (id: string, name: string, role: string) => any;
+  setLeader?: (index: number) => void;
+  setPartyPos?: (x: number, y: number) => void;
+  setMap?: (mapId: string, label?: string) => void;
+  takeNearestItem?: (opts?: Record<string, unknown>) => boolean;
+  interact?: () => void;
+  startCombat?: (target: unknown) => Promise<{ result?: string }>;
+  mapIdForState?: () => string;
+  findRandomGoal?: (map: string, currentGoal: { x: number; y: number } | null) => { x: number; y: number } | null;
+  queryTile?: (x: number, y: number, map?: string) => { walkable: boolean; items: any[]; entities: any[]; terrain?: string; tile?: unknown };
+  isAdjacent?: (a: { x: number; y: number }, b: { x: number; y: number }) => boolean;
+  NPCS?: Array<{ combat?: boolean; x: number; y: number; map?: string }>;
+  itemDrops?: Array<{ map?: string; x: number; y: number }>;
+  buildings?: Array<{ doorX?: number; doorY?: number; map?: string; boarded?: boolean }>;
+  TILE?: Record<string, unknown>;
+  Dustland?: {
+    movement?: { move?(dx: number, dy: number): Promise<void> };
+    path?: {
+      pathFor?(job: unknown): Array<{ x: number; y: number }> | null;
+      queue?(map: string, from: { x: number; y: number }, goal: { x: number; y: number }, leaderId: string): unknown;
+    };
+    eventBus?: { emit?(event: string, payload?: unknown): void };
+  };
+  EventBus?: {
+    on?(event: string, handler: (...args: any[]) => void): void;
+  };
+};
+
+const bindings = runtimeGlobal as RuntimeBindings;
 
 // Wait for the game to be ready in the browser or set up a jsdom
 // environment when executed under Node.js. This allows the balance
@@ -41,22 +81,22 @@ if (typeof window === 'undefined') {
     </body>`;
     const dom = new JSDOM(html, { url: 'http://localhost/dustland.html?ack-player=1' });
     const { window: w } = dom;
-    global.window = w;
-    global.document = w.document;
-    global.location = w.location;
+    runtimeGlobal.window = w;
+    runtimeGlobal.document = w.document;
+    runtimeGlobal.location = w.location;
     w.requestAnimationFrame = () => {};
-    global.requestAnimationFrame = w.requestAnimationFrame;
+    runtimeGlobal.requestAnimationFrame = w.requestAnimationFrame;
     w.NanoDialog = { init: () => {} };
-    global.NanoDialog = w.NanoDialog;
+    runtimeGlobal.NanoDialog = w.NanoDialog;
     w.AudioContext = function() {};
     w.webkitAudioContext = w.AudioContext;
     w.Audio = function(){ return { cloneNode: () => ({ play: () => ({ catch: () => {} }), pause: () => {} }) }; };
-    global.Audio = w.Audio;
-    global.EventBus = { on: () => {}, emit: () => {} };
-    global.TS = 16;
-    global.camX = 0;
-    global.camY = 0;
-    global.interactAt = () => {};
+    runtimeGlobal.Audio = w.Audio;
+    runtimeGlobal.EventBus = { on: () => {}, emit: () => {} };
+    runtimeGlobal.TS = 16;
+    runtimeGlobal.camX = 0;
+    runtimeGlobal.camY = 0;
+    runtimeGlobal.interactAt = () => false;
     w.HTMLCanvasElement.prototype.getContext = () => ({
       drawImage: () => {},
       clearRect: () => {},
@@ -71,12 +111,12 @@ if (typeof window === 'undefined') {
         removeItem: (k) => { delete store[k]; }
       }
     });
-    global.localStorage = w.localStorage;
-    global.showStart = () => {};
-    global.openCreator = () => {};
-    global.bootMap = () => {};
-    global.draw = () => {};
-    global.runTests = () => {};
+    runtimeGlobal.localStorage = w.localStorage;
+    runtimeGlobal.showStart = () => {};
+    runtimeGlobal.openCreator = () => {};
+    runtimeGlobal.bootMap = () => {};
+    runtimeGlobal.draw = () => {};
+    runtimeGlobal.runTests = () => {};
 
     const scripts = [
       'scripts/event-bus.js',
@@ -99,7 +139,7 @@ if (typeof window === 'undefined') {
     for (const file of scripts) {
       w.eval(fs.readFileSync(path.join(baseDir, file), 'utf8'));
     }
-    global.NanoDialog = w.NanoDialog;
+    runtimeGlobal.NanoDialog = w.NanoDialog;
     await runBalanceTest();
   })().catch(err => {
     console.error('Balance test error:', err);
@@ -129,11 +169,28 @@ async function runBalanceTest() {
     applyModule(moduleData);
     console.log('Balance test checkpoint: module loaded');
 
+    const party = bindings.party as BalanceParty | undefined;
+    const makeMemberFn = bindings.makeMember;
+    if (!party || !makeMemberFn) {
+      throw new Error('Dustland party API unavailable');
+    }
+    const setLeaderFn = bindings.setLeader;
+    const setPartyPosFn = bindings.setPartyPos;
+    const setMapFn = bindings.setMap;
+    const takeNearestItemFn = bindings.takeNearestItem;
+    const interactFn = bindings.interact;
+    const startCombatFn = bindings.startCombat;
+    const mapIdForStateFn = bindings.mapIdForState;
+    const findRandomGoalFn = bindings.findRandomGoal;
+    const queryTileFn = bindings.queryTile;
+    const isAdjacentFn = bindings.isAdjacent;
+    const dustland = bindings.Dustland;
+
     // Create a party
-    party.addMember(makeMember('player1', 'Test Player', 'Wanderer'));
-    setLeader(0);
-    setPartyPos(2, 2);
-    setMap('world', 'Test');
+    party.addMember(makeMemberFn('player1', 'Test Player', 'Wanderer'));
+    setLeaderFn?.(0);
+    setPartyPosFn?.(2, 2);
+    setMapFn?.('world', 'Test');
     console.log('Balance test checkpoint: party ready');
 
     const agent = {
@@ -144,27 +201,27 @@ async function runBalanceTest() {
         // 1. Attack monsters
         const nearbyMonster = findNearbyMonster();
         if (nearbyMonster) {
-          const result = await startCombat(nearbyMonster);
-          if (result.result === 'loot') {
+          const result: { result?: string } | null = startCombatFn ? await startCombatFn(nearbyMonster) : null;
+          if (result?.result === 'loot') {
             stats.monstersDefeated++;
-          } else if (result.result === 'bruise') {
+          } else if (result?.result === 'bruise') {
             stats.combatLost++;
           }
           return;
         }
 
         // 2. Grab items or use doors
-        if (takeNearestItem()) return;
+        if (takeNearestItemFn?.({})) return;
         const nearbyDoor = findNearbyDoor();
         if (nearbyDoor) {
-          interact();
+          interactFn?.();
           return;
         }
 
         // 3. Talk to NPCs
         const nearbyNPC = findNearbyNPC();
         if (nearbyNPC) {
-          interact();
+          interactFn?.();
           return;
         }
 
@@ -176,31 +233,34 @@ async function runBalanceTest() {
           const step = agent.path.shift();
           const dx = step.x - px;
           const dy = step.y - py;
-          await Dustland.movement.move(dx, dy);
+          await dustland?.movement?.move?.(dx, dy);
           stats.pathDistance += Math.abs(dx) + Math.abs(dy);
           return;
         }
         if (agent.job) {
-          const p = Dustland.path.pathFor(agent.job);
-          if (p) {
-            agent.path = p.slice(1);
+          const nextPath = dustland?.path?.pathFor?.(agent.job);
+          if (nextPath) {
+            agent.path = nextPath.slice(1);
             agent.job = null;
           }
           return;
         }
-        const map = mapIdForState();
-        const target = findRandomGoal(map, agent.goal);
+        const map = mapIdForStateFn?.();
+        if (!map) return;
+        const target = findRandomGoalFn?.(map, agent.goal) ?? findRandomGoal(map, agent.goal);
         if (target) {
           agent.goal = target;
-          agent.job = Dustland.path.queue(map, { x: px, y: py }, agent.goal, leader.id);
+          agent.job = dustland?.path?.queue?.(map, { x: px, y: py }, agent.goal, leader.id) ?? null;
         }
       }
     };
 
   function findNearbyMonster() {
+    if (!isAdjacentFn || !party.length) return null;
     const playerPos = { x: party[0].x, y: party[0].y };
-    for (const npc of NPCS) {
-      if (npc.combat && isAdjacent(playerPos, npc)) {
+    const npcs = bindings.NPCS ?? [];
+    for (const npc of npcs) {
+      if (npc.combat && isAdjacentFn(playerPos, npc)) {
         return npc;
       }
     }
@@ -208,16 +268,20 @@ async function runBalanceTest() {
   }
 
   function findNearbyNPC() {
+    if (!isAdjacentFn || !party.length) return null;
     const playerPos = { x: party[0].x, y: party[0].y };
-    for (const npc of NPCS) {
-      if (!npc.combat && isAdjacent(playerPos, npc)) {
+    const npcs = bindings.NPCS ?? [];
+    for (const npc of npcs) {
+      if (!npc.combat && isAdjacentFn(playerPos, npc)) {
         return npc;
       }
     }
     return null;
   }
 
-  function findNearbyDoor() {
+  function findNearbyDoor(){
+    if (!queryTileFn) return false;
+    const doorTile = (bindings.TILE as Record<string, unknown> | undefined)?.DOOR;
     const dirs = [
       [0, 0],
       [1, 0],
@@ -226,25 +290,30 @@ async function runBalanceTest() {
       [0, -1]
     ];
     for (const [dx, dy] of dirs) {
-      const info = queryTile(party.x + dx, party.y + dy);
-      if (info.tile === TILE.DOOR) {
-        return { x: party.x + dx, y: party.y + dy };
+      const info = queryTileFn(party.x + dx, party.y + dy);
+      if (!info?.walkable) continue;
+      const hasDoorEntity = Array.isArray(info.entities) && info.entities.some(e => (e as { type?: string }).type === 'door');
+      if (hasDoorEntity || (doorTile !== undefined && info.tile === doorTile)) {
+        return true;
       }
     }
-    return null;
+    return false;
   }
 
   function findRandomGoal(map, avoid) {
     const candidates = [];
-    for (const npc of NPCS) {
+    const npcs = bindings.NPCS ?? [];
+    for (const npc of npcs) {
       if (!npc.combat && npc.map === map) {
         const adj = findAdjacentWalkableTile(map, npc);
         candidates.push(adj);
       }
     }
+    const itemDrops = bindings.itemDrops ?? [];
     for (const it of itemDrops) {
       if (it.map === map) candidates.push({ x: it.x, y: it.y });
     }
+    const buildings = bindings.buildings ?? [];
     for (const b of buildings) {
       if (b.doorX != null && b.doorY != null && !b.boarded && (b.map == null || b.map === map)) {
         candidates.push({ x: b.doorX, y: b.doorY });
@@ -261,7 +330,8 @@ async function runBalanceTest() {
     return dx <= 1 && dy <= 1;
   }
 
-  function findAdjacentWalkableTile(map, pos) {
+  function findAdjacentWalkableTile(map: string, pos: { x: number; y: number }) {
+    if (!queryTileFn) return { x: pos.x, y: pos.y };
     const dirs = [
       { x: 1, y: 0 },
       { x: -1, y: 0 },
@@ -269,8 +339,8 @@ async function runBalanceTest() {
       { x: 0, y: -1 }
     ];
     for (const d of dirs) {
-      const info = queryTile(pos.x + d.x, pos.y + d.y, map);
-      if (info.walkable) return { x: pos.x + d.x, y: pos.y + d.y };
+      const info = queryTileFn(pos.x + d.x, pos.y + d.y, map);
+      if (info?.walkable) return { x: pos.x + d.x, y: pos.y + d.y };
     }
     return { x: pos.x, y: pos.y };
   }
@@ -286,15 +356,16 @@ async function runBalanceTest() {
     pathDistance: 0,
   };
 
-  EventBus.on('xp:gained', ({ amount }) => {
-    stats.experienceGained += amount;
+  const eventBus = bindings.EventBus;
+  eventBus?.on?.('xp:gained', ({ amount }) => {
+    stats.experienceGained += amount ?? 0;
   });
 
-  EventBus.on('character:leveled-up', () => {
+  eventBus?.on?.('character:leveled-up', () => {
     stats.levelsAdvanced++;
   });
 
-  EventBus.on('quest:completed', () => {
+  eventBus?.on?.('quest:completed', () => {
     stats.questsCompleted++;
   });
 

@@ -1,4 +1,4 @@
-// @ts-nocheck
+const globalDustland = globalThis;
 (function () {
     const hostBtn = document.getElementById('startHost');
     const newInviteBtn = document.getElementById('newInvite');
@@ -24,16 +24,17 @@
     let enteredGame = false;
     let gameFrame = null;
     let gameFrameContainer = null;
-    const bus = globalThis.EventBus;
-    const mpBridge = globalThis.Dustland?.multiplayerBridge;
+    const bus = globalDustland.EventBus;
+    const mpBridge = globalDustland.Dustland?.multiplayerBridge;
     const BRIDGE_EVENT = 'module-picker:select';
     const BRIDGE_FLAG = '__bridgeRelay';
     function cloneData(data) {
         if (!data || typeof data !== 'object')
             return data;
+        const source = data;
         const copy = {};
-        Object.keys(data).forEach(key => {
-            copy[key] = data[key];
+        Object.keys(source).forEach(key => {
+            copy[key] = source[key];
         });
         return copy;
     }
@@ -54,7 +55,7 @@
     }
     rememberRole(null);
     function setText(el, text) { if (el)
-        el.textContent = text || ''; }
+        el.textContent = text ?? ''; }
     function hide(el) { if (el?.classList)
         el.classList.add('hidden'); }
     function show(el) { if (el?.classList)
@@ -152,19 +153,19 @@
         if (!container)
             return null;
         container.id = 'mpGameFrame';
-        container.style = 'position:fixed;inset:0;z-index:60;background:#000;display:flex;flex-direction:column;';
+        container.style.cssText = 'position:fixed;inset:0;z-index:60;background:#000;display:flex;flex-direction:column;';
         const iframe = document.createElement('iframe');
         if (iframe) {
             iframe.id = 'mpGameFrameView';
             iframe.src = 'dustland.html';
-            iframe.style = 'flex:1 1 auto;width:100%;height:100%;border:0;';
+            iframe.style.cssText = 'flex:1 1 auto;width:100%;height:100%;border:0;';
             iframe.allow = 'fullscreen';
             container.appendChild(iframe);
         }
         const notice = document.createElement('div');
         if (notice) {
             notice.textContent = 'Dustland is open. Keep this tab running to stay connected.';
-            notice.style = 'flex:0 0 auto;padding:10px 16px;background:rgba(12,20,12,0.88);color:#9ec2a4;font-size:0.875rem;border-top:1px solid #2f3b2f;text-align:center;';
+            notice.style.cssText = 'flex:0 0 auto;padding:10px 16px;background:rgba(12,20,12,0.88);color:#9ec2a4;font-size:0.875rem;border-top:1px solid #2f3b2f;text-align:center;';
             container.appendChild(notice);
         }
         document.body?.appendChild?.(container);
@@ -181,8 +182,10 @@
         return gameFrame;
     }
     function setupModuleBridge() {
-        if (!mpBridge || !bus?.on)
+        const eventBus = bus;
+        if (!mpBridge || !eventBus?.on)
             return;
+        const safeBus = eventBus;
         const publish = typeof mpBridge.publish === 'function' ? mpBridge.publish.bind(mpBridge) : null;
         const subscribe = typeof mpBridge.subscribe === 'function' ? mpBridge.subscribe.bind(mpBridge) : null;
         if (!publish || !subscribe)
@@ -192,13 +195,13 @@
             if (data && typeof data === 'object')
                 data[BRIDGE_FLAG] = true;
             try {
-                bus.emit?.(BRIDGE_EVENT, data);
+                safeBus.emit?.(BRIDGE_EVENT, data);
             }
             catch (err) {
                 /* ignore */
             }
         });
-        bus.on(BRIDGE_EVENT, payload => {
+        safeBus.on(BRIDGE_EVENT, payload => {
             if (!publish)
                 return;
             if (payload && typeof payload === 'object' && payload[BRIDGE_FLAG])
@@ -217,7 +220,7 @@
     async function copyToClipboard(el, statusEl, success) {
         if (!el)
             return;
-        const text = el.value?.trim();
+        const text = el.value.trim();
         if (!text)
             return;
         try {
@@ -237,7 +240,7 @@
         catch (err) { /* ignore */ }
         setText(statusEl, success + ' (select & copy if needed)');
     }
-    async function startHosting(autoInvite) {
+    async function startHosting(autoInvite = false) {
         if (hostBtn)
             hostBtn.disabled = true;
         setText(hostStatusEl, 'Preparing host tools...');
@@ -247,7 +250,7 @@
         hostRoom = null;
         clearInvites();
         try {
-            hostRoom = await globalThis.Dustland?.multiplayer?.startHost();
+            hostRoom = await globalDustland.Dustland?.multiplayer?.startHost();
             if (!hostRoom)
                 throw new Error('Hosting unavailable.');
             setText(hostStatusEl, 'Hosting active. Generate a host code for each friend.');
@@ -349,20 +352,23 @@
         }
     }
     async function generateAnswer() {
-        const code = joinCodeEl.value?.trim();
+        const code = joinCodeEl?.value?.trim();
         if (!code) {
             setText(joinStatusEl, 'Paste a host code first.');
             return;
         }
-        connectBtn.disabled = true;
+        if (connectBtn)
+            connectBtn.disabled = true;
         setText(joinStatusEl, 'Preparing connection...');
         try {
             joinSocket?.close?.();
-            joinSocket = await globalThis.Dustland?.multiplayer?.connect({ code });
+            joinSocket = await globalDustland.Dustland?.multiplayer?.connect({ code });
             if (!joinSocket)
                 throw new Error('Connection failed.');
-            answerCodeEl.value = joinSocket.answer || '';
-            copyAnswerBtn.disabled = !answerCodeEl.value;
+            if (answerCodeEl)
+                answerCodeEl.value = joinSocket.answer || '';
+            if (copyAnswerBtn)
+                copyAnswerBtn.disabled = !(answerCodeEl?.value?.length);
             setText(joinStatusEl, 'Share your answer code with the host, then wait for them to link you.');
             joinSocket.ready?.then?.(() => {
                 enterGame(joinStatusEl, 'client');
@@ -375,7 +381,8 @@
             setText(joinStatusEl, 'Error: ' + (err?.message || err));
         }
         finally {
-            connectBtn.disabled = false;
+            if (connectBtn)
+                connectBtn.disabled = false;
         }
     }
     function init() {

@@ -1,5 +1,5 @@
-// @ts-nocheck
 (function () {
+    const fxGlobals = globalThis;
     const panel = document.getElementById('fxPanel');
     const openBtn = document.getElementById('fxBtn');
     const closeBtn = document.getElementById('fxClose');
@@ -16,9 +16,17 @@
     const grayscale = document.getElementById('fxGrayscale');
     const adrTint = document.getElementById('fxAdrTint');
     const canvas = document.getElementById('game');
-    let shearTimer;
+    let shearTimer = null;
+    function unrefTimer(timer) {
+        if (timer == null)
+            return;
+        const handle = timer;
+        handle.unref?.();
+    }
     function stopShear() {
-        clearTimeout(shearTimer);
+        if (shearTimer != null) {
+            clearTimeout(shearTimer);
+        }
         shearTimer = null;
         canvas?.classList.remove('shear');
     }
@@ -27,49 +35,58 @@
             return;
         function warp() {
             canvas.classList.add('shear');
-            setTimeout(() => {
+            const startTimer = setTimeout(() => {
                 canvas.classList.remove('shear');
                 const delay = 2000 + Math.random() * 3000;
                 shearTimer = setTimeout(warp, delay);
-                shearTimer.unref?.();
-            }, 100).unref?.();
+                unrefTimer(shearTimer);
+            }, 100);
+            unrefTimer(startTimer);
         }
         warp();
     }
     function applyFx() {
-        if (!canvas || !globalThis.fxConfig)
+        const fx = fxGlobals.fxConfig;
+        if (!canvas || !fx)
             return;
-        canvas.classList.toggle('scanlines', !!globalThis.fxConfig.scanlines);
-        canvas.classList.toggle('color-bleed', !!globalThis.fxConfig.colorBleed);
-        if (globalThis.fxConfig.crtShear) {
+        canvas.classList.toggle('scanlines', !!fx.scanlines);
+        canvas.classList.toggle('color-bleed', !!fx.colorBleed);
+        if (fx.crtShear) {
             startShear();
         }
         else {
             stopShear();
         }
-        globalThis.updateHUD?.();
+        fxGlobals.updateHUD?.();
     }
     function sync() {
-        if (!globalThis.fxConfig)
+        const fx = fxGlobals.fxConfig;
+        if (!fx)
             return;
-        prevAlpha.value = globalThis.fxConfig.prevAlpha;
-        sceneAlpha.value = globalThis.fxConfig.sceneAlpha;
-        offsetX.value = globalThis.fxConfig.offsetX;
-        offsetY.value = globalThis.fxConfig.offsetY;
-        enabled.checked = globalThis.fxConfig.enabled !== false;
-        dmgFlash.checked = globalThis.fxConfig.damageFlash !== false;
+        if (prevAlpha)
+            prevAlpha.value = String(fx.prevAlpha ?? '');
+        if (sceneAlpha)
+            sceneAlpha.value = String(fx.sceneAlpha ?? '');
+        if (offsetX)
+            offsetX.value = String(fx.offsetX ?? '');
+        if (offsetY)
+            offsetY.value = String(fx.offsetY ?? '');
+        if (enabled)
+            enabled.checked = fx.enabled !== false;
+        if (dmgFlash)
+            dmgFlash.checked = fx.damageFlash !== false;
         if (scanlines)
-            scanlines.checked = !!globalThis.fxConfig.scanlines;
+            scanlines.checked = !!fx.scanlines;
         if (shear)
-            shear.checked = !!globalThis.fxConfig.crtShear;
+            shear.checked = !!fx.crtShear;
         if (colorBleed)
-            colorBleed.checked = !!globalThis.fxConfig.colorBleed;
+            colorBleed.checked = !!fx.colorBleed;
         if (footstepBump)
-            footstepBump.checked = !!globalThis.fxConfig.footstepBump;
+            footstepBump.checked = !!fx.footstepBump;
         if (grayscale)
-            grayscale.checked = !!globalThis.fxConfig.grayscale;
+            grayscale.checked = !!fx.grayscale;
         if (adrTint)
-            adrTint.checked = globalThis.fxConfig.adrenalineTint !== false;
+            adrTint.checked = fx.adrenalineTint !== false;
         applyFx();
     }
     function show() {
@@ -83,26 +100,103 @@
     }
     openBtn?.addEventListener('click', show);
     closeBtn?.addEventListener('click', hide);
-    prevAlpha?.addEventListener('input', e => globalThis.fxConfig.prevAlpha = parseFloat(e.target.value));
-    sceneAlpha?.addEventListener('input', e => globalThis.fxConfig.sceneAlpha = parseFloat(e.target.value));
-    offsetX?.addEventListener('input', e => globalThis.fxConfig.offsetX = parseInt(e.target.value, 10) || 0);
-    offsetY?.addEventListener('input', e => globalThis.fxConfig.offsetY = parseInt(e.target.value, 10) || 0);
-    enabled?.addEventListener('change', e => globalThis.fxConfig.enabled = e.target.checked);
+    prevAlpha?.addEventListener('input', e => {
+        const fx = fxGlobals.fxConfig;
+        if (!fx)
+            return;
+        const target = e.currentTarget;
+        fx.prevAlpha = Number.parseFloat(target.value);
+    });
+    sceneAlpha?.addEventListener('input', e => {
+        const fx = fxGlobals.fxConfig;
+        if (!fx)
+            return;
+        const target = e.currentTarget;
+        fx.sceneAlpha = Number.parseFloat(target.value);
+    });
+    offsetX?.addEventListener('input', e => {
+        const fx = fxGlobals.fxConfig;
+        if (!fx)
+            return;
+        const target = e.currentTarget;
+        fx.offsetX = Number.parseInt(target.value, 10) || 0;
+    });
+    offsetY?.addEventListener('input', e => {
+        const fx = fxGlobals.fxConfig;
+        if (!fx)
+            return;
+        const target = e.currentTarget;
+        fx.offsetY = Number.parseInt(target.value, 10) || 0;
+    });
+    enabled?.addEventListener('change', e => {
+        const fx = fxGlobals.fxConfig;
+        if (!fx)
+            return;
+        const target = e.currentTarget;
+        fx.enabled = target.checked;
+    });
     dmgFlash?.addEventListener('change', e => {
-        globalThis.fxConfig.damageFlash = e.target.checked;
-        if (!e.target.checked)
+        const fx = fxGlobals.fxConfig;
+        if (!fx)
+            return;
+        const target = e.currentTarget;
+        fx.damageFlash = target.checked;
+        if (!target.checked)
             document.getElementById('hpBar')?.classList.remove('hurt');
     });
-    scanlines?.addEventListener('change', e => { globalThis.fxConfig.scanlines = e.target.checked; applyFx(); });
-    shear?.addEventListener('change', e => { globalThis.fxConfig.crtShear = e.target.checked; applyFx(); });
-    colorBleed?.addEventListener('change', e => { globalThis.fxConfig.colorBleed = e.target.checked; applyFx(); });
-    footstepBump?.addEventListener('change', e => { globalThis.fxConfig.footstepBump = e.target.checked; });
-    grayscale?.addEventListener('change', e => { globalThis.fxConfig.grayscale = e.target.checked; globalThis.updateHUD?.(); });
-    adrTint?.addEventListener('change', e => { globalThis.fxConfig.adrenalineTint = e.target.checked; globalThis.updateHUD?.(); });
+    scanlines?.addEventListener('change', e => {
+        const fx = fxGlobals.fxConfig;
+        if (!fx)
+            return;
+        const target = e.currentTarget;
+        fx.scanlines = target.checked;
+        applyFx();
+    });
+    shear?.addEventListener('change', e => {
+        const fx = fxGlobals.fxConfig;
+        if (!fx)
+            return;
+        const target = e.currentTarget;
+        fx.crtShear = target.checked;
+        applyFx();
+    });
+    colorBleed?.addEventListener('change', e => {
+        const fx = fxGlobals.fxConfig;
+        if (!fx)
+            return;
+        const target = e.currentTarget;
+        fx.colorBleed = target.checked;
+        applyFx();
+    });
+    footstepBump?.addEventListener('change', e => {
+        const fx = fxGlobals.fxConfig;
+        if (!fx)
+            return;
+        const target = e.currentTarget;
+        fx.footstepBump = target.checked;
+    });
+    grayscale?.addEventListener('change', e => {
+        const fx = fxGlobals.fxConfig;
+        if (!fx)
+            return;
+        const target = e.currentTarget;
+        fx.grayscale = target.checked;
+        fxGlobals.updateHUD?.();
+    });
+    adrTint?.addEventListener('change', e => {
+        const fx = fxGlobals.fxConfig;
+        if (!fx)
+            return;
+        const target = e.currentTarget;
+        fx.adrenalineTint = target.checked;
+        fxGlobals.updateHUD?.();
+    });
     const dragHandle = panel?.querySelector('header');
     let dragX = 0;
     let dragY = 0;
     function startDrag(e) {
+        if (!panel)
+            return;
         dragX = e.clientX - panel.offsetLeft;
         dragY = e.clientY - panel.offsetTop;
         document.addEventListener('mousemove', onDrag);
@@ -110,6 +204,8 @@
         e.preventDefault();
     }
     function onDrag(e) {
+        if (!panel)
+            return;
         panel.style.left = (e.clientX - dragX) + 'px';
         panel.style.top = (e.clientY - dragY) + 'px';
     }

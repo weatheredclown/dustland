@@ -1,5 +1,12 @@
-// @ts-nocheck
+/// <reference types="node" />
 // Simple arena fight to observe adrenaline gain pacing.
+const adrenalineGlobal = globalThis as typeof globalThis & Record<string, any>;
+
+type PartyRosterLike = {
+  length: number;
+  push(...members: any[]): number;
+};
+
 if (typeof window === 'undefined') {
   (async () => {
     const { JSDOM } = await import('jsdom');
@@ -45,7 +52,7 @@ if (typeof window === 'undefined') {
     const enemy = prepareEnemy(options);
     const arenaLog = [];
 
-    globalThis.log = (msg) => {
+    adrenalineGlobal.log = (msg) => {
       const line = String(msg ?? '').trim();
       if (!line) return;
       arenaLog.push(line);
@@ -84,7 +91,8 @@ function parseArgs(argv) {
     enemyChallenge: 1,
     turnDelay: 40,
     seed: 'prototype',
-    showLog: false
+    showLog: false,
+    help: false
   };
 
   for (const raw of argv) {
@@ -194,25 +202,25 @@ function bootstrapGlobals(w, seed) {
     }
   };
 
-  globalThis.EventBus = bus;
-  globalThis.Dustland = { eventBus: bus, combatTelemetry: [] };
-  globalThis.updateHUD = () => {};
-  globalThis.renderParty = () => {};
-  globalThis.renderWorld = () => {};
-  globalThis.tryAutoPickup = () => {};
-  globalThis.toast = () => {};
-  globalThis.setMap = () => {};
-  globalThis.setPartyPos = () => {};
-  globalThis.removeNPC = () => {};
-  globalThis.playFX = () => {};
-  globalThis.addToInv = () => {};
-  globalThis.registerItem = (x) => x;
-  globalThis.SpoilsCache = { rollDrop: () => null };
-  globalThis.player = { inv: [], scrap: 0, hp: 0 };
-  globalThis.itemDrops = [];
-  globalThis.worldSeed = 1337;
+  adrenalineGlobal.EventBus = bus;
+  adrenalineGlobal.Dustland = { eventBus: bus, combatTelemetry: [] };
+  adrenalineGlobal.updateHUD = () => {};
+  adrenalineGlobal.renderParty = () => {};
+  adrenalineGlobal.renderWorld = () => {};
+  adrenalineGlobal.tryAutoPickup = () => false;
+  adrenalineGlobal.toast = () => {};
+  adrenalineGlobal.setMap = () => {};
+  adrenalineGlobal.setPartyPos = () => {};
+  adrenalineGlobal.removeNPC = () => {};
+  adrenalineGlobal.playFX = () => {};
+  adrenalineGlobal.addToInv = () => false;
+  adrenalineGlobal.registerItem = (x) => x;
+  adrenalineGlobal.SpoilsCache = { rollDrop: () => null };
+  adrenalineGlobal.player = { inv: [], scrap: 0, hp: 0 };
+  adrenalineGlobal.itemDrops = [];
+  adrenalineGlobal.worldSeed = 1337;
 
-  globalThis.__restoreRandom = () => {
+  adrenalineGlobal.__restoreRandom = () => {
     Math.random = originalRandom;
   };
 }
@@ -244,14 +252,18 @@ function prepareHero(options) {
   hero.equip.weapon = {
     id: 'prototype_blade',
     name: 'Prototype Blade',
+    type: 'weapon',
     mods: {
       ADR: options.heroAdrMod
     }
   };
 
-  party.length = 0;
-  party.push(hero);
-  party.selected = 0;
+  const party = adrenalineGlobal.party as PartyRosterLike | undefined;
+  if (party) {
+    party.length = 0;
+    party.push(hero);
+  }
+  adrenalineGlobal.selectedMember = 0;
   return hero;
 }
 
@@ -268,7 +280,7 @@ function prepareEnemy(options) {
 }
 
 async function runArena(hero, enemy, options) {
-  const state = globalThis.__combatState;
+  const state = adrenalineGlobal.__combatState;
   const adrEvents = [];
   let lastAdr = hero.adr ?? 0;
   let fullAttack = null;
@@ -306,12 +318,12 @@ async function runArena(hero, enemy, options) {
       fullAttack,
       outcome,
       turns: state.turns,
-      telemetry: Array.isArray(globalThis.Dustland?.combatTelemetry)
-        ? globalThis.Dustland.combatTelemetry.slice()
+      telemetry: Array.isArray(adrenalineGlobal.Dustland?.combatTelemetry)
+        ? adrenalineGlobal.Dustland.combatTelemetry.slice()
         : []
     };
   } finally {
-    globalThis.__restoreRandom?.();
+    adrenalineGlobal.__restoreRandom?.();
   }
 }
 

@@ -1,4 +1,4 @@
-// @ts-nocheck
+const wizardGlobal = globalThis;
 (function () {
     function Wizard(config) {
         this.title = config.title || 'Wizard';
@@ -83,7 +83,7 @@
         label.appendChild(select);
         el.appendChild(label);
     };
-    globalThis.Wizard = Wizard;
-    globalThis.TextInputStep = TextInputStep;
-    globalThis.AssetPickerStep = AssetPickerStep;
+    wizardGlobal.Wizard = Wizard;
+    wizardGlobal.TextInputStep = TextInputStep;
+    wizardGlobal.AssetPickerStep = AssetPickerStep;
 })();

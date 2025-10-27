@@ -1,4 +1,11 @@
-// @ts-nocheck
+type WizardGlobals = typeof globalThis & {
+  Wizard?: unknown;
+  TextInputStep?: unknown;
+  AssetPickerStep?: unknown;
+};
+
+const wizardGlobal = globalThis as WizardGlobals;
+
 (function(){
   function Wizard(config){
     this.title = config.title || 'Wizard';
@@ -84,8 +91,8 @@
     el.appendChild(label);
   };
 
-  globalThis.Wizard = Wizard;
-  globalThis.TextInputStep = TextInputStep;
-  globalThis.AssetPickerStep = AssetPickerStep;
+  wizardGlobal.Wizard = Wizard;
+  wizardGlobal.TextInputStep = TextInputStep;
+  wizardGlobal.AssetPickerStep = AssetPickerStep;
 })();
 

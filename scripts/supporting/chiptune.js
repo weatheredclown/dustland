@@ -1,13 +1,15 @@
-// @ts-nocheck
+const chiptuneGlobal = globalThis;
 // Dynamic chiptune engine powered by Tone.js synths.
 // Mirrors the music-demo page moods while integrating with the Dustland event bus.
-globalThis.Dustland = globalThis.Dustland || {};
+chiptuneGlobal.Dustland = chiptuneGlobal.Dustland || {};
 (function () {
     'use strict';
-    const bus = globalThis.Dustland.eventBus;
+    const bus = chiptuneGlobal.Dustland?.eventBus;
     const isBrowser = typeof window !== 'undefined';
     const hasDocument = typeof document !== 'undefined';
-    const AC = isBrowser ? (window.AudioContext || window.webkitAudioContext) : null;
+    const toneWindow = isBrowser ? window : null;
+    const AC = toneWindow ? (toneWindow.AudioContext ?? toneWindow.webkitAudioContext ?? null) : null;
+    const clampMidiToScaleFn = chiptuneGlobal.clampMidiToScale;
     const moodPriority = Object.freeze({
         silence: -1,
         explore: 10,
@@ -53,7 +55,13 @@ globalThis.Dustland = globalThis.Dustland || {};
     const lookahead = 0.05;
     const scheduleAheadTime = 0.2;
     const stepsPerBar = 16;
-    const tone = { enabled: true, loading: false, ready: false, synths: null, fx: null };
+    const tone = {
+        enabled: true,
+        loading: false,
+        ready: false,
+        synths: null,
+        fx: null,
+    };
     let tonePromise = null;
     let audioCtx = null;
     let masterGain = null;
@@ -130,7 +138,7 @@ globalThis.Dustland = globalThis.Dustland || {};
         tone.loading = true;
         tonePromise = loadScript('https://cdn.jsdelivr.net/npm/tone/build/Tone.js')
             .then(() => {
-            if (!window.Tone)
+            if (!toneWindow?.Tone)
                 throw new Error('Tone unavailable');
             const masterHP = new Tone.Filter(60, 'highpass');
             masterHP.toDestination();
@@ -173,6 +181,11 @@ globalThis.Dustland = globalThis.Dustland || {};
             throw err;
         });
         return tonePromise;
+    }
+    function toneWhen(t) {
+        if (!audioCtx || !toneWindow?.Tone || typeof Tone.now !== 'function')
+            return undefined;
+        return Tone.now() + Math.max(0, t - audioCtx.currentTime);
     }
     function setSeed(seed) {
         currentSeed = (seed >>> 0) || 1;
@@ -296,22 +309,24 @@ globalThis.Dustland = globalThis.Dustland || {};
         return { gain: gate, scheduleRelease };
     }
     function mkOsc(type, freq, time) {
+        if (!audioCtx)
+            throw new Error('Audio context unavailable');
         const osc = audioCtx.createOscillator();
         osc.type = type;
-        if (freq)
-            osc.frequency.setValueAtTime(freq, time || audioCtx.currentTime);
+        if (freq != null)
+            osc.frequency.setValueAtTime(freq, time ?? audioCtx.currentTime);
         return osc;
     }
     function scheduleTone(frequency, duration, gainValue, wave, when) {
         if (!audioCtx || !masterGain)
             return;
-        const osc = mkOsc(wave || 'square');
+        const osc = mkOsc((wave || 'square'));
         const gain = audioCtx.createGain();
         osc.frequency.value = frequency;
         osc.connect(gain).connect(masterGain);
-        const start = Math.max(audioCtx.currentTime, when || audioCtx.currentTime);
-        const dur = Math.max(0.05, duration || 0.2);
-        gain.gain.value = Math.max(0.0001, gainValue || 0.1);
+        const start = Math.max(audioCtx.currentTime, when ?? audioCtx.currentTime);
+        const dur = Math.max(0.05, duration ?? 0.2);
+        gain.gain.value = Math.max(0.0001, gainValue ?? 0.1);
         gain.gain.setValueAtTime(gain.gain.value, start);
         gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
         osc.start(start);
@@ -321,9 +336,9 @@ globalThis.Dustland = globalThis.Dustland || {};
         if (!audioCtx || !masterGain)
             return;
         if (tone.enabled && tone.ready && tone.synths) {
-            const when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - audioCtx.currentTime) : undefined;
+            const when = toneWhen(t);
             try {
-                tone.synths.kick.triggerAttackRelease('C2', 0.12, when, vel != null ? vel : 0.9);
+                tone.synths.kick.triggerAttackRelease('C2', 0.12, when, vel ?? 0.9);
                 return;
             }
             catch (err) {
@@ -334,7 +349,7 @@ globalThis.Dustland = globalThis.Dustland || {};
         const env = envGate(t, 0.001, 0.05, 0.0001, 0.08, 0.12);
         const g = env.gain;
         const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(((vel != null ? vel : 1) * 1.2), t);
+        gain.gain.setValueAtTime(((vel ?? 1) * 1.2), t);
         osc.connect(g).connect(gain).connect(masterGain);
         osc.frequency.setValueAtTime(120, t);
         osc.frequency.exponentialRampToValueAtTime(35, t + 0.1);
@@ -342,15 +357,15 @@ globalThis.Dustland = globalThis.Dustland || {};
         osc.stop(t + 0.25);
         env.scheduleRelease(t + 0.12);
     }
-    function playSnare(t, tight, vel) {
+    function playSnare(t, tight = false, vel = 1) {
         if (!audioCtx || !masterGain)
             return;
         if (tone.enabled && tone.ready && tone.synths) {
-            const when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - audioCtx.currentTime) : undefined;
+            const when = toneWhen(t);
             try {
                 tone.synths.snare.noise.type = 'white';
                 tone.synths.snare.envelope.decay = tight ? 0.05 : 0.12;
-                tone.synths.snare.triggerAttackRelease(tight ? 0.06 : 0.12, when, vel != null ? vel : 0.7);
+                tone.synths.snare.triggerAttackRelease(tight ? 0.06 : 0.12, when, vel ?? 0.7);
                 return;
             }
             catch (err) {
@@ -365,7 +380,7 @@ globalThis.Dustland = globalThis.Dustland || {};
         hp.type = 'highpass';
         hp.frequency.setValueAtTime(1200, t);
         const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(((tight ? 0.3 : 0.45) * (vel != null ? vel : 1)), t);
+        gain.gain.setValueAtTime(((tight ? 0.3 : 0.45) * (vel ?? 1)), t);
         noise.connect(hp).connect(env.gain).connect(gain).connect(masterGain);
         noise.start(t);
         noise.stop(t + 0.2);
@@ -375,10 +390,10 @@ globalThis.Dustland = globalThis.Dustland || {};
         if (!audioCtx || !masterGain)
             return;
         if (tone.enabled && tone.ready && tone.synths) {
-            const when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - audioCtx.currentTime) : undefined;
+            const when = toneWhen(t);
             try {
                 tone.synths.hat.envelope.decay = open ? 0.08 : 0.03;
-                tone.synths.hat.triggerAttackRelease(open ? 0.06 : 0.03, when, vel != null ? vel : 0.5);
+                tone.synths.hat.triggerAttackRelease(open ? 0.06 : 0.03, when, vel ?? 0.5);
                 return;
             }
             catch (err) {
@@ -393,7 +408,7 @@ globalThis.Dustland = globalThis.Dustland || {};
         hp.type = 'highpass';
         hp.frequency.setValueAtTime(6000, t);
         const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(((open ? 0.18 : 0.12) * (vel != null ? vel : 1)), t);
+        gain.gain.setValueAtTime(((open ? 0.18 : 0.12) * (vel ?? 1)), t);
         noise.connect(hp).connect(env.gain).connect(gain).connect(masterGain);
         noise.start(t);
         noise.stop(t + 0.15);
@@ -404,9 +419,11 @@ globalThis.Dustland = globalThis.Dustland || {};
             return;
         const freq = hzFromMidi(midi);
         if (tone.enabled && tone.ready && tone.synths) {
-            const when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - audioCtx.currentTime) : undefined;
+            const when = toneWhen(t);
             try {
-                tone.synths.bass.frequency.setValueAtTime(freq, when ?? Tone.now());
+                if (typeof tone.synths.bass.frequency?.setValueAtTime === 'function' && when != null) {
+                    tone.synths.bass.frequency.setValueAtTime(freq, when);
+                }
                 tone.synths.bass.triggerAttackRelease(freq, dur, when, vel != null ? vel * 0.9 : 0.9);
                 return;
             }
@@ -414,13 +431,13 @@ globalThis.Dustland = globalThis.Dustland || {};
                 void err;
             }
         }
-        const osc = mkOsc(instruments.bass || music.bassWave, freq, t);
+        const osc = mkOsc((instruments.bass || music.bassWave), freq, t);
         const env = envGate(t, 0.003, 0.06, 0.2, 0.06, dur * 0.9);
         const lp = audioCtx.createBiquadFilter();
         lp.type = 'lowpass';
         lp.frequency.setValueAtTime(1800, t);
         const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(0.3 * (vel != null ? vel : 1), t);
+        gain.gain.setValueAtTime(0.3 * (vel ?? 1), t);
         osc.connect(env.gain).connect(lp).connect(gain).connect(masterGain);
         osc.start(t);
         osc.stop(t + dur + 0.1);
@@ -429,19 +446,19 @@ globalThis.Dustland = globalThis.Dustland || {};
     function playLeadNote(midi, t, dur, vel) {
         if (!audioCtx || !masterGain)
             return;
-        if (typeof clampMidiToScale === 'function') {
+        if (typeof clampMidiToScaleFn === 'function') {
             try {
-                midi = clampMidiToScale(midi, music.key, music.scale);
+                midi = clampMidiToScaleFn(midi, music.key, music.scale);
             }
             catch (err) {
                 void err;
             }
         }
         if (tone.enabled && tone.ready && tone.synths) {
-            const when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - audioCtx.currentTime) : undefined;
+            const when = toneWhen(t);
             const freq = hzFromMidi(midi);
             try {
-                tone.synths.lead.triggerAttackRelease(freq, dur, when, vel != null ? vel : 0.7);
+                tone.synths.lead.triggerAttackRelease(freq, dur, when, vel ?? 0.7);
                 return;
             }
             catch (err) {
@@ -449,10 +466,10 @@ globalThis.Dustland = globalThis.Dustland || {};
             }
         }
         const freq = hzFromMidi(midi);
-        const osc = mkOsc(instruments.lead || music.leadWave, freq, t);
+        const osc = mkOsc((instruments.lead || music.leadWave), freq, t);
         const env = envGate(t, 0.004, 0.05, 0.3, 0.1, dur * 0.85);
         const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(0.18 * (vel != null ? vel : 1), t);
+        gain.gain.setValueAtTime(0.18 * (vel ?? 1), t);
         osc.connect(env.gain).connect(gain).connect(delayNode).connect(delayGain).connect(masterGain);
         osc.start(t);
         osc.stop(t + dur + 0.12);
@@ -778,7 +795,7 @@ globalThis.Dustland = globalThis.Dustland || {};
     bus?.on?.('music:seed', (seed) => setSeed(seed));
     bus?.on?.('music:mood', handleMoodEvent);
     bus?.on?.('music:toggle', (on) => setEnabled(on ?? !enabled));
-    globalThis.Dustland.music = {
+    chiptuneGlobal.Dustland.music = {
         getSeed() { return currentSeed; },
         setSeed(seed) { setSeed(seed); bus?.emit?.('music:seed', seed); },
         setInstruments,
