@@ -1,3 +1,11 @@
+const rosterState = new WeakMap();
+function getRosterState(roster) {
+    const state = rosterState.get(roster);
+    if (!state) {
+        throw new Error('Party state not initialized');
+    }
+    return state;
+}
 const baseStats = () => ({
     STR: 4,
     AGI: 4,
@@ -68,7 +76,8 @@ class Character {
         eventBus.emit('character:leveled-up', { character: this });
         eventBus.emit('sfx', 'tick');
         safeLog(`${this.name} leveled up to ${this.lvl}! (+10 HP, +1 SP)`);
-        if ((party.flags && party.flags.mentor) || (typeof hasItem === 'function' && hasItem('mentor_token'))) {
+        const partyState = getRosterState(party);
+        if ((partyState.flags && partyState.flags.mentor) || (typeof hasItem === 'function' && hasItem('mentor_token'))) {
             eventBus.emit('mentor:bark', { text: 'Another scar, another lesson learned.', sound: 'mentor' });
         }
     }
@@ -142,18 +151,19 @@ class Character {
 }
 class PartyRoster extends Array {
     getState() {
-        return this;
+        return getRosterState(this);
     }
     constructor(...args) {
         super(...args);
-        const state = this.getState();
         const worldState = globalThis.state;
-        state.map = worldState?.map ?? 'world';
-        state.x = 2;
-        state.y = 2;
-        state.flags = {};
-        state.fallen = [];
-        state._roster = null;
+        rosterState.set(this, {
+            map: worldState?.map ?? 'world',
+            x: 2,
+            y: 2,
+            flags: {},
+            fallen: [],
+            _roster: null,
+        });
     }
     push(...members) {
         const unique = members.filter(m => m && !this.includes(m));
@@ -249,9 +259,34 @@ class PartyRoster extends Array {
     }
     leader() { return this[selectedMember] || this[0]; }
 }
-PartyRoster.prototype.join = function (member) {
-    return this.addMember(member);
+const makeStateAccessor = (key) => ({
+    get() {
+        return getRosterState(this)[key];
+    },
+    set(value) {
+        getRosterState(this)[key] = value;
+    },
+    configurable: true,
+});
+Object.defineProperties(PartyRoster.prototype, {
+    map: makeStateAccessor('map'),
+    x: makeStateAccessor('x'),
+    y: makeStateAccessor('y'),
+    flags: makeStateAccessor('flags'),
+    fallen: makeStateAccessor('fallen'),
+    _roster: makeStateAccessor('_roster'),
+});
+const joinOverride = function (arg) {
+    if (typeof arg === 'string' || typeof arg === 'undefined') {
+        return Array.prototype.join.call(this, arg);
+    }
+    return this.addMember(arg);
 };
+Object.defineProperty(PartyRoster.prototype, 'join', {
+    value: joinOverride,
+    writable: true,
+    configurable: true,
+});
 const party = new PartyRoster();
 const globalSelection = globalThis.selectedMember;
 let selectedMember = typeof globalSelection === 'number' ? globalSelection : 0;
