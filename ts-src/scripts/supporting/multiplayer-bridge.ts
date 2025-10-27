@@ -1,4 +1,11 @@
-// @ts-nocheck
+type BridgeGlobals = typeof globalThis & {
+  Dustland?: {
+    multiplayerBridge?: Record<string, unknown>;
+  };
+};
+
+const bridgeGlobal = globalThis as BridgeGlobals;
+
 (function(){
   const CHANNEL = 'dustland.multiplayer.bridge';
   const listeners = new Map();
@@ -99,8 +106,8 @@
     channel?.close?.();
   }
 
-  globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.multiplayerBridge = Object.assign(globalThis.Dustland.multiplayerBridge || {}, {
+  bridgeGlobal.Dustland = bridgeGlobal.Dustland || {};
+  bridgeGlobal.Dustland.multiplayerBridge = Object.assign(bridgeGlobal.Dustland.multiplayerBridge || {}, {
     publish,
     subscribe,
     close,

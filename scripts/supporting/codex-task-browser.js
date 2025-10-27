@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// @ts-nocheck
+/// <reference types="node" />
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -152,7 +152,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
         process.exit(exitCode);
     }
     catch (error) {
-        console.error(error.message);
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error(err.message);
         process.exit(1);
     }
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// @ts-nocheck
+/// <reference types="node" />
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -62,7 +62,7 @@ export function pickTask(tasks, identifier) {
   return tasks.find(task => task.id === identifier) ?? null;
 }
 
-export function formatTask(task, index) {
+export function formatTask(task, index?: number) {
   if (!task) return '';
   const prefix = typeof index === 'number' ? `${index + 1}.` : '-';
   const lines = [`${prefix} ${task.title}`];
@@ -159,7 +159,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     const exitCode = runCli();
     process.exit(exitCode);
   } catch (error) {
-    console.error(error.message);
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error(err.message);
     process.exit(1);
   }
 }

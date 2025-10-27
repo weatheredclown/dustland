@@ -1,4 +1,4 @@
-// @ts-nocheck
+/// <reference types="node" />
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -65,14 +65,14 @@ function normalizeItemList(list) {
     (list || []).forEach(item => {
         if (!item || !item.id)
             return;
-        const existing = map.get(item.id) || { id: item.id, mods: {}, tags: [] };
+        const existing = map.get(item.id) ?? { id: item.id, mods: {}, tags: [] };
         const merged = {
             ...existing,
             ...item,
             mods: { ...existing.mods, ...(item.mods || {}) },
             tags: Array.isArray(existing.tags) || Array.isArray(item.tags)
-                ? Array.from(new Set([...(existing.tags || []), ...(item.tags || [])]))
-                : undefined
+                ? Array.from(new Set([...(existing.tags || []), ...(Array.isArray(item.tags) ? item.tags : [])]))
+                : existing.tags
         };
         if (existing.value == null && item.value != null) {
             merged.value = item.value;
@@ -85,14 +85,19 @@ function normalizeItemList(list) {
     return map;
 }
 function calcModScore(item) {
-    return Object.values(item?.mods || {}).reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
+    const mods = item?.mods;
+    if (!mods)
+        return 0;
+    return Object.values(mods).reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
 }
 function extractHealValue(item) {
     if (!item || !item.use)
         return null;
     const use = item.use;
-    if (typeof use === 'object' && typeof use.amount === 'number') {
-        return use.amount;
+    if (use && typeof use === 'object' && 'amount' in use) {
+        const amount = use.amount;
+        if (typeof amount === 'number')
+            return amount;
     }
     return null;
 }

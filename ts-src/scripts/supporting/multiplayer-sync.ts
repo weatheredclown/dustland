@@ -1,12 +1,52 @@
-// @ts-nocheck
+type MultiplayerEventBus = {
+  emit?(event: string, ...args: any[]): void;
+  on?(event: string, handler: (...args: any[]) => void): void;
+  off?(event: string, handler: (...args: any[]) => void): void;
+  once?(event: string, handler: (...args: any[]) => void): void;
+};
+
+type LoopbackState = {
+  offers: Map<string, string>;
+  answers: Map<string, string>;
+  nextOffer: number;
+  nextAnswer: number;
+};
+
+type MultiplayerGlobals = typeof globalThis & {
+  EventBus?: MultiplayerEventBus;
+  Dustland?: {
+    gameState?: {
+      getState?: () => any;
+    };
+    multiplayer?: unknown;
+  };
+  __dustlandLoopback?: LoopbackState;
+};
+
+type PeerInfo = { id: string; status: string };
+type MessageHandler = (message: unknown, peerId?: string) => void;
+type HostOptions = { iceServers?: RTCIceServer[] };
+type ConnectOptions = { code?: string; iceServers?: RTCIceServer[] };
+type WebRTCPeer = { id: string; pc: RTCPeerConnection; channel: RTCDataChannel };
+type StateMessage = { __type: 'state'; full?: Record<string, unknown>; diff?: Record<string, unknown> };
+
+function isStateMessage(msg: unknown): msg is StateMessage {
+  return typeof msg === 'object' && msg !== null && (msg as { __type?: unknown }).__type === 'state';
+}
+
+type BufferCtor = typeof import('node:buffer').Buffer;
+const bufferCtor: BufferCtor | undefined = (globalThis as typeof globalThis & { Buffer?: BufferCtor }).Buffer;
+
+const syncGlobal = globalThis as MultiplayerGlobals;
+
 // ===== Multiplayer Sync (browser-first) =====
 (function(){
-  globalThis.Dustland = globalThis.Dustland || {};
-  const bus = globalThis.EventBus;
+  syncGlobal.Dustland = syncGlobal.Dustland || {};
+  const bus = syncGlobal.EventBus;
   const DEFAULT_ICE = [{ urls: 'stun:stun.l.google.com:19302' }];
-  const hasWebRTC = typeof globalThis.RTCPeerConnection === 'function';
+  const hasWebRTC = typeof syncGlobal.RTCPeerConnection === 'function';
 
-  const loopback = globalThis.__dustlandLoopback || (globalThis.__dustlandLoopback = {
+  const loopback = syncGlobal.__dustlandLoopback || (syncGlobal.__dustlandLoopback = {
     offers: new Map(),
     answers: new Map(),
     nextOffer: 1,
@@ -17,7 +57,7 @@
     try {
       const json = JSON.stringify(obj);
       if (typeof btoa === 'function') return btoa(json);
-      if (typeof Buffer === 'function') return Buffer.from(json, 'utf8').toString('base64');
+      if (bufferCtor) return bufferCtor.from(json, 'utf8').toString('base64');
       return json;
     } catch (err) {
       return '';
@@ -27,7 +67,7 @@
   function decode(str){
     try {
       if (typeof atob === 'function') return JSON.parse(atob(str));
-      if (typeof Buffer === 'function') return JSON.parse(Buffer.from(str, 'base64').toString('utf8'));
+      if (bufferCtor) return JSON.parse(bufferCtor.from(str, 'base64').toString('utf8'));
       return JSON.parse(str);
     } catch (err) {
       return null;
@@ -35,7 +75,7 @@
   }
 
   function cloneState(){
-    const state = globalThis.Dustland.gameState?.getState?.();
+    const state = syncGlobal.Dustland.gameState?.getState?.();
     if (!state) return {};
     try {
       return JSON.parse(JSON.stringify(state));
@@ -76,8 +116,8 @@
     }
   }
 
-  function applyStateMessage(msg){
-    const gs = globalThis.Dustland.gameState;
+  function applyStateMessage(msg: StateMessage){
+    const gs = syncGlobal.Dustland.gameState;
     if (!gs) return;
     if (msg?.full) {
       gs.updateState(state => {
@@ -101,8 +141,8 @@
   }
 
   function createLoopChannel(){
-    const hostHandlers = new Set();
-    const clientHandlers = new Set();
+    const hostHandlers = new Set<(msg: unknown) => void>();
+    const clientHandlers = new Set<(msg: unknown) => void>();
     let closed = false;
     return {
       hostHandlers,
@@ -128,9 +168,9 @@
   }
 
   function createLoopbackHostTransport(){
-    const peers = new Map();
-    const messageListeners = new Set();
-    const peerListeners = new Set();
+    const peers = new Map<string, ReturnType<typeof createLoopChannel>>();
+    const messageListeners = new Set<MessageHandler>();
+    const peerListeners = new Set<(peers: PeerInfo[]) => void>();
 
     function snapshot(){
       return Array.from(peers.keys()).map(id => ({ id, status: 'open' }));
@@ -170,17 +210,17 @@
       sendTo(peerId, msg){
         peers.get(peerId)?.sendToClient(msg);
       },
-      broadcast(msg, skipId){
+      broadcast(msg, skipId?: string){
         peers.forEach((channel, id) => {
           if (id === skipId) return;
           channel.sendToClient(msg);
         });
       },
-      onMessage(fn){
+      onMessage(fn: MessageHandler){
         messageListeners.add(fn);
         return () => messageListeners.delete(fn);
       },
-      onPeers(fn){
+      onPeers(fn: (peers: PeerInfo[]) => void){
         peerListeners.add(fn);
         fn(snapshot());
         return () => peerListeners.delete(fn);
@@ -196,7 +236,7 @@
     };
   }
 
-  function connectLoopback({ code } = {}){
+  function connectLoopback({ code }: ConnectOptions = {}){
     if (typeof code !== 'string' || !code.startsWith('DL1:LOOP:')) {
       throw new Error('Invalid host code.');
     }
@@ -204,30 +244,30 @@
     if (!loopback.offers.has(peerId)) throw new Error('Host code expired.');
     const channel = createLoopChannel();
     const answerId = `ans-${loopback.nextAnswer++}`;
-    let resolveReady;
-    const ready = new Promise(res => { resolveReady = res; });
+    let resolveReady: () => void = () => {};
+    const ready = new Promise<void>(res => { resolveReady = res; });
     loopback.answers.set(answerId, { peerId, channel, resolveReady });
-    const listeners = new Set();
+    const listeners = new Set<MessageHandler>();
     channel.clientHandlers.add(msg => {
-      if (msg && msg.__type === 'state') {
+      if (isStateMessage(msg)) {
         applyStateMessage(msg);
       } else {
-        listeners.forEach(fn => fn(msg));
+        listeners.forEach(fn => fn(msg, 'loopback-host'));
       }
     });
     function encodeAnswerId(id){ return `DL1:ANS:${id}`; }
     return {
       answer: encodeAnswerId(answerId),
       send(msg){ channel.sendToHost(msg); },
-      onMessage(fn){ listeners.add(fn); return () => listeners.delete(fn); },
+      onMessage(fn: MessageHandler){ listeners.add(fn); return () => listeners.delete(fn); },
       close(){ channel.close(); loopback.answers.delete(answerId); },
       ready
     };
   }
 
-  function waitForIce(pc){
+  function waitForIce(pc: RTCPeerConnection | null | undefined){
     if (!pc || pc.iceGatheringState === 'complete') return Promise.resolve();
-    return new Promise(resolve => {
+    return new Promise<void>(resolve => {
       const check = () => {
         if (pc.iceGatheringState === 'complete') resolve();
         else setTimeout(check, 50);
@@ -236,9 +276,9 @@
     });
   }
 
-  function attachChannel(peer, channel, onMessage, onClosed){
+  function attachChannel(peer: WebRTCPeer, channel: RTCDataChannel | null | undefined, onMessage: MessageHandler, onClosed: (peer: WebRTCPeer) => void){
     if (!channel) return;
-    const handle = ev => {
+    const handle = (ev: MessageEvent) => {
       try {
         const obj = JSON.parse(ev.data);
         onMessage(obj, peer.id);
@@ -252,19 +292,31 @@
       channel.addEventListener('error', () => onClosed(peer));
     } else {
       const origMessage = channel.onmessage;
-      channel.onmessage = ev => { handle(ev); origMessage?.(ev); };
+      const messageWrapper: typeof channel.onmessage = function(ev) {
+        handle(ev);
+        if (typeof origMessage === 'function') origMessage.call(this, ev);
+      };
+      channel.onmessage = messageWrapper;
       const closeWrap = () => onClosed(peer);
       const origClose = channel.onclose;
-      channel.onclose = ev => { closeWrap(); origClose?.(ev); };
+      const closeWrapper: typeof channel.onclose = function(ev) {
+        closeWrap();
+        origClose?.call(this, ev);
+      };
+      channel.onclose = closeWrapper;
       const origErr = channel.onerror;
-      channel.onerror = ev => { closeWrap(); origErr?.(ev); };
+      const errorWrapper: typeof channel.onerror = function(ev) {
+        closeWrap();
+        origErr?.call(this, ev);
+      };
+      channel.onerror = errorWrapper;
     }
   }
 
-  function waitForChannelOpen(channel){
+  function waitForChannelOpen(channel: RTCDataChannel | null | undefined){
     if (!channel) return Promise.resolve();
     if (channel.readyState === 'open') return Promise.resolve();
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       const done = () => {
         if (typeof channel.removeEventListener === 'function') {
           channel.removeEventListener('open', handleOpen);
@@ -280,21 +332,33 @@
         channel.addEventListener('error', handleClose);
       } else {
         const origOpen = channel.onopen;
-        channel.onopen = ev => { handleOpen(); origOpen?.(ev); };
+        const openWrapper: typeof channel.onopen = function(ev) {
+          handleOpen();
+          origOpen?.call(this, ev);
+        };
+        channel.onopen = openWrapper;
         const origClose = channel.onclose;
-        channel.onclose = ev => { handleClose(); origClose?.(ev); };
+        const closeWrapper: typeof channel.onclose = function(ev) {
+          handleClose();
+          origClose?.call(this, ev);
+        };
+        channel.onclose = closeWrapper;
         const origErr = channel.onerror;
-        channel.onerror = ev => { handleClose(); origErr?.(ev); };
+        const errWrapper: typeof channel.onerror = function(ev) {
+          handleClose();
+          origErr?.call(this, ev);
+        };
+        channel.onerror = errWrapper;
       }
     });
   }
 
-  function createWebRTCHostTransport(opts = {}){
-    const Peer = globalThis.RTCPeerConnection;
+  function createWebRTCHostTransport(opts: HostOptions = {}){
+    const Peer = syncGlobal.RTCPeerConnection;
     if (!Peer) throw new Error('WebRTC not supported in this browser.');
-    const peers = new Map();
-    const messageListeners = new Set();
-    const peerListeners = new Set();
+    const peers = new Map<string, WebRTCPeer>();
+    const messageListeners = new Set<MessageHandler>();
+    const peerListeners = new Set<(peers: PeerInfo[]) => void>();
 
     function snapshot(){
       return Array.from(peers.values()).map(peer => ({
@@ -339,18 +403,18 @@
         if (!peer || peer.channel?.readyState !== 'open') return;
         peer.channel.send(JSON.stringify(msg));
       },
-      broadcast(msg, skipId){
+      broadcast(msg, skipId?: string){
         const data = JSON.stringify(msg);
         peers.forEach(peer => {
           if (peer.id === skipId) return;
           if (peer.channel?.readyState === 'open') peer.channel.send(data);
         });
       },
-      onMessage(fn){
+      onMessage(fn: MessageHandler){
         messageListeners.add(fn);
         return () => messageListeners.delete(fn);
       },
-      onPeers(fn){
+      onPeers(fn: (peers: PeerInfo[]) => void){
         peerListeners.add(fn);
         fn(snapshot());
         return () => peerListeners.delete(fn);
@@ -366,18 +430,18 @@
     };
   }
 
-  function connectWebRTC({ code, iceServers } = {}){
+  function connectWebRTC({ code, iceServers }: ConnectOptions = {}){
     if (typeof code !== 'string' || !code.startsWith('DL1:O:')) {
       throw new Error('Invalid host code.');
     }
     const offerDesc = decode(code.split(':')[2]);
     if (!offerDesc) throw new Error('Host code corrupt.');
-    const Peer = globalThis.RTCPeerConnection;
+    const Peer = syncGlobal.RTCPeerConnection;
     if (!Peer) throw new Error('WebRTC not supported in this browser.');
     const pc = new Peer({ iceServers: iceServers || DEFAULT_ICE });
-    const listeners = new Set();
-    let channel;
-    const ready = new Promise((resolve, reject) => {
+    const listeners = new Set<MessageHandler>();
+    let channel: RTCDataChannel | null = null;
+    const ready = new Promise<void>((resolve, reject) => {
       const handleOpen = () => resolve();
       const handleClose = () => reject(new Error('Connection closed.'));
       pc.ondatachannel = ev => {
@@ -388,21 +452,39 @@
           channel.addEventListener('error', handleClose);
           channel.addEventListener('message', handleMessage);
         } else {
-          channel.onopen = handleOpen;
-          channel.onclose = handleClose;
-          channel.onerror = handleClose;
-          channel.onmessage = handleMessage;
+          const origOpen = channel.onopen;
+          const openWrapper: typeof channel.onopen = function(ev) {
+            handleOpen();
+            origOpen?.call(this, ev);
+          };
+          channel.onopen = openWrapper;
+          const origClose = channel.onclose;
+          const closeWrapper: typeof channel.onclose = function(ev) {
+            handleClose();
+            origClose?.call(this, ev);
+          };
+          channel.onclose = closeWrapper;
+          const origError = channel.onerror;
+          const errorWrapper: typeof channel.onerror = function(ev) {
+            handleClose();
+            origError?.call(this, ev);
+          };
+          channel.onerror = errorWrapper;
+          const messageWrapper: typeof channel.onmessage = function(ev) {
+            handleMessage(ev);
+          };
+          channel.onmessage = messageWrapper;
         }
       };
     });
 
-    function handleMessage(ev){
+    function handleMessage(ev: MessageEvent){
       try {
         const obj = JSON.parse(ev.data);
-        if (obj && obj.__type === 'state') {
+        if (isStateMessage(obj)) {
           applyStateMessage(obj);
         } else {
-          listeners.forEach(fn => fn(obj));
+          listeners.forEach(fn => fn(obj, 'webrtc-host'));
         }
       } catch (err) {
         /* ignore */
@@ -418,18 +500,18 @@
         send(msg){
           if (channel?.readyState === 'open') channel.send(JSON.stringify(msg));
         },
-        onMessage(fn){ listeners.add(fn); return () => listeners.delete(fn); },
+        onMessage(fn: MessageHandler){ listeners.add(fn); return () => listeners.delete(fn); },
         close(){ channel?.close(); pc.close(); },
         ready
       }));
   }
 
-  function createHost(opts){
+  function createHost(opts: HostOptions = {}){
     const transport = hasWebRTC ? createWebRTCHostTransport(opts) : createLoopbackHostTransport();
-    const listeners = new Set();
+    const listeners = new Set<MessageHandler>();
     let lastState = cloneState();
     const removeMsg = transport.onMessage((msg, fromId) => {
-      if (msg && msg.__type === 'state') return;
+      if (isStateMessage(msg)) return;
       listeners.forEach(fn => fn(msg, fromId));
     });
     const onPeers = transport.onPeers?.bind(transport);
@@ -454,7 +536,7 @@
         return peerId;
       },
       broadcast: transport.broadcast,
-      onMessage(fn){
+      onMessage(fn: MessageHandler){
         listeners.add(fn);
         return () => listeners.delete(fn);
       },
@@ -470,21 +552,21 @@
     };
   }
 
-  function connect(opts){
+  function connect(opts: ConnectOptions = {}){
     const ctor = hasWebRTC ? connectWebRTC : connectLoopback;
-    const listeners = new Set();
+    const listeners = new Set<MessageHandler>();
     return Promise.resolve(ctor(opts)).then(socket => {
-      const remove = socket.onMessage(msg => {
-        if (msg && msg.__type === 'state') {
+      const remove = socket.onMessage((msg, fromId) => {
+        if (isStateMessage(msg)) {
           applyStateMessage(msg);
         } else {
-          listeners.forEach(fn => fn(msg));
+          listeners.forEach(fn => fn(msg, fromId));
         }
       });
       return {
         answer: socket.answer,
         send: socket.send,
-        onMessage(fn){
+        onMessage(fn: MessageHandler){
           listeners.add(fn);
           return () => listeners.delete(fn);
         },
@@ -498,8 +580,9 @@
     });
   }
 
-  globalThis.Dustland.multiplayer = {
+  syncGlobal.Dustland.multiplayer = {
     startHost: opts => Promise.resolve(createHost(opts)),
     connect
   };
 })();
+/// <reference types="node" />

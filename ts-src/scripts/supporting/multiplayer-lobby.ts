@@ -1,46 +1,74 @@
-// @ts-nocheck
+type LobbyEventBus = {
+  emit?(event: string, ...args: any[]): void;
+  on?(event: string, handler: (...args: any[]) => void): void;
+  off?(event: string, handler: (...args: any[]) => void): void;
+};
+
+type MultiplayerBridge = {
+  request?(event: string, payload: unknown): void;
+  publish?(event: string, payload: unknown): void;
+  subscribe?(event: string, handler: (payload: unknown) => void): (() => void) | void;
+};
+
+type MultiplayerApi = {
+  startHost?: () => Promise<unknown>;
+  connect?: (options: { code: string }) => Promise<unknown>;
+  removeInvite?: (code: string) => void;
+};
+
+type LobbyGlobals = typeof globalThis & {
+  EventBus?: LobbyEventBus;
+  Dustland?: {
+    multiplayerBridge?: MultiplayerBridge;
+    multiplayer?: MultiplayerApi;
+  };
+};
+
+const globalDustland = globalThis as LobbyGlobals;
+
 (function(){
-  const hostBtn = document.getElementById('startHost');
-  const newInviteBtn = document.getElementById('newInvite');
-  const hostStatusEl = document.getElementById('hostStatus');
-  const peerListEl = document.getElementById('peerList');
-  const modeSection = document.getElementById('modeSection');
-  const hostSection = document.getElementById('hostSection');
-  const joinSection = document.getElementById('joinSection');
-  const inviteDeckEl = document.getElementById('inviteDeck');
-  const inviteEmptyEl = document.getElementById('inviteEmpty');
-  const inviteTemplate = document.getElementById('inviteTemplate');
-  const joinAnswerGroup = document.getElementById('joinAnswerGroup');
-  const chooseHostBtn = document.getElementById('chooseHost');
-  const chooseJoinBtn = document.getElementById('chooseJoin');
+  const hostBtn = document.getElementById('startHost') as HTMLButtonElement | null;
+  const newInviteBtn = document.getElementById('newInvite') as HTMLButtonElement | null;
+  const hostStatusEl = document.getElementById('hostStatus') as HTMLElement | null;
+  const peerListEl = document.getElementById('peerList') as HTMLElement | null;
+  const modeSection = document.getElementById('modeSection') as HTMLElement | null;
+  const hostSection = document.getElementById('hostSection') as HTMLElement | null;
+  const joinSection = document.getElementById('joinSection') as HTMLElement | null;
+  const inviteDeckEl = document.getElementById('inviteDeck') as HTMLElement | null;
+  const inviteEmptyEl = document.getElementById('inviteEmpty') as HTMLElement | null;
+  const inviteTemplate = document.getElementById('inviteTemplate') as HTMLTemplateElement | null;
+  const joinAnswerGroup = document.getElementById('joinAnswerGroup') as HTMLElement | null;
+  const chooseHostBtn = document.getElementById('chooseHost') as HTMLButtonElement | null;
+  const chooseJoinBtn = document.getElementById('chooseJoin') as HTMLButtonElement | null;
 
-  const joinCodeEl = document.getElementById('joinCode');
-  const connectBtn = document.getElementById('connectBtn');
-  const answerCodeEl = document.getElementById('answerCode');
-  const copyAnswerBtn = document.getElementById('copyAnswer');
-  const joinStatusEl = document.getElementById('joinStatus');
+  const joinCodeEl = document.getElementById('joinCode') as HTMLInputElement | null;
+  const connectBtn = document.getElementById('connectBtn') as HTMLButtonElement | null;
+  const answerCodeEl = document.getElementById('answerCode') as HTMLInputElement | null;
+  const copyAnswerBtn = document.getElementById('copyAnswer') as HTMLButtonElement | null;
+  const joinStatusEl = document.getElementById('joinStatus') as HTMLElement | null;
 
-  let hostRoom = null;
-  let joinSocket = null;
-  let removePeerWatcher = null;
+  let hostRoom: any = null;
+  let joinSocket: any = null;
+  let removePeerWatcher: (() => void) | null = null;
   let enteredGame = false;
-  let gameFrame = null;
-  let gameFrameContainer = null;
-  const bus = globalThis.EventBus;
-  const mpBridge = globalThis.Dustland?.multiplayerBridge;
+  let gameFrame: HTMLIFrameElement | null = null;
+  let gameFrameContainer: HTMLDivElement | null = null;
+  const bus = globalDustland.EventBus;
+  const mpBridge = globalDustland.Dustland?.multiplayerBridge;
   const BRIDGE_EVENT = 'module-picker:select';
   const BRIDGE_FLAG = '__bridgeRelay';
 
-  function cloneData(data){
+  function cloneData<T>(data: T): T {
     if (!data || typeof data !== 'object') return data;
-    const copy = {};
-    Object.keys(data).forEach(key => {
-      copy[key] = data[key];
+    const source = data as Record<string, unknown>;
+    const copy: Record<string, unknown> = {};
+    Object.keys(source).forEach(key => {
+      copy[key] = source[key];
     });
-    return copy;
+    return copy as T;
   }
-  const invites = new Map();
-  function rememberRole(role){
+  const invites = new Map<string, { node: HTMLElement }>();
+  function rememberRole(role: string | null){
     try {
       const store = globalThis.sessionStorage;
       if (!store?.setItem) return;
@@ -52,10 +80,10 @@
   }
   rememberRole(null);
 
-  function setText(el, text){ if (el) el.textContent = text || ''; }
+  function setText(el: HTMLElement | null, text?: string){ if (el) el.textContent = text ?? ''; }
 
-  function hide(el){ if (el?.classList) el.classList.add('hidden'); }
-  function show(el){ if (el?.classList) el.classList.remove('hidden'); }
+  function hide(el: HTMLElement | null){ if (el?.classList) el.classList.add('hidden'); }
+  function show(el: HTMLElement | null){ if (el?.classList) el.classList.remove('hidden'); }
 
   function showOnly(section){
     hide(modeSection);
@@ -64,7 +92,7 @@
     show(section);
   }
 
-  function updatePeerList(peers){
+  function updatePeerList(peers: Array<{ id: string }> | null | undefined){
     if (!peerListEl) return;
     if (!peers || !peers.length) {
       peerListEl.textContent = 'No players linked yet.';
@@ -73,7 +101,7 @@
     peerListEl.textContent = 'Linked players: ' + peers.map(p => p.id).join(', ');
   }
 
-  function updateInviteVisibility(){
+  function updateInviteVisibility(): void {
     const hasInvites = invites.size > 0;
     if (hasInvites) show(inviteDeckEl);
     else hide(inviteDeckEl);
@@ -83,13 +111,13 @@
     }
   }
 
-  function clearInvites(){
+  function clearInvites(): void {
     invites.forEach(entry => entry.node?.remove?.());
     invites.clear();
     updateInviteVisibility();
   }
 
-  function prepareHostView(){
+  function prepareHostView(): void {
     showOnly(hostSection);
     if (newInviteBtn) newInviteBtn.disabled = true;
     clearInvites();
@@ -97,7 +125,7 @@
     enteredGame = false;
   }
 
-  function updateJoinAnswerVisibility(){
+  function updateJoinAnswerVisibility(): void {
     const hasCode = !!joinCodeEl?.value?.trim();
     if (hasCode) {
       show(joinAnswerGroup);
@@ -110,7 +138,7 @@
     }
   }
 
-  function enterJoinMode(){
+  function enterJoinMode(): void {
     showOnly(joinSection);
     if (joinCodeEl) joinCodeEl.value = '';
     if (answerCodeEl) answerCodeEl.value = '';
@@ -121,7 +149,7 @@
     rememberRole(null);
   }
 
-  function enterGame(statusEl, role){
+  function enterGame(statusEl: HTMLElement | null, role: 'host' | 'client' | null){
     if (enteredGame) return;
     enteredGame = true;
     if (role) rememberRole(role);
@@ -135,24 +163,24 @@
     }, 400);
   }
 
-  function openGameFrame(){
+  function openGameFrame(): HTMLIFrameElement | null {
     if (gameFrame && gameFrameContainer) return gameFrame;
     const container = document.createElement('div');
     if (!container) return null;
     container.id = 'mpGameFrame';
-    container.style = 'position:fixed;inset:0;z-index:60;background:#000;display:flex;flex-direction:column;';
+    container.style.cssText = 'position:fixed;inset:0;z-index:60;background:#000;display:flex;flex-direction:column;';
     const iframe = document.createElement('iframe');
     if (iframe) {
       iframe.id = 'mpGameFrameView';
       iframe.src = 'dustland.html';
-      iframe.style = 'flex:1 1 auto;width:100%;height:100%;border:0;';
+      iframe.style.cssText = 'flex:1 1 auto;width:100%;height:100%;border:0;';
       iframe.allow = 'fullscreen';
       container.appendChild(iframe);
     }
     const notice = document.createElement('div');
     if (notice) {
       notice.textContent = 'Dustland is open. Keep this tab running to stay connected.';
-      notice.style = 'flex:0 0 auto;padding:10px 16px;background:rgba(12,20,12,0.88);color:#9ec2a4;font-size:0.875rem;border-top:1px solid #2f3b2f;text-align:center;';
+      notice.style.cssText = 'flex:0 0 auto;padding:10px 16px;background:rgba(12,20,12,0.88);color:#9ec2a4;font-size:0.875rem;border-top:1px solid #2f3b2f;text-align:center;';
       container.appendChild(notice);
     }
     document.body?.appendChild?.(container);
@@ -165,8 +193,10 @@
     return gameFrame;
   }
 
-  function setupModuleBridge(){
-    if (!mpBridge || !bus?.on) return;
+  function setupModuleBridge(): void {
+    const eventBus = bus;
+    if (!mpBridge || !eventBus?.on) return;
+    const safeBus = eventBus;
     const publish = typeof mpBridge.publish === 'function' ? mpBridge.publish.bind(mpBridge) : null;
     const subscribe = typeof mpBridge.subscribe === 'function' ? mpBridge.subscribe.bind(mpBridge) : null;
     if (!publish || !subscribe) return;
@@ -174,12 +204,12 @@
       const data = cloneData(payload);
       if (data && typeof data === 'object') data[BRIDGE_FLAG] = true;
       try {
-        bus.emit?.(BRIDGE_EVENT, data);
+        safeBus.emit?.(BRIDGE_EVENT, data);
       } catch (err) {
         /* ignore */
       }
     });
-    bus.on(BRIDGE_EVENT, payload => {
+    safeBus.on(BRIDGE_EVENT, payload => {
       if (!publish) return;
       if (payload && typeof payload === 'object' && payload[BRIDGE_FLAG]) return;
       const data = cloneData(payload);
@@ -192,9 +222,9 @@
     });
   }
 
-  async function copyToClipboard(el, statusEl, success){
+  async function copyToClipboard(el: HTMLInputElement | HTMLTextAreaElement | null, statusEl: HTMLElement | null, success: string){
     if (!el) return;
-    const text = el.value?.trim();
+    const text = el.value.trim();
     if (!text) return;
     try {
       if (navigator?.clipboard?.writeText) {
@@ -210,7 +240,7 @@
     setText(statusEl, success + ' (select & copy if needed)');
   }
 
-  async function startHosting(autoInvite){
+  async function startHosting(autoInvite = false){
     if (hostBtn) hostBtn.disabled = true;
     setText(hostStatusEl, 'Preparing host tools...');
     removePeerWatcher?.();
@@ -219,7 +249,7 @@
     hostRoom = null;
     clearInvites();
     try {
-      hostRoom = await globalThis.Dustland?.multiplayer?.startHost();
+      hostRoom = await globalDustland.Dustland?.multiplayer?.startHost();
       if (!hostRoom) throw new Error('Hosting unavailable.');
       setText(hostStatusEl, 'Hosting active. Generate a host code for each friend.');
       if (newInviteBtn) newInviteBtn.disabled = false;
@@ -235,15 +265,15 @@
     }
   }
 
-  function buildInviteCard(ticket){
+  function buildInviteCard(ticket: { id: string; code?: string | null }){
     const template = inviteTemplate?.content;
-    const node = template?.firstElementChild?.cloneNode(true);
+    const node = template?.firstElementChild?.cloneNode(true) as HTMLElement | null;
     if (!node) return null;
-    const hostField = node.querySelector('.host-code');
-    const answerField = node.querySelector('.answer-input');
-    const copyBtn = node.querySelector('.copy-host');
-    const linkBtn = node.querySelector('.link-player');
-    const statusEl = node.querySelector('.invite-status');
+    const hostField = node.querySelector<HTMLInputElement>('.host-code');
+    const answerField = node.querySelector<HTMLInputElement>('.answer-input');
+    const copyBtn = node.querySelector<HTMLButtonElement>('.copy-host');
+    const linkBtn = node.querySelector<HTMLButtonElement>('.link-player');
+    const statusEl = node.querySelector<HTMLElement>('.invite-status');
     if (hostField) {
       hostField.value = ticket.code || '';
       hostField.readOnly = true;
@@ -282,7 +312,7 @@
     return node;
   }
 
-  async function createInvite(){
+  async function createInvite(): Promise<void>{
     if (!hostRoom) {
       setText(hostStatusEl, 'Start hosting first.');
       return;
@@ -307,20 +337,20 @@
     }
   }
 
-  async function generateAnswer(){
-    const code = joinCodeEl.value?.trim();
+  async function generateAnswer(): Promise<void>{
+    const code = joinCodeEl?.value?.trim();
     if (!code) {
       setText(joinStatusEl, 'Paste a host code first.');
       return;
     }
-    connectBtn.disabled = true;
+    if (connectBtn) connectBtn.disabled = true;
     setText(joinStatusEl, 'Preparing connection...');
     try {
       joinSocket?.close?.();
-      joinSocket = await globalThis.Dustland?.multiplayer?.connect({ code });
+      joinSocket = await globalDustland.Dustland?.multiplayer?.connect({ code });
       if (!joinSocket) throw new Error('Connection failed.');
-      answerCodeEl.value = joinSocket.answer || '';
-      copyAnswerBtn.disabled = !answerCodeEl.value;
+      if (answerCodeEl) answerCodeEl.value = joinSocket.answer || '';
+      if (copyAnswerBtn) copyAnswerBtn.disabled = !(answerCodeEl?.value?.length);
       setText(joinStatusEl, 'Share your answer code with the host, then wait for them to link you.');
       joinSocket.ready?.then?.(() => {
         enterGame(joinStatusEl, 'client');
@@ -331,7 +361,7 @@
       joinSocket = null;
       setText(joinStatusEl, 'Error: ' + (err?.message || err));
     } finally {
-      connectBtn.disabled = false;
+      if (connectBtn) connectBtn.disabled = false;
     }
   }
 

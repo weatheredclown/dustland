@@ -1,4 +1,4 @@
-// @ts-nocheck
+const bridgeGlobal = globalThis;
 (function () {
     const CHANNEL = 'dustland.multiplayer.bridge';
     const listeners = new Map();
@@ -110,8 +110,8 @@
         listeners.clear();
         channel?.close?.();
     }
-    globalThis.Dustland = globalThis.Dustland || {};
-    globalThis.Dustland.multiplayerBridge = Object.assign(globalThis.Dustland.multiplayerBridge || {}, {
+    bridgeGlobal.Dustland = bridgeGlobal.Dustland || {};
+    bridgeGlobal.Dustland.multiplayerBridge = Object.assign(bridgeGlobal.Dustland.multiplayerBridge || {}, {
         publish,
         subscribe,
         close,

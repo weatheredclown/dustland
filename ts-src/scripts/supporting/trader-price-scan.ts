@@ -1,4 +1,4 @@
-// @ts-nocheck
+/// <reference types="node" />
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -13,13 +13,13 @@ const DEFAULT_MODULES = [
   'modules/pit-bas.module.js'
 ];
 
-let cachedTrader = null;
+let cachedTrader: any = null;
 
 function loadTraderClass(repoRoot){
   if (cachedTrader) return cachedTrader;
   const traderPath = path.resolve(repoRoot, 'scripts', 'core', 'trader.js');
   const code = fs.readFileSync(traderPath, 'utf8');
-  const context = {
+  const context: Record<string, any> = {
     console,
     Math,
     JSON,
@@ -59,18 +59,27 @@ function extractModuleData(filePath){
   throw new Error(`Unsupported module format for ${filePath}`);
 }
 
-function normalizeItemList(list){
-  const map = new Map();
+type ModuleItem = {
+  id: string;
+  mods?: Record<string, unknown>;
+  tags?: string[];
+  value?: number;
+  use?: unknown;
+  [key: string]: unknown;
+};
+
+function normalizeItemList(list: Array<ModuleItem | null | undefined> | null | undefined){
+  const map = new Map<string, ModuleItem>();
   (list || []).forEach(item => {
     if(!item || !item.id) return;
-    const existing = map.get(item.id) || { id: item.id, mods: {}, tags: [] };
-    const merged = {
+    const existing: ModuleItem = map.get(item.id) ?? { id: item.id, mods: {}, tags: [] };
+    const merged: ModuleItem = {
       ...existing,
       ...item,
       mods: { ...existing.mods, ...(item.mods || {}) },
       tags: Array.isArray(existing.tags) || Array.isArray(item.tags)
-        ? Array.from(new Set([...(existing.tags || []), ...(item.tags || [])]))
-        : undefined
+        ? Array.from(new Set([...(existing.tags || []), ...(Array.isArray(item.tags) ? item.tags : [])]))
+        : existing.tags
     };
     if(existing.value == null && item.value != null){
       merged.value = item.value;
@@ -83,15 +92,18 @@ function normalizeItemList(list){
   return map;
 }
 
-function calcModScore(item){
-  return Object.values(item?.mods || {}).reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
+function calcModScore(item: { mods?: Record<string, unknown> } | null | undefined){
+  const mods = item?.mods;
+  if (!mods) return 0;
+  return Object.values(mods).reduce<number>((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
 }
 
-function extractHealValue(item){
+function extractHealValue(item: ModuleItem | undefined | null){
   if(!item || !item.use) return null;
   const use = item.use;
-  if(typeof use === 'object' && typeof use.amount === 'number'){
-    return use.amount;
+  if(use && typeof use === 'object' && 'amount' in use){
+    const amount = (use as { amount?: unknown }).amount;
+    if (typeof amount === 'number') return amount;
   }
   return null;
 }
@@ -140,9 +152,9 @@ function formatNumber(value){
   return value.toFixed(2);
 }
 
-function collectScrapSources(data, threshold){
-  const sources = [];
-  const consider = (kind, ref, combat) => {
+function collectScrapSources(data: Record<string, any>, threshold: number){
+  const sources: Array<{ kind: string; id: string; min: number; max: number; avg: number; challenge: number | null }> = [];
+  const consider = (kind: string, ref: string, combat: any) => {
     if(!combat || !combat.scrap) return;
     const scrap = combat.scrap;
     let min;
@@ -174,7 +186,7 @@ function collectScrapSources(data, threshold){
   return sources;
 }
 
-export function collectPricingData(modulePaths, opts = {}){
+export function collectPricingData(modulePaths: string[], opts: { challengeThreshold?: number; repoRoot?: string } = {}){
   const threshold = typeof opts.challengeThreshold === 'number' ? opts.challengeThreshold : 10;
   const repoRoot = opts.repoRoot || REPO_ROOT;
   const Trader = loadTraderClass(repoRoot);
