@@ -187,18 +187,73 @@ declare global {
     [key: string]: unknown;
   }
 
+  type PartyFlags = Record<string, boolean | number | string | undefined>;
+
+  type PartySpecialEntry =
+    | string
+    | {
+        id?: string;
+        name?: string;
+        label?: string;
+        [key: string]: unknown;
+      };
+
+  interface PartyItem {
+    id: string;
+    name: string;
+    type: string;
+    mods?: {
+      [key: string]: unknown;
+      adrenaline_gen_mod?: number;
+      adrenaline_dmg_mod?: number;
+      granted_special?: PartySpecialEntry | PartySpecialEntry[];
+    };
+  }
+
+  interface PartyEquipmentSlots {
+    weapon: PartyItem | null;
+    armor: PartyItem | null;
+    trinket: PartyItem | null;
+  }
+
   interface PartyMember {
+    id: string;
+    name: string;
+    role: string;
+    permanent: boolean;
+    portraitSheet: string | null;
+    lvl: number;
+    xp: number;
+    skillPoints: number;
+    stats: Record<string, number>;
+    equip: PartyEquipmentSlots;
+    maxHp: number;
+    hp: number;
+    ap: number;
+    maxAdr: number;
+    adr: number;
+    _bonus: Record<string, number>;
+    special: PartySpecialEntry[];
+    adrGenMod: number;
+    adrDmgMod: number;
+    cooldowns: Record<string, number>;
+    guard: number;
+    statusEffects: Array<Record<string, unknown>>;
+    persona?: string;
+    _baseSpecial?: PartySpecialEntry[];
+    quirk?: string | null;
     hydration?: number;
     [key: string]: unknown;
   }
 
-  type Party = Array<PartyMember> & {
-    map?: string;
-    x?: number;
-    y?: number;
-    flags?: Record<string, number>;
-    [key: string]: unknown;
-  };
+  interface Party extends Array<PartyMember> {
+    map: string;
+    x: number;
+    y: number;
+    flags: PartyFlags;
+    fallen: PartyMember[];
+    _roster: PartyMember[] | null;
+  }
 
   interface DustlandNpc {
     map?: string;
@@ -276,7 +331,7 @@ declare global {
     processNode?: unknown,
     processChoice?: unknown,
     opts?: unknown
-  ): unknown;
+  ): DustlandNpc;
   function renderInv(): void;
   function calcItemValue(item: unknown, member?: unknown): number;
   function equipItem(memberIndex: number, itemIndex: number): void;
