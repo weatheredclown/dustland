@@ -142,8 +142,27 @@ declare global {
     [key: string]: unknown;
   }
 
+  interface DustlandModuleInstance {
+    postLoad?: (
+      moduleData: DustlandModuleInstance,
+      context?: { phase?: string; [key: string]: unknown }
+    ) => void;
+    start?: { map: string; x: number; y: number } | null;
+    templates?: Array<{
+      id?: string;
+      color?: string;
+      name?: string;
+      desc?: string;
+      combat?: Record<string, unknown>;
+      [key: string]: unknown;
+    }>;
+    npcs?: DustlandNpc[];
+    [key: string]: unknown;
+  }
+
   interface DustlandEventBus {
     on?: (event: string, handler: (...args: unknown[]) => void) => void;
+    off?: (event: string, handler: (...args: unknown[]) => void) => void;
     emit?: (event: string, payload?: unknown) => void;
     [key: string]: unknown;
   }
@@ -158,6 +177,11 @@ declare global {
     personaTemplates?: Record<string, DustlandPersonaTemplate>;
     gameState?: DustlandGameState;
     eventBus?: DustlandEventBus;
+    eventFlags?: {
+      watch?: (event: string, flag: string) => void;
+      clear?: (flag: string) => void;
+      [key: string]: unknown;
+    };
     zoneEffects?: DustlandZoneEffect[];
     weather?: {
       getWeather?: () => DustlandWeatherState;
@@ -276,11 +300,13 @@ declare global {
     TRAINER_UPGRADE_SCHEMA?: JsonSchema;
     TRAINER_UPGRADES?: TrainerUpgradeMap;
     eventBus?: DustlandEventBus;
+    EventBus?: DustlandEventBus;
     party?: Party;
     player?: { scrap?: number; [key: string]: unknown };
     CURRENCY?: string;
     NPCS?: DustlandNpc[];
-    DUSTLAND_MODULE?: { postLoad?: (moduleData: unknown) => void };
+    DUSTLAND_MODULE?: DustlandModuleInstance;
+    LOOTBOX_DEMO_MODULE?: DustlandModuleInstance;
     applyModule?: (moduleData: unknown) => void;
     setPartyPos?: (x: number, y: number) => void;
     setMap?: (map: string, label?: string) => void;
@@ -300,6 +326,7 @@ declare global {
     clamp: (value: number, min: number, max: number) => number;
     incFlag?: (flag: string, delta?: number) => void;
     flagValue?: (flag: string) => number;
+    setFlag?: (flag: string, value: number | string | boolean) => void;
     ItemGen?: {
       statRanges: Record<string, { min: number; max: number }>;
       generate(rank: string): { stats: { power: number } };
@@ -340,4 +367,10 @@ declare global {
   function getSpecialization(id: string): unknown;
   function getClassSpecials(id: string): unknown;
   function getQuirk(id: string): unknown;
+  function applyModule(moduleData: unknown): void;
+  function setPartyPos(x: number, y: number): void;
+  function setMap(map: string, label?: string): void;
+  function setFlag(flag: string, value: number | string | boolean): void;
+  function incFlag(flag: string, delta?: number): void;
+  function flagValue(flag: string): number;
 }

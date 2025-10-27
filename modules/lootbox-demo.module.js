@@ -1,6 +1,6 @@
-// @ts-nocheck
 function seedWorldContent() { }
-const DATA = `
+(() => {
+    const DATA = `
 {
   "seed": "lootbox-demo",
   "start": { "map": "demo_room", "x": 1, "y": 3 },
@@ -77,56 +77,82 @@ const DATA = `
     }
   ]
 }`;
-function postLoad(module) {
-    let sawDrop = false;
-    Dustland.eventFlags.watch('spoils:opened', 'cache_opened');
-    Dustland.eventBus.on('spoils:drop', () => { sawDrop = true; });
-    Dustland.eventBus.on('combat:ended', ({ result }) => {
-        if (result === 'loot') {
-            incFlag('dummy_defeated');
-            if (!sawDrop)
-                Dustland.eventBus.emit('mentor:bark', { text: 'Better luck next time', sound: 'mentor' });
-            sawDrop = false;
-        }
-    });
-    Dustland.eventBus.on('spoils:opened', () => {
-        Dustland.eventBus.emit('mentor:bark', { text: 'Good job', sound: 'mentor' });
-    });
-    // Map effect strings to real functions
-    module.npcs?.forEach(n => {
-        for (const key in n.tree) {
-            const node = n.tree[key];
-            (node.choices || []).forEach(ch => {
-                if (Array.isArray(ch.effects)) {
-                    ch.effects = ch.effects.map(e => e === 'clear_cache'
-                        ? () => Dustland.eventFlags.clear('cache_opened')
-                        : e === 'inc_challenge'
-                            ? () => incFlag('dummy_challenge')
-                            : e);
+    function postLoad(moduleData) {
+        let sawDrop = false;
+        Dustland.eventFlags?.watch?.('spoils:opened', 'cache_opened');
+        Dustland.eventBus?.on?.('spoils:drop', () => {
+            sawDrop = true;
+        });
+        Dustland.eventBus?.on?.('combat:ended', (payload) => {
+            if (payload?.result === 'loot') {
+                incFlag('dummy_defeated');
+                if (!sawDrop) {
+                    Dustland.eventBus?.emit?.('mentor:bark', { text: 'Better luck next time', sound: 'mentor' });
                 }
-                if (ch.spawn && ch.spawn.challenge) {
-                    if (ch.spawn.challenge.flag) {
-                        ch.spawn.challenge = flagValue(ch.spawn.challenge.flag);
+                sawDrop = false;
+            }
+        });
+        Dustland.eventBus?.on?.('spoils:opened', () => {
+            Dustland.eventBus?.emit?.('mentor:bark', { text: 'Good job', sound: 'mentor' });
+        });
+        // Map effect strings to real functions
+        moduleData.npcs?.forEach(npc => {
+            if (!npc?.tree)
+                return;
+            for (const key of Object.keys(npc.tree)) {
+                const node = npc.tree[key];
+                if (!node?.choices)
+                    continue;
+                node.choices = node.choices.map(choice => {
+                    if (!choice)
+                        return choice;
+                    if (Array.isArray(choice.effects)) {
+                        choice.effects = choice.effects.map(effect => effect === 'clear_cache'
+                            ? () => Dustland.eventFlags?.clear?.('cache_opened')
+                            : effect === 'inc_challenge'
+                                ? () => incFlag('dummy_challenge')
+                                : effect);
                     }
-                    else if (ch.spawn.challenge.add) {
-                        const [f, amt] = ch.spawn.challenge.add;
-                        ch.spawn.challenge = flagValue(f) + amt;
+                    const spawn = choice.spawn;
+                    if (spawn && typeof spawn.challenge === 'object' && spawn.challenge) {
+                        const challenge = spawn.challenge;
+                        if (challenge.flag) {
+                            spawn.challenge = flagValue(challenge.flag);
+                        }
+                        else if (Array.isArray(challenge.add)) {
+                            const [flag, amt] = challenge.add;
+                            if (typeof flag === 'string' && typeof amt === 'number') {
+                                spawn.challenge = flagValue(flag) + amt;
+                            }
+                        }
                     }
-                }
-            });
+                    return choice;
+                });
+            }
+        });
+    }
+    const lootboxModuleData = JSON.parse(DATA);
+    globalThis.LOOTBOX_DEMO_MODULE = lootboxModuleData;
+    lootboxModuleData.postLoad = postLoad;
+    globalThis.startGame = function startGame() {
+        const moduleData = globalThis.LOOTBOX_DEMO_MODULE;
+        if (!moduleData)
+            return;
+        moduleData.postLoad?.(moduleData);
+        applyModule(moduleData);
+        setFlag('dummy_challenge', 5);
+        const start = moduleData.start;
+        setPartyPos(start.x, start.y);
+        setMap(start.map, 'Loot Box Demo');
+        const template = moduleData.templates.find(t => t.id === 'training_dummy');
+        if (!template) {
+            throw new Error('training_dummy template missing');
         }
-    });
-}
-globalThis.LOOTBOX_DEMO_MODULE = JSON.parse(DATA);
-globalThis.LOOTBOX_DEMO_MODULE.postLoad = postLoad;
-startGame = function () {
-    LOOTBOX_DEMO_MODULE.postLoad?.(LOOTBOX_DEMO_MODULE);
-    applyModule(LOOTBOX_DEMO_MODULE);
-    setFlag('dummy_challenge', 5);
-    const s = LOOTBOX_DEMO_MODULE.start;
-    setPartyPos(s.x, s.y);
-    setMap(s.map, 'Loot Box Demo');
-    const template = LOOTBOX_DEMO_MODULE.templates.find(t => t.id === 'training_dummy');
-    const npc = makeNPC('training_dummy_1', 'demo_room', 5, Math.floor(6 / 2), template.color, template.name, '', template.desc, {}, null, null, null, { combat: { ...template.combat, HP: 5, challenge: 5 } });
-    NPCS.push(npc);
-};
+        const npc = makeNPC('training_dummy_1', 'demo_room', 5, Math.floor(6 / 2), template.color, template.name, '', template.desc, {}, null, null, null, { combat: { ...template.combat, HP: 5, challenge: 5 } });
+        const npcList = globalThis.NPCS;
+        if (!npcList) {
+            throw new Error('NPCS is not initialized');
+        }
+        npcList.push(npc);
+    };
+})();
