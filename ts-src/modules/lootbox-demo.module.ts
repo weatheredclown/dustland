@@ -1,6 +1,45 @@
-// @ts-nocheck
 function seedWorldContent() {}
 
+interface LootboxDemoSpawnChallenge {
+  flag?: string;
+  add?: [string, number];
+  [key: string]: unknown;
+}
+
+interface LootboxDemoChoice {
+  effects?: Array<unknown>;
+  spawn?: {
+    challenge?: number | LootboxDemoSpawnChallenge;
+    [key: string]: unknown;
+  } | null;
+  to?: string;
+  [key: string]: unknown;
+}
+
+interface LootboxDemoDialogNode {
+  choices?: LootboxDemoChoice[];
+  [key: string]: unknown;
+}
+
+interface LootboxDemoNpc {
+  tree?: Record<string, LootboxDemoDialogNode>;
+  [key: string]: unknown;
+}
+
+interface LootboxDemoModule extends DustlandModuleInstance {
+  start: { map: string; x: number; y: number };
+  templates: Array<{
+    id?: string;
+    color: string;
+    name: string;
+    desc: string;
+    combat: Record<string, unknown>;
+    [key: string]: unknown;
+  }>;
+  npcs?: LootboxDemoNpc[];
+}
+
+(() => {
 const DATA = `
 {
   "seed": "lootbox-demo",
@@ -79,57 +118,96 @@ const DATA = `
   ]
 }`;
 
-function postLoad(module){
+function postLoad(moduleData: LootboxDemoModule): void {
   let sawDrop = false;
-  Dustland.eventFlags.watch('spoils:opened', 'cache_opened');
-  Dustland.eventBus.on('spoils:drop', () => { sawDrop = true; });
-  Dustland.eventBus.on('combat:ended', ({ result }) => {
-    if(result === 'loot'){
+  Dustland.eventFlags?.watch?.('spoils:opened', 'cache_opened');
+  Dustland.eventBus?.on?.('spoils:drop', () => {
+    sawDrop = true;
+  });
+  Dustland.eventBus?.on?.('combat:ended', (payload?: { result?: string } | null) => {
+    if (payload?.result === 'loot') {
       incFlag('dummy_defeated');
-      if(!sawDrop) Dustland.eventBus.emit('mentor:bark', { text:'Better luck next time', sound:'mentor' });
+      if (!sawDrop) {
+        Dustland.eventBus?.emit?.('mentor:bark', { text: 'Better luck next time', sound: 'mentor' });
+      }
       sawDrop = false;
     }
   });
-  Dustland.eventBus.on('spoils:opened', () => {
-    Dustland.eventBus.emit('mentor:bark', { text:'Good job', sound:'mentor' });
+  Dustland.eventBus?.on?.('spoils:opened', () => {
+    Dustland.eventBus?.emit?.('mentor:bark', { text: 'Good job', sound: 'mentor' });
   });
 
   // Map effect strings to real functions
-  module.npcs?.forEach(n => {
-    for (const key in n.tree){
-      const node = n.tree[key];
-      (node.choices || []).forEach(ch => {
-        if (Array.isArray(ch.effects)){
-          ch.effects = ch.effects.map(e => e === 'clear_cache'
-            ? () => Dustland.eventFlags.clear('cache_opened')
-            : e === 'inc_challenge'
-              ? () => incFlag('dummy_challenge')
-              : e);
+  moduleData.npcs?.forEach(npc => {
+    if (!npc?.tree) return;
+    for (const key of Object.keys(npc.tree)) {
+      const node = npc.tree[key];
+      if (!node?.choices) continue;
+      node.choices = node.choices.map(choice => {
+        if (!choice) return choice;
+        if (Array.isArray(choice.effects)) {
+          choice.effects = choice.effects.map(effect =>
+            effect === 'clear_cache'
+              ? () => Dustland.eventFlags?.clear?.('cache_opened')
+              : effect === 'inc_challenge'
+                ? () => incFlag('dummy_challenge')
+                : effect
+          );
         }
-        if (ch.spawn && ch.spawn.challenge){
-          if (ch.spawn.challenge.flag){
-            ch.spawn.challenge = flagValue(ch.spawn.challenge.flag);
-          } else if (ch.spawn.challenge.add){
-            const [f, amt] = ch.spawn.challenge.add;
-            ch.spawn.challenge = flagValue(f) + amt;
+        const spawn = choice.spawn;
+        if (spawn && typeof spawn.challenge === 'object' && spawn.challenge) {
+          const challenge = spawn.challenge as LootboxDemoSpawnChallenge;
+          if (challenge.flag) {
+            spawn.challenge = flagValue(challenge.flag);
+          } else if (Array.isArray(challenge.add)) {
+            const [flag, amt] = challenge.add;
+            if (typeof flag === 'string' && typeof amt === 'number') {
+              spawn.challenge = flagValue(flag) + amt;
+            }
           }
         }
+        return choice;
       });
     }
   });
 }
 
-globalThis.LOOTBOX_DEMO_MODULE = JSON.parse(DATA);
-globalThis.LOOTBOX_DEMO_MODULE.postLoad = postLoad;
+const lootboxModuleData = JSON.parse(DATA) as LootboxDemoModule;
+globalThis.LOOTBOX_DEMO_MODULE = lootboxModuleData;
+lootboxModuleData.postLoad = postLoad;
 
-startGame = function(){
-  LOOTBOX_DEMO_MODULE.postLoad?.(LOOTBOX_DEMO_MODULE);
-  applyModule(LOOTBOX_DEMO_MODULE);
+globalThis.startGame = function startGame(): void {
+  const moduleData = globalThis.LOOTBOX_DEMO_MODULE as LootboxDemoModule | undefined;
+  if (!moduleData) return;
+  moduleData.postLoad?.(moduleData);
+  applyModule(moduleData);
   setFlag('dummy_challenge', 5);
-  const s = LOOTBOX_DEMO_MODULE.start;
-  setPartyPos(s.x, s.y);
-  setMap(s.map, 'Loot Box Demo');
-  const template = LOOTBOX_DEMO_MODULE.templates.find(t => t.id === 'training_dummy');
-  const npc = makeNPC('training_dummy_1', 'demo_room', 5, Math.floor(6/2), template.color, template.name, '', template.desc, {}, null, null, null, { combat: { ...template.combat, HP: 5, challenge: 5 } });
-  NPCS.push(npc);
+  const start = moduleData.start;
+  setPartyPos(start.x, start.y);
+  setMap(start.map, 'Loot Box Demo');
+  const template = moduleData.templates.find(t => t.id === 'training_dummy');
+  if (!template) {
+    throw new Error('training_dummy template missing');
+  }
+  const npc = makeNPC(
+    'training_dummy_1',
+    'demo_room',
+    5,
+    Math.floor(6 / 2),
+    template.color,
+    template.name,
+    '',
+    template.desc,
+    {},
+    null,
+    null,
+    null,
+    { combat: { ...template.combat, HP: 5, challenge: 5 } }
+  );
+  const npcList = (globalThis as { NPCS?: DustlandNpc[] | undefined }).NPCS;
+  if (!npcList) {
+    throw new Error('NPCS is not initialized');
+  }
+  npcList.push(npc);
 };
+})();

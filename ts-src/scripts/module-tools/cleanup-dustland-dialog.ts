@@ -1,6 +1,24 @@
-// @ts-nocheck
 import fs from 'node:fs';
 import { readModule } from './utils.js';
+
+interface QuestData {
+  id?: string;
+  dialog?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface NpcData {
+  id?: string;
+  dialogs?: unknown;
+  tree?: Record<string, DustlandDialogNode | undefined> | undefined;
+  [key: string]: unknown;
+}
+
+interface ModuleFileData {
+  quests?: QuestData[];
+  npcs?: NpcData[];
+  [key: string]: unknown;
+}
 
 const [file] = process.argv.slice(2);
 if (!file) {
@@ -9,7 +27,7 @@ if (!file) {
 }
 
 const mod = readModule(file);
-const data = mod.data;
+const data = mod.data as ModuleFileData;
 
 const questDialogText = {
   q_solar_alignment: {
@@ -26,7 +44,9 @@ const questDialogText = {
 
 if (Array.isArray(data.quests)) {
   for (const quest of data.quests) {
-    const dialog = questDialogText[quest.id];
+    const questId = quest.id;
+    if (!questId) continue;
+    const dialog = questDialogText[questId as keyof typeof questDialogText];
     if (dialog) {
       quest.dialog = { ...dialog };
     }
@@ -35,17 +55,20 @@ if (Array.isArray(data.quests)) {
 
 if (Array.isArray(data.npcs)) {
   for (const npc of data.npcs) {
-    if (npc?.id === 'tape_sage' && npc.dialogs) {
+    if (!npc) continue;
+    if (npc.id === 'tape_sage' && npc.dialogs) {
       delete npc.dialogs;
     }
-    const tree = npc?.tree;
+    const tree = npc.tree;
     if (!tree || typeof tree !== 'object') continue;
-    for (const node of Object.values(tree)) {
+    for (const node of Object.values(tree) as Array<DustlandDialogNode | undefined>) {
       if (!node || !Array.isArray(node.choices)) continue;
-      node.choices = node.choices.filter(choice => {
+      node.choices = node.choices.filter((choice?: DustlandDialogChoice | null) => {
         if (!choice || choice.to !== 'bye') return true;
-        const keys = Object.keys(choice).filter(k => choice[k] !== undefined);
-        return keys.some(k => k !== 'label' && k !== 'to');
+        const definedKeys = Object.keys(choice).filter(
+          key => (choice as Record<string, unknown>)[key] !== undefined
+        );
+        return definedKeys.some(key => key !== 'label' && key !== 'to');
       });
     }
   }

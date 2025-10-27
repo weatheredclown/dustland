@@ -1,4 +1,3 @@
-// @ts-nocheck
 import fs from 'node:fs';
 import { readModule } from './utils.js';
 const [file] = process.argv.slice(2);
@@ -22,7 +21,10 @@ const questDialogText = {
 };
 if (Array.isArray(data.quests)) {
     for (const quest of data.quests) {
-        const dialog = questDialogText[quest.id];
+        const questId = quest.id;
+        if (!questId)
+            continue;
+        const dialog = questDialogText[questId];
         if (dialog) {
             quest.dialog = { ...dialog };
         }
@@ -30,20 +32,22 @@ if (Array.isArray(data.quests)) {
 }
 if (Array.isArray(data.npcs)) {
     for (const npc of data.npcs) {
-        if (npc?.id === 'tape_sage' && npc.dialogs) {
+        if (!npc)
+            continue;
+        if (npc.id === 'tape_sage' && npc.dialogs) {
             delete npc.dialogs;
         }
-        const tree = npc?.tree;
+        const tree = npc.tree;
         if (!tree || typeof tree !== 'object')
             continue;
         for (const node of Object.values(tree)) {
             if (!node || !Array.isArray(node.choices))
                 continue;
-            node.choices = node.choices.filter(choice => {
+            node.choices = node.choices.filter((choice) => {
                 if (!choice || choice.to !== 'bye')
                     return true;
-                const keys = Object.keys(choice).filter(k => choice[k] !== undefined);
-                return keys.some(k => k !== 'label' && k !== 'to');
+                const definedKeys = Object.keys(choice).filter(key => choice[key] !== undefined);
+                return definedKeys.some(key => key !== 'label' && key !== 'to');
             });
         }
     }
