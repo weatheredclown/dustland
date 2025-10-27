@@ -1,74 +1,7 @@
 // @ts-nocheck
 /* global toast, log, EventBus */
-const { on } = globalThis.EventBus;
-/**
- * @typedef {object} GameItem
- * @property {string} id
- * @property {string} name
- * @property {string} type
- * @property {{[key:string]: number}} [mods]
- * @property {{type:string, amount?:number, duration?:number, stat?:string, text?:string, onUse?:Function}} [use]
- * @property {string} [desc]
- * @property {number} [rarity]
- * @property {number} [value]
- */
-/**
- * A party member character.
- * @typedef {object} PartyMember
- * @property {string} id
- * @property {string} name
- * @property {number} hp
- * @property {number} maxHp
- * @property {number} lvl
- * @property {Record<string, number>} stats
- * @property {{weapon:GameItem|null, armor:GameItem|null, trinket:GameItem|null}} equip
- * @property {string} [origin]
- * @property {string} [quirk]
- */
-/**
- * @typedef {object} QuestState
- * @property {string} id
- * @property {'available'|'active'|'completed'} status
- */
-/**
- * @typedef {object} NPC
- * @property {string} id
- * @property {string} map
- * @property {number} x
- * @property {number} y
- * @property {string} color
- * @property {string} name
- * @property {string} title
- * @property {{[key:string]: any}} tree
- * @property {Quest} [quest]
- */
-/**
- * @typedef {object} Quest
- * @property {string} id
- * @property {string} name
- * @property {'available'|'active'|'completed'} status
- * @property {string} [desc]
- * @property {Function} [onStart]
- * @property {Function} [onComplete]
- */
-/**
- * @typedef {object} Map
- * @property {string} id
- * @property {number} w
- * @property {number} h
- * @property {number[][]} grid
- * @property {number} [entryX]
- * @property {number} [entryY]
- * @property {string} [name]
- * @property {{name:string,HP?:number,DEF?:number,loot?:string}[]} [enemies]
- */
-/**
- * @typedef {object} Check
- * @property {string} stat
- * @property {number} dc
- * @property {Function[]} [onSuccess]
- * @property {Function[]} [onFail]
- */
+const coreEventBus = (globalThis.EventBus ?? globalThis.eventBus);
+const { on } = coreEventBus ?? { on: () => undefined };
 // ===== Core helpers =====
 const ROLL_SIDES = 12;
 const DC = Object.freeze({ TALK: 8, REPAIR: 9 });
@@ -77,16 +10,19 @@ const CURRENCY = 'Scrap';
 function seedWorldContent() { }
 let worldSeed = Date.now();
 function createRNG(seed) {
-    return function () {
+    return function rngInstance() {
         seed |= 0;
         seed = (seed + 0x6D2B79F5) | 0;
-        let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
-        t = (t + Math.imul(t ^ t >>> 7, 61 | t)) ^ t;
-        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
 }
 let rng = createRNG(worldSeed);
-function setRNGSeed(seed) { worldSeed = seed >>> 0; rng = createRNG(worldSeed); }
+function setRNGSeed(seed) {
+    worldSeed = seed >>> 0;
+    rng = createRNG(worldSeed);
+}
 const rand = (n) => Math.floor(rng() * n);
 function nextId(prefix, arr) {
     let i = 1;
@@ -107,9 +43,9 @@ function refreshUI() {
     updateHUD?.();
 }
 class Dice {
-    static skill(character, stat, add = 0, sides = ROLL_SIDES, rng = Math.random) {
-        const base = (character?.stats?.[stat] || 0);
-        const roll = Math.floor(rng() * sides) + 1;
+    static skill(character, stat, add = 0, sides = ROLL_SIDES, roller = Math.random) {
+        const base = character?.stats?.[stat] || 0;
+        const roll = Math.floor(roller() * sides) + 1;
         return roll + Math.floor(base / 2) + add;
     }
 }
@@ -130,9 +66,9 @@ async function startCombat(defender) {
         const { HP, portraitSheet, portraitLock, prompt, npc, name, ...rest } = def || {};
         return {
             ...rest,
-            id: def.id || def.name,
+            id: def?.id || def?.name,
             name: name || npc?.name || 'Enemy',
-            hp: def.hp ?? HP ?? 5,
+            hp: def?.hp ?? HP ?? 5,
             npc,
             portraitSheet: portraitSheet || npc?.portraitSheet,
             portraitLock: portraitLock ?? npc?.portraitLock,
@@ -163,6 +99,7 @@ async function startCombat(defender) {
         }
     }
     const result = await openCombat(enemies);
+    const combatResult = result ?? { result: 'flee' };
     if (result && result.result !== 'flee') {
         const avgLvl = party.reduce((s, m) => s + (m.lvl || 1), 0) / (party.length || 1);
         let xp = 0;
@@ -184,7 +121,7 @@ async function startCombat(defender) {
         player.hp = attacker.hp;
     }
     refreshUI();
-    return result;
+    return combatResult;
 }
 // ===== Tiles =====
 const TILE = Object.freeze({ SAND: 0, ROCK: 1, WATER: 2, BRUSH: 3, ROAD: 4, RUIN: 5, WALL: 6, FLOOR: 7, DOOR: 8, BUILDING: 9 });

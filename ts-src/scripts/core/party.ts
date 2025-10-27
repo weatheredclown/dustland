@@ -1,29 +1,10 @@
 type StatMap = Record<string, number>;
 
-type GameItem = {
-  id: string;
-  name: string;
-  type: string;
-  mods?: {
-    [key: string]: unknown;
-    adrenaline_gen_mod?: number;
-    adrenaline_dmg_mod?: number;
-    granted_special?: SpecialEntry | SpecialEntry[];
-  };
-};
+type PartyGameItem = PartyItem;
 
-type EquipmentSlots = {
-  weapon: GameItem | null;
-  armor: GameItem | null;
-  trinket: GameItem | null;
-};
+type EquipmentSlots = PartyEquipmentSlots;
 
-type SpecialEntry = string | ({
-  id?: string;
-  name?: string;
-  label?: string;
-  [key: string]: unknown;
-});
+type SpecialEntry = PartySpecialEntry;
 
 type PersonaData = {
   mods?: StatMap;
@@ -58,34 +39,6 @@ function getRosterState(roster: PartyRoster): PartyState {
     throw new Error('Party state not initialized');
   }
   return state;
-}
-
-interface PartyMember {
-  id: string;
-  name: string;
-  role: string;
-  permanent: boolean;
-  portraitSheet: string | null;
-  lvl: number;
-  xp: number;
-  skillPoints: number;
-  stats: StatMap;
-  equip: EquipmentSlots;
-  maxHp: number;
-  hp: number;
-  ap: number;
-  maxAdr: number;
-  adr: number;
-  _bonus: StatMap;
-  special: SpecialEntry[];
-  adrGenMod: number;
-  adrDmgMod: number;
-  cooldowns: Record<string, number>;
-  guard: number;
-  statusEffects: Array<Record<string, unknown>>;
-  persona?: string;
-  _baseSpecial?: SpecialEntry[];
-  quirk?: string | null;
 }
 
 const baseStats = (): StatMap => ({
@@ -235,10 +188,13 @@ class Character implements PartyMember {
         if(typeof dmg === 'number'){
           this.adrDmgMod *= dmg;
         }
-        const grant = it.mods.granted_special as SpecialEntry | SpecialEntry[] | undefined;
-        if(grant){
-          if(Array.isArray(grant)) this.special.push(...grant);
-          else this.special.push(grant);
+        const grantRaw = it.mods.granted_special;
+        if(grantRaw){
+          if(Array.isArray(grantRaw)){
+            this.special.push(...grantRaw as SpecialEntry[]);
+          } else if(typeof grantRaw === 'string' || typeof grantRaw === 'object'){
+            this.special.push(grantRaw as SpecialEntry);
+          }
         }
       }
     }
@@ -430,8 +386,8 @@ function setLeader(idx: number): void {
   const m = party[selectedMember];
   if(!m) return;
   const slots: Array<keyof EquipmentSlots> = ['weapon','armor','trinket'];
-  const playerState = (globalThis as { player?: { inv?: GameItem[] } }).player;
-  const inventory = Array.isArray(playerState?.inv) ? playerState.inv as GameItem[] : null;
+  const playerState = (globalThis as { player?: { inv?: PartyGameItem[] } }).player;
+  const inventory = Array.isArray(playerState?.inv) ? playerState.inv as PartyGameItem[] : null;
   if(!inventory){
     if(typeof renderInv === 'function') renderInv();
     return;
