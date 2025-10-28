@@ -1,6 +1,3 @@
-// @ts-nocheck
-// Splash screen allowing the player to pick a module.
-// Displays a pulsing title and swirling dust background with drifting particles.
 const MODULES = [
     { id: 'dustland', name: 'Dustland', file: 'modules/dustland.module.js' },
     { id: 'office', name: 'Office', file: 'modules/office.module.js' },
@@ -14,25 +11,31 @@ const MODULES = [
     { id: 'cli-demo', name: 'CLI Demo Adventure', file: 'modules/cli-demo.module.js' },
 ];
 const NET_FLAG = '__fromNet';
-const pickerBus = globalThis.EventBus;
-const mpBridge = globalThis.Dustland?.multiplayerBridge;
+const pickerBus = window.EventBus;
+const mpBridge = window.Dustland?.multiplayerBridge;
 let sessionRole = null;
 try {
-    sessionRole = globalThis.sessionStorage?.getItem?.('dustland.multiplayerRole') || null;
+    sessionRole = window.sessionStorage?.getItem?.('dustland.multiplayerRole') ?? null;
 }
 catch (err) {
     sessionRole = null;
 }
 const isClient = sessionRole === 'client';
+function isModulePickerPayload(payload) {
+    if (!payload || typeof payload !== 'object')
+        return false;
+    const record = payload;
+    return typeof record.moduleId === 'string' || typeof record.moduleFile === 'string';
+}
 function disconnectClient() {
     try {
-        globalThis.Dustland?.multiplayer?.disconnect?.('client');
+        window.Dustland?.multiplayer?.disconnect?.('client');
     }
     catch (err) {
         /* ignore */
     }
     try {
-        globalThis.sessionStorage?.removeItem?.('dustland.multiplayerRole');
+        window.sessionStorage?.removeItem?.('dustland.multiplayerRole');
     }
     catch (err) {
         /* ignore */
@@ -52,11 +55,17 @@ window.showStart = () => { };
 window.resetAll = () => { };
 const loadBtn = document.getElementById('loadBtn');
 if (loadBtn)
-    UI.hide('loadBtn');
+    UI?.hide?.('loadBtn');
 function startDust(canvas, getScale = () => 1) {
     const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        throw new Error('Dust background requires a 2D canvas context');
+    }
     const particles = [];
-    const attractors = [{ angle: 0 }, { angle: Math.PI }];
+    const attractors = [
+        { angle: 0, x: 0, y: 0 },
+        { angle: Math.PI, x: 0, y: 0 }
+    ];
     function resize() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -95,7 +104,7 @@ function startDust(canvas, getScale = () => 1) {
         }
     }
     for (let i = 0; i < 60; i++) {
-        const p = { x: 0, y: 0, vx: 0, vy: 0 };
+        const p = { x: 0, y: 0, vx: 0, vy: 0, life: 0, size: 0, speed: 0 };
         spawn(p);
         particles.push(p);
     }
@@ -113,7 +122,11 @@ function startDust(canvas, getScale = () => 1) {
         ctx.fillStyle = 'rgba(255,255,255,.4)';
         particles.forEach(p => {
             p.life--;
-            if (p.life <= 0 || p.x < -p.size * scale || p.x > canvas.width + p.size * scale || p.y < -p.size * scale || p.y > canvas.height + p.size * scale) {
+            if (p.life <= 0 ||
+                p.x < -p.size * scale ||
+                p.x > canvas.width + p.size * scale ||
+                p.y < -p.size * scale ||
+                p.y > canvas.height + p.size * scale) {
                 spawn(p);
                 ctx.fillRect(p.x, p.y, p.size * scale, p.size * scale);
                 return;
@@ -160,8 +173,7 @@ function broadcastModuleSelection(moduleInfo) {
 }
 function loadModule(moduleInfo) {
     const existingScript = document.getElementById('activeModuleScript');
-    if (existingScript)
-        existingScript.remove();
+    existingScript?.remove();
     window.seedWorldContent = () => { };
     window.startGame = () => { };
     if (moduleInfo.file.endsWith('.json')) {
@@ -172,18 +184,18 @@ function loadModule(moduleInfo) {
     script.id = 'activeModuleScript';
     script.src = `${moduleInfo.file}?_=${Date.now()}`;
     script.onload = () => {
-        UI.remove('modulePicker');
+        UI?.remove?.('modulePicker');
         window.openCreator = realOpenCreator;
         window.showStart = realShowStart;
         window.resetAll = () => {
             // Prevent stale modules from launching before the new one loads
             window.openCreator = () => { };
-            realResetAll();
+            realResetAll?.();
             loadModule(moduleInfo);
         };
         if (loadBtn)
-            UI.show('loadBtn');
-        globalThis.modulePickerPending = false;
+            UI?.show?.('loadBtn');
+        window.modulePickerPending = false;
         if (typeof warnOnUnload === 'function')
             warnOnUnload();
         openCreator();
@@ -193,7 +205,7 @@ function loadModule(moduleInfo) {
 function showModulePicker() {
     const overlay = document.createElement('div');
     overlay.id = 'modulePicker';
-    overlay.style = 'position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;z-index:40';
+    overlay.style.cssText = 'position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;z-index:40';
     const styleTag = document.createElement('style');
     styleTag.textContent = '@keyframes pulse{0%,100%{opacity:.8}50%{opacity:1}}.btn.selected{border-color:#4f6b4f;background:#151b15}';
     document.head.appendChild(styleTag);
@@ -201,31 +213,31 @@ function showModulePicker() {
     ackBtn.id = 'ackGlyph';
     ackBtn.textContent = '✎';
     ackBtn.title = 'Adventure Kit';
-    ackBtn.style = 'position:absolute;top:10px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer';
+    ackBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer';
     ackBtn.onclick = () => { window.location.href = 'adventure-kit.html'; };
     overlay.appendChild(ackBtn);
     const mpBtn = document.createElement('div');
     mpBtn.id = 'mpGlyph';
     mpBtn.textContent = '⇆';
     mpBtn.title = 'Multiplayer';
-    mpBtn.style = 'position:absolute;top:44px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer';
+    mpBtn.style.cssText = 'position:absolute;top:44px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer';
     mpBtn.onclick = () => { window.location.href = 'multiplayer.html'; };
     overlay.appendChild(mpBtn);
     const canvas = document.createElement('canvas');
     canvas.id = 'dustParticles';
     // Background dust layer; z-index keeps UI elements in front.
-    canvas.style = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0';
+    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0';
     overlay.appendChild(canvas);
     const title = document.createElement('div');
     title.id = 'gameTitle';
     title.textContent = 'Dustland CRT';
-    title.style = 'position:relative;z-index:1;color:#0f0;text-shadow:0 0 10px #0f0;font-size:2rem;margin-bottom:20px;animation:pulse 2s infinite';
+    title.style.cssText = 'position:relative;z-index:1;color:#0f0;text-shadow:0 0 10px #0f0;font-size:2rem;margin-bottom:20px;animation:pulse 2s infinite';
     const win = document.createElement('div');
     win.className = 'win';
-    win.style = 'position:relative;z-index:1;width:min(420px,92vw);background:#0b0d0b;border:1px solid #2a382a;border-radius:12px;box-shadow:0 20px 80px rgba(0,0,0,.7);overflow:hidden';
+    win.style.cssText = 'position:relative;z-index:1;width:min(420px,92vw);background:#0b0d0b;border:1px solid #2a382a;border-radius:12px;box-shadow:0 20px 80px rgba(0,0,0,.7);overflow:hidden';
     win.innerHTML = '<header style="padding:10px 12px;border-bottom:1px solid #223022;font-weight:700">Select Module</header><main style="padding:12px" id="moduleButtons"></main>';
     const uiBox = document.createElement('div');
-    uiBox.style = 'position:absolute;top:50%;left:50%;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%) scale(1);';
+    uiBox.style.cssText = 'position:absolute;top:50%;left:50%;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%) scale(1);';
     uiBox.appendChild(title);
     uiBox.appendChild(win);
     overlay.appendChild(uiBox);
@@ -241,6 +253,9 @@ function showModulePicker() {
     window.addEventListener('resize', applyScale);
     startDust(canvas, () => uiScale);
     const buttonContainer = overlay.querySelector('#moduleButtons');
+    if (!buttonContainer) {
+        throw new Error('Module picker buttons container missing');
+    }
     const buttons = [];
     let selectedIndex = isClient ? -1 : 0;
     function pickModule(moduleInfo) {
@@ -315,7 +330,7 @@ function showModulePicker() {
     }
     if (pickerBus?.on) {
         pickerBus.on('module-picker:select', payload => {
-            if (!payload)
+            if (!isModulePickerPayload(payload))
                 return;
             const moduleInfo = MODULES.find(m => m.id === payload.moduleId) ||
                 MODULES.find(m => m.file === payload.moduleFile);
@@ -333,10 +348,9 @@ function showModulePicker() {
     }
     if (mpBridge?.subscribe && pickerBus?.emit) {
         mpBridge.subscribe('module-picker:select', payload => {
-            let message = payload;
-            if (payload && typeof payload === 'object') {
-                message = { ...payload, [NET_FLAG]: true };
-            }
+            const message = isModulePickerPayload(payload)
+                ? { ...payload, [NET_FLAG]: true }
+                : payload;
             try {
                 pickerBus.emit('module-picker:select', message);
             }
@@ -347,11 +361,11 @@ function showModulePicker() {
     }
     if (isClient) {
         const waitingNotice = document.createElement('div');
-        waitingNotice.style = 'position:relative;z-index:1;margin-top:14px;text-align:center;color:#8fa48f;';
+        waitingNotice.style.cssText = 'position:relative;z-index:1;margin-top:14px;text-align:center;color:#8fa48f;';
         waitingNotice.textContent = 'Waiting for the host to pick a module.';
         uiBox.appendChild(waitingNotice);
         const actionRow = document.createElement('div');
-        actionRow.style = 'position:relative;z-index:1;margin-top:8px;text-align:center;';
+        actionRow.style.cssText = 'position:relative;z-index:1;margin-top:8px;text-align:center;';
         const leaveBtn = document.createElement('button');
         leaveBtn.id = 'leaveMultiplayer';
         leaveBtn.className = 'btn';

@@ -1,7 +1,70 @@
-// @ts-nocheck
 // Splash screen allowing the player to pick a module.
 // Displays a pulsing title and swirling dust background with drifting particles.
-const MODULES = [
+interface PickerModuleInfo {
+  id: string;
+  name: string;
+  file: string;
+}
+
+interface DustParticle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  size: number;
+  speed: number;
+}
+
+interface DustAttractor {
+  angle: number;
+  x: number;
+  y: number;
+}
+
+interface ModulePickerEventPayload {
+  moduleId: string;
+  moduleName: string;
+  moduleFile: string;
+  __fromNet?: boolean;
+  [key: string]: unknown;
+}
+
+type PickerEventHandler = (payload: unknown) => void;
+
+interface ModulePickerEventBus {
+  emit?: (event: string, payload: unknown) => void;
+  on?: (event: string, handler: PickerEventHandler) => void;
+}
+
+interface PickerMultiplayerBridge {
+  publish?: (event: string, payload: ModulePickerEventPayload) => void;
+  subscribe?: (event: string, handler: PickerEventHandler) => void;
+}
+
+interface PickerDustlandNamespace {
+  multiplayer?: {
+    disconnect?: (role: string) => void;
+  };
+  multiplayerBridge?: PickerMultiplayerBridge;
+}
+
+interface Window {
+  EventBus?: ModulePickerEventBus;
+  Dustland?: PickerDustlandNamespace;
+  openCreator?: () => void;
+  showStart?: () => void;
+  resetAll?: () => void;
+  seedWorldContent?: () => void;
+  startGame?: () => void;
+  modulePickerPending?: boolean;
+}
+
+declare function openCreator(): void;
+declare const UI: { hide?: (id: string) => void; show?: (id: string) => void; remove?: (id: string) => void; } | undefined;
+declare const warnOnUnload: (() => void) | undefined;
+
+const MODULES: PickerModuleInfo[] = [
   { id: 'dustland', name: 'Dustland', file: 'modules/dustland.module.js' },
   { id: 'office', name: 'Office', file: 'modules/office.module.js' },
   { id: 'lootbox-demo', name: 'Loot Box Demo', file: 'modules/lootbox-demo.module.js' },
@@ -15,24 +78,30 @@ const MODULES = [
 ];
 
 const NET_FLAG = '__fromNet';
-const pickerBus = globalThis.EventBus;
-const mpBridge = globalThis.Dustland?.multiplayerBridge;
-let sessionRole = null;
+const pickerBus = window.EventBus;
+const mpBridge = window.Dustland?.multiplayerBridge;
+let sessionRole: string | null = null;
 try {
-  sessionRole = globalThis.sessionStorage?.getItem?.('dustland.multiplayerRole') || null;
+  sessionRole = window.sessionStorage?.getItem?.('dustland.multiplayerRole') ?? null;
 } catch (err) {
   sessionRole = null;
 }
 const isClient = sessionRole === 'client';
 
-function disconnectClient(){
+function isModulePickerPayload(payload: unknown): payload is ModulePickerEventPayload {
+  if (!payload || typeof payload !== 'object') return false;
+  const record = payload as Record<string, unknown>;
+  return typeof record.moduleId === 'string' || typeof record.moduleFile === 'string';
+}
+
+function disconnectClient(): void {
   try {
-    globalThis.Dustland?.multiplayer?.disconnect?.('client');
+    window.Dustland?.multiplayer?.disconnect?.('client');
   } catch (err) {
     /* ignore */
   }
   try {
-    globalThis.sessionStorage?.removeItem?.('dustland.multiplayerRole');
+    window.sessionStorage?.removeItem?.('dustland.multiplayerRole');
   } catch (err) {
     /* ignore */
   }
@@ -50,83 +119,95 @@ window.openCreator = () => {};
 window.showStart = () => {};
 window.resetAll = () => {};
 const loadBtn = document.getElementById('loadBtn');
-if (loadBtn) UI.hide('loadBtn');
+if (loadBtn) UI?.hide?.('loadBtn');
 
-function startDust(canvas, getScale = () => 1){
+function startDust(canvas: HTMLCanvasElement, getScale: () => number = () => 1) {
   const ctx = canvas.getContext('2d');
-  const particles = [];
-  const attractors = [{ angle: 0 }, { angle: Math.PI }];
-  function resize(){
+  if (!ctx) {
+    throw new Error('Dust background requires a 2D canvas context');
+  }
+  const particles: DustParticle[] = [];
+  const attractors: DustAttractor[] = [
+    { angle: 0, x: 0, y: 0 },
+    { angle: Math.PI, x: 0, y: 0 }
+  ];
+  function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   }
   resize();
   window.addEventListener('resize', resize);
   // Reset a particle with a new lifetime and entry point at the screen edge.
-  function spawn(p){
-    p.life = Math.random()*100 + 200;
-    p.size = Math.random()*2 + 1;
-    p.speed = Math.random()*0.5 + 0.2;
-    const side = Math.floor(Math.random()*4);
-    if(side === 0){
+  function spawn(p: DustParticle) {
+    p.life = Math.random() * 100 + 200;
+    p.size = Math.random() * 2 + 1;
+    p.speed = Math.random() * 0.5 + 0.2;
+    const side = Math.floor(Math.random() * 4);
+    if (side === 0) {
       p.x = 0;
-      p.y = Math.random()*canvas.height;
-      p.vx = Math.random()*1 + 0.5;
-      p.vy = (Math.random()*2 - 1)*0.5;
-    } else if(side === 1){
+      p.y = Math.random() * canvas.height;
+      p.vx = Math.random() * 1 + 0.5;
+      p.vy = (Math.random() * 2 - 1) * 0.5;
+    } else if (side === 1) {
       p.x = canvas.width;
-      p.y = Math.random()*canvas.height;
-      p.vx = -(Math.random()*1 + 0.5);
-      p.vy = (Math.random()*2 - 1)*0.5;
-    } else if(side === 2){
-      p.x = Math.random()*canvas.width;
+      p.y = Math.random() * canvas.height;
+      p.vx = -(Math.random() * 1 + 0.5);
+      p.vy = (Math.random() * 2 - 1) * 0.5;
+    } else if (side === 2) {
+      p.x = Math.random() * canvas.width;
       p.y = 0;
-      p.vx = (Math.random()*2 - 1)*0.5;
-      p.vy = Math.random()*1 + 0.5;
+      p.vx = (Math.random() * 2 - 1) * 0.5;
+      p.vy = Math.random() * 1 + 0.5;
     } else {
-      p.x = Math.random()*canvas.width;
+      p.x = Math.random() * canvas.width;
       p.y = canvas.height;
-      p.vx = (Math.random()*2 - 1)*0.5;
-      p.vy = -(Math.random()*1 + 0.5);
+      p.vx = (Math.random() * 2 - 1) * 0.5;
+      p.vy = -(Math.random() * 1 + 0.5);
     }
   }
-  for(let i=0;i<60;i++){
-    const p = { x: 0, y: 0, vx: 0, vy: 0 };
+  for (let i = 0; i < 60; i++) {
+    const p: DustParticle = { x: 0, y: 0, vx: 0, vy: 0, life: 0, size: 0, speed: 0 };
     spawn(p);
     particles.push(p);
   }
-  function update(){
-    const cx = canvas.width/2;
-    const cy = canvas.height/2;
-    const radius = Math.min(canvas.width,canvas.height)/3;
-    attractors.forEach((a,i) => {
-      a.angle += 0.01 + i*0.005;
-      a.x = cx + Math.cos(a.angle)*radius;
-      a.y = cy + Math.sin(a.angle)*radius;
+  function update() {
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const radius = Math.min(canvas.width, canvas.height) / 3;
+    attractors.forEach((a, i) => {
+      a.angle += 0.01 + i * 0.005;
+      a.x = cx + Math.cos(a.angle) * radius;
+      a.y = cy + Math.sin(a.angle) * radius;
     });
     const scale = getScale();
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'rgba(255,255,255,.4)';
     particles.forEach(p => {
       p.life--;
-      if(p.life <= 0 || p.x < -p.size*scale || p.x > canvas.width + p.size*scale || p.y < -p.size*scale || p.y > canvas.height + p.size*scale){
+      if (
+        p.life <= 0 ||
+        p.x < -p.size * scale ||
+        p.x > canvas.width + p.size * scale ||
+        p.y < -p.size * scale ||
+        p.y > canvas.height + p.size * scale
+      ) {
         spawn(p);
-        ctx.fillRect(p.x,p.y,p.size*scale,p.size*scale);
+        ctx.fillRect(p.x, p.y, p.size * scale, p.size * scale);
         return;
       }
       attractors.forEach(a => {
         const dx = a.x - p.x;
         const dy = a.y - p.y;
-        const dist = Math.hypot(dx,dy) || 1;
+        const dist = Math.hypot(dx, dy) || 1;
         const force = 0.05;
-        p.vx += (dx/dist)*force + (-dy/dist)*force*0.5;
-        p.vy += (dy/dist)*force + (dx/dist)*force*0.5;
+        p.vx += (dx / dist) * force + (-dy / dist) * force * 0.5;
+        p.vy += (dy / dist) * force + (dx / dist) * force * 0.5;
       });
       p.vx *= 0.98;
       p.vy *= 0.98;
       p.x += p.vx - p.speed;
       p.y += p.vy;
-      ctx.fillRect(p.x,p.y,p.size*scale,p.size*scale);
+      ctx.fillRect(p.x, p.y, p.size * scale, p.size * scale);
     });
     requestAnimationFrame(update);
   }
@@ -134,9 +215,9 @@ function startDust(canvas, getScale = () => 1){
   return { particles, update };
 }
 
-function broadcastModuleSelection(moduleInfo){
+function broadcastModuleSelection(moduleInfo: PickerModuleInfo) {
   if (!moduleInfo || !pickerBus?.emit) return;
-  const payload = {
+  const payload: ModulePickerEventPayload = {
     moduleId: moduleInfo.id,
     moduleName: moduleInfo.name,
     moduleFile: moduleInfo.file
@@ -153,9 +234,9 @@ function broadcastModuleSelection(moduleInfo){
   }
 }
 
-function loadModule(moduleInfo){
+function loadModule(moduleInfo: PickerModuleInfo) {
   const existingScript = document.getElementById('activeModuleScript');
-  if (existingScript) existingScript.remove();
+  existingScript?.remove();
   window.seedWorldContent = () => {};
   window.startGame = () => {};
   if (moduleInfo.file.endsWith('.json')) {
@@ -166,27 +247,27 @@ function loadModule(moduleInfo){
   script.id = 'activeModuleScript';
   script.src = `${moduleInfo.file}?_=${Date.now()}`;
   script.onload = () => {
-    UI.remove('modulePicker');
+    UI?.remove?.('modulePicker');
     window.openCreator = realOpenCreator;
     window.showStart = realShowStart;
     window.resetAll = () => {
       // Prevent stale modules from launching before the new one loads
       window.openCreator = () => {};
-      realResetAll();
+      realResetAll?.();
       loadModule(moduleInfo);
     };
-    if (loadBtn) UI.show('loadBtn');
-    globalThis.modulePickerPending = false;
+    if (loadBtn) UI?.show?.('loadBtn');
+    window.modulePickerPending = false;
     if (typeof warnOnUnload === 'function') warnOnUnload();
     openCreator();
   };
   document.body.appendChild(script);
 }
 
-function showModulePicker(){
+function showModulePicker() {
   const overlay = document.createElement('div');
   overlay.id = 'modulePicker';
-  overlay.style = 'position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;z-index:40';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;z-index:40';
   const styleTag = document.createElement('style');
   styleTag.textContent = '@keyframes pulse{0%,100%{opacity:.8}50%{opacity:1}}.btn.selected{border-color:#4f6b4f;background:#151b15}';
   document.head.appendChild(styleTag);
@@ -195,7 +276,7 @@ function showModulePicker(){
   ackBtn.id = 'ackGlyph';
   ackBtn.textContent = '✎';
   ackBtn.title = 'Adventure Kit';
-  ackBtn.style = 'position:absolute;top:10px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer';
+  ackBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer';
   ackBtn.onclick = () => { window.location.href = 'adventure-kit.html'; };
   overlay.appendChild(ackBtn);
 
@@ -203,37 +284,37 @@ function showModulePicker(){
   mpBtn.id = 'mpGlyph';
   mpBtn.textContent = '⇆';
   mpBtn.title = 'Multiplayer';
-  mpBtn.style = 'position:absolute;top:44px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer';
+  mpBtn.style.cssText = 'position:absolute;top:44px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer';
   mpBtn.onclick = () => { window.location.href = 'multiplayer.html'; };
   overlay.appendChild(mpBtn);
 
   const canvas = document.createElement('canvas');
   canvas.id = 'dustParticles';
   // Background dust layer; z-index keeps UI elements in front.
-  canvas.style = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0';
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0';
   overlay.appendChild(canvas);
 
   const title = document.createElement('div');
   title.id = 'gameTitle';
   title.textContent = 'Dustland CRT';
-  title.style = 'position:relative;z-index:1;color:#0f0;text-shadow:0 0 10px #0f0;font-size:2rem;margin-bottom:20px;animation:pulse 2s infinite';
+  title.style.cssText = 'position:relative;z-index:1;color:#0f0;text-shadow:0 0 10px #0f0;font-size:2rem;margin-bottom:20px;animation:pulse 2s infinite';
 
   const win = document.createElement('div');
   win.className = 'win';
-  win.style = 'position:relative;z-index:1;width:min(420px,92vw);background:#0b0d0b;border:1px solid #2a382a;border-radius:12px;box-shadow:0 20px 80px rgba(0,0,0,.7);overflow:hidden';
+  win.style.cssText = 'position:relative;z-index:1;width:min(420px,92vw);background:#0b0d0b;border:1px solid #2a382a;border-radius:12px;box-shadow:0 20px 80px rgba(0,0,0,.7);overflow:hidden';
   win.innerHTML = '<header style="padding:10px 12px;border-bottom:1px solid #223022;font-weight:700">Select Module</header><main style="padding:12px" id="moduleButtons"></main>';
 
   const uiBox = document.createElement('div');
-  uiBox.style = 'position:absolute;top:50%;left:50%;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%) scale(1);';
+  uiBox.style.cssText = 'position:absolute;top:50%;left:50%;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%) scale(1);';
   uiBox.appendChild(title);
   uiBox.appendChild(win);
   overlay.appendChild(uiBox);
   document.body.appendChild(overlay);
 
   let uiScale = 1;
-  function applyScale(){
+  function applyScale() {
     const small = Math.min(window.innerWidth, window.innerHeight);
-    uiScale = Math.max(1, small/600);
+    uiScale = Math.max(1, small / 600);
     uiBox.style.transform = `translate(-50%,-50%) scale(${uiScale})`;
     title.style.marginBottom = `${20 * uiScale}px`;
   }
@@ -241,11 +322,14 @@ function showModulePicker(){
   window.addEventListener('resize', applyScale);
   startDust(canvas, () => uiScale);
 
-  const buttonContainer = overlay.querySelector('#moduleButtons');
-  const buttons = [];
+  const buttonContainer = overlay.querySelector<HTMLElement>('#moduleButtons');
+  if (!buttonContainer) {
+    throw new Error('Module picker buttons container missing');
+  }
+  const buttons: HTMLButtonElement[] = [];
   let selectedIndex = isClient ? -1 : 0;
 
-  function pickModule(moduleInfo){
+  function pickModule(moduleInfo: PickerModuleInfo) {
     if (!moduleInfo) return;
     const idx = MODULES.indexOf(moduleInfo);
     if (idx >= 0) {
@@ -292,7 +376,7 @@ function showModulePicker(){
   overlay.tabIndex = 0;
   if (overlay.focus) overlay.focus();
   if (!isClient) {
-    const keyHandler = (e) => {
+    const keyHandler = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
         e.preventDefault();
         selectedIndex = (selectedIndex + 1) % buttons.length;
@@ -311,7 +395,7 @@ function showModulePicker(){
 
   if (pickerBus?.on) {
     pickerBus.on('module-picker:select', payload => {
-      if (!payload) return;
+      if (!isModulePickerPayload(payload)) return;
       const moduleInfo = MODULES.find(m => m.id === payload.moduleId) ||
         MODULES.find(m => m.file === payload.moduleFile);
       if (!moduleInfo) return;
@@ -328,10 +412,9 @@ function showModulePicker(){
 
   if (mpBridge?.subscribe && pickerBus?.emit) {
     mpBridge.subscribe('module-picker:select', payload => {
-      let message = payload;
-      if (payload && typeof payload === 'object') {
-        message = { ...payload, [NET_FLAG]: true };
-      }
+      const message: unknown = isModulePickerPayload(payload)
+        ? { ...payload, [NET_FLAG]: true }
+        : payload;
       try {
         pickerBus.emit('module-picker:select', message);
       } catch (err) {
@@ -342,12 +425,12 @@ function showModulePicker(){
 
   if (isClient) {
     const waitingNotice = document.createElement('div');
-    waitingNotice.style = 'position:relative;z-index:1;margin-top:14px;text-align:center;color:#8fa48f;';
+    waitingNotice.style.cssText = 'position:relative;z-index:1;margin-top:14px;text-align:center;color:#8fa48f;';
     waitingNotice.textContent = 'Waiting for the host to pick a module.';
     uiBox.appendChild(waitingNotice);
 
     const actionRow = document.createElement('div');
-    actionRow.style = 'position:relative;z-index:1;margin-top:8px;text-align:center;';
+    actionRow.style.cssText = 'position:relative;z-index:1;margin-top:8px;text-align:center;';
     const leaveBtn = document.createElement('button');
     leaveBtn.id = 'leaveMultiplayer';
     leaveBtn.className = 'btn';
