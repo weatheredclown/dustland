@@ -1,5 +1,34 @@
-// @ts-nocheck
-function seedWorldContent() {}
+type GraffitiPuzzleModule = DustlandModuleInstance & {
+  start: { map: string; x: number; y: number };
+  postLoad?: (moduleData: DustlandModuleInstance) => void;
+};
+
+type RuntimeState = {
+  map?: string;
+  x?: number;
+  y?: number;
+  [key: string]: unknown;
+};
+
+type GraffitiPuzzleGlobals = typeof globalThis & {
+  seedWorldContent?: () => void;
+  GRAFFITI_PUZZLE?: GraffitiPuzzleModule;
+  state?: RuntimeState;
+  renderWorld?: () => void;
+  applyModule?: (moduleData: DustlandModuleInstance) => void;
+  setPartyPos?: (x: number, y: number) => void;
+  setMap?: (map: string, label?: string) => void;
+};
+
+declare global {
+  interface GlobalThis {
+    GRAFFITI_PUZZLE?: GraffitiPuzzleModule;
+  }
+}
+
+function seedWorldContent(): void {}
+const globals = globalThis as GraffitiPuzzleGlobals;
+globals.seedWorldContent = seedWorldContent;
 
 const DATA = `{
   "seed": "graffiti-puzzle",
@@ -57,16 +86,31 @@ const DATA = `{
   "start": { "map": "graffiti", "x": 3, "y": 5 }
 }`;
 
-function postLoad(module) {}
+function postLoad(module: DustlandModuleInstance): void {}
 
-globalThis.GRAFFITI_PUZZLE = JSON.parse(DATA);
-globalThis.GRAFFITI_PUZZLE.postLoad = postLoad;
+const moduleData = JSON.parse(DATA) as GraffitiPuzzleModule;
+moduleData.postLoad = postLoad;
+globals.GRAFFITI_PUZZLE = moduleData;
 
-startGame = function () {
-  applyModule(GRAFFITI_PUZZLE);
-  const s = GRAFFITI_PUZZLE.start;
-  state.map = s.map;
-  state.x = s.x;
-  state.y = s.y;
-  renderWorld();
+globals.startGame = function startGame(): void {
+  const graffitiModule = globals.GRAFFITI_PUZZLE;
+  if (!graffitiModule) return;
+
+  graffitiModule.postLoad?.(graffitiModule);
+  globals.applyModule?.(graffitiModule);
+
+  const start = graffitiModule.start;
+  if (!start) return;
+
+  globals.setPartyPos?.(start.x, start.y);
+  globals.setMap?.(start.map, 'Graffiti Puzzle');
+
+  globals.state = globals.state ?? {};
+  globals.state.map = start.map;
+  globals.state.x = start.x;
+  globals.state.y = start.y;
+
+  globals.renderWorld?.();
 };
+
+export {};

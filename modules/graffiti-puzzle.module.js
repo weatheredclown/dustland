@@ -1,5 +1,6 @@
-// @ts-nocheck
 function seedWorldContent() { }
+const globals = globalThis;
+globals.seedWorldContent = seedWorldContent;
 const DATA = `{
   "seed": "graffiti-puzzle",
   "name": "graffiti-puzzle",
@@ -56,13 +57,24 @@ const DATA = `{
   "start": { "map": "graffiti", "x": 3, "y": 5 }
 }`;
 function postLoad(module) { }
-globalThis.GRAFFITI_PUZZLE = JSON.parse(DATA);
-globalThis.GRAFFITI_PUZZLE.postLoad = postLoad;
-startGame = function () {
-    applyModule(GRAFFITI_PUZZLE);
-    const s = GRAFFITI_PUZZLE.start;
-    state.map = s.map;
-    state.x = s.x;
-    state.y = s.y;
-    renderWorld();
+const moduleData = JSON.parse(DATA);
+moduleData.postLoad = postLoad;
+globals.GRAFFITI_PUZZLE = moduleData;
+globals.startGame = function startGame() {
+    const graffitiModule = globals.GRAFFITI_PUZZLE;
+    if (!graffitiModule)
+        return;
+    graffitiModule.postLoad?.(graffitiModule);
+    globals.applyModule?.(graffitiModule);
+    const start = graffitiModule.start;
+    if (!start)
+        return;
+    globals.setPartyPos?.(start.x, start.y);
+    globals.setMap?.(start.map, 'Graffiti Puzzle');
+    globals.state = globals.state ?? {};
+    globals.state.map = start.map;
+    globals.state.x = start.x;
+    globals.state.y = start.y;
+    globals.renderWorld?.();
 };
+export {};

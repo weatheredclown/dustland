@@ -1,5 +1,5 @@
-// @ts-nocheck
 function seedWorldContent() { }
+globalThis.seedWorldContent = seedWorldContent;
 const DATA = `
 {
   "seed": "silencer-encounter",
@@ -124,15 +124,20 @@ const DATA = `
   "events": [],
   "portals": [],
   "buildings": []
-}
-`;
+}`;
 function postLoad(module) { }
-globalThis.SILENCER_ENCOUNTER = JSON.parse(DATA);
-globalThis.SILENCER_ENCOUNTER.postLoad = postLoad;
-startGame = function () {
-    applyModule(SILENCER_ENCOUNTER);
-    var s = SILENCER_ENCOUNTER.start;
-    setPartyPos(s.x, s.y);
-    setMap(s.map, 'Arena');
+const moduleData = JSON.parse(DATA);
+moduleData.postLoad = postLoad;
+globalThis.SILENCER_ENCOUNTER = moduleData;
+globalThis.startGame = function startGame() {
+    const encounter = globalThis.SILENCER_ENCOUNTER;
+    if (!encounter)
+        return;
+    encounter.postLoad?.(encounter);
+    globalThis.applyModule?.(encounter);
+    const start = encounter.start;
+    setPartyPos(start.x, start.y);
+    setMap(start.map, 'Arena');
     log('A Silencer scout blocks your path.');
 };
+export {};
