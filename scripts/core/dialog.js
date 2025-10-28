@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ===== Dialog =====
 const overlay = document.getElementById('overlay');
 const choicesEl = document.getElementById('choices');
@@ -7,32 +6,43 @@ const nameEl = document.getElementById('npcName');
 const titleEl = document.getElementById('npcTitle');
 const portEl = document.getElementById('port');
 const persistBtn = document.getElementById('persistLLM');
+const dialogGlobals = globalThis;
 let currentNPC = null;
-Object.defineProperty(globalThis, 'currentNPC', { get: () => currentNPC, set: v => { currentNPC = v; } });
+Object.defineProperty(globalThis, 'currentNPC', {
+    get: () => currentNPC,
+    set: v => {
+        currentNPC = v;
+    }
+});
 const dialogState = { tree: null, node: null };
 let selectedChoice = 0;
-var Dustland = globalThis.Dustland;
-if (persistBtn) {
-    persistBtn.onclick = function () {
-        persistLlmNodes(dialogState.tree);
+const DustlandNamespace = dialogGlobals.Dustland;
+if (persistBtn && typeof persistBtn === 'object' && 'onclick' in persistBtn) {
+    persistBtn.onclick = () => {
+        dialogGlobals.persistLlmNodes?.(dialogState.tree);
         renderDialog();
     };
 }
 function dlgHighlightChoice() {
-    [...choicesEl.children].forEach((c, i) => {
-        if (c.classList?.toggle)
-            c.classList.toggle('sel', i === selectedChoice);
+    const container = choicesEl;
+    if (!container)
+        return;
+    Array.from(container.children).forEach((child, index) => {
+        child.classList?.toggle?.('sel', index === selectedChoice);
     });
 }
 function dlgMoveChoice(dir) {
-    const total = choicesEl.children.length;
+    const container = choicesEl;
+    if (!container)
+        return;
+    const total = container.children.length;
     if (total === 0)
         return;
     selectedChoice = (selectedChoice + dir + total) % total;
     dlgHighlightChoice();
 }
 function handleDialogKey(e) {
-    if (!dialogState.tree)
+    if (!dialogState.tree || !choicesEl)
         return false;
     switch (e.key) {
         case 'ArrowUp':
@@ -58,14 +68,15 @@ function handleDialogKey(e) {
             if (el?.click)
                 el.click();
             else
-                el?.onclick?.();
+                el?.onclick?.(new MouseEvent('click'));
             return true;
         }
         case 'Escape':
             closeDialog();
             return true;
+        default:
+            return false;
     }
-    return false;
 }
 function ensureLeaveOption(node) {
     if (!node || node.noLeave)
@@ -78,29 +89,64 @@ function ensureLeaveOption(node) {
     node.next = choices;
 }
 function normalizeDialogTree(tree) {
+    const source = (typeof tree === 'object' && tree) ? tree : {};
     const out = {};
-    for (const id in tree) {
-        if (id === 'imports')
+    for (const id in source) {
+        if (!Object.prototype.hasOwnProperty.call(source, id) || id === 'imports')
             continue;
-        const n = tree[id];
-        const next = (n.next || n.choices || []).map(c => {
-            if (typeof c === 'string')
-                return { id: c, label: c };
-            const { to, id: cid, label, text, checks = [], effects = [], ...rest } = c;
-            const obj = { id: to || cid, label: label || text || '(Continue)', checks, effects, ...rest };
-            if (to)
-                obj.to = to;
-            return obj;
-        });
-        const jump = (Array.isArray(n.jump) ? n.jump : []).map(j => ({ to: j.to, if: j.if }));
-        out[id] = { text: n.text || '', checks: n.checks || [], effects: n.effects || [], next, jump, noLeave: !!n.noLeave };
+        const rawNode = source[id];
+        if (!rawNode || typeof rawNode !== 'object')
+            continue;
+        const node = rawNode;
+        const rawNext = Array.isArray(node.next)
+            ? node.next
+            : Array.isArray(node.choices)
+                ? node.choices
+                : [];
+        const next = rawNext
+            .map(entry => {
+            if (typeof entry === 'string') {
+                return { id: entry, label: entry };
+            }
+            if (!entry || typeof entry !== 'object')
+                return null;
+            const choice = entry;
+            const { to, id: choiceId, label, text, checks = [], effects = [], ...rest } = choice;
+            const normalized = {
+                ...rest,
+                to,
+                id: typeof choiceId === 'string' ? choiceId : to,
+                label: typeof label === 'string' ? label : typeof text === 'string' ? text : '(Continue)',
+                checks: Array.isArray(checks) ? checks : [],
+                effects: Array.isArray(effects) ? effects : []
+            };
+            if (!normalized.id && typeof to === 'string')
+                normalized.id = to;
+            return normalized;
+        })
+            .filter((choice) => Boolean(choice));
+        const jumpList = node.jump;
+        const jump = Array.isArray(jumpList)
+            ? jumpList
+                .map(j => (typeof j === 'object' && j ? { to: j.to, if: j.if } : null))
+                .filter(Boolean)
+            : [];
+        out[id] = {
+            text: typeof node.text === 'string' ? node.text : '',
+            checks: Array.isArray(node.checks) ? node.checks : [],
+            effects: Array.isArray(node.effects) ? node.effects : [],
+            next,
+            jump,
+            noLeave: !!node.noLeave
+        };
         ensureLeaveOption(out[id]);
     }
     return out;
 }
 function ensureNode(tree, id) {
-    if (!tree[id])
+    if (!tree[id]) {
         tree[id] = { text: '', checks: [], effects: [], next: [] };
+    }
     const node = tree[id];
     node.text = typeof node.text === 'string' ? node.text : '';
     node.checks = Array.isArray(node.checks) ? node.checks : [];
@@ -114,13 +160,17 @@ function normalizeChoiceConfig(data, defaults) {
     if (typeof data === 'string')
         return { ...defaults, label: data };
     if (typeof data === 'object') {
-        const result = { ...defaults, ...data };
-        if (typeof data.choice === 'string' && !result.label)
-            result.label = data.choice;
-        if (typeof data.text === 'string' && !result.label)
-            result.label = data.text;
-        if (typeof data.label !== 'string' && typeof data.name === 'string')
-            result.label = data.name;
+        const source = data;
+        const result = {
+            ...defaults,
+            ...source
+        };
+        if (typeof source.choice === 'string' && !result.label)
+            result.label = source.choice;
+        if (typeof source.text === 'string' && !result.label)
+            result.label = source.text;
+        if (typeof source.label !== 'string' && typeof source.name === 'string')
+            result.label = source.name;
         delete result.choice;
         return result;
     }
@@ -132,45 +182,52 @@ function normalizeDialogStage(data) {
     if (typeof data === 'string')
         return { text: data };
     if (typeof data === 'object') {
-        const stage = {};
-        if (typeof data.text === 'string')
-            stage.text = data.text;
-        else if (typeof data.dialog === 'string')
-            stage.text = data.dialog;
-        else if (typeof data.description === 'string')
-            stage.text = data.description;
-        if (data.choice !== undefined)
-            stage.choice = normalizeChoiceConfig(data.choice, {});
-        else if (typeof data.label === 'string')
-            stage.choice = normalizeChoiceConfig({ label: data.label }, {});
+        const source = data;
+        const stage = { text: '' };
+        if (typeof source.text === 'string')
+            stage.text = source.text;
+        else if (typeof source.dialog === 'string')
+            stage.text = source.dialog;
+        else if (typeof source.description === 'string')
+            stage.text = source.description;
+        if (source.choice !== undefined)
+            stage.choice = normalizeChoiceConfig(source.choice, {});
+        else if (typeof source.label === 'string')
+            stage.choice = normalizeChoiceConfig({ label: source.label }, {});
         return stage;
     }
     return { text: '' };
 }
 function normalizeQuestDialogConfig(dialog) {
-    if (!dialog)
-        return { offer: { text: '' }, accept: { text: '' }, turnIn: { text: '' }, active: { text: '' }, completed: { text: '' } };
     const src = typeof dialog === 'string' ? { offer: dialog } : dialog;
-    const offer = normalizeDialogStage(src.offer ?? src.offerText ?? src.start ?? src.available ?? null);
+    const offer = normalizeDialogStage(src?.offer ?? src?.offerText ?? src?.start ?? src?.available ?? null);
     if (!offer.choice) {
-        const raw = src.acceptLabel ?? src.offerChoice ?? null;
+        const raw = src?.acceptLabel ?? src?.offerChoice ?? null;
         if (raw)
             offer.choice = normalizeChoiceConfig(raw, {});
     }
-    const accept = normalizeDialogStage(src.accept ?? src.acceptText ?? null);
+    const accept = normalizeDialogStage(src?.accept ?? src?.acceptText ?? null);
     if (!accept.choice) {
-        const raw = src.acceptChoice ?? null;
+        const raw = src?.acceptChoice ?? null;
         if (raw)
             accept.choice = normalizeChoiceConfig(raw, {});
     }
-    const turnIn = normalizeDialogStage(src.turnIn ?? src.turnin ?? src.turnInText ?? src.turninText ?? null);
+    const turnIn = normalizeDialogStage(src?.turnIn ?? src?.turnin ?? src?.turnInText ?? src?.turninText ?? null);
     if (!turnIn.choice) {
-        const raw = src.turnInChoice ?? src.turnInLabel ?? src.turninChoice ?? src.turninLabel ?? null;
+        const raw = src?.turnInChoice ??
+            src?.turnInLabel ??
+            src?.turninChoice ??
+            src?.turninLabel ??
+            null;
         if (raw)
             turnIn.choice = normalizeChoiceConfig(raw, {});
     }
-    const active = normalizeDialogStage(src.active ?? src.activeText ?? src.progress ?? null);
-    const completed = normalizeDialogStage(src.completed ?? src.completedText ?? src.complete ?? src.completeText ?? null);
+    const active = normalizeDialogStage(src?.active ?? src?.activeText ?? src?.progress ?? null);
+    const completed = normalizeDialogStage(src?.completed ??
+        src?.completedText ??
+        src?.complete ??
+        src?.completeText ??
+        null);
     return {
         offer,
         accept,
@@ -179,8 +236,14 @@ function normalizeQuestDialogConfig(dialog) {
         completed
     };
 }
-function applyQuestDialog(tree, npc) {
+function getDialogQuest(npc) {
     const quest = npc?.quest;
+    if (!quest || typeof quest !== 'object')
+        return null;
+    return quest;
+}
+function applyQuestDialog(tree, npc) {
+    const quest = getDialogQuest(npc);
     if (!quest)
         return;
     const qConfig = normalizeQuestDialogConfig(quest.dialog);
@@ -189,7 +252,7 @@ function applyQuestDialog(tree, npc) {
     const turnCfg = qConfig.turnIn || { text: '' };
     const activeCfg = qConfig.active || { text: '' };
     const completedCfg = qConfig.completed || { text: '' };
-    const status = quest.status || 'available';
+    const status = typeof quest.status === 'string' ? quest.status : 'available';
     const startNode = ensureNode(tree, 'start');
     const acceptNode = ensureNode(tree, 'accept');
     const turnNode = ensureNode(tree, 'do_turnin');
@@ -199,8 +262,8 @@ function applyQuestDialog(tree, npc) {
     const turnChoiceConfig = turnCfg.choice;
     const acceptChoice = normalizeChoiceConfig(acceptChoiceConfig, acceptChoiceDefaults);
     const turnChoice = normalizeChoiceConfig(turnChoiceConfig, turnChoiceDefaults);
-    acceptNode.text = typeof acceptCfg.text === 'string' && acceptCfg.text ? acceptCfg.text : (acceptNode.text || 'Good luck.');
-    turnNode.text = typeof turnCfg.text === 'string' && turnCfg.text ? turnCfg.text : (turnNode.text || 'Thanks for helping.');
+    acceptNode.text = typeof acceptCfg.text === 'string' && acceptCfg.text ? acceptCfg.text : acceptNode.text || 'Good luck.';
+    turnNode.text = typeof turnCfg.text === 'string' && turnCfg.text ? turnCfg.text : turnNode.text || 'Thanks for helping.';
     let stageText = '';
     if (status === 'available')
         stageText = offer.text || '';
@@ -225,59 +288,89 @@ function applyQuestDialog(tree, npc) {
 }
 function runEffects(effects) {
     for (const eff of effects || []) {
-        if (typeof eff === 'function')
-            eff({ player, party, state });
-        else if (eff && typeof eff === 'object' && Dustland?.effects?.apply) {
-            Dustland.effects.apply([eff], { player, party, state });
+        if (typeof eff === 'function') {
+            eff({
+                player: dialogGlobals.player,
+                party: dialogGlobals.party,
+                state: dialogGlobals.state
+            });
+        }
+        else if (eff && typeof eff === 'object' && DustlandNamespace?.effects?.apply) {
+            DustlandNamespace.effects.apply([eff], {
+                player: dialogGlobals.player,
+                party: dialogGlobals.party,
+                state: dialogGlobals.state
+            });
         }
     }
 }
-function resolveCheck(check, actor = leader(), rng = Math.random) {
-    const roll = Dice.skill(actor, check.stat, 0, ROLL_SIDES, rng);
-    const dc = check.dc || 0;
+function resolveCheck(check, actorParam, rng = Math.random) {
+    const stat = typeof check.stat === 'string' ? check.stat : '';
+    const leader = dialogGlobals.party?.leader?.();
+    const fallbackMember = dialogGlobals.party?.[0];
+    const effectiveActor = actorParam ?? leader ?? fallbackMember;
+    if (!effectiveActor) {
+        return { success: true, roll: 0, dc: 0, stat };
+    }
+    const roll = Dice.skill(effectiveActor, stat, 0, ROLL_SIDES, rng);
+    const dc = typeof check.dc === 'number' ? check.dc : 0;
     const success = roll >= dc;
-    log?.(`Check ${check.stat} rolled ${roll} vs DC ${dc}: ${success ? 'success' : 'fail'}`);
-    runEffects(success ? check.onSuccess : check.onFail);
-    return { success, roll, dc, stat: check.stat };
+    log?.(`Check ${stat} rolled ${roll} vs DC ${dc}: ${success ? 'success' : 'fail'}`);
+    runEffects(success ? (Array.isArray(check.onSuccess) ? check.onSuccess : []) : Array.isArray(check.onFail) ? check.onFail : []);
+    return { success, roll, dc, stat };
 }
-function processQuestFlag(c) {
-    if (!currentNPC?.quest || !c?.q)
+function processQuestFlag(choice) {
+    if (!currentNPC?.quest || !choice?.q)
         return null;
-    if (c.q === 'accept')
-        return defaultQuestProcessor(currentNPC, 'accept');
-    if (c.q === 'turnin')
-        return defaultQuestProcessor(currentNPC, 'do_turnin');
+    if (choice.q === 'accept')
+        return dialogGlobals.defaultQuestProcessor?.(currentNPC, 'accept') ?? null;
+    if (choice.q === 'turnin')
+        return dialogGlobals.defaultQuestProcessor?.(currentNPC, 'do_turnin') ?? null;
     return null;
 }
 function dialogJoinParty(join) {
     if (!join)
         return;
     const opts = {};
-    if (join.portraitSheet) {
-        opts.portraitSheet = join.portraitSheet;
+    const joinData = join;
+    if (joinData.portraitSheet) {
+        opts.portraitSheet = joinData.portraitSheet;
     }
     else if (currentNPC?.portraitSheet) {
         opts.portraitSheet = currentNPC.portraitSheet;
     }
-    const m = makeMember(join.id, join.name, join.role, opts);
-    if (joinParty(m)) {
-        removeNPC(currentNPC);
+    const makeMemberFn = dialogGlobals.makeMember;
+    const joinPartyFn = dialogGlobals.joinParty;
+    const removeNpcFn = dialogGlobals.removeNPC;
+    if (!makeMemberFn || !joinPartyFn)
+        return;
+    const member = makeMemberFn(joinData.id, joinData.name, joinData.role, opts);
+    if (joinPartyFn(member)) {
+        removeNpcFn?.(currentNPC);
     }
 }
-// Teleport actor to a new position.
-// g: { map?, x?, y?, target?:'npc'|'player', rel?:true }
-//   target defaults to player (party).
-//   rel=true offsets from current position.
-function handleGoto(g) {
-    if (!g)
+function handleGoto(gotoConfig) {
+    if (!gotoConfig)
         return;
-    const tgtNPC = g.target === 'npc' ? currentNPC : null;
-    const base = tgtNPC || party;
-    const x = g.rel ? base.x + (g.x || 0) : (g.x != null ? g.x : base.x);
-    const y = g.rel ? base.y + (g.y || 0) : (g.y != null ? g.y : base.y);
+    const tgtNPC = gotoConfig.target === 'npc' ? currentNPC : null;
+    const partyRoster = dialogGlobals.party;
+    const runtimeState = dialogGlobals.state;
+    const worldMaps = dialogGlobals.world ?? [];
+    const applyModuleFn = dialogGlobals.applyModule;
+    const setPartyPosFn = dialogGlobals.setPartyPos;
+    const setMapFn = dialogGlobals.setMap;
+    const centerCameraFn = dialogGlobals.centerCamera;
+    const updateHudFn = dialogGlobals.updateHUD;
+    const base = tgtNPC || partyRoster;
+    if (!base)
+        return;
+    const baseX = base.x ?? 0;
+    const baseY = base.y ?? 0;
+    const x = gotoConfig.rel ? baseX + (gotoConfig.x || 0) : gotoConfig.x != null ? gotoConfig.x : baseX;
+    const y = gotoConfig.rel ? baseY + (gotoConfig.y || 0) : gotoConfig.y != null ? gotoConfig.y : baseY;
     if (tgtNPC) {
-        if (g.map)
-            tgtNPC.map = g.map;
+        if (gotoConfig.map)
+            tgtNPC.map = gotoConfig.map;
         tgtNPC.x = x;
         tgtNPC.y = y;
         if (tgtNPC._loop) {
@@ -286,182 +379,209 @@ function handleGoto(g) {
         }
     }
     else {
-        if (g.map === 'world') {
-            if (!world.length)
-                applyModule({});
-            setPartyPos(x, y);
-            setMap('world');
+        if (gotoConfig.map === 'world') {
+            if (!worldMaps.length)
+                applyModuleFn?.({});
+            setPartyPosFn?.(x, y);
+            setMapFn?.('world');
         }
         else {
-            setPartyPos(x, y);
-            if (g.map)
-                setMap(g.map);
-            else if (typeof centerCamera === 'function')
-                centerCamera(party.x, party.y, state.map);
+            setPartyPosFn?.(x, y);
+            if (gotoConfig.map)
+                setMapFn?.(gotoConfig.map);
+            else
+                centerCameraFn?.(partyRoster?.x ?? x, partyRoster?.y ?? y, runtimeState?.map);
         }
     }
-    updateHUD?.();
+    updateHudFn?.();
 }
 function calcCombatXP(npc) {
     const enemies = [npc.combat || {}];
-    const px = party.x, py = party.y, map = party.map || state.map;
-    for (const n of NPCS) {
+    const partyRoster = dialogGlobals.party;
+    const runtimeState = dialogGlobals.state;
+    const px = partyRoster?.x ?? 0;
+    const py = partyRoster?.y ?? 0;
+    const map = partyRoster?.map || runtimeState?.map;
+    const npcList = dialogGlobals.NPCS ?? [];
+    for (const n of npcList) {
         if (n === npc || !n.combat)
             continue;
         if (n.map !== map)
             continue;
-        const dist = Math.abs(n.x - px) + Math.abs(n.y - py);
+        const dist = Math.abs((n.x || 0) - px) + Math.abs((n.y || 0) - py);
         if (dist <= 2)
             enemies.push(n.combat);
     }
-    const avgLvl = Math.max(1, party.reduce((s, m) => s + (m.lvl || 1), 0) / (party.length || 1));
+    const partyMembers = partyRoster ?? [];
+    const avgLvl = Math.max(1, partyMembers.reduce((sum, member) => sum + (member.lvl || 1), 0) /
+        (partyMembers.length || 1));
     let xp = 0;
-    for (const e of enemies) {
-        if (!e)
+    for (const combat of enemies) {
+        if (!combat)
             continue;
-        const override = Number.isFinite(e.xp) ? e.xp : null;
+        const override = Number.isFinite(combat.xp) ? combat.xp : null;
         if (override != null) {
             xp += override;
             continue;
         }
-        const count = Math.max(1, e.count || 1);
-        const str = e.challenge || e.hp || e.HP || 1;
+        const count = Math.max(1, combat.count || 1);
+        const str = combat.challenge || combat.hp || combat.HP || 1;
         xp += count * Math.max(1, Math.ceil(str / avgLvl));
     }
     return xp;
 }
 function getNextId(prefix, arr) {
     let i = 1;
-    while (arr.some(o => o.id === prefix + i))
+    while (arr.some(o => o.id === `${prefix}${i}`))
         i++;
-    return prefix + i;
+    return `${prefix}${i}`;
 }
 function advanceDialog(stateObj, choiceIdx) {
     const prevNode = stateObj.node;
-    const node = stateObj.tree[stateObj.node];
+    if (!stateObj.tree || !prevNode) {
+        stateObj.node = null;
+        return { next: null, text: null, close: true, success: false, retriable: false };
+    }
+    const node = stateObj.tree[prevNode];
+    if (!node) {
+        stateObj.node = null;
+        return { next: null, text: null, close: true, success: false, retriable: false };
+    }
     const choice = node.next[choiceIdx];
     if (!choice) {
         stateObj.node = null;
-        return { next: null, text: null, close: true, success: false };
+        return { next: null, text: null, close: true, success: false, retriable: false };
     }
-    runEffects(choice.checks);
-    const res = { next: null, text: null, close: false, success: true, retriable: false };
-    const finalize = (text, ok, retriable = false) => { res.text = text || null; res.close = true; res.success = !!ok; res.retriable = !!retriable; stateObj.node = null; return res; };
+    const playerState = dialogGlobals.player;
+    const playerInv = Array.isArray(playerState?.inv) ? playerState.inv : [];
+    const countItemsFn = dialogGlobals.countItems;
+    const findItemIndexFn = dialogGlobals.findItemIndex;
+    const removeFromInvFn = dialogGlobals.removeFromInv;
+    const runtimeState = dialogGlobals.state;
+    const npcList = dialogGlobals.NPCS;
+    const npcTemplates = dialogGlobals.npcTemplates ?? [];
+    const getCount = (key, fallback = 0) => key ? countItemsFn?.(key) ?? fallback : fallback;
+    runEffects(choice.checks ?? []);
+    const finalize = (text, ok, retriable = false) => {
+        const result = {
+            next: null,
+            text,
+            close: true,
+            success: !!ok,
+            retriable: !!retriable
+        };
+        stateObj.node = null;
+        return result;
+    };
     if (choice.reqItem || choice.reqSlot || choice.reqTag) {
         const requiredCount = choice.reqCount || 1;
         const hasEnough = choice.reqItem
-            ? countItems(choice.reqItem) >= requiredCount
+            ? getCount(choice.reqItem) >= requiredCount
             : choice.reqSlot
-                ? player.inv.some(it => it.type === choice.reqSlot)
-                : countItems(choice.reqTag) >= requiredCount;
+                ? playerInv.some(it => it.type === choice.reqSlot)
+                : getCount(choice.reqTag) >= requiredCount;
         if (!hasEnough) {
             return finalize(choice.failure || 'You lack the required item.', false, true);
         }
-        Dustland.actions.applyQuestReward(choice.reward);
+        DustlandNamespace?.actions?.applyQuestReward?.(choice.reward);
         dialogJoinParty(choice.join);
         processQuestFlag(choice);
-        runEffects(choice.effects);
+        runEffects(choice.effects ?? []);
         if (choice.goto) {
             handleGoto(choice.goto);
-            res.close = true;
-            res.success = true;
-            stateObj.node = null;
-            return res;
+            return { next: null, text: null, close: true, success: true, retriable: false };
         }
         const nextId = choice.to || choice.id;
         if (nextId) {
-            res.next = nextId;
             stateObj.node = nextId;
-            return res;
+            return { next: nextId, text: null, close: false, success: true, retriable: false };
         }
         return finalize(choice.success || '', true);
     }
     if (choice.costItem || choice.costSlot || choice.costTag) {
         const costCount = choice.costCount || 1;
         const hasEnough = choice.costItem
-            ? countItems(choice.costItem) >= costCount
+            ? getCount(choice.costItem) >= costCount
             : choice.costSlot
-                ? player.inv.some(it => it.type === choice.costSlot)
-                : countItems(choice.costTag) >= costCount;
+                ? playerInv.some(it => it.type === choice.costSlot)
+                : getCount(choice.costTag) >= costCount;
         if (!hasEnough) {
             return finalize(choice.failure || 'You lack the required item.', false, true);
         }
         if (choice.costItem) {
             for (let i = 0; i < costCount; i++) {
-                const itemIdx = findItemIndex(choice.costItem);
+                const itemIdx = findItemIndexFn?.(choice.costItem ?? '') ?? -1;
                 if (itemIdx > -1)
-                    removeFromInv(itemIdx);
+                    removeFromInvFn?.(itemIdx);
             }
         }
         else if (choice.costSlot) {
-            const itemIdx = player.inv.findIndex(it => it.type === choice.costSlot);
+            const itemIdx = playerInv.findIndex(it => it.type === choice.costSlot);
             if (itemIdx > -1)
-                removeFromInv(itemIdx);
+                removeFromInvFn?.(itemIdx);
         }
         else if (choice.costTag) {
             for (let i = 0; i < costCount; i++) {
-                const itemIdx = findItemIndex(choice.costTag);
+                const itemIdx = findItemIndexFn?.(choice.costTag ?? '') ?? -1;
                 if (itemIdx > -1)
-                    removeFromInv(itemIdx);
+                    removeFromInvFn?.(itemIdx);
             }
         }
-        Dustland.actions.applyQuestReward(choice.reward);
+        DustlandNamespace?.actions?.applyQuestReward?.(choice.reward);
         dialogJoinParty(choice.join);
         processQuestFlag(choice);
-        runEffects(choice.effects);
+        runEffects(choice.effects ?? []);
         if (choice.goto) {
             handleGoto(choice.goto);
-            res.close = true;
-            res.success = true;
-            stateObj.node = null;
-            return res;
+            return { next: null, text: null, close: true, success: true, retriable: false };
         }
         const nextId = choice.to || choice.id;
         if (nextId) {
-            res.next = nextId;
             stateObj.node = nextId;
-            return res;
+            return { next: nextId, text: null, close: false, success: true, retriable: false };
         }
         return finalize(choice.success || '', true);
     }
     if (choice.check) {
-        const { success, roll, dc } = resolveCheck(choice.check, leader());
+        const { success, roll, dc } = resolveCheck(choice.check);
         log?.(`Dialog check ${choice.check.stat}: ${roll} vs ${dc}`);
         if (!success) {
             return finalize(choice.failure || 'Failed.', false);
         }
     }
-    Dustland.actions.applyQuestReward(choice.reward);
+    DustlandNamespace?.actions?.applyQuestReward?.(choice.reward);
     dialogJoinParty(choice.join);
     const questResult = processQuestFlag(choice);
     if (questResult?.blocked) {
         const msg = typeof questResult.message === 'string' && questResult.message
             ? questResult.message
             : 'You’re not done yet.';
-        res.text = msg;
-        res.success = false;
-        res.retriable = true;
-        res.next = prevNode;
         stateObj.node = prevNode;
-        return res;
+        return {
+            next: prevNode,
+            text: msg,
+            close: false,
+            success: false,
+            retriable: true
+        };
     }
-    runEffects(choice.effects);
+    runEffects(choice.effects ?? []);
     if (choice.setFlag) {
         const { flag, op, value } = choice.setFlag;
         if (op === 'set') {
-            setFlag(flag, value);
+            dialogGlobals.setFlag?.(flag, value);
         }
         else if (op === 'add') {
-            incFlag(flag, value);
+            dialogGlobals.incFlag?.(flag, value);
         }
         else if (op === 'clear') {
-            Dustland.eventFlags.clear(flag);
+            DustlandNamespace?.eventFlags?.clear?.(flag);
         }
     }
     if (choice.spawn) {
-        const template = npcTemplates.find(t => t.id === choice.spawn.templateId);
-        if (template) {
-            const id = getNextId(template.id, typeof NPCS !== 'undefined' ? NPCS : []);
+        const template = npcTemplates.find(t => t.id === choice.spawn?.templateId);
+        if (template && runtimeState?.map && dialogGlobals.makeNPC) {
+            const id = getNextId(template.id, npcList ?? []);
             const x = choice.spawn.x;
             const y = choice.spawn.y;
             const combat = template.combat ? { ...template.combat } : {};
@@ -469,31 +589,30 @@ function advanceDialog(stateObj, choiceIdx) {
                 combat.HP = choice.spawn.challenge;
                 combat.challenge = choice.spawn.challenge;
             }
-            const npc = makeNPC(id, state.map, x, y, template.color, template.name, '', template.desc, {}, null, null, null, {
+            const npc = dialogGlobals.makeNPC(id, runtimeState.map, x, y, template.color, template.name, '', template.desc, {}, null, null, null, {
                 combat,
                 portraitSheet: template.portraitSheet,
                 portraitLock: template.portraitLock
             });
-            if (typeof NPCS !== 'undefined')
-                NPCS.push(npc);
+            npcList?.push(npc);
         }
     }
     if (choice.q === 'accept' && currentNPC?.quest) {
         const meta = currentNPC.quest;
         const requiredCount = meta.count || 1;
         const itemKey = meta.itemTag || meta.item;
-        const hasItems = !itemKey || countItems(itemKey) >= requiredCount;
-        const hasFlag = !meta.reqFlag || (typeof flagValue === 'function' && flagValue(meta.reqFlag));
+        const hasItems = !itemKey || getCount(itemKey) >= requiredCount;
+        const flagValueFn = dialogGlobals.flagValue;
+        const hasFlag = !meta.reqFlag || (typeof flagValueFn === 'function' && flagValueFn(meta.reqFlag));
         if (meta.status === 'active' && hasItems && hasFlag) {
-            res.next = prevNode;
             stateObj.node = prevNode;
-            return res;
+            return { next: prevNode, text: null, close: false, success: true, retriable: false };
         }
     }
     if (choice.applyModule) {
-        const moduleData = globalThis[choice.applyModule];
+        const moduleData = dialogGlobals[choice.applyModule];
         if (moduleData) {
-            applyModule(moduleData, { fullReset: false });
+            dialogGlobals.applyModule?.(moduleData, { fullReset: false });
         }
         else {
             console.error(`Module ${choice.applyModule} not found in global scope.`);
@@ -501,29 +620,29 @@ function advanceDialog(stateObj, choiceIdx) {
     }
     if (choice.goto) {
         handleGoto(choice.goto);
-        res.close = true;
-        res.success = true;
-        stateObj.node = null;
-        return res;
+        return { next: null, text: null, close: true, success: true, retriable: false };
     }
     const nextId = choice.to || choice.id;
     if (nextId) {
-        res.next = nextId;
         stateObj.node = nextId;
-        return res;
+        return { next: nextId, text: null, close: false, success: true, retriable: false };
     }
     return finalize(choice.text || '', true);
 }
-const onceChoices = globalThis.usedOnceChoices || (globalThis.usedOnceChoices = new Set());
-function setPortrait(portEl, npc) {
-    if (!portEl)
+const onceChoiceStore = globalThis;
+const onceChoices = onceChoiceStore.usedOnceChoices ?? new Set();
+if (!onceChoiceStore.usedOnceChoices) {
+    onceChoiceStore.usedOnceChoices = onceChoices;
+}
+function setPortrait(portElement, npc) {
+    if (!portElement)
         return;
     if (!npc.portraitSheet) {
-        portEl.style.backgroundImage = '';
-        portEl.style.background = npc.color || '#274227';
+        portElement.style.backgroundImage = '';
+        portElement.style.background = npc.color || '#274227';
         return;
     }
-    setPortraitDiv(portEl, npc);
+    dialogGlobals.setPortraitDiv?.(portElement, npc);
 }
 function openDialog(npc, node = 'start') {
     currentNPC = npc;
@@ -538,58 +657,68 @@ function openDialog(npc, node = 'start') {
     if (npc.locked && dialogState.tree.locked) {
         dialogState.node = 'locked';
     }
-    nameEl.textContent = npc.name;
-    titleEl.textContent = npc.title;
+    if (nameEl)
+        nameEl.textContent = npc.name || '';
+    if (titleEl)
+        titleEl.textContent = npc.title || '';
     setPortrait(portEl, npc);
     const desc = npc.desc;
-    if (desc) {
+    if (desc && titleEl) {
         const small = document.createElement('div');
         small.className = 'small npcdesc';
         small.textContent = desc;
-        const hdr = titleEl.parentElement;
-        [...hdr.querySelectorAll('.small.npcdesc')].forEach(n => n.remove());
-        hdr.appendChild(small);
+        const header = titleEl.parentElement;
+        if (header) {
+            Array.from(header.querySelectorAll('.small.npcdesc')).forEach(n => n.remove());
+            header.appendChild(small);
+        }
     }
     renderDialog();
-    globalThis.EventBus?.emit?.('music:mood', { id: 'dialog', source: 'dialog', priority: 60 });
-    overlay.classList.add('shown');
-    setGameState(GAME_STATE.DIALOG);
+    dialogGlobals.EventBus?.emit?.('music:mood', { id: 'dialog', source: 'dialog', priority: 60 });
+    overlay?.classList.add('shown');
+    dialogGlobals.setGameState?.(GAME_STATE.DIALOG);
 }
 function closeDialog() {
-    globalThis.EventBus?.emit?.('music:mood', { id: null, source: 'dialog' });
-    overlay.classList.remove('shown');
+    dialogGlobals.EventBus?.emit?.('music:mood', { id: null, source: 'dialog' });
+    overlay?.classList.remove('shown');
     currentNPC = null;
     dialogState.tree = null;
     dialogState.node = null;
-    choicesEl.innerHTML = '';
-    const back = state.map === 'world' ? GAME_STATE.WORLD : GAME_STATE.INTERIOR;
-    setGameState(back);
+    if (choicesEl)
+        choicesEl.innerHTML = '';
+    const mapId = dialogGlobals.state?.map;
+    const back = mapId === 'world' ? GAME_STATE.WORLD : GAME_STATE.INTERIOR;
+    dialogGlobals.setGameState?.(back);
 }
 function renderDialog() {
-    if (!dialogState.tree)
+    if (!dialogState.tree || !choicesEl || !textEl)
         return;
     currentNPC?.processNode?.(dialogState.node);
-    if (currentNPC?.id && dialogState.node && typeof trackQuestDialogNode === 'function') {
-        trackQuestDialogNode(currentNPC.id, dialogState.node);
+    if (currentNPC?.id && dialogState.node) {
+        dialogGlobals.trackQuestDialogNode?.(currentNPC.id, dialogState.node);
     }
     if (!dialogState.tree || !dialogState.node)
         return;
-    let node = dialogState.tree[dialogState.node];
+    const node = dialogState.tree[dialogState.node];
     if (!node) {
         closeDialog();
         return;
     }
-    // Optional auto-redirects for config-only dialog trees.
+    const checkCondition = dialogGlobals.checkFlagCondition;
     if (node.jump && node.jump.length) {
-        const tgt = node.jump.find(j => !j.if || checkFlagCondition(j.if));
-        if (tgt) {
+        const tgt = node.jump.find(j => {
+            if (!j.if)
+                return true;
+            return checkCondition ? checkCondition(j.if) : true;
+        });
+        if (tgt?.to) {
             dialogState.node = tgt.to;
             renderDialog();
             return;
         }
     }
-    runEffects(node.checks);
-    runEffects(node.effects);
+    runEffects(node.checks ?? []);
+    runEffects(node.effects ?? []);
     textEl.textContent = node.text;
     choicesEl.innerHTML = '';
     if (!node.next || node.next.length === 0) {
@@ -603,20 +732,25 @@ function renderDialog() {
         return;
     }
     let choices = node.next.map((opt, idx) => ({ opt, idx }));
-    choices = choices.filter(({ opt }) => !opt.if || checkFlagCondition(opt.if));
+    choices = choices.filter(({ opt }) => {
+        if (!opt.if)
+            return true;
+        return checkCondition ? checkCondition(opt.if) : true;
+    });
     choices = choices.filter(({ opt }) => {
         const cond = opt.ifOnce;
         if (!cond)
             return true;
         const nodeId = cond.node;
         const label = cond.label;
-        if (!nodeId || !label)
+        if (!nodeId || !label || !currentNPC)
             return true;
         const key = `${currentNPC.id}::${nodeId}::${label}`;
         const used = cond.used === true;
         const seen = onceChoices.has(key);
         return used ? seen : !seen;
     });
+    const hasItemFn = dialogGlobals.hasItem;
     if (currentNPC?.quest) {
         const meta = currentNPC.quest;
         const itemKey = meta.itemTag || meta.item;
@@ -629,7 +763,7 @@ function renderDialog() {
             if (opt.q === 'turnin') {
                 if (meta.status !== 'active')
                     return false;
-                if (itemKey && !hasItem(itemKey))
+                if (itemKey && !hasItemFn?.(itemKey))
                     return false;
                 if (!itemKey && hasDialogGoals && progress < requiredCount)
                     return false;
@@ -638,16 +772,16 @@ function renderDialog() {
         });
     }
     choices = choices.filter(({ opt }) => {
-        if (!opt.once)
+        if (!opt.once || !currentNPC || !dialogState.node)
             return true;
         const key = `${currentNPC.id}::${dialogState.node}::${opt.label}`;
         return !onceChoices.has(key);
     });
-    const isExit = opt => opt.to === 'bye';
+    const isExit = (opt) => opt.to === 'bye';
     choices.sort((a, b) => {
         const aExit = isExit(a.opt);
         const bExit = isExit(b.opt);
-        return aExit === bExit ? 0 : (aExit ? 1 : -1);
+        return aExit === bExit ? 0 : aExit ? 1 : -1;
     });
     choices.forEach(({ opt, idx }) => {
         const div = document.createElement('div');
@@ -658,6 +792,8 @@ function renderDialog() {
             div.textContent = `${opt.label} (${xp} XP)`;
         }
         div.onclick = () => {
+            if (!currentNPC || !dialogState.node)
+                return;
             const key = `${currentNPC.id}::${dialogState.node}::${opt.label}`;
             const result = advanceDialog(dialogState, idx);
             if (opt.once && !result.retriable)
@@ -668,12 +804,14 @@ function renderDialog() {
                 const cont = document.createElement('div');
                 cont.className = 'choice';
                 cont.textContent = '(Continue)';
-                cont.onclick = () => { if (result.close)
-                    closeDialog();
-                else {
-                    dialogState.node = result.next;
-                    renderDialog();
-                } };
+                cont.onclick = () => {
+                    if (result.close)
+                        closeDialog();
+                    else {
+                        dialogState.node = result.next;
+                        renderDialog();
+                    }
+                };
                 choicesEl.appendChild(cont);
             }
             else {
@@ -688,5 +826,19 @@ function renderDialog() {
     selectedChoice = 0;
     dlgHighlightChoice();
 }
-const dialogExports = { overlay, choicesEl, textEl, nameEl, titleEl, portEl, openDialog, closeDialog, renderDialog, advanceDialog, resolveCheck, handleDialogKey, handleGoto };
+const dialogExports = {
+    overlay,
+    choicesEl,
+    textEl,
+    nameEl,
+    titleEl,
+    portEl,
+    openDialog,
+    closeDialog,
+    renderDialog,
+    advanceDialog,
+    resolveCheck,
+    handleDialogKey,
+    handleGoto
+};
 Object.assign(globalThis, dialogExports);

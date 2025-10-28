@@ -115,15 +115,77 @@ declare global {
     [key: string]: unknown;
   }
 
+  interface DustlandDialogGoto {
+    map?: string;
+    x?: number;
+    y?: number;
+    target?: 'npc' | 'player';
+    rel?: boolean;
+    [key: string]: unknown;
+  }
+
+  interface DustlandDialogChoiceConfig {
+    label?: string;
+    [key: string]: unknown;
+  }
+
   interface DustlandDialogChoice {
+    id?: string;
     to?: string;
+    label?: string;
+    text?: string;
+    q?: string;
+    goto?: DustlandDialogGoto;
+    reqItem?: string;
+    reqSlot?: string;
+    reqTag?: string;
+    reqCount?: number;
+    costItem?: string;
+    costSlot?: string;
+    costTag?: string;
+    costCount?: number;
+    reward?: unknown;
+    join?: Record<string, unknown>;
+    failure?: string;
+    success?: string;
+    effects?: unknown[];
+    checks?: unknown[];
+    check?: { stat?: string; dc?: number; [key: string]: unknown };
+    once?: boolean;
+    if?: unknown;
+    ifOnce?: { node?: string; label?: string; used?: boolean };
+    spawn?: {
+      templateId: string;
+      x: number;
+      y: number;
+      challenge?: number;
+      [key: string]: unknown;
+    };
+    applyModule?: string;
+    setFlag?: { flag: string; op?: 'set' | 'add' | 'clear'; value?: unknown };
+    [key: string]: unknown;
+  }
+
+  interface DustlandDialogJumpTarget {
+    to?: string;
+    if?: unknown;
     [key: string]: unknown;
   }
 
   interface DustlandDialogNode {
-    choices?: DustlandDialogChoice[];
+    text?: string;
+    checks?: Array<unknown>;
+    effects?: Array<unknown>;
+    next?: Array<string | DustlandDialogChoice>;
+    choices?: Array<string | DustlandDialogChoice>;
+    jump?: DustlandDialogJumpTarget[] | DustlandDialogJumpTarget | null;
+    noLeave?: boolean;
     [key: string]: unknown;
   }
+
+  type DustlandDialogTree = Record<string, DustlandDialogNode> & {
+    locked?: DustlandDialogNode;
+  };
 
   type ProfileStatMap = Record<string, number>;
 
@@ -365,6 +427,38 @@ declare global {
     [key: string]: unknown;
   }
 
+  interface DustlandQuestDialogStage {
+    text?: string;
+    choice?: DustlandDialogChoiceConfig | string;
+    [key: string]: unknown;
+  }
+
+  interface DustlandQuestDialogConfig {
+    offer?: DustlandQuestDialogStage | string | null;
+    accept?: DustlandQuestDialogStage | string | null;
+    turnIn?: DustlandQuestDialogStage | string | null;
+    active?: DustlandQuestDialogStage | string | null;
+    completed?: DustlandQuestDialogStage | string | null;
+    [key: string]: unknown;
+  }
+
+  interface DustlandNpcQuest {
+    status?: QuestStatus | string;
+    dialog?: DustlandQuestDialogConfig | string | null;
+    item?: string;
+    itemTag?: string;
+    reqFlag?: string;
+    count?: number;
+    progress?: number;
+    dialogNodes?: unknown[];
+    [key: string]: unknown;
+  }
+
+  interface DustlandActionsApi {
+    applyQuestReward?: (reward: unknown) => void;
+    [key: string]: unknown;
+  }
+
   interface DustlandNamespace {
     starterItems?: StarterItem[];
     Wizard?: WizardFactory;
@@ -387,7 +481,7 @@ declare global {
       setWeather?: (next: Partial<DustlandWeatherState>) => DustlandWeatherState;
     };
     status?: { init?: (member: PartyMember) => void };
-    actions?: Record<string, unknown>;
+    actions?: DustlandActionsApi;
     validateDialogTree?: (tree: Record<string, DustlandDialogNode>) => string[];
     effectPackInspector?: { load: (text: string) => void; fire: (evt: string) => void };
     BuildingWizard?: unknown;
@@ -512,11 +606,70 @@ declare global {
     color?: string;
     name?: string;
     title?: string;
-    tree?: Record<string, unknown>;
-    quest?: Quest;
+    desc?: string;
+    portraitSheet?: string;
+    portraitLock?: boolean;
+    locked?: boolean;
+    unlockTime?: number | null;
+    tree?:
+      | DustlandDialogTree
+      | Record<string, unknown>
+      | (() => DustlandDialogTree | Record<string, unknown> | null | undefined)
+      | null;
+    quest?: Quest | DustlandNpcQuest;
+    combat?: {
+      xp?: number;
+      challenge?: number;
+      HP?: number;
+      count?: number;
+      [key: string]: unknown;
+    };
+    _loop?: { path?: unknown[]; job?: unknown };
     onMemoryTape?: (recording: string | null) => void;
     [key: string]: unknown;
   }
+
+  interface DustlandGameRuntimeState {
+    map: string;
+    [key: string]: unknown;
+  }
+
+  interface DustlandNpcTemplate extends DustlandNpc {
+    id: string;
+  }
+
+  interface DustlandQuestProcessorResult {
+    blocked?: boolean;
+    message?: string;
+    [key: string]: unknown;
+  }
+
+  interface DustlandEventBusApi {
+    emit?: (event: string, payload?: unknown) => void;
+    [key: string]: unknown;
+  }
+
+  const Dice: {
+    skill: (
+      actor: PartyMember,
+      stat?: string,
+      bonus?: number,
+      sides?: number,
+      rng?: () => number
+    ) => number;
+  };
+
+  const ROLL_SIDES: number;
+
+  const log: ((message: string) => void) | undefined;
+
+  const GAME_STATE: { [key: string]: number } & {
+    WORLD: number;
+    INTERIOR: number;
+    DIALOG: number;
+  };
+
+  var EventBus: DustlandEventBus;
 
   interface MemoryTapeItem {
     recording?: string | null;
@@ -537,6 +690,8 @@ declare global {
     player?: PlayerState;
     CURRENCY?: string;
     NPCS?: DustlandNpc[];
+    npcTemplates?: DustlandNpcTemplate[];
+    world?: DustlandMap[];
     DUSTLAND_MODULE?: DustlandModuleInstance;
     LOOTBOX_DEMO_MODULE?: DustlandModuleInstance;
     applyModule?: (moduleData: unknown) => void;
@@ -560,6 +715,41 @@ declare global {
     incFlag?: (flag: string, delta?: number) => void;
     flagValue?: (flag: string) => number;
     setFlag?: (flag: string, value: number | string | boolean) => void;
+    defaultQuestProcessor?: (
+      npc: DustlandNpc | null | undefined,
+      action: string
+    ) => DustlandQuestProcessorResult | null | undefined;
+    makeMember?: (
+      id?: string,
+      name?: string,
+      role?: string,
+      options?: Record<string, unknown>
+    ) => PartyMember;
+    joinParty?: (member: PartyMember) => boolean;
+    removeNPC?: (npc: DustlandNpc | null | undefined) => void;
+    countItems?: (idOrTag: string) => number;
+    findItemIndex?: (idOrTag: string) => number;
+    removeFromInv?: (index: number, quantity?: number) => void;
+    hasItem?: (idOrTag: string) => boolean;
+    makeNPC?: (
+      id: string,
+      mapId: string,
+      x: number,
+      y: number,
+      color?: string,
+      name?: string,
+      title?: string,
+      desc?: string,
+      tree?: Record<string, unknown> | null,
+      quest?: DustlandNpcQuest | null,
+      dialog?: unknown,
+      extra?: unknown,
+      options?: Record<string, unknown>
+    ) => DustlandNpc;
+    setGameState?: (next: number) => void;
+    trackQuestDialogNode?: (npcId: string, nodeId: string) => void;
+    setPortraitDiv?: (element: HTMLElement, npc: DustlandNpc) => void;
+    persistLlmNodes?: (tree: DustlandDialogTree | null | undefined) => void;
     ItemGen?: {
       statRanges: Record<string, { min: number; max: number }>;
       generate(rank: string): { stats: { power: number } };
