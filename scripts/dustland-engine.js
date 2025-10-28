@@ -1,6 +1,6 @@
 // @ts-nocheck
 // ===== Rendering & Utilities =====
-const ENGINE_VERSION = '0.229.6';
+const ENGINE_VERSION = '0.229.7';
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const scrEl = document.getElementById('scrap');
