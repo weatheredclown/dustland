@@ -1,12 +1,52 @@
-// @ts-nocheck
+interface Point { x: number; y: number; }
+
+interface TileEntity {
+  id?: string | number;
+  door?: boolean;
+  locked?: boolean;
+}
+
+interface PathJob {
+  map: string;
+  start: Point;
+  goal: Point;
+  key: string;
+  ignoreId?: string | number | null;
+}
+
+interface NPCState {
+  id?: string | number;
+  map: string;
+  x: number;
+  y: number;
+  loop?: Point[];
+  _loop?: { idx: number; path: Point[]; job: string | null };
+  _lastMove?: number;
+  door?: boolean;
+  locked?: boolean;
+}
+
 // dustland-path.js
 // Simple A* pathfinding with async queue for Dustland
 (function(){
+  const globalScope = globalThis as typeof globalThis & {
+    perfStats?: { path: number; ai: number };
+    Dustland?: Record<string, unknown>;
+    NPC_MOVE_DELAY?: number;
+    walkable?: Record<string, boolean>;
+    NPCS?: NPCState[];
+    party?: { x: number; y: number };
+  };
   console.log('[Path] Script loaded');
   const MAX_CACHE = 256;
-  const state = { queue: [], busy:false, cache:new Map(), order: [] };
+  const state: {
+    queue: PathJob[];
+    busy: boolean;
+    cache: Map<string, Point[]>;
+    order: string[];
+  } = { queue: [], busy:false, cache:new Map(), order: [] };
 
-  function queue(map, start, goal, ignoreId){
+  function queue(map: string, start: Point, goal: Point, ignoreId?: string | number | null){
     const key = `${map}@${start.x},${start.y}->${goal.x},${goal.y}`;
     if(state.cache.has(key) || state.queue.find(j=>j.key===key)) return key;
     state.queue.push({map,start,goal,key,ignoreId});
@@ -14,7 +54,7 @@
     return key;
   }
 
-  function pathFor(key){
+  function pathFor(key: string){
     return state.cache.get(key) || null;
   }
 
@@ -22,10 +62,14 @@
     if(state.busy || !state.queue.length) return;
     state.busy=true;
     const job=state.queue.shift();
+    if(!job){
+      state.busy=false;
+      return;
+    }
     setTimeout(()=>{
       const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
       const p=aStar(job.map, job.start, job.goal, job.ignoreId);
-      if(globalThis.perfStats) globalThis.perfStats.path += ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - t0;
+      if(globalScope.perfStats) globalScope.perfStats.path += ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - t0;
       if(state.cache.size >= MAX_CACHE){
         const oldest=state.order.shift();
         if(oldest) state.cache.delete(oldest);
@@ -37,17 +81,18 @@
     },0);
   }
 
-  function aStar(map, start, goal, ignoreId){
-    const open=[{x:start.x,y:start.y}];
-    const came={};
-    const g={};
-    const f={};
+  function aStar(map: string, start: Point, goal: Point, ignoreId?: string | number | null){
+    const open: Point[]=[{x:start.x,y:start.y}];
+    const came: Record<string, string | undefined>={};
+    const g: Record<string, number>={};
+    const f: Record<string, number>={};
     const startKey=key(start.x,start.y);
     g[startKey]=0;
     f[startKey]=heuristic(start,goal);
     while(open.length){
       open.sort((a,b)=>f[key(a.x,a.y)]-f[key(b.x,b.y)]);
       const current=open.shift();
+      if(!current) break;
       const ck=key(current.x,current.y);
       if(current.x===goal.x && current.y===goal.y){
         return reconstruct(came, ck);
@@ -66,9 +111,9 @@
     return [];
   }
 
-  function neighbors(x,y,map,ignoreId){
-    const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
-    const out=[];
+  function neighbors(x: number,y: number,map: string,ignoreId?: string | number | null){
+    const dirs: Array<[number,number]>=[[1,0],[-1,0],[0,1],[0,-1]];
+    const out: Point[]=[];
     for(const [dx,dy] of dirs){
       const nx=x+dx, ny=y+dy;
       if(isWalkableAt(map,nx,ny,ignoreId)) out.push({x:nx,y:ny});
@@ -76,20 +121,21 @@
     return out;
   }
 
-  function isWalkableAt(map,x,y,ignoreId){
-    const info=queryTile(x,y,map);
+  function isWalkableAt(map: string,x: number,y: number,ignoreId?: string | number | null){
+    const info=queryTile(x,y,map) as unknown as { tile: string | number | null; entities: TileEntity[] };
     if(info.tile===null) return false;
-    if(!walkable[info.tile]) return false;
+    const tiles = globalScope.walkable;
+    if(tiles && !tiles[String(info.tile)]) return false;
     // treat unlocked doors as non-blocking
     return info.entities.every(e=> e.id===ignoreId || (e.door && !e.locked));
   }
 
-  function heuristic(a,b){
+  function heuristic(a: Point,b: Point){
     return Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
   }
 
-  function reconstruct(came, endKey){
-    const path=[];
+  function reconstruct(came: Record<string, string | undefined>, endKey: string){
+    const path: Point[]=[];
     let k=endKey;
     while(k){
       const [x,y]=k.split(',').map(Number);
@@ -99,21 +145,23 @@
     return path.reverse();
   }
 
-  function key(x,y){ return x+','+y; }
+  function key(x: number,y: number){ return x+','+y; }
 
-  const NPC_MOVE_DELAY = globalThis.NPC_MOVE_DELAY || 200; // min ms between NPC patrol steps
+  const npcMoveDelay = globalScope.NPC_MOVE_DELAY ?? 200; // min ms between NPC patrol steps
 
   // Step NPCs along their waypoint loops. Invoked after player moves.
   function tickPathAI(){
     const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     const now = Date.now();
-    for(const n of (typeof NPCS !== 'undefined' ? NPCS : [])){
+    const npcs = Array.isArray(globalScope.NPCS) ? (globalScope.NPCS as NPCState[]) : [];
+    const partyState = globalScope.party;
+    for(const n of npcs){
       const pts=n.loop;
       if(!Array.isArray(pts) || pts.length<2) continue;
       n._loop = n._loop || { idx:1, path:[], job:null };
-      if(n._lastMove && now - n._lastMove < NPC_MOVE_DELAY) continue;
+      if(n._lastMove && now - n._lastMove < npcMoveDelay) continue;
       const st=n._loop;
-      const near=party && Math.abs(n.x-party.x)+Math.abs(n.y-party.y) <= 2;
+      const near=partyState && Math.abs(n.x-partyState.x)+Math.abs(n.y-partyState.y) <= 2;
       if(near) continue;
       if(st.path.length){
         const step=st.path.shift();
@@ -151,8 +199,8 @@
       const target=pts[st.idx];
       st.job=queue(n.map,{x:n.x,y:n.y},target,n.id);
     }
-    if(globalThis.perfStats) globalThis.perfStats.ai += ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - t0;
+    if(globalScope.perfStats) globalScope.perfStats.ai += ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - t0;
   }
-  globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.path = { queue, pathFor, tickPathAI, MAX_CACHE };
+  globalScope.Dustland = globalScope.Dustland || {};
+  (globalScope.Dustland as Record<string, unknown>).path = { queue, pathFor, tickPathAI, MAX_CACHE };
 })();
