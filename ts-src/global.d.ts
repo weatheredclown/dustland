@@ -158,15 +158,31 @@ declare global {
   interface DustlandGameSnapshot {
     party?: Party;
     personas?: Record<string, DustlandPersonaTemplate>;
+    world?: Record<string, unknown>;
+    inventory?: PartyItem[];
+    flags?: Record<string, unknown>;
+    clock?: number;
+    quests?: QuestState[];
+    difficulty?: string;
+    effectPacks?: Record<string, unknown[]>;
+    npcMemory?: Record<string, Record<string, unknown>>;
     [key: string]: unknown;
   }
 
   interface DustlandGameState {
     setPersona?: (id: string, template: DustlandPersonaTemplate) => void;
+    getPersona?: (id: string) => DustlandPersonaTemplate | undefined;
     applyPersona?: (memberId: string, personaId: string) => void;
     clearPersona?: (memberId: string) => void;
     getState?: () => DustlandGameSnapshot | undefined;
     updateState?: (updater: (state: DustlandGameSnapshot) => void) => void;
+    getDifficulty?: () => string | undefined;
+    setDifficulty?: (mode: string) => void;
+    addEffectPack?: (event: string, list: unknown[]) => void;
+    loadEffectPacks?: (packs?: Record<string, unknown[]>) => void;
+    rememberNPC?: (id: string, key: string, value: unknown) => void;
+    recallNPC?: (id: string, key: string) => unknown;
+    forgetNPC?: (id: string, key?: string) => void;
     [key: string]: unknown;
   }
 
@@ -389,6 +405,8 @@ declare global {
     _baseSpecial?: PartySpecialEntry[];
     quirk?: string | null;
     hydration?: number;
+    applyEquipmentStats?: () => void;
+    applyCombatMods?: () => void;
     [key: string]: unknown;
   }
 
