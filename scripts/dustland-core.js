@@ -149,7 +149,7 @@ globalThis.tileEmoji = tileEmoji;
 globalThis.emojiTile = emojiTile;
 globalThis.gridFromEmoji = gridFromEmoji;
 globalThis.gridToEmoji = gridToEmoji;
-const mapNameEl = document.getElementById('mapname');
+const mapNameEl = typeof document !== 'undefined' ? document.getElementById('mapname') : null;
 const mapLabels = { world: 'Wastes', creator: 'Creator' };
 function formatMapName(id) {
     if (id == null)
@@ -205,11 +205,32 @@ function getViewSize() {
 }
 globalThis.getViewSize = getViewSize;
 // ===== Game state =====
-let world = [], interiors = {}, buildings = [], portals = [], npcTemplates = [];
+let world = [];
+let interiors = {};
+const buildings = [];
+const portals = [];
+const npcTemplates = [];
 const tileEvents = [];
 const zoneEffects = [];
 const enemyBanks = {};
-function registerTileEvents(list) { (list || []).forEach(e => tileEvents.push(e)); }
+function registerTileEvents(list) {
+    (list || []).forEach(e => tileEvents.push(e));
+}
+function resetWorldFrom(grid) {
+    world.length = 0;
+    for (const row of grid) {
+        world.push([...row]);
+    }
+}
+function replaceInteriorsFrom(data) {
+    Object.keys(interiors).forEach(key => delete interiors[key]);
+    if (!data)
+        return;
+    Object.entries(data).forEach(([key, value]) => {
+        if (value)
+            interiors[key] = { ...value };
+    });
+}
 function computeZoneWallGap(length, enabled) {
     if (!enabled || length <= 0)
         return null;
@@ -392,7 +413,6 @@ let gameState = GAME_STATE.TITLE;
 function setGameState(next) { gameState = next; }
 let doorPulseUntil = 0;
 let lastInteract = 0;
-// Simple map used during character creation
 const creatorMap = { w: 30, h: 22, grid: [], entryX: 15, entryY: 10 };
 function genCreatorMap() {
     creatorMap.grid = Array.from({ length: creatorMap.h }, (_, y) => Array.from({ length: creatorMap.w }, (_, x) => {
@@ -523,9 +543,8 @@ function applyModule(data = {}, options = {}) {
             }
         }
         if (moduleData.world) {
-            world.length = 0;
             const grid = Array.isArray(moduleData.world[0]) ? moduleData.world : gridFromEmoji(moduleData.world);
-            grid.forEach(row => world.push([...row]));
+            resetWorldFrom(grid);
             generated = true;
         }
         if (!generated) {
@@ -1405,8 +1424,8 @@ function mergeBuildingState(saved) {
 function loadLegacySave(d) {
     worldSeed = d.worldSeed || Date.now();
     setRNGSeed(worldSeed);
-    if (d.world) {
-        world = d.world;
+    if (Array.isArray(d.world)) {
+        resetWorldFrom(d.world);
     }
     else {
         genWorld(worldSeed);
@@ -1416,8 +1435,7 @@ function loadLegacySave(d) {
     state.fog = state.fog || {};
     buildings.length = 0;
     (d.buildings || []).forEach(b => buildings.push(b));
-    interiors = {};
-    Object.keys(d.interiors || {}).forEach(k => interiors[k] = d.interiors[k]);
+    replaceInteriorsFrom(d.interiors);
     itemDrops.length = 0;
     (d.itemDrops || []).forEach(i => itemDrops.push(i));
     Object.keys(quests).forEach(k => delete quests[k]);
