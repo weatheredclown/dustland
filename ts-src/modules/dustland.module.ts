@@ -1,6 +1,6 @@
-// @ts-nocheck
-function seedWorldContent() {}
+globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => {});
 
+(() => {
 const DATA = `
 {
   "seed": "dustland",
@@ -16404,7 +16404,9 @@ function configureWorkbenchRecipes() {
   const workbench = globalThis.Dustland?.workbench;
   if (!workbench) return;
   const bus = globalThis.EventBus;
-  const logFn = typeof globalThis.log === 'function' ? (...args) => globalThis.log(...args) : null;
+  const logFn = typeof globalThis.log === 'function'
+    ? (message: string, type?: string) => globalThis.log(message, type)
+    : null;
   const hasItemFn = typeof globalThis.hasItem === 'function' ? globalThis.hasItem.bind(globalThis) : () => false;
   const findItemIndexFn = typeof globalThis.findItemIndex === 'function' ? globalThis.findItemIndex.bind(globalThis) : () => -1;
   const removeFromInvFn = typeof globalThis.removeFromInv === 'function' ? globalThis.removeFromInv.bind(globalThis) : () => {};
@@ -16415,7 +16417,7 @@ function configureWorkbenchRecipes() {
   }
 
   function craftSignalBeacon() {
-    const actor = globalThis.player;
+    const actor = (globalThis as { player?: { scrap?: number; fuel?: number } }).player;
     if (!actor) return false;
     const scrapCost = 5;
     const fuelCost = 50;
@@ -16432,7 +16434,7 @@ function configureWorkbenchRecipes() {
   }
 
   function craftSolarTarp() {
-    const actor = globalThis.player;
+    const actor = (globalThis as { player?: { scrap?: number } }).player;
     if (!actor) return false;
     const scrapCost = 3;
     const scrap = Number(actor.scrap) || 0;
@@ -16523,7 +16525,7 @@ function configureWorkbenchRecipes() {
   }
 }
 
-function postLoad(module, ctx = {}) {
+function dustlandPostLoad(module: DustlandModuleInstance, ctx: { phase?: string } = {}) {
   const phase = ctx?.phase;
   const scheduleReconfigure = () => {
     const scheduler = typeof globalThis.queueMicrotask === 'function'
@@ -16546,16 +16548,23 @@ function postLoad(module, ctx = {}) {
   }
 }
 
-globalThis.DUSTLAND_MODULE = JSON.parse(DATA);
-globalThis.DUSTLAND_MODULE.postLoad = postLoad;
+const dustlandModule = JSON.parse(DATA) as DustlandModuleInstance;
+dustlandModule.postLoad = dustlandPostLoad;
+globalThis.DUSTLAND_MODULE = dustlandModule;
 
-startGame = function () {
-  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'beforeApply' });
-  applyModule(DUSTLAND_MODULE);
-  const s = DUSTLAND_MODULE.start;
-  if (s) {
-    setPartyPos(s.x, s.y);
-    setMap(s.map, 'dustland-module');
+globalThis.startGame = function startGame() {
+  const moduleData = globalThis.DUSTLAND_MODULE;
+  if (!moduleData) {
+    return;
   }
-  DUSTLAND_MODULE.postLoad?.(DUSTLAND_MODULE, { phase: 'afterApply' });
+
+  moduleData.postLoad?.(moduleData, { phase: 'beforeApply' });
+  applyModule(moduleData);
+  const start = moduleData.start;
+  if (start) {
+    setPartyPos(start.x, start.y);
+    setMap(start.map, 'dustland-module');
+  }
+  moduleData.postLoad?.(moduleData, { phase: 'afterApply' });
 };
+})();

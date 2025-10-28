@@ -1,7 +1,6 @@
-// @ts-nocheck
-function seedWorldContent() {}
+globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => {});
 
-(function(){
+(function () {
 const DATA = `
 {
   "seed": "world-one",
@@ -250,39 +249,78 @@ const DATA = `
 }
 `;
 
-globalThis.WORLD_ONE_MODULE = JSON.parse(DATA);
-function postLoad(module){
-  const handle = list => (list || []).map(e => {
-    if (e && e.effect === 'activateBunker') {
-      return () => Dustland.fastTravel?.activateBunker?.(e.id);
-    }
-    if (e && e.effect === 'openWorldMap') {
-      return () => Dustland.worldMap?.open?.(e.id);
-    }
-    return e;
-  });
-  module.npcs?.forEach(n => {
-    Object.values(n.tree || {}).forEach(node => {
-      if (node.effects) node.effects = handle(node.effects);
-      node.choices?.forEach(c => {
-        if (c.effects) c.effects = handle(c.effects);
-      });
+const worldOneModule = JSON.parse(DATA) as DustlandModuleInstance;
+globalThis.WORLD_ONE_MODULE = worldOneModule;
+
+function postLoad(module: DustlandModuleInstance) {
+  const handle = (list?: unknown): unknown[] => {
+    const entries = Array.isArray(list) ? list : [];
+    return entries.map(effect => {
+      if (effect && typeof effect === 'object') {
+        const effectRecord = effect as { effect?: string; id?: string };
+        if (effectRecord.effect === 'activateBunker') {
+          return () => Dustland.fastTravel?.activateBunker?.(effectRecord.id);
+        }
+        if (effectRecord.effect === 'openWorldMap') {
+          return () => Dustland.worldMap?.open?.(effectRecord.id);
+        }
+      }
+      return effect;
+    });
+  };
+  module.npcs?.forEach(npc => {
+    const nodes = npc.tree ? Object.values(npc.tree) : [];
+    nodes.forEach(node => {
+      if (!node || typeof node !== 'object') {
+        return;
+      }
+      const nodeRecord = node as Record<string, unknown>;
+      const nodeEffects = nodeRecord['effects'];
+      if (Array.isArray(nodeEffects)) {
+        nodeRecord['effects'] = handle(nodeEffects);
+      }
+      const choices = nodeRecord['choices'];
+      if (Array.isArray(choices)) {
+        choices.forEach(choice => {
+          if (!choice || typeof choice !== 'object') {
+            return;
+          }
+          const choiceRecord = choice as Record<string, unknown>;
+          const choiceEffects = choiceRecord['effects'];
+          if (Array.isArray(choiceEffects)) {
+            choiceRecord['effects'] = handle(choiceEffects);
+          }
+        });
+      }
     });
   });
 
-  const timers = module._timers || (module._timers = {});
-  function ensureCourier(flag, dropFactory, messageFactory, intervalMs){
+  type ModuleWithTimers = DustlandModuleInstance & {
+    _timers?: Record<string, ReturnType<typeof setTimeout> | null>;
+  };
+  const moduleWithTimers = module as ModuleWithTimers;
+  const timers = moduleWithTimers._timers ?? (moduleWithTimers._timers = {});
+  function ensureCourier(
+    flag: string,
+    dropFactory: (() => Record<string, unknown>) | Record<string, unknown>,
+    messageFactory: ((drop: Record<string, unknown>) => string) | string,
+    intervalMs?: number
+  ){
     if (!flag || typeof setTimeout !== 'function') return;
     if (timers[flag]) return;
-    const interval = Math.max(1000, intervalMs || 20000);
-    party.flags = party.flags || {};
-    const last = Number(party.flags[flag]) || 0;
+    const interval = Math.max(1000, intervalMs ?? 20000);
+    const roster = (globalThis as { party?: Party }).party;
+    if (!roster) return;
+    const flags = roster.flags ?? (roster.flags = {} as PartyFlags);
+    const last = Number(flags[flag]) || 0;
     const now = Date.now();
     const initialDelay = last ? Math.max(0, interval - (now - last)) : interval;
-    function schedule(delay){
+    function schedule(delay: number){
       timers[flag] = setTimeout(() => {
         timers[flag] = null;
-        const drop = typeof dropFactory === 'function' ? dropFactory() : { ...dropFactory };
+        const drop = typeof dropFactory === 'function'
+          ? dropFactory()
+          : { ...(dropFactory as Record<string, unknown>) };
         let added = false;
         if (typeof addToInv === 'function') {
           added = addToInv(drop);
@@ -290,8 +328,10 @@ function postLoad(module){
         if (!added && typeof dropItemNearParty === 'function') {
           dropItemNearParty(drop);
         }
-        party.flags[flag] = Date.now();
-        const msg = typeof messageFactory === 'function' ? messageFactory(drop) : messageFactory;
+        flags[flag] = Date.now();
+        const msg = typeof messageFactory === 'function'
+          ? messageFactory(drop)
+          : messageFactory;
         if (msg) {
           if (typeof log === 'function') log(msg);
           if (typeof toast === 'function') toast(msg);
@@ -320,14 +360,21 @@ function postLoad(module){
     20000
   );
 }
-globalThis.WORLD_ONE_MODULE.postLoad = postLoad;
+worldOneModule.postLoad = postLoad;
 
 })();
 
-startGame = function(){
-  WORLD_ONE_MODULE.postLoad?.(WORLD_ONE_MODULE);
-  applyModule(WORLD_ONE_MODULE);
-  const s = WORLD_ONE_MODULE.start;
-  setPartyPos(s.x, s.y);
-  setMap(s.map, 'World One');
+globalThis.startGame = function startGame() {
+  const moduleData = globalThis.WORLD_ONE_MODULE;
+  if (!moduleData) {
+    return;
+  }
+
+  moduleData.postLoad?.(moduleData);
+  applyModule(moduleData);
+  const start = moduleData.start;
+  if (start) {
+    setPartyPos(start.x, start.y);
+    setMap(start.map, 'World One');
+  }
 };
