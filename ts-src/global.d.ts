@@ -210,13 +210,61 @@ declare global {
     emit(event: string, payload?: unknown): void;
   }
 
+  interface GameItemTeleportTarget {
+    x: number;
+    y: number;
+    map?: string;
+  }
+
+  interface GameItemEquipRequirements {
+    role?: string;
+    roles?: string[];
+    [key: string]: unknown;
+  }
+
+  interface GameItemEquip {
+    minLevel?: number;
+    requires?: GameItemEquipRequirements;
+    teleport?: GameItemTeleportTarget;
+    flag?: string;
+    msg?: string;
+    [key: string]: unknown;
+  }
+
+  interface GameItemUnequip {
+    teleport?: GameItemTeleportTarget;
+    msg?: string;
+    [key: string]: unknown;
+  }
+
+  interface GameItemNarrative {
+    id: string;
+    prompt?: string;
+    [key: string]: unknown;
+  }
+
+  interface GameItemUseContext {
+    player?: PlayerState;
+    party: Party;
+    log?: (message: string) => void;
+    toast?: (message: string) => void;
+  }
+
   interface GameItemUse {
     type: string;
     amount?: number;
     duration?: number;
     stat?: string;
     text?: string;
-    onUse?: (...args: unknown[]) => unknown;
+    toast?: string;
+    label?: string;
+    ignoreDefense?: boolean;
+    consume?: boolean;
+    target?: string;
+    effect?: string | Record<string, unknown>;
+    effects?: Array<string | Record<string, unknown>>;
+    onUse?: (context: GameItemUseContext) => boolean | void;
+    [key: string]: unknown;
   }
 
   interface GameItem {
@@ -228,6 +276,17 @@ declare global {
     desc?: string;
     rarity?: number;
     value?: number;
+    tags?: string[];
+    count?: number;
+    maxStack?: number;
+    baseId?: string;
+    slot?: string;
+    fuel?: number;
+    equip?: GameItemEquip | null;
+    unequip?: GameItemUnequip | null;
+    narrative?: GameItemNarrative | null;
+    cursed?: boolean;
+    cursedKnown?: boolean;
     [key: string]: unknown;
   }
 
@@ -378,6 +437,17 @@ declare global {
     trinket: PartyItem | null;
   }
 
+  interface PlayerState {
+    inv: PartyItem[];
+    campChest?: PartyItem[];
+    campChestUnlocked?: boolean;
+    fuel?: number;
+    scrap?: number;
+    hp?: number;
+    maxHp?: number;
+    [key: string]: unknown;
+  }
+
   interface PartyMember {
     id: string;
     name: string;
@@ -410,6 +480,14 @@ declare global {
     [key: string]: unknown;
   }
 
+  interface Character extends PartyMember {
+    xpToNext(): number;
+    awardXP(amount: number): void;
+    levelUp(): void;
+    applyEquipmentStats(): void;
+    applyCombatMods(): void;
+  }
+
   interface Party extends Array<PartyMember> {
     map: string;
     x: number;
@@ -417,6 +495,13 @@ declare global {
     flags: PartyFlags;
     fallen: PartyMember[];
     _roster: PartyMember[] | null;
+    setMembers(members: (PartyMember | null | undefined)[] | null | undefined): number;
+    addMember(member: PartyMember): boolean;
+    leave(member: PartyMember): boolean;
+    fall(member: PartyMember): void;
+    restore(): void;
+    healAll(): void;
+    leader(): PartyMember | undefined;
   }
 
   interface DustlandNpc {
@@ -449,7 +534,7 @@ declare global {
     eventBus?: DustlandEventBus;
     EventBus?: DustlandEventBus;
     party?: Party;
-    player?: { scrap?: number; [key: string]: unknown };
+    player?: PlayerState;
     CURRENCY?: string;
     NPCS?: DustlandNpc[];
     DUSTLAND_MODULE?: DustlandModuleInstance;
@@ -461,7 +546,7 @@ declare global {
     toast?: (message: string) => void;
     updateHUD?: () => void;
     checkFlagCondition?: (condition: unknown) => boolean;
-    leader?: () => unknown;
+    leader?: () => PartyMember | undefined;
     awardXP?: (target: unknown, amount: number) => void;
     resolveItem?: (reward: unknown) => { name?: string } | null;
     addToInv?: (item: unknown) => boolean;
@@ -517,6 +602,13 @@ declare global {
     footstepBump?: () => void;
     pickupSparkle?: (x: number, y: number) => void;
     pickupVacuum?: (fromX: number, fromY: number, toX?: number, toY?: number) => void;
+    playerItemAOEDamage?: (
+      member: PartyMember,
+      damage: number,
+      options: { label?: string; ignoreDefense?: boolean }
+    ) => void;
+    applyEquipmentStats?: (member: PartyMember) => void;
+    applyCombatMods?: (member: PartyMember) => void;
     openShop?: (shop: unknown) => void;
     playFX?: (type: string) => void;
     postLoad?: (moduleData: DustlandModuleInstance) => void;
@@ -525,6 +617,10 @@ declare global {
     params?: URLSearchParams;
     state?: { map?: string; [key: string]: unknown };
   }
+
+  let __combatState:
+    | { enemies?: Array<{ name?: string; DEF?: number; hp: number; [key: string]: unknown }>; [key: string]: unknown }
+    | undefined;
 
   function log(message: string, type?: string): void;
   function toast(message: string): void;

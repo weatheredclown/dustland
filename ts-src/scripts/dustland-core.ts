@@ -587,17 +587,14 @@ type CoreState = {
   [key: string]: unknown;
 };
 
-type PlayerState = {
-  hp: number;
-  inv: unknown[];
-  scrap: number;
-  campChest: unknown[];
-  campChestUnlocked: boolean;
-  [key: string]: unknown;
-};
-
 const state: CoreState = { map:'world', mapFlags: {}, fog: {} }; // default map
-const player: PlayerState = { hp:10, inv:[], scrap:0, campChest: [], campChestUnlocked: false };
+const player: PlayerState = {
+  hp: 10,
+  inv: [] as PartyItem[],
+  scrap: 0,
+  campChest: [] as PartyItem[],
+  campChestUnlocked: false
+};
 if (typeof registerItem === 'function') {
   registerItem({
     id: 'memory_worm',
