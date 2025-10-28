@@ -52,7 +52,7 @@ if (typeof window === 'undefined') {
         w.webkitAudioContext = w.AudioContext;
         w.Audio = function () { return { cloneNode: () => ({ play: () => ({ catch: () => { } }), pause: () => { } }) }; };
         runtimeGlobal.Audio = w.Audio;
-        runtimeGlobal.EventBus = { on: () => { }, emit: () => { } };
+        runtimeGlobal.EventBus = { on: () => { }, off: () => { }, emit: () => { } };
         runtimeGlobal.TS = 16;
         runtimeGlobal.camX = 0;
         runtimeGlobal.camY = 0;

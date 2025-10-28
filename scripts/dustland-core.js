@@ -378,7 +378,13 @@ function revealFog(map, x, y, radius = FOG_RADIUS) {
     }
 }
 const state = { map: 'world', mapFlags: {}, fog: {} }; // default map
-const player = { hp: 10, inv: [], scrap: 0, campChest: [], campChestUnlocked: false };
+const player = {
+    hp: 10,
+    inv: [],
+    scrap: 0,
+    campChest: [],
+    campChestUnlocked: false
+};
 if (typeof registerItem === 'function') {
     registerItem({
         id: 'memory_worm',

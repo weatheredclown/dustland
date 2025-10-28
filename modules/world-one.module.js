@@ -313,11 +313,11 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
                         ? dropFactory()
                         : { ...dropFactory };
                     let added = false;
-                    if (typeof addToInv === 'function') {
-                        added = addToInv(drop);
+                    if (typeof globalThis.addToInv === 'function') {
+                        added = globalThis.addToInv(drop);
                     }
-                    if (!added && typeof dropItemNearParty === 'function') {
-                        dropItemNearParty(drop);
+                    if (!added && typeof globalThis.dropItemNearParty === 'function') {
+                        globalThis.dropItemNearParty(drop);
                     }
                     flags[flag] = Date.now();
                     const msg = typeof messageFactory === 'function'
