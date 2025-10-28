@@ -1,55 +1,74 @@
-// @ts-nocheck
+type UIShowPayload = { id: string; display?: string };
+type UITextPayload = { id: string; text: string };
+type UIValuePayload = { id: string; value: string };
+
+function isValueElement(el: HTMLElement): el is HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement {
+  return 'value' in el;
+}
+
 (function(){
-  const bus = globalThis.Dustland?.eventBus ?? globalThis.EventBus;
+  const globalScope = globalThis as typeof globalThis & {
+    Dustland?: DustlandNamespace;
+    EventBus?: DustlandEventBus;
+    UI?: DustlandUiApi;
+  };
+
+  const dustlandNamespace = (globalScope.Dustland ??= {} as DustlandNamespace);
+
+  const bus = dustlandNamespace.eventBus ?? globalScope.EventBus;
   if(!bus) return;
 
-  function show(id, display=''){
+  function show(id: string, display = ''): void {
     bus.emit('ui:show', { id, display });
   }
 
-  function hide(id){
+  function hide(id: string): void {
     bus.emit('ui:hide', id);
   }
 
-  function setText(id, text){
+  function setText(id: string, text: string): void {
     bus.emit('ui:text', { id, text });
   }
 
-  function setValue(id, value){
+  function setValue(id: string, value: string): void {
     bus.emit('ui:value', { id, value });
   }
 
-  function remove(id){
+  function remove(id: string): void {
     bus.emit('ui:remove', id);
   }
 
-  bus.on('ui:show', ({ id, display }) => {
+  bus.on('ui:show', payload => {
+    const { id, display = '' } = payload as UIShowPayload;
     const el = document.getElementById(id);
     if(el) el.style.display = display;
   });
 
-  bus.on('ui:hide', id => {
+  bus.on('ui:hide', payload => {
+    const id = payload as string;
     const el = document.getElementById(id);
     if(el) el.style.display = 'none';
   });
 
-  bus.on('ui:text', ({ id, text }) => {
+  bus.on('ui:text', payload => {
+    const { id, text } = payload as UITextPayload;
     const el = document.getElementById(id);
     if(el) el.textContent = text;
   });
 
-  bus.on('ui:value', ({ id, value }) => {
+  bus.on('ui:value', payload => {
+    const { id, value } = payload as UIValuePayload;
     const el = document.getElementById(id);
-    if(el) el.value = value;
+    if(el && isValueElement(el)) el.value = value;
   });
 
-  bus.on('ui:remove', id => {
+  bus.on('ui:remove', payload => {
+    const id = payload as string;
     const el = document.getElementById(id);
     el?.remove();
   });
 
-  const api = { show, hide, setText, setValue, remove };
-  globalThis.Dustland = globalThis.Dustland ?? {};
-  globalThis.Dustland.ui = api;
-  globalThis.UI = api;
+  const api: DustlandUiApi = { show, hide, setText, setValue, remove };
+  dustlandNamespace.ui = api;
+  globalScope.UI = api;
 })();
