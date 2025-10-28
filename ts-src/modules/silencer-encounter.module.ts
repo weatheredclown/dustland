@@ -1,5 +1,17 @@
-// @ts-nocheck
-function seedWorldContent() {}
+function seedWorldContent(): void {}
+globalThis.seedWorldContent = seedWorldContent;
+
+type SilencerEncounterModule = DustlandModuleInstance & {
+  start: { map: string; x: number; y: number };
+  postLoad?: (moduleData: DustlandModuleInstance) => void;
+};
+
+declare global {
+  interface GlobalThis {
+    SILENCER_ENCOUNTER?: SilencerEncounterModule;
+  }
+}
+
 const DATA = `
 {
   "seed": "silencer-encounter",
@@ -124,18 +136,25 @@ const DATA = `
   "events": [],
   "portals": [],
   "buildings": []
-}
-`;
+}`;
 
-function postLoad(module) {}
+function postLoad(module: DustlandModuleInstance): void {}
 
-globalThis.SILENCER_ENCOUNTER = JSON.parse(DATA);
-globalThis.SILENCER_ENCOUNTER.postLoad = postLoad;
+const moduleData = JSON.parse(DATA) as SilencerEncounterModule;
+moduleData.postLoad = postLoad;
+globalThis.SILENCER_ENCOUNTER = moduleData;
 
-startGame = function () {
-  applyModule(SILENCER_ENCOUNTER);
-  var s = SILENCER_ENCOUNTER.start;
-  setPartyPos(s.x, s.y);
-  setMap(s.map, 'Arena');
+globalThis.startGame = function startGame(): void {
+  const encounter = globalThis.SILENCER_ENCOUNTER;
+  if (!encounter) return;
+
+  encounter.postLoad?.(encounter);
+  globalThis.applyModule?.(encounter);
+
+  const start = encounter.start;
+  setPartyPos(start.x, start.y);
+  setMap(start.map, 'Arena');
   log('A Silencer scout blocks your path.');
 };
+
+export {};
