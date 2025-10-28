@@ -454,7 +454,7 @@ declare global {
     NPCS?: DustlandNpc[];
     DUSTLAND_MODULE?: DustlandModuleInstance;
     LOOTBOX_DEMO_MODULE?: DustlandModuleInstance;
-    applyModule?: (moduleData: unknown) => void;
+    applyModule?: (moduleData: unknown) => unknown;
     loadModule?: (moduleData: unknown) => Promise<void> | void;
     setPartyPos?: (x: number, y: number) => void;
     setMap?: (map: string, label?: string) => void;
@@ -524,6 +524,18 @@ declare global {
     healAll?: () => void;
     params?: URLSearchParams;
     state?: { map?: string; [key: string]: unknown };
+    EDGE_MODULE?: DustlandModuleInstance;
+    OTHER_BAS_MODULE?: DustlandModuleInstance & { listing?: string };
+    OFFICE_MODULE?: DustlandModuleInstance & { worldGen?: unknown };
+    WORLD_TWO_MODULE?: DustlandModuleInstance;
+    itemDrops?: Array<{
+      id?: string;
+      map?: string;
+      x: number;
+      y: number;
+      dropType?: string;
+      [key: string]: unknown;
+    }>;
   }
 
   function log(message: string, type?: string): void;
@@ -556,7 +568,7 @@ declare global {
   function getClassSpecials(id: string): unknown;
   function getQuirk(id: string): unknown;
   function renderQuests(): void;
-  function applyModule(moduleData: unknown): void;
+  function applyModule(moduleData: unknown): unknown;
   function setPartyPos(x: number, y: number): void;
   function setMap(map: string, label?: string): void;
   function setFlag(flag: string, value: number | string | boolean): void;
