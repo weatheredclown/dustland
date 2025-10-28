@@ -1,4 +1,3 @@
-// @ts-nocheck
 // ===== Item Generator =====
 let nextItemId = 1;
 const ItemGen = {
