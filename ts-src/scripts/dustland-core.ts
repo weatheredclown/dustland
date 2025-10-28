@@ -122,6 +122,98 @@ type CombatSource = CombatTarget & {
   challenge?: number;
 };
 
+type WorldGrid = number[][];
+
+type InteriorDefinition = DustlandMap & {
+  label?: string;
+  displayName?: string;
+  [key: string]: unknown;
+};
+
+type BuildingDefinition = {
+  x: number;
+  y: number;
+  w?: number;
+  h?: number;
+  doorX?: number;
+  doorY?: number;
+  interiorId?: string | null;
+  boarded?: boolean;
+  bunker?: boolean;
+  bunkerId?: string;
+  under?: number[][];
+  grid?: number[][];
+  [key: string]: unknown;
+};
+
+type PortalDefinition = {
+  id?: string;
+  map: string;
+  x: number;
+  y: number;
+  toMap?: string;
+  toX?: number;
+  toY?: number;
+  [key: string]: unknown;
+};
+
+type ZoneEffectDefinition = {
+  id?: string;
+  map?: string;
+  x?: number;
+  y?: number;
+  w?: number;
+  h?: number;
+  dry?: boolean;
+  walled?: boolean;
+  entrances?: Record<string, boolean | undefined>;
+  useItem?: {
+    id?: string;
+    once?: boolean;
+    reward?: unknown;
+    _used?: boolean;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+};
+
+type TileEventDefinition = Record<string, unknown>;
+
+type EnemyBankMap = Record<string, CombatSource[]>;
+
+type NpcTemplateDefinition = {
+  id?: string;
+  map?: string;
+  x?: number;
+  y?: number;
+  color?: string;
+  name?: string;
+  title?: string;
+  desc?: string;
+  tree?: Record<string, unknown> | string | null;
+  reveal?: unknown;
+  questId?: string;
+  quests?: string[];
+  quest?: { id?: string };
+  combat?: Record<string, unknown>;
+  shop?: unknown;
+  portraitSheet?: string;
+  portraitLock?: boolean;
+  symbol?: string;
+  door?: unknown;
+  locked?: boolean;
+  loop?: unknown[];
+  hintSound?: boolean;
+  workbench?: unknown;
+  trainer?: unknown;
+  overrideColor?: boolean;
+  questIdx?: number;
+  portraitPrompt?: string;
+  dialog?: unknown;
+  dialogs?: unknown[];
+  [key: string]: unknown;
+};
+
 // ===== Core helpers =====
 const ROLL_SIDES = 12;
 const DC = Object.freeze({ TALK: 8, REPAIR: 9 });
@@ -284,9 +376,9 @@ globalThis.emojiTile = emojiTile;
 globalThis.gridFromEmoji = gridFromEmoji;
 globalThis.gridToEmoji = gridToEmoji;
 
-const mapNameEl = document.getElementById('mapname');
-const mapLabels = { world: 'Wastes', creator: 'Creator' };
-function formatMapName(id){
+const mapNameEl: HTMLElement | null = typeof document !== 'undefined' ? document.getElementById('mapname') : null;
+const mapLabels: Record<string, string> = { world: 'Wastes', creator: 'Creator' };
+function formatMapName(id: string | null | undefined): string {
   if(id==null) return 'Interior';
   const str=String(id).trim();
   if(!str) return 'Interior';
@@ -294,7 +386,7 @@ function formatMapName(id){
   if(!spaced) return 'Interior';
   return spaced.replace(/\b\w/g,c=>c.toUpperCase());
 }
-function mapLabel(id){
+function mapLabel(id: string | null | undefined): string {
   if(!id) return '';
   const meta = interiors[id];
   const display = typeof meta?.displayName === 'string' ? meta.displayName.trim() : '';
@@ -302,7 +394,7 @@ function mapLabel(id){
   const stored = typeof mapLabels[id] === 'string' ? mapLabels[id].trim() : '';
   return display || label || stored || formatMapName(id);
 }
-function setMap(id,label){
+function setMap(id: string, label?: string): void {
   if(typeof gridFor === 'function' && !gridFor(id)){
     id = 'world';
     label = label || mapLabel(id);
@@ -335,11 +427,32 @@ function getViewSize(){
 globalThis.getViewSize = getViewSize;
 
 // ===== Game state =====
-let world = [], interiors = {}, buildings = [], portals = [], npcTemplates = [];
-const tileEvents = [];
-const zoneEffects = [];
-const enemyBanks = {};
-function registerTileEvents(list){ (list||[]).forEach(e => tileEvents.push(e)); }
+let world: WorldGrid = [];
+let interiors: Record<string, InteriorDefinition> = {};
+const buildings: BuildingDefinition[] = [];
+const portals: PortalDefinition[] = [];
+const npcTemplates: NpcTemplateDefinition[] = [];
+const tileEvents: TileEventDefinition[] = [];
+const zoneEffects: ZoneEffectDefinition[] = [];
+const enemyBanks: EnemyBankMap = {};
+function registerTileEvents(list: TileEventDefinition[] | null | undefined): void {
+  (list||[]).forEach(e => tileEvents.push(e));
+}
+
+function resetWorldFrom(grid: number[][]): void {
+  world.length = 0;
+  for (const row of grid) {
+    world.push([...row]);
+  }
+}
+
+function replaceInteriorsFrom(data: Record<string, InteriorDefinition | undefined> | undefined | null): void {
+  Object.keys(interiors).forEach(key => delete interiors[key]);
+  if (!data) return;
+  Object.entries(data).forEach(([key, value]) => {
+    if (value) interiors[key] = { ...value };
+  });
+}
 function computeZoneWallGap(length, enabled){
   if(!enabled || length <= 0) return null;
   const size = Math.min(2, length);
@@ -349,7 +462,7 @@ function computeZoneWallGap(length, enabled){
 function zoneGapContains(index, gap){
   return !!gap && index >= gap.start && index < gap.end;
 }
-function applyZoneWalls(z){
+function applyZoneWalls(z: ZoneEffectDefinition | null | undefined): void {
   if(!z || !z.walled || typeof setTile !== 'function') return;
   const map = z.map || 'world';
   const grid = typeof gridFor === 'function' ? gridFor(map) : null;
@@ -388,7 +501,7 @@ function applyZoneWalls(z){
     }
   }
 }
-function registerZoneEffects(list){
+function registerZoneEffects(list: ZoneEffectDefinition[] | null | undefined): void {
   (list||[]).forEach(z => {
     zoneEffects.push(z);
     applyZoneWalls(z);
@@ -466,8 +579,25 @@ function revealFog(map, x, y, radius = FOG_RADIUS){
   }
 }
 
-const state = { map:'world', mapFlags: {}, fog: {} }; // default map
-const player = { hp:10, inv:[], scrap:0, campChest: [], campChestUnlocked: false };
+type CoreState = {
+  map: string;
+  mapFlags: Record<string, unknown>;
+  fog: Record<string, unknown>;
+  mapEntry?: { map: string; x: number; y: number } | null;
+  [key: string]: unknown;
+};
+
+type PlayerState = {
+  hp: number;
+  inv: unknown[];
+  scrap: number;
+  campChest: unknown[];
+  campChestUnlocked: boolean;
+  [key: string]: unknown;
+};
+
+const state: CoreState = { map:'world', mapFlags: {}, fog: {} }; // default map
+const player: PlayerState = { hp:10, inv:[], scrap:0, campChest: [], campChestUnlocked: false };
 if (typeof registerItem === 'function') {
   registerItem({
     id: 'memory_worm',
@@ -476,7 +606,7 @@ if (typeof registerItem === 'function') {
     desc: 'Resets a character\'s spent skill points and lets them choose a new specialization and perk.'
   });
 }
-function setPartyPos(x, y){
+function setPartyPos(x: number | null | undefined, y: number | null | undefined): void {
   if(typeof x === 'number') party.x = x;
   if(typeof y === 'number') party.y = y;
   if(!state.mapEntry || state.mapEntry.map !== state.map){
@@ -485,8 +615,10 @@ function setPartyPos(x, y){
   if(mapSupportsFog(state.map)) revealFog(state.map, party.x, party.y);
   incFlag(`visits@${state.map}@${party.x},${party.y}`);
 }
-const worldFlags = {};
-const hiddenNPCs = [];
+type WorldFlagEntry = { count: number; time: number };
+
+const worldFlags: Record<string, WorldFlagEntry> = {};
+const hiddenNPCs: NpcTemplateDefinition[] = [];
 const GAME_STATE = Object.freeze({
   TITLE: 'title',
   CREATOR: 'creator',
@@ -495,14 +627,18 @@ const GAME_STATE = Object.freeze({
   DIALOG: 'dialog',
   MENU: 'menu'
 });
-let gameState = GAME_STATE.TITLE;
-function setGameState(next){ gameState = next; }
+type GameStateValue = typeof GAME_STATE[keyof typeof GAME_STATE];
+
+let gameState: GameStateValue = GAME_STATE.TITLE;
+function setGameState(next: GameStateValue): void { gameState = next; }
 let doorPulseUntil = 0;
 let lastInteract = 0;
 
 // Simple map used during character creation
-const creatorMap = { w:30, h:22, grid:[], entryX:15, entryY:10 };
-function genCreatorMap(){
+type CreatorMap = { w: number; h: number; grid: number[][]; entryX: number; entryY: number };
+
+const creatorMap: CreatorMap = { w:30, h:22, grid:[], entryX:15, entryY:10 };
+function genCreatorMap(): void {
   creatorMap.grid = Array.from({length:creatorMap.h},(_,y)=> Array.from({length:creatorMap.w},(_,x)=>{
     const edge = y===0||y===creatorMap.h-1||x===0||x===creatorMap.w-1; return edge? TILE.WALL : TILE.FLOOR;
   }));
@@ -625,9 +761,8 @@ function applyModule(data = {}, options = {}) {
       }
     }
     if (moduleData.world) {
-      world.length = 0;
       const grid = Array.isArray(moduleData.world[0]) ? moduleData.world : gridFromEmoji(moduleData.world);
-      grid.forEach(row => world.push([...row]));
+      resetWorldFrom(grid);
       generated = true;
     }
     if (!generated) {
@@ -1404,12 +1539,12 @@ function mergeBuildingState(saved){
 function loadLegacySave(d){
   worldSeed = d.worldSeed || Date.now();
   setRNGSeed(worldSeed);
-  if(d.world){ world=d.world; } else { genWorld(worldSeed); }
+  if(Array.isArray(d.world)){ resetWorldFrom(d.world); } else { genWorld(worldSeed); }
   Object.assign(player,d.player);
   Object.assign(state,d.state);
   state.fog = state.fog || {};
   buildings.length=0; (d.buildings||[]).forEach(b=> buildings.push(b));
-  interiors={}; Object.keys(d.interiors||{}).forEach(k=> interiors[k]=d.interiors[k]);
+  replaceInteriorsFrom(d.interiors);
   itemDrops.length=0; (d.itemDrops||[]).forEach(i=> itemDrops.push(i));
   Object.keys(quests).forEach(k=> delete quests[k]);
   Object.keys(d.quests||{}).forEach(id=>{

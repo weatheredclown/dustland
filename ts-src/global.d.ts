@@ -562,4 +562,9 @@ declare global {
   function setFlag(flag: string, value: number | string | boolean): void;
   function incFlag(flag: string, delta?: number): void;
   function flagValue(flag: string): number;
+  function gridFor(map: string): number[][] | null | undefined;
+  function setTile(map: string, x: number, y: number, tile: number): void;
+  function getTile(map: string, x: number, y: number): number;
+  function mapWH(map: string): { W: number; H: number } | null | undefined;
+  function centerCamera(x: number, y: number, map?: string): void;
 }
