@@ -1,7 +1,8 @@
-// @ts-nocheck
-function seedWorldContent() {}
-
-function postLoad() {}
+(function () {
+function postLoad(
+  _moduleData: DustlandModuleInstance,
+  _context?: { phase?: string; [key: string]: unknown }
+): void {}
 
 const DATA = `
 {
@@ -946,9 +947,10 @@ const DATA = `
 }
 `;
 
-globalThis.OTHER_BAS_MODULE = JSON.parse(DATA);
-globalThis.OTHER_BAS_MODULE.listing = `MCBDTFM6S0VZIE9GRjpDT0xPUiAxNQ0KMTAgUFJJTlQgIkhFUkUgQkVHSU5T
-globalThis.OTHER_BAS_MODULE.postLoad = postLoad;
+const otherBasModule = JSON.parse(DATA) as DustlandModuleInstance & { listing?: string };
+otherBasModule.listing = `MCBDTFM6S0VZIE9GRjpDT0xPUiAxNQ0KMTAgUFJJTlQgIkhFUkUgQkVHSU5T
+otherBasModule.postLoad = postLoad;
+globalThis.OTHER_BAS_MODULE = otherBasModule;
 IFRIRSBUUkFOU0NSSVBUIE9GIFRIRSBPVEhFUiBBRFZFTlRVUkUgR0FNRS4u
 LiI6UFJJTlQgIkNvcHl3cml0ZSAxOTkwOiAgTElTQ0VOU0VEIFRPOiBILlAu
 IEhhY2tlciwgTGFzZXIiOzpDT0xPUiA0OlBSSU5UICJQcmVzcyI7OkNPTE9S
@@ -2272,10 +2274,15 @@ JCxJSyQsSUwkLElNJCxJTiQsSU8kLElQJCxJUSQsSVIkLElTJCxJVCQsSVUk
 LElNQSQsSU5EJA0KNDU1MzAgQ0xPU0UgIzENCjQ1NTQwIENMUzpBJD0iTE9P
 SyINCjQ1OTk5IFJFVFVSTg0KGg==`;
 
-startGame = function () {
-  OTHER_BAS_MODULE.postLoad?.(OTHER_BAS_MODULE);
-  applyModule(OTHER_BAS_MODULE);
-  const s = OTHER_BAS_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-  setMap(s.map, s.map === 'world' ? 'Wastes' : undefined);
-  setPartyPos(s.x, s.y);
+globalThis.startGame = () => {
+  const moduleData = globalThis.OTHER_BAS_MODULE;
+  if (!moduleData) return;
+  moduleData.postLoad?.(moduleData);
+  applyModule(moduleData);
+  const worldHeight = (globalThis as { WORLD_H?: number }).WORLD_H ?? 0;
+  const fallbackStart = { map: 'world', x: 2, y: Math.floor(worldHeight / 2) };
+  const start = moduleData.start ?? fallbackStart;
+  setMap(start.map, start.map === 'world' ? 'Wastes' : undefined);
+  setPartyPos(start.x, start.y);
 };
+})();
