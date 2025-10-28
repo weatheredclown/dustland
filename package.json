@@ -14,7 +14,8 @@
     "test": "npm run lint && node --test",
     "lint": "eslint ts-src test --ext .ts,.js && yamllint .github/workflows/*.yml",
     "module:export": "node scripts/supporting/module-json.js export",
-    "module:import": "node scripts/supporting/module-json.js import"
+    "module:import": "node scripts/supporting/module-json.js import",
+    "check:prod": "npm run build && node scripts/supporting/build-health.js && node scripts/supporting/presubmit.js && npm run lint && node --test"
   },
   "author": "",
   "license": "MIT",
