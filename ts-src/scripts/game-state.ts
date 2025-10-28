@@ -1,76 +1,151 @@
-// @ts-nocheck
-(function(){
-  globalThis.Dustland = globalThis.Dustland ?? {};
-  const state = { party: [], world: {}, inventory: [], flags: {}, clock: 0, quests: [], difficulty: 'normal', personas: {}, effectPacks: {}, npcMemory: {} };
-  function getState(){ return state; }
-  function updateState(fn){
-    if (typeof fn === 'function') fn(state);
-    globalThis.EventBus?.emit('state:changed', state);
-  }
-  function getDifficulty(){ return state.difficulty; }
-  function setDifficulty(mode){ state.difficulty = mode; }
-  function setPersona(id, persona){
+(function () {
+  type PersonaRegistry = Record<string, DustlandPersonaTemplate>;
+  type EffectPackList = unknown[];
+  type EffectPackMap = Record<string, EffectPackList>;
+  type NpcMemory = Record<string, Record<string, unknown>>;
+
+  type MutableGameState = DustlandGameSnapshot & {
+    party: Party;
+    world: Record<string, unknown>;
+    inventory: PartyItem[];
+    flags: Record<string, unknown>;
+    clock: number;
+    quests: QuestState[];
+    difficulty: string;
+    personas: PersonaRegistry;
+    effectPacks: EffectPackMap;
+    npcMemory: NpcMemory;
+  };
+
+  const globals = globalThis as unknown as GlobalThis;
+  const dustland = (globals.Dustland ??= {} as DustlandNamespace);
+  const getEventBus = (): DustlandEventBus | undefined =>
+    globals.EventBus ?? globals.eventBus ?? dustland.eventBus;
+
+  const state: MutableGameState = {
+    party: [] as unknown as Party,
+    world: {},
+    inventory: [],
+    flags: {},
+    clock: 0,
+    quests: [],
+    difficulty: 'normal',
+    personas: {},
+    effectPacks: {},
+    npcMemory: {},
+  };
+
+  const emitStateChanged = (): void => {
+    getEventBus()?.emit('state:changed', state);
+  };
+
+  const getState = (): MutableGameState => state;
+
+  const updateState = (fn?: (draft: MutableGameState) => void): void => {
+    if (typeof fn === 'function') {
+      fn(state);
+    }
+    emitStateChanged();
+  };
+
+  const getDifficulty = (): string => state.difficulty;
+
+  const setDifficulty = (mode: string): void => {
+    state.difficulty = mode;
+  };
+
+  const setPersona = (id: string, persona: DustlandPersonaTemplate): void => {
     state.personas[id] = persona;
-    globalThis.Dustland?.profiles?.set?.(id, persona);
-  }
-  function getPersona(id){ return state.personas[id]; }
-  function addEffectPack(evt, list){
-    if(!evt || !Array.isArray(list)) return;
+    dustland.profiles?.set(id, persona);
+  };
+
+  const getPersona = (id: string): DustlandPersonaTemplate | undefined => state.personas[id];
+
+  const addEffectPack = (evt: string | undefined, list: EffectPackList | undefined): void => {
+    if (!evt || !Array.isArray(list)) return;
     state.effectPacks[evt] = list;
-    globalThis.EventBus?.on(evt, payload => {
-      globalThis.Dustland?.effects?.apply(list, payload ?? {});
+    getEventBus()?.on(evt, payload => {
+      const context =
+        payload && typeof payload === 'object'
+          ? (payload as Record<string, unknown>)
+          : {};
+      dustland.effects?.apply?.(list, context);
     });
-  }
-  function loadEffectPacks(packs){
-    if(packs) Object.entries(packs).forEach(([evt, list]) => addEffectPack(evt, list));
-  }
-  function rememberNPC(id, key, value){
-    if(!id || !key) return;
-    const m = state.npcMemory[id] ?? (state.npcMemory[id] = {});
-    m[key] = value;
-  }
-  function recallNPC(id, key){
-    return state.npcMemory[id] ? state.npcMemory[id][key] : undefined;
-  }
-  function forgetNPC(id, key){
-    if(!id) return;
-    if(key){
-      if(state.npcMemory[id]) delete state.npcMemory[id][key];
-    }else{
+  };
+
+  const loadEffectPacks = (packs?: Record<string, EffectPackList>): void => {
+    if (!packs) return;
+    Object.entries(packs).forEach(([evt, list]) => addEffectPack(evt, list));
+  };
+
+  const rememberNPC = (id: string | undefined, key: string | undefined, value: unknown): void => {
+    if (!id || !key) return;
+    const memory = state.npcMemory[id] ?? (state.npcMemory[id] = {});
+    memory[key] = value;
+  };
+
+  const recallNPC = (id: string | undefined, key: string | undefined): unknown => {
+    if (!id || !key) return undefined;
+    const memory = state.npcMemory[id];
+    return memory ? memory[key] : undefined;
+  };
+
+  const forgetNPC = (id: string | undefined, key?: string): void => {
+    if (!id) return;
+    if (key) {
+      delete state.npcMemory[id]?.[key];
+    } else {
       delete state.npcMemory[id];
     }
-  }
-  function applyPersona(memberId, personaId){
+  };
+
+  const applyPersona = (memberId: string, personaId: string): void => {
     const persona = state.personas[personaId];
     if (!persona) return;
     const member = state.party.find(m => m.id === memberId);
     if (!member) return;
     const prev = member.persona;
-    if (prev === personaId) return; // no change
+    if (prev === personaId) return;
     if (prev) {
-      globalThis.Dustland?.profiles?.remove?.(member, prev);
-      globalThis.EventBus?.emit('persona:unequip', { memberId, personaId: prev });
+      dustland.profiles?.remove?.(member, prev);
+      getEventBus()?.emit('persona:unequip', { memberId, personaId: prev });
     }
     member.persona = personaId;
-    globalThis.Dustland?.profiles?.apply?.(member, personaId);
+    dustland.profiles?.apply?.(member, personaId);
     if (typeof member.applyEquipmentStats === 'function') member.applyEquipmentStats();
     if (typeof member.applyCombatMods === 'function') member.applyCombatMods();
-    globalThis.EventBus?.emit('persona:equip', { memberId, personaId });
+    getEventBus()?.emit('persona:equip', { memberId, personaId });
     if (typeof renderParty === 'function') renderParty();
     if (typeof updateHUD === 'function') updateHUD();
-  }
-  function clearPersona(memberId){
+  };
+
+  const clearPersona = (memberId: string): void => {
     const member = state.party.find(m => m.id === memberId);
     if (!member) return;
     const prev = member.persona;
     if (!prev) return;
-    globalThis.Dustland?.profiles?.remove?.(member, prev);
+    dustland.profiles?.remove?.(member, prev);
     member.persona = undefined;
     if (typeof member.applyEquipmentStats === 'function') member.applyEquipmentStats();
     if (typeof member.applyCombatMods === 'function') member.applyCombatMods();
-    globalThis.EventBus?.emit('persona:unequip', { memberId, personaId: prev });
+    getEventBus()?.emit('persona:unequip', { memberId, personaId: prev });
     if (typeof renderParty === 'function') renderParty();
     if (typeof updateHUD === 'function') updateHUD();
-  }
-  Dustland.gameState = { getState, updateState, getDifficulty, setDifficulty, setPersona, getPersona, applyPersona, clearPersona, addEffectPack, loadEffectPacks, rememberNPC, recallNPC, forgetNPC };
+  };
+
+  dustland.gameState = {
+    getState,
+    updateState,
+    getDifficulty,
+    setDifficulty,
+    setPersona,
+    getPersona,
+    applyPersona,
+    clearPersona,
+    addEffectPack,
+    loadEffectPacks,
+    rememberNPC,
+    recallNPC,
+    forgetNPC,
+  };
 })();
