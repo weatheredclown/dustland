@@ -1,26 +1,40 @@
-// @ts-nocheck
 (function () {
-    globalThis.Dustland = globalThis.Dustland || {};
-    const bus = globalThis.EventBus;
+    const globalScope = globalThis;
+    globalScope.Dustland = globalScope.Dustland || {};
+    const Dustland = globalScope.Dustland;
+    const bus = globalScope.EventBus;
     const ENHANCE_COST = 5;
+    function notify(message) {
+        if (typeof globalScope.log === 'function') {
+            globalScope.log(message);
+        }
+        else {
+            console.log(message);
+        }
+    }
+    function getInventory() {
+        const inv = globalScope.player?.inv;
+        return Array.isArray(inv) ? inv : [];
+    }
     function getItemCount(id) {
         if (!id)
             return 0;
-        if (typeof countItems === 'function') {
-            return countItems(id) || 0;
+        if (typeof globalScope.countItems === 'function') {
+            const count = globalScope.countItems(id);
+            return typeof count === 'number' ? count : 0;
         }
-        const inv = Array.isArray(player?.inv) ? player.inv : [];
+        const inv = getInventory();
         return inv.reduce((sum, it) => sum + (it?.id === id ? Math.max(1, Number.isFinite(it?.count) ? it.count : 1) : 0), 0);
     }
     function resolveItemDefinition(id) {
         if (!id)
             return null;
-        if (typeof getItem === 'function') {
-            const found = getItem(id);
+        if (typeof globalScope.getItem === 'function') {
+            const found = globalScope.getItem(id);
             if (found)
                 return found;
         }
-        const inv = Array.isArray(player?.inv) ? player.inv : [];
+        const inv = getInventory();
         const entry = inv.find(it => it?.id === id);
         if (!entry)
             return null;
@@ -41,8 +55,8 @@
         if (!base || !base.id)
             return null;
         const enhancedId = `enhanced_${base.id}`;
-        if (typeof getItem === 'function') {
-            const existing = getItem(enhancedId);
+        if (typeof globalScope.getItem === 'function') {
+            const existing = globalScope.getItem(enhancedId);
             if (existing)
                 return existing;
         }
@@ -94,10 +108,10 @@
             def.equip = { ...base.equip };
         if (base.unequip)
             def.unequip = { ...base.unequip };
-        if (typeof registerItem === 'function') {
-            registerItem(def);
-            if (typeof getItem === 'function') {
-                const refreshed = getItem(enhancedId);
+        if (typeof globalScope.registerItem === 'function') {
+            globalScope.registerItem(def);
+            if (typeof globalScope.getItem === 'function') {
+                const refreshed = globalScope.getItem(enhancedId);
                 if (refreshed)
                     return refreshed;
             }
@@ -110,7 +124,7 @@
         if (!key)
             return null;
         const type = req.type === 'resource' ? 'resource' : 'item';
-        const amount = Number.isFinite(req.amount) ? req.amount : 1;
+        const amount = Number.isFinite(req.amount) ? Number(req.amount) : 1;
         const label = req.label || String(key);
         return { label, key, amount, type };
     }
@@ -123,7 +137,9 @@
             return null;
         const name = def.name || def.label || String(id);
         const requirements = Array.isArray(def.requirements)
-            ? def.requirements.map(normalizeRequirement).filter(Boolean)
+            ? def.requirements
+                .map(req => normalizeRequirement(req))
+                .filter((value) => Boolean(value))
             : [];
         return { id: String(id), name, craft, requirements };
     }
@@ -166,44 +182,44 @@
     function craftEnhancedItem(baseId) {
         const base = resolveItemDefinition(baseId);
         if (!base) {
-            log('Need a valid item to enhance.');
+            notify('Need a valid item to enhance.');
             return;
         }
         const needed = ENHANCE_COST;
         const have = getItemCount(baseId);
         if (have < needed) {
-            log(`Need ${needed} ${base.name || base.id}.`);
+            notify(`Need ${needed} ${base.name || base.id}.`);
             return;
         }
         for (let i = 0; i < needed; i += 1) {
-            const idx = typeof findItemIndex === 'function' ? findItemIndex(baseId) : -1;
+            const idx = typeof globalScope.findItemIndex === 'function' ? globalScope.findItemIndex(baseId) : -1;
             if (idx === -1) {
-                log('Missing components.');
+                notify('Missing components.');
                 return;
             }
-            if (typeof removeFromInv === 'function') {
-                removeFromInv(idx);
+            if (typeof globalScope.removeFromInv === 'function') {
+                globalScope.removeFromInv(idx);
             }
         }
         const enhanced = ensureEnhancedDefinition(base);
         if (!enhanced) {
-            log('Unable to enhance that item.');
+            notify('Unable to enhance that item.');
             return;
         }
         const addTarget = enhanced.id || enhanced;
         let added = false;
-        if (typeof addToInv === 'function') {
-            added = addToInv(addTarget);
+        if (typeof globalScope.addToInv === 'function') {
+            added = globalScope.addToInv(addTarget);
             if (!added && enhanced && enhanced.id) {
-                added = addToInv(enhanced);
+                added = globalScope.addToInv(enhanced);
             }
         }
         if (!added) {
-            log('Inventory full.');
+            notify('Inventory full.');
             return;
         }
         bus?.emit('craft:enhanced', { baseId: base.id || baseId, enhancedId: enhanced.id || addTarget });
-        log(`Forged ${enhanced.name || buildEnhancedName(base.name || base.id)}.`);
+        notify(`Forged ${enhanced.name || buildEnhancedName(base.name || base.id)}.`);
     }
     function openWorkbench() {
         const overlay = document.getElementById('workbenchOverlay');
@@ -218,7 +234,7 @@
                 focusables[focusIdx].focus();
         }
         function getEnhancementRecipes() {
-            const inv = Array.isArray(player?.inv) ? player.inv : [];
+            const inv = getInventory();
             const counts = {};
             inv.forEach(it => {
                 if (!it || !it.id)
@@ -236,6 +252,7 @@
                 const base = resolveItemDefinition(id);
                 const baseName = base?.name || id;
                 return {
+                    id: `enhance:${id}`,
                     name: buildEnhancedName(baseName),
                     craft: () => craftEnhancedItem(id),
                     requirements: [
@@ -259,9 +276,10 @@
                 info.appendChild(title);
                 const reqList = document.createElement('ul');
                 let craftable = true;
-                (Array.isArray(r.requirements) ? r.requirements : []).forEach(req => {
+                r.requirements.forEach(req => {
+                    const pool = globalScope.player;
                     const have = req.type === 'resource'
-                        ? (player?.[req.key] || 0)
+                        ? Number(pool?.[req.key] ?? 0) || 0
                         : getItemCount(req.key);
                     if (have < req.amount)
                         craftable = false;
