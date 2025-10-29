@@ -1,10 +1,96 @@
-// @ts-nocheck
 // ===== Effects =====
 (function(){
-  let dustStormCanvas = null;
-  let dustStormCtx = null;
-  let dustParticles = [];
-  let slotMachines = {};
+  type StatsHolder = { stats?: Record<string, number | undefined> };
+
+  type EffectDropConfig = {
+    threshold?: number;
+    rank?: string;
+    log?: string;
+    toast?: string;
+    [key: string]: unknown;
+  };
+
+  type EffectDefinition = {
+    effect?: string;
+    type?: string;
+    active?: boolean;
+    id?: string;
+    npcId?: string;
+    ids?: Array<string | null | undefined>;
+    map?: string;
+    x?: number;
+    y?: number;
+    label?: string;
+    log?: string;
+    toast?: string;
+    trainer?: string;
+    interiorId?: string;
+    bunkerId?: string;
+    color?: string;
+    duration?: number;
+    cost?: number;
+    payouts?: Array<number | null | undefined>;
+    machineId?: string;
+    drop?: EffectDropConfig;
+    set?: number;
+    delta?: number;
+    min?: number;
+    max?: number;
+    silent?: boolean;
+    itemId?: string;
+    recipe?: unknown;
+    tag?: string;
+    item?: unknown;
+    remove?: string;
+    add?: string;
+    stat?: string;
+    flag?: string;
+    msg?: string;
+    [key: string]: unknown;
+  };
+
+  type EffectBuff = {
+    target?: StatsHolder | null;
+    stat: string;
+    delta: number;
+    remaining: number;
+  };
+
+  type EffectContext = {
+    party?: Party;
+    player?: (PlayerState & StatsHolder) | null;
+    actor?: StatsHolder | null;
+    buffs?: EffectBuff[];
+    [key: string]: unknown;
+  };
+
+  type SlotMachineState = { net: number; exhausted: boolean };
+
+  type DustStormParticle = { x: number; y: number; size: number; speed: number };
+
+  type EffectsApi = {
+    apply: (list?: Array<EffectDefinition | null | undefined>, ctx?: EffectContext) => void;
+    reset: () => void;
+    tick: (ctx?: EffectContext) => void;
+  };
+
+  type EffectsGlobals = typeof globalThis & {
+    currentNPC?: DustlandNpc | null;
+    party?: (Party & { map?: string; x?: number; y?: number }) | null;
+    buildings?: DustlandBuilding[];
+    addToInv?: (item: unknown) => boolean;
+    NPCS?: DustlandNpc[];
+    player?: PlayerState | null;
+    TrainerUI?: DustlandTrainerUi;
+    itemDrops?: DustlandItemDrop[];
+  };
+
+  const globals = globalThis as EffectsGlobals;
+
+  let dustStormCanvas: HTMLCanvasElement | null = null;
+  let dustStormCtx: CanvasRenderingContext2D | null = null;
+  let dustParticles: DustStormParticle[] = [];
+  let slotMachines: Record<string, SlotMachineState> = {};
 
   function createDustStorm() {
     if (dustStormCanvas) return;
@@ -19,6 +105,11 @@
     dustStormCanvas.style.zIndex = '100';
     document.body.appendChild(dustStormCanvas);
     dustStormCtx = dustStormCanvas.getContext('2d');
+    if (!dustStormCtx) {
+      dustStormCanvas.remove();
+      dustStormCanvas = null;
+      return;
+    }
     dustStormCanvas.width = window.innerWidth;
     dustStormCanvas.height = window.innerHeight;
 
@@ -34,7 +125,7 @@
   }
 
   function animateDustStorm() {
-    if (!dustStormCanvas) return;
+    if (!dustStormCanvas || !dustStormCtx) return;
     dustStormCtx.clearRect(0, 0, dustStormCanvas.width, dustStormCanvas.height);
     dustStormCtx.fillStyle = 'rgba(210, 180, 140, 0.3)';
     for (const p of dustParticles) {
@@ -53,13 +144,13 @@
     dustParticles = [];
   }
 
-  function getSlotState(id = 'slot_machine') {
-    const key = id || 'slot_machine';
+  function getSlotState(id = 'slot_machine'): SlotMachineState {
+    const key = id ?? 'slot_machine';
     if (!slotMachines[key]) slotMachines[key] = { net: 0, exhausted: false };
     return slotMachines[key];
   }
 
-  function invokeWorkbench(recipe) {
+  function invokeWorkbench(recipe: unknown) {
     if (!recipe) return;
     const workbench = globalThis.Dustland?.workbench;
     if (!workbench) return;
@@ -71,15 +162,15 @@
         if (typeof fn === 'function') fn();
       }
     } else if (typeof recipe === 'function') {
-      recipe();
+      (recipe as () => void)();
     }
   }
 
-  const Effects = {
-    apply(list = [], ctx = {}) {
-      for (const eff of list || []) {
+  const Effects: EffectsApi = {
+    apply(list: Array<EffectDefinition | null | undefined> = [], ctx: EffectContext = {}) {
+      for (const eff of list) {
         if (!eff) continue;
-        const type = eff.effect || eff.type;
+        const type = (eff.effect ?? eff.type) as string | undefined;
         switch (type) {
           case 'dustStorm':
             if (eff.active) createDustStorm();
@@ -88,7 +179,7 @@
           case 'addSoundSource':
             if (eff.id && typeof eff.x === 'number' && typeof eff.y === 'number') {
               if (!soundSources.some(s => s.id === eff.id)) {
-                soundSources.push({ id: eff.id, x: eff.x, y: eff.y, map: eff.map || state.map });
+                soundSources.push({ id: eff.id, x: eff.x, y: eff.y, map: eff.map ?? state.map });
               }
             }
             break;
@@ -99,8 +190,8 @@
             }
             break;
           case 'removeNpc': {
-            const roster = Array.isArray(NPCS) ? NPCS : [];
-            const ids = [];
+            const roster = Array.isArray(globals.NPCS) ? globals.NPCS : [];
+            const ids: string[] = [];
             if (typeof eff.id === 'string') ids.push(eff.id);
             if (typeof eff.npcId === 'string') ids.push(eff.npcId);
             if (Array.isArray(eff.ids)) {
@@ -109,39 +200,45 @@
               }
             }
             if (!ids.length) {
-              const activeNPC = globalThis.currentNPC;
+              const activeNPC = globals.currentNPC;
               if (activeNPC?.id) ids.push(activeNPC.id);
             }
             const uniqueIds = Array.from(new Set(ids));
             for (const id of uniqueIds) {
-              const npc = roster.find(n => n?.id === id) || null;
+              const npc = roster.find(n => n && n.id === id) ?? null;
               if (npc && typeof removeNPC === 'function') removeNPC(npc);
             }
             break; }
           case 'toast':
-            if (typeof toast === 'function') toast(eff.msg || '');
-            else if (typeof log === 'function') log(eff.msg || '');
+            if (typeof toast === 'function') toast(eff.msg ?? '');
+            else if (typeof log === 'function') log(eff.msg ?? '');
             break;
           case 'log':
-            if (typeof log === 'function') log(eff.msg || '');
+            if (typeof log === 'function') log(eff.msg ?? '');
             break;
           case 'openWorkbench':
             globalThis.Dustland?.openWorkbench?.();
             break;
           case 'showTrainer':
-            if (eff.trainer) TrainerUI?.showTrainer?.(eff.trainer);
+            if (eff.trainer) globals.TrainerUI?.showTrainer?.(eff.trainer);
             break;
           case 'addFlag': {
-            const p = ctx.party || globalThis.party;
-            if (p) {
-              p.flags = p.flags || {};
-              p.flags[eff.flag] = true;
+            const p = ctx.party ?? globals.party ?? null;
+            if (p && eff.flag) {
+              const flags = (p.flags ?? {}) as PartyFlags;
+              p.flags = flags;
+              flags[eff.flag] = true;
               if (typeof revealHiddenNPCs === 'function') revealHiddenNPCs();
             }
             break; }
           case 'unboardDoor': {
-            if ((eff.interiorId || eff.bunkerId) && Array.isArray(globalThis.buildings)) {
-              const b = globalThis.buildings.find(b => eff.interiorId ? b.interiorId === eff.interiorId : b.bunkerId === eff.bunkerId);
+            const buildings = Array.isArray(globals.buildings) ? globals.buildings : [];
+            if ((eff.interiorId || eff.bunkerId) && buildings.length) {
+              const b = buildings.find(entry => {
+                if (!entry) return false;
+                if (eff.interiorId) return entry.interiorId === eff.interiorId;
+                return entry.bunkerId === eff.bunkerId;
+              });
               if (b) {
                 b.boarded = false;
                 if (b.bunkerId) {
@@ -152,8 +249,13 @@
             }
             break; }
           case 'boardDoor': {
-            if ((eff.interiorId || eff.bunkerId) && Array.isArray(globalThis.buildings)) {
-              const b = globalThis.buildings.find(b => eff.interiorId ? b.interiorId === eff.interiorId : b.bunkerId === eff.bunkerId);
+            const buildings = Array.isArray(globals.buildings) ? globals.buildings : [];
+            if ((eff.interiorId || eff.bunkerId) && buildings.length) {
+              const b = buildings.find(entry => {
+                if (!entry) return false;
+                if (eff.interiorId) return entry.interiorId === eff.interiorId;
+                return entry.bunkerId === eff.bunkerId;
+              });
               if (b) {
                 b.boarded = true;
                 if (b.bunkerId) {
@@ -164,8 +266,8 @@
             }
             break; }
           case 'lockNPC': {
-            if (eff.npcId && typeof NPCS !== 'undefined') {
-              const n = NPCS.find(n => n.id === eff.npcId);
+            if (eff.npcId && Array.isArray(globals.NPCS)) {
+              const n = globals.NPCS.find(npc => npc && npc.id === eff.npcId);
               if (n) {
                 n.locked = true;
                 if (typeof eff.duration === 'number' && eff.duration > 0) {
@@ -176,14 +278,14 @@
             }
             break; }
           case 'unlockNPC': {
-            if (eff.npcId && typeof NPCS !== 'undefined') {
-              const n = NPCS.find(n => n.id === eff.npcId);
+            if (eff.npcId && Array.isArray(globals.NPCS)) {
+              const n = globals.NPCS.find(npc => npc && npc.id === eff.npcId);
               if (n) { n.locked = false; n.unlockTime = null; }
             }
             break; }
           case 'npcColor': {
-            if (eff.npcId && typeof eff.color === 'string' && typeof NPCS !== 'undefined') {
-              const n = NPCS.find(n => n.id === eff.npcId);
+            if (eff.npcId && typeof eff.color === 'string' && Array.isArray(globals.NPCS)) {
+              const n = globals.NPCS.find(npc => npc && npc.id === eff.npcId);
               if (n) {
                 n.color = eff.color;
                 n.overrideColor = true;
@@ -192,8 +294,8 @@
             }
             break; }
           case 'addItem': {
-            if ((eff.id || eff.item) && typeof addToInv === 'function') {
-              addToInv(eff.id || eff.item);
+            if ((eff.id ?? eff.item) && typeof globals.addToInv === 'function') {
+              globals.addToInv(eff.id ?? eff.item);
             }
             break; }
           case 'removeItem': {
@@ -203,27 +305,29 @@
             }
             break; }
           case 'teleport': {
-            const map = eff.map || state.map;
+            const map = eff.map ?? state.map;
             if (map && typeof setMap === 'function') {
               if (typeof eff.label === 'string') setMap(map, eff.label);
               else setMap(map);
             }
-            const px = Number.isFinite(eff.x) ? eff.x : party?.x;
-            const py = Number.isFinite(eff.y) ? eff.y : party?.y;
+            const partyState = globals.party;
+            const px = Number.isFinite(eff.x) ? eff.x : partyState?.x;
+            const py = Number.isFinite(eff.y) ? eff.y : partyState?.y;
             if (Number.isFinite(px) && Number.isFinite(py) && typeof setPartyPos === 'function') {
-              setPartyPos(px, py);
+              setPartyPos(px as number, py as number);
             }
             if (typeof eff.log === 'string' && typeof log === 'function') log(eff.log);
             if (typeof eff.toast === 'string' && typeof toast === 'function') toast(eff.toast);
             break; }
           case 'pullSlots': {
-            if (!player || typeof player.scrap !== 'number') break;
+            const playerState = globals.player;
+            if (!playerState || typeof playerState.scrap !== 'number') break;
             const cost = Number.isFinite(eff.cost) ? eff.cost : 0;
-            if (cost > 0 && player.scrap < cost) {
+            if (cost > 0 && playerState.scrap < cost) {
               if (typeof log === 'function') log('Not enough scrap.');
               break;
             }
-            if (cost > 0) player.scrap -= cost;
+            if (cost > 0) playerState.scrap -= cost;
             const payouts = Array.isArray(eff.payouts) && eff.payouts.length ? eff.payouts : [0];
             const lead = typeof leader === 'function' ? leader() : null;
             const luck = (lead?.stats?.LCK ?? 0) + (lead?._bonus?.LCK ?? 0);
@@ -236,28 +340,31 @@
             }
             const reward = Number.isFinite(payouts[idx]) ? payouts[idx] : 0;
             if (reward > 0) {
-              player.scrap += reward;
+              playerState.scrap += reward;
               if (typeof log === 'function') log(`The machine rattles and spits out ${reward} scrap.`);
             } else if (typeof log === 'function') {
               log('The machine coughs and eats your scrap.');
             }
-            const machine = getSlotState(eff.npcId || eff.machineId || 'slot_machine');
+            const machine = getSlotState(eff.npcId ?? eff.machineId ?? 'slot_machine');
             machine.net += reward - cost;
-            const dropCfg = eff.drop;
+            const dropCfg = eff.drop as EffectDropConfig | undefined;
             if (!machine.exhausted && dropCfg) {
               const threshold = Number.isFinite(dropCfg.threshold) ? dropCfg.threshold : 500;
               if (machine.net >= threshold) {
                 machine.exhausted = true;
-                const roster = Array.isArray(NPCS) ? NPCS : [];
-                const npc = roster.find(n => n.id === (eff.npcId || eff.machineId)) || null;
-                const dropPos = npc ? { map: npc.map, x: npc.x, y: npc.y } : { map: party?.map ?? state.map, x: party?.x ?? 0, y: party?.y ?? 0 };
+                const roster = Array.isArray(globals.NPCS) ? globals.NPCS : [];
+                const npc = roster.find(n => n && n.id === (eff.npcId ?? eff.machineId)) ?? null;
+                const partyState = globals.party;
+                const dropPos = npc
+                  ? { map: npc.map, x: npc.x, y: npc.y }
+                  : { map: partyState?.map ?? state.map, x: partyState?.x ?? 0, y: partyState?.y ?? 0 };
                 if (npc && typeof removeNPC === 'function') removeNPC(npc);
                 if (dropCfg.log && typeof log === 'function') log(dropCfg.log);
                 if (dropCfg.toast && typeof toast === 'function') toast(dropCfg.toast);
                 if (dropCfg.rank && typeof SpoilsCache?.create === 'function') {
                   const cache = SpoilsCache.create(dropCfg.rank);
                   const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
-                  itemDrops?.push?.({ id: registered.id, ...dropPos, dropType: 'loot' });
+                  globals.itemDrops?.push?.({ id: registered.id, ...dropPos, dropType: 'loot' });
                   globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target: npc });
                 }
               }
@@ -265,15 +372,15 @@
             if (typeof updateHUD === 'function') updateHUD();
             break; }
           case 'modTraderGrudge': {
-            const roster = Array.isArray(NPCS) ? NPCS : [];
-            const trader = roster.find(n => n && (n.id === (eff.npcId || 'trader')));
-            const shop = trader?.shop;
+            const roster = Array.isArray(globals.NPCS) ? globals.NPCS : [];
+            const trader = roster.find(n => n && (n.id === (eff.npcId ?? 'trader')));
+            const shop = (trader?.shop ?? null) as { grudge?: number; name?: string; [key: string]: unknown } | null;
             if (!shop) break;
-            const current = Number.isFinite(shop.grudge) ? shop.grudge : 0;
+            const current = Number.isFinite(shop.grudge) ? (shop.grudge ?? 0) : 0;
             let target = Number.isFinite(eff.set) ? eff.set : current + (Number.isFinite(eff.delta) ? eff.delta : 0);
-            if (Number.isFinite(eff.min)) target = Math.max(eff.min, target);
-            if (Number.isFinite(eff.max)) target = Math.min(eff.max, target);
-            const next = Math.max(0, Math.round(Number.isFinite(target) ? target : current));
+            if (Number.isFinite(eff.min)) target = Math.max(eff.min, target as number);
+            if (Number.isFinite(eff.max)) target = Math.min(eff.max, target as number);
+            const next = Math.max(0, Math.round(Number.isFinite(target) ? (target as number) : current));
             shop.grudge = next;
             globalThis.Dustland?.updateTradeUI?.(shop);
             const diff = next - current;
@@ -283,7 +390,7 @@
             } else if (typeof eff.log === 'string' && typeof log === 'function') {
               log(eff.log);
             } else if (!eff.silent && typeof log === 'function') {
-              const name = eff.label || shop?.name || trader?.name || 'Trader';
+              const name = eff.label ?? shop?.name ?? trader?.name ?? 'Trader';
               const possessive = /s$/i.test(name) ? `${name}'` : `${name}'s`;
               if (diff > 0) log(`${possessive} grudge rises to ${next}.`);
               else if (diff < 0) log(`${possessive} grudge falls to ${next}.`);
@@ -291,17 +398,18 @@
             }
             break; }
           case 'buyMemoryWorm': {
+            const playerState = globals.player;
             const cost = Number.isFinite(eff.cost) ? eff.cost : 500;
-            if (!player || (player.scrap ?? 0) < cost) {
+            if (!playerState || (playerState.scrap ?? 0) < cost) {
               if (typeof log === 'function') log('Not enough scrap.');
               break;
             }
-            player.scrap -= cost;
-            const itemId = eff.itemId || 'memory_worm';
-            if (typeof addToInv === 'function') addToInv(itemId);
+            playerState.scrap = (playerState.scrap ?? 0) - cost;
+            const itemId = eff.itemId ?? 'memory_worm';
+            if (typeof globals.addToInv === 'function') globals.addToInv(itemId);
             if (typeof renderInv === 'function') renderInv();
             if (typeof updateHUD === 'function') updateHUD();
-            if (typeof log === 'function') log(eff.log || 'Purchased Memory Worm.');
+            if (typeof log === 'function') log(eff.log ?? 'Purchased Memory Worm.');
             break; }
           case 'workbenchCraft':
             invokeWorkbench(eff.recipe);
@@ -314,9 +422,10 @@
             else globalThis.Dustland?.worldMap?.open?.(eff.id);
             break; }
           case 'removeItemsByTag': {
-            if (eff.tag && Array.isArray(player?.inv) && typeof removeFromInv === 'function') {
-              for (let i = player.inv.length - 1; i >= 0; i--) {
-                const it = player.inv[i];
+            const playerState = globals.player;
+            if (eff.tag && Array.isArray(playerState?.inv) && typeof removeFromInv === 'function') {
+              for (let i = playerState.inv.length - 1; i >= 0; i--) {
+                const it = playerState.inv[i];
                 if (it.tags && it.tags.map(t => t.toLowerCase()).includes(eff.tag.toLowerCase())) {
                   const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
                   removeFromInv(i, qty);
@@ -329,16 +438,17 @@
               const idx = findItemIndex(eff.remove);
               if (idx !== -1) removeFromInv(idx);
             }
-            if (eff.add && typeof addToInv === 'function') addToInv(eff.add);
+            if (eff.add && typeof globals.addToInv === 'function') globals.addToInv(eff.add);
             break; }
           case 'modStat': {
-            const target = ctx.actor || ctx.player;
-            if (target && target.stats && eff.stat) {
-              const delta = eff.delta || 0;
-              target.stats[eff.stat] = (target.stats[eff.stat] || 0) + delta;
+            const target = ctx.actor ?? ctx.player;
+            if (target?.stats && eff.stat) {
+              const delta = typeof eff.delta === 'number' ? eff.delta : 0;
+              const current = target.stats[eff.stat] ?? 0;
+              target.stats[eff.stat] = current + delta;
               if (eff.duration) {
-                ctx.buffs = ctx.buffs || [];
-                ctx.buffs.push({ target, stat: eff.stat, delta, remaining: eff.duration });
+                const buffs = ctx.buffs ?? (ctx.buffs = []);
+                buffs.push({ target, stat: eff.stat, delta, remaining: eff.duration });
               }
               if(typeof playFX==='function') playFX('status');
             }
@@ -349,13 +459,15 @@
     reset() {
       slotMachines = {};
     },
-    tick(ctx = {}) {
-      const list = ctx.buffs || [];
+    tick(ctx: EffectContext = {}) {
+      const list = ctx.buffs ?? [];
       for (let i = list.length - 1; i >= 0; i--) {
         const b = list[i];
         if (--b.remaining <= 0) {
-          if (b.target && b.target.stats) {
-            b.target.stats[b.stat] = (b.target.stats[b.stat] || 0) - b.delta;
+          const target = b.target;
+          if (target?.stats) {
+            const current = target.stats[b.stat] ?? 0;
+            target.stats[b.stat] = current - b.delta;
           }
           list.splice(i, 1);
         }
@@ -363,8 +475,8 @@
     }
   };
 
-  globalThis.Dustland = globalThis.Dustland || {};
+  globalThis.Dustland = globalThis.Dustland ?? {};
   globalThis.Dustland.effects = Effects;
-  globalThis.Effects = Effects;
+  (globalThis as typeof globalThis & { Effects?: EffectsApi }).Effects = Effects;
 })();
 
