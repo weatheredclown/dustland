@@ -1,24 +1,35 @@
-// @ts-nocheck
 // ===== Module Behaviors =====
-(function () {
-    const dl = globalThis.Dustland = globalThis.Dustland || {};
+(() => {
+    const scope = globalThis;
+    const ensureDustland = () => {
+        if (scope.DustlandGlobals?.ensureDustland) {
+            return scope.DustlandGlobals.ensureDustland();
+        }
+        if (!scope.Dustland) {
+            scope.Dustland = {};
+        }
+        return scope.Dustland;
+    };
+    const dl = ensureDustland();
     const cleanupTasks = [];
     const timers = [];
-    function registerCleanup(fn) {
-        if (typeof fn === 'function')
-            cleanupTasks.push(fn);
-    }
-    function clearTimers() {
+    const registerCleanup = (fn) => {
+        cleanupTasks.push(fn);
+    };
+    const clearTimers = () => {
         while (timers.length) {
             const id = timers.pop();
-            if (id)
+            if (id != null) {
                 clearTimeout(id);
+            }
         }
-    }
-    function teardown() {
+    };
+    const teardown = () => {
         clearTimers();
         while (cleanupTasks.length) {
             const fn = cleanupTasks.pop();
+            if (!fn)
+                continue;
             try {
                 fn();
             }
@@ -26,123 +37,137 @@
                 console.error('Behavior cleanup failed', err);
             }
         }
-    }
-    function resolveTileId(tile) {
-        if (typeof tile === 'number')
+    };
+    const resolveTileId = (tile) => {
+        if (typeof tile === 'number' && Number.isFinite(tile)) {
             return tile;
-        if (typeof tile === 'string' && globalThis.TILE) {
+        }
+        const tileMap = scope.TILE ?? {};
+        if (typeof tile === 'string') {
             const key = tile.toUpperCase();
-            if (Object.prototype.hasOwnProperty.call(globalThis.TILE, key)) {
-                return globalThis.TILE[key];
+            if (Object.prototype.hasOwnProperty.call(tileMap, key)) {
+                return tileMap[key] ?? 0;
             }
         }
-        return globalThis.TILE?.DOOR ?? 0;
-    }
-    function ensurePortal(cfg) {
-        if (!cfg.portal || !Array.isArray(globalThis.portals))
+        return tileMap.DOOR ?? 0;
+    };
+    const ensurePortal = (cfg) => {
+        if (!cfg.portal || !Array.isArray(scope.portals))
             return;
         const { toMap, toX, toY } = cfg.portal;
         if (!cfg.map || typeof cfg.x !== 'number' || typeof cfg.y !== 'number')
             return;
         if (!toMap || typeof toX !== 'number' || typeof toY !== 'number')
             return;
-        const exists = globalThis.portals.some(p => p.map === cfg.map && p.x === cfg.x && p.y === cfg.y && p.toMap === toMap && p.toX === toX && p.toY === toY);
+        const exists = scope.portals.some(portal => portal.map === cfg.map &&
+            portal.x === cfg.x &&
+            portal.y === cfg.y &&
+            portal.toMap === toMap &&
+            portal.toX === toX &&
+            portal.toY === toY);
         if (!exists) {
-            globalThis.portals.push({ map: cfg.map, x: cfg.x, y: cfg.y, toMap, toX, toY });
+            scope.portals.push({ map: cfg.map, x: cfg.x, y: cfg.y, toMap, toX, toY });
         }
-    }
-    function setupStepUnlocks(list = []) {
-        if (!Array.isArray(list) || !list.length)
+    };
+    const getEventBus = () => dl.eventBus ?? scope.eventBus ?? scope.EventBus;
+    const setupStepUnlocks = (list) => {
+        if (!Array.isArray(list) || list.length === 0)
             return;
-        const bus = dl.eventBus || globalThis.EventBus;
-        if (!bus?.on)
+        const bus = getEventBus();
+        if (!bus?.on || !bus?.off)
             return;
         list.forEach(cfg => {
-            const map = cfg.map;
-            if (!map || typeof cfg.x !== 'number' || typeof cfg.y !== 'number')
+            if (!cfg)
                 return;
-            const stepsReq = Math.max(1, Number.isFinite(cfg.steps) ? cfg.steps : 1);
+            const mapId = cfg.map ?? 'world';
+            const stepsReq = Math.max(1, Number.isFinite(cfg.steps) ? Number(cfg.steps) : 1);
             const tileId = resolveTileId(cfg.tile);
             let steps = 0;
             const handler = id => {
                 if (id !== 'step')
                     return;
-                if (globalThis.state?.map !== map)
+                if (scope.state?.map !== mapId)
                     return;
-                if (++steps < stepsReq)
+                steps += 1;
+                if (steps < stepsReq)
                     return;
-                if (typeof globalThis.setTile === 'function') {
-                    globalThis.setTile(map, cfg.x, cfg.y, tileId);
+                if (typeof scope.setTile === 'function' && typeof cfg.x === 'number' && typeof cfg.y === 'number') {
+                    scope.setTile(mapId, cfg.x, cfg.y, tileId);
                 }
                 ensurePortal(cfg);
-                if (cfg.log && typeof globalThis.log === 'function')
-                    globalThis.log(cfg.log);
-                if (cfg.toast && typeof globalThis.toast === 'function')
-                    globalThis.toast(cfg.toast);
+                if (cfg.log && typeof scope.log === 'function')
+                    scope.log(cfg.log);
+                if (cfg.toast && typeof scope.toast === 'function')
+                    scope.toast(cfg.toast);
                 bus.off('sfx', handler);
             };
             bus.on('sfx', handler);
             registerCleanup(() => bus.off('sfx', handler));
         });
-    }
-    function findTemplate(moduleData, templateId) {
-        if (!templateId)
-            return null;
-        const templates = moduleData?.templates;
-        if (Array.isArray(templates)) {
-            return templates.find(t => t && t.id === templateId) || null;
-        }
-        return null;
-    }
-    function adjustDefense(enemy, delta) {
+    };
+    const adjustDefense = (enemy, delta) => {
         if (!enemy || typeof delta !== 'number')
             return;
         const current = typeof enemy.DEF === 'number' ? enemy.DEF : 0;
         enemy.DEF = Math.max(0, current + delta);
-    }
-    function hasUpgrade(ids) {
+    };
+    const hasUpgrade = (ids) => {
         if (!ids)
             return false;
-        const list = Array.isArray(ids) ? ids : [ids];
-        const roster = Array.isArray(globalThis.party) ? globalThis.party : [];
-        for (const id of list) {
+        const targets = Array.isArray(ids) ? ids : [ids];
+        const roster = Array.isArray(scope.party) ? scope.party : [];
+        for (const id of targets) {
             if (!id)
                 continue;
             for (const member of roster) {
                 const slots = member?.equip;
                 if (!slots)
                     continue;
-                if (slots.weapon?.id === id || slots.armor?.id === id || slots.trinket?.id === id)
+                if (slots.weapon?.id === id || slots.armor?.id === id || slots.trinket?.id === id) {
                     return true;
+                }
             }
-            if (typeof globalThis.countItems === 'function' && globalThis.countItems(id) > 0)
+            if (typeof scope.countItems === 'function' && scope.countItems(id) > 0)
                 return true;
-            if (typeof globalThis.hasItem === 'function' && globalThis.hasItem(id))
+            if (typeof scope.hasItem === 'function' && scope.hasItem(id))
                 return true;
         }
         return false;
-    }
-    function setupArenas(list = [], moduleData) {
-        if (!Array.isArray(list) || !list.length)
+    };
+    const setupArenas = (list, moduleData) => {
+        if (!Array.isArray(list) || list.length === 0)
             return;
-        const bus = dl.eventBus || globalThis.EventBus;
-        if (!bus?.on)
+        const bus = getEventBus();
+        if (!bus?.on || !bus?.off)
             return;
+        const enemyBanksRef = scope.enemyBanks;
+        if (!enemyBanksRef)
+            return;
+        const rosterState = (typeof scope.state === 'object' && scope.state) ? scope.state : null;
+        const arenaStore = rosterState ? (rosterState.arenas ?? (rosterState.arenas = {})) : null;
+        const findTemplate = (templateId) => {
+            if (!templateId)
+                return null;
+            const templates = moduleData?.templates;
+            if (!Array.isArray(templates))
+                return null;
+            return templates.find(t => t?.id === templateId) ?? null;
+        };
         list.forEach((cfg, index) => {
-            if (!cfg || !Array.isArray(cfg.waves) || !cfg.waves.length)
+            if (!cfg || !Array.isArray(cfg.waves) || cfg.waves.length === 0)
                 return;
             const arenaMap = cfg.map;
             if (!arenaMap)
                 return;
             const bankId = cfg.bankId || arenaMap;
-            const enemyBanksRef = globalThis.enemyBanks;
-            if (!enemyBanksRef)
-                return;
-            const globalState = (typeof globalThis.state === 'object' && globalThis.state) ? globalThis.state : null;
-            const arenaStore = globalState ? (globalState.arenas || (globalState.arenas = {})) : null;
-            const arenaKey = `${arenaMap || 'arena'}:${cfg.bankId || ''}:${index}`;
-            const saved = arenaStore ? arenaStore[arenaKey] : null;
-            const arenaState = { wave: 0, engaged: false, pending: false, cleared: false };
+            const arenaKey = `${arenaMap}:${cfg.bankId ?? ''}:${index}`;
+            const saved = arenaStore?.[arenaKey];
+            const arenaState = {
+                wave: 0,
+                engaged: false,
+                pending: false,
+                cleared: false
+            };
             if (saved) {
                 if (typeof saved.wave === 'number' && Number.isFinite(saved.wave)) {
                     const clamped = Math.max(0, Math.min(cfg.waves.length, Math.floor(saved.wave)));
@@ -157,107 +182,114 @@
                 arenaState.wave = cfg.waves.length;
                 arenaState.cleared = true;
             }
-            function persistArenaState() {
-                if (!arenaStore || !globalState)
+            const persistArenaState = () => {
+                if (!arenaStore || !rosterState)
                     return;
                 if (!arenaState.cleared && arenaState.wave <= 0) {
                     delete arenaStore[arenaKey];
                     if (Object.keys(arenaStore).length === 0)
-                        delete globalState.arenas;
+                        delete rosterState.arenas;
                     return;
                 }
-                arenaStore[arenaKey] = { wave: arenaState.wave, cleared: !!arenaState.cleared };
-            }
-            function ensureBank(index) {
-                const bank = enemyBanksRef[bankId] || (enemyBanksRef[bankId] = []);
+                arenaStore[arenaKey] = { wave: arenaState.wave, cleared: arenaState.cleared };
+            };
+            const ensureBank = (waveIndex) => {
+                const bank = enemyBanksRef[bankId] ?? (enemyBanksRef[bankId] = []);
                 bank.length = 0;
-                if (index >= 0 && cfg.waves[index]) {
-                    const wave = cfg.waves[index];
-                    const entry = { templateId: wave.templateId, count: wave.count ?? 1 };
-                    if (wave.bankChallenge)
+                if (waveIndex >= 0 && cfg.waves[waveIndex]) {
+                    const wave = cfg.waves[waveIndex];
+                    const entry = {
+                        templateId: wave.templateId,
+                        count: wave.count ?? 1
+                    };
+                    if (wave.bankChallenge != null)
                         entry.challenge = wave.bankChallenge;
                     bank.push(entry);
                 }
-            }
-            function buildEnemy(wave) {
-                const template = findTemplate(moduleData, wave.templateId);
+            };
+            const buildEnemy = (wave) => {
+                const template = findTemplate(wave.templateId);
                 if (!template)
                     return null;
                 const combat = template.combat ? JSON.parse(JSON.stringify(template.combat)) : {};
                 return {
                     id: template.id,
-                    name: template.name,
+                    name: template.name ?? 'Enemy',
                     portraitSheet: template.portraitSheet,
                     portraitLock: template.portraitLock,
                     ...combat
                 };
-            }
-            function applyVulnerability(wave, enemy) {
-                const v = wave.vulnerability;
-                if (!v || !enemy)
+            };
+            const applyVulnerability = (wave, enemy) => {
+                const vulnerability = wave.vulnerability;
+                if (!vulnerability || !enemy)
                     return;
-                const has = v.items ? hasUpgrade(v.items) : false;
+                const has = vulnerability.items ? hasUpgrade(vulnerability.items) : false;
                 if (has) {
-                    if (typeof v.matchDef === 'number')
-                        adjustDefense(enemy, v.matchDef);
-                    if (v.defMod && typeof v.defMod.match === 'number')
-                        adjustDefense(enemy, v.defMod.match);
-                    if (typeof v.successLog === 'string' && typeof globalThis.log === 'function')
-                        globalThis.log(v.successLog);
+                    if (typeof vulnerability.matchDef === 'number')
+                        adjustDefense(enemy, vulnerability.matchDef);
+                    const matchMod = vulnerability.defMod?.match;
+                    if (typeof matchMod === 'number')
+                        adjustDefense(enemy, matchMod);
+                    if (vulnerability.successLog && typeof scope.log === 'function') {
+                        scope.log(vulnerability.successLog);
+                    }
                 }
                 else {
-                    if (typeof v.missDef === 'number')
-                        adjustDefense(enemy, v.missDef);
-                    if (v.defMod && typeof v.defMod.miss === 'number')
-                        adjustDefense(enemy, v.defMod.miss);
-                    if (typeof v.failLog === 'string' && typeof globalThis.log === 'function')
-                        globalThis.log(v.failLog);
+                    if (typeof vulnerability.missDef === 'number')
+                        adjustDefense(enemy, vulnerability.missDef);
+                    const missMod = vulnerability.defMod?.miss;
+                    if (typeof missMod === 'number')
+                        adjustDefense(enemy, missMod);
+                    if (vulnerability.failLog && typeof scope.log === 'function') {
+                        scope.log(vulnerability.failLog);
+                    }
                 }
-            }
-            function startWave(index) {
-                const wave = cfg.waves[index];
+            };
+            const startWave = (waveIndex) => {
+                const wave = cfg.waves?.[waveIndex];
                 if (!wave)
                     return;
                 const enemy = buildEnemy(wave);
                 if (!enemy)
                     return;
-                ensureBank(index);
+                ensureBank(waveIndex);
                 enemy.count = wave.count ?? 1;
                 if (wave.prompt)
                     enemy.prompt = wave.prompt;
                 applyVulnerability(wave, enemy);
-                if (typeof wave.announce === 'string' && typeof globalThis.log === 'function')
-                    globalThis.log(wave.announce);
-                if (typeof wave.toast === 'string' && typeof globalThis.toast === 'function')
-                    globalThis.toast(wave.toast);
+                if (wave.announce && typeof scope.log === 'function')
+                    scope.log(wave.announce);
+                if (wave.toast && typeof scope.toast === 'function')
+                    scope.toast(wave.toast);
                 arenaState.engaged = true;
                 arenaState.pending = false;
                 arenaState.currentId = wave.templateId;
-                globalThis.Dustland?.actions?.startCombat?.(enemy);
-            }
-            function queueWaveStart(delay = 0) {
+                dl.actions?.startCombat?.(enemy);
+            };
+            const queueWaveStart = (delay = 0) => {
                 if (arenaState.pending || arenaState.engaged || arenaState.cleared)
                     return;
-                if (globalThis.state?.map !== arenaMap)
+                if (scope.state?.map !== arenaMap)
                     return;
                 arenaState.pending = true;
                 ensureBank(arenaState.wave);
                 const timer = setTimeout(() => {
                     arenaState.pending = false;
-                    if (globalThis.state?.map !== arenaMap || arenaState.engaged || arenaState.cleared)
+                    if (scope.state?.map !== arenaMap || arenaState.engaged || arenaState.cleared)
                         return;
                     startWave(arenaState.wave);
                 }, Math.max(0, delay));
                 timers.push(timer);
-            }
-            function resetArena() {
+            };
+            const resetArena = () => {
                 arenaState.wave = 0;
                 arenaState.pending = false;
                 arenaState.engaged = false;
                 arenaState.cleared = false;
                 ensureBank(0);
                 persistArenaState();
-            }
+            };
             if (arenaState.cleared) {
                 ensureBank(-1);
             }
@@ -272,163 +304,184 @@
                     return;
                 queueWaveStart();
             };
-            const combatHandler = ({ result }) => {
+            const combatHandler = payload => {
+                const result = payload?.result ?? null;
                 if (!arenaState.engaged)
                     return;
                 arenaState.engaged = false;
                 if (result === 'loot') {
                     arenaState.wave += 1;
-                    if (arenaState.wave < cfg.waves.length) {
-                        if (typeof globalThis.log === 'function')
-                            globalThis.log(`The arena shifts. Prepare for wave ${arenaState.wave + 1}.`);
+                    if (arenaState.wave < (cfg.waves?.length ?? 0)) {
+                        if (typeof scope.log === 'function') {
+                            scope.log(`The arena shifts. Prepare for wave ${arenaState.wave + 1}.`);
+                        }
                         persistArenaState();
                         queueWaveStart(600);
                     }
                     else {
                         arenaState.cleared = true;
-                        arenaState.wave = cfg.waves.length;
+                        arenaState.wave = cfg.waves?.length ?? arenaState.wave;
                         ensureBank(-1);
-                        if (cfg.reward?.log && typeof globalThis.log === 'function')
-                            globalThis.log(cfg.reward.log);
-                        if (cfg.reward?.toast && typeof globalThis.toast === 'function')
-                            globalThis.toast(cfg.reward.toast);
+                        if (cfg.reward?.log && typeof scope.log === 'function')
+                            scope.log(cfg.reward.log);
+                        if (cfg.reward?.toast && typeof scope.toast === 'function')
+                            scope.toast(cfg.reward.toast);
                         persistArenaState();
                     }
                 }
                 else {
                     resetArena();
-                    if (cfg.resetLog && typeof globalThis.log === 'function')
-                        globalThis.log(cfg.resetLog);
+                    if (cfg.resetLog && typeof scope.log === 'function')
+                        scope.log(cfg.resetLog);
                 }
             };
             bus.on('movement:player', movementHandler);
             bus.on('combat:ended', combatHandler);
             registerCleanup(() => bus.off('movement:player', movementHandler));
             registerCleanup(() => bus.off('combat:ended', combatHandler));
-            if (globalThis.state?.map === arenaMap) {
+            if (scope.state?.map === arenaMap) {
                 queueWaveStart(cfg.entranceDelay ?? 0);
             }
         });
-    }
-    function setupMemoryTapes(list = []) {
-        if (!Array.isArray(list) || !list.length)
+    };
+    const setupMemoryTapes = (list) => {
+        if (!Array.isArray(list) || list.length === 0)
             return;
-        const roster = Array.isArray(globalThis.NPCS) ? globalThis.NPCS : [];
+        const roster = Array.isArray(scope.NPCS) ? scope.NPCS : [];
         list.forEach(cfg => {
             if (!cfg?.npcId)
                 return;
-            const npc = roster.find(n => n.id === cfg.npcId);
+            const npc = roster.find(n => n?.id === cfg.npcId);
             if (!npc)
                 return;
-            const base = npc.onMemoryTape;
-            npc.onMemoryTape = function (msg) {
-                if (typeof cfg.log === 'string' && typeof globalThis.log === 'function') {
-                    globalThis.log(cfg.log.replace('{{msg}}', msg ?? ''));
+            const base = npc.onMemoryTape ?? null;
+            npc.onMemoryTape = (msg) => {
+                if (cfg.log && typeof scope.log === 'function') {
+                    scope.log(cfg.log.replace('{{msg}}', msg ?? ''));
                 }
-                else if (typeof cfg.logPrefix === 'string' && typeof globalThis.log === 'function') {
-                    globalThis.log(cfg.logPrefix + (msg ?? ''));
+                else if (cfg.logPrefix && typeof scope.log === 'function') {
+                    scope.log(cfg.logPrefix + (msg ?? ''));
                 }
                 if (typeof base === 'function')
-                    base.call(this, msg);
+                    base.call(npc, msg);
             };
-            registerCleanup(() => { npc.onMemoryTape = base; });
+            registerCleanup(() => {
+                npc.onMemoryTape = base ?? undefined;
+            });
         });
-    }
-    function checkCondition(cond) {
+    };
+    const checkCondition = (cond) => {
         if (!cond)
             return true;
-        switch (cond.type) {
-            case 'npcExists':
-                return Array.isArray(globalThis.NPCS) && globalThis.NPCS.some(n => n.id === cond.npcId);
-            case 'flag': {
-                if (typeof globalThis.flagValue !== 'function')
-                    return false;
-                const value = globalThis.flagValue(cond.flag) || 0;
-                const target = cond.value ?? 0;
-                const op = cond.op || '>=';
-                switch (op) {
-                    case '>=': return value >= target;
-                    case '>': return value > target;
-                    case '<=': return value <= target;
-                    case '<': return value < target;
-                    case '==':
-                    case '=': return value === target;
-                    case '!=': return value !== target;
-                }
-                return false;
-            }
-            default:
-                return false;
+        if (cond.type === 'npcExists') {
+            return Array.isArray(scope.NPCS) && scope.NPCS.some(n => n?.id === cond.npcId);
         }
-    }
-    function setupDialogMutations(list = []) {
-        if (!Array.isArray(list) || !list.length)
+        if (cond.type === 'flag') {
+            if (typeof scope.flagValue !== 'function')
+                return false;
+            const flagId = cond.flag;
+            const value = scope.flagValue(flagId) ?? 0;
+            const target = typeof cond.value === 'number' ? cond.value : 0;
+            const op = typeof cond.op === 'string' ? cond.op : '>=';
+            switch (op) {
+                case '>=':
+                    return value >= target;
+                case '>':
+                    return value > target;
+                case '<=':
+                    return value <= target;
+                case '<':
+                    return value < target;
+                case '==':
+                case '=':
+                    return value === target;
+                case '!=':
+                    return value !== target;
+                default:
+                    return false;
+            }
+        }
+        return false;
+    };
+    const setupDialogMutations = (list) => {
+        if (!Array.isArray(list) || list.length === 0)
             return;
-        const roster = Array.isArray(globalThis.NPCS) ? globalThis.NPCS : [];
+        const roster = Array.isArray(scope.NPCS) ? scope.NPCS : [];
         list.forEach(cfg => {
             if (!cfg?.npcId || !cfg.nodeId)
                 return;
-            const npc = roster.find(n => n.id === cfg.npcId);
+            const npc = roster.find(n => n?.id === cfg.npcId);
             if (!npc || !npc.tree)
                 return;
             const baseProcess = typeof npc.processNode === 'function' ? npc.processNode.bind(npc) : null;
-            npc.processNode = function (nodeId) {
+            npc.processNode = (nodeId) => {
                 if (nodeId === cfg.nodeId) {
-                    const node = this.tree?.[nodeId];
+                    const node = npc.tree?.[nodeId];
                     if (node) {
-                        const variant = (cfg.variants || []).find(v => checkCondition(v.condition));
+                        const variant = (cfg.variants ?? []).find(v => checkCondition(v.condition));
                         const text = variant?.text ?? cfg.defaultText;
-                        if (typeof text === 'string')
+                        if (typeof text === 'string') {
                             node.text = text;
+                        }
                     }
                 }
                 if (baseProcess)
                     baseProcess(nodeId);
             };
-            registerCleanup(() => { npc.processNode = baseProcess; });
+            registerCleanup(() => {
+                npc.processNode = baseProcess ?? undefined;
+            });
         });
-    }
-    function setupPortalLayout(moduleData) {
-        const flag = moduleData?.props?.portalLayout;
-        if (!flag)
+    };
+    const setupPortalLayout = (moduleData) => {
+        const props = (moduleData?.props ?? {});
+        if (!props.portalLayout)
             return;
         const startMap = moduleData?.start?.map;
         if (!startMap)
             return;
-        const portalList = Array.isArray(moduleData.portals) ? moduleData.portals : [];
+        const portalList = Array.isArray(moduleData?.portals) ? moduleData.portals : [];
         if (!portalList.length)
             return;
         const interiors = new Map();
-        const toEmojiGrid = globalThis.gridFromEmoji;
-        (moduleData.interiors || []).forEach(def => {
+        const toEmojiGrid = scope.gridFromEmoji;
+        const interiorDefs = (moduleData?.interiors ?? []);
+        interiorDefs.forEach(def => {
             if (!def?.id)
                 return;
             let grid = def.grid;
-            if (Array.isArray(grid) && typeof grid[0] === 'string') {
-                grid = typeof toEmojiGrid === 'function' ? toEmojiGrid(grid) : grid.map(row => Array.from(row).map(() => globalThis.TILE?.FLOOR ?? 7));
+            if (Array.isArray(grid) && grid.length && typeof grid[0] === 'string') {
+                grid = typeof toEmojiGrid === 'function'
+                    ? toEmojiGrid(grid)
+                    : grid.map(row => Array.from(row).map(() => scope.TILE?.FLOOR ?? 7));
             }
             else if (Array.isArray(grid)) {
-                grid = grid.map(row => Array.from(row));
+                grid = grid.map(row => Array.isArray(row) ? row.map(cell => Number(cell) || 0) : []);
             }
             else {
                 grid = null;
             }
-            const h = grid?.length ?? Math.max(0, Number(def.h) || 0);
-            const w = grid?.[0]?.length ?? Math.max(0, Number(def.w) || 0);
+            const rows = Array.isArray(grid) ? grid : null;
+            const h = rows?.length ?? Math.max(0, Number(def.h) || 0);
+            const w = rows?.[0]?.length ?? Math.max(0, Number(def.w) || 0);
             if (!w || !h)
                 return;
             const entryX = typeof def.entryX === 'number' ? def.entryX : Math.floor(w / 2);
             const entryY = typeof def.entryY === 'number' ? def.entryY : Math.max(0, Math.min(h - 1, Math.floor(h / 2)));
-            interiors.set(def.id, { id: def.id, w, h, entryX, entryY, grid });
+            if (!rows)
+                return;
+            interiors.set(def.id, { id: def.id, w, h, entryX, entryY, grid: rows });
         });
         if (!interiors.size || !interiors.has(startMap))
             return;
-        function normalizePos(info, value, axis) {
+        const normalizePos = (info, value, axis) => {
             if (typeof value === 'number')
                 return value;
-            return axis === 'x' ? (typeof info.entryX === 'number' ? info.entryX : Math.floor(info.w / 2)) : (typeof info.entryY === 'number' ? info.entryY : Math.floor(info.h / 2));
-        }
-        function edgeDirection(info, x, y) {
+            if (!info)
+                return 0;
+            return axis === 'x' ? info.entryX : info.entryY;
+        };
+        const edgeDirection = (info, x, y) => {
             if (!info)
                 return null;
             if (typeof x === 'number' && typeof y === 'number') {
@@ -442,24 +495,24 @@
                     return { dx: 1, dy: 0 };
             }
             return null;
-        }
+        };
         const edges = new Map();
-        function pushEdge(from, data) {
+        const pushEdge = (from, data) => {
             if (!edges.has(from))
                 edges.set(from, []);
-            edges.get(from).push(data);
-        }
+            edges.get(from)?.push(data);
+        };
         portalList.forEach(portal => {
-            if (!portal || !portal.map || !portal.toMap)
-                return;
-            if (!interiors.has(portal.map) || !interiors.has(portal.toMap))
+            if (!portal?.map || !portal.toMap)
                 return;
             const fromInfo = interiors.get(portal.map);
             const toInfo = interiors.get(portal.toMap);
-            const fromX = normalizePos(fromInfo, portal.x, 'x');
-            const fromY = normalizePos(fromInfo, portal.y, 'y');
-            const toX = normalizePos(toInfo, portal.toX, 'x');
-            const toY = normalizePos(toInfo, portal.toY, 'y');
+            if (!fromInfo || !toInfo)
+                return;
+            const fromX = normalizePos(fromInfo, typeof portal.x === 'number' ? portal.x : undefined, 'x');
+            const fromY = normalizePos(fromInfo, typeof portal.y === 'number' ? portal.y : undefined, 'y');
+            const toX = normalizePos(toInfo, typeof portal.toX === 'number' ? portal.toX : undefined, 'x');
+            const toY = normalizePos(toInfo, typeof portal.toY === 'number' ? portal.toY : undefined, 'y');
             let dir = edgeDirection(fromInfo, portal.x, portal.y);
             if (!dir) {
                 const rev = edgeDirection(toInfo, portal.toX, portal.toY);
@@ -477,8 +530,12 @@
         const queue = [startMap];
         while (queue.length) {
             const current = queue.shift();
+            if (!current)
+                continue;
             const basePos = placements.get(current);
-            const adj = edges.get(current) || [];
+            if (!basePos)
+                continue;
+            const adj = edges.get(current) ?? [];
             adj.forEach(edge => {
                 if (!interiors.has(edge.map))
                     return;
@@ -493,9 +550,12 @@
         }
         if (!placements.size)
             return;
-        const worldW = Number(globalThis.WORLD_W) || 120;
-        const worldH = Number(globalThis.WORLD_H) || 90;
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        const worldW = Number(scope.WORLD_W) || 120;
+        const worldH = Number(scope.WORLD_H) || 90;
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
         placements.forEach((pos, id) => {
             const info = interiors.get(id);
             if (!info)
@@ -517,30 +577,34 @@
         placements.forEach((pos, id) => {
             finalPlacement.set(id, { x: pos.x + offsetX, y: pos.y + offsetY });
         });
-        const filler = (globalThis.TILE && typeof globalThis.TILE.SAND === 'number') ? globalThis.TILE.SAND : 0;
+        const filler = typeof scope.TILE?.SAND === 'number' ? scope.TILE.SAND : 0;
         const rendered = new Set();
-        function renderRoom(id) {
+        const renderRoom = (id) => {
             if (!id || rendered.has(id))
                 return;
             const info = interiors.get(id);
             const origin = finalPlacement.get(id);
-            if (!info || !origin || !Array.isArray(info.grid))
+            if (!info || !origin)
                 return;
-            for (let yy = 0; yy < info.h; yy++) {
-                for (let xx = 0; xx < info.w; xx++) {
+            const grid = info.grid;
+            if (!Array.isArray(grid))
+                return;
+            if (typeof scope.setTile !== 'function')
+                return;
+            for (let yy = 0; yy < info.h; yy += 1) {
+                for (let xx = 0; xx < info.w; xx += 1) {
                     const wx = origin.x + xx;
                     const wy = origin.y + yy;
                     if (wx < 0 || wy < 0 || wx >= worldW || wy >= worldH)
                         continue;
-                    if (typeof globalThis.setTile === 'function')
-                        globalThis.setTile('world', wx, wy, filler);
+                    scope.setTile('world', wx, wy, filler);
                 }
             }
-            for (let yy = 0; yy < info.h; yy++) {
-                const row = info.grid[yy];
+            for (let yy = 0; yy < info.h; yy += 1) {
+                const row = grid[yy];
                 if (!row)
                     continue;
-                for (let xx = 0; xx < info.w; xx++) {
+                for (let xx = 0; xx < info.w; xx += 1) {
                     const tile = row[xx];
                     if (tile == null)
                         continue;
@@ -548,33 +612,34 @@
                     const wy = origin.y + yy;
                     if (wx < 0 || wy < 0 || wx >= worldW || wy >= worldH)
                         continue;
-                    if (typeof globalThis.setTile === 'function')
-                        globalThis.setTile('world', wx, wy, tile);
+                    scope.setTile('world', wx, wy, tile);
                 }
             }
             rendered.add(id);
-        }
-        const origSetMap = typeof globalThis.setMap === 'function' ? globalThis.setMap : null;
+        };
+        const origSetMap = scope.setMap;
         if (!origSetMap)
             return;
-        globalThis.setMap = function (mapId, label) {
-            const result = origSetMap.apply(this, arguments);
+        scope.setMap = function setMap(mapId, label) {
+            const result = origSetMap.call(this, mapId, label);
             renderRoom(mapId);
             return result;
         };
-        registerCleanup(() => { globalThis.setMap = origSetMap; });
+        registerCleanup(() => {
+            scope.setMap = origSetMap;
+        });
         renderRoom(startMap);
-    }
-    function setup(moduleData) {
+    };
+    const setup = (moduleData) => {
         teardown();
         if (!moduleData)
             return;
-        const behaviors = moduleData.behaviors || {};
+        const behaviors = (moduleData.behaviors ?? {});
         setupStepUnlocks(behaviors.stepUnlocks);
         setupArenas(behaviors.arenas, moduleData);
         setupMemoryTapes(behaviors.memoryTapes);
         setupDialogMutations(behaviors.dialogMutations);
         setupPortalLayout(moduleData);
-    }
+    };
     dl.behaviors = { setup, teardown };
 })();

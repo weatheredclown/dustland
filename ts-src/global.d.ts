@@ -313,6 +313,104 @@ declare global {
     [key: string]: unknown;
   }
 
+  interface DustlandArenaVulnerability {
+    items?: string | string[];
+    matchDef?: number;
+    missDef?: number;
+    defMod?: { match?: number; miss?: number };
+    successLog?: string;
+    failLog?: string;
+    [key: string]: unknown;
+  }
+
+  interface DustlandArenaWave {
+    templateId?: string;
+    count?: number;
+    bankChallenge?: number;
+    prompt?: string;
+    announce?: string;
+    toast?: string;
+    vulnerability?: DustlandArenaVulnerability;
+    [key: string]: unknown;
+  }
+
+  interface DustlandArenaReward {
+    log?: string;
+    toast?: string;
+    [key: string]: unknown;
+  }
+
+  interface DustlandArenaConfig {
+    map?: string;
+    bankId?: string;
+    waves?: DustlandArenaWave[];
+    reward?: DustlandArenaReward;
+    entranceDelay?: number;
+    resetLog?: string;
+    [key: string]: unknown;
+  }
+
+  interface DustlandStepUnlockBehavior {
+    map?: string;
+    x?: number;
+    y?: number;
+    steps?: number;
+    tile?: number | string;
+    log?: string;
+    toast?: string;
+    portal?: DustlandPortal;
+    [key: string]: unknown;
+  }
+
+  type DustlandBehaviorCondition =
+    | { type: 'npcExists'; npcId?: string }
+    | { type: 'flag'; flag: string; value?: number; op?: '>=' | '>' | '<=' | '<' | '==' | '=' | '!=' }
+    | { type?: string; [key: string]: unknown };
+
+  interface DustlandDialogVariant {
+    condition?: DustlandBehaviorCondition;
+    text?: string;
+    [key: string]: unknown;
+  }
+
+  interface DustlandDialogMutation {
+    npcId?: string;
+    nodeId?: string;
+    defaultText?: string;
+    variants?: DustlandDialogVariant[];
+    [key: string]: unknown;
+  }
+
+  interface DustlandMemoryTapeBehavior {
+    npcId?: string;
+    log?: string;
+    logPrefix?: string;
+    [key: string]: unknown;
+  }
+
+  interface DustlandModuleBehaviors {
+    stepUnlocks?: DustlandStepUnlockBehavior[] | null;
+    arenas?: DustlandArenaConfig[] | null;
+    memoryTapes?: DustlandMemoryTapeBehavior[] | null;
+    dialogMutations?: DustlandDialogMutation[] | null;
+    [key: string]: unknown;
+  }
+
+  interface DustlandBehaviorArenaState {
+    wave?: number;
+    cleared?: boolean;
+    [key: string]: unknown;
+  }
+
+  interface DustlandEnemyBankEntry {
+    templateId?: string;
+    count?: number;
+    challenge?: number;
+    [key: string]: unknown;
+  }
+
+  type DustlandEnemyBanks = Record<string, DustlandEnemyBankEntry[]>;
+
   interface DustlandModuleInstance {
     postLoad?: (
       moduleData: DustlandModuleInstance,
@@ -328,6 +426,18 @@ declare global {
       [key: string]: unknown;
     }>;
     npcs?: DustlandNpc[];
+    portals?: DustlandPortal[] | null;
+    interiors?: Array<{
+      id?: string;
+      w?: number;
+      h?: number;
+      grid?: unknown;
+      entryX?: number;
+      entryY?: number;
+      [key: string]: unknown;
+    }> | null;
+    props?: Record<string, unknown> | null;
+    behaviors?: DustlandModuleBehaviors | null;
     [key: string]: unknown;
   }
 
@@ -677,6 +787,7 @@ interface ItemGeneratorRange {
 
   interface DustlandActionsApi {
     applyQuestReward?: (reward: unknown) => void;
+    startCombat?: (enemy: CombatParticipant & { [key: string]: unknown }) => void;
     [key: string]: unknown;
   }
 
@@ -703,6 +814,11 @@ interface ItemGeneratorRange {
     };
     fastTravel?: {
       activateBunker?: (id?: string) => void;
+      [key: string]: unknown;
+    };
+    behaviors?: {
+      setup: (moduleData: DustlandModuleInstance | null | undefined) => void;
+      teardown: () => void;
       [key: string]: unknown;
     };
     worldMap?: {
@@ -920,6 +1036,11 @@ interface ItemGeneratorRange {
   };
 
   var EventBus: DustlandEventBus;
+  var state:
+    | (DustlandCoreState & {
+        arenas?: Record<string, DustlandBehaviorArenaState | undefined>;
+      })
+    | undefined;
 
   interface MemoryTapeItem {
     recording?: string | null;
@@ -1028,6 +1149,10 @@ interface ItemGeneratorRange {
     perfStats?: { tiles?: number; sfx?: number; [key: string]: number | undefined };
     fxConfig?: Record<string, unknown> | null;
     DustlandSkin?: unknown;
+    state?: (DustlandCoreState & {
+      arenas?: Record<string, DustlandBehaviorArenaState | undefined>;
+    }) | null;
+    enemyBanks?: DustlandEnemyBanks;
     fogOfWarEnabled?: boolean;
     toggleAudio?: () => void;
     toggleTileChars?: () => void;
