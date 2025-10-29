@@ -79,7 +79,7 @@ The remaining files with `@ts-nocheck` fall into three broad categories. The pla
 
 | Date       | Summary |
 | ---------- | ------- |
-| 2025-10-29 | Removed `@ts-nocheck` from `ts-src/scripts/core/item-generator.ts` by introducing typed generator helpers and global inventory definitions. Updated the remaining suppression count to 19. |
+| 2025-10-29 | Introduced `scripts/core/globals.ts` to expose typed helpers (DustlandGlobals) and removed `@ts-nocheck` from `ts-src/scripts/core/item-generator.ts`. Updated UI entry points and tests to load the helper before exercising ItemGen. |
 | 2025-10-28 | Removed `@ts-nocheck` from `ts-src/scripts/core/trader.ts` by introducing typed trader inventory helpers and stricter price calculations. Updated the global snapshot to reflect 21 files remaining. |
 | 2024-05-12 | Recounted the remaining suppressions (24 total) and categorized them by subsystem so future work can be pulled in smaller batches. Added this progress log section to track future milestones inline. |
 

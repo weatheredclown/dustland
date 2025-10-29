@@ -411,6 +411,7 @@ declare global {
     id: string;
     name: string;
     type: string;
+    stats?: Record<string, number>;
     mods?: Record<string, number>;
     use?: GameItemUse;
     desc?: string;
@@ -430,6 +431,13 @@ declare global {
     [key: string]: unknown;
   }
 
+interface ItemGeneratorRange {
+    min: number;
+    max: number;
+  }
+  
+  type ItemGeneratorRank = 'rusted' | 'sealed' | 'armored' | 'vaulted';
+  
   type ItemGeneratorRandomSource = () => number;
 
   interface GeneratedTrinketItem extends PartyItem {
@@ -444,7 +452,8 @@ declare global {
   interface ItemGenerator {
     adjectives: readonly string[];
     nouns: readonly string[];
-    statRanges: Record<string, { min: number; max: number }>;
+    statRanges: Record<string, ItemGeneratorRange> &
+      Record<ItemGeneratorRank, ItemGeneratorRange>;
     scrapValues: Record<string, number>;
     statKeys: readonly string[];
     calcScrap: (item: GeneratedTrinketItem) => number;
@@ -569,6 +578,7 @@ declare global {
     inventory?: DustlandInventoryApi;
     profiles?: DustlandProfilesApi;
     personaTemplates?: Record<string, DustlandPersonaTemplate>;
+    ItemGen?: ItemGenerator;
     gameState?: DustlandGameState;
     eventBus?: DustlandEventBus;
     eventFlags?: {
@@ -750,6 +760,19 @@ declare global {
     [key: string]: unknown;
   }
 
+  interface DustlandGlobalHelpers {
+    ensureDustland(): DustlandNamespace;
+    getDustland(): DustlandNamespace | undefined;
+    getEventBus(): DustlandEventBus | undefined;
+    getParty(): Party | undefined;
+    getPlayer(): PlayerState | undefined;
+    getNpcRoster(): DustlandNpc[];
+    getPersonaTemplates(): Record<string, DustlandPersonaTemplate>;
+    setItemGenerator(generator: ItemGenerator): ItemGenerator;
+  }
+
+  var DustlandGlobals: DustlandGlobalHelpers;
+
   const Dice: {
     skill: (
       actor: PartyMember,
@@ -789,6 +812,7 @@ declare global {
     EventBus?: DustlandEventBus;
     party?: Party;
     player?: PlayerState;
+    DustlandGlobals?: DustlandGlobalHelpers;
     CURRENCY?: string;
     NPCS?: DustlandNpc[];
     npcTemplates?: DustlandNpcTemplate[];
