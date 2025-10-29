@@ -431,14 +431,16 @@ declare global {
     [key: string]: unknown;
   }
 
-  interface ItemGeneratorRange {
+interface ItemGeneratorRange {
     min: number;
     max: number;
   }
-
+  
   type ItemGeneratorRank = 'rusted' | 'sealed' | 'armored' | 'vaulted';
+  
+  type ItemGeneratorRandomSource = () => number;
 
-  interface ItemGeneratorResult extends GameItem {
+  interface GeneratedTrinketItem extends PartyItem {
     rank: string;
     stats: Record<string, number>;
     mods: Record<string, number>;
@@ -454,10 +456,10 @@ declare global {
       Record<ItemGeneratorRank, ItemGeneratorRange>;
     scrapValues: Record<string, number>;
     statKeys: readonly string[];
-    calcScrap: (item: GameItem) => number;
-    pick: <T>(list: readonly T[], rng: () => number) => T;
-    randRange: (min: number, max: number, rng: () => number) => number;
-    generate: (rank?: string, rng?: () => number) => ItemGeneratorResult;
+    calcScrap: (item: GeneratedTrinketItem) => number;
+    pick: <T>(list: readonly T[], rng: ItemGeneratorRandomSource) => T;
+    randRange: (min: number, max: number, rng: ItemGeneratorRandomSource) => number;
+    generate: (rank?: string, rng?: ItemGeneratorRandomSource) => GeneratedTrinketItem;
   }
 
   type QuestStatus = 'available' | 'active' | 'completed';
