@@ -705,6 +705,7 @@ declare global {
     awardXP?: (target: unknown, amount: number) => void;
     resolveItem?: (reward: unknown) => { name?: string } | null;
     addToInv?: (item: unknown) => boolean;
+    ITEMS?: Record<string, GameItem>;
     dropItemNearParty?: (item: unknown) => void;
     startCombat?: (defender: CombatTarget) => Promise<CombatOutcome> | CombatOutcome;
     log?: (message: string, type?: string) => void;
@@ -715,6 +716,10 @@ declare global {
     incFlag?: (flag: string, delta?: number) => void;
     flagValue?: (flag: string) => number;
     setFlag?: (flag: string, value: number | string | boolean) => void;
+    queueNanoDialogForNPCs?: (nodeId?: string, reason?: string, map?: string) => void;
+    textEl?: HTMLElement | null;
+    choicesEl?: HTMLElement | null;
+    closeDialog?: () => void;
     defaultQuestProcessor?: (
       npc: DustlandNpc | null | undefined,
       action: string
@@ -836,12 +841,14 @@ declare global {
   function renderInv(): void;
   function calcItemValue(item: unknown, member?: unknown): number;
   function equipItem(memberIndex: number, itemIndex: number): void;
+  function countItems(id: string): number;
   function findItemIndex(id: string): number;
   function removeFromInv(index: number, quantity?: number): void;
   function getSpecialization(id: string): unknown;
   function getClassSpecials(id: string): unknown;
   function getQuirk(id: string): unknown;
   function renderQuests(): void;
+  function queueNanoDialogForNPCs(nodeId?: string, reason?: string, map?: string): void;
   function applyModule(moduleData: unknown): void;
   function setPartyPos(x: number, y: number): void;
   function setMap(map: string, label?: string): void;
