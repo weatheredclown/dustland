@@ -178,23 +178,24 @@ function bootstrapGlobals(w, seed) {
 
   Math.random = rng;
 
-  const listeners = new Map();
-  const bus = {
+  const listeners = new Map<DustlandEventName, Set<DustlandEventHandler>>();
+  const bus: DustlandEventBus = {
     on(event, handler) {
       if (!listeners.has(event)) listeners.set(event, new Set());
-      listeners.get(event).add(handler);
+      listeners.get(event)?.add(handler as DustlandEventHandler);
       return () => bus.off(event, handler);
     },
     off(event, handler) {
-      const set = listeners.get(event);
-      if (set) set.delete(handler);
+      listeners.get(event)?.delete(handler as DustlandEventHandler);
     },
     emit(event, payload) {
       const set = listeners.get(event);
       if (!set) return;
-      for (const handler of [...set]) {
+      for (const handler of set) {
         try {
-          handler(payload);
+          (handler as DustlandEventHandler<typeof event>)(
+            payload as DustlandEventPayloads[typeof event]
+          );
         } catch (err) {
           console.error('Event handler error:', err);
         }

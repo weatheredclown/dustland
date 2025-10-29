@@ -266,10 +266,88 @@ declare global {
     [key: string]: unknown;
   }
 
+  interface PersonaEventPayload {
+    memberId: string;
+    personaId: string;
+    [key: string]: unknown;
+  }
+
+  interface QuestCompletedPayload {
+    quest: unknown;
+    [key: string]: unknown;
+  }
+
+  interface QuestCheckpointPayload {
+    questId?: string;
+    stage?: string;
+    [key: string]: unknown;
+  }
+
+  interface SpoilsDropPayload {
+    cache?: unknown;
+    target?: unknown;
+    [key: string]: unknown;
+  }
+
+  interface SpoilsOpenedPayload {
+    rank?: string | number | null | undefined;
+    item?: unknown;
+    [key: string]: unknown;
+  }
+
+  interface SkinChangedPayload {
+    skin?: unknown;
+    [key: string]: unknown;
+  }
+
+  interface MusicMoodPayload {
+    id: string | null;
+    source?: string;
+    priority?: number;
+    [key: string]: unknown;
+  }
+
+  interface MovementEventPayload {
+    map?: string;
+    x?: number;
+    y?: number;
+    [key: string]: unknown;
+  }
+
+  type PartySelectedPayload = PartyMember | number | null | undefined;
+
+  interface DustlandEventPayloads {
+    'state:changed': DustlandGameSnapshot;
+    'persona:equip': PersonaEventPayload;
+    'persona:unequip': PersonaEventPayload;
+    'quest:completed': QuestCompletedPayload;
+    'quest:checkpoint': QuestCheckpointPayload;
+    'spoils:drop': SpoilsDropPayload;
+    'spoils:opened': SpoilsOpenedPayload;
+    'skin:changed': SkinChangedPayload;
+    'combat:started': undefined;
+    'combat:ended': { result?: CombatOutcome | string | null | undefined };
+    'combat:event': { type?: string; [key: string]: unknown } | unknown;
+    'combat:telemetry': unknown;
+    'enemy:defeated': { target?: unknown; [key: string]: unknown } | unknown;
+    'movement:player': MovementEventPayload;
+    'music:mood': MusicMoodPayload;
+    'party:selected': PartySelectedPayload;
+    'sfx': string | { id?: string; [key: string]: unknown };
+    'weather:change': DustlandWeatherState;
+    [event: string]: unknown | undefined;
+  }
+
+  type DustlandEventName = Extract<keyof DustlandEventPayloads, string>;
+
+  type DustlandEventHandler<E extends DustlandEventName = DustlandEventName> = (
+    payload: DustlandEventPayloads[E]
+  ) => void;
+
   interface DustlandEventBus {
-    on(event: string, handler: (...args: unknown[]) => void): void;
-    off(event: string, handler: (...args: unknown[]) => void): void;
-    emit(event: string, payload?: unknown): void;
+    on<E extends DustlandEventName>(event: E, handler: DustlandEventHandler<E>): void;
+    off<E extends DustlandEventName>(event: E, handler: DustlandEventHandler<E>): void;
+    emit<E extends DustlandEventName>(event: E, payload?: DustlandEventPayloads[E]): void;
   }
 
   interface GameItemTeleportTarget {
