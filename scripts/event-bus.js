@@ -13,7 +13,12 @@
         listeners.get(evt)?.delete(handler);
     }
     function emit(evt, payload) {
-        listeners.get(evt)?.forEach(fn => fn(payload));
+        const handlers = listeners.get(evt);
+        if (!handlers)
+            return;
+        handlers.forEach(fn => {
+            fn(payload);
+        });
     }
     const bus = { on, off, emit };
     // Expose under Dustland namespace and keep a legacy shim
