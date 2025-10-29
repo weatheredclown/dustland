@@ -430,6 +430,29 @@ declare global {
     [key: string]: unknown;
   }
 
+  type ItemGeneratorRandomSource = () => number;
+
+  interface GeneratedTrinketItem extends PartyItem {
+    rank: string;
+    stats: Record<string, number>;
+    mods: Record<string, number>;
+    scrap: number;
+    tags: string[];
+    persona?: string;
+  }
+
+  interface ItemGenerator {
+    adjectives: readonly string[];
+    nouns: readonly string[];
+    statRanges: Record<string, { min: number; max: number }>;
+    scrapValues: Record<string, number>;
+    statKeys: readonly string[];
+    calcScrap: (item: GeneratedTrinketItem) => number;
+    pick: <T>(list: readonly T[], rng: ItemGeneratorRandomSource) => T;
+    randRange: (min: number, max: number, rng: ItemGeneratorRandomSource) => number;
+    generate: (rank?: string, rng?: ItemGeneratorRandomSource) => GeneratedTrinketItem;
+  }
+
   type QuestStatus = 'available' | 'active' | 'completed';
 
   interface QuestState {
@@ -833,10 +856,7 @@ declare global {
     trackQuestDialogNode?: (npcId: string, nodeId: string) => void;
     setPortraitDiv?: (element: HTMLElement, npc: DustlandNpc) => void;
     persistLlmNodes?: (tree: DustlandDialogTree | null | undefined) => void;
-    ItemGen?: {
-      statRanges: Record<string, { min: number; max: number }>;
-      generate(rank: string): { stats: { power: number } };
-    };
+    ItemGen?: ItemGenerator;
     seedWorldContent?: () => void;
     startGame?: () => void;
     memoryTape?: MemoryTapeItem;
