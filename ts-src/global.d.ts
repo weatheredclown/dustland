@@ -75,6 +75,8 @@ declare global {
 
   interface DustlandEffectsApi {
     apply: (list?: unknown[], ctx?: Record<string, unknown>) => void;
+    reset?: () => void;
+    tick?: (ctx?: Record<string, unknown>) => void;
   }
 
   interface DustlandInventoryApi {
@@ -83,6 +85,69 @@ declare global {
     storeCampChestItem?: (index: number) => boolean | void;
     isCampChestUnlocked?: () => boolean;
     unlockCampChest?: () => void;
+  }
+
+  interface DustlandSoundSource {
+    id?: string;
+    x: number;
+    y: number;
+    map?: string;
+    [key: string]: unknown;
+  }
+
+  interface DustlandTrainerUi {
+    showTrainer: (id: string) => boolean;
+    applyUpgrade: (trainerId: string, upgradeId: string) => boolean;
+  }
+
+  interface DustlandSpoilsCacheApi {
+    ranks?: Record<string, { name?: string; desc?: string; icon?: string }>;
+    create: (rank: string) => { id: string; rank?: string; [key: string]: unknown };
+    pickRank: (challenge: number, rng?: () => number) => string;
+    rollDrop: (challenge: number, rng?: () => number) => unknown;
+    renderIcon: (rank: string, onOpen?: () => void) => HTMLElement | null;
+    open: (rank: string, rng?: () => number) => unknown;
+    openAll: (rank: string, rng?: () => number) => number;
+    [key: string]: unknown;
+  }
+
+  interface DustlandItemDrop {
+    map: string;
+    x: number;
+    y: number;
+    id?: string;
+    items?: string[];
+    dropType?: 'world' | 'loot' | string;
+    worldTurn?: number;
+    [key: string]: unknown;
+  }
+
+  interface DustlandPortal {
+    map?: string;
+    x?: number;
+    y?: number;
+    toMap?: string;
+    toX?: number;
+    toY?: number;
+    [key: string]: unknown;
+  }
+
+  interface DustlandBuilding {
+    interiorId?: string | null;
+    bunkerId?: string;
+    boarded?: boolean;
+    map?: string;
+    x?: number;
+    y?: number;
+    [key: string]: unknown;
+  }
+
+  interface DustlandCoreState {
+    map: string;
+    mapFlags: Record<string, unknown>;
+    fog: Record<string, unknown>;
+    mapEntry?: { map: string; x: number; y: number } | null;
+    [key: string]: unknown;
   }
 
   interface DustlandUiApi {
@@ -633,6 +698,18 @@ interface ItemGeneratorRange {
       [key: string]: unknown;
     };
     zoneEffects?: DustlandZoneEffect[];
+    workbench?: { [key: string]: ((...args: unknown[]) => unknown) | undefined } & {
+      craft?: (recipeId: string) => void;
+    };
+    fastTravel?: {
+      activateBunker?: (id?: string) => void;
+      [key: string]: unknown;
+    };
+    worldMap?: {
+      open?: (source?: string) => void;
+      [key: string]: unknown;
+    };
+    openWorkbench?: () => void;
     weather?: {
       getWeather?: () => DustlandWeatherState;
       setWeather?: (next: Partial<DustlandWeatherState>) => DustlandWeatherState;
@@ -768,6 +845,7 @@ interface ItemGeneratorRange {
     portraitLock?: boolean;
     locked?: boolean;
     unlockTime?: number | null;
+    overrideColor?: boolean;
     tree?:
       | DustlandDialogTree
       | Record<string, unknown>
@@ -832,6 +910,8 @@ interface ItemGeneratorRange {
   const ROLL_SIDES: number;
 
   const log: ((message: string) => void) | undefined;
+
+  let rng: () => number;
 
   const GAME_STATE: { [key: string]: number } & {
     WORLD: number;
@@ -976,9 +1056,13 @@ interface ItemGeneratorRange {
     playFX?: (type: string) => void;
     postLoad?: (moduleData: DustlandModuleInstance) => void;
     openWorldMap?: (source?: string) => void;
+    openWorkbench?: () => void;
     healAll?: () => void;
     params?: URLSearchParams;
-    state?: { map?: string; [key: string]: unknown };
+    state?: DustlandCoreState;
+    portals?: DustlandPortal[];
+    buildings?: DustlandBuilding[];
+    currentNPC?: DustlandNpc | null;
     TILE?: DustlandTileset;
     generateHeightField?: (
       seed: string | number,
@@ -1012,6 +1096,12 @@ interface ItemGeneratorRange {
       falloff?: number,
       features?: { roads?: boolean; ruins?: boolean }
     ) => ProceduralMapResult;
+    TrainerUI?: DustlandTrainerUi;
+    SpoilsCache?: DustlandSpoilsCacheApi;
+    itemDrops?: DustlandItemDrop[];
+    soundSources?: DustlandSoundSource[];
+    revealHiddenNPCs?: () => void;
+    Effects?: DustlandEffectsApi;
   }
 
   let __combatState:
@@ -1024,6 +1114,7 @@ interface ItemGeneratorRange {
   function updateHUD(): void;
   function hudBadge(message: string): void;
   function hasItem(itemId: string): boolean;
+  function revealHiddenNPCs(): void;
   function makeNPC(
     id: string,
     map: string,
@@ -1061,4 +1152,5 @@ interface ItemGeneratorRange {
   function getTile(map: string, x: number, y: number): number;
   function mapWH(map: string): { W: number; H: number } | null | undefined;
   function centerCamera(x: number, y: number, map?: string): void;
+  function render(gameState?: unknown, dt?: unknown): void;
 }
