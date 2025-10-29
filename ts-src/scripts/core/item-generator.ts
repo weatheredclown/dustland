@@ -1,5 +1,3 @@
-export {};
-
 // Use the types from the global declaration file
 type RandomSource = () => number;
 
@@ -81,7 +79,6 @@ function createGeneratedItem(
     tags: [noun.toLowerCase()],
     // PartyItem properties (from GeneratedTrinketItem -> PartyItem -> GameItem)
     slot: 'trinket',
-    // Default null/empty values for other PartyItem fields
     equip: null,
     unequip: null,
     narrative: null,
@@ -93,28 +90,6 @@ function createGeneratedItem(
     maxStack: 1,
     cursed: false,
     cursedKnown: false,
-    // Required PartyMember fields (when equipped, etc. - these are defaults)
-    adr: 0,
-    adrDmgMod: 0,
-    adrGenMod: 0,
-    ap: 0,
-    applyCombatMods: () => {},
-    applyEquipmentStats: () => {},
-    cooldowns: {},
-    equip: { weapon: null, armor: null, trinket: null },
-    guard: 0,
-    hp: 0,
-    lvl: 0,
-    maxAdr: 0,
-    maxHp: 0,
-    permanent: false,
-    role: '',
-    skillPoints: 0,
-    special: [],
-    statusEffects: [],
-    xp: 0,
-    _bonus: {},
-    portraitSheet: null,
   };
 }
 

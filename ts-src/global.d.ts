@@ -499,6 +499,52 @@ interface ItemGeneratorRange {
     [key: string]: unknown;
   }
 
+  interface DustlandTileset {
+    [key: string]: number | undefined;
+    ROAD?: number;
+    PATH?: number;
+    SAND?: number;
+    WATER?: number;
+    BRUSH?: number;
+    ROCK?: number;
+    RUIN?: number;
+    FLOOR?: number;
+    DOOR?: number;
+    WALL?: number;
+  }
+
+  interface ProceduralMapPoint {
+    x: number;
+    y: number;
+  }
+
+  interface ProceduralRoadSegment {
+    from: number;
+    to: number;
+    path: ProceduralMapPoint[];
+    bridges: ProceduralMapPoint[];
+    cost?: number;
+  }
+
+  interface ProceduralRoadNetwork {
+    anchors: ProceduralMapPoint[];
+    segments: ProceduralRoadSegment[];
+    crossroads: ProceduralMapPoint[];
+  }
+
+  interface ProceduralMapFeatures {
+    ruins?: ProceduralMapPoint[];
+    ruinHubs?: ProceduralMapPoint[];
+    [key: string]: unknown;
+  }
+
+  interface ProceduralMapResult {
+    tiles: number[][];
+    regions: ProceduralMapPoint[];
+    roads: ProceduralRoadNetwork;
+    features: ProceduralMapFeatures;
+  }
+
   type DustlandCheckHandler = (...args: unknown[]) => unknown;
 
   interface DustlandCheck {
@@ -933,6 +979,39 @@ interface ItemGeneratorRange {
     healAll?: () => void;
     params?: URLSearchParams;
     state?: { map?: string; [key: string]: unknown };
+    TILE?: DustlandTileset;
+    generateHeightField?: (
+      seed: string | number,
+      size: number,
+      scale: number,
+      falloff?: number
+    ) => number[][];
+    heightFieldToTiles?: (field: number[][]) => number[][];
+    refineTiles?: (tiles: number[][], iterations?: number) => number[][];
+    findRegionCenters?: (tiles: number[][]) => ProceduralMapPoint[];
+    connectRegionCenters?: (
+      tiles: number[][],
+      field: number[][],
+      centers: ProceduralMapPoint[] | null | undefined,
+      seed?: string | number
+    ) => ProceduralRoadNetwork;
+    carveRoads?: (
+      tiles: number[][],
+      network?: ProceduralRoadNetwork | null
+    ) => ProceduralRoadNetwork;
+    scatterRuins?: (
+      tiles: number[][],
+      seed?: string | number
+    ) => { tiles: number[][]; ruins: ProceduralMapPoint[]; hubs: ProceduralMapPoint[] };
+    exportMap?: (data: unknown, path?: string) => Promise<void> | void;
+    generateProceduralMap?: (
+      seed: string | number,
+      width: number,
+      height: number,
+      scale?: number,
+      falloff?: number,
+      features?: { roads?: boolean; ruins?: boolean }
+    ) => ProceduralMapResult;
   }
 
   let __combatState:
