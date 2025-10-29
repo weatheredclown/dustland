@@ -1,27 +1,64 @@
-// @ts-nocheck
 // Simplex noise-based height field generator without external deps
 
-function mulberry32(a) {
-  return function() {
-    let t = a += 0x6D2B79F5;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+type Noise2D = (x: number, y: number) => number;
+
+type HeightField = number[][];
+
+type TileGrid = number[][];
+
+interface PathPlan {
+  path: ProceduralMapPoint[];
+  bridges: ProceduralMapPoint[];
+  cost: number;
+}
+
+type PathPreference = boolean[][];
+
+interface ProceduralFeatureFlags {
+  roads?: boolean;
+  ruins?: boolean;
+}
+
+function getTileset(): DustlandTileset | undefined {
+  return (globalThis as unknown as GlobalThis).TILE;
+}
+
+function readTile(key: string): number | undefined {
+  const tileset = getTileset();
+  const value = tileset?.[key];
+  return typeof value === 'number' ? value : undefined;
+}
+
+const MIN_RUIN_HUB_DISTANCE = 12;
+const MIN_RUIN_HUB_DISTANCE_SQ = MIN_RUIN_HUB_DISTANCE * MIN_RUIN_HUB_DISTANCE;
+
+function mulberry32(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = Math.imul(state ^ (state >>> 15), state | 1);
+    state ^= state + Math.imul(state ^ (state >>> 7), state | 61);
+    return ((state ^ (state >>> 14)) >>> 0) / 4294967296;
   };
 }
 
-function hashString(str) {
-  let h = 0;
+function hashString(str: string): number {
+  let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+    hash = Math.imul(31, hash) + str.charCodeAt(i);
   }
-  return h >>> 0;
+  return hash >>> 0;
 }
 
-function createNoise2D(seed) {
-  const grad3 = [
-    [1, 1], [-1, 1], [1, -1], [-1, -1],
-    [1, 0], [-1, 0], [0, 1], [0, -1]
+function createNoise2D(seed: number): Noise2D {
+  const grad3: ReadonlyArray<readonly [number, number]> = [
+    [1, 1],
+    [-1, 1],
+    [1, -1],
+    [-1, -1],
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1]
   ];
   const p = new Uint8Array(256);
   for (let i = 0; i < 256; i++) {
@@ -30,15 +67,15 @@ function createNoise2D(seed) {
   const random = mulberry32(seed);
   for (let i = 255; i > 0; i--) {
     const r = Math.floor(random() * (i + 1));
-    const t = p[i];
+    const temp = p[i];
     p[i] = p[r];
-    p[r] = t;
+    p[r] = temp;
   }
   const perm = new Uint8Array(512);
   for (let i = 0; i < 512; i++) {
     perm[i] = p[i & 255];
   }
-  return function(xin, yin) {
+  return (xin, yin) => {
     const F2 = 0.5 * (Math.sqrt(3) - 1);
     const G2 = (3 - Math.sqrt(3)) / 6;
     const s = (xin + yin) * F2;
@@ -49,91 +86,102 @@ function createNoise2D(seed) {
     const Y0 = j - t;
     const x0 = xin - X0;
     const y0 = yin - Y0;
-    let i1, j1;
-    if (x0 > y0) {
-      i1 = 1; j1 = 0;
-    } else {
-      i1 = 0; j1 = 1;
-    }
+    const [i1, j1] = x0 > y0 ? [1, 0] : [0, 1];
     const x1 = x0 - i1 + G2;
     const y1 = y0 - j1 + G2;
     const x2 = x0 - 1 + 2 * G2;
     const y2 = y0 - 1 + 2 * G2;
     const ii = i & 255;
     const jj = j & 255;
-    const gi0 = perm[ii + perm[jj]] % 8;
-    const gi1 = perm[ii + i1 + perm[jj + j1]] % 8;
-    const gi2 = perm[ii + 1 + perm[jj + 1]] % 8;
-    let n0 = 0, n1 = 0, n2 = 0;
+    const gi0 = perm[ii + perm[jj]] % grad3.length;
+    const gi1 = perm[ii + i1 + perm[jj + j1]] % grad3.length;
+    const gi2 = perm[ii + 1 + perm[jj + 1]] % grad3.length;
+    let n0 = 0;
+    let n1 = 0;
+    let n2 = 0;
     let t0 = 0.5 - x0 * x0 - y0 * y0;
     if (t0 >= 0) {
       t0 *= t0;
-      const g = grad3[gi0];
-      n0 = t0 * t0 * (g[0] * x0 + g[1] * y0);
+      const [gx, gy] = grad3[gi0];
+      n0 = t0 * t0 * (gx * x0 + gy * y0);
     }
     let t1 = 0.5 - x1 * x1 - y1 * y1;
     if (t1 >= 0) {
       t1 *= t1;
-      const g = grad3[gi1];
-      n1 = t1 * t1 * (g[0] * x1 + g[1] * y1);
+      const [gx, gy] = grad3[gi1];
+      n1 = t1 * t1 * (gx * x1 + gy * y1);
     }
     let t2 = 0.5 - x2 * x2 - y2 * y2;
     if (t2 >= 0) {
       t2 *= t2;
-      const g = grad3[gi2];
-      n2 = t2 * t2 * (g[0] * x2 + g[1] * y2);
+      const [gx, gy] = grad3[gi2];
+      n2 = t2 * t2 * (gx * x2 + gy * y2);
     }
     return 70 * (n0 + n1 + n2);
   };
 }
 
-function generateHeightField(seed, size, scale, falloff = 0) {
-  // falloff (0-1) subtracts a radial gradient to bias edges toward water
-  const seedNum = typeof seed === 'string' ? hashString(seed) : seed;
+function normalizeSeed(seed: string | number): number {
+  return typeof seed === 'string' ? hashString(seed) : seed >>> 0;
+}
+
+function generateHeightField(
+  seed: string | number,
+  size: number,
+  scale: number,
+  falloff = 0
+): HeightField {
+  const seedNum = normalizeSeed(seed);
   const noise2D = createNoise2D(seedNum);
-  const grid = [];
+  const grid: HeightField = [];
   const center = (size - 1) / 2;
   const maxDist = Math.sqrt(2);
   for (let y = 0; y < size; y++) {
-    const row = [];
+    const row: number[] = [];
     for (let x = 0; x < size; x++) {
-      const nx = x / size * scale;
-      const ny = y / size * scale;
-      // noise2D returns roughly [-1,1]
-      let v = noise2D(nx, ny);
+      const nx = (x / size) * scale;
+      const ny = (y / size) * scale;
+      let value = noise2D(nx, ny);
       if (falloff > 0) {
         const dx = (x - center) / center;
         const dy = (y - center) / center;
         const dist = Math.sqrt(dx * dx + dy * dy) / maxDist;
-        v -= falloff * dist;
+        value -= falloff * dist;
       }
-      row.push(v);
+      row.push(value);
     }
     grid.push(row);
   }
   return grid;
 }
 
-function heightFieldToTiles(field) {
-  const tiles = [];
+function heightFieldToTiles(field: HeightField): TileGrid {
+  const tiles: TileGrid = [];
+  const rock = readTile('ROCK');
+  const water = readTile('WATER');
+  const brush = readTile('BRUSH');
+  const sand = readTile('SAND');
+  const fallback = sand ?? 0;
   for (let y = 0; y < field.length; y++) {
-    const row = [];
+    const row: number[] = [];
     for (let x = 0; x < field[y].length; x++) {
       const v = field[y][x];
-      if (v > 0.62) row.push(TILE.ROCK);
-      else if (v < -0.62) row.push(TILE.WATER);
-      else if (v > 0.18) row.push(TILE.BRUSH);
-      else row.push(TILE.SAND);
+      if (typeof rock === 'number' && v > 0.62) row.push(rock);
+      else if (typeof water === 'number' && v < -0.62) row.push(water);
+      else if (typeof brush === 'number' && v > 0.18) row.push(brush);
+      else row.push(fallback);
     }
     tiles.push(row);
   }
   return tiles;
 }
 
-function refineTiles(tiles, iterations = 1) {
-  let current = tiles.map(r => r.slice());
-  for (let i = 0; i < iterations; i++) {
-    const next = current.map(r => r.slice());
+function refineTiles(tiles: TileGrid, iterations = 1): TileGrid {
+  const water = readTile('WATER');
+  const sand = readTile('SAND');
+  let current = tiles.map(row => [...row]);
+  for (let iteration = 0; iteration < iterations; iteration++) {
+    const next = current.map(row => [...row]);
     for (let y = 0; y < current.length; y++) {
       for (let x = 0; x < current[y].length; x++) {
         let land = 0;
@@ -143,13 +191,18 @@ function refineTiles(tiles, iterations = 1) {
             const ny = y + dy;
             const nx = x + dx;
             if (ny >= 0 && ny < current.length && nx >= 0 && nx < current[y].length) {
-              if (current[ny][nx] !== TILE.WATER) land++;
+              if (!tileMatches(current[ny][nx], 'WATER')) land++;
             }
           }
         }
-        if (current[y][x] === TILE.WATER && land >= 5) next[y][x] = TILE.SAND;
-        else if (current[y][x] !== TILE.WATER && land <= 3) next[y][x] = TILE.WATER;
-        else next[y][x] = current[y][x];
+        const currentTile = current[y][x];
+        if (currentTile === water && land >= 5) {
+          next[y][x] = sand ?? currentTile;
+        } else if (currentTile !== water && land <= 3 && typeof water === 'number') {
+          next[y][x] = water;
+        } else {
+          next[y][x] = currentTile;
+        }
       }
     }
     current = next;
@@ -157,32 +210,31 @@ function refineTiles(tiles, iterations = 1) {
   return current;
 }
 
-
-function clampValue(v, min, max) {
-  if (v < min) return min;
-  if (v > max) return max;
-  return v;
+function clampValue(value: number, min: number, max: number): number {
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
 }
 
-function tileMatches(tile, key) {
-  const tileset = globalThis.TILE;
-  if (!tileset || typeof tileset[key] !== 'number') return false;
-  return tile === tileset[key];
+function tileMatches(tile: number, key: string): boolean {
+  const target = readTile(key);
+  return typeof target === 'number' && tile === target;
 }
 
-function getRoadTile() {
-  const tileset = globalThis.TILE;
-  if (tileset && typeof tileset.ROAD === 'number') return tileset.ROAD;
-  if (tileset && typeof tileset.PATH === 'number') return tileset.PATH;
-  if (tileset && typeof tileset.SAND === 'number') return tileset.SAND;
-  return 0;
+function getRoadTile(): number {
+  const road = readTile('ROAD');
+  if (typeof road === 'number') return road;
+  const path = readTile('PATH');
+  if (typeof path === 'number') return path;
+  const sand = readTile('SAND');
+  return typeof sand === 'number' ? sand : 0;
 }
 
-function isWater(tile) {
+function isWater(tile: number): boolean {
   return tileMatches(tile, 'WATER');
 }
 
-function terrainCost(tile) {
+function terrainCost(tile: number): number {
   if (tileMatches(tile, 'ROAD')) return 0.05;
   if (tileMatches(tile, 'SAND')) return 1;
   if (tileMatches(tile, 'BRUSH')) return 1.2;
@@ -192,17 +244,23 @@ function terrainCost(tile) {
   return 1.5;
 }
 
-function findNearestLand(x, y, tiles) {
+function findNearestLand(x: number, y: number, tiles: TileGrid): ProceduralMapPoint {
   const h = tiles.length;
-  const w = tiles[0].length;
-  const seen = new Set();
-  const queue = [[x, y]];
-  const dirs = [
-    [1, 0], [-1, 0], [0, 1], [0, -1],
-    [1, 1], [-1, 1], [1, -1], [-1, -1]
+  const w = tiles[0]?.length ?? 0;
+  const seen = new Set<string>();
+  const queue: Array<[number, number]> = [[x, y]];
+  const dirs: ReadonlyArray<readonly [number, number]> = [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+    [1, 1],
+    [-1, 1],
+    [1, -1],
+    [-1, -1]
   ];
   while (queue.length > 0) {
-    const [cx, cy] = queue.shift();
+    const [cx, cy] = queue.shift()!;
     const key = `${cx},${cy}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -215,10 +273,13 @@ function findNearestLand(x, y, tiles) {
   return { x: clampValue(x, 0, w - 1), y: clampValue(y, 0, h - 1) };
 }
 
-function deriveVirtualAnchors(tiles) {
+function deriveVirtualAnchors(tiles: TileGrid): ProceduralMapPoint[] {
   const h = tiles.length;
-  const w = tiles[0].length;
-  let minX = Infinity, maxX = -1, minY = Infinity, maxY = -1;
+  const w = tiles[0]?.length ?? 0;
+  let minX = Number.POSITIVE_INFINITY;
+  let maxX = -1;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxY = -1;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       if (isWater(tiles[y][x])) continue;
@@ -228,17 +289,17 @@ function deriveVirtualAnchors(tiles) {
       if (y > maxY) maxY = y;
     }
   }
-  if (!isFinite(minX) || !isFinite(minY)) return [];
+  if (!Number.isFinite(minX) || !Number.isFinite(minY)) return [];
   const midX = Math.round((minX + maxX) / 2);
   const midY = Math.round((minY + maxY) / 2);
-  const candidates = [
+  const candidates: Array<[number, number]> = [
     [minX, midY],
     [maxX, midY],
     [midX, minY],
     [midX, maxY]
   ];
-  const anchors = [];
-  const seen = new Set();
+  const anchors: ProceduralMapPoint[] = [];
+  const seen = new Set<string>();
   for (const [cx, cy] of candidates) {
     const snapped = findNearestLand(cx, cy, tiles);
     const key = `${snapped.x},${snapped.y}`;
@@ -250,75 +311,93 @@ function deriveVirtualAnchors(tiles) {
   return anchors;
 }
 
+interface HeapNode {
+  idx: number;
+  cost: number;
+}
+
 class MinHeap {
-  constructor() {
-    this.data = [];
-  }
-  push(node) {
+  data: HeapNode[] = [];
+
+  push(node: HeapNode): void {
     this.data.push(node);
     this.bubbleUp(this.data.length - 1);
   }
-  bubbleUp(index) {
-    while (index > 0) {
-      const parent = index - 1 >> 1;
-      if (this.data[parent].cost <= this.data[index].cost) break;
-      const tmp = this.data[parent];
-      this.data[parent] = this.data[index];
-      this.data[index] = tmp;
-      index = parent;
+
+  bubbleUp(index: number): void {
+    for (let current = index; current > 0;) {
+      const parent = (current - 1) >> 1;
+      if (this.data[parent].cost <= this.data[current].cost) break;
+      [this.data[parent], this.data[current]] = [this.data[current], this.data[parent]];
+      current = parent;
     }
   }
-  pop() {
+
+  pop(): HeapNode | null {
     if (!this.data.length) return null;
     const root = this.data[0];
-    const last = this.data.pop();
+    const last = this.data.pop()!;
     if (this.data.length) {
       this.data[0] = last;
       this.sinkDown(0);
     }
     return root;
   }
-  sinkDown(index) {
+
+  sinkDown(index: number): void {
     const len = this.data.length;
     for (let current = index; current < len;) {
-      let left = current * 2 + 1;
-      let right = left + 1;
+      const left = current * 2 + 1;
+      const right = left + 1;
       let smallest = current;
       if (left < len && this.data[left].cost < this.data[smallest].cost) smallest = left;
       if (right < len && this.data[right].cost < this.data[smallest].cost) smallest = right;
       if (smallest === current) break;
-      const tmp = this.data[current];
-      this.data[current] = this.data[smallest];
-      this.data[smallest] = tmp;
+      [this.data[current], this.data[smallest]] = [this.data[smallest], this.data[current]];
       current = smallest;
     }
   }
-  get length() {
+
+  get length(): number {
     return this.data.length;
   }
 }
 
-function buildPath(start, goal, tiles, field, preference) {
+function buildPath(
+  start: ProceduralMapPoint,
+  goal: ProceduralMapPoint,
+  tiles: TileGrid,
+  field: HeightField,
+  preference: PathPreference
+): PathPlan | null {
   const h = tiles.length;
-  const w = tiles[0].length;
+  const w = tiles[0]?.length ?? 0;
   const total = w * h;
+  if (!total) return null;
   const startIdx = start.y * w + start.x;
   const goalIdx = goal.y * w + goal.x;
   const dist = new Float64Array(total);
   const prev = new Int32Array(total);
   const prevDir = new Int8Array(total);
-  dist.fill(Infinity);
+  dist.fill(Number.POSITIVE_INFINITY);
   prev.fill(-1);
   prevDir.fill(-1);
   const heap = new MinHeap();
   dist[startIdx] = 0;
   heap.push({ idx: startIdx, cost: 0 });
-  const dirs = [
-    [1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1],
-    [1, 1, Math.SQRT2], [-1, 1, Math.SQRT2], [1, -1, Math.SQRT2], [-1, -1, Math.SQRT2]
+  const dirs: ReadonlyArray<readonly [number, number, number]> = [
+    [1, 0, 1],
+    [-1, 0, 1],
+    [0, 1, 1],
+    [0, -1, 1],
+    [1, 1, Math.SQRT2],
+    [-1, 1, Math.SQRT2],
+    [1, -1, Math.SQRT2],
+    [-1, -1, Math.SQRT2]
   ];
   while (heap.length > 0) {
     const current = heap.pop();
+    if (!current) break;
     if (current.idx === goalIdx) break;
     if (current.cost !== dist[current.idx]) continue;
     const cx = current.idx % w;
@@ -334,7 +413,7 @@ function buildPath(start, goal, tiles, field, preference) {
       const slope = Math.abs(field[ny][nx] - field[cy][cx]);
       step += terrainCost(tile);
       step += slope * 12;
-      if (preference[ny][nx]) step *= 0.35;
+      if (preference[ny]?.[nx]) step *= 0.35;
       if (isWater(tile)) step += 8;
       if (prevDir[current.idx] !== -1 && prevDir[current.idx] !== dirIndex) step += 0.25;
       const newCost = current.cost + step;
@@ -347,87 +426,106 @@ function buildPath(start, goal, tiles, field, preference) {
     }
   }
   if (!Number.isFinite(dist[goalIdx])) return null;
-  const path = [];
-  const bridges = [];
-  let cur = goalIdx;
-  while (cur !== -1) {
-    const x = cur % w;
-    const y = Math.floor(cur / w);
+  const path: ProceduralMapPoint[] = [];
+  const bridges: ProceduralMapPoint[] = [];
+  for (let cursor = goalIdx; cursor !== -1; cursor = prev[cursor]) {
+    const x = cursor % w;
+    const y = Math.floor(cursor / w);
     path.push({ x, y });
     if (isWater(tiles[y][x])) bridges.push({ x, y });
-    cur = prev[cur];
   }
   path.reverse();
   bridges.reverse();
   return { path, cost: dist[goalIdx], bridges };
 }
 
-function connectRegionCenters(tiles, field, centers, seed = 1) {
+function connectRegionCenters(
+  tiles: TileGrid,
+  field: HeightField,
+  centers: ProceduralMapPoint[] | null | undefined,
+  seed: string | number = 1
+): ProceduralRoadNetwork {
   const h = tiles.length;
-  if (!h) return { anchors: [], segments: [] };
-  const w = tiles[0].length;
-  const anchors = [];
+  if (!h) return { anchors: [], segments: [], crossroads: [] };
+  const w = tiles[0]?.length ?? 0;
+  const anchors: ProceduralMapPoint[] = [];
   if (Array.isArray(centers) && centers.length >= 2) {
-    for (const c of centers) {
-      const x = clampValue(Math.round(c.x), 0, w - 1);
-      const y = clampValue(Math.round(c.y), 0, h - 1);
+    for (const center of centers) {
+      const x = clampValue(Math.round(center.x), 0, w - 1);
+      const y = clampValue(Math.round(center.y), 0, h - 1);
       anchors.push(findNearestLand(x, y, tiles));
     }
   } else {
     anchors.push(...deriveVirtualAnchors(tiles));
   }
   if (anchors.length < 2) {
-    return { anchors, segments: [] };
+    return { anchors, segments: [], crossroads: [] };
   }
-  const rng = mulberry32(typeof seed === 'string' ? hashString(seed) : seed);
-  const order = anchors.map((a, idx) => ({ ...a, idx })).sort((a, b) => a.x - b.x || a.y - b.y);
-  const connected = new Set([order[0].idx]);
-  const preference = Array.from({ length: h }, () => Array(w).fill(false));
-  const segments = [];
+  const rng = mulberry32(normalizeSeed(seed));
+  const order = anchors
+    .map((point, idx) => ({ ...point, idx }))
+    .sort((a, b) => a.x - b.x || a.y - b.y);
+  const connected = new Set<number>([order[0]?.idx ?? 0]);
+  const preference: PathPreference = Array.from({ length: h }, () => Array(w).fill(false));
+  const segments: ProceduralRoadSegment[] = [];
   while (connected.size < anchors.length) {
-    let best = null;
+    let best: (ProceduralRoadSegment & { cost: number }) | null = null;
     for (const from of connected) {
       for (let to = 0; to < anchors.length; to++) {
         if (connected.has(to)) continue;
         const plan = buildPath(anchors[from], anchors[to], tiles, field, preference);
         if (!plan) continue;
-        if (!best || plan.cost < best.cost - 1e-6 || (Math.abs(plan.cost - best.cost) <= 1e-6 && rng() < 0.5)) {
-          best = { from, to, cost: plan.cost, path: plan.path, bridges: plan.bridges };
+        if (
+          !best ||
+          plan.cost < best.cost - 1e-6 ||
+          (Math.abs(plan.cost - best.cost) <= 1e-6 && rng() < 0.5)
+        ) {
+          best = { from, to, path: plan.path, bridges: plan.bridges, cost: plan.cost };
         }
       }
     }
     if (!best) break;
-    segments.push(best);
+    segments.push({ from: best.from, to: best.to, path: best.path, bridges: best.bridges });
     connected.add(best.to);
     for (const step of best.path) {
-      preference[step.y][step.x] = true;
+      if (preference[step.y]) {
+        preference[step.y][step.x] = true;
+      }
     }
   }
-  return { anchors, segments };
+  return { anchors, segments, crossroads: [] };
 }
 
-function carveRoads(tiles, network) {
+function carveRoads(tiles: TileGrid, network?: ProceduralRoadNetwork | null): ProceduralRoadNetwork {
   const roadId = getRoadTile();
-  if (!network || !network.segments || !network.segments.length) {
+  if (!network || !network.segments.length) {
     return { anchors: network?.anchors ?? [], segments: [], crossroads: [] };
   }
   const h = tiles.length;
-  const usage = Array.from({ length: h }, () => Array(tiles[0].length).fill(0));
-  const carvedSegments = [];
-  for (const seg of network.segments) {
-    const path = [];
-    const bridges = [];
-    for (const step of seg.path) {
+  const w = tiles[0]?.length ?? 0;
+  const usage = Array.from({ length: h }, () => Array(w).fill(0));
+  const carvedSegments: ProceduralRoadSegment[] = [];
+  for (const segment of network.segments) {
+    const path: ProceduralMapPoint[] = [];
+    const bridges: ProceduralMapPoint[] = [];
+    for (const step of segment.path) {
       const { x, y } = step;
       path.push({ x, y });
-      if (isWater(tiles[y][x])) bridges.push({ x, y });
-      tiles[y][x] = roadId;
-      usage[y][x]++;
+      if (tiles[y]?.[x] !== undefined) {
+        if (isWater(tiles[y][x])) bridges.push({ x, y });
+        tiles[y][x] = roadId;
+        usage[y][x]++;
+      }
     }
-    carvedSegments.push({ from: seg.from, to: seg.to, path, bridges });
+    carvedSegments.push({ from: segment.from, to: segment.to, path, bridges });
   }
-  const crossroads = [];
-  const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  const crossroads: ProceduralMapPoint[] = [];
+  const dirs: ReadonlyArray<readonly [number, number]> = [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1]
+  ];
   for (let y = 0; y < usage.length; y++) {
     for (let x = 0; x < usage[y].length; x++) {
       if (usage[y][x] > 1) {
@@ -435,8 +533,10 @@ function carveRoads(tiles, network) {
         for (const [dx, dy] of dirs) {
           const nx = x + dx;
           const ny = y + dy;
-          if (ny < 0 || ny >= tiles.length || nx < 0 || nx >= tiles[0].length) continue;
-          if (isWater(tiles[ny][nx])) continue;
+          if (ny < 0 || ny >= h || nx < 0 || nx >= w) continue;
+          const tile = tiles[ny]?.[nx];
+          if (tile === undefined) continue;
+          if (isWater(tile)) continue;
           tiles[ny][nx] = roadId;
         }
       }
@@ -445,26 +545,80 @@ function carveRoads(tiles, network) {
   return { anchors: network.anchors, segments: carvedSegments, crossroads };
 }
 
-function scatterRuins(tiles, seed = 1, radius = 12) {
-  const rand = mulberry32(typeof seed === 'string' ? hashString(seed) : seed);
+function scatterRuins(
+  tiles: TileGrid,
+  seed: string | number = 1
+): { tiles: TileGrid; ruins: ProceduralMapPoint[]; hubs: ProceduralMapPoint[] } {
   const h = tiles.length;
-  const w = tiles[0].length;
-  const hubs = [];
-  const ruins = [];
-  const r2 = radius * radius;
-  for (let i = 0; i < w * h; i++) {
-    const x = Math.floor(rand() * w);
-    const y = Math.floor(rand() * h);
-    const t = tiles[y][x];
-    if (t === TILE.WATER || t === TILE.ROAD || t === TILE.RUIN) continue;
-    let ok = true;
-    for (const c of hubs) {
-      const dx = c.x - x;
-      const dy = c.y - y;
-      if (dx * dx + dy * dy < r2) { ok = false; break; }
+  const w = tiles[0]?.length ?? 0;
+  const rand = mulberry32(normalizeSeed(seed));
+  const count = Math.max(3, Math.round((w * h) / 160));
+  const ruins: ProceduralMapPoint[] = [];
+  const hubs: ProceduralMapPoint[] = [];
+  const water = readTile('WATER');
+  const road = readTile('ROAD');
+  const ruin = readTile('RUIN');
+  const pickRandomLand = (): ProceduralMapPoint | null => {
+    for (let attempt = 0; attempt < 200; attempt++) {
+      const x = Math.floor(rand() * w);
+      const y = Math.floor(rand() * h);
+      const tile = tiles[y]?.[x];
+      if (tile === undefined) continue;
+      if (tile === water || tile === road || tile === ruin) continue;
+      return { x, y };
     }
-    if (!ok) continue;
-    hubs.push({ x, y });
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const tile = tiles[y]?.[x];
+        if (tile === undefined) continue;
+        if (tile === water || tile === road || tile === ruin) continue;
+        return { x, y };
+      }
+    }
+    return null;
+  };
+
+  const selectHub = (): ProceduralMapPoint | null => {
+    if (!h || !w) return null;
+    if (!hubs.length) {
+      return pickRandomLand();
+    }
+    let bestDistSq = -1;
+    const candidates: ProceduralMapPoint[] = [];
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const tile = tiles[y]?.[x];
+        if (tile === undefined) continue;
+        if (tile === water || tile === road || tile === ruin) continue;
+        let minDistSq = Infinity;
+        for (const hub of hubs) {
+          const dx = hub.x - x;
+          const dy = hub.y - y;
+          const distSq = dx * dx + dy * dy;
+          if (distSq < minDistSq) minDistSq = distSq;
+        }
+        if (minDistSq > bestDistSq + 1e-6) {
+          bestDistSq = minDistSq;
+          candidates.length = 0;
+          candidates.push({ x, y });
+        } else if (Math.abs(minDistSq - bestDistSq) <= 1e-6) {
+          candidates.push({ x, y });
+        }
+      }
+    }
+    if (bestDistSq < MIN_RUIN_HUB_DISTANCE_SQ || !candidates.length) {
+      return null;
+    }
+    const choice = candidates[Math.floor(rand() * candidates.length) % candidates.length];
+    return choice;
+  };
+
+  for (let i = 0; i < count; i++) {
+    const hub = selectHub();
+    if (!hub) break;
+    const { x, y } = hub;
+    hubs.push(hub);
+    const radius = 2 + Math.floor(rand() * 4);
     const groups = 2 + Math.floor(rand() * 3);
     for (let g = 0; g < groups; g++) {
       const angle = rand() * Math.PI * 2;
@@ -472,18 +626,18 @@ function scatterRuins(tiles, seed = 1, radius = 12) {
       const cx = x + Math.round(Math.cos(angle) * dist);
       const cy = y + Math.round(Math.sin(angle) * dist);
       if (cx < 0 || cx >= w || cy < 0 || cy >= h) continue;
-      const ct = tiles[cy][cx];
-      if (ct === TILE.WATER || ct === TILE.ROAD || ct === TILE.RUIN) continue;
-      tiles[cy][cx] = TILE.RUIN;
+      const tile = tiles[cy]?.[cx];
+      if (tile === water || tile === road || tile === ruin) continue;
+      tiles[cy][cx] = ruin ?? tile ?? 0;
       ruins.push({ x: cx, y: cy });
       const extra = 1 + Math.floor(rand() * 3);
       for (let n = 0; n < extra; n++) {
         const nx = cx + Math.floor(rand() * 3) - 1;
         const ny = cy + Math.floor(rand() * 3) - 1;
         if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-        const tt = tiles[ny][nx];
-        if (tt === TILE.WATER || tt === TILE.ROAD || tt === TILE.RUIN) continue;
-        tiles[ny][nx] = TILE.RUIN;
+        const current = tiles[ny]?.[nx];
+        if (current === water || current === road || current === ruin) continue;
+        tiles[ny][nx] = ruin ?? current ?? 0;
         ruins.push({ x: nx, y: ny });
       }
     }
@@ -491,26 +645,39 @@ function scatterRuins(tiles, seed = 1, radius = 12) {
   return { tiles, ruins, hubs };
 }
 
-function findRegionCenters(tiles) {
+function findRegionCenters(tiles: TileGrid): ProceduralMapPoint[] {
   const h = tiles.length;
-  const w = tiles[0].length;
-  const seen = Array.from({ length: h }, () => Array(w).fill(false));
-  let centers = [];
+  const w = tiles[0]?.length ?? 0;
+  const water = readTile('WATER');
+  const seen: boolean[][] = Array.from({ length: h }, () => Array(w).fill(false));
+  const centers: ProceduralMapPoint[] = [];
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      if (tiles[y][x] === TILE.WATER || seen[y][x]) continue;
-      const q = [[x, y]];
+      if (tiles[y]?.[x] === water || seen[y][x]) continue;
+      const stack: Array<[number, number]> = [[x, y]];
       seen[y][x] = true;
-      let sx = 0, sy = 0, count = 0;
-      while (q.length) {
-        const [cx, cy] = q.pop();
-        sx += cx; sy += cy; count++;
-        const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      let sx = 0;
+      let sy = 0;
+      let count = 0;
+      while (stack.length) {
+        const [cx, cy] = stack.pop()!;
+        sx += cx;
+        sy += cy;
+        count++;
+        const dirs: ReadonlyArray<readonly [number, number]> = [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1]
+        ];
         for (const [dx, dy] of dirs) {
-          const nx = cx + dx, ny = cy + dy;
-          if (ny >= 0 && ny < h && nx >= 0 && nx < w && tiles[ny][nx] !== TILE.WATER && !seen[ny][nx]) {
-            seen[ny][nx] = true;
-            q.push([nx, ny]);
+          const nx = cx + dx;
+          const ny = cy + dy;
+          if (ny >= 0 && ny < h && nx >= 0 && nx < w) {
+            if (!seen[ny][nx] && tiles[ny]?.[nx] !== water) {
+              seen[ny][nx] = true;
+              stack.push([nx, ny]);
+            }
           }
         }
       }
@@ -520,30 +687,34 @@ function findRegionCenters(tiles) {
   if (centers.length < 2) {
     const hw = Math.floor(w / 2);
     const hh = Math.floor(h / 2);
-    const quads = [
+    const quads: Array<[number, number, number, number]> = [
       [0, 0, hw, hh],
       [hw, 0, w, hh],
       [0, hh, hw, h],
       [hw, hh, w, h]
     ];
-    const extra = [];
+    const extra: ProceduralMapPoint[] = [];
     for (const [x0, y0, x1, y1] of quads) {
-      let sx = 0, sy = 0, count = 0;
+      let sx = 0;
+      let sy = 0;
+      let count = 0;
       for (let yy = y0; yy < y1; yy++) {
         for (let xx = x0; xx < x1; xx++) {
-          if (tiles[yy][xx] !== TILE.WATER) {
-            sx += xx; sy += yy; count++;
+          if (tiles[yy]?.[xx] !== water) {
+            sx += xx;
+            sy += yy;
+            count++;
           }
         }
       }
       if (count > 0) extra.push({ x: sx / count, y: sy / count });
     }
-    if (extra.length > 1) centers = extra;
+    if (extra.length > 1) return extra;
   }
   return centers;
 }
 
-async function exportMap(data, path = 'map.json') {
+async function exportMap(data: unknown, path = 'map.json'): Promise<void> {
   if (typeof window !== 'undefined') {
     console.warn('exportMap requires Node.js');
     return;
@@ -552,39 +723,45 @@ async function exportMap(data, path = 'map.json') {
   fs.writeFileSync(path, JSON.stringify(data));
 }
 
-function generateProceduralMap(seed, width, height, scale = 4, falloff = 0, features = { roads: true, ruins: true }) {
+function generateProceduralMap(
+  seed: string | number,
+  width: number,
+  height: number,
+  scale = 4,
+  falloff = 0,
+  features: ProceduralFeatureFlags = { roads: true, ruins: true }
+): ProceduralMapResult {
   const size = Math.max(width, height);
   let field = generateHeightField(seed, size, scale, falloff);
   let tiles = heightFieldToTiles(field);
   tiles = refineTiles(tiles, 3);
-  // Crop to requested dimensions before finding centers so roads stay in bounds
-  tiles = tiles.slice(0, height).map(r => r.slice(0, width));
-  field = field.slice(0, height).map(r => r.slice(0, width));
-  let centers = [];
-  let roadData = { anchors: [], segments: [], crossroads: [] };
+  tiles = tiles.slice(0, height).map(row => row.slice(0, width));
+  field = field.slice(0, height).map(row => row.slice(0, width));
+  let centers: ProceduralMapPoint[] = [];
+  let roadData: ProceduralRoadNetwork = { anchors: [], segments: [], crossroads: [] };
   if (features.roads) {
     const regionCenters = findRegionCenters(tiles);
     const planned = connectRegionCenters(tiles, field, regionCenters, seed);
     roadData = carveRoads(tiles, planned);
     centers = roadData.anchors;
   }
-  let feat = {};
+  const featureData: ProceduralMapFeatures = {};
   if (features.ruins) {
     const res = scatterRuins(tiles, seed);
     tiles = res.tiles;
-    feat.ruins = res.ruins;
-    feat.ruinHubs = res.hubs;
+    featureData.ruins = res.ruins;
+    featureData.ruinHubs = res.hubs;
   }
-  return { tiles, regions: centers, roads: roadData, features: feat };
+  return { tiles, regions: centers, roads: roadData, features: featureData };
 }
 
-globalThis.generateHeightField = generateHeightField;
-globalThis.heightFieldToTiles = heightFieldToTiles;
-globalThis.refineTiles = refineTiles;
-globalThis.findRegionCenters = findRegionCenters;
-globalThis.connectRegionCenters = connectRegionCenters;
-globalThis.carveRoads = carveRoads;
-globalThis.scatterRuins = scatterRuins;
-globalThis.exportMap = exportMap;
-globalThis.generateProceduralMap = generateProceduralMap;
-
+const scope = globalThis as unknown as GlobalThis;
+scope.generateHeightField = generateHeightField;
+scope.heightFieldToTiles = heightFieldToTiles;
+scope.refineTiles = refineTiles;
+scope.findRegionCenters = findRegionCenters;
+scope.connectRegionCenters = connectRegionCenters;
+scope.carveRoads = carveRoads;
+scope.scatterRuins = scatterRuins;
+scope.exportMap = exportMap;
+scope.generateProceduralMap = generateProceduralMap;
