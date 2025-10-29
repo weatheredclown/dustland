@@ -3,8 +3,11 @@ import { test } from 'node:test';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
-const code = await fs.readFile(new URL('../scripts/core/item-generator.js', import.meta.url), 'utf8');
-vm.runInThisContext(code, { filename: 'core/item-generator.js' });
+const globalsCode = await fs.readFile(new URL('../scripts/core/globals.js', import.meta.url), 'utf8');
+const itemGeneratorCode = await fs.readFile(new URL('../scripts/core/item-generator.js', import.meta.url), 'utf8');
+
+vm.runInThisContext(globalsCode, { filename: 'core/globals.js' });
+vm.runInThisContext(itemGeneratorCode, { filename: 'core/item-generator.js' });
 
 test('generator creates trinket with stat boost', () => {
   const vals = [0,0,0,0];

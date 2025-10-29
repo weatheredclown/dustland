@@ -3,11 +3,13 @@ import { test } from 'node:test';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
+const globalsCode = await fs.readFile(new URL('../scripts/core/globals.js', import.meta.url), 'utf8');
 const genCode = await fs.readFile(new URL('../scripts/core/item-generator.js', import.meta.url), 'utf8');
 const cacheCode = await fs.readFile(new URL('../scripts/core/spoils-cache.js', import.meta.url), 'utf8');
 const invCode = await fs.readFile(new URL('../scripts/core/inventory.js', import.meta.url), 'utf8');
 global.EventBus = { emit(){} };
 global.party = [{}];
+vm.runInThisContext(globalsCode, { filename: 'core/globals.js' });
 vm.runInThisContext(genCode, { filename: 'core/item-generator.js' });
 vm.runInThisContext(cacheCode, { filename: 'core/spoils-cache.js' });
 vm.runInThisContext(invCode, { filename: 'core/inventory.js' });

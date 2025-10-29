@@ -411,6 +411,7 @@ declare global {
     id: string;
     name: string;
     type: string;
+    stats?: Record<string, number>;
     mods?: Record<string, number>;
     use?: GameItemUse;
     desc?: string;
@@ -428,6 +429,35 @@ declare global {
     cursed?: boolean;
     cursedKnown?: boolean;
     [key: string]: unknown;
+  }
+
+  interface ItemGeneratorRange {
+    min: number;
+    max: number;
+  }
+
+  type ItemGeneratorRank = 'rusted' | 'sealed' | 'armored' | 'vaulted';
+
+  interface ItemGeneratorResult extends GameItem {
+    rank: string;
+    stats: Record<string, number>;
+    mods: Record<string, number>;
+    scrap: number;
+    tags: string[];
+    persona?: string;
+  }
+
+  interface ItemGenerator {
+    adjectives: readonly string[];
+    nouns: readonly string[];
+    statRanges: Record<string, ItemGeneratorRange> &
+      Record<ItemGeneratorRank, ItemGeneratorRange>;
+    scrapValues: Record<string, number>;
+    statKeys: readonly string[];
+    calcScrap: (item: GameItem) => number;
+    pick: <T>(list: readonly T[], rng: () => number) => T;
+    randRange: (min: number, max: number, rng: () => number) => number;
+    generate: (rank?: string, rng?: () => number) => ItemGeneratorResult;
   }
 
   type QuestStatus = 'available' | 'active' | 'completed';
@@ -546,6 +576,7 @@ declare global {
     inventory?: DustlandInventoryApi;
     profiles?: DustlandProfilesApi;
     personaTemplates?: Record<string, DustlandPersonaTemplate>;
+    ItemGen?: ItemGenerator;
     gameState?: DustlandGameState;
     eventBus?: DustlandEventBus;
     eventFlags?: {
@@ -727,6 +758,19 @@ declare global {
     [key: string]: unknown;
   }
 
+  interface DustlandGlobalHelpers {
+    ensureDustland(): DustlandNamespace;
+    getDustland(): DustlandNamespace | undefined;
+    getEventBus(): DustlandEventBus | undefined;
+    getParty(): Party | undefined;
+    getPlayer(): PlayerState | undefined;
+    getNpcRoster(): DustlandNpc[];
+    getPersonaTemplates(): Record<string, DustlandPersonaTemplate>;
+    setItemGenerator(generator: ItemGenerator): ItemGenerator;
+  }
+
+  var DustlandGlobals: DustlandGlobalHelpers;
+
   const Dice: {
     skill: (
       actor: PartyMember,
@@ -766,6 +810,7 @@ declare global {
     EventBus?: DustlandEventBus;
     party?: Party;
     player?: PlayerState;
+    DustlandGlobals?: DustlandGlobalHelpers;
     CURRENCY?: string;
     NPCS?: DustlandNpc[];
     npcTemplates?: DustlandNpcTemplate[];
@@ -833,10 +878,7 @@ declare global {
     trackQuestDialogNode?: (npcId: string, nodeId: string) => void;
     setPortraitDiv?: (element: HTMLElement, npc: DustlandNpc) => void;
     persistLlmNodes?: (tree: DustlandDialogTree | null | undefined) => void;
-    ItemGen?: {
-      statRanges: Record<string, { min: number; max: number }>;
-      generate(rank: string): { stats: { power: number } };
-    };
+    ItemGen?: ItemGenerator;
     seedWorldContent?: () => void;
     startGame?: () => void;
     memoryTape?: MemoryTapeItem;
