@@ -1,5 +1,4 @@
-// @ts-nocheck
-const bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
+const traderBus = (globalThis.Dustland?.eventBus ?? globalThis.EventBus) ?? undefined;
 const SHOP_STACK_LIMIT = 256;
 const PRICE_EXPONENT = 0.6;
 const PRICE_SCALE = 15;
@@ -89,24 +88,30 @@ class Trader {
         if (Array.isArray(seed)) {
             seed.forEach(entry => this.addItem(entry));
         }
-        this.grudge = opts.grudge || 0;
-        this.markup = opts.markup || 1;
+        this.grudge = typeof opts.grudge === 'number' ? opts.grudge : 0;
+        this.markup = typeof opts.markup === 'number' ? opts.markup : 1;
         this.refreshHours = typeof opts.refresh === 'number' ? opts.refresh : 0;
     }
     addItem(item) {
         if (!item)
             return;
-        const entry = typeof item === 'string' ? { id: item } : { ...item };
-        const id = entry.id;
-        if (!id)
+        const baseConfig = typeof item === 'string' ? { id: item } : { ...item };
+        const id = baseConfig.id;
+        if (typeof id !== 'string' || !id)
             return;
-        const max = Number.isFinite(entry.maxStack) ? entry.maxStack : SHOP_STACK_LIMIT;
-        let remaining = Math.max(1, Number.isFinite(entry.count) ? entry.count : 1);
+        const entry = { ...baseConfig, id };
+        const maxFromEntry = typeof entry.maxStack === 'number' && Number.isFinite(entry.maxStack)
+            ? entry.maxStack
+            : SHOP_STACK_LIMIT;
+        let remaining = Math.max(1, typeof entry.count === 'number' && Number.isFinite(entry.count) ? entry.count : 1);
         for (const invItem of this.inventory) {
             if (!invItem || invItem.id !== id)
                 continue;
-            const limit = Math.min(SHOP_STACK_LIMIT, Number.isFinite(invItem.maxStack) ? invItem.maxStack : max);
-            const current = Math.max(1, Number.isFinite(invItem.count) ? invItem.count : 1);
+            const limitBase = typeof invItem.maxStack === 'number' && Number.isFinite(invItem.maxStack)
+                ? invItem.maxStack
+                : maxFromEntry;
+            const limit = Math.min(SHOP_STACK_LIMIT, limitBase);
+            const current = Math.max(1, typeof invItem.count === 'number' && Number.isFinite(invItem.count) ? invItem.count : 1);
             const space = limit - current;
             if (space <= 0)
                 continue;
@@ -117,7 +122,10 @@ class Trader {
                 break;
         }
         while (remaining > 0) {
-            const add = Math.min(SHOP_STACK_LIMIT, Number.isFinite(entry.maxStack) ? entry.maxStack : SHOP_STACK_LIMIT, remaining);
+            const maxStack = typeof entry.maxStack === 'number' && Number.isFinite(entry.maxStack)
+                ? entry.maxStack
+                : SHOP_STACK_LIMIT;
+            const add = Math.min(SHOP_STACK_LIMIT, maxStack, remaining);
             const next = { ...entry, count: add };
             this.inventory.push(next);
             remaining -= add;
@@ -137,7 +145,7 @@ class Trader {
             });
         }
         return Trader.calculatePrice(valueOrItem, {
-            entry,
+            entry: entry ?? null,
             markup: this.markup,
             grudge: this.grudge
         });
@@ -153,7 +161,7 @@ class Trader {
             const nextWave = this.waves[this.waveIndex] || [];
             nextWave.forEach(entry => this.addItem(entry));
         }
-        bus?.emit('trader:refresh', { trader: this });
+        traderBus?.emit?.('trader:refresh', { trader: this });
     }
     static calculatePrice(itemOrValue, options = {}) {
         if (typeof itemOrValue === 'number' || itemOrValue == null) {
@@ -161,7 +169,7 @@ class Trader {
             const basePrice = Trader.basePriceFromValue(baseValue);
             return Trader.finalizePrice(basePrice, options);
         }
-        const entry = options.entry || null;
+        const entry = options.entry ?? null;
         const baseValue = Trader.resolveBaseValue(itemOrValue, entry);
         const basePrice = Trader.basePriceFromValue(baseValue);
         const tierMultiplier = options.tierMultiplier ?? Trader.resolveTierMultiplier(itemOrValue, entry);
@@ -181,7 +189,7 @@ class Trader {
         return Math.max(MIN_PRICE, Math.round(price));
     }
     static resolveGrudgeMultiplier(grudge) {
-        const g = Number.isFinite(grudge) ? grudge : 0;
+        const g = typeof grudge === 'number' && Number.isFinite(grudge) ? grudge : 0;
         if (g >= 3)
             return 1.1;
         if (g <= 0)
@@ -191,13 +199,14 @@ class Trader {
         return 1;
     }
     static basePriceFromValue(value) {
-        const safe = Math.max(0, Number.isFinite(value) ? value : 0);
+        const safe = Math.max(0, typeof value === 'number' && Number.isFinite(value) ? value : 0);
         const scaled = Math.pow(safe || MIN_BASE_VALUE, PRICE_EXPONENT) * PRICE_SCALE + PRICE_BASE;
         return Math.max(MIN_PRICE, scaled);
     }
     static resolveBaseValue(item, entry) {
-        const value = item && typeof item.value === 'number' ? item.value * VALUE_SCALE : 0;
-        const fallback = Trader.estimateBaselineValue(item) || (entry && typeof entry.value === 'number' ? entry.value : 0);
+        const value = typeof item.value === 'number' ? item.value * VALUE_SCALE : 0;
+        const fallbackEntryValue = entry && typeof entry.value === 'number' ? entry.value : 0;
+        const fallback = Trader.estimateBaselineValue(item) || fallbackEntryValue;
         if (value > 0 && fallback > 0)
             return Math.max(value, fallback);
         if (value > 0)
@@ -210,10 +219,10 @@ class Trader {
         if (!item || typeof item !== 'object')
             return 0;
         let total = 0;
-        const mods = item.mods || {};
+        const mods = item.mods ?? {};
         Object.keys(mods).forEach(key => {
             const raw = mods[key];
-            if (!Number.isFinite(raw))
+            if (typeof raw !== 'number' || !Number.isFinite(raw))
                 return;
             if (key.endsWith('_mod')) {
                 const delta = raw - 1;
@@ -238,15 +247,18 @@ class Trader {
         });
         const use = item.use;
         if (use && typeof use === 'object') {
-            const type = use.type || 'default';
+            const type = typeof use.type === 'string' && use.type ? use.type : 'default';
             const weight = USE_WEIGHTS[type] ?? USE_WEIGHTS.default;
-            const amt = Number.isFinite(use.amount) ? Math.abs(use.amount) : 1;
-            const duration = Number.isFinite(use.duration) ? Math.max(1, Math.abs(use.duration)) : 1;
+            const amountRaw = typeof use.amount === 'number' && Number.isFinite(use.amount) ? use.amount : 1;
+            const amt = Math.abs(amountRaw) || 1;
+            const durationRaw = typeof use.duration === 'number' && Number.isFinite(use.duration) ? use.duration : 1;
+            const duration = Math.max(1, Math.abs(durationRaw) || 1);
             total += amt * weight * duration;
         }
         if (typeof item.rank === 'string') {
-            const bonus = RANK_BASE_VALUES[item.rank.toLowerCase()];
-            if (bonus)
+            const rankKey = item.rank.toLowerCase();
+            const bonus = RANK_BASE_VALUES[rankKey];
+            if (typeof bonus === 'number')
                 total += bonus;
         }
         if (!total && typeof item.tier === 'number') {
@@ -255,27 +267,32 @@ class Trader {
         return total;
     }
     static resolveTierMultiplier(item, entry) {
-        const tier = entry?.tier ?? item?.tier;
-        if (Number.isFinite(tier)) {
-            if (tier <= 1)
+        const tierSource = entry?.tier ?? item?.tier;
+        if (typeof tierSource === 'number' && Number.isFinite(tierSource)) {
+            if (tierSource <= 1)
                 return 1;
-            return 1 + Math.min(0.8, Math.max(0, tier - 1) * 0.15);
+            return 1 + Math.min(0.8, Math.max(0, tierSource - 1) * 0.15);
         }
-        const rarity = (entry?.rarity ?? item?.rarity ?? '').toString().toLowerCase();
-        if (rarity && RARITY_MULTIPLIERS[rarity])
+        const raritySource = entry?.rarity ?? item?.rarity ?? '';
+        const rarity = raritySource != null ? raritySource.toString().toLowerCase() : '';
+        if (rarity && RARITY_MULTIPLIERS[rarity]) {
             return RARITY_MULTIPLIERS[rarity];
-        const rank = (entry?.rank ?? item?.rank ?? '').toString().toLowerCase();
-        if (rank && RANK_MULTIPLIERS[rank])
+        }
+        const rankSource = entry?.rank ?? item?.rank ?? '';
+        const rank = rankSource != null ? rankSource.toString().toLowerCase() : '';
+        if (rank && RANK_MULTIPLIERS[rank]) {
             return RANK_MULTIPLIERS[rank];
+        }
         return 1;
     }
     static resolveScarcityMultiplier(entry, item) {
-        const source = entry && entry.scarcity !== undefined ? entry.scarcity : item?.scarcity;
+        const entryScarcity = entry && entry.scarcity !== undefined ? entry.scarcity : undefined;
+        const source = entryScarcity !== undefined ? entryScarcity : item?.scarcity;
         if (source == null) {
-            const count = entry && Number.isFinite(entry.count) ? entry.count : 1;
-            if (count >= 5)
+            const countSource = entry && typeof entry.count === 'number' && Number.isFinite(entry.count) ? entry.count : 1;
+            if (countSource >= 5)
                 return 0.95;
-            if (count >= 3)
+            if (countSource >= 3)
                 return 0.98;
             return 1;
         }
