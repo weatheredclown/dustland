@@ -1,5 +1,5 @@
-// @ts-nocheck
-function seedWorldContent() { }
+const seedWorldContent = () => { };
+globalThis.seedWorldContent = seedWorldContent;
 const DATA = `
 {
   "seed": 1757710671980,
@@ -390,14 +390,20 @@ const DATA = `
 }
 `;
 function postLoad(module) { }
-globalThis.EDGE_MODULE = JSON.parse(DATA);
-globalThis.EDGE_MODULE.postLoad = postLoad;
-startGame = function () {
-    EDGE_MODULE.postLoad?.(EDGE_MODULE);
-    applyModule(EDGE_MODULE);
-    const s = EDGE_MODULE.start;
-    if (s) {
-        setPartyPos(s.x, s.y);
-        setMap(s.map, 'bunker-trainer-workshop');
+const moduleData = JSON.parse(DATA);
+moduleData.postLoad = postLoad;
+globalThis.EDGE_MODULE = moduleData;
+globalThis.startGame = function startGame() {
+    const edgeModule = globalThis.EDGE_MODULE;
+    if (!edgeModule) {
+        return;
+    }
+    edgeModule.postLoad?.(edgeModule);
+    applyModule(edgeModule);
+    const start = edgeModule.start;
+    if (start) {
+        setPartyPos(start.x, start.y);
+        setMap(start.map, 'bunker-trainer-workshop');
     }
 };
+export {};
