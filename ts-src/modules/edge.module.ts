@@ -1,5 +1,15 @@
-// @ts-nocheck
-function seedWorldContent() {}
+type EdgeModule = DustlandModuleInstance & {
+  postLoad?: (moduleData: DustlandModuleInstance) => void;
+};
+
+declare global {
+  interface GlobalThis {
+    EDGE_MODULE?: EdgeModule;
+  }
+}
+
+const seedWorldContent = (): void => {};
+globalThis.seedWorldContent = seedWorldContent;
 
 const DATA = `
 {
@@ -391,17 +401,25 @@ const DATA = `
 }
 `;
 
-function postLoad(module) {}
+function postLoad(module: DustlandModuleInstance): void {}
 
-globalThis.EDGE_MODULE = JSON.parse(DATA);
-globalThis.EDGE_MODULE.postLoad = postLoad;
+const moduleData = JSON.parse(DATA) as EdgeModule;
+moduleData.postLoad = postLoad;
+globalThis.EDGE_MODULE = moduleData;
 
-startGame = function () {
-  EDGE_MODULE.postLoad?.(EDGE_MODULE);
-  applyModule(EDGE_MODULE);
-  const s = EDGE_MODULE.start;
-  if (s) {
-    setPartyPos(s.x, s.y);
-    setMap(s.map, 'bunker-trainer-workshop');
+globalThis.startGame = function startGame(): void {
+  const edgeModule = globalThis.EDGE_MODULE;
+  if (!edgeModule) {
+    return;
+  }
+
+  edgeModule.postLoad?.(edgeModule);
+  applyModule(edgeModule);
+  const start = edgeModule.start;
+  if (start) {
+    setPartyPos(start.x, start.y);
+    setMap(start.map, 'bunker-trainer-workshop');
   }
 };
+
+export {};

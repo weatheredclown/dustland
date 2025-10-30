@@ -1,4 +1,4 @@
-function seedWorldContent() { }
+globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
 (() => {
     const DATA = `
 {
