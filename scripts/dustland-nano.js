@@ -1,4 +1,3 @@
-// @ts-nocheck
 // dustland-nano.js
 // Gemini Nano background dialog generator for Dustland
 // - Detects on-device LanguageModel Prompt API
@@ -7,9 +6,11 @@
 // - Never blocks gameplay; best-effort only
 // - chrome://on-device-internals/ to resent your crash count if needed
 (function () {
+    const nanoWindow = window;
+    const nanoGlobal = globalThis;
     console.log("[Nano] Script loaded and initializing public API...");
     // Public API
-    window.NanoDialog = {
+    nanoWindow.NanoDialog = {
         init,
         queueForNPC,
         linesFor, // get cached lines; returns []
@@ -19,7 +20,7 @@
         choicesEnabled: false,
         refreshIndicator
     };
-    window.NanoPalette = {
+    nanoWindow.NanoPalette = {
         init,
         generate: generatePalette,
         isReady: () => _state.ready,
@@ -34,6 +35,7 @@
         failed: false,
         cache: new Map(), // key: `${npcId}::${node}` -> {lines:[],choices:[]}
         seenKeys: new Set(), // avoid re-enqueue storms
+        seenAt: new Map()
     };
     const _ui = { wrap: null, badge: null, progress: null };
     function refreshIndicator() {
@@ -61,7 +63,7 @@
         }
         if (_ui.wrap)
             _ui.wrap.style.display = '';
-        const on = _state.ready && (window.NanoDialog.enabled || window.NanoPalette.enabled);
+        const on = _state.ready && (nanoWindow.NanoDialog.enabled || nanoWindow.NanoPalette.enabled);
         _ui.badge.textContent = on ? '✓' : '✗';
         _ui.badge.classList.toggle('on', on);
         _ui.badge.classList.toggle('off', !on);
@@ -94,11 +96,17 @@
             return;
         }
         try {
-            const avail = await LanguageModel.availability({ output: { language: "en" } });
+            if (!nanoWindow.LanguageModel) {
+                console.warn("[Nano] LanguageModel global missing.");
+                _state.failed = true;
+                _updateBadge();
+                return;
+            }
+            const avail = await nanoWindow.LanguageModel.availability({ output: { language: "en" } });
             console.log("[Nano] availability() returned:", avail);
             if (avail === "available") {
                 console.log("[Nano] Creating session (model already available)...");
-                _state.session = await LanguageModel.create({ output: { language: "en" } });
+                _state.session = await nanoWindow.LanguageModel.create({ output: { language: "en" } });
                 _state.ready = true;
                 _state.failed = false;
                 _updateBadge();
@@ -106,7 +114,7 @@
             else if (avail === "downloadable" || avail === "downloading") {
                 console.log("[Nano] Downloading on-device model…");
                 _showProgress(0);
-                _state.session = await LanguageModel.create({
+                _state.session = await nanoWindow.LanguageModel.create({
                     output: { language: "en" },
                     monitor(m) {
                         m.addEventListener("downloadprogress", (e) => {
@@ -137,17 +145,16 @@
         _pump(); // start background worker
     }
     function _featureSupported() {
-        const supported = !!window.LanguageModel;
+        const supported = !!nanoWindow.LanguageModel;
         console.log("[Nano] Feature supported:", supported);
         return supported;
     }
     // ===== Public: schedule generation for an NPC/node pair =====
     // state
-    _state.seenAt = new Map(); // key -> timestamp
     const SEEN_TTL_MS = 8000; // allow re-gen after 8s
     function queueForNPC(npc, nodeId = 'start', reason = 'timer') {
         console.log(`[Nano] queueForNPC called: npcId=${npc?.id}, nodeId=${nodeId}, reason=${reason}`);
-        if (!_state.ready || !window.NanoDialog.enabled)
+        if (!_state.ready || !nanoWindow.NanoDialog.enabled || !npc || !npc.id)
             return;
         const key = _key(npc.id, nodeId);
         const now = Date.now();
@@ -181,12 +188,19 @@
         _setBusy(true);
         try {
             const job = _state.queue.shift();
+            if (!job) {
+                return;
+            }
             console.log("[Nano] Processing job:", job);
             const prompt = _buildPrompt(job.npcId, job.nodeId);
             if (!prompt) {
                 console.warn("[Nano] No prompt built; skipping job.");
                 _state.busy = false;
                 _pump();
+                return;
+            }
+            if (!_state.session) {
+                console.warn("[Nano] Session not ready; skipping job.");
                 return;
             }
             const txt = await _state.session.prompt(prompt);
@@ -202,10 +216,10 @@
                 };
                 _state.cache.set(key, merged);
                 // allow re-enqueue later for fresh variants
-                const t = setTimeout(() => _state.seenKeys.delete(key), 10000);
-                t.unref?.();
-                if (typeof toast === 'function')
-                    toast(`New dialog for ${job.npcId}`);
+                const timeoutHandle = setTimeout(() => _state.seenKeys.delete(key), 10000);
+                unrefTimeout(timeoutHandle);
+                if (typeof nanoGlobal.toast === 'function')
+                    nanoGlobal.toast(`New dialog for ${job.npcId}`);
             }
         }
         catch (err) {
@@ -213,14 +227,16 @@
         }
         finally {
             _setBusy(false);
-            setTimeout(_pump, 50).unref?.();
+            const timeoutHandle = setTimeout(_pump, 50);
+            unrefTimeout(timeoutHandle);
         }
     }
     function _visibleLabels(npc, nodeId, node) {
         node = node || resolveNode(npc.tree, nodeId);
         if (!node)
             return [];
-        let labels = (node.choices || []).slice();
+        const choices = Array.isArray(node.choices) ? node.choices : [];
+        let labels = choices.slice();
         // Apply the same visibility rules your UI uses for quest choices
         if (npc.quest) {
             const q = npc.quest;
@@ -232,16 +248,18 @@
                 return true;
             });
         }
-        return labels.map(c => (c.label || '').replace(/\|/g, '').trim()).filter(Boolean);
+        return labels
+            .map(c => (c.label || '').replace(/\|/g, '').trim())
+            .filter((label) => Boolean(label));
     }
     // ===== Prompt construction =====
     function _buildPrompt(npcId, nodeId) {
         console.log("[Nano] Building prompt for npcId:", npcId, "nodeId:", nodeId);
-        if (typeof NPCS === 'undefined' || typeof party === 'undefined' || typeof player === 'undefined' || typeof quests === 'undefined') {
+        if (!nanoGlobal.NPCS || !nanoGlobal.party || !nanoGlobal.player || !nanoGlobal.quests) {
             console.warn("[Nano] Game state globals missing; cannot build prompt.");
             return null;
         }
-        const npc = NPCS.find(n => n.id === npcId);
+        const npc = (nanoGlobal.NPCS ?? []).find(n => n.id === npcId);
         if (!npc) {
             console.warn("[Nano] NPC not found:", npcId);
             return null;
@@ -252,11 +270,13 @@
             return null;
         }
         const desc = npc.desc || '';
-        const leader = party[typeof selectedMember === 'number' ? selectedMember : 0] || null;
-        const inv = (player.inv || []).map(i => i.name);
-        const completed = Object.entries(quests)
-            .filter(([, q]) => q.status === 'completed')
-            .map(([id, q]) => q.title || id);
+        const leaderIndex = typeof nanoGlobal.selectedMember === 'number' ? nanoGlobal.selectedMember : 0;
+        const partyList = nanoGlobal.party ?? [];
+        const leader = partyList[leaderIndex] || null;
+        const inv = (nanoGlobal.player?.inv || []).map(i => i.name ?? '').filter(Boolean);
+        const completed = Object.entries(nanoGlobal.quests)
+            .filter(([, q]) => q?.status === 'completed')
+            .map(([id, q]) => (q?.title && q.title.trim()) || id);
         const existing = _visibleLabels(npc, nodeId, node);
         const text = node.text;
         // Consider this in the prompt:
@@ -355,8 +375,8 @@ Choices:
             .slice(0, 3);
         const choices = choicePart.split(/\r?\n/)
             .map(_parseChoice)
-            .filter(Boolean)
-            .filter(c => !(c.check && (!c.reward || c.reward.toLowerCase() === 'none')))
+            .filter((choice) => Boolean(choice))
+            .filter(c => !('check' in c) || (c.reward && c.reward.toLowerCase() !== 'none'))
             .slice(0, 2);
         console.log("Produced:", lines, choices);
         return { lines, choices };
@@ -392,21 +412,25 @@ Choices:
     function _dedupeChoices(arr) {
         const seen = new Set(), out = [];
         for (const c of arr) {
-            const k = c.label.toLowerCase();
-            if (!seen.has(k)) {
-                seen.add(k);
+            const key = c.label.toLowerCase();
+            if (!seen.has(key)) {
+                seen.add(key);
                 out.push(c);
             }
         }
         return out.slice(-4); // keep latest few
     }
     async function generatePalette(examples) {
-        if (!_state.ready || !window.NanoPalette.enabled)
+        if (!_state.ready || !nanoWindow.NanoPalette.enabled)
             return null;
         _setBusy(true);
         const prompt = _buildPalettePrompt(examples || _defaultExamples());
         try {
             console.log("[Nano] prompt palette:\n" + prompt);
+            if (!_state.session) {
+                console.warn('[Nano] Session not ready for palette generation.');
+                return null;
+            }
             const txt = await _state.session.prompt(prompt);
             console.log("[Nano] returned:\n" + txt);
             return _parseEmojiBlock(txt);
@@ -420,11 +444,11 @@ Choices:
         }
     }
     function _defaultExamples() {
-        if (globalThis.worldStampEmoji) {
-            return Object.values(globalThis.worldStampEmoji);
+        if (nanoGlobal.worldStampEmoji) {
+            return Object.values(nanoGlobal.worldStampEmoji);
         }
-        const palette = globalThis.tileEmoji ? Object.values(globalThis.tileEmoji) : [];
-        return palette.map(e => Array(16).fill(e.repeat(16)));
+        const palette = nanoGlobal.tileEmoji ? Object.values(nanoGlobal.tileEmoji) : [];
+        return palette.map(e => Array(16).fill((e ?? '').repeat(16)));
     }
     function _buildPalettePrompt(examples) {
         const ex = examples?.map(b => b.join('\n')).join('\n\n') ??
@@ -452,8 +476,18 @@ Choices:
         return `${legend}\n\nExamples of 16x16 emoji blocks:\n${ex}\n\nNew 16x16 block:`;
     }
     function _parseEmojiBlock(txt) {
+        if (!txt)
+            return null;
         const lines = txt.trim().split(/\r?\n/).map(s => s.trim()).filter(Boolean);
         const block = lines.slice(0, 16).map(line => Array.from(line).slice(0, 16).join(''));
         return block.length === 16 ? block : null;
+    }
+    function unrefTimeout(handle) {
+        if (typeof handle === 'object' && handle !== null && 'unref' in handle) {
+            const maybeTimeout = handle;
+            if (typeof maybeTimeout.unref === 'function') {
+                maybeTimeout.unref();
+            }
+        }
     }
 })();
