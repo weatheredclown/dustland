@@ -1,7 +1,9 @@
-// @ts-nocheck
-function seedWorldContent() { }
-function postLoad() { }
-const DATA = `
+(function initOtherBasModule() {
+    const globals = globalThis;
+    const seedWorldContent = () => { };
+    const postLoad = () => { };
+    globals.seedWorldContent = seedWorldContent;
+    const DATA = `
 {
   "seed": "other-bas",
   "name": "other-bas",
@@ -943,9 +945,10 @@ const DATA = `
   "buildings": []
 }
 `;
-globalThis.OTHER_BAS_MODULE = JSON.parse(DATA);
-globalThis.OTHER_BAS_MODULE.listing = `MCBDTFM6S0VZIE9GRjpDT0xPUiAxNQ0KMTAgUFJJTlQgIkhFUkUgQkVHSU5T
-globalThis.OTHER_BAS_MODULE.postLoad = postLoad;
+    const otherBasModule = JSON.parse(DATA);
+    globals.OTHER_BAS_MODULE = otherBasModule;
+    otherBasModule.listing = `MCBDTFM6S0VZIE9GRjpDT0xPUiAxNQ0KMTAgUFJJTlQgIkhFUkUgQkVHSU5T
+otherBasModule.postLoad = postLoad;
 IFRIRSBUUkFOU0NSSVBUIE9GIFRIRSBPVEhFUiBBRFZFTlRVUkUgR0FNRS4u
 LiI6UFJJTlQgIkNvcHl3cml0ZSAxOTkwOiAgTElTQ0VOU0VEIFRPOiBILlAu
 IEhhY2tlciwgTGFzZXIiOzpDT0xPUiA0OlBSSU5UICJQcmVzcyI7OkNPTE9S
@@ -2268,10 +2271,18 @@ VVQgIzEsSUEkLElCJCxJQyQsSUQkLElFJCxJRkYkLElHJCxJSCQsSUkkLElK
 JCxJSyQsSUwkLElNJCxJTiQsSU8kLElQJCxJUSQsSVIkLElTJCxJVCQsSVUk
 LElNQSQsSU5EJA0KNDU1MzAgQ0xPU0UgIzENCjQ1NTQwIENMUzpBJD0iTE9P
 SyINCjQ1OTk5IFJFVFVSTg0KGg==`;
-startGame = function () {
-    OTHER_BAS_MODULE.postLoad?.(OTHER_BAS_MODULE);
-    applyModule(OTHER_BAS_MODULE);
-    const s = OTHER_BAS_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-    setMap(s.map, s.map === 'world' ? 'Wastes' : undefined);
-    setPartyPos(s.x, s.y);
-};
+    globals.startGame = () => {
+        const moduleData = globals.OTHER_BAS_MODULE ?? otherBasModule;
+        moduleData.postLoad?.(moduleData);
+        if (typeof globals.applyModule === 'function')
+            globals.applyModule(moduleData);
+        const start = moduleData.start ?? {
+            map: 'world',
+            x: 2,
+            y: Math.floor((globals.WORLD_H ?? 0) / 2),
+        };
+        const label = start.map === 'world' ? 'Wastes' : undefined;
+        globals.setMap?.(start.map, label);
+        globals.setPartyPos?.(start.x, start.y);
+    };
+})();
