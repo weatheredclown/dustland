@@ -1,4 +1,3 @@
-// @ts-nocheck
 // dustland-nano.js
 // Gemini Nano background dialog generator for Dustland
 // - Detects on-device LanguageModel Prompt API
@@ -7,11 +6,169 @@
 // - Never blocks gameplay; best-effort only
 // - chrome://on-device-internals/ to resent your crash count if needed
 
+type LanguageModelAvailability = 'available' | 'unavailable' | 'downloadable' | 'downloading';
+
+interface LanguageModelDownloadProgressEvent extends Event {
+  loaded: number;
+  total?: number;
+}
+
+interface LanguageModelMonitor {
+  addEventListener: (
+    type: 'downloadprogress',
+    listener: (event: LanguageModelDownloadProgressEvent) => void
+  ) => void;
+}
+
+interface LanguageModelRequestOptions {
+  output: { language: string };
+}
+
+interface LanguageModelCreateOptions extends LanguageModelRequestOptions {
+  monitor?: (monitor: LanguageModelMonitor) => void;
+}
+
+interface LanguageModelSession {
+  prompt: (prompt: string) => Promise<string>;
+}
+
+interface LanguageModelGlobal {
+  availability: (options: LanguageModelRequestOptions) => Promise<LanguageModelAvailability>;
+  create: (options: LanguageModelCreateOptions) => Promise<LanguageModelSession>;
+}
+
+interface NanoResponseChoice {
+  label: string;
+  response: string;
+}
+
+interface NanoCheckChoice {
+  label: string;
+  check: { stat: string; dc: number };
+  reward?: string;
+  success?: string;
+  failure?: string;
+}
+
+type NanoChoice = NanoResponseChoice | NanoCheckChoice;
+
+interface NanoDialogQueueJob {
+  npcId: string;
+  nodeId: string;
+  reason: string;
+  when: number;
+}
+
+interface NanoDialogState {
+  ready: boolean;
+  session: LanguageModelSession | null;
+  queue: NanoDialogQueueJob[];
+  busy: boolean;
+  failed: boolean;
+  cache: Map<string, { lines: string[]; choices: NanoChoice[] }>;
+  seenKeys: Set<string>;
+  seenAt: Map<string, number>;
+}
+
+interface NanoDialogAPI {
+  init: () => Promise<void>;
+  queueForNPC: (npc: NanoNPCSummary | undefined, nodeId?: string, reason?: string) => void;
+  linesFor: (npcId: string, nodeId?: string) => string[];
+  choicesFor: (npcId: string, nodeId?: string) => NanoChoice[];
+  isReady: () => boolean;
+  enabled: boolean;
+  choicesEnabled: boolean;
+  refreshIndicator: () => void;
+}
+
+interface NanoPaletteAPI {
+  init: () => Promise<void>;
+  generate: (examples?: string[][]) => Promise<string[] | null>;
+  isReady: () => boolean;
+  enabled: boolean;
+  refreshIndicator: () => void;
+}
+
+interface NanoDialogChoice {
+  label?: string;
+  q?: string;
+  response?: string;
+}
+
+interface NanoDialogNode {
+  text?: string;
+  choices?: NanoDialogChoice[];
+}
+
+interface NanoNPCQuest {
+  status?: string;
+  item?: string;
+  title?: string;
+}
+
+interface NanoNPCSummary {
+  id: string;
+  name?: string;
+  title?: string;
+  desc?: string;
+  text?: string;
+  tree: unknown;
+  quest?: NanoNPCQuest;
+}
+
+interface NanoPartyMember {
+  name?: string;
+  stats?: Record<string, unknown>;
+}
+
+interface NanoInventoryItem {
+  name?: string;
+  type?: string;
+  tags?: string[];
+  count?: number;
+}
+
+interface NanoPlayerState {
+  inv?: NanoInventoryItem[];
+}
+
+interface NanoUiState {
+  wrap: HTMLElement | null;
+  badge: HTMLElement | null;
+  progress: HTMLElement | null;
+}
+
+interface TimeoutLike {
+  unref?: () => void;
+}
+
+declare function resolveNode(tree: unknown, nodeId: string): NanoDialogNode | undefined;
+declare function hasItem(itemId: string): boolean;
+
+interface NanoWindow extends Window {
+  NanoDialog: NanoDialogAPI;
+  NanoPalette: NanoPaletteAPI;
+  LanguageModel?: LanguageModelGlobal;
+}
+
+type NanoGlobal = typeof globalThis & {
+  NPCS?: NanoNPCSummary[];
+  party?: NanoPartyMember[];
+  player?: NanoPlayerState;
+  quests?: Record<string, NanoNPCQuest & Record<string, unknown>>;
+  selectedMember?: number;
+  toast?: (message: string) => void;
+  worldStampEmoji?: Record<string, string[]>;
+  tileEmoji?: Record<string, string>;
+};
+
 (function(){
+  const nanoWindow = window as unknown as NanoWindow;
+  const nanoGlobal = globalThis as NanoGlobal;
   console.log("[Nano] Script loaded and initializing public API...");
 
   // Public API
-  window.NanoDialog = {
+  nanoWindow.NanoDialog = {
     init,
     queueForNPC,
     linesFor,      // get cached lines; returns []
@@ -21,7 +178,7 @@
     choicesEnabled: false,
     refreshIndicator
   };
-  window.NanoPalette = {
+  nanoWindow.NanoPalette = {
     init,
     generate: generatePalette,
     isReady: ()=> _state.ready,
@@ -29,7 +186,7 @@
     refreshIndicator
   };
 
-  const _state = {
+  const _state: NanoDialogState = {
     ready: false,
     session: null,
     queue: [],
@@ -37,12 +194,13 @@
     failed: false,
     cache: new Map(), // key: `${npcId}::${node}` -> {lines:[],choices:[]}
     seenKeys: new Set(), // avoid re-enqueue storms
+    seenAt: new Map()
   };
 
-  const _ui = { wrap:null, badge:null, progress:null };
+  const _ui: NanoUiState = { wrap:null, badge:null, progress:null };
 
-  function refreshIndicator(){ 
-    _updateBadge(); 
+  function refreshIndicator(){
+    _updateBadge();
   }
 
   function _ensureUI(){
@@ -52,8 +210,8 @@
       return;
     }
     _ui.wrap=wrap;
-    _ui.progress=wrap.querySelector('#nanoProgress');
-    _ui.badge=wrap.querySelector('#nanoBadge');
+    _ui.progress=wrap.querySelector<HTMLElement>('#nanoProgress');
+    _ui.badge=wrap.querySelector<HTMLElement>('#nanoBadge');
   }
 
   function _updateBadge(){
@@ -64,7 +222,7 @@
       return;
     }
     if(_ui.wrap) _ui.wrap.style.display='';
-    const on=_state.ready && (window.NanoDialog.enabled || window.NanoPalette.enabled);
+    const on=_state.ready && (nanoWindow.NanoDialog.enabled || nanoWindow.NanoPalette.enabled);
     _ui.badge.textContent = on ? '✓' : '✗';
     _ui.badge.classList.toggle('on', on);
     _ui.badge.classList.toggle('off', !on);
@@ -87,7 +245,7 @@
   }
 
   // ===== Lifecycle =====
-  async function init(){
+  async function init(): Promise<void>{
     _ensureUI();
     _state.failed=false;
     _updateBadge();
@@ -98,19 +256,25 @@
       return;
     }
     try {
-      const avail = await LanguageModel.availability({ output: { language: "en" } });
+      if (!nanoWindow.LanguageModel) {
+        console.warn("[Nano] LanguageModel global missing.");
+        _state.failed = true;
+        _updateBadge();
+        return;
+      }
+      const avail = await nanoWindow.LanguageModel.availability({ output: { language: "en" } });
       console.log("[Nano] availability() returned:", avail);
 
       if (avail === "available") {
         console.log("[Nano] Creating session (model already available)...");
-        _state.session = await LanguageModel.create({ output: { language: "en" } });
+        _state.session = await nanoWindow.LanguageModel.create({ output: { language: "en" } });
         _state.ready = true; _state.failed=false;
         _updateBadge();
 
       } else if (avail === "downloadable" || avail === "downloading") {
         console.log("[Nano] Downloading on-device model…");
         _showProgress(0);
-        _state.session = await LanguageModel.create({
+        _state.session = await nanoWindow.LanguageModel.create({
           output: { language: "en" },
           monitor(m){
             m.addEventListener("downloadprogress", (e)=>{
@@ -140,19 +304,18 @@
   }
 
   function _featureSupported(){ 
-    const supported = !!window.LanguageModel; 
+    const supported = !!nanoWindow.LanguageModel;
     console.log("[Nano] Feature supported:", supported);
-    return supported; 
+    return supported;
   }
 
   // ===== Public: schedule generation for an NPC/node pair =====
   // state
-  _state.seenAt = new Map(); // key -> timestamp
   const SEEN_TTL_MS = 8000;  // allow re-gen after 8s
 
-  function queueForNPC(npc, nodeId='start', reason='timer'){
+  function queueForNPC(npc: NanoNPCSummary | undefined, nodeId='start', reason='timer'){
     console.log(`[Nano] queueForNPC called: npcId=${npc?.id}, nodeId=${nodeId}, reason=${reason}`);
-    if(!_state.ready || !window.NanoDialog.enabled) return;
+    if(!_state.ready || !nanoWindow.NanoDialog.enabled || !npc || !npc.id) return;
 
     const key = _key(npc.id, nodeId);
     const now = Date.now();
@@ -169,36 +332,43 @@
     _pump();
   }
 
-  function linesFor(npcId, nodeId='start'){
+  function linesFor(npcId: string, nodeId='start'){
     console.log(`[Nano] linesFor called: npcId=${npcId}, nodeId=${nodeId}`);
     const data = _state.cache.get(_key(npcId, nodeId));
     return data && Array.isArray(data.lines) ? data.lines : [];
   }
 
-  function choicesFor(npcId, nodeId='start'){
+  function choicesFor(npcId: string, nodeId='start'){
     const data = _state.cache.get(_key(npcId, nodeId));
     return data && Array.isArray(data.choices) ? data.choices : [];
   }
 
-  function _key(npcId, node){ 
-    return `${npcId}::${node}`; 
+  function _key(npcId: string, node: string){
+    return `${npcId}::${node}`;
   }
 
   // ===== Background worker =====
-  async function _pump(){
+  async function _pump(): Promise<void>{
     if(_state.busy || !_state.ready || _state.queue.length===0) return;
     _setBusy(true);
     try{
       const job = _state.queue.shift();
+      if(!job){
+        return;
+      }
       console.log("[Nano] Processing job:", job);
       const prompt = _buildPrompt(job.npcId, job.nodeId);
-      if(!prompt){ 
+      if(!prompt){
         console.warn("[Nano] No prompt built; skipping job.");
-        _state.busy=false; 
-        _pump(); 
-        return; 
+        _state.busy=false;
+        _pump();
+        return;
       }
 
+      if(!_state.session){
+        console.warn("[Nano] Session not ready; skipping job.");
+        return;
+      }
       const txt = await _state.session.prompt(prompt);
       console.log("[Nano] Prompt built:\n"+ prompt);
       console.log("[Nano] returned:\n"+ txt);
@@ -212,23 +382,25 @@
         };
         _state.cache.set(key, merged);
         // allow re-enqueue later for fresh variants
-        const t=setTimeout(()=> _state.seenKeys.delete(key), 10000);
-        t.unref?.();
-        if (typeof toast === 'function') toast(`New dialog for ${job.npcId}`);
+        const timeoutHandle = setTimeout(()=> _state.seenKeys.delete(key), 10000);
+        unrefTimeout(timeoutHandle);
+        if (typeof nanoGlobal.toast === 'function') nanoGlobal.toast(`New dialog for ${job.npcId}`);
       }
     } catch(err){
       console.warn('[Nano] generation error', err);
     } finally{
       _setBusy(false);
-      setTimeout(_pump, 50).unref?.();
+      const timeoutHandle = setTimeout(_pump, 50);
+      unrefTimeout(timeoutHandle);
     }
   }
 
-  function _visibleLabels(npc, nodeId, node) {
+  function _visibleLabels(npc: NanoNPCSummary, nodeId: string, node?: NanoDialogNode | undefined) {
     node = node || resolveNode(npc.tree, nodeId);
     if (!node) return [];
-    let labels = (node.choices || []).slice();
-  
+    const choices = Array.isArray(node.choices) ? node.choices : [];
+    let labels = choices.slice();
+
     // Apply the same visibility rules your UI uses for quest choices
     if (npc.quest) {
       const q = npc.quest;
@@ -239,17 +411,19 @@
       });
     }
   
-    return labels.map(c => (c.label || '').replace(/\|/g,'').trim()).filter(Boolean);
+    return labels
+      .map(c => (c.label || '').replace(/\|/g,'').trim())
+      .filter((label): label is string => Boolean(label));
   }
 
   // ===== Prompt construction =====
-  function _buildPrompt(npcId, nodeId){
+  function _buildPrompt(npcId: string, nodeId: string){
     console.log("[Nano] Building prompt for npcId:", npcId, "nodeId:", nodeId);
-    if(typeof NPCS==='undefined' || typeof party==='undefined' || typeof player==='undefined' || typeof quests==='undefined') {
+    if(!nanoGlobal.NPCS || !nanoGlobal.party || !nanoGlobal.player || !nanoGlobal.quests) {
       console.warn("[Nano] Game state globals missing; cannot build prompt.");
       return null;
     }
-    const npc = NPCS.find(n=> n.id===npcId);
+    const npc = (nanoGlobal.NPCS ?? []).find(n=> n.id===npcId);
     if(!npc) {
       console.warn("[Nano] NPC not found:", npcId);
       return null;
@@ -261,11 +435,13 @@
     }
     const desc = npc.desc || '';
 
-    const leader = party[typeof selectedMember==='number' ? selectedMember : 0] || null;
-    const inv = (player.inv || []).map(i=>i.name);
-    const completed = Object.entries(quests)
-      .filter(([,q])=>q.status==='completed')
-      .map(([id,q])=> q.title || id);
+    const leaderIndex = typeof nanoGlobal.selectedMember==='number' ? nanoGlobal.selectedMember : 0;
+    const partyList = nanoGlobal.party ?? [];
+    const leader = partyList[leaderIndex] || null;
+    const inv = (nanoGlobal.player?.inv || []).map(i=>i.name ?? '').filter(Boolean);
+    const completed = Object.entries(nanoGlobal.quests)
+      .filter(([,q])=>q?.status==='completed')
+      .map(([id,q])=> (q?.title && q.title.trim()) || id);
 
     const existing = _visibleLabels(npc, nodeId, node);
     const text = node.text;
@@ -347,17 +523,17 @@ Choices:
   }
 
   // ===== Parsing helpers =====
-  function _cleanLine(s){
+  function _cleanLine(s: string){
     // remove leading bullets/dashes/quotes; trim trailing quotes
     return s.replace(/^[\s"'`–—\-•·]+/, '').replace(/["'`]+$/, '').trim();
   }
-  
-  function _extract(txt){
+
+  function _extract(txt: string | undefined | null){
     if(!txt) return {lines:[], choices:[]};
     const parts = txt.split(/Choices:/i);
     const linePart = parts[0] || '';
     const choicePart = parts[1] || '';
-  
+
     const rawLines = linePart.split(/\r?\n/).map(s => s.trim());
     if(rawLines[0]?.toLowerCase() !== 'lines:') return {lines:[], choices:[]};
     rawLines.shift();
@@ -369,15 +545,15 @@ Choices:
   
     const choices = choicePart.split(/\r?\n/)
       .map(_parseChoice)
-      .filter(Boolean)
-      .filter(c => !(c.check && (!c.reward || c.reward.toLowerCase() === 'none')))
+      .filter((choice): choice is NanoChoice => Boolean(choice))
+      .filter(c => !('check' in c) || (c.reward && c.reward.toLowerCase() !== 'none'))
       .slice(0, 2);
-  
+
     console.log("Produced:", lines, choices);
     return { lines, choices };
   }
 
-  function _parseChoice(s){
+  function _parseChoice(s: string): NanoChoice | null{
     const parts = s.split('|').map(p=>p.trim());
     if(parts.length === 2){
       return {label: parts[0], response: parts[1]};
@@ -395,8 +571,8 @@ Choices:
     return null;
   }
 
-  function _dedupe(arr){
-    const seen=new Set(), out=[];
+  function _dedupe(arr: string[]){
+    const seen=new Set<string>(), out: string[]=[];
     for(const s of arr){
       const k=s.toLowerCase();
       if(!seen.has(k)){ seen.add(k); out.push(s); }
@@ -404,21 +580,25 @@ Choices:
     return out.slice(-12); // keep latest 12
   }
 
-  function _dedupeChoices(arr){
-    const seen=new Set(), out=[];
+  function _dedupeChoices(arr: NanoChoice[]){
+    const seen=new Set<string>(), out: NanoChoice[]=[];
     for(const c of arr){
-      const k=c.label.toLowerCase();
-      if(!seen.has(k)){ seen.add(k); out.push(c); }
+      const key = c.label.toLowerCase();
+      if(!seen.has(key)){ seen.add(key); out.push(c); }
     }
     return out.slice(-4); // keep latest few
   }
 
-  async function generatePalette(examples){
-    if(!_state.ready || !window.NanoPalette.enabled) return null;
+  async function generatePalette(examples?: string[][]){
+    if(!_state.ready || !nanoWindow.NanoPalette.enabled) return null;
     _setBusy(true);
     const prompt = _buildPalettePrompt(examples || _defaultExamples());
     try {
       console.log("[Nano] prompt palette:\n"+prompt);
+      if(!_state.session){
+        console.warn('[Nano] Session not ready for palette generation.');
+        return null;
+      }
       const txt = await _state.session.prompt(prompt);
       console.log("[Nano] returned:\n"+ txt);
       return _parseEmojiBlock(txt);
@@ -431,14 +611,14 @@ Choices:
   }
 
   function _defaultExamples(){
-    if(globalThis.worldStampEmoji){
-      return Object.values(globalThis.worldStampEmoji);
+    if(nanoGlobal.worldStampEmoji){
+      return Object.values(nanoGlobal.worldStampEmoji);
     }
-    const palette = globalThis.tileEmoji ? Object.values(globalThis.tileEmoji) : [];
-    return palette.map(e => Array(16).fill(e.repeat(16)));
+    const palette = nanoGlobal.tileEmoji ? Object.values(nanoGlobal.tileEmoji) : [];
+    return palette.map(e => Array(16).fill((e ?? '').repeat(16)));
   }
 
-  function _buildPalettePrompt(examples){
+  function _buildPalettePrompt(examples?: string[][]){
     const ex = examples?.map(b=>b.join('\n')).join('\n\n')??
 [
 [
@@ -464,10 +644,20 @@ Choices:
     return `${legend}\n\nExamples of 16x16 emoji blocks:\n${ex}\n\nNew 16x16 block:`;
   }
 
-  function _parseEmojiBlock(txt){
+  function _parseEmojiBlock(txt: string | null){
+    if(!txt) return null;
     const lines = txt.trim().split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
     const block = lines.slice(0,16).map(line=> Array.from(line).slice(0,16).join(''));
     return block.length===16 ? block : null;
+  }
+
+  function unrefTimeout(handle: unknown): void {
+    if (typeof handle === 'object' && handle !== null && 'unref' in handle) {
+      const maybeTimeout = handle as TimeoutLike;
+      if (typeof maybeTimeout.unref === 'function') {
+        maybeTimeout.unref();
+      }
+    }
   }
 
 })();

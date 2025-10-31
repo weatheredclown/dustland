@@ -79,7 +79,7 @@ The remaining files with `@ts-nocheck` fall into three broad categories. The pla
 
 | Date       | Summary |
 | ---------- | ------- |
-| 2025-10-31 | Removed `@ts-nocheck` from `ts-src/scripts/ui/skin-manager.ts` by defining shared skin and sprite types, updating global declarations, and tightening the Skin API contract. Refreshed the suppression count to 14 remaining files. |
+| 2025-10-30 | Removed `@ts-nocheck` from `ts-src/scripts/dustland-nano.ts` by introducing typed Nano dialog and palette state along with guarded global lookups. Refreshed the suppression count to 14 remaining files. |
 | 2025-10-30 | Removed `@ts-nocheck` from `ts-src/modules/edge.module.ts` by introducing an `EdgeModule` type alias and wiring the loader through typed globals. Refreshed the suppression count to 18 remaining files. |
 | 2025-10-29 | Introduced `scripts/core/globals.ts` to expose typed helpers (DustlandGlobals) and removed `@ts-nocheck` from `ts-src/scripts/core/item-generator.ts`. Updated UI entry points and tests to load the helper before exercising ItemGen. |
 | 2025-10-28 | Removed `@ts-nocheck` from `ts-src/scripts/core/trader.ts` by introducing typed trader inventory helpers and stricter price calculations. Updated the global snapshot to reflect 21 files remaining. |

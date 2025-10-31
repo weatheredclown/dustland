@@ -485,6 +485,11 @@ declare global {
     [key: string]: unknown;
   }
 
+  type OtherBasModuleInstance = DustlandModuleInstance & {
+    start: { map: string; x: number; y: number };
+    listing?: string;
+  };
+
   interface PersonaEventPayload {
     memberId: string;
     personaId: string;
@@ -1113,6 +1118,7 @@ interface ItemGeneratorRange {
     world?: DustlandMap[];
     DUSTLAND_MODULE?: DustlandModuleInstance;
     LOOTBOX_DEMO_MODULE?: DustlandModuleInstance;
+    OTHER_BAS_MODULE?: OtherBasModuleInstance;
     applyModule?: (moduleData: unknown) => void;
     loadModule?: (moduleData: unknown) => Promise<void> | void;
     setPartyPos?: (x: number, y: number) => void;
