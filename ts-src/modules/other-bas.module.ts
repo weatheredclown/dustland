@@ -1,9 +1,27 @@
-// @ts-nocheck
-function seedWorldContent() {}
+type OtherBasModule = DustlandModuleInstance & {
+  start: { map: string; x: number; y: number };
+  listing?: string;
+};
 
-function postLoad() {}
+type OtherBasGlobals = typeof globalThis & {
+  OTHER_BAS_MODULE?: OtherBasModule;
+  WORLD_H?: number;
+  applyModule?: GlobalThis['applyModule'];
+  setMap?: GlobalThis['setMap'];
+  setPartyPos?: GlobalThis['setPartyPos'];
+  startGame?: GlobalThis['startGame'];
+  seedWorldContent?: () => void;
+};
 
-const DATA = `
+(function initOtherBasModule() {
+  const globals = globalThis as OtherBasGlobals;
+
+  const seedWorldContent = (): void => {};
+  const postLoad = (): void => {};
+
+  globals.seedWorldContent = seedWorldContent;
+
+  const DATA = `
 {
   "seed": "other-bas",
   "name": "other-bas",
@@ -946,9 +964,10 @@ const DATA = `
 }
 `;
 
-globalThis.OTHER_BAS_MODULE = JSON.parse(DATA);
-globalThis.OTHER_BAS_MODULE.listing = `MCBDTFM6S0VZIE9GRjpDT0xPUiAxNQ0KMTAgUFJJTlQgIkhFUkUgQkVHSU5T
-globalThis.OTHER_BAS_MODULE.postLoad = postLoad;
+const otherBasModule = JSON.parse(DATA) as OtherBasModule;
+globals.OTHER_BAS_MODULE = otherBasModule;
+otherBasModule.listing = `MCBDTFM6S0VZIE9GRjpDT0xPUiAxNQ0KMTAgUFJJTlQgIkhFUkUgQkVHSU5T
+otherBasModule.postLoad = postLoad;
 IFRIRSBUUkFOU0NSSVBUIE9GIFRIRSBPVEhFUiBBRFZFTlRVUkUgR0FNRS4u
 LiI6UFJJTlQgIkNvcHl3cml0ZSAxOTkwOiAgTElTQ0VOU0VEIFRPOiBILlAu
 IEhhY2tlciwgTGFzZXIiOzpDT0xPUiA0OlBSSU5UICJQcmVzcyI7OkNPTE9S
@@ -2272,10 +2291,17 @@ JCxJSyQsSUwkLElNJCxJTiQsSU8kLElQJCxJUSQsSVIkLElTJCxJVCQsSVUk
 LElNQSQsSU5EJA0KNDU1MzAgQ0xPU0UgIzENCjQ1NTQwIENMUzpBJD0iTE9P
 SyINCjQ1OTk5IFJFVFVSTg0KGg==`;
 
-startGame = function () {
-  OTHER_BAS_MODULE.postLoad?.(OTHER_BAS_MODULE);
-  applyModule(OTHER_BAS_MODULE);
-  const s = OTHER_BAS_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-  setMap(s.map, s.map === 'world' ? 'Wastes' : undefined);
-  setPartyPos(s.x, s.y);
+globals.startGame = () => {
+  const moduleData = globals.OTHER_BAS_MODULE ?? otherBasModule;
+  moduleData.postLoad?.(moduleData);
+  if (typeof globals.applyModule === 'function') globals.applyModule(moduleData);
+  const start = moduleData.start ?? {
+    map: 'world',
+    x: 2,
+    y: Math.floor((globals.WORLD_H ?? 0) / 2),
+  };
+  const label = start.map === 'world' ? 'Wastes' : undefined;
+  globals.setMap?.(start.map, label);
+  globals.setPartyPos?.(start.x, start.y);
 };
+})();
