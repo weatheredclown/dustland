@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* global EventBus */
 (function () {
     const UI_VAR_MAP = {
@@ -406,7 +405,7 @@
         };
     }
     function defaultGeneratedConfig(name) {
-        const packaged = getPackagedGeneratedConfig(name);
+        const packaged = getPackagedGeneratedConfig(name ?? undefined);
         if (packaged)
             return packaged;
         const styleDir = normalizeStyleDir(name || 'preview');
@@ -419,6 +418,7 @@
         };
     }
     function normalizeGeneratedOverride(name, input) {
+        void name;
         const result = {};
         if (!input || typeof input !== 'object')
             return result;
@@ -429,7 +429,7 @@
             result.styleDir = normalizeStyleDir(input.styleDir.trim());
         }
         if (typeof input.extension === 'string' && input.extension.trim()) {
-            result.extension = normalizeExtension(input.extension.trim(), input.styleDir);
+            result.extension = normalizeExtension(input.extension.trim(), input.styleDir ?? '');
         }
         if ('manifest' in input) {
             const manifest = input.manifest;
@@ -455,8 +455,8 @@
             baseDir: override.baseDir ?? baseCopy.baseDir,
             styleDir: override.styleDir ?? baseCopy.styleDir,
             extension: override.extension ?? baseCopy.extension,
-            manifest: ('manifest' in override) ? override.manifest : baseCopy.manifest,
-            slots: ('slots' in override) ? override.slots : baseCopy.slots
+            manifest: ('manifest' in override) ? (override.manifest ?? null) : baseCopy.manifest,
+            slots: ('slots' in override) ? (override.slots ?? null) : baseCopy.slots
         };
         merged.baseDir = normalizeBaseDir(merged.baseDir);
         merged.styleDir = normalizeStyleDir(merged.styleDir || baseCopy.styleDir);
@@ -580,7 +580,7 @@
             if (!base)
                 return null;
             if (!normalizedExtension)
-                return base;
+                return typeof base === 'string' ? base : String(base);
             const trimmed = String(base).trim();
             if (!trimmed)
                 return null;
@@ -589,8 +589,8 @@
                 return trimmed;
             return `${trimmed}${normalizedExtension}`;
         }
-        function defaultSlotFilename(name) {
-            const base = typeof name === 'string' ? name.trim() : '';
+        function defaultSlotFilename(slotName) {
+            const base = typeof slotName === 'string' ? slotName.trim() : '';
             if (!base)
                 return null;
             return appendDefaultExtension(base);
@@ -638,7 +638,7 @@
                 handleSlotDefinition(slotName, value);
             }
         }
-        const tileEnum = globalThis?.TILE;
+        const tileEnum = globalThis.TILE;
         if (tileEnum && typeof tileEnum === 'object') {
             for (const name of Object.keys(tileEnum)) {
                 if (typeof name !== 'string' || !name.trim())
@@ -660,16 +660,21 @@
             ui.slots = slotStyles;
         let tileConfig = null;
         if (manifestSections.tiles) {
-            tileConfig = rewriteSpriteEntry(manifestSections.tiles, baseDir, styleDir);
-            if (typeof tileConfig === 'string')
-                tileConfig = { atlas: tileConfig };
-            else if (!isPlainObject(tileConfig))
+            const rewrittenTiles = rewriteSpriteEntry(manifestSections.tiles, baseDir, styleDir);
+            if (typeof rewrittenTiles === 'string')
+                tileConfig = { atlas: rewrittenTiles };
+            else if (isPlainObject(rewrittenTiles))
+                tileConfig = rewrittenTiles;
+            else
                 tileConfig = {};
         }
         if (tileSlotDefinitions.size) {
             if (!isPlainObject(tileConfig))
                 tileConfig = {};
-            const existingSource = isPlainObject(tileConfig.map) ? tileConfig.map : (isPlainObject(tileConfig.tiles) ? tileConfig.tiles : {});
+            const currentTiles = tileConfig;
+            const existingSource = isPlainObject(currentTiles.map)
+                ? currentTiles.map
+                : (isPlainObject(currentTiles.tiles) ? currentTiles.tiles : {});
             const tileMap = { ...existingSource };
             for (const [tileKey, definition] of tileSlotDefinitions) {
                 if (definition == null)
@@ -684,19 +689,19 @@
                 const rewritten = rewriteSpriteEntry(definition, baseDir, styleDir);
                 if (rewritten == null)
                     continue;
-                if (lowerKey === 'atlas' && typeof rewritten === 'string' && !Object.prototype.hasOwnProperty.call(tileConfig, 'atlas')) {
-                    tileConfig.atlas = rewritten;
+                if (lowerKey === 'atlas' && typeof rewritten === 'string' && !Object.prototype.hasOwnProperty.call(currentTiles, 'atlas')) {
+                    currentTiles.atlas = rewritten;
                 }
                 tileMap[lowerKey] = rewritten;
             }
             const hasEntries = Object.keys(tileMap).length > 0;
-            if (hasEntries || (isPlainObject(existingSource) && Object.keys(existingSource).length)) {
-                if (isPlainObject(tileConfig.map))
-                    tileConfig.map = tileMap;
-                else if (isPlainObject(tileConfig.tiles))
-                    tileConfig.tiles = tileMap;
+            if (hasEntries || Object.keys(existingSource).length) {
+                if (isPlainObject(currentTiles.map))
+                    currentTiles.map = tileMap;
+                else if (isPlainObject(currentTiles.tiles))
+                    currentTiles.tiles = tileMap;
                 else if (hasEntries)
-                    tileConfig.map = tileMap;
+                    currentTiles.map = tileMap;
             }
         }
         const skin = {
@@ -771,7 +776,7 @@
         if (!root || !skin)
             return;
         const style = root.style;
-        const ui = skin.ui || {};
+        const ui = (skin.ui || {});
         if (skin.cssVars && typeof skin.cssVars === 'object') {
             for (const [name, value] of Object.entries(skin.cssVars)) {
                 if (value == null)
@@ -849,21 +854,23 @@
         }
     }
     function applyMapFrame(skin) {
-        const frame = skin?.map?.frame;
+        const frame = (skin?.map && typeof skin.map === 'object') ? skin.map.frame ?? null : null;
         if (frame) {
-            const color = frame.color ?? frame.strokeStyle ?? frame.fill ?? null;
-            const width = frame.width ?? frame.lineWidth ?? frame.strokeWidth ?? null;
+            const colorRaw = frame.color ?? frame.strokeStyle ?? frame.fill ?? null;
+            const widthRaw = frame.width ?? frame.lineWidth ?? frame.strokeWidth ?? null;
+            const colorValue = colorRaw != null ? String(colorRaw) : null;
+            const lineWidthValue = typeof widthRaw === 'number' ? widthRaw : (widthRaw != null ? String(widthRaw) : null);
             state.mapFrame = {
-                color: color ?? null,
-                lineWidth: width ?? null
+                color: colorValue,
+                lineWidth: lineWidthValue
             };
             const root = document.documentElement;
             if (root) {
                 const style = root.style;
-                if (color != null)
-                    style.setProperty('--skin-map-frame-color', String(color));
-                if (width != null) {
-                    const val = typeof width === 'number' ? `${width}px` : String(width);
+                if (colorValue != null)
+                    style.setProperty('--skin-map-frame-color', colorValue);
+                if (widthRaw != null) {
+                    const val = typeof widthRaw === 'number' ? `${widthRaw}px` : String(widthRaw);
                     style.setProperty('--skin-map-frame-width', val);
                 }
             }
@@ -932,7 +939,7 @@
         if (!src || typeof Image === 'undefined')
             return null;
         if (imageCache.has(src))
-            return imageCache.get(src);
+            return imageCache.get(src) ?? null;
         const img = new Image();
         img.decoding = 'async';
         imageCache.set(src, img);
@@ -963,29 +970,42 @@
     }
     function toFiniteNumber(...values) {
         for (const value of values) {
-            if (Number.isFinite(value))
+            if (typeof value === 'number' && Number.isFinite(value))
                 return value;
         }
         return null;
     }
+    function isSpriteConfig(value) {
+        return isPlainObject(value);
+    }
     function createSprite(entry, context) {
-        if (!entry)
+        if (entry == null)
             return null;
-        const base = typeof entry === 'string' ? { src: entry } : entry;
-        const atlas = base.atlas || context?.atlas;
-        const src = base.src || atlas;
+        if (Array.isArray(entry)) {
+            for (const candidate of entry) {
+                const sprite = createSprite(candidate, context);
+                if (sprite)
+                    return sprite;
+            }
+            return null;
+        }
+        const base = typeof entry === 'string' ? { src: entry } : (isSpriteConfig(entry) ? entry : null);
+        if (!base)
+            return null;
+        const atlasSource = typeof base.atlas === 'string' && base.atlas ? base.atlas : (typeof context?.atlas === 'string' ? context.atlas : undefined);
+        const src = typeof base.src === 'string' && base.src ? base.src : atlasSource;
         if (!src)
             return null;
         const image = loadImage(src);
         if (!image)
             return null;
-        const frame = base.frame || {};
+        const frame = isPlainObject(base.frame) ? base.frame : {};
         const tileWidth = toFiniteNumber(base.tileWidth, frame.tileWidth, context?.tileWidth, context?.tileSize);
         const tileHeight = toFiniteNumber(base.tileHeight, frame.tileHeight, context?.tileHeight, context?.tileSize);
         const sw = toFiniteNumber(base.w, base.width, frame.w, frame.width, tileWidth, context?.tileWidth, context?.tileSize, image.naturalWidth, image.width) || 0;
         const sh = toFiniteNumber(base.h, base.height, frame.h, frame.height, tileHeight, context?.tileHeight, context?.tileSize, sw) || 0;
-        const resolvedWidth = sw || (image.naturalWidth || image.width);
-        const resolvedHeight = sh || (image.naturalHeight || image.height);
+        const resolvedWidth = sw || image.naturalWidth || image.width;
+        const resolvedHeight = sh || image.naturalHeight || image.height;
         const columns = toFiniteNumber(base.columns, frame.columns, context?.columns, context?.cols, context?.tileColumns, context?.tileCols);
         const index = toFiniteNumber(base.index, frame.index, base.tileIndex, frame.tileIndex);
         const col = (() => {
@@ -1042,34 +1062,40 @@
             sw: spriteWidth,
             sh: spriteHeight
         };
-        if (Number.isFinite(base.scale))
+        if (typeof base.scale === 'number' && Number.isFinite(base.scale))
             sprite.scale = base.scale;
-        if (Number.isFinite(base.dw))
+        if (typeof base.dw === 'number' && Number.isFinite(base.dw))
             sprite.dw = base.dw;
-        if (Number.isFinite(base.dh))
+        if (typeof base.dh === 'number' && Number.isFinite(base.dh))
             sprite.dh = base.dh;
-        if (Number.isFinite(base.displayWidth))
+        if (typeof base.displayWidth === 'number' && Number.isFinite(base.displayWidth))
             sprite.displayWidth = base.displayWidth;
-        if (Number.isFinite(base.displayHeight))
+        if (typeof base.displayHeight === 'number' && Number.isFinite(base.displayHeight))
             sprite.displayHeight = base.displayHeight;
-        if (Number.isFinite(base.offsetX) || Number.isFinite(base.dx))
-            sprite.offsetX = Number.isFinite(base.offsetX) ? base.offsetX : base.dx;
-        if (Number.isFinite(base.offsetY) || Number.isFinite(base.dy))
-            sprite.offsetY = Number.isFinite(base.offsetY) ? base.offsetY : base.dy;
+        if (typeof base.offsetX === 'number' && Number.isFinite(base.offsetX))
+            sprite.offsetX = base.offsetX;
+        else if (typeof base.dx === 'number' && Number.isFinite(base.dx))
+            sprite.offsetX = base.dx;
+        if (typeof base.offsetY === 'number' && Number.isFinite(base.offsetY))
+            sprite.offsetY = base.offsetY;
+        else if (typeof base.dy === 'number' && Number.isFinite(base.dy))
+            sprite.offsetY = base.dy;
         if (base.align || base.anchor)
-            sprite.align = base.align || base.anchor;
+            sprite.align = (base.align ?? base.anchor);
         return sprite;
     }
     function findConfig(source, key) {
         if (!source || key == null)
             return null;
-        if (Object.prototype.hasOwnProperty.call(source, key))
-            return source[key];
-        if (typeof key === 'string') {
-            const lower = key.toLowerCase();
+        const directKey = typeof key === 'number' ? String(key) : key;
+        if (typeof directKey === 'string' && Object.prototype.hasOwnProperty.call(source, directKey)) {
+            return source[directKey];
+        }
+        if (typeof directKey === 'string') {
+            const lower = directKey.toLowerCase();
             if (Object.prototype.hasOwnProperty.call(source, lower))
                 return source[lower];
-            const upper = key.toUpperCase();
+            const upper = directKey.toUpperCase();
             if (Object.prototype.hasOwnProperty.call(source, upper))
                 return source[upper];
         }
@@ -1094,27 +1120,29 @@
             return null;
         const upper = String(name).replace(/[^a-z0-9]+/gi, '_').toUpperCase();
         if (Object.prototype.hasOwnProperty.call(tiles, upper))
-            return tiles[upper];
+            return tiles[upper] ?? null;
         return null;
     }
     function hasTileMapEntries(config) {
         if (!isPlainObject(config))
             return false;
-        if (isPlainObject(config.map) && Object.keys(config.map).length)
+        const maybeMap = config.map;
+        const maybeTiles = config.tiles;
+        if (isPlainObject(maybeMap) && Object.keys(maybeMap).length)
             return true;
-        if (isPlainObject(config.tiles) && Object.keys(config.tiles).length)
+        if (isPlainObject(maybeTiles) && Object.keys(maybeTiles).length)
             return true;
         return false;
     }
     function tileName(id) {
         if (tileNameCache.has(id))
-            return tileNameCache.get(id);
+            return tileNameCache.get(id) ?? null;
         const tiles = globalThis.TILE;
         if (tiles) {
             for (const [name, value] of Object.entries(tiles)) {
                 if (value === id) {
                     tileNameCache.set(id, name.toLowerCase());
-                    return tileNameCache.get(id);
+                    return tileNameCache.get(id) ?? null;
                 }
             }
         }
@@ -1124,7 +1152,7 @@
     function resolveTileDefinition(tiles, tileId) {
         if (!tiles)
             return null;
-        const defs = tiles.map || tiles.tiles || {};
+        const defs = (isPlainObject(tiles.map) ? tiles.map : (isPlainObject(tiles.tiles) ? tiles.tiles : {}));
         const keys = [];
         if (typeof tileId === 'number') {
             keys.push(String(tileId));
@@ -1180,9 +1208,9 @@
     function selectVariantIndex(count, context, tileId) {
         if (!Number.isFinite(count) || count <= 0)
             return 0;
-        const x = Number.isFinite(context?.x) ? context.x : 0;
-        const y = Number.isFinite(context?.y) ? context.y : 0;
-        const seed = Number.isFinite(context?.seed) ? context.seed : 0;
+        const x = typeof context?.x === 'number' && Number.isFinite(context.x) ? context.x : 0;
+        const y = typeof context?.y === 'number' && Number.isFinite(context.y) ? context.y : 0;
+        const seed = typeof context?.seed === 'number' && Number.isFinite(context.seed) ? context.seed : 0;
         let h = Math.imul(x | 0, 0x45d9f3b);
         h = Math.imul(h ^ Math.imul((y | 0) ^ 0x27d4eb2d, 0x165667b1), 0x27d4eb2d);
         h ^= Math.imul(seed | 0, 0x9e3779b9);
@@ -1198,12 +1226,16 @@
             const entry = def[idx] ?? def[0];
             return { entry, cacheKey: `arr:${idx}` };
         }
-        if (isPlainObject(def) && Array.isArray(def.variants) && def.variants.length) {
-            const base = cloneSpriteBase(def);
-            const idx = selectVariantIndex(def.variants.length, context, tileId);
-            const variantEntry = def.variants[idx] ?? def.variants[0];
-            const merged = mergeVariantEntry(base, variantEntry);
-            return { entry: merged, cacheKey: `obj:${idx}` };
+        if (isPlainObject(def)) {
+            const variantsRaw = def.variants;
+            if (Array.isArray(variantsRaw) && variantsRaw.length) {
+                const base = cloneSpriteBase(def);
+                const variants = variantsRaw;
+                const idx = selectVariantIndex(variants.length, context, tileId);
+                const variantEntry = variants[idx] ?? variants[0];
+                const merged = mergeVariantEntry(base, variantEntry);
+                return { entry: merged, cacheKey: `obj:${idx}` };
+            }
         }
         return { entry: def, cacheKey: 'base' };
     }
@@ -1222,7 +1254,7 @@
         const variant = resolveTileVariant(def, context, tileId);
         const cacheKey = variant.cacheKey ? `${key}|${variant.cacheKey}` : key;
         if (tileSpriteCache.has(cacheKey))
-            return tileSpriteCache.get(cacheKey);
+            return tileSpriteCache.get(cacheKey) ?? null;
         const sprite = createSprite(variant.entry, skin.tiles);
         tileSpriteCache.set(cacheKey, sprite || null);
         return sprite || null;
@@ -1240,7 +1272,7 @@
     function getItemSprite(item, context = {}) {
         const key = getItemCacheKey(item, context);
         if (itemSpriteCache.has(key))
-            return itemSpriteCache.get(key);
+            return itemSpriteCache.get(key) ?? null;
         const skin = state.currentSkin;
         if (!skin?.icons?.items) {
             itemSpriteCache.set(key, null);
@@ -1310,7 +1342,7 @@
         if (!entity || typeof entity !== 'object')
             return null;
         if (entitySpriteCache.has(entity))
-            return entitySpriteCache.get(entity);
+            return entitySpriteCache.get(entity) ?? null;
         const skin = state.currentSkin;
         if (!skin?.icons?.entities) {
             entitySpriteCache.set(entity, null);
@@ -1344,7 +1376,7 @@
     function getPlayerSprite(playerInfo, context = {}) {
         const key = context.mode ? `mode:${context.mode}` : 'default';
         if (playerSpriteCache.has(key))
-            return playerSpriteCache.get(key);
+            return playerSpriteCache.get(key) ?? null;
         const skin = state.currentSkin;
         if (!skin?.icons?.player) {
             playerSpriteCache.set(key, null);
@@ -1375,7 +1407,7 @@
             return null;
         const key = String(info.id ?? info.playerId ?? info.name ?? `${info.x ?? ''}:${info.y ?? ''}`);
         if (remoteSpriteCache.has(key))
-            return remoteSpriteCache.get(key);
+            return remoteSpriteCache.get(key) ?? null;
         const skin = state.currentSkin;
         if (!skin?.icons?.remoteParty) {
             remoteSpriteCache.set(key, null);
@@ -1414,14 +1446,17 @@
         }
         if (!isPlainObject(entry))
             return;
-        if (typeof entry.src === 'string')
-            loadImage(entry.src);
-        if (typeof entry.atlas === 'string')
-            loadImage(entry.atlas);
-        if (entry.frame && typeof entry.frame === 'object' && typeof entry.frame.src === 'string')
-            loadImage(entry.frame.src);
-        if (entry.variants)
-            preloadTileDefinition(entry.variants);
+        const record = entry;
+        if (typeof record.src === 'string')
+            loadImage(record.src);
+        if (typeof record.atlas === 'string')
+            loadImage(record.atlas);
+        const frameEntry = record.frame;
+        if (isPlainObject(frameEntry) && typeof frameEntry.src === 'string') {
+            loadImage(frameEntry.src);
+        }
+        if (record.variants)
+            preloadTileDefinition(record.variants);
     }
     function preloadIconGroup(group) {
         if (!group)
@@ -1436,11 +1471,12 @@
         }
         if (typeof group !== 'object')
             return;
-        if (group.src)
-            loadImage(group.src);
-        if (group.atlas)
-            loadImage(group.atlas);
-        for (const [key, value] of Object.entries(group)) {
+        const record = group;
+        if (typeof record.src === 'string')
+            loadImage(record.src);
+        if (typeof record.atlas === 'string')
+            loadImage(record.atlas);
+        for (const [key, value] of Object.entries(record)) {
             if (SPRITE_META_KEYS.has(key))
                 continue;
             preloadIconGroup(value);

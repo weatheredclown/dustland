@@ -1,5 +1,289 @@
-// @ts-nocheck
 /* global EventBus */
+
+type UnknownRecord = Record<string, unknown>;
+
+type CssVarValue = string | number | null | undefined;
+
+interface SpriteFrameConfig extends UnknownRecord {
+  src?: string;
+  tileWidth?: number;
+  tileHeight?: number;
+  tileSize?: number;
+  w?: number;
+  h?: number;
+  width?: number;
+  height?: number;
+  tileIndex?: number;
+  index?: number;
+  columns?: number;
+  rows?: number;
+  col?: number;
+  row?: number;
+  x?: number;
+  y?: number;
+  sx?: number;
+  sy?: number;
+}
+
+interface SpriteConfig extends UnknownRecord {
+  src?: string;
+  atlas?: string;
+  frame?: SpriteFrameConfig;
+  variants?: SpriteEntry[] | UnknownRecord;
+  tileWidth?: number;
+  tileHeight?: number;
+  tileSize?: number;
+  tileIndex?: number;
+  index?: number;
+  columns?: number;
+  cols?: number;
+  tileColumns?: number;
+  tileCols?: number;
+  scale?: number;
+  dw?: number;
+  dh?: number;
+  displayWidth?: number;
+  displayHeight?: number;
+  offsetX?: number;
+  offsetY?: number;
+  dx?: number;
+  dy?: number;
+  align?: string;
+  anchor?: string;
+}
+
+type SpriteEntry = string | SpriteConfig | SpriteEntry[];
+
+interface SpriteContext extends UnknownRecord {
+  atlas?: string;
+  tileWidth?: number;
+  tileHeight?: number;
+  tileSize?: number;
+  tileColumns?: number;
+  tileCols?: number;
+  columns?: number;
+  cols?: number;
+}
+
+interface Sprite {
+  image: HTMLImageElement;
+  sx: number;
+  sy: number;
+  sw: number;
+  sh: number;
+  scale?: number;
+  dw?: number;
+  dh?: number;
+  displayWidth?: number;
+  displayHeight?: number;
+  offsetX?: number;
+  offsetY?: number;
+  align?: string | unknown;
+}
+
+type SlotStyles = Record<string, UnknownRecord>;
+
+interface DustlandSkinUi extends Record<string, UnknownRecord | undefined> {
+  vars?: Record<string, CssVarValue>;
+  slots?: SlotStyles | null;
+}
+
+interface SkinMapFrame {
+  color?: unknown;
+  strokeStyle?: unknown;
+  fill?: unknown;
+  width?: unknown;
+  lineWidth?: unknown;
+  strokeWidth?: unknown;
+}
+
+interface SkinMapConfig extends UnknownRecord {
+  frame?: SkinMapFrame | null;
+}
+
+interface IconGroupConfig extends UnknownRecord {
+  byId?: Record<string, SpriteEntry>;
+  byTag?: Record<string, SpriteEntry>;
+  byType?: Record<string, SpriteEntry>;
+  bySlot?: Record<string, SpriteEntry>;
+  byDropType?: Record<string, SpriteEntry>;
+  byRarity?: Record<string, SpriteEntry>;
+  byFaction?: Record<string, SpriteEntry>;
+  byPersona?: Record<string, SpriteEntry>;
+  states?: Record<string, SpriteEntry>;
+  default?: SpriteEntry;
+  sprite?: SpriteEntry;
+  multi?: SpriteEntry;
+}
+
+interface SkinIconsConfig extends UnknownRecord {
+  atlas?: string;
+  player?: IconGroupConfig;
+  entities?: IconGroupConfig;
+  items?: IconGroupConfig;
+  remoteParty?: IconGroupConfig;
+  extra?: unknown;
+}
+
+interface SkinTilesConfig extends UnknownRecord {
+  atlas?: string;
+  map?: Record<string, SpriteEntry>;
+  tiles?: Record<string, SpriteEntry>;
+  tileWidth?: number;
+  tileHeight?: number;
+  tileSize?: number;
+}
+
+interface DustlandSkin extends Record<string, unknown> {
+  id: string;
+  label: string;
+  cssVars?: Record<string, CssVarValue>;
+  ui?: DustlandSkinUi | null;
+  tiles?: SkinTilesConfig | null;
+  icons?: SkinIconsConfig | null;
+  map?: SkinMapConfig | null;
+  meta?: UnknownRecord | null;
+}
+
+type GeneratedSkinSlots = Record<string, unknown> | string[] | null;
+
+interface GeneratedSkinManifest extends UnknownRecord {
+  id?: string;
+  label?: string;
+  slots?: GeneratedSkinSlots;
+  ui?: {
+    vars?: Record<string, unknown> | null;
+    slots?: Record<string, unknown> | null;
+    [key: string]: unknown;
+  } | null;
+  tiles?: unknown;
+  icons?: unknown;
+  map?: unknown;
+  meta?: UnknownRecord | null;
+}
+
+interface GeneratedSkinConfig {
+  baseDir: string;
+  styleDir: string;
+  extension: string;
+  manifest: GeneratedSkinManifest | null;
+  slots: GeneratedSkinSlots;
+}
+
+type GeneratedSkinOverrides = Partial<GeneratedSkinConfig> & {
+  manifest?: GeneratedSkinManifest | null;
+  slots?: GeneratedSkinSlots;
+};
+
+interface ManifestSections {
+  slots: Record<string, unknown> | null;
+  uiVars: Record<string, unknown> | null;
+  tiles: unknown;
+  icons: unknown;
+  map: unknown;
+  meta: UnknownRecord | null;
+  id: string | null;
+  label: string | null;
+}
+
+interface VariantResolution {
+  entry: unknown;
+  cacheKey: string | null;
+}
+
+interface TileContext {
+  x?: number;
+  y?: number;
+  seed?: number;
+  [key: string]: unknown;
+}
+
+interface ItemLike extends Record<string, unknown> {
+  items?: ItemLike[];
+  slot?: string;
+  type?: string;
+  id?: string | number;
+  rarity?: string;
+  dropType?: string;
+}
+
+interface ItemSpriteContext extends Record<string, unknown> {
+  dropType?: string;
+  multi?: boolean;
+}
+
+interface EntityLike extends Record<string, unknown> {
+  id?: string | number;
+  type?: string;
+  role?: string;
+  faction?: string;
+  trainer?: unknown;
+  shop?: unknown;
+  questId?: unknown;
+  quests?: unknown;
+  inanimate?: unknown;
+  attackOnSight?: unknown;
+  combat?: unknown;
+  friendly?: unknown;
+  tags?: unknown;
+}
+
+interface PlayerInfo extends Record<string, unknown> {
+  persona?: string;
+  id?: string | number;
+}
+
+interface PlayerSpriteContext extends Record<string, unknown> {
+  mode?: string;
+}
+
+interface RemotePartyInfo extends Record<string, unknown> {
+  id?: string | number;
+  playerId?: string | number;
+  name?: string;
+  x?: number;
+  y?: number;
+  faction?: string;
+}
+
+interface SkinMapFrameState {
+  color: string | null;
+  lineWidth: string | number | null;
+}
+
+interface SkinManagerState {
+  currentSkin: DustlandSkin | null;
+  domReady: boolean;
+  slotApplied: Array<{ el: HTMLElement; props: string[] }>;
+  mapFrame: SkinMapFrameState | null;
+}
+
+interface DustlandSkinApi {
+  applySkin: (input: string | DustlandSkin | null | undefined) => void;
+  registerSkin: (skin: DustlandSkin | null | undefined) => DustlandSkin | null;
+  registerGeneratedSkin: (
+    name: string,
+    input?: GeneratedSkinOverrides | null
+  ) => GeneratedSkinConfig | null;
+  loadGeneratedSkin: (
+    name: string,
+    input?: GeneratedSkinOverrides | null
+  ) => DustlandSkin | null;
+  listGeneratedSkins: () => string[];
+  getGeneratedSkinConfig: (name: string) => GeneratedSkinConfig | null;
+  getRegisteredSkin: (id: string) => DustlandSkin | null;
+  getCurrentSkin: () => DustlandSkin | null;
+  getTileSprite: (tileId: string | number, context?: TileContext) => Sprite | null;
+  getItemSprite: (item: ItemLike | null | undefined, context?: ItemSpriteContext) => Sprite | null;
+  getEntitySprite: (entity: EntityLike | null | undefined) => Sprite | null;
+  getPlayerSprite: (playerInfo: PlayerInfo | null | undefined, context?: PlayerSpriteContext) => Sprite | null;
+  getRemotePartySprite: (info: RemotePartyInfo | null | undefined) => Sprite | null;
+  getMapFrame: () => SkinMapFrameState | null;
+  onChange: (fn: (skin: DustlandSkin | null) => void) => () => void;
+  offChange: (fn: (skin: DustlandSkin | null) => void) => void;
+  reset: () => void;
+}
+
 (function(){
   const UI_VAR_MAP = {
     panel: {
@@ -166,19 +450,19 @@
 
   const TILE_SLOT_PATTERN = /^tile[-_:]?(.+)$/i;
 
-  const ALL_VAR_NAMES = Array.from(new Set(Object.values(UI_VAR_MAP).flatMap(section => Object.values(section))));
+  const ALL_VAR_NAMES = Array.from(new Set(Object.values(UI_VAR_MAP).flatMap(section => Object.values(section)))) as string[];
 
-  const registry = new Map();
-  const callbacks = new Set();
-  const imageCache = new Map();
-  const tileSpriteCache = new Map();
-  const itemSpriteCache = new Map();
-  let entitySpriteCache = new WeakMap();
-  const playerSpriteCache = new Map();
-  const remoteSpriteCache = new Map();
-  const tileNameCache = new Map();
+  const registry = new Map<string, DustlandSkin>();
+  const callbacks = new Set<(skin: DustlandSkin | null) => void>();
+  const imageCache = new Map<string, HTMLImageElement>();
+  const tileSpriteCache = new Map<string, Sprite | null>();
+  const itemSpriteCache = new Map<string, Sprite | null>();
+  let entitySpriteCache: WeakMap<object, Sprite | null> = new WeakMap();
+  const playerSpriteCache = new Map<string, Sprite | null>();
+  const remoteSpriteCache = new Map<string, Sprite | null>();
+  const tileNameCache = new Map<string | number, string | null>();
 
-  const state = {
+  const state: SkinManagerState = {
     currentSkin: null,
     domReady: document.readyState !== 'loading',
     slotApplied: [],
@@ -192,8 +476,8 @@
     }, { once: true });
   }
 
-  const generatedConfigs = new Map();
-  const PACKAGED_GENERATED_SKINS = {
+  const generatedConfigs = new Map<string, GeneratedSkinConfig>();
+  const PACKAGED_GENERATED_SKINS: Record<string, GeneratedSkinConfig> = {
     'retro-console': {
       baseDir: 'assets/skins',
       styleDir: 'retro-console',
@@ -290,24 +574,24 @@
     }
   };
 
-  function toForwardSlashes(value){
+  function toForwardSlashes(value: unknown): string {
     return typeof value === 'string' ? value.replace(/\\/g, '/') : '';
   }
 
-  function normalizeBaseDir(value){
+  function normalizeBaseDir(value: unknown): string {
     if(!value) return '';
     const text = toForwardSlashes(String(value)).replace(/\/+/g, '/');
     return text.replace(/\/+$/g, '').replace(/\s+$/g, '').trim();
   }
 
-  function normalizeStyleDir(value){
+  function normalizeStyleDir(value: unknown): string {
     if(!value) return '';
     let text = toForwardSlashes(String(value)).replace(/\/+/g, '/');
     text = text.replace(/^\s+/g, '').replace(/\s+$/g, '');
     return text.replace(/^\/+/g, '').replace(/\/+$/g, '');
   }
 
-  function normalizeFilePath(value){
+  function normalizeFilePath(value: unknown): string {
     if(!value) return '';
     let text = toForwardSlashes(String(value)).replace(/\/+/g, '/');
     text = text.replace(/^\.\//, '');
@@ -315,18 +599,18 @@
     return text;
   }
 
-  function normalizeExtension(ext, styleDir = ''){
+  function normalizeExtension(ext: unknown, styleDir = ''): string {
     if(!ext) return styleDir.toLowerCase().includes('svg') ? '.svg' : '.png';
     const text = String(ext).trim();
     if(!text) return styleDir.toLowerCase().includes('svg') ? '.svg' : '.png';
     return text.startsWith('.') ? text : `.${text}`;
   }
 
-  function isPlainObject(value){
+  function isPlainObject(value: unknown): value is UnknownRecord {
     return !!value && typeof value === 'object' && !Array.isArray(value);
   }
 
-  function buildAssetUrl(path, baseDir, styleDir){
+  function buildAssetUrl(path: unknown, baseDir: string, styleDir?: string): string {
     if(!path) return '';
     const raw = String(path).trim();
     if(/^([a-z]+:|data:|blob:)/i.test(raw)) return raw;
@@ -338,7 +622,7 @@
     return baseDir ? `${baseDir}/${relative}` : relative;
   }
 
-  function rewriteSpriteEntry(entry, baseDir, styleDir){
+  function rewriteSpriteEntry(entry: unknown, baseDir: string, styleDir?: string): unknown {
     if(entry == null) return entry;
     if(typeof entry === 'string'){
       return buildAssetUrl(entry, baseDir, styleDir);
@@ -347,14 +631,14 @@
       return entry.map(item => rewriteSpriteEntry(item, baseDir, styleDir));
     }
     if(!isPlainObject(entry)) return entry;
-    const copy = {};
+    const copy: UnknownRecord = {};
     for(const [key, value] of Object.entries(entry)){
       if(key === 'variants'){
         copy.variants = rewriteSpriteEntry(value, baseDir, styleDir);
         continue;
       }
       if(key === 'frame' && isPlainObject(value)){
-        const frameCopy = { ...value };
+        const frameCopy: UnknownRecord = { ...value };
         if(typeof frameCopy.src === 'string'){
           frameCopy.src = buildAssetUrl(frameCopy.src, baseDir, styleDir);
         }
@@ -370,9 +654,9 @@
     return copy;
   }
 
-  function discoverSlotNames(){
-    const slots = new Set();
-    const nodes = document.querySelectorAll('[data-skin-slot]');
+  function discoverSlotNames(): string[] {
+    const slots = new Set<string>();
+    const nodes = document.querySelectorAll<HTMLElement>('[data-skin-slot]');
     nodes.forEach(node => {
       const name = node?.getAttribute?.('data-skin-slot');
       if(name) slots.add(name);
@@ -380,7 +664,7 @@
     return Array.from(slots);
   }
 
-  function getPackagedGeneratedConfig(name){
+  function getPackagedGeneratedConfig(name: string | null | undefined): GeneratedSkinConfig | null {
     const styleId = typeof name === 'string' ? name.trim() : '';
     if(!styleId) return null;
     const direct = PACKAGED_GENERATED_SKINS[styleId];
@@ -390,10 +674,10 @@
     return null;
   }
 
-  function cloneGeneratedConfig(config){
+  function cloneGeneratedConfig(config: GeneratedSkinConfig | null | undefined): GeneratedSkinConfig | null {
     if(!config) return null;
     const slots = config.slots;
-    let slotsCopy = null;
+    let slotsCopy: GeneratedSkinSlots = null;
     if(Array.isArray(slots)) slotsCopy = [...slots];
     else if(slots && typeof slots === 'object') slotsCopy = { ...slots };
     const manifest = config.manifest && typeof config.manifest === 'object' ? { ...config.manifest } : null;
@@ -406,8 +690,8 @@
     };
   }
 
-  function defaultGeneratedConfig(name){
-    const packaged = getPackagedGeneratedConfig(name);
+  function defaultGeneratedConfig(name: string | null | undefined): GeneratedSkinConfig {
+    const packaged = getPackagedGeneratedConfig(name ?? undefined);
     if(packaged) return packaged;
     const styleDir = normalizeStyleDir(name || 'preview');
     return {
@@ -419,8 +703,12 @@
     };
   }
 
-  function normalizeGeneratedOverride(name, input){
-    const result = {};
+  function normalizeGeneratedOverride(
+    name: string,
+    input: GeneratedSkinOverrides | null | undefined
+  ): GeneratedSkinOverrides {
+    void name;
+    const result: GeneratedSkinOverrides = {};
     if(!input || typeof input !== 'object') return result;
     if(typeof input.baseDir === 'string' && input.baseDir.trim()){
       result.baseDir = normalizeBaseDir(input.baseDir.trim());
@@ -429,7 +717,7 @@
       result.styleDir = normalizeStyleDir(input.styleDir.trim());
     }
     if(typeof input.extension === 'string' && input.extension.trim()){
-      result.extension = normalizeExtension(input.extension.trim(), input.styleDir);
+      result.extension = normalizeExtension(input.extension.trim(), input.styleDir ?? '');
     }
     if('manifest' in input){
       const manifest = input.manifest;
@@ -445,19 +733,19 @@
     return result;
   }
 
-  function mergeGeneratedConfig(base, override){
+  function mergeGeneratedConfig(base: GeneratedSkinConfig, override: GeneratedSkinOverrides): GeneratedSkinConfig {
     const baseCopy = cloneGeneratedConfig(base) || defaultGeneratedConfig('preview');
-    const merged = {
+    const merged: GeneratedSkinConfig = {
       baseDir: override.baseDir ?? baseCopy.baseDir,
       styleDir: override.styleDir ?? baseCopy.styleDir,
       extension: override.extension ?? baseCopy.extension,
-      manifest: ('manifest' in override) ? override.manifest : baseCopy.manifest,
-      slots: ('slots' in override) ? override.slots : baseCopy.slots
+      manifest: ('manifest' in override) ? (override.manifest ?? null) : baseCopy.manifest,
+      slots: ('slots' in override) ? (override.slots ?? null) : baseCopy.slots
     };
     merged.baseDir = normalizeBaseDir(merged.baseDir);
     merged.styleDir = normalizeStyleDir(merged.styleDir || baseCopy.styleDir);
     merged.extension = normalizeExtension(merged.extension, merged.styleDir);
-    if(merged.manifest && typeof merged.manifest === 'object') merged.manifest = { ...merged.manifest };
+    if(merged.manifest && typeof merged.manifest === 'object') merged.manifest = { ...merged.manifest } as GeneratedSkinManifest;
     if(Array.isArray(merged.slots)) merged.slots = [...merged.slots];
     else if(merged.slots && typeof merged.slots === 'object') merged.slots = { ...merged.slots };
     else merged.slots = merged.slots ?? null;
@@ -466,8 +754,13 @@
 
   const RESERVED_SLOT_KEYS = new Set(['ui', 'tiles', 'icons', 'map', 'meta', 'id', 'label', 'version', 'info', 'slots']);
 
-  function mergeStyleObject(target, source, baseDir, styleDir){
-    const next = { ...target };
+  function mergeStyleObject(
+    target: UnknownRecord,
+    source: UnknownRecord,
+    baseDir: string,
+    styleDir: string
+  ): UnknownRecord {
+    const next: UnknownRecord = { ...target };
     for(const [prop, raw] of Object.entries(source)){
       if(typeof raw === 'string' && prop.toLowerCase().includes('image')){
         const trimmed = raw.trim();
@@ -484,9 +777,16 @@
     return next;
   }
 
-  function applySlotDefinition(slotStyles, slotName, definition, baseDir, styleDir, extension){
+  function applySlotDefinition(
+    slotStyles: SlotStyles,
+    slotName: string,
+    definition: unknown,
+    baseDir: string,
+    styleDir: string,
+    extension: string
+  ): void {
     if(!slotName) return;
-    let next = slotStyles[slotName] ? { ...slotStyles[slotName] } : {};
+    let next: UnknownRecord = slotStyles[slotName] ? { ...slotStyles[slotName] } : {};
     if(definition == null){
       const url = buildAssetUrl(`${slotName}${extension}`, baseDir, styleDir);
       if(url) next.backgroundImage = `url(${url})`;
@@ -499,8 +799,8 @@
     if(Object.keys(next).length) slotStyles[slotName] = next;
   }
 
-  function extractManifestSections(manifest){
-    const result = {
+  function extractManifestSections(manifest: GeneratedSkinManifest | null | undefined): ManifestSections {
+    const result: ManifestSections = {
       slots: null,
       uiVars: null,
       tiles: null,
@@ -511,7 +811,7 @@
       label: null
     };
     if(!isPlainObject(manifest)) return result;
-    const slots = {};
+    const slots: Record<string, unknown> = {};
     let hasSlots = false;
     if(isPlainObject(manifest.ui)){
       if(isPlainObject(manifest.ui.vars)) result.uiVars = { ...manifest.ui.vars };
@@ -539,13 +839,16 @@
     if(manifest.tiles) result.tiles = manifest.tiles;
     if(manifest.icons) result.icons = manifest.icons;
     if(manifest.map) result.map = manifest.map;
-    if(manifest.meta) result.meta = manifest.meta;
+    if(manifest.meta) result.meta = manifest.meta as UnknownRecord;
     if(typeof manifest.id === 'string') result.id = manifest.id.trim();
     if(typeof manifest.label === 'string') result.label = manifest.label.trim();
     return result;
   }
 
-  function buildGeneratedSkin(name, config){
+  function buildGeneratedSkin(
+    name: string,
+    config: GeneratedSkinConfig | GeneratedSkinOverrides | null | undefined
+  ): DustlandSkin | null {
     const styleId = typeof name === 'string' ? name.trim() : '';
     if(!styleId) return null;
     const merged = mergeGeneratedConfig(defaultGeneratedConfig(styleId), config || {});
@@ -555,30 +858,30 @@
     const extension = merged.extension;
     const normalizedExtension = typeof extension === 'string' ? extension : '';
     const normalizedExtensionLower = normalizedExtension.toLowerCase();
-    function appendDefaultExtension(base){
+    function appendDefaultExtension(base: unknown): string | null {
       if(!base) return null;
-      if(!normalizedExtension) return base;
+      if(!normalizedExtension) return typeof base === 'string' ? base : String(base);
       const trimmed = String(base).trim();
       if(!trimmed) return null;
       const lower = trimmed.toLowerCase();
       if(lower.endsWith(normalizedExtensionLower)) return trimmed;
       return `${trimmed}${normalizedExtension}`;
     }
-    function defaultSlotFilename(name){
-      const base = typeof name === 'string' ? name.trim() : '';
+    function defaultSlotFilename(slotName: unknown): string | null {
+      const base = typeof slotName === 'string' ? slotName.trim() : '';
       if(!base) return null;
       return appendDefaultExtension(base);
     }
-    function defaultTileFilename(tileKey){
+    function defaultTileFilename(tileKey: unknown): string | null {
       const slug = typeof tileKey === 'string' ? tileKey.trim() : '';
       if(!slug) return null;
       const sanitized = slug.replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '');
       if(!sanitized) return null;
       return appendDefaultExtension(`${sanitized.toLowerCase()}_tile`);
     }
-    const slotStyles = {};
-    const tileSlotDefinitions = new Map();
-    function handleSlotDefinition(slotName, definition){
+    const slotStyles: SlotStyles = {};
+    const tileSlotDefinitions = new Map<string, unknown>();
+    function handleSlotDefinition(slotName: unknown, definition: unknown): void {
       const name = typeof slotName === 'string' ? slotName.trim() : String(slotName ?? '');
       if(!name) return;
       const tileKey = parseTileSlotName(name);
@@ -607,7 +910,7 @@
         handleSlotDefinition(slotName, value);
       }
     }
-    const tileEnum = globalThis?.TILE;
+    const tileEnum = (globalThis as unknown as GlobalThis).TILE;
     if(tileEnum && typeof tileEnum === 'object'){
       for(const name of Object.keys(tileEnum)){
         if(typeof name !== 'string' || !name.trim()) continue;
@@ -619,19 +922,23 @@
         tileSlotDefinitions.set(tileKey, fallback);
       }
     }
-    const ui = {};
-    if(manifestSections.uiVars) ui.vars = { ...manifestSections.uiVars };
+    const ui: DustlandSkinUi = {};
+    if(manifestSections.uiVars) ui.vars = { ...manifestSections.uiVars } as Record<string, CssVarValue>;
     if(Object.keys(slotStyles).length) ui.slots = slotStyles;
-    let tileConfig = null;
+    let tileConfig: SkinTilesConfig | null = null;
     if(manifestSections.tiles){
-      tileConfig = rewriteSpriteEntry(manifestSections.tiles, baseDir, styleDir);
-      if(typeof tileConfig === 'string') tileConfig = { atlas: tileConfig };
-      else if(!isPlainObject(tileConfig)) tileConfig = {};
+      const rewrittenTiles = rewriteSpriteEntry(manifestSections.tiles, baseDir, styleDir);
+      if(typeof rewrittenTiles === 'string') tileConfig = { atlas: rewrittenTiles };
+      else if(isPlainObject(rewrittenTiles)) tileConfig = rewrittenTiles as SkinTilesConfig;
+      else tileConfig = {};
     }
     if(tileSlotDefinitions.size){
       if(!isPlainObject(tileConfig)) tileConfig = {};
-      const existingSource = isPlainObject(tileConfig.map) ? tileConfig.map : (isPlainObject(tileConfig.tiles) ? tileConfig.tiles : {});
-      const tileMap = { ...existingSource };
+      const currentTiles = tileConfig as SkinTilesConfig;
+      const existingSource: Record<string, SpriteEntry> = isPlainObject(currentTiles.map)
+        ? (currentTiles.map as Record<string, SpriteEntry>)
+        : (isPlainObject(currentTiles.tiles) ? (currentTiles.tiles as Record<string, SpriteEntry>) : {});
+      const tileMap: Record<string, SpriteEntry> = { ...existingSource };
       for(const [tileKey, definition] of tileSlotDefinitions){
         if(definition == null) continue;
         const lowerKey = tileKey.toLowerCase();
@@ -643,45 +950,45 @@
         }
         const rewritten = rewriteSpriteEntry(definition, baseDir, styleDir);
         if(rewritten == null) continue;
-        if(lowerKey === 'atlas' && typeof rewritten === 'string' && !Object.prototype.hasOwnProperty.call(tileConfig, 'atlas')){
-          tileConfig.atlas = rewritten;
+        if(lowerKey === 'atlas' && typeof rewritten === 'string' && !Object.prototype.hasOwnProperty.call(currentTiles, 'atlas')){
+          currentTiles.atlas = rewritten;
         }
-        tileMap[lowerKey] = rewritten;
+        tileMap[lowerKey] = rewritten as SpriteEntry;
       }
       const hasEntries = Object.keys(tileMap).length > 0;
-      if(hasEntries || (isPlainObject(existingSource) && Object.keys(existingSource).length)){
-        if(isPlainObject(tileConfig.map)) tileConfig.map = tileMap;
-        else if(isPlainObject(tileConfig.tiles)) tileConfig.tiles = tileMap;
-        else if(hasEntries) tileConfig.map = tileMap;
+      if(hasEntries || Object.keys(existingSource).length){
+        if(isPlainObject(currentTiles.map)) currentTiles.map = tileMap;
+        else if(isPlainObject(currentTiles.tiles)) currentTiles.tiles = tileMap;
+        else if(hasEntries) currentTiles.map = tileMap;
       }
     }
-    const skin = {
+    const skin: DustlandSkin = {
       id: manifestSections.id || `generated-${styleDir || styleId}`,
       label: manifestSections.label || styleId
     };
     if(Object.keys(ui).length) skin.ui = ui;
-    if(hasTileMapEntries(tileConfig)) skin.tiles = tileConfig;
-    if(manifestSections.icons) skin.icons = rewriteSpriteEntry(manifestSections.icons, baseDir, styleDir);
-    if(manifestSections.map) skin.map = rewriteSpriteEntry(manifestSections.map, baseDir, styleDir);
-    if(manifestSections.meta) skin.meta = { ...manifestSections.meta };
+    if(hasTileMapEntries(tileConfig)) skin.tiles = tileConfig as SkinTilesConfig;
+    if(manifestSections.icons) skin.icons = rewriteSpriteEntry(manifestSections.icons, baseDir, styleDir) as SkinIconsConfig;
+    if(manifestSections.map) skin.map = rewriteSpriteEntry(manifestSections.map, baseDir, styleDir) as SkinMapConfig;
+    if(manifestSections.meta) skin.meta = { ...manifestSections.meta } as UnknownRecord;
     const hasVisuals = skin.ui || skin.tiles || skin.icons || skin.map;
     if(!hasVisuals) return null;
     return skin;
   }
 
-  function cloneSkin(skin){
+  function cloneSkin(skin: DustlandSkin | null | undefined): DustlandSkin | null {
     if(!skin) return null;
     if(typeof structuredClone === 'function'){
       try { return structuredClone(skin); } catch (err) { void err; }
     }
     try {
-      return JSON.parse(JSON.stringify(skin));
+      return JSON.parse(JSON.stringify(skin)) as DustlandSkin;
     } catch (err) {
       return null;
     }
   }
 
-  function registerSkin(skin){
+  function registerSkin(skin: DustlandSkin | null | undefined): DustlandSkin | null {
     if(!skin || !skin.id) return null;
     const copy = cloneSkin(skin);
     if(!copy) return null;
@@ -689,7 +996,7 @@
     return copy;
   }
 
-  function resolveSkin(input){
+  function resolveSkin(input: string | DustlandSkin | null | undefined): DustlandSkin | null {
     if(!input) return null;
     if(typeof input === 'string'){
       const stored = registry.get(input);
@@ -699,7 +1006,7 @@
     return null;
   }
 
-  function resetCssVars(){
+  function resetCssVars(): void {
     const root = document.documentElement;
     if(!root) return;
     const style = root.style;
@@ -708,12 +1015,12 @@
     }
   }
 
-  function applyCssVars(skin){
+  function applyCssVars(skin: DustlandSkin | null | undefined): void {
     resetCssVars();
     const root = document.documentElement;
     if(!root || !skin) return;
     const style = root.style;
-    const ui = skin.ui || {};
+    const ui = (skin.ui || {}) as DustlandSkinUi;
     if(skin.cssVars && typeof skin.cssVars === 'object'){
       for(const [name, value] of Object.entries(skin.cssVars)){
         if(value == null) continue;
@@ -737,7 +1044,7 @@
     }
   }
 
-  function clearSlotStyles(){
+  function clearSlotStyles(): void {
     for(const info of state.slotApplied){
       const { el, props } = info;
       if(!el || !el.style) continue;
@@ -748,13 +1055,13 @@
     state.slotApplied.length = 0;
   }
 
-  function applySlotStyles(skin){
+  function applySlotStyles(skin: DustlandSkin): void {
     clearSlotStyles();
     if(!skin || !skin.ui || !skin.ui.slots) return;
     const slots = skin.ui.slots;
     for(const [slot, config] of Object.entries(slots)){
       if(!config) continue;
-      const elements = document.querySelectorAll(`[data-skin-slot="${slot}"]`);
+      const elements = document.querySelectorAll<HTMLElement>(`[data-skin-slot="${slot}"]`);
       if(!elements.length) continue;
       for(const el of elements){
         if(!el || !el.style) continue;
@@ -781,21 +1088,23 @@
     }
   }
 
-  function applyMapFrame(skin){
-    const frame = skin?.map?.frame;
+  function applyMapFrame(skin: DustlandSkin | null | undefined): void {
+    const frame = (skin?.map && typeof skin.map === 'object') ? (skin.map as SkinMapConfig).frame ?? null : null;
     if(frame){
-      const color = frame.color ?? frame.strokeStyle ?? frame.fill ?? null;
-      const width = frame.width ?? frame.lineWidth ?? frame.strokeWidth ?? null;
+      const colorRaw = frame.color ?? frame.strokeStyle ?? frame.fill ?? null;
+      const widthRaw = frame.width ?? frame.lineWidth ?? frame.strokeWidth ?? null;
+      const colorValue = colorRaw != null ? String(colorRaw) : null;
+      const lineWidthValue = typeof widthRaw === 'number' ? widthRaw : (widthRaw != null ? String(widthRaw) : null);
       state.mapFrame = {
-        color: color ?? null,
-        lineWidth: width ?? null
+        color: colorValue,
+        lineWidth: lineWidthValue
       };
       const root = document.documentElement;
       if(root){
         const style = root.style;
-        if(color != null) style.setProperty('--skin-map-frame-color', String(color));
-        if(width != null){
-          const val = typeof width === 'number' ? `${width}px` : String(width);
+        if(colorValue != null) style.setProperty('--skin-map-frame-color', colorValue);
+        if(widthRaw != null){
+          const val = typeof widthRaw === 'number' ? `${widthRaw}px` : String(widthRaw);
           style.setProperty('--skin-map-frame-width', val);
         }
       }
@@ -804,7 +1113,7 @@
     }
   }
 
-  function clearCaches(){
+  function clearCaches(): void {
     tileSpriteCache.clear();
     itemSpriteCache.clear();
     entitySpriteCache = new WeakMap();
@@ -812,7 +1121,7 @@
     remoteSpriteCache.clear();
   }
 
-  function resetSkin(shouldNotify = false){
+  function resetSkin(shouldNotify = false): void {
     state.currentSkin = null;
     state.mapFrame = null;
     clearCaches();
@@ -821,7 +1130,7 @@
     if(shouldNotify) notifyChange();
   }
 
-  function applySkin(input){
+  function applySkin(input: string | DustlandSkin | null | undefined): void {
     const skin = resolveSkin(input);
     if(!skin){
       resetSkin(true);
@@ -836,7 +1145,7 @@
     notifyChange();
   }
 
-  function notifyChange(){
+  function notifyChange(): void {
     const payload = state.currentSkin ? cloneSkin(state.currentSkin) : null;
     for(const fn of callbacks){
       try { fn(payload); } catch (err) { void err; }
@@ -846,18 +1155,18 @@
     } catch (err) { void err; }
   }
 
-  function onChange(fn){
+  function onChange(fn: (skin: DustlandSkin | null) => void): () => void {
     if(typeof fn === 'function') callbacks.add(fn);
     return () => offChange(fn);
   }
 
-  function offChange(fn){
+  function offChange(fn: (skin: DustlandSkin | null) => void): void {
     callbacks.delete(fn);
   }
 
-  function loadImage(src){
+  function loadImage(src: string | null | undefined): HTMLImageElement | null {
     if(!src || typeof Image === 'undefined') return null;
-    if(imageCache.has(src)) return imageCache.get(src);
+    if(imageCache.has(src)) return imageCache.get(src) ?? null;
     const img = new Image();
     img.decoding = 'async';
     imageCache.set(src, img);
@@ -886,28 +1195,61 @@
     return img;
   }
 
-  function toFiniteNumber(...values){
+  function toFiniteNumber(...values: unknown[]): number | null {
     for(const value of values){
-      if(Number.isFinite(value)) return value;
+      if(typeof value === 'number' && Number.isFinite(value)) return value;
     }
     return null;
   }
 
-  function createSprite(entry, context){
-    if(!entry) return null;
-    const base = typeof entry === 'string' ? { src: entry } : entry;
-    const atlas = base.atlas || context?.atlas;
-    const src = base.src || atlas;
+  function isSpriteConfig(value: unknown): value is SpriteConfig {
+    return isPlainObject(value);
+  }
+
+  function createSprite(entry: unknown, context: SpriteContext | null | undefined): Sprite | null {
+    if(entry == null) return null;
+    if(Array.isArray(entry)){
+      for(const candidate of entry){
+        const sprite = createSprite(candidate, context);
+        if(sprite) return sprite;
+      }
+      return null;
+    }
+    const base: SpriteConfig | null = typeof entry === 'string' ? { src: entry } : (isSpriteConfig(entry) ? entry : null);
+    if(!base) return null;
+    const atlasSource = typeof base.atlas === 'string' && base.atlas ? base.atlas : (typeof context?.atlas === 'string' ? context.atlas : undefined);
+    const src = typeof base.src === 'string' && base.src ? base.src : atlasSource;
     if(!src) return null;
     const image = loadImage(src);
     if(!image) return null;
-    const frame = base.frame || {};
+    const frame = isPlainObject(base.frame) ? (base.frame as SpriteFrameConfig) : {};
     const tileWidth = toFiniteNumber(base.tileWidth, frame.tileWidth, context?.tileWidth, context?.tileSize);
     const tileHeight = toFiniteNumber(base.tileHeight, frame.tileHeight, context?.tileHeight, context?.tileSize);
-    const sw = toFiniteNumber(base.w, base.width, frame.w, frame.width, tileWidth, context?.tileWidth, context?.tileSize, image.naturalWidth, image.width) || 0;
-    const sh = toFiniteNumber(base.h, base.height, frame.h, frame.height, tileHeight, context?.tileHeight, context?.tileSize, sw) || 0;
-    const resolvedWidth = sw || (image.naturalWidth || image.width);
-    const resolvedHeight = sh || (image.naturalHeight || image.height);
+    const sw =
+      toFiniteNumber(
+        base.w,
+        base.width,
+        frame.w,
+        frame.width,
+        tileWidth,
+        context?.tileWidth,
+        context?.tileSize,
+        image.naturalWidth,
+        image.width
+      ) || 0;
+    const sh =
+      toFiniteNumber(
+        base.h,
+        base.height,
+        frame.h,
+        frame.height,
+        tileHeight,
+        context?.tileHeight,
+        context?.tileSize,
+        sw
+      ) || 0;
+    const resolvedWidth = sw || image.naturalWidth || image.width;
+    const resolvedHeight = sh || image.naturalHeight || image.height;
     const columns = toFiniteNumber(base.columns, frame.columns, context?.columns, context?.cols, context?.tileColumns, context?.tileCols);
     const index = toFiniteNumber(base.index, frame.index, base.tileIndex, frame.tileIndex);
     const col = (() => {
@@ -948,37 +1290,42 @@
     const spriteWidth = sw || cellWidth;
     const spriteHeight = sh || cellHeight;
     if(!Number.isFinite(spriteWidth) || !Number.isFinite(spriteHeight)) return null;
-    const sprite = {
+    const sprite: Sprite = {
       image,
       sx,
       sy,
       sw: spriteWidth,
       sh: spriteHeight
     };
-    if(Number.isFinite(base.scale)) sprite.scale = base.scale;
-    if(Number.isFinite(base.dw)) sprite.dw = base.dw;
-    if(Number.isFinite(base.dh)) sprite.dh = base.dh;
-    if(Number.isFinite(base.displayWidth)) sprite.displayWidth = base.displayWidth;
-    if(Number.isFinite(base.displayHeight)) sprite.displayHeight = base.displayHeight;
-    if(Number.isFinite(base.offsetX) || Number.isFinite(base.dx)) sprite.offsetX = Number.isFinite(base.offsetX) ? base.offsetX : base.dx;
-    if(Number.isFinite(base.offsetY) || Number.isFinite(base.dy)) sprite.offsetY = Number.isFinite(base.offsetY) ? base.offsetY : base.dy;
-    if(base.align || base.anchor) sprite.align = base.align || base.anchor;
+    if(typeof base.scale === 'number' && Number.isFinite(base.scale)) sprite.scale = base.scale;
+    if(typeof base.dw === 'number' && Number.isFinite(base.dw)) sprite.dw = base.dw;
+    if(typeof base.dh === 'number' && Number.isFinite(base.dh)) sprite.dh = base.dh;
+    if(typeof base.displayWidth === 'number' && Number.isFinite(base.displayWidth)) sprite.displayWidth = base.displayWidth;
+    if(typeof base.displayHeight === 'number' && Number.isFinite(base.displayHeight)) sprite.displayHeight = base.displayHeight;
+    if(typeof base.offsetX === 'number' && Number.isFinite(base.offsetX)) sprite.offsetX = base.offsetX;
+    else if(typeof base.dx === 'number' && Number.isFinite(base.dx)) sprite.offsetX = base.dx;
+    if(typeof base.offsetY === 'number' && Number.isFinite(base.offsetY)) sprite.offsetY = base.offsetY;
+    else if(typeof base.dy === 'number' && Number.isFinite(base.dy)) sprite.offsetY = base.dy;
+    if(base.align || base.anchor) sprite.align = (base.align ?? base.anchor) as string | unknown;
     return sprite;
   }
 
-  function findConfig(source, key){
+  function findConfig<T = unknown>(source: Record<string, T> | null | undefined, key: unknown): T | null {
     if(!source || key == null) return null;
-    if(Object.prototype.hasOwnProperty.call(source, key)) return source[key];
-    if(typeof key === 'string'){
-      const lower = key.toLowerCase();
-      if(Object.prototype.hasOwnProperty.call(source, lower)) return source[lower];
-      const upper = key.toUpperCase();
-      if(Object.prototype.hasOwnProperty.call(source, upper)) return source[upper];
+    const directKey = typeof key === 'number' ? String(key) : key;
+    if(typeof directKey === 'string' && Object.prototype.hasOwnProperty.call(source, directKey)){
+      return source[directKey] as T;
+    }
+    if(typeof directKey === 'string'){
+      const lower = directKey.toLowerCase();
+      if(Object.prototype.hasOwnProperty.call(source, lower)) return source[lower] as T;
+      const upper = directKey.toUpperCase();
+      if(Object.prototype.hasOwnProperty.call(source, upper)) return source[upper] as T;
     }
     return null;
   }
 
-  function parseTileSlotName(name){
+  function parseTileSlotName(name: unknown): string | null {
     if(typeof name !== 'string') return null;
     const match = name.trim().match(TILE_SLOT_PATTERN);
     if(!match) return null;
@@ -987,30 +1334,32 @@
     return slug.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase();
   }
 
-  function tileIdByName(name){
+  function tileIdByName(name: unknown): number | null {
     if(!name) return null;
-    const tiles = globalThis.TILE;
+    const tiles = (globalThis as unknown as GlobalThis).TILE;
     if(!tiles || typeof tiles !== 'object') return null;
     const upper = String(name).replace(/[^a-z0-9]+/gi, '_').toUpperCase();
-    if(Object.prototype.hasOwnProperty.call(tiles, upper)) return tiles[upper];
+    if(Object.prototype.hasOwnProperty.call(tiles, upper)) return tiles[upper] ?? null;
     return null;
   }
 
-  function hasTileMapEntries(config){
+  function hasTileMapEntries(config: unknown): boolean {
     if(!isPlainObject(config)) return false;
-    if(isPlainObject(config.map) && Object.keys(config.map).length) return true;
-    if(isPlainObject(config.tiles) && Object.keys(config.tiles).length) return true;
+    const maybeMap = (config as SkinTilesConfig).map;
+    const maybeTiles = (config as SkinTilesConfig).tiles;
+    if(isPlainObject(maybeMap) && Object.keys(maybeMap).length) return true;
+    if(isPlainObject(maybeTiles) && Object.keys(maybeTiles).length) return true;
     return false;
   }
 
-  function tileName(id){
-    if(tileNameCache.has(id)) return tileNameCache.get(id);
-    const tiles = globalThis.TILE;
+  function tileName(id: string | number): string | null {
+    if(tileNameCache.has(id)) return tileNameCache.get(id) ?? null;
+    const tiles = (globalThis as unknown as GlobalThis).TILE;
     if(tiles){
       for(const [name, value] of Object.entries(tiles)){
         if(value === id){
           tileNameCache.set(id, name.toLowerCase());
-          return tileNameCache.get(id);
+          return tileNameCache.get(id) ?? null;
         }
       }
     }
@@ -1018,10 +1367,10 @@
     return null;
   }
 
-  function resolveTileDefinition(tiles, tileId){
+  function resolveTileDefinition(tiles: SkinTilesConfig | null | undefined, tileId: string | number): unknown {
     if(!tiles) return null;
-    const defs = tiles.map || tiles.tiles || {};
-    const keys = [];
+    const defs = (isPlainObject(tiles.map) ? tiles.map : (isPlainObject(tiles.tiles) ? tiles.tiles : {})) as Record<string, unknown>;
+    const keys: string[] = [];
     if(typeof tileId === 'number'){
       keys.push(String(tileId));
       const name = tileName(tileId);
@@ -1035,9 +1384,9 @@
     return null;
   }
 
-  function cloneSpriteBase(entry){
+  function cloneSpriteBase(entry: unknown): UnknownRecord | unknown {
     if(!isPlainObject(entry)) return entry;
-    const clone = {};
+    const clone: UnknownRecord = {};
     for(const [key, value] of Object.entries(entry)){
       if(key === 'variants') continue;
       if(isPlainObject(value)) clone[key] = { ...value };
@@ -1047,9 +1396,9 @@
     return clone;
   }
 
-  function mergeVariantEntry(base, variant){
+  function mergeVariantEntry(base: unknown, variant: unknown): unknown {
     if(!isPlainObject(base)) return variant;
-    const merged = { ...base };
+    const merged: UnknownRecord = { ...base };
     if(typeof variant === 'string'){
       merged.src = variant;
       return merged;
@@ -1065,11 +1414,11 @@
     return merged;
   }
 
-  function selectVariantIndex(count, context, tileId){
+  function selectVariantIndex(count: number, context: TileContext | null | undefined, tileId: string | number): number {
     if(!Number.isFinite(count) || count <= 0) return 0;
-    const x = Number.isFinite(context?.x) ? context.x : 0;
-    const y = Number.isFinite(context?.y) ? context.y : 0;
-    const seed = Number.isFinite(context?.seed) ? context.seed : 0;
+    const x = typeof context?.x === 'number' && Number.isFinite(context.x) ? context.x : 0;
+    const y = typeof context?.y === 'number' && Number.isFinite(context.y) ? context.y : 0;
+    const seed = typeof context?.seed === 'number' && Number.isFinite(context.seed) ? context.seed : 0;
     let h = Math.imul(x | 0, 0x45d9f3b);
     h = Math.imul(h ^ Math.imul((y | 0) ^ 0x27d4eb2d, 0x165667b1), 0x27d4eb2d);
     h ^= Math.imul(seed | 0, 0x9e3779b9);
@@ -1080,23 +1429,27 @@
     return Number.isFinite(idx) ? idx : 0;
   }
 
-  function resolveTileVariant(def, context, tileId){
+  function resolveTileVariant(def: unknown, context: TileContext | null | undefined, tileId: string | number): VariantResolution {
     if(Array.isArray(def) && def.length){
       const idx = selectVariantIndex(def.length, context, tileId);
       const entry = def[idx] ?? def[0];
       return { entry, cacheKey: `arr:${idx}` };
     }
-    if(isPlainObject(def) && Array.isArray(def.variants) && def.variants.length){
-      const base = cloneSpriteBase(def);
-      const idx = selectVariantIndex(def.variants.length, context, tileId);
-      const variantEntry = def.variants[idx] ?? def.variants[0];
-      const merged = mergeVariantEntry(base, variantEntry);
-      return { entry: merged, cacheKey: `obj:${idx}` };
+    if(isPlainObject(def)){
+      const variantsRaw = (def as UnknownRecord).variants;
+      if(Array.isArray(variantsRaw) && variantsRaw.length){
+        const base = cloneSpriteBase(def);
+        const variants = variantsRaw as unknown[];
+        const idx = selectVariantIndex(variants.length, context, tileId);
+        const variantEntry = variants[idx] ?? variants[0];
+        const merged = mergeVariantEntry(base, variantEntry);
+        return { entry: merged, cacheKey: `obj:${idx}` };
+      }
     }
     return { entry: def, cacheKey: 'base' };
   }
 
-  function getTileSprite(tileId, context = {}){
+  function getTileSprite(tileId: string | number, context: TileContext = {}): Sprite | null {
     const key = String(tileId);
     const skin = state.currentSkin;
     if(!skin?.tiles){
@@ -1110,13 +1463,13 @@
     }
     const variant = resolveTileVariant(def, context, tileId);
     const cacheKey = variant.cacheKey ? `${key}|${variant.cacheKey}` : key;
-    if(tileSpriteCache.has(cacheKey)) return tileSpriteCache.get(cacheKey);
+    if(tileSpriteCache.has(cacheKey)) return tileSpriteCache.get(cacheKey) ?? null;
     const sprite = createSprite(variant.entry, skin.tiles);
     tileSpriteCache.set(cacheKey, sprite || null);
     return sprite || null;
   }
 
-  function getItemCacheKey(item, context){
+  function getItemCacheKey(item: ItemLike | null | undefined, context: ItemSpriteContext): string {
     const first = Array.isArray(item?.items) && item.items.length ? item.items[0] : item;
     const dropType = context?.dropType ?? item?.dropType ?? '';
     const slot = first?.slot ?? '';
@@ -1127,9 +1480,9 @@
     return [dropType, slot, type, id, rarity, multi].join('|');
   }
 
-  function getItemSprite(item, context = {}){
+  function getItemSprite(item: ItemLike | null | undefined, context: ItemSpriteContext = {}): Sprite | null {
     const key = getItemCacheKey(item, context);
-    if(itemSpriteCache.has(key)) return itemSpriteCache.get(key);
+    if(itemSpriteCache.has(key)) return itemSpriteCache.get(key) ?? null;
     const skin = state.currentSkin;
     if(!skin?.icons?.items){
       itemSpriteCache.set(key, null);
@@ -1164,7 +1517,7 @@
     return sprite || null;
   }
 
-  function collectEntityTags(entity){
+  function collectEntityTags(entity: EntityLike | null | undefined): string[] {
     const tags = ['entity'];
     if(!entity || typeof entity !== 'object') return tags;
     if(entity.id) tags.push(`id:${entity.id}`);
@@ -1182,9 +1535,9 @@
     return tags;
   }
 
-  function getEntitySprite(entity){
+  function getEntitySprite(entity: EntityLike | null | undefined): Sprite | null {
     if(!entity || typeof entity !== 'object') return null;
-    if(entitySpriteCache.has(entity)) return entitySpriteCache.get(entity);
+    if(entitySpriteCache.has(entity)) return entitySpriteCache.get(entity) ?? null;
     const skin = state.currentSkin;
     if(!skin?.icons?.entities){
       entitySpriteCache.set(entity, null);
@@ -1212,9 +1565,9 @@
     return sprite || null;
   }
 
-  function getPlayerSprite(playerInfo, context = {}){
+  function getPlayerSprite(playerInfo: PlayerInfo | null | undefined, context: PlayerSpriteContext = {}): Sprite | null {
     const key = context.mode ? `mode:${context.mode}` : 'default';
-    if(playerSpriteCache.has(key)) return playerSpriteCache.get(key);
+    if(playerSpriteCache.has(key)) return playerSpriteCache.get(key) ?? null;
     const skin = state.currentSkin;
     if(!skin?.icons?.player){
       playerSpriteCache.set(key, null);
@@ -1239,10 +1592,10 @@
     return sprite || null;
   }
 
-  function getRemotePartySprite(info){
+  function getRemotePartySprite(info: RemotePartyInfo | null | undefined): Sprite | null {
     if(!info || typeof info !== 'object') return null;
     const key = String(info.id ?? info.playerId ?? info.name ?? `${info.x ?? ''}:${info.y ?? ''}`);
-    if(remoteSpriteCache.has(key)) return remoteSpriteCache.get(key);
+    if(remoteSpriteCache.has(key)) return remoteSpriteCache.get(key) ?? null;
     const skin = state.currentSkin;
     if(!skin?.icons?.remoteParty){
       remoteSpriteCache.set(key, null);
@@ -1262,14 +1615,14 @@
     return sprite || null;
   }
 
-  function getMapFrame(){
+  function getMapFrame(): SkinMapFrameState | null {
     if(!state.mapFrame) return null;
     return { ...state.mapFrame };
   }
 
   const SPRITE_META_KEYS = new Set(['src','atlas','frame','x','y','w','h','width','height','scale','offsetX','offsetY','dx','dy','align','anchor','dw','dh','displayWidth','displayHeight']);
 
-  function preloadTileDefinition(entry){
+  function preloadTileDefinition(entry: unknown): void {
     if(!entry) return;
     if(typeof entry === 'string'){
       loadImage(entry);
@@ -1280,13 +1633,17 @@
       return;
     }
     if(!isPlainObject(entry)) return;
-    if(typeof entry.src === 'string') loadImage(entry.src);
-    if(typeof entry.atlas === 'string') loadImage(entry.atlas);
-    if(entry.frame && typeof entry.frame === 'object' && typeof entry.frame.src === 'string') loadImage(entry.frame.src);
-    if(entry.variants) preloadTileDefinition(entry.variants);
+    const record = entry as UnknownRecord;
+    if(typeof record.src === 'string') loadImage(record.src);
+    if(typeof record.atlas === 'string') loadImage(record.atlas);
+    const frameEntry = record.frame;
+    if(isPlainObject(frameEntry) && typeof (frameEntry as UnknownRecord).src === 'string'){
+      loadImage((frameEntry as UnknownRecord).src as string);
+    }
+    if(record.variants) preloadTileDefinition(record.variants);
   }
 
-  function preloadIconGroup(group){
+  function preloadIconGroup(group: unknown): void {
     if(!group) return;
     if(Array.isArray(group)){
       group.forEach(preloadIconGroup);
@@ -1297,15 +1654,16 @@
       return;
     }
     if(typeof group !== 'object') return;
-    if(group.src) loadImage(group.src);
-    if(group.atlas) loadImage(group.atlas);
-    for(const [key, value] of Object.entries(group)){
+    const record = group as UnknownRecord;
+    if(typeof record.src === 'string') loadImage(record.src);
+    if(typeof record.atlas === 'string') loadImage(record.atlas);
+    for(const [key, value] of Object.entries(record)){
       if(SPRITE_META_KEYS.has(key)) continue;
       preloadIconGroup(value);
     }
   }
 
-  function prepareAssets(skin){
+  function prepareAssets(skin: DustlandSkin | null | undefined): void {
     if(!skin) return;
     if(skin.tiles){
       if(skin.tiles.atlas) loadImage(skin.tiles.atlas);
@@ -1322,7 +1680,7 @@
     }
   }
 
-  function registerGeneratedSkin(name, input = {}){
+  function registerGeneratedSkin(name: string, input: GeneratedSkinOverrides | null | undefined = {}): GeneratedSkinConfig | null {
     const styleId = typeof name === 'string' ? name.trim() : '';
     if(!styleId) return null;
     const overrides = normalizeGeneratedOverride(styleId, input);
@@ -1331,7 +1689,7 @@
     return cloneGeneratedConfig(merged);
   }
 
-  function loadGeneratedSkin(name, input = {}){
+  function loadGeneratedSkin(name: string, input: GeneratedSkinOverrides | null | undefined = {}): DustlandSkin | null {
     const styleId = typeof name === 'string' ? name.trim() : '';
     if(!styleId) return null;
     const stored = generatedConfigs.get(styleId) || defaultGeneratedConfig(styleId);
@@ -1345,11 +1703,11 @@
     return cloneSkin(skin);
   }
 
-  function listGeneratedSkins(){
+  function listGeneratedSkins(): string[] {
     return Array.from(generatedConfigs.keys());
   }
 
-  function getGeneratedSkinConfig(name){
+  function getGeneratedSkinConfig(name: string | null | undefined): GeneratedSkinConfig | null {
     const styleId = typeof name === 'string' ? name.trim() : '';
     if(!styleId) return null;
     const stored = generatedConfigs.get(styleId);
@@ -1357,7 +1715,7 @@
     return getPackagedGeneratedConfig(styleId);
   }
 
-  const api = {
+  const api: DustlandSkinApi = {
     applySkin,
     registerSkin,
     registerGeneratedSkin,
@@ -1380,7 +1738,7 @@
   globalThis.Dustland = globalThis.Dustland || {};
   globalThis.Dustland.skin = api;
   globalThis.DustlandSkin = api;
-  globalThis.loadSkin = globalThis.loadSkin || ((name, options) => api.loadGeneratedSkin(name, options));
+  globalThis.loadSkin = globalThis.loadSkin || ((name: string, options?: GeneratedSkinOverrides | null) => api.loadGeneratedSkin(name, options));
 
   resetSkin(false);
 })();
