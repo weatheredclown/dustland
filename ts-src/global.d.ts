@@ -73,6 +73,50 @@ declare global {
 
   type JsonSchema = Record<string, unknown>;
 
+  type DustlandSkinVarValue = string | number | null | undefined;
+
+  interface DustlandSkinUi extends Record<string, Record<string, unknown> | undefined> {
+    vars?: Record<string, DustlandSkinVarValue>;
+    slots?: Record<string, Record<string, unknown>> | null;
+  }
+
+  interface DustlandSkin {
+    id: string;
+    label: string;
+    cssVars?: Record<string, DustlandSkinVarValue>;
+    ui?: DustlandSkinUi | null;
+    tiles?: Record<string, unknown> | null;
+    icons?: Record<string, unknown> | null;
+    map?: Record<string, unknown> | null;
+    meta?: Record<string, unknown> | null;
+    [section: string]: unknown;
+  }
+
+  interface DustlandSkinFrameState {
+    color: string | null;
+    lineWidth: string | number | null;
+  }
+
+  interface DustlandSkinApi {
+    applySkin: (input: string | DustlandSkin | null | undefined) => void;
+    registerSkin: (skin: DustlandSkin | null | undefined) => DustlandSkin | null;
+    registerGeneratedSkin: (name: string, input?: Record<string, unknown> | null) => Record<string, unknown> | null;
+    loadGeneratedSkin: (name: string, input?: Record<string, unknown> | null) => DustlandSkin | null;
+    listGeneratedSkins: () => string[];
+    getGeneratedSkinConfig: (name: string) => Record<string, unknown> | null;
+    getRegisteredSkin: (id: string) => DustlandSkin | null;
+    getCurrentSkin: () => DustlandSkin | null;
+    getTileSprite: (tileId: string | number, context?: Record<string, unknown>) => unknown;
+    getItemSprite: (item: Record<string, unknown> | null | undefined, context?: Record<string, unknown>) => unknown;
+    getEntitySprite: (entity: Record<string, unknown> | null | undefined) => unknown;
+    getPlayerSprite: (playerInfo: Record<string, unknown> | null | undefined, context?: Record<string, unknown>) => unknown;
+    getRemotePartySprite: (info: Record<string, unknown> | null | undefined) => unknown;
+    getMapFrame: () => DustlandSkinFrameState | null;
+    onChange: (fn: (skin: DustlandSkin | null) => void) => () => void;
+    offChange: (fn: (skin: DustlandSkin | null) => void) => void;
+    reset: () => void;
+  }
+
   interface DustlandEffectsApi {
     apply: (list?: unknown[], ctx?: Record<string, unknown>) => void;
     reset?: () => void;
@@ -471,7 +515,7 @@ declare global {
   }
 
   interface SkinChangedPayload {
-    skin?: unknown;
+    skin?: DustlandSkin | null;
     [key: string]: unknown;
   }
 
@@ -796,6 +840,7 @@ interface ItemGeneratorRange {
     Wizard?: WizardFactory;
     WizardSteps?: WizardStepsRegistry;
     wizards?: Record<string, WizardDefinition>;
+    skin?: DustlandSkinApi;
     effects?: DustlandEffectsApi;
     inventory?: DustlandInventoryApi;
     profiles?: DustlandProfilesApi;
@@ -1051,6 +1096,8 @@ interface ItemGeneratorRange {
 
   interface GlobalThis {
     Dustland?: DustlandNamespace;
+    DustlandSkin?: DustlandSkinApi;
+    loadSkin?: (name: string, options?: Record<string, unknown> | null) => DustlandSkin | null;
     ACK?: AckGlobal;
     UI?: DustlandUiApi;
     TRAINER_UPGRADE_SCHEMA?: JsonSchema;
