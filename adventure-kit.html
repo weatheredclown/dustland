@@ -198,6 +198,138 @@
       font-size: 0.8125rem;
     }
 
+    .tabs2 {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .tab2 {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: #121a12;
+      border: 1px solid #2b3b2b;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: inherit;
+    }
+
+    .tab2.active {
+      border-color: #69e06e;
+      background: #1a301a;
+      box-shadow: 0 0 6px rgba(110, 231, 115, 0.25);
+    }
+
+    .tab2__icon {
+      font-size: 1.1rem;
+    }
+
+    .inline-message {
+      margin-top: 4px;
+      padding: 6px 8px;
+      border: 1px solid #2b3b2b;
+      border-radius: 4px;
+      background: #101910;
+      font-size: 0.75rem;
+    }
+
+    .inline-message[data-state="error"] {
+      border-color: #a44;
+      background: #2a1212;
+      color: #ffbfbf;
+    }
+
+    .inline-message[data-state="ready"] {
+      border-color: #3a6d3a;
+      color: #bdfac0;
+    }
+
+    .inline-hint {
+      margin-top: 4px;
+      font-size: 0.7rem;
+      opacity: 0.85;
+    }
+
+    label.fieldError {
+      color: #ffbfbf;
+    }
+
+    input.fieldError,
+    textarea.fieldError,
+    select.fieldError {
+      border-color: #cc5555;
+      box-shadow: 0 0 0 1px rgba(204, 85, 85, 0.35);
+    }
+
+    .coord-summary {
+      margin-top: 6px;
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+    }
+
+    .map-banner {
+      margin-top: 8px;
+      padding: 6px 8px;
+      border: 1px solid #2b3b2b;
+      border-radius: 4px;
+      background: rgba(18, 26, 18, 0.9);
+      font-size: 0.75rem;
+      letter-spacing: 0.03em;
+    }
+
+    .sticky-actions {
+      position: sticky;
+      bottom: -8px;
+      background: linear-gradient(180deg, rgba(15, 18, 15, 0.4) 0%, #0f120f 60%);
+      padding: 8px;
+      margin-top: 12px;
+      border-top: 1px solid #2b3b2b;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    .npc-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .npc-actions__row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .npc-actions__row--secondary {
+      justify-content: space-between;
+    }
+
+    .btn--primary {
+      background: #1f7f3f;
+      border-color: #69e06e;
+      color: #031203;
+    }
+
+    .btn--primary:disabled {
+      background: #1b2c1b;
+      border-color: #2b3b2b;
+      color: #6a8b6a;
+    }
+
+    @media (max-width: 1080px) {
+      .ak-layout {
+        flex-direction: column;
+      }
+      #mapCard {
+        order: -1;
+      }
+    }
+
     #stampWindow {
       position: absolute;
       background: #0f120f;
@@ -393,6 +525,7 @@
   <div class="ak-layout">
       <section class="card map-card" id="mapCard">
         <canvas id="map" width="640" height="480" aria-label="Map preview"></canvas>
+        <div id="mapSelectionBanner" class="map-banner" role="status" aria-live="polite" style="display:none">Map selection active: click a tile to place your NPC.</div>
         <label>Map<select id="mapSelect"></select></label>
         <div class="btn-group" id="paletteGroup">
           <div id="paletteWrap">
@@ -455,18 +588,18 @@
         <div class="list" id="problemList"></div>
       </fieldset>
       <div class="tabs2" role="tablist" aria-label="Editors">
-        <button class="tab2 active" type="button" data-tab="npc" role="tab" aria-selected="true">NPCs</button>
-        <button class="tab2" type="button" data-tab="items" role="tab" aria-selected="false">Items</button>
-        <button class="tab2" type="button" data-tab="buildings" role="tab" aria-selected="false">Buildings</button>
-        <button class="tab2" type="button" data-tab="interiors" role="tab" aria-selected="false">Interiors</button>
-        <button class="tab2" type="button" data-tab="portals" role="tab" aria-selected="false">Portals</button>
-        <button class="tab2" type="button" data-tab="quests" role="tab" aria-selected="false">Quests</button>
-        <button class="tab2" type="button" data-tab="events" role="tab" aria-selected="false">Events</button>
-        <button class="tab2" type="button" data-tab="arenas" role="tab" aria-selected="false">Arenas</button>
-        <button class="tab2" type="button" data-tab="zones" role="tab" aria-selected="false">Zones</button>
-        <button class="tab2" type="button" data-tab="encounters" role="tab" aria-selected="false">Encounters</button>
-        <button class="tab2" type="button" data-tab="templates" role="tab" aria-selected="false">Templates</button>
-        <button class="tab2" type="button" data-tab="wizards" role="tab" aria-selected="false">Wizards</button>
+        <button class="tab2 active" type="button" data-tab="npc" role="tab" aria-selected="true"><span class="tab2__icon" aria-hidden="true">🧑</span><span class="tab2__label">NPCs</span></button>
+        <button class="tab2" type="button" data-tab="items" role="tab" aria-selected="false"><span class="tab2__icon" aria-hidden="true">🎒</span><span class="tab2__label">Items</span></button>
+        <button class="tab2" type="button" data-tab="buildings" role="tab" aria-selected="false"><span class="tab2__icon" aria-hidden="true">🏠</span><span class="tab2__label">Buildings</span></button>
+        <button class="tab2" type="button" data-tab="interiors" role="tab" aria-selected="false"><span class="tab2__icon" aria-hidden="true">🏚️</span><span class="tab2__label">Interiors</span></button>
+        <button class="tab2" type="button" data-tab="portals" role="tab" aria-selected="false"><span class="tab2__icon" aria-hidden="true">🌀</span><span class="tab2__label">Portals</span></button>
+        <button class="tab2" type="button" data-tab="quests" role="tab" aria-selected="false"><span class="tab2__icon" aria-hidden="true">📜</span><span class="tab2__label">Quests</span></button>
+        <button class="tab2" type="button" data-tab="events" role="tab" aria-selected="false"><span class="tab2__icon" aria-hidden="true">🎯</span><span class="tab2__label">Events</span></button>
+        <button class="tab2" type="button" data-tab="arenas" role="tab" aria-selected="false"><span class="tab2__icon" aria-hidden="true">⚔️</span><span class="tab2__label">Arenas</span></button>
+        <button class="tab2" type="button" data-tab="zones" role="tab" aria-selected="false"><span class="tab2__icon" aria-hidden="true">🗺️</span><span class="tab2__label">Zones</span></button>
+        <button class="tab2" type="button" data-tab="encounters" role="tab" aria-selected="false"><span class="tab2__icon" aria-hidden="true">👾</span><span class="tab2__label">Encounters</span></button>
+        <button class="tab2" type="button" data-tab="templates" role="tab" aria-selected="false"><span class="tab2__icon" aria-hidden="true">🧩</span><span class="tab2__label">Templates</span></button>
+        <button class="tab2" type="button" data-tab="wizards" role="tab" aria-selected="false"><span class="tab2__icon" aria-hidden="true">🪄</span><span class="tab2__label">Wizards</span></button>
       </div>
       <div class="tabpanes">
         <fieldset class="card" id="npcCard" data-pane="npc">
@@ -475,6 +608,7 @@
           <div class="list" id="npcList"></div>
           <button class="btn" type="button" id="newNPC">+ NPC</button>
           <div id="npcEditor" style="display:none">
+          <div class="inline-message" id="npcValidationMessage" role="status" aria-live="polite">Select an NPC to edit or click “New NPC” to create one.</div>
           <label>ID<input id="npcId" placeholder="npc_id" /></label>
           <label>Name<input id="npcName" placeholder="NPC name" /></label>
           <label>Title<input id="npcTitle" placeholder="NPC title" /></label>
@@ -487,6 +621,8 @@
             <label>X<input id="npcX" type="number" min="0" /></label>
             <label>Y<input id="npcY" type="number" min="0" /></label>
           </div>
+          <div class="coord-summary" id="npcCoordSummary" aria-live="polite">No map tile selected</div>
+          <div class="inline-hint" id="npcPlacementHint" style="display:none">Enter an ID, name, and title before choosing a tile.</div>
           <label><input type="checkbox" id="npcPatrol"> Patrol NPC</label>
           <div id="npcLoopPts" style="display:none"></div>
           <button class="btn" type="button" id="addLoopPt" style="display:none">+ Waypoint</button>
@@ -517,7 +653,6 @@
             <label>Op<select id="npcOp"><option value=">=">&ge;</option><option value=">">&gt;</option><option value="==">==</option><option value="!=">!=</option><option value="<=">&le;</option><option value="<">&lt;</option></select></label>
             <label>Value<input id="npcVal" type="number" value="1" /></label>
           </div>
-          <button class="btn" type="button" id="npcPick" title="Click on the map to choose location">Select on Map</button>
           <label>Dialog<textarea id="npcDialog" rows="2"></textarea></label>
           <div id="npcDialogHint" class="small" style="display:none">Dialog text is set in the dialog tree.</div>
           <label>Quests<select id="npcQuests" multiple size="3"></select></label>
@@ -554,10 +689,18 @@
           </div>
           <textarea id="npcTree" style="display:none"></textarea>
           <div id="dialogPreview" style="margin-top:6px"></div>
-          <button class="btn" id="addNPC">Add NPC</button>
-          <button class="btn" type="button" id="cancelNPC" style="display:none">Cancel</button>
-          <button class="btn" id="delNPC" style="display:none">Delete NPC</button>
-          <button class="btn" type="button" id="closeNPC">Done</button>
+          <div class="npc-actions sticky-actions" aria-label="NPC actions">
+            <div class="npc-actions__row">
+              <button class="btn btn--primary" type="button" id="saveNPC">Save NPC</button>
+              <button class="btn" type="button" id="npcPick" title="Click on the map to choose location">Select on Map</button>
+              <button class="btn" type="button" id="npcPlacementCancel" style="display:none">Cancel Placement</button>
+            </div>
+            <div class="npc-actions__row npc-actions__row--secondary">
+              <button class="btn" type="button" id="discardNPC">Discard</button>
+              <button class="btn" id="delNPC" style="display:none">Delete NPC</button>
+              <button class="btn" type="button" id="closeNPC">Done</button>
+            </div>
+          </div>
         </div>
       </fieldset>
       <fieldset class="card" id="itemCard" data-pane="items" style="display:none">

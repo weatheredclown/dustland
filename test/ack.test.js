@@ -1249,7 +1249,12 @@ test('npc locked state round trips through editor', () => {
   moduleData.npcs = [];
   startNewNPC();
   document.getElementById('npcLocked').checked = true;
-  addNPC();
+  document.getElementById('npcName').value = 'Locked NPC';
+  document.getElementById('npcTitle').value = 'Guard';
+  document.getElementById('npcMap').value = 'world';
+  document.getElementById('npcX').value = '0';
+  document.getElementById('npcY').value = '0';
+  saveNPC();
   assert.strictEqual(moduleData.npcs[0].locked, true);
   editNPC(0);
   document.getElementById('npcLocked').checked = false;
@@ -1266,9 +1271,11 @@ test('placing NPC on interior map', () => {
   startNewNPC();
   document.getElementById('npcId').value = 'bob';
   document.getElementById('npcName').value = 'Bob';
+  document.getElementById('npcTitle').value = 'Villager';
   beginPlaceNPC();
   const intCanvas = document.getElementById('intCanvas');
   intCanvas._listeners.mousedown[0]({ clientX: 1, clientY: 1, stopPropagation(){}, preventDefault(){} });
+  saveNPC();
   assert.strictEqual(moduleData.npcs.length, 1);
   assert.strictEqual(moduleData.npcs[0].map, 'house');
 });

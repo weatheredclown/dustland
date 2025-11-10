@@ -83,6 +83,8 @@ test('collectNPCFromForm captures trainer type', async () => {
     npcPortraitPath: '',
     npcPortraitIndex: 0,
     npcPortraits: [],
+    moduleData: { npcs: [], quests: [] },
+    editNPCIdx: -1,
     updateTreeData() {},
     applyCombatTree() {},
     removeCombatTree() {},
@@ -93,8 +95,9 @@ test('collectNPCFromForm captures trainer type', async () => {
   vm.createContext(context);
   const code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
   const start = code.indexOf('function collectNPCFromForm');
-  const end = code.indexOf('// Add a new NPC', start);
-  vm.runInContext(code.slice(start, end), context);
+  const end = code.indexOf('function saveNPC', start);
+  const snippet = end > start ? code.slice(start, end) : code.slice(start);
+  vm.runInContext(snippet, context);
 
   const npc1 = context.collectNPCFromForm();
   assert.ok(!('trainer' in npc1));

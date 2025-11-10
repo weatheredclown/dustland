@@ -79,6 +79,8 @@ test('collectNPCFromForm uses patrol checkbox for loops', async () => {
     npcPortraitPath: '',
     npcPortraitIndex: 0,
     npcPortraits: [],
+    moduleData: { npcs: [], quests: [] },
+    editNPCIdx: -1,
     updateTreeData() {},
     applyCombatTree() {},
     removeCombatTree() {},
@@ -89,8 +91,9 @@ test('collectNPCFromForm uses patrol checkbox for loops', async () => {
   vm.createContext(context);
   const code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
   const start = code.indexOf('function collectNPCFromForm');
-  const end = code.indexOf('// Add a new NPC', start);
-  vm.runInContext(code.slice(start, end), context);
+  const end = code.indexOf('function saveNPC', start);
+  const snippet = end > start ? code.slice(start, end) : code.slice(start);
+  vm.runInContext(snippet, context);
 
   const npc1 = context.collectNPCFromForm();
   assert.ok(!('loop' in npc1));
@@ -141,6 +144,8 @@ test('collectNPCFromForm reads loot chance', async () => {
     npcPortraitPath: '',
     npcPortraitIndex: 0,
     npcPortraits: [],
+    moduleData: { npcs: [], quests: [] },
+    editNPCIdx: -1,
     updateTreeData() {},
     applyCombatTree() {},
     removeCombatTree() {},
@@ -151,8 +156,9 @@ test('collectNPCFromForm reads loot chance', async () => {
   vm.createContext(context);
   const code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
   const start = code.indexOf('function collectNPCFromForm');
-  const end = code.indexOf('// Add a new NPC', start);
-  vm.runInContext(code.slice(start, end), context);
+  const end = code.indexOf('function saveNPC', start);
+  const snippet = end > start ? code.slice(start, end) : code.slice(start);
+  vm.runInContext(snippet, context);
 
   const npc = context.collectNPCFromForm();
   assert.strictEqual(npc.combat.lootChance, 0.25);
@@ -199,6 +205,8 @@ test('collectNPCFromForm reads workbench checkbox', async () => {
     npcPortraitPath: '',
     npcPortraitIndex: 0,
     npcPortraits: [],
+    moduleData: { npcs: [], quests: [] },
+    editNPCIdx: -1,
     updateTreeData() {},
     applyCombatTree() {},
     removeCombatTree() {},
@@ -209,8 +217,9 @@ test('collectNPCFromForm reads workbench checkbox', async () => {
   vm.createContext(context);
   const code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
   const start = code.indexOf('function collectNPCFromForm');
-  const end = code.indexOf('// Add a new NPC', start);
-  vm.runInContext(code.slice(start, end), context);
+  const end = code.indexOf('function saveNPC', start);
+  const snippet = end > start ? code.slice(start, end) : code.slice(start);
+  vm.runInContext(snippet, context);
 
   const npc1 = context.collectNPCFromForm();
   assert.ok(!('workbench' in npc1));
