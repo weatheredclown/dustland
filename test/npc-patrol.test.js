@@ -156,8 +156,16 @@ test('collectNPCFromForm reads loot chance', async () => {
   if (end === -1) end = code.length;
   vm.runInContext(code.slice(start, end), context);
 
-  const npc = context.collectNPCFromForm();
+  let npc = context.collectNPCFromForm();
   assert.strictEqual(npc.combat.lootChance, 0.25);
+
+  document.getElementById('npcLootChance').value = '100';
+  npc = context.collectNPCFromForm();
+  assert.strictEqual(npc.combat.lootChance, 1);
+
+  document.getElementById('npcLootChance').value = '';
+  npc = context.collectNPCFromForm();
+  assert.ok(!('lootChance' in npc.combat));
 });
 
 test('collectNPCFromForm reads workbench checkbox', async () => {
