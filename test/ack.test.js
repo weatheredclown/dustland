@@ -97,7 +97,7 @@ for (const f of files) {
   vm.runInThisContext(code, { filename: f });
 }
 
-const { applyLoadedModule, TILE, setTile, placeHut, genWorld, addTerrainFeature, stampWorld, worldStamps, tileEmoji, gridToEmoji, clearWorld, beginPlaceNPC, beginPlaceItem, beginPlaceBldg } = globalThis;
+const { applyLoadedModule, TILE, setTile, placeHut, genWorld, addTerrainFeature, stampWorld, worldStamps, tileEmoji, gridToEmoji, clearWorld, beginNpcCoordinateSelection, beginPlaceItem, beginPlaceBldg, saveNPC } = globalThis;
 
 test('applyLoadedModule clears previous building tiles', () => {
   genWorld(123);
@@ -707,8 +707,8 @@ test('world palette selection stays highlighted and labels color', () => {
   assert.strictEqual(btn.classList.contains('active'), true);
 });
 
-test('beginPlace* clears world palette selection', () => {
-  const funcs = [beginPlaceNPC, beginPlaceItem, beginPlaceBldg];
+test('coordinate/item/bldg placement clears world palette selection', () => {
+  const funcs = [beginNpcCoordinateSelection, beginPlaceItem, beginPlaceBldg];
   for (const fn of funcs) {
     worldPaint = TILE.ROCK;
     worldStamp = worldStamps.hill;
@@ -1248,12 +1248,19 @@ test('npc locked state round trips through editor', () => {
   const prev = moduleData.npcs;
   moduleData.npcs = [];
   startNewNPC();
+  document.getElementById('npcId').value = 'lock_tester';
+  document.getElementById('npcName').value = 'Locke';
+  document.getElementById('npcTitle').value = 'Guardian';
+  document.getElementById('npcMap').value = 'world';
+  document.getElementById('npcX').value = 0;
+  document.getElementById('npcY').value = 0;
   document.getElementById('npcLocked').checked = true;
-  addNPC();
+  saveNPC();
   assert.strictEqual(moduleData.npcs[0].locked, true);
   editNPC(0);
   document.getElementById('npcLocked').checked = false;
   applyNPCChanges();
+  saveNPC();
   assert.strictEqual(moduleData.npcs[0].locked, undefined);
   moduleData.npcs = prev;
 });
@@ -1266,9 +1273,13 @@ test('placing NPC on interior map', () => {
   startNewNPC();
   document.getElementById('npcId').value = 'bob';
   document.getElementById('npcName').value = 'Bob';
-  beginPlaceNPC();
+  document.getElementById('npcTitle').value = 'Trader';
+  beginNpcCoordinateSelection();
   const intCanvas = document.getElementById('intCanvas');
   intCanvas._listeners.mousedown[0]({ clientX: 1, clientY: 1, stopPropagation(){}, preventDefault(){} });
+  assert.strictEqual(moduleData.npcs.length, 0);
+  assert.strictEqual(document.getElementById('npcMap').value, 'house');
+  saveNPC();
   assert.strictEqual(moduleData.npcs.length, 1);
   assert.strictEqual(moduleData.npcs[0].map, 'house');
 });

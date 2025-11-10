@@ -455,27 +455,28 @@
         <div class="list" id="problemList"></div>
       </fieldset>
       <div class="tabs2" role="tablist" aria-label="Editors">
-        <button class="tab2 active" type="button" data-tab="npc" role="tab" aria-selected="true">NPCs</button>
-        <button class="tab2" type="button" data-tab="items" role="tab" aria-selected="false">Items</button>
-        <button class="tab2" type="button" data-tab="buildings" role="tab" aria-selected="false">Buildings</button>
-        <button class="tab2" type="button" data-tab="interiors" role="tab" aria-selected="false">Interiors</button>
-        <button class="tab2" type="button" data-tab="portals" role="tab" aria-selected="false">Portals</button>
-        <button class="tab2" type="button" data-tab="quests" role="tab" aria-selected="false">Quests</button>
-        <button class="tab2" type="button" data-tab="events" role="tab" aria-selected="false">Events</button>
-        <button class="tab2" type="button" data-tab="arenas" role="tab" aria-selected="false">Arenas</button>
-        <button class="tab2" type="button" data-tab="zones" role="tab" aria-selected="false">Zones</button>
-        <button class="tab2" type="button" data-tab="encounters" role="tab" aria-selected="false">Encounters</button>
-        <button class="tab2" type="button" data-tab="templates" role="tab" aria-selected="false">Templates</button>
-        <button class="tab2" type="button" data-tab="wizards" role="tab" aria-selected="false">Wizards</button>
+        <button class="tab2 active" type="button" data-tab="npc" role="tab" aria-selected="true"><span aria-hidden="true">🧍</span> NPCs</button>
+        <button class="tab2" type="button" data-tab="items" role="tab" aria-selected="false"><span aria-hidden="true">🎒</span> Items</button>
+        <button class="tab2" type="button" data-tab="buildings" role="tab" aria-selected="false"><span aria-hidden="true">🏠</span> Buildings</button>
+        <button class="tab2" type="button" data-tab="interiors" role="tab" aria-selected="false"><span aria-hidden="true">🛋</span> Interiors</button>
+        <button class="tab2" type="button" data-tab="portals" role="tab" aria-selected="false"><span aria-hidden="true">🌀</span> Portals</button>
+        <button class="tab2" type="button" data-tab="quests" role="tab" aria-selected="false"><span aria-hidden="true">📜</span> Quests</button>
+        <button class="tab2" type="button" data-tab="events" role="tab" aria-selected="false"><span aria-hidden="true">✨</span> Events</button>
+        <button class="tab2" type="button" data-tab="arenas" role="tab" aria-selected="false"><span aria-hidden="true">⚔️</span> Arenas</button>
+        <button class="tab2" type="button" data-tab="zones" role="tab" aria-selected="false"><span aria-hidden="true">🗺</span> Zones</button>
+        <button class="tab2" type="button" data-tab="encounters" role="tab" aria-selected="false"><span aria-hidden="true">🎲</span> Encounters</button>
+        <button class="tab2" type="button" data-tab="templates" role="tab" aria-selected="false"><span aria-hidden="true">📦</span> Templates</button>
+        <button class="tab2" type="button" data-tab="wizards" role="tab" aria-selected="false"><span aria-hidden="true">🧙</span> Wizards</button>
       </div>
       <div class="tabpanes">
         <fieldset class="card" id="npcCard" data-pane="npc">
           <legend>NPCs</legend>
           <input id="npcFilter" placeholder="Filter NPCs..." />
           <div class="list" id="npcList"></div>
-          <button class="btn" type="button" id="newNPC">+ NPC</button>
+          <button class="btn" type="button" id="newNPC">New NPC</button>
           <div id="npcEditor" style="display:none">
-          <label>ID<input id="npcId" placeholder="npc_id" /></label>
+            <div id="npcFormNotice" class="inline-hint" role="status" aria-live="polite"></div>
+            <label>ID<input id="npcId" placeholder="npc_id" /></label>
           <label>Name<input id="npcName" placeholder="NPC name" /></label>
           <label>Title<input id="npcTitle" placeholder="NPC title" /></label>
           <label>Description<textarea id="npcDesc" rows="2"></textarea></label>
@@ -554,12 +555,15 @@
           </div>
           <textarea id="npcTree" style="display:none"></textarea>
           <div id="dialogPreview" style="margin-top:6px"></div>
-          <button class="btn" id="addNPC">Add NPC</button>
-          <button class="btn" type="button" id="cancelNPC" style="display:none">Cancel</button>
-          <button class="btn" id="delNPC" style="display:none">Delete NPC</button>
-          <button class="btn" type="button" id="closeNPC">Done</button>
-        </div>
-      </fieldset>
+            <div class="editor-actions">
+              <div id="npcMapBanner" class="inline-hint" style="display:none"></div>
+              <button class="btn btn--primary" id="saveNPC" disabled>Save NPC</button>
+              <button class="btn" type="button" id="discardNPC">Discard</button>
+              <button class="btn" id="delNPC" style="display:none">Delete NPC</button>
+              <button class="btn" type="button" id="closeNPC">Done</button>
+            </div>
+          </div>
+        </fieldset>
       <fieldset class="card" id="itemCard" data-pane="items" style="display:none">
         <legend>Items</legend>
         <input id="itemFilter" placeholder="Filter items..." />

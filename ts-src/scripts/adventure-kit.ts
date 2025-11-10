@@ -129,6 +129,10 @@ let hoverTile = null;
 var coordTarget = null;
 function setCoordTarget(v){ coordTarget = v; }
 globalThis.setCoordTarget = setCoordTarget;
+let npcOriginal = null;
+let npcDirty = false;
+let npcNoticeTimer = 0;
+let npcMapMode = false;
 let worldZoom = 1, panX = 0, panY = 0;
 let panning = false, panStartX = 0, panStartY = 0, panMouseX = 0, panMouseY = 0, panScaleX = 1, panScaleY = 1;
 const baseTileW = canvas.width / WORLD_W;
@@ -435,8 +439,8 @@ if (intPalette) {
   });
 }
 
-const bldgCanvas = document.getElementById('bldgCanvas');
-const bldgCtx = bldgCanvas.getContext('2d');
+const bldgCanvas = (typeof document !== 'undefined' && typeof document.getElementById === 'function') ? document.getElementById('bldgCanvas') : null;
+const bldgCtx = bldgCanvas && typeof bldgCanvas.getContext === 'function' ? bldgCanvas.getContext('2d') : null;
 const bldgPalette = document.getElementById('bldgPalette');
 let bldgPaint = TILE.BUILDING;
 let bldgPainting = false;
@@ -847,7 +851,6 @@ intCanvas.addEventListener('mousedown', e => {
       document.getElementById('npcX').value = x;
       document.getElementById('npcY').value = y;
       if(placingCb) placingCb();
-      document.getElementById('cancelNPC').style.display = 'none';
     }else if(placingType==='item'){
       populateMapDropdown(document.getElementById('itemMap'), I.id);
       document.getElementById('itemX').value = x;
@@ -2219,6 +2222,135 @@ function getRevealFlag() {
 }
 function showNPCEditor(show) {
   document.getElementById('npcEditor').style.display = show ? 'block' : 'none';
+  if (!show) {
+    updateNpcMapBanner('', false);
+    canvas?.classList?.remove('map-select');
+  }
+}
+function setNpcNotice(message, type = 'info', autoClear = false) {
+  const notice = document.getElementById('npcFormNotice');
+  if (!notice) return;
+  clearTimeout(npcNoticeTimer);
+  npcNoticeTimer = 0;
+  notice.textContent = message || '';
+  notice.style.display = message ? 'block' : 'none';
+  notice.classList.remove('error', 'success');
+  if (type === 'error') notice.classList.add('error');
+  if (type === 'success') notice.classList.add('success');
+  if (autoClear && message) {
+    npcNoticeTimer = setTimeout(() => {
+      notice.classList.remove('success');
+      notice.style.display = 'none';
+    }, 3500);
+  }
+}
+function updateNpcMapBanner(message, show) {
+  const banner = document.getElementById('npcMapBanner');
+  if (!banner) return;
+  banner.textContent = message || '';
+  banner.style.display = show && message ? 'block' : 'none';
+}
+function setNpcFieldInvalid(el, invalid) {
+  if (!el) return;
+  const cls = el.classList;
+  if (invalid) {
+    if (cls?.add) cls.add('input-invalid');
+    if (typeof el.setAttribute === 'function') el.setAttribute('aria-invalid', 'true');
+  } else {
+    if (cls?.remove) cls.remove('input-invalid');
+    if (typeof el.removeAttribute === 'function') el.removeAttribute('aria-invalid');
+  }
+}
+function cloneNpcData(npc) {
+  try { return JSON.parse(JSON.stringify(npc || {})); } catch (err) { return npc ? { ...npc } : null; }
+}
+function validateNpcForm(options = {}) {
+  const { silent = false } = options;
+  const idEl = document.getElementById('npcId');
+  const nameEl = document.getElementById('npcName');
+  const titleEl = document.getElementById('npcTitle');
+  const mapEl = document.getElementById('npcMap');
+  const xEl = document.getElementById('npcX');
+  const yEl = document.getElementById('npcY');
+  if (!idEl || !nameEl || !mapEl || !xEl || !yEl) return { valid: false, errors: ['Missing form fields'] };
+  const id = idEl.value.trim();
+  const name = nameEl.value.trim();
+  const title = (titleEl?.value || '').trim();
+  const map = mapEl.value.trim();
+  const x = Number.parseInt(xEl.value, 10);
+  const y = Number.parseInt(yEl.value, 10);
+  const errors = [];
+  const warnings = [];
+  if (!id) errors.push('Enter an ID for the NPC.');
+  const duplicate = id && moduleData.npcs.some((npc, idx) => idx !== editNPCIdx && npc?.id === id);
+  if (duplicate) errors.push('That ID already exists. Choose another one.');
+  if (!name) errors.push('Enter a name for the NPC.');
+  if (!title) errors.push('Add a title so the NPC introduction is clear.');
+  if (!map) errors.push('Choose a map for this NPC.');
+  const hasCoords = Number.isFinite(x) && Number.isFinite(y);
+  if (!hasCoords) errors.push('Set map coordinates for the NPC.');
+  setNpcFieldInvalid(idEl, !id || duplicate);
+  setNpcFieldInvalid(nameEl, !name);
+  setNpcFieldInvalid(titleEl, !title);
+  setNpcFieldInvalid(mapEl, !map);
+  setNpcFieldInvalid(xEl, !hasCoords);
+  setNpcFieldInvalid(yEl, !hasCoords);
+  const saveBtn = document.getElementById('saveNPC');
+  if (saveBtn) saveBtn.disabled = errors.length > 0;
+  if (!silent) {
+    if (errors.length) {
+      setNpcNotice(errors.join(' '), 'error');
+    } else if (warnings.length) {
+      setNpcNotice(warnings.join(' '));
+    } else if (npcDirty) {
+      setNpcNotice('All required fields look good. Click Save to apply your changes.');
+    } else {
+      setNpcNotice('Fill out ID, Name, and Title, then choose a map location before saving.');
+    }
+  }
+  return { valid: errors.length === 0, errors, warnings };
+}
+function beginNpcCoordinateSelection() {
+  clearPaletteSelection();
+  const idEl = document.getElementById('npcId');
+  const nameEl = document.getElementById('npcName');
+  const titleEl = document.getElementById('npcTitle');
+  const id = idEl?.value.trim();
+  const name = nameEl?.value.trim();
+  const title = titleEl?.value.trim();
+  const missing = [];
+  if (!id) missing.push({ label: 'ID', el: idEl });
+  if (!name) missing.push({ label: 'Name', el: nameEl });
+  if (!title) missing.push({ label: 'Title', el: titleEl });
+  if (missing.length) {
+    const labels = missing.map(m => m.label).join(', ');
+    setNpcNotice(`Enter ${labels} before selecting a map location.`, 'error');
+    validateNpcForm();
+    const focusTarget = missing[0]?.el;
+    if (focusTarget && typeof focusTarget.focus === 'function') focusTarget.focus();
+    return;
+  }
+  npcMapMode = true;
+  updateNpcMapBanner('Map selection active: click a tile to place your NPC.', true);
+  coordTarget = { x: 'npcX', y: 'npcY', map: 'npcMap' };
+  canvas?.classList?.add('map-select');
+}
+function finishNpcCoordinateSelection(x, y) {
+  if (!npcMapMode) return;
+  npcMapMode = false;
+  updateNpcMapBanner('', false);
+  canvas?.classList?.remove('map-select');
+  setNpcNotice(`Location set to (${x}, ${y}).`, 'success', true);
+  applyNPCChanges();
+}
+function cancelNpcCoordinateSelection() {
+  if (!npcMapMode) return;
+  npcMapMode = false;
+  coordTarget = null;
+  updateNpcMapBanner('', false);
+  canvas?.classList?.remove('map-select');
+  setNpcNotice('Map selection cancelled.', 'error', true);
+  validateNpcForm({ silent: false });
 }
 function startNewNPC() {
   editNPCIdx = -1;
@@ -2230,9 +2362,9 @@ function startNewNPC() {
   document.getElementById('npcColorOverride').checked = false;
   updateColorOverride();
   document.getElementById('npcSymbol').value = '!';
-  populateMapDropdown(document.getElementById('npcMap'), 'world');
-  document.getElementById('npcX').value = 0;
-  document.getElementById('npcY').value = 0;
+  populateMapDropdown(document.getElementById('npcMap'), '');
+  document.getElementById('npcX').value = '';
+  document.getElementById('npcY').value = '';
   renderLoopFields([]);
   document.getElementById('npcPatrol').checked = false;
   updatePatrolSection();
@@ -2276,9 +2408,16 @@ function startNewNPC() {
   document.getElementById('npcTrainer').checked = false;
   document.getElementById('npcTrainerType').value = 'power';
   updateNPCOptSections();
-  document.getElementById('addNPC').style.display = 'block';
-  document.getElementById('cancelNPC').style.display = 'none';
   document.getElementById('delNPC').style.display = 'none';
+  const saveBtn = document.getElementById('saveNPC');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Save NPC';
+  }
+  npcOriginal = null;
+  npcDirty = false;
+  updateNpcMapBanner('', false);
+  setNpcNotice('Fill out ID, Name, and Title, then choose a map location before saving.');
   loadTreeEditor();
   toggleQuestDialogBtn();
   placingType = null;
@@ -2288,18 +2427,9 @@ function startNewNPC() {
   showNPCEditor(true);
   const npcIdEl = document.getElementById('npcId');
   if (npcIdEl && typeof npcIdEl.focus === 'function') npcIdEl.focus();
+  validateNpcForm({ silent: true });
 }
 
-function beginPlaceNPC() {
-  clearPaletteSelection();
-  placingType = 'npc';
-  placingPos = null;
-  placingCb = addNPC;
-  document.getElementById('addNPC').style.display = 'none';
-  document.getElementById('cancelNPC').style.display = 'block';
-  selectedObj = null;
-  drawWorld();
-}
 // Gather NPC form fields into an object
 function ensureTrainerChoiceEffect(tree, trainerId) {
   if (!tree?.start) return;
@@ -2462,39 +2592,76 @@ function collectNPCFromForm() {
   return npc;
 }
 
-// Add a new NPC to the module and begin editing it
-function addNPC() {
+// Add or update an NPC
+function saveNPC() {
+  const { valid, errors } = validateNpcForm();
+  if (!valid) {
+    setNpcNotice(errors.join(' '), 'error');
+    return;
+  }
   const npc = collectNPCFromForm();
-  moduleData.npcs.push(npc);
-  editNPCIdx = moduleData.npcs.length - 1;
+  if (editNPCIdx >= 0) {
+    moduleData.npcs[editNPCIdx] = npc;
+  } else {
+    moduleData.npcs.push(npc);
+    editNPCIdx = moduleData.npcs.length - 1;
+  }
+  npcOriginal = cloneNpcData(npc);
+  npcDirty = false;
   renderNPCList();
-  document.getElementById('delNPC').style.display = 'block';
-  document.getElementById('addNPC').style.display = 'none';
+  const delBtn = document.getElementById('delNPC');
+  if (delBtn) delBtn.style.display = 'block';
+  const saveBtn = document.getElementById('saveNPC');
+  if (saveBtn) {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save Changes';
+  }
+  updateNpcMapBanner('', false);
+  canvas?.classList?.remove('map-select');
+  setNpcNotice('NPC saved.', 'success', true);
   selectedObj = { type: 'npc', obj: npc };
   drawWorld();
   drawInterior();
 }
 
-function cancelNPC() {
-  placingType = null;
-  placingPos = null;
-  placingCb = null;
-  document.getElementById('addNPC').style.display = 'block';
-  document.getElementById('cancelNPC').style.display = 'none';
-  drawWorld();
-  drawInterior();
-  updateCursor();
-}
-
-// Update the currently edited NPC as form fields change
 function applyNPCChanges() {
-  if (editNPCIdx < 0) return;
+  npcDirty = true;
   const npc = collectNPCFromForm();
-  moduleData.npcs[editNPCIdx] = npc;
-  renderNPCList();
-  selectedObj = { type: 'npc', obj: npc };
+  const result = validateNpcForm({ silent: false });
+  if (result.valid) {
+    selectedObj = { type: 'npc', obj: npc };
+  } else if (editNPCIdx >= 0 && moduleData.npcs[editNPCIdx]) {
+    selectedObj = { type: 'npc', obj: moduleData.npcs[editNPCIdx] };
+  } else {
+    selectedObj = null;
+  }
   drawWorld();
   drawInterior();
+}
+
+function discardNPC() {
+  if (editNPCIdx >= 0) {
+    const idx = editNPCIdx;
+    editNPC(idx);
+    npcDirty = false;
+    setNpcNotice('Changes discarded.', 'success', true);
+    return;
+  }
+  npcOriginal = null;
+  npcDirty = false;
+  updateNpcMapBanner('', false);
+  showNPCEditor(false);
+  const saveBtn = document.getElementById('saveNPC');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Save NPC';
+  }
+  document.getElementById('delNPC').style.display = 'none';
+  setNpcNotice('', 'info');
+  selectedObj = null;
+  drawWorld();
+  drawInterior();
+  validateNpcForm({ silent: true });
 }
 
 function expandHex(hex) {
@@ -2579,15 +2746,23 @@ function editNPC(i) {
   document.getElementById('npcTrainer').checked = !!n.trainer;
   document.getElementById('npcTrainerType').value = n.trainer || 'power';
   updateNPCOptSections();
-  document.getElementById('addNPC').style.display = 'none';
-  document.getElementById('cancelNPC').style.display = 'none';
+  const saveBtn = document.getElementById('saveNPC');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Save Changes';
+  }
   document.getElementById('delNPC').style.display = 'block';
+  npcOriginal = cloneNpcData(n);
+  npcDirty = false;
+  updateNpcMapBanner('', false);
+  setNpcNotice('Make your changes, then click Save Changes.');
   loadTreeEditor();
   toggleQuestDialogBtn();
   showNPCEditor(true);
   selectedObj = { type: 'npc', obj: n };
   drawWorld();
   renderNPCList();
+  validateNpcForm({ silent: true });
 }
 function renderNPCList() {
   const list = document.getElementById('npcList');
@@ -2615,9 +2790,16 @@ function deleteNPC() {
   confirmDialog('Delete this NPC?', () => {
     moduleData.npcs.splice(editNPCIdx, 1);
     editNPCIdx = -1;
-    document.getElementById('addNPC').style.display = 'block';
-    document.getElementById('cancelNPC').style.display = 'none';
     document.getElementById('delNPC').style.display = 'none';
+    const saveBtn = document.getElementById('saveNPC');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Save NPC';
+    }
+    npcOriginal = null;
+    npcDirty = false;
+    updateNpcMapBanner('', false);
+    setNpcNotice('NPC deleted.', 'success', true);
     renderNPCList();
     selectedObj = null;
     drawWorld();
@@ -2625,6 +2807,7 @@ function deleteNPC() {
     document.getElementById('npcDesc').value = '';
     loadTreeEditor();
     showNPCEditor(false);
+    validateNpcForm({ silent: true });
   });
 }
 
@@ -2633,9 +2816,17 @@ function closeNPCEditor() {
   selectedObj = null;
   placingType = null;
   showNPCEditor(false);
-  document.getElementById('addNPC').style.display = 'block';
-  document.getElementById('cancelNPC').style.display = 'none';
+  const saveBtn = document.getElementById('saveNPC');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Save NPC';
+  }
   document.getElementById('delNPC').style.display = 'none';
+  npcOriginal = null;
+  npcDirty = false;
+  updateNpcMapBanner('', false);
+  setNpcNotice('');
+  validateNpcForm({ silent: true });
 }
 
 // --- Items ---
@@ -4062,6 +4253,7 @@ function deletePortal() {
 
 // --- Buildings ---
 function drawBldg(){
+  if (!bldgCanvas || !bldgCtx) return;
   const w=bldgGrid[0]?.length||1, h=bldgGrid.length||1;
   const sx=bldgCanvas.width/w, sy=bldgCanvas.height/h;
   bldgCtx.clearRect(0,0,bldgCanvas.width,bldgCanvas.height);
@@ -4183,7 +4375,7 @@ function editBldg(i) {
 }
 
 function paintBldg(e){
-  if(!bldgPainting) return;
+  if(!bldgPainting || !bldgCanvas) return;
   const w=bldgGrid[0]?.length||1, h=bldgGrid.length||1;
   const rect=bldgCanvas.getBoundingClientRect();
   const x=Math.floor((e.clientX-rect.left)/(bldgCanvas.width/w));
@@ -4195,10 +4387,12 @@ function paintBldg(e){
   drawBldg();
   applyBldgChanges();
 }
-bldgCanvas.addEventListener('mousedown',e=>{ bldgPainting=true; paintBldg(e); });
-bldgCanvas.addEventListener('mousemove',paintBldg);
-bldgCanvas.addEventListener('mouseup',()=>{ bldgPainting=false; });
-bldgCanvas.addEventListener('mouseleave',()=>{ bldgPainting=false; });
+if (bldgCanvas) {
+  bldgCanvas.addEventListener('mousedown',e=>{ bldgPainting=true; paintBldg(e); });
+  bldgCanvas.addEventListener('mousemove',paintBldg);
+  bldgCanvas.addEventListener('mouseup',()=>{ bldgPainting=false; });
+  bldgCanvas.addEventListener('mouseleave',()=>{ bldgPainting=false; });
+}
 
 function resizeBldg(){
   const w=parseInt(document.getElementById('bldgW').value,10)||1;
@@ -4628,8 +4822,9 @@ function updateQuestOptions() {
   const npcSel = document.getElementById('questNPC');
   if (npcSel) {
     const npcCur = npcSel.value;
-    npcSel.innerHTML = '<option value="">(none)</option>' + moduleData.npcs.map(n => `<option value="${n.id}">${n.id}</option>`).join('');
-    npcSel.value = npcCur;
+    npcSel.innerHTML = '<option value="" data-placeholder="true">Select NPC…</option>' + moduleData.npcs.map(n => `<option value="${n.id}">${n.id}</option>`).join('');
+    if (npcCur) npcSel.value = npcCur;
+    else npcSel.selectedIndex = 0;
   }
 }
 
@@ -5042,7 +5237,7 @@ function runGenerate(regen) {
 }
 document.getElementById('procGen').onclick = () => runGenerate(false);
 document.getElementById('procRegen').onclick = () => runGenerate(true);
-document.getElementById('addNPC').onclick = beginPlaceNPC;
+document.getElementById('saveNPC').onclick = saveNPC;
 document.getElementById('addItem').onclick = () => {
   const onMap = document.getElementById('itemOnMap').checked;
   const mapVal = document.getElementById('itemMap').value.trim();
@@ -5053,6 +5248,7 @@ document.getElementById('itemMap').addEventListener('input', updateItemMapWrap);
 document.getElementById('itemOnMap').addEventListener('change', updateItemMapWrap);
 document.getElementById('itemRemove').onclick = removeItemFromWorld;
 document.getElementById('newNPC').onclick = startNewNPC;
+document.getElementById('discardNPC').onclick = discardNPC;
 document.getElementById('newBldg').onclick = startNewBldg;
 document.getElementById('newQuest').onclick = startNewQuest;
 document.getElementById('questRewardType').addEventListener('change', updateQuestRewardFields);
@@ -5063,7 +5259,6 @@ if (questRewardCustomType) questRewardCustomType.addEventListener('change', () =
 document.getElementById('addBldg').onclick = beginPlaceBldg;
 document.getElementById('addQuest').onclick = addQuest;
 document.getElementById('addEvent').onclick = addEvent;
-document.getElementById('cancelNPC').onclick = cancelNPC;
 document.getElementById('cancelItem').onclick = cancelItem;
 document.getElementById('cancelBldg').onclick = cancelBldg;
 document.getElementById('newEvent').onclick = startNewEvent;
@@ -5165,9 +5360,19 @@ document.getElementById('itemPersonaNext').onclick = () => {
 document.getElementById('eventEffect').addEventListener('change', updateEventEffectFields);
 document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
 document.getElementById('npcFlagType').addEventListener('change', updateFlagBuilder);
-document.getElementById('npcEditor').addEventListener('input', applyNPCChanges);
+const npcEditorEl = typeof document !== 'undefined' ? document.getElementById('npcEditor') : null;
+if (npcEditorEl) {
+  npcEditorEl.addEventListener('input', applyNPCChanges);
+  npcEditorEl.addEventListener('change', applyNPCChanges);
+  npcEditorEl.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      const saveBtn = document.getElementById('saveNPC');
+      if (saveBtn && !saveBtn.disabled) saveNPC();
+    }
+  });
+}
 document.getElementById('moduleName').value = moduleData.name;
-document.getElementById('npcEditor').addEventListener('change', applyNPCChanges);
 document.getElementById('npcPatrol').addEventListener('change', () => {
   updatePatrolSection();
   applyNPCChanges();
@@ -5178,7 +5383,7 @@ document.getElementById('bldgEditor').addEventListener('change', applyBldgChange
 document.getElementById('npcFlagPick').onclick = () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY', map: 'npcFlagMap' }; };
 document.getElementById('portalPick').onclick = () => { coordTarget = { x: 'portalX', y: 'portalY' }; };
 document.getElementById('portalDestPick').onclick = () => { coordTarget = { x: 'portalToX', y: 'portalToY' }; };
-document.getElementById('npcPick').onclick = () => { coordTarget = { x: 'npcX', y: 'npcY', map: 'npcMap' }; };
+document.getElementById('npcPick').onclick = beginNpcCoordinateSelection;
 document.getElementById('itemPick').onclick = () => { coordTarget = { x: 'itemX', y: 'itemY', map: 'itemMap' }; };
 document.getElementById('save').onclick = saveModule;
 document.getElementById('load').onclick = () => document.getElementById('loadFile').click();
@@ -5231,6 +5436,13 @@ document.getElementById('npcTrainer').addEventListener('change', updateNPCOptSec
 document.getElementById('npcColorOverride').addEventListener('change', updateColorOverride);
 document.getElementById('npcLocked').addEventListener('change', onLockedToggle);
 document.getElementById('genQuestDialog').onclick = generateQuestTree;
+if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && npcMapMode) {
+      cancelNpcCoordinateSelection();
+    }
+  });
+}
 
 // --- Map interactions ---
 function canvasPos(ev) {
@@ -5354,22 +5566,20 @@ canvas.addEventListener('mousedown', ev => {
   hoverTarget = null;
   didDrag = false;
   if (coordTarget) {
-    document.getElementById(coordTarget.x).value = x;
-    document.getElementById(coordTarget.y).value = y;
-    if (coordTarget.map) populateMapDropdown(document.getElementById(coordTarget.map), currentMap);
+    const target = coordTarget;
+    document.getElementById(target.x).value = x;
+    document.getElementById(target.y).value = y;
+    if (target.map) populateMapDropdown(document.getElementById(target.map), currentMap);
     coordTarget = null;
     canvas.style.cursor = '';
+    if (target.x === 'npcX' && target.y === 'npcY') {
+      finishNpcCoordinateSelection(x, y);
+    }
     drawWorld();
     return;
   }
   if (placingType) {
-    if (placingType === 'npc') {
-      populateMapDropdown(document.getElementById('npcMap'), currentMap);
-      document.getElementById('npcX').value = x;
-      document.getElementById('npcY').value = y;
-      if (placingCb) placingCb();
-      document.getElementById('cancelNPC').style.display = 'none';
-    } else if (placingType === 'item') {
+    if (placingType === 'item') {
       populateMapDropdown(document.getElementById('itemMap'), currentMap);
       document.getElementById('itemX').value = x;
       document.getElementById('itemY').value = y;
