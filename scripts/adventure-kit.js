@@ -1835,7 +1835,7 @@ function populateItemDropdown(sel, selected = '') {
     sel.value = selectedId;
 }
 function populateNPCDropdown(sel, selected = '') {
-    sel.innerHTML = '<option value=""></option>' + moduleData.npcs.map(n => `<option value="${n.id}">${n.id}</option>`).join('');
+    sel.innerHTML = '<option value="">Select NPC…</option>' + moduleData.npcs.map(n => `<option value="${n.id}">${n.id}</option>`).join('');
     sel.value = selected;
 }
 function populateRoleDropdown(sel, selected = '') {
@@ -2464,6 +2464,12 @@ function updateNpcMapBanner(message, show) {
     banner.textContent = message || '';
     banner.style.display = show && message ? 'block' : 'none';
 }
+function setNpcCancelVisible(show) {
+    const cancelBtn = document.getElementById('npcCancelPick');
+    if (!cancelBtn)
+        return;
+    cancelBtn.style.display = show ? 'inline-block' : 'none';
+}
 function setNpcFieldInvalid(el, invalid) {
     if (!el)
         return;
@@ -2574,6 +2580,7 @@ function beginNpcCoordinateSelection() {
     updateNpcMapBanner('Map selection active: click a tile to place your NPC.', true);
     coordTarget = { x: 'npcX', y: 'npcY', map: 'npcMap' };
     canvas?.classList?.add('map-select');
+    setNpcCancelVisible(true);
 }
 function finishNpcCoordinateSelection(x, y) {
     if (!npcMapMode)
@@ -2583,6 +2590,7 @@ function finishNpcCoordinateSelection(x, y) {
     canvas?.classList?.remove('map-select');
     setNpcNotice(`Location set to (${x}, ${y}).`, 'success', true);
     applyNPCChanges();
+    setNpcCancelVisible(false);
 }
 function cancelNpcCoordinateSelection() {
     if (!npcMapMode)
@@ -2593,6 +2601,7 @@ function cancelNpcCoordinateSelection() {
     canvas?.classList?.remove('map-select');
     setNpcNotice('Map selection cancelled.', 'error', true);
     validateNpcForm({ silent: false });
+    setNpcCancelVisible(false);
 }
 function startNewNPC() {
     editNPCIdx = -1;
@@ -2638,7 +2647,7 @@ function startNewNPC() {
     document.getElementById('npcATK').value = 0;
     document.getElementById('npcDEF').value = 0;
     document.getElementById('npcLoot').value = '';
-    document.getElementById('npcLootChance').value = 100;
+    document.getElementById('npcLootChance').value = '';
     document.getElementById('npcBoss').checked = false;
     document.getElementById('npcSpecialCue').value = '';
     document.getElementById('npcSpecialDmg').value = '';
@@ -2668,6 +2677,7 @@ function startNewNPC() {
     selectedObj = null;
     drawWorld();
     showNPCEditor(true);
+    setNpcCancelVisible(false);
     const npcIdEl = document.getElementById('npcId');
     if (npcIdEl && typeof npcIdEl.focus === 'function')
         npcIdEl.focus();
@@ -2838,7 +2848,8 @@ function collectNPCFromForm() {
         const ATK = parseInt(document.getElementById('npcATK').value, 10) || 0;
         const DEF = parseInt(document.getElementById('npcDEF').value, 10) || 0;
         const loot = document.getElementById('npcLoot').value.trim();
-        const lootChancePct = parseFloat(document.getElementById('npcLootChance').value);
+        const lootChanceEl = document.getElementById('npcLootChance');
+        const lootChanceInput = typeof lootChanceEl?.value === 'string' ? lootChanceEl.value.trim() : '';
         const boss = document.getElementById('npcBoss').checked;
         const cue = document.getElementById('npcSpecialCue').value.trim();
         const dmg = parseInt(document.getElementById('npcSpecialDmg').value, 10);
@@ -2846,8 +2857,11 @@ function collectNPCFromForm() {
         npc.combat = { HP, ATK, DEF };
         if (loot)
             npc.combat.loot = loot;
-        if (!isNaN(lootChancePct) && lootChancePct >= 0 && lootChancePct < 100) {
-            npc.combat.lootChance = lootChancePct / 100;
+        if (lootChanceInput !== '') {
+            const lootChancePct = parseFloat(lootChanceInput);
+            if (!Number.isNaN(lootChancePct) && lootChancePct >= 0 && lootChancePct <= 100) {
+                npc.combat.lootChance = lootChancePct / 100;
+            }
         }
         if (boss)
             npc.combat.boss = true;
@@ -2908,6 +2922,7 @@ function saveNPC() {
         saveBtn.textContent = 'Save Changes';
     }
     updateNpcMapBanner('', false);
+    setNpcCancelVisible(false);
     canvas?.classList?.remove('map-select');
     setNpcNotice('NPC saved.', 'success', true);
     selectedObj = { type: 'npc', obj: npc };
@@ -2941,6 +2956,7 @@ function discardNPC() {
     npcOriginal = null;
     npcDirty = false;
     updateNpcMapBanner('', false);
+    setNpcCancelVisible(false);
     showNPCEditor(false);
     const saveBtn = document.getElementById('saveNPC');
     if (saveBtn) {
@@ -3025,7 +3041,10 @@ function editNPC(i) {
     document.getElementById('npcATK').value = n.combat?.ATK ?? 0;
     document.getElementById('npcDEF').value = n.combat?.DEF ?? 0;
     document.getElementById('npcLoot').value = n.combat?.loot || '';
-    document.getElementById('npcLootChance').value = n.combat?.lootChance != null ? Math.round(n.combat.lootChance * 100) : 100;
+    const lootChanceEl = document.getElementById('npcLootChance');
+    if (lootChanceEl) {
+        lootChanceEl.value = n.combat?.lootChance != null ? String(Math.round(n.combat.lootChance * 100)) : '';
+    }
     document.getElementById('npcBoss').checked = !!n.combat?.boss;
     document.getElementById('npcSpecialCue').value = n.combat?.special?.cue || '';
     document.getElementById('npcSpecialDmg').value = n.combat?.special?.dmg ?? '';
@@ -3047,6 +3066,7 @@ function editNPC(i) {
     npcOriginal = cloneNpcData(n);
     npcDirty = false;
     updateNpcMapBanner('', false);
+    setNpcCancelVisible(false);
     setNpcNotice('Make your changes, then click Save Changes.');
     loadTreeEditor();
     toggleQuestDialogBtn();
@@ -3091,6 +3111,7 @@ function deleteNPC() {
         npcOriginal = null;
         npcDirty = false;
         updateNpcMapBanner('', false);
+        setNpcCancelVisible(false);
         setNpcNotice('NPC deleted.', 'success', true);
         renderNPCList();
         selectedObj = null;
@@ -3116,6 +3137,7 @@ function closeNPCEditor() {
     npcOriginal = null;
     npcDirty = false;
     updateNpcMapBanner('', false);
+    setNpcCancelVisible(false);
     setNpcNotice('');
     validateNpcForm({ silent: true });
 }
@@ -5382,6 +5404,7 @@ function applyLoadedModule(data) {
     loadMods({});
     showItemEditor(false);
     showNPCEditor(false);
+    setNpcCancelVisible(false);
     showBldgEditor(false);
     showInteriorEditor(false);
     showQuestEditor(false);
@@ -5912,6 +5935,7 @@ document.getElementById('npcFlagPick').onclick = () => { coordTarget = { x: 'npc
 document.getElementById('portalPick').onclick = () => { coordTarget = { x: 'portalX', y: 'portalY' }; };
 document.getElementById('portalDestPick').onclick = () => { coordTarget = { x: 'portalToX', y: 'portalToY' }; };
 document.getElementById('npcPick').onclick = beginNpcCoordinateSelection;
+document.getElementById('npcCancelPick').onclick = cancelNpcCoordinateSelection;
 document.getElementById('itemPick').onclick = () => { coordTarget = { x: 'itemX', y: 'itemY', map: 'itemMap' }; };
 document.getElementById('save').onclick = saveModule;
 document.getElementById('load').onclick = () => document.getElementById('loadFile').click();
