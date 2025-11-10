@@ -124,6 +124,31 @@ textarea {
   font: inherit;
 }
 
+.inline-hint {
+  background: rgba(20, 26, 20, 0.8);
+  border: 1px solid rgba(79, 107, 79, 0.4);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+}
+
+.input-invalid {
+  border-color: #a44 !important;
+  box-shadow: 0 0 0 1px rgba(170, 68, 68, 0.4);
+}
+
+.inline-hint.error {
+  border-color: #a44;
+  color: #f6b0b0;
+}
+
+.inline-hint.success {
+  border-color: #4f6b4f;
+  color: #bce7bc;
+}
+
 input[type="range"] {
   accent-color: var(--accent);
   background: none;
@@ -190,6 +215,11 @@ input[type="range"] {
         box-shadow: var(--skin-crt-shadow, 0 0 0 2px #000 inset, 0 0 40px #000);
         image-rendering: pixelated;
         filter: contrast(1.06) saturate(1.1);
+    }
+
+    canvas.map-select {
+        cursor: crosshair !important;
+        box-shadow: 0 0 0 2px #4f6b4f inset, 0 0 40px rgba(79, 107, 79, 0.4);
     }
 
     .panel {
@@ -2026,15 +2056,22 @@ input[type="range"] {
 
     .tab2 {
         flex: 0 0 auto;
-        padding: 8px 10px;
+        padding: 10px 14px;
         text-align: center;
         cursor: pointer;
         border: 1px solid #273027;
-        border-radius: 6px;
+        border-radius: 8px;
         background: #121712;
         color: var(--ink);
-        font-size: 0.8125rem;
+        font-size: 0.9rem;
         font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .tab2 span[aria-hidden="true"] {
+        font-size: 1rem;
     }
 
     .tab2:hover {
@@ -2050,6 +2087,25 @@ input[type="range"] {
     .tabpanes {
         overflow: auto;
         padding: 8px;
+    }
+
+    .editor-actions {
+        position: sticky;
+        bottom: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 8px 0 0;
+        margin-top: 12px;
+        background: linear-gradient(180deg, rgba(11, 13, 11, 0) 0%, rgba(11, 13, 11, 0.9) 35%, rgba(11, 13, 11, 1) 100%);
+    }
+
+    .editor-actions .inline-hint {
+        flex: 1 0 100%;
+        margin-bottom: 8px;
+        text-align: left;
     }
 
     /* Elevate active card when focused */

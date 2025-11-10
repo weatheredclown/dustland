@@ -89,7 +89,8 @@ test('collectNPCFromForm uses patrol checkbox for loops', async () => {
   vm.createContext(context);
   const code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
   const start = code.indexOf('function collectNPCFromForm');
-  const end = code.indexOf('// Add a new NPC', start);
+  let end = code.indexOf('function saveNPC', start);
+  if (end === -1) end = code.length;
   vm.runInContext(code.slice(start, end), context);
 
   const npc1 = context.collectNPCFromForm();
@@ -151,7 +152,8 @@ test('collectNPCFromForm reads loot chance', async () => {
   vm.createContext(context);
   const code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
   const start = code.indexOf('function collectNPCFromForm');
-  const end = code.indexOf('// Add a new NPC', start);
+  let end = code.indexOf('function saveNPC', start);
+  if (end === -1) end = code.length;
   vm.runInContext(code.slice(start, end), context);
 
   const npc = context.collectNPCFromForm();
@@ -209,7 +211,8 @@ test('collectNPCFromForm reads workbench checkbox', async () => {
   vm.createContext(context);
   const code = await fs.readFile(new URL('../scripts/adventure-kit.js', import.meta.url), 'utf8');
   const start = code.indexOf('function collectNPCFromForm');
-  const end = code.indexOf('// Add a new NPC', start);
+  let end = code.indexOf('function saveNPC', start);
+  if (end === -1) end = code.length;
   vm.runInContext(code.slice(start, end), context);
 
   const npc1 = context.collectNPCFromForm();
