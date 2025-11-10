@@ -36,6 +36,37 @@
       box-shadow: 0 0 12px #000, 0 0 8px #9ef7a0;
     }
 
+    .ak-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      background: #0c140c;
+      border-bottom: 2px solid #2b3b2b;
+      position: sticky;
+      top: 0;
+      z-index: 15;
+    }
+
+    .ak-toolbar .toolbar-title {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #9ef7a0;
+    }
+
+    .ak-toolbar .toolbar-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .ak-toolbar .btn {
+      min-width: 96px;
+    }
+
     .card {
       padding: 8px;
       background: #0f120f;
@@ -52,6 +83,25 @@
 
     .list div {
       cursor: pointer;
+    }
+
+    .map-card {
+      position: relative;
+    }
+
+    #mapModeBanner {
+      position: absolute;
+      left: 50%;
+      top: 12px;
+      transform: translateX(-50%);
+      background: rgba(20, 40, 20, 0.95);
+      border: 1px solid #4f6b4f;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      display: none;
+      z-index: 10;
     }
 
     .lootTableWrap {
@@ -140,6 +190,30 @@
       font-size: 0.75rem;
     }
 
+    .tabs2 {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .tab2 {
+      font-size: 0.9rem;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #121a12;
+      border: 1px solid transparent;
+      color: #9ef7a0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab2.active {
+      background: #1c2b1c;
+      border-color: #4f6b4f;
+    }
+
     input,
     textarea,
     select {
@@ -151,6 +225,11 @@
       font-family: inherit;
       font-size: 0.8125rem;
       border-radius: 4px;
+    }
+
+    [aria-invalid="true"] {
+      border-color: #e76868;
+      box-shadow: 0 0 0 1px rgba(231, 104, 104, 0.35);
     }
 
     input[type=checkbox] {
@@ -184,6 +263,45 @@
     .xy label {
       display: flex;
       flex-direction: column;
+    }
+
+    .field-hint {
+      font-size: 0.75rem;
+      margin-top: 4px;
+      color: #f3a9a9;
+    }
+
+    #npcCoordStatus {
+      font-size: 0.75rem;
+      margin-top: 4px;
+      color: #9ef7a0;
+    }
+
+    .editor-actions {
+      position: sticky;
+      bottom: 0;
+      background: linear-gradient(to top, #101610, rgba(16, 22, 16, 0.92));
+      padding-top: 8px;
+      padding-bottom: 8px;
+      margin-top: 12px;
+      border-top: 1px solid #2b3b2b;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .editor-actions .spacer {
+      flex: 1 1 auto;
+    }
+
+    #editorMode {
+      margin: 8px 0;
+      padding: 6px 12px;
+      background: #101a10;
+      border-left: 3px solid #4f6b4f;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      color: #c8f7c9;
     }
     .xy input {
       width: 60px;
@@ -389,9 +507,19 @@
 </head>
 
 <body class="adventure-kit">
+  <div class="ak-toolbar" role="toolbar" aria-label="Module controls">
+    <span class="toolbar-title">Adventure Construction Kit</span>
+    <div class="toolbar-actions">
+      <button class="btn" id="undo" type="button" disabled>Undo</button>
+      <button class="btn" id="redo" type="button" disabled>Redo</button>
+      <button class="btn btn--primary" id="save" type="button" title="Download module as a JSON file">Save JSON</button>
+      <button class="btn" id="load" type="button" title="Load a module from a JSON file">Import JSON</button>
+    </div>
+  </div>
   <canvas id="game" width="0" height="0" class="glow" aria-label="Dustland CRT"></canvas>
   <div class="ak-layout">
       <section class="card map-card" id="mapCard">
+        <div id="mapModeBanner" role="status" aria-live="polite"></div>
         <canvas id="map" width="640" height="480" aria-label="Map preview"></canvas>
         <label>Map<select id="mapSelect"></select></label>
         <div class="btn-group" id="paletteGroup">
@@ -428,8 +556,6 @@
             <option value="module">This module only</option>
           </select>
           </div>
-          <button class="btn btn--primary" id="save" title="Download module as a JSON file">Save</button>
-          <button class="btn" id="load" title="Load a module from a JSON file">Load</button>
         </div>
         <div class="btn-group">
           <button class="btn" id="setStart" title="Set player starting tile">Set Start</button>
@@ -450,23 +576,24 @@
       <input type="file" id="loadFile" accept="application/json" style="display:none" />
     </section>
     <aside class="editor-panel" id="editorPanel" aria-hidden="false">
+      <div id="editorMode" role="status" aria-live="polite">Editing: NPCs &mdash; Fill out the details, then choose a map tile.</div>
       <fieldset class="card" id="problemCard" style="display:none;border-color:#a00">
         <legend>Problems</legend>
         <div class="list" id="problemList"></div>
       </fieldset>
       <div class="tabs2" role="tablist" aria-label="Editors">
-        <button class="tab2 active" type="button" data-tab="npc" role="tab" aria-selected="true">NPCs</button>
-        <button class="tab2" type="button" data-tab="items" role="tab" aria-selected="false">Items</button>
-        <button class="tab2" type="button" data-tab="buildings" role="tab" aria-selected="false">Buildings</button>
-        <button class="tab2" type="button" data-tab="interiors" role="tab" aria-selected="false">Interiors</button>
-        <button class="tab2" type="button" data-tab="portals" role="tab" aria-selected="false">Portals</button>
-        <button class="tab2" type="button" data-tab="quests" role="tab" aria-selected="false">Quests</button>
-        <button class="tab2" type="button" data-tab="events" role="tab" aria-selected="false">Events</button>
-        <button class="tab2" type="button" data-tab="arenas" role="tab" aria-selected="false">Arenas</button>
-        <button class="tab2" type="button" data-tab="zones" role="tab" aria-selected="false">Zones</button>
-        <button class="tab2" type="button" data-tab="encounters" role="tab" aria-selected="false">Encounters</button>
-        <button class="tab2" type="button" data-tab="templates" role="tab" aria-selected="false">Templates</button>
-        <button class="tab2" type="button" data-tab="wizards" role="tab" aria-selected="false">Wizards</button>
+        <button class="tab2 active" type="button" data-tab="npc" role="tab" aria-selected="true"><span aria-hidden="true">🧍</span><span>NPCs</span></button>
+        <button class="tab2" type="button" data-tab="items" role="tab" aria-selected="false"><span aria-hidden="true">🎒</span><span>Items</span></button>
+        <button class="tab2" type="button" data-tab="buildings" role="tab" aria-selected="false"><span aria-hidden="true">🏠</span><span>Buildings</span></button>
+        <button class="tab2" type="button" data-tab="interiors" role="tab" aria-selected="false"><span aria-hidden="true">🪟</span><span>Interiors</span></button>
+        <button class="tab2" type="button" data-tab="portals" role="tab" aria-selected="false"><span aria-hidden="true">🌀</span><span>Portals</span></button>
+        <button class="tab2" type="button" data-tab="quests" role="tab" aria-selected="false"><span aria-hidden="true">📜</span><span>Quests</span></button>
+        <button class="tab2" type="button" data-tab="events" role="tab" aria-selected="false"><span aria-hidden="true">⚡</span><span>Events</span></button>
+        <button class="tab2" type="button" data-tab="arenas" role="tab" aria-selected="false"><span aria-hidden="true">⚔️</span><span>Arenas</span></button>
+        <button class="tab2" type="button" data-tab="zones" role="tab" aria-selected="false"><span aria-hidden="true">🧭</span><span>Zones</span></button>
+        <button class="tab2" type="button" data-tab="encounters" role="tab" aria-selected="false"><span aria-hidden="true">👾</span><span>Encounters</span></button>
+        <button class="tab2" type="button" data-tab="templates" role="tab" aria-selected="false"><span aria-hidden="true">🧩</span><span>Templates</span></button>
+        <button class="tab2" type="button" data-tab="wizards" role="tab" aria-selected="false"><span aria-hidden="true">🪄</span><span>Wizards</span></button>
       </div>
       <div class="tabpanes">
         <fieldset class="card" id="npcCard" data-pane="npc">
@@ -478,6 +605,7 @@
           <label>ID<input id="npcId" placeholder="npc_id" /></label>
           <label>Name<input id="npcName" placeholder="NPC name" /></label>
           <label>Title<input id="npcTitle" placeholder="NPC title" /></label>
+          <div id="npcFormMessage" class="field-hint" role="status" aria-live="polite">Fill in the ID, name, and title to enable map placement.</div>
           <label>Description<textarea id="npcDesc" rows="2"></textarea></label>
           <label><input type="checkbox" id="npcColorOverride"> Override Color</label>
           <label id="npcColorWrap" style="display:none">Color<input id="npcColor" type="color" value="#9ef7a0" /></label>
@@ -487,6 +615,7 @@
             <label>X<input id="npcX" type="number" min="0" /></label>
             <label>Y<input id="npcY" type="number" min="0" /></label>
           </div>
+          <div id="npcCoordStatus">No map tile selected.</div>
           <label><input type="checkbox" id="npcPatrol"> Patrol NPC</label>
           <div id="npcLoopPts" style="display:none"></div>
           <button class="btn" type="button" id="addLoopPt" style="display:none">+ Waypoint</button>
@@ -517,7 +646,7 @@
             <label>Op<select id="npcOp"><option value=">=">&ge;</option><option value=">">&gt;</option><option value="==">==</option><option value="!=">!=</option><option value="<=">&le;</option><option value="<">&lt;</option></select></label>
             <label>Value<input id="npcVal" type="number" value="1" /></label>
           </div>
-          <button class="btn" type="button" id="npcPick" title="Click on the map to choose location">Select on Map</button>
+          <button class="btn" type="button" id="npcPick" title="Click on the map to choose location" disabled>Select on Map</button>
           <label>Dialog<textarea id="npcDialog" rows="2"></textarea></label>
           <div id="npcDialogHint" class="small" style="display:none">Dialog text is set in the dialog tree.</div>
           <label>Quests<select id="npcQuests" multiple size="3"></select></label>
@@ -554,10 +683,13 @@
           </div>
           <textarea id="npcTree" style="display:none"></textarea>
           <div id="dialogPreview" style="margin-top:6px"></div>
-          <button class="btn" id="addNPC">Add NPC</button>
-          <button class="btn" type="button" id="cancelNPC" style="display:none">Cancel</button>
-          <button class="btn" id="delNPC" style="display:none">Delete NPC</button>
-          <button class="btn" type="button" id="closeNPC">Done</button>
+          <div class="editor-actions">
+            <button class="btn btn--primary" id="saveNPC" type="button" disabled>Save NPC</button>
+            <button class="btn" type="button" id="discardNPC">Discard Changes</button>
+            <span class="spacer"></span>
+            <button class="btn" id="delNPC" style="display:none">Delete NPC</button>
+            <button class="btn" type="button" id="closeNPC">Done</button>
+          </div>
         </div>
       </fieldset>
       <fieldset class="card" id="itemCard" data-pane="items" style="display:none">
@@ -739,7 +871,7 @@
           </div>
           <label>XP Reward<input id="questXP" type="number" min="10" max="100" value="10" /></label>
           <label>NPC<select id="questNPC">
-              <option value="">(none)</option>
+              <option value="" selected>Select NPC…</option>
             </select></label>
           <button class="btn" id="addQuest">Add Quest</button>
           <button class="btn" id="delQuest" style="display:none">Delete Quest</button>
