@@ -14,6 +14,18 @@ const tileNames = {
     [TILE.RUIN]: 'Ruin',
     [TILE.WALL]: 'Wall'
 };
+const walkableTiles = {
+    0: true,
+    1: true,
+    2: false,
+    3: true,
+    4: true,
+    5: true,
+    6: false,
+    7: true,
+    8: true,
+    9: false
+};
 const stampNames = {
     hill: 'Hill',
     cross: 'Cross Roads',
@@ -125,6 +137,8 @@ let npcOriginal = null;
 let npcDirty = false;
 let npcNoticeTimer = 0;
 let npcMapMode = false;
+let npcLastCoords = null;
+const npcSectionRefs = new Map();
 let worldZoom = 1, panX = 0, panY = 0;
 let panning = false, panStartX = 0, panStartY = 0, panMouseX = 0, panMouseY = 0, panScaleX = 1, panScaleY = 1;
 const baseTileW = canvas.width / WORLD_W;
@@ -133,6 +147,7 @@ let problemRefs = [];
 let spawnHeat = false;
 var spawnHeatMap = null;
 var spawnHeatMax = 0;
+let mapActionTimer = 0;
 function focusMap(x, y) {
     if (currentMap !== 'world')
         return;
@@ -144,6 +159,47 @@ function focusMap(x, y) {
     panY = clamp(y - viewH / 2, 0, maxPanY);
 }
 globalThis.focusMap = focusMap;
+function getTileAt(mapName, x, y) {
+    if (mapName === 'world') {
+        return world?.[y]?.[x];
+    }
+    const interior = moduleData.interiors.find(i => i.id === mapName);
+    return interior?.grid?.[y]?.[x];
+}
+function isTileWalkable(mapName, x, y) {
+    const tile = getTileAt(mapName, x, y);
+    if (tile == null)
+        return false;
+    if (mapName === 'world')
+        return !!walkableTiles[tile];
+    if (tile === TILE.WALL || tile === TILE.WATER)
+        return false;
+    return true;
+}
+function setMapActionBanner(message, type = 'info', autoHideMs = 0) {
+    const banner = document.getElementById('mapActionBanner');
+    if (!banner)
+        return;
+    if (mapActionTimer) {
+        clearTimeout(mapActionTimer);
+        mapActionTimer = 0;
+    }
+    banner.textContent = message || '';
+    banner.style.display = message ? 'block' : 'none';
+    banner.classList.remove('error', 'success');
+    if (type === 'error')
+        banner.classList.add('error');
+    else if (type === 'success')
+        banner.classList.add('success');
+    if (message && autoHideMs > 0) {
+        mapActionTimer = setTimeout(() => {
+            banner.style.display = 'none';
+            banner.classList.remove('error', 'success');
+            banner.textContent = '';
+            mapActionTimer = 0;
+        }, autoHideMs);
+    }
+}
 function getWallGap(length, enabled) {
     if (!enabled || length <= 0)
         return null;
@@ -557,6 +613,9 @@ function drawWorld() {
     }
     if (map === 'world' && spawnHeat)
         computeSpawnHeat();
+    const selectingNpc = npcMapMode && map === currentMap;
+    const selectingStart = settingStart && map === 'world';
+    const highlightSelection = selectingNpc || selectingStart;
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     for (let y = 0; y < H; y++) {
@@ -586,30 +645,64 @@ function drawWorld() {
                     ctx.fillRect(px, py, sx, sy);
                 }
             }
-        }
-    }
-    if (map === 'world' && hoverTile) {
-        if (worldStamp) {
-            ctx.globalAlpha = 0.5;
-            for (let yy = 0; yy < worldStamp.length; yy++) {
-                for (let xx = 0; xx < worldStamp[yy].length; xx++) {
-                    const tx = hoverTile.x + xx;
-                    const ty = hoverTile.y + yy;
-                    if (tx < 0 || ty < 0 || tx >= WORLD_W || ty >= WORLD_H)
-                        continue;
-                    ctx.fillStyle = akColors[worldStamp[yy][xx]] || '#000';
-                    ctx.fillRect((tx - panX) * sx, (ty - panY) * sy, sx, sy);
-                }
+            if (highlightSelection) {
+                const walkable = isTileWalkable(map, x, y);
+                ctx.save();
+                ctx.fillStyle = walkable ? 'rgba(120, 200, 140, 0.18)' : 'rgba(210, 70, 70, 0.22)';
+                ctx.fillRect(px, py, sx, sy);
+                ctx.restore();
             }
-            ctx.globalAlpha = 1;
-        }
-        else {
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.fillRect((hoverTile.x - panX) * sx, (hoverTile.y - panY) * sy, sx, sy);
         }
     }
     const pxoff = map === 'world' ? panX : 0;
     const pyoff = map === 'world' ? panY : 0;
+    if (hoverTile) {
+        const hx = hoverTile.x;
+        const hy = hoverTile.y;
+        const hxpx = (hx - pxoff) * sx;
+        const hypy = (hy - pyoff) * sy;
+        if (hxpx + sx >= 0 && hypy + sy >= 0 && hxpx <= canvas.width && hypy <= canvas.height) {
+            if (highlightSelection) {
+                const valid = isTileWalkable(map, hx, hy);
+                ctx.save();
+                ctx.globalAlpha = 0.2;
+                ctx.fillStyle = valid ? '#9ef7a0' : '#f66';
+                ctx.fillRect(hxpx, hypy, sx, sy);
+                ctx.globalAlpha = 1;
+                ctx.strokeStyle = valid ? '#9ef7a0' : '#f66';
+                ctx.lineWidth = 2;
+                if (typeof ctx.setLineDash === 'function') {
+                    ctx.setLineDash([4, 4]);
+                }
+                ctx.strokeRect(hxpx + 1, hypy + 1, sx - 2, sy - 2);
+                if (typeof ctx.setLineDash === 'function') {
+                    ctx.setLineDash([]);
+                }
+                ctx.restore();
+            }
+            else if (map === 'world' && worldStamp) {
+                ctx.save();
+                ctx.globalAlpha = 0.5;
+                for (let yy = 0; yy < worldStamp.length; yy++) {
+                    for (let xx = 0; xx < worldStamp[yy].length; xx++) {
+                        const tx = hoverTile.x + xx;
+                        const ty = hoverTile.y + yy;
+                        if (tx < 0 || ty < 0 || tx >= WORLD_W || ty >= WORLD_H)
+                            continue;
+                        ctx.fillStyle = akColors[worldStamp[yy][xx]] || '#000';
+                        ctx.fillRect((tx - panX) * sx, (ty - panY) * sy, sx, sy);
+                    }
+                }
+                ctx.restore();
+            }
+            else if (map === 'world') {
+                ctx.save();
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.fillRect((hoverTile.x - panX) * sx, (hoverTile.y - panY) * sy, sx, sy);
+                ctx.restore();
+            }
+        }
+    }
     moduleData.npcs.filter(n => n.map === map).forEach(n => {
         const hovering = hoverTarget && hoverTarget.type === 'npc' && hoverTarget.obj === n;
         const px = (n.x - pxoff) * sx;
@@ -635,7 +728,8 @@ function drawWorld() {
         const pts = selectedObj.obj.loop;
         ctx.save();
         ctx.strokeStyle = '#0f0';
-        ctx.setLineDash([4, 4]);
+        if (typeof ctx.setLineDash === 'function')
+            ctx.setLineDash([4, 4]);
         ctx.beginPath();
         pts.forEach((p, i) => {
             const px = (p.x - panX) * sx + sx / 2;
@@ -646,7 +740,8 @@ function drawWorld() {
                 ctx.lineTo(px, py);
         });
         ctx.stroke();
-        ctx.setLineDash([]);
+        if (typeof ctx.setLineDash === 'function')
+            ctx.setLineDash([]);
         pts.forEach(p => {
             ctx.strokeStyle = '#0f0';
             ctx.strokeRect((p.x - panX) * sx, (p.y - panY) * sy, sx, sy);
@@ -1106,6 +1201,8 @@ function confirmDialog(msg, onYes) {
     no.onclick = cleanup;
     tgt.addEventListener?.('keydown', onKey);
 }
+const listFilterApplyFns = new Map();
+const listFilterResetMarkers = new WeakSet();
 function setupListFilter(inputId, listId) {
     const input = document.getElementById(inputId);
     const list = document.getElementById(listId);
@@ -1117,11 +1214,48 @@ function setupListFilter(inputId, listId) {
             ch.style.display = ch.textContent.toLowerCase().includes(term) ? '' : 'none';
         });
     };
+    listFilterApplyFns.set(inputId, apply);
     input.addEventListener('input', apply);
     if (typeof MutationObserver !== 'undefined') {
         new MutationObserver(apply).observe(list, { childList: true });
     }
+    if (!listFilterResetMarkers.has(input)) {
+        const resetBtn = document.createElement('button');
+        resetBtn.type = 'button';
+        resetBtn.className = 'btn filter-reset';
+        resetBtn.textContent = 'Reset Filter';
+        resetBtn.addEventListener('click', () => resetListFilter(inputId, { focus: true }));
+        if (typeof input.insertAdjacentElement === 'function') {
+            input.insertAdjacentElement('afterend', resetBtn);
+        }
+        else if (input.parentNode) {
+            input.parentNode.insertBefore(resetBtn, input.nextSibling);
+        }
+        listFilterResetMarkers.add(input);
+        if (typeof input.setAttribute === 'function') {
+            input.setAttribute('data-reset-attached', '1');
+        }
+        else if (input.dataset) {
+            input.dataset.resetAttached = '1';
+        }
+    }
     apply();
+}
+function resetListFilter(inputId, options = {}) {
+    const input = document.getElementById(inputId);
+    if (!input)
+        return;
+    const { focus = false } = options;
+    const apply = listFilterApplyFns.get(inputId);
+    if (input.value) {
+        input.value = '';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    else if (apply) {
+        apply();
+    }
+    if (focus)
+        input.focus();
 }
 function regenWorld() {
     moduleData.seed = Date.now();
@@ -2487,6 +2621,209 @@ function setNpcFieldInvalid(el, invalid) {
             el.removeAttribute('aria-invalid');
     }
 }
+function getNpcFieldWrapper(id) {
+    const el = document.getElementById(id);
+    if (!el)
+        return null;
+    const wrap = typeof el.closest === 'function' ? el.closest('label') : null;
+    return wrap || el;
+}
+function openNpcSection(sectionId, options = {}) {
+    const section = npcSectionRefs.get(sectionId);
+    if (!section)
+        return;
+    const { scroll = false, focus = false } = options;
+    section.open = true;
+    if (scroll && typeof section.scrollIntoView === 'function') {
+        section.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
+    if (focus) {
+        const summary = section.querySelector('summary');
+        summary?.focus?.({ preventScroll: scroll });
+    }
+}
+function setupNpcSections() {
+    const editor = document.getElementById('npcEditor');
+    if (!editor)
+        return;
+    const appliedAttr = typeof editor.getAttribute === 'function' ? editor.getAttribute('data-sections-applied') : null;
+    const applied = editor.dataset?.sectionsApplied === '1' || appliedAttr === '1';
+    if (applied)
+        return;
+    if (editor.dataset) {
+        editor.dataset.sectionsApplied = '1';
+    }
+    else if (typeof editor.setAttribute === 'function') {
+        editor.setAttribute('data-sections-applied', '1');
+    }
+    npcSectionRefs.clear();
+    const npcXField = document.getElementById('npcX');
+    const mapRow = npcXField && typeof npcXField.closest === 'function'
+        ? npcXField.closest('.xy')
+        : npcXField?.parentElement || null;
+    const pickRow = document.getElementById('npcPick')?.parentElement;
+    const portraitNav = document.getElementById('npcPrevP')?.parentElement;
+    const sections = [
+        {
+            id: 'npcSectionGeneral',
+            label: 'General',
+            open: true,
+            nodes: [
+                getNpcFieldWrapper('npcId'),
+                getNpcFieldWrapper('npcName'),
+                getNpcFieldWrapper('npcTitle'),
+                getNpcFieldWrapper('npcDesc'),
+                getNpcFieldWrapper('npcColorOverride'),
+                document.getElementById('npcColorWrap'),
+                getNpcFieldWrapper('npcSymbol')
+            ]
+        },
+        {
+            id: 'npcSectionPlacement',
+            label: 'Map & Placement',
+            open: true,
+            nodes: [
+                getNpcFieldWrapper('npcMap'),
+                mapRow,
+                pickRow,
+                getNpcFieldWrapper('npcPatrol'),
+                document.getElementById('npcLoopPts'),
+                document.getElementById('addLoopPt')
+            ]
+        },
+        {
+            id: 'npcSectionAppearance',
+            label: 'Portrait & Visibility',
+            nodes: [
+                document.getElementById('npcPort'),
+                portraitNav,
+                getNpcFieldWrapper('npcPortraitLock'),
+                getNpcFieldWrapper('npcHidden'),
+                getNpcFieldWrapper('npcLocked'),
+                getNpcFieldWrapper('npcInanimate'),
+                document.getElementById('revealOpts')
+            ]
+        },
+        {
+            id: 'npcSectionInteraction',
+            label: 'Dialogue & Quests',
+            nodes: [
+                getNpcFieldWrapper('npcDialog'),
+                document.getElementById('npcDialogHint'),
+                getNpcFieldWrapper('npcQuests'),
+                document.getElementById('genQuestDialog'),
+                document.getElementById('questTextWrap'),
+                document.getElementById('treeWrap'),
+                document.getElementById('npcTree'),
+                document.getElementById('dialogPreview')
+            ]
+        },
+        {
+            id: 'npcSectionServices',
+            label: 'Behavior & Services',
+            nodes: [
+                getNpcFieldWrapper('npcCombat'),
+                document.getElementById('combatOpts'),
+                getNpcFieldWrapper('npcShop'),
+                document.getElementById('shopOpts'),
+                getNpcFieldWrapper('npcTrainer'),
+                document.getElementById('trainerOpts'),
+                getNpcFieldWrapper('npcWorkbench')
+            ]
+        }
+    ];
+    const notice = document.getElementById('npcFormNotice');
+    const canFragment = typeof document.createDocumentFragment === 'function';
+    const frag = canFragment ? document.createDocumentFragment() : null;
+    const sectionNodes = [];
+    sections.forEach(section => {
+        const detail = document.createElement('details');
+        detail.className = 'npc-section';
+        detail.id = section.id;
+        if (section.open)
+            detail.open = true;
+        const summary = document.createElement('summary');
+        summary.textContent = section.label;
+        detail.appendChild(summary);
+        const body = document.createElement('div');
+        body.className = 'npc-section__body';
+        section.nodes.forEach(node => {
+            if (!node)
+                return;
+            body.appendChild(node);
+        });
+        detail.appendChild(body);
+        if (frag)
+            frag.appendChild(detail);
+        else
+            sectionNodes.push(detail);
+        npcSectionRefs.set(section.id, detail);
+    });
+    if (notice && notice.parentNode) {
+        if (frag && typeof notice.parentNode.insertBefore === 'function') {
+            notice.parentNode.insertBefore(frag, notice.nextSibling);
+        }
+        else {
+            let ref = notice.nextSibling;
+            sectionNodes.forEach(node => {
+                if (typeof notice.parentNode.insertBefore === 'function') {
+                    notice.parentNode.insertBefore(node, ref);
+                    ref = node.nextSibling;
+                }
+                else if (typeof notice.parentNode.appendChild === 'function') {
+                    notice.parentNode.appendChild(node);
+                }
+            });
+        }
+    }
+    else {
+        if (frag && typeof editor.prepend === 'function') {
+            editor.prepend(frag);
+        }
+        else if (frag && typeof editor.insertBefore === 'function') {
+            editor.insertBefore(frag, editor.firstChild);
+        }
+        else {
+            for (let i = sectionNodes.length - 1; i >= 0; i -= 1) {
+                const node = sectionNodes[i];
+                if (typeof editor.insertBefore === 'function') {
+                    editor.insertBefore(node, editor.firstChild);
+                }
+                else if (typeof editor.prepend === 'function') {
+                    editor.prepend(node);
+                }
+                else if (typeof editor.appendChild === 'function') {
+                    editor.appendChild(node);
+                }
+            }
+        }
+    }
+    updateNpcCoordinateState();
+}
+function updateNpcCoordinateState() {
+    const idVal = document.getElementById('npcId')?.value.trim();
+    const nameVal = document.getElementById('npcName')?.value.trim();
+    const titleVal = document.getElementById('npcTitle')?.value.trim();
+    const ready = !!(idVal && nameVal && titleVal);
+    const xInput = document.getElementById('npcX');
+    const yInput = document.getElementById('npcY');
+    const pickBtn = document.getElementById('npcPick');
+    [xInput, yInput].forEach(el => {
+        if (!el)
+            return;
+        el.disabled = !ready;
+        if (!ready)
+            el.setAttribute('aria-disabled', 'true');
+        else if (typeof el.removeAttribute === 'function')
+            el.removeAttribute('aria-disabled');
+    });
+    if (pickBtn) {
+        pickBtn.disabled = !ready;
+        pickBtn.title = ready
+            ? 'Click on the map to choose location'
+            : 'Fill in ID, Name, and Title before choosing a location';
+    }
+}
 function cloneNpcData(npc) {
     try {
         return JSON.parse(JSON.stringify(npc || {}));
@@ -2544,12 +2881,13 @@ function validateNpcForm(options = {}) {
             setNpcNotice(warnings.join(' '));
         }
         else if (npcDirty) {
-            setNpcNotice('All required fields look good. Click Save to apply your changes.');
+            setNpcNotice('All required fields look good. Click Save NPC to apply your changes.');
         }
         else {
-            setNpcNotice('Fill out ID, Name, and Title, then choose a map location before saving.');
+            setNpcNotice('Fill out ID, Name, and Title, then choose a map location before saving the NPC.');
         }
     }
+    updateNpcCoordinateState();
     return { valid: errors.length === 0, errors, warnings };
 }
 function beginNpcCoordinateSelection() {
@@ -2581,6 +2919,9 @@ function beginNpcCoordinateSelection() {
     coordTarget = { x: 'npcX', y: 'npcY', map: 'npcMap' };
     canvas?.classList?.add('map-select');
     setNpcCancelVisible(true);
+    openNpcSection('npcSectionPlacement', { scroll: true });
+    setMapActionBanner('NPC placement active: choose a walkable tile.', 'info');
+    drawWorld();
 }
 function finishNpcCoordinateSelection(x, y) {
     if (!npcMapMode)
@@ -2589,8 +2930,12 @@ function finishNpcCoordinateSelection(x, y) {
     updateNpcMapBanner('', false);
     canvas?.classList?.remove('map-select');
     setNpcNotice(`Location set to (${x}, ${y}).`, 'success', true);
+    const mapVal = document.getElementById('npcMap')?.value.trim() || currentMap || 'world';
+    npcLastCoords = { map: mapVal, x, y };
+    setMapActionBanner(`NPC location set to (${x}, ${y}).`, 'success', 3000);
     applyNPCChanges();
     setNpcCancelVisible(false);
+    drawWorld();
 }
 function cancelNpcCoordinateSelection() {
     if (!npcMapMode)
@@ -2602,6 +2947,8 @@ function cancelNpcCoordinateSelection() {
     setNpcNotice('Map selection cancelled.', 'error', true);
     validateNpcForm({ silent: false });
     setNpcCancelVisible(false);
+    setMapActionBanner('NPC placement cancelled.', 'error', 2500);
+    drawWorld();
 }
 function startNewNPC() {
     editNPCIdx = -1;
@@ -2641,6 +2988,8 @@ function startNewNPC() {
         Array.from(qs.options || []).forEach(o => o.selected = false);
     document.getElementById('npcAccept').value = 'Good luck.';
     document.getElementById('npcTurnin').value = 'Thanks for helping.';
+    npcLastCoords = null;
+    updateNpcCoordinateState();
     toggleQuestTextWrap();
     document.getElementById('npcTree').value = '';
     document.getElementById('npcHP').value = 5;
@@ -2669,7 +3018,7 @@ function startNewNPC() {
     npcOriginal = null;
     npcDirty = false;
     updateNpcMapBanner('', false);
-    setNpcNotice('Fill out ID, Name, and Title, then choose a map location before saving.');
+    setNpcNotice('Fill out ID, Name, and Title, then choose a map location before saving the NPC.');
     loadTreeEditor();
     toggleQuestDialogBtn();
     placingType = null;
@@ -2723,8 +3072,18 @@ function collectNPCFromForm() {
     const color = document.getElementById('npcColor').value.trim() || '#fff';
     const symbol = document.getElementById('npcSymbol').value.trim().charAt(0) || '!';
     const map = document.getElementById('npcMap').value.trim() || 'world';
-    const x = parseInt(document.getElementById('npcX').value, 10) || 0;
-    const y = parseInt(document.getElementById('npcY').value, 10) || 0;
+    const rawX = document.getElementById('npcX').value;
+    const rawY = document.getElementById('npcY').value;
+    const parsedX = Number.parseInt(rawX, 10);
+    const parsedY = Number.parseInt(rawY, 10);
+    let x = Number.isFinite(parsedX) ? parsedX : undefined;
+    let y = Number.isFinite(parsedY) ? parsedY : undefined;
+    if (Number.isFinite(parsedX) && Number.isFinite(parsedY)) {
+        npcLastCoords = { map, x: parsedX, y: parsedY };
+    }
+    else if (npcLastCoords && npcLastCoords.map === map) {
+        ({ x, y } = npcLastCoords);
+    }
     const dialogLines = document.getElementById('npcDialog').value.trim().split('\n');
     const questSel = document.getElementById('npcQuests');
     const questIds = questSel ? Array.from(questSel.selectedOptions || []).map(o => o.value.trim()).filter(Boolean) : [];
@@ -2825,6 +3184,10 @@ function collectNPCFromForm() {
         removeCombatTree(tree);
     document.getElementById('npcTree').value = JSON.stringify(tree, null, 2);
     loadTreeEditor();
+    if (!Number.isFinite(x))
+        x = 0;
+    if (!Number.isFinite(y))
+        y = 0;
     const npc = { id, name, title, desc, symbol, map, x, y, tree };
     if (overrideColor) {
         npc.color = color;
@@ -2902,6 +3265,7 @@ function saveNPC() {
         setNpcNotice(errors.join(' '), 'error');
         return;
     }
+    const wasNew = editNPCIdx < 0;
     const npc = collectNPCFromForm();
     if (editNPCIdx >= 0) {
         moduleData.npcs[editNPCIdx] = npc;
@@ -2919,7 +3283,7 @@ function saveNPC() {
     const saveBtn = document.getElementById('saveNPC');
     if (saveBtn) {
         saveBtn.disabled = false;
-        saveBtn.textContent = 'Save Changes';
+        saveBtn.textContent = 'Save NPC';
     }
     updateNpcMapBanner('', false);
     setNpcCancelVisible(false);
@@ -2928,6 +3292,8 @@ function saveNPC() {
     selectedObj = { type: 'npc', obj: npc };
     drawWorld();
     drawInterior();
+    if (wasNew)
+        resetListFilter('npcFilter');
 }
 function applyNPCChanges() {
     npcDirty = true;
@@ -2992,6 +3358,7 @@ function editNPC(i) {
     populateMapDropdown(document.getElementById('npcMap'), n.map);
     document.getElementById('npcX').value = n.x;
     document.getElementById('npcY').value = n.y;
+    npcLastCoords = { map: n.map || 'world', x: n.x, y: n.y };
     renderLoopFields(n.loop || []);
     document.getElementById('npcPatrol').checked = Array.isArray(n.loop) && n.loop.length >= 2;
     updatePatrolSection();
@@ -3060,14 +3427,14 @@ function editNPC(i) {
     const saveBtn = document.getElementById('saveNPC');
     if (saveBtn) {
         saveBtn.disabled = true;
-        saveBtn.textContent = 'Save Changes';
+        saveBtn.textContent = 'Save NPC';
     }
     document.getElementById('delNPC').style.display = 'block';
     npcOriginal = cloneNpcData(n);
     npcDirty = false;
     updateNpcMapBanner('', false);
     setNpcCancelVisible(false);
-    setNpcNotice('Make your changes, then click Save Changes.');
+    setNpcNotice('Make your changes, then click Save NPC.');
     loadTreeEditor();
     toggleQuestDialogBtn();
     showNPCEditor(true);
@@ -3075,6 +3442,7 @@ function editNPC(i) {
     drawWorld();
     renderNPCList();
     validateNpcForm({ silent: true });
+    updateNpcCoordinateState();
 }
 function renderNPCList() {
     const list = document.getElementById('npcList');
@@ -3231,6 +3599,7 @@ function beginPlaceItem() {
     drawWorld();
 }
 function addItem() {
+    const wasNew = editItemIdx < 0;
     const name = document.getElementById('itemName').value.trim();
     const id = document.getElementById('itemId').value.trim();
     const type = document.getElementById('itemType').value.trim();
@@ -3330,6 +3699,8 @@ function addItem() {
     drawWorld();
     drawInterior();
     showItemEditor(false);
+    if (wasNew)
+        resetListFilter('itemFilter');
 }
 function cancelItem() {
     placingType = null;
@@ -5631,9 +6002,33 @@ function validateSpawns() {
     return issues;
 }
 function onProblemClick() {
-    const prob = problemRefs[parseInt(this.dataset.idx, 10)];
-    if (prob.type === 'npc')
+    const idxStr = this.dataset?.idx ?? (typeof this.getAttribute === 'function' ? this.getAttribute('data-idx') : null);
+    const prob = problemRefs[parseInt(idxStr || '-1', 10)];
+    if (!prob)
+        return;
+    if (prob.type === 'npc') {
         editNPC(prob.idx);
+        const msg = prob.msg || '';
+        let targetSection = null;
+        if (/portrait/i.test(msg))
+            targetSection = 'npcSectionAppearance';
+        else if (/prompt|dialog/i.test(msg))
+            targetSection = 'npcSectionInteraction';
+        else if (/locked npc/i.test(msg))
+            targetSection = 'npcSectionServices';
+        else if (/blocked tile/i.test(msg))
+            targetSection = 'npcSectionPlacement';
+        if (/blocked tile/i.test(msg)) {
+            setTimeout(() => {
+                beginNpcCoordinateSelection();
+                openNpcSection('npcSectionPlacement', { scroll: true, focus: true });
+            }, 60);
+            return;
+        }
+        if (targetSection) {
+            setTimeout(() => openNpcSection(targetSection, { scroll: true, focus: true }), 60);
+        }
+    }
     else if (prob.type === 'item')
         editItem(prob.idx);
     else if (prob.type === 'template')
@@ -5642,6 +6037,8 @@ function onProblemClick() {
         showMap('world');
         focusMap(moduleData.start.x, moduleData.start.y);
         selectedObj = null;
+        settingStart = true;
+        setMapActionBanner('Player start needs a walkable tile. Click a valid tile to reposition.', 'error');
         drawWorld();
     }
 }
@@ -5652,17 +6049,59 @@ function renderProblems(issues) {
     problemRefs = issues;
     if (!issues.length) {
         card.style.display = 'none';
+        if (list)
+            list.innerHTML = '';
         return;
     }
     card.style.display = 'block';
-    const html = issues.map((p, i) => {
-        const icon = p.warn ? '⚠️' : '🛑';
-        const color = p.warn ? '#fc0' : '#f33';
-        return `<div data-idx="${i}" style="color:${color}">${icon} ${p.msg}</div>`;
-    }).join('');
-    if (list.innerHTML !== html) {
-        list.innerHTML = html;
-        Array.from(list.children).forEach(div => div.onclick = onProblemClick);
+    if (!list)
+        return;
+    const existing = Array.from(list.children);
+    const frag = typeof document.createDocumentFragment === 'function' ? document.createDocumentFragment() : null;
+    const pendingNodes = [];
+    issues.forEach((p, i) => {
+        let btn = existing[i];
+        const isButton = btn && btn.tagName === 'BUTTON';
+        if (!isButton) {
+            btn = document.createElement('button');
+        }
+        const button = btn;
+        button.type = 'button';
+        button.className = 'problem-link';
+        if (button.dataset)
+            button.dataset.idx = String(i);
+        else if (typeof button.setAttribute === 'function')
+            button.setAttribute('data-idx', String(i));
+        button.style.color = p.warn ? '#fc0' : '#f33';
+        button.title = 'Jump to issue';
+        if (button.onclick !== onProblemClick)
+            button.onclick = onProblemClick;
+        let icon = button.querySelector('span.problem-icon');
+        if (!icon) {
+            icon = document.createElement('span');
+            icon.className = 'problem-icon';
+            button.insertBefore(icon, button.firstChild);
+        }
+        icon.textContent = p.warn ? '⚠️' : '🛑';
+        let text = button.querySelector('span.problem-text');
+        if (!text) {
+            text = document.createElement('span');
+            text.className = 'problem-text';
+            button.appendChild(text);
+        }
+        text.textContent = p.msg;
+        if (frag)
+            frag.appendChild(button);
+        else
+            pendingNodes.push(button);
+    });
+    if (frag && typeof list.replaceChildren === 'function') {
+        list.replaceChildren(frag);
+    }
+    else {
+        while (list.firstChild)
+            list.removeChild(list.firstChild);
+        pendingNodes.forEach(node => list.appendChild(node));
     }
 }
 function saveModule() {
@@ -5910,6 +6349,7 @@ document.getElementById('itemPersonaNext').onclick = () => {
 document.getElementById('eventEffect').addEventListener('change', updateEventEffectFields);
 document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
 document.getElementById('npcFlagType').addEventListener('change', updateFlagBuilder);
+setupNpcSections();
 const npcEditorEl = typeof document !== 'undefined' ? document.getElementById('npcEditor') : null;
 if (npcEditorEl) {
     npcEditorEl.addEventListener('input', applyNPCChanges);
@@ -5938,6 +6378,7 @@ document.getElementById('npcPick').onclick = beginNpcCoordinateSelection;
 document.getElementById('npcCancelPick').onclick = cancelNpcCoordinateSelection;
 document.getElementById('itemPick').onclick = () => { coordTarget = { x: 'itemX', y: 'itemY', map: 'itemMap' }; };
 document.getElementById('save').onclick = saveModule;
+document.getElementById('quickSave')?.addEventListener('click', saveModule);
 document.getElementById('load').onclick = () => document.getElementById('loadFile').click();
 document.getElementById('loadFile').addEventListener('change', e => {
     const file = e.target.files[0];
@@ -5955,10 +6396,15 @@ document.getElementById('loadFile').addEventListener('change', e => {
     reader.readAsText(file);
     e.target.value = '';
 });
-document.getElementById('setStart').onclick = () => { settingStart = true; };
+document.getElementById('setStart').onclick = () => {
+    settingStart = true;
+    setMapActionBanner('Start position active: choose a walkable tile on the world map.', 'info');
+    drawWorld();
+};
 document.getElementById('resetStart').onclick = () => {
     moduleData.start = { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
     drawWorld();
+    setMapActionBanner('Start position reset to the default location.', 'info', 2500);
 };
 const spawnHeatBtn = document.getElementById('spawnHeatBtn');
 if (spawnHeatBtn)
@@ -6170,8 +6616,13 @@ canvas.addEventListener('mousedown', ev => {
         return;
     }
     if (settingStart && currentMap === 'world') {
+        if (!isTileWalkable('world', x, y)) {
+            setMapActionBanner('That tile is blocked. Pick a walkable tile for the start.', 'error');
+            return;
+        }
         moduleData.start = { map: 'world', x, y };
         settingStart = false;
+        setMapActionBanner(`Player start set to (${x}, ${y}).`, 'success', 3000);
         drawWorld();
         updateCursor(x, y);
         return;

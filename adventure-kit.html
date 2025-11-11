@@ -393,6 +393,7 @@
   <div class="ak-layout">
       <section class="card map-card" id="mapCard">
         <canvas id="map" width="640" height="480" aria-label="Map preview"></canvas>
+        <div id="mapActionBanner" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
         <label>Map<select id="mapSelect"></select></label>
         <div class="btn-group" id="paletteGroup">
           <div id="paletteWrap">
@@ -934,10 +935,10 @@
       </div>
     </div>
   </div>
-  <button id="playtestFloat" class="btn btn--primary" style="
-    position:fixed; right:20px; bottom:20px; z-index:9999; border-radius:999px; padding:10px 14px;">
-      ▶ Playtest
-  </button>
+  <div id="quickActions" class="quick-actions" role="toolbar" aria-label="Quick actions">
+    <button id="quickSave" class="btn" type="button" title="Save module (Ctrl+S)">💾 Save</button>
+    <button id="playtestFloat" class="btn btn--primary" type="button" title="Playtest module (Ctrl+P)">▶ Playtest</button>
+  </div>
   <script defer src="./scripts/event-bus.js"></script>
   <script defer src="./scripts/supporting/chiptune.js"></script>
   <script defer src="./scripts/core/effects.js"></script>
