@@ -3,6 +3,10 @@
 // Provides basic tools to build Dustland modules.
 // Ensure world generation doesn't pull default content
 window.seedWorldContent = () => { };
+window.DUSTLAND_FEATURES = window.DUSTLAND_FEATURES ?? {};
+if (typeof window.DUSTLAND_FEATURES.serverMode !== 'boolean') {
+    window.DUSTLAND_FEATURES.serverMode = false;
+}
 const PLAYTEST_KEY = 'ack_playtest';
 const akColors = { 0: '#1e271d', 1: '#2c342c', 2: '#1573ff', 3: '#203320', 4: '#777777', 5: '#304326', 6: '#4d5f4d', 7: '#233223', 8: '#8bd98d', 9: '#000' };
 const tileNames = {
