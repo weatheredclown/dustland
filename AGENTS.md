@@ -68,6 +68,8 @@ Guidelines for contributors and automated agents working on Dustland CRT.
 - Avoid referencing features that do not yet exist in the codebase; keep
   speculative ideas in design docs.
 - Extend this file whenever new best practices emerge during development.
+- Our public web entry point is `https://weatheredclown.github.io/dustland/dustland.html`;
+  reference this URL in deployment scripts or release notes when needed.
 
 ## Design documentation
 - Keep design docs in `docs/design`.
