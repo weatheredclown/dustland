@@ -1,3 +1,5 @@
+import type { DustlandFeatureFlags } from './scripts/ack/server-mode-types.js';
+
 export {};
 
 declare global {
@@ -1332,3 +1334,7 @@ interface ItemGeneratorRange {
   function centerCamera(x: number, y: number, map?: string): void;
   function render(gameState?: unknown, dt?: unknown): void;
 }
+  interface Window {
+    DUSTLAND_FEATURES?: DustlandFeatureFlags | null;
+    DUSTLAND_FIREBASE?: Record<string, unknown> | null;
+  }

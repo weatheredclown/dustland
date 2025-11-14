@@ -6,6 +6,11 @@
 // Ensure world generation doesn't pull default content
 window.seedWorldContent = () => { };
 
+window.DUSTLAND_FEATURES = window.DUSTLAND_FEATURES ?? {};
+if (typeof window.DUSTLAND_FEATURES.serverMode !== 'boolean') {
+  window.DUSTLAND_FEATURES.serverMode = false;
+}
+
 
 
 const PLAYTEST_KEY = 'ack_playtest';
