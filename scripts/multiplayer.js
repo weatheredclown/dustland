@@ -1,10 +1,17 @@
-// @ts-nocheck
 (function () {
-    globalThis.Dustland = globalThis.Dustland || {};
-    const bus = globalThis.EventBus;
-    const base = globalThis.Dustland.multiplayer || {};
+    const scope = globalThis;
+    const dustland = (scope.Dustland ?? (scope.Dustland = {}));
+    const bus = scope.EventBus;
+    const base = (dustland.multiplayer ?? {});
     const NET_FLAG = '__fromNet';
-    const EVENTS = ['movement:player', 'combat:event', 'combat:started', 'combat:ended', 'multiplayer:presence', 'module-picker:select'];
+    const EVENTS = [
+        'movement:player',
+        'combat:event',
+        'combat:started',
+        'combat:ended',
+        'multiplayer:presence',
+        'module-picker:select'
+    ];
     const remoteParties = new Map();
     let debugMovement = false;
     let activeRole = null;
@@ -21,21 +28,21 @@
     }
     function updateRemoteState() {
         const list = snapshotRemoteParties();
-        globalThis.Dustland = globalThis.Dustland || {};
-        const mpState = globalThis.Dustland.multiplayerState || (globalThis.Dustland.multiplayerState = {});
+        const mpState = dustland.multiplayerState ?? (dustland.multiplayerState = {});
         mpState.remoteParties = list;
-        const api = globalThis.Dustland.multiplayerParties || (globalThis.Dustland.multiplayerParties = {});
+        const api = dustland.multiplayerParties ?? (dustland.multiplayerParties = {});
         api.list = () => snapshotRemoteParties();
         bus?.emit?.('multiplayer:party-sync', list);
     }
     function setRemoteParty(id, info = {}) {
-        if (!id)
+        if (id === null || id === undefined)
             return;
-        const entry = remoteParties.get(id) || { id };
+        const entry = remoteParties.get(id) ?? { id };
         if (typeof info.map === 'string')
             entry.map = info.map;
         else if (!entry.map) {
-            const mapId = globalThis.Dustland?.movement?.mapIdForState?.();
+            const movementApi = dustland.movement;
+            const mapId = movementApi?.mapIdForState?.();
             if (typeof mapId === 'string')
                 entry.map = mapId;
         }
@@ -48,7 +55,7 @@
         updateRemoteState();
     }
     function pruneRemoteParties(ids) {
-        const keep = new Set((ids || []).filter(id => typeof id === 'string'));
+        const keep = new Set((ids || []).filter((value) => typeof value === 'string' || typeof value === 'number'));
         let changed = false;
         remoteParties.forEach((_, key) => {
             if (!keep.has(key)) {
@@ -68,28 +75,30 @@
         updateRemoteState();
     }
     updateRemoteState();
-    function bindEvent(evt, handler) {
+    function bindEvent(event, handler) {
         if (!bus?.on)
             return () => { };
-        bus.on(evt, handler);
-        return () => bus?.off?.(evt, handler);
+        bus.on(event, handler);
+        return () => bus?.off?.(event, handler);
     }
     bindEvent('multiplayer:party-pos', info => {
-        if (!info?.id)
+        const payload = info;
+        if (!payload?.id)
             return;
-        setRemoteParty(info.id, info);
+        setRemoteParty(payload.id, payload);
     });
     bindEvent('multiplayer:presence', info => {
-        if (!info)
+        const payload = info;
+        if (!payload)
             return;
-        if (info.status === 'closed' && info.role === 'host') {
+        if (payload.status === 'closed' && payload.role === 'host') {
             clearRemoteParties();
         }
     });
     function tagAndEmit(msg, fromId) {
         if (!msg?.evt)
             return;
-        const payload = msg.data || {};
+        const payload = (msg.data ?? {});
         if (debugMovement && msg.evt === 'movement:player') {
             const info = {
                 from: typeof fromId === 'string' || typeof fromId === 'number' ? fromId : 'remote peer',
@@ -112,7 +121,7 @@
         return { movement: debugMovement };
     }
     async function startHost(opts) {
-        setDebugMode(opts?.debugMode);
+        setDebugMode(opts?.debugMode ?? null);
         const room = await base.startHost?.(opts);
         if (!room)
             return room;
@@ -121,7 +130,9 @@
             try {
                 activeRoom.close?.();
             }
-            catch (err) { /* ignore */ }
+            catch {
+                // Ignore cleanup errors
+            }
         }
         const emitPresence = (status, extra = {}) => {
             bus?.emit?.('multiplayer:presence', Object.assign({ role: 'host', status }, extra));
@@ -133,54 +144,59 @@
         emitPresence('started');
         let stopPeerFeed = null;
         const sendPartyPos = (id, data, opts = {}) => {
-            if (!id)
+            if (id === null || id === undefined)
                 return;
-            const payload = {};
+            const payload = { id };
             if (typeof data?.map === 'string')
                 payload.map = data.map;
             else {
-                const mapId = globalThis.Dustland?.movement?.mapIdForState?.();
+                const movementApi = dustland.movement;
+                const mapId = movementApi?.mapIdForState?.();
                 if (typeof mapId === 'string')
                     payload.map = mapId;
             }
             if (Number.isFinite(data?.x))
-                payload.x = data.x;
+                payload.x = data?.x;
             if (Number.isFinite(data?.y))
-                payload.y = data.y;
+                payload.y = data?.y;
             if (!('x' in payload) && !('y' in payload))
                 return;
-            payload.id = id;
             if (opts.store !== false)
                 setRemoteParty(id, payload);
             room.broadcast?.({ type: 'event', evt: 'multiplayer:party-pos', data: payload }, opts.skipId);
         };
         const removers = EVENTS.map(evt => bindEvent(evt, data => {
-            if (evt === 'movement:player' && !data?.[NET_FLAG]) {
-                sendPartyPos('host', data, { store: false });
+            const payload = data;
+            if (evt === 'movement:player' && !payload?.[NET_FLAG]) {
+                sendPartyPos('host', payload, { store: false });
             }
-            if (data && data[NET_FLAG])
+            if (payload?.[NET_FLAG])
                 return;
-            room.broadcast?.({ type: 'event', evt, data });
+            room.broadcast?.({ type: 'event', evt, data: payload });
         }));
         const stopMessage = room.onMessage?.((msg, fromId) => {
             if (msg?.type === 'event') {
-                if (msg.evt === 'movement:player' && fromId) {
+                if (msg.evt === 'movement:player' && fromId !== undefined && fromId !== null) {
                     const details = Object.assign({}, msg.data, { id: fromId });
                     setRemoteParty(fromId, details);
                     sendPartyPos(fromId, msg.data, { skipId: fromId });
                 }
-                else if (msg.evt === 'multiplayer:party-pos' && msg.data?.id && fromId) {
+                else if (msg.evt === 'multiplayer:party-pos' && msg.data?.id && fromId !== undefined && fromId !== null) {
                     setRemoteParty(msg.data.id, msg.data);
                 }
                 tagAndEmit(msg, fromId);
-                room.broadcast?.(msg, fromId);
+                room.broadcast?.(msg, fromId ?? undefined);
             }
         });
         const baseOnPeers = typeof room.onPeers === 'function' ? room.onPeers.bind(room) : null;
         if (baseOnPeers) {
             stopPeerFeed = baseOnPeers(peers => {
                 emitPeers(peers);
-                const ids = Array.isArray(peers) ? peers.map(p => p?.id).filter(id => typeof id === 'string') : [];
+                const ids = Array.isArray(peers)
+                    ? peers
+                        .map(peer => peer?.id)
+                        .filter((value) => typeof value === 'string' || typeof value === 'number')
+                    : [];
                 pruneRemoteParties(ids);
             });
             room.onPeers = fn => {
@@ -196,7 +212,8 @@
         const originalClose = room.close?.bind(room);
         room.close = () => {
             removers.forEach(off => off());
-            stopMessage?.();
+            if (typeof stopMessage === 'function')
+                stopMessage();
             stopPeerFeed?.();
             clearRemoteParties();
             emitPresence('closed');
@@ -212,7 +229,7 @@
         return room;
     }
     async function connect(opts) {
-        setDebugMode(opts?.debugMode);
+        setDebugMode(opts?.debugMode ?? null);
         const socket = await base.connect?.(opts);
         if (!socket)
             return socket;
@@ -221,7 +238,9 @@
             try {
                 activeSocket.close?.();
             }
-            catch (err) { /* ignore */ }
+            catch {
+                // Ignore cleanup errors
+            }
         }
         const emitPresence = (status, extra = {}) => {
             bus?.emit?.('multiplayer:presence', Object.assign({ role: 'client', status }, extra));
@@ -229,11 +248,12 @@
         emitPresence('started');
         emitPresence('linking');
         const sendEvent = (evt, data) => {
+            const payload = data;
             if (evt === 'module-picker:select')
                 return;
-            if (data && data[NET_FLAG])
+            if (payload?.[NET_FLAG])
                 return;
-            socket.send?.({ type: 'event', evt, data });
+            socket.send?.({ type: 'event', evt, data: payload });
         };
         const removers = EVENTS.map(evt => bindEvent(evt, data => sendEvent(evt, data)));
         const stopMessage = socket.onMessage?.(msg => {
@@ -244,20 +264,23 @@
                 tagAndEmit(msg);
             }
             else if (msg && typeof msg === 'object') {
-                globalThis.Dustland.gameState?.updateState?.(state => Object.assign(state, msg));
+                dustland.gameState?.updateState?.(state => Object.assign(state, msg));
             }
         });
         if (socket?.ready?.then) {
-            socket.ready.then(() => {
+            socket.ready
+                .then(() => {
                 emitPresence('linked');
-            }).catch(err => {
+            })
+                .catch(err => {
                 emitPresence('error', { reason: err?.message || err });
             });
         }
         const originalClose = socket.close?.bind(socket);
         socket.close = () => {
             removers.forEach(off => off());
-            stopMessage?.();
+            if (typeof stopMessage === 'function')
+                stopMessage();
             emitPresence('closed');
             clearRemoteParties();
             originalClose?.();
@@ -293,5 +316,5 @@
         }
         return false;
     }
-    globalThis.Dustland.multiplayer = Object.assign({}, base, { startHost, connect, setDebugMode, disconnect });
+    dustland.multiplayer = Object.assign({}, base, { startHost, connect, setDebugMode, disconnect });
 })();
