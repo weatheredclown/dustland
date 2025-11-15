@@ -1,4 +1,3 @@
-// @ts-nocheck
 /*
   Chiptune Dynamic Music Lab
   - Plain JS, globals only, no bundlers
@@ -9,57 +8,61 @@
 (function () {
   'use strict';
 
+  function byId<T extends HTMLElement>(id: string): T | null {
+    return document.getElementById(id) as T | null;
+  }
+
   // --- DOM ---
-  var startBtn = document.getElementById('startBtn');
-  var stopBtn = document.getElementById('stopBtn');
-  var nextBtn = document.getElementById('nextBtn');
-  var tempoEl = document.getElementById('tempo');
-  var tempoLabel = document.getElementById('tempoLabel');
-  var seedEl = document.getElementById('seed');
-  var keyEl = document.getElementById('key');
-  var moodList = document.getElementById('moodList');
-  var moodInfo = document.getElementById('moodInfo');
-  var nowStat = document.getElementById('nowStat');
-  var barBeat = document.getElementById('barBeat');
-  var scaleLabel = document.getElementById('scaleLabel');
-  var mgBtn = document.getElementById('mgBtn');
-  var mgStatus = document.getElementById('mgStatus');
-  var toneBtn = document.getElementById('toneBtn');
-  var toneStatus = document.getElementById('toneStatus');
-  var fxPulse = document.getElementById('fxPulse');
-  var fxPulseLabel = document.getElementById('fxPulseLabel');
-  var fxBits = document.getElementById('fxBits');
-  var fxBitsLabel = document.getElementById('fxBitsLabel');
-  var fxDown = document.getElementById('fxDown');
-  var fxDownLabel = document.getElementById('fxDownLabel');
-  var fxEcho = document.getElementById('fxEcho');
-  var fxEchoLabel = document.getElementById('fxEchoLabel');
-  var downloadJsonBtn = document.getElementById('downloadJsonBtn');
-  var loadJsonBtn = document.getElementById('loadJsonBtn');
-  var loadJsonInput = document.getElementById('loadJsonInput');
+  var startBtn = byId<HTMLButtonElement>('startBtn');
+  var stopBtn = byId<HTMLButtonElement>('stopBtn');
+  var nextBtn = byId<HTMLButtonElement>('nextBtn');
+  var tempoEl = byId<HTMLInputElement>('tempo');
+  var tempoLabel = byId<HTMLElement>('tempoLabel');
+  var seedEl = byId<HTMLInputElement>('seed');
+  var keyEl = byId<HTMLSelectElement>('key');
+  var moodList = byId<HTMLElement>('moodList');
+  var moodInfo = byId<HTMLElement>('moodInfo');
+  var nowStat = byId<HTMLElement>('nowStat');
+  var barBeat = byId<HTMLElement>('barBeat');
+  var scaleLabel = byId<HTMLElement>('scaleLabel');
+  var mgBtn = byId<HTMLButtonElement>('mgBtn');
+  var mgStatus = byId<HTMLElement>('mgStatus');
+  var toneBtn = byId<HTMLButtonElement>('toneBtn');
+  var toneStatus = byId<HTMLElement>('toneStatus');
+  var fxPulse = byId<HTMLInputElement>('fxPulse');
+  var fxPulseLabel = byId<HTMLElement>('fxPulseLabel');
+  var fxBits = byId<HTMLInputElement>('fxBits');
+  var fxBitsLabel = byId<HTMLElement>('fxBitsLabel');
+  var fxDown = byId<HTMLInputElement>('fxDown');
+  var fxDownLabel = byId<HTMLElement>('fxDownLabel');
+  var fxEcho = byId<HTMLInputElement>('fxEcho');
+  var fxEchoLabel = byId<HTMLElement>('fxEchoLabel');
+  var downloadJsonBtn = byId<HTMLButtonElement>('downloadJsonBtn');
+  var loadJsonBtn = byId<HTMLButtonElement>('loadJsonBtn');
+  var loadJsonInput = byId<HTMLInputElement>('loadJsonInput');
   // Disable FX controls until Tone is ready
-  [document.getElementById('fxPulse'), document.getElementById('fxBits'), document.getElementById('fxDown'), document.getElementById('fxEcho')]
+  [fxPulse, fxBits, fxDown, fxEcho]
     .forEach(function (el) { if (el) el.disabled = true; });
-  var harmonyInput = document.getElementById('harmonyInput');
-  var moodKeyEl = document.getElementById('moodKey');
-  var moodBpmEl = document.getElementById('moodBpm');
-  var moodScaleEl = document.getElementById('moodScale');
-  var moodDensityEl = document.getElementById('moodDensity');
-  var moodSwingEl = document.getElementById('moodSwing');
-  var moodLeadWaveEl = document.getElementById('moodLeadWave');
-  var moodBassWaveEl = document.getElementById('moodBassWave');
-  var barStartEl = document.getElementById('barStart');
-  var saveMoodBtn = document.getElementById('saveMoodBtn');
-  var seedRows = document.getElementById('seedRows');
-  var addSeedBtn = document.getElementById('addSeedBtn');
-  var clearSeedBtn = document.getElementById('clearSeedBtn');
+  var harmonyInput = byId<HTMLInputElement>('harmonyInput');
+  var moodKeyEl = byId<HTMLSelectElement>('moodKey');
+  var moodBpmEl = byId<HTMLInputElement>('moodBpm');
+  var moodScaleEl = byId<HTMLSelectElement>('moodScale');
+  var moodDensityEl = byId<HTMLInputElement>('moodDensity');
+  var moodSwingEl = byId<HTMLInputElement>('moodSwing');
+  var moodLeadWaveEl = byId<HTMLSelectElement>('moodLeadWave');
+  var moodBassWaveEl = byId<HTMLSelectElement>('moodBassWave');
+  var barStartEl = byId<HTMLSelectElement>('barStart');
+  var saveMoodBtn = byId<HTMLButtonElement>('saveMoodBtn');
+  var seedRows = byId<HTMLElement>('seedRows');
+  var addSeedBtn = byId<HTMLButtonElement>('addSeedBtn');
+  var clearSeedBtn = byId<HTMLButtonElement>('clearSeedBtn');
   // saveSeedBtn removed: motif edits auto-apply
-  var motifList = document.getElementById('motifList');
-  var motifModeEl = document.getElementById('motifMode');
-  var addMotifBtn = document.getElementById('addMotifBtn');
-  var dupMotifBtn = document.getElementById('dupMotifBtn');
-  var delMotifBtn = document.getElementById('delMotifBtn');
-  var jsonOut = document.getElementById('jsonOut');
+  var motifList = byId<HTMLElement>('motifList');
+  var motifModeEl = byId<HTMLSelectElement>('motifMode');
+  var addMotifBtn = byId<HTMLButtonElement>('addMotifBtn');
+  var dupMotifBtn = byId<HTMLButtonElement>('dupMotifBtn');
+  var delMotifBtn = byId<HTMLButtonElement>('delMotifBtn');
+  var jsonOut = byId<HTMLTextAreaElement>('jsonOut');
 
   // --- Globals & Engine ---
   var ac = null; // AudioContext
@@ -68,7 +71,7 @@
   var delayGain = null; // GainNode
   var tone = { enabled: false, loading: false, ready: false, synths: null, fx: null };
   var playing = false;
-  var scheduleTimer = 0;
+  var scheduleTimer: ReturnType<typeof setInterval> | null = null;
   var lookahead = 0.05; // seconds
   var scheduleAheadTime = 0.2; // seconds
   var current16th = 0; // step index in 16ths
@@ -136,9 +139,10 @@
   });
 
   function setActiveMoodBtn(id) {
+    if (!moodList) return;
     var nodes = moodList.children;
     for (var i = 0; i < nodes.length; i++) {
-      var n = nodes[i];
+      var n = nodes[i] as HTMLElement;
       if (n.dataset.mood === id) n.classList.add('active'); else n.classList.remove('active');
     }
   }
@@ -221,10 +225,10 @@
     return { gain: g, scheduleRelease: scheduleRelease };
   }
 
-  function mkOsc(type, freq, time) {
+  function mkOsc(type, freq?, time?) {
     var o = ac.createOscillator();
     o.type = type;
-    if (freq) o.frequency.setValueAtTime(freq, time || ac.currentTime);
+    if (freq != null) o.frequency.setValueAtTime(freq, time || ac.currentTime);
     return o;
   }
 
@@ -265,7 +269,7 @@
     e.scheduleRelease(t + 0.12);
   }
 
-  function playSnare(t, tight, vel) {
+  function playSnare(t, tight, vel?) {
     if (tone.enabled && tone.ready && tone.synths) {
       var when = (window.Tone && Tone.now) ? Tone.now() + Math.max(0, t - ac.currentTime) : undefined;
       tone.synths.snare.noise.type = 'white';
@@ -497,15 +501,15 @@
     scaleLabel.textContent = music.key + ' ' + music.scale + ' [' + sc + ']';
     moodInfo.textContent = m.name + ': ' + m.info;
     // Reflect UI: per-mood bpm/key and harmony
-    if (tempoEl) { tempoEl.value = music.bpm; tempoLabel.textContent = music.bpm + ' BPM'; }
+    if (tempoEl) { tempoEl.value = String(music.bpm); tempoLabel.textContent = music.bpm + ' BPM'; }
     if (keyEl) { keyEl.value = music.key; }
     if (harmonyInput) harmonyInput.value = (m.harmony || []).join(',');
     if (barStartEl) barStartEl.value = music.barStart;
     if (moodKeyEl) moodKeyEl.value = music.key;
-    if (moodBpmEl) moodBpmEl.value = music.bpm;
+    if (moodBpmEl) moodBpmEl.value = String(music.bpm);
     if (moodScaleEl) moodScaleEl.value = music.scale;
-    if (moodDensityEl) moodDensityEl.value = music.density;
-    if (moodSwingEl) moodSwingEl.value = music.swing;
+    if (moodDensityEl) moodDensityEl.value = String(music.density);
+    if (moodSwingEl) moodSwingEl.value = String(music.swing);
     if (moodLeadWaveEl) moodLeadWaveEl.value = music.leadWave;
     if (moodBassWaveEl) moodBassWaveEl.value = music.bassWave;
     loadSeedRows();
@@ -513,10 +517,21 @@
   }
 
   // Optional Magenta VAE integration for lead interpolation
-  var mg = { enabled: false, loading: false, ready: false, vae: null, leadOverride: {} };
+  type LeadOverrideEvent = { step: number; midi: number; durSteps?: number };
+  type LeadOverrideMap = Record<number, LeadOverrideEvent[]>;
+  var mg = {
+    enabled: false,
+    loading: false,
+    ready: false,
+    vae: null as {
+      initialize: () => Promise<void>;
+      interpolate: (inputs: unknown[], count: number) => Promise<unknown[]>;
+    } | null,
+    leadOverride: {} as LeadOverrideMap
+  };
   function setMgStatus(text) { if (mgStatus) mgStatus.textContent = 'Magenta: ' + text; }
   function loadScript(src) {
-    return new Promise(function (resolve, reject) {
+    return new Promise<void>(function (resolve, reject) {
       var s = document.createElement('script'); s.async = true; s.crossOrigin = 'anonymous'; s.src = src;
       s.onload = function () { resolve(); };
       s.onerror = function () { reject(new Error('load ' + src)); };
@@ -596,15 +611,15 @@
         if (!out || !out.length) throw new Error('no sequences');
         var barEvents = [];
         for (var i = 1; i < out.length - 1; i++) { // use interior sequences
-          var seq = out[i];
-          if (!seq) continue;
-          if (!seq.quantizationInfo && window.mm && window.mm.sequences) {
-            try { seq = window.mm.sequences.quantizeNoteSequence(seq, 4); } catch (e) { /* ignore */ void e; }
-          }
+        var seq = out[i] as any;
+        if (!seq) continue;
+        if (!seq.quantizationInfo && window.mm && window.mm.sequences) {
+          try { seq = window.mm.sequences.quantizeNoteSequence(seq, 4); } catch (e) { /* ignore */ void e; }
+        }
           // Split 2-bar sequence into two one-bar chunks
           for (var off = 0; off <= stepsPerBar; off += stepsPerBar) {
             var ns = { ticksPerQuarter: 220, totalQuantizedSteps: stepsPerBar, quantizationInfo: { stepsPerQuarter: 4 }, notes: [] };
-            var notes = seq.notes || [];
+            var notes = (seq as any).notes || [];
             for (var j = 0; j < notes.length; j++) {
               var q = notes[j];
               var st = (q.quantizedStartStep|0) - off;
@@ -687,14 +702,16 @@
     barBeat.textContent = (bar + 1) + ' / ' + Math.floor(beat);
   }
 
-  function start() {
-    if (playing) return;
-    if (!ac) {
-      ac = new (window.AudioContext || window.webkitAudioContext)();
-      master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination);
-      delay = ac.createDelay(0.5); delay.delayTime.value = 0.22;
-      delayGain = ac.createGain(); delayGain.gain.value = 0.25;
-    }
+    function start() {
+      if (playing) return;
+      if (!ac) {
+        var ContextCtor = window.AudioContext || window.webkitAudioContext;
+        if (!ContextCtor) return;
+        ac = new ContextCtor();
+        master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination);
+        delay = ac.createDelay(0.5); delay.delayTime.value = 0.22;
+        delayGain = ac.createGain(); delayGain.gain.value = 0.25;
+      }
     if (tone.enabled && window.Tone && !tone.ready) {
       // ensure Tone audio context is started
       Tone.start().then(function(){ /* started */ }).catch(function(){});
@@ -705,46 +722,53 @@
     current16th = 0;
     music.barCount = 0;
     playing = true;
-    scheduleTimer = setInterval(scheduler, lookahead * 1000);
-  }
-
-  function stop() {
-    if (!playing) return;
-    playing = false;
-    clearInterval(scheduleTimer);
-  }
-
-  // UI wiring
-  startBtn.onclick = function () {
-    if (!ac) setSeed(parseInt(seedEl.value || '1', 10));
-    start();
-  };
-  stopBtn.onclick = function () { stop(); };
-  nextBtn.onclick = function () { if (playing) music.nextMood = music.nextMood || music.mood; };
-  // Apply current harmony edits when switching moods via click
-  moodList.addEventListener('click', function (e) {
-    var t = e.target;
-    if (t && t.dataset && t.dataset.mood) {
-      persistHarmonyFromInput();
+      scheduleTimer = setInterval(scheduler, lookahead * 1000);
     }
-  }, true);
 
-  tempoEl.oninput = function () {
-    var v = parseInt(tempoEl.value, 10);
-    tempoLabel.textContent = v + ' BPM';
-    music.bpm = v;
-    // persist per-mood tempo
-    var idx = MOODS.findIndex(function (x) { return x.id === music.mood; });
-    if (idx >= 0) MOODS[idx].bpm = v;
-    renderConfig();
-  };
-  keyEl.onchange = function () {
-    music.key = keyEl.value;
-    var idx = MOODS.findIndex(function (x) { return x.id === music.mood; });
-    if (idx >= 0) MOODS[idx].key = music.key;
-    scaleLabel.textContent = music.key + ' ' + music.scale;
-    renderConfig();
-  };
+    function stop() {
+      if (!playing) return;
+      playing = false;
+      if (scheduleTimer) {
+        clearInterval(scheduleTimer);
+        scheduleTimer = null;
+      }
+    }
+
+    // UI wiring
+    if (startBtn && seedEl) {
+      startBtn.onclick = function () {
+        if (!ac) setSeed(parseInt(seedEl.value || '1', 10));
+        start();
+      };
+    }
+    if (stopBtn) stopBtn.onclick = function () { stop(); };
+    if (nextBtn) nextBtn.onclick = function () { if (playing) music.nextMood = music.nextMood || music.mood; };
+    // Apply current harmony edits when switching moods via click
+    if (moodList) {
+      moodList.addEventListener('click', function (e) {
+        var target = e.target as HTMLElement | null;
+        if (target?.dataset?.mood) {
+          persistHarmonyFromInput();
+        }
+      }, true);
+    }
+
+    if (tempoEl) tempoEl.oninput = function () {
+      var v = parseInt(tempoEl.value, 10);
+      if (tempoLabel) tempoLabel.textContent = v + ' BPM';
+      music.bpm = v;
+      // persist per-mood tempo
+      var idx = MOODS.findIndex(function (x) { return x.id === music.mood; });
+      if (idx >= 0) MOODS[idx].bpm = v;
+      renderConfig();
+    };
+    if (keyEl) keyEl.onchange = function () {
+      music.key = keyEl.value;
+      var idx = MOODS.findIndex(function (x) { return x.id === music.mood; });
+      if (idx >= 0) MOODS[idx].key = music.key;
+      if (scaleLabel) scaleLabel.textContent = music.key + ' ' + music.scale;
+      renderConfig();
+    };
   seedEl.onchange = function () { setSeed(parseInt(seedEl.value || '1', 10)); };
   if (mgBtn) mgBtn.onclick = function () { loadMagenta(); };
   if (toneBtn) toneBtn.onclick = function () { loadTone(); };
@@ -893,7 +917,7 @@
     var m = MOODS.find(function (x) { return x.id === music.mood; });
     if (!m) return;
     if (moodKeyEl) { m.key = music.key = moodKeyEl.value; if (keyEl) keyEl.value = music.key; }
-    if (moodBpmEl) { m.bpm = music.bpm = parseInt(moodBpmEl.value, 10) || m.bpm; if (tempoEl) { tempoEl.value = music.bpm; tempoLabel.textContent = music.bpm + ' BPM'; } }
+      if (moodBpmEl) { m.bpm = music.bpm = parseInt(moodBpmEl.value, 10) || m.bpm; if (tempoEl) { tempoEl.value = String(music.bpm); tempoLabel.textContent = music.bpm + ' BPM'; } }
     if (moodScaleEl) { m.scale = music.scale = moodScaleEl.value; }
     if (moodDensityEl) { var d = parseFloat(moodDensityEl.value); if (!isNaN(d)) m.density = music.density = d; }
     if (moodSwingEl) { var s = parseFloat(moodSwingEl.value); if (!isNaN(s)) m.swing = music.swing = s; }
@@ -1106,9 +1130,9 @@
 
   // Defaults
   applyMood('somber');
-  tempoEl.value = music.bpm;
-  tempoLabel.textContent = music.bpm + ' BPM';
-  keyEl.value = music.key;
+    if (tempoEl) tempoEl.value = String(music.bpm);
+    if (tempoLabel) tempoLabel.textContent = music.bpm + ' BPM';
+    if (keyEl) keyEl.value = music.key;
   ensureDefaultMotif();
   setMotifMode('improv');
   renderMotifList();
