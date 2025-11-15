@@ -142,8 +142,10 @@ interface TimeoutLike {
   unref?: () => void;
 }
 
-declare function resolveNode(tree: unknown, nodeId: string): NanoDialogNode | undefined;
-declare function hasItem(itemId: string): boolean;
+const { resolveNode, hasItem } = globalThis as typeof globalThis & {
+  resolveNode: (tree: unknown, nodeId: string) => NanoDialogNode | undefined;
+  hasItem: (itemId: string) => boolean;
+};
 
 interface NanoWindow extends Window {
   NanoDialog: NanoDialogAPI;
