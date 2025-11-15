@@ -2198,6 +2198,40 @@ input[type="range"] {
         backdrop-filter: blur(2px);
     }
 
+    .quick-actions__cloud {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding-right: 6px;
+        border-right: 1px solid rgba(120, 192, 120, .25);
+    }
+
+    .quick-actions__cloud[hidden] {
+        display: none;
+    }
+
+    .quick-actions__cloud-status {
+        font-size: 0.75rem;
+        opacity: .85;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 720px) {
+        .quick-actions__cloud {
+            width: 100%;
+            justify-content: space-between;
+            padding-right: 0;
+            border-right: 0;
+            border-bottom: 1px solid rgba(120, 192, 120, .25);
+            padding-bottom: 6px;
+            margin-bottom: 6px;
+        }
+
+        .quick-actions__cloud-status {
+            white-space: normal;
+        }
+    }
+
     .quick-actions .btn {
         margin: 0;
         white-space: nowrap;

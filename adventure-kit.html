@@ -936,6 +936,10 @@
     </div>
   </div>
   <div id="quickActions" class="quick-actions" role="toolbar" aria-label="Quick actions">
+    <div id="serverModeActions" class="quick-actions__cloud" hidden>
+      <span class="quick-actions__cloud-status" data-role="server-mode-status" aria-live="polite"></span>
+      <button class="btn" type="button" aria-haspopup="dialog">☁ Cloud</button>
+    </div>
     <button id="quickSave" class="btn" type="button" title="Save module (Ctrl+S)">💾 Save</button>
     <button id="playtestFloat" class="btn btn--primary" type="button" title="Playtest module (Ctrl+P)">▶ Playtest</button>
   </div>
@@ -968,6 +972,7 @@
     <script defer src="./components/wizard/npc-wizard.js"></script>
     <script defer src="./scripts/supporting/wizard-building.js"></script>
     <script defer src="./scripts/procedural-map.js"></script>
+    <script type="module" src="./scripts/ack/server-mode-controls.js"></script>
     <script defer src="./scripts/adventure-kit.js"></script>
   </body>
 

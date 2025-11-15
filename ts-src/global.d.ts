@@ -1337,4 +1337,13 @@ interface ItemGeneratorRange {
   interface Window {
     DUSTLAND_FEATURES?: DustlandFeatureFlags | null;
     DUSTLAND_FIREBASE?: Record<string, unknown> | null;
+    Dustland?: DustlandNamespace;
+    hasItem?: (...args: unknown[]) => boolean;
   }
+
+  interface GlobalThis {
+    Dustland?: DustlandNamespace;
+    hasItem?: (...args: unknown[]) => boolean;
+  }
+
+  var Dustland: DustlandNamespace | undefined;
