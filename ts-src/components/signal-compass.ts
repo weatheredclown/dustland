@@ -38,7 +38,7 @@ interface SignalCompass {
     };
   }
 
-  const dustland = (globalThis.Dustland ??= {} as DustlandNamespace);
+  const dustland = ((globalThis as any).Dustland ??= {} as DustlandNamespace);
   (dustland as DustlandNamespace & { createSignalCompass: typeof createSignalCompass }).createSignalCompass = createSignalCompass;
 })();
 

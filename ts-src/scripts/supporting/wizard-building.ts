@@ -1,6 +1,6 @@
 // Building Wizard config
 
-globalThis.Dustland = globalThis.Dustland || {};
+(globalThis as any).Dustland = (globalThis as any).Dustland || {};
 Dustland.wizards = Dustland.wizards || {};
 var steps = [];
 if (Dustland.WizardSteps) {

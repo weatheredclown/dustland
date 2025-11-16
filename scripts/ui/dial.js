@@ -1,3 +1,4 @@
+var _a;
 function createDial(options = {}) {
     const opts = options;
     const dial = document.createElement('div');
@@ -38,7 +39,7 @@ function createDial(options = {}) {
     set(value);
     return { el: dial, set };
 }
-const dustland = (globalThis.Dustland ?? (globalThis.Dustland = {}));
+const dustland = ((_a = globalThis).Dustland ?? (_a.Dustland = {}));
 const uiNamespace = dustland.ui ??
     (dustland.ui = {});
 uiNamespace.createDial = createDial;

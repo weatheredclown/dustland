@@ -1,3 +1,4 @@
+var _a;
 const isMapPlacementPoint = (value) => {
     if (!value || typeof value !== 'object')
         return false;
@@ -49,6 +50,6 @@ const mapPlacementStep = (key) => {
         onComplete() { }
     };
 };
-const dustlandMapPlacement = (globalThis.Dustland ?? (globalThis.Dustland = {}));
+const dustlandMapPlacement = ((_a = globalThis).Dustland ?? (_a.Dustland = {}));
 const wizardStepsMapPlacement = (dustlandMapPlacement.WizardSteps ?? (dustlandMapPlacement.WizardSteps = {}));
 wizardStepsMapPlacement.mapPlacement = mapPlacementStep;

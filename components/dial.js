@@ -1,4 +1,5 @@
 (function () {
+    var _a;
     function clamp(value, min, max) {
         return Math.max(min, Math.min(max, value));
     }
@@ -37,6 +38,6 @@
             }
         };
     }
-    const dustland = (globalThis.Dustland ?? (globalThis.Dustland = {}));
+    const dustland = ((_a = globalThis).Dustland ?? (_a.Dustland = {}));
     dustland.DialWidget = DialWidget;
 })();

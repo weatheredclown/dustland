@@ -3,9 +3,9 @@
     flags?: Record<string, number>;
   };
 
-  globalThis.Dustland = globalThis.Dustland || {};
+  (globalThis as any).Dustland = (globalThis as any).Dustland || {};
   function watch(evt: string | undefined, flag: string | undefined){
-    const bus = globalThis.Dustland.eventBus;
+    const bus = (globalThis as any).Dustland.eventBus;
     if(!evt || !flag || !bus?.on) return;
     bus.on(evt, () => incFlag?.(flag));
   }
@@ -16,5 +16,5 @@
     const party = (globalThis as { party?: PartyWithFlags }).party;
     if(party?.flags) delete party.flags[flag];
   }
-  globalThis.Dustland.eventFlags = { watch, clear };
+  (globalThis as any).Dustland.eventFlags = { watch, clear };
 })();

@@ -57,6 +57,6 @@ interface DialWidgetHandle {
     };
   }
 
-  const dustland = (globalThis.Dustland ??= {} as DustlandNamespace);
+  const dustland = ((globalThis as any).Dustland ??= {} as DustlandNamespace);
   (dustland as DustlandNamespace & { DialWidget: typeof DialWidget }).DialWidget = DialWidget;
 })();

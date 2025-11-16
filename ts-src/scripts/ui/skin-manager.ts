@@ -1735,9 +1735,9 @@ interface DustlandSkinApi {
     reset: () => resetSkin(true)
   };
 
-  globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.skin = api;
-  globalThis.DustlandSkin = api;
+  (globalThis as any).Dustland = (globalThis as any).Dustland || {};
+  (globalThis as any).Dustland.skin = api;
+  (globalThis as any).DustlandSkin = api;
   globalThis.loadSkin = globalThis.loadSkin || ((name: string, options?: GeneratedSkinOverrides | null) => api.loadGeneratedSkin(name, options));
 
   resetSkin(false);

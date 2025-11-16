@@ -20,14 +20,14 @@
     dry?: boolean;
   };
 
-  const bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
+  const bus = ((globalThis as any).Dustland && (globalThis as any).Dustland.eventBus) || globalThis.EventBus;
   function init(member: PartyMember){
     if(typeof member.hydration !== 'number') member.hydration = 2;
   }
   bus?.on?.('hydration:tick', () => {
     const party = (globalThis as { party?: PartyState }).party;
     if(!Array.isArray(party)) return;
-    const zones = (globalThis.Dustland?.zoneEffects || []) as ZoneEffect[];
+    const zones = ((globalThis as any).Dustland?.zoneEffects || []) as ZoneEffect[];
     const map = party.map || 'world';
     const x = party.x ?? 0;
     const y = party.y ?? 0;
@@ -49,6 +49,6 @@
     if(changed) globalThis.updateHUD?.();
   });
 
-  globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.status = { init };
+  (globalThis as any).Dustland = (globalThis as any).Dustland || {};
+  (globalThis as any).Dustland.status = { init };
 })();

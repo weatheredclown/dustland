@@ -17,6 +17,7 @@ type MultiplayerGlobals = typeof globalThis & {
   Dustland?: {
     gameState?: {
       getState?: () => any;
+      updateState?: (updater: (state: any) => void) => void;
     };
     multiplayer?: unknown;
   };

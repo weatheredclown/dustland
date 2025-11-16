@@ -1,5 +1,3 @@
-declare const Tone: any;
-
 type ChiptuneEventBus = {
   emit?(event: string, ...args: any[]): void;
   on?(event: string, handler: (...args: any[]) => void): void;

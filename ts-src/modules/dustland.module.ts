@@ -16401,13 +16401,13 @@ const DATA = `
 `;
 
 function configureWorkbenchRecipes() {
-  const workbench = globalThis.Dustland?.workbench;
+  const workbench = (globalThis as any).Dustland?.workbench;
   if (!workbench) return;
   const bus = globalThis.EventBus;
   const logFn = typeof globalThis.log === 'function'
     ? (message: string, type?: string) => globalThis.log(message, type)
     : null;
-  const hasItemFn = typeof globalThis.hasItem === 'function' ? globalThis.hasItem.bind(globalThis) : () => false;
+  const hasItemFn = typeof (globalThis as any).hasItem === 'function' ? (globalThis as any).hasItem.bind(globalThis) : () => false;
   const findItemIndexFn = typeof globalThis.findItemIndex === 'function' ? globalThis.findItemIndex.bind(globalThis) : () => -1;
   const removeFromInvFn = typeof globalThis.removeFromInv === 'function' ? globalThis.removeFromInv.bind(globalThis) : () => {};
   const addToInvFn = typeof globalThis.addToInv === 'function' ? globalThis.addToInv.bind(globalThis) : () => false;

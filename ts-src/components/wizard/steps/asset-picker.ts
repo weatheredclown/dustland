@@ -42,6 +42,6 @@ const assetPickerStep: WizardStepFactory = (
   };
 };
 
-const dustlandAssetPicker = (globalThis.Dustland ??= {});
+const dustlandAssetPicker = ((globalThis as any).Dustland ??= {});
 const wizardStepsAssetPicker = (dustlandAssetPicker.WizardSteps ??= {});
 wizardStepsAssetPicker.assetPicker = assetPickerStep;

@@ -23,6 +23,7 @@
   function getWeather(): WeatherState {
     return current;
   }
-  if(!globalThis.Dustland) globalThis.Dustland = {} as typeof globalThis.Dustland;
-  globalThis.Dustland.weather = { getWeather, setWeather };
+  const dustlandGlobals = globalThis as any;
+  if(!dustlandGlobals.Dustland) dustlandGlobals.Dustland = {};
+  dustlandGlobals.Dustland.weather = { getWeather, setWeather };
 })();

@@ -1,5 +1,5 @@
 (function(){
-  globalThis.Dustland = globalThis.Dustland || {};
+  (globalThis as any).Dustland = (globalThis as any).Dustland || {};
   const bus = globalThis.EventBus;
   let packs = {};
 

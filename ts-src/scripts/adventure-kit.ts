@@ -1419,14 +1419,14 @@ function buildSpoofItemsFromPanel() {
 function startSpoofPlayback(tree, flags, items, locked = false) {
   if (!_origFlagValue) _origFlagValue = globalThis.flagValue;
   if (!_origCloseDialog) _origCloseDialog = globalThis.closeDialog;
-  if (!_origHasItem) _origHasItem = globalThis.hasItem;
+  if (!_origHasItem) _origHasItem = (globalThis as any).hasItem;
   if (!_origCountItems) _origCountItems = globalThis.countItems;
   globalThis.flagValue = function (flag) {
     if (Object.prototype.hasOwnProperty.call(flags || {}, flag)) return flags[flag] || 0;
     return _origFlagValue(flag);
   };
   const itemCounts = items || {};
-  globalThis.hasItem = function(idOrTag){
+  (globalThis as any).hasItem = function(idOrTag){
     if (typeof idOrTag === 'string' && Object.prototype.hasOwnProperty.call(itemCounts, idOrTag)) return (itemCounts[idOrTag]||0) > 0;
     return _origHasItem(idOrTag);
   };
@@ -1445,7 +1445,7 @@ function startSpoofPlayback(tree, flags, items, locked = false) {
 function stopSpoofPlayback() {
   if (_origFlagValue) { globalThis.flagValue = _origFlagValue; _origFlagValue = null; }
   if (_origCloseDialog) { globalThis.closeDialog = _origCloseDialog; _origCloseDialog = null; }
-  if (_origHasItem) { globalThis.hasItem = _origHasItem; _origHasItem = null; }
+  if (_origHasItem) { (globalThis as any).hasItem = _origHasItem; _origHasItem = null; }
   if (_origCountItems) { globalThis.countItems = _origCountItems; _origCountItems = null; }
 }
 function playInGameWithSpoof() {
@@ -6384,8 +6384,8 @@ renderEventList();
 loadTreeEditor();
 setPlaceholders();
 const wizardList = document.getElementById('wizardList');
-if (wizardList && globalThis.Dustland?.wizards) {
-  Object.values(globalThis.Dustland.wizards).forEach(cfg => {
+if (wizardList && (globalThis as any).Dustland?.wizards) {
+  Object.values((globalThis as any).Dustland.wizards).forEach(cfg => {
     const btn = document.createElement('button');
     btn.className = 'btn';
     btn.textContent = cfg.title;

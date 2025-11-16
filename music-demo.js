@@ -1,4 +1,3 @@
-// @ts-nocheck
 /*
   Chiptune Dynamic Music Lab
   - Plain JS, globals only, no bundlers
@@ -7,58 +6,61 @@
 */
 (function () {
     'use strict';
+    function byId(id) {
+        return document.getElementById(id);
+    }
     // --- DOM ---
-    var startBtn = document.getElementById('startBtn');
-    var stopBtn = document.getElementById('stopBtn');
-    var nextBtn = document.getElementById('nextBtn');
-    var tempoEl = document.getElementById('tempo');
-    var tempoLabel = document.getElementById('tempoLabel');
-    var seedEl = document.getElementById('seed');
-    var keyEl = document.getElementById('key');
-    var moodList = document.getElementById('moodList');
-    var moodInfo = document.getElementById('moodInfo');
-    var nowStat = document.getElementById('nowStat');
-    var barBeat = document.getElementById('barBeat');
-    var scaleLabel = document.getElementById('scaleLabel');
-    var mgBtn = document.getElementById('mgBtn');
-    var mgStatus = document.getElementById('mgStatus');
-    var toneBtn = document.getElementById('toneBtn');
-    var toneStatus = document.getElementById('toneStatus');
-    var fxPulse = document.getElementById('fxPulse');
-    var fxPulseLabel = document.getElementById('fxPulseLabel');
-    var fxBits = document.getElementById('fxBits');
-    var fxBitsLabel = document.getElementById('fxBitsLabel');
-    var fxDown = document.getElementById('fxDown');
-    var fxDownLabel = document.getElementById('fxDownLabel');
-    var fxEcho = document.getElementById('fxEcho');
-    var fxEchoLabel = document.getElementById('fxEchoLabel');
-    var downloadJsonBtn = document.getElementById('downloadJsonBtn');
-    var loadJsonBtn = document.getElementById('loadJsonBtn');
-    var loadJsonInput = document.getElementById('loadJsonInput');
+    var startBtn = byId('startBtn');
+    var stopBtn = byId('stopBtn');
+    var nextBtn = byId('nextBtn');
+    var tempoEl = byId('tempo');
+    var tempoLabel = byId('tempoLabel');
+    var seedEl = byId('seed');
+    var keyEl = byId('key');
+    var moodList = byId('moodList');
+    var moodInfo = byId('moodInfo');
+    var nowStat = byId('nowStat');
+    var barBeat = byId('barBeat');
+    var scaleLabel = byId('scaleLabel');
+    var mgBtn = byId('mgBtn');
+    var mgStatus = byId('mgStatus');
+    var toneBtn = byId('toneBtn');
+    var toneStatus = byId('toneStatus');
+    var fxPulse = byId('fxPulse');
+    var fxPulseLabel = byId('fxPulseLabel');
+    var fxBits = byId('fxBits');
+    var fxBitsLabel = byId('fxBitsLabel');
+    var fxDown = byId('fxDown');
+    var fxDownLabel = byId('fxDownLabel');
+    var fxEcho = byId('fxEcho');
+    var fxEchoLabel = byId('fxEchoLabel');
+    var downloadJsonBtn = byId('downloadJsonBtn');
+    var loadJsonBtn = byId('loadJsonBtn');
+    var loadJsonInput = byId('loadJsonInput');
     // Disable FX controls until Tone is ready
-    [document.getElementById('fxPulse'), document.getElementById('fxBits'), document.getElementById('fxDown'), document.getElementById('fxEcho')]
+    [fxPulse, fxBits, fxDown, fxEcho]
         .forEach(function (el) { if (el)
         el.disabled = true; });
-    var harmonyInput = document.getElementById('harmonyInput');
-    var moodKeyEl = document.getElementById('moodKey');
-    var moodBpmEl = document.getElementById('moodBpm');
-    var moodScaleEl = document.getElementById('moodScale');
-    var moodDensityEl = document.getElementById('moodDensity');
-    var moodSwingEl = document.getElementById('moodSwing');
-    var moodLeadWaveEl = document.getElementById('moodLeadWave');
-    var moodBassWaveEl = document.getElementById('moodBassWave');
-    var barStartEl = document.getElementById('barStart');
-    var saveMoodBtn = document.getElementById('saveMoodBtn');
-    var seedRows = document.getElementById('seedRows');
-    var addSeedBtn = document.getElementById('addSeedBtn');
-    var clearSeedBtn = document.getElementById('clearSeedBtn');
+    var harmonyInput = byId('harmonyInput');
+    var moodKeyEl = byId('moodKey');
+    var moodBpmEl = byId('moodBpm');
+    var moodScaleEl = byId('moodScale');
+    var moodDensityEl = byId('moodDensity');
+    var moodSwingEl = byId('moodSwing');
+    var moodLeadWaveEl = byId('moodLeadWave');
+    var moodBassWaveEl = byId('moodBassWave');
+    var barStartEl = byId('barStart');
+    var saveMoodBtn = byId('saveMoodBtn');
+    var seedRows = byId('seedRows');
+    var addSeedBtn = byId('addSeedBtn');
+    var clearSeedBtn = byId('clearSeedBtn');
     // saveSeedBtn removed: motif edits auto-apply
-    var motifList = document.getElementById('motifList');
-    var motifModeEl = document.getElementById('motifMode');
-    var addMotifBtn = document.getElementById('addMotifBtn');
-    var dupMotifBtn = document.getElementById('dupMotifBtn');
-    var delMotifBtn = document.getElementById('delMotifBtn');
-    var jsonOut = document.getElementById('jsonOut');
+    var motifList = byId('motifList');
+    var motifModeEl = byId('motifMode');
+    var addMotifBtn = byId('addMotifBtn');
+    var dupMotifBtn = byId('dupMotifBtn');
+    var delMotifBtn = byId('delMotifBtn');
+    var jsonOut = byId('jsonOut');
     // --- Globals & Engine ---
     var ac = null; // AudioContext
     var master = null; // GainNode
@@ -66,7 +68,7 @@
     var delayGain = null; // GainNode
     var tone = { enabled: false, loading: false, ready: false, synths: null, fx: null };
     var playing = false;
-    var scheduleTimer = 0;
+    var scheduleTimer = null;
     var lookahead = 0.05; // seconds
     var scheduleAheadTime = 0.2; // seconds
     var current16th = 0; // step index in 16ths
@@ -128,6 +130,8 @@
         moodList.appendChild(btn);
     });
     function setActiveMoodBtn(id) {
+        if (!moodList)
+            return;
         var nodes = moodList.children;
         for (var i = 0; i < nodes.length; i++) {
             var n = nodes[i];
@@ -235,7 +239,7 @@
     function mkOsc(type, freq, time) {
         var o = ac.createOscillator();
         o.type = type;
-        if (freq)
+        if (freq != null)
             o.frequency.setValueAtTime(freq, time || ac.currentTime);
         return o;
     }
@@ -529,7 +533,7 @@
         moodInfo.textContent = m.name + ': ' + m.info;
         // Reflect UI: per-mood bpm/key and harmony
         if (tempoEl) {
-            tempoEl.value = music.bpm;
+            tempoEl.value = String(music.bpm);
             tempoLabel.textContent = music.bpm + ' BPM';
         }
         if (keyEl) {
@@ -542,13 +546,13 @@
         if (moodKeyEl)
             moodKeyEl.value = music.key;
         if (moodBpmEl)
-            moodBpmEl.value = music.bpm;
+            moodBpmEl.value = String(music.bpm);
         if (moodScaleEl)
             moodScaleEl.value = music.scale;
         if (moodDensityEl)
-            moodDensityEl.value = music.density;
+            moodDensityEl.value = String(music.density);
         if (moodSwingEl)
-            moodSwingEl.value = music.swing;
+            moodSwingEl.value = String(music.swing);
         if (moodLeadWaveEl)
             moodLeadWaveEl.value = music.leadWave;
         if (moodBassWaveEl)
@@ -556,8 +560,13 @@
         loadSeedRows();
         renderConfig();
     }
-    // Optional Magenta VAE integration for lead interpolation
-    var mg = { enabled: false, loading: false, ready: false, vae: null, leadOverride: {} };
+    var mg = {
+        enabled: false,
+        loading: false,
+        ready: false,
+        vae: null,
+        leadOverride: {}
+    };
     function setMgStatus(text) { if (mgStatus)
         mgStatus.textContent = 'Magenta: ' + text; }
     function loadScript(src) {
@@ -770,7 +779,10 @@
         if (playing)
             return;
         if (!ac) {
-            ac = new (window.AudioContext || window.webkitAudioContext)();
+            var ContextCtor = window.AudioContext || window.webkitAudioContext;
+            if (!ContextCtor)
+                return;
+            ac = new ContextCtor();
             master = ac.createGain();
             master.gain.value = 0.9;
             master.connect(ac.destination);
@@ -795,42 +807,55 @@
         if (!playing)
             return;
         playing = false;
-        clearInterval(scheduleTimer);
+        if (scheduleTimer) {
+            clearInterval(scheduleTimer);
+            scheduleTimer = null;
+        }
     }
     // UI wiring
-    startBtn.onclick = function () {
-        if (!ac)
-            setSeed(parseInt(seedEl.value || '1', 10));
-        start();
-    };
-    stopBtn.onclick = function () { stop(); };
-    nextBtn.onclick = function () { if (playing)
-        music.nextMood = music.nextMood || music.mood; };
+    if (startBtn && seedEl) {
+        startBtn.onclick = function () {
+            if (!ac)
+                setSeed(parseInt(seedEl.value || '1', 10));
+            start();
+        };
+    }
+    if (stopBtn)
+        stopBtn.onclick = function () { stop(); };
+    if (nextBtn)
+        nextBtn.onclick = function () { if (playing)
+            music.nextMood = music.nextMood || music.mood; };
     // Apply current harmony edits when switching moods via click
-    moodList.addEventListener('click', function (e) {
-        var t = e.target;
-        if (t && t.dataset && t.dataset.mood) {
-            persistHarmonyFromInput();
-        }
-    }, true);
-    tempoEl.oninput = function () {
-        var v = parseInt(tempoEl.value, 10);
-        tempoLabel.textContent = v + ' BPM';
-        music.bpm = v;
-        // persist per-mood tempo
-        var idx = MOODS.findIndex(function (x) { return x.id === music.mood; });
-        if (idx >= 0)
-            MOODS[idx].bpm = v;
-        renderConfig();
-    };
-    keyEl.onchange = function () {
-        music.key = keyEl.value;
-        var idx = MOODS.findIndex(function (x) { return x.id === music.mood; });
-        if (idx >= 0)
-            MOODS[idx].key = music.key;
-        scaleLabel.textContent = music.key + ' ' + music.scale;
-        renderConfig();
-    };
+    if (moodList) {
+        moodList.addEventListener('click', function (e) {
+            var target = e.target;
+            if (target?.dataset?.mood) {
+                persistHarmonyFromInput();
+            }
+        }, true);
+    }
+    if (tempoEl)
+        tempoEl.oninput = function () {
+            var v = parseInt(tempoEl.value, 10);
+            if (tempoLabel)
+                tempoLabel.textContent = v + ' BPM';
+            music.bpm = v;
+            // persist per-mood tempo
+            var idx = MOODS.findIndex(function (x) { return x.id === music.mood; });
+            if (idx >= 0)
+                MOODS[idx].bpm = v;
+            renderConfig();
+        };
+    if (keyEl)
+        keyEl.onchange = function () {
+            music.key = keyEl.value;
+            var idx = MOODS.findIndex(function (x) { return x.id === music.mood; });
+            if (idx >= 0)
+                MOODS[idx].key = music.key;
+            if (scaleLabel)
+                scaleLabel.textContent = music.key + ' ' + music.scale;
+            renderConfig();
+        };
     seedEl.onchange = function () { setSeed(parseInt(seedEl.value || '1', 10)); };
     if (mgBtn)
         mgBtn.onclick = function () { loadMagenta(); };
@@ -1057,7 +1082,7 @@
         if (moodBpmEl) {
             m.bpm = music.bpm = parseInt(moodBpmEl.value, 10) || m.bpm;
             if (tempoEl) {
-                tempoEl.value = music.bpm;
+                tempoEl.value = String(music.bpm);
                 tempoLabel.textContent = music.bpm + ' BPM';
             }
         }
@@ -1363,9 +1388,12 @@
     }
     // Defaults
     applyMood('somber');
-    tempoEl.value = music.bpm;
-    tempoLabel.textContent = music.bpm + ' BPM';
-    keyEl.value = music.key;
+    if (tempoEl)
+        tempoEl.value = String(music.bpm);
+    if (tempoLabel)
+        tempoLabel.textContent = music.bpm + ' BPM';
+    if (keyEl)
+        keyEl.value = music.key;
     ensureDefaultMotif();
     setMotifMode('improv');
     renderMotifList();

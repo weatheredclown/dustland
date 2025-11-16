@@ -55,7 +55,7 @@ const mapPlacementStep: WizardStepFactory = (key: string) => {
   };
 };
 
-const dustlandMapPlacement = (globalThis.Dustland ??= {});
+const dustlandMapPlacement = ((globalThis as any).Dustland ??= {});
 const wizardStepsMapPlacement = (dustlandMapPlacement.WizardSteps ??= {});
 wizardStepsMapPlacement.mapPlacement = mapPlacementStep;
 

@@ -287,7 +287,7 @@ function postLoad(module){
 
   function activateBunkerWhenReady(id, attempts){
     if (!id || attempts <= 0) return;
-    const ft = globalThis.Dustland?.fastTravel;
+    const ft = (globalThis as any).Dustland?.fastTravel;
     if (ft?.activateBunker) {
       ft.activateBunker(id);
       return;

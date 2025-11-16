@@ -5,6 +5,7 @@
 // - Queues NPC dialog generations and caches lines per (npcId, "start"/node)
 // - Never blocks gameplay; best-effort only
 // - chrome://on-device-internals/ to resent your crash count if needed
+const { resolveNode, hasItem: nanoHasItem } = globalThis;
 (function () {
     const nanoWindow = window;
     const nanoGlobal = globalThis;
@@ -243,7 +244,7 @@
             labels = labels.filter(c => {
                 if (c.q === 'accept' && q.status !== 'available')
                     return false;
-                if (c.q === 'turnin' && (q.status !== 'active' || (q.item && !hasItem(q.item))))
+                if (c.q === 'turnin' && (q.status !== 'active' || (q.item && !nanoHasItem(q.item))))
                     return false;
                 return true;
             });

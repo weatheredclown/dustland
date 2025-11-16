@@ -494,10 +494,11 @@ function incFlag(flag, amt = 1) {
 }
 // ===== Module application =====
 function applyModule(data = {}, options = {}) {
+    var _a;
     const { fullReset = true } = options;
     let moduleData = data || {};
     const moduleName = moduleData.name || '';
-    const dl = globalThis.Dustland || (globalThis.Dustland = {});
+    const dl = (_a = globalThis).Dustland || (_a.Dustland = {});
     dl.behaviors?.teardown?.();
     dl.effects?.reset?.();
     dl.currentModule = moduleName;
@@ -858,6 +859,7 @@ function makeInteriorRoom(id, w = 12, h = 9) {
     return id;
 }
 function placeHut(x, y, b = {}) {
+    var _a;
     let grid = b.grid;
     let w, h, doorX, doorY;
     if (grid) {
@@ -917,7 +919,7 @@ function placeHut(x, y, b = {}) {
         const moduleName = globalThis.Dustland?.currentModule || '';
         const bunkerId = b.bunkerId || `bunker_${x}_${y}`;
         nb.bunkerId = bunkerId;
-        const bunkers = (globalThis.Dustland || (globalThis.Dustland = {})).bunkers || (globalThis.Dustland.bunkers = []);
+        const bunkers = ((_a = globalThis).Dustland || (_a.Dustland = {})).bunkers || (globalThis.Dustland.bunkers = []);
         if (!bunkers.some(b => b.id === bunkerId)) {
             const ft = globalThis.Dustland?.fastTravel;
             const network = typeof ft?.networkFor === 'function' ? ft.networkFor(moduleName) : 'global';

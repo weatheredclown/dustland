@@ -1,3 +1,4 @@
+var _a;
 const assetPickerStep = (label, options, key) => {
     let selectEl = null;
     return {
@@ -36,6 +37,6 @@ const assetPickerStep = (label, options, key) => {
         }
     };
 };
-const dustlandAssetPicker = (globalThis.Dustland ?? (globalThis.Dustland = {}));
+const dustlandAssetPicker = ((_a = globalThis).Dustland ?? (_a.Dustland = {}));
 const wizardStepsAssetPicker = (dustlandAssetPicker.WizardSteps ?? (dustlandAssetPicker.WizardSteps = {}));
 wizardStepsAssetPicker.assetPicker = assetPickerStep;

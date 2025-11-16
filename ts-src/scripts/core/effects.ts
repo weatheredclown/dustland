@@ -152,7 +152,7 @@
 
   function invokeWorkbench(recipe: unknown) {
     if (!recipe) return;
-    const workbench = globalThis.Dustland?.workbench;
+    const workbench = (globalThis as any).Dustland?.workbench;
     if (!workbench) return;
     if (typeof recipe === 'string') {
       if (typeof workbench.craft === 'function') {
@@ -217,7 +217,7 @@
             if (typeof log === 'function') log(eff.msg ?? '');
             break;
           case 'openWorkbench':
-            globalThis.Dustland?.openWorkbench?.();
+            (globalThis as any).Dustland?.openWorkbench?.();
             break;
           case 'showTrainer':
             if (eff.trainer) globals.TrainerUI?.showTrainer?.(eff.trainer);
@@ -242,7 +242,7 @@
               if (b) {
                 b.boarded = false;
                 if (b.bunkerId) {
-                  const bk = globalThis.Dustland?.bunkers?.find(u => u.id === b.bunkerId);
+                  const bk = (globalThis as any).Dustland?.bunkers?.find(u => u.id === b.bunkerId);
                   if (bk) bk.active = true;
                 }
               }
@@ -259,7 +259,7 @@
               if (b) {
                 b.boarded = true;
                 if (b.bunkerId) {
-                  const bk = globalThis.Dustland?.bunkers?.find(u => u.id === b.bunkerId);
+                  const bk = (globalThis as any).Dustland?.bunkers?.find(u => u.id === b.bunkerId);
                   if (bk) bk.active = false;
                 }
               }
@@ -382,7 +382,7 @@
             if (Number.isFinite(eff.max)) target = Math.min(eff.max, target as number);
             const next = Math.max(0, Math.round(Number.isFinite(target) ? (target as number) : current));
             shop.grudge = next;
-            globalThis.Dustland?.updateTradeUI?.(shop);
+            (globalThis as any).Dustland?.updateTradeUI?.(shop);
             const diff = next - current;
             if (typeof eff.toast === 'string') {
               if (typeof toast === 'function') toast(eff.toast);
@@ -415,11 +415,11 @@
             invokeWorkbench(eff.recipe);
             break;
           case 'activateBunker':
-            globalThis.Dustland?.fastTravel?.activateBunker?.(eff.id);
+            (globalThis as any).Dustland?.fastTravel?.activateBunker?.(eff.id);
             break;
           case 'openWorldMap': {
             if (typeof globalThis.openWorldMap === 'function') globalThis.openWorldMap(eff.id);
-            else globalThis.Dustland?.worldMap?.open?.(eff.id);
+            else (globalThis as any).Dustland?.worldMap?.open?.(eff.id);
             break; }
           case 'removeItemsByTag': {
             const playerState = globals.player;
@@ -475,8 +475,8 @@
     }
   };
 
-  globalThis.Dustland = globalThis.Dustland ?? {};
-  globalThis.Dustland.effects = Effects;
+  (globalThis as any).Dustland = (globalThis as any).Dustland ?? {};
+  (globalThis as any).Dustland.effects = Effects;
   (globalThis as typeof globalThis & { Effects?: EffectsApi }).Effects = Effects;
 })();
 

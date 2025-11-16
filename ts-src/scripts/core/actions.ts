@@ -42,7 +42,7 @@
       if(typeof globalThis.startCombat==='function') return globalThis.startCombat(defender);
     }
   };
-  globalThis.Dustland = globalThis.Dustland || {};
-  globalThis.Dustland.actions = Actions;
+  (globalThis as any).Dustland = (globalThis as any).Dustland || {};
+  (globalThis as any).Dustland.actions = Actions;
   globalThis.Actions = Actions;
 })();

@@ -30,8 +30,8 @@
     };
   }
 
-  const dustland = (globalThis.Dustland as DustlandNamespace | undefined) ||
-    (globalThis.Dustland = {} as DustlandNamespace);
+  const dustland = ((globalThis as any).Dustland as DustlandNamespace | undefined) ||
+    ((globalThis as any).Dustland = {} as DustlandNamespace);
 
   let wizardSteps = dustland.WizardSteps;
   if (!wizardSteps) {

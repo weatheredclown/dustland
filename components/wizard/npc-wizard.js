@@ -1,6 +1,7 @@
 (() => {
+    var _a;
     const toSlug = (value) => value.trim().toLowerCase().replace(/\s+/g, '_');
-    const dustlandNpcWizard = (globalThis.Dustland ?? (globalThis.Dustland = {}));
+    const dustlandNpcWizard = ((_a = globalThis).Dustland ?? (_a.Dustland = {}));
     const wizardStepsNpc = (dustlandNpcWizard.WizardSteps ?? (dustlandNpcWizard.WizardSteps = {}));
     const { text, assetPicker, itemPicker, mapPlacement, confirm } = wizardStepsNpc;
     if (!text || !assetPicker || !itemPicker || !mapPlacement || !confirm) {

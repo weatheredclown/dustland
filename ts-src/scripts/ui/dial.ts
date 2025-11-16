@@ -62,7 +62,7 @@ function createDial(options: DialOptions = {}): DialWidget {
   return { el: dial, set };
 }
 
-const dustland = (globalThis.Dustland ??= {} as DustlandNamespace);
+const dustland = ((globalThis as any).Dustland ??= {} as DustlandNamespace);
 const uiNamespace = (dustland.ui as DustlandUiNamespace | undefined) ??
   (dustland.ui = {} as DustlandUiNamespace);
 uiNamespace.createDial = createDial;

@@ -15,8 +15,8 @@
   };
 
   const dustland: StarterDustland =
-    (globalThis.Dustland as StarterDustland | undefined) ||
-    (globalThis.Dustland = {} as StarterDustland);
+    ((globalThis as any).Dustland as StarterDustland | undefined) ||
+    ((globalThis as any).Dustland = {} as StarterDustland);
 
   const starterItems: StarterItem[] = [
     {

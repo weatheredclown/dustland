@@ -142,7 +142,7 @@ interface TimeoutLike {
   unref?: () => void;
 }
 
-const { resolveNode, hasItem } = globalThis as typeof globalThis & {
+const { resolveNode, hasItem: nanoHasItem } = globalThis as typeof globalThis & {
   resolveNode: (tree: unknown, nodeId: string) => NanoDialogNode | undefined;
   hasItem: (itemId: string) => boolean;
 };
@@ -408,7 +408,7 @@ type NanoGlobal = typeof globalThis & {
       const q = npc.quest;
       labels = labels.filter(c => {
         if (c.q === 'accept' && q.status !== 'available') return false;
-        if (c.q === 'turnin' && (q.status !== 'active' || (q.item && !hasItem(q.item)))) return false;
+        if (c.q === 'turnin' && (q.status !== 'active' || (q.item && !nanoHasItem(q.item)))) return false;
         return true;
       });
     }

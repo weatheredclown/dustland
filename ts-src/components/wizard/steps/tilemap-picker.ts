@@ -43,6 +43,6 @@ const tilemapPickerStep: WizardStepFactory = (
   };
 };
 
-const dustlandTilemapPicker = (globalThis.Dustland ??= {});
+const dustlandTilemapPicker = ((globalThis as any).Dustland ??= {});
 const wizardStepsTilemapPicker = (dustlandTilemapPicker.WizardSteps ??= {});
 wizardStepsTilemapPicker.tilemapPicker = tilemapPickerStep;
