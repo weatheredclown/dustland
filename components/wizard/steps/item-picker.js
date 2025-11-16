@@ -1,3 +1,4 @@
+var _a;
 const itemPickerStep = (label, options, key, rewardKey) => {
     let selectEl = null;
     let rewardInputEl = null;
@@ -60,6 +61,6 @@ const itemPickerStep = (label, options, key, rewardKey) => {
         }
     };
 };
-const dustlandItemPicker = (globalThis.Dustland ?? (globalThis.Dustland = {}));
+const dustlandItemPicker = ((_a = globalThis).Dustland ?? (_a.Dustland = {}));
 const wizardStepsItemPicker = (dustlandItemPicker.WizardSteps ?? (dustlandItemPicker.WizardSteps = {}));
 wizardStepsItemPicker.itemPicker = itemPickerStep;

@@ -11,7 +11,7 @@ interface ChestWizardState extends WizardState {
 (() => {
   const toChestSlug = (value: string): string => value.trim().toLowerCase().replace(/\s+/g, '_');
 
-  const dustlandChestWizard = (globalThis.Dustland ??= {});
+  const dustlandChestWizard = ((globalThis as any).Dustland ??= {});
   const wizardStepsChest = (dustlandChestWizard.WizardSteps ??= {});
   const { text, mapPlacement, confirm } = wizardStepsChest;
 

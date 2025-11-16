@@ -338,7 +338,7 @@ type WorldMapDustlandGlobal = typeof globalThis & {
     if(!ft?.travel?.(fromId, dest.id)) return;
     if(ft?.loadSlot?.(dest.id)){ close(); return; }
     ensureModule(dest, moduleData => {
-      const cur = globalThis.Dustland?.currentModule;
+      const cur = (globalThis as any).Dustland?.currentModule;
       if(moduleData && dest.module !== cur){
         moduleData.postLoad?.(moduleData);
         applyModule(moduleData);

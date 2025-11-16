@@ -1,6 +1,6 @@
 // @ts-nocheck
-const { effects: Effects } = globalThis.Dustland || {};
-var bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
+const { effects: Effects } = (globalThis as any).Dustland || {};
+var bus = ((globalThis as any).Dustland && (globalThis as any).Dustland.eventBus) || globalThis.EventBus;
 let combatActive = false;
 bus?.on?.('combat:started', () => { combatActive = true; });
 bus?.on?.('combat:ended', () => { combatActive = false; });
@@ -31,7 +31,7 @@ function normalizePositiveInt(value, fallback){
 }
 
 function getEssentialRestockConfig(){
-  const moduleName = globalThis.Dustland?.currentModule || null;
+  const moduleName = (globalThis as any).Dustland?.currentModule || null;
   if(!moduleName) return null;
   if(essentialRestockCache.module !== moduleName){
     essentialRestockState.clear();
@@ -43,7 +43,7 @@ function getEssentialRestockConfig(){
         targets: new Map()
       });
     });
-    const moduleData = globalThis.Dustland?.loadedModules?.[moduleName];
+    const moduleData = (globalThis as any).Dustland?.loadedModules?.[moduleName];
     const baseNpcs = Array.isArray(moduleData?.npcs) ? moduleData.npcs : [];
     baseNpcs.forEach(baseNpc => {
       const inv = Array.isArray(baseNpc?.shop?.inv) ? baseNpc.shop.inv : [];
@@ -106,7 +106,7 @@ bus?.on?.('weather:change', w => {
 const RANDOM_COMBAT_INPUT_LOCK_MS = 333;
 
 function lockInput(ms = RANDOM_COMBAT_INPUT_LOCK_MS, key){
-  const game = globalThis.Dustland || (globalThis.Dustland = {});
+  const game = (globalThis as any).Dustland || ((globalThis as any).Dustland = {});
   const target = Date.now() + ms;
   const current = typeof game.inputLockUntil === 'number' ? game.inputLockUntil : 0;
   game.inputLockUntil = current > target ? current : target;
@@ -149,8 +149,8 @@ function advanceWorldTurn(){
   worldTurnCounter = before + 1;
   const now = worldTurnCounter;
   decayWorldLoot(now);
-  if(globalThis.Dustland){
-    globalThis.Dustland.worldTurns = now;
+  if((globalThis as any).Dustland){
+    (globalThis as any).Dustland.worldTurns = now;
   }
   restockEssentialSupplies(now);
 }
@@ -161,7 +161,7 @@ function zoneAttrs(map,x,y){
   let spawns = null;
   let minSteps = null;
   let maxSteps = null;
-  const zones = globalThis.Dustland?.zoneEffects || [];
+  const zones = (globalThis as any).Dustland?.zoneEffects || [];
   for(const z of zones){
     if(z.if && !globalThis.checkFlagCondition?.(z.if)) continue;
     if((z.map||'world')!==map) continue;
@@ -343,7 +343,7 @@ function hasItemOrEquipped(idOrTag){
 }
 
 function applyZones(map,x,y){
-  const zones = globalThis.Dustland?.zoneEffects || [];
+  const zones = (globalThis as any).Dustland?.zoneEffects || [];
   let weatherZone = null;
   for(const z of zones){
     if(z.if && !globalThis.checkFlagCondition?.(z.if)) continue;
@@ -367,13 +367,13 @@ function applyZones(map,x,y){
   }
   if(weatherZone){
     if(lastWeatherZone !== weatherZone){
-      if(!lastWeatherZone) prevWeather = globalThis.Dustland?.weather?.getWeather?.();
+      if(!lastWeatherZone) prevWeather = (globalThis as any).Dustland?.weather?.getWeather?.();
       const w = weatherZone.weather;
-      globalThis.Dustland?.weather?.setWeather?.(typeof w === 'string' ? { state: w } : w);
+      (globalThis as any).Dustland?.weather?.setWeather?.(typeof w === 'string' ? { state: w } : w);
       lastWeatherZone = weatherZone;
     }
   } else if(lastWeatherZone){
-    if(prevWeather) globalThis.Dustland?.weather?.setWeather?.(prevWeather);
+    if(prevWeather) (globalThis as any).Dustland?.weather?.setWeather?.(prevWeather);
     lastWeatherZone = null;
   }
   if((party||[]).length && party.every(m=>m.hp<=0)){
@@ -390,7 +390,7 @@ function applyZones(map,x,y){
 }
 
 function updateZoneMsgs(map,x,y){
-  const zones = globalThis.Dustland?.zoneEffects || [];
+  const zones = (globalThis as any).Dustland?.zoneEffects || [];
   const current = [];
   for(const z of zones){
     if(z.if && !globalThis.checkFlagCondition?.(z.if)) continue;
@@ -584,7 +584,7 @@ function encounterMatchesLocation(entry, map, x, y, dist){
   if(mode === 'zone'){
     const rawTag = typeof entry.zoneTag === 'string' ? entry.zoneTag.trim() : '';
     if(!rawTag) return false;
-    const zones = globalThis.Dustland?.zoneEffects || [];
+    const zones = (globalThis as any).Dustland?.zoneEffects || [];
     for(const z of zones){
       const tag = typeof z.tag === 'string' ? z.tag.trim() : '';
       const id = typeof z.id === 'string' ? z.id.trim() : '';
@@ -619,7 +619,7 @@ function checkRandomEncounter(){
     }
     if(chosen){
       encounterCooldown = minSteps + Math.floor(Math.random() * (maxSteps - minSteps + 1));
-      lockInput(undefined, globalThis.Dustland?.lastNonCombatKey);
+      lockInput(undefined, (globalThis as any).Dustland?.lastNonCombatKey);
       return Dustland.actions.startCombat({ ...chosen });
     }
     return;
@@ -669,7 +669,7 @@ function checkRandomEncounter(){
     }
     if (count > 1) def.count = count;
     encounterCooldown = minSteps + Math.floor(Math.random() * (maxSteps - minSteps + 1));
-    lockInput(undefined, globalThis.Dustland?.lastNonCombatKey);
+    lockInput(undefined, (globalThis as any).Dustland?.lastNonCombatKey);
     return Dustland.actions.startCombat(def);
   }
 }
@@ -854,7 +854,7 @@ bus?.on?.('movement:player', payload => {
   const { x, y } = payload;
   setPartyPos(x, y);
 });
-globalThis.Dustland = globalThis.Dustland || {};
-globalThis.Dustland.worldTurns = worldTurnCounter;
-globalThis.Dustland.movement = movement;
+(globalThis as any).Dustland = (globalThis as any).Dustland || {};
+(globalThis as any).Dustland.worldTurns = worldTurnCounter;
+(globalThis as any).Dustland.movement = movement;
 Object.assign(globalThis, movement);

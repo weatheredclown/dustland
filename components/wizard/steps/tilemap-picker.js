@@ -1,3 +1,4 @@
+var _a;
 const tilemapPickerStep = (label, options, key) => {
     let selectEl = null;
     return {
@@ -36,6 +37,6 @@ const tilemapPickerStep = (label, options, key) => {
         }
     };
 };
-const dustlandTilemapPicker = (globalThis.Dustland ?? (globalThis.Dustland = {}));
+const dustlandTilemapPicker = ((_a = globalThis).Dustland ?? (_a.Dustland = {}));
 const wizardStepsTilemapPicker = (dustlandTilemapPicker.WizardSteps ?? (dustlandTilemapPicker.WizardSteps = {}));
 wizardStepsTilemapPicker.tilemapPicker = tilemapPickerStep;

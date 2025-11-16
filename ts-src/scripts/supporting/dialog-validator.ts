@@ -1,6 +1,6 @@
 // Basic dialog tree validator
 
-globalThis.Dustland = globalThis.Dustland || {};
+(globalThis as any).Dustland = (globalThis as any).Dustland || {};
 (function(){
   type DialogChoice = { to?: string };
   type DialogNode = { choices?: DialogChoice[] };
@@ -14,5 +14,5 @@ globalThis.Dustland = globalThis.Dustland || {};
     }
     return errors;
   }
-  globalThis.Dustland.validateDialogTree = validateDialogTree;
+  (globalThis as any).Dustland.validateDialogTree = validateDialogTree;
 })();

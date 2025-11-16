@@ -45,7 +45,7 @@ interface TraderPriceOptions {
   scarcityMultiplier?: number;
 }
 
-const traderBus = (globalThis.Dustland?.eventBus ?? globalThis.EventBus) ?? undefined;
+const traderBus = ((globalThis as any).Dustland?.eventBus ?? globalThis.EventBus) ?? undefined;
 const SHOP_STACK_LIMIT = 256;
 const PRICE_EXPONENT = 0.6;
 const PRICE_SCALE = 15;
@@ -362,5 +362,5 @@ class Trader {
   }
 }
 
-globalThis.Dustland = globalThis.Dustland || {};
-globalThis.Dustland.Trader = Trader;
+(globalThis as any).Dustland = (globalThis as any).Dustland || {};
+(globalThis as any).Dustland.Trader = Trader;

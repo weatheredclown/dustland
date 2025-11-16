@@ -1,3 +1,4 @@
+var _a;
 const isDoorCoordinate = (value) => {
     if (!value || typeof value !== 'object')
         return false;
@@ -69,6 +70,6 @@ const doorLinkerStep = (entryKey, exitKey, entryLabel, exitLabel) => {
         onComplete() { }
     };
 };
-const dustlandDoorLinker = (globalThis.Dustland ?? (globalThis.Dustland = {}));
+const dustlandDoorLinker = ((_a = globalThis).Dustland ?? (_a.Dustland = {}));
 const wizardStepsDoorLinker = (dustlandDoorLinker.WizardSteps ?? (dustlandDoorLinker.WizardSteps = {}));
 wizardStepsDoorLinker.doorLinker = doorLinkerStep;

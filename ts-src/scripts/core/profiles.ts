@@ -1,7 +1,7 @@
 // ===== Profiles =====
 (function(){
-  if(!globalThis.Dustland) globalThis.Dustland = {};
-  const dustland = globalThis.Dustland;
+  if(!(globalThis as any).Dustland) (globalThis as any).Dustland = {};
+  const dustland = (globalThis as any).Dustland;
   const registry: Record<string, DustlandProfile> = {};
 
   function set(id: string, data: DustlandProfile = {}): void {

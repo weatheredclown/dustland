@@ -22,5 +22,5 @@
     }
     return base + oct * 12 + best;
   }
-  globalThis.clampMidiToScale = clampMidiToScale;
+  (globalThis as any).clampMidiToScale = clampMidiToScale;
 })();

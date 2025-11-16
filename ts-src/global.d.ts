@@ -138,7 +138,7 @@ declare global {
     x: number;
     y: number;
     map?: string;
-    [key: string]: unknown;
+    [key: string]: any;
   }
 
   interface DustlandTrainerUi {
@@ -154,7 +154,7 @@ declare global {
     renderIcon: (rank: string, onOpen?: () => void) => HTMLElement | null;
     open: (rank: string, rng?: () => number) => unknown;
     openAll: (rank: string, rng?: () => number) => number;
-    [key: string]: unknown;
+    [key: string]: any;
   }
 
   interface DustlandItemDrop {
@@ -883,6 +883,7 @@ interface ItemGeneratorRange {
       setWeather?: (next: Partial<DustlandWeatherState>) => DustlandWeatherState;
     };
     status?: { init?: (member: PartyMember) => void };
+    ui?: DustlandUiApi | Record<string, unknown>;
     actions?: DustlandActionsApi;
     validateDialogTree?: (tree: Record<string, DustlandDialogNode>) => string[];
     effectPackInspector?: { load: (text: string) => void; fire: (evt: string) => void };
@@ -1282,7 +1283,191 @@ interface ItemGeneratorRange {
     soundSources?: DustlandSoundSource[];
     revealHiddenNPCs?: () => void;
     Effects?: DustlandEffectsApi;
+    [key: string]: unknown;
   }
+
+  interface Window {
+    Dustland?: DustlandNamespace;
+    DustlandSkin?: DustlandSkinApi;
+    loadSkin?: (name: string, options?: Record<string, unknown> | null) => DustlandSkin | null;
+    ACK?: AckGlobal;
+    UI?: DustlandUiApi;
+    TRAINER_UPGRADE_SCHEMA?: JsonSchema;
+    TRAINER_UPGRADES?: TrainerUpgradeMap;
+    eventBus?: DustlandEventBus;
+    EventBus?: DustlandEventBus;
+    party?: Party;
+    player?: PlayerState;
+    DustlandGlobals?: DustlandGlobalHelpers;
+    CURRENCY?: string;
+    NPCS?: DustlandNpc[];
+    npcTemplates?: DustlandNpcTemplate[];
+    world?: DustlandMap[];
+    DUSTLAND_MODULE?: DustlandModuleInstance;
+    LOOTBOX_DEMO_MODULE?: DustlandModuleInstance;
+    OTHER_BAS_MODULE?: OtherBasModuleInstance;
+    applyModule?: (moduleData: unknown) => void;
+    loadModule?: (moduleData: unknown) => Promise<void> | void;
+    setPartyPos?: (x: number, y: number) => void;
+    setMap?: (map: string, label?: string) => void;
+    toast?: (message: string) => void;
+    updateHUD?: () => void;
+    checkFlagCondition?: (condition: unknown) => boolean;
+    leader?: () => PartyMember | undefined;
+    awardXP?: (target: unknown, amount: number) => void;
+    resolveItem?: (reward: unknown) => { name?: string } | null;
+    addToInv?: (item: unknown) => boolean;
+    ITEMS?: Record<string, GameItem>;
+    dropItemNearParty?: (item: unknown) => void;
+    startCombat?: (defender: CombatTarget) => Promise<CombatOutcome> | CombatOutcome;
+    log?: (message: string, type?: string) => void;
+    ENGINE_VERSION: string;
+    WORLD_W?: number;
+    WORLD_H?: number;
+    clamp: (value: number, min: number, max: number) => number;
+    incFlag?: (flag: string, delta?: number) => void;
+    flagValue?: (flag: string) => number;
+    setFlag?: (flag: string, value: number | string | boolean) => void;
+    queueNanoDialogForNPCs?: (nodeId?: string, reason?: string, map?: string) => void;
+    textEl?: HTMLElement | null;
+    choicesEl?: HTMLElement | null;
+    closeDialog?: () => void;
+    defaultQuestProcessor?: (
+      npc: DustlandNpc | null | undefined,
+      action: string
+    ) => DustlandQuestProcessorResult | null | undefined;
+    makeMember?: (
+      id?: string,
+      name?: string,
+      role?: string,
+      options?: Record<string, unknown>
+    ) => PartyMember;
+    joinParty?: (member: PartyMember) => boolean;
+    removeNPC?: (npc: DustlandNpc | null | undefined) => void;
+    countItems?: (idOrTag: string) => number;
+    findItemIndex?: (idOrTag: string) => number;
+    removeFromInv?: (index: number, quantity?: number) => void;
+    hasItem?: (idOrTag: string) => boolean;
+    makeNPC?: (
+      id: string,
+      mapId: string,
+      x: number,
+      y: number,
+      color?: string,
+      name?: string,
+      title?: string,
+      desc?: string,
+      tree?: Record<string, unknown> | null,
+      quest?: DustlandNpcQuest | null,
+      dialog?: unknown,
+      extra?: unknown,
+      options?: Record<string, unknown>
+    ) => DustlandNpc;
+    setGameState?: (next: number) => void;
+    trackQuestDialogNode?: (npcId: string, nodeId: string) => void;
+    setPortraitDiv?: (element: HTMLElement, npc: DustlandNpc) => void;
+    persistLlmNodes?: (tree: DustlandDialogTree | null | undefined) => void;
+    ItemGen?: ItemGenerator;
+    seedWorldContent?: () => void;
+    startGame?: () => void;
+    memoryTape?: MemoryTapeItem;
+    openDialog?: (dialog: unknown) => void;
+    openCombat?: (enemies: CombatParticipant[]) => Promise<CombatOutcome | null | undefined>;
+    selectedMember?: number;
+    tileEmoji?: Readonly<Record<number, string>>;
+    emojiTile?: Readonly<Record<string, number>>;
+    gridFromEmoji?: (rows: string[]) => number[][];
+    gridToEmoji?: (grid: number[][]) => string[];
+    getViewSize?: () => { w: number; h: number };
+    showStart?: () => void;
+    hideStart?: () => void;
+    openCreator?: () => void;
+    closeCreator?: () => void;
+    resetAll?: () => void;
+    moduleData?: DustlandModuleInstance | null;
+    modulePickerPending?: boolean;
+    perfStats?: { tiles?: number; sfx?: number; [key: string]: number | undefined };
+    fxConfig?: Record<string, unknown> | null;
+    state?: (DustlandCoreState & {
+      arenas?: Record<string, DustlandBehaviorArenaState | undefined>;
+    }) | null;
+    enemyBanks?: DustlandEnemyBanks;
+    fogOfWarEnabled?: boolean;
+    toggleAudio?: () => void;
+    toggleTileChars?: () => void;
+    toggleFogOfWar?: () => void;
+    tileChars?: Readonly<Record<number | string, string>>;
+    jitterColor?: (hex: string, x: number, y: number) => string;
+    playerAdrenalineFx?: {
+      intensity: number;
+      scale: number;
+      hueShift: number;
+      saturation: number;
+      brightness: number;
+      glow: number;
+    };
+    footstepBump?: () => void;
+    pickupSparkle?: (x: number, y: number) => void;
+    pickupVacuum?: (fromX: number, fromY: number, toX?: number, toY?: number) => void;
+    playerItemAOEDamage?: (
+      member: PartyMember,
+      damage: number,
+      options: { label?: string; ignoreDefense?: boolean }
+    ) => void;
+    applyEquipmentStats?: (member: PartyMember) => void;
+    applyCombatMods?: (member: PartyMember) => void;
+    openShop?: (shop: unknown) => void;
+    playFX?: (type: string) => void;
+    postLoad?: (moduleData: DustlandModuleInstance) => void;
+    openWorldMap?: (source?: string) => void;
+    openWorkbench?: () => void;
+    healAll?: () => void;
+    params?: URLSearchParams;
+    portals?: DustlandPortal[];
+    buildings?: DustlandBuilding[];
+    currentNPC?: DustlandNpc | null;
+    TILE?: DustlandTileset;
+    generateHeightField?: (
+      seed: string | number,
+      size: number,
+      scale: number,
+      falloff?: number
+    ) => number[][];
+    heightFieldToTiles?: (field: number[][]) => number[][];
+    refineTiles?: (tiles: number[][], iterations?: number) => number[][];
+    findRegionCenters?: (tiles: number[][]) => ProceduralMapPoint[];
+    connectRegionCenters?: (
+      tiles: number[][],
+      field: number[][],
+      centers: ProceduralMapPoint[] | null | undefined,
+      seed?: string | number
+    ) => ProceduralRoadNetwork;
+    carveRoads?: (
+      tiles: number[][],
+      network?: ProceduralRoadNetwork | null
+    ) => ProceduralRoadNetwork;
+    scatterRuins?: (
+      tiles: number[][],
+      seed?: string | number
+    ) => { tiles: number[][]; ruins: ProceduralMapPoint[]; hubs: ProceduralMapPoint[] };
+    exportMap?: (data: unknown, path?: string) => Promise<void> | void;
+    generateProceduralMap?: (
+      seed: string | number,
+      width: number,
+      height: number,
+      scale?: number,
+      falloff?: number,
+      features?: { roads?: boolean; ruins?: boolean }
+    ) => ProceduralMapResult;
+    TrainerUI?: DustlandTrainerUi;
+    SpoilsCache?: DustlandSpoilsCacheApi;
+    itemDrops?: DustlandItemDrop[];
+    soundSources?: DustlandSoundSource[];
+    revealHiddenNPCs?: () => void;
+    Effects?: DustlandEffectsApi;
+    [key: string]: unknown;
+  }
+
 
   let __combatState:
     | { enemies?: Array<{ name?: string; DEF?: number; hp: number; [key: string]: unknown }>; [key: string]: unknown }

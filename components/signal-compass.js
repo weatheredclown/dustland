@@ -1,4 +1,5 @@
 (function () {
+    var _a;
     function createSignalCompass(parent) {
         const container = parent ?? document.body;
         const el = document.createElement('div');
@@ -22,6 +23,6 @@
             }
         };
     }
-    const dustland = (globalThis.Dustland ?? (globalThis.Dustland = {}));
+    const dustland = ((_a = globalThis).Dustland ?? (_a.Dustland = {}));
     dustland.createSignalCompass = createSignalCompass;
 })();

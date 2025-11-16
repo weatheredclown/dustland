@@ -333,8 +333,8 @@ function closeCombat(result = 'flee'){
   globalThis.EventBus?.emit?.('combat:ended', { result });
   const tele = { duration, log: combatState.log.slice() };
   globalThis.EventBus?.emit?.('combat:telemetry', tele);
-  if(globalThis.Dustland){
-    const arr = globalThis.Dustland.combatTelemetry || (globalThis.Dustland.combatTelemetry = []);
+  if((globalThis as any).Dustland){
+    const arr = (globalThis as any).Dustland.combatTelemetry || ((globalThis as any).Dustland.combatTelemetry = []);
     arr.push(tele);
   }
   combatState.onComplete?.({ result });

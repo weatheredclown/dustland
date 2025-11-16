@@ -15,7 +15,7 @@ const adrBar = document.getElementById('adrBar') as HTMLElement | null;
 const adrFill = document.getElementById('adrFill') as HTMLElement | null;
 const statusIcons = document.getElementById('statusIcons');
 const weatherBanner = document.getElementById('weatherBanner');
-const musicBus: DustlandEventBus | undefined = globalThis.Dustland?.eventBus || globalThis.EventBus;
+const musicBus: DustlandEventBus | undefined = (globalThis as any).Dustland?.eventBus || globalThis.EventBus;
 let hudAdrMood: 'adr_high' | 'adr_low' | null = null;
 
 const FOG_UNSEEN_ALPHA = 0.94;
@@ -59,7 +59,7 @@ console.error = function(...args) {
   log('🛑 ' + args.join(' '), 'error');
 };
 
-const multiplayerBus = globalThis.Dustland?.eventBus || globalThis.EventBus;
+const multiplayerBus = (globalThis as any).Dustland?.eventBus || globalThis.EventBus;
 if (multiplayerBus?.on) {
   (function(){
     let peerSnapshot: MultiplayerPeer[] = [];
@@ -1207,8 +1207,8 @@ EventBus.on('weather:change', w => {
 EventBus.on('persona:equip', () => { renderParty(); updateHUD?.(); });
 EventBus.on('persona:unequip', () => { renderParty(); updateHUD?.(); });
 EventBus.on('movement:player', updateQuestCompassTargets);
-if(weatherBanner && globalThis.Dustland?.weather){
-  const w = globalThis.Dustland.weather.getWeather();
+if(weatherBanner && (globalThis as any).Dustland?.weather){
+  const w = (globalThis as any).Dustland.weather.getWeather();
   weatherBanner.textContent = (w.icon ? w.icon + ' ' : '') + (w.desc || w.state);
   weatherBanner.hidden = false;
 }
@@ -1555,7 +1555,7 @@ function renderFog(ctx, map, offX, offY, viewW, viewH){
 const renderOrder = ['tiles', 'items', 'portals', 'entitiesBelow', 'player', 'entitiesAbove'];
 
 function skinManager(){
-  return globalThis.DustlandSkin || globalThis.Dustland?.skin || null;
+  return (globalThis as any).DustlandSkin || (globalThis as any).Dustland?.skin || null;
 }
 
 function drawSkinSprite(ctx, sprite, dx, dy, size = TS){
@@ -1619,7 +1619,7 @@ function render(gameState=state, dt){
   const ps = gameState.portals || portals;
   const entities = gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : []);
   const pos = gameState.party || party;
-  const remoteParties = globalThis.Dustland?.multiplayerParties?.list?.() || globalThis.Dustland?.multiplayerState?.remoteParties || [];
+  const remoteParties = (globalThis as any).Dustland?.multiplayerParties?.list?.() || (globalThis as any).Dustland?.multiplayerState?.remoteParties || [];
   const skin = skinManager();
 
   // split entities into below/above
@@ -2870,7 +2870,7 @@ party.forEach((m,i)=>{
   const tLabel=labelEquip(tEq);
   const nextXP=xpToNext(m.lvl);
   const pct=Math.min(100,(m.xp/nextXP)*100);
-  const persona = globalThis.Dustland?.gameState?.getPersona?.(m.persona);
+  const persona = (globalThis as any).Dustland?.gameState?.getPersona?.(m.persona);
   const label = persona ? `${m.name} (${persona.label})` : m.name;
   const portraitSrc = persona?.portrait || m.portraitSheet;
   c.innerHTML = `<div class='row'><div class='portrait'></div><div><b>${label}</b> — ${m.role} (Lv ${m.lvl})</div></div>`+
@@ -3012,14 +3012,14 @@ function openShop(npc) {
   }
   function renderShop() {
     renderScrap();
-    globalThis.Dustland?.updateTradeUI?.(npc.shop);
+    (globalThis as any).Dustland?.updateTradeUI?.(npc.shop);
     shopBuy.innerHTML = '';
     shopSell.innerHTML = '';
 
     const shopInv = npc.shop.inv || [];
     const baseMarkup = npc.vending ? 1 : npc.shop.markup || 2;
     const grudgeLevel = npc.shop.grudge ?? 0;
-    const TraderClass = globalThis.Dustland?.Trader;
+    const TraderClass = (globalThis as any).Dustland?.Trader;
 
     const resolveBuyPrice = (stack) => {
       if (!stack?.item) return 0;
@@ -3236,7 +3236,7 @@ function openShop(npc) {
     shopOverlay.removeEventListener('keydown', handleKey);
     if (!madePurchase && npc) {
       npc.shop.grudge = (npc.shop.grudge || 0) + 1;
-      globalThis.Dustland?.updateTradeUI?.(npc.shop);
+      (globalThis as any).Dustland?.updateTradeUI?.(npc.shop);
       npc.cancelCount = (npc.cancelCount || 0) + 1;
       if (npc.cancelCount >= 2) {
         npc.tree.start.text = 'Buy or move on.';
@@ -3246,7 +3246,7 @@ function openShop(npc) {
       npc.cancelCount = 0;
       npc.shop.grudge = 0;
       npc.tree.start.text = 'Got goods to sell? I pay in scrap.';
-      globalThis.Dustland?.updateTradeUI?.(npc.shop);
+      (globalThis as any).Dustland?.updateTradeUI?.(npc.shop);
     }
   }
   function handleKey(e) {
@@ -3271,21 +3271,21 @@ function openShop(npc) {
   shopOverlay.focus();
 }
 
-globalThis.Dustland = globalThis.Dustland || {};
-globalThis.Dustland.openShop = openShop;
-globalThis.Dustland.retroNpcArt = {
+(globalThis as any).Dustland = (globalThis as any).Dustland || {};
+(globalThis as any).Dustland.openShop = openShop;
+(globalThis as any).Dustland.retroNpcArt = {
   isEnabled: () => retroNpcArtEnabled,
   setEnabled: setRetroNpcArt,
   getItemGlyph: () => getRetroItemSprite(),
   getLootGlyph: () => getRetroLootSprite(),
   getItemCacheGlyph: () => getRetroItemCacheSprite()
 };
-globalThis.Dustland.fogOfWar = {
+(globalThis as any).Dustland.fogOfWar = {
   isEnabled: () => fogOfWarEnabled,
   setEnabled: (value, opts) => setFogOfWar(value, opts),
   toggle: () => toggleFogOfWar()
 };
-globalThis.Dustland.font = {
+(globalThis as any).Dustland.font = {
   getScale: () => fontScale,
   setScale: (value, opts) => setFontScale(value, opts)
 };
@@ -3350,11 +3350,11 @@ function runTests(){
   const musicBtn=document.getElementById('musicToggle');
   if(musicBtn){
     const updateMusicBtn=()=>{
-      const enabled = !!globalThis.Dustland?.music?.isEnabled?.();
+      const enabled = !!(globalThis as any).Dustland?.music?.isEnabled?.();
       musicBtn.textContent = `Music: ${enabled ? 'On' : 'Off'}`;
     };
     musicBtn.onclick=()=>{
-      globalThis.Dustland?.music?.toggleEnabled?.();
+      (globalThis as any).Dustland?.music?.toggleEnabled?.();
       updateMusicBtn();
     };
     musicBus?.on?.('music:state', updateMusicBtn);
@@ -3420,7 +3420,7 @@ function runTests(){
       skinPreviewStatus.classList.toggle('is-error', !!isError);
     };
     const buildOverrides=(styleId)=>{
-      const manager=globalThis.Dustland?.skin;
+      const manager=(globalThis as any).Dustland?.skin;
       const stored=manager?.getGeneratedSkinConfig?.(styleId);
       const overrides={};
       if(stored && typeof stored==='object'){
@@ -3439,7 +3439,7 @@ function runTests(){
         updateSkinStatus('Enter a style ID to preview.', true);
         return;
       }
-      const manager=globalThis.Dustland?.skin;
+      const manager=(globalThis as any).Dustland?.skin;
       if(!manager?.loadGeneratedSkin){
         updateSkinStatus('Skin preview unavailable.', true);
         return;
@@ -3608,7 +3608,7 @@ function runTests(){
   }
 
   window.addEventListener('keydown',(e)=>{
-    const game = globalThis.Dustland || (globalThis.Dustland = {});
+    const game = (globalThis as any).Dustland || ((globalThis as any).Dustland = {});
     const lockUntil = game.inputLockUntil;
     if(typeof lockUntil === 'number' && lockUntil > Date.now()){
       const lockedKey = typeof game.inputLockKey === 'string' ? game.inputLockKey : null;

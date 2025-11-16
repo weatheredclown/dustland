@@ -12,6 +12,6 @@
       grudgeEl.style.color = g >= 3 ? '#c33' : '';
     }
   }
-  globalThis.Dustland = globalThis.Dustland ?? {};
-  globalThis.Dustland.updateTradeUI = updateTradeUI;
+  (globalThis as any).Dustland = (globalThis as any).Dustland ?? {};
+  (globalThis as any).Dustland.updateTradeUI = updateTradeUI;
 })();

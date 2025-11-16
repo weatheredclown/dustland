@@ -69,6 +69,6 @@ function isValueElement(el: HTMLElement): el is HTMLInputElement | HTMLTextAreaE
   });
 
   const api: DustlandUiApi = { show, hide, setText, setValue, remove };
-  dustlandNamespace.ui = api;
+  dustlandNamespace.ui = api as unknown as Record<string, unknown>;
   globalScope.UI = api;
 })();

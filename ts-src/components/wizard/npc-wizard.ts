@@ -13,7 +13,7 @@ interface NpcWizardState extends WizardState {
 (() => {
   const toSlug = (value: string): string => value.trim().toLowerCase().replace(/\s+/g, '_');
 
-  const dustlandNpcWizard = (globalThis.Dustland ??= {});
+  const dustlandNpcWizard = ((globalThis as any).Dustland ??= {});
   const wizardStepsNpc = (dustlandNpcWizard.WizardSteps ??= {});
   const { text, assetPicker, itemPicker, mapPlacement, confirm } = wizardStepsNpc;
 

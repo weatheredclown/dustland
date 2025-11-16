@@ -1,10 +1,10 @@
 (function(){
   // Using the cleaner helper functions from the 'codex' branch
   function ensureDustland(): DustlandNamespace {
-    if (!globalThis.Dustland) {
-      globalThis.Dustland = {};
+    if (!(globalThis as any).Dustland) {
+      (globalThis as any).Dustland = {};
     }
-    return globalThis.Dustland as DustlandNamespace;
+    return (globalThis as any).Dustland as DustlandNamespace;
   }
 
   function ensureWizardSteps(dustland: DustlandNamespace): WizardStepsRegistry {

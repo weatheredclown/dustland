@@ -85,6 +85,6 @@ const doorLinkerStep: WizardStepFactory = (
   };
 };
 
-const dustlandDoorLinker = (globalThis.Dustland ??= {});
+const dustlandDoorLinker = ((globalThis as any).Dustland ??= {});
 const wizardStepsDoorLinker = (dustlandDoorLinker.WizardSteps ??= {});
 wizardStepsDoorLinker.doorLinker = doorLinkerStep;

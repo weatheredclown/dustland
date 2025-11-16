@@ -1,6 +1,6 @@
 (function(){
-  if(!globalThis.Dustland) globalThis.Dustland = {};
-  const dustland = globalThis.Dustland;
+  if(!(globalThis as any).Dustland) (globalThis as any).Dustland = {};
+  const dustland = (globalThis as any).Dustland;
   const gs = dustland.gameState;
   const bus = dustland.eventBus || globalThis.EventBus;
   if(typeof gs?.setPersona !== 'function') return;

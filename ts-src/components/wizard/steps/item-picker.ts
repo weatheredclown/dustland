@@ -69,7 +69,7 @@ const itemPickerStep: WizardStepFactory = (
   };
 };
 
-const dustlandItemPicker = (globalThis.Dustland ??= {});
+const dustlandItemPicker = ((globalThis as any).Dustland ??= {});
 const wizardStepsItemPicker = (dustlandItemPicker.WizardSteps ??= {});
 wizardStepsItemPicker.itemPicker = itemPickerStep;
 

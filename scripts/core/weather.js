@@ -11,7 +11,8 @@
     function getWeather() {
         return current;
     }
-    if (!globalThis.Dustland)
-        globalThis.Dustland = {};
-    globalThis.Dustland.weather = { getWeather, setWeather };
+    const dustlandGlobals = globalThis;
+    if (!dustlandGlobals.Dustland)
+        dustlandGlobals.Dustland = {};
+    dustlandGlobals.Dustland.weather = { getWeather, setWeather };
 })();

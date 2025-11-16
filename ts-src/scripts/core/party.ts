@@ -52,7 +52,7 @@ const baseStats = (): StatMap => ({
 
 const xpCurve: number[] = [0,100,200,300,400,500,700,900,1100,1300,1500,1900,2300,2700,3100,3500,4300,5100,5900,6700];
 
-const eventBus: EventBusLike = globalThis.Dustland?.eventBus ?? globalThis.EventBus ?? { emit() {} };
+const eventBus: EventBusLike = (globalThis as any).Dustland?.eventBus ?? globalThis.EventBus ?? { emit() {} };
 
 const safeLog = (message: string, type?: string): void => {
   if(typeof log === 'function') log(message, type);
@@ -113,8 +113,8 @@ class Character implements PartyMember {
     this.cooldowns = {};
     this.guard = 0;
     this.statusEffects = [];
-    if(globalThis.Dustland?.status?.init){
-      globalThis.Dustland.status.init(this);
+    if((globalThis as any).Dustland?.status?.init){
+      (globalThis as any).Dustland.status.init(this);
     }
   }
   xpToNext(): number { return xpToNext(this.lvl); }
@@ -159,7 +159,7 @@ class Character implements PartyMember {
         }
       }
     }
-    const persona = globalThis.Dustland?.gameState?.getPersona?.(this.persona ?? null);
+    const persona = (globalThis as any).Dustland?.gameState?.getPersona?.(this.persona ?? null);
     if(persona && persona.mods){
       for(const stat in persona.mods){
         const value = persona.mods[stat];

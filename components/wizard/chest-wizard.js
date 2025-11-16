@@ -1,6 +1,7 @@
 (() => {
+    var _a;
     const toChestSlug = (value) => value.trim().toLowerCase().replace(/\s+/g, '_');
-    const dustlandChestWizard = (globalThis.Dustland ?? (globalThis.Dustland = {}));
+    const dustlandChestWizard = ((_a = globalThis).Dustland ?? (_a.Dustland = {}));
     const wizardStepsChest = (dustlandChestWizard.WizardSteps ?? (dustlandChestWizard.WizardSteps = {}));
     const { text, mapPlacement, confirm } = wizardStepsChest;
     if (!text || !mapPlacement || !confirm) {

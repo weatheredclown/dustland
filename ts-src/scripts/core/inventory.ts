@@ -1,7 +1,7 @@
 // ===== Inventory / equipment =====
 
 (function(){
-globalThis.Dustland = globalThis.Dustland || {};
+(globalThis as any).Dustland = (globalThis as any).Dustland || {};
 
 type EquipType = 'weapon' | 'armor' | 'trinket';
 
@@ -15,7 +15,7 @@ interface ItemDrop {
 }
 
 const inventoryEventBus: DustlandEventBus | undefined =
-  globalThis.Dustland?.eventBus ?? globalThis.EventBus;
+  (globalThis as any).Dustland?.eventBus ?? globalThis.EventBus;
 
 const emit = (event: string, payload?: unknown): void => {
   inventoryEventBus?.emit(event, payload);
@@ -451,7 +451,7 @@ function leaderHasLootVacuum(){
 
 function loadStarterItems(){
   try {
-    const items = globalThis.Dustland && globalThis.Dustland.starterItems;
+    const items = (globalThis as any).Dustland && (globalThis as any).Dustland.starterItems;
     if (Array.isArray(items)) {
       items.forEach(it => addToInv(it));
     }
@@ -953,8 +953,8 @@ function useItem(invIndex){
   if(it.use.type==='boost'){
     const who = (partyMembers[selectedMember]||partyMembers[0]);
     if(!who){ log('No party member to boost.'); return false; }
-    const buffList = globalThis.Dustland?.movement?.buffs;
-    globalThis.Dustland?.effects?.apply?.([{ effect:'modStat', stat: it.use.stat, delta: it.use.amount, duration: it.use.duration }], { actor: who, buffs: buffList });
+    const buffList = (globalThis as any).Dustland?.movement?.buffs;
+    (globalThis as any).Dustland?.effects?.apply?.([{ effect:'modStat', stat: it.use.stat, delta: it.use.amount, duration: it.use.duration }], { actor: who, buffs: buffList });
     const msg = it.use.text || `${who.name} feels different.`;
     log(msg);
     if(typeof toast==='function') toast(msg);
@@ -1027,7 +1027,7 @@ function useItem(invIndex){
     }
   }
   if (effectList.length) {
-    globalThis.Dustland?.effects?.apply?.(effectList, { player: playerState, party: partyMembers, item: it });
+    (globalThis as any).Dustland?.effects?.apply?.(effectList, { player: playerState, party: partyMembers, item: it });
     maybeConsumeItem(it, invIndex);
     const msg = it.use.text || `Used ${it.name}`;
     log(msg);
@@ -1058,6 +1058,6 @@ function useItem(invIndex){
 }
 
 const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache, tryAutoPickup, loadStarterItems, canEquip, describeRequiredRoles, getEquipMinLevel, getEquipRestrictions, getCampChest, isCampChestUnlocked, unlockCampChest, storeCampChestItem, withdrawCampChestItem, leaderHasLootVacuum, isLootVacuumItem };
-globalThis.Dustland.inventory = inventoryExports;
+(globalThis as any).Dustland.inventory = inventoryExports;
 Object.assign(globalThis, inventoryExports);
 })();
