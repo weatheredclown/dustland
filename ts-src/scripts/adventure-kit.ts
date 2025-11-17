@@ -5561,12 +5561,7 @@ function renderProblems(issues){
   }
 }
 
-function saveModule() {
-  const issues = validateSpawns() || [];
-  if(issues.length){
-    renderProblems(issues);
-    if(issues.some(i=>!i.warn)) return;
-  }
+function exportModulePayload() {
   moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
   if (moduleData.personas) {
     const used = new Set((moduleData.items || []).map(it => it.persona).filter(Boolean));
@@ -5594,7 +5589,7 @@ function saveModule() {
     const { map, ...rest } = e;
     (enc[map] ||= []).push(rest);
   });
-  const base = {};
+  const base = {} as Record<string, unknown>;
   (moduleData._origKeys || Object.keys(moduleData)).forEach(k => {
     if (['buildings', 'interiors', 'encounters', 'world', '_origKeys'].includes(k)) return;
     if (k === 'props') {
@@ -5612,6 +5607,17 @@ function saveModule() {
   if (moduleData._origKeys?.includes('buildings') || bldgs.length) base.buildings = bldgs;
   if (moduleData._origKeys?.includes('interiors') || ints.length) base.interiors = ints;
   const data = base;
+  return { data };
+}
+globalThis.exportModulePayload = exportModulePayload;
+
+function saveModule() {
+  const issues = validateSpawns() || [];
+  if(issues.length){
+    renderProblems(issues);
+    if(issues.some(i=>!i.warn)) return;
+  }
+  const { data } = exportModulePayload();
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);

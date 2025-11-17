@@ -19,6 +19,9 @@
   },
   "author": "",
   "license": "MIT",
+  "dependencies": {
+    "firebase": "^11.0.1"
+  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.16.1",
     "@typescript-eslint/parser": "^7.16.1",
