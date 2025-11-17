@@ -1333,7 +1333,7 @@ interface ItemGeneratorRange {
   function mapWH(map: string): { W: number; H: number } | null | undefined;
   function centerCamera(x: number, y: number, map?: string): void;
   function render(gameState?: unknown, dt?: unknown): void;
-}
+
   interface Window {
     DUSTLAND_FEATURES?: DustlandFeatureFlags | null;
     DUSTLAND_FIREBASE?: Record<string, unknown> | null;
@@ -1347,3 +1347,4 @@ interface ItemGeneratorRange {
   }
 
   var Dustland: DustlandNamespace | undefined;
+}
