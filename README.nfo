@@ -31,6 +31,35 @@ _______________________________________________________________________________
   - Play modules: dustland.html?ack-player=1 (load module URLs or local JSON)
   - Tip: use a modern Chromium, Firefox, or Safari
 
+[ GETTING STARTED IN-GAME ]
+  - Booting lands you on the Character Creator.
+      * Click "Start Now" to dive in with fewer than three drifters.
+      * Click "Load Game" to restore an existing save before finishing setup.
+  - In the top toolbar:
+      * "Save" stores your run (localStorage only; no sign-up required).
+      * "Load" pulls the stored save into the current session.
+      * "Reset" clears the current party and returns to creation.
+  - During play, use the tabs along the right edge:
+      * "Party" radio buttons switch the active leader for checks & XP.
+      * "Inventory" lets you click items to equip/unequip or read details.
+      * "Quests" tracks active objectives and completed jobs.
+  - The on-canvas buttons along the lower edge mirror keyboard controls:
+      * Arrow cluster moves, "E" interacts, "Wait" passes a turn.
+      * Tap the speaker icon to toggle audio.
+      * Add `?touch=1` to the URL for persistent touch controls on mobile.
+  - No accounts, cloud saves, or external services exist—everything stays local.
+
+[ BUILDING YOUR OWN MODULE ]
+  - Open adventure-kit.html to launch the Adventure Construction Kit (ACK).
+      * "New Module" starts from a blank template; "Load" imports JSON.
+      * The world editor offers brush, stamp, and noise tools for terrain.
+      * Interior and building editors appear via the tabs under the canvas.
+  - Click map tiles or palette buttons to paint terrain, items, NPCs, or doors.
+  - Use the right-hand panels to edit stats, dialog, loot tables, and events.
+  - Playtest anytime with the top "Playtest" button (or press Ctrl+P).
+  - Save with the disk icon or Ctrl+S; this downloads a JSON file locally.
+  - Load the module in-game with dustland.html?ack-player=1 and selecting the file.
+
 [ CONTROLS ]
   Movement .......... WASD / Arrow Keys
   Interact/Take/Wait ..... E / Space / T (space waits if nothing nearby)
