@@ -1,5 +1,3 @@
-function seedWorldContent() {}
-
 type CourierDrop = {
   id?: string;
   name?: string;
