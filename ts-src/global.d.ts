@@ -1,8 +1,3 @@
-import type { DustlandFeatureFlags } from './scripts/ack/server-mode-types.js';
-
-export {};
-
-declare global {
   type WizardPrimitive = string | number | boolean | null | undefined;
   type WizardStateValue = WizardPrimitive | WizardState | WizardStateValue[];
 
@@ -102,18 +97,24 @@ declare global {
   interface DustlandSkinApi {
     applySkin: (input: string | DustlandSkin | null | undefined) => void;
     registerSkin: (skin: DustlandSkin | null | undefined) => DustlandSkin | null;
-    registerGeneratedSkin: (name: string, input?: Record<string, unknown> | null) => Record<string, unknown> | null;
-    loadGeneratedSkin: (name: string, input?: Record<string, unknown> | null) => DustlandSkin | null;
+    registerGeneratedSkin: (
+      name: string,
+      input?: GeneratedSkinOverrides | null
+    ) => GeneratedSkinConfig | null;
+    loadGeneratedSkin: (
+      name: string,
+      input?: GeneratedSkinOverrides | null
+    ) => DustlandSkin | null;
     listGeneratedSkins: () => string[];
-    getGeneratedSkinConfig: (name: string) => Record<string, unknown> | null;
+    getGeneratedSkinConfig: (name: string) => GeneratedSkinConfig | null;
     getRegisteredSkin: (id: string) => DustlandSkin | null;
     getCurrentSkin: () => DustlandSkin | null;
-    getTileSprite: (tileId: string | number, context?: Record<string, unknown>) => unknown;
-    getItemSprite: (item: Record<string, unknown> | null | undefined, context?: Record<string, unknown>) => unknown;
-    getEntitySprite: (entity: Record<string, unknown> | null | undefined) => unknown;
-    getPlayerSprite: (playerInfo: Record<string, unknown> | null | undefined, context?: Record<string, unknown>) => unknown;
-    getRemotePartySprite: (info: Record<string, unknown> | null | undefined) => unknown;
-    getMapFrame: () => DustlandSkinFrameState | null;
+    getTileSprite: (tileId: string | number, context?: TileContext) => Sprite | null;
+    getItemSprite: (item: ItemLike | null | undefined, context?: ItemSpriteContext) => Sprite | null;
+    getEntitySprite: (entity: EntityLike | null | undefined) => Sprite | null;
+    getPlayerSprite: (playerInfo: PlayerInfo | null | undefined, context?: PlayerSpriteContext) => Sprite | null;
+    getRemotePartySprite: (info: RemotePartyInfo | null | undefined) => Sprite | null;
+    getMapFrame: () => SkinMapFrameState | null;
     onChange: (fn: (skin: DustlandSkin | null) => void) => () => void;
     offChange: (fn: (skin: DustlandSkin | null) => void) => void;
     reset: () => void;
@@ -202,6 +203,7 @@ declare global {
     setText: (id: string, text: string) => void;
     setValue: (id: string, value: string) => void;
     remove: (id: string) => void;
+    createDial?: (options?: DialOptions) => DialWidget;
   }
 
   interface DustlandZoneEffect {
@@ -1335,7 +1337,14 @@ interface ItemGeneratorRange {
   function render(gameState?: unknown, dt?: unknown): void;
 
   interface Window {
-    DUSTLAND_FEATURES?: DustlandFeatureFlags | null;
+    DUSTLAND_FEATURES?: {
+      multiplayer?: boolean;
+      llm?: {
+        npc?: boolean;
+        item?: boolean;
+        persona?: boolean;
+      }
+    } | null;
     DUSTLAND_FIREBASE?: Record<string, unknown> | null;
     Dustland?: DustlandNamespace;
     hasItem?: (...args: unknown[]) => boolean;
@@ -1347,4 +1356,3 @@ interface ItemGeneratorRange {
   }
 
   var Dustland: DustlandNamespace | undefined;
-}

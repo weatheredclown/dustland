@@ -83,10 +83,6 @@ interface Sprite {
 
 type SlotStyles = Record<string, UnknownRecord>;
 
-interface DustlandSkinUi extends Record<string, UnknownRecord | undefined> {
-  vars?: Record<string, CssVarValue>;
-  slots?: SlotStyles | null;
-}
 
 interface SkinMapFrame {
   color?: unknown;
@@ -134,16 +130,6 @@ interface SkinTilesConfig extends UnknownRecord {
   tileSize?: number;
 }
 
-interface DustlandSkin extends Record<string, unknown> {
-  id: string;
-  label: string;
-  cssVars?: Record<string, CssVarValue>;
-  ui?: DustlandSkinUi | null;
-  tiles?: SkinTilesConfig | null;
-  icons?: SkinIconsConfig | null;
-  map?: SkinMapConfig | null;
-  meta?: UnknownRecord | null;
-}
 
 type GeneratedSkinSlots = Record<string, unknown> | string[] | null;
 
@@ -258,31 +244,6 @@ interface SkinManagerState {
   mapFrame: SkinMapFrameState | null;
 }
 
-interface DustlandSkinApi {
-  applySkin: (input: string | DustlandSkin | null | undefined) => void;
-  registerSkin: (skin: DustlandSkin | null | undefined) => DustlandSkin | null;
-  registerGeneratedSkin: (
-    name: string,
-    input?: GeneratedSkinOverrides | null
-  ) => GeneratedSkinConfig | null;
-  loadGeneratedSkin: (
-    name: string,
-    input?: GeneratedSkinOverrides | null
-  ) => DustlandSkin | null;
-  listGeneratedSkins: () => string[];
-  getGeneratedSkinConfig: (name: string) => GeneratedSkinConfig | null;
-  getRegisteredSkin: (id: string) => DustlandSkin | null;
-  getCurrentSkin: () => DustlandSkin | null;
-  getTileSprite: (tileId: string | number, context?: TileContext) => Sprite | null;
-  getItemSprite: (item: ItemLike | null | undefined, context?: ItemSpriteContext) => Sprite | null;
-  getEntitySprite: (entity: EntityLike | null | undefined) => Sprite | null;
-  getPlayerSprite: (playerInfo: PlayerInfo | null | undefined, context?: PlayerSpriteContext) => Sprite | null;
-  getRemotePartySprite: (info: RemotePartyInfo | null | undefined) => Sprite | null;
-  getMapFrame: () => SkinMapFrameState | null;
-  onChange: (fn: (skin: DustlandSkin | null) => void) => () => void;
-  offChange: (fn: (skin: DustlandSkin | null) => void) => void;
-  reset: () => void;
-}
 
 (function(){
   const UI_VAR_MAP = {

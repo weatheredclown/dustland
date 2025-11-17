@@ -10,11 +10,6 @@ interface DialWidget {
   set(value: number): void;
 }
 
-type DustlandUiNamespace = Record<string, unknown> & { createDial?: (options?: DialOptions) => DialWidget };
-
-interface DustlandNamespace {
-  ui?: DustlandUiNamespace;
-}
 
 function createDial(options: DialOptions = {}): DialWidget {
   const opts = options;
@@ -62,7 +57,6 @@ function createDial(options: DialOptions = {}): DialWidget {
   return { el: dial, set };
 }
 
-const dustland = (globalThis.Dustland ??= {} as DustlandNamespace);
-const uiNamespace = (dustland.ui as DustlandUiNamespace | undefined) ??
-  (dustland.ui = {} as DustlandUiNamespace);
+const dustland = (globalThis.Dustland ??= {});
+const uiNamespace = (dustland.ui = dustland.ui ?? {});
 uiNamespace.createDial = createDial;
