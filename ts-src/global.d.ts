@@ -1101,7 +1101,7 @@ interface ItemGeneratorRange {
 
   function registerItem<T>(item: T): T;
 
-  interface GlobalThis {
+  interface globalThis {
     Dustland?: DustlandNamespace;
     DustlandSkin?: DustlandSkinApi;
     loadSkin?: (name: string, options?: Record<string, unknown> | null) => DustlandSkin | null;
@@ -1341,7 +1341,7 @@ interface ItemGeneratorRange {
     hasItem?: (...args: unknown[]) => boolean;
   }
 
-  interface GlobalThis {
+  interface globalThis {
     Dustland?: DustlandNamespace;
     hasItem?: (...args: unknown[]) => boolean;
   }

@@ -6,7 +6,7 @@ declare global {
     [key: string]: unknown;
   }
 
-  interface GlobalThis {
+  interface globalThis {
     [key: string]: unknown;
     Dustland?: DustlandNamespace;
     EventBus?: unknown;
