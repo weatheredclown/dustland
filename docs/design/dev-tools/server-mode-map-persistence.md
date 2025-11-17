@@ -74,6 +74,7 @@ A minimal HTTPS callable function `resolveUserByEmail` ensures we never expose f
 ## Deployment Story
 - GitHub Pages remains our host. We add `firebase-config.json` to the `weatheredclown.github.io` repo, excluded from the main game bundle so local copies stay config-free.
 - For contributors testing locally, we document how to drop a config file next to `dustland.html` or set `DUSTLAND_FIREBASE` manually in the dev console.
+- `firebase-config.json` can be a raw Firebase config export (apiKey, appId, projectId, authDomain) or a wrapper object with `firebase` and optional `features` fields. When present, the hosted bootstrap sets `window.DUSTLAND_FIREBASE` and defaults `DUSTLAND_FEATURES.serverMode` to `true` unless explicitly overridden.
 - The same static assets serve offline because Firebase scripts only load when config exists. No config → no auth prompts, no Firestore calls.
 
 ## Rollout Plan

@@ -58,7 +58,7 @@ export function detectServerMode(globalObject: DustlandWindow = window as Dustla
   return { status: 'firebase-ready', config: firebaseConfig, features };
 }
 
-function isFirebaseConfigValid(config: DustlandFirebaseBootstrap): boolean {
+export function isFirebaseConfigValid(config: DustlandFirebaseBootstrap): boolean {
   if (!config.projectId) {
     return false;
   }

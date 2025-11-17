@@ -30,7 +30,7 @@ export function detectServerMode(globalObject = window) {
     }
     return { status: 'firebase-ready', config: firebaseConfig, features };
 }
-function isFirebaseConfigValid(config) {
+export function isFirebaseConfigValid(config) {
     if (!config.projectId) {
         return false;
     }
