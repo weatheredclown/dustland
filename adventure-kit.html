@@ -942,6 +942,9 @@
       <button class="btn" type="button" aria-haspopup="dialog">☁ Cloud</button>
     </div>
     <button id="quickSave" class="btn" type="button" title="Save module (Ctrl+S)">💾 Save</button>
+    <button id="cloudSave" class="btn" type="button" title="Save to the cloud" hidden>☁ Save</button>
+    <button id="cloudPublish" class="btn" type="button" title="Publish for everyone" hidden>📢 Publish</button>
+    <button id="cloudShare" class="btn" type="button" title="Share with collaborators" hidden>🔗 Share</button>
     <button id="playtestFloat" class="btn btn--primary" type="button" title="Playtest module (Ctrl+P)">▶ Playtest</button>
   </div>
   <script defer src="./scripts/event-bus.js"></script>
@@ -974,6 +977,7 @@
     <script defer src="./scripts/supporting/wizard-building.js"></script>
     <script defer src="./scripts/procedural-map.js"></script>
     <script type="module" src="./scripts/ack/server-mode-controls.js"></script>
+    <script type="module" src="./scripts/ack/cloud-actions.js"></script>
     <script defer src="./scripts/adventure-kit.js"></script>
   </body>
 
