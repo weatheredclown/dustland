@@ -7,6 +7,7 @@ declare global {
   }
 
   interface GlobalThis {
+    [key: string]: unknown;
     Dustland?: DustlandNamespace;
     EventBus?: unknown;
     log?: (...args: unknown[]) => unknown;
@@ -15,6 +16,14 @@ declare global {
     clampMidiToScale?: (...args: unknown[]) => unknown;
     TILE?: unknown;
   }
+
+  // Provide loose globals so non-module scripts can access shared helpers
+  var Dustland: DustlandNamespace | undefined;
+  var startGame: ((...args: unknown[]) => unknown) | undefined;
+  var log: ((...args: unknown[]) => unknown) | undefined;
+  var hasItem: ((...args: unknown[]) => boolean) | undefined;
+  var applyModule: ((...args: unknown[]) => void) | undefined;
+  var clampMidiToScale: ((...args: unknown[]) => unknown) | undefined;
 
   type DustlandProfile = Record<string, unknown>;
   type ProfiledEntity = Record<string, unknown>;
