@@ -1,5 +1,16 @@
-// @ts-nocheck
-function seedWorldContent() {}
+type PitBasModule = DustlandModuleInstance & { listing?: string };
+
+declare let PIT_BAS_MODULE: PitBasModule;
+declare const WORLD_H: number;
+declare const log: (msg: string) => void;
+declare const setMap: (map: string, label?: string) => void;
+declare const setPartyPos: (x: number, y: number) => void;
+declare const hasItem: (id: string) => boolean;
+declare const openCombat: (enemies: { id?: string; name: string; hp: number; ATK: number; DEF: number }[]) => void;
+declare const applyModule: (module: PitBasModule) => void;
+declare let startGame: () => void;
+
+function seedWorldContent(): void {}
 
 const DATA = `
 {
@@ -1614,7 +1625,7 @@ const DATA = `
 }
 `;
 
-function postLoad(module) {
+function postLoad(module: PitBasModule): void {
   log('You land in a shadowy cavern.');
   module.effects = module.effects || {};
   module.effects.lightningZap = () => {
