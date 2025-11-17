@@ -30,6 +30,28 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm ci
+      - name: Create Firebase config
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGE_SENDER_ID: ${{ secrets.FIREBASE_MESSAGE_SENDER_ID }}
+          FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+        run: |
+          mkdir -p scripts/hosting
+          cat > scripts/hosting/firebase-config.json <<'EOF'
+          {
+            "apiKey": "${FIREBASE_API_KEY}",
+            "authDomain": "${FIREBASE_AUTH_DOMAIN}",
+            "projectId": "${FIREBASE_PROJECT_ID}",
+            "storageBucket": "${FIREBASE_STORAGE_BUCKET}",
+            "messagingSenderId": "${FIREBASE_MESSAGE_SENDER_ID}",
+            "appId": "${FIREBASE_APP_ID}",
+            "measurementId": "${FIREBASE_MEASUREMENT_ID}"
+          }
+          EOF
       - name: Bump version
         run: node scripts/supporting/version-bump.js
       - name: Setup Pages
