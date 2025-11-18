@@ -57,7 +57,7 @@ type GlobalScope = typeof globalThis & {
   const globalScope = globalThis as GlobalScope;
   const dl = (globalScope.Dustland ||= {});
   const bus = dl.eventBus ?? globalScope.EventBus;
-  const bunkers = dl.bunkers ?? (dl.bunkers = []);
+  const bunkers: FastTravelBunker[] = dl.bunkers ?? (dl.bunkers = [] as FastTravelBunker[]);
   const BASE_COST = 1;
   const FUEL_PER_TILE = 1;
   const CAMP_NODE_ID = 'camp';

@@ -427,7 +427,9 @@ function resolveCheck(
   const leader = dialogGlobals.party?.leader?.();
   const fallbackMember = dialogGlobals.party?.[0];
   const effectiveActor =
-    actorParam ?? (leader as PartyMember | undefined) ?? (fallbackMember as PartyMember | undefined);
+    actorParam ??
+    (leader as unknown as PartyMember | undefined) ??
+    (fallbackMember as unknown as PartyMember | undefined);
   if (!effectiveActor) {
     return { success: true, roll: 0, dc: 0, stat };
   }

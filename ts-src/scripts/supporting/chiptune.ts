@@ -1,5 +1,3 @@
-declare const Tone: any;
-
 type ChiptuneEventBus = {
   emit?(event: string, ...args: any[]): void;
   on?(event: string, handler: (...args: any[]) => void): void;
@@ -464,7 +462,12 @@ chiptuneGlobal.Dustland = chiptuneGlobal.Dustland || {};
   function playLeadNote(midi: number, t: number, dur: number, vel?: number){
     if(!audioCtx || !masterGain) return;
     if(typeof clampMidiToScaleFn === 'function'){
-      try { midi = clampMidiToScaleFn(midi, music.key, music.scale); }
+      try {
+        const clamped = clampMidiToScaleFn(midi, music.key, music.scale);
+        if (typeof clamped === 'number') {
+          midi = clamped;
+        }
+      }
       catch (err) { void err; }
     }
     if(tone.enabled && tone.ready && tone.synths){

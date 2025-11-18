@@ -39,17 +39,17 @@ type DustlandModuleProps = {
   fastTravelModules?: ModuleInfo[];
 } & Record<string, unknown>;
 
-type DustlandEventBus = {
+type WorldMapEventBus = {
   emit?: (event: string, payload?: unknown) => void;
   on?: (event: string, listener: (...args: any[]) => void) => void;
   off?: (event: string, listener: (...args: any[]) => void) => void;
 };
 
-type DustlandApi = {
+type DustlandApi = DustlandNamespace & {
   loadedModules?: Record<string, ModuleInfo>;
   moduleProps?: Record<string, DustlandModuleProps>;
   fastTravel?: DustlandFastTravel;
-  eventBus?: DustlandEventBus;
+  eventBus?: WorldMapEventBus;
   bunkers?: BunkerEntry[];
   currentModule?: string;
   worldMap?: {
