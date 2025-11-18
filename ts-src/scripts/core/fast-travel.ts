@@ -86,13 +86,14 @@ type GlobalScope = typeof globalThis & {
 
   function normalize(entry: FastTravelBunkerInput | null | undefined){
     if(!entry) return null;
-    const normalized: FastTravelBunker = { ...entry } as FastTravelBunker;
-    if (normalized.id == null) {
+    const { id, ...rest } = entry;
+    if (id == null) {
       return null;
     }
-    if (typeof normalized.id !== 'string') {
-      normalized.id = String(normalized.id);
-    }
+    const normalized: FastTravelBunker = {
+      ...rest,
+      id: String(id),
+    };
     if(!normalized.network){
       const net = networkFor(normalized.module);
       if(net) normalized.network = net;
