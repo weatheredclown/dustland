@@ -90,7 +90,6 @@ type NpcGlobals = typeof globalThis & {
 };
 
 const npcGlobals = globalThis as NpcGlobals;
-const Dustland = npcGlobals.Dustland;
 const NPC_COLOR = '#9ef7a0';
 const OBJECT_COLOR = '#225a20';
 
