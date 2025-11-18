@@ -2567,8 +2567,7 @@ function setupNpcSections() {
 function updateNpcCoordinateState() {
   const idVal = document.getElementById('npcId')?.value.trim();
   const nameVal = document.getElementById('npcName')?.value.trim();
-  const titleVal = document.getElementById('npcTitle')?.value.trim();
-  const ready = !!(idVal && nameVal && titleVal);
+  const ready = !!(idVal && nameVal);
   const xInput = document.getElementById('npcX');
   const yInput = document.getElementById('npcY');
   const pickBtn = document.getElementById('npcPick');
@@ -2599,7 +2598,6 @@ function validateNpcForm(options = {}) {
   if (!idEl || !nameEl || !mapEl || !xEl || !yEl) return { valid: false, errors: ['Missing form fields'] };
   const id = idEl.value.trim();
   const name = nameEl.value.trim();
-  const title = (titleEl?.value || '').trim();
   const map = mapEl.value.trim();
   const x = Number.parseInt(xEl.value, 10);
   const y = Number.parseInt(yEl.value, 10);
@@ -2609,13 +2607,12 @@ function validateNpcForm(options = {}) {
   const duplicate = id && moduleData.npcs.some((npc, idx) => idx !== editNPCIdx && npc?.id === id);
   if (duplicate) errors.push('That ID already exists. Choose another one.');
   if (!name) errors.push('Enter a name for the NPC.');
-  if (!title) errors.push('Add a title so the NPC introduction is clear.');
   if (!map) errors.push('Choose a map for this NPC.');
   const hasCoords = Number.isFinite(x) && Number.isFinite(y);
   if (!hasCoords) errors.push('Set map coordinates for the NPC.');
   setNpcFieldInvalid(idEl, !id || duplicate);
   setNpcFieldInvalid(nameEl, !name);
-  setNpcFieldInvalid(titleEl, !title);
+  setNpcFieldInvalid(titleEl, false);
   setNpcFieldInvalid(mapEl, !map);
   setNpcFieldInvalid(xEl, !hasCoords);
   setNpcFieldInvalid(yEl, !hasCoords);
@@ -2642,11 +2639,9 @@ function beginNpcCoordinateSelection() {
   const titleEl = document.getElementById('npcTitle');
   const id = idEl?.value.trim();
   const name = nameEl?.value.trim();
-  const title = titleEl?.value.trim();
   const missing = [];
   if (!id) missing.push({ label: 'ID', el: idEl });
   if (!name) missing.push({ label: 'Name', el: nameEl });
-  if (!title) missing.push({ label: 'Title', el: titleEl });
   if (missing.length) {
     const labels = missing.map(m => m.label).join(', ');
     setNpcNotice(`Enter ${labels} before selecting a map location.`, 'error');
