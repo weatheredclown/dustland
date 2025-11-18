@@ -60,12 +60,12 @@
             return cloudRepoPromise;
         cloudRepoPromise = (async () => {
             try {
-                const { detectServerMode } = await import('./scripts/ack/server-mode.js');
+                const { detectServerMode } = await import('./ack/server-mode.js');
                 const bootstrap = detectServerMode();
                 if (bootstrap.status !== 'firebase-ready') {
                     return null;
                 }
-                const { FirestoreModuleRepository } = await import('./scripts/ack/module-repository.js');
+                const { FirestoreModuleRepository } = await import('./ack/module-repository.js');
                 const repo = new FirestoreModuleRepository();
                 await repo.init({ status: 'authenticated', user: null, error: null, bootstrap });
                 return repo;
