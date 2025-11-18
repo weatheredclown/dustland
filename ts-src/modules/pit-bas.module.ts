@@ -1,6 +1,9 @@
 type PitBasModule = DustlandModuleInstance & { listing?: string };
 
-const pitBasGlobals = globalThis as typeof globalThis & { PIT_BAS_MODULE?: PitBasModule };
+const pitBasGlobals = globalThis as typeof globalThis & {
+  PIT_BAS_MODULE?: PitBasModule;
+  startGame?: () => void;
+};
 
 pitBasGlobals.seedWorldContent = pitBasGlobals.seedWorldContent ?? (() => {});
 
@@ -1617,7 +1620,7 @@ const PIT_BAS_DATA = `
 }
 `;
 
-function postLoad(module: PitBasModule): void {
+function pitBasPostLoad(module: PitBasModule): void {
   log('You land in a shadowy cavern.');
   module.effects = module.effects || {};
   module.effects.lightningZap = () => {
@@ -1649,7 +1652,8 @@ function postLoad(module: PitBasModule): void {
 }
 
 pitBasGlobals.PIT_BAS_MODULE = JSON.parse(PIT_BAS_DATA);
-pitBasGlobals.PIT_BAS_MODULE.listing = `
+const pitBasModule = pitBasGlobals.PIT_BAS_MODULE;
+pitBasModule.listing = `
 MCBDT0xPUiAxNTogQ0xTCjEgS0VZIE9GRjogQkVHSU4gPSAxOiBHT1NVQiAzODAwMAoyIElOUFVUICJX
 SEFUIElTIFlPVVIgTkFNRT8gIiwgTUFNRSQ6IEdPU1VCIDM5MDAwCjMgQ0xTIDogSUYgTUFNRSQgPSAi
 QlJJQU4gR0FMTEVUVEEiIFRIRU4gR09TVUIgNDIwMDAKNCBJTlBVVCAiV09VTEQgWU9VIExJS0UgSU5T
@@ -2840,12 +2844,12 @@ IEVSUk9SIElOIFRIRSBQUk9HUkFNISI6IEZPUiBYID0gMSBUTyAxMDAwMDogTkVYVCBYOiBHT1RPIDYw
 MAo2MDAwMCBGT1IgWCA9IDEgVE8gMzEKNjAwMTAgQ09MT1IgWAo2MDAxNSBQUklOVCBYOwo2MDAyMCBO
 RVhUIFgKCg==
 `;
-globalThis.PIT_BAS_MODULE.postLoad = postLoad;
+pitBasModule.postLoad = pitBasPostLoad;
 
-startGame = function () {
-  PIT_BAS_MODULE.postLoad?.(PIT_BAS_MODULE);
-  applyModule(PIT_BAS_MODULE);
-  const s = PIT_BAS_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+pitBasGlobals.startGame = function pitBasStartGame() {
+  pitBasModule.postLoad?.(pitBasModule);
+  applyModule(pitBasModule);
+  const s = pitBasModule.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   setMap(s.map, s.map === 'world' ? 'Wastes' : undefined);
   setPartyPos(s.x, s.y);
 };

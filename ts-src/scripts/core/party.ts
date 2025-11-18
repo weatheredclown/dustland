@@ -113,9 +113,8 @@ class Character implements PartyMember {
     this.cooldowns = {};
     this.guard = 0;
     this.statusEffects = [];
-    if(globalThis.Dustland?.status?.init){
-      globalThis.Dustland.status.init(this);
-    }
+    const statusInit = globalThis.Dustland?.status?.init as ((member: any) => void) | undefined;
+    statusInit?.(this);
   }
   xpToNext(): number { return xpToNext(this.lvl); }
   awardXP(amt: number): void {

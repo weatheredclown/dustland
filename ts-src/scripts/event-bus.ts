@@ -6,15 +6,21 @@ type EventHandler<E extends EventName = EventName> = (
   payload: DustlandEventPayloads[E]
 ) => void;
 
-type DustlandGlobal = {
-  eventBus?: DustlandEventBus;
+type EventBusApi = {
+  on<E extends EventName>(event: E, handler: EventHandler<E>): void;
+  off<E extends EventName>(event: E, handler: EventHandler<E>): void;
+  emit<E extends EventName>(event: E, payload?: DustlandEventPayloads[E]): void;
+};
+
+type DustlandGlobal = DustlandNamespace & {
+  eventBus?: EventBusApi;
   [key: string]: unknown;
 };
 
 (function(){
   const globalScope = globalThis as typeof globalThis & {
     Dustland?: DustlandGlobal;
-    EventBus?: DustlandEventBus;
+    EventBus?: EventBusApi;
   };
 
   const dustlandNamespace = (globalScope.Dustland ?? {}) as DustlandGlobal;
@@ -39,7 +45,7 @@ type DustlandGlobal = {
     });
   }
 
-  const bus: DustlandEventBus = { on, off, emit };
+  const bus: EventBusApi = { on, off, emit };
   // Expose under Dustland namespace and keep a legacy shim
   dustlandNamespace.eventBus = bus;
   globalScope.EventBus = bus;

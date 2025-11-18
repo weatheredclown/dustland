@@ -219,10 +219,13 @@ class NpcEntity implements DustlandNpc {
         sellNode.text = items.length ? 'What are you selling?' : 'Nothing to sell.';
         items.push({ label: '(Back)', to: 'start' });
         sellNode.choices = items;
-      } else if (this.shop && node === 'buy') {
-        npcGlobals.closeDialog?.();
-        Dustland?.openShop?.(this);
-        return;
+        } else if (this.shop && node === 'buy') {
+          npcGlobals.closeDialog?.();
+          const openShop = npcGlobals.Dustland?.openShop;
+          if (typeof openShop === 'function') {
+            openShop(this);
+          }
+          return;
       } else if (this.workbench && node === 'start') {
         npcGlobals.closeDialog?.();
         Dustland?.openWorkbench?.();

@@ -179,7 +179,13 @@ function bootstrapGlobals(w, seed) {
   Math.random = rng;
 
   const listeners = new Map<DustlandEventName, Set<DustlandEventHandler>>();
-  const bus: DustlandEventBus = {
+  type AdrenalineEventBus = {
+    on: (event: DustlandEventName, handler: DustlandEventHandler) => void;
+    off: (event: DustlandEventName, handler: DustlandEventHandler) => void;
+    emit: <E extends DustlandEventName>(event: E, payload?: DustlandEventPayloads[E]) => void;
+  };
+
+  const bus: AdrenalineEventBus = {
     on(event, handler) {
       if (!listeners.has(event)) listeners.set(event, new Set());
       listeners.get(event)?.add(handler as DustlandEventHandler);
@@ -203,8 +209,8 @@ function bootstrapGlobals(w, seed) {
     }
   };
 
-  adrenalineGlobal.EventBus = bus;
-  adrenalineGlobal.Dustland = { eventBus: bus, combatTelemetry: [] };
+    adrenalineGlobal.EventBus = bus;
+    adrenalineGlobal.Dustland = { eventBus: bus, combatTelemetry: [] };
   adrenalineGlobal.updateHUD = () => {};
   adrenalineGlobal.renderParty = () => {};
   adrenalineGlobal.renderWorld = () => {};
