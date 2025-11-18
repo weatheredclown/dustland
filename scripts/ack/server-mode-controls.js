@@ -9,14 +9,21 @@ function initServerModeControls() {
     if (!statusEl || !button) {
         return;
     }
+    const session = ServerSession.get();
+    let latestSnapshot = session.getSnapshot();
     button.addEventListener('click', () => {
         if (button.disabled) {
             return;
         }
-        window.alert?.('Cloud save management is still under construction. Hang tight while we wire it up!');
+        if (latestSnapshot.status === 'authenticated') {
+            void session.signOut();
+        }
+        else {
+            void session.signIn();
+        }
     });
-    const session = ServerSession.get();
     session.subscribe(snapshot => {
+        latestSnapshot = snapshot;
         applySnapshot(snapshot, container, statusEl, button);
     });
 }
@@ -37,10 +44,10 @@ function describeSnapshot(snapshot) {
     switch (snapshot.status) {
         case 'idle':
             return {
-                message: 'Cloud saves preview is warming up.',
-                buttonLabel: '☁ Cloud',
+                message: 'Sign in to manage cloud saves.',
+                buttonLabel: '☁ Sign in',
                 buttonDisabled: false,
-                buttonTooltip: 'Preview build – features coming soon.',
+                buttonTooltip: 'Use your Google account to sync modules.',
             };
         case 'initializing':
             return {
@@ -60,9 +67,9 @@ function describeSnapshot(snapshot) {
             const name = formatUserName(snapshot);
             return {
                 message: `Signed in as ${name}.`,
-                buttonLabel: '☁ Cloud',
+                buttonLabel: '☁ Sign out',
                 buttonDisabled: false,
-                buttonTooltip: 'Manage your cloud saves (coming soon).',
+                buttonTooltip: 'Sign out of cloud saves.',
             };
         }
         case 'error': {
@@ -71,7 +78,7 @@ function describeSnapshot(snapshot) {
                 message: `Cloud error: ${detail}`,
                 buttonLabel: '☁ Retry',
                 buttonDisabled: false,
-                buttonTooltip: 'Tap to try again once the issue is resolved.',
+                buttonTooltip: 'Tap to try signing in again.',
             };
         }
         case 'disabled':
