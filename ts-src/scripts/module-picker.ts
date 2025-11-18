@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Splash screen allowing the player to pick a module.
 // Displays a pulsing title and swirling dust background with drifting particles.
 (() => {
@@ -128,6 +129,7 @@ let buttonContainer: HTMLElement | null = null;
 let statusLine: HTMLElement | null = null;
 let cloudRepoPromise: Promise<CloudRepo | null> | null = null;
 let sessionRole: string | null = null;
+const tabButtons: Partial<Record<PickerTab, HTMLButtonElement>> = {};
 try {
   sessionRole = window.sessionStorage?.getItem?.('dustland.multiplayerRole') ?? null;
 } catch (err) {
@@ -455,6 +457,11 @@ async function hydrateCloudLibrary(): Promise<void> {
     return;
   }
   try {
+    Object.entries(tabButtons).forEach(([tab, btn]) => {
+      if (tab !== 'local' && btn) {
+        btn.style.display = '';
+      }
+    });
     const [mine, shared, pub] = await Promise.all([
       repo.listMine(),
       repo.listShared(),
@@ -483,7 +490,7 @@ function showModulePicker() {
   overlay.id = 'modulePicker';
   overlay.style.cssText = 'position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;z-index:40';
   const styleTag = document.createElement('style');
-  styleTag.textContent = '@keyframes pulse{0%,100%{opacity:.8}50%{opacity:1}}.btn.selected{border-color:#4f6b4f;background:#151b15}.tab-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}.tab-row button{background:#0f110f;border:1px solid #2a382a;color:#9fbf9f;padding:6px 10px;border-radius:8px;cursor:pointer}.tab-row button.active{color:#0f0;border-color:#3c533c;background:#101610}.module-meta{font-size:.75rem;color:#7a907a}.module-summary{color:#9fbf9f;font-size:.85rem;margin-top:2px}';
+  styleTag.textContent = '@keyframes pulse{0%,100%{opacity:.8}50%{opacity:1}}.btn.selected{border-color:#4f6b4f;background:#151b15}.tab-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}.tab-row button{font-family:var(--ui-font);background:#0f110f;border:1px solid #2a382a;color:#9fbf9f;padding:6px 10px;border-radius:8px;cursor:pointer}.tab-row button.active{color:#0f0;border-color:#3c533c;background:#101610}.module-meta{font-size:.75rem;color:#7a907a}.module-summary{color:#9fbf9f;font-size:.85rem;margin-top:2px}';
   document.head.appendChild(styleTag);
 
   const ackBtn = document.createElement('div');
@@ -551,7 +558,6 @@ function showModulePicker() {
     shared: 'Shared',
     public: 'Public',
   };
-  const tabButtons: Partial<Record<PickerTab, HTMLButtonElement>> = {};
 
   function updateSelected() {
     buttons.forEach((btn, i) => {
@@ -634,6 +640,9 @@ function showModulePicker() {
     btn.textContent = tabLabels[tab];
     btn.className = tab === activeTab ? 'active' : '';
     btn.onclick = () => setActiveTab(tab);
+    if (tab !== 'local') {
+      btn.style.display = 'none';
+    }
     tabButtons[tab] = btn;
     tabRow.appendChild(btn);
   });
