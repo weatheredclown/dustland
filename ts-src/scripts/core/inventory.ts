@@ -1,11 +1,10 @@
 // ===== Inventory / equipment =====
 
-(function(){
 globalThis.Dustland = globalThis.Dustland || {};
 
-type EquipType = 'weapon' | 'armor' | 'trinket';
+type _EquipType = 'weapon' | 'armor' | 'trinket';
 
-interface ItemDrop {
+interface _ItemDrop {
   map: string;
   x: number;
   y: number;
@@ -14,14 +13,14 @@ interface ItemDrop {
   dropType?: 'world' | 'loot';
 }
 
-const inventoryEventBus: DustlandEventBus | undefined =
+const _inventoryEventBus: DustlandEventBus | undefined =
   globalThis.Dustland?.eventBus ?? globalThis.EventBus;
 
-const emit = (event: string, payload?: unknown): void => {
-  inventoryEventBus?.emit(event, payload);
+const _emit = (event: string, payload?: unknown): void => {
+  _inventoryEventBus?.emit(event, payload);
 };
 
-type InventoryGlobals = typeof globalThis & {
+type _InventoryGlobals = typeof globalThis & {
   player?: PlayerState;
   party?: Party;
   leader?: () => PartyMember | undefined;
@@ -40,19 +39,19 @@ type InventoryGlobals = typeof globalThis & {
   };
 };
 
-const globals = globalThis as InventoryGlobals;
-const getPlayer = (): PlayerState => {
-  const current = globals.player ?? (globals.player = { inv: [] as PartyItem[], campChest: [] as PartyItem[], campChestUnlocked: false } as PlayerState);
+const _globals = globalThis as _InventoryGlobals;
+const _getPlayer = (): PlayerState => {
+  const current = _globals.player ?? (_globals.player = { inv: [] as PartyItem[], campChest: [] as PartyItem[], campChestUnlocked: false } as PlayerState);
   if(!Array.isArray(current.inv)){
     current.inv = [] as PartyItem[];
   }
   return current;
 };
-const getParty = (): Party => globals.party as Party;
-const getPartyState = (): Party & { map: string; x: number; y: number } =>
-  (getParty() as Party & { map: string; x: number; y: number });
-const ensureInventory = (): PartyItem[] => {
-  const current = getPlayer();
+const _getParty = (): Party => _globals.party as Party;
+const _getPartyState = (): Party & { map: string; x: number; y: number } =>
+  (_getParty() as Party & { map: string; x: number; y: number });
+const _ensureInventory = (): PartyItem[] => {
+  const current = _getPlayer();
   if(!Array.isArray(current.inv)){
     current.inv = [] as PartyItem[];
   }
@@ -60,23 +59,23 @@ const ensureInventory = (): PartyItem[] => {
 };
 
 
-const ITEMS: Record<string, GameItem> = {};
-const itemDrops: ItemDrop[] = [];
-const EQUIP_TYPES: EquipType[] = ['weapon', 'armor', 'trinket'];
-const isEquipType = (value: string | undefined): value is EquipType =>
+const _ITEMS: Record<string, GameItem> = {};
+const _itemDrops: _ItemDrop[] = [];
+const _EQUIP_TYPES: _EquipType[] = ['weapon', 'armor', 'trinket'];
+const _isEquipType = (value: string | undefined): value is _EquipType =>
   value === 'weapon' || value === 'armor' || value === 'trinket';
-const MAX_INV_STACK = 64;
-const CAMP_CHEST_EVENT = 'campChest:changed';
-const LOOT_VACUUM_TAG = 'loot_vacuum';
-const LOOT_VACUUM_IDS = new Set(['suction_relay']);
+const _MAX_INV_STACK = 64;
+const _CAMP_CHEST_EVENT = 'campChest:changed';
+const _LOOT_VACUUM_TAG = 'loot_vacuum';
+const _LOOT_VACUUM_IDS = new Set(['suction_relay']);
 
-function cloneData(obj){
+function _cloneData(obj){
   if(!obj) return null;
   try {
     return JSON.parse(JSON.stringify(obj));
   } catch (err) {
     if(Array.isArray(obj)){
-      return obj.map(entry => (entry && typeof entry === 'object') ? cloneData(entry) : entry);
+      return obj.map(entry => (entry && typeof entry === 'object') ? _cloneData(entry) : entry);
     }
     const copy = {};
     for(const key in obj){
@@ -86,7 +85,7 @@ function cloneData(obj){
   }
 }
 
-function listRequiredRoles(it){
+function _listRequiredRoles(it){
   const roles = [];
   const seen = new Set();
   const req = it?.equip?.requires;
@@ -105,15 +104,15 @@ function listRequiredRoles(it){
   return roles;
 }
 
-function describeRequiredRoles(it){
-  const roles = listRequiredRoles(it);
+function _describeRequiredRoles(it){
+  const roles = _listRequiredRoles(it);
   if(roles.length === 0) return '';
   if(roles.length === 1) return roles[0];
   if(roles.length === 2) return roles.join(' or ');
   return roles.slice(0, roles.length - 1).join(', ') + ', or ' + roles[roles.length - 1];
 }
 
-function inferMinLevelFromStats(it){
+function _inferMinLevelFromStats(it){
   if(!it || it.type !== 'weapon') return 1;
   const atk = Number.isFinite(it.mods?.ATK) ? it.mods.ATK : 0;
   if(atk >= 13) return 7;
@@ -124,16 +123,16 @@ function inferMinLevelFromStats(it){
   return 1;
 }
 
-function getEquipMinLevel(item){
-  if(!item || !isEquipType(item.type)) return 1;
+function _getEquipMinLevel(item){
+  if(!item || !_isEquipType(item.type)) return 1;
   const raw = item.equip?.minLevel;
   if(Number.isFinite(raw)){
     return Math.max(1, Math.floor(raw));
   }
-  return inferMinLevelFromStats(item);
+  return _inferMinLevelFromStats(item);
 }
 
-function getEquipRestrictions(member, item){
+function _getEquipRestrictions(member, item){
   const result = {
     allowed: false,
     levelRequired: 1,
@@ -142,14 +141,14 @@ function getEquipRestrictions(member, item){
     roleMet: true,
     reasons: []
   };
-  if(!item || !isEquipType(item.type)){
+  if(!item || !_isEquipType(item.type)){
     result.allowed = false;
     result.reasons.push('Cannot equip that.');
     return result;
   }
-  const roles = listRequiredRoles(item);
+  const roles = _listRequiredRoles(item);
   result.roles = roles;
-  const minLevel = getEquipMinLevel(item);
+  const minLevel = _getEquipMinLevel(item);
   result.levelRequired = minLevel;
   const hasMember = !!member;
   const level = hasMember && Number.isFinite(member?.lvl) ? member.lvl : 1;
@@ -162,30 +161,30 @@ function getEquipRestrictions(member, item){
   const roleMet = !hasMember || roles.length === 0 || (memberRole && roles.some(role => role.toLowerCase() === memberRole));
   result.roleMet = roleMet;
   if(!roleMet && roles.length){
-    const reqText = describeRequiredRoles(item);
+    const reqText = _describeRequiredRoles(item);
     result.reasons.push(reqText ? `Only ${reqText} can equip.` : 'Cannot equip.');
   }
   result.allowed = hasMember ? (levelMet && roleMet) : false;
   return result;
 }
 
-function canEquip(member, item){
-  if(!member || !item || !isEquipType(item.type)) return false;
-  return getEquipRestrictions(member, item).allowed;
+function _canEquip(member, item){
+  if(!member || !item || !_isEquipType(item.type)) return false;
+  return _getEquipRestrictions(member, item).allowed;
 }
 
-function isStackable(it){
+function _isStackable(it){
   if(!it) return false;
-  if(!isEquipType(it.type)) return true;
+  if(!_isEquipType(it.type)) return true;
   const rarity = typeof it.rarity === 'string' ? it.rarity.toLowerCase() : '';
   return rarity === 'common';
 }
 
-function getStackCount(it){
+function _getStackCount(it){
   return Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
 }
 
-function setStackCount(it, count){
+function _setStackCount(it, count){
   if(!it) return;
   const next = Math.max(0, count|0);
   if(next <= 1){
@@ -195,12 +194,12 @@ function setStackCount(it, count){
   }
 }
 
-function getStackLimit(it){
-  if(!isStackable(it)) return 1;
-  const raw = Number.isFinite(it?.maxStack) ? it.maxStack : MAX_INV_STACK;
-  return Math.max(1, Math.min(MAX_INV_STACK, raw));
+function _getStackLimit(it){
+  if(!_isStackable(it)) return 1;
+  const raw = Number.isFinite(it?.maxStack) ? it.maxStack : _MAX_INV_STACK;
+  return Math.max(1, Math.min(_MAX_INV_STACK, raw));
 }
-function cloneItem(it){
+function _cloneItem(it){
   return {
     ...it,
     mods: { ...it.mods },
@@ -214,81 +213,81 @@ function cloneItem(it){
  * @param {GameItem} item
  * @returns {GameItem}
  */
-function registerItem(item){
-  const norm = normalizeItem(item);
+function _registerItem(item){
+  const norm = _normalizeItem(item);
   if(!norm.id) throw new Error('Item must have id');
-  ITEMS[norm.id] = norm;
+  _ITEMS[norm.id] = norm;
   return norm;
 }
 /**
  * @param {string} id
  * @returns {GameItem|null}
  */
-function getItem(id){
-  const it = ITEMS[id];
-  return it ? cloneItem(it) : null;
+function _getItem(id){
+  const it = _ITEMS[id];
+  return it ? _cloneItem(it) : null;
 }
 /**
  * @param {string|GameItem} def
  * @returns {GameItem|null}
  */
-function resolveItem(def){
+function _resolveItem(def){
   if(!def) return null;
   const id = typeof def === 'string' ? def : def.id;
-  let it = id ? getItem(id) : null;
+  let it = id ? _getItem(id) : null;
   if(!it && typeof def === 'object') it = def;
   return it;
 }
-function notifyInventoryChanged(){
-  emit('inventory:changed');
+function _notifyInventoryChanged(){
+  _emit('inventory:changed');
 }
 
-function ensureCampChest(): PartyItem[] {
-  const player = getPlayer();
+function _ensureCampChest(): PartyItem[] {
+  const player = _getPlayer();
   if(!Array.isArray(player.campChest)){
     player.campChest = [];
   }
   return player.campChest as PartyItem[];
 }
 
-function emitCampChestChanged(){
-  const chest = ensureCampChest();
-  emit(CAMP_CHEST_EVENT, { chest: cloneData(chest) });
+function _emitCampChestChanged(){
+  const chest = _ensureCampChest();
+  _emit(_CAMP_CHEST_EVENT, { chest: _cloneData(chest) });
 }
 
-function isCampChestUnlocked(){
-  return !!getPlayer().campChestUnlocked;
+function _isCampChestUnlocked(){
+  return !!_getPlayer().campChestUnlocked;
 }
 
-function unlockCampChest(){
-  const player = getPlayer();
+function _unlockCampChest(){
+  const player = _getPlayer();
   if(!player.campChestUnlocked){
     player.campChestUnlocked = true;
-    const chest = ensureCampChest();
+    const chest = _ensureCampChest();
     if(Array.isArray(chest) && chest.length === 0){
-      const medkit = getItem('medkit');
+      const medkit = _getItem('medkit');
       if(medkit){
-        setStackCount(medkit, 10);
-        mergeIntoCampChest(medkit);
+        _setStackCount(medkit, 10);
+        _mergeIntoCampChest(medkit);
       }
     }
-    emitCampChestChanged();
+    _emitCampChestChanged();
   }
   return true;
 }
 
-function addExistingItemToInventory(item){
+function _addExistingItemToInventory(item){
   if(!item || !item.id) return false;
-  const inventory = ensureInventory();
-  const capacity = getPartyInventoryCapacity();
-  if(isStackable(item)){
-    const limit = getStackLimit(item);
-    const total = getStackCount(item);
+  const inventory = _ensureInventory();
+  const capacity = _getPartyInventoryCapacity();
+  if(_isStackable(item)){
+    const limit = _getStackLimit(item);
+    const total = _getStackCount(item);
     let remaining = total;
     const stackPlan = [];
     inventory.forEach((invItem, idx) => {
-      if(!invItem || invItem.id !== item.id || !isStackable(invItem)) return;
-      const space = getStackLimit(invItem) - getStackCount(invItem);
+      if(!invItem || invItem.id !== item.id || !_isStackable(invItem)) return;
+      const space = _getStackLimit(invItem) - _getStackCount(invItem);
       if(space <= 0) return;
       const add = Math.min(space, remaining);
       if(add > 0){
@@ -303,20 +302,20 @@ function addExistingItemToInventory(item){
     let applied = 0;
     stackPlan.forEach(({ idx, add }) => {
       const target = inventory[idx];
-      setStackCount(target, getStackCount(target) + add);
+      _setStackCount(target, _getStackCount(target) + add);
       applied += add;
     });
     let leftover = total - applied;
     if(leftover > 0){
       const first = item;
       const firstAdd = Math.min(limit, leftover);
-      setStackCount(first, firstAdd);
+      _setStackCount(first, firstAdd);
       inventory.push(first);
       leftover -= firstAdd;
       while(leftover > 0){
-        const extra = cloneItem(item);
+        const extra = _cloneItem(item);
         const add = Math.min(limit, leftover);
-        setStackCount(extra, add);
+        _setStackCount(extra, add);
         inventory.push(extra);
         leftover -= add;
       }
@@ -327,26 +326,26 @@ function addExistingItemToInventory(item){
     }
     inventory.push(item);
   }
-  notifyInventoryChanged();
+  _notifyInventoryChanged();
   return true;
 }
 
-function mergeIntoCampChest(item){
+function _mergeIntoCampChest(item){
   if(!item || !item.id) return;
-  const chest = ensureCampChest();
-  if(!isStackable(item)){
+  const chest = _ensureCampChest();
+  if(!_isStackable(item)){
     chest.push(item);
     return;
   }
-  const limit = getStackLimit(item);
-  let remaining = getStackCount(item);
+  const limit = _getStackLimit(item);
+  let remaining = _getStackCount(item);
   for(const entry of chest){
-    if(!entry || entry.id !== item.id || !isStackable(entry)) continue;
-    const space = getStackLimit(entry) - getStackCount(entry);
+    if(!entry || entry.id !== item.id || !_isStackable(entry)) continue;
+    const space = _getStackLimit(entry) - _getStackCount(entry);
     if(space <= 0) continue;
     const add = Math.min(space, remaining);
     if(add > 0){
-      setStackCount(entry, getStackCount(entry) + add);
+      _setStackCount(entry, _getStackCount(entry) + add);
       remaining -= add;
     }
     if(remaining <= 0) break;
@@ -354,59 +353,59 @@ function mergeIntoCampChest(item){
   if(remaining > 0){
     const first = item;
     const firstAdd = Math.min(limit, remaining);
-    setStackCount(first, firstAdd);
+    _setStackCount(first, firstAdd);
     chest.push(first);
     remaining -= firstAdd;
     while(remaining > 0){
-      const extra = cloneItem(item);
+      const extra = _cloneItem(item);
       const add = Math.min(limit, remaining);
-      setStackCount(extra, add);
+      _setStackCount(extra, add);
       chest.push(extra);
       remaining -= add;
     }
   }
 }
 
-function storeCampChestItem(invIndex){
-  if(!isCampChestUnlocked()) return false;
-  const inventory = ensureInventory();
+function _storeCampChestItem(invIndex){
+  if(!_isCampChestUnlocked()) return false;
+  const inventory = _ensureInventory();
   if(invIndex < 0 || invIndex >= inventory.length) return false;
   const removed = inventory.splice(invIndex, 1)[0];
   if(!removed) return false;
-  mergeIntoCampChest(removed);
-  notifyInventoryChanged();
-  emitCampChestChanged();
+  _mergeIntoCampChest(removed);
+  _notifyInventoryChanged();
+  _emitCampChestChanged();
   return true;
 }
 
-function withdrawCampChestItem(chestIndex){
-  if(!isCampChestUnlocked()) return false;
-  const chest = ensureCampChest();
+function _withdrawCampChestItem(chestIndex){
+  if(!_isCampChestUnlocked()) return false;
+  const chest = _ensureCampChest();
   if(chestIndex < 0 || chestIndex >= chest.length) return false;
   const removed = chest[chestIndex];
   if(!removed) return false;
-  const toAdd = isStackable(removed) ? cloneItem(removed) : removed;
-  const added = addExistingItemToInventory(toAdd);
+  const toAdd = _isStackable(removed) ? _cloneItem(removed) : removed;
+  const added = _addExistingItemToInventory(toAdd);
   if(!added){
     if(typeof log === 'function') log('Inventory full.');
     return false;
   }
   chest.splice(chestIndex, 1);
-  emitCampChestChanged();
+  _emitCampChestChanged();
   return true;
 }
 
-function getCampChest(){
-  return ensureCampChest();
+function _getCampChest(){
+  return _ensureCampChest();
 }
-function getPartyInventoryCapacity() {
-  const party = getParty();
+function _getPartyInventoryCapacity() {
+  const party = _getParty();
   const size = typeof party?.length === 'number' ? party.length : 0;
   return Math.max(0, size * 20);
 }
 
-function getLeaderMember(){
-  const leaderFn = globals.leader;
+function _getLeaderMember(){
+  const leaderFn = _globals.leader;
   if (typeof leaderFn === 'function') {
     try {
       const member = leaderFn();
@@ -415,7 +414,7 @@ function getLeaderMember(){
       // ignore leader lookup errors
     }
   }
-  const party = getParty();
+  const party = _getParty();
   if (party && typeof party.leader === 'function') {
     try {
       const member = party.leader();
@@ -430,30 +429,30 @@ function getLeaderMember(){
   return null;
 }
 
-function isLootVacuumItem(it){
+function _isLootVacuumItem(it){
   if (!it) return false;
   const tags = Array.isArray(it.tags) ? it.tags : [];
-  if (tags.some(tag => typeof tag === 'string' && tag.toLowerCase() === LOOT_VACUUM_TAG)) {
+  if (tags.some(tag => typeof tag === 'string' && tag.toLowerCase() === _LOOT_VACUUM_TAG)) {
     return true;
   }
   const id = typeof it.id === 'string' ? it.id.toLowerCase() : '';
-  if (id && LOOT_VACUUM_IDS.has(id)) return true;
+  if (id && _LOOT_VACUUM_IDS.has(id)) return true;
   const baseId = typeof it.baseId === 'string' ? it.baseId.toLowerCase() : '';
-  if (baseId && LOOT_VACUUM_IDS.has(baseId)) return true;
+  if (baseId && _LOOT_VACUUM_IDS.has(baseId)) return true;
   return false;
 }
 
-function leaderHasLootVacuum(){
-  const lead = getLeaderMember();
+function _leaderHasLootVacuum(){
+  const lead = _getLeaderMember();
   if (!lead || !lead.equip) return false;
-  return isLootVacuumItem(lead.equip.trinket);
+  return _isLootVacuumItem(lead.equip.trinket);
 }
 
-function loadStarterItems(){
+function _loadStarterItems(){
   try {
     const items = globalThis.Dustland && globalThis.Dustland.starterItems;
     if (Array.isArray(items)) {
-      items.forEach(it => addToInv(it));
+      items.forEach(it => _addToInv(it));
     }
   } catch (e) {
     // ignore load errors
@@ -463,52 +462,52 @@ function loadStarterItems(){
 /**
  * @param {string|GameItem} item
  */
-function dropItemNearParty(item) {
-  const it = resolveItem(item);
+function _dropItemNearParty(item) {
+  const it = _resolveItem(item);
   if (!it || !it.id) {
     throw new Error('Unknown item');
   }
-  const base = cloneItem(ITEMS[it.id] || registerItem(it));
-  const partyInfo = getPartyState();
-  itemDrops.push({ id: base.id, map: partyInfo.map, x: partyInfo.x, y: partyInfo.y, dropType: 'loot' });
+  const base = _cloneItem(_ITEMS[it.id] || _registerItem(it));
+  const partyInfo = _getPartyState();
+  _itemDrops.push({ id: base.id, map: partyInfo.map, x: partyInfo.x, y: partyInfo.y, dropType: 'loot' });
   log(`Inventory full, ${base.name} was dropped.`);
   if (typeof toast === 'function') toast(`Inventory full, ${base.name} was dropped.`);
 }
 
 /**
  * Attempt to automatically collect a loot drop near the party.
- * @param {ItemDrop} drop
+ * @param {_ItemDrop} drop
  * @returns {boolean}
  */
-function tryAutoPickup(drop) {
+function _tryAutoPickup(drop) {
   if (!drop || drop.dropType !== 'loot') return false;
-  const player = globals.player ?? getPlayer();
-  const party = globals.party ?? getParty();
+  const player = _globals.player ?? _getPlayer();
+  const party = _globals.party ?? _getParty();
   if (!player) return false;
   if (!party) return false;
-  ensureInventory();
-  const partyInfo = getPartyState();
+  _ensureInventory();
+  const partyInfo = _getPartyState();
   const mapId = typeof drop.map === 'string' ? drop.map : 'world';
   if (mapId !== partyInfo.map) return false;
   const dx = typeof drop.x === 'number' ? drop.x - partyInfo.x : 0;
   const dy = typeof drop.y === 'number' ? drop.y - partyInfo.y : 0;
   const distance = Math.abs(dx) + Math.abs(dy);
   const sameTile = distance === 0;
-  const vacuumActive = !sameTile && distance === 1 && leaderHasLootVacuum();
+  const vacuumActive = !sameTile && distance === 1 && _leaderHasLootVacuum();
   if (!sameTile && !vacuumActive) return false;
   let took = false;
   const messages: string[] = [];
   if (Array.isArray(drop.items) && drop.items.length) {
-    took = pickupCache(drop);
+    took = _pickupCache(drop);
     if (took) messages.push(`Took ${drop.items.length} items.`);
   } else if (drop.id) {
-    const item = getItem(drop.id);
+    const item = _getItem(drop.id);
     if (!item) return false;
-    took = addToInv(item);
+    took = _addToInv(item);
   }
   if (!took) return false;
-  const idx = itemDrops.indexOf(drop);
-  if (idx > -1) itemDrops.splice(idx, 1);
+  const idx = _itemDrops.indexOf(drop);
+  if (idx > -1) _itemDrops.splice(idx, 1);
   if (vacuumActive) {
     globalThis.pickupVacuum?.(drop.x, drop.y, partyInfo.x, partyInfo.y);
   } else if (typeof globalThis.pickupSparkle === 'function') {
@@ -524,34 +523,34 @@ function tryAutoPickup(drop) {
  * @param {string|GameItem} item
  * @returns {boolean}
  */
-function addToInv(item) {
-  const it = resolveItem(item);
+function _addToInv(item) {
+  const it = _resolveItem(item);
   if (!it || !it.id) {
     throw new Error('Unknown item');
   }
-  const base = cloneItem(ITEMS[it.id] || registerItem(it));
+  const base = _cloneItem(_ITEMS[it.id] || _registerItem(it));
   const fuel = typeof base.fuel === 'number' ? base.fuel : (base.id === 'fuel_cell' ? 50 : 0);
   if (fuel > 0) {
-    const player = getPlayer();
+    const player = _getPlayer();
     player.fuel = (player.fuel || 0) + fuel;
-    emit('item:picked', base);
+    _emit('item:picked', base);
     if (base.narrative) {
-      emit('item:narrative', { itemId: base.id, narrative: base.narrative });
+      _emit('item:narrative', { itemId: base.id, narrative: base.narrative });
     }
-    notifyInventoryChanged();
+    _notifyInventoryChanged();
     if (typeof log === 'function') log('Fuel +' + fuel);
     return true;
   }
-  const inventory = ensureInventory();
-  const capacity = getPartyInventoryCapacity();
-  const stackable = isStackable(base);
+  const inventory = _ensureInventory();
+  const capacity = _getPartyInventoryCapacity();
+  const stackable = _isStackable(base);
   let quantity = Math.max(1, Number.isFinite(base.count) ? base.count : 1);
   if (stackable) {
     let remaining = quantity;
     const stackPlan = [];
     inventory.forEach((invItem, idx) => {
-      if (!invItem || invItem.id !== base.id || !isStackable(invItem)) return;
-      const space = getStackLimit(invItem) - getStackCount(invItem);
+      if (!invItem || invItem.id !== base.id || !_isStackable(invItem)) return;
+      const space = _getStackLimit(invItem) - _getStackCount(invItem);
       if (space <= 0) return;
       const add = Math.min(space, remaining);
       if (add > 0) {
@@ -559,22 +558,22 @@ function addToInv(item) {
         remaining -= add;
       }
     });
-    const limit = getStackLimit(base);
+    const limit = _getStackLimit(base);
     const slotsNeeded = Math.ceil(Math.max(0, remaining) / Math.max(1, limit));
     if (inventory.length + slotsNeeded > capacity) {
       return false;
     }
     stackPlan.forEach(({ idx, add }) => {
       const target = inventory[idx];
-      setStackCount(target, getStackCount(target) + add);
+      _setStackCount(target, _getStackCount(target) + add);
       quantity -= add;
     });
     let leftover = quantity;
     let usedBase = false;
     while (leftover > 0) {
-      const toAdd = Math.min(getStackLimit(base), leftover);
-      const entry = !usedBase ? base : cloneItem(base);
-      setStackCount(entry, toAdd);
+      const toAdd = Math.min(_getStackLimit(base), leftover);
+      const entry = !usedBase ? base : _cloneItem(base);
+      _setStackCount(entry, toAdd);
       inventory.push(entry);
       leftover -= toAdd;
       usedBase = true;
@@ -583,39 +582,39 @@ function addToInv(item) {
     if (inventory.length >= capacity) {
       return false;
     }
-    setStackCount(base, 1);
+    _setStackCount(base, 1);
     inventory.push(base);
   }
-  emit('item:picked', base);
+  _emit('item:picked', base);
   if(base.narrative){
-    emit('item:narrative', { itemId: base.id, narrative: base.narrative });
+    _emit('item:narrative', { itemId: base.id, narrative: base.narrative });
   }
-  notifyInventoryChanged();
+  _notifyInventoryChanged();
   return true;
 }
 
-function removeFromInv(invIndex, quantity?: number) {
-  const inventory = ensureInventory();
+function _removeFromInv(invIndex, quantity?: number) {
+  const inventory = _ensureInventory();
   if (invIndex < 0 || invIndex >= inventory.length) return;
   const it = inventory[invIndex];
   if (!it) return;
-  const stackable = isStackable(it);
-  const current = getStackCount(it);
+  const stackable = _isStackable(it);
+  const current = _getStackCount(it);
   const amt = stackable
     ? (Number.isFinite(quantity) ? Math.max(1, quantity | 0) : 1)
     : 1;
   if (stackable && current > amt) {
-    setStackCount(it, current - amt);
-    notifyInventoryChanged();
+    _setStackCount(it, current - amt);
+    _notifyInventoryChanged();
     return;
   }
   inventory.splice(invIndex, 1);
-  notifyInventoryChanged();
+  _notifyInventoryChanged();
 }
 
-function maybeConsumeItem(it, invIndex) {
+function _maybeConsumeItem(it, invIndex) {
   if (it?.use?.consume === false) return;
-  removeFromInv(invIndex);
+  _removeFromInv(invIndex);
 }
 
 // Drop multiple items from inventory as a single cache on the ground
@@ -623,48 +622,48 @@ function maybeConsumeItem(it, invIndex) {
  * @param {number[]} indices
  * @returns {number}
  */
-function dropItems(indices) {
+function _dropItems(indices) {
   if (!Array.isArray(indices) || indices.length === 0) return 0;
   const drops = [];
   const counts = new Map();
-  const inventory = ensureInventory();
+  const inventory = _ensureInventory();
   indices.forEach(i => {
     const it = inventory[i];
     if (!it || !it.id) return;
-    const qty = getStackCount(it);
+    const qty = _getStackCount(it);
     counts.set(i, qty);
     for (let n = 0; n < qty; n++) drops.push(it.id);
   });
   const sorted = Array.from(counts.keys()).sort((a, b) => b - a);
   for (const idx of sorted) {
-    removeFromInv(idx, counts.get(idx));
+    _removeFromInv(idx, counts.get(idx));
   }
   if (drops.length) {
-    const partyInfo = getPartyState();
-    itemDrops.push({ items: drops, map: partyInfo.map, x: partyInfo.x, y: partyInfo.y, dropType: 'loot' });
+    const partyInfo = _getPartyState();
+    _itemDrops.push({ items: drops, map: partyInfo.map, x: partyInfo.x, y: partyInfo.y, dropType: 'loot' });
   }
   return drops.length;
 }
 
 // Add all items from a cache drop into inventory
 /**
- * @param {ItemDrop} drop
+ * @param {_ItemDrop} drop
  * @returns {boolean}
  */
-function pickupCache(drop) {
+function _pickupCache(drop) {
   const ids = Array.isArray(drop?.items) ? drop.items : (drop?.id ? [drop.id] : []);
   if (!ids.length) return true;
-  const capacity = getPartyInventoryCapacity();
-  const inventory = ensureInventory();
-  const tempStacks = inventory.map(it => ({ id: it.id, count: getStackCount(it), limit: getStackLimit(it), stackable: isStackable(it) }));
+  const capacity = _getPartyInventoryCapacity();
+  const inventory = _ensureInventory();
+  const tempStacks = inventory.map(it => ({ id: it.id, count: _getStackCount(it), limit: _getStackLimit(it), stackable: _isStackable(it) }));
   let needed = 0;
   ids.forEach(id => {
-    const item = getItem(id);
+    const item = _getItem(id);
     if (!item) {
       needed++;
       return;
     }
-    if (!isStackable(item)) {
+    if (!_isStackable(item)) {
       needed++;
       tempStacks.push({ id: item.id, count: 1, limit: 1, stackable: false });
       return;
@@ -675,14 +674,14 @@ function pickupCache(drop) {
       return;
     }
     needed++;
-    tempStacks.push({ id: item.id, count: 1, limit: getStackLimit(item), stackable: true });
+    tempStacks.push({ id: item.id, count: 1, limit: _getStackLimit(item), stackable: true });
   });
   if (inventory.length + needed > capacity) {
     log('Inventory is full.');
     if (typeof toast === 'function') toast('Inventory is full.');
     return false;
   }
-  ids.forEach(id => addToInv(getItem(id)));
+  ids.forEach(id => _addToInv(_getItem(id)));
   return true;
 }
 
@@ -690,13 +689,13 @@ function pickupCache(drop) {
  * @param {number} memberIndex
  * @param {number} invIndex
  */
-function equipItem(memberIndex, invIndex){
-  const inventory = ensureInventory();
-  const partyMembers = getParty();
+function _equipItem(memberIndex, invIndex){
+  const inventory = _ensureInventory();
+  const partyMembers = _getParty();
   const m = Array.isArray(partyMembers) ? partyMembers[memberIndex] : undefined;
   const it=inventory[invIndex];
-  if(!m||!it||!isEquipType(it.type)){ log('Cannot equip that.'); return; }
-  const restrictions = getEquipRestrictions(m, it);
+  if(!m||!it||!_isEquipType(it.type)){ log('Cannot equip that.'); return; }
+  const restrictions = _getEquipRestrictions(m, it);
   if(!restrictions.allowed){
     const msg = restrictions.reasons.length
       ? `${it.name}: ${restrictions.reasons.join(' ')}`
@@ -705,29 +704,29 @@ function equipItem(memberIndex, invIndex){
     if(typeof toast==='function') toast(msg);
     return;
   }
-  const slot: EquipType = it.type;
+  const slot: _EquipType = it.type;
   const prevEq = m.equip[slot];
   const before = { ...(m._bonus || {}) };
   if(prevEq){
     if(prevEq.cursed){
       prevEq.cursedKnown = true;
-      notifyInventoryChanged();
+      _notifyInventoryChanged();
       log(`${prevEq.name} is cursed and cannot be removed.`);
       return;
     }
-    setStackCount(prevEq, 1);
-    if(!addExistingItemToInventory(prevEq)){
+    _setStackCount(prevEq, 1);
+    if(!_addExistingItemToInventory(prevEq)){
       inventory.push(prevEq);
     }
   }
-  const stackable = isStackable(it);
-  const count = getStackCount(it);
+  const stackable = _isStackable(it);
+  const count = _getStackCount(it);
   const removeEntry = !stackable || count <= 1;
   let equipped = it;
   if(stackable && count > 1){
-    equipped = cloneItem(it);
-    setStackCount(equipped, 1);
-    setStackCount(it, count - 1);
+    equipped = _cloneItem(it);
+    _setStackCount(equipped, 1);
+    _setStackCount(it, count - 1);
   }
   if(removeEntry){
     inventory.splice(invIndex,1);
@@ -742,10 +741,10 @@ function equipItem(memberIndex, invIndex){
     const diff = (after[stat] || 0) - (before[stat] || 0);
     if(diff) deltas.push(`${diff>0?'+':''}${diff} ${stat}`);
   });
-  notifyInventoryChanged();
+  _notifyInventoryChanged();
   log(`${m.name} equips ${it.name}.`);
   if(typeof toast==='function'){ toast(`${m.name} equips ${it.name}`); if(deltas.length) toast(deltas.join(', ')); }
-  emit('sfx','tick');
+  _emit('sfx','tick');
   if(it.equip && it.equip.teleport){
     const t=it.equip.teleport;
     setPartyPos(t.x, t.y);
@@ -764,30 +763,30 @@ function equipItem(memberIndex, invIndex){
  * @param {number} memberIndex
  * @param {string} slot
  */
-function unequipItem(memberIndex, slot){
-  const partyMembers = getParty();
+function _unequipItem(memberIndex, slot){
+  const partyMembers = _getParty();
   const m = Array.isArray(partyMembers) ? partyMembers[memberIndex] : undefined;
   if(!m) return;
   const it=m.equip[slot];
   if(!it){ log('Nothing to unequip.'); return; }
   if(it.cursed){
     it.cursedKnown = true;
-    notifyInventoryChanged();
+    _notifyInventoryChanged();
     log(`${it.name} is cursed and won't come off!`);
     return;
   }
   m.equip[slot]=null;
-  setStackCount(it, 1);
-  const added = addExistingItemToInventory(it);
+  _setStackCount(it, 1);
+  const added = _addExistingItemToInventory(it);
   if(!added){
-    ensureInventory().push(it);
+    _ensureInventory().push(it);
   }
   m.applyEquipmentStats?.();
   m.applyCombatMods?.();
-  notifyInventoryChanged();
+  _notifyInventoryChanged();
   log(`${m.name} unequips ${it.name}.`);
   if(typeof toast==='function') toast(`${m.name} unequips ${it.name}`);
-  emit('sfx','tick');
+  _emit('sfx','tick');
   if(it.unequip && it.unequip.teleport){
     const t=it.unequip.teleport;
     setPartyPos(t.x, t.y);
@@ -804,13 +803,13 @@ function unequipItem(memberIndex, slot){
  * @param {string} id
  * @returns {boolean}
  */
-function uncurseItem(id){
+function _uncurseItem(id){
   if(!id) return false;
   let found=false;
-  for(const it of ensureInventory()){
+  for(const it of _ensureInventory()){
     if(it.id===id){ it.cursed=false; it.cursedKnown=false; found=true; }
   }
-  const partyMembers = getParty();
+  const partyMembers = _getParty();
   if (Array.isArray(partyMembers)) {
     for(const m of partyMembers){
       ['weapon','armor','trinket'].forEach(sl=>{
@@ -819,7 +818,7 @@ function uncurseItem(id){
       });
     }
   }
-  if(found) notifyInventoryChanged();
+  if(found) _notifyInventoryChanged();
   return found;
 }
 
@@ -827,7 +826,7 @@ function uncurseItem(id){
  * @param {GameItem} it
  * @returns {number}
  */
-function estimateItemValue(it){
+function _estimateItemValue(it){
   let val = 0;
   if(it.use){
     if(it.use.type==='heal'){
@@ -845,10 +844,10 @@ function estimateItemValue(it){
   return val;
 }
 
-function normalizeItem(it){
+function _normalizeItem(it){
   if(!it) return null;
   const baseValue = typeof it.value === 'number' ? it.value : 0;
-  const val = baseValue > 0 ? baseValue : estimateItemValue(it);
+  const val = baseValue > 0 ? baseValue : _estimateItemValue(it);
   const type = it.type || it.slot || 'misc';
   const baseId = typeof it.baseId === 'string' && it.baseId ? it.baseId : undefined;
   return {
@@ -860,8 +859,8 @@ function normalizeItem(it){
     tags: Array.isArray(it.tags) ? it.tags.map(t=>t.toLowerCase()) : [],
     mods: it.mods ? { ...it.mods } : {},
     use: it.use || null,
-    equip: cloneData(it.equip),
-    unequip: cloneData(it.unequip),
+    equip: _cloneData(it.equip),
+    unequip: _cloneData(it.unequip),
     cursed: !!it.cursed,
     cursedKnown: !!it.cursedKnown,
     rarity: typeof it.rarity === 'string' ? it.rarity.toLowerCase() : 'common',
@@ -874,33 +873,33 @@ function normalizeItem(it){
   };
 }
 
-function findItemIndex(idOrTag){
+function _findItemIndex(idOrTag){
   const tag = typeof idOrTag === 'string' ? idOrTag.toLowerCase() : '';
-  const inventory = ensureInventory();
+  const inventory = _ensureInventory();
   return inventory.findIndex(it => it.id === idOrTag || (Array.isArray(it.tags) && it.tags.map(t=>t.toLowerCase()).includes(tag)));
 }
-function hasItem(idOrTag){ return findItemIndex(idOrTag) !== -1; }
-function countItems(idOrTag) {
+function _hasItem(idOrTag){ return _findItemIndex(idOrTag) !== -1; }
+function _countItems(idOrTag) {
   const tag = typeof idOrTag === 'string' ? idOrTag.toLowerCase() : '';
-  const inventory = ensureInventory();
+  const inventory = _ensureInventory();
   return inventory.reduce((count, it) => {
     const tags = Array.isArray(it.tags) ? it.tags.map(t => t.toLowerCase()) : [];
     if (it.id === idOrTag || tags.includes(tag)) {
-      return count + getStackCount(it);
+      return count + _getStackCount(it);
     }
     return count;
   }, 0);
 }
 
-function useItem(invIndex){
-  const inventory = ensureInventory();
+function _useItem(invIndex){
+  const inventory = _ensureInventory();
   const it = inventory[invIndex];
   if(!it || !it.use){
     log('Cannot use that.');
     return false;
   }
-  const partyMembers = getParty();
-  const playerState = getPlayer();
+  const partyMembers = _getParty();
+  const playerState = _getPlayer();
   if(it.use.type==='heal'){
     const who = (partyMembers[selectedMember]||partyMembers[0]);
     if(!who){ log('No party member to heal.'); return false; }
@@ -915,7 +914,7 @@ function useItem(invIndex){
     log(msg);
     if (bonus > 0 && !it.use.text) log('Lucky boost!');
     if (typeof toast === 'function') toast(it.use.text || `${who.name} +${healed} HP`);
-    emit('sfx','tick');
+    _emit('sfx','tick');
     if (it.id === 'wand'){
       const label = it.use?.label || it.name;
       const defeated = globalThis.defeatEnemiesByRequirement?.('wand', {
@@ -924,13 +923,13 @@ function useItem(invIndex){
         itemLabel: label
       }) || [];
       if (defeated.length){
-        emit('sfx','damage');
+        _emit('sfx','damage');
       }
     }
-    maybeConsumeItem(it, invIndex);
+    _maybeConsumeItem(it, invIndex);
     playerState.hp = partyMembers[0] ? partyMembers[0].hp : playerState.hp;
     if(typeof updateHUD === 'function') updateHUD();
-    emit(`used:${it.id}`, { item: it });
+    _emit(`used:${it.id}`, { item: it });
     return true;
   }
   if(it.use.type==='hydrate'){
@@ -944,10 +943,10 @@ function useItem(invIndex){
     const msg = it.use.text || `${who.name} drinks ${it.name}.`;
     log(msg);
     if(typeof toast==='function') toast(it.use.text || `${who.name} +${who.hydration - before} HYD`);
-    maybeConsumeItem(it, invIndex);
+    _maybeConsumeItem(it, invIndex);
     globalThis.updateHUD?.();
-    emit('sfx','tick');
-    emit(`used:${it.id}`, { item: it });
+    _emit('sfx','tick');
+    _emit(`used:${it.id}`, { item: it });
     return true;
   }
   if(it.use.type==='boost'){
@@ -958,13 +957,13 @@ function useItem(invIndex){
     const msg = it.use.text || `${who.name} feels different.`;
     log(msg);
     if(typeof toast==='function') toast(msg);
-    emit('sfx','tick');
-    maybeConsumeItem(it, invIndex);
-    emit(`used:${it.id}`, { item: it });
+    _emit('sfx','tick');
+    _maybeConsumeItem(it, invIndex);
+    _emit(`used:${it.id}`, { item: it });
     return true;
   }
   if(it.use.type==='grenade'){
-    const combatState = globals.__combatState;
+    const combatState = _globals.__combatState;
     const enemies = Array.isArray(combatState?.enemies) ? combatState.enemies : [];
     if(enemies.length === 0){ log('You can only use that in combat.'); return false; }
     const who = (partyMembers[selectedMember]||partyMembers[0]);
@@ -975,7 +974,7 @@ function useItem(invIndex){
     if(typeof toast==='function') toast(msg);
     const label = it.use.label || it.name;
     const ignoreDefense = !!it.use.ignoreDefense;
-    const aoe = globals.playerItemAOEDamage;
+    const aoe = _globals.playerItemAOEDamage;
     if (typeof aoe === 'function') {
       aoe(who, dmg, { label, ignoreDefense });
     } else {
@@ -987,9 +986,9 @@ function useItem(invIndex){
       }
       globalThis.renderCombat?.();
     }
-    emit('sfx','damage');
-    maybeConsumeItem(it, invIndex);
-    emit(`used:${it.id}`, { item: it });
+    _emit('sfx','damage');
+    _maybeConsumeItem(it, invIndex);
+    _emit(`used:${it.id}`, { item: it });
     return true;
   }
   if(it.use.type==='cleanse'){
@@ -1001,9 +1000,9 @@ function useItem(invIndex){
     const msg = it.use.text || `${who.name} feels purified.`;
     log(msg);
     if(typeof toast==='function') toast(it.use.text || `${who.name} is cleansed`);
-    emit('sfx','tick');
-    maybeConsumeItem(it, invIndex);
-    emit(`used:${it.id}`, { item: it });
+    _emit('sfx','tick');
+    _maybeConsumeItem(it, invIndex);
+    _emit(`used:${it.id}`, { item: it });
     return true;
   }
   const effectList = [];
@@ -1028,12 +1027,12 @@ function useItem(invIndex){
   }
   if (effectList.length) {
     globalThis.Dustland?.effects?.apply?.(effectList, { player: playerState, party: partyMembers, item: it });
-    maybeConsumeItem(it, invIndex);
+    _maybeConsumeItem(it, invIndex);
     const msg = it.use.text || `Used ${it.name}`;
     log(msg);
     if (typeof toast === 'function') toast(it.use.toast || msg);
-    emit('sfx','tick');
-    emit(`used:${it.id}`, { item: it });
+    _emit('sfx','tick');
+    _emit(`used:${it.id}`, { item: it });
     return true;
   }
   if(typeof it.use.onUse === 'function'){
@@ -1044,12 +1043,12 @@ function useItem(invIndex){
       toast
     });
     if(ok!==false){
-        maybeConsumeItem(it, invIndex);
+        _maybeConsumeItem(it, invIndex);
         const msg = it.use.text || `Used ${it.name}`;
         log(msg);
         if(typeof toast==='function') toast(msg);
-        emit('sfx','tick');
-        emit(`used:${it.id}`, { item: it });
+        _emit('sfx','tick');
+        _emit(`used:${it.id}`, { item: it });
     }
     return !!ok;
   }
@@ -1057,7 +1056,6 @@ function useItem(invIndex){
   return false;
 }
 
-const inventoryExports = { ITEMS, itemDrops, registerItem, getItem, resolveItem, addToInv, removeFromInv, equipItem, unequipItem, normalizeItem, findItemIndex, useItem, hasItem, countItems, uncurseItem, getPartyInventoryCapacity, dropItemNearParty, dropItems, pickupCache, tryAutoPickup, loadStarterItems, canEquip, describeRequiredRoles, getEquipMinLevel, getEquipRestrictions, getCampChest, isCampChestUnlocked, unlockCampChest, storeCampChestItem, withdrawCampChestItem, leaderHasLootVacuum, isLootVacuumItem };
+const inventoryExports = { ITEMS: _ITEMS, itemDrops: _itemDrops, registerItem: _registerItem, getItem: _getItem, resolveItem: _resolveItem, addToInv: _addToInv, removeFromInv: _removeFromInv, equipItem: _equipItem, unequipItem: _unequipItem, normalizeItem: _normalizeItem, findItemIndex: _findItemIndex, useItem: _useItem, hasItem: _hasItem, countItems: _countItems, uncurseItem: _uncurseItem, getPartyInventoryCapacity: _getPartyInventoryCapacity, dropItemNearParty: _dropItemNearParty, dropItems: _dropItems, pickupCache: _pickupCache, tryAutoPickup: _tryAutoPickup, loadStarterItems: _loadStarterItems, canEquip: _canEquip, describeRequiredRoles: _describeRequiredRoles, getEquipMinLevel: _getEquipMinLevel, getEquipRestrictions: _getEquipRestrictions, getCampChest: _getCampChest, isCampChestUnlocked: _isCampChestUnlocked, unlockCampChest: _unlockCampChest, storeCampChestItem: _storeCampChestItem, withdrawCampChestItem: _withdrawCampChestItem, leaderHasLootVacuum: _leaderHasLootVacuum, isLootVacuumItem: _isLootVacuumItem };
 globalThis.Dustland.inventory = inventoryExports;
 Object.assign(globalThis, inventoryExports);
-})();
