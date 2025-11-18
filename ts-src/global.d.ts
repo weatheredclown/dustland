@@ -925,6 +925,9 @@ interface ItemGeneratorRange {
       adrenaline_dmg_mod?: number;
       granted_special?: PartySpecialEntry | PartySpecialEntry[];
     };
+    use?: {
+      onUse?: (...args: any[]) => boolean | void;
+    };
   }
 
   interface PartyEquipmentSlots {
