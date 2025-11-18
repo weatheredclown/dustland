@@ -142,9 +142,8 @@ interface TimeoutLike {
   unref?: () => void;
 }
 
-const { resolveNode, hasItem } = globalThis as typeof globalThis & {
+const { resolveNode } = globalThis as typeof globalThis & {
   resolveNode: (tree: unknown, nodeId: string) => NanoDialogNode | undefined;
-  hasItem: (itemId: string) => boolean;
 };
 
 interface NanoWindow extends Window {
