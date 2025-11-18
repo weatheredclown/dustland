@@ -926,7 +926,19 @@ interface ItemGeneratorRange {
       granted_special?: PartySpecialEntry | PartySpecialEntry[];
     };
     use?: {
+      type?: string;
+      amount?: number;
+      duration?: number;
+      stat?: string;
+      label?: string;
+      text?: string;
+      toast?: string;
+      effect?: string | Record<string, unknown>;
+      effects?: Array<string | Record<string, unknown>>;
+      consume?: boolean;
+      ignoreDefense?: boolean;
       onUse?: (...args: any[]) => boolean | void;
+      [key: string]: unknown;
     };
   }
 
