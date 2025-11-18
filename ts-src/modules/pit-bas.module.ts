@@ -1,18 +1,10 @@
 type PitBasModule = DustlandModuleInstance & { listing?: string };
 
-declare let PIT_BAS_MODULE: PitBasModule;
-declare const WORLD_H: number;
-declare const log: (msg: string) => void;
-declare const setMap: (map: string, label?: string) => void;
-declare const setPartyPos: (x: number, y: number) => void;
-declare const hasItem: (id: string) => boolean;
-declare const openCombat: (enemies: { id?: string; name: string; hp: number; ATK: number; DEF: number }[]) => void;
-declare const applyModule: (module: PitBasModule) => void;
-declare let startGame: () => void;
+const pitBasGlobals = globalThis as typeof globalThis & { PIT_BAS_MODULE?: PitBasModule };
 
-function seedWorldContent(): void {}
+pitBasGlobals.seedWorldContent = pitBasGlobals.seedWorldContent ?? (() => {});
 
-const DATA = `
+const PIT_BAS_DATA = `
 {
   "seed": "pit-bas",
   "name": "pit-bas",
@@ -1656,8 +1648,8 @@ function postLoad(module: PitBasModule): void {
   };
 }
 
-globalThis.PIT_BAS_MODULE = JSON.parse(DATA);
-globalThis.PIT_BAS_MODULE.listing = `
+pitBasGlobals.PIT_BAS_MODULE = JSON.parse(PIT_BAS_DATA);
+pitBasGlobals.PIT_BAS_MODULE.listing = `
 MCBDT0xPUiAxNTogQ0xTCjEgS0VZIE9GRjogQkVHSU4gPSAxOiBHT1NVQiAzODAwMAoyIElOUFVUICJX
 SEFUIElTIFlPVVIgTkFNRT8gIiwgTUFNRSQ6IEdPU1VCIDM5MDAwCjMgQ0xTIDogSUYgTUFNRSQgPSAi
 QlJJQU4gR0FMTEVUVEEiIFRIRU4gR09TVUIgNDIwMDAKNCBJTlBVVCAiV09VTEQgWU9VIExJS0UgSU5T
