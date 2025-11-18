@@ -1,5 +1,6 @@
 // Splash screen allowing the player to pick a module.
 // Displays a pulsing title and swirling dust background with drifting particles.
+(() => {
 type ModuleSource = 'local' | 'cloud';
 
 interface PickerModuleInfo {
@@ -78,11 +79,18 @@ interface Window {
   seedWorldContent?: () => void;
   startGame?: () => void;
   modulePickerPending?: boolean;
+  modulePickerLoaded?: boolean;
 }
 
 declare function openCreator(): void;
 declare const UI: { hide?: (id: string) => void; show?: (id: string) => void; remove?: (id: string) => void; } | undefined;
 declare const warnOnUnload: (() => void) | undefined;
+
+if (window.modulePickerLoaded) {
+  console.warn('Module picker already initialized; skipping duplicate load.');
+  return;
+}
+window.modulePickerLoaded = true;
 
 const LOCAL_MODULES: PickerModuleInfo[] = [
   { id: 'dustland', name: 'Dustland', file: 'modules/dustland.module.js', source: 'local' },
@@ -710,3 +718,4 @@ function showModulePicker() {
 }
 
 showModulePicker();
+})();
