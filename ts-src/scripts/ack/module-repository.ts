@@ -1,3 +1,4 @@
+import { FIREBASE_APP_NAME } from './firebase-clients.js';
 import type { ServerSessionSnapshot } from './server-session.js';
 
 export type ModuleVisibility = 'private' | 'shared' | 'public';
@@ -100,9 +101,8 @@ export class FirestoreModuleRepository implements ModuleRepository {
     const { initializeApp, getApps } = await import('firebase/app');
     const { getFirestore } = await import('firebase/firestore');
     const { getFunctions } = await import('firebase/functions');
-    const appName = 'dustland-ack';
-    const existing = getApps().find(app => app.name === appName);
-    const app = existing ?? initializeApp(session.bootstrap.config, appName);
+    const existing = getApps().find(app => app.name === FIREBASE_APP_NAME);
+    const app = existing ?? initializeApp(session.bootstrap.config, FIREBASE_APP_NAME);
     this.db = getFirestore(app);
     this.functions = getFunctions(app);
   }
