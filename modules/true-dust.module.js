@@ -1,4 +1,3 @@
-// @ts-nocheck
 const DATA = `
 {
   "seed": "true-dust",
@@ -723,14 +722,17 @@ const DATA = `
   }
 }
 `;
-function startPendant() {
-    if (startPendant._t)
+const TRUE_DUST = JSON.parse(DATA);
+let pendantTimer = null;
+const startPendant = () => {
+    if (pendantTimer)
         return;
-    startPendant._t = setInterval(() => {
+    pendantTimer = setInterval(() => {
         const r = party.find(m => m.id === 'rygar');
         if (!r) {
-            clearInterval(startPendant._t);
-            startPendant._t = null;
+            if (pendantTimer)
+                clearInterval(pendantTimer);
+            pendantTimer = null;
             return;
         }
         if (typeof playFX === 'function')
@@ -738,16 +740,18 @@ function startPendant() {
         if (typeof log === 'function')
             log("Rygar's pendant glints.");
     }, 8000);
-}
-function startRadio() {
-    if (startRadio._t)
+};
+let radioTimer = null;
+const startRadio = () => {
+    if (radioTimer)
         return;
-    const caches = TRUE_DUST.items.filter(i => i.id.startsWith('scrap_cache'));
-    startRadio._t = setInterval(() => {
+    const caches = (TRUE_DUST.items ?? []).filter((item) => typeof item?.id === 'string' && item.id.startsWith('scrap_cache'));
+    const partyState = party;
+    radioTimer = setInterval(() => {
         const hasRadio = party.some(m => m.equip?.trinket?.id === 'cracked_radio');
         if (!hasRadio)
             return;
-        const near = caches.some(c => party.map === c.map && Math.abs(party.x - c.x) <= 1 && Math.abs(party.y - c.y) <= 1);
+        const near = caches.some(c => partyState.map === c.map && Math.abs(partyState.x - (c.x ?? 0)) <= 1 && Math.abs(partyState.y - (c.y ?? 0)) <= 1);
         if (near) {
             if (typeof toast === 'function')
                 toast('Static bursts from the radio.');
@@ -755,7 +759,7 @@ function startRadio() {
                 log('The radio crackles with static.');
         }
     }, 1000);
-}
+};
 const MASK_QUEST_ID = 'mask_memory';
 const MASK_QUEST_FLAG = 'mask_memory_stage';
 const MASK_JOURNAL = [
@@ -827,7 +831,8 @@ function handleMaskAcquired(item) {
     setMaskQuestStage(1);
 }
 function handleMaskQuestCompleted(evt) {
-    if (!evt?.quest || evt.quest.id !== MASK_QUEST_ID)
+    const quest = evt?.quest;
+    if (!quest || quest.id !== MASK_QUEST_ID)
         return;
     setMaskQuestStage(2);
 }
@@ -852,7 +857,10 @@ function syncMaskQuestState(module) {
     }
     quest.progress = -1;
     if (!maskHermitTree) {
-        maskHermitTree = module.npcs?.find(n => n.id === 'mask_giver')?.tree || null;
+        const hermit = (module.npcs ?? []).find(npc => npc.id === 'mask_giver');
+        maskHermitTree = (typeof hermit?.tree === 'function'
+            ? hermit.tree()
+            : hermit?.tree ?? null);
     }
     updateMaskHermitStart(-1);
 }
@@ -860,17 +868,25 @@ function setupMaskQuest(module) {
     const quest = globalThis.quests?.[MASK_QUEST_ID];
     if (!quest)
         return;
-    const hermit = module.npcs?.find(n => n.id === 'mask_giver');
-    if (!hermit?.tree?.start)
+    const hermit = (module.npcs ?? []).find(npc => npc.id === 'mask_giver');
+    const hermitTree = (typeof hermit?.tree === 'function'
+        ? hermit.tree()
+        : hermit?.tree ?? null);
+    const treeStart = hermitTree?.start;
+    if (!treeStart)
         return;
-    maskHermitTree = hermit.tree;
-    const accept = hermit.tree.start.choices?.find(c => c.q === 'accept');
+    maskHermitTree = hermitTree;
+    const startChoices = Array.isArray(treeStart.choices) ? treeStart.choices : [];
+    const accept = startChoices.find((choice) => typeof choice === 'object' && choice !== null && 'q' in choice);
     if (accept) {
         accept.effects = Array.isArray(accept.effects) ? accept.effects : [];
         if (!accept.effects.includes(beginMaskQuest))
             accept.effects.push(beginMaskQuest);
     }
-    const turnin = hermit.tree.do_turnin?.choices?.find(c => c.to === 'after');
+    const turninChoices = Array.isArray(hermitTree?.do_turnin?.choices)
+        ? hermitTree?.do_turnin?.choices
+        : [];
+    const turnin = turninChoices?.find((choice) => typeof choice === 'object' && choice !== null && 'to' in choice);
     if (turnin) {
         turnin.effects = Array.isArray(turnin.effects) ? turnin.effects : [];
         if (!turnin.effects.includes(completeMaskQuest)) {
@@ -889,20 +905,25 @@ function setupMaskQuest(module) {
     syncMaskQuestState(module);
 }
 function postLoad(module) {
-    const rygar = module.npcs.find(n => n.id === 'rygar');
-    if (rygar && rygar.tree && rygar.tree.start) {
-        rygar.tree.start.choices.unshift({
+    const npcs = module.npcs ?? [];
+    const rygar = npcs.find(n => n.id === 'rygar');
+    const rygarTree = (typeof rygar?.tree === 'function'
+        ? rygar.tree()
+        : rygar?.tree ?? null);
+    if (rygarTree && rygarTree.start) {
+        const tree = rygarTree;
+        tree.start.choices.unshift({
             label: 'Travel with us',
             join: { id: 'rygar', name: 'Rygar', role: 'Guard' },
             effects: [startPendant],
             to: 'joined'
         });
-        rygar.tree.joined = {
+        tree.joined = {
             text: 'Rygar nods and falls in step.',
             choices: [{ label: '(Leave)', to: 'bye' }]
         };
     }
-    const dock = module.npcs.find(n => n.id === 'lakeside_dockhand');
+    const dock = npcs.find(n => n.id === 'lakeside_dockhand');
     if (dock) {
         dock.processNode = function (node) {
             if (node === 'ask') {
@@ -910,21 +931,24 @@ function postLoad(module) {
             }
         };
     }
-    const bandit = module.npcs.find(n => n.id === 'bandit_leader');
+    const bandit = npcs.find(n => n.id === 'bandit_leader');
     if (bandit && bandit.combat) {
         bandit.combat.effects = [() => setFlag('bandits_cleared', 1)];
     }
     setupMaskQuest(module);
+    const addQuestFn = globalThis.addQuest;
     module.quests?.forEach(q => {
-        if (q && q.autoStart === false)
+        const quest = q;
+        if (!quest || quest.autoStart === false)
             return;
-        addQuest(q.id, q.title, q.desc, q);
+        addQuestFn?.(quest.id, quest.title ?? quest.name, quest.desc, quest);
     });
 }
-globalThis.TRUE_DUST = JSON.parse(DATA);
-globalThis.TRUE_DUST.postLoad = postLoad;
-globalThis.TRUE_DUST.startRadio = startRadio;
-startGame = function () {
+const dustlandGlobals = globalThis;
+dustlandGlobals.TRUE_DUST = TRUE_DUST;
+dustlandGlobals.TRUE_DUST.postLoad = postLoad;
+dustlandGlobals.TRUE_DUST.startRadio = startRadio;
+globalThis.startGame = function () {
     applyModule(TRUE_DUST);
     TRUE_DUST.postLoad?.(TRUE_DUST);
     const s = TRUE_DUST.start;
