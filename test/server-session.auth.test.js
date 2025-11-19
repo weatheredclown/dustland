@@ -1,13 +1,17 @@
 import assert from 'node:assert/strict';
 import { mock, test } from 'node:test';
 
-import * as firebaseClients from '../scripts/ack/firebase-clients.js';
-import { ServerSession } from '../scripts/ack/server-session.js';
+import {
+  overrideFirebaseClients,
+  resetFirebaseClientsForTests,
+} from '../scripts/ack/firebase-clients.js';
+
+globalThis.window = globalThis;
 
 test('server session authenticates with Firebase', async t => {
   const previousFeatures = globalThis.DUSTLAND_FEATURES;
   const previousFirebase = globalThis.DUSTLAND_FIREBASE;
-  ServerSession.resetForTests();
+  let ServerSession;
 
   t.after(() => {
     mock.restoreAll();
@@ -15,7 +19,8 @@ test('server session authenticates with Firebase', async t => {
     else globalThis.DUSTLAND_FEATURES = previousFeatures;
     if (previousFirebase === undefined) delete globalThis.DUSTLAND_FIREBASE;
     else globalThis.DUSTLAND_FIREBASE = previousFirebase;
-    ServerSession.resetForTests();
+    resetFirebaseClientsForTests();
+    ServerSession?.resetForTests();
   });
 
   globalThis.DUSTLAND_FEATURES = { serverMode: true };
@@ -30,25 +35,29 @@ test('server session authenticates with Firebase', async t => {
   let signInCount = 0;
   let signOutCount = 0;
 
-  mock.method(firebaseClients, 'loadFirebaseApp', async () => ({
-    initializeApp: (_config, name) => ({ name }),
-    getApps: () => [],
-  }));
+  overrideFirebaseClients({
+    loadFirebaseApp: async () => ({
+      initializeApp: (_config, name) => ({ name }),
+      getApps: () => [],
+    }),
+    loadFirebaseAuth: async () => ({
+      getAuth: () => ({ app: 'ack-app' }),
+      onAuthStateChanged: (_auth, callback) => {
+        authCallbacks.push(callback);
+        return () => {};
+      },
+      GoogleAuthProvider: class GoogleAuthProvider {},
+      signInWithPopup: async () => {
+        signInCount += 1;
+      },
+      signOut: async () => {
+        signOutCount += 1;
+      },
+    }),
+  });
 
-  mock.method(firebaseClients, 'loadFirebaseAuth', async () => ({
-    getAuth: () => ({ app: 'ack-app' }),
-    onAuthStateChanged: (_auth, callback) => {
-      authCallbacks.push(callback);
-      return () => {};
-    },
-    GoogleAuthProvider: class GoogleAuthProvider {},
-    signInWithPopup: async () => {
-      signInCount += 1;
-    },
-    signOut: async () => {
-      signOutCount += 1;
-    },
-  }));
+  ({ ServerSession } = await import('../scripts/ack/server-session.js'));
+  ServerSession.resetForTests();
 
   const session = ServerSession.get();
   const snapshots = [];

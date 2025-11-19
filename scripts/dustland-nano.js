@@ -5,6 +5,7 @@
 // - Queues NPC dialog generations and caches lines per (npcId, "start"/node)
 // - Never blocks gameplay; best-effort only
 // - chrome://on-device-internals/ to resent your crash count if needed
+const { resolveNode } = globalThis;
 (function () {
     const nanoWindow = window;
     const nanoGlobal = globalThis;

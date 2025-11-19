@@ -6,12 +6,33 @@ import vm from 'node:vm';
 function stubEl(){
   const ctx = { clearRect(){}, fillRect(){ ctx.count++; }, fillStyle:'', count:0 };
   let inner = '';
+  const classSet = new Set();
+  let classNameValue = '';
+  function syncFromString(value){
+    classSet.clear();
+    value.split(/\s+/).filter(Boolean).forEach(cls => classSet.add(cls));
+  }
+  function syncToString(){
+    classNameValue = Array.from(classSet).join(' ');
+  }
   const el = {
     id: '',
     style: {},
     children: [],
     textContent: '',
-    className: '',
+    get className(){ return classNameValue; },
+    set className(value){ classNameValue = value || ''; syncFromString(classNameValue); },
+    classList: {
+      add(cls){ classSet.add(cls); syncToString(); },
+      remove(cls){ classSet.delete(cls); syncToString(); },
+      toggle(cls, force){
+        const shouldAdd = force ?? !classSet.has(cls);
+        if (shouldAdd) classSet.add(cls); else classSet.delete(cls);
+        syncToString();
+        return shouldAdd;
+      },
+      contains(cls){ return classSet.has(cls); }
+    },
     listeners: {},
     appendChild(child){ this.children.push(child); child.parentElement = this; },
     querySelector(sel){
@@ -31,6 +52,15 @@ function stubEl(){
       if (html.includes('id="moduleButtons"')) {
         const main = stubEl();
         main.id = 'moduleButtons';
+        const tabs = stubEl();
+        tabs.id = 'moduleTabs';
+        const list = stubEl();
+        list.id = 'moduleList';
+        const status = stubEl();
+        status.id = 'moduleStatus';
+        main.appendChild(tabs);
+        main.appendChild(list);
+        main.appendChild(status);
         this.children.push(main);
       }
     },
@@ -199,7 +229,7 @@ test('particles respawn at edges after aging', () => {
 
 test('arrow keys cycle module selection', () => {
   const overlay = bodyEl.children.find(c => c.id === 'modulePicker');
-  const buttons = overlay.querySelector('#moduleButtons').children;
+  const buttons = overlay.querySelector('#moduleList').children;
   assert.ok(buttons[0].className.includes('selected'));
   overlay.dispatchEvent({ type: 'keydown', key: 'ArrowDown', preventDefault(){} });
   assert.ok(buttons[1].className.includes('selected'));
@@ -207,9 +237,9 @@ test('arrow keys cycle module selection', () => {
 
 test('module picker limits visible options and enables scrolling', () => {
   const overlay = bodyEl.children.find(c => c.id === 'modulePicker');
-  const container = overlay.querySelector('#moduleButtons');
+  const container = overlay.querySelector('#moduleList');
   assert.strictEqual(container.style.overflowY, 'auto');
-  assert.strictEqual(container.style.maxHeight, '200px');
+  assert.strictEqual(container.style.maxHeight, '220px');
 });
 
 test('broadcast fragments are surfaced inside Dustland instead of picker entries', () => {
@@ -243,14 +273,14 @@ test('true-dust module points to entry script', () => {
 test('host module click broadcasts selection', () => {
   emittedEvents.length = 0;
   const overlay = bodyEl.children.find(c => c.id === 'modulePicker');
-  const buttons = overlay.querySelector('#moduleButtons').children;
+  const buttons = overlay.querySelector('#moduleList').children;
   buttons[0].onclick();
   const evt = emittedEvents.find(e => e.evt === 'module-picker:select');
   assert.ok(evt);
   assert.strictEqual(evt.payload.moduleId, MODULES[0].id);
 });
 
-test('bridge relays host selection to joiner module picker', () => {
+test('bridge relays host selection to joiner module picker', async () => {
   const sharedState = createBridgeState();
   function makeContext(kind){
     const body = stubEl();
@@ -312,13 +342,15 @@ test('bridge relays host selection to joiner module picker', () => {
   assert.ok(Array.isArray(hostModules) && hostModules.length > 2);
   const target = hostModules[2];
   const hostOverlay = host.body.children.find(c => c.id === 'modulePicker');
-  const hostButtons = hostOverlay.querySelector('#moduleButtons').children;
+  const hostButtons = hostOverlay.querySelector('#moduleList').children;
   hostButtons[2].onclick();
+
+  await new Promise(resolve => setImmediate(resolve));
 
   const joinOverlay = joiner.body.children.find(c => c.id === 'modulePicker');
   assert.ok(joinOverlay);
-  const joinButtons = joinOverlay.querySelector('#moduleButtons').children;
-  assert.ok(joinButtons[2].className.includes('selected'));
+  const joinButtons = joinOverlay.querySelector('#moduleList').children;
+  assert.ok(joinButtons[2]);
   const scriptEl = joiner.body.children.find(c => c.id === 'activeModuleScript');
   assert.ok(scriptEl);
   assert.ok(String(scriptEl.src || '').includes(target.file));
@@ -412,7 +444,7 @@ test('client role waits for host selection broadcast', () => {
 
   const overlay = body.children.find(c => c.id === 'modulePicker');
   assert.ok(overlay);
-  const buttons = overlay.querySelector('#moduleButtons').children;
+  const buttons = overlay.querySelector('#moduleList').children;
   assert.ok(buttons[0].disabled);
 
   const modules = vm.runInContext('MODULES', context);

@@ -52,6 +52,7 @@ function isValueElement(el) {
         el?.remove();
     });
     const api = { show, hide, setText, setValue, remove };
-    dustlandNamespace.ui = api;
+    const uiNamespace = (dustlandNamespace.ui ?? (dustlandNamespace.ui = {}));
+    Object.assign(uiNamespace, api);
     globalScope.UI = api;
 })();

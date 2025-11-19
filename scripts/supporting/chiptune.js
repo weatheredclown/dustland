@@ -448,7 +448,10 @@ chiptuneGlobal.Dustland = chiptuneGlobal.Dustland || {};
             return;
         if (typeof clampMidiToScaleFn === 'function') {
             try {
-                midi = clampMidiToScaleFn(midi, music.key, music.scale);
+                const clamped = clampMidiToScaleFn(midi, music.key, music.scale);
+                if (typeof clamped === 'number') {
+                    midi = clamped;
+                }
             }
             catch (err) {
                 void err;

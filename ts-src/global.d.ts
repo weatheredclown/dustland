@@ -484,6 +484,7 @@ declare global {
     }> | null;
     props?: Record<string, unknown> | null;
     behaviors?: DustlandModuleBehaviors | null;
+    effects?: Record<string, unknown>;
     [key: string]: unknown;
   }
 
@@ -893,6 +894,7 @@ interface ItemGeneratorRange {
     BuildingWizard?: unknown;
     updateTradeUI?: (trader: unknown) => void;
     bunkers?: Array<{ id?: string; active?: boolean; [key: string]: unknown }>;
+    movement?: { buffs?: unknown };
     [key: string]: unknown;
   }
 
@@ -1346,7 +1348,7 @@ interface ItemGeneratorRange {
     hasItem?: (...args: unknown[]) => boolean;
   }
 
-  interface globalThis {
+  interface GlobalThis {
     Dustland?: DustlandNamespace;
     hasItem?: (...args: unknown[]) => boolean;
   }

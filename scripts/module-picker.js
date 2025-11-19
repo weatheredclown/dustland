@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Splash screen allowing the player to pick a module.
 // Displays a pulsing title and swirling dust background with drifting particles.
 (() => {
@@ -18,6 +19,7 @@
         { id: 'edge', name: 'bunker-trainer-workshop', file: 'modules/edge.module.js', source: 'local' },
         { id: 'cli-demo', name: 'CLI Demo Adventure', file: 'modules/cli-demo.module.js', source: 'local' },
     ];
+    globalThis.MODULES = LOCAL_MODULES;
     const NET_FLAG = '__fromNet';
     const pickerBus = window.EventBus;
     const mpBridge = window.Dustland?.multiplayerBridge;
@@ -39,6 +41,7 @@
     let statusLine = null;
     let cloudRepoPromise = null;
     let sessionRole = null;
+    const tabButtons = {};
     try {
         sessionRole = window.sessionStorage?.getItem?.('dustland.multiplayerRole') ?? null;
     }
@@ -227,6 +230,7 @@
         update();
         return { particles, update };
     }
+    globalThis.startDust = startDust;
     function broadcastModuleSelection(moduleInfo) {
         if (!moduleInfo || !pickerBus?.emit)
             return;
@@ -285,6 +289,7 @@
         };
         document.body.appendChild(script);
     }
+    globalThis.loadModule = loadModule;
     async function loadCloudModule(moduleInfo) {
         const repo = await ensureCloudRepo();
         if (!repo) {
@@ -369,6 +374,11 @@
             return;
         }
         try {
+            Object.entries(tabButtons).forEach(([tab, btn]) => {
+                if (tab !== 'local' && btn) {
+                    btn.style.display = '';
+                }
+            });
             const [mine, shared, pub] = await Promise.all([
                 repo.listMine(),
                 repo.listShared(),
@@ -397,7 +407,7 @@
         overlay.id = 'modulePicker';
         overlay.style.cssText = 'position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;z-index:40';
         const styleTag = document.createElement('style');
-        styleTag.textContent = '@keyframes pulse{0%,100%{opacity:.8}50%{opacity:1}}.btn.selected{border-color:#4f6b4f;background:#151b15}.tab-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}.tab-row button{background:#0f110f;border:1px solid #2a382a;color:#9fbf9f;padding:6px 10px;border-radius:8px;cursor:pointer}.tab-row button.active{color:#0f0;border-color:#3c533c;background:#101610}.module-meta{font-size:.75rem;color:#7a907a}.module-summary{color:#9fbf9f;font-size:.85rem;margin-top:2px}';
+        styleTag.textContent = '@keyframes pulse{0%,100%{opacity:.8}50%{opacity:1}}.btn.selected{border-color:#4f6b4f;background:#151b15}.tab-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}.tab-row button{font-family:var(--ui-font);background:#0f110f;border:1px solid #2a382a;color:#9fbf9f;padding:6px 10px;border-radius:8px;cursor:pointer}.tab-row button.active{color:#0f0;border-color:#3c533c;background:#101610}.module-meta{font-size:.75rem;color:#7a907a}.module-summary{color:#9fbf9f;font-size:.85rem;margin-top:2px}';
         document.head.appendChild(styleTag);
         const ackBtn = document.createElement('div');
         ackBtn.id = 'ackGlyph';
@@ -456,7 +466,6 @@
             shared: 'Shared',
             public: 'Public',
         };
-        const tabButtons = {};
         function updateSelected() {
             buttons.forEach((btn, i) => {
                 if (i === selectedByTab[activeTab]) {
@@ -541,6 +550,9 @@
             btn.textContent = tabLabels[tab];
             btn.className = tab === activeTab ? 'active' : '';
             btn.onclick = () => setActiveTab(tab);
+            if (tab !== 'local') {
+                btn.style.display = 'none';
+            }
             tabButtons[tab] = btn;
             tabRow.appendChild(btn);
         });

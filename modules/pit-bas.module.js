@@ -1,6 +1,6 @@
-// @ts-nocheck
-function seedWorldContent() { }
-const DATA = `
+const pitBasGlobals = globalThis;
+pitBasGlobals.seedWorldContent = pitBasGlobals.seedWorldContent ?? (() => { });
+const PIT_BAS_DATA = `
 {
   "seed": "pit-bas",
   "name": "pit-bas",
@@ -1612,7 +1612,7 @@ const DATA = `
   ]
 }
 `;
-function postLoad(module) {
+function pitBasPostLoad(module) {
     log('You land in a shadowy cavern.');
     module.effects = module.effects || {};
     module.effects.lightningZap = () => {
@@ -1644,8 +1644,9 @@ function postLoad(module) {
         }
     };
 }
-globalThis.PIT_BAS_MODULE = JSON.parse(DATA);
-globalThis.PIT_BAS_MODULE.listing = `
+pitBasGlobals.PIT_BAS_MODULE = JSON.parse(PIT_BAS_DATA);
+const pitBasModule = pitBasGlobals.PIT_BAS_MODULE;
+pitBasModule.listing = `
 MCBDT0xPUiAxNTogQ0xTCjEgS0VZIE9GRjogQkVHSU4gPSAxOiBHT1NVQiAzODAwMAoyIElOUFVUICJX
 SEFUIElTIFlPVVIgTkFNRT8gIiwgTUFNRSQ6IEdPU1VCIDM5MDAwCjMgQ0xTIDogSUYgTUFNRSQgPSAi
 QlJJQU4gR0FMTEVUVEEiIFRIRU4gR09TVUIgNDIwMDAKNCBJTlBVVCAiV09VTEQgWU9VIExJS0UgSU5T
@@ -2836,11 +2837,11 @@ IEVSUk9SIElOIFRIRSBQUk9HUkFNISI6IEZPUiBYID0gMSBUTyAxMDAwMDogTkVYVCBYOiBHT1RPIDYw
 MAo2MDAwMCBGT1IgWCA9IDEgVE8gMzEKNjAwMTAgQ09MT1IgWAo2MDAxNSBQUklOVCBYOwo2MDAyMCBO
 RVhUIFgKCg==
 `;
-globalThis.PIT_BAS_MODULE.postLoad = postLoad;
-startGame = function () {
-    PIT_BAS_MODULE.postLoad?.(PIT_BAS_MODULE);
-    applyModule(PIT_BAS_MODULE);
-    const s = PIT_BAS_MODULE.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+pitBasModule.postLoad = pitBasPostLoad;
+pitBasGlobals.startGame = function pitBasStartGame() {
+    pitBasModule.postLoad?.(pitBasModule);
+    applyModule(pitBasModule);
+    const s = pitBasModule.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
     setMap(s.map, s.map === 'world' ? 'Wastes' : undefined);
     setPartyPos(s.x, s.y);
 };
