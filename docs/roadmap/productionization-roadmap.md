@@ -10,6 +10,8 @@ A lean checklist that keeps the browser build ship-ready without introducing hea
 - [x] Expose a `npm run check:prod` command that runs the build health scan alongside lint, tests, and HTML presubmit checks.
 - [ ] Automate nightly runs of the production check on CI to catch regressions before morning standup.
 
+Current CI runs `npm test`, `npm run lint`, and `node scripts/supporting/presubmit.js` on pushes, but the nightly and release gates for `npm run check:prod` still need to be wired into the workflows.
+
 ## Release Comms
 - [ ] Draft a one-pager summarizing the production check for the wider team.
 - [ ] Fold the new checks into the QA checklist in `docs/guides/qa-checks.md`.
