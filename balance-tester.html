@@ -225,6 +225,18 @@
         }
       });
     </script>
-  <script type="module" src="./scripts/supporting/balance-tester-agent.js"></script>
+  <script>
+    (function loadBalanceTesterAgent() {
+      const moduleUrl = './scripts/supporting/balance-tester-agent.js';
+      const handleError = (error) => {
+        console.warn('Unable to load the balance tester helper.', error);
+      };
+      try {
+        import(moduleUrl).catch(handleError);
+      } catch (error) {
+        handleError(error);
+      }
+    })();
+  </script>
 </body>
 </html>

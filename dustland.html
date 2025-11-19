@@ -6,7 +6,25 @@
   <title>Dustland: CRT Edition</title>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Oxanium:wght@400;600;700&family=Pixelify+Sans:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="dustland.css" />
-  <script type="module" src="./scripts/hosting/firebase-bootstrap.js"></script>
+  <script>
+    (function loadHostedFirebaseBootstrap() {
+      const moduleUrl = './scripts/hosting/firebase-bootstrap.js';
+      const handleError = (error) => {
+        console.warn('Skipping hosted Firebase bootstrap.', error);
+      };
+      try {
+        import(moduleUrl)
+          .then((module) => {
+            if (typeof module.bootstrapHostedFirebase === 'function') {
+              module.bootstrapHostedFirebase(window);
+            }
+          })
+          .catch(handleError);
+      } catch (error) {
+        handleError(error);
+      }
+    })();
+  </script>
 </head>
 <body>
   <div id="nanoStatus">
