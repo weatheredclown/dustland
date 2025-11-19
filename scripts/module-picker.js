@@ -1,12 +1,14 @@
-// @ts-nocheck
 // Splash screen allowing the player to pick a module.
 // Displays a pulsing title and swirling dust background with drifting particles.
 (() => {
-    if (window.modulePickerLoaded) {
+    const dustlandWindow = window;
+    const UI = dustlandWindow.UI;
+    const warnOnUnload = dustlandWindow.warnOnUnload;
+    if (dustlandWindow.modulePickerLoaded) {
         console.warn('Module picker already initialized; skipping duplicate load.');
         return;
     }
-    window.modulePickerLoaded = true;
+    dustlandWindow.modulePickerLoaded = true;
     const LOCAL_MODULES = [
         { id: 'dustland', name: 'Dustland', file: 'modules/dustland.module.js', source: 'local' },
         { id: 'office', name: 'Office', file: 'modules/office.module.js', source: 'local' },
@@ -21,8 +23,8 @@
     ];
     globalThis.MODULES = LOCAL_MODULES;
     const NET_FLAG = '__fromNet';
-    const pickerBus = window.EventBus;
-    const mpBridge = window.Dustland?.multiplayerBridge;
+    const pickerBus = dustlandWindow.EventBus;
+    const mpBridge = dustlandWindow.Dustland?.multiplayerBridge;
     const moduleLists = {
         local: [...LOCAL_MODULES],
         mine: [],
@@ -299,7 +301,7 @@
     }
     function disconnectClient() {
         try {
-            window.Dustland?.multiplayer?.disconnect?.('client');
+            dustlandWindow.Dustland?.multiplayer?.disconnect?.('client');
         }
         catch (err) {
             /* ignore */
@@ -317,12 +319,12 @@
             /* ignore */
         }
     }
-    const realOpenCreator = window.openCreator;
-    const realShowStart = window.showStart;
-    const realResetAll = window.resetAll;
-    window.openCreator = () => { };
-    window.showStart = () => { };
-    window.resetAll = () => { };
+    const realOpenCreator = dustlandWindow.openCreator;
+    const realShowStart = dustlandWindow.showStart;
+    const realResetAll = dustlandWindow.resetAll;
+    dustlandWindow.openCreator = () => { };
+    dustlandWindow.showStart = () => { };
+    dustlandWindow.resetAll = () => { };
     const loadBtn = document.getElementById('loadBtn');
     if (loadBtn)
         UI?.hide?.('loadBtn');
@@ -451,8 +453,8 @@
         }
         const existingScript = document.getElementById('activeModuleScript');
         existingScript?.remove();
-        window.seedWorldContent = () => { };
-        window.startGame = () => { };
+        dustlandWindow.seedWorldContent = () => { };
+        dustlandWindow.startGame = () => { };
         if (moduleInfo.file.endsWith('.json')) {
             window.location.href = `dustland.html?ack-player=1&module=${encodeURIComponent(moduleInfo.file)}`;
             return;
@@ -462,20 +464,20 @@
         script.src = `${moduleInfo.file}?_=${Date.now()}`;
         script.onload = () => {
             UI?.remove?.('modulePicker');
-            window.openCreator = realOpenCreator;
-            window.showStart = realShowStart;
-            window.resetAll = () => {
+            dustlandWindow.openCreator = realOpenCreator;
+            dustlandWindow.showStart = realShowStart;
+            dustlandWindow.resetAll = () => {
                 // Prevent stale modules from launching before the new one loads
-                window.openCreator = () => { };
+                dustlandWindow.openCreator = () => { };
                 realResetAll?.();
                 loadModule(moduleInfo);
             };
             if (loadBtn)
                 UI?.show?.('loadBtn');
-            window.modulePickerPending = false;
+            dustlandWindow.modulePickerPending = false;
             if (typeof warnOnUnload === 'function')
                 warnOnUnload();
-            openCreator();
+            dustlandWindow.openCreator?.();
         };
         document.body.appendChild(script);
     }
