@@ -1,4 +1,12 @@
-type PitBasModule = DustlandModuleInstance & { listing?: string };
+type PitBasModule = DustlandModuleInstance & {
+  listing?: string;
+  effects?: {
+    lightningZap?: () => void;
+    requireAirTanks?: () => void;
+    darkGrueCheck?: () => void;
+    [key: string]: unknown;
+  } | null;
+};
 
 const pitBasGlobals = globalThis as typeof globalThis & {
   PIT_BAS_MODULE?: PitBasModule;
