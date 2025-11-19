@@ -74,4 +74,5 @@ test('shows leader skill points in text', () => {
   context.party.push(lead);
   context.TrainerUI.showTrainer('power', 0);
   assert.ok(npc.tree.train.text.includes('Skill Points: 2'));
+  assert.ok(npc.tree.train.text.includes('training: Lead'));
 });

@@ -25,6 +25,7 @@ type TrainerLeader = {
   skillPoints?: number;
   stats?: Record<string, number>;
   maxHp?: number;
+  name?: string;
 };
 
 type TrainerGlobals = {
@@ -73,7 +74,9 @@ type TrainerGlobals = {
     if(dsTree && !dsTree.train) dsTree.train = trainNode;
     if(npcTree && !npcTree.train) npcTree.train = trainNode;
     const lead = typeof trainerGlobals.leader === 'function' ? trainerGlobals.leader() ?? null : null;
-    trainNode.text = `Skill Points: ${lead?.skillPoints ?? 0}`;
+    const trainingName = (lead?.name ?? '').trim();
+    const trainingLine = trainingName ? `\ntraining: ${trainingName}` : '';
+    trainNode.text = `Skill Points: ${lead?.skillPoints ?? 0}${trainingLine}`;
     const choices: TrainerDialogChoice[] = upgrades.map(up => {
       let base = 0;
       if(lead){
