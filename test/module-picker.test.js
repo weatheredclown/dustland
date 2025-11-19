@@ -20,6 +20,8 @@ function stubEl(){
     style: {},
     children: [],
     textContent: '',
+    hidden: false,
+    disabled: false,
     get className(){ return classNameValue; },
     set className(value){ classNameValue = value || ''; syncFromString(classNameValue); },
     classList: {
@@ -49,15 +51,25 @@ function stubEl(){
     getContext: () => ctx,
     set innerHTML(html){
       inner = html;
+      this.children = [];
       if (html.includes('id="moduleButtons"')) {
         const main = stubEl();
         main.id = 'moduleButtons';
+        const cloudRow = stubEl();
+        cloudRow.id = 'cloudStatusRow';
+        const cloudStatus = stubEl();
+        cloudStatus.id = 'cloudStatusLine';
+        const cloudBtn = stubEl();
+        cloudBtn.id = 'cloudLoginButton';
+        cloudRow.appendChild(cloudStatus);
+        cloudRow.appendChild(cloudBtn);
         const tabs = stubEl();
         tabs.id = 'moduleTabs';
         const list = stubEl();
         list.id = 'moduleList';
         const status = stubEl();
         status.id = 'moduleStatus';
+        main.appendChild(cloudRow);
         main.appendChild(tabs);
         main.appendChild(list);
         main.appendChild(status);
@@ -198,6 +210,14 @@ test('module picker shows title and dust background', () => {
   const canvas = overlay.children.find(c => c.id === 'dustParticles');
   assert.ok(canvas);
   assert.ok(canvas.ctx.count > 0);
+});
+
+test('cloud login row stays hidden when server mode disabled', () => {
+  const overlay = bodyEl.children.find(c => c.id === 'modulePicker');
+  assert.ok(overlay);
+  const cloudRow = overlay.querySelector('#cloudStatusRow');
+  assert.ok(cloudRow);
+  assert.ok(cloudRow.hidden);
 });
 
 test('adventure kit glyph navigates to editor', () => {
