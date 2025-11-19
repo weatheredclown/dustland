@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Splash screen allowing the player to pick a module.
 // Displays a pulsing title and swirling dust background with drifting particles.
 (() => {
@@ -71,7 +70,13 @@ interface PickerDustlandNamespace {
   multiplayerBridge?: PickerMultiplayerBridge;
 }
 
-interface Window {
+type PickerUiApi = {
+  hide?: (id: string) => void;
+  show?: (id: string) => void;
+  remove?: (id: string) => void;
+};
+
+type DustlandWindow = Window & {
   EventBus?: ModulePickerEventBus;
   Dustland?: PickerDustlandNamespace;
   openCreator?: () => void;
@@ -81,17 +86,19 @@ interface Window {
   startGame?: () => void;
   modulePickerPending?: boolean;
   modulePickerLoaded?: boolean;
-}
+  UI?: PickerUiApi;
+  warnOnUnload?: () => void;
+};
 
-declare function openCreator(): void;
-declare const UI: { hide?: (id: string) => void; show?: (id: string) => void; remove?: (id: string) => void; } | undefined;
-declare const warnOnUnload: (() => void) | undefined;
+const dustlandWindow = window as DustlandWindow;
+const UI = dustlandWindow.UI;
+const warnOnUnload = dustlandWindow.warnOnUnload;
 
-if (window.modulePickerLoaded) {
+if (dustlandWindow.modulePickerLoaded) {
   console.warn('Module picker already initialized; skipping duplicate load.');
   return;
 }
-window.modulePickerLoaded = true;
+dustlandWindow.modulePickerLoaded = true;
 
 const LOCAL_MODULES: PickerModuleInfo[] = [
   { id: 'dustland', name: 'Dustland', file: 'modules/dustland.module.js', source: 'local' },
@@ -111,8 +118,8 @@ const LOCAL_MODULES: PickerModuleInfo[] = [
 type PickerTab = 'local' | 'mine' | 'shared' | 'public';
 
 const NET_FLAG = '__fromNet';
-const pickerBus = window.EventBus;
-const mpBridge = window.Dustland?.multiplayerBridge;
+const pickerBus = dustlandWindow.EventBus;
+const mpBridge = dustlandWindow.Dustland?.multiplayerBridge;
 const moduleLists: Record<PickerTab, PickerModuleInfo[]> = {
   local: [...LOCAL_MODULES],
   mine: [],
@@ -411,7 +418,7 @@ function setStatus(message: string): void {
 
 function disconnectClient(): void {
   try {
-    window.Dustland?.multiplayer?.disconnect?.('client');
+    dustlandWindow.Dustland?.multiplayer?.disconnect?.('client');
   } catch (err) {
     /* ignore */
   }
@@ -427,12 +434,12 @@ function disconnectClient(): void {
   }
 }
 
-const realOpenCreator = window.openCreator;
-const realShowStart = window.showStart;
-const realResetAll = window.resetAll;
-window.openCreator = () => {};
-window.showStart = () => {};
-window.resetAll = () => {};
+const realOpenCreator = dustlandWindow.openCreator;
+const realShowStart = dustlandWindow.showStart;
+const realResetAll = dustlandWindow.resetAll;
+dustlandWindow.openCreator = () => {};
+dustlandWindow.showStart = () => {};
+dustlandWindow.resetAll = () => {};
 const loadBtn = document.getElementById('loadBtn');
 if (loadBtn) UI?.hide?.('loadBtn');
 
@@ -560,8 +567,8 @@ function loadModule(moduleInfo: PickerModuleInfo) {
   }
   const existingScript = document.getElementById('activeModuleScript');
   existingScript?.remove();
-  window.seedWorldContent = () => {};
-  window.startGame = () => {};
+  dustlandWindow.seedWorldContent = () => {};
+  dustlandWindow.startGame = () => {};
   if (moduleInfo.file.endsWith('.json')) {
     window.location.href = `dustland.html?ack-player=1&module=${encodeURIComponent(moduleInfo.file)}`;
     return;
@@ -571,18 +578,18 @@ function loadModule(moduleInfo: PickerModuleInfo) {
   script.src = `${moduleInfo.file}?_=${Date.now()}`;
   script.onload = () => {
     UI?.remove?.('modulePicker');
-    window.openCreator = realOpenCreator;
-    window.showStart = realShowStart;
-    window.resetAll = () => {
+    dustlandWindow.openCreator = realOpenCreator;
+    dustlandWindow.showStart = realShowStart;
+    dustlandWindow.resetAll = () => {
       // Prevent stale modules from launching before the new one loads
-      window.openCreator = () => {};
+      dustlandWindow.openCreator = () => {};
       realResetAll?.();
       loadModule(moduleInfo);
     };
     if (loadBtn) UI?.show?.('loadBtn');
-    window.modulePickerPending = false;
+    dustlandWindow.modulePickerPending = false;
     if (typeof warnOnUnload === 'function') warnOnUnload();
-    openCreator();
+    dustlandWindow.openCreator?.();
   };
   document.body.appendChild(script);
 }
