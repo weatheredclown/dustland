@@ -855,6 +855,10 @@ interface ItemGeneratorRange {
     ItemGen?: ItemGenerator;
     gameState?: DustlandGameState;
     eventBus?: DustlandEventBus;
+    movement?: {
+      buffs?: unknown;
+      [key: string]: unknown;
+    };
     eventFlags?: {
       watch?: (event: string, flag: string) => void;
       clear?: (flag: string) => void;
@@ -925,21 +929,7 @@ interface ItemGeneratorRange {
       adrenaline_dmg_mod?: number;
       granted_special?: PartySpecialEntry | PartySpecialEntry[];
     };
-    use?: {
-      type?: string;
-      amount?: number;
-      duration?: number;
-      stat?: string;
-      label?: string;
-      text?: string;
-      toast?: string;
-      effect?: string | Record<string, unknown>;
-      effects?: Array<string | Record<string, unknown>>;
-      consume?: boolean;
-      ignoreDefense?: boolean;
-      onUse?: (...args: any[]) => boolean | void;
-      [key: string]: unknown;
-    };
+    use?: (GameItemUse & { onUse?: (...args: any[]) => boolean | void }) | null;
   }
 
   interface PartyEquipmentSlots {
@@ -1116,7 +1106,7 @@ interface ItemGeneratorRange {
 
   function registerItem<T>(item: T): T;
 
-  interface globalThis {
+  interface GlobalThis {
     Dustland?: DustlandNamespace;
     DustlandSkin?: DustlandSkinApi;
     loadSkin?: (name: string, options?: Record<string, unknown> | null) => DustlandSkin | null;

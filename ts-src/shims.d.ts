@@ -6,7 +6,7 @@ declare global {
     [key: string]: unknown;
   }
 
-  interface DustlandGlobalsBase {
+  interface GlobalThis {
     [key: string]: unknown;
     Dustland?: DustlandNamespace;
     EventBus?: unknown;
@@ -16,9 +16,6 @@ declare global {
     clampMidiToScale?: (...args: unknown[]) => unknown;
     TILE?: unknown;
   }
-
-  interface globalThis extends DustlandGlobalsBase {}
-  interface GlobalThis extends DustlandGlobalsBase {}
 
   // Provide loose globals so non-module scripts can access shared helpers
   var Dustland: DustlandNamespace | undefined;
