@@ -34,7 +34,9 @@
         if (npcTree && !npcTree.train)
             npcTree.train = trainNode;
         const lead = typeof trainerGlobals.leader === 'function' ? trainerGlobals.leader() ?? null : null;
-        trainNode.text = `Skill Points: ${lead?.skillPoints ?? 0}`;
+        const trainingName = (lead?.name ?? '').trim();
+        const trainingLine = trainingName ? `\ntraining: ${trainingName}` : '';
+        trainNode.text = `Skill Points: ${lead?.skillPoints ?? 0}${trainingLine}`;
         const choices = upgrades.map(up => {
             let base = 0;
             if (lead) {
