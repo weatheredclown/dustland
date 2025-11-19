@@ -25,7 +25,10 @@ type TrainerLeader = {
   skillPoints?: number;
   stats?: Record<string, number>;
   maxHp?: number;
+  hp?: number;
 };
+
+type TrainerParty = TrainerLeader[] & { selectedMember?: number };
 
 type TrainerGlobals = {
   TRAINER_UPGRADES?: TrainerUpgradeMap;
@@ -33,6 +36,9 @@ type TrainerGlobals = {
   dialogState?: TrainerState | null;
   leader?: () => TrainerLeader | null | undefined;
   trainStat?: (stat: string) => boolean;
+  party?: TrainerParty;
+  renderParty?: () => void;
+  updateHUD?: () => void;
   TrainerUI?: {
     showTrainer: (id: string) => boolean;
     applyUpgrade: (trainerId: string, upgradeId: string) => boolean;
@@ -40,6 +46,42 @@ type TrainerGlobals = {
 };
 (function(){
   const trainerGlobals = globalThis as typeof globalThis & TrainerGlobals;
+
+  function leader(): TrainerLeader | null {
+    if(typeof trainerGlobals.leader === 'function'){
+      const fromGlobals = trainerGlobals.leader();
+      if(fromGlobals) return fromGlobals;
+    }
+    const p = trainerGlobals.party;
+    if(!p || !Array.isArray(p) || p.length === 0){
+      return null;
+    }
+    const idx = typeof p.selectedMember === 'number' ? p.selectedMember : 0;
+    return p[idx] ?? p[0] ?? null;
+  }
+
+  function trainStat(stat: string): boolean {
+    if(typeof trainerGlobals.trainStat === 'function'){
+      return trainerGlobals.trainStat(stat);
+    }
+    const m = leader();
+    if(!m) return false;
+
+    if((m.skillPoints ?? 0) > 0){
+      m.skillPoints = (m.skillPoints ?? 0) - 1;
+      if(stat === 'HP'){
+        m.maxHp = (m.maxHp ?? 0) + 5;
+        m.hp = (m.hp ?? 0) + 5;
+      }else{
+        const stats = m.stats ?? (m.stats = {});
+        stats[stat] = (stats[stat] ?? 0) + 1;
+      }
+      if(typeof trainerGlobals.renderParty === 'function') trainerGlobals.renderParty();
+      if(typeof trainerGlobals.updateHUD === 'function') trainerGlobals.updateHUD();
+      return true;
+    }
+    return false;
+  }
 
   function loadTrainerData(): TrainerUpgradeMap {
     if(!trainerGlobals.TRAINER_UPGRADES){
@@ -72,7 +114,7 @@ type TrainerGlobals = {
     if(!trainNode) return false;
     if(dsTree && !dsTree.train) dsTree.train = trainNode;
     if(npcTree && !npcTree.train) npcTree.train = trainNode;
-    const lead = typeof trainerGlobals.leader === 'function' ? trainerGlobals.leader() ?? null : null;
+    const lead = leader() ?? null;
     trainNode.text = `Skill Points: ${lead?.skillPoints ?? 0}`;
     const choices: TrainerDialogChoice[] = upgrades.map(up => {
       let base = 0;
@@ -99,7 +141,7 @@ type TrainerGlobals = {
     if(up.type === 'stat'){
       const stat = up.stat;
       if(!stat) return false;
-      const ok = typeof trainerGlobals.trainStat === 'function' ? trainerGlobals.trainStat(stat) : false;
+      const ok = trainStat(stat);
       if(ok) showTrainer(trainerId);
       return ok;
     }
