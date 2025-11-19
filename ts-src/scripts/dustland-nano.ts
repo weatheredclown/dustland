@@ -315,8 +315,8 @@ type NanoGlobal = typeof globalThis & {
   const SEEN_TTL_MS = 8000;  // allow re-gen after 8s
 
   function queueForNPC(npc: NanoNPCSummary | undefined, nodeId='start', reason='timer'){
-    console.log(`[Nano] queueForNPC called: npcId=${npc?.id}, nodeId=${nodeId}, reason=${reason}`);
     if(!_state.ready || !nanoWindow.NanoDialog.enabled || !npc || !npc.id) return;
+    console.log(`[Nano] queueForNPC called: npcId=${npc?.id}, nodeId=${nodeId}, reason=${reason}`);
 
     const key = _key(npc.id, nodeId);
     const now = Date.now();
