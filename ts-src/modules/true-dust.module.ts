@@ -1,4 +1,21 @@
-// @ts-nocheck
+type TrueDustItem = {
+  id: string;
+  map?: string;
+  x?: number;
+  y?: number;
+  [key: string]: unknown;
+};
+
+type TrueDustModule = DustlandModuleInstance & {
+  items: TrueDustItem[];
+  start: { map: string; x: number; y: number };
+  quests?: MaskQuest[];
+  postLoad?: (moduleData: DustlandModuleInstance) => void;
+  startRadio?: () => void;
+};
+
+type MaskQuest = Quest & { progress?: number; desc?: string; autoStart?: boolean; title?: string };
+
 const DATA = `
 {
   "seed": "true-dust",
@@ -724,33 +741,42 @@ const DATA = `
 }
 `;
 
-function startPendant() {
-  if (startPendant._t) return;
-  startPendant._t = setInterval(() => {
+const TRUE_DUST = JSON.parse(DATA) as TrueDustModule;
+
+let pendantTimer: ReturnType<typeof setInterval> | null = null;
+const startPendant = (): void => {
+  if (pendantTimer) return;
+  pendantTimer = setInterval(() => {
     const r = party.find(m => m.id === 'rygar');
     if (!r) {
-      clearInterval(startPendant._t);
-      startPendant._t = null;
+      if (pendantTimer) clearInterval(pendantTimer);
+      pendantTimer = null;
       return;
     }
     if (typeof playFX === 'function') playFX('status');
     if (typeof log === 'function') log("Rygar's pendant glints.");
   }, 8000);
-}
+};
 
-function startRadio() {
-  if (startRadio._t) return;
-  const caches = TRUE_DUST.items.filter(i => i.id.startsWith('scrap_cache'));
-  startRadio._t = setInterval(() => {
+let radioTimer: ReturnType<typeof setInterval> | null = null;
+const startRadio = (): void => {
+  if (radioTimer) return;
+  const caches = (TRUE_DUST.items ?? []).filter(
+    (item): item is TrueDustItem => typeof item?.id === 'string' && item.id.startsWith('scrap_cache')
+  );
+  const partyState = party as unknown as Party & { map: string; x: number; y: number };
+  radioTimer = setInterval(() => {
     const hasRadio = party.some(m => m.equip?.trinket?.id === 'cracked_radio');
     if (!hasRadio) return;
-    const near = caches.some(c => party.map === c.map && Math.abs(party.x - c.x) <= 1 && Math.abs(party.y - c.y) <= 1);
+    const near = caches.some(c =>
+      partyState.map === c.map && Math.abs(partyState.x - (c.x ?? 0)) <= 1 && Math.abs(partyState.y - (c.y ?? 0)) <= 1
+    );
     if (near) {
       if (typeof toast === 'function') toast('Static bursts from the radio.');
       if (typeof log === 'function') log('The radio crackles with static.');
     }
   }, 1000);
-}
+};
 
 const MASK_QUEST_ID = 'mask_memory';
 const MASK_QUEST_FLAG = 'mask_memory_stage';
@@ -767,23 +793,23 @@ const MASK_STAGE_TEXT = [
 ];
 const MASK_CHECKPOINTS = ['accepted', 'recovered', 'awakened'];
 let maskQuestSetupDone = false;
-let maskHermitTree = null;
+let maskHermitTree: DustlandDialogTree | null = null;
 
-function updateMaskHermitStart(stage) {
+function updateMaskHermitStart(stage: number): void {
   if (!maskHermitTree?.start) return;
   const idx = stage >= 0 ? stage + 1 : 0;
   maskHermitTree.start.text = MASK_STAGE_TEXT[idx] || MASK_STAGE_TEXT[0];
 }
 
-function maskQuestCheckpoint(stage) {
+function maskQuestCheckpoint(stage: number): void {
   const key = MASK_CHECKPOINTS[stage];
   if (!key) return;
   if (typeof log === 'function') log(`Checkpoint: mask quest ${key}.`);
   globalThis.EventBus?.emit?.('quest:checkpoint', { questId: MASK_QUEST_ID, stage: key });
 }
 
-function setMaskQuestStage(stage) {
-  const quest = globalThis.quests?.[MASK_QUEST_ID];
+function setMaskQuestStage(stage: number): void {
+  const quest = globalThis.quests?.[MASK_QUEST_ID] as MaskQuest | undefined;
   if (!quest) return;
   if (quest.progress === stage) {
     updateMaskHermitStart(stage);
@@ -803,8 +829,8 @@ function setMaskQuestStage(stage) {
   maskQuestCheckpoint(stage);
 }
 
-function beginMaskQuest() {
-  const quest = globalThis.quests?.[MASK_QUEST_ID];
+function beginMaskQuest(): void {
+  const quest = globalThis.quests?.[MASK_QUEST_ID] as MaskQuest | undefined;
   if (!quest) return;
   if (quest.status !== 'active') {
     globalThis.questLog?.add?.(quest);
@@ -812,7 +838,7 @@ function beginMaskQuest() {
   setMaskQuestStage(0);
 }
 
-function handleMaskAcquired(item) {
+function handleMaskAcquired(item: { tags?: string[] } | null | undefined): void {
   const quest = globalThis.quests?.[MASK_QUEST_ID];
   if (!quest || quest.status !== 'active' || quest.progress >= 1) return;
   const tags = Array.isArray(item?.tags) ? item.tags.map(t => t.toLowerCase()) : [];
@@ -820,17 +846,18 @@ function handleMaskAcquired(item) {
   setMaskQuestStage(1);
 }
 
-function handleMaskQuestCompleted(evt) {
-  if (!evt?.quest || evt.quest.id !== MASK_QUEST_ID) return;
+function handleMaskQuestCompleted(evt: QuestCompletedPayload | null | undefined): void {
+  const quest = evt?.quest as MaskQuest | undefined;
+  if (!quest || quest.id !== MASK_QUEST_ID) return;
   setMaskQuestStage(2);
 }
 
-function completeMaskQuest() {
+function completeMaskQuest(): void {
   setMaskQuestStage(2);
 }
 
-function syncMaskQuestState(module) {
-  const quest = globalThis.quests?.[MASK_QUEST_ID];
+function syncMaskQuestState(module: TrueDustModule): void {
+  const quest = globalThis.quests?.[MASK_QUEST_ID] as MaskQuest | undefined;
   if (!quest) return;
   if (quest.status === 'completed') {
     setMaskQuestStage(2);
@@ -846,23 +873,38 @@ function syncMaskQuestState(module) {
   }
   quest.progress = -1;
   if (!maskHermitTree) {
-    maskHermitTree = module.npcs?.find(n => n.id === 'mask_giver')?.tree || null;
+    const hermit = (module.npcs ?? []).find(npc => npc.id === 'mask_giver');
+    maskHermitTree = (typeof hermit?.tree === 'function'
+      ? hermit.tree()
+      : hermit?.tree ?? null) as DustlandDialogTree | null;
   }
   updateMaskHermitStart(-1);
 }
 
-function setupMaskQuest(module) {
-  const quest = globalThis.quests?.[MASK_QUEST_ID];
+function setupMaskQuest(module: TrueDustModule): void {
+  const quest = globalThis.quests?.[MASK_QUEST_ID] as MaskQuest | undefined;
   if (!quest) return;
-  const hermit = module.npcs?.find(n => n.id === 'mask_giver');
-  if (!hermit?.tree?.start) return;
-  maskHermitTree = hermit.tree;
-  const accept = hermit.tree.start.choices?.find(c => c.q === 'accept');
+  const hermit = (module.npcs ?? []).find(npc => npc.id === 'mask_giver');
+  const hermitTree = (typeof hermit?.tree === 'function'
+    ? hermit.tree()
+    : hermit?.tree ?? null) as DustlandDialogTree | null;
+  const treeStart = hermitTree?.start;
+  if (!treeStart) return;
+  maskHermitTree = hermitTree;
+  const startChoices = Array.isArray(treeStart.choices) ? treeStart.choices : [];
+  const accept = startChoices.find((choice): choice is DustlandDialogChoice =>
+    typeof choice === 'object' && choice !== null && 'q' in choice
+  );
   if (accept) {
     accept.effects = Array.isArray(accept.effects) ? accept.effects : [];
     if (!accept.effects.includes(beginMaskQuest)) accept.effects.push(beginMaskQuest);
   }
-  const turnin = hermit.tree.do_turnin?.choices?.find(c => c.to === 'after');
+  const turninChoices = Array.isArray(hermitTree?.do_turnin?.choices)
+    ? hermitTree?.do_turnin?.choices
+    : [];
+  const turnin = turninChoices?.find((choice): choice is DustlandDialogChoice =>
+    typeof choice === 'object' && choice !== null && 'to' in choice
+  );
   if (turnin) {
     turnin.effects = Array.isArray(turnin.effects) ? turnin.effects : [];
     if (!turnin.effects.includes(completeMaskQuest)) {
@@ -881,44 +923,52 @@ function setupMaskQuest(module) {
   syncMaskQuestState(module);
 }
 
-function postLoad(module) {
-  const rygar = module.npcs.find(n => n.id === 'rygar');
-  if (rygar && rygar.tree && rygar.tree.start) {
-    rygar.tree.start.choices.unshift({
+function postLoad(module: TrueDustModule): void {
+  const npcs = module.npcs ?? [];
+  const rygar = npcs.find(n => n.id === 'rygar');
+  const rygarTree = (typeof rygar?.tree === 'function'
+    ? rygar.tree()
+    : rygar?.tree ?? null) as DustlandDialogTree | Record<string, unknown> | null;
+  if (rygarTree && (rygarTree as DustlandDialogTree).start) {
+    const tree = rygarTree as DustlandDialogTree;
+    tree.start.choices.unshift({
       label: 'Travel with us',
       join: { id: 'rygar', name: 'Rygar', role: 'Guard' },
       effects: [startPendant],
       to: 'joined'
     });
-    rygar.tree.joined = {
+    tree.joined = {
       text: 'Rygar nods and falls in step.',
       choices: [ { label: '(Leave)', to: 'bye' } ]
     };
   }
-  const dock = module.npcs.find(n => n.id === 'lakeside_dockhand');
+  const dock = npcs.find(n => n.id === 'lakeside_dockhand');
   if (dock) {
-    dock.processNode = function (node) {
+    dock.processNode = function (node: string | undefined) {
       if (node === 'ask') {
         dialogState.node = party.some(m => m.id === 'rygar') ? 'with_rygar' : 'without_rygar';
       }
     };
   }
-  const bandit = module.npcs.find(n => n.id === 'bandit_leader');
+  const bandit = npcs.find(n => n.id === 'bandit_leader');
   if (bandit && bandit.combat) {
     bandit.combat.effects = [() => setFlag('bandits_cleared', 1)];
   }
   setupMaskQuest(module);
+  const addQuestFn = (globalThis as typeof globalThis & { addQuest?: (...args: unknown[]) => void }).addQuest;
   module.quests?.forEach(q => {
-    if (q && q.autoStart === false) return;
-    addQuest(q.id, q.title, q.desc, q);
+    const quest = q as MaskQuest | undefined;
+    if (!quest || quest.autoStart === false) return;
+    addQuestFn?.(quest.id, quest.title ?? quest.name, quest.desc, quest);
   });
 }
 
-globalThis.TRUE_DUST = JSON.parse(DATA);
-globalThis.TRUE_DUST.postLoad = postLoad;
-globalThis.TRUE_DUST.startRadio = startRadio;
+const dustlandGlobals = globalThis as typeof globalThis & { TRUE_DUST?: TrueDustModule };
+dustlandGlobals.TRUE_DUST = TRUE_DUST;
+dustlandGlobals.TRUE_DUST.postLoad = postLoad;
+dustlandGlobals.TRUE_DUST.startRadio = startRadio;
 
-startGame = function () {
+globalThis.startGame = function () {
   applyModule(TRUE_DUST);
   TRUE_DUST.postLoad?.(TRUE_DUST);
   const s = TRUE_DUST.start;
