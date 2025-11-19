@@ -39,7 +39,6 @@
     let buttons = [];
     let buttonContainer = null;
     let statusLine = null;
-    let cloudRepoPromise = null;
     let sessionRole = null;
     const tabButtons = {};
     try {
@@ -52,6 +51,11 @@
     if (isClient) {
         selectedByTab.local = -1;
     }
+    let latestSessionSnapshot = null;
+    let cloudRepo = null;
+    let cloudRepoPromise = null;
+    let cloudRepoUserId = null;
+    let rerenderActiveList = null;
     function isModulePickerPayload(payload) {
         if (!payload || typeof payload !== 'object')
             return false;
@@ -59,26 +63,41 @@
         return typeof record.moduleId === 'string' || typeof record.moduleFile === 'string';
     }
     async function ensureCloudRepo() {
-        if (cloudRepoPromise)
+        const snapshot = await ensureSessionSnapshot();
+        if (!snapshot || snapshot.bootstrap.status !== 'firebase-ready') {
+            return null;
+        }
+        const userId = snapshot.user?.uid ?? null;
+        if (cloudRepo && cloudRepoUserId === userId) {
+            return cloudRepo;
+        }
+        if (cloudRepoPromise) {
             return cloudRepoPromise;
+        }
         cloudRepoPromise = (async () => {
             try {
-                const { detectServerMode } = await import('./ack/server-mode.js');
-                const bootstrap = detectServerMode();
-                if (bootstrap.status !== 'firebase-ready') {
-                    return null;
-                }
                 const { FirestoreModuleRepository } = await import('./ack/module-repository.js');
                 const repo = new FirestoreModuleRepository();
-                await repo.init({ status: 'authenticated', user: null, error: null, bootstrap });
+                await repo.init(snapshot);
+                cloudRepo = repo;
+                cloudRepoUserId = userId;
                 return repo;
             }
             catch (err) {
                 console.warn('Cloud module repository unavailable', err);
                 return null;
             }
+            finally {
+                if (!cloudRepo) {
+                    cloudRepoPromise = null;
+                }
+            }
         })();
-        return cloudRepoPromise;
+        const repo = await cloudRepoPromise;
+        if (!repo) {
+            cloudRepoPromise = null;
+        }
+        return repo;
     }
     function mapSummaryToModule(summary) {
         return {
@@ -100,6 +119,177 @@
         }
         catch (err) {
             return '';
+        }
+    }
+    async function ensureSessionSnapshot() {
+        if (latestSessionSnapshot) {
+            return latestSessionSnapshot;
+        }
+        try {
+            const { detectServerMode } = await import('./ack/server-mode.js');
+            const bootstrap = detectServerMode();
+            if (bootstrap.status !== 'firebase-ready') {
+                return null;
+            }
+            latestSessionSnapshot = { status: 'idle', user: null, error: null, bootstrap };
+            return latestSessionSnapshot;
+        }
+        catch (err) {
+            console.warn('Server mode detection failed', err);
+            return null;
+        }
+    }
+    function resetCloudRepo() {
+        cloudRepo = null;
+        cloudRepoPromise = null;
+        cloudRepoUserId = null;
+    }
+    function hideCloudTabs() {
+        moduleLists.mine = [];
+        moduleLists.shared = [];
+        moduleLists.public = [];
+        selectedByTab.mine = -1;
+        selectedByTab.shared = -1;
+        selectedByTab.public = -1;
+        Object.entries(tabButtons).forEach(([tab, btn]) => {
+            if (tab !== 'local' && btn) {
+                btn.style.display = 'none';
+                btn.classList.remove('active');
+            }
+            else if (tab === 'local' && btn) {
+                btn.classList.add('active');
+            }
+        });
+        if (activeTab !== 'local') {
+            activeTab = 'local';
+            seedSelection('local');
+        }
+        rerenderActiveList?.();
+    }
+    function showCloudTabs() {
+        Object.entries(tabButtons).forEach(([tab, btn]) => {
+            if (tab !== 'local' && btn) {
+                btn.style.display = '';
+            }
+        });
+    }
+    function describeCloudSessionSnapshot(snapshot) {
+        switch (snapshot.status) {
+            case 'idle':
+                return {
+                    message: 'Sign in to browse cloud modules.',
+                    buttonLabel: '☁ Sign in',
+                    buttonDisabled: false,
+                    buttonTooltip: 'Use Google login to unlock Mine/Shared/Public tabs.',
+                };
+            case 'initializing':
+                return {
+                    message: 'Connecting to Dustland cloud…',
+                    buttonLabel: '☁ Connecting…',
+                    buttonDisabled: true,
+                    buttonTooltip: 'Bootstrapping Firebase client.',
+                };
+            case 'authenticating':
+                return {
+                    message: 'Signing you in…',
+                    buttonLabel: '☁ Signing in…',
+                    buttonDisabled: true,
+                    buttonTooltip: 'Completing authentication.',
+                };
+            case 'authenticated':
+                return {
+                    message: 'Cloud tabs unlocked.',
+                    buttonLabel: '☁ Sign out',
+                    buttonDisabled: false,
+                    buttonTooltip: 'Sign out of Dustland cloud.',
+                };
+            case 'error':
+                return {
+                    message: `Cloud error: ${snapshot.error?.message ?? 'Unknown issue'}`,
+                    buttonLabel: '☁ Retry',
+                    buttonDisabled: false,
+                    buttonTooltip: 'Try signing in again.',
+                };
+            case 'disabled':
+            default:
+                return {
+                    message: 'Cloud unavailable.',
+                    buttonLabel: '☁ Cloud',
+                    buttonDisabled: true,
+                    buttonTooltip: 'Server mode disabled.',
+                };
+        }
+    }
+    async function initCloudLoginControls(row, statusEl, button) {
+        if (!row || !statusEl || !button)
+            return;
+        row.hidden = true;
+        button.disabled = true;
+        button.title = '';
+        let sessionInstance = null;
+        button.onclick = () => {
+            if (button.disabled || !sessionInstance)
+                return;
+            const snapshot = latestSessionSnapshot;
+            if (!snapshot)
+                return;
+            if (snapshot.status === 'authenticated') {
+                void sessionInstance.signOut?.();
+            }
+            else {
+                void sessionInstance.signIn?.();
+            }
+        };
+        const baseSnapshot = await ensureSessionSnapshot();
+        if (!baseSnapshot || baseSnapshot.bootstrap.status !== 'firebase-ready') {
+            return;
+        }
+        applySessionSnapshotToUi(baseSnapshot, row, statusEl, button);
+        try {
+            const { ServerSession } = await import('./ack/server-session.js');
+            sessionInstance = ServerSession.get();
+            const apply = (snapshot) => {
+                applySessionSnapshotToUi(snapshot, row, statusEl, button);
+            };
+            const current = sessionInstance.getSnapshot?.();
+            if (current)
+                apply(current);
+            sessionInstance.subscribe?.(apply);
+        }
+        catch (err) {
+            console.warn('Server session unavailable for module picker', err);
+            statusEl.textContent = 'Cloud login unavailable.';
+            button.disabled = true;
+        }
+    }
+    function applySessionSnapshotToUi(snapshot, row, statusEl, button) {
+        latestSessionSnapshot = snapshot;
+        if (snapshot.bootstrap.status !== 'firebase-ready') {
+            row.hidden = true;
+            hideCloudTabs();
+            return;
+        }
+        row.hidden = false;
+        const uiState = describeCloudSessionSnapshot(snapshot);
+        statusEl.textContent = uiState.message;
+        button.textContent = uiState.buttonLabel;
+        button.disabled = uiState.buttonDisabled;
+        button.title = uiState.buttonTooltip;
+        const nextUserId = snapshot.user?.uid ?? null;
+        if (cloudRepoUserId !== nextUserId) {
+            resetCloudRepo();
+        }
+        if (snapshot.status === 'authenticated') {
+            void hydrateCloudLibrary();
+        }
+        else {
+            hideCloudTabs();
+            if (snapshot.status === 'idle') {
+                setStatus('Sign in to access cloud modules.');
+            }
+            else if (snapshot.status === 'error') {
+                setStatus('Cloud sign-in failed. Try again.');
+            }
         }
     }
     function setStatus(message) {
@@ -367,18 +557,21 @@
         }
     }
     async function hydrateCloudLibrary() {
+        const snapshot = await ensureSessionSnapshot();
+        if (!snapshot || snapshot.bootstrap.status !== 'firebase-ready') {
+            setStatus('Cloud features unavailable. Showing local modules.');
+            hideCloudTabs();
+            return;
+        }
         setStatus('Loading Mine/Shared/Public…');
         const repo = await ensureCloudRepo();
         if (!repo) {
             setStatus('Cloud features unavailable. Showing local modules.');
+            hideCloudTabs();
             return;
         }
         try {
-            Object.entries(tabButtons).forEach(([tab, btn]) => {
-                if (tab !== 'local' && btn) {
-                    btn.style.display = '';
-                }
-            });
+            showCloudTabs();
             const [mine, shared, pub] = await Promise.all([
                 repo.listMine(),
                 repo.listShared(),
@@ -394,12 +587,13 @@
                 ? ''
                 : 'No cloud modules found. Try Local or publish a map from ACK.');
             if (activeTab !== 'local') {
-                renderModuleButtons();
+                rerenderActiveList?.();
             }
         }
         catch (err) {
             console.warn('Unable to load cloud module lists', err);
             setStatus('Cloud module list unavailable. Local modules remain usable.');
+            hideCloudTabs();
         }
     }
     function showModulePicker() {
@@ -435,7 +629,13 @@
         const win = document.createElement('div');
         win.className = 'win';
         win.style.cssText = 'position:relative;z-index:1;width:min(460px,92vw);background:#0b0d0b;border:1px solid #2a382a;border-radius:12px;box-shadow:0 20px 80px rgba(0,0,0,.7);overflow:hidden';
-        win.innerHTML = '<header style="padding:10px 12px;border-bottom:1px solid #223022;font-weight:700">Select Module</header><main style="padding:12px" id="moduleButtons"><div class="tab-row" id="moduleTabs"></div><div id="moduleList"></div><div id="moduleStatus" class="module-meta" style="margin-top:6px;"></div></main>';
+        win.innerHTML = '<header style="padding:10px 12px;border-bottom:1px solid #223022;font-weight:700">Select Module</header>' +
+            '<main style="padding:12px" id="moduleButtons">' +
+            '<div id="cloudStatusRow" style="display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px;">' +
+            '<div id="cloudStatusLine" class="module-meta">Cloud saves unavailable.</div>' +
+            '<button id="cloudLoginButton" class="btn" style="padding:4px 10px;font-size:.85rem;">☁ Sign in</button>' +
+            '</div>' +
+            '<div class="tab-row" id="moduleTabs"></div><div id="moduleList"></div><div id="moduleStatus" class="module-meta" style="margin-top:6px;"></div></main>';
         const uiBox = document.createElement('div');
         uiBox.style.cssText = 'position:absolute;top:50%;left:50%;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%) scale(1);';
         uiBox.appendChild(title);
@@ -455,6 +655,13 @@
         buttonContainer = overlay.querySelector('#moduleList');
         statusLine = overlay.querySelector('#moduleStatus');
         const tabRow = overlay.querySelector('#moduleTabs');
+        const cloudRow = overlay.querySelector('#cloudStatusRow');
+        const cloudStatus = overlay.querySelector('#cloudStatusLine');
+        const cloudButton = overlay.querySelector('#cloudLoginButton');
+        if (cloudRow)
+            cloudRow.hidden = true;
+        if (cloudButton)
+            cloudButton.disabled = true;
         if (!buttonContainer || !tabRow || !statusLine) {
             throw new Error('Module picker UI is missing required nodes');
         }
@@ -536,6 +743,7 @@
             });
             updateSelected();
         }
+        rerenderActiveList = () => renderModuleButtons();
         function setActiveTab(next) {
             activeTab = next;
             Object.entries(tabButtons).forEach(([tab, btn]) => {
@@ -556,6 +764,7 @@
             tabButtons[tab] = btn;
             tabRow.appendChild(btn);
         });
+        void initCloudLoginControls(cloudRow, cloudStatus, cloudButton);
         renderModuleButtons();
         overlay.tabIndex = 0;
         if (overlay.focus)
