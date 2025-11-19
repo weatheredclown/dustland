@@ -12,6 +12,7 @@ type DialogGlobals = typeof globalThis & {
   player?: PlayerState;
   party?: Party;
   state?: DustlandGameRuntimeState;
+  dialogState?: DialogState | null;
   joinParty?: (member: PartyMember) => boolean;
   removeNPC?: (npc: DustlandNpc | null | undefined) => void;
   makeMember?: (
@@ -114,6 +115,7 @@ Object.defineProperty(globalThis, 'currentNPC', {
 });
 
 const dialogState: DialogState = { tree: null, node: null };
+dialogGlobals.dialogState = dialogState;
 let selectedChoice = 0;
 const DustlandNamespace = dialogGlobals.Dustland;
 

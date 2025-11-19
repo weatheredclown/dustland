@@ -15,6 +15,7 @@ Object.defineProperty(globalThis, 'currentNPC', {
     }
 });
 const dialogState = { tree: null, node: null };
+dialogGlobals.dialogState = dialogState;
 let selectedChoice = 0;
 const DustlandNamespace = dialogGlobals.Dustland;
 if (persistBtn && typeof persistBtn === 'object' && 'onclick' in persistBtn) {
