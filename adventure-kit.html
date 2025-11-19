@@ -7,7 +7,25 @@
   <title>Adventure Construction Kit</title>
   <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="dustland.css" />
-  <script type="module" src="./scripts/hosting/firebase-bootstrap.js"></script>
+  <script>
+    (function loadHostedFirebaseBootstrap() {
+      const moduleUrl = './scripts/hosting/firebase-bootstrap.js';
+      const handleError = (error) => {
+        console.warn('Skipping hosted Firebase bootstrap.', error);
+      };
+      try {
+        import(moduleUrl)
+          .then((module) => {
+            if (typeof module.bootstrapHostedFirebase === 'function') {
+              module.bootstrapHostedFirebase(window);
+            }
+          })
+          .catch(handleError);
+      } catch (error) {
+        handleError(error);
+      }
+    })();
+  </script>
   <style>
     body {
       margin: 0;
@@ -976,8 +994,22 @@
     <script defer src="./components/wizard/npc-wizard.js"></script>
     <script defer src="./scripts/supporting/wizard-building.js"></script>
     <script defer src="./scripts/procedural-map.js"></script>
-    <script type="module" src="./scripts/ack/server-mode-controls.js"></script>
-    <script type="module" src="./scripts/ack/cloud-actions.js"></script>
+    <script>
+      (function loadServerModeModules() {
+        const importWithWarning = (path) => {
+          try {
+            return import(path).catch((error) => {
+              console.warn(`Unable to load ${path}.`, error);
+            });
+          } catch (error) {
+            console.warn(`Unable to load ${path}.`, error);
+            return Promise.resolve();
+          }
+        };
+        void importWithWarning('./scripts/ack/server-mode-controls.js');
+        void importWithWarning('./scripts/ack/cloud-actions.js');
+      })();
+    </script>
     <script defer src="./scripts/adventure-kit.js"></script>
   </body>
 
