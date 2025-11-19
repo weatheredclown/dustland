@@ -1,6 +1,21 @@
-// @ts-nocheck
-function seedWorldContent() { }
+const seedWorldContent = () => { };
+globalThis.seedWorldContent = seedWorldContent;
 const OFFICE_IMPL = (() => {
+    const tileSet = TILE;
+    const tileWall = tileSet.WALL ?? 0;
+    const tileFloor = tileSet.FLOOR ?? 0;
+    const tileDoor = tileSet.DOOR ?? 0;
+    const tileRoad = tileSet.ROAD ?? 0;
+    const tileWater = tileSet.WATER ?? 0;
+    const tileRock = tileSet.ROCK ?? 0;
+    const tileSand = tileSet.SAND ?? 0;
+    const tileBrush = tileSet.BRUSH ?? 0;
+    const worldWidth = WORLD_W;
+    const worldHeight = WORLD_H;
+    const dcTalk = DC.TALK ?? 0;
+    interiors || (interiors = {});
+    buildings || (buildings = []);
+    const creatorMapData = creatorMap;
     const FLOOR_W = 20, 
     // Expanded height to make room for an exterior elevator area
     FLOOR_H = 24;
@@ -19,27 +34,27 @@ const OFFICE_IMPL = (() => {
         janitor: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjZjg4Ii8+PHRleHQgeD0iMTYiIHk9IjIxIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIj5KPC90ZXh0Pjwvc3ZnPg==',
         elevator: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjYTlmNTlmIi8+PHRleHQgeD0iMTYiIHk9IjIxIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAwIj5FPC90ZXh0Pjwvc3ZnPg=='
     };
-    const WORLD_MID = Math.floor(WORLD_W / 2), WORLD_MIDY = Math.floor(WORLD_H / 2);
+    const WORLD_MID = Math.floor(worldWidth / 2), WORLD_MIDY = Math.floor(worldHeight / 2);
     function liftHelmetCurse() {
         uncurseItem('cursed_vr_helmet');
     }
     function genForestWorld(seed = Date.now()) {
         setRNGSeed(seed);
-        world = Array.from({ length: WORLD_H }, () => Array.from({ length: WORLD_W }, (_, x) => {
+        world = Array.from({ length: worldHeight }, () => Array.from({ length: worldWidth }, (_, x) => {
             if (x === WORLD_MID)
-                return TILE.WATER;
+                return tileWater;
             // Add variety so the forest isn't a featureless expanse
             const roll = rand(100);
             if (roll < 10)
-                return TILE.ROCK;
+                return tileRock;
             if (roll < 30)
-                return TILE.SAND;
-            return TILE.BRUSH;
+                return tileSand;
+            return tileBrush;
         }));
-        setTile('world', WORLD_MID, WORLD_MIDY, TILE.ROAD);
-        interiors = {};
-        if (creatorMap.grid && creatorMap.grid.length)
-            interiors['creator'] = creatorMap;
+        setTile('world', WORLD_MID, WORLD_MIDY, tileRoad);
+        Object.keys(interiors).forEach((key) => delete interiors[key]);
+        if (creatorMapData.grid && creatorMapData.grid.length)
+            interiors['creator'] = creatorMapData;
         buildings.length = 0;
         const hut = placeHut(WORLD_MID + 3, WORLD_MIDY - 2, {
             interiorId: 'castle',
@@ -53,33 +68,33 @@ const OFFICE_IMPL = (() => {
             x === 0 ||
             x === FLOOR_W - 1 ||
             y === 4
-            ? TILE.WALL
-            : TILE.FLOOR));
+            ? tileWall
+            : tileFloor));
     }
     function addElevator(grid) {
         // Wider elevator placed outside the main office rectangle
         for (let y = 1; y <= 4; y++) {
-            grid[y][midX - 2] = TILE.WALL;
-            grid[y][midX + 2] = TILE.WALL;
+            grid[y][midX - 2] = tileWall;
+            grid[y][midX + 2] = tileWall;
         }
         for (let y = 1; y < 4; y++) {
-            grid[y][midX - 1] = TILE.FLOOR;
-            grid[y][midX] = TILE.FLOOR; // NPC spot and elevator floor
-            grid[y][midX + 1] = TILE.FLOOR;
+            grid[y][midX - 1] = tileFloor;
+            grid[y][midX] = tileFloor; // NPC spot and elevator floor
+            grid[y][midX + 1] = tileFloor;
         }
-        grid[4][midX - 1] = TILE.DOOR;
-        grid[4][midX] = TILE.DOOR;
-        grid[4][midX + 1] = TILE.DOOR;
+        grid[4][midX - 1] = tileDoor;
+        grid[4][midX] = tileDoor;
+        grid[4][midX + 1] = tileDoor;
     }
     function makeFloor1() {
         const grid = baseGrid();
         addElevator(grid);
         // four pillars
-        [6, FLOOR_W - 7].forEach((x) => [10, FLOOR_H - 7].forEach((y) => (grid[y][x] = TILE.WALL)));
+        [6, FLOOR_W - 7].forEach((x) => [10, FLOOR_H - 7].forEach((y) => (grid[y][x] = tileWall)));
         // front desk
         for (let x = 3; x < FLOOR_W - 3; x++) {
             if (x !== midX)
-                grid[FLOOR_H - 5][x] = TILE.WALL;
+                grid[FLOOR_H - 5][x] = tileWall;
         }
         return { id: 'floor1', label: 'Lobby', w: FLOOR_W, h: FLOOR_H, grid, entryX: midX, entryY: 2 };
     }
@@ -91,7 +106,7 @@ const OFFICE_IMPL = (() => {
             for (let y = 8; y < FLOOR_H - 4; y++) {
                 if (y === (i % 2 === 0 ? 14 : 18))
                     continue; // door gaps
-                grid[y][x] = TILE.WALL;
+                grid[y][x] = tileWall;
             }
         });
         return { id: 'floor2', label: 'Workspace', w: FLOOR_W, h: FLOOR_H, grid, entryX: midX, entryY: 2 };
@@ -104,15 +119,15 @@ const OFFICE_IMPL = (() => {
             for (let x = 5; x <= FLOOR_W - 6; x++) {
                 const edge = y === 9 || y === FLOOR_H - 6 || x === 5 || x === FLOOR_W - 6;
                 if (edge)
-                    grid[y][x] = TILE.WALL;
+                    grid[y][x] = tileWall;
             }
         }
-        grid[FLOOR_H - 6][midX] = TILE.DOOR;
+        grid[FLOOR_H - 6][midX] = tileDoor;
         return { id: 'floor3', label: 'Executive Suite', w: FLOOR_W, h: FLOOR_H, grid, entryX: midX, entryY: 2 };
     }
     function makeCastle() {
         const W = 30, H = 30;
-        const grid = Array.from({ length: H }, () => Array.from({ length: W }, () => TILE.WALL));
+        const grid = Array.from({ length: H }, () => Array.from({ length: W }, () => tileWall));
         function shuffle(arr) {
             for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -121,7 +136,7 @@ const OFFICE_IMPL = (() => {
             return arr;
         }
         function carve(x, y) {
-            grid[y][x] = TILE.FLOOR;
+            grid[y][x] = tileFloor;
             shuffle([
                 [1, 0],
                 [-1, 0],
@@ -133,14 +148,14 @@ const OFFICE_IMPL = (() => {
                     ny > 0 &&
                     nx < W - 1 &&
                     ny < H - 1 &&
-                    grid[ny][nx] === TILE.WALL) {
-                    grid[y + dy][x + dx] = TILE.FLOOR;
+                    grid[ny][nx] === tileWall) {
+                    grid[y + dy][x + dx] = tileFloor;
                     carve(nx, ny);
                 }
             });
         }
         carve(1, 1);
-        grid[1][1] = TILE.DOOR;
+        grid[1][1] = tileDoor;
         return { id: 'castle', label: 'Castle', w: W, h: H, grid, entryX: 1, entryY: 1 };
     }
     const floor1 = makeFloor1();
@@ -192,7 +207,7 @@ const OFFICE_IMPL = (() => {
                     choices: [
                         {
                             label: '(Persuade for card)',
-                            check: { stat: 'CHA', dc: DC.TALK },
+                            check: { stat: 'CHA', dc: dcTalk },
                             success: 'He sighs and hands over a spare card.',
                             failure: 'Rules are rules.',
                             reward: 'access_card'
@@ -212,15 +227,20 @@ const OFFICE_IMPL = (() => {
             desc: 'Busy typing at their desk.',
             portraitSheet: portraits.worker,
             tree: () => {
-                const baseText = flagValue('visited_forest')
+                const visitedForest = Boolean(flagValue('visited_forest'));
+                const baseText = visitedForest
                     ? 'Back from the forest already?'
                     : 'Too busy to chat.';
                 const choices = [];
-                if (player.scrap < 2 && !hasItem('access_card'))
+                const playerScrap = player.scrap;
+                const hasAccessCard = hasItem('access_card');
+                if (playerScrap < 2 && !hasAccessCard)
                     choices.push({ label: 'Borrow 2 scrap', to: 'borrow', reward: 'SCRAP 2' });
                 choices.push({ label: '(Leave)', to: 'bye' });
-                const nodes = { start: { text: baseText, choices } };
-                if (player.scrap < 2 && !hasItem('access_card')) {
+                const nodes = {
+                    start: { text: baseText, choices }
+                };
+                if (playerScrap < 2 && !hasAccessCard) {
                     nodes.borrow = {
                         text: 'Here, buy back your badge.',
                         choices: [{ label: '(Thanks)', to: 'bye' }]
@@ -548,12 +568,16 @@ const DATA = `{
 function postLoad(module) {
     Object.assign(module, OFFICE_IMPL);
 }
-globalThis.OFFICE_MODULE = JSON.parse(DATA);
-globalThis.OFFICE_MODULE.postLoad = postLoad;
-startGame = function () {
-    OFFICE_MODULE.postLoad?.(OFFICE_MODULE);
-    if (OFFICE_MODULE.worldGen) {
-        const { castleId } = applyModule(OFFICE_MODULE);
+const officeModule = JSON.parse(DATA);
+officeModule.postLoad = postLoad;
+globalThis.OFFICE_MODULE = officeModule;
+globalThis.startGame = function startGame() {
+    const module = globalThis.OFFICE_MODULE;
+    if (!module)
+        throw new Error('Malformed or incomplete module: OFFICE_MODULE');
+    module.postLoad?.(module);
+    if (module.worldGen) {
+        const { castleId } = applyModule(module);
         const charm = registerItem({
             id: 'forest_charm',
             name: 'Forest Charm',
@@ -575,9 +599,11 @@ startGame = function () {
             itemDrops.push({ id: charm.id, map: castleId, x: ix, y: iy, dropType: 'world' });
             itemDrops.push({ id: stim.id, map: castleId, x: ix + 1, y: iy, dropType: 'world' });
         }
-        const s = OFFICE_MODULE.start;
-        setPartyPos(s.x, s.y);
-        setMap(s.map);
+        const start = module.start;
+        if (start) {
+            setPartyPos(start.x, start.y);
+            setMap(start.map);
+        }
         player.scrap = 10;
         log('You arrive at the office.');
     }
@@ -585,3 +611,4 @@ startGame = function () {
         throw Error("Malformed or incomplete module: OFFICE_MODULE");
     }
 };
+export {};
