@@ -5,6 +5,16 @@ import vm from 'node:vm';
 
 function stubEl(){
   const ctx = { clearRect(){}, fillRect(){}, fillStyle: '', count:0 };
+  let inner = '';
+  const classSet = new Set();
+  let classNameValue = '';
+  function syncFromString(value){
+    classSet.clear();
+    value.split(/\s+/).filter(Boolean).forEach(cls => classSet.add(cls));
+  }
+  function syncToString(){
+    classNameValue = Array.from(classSet).join(' ');
+  }
   const el = {
     id: '',
     style: {},
@@ -18,9 +28,23 @@ function stubEl(){
     querySelector: () => stubEl(),
     querySelectorAll: () => [],
     textContent: '',
-    className: '',
+    get className(){ return classNameValue; },
+    set className(value){ classNameValue = value || ''; syncFromString(classNameValue); },
+    classList: {
+      add(cls){ classSet.add(cls); syncToString(); },
+      remove(cls){ classSet.delete(cls); syncToString(); },
+      toggle(cls, force){
+        const shouldAdd = force ?? !classSet.has(cls);
+        if (shouldAdd) classSet.add(cls); else classSet.delete(cls);
+        syncToString();
+        return shouldAdd;
+      },
+      contains(cls){ return classSet.has(cls); }
+    },
     ctx,
-    getContext: () => ctx
+    getContext: () => ctx,
+    set innerHTML(html){ inner = html; this.children.length = 0; },
+    get innerHTML(){ return inner; }
   };
   return el;
 }

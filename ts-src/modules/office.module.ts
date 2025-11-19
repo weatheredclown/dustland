@@ -646,14 +646,15 @@ function postLoad(module: OfficeModule): void {
 
 const officeModule = JSON.parse(DATA) as OfficeModule;
 officeModule.postLoad = postLoad;
-globalThis.OFFICE_MODULE = officeModule;
+const OFFICE_MODULE = officeModule;
+globalThis.OFFICE_MODULE = OFFICE_MODULE;
 
-globalThis.startGame = function startGame(): void {
+globalThis.startGame = function (): void {
   const module = globalThis.OFFICE_MODULE;
   if (!module) throw new Error('Malformed or incomplete module: OFFICE_MODULE');
   module.postLoad?.(module);
   if (module.worldGen) {
-    const { castleId } = applyModule(module);
+    const { castleId } = applyModule(OFFICE_MODULE);
     const charm = registerItem({
       id: 'forest_charm',
       name: 'Forest Charm',

@@ -1,4 +1,5 @@
 (function () {
+    const globalScope = globalThis;
     const timerEl = typeof document !== 'undefined' ? document.getElementById('shopTimer') : null;
     const grudgeEl = typeof document !== 'undefined' ? document.getElementById('shopGrudge') : null;
     function updateTradeUI(trader) {
@@ -12,6 +13,6 @@
             grudgeEl.style.color = g >= 3 ? '#c33' : '';
         }
     }
-    globalThis.Dustland = globalThis.Dustland ?? {};
-    globalThis.Dustland.updateTradeUI = updateTradeUI;
+    const dustland = (globalScope.Dustland ?? (globalScope.Dustland = {}));
+    dustland.updateTradeUI = updateTradeUI;
 })();

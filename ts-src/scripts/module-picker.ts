@@ -106,6 +106,8 @@ const LOCAL_MODULES: PickerModuleInfo[] = [
   { id: 'cli-demo', name: 'CLI Demo Adventure', file: 'modules/cli-demo.module.js', source: 'local' },
 ];
 
+(globalThis as typeof globalThis & { MODULES?: PickerModuleInfo[] }).MODULES = LOCAL_MODULES;
+
 type PickerTab = 'local' | 'mine' | 'shared' | 'public';
 
 const NET_FLAG = '__fromNet';
@@ -324,6 +326,8 @@ function startDust(canvas: HTMLCanvasElement, getScale: () => number = () => 1) 
   return { particles, update };
 }
 
+(globalThis as typeof globalThis & { startDust?: typeof startDust }).startDust = startDust;
+
 function broadcastModuleSelection(moduleInfo: PickerModuleInfo) {
   if (!moduleInfo || !pickerBus?.emit) return;
   const payload: ModulePickerEventPayload = {
@@ -378,6 +382,8 @@ function loadModule(moduleInfo: PickerModuleInfo) {
   };
   document.body.appendChild(script);
 }
+
+(globalThis as typeof globalThis & { loadModule?: typeof loadModule }).loadModule = loadModule;
 
 async function loadCloudModule(moduleInfo: PickerModuleInfo) {
   const repo = await ensureCloudRepo();

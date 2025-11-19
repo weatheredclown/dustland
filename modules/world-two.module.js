@@ -1,6 +1,5 @@
-// @ts-nocheck
-function seedWorldContent() { }
 (function () {
+    const globals = globalThis;
     const DATA = `
 {
   "seed": "world-two",
@@ -263,14 +262,14 @@ function seedWorldContent() { }
   }
 }
 `;
-    globalThis.WORLD_TWO_MODULE = JSON.parse(DATA);
+    const WORLD_TWO_MODULE = (globals.WORLD_TWO_MODULE = JSON.parse(DATA));
     function postLoad(module) {
-        const handle = list => (list || []).map(e => {
+        const handle = (list) => (list || []).map((e) => {
             if (e && e.effect === 'activateBunker') {
-                return () => Dustland.fastTravel?.activateBunker?.(e.id);
+                return () => globals.Dustland?.fastTravel?.activateBunker?.(e.id);
             }
             if (e && e.effect === 'openWorldMap') {
-                return () => Dustland.worldMap?.open?.(e.id);
+                return () => globals.Dustland?.worldMap?.open?.(e.id);
             }
             return e;
         });
@@ -287,7 +286,7 @@ function seedWorldContent() { }
         function activateBunkerWhenReady(id, attempts) {
             if (!id || attempts <= 0)
                 return;
-            const ft = globalThis.Dustland?.fastTravel;
+            const ft = globals.Dustland?.fastTravel;
             if (ft?.activateBunker) {
                 ft.activateBunker(id);
                 return;
@@ -297,15 +296,16 @@ function seedWorldContent() { }
             }
         }
         activateBunkerWhenReady('beta', 20);
-        const timers = module._timers || (module._timers = {});
+        const timers = module._timers ?? (module._timers = {});
+        const partyState = globals.party ?? (globals.party = {});
         function ensureCourier(flag, dropFactory, messageFactory, intervalMs) {
             if (!flag || typeof setTimeout !== 'function')
                 return;
             if (timers[flag])
                 return;
             const interval = Math.max(1000, intervalMs || 22000);
-            party.flags = party.flags || {};
-            const last = Number(party.flags[flag]) || 0;
+            partyState.flags = partyState.flags || {};
+            const last = Number(partyState.flags[flag]) || 0;
             const now = Date.now();
             const initialDelay = last ? Math.max(0, interval - (now - last)) : interval;
             function schedule(delay) {
@@ -313,21 +313,21 @@ function seedWorldContent() { }
                     timers[flag] = null;
                     const drop = typeof dropFactory === 'function' ? dropFactory() : { ...dropFactory };
                     let added = false;
-                    if (typeof addToInv === 'function') {
-                        added = addToInv(drop);
+                    if (typeof globals.addToInv === 'function') {
+                        added = globals.addToInv(drop);
                     }
-                    if (!added && typeof dropItemNearParty === 'function') {
-                        dropItemNearParty(drop);
+                    if (!added && typeof globals.dropItemNearParty === 'function') {
+                        globals.dropItemNearParty(drop);
                     }
-                    party.flags[flag] = Date.now();
+                    partyState.flags[flag] = Date.now();
                     const msg = typeof messageFactory === 'function' ? messageFactory(drop) : messageFactory;
                     if (msg) {
-                        if (typeof log === 'function')
-                            log(msg);
-                        if (typeof toast === 'function')
-                            toast(msg);
+                        if (typeof globals.log === 'function')
+                            globals.log(msg);
+                        if (typeof globals.toast === 'function')
+                            globals.toast(msg);
                     }
-                    Dustland.eventBus?.emit?.('courier:delivered', {
+                    globals.Dustland?.eventBus?.emit?.('courier:delivered', {
                         module: module.seed || module.name || 'world-two',
                         flag,
                         item: drop
@@ -345,12 +345,18 @@ function seedWorldContent() { }
             desc: 'Beta line couriers stash fuel near the terminal.'
         }), drop => `Courier drop delivered ${drop.fuel ?? 0} fuel to Beta.`, 22000);
     }
-    globalThis.WORLD_TWO_MODULE.postLoad = postLoad;
+    globals.WORLD_TWO_MODULE.postLoad = postLoad;
 })();
-startGame = function () {
-    WORLD_TWO_MODULE.postLoad?.(WORLD_TWO_MODULE);
-    applyModule(WORLD_TWO_MODULE);
-    const s = WORLD_TWO_MODULE.start;
-    setPartyPos(s.x, s.y);
-    setMap(s.map, 'World Two');
+globalThis.startGame = function () {
+    const globals = globalThis;
+    const moduleData = globals.WORLD_TWO_MODULE;
+    if (!moduleData)
+        return;
+    moduleData.postLoad?.(moduleData);
+    globals.applyModule?.(moduleData);
+    const s = moduleData.start;
+    if (!s)
+        return;
+    globals.setPartyPos?.(s.x, s.y);
+    globals.setMap?.(s.map, 'World Two');
 };

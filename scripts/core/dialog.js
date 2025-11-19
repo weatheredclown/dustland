@@ -308,7 +308,9 @@ function resolveCheck(check, actorParam, rng = Math.random) {
     const stat = typeof check.stat === 'string' ? check.stat : '';
     const leader = dialogGlobals.party?.leader?.();
     const fallbackMember = dialogGlobals.party?.[0];
-    const effectiveActor = actorParam ?? leader ?? fallbackMember;
+    const effectiveActor = actorParam ??
+        leader ??
+        fallbackMember;
     if (!effectiveActor) {
         return { success: true, roll: 0, dc: 0, stat };
     }

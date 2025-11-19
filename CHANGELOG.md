@@ -1,5 +1,14 @@
 # Changelog
 
+## 2025-09-16
+- Pulled upstream PR #1414 to align TypeScript and runtime modules, including
+  the rebuilt office module wiring and synced JavaScript artifacts.
+- Extended Dustland global type declarations so effects, movement metadata, and
+  `PartyItem.use` signatures match the runtime, easing downstream TypeScript
+  integrations.
+- Added Firebase client override helpers and refreshed module picker tests so
+  the new globals and ACK hooks remain covered under Node's test runner.
+
 ## 2025-09-15
 - Camp interface now appears even when no masks are available.
 

@@ -32,13 +32,14 @@
     function normalize(entry) {
         if (!entry)
             return null;
-        const normalized = { ...entry };
-        if (normalized.id == null) {
+        const { id, ...rest } = entry;
+        if (id == null) {
             return null;
         }
-        if (typeof normalized.id !== 'string') {
-            normalized.id = String(normalized.id);
-        }
+        const normalized = {
+            ...rest,
+            id: String(id),
+        };
         if (!normalized.network) {
             const net = networkFor(normalized.module);
             if (net)
