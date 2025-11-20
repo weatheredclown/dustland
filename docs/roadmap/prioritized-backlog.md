@@ -9,19 +9,23 @@
 - **Gizmo (Priya):** "The engine’s coughing. If we don’t clean the pipes, every new gadget we bolt on will rattle loose."
 - **Wing (Mateo):** "Combat’s still a tech demo. Until adrenaline and flow land, none of the other features matter."
 
+## Delivery snapshot
+
+- **Combat loop is live**: the adrenaline HUD, specials, and boss telegraph effects are wired into the current combat renderer and status system. The remaining gaps are AI aggression, encounter pacing, and HUD readability at speed.
+- **RPG progression is playable**: XP curves, skill points, trainers, Memory Worm respecs, and mentor hooks ship in the runtime. Balancing the curve and upgrading trainer inventories are the open items.
+- **Hydration and fast travel shipped**: hydration ticks during movement and consumes items, and bunker terminals feed the world-map fast travel UI. Further polish should focus on messaging and scope controls.
+- **Loot and tools landed**: Spoils Cache drops, persona-aware item generation, and the Adventure Kit wizard scaffolding all exist in the codebase. Future work is tuning drop tables and expanding wizard steps.
+
 ## Prioritized Roadmap
 
-1. **Combat overhaul** – core loop still unbuilt; adrenaline-based system defines game feel.
-2. **RPG progression** – instant level-ups and trainer flow tie directly into combat and pacing.
-3. **Tech-debt paydown** – namespace and event bus cleanup unblock future work.
-4. **True Dust starter module** – anchors early narrative and quest flow.
-5. **Hydration system polish** – vital survival mechanic lacks UI and item hooks.
-6. **Bunker fast travel** – quality-of-life upgrade pending map answers.
-7. **Oasis trader refresh** – economy needs persistence before more vendors.
-8. **Spoils caches** – flavorful loot but secondary to core systems.
-9. **Persona mechanics** – identity swaps can wait until arcs are playable.
-10. **Wizard framework** – creator tooling valuable long-term, lower priority now.
-11. **Multiplayer prototype** – ambitious scope; defer until single-player stabilizes.
+1. **Type safety and event hygiene** – remove the remaining `@ts-nocheck` headers (combat, movement, core, adventure-kit, engine) and stabilize ambient globals so CI can enforce type coverage.
+2. **Combat polish** – tighten enemy AI scripts, add visibility cues for status effects, and lock in HUD layout tweaks for adrenaline and health readability.
+3. **Progression tuning** – rebalance XP gain, trainer price ladders, and Memory Worm availability based on the current skill-point loop.
+4. **Module cohesion** – finish integrating the True Dust starter path and ensure map fragments and bunker routes align with the existing modules.
+5. **Production checks in CI** – schedule `npm run check:prod` as a nightly and pre-release gate to keep synced builds and HTML presubmit coverage.
+6. **Economy refresh** – extend trader persistence and inventory refresh rules before adding new vendor locations.
+7. **Wizard and tooling extensions** – add more Adventure Kit wizard steps (placement, preview) and keep module CLI coverage healthy.
+8. **Multiplayer experiments** – keep on ice until the single-player loop is balanced and stable.
 
 *Dynamic Weather is complete and lives in `docs/design/core-systems/dynamic-weather.md`.*
 
