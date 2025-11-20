@@ -681,7 +681,7 @@ function adjacentNPC(){
   }
   return null;
 }
-function takeNearestItem(opts) {
+function takeNearestItem(opts?: { cheatPickup?: boolean; vacuum?: boolean }) {
   const useVacuumFx = !!(opts && opts.vacuum);
   const dirs = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
   for (const [dx, dy] of dirs) {

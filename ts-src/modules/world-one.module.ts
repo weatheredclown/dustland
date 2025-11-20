@@ -323,7 +323,7 @@ function postLoad(module: DustlandModuleInstance) {
           : { ...(dropFactory as Record<string, unknown>) };
         let added = false;
         if (typeof globalThis.addToInv === 'function') {
-          added = globalThis.addToInv(drop);
+          added = !!globalThis.addToInv(drop);
         }
         if (!added && typeof globalThis.dropItemNearParty === 'function') {
           globalThis.dropItemNearParty(drop);

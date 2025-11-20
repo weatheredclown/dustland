@@ -356,7 +356,7 @@ function postLoad(module: WorldTwoModule){
         const drop = typeof dropFactory === 'function' ? dropFactory() : { ...dropFactory };
         let added = false;
         if (typeof globals.addToInv === 'function') {
-          added = globals.addToInv(drop);
+          added = !!globals.addToInv(drop);
         }
         if (!added && typeof globals.dropItemNearParty === 'function') {
           globals.dropItemNearParty(drop);

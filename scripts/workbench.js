@@ -209,9 +209,9 @@
         const addTarget = enhanced.id || enhanced;
         let added = false;
         if (typeof globalScope.addToInv === 'function') {
-            added = globalScope.addToInv(addTarget);
+            added = !!globalScope.addToInv(addTarget);
             if (!added && enhanced && enhanced.id) {
-                added = globalScope.addToInv(enhanced);
+                added = !!globalScope.addToInv(enhanced);
             }
         }
         if (!added) {
