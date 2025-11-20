@@ -2,20 +2,7 @@
 
 // ===== Rendering & Utilities =====
 
-const ENGINE_VERSION = '0.227.1';
-
-type DustlandGlobals = typeof globalThis & {
-  TILE?: Record<string, number>;
-  fogOfWarEnabled?: boolean;
-  FOG_RADIUS?: number | string;
-  tileChars?: unknown;
-  playerAdrenalineFx?: unknown;
-  moduleTests?: ((assert: any) => void) | undefined;
-  NanoDialog?: { enabled?: boolean; init?: () => Promise<void>; isReady?: () => boolean; refreshIndicator?: () => void };
-  Dustland?: (typeof globalThis & { music?: { isEnabled?: () => boolean; toggleEnabled?: () => void } })['Dustland'];
-};
-
-const engineGlobals = globalThis as DustlandGlobals;
+const ENGINE_VERSION = '0.243.4';
 
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
@@ -33,8 +20,7 @@ let hudAdrMood: 'adr_high' | 'adr_low' | null = null;
 
 const FOG_UNSEEN_ALPHA = 0.94;
 
-type LogFn = (msg: string, type?: 'warn' | 'error' | string) => void;
-const logImpl: LogFn = (msg, type) => {
+function log(msg: string, type?: 'warn' | 'error' | string){
   if (logEl) {
     const p = document.createElement('div');
     p.textContent = msg;
@@ -44,9 +30,7 @@ const logImpl: LogFn = (msg, type) => {
   } else {
     console.log("Log: " + msg);
   }
-};
-const engineLog: LogFn = engineGlobals.log ?? logImpl;
-engineGlobals.log = engineLog;
+}
 
 type MultiplayerPeer = {
   id: string;
@@ -67,12 +51,12 @@ type MultiplayerPresenceEvent = {
 const origWarn = console.warn;
 console.warn = function(...args) {
   origWarn.apply(console, args);
-  engineLog('⚠️ ' + args.join(' '), 'warn');
+  log('⚠️ ' + args.join(' '), 'warn');
 };
 const origError = console.error;
 console.error = function(...args) {
   origError.apply(console, args);
-  engineLog('🛑 ' + args.join(' '), 'error');
+  log('🛑 ' + args.join(' '), 'error');
 };
 
 const multiplayerBus = globalThis.Dustland?.eventBus || globalThis.EventBus;
@@ -99,23 +83,23 @@ if (multiplayerBus?.on) {
       switch (info.status) {
         case 'started':
           if (info.role === 'host') {
-            engineLog(fromNet ? 'Multiplayer: Host is online.' : 'Multiplayer: Hosting session active. Share the host code to invite players.');
+            log(fromNet ? 'Multiplayer: Host is online.' : 'Multiplayer: Hosting session active. Share the host code to invite players.');
             if (!fromNet) {
               peerSnapshot = [];
               peerHash = '';
             }
           } else if (info.role === 'client') {
-            engineLog(fromNet ? 'Multiplayer: A player is preparing to link.' : 'Multiplayer: Preparing link to host…');
+            log(fromNet ? 'Multiplayer: A player is preparing to link.' : 'Multiplayer: Preparing link to host…');
           }
           break;
         case 'linking':
           if (info.role === 'client') {
-            engineLog(fromNet ? 'Multiplayer: Player submitted an answer code.' : 'Multiplayer: Waiting for host to accept your answer.');
+            log(fromNet ? 'Multiplayer: Player submitted an answer code.' : 'Multiplayer: Waiting for host to accept your answer.');
           }
           break;
         case 'linked':
           if (info.role === 'client') {
-            engineLog(fromNet ? 'Multiplayer: Player link confirmed.' : 'Multiplayer: Link confirmed.');
+            log(fromNet ? 'Multiplayer: Player link confirmed.' : 'Multiplayer: Link confirmed.');
           }
           break;
         case 'peers':
@@ -126,28 +110,28 @@ if (multiplayerBus?.on) {
             const prevById = new Map(peerSnapshot.map(p => [p.id, p]));
             const nextById = new Map(peers.map(p => [p.id, p]));
             peers.forEach(peer => {
-              if (!prevById.has(peer.id)) engineLog(`Multiplayer: ${peer.label} linked.`);
+              if (!prevById.has(peer.id)) log(`Multiplayer: ${peer.label} linked.`);
             });
             peerSnapshot.forEach(peer => {
-              if (!nextById.has(peer.id)) engineLog(`Multiplayer: ${peer.label} disconnected.`);
+              if (!nextById.has(peer.id)) log(`Multiplayer: ${peer.label} disconnected.`);
             });
             const remoteCount = peers.length;
             const total = remoteCount + 1;
             const label = total === 1 ? 'player' : 'players';
-            engineLog(`Multiplayer: ${total} ${label} in session (host + ${remoteCount}).`);
+            log(`Multiplayer: ${total} ${label} in session (host + ${remoteCount}).`);
             peerSnapshot = peers;
             peerHash = hash;
           }
           break;
         case 'closed':
           if (info.role === 'host') {
-            engineLog(fromNet ? 'Multiplayer: Host disconnected.' : 'Multiplayer: Hosting stopped.');
+            log(fromNet ? 'Multiplayer: Host disconnected.' : 'Multiplayer: Hosting stopped.');
             peerSnapshot = [];
             peerHash = '';
           } else if (info.role === 'client') {
-            engineLog(fromNet ? 'Multiplayer: Player connection closed.' : 'Multiplayer: Disconnected from host.');
+            log(fromNet ? 'Multiplayer: Player connection closed.' : 'Multiplayer: Disconnected from host.');
           } else {
-            engineLog('Multiplayer: Connection closed.');
+            log('Multiplayer: Connection closed.');
           }
           break;
         case 'error': {
@@ -163,7 +147,7 @@ if (multiplayerBus?.on) {
               }
             }
           }
-          engineLog(`Multiplayer error: ${detail}`);
+          log(`Multiplayer error: ${detail}`);
           break;
         }
       }
@@ -176,8 +160,7 @@ const toastHost = document.createElement('div');
 toastHost.style.cssText = 'position:fixed;left:50%;top:24px;transform:translateX(-50%);z-index:9999;pointer-events:none';
 document.body.appendChild(toastHost);
 
-type ToastFn = (msg: string) => void;
-const toastImpl: ToastFn = (msg) => {
+function toast(msg) {
   const t = document.createElement('div');
   t.textContent = msg;
   t.style.cssText = 'margin:6px 0;padding:8px 12px;background:#101910;border:1px solid #2b3b2b;border-radius:8px;color:#c8f7c9;box-shadow:0 8px 20px rgba(0,0,0,.4);opacity:0;transition:opacity .15s, transform .15s; transform: translateY(-6px)';
@@ -189,12 +172,10 @@ const toastImpl: ToastFn = (msg) => {
     party.flags.demoComplete = true;
     if(typeof save === 'function') save();
   }
-};
-const engineToast: ToastFn = engineGlobals.toast ?? toastImpl;
-engineGlobals.toast = engineToast;
+}
 
 // tiny sfx and hud feedback
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
 let audioEnabled = true;
 function setAudio(on: boolean){
   audioEnabled = on;
@@ -232,7 +213,7 @@ function setMobileControls(on: boolean){
         if(creatorEl?.style?.display==='flex'){
           const btn=document.getElementById(btnId);
           if(btn && !btn.disabled){
-            if(typeof btn.click==='function') btn.click(); else btn.onclick?.(new MouseEvent('click'));
+            if(typeof btn.click==='function') btn.click(); else btn.onclick?.();
           }
           return true;
         }
@@ -289,9 +270,9 @@ function setMobileControls(on: boolean){
           return;
         }
         if(overlay?.classList?.contains('shown')){
-          handleDialogKey?.(new KeyboardEvent('keydown', { key:'Enter' }));
+          handleDialogKey?.(new KeyboardEvent('keydown', { key: 'Enter' }));
         } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
-          handleCombatKey?.(new KeyboardEvent('keydown', { key:'Enter' }));
+          handleCombatKey?.(new KeyboardEvent('keydown', { key: 'Enter' }));
         } else {
           interact();
         }
@@ -304,7 +285,7 @@ function setMobileControls(on: boolean){
         if(overlay?.classList?.contains('shown')){
           closeDialog?.();
         } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
-          handleCombatKey?.(new KeyboardEvent('keydown', { key:'Escape' }));
+          handleCombatKey?.(new KeyboardEvent('keydown', { key: 'Escape' }));
         } else if(shop?.classList?.contains('shown')){
           shop.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape' }));
         } else {
@@ -422,7 +403,7 @@ function prettifyTileLabel(name){
 
 function tileLabelForId(id){
   if(typeof id==='number'){
-    const tiles=engineGlobals.TILE;
+    const tiles=(globalThis as any).TILE;
     if(tiles && typeof tiles==='object'){
       for(const [name,value] of Object.entries(tiles)){
         if(value===id) return prettifyTileLabel(name);
@@ -461,7 +442,7 @@ function collectTilePreviewEntries(){
   const seen=new Set();
   const entries=[];
   const numericEntries=[];
-  const tiles=engineGlobals.TILE;
+  const tiles=(globalThis as any).TILE;
   if(tiles && typeof tiles==='object'){
     for(const [name,id] of Object.entries(tiles)){
       if(!Number.isFinite(id)) continue;
@@ -539,11 +520,9 @@ if(typeof EventBus?.on === 'function'){
     if(tilePreviewOpen) renderTilePreview();
   });
 }
-type StorageOpts = { skipStorage?: boolean };
-
 const initialSkin=skinManager()?.getCurrentSkin?.();
 setTileCharLock(!!initialSkin?.tiles);
-function setFogOfWar(on, opts: StorageOpts = {}){
+function setFogOfWar(on, opts: { skipStorage?: boolean } = {}){
   fogOfWarEnabled = !!on;
   if(typeof document !== 'undefined'){
     const btn=document.getElementById('fogToggle');
@@ -601,7 +580,7 @@ function applyFontScale(scale){
   }
   updateFontScaleUI(scale);
 }
-function setFontScale(scale, opts: StorageOpts = {}){
+function setFontScale(scale, opts: { skipStorage?: boolean } = {}){
   const next = clampFontScale(scale);
   applyFontScale(next);
   if(!opts.skipStorage){
@@ -658,7 +637,7 @@ function applyFontFamily(option){
   updateFontFamilyUI(fontFamily.id);
 }
 
-function setFontFamily(id, opts: StorageOpts = {}){
+function setFontFamily(id, opts: { skipStorage?: boolean } = {}){
   const option = getFontFamilyOption(id);
   applyFontFamily(option);
   if(!opts.skipStorage){
@@ -678,15 +657,14 @@ if(Number.isFinite(savedFontScale)){
 } else {
   applyFontScale(fontScale);
 }
-function setRetroNpcArt(on: boolean, optsOrSkip?: StorageOpts | boolean){
-  const opts = typeof optsOrSkip === 'object' ? optsOrSkip : { skipStorage: !!optsOrSkip };
+function setRetroNpcArt(on, skipStorage){
   retroNpcArtEnabled = !!on;
   const cb = document.getElementById('retroNpcToggle');
   if(cb) cb.checked = retroNpcArtEnabled;
   if(typeof document !== 'undefined'){
     document.body?.classList?.toggle('retro-npc-art', retroNpcArtEnabled);
   }
-  if(!opts.skipStorage){
+  if(!skipStorage){
     globalThis.localStorage?.setItem('retroNpcArt', retroNpcArtEnabled ? '1' : '0');
   }
   retroPlayerSprite = null;
@@ -730,7 +708,7 @@ function updatePlayerIconPreview(){
   }
 }
 
-function setPlayerIcon(idx, opts: StorageOpts = {}){
+function setPlayerIcon(idx, opts: { skipStorage?: boolean } = {}){
   if(!playerIcons.length) return;
   const next = clampPlayerIconIndex(idx);
   const changed = next !== playerIconIndex;
@@ -1237,8 +1215,7 @@ if(weatherBanner && globalThis.Dustland?.weather){
 const fxOverlay = document.createElement('div');
 fxOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;opacity:0;transition:opacity .2s;z-index:200;';
 document.body.appendChild(fxOverlay);
-type PlayFxFn = ((type: any) => void) & { _t?: number };
-const playFX: PlayFxFn = (type) => {
+function playFX(type){
   if(audioEnabled && typeof audioCtx?.createOscillator==='function'){
     const o=audioCtx.createOscillator();
     const g=audioCtx.createGain();
@@ -1253,9 +1230,9 @@ const playFX: PlayFxFn = (type) => {
   const color = type==='adrenaline'? 'rgba(255,0,0,0.3)': type==='special'? 'rgba(0,255,255,0.3)': 'rgba(255,255,0,0.3)';
   fxOverlay.style.background=color;
   fxOverlay.style.opacity='1';
-  clearTimeout(playFX._t);
-  playFX._t=setTimeout(()=>{ fxOverlay.style.opacity='0'; },200);
-};
+  clearTimeout((playFX as any)._t);
+  (playFX as any)._t=setTimeout(()=>{ fxOverlay.style.opacity='0'; },200);
+}
 function hudBadge(msg){
   const target = hpEl;
   if(!target) return;
@@ -1303,7 +1280,7 @@ function lightenColor(hex, amt = 0.2) {
   const lb = Math.min(255, Math.round(b + (255 - b) * amt));
   return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
 }
-engineGlobals.tileChars = tileChars;
+globalThis.tileChars = tileChars;
 globalThis.jitterColor = jitterColor;
 
 // ===== Camera & CRT draw with ghosting =====
@@ -1316,7 +1293,7 @@ const playerAdrenalineFx = {
   brightness: 1,
   glow: 0
 };
-engineGlobals.playerAdrenalineFx = playerAdrenalineFx;
+globalThis.playerAdrenalineFx = playerAdrenalineFx;
 const rawAttrWidth = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('width')) : NaN;
 const rawAttrHeight = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('height')) : NaN;
 const BASE_CANVAS_WIDTH = Number.isFinite(rawAttrWidth) && rawAttrWidth > 0 ? rawAttrWidth : (disp?.width && disp.width > 0 ? disp.width : 640);
@@ -1460,8 +1437,7 @@ function pickupSparkle(x,y){
   sparkles.push({x,y});
 }
 
-type PickupVacuumFn = (fromX: number, fromY: number, toX?: number, toY?: number) => void;
-const pickupVacuumImpl: PickupVacuumFn = (fromX, fromY, toX, toY) => {
+function pickupVacuum(fromX, fromY, toX, toY){
   const now = Date.now();
   const fx = {
     fromX,
@@ -1472,9 +1448,7 @@ const pickupVacuumImpl: PickupVacuumFn = (fromX, fromY, toX, toY) => {
     end: now + 350
   };
   vacuumTrails.push(fx);
-};
-const enginePickupVacuum: PickupVacuumFn = engineGlobals.pickupVacuum ?? pickupVacuumImpl;
-engineGlobals.pickupVacuum = enginePickupVacuum;
+}
 
 function draw(t){
   if (disp.width < 16) {
@@ -1522,7 +1496,7 @@ function shouldRenderFog(map){
   if(!map) return false;
   const enabled = typeof fogOfWarEnabled === 'boolean'
     ? fogOfWarEnabled
-    : (typeof engineGlobals?.fogOfWarEnabled === 'boolean' ? engineGlobals.fogOfWarEnabled : true);
+    : (typeof globalThis?.fogOfWarEnabled === 'boolean' ? globalThis.fogOfWarEnabled : true);
   if(!enabled) return false;
   if(typeof mapSupportsFog === 'function') return mapSupportsFog(map);
   return map !== 'creator';
@@ -1530,9 +1504,9 @@ function shouldRenderFog(map){
 
 function renderFog(ctx, map, offX, offY, viewW, viewH){
   if(!ctx || !shouldRenderFog(map)) return;
-  const dims = (typeof mapWH === 'function' ? mapWH(map) : null) as { W?: number; H?: number } | null;
-  const W = Number.isFinite(dims?.W) ? dims?.W ?? null : null;
-  const H = Number.isFinite(dims?.H) ? dims?.H ?? null : null;
+  const dims = typeof mapWH === 'function' ? mapWH(map) : null;
+  const W = Number.isFinite(dims?.W) ? dims.W : null;
+  const H = Number.isFinite(dims?.H) ? dims.H : null;
   if(!Number.isFinite(W) || !Number.isFinite(H)) return;
   const px = Number.isFinite(party?.x) ? party.x : null;
   const py = Number.isFinite(party?.y) ? party.y : null;
@@ -1546,7 +1520,7 @@ function renderFog(ctx, map, offX, offY, viewW, viewH){
   }else if(fogState && typeof fogState === 'object'){
     visitedLookup = fogState;
   }
-  const rawRadius = Number(engineGlobals.FOG_RADIUS);
+  const rawRadius = Number((globalThis as any).FOG_RADIUS);
   const radius = Math.max(1, Number.isFinite(rawRadius) ? rawRadius : 5);
   const denom = radius + 1;
   ctx.fillStyle = '#000';
@@ -1620,7 +1594,7 @@ function render(gameState=state, dt){
   if(!ctx) return;
 
   const activeMap = gameState.map || mapIdForState();
-  const dims = (mapWH(activeMap) || {}) as { W?: number; H?: number };
+  const dims = mapWH(activeMap) || { W: 0, H: 0 };
   const { w:vWRaw, h:vHRaw } = getViewSize();
   const vW = Number.isFinite(vWRaw) ? vWRaw : VIEW_W;
   const vH = Number.isFinite(vHRaw) ? vHRaw : VIEW_H;
@@ -1641,11 +1615,11 @@ function render(gameState=state, dt){
   const offX = Math.max(0, Math.floor((vW - W) / 2));
   const offY = Math.max(0, Math.floor((vH - H) / 2));
 
-  const items = (gameState.itemDrops || itemDrops) as any[];
-  const ps = (gameState.portals || portals) as any[];
-  const entities = (gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : [])) as any[];
+  const items = gameState.itemDrops || itemDrops;
+  const ps = gameState.portals || portals;
+  const entities = gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : []);
   const pos = gameState.party || party;
-  const remoteParties = (engineGlobals.Dustland?.multiplayerParties?.list?.() as any[]) || (engineGlobals.Dustland?.multiplayerState?.remoteParties as any[]) || [];
+  const remoteParties = globalThis.Dustland?.multiplayerParties?.list?.() || globalThis.Dustland?.multiplayerState?.remoteParties || [];
   const skin = skinManager();
 
   // split entities into below/above
@@ -1998,17 +1972,18 @@ const TAB_BREAKPOINT = 1980;
 let activeTab = 'inv';
 
 function updateHUD(){
-  const prevHp = updateHUD._lastHpVal ?? player.hp;
-  hpEl.textContent = player.hp;
-  if(scrEl) scrEl.textContent = player.scrap;
+  const self = updateHUD as any;
+  const prevHp = self._lastHpVal ?? player.hp;
+  hpEl.textContent = String(player.hp);
+  if(scrEl) scrEl.textContent = String(player.scrap);
   const lead = typeof leader === 'function' ? leader() : null;
   const fx = globalThis.fxConfig;
   if(hpBar){
     if(player.hp < prevHp && fx?.damageFlash !== false){
       EventBus.emit('sfx','damage');
       hpBar.classList.add('hurt');
-      clearTimeout(updateHUD._hurtTimer);
-      updateHUD._hurtTimer = setTimeout(()=>hpBar.classList.remove('hurt'), 300);
+      clearTimeout(self._hurtTimer);
+      self._hurtTimer = setTimeout(()=>hpBar.classList.remove('hurt'), 300);
     }else if(fx?.damageFlash === false){
       hpBar.classList.remove('hurt');
     }
@@ -2016,14 +1991,14 @@ function updateHUD(){
   if(hpFill && hpBar && lead){
     const pct = Math.max(0, Math.min(100, (player.hp / (lead.maxHp || 1)) * 100));
     hpFill.style.width = pct + '%';
-    hpBar.setAttribute('aria-valuenow', player.hp);
-    hpBar.setAttribute('aria-valuemax', lead.maxHp || 1);
-    hpBar.setAttribute('aria-valuemin', 0);
+    hpBar.setAttribute('aria-valuenow', String(player.hp));
+    hpBar.setAttribute('aria-valuemax', String(lead.maxHp || 1));
+    hpBar.setAttribute('aria-valuemin', '0');
     if(hpGhost){
-      hpGhost.style.width = (updateHUD._lastHpPct ?? pct) + '%';
+      hpGhost.style.width = (self._lastHpPct ?? pct) + '%';
       requestAnimationFrame(()=>{ hpGhost.style.width = pct + '%'; });
     }
-    updateHUD._lastHpPct = pct;
+    self._lastHpPct = pct;
     if(lead){
       const crit = player.hp > 0 && player.hp <= (lead.maxHp || 1) * 0.25;
       document.body.classList.toggle('hp-critical', crit);
@@ -2033,9 +2008,9 @@ function updateHUD(){
   if(adrFill && adrBar && lead){
     const apct = Math.max(0, Math.min(100, (lead.adr / (lead.maxAdr || 1)) * 100));
     adrFill.style.width = apct + '%';
-    adrBar.setAttribute('aria-valuenow', lead.adr);
-    adrBar.setAttribute('aria-valuemax', lead.maxAdr || 1);
-    adrBar.setAttribute('aria-valuemin', 0);
+    adrBar.setAttribute('aria-valuenow', String(lead.adr));
+    adrBar.setAttribute('aria-valuemax', String(lead.maxAdr || 1));
+    adrBar.setAttribute('aria-valuemin', '0');
     if(musicBus){
       const ratio = Math.max(0, Math.min(1, (lead.adr || 0) / (lead.maxAdr || 1)));
       let nextMood = hudAdrMood;
@@ -2112,7 +2087,7 @@ function updateHUD(){
       hydEl.hidden = true;
     }
   }
-  updateHUD._lastHpVal = player.hp;
+  (updateHUD as any)._lastHpVal = player.hp;
 }
 
 function resetPlayerAdrenalineFx(){
@@ -2248,7 +2223,7 @@ function renderInv(){
     const ok=document.createElement('button');
     ok.className='btn';
     ok.textContent='Drop Selected';
-    ok.onclick=()=>{ if(dropSet.size) dropItems(Array.from(dropSet)); dropMode=false; dropSet.clear(); renderInv(); updateHUD?.(); };
+    ok.onclick=()=>{ if(dropSet.size) (globalThis as any).dropItems?.(Array.from(dropSet)); dropMode=false; dropSet.clear(); renderInv(); updateHUD?.(); };
     const cancel=document.createElement('button');
     cancel.className='btn';
     cancel.textContent='Cancel';
@@ -2322,8 +2297,8 @@ function renderInv(){
     inv.appendChild(Object.assign(document.createElement('div'),{className:'slot muted',textContent:'(empty)'}));
     return;
   }
-  const caches = {};
-  const others = [];
+  const caches: Record<string, any> = {};
+  const others: any[] = [];
   player.inv.forEach(it => {
     const slotKey=resolveInventorySlotKey(it);
     if(invSlotFilter && slotKey!==invSlotFilter) return;
@@ -2337,8 +2312,8 @@ function renderInv(){
     }
   });
   const member=party[selectedMember]||party[0];
-  const canEquipFn = typeof canEquip === 'function' ? canEquip : null;
-  const equipRestrictionsFn = typeof getEquipRestrictions === 'function' ? getEquipRestrictions : null;
+  const canEquipFn = typeof (globalThis as any).canEquip === 'function' ? (globalThis as any).canEquip : null;
+  const equipRestrictionsFn = typeof (globalThis as any).getEquipRestrictions === 'function' ? (globalThis as any).getEquipRestrictions : null;
   const fallbackRestrictions = (member, item) => {
     if(!member || !item || !['weapon','armor','trinket'].includes(item.type)) return null;
     const atk = Number.isFinite(item?.mods?.ATK) ? item.mods.ATK : 0;
@@ -2362,7 +2337,7 @@ function renderInv(){
       reasons: (!levelMet && minLevel > 1) ? [`Requires level ${minLevel}.`] : []
     };
   };
-  const describeRoles = typeof describeRequiredRoles === 'function' ? describeRequiredRoles : () => '';
+  const describeRoles = typeof (globalThis as any).describeRequiredRoles === 'function' ? (globalThis as any).describeRequiredRoles : () => '';
   const suggestions = {};
   if(member){
     for(const slot of ['weapon','armor','trinket']){
@@ -2380,9 +2355,10 @@ function renderInv(){
     const total = info.total || items.length;
     const row=document.createElement('div');
     row.className='slot cache-slot';
-    const icon = SpoilsCache.renderIcon(rank, () => {
-      SpoilsCache.open(rank);
-    });
+    const sc = (globalThis as any).SpoilsCache;
+    const icon = sc?.renderIcon ? sc.renderIcon(rank, () => {
+      sc.open(rank);
+    }) : null;
     if(icon){
       const wrap=document.createElement('div');
       wrap.style.display='flex';
@@ -2399,7 +2375,7 @@ function renderInv(){
       const btn=document.createElement('button');
       btn.className='btn jitter';
       btn.textContent='Open All';
-      btn.onclick=()=>{ SpoilsCache.openAll(rank); };
+      btn.onclick=()=>{ const sc = (globalThis as any).SpoilsCache; if(sc) sc.openAll(rank); };
       row.appendChild(btn);
     }
     inv.appendChild(row);
@@ -3045,13 +3021,7 @@ function openShop(npc) {
     const shopInv = npc.shop.inv || [];
     const baseMarkup = npc.vending ? 1 : npc.shop.markup || 2;
     const grudgeLevel = npc.shop.grudge ?? 0;
-    type TraderApi = {
-      calculatePrice?: (item: any, opts: any) => number;
-      resolveBaseValue?: (item: any) => number;
-      basePriceFromValue?: (value: number) => number;
-      resolveGrudgeMultiplier?: (grudge: number) => number;
-    };
-    const TraderClass = globalThis.Dustland?.Trader as TraderApi | undefined;
+    const TraderClass = globalThis.Dustland?.Trader;
 
     const resolveBuyPrice = (stack) => {
       if (!stack?.item) return 0;
@@ -3211,12 +3181,12 @@ function openShop(npc) {
             updateHUD();
             madePurchase = true;
           } else {
-            engineLog('Inventory is full.');
-            if (typeof toast === 'function') engineToast('Inventory is full.');
+            log('Inventory is full.');
+            if (typeof toast === 'function') toast('Inventory is full.');
           }
         } else {
-          engineLog('Not enough scrap.');
-          if (typeof toast === 'function') engineToast('Not enough scrap.');
+          log('Not enough scrap.');
+          if (typeof toast === 'function') toast('Not enough scrap.');
         }
       };
       shopBuy.appendChild(row);
@@ -3272,7 +3242,7 @@ function openShop(npc) {
       npc.cancelCount = (npc.cancelCount || 0) + 1;
       if (npc.cancelCount >= 2) {
         npc.tree.start.text = 'Buy or move on.';
-        if (typeof toast === 'function') engineToast(`${npc.name} eyes you warily.`);
+        if (typeof toast === 'function') toast(`${npc.name} eyes you warily.`);
       }
     } else if (npc) {
       npc.cancelCount = 0;
@@ -3322,13 +3292,13 @@ globalThis.Dustland.font = {
   setScale: (value, opts) => setFontScale(value, opts)
 };
 
-const engineExports = { log: engineLog, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, pickupVacuum: enginePickupVacuum, openShop, playFX };
+const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, pickupVacuum, openShop, playFX };
 Object.assign(globalThis, engineExports);
 
 // ===== Minimal Unit Tests (#test) =====
 function assert(name, cond){
   if (cond) {
-    engineLog('✅ ' + name);
+    log('✅ ' + name);
   } else {
     console.error('Test failed: ' + name);
   }
@@ -3339,7 +3309,7 @@ function runTests(){
 
   genWorld(); const hutsOK = buildings.length>0 && buildings.every(b=> b.interiorId && interiors[b.interiorId] && interiors[b.interiorId].grid); assert('Huts have interiors', hutsOK);
 
-  if(typeof engineGlobals.moduleTests === 'function') engineGlobals.moduleTests(assert);
+  if(typeof moduleTests === 'function') moduleTests(assert);
 }
 
 // ===== Input =====
@@ -3369,8 +3339,8 @@ function runTests(){
     nanoBtn.onclick=()=>{
       if(window.NanoDialog){
         NanoDialog.enabled=!NanoDialog.enabled;
-        if (typeof toast === 'function') engineToast(`Dynamic dialog ${NanoDialog.enabled ? 'enabled' : 'disabled'}`);
-        if (engineGlobals.NanoDialog?.refreshIndicator) engineGlobals.NanoDialog.refreshIndicator();
+        if (typeof toast === 'function') toast(`Dynamic dialog ${NanoDialog.enabled ? 'enabled' : 'disabled'}`);
+        if (NanoDialog.refreshIndicator) NanoDialog.refreshIndicator();
       }
       updateNano();
     };
@@ -3382,11 +3352,11 @@ function runTests(){
   const musicBtn=document.getElementById('musicToggle');
   if(musicBtn){
     const updateMusicBtn=()=>{
-      const enabled = !!engineGlobals.Dustland?.music?.isEnabled?.();
+      const enabled = !!globalThis.Dustland?.music?.isEnabled?.();
       musicBtn.textContent = `Music: ${enabled ? 'On' : 'Off'}`;
     };
     musicBtn.onclick=()=>{
-      engineGlobals.Dustland?.music?.toggleEnabled?.();
+      globalThis.Dustland?.music?.toggleEnabled?.();
       updateMusicBtn();
     };
     musicBus?.on?.('music:state', updateMusicBtn);
@@ -3451,11 +3421,10 @@ function runTests(){
       skinPreviewStatus.textContent=text || '';
       skinPreviewStatus.classList.toggle('is-error', !!isError);
     };
-    type SkinOverrides = { baseDir?: string; styleDir?: string; extension?: string; slots?: unknown };
-    const buildOverrides=(styleId): SkinOverrides=>{
+    const buildOverrides=(styleId)=>{
       const manager=globalThis.Dustland?.skin;
-      const stored=manager?.getGeneratedSkinConfig?.(styleId) as SkinOverrides | undefined;
-      const overrides: SkinOverrides={};
+      const stored=manager?.getGeneratedSkinConfig?.(styleId);
+      const overrides={};
       if(stored && typeof stored==='object'){
         if(typeof stored.baseDir==='string' && stored.baseDir.trim()) overrides.baseDir=stored.baseDir;
         if(typeof stored.styleDir==='string' && stored.styleDir.trim()) overrides.styleDir=stored.styleDir;
@@ -3567,12 +3536,12 @@ function runTests(){
           link.download=`dustland-save-${stamp}.json`;
           document.body.appendChild(link);
           if(typeof link.click==='function') link.click();
-          else link.dispatchEvent?.(new Event('click'));
+          else link.dispatchEvent?.({ type:'click' });
           link.remove();
           globalThis.URL.revokeObjectURL?.(url);
           hideDebug();
-          engineLog('Save exported.');
-          if(typeof toast === 'function') engineToast('Save exported.');
+          log('Save exported.');
+          if(typeof toast === 'function') toast('Save exported.');
         }catch(err){
           console.error('Failed to export save', err);
           const msg='Failed to export save.';
@@ -3586,7 +3555,7 @@ function runTests(){
       importBtn.addEventListener('click', ()=>{
         importInput.value='';
         if(typeof importInput.click==='function') importInput.click();
-        else importInput.dispatchEvent?.(new Event('click'));
+        else importInput.dispatchEvent?.({ type:'click' });
       });
       importInput.addEventListener('change', ()=>{
         const file=importInput.files?.[0];
@@ -3613,8 +3582,8 @@ function runTests(){
             globalThis.localStorage?.setItem('dustland_crt', JSON.stringify(parsed));
             hideDebug();
             if(typeof load === 'function') load();
-            engineLog('Save imported.');
-            if(typeof toast === 'function') engineToast('Save imported.');
+            log('Save imported.');
+            if(typeof toast === 'function') toast('Save imported.');
           }catch(err){
             console.error('Failed to import save', err);
             const msg='Failed to import save. Ensure the file is a valid Dustland save.';
@@ -3710,7 +3679,7 @@ function runTests(){
           selectedMember = (selectedMember + 1) % party.length;
           renderParty();
           if (typeof globalThis.renderInv === 'function') globalThis.renderInv();
-          engineToast(`Leader: ${party[selectedMember].name}`);
+          toast(`Leader: ${party[selectedMember].name}`);
         }
         break;
       case 'm': case 'M': showMini=!showMini; break;
