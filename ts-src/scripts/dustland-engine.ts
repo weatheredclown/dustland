@@ -4,6 +4,19 @@
 
 const ENGINE_VERSION = '0.227.1';
 
+type DustlandGlobals = typeof globalThis & {
+  TILE?: Record<string, number>;
+  fogOfWarEnabled?: boolean;
+  FOG_RADIUS?: number | string;
+  tileChars?: unknown;
+  playerAdrenalineFx?: unknown;
+  moduleTests?: ((assert: any) => void) | undefined;
+  NanoDialog?: { enabled?: boolean; init?: () => Promise<void>; isReady?: () => boolean; refreshIndicator?: () => void };
+  Dustland?: (typeof globalThis & { music?: { isEnabled?: () => boolean; toggleEnabled?: () => void } })['Dustland'];
+};
+
+const engineGlobals = globalThis as DustlandGlobals;
+
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const scrEl = document.getElementById('scrap');
@@ -20,7 +33,8 @@ let hudAdrMood: 'adr_high' | 'adr_low' | null = null;
 
 const FOG_UNSEEN_ALPHA = 0.94;
 
-function log(msg: string, type?: 'warn' | 'error' | string){
+type LogFn = (msg: string, type?: 'warn' | 'error' | string) => void;
+const logImpl: LogFn = (msg, type) => {
   if (logEl) {
     const p = document.createElement('div');
     p.textContent = msg;
@@ -30,7 +44,9 @@ function log(msg: string, type?: 'warn' | 'error' | string){
   } else {
     console.log("Log: " + msg);
   }
-}
+};
+const engineLog: LogFn = engineGlobals.log ?? logImpl;
+engineGlobals.log = engineLog;
 
 type MultiplayerPeer = {
   id: string;
@@ -51,12 +67,12 @@ type MultiplayerPresenceEvent = {
 const origWarn = console.warn;
 console.warn = function(...args) {
   origWarn.apply(console, args);
-  log('⚠️ ' + args.join(' '), 'warn');
+  engineLog('⚠️ ' + args.join(' '), 'warn');
 };
 const origError = console.error;
 console.error = function(...args) {
   origError.apply(console, args);
-  log('🛑 ' + args.join(' '), 'error');
+  engineLog('🛑 ' + args.join(' '), 'error');
 };
 
 const multiplayerBus = globalThis.Dustland?.eventBus || globalThis.EventBus;
@@ -83,23 +99,23 @@ if (multiplayerBus?.on) {
       switch (info.status) {
         case 'started':
           if (info.role === 'host') {
-            log(fromNet ? 'Multiplayer: Host is online.' : 'Multiplayer: Hosting session active. Share the host code to invite players.');
+            engineLog(fromNet ? 'Multiplayer: Host is online.' : 'Multiplayer: Hosting session active. Share the host code to invite players.');
             if (!fromNet) {
               peerSnapshot = [];
               peerHash = '';
             }
           } else if (info.role === 'client') {
-            log(fromNet ? 'Multiplayer: A player is preparing to link.' : 'Multiplayer: Preparing link to host…');
+            engineLog(fromNet ? 'Multiplayer: A player is preparing to link.' : 'Multiplayer: Preparing link to host…');
           }
           break;
         case 'linking':
           if (info.role === 'client') {
-            log(fromNet ? 'Multiplayer: Player submitted an answer code.' : 'Multiplayer: Waiting for host to accept your answer.');
+            engineLog(fromNet ? 'Multiplayer: Player submitted an answer code.' : 'Multiplayer: Waiting for host to accept your answer.');
           }
           break;
         case 'linked':
           if (info.role === 'client') {
-            log(fromNet ? 'Multiplayer: Player link confirmed.' : 'Multiplayer: Link confirmed.');
+            engineLog(fromNet ? 'Multiplayer: Player link confirmed.' : 'Multiplayer: Link confirmed.');
           }
           break;
         case 'peers':
@@ -110,28 +126,28 @@ if (multiplayerBus?.on) {
             const prevById = new Map(peerSnapshot.map(p => [p.id, p]));
             const nextById = new Map(peers.map(p => [p.id, p]));
             peers.forEach(peer => {
-              if (!prevById.has(peer.id)) log(`Multiplayer: ${peer.label} linked.`);
+              if (!prevById.has(peer.id)) engineLog(`Multiplayer: ${peer.label} linked.`);
             });
             peerSnapshot.forEach(peer => {
-              if (!nextById.has(peer.id)) log(`Multiplayer: ${peer.label} disconnected.`);
+              if (!nextById.has(peer.id)) engineLog(`Multiplayer: ${peer.label} disconnected.`);
             });
             const remoteCount = peers.length;
             const total = remoteCount + 1;
             const label = total === 1 ? 'player' : 'players';
-            log(`Multiplayer: ${total} ${label} in session (host + ${remoteCount}).`);
+            engineLog(`Multiplayer: ${total} ${label} in session (host + ${remoteCount}).`);
             peerSnapshot = peers;
             peerHash = hash;
           }
           break;
         case 'closed':
           if (info.role === 'host') {
-            log(fromNet ? 'Multiplayer: Host disconnected.' : 'Multiplayer: Hosting stopped.');
+            engineLog(fromNet ? 'Multiplayer: Host disconnected.' : 'Multiplayer: Hosting stopped.');
             peerSnapshot = [];
             peerHash = '';
           } else if (info.role === 'client') {
-            log(fromNet ? 'Multiplayer: Player connection closed.' : 'Multiplayer: Disconnected from host.');
+            engineLog(fromNet ? 'Multiplayer: Player connection closed.' : 'Multiplayer: Disconnected from host.');
           } else {
-            log('Multiplayer: Connection closed.');
+            engineLog('Multiplayer: Connection closed.');
           }
           break;
         case 'error': {
@@ -147,7 +163,7 @@ if (multiplayerBus?.on) {
               }
             }
           }
-          log(`Multiplayer error: ${detail}`);
+          engineLog(`Multiplayer error: ${detail}`);
           break;
         }
       }
@@ -160,7 +176,8 @@ const toastHost = document.createElement('div');
 toastHost.style.cssText = 'position:fixed;left:50%;top:24px;transform:translateX(-50%);z-index:9999;pointer-events:none';
 document.body.appendChild(toastHost);
 
-function toast(msg) {
+type ToastFn = (msg: string) => void;
+const toastImpl: ToastFn = (msg) => {
   const t = document.createElement('div');
   t.textContent = msg;
   t.style.cssText = 'margin:6px 0;padding:8px 12px;background:#101910;border:1px solid #2b3b2b;border-radius:8px;color:#c8f7c9;box-shadow:0 8px 20px rgba(0,0,0,.4);opacity:0;transition:opacity .15s, transform .15s; transform: translateY(-6px)';
@@ -172,7 +189,9 @@ function toast(msg) {
     party.flags.demoComplete = true;
     if(typeof save === 'function') save();
   }
-}
+};
+const engineToast: ToastFn = engineGlobals.toast ?? toastImpl;
+engineGlobals.toast = engineToast;
 
 // tiny sfx and hud feedback
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -213,7 +232,7 @@ function setMobileControls(on: boolean){
         if(creatorEl?.style?.display==='flex'){
           const btn=document.getElementById(btnId);
           if(btn && !btn.disabled){
-            if(typeof btn.click==='function') btn.click(); else btn.onclick?.();
+            if(typeof btn.click==='function') btn.click(); else btn.onclick?.(new MouseEvent('click'));
           }
           return true;
         }
@@ -241,9 +260,9 @@ function setMobileControls(on: boolean){
       };
       const mobileMove=(dx,dy,key)=>{
         if(overlay?.classList?.contains('shown')){
-          handleDialogKey?.({ key });
+          handleDialogKey?.(new KeyboardEvent('keydown', { key }));
         }else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
-          handleCombatKey?.({ key });
+          handleCombatKey?.(new KeyboardEvent('keydown', { key }));
         }else{
           move(dx,dy);
         }
@@ -270,9 +289,9 @@ function setMobileControls(on: boolean){
           return;
         }
         if(overlay?.classList?.contains('shown')){
-          handleDialogKey?.({ key:'Enter' });
+          handleDialogKey?.(new KeyboardEvent('keydown', { key:'Enter' }));
         } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
-          handleCombatKey?.({ key:'Enter' });
+          handleCombatKey?.(new KeyboardEvent('keydown', { key:'Enter' }));
         } else {
           interact();
         }
@@ -285,7 +304,7 @@ function setMobileControls(on: boolean){
         if(overlay?.classList?.contains('shown')){
           closeDialog?.();
         } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
-          handleCombatKey?.({ key:'Escape' });
+          handleCombatKey?.(new KeyboardEvent('keydown', { key:'Escape' }));
         } else if(shop?.classList?.contains('shown')){
           shop.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape' }));
         } else {
@@ -403,7 +422,7 @@ function prettifyTileLabel(name){
 
 function tileLabelForId(id){
   if(typeof id==='number'){
-    const tiles=globalThis.TILE;
+    const tiles=engineGlobals.TILE;
     if(tiles && typeof tiles==='object'){
       for(const [name,value] of Object.entries(tiles)){
         if(value===id) return prettifyTileLabel(name);
@@ -442,7 +461,7 @@ function collectTilePreviewEntries(){
   const seen=new Set();
   const entries=[];
   const numericEntries=[];
-  const tiles=globalThis.TILE;
+  const tiles=engineGlobals.TILE;
   if(tiles && typeof tiles==='object'){
     for(const [name,id] of Object.entries(tiles)){
       if(!Number.isFinite(id)) continue;
@@ -520,9 +539,11 @@ if(typeof EventBus?.on === 'function'){
     if(tilePreviewOpen) renderTilePreview();
   });
 }
+type StorageOpts = { skipStorage?: boolean };
+
 const initialSkin=skinManager()?.getCurrentSkin?.();
 setTileCharLock(!!initialSkin?.tiles);
-function setFogOfWar(on, opts = {}){
+function setFogOfWar(on, opts: StorageOpts = {}){
   fogOfWarEnabled = !!on;
   if(typeof document !== 'undefined'){
     const btn=document.getElementById('fogToggle');
@@ -580,7 +601,7 @@ function applyFontScale(scale){
   }
   updateFontScaleUI(scale);
 }
-function setFontScale(scale, opts = {}){
+function setFontScale(scale, opts: StorageOpts = {}){
   const next = clampFontScale(scale);
   applyFontScale(next);
   if(!opts.skipStorage){
@@ -637,7 +658,7 @@ function applyFontFamily(option){
   updateFontFamilyUI(fontFamily.id);
 }
 
-function setFontFamily(id, opts = {}){
+function setFontFamily(id, opts: StorageOpts = {}){
   const option = getFontFamilyOption(id);
   applyFontFamily(option);
   if(!opts.skipStorage){
@@ -657,14 +678,15 @@ if(Number.isFinite(savedFontScale)){
 } else {
   applyFontScale(fontScale);
 }
-function setRetroNpcArt(on, skipStorage){
+function setRetroNpcArt(on: boolean, optsOrSkip?: StorageOpts | boolean){
+  const opts = typeof optsOrSkip === 'object' ? optsOrSkip : { skipStorage: !!optsOrSkip };
   retroNpcArtEnabled = !!on;
   const cb = document.getElementById('retroNpcToggle');
   if(cb) cb.checked = retroNpcArtEnabled;
   if(typeof document !== 'undefined'){
     document.body?.classList?.toggle('retro-npc-art', retroNpcArtEnabled);
   }
-  if(!skipStorage){
+  if(!opts.skipStorage){
     globalThis.localStorage?.setItem('retroNpcArt', retroNpcArtEnabled ? '1' : '0');
   }
   retroPlayerSprite = null;
@@ -708,7 +730,7 @@ function updatePlayerIconPreview(){
   }
 }
 
-function setPlayerIcon(idx, opts = {}){
+function setPlayerIcon(idx, opts: StorageOpts = {}){
   if(!playerIcons.length) return;
   const next = clampPlayerIconIndex(idx);
   const changed = next !== playerIconIndex;
@@ -1215,7 +1237,8 @@ if(weatherBanner && globalThis.Dustland?.weather){
 const fxOverlay = document.createElement('div');
 fxOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;opacity:0;transition:opacity .2s;z-index:200;';
 document.body.appendChild(fxOverlay);
-function playFX(type){
+type PlayFxFn = ((type: any) => void) & { _t?: number };
+const playFX: PlayFxFn = (type) => {
   if(audioEnabled && typeof audioCtx?.createOscillator==='function'){
     const o=audioCtx.createOscillator();
     const g=audioCtx.createGain();
@@ -1232,7 +1255,7 @@ function playFX(type){
   fxOverlay.style.opacity='1';
   clearTimeout(playFX._t);
   playFX._t=setTimeout(()=>{ fxOverlay.style.opacity='0'; },200);
-}
+};
 function hudBadge(msg){
   const target = hpEl;
   if(!target) return;
@@ -1280,7 +1303,7 @@ function lightenColor(hex, amt = 0.2) {
   const lb = Math.min(255, Math.round(b + (255 - b) * amt));
   return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
 }
-globalThis.tileChars = tileChars;
+engineGlobals.tileChars = tileChars;
 globalThis.jitterColor = jitterColor;
 
 // ===== Camera & CRT draw with ghosting =====
@@ -1293,7 +1316,7 @@ const playerAdrenalineFx = {
   brightness: 1,
   glow: 0
 };
-globalThis.playerAdrenalineFx = playerAdrenalineFx;
+engineGlobals.playerAdrenalineFx = playerAdrenalineFx;
 const rawAttrWidth = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('width')) : NaN;
 const rawAttrHeight = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('height')) : NaN;
 const BASE_CANVAS_WIDTH = Number.isFinite(rawAttrWidth) && rawAttrWidth > 0 ? rawAttrWidth : (disp?.width && disp.width > 0 ? disp.width : 640);
@@ -1437,7 +1460,8 @@ function pickupSparkle(x,y){
   sparkles.push({x,y});
 }
 
-function pickupVacuum(fromX, fromY, toX, toY){
+type PickupVacuumFn = (fromX: number, fromY: number, toX?: number, toY?: number) => void;
+const pickupVacuumImpl: PickupVacuumFn = (fromX, fromY, toX, toY) => {
   const now = Date.now();
   const fx = {
     fromX,
@@ -1448,7 +1472,9 @@ function pickupVacuum(fromX, fromY, toX, toY){
     end: now + 350
   };
   vacuumTrails.push(fx);
-}
+};
+const enginePickupVacuum: PickupVacuumFn = engineGlobals.pickupVacuum ?? pickupVacuumImpl;
+engineGlobals.pickupVacuum = enginePickupVacuum;
 
 function draw(t){
   if (disp.width < 16) {
@@ -1496,7 +1522,7 @@ function shouldRenderFog(map){
   if(!map) return false;
   const enabled = typeof fogOfWarEnabled === 'boolean'
     ? fogOfWarEnabled
-    : (typeof globalThis?.fogOfWarEnabled === 'boolean' ? globalThis.fogOfWarEnabled : true);
+    : (typeof engineGlobals?.fogOfWarEnabled === 'boolean' ? engineGlobals.fogOfWarEnabled : true);
   if(!enabled) return false;
   if(typeof mapSupportsFog === 'function') return mapSupportsFog(map);
   return map !== 'creator';
@@ -1504,9 +1530,9 @@ function shouldRenderFog(map){
 
 function renderFog(ctx, map, offX, offY, viewW, viewH){
   if(!ctx || !shouldRenderFog(map)) return;
-  const dims = typeof mapWH === 'function' ? mapWH(map) : null;
-  const W = Number.isFinite(dims?.W) ? dims.W : null;
-  const H = Number.isFinite(dims?.H) ? dims.H : null;
+  const dims = (typeof mapWH === 'function' ? mapWH(map) : null) as { W?: number; H?: number } | null;
+  const W = Number.isFinite(dims?.W) ? dims?.W ?? null : null;
+  const H = Number.isFinite(dims?.H) ? dims?.H ?? null : null;
   if(!Number.isFinite(W) || !Number.isFinite(H)) return;
   const px = Number.isFinite(party?.x) ? party.x : null;
   const py = Number.isFinite(party?.y) ? party.y : null;
@@ -1520,7 +1546,7 @@ function renderFog(ctx, map, offX, offY, viewW, viewH){
   }else if(fogState && typeof fogState === 'object'){
     visitedLookup = fogState;
   }
-  const rawRadius = Number(globalThis.FOG_RADIUS);
+  const rawRadius = Number(engineGlobals.FOG_RADIUS);
   const radius = Math.max(1, Number.isFinite(rawRadius) ? rawRadius : 5);
   const denom = radius + 1;
   ctx.fillStyle = '#000';
@@ -1594,7 +1620,7 @@ function render(gameState=state, dt){
   if(!ctx) return;
 
   const activeMap = gameState.map || mapIdForState();
-  const dims = mapWH(activeMap) || {};
+  const dims = (mapWH(activeMap) || {}) as { W?: number; H?: number };
   const { w:vWRaw, h:vHRaw } = getViewSize();
   const vW = Number.isFinite(vWRaw) ? vWRaw : VIEW_W;
   const vH = Number.isFinite(vHRaw) ? vHRaw : VIEW_H;
@@ -1615,11 +1641,11 @@ function render(gameState=state, dt){
   const offX = Math.max(0, Math.floor((vW - W) / 2));
   const offY = Math.max(0, Math.floor((vH - H) / 2));
 
-  const items = gameState.itemDrops || itemDrops;
-  const ps = gameState.portals || portals;
-  const entities = gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : []);
+  const items = (gameState.itemDrops || itemDrops) as any[];
+  const ps = (gameState.portals || portals) as any[];
+  const entities = (gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : [])) as any[];
   const pos = gameState.party || party;
-  const remoteParties = globalThis.Dustland?.multiplayerParties?.list?.() || globalThis.Dustland?.multiplayerState?.remoteParties || [];
+  const remoteParties = (engineGlobals.Dustland?.multiplayerParties?.list?.() as any[]) || (engineGlobals.Dustland?.multiplayerState?.remoteParties as any[]) || [];
   const skin = skinManager();
 
   // split entities into below/above
@@ -3019,7 +3045,13 @@ function openShop(npc) {
     const shopInv = npc.shop.inv || [];
     const baseMarkup = npc.vending ? 1 : npc.shop.markup || 2;
     const grudgeLevel = npc.shop.grudge ?? 0;
-    const TraderClass = globalThis.Dustland?.Trader;
+    type TraderApi = {
+      calculatePrice?: (item: any, opts: any) => number;
+      resolveBaseValue?: (item: any) => number;
+      basePriceFromValue?: (value: number) => number;
+      resolveGrudgeMultiplier?: (grudge: number) => number;
+    };
+    const TraderClass = globalThis.Dustland?.Trader as TraderApi | undefined;
 
     const resolveBuyPrice = (stack) => {
       if (!stack?.item) return 0;
@@ -3179,12 +3211,12 @@ function openShop(npc) {
             updateHUD();
             madePurchase = true;
           } else {
-            log('Inventory is full.');
-            if (typeof toast === 'function') toast('Inventory is full.');
+            engineLog('Inventory is full.');
+            if (typeof toast === 'function') engineToast('Inventory is full.');
           }
         } else {
-          log('Not enough scrap.');
-          if (typeof toast === 'function') toast('Not enough scrap.');
+          engineLog('Not enough scrap.');
+          if (typeof toast === 'function') engineToast('Not enough scrap.');
         }
       };
       shopBuy.appendChild(row);
@@ -3240,7 +3272,7 @@ function openShop(npc) {
       npc.cancelCount = (npc.cancelCount || 0) + 1;
       if (npc.cancelCount >= 2) {
         npc.tree.start.text = 'Buy or move on.';
-        if (typeof toast === 'function') toast(`${npc.name} eyes you warily.`);
+        if (typeof toast === 'function') engineToast(`${npc.name} eyes you warily.`);
       }
     } else if (npc) {
       npc.cancelCount = 0;
@@ -3290,13 +3322,13 @@ globalThis.Dustland.font = {
   setScale: (value, opts) => setFontScale(value, opts)
 };
 
-const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, pickupVacuum, openShop, playFX };
+const engineExports = { log: engineLog, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, pickupVacuum: enginePickupVacuum, openShop, playFX };
 Object.assign(globalThis, engineExports);
 
 // ===== Minimal Unit Tests (#test) =====
 function assert(name, cond){
   if (cond) {
-    log('✅ ' + name);
+    engineLog('✅ ' + name);
   } else {
     console.error('Test failed: ' + name);
   }
@@ -3307,7 +3339,7 @@ function runTests(){
 
   genWorld(); const hutsOK = buildings.length>0 && buildings.every(b=> b.interiorId && interiors[b.interiorId] && interiors[b.interiorId].grid); assert('Huts have interiors', hutsOK);
 
-  if(typeof moduleTests === 'function') moduleTests(assert);
+  if(typeof engineGlobals.moduleTests === 'function') engineGlobals.moduleTests(assert);
 }
 
 // ===== Input =====
@@ -3337,8 +3369,8 @@ function runTests(){
     nanoBtn.onclick=()=>{
       if(window.NanoDialog){
         NanoDialog.enabled=!NanoDialog.enabled;
-        if (typeof toast === 'function') toast(`Dynamic dialog ${NanoDialog.enabled ? 'enabled' : 'disabled'}`);
-        if (NanoDialog.refreshIndicator) NanoDialog.refreshIndicator();
+        if (typeof toast === 'function') engineToast(`Dynamic dialog ${NanoDialog.enabled ? 'enabled' : 'disabled'}`);
+        if (engineGlobals.NanoDialog?.refreshIndicator) engineGlobals.NanoDialog.refreshIndicator();
       }
       updateNano();
     };
@@ -3350,11 +3382,11 @@ function runTests(){
   const musicBtn=document.getElementById('musicToggle');
   if(musicBtn){
     const updateMusicBtn=()=>{
-      const enabled = !!globalThis.Dustland?.music?.isEnabled?.();
+      const enabled = !!engineGlobals.Dustland?.music?.isEnabled?.();
       musicBtn.textContent = `Music: ${enabled ? 'On' : 'Off'}`;
     };
     musicBtn.onclick=()=>{
-      globalThis.Dustland?.music?.toggleEnabled?.();
+      engineGlobals.Dustland?.music?.toggleEnabled?.();
       updateMusicBtn();
     };
     musicBus?.on?.('music:state', updateMusicBtn);
@@ -3419,10 +3451,11 @@ function runTests(){
       skinPreviewStatus.textContent=text || '';
       skinPreviewStatus.classList.toggle('is-error', !!isError);
     };
-    const buildOverrides=(styleId)=>{
+    type SkinOverrides = { baseDir?: string; styleDir?: string; extension?: string; slots?: unknown };
+    const buildOverrides=(styleId): SkinOverrides=>{
       const manager=globalThis.Dustland?.skin;
-      const stored=manager?.getGeneratedSkinConfig?.(styleId);
-      const overrides={};
+      const stored=manager?.getGeneratedSkinConfig?.(styleId) as SkinOverrides | undefined;
+      const overrides: SkinOverrides={};
       if(stored && typeof stored==='object'){
         if(typeof stored.baseDir==='string' && stored.baseDir.trim()) overrides.baseDir=stored.baseDir;
         if(typeof stored.styleDir==='string' && stored.styleDir.trim()) overrides.styleDir=stored.styleDir;
@@ -3534,12 +3567,12 @@ function runTests(){
           link.download=`dustland-save-${stamp}.json`;
           document.body.appendChild(link);
           if(typeof link.click==='function') link.click();
-          else link.dispatchEvent?.({ type:'click' });
+          else link.dispatchEvent?.(new Event('click'));
           link.remove();
           globalThis.URL.revokeObjectURL?.(url);
           hideDebug();
-          log('Save exported.');
-          if(typeof toast === 'function') toast('Save exported.');
+          engineLog('Save exported.');
+          if(typeof toast === 'function') engineToast('Save exported.');
         }catch(err){
           console.error('Failed to export save', err);
           const msg='Failed to export save.';
@@ -3553,7 +3586,7 @@ function runTests(){
       importBtn.addEventListener('click', ()=>{
         importInput.value='';
         if(typeof importInput.click==='function') importInput.click();
-        else importInput.dispatchEvent?.({ type:'click' });
+        else importInput.dispatchEvent?.(new Event('click'));
       });
       importInput.addEventListener('change', ()=>{
         const file=importInput.files?.[0];
@@ -3580,8 +3613,8 @@ function runTests(){
             globalThis.localStorage?.setItem('dustland_crt', JSON.stringify(parsed));
             hideDebug();
             if(typeof load === 'function') load();
-            log('Save imported.');
-            if(typeof toast === 'function') toast('Save imported.');
+            engineLog('Save imported.');
+            if(typeof toast === 'function') engineToast('Save imported.');
           }catch(err){
             console.error('Failed to import save', err);
             const msg='Failed to import save. Ensure the file is a valid Dustland save.';
@@ -3677,7 +3710,7 @@ function runTests(){
           selectedMember = (selectedMember + 1) % party.length;
           renderParty();
           if (typeof globalThis.renderInv === 'function') globalThis.renderInv();
-          toast(`Leader: ${party[selectedMember].name}`);
+          engineToast(`Leader: ${party[selectedMember].name}`);
         }
         break;
       case 'm': case 'M': showMini=!showMini; break;
