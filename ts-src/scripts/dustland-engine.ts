@@ -12,7 +12,19 @@ type DustlandGlobals = typeof globalThis & {
   playerAdrenalineFx?: unknown;
   moduleTests?: ((assert: any) => void) | undefined;
   NanoDialog?: { enabled?: boolean; init?: () => Promise<void>; isReady?: () => boolean; refreshIndicator?: () => void };
-  Dustland?: (typeof globalThis & { music?: { isEnabled?: () => boolean; toggleEnabled?: () => void } })['Dustland'];
+  Dustland?: (typeof globalThis & {
+    music?: { isEnabled?: () => boolean; toggleEnabled?: () => void };
+    multiplayerParties?: { list?: () => MultiplayerPeer[] };
+    multiplayerState?: { remoteParties?: MultiplayerPeer[] };
+  })['Dustland'];
+  player?: { x?: number; y?: number; [key: string]: unknown };
+  canEquip?: (member: unknown, item: unknown) => boolean;
+  getEquipRestrictions?: (member: unknown, item: unknown) => unknown;
+  describeRequiredRoles?: (roles: unknown) => string;
+  unequipItem?: (member: unknown, slot: unknown) => unknown;
+  dropItems?: (indices: number[]) => unknown;
+  quests?: Record<string, unknown>;
+  state?: { map?: string; mapEntry?: { x?: number; y?: number } };
 };
 
 const engineGlobals = globalThis as DustlandGlobals;
@@ -1237,7 +1249,7 @@ if(weatherBanner && globalThis.Dustland?.weather){
 const fxOverlay = document.createElement('div');
 fxOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;opacity:0;transition:opacity .2s;z-index:200;';
 document.body.appendChild(fxOverlay);
-type PlayFxFn = ((type: any) => void) & { _t?: number };
+type PlayFxFn = ((type: any) => void) & { _t?: ReturnType<typeof setTimeout> };
 const playFX: PlayFxFn = (type) => {
   if(audioEnabled && typeof audioCtx?.createOscillator==='function'){
     const o=audioCtx.createOscillator();
@@ -1643,9 +1655,9 @@ function render(gameState=state, dt){
 
   const items = (gameState.itemDrops || itemDrops) as any[];
   const ps = (gameState.portals || portals) as any[];
-  const entities = (gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : [])) as any[];
-  const pos = gameState.party || party;
-  const remoteParties = (engineGlobals.Dustland?.multiplayerParties?.list?.() as any[]) || (engineGlobals.Dustland?.multiplayerState?.remoteParties as any[]) || [];
+    const entities = (gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : [])) as any[];
+    const pos = (gameState.party || party) as { x: number; y: number; [key: string]: unknown };
+    const remoteParties = (engineGlobals.Dustland?.multiplayerParties?.list?.() as MultiplayerPeer[]) || (engineGlobals.Dustland?.multiplayerState?.remoteParties as MultiplayerPeer[]) || [];
   const skin = skinManager();
 
   // split entities into below/above
@@ -1843,7 +1855,7 @@ function render(gameState=state, dt){
           appliedFilter = true;
         }
       }
-      const skinPlayerSprite = skin?.getPlayerSprite?.(globalThis.player || pos, { mode: hasPulse ? 'adrenaline' : 'default', state: pos, fx: fxState });
+        const skinPlayerSprite = skin?.getPlayerSprite?.(engineGlobals.player || pos, { mode: hasPulse ? 'adrenaline' : 'default', state: pos, fx: fxState });
       let playerDrawn = false;
       if(skinPlayerSprite){
         playerDrawn = drawSkinSprite(ctx, skinPlayerSprite, 0, 0, TS);
@@ -1997,8 +2009,14 @@ Object.assign(window, { renderOrderSystem: { order: renderOrder, render } });
 const TAB_BREAKPOINT = 1980;
 let activeTab = 'inv';
 
-function updateHUD(){
-  const prevHp = updateHUD._lastHpVal ?? player.hp;
+  const updateHudState: {
+    lastHpVal?: number;
+    hurtTimer?: ReturnType<typeof setTimeout>;
+    lastHpPct?: number;
+  } = {};
+
+  function updateHUD(){
+    const prevHp = updateHudState.lastHpVal ?? player.hp;
   hpEl.textContent = player.hp;
   if(scrEl) scrEl.textContent = player.scrap;
   const lead = typeof leader === 'function' ? leader() : null;
@@ -2007,8 +2025,8 @@ function updateHUD(){
     if(player.hp < prevHp && fx?.damageFlash !== false){
       EventBus.emit('sfx','damage');
       hpBar.classList.add('hurt');
-      clearTimeout(updateHUD._hurtTimer);
-      updateHUD._hurtTimer = setTimeout(()=>hpBar.classList.remove('hurt'), 300);
+        clearTimeout(updateHudState.hurtTimer);
+        updateHudState.hurtTimer = setTimeout(()=>hpBar.classList.remove('hurt'), 300);
     }else if(fx?.damageFlash === false){
       hpBar.classList.remove('hurt');
     }
@@ -2020,10 +2038,10 @@ function updateHUD(){
     hpBar.setAttribute('aria-valuemax', lead.maxHp || 1);
     hpBar.setAttribute('aria-valuemin', 0);
     if(hpGhost){
-      hpGhost.style.width = (updateHUD._lastHpPct ?? pct) + '%';
-      requestAnimationFrame(()=>{ hpGhost.style.width = pct + '%'; });
-    }
-    updateHUD._lastHpPct = pct;
+        hpGhost.style.width = (updateHudState.lastHpPct ?? pct) + '%';
+        requestAnimationFrame(()=>{ hpGhost.style.width = pct + '%'; });
+      }
+      updateHudState.lastHpPct = pct;
     if(lead){
       const crit = player.hp > 0 && player.hp <= (lead.maxHp || 1) * 0.25;
       document.body.classList.toggle('hp-critical', crit);
@@ -2112,7 +2130,7 @@ function updateHUD(){
       hydEl.hidden = true;
     }
   }
-  updateHUD._lastHpVal = player.hp;
+  updateHudState.lastHpVal = player.hp;
 }
 
 function resetPlayerAdrenalineFx(){
@@ -2229,8 +2247,8 @@ function formatInventorySlotLabel(key){
     return part.charAt(0).toUpperCase()+part.slice(1);
   }).join(' ');
 }
-function sortInventorySlotKeys(keys){
-  return Array.from(keys).sort((a,b)=>{
+  function sortInventorySlotKeys(keys: Iterable<string>){
+    return Array.from(keys).sort((a,b)=>{
     const idxA=inventorySlotOrder.indexOf(a);
     const idxB=inventorySlotOrder.indexOf(b);
     if(idxA!==-1&&idxB!==-1) return idxA-idxB;
@@ -2248,7 +2266,7 @@ function renderInv(){
     const ok=document.createElement('button');
     ok.className='btn';
     ok.textContent='Drop Selected';
-    ok.onclick=()=>{ if(dropSet.size) dropItems(Array.from(dropSet)); dropMode=false; dropSet.clear(); renderInv(); updateHUD?.(); };
+      ok.onclick=()=>{ if(dropSet.size) engineGlobals.dropItems?.(Array.from(dropSet)); dropMode=false; dropSet.clear(); renderInv(); updateHUD?.(); };
     const cancel=document.createElement('button');
     cancel.className='btn';
     cancel.textContent='Cancel';
@@ -2322,8 +2340,8 @@ function renderInv(){
     inv.appendChild(Object.assign(document.createElement('div'),{className:'slot muted',textContent:'(empty)'}));
     return;
   }
-  const caches = {};
-  const others = [];
+    const caches: Record<string, { items: any[]; total: number }> = {};
+    const others: any[] = [];
   player.inv.forEach(it => {
     const slotKey=resolveInventorySlotKey(it);
     if(invSlotFilter && slotKey!==invSlotFilter) return;
@@ -2336,9 +2354,9 @@ function renderInv(){
       others.push(it);
     }
   });
-  const member=party[selectedMember]||party[0];
-  const canEquipFn = typeof canEquip === 'function' ? canEquip : null;
-  const equipRestrictionsFn = typeof getEquipRestrictions === 'function' ? getEquipRestrictions : null;
+    const member=party[selectedMember]||party[0];
+    const canEquipFn = typeof engineGlobals.canEquip === 'function' ? engineGlobals.canEquip : null;
+    const equipRestrictionsFn = typeof engineGlobals.getEquipRestrictions === 'function' ? engineGlobals.getEquipRestrictions : null;
   const fallbackRestrictions = (member, item) => {
     if(!member || !item || !['weapon','armor','trinket'].includes(item.type)) return null;
     const atk = Number.isFinite(item?.mods?.ATK) ? item.mods.ATK : 0;
@@ -2362,7 +2380,7 @@ function renderInv(){
       reasons: (!levelMet && minLevel > 1) ? [`Requires level ${minLevel}.`] : []
     };
   };
-  const describeRoles = typeof describeRequiredRoles === 'function' ? describeRequiredRoles : () => '';
+    const describeRoles = typeof engineGlobals.describeRequiredRoles === 'function' ? engineGlobals.describeRequiredRoles : () => '';
   const suggestions = {};
   if(member){
     for(const slot of ['weapon','armor','trinket']){
@@ -2505,7 +2523,7 @@ function renderQuests(){
   const host=document.getElementById('quests');
   if(!host) return;
   host.innerHTML='';
-  const list=quests?Object.values(quests).filter(v=> v && v.status!=='available'):[];
+    const list=engineGlobals.quests?Object.values(engineGlobals.quests).filter(v=> v && (v as { status?: string }).status!=='available'):[];
   if(list.length===0){
     host.innerHTML='<div class="q muted">(no quests)</div>';
     return;
@@ -2594,16 +2612,17 @@ function updateQuestCompassTargets(){
 }
 
 function questPartyLocation(){
-  const loc={ map:'world', x:0, y:0 };
-  const p=typeof party==='object' ? party : null;
-  if(p && typeof p.map==='string') loc.map=p.map;
-  else if(globalThis.state && typeof state.map==='string') loc.map=state.map;
-  if(p && typeof p.x==='number') loc.x=p.x;
-  else if(globalThis.state?.mapEntry && typeof state.mapEntry.x==='number') loc.x=state.mapEntry.x;
-  if(p && typeof p.y==='number') loc.y=p.y;
-  else if(globalThis.state?.mapEntry && typeof state.mapEntry.y==='number') loc.y=state.mapEntry.y;
-  return loc;
-}
+    const loc={ map:'world', x:0, y:0 };
+    const p=typeof party==='object' ? party : null;
+    const globalState = engineGlobals.state;
+    if(p && typeof p.map==='string') loc.map=p.map;
+    else if(globalState && typeof globalState.map==='string') loc.map=globalState.map;
+    if(p && typeof p.x==='number') loc.x=p.x;
+    else if(globalState?.mapEntry && typeof globalState.mapEntry.x==='number') loc.x=globalState.mapEntry.x;
+    if(p && typeof p.y==='number') loc.y=p.y;
+    else if(globalState?.mapEntry && typeof globalState.mapEntry.y==='number') loc.y=globalState.mapEntry.y;
+    return loc;
+  }
 
 function questProgressInfo(q){
   const required=Math.max(0, q.count || (q.item || q.itemTag ? 1 : 0));
@@ -2939,7 +2958,7 @@ party.forEach((m,i)=>{
   c.onfocus=()=>selectMember(i);
   c.querySelectorAll('button[data-a="unequip"]').forEach(b=>{
     const sl=b.dataset.slot;
-    b.onclick=()=> unequipItem(i,sl);
+    b.onclick=()=> engineGlobals.unequipItem?.(i,sl);
   });
   p.appendChild(c);
 });
