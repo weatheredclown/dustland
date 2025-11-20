@@ -7,7 +7,8 @@ const cmdMenu = typeof document !== 'undefined' ? document.getElementById('comba
 const turnIndicator = typeof document !== 'undefined' ? document.getElementById('turnIndicator') : null;
 const combatKeys = {};
 // Track how many turns it takes to defeat each enemy type
-const enemyTurnStats = globalThis.enemyTurnStats || (globalThis.enemyTurnStats = {});
+const combatGlobals = globalThis;
+const enemyTurnStats = combatGlobals.enemyTurnStats || (combatGlobals.enemyTurnStats = {});
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
     window.addEventListener('keyup', (e) => { combatKeys[e.key] = false; });
 }
@@ -196,7 +197,7 @@ function renderCombat() {
             hp.setAttribute('aria-label', 'Health');
             hp.setAttribute('aria-valuemin', '0');
             hp.setAttribute('aria-valuemax', e.maxHp || 1);
-            hp.setAttribute('aria-valuenow', e.hp | 0);
+            hp.setAttribute('aria-valuenow', String(e.hp | 0));
         }
         const hpf = document.createElement('div');
         hpf.className = 'fill';
@@ -211,7 +212,7 @@ function renderCombat() {
             adr.setAttribute('aria-label', 'Adrenaline');
             adr.setAttribute('aria-valuemin', '0');
             adr.setAttribute('aria-valuemax', e.maxAdr || 1);
-            adr.setAttribute('aria-valuenow', e.adr | 0);
+            adr.setAttribute('aria-valuenow', String(e.adr | 0));
         }
         const adrf = document.createElement('div');
         adrf.className = 'fill';
@@ -241,7 +242,7 @@ function renderCombat() {
             hp.setAttribute('aria-label', 'Health');
             hp.setAttribute('aria-valuemin', '0');
             hp.setAttribute('aria-valuemax', m.maxHp || 1);
-            hp.setAttribute('aria-valuenow', m.hp | 0);
+            hp.setAttribute('aria-valuenow', String(m.hp | 0));
         }
         const hpf = document.createElement('div');
         hpf.className = 'fill';
@@ -349,7 +350,8 @@ function closeCombat(result = 'flee') {
     const tele = { duration, log: combatState.log.slice() };
     globalThis.EventBus?.emit?.('combat:telemetry', tele);
     if (globalThis.Dustland) {
-        const arr = globalThis.Dustland.combatTelemetry || (globalThis.Dustland.combatTelemetry = []);
+        const arr = globalThis.Dustland.combatTelemetry
+            || (globalThis.Dustland.combatTelemetry = []);
         arr.push(tele);
     }
     combatState.onComplete?.({ result });
@@ -395,6 +397,7 @@ function openCommand() {
     }
     cmdMenu.innerHTML = '';
     combatState.mode = 'command';
+    const cooldowns = (m?.cooldowns ?? {});
     // Tick down cooldowns at the start of the actor's command phase
     if (m && m.cooldowns) {
         for (const id in m.cooldowns) {
@@ -406,9 +409,9 @@ function openCommand() {
         if (typeof spec !== 'object' || !spec)
             return false;
         const id = spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`;
-        const cost = spec.adrCost ?? spec.adrenaline_cost ?? 0;
-        const cd = m.cooldowns?.[id] || 0;
-        return cd <= 0 && (m.adr ?? 0) >= cost;
+        const cost = Number(spec.adrCost ?? spec.adrenaline_cost ?? 0);
+        const cd = Number(cooldowns[id] ?? 0);
+        return cd <= 0 && (m?.adr ?? 0) >= cost;
     });
     ['Attack', 'Special', 'Item', 'Flee'].forEach((opt) => {
         const d = document.createElement('div');
@@ -437,14 +440,15 @@ function openSpecialMenu() {
         const id = spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`;
         const d = document.createElement('div');
         const label = spec.label || spec.name || id;
-        const cost = spec.adrCost ?? spec.adrenaline_cost ?? 0;
-        const cd = m.cooldowns?.[id] || 0;
-        d.textContent = label;
+        const cost = Number(spec.adrCost ?? spec.adrenaline_cost ?? 0);
+        const cooldowns = (m.cooldowns ?? {});
+        const cd = Number(cooldowns[id] ?? 0);
+        d.textContent = label ?? '';
         if (cost > 0)
             d.textContent += ` (${cost})`;
         if (cd > 0)
             d.textContent += ` [CD ${cd}]`;
-        d.dataset.action = idx;
+        d.dataset.action = String(idx);
         if ((m.adr ?? 0) < cost || cd > 0)
             d.classList.add('disabled');
         cmdMenu.appendChild(d);
@@ -468,7 +472,7 @@ function openItemMenu() {
     usable.forEach(({ it, idx }) => {
         const d = document.createElement('div');
         d.textContent = it.name;
-        d.dataset.idx = idx;
+        d.dataset.idx = String(idx);
         cmdMenu.appendChild(d);
     });
     if (usable.length === 0) {
@@ -505,7 +509,8 @@ function moveChoice(dir) {
     updateChoice();
 }
 function attemptFlee() {
-    const partyPower = (party || []).reduce((s, m) => s + (m.lvl || 1), 0);
+    const partyPower = (party || [])
+        .reduce((s, m) => s + (m?.lvl ?? 1), 0);
     const enemyPower = (combatState.enemies || []).reduce((s, e) => s + (e.challenge || e.hp || 1), 0);
     const chance = partyPower / (partyPower + enemyPower);
     if (Math.random() < chance) {
