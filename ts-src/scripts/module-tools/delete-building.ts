@@ -1,4 +1,4 @@
-import process from 'node:process';
+import process from 'process';
 
 import { readModule, getByPath, removeIndex } from './utils.js';
 
