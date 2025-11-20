@@ -2,7 +2,7 @@
 
 // ===== Rendering & Utilities =====
 
-const ENGINE_VERSION = '0.227.1';
+const ENGINE_VERSION = '0.243.4';
 
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
@@ -175,7 +175,7 @@ function toast(msg) {
 }
 
 // tiny sfx and hud feedback
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
 let audioEnabled = true;
 function setAudio(on: boolean){
   audioEnabled = on;
@@ -241,9 +241,9 @@ function setMobileControls(on: boolean){
       };
       const mobileMove=(dx,dy,key)=>{
         if(overlay?.classList?.contains('shown')){
-          handleDialogKey?.({ key });
+          handleDialogKey?.(new KeyboardEvent('keydown', { key }));
         }else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
-          handleCombatKey?.({ key });
+          handleCombatKey?.(new KeyboardEvent('keydown', { key }));
         }else{
           move(dx,dy);
         }
@@ -270,9 +270,9 @@ function setMobileControls(on: boolean){
           return;
         }
         if(overlay?.classList?.contains('shown')){
-          handleDialogKey?.({ key:'Enter' });
+          handleDialogKey?.(new KeyboardEvent('keydown', { key: 'Enter' }));
         } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
-          handleCombatKey?.({ key:'Enter' });
+          handleCombatKey?.(new KeyboardEvent('keydown', { key: 'Enter' }));
         } else {
           interact();
         }
@@ -285,7 +285,7 @@ function setMobileControls(on: boolean){
         if(overlay?.classList?.contains('shown')){
           closeDialog?.();
         } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
-          handleCombatKey?.({ key:'Escape' });
+          handleCombatKey?.(new KeyboardEvent('keydown', { key: 'Escape' }));
         } else if(shop?.classList?.contains('shown')){
           shop.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape' }));
         } else {
@@ -403,7 +403,7 @@ function prettifyTileLabel(name){
 
 function tileLabelForId(id){
   if(typeof id==='number'){
-    const tiles=globalThis.TILE;
+    const tiles=(globalThis as any).TILE;
     if(tiles && typeof tiles==='object'){
       for(const [name,value] of Object.entries(tiles)){
         if(value===id) return prettifyTileLabel(name);
@@ -442,7 +442,7 @@ function collectTilePreviewEntries(){
   const seen=new Set();
   const entries=[];
   const numericEntries=[];
-  const tiles=globalThis.TILE;
+  const tiles=(globalThis as any).TILE;
   if(tiles && typeof tiles==='object'){
     for(const [name,id] of Object.entries(tiles)){
       if(!Number.isFinite(id)) continue;
@@ -522,7 +522,7 @@ if(typeof EventBus?.on === 'function'){
 }
 const initialSkin=skinManager()?.getCurrentSkin?.();
 setTileCharLock(!!initialSkin?.tiles);
-function setFogOfWar(on, opts = {}){
+function setFogOfWar(on, opts: { skipStorage?: boolean } = {}){
   fogOfWarEnabled = !!on;
   if(typeof document !== 'undefined'){
     const btn=document.getElementById('fogToggle');
@@ -580,7 +580,7 @@ function applyFontScale(scale){
   }
   updateFontScaleUI(scale);
 }
-function setFontScale(scale, opts = {}){
+function setFontScale(scale, opts: { skipStorage?: boolean } = {}){
   const next = clampFontScale(scale);
   applyFontScale(next);
   if(!opts.skipStorage){
@@ -637,7 +637,7 @@ function applyFontFamily(option){
   updateFontFamilyUI(fontFamily.id);
 }
 
-function setFontFamily(id, opts = {}){
+function setFontFamily(id, opts: { skipStorage?: boolean } = {}){
   const option = getFontFamilyOption(id);
   applyFontFamily(option);
   if(!opts.skipStorage){
@@ -708,7 +708,7 @@ function updatePlayerIconPreview(){
   }
 }
 
-function setPlayerIcon(idx, opts = {}){
+function setPlayerIcon(idx, opts: { skipStorage?: boolean } = {}){
   if(!playerIcons.length) return;
   const next = clampPlayerIconIndex(idx);
   const changed = next !== playerIconIndex;
@@ -1230,8 +1230,8 @@ function playFX(type){
   const color = type==='adrenaline'? 'rgba(255,0,0,0.3)': type==='special'? 'rgba(0,255,255,0.3)': 'rgba(255,255,0,0.3)';
   fxOverlay.style.background=color;
   fxOverlay.style.opacity='1';
-  clearTimeout(playFX._t);
-  playFX._t=setTimeout(()=>{ fxOverlay.style.opacity='0'; },200);
+  clearTimeout((playFX as any)._t);
+  (playFX as any)._t=setTimeout(()=>{ fxOverlay.style.opacity='0'; },200);
 }
 function hudBadge(msg){
   const target = hpEl;
@@ -1520,7 +1520,7 @@ function renderFog(ctx, map, offX, offY, viewW, viewH){
   }else if(fogState && typeof fogState === 'object'){
     visitedLookup = fogState;
   }
-  const rawRadius = Number(globalThis.FOG_RADIUS);
+  const rawRadius = Number((globalThis as any).FOG_RADIUS);
   const radius = Math.max(1, Number.isFinite(rawRadius) ? rawRadius : 5);
   const denom = radius + 1;
   ctx.fillStyle = '#000';
@@ -1594,7 +1594,7 @@ function render(gameState=state, dt){
   if(!ctx) return;
 
   const activeMap = gameState.map || mapIdForState();
-  const dims = mapWH(activeMap) || {};
+  const dims = mapWH(activeMap) || { W: 0, H: 0 };
   const { w:vWRaw, h:vHRaw } = getViewSize();
   const vW = Number.isFinite(vWRaw) ? vWRaw : VIEW_W;
   const vH = Number.isFinite(vHRaw) ? vHRaw : VIEW_H;
@@ -1972,17 +1972,18 @@ const TAB_BREAKPOINT = 1980;
 let activeTab = 'inv';
 
 function updateHUD(){
-  const prevHp = updateHUD._lastHpVal ?? player.hp;
-  hpEl.textContent = player.hp;
-  if(scrEl) scrEl.textContent = player.scrap;
+  const self = updateHUD as any;
+  const prevHp = self._lastHpVal ?? player.hp;
+  hpEl.textContent = String(player.hp);
+  if(scrEl) scrEl.textContent = String(player.scrap);
   const lead = typeof leader === 'function' ? leader() : null;
   const fx = globalThis.fxConfig;
   if(hpBar){
     if(player.hp < prevHp && fx?.damageFlash !== false){
       EventBus.emit('sfx','damage');
       hpBar.classList.add('hurt');
-      clearTimeout(updateHUD._hurtTimer);
-      updateHUD._hurtTimer = setTimeout(()=>hpBar.classList.remove('hurt'), 300);
+      clearTimeout(self._hurtTimer);
+      self._hurtTimer = setTimeout(()=>hpBar.classList.remove('hurt'), 300);
     }else if(fx?.damageFlash === false){
       hpBar.classList.remove('hurt');
     }
@@ -1990,14 +1991,14 @@ function updateHUD(){
   if(hpFill && hpBar && lead){
     const pct = Math.max(0, Math.min(100, (player.hp / (lead.maxHp || 1)) * 100));
     hpFill.style.width = pct + '%';
-    hpBar.setAttribute('aria-valuenow', player.hp);
-    hpBar.setAttribute('aria-valuemax', lead.maxHp || 1);
-    hpBar.setAttribute('aria-valuemin', 0);
+    hpBar.setAttribute('aria-valuenow', String(player.hp));
+    hpBar.setAttribute('aria-valuemax', String(lead.maxHp || 1));
+    hpBar.setAttribute('aria-valuemin', '0');
     if(hpGhost){
-      hpGhost.style.width = (updateHUD._lastHpPct ?? pct) + '%';
+      hpGhost.style.width = (self._lastHpPct ?? pct) + '%';
       requestAnimationFrame(()=>{ hpGhost.style.width = pct + '%'; });
     }
-    updateHUD._lastHpPct = pct;
+    self._lastHpPct = pct;
     if(lead){
       const crit = player.hp > 0 && player.hp <= (lead.maxHp || 1) * 0.25;
       document.body.classList.toggle('hp-critical', crit);
@@ -2007,9 +2008,9 @@ function updateHUD(){
   if(adrFill && adrBar && lead){
     const apct = Math.max(0, Math.min(100, (lead.adr / (lead.maxAdr || 1)) * 100));
     adrFill.style.width = apct + '%';
-    adrBar.setAttribute('aria-valuenow', lead.adr);
-    adrBar.setAttribute('aria-valuemax', lead.maxAdr || 1);
-    adrBar.setAttribute('aria-valuemin', 0);
+    adrBar.setAttribute('aria-valuenow', String(lead.adr));
+    adrBar.setAttribute('aria-valuemax', String(lead.maxAdr || 1));
+    adrBar.setAttribute('aria-valuemin', '0');
     if(musicBus){
       const ratio = Math.max(0, Math.min(1, (lead.adr || 0) / (lead.maxAdr || 1)));
       let nextMood = hudAdrMood;
@@ -2086,7 +2087,7 @@ function updateHUD(){
       hydEl.hidden = true;
     }
   }
-  updateHUD._lastHpVal = player.hp;
+  (updateHUD as any)._lastHpVal = player.hp;
 }
 
 function resetPlayerAdrenalineFx(){
@@ -2222,7 +2223,7 @@ function renderInv(){
     const ok=document.createElement('button');
     ok.className='btn';
     ok.textContent='Drop Selected';
-    ok.onclick=()=>{ if(dropSet.size) dropItems(Array.from(dropSet)); dropMode=false; dropSet.clear(); renderInv(); updateHUD?.(); };
+    ok.onclick=()=>{ if(dropSet.size) (globalThis as any).dropItems?.(Array.from(dropSet)); dropMode=false; dropSet.clear(); renderInv(); updateHUD?.(); };
     const cancel=document.createElement('button');
     cancel.className='btn';
     cancel.textContent='Cancel';
@@ -2296,8 +2297,8 @@ function renderInv(){
     inv.appendChild(Object.assign(document.createElement('div'),{className:'slot muted',textContent:'(empty)'}));
     return;
   }
-  const caches = {};
-  const others = [];
+  const caches: Record<string, any> = {};
+  const others: any[] = [];
   player.inv.forEach(it => {
     const slotKey=resolveInventorySlotKey(it);
     if(invSlotFilter && slotKey!==invSlotFilter) return;
@@ -2311,8 +2312,8 @@ function renderInv(){
     }
   });
   const member=party[selectedMember]||party[0];
-  const canEquipFn = typeof canEquip === 'function' ? canEquip : null;
-  const equipRestrictionsFn = typeof getEquipRestrictions === 'function' ? getEquipRestrictions : null;
+  const canEquipFn = typeof (globalThis as any).canEquip === 'function' ? (globalThis as any).canEquip : null;
+  const equipRestrictionsFn = typeof (globalThis as any).getEquipRestrictions === 'function' ? (globalThis as any).getEquipRestrictions : null;
   const fallbackRestrictions = (member, item) => {
     if(!member || !item || !['weapon','armor','trinket'].includes(item.type)) return null;
     const atk = Number.isFinite(item?.mods?.ATK) ? item.mods.ATK : 0;
@@ -2336,7 +2337,7 @@ function renderInv(){
       reasons: (!levelMet && minLevel > 1) ? [`Requires level ${minLevel}.`] : []
     };
   };
-  const describeRoles = typeof describeRequiredRoles === 'function' ? describeRequiredRoles : () => '';
+  const describeRoles = typeof (globalThis as any).describeRequiredRoles === 'function' ? (globalThis as any).describeRequiredRoles : () => '';
   const suggestions = {};
   if(member){
     for(const slot of ['weapon','armor','trinket']){
@@ -2354,9 +2355,10 @@ function renderInv(){
     const total = info.total || items.length;
     const row=document.createElement('div');
     row.className='slot cache-slot';
-    const icon = SpoilsCache.renderIcon(rank, () => {
-      SpoilsCache.open(rank);
-    });
+    const sc = (globalThis as any).SpoilsCache;
+    const icon = sc?.renderIcon ? sc.renderIcon(rank, () => {
+      sc.open(rank);
+    }) : null;
     if(icon){
       const wrap=document.createElement('div');
       wrap.style.display='flex';
@@ -2373,7 +2375,7 @@ function renderInv(){
       const btn=document.createElement('button');
       btn.className='btn jitter';
       btn.textContent='Open All';
-      btn.onclick=()=>{ SpoilsCache.openAll(rank); };
+      btn.onclick=()=>{ const sc = (globalThis as any).SpoilsCache; if(sc) sc.openAll(rank); };
       row.appendChild(btn);
     }
     inv.appendChild(row);

@@ -235,10 +235,10 @@ function setMobileControls(on) {
             };
             const mobileMove = (dx, dy, key) => {
                 if (overlay?.classList?.contains('shown')) {
-                    handleDialogKey?.({ key });
+                    handleDialogKey?.(new KeyboardEvent('keydown', { key }));
                 }
                 else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
-                    handleCombatKey?.({ key });
+                    handleCombatKey?.(new KeyboardEvent('keydown', { key }));
                 }
                 else {
                     move(dx, dy);
@@ -266,10 +266,10 @@ function setMobileControls(on) {
                     return;
                 }
                 if (overlay?.classList?.contains('shown')) {
-                    handleDialogKey?.({ key: 'Enter' });
+                    handleDialogKey?.(new KeyboardEvent('keydown', { key: 'Enter' }));
                 }
                 else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
-                    handleCombatKey?.({ key: 'Enter' });
+                    handleCombatKey?.(new KeyboardEvent('keydown', { key: 'Enter' }));
                 }
                 else {
                     interact();
@@ -284,7 +284,7 @@ function setMobileControls(on) {
                     closeDialog?.();
                 }
                 else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
-                    handleCombatKey?.({ key: 'Escape' });
+                    handleCombatKey?.(new KeyboardEvent('keydown', { key: 'Escape' }));
                 }
                 else if (shop?.classList?.contains('shown')) {
                     shop.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
@@ -1654,7 +1654,7 @@ function render(gameState = state, dt) {
     if (!ctx)
         return;
     const activeMap = gameState.map || mapIdForState();
-    const dims = mapWH(activeMap) || {};
+    const dims = mapWH(activeMap) || { W: 0, H: 0 };
     const { w: vWRaw, h: vHRaw } = getViewSize();
     const vW = Number.isFinite(vWRaw) ? vWRaw : VIEW_W;
     const vH = Number.isFinite(vHRaw) ? vHRaw : VIEW_H;
@@ -2056,18 +2056,19 @@ Object.assign(window, { renderOrderSystem: { order: renderOrder, render } });
 const TAB_BREAKPOINT = 1980;
 let activeTab = 'inv';
 function updateHUD() {
-    const prevHp = updateHUD._lastHpVal ?? player.hp;
-    hpEl.textContent = player.hp;
+    const self = updateHUD;
+    const prevHp = self._lastHpVal ?? player.hp;
+    hpEl.textContent = String(player.hp);
     if (scrEl)
-        scrEl.textContent = player.scrap;
+        scrEl.textContent = String(player.scrap);
     const lead = typeof leader === 'function' ? leader() : null;
     const fx = globalThis.fxConfig;
     if (hpBar) {
         if (player.hp < prevHp && fx?.damageFlash !== false) {
             EventBus.emit('sfx', 'damage');
             hpBar.classList.add('hurt');
-            clearTimeout(updateHUD._hurtTimer);
-            updateHUD._hurtTimer = setTimeout(() => hpBar.classList.remove('hurt'), 300);
+            clearTimeout(self._hurtTimer);
+            self._hurtTimer = setTimeout(() => hpBar.classList.remove('hurt'), 300);
         }
         else if (fx?.damageFlash === false) {
             hpBar.classList.remove('hurt');
@@ -2076,14 +2077,14 @@ function updateHUD() {
     if (hpFill && hpBar && lead) {
         const pct = Math.max(0, Math.min(100, (player.hp / (lead.maxHp || 1)) * 100));
         hpFill.style.width = pct + '%';
-        hpBar.setAttribute('aria-valuenow', player.hp);
-        hpBar.setAttribute('aria-valuemax', lead.maxHp || 1);
-        hpBar.setAttribute('aria-valuemin', 0);
+        hpBar.setAttribute('aria-valuenow', String(player.hp));
+        hpBar.setAttribute('aria-valuemax', String(lead.maxHp || 1));
+        hpBar.setAttribute('aria-valuemin', '0');
         if (hpGhost) {
-            hpGhost.style.width = (updateHUD._lastHpPct ?? pct) + '%';
+            hpGhost.style.width = (self._lastHpPct ?? pct) + '%';
             requestAnimationFrame(() => { hpGhost.style.width = pct + '%'; });
         }
-        updateHUD._lastHpPct = pct;
+        self._lastHpPct = pct;
         if (lead) {
             const crit = player.hp > 0 && player.hp <= (lead.maxHp || 1) * 0.25;
             document.body.classList.toggle('hp-critical', crit);
@@ -2093,9 +2094,9 @@ function updateHUD() {
     if (adrFill && adrBar && lead) {
         const apct = Math.max(0, Math.min(100, (lead.adr / (lead.maxAdr || 1)) * 100));
         adrFill.style.width = apct + '%';
-        adrBar.setAttribute('aria-valuenow', lead.adr);
-        adrBar.setAttribute('aria-valuemax', lead.maxAdr || 1);
-        adrBar.setAttribute('aria-valuemin', 0);
+        adrBar.setAttribute('aria-valuenow', String(lead.adr));
+        adrBar.setAttribute('aria-valuemax', String(lead.maxAdr || 1));
+        adrBar.setAttribute('aria-valuemin', '0');
         if (musicBus) {
             const ratio = Math.max(0, Math.min(1, (lead.adr || 0) / (lead.maxAdr || 1)));
             let nextMood = hudAdrMood;
@@ -2358,7 +2359,7 @@ function renderInv() {
         ok.className = 'btn';
         ok.textContent = 'Drop Selected';
         ok.onclick = () => { if (dropSet.size)
-            dropItems(Array.from(dropSet)); dropMode = false; dropSet.clear(); renderInv(); updateHUD?.(); };
+            globalThis.dropItems?.(Array.from(dropSet)); dropMode = false; dropSet.clear(); renderInv(); updateHUD?.(); };
         const cancel = document.createElement('button');
         cancel.className = 'btn';
         cancel.textContent = 'Cancel';
@@ -2457,8 +2458,8 @@ function renderInv() {
         }
     });
     const member = party[selectedMember] || party[0];
-    const canEquipFn = typeof canEquip === 'function' ? canEquip : null;
-    const equipRestrictionsFn = typeof getEquipRestrictions === 'function' ? getEquipRestrictions : null;
+    const canEquipFn = typeof globalThis.canEquip === 'function' ? globalThis.canEquip : null;
+    const equipRestrictionsFn = typeof globalThis.getEquipRestrictions === 'function' ? globalThis.getEquipRestrictions : null;
     const fallbackRestrictions = (member, item) => {
         if (!member || !item || !['weapon', 'armor', 'trinket'].includes(item.type))
             return null;
@@ -2488,7 +2489,7 @@ function renderInv() {
             reasons: (!levelMet && minLevel > 1) ? [`Requires level ${minLevel}.`] : []
         };
     };
-    const describeRoles = typeof describeRequiredRoles === 'function' ? describeRequiredRoles : () => '';
+    const describeRoles = typeof globalThis.describeRequiredRoles === 'function' ? globalThis.describeRequiredRoles : () => '';
     const suggestions = {};
     if (member) {
         for (const slot of ['weapon', 'armor', 'trinket']) {
@@ -2506,9 +2507,10 @@ function renderInv() {
         const total = info.total || items.length;
         const row = document.createElement('div');
         row.className = 'slot cache-slot';
-        const icon = SpoilsCache.renderIcon(rank, () => {
-            SpoilsCache.open(rank);
-        });
+        const sc = globalThis.SpoilsCache;
+        const icon = sc?.renderIcon ? sc.renderIcon(rank, () => {
+            sc.open(rank);
+        }) : null;
         if (icon) {
             const wrap = document.createElement('div');
             wrap.style.display = 'flex';
@@ -2525,7 +2527,8 @@ function renderInv() {
             const btn = document.createElement('button');
             btn.className = 'btn jitter';
             btn.textContent = 'Open All';
-            btn.onclick = () => { SpoilsCache.openAll(rank); };
+            btn.onclick = () => { const sc = globalThis.SpoilsCache; if (sc)
+                sc.openAll(rank); };
             row.appendChild(btn);
         }
         inv.appendChild(row);
