@@ -701,6 +701,7 @@ interface ItemGeneratorRange {
     name: string;
     status: QuestStatus;
     desc?: string;
+    progress?: number;
     onStart?: (...args: unknown[]) => unknown;
     onComplete?: (...args: unknown[]) => unknown;
     [key: string]: unknown;

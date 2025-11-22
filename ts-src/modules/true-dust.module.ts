@@ -839,8 +839,8 @@ function beginMaskQuest(): void {
 }
 
 function handleMaskAcquired(item: { tags?: string[] } | null | undefined): void {
-  const quest = globalThis.quests?.[MASK_QUEST_ID];
-  if (!quest || quest.status !== 'active' || quest.progress >= 1) return;
+  const quest = globalThis.quests?.[MASK_QUEST_ID] as MaskQuest | undefined;
+  if (!quest || quest.status !== 'active' || (quest.progress ?? 0) >= 1) return;
   const tags = Array.isArray(item?.tags) ? item.tags.map(t => t.toLowerCase()) : [];
   if (!tags.includes('mask')) return;
   setMaskQuestStage(1);
