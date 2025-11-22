@@ -1,5 +1,5 @@
 // ===== Rendering & Utilities =====
-const ENGINE_VERSION = '0.243.7';
+const ENGINE_VERSION = '0.243.6';
 let cachedGlobals;
 function getEngineGlobals() {
     if (cachedGlobals)
@@ -39,8 +39,13 @@ const logImpl = (msg, type) => {
         console.log("Log: " + msg);
     }
 };
-const engineLog = getEngineGlobals().log ?? logImpl;
+const existingLog = getEngineGlobals().log;
+const engineLog = typeof existingLog === 'function' ? existingLog : logImpl;
 getEngineGlobals().log = engineLog;
+getEngineGlobals().logger = engineLog;
+getEngineGlobals().engineLog = engineLog;
+globalThis.logger = engineLog;
+globalThis.engineLog = engineLog;
 const origWarn = console.warn;
 console.warn = function (...args) {
     origWarn.apply(console, args);
@@ -172,8 +177,11 @@ const toastImpl = (msg) => {
             save();
     }
 };
-const engineToast = getEngineGlobals().toast ?? toastImpl;
+const existingToast = getEngineGlobals().toast;
+const engineToast = typeof existingToast === 'function' ? existingToast : toastImpl;
 getEngineGlobals().toast = engineToast;
+getEngineGlobals().engineToast = engineToast;
+globalThis.engineToast = engineToast;
 // tiny sfx and hud feedback
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let audioEnabled = true;
@@ -213,6 +221,16 @@ function setMobileControls(on) {
             mobileWrap.id = 'mobileControls';
             mobileWrap.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:180px;display:flex;justify-content:space-between;padding:20px;z-index:1000;touch-action:manipulation;';
             document.body.appendChild(mobileWrap);
+            const createKeyEvent = (key) => {
+                if (typeof KeyboardEvent === 'function')
+                    return new KeyboardEvent('keydown', { key });
+                const ev = typeof Event === 'function' ? new Event('keydown') : { type: 'keydown' };
+                ev.key = key;
+                return ev;
+            };
+            const createMouseEvent = () => typeof MouseEvent === 'function'
+                ? new MouseEvent('click')
+                : { type: 'click' };
             const tryCreatorNav = (btnId) => {
                 const creatorEl = document.getElementById('creator');
                 if (creatorEl?.style?.display === 'flex') {
@@ -221,7 +239,7 @@ function setMobileControls(on) {
                         if (typeof btn.click === 'function')
                             btn.click();
                         else
-                            btn.onclick?.(new MouseEvent('click'));
+                            btn.onclick?.(createMouseEvent());
                     }
                     return true;
                 }
@@ -249,10 +267,10 @@ function setMobileControls(on) {
             };
             const mobileMove = (dx, dy, key) => {
                 if (overlay?.classList?.contains('shown')) {
-                    handleDialogKey?.(new KeyboardEvent('keydown', { key }));
+                    handleDialogKey?.(createKeyEvent(key));
                 }
                 else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
-                    handleCombatKey?.(new KeyboardEvent('keydown', { key }));
+                    handleCombatKey?.(createKeyEvent(key));
                 }
                 else {
                     move(dx, dy);
@@ -280,10 +298,10 @@ function setMobileControls(on) {
                     return;
                 }
                 if (overlay?.classList?.contains('shown')) {
-                    handleDialogKey?.(new KeyboardEvent('keydown', { key: 'Enter' }));
+                    handleDialogKey?.(createKeyEvent('Enter'));
                 }
                 else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
-                    handleCombatKey?.(new KeyboardEvent('keydown', { key: 'Enter' }));
+                    handleCombatKey?.(createKeyEvent('Enter'));
                 }
                 else {
                     interact();
@@ -298,17 +316,17 @@ function setMobileControls(on) {
                     closeDialog?.();
                 }
                 else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
-                    handleCombatKey?.(new KeyboardEvent('keydown', { key: 'Escape' }));
+                    handleCombatKey?.(createKeyEvent('Escape'));
                 }
                 else if (shop?.classList?.contains('shown')) {
-                    shop.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+                    shop.dispatchEvent(createKeyEvent('Escape'));
                 }
                 else {
                     if (panel?.classList?.contains('show')) {
                         closePanel();
                     }
                     else {
-                        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+                        window.dispatchEvent(createKeyEvent('Escape'));
                     }
                 }
             }));
@@ -1344,7 +1362,10 @@ function lightenColor(hex, amt = 0.2) {
     const lb = Math.min(255, Math.round(b + (255 - b) * amt));
     return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
 }
-getEngineGlobals().tileChars = tileChars;
+{
+    const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis);
+    globals.tileChars = tileChars;
+}
 globalThis.jitterColor = jitterColor;
 // ===== Camera & CRT draw with ghosting =====
 const disp = document.getElementById('game');
@@ -1356,7 +1377,10 @@ const playerAdrenalineFx = {
     brightness: 1,
     glow: 0
 };
-getEngineGlobals().playerAdrenalineFx = playerAdrenalineFx;
+{
+    const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis);
+    globals.playerAdrenalineFx = playerAdrenalineFx;
+}
 const rawAttrWidth = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('width')) : NaN;
 const rawAttrHeight = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('height')) : NaN;
 const BASE_CANVAS_WIDTH = Number.isFinite(rawAttrWidth) && rawAttrWidth > 0 ? rawAttrWidth : (disp?.width && disp.width > 0 ? disp.width : 640);
@@ -1562,9 +1586,10 @@ function centerCamera(x, y, map) {
 function shouldRenderFog(map) {
     if (!map)
         return false;
+    const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis);
     const enabled = typeof fogOfWarEnabled === 'boolean'
         ? fogOfWarEnabled
-        : (typeof engineGlobals?.fogOfWarEnabled === 'boolean' ? getEngineGlobals().fogOfWarEnabled : true);
+        : (typeof globals.fogOfWarEnabled === 'boolean' ? globals.fogOfWarEnabled : true);
     if (!enabled)
         return false;
     if (typeof mapSupportsFog === 'function')
@@ -1593,7 +1618,8 @@ function renderFog(ctx, map, offX, offY, viewW, viewH) {
     else if (fogState && typeof fogState === 'object') {
         visitedLookup = fogState;
     }
-    const rawRadius = Number(getEngineGlobals().FOG_RADIUS);
+    const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis);
+    const rawRadius = Number(globals.FOG_RADIUS);
     const radius = Math.max(1, Number.isFinite(rawRadius) ? rawRadius : 5);
     const denom = radius + 1;
     ctx.fillStyle = '#000';
@@ -2369,6 +2395,7 @@ function sortInventorySlotKeys(keys) {
 }
 function renderInv() {
     const inv = document.getElementById('inv');
+    const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis);
     inv.innerHTML = '';
     if (dropMode) {
         const ctrl = document.createElement('div');
@@ -2377,7 +2404,7 @@ function renderInv() {
         ok.className = 'btn';
         ok.textContent = 'Drop Selected';
         ok.onclick = () => { if (dropSet.size)
-            getEngineGlobals().dropItems?.(Array.from(dropSet)); dropMode = false; dropSet.clear(); renderInv(); updateHUD?.(); };
+            globals.dropItems?.(Array.from(dropSet)); dropMode = false; dropSet.clear(); renderInv(); updateHUD?.(); };
         const cancel = document.createElement('button');
         cancel.className = 'btn';
         cancel.textContent = 'Cancel';
@@ -2477,8 +2504,8 @@ function renderInv() {
         }
     });
     const member = party[selectedMember] || party[0];
-    const canEquipFn = typeof getEngineGlobals().canEquip === 'function' ? getEngineGlobals().canEquip : null;
-    const equipRestrictionsFn = typeof getEngineGlobals().getEquipRestrictions === 'function' ? getEngineGlobals().getEquipRestrictions : null;
+    const canEquipFn = typeof globals.canEquip === 'function' ? globals.canEquip : null;
+    const equipRestrictionsFn = typeof globals.getEquipRestrictions === 'function' ? globals.getEquipRestrictions : null;
     const fallbackRestrictions = (member, item) => {
         if (!member || !item || !['weapon', 'armor', 'trinket'].includes(item.type))
             return null;
@@ -2508,7 +2535,7 @@ function renderInv() {
             reasons: (!levelMet && minLevel > 1) ? [`Requires level ${minLevel}.`] : []
         };
     };
-    const describeRoles = typeof getEngineGlobals().describeRequiredRoles === 'function' ? getEngineGlobals().describeRequiredRoles : () => '';
+    const describeRoles = typeof globals.describeRequiredRoles === 'function' ? globals.describeRequiredRoles : () => '';
     const suggestions = {};
     if (member) {
         for (const slot of ['weapon', 'armor', 'trinket']) {
@@ -2658,7 +2685,8 @@ function renderQuests() {
     if (!host)
         return;
     host.innerHTML = '';
-    const questList = getEngineGlobals().quests ? Object.values(getEngineGlobals().quests) : [];
+    const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis);
+    const questList = globals.quests ? Object.values(globals.quests) : [];
     const list = questList.filter(v => v && v.status !== 'available');
     if (list.length === 0) {
         host.innerHTML = '<div class="q muted">(no quests)</div>';
@@ -2756,7 +2784,7 @@ function updateQuestCompassTargets() {
 function questPartyLocation() {
     const loc = { map: 'world', x: 0, y: 0 };
     const p = (!Array.isArray(party) && typeof party === 'object') ? party : null;
-    const globalState = getEngineGlobals().state;
+    const globalState = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis).state;
     if (p && typeof p.map === 'string')
         loc.map = p.map;
     else if (globalState && typeof globalState.map === 'string')
@@ -3131,7 +3159,7 @@ function renderParty() {
         c.onfocus = () => selectMember(i);
         c.querySelectorAll('button[data-a="unequip"]').forEach(b => {
             const sl = b.dataset.slot;
-            b.onclick = () => getEngineGlobals().unequipItem?.(i, sl);
+            b.onclick = () => (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis).unequipItem?.(i, sl);
         });
         p.appendChild(c);
     });
@@ -3933,6 +3961,11 @@ if (document.getElementById('saveBtn')) {
             e.preventDefault();
             return;
         }
+        const toastFn = typeof globalThis.engineToast === 'function'
+            ? globalThis.engineToast
+            : typeof globalThis.toast === 'function'
+                ? globalThis.toast
+                : undefined;
         const keyId = typeof e.key === 'string' ? e.key.toLowerCase() : '';
         if (keyId)
             game.lastNonCombatKey = keyId;
@@ -4010,7 +4043,7 @@ if (document.getElementById('saveBtn')) {
                     renderParty();
                     if (typeof globalThis.renderInv === 'function')
                         globalThis.renderInv();
-                    engineToast(`Leader: ${party[selectedMember].name}`);
+                    toastFn?.(`Leader: ${party[selectedMember].name}`);
                 }
                 break;
             case 'm':
