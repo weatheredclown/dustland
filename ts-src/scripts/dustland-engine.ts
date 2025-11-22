@@ -1,6 +1,6 @@
 // ===== Rendering & Utilities =====
 
-const ENGINE_VERSION = '0.243.6';
+const ENGINE_VERSION = '0.243.14';
 
 type DustlandGlobals = typeof globalThis & {
   TILE?: Record<string, number>;

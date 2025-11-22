@@ -1890,6 +1890,7 @@ function updateTreeData() {
   const newTree = {} as AnyRecord;
   const nodeRefs = {} as AnyRecord;
   const oldTree = getTreeData();
+  const choiceRefs = [];
 
   // Build tree from editor UI. Preserve collapsed nodes by keeping previous snapshot.
   wrap.querySelectorAll('.node').forEach(nodeEl => {
