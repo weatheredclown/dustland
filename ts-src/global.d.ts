@@ -1349,7 +1349,7 @@ interface ItemGeneratorRange {
 
   interface AckGlobalsSnapshot {
     moduleData?: AckModuleData;
-    interiors?: Array<Record<string, unknown>>;
+    interiors?: Record<string, any>;
     world?: number[][];
     EventBus?: DustlandEventBus;
     eventBus?: DustlandEventBus;
@@ -1371,7 +1371,7 @@ interface ItemGeneratorRange {
     EventBus?: DustlandEventBus;
     eventBus?: DustlandEventBus;
     moduleData?: AckModuleData;
-    interiors?: Array<Record<string, unknown>>;
+    interiors?: Record<string, any>;
     world?: number[][];
     TILE?: Record<string, number>;
     tileEmoji?: Record<number, string>;

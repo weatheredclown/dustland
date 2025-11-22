@@ -138,7 +138,9 @@ async function runBalanceTest() {
         const setMapFn = bindings.setMap;
         const takeNearestItemFn = bindings.takeNearestItem;
         const interactFn = bindings.interact;
-        const startCombatFn = bindings.startCombat;
+        const startCombatFn = typeof bindings.startCombat === 'function'
+            ? bindings.startCombat
+            : undefined;
         const mapIdForStateFn = bindings.mapIdForState;
         const findRandomGoalFn = bindings.findRandomGoal;
         const queryTileFn = bindings.queryTile;

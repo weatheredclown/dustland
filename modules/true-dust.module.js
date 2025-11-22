@@ -823,7 +823,7 @@ function beginMaskQuest() {
 }
 function handleMaskAcquired(item) {
     const quest = globalThis.quests?.[MASK_QUEST_ID];
-    if (!quest || quest.status !== 'active' || quest.progress >= 1)
+    if (!quest || quest.status !== 'active' || (quest.progress ?? 0) >= 1)
         return;
     const tags = Array.isArray(item?.tags) ? item.tags.map(t => t.toLowerCase()) : [];
     if (!tags.includes('mask'))
