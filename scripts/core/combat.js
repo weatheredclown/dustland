@@ -1,10 +1,11 @@
-// @ts-nocheck
+// combat logic relies on the shared Dustland globals and benefits from type safety
 // ===== Combat =====
 const combatOverlay = typeof document !== 'undefined' ? document.getElementById('combatOverlay') : null;
 const enemyRow = typeof document !== 'undefined' ? document.getElementById('combatEnemies') : null;
 const partyRow = typeof document !== 'undefined' ? document.getElementById('combatParty') : null;
 const cmdMenu = typeof document !== 'undefined' ? document.getElementById('combatCmd') : null;
 const turnIndicator = typeof document !== 'undefined' ? document.getElementById('turnIndicator') : null;
+const tryAutoPickupFn = globalThis.tryAutoPickup;
 const combatKeys = {};
 // Track how many turns it takes to defeat each enemy type
 const combatGlobals = globalThis;
@@ -408,7 +409,7 @@ function openCommand() {
     const hasSpecial = (m?.special || []).some((spec, idx) => {
         if (typeof spec !== 'object' || !spec)
             return false;
-        const id = spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`;
+        const id = String(spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`);
         const cost = Number(spec.adrCost ?? spec.adrenaline_cost ?? 0);
         const cd = Number(cooldowns[id] ?? 0);
         return cd <= 0 && (m?.adr ?? 0) >= cost;
@@ -437,13 +438,13 @@ function openSpecialMenu() {
     (m.special || []).forEach((spec, idx) => {
         if (typeof spec !== 'object' || !spec)
             return;
-        const id = spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`;
+        const id = String(spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`);
         const d = document.createElement('div');
-        const label = spec.label || spec.name || id;
+        const label = String(spec.label ?? spec.name ?? id);
         const cost = Number(spec.adrCost ?? spec.adrenaline_cost ?? 0);
         const cooldowns = (m.cooldowns ?? {});
         const cd = Number(cooldowns[id] ?? 0);
-        d.textContent = label ?? '';
+        d.textContent = label;
         if (cost > 0)
             d.textContent += ` (${cost})`;
         if (cd > 0)
@@ -930,7 +931,7 @@ function handleEnemyDefeat(attacker, target, sourceLabel) {
             const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
             const drop = { id: registered.id, map: party.map, x: party.x, y: party.y, dropType: 'loot' };
             itemDrops?.push?.(drop);
-            tryAutoPickup?.(drop);
+            tryAutoPickupFn?.(drop);
             log?.(`The ground coughs up a ${registered.name}.`);
             if (desertProphet)
                 log?.('A prophetic vision hinted at this cache.');
@@ -1076,10 +1077,10 @@ function doSpecial(idx) {
         openCommand?.();
         return;
     }
-    const id = spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`;
-    const label = spec.label || spec.name || id;
+    const id = String(spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`);
+    const label = String(spec.label ?? spec.name ?? id);
     // Cost & cooldown checks
-    const cost = spec.adrCost ?? spec.adrenaline_cost ?? 0;
+    const cost = Number(spec.adrCost ?? spec.adrenaline_cost ?? 0);
     if ((m.adr ?? 0) < cost) {
         log?.('Not enough adrenaline.');
         openSpecialMenu?.();
@@ -1096,14 +1097,14 @@ function doSpecial(idx) {
     if (spec.cooldown && id) {
         if (!m.cooldowns)
             m.cooldowns = {};
-        m.cooldowns[id] = spec.cooldown;
+        m.cooldowns[id] = Number(spec.cooldown ?? 0);
     }
     if (typeof playFX === 'function')
         playFX('special');
     // Effects
     if (spec.heal) {
         const maxHp = m.maxHp ?? m.hp ?? 0;
-        const amt = Math.max(0, spec.heal | 0);
+        const amt = Math.max(0, Number(spec.heal ?? 0));
         m.hp = Math.min(maxHp, (m.hp ?? 0) + amt);
         log?.(`${m.name} uses ${label} and heals ${amt} HP.`);
         renderCombat?.();
@@ -1112,7 +1113,7 @@ function doSpecial(idx) {
     }
     if (spec.adrGain) {
         const maxAdr = m.maxAdr ?? 100;
-        const amt = Math.max(0, spec.adrGain | 0);
+        const amt = Math.max(0, Number(spec.adrGain ?? 0));
         m.adr = Math.min(maxAdr, (m.adr ?? 0) + amt);
         log?.(`${m.name} uses ${label} and surges with adrenaline!`);
         updateHUD?.();
@@ -1128,7 +1129,7 @@ function doSpecial(idx) {
     if (spec.stun) {
         const target = combatState.enemies?.[0];
         if (target) {
-            target.stun = (target.stun ?? 0) + (spec.stun | 0);
+            target.stun = (target.stun ?? 0) + Number(spec.stun ?? 0);
         }
         if (spec.dmg) {
             doAttack?.(spec.dmg, 'special');
@@ -1234,7 +1235,7 @@ function enemyAttack() {
                 const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
                 const drop = { id: registered.id, map: party.map, x: party.x, y: party.y, dropType: 'loot' };
                 itemDrops?.push?.(drop);
-                tryAutoPickup?.(drop);
+                tryAutoPickupFn?.(drop);
                 log?.(`The ground coughs up a ${registered.name}.`);
                 globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target: enemy });
             }
@@ -1277,7 +1278,7 @@ function enemyAttack() {
         const fx = window.bossTelegraphFX || {};
         const delay = enemy.special.delay ?? fx.duration ?? 1000;
         const animDur = fx.duration ?? delay;
-        combatOverlay?.style?.setProperty?.('--telegraphIntensity', fx.intensity ?? 1);
+        combatOverlay?.style?.setProperty?.('--telegraphIntensity', String(fx.intensity ?? 1));
         combatOverlay?.style?.setProperty?.('--telegraphDuration', animDur + 'ms');
         combatOverlay?.classList.add('warning');
         log?.(`${enemy.name} ${enemy.special.cue || 'charges up!'}`);

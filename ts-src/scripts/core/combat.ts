@@ -1,10 +1,53 @@
-// @ts-nocheck
+// combat logic relies on the shared Dustland globals and benefits from type safety
 // ===== Combat =====
 const combatOverlay = typeof document !== 'undefined' ? document.getElementById('combatOverlay') : null;
 const enemyRow      = typeof document !== 'undefined' ? document.getElementById('combatEnemies') : null;
 const partyRow      = typeof document !== 'undefined' ? document.getElementById('combatParty') : null;
 const cmdMenu       = typeof document !== 'undefined' ? document.getElementById('combatCmd') : null;
 const turnIndicator = typeof document !== 'undefined' ? document.getElementById('turnIndicator') : null;
+type CombatSpecial = {
+  id?: string | number;
+  key?: string | number;
+  name?: string;
+  label?: string;
+  adrCost?: number;
+  adrenaline_cost?: number;
+  cooldown?: number;
+  heal?: number;
+  adrGain?: number;
+  stun?: number;
+  ignoreDefense?: boolean;
+  [key: string]: unknown;
+};
+type CombatActor = PartyMember & {
+  cooldowns?: Record<string, number>;
+  adr?: number;
+  maxAdr?: number;
+  guard?: number;
+  stun?: number;
+  _bonus?: Record<string, number>;
+  statusEffects?: Array<{ type?: string; strength?: number; remaining?: number }>;
+  special?: CombatSpecial[];
+  equip?: {
+    weapon?: (PartyEquipmentSlots['weapon'] & { mods?: Record<string, unknown> }) | null;
+    armor?: (PartyEquipmentSlots['armor'] & { mods?: Record<string, unknown> }) | null;
+    trinket?: (PartyEquipmentSlots['trinket'] & { mods?: Record<string, unknown> }) | null;
+  };
+  [key: string]: unknown;
+};
+type CombatActorLike = CombatActor | { [key: string]: any };
+type CombatItemOptions = {
+  label?: string;
+  ignoreDefense?: boolean;
+};
+type CombatDefeatOptions = {
+  attacker?: CombatActorLike | null;
+  itemLabel?: string;
+  sourceLabel?: string;
+  label?: string;
+};
+type LootDrop = { id?: string; map?: unknown; x?: number; y?: number; dropType?: string; items?: unknown[] };
+const tryAutoPickupFn = (globalThis as { tryAutoPickup?: (drop: LootDrop) => void }).tryAutoPickup;
 const combatKeys: Record<string, boolean> = {};
 // Track how many turns it takes to defeat each enemy type
 const combatGlobals = globalThis as typeof globalThis & {
@@ -372,11 +415,11 @@ function highlightActive(){
 function openCommand(){
   if (combatState.phase !== 'party' || !cmdMenu) return;
 
-  const m = party[combatState.active];
+  const m = party[combatState.active] as CombatActor | undefined;
 
   if (m && tickStatuses(m)){
     log?.(`${m.name} falls to poison.`);
-    party.fall(m);
+    party.fall(m as Character);
     renderCombat();
     if ((party?.length || 0) === 0){
       log?.('The party has fallen...');
@@ -398,9 +441,9 @@ function openCommand(){
     }
   }
 
-  const hasSpecial = (m?.special || []).some((spec, idx) => {
+  const hasSpecial = (m?.special || []).some((spec: CombatSpecial, idx) => {
     if(typeof spec !== 'object' || !spec) return false;
-    const id   = spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`;
+    const id   = String(spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`);
     const cost = Number(spec.adrCost ?? spec.adrenaline_cost ?? 0);
     const cd   = Number(cooldowns[id] ?? 0);
     return cd <= 0 && (m?.adr ?? 0) >= cost;
@@ -427,16 +470,16 @@ function openSpecialMenu(){
   cmdMenu.innerHTML = '';
   combatState.mode = 'special';
 
-  const m = party[combatState.active];
-  (m.special || []).forEach((spec, idx) => {
+  const m = party[combatState.active] as CombatActor | undefined;
+  (m.special || []).forEach((spec: CombatSpecial, idx) => {
     if(typeof spec !== 'object' || !spec) return;
-    const id    = spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`;
+    const id    = String(spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`);
     const d     = document.createElement('div');
-    const label = spec.label || spec.name || id;
+    const label = String(spec.label ?? spec.name ?? id);
     const cost  = Number(spec.adrCost ?? spec.adrenaline_cost ?? 0);
     const cooldowns = (m.cooldowns ?? {}) as Record<string, number>;
     const cd    = Number(cooldowns[id] ?? 0);
-    d.textContent = label ?? '';
+    d.textContent = label;
     if(cost > 0) d.textContent += ` (${cost})`;
     if(cd > 0) d.textContent += ` [CD ${cd}]`;
     d.dataset.action = String(idx);
@@ -904,7 +947,7 @@ function handleEnemyDefeat(attacker, target, sourceLabel){
       const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
       const drop = { id: registered.id, map: party.map, x: party.x, y: party.y, dropType: 'loot' };
       itemDrops?.push?.(drop);
-      tryAutoPickup?.(drop);
+      tryAutoPickupFn?.(drop);
       log?.(`The ground coughs up a ${registered.name}.`);
       if (desertProphet) log?.('A prophetic vision hinted at this cache.');
       globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target });
@@ -940,7 +983,7 @@ function handleEnemyDefeat(attacker, target, sourceLabel){
   return true;
 }
 
-function playerItemAOEDamage(attacker, baseDamage, opts = {}){
+function playerItemAOEDamage(attacker: CombatActorLike, baseDamage: number, opts: CombatItemOptions = {}){
   const amount = Math.max(0, baseDamage | 0);
   const enemies = combatState.enemies || [];
   if (!attacker || enemies.length === 0) return { defeated: [] };
@@ -993,7 +1036,7 @@ function playerItemAOEDamage(attacker, baseDamage, opts = {}){
   return { defeated };
 }
 
-function defeatEnemiesByRequirement(requirement, opts = {}){
+function defeatEnemiesByRequirement(requirement, opts: CombatDefeatOptions = {}){
   const reqList = normalizeRequirementList(requirement);
   if (reqList.length === 0) return [];
 
@@ -1054,17 +1097,17 @@ function testAttack(attacker, enemy, dmg = 1, type = 'basic'){
 }
 
 function doSpecial(idx){
-  const m = party[combatState.active];
+  const m = party[combatState.active] as CombatActor | undefined;
   if (!m){ openCommand?.(); return; }
 
-  const spec = m.special?.[idx];
+  const spec = m.special?.[idx] as CombatSpecial | undefined;
   if(typeof spec !== 'object' || !spec){ openCommand?.(); return; }
 
-  const id    = spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`;
-  const label = spec.label || spec.name || id;
+  const id    = String(spec.id ?? spec.key ?? spec.name ?? spec.label ?? `special_${idx}`);
+  const label = String(spec.label ?? spec.name ?? id);
 
   // Cost & cooldown checks
-  const cost = spec.adrCost ?? spec.adrenaline_cost ?? 0;
+  const cost = Number(spec.adrCost ?? spec.adrenaline_cost ?? 0);
   if ((m.adr ?? 0) < cost){
     log?.('Not enough adrenaline.');
     openSpecialMenu?.();
@@ -1081,7 +1124,7 @@ function doSpecial(idx){
   m.adr = (m.adr ?? 0) - cost;
   if (spec.cooldown && id){
     if (!m.cooldowns) m.cooldowns = {};
-    m.cooldowns[id] = spec.cooldown;
+    m.cooldowns[id] = Number(spec.cooldown ?? 0);
   }
 
   if (typeof playFX === 'function') playFX('special');
@@ -1089,7 +1132,7 @@ function doSpecial(idx){
   // Effects
   if (spec.heal){
     const maxHp = m.maxHp ?? m.hp ?? 0;
-    const amt   = Math.max(0, spec.heal | 0);
+    const amt   = Math.max(0, Number(spec.heal ?? 0));
     m.hp = Math.min(maxHp, (m.hp ?? 0) + amt);
     log?.(`${m.name} uses ${label} and heals ${amt} HP.`);
     renderCombat?.();
@@ -1099,7 +1142,7 @@ function doSpecial(idx){
 
   if (spec.adrGain){
     const maxAdr = m.maxAdr ?? 100;
-    const amt    = Math.max(0, spec.adrGain | 0);
+    const amt    = Math.max(0, Number(spec.adrGain ?? 0));
     m.adr = Math.min(maxAdr, (m.adr ?? 0) + amt);
     log?.(`${m.name} uses ${label} and surges with adrenaline!`);
     updateHUD?.();
@@ -1116,7 +1159,7 @@ function doSpecial(idx){
 
   if (spec.stun){
     const target = combatState.enemies?.[0];
-    if (target){ target.stun = (target.stun ?? 0) + (spec.stun | 0); }
+    if (target){ target.stun = (target.stun ?? 0) + Number(spec.stun ?? 0); }
     if (spec.dmg){
       doAttack?.(spec.dmg, 'special');
       return;
@@ -1222,7 +1265,7 @@ function enemyAttack(){
         const registered = typeof registerItem === 'function' ? registerItem(cache) : cache;
         const drop = { id: registered.id, map: party.map, x: party.x, y: party.y, dropType: 'loot' };
         itemDrops?.push?.(drop);
-        tryAutoPickup?.(drop);
+        tryAutoPickupFn?.(drop);
         log?.(`The ground coughs up a ${registered.name}.`);
         globalThis.EventBus?.emit?.('spoils:drop', { cache: registered, target: enemy });
       }
@@ -1266,7 +1309,7 @@ function enemyAttack(){
     const delay  = enemy.special.delay ?? fx.duration ?? 1000;
     const animDur = fx.duration ?? delay;
 
-    combatOverlay?.style?.setProperty?.('--telegraphIntensity', fx.intensity ?? 1);
+    combatOverlay?.style?.setProperty?.('--telegraphIntensity', String(fx.intensity ?? 1));
     combatOverlay?.style?.setProperty?.('--telegraphDuration', animDur + 'ms');
     combatOverlay?.classList.add('warning');
 
