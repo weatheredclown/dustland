@@ -1,3 +1,4 @@
+// @ts-nocheck
 const { effects: Effects } = globalThis.Dustland || {};
 var bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
 let combatActive = false;
@@ -28,8 +29,7 @@ function normalizePositiveInt(value, fallback) {
     return Math.max(1, Math.round(base));
 }
 function getEssentialRestockConfig() {
-    const moduleNameRoot = globalThis.Dustland?.currentModule;
-    const moduleName = typeof moduleNameRoot === 'string' ? moduleNameRoot : null;
+    const moduleName = globalThis.Dustland?.currentModule || null;
     if (!moduleName)
         return null;
     if (essentialRestockCache.module !== moduleName) {
@@ -42,23 +42,17 @@ function getEssentialRestockConfig() {
                 targets: new Map()
             });
         });
-        const modules = globalThis.Dustland?.loadedModules;
-        const moduleData = modules?.[moduleName];
+        const moduleData = globalThis.Dustland?.loadedModules?.[moduleName];
         const baseNpcs = Array.isArray(moduleData?.npcs) ? moduleData.npcs : [];
         baseNpcs.forEach(baseNpc => {
-            const shop = baseNpc?.shop && baseNpc.shop !== true ? baseNpc.shop : null;
-            const inv = Array.isArray(shop?.inv) ? shop.inv : [];
+            const inv = Array.isArray(baseNpc?.shop?.inv) ? baseNpc.shop.inv : [];
             inv.forEach(entry => {
-                const itemId = typeof entry?.id === 'string' ? entry.id : null;
-                if (!itemId)
-                    return;
-                const restock = config.get(itemId);
+                const restock = config.get(entry?.id);
                 if (!restock)
                     return;
                 if (!baseNpc.id)
                     return;
-                const normalizedEntry = (entry && typeof entry === 'object') ? entry : { id: itemId };
-                restock.targets.set(baseNpc.id, { ...normalizedEntry, id: itemId });
+                restock.targets.set(baseNpc.id, { ...entry });
             });
         });
         essentialRestockCache = { module: moduleName, data: config };
@@ -80,8 +74,7 @@ function restockEssentialSupplies(turn) {
     const config = getEssentialRestockConfig();
     if (!config)
         return;
-    const rosterRoot = globalThis.NPCS;
-    const roster = Array.isArray(rosterRoot) ? rosterRoot : [];
+    const roster = Array.isArray(globalThis.NPCS) ? globalThis.NPCS : [];
     if (!roster.length)
         return;
     for (const [itemId, cfg] of config.entries()) {
@@ -355,8 +348,7 @@ function onEnter(map, x, y, ctx) {
         }
         return;
     }
-    const events = Array.isArray(t.events) ? t.events : [];
-    const list = events.filter(ev => ev?.when === 'enter');
+    const list = (t.events || []).filter(ev => ev.when === 'enter');
     if (list.length)
         Effects.apply(list, ctx);
     const hasDustStorm = list.some(e => e.effect === 'dustStorm');
@@ -388,8 +380,7 @@ function hasItemOrEquipped(idOrTag) {
 function applyZones(map, x, y) {
     const zones = globalThis.Dustland?.zoneEffects || [];
     let weatherZone = null;
-    for (const zRaw of zones) {
-        const z = zRaw;
+    for (const z of zones) {
         if (z.if && !globalThis.checkFlagCondition?.(z.if))
             continue;
         if ((z.map || 'world') !== map)
@@ -411,7 +402,7 @@ function applyZones(map, x, y) {
             });
             renderParty?.();
             updateHUD?.();
-            const msg = typeof step.msg === 'string' ? step.msg : (delta > 0 ? 'You feel better.' : 'You take damage.');
+            const msg = step.msg || (delta > 0 ? 'You feel better.' : 'You take damage.');
             log?.(msg);
             if (typeof toast === 'function')
                 toast(msg);
@@ -448,8 +439,7 @@ function applyZones(map, x, y) {
 function updateZoneMsgs(map, x, y) {
     const zones = globalThis.Dustland?.zoneEffects || [];
     const current = [];
-    for (const zRaw of zones) {
-        const z = zRaw;
+    for (const z of zones) {
         if (z.if && !globalThis.checkFlagCondition?.(z.if))
             continue;
         if ((z.map || 'world') !== map)
@@ -557,20 +547,18 @@ function move(dx, dy) {
                 bus.emit('hydration:tick');
                 bus.emit('sfx', 'step');
                 // NPCs advance along paths after the player steps
-                const pathing = Dustland.path;
-                pathing?.tickPathAI?.();
+                if (Dustland.path?.tickPathAI)
+                    Dustland.path.tickPathAI();
                 if (state.map === 'world')
                     advanceWorldTurn();
-                const vacuumActive = globalThis.leaderHasLootVacuum
-                    ?? globalThis.Dustland?.inventory?.leaderHasLootVacuum;
-                if (typeof vacuumActive === 'function' && vacuumActive()) {
+                if (typeof leaderHasLootVacuum === 'function' && leaderHasLootVacuum()) {
                     let sweeps = 0;
                     while (takeNearestItem({ vacuum: true }) && sweeps < 5) {
                         sweeps++;
                     }
                 }
                 moveDelay = 0;
-                resolve(undefined);
+                resolve();
             }, moveDelay);
         });
     }
@@ -588,14 +576,7 @@ function checkAggro() {
             continue;
         const d = Math.abs(n.x - party.x) + Math.abs(n.y - party.y);
         if (d <= 3) {
-            const baseHp = typeof n.combat?.hp === 'number'
-                ? n.combat.hp
-                : (typeof n.combat?.HP === 'number'
-                    ? n.combat.HP
-                    : (typeof n.hp === 'number'
-                        ? n.hp
-                        : (typeof n.HP === 'number' ? n.HP : 1)));
-            Dustland.actions.startCombat({ ...n.combat, npc: n, name: n.name, hp: baseHp });
+            Dustland.actions.startCombat({ ...n.combat, npc: n, name: n.name });
             break;
         }
     }
@@ -743,15 +724,7 @@ function checkRandomEncounter() {
             return;
         if (encounterBias) {
             const tag = encounterBias.toLowerCase();
-            const biased = pool.filter(e => {
-                const tags = Array.isArray(e?.tags) ? e.tags : [];
-                const id = typeof e?.id === 'string' ? e.id : '';
-                const name = typeof e?.name === 'string' ? e.name : '';
-                const idMatch = id.toLowerCase().includes(tag);
-                const nameMatch = name.toLowerCase().includes(tag);
-                const tagMatch = tags.some(t => typeof t === 'string' && t.toLowerCase().includes(tag));
-                return tagMatch || idMatch || nameMatch;
-            });
+            const biased = pool.filter(e => (e.tags && e.tags.includes(tag)) || (e.id && e.id.includes(tag)) || (e.name && e.name.toLowerCase().includes(tag)));
             if (biased.length)
                 pool = biased;
         }
@@ -903,8 +876,7 @@ function interactAt(x, y) {
         const p = portals.find(p => p.map === state.map && p.x === x && p.y === y);
         if (p) {
             if (p.if && !globalThis.checkFlagCondition?.(p.if)) {
-                const blocked = typeof p.blockedMsg === 'string' ? p.blockedMsg : 'It\'s locked.';
-                log(blocked);
+                log(p.blockedMsg || 'It\'s locked.');
                 bus.emit('sfx', 'denied');
                 return true;
             }
@@ -914,8 +886,7 @@ function interactAt(x, y) {
             const py = (typeof p.toY === 'number') ? p.toY : (I ? I.entryY : 0);
             setPartyPos(px, py);
             setMap(target);
-            const desc = typeof p.desc === 'string' ? p.desc : 'You move through the doorway.';
-            log(desc);
+            log(p.desc || 'You move through the doorway.');
             updateHUD();
             bus.emit('sfx', 'confirm');
             return true;

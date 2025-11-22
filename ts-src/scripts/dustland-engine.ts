@@ -1,8 +1,6 @@
-// @ts-nocheck
-
 // ===== Rendering & Utilities =====
 
-const ENGINE_VERSION = '0.227.1';
+const ENGINE_VERSION = '0.243.6';
 
 type DustlandGlobals = typeof globalThis & {
   TILE?: Record<string, number>;
@@ -25,9 +23,24 @@ type DustlandGlobals = typeof globalThis & {
   dropItems?: (indices: number[]) => unknown;
   quests?: Record<string, unknown>;
   state?: { map?: string; mapEntry?: { x?: number; y?: number } };
+  engineGlobals?: DustlandGlobals;
+  log?: (msg: string, type?: 'warn' | 'error' | string) => void;
+  toast?: (msg: string) => void;
+  pickupVacuum?: (fromX: number, fromY: number, toX?: number, toY?: number) => void;
 };
 
-const engineGlobals = globalThis as DustlandGlobals;
+let cachedGlobals: DustlandGlobals | undefined;
+
+function getEngineGlobals(): DustlandGlobals {
+  if (cachedGlobals) return cachedGlobals;
+  const fallback = globalThis as DustlandGlobals;
+  cachedGlobals = (fallback.engineGlobals as DustlandGlobals | undefined) ?? fallback;
+  fallback.engineGlobals = cachedGlobals;
+  return cachedGlobals;
+}
+
+const engineGlobals = getEngineGlobals();
+(globalThis as DustlandGlobals).getEngineGlobals = getEngineGlobals;
 
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
@@ -57,8 +70,8 @@ const logImpl: LogFn = (msg, type) => {
     console.log("Log: " + msg);
   }
 };
-const engineLog: LogFn = engineGlobals.log ?? logImpl;
-engineGlobals.log = engineLog;
+const engineLog: LogFn = getEngineGlobals().log ?? logImpl;
+getEngineGlobals().log = engineLog;
 
 type MultiplayerPeer = {
   id: string;
@@ -202,8 +215,8 @@ const toastImpl: ToastFn = (msg) => {
     if(typeof save === 'function') save();
   }
 };
-const engineToast: ToastFn = engineGlobals.toast ?? toastImpl;
-engineGlobals.toast = engineToast;
+const engineToast: ToastFn = getEngineGlobals().toast ?? toastImpl;
+getEngineGlobals().toast = engineToast;
 
 // tiny sfx and hud feedback
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -434,7 +447,7 @@ function prettifyTileLabel(name){
 
 function tileLabelForId(id){
   if(typeof id==='number'){
-    const tiles=engineGlobals.TILE;
+    const tiles=getEngineGlobals().TILE;
     if(tiles && typeof tiles==='object'){
       for(const [name,value] of Object.entries(tiles)){
         if(value===id) return prettifyTileLabel(name);
@@ -473,7 +486,7 @@ function collectTilePreviewEntries(){
   const seen=new Set();
   const entries=[];
   const numericEntries=[];
-  const tiles=engineGlobals.TILE;
+  const tiles=getEngineGlobals().TILE;
   if(tiles && typeof tiles==='object'){
     for(const [name,id] of Object.entries(tiles)){
       if(!Number.isFinite(id)) continue;
@@ -1315,7 +1328,7 @@ function lightenColor(hex, amt = 0.2) {
   const lb = Math.min(255, Math.round(b + (255 - b) * amt));
   return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
 }
-engineGlobals.tileChars = tileChars;
+getEngineGlobals().tileChars = tileChars;
 globalThis.jitterColor = jitterColor;
 
 // ===== Camera & CRT draw with ghosting =====
@@ -1328,7 +1341,7 @@ const playerAdrenalineFx = {
   brightness: 1,
   glow: 0
 };
-engineGlobals.playerAdrenalineFx = playerAdrenalineFx;
+getEngineGlobals().playerAdrenalineFx = playerAdrenalineFx;
 const rawAttrWidth = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('width')) : NaN;
 const rawAttrHeight = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('height')) : NaN;
 const BASE_CANVAS_WIDTH = Number.isFinite(rawAttrWidth) && rawAttrWidth > 0 ? rawAttrWidth : (disp?.width && disp.width > 0 ? disp.width : 640);
@@ -1485,8 +1498,8 @@ const pickupVacuumImpl: PickupVacuumFn = (fromX, fromY, toX, toY) => {
   };
   vacuumTrails.push(fx);
 };
-const enginePickupVacuum: PickupVacuumFn = engineGlobals.pickupVacuum ?? pickupVacuumImpl;
-engineGlobals.pickupVacuum = enginePickupVacuum;
+const enginePickupVacuum: PickupVacuumFn = getEngineGlobals().pickupVacuum ?? pickupVacuumImpl;
+getEngineGlobals().pickupVacuum = enginePickupVacuum;
 
 function draw(t){
   if (disp.width < 16) {
@@ -1534,7 +1547,7 @@ function shouldRenderFog(map){
   if(!map) return false;
   const enabled = typeof fogOfWarEnabled === 'boolean'
     ? fogOfWarEnabled
-    : (typeof engineGlobals?.fogOfWarEnabled === 'boolean' ? engineGlobals.fogOfWarEnabled : true);
+    : (typeof engineGlobals?.fogOfWarEnabled === 'boolean' ? getEngineGlobals().fogOfWarEnabled : true);
   if(!enabled) return false;
   if(typeof mapSupportsFog === 'function') return mapSupportsFog(map);
   return map !== 'creator';
@@ -1558,7 +1571,7 @@ function renderFog(ctx, map, offX, offY, viewW, viewH){
   }else if(fogState && typeof fogState === 'object'){
     visitedLookup = fogState;
   }
-  const rawRadius = Number(engineGlobals.FOG_RADIUS);
+  const rawRadius = Number(getEngineGlobals().FOG_RADIUS);
   const radius = Math.max(1, Number.isFinite(rawRadius) ? rawRadius : 5);
   const denom = radius + 1;
   ctx.fillStyle = '#000';
@@ -1655,9 +1668,11 @@ function render(gameState=state, dt){
 
   const items = (gameState.itemDrops || itemDrops) as any[];
   const ps = (gameState.portals || portals) as any[];
-    const entities = (gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : [])) as any[];
-    const pos = (gameState.party || party) as { x: number; y: number; [key: string]: unknown };
-    const remoteParties = (engineGlobals.Dustland?.multiplayerParties?.list?.() as MultiplayerPeer[]) || (engineGlobals.Dustland?.multiplayerState?.remoteParties as MultiplayerPeer[]) || [];
+  const entities = (gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : [])) as any[];
+  const pos = (gameState.party || party) as { x: number; y: number; [key: string]: unknown };
+  type RemoteParty = MultiplayerPeer & { map?: string; x?: number; y?: number; updated?: number };
+  const dustlandState = getEngineGlobals().Dustland as { multiplayerParties?: { list?: () => RemoteParty[] }; multiplayerState?: { remoteParties?: RemoteParty[] } } | undefined;
+  const remoteParties = (dustlandState?.multiplayerParties?.list?.() as RemoteParty[] | undefined) || dustlandState?.multiplayerState?.remoteParties || [];
   const skin = skinManager();
 
   // split entities into below/above
@@ -1855,7 +1870,7 @@ function render(gameState=state, dt){
           appliedFilter = true;
         }
       }
-        const skinPlayerSprite = skin?.getPlayerSprite?.(engineGlobals.player || pos, { mode: hasPulse ? 'adrenaline' : 'default', state: pos, fx: fxState });
+        const skinPlayerSprite = skin?.getPlayerSprite?.(getEngineGlobals().player || pos, { mode: hasPulse ? 'adrenaline' : 'default', state: pos, fx: fxState });
       let playerDrawn = false;
       if(skinPlayerSprite){
         playerDrawn = drawSkinSprite(ctx, skinPlayerSprite, 0, 0, TS);
@@ -2017,8 +2032,8 @@ let activeTab = 'inv';
 
   function updateHUD(){
     const prevHp = updateHudState.lastHpVal ?? player.hp;
-  hpEl.textContent = player.hp;
-  if(scrEl) scrEl.textContent = player.scrap;
+    hpEl.textContent = String(player.hp);
+    if(scrEl) scrEl.textContent = String(player.scrap);
   const lead = typeof leader === 'function' ? leader() : null;
   const fx = globalThis.fxConfig;
   if(hpBar){
@@ -2031,12 +2046,12 @@ let activeTab = 'inv';
       hpBar.classList.remove('hurt');
     }
   }
-  if(hpFill && hpBar && lead){
-    const pct = Math.max(0, Math.min(100, (player.hp / (lead.maxHp || 1)) * 100));
-    hpFill.style.width = pct + '%';
-    hpBar.setAttribute('aria-valuenow', player.hp);
-    hpBar.setAttribute('aria-valuemax', lead.maxHp || 1);
-    hpBar.setAttribute('aria-valuemin', 0);
+    if(hpFill && hpBar && lead){
+      const pct = Math.max(0, Math.min(100, (player.hp / (lead.maxHp || 1)) * 100));
+      hpFill.style.width = pct + '%';
+      hpBar.setAttribute('aria-valuenow', String(player.hp));
+      hpBar.setAttribute('aria-valuemax', String(lead.maxHp || 1));
+      hpBar.setAttribute('aria-valuemin', '0');
     if(hpGhost){
         hpGhost.style.width = (updateHudState.lastHpPct ?? pct) + '%';
         requestAnimationFrame(()=>{ hpGhost.style.width = pct + '%'; });
@@ -2048,12 +2063,12 @@ let activeTab = 'inv';
       document.body.classList.toggle('hp-out', player.hp <= 0);
     }
   }
-  if(adrFill && adrBar && lead){
-    const apct = Math.max(0, Math.min(100, (lead.adr / (lead.maxAdr || 1)) * 100));
-    adrFill.style.width = apct + '%';
-    adrBar.setAttribute('aria-valuenow', lead.adr);
-    adrBar.setAttribute('aria-valuemax', lead.maxAdr || 1);
-    adrBar.setAttribute('aria-valuemin', 0);
+    if(adrFill && adrBar && lead){
+      const apct = Math.max(0, Math.min(100, (lead.adr / (lead.maxAdr || 1)) * 100));
+      adrFill.style.width = apct + '%';
+      adrBar.setAttribute('aria-valuenow', String(lead.adr));
+      adrBar.setAttribute('aria-valuemax', String(lead.maxAdr || 1));
+      adrBar.setAttribute('aria-valuemin', '0');
     if(musicBus){
       const ratio = Math.max(0, Math.min(1, (lead.adr || 0) / (lead.maxAdr || 1)));
       let nextMood = hudAdrMood;
@@ -2265,8 +2280,8 @@ function renderInv(){
     ctrl.className='inventory-controls';
     const ok=document.createElement('button');
     ok.className='btn';
-    ok.textContent='Drop Selected';
-      ok.onclick=()=>{ if(dropSet.size) engineGlobals.dropItems?.(Array.from(dropSet)); dropMode=false; dropSet.clear(); renderInv(); updateHUD?.(); };
+      ok.textContent='Drop Selected';
+        ok.onclick=()=>{ if(dropSet.size) getEngineGlobals().dropItems?.(Array.from(dropSet) as number[]); dropMode=false; dropSet.clear(); renderInv(); updateHUD?.(); };
     const cancel=document.createElement('button');
     cancel.className='btn';
     cancel.textContent='Cancel';
@@ -2306,7 +2321,7 @@ function renderInv(){
   dropBtn.onclick=()=>{ dropMode=true; dropSet.clear(); renderInv(); };
   ctrl.appendChild(dropBtn);
 
-  const slotKeys=new Set();
+  const slotKeys=new Set<string>();
   player.inv.forEach(it=>{ slotKeys.add(resolveInventorySlotKey(it)); });
   const sortedKeys=sortInventorySlotKeys(slotKeys);
   if(sortedKeys.length){
@@ -2346,18 +2361,20 @@ function renderInv(){
     const slotKey=resolveInventorySlotKey(it);
     if(invSlotFilter && slotKey!==invSlotFilter) return;
     const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
-    if(it.type === 'spoils-cache'){
-      const bucket = caches[it.rank] || (caches[it.rank] = { items: [], total: 0 });
-      bucket.items.push(it);
-      bucket.total += qty;
-    } else {
+      if(it.type === 'spoils-cache'){
+        const rankKey = String(it?.rank ?? '');
+        const bucket = caches[rankKey] || (caches[rankKey] = { items: [], total: 0 });
+        bucket.items.push(it);
+        bucket.total += qty;
+      } else {
       others.push(it);
     }
   });
     const member=party[selectedMember]||party[0];
-    const canEquipFn = typeof engineGlobals.canEquip === 'function' ? engineGlobals.canEquip : null;
-    const equipRestrictionsFn = typeof engineGlobals.getEquipRestrictions === 'function' ? engineGlobals.getEquipRestrictions : null;
-  const fallbackRestrictions = (member, item) => {
+    const canEquipFn = typeof getEngineGlobals().canEquip === 'function' ? getEngineGlobals().canEquip : null;
+    const equipRestrictionsFn = typeof getEngineGlobals().getEquipRestrictions === 'function' ? getEngineGlobals().getEquipRestrictions : null;
+  type EquipRestriction = { allowed?: boolean; levelMet?: boolean; levelRequired?: number; reasons?: string[] };
+  const fallbackRestrictions = (member, item): EquipRestriction | null => {
     if(!member || !item || !['weapon','armor','trinket'].includes(item.type)) return null;
     const atk = Number.isFinite(item?.mods?.ATK) ? item.mods.ATK : 0;
     let minLevel = 1;
@@ -2380,7 +2397,7 @@ function renderInv(){
       reasons: (!levelMet && minLevel > 1) ? [`Requires level ${minLevel}.`] : []
     };
   };
-    const describeRoles = typeof engineGlobals.describeRequiredRoles === 'function' ? engineGlobals.describeRequiredRoles : () => '';
+    const describeRoles = typeof getEngineGlobals().describeRequiredRoles === 'function' ? getEngineGlobals().describeRequiredRoles : () => '';
   const suggestions = {};
   if(member){
     for(const slot of ['weapon','armor','trinket']){
@@ -2429,7 +2446,7 @@ function renderInv(){
     if(['weapon','armor','trinket'].includes(it.type) && suggestions[it.type]===it){
       row.classList.add('better');
     }
-    const restriction = member ? (equipRestrictionsFn ? equipRestrictionsFn(member, it) : fallbackRestrictions(member, it)) : null;
+    const restriction = (member ? (equipRestrictionsFn ? equipRestrictionsFn(member, it) : fallbackRestrictions(member, it)) : null) as EquipRestriction | null;
     const baseLabel = it.name + (['weapon','armor','trinket'].includes(it.type)?` [${it.type}]`:'');
     const label = (it.cursed && it.cursedKnown)? `${baseLabel} (cursed)` : baseLabel;
     const labelSpan=document.createElement('span');
@@ -2491,8 +2508,8 @@ function renderInv(){
       row.appendChild(countSpan);
     }
     row.appendChild(btnWrap);
-    const mods = Object.entries(it.mods || {})
-      .map(([k, v]) => `${k} ${v >= 0 ? '+' : ''}${v}`)
+      const mods = (Object.entries(it.mods || {}) as [string, number][]) 
+        .map(([k, v]) => `${k} ${v >= 0 ? '+' : ''}${v}`)
       .join(' ');
     const use = it.use ? `${it.use.type}${it.use.amount ? ` ${it.use.amount}` : ''}` : '';
     const valueStr = (() => {
@@ -2519,11 +2536,13 @@ function renderInv(){
     inv.appendChild(row);
   });
 }
-function renderQuests(){
-  const host=document.getElementById('quests');
-  if(!host) return;
-  host.innerHTML='';
-    const list=engineGlobals.quests?Object.values(engineGlobals.quests).filter(v=> v && (v as { status?: string }).status!=='available'):[];
+  type EngineQuest = { id?: string; title?: string; status?: string; [key: string]: unknown };
+  function renderQuests(){
+    const host=document.getElementById('quests');
+    if(!host) return;
+    host.innerHTML='';
+    const questList = getEngineGlobals().quests ? (Object.values(getEngineGlobals().quests) as EngineQuest[]) : [];
+    const list=questList.filter(v=> v && v.status!=='available');
   if(list.length===0){
     host.innerHTML='<div class="q muted">(no quests)</div>';
     return;
@@ -2611,10 +2630,10 @@ function updateQuestCompassTargets(){
   });
 }
 
-function questPartyLocation(){
+  function questPartyLocation(){
     const loc={ map:'world', x:0, y:0 };
-    const p=typeof party==='object' ? party : null;
-    const globalState = engineGlobals.state;
+    const p=(!Array.isArray(party) && typeof party==='object') ? party as { map?: string; x?: number; y?: number } : null;
+    const globalState = getEngineGlobals().state;
     if(p && typeof p.map==='string') loc.map=p.map;
     else if(globalState && typeof globalState.map==='string') loc.map=globalState.map;
     if(p && typeof p.x==='number') loc.x=p.x;
@@ -2919,7 +2938,7 @@ party.forEach((m,i)=>{
   const label = persona ? `${m.name} (${persona.label})` : m.name;
   const portraitSrc = persona?.portrait || m.portraitSheet;
   c.innerHTML = `<div class='row'><div class='portrait'></div><div><b>${label}</b> — ${m.role} (Lv ${m.lvl})</div></div>`+
-`<div class='row small'>${statLine(m.stats)}</div>`+
+  `<div class='row small'>${statLine(m.stats as any)}</div>`+
 `<div class='row stats'>HP ${m.hp}/${m.maxHp}  ADR ${m.adr}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div>`+
 `<div class='row'><div class='xpbar' data-xp='${m.xp}/${nextXP}'><div class='fill' style='width:${pct}%'></div></div></div>`+
 `<div class='row small'>
@@ -2942,15 +2961,15 @@ party.forEach((m,i)=>{
     }
   }
   const existingBadge = portrait.querySelector('.spbadge');
-  if(m.skillPoints>0){
-    if(existingBadge){
-      existingBadge.textContent = m.skillPoints;
-    }else{
-      const badge=document.createElement('div');
-      badge.className='spbadge';
-      badge.textContent=m.skillPoints;
-      portrait.appendChild(badge);
-    }
+    if(m.skillPoints>0){
+      if(existingBadge){
+        existingBadge.textContent = String(m.skillPoints);
+      }else{
+        const badge=document.createElement('div');
+        badge.className='spbadge';
+        badge.textContent=String(m.skillPoints);
+        portrait.appendChild(badge);
+      }
   }else if(existingBadge){
     existingBadge.remove();
   }
@@ -2958,7 +2977,7 @@ party.forEach((m,i)=>{
   c.onfocus=()=>selectMember(i);
   c.querySelectorAll('button[data-a="unequip"]').forEach(b=>{
     const sl=b.dataset.slot;
-    b.onclick=()=> engineGlobals.unequipItem?.(i,sl);
+    b.onclick=()=> getEngineGlobals().unequipItem?.(i,sl);
   });
   p.appendChild(c);
 });
@@ -2995,10 +3014,10 @@ function openShop(npc) {
       return part.charAt(0).toUpperCase() + part.slice(1);
     }).join(' ');
   }
-  function sortSlotKeys(keys) {
-    return Array.from(keys).sort((a, b) => {
-      const idxA = slotOrder.indexOf(a);
-      const idxB = slotOrder.indexOf(b);
+    function sortSlotKeys(keys: Iterable<string>) {
+      return Array.from(keys).sort((a, b) => {
+        const idxA = slotOrder.indexOf(a);
+        const idxB = slotOrder.indexOf(b);
       if (idxA !== -1 && idxB !== -1) return idxA - idxB;
       if (idxA !== -1) return -1;
       if (idxB !== -1) return 1;
@@ -3009,10 +3028,10 @@ function openShop(npc) {
     if (!slotFilter) return true;
     return resolveSlotKey(item) === slotFilter;
   }
-  function updateSlotFilterOptions(keys) {
-    if (!shopSlotFilter) return;
-    const target = [''].concat(keys);
-    const existing = Array.from(shopSlotFilter.options).map(opt => opt.value);
+    function updateSlotFilterOptions(keys: string[]) {
+      if (!shopSlotFilter) return;
+      const target = [''].concat(keys);
+      const existing = Array.from(shopSlotFilter.options).map(opt => (opt as HTMLOptionElement).value);
     let needsUpdate = existing.length !== target.length;
     if (!needsUpdate) {
       for (let i = 0; i < target.length; i++) {
@@ -3119,7 +3138,7 @@ function openShop(npc) {
       return out;
     };
 
-    const slotKeys = new Set();
+      const slotKeys = new Set<string>();
     const registerSlotKey = (item) => {
       if (!item) return;
       slotKeys.add(resolveSlotKey(item));
@@ -3358,7 +3377,7 @@ function runTests(){
 
   genWorld(); const hutsOK = buildings.length>0 && buildings.every(b=> b.interiorId && interiors[b.interiorId] && interiors[b.interiorId].grid); assert('Huts have interiors', hutsOK);
 
-  if(typeof engineGlobals.moduleTests === 'function') engineGlobals.moduleTests(assert);
+  if(typeof getEngineGlobals().moduleTests === 'function') getEngineGlobals().moduleTests(assert);
 }
 
 // ===== Input =====
@@ -3389,7 +3408,7 @@ function runTests(){
       if(window.NanoDialog){
         NanoDialog.enabled=!NanoDialog.enabled;
         if (typeof toast === 'function') engineToast(`Dynamic dialog ${NanoDialog.enabled ? 'enabled' : 'disabled'}`);
-        if (engineGlobals.NanoDialog?.refreshIndicator) engineGlobals.NanoDialog.refreshIndicator();
+        if (getEngineGlobals().NanoDialog?.refreshIndicator) getEngineGlobals().NanoDialog.refreshIndicator();
       }
       updateNano();
     };
@@ -3400,12 +3419,13 @@ function runTests(){
   if(audioBtn) audioBtn.onclick=()=>toggleAudio();
   const musicBtn=document.getElementById('musicToggle');
   if(musicBtn){
+    const dustlandApi = getEngineGlobals().Dustland as { music?: { isEnabled?: () => boolean; toggleEnabled?: () => void } } | undefined;
     const updateMusicBtn=()=>{
-      const enabled = !!engineGlobals.Dustland?.music?.isEnabled?.();
+      const enabled = !!dustlandApi?.music?.isEnabled?.();
       musicBtn.textContent = `Music: ${enabled ? 'On' : 'Off'}`;
     };
     musicBtn.onclick=()=>{
-      engineGlobals.Dustland?.music?.toggleEnabled?.();
+      dustlandApi?.music?.toggleEnabled?.();
       updateMusicBtn();
     };
     musicBus?.on?.('music:state', updateMusicBtn);
@@ -3472,7 +3492,7 @@ function runTests(){
     };
     type SkinOverrides = { baseDir?: string; styleDir?: string; extension?: string; slots?: unknown };
     const buildOverrides=(styleId): SkinOverrides=>{
-      const manager=globalThis.Dustland?.skin;
+        const manager=globalThis.Dustland?.skin;
       const stored=manager?.getGeneratedSkinConfig?.(styleId) as SkinOverrides | undefined;
       const overrides: SkinOverrides={};
       if(stored && typeof stored==='object'){
@@ -3498,8 +3518,8 @@ function runTests(){
       }
       updateSkinStatus('Loading skin preview…');
       try{
-        const overrides=buildOverrides(styleId);
-        const loaded=manager.loadGeneratedSkin(styleId, overrides);
+          const overrides=buildOverrides(styleId) as unknown;
+          const loaded=manager.loadGeneratedSkin(styleId, overrides as any);
         if(loaded){
           updateSkinStatus(`Previewing "${styleId}".`);
         }else{
