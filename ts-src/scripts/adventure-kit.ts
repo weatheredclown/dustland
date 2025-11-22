@@ -1268,7 +1268,7 @@ function clearWorld() {
 function collectMods(containerId = 'modBuilder') {
   const wrap = document.getElementById(containerId);
   if (!wrap) return {};
-  const mods = {};
+  const mods = {} as AnyRecord;
   wrap.querySelectorAll('label').forEach(label => {
     const chk = label.querySelector('input[type="checkbox"]');
     const mod = chk?.getAttribute('data-mod');
@@ -1387,7 +1387,7 @@ let _origHasItem = null;
 let _origCountItems = null;
 
 function parseSpoofFlags(input) {
-  const out = {};
+  const out = {} as AnyRecord;
   (input || '').split(',').forEach(pair => {
     const [k, v] = pair.split('=').map(s => (s || '').trim());
     if (!k) return;
@@ -1402,7 +1402,7 @@ function buildSpoofFlagsFromPanel() {
   if (!panel) return null;
   const inputs = panel.querySelectorAll('input[data-flag]');
   if (!inputs.length) return null;
-  const out = {};
+  const out = {} as AnyRecord;
   inputs.forEach(inp => { const v = parseInt(inp.value, 10); out[inp.dataset.flag] = Number.isNaN(v) ? 1 : v; });
   return out;
 }
@@ -1411,7 +1411,7 @@ function buildSpoofItemsFromPanel() {
   if (!panel) return null;
   const inputs = panel.querySelectorAll('input[data-item]');
   if (!inputs.length) return null;
-  const out = {};
+  const out = {} as AnyRecord;
   inputs.forEach(inp => { const v = parseInt(inp.value, 10); out[inp.dataset.item] = Number.isNaN(v) ? 1 : v; });
   return out;
 }
@@ -1887,9 +1887,8 @@ function renderTreeEditor() {
 
 function updateTreeData() {
   const wrap = document.getElementById('treeEditor');
-  const newTree = {};
-  const choiceRefs = [];
-  const nodeRefs = {};
+  const newTree = {} as AnyRecord;
+  const nodeRefs = {} as AnyRecord;
   const oldTree = getTreeData();
 
   // Build tree from editor UI. Preserve collapsed nodes by keeping previous snapshot.
@@ -1982,7 +1981,7 @@ function updateTreeData() {
         if (reqTag) c.reqTag = reqTag;
         if (joinId || joinName || joinRole) c.join = { id: joinId, name: joinName, role: joinRole };
         if (gotoMap || gotoXTxt || gotoYTxt || gotoTarget === 'npc' || gotoRel) {
-          const go = {};
+          const go = {} as AnyRecord;
           if (gotoMap) go.map = gotoMap;
           const gx = gotoXTxt ? parseInt(gotoXTxt, 10) : undefined;
           const gy = gotoYTxt ? parseInt(gotoYTxt, 10) : undefined;
@@ -4230,7 +4229,7 @@ function collectArena() {
     if (toast) wave.toast = toast;
     const prompt = div.querySelector('.arenaWavePrompt')?.value.trim();
     if (prompt) wave.prompt = prompt;
-    const vuln = {};
+    const vuln = {} as AnyRecord;
     const itemsStr = div.querySelector('.arenaWaveItems')?.value.trim() || '';
     if (itemsStr) {
       const parts = itemsStr.split(',').map(str => str.trim()).filter(Boolean);
@@ -4244,7 +4243,7 @@ function collectArena() {
     const defMatch = parseFloat(div.querySelector('.arenaWaveDefMatch')?.value);
     const defMiss = parseFloat(div.querySelector('.arenaWaveDefMiss')?.value);
     if (Number.isFinite(defMatch) || Number.isFinite(defMiss)) {
-      const mod = {};
+      const mod = {} as AnyRecord;
       if (Number.isFinite(defMatch)) mod.match = defMatch;
       if (Number.isFinite(defMiss)) mod.miss = defMiss;
       if (Object.keys(mod).length) vuln.defMod = mod;
@@ -4266,9 +4265,9 @@ function collectArena() {
   if (Number.isFinite(delay) && delay >= 0) arena.entranceDelay = delay;
   if (resetLog) arena.resetLog = resetLog;
   if (rewardLog || rewardToast) {
-    arena.reward = {};
-    if (rewardLog) arena.reward.log = rewardLog;
-    if (rewardToast) arena.reward.toast = rewardToast;
+    (arena as any).reward = {} as AnyRecord;
+    if (rewardLog) (arena as any).reward.log = rewardLog;
+    if (rewardToast) (arena as any).reward.toast = rewardToast;
   }
   return arena;
 }
@@ -4413,7 +4412,7 @@ function collectZone() {
   const entry = { map, x, y, w, h };
   if (tag) entry.tag = tag;
   if (hp || msg) {
-    entry.perStep = {};
+    entry.perStep = {} as AnyRecord;
     if (hp) entry.perStep.hp = hp;
     if (msg) entry.perStep.msg = msg;
   }
@@ -5571,7 +5570,7 @@ function exportModulePayload() {
   }
   const hasProps = Object.keys(moduleData.props || {}).length > 0;
   const bldgs = moduleData.buildings.map(({ under, _origKeys, ...rest }) => {
-    const clean = {};
+    const clean = {} as AnyRecord;
     (_origKeys || Object.keys(rest)).forEach(k => { clean[k] = rest[k]; });
     return clean;
   });
@@ -5579,7 +5578,7 @@ function exportModulePayload() {
     const { _origGrid, ...rest } = I;
     return { ...rest, grid: _origGrid || gridToEmoji(I.grid) };
   });
-  const enc = {};
+  const enc = {} as AnyRecord;
   (moduleData.encounters || []).forEach(e => {
     const { map, ...rest } = e;
     (enc[map] ||= []).push(rest);
@@ -5632,7 +5631,7 @@ function playtestModule() {
   }
   const bldgs = buildings.map(({ under, ...rest }) => rest);
   const ints = moduleData.interiors.map(I => ({...I, grid: gridToEmoji(I.grid)}));
-  const enc = {};
+  const enc = {} as AnyRecord;
   (moduleData.encounters||[]).forEach(e => {
     const { map, ...rest } = e;
     (enc[map] ||= []).push(rest);

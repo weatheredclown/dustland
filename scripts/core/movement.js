@@ -1,6 +1,6 @@
-// @ts-nocheck
-const { effects: Effects } = globalThis.Dustland || {};
-var bus = (globalThis.Dustland && globalThis.Dustland.eventBus) || globalThis.EventBus;
+const movementGlobals = globalThis;
+const { effects: Effects } = movementGlobals.Dustland || {};
+var bus = (movementGlobals.Dustland && movementGlobals.Dustland.eventBus) || movementGlobals.EventBus;
 let combatActive = false;
 bus?.on?.('combat:started', () => { combatActive = true; });
 bus?.on?.('combat:ended', () => { combatActive = false; });
@@ -22,6 +22,16 @@ const ESSENTIAL_SUPPLY_RESTOCKS = Object.freeze([
 ]);
 const essentialRestockState = new Map();
 let essentialRestockCache = { module: null, data: null };
+function buildCombatant(def, npc) {
+    const base = def || {};
+    const hp = typeof base.hp === 'number' ? base.hp : (typeof base.HP === 'number' ? base.HP : 1);
+    const name = typeof base.name === 'string' ? base.name : npc?.name;
+    return { ...base, hp, npc, name };
+}
+function startCombat(def, npc) {
+    const combatant = buildCombatant(def, npc);
+    return Dustland.actions?.startCombat?.(combatant);
+}
 function normalizePositiveInt(value, fallback) {
     const base = Number.isFinite(value) ? value : fallback;
     if (!Number.isFinite(base))
@@ -29,7 +39,7 @@ function normalizePositiveInt(value, fallback) {
     return Math.max(1, Math.round(base));
 }
 function getEssentialRestockConfig() {
-    const moduleName = globalThis.Dustland?.currentModule || null;
+    const moduleName = movementGlobals.Dustland?.currentModule;
     if (!moduleName)
         return null;
     if (essentialRestockCache.module !== moduleName) {
@@ -42,7 +52,7 @@ function getEssentialRestockConfig() {
                 targets: new Map()
             });
         });
-        const moduleData = globalThis.Dustland?.loadedModules?.[moduleName];
+        const moduleData = movementGlobals.Dustland?.loadedModules?.[moduleName];
         const baseNpcs = Array.isArray(moduleData?.npcs) ? moduleData.npcs : [];
         baseNpcs.forEach(baseNpc => {
             const inv = Array.isArray(baseNpc?.shop?.inv) ? baseNpc.shop.inv : [];
@@ -74,7 +84,7 @@ function restockEssentialSupplies(turn) {
     const config = getEssentialRestockConfig();
     if (!config)
         return;
-    const roster = Array.isArray(globalThis.NPCS) ? globalThis.NPCS : [];
+    const roster = Array.isArray(movementGlobals.NPCS) ? movementGlobals.NPCS : [];
     if (!roster.length)
         return;
     for (const [itemId, cfg] of config.entries()) {
@@ -95,13 +105,14 @@ function restockEssentialSupplies(turn) {
             const shop = npc.shop;
             if (!shop || shop === true)
                 continue;
-            if (!Array.isArray(shop.inv))
-                shop.inv = [];
+            const shopInv = shop;
+            if (!Array.isArray(shopInv.inv))
+                shopInv.inv = [];
             const baseEntry = cfg.targets.get(npc.id) || { id: itemId };
             const desired = Number.isFinite(baseEntry.count) ? baseEntry.count : cfg.count;
             const restockEntry = { ...baseEntry, id: itemId };
             restockEntry.count = normalizePositiveInt(desired, cfg.count);
-            shop.inv.push(restockEntry);
+            shopInv.inv.push(restockEntry);
             essentialRestockState.set(itemId, turn);
             break;
         }
@@ -168,7 +179,7 @@ function zoneAttrs(map, x, y) {
     let spawns = null;
     let minSteps = null;
     let maxSteps = null;
-    const zones = globalThis.Dustland?.zoneEffects || [];
+    const zones = (movementGlobals.Dustland?.zoneEffects ?? []);
     for (const z of zones) {
         if (z.if && !globalThis.checkFlagCondition?.(z.if))
             continue;
@@ -348,7 +359,7 @@ function onEnter(map, x, y, ctx) {
         }
         return;
     }
-    const list = (t.events || []).filter(ev => ev.when === 'enter');
+    const list = (Array.isArray(t.events) ? t.events : []).filter((ev) => ev.when === 'enter');
     if (list.length)
         Effects.apply(list, ctx);
     const hasDustStorm = list.some(e => e.effect === 'dustStorm');
@@ -378,7 +389,7 @@ function hasItemOrEquipped(idOrTag) {
     return false;
 }
 function applyZones(map, x, y) {
-    const zones = globalThis.Dustland?.zoneEffects || [];
+    const zones = (movementGlobals.Dustland?.zoneEffects ?? []);
     let weatherZone = null;
     for (const z of zones) {
         if (z.if && !globalThis.checkFlagCondition?.(z.if))
@@ -393,7 +404,7 @@ function applyZones(map, x, y) {
             continue;
         if (z.weather)
             weatherZone = z;
-        const step = z.perStep || z.step;
+        const step = (z.perStep || z.step);
         if (step && typeof step.hp === 'number') {
             const delta = step.hp;
             (party || []).forEach(m => {
@@ -402,7 +413,8 @@ function applyZones(map, x, y) {
             });
             renderParty?.();
             updateHUD?.();
-            const msg = step.msg || (delta > 0 ? 'You feel better.' : 'You take damage.');
+            const baseMsg = typeof step.msg === 'string' ? step.msg : undefined;
+            const msg = baseMsg || (delta > 0 ? 'You feel better.' : 'You take damage.');
             log?.(msg);
             if (typeof toast === 'function')
                 toast(msg);
@@ -437,7 +449,7 @@ function applyZones(map, x, y) {
     }
 }
 function updateZoneMsgs(map, x, y) {
-    const zones = globalThis.Dustland?.zoneEffects || [];
+    const zones = (movementGlobals.Dustland?.zoneEffects ?? []);
     const current = [];
     for (const z of zones) {
         if (z.if && !globalThis.checkFlagCondition?.(z.if))
@@ -446,7 +458,7 @@ function updateZoneMsgs(map, x, y) {
             continue;
         if (x < z.x || y < z.y || x >= z.x + (z.w || 0) || y >= z.y + (z.h || 0))
             continue;
-        const step = z.perStep || z.step;
+        const step = (z.perStep || z.step);
         if (!step || !step.msg)
             continue;
         const others = Object.keys(step).filter(k => k !== 'msg');
@@ -462,7 +474,7 @@ function updateZoneMsgs(map, x, y) {
     }
     for (const z of activeMsgZones) {
         if (!current.includes(z)) {
-            const step = z.perStep || z.step;
+            const step = (z.perStep || z.step);
             const msg = 'exiting: ' + (step?.msg || '');
             log?.(msg);
             if (typeof toast === 'function')
@@ -547,11 +559,12 @@ function move(dx, dy) {
                 bus.emit('hydration:tick');
                 bus.emit('sfx', 'step');
                 // NPCs advance along paths after the player steps
-                if (Dustland.path?.tickPathAI)
-                    Dustland.path.tickPathAI();
+                const pathApi = movementGlobals.Dustland?.path;
+                if (pathApi?.tickPathAI)
+                    pathApi.tickPathAI();
                 if (state.map === 'world')
                     advanceWorldTurn();
-                if (typeof leaderHasLootVacuum === 'function' && leaderHasLootVacuum()) {
+                if (typeof movementGlobals.leaderHasLootVacuum === 'function' && movementGlobals.leaderHasLootVacuum()) {
                     let sweeps = 0;
                     while (takeNearestItem({ vacuum: true }) && sweeps < 5) {
                         sweeps++;
@@ -576,7 +589,7 @@ function checkAggro() {
             continue;
         const d = Math.abs(n.x - party.x) + Math.abs(n.y - party.y);
         if (d <= 3) {
-            Dustland.actions.startCombat({ ...n.combat, npc: n, name: n.name });
+            startCombat({ ...n.combat, name: n.name }, n);
             break;
         }
     }
@@ -706,7 +719,7 @@ function checkRandomEncounter() {
         if (chosen) {
             encounterCooldown = minSteps + Math.floor(Math.random() * (maxSteps - minSteps + 1));
             lockInput(undefined, globalThis.Dustland?.lastNonCombatKey);
-            return Dustland.actions.startCombat({ ...chosen });
+            return startCombat({ ...chosen });
         }
         return;
     }
@@ -724,7 +737,12 @@ function checkRandomEncounter() {
             return;
         if (encounterBias) {
             const tag = encounterBias.toLowerCase();
-            const biased = pool.filter(e => (e.tags && e.tags.includes(tag)) || (e.id && e.id.includes(tag)) || (e.name && e.name.toLowerCase().includes(tag)));
+            const biased = pool.filter(e => {
+                const tags = Array.isArray(e.tags) ? e.tags : [];
+                const id = typeof e.id === 'string' ? e.id : '';
+                const name = typeof e.name === 'string' ? e.name.toLowerCase() : '';
+                return tags.includes(tag) || id.includes(tag) || name.includes(tag);
+            });
             if (biased.length)
                 pool = biased;
         }
@@ -754,7 +772,7 @@ function checkRandomEncounter() {
             def = { ...base };
         }
         const id = def.id || def.name;
-        const stats = globalThis.enemyTurnStats?.[id];
+        const stats = movementGlobals.enemyTurnStats?.[id];
         // If this enemy consistently falls in a single turn, spawn them in triples
         let count = 1;
         if (stats && stats.quick >= 3) {
@@ -764,7 +782,7 @@ function checkRandomEncounter() {
             def.count = count;
         encounterCooldown = minSteps + Math.floor(Math.random() * (maxSteps - minSteps + 1));
         lockInput(undefined, globalThis.Dustland?.lastNonCombatKey);
-        return Dustland.actions.startCombat(def);
+        return startCombat(def);
     }
 }
 function adjacentNPC() {
@@ -876,7 +894,8 @@ function interactAt(x, y) {
         const p = portals.find(p => p.map === state.map && p.x === x && p.y === y);
         if (p) {
             if (p.if && !globalThis.checkFlagCondition?.(p.if)) {
-                log(p.blockedMsg || 'It\'s locked.');
+                const blockedMsg = typeof p.blockedMsg === 'string' ? p.blockedMsg : 'It\'s locked.';
+                log(blockedMsg);
                 bus.emit('sfx', 'denied');
                 return true;
             }
@@ -886,7 +905,8 @@ function interactAt(x, y) {
             const py = (typeof p.toY === 'number') ? p.toY : (I ? I.entryY : 0);
             setPartyPos(px, py);
             setMap(target);
-            log(p.desc || 'You move through the doorway.');
+            const desc = typeof p.desc === 'string' ? p.desc : 'You move through the doorway.';
+            log(desc);
             updateHUD();
             bus.emit('sfx', 'confirm');
             return true;

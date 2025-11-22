@@ -1,7 +1,20 @@
 // @ts-nocheck
-/* global toast, log, EventBus */
-const coreEventBus = (globalThis.EventBus ?? globalThis.eventBus);
+// TODO: migrate dustland-core to the typed DustlandCoreGlobals surface.
+/* eslint-disable no-var */
+const coreGlobals = globalThis;
+const coreEventBus = coreGlobals.EventBus ?? coreGlobals.eventBus;
 const { on } = coreEventBus ?? { on: () => undefined };
+class Quest {
+    constructor(id, title, desc, opts) {
+        this.id = id;
+        this.name = title;
+        this.desc = desc;
+        this.status = 'available';
+        if (opts) {
+            Object.assign(this, opts);
+        }
+    }
+}
 // ===== Core helpers =====
 const ROLL_SIDES = 12;
 const DC = Object.freeze({ TALK: 8, REPAIR: 9 });

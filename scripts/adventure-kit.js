@@ -1,4 +1,5 @@
 // @ts-nocheck
+// TypeScript checking remains disabled here until the editor globals are fully typed.
 // Adventure Construction Kit
 // Provides basic tools to build Dustland modules.
 // Ensure world generation doesn't pull default content
@@ -2055,7 +2056,6 @@ function renderTreeEditor() {
 function updateTreeData() {
     const wrap = document.getElementById('treeEditor');
     const newTree = {};
-    const choiceRefs = [];
     const nodeRefs = {};
     const oldTree = getTreeData();
     // Build tree from editor UI. Preserve collapsed nodes by keeping previous snapshot.

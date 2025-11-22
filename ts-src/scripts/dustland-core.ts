@@ -51,14 +51,37 @@ type QuestState = {
   status: QuestStatus;
 };
 
-type Quest = {
+class Quest {
   id: string;
   name: string;
   status: QuestStatus;
   desc?: string;
   onStart?: (...args: unknown[]) => unknown;
   onComplete?: (...args: unknown[]) => unknown;
-};
+  pinned?: boolean;
+  item?: string;
+  itemTag?: string;
+  count?: number;
+  reward?: unknown;
+  xp?: number | string;
+  moveTo?: unknown;
+  itemLocation?: unknown;
+  targetMap?: unknown;
+  dialog?: unknown;
+  dialogNodes?: unknown;
+  reqFlag?: unknown;
+  progressText?: unknown;
+
+  constructor(id: string, title: string, desc: string, opts?: Record<string, unknown>) {
+    this.id = id;
+    this.name = title;
+    this.desc = desc;
+    this.status = 'available';
+    if (opts) {
+      Object.assign(this, opts);
+    }
+  }
+}
 
 type NPC = {
   id: string;
@@ -402,7 +425,7 @@ function setMap(id: string, label?: string): void {
     label = label || mapLabel(id);
   }
   state.map=id;
-  party.map = id;
+  (party as any).map = id;
   state.mapEntry = null;
   if (mapNameEl) {
     mapNameEl.textContent = label || mapLabel(id);
@@ -911,7 +934,7 @@ function applyModule(data = {}, options = {}) {
       quest = quests[n.questId];
       registerQuestGiver(quest, n);
     }
-    const opts = {};
+    const opts = {} as AnyRecord;
     if (n.combat) opts.combat = n.combat;
     if (n.shop) opts.shop = n.shop;
     if (n.portraitSheet) opts.portraitSheet = n.portraitSheet;
@@ -1198,7 +1221,7 @@ function getNpcTemplateDefinition(id){
   if(!id) return null;
   const moduleName = globalThis.Dustland?.currentModule;
   if(moduleName){
-    const moduleData = globalThis.Dustland?.loadedModules?.[moduleName];
+    const moduleData = (globalThis.Dustland as any)?.loadedModules?.[moduleName];
     const found = moduleData?.npcs?.find(n => n.id === id);
     if(found) return found;
   }
@@ -1232,7 +1255,7 @@ function serializeShopPatch(currentShop, baseShop){
   const current = currentShop || null;
   const base = baseShop || null;
   if(!current && !base) return null;
-  const patch = {};
+  const patch = {} as AnyRecord;
   const currInv = Array.isArray(current?.inv) ? current.inv : [];
   const baseInv = Array.isArray(base?.inv) ? base.inv : [];
   if(!deepEqual(currInv, baseInv)){
@@ -1267,7 +1290,7 @@ function normalizeShopValueForKey(value){
 
 function shopEntryKey(entry){
   if(!entry || typeof entry !== 'object') return null;
-  const normalized = {};
+  const normalized = {} as AnyRecord;
   Object.keys(entry).sort().forEach(key => {
     if(key === 'count') return;
     normalized[key] = normalizeShopValueForKey(entry[key]);
@@ -1631,7 +1654,7 @@ function loadLegacySave(d){
 
 function loadModernSave(d){
   const moduleName = resolveModuleName(d.module) ?? globalThis.Dustland?.currentModule ?? null;
-  const moduleData = (moduleName != null ? globalThis.Dustland?.loadedModules?.[moduleName] : null) || globalThis.moduleData;
+  const moduleData = (moduleName != null ? (globalThis.Dustland as any)?.loadedModules?.[moduleName] : null) || globalThis.moduleData;
   party.length = 0;
   party.flags = {};
   party.fallen = [];
@@ -1748,10 +1771,10 @@ function loadModernSave(d){
     party.x = partyData.members[0].x ?? party.x;
     party.y = partyData.members[0].y ?? party.y;
   }
-  party.map = state.map;
+  (party as any).map = state.map;
   if(state.map === 'dust_storm'){
     state.map = 'world';
-    party.map = 'world';
+    (party as any).map = 'world';
     party.x = 10;
     party.y = 18;
   }
@@ -1759,7 +1782,7 @@ function loadModernSave(d){
   const tile = typeof getTile === 'function' ? getTile(state.map, party.x, party.y) : null;
   if(!grid || tile === null){
     state.map = 'world';
-    party.map = 'world';
+    (party as any).map = 'world';
     const wx = world?.[0]?.length ? Math.floor(world[0].length/2) : 0;
     const wy = world?.length ? Math.floor(world.length/2) : 0;
     setPartyPos(wx, wy);
