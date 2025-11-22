@@ -1,6 +1,16 @@
-// @ts-nocheck
 // ===== Rendering & Utilities =====
 const ENGINE_VERSION = '0.243.6';
+let cachedGlobals;
+function getEngineGlobals() {
+    if (cachedGlobals)
+        return cachedGlobals;
+    const fallback = globalThis;
+    cachedGlobals = fallback.engineGlobals ?? fallback;
+    fallback.engineGlobals = cachedGlobals;
+    return cachedGlobals;
+}
+const engineGlobals = getEngineGlobals();
+globalThis.getEngineGlobals = getEngineGlobals;
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
 const scrEl = document.getElementById('scrap');
@@ -15,7 +25,7 @@ const weatherBanner = document.getElementById('weatherBanner');
 const musicBus = globalThis.Dustland?.eventBus || globalThis.EventBus;
 let hudAdrMood = null;
 const FOG_UNSEEN_ALPHA = 0.94;
-function log(msg, type) {
+const logImpl = (msg, type) => {
     if (logEl) {
         const p = document.createElement('div');
         p.textContent = msg;
@@ -28,16 +38,18 @@ function log(msg, type) {
     else {
         console.log("Log: " + msg);
     }
-}
+};
+const engineLog = getEngineGlobals().log ?? logImpl;
+getEngineGlobals().log = engineLog;
 const origWarn = console.warn;
 console.warn = function (...args) {
     origWarn.apply(console, args);
-    log('⚠️ ' + args.join(' '), 'warn');
+    engineLog('⚠️ ' + args.join(' '), 'warn');
 };
 const origError = console.error;
 console.error = function (...args) {
     origError.apply(console, args);
-    log('🛑 ' + args.join(' '), 'error');
+    engineLog('🛑 ' + args.join(' '), 'error');
 };
 const multiplayerBus = globalThis.Dustland?.eventBus || globalThis.EventBus;
 if (multiplayerBus?.on) {
@@ -63,24 +75,24 @@ if (multiplayerBus?.on) {
             switch (info.status) {
                 case 'started':
                     if (info.role === 'host') {
-                        log(fromNet ? 'Multiplayer: Host is online.' : 'Multiplayer: Hosting session active. Share the host code to invite players.');
+                        engineLog(fromNet ? 'Multiplayer: Host is online.' : 'Multiplayer: Hosting session active. Share the host code to invite players.');
                         if (!fromNet) {
                             peerSnapshot = [];
                             peerHash = '';
                         }
                     }
                     else if (info.role === 'client') {
-                        log(fromNet ? 'Multiplayer: A player is preparing to link.' : 'Multiplayer: Preparing link to host…');
+                        engineLog(fromNet ? 'Multiplayer: A player is preparing to link.' : 'Multiplayer: Preparing link to host…');
                     }
                     break;
                 case 'linking':
                     if (info.role === 'client') {
-                        log(fromNet ? 'Multiplayer: Player submitted an answer code.' : 'Multiplayer: Waiting for host to accept your answer.');
+                        engineLog(fromNet ? 'Multiplayer: Player submitted an answer code.' : 'Multiplayer: Waiting for host to accept your answer.');
                     }
                     break;
                 case 'linked':
                     if (info.role === 'client') {
-                        log(fromNet ? 'Multiplayer: Player link confirmed.' : 'Multiplayer: Link confirmed.');
+                        engineLog(fromNet ? 'Multiplayer: Player link confirmed.' : 'Multiplayer: Link confirmed.');
                     }
                     break;
                 case 'peers':
@@ -93,31 +105,31 @@ if (multiplayerBus?.on) {
                         const nextById = new Map(peers.map(p => [p.id, p]));
                         peers.forEach(peer => {
                             if (!prevById.has(peer.id))
-                                log(`Multiplayer: ${peer.label} linked.`);
+                                engineLog(`Multiplayer: ${peer.label} linked.`);
                         });
                         peerSnapshot.forEach(peer => {
                             if (!nextById.has(peer.id))
-                                log(`Multiplayer: ${peer.label} disconnected.`);
+                                engineLog(`Multiplayer: ${peer.label} disconnected.`);
                         });
                         const remoteCount = peers.length;
                         const total = remoteCount + 1;
                         const label = total === 1 ? 'player' : 'players';
-                        log(`Multiplayer: ${total} ${label} in session (host + ${remoteCount}).`);
+                        engineLog(`Multiplayer: ${total} ${label} in session (host + ${remoteCount}).`);
                         peerSnapshot = peers;
                         peerHash = hash;
                     }
                     break;
                 case 'closed':
                     if (info.role === 'host') {
-                        log(fromNet ? 'Multiplayer: Host disconnected.' : 'Multiplayer: Hosting stopped.');
+                        engineLog(fromNet ? 'Multiplayer: Host disconnected.' : 'Multiplayer: Hosting stopped.');
                         peerSnapshot = [];
                         peerHash = '';
                     }
                     else if (info.role === 'client') {
-                        log(fromNet ? 'Multiplayer: Player connection closed.' : 'Multiplayer: Disconnected from host.');
+                        engineLog(fromNet ? 'Multiplayer: Player connection closed.' : 'Multiplayer: Disconnected from host.');
                     }
                     else {
-                        log('Multiplayer: Connection closed.');
+                        engineLog('Multiplayer: Connection closed.');
                     }
                     break;
                 case 'error': {
@@ -135,7 +147,7 @@ if (multiplayerBus?.on) {
                             }
                         }
                     }
-                    log(`Multiplayer error: ${detail}`);
+                    engineLog(`Multiplayer error: ${detail}`);
                     break;
                 }
             }
@@ -146,7 +158,7 @@ if (multiplayerBus?.on) {
 const toastHost = document.createElement('div');
 toastHost.style.cssText = 'position:fixed;left:50%;top:24px;transform:translateX(-50%);z-index:9999;pointer-events:none';
 document.body.appendChild(toastHost);
-function toast(msg) {
+const toastImpl = (msg) => {
     const t = document.createElement('div');
     t.textContent = msg;
     t.style.cssText = 'margin:6px 0;padding:8px 12px;background:#101910;border:1px solid #2b3b2b;border-radius:8px;color:#c8f7c9;box-shadow:0 8px 20px rgba(0,0,0,.4);opacity:0;transition:opacity .15s, transform .15s; transform: translateY(-6px)';
@@ -159,7 +171,9 @@ function toast(msg) {
         if (typeof save === 'function')
             save();
     }
-}
+};
+const engineToast = getEngineGlobals().toast ?? toastImpl;
+getEngineGlobals().toast = engineToast;
 // tiny sfx and hud feedback
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let audioEnabled = true;
@@ -207,7 +221,7 @@ function setMobileControls(on) {
                         if (typeof btn.click === 'function')
                             btn.click();
                         else
-                            btn.onclick?.();
+                            btn.onclick?.(new MouseEvent('click'));
                     }
                     return true;
                 }
@@ -235,10 +249,10 @@ function setMobileControls(on) {
             };
             const mobileMove = (dx, dy, key) => {
                 if (overlay?.classList?.contains('shown')) {
-                    handleDialogKey?.({ key });
+                    handleDialogKey?.(new KeyboardEvent('keydown', { key }));
                 }
                 else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
-                    handleCombatKey?.({ key });
+                    handleCombatKey?.(new KeyboardEvent('keydown', { key }));
                 }
                 else {
                     move(dx, dy);
@@ -266,10 +280,10 @@ function setMobileControls(on) {
                     return;
                 }
                 if (overlay?.classList?.contains('shown')) {
-                    handleDialogKey?.({ key: 'Enter' });
+                    handleDialogKey?.(new KeyboardEvent('keydown', { key: 'Enter' }));
                 }
                 else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
-                    handleCombatKey?.({ key: 'Enter' });
+                    handleCombatKey?.(new KeyboardEvent('keydown', { key: 'Enter' }));
                 }
                 else {
                     interact();
@@ -284,7 +298,7 @@ function setMobileControls(on) {
                     closeDialog?.();
                 }
                 else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
-                    handleCombatKey?.({ key: 'Escape' });
+                    handleCombatKey?.(new KeyboardEvent('keydown', { key: 'Escape' }));
                 }
                 else if (shop?.classList?.contains('shown')) {
                     shop.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
@@ -415,7 +429,7 @@ function prettifyTileLabel(name) {
 }
 function tileLabelForId(id) {
     if (typeof id === 'number') {
-        const tiles = globalThis.TILE;
+        const tiles = getEngineGlobals().TILE;
         if (tiles && typeof tiles === 'object') {
             for (const [name, value] of Object.entries(tiles)) {
                 if (value === id)
@@ -457,7 +471,7 @@ function collectTilePreviewEntries() {
     const seen = new Set();
     const entries = [];
     const numericEntries = [];
-    const tiles = globalThis.TILE;
+    const tiles = getEngineGlobals().TILE;
     if (tiles && typeof tiles === 'object') {
         for (const [name, id] of Object.entries(tiles)) {
             if (!Number.isFinite(id))
@@ -685,7 +699,8 @@ if (Number.isFinite(savedFontScale)) {
 else {
     applyFontScale(fontScale);
 }
-function setRetroNpcArt(on, skipStorage) {
+function setRetroNpcArt(on, optsOrSkip) {
+    const opts = typeof optsOrSkip === 'object' ? optsOrSkip : { skipStorage: !!optsOrSkip };
     retroNpcArtEnabled = !!on;
     const cb = document.getElementById('retroNpcToggle');
     if (cb)
@@ -693,7 +708,7 @@ function setRetroNpcArt(on, skipStorage) {
     if (typeof document !== 'undefined') {
         document.body?.classList?.toggle('retro-npc-art', retroNpcArtEnabled);
     }
-    if (!skipStorage) {
+    if (!opts.skipStorage) {
         globalThis.localStorage?.setItem('retroNpcArt', retroNpcArtEnabled ? '1' : '0');
     }
     retroPlayerSprite = null;
@@ -1264,7 +1279,7 @@ if (weatherBanner && globalThis.Dustland?.weather) {
 const fxOverlay = document.createElement('div');
 fxOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;opacity:0;transition:opacity .2s;z-index:200;';
 document.body.appendChild(fxOverlay);
-function playFX(type) {
+const playFX = (type) => {
     if (audioEnabled && typeof audioCtx?.createOscillator === 'function') {
         const o = audioCtx.createOscillator();
         const g = audioCtx.createGain();
@@ -1282,7 +1297,7 @@ function playFX(type) {
     fxOverlay.style.opacity = '1';
     clearTimeout(playFX._t);
     playFX._t = setTimeout(() => { fxOverlay.style.opacity = '0'; }, 200);
-}
+};
 function hudBadge(msg) {
     const target = hpEl;
     if (!target)
@@ -1329,7 +1344,7 @@ function lightenColor(hex, amt = 0.2) {
     const lb = Math.min(255, Math.round(b + (255 - b) * amt));
     return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
 }
-globalThis.tileChars = tileChars;
+getEngineGlobals().tileChars = tileChars;
 globalThis.jitterColor = jitterColor;
 // ===== Camera & CRT draw with ghosting =====
 const disp = document.getElementById('game');
@@ -1341,7 +1356,7 @@ const playerAdrenalineFx = {
     brightness: 1,
     glow: 0
 };
-globalThis.playerAdrenalineFx = playerAdrenalineFx;
+getEngineGlobals().playerAdrenalineFx = playerAdrenalineFx;
 const rawAttrWidth = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('width')) : NaN;
 const rawAttrHeight = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('height')) : NaN;
 const BASE_CANVAS_WIDTH = Number.isFinite(rawAttrWidth) && rawAttrWidth > 0 ? rawAttrWidth : (disp?.width && disp.width > 0 ? disp.width : 640);
@@ -1479,7 +1494,7 @@ function footstepBump() {
 function pickupSparkle(x, y) {
     sparkles.push({ x, y });
 }
-function pickupVacuum(fromX, fromY, toX, toY) {
+const pickupVacuumImpl = (fromX, fromY, toX, toY) => {
     const now = Date.now();
     const fx = {
         fromX,
@@ -1490,7 +1505,9 @@ function pickupVacuum(fromX, fromY, toX, toY) {
         end: now + 350
     };
     vacuumTrails.push(fx);
-}
+};
+const enginePickupVacuum = getEngineGlobals().pickupVacuum ?? pickupVacuumImpl;
+getEngineGlobals().pickupVacuum = enginePickupVacuum;
 function draw(t) {
     if (disp.width < 16) {
         return;
@@ -1547,7 +1564,7 @@ function shouldRenderFog(map) {
         return false;
     const enabled = typeof fogOfWarEnabled === 'boolean'
         ? fogOfWarEnabled
-        : (typeof globalThis?.fogOfWarEnabled === 'boolean' ? globalThis.fogOfWarEnabled : true);
+        : (typeof engineGlobals?.fogOfWarEnabled === 'boolean' ? getEngineGlobals().fogOfWarEnabled : true);
     if (!enabled)
         return false;
     if (typeof mapSupportsFog === 'function')
@@ -1557,9 +1574,9 @@ function shouldRenderFog(map) {
 function renderFog(ctx, map, offX, offY, viewW, viewH) {
     if (!ctx || !shouldRenderFog(map))
         return;
-    const dims = typeof mapWH === 'function' ? mapWH(map) : null;
-    const W = Number.isFinite(dims?.W) ? dims.W : null;
-    const H = Number.isFinite(dims?.H) ? dims.H : null;
+    const dims = (typeof mapWH === 'function' ? mapWH(map) : null);
+    const W = Number.isFinite(dims?.W) ? dims?.W ?? null : null;
+    const H = Number.isFinite(dims?.H) ? dims?.H ?? null : null;
     if (!Number.isFinite(W) || !Number.isFinite(H))
         return;
     const px = Number.isFinite(party?.x) ? party.x : null;
@@ -1576,7 +1593,7 @@ function renderFog(ctx, map, offX, offY, viewW, viewH) {
     else if (fogState && typeof fogState === 'object') {
         visitedLookup = fogState;
     }
-    const rawRadius = Number(globalThis.FOG_RADIUS);
+    const rawRadius = Number(getEngineGlobals().FOG_RADIUS);
     const radius = Math.max(1, Number.isFinite(rawRadius) ? rawRadius : 5);
     const denom = radius + 1;
     ctx.fillStyle = '#000';
@@ -1654,7 +1671,7 @@ function render(gameState = state, dt) {
     if (!ctx)
         return;
     const activeMap = gameState.map || mapIdForState();
-    const dims = mapWH(activeMap) || {};
+    const dims = (mapWH(activeMap) || {});
     const { w: vWRaw, h: vHRaw } = getViewSize();
     const vW = Number.isFinite(vWRaw) ? vWRaw : VIEW_W;
     const vH = Number.isFinite(vHRaw) ? vHRaw : VIEW_H;
@@ -1672,11 +1689,12 @@ function render(gameState = state, dt) {
     ctx.fillRect(0, 0, BASE_CANVAS_WIDTH, BASE_CANVAS_HEIGHT);
     const offX = Math.max(0, Math.floor((vW - W) / 2));
     const offY = Math.max(0, Math.floor((vH - H) / 2));
-    const items = gameState.itemDrops || itemDrops;
-    const ps = gameState.portals || portals;
-    const entities = gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : []);
-    const pos = gameState.party || party;
-    const remoteParties = globalThis.Dustland?.multiplayerParties?.list?.() || globalThis.Dustland?.multiplayerState?.remoteParties || [];
+    const items = (gameState.itemDrops || itemDrops);
+    const ps = (gameState.portals || portals);
+    const entities = (gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : []));
+    const pos = (gameState.party || party);
+    const dustlandState = getEngineGlobals().Dustland;
+    const remoteParties = dustlandState?.multiplayerParties?.list?.() || dustlandState?.multiplayerState?.remoteParties || [];
     const skin = skinManager();
     // split entities into below/above
     const below = [], above = [];
@@ -1893,7 +1911,7 @@ function render(gameState = state, dt) {
                     appliedFilter = true;
                 }
             }
-            const skinPlayerSprite = skin?.getPlayerSprite?.(globalThis.player || pos, { mode: hasPulse ? 'adrenaline' : 'default', state: pos, fx: fxState });
+            const skinPlayerSprite = skin?.getPlayerSprite?.(getEngineGlobals().player || pos, { mode: hasPulse ? 'adrenaline' : 'default', state: pos, fx: fxState });
             let playerDrawn = false;
             if (skinPlayerSprite) {
                 playerDrawn = drawSkinSprite(ctx, skinPlayerSprite, 0, 0, TS);
@@ -2055,19 +2073,20 @@ Object.assign(window, { renderOrderSystem: { order: renderOrder, render } });
 // ===== HUD & Tabs =====
 const TAB_BREAKPOINT = 1980;
 let activeTab = 'inv';
+const updateHudState = {};
 function updateHUD() {
-    const prevHp = updateHUD._lastHpVal ?? player.hp;
-    hpEl.textContent = player.hp;
+    const prevHp = updateHudState.lastHpVal ?? player.hp;
+    hpEl.textContent = String(player.hp);
     if (scrEl)
-        scrEl.textContent = player.scrap;
+        scrEl.textContent = String(player.scrap);
     const lead = typeof leader === 'function' ? leader() : null;
     const fx = globalThis.fxConfig;
     if (hpBar) {
         if (player.hp < prevHp && fx?.damageFlash !== false) {
             EventBus.emit('sfx', 'damage');
             hpBar.classList.add('hurt');
-            clearTimeout(updateHUD._hurtTimer);
-            updateHUD._hurtTimer = setTimeout(() => hpBar.classList.remove('hurt'), 300);
+            clearTimeout(updateHudState.hurtTimer);
+            updateHudState.hurtTimer = setTimeout(() => hpBar.classList.remove('hurt'), 300);
         }
         else if (fx?.damageFlash === false) {
             hpBar.classList.remove('hurt');
@@ -2076,14 +2095,14 @@ function updateHUD() {
     if (hpFill && hpBar && lead) {
         const pct = Math.max(0, Math.min(100, (player.hp / (lead.maxHp || 1)) * 100));
         hpFill.style.width = pct + '%';
-        hpBar.setAttribute('aria-valuenow', player.hp);
-        hpBar.setAttribute('aria-valuemax', lead.maxHp || 1);
-        hpBar.setAttribute('aria-valuemin', 0);
+        hpBar.setAttribute('aria-valuenow', String(player.hp));
+        hpBar.setAttribute('aria-valuemax', String(lead.maxHp || 1));
+        hpBar.setAttribute('aria-valuemin', '0');
         if (hpGhost) {
-            hpGhost.style.width = (updateHUD._lastHpPct ?? pct) + '%';
+            hpGhost.style.width = (updateHudState.lastHpPct ?? pct) + '%';
             requestAnimationFrame(() => { hpGhost.style.width = pct + '%'; });
         }
-        updateHUD._lastHpPct = pct;
+        updateHudState.lastHpPct = pct;
         if (lead) {
             const crit = player.hp > 0 && player.hp <= (lead.maxHp || 1) * 0.25;
             document.body.classList.toggle('hp-critical', crit);
@@ -2093,9 +2112,9 @@ function updateHUD() {
     if (adrFill && adrBar && lead) {
         const apct = Math.max(0, Math.min(100, (lead.adr / (lead.maxAdr || 1)) * 100));
         adrFill.style.width = apct + '%';
-        adrBar.setAttribute('aria-valuenow', lead.adr);
-        adrBar.setAttribute('aria-valuemax', lead.maxAdr || 1);
-        adrBar.setAttribute('aria-valuemin', 0);
+        adrBar.setAttribute('aria-valuenow', String(lead.adr));
+        adrBar.setAttribute('aria-valuemax', String(lead.maxAdr || 1));
+        adrBar.setAttribute('aria-valuemin', '0');
         if (musicBus) {
             const ratio = Math.max(0, Math.min(1, (lead.adr || 0) / (lead.maxAdr || 1)));
             let nextMood = hudAdrMood;
@@ -2185,7 +2204,7 @@ function updateHUD() {
             hydEl.hidden = true;
         }
     }
-    updateHUD._lastHpVal = player.hp;
+    updateHudState.lastHpVal = player.hp;
 }
 function resetPlayerAdrenalineFx() {
     playerAdrenalineFx.intensity = 0;
@@ -2358,7 +2377,7 @@ function renderInv() {
         ok.className = 'btn';
         ok.textContent = 'Drop Selected';
         ok.onclick = () => { if (dropSet.size)
-            dropItems(Array.from(dropSet)); dropMode = false; dropSet.clear(); renderInv(); updateHUD?.(); };
+            getEngineGlobals().dropItems?.(Array.from(dropSet)); dropMode = false; dropSet.clear(); renderInv(); updateHUD?.(); };
         const cancel = document.createElement('button');
         cancel.className = 'btn';
         cancel.textContent = 'Cancel';
@@ -2448,7 +2467,8 @@ function renderInv() {
             return;
         const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
         if (it.type === 'spoils-cache') {
-            const bucket = caches[it.rank] || (caches[it.rank] = { items: [], total: 0 });
+            const rankKey = String(it?.rank ?? '');
+            const bucket = caches[rankKey] || (caches[rankKey] = { items: [], total: 0 });
             bucket.items.push(it);
             bucket.total += qty;
         }
@@ -2457,8 +2477,8 @@ function renderInv() {
         }
     });
     const member = party[selectedMember] || party[0];
-    const canEquipFn = typeof canEquip === 'function' ? canEquip : null;
-    const equipRestrictionsFn = typeof getEquipRestrictions === 'function' ? getEquipRestrictions : null;
+    const canEquipFn = typeof getEngineGlobals().canEquip === 'function' ? getEngineGlobals().canEquip : null;
+    const equipRestrictionsFn = typeof getEngineGlobals().getEquipRestrictions === 'function' ? getEngineGlobals().getEquipRestrictions : null;
     const fallbackRestrictions = (member, item) => {
         if (!member || !item || !['weapon', 'armor', 'trinket'].includes(item.type))
             return null;
@@ -2488,7 +2508,7 @@ function renderInv() {
             reasons: (!levelMet && minLevel > 1) ? [`Requires level ${minLevel}.`] : []
         };
     };
-    const describeRoles = typeof describeRequiredRoles === 'function' ? describeRequiredRoles : () => '';
+    const describeRoles = typeof getEngineGlobals().describeRequiredRoles === 'function' ? getEngineGlobals().describeRequiredRoles : () => '';
     const suggestions = {};
     if (member) {
         for (const slot of ['weapon', 'armor', 'trinket']) {
@@ -2537,7 +2557,7 @@ function renderInv() {
         if (['weapon', 'armor', 'trinket'].includes(it.type) && suggestions[it.type] === it) {
             row.classList.add('better');
         }
-        const restriction = member ? (equipRestrictionsFn ? equipRestrictionsFn(member, it) : fallbackRestrictions(member, it)) : null;
+        const restriction = (member ? (equipRestrictionsFn ? equipRestrictionsFn(member, it) : fallbackRestrictions(member, it)) : null);
         const baseLabel = it.name + (['weapon', 'armor', 'trinket'].includes(it.type) ? ` [${it.type}]` : '');
         const label = (it.cursed && it.cursedKnown) ? `${baseLabel} (cursed)` : baseLabel;
         const labelSpan = document.createElement('span');
@@ -2638,7 +2658,8 @@ function renderQuests() {
     if (!host)
         return;
     host.innerHTML = '';
-    const list = quests ? Object.values(quests).filter(v => v && v.status !== 'available') : [];
+    const questList = getEngineGlobals().quests ? Object.values(getEngineGlobals().quests) : [];
+    const list = questList.filter(v => v && v.status !== 'available');
     if (list.length === 0) {
         host.innerHTML = '<div class="q muted">(no quests)</div>';
         return;
@@ -2734,19 +2755,20 @@ function updateQuestCompassTargets() {
 }
 function questPartyLocation() {
     const loc = { map: 'world', x: 0, y: 0 };
-    const p = typeof party === 'object' ? party : null;
+    const p = (!Array.isArray(party) && typeof party === 'object') ? party : null;
+    const globalState = getEngineGlobals().state;
     if (p && typeof p.map === 'string')
         loc.map = p.map;
-    else if (globalThis.state && typeof state.map === 'string')
-        loc.map = state.map;
+    else if (globalState && typeof globalState.map === 'string')
+        loc.map = globalState.map;
     if (p && typeof p.x === 'number')
         loc.x = p.x;
-    else if (globalThis.state?.mapEntry && typeof state.mapEntry.x === 'number')
-        loc.x = state.mapEntry.x;
+    else if (globalState?.mapEntry && typeof globalState.mapEntry.x === 'number')
+        loc.x = globalState.mapEntry.x;
     if (p && typeof p.y === 'number')
         loc.y = p.y;
-    else if (globalThis.state?.mapEntry && typeof state.mapEntry.y === 'number')
-        loc.y = state.mapEntry.y;
+    else if (globalState?.mapEntry && typeof globalState.mapEntry.y === 'number')
+        loc.y = globalState.mapEntry.y;
     return loc;
 }
 function questProgressInfo(q) {
@@ -3093,12 +3115,12 @@ function renderParty() {
         const existingBadge = portrait.querySelector('.spbadge');
         if (m.skillPoints > 0) {
             if (existingBadge) {
-                existingBadge.textContent = m.skillPoints;
+                existingBadge.textContent = String(m.skillPoints);
             }
             else {
                 const badge = document.createElement('div');
                 badge.className = 'spbadge';
-                badge.textContent = m.skillPoints;
+                badge.textContent = String(m.skillPoints);
                 portrait.appendChild(badge);
             }
         }
@@ -3109,7 +3131,7 @@ function renderParty() {
         c.onfocus = () => selectMember(i);
         c.querySelectorAll('button[data-a="unequip"]').forEach(b => {
             const sl = b.dataset.slot;
-            b.onclick = () => unequipItem(i, sl);
+            b.onclick = () => getEngineGlobals().unequipItem?.(i, sl);
         });
         p.appendChild(c);
     });
@@ -3382,15 +3404,15 @@ function openShop(npc) {
                         madePurchase = true;
                     }
                     else {
-                        log('Inventory is full.');
+                        engineLog('Inventory is full.');
                         if (typeof toast === 'function')
-                            toast('Inventory is full.');
+                            engineToast('Inventory is full.');
                     }
                 }
                 else {
-                    log('Not enough scrap.');
+                    engineLog('Not enough scrap.');
                     if (typeof toast === 'function')
-                        toast('Not enough scrap.');
+                        engineToast('Not enough scrap.');
                 }
             };
             shopBuy.appendChild(row);
@@ -3447,7 +3469,7 @@ function openShop(npc) {
             if (npc.cancelCount >= 2) {
                 npc.tree.start.text = 'Buy or move on.';
                 if (typeof toast === 'function')
-                    toast(`${npc.name} eyes you warily.`);
+                    engineToast(`${npc.name} eyes you warily.`);
             }
         }
         else if (npc) {
@@ -3499,12 +3521,12 @@ globalThis.Dustland.font = {
     getScale: () => fontScale,
     setScale: (value, opts) => setFontScale(value, opts)
 };
-const engineExports = { log, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, pickupVacuum, openShop, playFX };
+const engineExports = { log: engineLog, updateHUD, renderInv, renderQuests, renderParty, footstepBump, pickupSparkle, pickupVacuum: enginePickupVacuum, openShop, playFX };
 Object.assign(globalThis, engineExports);
 // ===== Minimal Unit Tests (#test) =====
 function assert(name, cond) {
     if (cond) {
-        log('✅ ' + name);
+        engineLog('✅ ' + name);
     }
     else {
         console.error('Test failed: ' + name);
@@ -3519,8 +3541,8 @@ function runTests() {
     genWorld();
     const hutsOK = buildings.length > 0 && buildings.every(b => b.interiorId && interiors[b.interiorId] && interiors[b.interiorId].grid);
     assert('Huts have interiors', hutsOK);
-    if (typeof moduleTests === 'function')
-        moduleTests(assert);
+    if (typeof getEngineGlobals().moduleTests === 'function')
+        getEngineGlobals().moduleTests(assert);
 }
 // ===== Input =====
 if (document.getElementById('saveBtn')) {
@@ -3556,9 +3578,9 @@ if (document.getElementById('saveBtn')) {
             if (window.NanoDialog) {
                 NanoDialog.enabled = !NanoDialog.enabled;
                 if (typeof toast === 'function')
-                    toast(`Dynamic dialog ${NanoDialog.enabled ? 'enabled' : 'disabled'}`);
-                if (NanoDialog.refreshIndicator)
-                    NanoDialog.refreshIndicator();
+                    engineToast(`Dynamic dialog ${NanoDialog.enabled ? 'enabled' : 'disabled'}`);
+                if (getEngineGlobals().NanoDialog?.refreshIndicator)
+                    getEngineGlobals().NanoDialog.refreshIndicator();
             }
             updateNano();
         };
@@ -3571,12 +3593,13 @@ if (document.getElementById('saveBtn')) {
         audioBtn.onclick = () => toggleAudio();
     const musicBtn = document.getElementById('musicToggle');
     if (musicBtn) {
+        const dustlandApi = getEngineGlobals().Dustland;
         const updateMusicBtn = () => {
-            const enabled = !!globalThis.Dustland?.music?.isEnabled?.();
+            const enabled = !!dustlandApi?.music?.isEnabled?.();
             musicBtn.textContent = `Music: ${enabled ? 'On' : 'Off'}`;
         };
         musicBtn.onclick = () => {
-            globalThis.Dustland?.music?.toggleEnabled?.();
+            dustlandApi?.music?.toggleEnabled?.();
             updateMusicBtn();
         };
         musicBus?.on?.('music:state', updateMusicBtn);
@@ -3784,13 +3807,13 @@ if (document.getElementById('saveBtn')) {
                     if (typeof link.click === 'function')
                         link.click();
                     else
-                        link.dispatchEvent?.({ type: 'click' });
+                        link.dispatchEvent?.(new Event('click'));
                     link.remove();
                     globalThis.URL.revokeObjectURL?.(url);
                     hideDebug();
-                    log('Save exported.');
+                    engineLog('Save exported.');
                     if (typeof toast === 'function')
-                        toast('Save exported.');
+                        engineToast('Save exported.');
                 }
                 catch (err) {
                     console.error('Failed to export save', err);
@@ -3807,7 +3830,7 @@ if (document.getElementById('saveBtn')) {
                 if (typeof importInput.click === 'function')
                     importInput.click();
                 else
-                    importInput.dispatchEvent?.({ type: 'click' });
+                    importInput.dispatchEvent?.(new Event('click'));
             });
             importInput.addEventListener('change', () => {
                 const file = importInput.files?.[0];
@@ -3836,9 +3859,9 @@ if (document.getElementById('saveBtn')) {
                         hideDebug();
                         if (typeof load === 'function')
                             load();
-                        log('Save imported.');
+                        engineLog('Save imported.');
                         if (typeof toast === 'function')
-                            toast('Save imported.');
+                            engineToast('Save imported.');
                     }
                     catch (err) {
                         console.error('Failed to import save', err);
@@ -3987,7 +4010,7 @@ if (document.getElementById('saveBtn')) {
                     renderParty();
                     if (typeof globalThis.renderInv === 'function')
                         globalThis.renderInv();
-                    toast(`Leader: ${party[selectedMember].name}`);
+                    engineToast(`Leader: ${party[selectedMember].name}`);
                 }
                 break;
             case 'm':
