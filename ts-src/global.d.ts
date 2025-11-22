@@ -1342,6 +1342,22 @@ interface ItemGeneratorRange {
   function centerCamera(x: number, y: number, map?: string): void;
   function render(gameState?: unknown, dt?: unknown): void;
 
+  type AckModuleData = Record<string, unknown> & {
+    world?: number[][];
+    interiors?: Array<Record<string, unknown>>;
+  };
+
+  interface AckGlobalsSnapshot {
+    moduleData?: AckModuleData;
+    interiors?: Array<Record<string, unknown>>;
+    world?: number[][];
+    EventBus?: DustlandEventBus;
+    eventBus?: DustlandEventBus;
+    TILE?: Record<string, number>;
+    tileEmoji?: Record<number, string>;
+    emojiTile?: Record<string, number>;
+  }
+
   interface Window {
     DUSTLAND_FEATURES?: DustlandFeatureFlags | null;
     DUSTLAND_FIREBASE?: Record<string, unknown> | null;
@@ -1352,6 +1368,14 @@ interface ItemGeneratorRange {
   interface GlobalThis {
     Dustland?: DustlandNamespace;
     hasItem?: (...args: unknown[]) => boolean;
+    EventBus?: DustlandEventBus;
+    eventBus?: DustlandEventBus;
+    moduleData?: AckModuleData;
+    interiors?: Array<Record<string, unknown>>;
+    world?: number[][];
+    TILE?: Record<string, number>;
+    tileEmoji?: Record<number, string>;
+    emojiTile?: Record<string, number>;
   }
 
   var Dustland: DustlandNamespace | undefined;
