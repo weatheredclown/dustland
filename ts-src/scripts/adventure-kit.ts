@@ -1,5 +1,5 @@
 // @ts-nocheck
-
+// TypeScript checking remains disabled here until the editor globals are fully typed.
 // Adventure Construction Kit
 // Provides basic tools to build Dustland modules.
 

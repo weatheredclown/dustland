@@ -1,7 +1,9 @@
 // @ts-nocheck
-/* global toast, log, EventBus */
+// TODO: migrate dustland-core to the typed DustlandCoreGlobals surface.
+/* eslint-disable no-var */
 
-const coreEventBus = (globalThis.EventBus ?? globalThis.eventBus) as DustlandEventBus | undefined;
+const coreGlobals = globalThis as DustlandCoreGlobals;
+const coreEventBus = coreGlobals.EventBus ?? coreGlobals.eventBus;
 const { on } = coreEventBus ?? { on: () => undefined };
 
 type GameItemUse = {
