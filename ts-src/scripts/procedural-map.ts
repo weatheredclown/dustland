@@ -230,7 +230,7 @@ function getRoadTile(): number {
   return typeof sand === 'number' ? sand : 0;
 }
 
-function isWater(tile: number): boolean {
+function isWaterTile(tile: number): boolean {
   return tileMatches(tile, 'WATER');
 }
 
@@ -244,7 +244,7 @@ function terrainCost(tile: number): number {
   return 1.5;
 }
 
-function findNearestLand(x: number, y: number, tiles: TileGrid): ProceduralMapPoint {
+function findNearestLandTile(x: number, y: number, tiles: TileGrid): ProceduralMapPoint {
   const h = tiles.length;
   const w = tiles[0]?.length ?? 0;
   const seen = new Set<string>();
@@ -265,7 +265,7 @@ function findNearestLand(x: number, y: number, tiles: TileGrid): ProceduralMapPo
     if (seen.has(key)) continue;
     seen.add(key);
     if (cx < 0 || cy < 0 || cx >= w || cy >= h) continue;
-    if (!isWater(tiles[cy][cx])) return { x: cx, y: cy };
+    if (!isWaterTile(tiles[cy][cx])) return { x: cx, y: cy };
     for (const [dx, dy] of dirs) {
       queue.push([cx + dx, cy + dy]);
     }
@@ -282,7 +282,7 @@ function deriveVirtualAnchors(tiles: TileGrid): ProceduralMapPoint[] {
   let maxY = -1;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      if (isWater(tiles[y][x])) continue;
+      if (isWaterTile(tiles[y][x])) continue;
       if (x < minX) minX = x;
       if (x > maxX) maxX = x;
       if (y < minY) minY = y;
@@ -301,7 +301,7 @@ function deriveVirtualAnchors(tiles: TileGrid): ProceduralMapPoint[] {
   const anchors: ProceduralMapPoint[] = [];
   const seen = new Set<string>();
   for (const [cx, cy] of candidates) {
-    const snapped = findNearestLand(cx, cy, tiles);
+    const snapped = findNearestLandTile(cx, cy, tiles);
     const key = `${snapped.x},${snapped.y}`;
     if (!seen.has(key)) {
       seen.add(key);
@@ -414,7 +414,7 @@ function buildPath(
       step += terrainCost(tile);
       step += slope * 12;
       if (preference[ny]?.[nx]) step *= 0.35;
-      if (isWater(tile)) step += 8;
+      if (isWaterTile(tile)) step += 8;
       if (prevDir[current.idx] !== -1 && prevDir[current.idx] !== dirIndex) step += 0.25;
       const newCost = current.cost + step;
       if (newCost < dist[nIdx]) {
@@ -432,7 +432,7 @@ function buildPath(
     const x = cursor % w;
     const y = Math.floor(cursor / w);
     path.push({ x, y });
-    if (isWater(tiles[y][x])) bridges.push({ x, y });
+    if (isWaterTile(tiles[y][x])) bridges.push({ x, y });
   }
   path.reverse();
   bridges.reverse();
@@ -453,7 +453,7 @@ function connectRegionCenters(
     for (const center of centers) {
       const x = clampValue(Math.round(center.x), 0, w - 1);
       const y = clampValue(Math.round(center.y), 0, h - 1);
-      anchors.push(findNearestLand(x, y, tiles));
+      anchors.push(findNearestLandTile(x, y, tiles));
     }
   } else {
     anchors.push(...deriveVirtualAnchors(tiles));
@@ -512,7 +512,7 @@ function carveRoads(tiles: TileGrid, network?: ProceduralRoadNetwork | null): Pr
       const { x, y } = step;
       path.push({ x, y });
       if (tiles[y]?.[x] !== undefined) {
-        if (isWater(tiles[y][x])) bridges.push({ x, y });
+        if (isWaterTile(tiles[y][x])) bridges.push({ x, y });
         tiles[y][x] = roadId;
         usage[y][x]++;
       }
@@ -536,7 +536,7 @@ function carveRoads(tiles: TileGrid, network?: ProceduralRoadNetwork | null): Pr
           if (ny < 0 || ny >= h || nx < 0 || nx >= w) continue;
           const tile = tiles[ny]?.[nx];
           if (tile === undefined) continue;
-          if (isWater(tile)) continue;
+          if (isWaterTile(tile)) continue;
           tiles[ny][nx] = roadId;
         }
       }
