@@ -371,8 +371,13 @@
     const playerState = questGlobals.player as PlayerState;
     if (!Array.isArray(playerState.inv)) playerState.inv = [];
     const questEntry = questLog.quests[meta.id];
+    if (!questEntry && meta.status !== 'completed') {
+      questLog.add(meta);
+    }
+    if (!questLog.quests[meta.id]) {
+      questLog.quests[meta.id] = meta as Quest;
+    }
     if (nodeId === 'accept') {
-      if (!questEntry && meta.status !== 'completed') questLog.add(meta);
       if (meta.status === 'available') meta.status = 'active';
       return { handled: true };
     }
@@ -440,21 +445,28 @@
           questGlobals.removeFromInv?.(idx);
         }
       }
-      meta.progress = prev + turnIn;
+      meta.progress = Math.min(requiredCount, prev + turnIn);
+    } else if (!itemKey && !dialogGoal) {
+      meta.progress = requiredCount;
     }
 
     if ((meta.progress ?? 0) >= requiredCount && hasFlag) {
       questLog.complete(meta.id);
       if (meta.reward) {
-        const rewardIt = questGlobals.resolveItem?.(meta.reward as unknown) ?? meta.reward;
+        const rewardId = (meta.reward as { id?: string })?.id ?? (typeof meta.reward === 'string' ? meta.reward : null);
+        const rewardIt = questGlobals.resolveItem?.(meta.reward as unknown)
+          ?? (rewardId ? questGlobals.resolveItem?.(rewardId) : null)
+          ?? (rewardId ? questGlobals.ITEMS?.[rewardId] : null)
+          ?? (typeof meta.reward === 'object' && meta.reward)
+          ?? (rewardId ? { id: rewardId } as { id: string } : null);
         if (rewardIt) {
           const added = questGlobals.addToInv?.(rewardIt);
           const fallback = questGlobals.resolveItem?.(rewardIt as unknown)
-            ?? (questGlobals.ITEMS?.[String((rewardIt as { id?: string }).id ?? rewardIt)] ?? null)
+            ?? (rewardId ? questGlobals.ITEMS?.[rewardId] : null)
             ?? rewardIt;
-          if (Array.isArray(playerState.inv) && fallback && typeof fallback === 'object') {
-            const rewardId = (fallback as { id?: string }).id ?? String(meta.reward);
-            const alreadyPresent = playerState.inv.some(it => (it as { id?: string })?.id === rewardId);
+          if (Array.isArray(playerState.inv) && fallback) {
+            const rewardKey = (fallback as { id?: string }).id ?? rewardId ?? String(meta.reward);
+            const alreadyPresent = playerState.inv.some(it => (it as { id?: string })?.id === rewardKey);
             if (!alreadyPresent) {
               playerState.inv.push(fallback as unknown as typeof playerState.inv[number]);
             }
