@@ -42,6 +42,8 @@ declare global {
   interface PartyRoster extends Array<any> {
     x: number;
     y: number;
+    map: any;
+    mapEntry?: { map: string; x: number; y: number } | null;
     flags: any;
     fallen: any[];
     _roster: any;
