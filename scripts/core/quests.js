@@ -213,13 +213,24 @@
         if (!isQuestLike(metaCandidate))
             return null;
         const meta = metaCandidate;
+        if (!questGlobals.player || typeof questGlobals.player !== 'object') {
+            questGlobals.player = { inv: [] };
+        }
+        const playerState = questGlobals.player;
+        if (!Array.isArray(playerState.inv))
+            playerState.inv = [];
+        const questEntry = questLog.quests[meta.id];
         if (nodeId === 'accept') {
-            if (meta.status === 'available')
+            if (!questEntry && meta.status !== 'completed')
                 questLog.add(meta);
+            if (meta.status === 'available')
+                meta.status = 'active';
             return { handled: true };
         }
         if (nodeId !== 'do_turnin')
             return null;
+        if (!questEntry && meta.status !== 'completed')
+            questLog.add(meta);
         if (meta.status === 'available')
             questLog.add(meta);
         if (meta.status !== 'active') {
@@ -232,7 +243,22 @@
             : typeof meta.item === 'string' && meta.item
                 ? meta.item
                 : null;
-        const have = typeof itemKey === 'string' ? questGlobals.countItems?.(itemKey) ?? 0 : 0;
+        const manualCount = (idOrTag) => {
+            const tag = idOrTag.toLowerCase();
+            const items = playerState.inv ?? [];
+            return items.reduce((count, it) => {
+                if (!it)
+                    return count;
+                const tags = Array.isArray(it.tags)
+                    ? it.tags.map(t => t.toLowerCase())
+                    : [];
+                const matches = it.id === idOrTag || tags.includes(tag);
+                return matches ? count + Math.max(1, Number(it.count) || 1) : count;
+            }, 0);
+        };
+        const have = typeof itemKey === 'string'
+            ? questGlobals.countItems?.(itemKey) ?? manualCount(itemKey)
+            : 0;
         const prev = Number.isFinite(Number(meta.progress)) ? Number(meta.progress) : 0;
         const remaining = requiredCount - prev;
         const turnIn = typeof itemKey === 'string' ? Math.min(have, remaining) : 0;
@@ -243,9 +269,22 @@
             meta.progress = requiredCount;
         if (turnIn > 0 && typeof itemKey === 'string') {
             for (let i = 0; i < turnIn; i += 1) {
-                const idx = questGlobals.findItemIndex?.(itemKey) ?? -1;
+                const manualFind = () => {
+                    const items = playerState.inv ?? [];
+                    const tag = itemKey.toLowerCase();
+                    return items.findIndex(it => {
+                        if (!it)
+                            return false;
+                        if (it.id === itemKey)
+                            return true;
+                        const tags = Array.isArray(it.tags)
+                            ? it.tags.map(t => t.toLowerCase())
+                            : [];
+                        return tags.includes(tag);
+                    });
+                };
+                const idx = questGlobals.findItemIndex?.(itemKey) ?? manualFind();
                 if (idx > -1) {
-                    const playerState = questGlobals.player;
                     const invItem = playerState?.inv?.[idx];
                     if (invItem?.name) {
                         questGlobals.log?.(`Turned in ${invItem.name}.`);
@@ -258,9 +297,23 @@
         if ((meta.progress ?? 0) >= requiredCount && hasFlag) {
             questLog.complete(meta.id);
             if (meta.reward) {
-                const rewardIt = questGlobals.resolveItem?.(meta.reward) ?? null;
-                if (rewardIt)
-                    questGlobals.addToInv?.(rewardIt);
+                const rewardIt = questGlobals.resolveItem?.(meta.reward) ?? meta.reward;
+                if (rewardIt) {
+                    const added = questGlobals.addToInv?.(rewardIt);
+                    const fallback = questGlobals.resolveItem?.(rewardIt)
+                        ?? (questGlobals.ITEMS?.[String(rewardIt.id ?? rewardIt)] ?? null)
+                        ?? rewardIt;
+                    if (Array.isArray(playerState.inv) && fallback && typeof fallback === 'object') {
+                        const rewardId = fallback.id ?? String(meta.reward);
+                        const alreadyPresent = playerState.inv.some(it => it?.id === rewardId);
+                        if (!alreadyPresent) {
+                            playerState.inv.push(fallback);
+                        }
+                    }
+                    if (!added && typeof questGlobals.addToInv === 'function') {
+                        questGlobals.addToInv(fallback);
+                    }
+                }
             }
             let xpValue;
             if (typeof meta.xp === 'number')
@@ -276,9 +329,37 @@
                 xpValue = 10;
             else if (xpValue > 100)
                 xpValue = 100;
-            questGlobals.party?.forEach(member => {
-                questGlobals.awardXP?.(member, xpValue);
-            });
+            const roster = questGlobals.party ?? questGlobals.player?.party;
+            const grantXp = (member) => {
+                if (questGlobals.awardXP) {
+                    questGlobals.awardXP(member, xpValue);
+                    return;
+                }
+                if (member && typeof member.awardXP === 'function') {
+                    member.awardXP(xpValue);
+                    return;
+                }
+                if (member && typeof member === 'object') {
+                    const target = member;
+                    target.xp = (target.xp ?? 0) + xpValue;
+                    if (typeof target.lvl === 'number' && target.xp >= 100) {
+                        const gained = Math.floor(target.xp / 100);
+                        target.lvl += gained;
+                        target.xp -= gained * 100;
+                    }
+                }
+            };
+            if (roster && typeof roster.forEach === 'function') {
+                roster.forEach(member => {
+                    grantXp(member);
+                });
+            }
+            else if (Array.isArray(playerState.party)) {
+                playerState.party.forEach(member => grantXp(member));
+            }
+            else if (playerState) {
+                grantXp(playerState);
+            }
             const moveTo = meta.moveTo;
             if (moveTo && typeof moveTo === 'object') {
                 if (typeof moveTo.x === 'number')
