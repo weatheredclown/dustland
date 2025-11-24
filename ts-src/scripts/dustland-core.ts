@@ -6,51 +6,6 @@ const coreGlobals = globalThis as unknown as DustlandCoreGlobals;
 const coreEventBus = coreGlobals.EventBus ?? coreGlobals.eventBus;
 const { on } = coreEventBus ?? { on: () => undefined };
 
-type GameItemUse = {
-  type: string;
-  amount?: number;
-  duration?: number;
-  stat?: string;
-  text?: string;
-  onUse?: (...args: unknown[]) => unknown;
-};
-
-type GameItem = {
-  id: string;
-  name: string;
-  type: string;
-  mods?: Record<string, number>;
-  use?: GameItemUse;
-  desc?: string;
-  rarity?: number;
-  value?: number;
-};
-
-type PartyEquipmentSlots = {
-  weapon: GameItem | null;
-  armor: GameItem | null;
-  trinket: GameItem | null;
-};
-
-type PartyMember = {
-  id: string;
-  name: string;
-  hp: number;
-  maxHp: number;
-  lvl: number;
-  stats: Record<string, number>;
-  equip: PartyEquipmentSlots;
-  origin?: string;
-  quirk?: string;
-};
-
-type QuestStatus = 'available' | 'active' | 'completed';
-
-type QuestState = {
-  id: string;
-  status: QuestStatus;
-};
-
 class Quest {
   id: string;
   name: string;
@@ -83,37 +38,6 @@ class Quest {
   }
 }
 
-type NPC = {
-  id: string;
-  map: string;
-  x: number;
-  y: number;
-  color: string;
-  name: string;
-  title: string;
-  tree: Record<string, unknown>;
-  quest?: Quest;
-};
-
-type DustlandMapEnemy = {
-  name: string;
-  HP?: number;
-  DEF?: number;
-  loot?: string;
-  [key: string]: unknown;
-};
-
-type DustlandMap = {
-  id: string;
-  w: number;
-  h: number;
-  grid: number[][];
-  entryX?: number;
-  entryY?: number;
-  name?: string;
-  enemies?: DustlandMapEnemy[];
-};
-
 type CheckHandler = (...args: unknown[]) => unknown;
 
 type Check = {
@@ -121,30 +45,6 @@ type Check = {
   dc: number;
   onSuccess?: CheckHandler[];
   onFail?: CheckHandler[];
-};
-
-type CombatParticipant = {
-  id?: string;
-  name: string;
-  hp: number;
-  npc?: NPC;
-  portraitSheet?: string;
-  portraitLock?: boolean;
-  prompt?: string;
-  special?: unknown;
-  [key: string]: unknown;
-};
-
-type CombatSource = CombatTarget & {
-  id?: string;
-  hp?: number;
-  portraitSheet?: string;
-  portraitLock?: boolean;
-  prompt?: string;
-  special?: unknown;
-  count?: number;
-  xp?: number;
-  challenge?: number;
 };
 
 type WorldGrid = number[][];
