@@ -26,6 +26,11 @@ declare global {
     CoreEventHooks &
     CoreParties &
     CoreModules & {
+      ENGINE_VERSION?: string;
+      clamp?: (value: number, min: number, max: number) => number;
+      tileEmoji?: Record<string, number>;
+      emojiTile?: Record<string, number>;
+      moduleData?: unknown;
       EventBus?: CoreEventBus;
       eventBus?: CoreEventBus;
     };
