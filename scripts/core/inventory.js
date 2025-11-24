@@ -383,7 +383,7 @@ function _getCampChest() {
 function _getPartyInventoryCapacity() {
     const party = _getParty();
     const size = typeof party?.length === 'number' ? party.length : 0;
-    return Math.max(0, size * 20);
+    return Math.max(20, size * 20);
 }
 function _getLeaderMember() {
     const leaderFn = _globals.leader;

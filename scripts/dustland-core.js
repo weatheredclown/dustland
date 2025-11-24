@@ -21,6 +21,7 @@ const DC = Object.freeze({ TALK: 8, REPAIR: 9 });
 const CURRENCY = 'Scrap';
 // Placeholder; actual content provided by modules (e.g. Dustland)
 function seedWorldContent() { }
+coreGlobals.seedWorldContent = coreGlobals.seedWorldContent ?? seedWorldContent;
 let worldSeed = Date.now();
 function createRNG(seed) {
     return function rngInstance() {
@@ -137,29 +138,32 @@ async function startCombat(defender) {
     return combatResult;
 }
 // ===== Tiles =====
-const TILE = Object.freeze({ SAND: 0, ROCK: 1, WATER: 2, BRUSH: 3, ROAD: 4, RUIN: 5, WALL: 6, FLOOR: 7, DOOR: 8, BUILDING: 9 });
+const TILE_SET = coreGlobals.TILE ?? Object.freeze({ SAND: 0, ROCK: 1, WATER: 2, BRUSH: 3, ROAD: 4, RUIN: 5, WALL: 6, FLOOR: 7, DOOR: 8, BUILDING: 9 });
 const walkable = Object.freeze({ 0: true, 1: true, 2: false, 3: true, 4: true, 5: true, 6: false, 7: true, 8: true, 9: false });
-const tileEmoji = Object.freeze({
-    0: '\u{1F3DD}', // 🏝
-    1: '\u{1FAA8}', // 🪨
-    2: '\u{1F30A}', // 🌊
-    3: '\u{1F33F}', // 🌿
-    4: '\u{1F6E3}', // 🛣
-    5: '\u{1F3DA}', // 🏚
-    6: '\u{1F9F1}', // 🧱
-    7: '\u{2B1C}', // ⬜
-    8: '\u{1F6AA}', // 🚪
-    9: '\u{1F3E0}' // 🏠
+const tileEmojiMap = coreGlobals.tileEmoji ?? Object.freeze({
+    [TILE_SET.SAND]: '\u{1F3DD}', // 🏝
+    [TILE_SET.ROCK]: '\u{1FAA8}', // 🪨
+    [TILE_SET.WATER]: '\u{1F30A}', // 🌊
+    [TILE_SET.BRUSH]: '\u{1F33F}', // 🌿
+    [TILE_SET.ROAD]: '\u{1F6E3}', // 🛣
+    [TILE_SET.RUIN]: '\u{1F3DA}', // 🏚
+    [TILE_SET.WALL]: '\u{1F9F1}', // 🧱
+    [TILE_SET.FLOOR]: '\u{2B1C}', // ⬜
+    [TILE_SET.DOOR]: '\u{1F6AA}', // 🚪
+    [TILE_SET.BUILDING]: '\u{1F3E0}' // 🏠
 });
-const emojiTile = Object.freeze(Object.fromEntries(Object.entries(tileEmoji).map(([k, v]) => [v, +k])));
+const emojiTileMap = coreGlobals.emojiTile ?? Object.freeze(Object.fromEntries(Object.entries(tileEmojiMap).map(([k, v]) => [v, +k])));
+coreGlobals.TILE = TILE_SET;
+coreGlobals.tileEmoji = tileEmojiMap;
+coreGlobals.emojiTile = emojiTileMap;
 function gridFromEmoji(rows) {
-    return rows.map(r => Array.from(r).map(ch => emojiTile[ch] ?? 0));
+    return rows.map(r => Array.from(r).map(ch => emojiTileMap[ch] ?? 0));
 }
 function gridToEmoji(grid) {
-    return grid.map(r => r.map(t => tileEmoji[t] || '').join(''));
+    return grid.map(r => r.map(t => tileEmojiMap[t] || '').join(''));
 }
-globalThis.tileEmoji = tileEmoji;
-globalThis.emojiTile = emojiTile;
+globalThis.tileEmoji = tileEmojiMap;
+globalThis.emojiTile = emojiTileMap;
 globalThis.gridFromEmoji = gridFromEmoji;
 globalThis.gridToEmoji = gridToEmoji;
 const mapNameEl = typeof document !== 'undefined' ? document.getElementById('mapname') : null;
@@ -272,7 +276,7 @@ function applyZoneWalls(z) {
     const southGap = computeZoneWallGap(width, entrances.south);
     const westGap = computeZoneWallGap(height, entrances.west);
     const eastGap = computeZoneWallGap(height, entrances.east);
-    const wallTile = typeof TILE === 'object' && TILE ? TILE.WALL : 6;
+    const wallTile = typeof TILE_SET === 'object' && TILE_SET ? TILE_SET.WALL : 6;
     for (let i = 0; i < width; i++) {
         if (zoneGapContains(i, northGap) || (height === 1 && zoneGapContains(i, southGap)))
             continue;
@@ -436,7 +440,7 @@ const creatorMap = { w: 30, h: 22, grid: [], entryX: 15, entryY: 10 };
 function genCreatorMap() {
     creatorMap.grid = Array.from({ length: creatorMap.h }, (_, y) => Array.from({ length: creatorMap.w }, (_, x) => {
         const edge = y === 0 || y === creatorMap.h - 1 || x === 0 || x === creatorMap.w - 1;
-        return edge ? TILE.WALL : TILE.FLOOR;
+        return edge ? TILE_SET.WALL : TILE_SET.FLOOR;
     }));
     interiors['creator'] = creatorMap;
 }
@@ -795,25 +799,25 @@ function genWorld(seed = Date.now(), data = {}) {
         for (let x = 0; x < WORLD_W; x++) {
             const v = (Math.sin((x + seed % 977) * .37) + Math.cos((y + seed % 911) * .29) + Math.sin((x + y) * .11)) * 0.5;
             if (v > .62)
-                row.push(TILE.ROCK);
+                row.push(TILE_SET.ROCK);
             else if (v < -0.62)
-                row.push(TILE.WATER);
+                row.push(TILE_SET.WATER);
             else if (v > .18)
-                row.push(TILE.BRUSH);
+                row.push(TILE_SET.BRUSH);
             else
-                row.push(TILE.SAND);
+                row.push(TILE_SET.SAND);
         }
         world.push(row);
     }
     for (let x = 0; x < WORLD_W; x++) {
         const ry = clamp(Math.floor(WORLD_H / 2 + Math.sin(x * 0.22) * 6), 2, WORLD_H - 3);
-        setTile('world', x, ry, TILE.ROAD);
-        setTile('world', x, ry - 1, TILE.ROAD);
+        setTile('world', x, ry, TILE_SET.ROAD);
+        setTile('world', x, ry - 1, TILE_SET.ROAD);
     }
     for (let i = 0; i < 120; i++) {
         const rx = rand(WORLD_W), ry = rand(WORLD_H);
-        if (getTile('world', rx, ry) !== TILE.WATER)
-            setTile('world', rx, ry, TILE.RUIN);
+        if (getTile('world', rx, ry) !== TILE_SET.WATER)
+            setTile('world', rx, ry, TILE_SET.RUIN);
     }
     Object.keys(interiors).forEach(k => delete interiors[k]);
     if (creatorMap.grid && creatorMap.grid.length)
@@ -826,7 +830,7 @@ function genWorld(seed = Date.now(), data = {}) {
     else {
         for (let i = 0; i < 10; i++) {
             let x = 8 + rand(WORLD_W - 16), y = 6 + rand(WORLD_H - 12);
-            if (getTile('world', x, y) === TILE.WATER) {
+            if (getTile('world', x, y) === TILE_SET.WATER) {
                 const p = findNearestLand(x, y);
                 x = p.x;
                 y = p.y;
@@ -840,7 +844,7 @@ function genWorld(seed = Date.now(), data = {}) {
     }
     seedWorldContent();
 }
-function isWater(x, y) { return getTile('world', x, y) === TILE.WATER; }
+function isWater(x, y) { return getTile('world', x, y) === TILE_SET.WATER; }
 function findNearestLand(sx, sy) {
     const q = [[sx, sy]], seen = new Set([sx + "," + sy]);
     const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
@@ -863,10 +867,10 @@ function makeInteriorRoom(id, w = 12, h = 9) {
     id = id || ('room_' + rng().toString(36).slice(2, 8));
     const g = Array.from({ length: h }, (_, y) => Array.from({ length: w }, (_, x) => {
         const edge = y === 0 || y === h - 1 || x === 0 || x === w - 1;
-        return edge ? TILE.WALL : TILE.FLOOR;
+        return edge ? TILE_SET.WALL : TILE_SET.FLOOR;
     }));
     const ex = Math.floor(w / 2), ey = h - 1;
-    g[ey][ex] = TILE.DOOR;
+    g[ey][ex] = TILE_SET.DOOR;
     interiors[id] = { w, h, grid: g, entryX: ex, entryY: h - 2 };
     return id;
 }
@@ -879,7 +883,7 @@ function placeHut(x, y, b = {}) {
         for (let yy = 0; yy < h; yy++) {
             for (let xx = 0; xx < w; xx++) {
                 const tile = grid[yy][xx];
-                if (tile === TILE.DOOR) {
+                if (tile === TILE_SET.DOOR) {
                     doorX = x + xx;
                     doorY = y + yy;
                 }
@@ -893,11 +897,11 @@ function placeHut(x, y, b = {}) {
     else {
         w = b.w || 6;
         h = b.h || 5;
-        grid = Array.from({ length: h }, (_, yy) => Array.from({ length: w }, (_, xx) => TILE.BUILDING));
+        grid = Array.from({ length: h }, (_, yy) => Array.from({ length: w }, (_, xx) => TILE_SET.BUILDING));
         const relX = b.doorX != null ? b.doorX - x : Math.floor(w / 2);
         const relY = b.doorY != null ? b.doorY - y : h - 1;
         if (relY >= 0 && relY < h && relX >= 0 && relX < w)
-            grid[relY][relX] = TILE.DOOR;
+            grid[relY][relX] = TILE_SET.DOOR;
         doorX = x + relX;
         doorY = y + relY;
     }
@@ -905,11 +909,11 @@ function placeHut(x, y, b = {}) {
     for (let yy = 0; yy < h; yy++) {
         for (let xx = 0; xx < w; xx++) {
             const t = grid[yy][xx];
-            if (t === TILE.DOOR) {
-                setTile('world', x + xx, y + yy, TILE.DOOR);
+            if (t === TILE_SET.DOOR) {
+                setTile('world', x + xx, y + yy, TILE_SET.DOOR);
             }
-            else if (t === TILE.BUILDING) {
-                setTile('world', x + xx, y + yy, TILE.BUILDING);
+            else if (t === TILE_SET.BUILDING) {
+                setTile('world', x + xx, y + yy, TILE_SET.BUILDING);
             }
         }
     }
@@ -2156,7 +2160,7 @@ const coreExports = {
     Dice,
     refreshUI,
     startCombat,
-    TILE,
+    TILE: TILE_SET,
     walkable,
     mapLabels,
     mapLabel,
