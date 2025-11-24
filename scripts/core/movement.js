@@ -28,7 +28,7 @@ function buildCombatant(def, npc) {
     const name = typeof base.name === 'string' ? base.name : npc?.name;
     return { ...base, hp, npc, name };
 }
-function startCombat(def, npc) {
+function startMovementCombat(def, npc) {
     const combatant = buildCombatant(def, npc);
     return Dustland.actions?.startCombat?.(combatant);
 }
@@ -589,7 +589,7 @@ function checkAggro() {
             continue;
         const d = Math.abs(n.x - party.x) + Math.abs(n.y - party.y);
         if (d <= 3) {
-            startCombat({ ...n.combat, name: n.name }, n);
+            startMovementCombat({ ...n.combat, name: n.name }, n);
             break;
         }
     }
@@ -719,7 +719,7 @@ function checkRandomEncounter() {
         if (chosen) {
             encounterCooldown = minSteps + Math.floor(Math.random() * (maxSteps - minSteps + 1));
             lockInput(undefined, globalThis.Dustland?.lastNonCombatKey);
-            return startCombat({ ...chosen });
+            return startMovementCombat({ ...chosen });
         }
         return;
     }
@@ -782,7 +782,7 @@ function checkRandomEncounter() {
             def.count = count;
         encounterCooldown = minSteps + Math.floor(Math.random() * (maxSteps - minSteps + 1));
         lockInput(undefined, globalThis.Dustland?.lastNonCombatKey);
-        return startCombat(def);
+        return startMovementCombat(def);
     }
 }
 function adjacentNPC() {

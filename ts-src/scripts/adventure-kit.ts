@@ -6583,3 +6583,4 @@ if (document && typeof document.addEventListener === 'function') {
 
 document.getElementById('playtestFloat')?.addEventListener('click', playtestModule);
 updateMapSelect();
+// @ts-nocheck
