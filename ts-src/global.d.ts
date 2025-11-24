@@ -131,6 +131,7 @@ declare global {
     storeCampChestItem?: (index: number) => boolean | void;
     isCampChestUnlocked?: () => boolean;
     unlockCampChest?: () => void;
+    loadStarterItems?: () => void;
   }
 
   interface DustlandSoundSource {
@@ -320,9 +321,9 @@ declare global {
   }
 
   interface DustlandPersonaTemplate {
-    id: string;
-    label: string;
-    portrait: string;
+    id?: string;
+    label?: string;
+    portrait?: string;
     portraitPrompt?: string;
     mods?: ProfileStatMap;
     [key: string]: unknown;
@@ -872,6 +873,7 @@ interface ItemGeneratorRange {
     };
     fastTravel?: {
       activateBunker?: (id?: string) => void;
+      upsertBunkers?: (entries: Array<Record<string, unknown>>) => void;
       [key: string]: unknown;
     };
     behaviors?: {
