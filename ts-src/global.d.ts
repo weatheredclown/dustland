@@ -179,6 +179,29 @@ declare global {
     [key: string]: unknown;
   }
 
+  interface DustlandFastTravelBunker {
+    id?: string;
+    x?: number;
+    y?: number;
+    active?: boolean;
+    network?: string;
+    module?: string;
+    [key: string]: unknown;
+  }
+
+  interface DustlandFastTravelApi {
+    fuelCost?: (fromId?: string, toId?: string) => number;
+    travel?: (fromId?: string, toId?: string) => boolean;
+    activateBunker?: (id?: string) => void;
+    saveSlot?: (id: string) => void;
+    loadSlot?: (id: string) => boolean;
+    upsertBunkers?: (
+      entries: Array<Partial<DustlandFastTravelBunker> | null | undefined> | null | undefined
+    ) => DustlandFastTravelBunker[] | undefined;
+    networkFor?: (moduleName?: string) => string | undefined;
+    [key: string]: unknown;
+  }
+
   interface DustlandBuilding {
     interiorId?: string | null;
     bunkerId?: string;
@@ -321,9 +344,9 @@ declare global {
   }
 
   interface DustlandPersonaTemplate {
-    id: string;
-    label: string;
-    portrait: string;
+    id?: string;
+    label?: string;
+    portrait?: string;
     portraitPrompt?: string;
     mods?: ProfileStatMap;
     [key: string]: unknown;
@@ -871,11 +894,7 @@ interface ItemGeneratorRange {
     workbench?: { [key: string]: ((...args: unknown[]) => unknown) | undefined } & {
       craft?: (recipeId: string) => void;
     };
-    fastTravel?: {
-      activateBunker?: (id?: string) => void;
-      upsertBunkers?: (bunkers: unknown) => void;
-      [key: string]: unknown;
-    };
+    fastTravel?: DustlandFastTravelApi;
     behaviors?: {
       setup: (moduleData: DustlandModuleInstance | null | undefined) => void;
       teardown: () => void;
@@ -896,8 +915,7 @@ interface ItemGeneratorRange {
     effectPackInspector?: { load: (text: string) => void; fire: (evt: string) => void };
     BuildingWizard?: unknown;
     updateTradeUI?: (trader: unknown) => void;
-    bunkers?: Array<{ id?: string; active?: boolean; [key: string]: unknown }>;
-    movement?: { buffs?: unknown };
+    bunkers?: DustlandFastTravelBunker[];
     [key: string]: unknown;
   }
 

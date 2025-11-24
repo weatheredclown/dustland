@@ -28,8 +28,8 @@ declare global {
     CoreModules & {
       ENGINE_VERSION?: string;
       clamp?: (value: number, min: number, max: number) => number;
-      tileEmoji?: Record<string, number>;
-      emojiTile?: Record<string, number>;
+      tileEmoji?: Readonly<Record<number, string>>;
+      emojiTile?: Readonly<Record<string, number>>;
       moduleData?: unknown;
       EventBus?: CoreEventBus;
       eventBus?: CoreEventBus;
