@@ -1,16 +1,26 @@
 import assert from 'node:assert';
 import { test } from 'node:test';
-import { JSDOM } from 'jsdom';
+import { JSDOM, ResourceLoader } from 'jsdom';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const htmlFiles = ['dustland.html', 'adventure-kit.html'];
 const rootDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
+class NullExternalResourceLoader extends ResourceLoader {
+  fetch(url, options){
+    const href = typeof url === 'string' ? url : url.href;
+    if(href.startsWith('https://fonts.googleapis.com/')){
+      return Promise.resolve(Buffer.from(''));
+    }
+    return super.fetch(url, options);
+  }
+}
+
 async function loadNoError(file){
   const dom = await JSDOM.fromFile(path.join(rootDir, file), {
     runScripts: 'dangerously',
-    resources: 'usable',
+    resources: new NullExternalResourceLoader(),
     pretendToBeVisual: true,
     beforeParse(window){
       window.requestAnimationFrame = () => 0;
