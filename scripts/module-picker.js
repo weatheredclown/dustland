@@ -58,6 +58,7 @@
     let cloudRepoPromise = null;
     let cloudRepoUserId = null;
     let rerenderActiveList = null;
+    let dynamicImportsBroken = false;
     function isModulePickerPayload(payload) {
         if (!payload || typeof payload !== 'object')
             return false;
@@ -124,6 +125,9 @@
         }
     }
     async function ensureSessionSnapshot() {
+        if (dynamicImportsBroken) {
+            return null;
+        }
         if (latestSessionSnapshot) {
             return latestSessionSnapshot;
         }
@@ -137,6 +141,10 @@
             return latestSessionSnapshot;
         }
         catch (err) {
+            if (err?.code === 'ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING') {
+                dynamicImportsBroken = true;
+                return null;
+            }
             console.warn('Server mode detection failed', err);
             return null;
         }

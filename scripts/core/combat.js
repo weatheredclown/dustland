@@ -723,13 +723,15 @@ function doAttack(dmg, type = 'basic') {
     const mult = 1 + adrPct * (attacker.adrDmgMod || 1);
     dealt = Math.round(dealt * mult);
     // Adrenaline gain (based on weapon mods & generator mod)
-    const baseGain = (weapon?.mods?.ADR ?? 10) / 4;
+    const weaponAdr = weapon?.mods?.ADR;
+    const baseGain = (typeof weaponAdr === 'number' ? weaponAdr : Number(weaponAdr ?? 10)) / 4;
     const gain = Math.round(baseGain * (attacker.adrGenMod || 1));
     attacker.adr = Math.min(attacker.maxAdr || 100, (attacker.adr ?? 0) + Math.max(0, gain));
     if (gain > 0 && typeof playFX === 'function')
         playFX('adrenaline');
     updateHUD?.();
-    const perTarget = spread ? Math.max(0, Math.round(dealt * spread / 100)) : dealt;
+    const spreadPct = typeof spread === 'number' ? spread : Number(spread ?? 0);
+    const perTarget = spreadPct ? Math.max(0, Math.round(dealt * spreadPct / 100)) : dealt;
     const defeated = [];
     for (const target of targets) {
         let tDmg = perTarget;
