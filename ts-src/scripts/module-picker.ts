@@ -153,6 +153,7 @@ let cloudRepo: CloudRepo | null = null;
 let cloudRepoPromise: Promise<CloudRepo | null> | null = null;
 let cloudRepoUserId: string | null = null;
 let rerenderActiveList: (() => void) | null = null;
+let dynamicImportsBroken = false;
 
 type CloudRepo = {
   init: (session: { status: string; user: { uid?: string } | null; error: Error | null; bootstrap: unknown }) => Promise<void> | void;
@@ -227,6 +228,9 @@ function formatUpdatedAt(timestamp?: number): string {
 }
 
 async function ensureSessionSnapshot(): Promise<{ status: string; user: { uid?: string | null } | null; bootstrap: { status: string } } | null> {
+  if (dynamicImportsBroken) {
+    return null;
+  }
   if (latestSessionSnapshot) {
     return latestSessionSnapshot;
   }
@@ -243,6 +247,10 @@ async function ensureSessionSnapshot(): Promise<{ status: string; user: { uid?: 
     };
     return latestSessionSnapshot;
   } catch (err) {
+    if ((err as { code?: string })?.code === 'ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING') {
+      dynamicImportsBroken = true;
+      return null;
+    }
     console.warn('Server mode detection failed', err);
     return null;
   }

@@ -10,10 +10,16 @@
   <script>
     (function loadHostedFirebaseBootstrap() {
       const moduleUrl = './scripts/hosting/firebase-bootstrap.js';
+      let dynamicImportsBroken = false;
       const handleError = (error) => {
+        if (error?.code === 'ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING') {
+          dynamicImportsBroken = true;
+          return;
+        }
         console.warn('Skipping hosted Firebase bootstrap.', error);
       };
       try {
+        if (dynamicImportsBroken) return;
         import(moduleUrl)
           .then((module) => {
             if (typeof module.bootstrapHostedFirebase === 'function') {
@@ -996,13 +1002,25 @@
     <script defer src="./scripts/procedural-map.js"></script>
     <script>
       (function loadServerModeModules() {
+        let dynamicImportsBroken = false;
+        const shouldSkipError = (error) => {
+          if (error?.code === 'ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING') {
+            dynamicImportsBroken = true;
+            return true;
+          }
+          return false;
+        };
         const importWithWarning = (path) => {
+          if (dynamicImportsBroken) return Promise.resolve();
           try {
             return import(path).catch((error) => {
+              if (shouldSkipError(error)) return;
               console.warn(`Unable to load ${path}.`, error);
             });
           } catch (error) {
-            console.warn(`Unable to load ${path}.`, error);
+            if (!shouldSkipError(error)) {
+              console.warn(`Unable to load ${path}.`, error);
+            }
             return Promise.resolve();
           }
         };

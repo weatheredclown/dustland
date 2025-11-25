@@ -9,10 +9,16 @@
   <script>
     (function loadHostedFirebaseBootstrap() {
       const moduleUrl = './scripts/hosting/firebase-bootstrap.js';
+      let dynamicImportsBroken = false;
       const handleError = (error) => {
+        if (error?.code === 'ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING') {
+          dynamicImportsBroken = true;
+          return;
+        }
         console.warn('Skipping hosted Firebase bootstrap.', error);
       };
       try {
+        if (dynamicImportsBroken) return;
         import(moduleUrl)
           .then((module) => {
             if (typeof module.bootstrapHostedFirebase === 'function') {
