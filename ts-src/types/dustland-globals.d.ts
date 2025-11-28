@@ -56,7 +56,6 @@ declare global {
   var Enemies: any[];
   var itemDrops: any[];
   var pathQueue: any;
-  var checkFlagCondition: ((condition: any) => boolean) | undefined;
   var pickupVacuum: ((...coords: number[]) => void) | undefined;
   var addToInv: ((item: any, opts?: any) => unknown) | undefined;
   var getItem: ((id: any) => any) | undefined;
@@ -71,7 +70,6 @@ declare global {
   var bossesDefeated: number | undefined;
   var runCount: number | undefined;
   var DUSTLAND_FEATURES: DustlandFeatures | undefined;
-  var seedWorldContent: (() => void) | undefined;
   var quests: Record<string, Quest> | undefined;
   var tileEmoji: Record<string, number> | undefined;
   var emojiTile: Record<string, number> | undefined;
