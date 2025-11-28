@@ -49,6 +49,8 @@ type Check = {
 
 type WorldGrid = number[][];
 
+type AnyRecord = Record<string, unknown>;
+
 type InteriorDefinition = DustlandMap & {
   label?: string;
   displayName?: string;
@@ -116,6 +118,17 @@ type CombatSource = CombatTarget & {
 type TileEventDefinition = Record<string, unknown>;
 
 type EnemyBankMap = Record<string, CombatSource[]>;
+
+type CombatSource = CombatParticipant & {
+  DEF?: number;
+  HP?: number;
+  count?: number;
+  npc?: DustlandNpc | null | undefined;
+  portraitLock?: boolean;
+  portraitSheet?: string;
+  prompt?: string;
+  special?: unknown;
+};
 
 type NpcTemplateDefinition = {
   id?: string;
@@ -285,9 +298,9 @@ async function startCombat(defender: CombatTarget): Promise<CombatOutcome> {
 
 // ===== Tiles =====
 const TILE_SET = coreGlobals.TILE ?? Object.freeze({ SAND:0, ROCK:1, WATER:2, BRUSH:3, ROAD:4, RUIN:5, WALL:6, FLOOR:7, DOOR:8, BUILDING:9 });
-const walkable = Object.freeze({0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false});
+const walkable: Record<number, boolean> = Object.freeze({0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false});
 
-const tileEmojiMap = coreGlobals.tileEmoji ?? Object.freeze({
+const tileEmojiMap: Record<number, string> = coreGlobals.tileEmoji ?? Object.freeze({
   [TILE_SET.SAND]:'\u{1F3DD}', // 🏝
   [TILE_SET.ROCK]:'\u{1FAA8}', // 🪨
   [TILE_SET.WATER]:'\u{1F30A}', // 🌊
@@ -299,7 +312,7 @@ const tileEmojiMap = coreGlobals.tileEmoji ?? Object.freeze({
   [TILE_SET.DOOR]:'\u{1F6AA}', // 🚪
   [TILE_SET.BUILDING]:'\u{1F3E0}'  // 🏠
 });
-const emojiTileMap = coreGlobals.emojiTile ?? Object.freeze(Object.fromEntries(Object.entries(tileEmojiMap).map(([k,v])=>[v,+k])));
+const emojiTileMap: Record<string, number> = coreGlobals.emojiTile ?? Object.freeze(Object.fromEntries(Object.entries(tileEmojiMap).map(([k,v])=>[v,+k])) as Record<string, number>);
 coreGlobals.TILE = TILE_SET;
 coreGlobals.tileEmoji = tileEmojiMap;
 coreGlobals.emojiTile = emojiTileMap;
