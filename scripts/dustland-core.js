@@ -1943,7 +1943,7 @@ function openCreator() {
 function closeCreator() { creator.style.display = 'none'; }
 function updateCreatorButtons() { ccStart.disabled = (built.length === 0 && !building?.name); }
 function renderStep() {
-    ccStepEl.textContent = step;
+    ccStepEl.textContent = String(step);
     ccBack.disabled = (step === 1);
     ccNext.textContent = (step === 5 ? 'Finish Member' : 'Next');
     const r = ccRight;
@@ -1966,8 +1966,8 @@ function renderStep() {
             pool -= (building.stats[k] - base[k]);
         }
         const ptsEl = document.getElementById('pts');
-        function upd() { ptsEl.textContent = pool; for (const k in building.stats) {
-            document.getElementById('v_' + k).textContent = building.stats[k];
+        function upd() { ptsEl.textContent = String(pool); for (const k in building.stats) {
+            document.getElementById('v_' + k).textContent = String(building.stats[k]);
         } }
         upd();
         r.querySelectorAll('button').forEach(b => b.onclick = () => { const k = b.dataset.k, d = parseInt(b.dataset.d, 10); if (d > 0 && pool <= 0)
@@ -2130,7 +2130,7 @@ if (creator?.addEventListener)
             if (ccNext?.click)
                 ccNext.click();
             else
-                ccNext?.onclick?.();
+                ccNext?.onclick?.(new MouseEvent('click'));
         }
     });
 function startGame() {
@@ -2141,8 +2141,9 @@ on('inventory:changed', () => {
     queueNanoDialogForNPCs?.('start', 'inventory change');
 });
 on('item:picked', (it) => {
-    log?.(`Picked up ${it.name}`);
-    toast?.(`Picked up ${it.name}`);
+    const label = it?.name ?? 'item';
+    log?.(`Picked up ${label}`);
+    toast?.(`Picked up ${label}`);
 });
 on('mentor:bark', (evt) => {
     if (evt?.text)

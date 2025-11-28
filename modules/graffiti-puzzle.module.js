@@ -71,10 +71,14 @@ globals.startGame = function startGame() {
         return;
     globals.setPartyPos?.(start.x, start.y);
     globals.setMap?.(start.map, 'Graffiti Puzzle');
-    globals.state = globals.state ?? {};
-    globals.state.map = start.map;
-    globals.state.x = start.x;
-    globals.state.y = start.y;
+    const fallbackState = {
+        map: start.map,
+        mapFlags: {},
+        fog: {},
+        x: start.x,
+        y: start.y
+    };
+    globals.state = { ...(globals.state ?? fallbackState), map: start.map, x: start.x, y: start.y };
     globals.renderWorld?.();
 };
 export {};
