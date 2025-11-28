@@ -4,19 +4,28 @@
 // Provides basic tools to build Dustland modules.
 
 // Ensure world generation doesn't pull default content
-window.seedWorldContent = () => { };
+window.seedWorldContent = () => {};
 
 window.DUSTLAND_FEATURES = window.DUSTLAND_FEATURES ?? {};
 if (typeof window.DUSTLAND_FEATURES.serverMode !== 'boolean') {
   window.DUSTLAND_FEATURES.serverMode = false;
 }
-
-
-
 const PLAYTEST_KEY = 'ack_playtest';
 
-const akColors = { 0: '#1e271d', 1: '#2c342c', 2: '#1573ff', 3: '#203320', 4: '#777777', 5: '#304326', 6: '#4d5f4d', 7: '#233223', 8: '#8bd98d', 9: '#000' };
-const tileNames = {
+const akColors: Record<number, string> = {
+  0: '#1e271d',
+  1: '#2c342c',
+  2: '#1573ff',
+  3: '#203320',
+  4: '#777777',
+  5: '#304326',
+  6: '#4d5f4d',
+  7: '#233223',
+  8: '#8bd98d',
+  9: '#000'
+};
+
+const tileNames: Record<number, string> = {
   [TILE.SAND]: 'Sand',
   [TILE.ROCK]: 'Rock',
   [TILE.WATER]: 'Water',
@@ -25,7 +34,8 @@ const tileNames = {
   [TILE.RUIN]: 'Ruin',
   [TILE.WALL]: 'Wall'
 };
-const walkableTiles = {
+
+const walkableTiles: Record<number, boolean> = {
   0: true,
   1: true,
   2: false,
@@ -37,6 +47,7 @@ const walkableTiles = {
   8: true,
   9: false
 };
+
 const stampNames = {
   hill: 'Hill',
   cross: 'Cross Roads',
@@ -132,7 +143,13 @@ window.worldStampEmoji = worldStampEmoji;
 const worldStamps = { hill: makeHill(), cross: makeCross(), compound: makeCompound(), pond: makePond() };
 window.worldStamps = worldStamps;
 const canvas = document.getElementById('map');
-const ctx = canvas.getContext('2d');
+if (!canvas) {
+  throw new Error('Adventure Kit map canvas missing');
+}
+const ctx = (canvas as HTMLCanvasElement).getContext('2d');
+if (!ctx) {
+  throw new Error('Adventure Kit map canvas context unavailable');
+}
 
 function getCanvasScale(rect = canvas.getBoundingClientRect()) {
   const scaleX = rect.width / canvas.width || 1;
