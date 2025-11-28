@@ -1093,9 +1093,34 @@ interface ItemGeneratorRange {
 
   var DustlandGlobals: DustlandGlobalHelpers;
 
-  const log: ((message: string) => void) | undefined;
+  declare const Dice: {
+    skill: (
+      actor: PartyMember,
+      stat?: string,
+      bonus?: number,
+      sides?: number,
+      rng?: () => number
+    ) => number;
+  };
 
-  var EventBus: DustlandEventBus;
+  declare const ROLL_SIDES: number;
+
+  declare const log: ((message: string) => void) | undefined;
+
+  declare let rng: () => number;
+
+  declare const GAME_STATE: { [key: string]: number } & {
+    WORLD: number;
+    INTERIOR: number;
+    DIALOG: number;
+  };
+
+  declare var EventBus: DustlandEventBus;
+  declare var state:
+    | (DustlandCoreState & {
+        arenas?: Record<string, DustlandBehaviorArenaState | undefined>;
+      })
+    | undefined;
 
   interface MemoryTapeItem {
     recording?: string | null;

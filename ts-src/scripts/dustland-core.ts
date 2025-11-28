@@ -104,6 +104,17 @@ type ZoneEffectDefinition = {
   [key: string]: unknown;
 };
 
+type CombatSource = CombatTarget & {
+  id?: string;
+  hp?: number;
+  count?: number;
+  challenge?: number;
+  xp?: number;
+  prompt?: string;
+  special?: unknown;
+  [key: string]: unknown;
+};
+
 type TileEventDefinition = Record<string, unknown>;
 
 type EnemyBankMap = Record<string, CombatSource[]>;
@@ -1910,7 +1921,7 @@ function closeCreator(){ creator.style.display='none'; }
 function updateCreatorButtons(){ ccStart.disabled = (built.length===0 && !building?.name); }
 
 function renderStep(){
-  ccStepEl.textContent=step; ccBack.disabled = (step===1);
+  ccStepEl.textContent = String(step); ccBack.disabled = (step===1);
   ccNext.textContent = (step===5? 'Finish Member' : 'Next');
   const r=ccRight; r.innerHTML='';
   if(step===1){
@@ -1925,7 +1936,7 @@ function renderStep(){
     ccHint.textContent='Distribute 6 points among stats.';
     r.innerHTML=`<div class='grid'>${Object.keys(building.stats).map(k=>{const info=statInfo[k]||{name:k,benefit:'helps with DC checks'};return `<div class='field'><label title='${info.name}: ${info.benefit}'>${k}</label><div class='range'><button data-k='${k}' data-d='-1'>−</button><div id='v_${k}' class='pill'>${building.stats[k]}</div><button data-k='${k}' data-d='1'>+</button></div></div>`;}).join('')}</div><div class='small'>Points left: <span id='pts'></span></div>`;
     let pool=6; const base=baseStats(); for(const k in base){ pool -= (building.stats[k]-base[k]); }
-    const ptsEl=document.getElementById('pts'); function upd(){ ptsEl.textContent=pool; for(const k in building.stats){ document.getElementById('v_'+k).textContent=building.stats[k]; } } upd();
+    const ptsEl=document.getElementById('pts'); function upd(){ ptsEl.textContent=String(pool); for(const k in building.stats){ document.getElementById('v_'+k)!.textContent=String(building.stats[k]); } } upd();
     r.querySelectorAll('button').forEach(b=> b.onclick=()=>{ const k=b.dataset.k, d=parseInt(b.dataset.d,10); if(d>0 && pool<=0) return; if(d<0 && building.stats[k]<=1) return; building.stats[k]+=d; pool-=d; upd(); });
   }
   if(step===3){
@@ -2060,7 +2071,7 @@ if (ccLoad) ccLoad.onclick=()=>{ load(); closeCreator(); };
 if (creator?.addEventListener) creator.addEventListener('keydown', e => {
   if(e.key==='Enter'){
     e.preventDefault();
-    if(ccNext?.click) ccNext.click(); else ccNext?.onclick?.();
+    if(ccNext?.click) ccNext.click(); else ccNext?.onclick?.(new MouseEvent('click'));
   }
 });
 
@@ -2073,9 +2084,10 @@ on('inventory:changed', () => {
   queueNanoDialogForNPCs?.('start', 'inventory change');
 });
 
-on('item:picked', (it) => {
-  log?.(`Picked up ${it.name}`);
-  toast?.(`Picked up ${it.name}`);
+on('item:picked', (it: { name?: string } | null | undefined) => {
+  const label = it?.name ?? 'item';
+  log?.(`Picked up ${label}`);
+  toast?.(`Picked up ${label}`);
 });
 
 on('mentor:bark', (evt) => {
