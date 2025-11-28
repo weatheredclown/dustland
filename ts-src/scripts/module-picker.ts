@@ -256,6 +256,17 @@ async function ensureSessionSnapshot(): Promise<{ status: string; user: { uid?: 
   }
 }
 
+async function waitForSessionSnapshot(retries = 10, delayMs = 150): Promise<{ status: string; user: { uid?: string | null } | null; bootstrap: { status: string } } | null> {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    const snapshot = await ensureSessionSnapshot();
+    if (snapshot) {
+      return snapshot;
+    }
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+  }
+  return null;
+}
+
 function resetCloudRepo(): void {
   cloudRepo = null;
   cloudRepoPromise = null;
@@ -363,8 +374,9 @@ async function initCloudLoginControls(row: HTMLElement | null, statusEl: HTMLEle
       void sessionInstance.signIn?.();
     }
   };
-  const baseSnapshot = await ensureSessionSnapshot();
+  const baseSnapshot = await waitForSessionSnapshot();
   if (!baseSnapshot || baseSnapshot.bootstrap.status !== 'firebase-ready') {
+    statusEl.textContent = 'Cloud login unavailable.';
     return;
   }
   applySessionSnapshotToUi(baseSnapshot, row, statusEl, button);
