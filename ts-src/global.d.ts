@@ -1093,7 +1093,7 @@ interface ItemGeneratorRange {
 
   var DustlandGlobals: DustlandGlobalHelpers;
 
-  declare const Dice: {
+  declare var Dice: {
     skill: (
       actor: PartyMember,
       stat?: string,
@@ -1103,13 +1103,13 @@ interface ItemGeneratorRange {
     ) => number;
   };
 
-  declare const ROLL_SIDES: number;
+  declare var ROLL_SIDES: number;
 
   declare const log: ((message: string) => void) | undefined;
 
-  declare let rng: () => number;
+  declare var rng: () => number;
 
-  declare const GAME_STATE: { [key: string]: number } & {
+  declare var GAME_STATE: { [key: string]: number } & {
     WORLD: number;
     INTERIOR: number;
     DIALOG: number;
