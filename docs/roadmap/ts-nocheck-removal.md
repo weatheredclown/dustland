@@ -69,6 +69,27 @@ The remaining files with `@ts-nocheck` fall into three broad categories. The pla
 3. Address `dustland-nano.ts` and `adventure-kit.ts` after the engine globals are formalized, since they depend on the same shared APIs. Write lightweight integration tests that mount the primary UI flows in jsdom to catch regressions while typing.
 4. Reserve `music-demo.ts` for last; split it into smaller helpers if needed to stay within manageable review size. Document any Tone.js abstractions so newcomers can trace signal flow quickly.
 
+## 4. Adventure Kit `@ts-nocheck` removal
+
+**Scope**: `ts-src/scripts/adventure-kit.ts` and its dependencies in `ts-src/scripts/core/`, `ts-src/modules/`, and the UI helper files that power the module builder HTML.
+
+**Why it is tricky**
+- The file mixes DOM access, canvas drawing, and game data mutations through `globalThis`. Most globals originate from `dustland-core.ts`, `scripts/core/` helpers, or module schemas that are still being typed.
+- UI state (drag targets, hover tiles, NPC editing forms) flows through loosely typed module data. Aligning those structures with the engine’s typed globals is a prerequisite.
+
+**Exit criteria**
+- `adventure-kit.ts` compiles without `@ts-nocheck` while relying on shared ambient types instead of inline `any` casts.
+- Canvas interactions, tile metadata, and NPC/loot editors use typed helpers for DOM querying and module mutation.
+- Adventure Kit smoke tests cover map stamping, NPC placement, loot editing, and export flows to guard regressions while typing.
+
+**Work breakdown**
+1. **Catalog dependencies**: List every `globalThis` read/write in `adventure-kit.ts` (world grids, moduleData, NPC collections, placement helpers) and map each to an existing or planned ambient type in `ts-src/global.d.ts` or `scripts/core/globals.ts`. Fill gaps with new interfaces (e.g., `AdventureKitState`, `EditableModuleData`).
+2. **Type the DOM surface**: Introduce typed query helpers for the canvas, toolbars, form fields, and notice elements. Reuse the query patterns from `workbench.ts` to avoid null assertions and to centralize `HTMLElement` narrowing.
+3. **Model map data and tools**: Create types for tile palettes, stamps, brush modes, placement callbacks, and heat-map overlays. Wire these through the existing rendering helpers (`gridFromEmoji`, `focusMap`, `getTileAt`) so canvas operations stay type-safe.
+4. **Constrain NPC and loot editors**: Define interfaces for NPC snapshots, spawn points, dialog IDs, loot tables, and playtest flags (`PLAYTEST_KEY`). Replace implicit object shapes with these interfaces and ensure mutations flow through typed utility functions rather than ad-hoc property writes.
+5. **Harden events and persistence**: Type the event hooks that respond to mouse interactions, keyboard shortcuts, and module export/download flows. Add a lightweight jsdom test suite that simulates drag/drop placement and verifies exported module JSON matches the typed schema.
+6. **Remove the suppression**: Once the shared globals and DOM helpers land, delete `@ts-nocheck`, run `npm test`, and validate `npm run build` to ensure Adventure Kit still boots from `adventure-kit.html` when opened from disk.
+
 ## Reporting cadence
 
 - Update this roadmap after each merge that removes a `@ts-nocheck` header. Include the interface or helper introduced so future contributors can reuse it.
