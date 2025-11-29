@@ -383,8 +383,7 @@ loopMinus.addEventListener('click', () => {
 });
 
 type ModuleGlobals = typeof globalThis & { moduleData?: any };
-const moduleGlobals = globalThis as ModuleGlobals;
-const moduleData = moduleGlobals.moduleData || (moduleGlobals.moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
+const moduleData = (globalThis as ModuleGlobals).moduleData ?? ((globalThis as ModuleGlobals).moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod', 'spread'];
 const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];

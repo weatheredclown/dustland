@@ -169,7 +169,7 @@ let problemRefs = [];
 let spawnHeat = false;
 var spawnHeatMap = null;
 var spawnHeatMax = 0;
-let mapActionTimer = 0;
+let mapActionTimer = null;
 function focusMap(x, y) {
     if (currentMap !== 'world')
         return;
@@ -204,7 +204,7 @@ function setMapActionBanner(message, type = 'info', autoHideMs = 0) {
         return;
     if (mapActionTimer) {
         clearTimeout(mapActionTimer);
-        mapActionTimer = 0;
+        mapActionTimer = null;
     }
     banner.textContent = message || '';
     banner.style.display = message ? 'block' : 'none';
@@ -218,7 +218,7 @@ function setMapActionBanner(message, type = 'info', autoHideMs = 0) {
             banner.style.display = 'none';
             banner.classList.remove('error', 'success');
             banner.textContent = '';
-            mapActionTimer = 0;
+            mapActionTimer = null;
         }, autoHideMs);
     }
 }
@@ -377,7 +377,7 @@ loopMinus.addEventListener('click', () => {
     drawWorld();
     showLoopControls(null);
 });
-const moduleData = globalThis.moduleData || (globalThis.moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
+const moduleData = globalThis.moduleData ?? (globalThis.moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod', 'spread'];
 const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];
@@ -506,8 +506,8 @@ function showMap(map) {
         idx = moduleData.interiors.findIndex(I => I.id === map);
         if (idx >= 0) {
             editInterior(idx);
-            if (typeof showEditorTab === 'function')
-                showEditorTab('interiors');
+            if (typeof window !== 'undefined' && typeof window.showEditorTab === 'function')
+                window.showEditorTab('interiors');
         }
         else {
             editInteriorIdx = -1;
