@@ -6,9 +6,10 @@ import vm from 'node:vm';
 async function loadCoreFogSnippet(){
   const code = await fs.readFile(new URL('../scripts/dustland-core.js', import.meta.url), 'utf8');
   const start = code.indexOf('const FOG_RADIUS');
-  const end = code.indexOf('const state =', start);
-  assert.ok(start >= 0 && end > start, 'fog snippet boundaries found');
-  return code.slice(start, end);
+  const stateIdx = code.indexOf('state =', start);
+  const end = code.indexOf(';', stateIdx);
+  assert.ok(start >= 0 && stateIdx > start && end > stateIdx, 'fog snippet boundaries found');
+  return code.slice(start, end + 1);
 }
 
 function extractFunction(code, name){

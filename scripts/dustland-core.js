@@ -1,4 +1,3 @@
-// @ts-nocheck
 // TODO: migrate dustland-core to the typed DustlandCoreGlobals surface.
 /* eslint-disable no-var */
 const coreGlobals = globalThis;
@@ -16,7 +15,7 @@ class Quest {
     }
 }
 // ===== Core helpers =====
-const ROLL_SIDES = 12;
+var ROLL_SIDES = 12;
 const DC = Object.freeze({ TALK: 8, REPAIR: 9 });
 const CURRENCY = 'Scrap';
 // Placeholder; actual content provided by modules (e.g. Dustland)
@@ -32,7 +31,7 @@ function createRNG(seed) {
         return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
 }
-let rng = createRNG(worldSeed);
+var rng = createRNG(worldSeed);
 function setRNGSeed(seed) {
     worldSeed = seed >>> 0;
     rng = createRNG(worldSeed);
@@ -56,13 +55,13 @@ function refreshUI() {
     renderParty?.();
     updateHUD?.();
 }
-class Dice {
+var Dice = class Dice {
     static skill(character, stat, add = 0, sides = ROLL_SIDES, roller = Math.random) {
         const base = character?.stats?.[stat] || 0;
         const roll = Math.floor(roller() * sides) + 1;
         return roll + Math.floor(base / 2) + add;
     }
-}
+};
 // ===== Combat =====
 /**
  * Launch the menu-based combat interface. In non-browser environments the
@@ -77,17 +76,18 @@ async function startCombat(defender) {
         return { result: 'flee' };
     }
     const toEnemy = (def) => {
-        const { HP, portraitSheet, portraitLock, prompt, npc, name, ...rest } = def || {};
+        const source = def ?? { DEF: 0 };
+        const { HP, portraitSheet, portraitLock, prompt, npc, name, special, ...rest } = source;
         return {
             ...rest,
-            id: def?.id || def?.name,
+            id: source.id || source.name,
             name: name || npc?.name || 'Enemy',
-            hp: def?.hp ?? HP ?? 5,
+            hp: source.hp ?? HP ?? 5,
             npc,
             portraitSheet: portraitSheet || npc?.portraitSheet,
             portraitLock: portraitLock ?? npc?.portraitLock,
-            prompt: prompt || npc?.prompt,
-            special: rest.special
+            prompt: (typeof prompt === 'string' ? prompt : npc?.prompt),
+            special
         };
     };
     const enemies = [];
@@ -109,7 +109,15 @@ async function startCombat(defender) {
             continue;
         const dist = Math.abs(n.x - px) + Math.abs(n.y - py);
         if (dist <= 2 && (!defender?.npc || n !== defender.npc)) {
-            addCombatSource({ ...n.combat, npc: n, name: n.name, portraitSheet: n.portraitSheet, portraitLock: n.portraitLock });
+            const npcSource = {
+                DEF: n.combat?.DEF ?? 0,
+                ...n.combat,
+                npc: n,
+                name: n.name,
+                portraitSheet: n.portraitSheet,
+                portraitLock: n.portraitLock
+            };
+            addCombatSource(npcSource);
         }
     }
     const result = await openCombat(enemies);
@@ -394,7 +402,7 @@ function revealFog(map, x, y, radius = FOG_RADIUS) {
         }
     }
 }
-const state = { map: 'world', mapFlags: {}, fog: {} }; // default map
+var state = { map: 'world', mapFlags: {}, fog: {} }; // default map
 const player = {
     hp: 10,
     inv: [],
@@ -424,7 +432,7 @@ function setPartyPos(x, y) {
 }
 const worldFlags = {};
 const hiddenNPCs = [];
-const GAME_STATE = Object.freeze({
+var GAME_STATE = Object.freeze({
     TITLE: 'title',
     CREATOR: 'creator',
     WORLD: 'world',
@@ -436,7 +444,7 @@ let gameState = GAME_STATE.TITLE;
 function setGameState(next) { gameState = next; }
 let doorPulseUntil = 0;
 let lastInteract = 0;
-const creatorMap = { w: 30, h: 22, grid: [], entryX: 15, entryY: 10 };
+const creatorMap = { id: 'creator', w: 30, h: 22, grid: [], entryX: 15, entryY: 10 };
 function genCreatorMap() {
     creatorMap.grid = Array.from({ length: creatorMap.h }, (_, y) => Array.from({ length: creatorMap.w }, (_, x) => {
         const edge = y === 0 || y === creatorMap.h - 1 || x === 0 || x === creatorMap.w - 1;
@@ -487,7 +495,8 @@ function revealHiddenNPCs() {
                 opts.door = n.door;
             if (typeof n.locked === 'boolean')
                 opts.locked = n.locked;
-            const npc = makeNPC(n.id, n.map || 'world', n.x, n.y, n.color, n.name || n.id, n.title || '', n.desc || '', n.tree, quest, null, null, opts);
+            const tree = (typeof n.tree === 'object' && n.tree) ? n.tree : {};
+            const npc = makeNPC(n.id, n.map || 'world', n.x, n.y, n.color, n.name || n.id, n.title || '', n.desc || '', tree, quest, null, null, opts);
             if (Array.isArray(n.loop))
                 npc.loop = n.loop;
             if (typeof NPCS !== 'undefined')
@@ -631,20 +640,24 @@ function applyModule(data = {}, options = {}) {
     if (moduleData.templates)
         npcTemplates.push(...moduleData.templates);
     if (moduleData.encounters) {
-        Object.entries(moduleData.encounters).forEach(([map, list]) => {
-            enemyBanks[map] = list.map(e => ({ ...e }));
+        const encounters = moduleData.encounters;
+        Object.entries(encounters).forEach(([map, list]) => {
+            enemyBanks[map] = (list || []).map(e => ({ ...e }));
         });
     }
     if (personaTemplates && moduleData.personas) {
-        Object.entries(moduleData.personas).forEach(([id, def]) => {
+        const personas = moduleData.personas;
+        Object.entries(personas).forEach(([id, def]) => {
+            if (!def || typeof def !== 'object')
+                return;
             const base = personaTemplates[id] ? { ...personaTemplates[id] } : { id };
             personaTemplates[id] = { ...base, ...def, id: def.id || base.id || id };
         });
         const personaState = globalThis.Dustland?.gameState?.getState?.()?.personas;
-        if (personaState && globalThis.Dustland?.gameState?.setPersona) {
+        if (personaState && globalThis.Dustland?.gameState?.setPersona && personas) {
             Object.keys(personaState).forEach(id => {
-                if (moduleData.personas[id]) {
-                    const merged = { ...personaState[id], ...moduleData.personas[id], id };
+                if (personas[id]) {
+                    const merged = { ...personaState[id], ...personas[id], id };
                     globalThis.Dustland.gameState.setPersona(id, merged);
                 }
             });
@@ -822,7 +835,7 @@ function genWorld(seed = Date.now(), data = {}) {
     Object.keys(interiors).forEach(k => delete interiors[k]);
     if (creatorMap.grid && creatorMap.grid.length)
         interiors['creator'] = creatorMap;
-    (data.interiors || []).forEach(I => { const { id, ...rest } = I; interiors[id] = { ...rest }; });
+    (data.interiors || []).forEach(I => { const { id, ...rest } = I; interiors[id] = { id, ...rest }; });
     buildings.length = 0;
     if (data.buildings) {
         data.buildings.forEach(b => placeHut(b.x, b.y, b));
@@ -871,12 +884,15 @@ function makeInteriorRoom(id, w = 12, h = 9) {
     }));
     const ex = Math.floor(w / 2), ey = h - 1;
     g[ey][ex] = TILE_SET.DOOR;
-    interiors[id] = { w, h, grid: g, entryX: ex, entryY: h - 2 };
+    interiors[id] = { id, w, h, grid: g, entryX: ex, entryY: h - 2 };
     return id;
 }
 function placeHut(x, y, b = {}) {
     let grid = b.grid;
-    let w, h, doorX, doorY;
+    let w;
+    let h;
+    let doorX;
+    let doorY;
     if (grid) {
         h = grid.length;
         w = grid[0].length;
@@ -928,7 +944,7 @@ function placeHut(x, y, b = {}) {
         interiorId = null;
     }
     boarded = b.boarded !== undefined ? b.boarded : rng() < 0.3;
-    const nb = { x, y, w, h, doorX, doorY, interiorId, boarded, under, grid };
+    const nb = { x, y, w: w ?? 0, h: h ?? 0, doorX, doorY, interiorId, boarded, under, grid };
     if (bunker) {
         nb.bunker = true;
         const moduleName = globalThis.Dustland?.currentModule || '';
@@ -937,8 +953,9 @@ function placeHut(x, y, b = {}) {
         const bunkers = (globalThis.Dustland || (globalThis.Dustland = {})).bunkers || (globalThis.Dustland.bunkers = []);
         if (!bunkers.some(b => b.id === bunkerId)) {
             const ft = globalThis.Dustland?.fastTravel;
-            const network = typeof ft?.networkFor === 'function' ? ft.networkFor(moduleName) : 'global';
-            const entry = { id: bunkerId, x: doorX, y: doorY, map: 'world', module: moduleName, name: moduleName, active: !boarded, network };
+            const ftNetwork = ft?.networkFor;
+            const network = typeof ftNetwork === 'function' ? String(ftNetwork(moduleName)) : 'global';
+            const entry = { id: bunkerId, x: doorX ?? x, y: doorY ?? y, map: 'world', module: moduleName, name: moduleName, active: !boarded, network };
             bunkers.push(entry);
         }
     }
@@ -1088,7 +1105,7 @@ const SHOP_DEFAULTS = Object.freeze({
 function getNpcTemplateDefinition(id) {
     if (!id)
         return null;
-    const moduleName = globalThis.Dustland?.currentModule;
+    const moduleName = globalThis.Dustland?.currentModule ?? '';
     if (moduleName) {
         const moduleData = globalThis.Dustland?.loadedModules?.[moduleName];
         const found = moduleData?.npcs?.find(n => n.id === id);
@@ -1255,7 +1272,7 @@ function applyGameState(data) {
         return;
     const gs = globalThis.Dustland.gameState;
     const flags = deepClone(data.flags || {});
-    const personas = deepClone(data.personas || {});
+    const personas = deepClone((data.personas || {}));
     const effectPacks = deepClone(data.effectPacks || {});
     const npcMemory = deepClone(data.npcMemory || {});
     const clock = data.clock ?? 0;
@@ -1405,7 +1422,7 @@ function save() {
         format: SAVE_FORMAT,
         version: 2,
         savedAt: Date.now(),
-        module: globalThis.Dustland?.currentModule ?? globalThis.moduleData?.name ?? globalThis.moduleData?.id ?? null,
+        module: globalThis.Dustland?.currentModule ?? coreGlobals.moduleData?.name ?? coreGlobals.moduleData?.id ?? null,
         worldSeed,
         world: worldData,
         player: playerData,
@@ -1471,7 +1488,7 @@ function loadLegacySave(d) {
     });
     if (typeof NPCS !== 'undefined')
         NPCS.length = 0;
-    const moduleData = globalThis.moduleData;
+    const moduleData = coreGlobals.moduleData;
     moduleData?.postLoad?.(moduleData);
     const moduleNpcs = moduleData?.npcs || [];
     const moduleNpcMap = new Map(moduleNpcs.map(n => [n.id, n]));
@@ -1560,7 +1577,7 @@ function loadLegacySave(d) {
 }
 function loadModernSave(d) {
     const moduleName = resolveModuleName(d.module) ?? globalThis.Dustland?.currentModule ?? null;
-    const moduleData = (moduleName != null ? globalThis.Dustland?.loadedModules?.[moduleName] : null) || globalThis.moduleData;
+    const moduleData = (moduleName != null ? globalThis.Dustland?.loadedModules?.[moduleName] : null) || coreGlobals.moduleData;
     party.length = 0;
     party.flags = {};
     party.fallen = [];

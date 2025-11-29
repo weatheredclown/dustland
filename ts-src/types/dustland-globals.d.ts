@@ -71,7 +71,7 @@ declare global {
   var runCount: number | undefined;
   var DUSTLAND_FEATURES: DustlandFeatures | undefined;
   var quests: Record<string, Quest> | undefined;
-  var tileEmoji: Record<string, number> | undefined;
+  var tileEmoji: Record<number, string> | undefined;
   var emojiTile: Record<string, number> | undefined;
   var Mods: Record<string, any> | undefined;
   var TILE: Record<string, number>;
