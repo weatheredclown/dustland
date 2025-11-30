@@ -468,10 +468,10 @@ let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, edit
 let currentTree = {};
 globalThis.treeData = currentTree;
 function getTreeData() {
-    return currentTree;
+    return currentTree ?? {};
 }
 function setTreeData(tree) {
-    currentTree = tree;
+    currentTree = tree ?? {};
     globalThis.treeData = currentTree;
     const treeEl = document.getElementById('npcTree');
     if (treeEl)
@@ -1712,7 +1712,7 @@ function addChoiceRow(container, ch = {}) {
     const spawnX = spawn?.x ?? '';
     const spawnY = spawn?.y ?? '';
     const row = document.createElement('div');
-    const rowDataset = row.dataset || (row.dataset = {});
+    const rowDataset = row.dataset;
     if (extraEffects.length)
         rowDataset.extraEffects = JSON.stringify(extraEffects);
     else

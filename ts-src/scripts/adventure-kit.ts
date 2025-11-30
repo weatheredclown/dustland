@@ -536,10 +536,10 @@ let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, edit
 let currentTree = {};
 globalThis.treeData = currentTree;
 function getTreeData() {
-  return currentTree;
+  return currentTree ?? {};
 }
 function setTreeData(tree) {
-  currentTree = tree;
+  currentTree = tree ?? {};
   globalThis.treeData = currentTree;
   const treeEl = document.getElementById('npcTree');
   if (treeEl) treeEl.value = JSON.stringify(tree, null, 2);

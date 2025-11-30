@@ -13,6 +13,7 @@ function stubEl(){
     textContent:'',
     onclick:null,
     value:'',
+    dataset:{},
     _innerHTML:'',
     children:[],
     width:0,
