@@ -22,6 +22,8 @@ interface DustlandFeatures {
   [key: string]: unknown;
 }
 
+type AnyRecord = Record<string, any>;
+
 declare global {
   interface HTMLElement {
     [key: string]: any;
@@ -79,6 +81,12 @@ declare global {
   var NanoDialog: { enabled?: boolean; init?: () => Promise<void>; isReady?: () => boolean } | undefined;
   function bootMap(): void;
 
+  var nextLoopPoint: ((prev: {x: number, y: number} | undefined, npc: {x: number, y: number}) => {x: number, y: number}) | undefined;
+  var showEditorTab: ((tab: string) => void) | undefined;
+  var moduleData: AnyRecord | undefined;
+  var focusMap: ((x: number, y: number) => void) | undefined;
+  var setCoordTarget: ((v: any) => void) | undefined;
+
   interface Window {
     DUSTLAND_FEATURES?: DustlandFeatures;
     seedWorldContent?: () => void;
@@ -86,6 +94,12 @@ declare global {
     setBossTelegraphFX?: (opts?: { intensity?: number; duration?: number }) => void;
     NanoDialog?: { enabled?: boolean; init?: () => Promise<void>; isReady?: () => boolean };
     NanoPalette?: { init?: () => void; generate?: () => Promise<unknown> };
+    nextLoopPoint?: (prev: {x: number, y: number} | undefined, npc: {x: number, y: number}) => {x: number, y: number};
+    showEditorTab?: (tab: string) => void;
+    worldStampEmoji?: any;
+    worldStamps?: any;
+    addTerrainFeature?: (x: number, y: number, tile: any) => void;
+    stampWorld?: (x: number, y: number, stamp: any) => void;
     [key: string]: any;
   }
 }

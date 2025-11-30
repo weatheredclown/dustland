@@ -1,4 +1,3 @@
-// @ts-nocheck
 // TypeScript checking remains disabled here until the editor globals are fully typed.
 // Adventure Construction Kit
 // Provides basic tools to build Dustland modules.
@@ -104,28 +103,28 @@ type ModuleGlobals = typeof globalThis & { moduleData?: ModuleData };
   type ModuleData = {
     seed: number;
     name: string;
-  npcs: any[];
-  items: any[];
-  quests: any[];
-  buildings: any[];
-  interiors: Array<{ id: string; grid?: number[][]; w: number; h: number }>;
-  portals: any[];
-  events: any[];
-  zones: any[];
-  encounters: any[];
-  templates: any[];
-  personas: Record<string, unknown>;
+    npcs: any[];
+    items: any[];
+    quests: any[];
+    buildings: any[];
+    interiors: Array<{ id: string; grid?: number[][]; w: number; h: number; label?: string; displayName?: string; _origGrid?: number[][] }>;
+    portals: any[];
+    events: any[];
+    zones: any[];
+    encounters: any[];
+    templates: any[];
+    personas: Record<string, unknown>;
     start: { map: string; x: number; y: number };
-    module?: unknown;
-    moduleVar?: unknown;
-    props: Record<string, unknown>;
-    behaviors: Record<string, unknown>;
-    procGen?: unknown;
+    module?: any;
+    moduleVar?: any;
+    props: Record<string, any>;
+    behaviors: Record<string, any>;
+    procGen?: any;
     _origKeys?: string[];
     zoneEffects?: any[];
-    generateMap?: (seed: number, opts?: unknown) => unknown;
-  };
-declare function nextLoopPoint(prev: LoopPoint | undefined, npc: LoopPoint): LoopPoint;
+    generateMap?: (seed: number, opts?: any) => any;
+  };;
+
 
 const stampNames = {
   hill: 'Hill',
@@ -237,14 +236,14 @@ function getCanvasScale(rect = canvas.getBoundingClientRect()) {
 }
 
 let dragTarget = null, settingStart = false, hoverTarget = null, didDrag = false, dragOffsetX = 0, dragOffsetY = 0;
-let placingType = null, placingPos = null, placingCb = null;
+let placingType = null, placingPos = null; let placingCb: (() => void) | null = null;
 let hoverTile = null;
 var coordTarget = null;
-function setCoordTarget(v){ coordTarget = v; }
-globalThis.setCoordTarget = setCoordTarget;
+const setCoordTargetACK = (v: any) => { coordTarget = v; }
+globalThis.setCoordTarget = setCoordTargetACK;
 let npcOriginal = null;
 let npcDirty = false;
-let npcNoticeTimer = 0;
+let npcNoticeTimer: any = 0;
 let npcMapMode = false;
 let npcLastCoords = null;
 const npcSectionRefs = new Map();
@@ -258,7 +257,7 @@ var spawnHeatMap = null;
 var spawnHeatMax = 0;
 let mapActionTimer: ReturnType<typeof setTimeout> | null = null;
 
-function focusMap(x, y) {
+function focusMapACK(x: number, y: number) {
   if (currentMap !== 'world') return;
   const viewW = WORLD_W / worldZoom;
   const viewH = WORLD_H / worldZoom;
@@ -267,7 +266,7 @@ function focusMap(x, y) {
   panX = clamp(x - viewW / 2, 0, maxPanX);
   panY = clamp(y - viewH / 2, 0, maxPanY);
 }
-globalThis.focusMap = focusMap;
+globalThis.focusMap = focusMapACK;
 
 function getTileAt(mapName, x, y) {
   if (mapName === 'world') {
@@ -476,7 +475,7 @@ function updateTagOptions() {
   dl.innerHTML = allTags().map(t => `<option value="${t}"></option>`).join('');
 }
 
-function isComplexDialogTree(tree) {
+function isComplexDialogTree(tree: any) {
   if (!tree || typeof tree !== 'object') return false;
   if (tree.imports && Object.keys(tree.imports).length) return true;
   const keys = Object.keys(tree).filter(k => k !== 'imports');
@@ -499,10 +498,10 @@ function isComplexDialogTree(tree) {
   return false;
 }
 
-function updateDialogFieldVisibility(tree) {
+function updateDialogFieldVisibility(tree: any) {
   const dialogEl = document.getElementById('npcDialog');
   if (!dialogEl) return;
-  const wrap = dialogEl.parentElement;
+  const wrap = dialogEl.parentElement as HTMLElement;
   const hint = document.getElementById('npcDialogHint');
   let current = tree;
   if (!current) {
@@ -533,7 +532,7 @@ function initTags() {
 
 initTags();
 let editNPCIdx = -1, editItemIdx = -1, editQuestIdx = -1, editBldgIdx = -1, editInteriorIdx = -1, editEventIdx = -1, editPortalIdx = -1, editZoneIdx = -1, editArenaIdx = -1, editEncounterIdx = -1, editTemplateIdx = -1;
-let currentTree = {};
+let currentTree: AnyRecord = {};
 globalThis.treeData = currentTree;
 function getTreeData() {
   return currentTree;
@@ -648,7 +647,7 @@ function stampWorld(x, y, stamp) {
 }
 window.stampWorld = stampWorld;
 
-function getNpcColor(n) {
+function getNpcColorACK(n) {
   if (n.overrideColor && n.color) return n.color;
   if (n.trainer) return '#ffcc99';
   if (n.shop) return '#ffee99';
@@ -659,7 +658,7 @@ function getNpcColor(n) {
   return '#9ef7a0';
 }
 
-function getNpcSymbol(n) {
+function getNpcSymbolACK(n) {
   if (n.symbol) return n.symbol;
   if (n.inanimate) return '?';
   if (n.questId || n.quests) return '★';
@@ -673,7 +672,7 @@ function drawWorld() {
   const pulse = 2 + Math.sin(Date.now() / 300) * 2;
   let grid = world;
   if (map !== 'world') {
-    const I = moduleData.interiors.find(i => i.id === map);
+    const I: any = moduleData.interiors.find(i => i.id === map);
     if (!I || !Array.isArray(I.grid)) return;
     W = I.w; H = I.h; grid = I.grid;
     sx = canvas.width / W * worldZoom;
@@ -769,14 +768,14 @@ function drawWorld() {
     const py = (n.y - pyoff) * sy;
     if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height) return;
     ctx.save();
-    ctx.fillStyle = hovering ? '#fff' : getNpcColor(n);
+    ctx.fillStyle = hovering ? '#fff' : getNpcColorACK(n);
     if (hovering) {
       ctx.shadowColor = '#fff';
       ctx.shadowBlur = 8;
     }
     ctx.fillRect(px, py, sx, sy);
     ctx.fillStyle = '#000';
-    ctx.fillText(getNpcSymbol(n), px + 4, py + 12);
+    ctx.fillText(getNpcSymbolACK(n), px + 4, py + 12);
     if (hovering) {
       ctx.strokeStyle = '#fff';
       ctx.strokeRect(px, py, sx, sy);
@@ -896,7 +895,7 @@ function drawWorld() {
     ctx.save();
     ctx.lineWidth = pulse;
     if (selectedObj.type === 'npc') {
-      ctx.strokeStyle = getNpcColor(o);
+      ctx.strokeStyle = getNpcColorACK(o);
       ctx.strokeRect((o.x - pxoff) * sx + 1, (o.y - pyoff) * sy + 1, sx - 2, sy - 2);
     } else if (selectedObj.type === 'item') {
       ctx.strokeStyle = '#ff0';
@@ -944,7 +943,7 @@ function drawWorld() {
 
 function drawInterior() {
   if (editInteriorIdx < 0) return;
-  const I = moduleData.interiors[editInteriorIdx];
+  const I: any = moduleData.interiors[editInteriorIdx];
   if (!I || !Array.isArray(I.grid)) return;
   const sx = intCanvas.width / I.w;
   const sy = intCanvas.height / I.h;
@@ -959,10 +958,10 @@ function drawInterior() {
     }
   }
   moduleData.npcs.filter(n => n.map === I.id).forEach(n => {
-    intCtx.fillStyle = getNpcColor(n);
+    intCtx.fillStyle = getNpcColorACK(n);
     intCtx.fillRect(n.x * sx, n.y * sy, sx, sy);
     intCtx.fillStyle = '#000';
-    intCtx.fillText(getNpcSymbol(n), n.x * sx + 4, n.y * sy + 12);
+    intCtx.fillText(getNpcSymbolACK(n), n.x * sx + 4, n.y * sy + 12);
   });
   moduleData.items.filter(it => it.map === I.id).forEach(it => {
     intCtx.strokeStyle = '#ff0';
@@ -972,20 +971,20 @@ function drawInterior() {
     const o = selectedObj.obj;
     intCtx.save();
     intCtx.lineWidth = 2;
-    intCtx.strokeStyle = selectedObj.type === 'npc' ? getNpcColor(o) : '#ff0';
+    intCtx.strokeStyle = selectedObj.type === 'npc' ? getNpcColorACK(o) : '#ff0';
     intCtx.strokeRect(o.x * sx + 1, o.y * sy + 1, sx - 2, sy - 2);
     intCtx.restore();
   }
 }
 
 function interiorCanvasPos(e) {
-  const I = moduleData.interiors[editInteriorIdx];
+  const I: any = moduleData.interiors[editInteriorIdx];
   const rect = intCanvas.getBoundingClientRect();
   const x = Math.floor((e.clientX - rect.left) / (intCanvas.width / I.w));
   const y = Math.floor((e.clientY - rect.top) / (intCanvas.height / I.h));
   return { x, y };
 }
-function applyInteriorBrush(I, x, y, tile) {
+const applyInteriorBrushACK = (I: any, x: any, y: any, tile: any) => {
   if (!I || !Array.isArray(I.grid)) return false;
   const radius = Math.max(0, (brushSize || 1) - 1);
   let changed = false;
@@ -1011,10 +1010,10 @@ function applyInteriorBrush(I, x, y, tile) {
 
 function paintInterior(e){
   if(editInteriorIdx<0||!intPainting) return;
-  const I=moduleData.interiors[editInteriorIdx];
+  const I: any=moduleData.interiors[editInteriorIdx];
   const { x, y } = interiorCanvasPos(e);
   if(x<0||y<0||x>=I.w||y>=I.h) return;
-  const painted = applyInteriorBrush(I, x, y, intPaint);
+  const painted = applyInteriorBrushACK(I, x, y, intPaint);
   if(painted || intPaint===TILE.DOOR){
     didInteriorPaint = true;
     delete I._origGrid;
@@ -1025,11 +1024,11 @@ intCanvas.addEventListener('mousedown', e => {
   e.stopPropagation();
   e.preventDefault();
   if (editInteriorIdx < 0) return;
-  const I = moduleData.interiors[editInteriorIdx];
+  const I: any = moduleData.interiors[editInteriorIdx];
   const { x, y } = interiorCanvasPos(e);
   if(coordTarget){
-    document.getElementById(coordTarget.x).value = x;
-    document.getElementById(coordTarget.y).value = y;
+    (document.getElementById(coordTarget.x) as HTMLInputElement).value = String(x);
+    (document.getElementById(coordTarget.y) as HTMLInputElement).value = String(y);
     if (coordTarget.map) populateMapDropdown(document.getElementById(coordTarget.map), I.id);
     coordTarget = null;
     drawInterior();
@@ -1038,15 +1037,15 @@ intCanvas.addEventListener('mousedown', e => {
   if(placingType){
     if(placingType==='npc'){
       populateMapDropdown(document.getElementById('npcMap'), I.id);
-      document.getElementById('npcX').value = x;
-      document.getElementById('npcY').value = y;
-      if(placingCb) placingCb();
+      (document.getElementById('npcX') as HTMLInputElement).value = String(x);
+      (document.getElementById('npcY') as HTMLInputElement).value = String(y);
+      if(placingCb) (placingCb as any)();
     }else if(placingType==='item'){
       populateMapDropdown(document.getElementById('itemMap'), I.id);
-      document.getElementById('itemX').value = x;
-      document.getElementById('itemY').value = y;
-      if(placingCb) placingCb();
-      document.getElementById('cancelItem').style.display = 'none';
+      (document.getElementById('itemX') as HTMLInputElement).value = String(x);
+      (document.getElementById('itemY') as HTMLInputElement).value = String(y);
+      if(placingCb) (placingCb as any)();
+      (document.getElementById('cancelItem') as HTMLElement).style.display = 'none';
     }
     placingType=null;
     placingPos=null;
@@ -1069,7 +1068,7 @@ intCanvas.addEventListener('mouseleave',()=>{ intPainting=false; didInteriorPain
 intCanvas.addEventListener('click', e => {
   if (editInteriorIdx < 0) return;
   if (didInteriorPaint) { didInteriorPaint = false; return; }
-  const I = moduleData.interiors[editInteriorIdx];
+  const I: any = moduleData.interiors[editInteriorIdx];
   const { x, y } = interiorCanvasPos(e);
   if (x < 0 || y < 0 || x >= I.w || y >= I.h) { didInteriorPaint = false; return; }
   let idx = moduleData.npcs.findIndex(n => n.map === I.id && n.x === x && n.y === y);
@@ -1098,7 +1097,7 @@ intPalette.querySelectorAll('button').forEach(btn=>{
 intPalette.querySelector('button')?.classList.add('active');
 
 function showInteriorEditor(show) {
-  document.getElementById('intEditor').style.display = show ? 'block' : 'none';
+  (document.getElementById('intEditor') as HTMLElement).style.display = show ? 'block' : 'none';
 }
 
 function renderInteriorList() {
@@ -1112,33 +1111,33 @@ function renderInteriorList() {
 }
 
 function startNewInterior() {
-  const w = parseInt(document.getElementById('intW').value,10) || 12;
-  const h = parseInt(document.getElementById('intH').value,10) || 9;
-  const id = makeInteriorRoom(undefined,w,h);
+  const w = parseInt((document.getElementById('intW') as HTMLInputElement).value,10) || 12;
+  const h = parseInt((document.getElementById('intH') as HTMLInputElement).value,10) || 9;
+  const id = (makeInteriorRoom as any)(undefined,w,h);
   const I = interiors[id];
   I.id = id;
-  moduleData.interiors.push(I);
+  (moduleData.interiors as any[]).push(I);
   renderInteriorList();
   editInterior(moduleData.interiors.length - 1);
 }
 
 function editInterior(i) {
-  const I = moduleData.interiors[i];
+  const I: any = moduleData.interiors[i];
   editInteriorIdx = i;
-  document.getElementById('intId').value = I.id;
-  document.getElementById('intLabel').value = I.label || '';
-  document.getElementById('intW').value = I.w;
-  document.getElementById('intH').value = I.h;
+  (document.getElementById('intId') as HTMLInputElement).value = String(I.id);
+  (document.getElementById('intLabel') as HTMLInputElement).value = String(I.label || '');
+  (document.getElementById('intW') as HTMLInputElement).value = String(I.w);
+  (document.getElementById('intH') as HTMLInputElement).value = String(I.h);
   showInteriorEditor(true);
-  document.getElementById('delInterior').style.display = 'block';
+  (document.getElementById('delInterior') as HTMLElement).style.display = 'block';
   drawInterior();
 }
 
 function resizeInterior(){
   if(editInteriorIdx<0) return;
-  const I=moduleData.interiors[editInteriorIdx];
-  const w=parseInt(document.getElementById('intW').value,10)||I.w;
-  const h=parseInt(document.getElementById('intH').value,10)||I.h;
+  const I: any=moduleData.interiors[editInteriorIdx];
+  const w=parseInt((document.getElementById('intW') as HTMLInputElement).value,10)||I.w;
+  const h=parseInt((document.getElementById('intH') as HTMLInputElement).value,10)||I.h;
   const ng=Array.from({length:h},(_,y)=>Array.from({length:w},(_,x)=>{
     if(y<I.h && x<I.w && I.grid[y]) return I.grid[y][x];
     const edge=y===0||y===h-1||x===0||x===w-1; return edge?TILE.WALL:TILE.FLOOR;
@@ -1147,12 +1146,12 @@ function resizeInterior(){
   delete I._origGrid;
   drawInterior();
 }
-document.getElementById('intW').addEventListener('change',resizeInterior);
-document.getElementById('intH').addEventListener('change',resizeInterior);
+(document.getElementById('intW') as HTMLElement).addEventListener('change',resizeInterior);
+(document.getElementById('intH') as HTMLElement).addEventListener('change',resizeInterior);
 
-document.getElementById('intLabel').addEventListener('input', e => {
+(document.getElementById('intLabel') as HTMLElement).addEventListener('input', e => {
   if (editInteriorIdx < 0) return;
-  const I = moduleData.interiors[editInteriorIdx];
+  const I: any = moduleData.interiors[editInteriorIdx];
   const v = e.target.value.trim();
   if (v) I.label = v; else delete I.label;
   const div = document.querySelector(`#intList div[data-idx="${editInteriorIdx}"]`);
@@ -1163,7 +1162,7 @@ document.getElementById('intLabel').addEventListener('input', e => {
 
 function deleteInterior() {
   if (editInteriorIdx < 0) return;
-  const I = moduleData.interiors[editInteriorIdx];
+  const I: any = moduleData.interiors[editInteriorIdx];
   delete interiors[I.id];
   moduleData.interiors.splice(editInteriorIdx, 1);
   editInteriorIdx = -1;
@@ -1173,7 +1172,7 @@ function deleteInterior() {
 
 function closeInteriorEditor() {
   editInteriorIdx = -1;
-  document.getElementById('delInterior').style.display = 'none';
+  (document.getElementById('delInterior') as HTMLElement).style.display = 'none';
   showInteriorEditor(false);
 }
 
@@ -1189,11 +1188,11 @@ function confirmDialog(msg, onYes) {
     if (confirm(msg)) onYes();
     return;
   }
-  document.getElementById('confirmText').textContent = msg;
+  (document.getElementById('confirmText') as HTMLElement).textContent = msg;
   modal.classList.add('shown');
   const yes = document.getElementById('confirmYes');
   const no = document.getElementById('confirmNo');
-  const prev = document.activeElement;
+  const prev = document.activeElement as HTMLElement;
   yes.focus();
   const tgt = document.addEventListener ? document : document.body;
   const onKey = e => {
@@ -1281,7 +1280,7 @@ function regenWorld() {
   moduleData.templates = [];
   for (const id in interiors) {
     if (id === 'creator') continue;
-    const I = interiors[id]; I.id = id; moduleData.interiors.push(I);
+    const I = interiors[id]; I.id = id; (moduleData.interiors as any[]).push(I);
   }
   renderInteriorList();
   renderBldgList();
@@ -1297,11 +1296,11 @@ function generateProceduralWorld(regen) {
   confirmDialog(regen ? 'Regenerate the world map?' : 'Replace the world map?', () => {
     moduleData.procGen = moduleData.procGen || {};
     if (!regen) {
-      const seedVal = parseInt(document.getElementById('procSeed').value, 10);
+      const seedVal = parseInt((document.getElementById('procSeed') as HTMLInputElement).value, 10);
       moduleData.procGen.seed = Number.isFinite(seedVal) ? seedVal : Date.now();
-      moduleData.procGen.falloff = parseFloat(document.getElementById('procFalloff').value) || 0;
-      moduleData.procGen.roads = document.getElementById('procRoads').checked;
-      moduleData.procGen.ruins = document.getElementById('procRuins').checked;
+      moduleData.procGen.falloff = parseFloat((document.getElementById('procFalloff') as HTMLInputElement).value) || 0;
+      moduleData.procGen.roads = (document.getElementById('procRoads') as HTMLInputElement).checked;
+      moduleData.procGen.ruins = (document.getElementById('procRuins') as HTMLInputElement).checked;
     }
     const cfg = moduleData.procGen;
     const map = generateProceduralMap(cfg.seed, WORLD_W, WORLD_H, 4, cfg.falloff, { roads: cfg.roads, ruins: cfg.ruins });
@@ -1346,8 +1345,8 @@ function clearWorld() {
     initTags();
     buildings.length = 0;
     portals.length = 0;
-    globalThis.interiors = {};
-    interiors = globalThis.interiors;
+    (globalThis as any).interiors = {};
+    interiors = (globalThis as any).interiors;
     renderNPCList();
     renderItemList();
     renderQuestList();
@@ -1410,8 +1409,8 @@ function loadMods(mods = {}, containerId = 'modBuilder') {
 
 function renderDialogPreview() {
   const prev = document.getElementById('dialogPreview');
-  let tree = null;
-  const txt = document.getElementById('npcTree').value.trim();
+  let tree: any = null;
+  const txt = (document.getElementById('npcTree') as HTMLTextAreaElement | HTMLInputElement).value.trim();
   if (txt) { try { tree = JSON.parse(txt); } catch (e) { tree = null; } }
   // Inject preview + spoof controls once
   if (prev && !document.getElementById('dlgPreviewControls')) {
@@ -1425,8 +1424,8 @@ function renderDialogPreview() {
     </div>
     <div id="spoofImports" class="small" style="margin-top:6px"></div>`;
     prev.parentElement.insertBefore(ctl, prev);
-    document.getElementById('playDlg').onclick = () => playInGameWithSpoof();
-    document.getElementById('stopDlg').onclick = () => stopSpoofPlayback();
+    (document.getElementById('playDlg') as HTMLElement).onclick = () => playInGameWithSpoof();
+    (document.getElementById('stopDlg') as HTMLElement).onclick = () => stopSpoofPlayback();
   }
   // Render imports spoof panel (lightweight)
   const importsEl = document.getElementById('spoofImports');
@@ -1446,7 +1445,7 @@ function renderDialogPreview() {
   }
   if (!tree || !tree.start) { prev.innerHTML = ''; return; }
   function show(id) {
-    const node = tree[id]; if (!node) return;
+    const node: any = tree[id]; if (!node) return;
     const html = (node.choices || [])
       .map(c => `<button class="btn" data-to="${c.to || ''}" style="margin-top:4px">${c.label}</button>`)
       .join('');
@@ -1460,7 +1459,7 @@ function renderDialogPreview() {
 }
 
 // Shallow imports generator (editor-only)
-function generateImportsShallow(tree) {
+function generateImportsShallow(tree: any) {
   const flags = new Set();
   const items = new Set();
   Object.entries(tree || {}).forEach(([id, node]) => {
@@ -1512,7 +1511,7 @@ function buildSpoofItemsFromPanel() {
   return out;
 }
 
-function startSpoofPlayback(tree, flags, items, locked = false) {
+function startSpoofPlayback(tree: any, flags: any, items: any, locked = false) {
   if (!_origFlagValue) _origFlagValue = globalThis.flagValue;
   if (!_origCloseDialog) _origCloseDialog = globalThis.closeDialog;
   if (!_origHasItem) _origHasItem = globalThis.hasItem;
@@ -1546,10 +1545,10 @@ function stopSpoofPlayback() {
 }
 function playInGameWithSpoof() {
   // Use imports panel values if present, else freeform field
-  const txt = document.getElementById('npcTree').value.trim();
+  const txt = (document.getElementById('npcTree') as HTMLTextAreaElement | HTMLInputElement).value.trim();
   if (!txt) return;
-  let tree = null; try { tree = JSON.parse(txt); } catch (e) { alert('Invalid tree JSON'); return; }
-  const flags = buildSpoofFlagsFromPanel() || parseSpoofFlags(document.getElementById('spoofFlags').value);
+  let tree: any = null; try { tree = JSON.parse(txt); } catch (e) { alert('Invalid tree JSON'); return; }
+  const flags = buildSpoofFlagsFromPanel() || parseSpoofFlags((document.getElementById('spoofFlags') as HTMLInputElement).value);
   const items = buildSpoofItemsFromPanel() || {};
   const locked = document.getElementById('npcLocked')?.checked;
   startSpoofPlayback(tree, flags, items, locked);
@@ -1745,10 +1744,10 @@ const ADV_HTML = {
   }
   if (stat || dc || success || failure) {
     addAdv('stat');
-    if (stat) row.querySelector('.choiceStat').value = stat;
-    if (dc !== '') row.querySelector('.choiceDC').value = dc;
-    if (success) row.querySelector('.choiceSuccess').value = success;
-    if (failure) row.querySelector('.choiceFailure').value = failure;
+    if (stat) row.querySelector('.choiceStat').value = String(stat);
+    if (dc !== '') row.querySelector('.choiceDC').value = String(dc);
+    if (success) row.querySelector('.choiceSuccess').value = String(success);
+    if (failure) row.querySelector('.choiceFailure').value = String(failure);
   }
   if (costItem || costSlot || costTag) {
     addAdv('cost');
@@ -1760,7 +1759,7 @@ const ADV_HTML = {
       const el = row.querySelector('.choiceCostSlot');
       if (el) (el.dataset || (el.dataset = {})).sel = costSlot;
     }
-    if (costTag) row.querySelector('.choiceCostTag').value = costTag;
+    if (costTag) row.querySelector('.choiceCostTag').value = String(costTag);
   }
   if (reqItem || reqSlot || reqTag) {
     addAdv('req');
@@ -1772,26 +1771,26 @@ const ADV_HTML = {
       const el = row.querySelector('.choiceReqSlot');
       if (el) (el.dataset || (el.dataset = {})).sel = reqSlot;
     }
-    if (reqTag) row.querySelector('.choiceReqTag').value = reqTag;
+    if (reqTag) row.querySelector('.choiceReqTag').value = String(reqTag);
   }
   if (joinId || joinName || joinRole) {
     addAdv('join');
-    if (joinId) row.querySelector('.choiceJoinId').value = joinId;
-    if (joinName) row.querySelector('.choiceJoinName').value = joinName;
-    if (joinRole) row.querySelector('.choiceJoinRole').value = joinRole;
+    if (joinId) row.querySelector('.choiceJoinId').value = String(joinId);
+    if (joinName) row.querySelector('.choiceJoinName').value = String(joinName);
+    if (joinRole) row.querySelector('.choiceJoinRole').value = String(joinRole);
   }
   if (gotoMap || gotoX !== '' || gotoY !== '' || gotoTarget === 'npc' || gotoRel) {
     addAdv('goto');
-    row.querySelector('.choiceGotoTarget').value = gotoTarget;
-    if (gotoMap) row.querySelector('.choiceGotoMap').value = gotoMap;
-    if (gotoX !== '') row.querySelector('.choiceGotoX').value = gotoX;
-    if (gotoY !== '') row.querySelector('.choiceGotoY').value = gotoY;
+    row.querySelector('.choiceGotoTarget').value = String(gotoTarget);
+    if (gotoMap) row.querySelector('.choiceGotoMap').value = String(gotoMap);
+    if (gotoX !== '') row.querySelector('.choiceGotoX').value = String(gotoX);
+    if (gotoY !== '') row.querySelector('.choiceGotoY').value = String(gotoY);
     if (gotoRel) row.querySelector('.choiceGotoRel').checked = true;
   }
   if (boardId || unboardId) {
     addAdv('doors');
-    if (boardId) row.querySelector('.choiceBoard').value = boardId;
-    if (unboardId) row.querySelector('.choiceUnboard').value = unboardId;
+    if (boardId) row.querySelector('.choiceBoard').value = String(boardId);
+    if (unboardId) row.querySelector('.choiceUnboard').value = String(unboardId);
   }
   if (lockId || unlockId || lockDur !== '') {
     addAdv('npcLock');
@@ -1803,7 +1802,7 @@ const ADV_HTML = {
       const el = row.querySelector('.choiceUnlockNPC');
       if (el) (el.dataset || (el.dataset = {})).sel = unlockId;
     }
-    if (lockDur !== '') row.querySelector('.choiceLockDuration').value = lockDur;
+    if (lockDur !== '') row.querySelector('.choiceLockDuration').value = String(lockDur);
   }
   if (colorNpc || colorHex) {
     addAdv('npcColor');
@@ -1811,23 +1810,23 @@ const ADV_HTML = {
       const el = row.querySelector('.choiceColorNPC');
       if (el) (el.dataset || (el.dataset = {})).sel = colorNpc;
     }
-    if (colorHex) row.querySelector('.choiceNPCColor').value = colorHex;
+    if (colorHex) row.querySelector('.choiceNPCColor').value = String(colorHex);
   }
   if (setFlagName) {
     addAdv('flagEff');
-    row.querySelector('.choiceSetFlagName').value = setFlagName;
-    row.querySelector('.choiceSetFlagOp').value = setFlagOp;
-    if (setFlagVal !== '') row.querySelector('.choiceSetFlagValue').value = setFlagVal;
+    row.querySelector('.choiceSetFlagName').value = String(setFlagName);
+    row.querySelector('.choiceSetFlagOp').value = String(setFlagOp);
+    if (setFlagVal !== '') row.querySelector('.choiceSetFlagValue').value = String(setFlagVal);
   }
   if (spawnTemplate) {
     addAdv('spawn');
-    row.querySelector('.choiceSpawnTemplate').value = spawnTemplate;
-    if (spawnX !== '') row.querySelector('.choiceSpawnX').value = spawnX;
-    if (spawnY !== '') row.querySelector('.choiceSpawnY').value = spawnY;
+    row.querySelector('.choiceSpawnTemplate').value = String(spawnTemplate);
+    if (spawnX !== '') row.querySelector('.choiceSpawnX').value = String(spawnX);
+    if (spawnY !== '') row.querySelector('.choiceSpawnY').value = String(spawnY);
   }
   if (q) {
     addAdv('quest');
-    row.querySelector('.choiceQ').value = q;
+    row.querySelector('.choiceQ').value = String(q);
   }
   if (once) {
     addAdv('once');
@@ -1835,15 +1834,15 @@ const ADV_HTML = {
   }
   if (ifOnceNode || ifOnceLabel || ifOnceUsed) {
     addAdv('ifOnce');
-    row.querySelector('.choiceIfOnceNode').value = ifOnceNode;
-    row.querySelector('.choiceIfOnceLabel').value = ifOnceLabel;
+    row.querySelector('.choiceIfOnceNode').value = String(ifOnceNode);
+    row.querySelector('.choiceIfOnceLabel').value = String(ifOnceLabel);
     if (ifOnceUsed) row.querySelector('.choiceIfOnceUsed').checked = true;
   }
   if (flag) {
     addAdv('condition');
-    row.querySelector('.choiceFlag').value = flag;
-    row.querySelector('.choiceOp').value = op;
-    row.querySelector('.choiceVal').value = val;
+    row.querySelector('.choiceFlag').value = String(flag);
+    row.querySelector('.choiceOp').value = String(op);
+    row.querySelector('.choiceVal').value = String(val);
   }
   const toSel = row.querySelector('.choiceTo');
   toSel.addEventListener('change', () => { if (toSel.value === '[new]') updateTreeData(); });
@@ -2170,7 +2169,7 @@ function updateTreeData() {
     (newTree[id].choices || []).forEach(c => { if (c.to) visit(c.to); });
   };
   visit('start');
-  if (document.getElementById('npcLocked').checked) visit('locked');
+  if ((document.getElementById('npcLocked') as HTMLInputElement).checked) visit('locked');
 
   const orphans = [];
   Object.entries(nodeRefs).forEach(([id, nodeEl]) => {
@@ -2187,7 +2186,7 @@ function updateTreeData() {
 }
 
 function loadTreeEditor() {
-  let txt = document.getElementById('npcTree').value.trim();
+  let txt = (document.getElementById('npcTree') as HTMLTextAreaElement | HTMLInputElement).value.trim();
   let tree;
   try { tree = txt ? JSON.parse(txt) : {}; } catch (e) { tree = {}; }
   setTreeData(tree);
@@ -2196,13 +2195,13 @@ function loadTreeEditor() {
 }
 
 function openDialogEditor() {
-  document.getElementById('dialogModal').classList.add('shown');
+  (document.getElementById('dialogModal') as HTMLElement).classList.add('shown');
   renderTreeEditor();
 }
 
 function closeDialogEditor() {
   updateTreeData();
-  document.getElementById('dialogModal').classList.remove('shown');
+  (document.getElementById('dialogModal') as HTMLElement).classList.remove('shown');
   const dlgEl = document.getElementById('npcDialog');
   const tree = getTreeData();
   if (!dlgEl.value.trim()) dlgEl.value = tree.start?.text || '';
@@ -2211,7 +2210,7 @@ function closeDialogEditor() {
 
 function toggleQuestDialogBtn() {
   const btn = document.getElementById('genQuestDialog');
-  const sel = document.getElementById('npcQuests');
+  const sel = (document.getElementById('npcQuests') as HTMLSelectElement);
   if (!btn || !sel) return;
   const count = sel.selectedOptions ? sel.selectedOptions.length : 0;
   btn.style.display = count ? 'block' : 'none';
@@ -2227,25 +2226,25 @@ function addNode() {
 }
 
 function generateQuestTree() {
-  const sel = document.getElementById('npcQuests');
+  const sel = (document.getElementById('npcQuests') as HTMLSelectElement);
   if (!sel) return;
   const opts = sel.selectedOptions || [];
   const quest = opts[0]?.value?.trim();
   if (!quest) return;
-  const dialogLines = document.getElementById('npcDialog').value.trim().split('\n');
+  const dialogLines = (document.getElementById('npcDialog') as HTMLTextAreaElement | HTMLInputElement).value.trim().split('\n');
   const dialog = dialogLines[0] || '';
-  const accept = document.getElementById('npcAccept').value.trim();
-  const turnin = document.getElementById('npcTurnin').value.trim();
+  const accept = (document.getElementById('npcAccept') as HTMLInputElement).value.trim();
+  const turnin = (document.getElementById('npcTurnin') as HTMLInputElement).value.trim();
   const tree = { start: { text: dialog } };
   if (accept) tree.accept = { text: accept };
   if (turnin) tree.do_turnin = { text: turnin };
-  document.getElementById('npcTree').value = JSON.stringify(tree, null, 2);
+  (document.getElementById('npcTree') as HTMLTextAreaElement | HTMLInputElement).value = String(JSON.stringify(tree, null, 2));
   loadTreeEditor();
 }
 
 function toggleQuestTextWrap() {
   const wrap = document.getElementById('questTextWrap');
-  const sel = document.getElementById('npcQuests');
+  const sel = (document.getElementById('npcQuests') as HTMLSelectElement);
   if (!wrap || !sel) return;
   const count = sel.selectedOptions ? sel.selectedOptions.length : 0;
   wrap.style.display = count ? 'block' : 'none';
@@ -2284,7 +2283,7 @@ function loadPersonaFields(personaId) {
   const id = personaId || document.getElementById('itemPersonaId')?.value?.trim() || '';
   const labelEl = document.getElementById('itemPersonaLabel');
   const pathEl = document.getElementById('itemPersonaPortraitPath');
-  const data = (moduleData.personas || {})[id] || {};
+  const data = ((moduleData.personas || {})[id] || {}) as any;
   if (labelEl) labelEl.value = data.label || '';
   const stored = data.portrait || '';
   const idx = personaPortraits.indexOf(stored);
@@ -2309,7 +2308,7 @@ function updatePersonaSection() {
   const show = tagList.includes('mask') || !!personaId;
   wrap.style.display = show ? 'block' : 'none';
 }
-function applyCombatTree(tree) {
+function applyCombatTree(tree: any) {
   tree.start = tree.start || { text: '', choices: [] };
   tree.start.choices = Array.isArray(tree.start.choices) ? tree.start.choices : [];
   if (!tree.start.choices.some(c => c?.to === 'do_fight'))
@@ -2318,14 +2317,14 @@ function applyCombatTree(tree) {
   tree.do_fight.choices = Array.isArray(tree.do_fight.choices) ? tree.do_fight.choices : [];
   if (!tree.do_fight.choices.length) tree.do_fight.choices.push({ label: '(Continue)', to: 'bye' });
 }
-function removeCombatTree(tree) {
+function removeCombatTree(tree: any) {
   if (tree.start && Array.isArray(tree.start.choices))
     tree.start.choices = tree.start.choices.filter(c => c.to !== 'do_fight');
   delete tree.do_fight;
 }
 
 function onLockedToggle() {
-  if (document.getElementById('npcLocked').checked) {
+  if ((document.getElementById('npcLocked') as HTMLInputElement).checked) {
     const tree = getTreeData();
     if (!tree.start) tree.start = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
     if (!tree.locked) tree.locked = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
@@ -2335,23 +2334,23 @@ function onLockedToggle() {
   updateTreeData();
 }
 function updateNPCOptSections() {
-  document.getElementById('combatOpts').style.display =
-    document.getElementById('npcCombat').checked ? 'block' : 'none';
-  document.getElementById('shopOpts').style.display =
-    document.getElementById('npcShop').checked ? 'block' : 'none';
-  document.getElementById('revealOpts').style.display =
-    document.getElementById('npcHidden').checked ? 'block' : 'none';
-  document.getElementById('trainerOpts').style.display =
-    document.getElementById('npcTrainer').checked ? 'block' : 'none';
+  (document.getElementById('combatOpts') as HTMLElement).style.display =
+    (document.getElementById('npcCombat') as HTMLInputElement).checked ? 'block' : 'none';
+  (document.getElementById('shopOpts') as HTMLElement).style.display =
+    (document.getElementById('npcShop') as HTMLInputElement).checked ? 'block' : 'none';
+  (document.getElementById('revealOpts') as HTMLElement).style.display =
+    (document.getElementById('npcHidden') as HTMLInputElement).checked ? 'block' : 'none';
+  (document.getElementById('trainerOpts') as HTMLElement).style.display =
+    (document.getElementById('npcTrainer') as HTMLInputElement).checked ? 'block' : 'none';
 }
 
 function updateColorOverride(){
   const wrap = document.getElementById('npcColorWrap');
-  wrap.style.display = document.getElementById('npcColorOverride').checked ? 'block' : 'none';
+  wrap.style.display = (document.getElementById('npcColorOverride') as HTMLInputElement).checked ? 'block' : 'none';
 }
 
 function updatePatrolSection() {
-  const patrol = document.getElementById('npcPatrol').checked;
+  const patrol = (document.getElementById('npcPatrol') as HTMLInputElement).checked;
   const loopWrap = document.getElementById('npcLoopPts');
   const addBtn = document.getElementById('addLoopPt');
   if (loopWrap) loopWrap.style.display = patrol ? 'block' : 'none';
@@ -2413,9 +2412,9 @@ if (loopWrap) {
   });
 }
 function updateFlagBuilder() {
-  const type = document.getElementById('npcFlagType').value;
-  document.getElementById('revealVisit').style.display = type === 'visits' ? 'block' : 'none';
-  document.getElementById('revealParty').style.display = type === 'party' ? 'block' : 'none';
+  const type = (document.getElementById('npcFlagType') as HTMLInputElement | HTMLSelectElement).value;
+  (document.getElementById('revealVisit') as HTMLElement).style.display = type === 'visits' ? 'block' : 'none';
+  (document.getElementById('revealParty') as HTMLElement).style.display = type === 'party' ? 'block' : 'none';
 }
 function gatherEventFlags() {
   const flags = new Set();
@@ -2434,20 +2433,20 @@ function populateFlagList() {
   if (choiceList) choiceList.innerHTML = flags;
 }
 function getRevealFlag() {
-  const type = document.getElementById('npcFlagType').value;
+  const type = (document.getElementById('npcFlagType') as HTMLInputElement | HTMLSelectElement).value;
   if (type === 'visits') {
-    const map = document.getElementById('npcFlagMap').value.trim() || 'world';
-    const x = parseInt(document.getElementById('npcFlagX').value, 10) || 0;
-    const y = parseInt(document.getElementById('npcFlagY').value, 10) || 0;
+    const map = (document.getElementById('npcFlagMap') as HTMLInputElement | HTMLSelectElement).value.trim() || 'world';
+    const x = parseInt((document.getElementById('npcFlagX') as HTMLInputElement).value, 10) || 0;
+    const y = parseInt((document.getElementById('npcFlagY') as HTMLInputElement).value, 10) || 0;
     return `visits@${map}@${x},${y}`;
   }
   if (type === 'party') {
-    return document.getElementById('npcFlagName').value.trim();
+    return (document.getElementById('npcFlagName') as HTMLInputElement).value.trim();
   }
   return '';
 }
 function showNPCEditor(show) {
-  document.getElementById('npcEditor').style.display = show ? 'block' : 'none';
+  (document.getElementById('npcEditor') as HTMLElement).style.display = show ? 'block' : 'none';
   if (!show) {
     updateNpcMapBanner('', false);
     canvas?.classList?.remove('map-select');
@@ -2646,7 +2645,7 @@ function setupNpcSections() {
       editor.insertBefore(frag, editor.firstChild);
     } else {
       for (let i = sectionNodes.length - 1; i >= 0; i -= 1) {
-        const node = sectionNodes[i];
+        const node: any = sectionNodes[i];
         if (typeof editor.insertBefore === 'function') {
           editor.insertBefore(node, editor.firstChild);
         } else if (typeof editor.prepend === 'function') {
@@ -2683,7 +2682,7 @@ function updateNpcCoordinateState() {
 function cloneNpcData(npc) {
   try { return JSON.parse(JSON.stringify(npc || {})); } catch (err) { return npc ? { ...npc } : null; }
 }
-function validateNpcForm(options = {}) {
+function validateNpcForm(options: { silent?: boolean } = {}) {
   const { silent = false } = options;
   const idEl = document.getElementById('npcId');
   const nameEl = document.getElementById('npcName');
@@ -2782,63 +2781,63 @@ function cancelNpcCoordinateSelection() {
 }
 function startNewNPC() {
   editNPCIdx = -1;
-  document.getElementById('npcId').value = nextId('npc', moduleData.npcs);
-  document.getElementById('npcName').value = '';
-  document.getElementById('npcTitle').value = '';
-  document.getElementById('npcDesc').value = '';
-  document.getElementById('npcColor').value = '#9ef7a0';
-  document.getElementById('npcColorOverride').checked = false;
+  (document.getElementById('npcId') as HTMLInputElement).value = String(nextId('npc', moduleData.npcs));
+  (document.getElementById('npcName') as HTMLInputElement).value = '';
+  (document.getElementById('npcTitle') as HTMLInputElement).value = '';
+  (document.getElementById('npcDesc') as HTMLTextAreaElement | HTMLInputElement).value = '';
+  (document.getElementById('npcColor') as HTMLInputElement).value = '#9ef7a0';
+  (document.getElementById('npcColorOverride') as HTMLInputElement).checked = false;
   updateColorOverride();
-  document.getElementById('npcSymbol').value = '!';
+  (document.getElementById('npcSymbol') as HTMLInputElement).value = '!';
   populateMapDropdown(document.getElementById('npcMap'), '');
-  document.getElementById('npcX').value = '';
-  document.getElementById('npcY').value = '';
+  (document.getElementById('npcX') as HTMLInputElement).value = '';
+  (document.getElementById('npcY') as HTMLInputElement).value = '';
   renderLoopFields([]);
-  document.getElementById('npcPatrol').checked = false;
+  (document.getElementById('npcPatrol') as HTMLInputElement).checked = false;
   updatePatrolSection();
   npcPortraitIndex = 0;
   npcPortraitPath = '';
   setNpcPortrait();
-  document.getElementById('npcPortraitLock').checked = true;
-  document.getElementById('npcHidden').checked = false;
-  document.getElementById('npcLocked').checked = false;
-  document.getElementById('npcInanimate').checked = false;
-  document.getElementById('npcFlagType').value = 'visits';
+  (document.getElementById('npcPortraitLock') as HTMLInputElement).checked = true;
+  (document.getElementById('npcHidden') as HTMLInputElement).checked = false;
+  (document.getElementById('npcLocked') as HTMLInputElement).checked = false;
+  (document.getElementById('npcInanimate') as HTMLInputElement).checked = false;
+  (document.getElementById('npcFlagType') as HTMLInputElement | HTMLSelectElement).value = 'visits';
   populateMapDropdown(document.getElementById('npcFlagMap'), 'world');
-  document.getElementById('npcFlagX').value = 0;
-  document.getElementById('npcFlagY').value = 0;
-  document.getElementById('npcFlagName').value = '';
-  document.getElementById('npcOp').value = '>=';
-  document.getElementById('npcVal').value = 1;
+  (document.getElementById('npcFlagX') as HTMLInputElement).value = String(0);
+  (document.getElementById('npcFlagY') as HTMLInputElement).value = String(0);
+  (document.getElementById('npcFlagName') as HTMLInputElement).value = '';
+  (document.getElementById('npcOp') as HTMLInputElement | HTMLSelectElement).value = '>=';
+  (document.getElementById('npcVal') as HTMLInputElement).value = String(1);
   populateFlagList();
   updateFlagBuilder();
-  document.getElementById('npcDialog').value = '';
-  const qs = document.getElementById('npcQuests');
+  (document.getElementById('npcDialog') as HTMLTextAreaElement | HTMLInputElement).value = '';
+  const qs = (document.getElementById('npcQuests') as HTMLSelectElement);
   if (qs) Array.from(qs.options || []).forEach(o => o.selected = false);
-  document.getElementById('npcAccept').value = 'Good luck.';
-  document.getElementById('npcTurnin').value = 'Thanks for helping.';
+  (document.getElementById('npcAccept') as HTMLInputElement).value = 'Good luck.';
+  (document.getElementById('npcTurnin') as HTMLInputElement).value = 'Thanks for helping.';
   npcLastCoords = null;
   updateNpcCoordinateState();
   toggleQuestTextWrap();
-  document.getElementById('npcTree').value = '';
-  document.getElementById('npcHP').value = 5;
-  document.getElementById('npcATK').value = 0;
-  document.getElementById('npcDEF').value = 0;
-  document.getElementById('npcLoot').value = '';
-  document.getElementById('npcLootChance').value = '';
-  document.getElementById('npcBoss').checked = false;
-  document.getElementById('npcSpecialCue').value = '';
-  document.getElementById('npcSpecialDmg').value = '';
-  document.getElementById('npcSpecialDelay').value = '';
-  document.getElementById('npcCombat').checked = false;
-  document.getElementById('npcShop').checked = false;
-  document.getElementById('npcWorkbench').checked = false;
-  document.getElementById('shopMarkup').value = 2;
-  document.getElementById('shopRefresh').value = 0;
-  document.getElementById('npcTrainer').checked = false;
-  document.getElementById('npcTrainerType').value = 'power';
+  (document.getElementById('npcTree') as HTMLTextAreaElement | HTMLInputElement).value = '';
+  (document.getElementById('npcHP') as HTMLInputElement).value = String(5);
+  (document.getElementById('npcATK') as HTMLInputElement).value = String(0);
+  (document.getElementById('npcDEF') as HTMLInputElement).value = String(0);
+  (document.getElementById('npcLoot') as HTMLInputElement).value = '';
+  (document.getElementById('npcLootChance') as HTMLInputElement).value = '';
+  (document.getElementById('npcBoss') as HTMLInputElement).checked = false;
+  (document.getElementById('npcSpecialCue') as HTMLInputElement).value = '';
+  (document.getElementById('npcSpecialDmg') as HTMLInputElement).value = '';
+  (document.getElementById('npcSpecialDelay') as HTMLInputElement).value = '';
+  (document.getElementById('npcCombat') as HTMLInputElement).checked = false;
+  (document.getElementById('npcShop') as HTMLInputElement).checked = false;
+  (document.getElementById('npcWorkbench') as HTMLInputElement).checked = false;
+  (document.getElementById('shopMarkup') as HTMLInputElement | HTMLSelectElement).value = String(2);
+  (document.getElementById('shopRefresh') as HTMLInputElement | HTMLSelectElement).value = String(0);
+  (document.getElementById('npcTrainer') as HTMLInputElement).checked = false;
+  (document.getElementById('npcTrainerType') as HTMLInputElement | HTMLSelectElement).value = 'power';
   updateNPCOptSections();
-  document.getElementById('delNPC').style.display = 'none';
+  (document.getElementById('delNPC') as HTMLElement).style.display = 'none';
   const saveBtn = document.getElementById('saveNPC');
   if (saveBtn) {
     saveBtn.disabled = true;
@@ -2862,7 +2861,7 @@ function startNewNPC() {
 }
 
 // Gather NPC form fields into an object
-function ensureTrainerChoiceEffect(tree, trainerId) {
+function ensureTrainerChoiceEffect(tree: any, trainerId: any) {
   if (!tree?.start) return;
   const start = tree.start;
   start.choices = Array.isArray(start.choices) ? start.choices : [];
@@ -2881,7 +2880,7 @@ function ensureTrainerChoiceEffect(tree, trainerId) {
   choice.effects = effects;
 }
 
-function removeTrainerChoiceEffect(tree) {
+function removeTrainerChoiceEffect(tree: any) {
   const choice = tree?.start?.choices?.find(c => c?.to === 'train');
   if (!choice || !Array.isArray(choice.effects)) return;
   const remaining = choice.effects.filter(e => e && e.effect !== 'showTrainer');
@@ -2890,16 +2889,16 @@ function removeTrainerChoiceEffect(tree) {
 }
 
 function collectNPCFromForm() {
-  const id = document.getElementById('npcId').value.trim();
-  const name = document.getElementById('npcName').value.trim();
-  const title = document.getElementById('npcTitle').value.trim();
-  const desc = document.getElementById('npcDesc').value.trim();
-  const overrideColor = document.getElementById('npcColorOverride').checked;
-  const color = document.getElementById('npcColor').value.trim() || '#fff';
-  const symbol = document.getElementById('npcSymbol').value.trim().charAt(0) || '!';
-  const map = document.getElementById('npcMap').value.trim() || 'world';
-  const rawX = document.getElementById('npcX').value;
-  const rawY = document.getElementById('npcY').value;
+  const id = (document.getElementById('npcId') as HTMLInputElement).value.trim();
+  const name = (document.getElementById('npcName') as HTMLInputElement).value.trim();
+  const title = (document.getElementById('npcTitle') as HTMLInputElement).value.trim();
+  const desc = (document.getElementById('npcDesc') as HTMLTextAreaElement | HTMLInputElement).value.trim();
+  const overrideColor = (document.getElementById('npcColorOverride') as HTMLInputElement).checked;
+  const color = (document.getElementById('npcColor') as HTMLInputElement).value.trim() || '#fff';
+  const symbol = (document.getElementById('npcSymbol') as HTMLInputElement).value.trim().charAt(0) || '!';
+  const map = (document.getElementById('npcMap') as HTMLInputElement | HTMLSelectElement).value.trim() || 'world';
+  const rawX = (document.getElementById('npcX') as HTMLInputElement).value;
+  const rawY = (document.getElementById('npcY') as HTMLInputElement).value;
   const parsedX = Number.parseInt(rawX, 10);
   const parsedY = Number.parseInt(rawY, 10);
   let x = Number.isFinite(parsedX) ? parsedX : undefined;
@@ -2909,27 +2908,27 @@ function collectNPCFromForm() {
   } else if (npcLastCoords && npcLastCoords.map === map) {
     ({ x, y } = npcLastCoords);
   }
-  const dialogLines = document.getElementById('npcDialog').value.trim().split('\n');
-  const questSel = document.getElementById('npcQuests');
+  const dialogLines = (document.getElementById('npcDialog') as HTMLTextAreaElement | HTMLInputElement).value.trim().split('\n');
+  const questSel = (document.getElementById('npcQuests') as HTMLSelectElement);
   const questIds = questSel ? Array.from(questSel.selectedOptions || []).map(o => o.value.trim()).filter(Boolean) : [];
-  const accept = document.getElementById('npcAccept').value.trim();
-  const turnin = document.getElementById('npcTurnin').value.trim();
-  const combat = document.getElementById('npcCombat').checked;
-  const shop = document.getElementById('npcShop').checked;
-  const workbench = document.getElementById('npcWorkbench').checked;
-  const shopMarkup = parseInt(document.getElementById('shopMarkup').value, 10) || 2;
-  const shopRefresh = parseInt(document.getElementById('shopRefresh').value, 10) || 0;
-  const trainer = document.getElementById('npcTrainer').checked ?
-    document.getElementById('npcTrainerType').value.trim() : '';
-  const hidden = document.getElementById('npcHidden').checked;
-  const inanimate = document.getElementById('npcInanimate').checked;
-  const locked = document.getElementById('npcLocked').checked;
-  const portraitLock = document.getElementById('npcPortraitLock').checked;
+  const accept = (document.getElementById('npcAccept') as HTMLInputElement).value.trim();
+  const turnin = (document.getElementById('npcTurnin') as HTMLInputElement).value.trim();
+  const combat = (document.getElementById('npcCombat') as HTMLInputElement).checked;
+  const shop = (document.getElementById('npcShop') as HTMLInputElement).checked;
+  const workbench = (document.getElementById('npcWorkbench') as HTMLInputElement).checked;
+  const shopMarkup = parseInt((document.getElementById('shopMarkup') as HTMLInputElement | HTMLSelectElement).value, 10) || 2;
+  const shopRefresh = parseInt((document.getElementById('shopRefresh') as HTMLInputElement | HTMLSelectElement).value, 10) || 0;
+  const trainer = (document.getElementById('npcTrainer') as HTMLInputElement).checked ?
+    (document.getElementById('npcTrainerType') as HTMLInputElement | HTMLSelectElement).value.trim() : '';
+  const hidden = (document.getElementById('npcHidden') as HTMLInputElement).checked;
+  const inanimate = (document.getElementById('npcInanimate') as HTMLInputElement).checked;
+  const locked = (document.getElementById('npcLocked') as HTMLInputElement).checked;
+  const portraitLock = (document.getElementById('npcPortraitLock') as HTMLInputElement).checked;
   const flag = getRevealFlag();
-  const op = document.getElementById('npcOp').value;
-  const val = parseInt(document.getElementById('npcVal').value, 10) || 0;
-  let tree = null;
-  const treeTxt = document.getElementById('npcTree').value.trim();
+  const op = (document.getElementById('npcOp') as HTMLInputElement | HTMLSelectElement).value;
+  const val = parseInt((document.getElementById('npcVal') as HTMLInputElement).value, 10) || 0;
+  let tree: any = null;
+  const treeTxt = (document.getElementById('npcTree') as HTMLTextAreaElement | HTMLInputElement).value.trim();
   if (treeTxt) { try { tree = JSON.parse(treeTxt); } catch (e) { tree = null; } }
   const firstQuest = questIds[0];
   const startDialog = dialogLines[0] || '';
@@ -2984,7 +2983,7 @@ function collectNPCFromForm() {
   if (trainer) ensureTrainerFn(tree, trainer);
   else removeTrainerFn(tree);
   if (combat) applyCombatTree(tree); else removeCombatTree(tree);
-  document.getElementById('npcTree').value = JSON.stringify(tree, null, 2);
+  (document.getElementById('npcTree') as HTMLTextAreaElement | HTMLInputElement).value = String(JSON.stringify(tree, null, 2));
   loadTreeEditor();
 
   if (!Number.isFinite(x)) x = 0;
@@ -2995,21 +2994,21 @@ function collectNPCFromForm() {
   else if (firstQuest) npc.questId = firstQuest;
   if (dialogLines.length > 1) npc.dialogs = dialogLines;
   else if (dialogLines[0]) npc.dialog = dialogLines[0];
-  if (document.getElementById('npcPatrol').checked) {
+  if ((document.getElementById('npcPatrol') as HTMLInputElement).checked) {
     const pts = gatherLoopFields();
     if (pts.length >= 2) npc.loop = pts;
   }
   if (combat) {
-    const HP = parseInt(document.getElementById('npcHP').value, 10) || 1;
-    const ATK = parseInt(document.getElementById('npcATK').value, 10) || 0;
-    const DEF = parseInt(document.getElementById('npcDEF').value, 10) || 0;
-    const loot = document.getElementById('npcLoot').value.trim();
+    const HP = parseInt((document.getElementById('npcHP') as HTMLInputElement).value, 10) || 1;
+    const ATK = parseInt((document.getElementById('npcATK') as HTMLInputElement).value, 10) || 0;
+    const DEF = parseInt((document.getElementById('npcDEF') as HTMLInputElement).value, 10) || 0;
+    const loot = (document.getElementById('npcLoot') as HTMLInputElement).value.trim();
     const lootChanceEl = document.getElementById('npcLootChance');
     const lootChanceInput = typeof lootChanceEl?.value === 'string' ? lootChanceEl.value.trim() : '';
-    const boss = document.getElementById('npcBoss').checked;
-    const cue = document.getElementById('npcSpecialCue').value.trim();
-    const dmg = parseInt(document.getElementById('npcSpecialDmg').value, 10);
-    const delay = parseInt(document.getElementById('npcSpecialDelay').value, 10);
+    const boss = (document.getElementById('npcBoss') as HTMLInputElement).checked;
+    const cue = (document.getElementById('npcSpecialCue') as HTMLInputElement).value.trim();
+    const dmg = parseInt((document.getElementById('npcSpecialDmg') as HTMLInputElement).value, 10);
+    const delay = parseInt((document.getElementById('npcSpecialDelay') as HTMLInputElement).value, 10);
     npc.combat = { HP, ATK, DEF };
     if (loot) npc.combat.loot = loot;
     if (lootChanceInput !== '') {
@@ -3106,7 +3105,7 @@ function discardNPC() {
     saveBtn.disabled = true;
     saveBtn.textContent = 'Save NPC';
   }
-  document.getElementById('delNPC').style.display = 'none';
+  (document.getElementById('delNPC') as HTMLElement).style.display = 'none';
   setNpcNotice('', 'info');
   selectedObj = null;
   drawWorld();
@@ -3123,22 +3122,22 @@ function expandHex(hex) {
 function editNPC(i) {
   const n = moduleData.npcs[i];
   showMap(n.map);
-  focusMap(n.x, n.y);
+  focusMapACK(n.x, n.y);
   editNPCIdx = i;
-  document.getElementById('npcId').value = n.id;
-  document.getElementById('npcName').value = n.name;
-  document.getElementById('npcTitle').value = n.title || '';
-  document.getElementById('npcDesc').value = n.desc || '';
-  document.getElementById('npcColor').value = expandHex(n.color || '#9ef7a0');
-  document.getElementById('npcColorOverride').checked = !!n.overrideColor;
+  (document.getElementById('npcId') as HTMLInputElement).value = String(n.id);
+  (document.getElementById('npcName') as HTMLInputElement).value = String(n.name);
+  (document.getElementById('npcTitle') as HTMLInputElement).value = String(n.title || '');
+  (document.getElementById('npcDesc') as HTMLTextAreaElement | HTMLInputElement).value = String(n.desc || '');
+  (document.getElementById('npcColor') as HTMLInputElement).value = String(expandHex(n.color || '#9ef7a0'));
+  (document.getElementById('npcColorOverride') as HTMLInputElement).checked = !!n.overrideColor;
   updateColorOverride();
-  document.getElementById('npcSymbol').value = n.symbol || '!';
+  (document.getElementById('npcSymbol') as HTMLInputElement).value = String(n.symbol || '!');
   populateMapDropdown(document.getElementById('npcMap'), n.map);
-  document.getElementById('npcX').value = n.x;
-  document.getElementById('npcY').value = n.y;
+  (document.getElementById('npcX') as HTMLInputElement).value = String(n.x);
+  (document.getElementById('npcY') as HTMLInputElement).value = String(n.y);
   npcLastCoords = { map: n.map || 'world', x: n.x, y: n.y };
   renderLoopFields(n.loop || []);
-  document.getElementById('npcPatrol').checked = Array.isArray(n.loop) && n.loop.length >= 2;
+  (document.getElementById('npcPatrol') as HTMLInputElement).checked = Array.isArray(n.loop) && n.loop.length >= 2;
   updatePatrolSection();
   npcPortraitIndex = npcPortraits.indexOf(n.portraitSheet);
   if (npcPortraitIndex < 0) {
@@ -3148,64 +3147,64 @@ function editNPC(i) {
     npcPortraitPath = '';
   }
   setNpcPortrait();
-  document.getElementById('npcPortraitLock').checked = n.portraitLock !== false;
-  document.getElementById('npcHidden').checked = !!n.hidden;
-  document.getElementById('npcLocked').checked = !!n.locked;
-  document.getElementById('npcInanimate').checked = !!n.inanimate;
+  (document.getElementById('npcPortraitLock') as HTMLInputElement).checked = n.portraitLock !== false;
+  (document.getElementById('npcHidden') as HTMLInputElement).checked = !!n.hidden;
+  (document.getElementById('npcLocked') as HTMLInputElement).checked = !!n.locked;
+  (document.getElementById('npcInanimate') as HTMLInputElement).checked = !!n.inanimate;
   let flagMap = 'world';
   if (n.reveal?.flag?.startsWith('visits@')) {
-    document.getElementById('npcFlagType').value = 'visits';
+    (document.getElementById('npcFlagType') as HTMLInputElement | HTMLSelectElement).value = 'visits';
     const parts = n.reveal.flag.split('@');
     flagMap = parts[1] || 'world';
     const [fx, fy] = (parts[2] || '0,0').split(',');
-    document.getElementById('npcFlagX').value = fx;
-    document.getElementById('npcFlagY').value = fy;
+    (document.getElementById('npcFlagX') as HTMLInputElement).value = String(fx);
+    (document.getElementById('npcFlagY') as HTMLInputElement).value = String(fy);
   } else {
-    document.getElementById('npcFlagType').value = 'party';
-    document.getElementById('npcFlagName').value = n.reveal?.flag || '';
+    (document.getElementById('npcFlagType') as HTMLInputElement | HTMLSelectElement).value = 'party';
+    (document.getElementById('npcFlagName') as HTMLInputElement).value = String(n.reveal?.flag || '');
   }
   populateMapDropdown(document.getElementById('npcFlagMap'), flagMap);
-  document.getElementById('npcOp').value = n.reveal?.op || '>=';
-  document.getElementById('npcVal').value = n.reveal?.value ?? 1;
+  (document.getElementById('npcOp') as HTMLInputElement | HTMLSelectElement).value = String(n.reveal?.op || '>=');
+  (document.getElementById('npcVal') as HTMLInputElement).value = String(n.reveal?.value ?? 1);
   populateFlagList();
   updateFlagBuilder();
-  document.getElementById('npcDialog').value = Array.isArray(n.dialogs) ? n.dialogs.join('\n') : (n.dialog || n.tree?.start?.text || '');
-  const qs = document.getElementById('npcQuests');
+  (document.getElementById('npcDialog') as HTMLTextAreaElement | HTMLInputElement).value = String(Array.isArray(n.dialogs) ? n.dialogs.join('\n') : (n.dialog || n.tree?.start?.text || ''));
+  const qs = (document.getElementById('npcQuests') as HTMLSelectElement);
   if (qs) {
     Array.from(qs.options || []).forEach(o => {
       o.selected = Array.isArray(n.quests) ? n.quests.includes(o.value) : n.questId === o.value;
     });
   }
-  document.getElementById('npcAccept').value = n.tree?.accept?.text || 'Good luck.';
-  document.getElementById('npcTurnin').value = n.tree?.do_turnin?.text || 'Thanks for helping.';
+  (document.getElementById('npcAccept') as HTMLInputElement).value = String(n.tree?.accept?.text || 'Good luck.');
+  (document.getElementById('npcTurnin') as HTMLInputElement).value = String(n.tree?.do_turnin?.text || 'Thanks for helping.');
   toggleQuestTextWrap();
-  document.getElementById('npcTree').value = JSON.stringify(n.tree, null, 2);
-  document.getElementById('npcHP').value = n.combat?.HP ?? 1;
-  document.getElementById('npcATK').value = n.combat?.ATK ?? 0;
-  document.getElementById('npcDEF').value = n.combat?.DEF ?? 0;
-  document.getElementById('npcLoot').value = n.combat?.loot || '';
+  (document.getElementById('npcTree') as HTMLTextAreaElement | HTMLInputElement).value = String(JSON.stringify(n.tree, null, 2));
+  (document.getElementById('npcHP') as HTMLInputElement).value = String(n.combat?.HP ?? 1);
+  (document.getElementById('npcATK') as HTMLInputElement).value = String(n.combat?.ATK ?? 0);
+  (document.getElementById('npcDEF') as HTMLInputElement).value = String(n.combat?.DEF ?? 0);
+  (document.getElementById('npcLoot') as HTMLInputElement).value = String(n.combat?.loot || '');
   const lootChanceEl = document.getElementById('npcLootChance');
   if (lootChanceEl) {
     lootChanceEl.value = n.combat?.lootChance != null ? String(Math.round(n.combat.lootChance * 100)) : '';
   }
-  document.getElementById('npcBoss').checked = !!n.combat?.boss;
-  document.getElementById('npcSpecialCue').value = n.combat?.special?.cue || '';
-  document.getElementById('npcSpecialDmg').value = n.combat?.special?.dmg ?? '';
-  document.getElementById('npcSpecialDelay').value = n.combat?.special?.delay ?? '';
-  document.getElementById('npcCombat').checked = !!n.combat;
-  document.getElementById('npcShop').checked = !!n.shop;
-  document.getElementById('npcWorkbench').checked = !!n.workbench;
-  document.getElementById('shopMarkup').value = n.shop ? n.shop.markup || 2 : 2;
-  document.getElementById('shopRefresh').value = n.shop ? n.shop.refresh || 0 : 0;
-  document.getElementById('npcTrainer').checked = !!n.trainer;
-  document.getElementById('npcTrainerType').value = n.trainer || 'power';
+  (document.getElementById('npcBoss') as HTMLInputElement).checked = !!n.combat?.boss;
+  (document.getElementById('npcSpecialCue') as HTMLInputElement).value = String(n.combat?.special?.cue || '');
+  (document.getElementById('npcSpecialDmg') as HTMLInputElement).value = String(n.combat?.special?.dmg ?? '');
+  (document.getElementById('npcSpecialDelay') as HTMLInputElement).value = String(n.combat?.special?.delay ?? '');
+  (document.getElementById('npcCombat') as HTMLInputElement).checked = !!n.combat;
+  (document.getElementById('npcShop') as HTMLInputElement).checked = !!n.shop;
+  (document.getElementById('npcWorkbench') as HTMLInputElement).checked = !!n.workbench;
+  (document.getElementById('shopMarkup') as HTMLInputElement | HTMLSelectElement).value = String(n.shop ? n.shop.markup || 2 : 2);
+  (document.getElementById('shopRefresh') as HTMLInputElement | HTMLSelectElement).value = String(n.shop ? n.shop.refresh || 0 : 0);
+  (document.getElementById('npcTrainer') as HTMLInputElement).checked = !!n.trainer;
+  (document.getElementById('npcTrainerType') as HTMLInputElement | HTMLSelectElement).value = String(n.trainer || 'power');
   updateNPCOptSections();
   const saveBtn = document.getElementById('saveNPC');
   if (saveBtn) {
     saveBtn.disabled = true;
     saveBtn.textContent = 'Save NPC';
   }
-  document.getElementById('delNPC').style.display = 'block';
+  (document.getElementById('delNPC') as HTMLElement).style.display = 'block';
   npcOriginal = cloneNpcData(n);
   npcDirty = false;
   updateNpcMapBanner('', false);
@@ -3246,7 +3245,7 @@ function deleteNPC() {
   confirmDialog('Delete this NPC?', () => {
     moduleData.npcs.splice(editNPCIdx, 1);
     editNPCIdx = -1;
-    document.getElementById('delNPC').style.display = 'none';
+    (document.getElementById('delNPC') as HTMLElement).style.display = 'none';
     const saveBtn = document.getElementById('saveNPC');
     if (saveBtn) {
       saveBtn.disabled = true;
@@ -3260,8 +3259,8 @@ function deleteNPC() {
     renderNPCList();
     selectedObj = null;
     drawWorld();
-    document.getElementById('npcId').value = nextId('npc', moduleData.npcs);
-    document.getElementById('npcDesc').value = '';
+    (document.getElementById('npcId') as HTMLInputElement).value = String(nextId('npc', moduleData.npcs));
+    (document.getElementById('npcDesc') as HTMLTextAreaElement | HTMLInputElement).value = '';
     loadTreeEditor();
     showNPCEditor(false);
     validateNpcForm({ silent: true });
@@ -3278,7 +3277,7 @@ function closeNPCEditor() {
     saveBtn.disabled = true;
     saveBtn.textContent = 'Save NPC';
   }
-  document.getElementById('delNPC').style.display = 'none';
+  (document.getElementById('delNPC') as HTMLElement).style.display = 'none';
   npcOriginal = null;
   npcDirty = false;
   updateNpcMapBanner('', false);
@@ -3289,28 +3288,28 @@ function closeNPCEditor() {
 
 // --- Items ---
 function showItemEditor(show) {
-  document.getElementById('itemEditor').style.display = show ? 'block' : 'none';
+  (document.getElementById('itemEditor') as HTMLElement).style.display = show ? 'block' : 'none';
 }
 
 function updateModsWrap() {
-  const type = document.getElementById('itemType').value;
+  const type = (document.getElementById('itemType') as HTMLInputElement | HTMLSelectElement).value;
   const isEquip = ['weapon', 'armor', 'trinket'].includes(type);
-  document.getElementById('modsWrap').style.display = isEquip ? 'block' : 'none';
-  const equipWrap = document.getElementById('itemEquip').parentElement;
+  (document.getElementById('modsWrap') as HTMLElement).style.display = isEquip ? 'block' : 'none';
+  const equipWrap = (document.getElementById('itemEquip') as HTMLElement).parentElement;
   if (equipWrap) equipWrap.style.display = isEquip ? 'block' : 'none';
-  if (!isEquip) document.getElementById('itemEquip').value = '';
+  if (!isEquip) (document.getElementById('itemEquip') as HTMLInputElement).value = '';
 }
 function updateUseWrap() {
-  const type = document.getElementById('itemUseType').value;
-  document.getElementById('itemUseAmtWrap').style.display = type === 'heal' ? 'block' : 'none';
+  const type = (document.getElementById('itemUseType') as HTMLInputElement | HTMLSelectElement).value;
+  (document.getElementById('itemUseAmtWrap') as HTMLElement).style.display = type === 'heal' ? 'block' : 'none';
   const boost = type === 'boost';
-  document.getElementById('itemBoostStatWrap').style.display = boost ? 'block' : 'none';
-  document.getElementById('itemBoostAmtWrap').style.display = boost ? 'block' : 'none';
-  document.getElementById('itemBoostDurWrap').style.display = boost ? 'block' : 'none';
-  document.getElementById('itemUseWrap').style.display = type ? 'block' : 'none';
+  (document.getElementById('itemBoostStatWrap') as HTMLElement).style.display = boost ? 'block' : 'none';
+  (document.getElementById('itemBoostAmtWrap') as HTMLElement).style.display = boost ? 'block' : 'none';
+  (document.getElementById('itemBoostDurWrap') as HTMLElement).style.display = boost ? 'block' : 'none';
+  (document.getElementById('itemUseWrap') as HTMLElement).style.display = type ? 'block' : 'none';
 }
 function updateItemMapWrap() {
-  const onMap = document.getElementById('itemOnMap').checked;
+  const onMap = (document.getElementById('itemOnMap') as HTMLInputElement).checked;
   const mapEl = document.getElementById('itemMap');
   populateMapDropdown(mapEl, mapEl.value || '');
   const mapWrap = document.getElementById('itemMapWrap');
@@ -3325,40 +3324,40 @@ function updateItemMapWrap() {
 }
 function startNewItem() {
   editItemIdx = -1;
-  document.getElementById('itemName').value = '';
-  document.getElementById('itemId').value = '';
-  document.getElementById('itemType').value = '';
-  document.getElementById('itemDesc').value = '';
-  document.getElementById('itemTags').value = '';
-  document.getElementById('itemNarrativeId').value = '';
-  document.getElementById('itemNarrativePrompt').value = '';
-  document.getElementById('itemMap').value = '';
-  document.getElementById('itemX').value = 0;
-  document.getElementById('itemY').value = 0;
-  document.getElementById('itemOnMap').checked = false;
+  (document.getElementById('itemName') as HTMLInputElement).value = '';
+  (document.getElementById('itemId') as HTMLInputElement).value = '';
+  (document.getElementById('itemType') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('itemDesc') as HTMLTextAreaElement | HTMLInputElement).value = '';
+  (document.getElementById('itemTags') as HTMLInputElement).value = '';
+  (document.getElementById('itemNarrativeId') as HTMLInputElement).value = '';
+  (document.getElementById('itemNarrativePrompt') as HTMLTextAreaElement | HTMLInputElement).value = '';
+  (document.getElementById('itemMap') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('itemX') as HTMLInputElement).value = String(0);
+  (document.getElementById('itemY') as HTMLInputElement).value = String(0);
+  (document.getElementById('itemOnMap') as HTMLInputElement).checked = false;
   resetPersonaFields();
   updateModsWrap();
   loadMods({});
-  document.getElementById('itemValue').value = 0;
-  document.getElementById('itemEquip').value = '';
-  document.getElementById('itemUseType').value = '';
-  document.getElementById('itemUseAmount').value = 0;
-  document.getElementById('itemBoostStat').value = '';
-  document.getElementById('itemBoostAmount').value = 0;
-  document.getElementById('itemBoostDuration').value = 0;
-  document.getElementById('itemUse').value = '';
-  document.getElementById('itemFuel').value = 0;
+  (document.getElementById('itemValue') as HTMLInputElement).value = String(0);
+  (document.getElementById('itemEquip') as HTMLInputElement).value = '';
+  (document.getElementById('itemUseType') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('itemUseAmount') as HTMLInputElement).value = String(0);
+  (document.getElementById('itemBoostStat') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('itemBoostAmount') as HTMLInputElement).value = String(0);
+  (document.getElementById('itemBoostDuration') as HTMLInputElement).value = String(0);
+  (document.getElementById('itemUse') as HTMLInputElement).value = '';
+  (document.getElementById('itemFuel') as HTMLInputElement).value = String(0);
   updateUseWrap();
   updateItemMapWrap();
-  document.getElementById('addItem').textContent = 'Add Item';
-  document.getElementById('cancelItem').style.display = 'none';
-  document.getElementById('delItem').style.display = 'none';
+  (document.getElementById('addItem') as HTMLElement).textContent = 'Add Item';
+  (document.getElementById('cancelItem') as HTMLElement).style.display = 'none';
+  (document.getElementById('delItem') as HTMLElement).style.display = 'none';
   placingType = null;
   placingPos = null;
   selectedObj = null;
   drawWorld();
   showItemEditor(true);
-  document.getElementById('itemName').focus();
+  (document.getElementById('itemName') as HTMLElement).focus();
 }
 
 function beginPlaceItem() {
@@ -3366,48 +3365,48 @@ function beginPlaceItem() {
   placingType = 'item';
   placingPos = null;
   placingCb = addItem;
-  document.getElementById('addItem').style.display = 'none';
-  document.getElementById('cancelItem').style.display = 'block';
+  (document.getElementById('addItem') as HTMLElement).style.display = 'none';
+  (document.getElementById('cancelItem') as HTMLElement).style.display = 'block';
   selectedObj = null;
   drawWorld();
 }
 function addItem() {
   const wasNew = editItemIdx < 0;
-  const name = document.getElementById('itemName').value.trim();
-  const id = document.getElementById('itemId').value.trim();
-  const type = document.getElementById('itemType').value.trim();
-  const desc = document.getElementById('itemDesc').value.trim();
-  const tags = document.getElementById('itemTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const name = (document.getElementById('itemName') as HTMLInputElement).value.trim();
+  const id = (document.getElementById('itemId') as HTMLInputElement).value.trim();
+  const type = (document.getElementById('itemType') as HTMLInputElement | HTMLSelectElement).value.trim();
+  const desc = (document.getElementById('itemDesc') as HTMLTextAreaElement | HTMLInputElement).value.trim();
+  const tags = (document.getElementById('itemTags') as HTMLInputElement).value.split(',').map(t=>t.trim()).filter(Boolean);
   collectKnownTags(tags);
   updateTagOptions();
-  const narrativeId = document.getElementById('itemNarrativeId').value.trim();
-  const narrativePrompt = document.getElementById('itemNarrativePrompt').value.trim();
-  const onMap = document.getElementById('itemOnMap').checked;
-  const map = onMap ? document.getElementById('itemMap').value.trim() : '';
-  const x = parseInt(document.getElementById('itemX').value, 10) || 0;
-  const y = parseInt(document.getElementById('itemY').value, 10) || 0;
+  const narrativeId = (document.getElementById('itemNarrativeId') as HTMLInputElement).value.trim();
+  const narrativePrompt = (document.getElementById('itemNarrativePrompt') as HTMLTextAreaElement | HTMLInputElement).value.trim();
+  const onMap = (document.getElementById('itemOnMap') as HTMLInputElement).checked;
+  const map = onMap ? (document.getElementById('itemMap') as HTMLInputElement | HTMLSelectElement).value.trim() : '';
+  const x = parseInt((document.getElementById('itemX') as HTMLInputElement).value, 10) || 0;
+  const y = parseInt((document.getElementById('itemY') as HTMLInputElement).value, 10) || 0;
   const isEquip = ['weapon', 'armor', 'trinket'].includes(type);
   const mods = collectMods();
-  const value = parseInt(document.getElementById('itemValue').value, 10) || 0;
-  const fuel = parseInt(document.getElementById('itemFuel').value, 10) || 0;
+  const value = parseInt((document.getElementById('itemValue') as HTMLInputElement).value, 10) || 0;
+  const fuel = parseInt((document.getElementById('itemFuel') as HTMLInputElement).value, 10) || 0;
   let equip = null;
   if (isEquip) {
-    try { equip = JSON.parse(document.getElementById('itemEquip').value || 'null'); } catch (e) { equip = null; }
+    try { equip = JSON.parse((document.getElementById('itemEquip') as HTMLInputElement).value || 'null'); } catch (e) { equip = null; }
   }
   let use = null;
-  const useType = document.getElementById('itemUseType').value;
+  const useType = (document.getElementById('itemUseType') as HTMLInputElement | HTMLSelectElement).value;
   if (useType === 'heal') {
-    const amt = parseInt(document.getElementById('itemUseAmount').value, 10) || 0;
+    const amt = parseInt((document.getElementById('itemUseAmount') as HTMLInputElement).value, 10) || 0;
     use = { type: 'heal', amount: amt };
   } else if (useType === 'boost') {
-    const stat = document.getElementById('itemBoostStat').value.trim();
-    const amt = parseInt(document.getElementById('itemBoostAmount').value, 10) || 0;
-    const dur = parseInt(document.getElementById('itemBoostDuration').value, 10) || 0;
+    const stat = (document.getElementById('itemBoostStat') as HTMLInputElement | HTMLSelectElement).value.trim();
+    const amt = parseInt((document.getElementById('itemBoostAmount') as HTMLInputElement).value, 10) || 0;
+    const dur = parseInt((document.getElementById('itemBoostDuration') as HTMLInputElement).value, 10) || 0;
     use = { type: 'boost', stat, amount: amt, duration: dur };
   } else if (useType) {
     use = { type: useType };
   }
-  const useText = document.getElementById('itemUse').value.trim();
+  const useText = (document.getElementById('itemUse') as HTMLInputElement).value.trim();
   if (use && useText) use.text = useText;
   const item = { id, name, desc, type, tags, mods, value, use, equip };
   if (fuel) item.fuel = fuel;
@@ -3421,9 +3420,9 @@ function addItem() {
     item.x = x;
     item.y = y;
   }
-  const personaId = document.getElementById('itemPersonaId').value.trim();
-  const personaLabel = document.getElementById('itemPersonaLabel').value.trim();
-  const personaPathInput = document.getElementById('itemPersonaPortraitPath').value.trim();
+  const personaId = (document.getElementById('itemPersonaId') as HTMLInputElement).value.trim();
+  const personaLabel = (document.getElementById('itemPersonaLabel') as HTMLInputElement).value.trim();
+  const personaPathInput = (document.getElementById('itemPersonaPortraitPath') as HTMLInputElement).value.trim();
   if (personaId) {
     item.persona = personaId;
     const portrait = personaPathInput || (itemPersonaPortraitIndex > 0 ? personaPortraits[itemPersonaPortraitIndex] : '');
@@ -3442,13 +3441,13 @@ function addItem() {
     moduleData.items.push(item);
   }
   editItemIdx = -1;
-  document.getElementById('addItem').textContent = 'Add Item';
-  document.getElementById('addItem').style.display = 'block';
-  document.getElementById('cancelItem').style.display = 'none';
-  document.getElementById('delItem').style.display = 'none';
+  (document.getElementById('addItem') as HTMLElement).textContent = 'Add Item';
+  (document.getElementById('addItem') as HTMLElement).style.display = 'block';
+  (document.getElementById('cancelItem') as HTMLElement).style.display = 'none';
+  (document.getElementById('delItem') as HTMLElement).style.display = 'none';
   loadMods({});
-  document.getElementById('itemNarrativeId').value = '';
-  document.getElementById('itemNarrativePrompt').value = '';
+  (document.getElementById('itemNarrativeId') as HTMLInputElement).value = '';
+  (document.getElementById('itemNarrativePrompt') as HTMLTextAreaElement | HTMLInputElement).value = '';
   renderItemList();
   selectedObj = null;
   drawWorld();
@@ -3461,16 +3460,16 @@ function cancelItem() {
   placingType = null;
   placingPos = null;
   placingCb = null;
-  document.getElementById('addItem').style.display = 'block';
-  document.getElementById('cancelItem').style.display = 'none';
+  (document.getElementById('addItem') as HTMLElement).style.display = 'block';
+  (document.getElementById('cancelItem') as HTMLElement).style.display = 'none';
   drawWorld();
   drawInterior();
   updateCursor();
 }
 
 function removeItemFromWorld() {
-  document.getElementById('itemOnMap').checked = false;
-  document.getElementById('itemMap').value = '';
+  (document.getElementById('itemOnMap') as HTMLInputElement).checked = false;
+  (document.getElementById('itemMap') as HTMLInputElement | HTMLSelectElement).value = '';
   if (editItemIdx >= 0) {
     const it = moduleData.items[editItemIdx];
     delete it.map;
@@ -3488,63 +3487,63 @@ function editItem(i) {
   const it = moduleData.items[i];
   if (it.map) {
     showMap(it.map);
-    focusMap(it.x, it.y);
+    focusMapACK(it.x, it.y);
   }
   editItemIdx = i;
-  document.getElementById('itemName').value = it.name;
-  document.getElementById('itemId').value = it.id;
-  document.getElementById('itemType').value = it.type || '';
-  document.getElementById('itemDesc').value = it.desc || '';
+  (document.getElementById('itemName') as HTMLInputElement).value = String(it.name);
+  (document.getElementById('itemId') as HTMLInputElement).value = String(it.id);
+  (document.getElementById('itemType') as HTMLInputElement | HTMLSelectElement).value = String(it.type || '');
+  (document.getElementById('itemDesc') as HTMLTextAreaElement | HTMLInputElement).value = String(it.desc || '');
   collectKnownTags(it.tags || []);
   updateTagOptions();
-  document.getElementById('itemTags').value = (it.tags || []).join(',');
-  document.getElementById('itemNarrativeId').value = it.narrative ? it.narrative.id || '' : '';
-  document.getElementById('itemNarrativePrompt').value = it.narrative ? it.narrative.prompt || '' : '';
-  document.getElementById('itemMap').value = it.map || '';
-  document.getElementById('itemX').value = it.x || 0;
-  document.getElementById('itemY').value = it.y || 0;
-  document.getElementById('itemOnMap').checked = !!it.map;
+  (document.getElementById('itemTags') as HTMLInputElement).value = String((it.tags || []).join(','));
+  (document.getElementById('itemNarrativeId') as HTMLInputElement).value = String(it.narrative ? it.narrative.id || '' : '');
+  (document.getElementById('itemNarrativePrompt') as HTMLTextAreaElement | HTMLInputElement).value = String(it.narrative ? it.narrative.prompt || '' : '');
+  (document.getElementById('itemMap') as HTMLInputElement | HTMLSelectElement).value = String(it.map || '');
+  (document.getElementById('itemX') as HTMLInputElement).value = String(it.x || 0);
+  (document.getElementById('itemY') as HTMLInputElement).value = String(it.y || 0);
+  (document.getElementById('itemOnMap') as HTMLInputElement).checked = !!it.map;
   updateItemMapWrap();
   updateModsWrap();
   loadMods(it.mods);
-  document.getElementById('itemValue').value = it.value || 0;
-  document.getElementById('itemFuel').value = it.fuel || 0;
-  document.getElementById('itemEquip').value = it.equip ? JSON.stringify(it.equip, null, 2) : '';
+  (document.getElementById('itemValue') as HTMLInputElement).value = String(it.value || 0);
+  (document.getElementById('itemFuel') as HTMLInputElement).value = String(it.fuel || 0);
+  (document.getElementById('itemEquip') as HTMLInputElement).value = String(it.equip ? JSON.stringify(it.equip, null, 2) : '');
   if (it.use) {
-    document.getElementById('itemUseType').value = it.use.type || '';
+    (document.getElementById('itemUseType') as HTMLInputElement | HTMLSelectElement).value = String(it.use.type || '');
     if (it.use.type === 'heal') {
-      document.getElementById('itemUseAmount').value = it.use.amount || 0;
-      document.getElementById('itemBoostStat').value = '';
-      document.getElementById('itemBoostAmount').value = 0;
-      document.getElementById('itemBoostDuration').value = 0;
+      (document.getElementById('itemUseAmount') as HTMLInputElement).value = String(it.use.amount || 0);
+      (document.getElementById('itemBoostStat') as HTMLInputElement | HTMLSelectElement).value = '';
+      (document.getElementById('itemBoostAmount') as HTMLInputElement).value = String(0);
+      (document.getElementById('itemBoostDuration') as HTMLInputElement).value = String(0);
     } else if (it.use.type === 'boost') {
-      document.getElementById('itemUseAmount').value = 0;
-      document.getElementById('itemBoostStat').value = it.use.stat || '';
-      document.getElementById('itemBoostAmount').value = it.use.amount || 0;
-      document.getElementById('itemBoostDuration').value = it.use.duration || 0;
+      (document.getElementById('itemUseAmount') as HTMLInputElement).value = String(0);
+      (document.getElementById('itemBoostStat') as HTMLInputElement | HTMLSelectElement).value = String(it.use.stat || '');
+      (document.getElementById('itemBoostAmount') as HTMLInputElement).value = String(it.use.amount || 0);
+      (document.getElementById('itemBoostDuration') as HTMLInputElement).value = String(it.use.duration || 0);
     } else {
-      document.getElementById('itemUseAmount').value = 0;
-      document.getElementById('itemBoostStat').value = '';
-      document.getElementById('itemBoostAmount').value = 0;
-      document.getElementById('itemBoostDuration').value = 0;
+      (document.getElementById('itemUseAmount') as HTMLInputElement).value = String(0);
+      (document.getElementById('itemBoostStat') as HTMLInputElement | HTMLSelectElement).value = '';
+      (document.getElementById('itemBoostAmount') as HTMLInputElement).value = String(0);
+      (document.getElementById('itemBoostDuration') as HTMLInputElement).value = String(0);
     }
-    document.getElementById('itemUse').value = it.use.text || '';
+    (document.getElementById('itemUse') as HTMLInputElement).value = String(it.use.text || '');
   } else {
-    document.getElementById('itemUseType').value = '';
-    document.getElementById('itemUseAmount').value = 0;
-    document.getElementById('itemBoostStat').value = '';
-    document.getElementById('itemBoostAmount').value = 0;
-    document.getElementById('itemBoostDuration').value = 0;
-    document.getElementById('itemUse').value = '';
+    (document.getElementById('itemUseType') as HTMLInputElement | HTMLSelectElement).value = '';
+    (document.getElementById('itemUseAmount') as HTMLInputElement).value = String(0);
+    (document.getElementById('itemBoostStat') as HTMLInputElement | HTMLSelectElement).value = '';
+    (document.getElementById('itemBoostAmount') as HTMLInputElement).value = String(0);
+    (document.getElementById('itemBoostDuration') as HTMLInputElement).value = String(0);
+    (document.getElementById('itemUse') as HTMLInputElement).value = '';
   }
   updateUseWrap();
-  document.getElementById('itemPersonaId').value = it.persona || '';
+  (document.getElementById('itemPersonaId') as HTMLInputElement).value = String(it.persona || '');
   if (it.persona) loadPersonaFields(it.persona);
   else resetPersonaFields();
   updatePersonaSection();
-  document.getElementById('addItem').textContent = 'Update Item';
-  document.getElementById('delItem').style.display = 'block';
-  document.getElementById('cancelItem').style.display = 'none';
+  (document.getElementById('addItem') as HTMLElement).textContent = 'Update Item';
+  (document.getElementById('delItem') as HTMLElement).style.display = 'block';
+  (document.getElementById('cancelItem') as HTMLElement).style.display = 'none';
   showItemEditor(true);
   selectedObj = { type: 'item', obj: it };
   drawWorld();
@@ -3566,8 +3565,8 @@ function deleteItem() {
   confirmDialog('Delete this item?', () => {
     moduleData.items.splice(editItemIdx, 1);
     editItemIdx = -1;
-    document.getElementById('addItem').textContent = 'Add Item';
-    document.getElementById('delItem').style.display = 'none';
+    (document.getElementById('addItem') as HTMLElement).textContent = 'Add Item';
+    (document.getElementById('delItem') as HTMLElement).style.display = 'none';
     loadMods({});
     renderItemList();
     selectedObj = null;
@@ -3578,12 +3577,12 @@ function deleteItem() {
 
 function closeItemEditor() {
   editItemIdx = -1;
-  document.getElementById('addItem').textContent = 'Add Item';
-  document.getElementById('cancelItem').style.display = 'none';
-  document.getElementById('delItem').style.display = 'none';
+  (document.getElementById('addItem') as HTMLElement).textContent = 'Add Item';
+  (document.getElementById('cancelItem') as HTMLElement).style.display = 'none';
+  (document.getElementById('delItem') as HTMLElement).style.display = 'none';
   loadMods({});
-  document.getElementById('itemNarrativeId').value = '';
-  document.getElementById('itemNarrativePrompt').value = '';
+  (document.getElementById('itemNarrativeId') as HTMLInputElement).value = '';
+  (document.getElementById('itemNarrativePrompt') as HTMLTextAreaElement | HTMLInputElement).value = '';
   renderItemList();
   selectedObj = null;
   showItemEditor(false);
@@ -3813,34 +3812,34 @@ function formatEncounterLocation(entry) {
 }
 
 function showEncounterEditor(show){
-  document.getElementById('encounterEditor').style.display = show ? 'block' : 'none';
+  (document.getElementById('encounterEditor') as HTMLElement).style.display = show ? 'block' : 'none';
 }
 function startNewEncounter(){
   editEncounterIdx = -1;
   const mapSel = document.getElementById('encMap');
   populateMapDropdown(mapSel, 'world');
   populateEncounterZoneDropdown(mapSel.value || 'world', '');
-  document.getElementById('encLocationMode').value = 'distance';
-  document.getElementById('encMinDist').value = '';
-  document.getElementById('encMaxDist').value = '';
-  document.getElementById('encZone').value = '';
+  (document.getElementById('encLocationMode') as HTMLInputElement | HTMLSelectElement).value = 'distance';
+  (document.getElementById('encMinDist') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('encMaxDist') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('encZone') as HTMLInputElement | HTMLSelectElement).value = '';
   const tmplSel = document.getElementById('encTemplate');
   populateTemplateDropdown(tmplSel, '');
   setLootTable(document.getElementById('encLootTable'), []);
-  document.getElementById('addEncounter').textContent = 'Add Enemy';
-  document.getElementById('delEncounter').style.display = 'none';
+  (document.getElementById('addEncounter') as HTMLElement).textContent = 'Add Enemy';
+  (document.getElementById('delEncounter') as HTMLElement).style.display = 'none';
   showEncounterEditor(true);
   tmplSel.focus();
   updateEncounterLocationMode();
 }
 function collectEncounter(){
-  const map = document.getElementById('encMap').value.trim() || 'world';
-  const templateId = document.getElementById('encTemplate').value.trim();
+  const map = (document.getElementById('encMap') as HTMLInputElement | HTMLSelectElement).value.trim() || 'world';
+  const templateId = (document.getElementById('encTemplate') as HTMLInputElement | HTMLSelectElement).value.trim();
   const mode = getEncounterLocationMode();
-  const minDist = parseInt(document.getElementById('encMinDist').value,10);
-  const maxDist = parseInt(document.getElementById('encMaxDist').value,10);
-  const zoneTag = document.getElementById('encZone').value.trim();
-  const t = globalThis.moduleData?.templates?.find(t => t.id === templateId);
+  const minDist = parseInt((document.getElementById('encMinDist') as HTMLInputElement | HTMLSelectElement).value,10);
+  const maxDist = parseInt((document.getElementById('encMaxDist') as HTMLInputElement | HTMLSelectElement).value,10);
+  const zoneTag = (document.getElementById('encZone') as HTMLInputElement | HTMLSelectElement).value.trim();
+  const t = (globalThis as any).moduleData?.templates?.find(t => t.id === templateId);
   const entry = { map, templateId };
   if (mode === 'zone') {
     entry.mode = 'zone';
@@ -3862,10 +3861,10 @@ function collectEncounter(){
 function addEncounter(){
   const entry = collectEncounter();
   if(editEncounterIdx >= 0){ moduleData.encounters[editEncounterIdx] = entry; }
-  else moduleData.encounters.push(entry);
+  else (moduleData.encounters as any[]).push(entry);
   editEncounterIdx = -1;
-  document.getElementById('addEncounter').textContent = 'Add Enemy';
-  document.getElementById('delEncounter').style.display = 'none';
+  (document.getElementById('addEncounter') as HTMLElement).textContent = 'Add Enemy';
+  (document.getElementById('delEncounter') as HTMLElement).style.display = 'none';
   renderEncounterList();
   showEncounterEditor(false);
 }
@@ -3877,14 +3876,14 @@ function editEncounter(i){
   populateEncounterZoneDropdown(mapSel.value || 'world', e.zoneTag || '');
   populateTemplateDropdown(document.getElementById('encTemplate'), e.templateId || '');
   const mode = e.mode === 'zone' || (e.zoneTag && !e.mode) ? 'zone' : 'distance';
-  document.getElementById('encLocationMode').value = mode;
-  document.getElementById('encMinDist').value = Number.isFinite(e.minDist) ? e.minDist : '';
-  document.getElementById('encMaxDist').value = Number.isFinite(e.maxDist) ? e.maxDist : '';
-  document.getElementById('encZone').value = e.zoneTag || '';
+  (document.getElementById('encLocationMode') as HTMLInputElement | HTMLSelectElement).value = String(mode);
+  (document.getElementById('encMinDist') as HTMLInputElement | HTMLSelectElement).value = String(Number.isFinite(e.minDist) ? e.minDist : '');
+  (document.getElementById('encMaxDist') as HTMLInputElement | HTMLSelectElement).value = String(Number.isFinite(e.maxDist) ? e.maxDist : '');
+  (document.getElementById('encZone') as HTMLInputElement | HTMLSelectElement).value = String(e.zoneTag || '');
   const t = moduleData.templates.find(t => t.id === e.templateId);
   setLootTable(document.getElementById('encLootTable'), getEncounterLootTable(e, t));
-  document.getElementById('addEncounter').textContent = 'Update Enemy';
-  document.getElementById('delEncounter').style.display = 'block';
+  (document.getElementById('addEncounter') as HTMLElement).textContent = 'Update Enemy';
+  (document.getElementById('delEncounter') as HTMLElement).style.display = 'block';
   showEncounterEditor(true);
   updateEncounterLocationMode();
 }
@@ -3906,8 +3905,8 @@ function deleteEncounter(){
   confirmDialog('Delete this enemy?', () => {
     moduleData.encounters.splice(editEncounterIdx,1);
     editEncounterIdx = -1;
-    document.getElementById('addEncounter').textContent = 'Add Enemy';
-    document.getElementById('delEncounter').style.display = 'none';
+    (document.getElementById('addEncounter') as HTMLElement).textContent = 'Add Enemy';
+    (document.getElementById('delEncounter') as HTMLElement).style.display = 'none';
     renderEncounterList();
     showEncounterEditor(false);
   });
@@ -3915,55 +3914,55 @@ function deleteEncounter(){
 
 // --- NPC Templates ---
 function showTemplateEditor(show){
-  document.getElementById('templateEditor').style.display = show ? 'block' : 'none';
+  (document.getElementById('templateEditor') as HTMLElement).style.display = show ? 'block' : 'none';
 }
 function toggleTemplateScrapFields(){
-  const show = document.getElementById('templateDropScrap').checked;
+  const show = (document.getElementById('templateDropScrap') as HTMLInputElement).checked;
   document.querySelectorAll('.templateScrapField').forEach(el => {
     el.style.display = show ? 'inline-block' : 'none';
   });
 }
 function startNewTemplate(){
   editTemplateIdx = -1;
-  document.getElementById('templateId').value = nextId('template', moduleData.templates);
-  document.getElementById('templateName').value = '';
-  document.getElementById('templateDesc').value = '';
-  document.getElementById('templateColor').value = '#9ef7a0';
-  document.getElementById('templatePortrait').value = '';
-  document.getElementById('templateHP').value = 5;
-  document.getElementById('templateATK').value = 1;
-  document.getElementById('templateDEF').value = 0;
-  document.getElementById('templateChallenge').value = '';
-  document.getElementById('templateSpecialCue').value = '';
-  document.getElementById('templateSpecialDmg').value = '';
+  (document.getElementById('templateId') as HTMLInputElement | HTMLSelectElement).value = String(nextId('template', moduleData.templates));
+  (document.getElementById('templateName') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('templateDesc') as HTMLTextAreaElement | HTMLInputElement).value = '';
+  (document.getElementById('templateColor') as HTMLInputElement | HTMLSelectElement).value = '#9ef7a0';
+  (document.getElementById('templatePortrait') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('templateHP') as HTMLInputElement | HTMLSelectElement).value = String(5);
+  (document.getElementById('templateATK') as HTMLInputElement | HTMLSelectElement).value = String(1);
+  (document.getElementById('templateDEF') as HTMLInputElement | HTMLSelectElement).value = String(0);
+  (document.getElementById('templateChallenge') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('templateSpecialCue') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('templateSpecialDmg') as HTMLInputElement | HTMLSelectElement).value = '';
   setLootTable(document.getElementById('templateLootTable'), []);
-  document.getElementById('templateDropScrap').checked = false;
-  document.getElementById('templateScrapChance').value = 100;
-  document.getElementById('templateScrapMin').value = 1;
-  document.getElementById('templateScrapMax').value = 1;
-  document.getElementById('templateRequires').value = '';
-  document.getElementById('addTemplate').textContent = 'Add Template';
-  document.getElementById('delTemplate').style.display = 'none';
+  (document.getElementById('templateDropScrap') as HTMLInputElement).checked = false;
+  (document.getElementById('templateScrapChance') as HTMLInputElement | HTMLSelectElement).value = String(100);
+  (document.getElementById('templateScrapMin') as HTMLInputElement | HTMLSelectElement).value = String(1);
+  (document.getElementById('templateScrapMax') as HTMLInputElement | HTMLSelectElement).value = String(1);
+  (document.getElementById('templateRequires') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('addTemplate') as HTMLElement).textContent = 'Add Template';
+  (document.getElementById('delTemplate') as HTMLElement).style.display = 'none';
   toggleTemplateScrapFields();
   showTemplateEditor(true);
 }
 function collectTemplate(){
-  const id = document.getElementById('templateId').value.trim();
-  const name = document.getElementById('templateName').value.trim();
-  const desc = document.getElementById('templateDesc').value.trim();
-  const color = document.getElementById('templateColor').value.trim();
-  const portraitSheet = document.getElementById('templatePortrait').value.trim();
-  const HP = parseInt(document.getElementById('templateHP').value,10) || 1;
-  const ATK = parseInt(document.getElementById('templateATK').value,10) || 1;
-  const DEF = parseInt(document.getElementById('templateDEF').value,10) || 0;
-  const challenge = parseInt(document.getElementById('templateChallenge').value,10);
-  const specialCue = document.getElementById('templateSpecialCue').value.trim();
-  const specialDmg = parseInt(document.getElementById('templateSpecialDmg').value,10) || 0;
-  const dropScrap = document.getElementById('templateDropScrap').checked;
-  const scrapChancePct = parseFloat(document.getElementById('templateScrapChance').value);
-  const scrapMin = parseInt(document.getElementById('templateScrapMin').value,10) || 0;
-  const scrapMax = parseInt(document.getElementById('templateScrapMax').value,10) || scrapMin;
-  const requires = document.getElementById('templateRequires').value.trim();
+  const id = (document.getElementById('templateId') as HTMLInputElement | HTMLSelectElement).value.trim();
+  const name = (document.getElementById('templateName') as HTMLInputElement | HTMLSelectElement).value.trim();
+  const desc = (document.getElementById('templateDesc') as HTMLTextAreaElement | HTMLInputElement).value.trim();
+  const color = (document.getElementById('templateColor') as HTMLInputElement | HTMLSelectElement).value.trim();
+  const portraitSheet = (document.getElementById('templatePortrait') as HTMLInputElement | HTMLSelectElement).value.trim();
+  const HP = parseInt((document.getElementById('templateHP') as HTMLInputElement | HTMLSelectElement).value,10) || 1;
+  const ATK = parseInt((document.getElementById('templateATK') as HTMLInputElement | HTMLSelectElement).value,10) || 1;
+  const DEF = parseInt((document.getElementById('templateDEF') as HTMLInputElement | HTMLSelectElement).value,10) || 0;
+  const challenge = parseInt((document.getElementById('templateChallenge') as HTMLInputElement | HTMLSelectElement).value,10);
+  const specialCue = (document.getElementById('templateSpecialCue') as HTMLInputElement | HTMLSelectElement).value.trim();
+  const specialDmg = parseInt((document.getElementById('templateSpecialDmg') as HTMLInputElement | HTMLSelectElement).value,10) || 0;
+  const dropScrap = (document.getElementById('templateDropScrap') as HTMLInputElement).checked;
+  const scrapChancePct = parseFloat((document.getElementById('templateScrapChance') as HTMLInputElement | HTMLSelectElement).value);
+  const scrapMin = parseInt((document.getElementById('templateScrapMin') as HTMLInputElement | HTMLSelectElement).value,10) || 0;
+  const scrapMax = parseInt((document.getElementById('templateScrapMax') as HTMLInputElement | HTMLSelectElement).value,10) || scrapMin;
+  const requires = (document.getElementById('templateRequires') as HTMLInputElement | HTMLSelectElement).value.trim();
   const combat = { HP, ATK, DEF };
   if (challenge > 0) combat.challenge = Math.min(10, challenge); // higher values improve loot caches
   const lootTable = collectLootTable(document.getElementById('templateLootTable'));
@@ -3985,36 +3984,36 @@ function collectTemplate(){
 function addTemplate(){
   const entry = collectTemplate();
   if(editTemplateIdx >= 0){ moduleData.templates[editTemplateIdx] = entry; }
-  else moduleData.templates.push(entry);
+  else (moduleData.templates as any[]).push(entry);
   editTemplateIdx = -1;
-  document.getElementById('addTemplate').textContent = 'Add Template';
-  document.getElementById('delTemplate').style.display = 'none';
+  (document.getElementById('addTemplate') as HTMLElement).textContent = 'Add Template';
+  (document.getElementById('delTemplate') as HTMLElement).style.display = 'none';
   renderTemplateList();
   showTemplateEditor(false);
 }
 function editTemplate(i){
   const t = moduleData.templates[i];
   editTemplateIdx = i;
-  document.getElementById('templateId').value = t.id;
-  document.getElementById('templateName').value = t.name;
-  document.getElementById('templateDesc').value = t.desc;
-  document.getElementById('templateColor').value = expandHex(t.color || '#ffffff');
-  document.getElementById('templatePortrait').value = t.portraitSheet || '';
-  document.getElementById('templateHP').value = t.combat?.HP || 1;
-  document.getElementById('templateATK').value = t.combat?.ATK || 1;
-  document.getElementById('templateDEF').value = t.combat?.DEF || 0;
-  document.getElementById('templateChallenge').value = t.combat?.challenge || '';
-  document.getElementById('templateSpecialCue').value = t.combat?.special?.cue || '';
-  document.getElementById('templateSpecialDmg').value = t.combat?.special?.dmg || '';
+  (document.getElementById('templateId') as HTMLInputElement | HTMLSelectElement).value = String(t.id);
+  (document.getElementById('templateName') as HTMLInputElement | HTMLSelectElement).value = String(t.name);
+  (document.getElementById('templateDesc') as HTMLTextAreaElement | HTMLInputElement).value = String(t.desc);
+  (document.getElementById('templateColor') as HTMLInputElement | HTMLSelectElement).value = String(expandHex(t.color || '#ffffff'));
+  (document.getElementById('templatePortrait') as HTMLInputElement | HTMLSelectElement).value = String(t.portraitSheet || '');
+  (document.getElementById('templateHP') as HTMLInputElement | HTMLSelectElement).value = String(t.combat?.HP || 1);
+  (document.getElementById('templateATK') as HTMLInputElement | HTMLSelectElement).value = String(t.combat?.ATK || 1);
+  (document.getElementById('templateDEF') as HTMLInputElement | HTMLSelectElement).value = String(t.combat?.DEF || 0);
+  (document.getElementById('templateChallenge') as HTMLInputElement | HTMLSelectElement).value = String(t.combat?.challenge || '');
+  (document.getElementById('templateSpecialCue') as HTMLInputElement | HTMLSelectElement).value = String(t.combat?.special?.cue || '');
+  (document.getElementById('templateSpecialDmg') as HTMLInputElement | HTMLSelectElement).value = String(t.combat?.special?.dmg || '');
   setLootTable(document.getElementById('templateLootTable'), getTemplateLootTable(t));
   const scrap = t.combat?.scrap;
-  document.getElementById('templateDropScrap').checked = !!scrap;
-  document.getElementById('templateScrapChance').value = scrap?.chance != null ? Math.round(scrap.chance * 100) : 100;
-  document.getElementById('templateScrapMin').value = scrap?.min ?? 1;
-  document.getElementById('templateScrapMax').value = scrap?.max ?? 1;
-  document.getElementById('templateRequires').value = t.combat?.requires || '';
-  document.getElementById('addTemplate').textContent = 'Update Template';
-  document.getElementById('delTemplate').style.display = 'block';
+  (document.getElementById('templateDropScrap') as HTMLInputElement).checked = !!scrap;
+  (document.getElementById('templateScrapChance') as HTMLInputElement | HTMLSelectElement).value = String(scrap?.chance != null ? Math.round(scrap.chance * 100) : 100);
+  (document.getElementById('templateScrapMin') as HTMLInputElement | HTMLSelectElement).value = String(scrap?.min ?? 1);
+  (document.getElementById('templateScrapMax') as HTMLInputElement | HTMLSelectElement).value = String(scrap?.max ?? 1);
+  (document.getElementById('templateRequires') as HTMLInputElement | HTMLSelectElement).value = String(t.combat?.requires || '');
+  (document.getElementById('addTemplate') as HTMLElement).textContent = 'Update Template';
+  (document.getElementById('delTemplate') as HTMLElement).style.display = 'block';
   toggleTemplateScrapFields();
   showTemplateEditor(true);
 }
@@ -4029,8 +4028,8 @@ function deleteTemplate(){
   confirmDialog('Delete this template?', () => {
     moduleData.templates.splice(editTemplateIdx,1);
     editTemplateIdx = -1;
-    document.getElementById('addTemplate').textContent = 'Add Template';
-    document.getElementById('delTemplate').style.display = 'none';
+    (document.getElementById('addTemplate') as HTMLElement).textContent = 'Add Template';
+    (document.getElementById('delTemplate') as HTMLElement).style.display = 'none';
     renderTemplateList();
     showTemplateEditor(false);
   });
@@ -4039,46 +4038,46 @@ function deleteTemplate(){
 
 // --- Tile Events ---
 function showEventEditor(show) {
-  document.getElementById('eventEditor').style.display = show ? 'block' : 'none';
+  (document.getElementById('eventEditor') as HTMLElement).style.display = show ? 'block' : 'none';
 }
 
 function updateEventEffectFields() {
-  const eff = document.getElementById('eventEffect').value;
-  document.getElementById('eventMsgWrap').style.display = (eff === 'toast' || eff === 'log') ? 'block' : 'none';
-  document.getElementById('eventFlagWrap').style.display = eff === 'addFlag' ? 'block' : 'none';
-  document.getElementById('eventStatWrap').style.display = eff === 'modStat' ? 'block' : 'none';
+  const eff = (document.getElementById('eventEffect') as HTMLInputElement | HTMLSelectElement).value;
+  (document.getElementById('eventMsgWrap') as HTMLElement).style.display = (eff === 'toast' || eff === 'log') ? 'block' : 'none';
+  (document.getElementById('eventFlagWrap') as HTMLElement).style.display = eff === 'addFlag' ? 'block' : 'none';
+  (document.getElementById('eventStatWrap') as HTMLElement).style.display = eff === 'modStat' ? 'block' : 'none';
 }
 
 function startNewEvent() {
   editEventIdx = -1;
   populateMapDropdown(document.getElementById('eventMap'), 'world');
-  document.getElementById('eventX').value = 0;
-  document.getElementById('eventY').value = 0;
-  document.getElementById('eventEffect').value = 'toast';
-  document.getElementById('eventMsg').value = '';
-  document.getElementById('eventFlag').value = '';
-  document.getElementById('eventStat').value = STAT_OPTS[0];
-  document.getElementById('eventDelta').value = 0;
-  document.getElementById('eventDuration').value = 0;
+  (document.getElementById('eventX') as HTMLInputElement).value = String(0);
+  (document.getElementById('eventY') as HTMLInputElement).value = String(0);
+  (document.getElementById('eventEffect') as HTMLInputElement | HTMLSelectElement).value = 'toast';
+  (document.getElementById('eventMsg') as HTMLInputElement).value = '';
+  (document.getElementById('eventFlag') as HTMLInputElement).value = '';
+  (document.getElementById('eventStat') as HTMLInputElement | HTMLSelectElement).value = String(STAT_OPTS[0]);
+  (document.getElementById('eventDelta') as HTMLInputElement).value = String(0);
+  (document.getElementById('eventDuration') as HTMLInputElement).value = String(0);
   updateEventEffectFields();
-  document.getElementById('addEvent').textContent = 'Add Event';
-  document.getElementById('delEvent').style.display = 'none';
+  (document.getElementById('addEvent') as HTMLElement).textContent = 'Add Event';
+  (document.getElementById('delEvent') as HTMLElement).style.display = 'none';
   showEventEditor(true);
-  document.getElementById('eventMap').focus();
+  (document.getElementById('eventMap') as HTMLElement).focus();
 }
 
 function collectEvent() {
-  const map = document.getElementById('eventMap').value.trim() || 'world';
-  const x = parseInt(document.getElementById('eventX').value, 10) || 0;
-  const y = parseInt(document.getElementById('eventY').value, 10) || 0;
-  const eff = document.getElementById('eventEffect').value;
+  const map = (document.getElementById('eventMap') as HTMLInputElement | HTMLSelectElement).value.trim() || 'world';
+  const x = parseInt((document.getElementById('eventX') as HTMLInputElement).value, 10) || 0;
+  const y = parseInt((document.getElementById('eventY') as HTMLInputElement).value, 10) || 0;
+  const eff = (document.getElementById('eventEffect') as HTMLInputElement | HTMLSelectElement).value;
   const ev = { when: 'enter', effect: eff };
-  if (eff === 'toast' || eff === 'log') ev.msg = document.getElementById('eventMsg').value;
-  if (eff === 'addFlag') ev.flag = document.getElementById('eventFlag').value;
+  if (eff === 'toast' || eff === 'log') ev.msg = (document.getElementById('eventMsg') as HTMLInputElement).value;
+  if (eff === 'addFlag') ev.flag = (document.getElementById('eventFlag') as HTMLInputElement).value;
   if (eff === 'modStat') {
-    ev.stat = document.getElementById('eventStat').value;
-    ev.delta = parseInt(document.getElementById('eventDelta').value, 10) || 0;
-    ev.duration = parseInt(document.getElementById('eventDuration').value, 10) || 0;
+    ev.stat = (document.getElementById('eventStat') as HTMLInputElement | HTMLSelectElement).value;
+    ev.delta = parseInt((document.getElementById('eventDelta') as HTMLInputElement).value, 10) || 0;
+    ev.duration = parseInt((document.getElementById('eventDuration') as HTMLInputElement).value, 10) || 0;
   }
   return { map, x, y, events: [ev] };
 }
@@ -4088,11 +4087,11 @@ function addEvent() {
   if (editEventIdx >= 0) {
     moduleData.events[editEventIdx] = entry;
   } else {
-    moduleData.events.push(entry);
+    (moduleData.events as any[]).push(entry);
   }
   editEventIdx = -1;
-  document.getElementById('addEvent').textContent = 'Add Event';
-  document.getElementById('delEvent').style.display = 'none';
+  (document.getElementById('addEvent') as HTMLElement).textContent = 'Add Event';
+  (document.getElementById('delEvent') as HTMLElement).style.display = 'none';
   renderEventList();
   selectedObj = null;
   drawWorld();
@@ -4103,18 +4102,18 @@ function editEvent(i) {
   const e = moduleData.events[i];
   editEventIdx = i;
   populateMapDropdown(document.getElementById('eventMap'), e.map);
-  document.getElementById('eventX').value = e.x;
-  document.getElementById('eventY').value = e.y;
+  (document.getElementById('eventX') as HTMLInputElement).value = String(e.x);
+  (document.getElementById('eventY') as HTMLInputElement).value = String(e.y);
   const ev = e.events[0] || { effect: 'toast' };
-  document.getElementById('eventEffect').value = ev.effect;
-  document.getElementById('eventMsg').value = ev.msg || '';
-  document.getElementById('eventFlag').value = ev.flag || '';
-  document.getElementById('eventStat').value = ev.stat || STAT_OPTS[0];
-  document.getElementById('eventDelta').value = ev.delta || 0;
-  document.getElementById('eventDuration').value = ev.duration || 0;
+  (document.getElementById('eventEffect') as HTMLInputElement | HTMLSelectElement).value = String(ev.effect);
+  (document.getElementById('eventMsg') as HTMLInputElement).value = String(ev.msg || '');
+  (document.getElementById('eventFlag') as HTMLInputElement).value = String(ev.flag || '');
+  (document.getElementById('eventStat') as HTMLInputElement | HTMLSelectElement).value = String(ev.stat || STAT_OPTS[0]);
+  (document.getElementById('eventDelta') as HTMLInputElement).value = String(ev.delta || 0);
+  (document.getElementById('eventDuration') as HTMLInputElement).value = String(ev.duration || 0);
   updateEventEffectFields();
-  document.getElementById('addEvent').textContent = 'Update Event';
-  document.getElementById('delEvent').style.display = 'block';
+  (document.getElementById('addEvent') as HTMLElement).textContent = 'Update Event';
+  (document.getElementById('delEvent') as HTMLElement).style.display = 'block';
   showEventEditor(true);
   selectedObj = { type: 'event', obj: e };
   drawWorld();
@@ -4135,8 +4134,8 @@ function deleteEvent() {
   confirmDialog('Delete this event?', () => {
     moduleData.events.splice(editEventIdx, 1);
     editEventIdx = -1;
-    document.getElementById('addEvent').textContent = 'Add Event';
-    document.getElementById('delEvent').style.display = 'none';
+    (document.getElementById('addEvent') as HTMLElement).textContent = 'Add Event';
+    (document.getElementById('delEvent') as HTMLElement).style.display = 'none';
     renderEventList();
     selectedObj = null;
     drawWorld();
@@ -4288,15 +4287,15 @@ function startNewArena() {
   editArenaIdx = -1;
   const mapSel = document.getElementById('arenaMap');
   if (mapSel) populateMapDropdown(mapSel, 'world');
-  document.getElementById('arenaBankId').value = '';
-  document.getElementById('arenaDelay').value = '';
-  document.getElementById('arenaResetLog').value = '';
-  document.getElementById('arenaRewardLog').value = '';
-  document.getElementById('arenaRewardToast').value = '';
+  (document.getElementById('arenaBankId') as HTMLInputElement).value = '';
+  (document.getElementById('arenaDelay') as HTMLInputElement).value = '';
+  (document.getElementById('arenaResetLog') as HTMLTextAreaElement | HTMLInputElement).value = '';
+  (document.getElementById('arenaRewardLog') as HTMLTextAreaElement | HTMLInputElement).value = '';
+  (document.getElementById('arenaRewardToast') as HTMLInputElement).value = '';
   setArenaWaves([]);
-  document.getElementById('addArena').textContent = 'Add Arena';
-  document.getElementById('delArena').style.display = 'none';
-  document.getElementById('cancelArena').style.display = 'inline-block';
+  (document.getElementById('addArena') as HTMLElement).textContent = 'Add Arena';
+  (document.getElementById('delArena') as HTMLElement).style.display = 'none';
+  (document.getElementById('cancelArena') as HTMLElement).style.display = 'inline-block';
   showArenaEditor(true);
   if (mapSel) mapSel.focus();
   if (window.showEditorTab) window.showEditorTab('arenas');
@@ -4305,11 +4304,11 @@ function startNewArena() {
 function collectArena() {
   const mapSel = document.getElementById('arenaMap');
   const map = mapSel?.value.trim() || 'world';
-  const bankId = document.getElementById('arenaBankId').value.trim();
-  const delayRaw = document.getElementById('arenaDelay').value.trim();
-  const resetLog = document.getElementById('arenaResetLog').value.trim();
-  const rewardLog = document.getElementById('arenaRewardLog').value.trim();
-  const rewardToast = document.getElementById('arenaRewardToast').value.trim();
+  const bankId = (document.getElementById('arenaBankId') as HTMLInputElement).value.trim();
+  const delayRaw = (document.getElementById('arenaDelay') as HTMLInputElement).value.trim();
+  const resetLog = (document.getElementById('arenaResetLog') as HTMLTextAreaElement | HTMLInputElement).value.trim();
+  const rewardLog = (document.getElementById('arenaRewardLog') as HTMLTextAreaElement | HTMLInputElement).value.trim();
+  const rewardToast = (document.getElementById('arenaRewardToast') as HTMLInputElement).value.trim();
   const waves = [];
   document.querySelectorAll('#arenaWaveContainer .arenaWave').forEach(div => {
     const templateSel = div.querySelector('.arenaWaveTemplate');
@@ -4378,9 +4377,9 @@ function addArena() {
   else list.push(arena);
   ensureBehaviorKey();
   editArenaIdx = -1;
-  document.getElementById('addArena').textContent = 'Add Arena';
-  document.getElementById('cancelArena').style.display = 'none';
-  document.getElementById('delArena').style.display = 'none';
+  (document.getElementById('addArena') as HTMLElement).textContent = 'Add Arena';
+  (document.getElementById('cancelArena') as HTMLElement).style.display = 'none';
+  (document.getElementById('delArena') as HTMLElement).style.display = 'none';
   renderArenaList();
   showArenaEditor(false);
 }
@@ -4391,15 +4390,15 @@ function editArena(idx) {
   if (!arena) return;
   editArenaIdx = idx;
   populateMapDropdown(document.getElementById('arenaMap'), arena.map || 'world');
-  document.getElementById('arenaBankId').value = arena.bankId || '';
-  document.getElementById('arenaDelay').value = arena.entranceDelay ?? '';
-  document.getElementById('arenaResetLog').value = arena.resetLog || '';
-  document.getElementById('arenaRewardLog').value = arena.reward?.log || '';
-  document.getElementById('arenaRewardToast').value = arena.reward?.toast || '';
+  (document.getElementById('arenaBankId') as HTMLInputElement).value = String(arena.bankId || '');
+  (document.getElementById('arenaDelay') as HTMLInputElement).value = String(arena.entranceDelay ?? '');
+  (document.getElementById('arenaResetLog') as HTMLTextAreaElement | HTMLInputElement).value = String(arena.resetLog || '');
+  (document.getElementById('arenaRewardLog') as HTMLTextAreaElement | HTMLInputElement).value = String(arena.reward?.log || '');
+  (document.getElementById('arenaRewardToast') as HTMLInputElement).value = String(arena.reward?.toast || '');
   setArenaWaves(arena.waves || []);
-  document.getElementById('addArena').textContent = 'Update Arena';
-  document.getElementById('cancelArena').style.display = 'inline-block';
-  document.getElementById('delArena').style.display = 'inline-block';
+  (document.getElementById('addArena') as HTMLElement).textContent = 'Update Arena';
+  (document.getElementById('cancelArena') as HTMLElement).style.display = 'inline-block';
+  (document.getElementById('delArena') as HTMLElement).style.display = 'inline-block';
   showArenaEditor(true);
   if (window.showEditorTab) window.showEditorTab('arenas');
 }
@@ -4411,9 +4410,9 @@ function deleteArena() {
     if (!list) return;
     list.splice(editArenaIdx, 1);
     editArenaIdx = -1;
-    document.getElementById('addArena').textContent = 'Add Arena';
-    document.getElementById('cancelArena').style.display = 'none';
-    document.getElementById('delArena').style.display = 'none';
+    (document.getElementById('addArena') as HTMLElement).textContent = 'Add Arena';
+    (document.getElementById('cancelArena') as HTMLElement).style.display = 'none';
+    (document.getElementById('delArena') as HTMLElement).style.display = 'none';
     renderArenaList();
     showArenaEditor(false);
     cleanupBehaviors();
@@ -4422,9 +4421,9 @@ function deleteArena() {
 
 function cancelArena() {
   editArenaIdx = -1;
-  document.getElementById('addArena').textContent = 'Add Arena';
-  document.getElementById('cancelArena').style.display = 'none';
-  document.getElementById('delArena').style.display = 'none';
+  (document.getElementById('addArena') as HTMLElement).textContent = 'Add Arena';
+  (document.getElementById('cancelArena') as HTMLElement).style.display = 'none';
+  (document.getElementById('delArena') as HTMLElement).style.display = 'none';
   showArenaEditor(false);
 }
 
@@ -4445,66 +4444,66 @@ function renderArenaList() {
 
 // --- Zones ---
 function showZoneEditor(show) {
-  document.getElementById('zoneEditor').style.display = show ? 'block' : 'none';
+  (document.getElementById('zoneEditor') as HTMLElement).style.display = show ? 'block' : 'none';
 }
 
 function updateZoneWallFields() {
   const wrap = document.getElementById('zoneEntrancesWrap');
   if (!wrap) return;
-  wrap.style.display = document.getElementById('zoneWalled').checked ? 'block' : 'none';
+  wrap.style.display = (document.getElementById('zoneWalled') as HTMLInputElement).checked ? 'block' : 'none';
 }
 
 function startNewZone() {
   editZoneIdx = -1;
   populateMapDropdown(document.getElementById('zoneMap'), 'world');
-  document.getElementById('zoneTag').value = '';
-  document.getElementById('zoneX').value = 0;
-  document.getElementById('zoneY').value = 0;
-  document.getElementById('zoneW').value = 1;
-  document.getElementById('zoneH').value = 1;
-  document.getElementById('zoneHp').value = 0;
-  document.getElementById('zoneMsg').value = '';
-  document.getElementById('zoneWeather').value = '';
-  document.getElementById('zoneNegate').value = '';
-  document.getElementById('zoneHealMult').value = '';
-  document.getElementById('zoneNoEnc').checked = false;
-  document.getElementById('zoneUseItem').value = '';
-  document.getElementById('zoneReward').value = '';
-  document.getElementById('zoneOnce').checked = false;
-  document.getElementById('zoneWalled').checked = false;
+  (document.getElementById('zoneTag') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('zoneX') as HTMLInputElement | HTMLSelectElement).value = String(0);
+  (document.getElementById('zoneY') as HTMLInputElement | HTMLSelectElement).value = String(0);
+  (document.getElementById('zoneW') as HTMLInputElement | HTMLSelectElement).value = String(1);
+  (document.getElementById('zoneH') as HTMLInputElement | HTMLSelectElement).value = String(1);
+  (document.getElementById('zoneHp') as HTMLInputElement | HTMLSelectElement).value = String(0);
+  (document.getElementById('zoneMsg') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('zoneWeather') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('zoneNegate') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('zoneHealMult') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('zoneNoEnc') as HTMLInputElement).checked = false;
+  (document.getElementById('zoneUseItem') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('zoneReward') as HTMLInputElement | HTMLSelectElement).value = '';
+  (document.getElementById('zoneOnce') as HTMLInputElement).checked = false;
+  (document.getElementById('zoneWalled') as HTMLInputElement).checked = false;
   ['North', 'South', 'East', 'West'].forEach(dir => {
     document.getElementById('zoneEntrance' + dir).checked = false;
   });
   updateZoneWallFields();
-  document.getElementById('addZone').textContent = 'Add Zone';
-  document.getElementById('delZone').style.display = 'none';
+  (document.getElementById('addZone') as HTMLElement).textContent = 'Add Zone';
+  (document.getElementById('delZone') as HTMLElement).style.display = 'none';
   showZoneEditor(true);
   selectedObj = null;
   drawWorld();
 }
 
 function collectZone() {
-  const map = document.getElementById('zoneMap').value.trim() || 'world';
-  const tag = document.getElementById('zoneTag').value.trim();
-  const x = parseInt(document.getElementById('zoneX').value, 10) || 0;
-  const y = parseInt(document.getElementById('zoneY').value, 10) || 0;
-  const w = parseInt(document.getElementById('zoneW').value, 10) || 1;
-  const h = parseInt(document.getElementById('zoneH').value, 10) || 1;
-  const hp = parseInt(document.getElementById('zoneHp').value, 10);
-  const msg = document.getElementById('zoneMsg').value.trim();
-  const weather = document.getElementById('zoneWeather').value.trim();
-  const negate = document.getElementById('zoneNegate').value.trim();
-  const healMult = parseFloat(document.getElementById('zoneHealMult').value);
-  const noEnc = document.getElementById('zoneNoEnc').checked;
-  const useItemId = document.getElementById('zoneUseItem').value.trim();
-  const reward = document.getElementById('zoneReward').value.trim();
-  const once = document.getElementById('zoneOnce').checked;
-  const walled = document.getElementById('zoneWalled').checked;
+  const map = (document.getElementById('zoneMap') as HTMLInputElement | HTMLSelectElement).value.trim() || 'world';
+  const tag = (document.getElementById('zoneTag') as HTMLInputElement | HTMLSelectElement).value.trim();
+  const x = parseInt((document.getElementById('zoneX') as HTMLInputElement | HTMLSelectElement).value, 10) || 0;
+  const y = parseInt((document.getElementById('zoneY') as HTMLInputElement | HTMLSelectElement).value, 10) || 0;
+  const w = parseInt((document.getElementById('zoneW') as HTMLInputElement | HTMLSelectElement).value, 10) || 1;
+  const h = parseInt((document.getElementById('zoneH') as HTMLInputElement | HTMLSelectElement).value, 10) || 1;
+  const hp = parseInt((document.getElementById('zoneHp') as HTMLInputElement | HTMLSelectElement).value, 10);
+  const msg = (document.getElementById('zoneMsg') as HTMLInputElement | HTMLSelectElement).value.trim();
+  const weather = (document.getElementById('zoneWeather') as HTMLInputElement | HTMLSelectElement).value.trim();
+  const negate = (document.getElementById('zoneNegate') as HTMLInputElement | HTMLSelectElement).value.trim();
+  const healMult = parseFloat((document.getElementById('zoneHealMult') as HTMLInputElement | HTMLSelectElement).value);
+  const noEnc = (document.getElementById('zoneNoEnc') as HTMLInputElement).checked;
+  const useItemId = (document.getElementById('zoneUseItem') as HTMLInputElement | HTMLSelectElement).value.trim();
+  const reward = (document.getElementById('zoneReward') as HTMLInputElement | HTMLSelectElement).value.trim();
+  const once = (document.getElementById('zoneOnce') as HTMLInputElement).checked;
+  const walled = (document.getElementById('zoneWalled') as HTMLInputElement).checked;
   const entrances = {
-    north: document.getElementById('zoneEntranceNorth').checked,
-    south: document.getElementById('zoneEntranceSouth').checked,
-    east: document.getElementById('zoneEntranceEast').checked,
-    west: document.getElementById('zoneEntranceWest').checked
+    north: (document.getElementById('zoneEntranceNorth') as HTMLInputElement).checked,
+    south: (document.getElementById('zoneEntranceSouth') as HTMLInputElement).checked,
+    east: (document.getElementById('zoneEntranceEast') as HTMLInputElement).checked,
+    west: (document.getElementById('zoneEntranceWest') as HTMLInputElement).checked
   };
   const entry = { map, x, y, w, h };
   if (tag) entry.tag = tag;
@@ -4540,11 +4539,11 @@ function addZone() {
   if (editZoneIdx >= 0) {
     moduleData.zones[editZoneIdx] = entry;
   } else {
-    moduleData.zones.push(entry);
+    (moduleData.zones as any[]).push(entry);
   }
   editZoneIdx = -1;
-  document.getElementById('addZone').textContent = 'Add Zone';
-  document.getElementById('delZone').style.display = 'none';
+  (document.getElementById('addZone') as HTMLElement).textContent = 'Add Zone';
+  (document.getElementById('delZone') as HTMLElement).style.display = 'none';
   renderZoneList();
   showZoneEditor(false);
   selectedObj = null;
@@ -4555,33 +4554,33 @@ function editZone(i) {
   const z = moduleData.zones[i];
   editZoneIdx = i;
   populateMapDropdown(document.getElementById('zoneMap'), z.map);
-  document.getElementById('zoneTag').value = z.tag || '';
-  document.getElementById('zoneX').value = z.x;
-  document.getElementById('zoneY').value = z.y;
-  document.getElementById('zoneW').value = z.w;
-  document.getElementById('zoneH').value = z.h;
-  document.getElementById('zoneHp').value = z.perStep?.hp ?? '';
-  document.getElementById('zoneMsg').value = z.perStep?.msg || '';
-  document.getElementById('zoneWeather').value = typeof z.weather === 'string' ? z.weather : z.weather?.state || '';
-  document.getElementById('zoneNegate').value = z.negate || '';
-  document.getElementById('zoneHealMult').value = z.healMult ?? '';
-  document.getElementById('zoneNoEnc').checked = !!z.noEncounters;
-  document.getElementById('zoneUseItem').value = z.useItem?.id || '';
-  document.getElementById('zoneReward').value = z.useItem?.reward || '';
-  document.getElementById('zoneOnce').checked = !!z.useItem?.once;
-  document.getElementById('zoneWalled').checked = !!z.walled;
+  (document.getElementById('zoneTag') as HTMLInputElement | HTMLSelectElement).value = String(z.tag || '');
+  (document.getElementById('zoneX') as HTMLInputElement | HTMLSelectElement).value = String(z.x);
+  (document.getElementById('zoneY') as HTMLInputElement | HTMLSelectElement).value = String(z.y);
+  (document.getElementById('zoneW') as HTMLInputElement | HTMLSelectElement).value = String(z.w);
+  (document.getElementById('zoneH') as HTMLInputElement | HTMLSelectElement).value = String(z.h);
+  (document.getElementById('zoneHp') as HTMLInputElement | HTMLSelectElement).value = String(z.perStep?.hp ?? '');
+  (document.getElementById('zoneMsg') as HTMLInputElement | HTMLSelectElement).value = String(z.perStep?.msg || '');
+  (document.getElementById('zoneWeather') as HTMLInputElement | HTMLSelectElement).value = String(typeof z.weather === 'string' ? z.weather : z.weather?.state || '');
+  (document.getElementById('zoneNegate') as HTMLInputElement | HTMLSelectElement).value = String(z.negate || '');
+  (document.getElementById('zoneHealMult') as HTMLInputElement | HTMLSelectElement).value = String(z.healMult ?? '');
+  (document.getElementById('zoneNoEnc') as HTMLInputElement).checked = !!z.noEncounters;
+  (document.getElementById('zoneUseItem') as HTMLInputElement | HTMLSelectElement).value = String(z.useItem?.id || '');
+  (document.getElementById('zoneReward') as HTMLInputElement | HTMLSelectElement).value = String(z.useItem?.reward || '');
+  (document.getElementById('zoneOnce') as HTMLInputElement).checked = !!z.useItem?.once;
+  (document.getElementById('zoneWalled') as HTMLInputElement).checked = !!z.walled;
   const entrances = typeof z.entrances === 'object' && z.entrances ? z.entrances : {};
-  document.getElementById('zoneEntranceNorth').checked = !!entrances.north;
-  document.getElementById('zoneEntranceSouth').checked = !!entrances.south;
-  document.getElementById('zoneEntranceEast').checked = !!entrances.east;
-  document.getElementById('zoneEntranceWest').checked = !!entrances.west;
+  (document.getElementById('zoneEntranceNorth') as HTMLInputElement).checked = !!entrances.north;
+  (document.getElementById('zoneEntranceSouth') as HTMLInputElement).checked = !!entrances.south;
+  (document.getElementById('zoneEntranceEast') as HTMLInputElement).checked = !!entrances.east;
+  (document.getElementById('zoneEntranceWest') as HTMLInputElement).checked = !!entrances.west;
   updateZoneWallFields();
-  document.getElementById('addZone').textContent = 'Update Zone';
-  document.getElementById('delZone').style.display = 'block';
+  (document.getElementById('addZone') as HTMLElement).textContent = 'Update Zone';
+  (document.getElementById('delZone') as HTMLElement).style.display = 'block';
   showZoneEditor(true);
   selectedObj = { type: 'zone', obj: z };
   showMap(z.map);
-  focusMap(z.x + z.w / 2, z.y + z.h / 2);
+  focusMapACK(z.x + z.w / 2, z.y + z.h / 2);
   drawWorld();
 }
 
@@ -4607,10 +4606,10 @@ function renderZoneList() {
 function updateZoneDims() {
   if (editZoneIdx < 0) return;
   const z = moduleData.zones[editZoneIdx];
-  z.x = parseInt(document.getElementById('zoneX').value, 10) || 0;
-  z.y = parseInt(document.getElementById('zoneY').value, 10) || 0;
-  z.w = Math.max(1, parseInt(document.getElementById('zoneW').value, 10) || 1);
-  z.h = Math.max(1, parseInt(document.getElementById('zoneH').value, 10) || 1);
+  z.x = parseInt((document.getElementById('zoneX') as HTMLInputElement | HTMLSelectElement).value, 10) || 0;
+  z.y = parseInt((document.getElementById('zoneY') as HTMLInputElement | HTMLSelectElement).value, 10) || 0;
+  z.w = Math.max(1, parseInt((document.getElementById('zoneW') as HTMLInputElement | HTMLSelectElement).value, 10) || 1);
+  z.h = Math.max(1, parseInt((document.getElementById('zoneH') as HTMLInputElement | HTMLSelectElement).value, 10) || 1);
   renderZoneList();
   drawWorld();
 }
@@ -4619,14 +4618,14 @@ function updateZoneDims() {
   document.getElementById(id).addEventListener('input', updateZoneDims);
 });
 
-document.getElementById('zoneWalled').addEventListener('change', updateZoneWallFields);
+(document.getElementById('zoneWalled') as HTMLElement).addEventListener('change', updateZoneWallFields);
 
 function deleteZone() {
   if (editZoneIdx < 0) return;
   moduleData.zones.splice(editZoneIdx, 1);
   editZoneIdx = -1;
-  document.getElementById('addZone').textContent = 'Add Zone';
-  document.getElementById('delZone').style.display = 'none';
+  (document.getElementById('addZone') as HTMLElement).textContent = 'Add Zone';
+  (document.getElementById('delZone') as HTMLElement).style.display = 'none';
   renderZoneList();
   showZoneEditor(false);
   selectedObj = null;
@@ -4635,29 +4634,29 @@ function deleteZone() {
 
 // --- Portals ---
 function showPortalEditor(show) {
-  document.getElementById('portalEditor').style.display = show ? 'block' : 'none';
+  (document.getElementById('portalEditor') as HTMLElement).style.display = show ? 'block' : 'none';
 }
 
 function startNewPortal() {
   editPortalIdx = -1;
   populateMapDropdown(document.getElementById('portalMap'), 'world');
-  document.getElementById('portalX').value = 0;
-  document.getElementById('portalY').value = 0;
+  (document.getElementById('portalX') as HTMLInputElement).value = String(0);
+  (document.getElementById('portalY') as HTMLInputElement).value = String(0);
   populateMapDropdown(document.getElementById('portalToMap'), 'world');
-  document.getElementById('portalToX').value = 0;
-  document.getElementById('portalToY').value = 0;
-  document.getElementById('addPortal').textContent = 'Add Portal';
-  document.getElementById('delPortal').style.display = 'none';
+  (document.getElementById('portalToX') as HTMLInputElement).value = String(0);
+  (document.getElementById('portalToY') as HTMLInputElement).value = String(0);
+  (document.getElementById('addPortal') as HTMLElement).textContent = 'Add Portal';
+  (document.getElementById('delPortal') as HTMLElement).style.display = 'none';
   showPortalEditor(true);
 }
 
 function collectPortal() {
-  const map = document.getElementById('portalMap').value.trim() || 'world';
-  const x = parseInt(document.getElementById('portalX').value, 10) || 0;
-  const y = parseInt(document.getElementById('portalY').value, 10) || 0;
-  const toMap = document.getElementById('portalToMap').value.trim() || 'world';
-  const toX = parseInt(document.getElementById('portalToX').value, 10) || 0;
-  const toY = parseInt(document.getElementById('portalToY').value, 10) || 0;
+  const map = (document.getElementById('portalMap') as HTMLInputElement | HTMLSelectElement).value.trim() || 'world';
+  const x = parseInt((document.getElementById('portalX') as HTMLInputElement).value, 10) || 0;
+  const y = parseInt((document.getElementById('portalY') as HTMLInputElement).value, 10) || 0;
+  const toMap = (document.getElementById('portalToMap') as HTMLInputElement | HTMLSelectElement).value.trim() || 'world';
+  const toX = parseInt((document.getElementById('portalToX') as HTMLInputElement).value, 10) || 0;
+  const toY = parseInt((document.getElementById('portalToY') as HTMLInputElement).value, 10) || 0;
   return { map, x, y, toMap, toX, toY };
 }
 
@@ -4666,11 +4665,11 @@ function addPortal() {
   if (editPortalIdx >= 0) {
     moduleData.portals[editPortalIdx] = entry;
   } else {
-    moduleData.portals.push(entry);
+    (moduleData.portals as any[]).push(entry);
   }
   editPortalIdx = -1;
-  document.getElementById('addPortal').textContent = 'Add Portal';
-  document.getElementById('delPortal').style.display = 'none';
+  (document.getElementById('addPortal') as HTMLElement).textContent = 'Add Portal';
+  (document.getElementById('delPortal') as HTMLElement).style.display = 'none';
   renderPortalList();
   selectedObj = null;
   drawWorld();
@@ -4681,13 +4680,13 @@ function editPortal(i) {
   const p = moduleData.portals[i];
   editPortalIdx = i;
   populateMapDropdown(document.getElementById('portalMap'), p.map);
-  document.getElementById('portalX').value = p.x;
-  document.getElementById('portalY').value = p.y;
+  (document.getElementById('portalX') as HTMLInputElement).value = String(p.x);
+  (document.getElementById('portalY') as HTMLInputElement).value = String(p.y);
   populateMapDropdown(document.getElementById('portalToMap'), p.toMap);
-  document.getElementById('portalToX').value = p.toX;
-  document.getElementById('portalToY').value = p.toY;
-  document.getElementById('addPortal').textContent = 'Update Portal';
-  document.getElementById('delPortal').style.display = 'block';
+  (document.getElementById('portalToX') as HTMLInputElement).value = String(p.toX);
+  (document.getElementById('portalToY') as HTMLInputElement).value = String(p.toY);
+  (document.getElementById('addPortal') as HTMLElement).textContent = 'Update Portal';
+  (document.getElementById('delPortal') as HTMLElement).style.display = 'block';
   showPortalEditor(true);
   selectedObj = { type: 'portal', obj: p };
   drawWorld();
@@ -4703,8 +4702,8 @@ function deletePortal() {
   if (editPortalIdx < 0) return;
   moduleData.portals.splice(editPortalIdx, 1);
   editPortalIdx = -1;
-  document.getElementById('addPortal').textContent = 'Add Portal';
-  document.getElementById('delPortal').style.display = 'none';
+  (document.getElementById('addPortal') as HTMLElement).textContent = 'Add Portal';
+  (document.getElementById('delPortal') as HTMLElement).style.display = 'none';
   renderPortalList();
   selectedObj = null;
   drawWorld();
@@ -4726,26 +4725,26 @@ function drawBldg(){
   }
 }
 function showBldgEditor(show) {
-  document.getElementById('bldgEditor').style.display = show ? 'block' : 'none';
+  (document.getElementById('bldgEditor') as HTMLElement).style.display = show ? 'block' : 'none';
 }
 function startNewBldg() {
   editBldgIdx = -1;
-  document.getElementById('bldgX').value = 0;
-  document.getElementById('bldgY').value = 0;
-  document.getElementById('bldgW').value = 6;
-  document.getElementById('bldgH').value = 5;
-  document.getElementById('bldgBoarded').checked = false;
-  document.getElementById('bldgBunker').checked = false;
-  document.getElementById('bldgInterior').disabled = false;
+  (document.getElementById('bldgX') as HTMLInputElement).value = String(0);
+  (document.getElementById('bldgY') as HTMLInputElement).value = String(0);
+  (document.getElementById('bldgW') as HTMLInputElement).value = String(6);
+  (document.getElementById('bldgH') as HTMLInputElement).value = String(5);
+  (document.getElementById('bldgBoarded') as HTMLInputElement).checked = false;
+  (document.getElementById('bldgBunker') as HTMLInputElement).checked = false;
+  (document.getElementById('bldgInterior') as HTMLInputElement | HTMLButtonElement | HTMLSelectElement).disabled = false;
   bldgGrid = Array.from({length:5},(_,yy)=>Array.from({length:6},(_,xx)=>TILE.BUILDING));
   bldgGrid[4][3]=TILE.DOOR;
   bldgPalette.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
   bldgPalette.querySelector('button[data-tile="B"]').classList.add('active');
   bldgPaint = TILE.BUILDING;
   updateInteriorOptions();
-  document.getElementById('addBldg').style.display = 'block';
-  document.getElementById('cancelBldg').style.display = 'none';
-  document.getElementById('delBldg').style.display = 'none';
+  (document.getElementById('addBldg') as HTMLElement).style.display = 'block';
+  (document.getElementById('cancelBldg') as HTMLElement).style.display = 'none';
+  (document.getElementById('delBldg') as HTMLElement).style.display = 'none';
   placingType = null;
   placingPos = null;
   selectedObj = null;
@@ -4759,44 +4758,44 @@ function beginPlaceBldg() {
   placingType = 'bldg';
   placingPos = null;
   placingCb = addBuilding;
-  document.getElementById('addBldg').style.display = 'none';
-  document.getElementById('cancelBldg').style.display = 'block';
+  (document.getElementById('addBldg') as HTMLElement).style.display = 'none';
+  (document.getElementById('cancelBldg') as HTMLElement).style.display = 'block';
   selectedObj = null;
   drawWorld();
 }
 // Add a new building to the world and start editing it
 function addBuilding() {
-  const x = parseInt(document.getElementById('bldgX').value, 10) || 0;
-  const y = parseInt(document.getElementById('bldgY').value, 10) || 0;
-  const bunker = document.getElementById('bldgBunker').checked;
-  let interiorId = document.getElementById('bldgInterior').value;
+  const x = parseInt((document.getElementById('bldgX') as HTMLInputElement).value, 10) || 0;
+  const y = parseInt((document.getElementById('bldgY') as HTMLInputElement).value, 10) || 0;
+  const bunker = (document.getElementById('bldgBunker') as HTMLInputElement).checked;
+  let interiorId = (document.getElementById('bldgInterior') as HTMLInputElement).value;
   if (!bunker) {
     if (!interiorId) {
       interiorId = makeInteriorRoom();
-      const I = interiors[interiorId]; I.id = interiorId; moduleData.interiors.push(I); renderInteriorList();
+      const I = interiors[interiorId]; I.id = interiorId; (moduleData.interiors as any[]).push(I); renderInteriorList();
     }
   } else {
     interiorId = null;
   }
-  const boarded = document.getElementById('bldgBoarded').checked;
+  const boarded = (document.getElementById('bldgBoarded') as HTMLInputElement).checked;
   const b = placeHut(x,y,{interiorId, grid:bldgGrid, boarded, bunker});
-  moduleData.buildings.push(b);
+  (moduleData.buildings as any[]).push(b);
   editBldgIdx = moduleData.buildings.length - 1;
   renderBldgList();
   selectedObj = { type: 'bldg', obj: b };
   placingType = null;
   placingPos = null;
   drawWorld();
-  document.getElementById('delBldg').style.display = 'block';
-  document.getElementById('addBldg').style.display = 'none';
+  (document.getElementById('delBldg') as HTMLElement).style.display = 'block';
+  (document.getElementById('addBldg') as HTMLElement).style.display = 'none';
 }
 
 function cancelBldg() {
   placingType = null;
   placingPos = null;
   placingCb = null;
-  document.getElementById('addBldg').style.display = 'block';
-  document.getElementById('cancelBldg').style.display = 'none';
+  (document.getElementById('addBldg') as HTMLElement).style.display = 'block';
+  (document.getElementById('cancelBldg') as HTMLElement).style.display = 'none';
   drawWorld();
   updateCursor();
 }
@@ -4810,21 +4809,21 @@ function renderBldgList() {
 function editBldg(i) {
   const b = moduleData.buildings[i];
   showMap('world');
-  focusMap(b.x + b.w / 2, b.y + b.h / 2);
+  focusMapACK(b.x + b.w / 2, b.y + b.h / 2);
   editBldgIdx = i;
-  document.getElementById('bldgX').value = b.x;
-  document.getElementById('bldgY').value = b.y;
-  document.getElementById('bldgW').value = b.w;
-  document.getElementById('bldgH').value = b.h;
-  document.getElementById('bldgBoarded').checked = !!b.boarded;
-  document.getElementById('bldgBunker').checked = !!b.bunker;
-  document.getElementById('bldgInterior').disabled = !!b.bunker;
+  (document.getElementById('bldgX') as HTMLInputElement).value = String(b.x);
+  (document.getElementById('bldgY') as HTMLInputElement).value = String(b.y);
+  (document.getElementById('bldgW') as HTMLInputElement).value = String(b.w);
+  (document.getElementById('bldgH') as HTMLInputElement).value = String(b.h);
+  (document.getElementById('bldgBoarded') as HTMLInputElement).checked = !!b.boarded;
+  (document.getElementById('bldgBunker') as HTMLInputElement).checked = !!b.bunker;
+  (document.getElementById('bldgInterior') as HTMLInputElement | HTMLButtonElement | HTMLSelectElement).disabled = !!b.bunker;
   bldgGrid = b.grid ? b.grid.map(r=>r.slice()) : Array.from({length:b.h},()=>Array.from({length:b.w},()=>TILE.BUILDING));
   updateInteriorOptions();
-  document.getElementById('bldgInterior').value = b.interiorId || '';
-  document.getElementById('addBldg').style.display = 'none';
-  document.getElementById('cancelBldg').style.display = 'none';
-  document.getElementById('delBldg').style.display = 'block';
+  (document.getElementById('bldgInterior') as HTMLInputElement).value = String(b.interiorId || '');
+  (document.getElementById('addBldg') as HTMLElement).style.display = 'none';
+  (document.getElementById('cancelBldg') as HTMLElement).style.display = 'none';
+  (document.getElementById('delBldg') as HTMLElement).style.display = 'block';
   bldgPalette.querySelectorAll('button').forEach(btn=>btn.classList.remove('active'));
   bldgPalette.querySelector('button[data-tile="B"]').classList.add('active');
   bldgPaint = TILE.BUILDING;
@@ -4855,14 +4854,14 @@ if (bldgCanvas) {
 }
 
 function resizeBldg(){
-  const w=parseInt(document.getElementById('bldgW').value,10)||1;
-  const h=parseInt(document.getElementById('bldgH').value,10)||1;
+  const w=parseInt((document.getElementById('bldgW') as HTMLInputElement).value,10)||1;
+  const h=parseInt((document.getElementById('bldgH') as HTMLInputElement).value,10)||1;
   const ng=Array.from({length:h},(_,y)=>Array.from({length:w},(_,x)=> (y<bldgGrid.length && x<bldgGrid[0].length)? bldgGrid[y][x]:null));
   bldgGrid=ng; drawBldg();
   applyBldgChanges();
 }
-document.getElementById('bldgW').addEventListener('change',resizeBldg);
-document.getElementById('bldgH').addEventListener('change',resizeBldg);
+(document.getElementById('bldgW') as HTMLElement).addEventListener('change',resizeBldg);
+(document.getElementById('bldgH') as HTMLElement).addEventListener('change',resizeBldg);
 
 bldgPalette.querySelectorAll('button').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -4922,7 +4921,7 @@ const stampWindow = document.getElementById('stampWindow');
 if (stampsBtn && stampWindow) {
   function renderStampWindow() {
     stampWindow.innerHTML = '';
-    for (const [id, stamp] of Object.entries(worldStamps)) {
+    for (const [id, stamp] of Object.entries(worldStamps as Record<string, any>)) {
       const opt = document.createElement('div');
       opt.className = 'stamp-option';
       const canv = document.createElement('canvas');
@@ -4957,7 +4956,7 @@ if (stampsBtn && stampWindow) {
       aiBtn.addEventListener('click', async () => {
         const block = await window.NanoPalette.generate();
         if (block) {
-          const grid = gridFromEmoji(block);
+          const grid = gridFromEmoji(block as string[]);
           worldStamps.nano = grid;
           worldStampEmoji.nano = block;
           stampNames.nano = 'Nano';
@@ -5022,22 +5021,22 @@ function redrawBuildings() {
 // Update the currently edited building when fields or tiles change
 function applyBldgChanges() {
   if (editBldgIdx < 0) return;
-  const x = parseInt(document.getElementById('bldgX').value, 10) || 0;
-  const y = parseInt(document.getElementById('bldgY').value, 10) || 0;
-  const bunker = document.getElementById('bldgBunker').checked;
-  let interiorId = document.getElementById('bldgInterior').value;
+  const x = parseInt((document.getElementById('bldgX') as HTMLInputElement).value, 10) || 0;
+  const y = parseInt((document.getElementById('bldgY') as HTMLInputElement).value, 10) || 0;
+  const bunker = (document.getElementById('bldgBunker') as HTMLInputElement).checked;
+  let interiorId = (document.getElementById('bldgInterior') as HTMLInputElement).value;
   if (!bunker) {
     if (!interiorId) {
       interiorId = makeInteriorRoom();
-      const I = interiors[interiorId]; I.id = interiorId; moduleData.interiors.push(I); renderInteriorList();
-      document.getElementById('bldgInterior').value = interiorId;
+      const I = interiors[interiorId]; I.id = interiorId; (moduleData.interiors as any[]).push(I); renderInteriorList();
+      (document.getElementById('bldgInterior') as HTMLInputElement).value = String(interiorId);
     }
   } else {
     interiorId = null;
   }
   const ob = moduleData.buildings[editBldgIdx];
   removeBuilding(ob);
-  const boarded = document.getElementById('bldgBoarded').checked;
+  const boarded = (document.getElementById('bldgBoarded') as HTMLInputElement).checked;
   const b = placeHut(x, y, { interiorId, grid: bldgGrid, boarded, bunker });
   moduleData.buildings[editBldgIdx] = b;
   selectedObj = { type: 'bldg', obj: b };
@@ -5053,9 +5052,9 @@ function deleteBldg() {
   removeBuilding(b);
   moduleData.buildings.splice(editBldgIdx, 1);
   editBldgIdx = -1;
-  document.getElementById('addBldg').style.display = 'block';
-  document.getElementById('cancelBldg').style.display = 'none';
-  document.getElementById('delBldg').style.display = 'none';
+  (document.getElementById('addBldg') as HTMLElement).style.display = 'block';
+  (document.getElementById('cancelBldg') as HTMLElement).style.display = 'none';
+  (document.getElementById('delBldg') as HTMLElement).style.display = 'none';
   renderBldgList();
   selectedObj = null;
   drawWorld();
@@ -5067,9 +5066,9 @@ function closeBldgEditor() {
   placingType = null;
   placingPos = null;
   selectedObj = null;
-  document.getElementById('addBldg').style.display = 'block';
-  document.getElementById('cancelBldg').style.display = 'none';
-  document.getElementById('delBldg').style.display = 'none';
+  (document.getElementById('addBldg') as HTMLElement).style.display = 'block';
+  (document.getElementById('cancelBldg') as HTMLElement).style.display = 'none';
+  (document.getElementById('delBldg') as HTMLElement).style.display = 'none';
   renderBldgList();
   showBldgEditor(false);
   drawWorld();
@@ -5152,25 +5151,25 @@ function buildQuestRewardFromInputs() {
   const type = typeSel.value;
   if (!type) return { ok: true, reward: undefined };
   if (type === 'item') {
-    const itemId = document.getElementById('questRewardItemId').value.trim();
+    const itemId = (document.getElementById('questRewardItemId') as HTMLInputElement).value.trim();
     if (!itemId) return { ok: false, error: 'Enter an item id for the reward.' };
     return { ok: true, reward: itemId };
   }
   if (type === 'xp') {
-    const xp = parseInt(document.getElementById('questRewardXP').value, 10);
+    const xp = parseInt((document.getElementById('questRewardXP') as HTMLInputElement).value, 10);
     if (!Number.isFinite(xp) || xp < 0) return { ok: false, error: 'Enter an XP amount of 0 or more.' };
     return { ok: true, reward: `XP ${xp}` };
   }
   if (type === 'scrap') {
-    const scrap = parseInt(document.getElementById('questRewardScrap').value, 10);
+    const scrap = parseInt((document.getElementById('questRewardScrap') as HTMLInputElement).value, 10);
     if (!Number.isFinite(scrap) || scrap < 0) return { ok: false, error: 'Enter a scrap amount of 0 or more.' };
     return { ok: true, reward: `SCRAP ${scrap}` };
   }
   if (type === 'custom') {
-    const id = document.getElementById('questRewardCustomId').value.trim();
-    const name = document.getElementById('questRewardCustomName').value.trim();
-    const rewardType = document.getElementById('questRewardCustomType').value.trim();
-    const slot = document.getElementById('questRewardCustomSlot').value.trim();
+    const id = (document.getElementById('questRewardCustomId') as HTMLInputElement).value.trim();
+    const name = (document.getElementById('questRewardCustomName') as HTMLInputElement).value.trim();
+    const rewardType = (document.getElementById('questRewardCustomType') as HTMLInputElement | HTMLSelectElement).value.trim();
+    const slot = (document.getElementById('questRewardCustomSlot') as HTMLInputElement | HTMLSelectElement).value.trim();
     if (!id || !name) return { ok: false, error: 'Custom rewards need an id and name.' };
     const mods = collectMods('questRewardMods');
     const reward = { id, name };
@@ -5188,33 +5187,33 @@ function maybeSyncQuestRewardSlot() {
   if (!slot.value && ['weapon', 'armor', 'trinket'].includes(type)) slot.value = type;
 }
 function showQuestEditor(show) {
-  document.getElementById('questEditor').style.display = show ? 'block' : 'none';
+  (document.getElementById('questEditor') as HTMLElement).style.display = show ? 'block' : 'none';
 }
 function startNewQuest() {
   editQuestIdx = -1;
-  document.getElementById('questId').value = nextId('quest', moduleData.quests);
-  document.getElementById('questTitle').value = '';
-  document.getElementById('questDesc').value = '';
-  document.getElementById('questItem').value = '';
+  (document.getElementById('questId') as HTMLInputElement).value = String(nextId('quest', moduleData.quests));
+  (document.getElementById('questTitle') as HTMLInputElement).value = '';
+  (document.getElementById('questDesc') as HTMLTextAreaElement | HTMLInputElement).value = '';
+  (document.getElementById('questItem') as HTMLInputElement).value = '';
   resetQuestRewardFields();
-  document.getElementById('questXP').value = 10;
-  document.getElementById('questNPC').value = '';
-  document.getElementById('addQuest').textContent = 'Add Quest';
-  document.getElementById('delQuest').style.display = 'none';
+  (document.getElementById('questXP') as HTMLInputElement).value = String(10);
+  (document.getElementById('questNPC') as HTMLInputElement).value = '';
+  (document.getElementById('addQuest') as HTMLElement).textContent = 'Add Quest';
+  (document.getElementById('delQuest') as HTMLElement).style.display = 'none';
   showQuestEditor(true);
-  document.getElementById('questId').focus();
+  (document.getElementById('questId') as HTMLElement).focus();
 }
 function addQuest() {
-  const id = document.getElementById('questId').value.trim();
-  const title = document.getElementById('questTitle').value.trim();
-  const desc = document.getElementById('questDesc').value.trim();
-  const item = document.getElementById('questItem').value.trim();
+  const id = (document.getElementById('questId') as HTMLInputElement).value.trim();
+  const title = (document.getElementById('questTitle') as HTMLInputElement).value.trim();
+  const desc = (document.getElementById('questDesc') as HTMLTextAreaElement | HTMLInputElement).value.trim();
+  const item = (document.getElementById('questItem') as HTMLInputElement).value.trim();
   const rewardResult = buildQuestRewardFromInputs();
   if (!rewardResult.ok) {
     alert(rewardResult.error);
     return;
   }
-  const xpValue = parseInt(document.getElementById('questXP').value, 10);
+  const xpValue = parseInt((document.getElementById('questXP') as HTMLInputElement).value, 10);
   let xp = Number.isFinite(xpValue) ? xpValue : 10;
   xp = Math.round(xp);
   if (xp < 10) xp = 10;
@@ -5227,7 +5226,7 @@ function addQuest() {
   } else {
     moduleData.quests.push(quest);
   }
-  const npcId = document.getElementById('questNPC').value.trim();
+  const npcId = (document.getElementById('questNPC') as HTMLInputElement).value.trim();
   if (npcId) {
     const npc = moduleData.npcs.find(n => n.id === npcId);
     if (npc) {
@@ -5242,11 +5241,11 @@ function addQuest() {
     }
   }
   editQuestIdx = -1;
-  document.getElementById('addQuest').textContent = 'Add Quest';
-  document.getElementById('delQuest').style.display = 'none';
+  (document.getElementById('addQuest') as HTMLElement).textContent = 'Add Quest';
+  (document.getElementById('delQuest') as HTMLElement).style.display = 'none';
   renderQuestList();
   renderNPCList();
-  document.getElementById('questId').value = nextId('quest', moduleData.quests);
+  (document.getElementById('questId') as HTMLInputElement).value = String(nextId('quest', moduleData.quests));
   showQuestEditor(false);
 }
 function renderQuestList() {
@@ -5258,22 +5257,22 @@ function renderQuestList() {
 function editQuest(i) {
   const q = moduleData.quests[i];
   editQuestIdx = i;
-  document.getElementById('questId').value = q.id;
-  document.getElementById('questTitle').value = q.title;
-  document.getElementById('questDesc').value = q.desc;
-  document.getElementById('questItem').value = q.item || '';
+  (document.getElementById('questId') as HTMLInputElement).value = String(q.id);
+  (document.getElementById('questTitle') as HTMLInputElement).value = String(q.title);
+  (document.getElementById('questDesc') as HTMLTextAreaElement | HTMLInputElement).value = String(q.desc);
+  (document.getElementById('questItem') as HTMLInputElement).value = String(q.item || '');
   setQuestRewardFields(q.reward);
   const questXP = typeof q.xp === 'number' ? q.xp : parseInt(q.xp, 10);
   const sanitizedQuestXP = Number.isFinite(questXP) ? Math.min(Math.max(Math.round(questXP), 10), 100) : 10;
-  document.getElementById('questXP').value = sanitizedQuestXP;
+  (document.getElementById('questXP') as HTMLInputElement).value = String(sanitizedQuestXP);
   const npc = moduleData.npcs.find(n => Array.isArray(n.quests) ? n.quests.includes(q.id) : n.questId === q.id);
-  document.getElementById('questNPC').value = npc ? npc.id : '';
-  document.getElementById('addQuest').textContent = 'Update Quest';
-  document.getElementById('delQuest').style.display = 'block';
+  (document.getElementById('questNPC') as HTMLInputElement).value = String(npc ? npc.id : '');
+  (document.getElementById('addQuest') as HTMLElement).textContent = 'Update Quest';
+  (document.getElementById('delQuest') as HTMLElement).style.display = 'block';
   showQuestEditor(true);
 }
 function updateQuestOptions() {
-  const sel = document.getElementById('npcQuests');
+  const sel = (document.getElementById('npcQuests') as HTMLSelectElement);
     if (sel) {
       const cur = Array.from(sel.selectedOptions || []).map(o => o.value);
       sel.innerHTML = moduleData.quests.map(q => `<option value="${q.id}">${q.title}</option>`).join('');
@@ -5301,12 +5300,12 @@ function deleteQuest() {
     });
     moduleData.quests.splice(editQuestIdx, 1);
     editQuestIdx = -1;
-    document.getElementById('addQuest').textContent = 'Add Quest';
-    document.getElementById('delQuest').style.display = 'none';
+    (document.getElementById('addQuest') as HTMLElement).textContent = 'Add Quest';
+    (document.getElementById('delQuest') as HTMLElement).style.display = 'none';
     renderQuestList();
     renderNPCList();
     updateQuestOptions();
-    document.getElementById('questId').value = nextId('quest', moduleData.quests);
+    (document.getElementById('questId') as HTMLInputElement).value = String(nextId('quest', moduleData.quests));
     showQuestEditor(false);
   });
 }
@@ -5345,22 +5344,22 @@ function applyLoadedModule(data) {
   moduleData.encounters = [];
   if (data.encounters) {
     Object.entries(data.encounters).forEach(([map, list]) => {
-      list.forEach(e => moduleData.encounters.push({ map, ...e }));
+      list.forEach(e => (moduleData.encounters as any[]).push({ map, ...e }));
     });
   }
   moduleData.start = data.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
-  document.getElementById('moduleName').value = moduleData.name;
+  (document.getElementById('moduleName') as HTMLInputElement).value = String(moduleData.name);
   const bunkerScope = moduleData.props?.bunkerTravelScope || 'global';
   const scopeEl = document.getElementById('moduleBunkerScope');
   if(scopeEl) scopeEl.value = bunkerScope;
-  globalThis.interiors = {};
-  interiors = globalThis.interiors;
+  (globalThis as any).interiors = {};
+  interiors = (globalThis as any).interiors;
   moduleData.interiors.forEach(I => { interiors[I.id] = I; });
 
   if (data.world) {
     const w = typeof data.world[0] === 'string' ? gridFromEmoji(data.world) : data.world;
-    globalThis.world = w;
-    world = globalThis.world;
+    (globalThis as any).world = w;
+    world = (globalThis as any).world;
   } else {
     buildings.forEach(b => {
       for (let yy = 0; yy < b.h; yy++) {
@@ -5590,7 +5589,7 @@ function onProblemClick(){
   else if(prob.type==='template') editTemplate(prob.idx);
   else if(prob.type==='start'){
     showMap('world');
-    focusMap(moduleData.start.x,moduleData.start.y);
+    focusMapACK(moduleData.start.x,moduleData.start.y);
     selectedObj=null;
     settingStart = true;
     setMapActionBanner('Player start needs a walkable tile. Click a valid tile to reposition.', 'error');
@@ -5653,7 +5652,7 @@ function renderProblems(issues){
 }
 
 function exportModulePayload() {
-  moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
+  moduleData.name = (document.getElementById('moduleName') as HTMLInputElement).value.trim() || 'adventure-module';
   if (moduleData.personas) {
     const used = new Set((moduleData.items || []).map(it => it.persona).filter(Boolean));
     Object.keys(moduleData.personas).forEach(id => {
@@ -5671,7 +5670,7 @@ function exportModulePayload() {
     (_origKeys || Object.keys(rest)).forEach(k => { clean[k] = rest[k]; });
     return clean;
   });
-  const ints = moduleData.interiors.map(I => {
+  const ints = moduleData.interiors.map((I: any) => {
     const { _origGrid, ...rest } = I;
     return { ...rest, grid: _origGrid || gridToEmoji(I.grid) };
   });
@@ -5718,7 +5717,7 @@ function saveModule() {
 }
 
 function playtestModule() {
-  moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
+  moduleData.name = (document.getElementById('moduleName') as HTMLInputElement).value.trim() || 'adventure-module';
   if (moduleData.personas) {
     const used = new Set((moduleData.items || []).map(it => it.persona).filter(Boolean));
     Object.keys(moduleData.personas).forEach(id => {
@@ -5727,7 +5726,7 @@ function playtestModule() {
     });
   }
   const bldgs = buildings.map(({ under, ...rest }) => rest);
-  const ints = moduleData.interiors.map(I => ({...I, grid: gridToEmoji(I.grid)}));
+  const ints = moduleData.interiors.map((I: any) => ({...I, grid: gridToEmoji(I.grid || [])}));
   const enc = {} as AnyRecord;
   (moduleData.encounters||[]).forEach(e => {
     const { map, ...rest } = e;
@@ -5743,7 +5742,7 @@ function playtestModule() {
   window.open('dustland.html?ack-player=1#play', '_blank');
 }
 
-document.getElementById('clear').onclick = clearWorld;
+(document.getElementById('clear') as HTMLElement).onclick = clearWorld;
 const moduleBunkerScope = document.getElementById('moduleBunkerScope');
 if(moduleBunkerScope){
   moduleBunkerScope.addEventListener('change', () => {
@@ -5757,85 +5756,85 @@ function runGenerate(regen) {
   if (typeof moduleData?.generateMap === 'function') moduleData.generateMap(regen);
   else generateProceduralWorld(regen);
 }
-document.getElementById('procGen').onclick = () => runGenerate(false);
-document.getElementById('procRegen').onclick = () => runGenerate(true);
-document.getElementById('saveNPC').onclick = saveNPC;
-document.getElementById('addItem').onclick = () => {
-  const onMap = document.getElementById('itemOnMap').checked;
-  const mapVal = document.getElementById('itemMap').value.trim();
+(document.getElementById('procGen') as HTMLElement).onclick = () => runGenerate(false);
+(document.getElementById('procRegen') as HTMLElement).onclick = () => runGenerate(true);
+(document.getElementById('saveNPC') as HTMLElement).onclick = saveNPC;
+(document.getElementById('addItem') as HTMLElement).onclick = () => {
+  const onMap = (document.getElementById('itemOnMap') as HTMLInputElement).checked;
+  const mapVal = (document.getElementById('itemMap') as HTMLInputElement | HTMLSelectElement).value.trim();
   if (editItemIdx >= 0 || !onMap || !mapVal) addItem(); else beginPlaceItem();
 };
-document.getElementById('newItem').onclick = startNewItem;
-document.getElementById('itemMap').addEventListener('input', updateItemMapWrap);
-document.getElementById('itemOnMap').addEventListener('change', updateItemMapWrap);
-document.getElementById('itemRemove').onclick = removeItemFromWorld;
-document.getElementById('newNPC').onclick = startNewNPC;
-document.getElementById('discardNPC').onclick = discardNPC;
-document.getElementById('newBldg').onclick = startNewBldg;
-document.getElementById('newQuest').onclick = startNewQuest;
-document.getElementById('questRewardType').addEventListener('change', updateQuestRewardFields);
+(document.getElementById('newItem') as HTMLElement).onclick = startNewItem;
+(document.getElementById('itemMap') as HTMLElement).addEventListener('input', updateItemMapWrap);
+(document.getElementById('itemOnMap') as HTMLElement).addEventListener('change', updateItemMapWrap);
+(document.getElementById('itemRemove') as HTMLElement).onclick = removeItemFromWorld;
+(document.getElementById('newNPC') as HTMLElement).onclick = startNewNPC;
+(document.getElementById('discardNPC') as HTMLElement).onclick = discardNPC;
+(document.getElementById('newBldg') as HTMLElement).onclick = startNewBldg;
+(document.getElementById('newQuest') as HTMLElement).onclick = startNewQuest;
+(document.getElementById('questRewardType') as HTMLElement).addEventListener('change', updateQuestRewardFields);
 const questRewardCustomType = document.getElementById('questRewardCustomType');
 if (questRewardCustomType) questRewardCustomType.addEventListener('change', () => {
   maybeSyncQuestRewardSlot();
 });
-document.getElementById('addBldg').onclick = beginPlaceBldg;
-document.getElementById('addQuest').onclick = addQuest;
-document.getElementById('addEvent').onclick = addEvent;
-document.getElementById('cancelItem').onclick = cancelItem;
-document.getElementById('cancelBldg').onclick = cancelBldg;
-document.getElementById('newEvent').onclick = startNewEvent;
-document.getElementById('addPortal').onclick = addPortal;
-document.getElementById('newPortal').onclick = startNewPortal;
-document.getElementById('newZone').onclick = startNewZone;
-document.getElementById('bldgBunker').addEventListener('change', () => {
-  document.getElementById('bldgInterior').disabled = document.getElementById('bldgBunker').checked;
+(document.getElementById('addBldg') as HTMLElement).onclick = beginPlaceBldg;
+(document.getElementById('addQuest') as HTMLElement).onclick = addQuest;
+(document.getElementById('addEvent') as HTMLElement).onclick = addEvent;
+(document.getElementById('cancelItem') as HTMLElement).onclick = cancelItem;
+(document.getElementById('cancelBldg') as HTMLElement).onclick = cancelBldg;
+(document.getElementById('newEvent') as HTMLElement).onclick = startNewEvent;
+(document.getElementById('addPortal') as HTMLElement).onclick = addPortal;
+(document.getElementById('newPortal') as HTMLElement).onclick = startNewPortal;
+(document.getElementById('newZone') as HTMLElement).onclick = startNewZone;
+(document.getElementById('bldgBunker') as HTMLElement).addEventListener('change', () => {
+  (document.getElementById('bldgInterior') as HTMLInputElement | HTMLButtonElement | HTMLSelectElement).disabled = (document.getElementById('bldgBunker') as HTMLInputElement).checked;
 });
-document.getElementById('addZone').onclick = addZone;
-document.getElementById('delZone').onclick = deleteZone;
-document.getElementById('delNPC').onclick = deleteNPC;
-document.getElementById('closeNPC').onclick = closeNPCEditor;
-document.getElementById('closeItem').onclick = closeItemEditor;
-document.getElementById('closeBldg').onclick = closeBldgEditor;
-document.getElementById('closeInterior').onclick = closeInteriorEditor;
-document.getElementById('newArena').onclick = startNewArena;
-document.getElementById('addArena').onclick = addArena;
-document.getElementById('arenaAddWave').onclick = () => addArenaWaveBlock({});
-document.getElementById('cancelArena').onclick = cancelArena;
-document.getElementById('delArena').onclick = deleteArena;
-document.getElementById('newEncounter').onclick = startNewEncounter;
-document.getElementById('addEncounter').onclick = addEncounter;
-document.getElementById('encAddLootRow').onclick = () => addLootTableRow(document.getElementById('encLootTable'));
-document.getElementById('cancelEncounter').onclick = () => { editEncounterIdx = -1; showEncounterEditor(false); };
-document.getElementById('delEncounter').onclick = deleteEncounter;
-document.getElementById('closeEncounter').onclick = () => showEncounterEditor(false);
-document.getElementById('newTemplate').onclick = startNewTemplate;
-document.getElementById('addTemplate').onclick = addTemplate;
-document.getElementById('templateAddLootRow').onclick = () => addLootTableRow(document.getElementById('templateLootTable'));
-document.getElementById('delTemplate').onclick = deleteTemplate;
-document.getElementById('templateDropScrap').onchange = toggleTemplateScrapFields;
-document.getElementById('encTemplate').addEventListener('change', () => {
+(document.getElementById('addZone') as HTMLElement).onclick = addZone;
+(document.getElementById('delZone') as HTMLElement).onclick = deleteZone;
+(document.getElementById('delNPC') as HTMLElement).onclick = deleteNPC;
+(document.getElementById('closeNPC') as HTMLElement).onclick = closeNPCEditor;
+(document.getElementById('closeItem') as HTMLElement).onclick = closeItemEditor;
+(document.getElementById('closeBldg') as HTMLElement).onclick = closeBldgEditor;
+(document.getElementById('closeInterior') as HTMLElement).onclick = closeInteriorEditor;
+(document.getElementById('newArena') as HTMLElement).onclick = startNewArena;
+(document.getElementById('addArena') as HTMLElement).onclick = addArena;
+(document.getElementById('arenaAddWave') as HTMLElement).onclick = () => addArenaWaveBlock({});
+(document.getElementById('cancelArena') as HTMLElement).onclick = cancelArena;
+(document.getElementById('delArena') as HTMLElement).onclick = deleteArena;
+(document.getElementById('newEncounter') as HTMLElement).onclick = startNewEncounter;
+(document.getElementById('addEncounter') as HTMLElement).onclick = addEncounter;
+(document.getElementById('encAddLootRow') as HTMLElement).onclick = () => addLootTableRow(document.getElementById('encLootTable'));
+(document.getElementById('cancelEncounter') as HTMLElement).onclick = () => { editEncounterIdx = -1; showEncounterEditor(false); };
+(document.getElementById('delEncounter') as HTMLElement).onclick = deleteEncounter;
+(document.getElementById('closeEncounter') as HTMLElement).onclick = () => showEncounterEditor(false);
+(document.getElementById('newTemplate') as HTMLElement).onclick = startNewTemplate;
+(document.getElementById('addTemplate') as HTMLElement).onclick = addTemplate;
+(document.getElementById('templateAddLootRow') as HTMLElement).onclick = () => addLootTableRow(document.getElementById('templateLootTable'));
+(document.getElementById('delTemplate') as HTMLElement).onclick = deleteTemplate;
+(document.getElementById('templateDropScrap') as HTMLElement).onchange = toggleTemplateScrapFields;
+(document.getElementById('encTemplate') as HTMLElement).addEventListener('change', () => {
   const container = document.getElementById('encLootTable');
   if (!container || container.querySelector('.lootRow')) return;
-  const tmplId = document.getElementById('encTemplate').value.trim();
+  const tmplId = (document.getElementById('encTemplate') as HTMLInputElement | HTMLSelectElement).value.trim();
   const tmpl = moduleData.templates.find(t => t.id === tmplId);
   const table = getTemplateLootTable(tmpl);
   if (table.length) setLootTable(container, table);
 });
-document.getElementById('encLocationMode').addEventListener('change', updateEncounterLocationMode);
-document.getElementById('encMap').addEventListener('change', () => {
+(document.getElementById('encLocationMode') as HTMLElement).addEventListener('change', updateEncounterLocationMode);
+(document.getElementById('encMap') as HTMLElement).addEventListener('change', () => {
   const mapSel = document.getElementById('encMap');
   const zoneSel = document.getElementById('encZone');
   populateEncounterZoneDropdown(mapSel.value || 'world', zoneSel ? zoneSel.value : '');
   updateEncounterLocationMode();
 });
 updateEncounterLocationMode();
-document.getElementById('npcPrevP').onclick = () => {
+(document.getElementById('npcPrevP') as HTMLElement).onclick = () => {
   npcPortraitIndex = (npcPortraitIndex + npcPortraits.length - 1) % npcPortraits.length;
   npcPortraitPath = '';
   setNpcPortrait();
   applyNPCChanges();
 };
-document.getElementById('npcNextP').onclick = () => {
+(document.getElementById('npcNextP') as HTMLElement).onclick = () => {
   npcPortraitIndex = (npcPortraitIndex + 1) % npcPortraits.length;
   npcPortraitPath = '';
   setNpcPortrait();
@@ -5848,40 +5847,40 @@ setupListFilter('questFilter','questList');
 setupListFilter('eventFilter','eventList');
 setupListFilter('arenaFilter','arenaList');
 setupListFilter('encFilter','encounterList');
-document.getElementById('delItem').onclick = deleteItem;
-document.getElementById('delBldg').onclick = deleteBldg;
-document.getElementById('newInterior').onclick = startNewInterior;
-document.getElementById('delInterior').onclick = deleteInterior;
-document.getElementById('delQuest').onclick = deleteQuest;
-document.getElementById('delEvent').onclick = deleteEvent;
-document.getElementById('delPortal').onclick = deletePortal;
+(document.getElementById('delItem') as HTMLElement).onclick = deleteItem;
+(document.getElementById('delBldg') as HTMLElement).onclick = deleteBldg;
+(document.getElementById('newInterior') as HTMLElement).onclick = startNewInterior;
+(document.getElementById('delInterior') as HTMLElement).onclick = deleteInterior;
+(document.getElementById('delQuest') as HTMLElement).onclick = deleteQuest;
+(document.getElementById('delEvent') as HTMLElement).onclick = deleteEvent;
+(document.getElementById('delPortal') as HTMLElement).onclick = deletePortal;
 populateTypeDropdown(document.getElementById('itemType'));
-document.getElementById('itemType').addEventListener('change', updateModsWrap);
-document.getElementById('itemUseType').addEventListener('change', updateUseWrap);
-document.getElementById('itemTags').addEventListener('input', updatePersonaSection);
-document.getElementById('itemPersonaId').addEventListener('input', updatePersonaSection);
-document.getElementById('itemPersonaPortraitPath').addEventListener('input', e => {
+(document.getElementById('itemType') as HTMLElement).addEventListener('change', updateModsWrap);
+(document.getElementById('itemUseType') as HTMLElement).addEventListener('change', updateUseWrap);
+(document.getElementById('itemTags') as HTMLElement).addEventListener('input', updatePersonaSection);
+(document.getElementById('itemPersonaId') as HTMLElement).addEventListener('input', updatePersonaSection);
+(document.getElementById('itemPersonaPortraitPath') as HTMLElement).addEventListener('input', e => {
   itemPersonaPortraitPath = e.target.value.trim();
   if (itemPersonaPortraitPath) itemPersonaPortraitIndex = 0;
   setItemPersonaPortrait();
 });
-document.getElementById('itemPersonaPrev').onclick = () => {
+(document.getElementById('itemPersonaPrev') as HTMLElement).onclick = () => {
   itemPersonaPortraitIndex = (itemPersonaPortraitIndex + personaPortraits.length - 1) % personaPortraits.length;
   itemPersonaPortraitPath = '';
   const pathEl = document.getElementById('itemPersonaPortraitPath');
   if (pathEl) pathEl.value = '';
   setItemPersonaPortrait();
 };
-document.getElementById('itemPersonaNext').onclick = () => {
+(document.getElementById('itemPersonaNext') as HTMLElement).onclick = () => {
   itemPersonaPortraitIndex = (itemPersonaPortraitIndex + 1) % personaPortraits.length;
   itemPersonaPortraitPath = '';
   const pathEl = document.getElementById('itemPersonaPortraitPath');
   if (pathEl) pathEl.value = '';
   setItemPersonaPortrait();
 };
-document.getElementById('eventEffect').addEventListener('change', updateEventEffectFields);
-document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
-document.getElementById('npcFlagType').addEventListener('change', updateFlagBuilder);
+(document.getElementById('eventEffect') as HTMLElement).addEventListener('change', updateEventEffectFields);
+(document.getElementById('eventPick') as HTMLElement).onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
+(document.getElementById('npcFlagType') as HTMLElement).addEventListener('change', updateFlagBuilder);
 setupNpcSections();
 const npcEditorEl = typeof document !== 'undefined' ? document.getElementById('npcEditor') : null;
 if (npcEditorEl) {
@@ -5895,24 +5894,24 @@ if (npcEditorEl) {
     }
   });
 }
-document.getElementById('moduleName').value = moduleData.name;
-document.getElementById('npcPatrol').addEventListener('change', () => {
+(document.getElementById('moduleName') as HTMLInputElement).value = String(moduleData.name);
+(document.getElementById('npcPatrol') as HTMLElement).addEventListener('change', () => {
   updatePatrolSection();
   applyNPCChanges();
 });
 updatePatrolSection();
-document.getElementById('bldgEditor').addEventListener('input', applyBldgChanges);
-document.getElementById('bldgEditor').addEventListener('change', applyBldgChanges);
-document.getElementById('npcFlagPick').onclick = () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY', map: 'npcFlagMap' }; };
-document.getElementById('portalPick').onclick = () => { coordTarget = { x: 'portalX', y: 'portalY' }; };
-document.getElementById('portalDestPick').onclick = () => { coordTarget = { x: 'portalToX', y: 'portalToY' }; };
-document.getElementById('npcPick').onclick = beginNpcCoordinateSelection;
-document.getElementById('npcCancelPick').onclick = cancelNpcCoordinateSelection;
-document.getElementById('itemPick').onclick = () => { coordTarget = { x: 'itemX', y: 'itemY', map: 'itemMap' }; };
-document.getElementById('save').onclick = saveModule;
+(document.getElementById('bldgEditor') as HTMLElement).addEventListener('input', applyBldgChanges);
+(document.getElementById('bldgEditor') as HTMLElement).addEventListener('change', applyBldgChanges);
+(document.getElementById('npcFlagPick') as HTMLElement).onclick = () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY', map: 'npcFlagMap' }; };
+(document.getElementById('portalPick') as HTMLElement).onclick = () => { coordTarget = { x: 'portalX', y: 'portalY' }; };
+(document.getElementById('portalDestPick') as HTMLElement).onclick = () => { coordTarget = { x: 'portalToX', y: 'portalToY' }; };
+(document.getElementById('npcPick') as HTMLElement).onclick = beginNpcCoordinateSelection;
+(document.getElementById('npcCancelPick') as HTMLElement).onclick = cancelNpcCoordinateSelection;
+(document.getElementById('itemPick') as HTMLElement).onclick = () => { coordTarget = { x: 'itemX', y: 'itemY', map: 'itemMap' }; };
+(document.getElementById('save') as HTMLElement).onclick = saveModule;
 document.getElementById('quickSave')?.addEventListener('click', saveModule);
-document.getElementById('load').onclick = () => document.getElementById('loadFile').click();
-document.getElementById('loadFile').addEventListener('change', e => {
+(document.getElementById('load') as HTMLElement).onclick = () => (document.getElementById('loadFile') as HTMLElement).click();
+(document.getElementById('loadFile') as HTMLElement).addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -5923,12 +5922,12 @@ document.getElementById('loadFile').addEventListener('change', e => {
   reader.readAsText(file);
   e.target.value = '';
 });
-document.getElementById('setStart').onclick = () => {
+(document.getElementById('setStart') as HTMLElement).onclick = () => {
   settingStart = true;
   setMapActionBanner('Start position active: choose a walkable tile on the world map.', 'info');
   drawWorld();
 };
-document.getElementById('resetStart').onclick = () => {
+(document.getElementById('resetStart') as HTMLElement).onclick = () => {
   moduleData.start = { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   drawWorld();
   setMapActionBanner('Start position reset to the default location.', 'info', 2500);
@@ -5939,17 +5938,17 @@ if (spawnHeatBtn) spawnHeatBtn.onclick = () => {
   spawnHeatBtn.textContent = `Spawn Heat: ${spawnHeat ? 'On' : 'Off'}`;
   drawWorld();
 };
-document.getElementById('addNode').onclick = addNode;
-document.getElementById('editDialog').onclick = openDialogEditor;
-document.getElementById('closeDialogModal').onclick = closeDialogEditor;
-document.getElementById('dialogModal').addEventListener('click', e => { if (e.target.id === 'dialogModal') closeDialogEditor(); });
+(document.getElementById('addNode') as HTMLElement).onclick = addNode;
+(document.getElementById('editDialog') as HTMLElement).onclick = openDialogEditor;
+(document.getElementById('closeDialogModal') as HTMLElement).onclick = closeDialogEditor;
+(document.getElementById('dialogModal') as HTMLElement).addEventListener('click', e => { if (e.target.id === 'dialogModal') closeDialogEditor(); });
 // Live preview when dialog text changes
 ['npcDialog', 'npcAccept', 'npcTurnin'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderDialogPreview);
 });
 
 // When quest selection changes, show/hide extra fields, update preview, and (optionally) auto-generate the quest scaffold
-const npcQuestEl = document.getElementById('npcQuests');
+const npcQuestEl = (document.getElementById('npcQuests') as HTMLSelectElement);
 if (npcQuestEl) npcQuestEl.addEventListener('change', () => {
   toggleQuestDialogBtn();
   toggleQuestTextWrap();
@@ -5959,13 +5958,13 @@ if (npcQuestEl) npcQuestEl.addEventListener('change', () => {
     renderDialogPreview();   // just refresh preview of whatever is in the editor
   }
 });
-document.getElementById('npcCombat').addEventListener('change', updateNPCOptSections);
-document.getElementById('npcShop').addEventListener('change', updateNPCOptSections);
-document.getElementById('npcHidden').addEventListener('change', updateNPCOptSections);
-document.getElementById('npcTrainer').addEventListener('change', updateNPCOptSections);
-document.getElementById('npcColorOverride').addEventListener('change', updateColorOverride);
-document.getElementById('npcLocked').addEventListener('change', onLockedToggle);
-document.getElementById('genQuestDialog').onclick = generateQuestTree;
+(document.getElementById('npcCombat') as HTMLElement).addEventListener('change', updateNPCOptSections);
+(document.getElementById('npcShop') as HTMLElement).addEventListener('change', updateNPCOptSections);
+(document.getElementById('npcHidden') as HTMLElement).addEventListener('change', updateNPCOptSections);
+(document.getElementById('npcTrainer') as HTMLElement).addEventListener('change', updateNPCOptSections);
+(document.getElementById('npcColorOverride') as HTMLElement).addEventListener('change', updateColorOverride);
+(document.getElementById('npcLocked') as HTMLElement).addEventListener('change', onLockedToggle);
+(document.getElementById('genQuestDialog') as HTMLElement).onclick = generateQuestTree;
 if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && npcMapMode) {
@@ -5986,7 +5985,7 @@ function canvasPos(ev) {
     const y = clamp(Math.floor(py / sy + panY), 0, WORLD_H - 1);
     return { x, y };
   } else {
-    const I = moduleData.interiors.find(i => i.id === currentMap);
+    const I: any = moduleData.interiors.find(i => i.id === currentMap);
     if (!I) return { x: 0, y: 0 };
     const sx = canvas.width / I.w;
     const sy = canvas.height / I.h;
@@ -6081,9 +6080,9 @@ canvas.addEventListener('mousedown', ev => {
   }
   if (currentMap !== 'world' && !coordTarget && !placingType && !(overNpc || overItem || overEvent || overPortal || overZone)) {
     hoverTile = { x, y };
-    const I = moduleData.interiors.find(i => i.id === currentMap);
+    const I: any = moduleData.interiors.find(i => i.id === currentMap);
     if (I) {
-      applyInteriorBrush(I, x, y, intPaint);
+      applyInteriorBrushACK(I, x, y, intPaint);
       delete I._origGrid;
       intPainting = true;
       didPaint = true;
@@ -6097,8 +6096,8 @@ canvas.addEventListener('mousedown', ev => {
   didDrag = false;
   if (coordTarget) {
     const target = coordTarget;
-    document.getElementById(target.x).value = x;
-    document.getElementById(target.y).value = y;
+    (document.getElementById(target.x) as HTMLInputElement).value = String(x);
+    (document.getElementById(target.y) as HTMLInputElement).value = String(y);
     if (target.map) populateMapDropdown(document.getElementById(target.map), currentMap);
     coordTarget = null;
     canvas.style.cursor = '';
@@ -6111,15 +6110,15 @@ canvas.addEventListener('mousedown', ev => {
   if (placingType) {
     if (placingType === 'item') {
       populateMapDropdown(document.getElementById('itemMap'), currentMap);
-      document.getElementById('itemX').value = x;
-      document.getElementById('itemY').value = y;
-      if (placingCb) placingCb();
-      document.getElementById('cancelItem').style.display = 'none';
+      (document.getElementById('itemX') as HTMLInputElement).value = String(x);
+      (document.getElementById('itemY') as HTMLInputElement).value = String(y);
+      if (placingCb) (placingCb as any)();
+      (document.getElementById('cancelItem') as HTMLElement).style.display = 'none';
     } else if (placingType === 'bldg' && currentMap === 'world') {
-      document.getElementById('bldgX').value = x;
-      document.getElementById('bldgY').value = y;
-      if (placingCb) placingCb();
-      document.getElementById('cancelBldg').style.display = 'none';
+      (document.getElementById('bldgX') as HTMLInputElement).value = String(x);
+      (document.getElementById('bldgY') as HTMLInputElement).value = String(y);
+      if (placingCb) (placingCb as any)();
+      (document.getElementById('cancelBldg') as HTMLElement).style.display = 'none';
     }
     placingType = null;
     placingPos = null;
@@ -6194,21 +6193,21 @@ canvas.addEventListener('mousedown', ev => {
   dragTarget = currentMap === 'world' ? moduleData.buildings.find(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h) : null;
   if (dragTarget) {
     dragTarget._type = 'bldg';
-    document.getElementById('bldgX').value = dragTarget.x;
-    document.getElementById('bldgY').value = dragTarget.y;
+    (document.getElementById('bldgX') as HTMLInputElement).value = String(dragTarget.x);
+    (document.getElementById('bldgY') as HTMLInputElement).value = String(dragTarget.y);
     editBldgIdx = moduleData.buildings.indexOf(dragTarget);
-    document.getElementById('delBldg').style.display = 'block';
+    (document.getElementById('delBldg') as HTMLElement).style.display = 'block';
     selectedObj = { type: 'bldg', obj: dragTarget };
     drawWorld();
     showBldgEditor(true);
     updateCursor(x, y);
     return;
   }
-  document.getElementById('npcX').value = x; document.getElementById('npcY').value = y;
-  document.getElementById('itemX').value = x; document.getElementById('itemY').value = y;
-  document.getElementById('bldgX').value = x; document.getElementById('bldgY').value = y;
-  document.getElementById('eventX').value = x; document.getElementById('eventY').value = y;
-  document.getElementById('zoneX').value = x; document.getElementById('zoneY').value = y;
+  (document.getElementById('npcX') as HTMLInputElement).value = String(x); (document.getElementById('npcY') as HTMLInputElement).value = String(y);
+  (document.getElementById('itemX') as HTMLInputElement).value = String(x); (document.getElementById('itemY') as HTMLInputElement).value = String(y);
+  (document.getElementById('bldgX') as HTMLInputElement).value = String(x); (document.getElementById('bldgY') as HTMLInputElement).value = String(y);
+  (document.getElementById('eventX') as HTMLInputElement).value = String(x); (document.getElementById('eventY') as HTMLInputElement).value = String(y);
+  (document.getElementById('zoneX') as HTMLInputElement | HTMLSelectElement).value = String(x); (document.getElementById('zoneY') as HTMLInputElement | HTMLSelectElement).value = String(y);
   const px = document.getElementById('portalX');
   const py = document.getElementById('portalY');
   if (px && py) { px.value = x; py.value = y; }
@@ -6239,9 +6238,9 @@ canvas.addEventListener('mousemove', ev => {
     return;
   }
   if (currentMap !== 'world' && intPainting) {
-    const I = moduleData.interiors.find(i => i.id === currentMap);
+    const I: any = moduleData.interiors.find(i => i.id === currentMap);
     if (I) {
-      applyInteriorBrush(I, x, y, intPaint);
+      applyInteriorBrushACK(I, x, y, intPaint);
       delete I._origGrid;
       didPaint = true;
       drawWorld();
@@ -6267,31 +6266,31 @@ canvas.addEventListener('mousemove', ev => {
       dragTarget._type = 'bldg';
       if (selectedObj && selectedObj.type === 'bldg') selectedObj.obj = dragTarget;
       renderBldgList();
-      document.getElementById('bldgX').value = x;
-      document.getElementById('bldgY').value = y;
-      document.getElementById('delBldg').style.display = 'block';
+      (document.getElementById('bldgX') as HTMLInputElement).value = String(x);
+      (document.getElementById('bldgY') as HTMLInputElement).value = String(y);
+      (document.getElementById('delBldg') as HTMLElement).style.display = 'block';
     } else if (dragTarget._type === 'loop') {
       const npc = dragTarget.npc;
       npc.loop[dragTarget.idx].x = x; npc.loop[dragTarget.idx].y = y;
       if (dragTarget.idx === 0) {
         npc.x = x; npc.y = y;
-        document.getElementById('npcX').value = x;
-        document.getElementById('npcY').value = y;
+        (document.getElementById('npcX') as HTMLInputElement).value = String(x);
+        (document.getElementById('npcY') as HTMLInputElement).value = String(y);
         renderNPCList();
       }
       renderLoopFields(npc.loop);
     } else if (dragTarget._type === 'npc') {
       dragTarget.x = x; dragTarget.y = y;
       renderNPCList();
-      document.getElementById('npcX').value = x;
-      document.getElementById('npcY').value = y;
+      (document.getElementById('npcX') as HTMLInputElement).value = String(x);
+      (document.getElementById('npcY') as HTMLInputElement).value = String(y);
     } else if (dragTarget._type === 'start') {
       dragTarget.x = x; dragTarget.y = y;
     } else if (dragTarget._type === 'zoneMove') {
       dragTarget.x = x - dragOffsetX;
       dragTarget.y = y - dragOffsetY;
-      document.getElementById('zoneX').value = dragTarget.x;
-      document.getElementById('zoneY').value = dragTarget.y;
+      (document.getElementById('zoneX') as HTMLInputElement | HTMLSelectElement).value = String(dragTarget.x);
+      (document.getElementById('zoneY') as HTMLInputElement | HTMLSelectElement).value = String(dragTarget.y);
       renderZoneList();
     } else if (dragTarget._type === 'zoneTL') {
       const brx = dragOffsetX, bry = dragOffsetY;
@@ -6299,22 +6298,22 @@ canvas.addEventListener('mousemove', ev => {
       dragTarget.y = Math.min(y, bry - 1);
       dragTarget.w = brx - dragTarget.x;
       dragTarget.h = bry - dragTarget.y;
-      document.getElementById('zoneX').value = dragTarget.x;
-      document.getElementById('zoneY').value = dragTarget.y;
-      document.getElementById('zoneW').value = dragTarget.w;
-      document.getElementById('zoneH').value = dragTarget.h;
+      (document.getElementById('zoneX') as HTMLInputElement | HTMLSelectElement).value = String(dragTarget.x);
+      (document.getElementById('zoneY') as HTMLInputElement | HTMLSelectElement).value = String(dragTarget.y);
+      (document.getElementById('zoneW') as HTMLInputElement | HTMLSelectElement).value = String(dragTarget.w);
+      (document.getElementById('zoneH') as HTMLInputElement | HTMLSelectElement).value = String(dragTarget.h);
       renderZoneList();
     } else if (dragTarget._type === 'zoneBR') {
       dragTarget.w = Math.max(1, x - dragTarget.x + 1);
       dragTarget.h = Math.max(1, y - dragTarget.y + 1);
-      document.getElementById('zoneW').value = dragTarget.w;
-      document.getElementById('zoneH').value = dragTarget.h;
+      (document.getElementById('zoneW') as HTMLInputElement | HTMLSelectElement).value = String(dragTarget.w);
+      (document.getElementById('zoneH') as HTMLInputElement | HTMLSelectElement).value = String(dragTarget.h);
       renderZoneList();
     } else { // item
       dragTarget.x = x; dragTarget.y = y;
       renderItemList();
-      document.getElementById('itemX').value = x;
-      document.getElementById('itemY').value = y;
+      (document.getElementById('itemX') as HTMLInputElement).value = String(x);
+      (document.getElementById('itemY') as HTMLInputElement).value = String(y);
     }
     drawWorld();
     updateCursor(x, y);
@@ -6474,9 +6473,9 @@ showNPCEditor(false);
 showBldgEditor(false);
 showQuestEditor(false);
 showEventEditor(false);
-document.getElementById('npcId').value = nextId('npc', moduleData.npcs);
-document.getElementById('questId').value = nextId('quest', moduleData.quests);
-document.getElementById('eventStat').innerHTML = STAT_OPTS.map(s => `<option value="${s}">${s}</option>`).join('');
+(document.getElementById('npcId') as HTMLInputElement).value = String(nextId('npc', moduleData.npcs));
+(document.getElementById('questId') as HTMLInputElement).value = String(nextId('quest', moduleData.quests));
+(document.getElementById('eventStat') as HTMLElement).innerHTML = STAT_OPTS.map(s => `<option value="${s}">${s}</option>`).join('');
 renderEventList();
 loadTreeEditor();
 setPlaceholders();
@@ -6679,4 +6678,3 @@ if (document && typeof document.addEventListener === 'function') {
 
 document.getElementById('playtestFloat')?.addEventListener('click', playtestModule);
 updateMapSelect();
-// @ts-nocheck
