@@ -49,6 +49,82 @@ const walkableTiles: Record<number, boolean> = {
 };
 
 type LoopPoint = { x: number; y: number };
+type DialogEffect =
+  | { effect: 'boardDoor'; interiorId?: string }
+  | { effect: 'unboardDoor'; interiorId?: string }
+  | { effect: 'lockNPC'; npcId?: string; duration?: number }
+  | { effect: 'unlockNPC'; npcId?: string }
+  | { effect: 'npcColor'; npcId?: string; color?: string }
+  | { effect: 'setFlag'; flag?: string; op?: 'set' | 'add' | 'clear'; value?: number }
+  | { effect: string; [key: string]: unknown };
+type DialogCondition = { flag?: string; op?: string; value?: number } | null;
+type DialogGoto = { target?: 'player' | 'npc'; map?: string; x?: number; y?: number; rel?: boolean } | null;
+type DialogJoin = { id?: string; name?: string; role?: string } | null;
+type DialogIfOnce = { node?: string; label?: string; used?: boolean } | null;
+type DialogSetFlag = { flag?: string; op?: 'set' | 'add' | 'clear'; value?: number } | null;
+type DialogSpawn = { templateId?: string; x?: number; y?: number } | null;
+type DialogChoice = {
+  label?: string;
+  to?: string;
+  reward?: string;
+  stat?: string;
+  dc?: number | string;
+  success?: string;
+  failure?: string;
+  once?: boolean;
+  costItem?: string;
+  costSlot?: string;
+  costTag?: string;
+  reqItem?: string;
+  reqSlot?: string;
+  reqTag?: string;
+  join?: DialogJoin;
+  q?: string;
+  goto?: DialogGoto;
+  effects?: DialogEffect[];
+  setFlag?: DialogSetFlag;
+  spawn?: DialogSpawn;
+  if?: DialogCondition;
+  ifOnce?: DialogIfOnce;
+};
+type DialogNode = {
+  text?: string;
+  choices?: DialogChoice[];
+  start?: { text?: string; choices?: DialogChoice[]; accept?: DialogNode; do_turnin?: DialogNode };
+  locked?: DialogNode;
+  accept?: DialogNode;
+  turnin?: DialogNode;
+  do_turnin?: DialogNode;
+  do_fight?: DialogNode;
+  train?: DialogNode;
+  bye?: DialogNode;
+  [key: string]: unknown;
+};
+type ModuleGlobals = typeof globalThis & { moduleData?: ModuleData };
+  type ModuleData = {
+    seed: number;
+    name: string;
+  npcs: any[];
+  items: any[];
+  quests: any[];
+  buildings: any[];
+  interiors: Array<{ id: string; grid?: number[][]; w: number; h: number }>;
+  portals: any[];
+  events: any[];
+  zones: any[];
+  encounters: any[];
+  templates: any[];
+  personas: Record<string, unknown>;
+    start: { map: string; x: number; y: number };
+    module?: unknown;
+    moduleVar?: unknown;
+    props: Record<string, unknown>;
+    behaviors: Record<string, unknown>;
+    procGen?: unknown;
+    _origKeys?: string[];
+    zoneEffects?: any[];
+    generateMap?: (seed: number, opts?: unknown) => unknown;
+  };
 declare function nextLoopPoint(prev: LoopPoint | undefined, npc: LoopPoint): LoopPoint;
 
 const stampNames = {
@@ -382,18 +458,17 @@ loopMinus.addEventListener('click', () => {
   showLoopControls(null);
 });
 
-type ModuleGlobals = typeof globalThis & { moduleData?: any };
-const moduleData = (globalThis as ModuleGlobals).moduleData ?? ((globalThis as ModuleGlobals).moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
+  const moduleData = (globalThis as ModuleGlobals).moduleData ?? ((globalThis as ModuleGlobals).moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod', 'spread'];
-const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];
-const SIMPLE_DIALOG_NODES = new Set(['start', 'locked', 'accept', 'turnin', 'do_turnin', 'do_fight', 'train', 'bye']);
-const customTags = new Set();
-globalThis.treeData = globalThis.treeData || {};
+  const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];
+  const SIMPLE_DIALOG_NODES = new Set(['start', 'locked', 'accept', 'turnin', 'do_turnin', 'do_fight', 'train', 'bye']);
+  const customTags = new Set<string>();
+  globalThis.treeData = globalThis.treeData || {};
 
-function allTags() {
-  return PRESET_TAGS.concat([...customTags]).sort();
-}
+  function allTags() {
+    return PRESET_TAGS.concat([...customTags]).sort();
+  }
 
 function updateTagOptions() {
   const dl = document.getElementById('tagOptions');
@@ -1535,7 +1610,7 @@ const ADV_HTML = {
       <label>Value<input type="number" class="choiceVal" value="1"/></label>`
 };
 
-function addChoiceRow(container, ch = {}) {
+  function addChoiceRow(container: HTMLElement, ch: DialogChoice = {}) {
   const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', costTag = '', reqItem = '', reqSlot = '', reqTag = '', join = null, q = '', setFlag = null, spawn = null } = ch || {};
   const cond = ch && ch.if ? ch.if : null;
   const ifOnce = ch && ch.ifOnce ? ch.ifOnce : null;
@@ -1577,8 +1652,8 @@ function addChoiceRow(container, ch = {}) {
   const spawnTemplate = spawn?.templateId || '';
   const spawnX = spawn?.x ?? '';
   const spawnY = spawn?.y ?? '';
-  const row = document.createElement('div');
-  const rowDataset = row.dataset || (row.dataset = {});
+    const row = document.createElement('div');
+    const rowDataset = row.dataset;
   if (extraEffects.length) rowDataset.extraEffects = JSON.stringify(extraEffects);
   else delete rowDataset.extraEffects;
   row.innerHTML = `<label>Label<input class="choiceLabel" value="${label}"/></label>
