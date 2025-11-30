@@ -39,6 +39,7 @@ class Elem {
     this.checked=false;
     this.type='';
     this.textContent='';
+    this.dataset={};
   }
   appendChild(child){ this.children.push(child); child.parentElement=this; }
   prepend(child){ this.children.unshift(child); child.parentElement=this; }
