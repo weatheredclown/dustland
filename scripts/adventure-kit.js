@@ -591,7 +591,7 @@ function stampWorld(x, y, stamp) {
     }
 }
 window.stampWorld = stampWorld;
-function getNpcColor(n) {
+function getEditorNpcColor(n) {
     if (n.overrideColor && n.color)
         return n.color;
     if (n.trainer)
@@ -608,7 +608,7 @@ function getNpcColor(n) {
         return '#f88';
     return '#9ef7a0';
 }
-function getNpcSymbol(n) {
+function getEditorNpcSymbol(n) {
     if (n.symbol)
         return n.symbol;
     if (n.inanimate)
@@ -732,14 +732,14 @@ function drawWorld() {
         if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height)
             return;
         ctx.save();
-        ctx.fillStyle = hovering ? '#fff' : getNpcColor(n);
+        ctx.fillStyle = hovering ? '#fff' : getEditorNpcColor(n);
         if (hovering) {
             ctx.shadowColor = '#fff';
             ctx.shadowBlur = 8;
         }
         ctx.fillRect(px, py, sx, sy);
         ctx.fillStyle = '#000';
-        ctx.fillText(getNpcSymbol(n), px + 4, py + 12);
+        ctx.fillText(getEditorNpcSymbol(n), px + 4, py + 12);
         if (hovering) {
             ctx.strokeStyle = '#fff';
             ctx.strokeRect(px, py, sx, sy);
@@ -7240,4 +7240,3 @@ if (document && typeof document.addEventListener === 'function') {
 }
 document.getElementById('playtestFloat')?.addEventListener('click', playtestModule);
 updateMapSelect();
-// @ts-nocheck

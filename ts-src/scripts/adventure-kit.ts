@@ -4,7 +4,7 @@
 // Provides basic tools to build Dustland modules.
 
 // Ensure world generation doesn't pull default content
-window.seedWorldContent = () => {};
+window.seedWorldContent = () => { };
 
 window.DUSTLAND_FEATURES = window.DUSTLAND_FEATURES ?? {};
 if (typeof window.DUSTLAND_FEATURES.serverMode !== 'boolean') {
@@ -56,7 +56,8 @@ type DialogEffect =
   | { effect: 'unlockNPC'; npcId?: string }
   | { effect: 'npcColor'; npcId?: string; color?: string }
   | { effect: 'setFlag'; flag?: string; op?: 'set' | 'add' | 'clear'; value?: number }
-  | { effect: string; [key: string]: unknown };
+  | { effect: 'addItem'; id?: string; item?: string }
+  | { effect: string;[key: string]: any };
 type DialogCondition = { flag?: string; op?: string; value?: number } | null;
 type DialogGoto = { target?: 'player' | 'npc'; map?: string; x?: number; y?: number; rel?: boolean } | null;
 type DialogJoin = { id?: string; name?: string; role?: string } | null;
@@ -66,7 +67,7 @@ type DialogSpawn = { templateId?: string; x?: number; y?: number } | null;
 type DialogChoice = {
   label?: string;
   to?: string;
-  reward?: string;
+  reward?: string | any;
   stat?: string;
   dc?: number | string;
   success?: string;
@@ -86,6 +87,7 @@ type DialogChoice = {
   spawn?: DialogSpawn;
   if?: DialogCondition;
   ifOnce?: DialogIfOnce;
+  quest?: string;
 };
 type DialogNode = {
   text?: string;
@@ -98,33 +100,62 @@ type DialogNode = {
   do_fight?: DialogNode;
   train?: DialogNode;
   bye?: DialogNode;
-  [key: string]: unknown;
+  effects?: DialogEffect[];
+  [key: string]: any;
 };
-type ModuleGlobals = typeof globalThis & { moduleData?: ModuleData };
-  type ModuleData = {
-    seed: number;
-    name: string;
+type ProcGenConfig = {
+  seed?: number;
+  falloff?: number;
+  roads?: boolean;
+  ruins?: boolean;
+};
+type EditorInteriorDefinition = {
+  id: string;
+  grid?: number[][];
+  w: number;
+  h: number;
+  _origGrid?: number[][];
+  label?: string;
+};
+type ModuleGlobals = typeof globalThis & {
+  moduleData?: ModuleData;
+  interiors?: Record<string, EditorInteriorDefinition>;
+  world?: number[][];
+  treeData?: any;
+  toggleTileChars?: () => void;
+  toggleFogOfWar?: () => void;
+  toggleAudio?: () => void;
+  setCoordTarget?: (v: any) => void;
+  focusMap?: (x: number, y: number) => void;
+  addTerrainFeature?: (x: number, y: number, tile: number) => void;
+  stampWorld?: (x: number, y: number, stamp: number[][]) => void;
+  getTreeData?: () => any;
+  setTreeData?: (tree: any) => void;
+};
+type ModuleData = {
+  seed: number;
+  name: string;
   npcs: any[];
   items: any[];
   quests: any[];
   buildings: any[];
-  interiors: Array<{ id: string; grid?: number[][]; w: number; h: number }>;
+  interiors: EditorInteriorDefinition[];
   portals: any[];
   events: any[];
   zones: any[];
   encounters: any[];
   templates: any[];
   personas: Record<string, unknown>;
-    start: { map: string; x: number; y: number };
-    module?: unknown;
-    moduleVar?: unknown;
-    props: Record<string, unknown>;
-    behaviors: Record<string, unknown>;
-    procGen?: unknown;
-    _origKeys?: string[];
-    zoneEffects?: any[];
-    generateMap?: (seed: number, opts?: unknown) => unknown;
-  };
+  start: { map: string; x: number; y: number };
+  module?: unknown;
+  moduleVar?: unknown;
+  props: Record<string, unknown>;
+  behaviors: Record<string, any>;
+  procGen?: ProcGenConfig;
+  _origKeys?: string[];
+  zoneEffects?: any[];
+  generateMap?: (seed: number, opts?: unknown) => unknown;
+};
 declare function nextLoopPoint(prev: LoopPoint | undefined, npc: LoopPoint): LoopPoint;
 
 const stampNames = {
@@ -240,7 +271,7 @@ let dragTarget = null, settingStart = false, hoverTarget = null, didDrag = false
 let placingType = null, placingPos = null, placingCb = null;
 let hoverTile = null;
 var coordTarget = null;
-function setCoordTarget(v){ coordTarget = v; }
+function setCoordTarget(v) { coordTarget = v; }
 globalThis.setCoordTarget = setCoordTarget;
 let npcOriginal = null;
 let npcDirty = false;
@@ -359,37 +390,37 @@ function renderZoneWalls(targetCtx, zone, pxoff, pyoff, sx, sy) {
   targetCtx.restore();
 }
 
-function computeSpawnHeat(){
+function computeSpawnHeat() {
   const W = WORLD_W, H = WORLD_H;
   const grid = Array.from({ length: H }, () => Array(W).fill(Infinity));
   const q = [];
-  for(let y=0;y<H;y++){
-    for(let x=0;x<W;x++){
-      if(world[y][x] === TILE.ROAD){
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (world[y][x] === TILE.ROAD) {
         grid[y][x] = 0;
-        q.push([x,y]);
+        q.push([x, y]);
       }
     }
   }
-  const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+  const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   let head = 0;
-  while(head < q.length){
-    const [x,y] = q[head++];
+  while (head < q.length) {
+    const [x, y] = q[head++];
     const d = grid[y][x] + 1;
-    for(const [dx,dy] of dirs){
+    for (const [dx, dy] of dirs) {
       const nx = x + dx, ny = y + dy;
-      if(nx>=0 && ny>=0 && nx<W && ny<H && grid[ny][nx] > d){
+      if (nx >= 0 && ny >= 0 && nx < W && ny < H && grid[ny][nx] > d) {
         grid[ny][nx] = d;
-        q.push([nx,ny]);
+        q.push([nx, ny]);
       }
     }
   }
   spawnHeatMap = grid;
   spawnHeatMax = 0;
-  for(let y=0;y<H;y++){
-    for(let x=0;x<W;x++){
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
       const v = grid[y][x];
-      if(v !== Infinity && v > spawnHeatMax) spawnHeatMax = v;
+      if (v !== Infinity && v > spawnHeatMax) spawnHeatMax = v;
     }
   }
 }
@@ -458,17 +489,17 @@ loopMinus.addEventListener('click', () => {
   showLoopControls(null);
 });
 
-  const moduleData = (globalThis as ModuleGlobals).moduleData ?? ((globalThis as ModuleGlobals).moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
+const moduleData = (globalThis as ModuleGlobals).moduleData ?? ((globalThis as ModuleGlobals).moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod', 'spread'];
-  const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];
-  const SIMPLE_DIALOG_NODES = new Set(['start', 'locked', 'accept', 'turnin', 'do_turnin', 'do_fight', 'train', 'bye']);
-  const customTags = new Set<string>();
-  globalThis.treeData = globalThis.treeData || {};
+const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];
+const SIMPLE_DIALOG_NODES = new Set(['start', 'locked', 'accept', 'turnin', 'do_turnin', 'do_fight', 'train', 'bye']);
+const customTags = new Set<string>();
+globalThis.treeData = globalThis.treeData || {};
 
-  function allTags() {
-    return PRESET_TAGS.concat([...customTags]).sort();
-  }
+function allTags() {
+  return PRESET_TAGS.concat([...customTags]).sort();
+}
 
 function updateTagOptions() {
   const dl = document.getElementById('tagOptions');
@@ -648,7 +679,7 @@ function stampWorld(x, y, stamp) {
 }
 window.stampWorld = stampWorld;
 
-function getNpcColor(n) {
+function getEditorNpcColor(n: any) {
   if (n.overrideColor && n.color) return n.color;
   if (n.trainer) return '#ffcc99';
   if (n.shop) return '#ffee99';
@@ -659,7 +690,7 @@ function getNpcColor(n) {
   return '#9ef7a0';
 }
 
-function getNpcSymbol(n) {
+function getEditorNpcSymbol(n: any) {
   if (n.symbol) return n.symbol;
   if (n.inanimate) return '?';
   if (n.questId || n.quests) return '★';
@@ -769,14 +800,14 @@ function drawWorld() {
     const py = (n.y - pyoff) * sy;
     if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height) return;
     ctx.save();
-    ctx.fillStyle = hovering ? '#fff' : getNpcColor(n);
+    ctx.fillStyle = hovering ? '#fff' : getEditorNpcColor(n);
     if (hovering) {
       ctx.shadowColor = '#fff';
       ctx.shadowBlur = 8;
     }
     ctx.fillRect(px, py, sx, sy);
     ctx.fillStyle = '#000';
-    ctx.fillText(getNpcSymbol(n), px + 4, py + 12);
+    ctx.fillText(getEditorNpcSymbol(n), px + 4, py + 12);
     if (hovering) {
       ctx.strokeStyle = '#fff';
       ctx.strokeRect(px, py, sx, sy);
@@ -787,7 +818,7 @@ function drawWorld() {
     const pts = selectedObj.obj.loop;
     ctx.save();
     ctx.strokeStyle = '#0f0';
-    if (typeof ctx.setLineDash === 'function') ctx.setLineDash([4,4]);
+    if (typeof ctx.setLineDash === 'function') ctx.setLineDash([4, 4]);
     ctx.beginPath();
     pts.forEach((p, i) => {
       const px = (p.x - panX) * sx + sx / 2;
@@ -896,7 +927,7 @@ function drawWorld() {
     ctx.save();
     ctx.lineWidth = pulse;
     if (selectedObj.type === 'npc') {
-      ctx.strokeStyle = getNpcColor(o);
+      ctx.strokeStyle = getEditorNpcColor(o);
       ctx.strokeRect((o.x - pxoff) * sx + 1, (o.y - pyoff) * sy + 1, sx - 2, sy - 2);
     } else if (selectedObj.type === 'item') {
       ctx.strokeStyle = '#ff0';
@@ -959,10 +990,10 @@ function drawInterior() {
     }
   }
   moduleData.npcs.filter(n => n.map === I.id).forEach(n => {
-    intCtx.fillStyle = getNpcColor(n);
+    intCtx.fillStyle = getEditorNpcColor(n);
     intCtx.fillRect(n.x * sx, n.y * sy, sx, sy);
     intCtx.fillStyle = '#000';
-    intCtx.fillText(getNpcSymbol(n), n.x * sx + 4, n.y * sy + 12);
+    intCtx.fillText(getEditorNpcSymbol(n), n.x * sx + 4, n.y * sy + 12);
   });
   moduleData.items.filter(it => it.map === I.id).forEach(it => {
     intCtx.strokeStyle = '#ff0';
@@ -972,7 +1003,7 @@ function drawInterior() {
     const o = selectedObj.obj;
     intCtx.save();
     intCtx.lineWidth = 2;
-    intCtx.strokeStyle = selectedObj.type === 'npc' ? getNpcColor(o) : '#ff0';
+    intCtx.strokeStyle = selectedObj.type === 'npc' ? getEditorNpcColor(o) : '#ff0';
     intCtx.strokeRect(o.x * sx + 1, o.y * sy + 1, sx - 2, sy - 2);
     intCtx.restore();
   }
@@ -1009,13 +1040,13 @@ function applyInteriorBrush(I, x, y, tile) {
   return changed;
 }
 
-function paintInterior(e){
-  if(editInteriorIdx<0||!intPainting) return;
-  const I=moduleData.interiors[editInteriorIdx];
+function paintInterior(e) {
+  if (editInteriorIdx < 0 || !intPainting) return;
+  const I = moduleData.interiors[editInteriorIdx];
   const { x, y } = interiorCanvasPos(e);
-  if(x<0||y<0||x>=I.w||y>=I.h) return;
+  if (x < 0 || y < 0 || x >= I.w || y >= I.h) return;
   const painted = applyInteriorBrush(I, x, y, intPaint);
-  if(painted || intPaint===TILE.DOOR){
+  if (painted || intPaint === TILE.DOOR) {
     didInteriorPaint = true;
     delete I._origGrid;
     drawInterior();
@@ -1027,7 +1058,7 @@ intCanvas.addEventListener('mousedown', e => {
   if (editInteriorIdx < 0) return;
   const I = moduleData.interiors[editInteriorIdx];
   const { x, y } = interiorCanvasPos(e);
-  if(coordTarget){
+  if (coordTarget) {
     document.getElementById(coordTarget.x).value = x;
     document.getElementById(coordTarget.y).value = y;
     if (coordTarget.map) populateMapDropdown(document.getElementById(coordTarget.map), I.id);
@@ -1035,22 +1066,22 @@ intCanvas.addEventListener('mousedown', e => {
     drawInterior();
     return;
   }
-  if(placingType){
-    if(placingType==='npc'){
+  if (placingType) {
+    if (placingType === 'npc') {
       populateMapDropdown(document.getElementById('npcMap'), I.id);
       document.getElementById('npcX').value = x;
       document.getElementById('npcY').value = y;
-      if(placingCb) placingCb();
-    }else if(placingType==='item'){
+      if (placingCb) placingCb();
+    } else if (placingType === 'item') {
       populateMapDropdown(document.getElementById('itemMap'), I.id);
       document.getElementById('itemX').value = x;
       document.getElementById('itemY').value = y;
-      if(placingCb) placingCb();
+      if (placingCb) placingCb();
       document.getElementById('cancelItem').style.display = 'none';
     }
-    placingType=null;
-    placingPos=null;
-    placingCb=null;
+    placingType = null;
+    placingPos = null;
+    placingCb = null;
     drawInterior();
     return;
   }
@@ -1059,12 +1090,12 @@ intCanvas.addEventListener('mousedown', e => {
   if (!coordTarget && !placingType && (overNpc || overItem)) {
     return;
   }
-  intPainting=true;
+  intPainting = true;
   paintInterior(e);
 });
-intCanvas.addEventListener('mousemove',e=>{ if(intPainting) paintInterior(e); });
-intCanvas.addEventListener('mouseup',()=>{ intPainting=false; });
-intCanvas.addEventListener('mouseleave',()=>{ intPainting=false; didInteriorPaint = false; });
+intCanvas.addEventListener('mousemove', e => { if (intPainting) paintInterior(e); });
+intCanvas.addEventListener('mouseup', () => { intPainting = false; });
+intCanvas.addEventListener('mouseleave', () => { intPainting = false; didInteriorPaint = false; });
 
 intCanvas.addEventListener('click', e => {
   if (editInteriorIdx < 0) return;
@@ -1087,12 +1118,12 @@ intCanvas.addEventListener('click', e => {
   didInteriorPaint = false;
 });
 
-intPalette.querySelectorAll('button').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    intPalette.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+intPalette.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    intPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const t=btn.dataset.tile;
-    intPaint = t==='W'?TILE.WALL: t==='D'?TILE.DOOR: TILE.FLOOR;
+    const t = btn.dataset.tile;
+    intPaint = t === 'W' ? TILE.WALL : t === 'D' ? TILE.DOOR : TILE.FLOOR;
   });
 });
 intPalette.querySelector('button')?.classList.add('active');
@@ -1112,9 +1143,9 @@ function renderInteriorList() {
 }
 
 function startNewInterior() {
-  const w = parseInt(document.getElementById('intW').value,10) || 12;
-  const h = parseInt(document.getElementById('intH').value,10) || 9;
-  const id = makeInteriorRoom(undefined,w,h);
+  const w = parseInt(document.getElementById('intW').value, 10) || 12;
+  const h = parseInt(document.getElementById('intH').value, 10) || 9;
+  const id = makeInteriorRoom(undefined, w, h);
   const I = interiors[id];
   I.id = id;
   moduleData.interiors.push(I);
@@ -1134,21 +1165,21 @@ function editInterior(i) {
   drawInterior();
 }
 
-function resizeInterior(){
-  if(editInteriorIdx<0) return;
-  const I=moduleData.interiors[editInteriorIdx];
-  const w=parseInt(document.getElementById('intW').value,10)||I.w;
-  const h=parseInt(document.getElementById('intH').value,10)||I.h;
-  const ng=Array.from({length:h},(_,y)=>Array.from({length:w},(_,x)=>{
-    if(y<I.h && x<I.w && I.grid[y]) return I.grid[y][x];
-    const edge=y===0||y===h-1||x===0||x===w-1; return edge?TILE.WALL:TILE.FLOOR;
+function resizeInterior() {
+  if (editInteriorIdx < 0) return;
+  const I = moduleData.interiors[editInteriorIdx];
+  const w = parseInt(document.getElementById('intW').value, 10) || I.w;
+  const h = parseInt(document.getElementById('intH').value, 10) || I.h;
+  const ng = Array.from({ length: h }, (_, y) => Array.from({ length: w }, (_, x) => {
+    if (y < I.h && x < I.w && I.grid[y]) return I.grid[y][x];
+    const edge = y === 0 || y === h - 1 || x === 0 || x === w - 1; return edge ? TILE.WALL : TILE.FLOOR;
   }));
-  I.w=w; I.h=h; I.grid=ng;
+  I.w = w; I.h = h; I.grid = ng;
   delete I._origGrid;
   drawInterior();
 }
-document.getElementById('intW').addEventListener('change',resizeInterior);
-document.getElementById('intH').addEventListener('change',resizeInterior);
+document.getElementById('intW').addEventListener('change', resizeInterior);
+document.getElementById('intH').addEventListener('change', resizeInterior);
 
 document.getElementById('intLabel').addEventListener('input', e => {
   if (editInteriorIdx < 0) return;
@@ -1346,8 +1377,8 @@ function clearWorld() {
     initTags();
     buildings.length = 0;
     portals.length = 0;
-    globalThis.interiors = {};
-    interiors = globalThis.interiors;
+    (globalThis as ModuleGlobals).interiors = {};
+    interiors = (globalThis as ModuleGlobals).interiors as any;
     renderNPCList();
     renderItemList();
     renderQuestList();
@@ -1437,10 +1468,10 @@ function renderDialogPreview() {
     const items = (imports && imports.items) || [];
     let html = '';
     if (flags.length) {
-      html += '<div><b>Flags</b> ' + flags.map(f=>`<label style="margin-right:6px">${f}<input type="number" data-flag="${f}" value="1" min="0" style="width:56px;margin-left:4px"/></label>`).join('') + '</div>';
+      html += '<div><b>Flags</b> ' + flags.map(f => `<label style="margin-right:6px">${f}<input type="number" data-flag="${f}" value="1" min="0" style="width:56px;margin-left:4px"/></label>`).join('') + '</div>';
     }
     if (items.length) {
-      html += '<div style="margin-top:4px"><b>Items</b> ' + items.map(it=>`<label style="margin-right:6px">${it}<input type="number" data-item="${it}" value="1" min="0" style="width:56px;margin-left:4px"/></label>`).join('') + '</div>';
+      html += '<div style="margin-top:4px"><b>Items</b> ' + items.map(it => `<label style="margin-right:6px">${it}<input type="number" data-item="${it}" value="1" min="0" style="width:56px;margin-left:4px"/></label>`).join('') + '</div>';
     }
     importsEl.innerHTML = html || '<span class="muted">(no imports)</span>';
   }
@@ -1522,12 +1553,12 @@ function startSpoofPlayback(tree, flags, items, locked = false) {
     return _origFlagValue(flag);
   };
   const itemCounts = items || {};
-  globalThis.hasItem = function(idOrTag){
-    if (typeof idOrTag === 'string' && Object.prototype.hasOwnProperty.call(itemCounts, idOrTag)) return (itemCounts[idOrTag]||0) > 0;
+  globalThis.hasItem = function (idOrTag) {
+    if (typeof idOrTag === 'string' && Object.prototype.hasOwnProperty.call(itemCounts, idOrTag)) return (itemCounts[idOrTag] || 0) > 0;
     return _origHasItem(idOrTag);
   };
-  globalThis.countItems = function(idOrTag){
-    if (typeof idOrTag === 'string' && Object.prototype.hasOwnProperty.call(itemCounts, idOrTag)) return itemCounts[idOrTag]||0;
+  globalThis.countItems = function (idOrTag) {
+    if (typeof idOrTag === 'string' && Object.prototype.hasOwnProperty.call(itemCounts, idOrTag)) return itemCounts[idOrTag] || 0;
     return _origCountItems(idOrTag);
   };
   globalThis.closeDialog = function () {
@@ -1610,7 +1641,7 @@ const ADV_HTML = {
       <label>Value<input type="number" class="choiceVal" value="1"/></label>`
 };
 
-  function addChoiceRow(container: HTMLElement, ch: DialogChoice = {}) {
+function addChoiceRow(container: HTMLElement, ch: DialogChoice = {}) {
   const { label = '', to = '', reward = '', stat = '', dc = '', success = '', failure = '', once = false, costItem = '', costSlot = '', costTag = '', reqItem = '', reqSlot = '', reqTag = '', join = null, q = '', setFlag = null, spawn = null } = ch || {};
   const cond = ch && ch.if ? ch.if : null;
   const ifOnce = ch && ch.ifOnce ? ch.ifOnce : null;
@@ -1636,24 +1667,24 @@ const ADV_HTML = {
   const extraEffects = effs.filter(e => !knownEffectTypes.includes(e?.effect));
   const boardEff = effs.find(e => e.effect === 'boardDoor');
   const unboardEff = effs.find(e => e.effect === 'unboardDoor');
-  const boardId = boardEff ? boardEff.interiorId || '' : '';
-  const unboardId = unboardEff ? unboardEff.interiorId || '' : '';
+  const boardId = boardEff ? (boardEff as any).interiorId || '' : '';
+  const unboardId = unboardEff ? (unboardEff as any).interiorId || '' : '';
   const lockEff = effs.find(e => e.effect === 'lockNPC');
   const unlockEff = effs.find(e => e.effect === 'unlockNPC');
-  const lockId = lockEff ? lockEff.npcId || '' : '';
-  const lockDur = lockEff && typeof lockEff.duration === 'number' ? lockEff.duration : '';
-  const unlockId = unlockEff ? unlockEff.npcId || '' : '';
+  const lockId = lockEff ? (lockEff as any).npcId || '' : '';
+  const lockDur = lockEff && typeof (lockEff as any).duration === 'number' ? (lockEff as any).duration : '';
+  const unlockId = unlockEff ? (unlockEff as any).npcId || '' : '';
   const colorEff = effs.find(e => e.effect === 'npcColor');
-  const colorNpc = colorEff ? colorEff.npcId || '' : '';
-  const colorHex = colorEff ? colorEff.color || '' : '';
+  const colorNpc = colorEff ? (colorEff as any).npcId || '' : '';
+  const colorHex = colorEff ? (colorEff as any).color || '' : '';
   const setFlagName = setFlag?.flag || '';
   const setFlagOp = setFlag?.op || 'set';
   const setFlagVal = setFlag?.value ?? '';
   const spawnTemplate = spawn?.templateId || '';
   const spawnX = spawn?.x ?? '';
   const spawnY = spawn?.y ?? '';
-    const row = document.createElement('div');
-    const rowDataset = row.dataset;
+  const row = document.createElement('div');
+  const rowDataset = row.dataset;
   if (extraEffects.length) rowDataset.extraEffects = JSON.stringify(extraEffects);
   else delete rowDataset.extraEffects;
   row.innerHTML = `<label>Label<input class="choiceLabel" value="${label}"/></label>
@@ -1952,7 +1983,7 @@ function renderTreeEditor() {
   const wrap = document.getElementById('treeEditor');
   if (!wrap) return;
   wrap.innerHTML = '';
-  Object.entries(getTreeData()).forEach(([id, node]) => {
+  Object.entries(getTreeData()).forEach(([id, node]: [string, any]) => {
     if (id === 'imports') return;
     const div = document.createElement('div');
     div.className = 'node';
@@ -1983,7 +2014,7 @@ function renderTreeEditor() {
 
 function updateTreeData() {
   const wrap = document.getElementById('treeEditor');
-  const newTree = {} as AnyRecord;
+  const newTree: any = {} as AnyRecord;
   const nodeRefs = {} as AnyRecord;
   const oldTree = getTreeData();
   const choiceRefs = [];
@@ -2063,7 +2094,7 @@ function updateTreeData() {
       }
 
       if (label) {
-        const c = { label };
+        const c: any = { label };
         if (to) c.to = to;
         if (reward) c.reward = reward;
         if (stat) c.stat = stat;
@@ -2094,36 +2125,36 @@ function updateTreeData() {
           c.ifOnce = { node: ifOnceNode, label: ifOnceLabel };
           if (ifOnceUsed) c.ifOnce.used = true;
         }
-      const boardId = chEl.querySelector('.choiceBoard')?.value.trim();
-      const unboardId = chEl.querySelector('.choiceUnboard')?.value.trim();
-      const lockSel = chEl.querySelector('.choiceLockNPC');
-      const lockNpc = lockSel ? (lockSel.value || lockSel.dataset?.sel || '').trim() : '';
-      const lockDurTxt = chEl.querySelector('.choiceLockDuration')?.value.trim();
-      const lockDur = lockDurTxt ? parseInt(lockDurTxt, 10) : 0;
-      const unlockSel = chEl.querySelector('.choiceUnlockNPC');
-      const unlockNpc = unlockSel ? (unlockSel.value || unlockSel.dataset?.sel || '').trim() : '';
-      const colorSel = chEl.querySelector('.choiceColorNPC');
-      const colorNpc = colorSel ? (colorSel.value || colorSel.dataset?.sel || '').trim() : '';
-      const colorHex = chEl.querySelector('.choiceNPCColor')?.value.trim();
-      if (flag) c.if = { flag, op, value: val != null && !Number.isNaN(val) ? val : 0 };
-      const ds = chEl.dataset || {};
-      let extra = [];
-      if (ds.extraEffects) {
-        try { extra = JSON.parse(ds.extraEffects) || []; } catch (e) { extra = []; }
-      }
-      const effs = Array.isArray(extra) ? extra.filter(e => e && typeof e === 'object').map(e => ({ ...e })) : [];
-      if (boardId) effs.push({ effect: 'boardDoor', interiorId: boardId });
-      if (unboardId) effs.push({ effect: 'unboardDoor', interiorId: unboardId });
-      if (lockNpc) {
-        const obj = { effect: 'lockNPC', npcId: lockNpc };
-        if (!Number.isNaN(lockDur) && lockDur > 0) obj.duration = lockDur;
-        effs.push(obj);
-      }
-      if (unlockNpc) effs.push({ effect: 'unlockNPC', npcId: unlockNpc });
-      if (colorNpc && colorHex) effs.push({ effect: 'npcColor', npcId: colorNpc, color: colorHex });
-      if (effs.length) c.effects = effs;
-      if (setFlagName) {
-        const op = chEl.querySelector('.choiceSetFlagOp').value;
+        const boardId = chEl.querySelector('.choiceBoard')?.value.trim();
+        const unboardId = chEl.querySelector('.choiceUnboard')?.value.trim();
+        const lockSel = chEl.querySelector('.choiceLockNPC');
+        const lockNpc = lockSel ? (lockSel.value || lockSel.dataset?.sel || '').trim() : '';
+        const lockDurTxt = chEl.querySelector('.choiceLockDuration')?.value.trim();
+        const lockDur = lockDurTxt ? parseInt(lockDurTxt, 10) : 0;
+        const unlockSel = chEl.querySelector('.choiceUnlockNPC');
+        const unlockNpc = unlockSel ? (unlockSel.value || unlockSel.dataset?.sel || '').trim() : '';
+        const colorSel = chEl.querySelector('.choiceColorNPC');
+        const colorNpc = colorSel ? (colorSel.value || colorSel.dataset?.sel || '').trim() : '';
+        const colorHex = chEl.querySelector('.choiceNPCColor')?.value.trim();
+        if (flag) c.if = { flag, op, value: val != null && !Number.isNaN(val) ? val : 0 };
+        const ds = chEl.dataset || {};
+        let extra = [];
+        if (ds.extraEffects) {
+          try { extra = JSON.parse(ds.extraEffects) || []; } catch (e) { extra = []; }
+        }
+        const effs = Array.isArray(extra) ? extra.filter(e => e && typeof e === 'object').map(e => ({ ...e })) : [];
+        if (boardId) effs.push({ effect: 'boardDoor', interiorId: boardId });
+        if (unboardId) effs.push({ effect: 'unboardDoor', interiorId: unboardId });
+        if (lockNpc) {
+          const obj: any = { effect: 'lockNPC', npcId: lockNpc };
+          if (!Number.isNaN(lockDur) && lockDur > 0) obj.duration = lockDur;
+          effs.push(obj);
+        }
+        if (unlockNpc) effs.push({ effect: 'unlockNPC', npcId: unlockNpc });
+        if (colorNpc && colorHex) effs.push({ effect: 'npcColor', npcId: colorNpc, color: colorHex });
+        if (effs.length) c.effects = effs;
+        if (setFlagName) {
+          const op = chEl.querySelector('.choiceSetFlagOp').value;
           const valTxt = chEl.querySelector('.choiceSetFlagValue').value.trim();
           const value = valTxt ? parseInt(valTxt, 10) : undefined;
           c.setFlag = { flag: setFlagName, op, value };
@@ -2188,7 +2219,7 @@ function updateTreeData() {
 
 function loadTreeEditor() {
   let txt = document.getElementById('npcTree').value.trim();
-  let tree;
+  let tree: any;
   try { tree = txt ? JSON.parse(txt) : {}; } catch (e) { tree = {}; }
   setTreeData(tree);
   renderTreeEditor();
@@ -2345,7 +2376,7 @@ function updateNPCOptSections() {
     document.getElementById('npcTrainer').checked ? 'block' : 'none';
 }
 
-function updateColorOverride(){
+function updateColorOverride() {
   const wrap = document.getElementById('npcColorWrap');
   wrap.style.display = document.getElementById('npcColorOverride').checked ? 'block' : 'none';
 }
@@ -2467,7 +2498,7 @@ function setNpcNotice(message, type = 'info', autoClear = false) {
     npcNoticeTimer = setTimeout(() => {
       notice.classList.remove('success');
       notice.style.display = 'none';
-    }, 3500);
+    }, 3500) as any;
   }
 }
 function updateNpcMapBanner(message, show) {
@@ -2683,7 +2714,7 @@ function updateNpcCoordinateState() {
 function cloneNpcData(npc) {
   try { return JSON.parse(JSON.stringify(npc || {})); } catch (err) { return npc ? { ...npc } : null; }
 }
-function validateNpcForm(options = {}) {
+function validateNpcForm(options: any = {}) {
   const { silent = false } = options;
   const idEl = document.getElementById('npcId');
   const nameEl = document.getElementById('npcName');
@@ -2720,10 +2751,10 @@ function validateNpcForm(options = {}) {
     } else if (warnings.length) {
       setNpcNotice(warnings.join(' '));
     } else if (npcDirty) {
-    setNpcNotice('All required fields look good. Click Save NPC to apply your changes.');
-  } else {
-    setNpcNotice('Fill out ID, Name, and Title, then choose a map location before saving the NPC.');
-  }
+      setNpcNotice('All required fields look good. Click Save NPC to apply your changes.');
+    } else {
+      setNpcNotice('Fill out ID, Name, and Title, then choose a map location before saving the NPC.');
+    }
   }
   updateNpcCoordinateState();
   return { valid: errors.length === 0, errors, warnings };
@@ -2814,7 +2845,7 @@ function startNewNPC() {
   updateFlagBuilder();
   document.getElementById('npcDialog').value = '';
   const qs = document.getElementById('npcQuests');
-  if (qs) Array.from(qs.options || []).forEach(o => o.selected = false);
+  if (qs) Array.from(qs.options || []).forEach((opt: any) => opt.selected = false);
   document.getElementById('npcAccept').value = 'Good luck.';
   document.getElementById('npcTurnin').value = 'Thanks for helping.';
   npcLastCoords = null;
@@ -2989,7 +3020,7 @@ function collectNPCFromForm() {
 
   if (!Number.isFinite(x)) x = 0;
   if (!Number.isFinite(y)) y = 0;
-  const npc = { id, name, title, desc, symbol, map, x, y, tree };
+  const npc: any = { id, name, title, desc, symbol, map, x, y, tree };
   if (overrideColor) { npc.color = color; npc.overrideColor = true; }
   if (questIds.length > 1) npc.quests = questIds;
   else if (firstQuest) npc.questId = firstQuest;
@@ -3172,7 +3203,7 @@ function editNPC(i) {
   document.getElementById('npcDialog').value = Array.isArray(n.dialogs) ? n.dialogs.join('\n') : (n.dialog || n.tree?.start?.text || '');
   const qs = document.getElementById('npcQuests');
   if (qs) {
-    Array.from(qs.options || []).forEach(o => {
+    Array.from(qs.options || []).forEach((o: any) => {
       o.selected = Array.isArray(n.quests) ? n.quests.includes(o.value) : n.questId === o.value;
     });
   }
@@ -3377,7 +3408,7 @@ function addItem() {
   const id = document.getElementById('itemId').value.trim();
   const type = document.getElementById('itemType').value.trim();
   const desc = document.getElementById('itemDesc').value.trim();
-  const tags = document.getElementById('itemTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const tags = document.getElementById('itemTags').value.split(',').map(t => t.trim()).filter(Boolean);
   collectKnownTags(tags);
   updateTagOptions();
   const narrativeId = document.getElementById('itemNarrativeId').value.trim();
@@ -3409,7 +3440,7 @@ function addItem() {
   }
   const useText = document.getElementById('itemUse').value.trim();
   if (use && useText) use.text = useText;
-  const item = { id, name, desc, type, tags, mods, value, use, equip };
+  const item: any = { id, name, desc, type, tags, mods, value, use, equip };
   if (fuel) item.fuel = fuel;
   if (narrativeId || narrativePrompt) {
     item.narrative = {};
@@ -3428,7 +3459,7 @@ function addItem() {
     item.persona = personaId;
     const portrait = personaPathInput || (itemPersonaPortraitIndex > 0 ? personaPortraits[itemPersonaPortraitIndex] : '');
     const store = moduleData.personas || (moduleData.personas = {});
-    const entry = { ...(store[personaId] || {}) };
+    const entry: any = { ...(store[personaId] || {}) };
     if (personaLabel) entry.label = personaLabel;
     else delete entry.label;
     if (portrait) entry.portrait = portrait;
@@ -3650,7 +3681,7 @@ function lootTablesEqual(a, b) {
 
 function collectLootTable(container) {
   if (!container) return [];
-  const rows = Array.from(container.querySelectorAll('.lootRow')).map(row => {
+  const rows = Array.from(container.querySelectorAll('.lootRow')).map((row: any) => {
     const itemSel = row.querySelector('.lootItemSelect');
     const chanceInput = row.querySelector('.lootChanceInput');
     const val = itemSel?.value ?? '';
@@ -3660,7 +3691,7 @@ function collectLootTable(container) {
   return sanitizeLootTable(rows);
 }
 
-function addLootTableRow(container, entry = {}) {
+function addLootTableRow(container, entry: any = {}) {
   if (!container) return null;
   const row = document.createElement('div');
   row.className = 'lootRow';
@@ -3812,10 +3843,10 @@ function formatEncounterLocation(entry) {
   return `Dist ${pieces.join(' ')}`;
 }
 
-function showEncounterEditor(show){
+function showEncounterEditor(show) {
   document.getElementById('encounterEditor').style.display = show ? 'block' : 'none';
 }
-function startNewEncounter(){
+function startNewEncounter() {
   editEncounterIdx = -1;
   const mapSel = document.getElementById('encMap');
   populateMapDropdown(mapSel, 'world');
@@ -3833,15 +3864,15 @@ function startNewEncounter(){
   tmplSel.focus();
   updateEncounterLocationMode();
 }
-function collectEncounter(){
+function collectEncounter() {
   const map = document.getElementById('encMap').value.trim() || 'world';
   const templateId = document.getElementById('encTemplate').value.trim();
   const mode = getEncounterLocationMode();
-  const minDist = parseInt(document.getElementById('encMinDist').value,10);
-  const maxDist = parseInt(document.getElementById('encMaxDist').value,10);
+  const minDist = parseInt(document.getElementById('encMinDist').value, 10);
+  const maxDist = parseInt(document.getElementById('encMaxDist').value, 10);
   const zoneTag = document.getElementById('encZone').value.trim();
-  const t = globalThis.moduleData?.templates?.find(t => t.id === templateId);
-  const entry = { map, templateId };
+  const t = (globalThis as ModuleGlobals).moduleData?.templates?.find(t => t.id === templateId);
+  const entry: any = { map, templateId };
   if (mode === 'zone') {
     entry.mode = 'zone';
     if (zoneTag) entry.zoneTag = zoneTag;
@@ -3859,9 +3890,9 @@ function collectEncounter(){
   }
   return entry;
 }
-function addEncounter(){
+function addEncounter() {
   const entry = collectEncounter();
-  if(editEncounterIdx >= 0){ moduleData.encounters[editEncounterIdx] = entry; }
+  if (editEncounterIdx >= 0) { moduleData.encounters[editEncounterIdx] = entry; }
   else moduleData.encounters.push(entry);
   editEncounterIdx = -1;
   document.getElementById('addEncounter').textContent = 'Add Enemy';
@@ -3869,7 +3900,7 @@ function addEncounter(){
   renderEncounterList();
   showEncounterEditor(false);
 }
-function editEncounter(i){
+function editEncounter(i) {
   const e = moduleData.encounters[i];
   editEncounterIdx = i;
   const mapSel = document.getElementById('encMap');
@@ -3888,9 +3919,9 @@ function editEncounter(i){
   showEncounterEditor(true);
   updateEncounterLocationMode();
 }
-function renderEncounterList(){
+function renderEncounterList() {
   const list = document.getElementById('encounterList');
-  list.innerHTML = moduleData.encounters.map((e,i)=>{
+  list.innerHTML = moduleData.encounters.map((e, i) => {
     const t = moduleData.templates.find(t => t.id === e.templateId);
     const name = t ? t.name : e.templateId;
     const summary = formatLootTableSummary(getEncounterLootTable(e, t));
@@ -3899,12 +3930,12 @@ function renderEncounterList(){
     const locStr = location ? ` [${location}]` : '';
     return `<div data-idx="${i}">${e.map}: ${name}${locStr}${lootStr}</div>`;
   }).join('');
-  Array.from(list.children).forEach(div => div.onclick = () => editEncounter(parseInt(div.dataset.idx,10)));
+  Array.from(list.children).forEach(div => div.onclick = () => editEncounter(parseInt(div.dataset.idx, 10)));
 }
-function deleteEncounter(){
-  if(editEncounterIdx < 0) return;
+function deleteEncounter() {
+  if (editEncounterIdx < 0) return;
   confirmDialog('Delete this enemy?', () => {
-    moduleData.encounters.splice(editEncounterIdx,1);
+    moduleData.encounters.splice(editEncounterIdx, 1);
     editEncounterIdx = -1;
     document.getElementById('addEncounter').textContent = 'Add Enemy';
     document.getElementById('delEncounter').style.display = 'none';
@@ -3914,16 +3945,16 @@ function deleteEncounter(){
 }
 
 // --- NPC Templates ---
-function showTemplateEditor(show){
+function showTemplateEditor(show) {
   document.getElementById('templateEditor').style.display = show ? 'block' : 'none';
 }
-function toggleTemplateScrapFields(){
+function toggleTemplateScrapFields() {
   const show = document.getElementById('templateDropScrap').checked;
   document.querySelectorAll('.templateScrapField').forEach(el => {
     el.style.display = show ? 'inline-block' : 'none';
   });
 }
-function startNewTemplate(){
+function startNewTemplate() {
   editTemplateIdx = -1;
   document.getElementById('templateId').value = nextId('template', moduleData.templates);
   document.getElementById('templateName').value = '';
@@ -3947,24 +3978,24 @@ function startNewTemplate(){
   toggleTemplateScrapFields();
   showTemplateEditor(true);
 }
-function collectTemplate(){
+function collectTemplate() {
   const id = document.getElementById('templateId').value.trim();
   const name = document.getElementById('templateName').value.trim();
   const desc = document.getElementById('templateDesc').value.trim();
   const color = document.getElementById('templateColor').value.trim();
   const portraitSheet = document.getElementById('templatePortrait').value.trim();
-  const HP = parseInt(document.getElementById('templateHP').value,10) || 1;
-  const ATK = parseInt(document.getElementById('templateATK').value,10) || 1;
-  const DEF = parseInt(document.getElementById('templateDEF').value,10) || 0;
-  const challenge = parseInt(document.getElementById('templateChallenge').value,10);
+  const HP = parseInt(document.getElementById('templateHP').value, 10) || 1;
+  const ATK = parseInt(document.getElementById('templateATK').value, 10) || 1;
+  const DEF = parseInt(document.getElementById('templateDEF').value, 10) || 0;
+  const challenge = parseInt(document.getElementById('templateChallenge').value, 10);
   const specialCue = document.getElementById('templateSpecialCue').value.trim();
-  const specialDmg = parseInt(document.getElementById('templateSpecialDmg').value,10) || 0;
+  const specialDmg = parseInt(document.getElementById('templateSpecialDmg').value, 10) || 0;
   const dropScrap = document.getElementById('templateDropScrap').checked;
   const scrapChancePct = parseFloat(document.getElementById('templateScrapChance').value);
-  const scrapMin = parseInt(document.getElementById('templateScrapMin').value,10) || 0;
-  const scrapMax = parseInt(document.getElementById('templateScrapMax').value,10) || scrapMin;
+  const scrapMin = parseInt(document.getElementById('templateScrapMin').value, 10) || 0;
+  const scrapMax = parseInt(document.getElementById('templateScrapMax').value, 10) || scrapMin;
   const requires = document.getElementById('templateRequires').value.trim();
-  const combat = { HP, ATK, DEF };
+  const combat: any = { HP, ATK, DEF };
   if (challenge > 0) combat.challenge = Math.min(10, challenge); // higher values improve loot caches
   const lootTable = collectLootTable(document.getElementById('templateLootTable'));
   if (lootTable.length) combat.lootTable = lootTable;
@@ -3982,9 +4013,9 @@ function collectTemplate(){
   }
   return { id, name, desc, color, portraitSheet, combat };
 }
-function addTemplate(){
+function addTemplate() {
   const entry = collectTemplate();
-  if(editTemplateIdx >= 0){ moduleData.templates[editTemplateIdx] = entry; }
+  if (editTemplateIdx >= 0) { moduleData.templates[editTemplateIdx] = entry; }
   else moduleData.templates.push(entry);
   editTemplateIdx = -1;
   document.getElementById('addTemplate').textContent = 'Add Template';
@@ -3992,7 +4023,7 @@ function addTemplate(){
   renderTemplateList();
   showTemplateEditor(false);
 }
-function editTemplate(i){
+function editTemplate(i) {
   const t = moduleData.templates[i];
   editTemplateIdx = i;
   document.getElementById('templateId').value = t.id;
@@ -4018,16 +4049,16 @@ function editTemplate(i){
   toggleTemplateScrapFields();
   showTemplateEditor(true);
 }
-function renderTemplateList(){
+function renderTemplateList() {
   const list = document.getElementById('templateList');
-  list.innerHTML = moduleData.templates.map((t,i)=>`<div data-idx="${i}">${t.id}</div>`).join('');
-  Array.from(list.children).forEach(div => div.onclick = () => editTemplate(parseInt(div.dataset.idx,10)));
+  list.innerHTML = moduleData.templates.map((t, i) => `<div data-idx="${i}">${t.id}</div>`).join('');
+  Array.from(list.children).forEach(div => div.onclick = () => editTemplate(parseInt(div.dataset.idx, 10)));
   refreshChoiceDropdowns();
 }
-function deleteTemplate(){
-  if(editTemplateIdx < 0) return;
+function deleteTemplate() {
+  if (editTemplateIdx < 0) return;
   confirmDialog('Delete this template?', () => {
-    moduleData.templates.splice(editTemplateIdx,1);
+    moduleData.templates.splice(editTemplateIdx, 1);
     editTemplateIdx = -1;
     document.getElementById('addTemplate').textContent = 'Add Template';
     document.getElementById('delTemplate').style.display = 'none';
@@ -4072,7 +4103,7 @@ function collectEvent() {
   const x = parseInt(document.getElementById('eventX').value, 10) || 0;
   const y = parseInt(document.getElementById('eventY').value, 10) || 0;
   const eff = document.getElementById('eventEffect').value;
-  const ev = { when: 'enter', effect: eff };
+  const ev: any = { when: 'enter', effect: eff };
   if (eff === 'toast' || eff === 'log') ev.msg = document.getElementById('eventMsg').value;
   if (eff === 'addFlag') ev.flag = document.getElementById('eventFlag').value;
   if (eff === 'modStat') {
@@ -4191,7 +4222,7 @@ function updateArenaWaveHeaders() {
   });
 }
 
-function addArenaWaveBlock(entry = {}) {
+function addArenaWaveBlock(entry: any = {}) {
   const container = document.getElementById('arenaWaveContainer');
   if (!container) return null;
   const div = document.createElement('div');
@@ -4315,7 +4346,7 @@ function collectArena() {
     const templateSel = div.querySelector('.arenaWaveTemplate');
     const templateId = templateSel?.value.trim();
     if (!templateId) return;
-    const wave = { templateId };
+    const wave: any = { templateId };
     const countVal = parseInt(div.querySelector('.arenaWaveCount')?.value, 10);
     if (Number.isFinite(countVal) && countVal > 0) wave.count = countVal;
     const challengeVal = parseInt(div.querySelector('.arenaWaveChallenge')?.value, 10);
@@ -4356,7 +4387,7 @@ function collectArena() {
     alert('Add at least one wave with an enemy template.');
     return null;
   }
-  const arena = { map, waves };
+  const arena: any = { map, waves };
   if (bankId) arena.bankId = bankId;
   const delay = parseInt(delayRaw, 10);
   if (Number.isFinite(delay) && delay >= 0) arena.entranceDelay = delay;
@@ -4506,7 +4537,7 @@ function collectZone() {
     east: document.getElementById('zoneEntranceEast').checked,
     west: document.getElementById('zoneEntranceWest').checked
   };
-  const entry = { map, x, y, w, h };
+  const entry: any = { map, x, y, w, h };
   if (tag) entry.tag = tag;
   if (hp || msg) {
     entry.perStep = {} as AnyRecord;
@@ -4712,16 +4743,16 @@ function deletePortal() {
 }
 
 // --- Buildings ---
-function drawBldg(){
+function drawBldg() {
   if (!bldgCanvas || !bldgCtx) return;
-  const w=bldgGrid[0]?.length||1, h=bldgGrid.length||1;
-  const sx=bldgCanvas.width/w, sy=bldgCanvas.height/h;
-  bldgCtx.clearRect(0,0,bldgCanvas.width,bldgCanvas.height);
-  for(let y=0;y<h;y++){
-    for(let x=0;x<w;x++){
-      const t=bldgGrid[y][x];
-      bldgCtx.fillStyle = t===TILE.BUILDING? '#fff' : t===TILE.DOOR? '#8bd98d' : '#000';
-      bldgCtx.fillRect(x*sx,y*sy,sx,sy);
+  const w = bldgGrid[0]?.length || 1, h = bldgGrid.length || 1;
+  const sx = bldgCanvas.width / w, sy = bldgCanvas.height / h;
+  bldgCtx.clearRect(0, 0, bldgCanvas.width, bldgCanvas.height);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const t = bldgGrid[y][x];
+      bldgCtx.fillStyle = t === TILE.BUILDING ? '#fff' : t === TILE.DOOR ? '#8bd98d' : '#000';
+      bldgCtx.fillRect(x * sx, y * sy, sx, sy);
     }
   }
 }
@@ -4737,9 +4768,9 @@ function startNewBldg() {
   document.getElementById('bldgBoarded').checked = false;
   document.getElementById('bldgBunker').checked = false;
   document.getElementById('bldgInterior').disabled = false;
-  bldgGrid = Array.from({length:5},(_,yy)=>Array.from({length:6},(_,xx)=>TILE.BUILDING));
-  bldgGrid[4][3]=TILE.DOOR;
-  bldgPalette.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+  bldgGrid = Array.from({ length: 5 }, (_, yy) => Array.from({ length: 6 }, (_, xx) => TILE.BUILDING));
+  bldgGrid[4][3] = TILE.DOOR;
+  bldgPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
   bldgPalette.querySelector('button[data-tile="B"]').classList.add('active');
   bldgPaint = TILE.BUILDING;
   updateInteriorOptions();
@@ -4779,7 +4810,7 @@ function addBuilding() {
     interiorId = null;
   }
   const boarded = document.getElementById('bldgBoarded').checked;
-  const b = placeHut(x,y,{interiorId, grid:bldgGrid, boarded, bunker});
+  const b = placeHut(x, y, { interiorId, grid: bldgGrid, boarded, bunker });
   moduleData.buildings.push(b);
   editBldgIdx = moduleData.buildings.length - 1;
   renderBldgList();
@@ -4819,13 +4850,13 @@ function editBldg(i) {
   document.getElementById('bldgBoarded').checked = !!b.boarded;
   document.getElementById('bldgBunker').checked = !!b.bunker;
   document.getElementById('bldgInterior').disabled = !!b.bunker;
-  bldgGrid = b.grid ? b.grid.map(r=>r.slice()) : Array.from({length:b.h},()=>Array.from({length:b.w},()=>TILE.BUILDING));
+  bldgGrid = b.grid ? b.grid.map(r => r.slice()) : Array.from({ length: b.h }, () => Array.from({ length: b.w }, () => TILE.BUILDING));
   updateInteriorOptions();
   document.getElementById('bldgInterior').value = b.interiorId || '';
   document.getElementById('addBldg').style.display = 'none';
   document.getElementById('cancelBldg').style.display = 'none';
   document.getElementById('delBldg').style.display = 'block';
-  bldgPalette.querySelectorAll('button').forEach(btn=>btn.classList.remove('active'));
+  bldgPalette.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
   bldgPalette.querySelector('button[data-tile="B"]').classList.add('active');
   bldgPaint = TILE.BUILDING;
   drawBldg();
@@ -4834,42 +4865,42 @@ function editBldg(i) {
   drawWorld();
 }
 
-function paintBldg(e){
-  if(!bldgPainting || !bldgCanvas) return;
-  const w=bldgGrid[0]?.length||1, h=bldgGrid.length||1;
-  const rect=bldgCanvas.getBoundingClientRect();
-  const x=Math.floor((e.clientX-rect.left)/(bldgCanvas.width/w));
-  const y=Math.floor((e.clientY-rect.top)/(bldgCanvas.height/h));
-  if(bldgPaint===TILE.DOOR){
-    for(let yy=0; yy<h; yy++){ for(let xx=0; xx<w; xx++){ if(bldgGrid[yy][xx]===TILE.DOOR) bldgGrid[yy][xx]=TILE.BUILDING; }}
+function paintBldg(e) {
+  if (!bldgPainting || !bldgCanvas) return;
+  const w = bldgGrid[0]?.length || 1, h = bldgGrid.length || 1;
+  const rect = bldgCanvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left) / (bldgCanvas.width / w));
+  const y = Math.floor((e.clientY - rect.top) / (bldgCanvas.height / h));
+  if (bldgPaint === TILE.DOOR) {
+    for (let yy = 0; yy < h; yy++) { for (let xx = 0; xx < w; xx++) { if (bldgGrid[yy][xx] === TILE.DOOR) bldgGrid[yy][xx] = TILE.BUILDING; } }
   }
-  bldgGrid[y][x]=bldgPaint;
+  bldgGrid[y][x] = bldgPaint;
   drawBldg();
   applyBldgChanges();
 }
 if (bldgCanvas) {
-  bldgCanvas.addEventListener('mousedown',e=>{ bldgPainting=true; paintBldg(e); });
-  bldgCanvas.addEventListener('mousemove',paintBldg);
-  bldgCanvas.addEventListener('mouseup',()=>{ bldgPainting=false; });
-  bldgCanvas.addEventListener('mouseleave',()=>{ bldgPainting=false; });
+  bldgCanvas.addEventListener('mousedown', e => { bldgPainting = true; paintBldg(e); });
+  bldgCanvas.addEventListener('mousemove', paintBldg);
+  bldgCanvas.addEventListener('mouseup', () => { bldgPainting = false; });
+  bldgCanvas.addEventListener('mouseleave', () => { bldgPainting = false; });
 }
 
-function resizeBldg(){
-  const w=parseInt(document.getElementById('bldgW').value,10)||1;
-  const h=parseInt(document.getElementById('bldgH').value,10)||1;
-  const ng=Array.from({length:h},(_,y)=>Array.from({length:w},(_,x)=> (y<bldgGrid.length && x<bldgGrid[0].length)? bldgGrid[y][x]:null));
-  bldgGrid=ng; drawBldg();
+function resizeBldg() {
+  const w = parseInt(document.getElementById('bldgW').value, 10) || 1;
+  const h = parseInt(document.getElementById('bldgH').value, 10) || 1;
+  const ng = Array.from({ length: h }, (_, y) => Array.from({ length: w }, (_, x) => (y < bldgGrid.length && x < bldgGrid[0].length) ? bldgGrid[y][x] : null));
+  bldgGrid = ng; drawBldg();
   applyBldgChanges();
 }
-document.getElementById('bldgW').addEventListener('change',resizeBldg);
-document.getElementById('bldgH').addEventListener('change',resizeBldg);
+document.getElementById('bldgW').addEventListener('change', resizeBldg);
+document.getElementById('bldgH').addEventListener('change', resizeBldg);
 
-bldgPalette.querySelectorAll('button').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    bldgPalette.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+bldgPalette.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    bldgPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const t=btn.dataset.tile;
-    bldgPaint = t==='B'?TILE.BUILDING : t==='D'?TILE.DOOR : null;
+    const t = btn.dataset.tile;
+    bldgPaint = t === 'B' ? TILE.BUILDING : t === 'D' ? TILE.DOOR : null;
   });
 });
 bldgPalette.querySelector('button')?.classList.add('active');
@@ -4957,15 +4988,15 @@ if (stampsBtn && stampWindow) {
       aiBtn.addEventListener('click', async () => {
         const block = await window.NanoPalette.generate();
         if (block) {
-          const grid = gridFromEmoji(block);
-          worldStamps.nano = grid;
-          worldStampEmoji.nano = block;
-          stampNames.nano = 'Nano';
+          const grid = gridFromEmoji(block as string[]);
+          (worldStamps as any).nano = grid;
+          (worldStampEmoji as any).nano = block;
+          (stampNames as any).nano = 'Nano';
           renderStampWindow();
-          worldStamp = worldStamps.nano;
+          worldStamp = (worldStamps as any).nano;
           worldPaint = null;
           if (worldPalette) worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-          if (paletteLabel) paletteLabel.textContent = stampNames.nano || '';
+          if (paletteLabel) paletteLabel.textContent = (stampNames as any).nano || '';
           stampWindow.style.display = 'none';
           updateCursor();
           drawWorld();
@@ -5173,7 +5204,7 @@ function buildQuestRewardFromInputs() {
     const slot = document.getElementById('questRewardCustomSlot').value.trim();
     if (!id || !name) return { ok: false, error: 'Custom rewards need an id and name.' };
     const mods = collectMods('questRewardMods');
-    const reward = { id, name };
+    const reward: any = { id, name };
     if (rewardType) reward.type = rewardType;
     if (slot) reward.slot = slot;
     if (Object.keys(mods).length) reward.mods = mods;
@@ -5219,7 +5250,7 @@ function addQuest() {
   xp = Math.round(xp);
   if (xp < 10) xp = 10;
   else if (xp > 100) xp = 100;
-  const quest = { id, title, desc, xp };
+  const quest: any = { id, title, desc, xp };
   if (item) quest.item = item;
   if (typeof rewardResult.reward !== 'undefined') quest.reward = rewardResult.reward;
   if (editQuestIdx >= 0) {
@@ -5274,11 +5305,11 @@ function editQuest(i) {
 }
 function updateQuestOptions() {
   const sel = document.getElementById('npcQuests');
-    if (sel) {
-      const cur = Array.from(sel.selectedOptions || []).map(o => o.value);
-      sel.innerHTML = moduleData.quests.map(q => `<option value="${q.id}">${q.title}</option>`).join('');
-      cur.forEach(v => { const opt = Array.from(sel.options || []).find(o => o.value === v); if (opt) opt.selected = true; });
-    }
+  if (sel) {
+    const cur = Array.from(sel.selectedOptions || []).map(o => o.value);
+    sel.innerHTML = moduleData.quests.map(q => `<option value="${q.id}">${q.title}</option>`).join('');
+    cur.forEach(v => { const opt = Array.from(sel.options || []).find((o: any) => o.value === v); if (opt) (opt as any).selected = true; });
+  }
   const npcSel = document.getElementById('questNPC');
   if (npcSel) {
     const npcCur = npcSel.value;
@@ -5320,7 +5351,7 @@ function applyLoadedModule(data) {
   moduleData.name = data.name || 'adventure-module';
   moduleData.npcs = data.npcs || [];
   moduleData.items = (data.items || []).map(it => {
-    if (it && it.slot && (!it.type || ['weapon','armor','trinket'].includes(it.slot))) {
+    if (it && it.slot && (!it.type || ['weapon', 'armor', 'trinket'].includes(it.slot))) {
       it.type = it.type || it.slot;
     }
     delete it.slot;
@@ -5345,22 +5376,22 @@ function applyLoadedModule(data) {
   moduleData.encounters = [];
   if (data.encounters) {
     Object.entries(data.encounters).forEach(([map, list]) => {
-      list.forEach(e => moduleData.encounters.push({ map, ...e }));
+      (list as any[]).forEach(e => moduleData.encounters.push({ map, ...e }));
     });
   }
   moduleData.start = data.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
   document.getElementById('moduleName').value = moduleData.name;
   const bunkerScope = moduleData.props?.bunkerTravelScope || 'global';
   const scopeEl = document.getElementById('moduleBunkerScope');
-  if(scopeEl) scopeEl.value = bunkerScope;
-  globalThis.interiors = {};
-  interiors = globalThis.interiors;
-  moduleData.interiors.forEach(I => { interiors[I.id] = I; });
+  if (scopeEl) scopeEl.value = bunkerScope;
+  (globalThis as ModuleGlobals).interiors = {};
+  interiors = (globalThis as ModuleGlobals).interiors as any;
+  moduleData.interiors.forEach(I => { interiors[I.id] = I as any; });
 
   if (data.world) {
     const w = typeof data.world[0] === 'string' ? gridFromEmoji(data.world) : data.world;
-    globalThis.world = w;
-    world = globalThis.world;
+    (globalThis as ModuleGlobals).world = w;
+    world = (globalThis as ModuleGlobals).world!;
   } else {
     buildings.forEach(b => {
       for (let yy = 0; yy < b.h; yy++) {
@@ -5400,98 +5431,98 @@ function applyLoadedModule(data) {
   showArenaEditor(false);
 }
 
-function validateSpawns(){
-  const walkable={0:true,1:true,2:false,3:true,4:true,5:true,6:false,7:true,8:true,9:false};
-  const issues=[];
-  const s=moduleData.start;
-  if(!walkable[world[s.y][s.x]]) issues.push({ msg:'Player start on blocked tile', type:'start' });
-  moduleData.npcs.forEach((n,i)=>{ if(n.map==='world' && !walkable[world[n.y][n.x]]) issues.push({ msg:'NPC '+(n.id||'')+' on blocked tile', type:'npc', idx:i }); });
-  moduleData.items.forEach((it,i)=>{ if(it.map==='world' && !walkable[world[it.y][it.x]]) issues.push({ msg:'Item '+it.id+' on blocked tile', type:'item', idx:i }); });
-  const unlocks=new Set();
-  moduleData.npcs.forEach(n=>{
-    Object.values(n.tree||{}).forEach(node=>{
-      (node.choices||[]).forEach(ch=>{
-        (ch.effects||[]).forEach(e=>{ if(e.effect==='unlockNPC' && e.npcId) unlocks.add(e.npcId); });
+function validateSpawns() {
+  const walkable = { 0: true, 1: true, 2: false, 3: true, 4: true, 5: true, 6: false, 7: true, 8: true, 9: false };
+  const issues = [];
+  const s = moduleData.start;
+  if (!walkable[world[s.y][s.x]]) issues.push({ msg: 'Player start on blocked tile', type: 'start' });
+  moduleData.npcs.forEach((n, i) => { if (n.map === 'world' && !walkable[world[n.y][n.x]]) issues.push({ msg: 'NPC ' + (n.id || '') + ' on blocked tile', type: 'npc', idx: i }); });
+  moduleData.items.forEach((it, i) => { if (it.map === 'world' && !walkable[world[it.y][it.x]]) issues.push({ msg: 'Item ' + it.id + ' on blocked tile', type: 'item', idx: i }); });
+  const unlocks = new Set();
+  moduleData.npcs.forEach(n => {
+    Object.values(n.tree || {}).forEach((node: any) => {
+      (node.choices || []).forEach(ch => {
+        (ch.effects || []).forEach(e => { if (e.effect === 'unlockNPC' && e.npcId) unlocks.add(e.npcId); });
       });
     });
   });
-  moduleData.npcs.forEach((n,i)=>{
-    if(n.locked && n.id && !unlocks.has(n.id)) issues.push({ msg:'Locked NPC '+n.id+' has no unlock', type:'npc', idx:i });
-    if(!n.portraitSheet) issues.push({ msg:'NPC '+(n.id||'')+' missing portrait', type:'npc', idx:i, warn:true });
-    if(!n.prompt) issues.push({ msg:'NPC '+(n.id||'')+' missing prompt', type:'npc', idx:i, warn:true });
+  moduleData.npcs.forEach((n, i) => {
+    if (n.locked && n.id && !unlocks.has(n.id)) issues.push({ msg: 'Locked NPC ' + n.id + ' has no unlock', type: 'npc', idx: i });
+    if (!n.portraitSheet) issues.push({ msg: 'NPC ' + (n.id || '') + ' missing portrait', type: 'npc', idx: i, warn: true });
+    if (!n.prompt) issues.push({ msg: 'NPC ' + (n.id || '') + ' missing prompt', type: 'npc', idx: i, warn: true });
   });
-  const availableItems=new Set();
-  const availableTags=new Set();
-  const addTag=tag=>{
-    if(typeof tag!=='string') return;
-    const clean=tag.trim().toLowerCase();
-    if(clean) availableTags.add(clean);
+  const availableItems = new Set();
+  const availableTags = new Set();
+  const addTag = tag => {
+    if (typeof tag !== 'string') return;
+    const clean = tag.trim().toLowerCase();
+    if (clean) availableTags.add(clean);
   };
-  const addTags=tags=>{
-    if(!tags) return;
-    if(Array.isArray(tags)) tags.forEach(addTag);
+  const addTags = tags => {
+    if (!tags) return;
+    if (Array.isArray(tags)) tags.forEach(addTag);
     else addTag(tags);
   };
-  const addItemId=id=>{
-    if(typeof id!=='string') return;
-    const clean=id.trim();
-    if(!clean || /\s/.test(clean)) return;
+  const addItemId = id => {
+    if (typeof id !== 'string') return;
+    const clean = id.trim();
+    if (!clean || /\s/.test(clean)) return;
     availableItems.add(clean);
   };
-  const addItemEntry=entry=>{
-    if(!entry) return;
-    if(typeof entry==='string'){ addItemId(entry); return; }
-    if(typeof entry==='object'){
-      if(entry.id) addItemId(entry.id);
-      if(entry.item) addItemId(entry.item);
-      if(entry.baseId) addItemId(entry.baseId);
+  const addItemEntry = entry => {
+    if (!entry) return;
+    if (typeof entry === 'string') { addItemId(entry); return; }
+    if (typeof entry === 'object') {
+      if (entry.id) addItemId(entry.id);
+      if (entry.item) addItemId(entry.item);
+      if (entry.baseId) addItemId(entry.baseId);
       addTags(entry.tags);
     }
   };
-  const addReward=reward=>{
-    if(!reward) return;
-    if(Array.isArray(reward)){ reward.forEach(addReward); return; }
-    if(typeof reward==='string'){ addItemId(reward); return; }
-    if(typeof reward==='object'){
+  const addReward = reward => {
+    if (!reward) return;
+    if (Array.isArray(reward)) { reward.forEach(addReward); return; }
+    if (typeof reward === 'string') { addItemId(reward); return; }
+    if (typeof reward === 'object') {
       addItemEntry(reward);
-      if(reward.reward) addReward(reward.reward);
-      if(reward.items) addReward(reward.items);
+      if (reward.reward) addReward(reward.reward);
+      if (reward.items) addReward(reward.items);
     }
   };
-  const addEffects=effects=>{
-    if(!Array.isArray(effects)) return;
-    effects.forEach(e=>{
-      if(!e || typeof e!=='object') return;
-      if(e.effect==='addItem') addItemId(e.id||e.item);
+  const addEffects = effects => {
+    if (!Array.isArray(effects)) return;
+    effects.forEach(e => {
+      if (!e || typeof e !== 'object') return;
+      if (e.effect === 'addItem') addItemId(e.id || e.item);
     });
   };
-  (moduleData.items||[]).forEach(it=>{
+  (moduleData.items || []).forEach(it => {
     addItemEntry(it);
     addTags(it.tags);
   });
-  (moduleData.quests||[]).forEach(q=>{ addReward(q.reward); });
-  (moduleData.npcs||[]).forEach(n=>{
-    if(n.shop?.inv) n.shop.inv.forEach(addItemEntry);
-    Object.values(n.tree||{}).forEach(node=>{
+  (moduleData.quests || []).forEach(q => { addReward(q.reward); });
+  (moduleData.npcs || []).forEach(n => {
+    if (n.shop?.inv) n.shop.inv.forEach(addItemEntry);
+    Object.values(n.tree || {}).forEach((node: any) => {
       addEffects(node.effects);
-      (node.choices||[]).forEach(ch=>{
+      (node.choices || []).forEach(ch => {
         addReward(ch.reward);
         addEffects(ch.effects);
       });
     });
   });
-  (moduleData.events||[]).forEach(ev=>{
-    (ev.events||[]).forEach(e=>{ if(e.effect==='addItem') addItemId(e.id||e.item); });
+  (moduleData.events || []).forEach(ev => {
+    (ev.events || []).forEach(e => { if (e.effect === 'addItem') addItemId(e.id || e.item); });
   });
-  const normReqList=req=>{
-    const out=[];
-    const push=entry=>{
-      if(!entry) return;
-      if(Array.isArray(entry)){ entry.forEach(push); return; }
-      if(typeof entry==='string'){
-        const str=entry.trim();
-        if(!str) return;
-        if(str.includes(',')) str.split(',').forEach(part=>push(part.trim()));
+  const normReqList = req => {
+    const out = [];
+    const push = entry => {
+      if (!entry) return;
+      if (Array.isArray(entry)) { entry.forEach(push); return; }
+      if (typeof entry === 'string') {
+        const str = entry.trim();
+        if (!str) return;
+        if (str.includes(',')) str.split(',').forEach(part => push(part.trim()));
         else out.push(str);
         return;
       }
@@ -5500,120 +5531,120 @@ function validateSpawns(){
     push(req);
     return out;
   };
-  const hasRequirement=req=>{
-    if(!req) return false;
-    if(Array.isArray(req)) return req.some(hasRequirement);
-    if(typeof req==='string'){
-      const str=req.trim();
-      if(!str) return false;
-      if(str.startsWith('tag:')){
-        const tag=str.slice(4).trim().toLowerCase();
+  const hasRequirement = req => {
+    if (!req) return false;
+    if (Array.isArray(req)) return req.some(hasRequirement);
+    if (typeof req === 'string') {
+      const str = req.trim();
+      if (!str) return false;
+      if (str.startsWith('tag:')) {
+        const tag = str.slice(4).trim().toLowerCase();
         return tag ? availableTags.has(tag) : false;
       }
       return availableItems.has(str);
     }
-    if(typeof req==='object'){
-      if(req.id && hasRequirement(req.id)) return true;
-      if(req.item && hasRequirement(req.item)) return true;
-      if(typeof req.tag==='string') return availableTags.has(req.tag.trim().toLowerCase());
-      if(Array.isArray(req.tags)) return req.tags.some(t=>typeof t==='string' && availableTags.has(t.trim().toLowerCase()));
+    if (typeof req === 'object') {
+      if (req.id && hasRequirement(req.id)) return true;
+      if (req.item && hasRequirement(req.item)) return true;
+      if (typeof req.tag === 'string') return availableTags.has(req.tag.trim().toLowerCase());
+      if (Array.isArray(req.tags)) return req.tags.some(t => typeof t === 'string' && availableTags.has(t.trim().toLowerCase()));
     }
     return false;
   };
-  const describeReq=req=>{
-    if(!req) return 'the required item';
-    if(typeof req==='string'){
-      if(req.startsWith('tag:')){
-        const tag=req.slice(4).trim();
+  const describeReq = req => {
+    if (!req) return 'the required item';
+    if (typeof req === 'string') {
+      if (req.startsWith('tag:')) {
+        const tag = req.slice(4).trim();
         return tag ? `an item tagged "${tag}"` : 'the required item';
       }
       return `"${req}"`;
     }
-    if(typeof req==='object'){
-      if(typeof req.tag==='string' && req.tag.trim()) return `an item tagged "${req.tag.trim()}"`;
-      if(Array.isArray(req.tags)){
-        const tags=req.tags.map(t=>typeof t==='string'?t.trim():'').filter(Boolean);
-        if(tags.length) return `an item tagged "${tags.join('" or "')}"`;
+    if (typeof req === 'object') {
+      if (typeof req.tag === 'string' && req.tag.trim()) return `an item tagged "${req.tag.trim()}"`;
+      if (Array.isArray(req.tags)) {
+        const tags = req.tags.map(t => typeof t === 'string' ? t.trim() : '').filter(Boolean);
+        if (tags.length) return `an item tagged "${tags.join('" or "')}"`;
       }
-      if(typeof req.id==='string' && req.id.trim()) return `"${req.id.trim()}"`;
-      if(typeof req.item==='string' && req.item.trim()) return `"${req.item.trim()}"`;
+      if (typeof req.id === 'string' && req.id.trim()) return `"${req.id.trim()}"`;
+      if (typeof req.item === 'string' && req.item.trim()) return `"${req.item.trim()}"`;
     }
     return 'the required item';
   };
-  const describeReqList=list=>{
-    const parts=list.map(describeReq).filter(Boolean);
-    if(!parts.length) return 'the required item';
-    if(parts.length===1) return parts[0];
-    return parts.slice(0,-1).join(', ')+' or '+parts[parts.length-1];
+  const describeReqList = list => {
+    const parts = list.map(describeReq).filter(Boolean);
+    if (!parts.length) return 'the required item';
+    if (parts.length === 1) return parts[0];
+    return parts.slice(0, -1).join(', ') + ' or ' + parts[parts.length - 1];
   };
-  const checkCombatRequires=(entry,label,type,idx)=>{
-    const reqs=normReqList(entry?.combat?.requires);
-    if(!reqs.length) return;
-    if(reqs.some(hasRequirement)) return;
-    issues.push({ msg:`${label} requires ${describeReqList(reqs)} but the module has none`, type, idx });
+  const checkCombatRequires = (entry, label, type, idx) => {
+    const reqs = normReqList(entry?.combat?.requires);
+    if (!reqs.length) return;
+    if (reqs.some(hasRequirement)) return;
+    issues.push({ msg: `${label} requires ${describeReqList(reqs)} but the module has none`, type, idx });
   };
-  (moduleData.npcs||[]).forEach((n,i)=>{
-    const label='Enemy '+(n.id||n.name||('NPC #'+(i+1)));
-    checkCombatRequires(n,label,'npc',i);
+  (moduleData.npcs || []).forEach((n, i) => {
+    const label = 'Enemy ' + (n.id || n.name || ('NPC #' + (i + 1)));
+    checkCombatRequires(n, label, 'npc', i);
   });
-  (moduleData.templates||[]).forEach((t,i)=>{
-    const label='Enemy template '+(t.id||t.name||('#'+(i+1)));
-    checkCombatRequires(t,label,'template',i);
+  (moduleData.templates || []).forEach((t, i) => {
+    const label = 'Enemy template ' + (t.id || t.name || ('#' + (i + 1)));
+    checkCombatRequires(t, label, 'template', i);
   });
   return issues;
 }
 
-function onProblemClick(){
+function onProblemClick() {
   const idxStr = this.dataset?.idx ?? (typeof this.getAttribute === 'function' ? this.getAttribute('data-idx') : null);
-  const prob=problemRefs[parseInt(idxStr || '-1',10)];
-  if(!prob) return;
-  if(prob.type==='npc'){
+  const prob = problemRefs[parseInt(idxStr || '-1', 10)];
+  if (!prob) return;
+  if (prob.type === 'npc') {
     editNPC(prob.idx);
     const msg = prob.msg || '';
     let targetSection = null;
-    if(/portrait/i.test(msg)) targetSection = 'npcSectionAppearance';
-    else if(/prompt|dialog/i.test(msg)) targetSection = 'npcSectionInteraction';
-    else if(/locked npc/i.test(msg)) targetSection = 'npcSectionServices';
-    else if(/blocked tile/i.test(msg)) targetSection = 'npcSectionPlacement';
-    if(/blocked tile/i.test(msg)){
+    if (/portrait/i.test(msg)) targetSection = 'npcSectionAppearance';
+    else if (/prompt|dialog/i.test(msg)) targetSection = 'npcSectionInteraction';
+    else if (/locked npc/i.test(msg)) targetSection = 'npcSectionServices';
+    else if (/blocked tile/i.test(msg)) targetSection = 'npcSectionPlacement';
+    if (/blocked tile/i.test(msg)) {
       setTimeout(() => {
         beginNpcCoordinateSelection();
         openNpcSection('npcSectionPlacement', { scroll: true, focus: true });
       }, 60);
       return;
     }
-    if(targetSection){
+    if (targetSection) {
       setTimeout(() => openNpcSection(targetSection, { scroll: true, focus: true }), 60);
     }
   }
-  else if(prob.type==='item') editItem(prob.idx);
-  else if(prob.type==='template') editTemplate(prob.idx);
-  else if(prob.type==='start'){
+  else if (prob.type === 'item') editItem(prob.idx);
+  else if (prob.type === 'template') editTemplate(prob.idx);
+  else if (prob.type === 'start') {
     showMap('world');
-    focusMap(moduleData.start.x,moduleData.start.y);
-    selectedObj=null;
+    focusMap(moduleData.start.x, moduleData.start.y);
+    selectedObj = null;
     settingStart = true;
     setMapActionBanner('Player start needs a walkable tile. Click a valid tile to reposition.', 'error');
     drawWorld();
   }
 }
 
-function renderProblems(issues){
-  issues = issues || validateSpawns();
+function renderProblems(issues?: any[]) {
+  issues = issues || (validateSpawns() as any[]);
   const card = document.getElementById('problemCard');
   const list = document.getElementById('problemList');
   problemRefs = issues;
-  if(!issues.length){
-    card.style.display='none';
+  if (!issues.length) {
+    card.style.display = 'none';
     if (list) list.innerHTML = '';
     return;
   }
-  card.style.display='block';
+  card.style.display = 'block';
   if (!list) return;
   const existing = Array.from(list.children);
   const frag = typeof document.createDocumentFragment === 'function' ? document.createDocumentFragment() : null;
   const pendingNodes = [] as HTMLElement[];
-  issues.forEach((p,i)=>{
+  issues.forEach((p, i) => {
     let btn = existing[i];
     const isButton = btn && (btn as HTMLElement).tagName === 'BUTTON';
     if (!isButton) {
@@ -5675,7 +5706,7 @@ function exportModulePayload() {
     const { _origGrid, ...rest } = I;
     return { ...rest, grid: _origGrid || gridToEmoji(I.grid) };
   });
-  const enc = {} as AnyRecord;
+  const enc = {} as Record<string, any[]>;
   (moduleData.encounters || []).forEach(e => {
     const { map, ...rest } = e;
     (enc[map] ||= []).push(rest);
@@ -5704,9 +5735,9 @@ globalThis.exportModulePayload = exportModulePayload;
 
 function saveModule() {
   const issues = validateSpawns() || [];
-  if(issues.length){
+  if (issues.length) {
     renderProblems(issues);
-    if(issues.some(i=>!i.warn)) return;
+    if (issues.some(i => !i.warn)) return;
   }
   const { data } = exportModulePayload();
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -5727,9 +5758,9 @@ function playtestModule() {
     });
   }
   const bldgs = buildings.map(({ under, ...rest }) => rest);
-  const ints = moduleData.interiors.map(I => ({...I, grid: gridToEmoji(I.grid)}));
-  const enc = {} as AnyRecord;
-  (moduleData.encounters||[]).forEach(e => {
+  const ints = moduleData.interiors.map(I => ({ ...I, grid: gridToEmoji(I.grid) }));
+  const enc = {} as Record<string, any[]>;
+  (moduleData.encounters || []).forEach(e => {
     const { map, ...rest } = e;
     (enc[map] ||= []).push(rest);
   });
@@ -5737,7 +5768,7 @@ function playtestModule() {
   const zoneEffects = moduleData.zoneEffects ? moduleData.zoneEffects.map(z => ({ ...z })) : [];
   const hasProps = Object.keys(moduleData.props || {}).length > 0;
   const moduleBase = { ...moduleData };
-  if(!hasProps) delete moduleBase.props;
+  if (!hasProps) delete moduleBase.props;
   const data = { ...moduleBase, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints, zones, zoneEffects };
   localStorage.setItem(PLAYTEST_KEY, JSON.stringify(data));
   window.open('dustland.html?ack-player=1#play', '_blank');
@@ -5745,11 +5776,11 @@ function playtestModule() {
 
 document.getElementById('clear').onclick = clearWorld;
 const moduleBunkerScope = document.getElementById('moduleBunkerScope');
-if(moduleBunkerScope){
+if (moduleBunkerScope) {
   moduleBunkerScope.addEventListener('change', () => {
     const scope = moduleBunkerScope.value || 'global';
     moduleData.props = moduleData.props || {};
-    if(scope === 'global') delete moduleData.props.bunkerTravelScope;
+    if (scope === 'global') delete moduleData.props.bunkerTravelScope;
     else moduleData.props.bunkerTravelScope = scope;
   });
 }
@@ -5842,12 +5873,12 @@ document.getElementById('npcNextP').onclick = () => {
   applyNPCChanges();
 };
 
-setupListFilter('npcFilter','npcList');
-setupListFilter('itemFilter','itemList');
-setupListFilter('questFilter','questList');
-setupListFilter('eventFilter','eventList');
-setupListFilter('arenaFilter','arenaList');
-setupListFilter('encFilter','encounterList');
+setupListFilter('npcFilter', 'npcList');
+setupListFilter('itemFilter', 'itemList');
+setupListFilter('questFilter', 'questList');
+setupListFilter('eventFilter', 'eventList');
+setupListFilter('arenaFilter', 'arenaList');
+setupListFilter('encFilter', 'encounterList');
 document.getElementById('delItem').onclick = deleteItem;
 document.getElementById('delBldg').onclick = deleteBldg;
 document.getElementById('newInterior').onclick = startNewInterior;
@@ -5917,7 +5948,7 @@ document.getElementById('loadFile').addEventListener('change', e => {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    try { applyLoadedModule(JSON.parse(reader.result)); }
+    try { const json = JSON.parse(reader.result as string); applyLoadedModule(json); }
     catch (err) { alert('Invalid module: ' + err.message); }
   };
   reader.readAsText(file);
@@ -5998,7 +6029,7 @@ function canvasPos(ev) {
   }
 }
 
-function updateCursor(x, y) {
+function updateCursor(x?: number, y?: number) {
   if (panning) {
     canvas.style.cursor = 'grabbing';
     return;
@@ -6494,7 +6525,7 @@ if (wizardList && globalThis.Dustland?.wizards) {
 function mergeWizardResult(res) {
   if (!res) return;
   Object.entries(res).forEach(([k, v]) => {
-    if (Array.isArray(moduleData[k])) moduleData[k].push(...v);
+    if (Array.isArray(moduleData[k])) moduleData[k].push(...(v as any[]));
     else moduleData[k] = v;
   });
   if (typeof applyModule === 'function') applyModule(moduleData, { fullReset: false });
@@ -6627,7 +6658,7 @@ animate();
     });
     const active = tabs.find(t => t.dataset.tab === tabName);
     if (active && active.scrollIntoView) {
-      active.scrollIntoView({block: 'nearest', inline: 'nearest'});
+      active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     }
     if (!wide) {
       panes.forEach(p => p.style.display = (p.dataset.pane === tabName ? '' : 'none'));
@@ -6654,7 +6685,7 @@ animate();
 
   if (typeof MutationObserver === 'function' && tabList) {
     const mo = new MutationObserver(scheduleSizing);
-    mo.observe(tabList, {childList: true, subtree: true, characterData: true});
+    mo.observe(tabList, { childList: true, subtree: true, characterData: true });
   }
 
   handleResize();
@@ -6679,4 +6710,3 @@ if (document && typeof document.addEventListener === 'function') {
 
 document.getElementById('playtestFloat')?.addEventListener('click', playtestModule);
 updateMapSelect();
-// @ts-nocheck
