@@ -1,5 +1,3 @@
-// @ts-nocheck
-// TypeScript checking remains disabled here until the editor globals are fully typed.
 // Adventure Construction Kit
 // Provides basic tools to build Dustland modules.
 // Ensure world generation doesn't pull default content
@@ -869,7 +867,7 @@ function drawWorld() {
         ctx.save();
         ctx.lineWidth = pulse;
         if (selectedObj.type === 'npc') {
-            ctx.strokeStyle = getNpcColor(o);
+            ctx.strokeStyle = getEditorNpcColor(o);
             ctx.strokeRect((o.x - pxoff) * sx + 1, (o.y - pyoff) * sy + 1, sx - 2, sy - 2);
         }
         else if (selectedObj.type === 'item') {
@@ -940,10 +938,10 @@ function drawInterior() {
         }
     }
     moduleData.npcs.filter(n => n.map === I.id).forEach(n => {
-        intCtx.fillStyle = getNpcColor(n);
+        intCtx.fillStyle = getEditorNpcColor(n);
         intCtx.fillRect(n.x * sx, n.y * sy, sx, sy);
         intCtx.fillStyle = '#000';
-        intCtx.fillText(getNpcSymbol(n), n.x * sx + 4, n.y * sy + 12);
+        intCtx.fillText(getEditorNpcSymbol(n), n.x * sx + 4, n.y * sy + 12);
     });
     moduleData.items.filter(it => it.map === I.id).forEach(it => {
         intCtx.strokeStyle = '#ff0';
@@ -953,7 +951,7 @@ function drawInterior() {
         const o = selectedObj.obj;
         intCtx.save();
         intCtx.lineWidth = 2;
-        intCtx.strokeStyle = selectedObj.type === 'npc' ? getNpcColor(o) : '#ff0';
+        intCtx.strokeStyle = selectedObj.type === 'npc' ? getEditorNpcColor(o) : '#ff0';
         intCtx.strokeRect(o.x * sx + 1, o.y * sy + 1, sx - 2, sy - 2);
         intCtx.restore();
     }
@@ -1193,23 +1191,30 @@ function confirmDialog(msg, onYes) {
     modal.classList.add('shown');
     const yes = document.getElementById('confirmYes');
     const no = document.getElementById('confirmNo');
+    if (!yes || !no)
+        return;
     const prev = document.activeElement;
+    const triggerClick = (btn) => {
+        if (!btn)
+            return;
+        const clickEvent = typeof MouseEvent !== 'undefined'
+            ? new MouseEvent('click')
+            : { preventDefault: () => undefined };
+        if (btn.onclick)
+            btn.onclick(clickEvent);
+        else
+            btn.click?.();
+    };
     yes.focus();
     const tgt = document.addEventListener ? document : document.body;
-    const onKey = e => {
+    const onKey = (e) => {
         if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
             e.preventDefault?.();
-            if (yes.onclick)
-                yes.onclick();
-            else
-                yes.click?.();
+            triggerClick(yes);
         }
         else if (e.key === 'Escape') {
             e.preventDefault?.();
-            if (no.onclick)
-                no.onclick();
-            else
-                no.click?.();
+            triggerClick(no);
         }
     };
     const cleanup = () => {
@@ -1416,7 +1421,7 @@ function loadMods(mods = {}, containerId = 'modBuilder') {
         if (typeof mods[m] === 'number') {
             chk.checked = true;
             inp.disabled = false;
-            inp.value = mods[m];
+            inp.value = String(mods[m]);
         }
     });
 }
@@ -2048,8 +2053,12 @@ function renderTreeEditor() {
         div.className = 'node';
         div.innerHTML = `<div class="nodeHeader"><button class="btn toggle" type="button">-</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="btn delNode" type="button" title="Delete node">&#128465;</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
         const choicesDiv = div.querySelector('.choices');
+        if (!choicesDiv)
+            return;
         (node.choices || []).forEach(ch => addChoiceRow(choicesDiv, ch));
-        div.querySelector('.addChoice').onclick = () => addChoiceRow(choicesDiv);
+        const addChoiceBtn = div.querySelector('.addChoice');
+        if (addChoiceBtn)
+            addChoiceBtn.onclick = () => addChoiceRow(choicesDiv);
         const toggleBtn = div.querySelector('.toggle');
         toggleBtn.addEventListener('click', () => {
             div.classList.toggle('collapsed');
@@ -2293,12 +2302,13 @@ function updateTreeData() {
         visit('locked');
     const orphans = [];
     Object.entries(nodeRefs).forEach(([id, nodeEl]) => {
+        const el = nodeEl;
         if (!visited.has(id)) {
-            nodeEl.style.borderColor = 'orange';
+            el.style.borderColor = 'orange';
             orphans.push(id);
         }
         else {
-            nodeEl.style.borderColor = '';
+            el.style.borderColor = '';
         }
     });
     const warnEl = document.getElementById('treeWarning');
@@ -3000,7 +3010,7 @@ function startNewNPC() {
     document.getElementById('npcDialog').value = '';
     const qs = document.getElementById('npcQuests');
     if (qs)
-        Array.from(qs.options || []).forEach(o => o.selected = false);
+        Array.from(qs.options || []).forEach((opt) => opt.selected = false);
     document.getElementById('npcAccept').value = 'Good luck.';
     document.getElementById('npcTurnin').value = 'Thanks for helping.';
     npcLastCoords = null;
@@ -3411,7 +3421,7 @@ function editNPC(i) {
     document.getElementById('npcDialog').value = Array.isArray(n.dialogs) ? n.dialogs.join('\n') : (n.dialog || n.tree?.start?.text || '');
     const qs = document.getElementById('npcQuests');
     if (qs) {
-        Array.from(qs.options || []).forEach(o => {
+        Array.from(qs.options || []).forEach((o) => {
             o.selected = Array.isArray(n.quests) ? n.quests.includes(o.value) : n.questId === o.value;
         });
     }
@@ -3681,7 +3691,8 @@ function addItem() {
         item.persona = personaId;
         const portrait = personaPathInput || (itemPersonaPortraitIndex > 0 ? personaPortraits[itemPersonaPortraitIndex] : '');
         const store = moduleData.personas || (moduleData.personas = {});
-        const entry = { ...(store[personaId] || {}) };
+        const prevEntry = store[personaId];
+        const entry = { ...(prevEntry && typeof prevEntry === 'object' ? prevEntry : {}) };
         if (personaLabel)
             entry.label = personaLabel;
         else
@@ -3915,7 +3926,7 @@ function lootTablesEqual(a, b) {
 function collectLootTable(container) {
     if (!container)
         return [];
-    const rows = Array.from(container.querySelectorAll('.lootRow')).map(row => {
+    const rows = Array.from(container.querySelectorAll('.lootRow')).map((row) => {
         const itemSel = row.querySelector('.lootItemSelect');
         const chanceInput = row.querySelector('.lootChanceInput');
         const val = itemSel?.value ?? '';
@@ -5668,7 +5679,7 @@ function updateQuestOptions() {
     if (sel) {
         const cur = Array.from(sel.selectedOptions || []).map(o => o.value);
         sel.innerHTML = moduleData.quests.map(q => `<option value="${q.id}">${q.title}</option>`).join('');
-        cur.forEach(v => { const opt = Array.from(sel.options || []).find(o => o.value === v); if (opt)
+        cur.forEach(v => { const opt = Array.from(sel.options || []).find((o) => o.value === v); if (opt)
             opt.selected = true; });
     }
     const npcSel = document.getElementById('questNPC');
@@ -5808,7 +5819,7 @@ function validateSpawns() {
         issues.push({ msg: 'Item ' + it.id + ' on blocked tile', type: 'item', idx: i }); });
     const unlocks = new Set();
     moduleData.npcs.forEach(n => {
-        Object.values(n.tree || {}).forEach(node => {
+        Object.values(n.tree || {}).forEach((node) => {
             (node.choices || []).forEach(ch => {
                 (ch.effects || []).forEach(e => { if (e.effect === 'unlockNPC' && e.npcId)
                     unlocks.add(e.npcId); });
@@ -5902,7 +5913,7 @@ function validateSpawns() {
     (moduleData.npcs || []).forEach(n => {
         if (n.shop?.inv)
             n.shop.inv.forEach(addItemEntry);
-        Object.values(n.tree || {}).forEach(node => {
+        Object.values(n.tree || {}).forEach((node) => {
             addEffects(node.effects);
             (node.choices || []).forEach(ch => {
                 addReward(ch.reward);
@@ -6407,7 +6418,8 @@ document.getElementById('loadFile').addEventListener('change', e => {
     const reader = new FileReader();
     reader.onload = () => {
         try {
-            applyLoadedModule(JSON.parse(reader.result));
+            const json = JSON.parse(reader.result);
+            applyLoadedModule(json);
         }
         catch (err) {
             alert('Invalid module: ' + err.message);

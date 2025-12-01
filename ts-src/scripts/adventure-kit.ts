@@ -1,5 +1,3 @@
-// @ts-nocheck
-// TypeScript checking remains disabled here until the editor globals are fully typed.
 // Adventure Construction Kit
 // Provides basic tools to build Dustland modules.
 
@@ -116,6 +114,9 @@ type EditorInteriorDefinition = {
   h: number;
   _origGrid?: number[][];
   label?: string;
+  displayName?: string;
+  entryX?: number;
+  entryY?: number;
 };
 type ModuleGlobals = typeof globalThis & {
   moduleData?: ModuleData;
@@ -145,7 +146,7 @@ type ModuleData = {
   zones: any[];
   encounters: any[];
   templates: any[];
-  personas: Record<string, unknown>;
+  personas: Record<string, AckPersonaData>;
   start: { map: string; x: number; y: number };
   module?: unknown;
   moduleVar?: unknown;
@@ -156,6 +157,7 @@ type ModuleData = {
   zoneEffects?: any[];
   generateMap?: (seed: number, opts?: unknown) => unknown;
 };
+type AckPersonaData = PersonaData & { label?: string; portrait?: string; [key: string]: unknown };
 declare function nextLoopPoint(prev: LoopPoint | undefined, npc: LoopPoint): LoopPoint;
 
 const stampNames = {
@@ -1222,18 +1224,27 @@ function confirmDialog(msg, onYes) {
   }
   document.getElementById('confirmText').textContent = msg;
   modal.classList.add('shown');
-  const yes = document.getElementById('confirmYes');
-  const no = document.getElementById('confirmNo');
+  const yes = document.getElementById('confirmYes') as HTMLButtonElement | null;
+  const no = document.getElementById('confirmNo') as HTMLButtonElement | null;
+  if (!yes || !no) return;
   const prev = document.activeElement;
+  const triggerClick = (btn: HTMLButtonElement | null) => {
+    if (!btn) return;
+    const clickEvent = typeof MouseEvent !== 'undefined'
+      ? new MouseEvent('click')
+      : ({ preventDefault: () => undefined } as MouseEvent);
+    if (btn.onclick) btn.onclick(clickEvent);
+    else btn.click?.();
+  };
   yes.focus();
   const tgt = document.addEventListener ? document : document.body;
-  const onKey = e => {
+  const onKey = (e: KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
       e.preventDefault?.();
-      if (yes.onclick) yes.onclick(); else yes.click?.();
+      triggerClick(yes);
     } else if (e.key === 'Escape') {
       e.preventDefault?.();
-      if (no.onclick) no.onclick(); else no.click?.();
+      triggerClick(no);
     }
   };
   const cleanup = () => {
@@ -1287,7 +1298,7 @@ function setupListFilter(inputId, listId) {
   apply();
 }
 
-function resetListFilter(inputId, options = {}) {
+function resetListFilter(inputId, options: { focus?: boolean } = {}) {
   const input = document.getElementById(inputId);
   if (!input) return;
   const { focus = false } = options;
@@ -1434,7 +1445,7 @@ function loadMods(mods = {}, containerId = 'modBuilder') {
     if (typeof mods[m] === 'number') {
       chk.checked = true;
       inp.disabled = false;
-      inp.value = mods[m];
+      inp.value = String(mods[m]);
     }
   });
 }
@@ -1491,7 +1502,7 @@ function renderDialogPreview() {
 }
 
 // Shallow imports generator (editor-only)
-function generateImportsShallow(tree) {
+function generateImportsShallow(tree: Record<string, DialogNode> | null | undefined) {
   const flags = new Set();
   const items = new Set();
   Object.entries(tree || {}).forEach(([id, node]) => {
@@ -1565,7 +1576,7 @@ function startSpoofPlayback(tree, flags, items, locked = false) {
     stopSpoofPlayback();
     _origCloseDialog();
   };
-  const npc = { id: 'ack_preview', map: state.map, x: party.x, y: party.y, name: 'Preview', title: '', desc: '', tree };
+  const npc: { locked?: boolean; [key: string]: any } = { id: 'ack_preview', map: state.map, x: party.x, y: party.y, name: 'Preview', title: '', desc: '', tree };
   if (locked && tree && tree.locked) npc.locked = true;
   openDialog(npc, 'start');
 }
@@ -1988,9 +1999,11 @@ function renderTreeEditor() {
     const div = document.createElement('div');
     div.className = 'node';
     div.innerHTML = `<div class="nodeHeader"><button class="btn toggle" type="button">-</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="btn delNode" type="button" title="Delete node">&#128465;</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
-    const choicesDiv = div.querySelector('.choices');
+    const choicesDiv = div.querySelector('.choices') as HTMLElement | null;
+    if (!choicesDiv) return;
     (node.choices || []).forEach(ch => addChoiceRow(choicesDiv, ch));
-    div.querySelector('.addChoice').onclick = () => addChoiceRow(choicesDiv);
+    const addChoiceBtn = div.querySelector('.addChoice') as HTMLButtonElement | null;
+    if (addChoiceBtn) addChoiceBtn.onclick = () => addChoiceRow(choicesDiv);
     const toggleBtn = div.querySelector('.toggle');
     toggleBtn.addEventListener('click', () => {
       div.classList.toggle('collapsed');
@@ -2205,11 +2218,12 @@ function updateTreeData() {
 
   const orphans = [];
   Object.entries(nodeRefs).forEach(([id, nodeEl]) => {
+    const el = nodeEl as HTMLElement;
     if (!visited.has(id)) {
-      nodeEl.style.borderColor = 'orange';
+      el.style.borderColor = 'orange';
       orphans.push(id);
     } else {
-      nodeEl.style.borderColor = '';
+      el.style.borderColor = '';
     }
   });
 
@@ -2235,14 +2249,14 @@ function closeDialogEditor() {
   updateTreeData();
   document.getElementById('dialogModal').classList.remove('shown');
   const dlgEl = document.getElementById('npcDialog');
-  const tree = getTreeData();
+  const tree = getTreeData() as Record<string, DialogNode>;
   if (!dlgEl.value.trim()) dlgEl.value = tree.start?.text || '';
   applyNPCChanges();
 }
 
 function toggleQuestDialogBtn() {
   const btn = document.getElementById('genQuestDialog');
-  const sel = document.getElementById('npcQuests');
+  const sel = document.getElementById('npcQuests') as HTMLSelectElement | null;
   if (!btn || !sel) return;
   const count = sel.selectedOptions ? sel.selectedOptions.length : 0;
   btn.style.display = count ? 'block' : 'none';
@@ -2258,7 +2272,7 @@ function addNode() {
 }
 
 function generateQuestTree() {
-  const sel = document.getElementById('npcQuests');
+  const sel = document.getElementById('npcQuests') as HTMLSelectElement | null;
   if (!sel) return;
   const opts = sel.selectedOptions || [];
   const quest = opts[0]?.value?.trim();
@@ -2267,7 +2281,7 @@ function generateQuestTree() {
   const dialog = dialogLines[0] || '';
   const accept = document.getElementById('npcAccept').value.trim();
   const turnin = document.getElementById('npcTurnin').value.trim();
-  const tree = { start: { text: dialog } };
+  const tree: Record<string, DialogNode> = { start: { text: dialog } };
   if (accept) tree.accept = { text: accept };
   if (turnin) tree.do_turnin = { text: turnin };
   document.getElementById('npcTree').value = JSON.stringify(tree, null, 2);
@@ -2276,7 +2290,7 @@ function generateQuestTree() {
 
 function toggleQuestTextWrap() {
   const wrap = document.getElementById('questTextWrap');
-  const sel = document.getElementById('npcQuests');
+  const sel = document.getElementById('npcQuests') as HTMLSelectElement | null;
   if (!wrap || !sel) return;
   const count = sel.selectedOptions ? sel.selectedOptions.length : 0;
   wrap.style.display = count ? 'block' : 'none';
@@ -2315,7 +2329,7 @@ function loadPersonaFields(personaId) {
   const id = personaId || document.getElementById('itemPersonaId')?.value?.trim() || '';
   const labelEl = document.getElementById('itemPersonaLabel');
   const pathEl = document.getElementById('itemPersonaPortraitPath');
-  const data = (moduleData.personas || {})[id] || {};
+  const data: AckPersonaData = (moduleData.personas || {})[id] || {};
   if (labelEl) labelEl.value = data.label || '';
   const stored = data.portrait || '';
   const idx = personaPortraits.indexOf(stored);
@@ -2357,7 +2371,7 @@ function removeCombatTree(tree) {
 
 function onLockedToggle() {
   if (document.getElementById('npcLocked').checked) {
-    const tree = getTreeData();
+    const tree = getTreeData() as Record<string, DialogNode>;
     if (!tree.start) tree.start = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
     if (!tree.locked) tree.locked = { text: '', choices: [{ label: '(Leave)', to: 'bye' }] };
     setTreeData(tree);
@@ -2532,7 +2546,7 @@ function getNpcFieldWrapper(id) {
   return wrap || el;
 }
 
-function openNpcSection(sectionId, options = {}) {
+function openNpcSection(sectionId, options: { scroll?: boolean; focus?: boolean } = {}) {
   const section = npcSectionRefs.get(sectionId);
   if (!section) return;
   const { scroll = false, focus = false } = options;
@@ -2941,7 +2955,7 @@ function collectNPCFromForm() {
     ({ x, y } = npcLastCoords);
   }
   const dialogLines = document.getElementById('npcDialog').value.trim().split('\n');
-  const questSel = document.getElementById('npcQuests');
+  const questSel = document.getElementById('npcQuests') as HTMLSelectElement | null;
   const questIds = questSel ? Array.from(questSel.selectedOptions || []).map(o => o.value.trim()).filter(Boolean) : [];
   const accept = document.getElementById('npcAccept').value.trim();
   const turnin = document.getElementById('npcTurnin').value.trim();
@@ -3459,7 +3473,8 @@ function addItem() {
     item.persona = personaId;
     const portrait = personaPathInput || (itemPersonaPortraitIndex > 0 ? personaPortraits[itemPersonaPortraitIndex] : '');
     const store = moduleData.personas || (moduleData.personas = {});
-    const entry: any = { ...(store[personaId] || {}) };
+    const prevEntry = store[personaId];
+    const entry: Record<string, unknown> = { ...(prevEntry && typeof prevEntry === 'object' ? prevEntry : {}) };
     if (personaLabel) entry.label = personaLabel;
     else delete entry.label;
     if (portrait) entry.portrait = portrait;
@@ -5304,13 +5319,13 @@ function editQuest(i) {
   showQuestEditor(true);
 }
 function updateQuestOptions() {
-  const sel = document.getElementById('npcQuests');
+  const sel = document.getElementById('npcQuests') as HTMLSelectElement | null;
   if (sel) {
     const cur = Array.from(sel.selectedOptions || []).map(o => o.value);
     sel.innerHTML = moduleData.quests.map(q => `<option value="${q.id}">${q.title}</option>`).join('');
     cur.forEach(v => { const opt = Array.from(sel.options || []).find((o: any) => o.value === v); if (opt) (opt as any).selected = true; });
   }
-  const npcSel = document.getElementById('questNPC');
+  const npcSel = document.getElementById('questNPC') as HTMLSelectElement | null;
   if (npcSel) {
     const npcCur = npcSel.value;
     npcSel.innerHTML = '<option value="" data-placeholder="true">Select NPC…</option>' + moduleData.npcs.map(n => `<option value="${n.id}">${n.id}</option>`).join('');
