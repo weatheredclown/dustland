@@ -3,13 +3,22 @@ interface DustlandEventBus {
   emit?: (event: string, ...args: any[]) => void;
 }
 
+interface WeatherState {
+  state: string;
+  icon?: string;
+  desc?: string;
+  speedMod?: number;
+  encounterBias?: number | Record<string, number>;
+  [key: string]: unknown;
+}
+
 interface DustlandNamespace {
   eventBus?: DustlandEventBus;
   currentModule?: string;
   loadedModules?: Record<string, any>;
   zoneEffects?: Array<Record<string, any>>;
   weather?: {
-    getWeather?: () => unknown;
+    getWeather?: () => WeatherState;
     setWeather?: (weather: any) => void;
   };
   worldTurns?: number;
@@ -23,6 +32,18 @@ interface DustlandFeatures {
 }
 
 declare global {
+  interface DustlandGlobals {
+    player?: PlayerState;
+    removeFromInv?: (index: number) => void;
+    notifyInventoryChanged?: () => void;
+    addToInv?: (item: GameItem) => boolean;
+    dropItemNearParty?: (item: GameItem) => void;
+    ItemGen?: ItemGenerator;
+    EventBus?: DustlandEventBus;
+    log?: (message: string) => void;
+    [key: string]: unknown;
+  }
+
   interface HTMLElement {
     [key: string]: any;
   }
@@ -57,12 +78,12 @@ declare global {
   var itemDrops: any[];
   var pathQueue: any;
   var pickupVacuum: ((...coords: number[]) => void) | undefined;
-  var addToInv: ((item: any, opts?: any) => unknown) | undefined;
+  var addToInv: ((item: any, opts?: any) => boolean) | undefined;
   var getItem: ((id: any) => any) | undefined;
   var pickupCache: ((drop: any) => boolean) | undefined;
   var getPartyInventoryCapacity: (() => number) | undefined;
   var openWorldMap: ((id?: any) => void) | undefined;
-  var useItem: ((item: any, target?: any) => unknown) | undefined;
+  var useItem: ((item: any, target?: any) => boolean) | undefined;
   var ITEMS: Record<string, any> | undefined;
   var log: ((message: string, type?: string) => void) | undefined;
   var toast: ((message: string, type?: string) => void) | undefined;
@@ -90,4 +111,4 @@ declare global {
   }
 }
 
-export {};
+export { };

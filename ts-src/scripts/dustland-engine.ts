@@ -2,7 +2,7 @@
 
 const ENGINE_VERSION = '0.243.14';
 
-type DustlandGlobals = typeof globalThis & {
+type DustlandEngineGlobals = typeof globalThis & {
   TILE?: Record<string, number>;
   fogOfWarEnabled?: boolean;
   FOG_RADIUS?: number | string;
@@ -15,7 +15,7 @@ type DustlandGlobals = typeof globalThis & {
     multiplayerParties?: { list?: () => MultiplayerPeer[] };
     multiplayerState?: { remoteParties?: MultiplayerPeer[] };
   })['Dustland'];
-  player?: { x?: number; y?: number; [key: string]: unknown };
+  player?: { x?: number; y?: number;[key: string]: unknown };
   canEquip?: (member: unknown, item: unknown) => boolean;
   getEquipRestrictions?: (member: unknown, item: unknown) => unknown;
   describeRequiredRoles?: (roles: unknown) => string;
@@ -23,7 +23,7 @@ type DustlandGlobals = typeof globalThis & {
   dropItems?: (indices: number[]) => unknown;
   quests?: Record<string, unknown>;
   state?: { map?: string; mapEntry?: { x?: number; y?: number } };
-  engineGlobals?: DustlandGlobals;
+  engineGlobals?: DustlandEngineGlobals;
   log?: (msg: string, type?: 'warn' | 'error' | string) => void;
   toast?: (msg: string) => void;
   logger?: (msg: string, type?: 'warn' | 'error' | string) => void;
@@ -32,18 +32,18 @@ type DustlandGlobals = typeof globalThis & {
   pickupVacuum?: (fromX: number, fromY: number, toX?: number, toY?: number) => void;
 };
 
-let cachedGlobals: DustlandGlobals | undefined;
+let cachedGlobals: DustlandEngineGlobals | undefined;
 
-function getEngineGlobals(): DustlandGlobals {
+function getEngineGlobals(): DustlandEngineGlobals {
   if (cachedGlobals) return cachedGlobals;
-  const fallback = globalThis as DustlandGlobals;
-  cachedGlobals = (fallback.engineGlobals as DustlandGlobals | undefined) ?? fallback;
+  const fallback = globalThis as DustlandEngineGlobals;
+  cachedGlobals = (fallback.engineGlobals as DustlandEngineGlobals | undefined) ?? fallback;
   fallback.engineGlobals = cachedGlobals;
   return cachedGlobals;
 }
 
 const engineGlobals = getEngineGlobals();
-(globalThis as DustlandGlobals).getEngineGlobals = getEngineGlobals;
+(globalThis as DustlandEngineGlobals).getEngineGlobals = getEngineGlobals;
 
 const logEl = document.getElementById('log');
 const hpEl = document.getElementById('hp');
@@ -76,10 +76,10 @@ const logImpl: LogFn = (msg, type) => {
 const existingLog = getEngineGlobals().log;
 const engineLog: LogFn = typeof existingLog === 'function' ? existingLog : logImpl;
 getEngineGlobals().log = engineLog;
-(getEngineGlobals() as DustlandGlobals).logger = engineLog;
-(getEngineGlobals() as DustlandGlobals).engineLog = engineLog;
-(globalThis as DustlandGlobals).logger = engineLog;
-(globalThis as DustlandGlobals).engineLog = engineLog;
+(getEngineGlobals() as DustlandEngineGlobals).logger = engineLog;
+(getEngineGlobals() as DustlandEngineGlobals).engineLog = engineLog;
+(globalThis as DustlandEngineGlobals).logger = engineLog;
+(globalThis as DustlandEngineGlobals).engineLog = engineLog;
 
 type MultiplayerPeer = {
   id: string;
@@ -98,19 +98,19 @@ type MultiplayerPresenceEvent = {
 };
 
 const origWarn = console.warn;
-console.warn = function(...args) {
+console.warn = function (...args) {
   origWarn.apply(console, args);
   engineLog('⚠️ ' + args.join(' '), 'warn');
 };
 const origError = console.error;
-console.error = function(...args) {
+console.error = function (...args) {
   origError.apply(console, args);
   engineLog('🛑 ' + args.join(' '), 'error');
 };
 
 const multiplayerBus = globalThis.Dustland?.eventBus || globalThis.EventBus;
 if (multiplayerBus?.on) {
-  (function(){
+  (function () {
     let peerSnapshot: MultiplayerPeer[] = [];
     let peerHash = '';
 
@@ -215,28 +215,28 @@ const toastImpl: ToastFn = (msg) => {
   t.textContent = msg;
   t.style.cssText = 'margin:6px 0;padding:8px 12px;background:#101910;border:1px solid #2b3b2b;border-radius:8px;color:#c8f7c9;box-shadow:0 8px 20px rgba(0,0,0,.4);opacity:0;transition:opacity .15s, transform .15s; transform: translateY(-6px)';
   toastHost.appendChild(t);
-  requestAnimationFrame(()=>{ t.style.opacity = '1'; t.style.transform='translateY(0)'; });
-  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(-6px)'; setTimeout(()=> t.remove(), 180); }, 1600);
-  if(/end of demo/i.test(msg) || /demo complete/i.test(msg)){
+  requestAnimationFrame(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; });
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-6px)'; setTimeout(() => t.remove(), 180); }, 1600);
+  if (/end of demo/i.test(msg) || /demo complete/i.test(msg)) {
     party.flags = party.flags || {};
     party.flags.demoComplete = true;
-    if(typeof save === 'function') save();
+    if (typeof save === 'function') save();
   }
 };
 const existingToast = getEngineGlobals().toast;
 const engineToast: ToastFn = typeof existingToast === 'function' ? existingToast : toastImpl;
 getEngineGlobals().toast = engineToast;
-(getEngineGlobals() as DustlandGlobals).engineToast = engineToast;
-(globalThis as DustlandGlobals).engineToast = engineToast;
+(getEngineGlobals() as DustlandEngineGlobals).engineToast = engineToast;
+(globalThis as DustlandEngineGlobals).engineToast = engineToast;
 
 // tiny sfx and hud feedback
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let audioEnabled = true;
-function setAudio(on: boolean){
+function setAudio(on: boolean) {
   audioEnabled = on;
-  const btn=document.getElementById('audioToggle');
-  if(btn) btn.textContent = `Audio: ${on ? 'On' : 'Off'}`;
-  if(on) audioCtx.resume?.(); else audioCtx.suspend?.();
+  const btn = document.getElementById('audioToggle');
+  if (btn) btn.textContent = `Audio: ${on ? 'On' : 'Off'}`;
+  if (on) audioCtx.resume?.(); else audioCtx.suspend?.();
 }
 function toggleAudio(): void { setAudio(!audioEnabled); }
 globalThis.toggleAudio = toggleAudio;
@@ -245,23 +245,23 @@ let mobileControlsEnabled = isMobileUA;
 let mobileWrap: HTMLElement | null = null, mobilePad: HTMLElement | null = null, mobileAB: HTMLElement | null = null, mobileButtons: Record<string, HTMLElement> = {};
 let panelToggle: HTMLElement | null = null, panel: HTMLElement | null = null;
 function closePanel(): void {
-  if(panel && panelToggle){
+  if (panel && panelToggle) {
     panel.classList.remove('show');
-    panelToggle.textContent='☰';
-    globalThis.localStorage?.setItem('panel_open','0');
+    panelToggle.textContent = '☰';
+    globalThis.localStorage?.setItem('panel_open', '0');
   }
 }
-function setMobileControls(on: boolean){
+function setMobileControls(on: boolean) {
   mobileControlsEnabled = on;
-  const btn=document.getElementById('mobileToggle');
-  if(btn) btn.textContent = `Mobile Controls: ${on ? 'On' : 'Off'}`;
+  const btn = document.getElementById('mobileToggle');
+  if (btn) btn.textContent = `Mobile Controls: ${on ? 'On' : 'Off'}`;
   document.body.classList.toggle('mobile-on', on);
-  if(on){
-    if(!mobileWrap){
+  if (on) {
+    if (!mobileWrap) {
       mobileButtons = {};
-      mobileWrap=document.createElement('div');
-      mobileWrap.id='mobileControls';
-      mobileWrap.style.cssText='position:fixed;left:0;right:0;bottom:0;height:180px;display:flex;justify-content:space-between;padding:20px;z-index:1000;touch-action:manipulation;';
+      mobileWrap = document.createElement('div');
+      mobileWrap.id = 'mobileControls';
+      mobileWrap.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:180px;display:flex;justify-content:space-between;padding:20px;z-index:1000;touch-action:manipulation;';
       document.body.appendChild(mobileWrap);
       const createKeyEvent = (key: string) => {
         if (typeof KeyboardEvent === 'function') return new KeyboardEvent('keydown', { key });
@@ -273,87 +273,87 @@ function setMobileControls(on: boolean){
         ? new MouseEvent('click')
         : ({ type: 'click' } as unknown as MouseEvent);
       const tryCreatorNav = (btnId) => {
-        const creatorEl=document.getElementById('creator');
-        if(creatorEl?.style?.display==='flex'){
-          const btn=document.getElementById(btnId);
-          if(btn && !btn.disabled){
-            if(typeof btn.click==='function') btn.click(); else btn.onclick?.(createMouseEvent());
+        const creatorEl = document.getElementById('creator');
+        if (creatorEl?.style?.display === 'flex') {
+          const btn = document.getElementById(btnId);
+          if (btn && !btn.disabled) {
+            if (typeof btn.click === 'function') btn.click(); else btn.onclick?.(createMouseEvent());
           }
           return true;
         }
         return false;
       };
-      const mk=(name,t,fn)=>{
-        const b=document.createElement('button');
-        b.textContent=t;
-        b.style.cssText='width:48px;height:48px;border:2px solid #0f0;border-radius:8px;background:#000;color:#0f0;font-size:1.25rem;user-select:none;outline:none;touch-action:manipulation;';
-        b.onclick=fn;
-        b.onpointerdown=()=>{
-          b.style.background='#0f0';
-          b.style.color='#000';
-          b.style.boxShadow='0 0 8px #0f0';
+      const mk = (name, t, fn) => {
+        const b = document.createElement('button');
+        b.textContent = t;
+        b.style.cssText = 'width:48px;height:48px;border:2px solid #0f0;border-radius:8px;background:#000;color:#0f0;font-size:1.25rem;user-select:none;outline:none;touch-action:manipulation;';
+        b.onclick = fn;
+        b.onpointerdown = () => {
+          b.style.background = '#0f0';
+          b.style.color = '#000';
+          b.style.boxShadow = '0 0 8px #0f0';
         };
-        const up=()=>{
-          b.style.background='#000';
-          b.style.color='#0f0';
-          b.style.boxShadow='none';
+        const up = () => {
+          b.style.background = '#000';
+          b.style.color = '#0f0';
+          b.style.boxShadow = 'none';
         };
-        b.onpointerup=up;
-        b.onpointerleave=up;
-        mobileButtons[name]=b;
+        b.onpointerup = up;
+        b.onpointerleave = up;
+        mobileButtons[name] = b;
         return b;
       };
-      const mobileMove=(dx,dy,key)=>{
-        if(overlay?.classList?.contains('shown')){
+      const mobileMove = (dx, dy, key) => {
+        if (overlay?.classList?.contains('shown')) {
           handleDialogKey?.(createKeyEvent(key));
-        }else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
+        } else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
           handleCombatKey?.(createKeyEvent(key));
-        }else{
-          move(dx,dy);
+        } else {
+          move(dx, dy);
         }
       };
-      mobilePad=document.createElement('div');
-      mobilePad.style.cssText='display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);gap:6px;user-select:none;';
-      const cells=[
+      mobilePad = document.createElement('div');
+      mobilePad.style.cssText = 'display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);gap:6px;user-select:none;';
+      const cells = [
         document.createElement('div'),
-        mk('up','↑',()=>mobileMove(0,-1,'ArrowUp')),
+        mk('up', '↑', () => mobileMove(0, -1, 'ArrowUp')),
         document.createElement('div'),
-        mk('left','←',()=>mobileMove(-1,0,'ArrowLeft')),
+        mk('left', '←', () => mobileMove(-1, 0, 'ArrowLeft')),
         document.createElement('div'),
-        mk('right','→',()=>mobileMove(1,0,'ArrowRight')),
+        mk('right', '→', () => mobileMove(1, 0, 'ArrowRight')),
         document.createElement('div'),
-        mk('down','↓',()=>mobileMove(0,1,'ArrowDown')),
+        mk('down', '↓', () => mobileMove(0, 1, 'ArrowDown')),
         document.createElement('div')
       ];
-      cells.forEach(c=>mobilePad.appendChild(c));
+      cells.forEach(c => mobilePad.appendChild(c));
       mobileWrap.appendChild(mobilePad);
-      mobileAB=document.createElement('div');
-      mobileAB.style.cssText='display:flex;gap:10px;user-select:none;';
-      mobileAB.appendChild(mk('A','A',()=>{
-        if(tryCreatorNav('ccNext')){
+      mobileAB = document.createElement('div');
+      mobileAB.style.cssText = 'display:flex;gap:10px;user-select:none;';
+      mobileAB.appendChild(mk('A', 'A', () => {
+        if (tryCreatorNav('ccNext')) {
           return;
         }
-        if(overlay?.classList?.contains('shown')){
+        if (overlay?.classList?.contains('shown')) {
           handleDialogKey?.(createKeyEvent('Enter'));
-        } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
+        } else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
           handleCombatKey?.(createKeyEvent('Enter'));
         } else {
           interact();
         }
       }));
-      mobileAB.appendChild(mk('B','B',()=>{
+      mobileAB.appendChild(mk('B', 'B', () => {
         const shop = document.getElementById('shopOverlay');
-        if(tryCreatorNav('ccBack')){
+        if (tryCreatorNav('ccBack')) {
           return;
         }
-        if(overlay?.classList?.contains('shown')){
+        if (overlay?.classList?.contains('shown')) {
           closeDialog?.();
-        } else if(document.getElementById('combatOverlay')?.classList?.contains('shown')){
+        } else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
           handleCombatKey?.(createKeyEvent('Escape'));
-        } else if(shop?.classList?.contains('shown')){
+        } else if (shop?.classList?.contains('shown')) {
           shop.dispatchEvent(createKeyEvent('Escape'));
         } else {
-          if(panel?.classList?.contains('show')){
+          if (panel?.classList?.contains('show')) {
             closePanel();
           } else {
             window.dispatchEvent(createKeyEvent('Escape'));
@@ -363,27 +363,27 @@ function setMobileControls(on: boolean){
       mobileWrap.appendChild(mobileAB);
     }
   } else {
-    if(mobileWrap){ mobileWrap.remove(); mobileWrap=null; }
-    mobilePad=null; mobileAB=null; mobileButtons={};
+    if (mobileWrap) { mobileWrap.remove(); mobileWrap = null; }
+    mobilePad = null; mobileAB = null; mobileButtons = {};
   }
   updateCanvasStretch();
   return mobileButtons;
 }
-function toggleMobileControls(){ setMobileControls(!mobileControlsEnabled); }
+function toggleMobileControls() { setMobileControls(!mobileControlsEnabled); }
 const PLAYER_ICON_STORAGE_KEY = 'playerIconIndex';
 const playerIcons = [
-  { id:'saber-vanguard', label:'Saber Vanguard', path:'assets/player-icons/player-icon-01.svg' },
-  { id:'aegis-sentinel', label:'Aegis Sentinel', path:'assets/player-icons/player-icon-02.svg' },
-  { id:'iron-marauder', label:'Iron Marauder', path:'assets/player-icons/player-icon-03.svg' },
-  { id:'cobalt-mystic', label:'Cobalt Mystic', path:'assets/player-icons/player-icon-04.svg' },
-  { id:'verdant-scout', label:'Verdant Scout', path:'assets/player-icons/player-icon-05.svg' },
-  { id:'circuit-mechanist', label:'Circuit Mechanist', path:'assets/player-icons/player-icon-06.svg' },
-  { id:'gilded-gunslinger', label:'Gilded Gunslinger', path:'assets/player-icons/player-icon-07.svg' },
-  { id:'dust-nomad', label:'Dust Nomad', path:'assets/player-icons/player-icon-08.svg' },
-  { id:'veil-oracle', label:'Veil Oracle', path:'assets/player-icons/player-icon-09.svg' },
-  { id:'nightshade', label:'Nightshade', path:'assets/player-icons/player-icon-10.svg' },
-  { id:'glyph-weaver', label:'Glyph Weaver', path:'assets/player-icons/player-icon-11.svg' },
-  { id:'trailblazer', label:'Trailblazer', path:'assets/player-icons/player-icon-12.svg' }
+  { id: 'saber-vanguard', label: 'Saber Vanguard', path: 'assets/player-icons/player-icon-01.svg' },
+  { id: 'aegis-sentinel', label: 'Aegis Sentinel', path: 'assets/player-icons/player-icon-02.svg' },
+  { id: 'iron-marauder', label: 'Iron Marauder', path: 'assets/player-icons/player-icon-03.svg' },
+  { id: 'cobalt-mystic', label: 'Cobalt Mystic', path: 'assets/player-icons/player-icon-04.svg' },
+  { id: 'verdant-scout', label: 'Verdant Scout', path: 'assets/player-icons/player-icon-05.svg' },
+  { id: 'circuit-mechanist', label: 'Circuit Mechanist', path: 'assets/player-icons/player-icon-06.svg' },
+  { id: 'gilded-gunslinger', label: 'Gilded Gunslinger', path: 'assets/player-icons/player-icon-07.svg' },
+  { id: 'dust-nomad', label: 'Dust Nomad', path: 'assets/player-icons/player-icon-08.svg' },
+  { id: 'veil-oracle', label: 'Veil Oracle', path: 'assets/player-icons/player-icon-09.svg' },
+  { id: 'nightshade', label: 'Nightshade', path: 'assets/player-icons/player-icon-10.svg' },
+  { id: 'glyph-weaver', label: 'Glyph Weaver', path: 'assets/player-icons/player-icon-11.svg' },
+  { id: 'trailblazer', label: 'Trailblazer', path: 'assets/player-icons/player-icon-12.svg' }
 ];
 let playerIconIndex = 0;
 let tileCharsEnabled = true;
@@ -392,9 +392,9 @@ let tileCharsBeforeLock = true;
 const FOG_OF_WAR_STORAGE_KEY = 'fogOfWarEnabled';
 let fogOfWarEnabled = true;
 const savedFogSetting = globalThis.localStorage?.getItem(FOG_OF_WAR_STORAGE_KEY);
-if(savedFogSetting === '0'){
+if (savedFogSetting === '0') {
   fogOfWarEnabled = false;
-}else if(savedFogSetting === '1'){
+} else if (savedFogSetting === '1') {
   fogOfWarEnabled = true;
 }
 let retroNpcArtEnabled = false;
@@ -408,248 +408,248 @@ const DEFAULT_NPC_COLOR = '#9ef7a0';
 const xmlEscapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
 xmlEscapeMap['"'] = '&quot;';
 xmlEscapeMap["'"] = '&#39;';
-function updateTileCharButton(){
-  const btn=document.getElementById('tileCharToggle');
-  if(!btn) return;
-  if(tileCharsLocked){
-    btn.textContent='ASCII Tiles: Skin';
-    btn.disabled=true;
-    btn.setAttribute?.('aria-disabled','true');
-    btn.title=btn.title && btn.title.includes('Tile skins') ? btn.title : 'Tile skins provide their own terrain artwork.';
-  }else{
-    btn.textContent=`ASCII Tiles: ${tileCharsEnabled ? 'On' : 'Off'}`;
-    btn.disabled=false;
+function updateTileCharButton() {
+  const btn = document.getElementById('tileCharToggle');
+  if (!btn) return;
+  if (tileCharsLocked) {
+    btn.textContent = 'ASCII Tiles: Skin';
+    btn.disabled = true;
+    btn.setAttribute?.('aria-disabled', 'true');
+    btn.title = btn.title && btn.title.includes('Tile skins') ? btn.title : 'Tile skins provide their own terrain artwork.';
+  } else {
+    btn.textContent = `ASCII Tiles: ${tileCharsEnabled ? 'On' : 'Off'}`;
+    btn.disabled = false;
     btn.removeAttribute?.('aria-disabled');
-    if(btn.title && btn.title.includes('Tile skins')) btn.removeAttribute?.('title');
+    if (btn.title && btn.title.includes('Tile skins')) btn.removeAttribute?.('title');
   }
 }
-function applyTileCharState(on){
-  const next=tileCharsLocked?false:!!on;
-  tileCharsEnabled=next;
+function applyTileCharState(on) {
+  const next = tileCharsLocked ? false : !!on;
+  tileCharsEnabled = next;
   updateTileCharButton();
 }
-function setTileChars(on){
+function setTileChars(on) {
   applyTileCharState(on);
 }
-function toggleTileChars(){
-  if(tileCharsLocked) return;
+function toggleTileChars() {
+  if (tileCharsLocked) return;
   applyTileCharState(!tileCharsEnabled);
 }
 globalThis.toggleTileChars = toggleTileChars;
-function setTileCharLock(locked){
-  const next=!!locked;
-  if(next===tileCharsLocked){
+function setTileCharLock(locked) {
+  const next = !!locked;
+  if (next === tileCharsLocked) {
     updateTileCharButton();
     return;
   }
-  tileCharsLocked=next;
-  if(tileCharsLocked){
-    tileCharsBeforeLock=tileCharsEnabled;
+  tileCharsLocked = next;
+  if (tileCharsLocked) {
+    tileCharsBeforeLock = tileCharsEnabled;
     applyTileCharState(false);
-  }else{
+  } else {
     applyTileCharState(tileCharsBeforeLock);
   }
 }
 
-let tilePreviewOverlay=null;
-let tilePreviewGrid=null;
-let tilePreviewEmpty=null;
-let tilePreviewOpen=false;
+let tilePreviewOverlay = null;
+let tilePreviewGrid = null;
+let tilePreviewEmpty = null;
+let tilePreviewOpen = false;
 
-function prettifyTileLabel(name){
-  if(!name) return '';
+function prettifyTileLabel(name) {
+  if (!name) return '';
   return String(name)
-    .replace(/[_-]+/g,' ')
-    .replace(/\s+/g,' ')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim()
-    .replace(/\b\w/g,ch=>ch.toUpperCase());
+    .replace(/\b\w/g, ch => ch.toUpperCase());
 }
 
-function tileLabelForId(id){
-  if(typeof id==='number'){
-    const tiles=getEngineGlobals().TILE;
-    if(tiles && typeof tiles==='object'){
-      for(const [name,value] of Object.entries(tiles)){
-        if(value===id) return prettifyTileLabel(name);
+function tileLabelForId(id) {
+  if (typeof id === 'number') {
+    const tiles = getEngineGlobals().TILE;
+    if (tiles && typeof tiles === 'object') {
+      for (const [name, value] of Object.entries(tiles)) {
+        if (value === id) return prettifyTileLabel(name);
       }
     }
     return `Tile ${id}`;
   }
-  if(typeof id==='string' && id){
+  if (typeof id === 'string' && id) {
     return prettifyTileLabel(id);
   }
   return 'Tile';
 }
 
-function drawTilePreviewSprite(canvas, sprite){
-  if(!canvas || !sprite) return;
-  const ctx=canvas.getContext?.('2d');
-  if(!ctx) return;
-  ctx.imageSmoothingEnabled=false;
-  const size=canvas.width || (typeof TS==='number' ? TS : 16);
-  const render=()=>{
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+function drawTilePreviewSprite(canvas, sprite) {
+  if (!canvas || !sprite) return;
+  const ctx = canvas.getContext?.('2d');
+  if (!ctx) return;
+  ctx.imageSmoothingEnabled = false;
+  const size = canvas.width || (typeof TS === 'number' ? TS : 16);
+  const render = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawSkinSprite(ctx, sprite, 0, 0, size);
   };
-  if(sprite?.image?.complete){
+  if (sprite?.image?.complete) {
     render();
-  }else if(sprite?.image){
-    sprite.image.addEventListener('load', render, { once:true });
+  } else if (sprite?.image) {
+    sprite.image.addEventListener('load', render, { once: true });
   }
 }
 
-function collectTilePreviewEntries(){
-  const manager=skinManager();
-  if(!manager?.getTileSprite) return [];
-  const skin=manager?.getCurrentSkin?.();
-  const defs=skin?.tiles?.map || skin?.tiles?.tiles || {};
-  const seen=new Set();
-  const entries=[];
-  const numericEntries=[];
-  const tiles=getEngineGlobals().TILE;
-  if(tiles && typeof tiles==='object'){
-    for(const [name,id] of Object.entries(tiles)){
-      if(!Number.isFinite(id)) continue;
-      const key=`num:${id}`;
-      if(seen.has(key)) continue;
-      const sprite=manager?.getTileSprite?.(id,{ x:0, y:0, seed:0, preview:true });
-      if(!sprite) continue;
+function collectTilePreviewEntries() {
+  const manager = skinManager();
+  if (!manager?.getTileSprite) return [];
+  const skin = manager?.getCurrentSkin?.();
+  const defs = skin?.tiles?.map || skin?.tiles?.tiles || {};
+  const seen = new Set();
+  const entries = [];
+  const numericEntries = [];
+  const tiles = getEngineGlobals().TILE;
+  if (tiles && typeof tiles === 'object') {
+    for (const [name, id] of Object.entries(tiles)) {
+      if (!Number.isFinite(id)) continue;
+      const key = `num:${id}`;
+      if (seen.has(key)) continue;
+      const sprite = manager?.getTileSprite?.(id, { x: 0, y: 0, seed: 0, preview: true });
+      if (!sprite) continue;
       seen.add(key);
-      numericEntries.push({ id, label: tileLabelForId(id), sprite, numeric:true });
+      numericEntries.push({ id, label: tileLabelForId(id), sprite, numeric: true });
     }
   }
-  for(const rawKey of Object.keys(defs)){
-    const numericValue=Number.parseInt(rawKey,10);
-    const isNumeric=Number.isFinite(numericValue);
-    const cacheKey=isNumeric?`num:${numericValue}`:`name:${String(rawKey).toLowerCase()}`;
-    if(seen.has(cacheKey)) continue;
-    const tileId=isNumeric?numericValue:rawKey;
-    const sprite=manager?.getTileSprite?.(tileId,{ x:0, y:0, seed:0, preview:true });
-    if(!sprite) continue;
+  for (const rawKey of Object.keys(defs)) {
+    const numericValue = Number.parseInt(rawKey, 10);
+    const isNumeric = Number.isFinite(numericValue);
+    const cacheKey = isNumeric ? `num:${numericValue}` : `name:${String(rawKey).toLowerCase()}`;
+    if (seen.has(cacheKey)) continue;
+    const tileId = isNumeric ? numericValue : rawKey;
+    const sprite = manager?.getTileSprite?.(tileId, { x: 0, y: 0, seed: 0, preview: true });
+    if (!sprite) continue;
     seen.add(cacheKey);
-    const label=isNumeric?tileLabelForId(numericValue):tileLabelForId(rawKey);
-    entries.push({ id: tileId, label, sprite, numeric:isNumeric });
+    const label = isNumeric ? tileLabelForId(numericValue) : tileLabelForId(rawKey);
+    entries.push({ id: tileId, label, sprite, numeric: isNumeric });
   }
-  const extraEntries=entries.filter(e=>!e.numeric).sort((a,b)=>a.label.localeCompare(b.label));
-  const numericExtras=entries.filter(e=>e.numeric);
+  const extraEntries = entries.filter(e => !e.numeric).sort((a, b) => a.label.localeCompare(b.label));
+  const numericExtras = entries.filter(e => e.numeric);
   return [...numericEntries, ...numericExtras, ...extraEntries];
 }
 
-function renderTilePreview(){
-  if(!tilePreviewGrid) return;
-  const entries=collectTilePreviewEntries();
-  const size=typeof TS==='number' && TS>0 ? TS : 16;
-  tilePreviewGrid.innerHTML='';
-  if(!entries.length){
-    if(tilePreviewEmpty) tilePreviewEmpty.hidden=false;
+function renderTilePreview() {
+  if (!tilePreviewGrid) return;
+  const entries = collectTilePreviewEntries();
+  const size = typeof TS === 'number' && TS > 0 ? TS : 16;
+  tilePreviewGrid.innerHTML = '';
+  if (!entries.length) {
+    if (tilePreviewEmpty) tilePreviewEmpty.hidden = false;
     return;
   }
-  if(tilePreviewEmpty) tilePreviewEmpty.hidden=true;
-  for(const entry of entries){
-    const item=document.createElement('div');
-    item.className='tile-preview__item';
-    const canvas=document.createElement('canvas');
-    canvas.width=size;
-    canvas.height=size;
-    canvas.className='tile-preview__canvas';
-    canvas.style.width=`${size*2}px`;
-    canvas.style.height=`${size*2}px`;
+  if (tilePreviewEmpty) tilePreviewEmpty.hidden = true;
+  for (const entry of entries) {
+    const item = document.createElement('div');
+    item.className = 'tile-preview__item';
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    canvas.className = 'tile-preview__canvas';
+    canvas.style.width = `${size * 2}px`;
+    canvas.style.height = `${size * 2}px`;
     drawTilePreviewSprite(canvas, entry.sprite);
-    const label=document.createElement('div');
-    label.className='tile-preview__label';
-    label.textContent=entry.numeric ? `${entry.label} (#${entry.id})` : entry.label;
+    const label = document.createElement('div');
+    label.className = 'tile-preview__label';
+    label.textContent = entry.numeric ? `${entry.label} (#${entry.id})` : entry.label;
     item.appendChild(canvas);
     item.appendChild(label);
     tilePreviewGrid.appendChild(item);
   }
 }
 
-function openTilePreview(){
-  if(!tilePreviewOverlay || !tilePreviewGrid) return;
+function openTilePreview() {
+  if (!tilePreviewOverlay || !tilePreviewGrid) return;
   renderTilePreview();
-  tilePreviewOverlay.style.display='flex';
-  tilePreviewOverlay.setAttribute?.('aria-hidden','false');
-  tilePreviewOpen=true;
+  tilePreviewOverlay.style.display = 'flex';
+  tilePreviewOverlay.setAttribute?.('aria-hidden', 'false');
+  tilePreviewOpen = true;
 }
 
-function closeTilePreview(){
-  if(!tilePreviewOverlay) return;
-  tilePreviewOverlay.style.display='none';
-  tilePreviewOverlay.setAttribute?.('aria-hidden','true');
-  tilePreviewOpen=false;
+function closeTilePreview() {
+  if (!tilePreviewOverlay) return;
+  tilePreviewOverlay.style.display = 'none';
+  tilePreviewOverlay.setAttribute?.('aria-hidden', 'true');
+  tilePreviewOpen = false;
 }
-if(typeof EventBus?.on === 'function'){
+if (typeof EventBus?.on === 'function') {
   EventBus.on('skin:changed', ({ skin }) => {
     setTileCharLock(!!skin?.tiles);
-    if(tilePreviewOpen) renderTilePreview();
+    if (tilePreviewOpen) renderTilePreview();
   });
 }
 type StorageOpts = { skipStorage?: boolean };
 
-const initialSkin=skinManager()?.getCurrentSkin?.();
+const initialSkin = skinManager()?.getCurrentSkin?.();
 setTileCharLock(!!initialSkin?.tiles);
-function setFogOfWar(on, opts: StorageOpts = {}){
+function setFogOfWar(on, opts: StorageOpts = {}) {
   fogOfWarEnabled = !!on;
-  if(typeof document !== 'undefined'){
-    const btn=document.getElementById('fogToggle');
-    if(btn) btn.textContent = `Fog of War: ${fogOfWarEnabled ? 'On' : 'Off'}`;
+  if (typeof document !== 'undefined') {
+    const btn = document.getElementById('fogToggle');
+    if (btn) btn.textContent = `Fog of War: ${fogOfWarEnabled ? 'On' : 'Off'}`;
   }
-  if(!opts.skipStorage){
+  if (!opts.skipStorage) {
     globalThis.localStorage?.setItem(FOG_OF_WAR_STORAGE_KEY, fogOfWarEnabled ? '1' : '0');
   }
   return fogOfWarEnabled;
 }
-function toggleFogOfWar(){ setFogOfWar(!fogOfWarEnabled); }
+function toggleFogOfWar() { setFogOfWar(!fogOfWarEnabled); }
 globalThis.toggleFogOfWar = toggleFogOfWar;
 const FONT_SCALE_STORAGE_KEY = 'fontScale';
 const FONT_SCALE_MIN = 1;
 const FONT_SCALE_MAX = 1.75;
 const FONT_SCALE_DEFAULT = 1;
 let fontScale = FONT_SCALE_DEFAULT;
-function clampFontScale(value){
+function clampFontScale(value) {
   const num = Number.parseFloat(value);
-  if(!Number.isFinite(num)) return fontScale;
+  if (!Number.isFinite(num)) return fontScale;
   const snapped = Math.round(num * 100) / 100;
-  if(snapped < FONT_SCALE_MIN) return FONT_SCALE_MIN;
-  if(snapped > FONT_SCALE_MAX) return FONT_SCALE_MAX;
+  if (snapped < FONT_SCALE_MIN) return FONT_SCALE_MIN;
+  if (snapped > FONT_SCALE_MAX) return FONT_SCALE_MAX;
   return snapped;
 }
-function formatFontScale(value){
+function formatFontScale(value) {
   const str = value.toFixed(2);
   return str.replace(/(\.\d*?)0+$/, '$1').replace(/\.0$/, '').replace(/\.$/, '');
 }
-function getFontScaleRootStyle(){
-  if(typeof document === 'undefined') return null;
+function getFontScaleRootStyle() {
+  if (typeof document === 'undefined') return null;
   return document.documentElement?.style || document.body?.style || null;
 }
-function updateFontScaleUI(scale){
-  if(typeof document === 'undefined') return;
+function updateFontScaleUI(scale) {
+  if (typeof document === 'undefined') return;
   const slider = document.getElementById('fontScale');
-  if(slider){
+  if (slider) {
     slider.value = formatFontScale(scale);
   }
   const readout = document.getElementById('fontScaleValue');
-  if(readout){
+  if (readout) {
     readout.textContent = `${Math.round(scale * 100)}%`;
   }
 }
-function applyFontScale(scale){
+function applyFontScale(scale) {
   fontScale = scale;
   const rootStyle = getFontScaleRootStyle();
   const value = formatFontScale(scale);
   rootStyle?.setProperty('--font-scale', value);
-  if(typeof document !== 'undefined'){
+  if (typeof document !== 'undefined') {
     const bodyStyle = document.body?.style;
-    if(bodyStyle && bodyStyle !== rootStyle){
+    if (bodyStyle && bodyStyle !== rootStyle) {
       bodyStyle.setProperty('--font-scale', value);
     }
   }
   updateFontScaleUI(scale);
 }
-function setFontScale(scale, opts: StorageOpts = {}){
+function setFontScale(scale, opts: StorageOpts = {}) {
   const next = clampFontScale(scale);
   applyFontScale(next);
-  if(!opts.skipStorage){
+  if (!opts.skipStorage) {
     globalThis.localStorage?.setItem(FONT_SCALE_STORAGE_KEY, formatFontScale(next));
   }
 }
@@ -657,81 +657,81 @@ function setFontScale(scale, opts: StorageOpts = {}){
 const FONT_FAMILY_STORAGE_KEY = 'fontFamily';
 const FONT_FAMILY_SAMPLE_TEXT = 'Sample: The wasteland is calling.';
 const FONT_FAMILY_OPTIONS = [
-  { id:'pixel', css:"'Pixelify Sans', sans-serif" },
-  { id:'oxanium', css:"'Oxanium', 'Pixelify Sans', sans-serif" },
-  { id:'atkinson', css:"'Atkinson Hyperlegible', 'Source Sans Pro', 'Arial', sans-serif" },
-  { id:'roboto', css:"'Roboto', 'Helvetica Neue', 'Arial', sans-serif" }
+  { id: 'pixel', css: "'Pixelify Sans', sans-serif" },
+  { id: 'oxanium', css: "'Oxanium', 'Pixelify Sans', sans-serif" },
+  { id: 'atkinson', css: "'Atkinson Hyperlegible', 'Source Sans Pro', 'Arial', sans-serif" },
+  { id: 'roboto', css: "'Roboto', 'Helvetica Neue', 'Arial', sans-serif" }
 ];
 const FONT_FAMILY_DEFAULT = FONT_FAMILY_OPTIONS[0];
 let fontFamily = FONT_FAMILY_DEFAULT;
 
-function getFontFamilyOption(id){
-  if(!id) return FONT_FAMILY_DEFAULT;
-  for(let i=0;i<FONT_FAMILY_OPTIONS.length;i++){
+function getFontFamilyOption(id) {
+  if (!id) return FONT_FAMILY_DEFAULT;
+  for (let i = 0; i < FONT_FAMILY_OPTIONS.length; i++) {
     const option = FONT_FAMILY_OPTIONS[i];
-    if(option.id === id) return option;
+    if (option.id === id) return option;
   }
   return FONT_FAMILY_DEFAULT;
 }
 
-function updateFontFamilyUI(id){
-  if(typeof document === 'undefined') return;
+function updateFontFamilyUI(id) {
+  if (typeof document === 'undefined') return;
   const option = getFontFamilyOption(id);
   const select = document.getElementById('fontFamily');
-  if(select){
+  if (select) {
     select.value = option.id;
     select.style?.setProperty?.('font-family', option.css);
   }
   const sample = document.getElementById('fontFamilySample');
-  if(sample){
+  if (sample) {
     sample.textContent = FONT_FAMILY_SAMPLE_TEXT;
     sample.style?.setProperty?.('font-family', option.css);
   }
 }
 
-function applyFontFamily(option){
+function applyFontFamily(option) {
   fontFamily = option || FONT_FAMILY_DEFAULT;
   const style = getFontScaleRootStyle();
   const value = fontFamily.css || FONT_FAMILY_DEFAULT.css;
   style?.setProperty('--ui-font', value);
-  if(typeof document !== 'undefined'){
+  if (typeof document !== 'undefined') {
     const bodyStyle = document.body?.style;
-    if(bodyStyle && bodyStyle !== style){
+    if (bodyStyle && bodyStyle !== style) {
       bodyStyle.setProperty('--ui-font', value);
     }
   }
   updateFontFamilyUI(fontFamily.id);
 }
 
-function setFontFamily(id, opts: StorageOpts = {}){
+function setFontFamily(id, opts: StorageOpts = {}) {
   const option = getFontFamilyOption(id);
   applyFontFamily(option);
-  if(!opts.skipStorage){
+  if (!opts.skipStorage) {
     globalThis.localStorage?.setItem(FONT_FAMILY_STORAGE_KEY, option.id);
   }
 }
 
 const savedFontFamily = globalThis.localStorage?.getItem(FONT_FAMILY_STORAGE_KEY);
-if(typeof savedFontFamily === 'string' && savedFontFamily){
+if (typeof savedFontFamily === 'string' && savedFontFamily) {
   setFontFamily(savedFontFamily, { skipStorage: true });
 } else {
   applyFontFamily(fontFamily);
 }
 const savedFontScale = Number.parseFloat(globalThis.localStorage?.getItem(FONT_SCALE_STORAGE_KEY));
-if(Number.isFinite(savedFontScale)){
+if (Number.isFinite(savedFontScale)) {
   setFontScale(savedFontScale, { skipStorage: true });
 } else {
   applyFontScale(fontScale);
 }
-function setRetroNpcArt(on: boolean, optsOrSkip?: StorageOpts | boolean){
+function setRetroNpcArt(on: boolean, optsOrSkip?: StorageOpts | boolean) {
   const opts = typeof optsOrSkip === 'object' ? optsOrSkip : { skipStorage: !!optsOrSkip };
   retroNpcArtEnabled = !!on;
   const cb = document.getElementById('retroNpcToggle');
-  if(cb) cb.checked = retroNpcArtEnabled;
-  if(typeof document !== 'undefined'){
+  if (cb) cb.checked = retroNpcArtEnabled;
+  if (typeof document !== 'undefined') {
     document.body?.classList?.toggle('retro-npc-art', retroNpcArtEnabled);
   }
-  if(!opts.skipStorage){
+  if (!opts.skipStorage) {
     globalThis.localStorage?.setItem('retroNpcArt', retroNpcArtEnabled ? '1' : '0');
   }
   retroPlayerSprite = null;
@@ -739,130 +739,130 @@ function setRetroNpcArt(on: boolean, optsOrSkip?: StorageOpts | boolean){
   retroItemSprite = null;
   retroLootSprite = null;
   retroItemCacheSprite = null;
-  if(!retroNpcArtEnabled){
+  if (!retroNpcArtEnabled) {
     retroNpcArtCache.clear();
   }
 }
 
-function clampPlayerIconIndex(idx){
-  if(!playerIcons.length) return 0;
+function clampPlayerIconIndex(idx) {
+  if (!playerIcons.length) return 0;
   const total = playerIcons.length;
   const raw = Number.isFinite(idx) ? Math.trunc(idx) : 0;
   let next = raw % total;
-  if(next < 0) next += total;
+  if (next < 0) next += total;
   return next;
 }
 
-function updatePlayerIconPreview(){
-  if(!playerIcons.length) return;
+function updatePlayerIconPreview() {
+  if (!playerIcons.length) return;
   playerIconIndex = clampPlayerIconIndex(playerIconIndex);
   const meta = playerIcons[playerIconIndex];
   const preview = document.getElementById('playerIconPreview');
   const nameEl = document.getElementById('playerIconName');
-  if(nameEl && meta){
+  if (nameEl && meta) {
     nameEl.textContent = meta.label;
   }
-  if(preview && meta){
-    if(typeof preview.setAttribute === 'function') preview.setAttribute('data-icon-id', meta.id);
-    else if(preview.dataset) preview.dataset.iconId = meta.id;
-    if(typeof preview.setAttribute === 'function') preview.setAttribute('aria-label', meta.label);
+  if (preview && meta) {
+    if (typeof preview.setAttribute === 'function') preview.setAttribute('data-icon-id', meta.id);
+    else if (preview.dataset) preview.dataset.iconId = meta.id;
+    if (typeof preview.setAttribute === 'function') preview.setAttribute('aria-label', meta.label);
     preview.title = meta.label;
     const img = preview.querySelector('img');
-    if(img){
+    if (img) {
       img.src = meta.path;
       img.alt = '';
     }
   }
 }
 
-function setPlayerIcon(idx, opts: StorageOpts = {}){
-  if(!playerIcons.length) return;
+function setPlayerIcon(idx, opts: StorageOpts = {}) {
+  if (!playerIcons.length) return;
   const next = clampPlayerIconIndex(idx);
   const changed = next !== playerIconIndex;
   playerIconIndex = next;
-  if(changed){
+  if (changed) {
     retroPlayerSprite = null;
     retroPlayerSpriteIndex = -1;
   }
-  if(!opts.skipStorage){
+  if (!opts.skipStorage) {
     globalThis.localStorage?.setItem(PLAYER_ICON_STORAGE_KEY, String(playerIconIndex));
   }
   updatePlayerIconPreview();
 }
 
-function sanitizeRetroText(value, fallback){
+function sanitizeRetroText(value, fallback) {
   const base = (value ?? '').toString().toUpperCase().replace(/[^A-Z0-9]/g, '');
   const txt = base.slice(0, 7);
-  if(txt) return txt;
+  if (txt) return txt;
   return (fallback ?? 'NPC').toString().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7) || 'NPC';
 }
 
-function normalizeColor(hex){
-  if(typeof hex !== 'string') return DEFAULT_NPC_COLOR;
+function normalizeColor(hex) {
+  if (typeof hex !== 'string') return DEFAULT_NPC_COLOR;
   let col = hex.trim();
-  if(col.startsWith('#')) col = col.slice(1);
-  if(col.length === 3){
-    col = col.split('').map(c=>c+c).join('');
+  if (col.startsWith('#')) col = col.slice(1);
+  if (col.length === 3) {
+    col = col.split('').map(c => c + c).join('');
   }
-  if(col.length !== 6 || /[^0-9a-f]/i.test(col)) return DEFAULT_NPC_COLOR;
+  if (col.length !== 6 || /[^0-9a-f]/i.test(col)) return DEFAULT_NPC_COLOR;
   return '#' + col.toLowerCase();
 }
 
-function adjustColor(hex, pct){
+function adjustColor(hex, pct) {
   const base = normalizeColor(hex);
   const raw = base.slice(1);
   const ratio = Math.max(-1, Math.min(1, pct));
-  const adjust = (channel)=>{
-    if(ratio >= 0){
+  const adjust = (channel) => {
+    if (ratio >= 0) {
       return Math.round(channel + (255 - channel) * ratio);
     }
     return Math.round(channel + channel * ratio);
   };
-  const r = parseInt(raw.slice(0,2),16);
-  const g = parseInt(raw.slice(2,4),16);
-  const b = parseInt(raw.slice(4,6),16);
-  const toHex = (v)=>Math.max(0, Math.min(255, v)).toString(16).padStart(2,'0');
+  const r = parseInt(raw.slice(0, 2), 16);
+  const g = parseInt(raw.slice(2, 4), 16);
+  const b = parseInt(raw.slice(4, 6), 16);
+  const toHex = (v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0');
   return '#' + toHex(adjust(r)) + toHex(adjust(g)) + toHex(adjust(b));
 }
 
-function escapeXml(str){
+function escapeXml(str) {
   const txt = (str ?? '').toString();
   return txt.replace(/[&<>"']/g, ch => xmlEscapeMap[ch] || ch);
 }
 
-function svgToDataUrl(svg){
-  try{
-    if(typeof TextEncoder !== 'undefined' && typeof globalThis.btoa === 'function'){
+function svgToDataUrl(svg) {
+  try {
+    if (typeof TextEncoder !== 'undefined' && typeof globalThis.btoa === 'function') {
       const bytes = new TextEncoder().encode(svg);
-      let binary='';
-      for(let i=0;i<bytes.length;i++) binary += String.fromCharCode(bytes[i]);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
       return 'data:image/svg+xml;base64,' + globalThis.btoa(binary);
     }
-  }catch(err){/* ignore encoding errors */}
-  if(typeof globalThis.btoa === 'function'){
-    try{ return 'data:image/svg+xml;base64,' + globalThis.btoa(svg); }
-    catch(err){/* ignore and fallback */}
+  } catch (err) {/* ignore encoding errors */ }
+  if (typeof globalThis.btoa === 'function') {
+    try { return 'data:image/svg+xml;base64,' + globalThis.btoa(svg); }
+    catch (err) {/* ignore and fallback */ }
   }
-  if(typeof Buffer !== 'undefined'){
-    return 'data:image/svg+xml;base64,' + Buffer.from(svg,'utf8').toString('base64');
+  if (typeof Buffer !== 'undefined') {
+    return 'data:image/svg+xml;base64,' + Buffer.from(svg, 'utf8').toString('base64');
   }
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
-function getRetroNpcArchetype(n){
+function getRetroNpcArchetype(n) {
   const hasQuest = !!(n?.questId || (Array.isArray(n?.quests) && n.quests.length));
-  if(n?.inanimate) return 'object';
-  if(n?.combat?.auto) return 'automaton';
-  if(n?.attackOnSight) return 'feral';
-  if(n?.combat && !n?.tree) return 'warrior';
-  if(n?.trainer) return 'trainer';
-  if(n?.shop) return 'merchant';
-  if(hasQuest) return 'quest';
+  if (n?.inanimate) return 'object';
+  if (n?.combat?.auto) return 'automaton';
+  if (n?.attackOnSight) return 'feral';
+  if (n?.combat && !n?.tree) return 'warrior';
+  if (n?.trainer) return 'trainer';
+  if (n?.shop) return 'merchant';
+  if (hasQuest) return 'quest';
   return 'wanderer';
 }
 
 const retroSilhouettes = {
-  wanderer(colors, faceSymbol){
+  wanderer(colors, faceSymbol) {
     const { base, highlight, shadow, accent, edge } = colors;
     return `<g>
       <path d="M8.5 23l3.8-9 3.7-3 3.7 3 3.8 9H8.5z" fill="${base}" stroke="${edge}" stroke-width="0.85" stroke-linejoin="round"/>
@@ -874,7 +874,7 @@ const retroSilhouettes = {
       <text x="15" y="18.8" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6.8" fill="#050805" opacity="0.45">${faceSymbol}</text>
     </g>`;
   },
-  merchant(colors, faceSymbol){
+  merchant(colors, faceSymbol) {
     const { base, highlight, shadow, accent, edge } = colors;
     return `<g>
       <rect x="6.5" y="12" width="8" height="11.5" rx="2" fill="${shadow}" stroke="${edge}" stroke-width="0.9"/>
@@ -886,7 +886,7 @@ const retroSilhouettes = {
       <text x="13.8" y="23.5" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6.2" fill="#050805" opacity="0.45">${faceSymbol}</text>
     </g>`;
   },
-  trainer(colors, faceSymbol){
+  trainer(colors, faceSymbol) {
     const { base, highlight, shadow, accent, edge } = colors;
     return `<g>
       <path d="M8 20l2.5-7 5.5-2.5 5.5 2.5L24 20l-2.5 6.5h-11z" fill="${base}" stroke="${edge}" stroke-width="0.9" stroke-linejoin="round"/>
@@ -898,7 +898,7 @@ const retroSilhouettes = {
       <text x="16" y="18.8" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6.3" fill="#050805" opacity="0.52">${faceSymbol}</text>
     </g>`;
   },
-  warrior(colors, faceSymbol){
+  warrior(colors, faceSymbol) {
     const { base, highlight, shadow, accent, edge } = colors;
     return `<g>
       <path d="M9.5 19.5l3.2-8.2L16 8l3.3 3.3 3.2 8.2-2 7.5h-8z" fill="${base}" stroke="${edge}" stroke-width="0.95" stroke-linejoin="round"/>
@@ -910,7 +910,7 @@ const retroSilhouettes = {
       <text x="16" y="18.5" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6.5" fill="#050805" opacity="0.45">${faceSymbol}</text>
     </g>`;
   },
-  feral(colors){
+  feral(colors) {
     const { base, highlight, shadow, accent, edge } = colors;
     return `<g>
       <path d="M9 13l4-5h6l4 5-1 3 2 5-3.5 4-3.5-2-3.5 2-3.5-4 2-5z" fill="${base}" stroke="${edge}" stroke-width="0.9" stroke-linejoin="round"/>
@@ -921,7 +921,7 @@ const retroSilhouettes = {
       <path d="M14 19h4l-2 1.8z" fill="${shadow}" opacity="0.6"/>
     </g>`;
   },
-  automaton(colors, faceSymbol){
+  automaton(colors, faceSymbol) {
     const { base, highlight, shadow, accent, edge } = colors;
     return `<g>
       <rect x="11" y="9" width="10" height="9" rx="2" fill="${base}" stroke="${edge}" stroke-width="1"/>
@@ -934,7 +934,7 @@ const retroSilhouettes = {
       <text x="16" y="21.5" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="6" fill="#050805" opacity="0.45">${faceSymbol}</text>
     </g>`;
   },
-  object(colors, faceSymbol){
+  object(colors, faceSymbol) {
     const { base, highlight, shadow, edge } = colors;
     return `<g>
       <rect x="8" y="11" width="16" height="14" rx="2" fill="${base}" stroke="${edge}" stroke-width="1"/>
@@ -945,7 +945,7 @@ const retroSilhouettes = {
       <text x="16" y="25" text-anchor="middle" font-family="Pixelify Sans, 'VT323', 'Courier New', monospace" font-size="7" fill="#050805" opacity="0.5">${faceSymbol}</text>
     </g>`;
   },
-  quest(colors, faceSymbol){
+  quest(colors, faceSymbol) {
     const { highlight, accent, edge } = colors;
     const symbol = faceSymbol || '★';
     return `<g>
@@ -956,12 +956,12 @@ const retroSilhouettes = {
   }
 };
 
-function renderRetroNpcSilhouette(type, colors, faceSymbol){
+function renderRetroNpcSilhouette(type, colors, faceSymbol) {
   const factory = retroSilhouettes[type] || retroSilhouettes.wanderer;
   return factory(colors, faceSymbol);
 }
 
-function buildRetroNpcSvg(n){
+function buildRetroNpcSvg(n) {
   const base = normalizeColor(getNpcColor(n));
   const glow = adjustColor(base, 0.2);
   const highlight = adjustColor(base, 0.4);
@@ -989,9 +989,9 @@ function buildRetroNpcSvg(n){
 </svg>`;
 }
 
-function getRetroNpcSprite(n){
+function getRetroNpcSprite(n) {
   const Img = globalThis.Image;
-  if(typeof Img !== 'function') return null;
+  if (typeof Img !== 'function') return null;
   const keyParts = [
     n.id ?? n.npcId ?? n.slug ?? n.key ?? n.name ?? n.title ?? `${n.map ?? ''}:${n.x ?? ''},${n.y ?? ''}`,
     getNpcColor(n) ?? DEFAULT_NPC_COLOR,
@@ -1000,7 +1000,7 @@ function getRetroNpcSprite(n){
   ];
   const key = keyParts.join('|');
   const cached = retroNpcArtCache.get(key);
-  if(cached) return cached;
+  if (cached) return cached;
   const svg = buildRetroNpcSvg(n);
   const url = svgToDataUrl(svg);
   const sprite = new Img();
@@ -1010,7 +1010,7 @@ function getRetroNpcSprite(n){
   return sprite;
 }
 
-function buildRetroItemGlyphSvg(){
+function buildRetroItemGlyphSvg() {
   const inner = '#111b12';
   const glowA = '#c8ffbf';
   const glowB = '#64f0ff';
@@ -1040,7 +1040,7 @@ function buildRetroItemGlyphSvg(){
 </svg>`;
 }
 
-function buildRetroLootGlyphSvg(){
+function buildRetroLootGlyphSvg() {
   const inner = '#1a0d10';
   const glowA = '#ff9472';
   const glowB = '#ffd36a';
@@ -1048,31 +1048,31 @@ function buildRetroLootGlyphSvg(){
   const ember = '#ff6b5a';
   const shrink = 'translate(16 16) scale(0.75) translate(-16 -16)';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="geometricPrecision">`
-  + `\n  <defs>`
-  + `\n    <radialGradient id="retroLootGlyphAura" cx="52%" cy="44%" r="56%">`
-  + `\n      <stop offset="0" stop-color="${glowB}" stop-opacity="0.95"/>`
-  + `\n      <stop offset="1" stop-color="${inner}" stop-opacity="0.1"/>`
-  + `\n    </radialGradient>`
-  + `\n    <linearGradient id="retroLootGlyphBody" x1="0" y1="0" x2="0" y2="1">`
-  + `\n      <stop offset="0" stop-color="${glowB}" stop-opacity="0.95"/>`
-  + `\n      <stop offset="0.6" stop-color="${glowA}" stop-opacity="0.85"/>`
-  + `\n      <stop offset="1" stop-color="${ember}" stop-opacity="0.8"/>`
-  + `\n    </linearGradient>`
-  + `\n  </defs>`
-  + `\n  <g transform="${shrink}">`
-  + `\n    <circle cx="16" cy="14.5" r="10.5" fill="url(#retroLootGlyphAura)" opacity="0.85"/>`
-  + `\n    <path d="M16 8.8l3.2 4.9-3.2 1.7-3.2-1.7z" fill="${accent}" stroke="${ember}" stroke-width="0.9" stroke-linejoin="round"/>`
-  + `\n    <path d="M11 13.8h10" stroke="${accent}" stroke-width="1.2" stroke-linecap="round" opacity="0.85"/>`
-  + `\n    <path d="M10 15.5h12l-1.2 10.4c-0.2 1.7-1.6 2.9-3.3 2.9h-3.9c-1.7 0-3.1-1.2-3.3-2.9z" fill="url(#retroLootGlyphBody)" stroke="${ember}" stroke-width="1" stroke-linejoin="round"/>`
-  + `\n    <path d="M12.4 19.4h7.2" stroke="${accent}" stroke-width="1" stroke-linecap="round" opacity="0.9"/>`
-  + `\n    <circle cx="16" cy="21.8" r="1.4" fill="${accent}" stroke="${ember}" stroke-width="0.7"/>`
-  + `\n    <path d="M12.6 22.9l-0.9 2.4" stroke="${accent}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>`
-  + `\n    <path d="M19.4 22.9l0.9 2.4" stroke="${accent}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>`
-  + `\n  </g>`
-  + `\n</svg>`;
+    + `\n  <defs>`
+    + `\n    <radialGradient id="retroLootGlyphAura" cx="52%" cy="44%" r="56%">`
+    + `\n      <stop offset="0" stop-color="${glowB}" stop-opacity="0.95"/>`
+    + `\n      <stop offset="1" stop-color="${inner}" stop-opacity="0.1"/>`
+    + `\n    </radialGradient>`
+    + `\n    <linearGradient id="retroLootGlyphBody" x1="0" y1="0" x2="0" y2="1">`
+    + `\n      <stop offset="0" stop-color="${glowB}" stop-opacity="0.95"/>`
+    + `\n      <stop offset="0.6" stop-color="${glowA}" stop-opacity="0.85"/>`
+    + `\n      <stop offset="1" stop-color="${ember}" stop-opacity="0.8"/>`
+    + `\n    </linearGradient>`
+    + `\n  </defs>`
+    + `\n  <g transform="${shrink}">`
+    + `\n    <circle cx="16" cy="14.5" r="10.5" fill="url(#retroLootGlyphAura)" opacity="0.85"/>`
+    + `\n    <path d="M16 8.8l3.2 4.9-3.2 1.7-3.2-1.7z" fill="${accent}" stroke="${ember}" stroke-width="0.9" stroke-linejoin="round"/>`
+    + `\n    <path d="M11 13.8h10" stroke="${accent}" stroke-width="1.2" stroke-linecap="round" opacity="0.85"/>`
+    + `\n    <path d="M10 15.5h12l-1.2 10.4c-0.2 1.7-1.6 2.9-3.3 2.9h-3.9c-1.7 0-3.1-1.2-3.3-2.9z" fill="url(#retroLootGlyphBody)" stroke="${ember}" stroke-width="1" stroke-linejoin="round"/>`
+    + `\n    <path d="M12.4 19.4h7.2" stroke="${accent}" stroke-width="1" stroke-linecap="round" opacity="0.9"/>`
+    + `\n    <circle cx="16" cy="21.8" r="1.4" fill="${accent}" stroke="${ember}" stroke-width="0.7"/>`
+    + `\n    <path d="M12.6 22.9l-0.9 2.4" stroke="${accent}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>`
+    + `\n    <path d="M19.4 22.9l0.9 2.4" stroke="${accent}" stroke-width="0.9" stroke-linecap="round" opacity="0.9"/>`
+    + `\n  </g>`
+    + `\n</svg>`;
 }
 
-function buildRetroItemCacheSvg(){
+function buildRetroItemCacheSvg() {
   const inner = '#1a130a';
   const glowA = '#ffcd7a';
   const glowB = '#ff7f6a';
@@ -1108,7 +1108,7 @@ function buildRetroItemCacheSvg(){
 </svg>`;
 }
 
-function buildRetroPlayerSvg(){
+function buildRetroPlayerSvg() {
   const base = '#0b141a';
   const innerField = '#09121a';
   const glowA = '#64f0ff';
@@ -1144,12 +1144,12 @@ function buildRetroPlayerSvg(){
 </svg>`;
 }
 
-function getRetroPlayerSprite(){
+function getRetroPlayerSprite() {
   const Img = globalThis.Image;
-  if(typeof Img !== 'function') return null;
+  if (typeof Img !== 'function') return null;
   const meta = playerIcons[clampPlayerIconIndex(playerIconIndex)];
-  if(meta){
-    if(retroPlayerSprite && retroPlayerSpriteIndex === playerIconIndex){
+  if (meta) {
+    if (retroPlayerSprite && retroPlayerSpriteIndex === playerIconIndex) {
       return retroPlayerSprite;
     }
     const sprite = new Img();
@@ -1159,7 +1159,7 @@ function getRetroPlayerSprite(){
     retroPlayerSpriteIndex = playerIconIndex;
     return sprite;
   }
-  if(retroPlayerSprite && retroPlayerSpriteIndex === -2){
+  if (retroPlayerSprite && retroPlayerSpriteIndex === -2) {
     return retroPlayerSprite;
   }
   const svg = buildRetroPlayerSvg();
@@ -1172,10 +1172,10 @@ function getRetroPlayerSprite(){
   return sprite;
 }
 
-function getRetroItemSprite(){
+function getRetroItemSprite() {
   const Img = globalThis.Image;
-  if(typeof Img !== 'function') return null;
-  if(retroItemSprite) return retroItemSprite;
+  if (typeof Img !== 'function') return null;
+  if (retroItemSprite) return retroItemSprite;
   const svg = buildRetroItemGlyphSvg();
   const url = svgToDataUrl(svg);
   const sprite = new Img();
@@ -1185,10 +1185,10 @@ function getRetroItemSprite(){
   return sprite;
 }
 
-function getRetroLootSprite(){
+function getRetroLootSprite() {
   const Img = globalThis.Image;
-  if(typeof Img !== 'function') return null;
-  if(retroLootSprite) return retroLootSprite;
+  if (typeof Img !== 'function') return null;
+  if (retroLootSprite) return retroLootSprite;
   const svg = buildRetroLootGlyphSvg();
   const url = svgToDataUrl(svg);
   const sprite = new Img();
@@ -1198,10 +1198,10 @@ function getRetroLootSprite(){
   return sprite;
 }
 
-function getRetroItemCacheSprite(){
+function getRetroItemCacheSprite() {
   const Img = globalThis.Image;
-  if(typeof Img !== 'function') return null;
-  if(retroItemCacheSprite) return retroItemCacheSprite;
+  if (typeof Img !== 'function') return null;
+  if (retroItemCacheSprite) return retroItemCacheSprite;
   const svg = buildRetroItemCacheSvg();
   const url = svgToDataUrl(svg);
   const sprite = new Img();
@@ -1210,63 +1210,63 @@ function getRetroItemCacheSprite(){
   retroItemCacheSprite = sprite;
   return sprite;
 }
-function sfxTick(){
-  if(!audioEnabled) return;
-  const o=audioCtx.createOscillator();
-  const g=audioCtx.createGain();
-  o.type='square';
-  o.frequency.value=800;
+function sfxTick() {
+  if (!audioEnabled) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = 'square';
+  o.frequency.value = 800;
   o.connect(g); g.connect(audioCtx.destination);
-  g.gain.value=0.1;
+  g.gain.value = 0.1;
   o.start();
-  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.1);
-  o.stop(audioCtx.currentTime+0.1);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+  o.stop(audioCtx.currentTime + 0.1);
 }
-function sfxCrunch(){
-  if(!audioEnabled || typeof audioCtx?.createOscillator!=='function') return;
-  const o=audioCtx.createOscillator();
-  const g=audioCtx.createGain();
-  o.type='square';
-  o.frequency.setValueAtTime(200,audioCtx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(40,audioCtx.currentTime+0.2);
+function sfxCrunch() {
+  if (!audioEnabled || typeof audioCtx?.createOscillator !== 'function') return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = 'square';
+  o.frequency.setValueAtTime(200, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.2);
   o.connect(g); g.connect(audioCtx.destination);
-  g.gain.value=0.3;
+  g.gain.value = 0.3;
   o.start();
-  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.2);
-  o.stop(audioCtx.currentTime+0.2);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+  o.stop(audioCtx.currentTime + 0.2);
 }
 const sfxSpriteData = [
-  { id:'step', start:0.00, dur:0.05 },
-  { id:'pickup', start:0.05, dur:0.08 },
-  { id:'confirm', start:0.13, dur:0.08 },
-  { id:'denied', start:0.21, dur:0.08 }
+  { id: 'step', start: 0.00, dur: 0.05 },
+  { id: 'pickup', start: 0.05, dur: 0.08 },
+  { id: 'confirm', start: 0.13, dur: 0.08 },
+  { id: 'denied', start: 0.21, dur: 0.08 }
 ];
 const sfxSpriteSrc = 'data:audio/wav;base64,UklGRjQJAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YRAJAACAnbnS5/X9//ns2sKnimxPNR8OBAAEDh81T2yKp8La7Pn//fXn0rmdgGJGLRgKAgAGEyU9WHWTsMrg8fv/+/HgyrCTdVg9JRMGAAIKGC1GYn+dudLn9f3/+ezawqeKbE81Hw4EAAQOHzVPbIqnwtrs+f/99efSuZ2AYkYtGAoCAAYTJT1YdZOwyuDx+//78eDKsJN1WD0lEwYAAgoYLUZif5250uf1/f/57NrCp4psTzUfDgQABA4fNU9siqfC2uz5//3159K5nX9iRi0YCgIABhMlPVh1k7DK4PH7//vx4Mqwk3VYPSUTBgACChgtRmJ/nbnS5/X9//ns2sKnimxPNR8OBAAEDh81T2yKp8La7Pn//fXn0rmdf2JGLRgKAgAGEyU9WHWTsMrg8fv/+/HgyrCTdVg9JRMGAAIKGC1GYn+dudLn9f3/+ezawqeKbE81Hw4EAAQOHzVPbIqnwtrs+f/99efSuZ2AYkYtGAoCAAYTJT1YdZOwyuDx+//78eDKsJN1WD0lEwYAAgoYLUZigNL97KdPDgQ1itr/551GCgY9k+D/4JM9BgpGnef/2oo1BA5Pp+z90oAtAhNYsPH7ynUlABhiufX5wmwfAB9swvn1uWIYACV1yvvxsFgTAi1/0v3sp08OBDWK2v/nnUYKBj2T4P/gkz0GCkad5//aijUEDk+n7P3SgC0CE1iw8fvKdSUAGGK59fnCbB8AH2zC+fW5YhgAJXXK+/GwWBMCLX/S/eynTw4ENYra/+edRgoGPZPg/+CTPQYKRp3n/9qKNQQOT6fs/dKALQITWLDx+8p1JQAYYrn1+cJsHwAfbML59bliGAAldcr78bBYEwItf9L97KdPDgQ1itr/551GCgY9k+D/4JM9BgpGnef/2oo1BA5Pp+z90n8tAhNYsPH7ynUlABhiufX5wmwfAB9swvn1uWIYACV1yvvxsFgTAi1/0v3sp08OBDWK2v/nnUYKBj2T4P/gkz0GCkad5//aijUEDk+n7P3SgC0CE1iw8fvKdSUAGGK59fnCbB8AH2zC+fW5YhgAJXXK+/GwWBMCLX/S/eynTw4ENYra/+edRgoGPZPg/+CTPQYKRp3n/9qKNQQOT6fs/dJ/LQITWLDx+8p1JQAYYrn1+cJsHwAfbML59bliGAAldcr78bBYEwItf9L97KdPDgQ1itr/551GCgY9k+D/4JM9BgpGnef/2oo1BA5Pp+z90oAtAhNYsPH7ynUlABhiufX5wmwfAB9swvn1uWIYACV1yvvxsFgTAi2A0v3sp08OBDWK2v/nnUYKBj2T4P/gkz0GCkad5//aijUEDk+n7P3SgC0CE1iw8fvKdSUAGGK59fnCbB8AH2zC+fW5YhgAJXXK+/GwWBMCLYC55/352qdsNQ4ADjVsp9r5/ee5gEYYAgYlWJPK8f/xypNYJQYCGEZ/uef9+dqnbDUOAA41bKfa+f3nuYBGGAIGJViTyvH/8cqTWCUGAhhGf7nn/fnap2w1DgAONWyn2vn957l/RhgCBiVYk8rx//HKk1glBgIYRn+55/352qdsNQ4ADjVsp9r5/ee5f0YYAgYlWJPK8f/xypNYJQYCGEZ/uef9+dqnbDUOAA41bKfa+f3nuYBGGAIGJViTyvH/8cqTWCUGAhhGgLnn/fnap2w1DgAONWyn2vn957mARhgCBiVYk8rx//HKk1glBgIYRn+55/352qdsNQ4ADjVsp9r5/ee5gEYYAgYlWJPK8f/xypNYJQYCGEaAuef9+dqnbDUOAA41bKfa+f3nuYBGGAIGJViTyvH/8cqTWCUGAhhGf7nn/fnap2w1DgAONWyn2vn957mARhgCBiVYk8rx//HKk1glBgIYRn+55/352qdsNQ4ADjVsp9r5/ee5gEYYAgYlWJPK8f/xypNYJQYCGEaAuef9+dqnbDUOAA41bKfa+f3nuYBGGAIGJViTyvH/8cqTWCUGAhhGf7nn/fnap2w1DgAONWyn2vn957mARhgCBiVYk8rx//HKk1glBgIYRn+55/352qdsNQ4ADjVsp9r5/ee5gEYYAgYlWJPK8f/xypNYJQYCGEZ/uef9+dqnbDUOAA41bKfa+f3nuX9GGAIGJViTyvH/8cqTWCUGAhhGgLnn/fnap2w1DgAONWyn2vn957mARhgCBiVYk8rx//HKk1glBgIYRn+55/352qdsNQ4ADjVsp9r5/ee5gEYYAgYlWJPK8f/xypNYJQYCGEaAk6e5ytrn8fn9//358efayrmnk4BsWEY1JRgOBgIAAgYOGCU1Rlhsf5Onucra5/H5/f/9+fHn2sq5p5OAbFhGNSUYDgYCAAIGDhglNUZYbH+Tp7nK2ufx+f3//fnx59rKuaeTf2xYRjUlGA4GAgACBg4YJTVGWGx/k6e5ytrn8fn9//358efayrmnk39sWEY1JRgOBgIAAgYOGCU1Rlhsf5Onucra5/H5/f/9+fHn2sq5p5OAbFhGNSUYDgYCAAIGDhglNUZYbICTp7nK2ufx+f3//fnx59rKuaeTf2xYRjUlGA4GAgACBg4YJTVGWGx/k6e5ytrn8fn9//358efayrmnk39sWEY1JRgOBgIAAgYOGCU1RlhsgJOnucra5/H5/f/9+fHn2sq5p5N/bFhGNSUYDgYCAAIGDhglNUZYbH+Tp7nK2ufx+f3//fnx59rKuaeTf2xYRjUlGA4GAgACBg4YJTVGWGx/k6e5ytrn8fn9//358efayrmnk39sWEY1JRgOBgIAAgYOGCU1RlhsgJOnucra5/H5/f/9+fHn2sq5p5N/bFhGNSUYDgYCAAIGDhglNUZYbICTp7nK2ufx+f3//fnx59rKuaeTf2xYRjUlGA4GAgACBg4YJTVGWGx/k6e5ytrn8fn9//358efayrmnk39sWEY1JRgOBgIAAgYOGCU1RlhsgJOnucra5/H5/f/9+fHn2sq5p5N/bFhGNSUYDgYCAAIGDhglNUZYbICTp7nK2ufx+f3//fnx59rKuaeTgGxYRjUlGA4GAgACBg4YJTVGWGyAk6e5ytrn8fn9//358efayrmnk39sWEY1JRgOBgIAAgYOGCU1Rlhs';
 const sfxBase = new Audio(sfxSpriteSrc);
 const sfxPool = Array.from({ length: 5 }, () => sfxBase.cloneNode());
 const sfxTimers = new Array(sfxPool.length).fill(0);
 let sfxIndex = 0;
-function playSfx(id){
+function playSfx(id) {
   const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-  if(!audioEnabled) return;
-  if(id==='tick') return sfxTick();
-  if(id==='damage') return sfxCrunch();
-  const meta=sfxSpriteData.find(s=>s.id===id);
-  if(!meta) return;
-  const slot=sfxIndex++%sfxPool.length;
-  const a=sfxPool[slot];
+  if (!audioEnabled) return;
+  if (id === 'tick') return sfxTick();
+  if (id === 'damage') return sfxCrunch();
+  const meta = sfxSpriteData.find(s => s.id === id);
+  if (!meta) return;
+  const slot = sfxIndex++ % sfxPool.length;
+  const a = sfxPool[slot];
   clearTimeout(sfxTimers[slot]);
   a.pause();
-  a.volume=0.2;
-  a.currentTime=meta.start;
+  a.volume = 0.2;
+  a.currentTime = meta.start;
   // Ignore playback aborts from rapid movement to avoid console noise
-  a.play().catch(()=>{});
-  sfxTimers[slot]=setTimeout(()=>a.pause(), meta.dur*1000);
-  if(globalThis.perfStats) globalThis.perfStats.sfx += ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - t0;
+  a.play().catch(() => { });
+  sfxTimers[slot] = setTimeout(() => a.pause(), meta.dur * 1000);
+  if (globalThis.perfStats) globalThis.perfStats.sfx += ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - t0;
 }
 EventBus.on('sfx', playSfx);
 EventBus.on('weather:change', w => {
-  if(!weatherBanner) return;
+  if (!weatherBanner) return;
   const txt = (w.icon ? w.icon + ' ' : '') + (w.desc || w.state);
   weatherBanner.textContent = txt;
   weatherBanner.hidden = false;
@@ -1274,7 +1274,7 @@ EventBus.on('weather:change', w => {
 EventBus.on('persona:equip', () => { renderParty(); updateHUD?.(); });
 EventBus.on('persona:unequip', () => { renderParty(); updateHUD?.(); });
 EventBus.on('movement:player', updateQuestCompassTargets);
-if(weatherBanner && globalThis.Dustland?.weather){
+if (weatherBanner && globalThis.Dustland?.weather) {
   const w = globalThis.Dustland.weather.getWeather();
   weatherBanner.textContent = (w.icon ? w.icon + ' ' : '') + (w.desc || w.state);
   weatherBanner.hidden = false;
@@ -1284,40 +1284,40 @@ fxOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;pointer-
 document.body.appendChild(fxOverlay);
 type PlayFxFn = ((type: any) => void) & { _t?: ReturnType<typeof setTimeout> };
 const playFX: PlayFxFn = (type) => {
-  if(audioEnabled && typeof audioCtx?.createOscillator==='function'){
-    const o=audioCtx.createOscillator();
-    const g=audioCtx.createGain();
-    o.type='triangle';
-    o.frequency.value= type==='adrenaline'?600: type==='special'?900:300;
+  if (audioEnabled && typeof audioCtx?.createOscillator === 'function') {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'triangle';
+    o.frequency.value = type === 'adrenaline' ? 600 : type === 'special' ? 900 : 300;
     o.connect(g); g.connect(audioCtx.destination);
-    g.gain.value=0.2;
+    g.gain.value = 0.2;
     o.start();
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.3);
-    o.stop(audioCtx.currentTime+0.3);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+    o.stop(audioCtx.currentTime + 0.3);
   }
-  const color = type==='adrenaline'? 'rgba(255,0,0,0.3)': type==='special'? 'rgba(0,255,255,0.3)': 'rgba(255,255,0,0.3)';
-  fxOverlay.style.background=color;
-  fxOverlay.style.opacity='1';
+  const color = type === 'adrenaline' ? 'rgba(255,0,0,0.3)' : type === 'special' ? 'rgba(0,255,255,0.3)' : 'rgba(255,255,0,0.3)';
+  fxOverlay.style.background = color;
+  fxOverlay.style.opacity = '1';
   clearTimeout(playFX._t);
-  playFX._t=setTimeout(()=>{ fxOverlay.style.opacity='0'; },200);
+  playFX._t = setTimeout(() => { fxOverlay.style.opacity = '0'; }, 200);
 };
-function hudBadge(msg){
+function hudBadge(msg) {
   const target = hpEl;
-  if(!target) return;
-  const span=document.createElement('span');
-  span.className='hudBadge';
-  span.textContent=msg;
+  if (!target) return;
+  const span = document.createElement('span');
+  span.className = 'hudBadge';
+  span.textContent = msg;
   target.parentElement.appendChild(span);
-  setTimeout(()=>span.remove(),1000);
+  setTimeout(() => span.remove(), 1000);
 }
 
 // Tile colors for rendering
-const colors = {0:'#1e271d',1:'#313831',2:'#1573ff',3:'#203320',4:'#777777',5:'#304326',6:'#4d5f4d',7:'#233223',8:'#8bd98d',9:'#000000'};
+const colors = { 0: '#1e271d', 1: '#313831', 2: '#1573ff', 3: '#203320', 4: '#777777', 5: '#304326', 6: '#4d5f4d', 7: '#233223', 8: '#8bd98d', 9: '#000000' };
 // Alternate floor colors used in office interiors for subtle variation
-const officeFloorColors = ['#233223','#243424','#222a22'];
-const officeMaps = new Set(['floor1','floor2','floor3']);
+const officeFloorColors = ['#233223', '#243424', '#222a22'];
+const officeMaps = new Set(['floor1', 'floor2', 'floor3']);
 
-const tileChars = {0:'.',1:'^',2:'~',3:',',4:'=',5:'%',6:'#',7:'.',8:'+',9:'B'};
+const tileChars = { 0: '.', 1: '^', 2: '~', 3: ',', 4: '=', 5: '%', 6: '#', 7: '.', 8: '+', 9: 'B' };
 const tileCharColors = {
   0: lightenColor('#1e271d', 0.2),
   1: lightenColor('#313831', 0.2),
@@ -1349,7 +1349,7 @@ function lightenColor(hex, amt = 0.2) {
   return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
 }
 {
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals));
+  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
   globals.tileChars = tileChars;
 }
 globalThis.jitterColor = jitterColor;
@@ -1365,7 +1365,7 @@ const playerAdrenalineFx = {
   glow: 0
 };
 {
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals));
+  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
   globals.playerAdrenalineFx = playerAdrenalineFx;
 }
 const rawAttrWidth = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('width')) : NaN;
@@ -1373,7 +1373,7 @@ const rawAttrHeight = (disp && typeof disp.getAttribute === 'function') ? Number
 const BASE_CANVAS_WIDTH = Number.isFinite(rawAttrWidth) && rawAttrWidth > 0 ? rawAttrWidth : (disp?.width && disp.width > 0 ? disp.width : 640);
 const BASE_CANVAS_HEIGHT = Number.isFinite(rawAttrHeight) && rawAttrHeight > 0 ? rawAttrHeight : (disp?.height && disp.height > 0 ? disp.height : 480);
 const RENDER_SCALE = 2;
-if(disp){
+if (disp) {
   disp.width = Math.round(BASE_CANVAS_WIDTH * RENDER_SCALE);
   disp.height = Math.round(BASE_CANVAS_HEIGHT * RENDER_SCALE);
 }
@@ -1386,13 +1386,13 @@ const prev = document.createElement('canvas');
 prev.width = scene.width;
 prev.height = scene.height;
 const pctx = prev.getContext('2d');
-if(dctx){
+if (dctx) {
   dctx.imageSmoothingEnabled = false;
 }
-if(sctx){
+if (sctx) {
   sctx.imageSmoothingEnabled = false;
 }
-if(pctx){
+if (pctx) {
   pctx.imageSmoothingEnabled = false;
 }
 
@@ -1400,24 +1400,24 @@ const CRT_CANVAS_MAX_SCALE = 3;
 const CRT_DESKTOP_BREAKPOINT = 900;
 const crtTube = disp ? disp.parentElement : null;
 
-function setCanvasDimensions(width, height){
-  if(!disp) return;
+function setCanvasDimensions(width, height) {
+  if (!disp) return;
   const widthPx = `${Math.floor(width)}px`;
   const heightPx = `${Math.floor(height)}px`;
   disp.style.width = widthPx;
   disp.style.height = heightPx;
-  if(crtTube){
+  if (crtTube) {
     crtTube.style.width = widthPx;
     crtTube.style.height = heightPx;
   }
 }
 
-function updateCanvasStretch(){
-  if(!disp) return;
+function updateCanvasStretch() {
+  if (!disp) return;
   const baseWidth = BASE_CANVAS_WIDTH || disp.clientWidth || 0;
   const baseHeight = BASE_CANVAS_HEIGHT || disp.clientHeight || 0;
-  if(!baseWidth || !baseHeight){
-    if(crtTube){
+  if (!baseWidth || !baseHeight) {
+    if (crtTube) {
       crtTube.style.width = '';
       crtTube.style.height = '';
     }
@@ -1426,13 +1426,13 @@ function updateCanvasStretch(){
     return;
   }
   const viewportWidth = (typeof window !== 'undefined' && typeof window.innerWidth === 'number') ? window.innerWidth : Number.POSITIVE_INFINITY;
-  if(viewportWidth < CRT_DESKTOP_BREAKPOINT){
+  if (viewportWidth < CRT_DESKTOP_BREAKPOINT) {
     setCanvasDimensions(baseWidth, baseHeight);
     return;
   }
   const crtWrapCandidate = crtTube ? crtTube.parentElement : null;
   const crtWrap = (crtWrapCandidate && crtWrapCandidate.classList?.contains('crt-wrap')) ? crtWrapCandidate : document.querySelector('.crt-wrap');
-  if(!crtWrap){
+  if (!crtWrap) {
     setCanvasDimensions(baseWidth, baseHeight);
     return;
   }
@@ -1440,7 +1440,7 @@ function updateCanvasStretch(){
   const wrap = (wrapParent && wrapParent.classList?.contains('wrap')) ? wrapParent : document.querySelector('.wrap');
   const availableWidth = Math.max(0, crtWrap.clientWidth || 0);
   const availableHeight = Math.max(0, (wrap?.clientHeight || crtWrap.clientHeight || (typeof window !== 'undefined' && typeof window.innerHeight === 'number' ? window.innerHeight : baseHeight)));
-  if(!availableWidth || !availableHeight){
+  if (!availableWidth || !availableHeight) {
     setCanvasDimensions(baseWidth, baseHeight);
     return;
   }
@@ -1449,18 +1449,18 @@ function updateCanvasStretch(){
   let targetWidth = Math.min(availableWidth, maxWidth);
   let targetHeight = targetWidth * (baseHeight / baseWidth);
   const heightLimit = Math.min(availableHeight, maxHeight);
-  if(targetHeight > heightLimit){
+  if (targetHeight > heightLimit) {
     targetHeight = heightLimit;
     targetWidth = targetHeight * (baseWidth / baseHeight);
   }
-  if(!Number.isFinite(targetWidth) || !Number.isFinite(targetHeight) || targetWidth <= baseWidth || targetHeight <= baseHeight){
+  if (!Number.isFinite(targetWidth) || !Number.isFinite(targetHeight) || targetWidth <= baseWidth || targetHeight <= baseHeight) {
     setCanvasDimensions(baseWidth, baseHeight);
     return;
   }
   setCanvasDimensions(targetWidth, targetHeight);
 }
 
-if(typeof window !== 'undefined' && window.addEventListener){
+if (typeof window !== 'undefined' && window.addEventListener) {
   window.addEventListener('resize', updateCanvasStretch);
 }
 updateCanvasStretch();
@@ -1468,13 +1468,13 @@ updateCanvasStretch();
 // Font init (prevents invisible glyphs on some canvases)
 sctx.font = `${(12 * fontScale) / RENDER_SCALE}px system-ui, sans-serif`;
 
-let camX=0, camY=0, showMini=true;
-let _lastTime=0;
-let bumpX=0, bumpY=0, bumpEnd=0;
+let camX = 0, camY = 0, showMini = true;
+let _lastTime = 0;
+let bumpX = 0, bumpY = 0, bumpEnd = 0;
 const FOOTSTEP_BUMP_RANGE = 0.6;
 const FOOTSTEP_BUMP_DURATION_MS = 35;
-const sparkles=[];
-const vacuumTrails=[];
+const sparkles = [];
+const vacuumTrails = [];
 const soundSources = [];
 let lastChimeTime = 0;
 
@@ -1498,17 +1498,17 @@ function playWindChime(x, y) {
   o.stop(audioCtx.currentTime + 0.5);
 }
 
-function footstepBump(){
+function footstepBump() {
   const fx = globalThis.fxConfig;
-  if(!fx || !fx.footstepBump) return;
+  if (!fx || !fx.footstepBump) return;
   const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-  bumpX = (Math.random()-0.5) * FOOTSTEP_BUMP_RANGE;
-  bumpY = (Math.random()-0.5) * FOOTSTEP_BUMP_RANGE;
+  bumpX = (Math.random() - 0.5) * FOOTSTEP_BUMP_RANGE;
+  bumpY = (Math.random() - 0.5) * FOOTSTEP_BUMP_RANGE;
   bumpEnd = now + FOOTSTEP_BUMP_DURATION_MS;
 }
 
-function pickupSparkle(x,y){
-  sparkles.push({x,y});
+function pickupSparkle(x, y) {
+  sparkles.push({ x, y });
 }
 
 type PickupVacuumFn = (fromX: number, fromY: number, toX?: number, toY?: number) => void;
@@ -1527,27 +1527,27 @@ const pickupVacuumImpl: PickupVacuumFn = (fromX, fromY, toX, toY) => {
 const enginePickupVacuum: PickupVacuumFn = getEngineGlobals().pickupVacuum ?? pickupVacuumImpl;
 getEngineGlobals().pickupVacuum = enginePickupVacuum;
 
-function draw(t){
+function draw(t) {
   if (disp.width < 16) {
     return;
   }
   pulseAdrenaline(t);
-  const dt=(t-_lastTime)||0; _lastTime=t;
-  render(state, dt/1000);
+  const dt = (t - _lastTime) || 0; _lastTime = t;
+  render(state, dt / 1000);
   const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
   const bx = bumpEnd > now ? bumpX : 0;
   const by = bumpEnd > now ? bumpY : 0;
   const fx = globalThis.fxConfig || {};
-  if(fx.enabled === false){
+  if (fx.enabled === false) {
     dctx.globalAlpha = 1;
     dctx.drawImage(scene, bx, by);
-  }else{
+  } else {
     dctx.globalAlpha = fx.prevAlpha;
     dctx.drawImage(prev, (fx.offsetX || 0) + bx, (fx.offsetY || 0) + by);
     dctx.globalAlpha = fx.sceneAlpha;
     dctx.drawImage(scene, bx, by);
   }
-  pctx.clearRect(0,0,prev.width,prev.height); pctx.drawImage(scene,0,0);
+  pctx.clearRect(0, 0, prev.width, prev.height); pctx.drawImage(scene, 0, 0);
 
   for (const source of soundSources) {
     if (source.map === state.map) {
@@ -1559,72 +1559,72 @@ function draw(t){
 }
 
 // ===== Camera =====
-function centerCamera(x,y,map){
-  let W,H;
-  if(map==='world'){ W=WORLD_W; H=WORLD_H; }
-  else if(interiors[map]){ const I=interiors[map]; W=(I&&I.w)||VIEW_W; H=(I&&I.h)||VIEW_H; }
-  else { W=VIEW_W; H=VIEW_H; }
-  const { w:vW, h:vH } = getViewSize();
-  camX = clamp(x - Math.floor(vW/2), 0, Math.max(0, (W||vW) - vW));
-  camY = clamp(y - Math.floor(vH/2), 0, Math.max(0, (H||vH) - vH));
+function centerCamera(x, y, map) {
+  let W, H;
+  if (map === 'world') { W = WORLD_W; H = WORLD_H; }
+  else if (interiors[map]) { const I = interiors[map]; W = (I && I.w) || VIEW_W; H = (I && I.h) || VIEW_H; }
+  else { W = VIEW_W; H = VIEW_H; }
+  const { w: vW, h: vH } = getViewSize();
+  camX = clamp(x - Math.floor(vW / 2), 0, Math.max(0, (W || vW) - vW));
+  camY = clamp(y - Math.floor(vH / 2), 0, Math.max(0, (H || vH) - vH));
 }
 
-function shouldRenderFog(map){
-  if(!map) return false;
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals));
+function shouldRenderFog(map) {
+  if (!map) return false;
+  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
   const enabled = typeof fogOfWarEnabled === 'boolean'
     ? fogOfWarEnabled
     : (typeof globals.fogOfWarEnabled === 'boolean' ? globals.fogOfWarEnabled : true);
-  if(!enabled) return false;
-  if(typeof mapSupportsFog === 'function') return mapSupportsFog(map);
+  if (!enabled) return false;
+  if (typeof mapSupportsFog === 'function') return mapSupportsFog(map);
   return map !== 'creator';
 }
 
-function renderFog(ctx, map, offX, offY, viewW, viewH){
-  if(!ctx || !shouldRenderFog(map)) return;
+function renderFog(ctx, map, offX, offY, viewW, viewH) {
+  if (!ctx || !shouldRenderFog(map)) return;
   const dims = (typeof mapWH === 'function' ? mapWH(map) : null) as { W?: number; H?: number } | null;
   const W = Number.isFinite(dims?.W) ? dims?.W ?? null : null;
   const H = Number.isFinite(dims?.H) ? dims?.H ?? null : null;
-  if(!Number.isFinite(W) || !Number.isFinite(H)) return;
+  if (!Number.isFinite(W) || !Number.isFinite(H)) return;
   const px = Number.isFinite(party?.x) ? party.x : null;
   const py = Number.isFinite(party?.y) ? party.y : null;
-  if(!Number.isFinite(px) || !Number.isFinite(py)) return;
+  if (!Number.isFinite(px) || !Number.isFinite(py)) return;
   const fogState = (state?.fog && typeof state.fog === 'object') ? state.fog[map] : null;
   let visitedLookup = null;
   let visitedIsMap = false;
-  if(fogState instanceof Map){
+  if (fogState instanceof Map) {
     visitedLookup = fogState;
     visitedIsMap = true;
-  }else if(fogState && typeof fogState === 'object'){
+  } else if (fogState && typeof fogState === 'object') {
     visitedLookup = fogState;
   }
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals));
+  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
   const rawRadius = Number(globals.FOG_RADIUS);
   const radius = Math.max(1, Number.isFinite(rawRadius) ? rawRadius : 5);
   const denom = radius + 1;
   ctx.fillStyle = '#000';
-  for(let vy=0; vy<viewH; vy++){
-    for(let vx=0; vx<viewW; vx++){
+  for (let vy = 0; vy < viewH; vy++) {
+    for (let vx = 0; vx < viewW; vx++) {
       const gx = camX + vx - offX;
       const gy = camY + vy - offY;
-      if(gx<0 || gy<0 || gx>=W || gy>=H) continue;
+      if (gx < 0 || gy < 0 || gx >= W || gy >= H) continue;
       const key = `${gx},${gy}`;
       const dist = Math.max(Math.abs(gx - px), Math.abs(gy - py));
       let stored = 0;
-      if(visitedLookup){
+      if (visitedLookup) {
         const storedRaw = visitedIsMap ? visitedLookup.get(key) : visitedLookup[key];
         stored = typeof storedRaw === 'number' ? storedRaw : (storedRaw ? 1 : 0);
       }
       let brightness = stored;
-      if(dist <= radius){
+      if (dist <= radius) {
         const current = Math.max(0, 1 - (dist / denom));
-        if(current > brightness) brightness = current;
+        if (current > brightness) brightness = current;
       }
       brightness = Math.max(0, Math.min(1, brightness));
       const alpha = (1 - brightness) * FOG_UNSEEN_ALPHA;
-      if(alpha <= 0) continue;
+      if (alpha <= 0) continue;
       ctx.globalAlpha = alpha;
-      ctx.fillRect(vx*TS,vy*TS,TS,TS);
+      ctx.fillRect(vx * TS, vy * TS, TS, TS);
     }
   }
   ctx.globalAlpha = 1;
@@ -1633,32 +1633,32 @@ function renderFog(ctx, map, offX, offY, viewW, viewH){
 // ===== Drawing Pipeline =====
 const renderOrder = ['tiles', 'items', 'portals', 'entitiesBelow', 'player', 'entitiesAbove'];
 
-function skinManager(){
+function skinManager() {
   return globalThis.DustlandSkin || globalThis.Dustland?.skin || null;
 }
 
-function drawSkinSprite(ctx, sprite, dx, dy, size = TS){
-  if(!ctx || !sprite || !sprite.image) return false;
+function drawSkinSprite(ctx, sprite, dx, dy, size = TS) {
+  if (!ctx || !sprite || !sprite.image) return false;
   const img = sprite.image;
-  if(!img.complete || !(img.naturalWidth || img.width) || !(img.naturalHeight || img.height)) return false;
+  if (!img.complete || !(img.naturalWidth || img.width) || !(img.naturalHeight || img.height)) return false;
   const sx = Number.isFinite(sprite.sx) ? sprite.sx : 0;
   const sy = Number.isFinite(sprite.sy) ? sprite.sy : 0;
   const sw = Number.isFinite(sprite.sw) ? sprite.sw : (img.naturalWidth || img.width);
   const sh = Number.isFinite(sprite.sh) ? sprite.sh : (img.naturalHeight || img.height);
-  if(!sw || !sh) return false;
+  if (!sw || !sh) return false;
   const scale = Number.isFinite(sprite.scale) ? sprite.scale : 1;
   const dwRaw = Number.isFinite(sprite.dw) ? sprite.dw : Number.isFinite(sprite.displayWidth) ? sprite.displayWidth : null;
   const dhRaw = Number.isFinite(sprite.dh) ? sprite.dh : Number.isFinite(sprite.displayHeight) ? sprite.displayHeight : null;
   const dw = dwRaw ?? (size * scale);
   const dh = dhRaw ?? (size * scale);
-  if(!dw || !dh) return false;
+  if (!dw || !dh) return false;
   let destX = dx;
   let destY = dy;
   const alignRaw = typeof sprite.align === 'string' ? sprite.align.toLowerCase() : (typeof sprite.anchor === 'string' ? sprite.anchor.toLowerCase() : null);
-  if(alignRaw === 'center' || alignRaw === 'middle'){
+  if (alignRaw === 'center' || alignRaw === 'middle') {
     destX += (size - dw) / 2;
     destY += (size - dh) / 2;
-  } else if(alignRaw === 'bottom'){
+  } else if (alignRaw === 'bottom') {
     destX += (size - dw) / 2;
     destY += size - dh;
   }
@@ -1668,28 +1668,28 @@ function drawSkinSprite(ctx, sprite, dx, dy, size = TS){
   return true;
 }
 
-function render(gameState=state, dt){
+function render(gameState = state, dt) {
   const ctx = sctx;
-  if(!ctx) return;
+  if (!ctx) return;
 
   const activeMap = gameState.map || mapIdForState();
   const dims = (mapWH(activeMap) || {}) as { W?: number; H?: number };
-  const { w:vWRaw, h:vHRaw } = getViewSize();
+  const { w: vWRaw, h: vHRaw } = getViewSize();
   const vW = Number.isFinite(vWRaw) ? vWRaw : VIEW_W;
   const vH = Number.isFinite(vHRaw) ? vHRaw : VIEW_H;
   const W = Number.isFinite(dims.W) ? dims.W : vW;
   const H = Number.isFinite(dims.H) ? dims.H : vH;
   const mapSmallerThanView = W < vW || H < vH;
 
-  ctx.setTransform(1,0,0,1,0,0);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = '#000';
-  ctx.fillRect(0,0,scene.width,scene.height);
+  ctx.fillRect(0, 0, scene.width, scene.height);
   ctx.save();
   ctx.scale(RENDER_SCALE, RENDER_SCALE);
   ctx.imageSmoothingEnabled = false;
   ctx.font = `${(12 * fontScale) / RENDER_SCALE}px system-ui, sans-serif`;
   ctx.fillStyle = '#000';
-  ctx.fillRect(0,0,BASE_CANVAS_WIDTH,BASE_CANVAS_HEIGHT);
+  ctx.fillRect(0, 0, BASE_CANVAS_WIDTH, BASE_CANVAS_HEIGHT);
 
   const offX = Math.max(0, Math.floor((vW - W) / 2));
   const offY = Math.max(0, Math.floor((vH - H) / 2));
@@ -1697,7 +1697,7 @@ function render(gameState=state, dt){
   const items = (gameState.itemDrops || itemDrops) as any[];
   const ps = (gameState.portals || portals) as any[];
   const entities = (gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : [])) as any[];
-  const pos = (gameState.party || party) as { x: number; y: number; [key: string]: unknown };
+  const pos = (gameState.party || party) as { x: number; y: number;[key: string]: unknown };
   type RemoteParty = MultiplayerPeer & { map?: string; x?: number; y?: number; updated?: number };
   const dustlandState = getEngineGlobals().Dustland as { multiplayerParties?: { list?: () => RemoteParty[] }; multiplayerState?: { remoteParties?: RemoteParty[] } } | undefined;
   const remoteParties = (dustlandState?.multiplayerParties?.list?.() as RemoteParty[] | undefined) || dustlandState?.multiplayerState?.remoteParties || [];
@@ -1705,150 +1705,150 @@ function render(gameState=state, dt){
 
   // split entities into below/above
   const below = [], above = [];
-  for(const n of entities){
-    if(n.map !== activeMap) continue;
+  for (const n of entities) {
+    if (n.map !== activeMap) continue;
     (n.drawAbovePlayer ? above : below).push(n);
   }
 
-  for(const layer of renderOrder){
-    if(layer==='tiles'){
+  for (const layer of renderOrder) {
+    if (layer === 'tiles') {
       const perf = (typeof performance !== 'undefined' && performance.now) ? performance : null;
       const measureTiles = !!globalThis.perfStats;
       const tileStart = measureTiles ? (perf ? perf.now() : Date.now()) : 0;
-      for(let vy=0; vy<vH; vy++){
-        for(let vx=0; vx<vW; vx++){
+      for (let vy = 0; vy < vH; vy++) {
+        for (let vx = 0; vx < vW; vx++) {
           const gx = camX + vx - offX, gy = camY + vy - offY;
-          if(gx<0||gy<0||gx>=W||gy>=H) continue;
-          const t = getTile(activeMap,gx,gy); if(t===null) continue;
+          if (gx < 0 || gy < 0 || gx >= W || gy >= H) continue;
+          const t = getTile(activeMap, gx, gy); if (t === null) continue;
           const tileSprite = skin?.getTileSprite?.(t, { x: gx, y: gy, map: activeMap });
           let tileDrawn = false;
-          if(tileSprite){
-            tileDrawn = drawSkinSprite(ctx, tileSprite, vx*TS, vy*TS, TS);
+          if (tileSprite) {
+            tileDrawn = drawSkinSprite(ctx, tileSprite, vx * TS, vy * TS, TS);
           }
-          if(!tileDrawn){
+          if (!tileDrawn) {
             let col = colors[t];
-            if(t===TILE.FLOOR && officeMaps.has(activeMap)){
-              col = officeFloorColors[(gx+gy)%officeFloorColors.length];
+            if (t === TILE.FLOOR && officeMaps.has(activeMap)) {
+              col = officeFloorColors[(gx + gy) % officeFloorColors.length];
             }
             ctx.fillStyle = jitterColor(col, gx, gy);
-            ctx.fillRect(vx*TS,vy*TS,TS,TS);
+            ctx.fillRect(vx * TS, vy * TS, TS, TS);
           }
-          if(tileCharsEnabled){
+          if (tileCharsEnabled) {
             const ch = tileChars[t];
-            if(ch){
+            if (ch) {
               ctx.fillStyle = tileCharColors[t];
-              ctx.fillText(ch, vx*TS+4, vy*TS+12);
+              ctx.fillText(ch, vx * TS + 4, vy * TS + 12);
             }
           }
-          if(t===TILE.DOOR){
-            ctx.strokeStyle='#9ef7a0';
-            ctx.strokeRect(vx*TS+5,vy*TS+5,TS-10,TS-10);
-            if(doorPulseUntil && Date.now()<doorPulseUntil){
-              const a=0.3+0.2*Math.sin(Date.now()/200);
-              ctx.globalAlpha=a;
-              ctx.strokeRect(vx*TS+3,vy*TS+3,TS-6,TS-6);
-              ctx.globalAlpha=1;
+          if (t === TILE.DOOR) {
+            ctx.strokeStyle = '#9ef7a0';
+            ctx.strokeRect(vx * TS + 5, vy * TS + 5, TS - 10, TS - 10);
+            if (doorPulseUntil && Date.now() < doorPulseUntil) {
+              const a = 0.3 + 0.2 * Math.sin(Date.now() / 200);
+              ctx.globalAlpha = a;
+              ctx.strokeRect(vx * TS + 3, vy * TS + 3, TS - 6, TS - 6);
+              ctx.globalAlpha = 1;
             }
           }
         }
       }
-      if(measureTiles && globalThis.perfStats){
+      if (measureTiles && globalThis.perfStats) {
         globalThis.perfStats.tiles += (perf ? perf.now() : Date.now()) - tileStart;
       }
     }
-    else if(layer==='items'){
-      for(const it of items){
-        if(it.map!==activeMap) continue;
-        if(it.x>=camX&&it.y>=camY&&it.x<camX+vW&&it.y<camY+vH){
-          const vx=(it.x-camX+offX)*TS, vy=(it.y-camY+offY)*TS;
-          const multi = Array.isArray(it.items) && it.items.length>1;
+    else if (layer === 'items') {
+      for (const it of items) {
+        if (it.map !== activeMap) continue;
+        if (it.x >= camX && it.y >= camY && it.x < camX + vW && it.y < camY + vH) {
+          const vx = (it.x - camX + offX) * TS, vy = (it.y - camY + offY) * TS;
+          const multi = Array.isArray(it.items) && it.items.length > 1;
           const dropType = typeof it.dropType === 'string' ? it.dropType : (it.source === 'loot' ? 'loot' : 'world');
           const isLoot = dropType === 'loot';
           const skinItemSprite = skin?.getItemSprite?.(it, { dropType, multi });
-          if(skinItemSprite){
-            if(multi){
-              const a=0.7+0.3*Math.sin(Date.now()/300);
+          if (skinItemSprite) {
+            if (multi) {
+              const a = 0.7 + 0.3 * Math.sin(Date.now() / 300);
               ctx.save();
-              ctx.globalAlpha=a;
+              ctx.globalAlpha = a;
               drawSkinSprite(ctx, skinItemSprite, vx, vy, TS);
               ctx.restore();
-            }else{
+            } else {
               drawSkinSprite(ctx, skinItemSprite, vx, vy, TS);
             }
             ctx.globalAlpha = 1;
             continue;
           }
-          if(retroNpcArtEnabled){
+          if (retroNpcArtEnabled) {
             const sprite = multi ? getRetroItemCacheSprite() : (isLoot ? getRetroLootSprite() : getRetroItemSprite());
-            if(sprite?.complete){
-              if(multi){
-                const a=0.7+0.3*Math.sin(Date.now()/300);
-                ctx.globalAlpha=a;
+            if (sprite?.complete) {
+              if (multi) {
+                const a = 0.7 + 0.3 * Math.sin(Date.now() / 300);
+                ctx.globalAlpha = a;
               }
               ctx.drawImage(sprite, vx, vy, TS, TS);
-              ctx.globalAlpha=1;
+              ctx.globalAlpha = 1;
               continue;
             }
           }
           ctx.globalAlpha = 1;
-          if(multi){
-            const a=0.7+0.3*Math.sin(Date.now()/300);
-            ctx.fillStyle='#ffb347';
-            ctx.globalAlpha=a;
-            ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
-            ctx.globalAlpha=1;
-          }else{
+          if (multi) {
+            const a = 0.7 + 0.3 * Math.sin(Date.now() / 300);
+            ctx.fillStyle = '#ffb347';
+            ctx.globalAlpha = a;
+            ctx.fillRect(vx + 4, vy + 4, TS - 8, TS - 8);
+            ctx.globalAlpha = 1;
+          } else {
             ctx.fillStyle = isLoot ? '#ff7f6a' : '#c8ffbf';
-            ctx.fillRect(vx+4,vy+4,TS-8,TS-8);
-            if(isLoot){
+            ctx.fillRect(vx + 4, vy + 4, TS - 8, TS - 8);
+            if (isLoot) {
               ctx.strokeStyle = '#7f3b16';
               ctx.lineWidth = 1;
-              ctx.strokeRect(vx+4,vy+4,TS-8,TS-8);
+              ctx.strokeRect(vx + 4, vy + 4, TS - 8, TS - 8);
             }
           }
         }
       }
     }
-    else if(layer==='portals'){
-      for(const p of ps){
-        if(p.map!==activeMap) continue;
-        if(p.x>=camX&&p.y>=camY&&p.x<camX+vW&&p.y<camY+vH){
-          const vx=(p.x-camX+offX)*TS, vy=(p.y-camY+offY)*TS;
-          ctx.strokeStyle='#f0f';
-          ctx.strokeRect(vx+2,vy+2,TS-4,TS-4);
+    else if (layer === 'portals') {
+      for (const p of ps) {
+        if (p.map !== activeMap) continue;
+        if (p.x >= camX && p.y >= camY && p.x < camX + vW && p.y < camY + vH) {
+          const vx = (p.x - camX + offX) * TS, vy = (p.y - camY + offY) * TS;
+          ctx.strokeStyle = '#f0f';
+          ctx.strokeRect(vx + 2, vy + 2, TS - 4, TS - 4);
         }
       }
     }
-    else if(layer==='entitiesBelow'){ drawEntities(ctx, below, offX, offY, skin); }
-    else if(layer==='player'){
-      if(Array.isArray(remoteParties) && remoteParties.length){
+    else if (layer === 'entitiesBelow') { drawEntities(ctx, below, offX, offY, skin); }
+    else if (layer === 'player') {
+      if (Array.isArray(remoteParties) && remoteParties.length) {
         const now = Date.now();
-        for(const info of remoteParties){
-          if(!info || info.map !== activeMap) continue;
-          if(!Number.isFinite(info.x) || !Number.isFinite(info.y)) continue;
-          const rx=(info.x-camX+offX)*TS;
-          const ry=(info.y-camY+offY)*TS;
+        for (const info of remoteParties) {
+          if (!info || info.map !== activeMap) continue;
+          if (!Number.isFinite(info.x) || !Number.isFinite(info.y)) continue;
+          const rx = (info.x - camX + offX) * TS;
+          const ry = (info.y - camY + offY) * TS;
           const age = info.updated ? Math.max(0, Math.min(8000, now - info.updated)) : 0;
           const alpha = 0.35 + (Math.max(0, 8000 - age) / 8000) * 0.45;
           const remoteSprite = skin?.getRemotePartySprite?.(info);
-          if(remoteSprite){
+          if (remoteSprite) {
             ctx.save();
             ctx.globalAlpha = alpha;
             const drawn = drawSkinSprite(ctx, remoteSprite, rx, ry, TS);
             ctx.restore();
-            if(drawn) continue;
+            if (drawn) continue;
           }
           ctx.save();
           ctx.globalAlpha = alpha;
-          ctx.fillStyle='#64f0ff';
-          ctx.fillRect(rx+3,ry+3,TS-6,TS-6);
-          ctx.strokeStyle='#102c30';
+          ctx.fillStyle = '#64f0ff';
+          ctx.fillRect(rx + 3, ry + 3, TS - 6, TS - 6);
+          ctx.strokeStyle = '#102c30';
           ctx.lineWidth = 1;
-          ctx.strokeRect(rx+3,ry+3,TS-6,TS-6);
+          ctx.strokeRect(rx + 3, ry + 3, TS - 6, TS - 6);
           ctx.restore();
         }
       }
-      const px=(pos.x-camX+offX)*TS, py=(pos.y-camY+offY)*TS;
+      const px = (pos.x - camX + offX) * TS, py = (pos.y - camY + offY) * TS;
       const fxState = playerAdrenalineFx;
       const fxIntensity = fxState?.intensity ?? 0;
       const fxScale = fxState?.scale ?? 1;
@@ -1859,7 +1859,7 @@ function render(gameState=state, dt){
       const hasPulse = fxIntensity > 0.0001 || fxGlow > 0.0001 || Math.abs(fxScale - 1) > 0.0001;
       const centerX = px + TS / 2;
       const centerY = py + TS / 2;
-      if(hasPulse && typeof ctx.save === 'function'){
+      if (hasPulse && typeof ctx.save === 'function') {
         ctx.save();
         ctx.translate(centerX, centerY);
         const glowRadius = (TS / 2) * (1.15 + fxGlow * 0.55);
@@ -1869,77 +1869,77 @@ function render(gameState=state, dt){
         const grad = typeof ctx.createRadialGradient === 'function'
           ? ctx.createRadialGradient(0, 0, innerRadius, 0, 0, glowRadius)
           : null;
-        if(grad && typeof grad.addColorStop === 'function'){
+        if (grad && typeof grad.addColorStop === 'function') {
           grad.addColorStop(0, `hsla(${hue}, 90%, 74%, ${alpha})`);
           grad.addColorStop(1, `hsla(${hue}, 90%, 50%, 0)`);
           ctx.fillStyle = grad;
         } else {
           ctx.fillStyle = `hsla(${hue}, 90%, 60%, ${alpha})`;
         }
-        if(typeof ctx.beginPath === 'function') ctx.beginPath();
-        if(typeof ctx.arc === 'function') ctx.arc(0, 0, glowRadius, 0, Math.PI * 2);
-        if(typeof ctx.fill === 'function') ctx.fill();
+        if (typeof ctx.beginPath === 'function') ctx.beginPath();
+        if (typeof ctx.arc === 'function') ctx.arc(0, 0, glowRadius, 0, Math.PI * 2);
+        if (typeof ctx.fill === 'function') ctx.fill();
         ctx.restore();
       }
       ctx.save();
       ctx.translate(centerX, centerY);
-      if(hasPulse && Math.abs(fxScale - 1) > 0.0001) ctx.scale(fxScale, fxScale);
+      if (hasPulse && Math.abs(fxScale - 1) > 0.0001) ctx.scale(fxScale, fxScale);
       ctx.translate(-TS / 2, -TS / 2);
       let prevFilter = null;
       let appliedFilter = false;
-      if(hasPulse && typeof ctx.filter === 'string'){
+      if (hasPulse && typeof ctx.filter === 'string') {
         const filterParts = [];
-        if(Math.abs(fxHue) > 0.001) filterParts.push(`hue-rotate(${fxHue}deg)`);
-        if(Math.abs(fxSat - 1) > 0.001) filterParts.push(`saturate(${fxSat})`);
-        if(Math.abs(fxBright - 1) > 0.001) filterParts.push(`brightness(${fxBright})`);
-        if(filterParts.length){
+        if (Math.abs(fxHue) > 0.001) filterParts.push(`hue-rotate(${fxHue}deg)`);
+        if (Math.abs(fxSat - 1) > 0.001) filterParts.push(`saturate(${fxSat})`);
+        if (Math.abs(fxBright - 1) > 0.001) filterParts.push(`brightness(${fxBright})`);
+        if (filterParts.length) {
           prevFilter = ctx.filter;
           ctx.filter = filterParts.join(' ');
           appliedFilter = true;
         }
       }
-        const skinPlayerSprite = skin?.getPlayerSprite?.(getEngineGlobals().player || pos, { mode: hasPulse ? 'adrenaline' : 'default', state: pos, fx: fxState });
+      const skinPlayerSprite = skin?.getPlayerSprite?.(getEngineGlobals().player || pos, { mode: hasPulse ? 'adrenaline' : 'default', state: pos, fx: fxState });
       let playerDrawn = false;
-      if(skinPlayerSprite){
+      if (skinPlayerSprite) {
         playerDrawn = drawSkinSprite(ctx, skinPlayerSprite, 0, 0, TS);
       }
-      if(!playerDrawn){
-        if(retroNpcArtEnabled){
+      if (!playerDrawn) {
+        if (retroNpcArtEnabled) {
           const sprite = getRetroPlayerSprite();
-          if(sprite?.complete){
+          if (sprite?.complete) {
             ctx.drawImage(sprite, 0, 0, TS, TS);
-          }else{
-            ctx.fillStyle='#64f0ff';
-            ctx.fillRect(4,4,TS-8,TS-8);
+          } else {
+            ctx.fillStyle = '#64f0ff';
+            ctx.fillRect(4, 4, TS - 8, TS - 8);
           }
-        }else{
-          if(hasPulse){
+        } else {
+          if (hasPulse) {
             const hue = (300 + fxHue) % 360;
             const light = Math.min(78, 62 + fxGlow * 18);
             ctx.fillStyle = `hsl(${hue}, 90%, ${light}%)`;
-          }else{
-            ctx.fillStyle='#f0f';
+          } else {
+            ctx.fillStyle = '#f0f';
           }
-          ctx.fillRect(4,4,TS-8,TS-8);
+          ctx.fillRect(4, 4, TS - 8, TS - 8);
         }
       }
-      if(appliedFilter){
+      if (appliedFilter) {
         ctx.filter = prevFilter || 'none';
       }
       ctx.restore();
     }
-    else if(layer==='entitiesAbove'){ drawEntities(ctx, above, offX, offY, skin); }
+    else if (layer === 'entitiesAbove') { drawEntities(ctx, above, offX, offY, skin); }
   }
 
-  if(vacuumTrails.length){
+  if (vacuumTrails.length) {
     const now = Date.now();
     const active = [];
-    for(const fx of vacuumTrails){
+    for (const fx of vacuumTrails) {
       const start = typeof fx.start === 'number' ? fx.start : now;
       const end = typeof fx.end === 'number' ? fx.end : start + 300;
       const duration = Math.max(1, end - start);
       const elapsed = now - start;
-      if (elapsed >= duration){
+      if (elapsed >= duration) {
         continue;
       }
       const progress = Math.max(0, Math.min(1, elapsed / duration));
@@ -1952,7 +1952,7 @@ function render(gameState=state, dt){
       const worldY = fromY + (toY - fromY) * eased;
       const px = (worldX - camX + offX) * TS;
       const py = (worldY - camY + offY) * TS;
-      if(px + TS < 0 || py + TS < 0 || px > BASE_CANVAS_WIDTH || py > BASE_CANVAS_HEIGHT){
+      if (px + TS < 0 || py + TS < 0 || px > BASE_CANVAS_WIDTH || py > BASE_CANVAS_HEIGHT) {
         active.push(fx);
         continue;
       }
@@ -1980,8 +1980,8 @@ function render(gameState=state, dt){
     vacuumTrails.push(...active);
   }
 
-  if(sparkles.length){
-    for(const s of sparkles){
+  if (sparkles.length) {
+    for (const s of sparkles) {
       const sx = (s.x - camX + offX) * TS;
       const sy = (s.y - camY + offY) * TS;
       ctx.fillStyle = 'rgba(255,255,255,0.7)';
@@ -2000,48 +2000,48 @@ function render(gameState=state, dt){
   const halfWidth = frameWidth / 2;
   ctx.strokeStyle = frameColor;
   ctx.lineWidth = frameWidth;
-  ctx.strokeRect(halfWidth, halfWidth, vW*TS - frameWidth, vH*TS - frameWidth);
+  ctx.strokeRect(halfWidth, halfWidth, vW * TS - frameWidth, vH * TS - frameWidth);
   ctx.lineWidth = 1;
   ctx.restore();
 }
 
-function getNpcColor(n){
-  if(n.overrideColor && n.color) return n.color;
-  if(n.trainer) return '#ffcc99';
-  if(n.shop) return '#ffee99';
-  if(n.inanimate) return '#d4af37';
-  if(n.questId || n.quests) return '#cc99ff';
-  if(n.combat?.auto) return '#f00';
-  if((n.combat && !n.tree) || n.attackOnSight) return '#f88';
+function getNpcColor(n) {
+  if (n.overrideColor && n.color) return n.color;
+  if (n.trainer) return '#ffcc99';
+  if (n.shop) return '#ffee99';
+  if (n.inanimate) return '#d4af37';
+  if (n.questId || n.quests) return '#cc99ff';
+  if (n.combat?.auto) return '#f00';
+  if ((n.combat && !n.tree) || n.attackOnSight) return '#f88';
   return '#9ef7a0';
 }
 
-function getNpcSymbol(n){
-  if(n.symbol) return n.symbol;
-  if(n.inanimate) return '?';
-  if(n.questId || n.quests) return '★';
+function getNpcSymbol(n) {
+  if (n.symbol) return n.symbol;
+  if (n.inanimate) return '?';
+  if (n.questId || n.quests) return '★';
   return '!';
 }
 
-function drawEntities(ctx, list, offX, offY, skin){
-  const { w:vW, h:vH } = getViewSize();
-  for(const n of list){
-    if(n.x>=camX&&n.y>=camY&&n.x<camX+vW&&n.y<camY+vH){
-      const vx=(n.x-camX+offX)*TS, vy=(n.y-camY+offY)*TS;
+function drawEntities(ctx, list, offX, offY, skin) {
+  const { w: vW, h: vH } = getViewSize();
+  for (const n of list) {
+    if (n.x >= camX && n.y >= camY && n.x < camX + vW && n.y < camY + vH) {
+      const vx = (n.x - camX + offX) * TS, vy = (n.y - camY + offY) * TS;
       const entitySprite = skin?.getEntitySprite?.(n);
-      if(entitySprite){
+      if (entitySprite) {
         const drawn = drawSkinSprite(ctx, entitySprite, vx, vy, TS);
-        if(drawn) continue;
+        if (drawn) continue;
       }
-      if(retroNpcArtEnabled){
+      if (retroNpcArtEnabled) {
         const sprite = getRetroNpcSprite(n);
-        if(sprite?.complete){
+        if (sprite?.complete) {
           ctx.drawImage(sprite, vx, vy, TS, TS);
           continue;
         }
       }
-      ctx.fillStyle=getNpcColor(n); ctx.fillRect(vx,vy,TS,TS);
-      ctx.fillStyle='#000'; ctx.fillText(getNpcSymbol(n),vx+5,vy+12);
+      ctx.fillStyle = getNpcColor(n); ctx.fillRect(vx, vy, TS, TS);
+      ctx.fillStyle = '#000'; ctx.fillText(getNpcSymbol(n), vx + 5, vy + 12);
     }
   }
 }
@@ -2052,65 +2052,65 @@ Object.assign(window, { renderOrderSystem: { order: renderOrder, render } });
 const TAB_BREAKPOINT = 1980;
 let activeTab = 'inv';
 
-  const updateHudState: {
-    lastHpVal?: number;
-    hurtTimer?: ReturnType<typeof setTimeout>;
-    lastHpPct?: number;
-  } = {};
+const updateHudState: {
+  lastHpVal?: number;
+  hurtTimer?: ReturnType<typeof setTimeout>;
+  lastHpPct?: number;
+} = {};
 
-  function updateHUD(){
-    const prevHp = updateHudState.lastHpVal ?? player.hp;
-    hpEl.textContent = String(player.hp);
-    if(scrEl) scrEl.textContent = String(player.scrap);
+function updateHUD() {
+  const prevHp = updateHudState.lastHpVal ?? player.hp;
+  hpEl.textContent = String(player.hp);
+  if (scrEl) scrEl.textContent = String(player.scrap);
   const lead = typeof leader === 'function' ? leader() : null;
   const fx = globalThis.fxConfig;
-  if(hpBar){
-    if(player.hp < prevHp && fx?.damageFlash !== false){
-      EventBus.emit('sfx','damage');
+  if (hpBar) {
+    if (player.hp < prevHp && fx?.damageFlash !== false) {
+      EventBus.emit('sfx', 'damage');
       hpBar.classList.add('hurt');
-        clearTimeout(updateHudState.hurtTimer);
-        updateHudState.hurtTimer = setTimeout(()=>hpBar.classList.remove('hurt'), 300);
-    }else if(fx?.damageFlash === false){
+      clearTimeout(updateHudState.hurtTimer);
+      updateHudState.hurtTimer = setTimeout(() => hpBar.classList.remove('hurt'), 300);
+    } else if (fx?.damageFlash === false) {
       hpBar.classList.remove('hurt');
     }
   }
-    if(hpFill && hpBar && lead){
-      const pct = Math.max(0, Math.min(100, (player.hp / (lead.maxHp || 1)) * 100));
-      hpFill.style.width = pct + '%';
-      hpBar.setAttribute('aria-valuenow', String(player.hp));
-      hpBar.setAttribute('aria-valuemax', String(lead.maxHp || 1));
-      hpBar.setAttribute('aria-valuemin', '0');
-    if(hpGhost){
-        hpGhost.style.width = (updateHudState.lastHpPct ?? pct) + '%';
-        requestAnimationFrame(()=>{ hpGhost.style.width = pct + '%'; });
-      }
-      updateHudState.lastHpPct = pct;
-    if(lead){
+  if (hpFill && hpBar && lead) {
+    const pct = Math.max(0, Math.min(100, (player.hp / (lead.maxHp || 1)) * 100));
+    hpFill.style.width = pct + '%';
+    hpBar.setAttribute('aria-valuenow', String(player.hp));
+    hpBar.setAttribute('aria-valuemax', String(lead.maxHp || 1));
+    hpBar.setAttribute('aria-valuemin', '0');
+    if (hpGhost) {
+      hpGhost.style.width = (updateHudState.lastHpPct ?? pct) + '%';
+      requestAnimationFrame(() => { hpGhost.style.width = pct + '%'; });
+    }
+    updateHudState.lastHpPct = pct;
+    if (lead) {
       const crit = player.hp > 0 && player.hp <= (lead.maxHp || 1) * 0.25;
       document.body.classList.toggle('hp-critical', crit);
       document.body.classList.toggle('hp-out', player.hp <= 0);
     }
   }
-    if(adrFill && adrBar && lead){
-      const apct = Math.max(0, Math.min(100, (lead.adr / (lead.maxAdr || 1)) * 100));
-      adrFill.style.width = apct + '%';
-      adrBar.setAttribute('aria-valuenow', String(lead.adr));
-      adrBar.setAttribute('aria-valuemax', String(lead.maxAdr || 1));
-      adrBar.setAttribute('aria-valuemin', '0');
-    if(musicBus){
+  if (adrFill && adrBar && lead) {
+    const apct = Math.max(0, Math.min(100, (lead.adr / (lead.maxAdr || 1)) * 100));
+    adrFill.style.width = apct + '%';
+    adrBar.setAttribute('aria-valuenow', String(lead.adr));
+    adrBar.setAttribute('aria-valuemax', String(lead.maxAdr || 1));
+    adrBar.setAttribute('aria-valuemin', '0');
+    if (musicBus) {
       const ratio = Math.max(0, Math.min(1, (lead.adr || 0) / (lead.maxAdr || 1)));
       let nextMood = hudAdrMood;
-      if(hudAdrMood === 'adr_high'){
-        if(ratio < 0.6) nextMood = null;
-      } else if(hudAdrMood === 'adr_low'){
-        if(ratio > 0.35) nextMood = null;
+      if (hudAdrMood === 'adr_high') {
+        if (ratio < 0.6) nextMood = null;
+      } else if (hudAdrMood === 'adr_low') {
+        if (ratio > 0.35) nextMood = null;
       } else {
-        if(ratio >= 0.75) nextMood = 'adr_high';
-        else if(ratio <= 0.2) nextMood = 'adr_low';
+        if (ratio >= 0.75) nextMood = 'adr_high';
+        else if (ratio <= 0.2) nextMood = 'adr_low';
         else nextMood = null;
       }
-      if(nextMood !== hudAdrMood){
-        if(nextMood){
+      if (nextMood !== hudAdrMood) {
+        if (nextMood) {
           const priority = nextMood === 'adr_high' ? 50 : 35;
           musicBus.emit('music:mood', { id: nextMood, source: 'adrenaline', priority });
         } else {
@@ -2119,56 +2119,56 @@ let activeTab = 'inv';
         hudAdrMood = nextMood;
       }
     }
-  } else if(musicBus && hudAdrMood){
+  } else if (musicBus && hudAdrMood) {
     musicBus.emit('music:mood', { id: null, source: 'adrenaline' });
     hudAdrMood = null;
   }
-  if(disp && fx){
+  if (disp && fx) {
     const filters = [];
-    if(lead && fx?.lowHpDesaturate !== false){
+    if (lead && fx?.lowHpDesaturate !== false) {
       const maxHp = lead.maxHp || 1;
       const ratio = maxHp > 0 ? Math.max(0, Math.min(1, player.hp / maxHp)) : 0;
       const threshold = 0.35;
-      if(ratio < threshold){
+      if (ratio < threshold) {
         const normalized = Math.min(1, (threshold - ratio) / threshold);
         const gray = Math.min(1, normalized * normalized * 1.05);
-        if(gray > 0.01) filters.push(`grayscale(${gray.toFixed(3)})`);
+        if (gray > 0.01) filters.push(`grayscale(${gray.toFixed(3)})`);
       }
     }
-    if(fx.grayscale) filters.push('grayscale(1)');
-    if(fx.adrenalineTint && lead){
+    if (fx.grayscale) filters.push('grayscale(1)');
+    if (fx.adrenalineTint && lead) {
       const ratio = Math.max(0, Math.min(1, lead.adr / (lead.maxAdr || 1)));
-      if(ratio > 0){
+      if (ratio > 0) {
         const sat = 1 + ratio * 1.5;
         const hue = ratio * 90;
         filters.push(`saturate(${sat}) hue-rotate(${hue}deg)`);
       }
     }
     const fstr = filters.join(' ');
-    if(fstr){
+    if (fstr) {
       disp.style.setProperty('--fxFilter', fstr);
-    }else{
+    } else {
       disp.style.removeProperty('--fxFilter');
     }
   }
-  if(statusIcons){
-    statusIcons.innerHTML='';
-    if(typeof buffs !== 'undefined' && lead){
-      for(const b of buffs){
-        if(b.target===lead){
-          const s=document.createElement('span');
+  if (statusIcons) {
+    statusIcons.innerHTML = '';
+    if (typeof buffs !== 'undefined' && lead) {
+      for (const b of buffs) {
+        if (b.target === lead) {
+          const s = document.createElement('span');
           statusIcons.appendChild(s);
         }
       }
     }
   }
-  if(hydEl){
+  if (hydEl) {
     const h = player.hydration;
     const maxHyd = 2;
-    if(typeof h === 'number' && h < maxHyd){
+    if (typeof h === 'number' && h < maxHyd) {
       hydEl.textContent = '💧'.repeat(h);
       hydEl.hidden = false;
-    }else{
+    } else {
       hydEl.textContent = '';
       hydEl.hidden = true;
     }
@@ -2176,23 +2176,23 @@ let activeTab = 'inv';
   updateHudState.lastHpVal = player.hp;
 }
 
-function resetPlayerAdrenalineFx(){
+function resetPlayerAdrenalineFx() {
   playerAdrenalineFx.intensity = 0;
   playerAdrenalineFx.scale = 1;
   playerAdrenalineFx.hueShift = 0;
   playerAdrenalineFx.saturation = 1;
   playerAdrenalineFx.brightness = 1;
   playerAdrenalineFx.glow = 0;
-  if(disp?.style?.removeProperty) disp.style.removeProperty('--fxBloom');
+  if (disp?.style?.removeProperty) disp.style.removeProperty('--fxBloom');
 }
 
-function pulseAdrenaline(t){
-  if(typeof leader !== 'function'){ resetPlayerAdrenalineFx(); return; }
+function pulseAdrenaline(t) {
+  if (typeof leader !== 'function') { resetPlayerAdrenalineFx(); return; }
   const lead = leader();
   const fx = globalThis.fxConfig;
-  if(!lead || fx?.adrenalineTint === false){ resetPlayerAdrenalineFx(); return; }
+  if (!lead || fx?.adrenalineTint === false) { resetPlayerAdrenalineFx(); return; }
   const ratio = Math.max(0, Math.min(1, lead.adr / (lead.maxAdr || 1)));
-  if(ratio <= 0){ resetPlayerAdrenalineFx(); return; }
+  if (ratio <= 0) { resetPlayerAdrenalineFx(); return; }
   const pulse = (Math.sin(t / 200) + 1) / 2;
   const intensity = ratio * pulse;
   const hue = 40 + ratio * 160;
@@ -2204,38 +2204,38 @@ function pulseAdrenaline(t){
   playerAdrenalineFx.glow = ratio * 0.6 + intensity * 0.4;
 }
 
-function showTab(which){
+function showTab(which) {
   activeTab = which;
-  if(window.innerWidth >= TAB_BREAKPOINT) return;
-  const inv=document.getElementById('inv'), partyEl=document.getElementById('party'), q=document.getElementById('quests');
-  const tInv=document.getElementById('tabInv'), tP=document.getElementById('tabParty'), tQ=document.getElementById('tabQuests');
+  if (window.innerWidth >= TAB_BREAKPOINT) return;
+  const inv = document.getElementById('inv'), partyEl = document.getElementById('party'), q = document.getElementById('quests');
+  const tInv = document.getElementById('tabInv'), tP = document.getElementById('tabParty'), tQ = document.getElementById('tabQuests');
   if (!inv) return;
-  inv.style.display=(which==='inv'?'grid':'none');
-  if(partyEl) partyEl.style.display=(which==='party'?'grid':'none');
-  if(q) q.style.display=(which==='quests'?'grid':'none');
-  for(const el of [tInv,tP,tQ]){
-    if(!el) continue;
+  inv.style.display = (which === 'inv' ? 'grid' : 'none');
+  if (partyEl) partyEl.style.display = (which === 'party' ? 'grid' : 'none');
+  if (q) q.style.display = (which === 'quests' ? 'grid' : 'none');
+  for (const el of [tInv, tP, tQ]) {
+    if (!el) continue;
     el.classList.remove('active');
-    if(el.setAttribute) el.setAttribute('aria-selected','false');
+    if (el.setAttribute) el.setAttribute('aria-selected', 'false');
   }
-  if(which==='inv' && tInv){ tInv.classList.add('active'); if(tInv.setAttribute) tInv.setAttribute('aria-selected','true'); }
-  if(which==='party' && tP){ tP.classList.add('active'); if(tP.setAttribute) tP.setAttribute('aria-selected','true'); }
-  if(which==='quests' && tQ){ tQ.classList.add('active'); if(tQ.setAttribute) tQ.setAttribute('aria-selected','true'); }
+  if (which === 'inv' && tInv) { tInv.classList.add('active'); if (tInv.setAttribute) tInv.setAttribute('aria-selected', 'true'); }
+  if (which === 'party' && tP) { tP.classList.add('active'); if (tP.setAttribute) tP.setAttribute('aria-selected', 'true'); }
+  if (which === 'quests' && tQ) { tQ.classList.add('active'); if (tQ.setAttribute) tQ.setAttribute('aria-selected', 'true'); }
 }
 
-function updateTabsLayout(){
+function updateTabsLayout() {
   const wide = window.innerWidth >= TAB_BREAKPOINT;
   const tabs = document.querySelector('.tabs');
-  const inv=document.getElementById('inv'), partyEl=document.getElementById('party'), q=document.getElementById('quests');
-  if(wide){
-    if(tabs) tabs.style.display='none';
+  const inv = document.getElementById('inv'), partyEl = document.getElementById('party'), q = document.getElementById('quests');
+  if (wide) {
+    if (tabs) tabs.style.display = 'none';
     if (inv) {
-      inv.style.display='grid';
-      partyEl.style.display='grid';
-      q.style.display='grid';
+      inv.style.display = 'grid';
+      partyEl.style.display = 'grid';
+      q.style.display = 'grid';
     }
   } else {
-    if(tabs) tabs.style.display='flex';
+    if (tabs) tabs.style.display = 'flex';
     showTab(activeTab);
   }
   updateCanvasStretch();
@@ -2245,80 +2245,80 @@ updateTabsLayout();
 
 if (document.getElementById('tabInv')) {
   const keyHandler = which => e => {
-    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); showTab(which); }
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showTab(which); }
   };
-  const tabInv=document.getElementById('tabInv');
-  const tabParty=document.getElementById('tabParty');
-  const tabQuests=document.getElementById('tabQuests');
-  tabInv.onclick=()=>showTab('inv');
-  tabParty.onclick=()=>showTab('party');
-  tabQuests.onclick=()=>showTab('quests');
-  tabInv.onkeydown=keyHandler('inv');
-  tabParty.onkeydown=keyHandler('party');
-  tabQuests.onkeydown=keyHandler('quests');
+  const tabInv = document.getElementById('tabInv');
+  const tabParty = document.getElementById('tabParty');
+  const tabQuests = document.getElementById('tabQuests');
+  tabInv.onclick = () => showTab('inv');
+  tabParty.onclick = () => showTab('party');
+  tabQuests.onclick = () => showTab('quests');
+  tabInv.onkeydown = keyHandler('inv');
+  tabParty.onkeydown = keyHandler('party');
+  tabQuests.onkeydown = keyHandler('quests');
 }
 // ===== Renderers =====
 
-function calcItemValue(it, member){
-  if(!it) return 0;
+function calcItemValue(it, member) {
+  if (!it) return 0;
   const m = member || party[selectedMember] || party[0];
   let score = it.value ?? 0;
-  for(const v of Object.values(it.mods || {})){
+  for (const v of Object.values(it.mods || {})) {
     score += v;
   }
-  if(it.type === 'weapon' && m && m.stats){
+  if (it.type === 'weapon' && m && m.stats) {
     const isRanged = Array.isArray(it.tags) && it.tags.includes('ranged');
     const stat = isRanged ? m.stats.AGI : m.stats.STR;
     score += (stat || 0) * 2;
   }
   return score;
 }
-let dropMode=false;
-const dropSet=new Set();
-let invSlotFilter='';
+let dropMode = false;
+const dropSet = new Set();
+let invSlotFilter = '';
 
-const inventorySlotOrder=['weapon','armor','trinket','consumable','spoils-cache','quest','misc'];
-function resolveInventorySlotKey(item){
-  if(!item||typeof item!=='object') return 'misc';
-  const slot=(item.slot||item.type||'').toString().trim().toLowerCase();
-  return slot||'misc';
+const inventorySlotOrder = ['weapon', 'armor', 'trinket', 'consumable', 'spoils-cache', 'quest', 'misc'];
+function resolveInventorySlotKey(item) {
+  if (!item || typeof item !== 'object') return 'misc';
+  const slot = (item.slot || item.type || '').toString().trim().toLowerCase();
+  return slot || 'misc';
 }
-function formatInventorySlotLabel(key){
-  if(!key) return 'All Slots';
-  if(key==='misc') return 'Other';
-  return key.split(/[-_]/).map(part=>{
-    if(!part) return part;
-    return part.charAt(0).toUpperCase()+part.slice(1);
+function formatInventorySlotLabel(key) {
+  if (!key) return 'All Slots';
+  if (key === 'misc') return 'Other';
+  return key.split(/[-_]/).map(part => {
+    if (!part) return part;
+    return part.charAt(0).toUpperCase() + part.slice(1);
   }).join(' ');
 }
-  function sortInventorySlotKeys(keys: Iterable<string>){
-    return Array.from(keys).sort((a,b)=>{
-    const idxA=inventorySlotOrder.indexOf(a);
-    const idxB=inventorySlotOrder.indexOf(b);
-    if(idxA!==-1&&idxB!==-1) return idxA-idxB;
-    if(idxA!==-1) return -1;
-    if(idxB!==-1) return 1;
+function sortInventorySlotKeys(keys: Iterable<string>) {
+  return Array.from(keys).sort((a, b) => {
+    const idxA = inventorySlotOrder.indexOf(a);
+    const idxB = inventorySlotOrder.indexOf(b);
+    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+    if (idxA !== -1) return -1;
+    if (idxB !== -1) return 1;
     return a.localeCompare(b);
   });
 }
-function renderInv(){
-  const inv=document.getElementById('inv');
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals));
-  inv.innerHTML='';
-  if(dropMode){
-    const ctrl=document.createElement('div');
-    ctrl.className='inventory-controls';
-    const ok=document.createElement('button');
-    ok.className='btn';
-      ok.textContent='Drop Selected';
-        ok.onclick=()=>{ if(dropSet.size) globals.dropItems?.(Array.from(dropSet) as number[]); dropMode=false; dropSet.clear(); renderInv(); updateHUD?.(); };
-    const cancel=document.createElement('button');
-    cancel.className='btn';
-    cancel.textContent='Cancel';
-    cancel.onclick=()=>{ dropMode=false; dropSet.clear(); renderInv(); };
+function renderInv() {
+  const inv = document.getElementById('inv');
+  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
+  inv.innerHTML = '';
+  if (dropMode) {
+    const ctrl = document.createElement('div');
+    ctrl.className = 'inventory-controls';
+    const ok = document.createElement('button');
+    ok.className = 'btn';
+    ok.textContent = 'Drop Selected';
+    ok.onclick = () => { if (dropSet.size) globals.dropItems?.(Array.from(dropSet) as number[]); dropMode = false; dropSet.clear(); renderInv(); updateHUD?.(); };
+    const cancel = document.createElement('button');
+    cancel.className = 'btn';
+    cancel.textContent = 'Cancel';
+    cancel.onclick = () => { dropMode = false; dropSet.clear(); renderInv(); };
     ctrl.appendChild(ok); ctrl.appendChild(cancel);
     inv.appendChild(ctrl);
-    if(player.inv.length===0){ inv.appendChild(Object.assign(document.createElement('div'),{className:'slot muted',textContent:'(empty)'})); return; }
+    if (player.inv.length === 0) { inv.appendChild(Object.assign(document.createElement('div'), { className: 'slot muted', textContent: '(empty)' })); return; }
     const dropEntries = player.inv.map((it, index) => ({ it, index }));
     dropEntries.sort((a, b) => {
       const nameA = a.it?.name || '';
@@ -2329,93 +2329,93 @@ function renderInv(){
     });
     dropEntries.forEach(({ it, index }) => {
       const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
-      const row=document.createElement('div');
-      row.className='slot';
-      const cb=document.createElement('input');
-      cb.type='checkbox';
+      const row = document.createElement('div');
+      row.className = 'slot';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
       cb.checked = dropSet.has(index);
-      cb.onchange=()=>{ if(cb.checked) dropSet.add(index); else dropSet.delete(index); };
+      cb.onchange = () => { if (cb.checked) dropSet.add(index); else dropSet.delete(index); };
       row.appendChild(cb);
-      const span=document.createElement('span');
-      span.textContent=qty>1?`${it.name} x${qty}`:it.name;
+      const span = document.createElement('span');
+      span.textContent = qty > 1 ? `${it.name} x${qty}` : it.name;
       row.appendChild(span);
       inv.appendChild(row);
     });
     return;
   }
-  const ctrl=document.createElement('div');
-  ctrl.className='inventory-controls';
-  const dropBtn=document.createElement('button');
-  dropBtn.className='btn';
-  dropBtn.textContent='Drop';
-  dropBtn.onclick=()=>{ dropMode=true; dropSet.clear(); renderInv(); };
+  const ctrl = document.createElement('div');
+  ctrl.className = 'inventory-controls';
+  const dropBtn = document.createElement('button');
+  dropBtn.className = 'btn';
+  dropBtn.textContent = 'Drop';
+  dropBtn.onclick = () => { dropMode = true; dropSet.clear(); renderInv(); };
   ctrl.appendChild(dropBtn);
 
-  const slotKeys=new Set<string>();
-  player.inv.forEach(it=>{ slotKeys.add(resolveInventorySlotKey(it)); });
-  const sortedKeys=sortInventorySlotKeys(slotKeys);
-  if(sortedKeys.length){
-    if(!sortedKeys.includes(invSlotFilter)) invSlotFilter='';
-  }else if(invSlotFilter){
-    invSlotFilter='';
+  const slotKeys = new Set<string>();
+  player.inv.forEach(it => { slotKeys.add(resolveInventorySlotKey(it)); });
+  const sortedKeys = sortInventorySlotKeys(slotKeys);
+  if (sortedKeys.length) {
+    if (!sortedKeys.includes(invSlotFilter)) invSlotFilter = '';
+  } else if (invSlotFilter) {
+    invSlotFilter = '';
   }
-  const filterLabel=document.createElement('label');
-  filterLabel.htmlFor='inventorySlotFilter';
-  filterLabel.className='inventory-filter';
-  filterLabel.textContent='Slot';
-  const filterSelect=document.createElement('select');
-  filterSelect.id='inventorySlotFilter';
-  const allOption=document.createElement('option');
-  allOption.value='';
-  allOption.textContent=formatInventorySlotLabel('');
+  const filterLabel = document.createElement('label');
+  filterLabel.htmlFor = 'inventorySlotFilter';
+  filterLabel.className = 'inventory-filter';
+  filterLabel.textContent = 'Slot';
+  const filterSelect = document.createElement('select');
+  filterSelect.id = 'inventorySlotFilter';
+  const allOption = document.createElement('option');
+  allOption.value = '';
+  allOption.textContent = formatInventorySlotLabel('');
   filterSelect.appendChild(allOption);
-  sortedKeys.forEach(key=>{
-    const opt=document.createElement('option');
-    opt.value=key;
-    opt.textContent=formatInventorySlotLabel(key);
+  sortedKeys.forEach(key => {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = formatInventorySlotLabel(key);
     filterSelect.appendChild(opt);
   });
-  filterSelect.value=invSlotFilter;
-  filterSelect.onchange=()=>{ invSlotFilter=filterSelect.value; renderInv(); };
+  filterSelect.value = invSlotFilter;
+  filterSelect.onchange = () => { invSlotFilter = filterSelect.value; renderInv(); };
   filterLabel.appendChild(filterSelect);
   ctrl.appendChild(filterLabel);
 
   inv.appendChild(ctrl);
-  if(player.inv.length===0){
-    inv.appendChild(Object.assign(document.createElement('div'),{className:'slot muted',textContent:'(empty)'}));
+  if (player.inv.length === 0) {
+    inv.appendChild(Object.assign(document.createElement('div'), { className: 'slot muted', textContent: '(empty)' }));
     return;
   }
-    const caches: Record<string, { items: any[]; total: number }> = {};
-    const others: any[] = [];
+  const caches: Record<string, { items: any[]; total: number }> = {};
+  const others: any[] = [];
   player.inv.forEach(it => {
-    const slotKey=resolveInventorySlotKey(it);
-    if(invSlotFilter && slotKey!==invSlotFilter) return;
+    const slotKey = resolveInventorySlotKey(it);
+    if (invSlotFilter && slotKey !== invSlotFilter) return;
     const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
-      if(it.type === 'spoils-cache'){
-        const rankKey = String(it?.rank ?? '');
-        const bucket = caches[rankKey] || (caches[rankKey] = { items: [], total: 0 });
-        bucket.items.push(it);
-        bucket.total += qty;
-      } else {
+    if (it.type === 'spoils-cache') {
+      const rankKey = String(it?.rank ?? '');
+      const bucket = caches[rankKey] || (caches[rankKey] = { items: [], total: 0 });
+      bucket.items.push(it);
+      bucket.total += qty;
+    } else {
       others.push(it);
     }
   });
-    const member=party[selectedMember]||party[0];
-    const canEquipFn = typeof globals.canEquip === 'function' ? globals.canEquip : null;
-    const equipRestrictionsFn = typeof globals.getEquipRestrictions === 'function' ? globals.getEquipRestrictions : null;
+  const member = party[selectedMember] || party[0];
+  const canEquipFn = typeof globals.canEquip === 'function' ? globals.canEquip : null;
+  const equipRestrictionsFn = typeof globals.getEquipRestrictions === 'function' ? globals.getEquipRestrictions : null;
   type EquipRestriction = { allowed?: boolean; levelMet?: boolean; levelRequired?: number; reasons?: string[] };
   const fallbackRestrictions = (member, item): EquipRestriction | null => {
-    if(!member || !item || !['weapon','armor','trinket'].includes(item.type)) return null;
+    if (!member || !item || !['weapon', 'armor', 'trinket'].includes(item.type)) return null;
     const atk = Number.isFinite(item?.mods?.ATK) ? item.mods.ATK : 0;
     let minLevel = 1;
-    if(item.type === 'weapon'){
-      if(atk >= 13) minLevel = 7;
-      else if(atk >= 11) minLevel = 6;
-      else if(atk >= 9) minLevel = 5;
-      else if(atk >= 7) minLevel = 4;
-      else if(atk >= 5) minLevel = 3;
+    if (item.type === 'weapon') {
+      if (atk >= 13) minLevel = 7;
+      else if (atk >= 11) minLevel = 6;
+      else if (atk >= 9) minLevel = 5;
+      else if (atk >= 7) minLevel = 4;
+      else if (atk >= 5) minLevel = 3;
     }
-    if(Number.isFinite(item?.equip?.minLevel)){
+    if (Number.isFinite(item?.equip?.minLevel)) {
       minLevel = Math.max(1, Math.floor(item.equip.minLevel));
     }
     const lvl = Number.isFinite(member?.lvl) ? member.lvl : 1;
@@ -2427,119 +2427,119 @@ function renderInv(){
       reasons: (!levelMet && minLevel > 1) ? [`Requires level ${minLevel}.`] : []
     };
   };
-    const describeRoles = typeof globals.describeRequiredRoles === 'function' ? globals.describeRequiredRoles : () => '';
+  const describeRoles = typeof globals.describeRequiredRoles === 'function' ? globals.describeRequiredRoles : () => '';
   const suggestions = {};
-  if(member){
-    for(const slot of ['weapon','armor','trinket']){
-      const eq=member.equip[slot];
-      const candidates = others.filter(it => it.type===slot && (!eq || calcItemValue(it)>calcItemValue(eq)) && (!canEquipFn || canEquipFn(member, it)));
-      if(candidates.length){
-        const max=Math.max(...candidates.map(it=>calcItemValue(it)));
-        const best=candidates.filter(it=>calcItemValue(it)===max);
-        suggestions[slot]=best[Math.floor(Math.random()*best.length)];
+  if (member) {
+    for (const slot of ['weapon', 'armor', 'trinket']) {
+      const eq = member.equip[slot];
+      const candidates = others.filter(it => it.type === slot && (!eq || calcItemValue(it) > calcItemValue(eq)) && (!canEquipFn || canEquipFn(member, it)));
+      if (candidates.length) {
+        const max = Math.max(...candidates.map(it => calcItemValue(it)));
+        const best = candidates.filter(it => calcItemValue(it) === max);
+        suggestions[slot] = best[Math.floor(Math.random() * best.length)];
       }
     }
   }
   Object.entries(caches).forEach(([rank, info]) => {
     const items = info.items;
     const total = info.total || items.length;
-    const row=document.createElement('div');
-    row.className='slot cache-slot';
+    const row = document.createElement('div');
+    row.className = 'slot cache-slot';
     const icon = SpoilsCache.renderIcon(rank, () => {
       SpoilsCache.open(rank);
     });
-    if(icon){
-      const wrap=document.createElement('div');
-      wrap.style.display='flex';
-      wrap.style.alignItems='center';
-      wrap.style.gap='6px';
+    if (icon) {
+      const wrap = document.createElement('div');
+      wrap.style.display = 'flex';
+      wrap.style.alignItems = 'center';
+      wrap.style.gap = '6px';
       wrap.appendChild(icon);
-      const count=document.createElement('span');
-      count.className='cache-count';
-      count.textContent='x'+total;
+      const count = document.createElement('span');
+      count.className = 'cache-count';
+      count.textContent = 'x' + total;
       wrap.appendChild(count);
       row.appendChild(wrap);
     }
-    if(total>1){
-      const btn=document.createElement('button');
-      btn.className='btn jitter';
-      btn.textContent='Open All';
-      btn.onclick=()=>{ SpoilsCache.openAll(rank); };
+    if (total > 1) {
+      const btn = document.createElement('button');
+      btn.className = 'btn jitter';
+      btn.textContent = 'Open All';
+      btn.onclick = () => { SpoilsCache.openAll(rank); };
       row.appendChild(btn);
     }
     inv.appendChild(row);
   });
   others.forEach(it => {
     const qty = Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
-    const row=document.createElement('div');
-    row.className='slot inventory-slot';
-    if(['weapon','armor','trinket'].includes(it.type) && suggestions[it.type]===it){
+    const row = document.createElement('div');
+    row.className = 'slot inventory-slot';
+    if (['weapon', 'armor', 'trinket'].includes(it.type) && suggestions[it.type] === it) {
       row.classList.add('better');
     }
     const restriction = (member ? (equipRestrictionsFn ? equipRestrictionsFn(member, it) : fallbackRestrictions(member, it)) : null) as EquipRestriction | null;
-    const baseLabel = it.name + (['weapon','armor','trinket'].includes(it.type)?` [${it.type}]`:'');
-    const label = (it.cursed && it.cursedKnown)? `${baseLabel} (cursed)` : baseLabel;
-    const labelSpan=document.createElement('span');
-    labelSpan.className='inventory-label';
-    labelSpan.textContent=label;
-    if(restriction && !restriction.levelMet && restriction.levelRequired > 1){
+    const baseLabel = it.name + (['weapon', 'armor', 'trinket'].includes(it.type) ? ` [${it.type}]` : '');
+    const label = (it.cursed && it.cursedKnown) ? `${baseLabel} (cursed)` : baseLabel;
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'inventory-label';
+    labelSpan.textContent = label;
+    if (restriction && !restriction.levelMet && restriction.levelRequired > 1) {
       row.classList.add('level-locked');
       labelSpan.classList.add('level-locked-label');
     }
-    const btnWrap=document.createElement('div');
-    btnWrap.className='inventory-actions';
-    if(['weapon','armor','trinket'].includes(it.type)){
-      const equipBtn=document.createElement('button');
-      equipBtn.className='btn';
-      equipBtn.dataset.a='equip';
+    const btnWrap = document.createElement('div');
+    btnWrap.className = 'inventory-actions';
+    if (['weapon', 'armor', 'trinket'].includes(it.type)) {
+      const equipBtn = document.createElement('button');
+      equipBtn.className = 'btn';
+      equipBtn.dataset.a = 'equip';
       const reqText = describeRoles(it);
       let allowed = true;
-      if(member){
-        if(restriction){
+      if (member) {
+        if (restriction) {
           allowed = restriction.allowed;
-        } else if(canEquipFn){
+        } else if (canEquipFn) {
           allowed = canEquipFn(member, it);
         }
       }
       let title = 'Equip';
-      if(!allowed){
-        if(restriction?.reasons?.length){
+      if (!allowed) {
+        if (restriction?.reasons?.length) {
           title = restriction.reasons.join(' ');
-        } else if(reqText){
+        } else if (reqText) {
           title = `Only ${reqText} can equip`;
         } else {
           title = 'Cannot equip';
         }
         equipBtn.disabled = true;
-      } else if(restriction && restriction.levelRequired > 1){
+      } else if (restriction && restriction.levelRequired > 1) {
         title = `Equip (requires level ${restriction.levelRequired})`;
       }
       equipBtn.title = title;
       equipBtn.setAttribute('aria-label', title);
-      equipBtn.textContent='⚙';
-      equipBtn.onclick=()=> equipItem(selectedMember, player.inv.indexOf(it));
+      equipBtn.textContent = '⚙';
+      equipBtn.onclick = () => equipItem(selectedMember, player.inv.indexOf(it));
       btnWrap.appendChild(equipBtn);
     }
-    if(it.use){
-      const useBtn=document.createElement('button');
-      useBtn.className='btn';
-      useBtn.dataset.a='use';
-      useBtn.title='Use';
-      useBtn.setAttribute('aria-label','Use');
-      useBtn.textContent='⚡';
-      useBtn.onclick=()=> useItem(player.inv.indexOf(it));
+    if (it.use) {
+      const useBtn = document.createElement('button');
+      useBtn.className = 'btn';
+      useBtn.dataset.a = 'use';
+      useBtn.title = 'Use';
+      useBtn.setAttribute('aria-label', 'Use');
+      useBtn.textContent = '⚡';
+      useBtn.onclick = () => useItem(player.inv.indexOf(it));
       btnWrap.appendChild(useBtn);
     }
     row.appendChild(labelSpan);
-    if(qty>1){
-      const countSpan=document.createElement('span');
-      countSpan.className='stack-count';
-      countSpan.textContent='x'+qty;
+    if (qty > 1) {
+      const countSpan = document.createElement('span');
+      countSpan.className = 'stack-count';
+      countSpan.textContent = 'x' + qty;
       row.appendChild(countSpan);
     }
     row.appendChild(btnWrap);
-      const mods = (Object.entries(it.mods || {}) as [string, number][]) 
-        .map(([k, v]) => `${k} ${v >= 0 ? '+' : ''}${v}`)
+    const mods = (Object.entries(it.mods || {}) as [string, number][])
+      .map(([k, v]) => `${k} ${v >= 0 ? '+' : ''}${v}`)
       .join(' ');
     const use = it.use ? `${it.use.type}${it.use.amount ? ` ${it.use.amount}` : ''}` : '';
     const valueStr = (() => {
@@ -2548,7 +2548,7 @@ function renderInv(){
         ? `${v} ${CURRENCY}`
         : String(v);
     })();
-    const nameLine = baseLabel + ((it.cursed && it.cursedKnown)? ' (cursed)' : '');
+    const nameLine = baseLabel + ((it.cursed && it.cursedKnown) ? ' (cursed)' : '');
     const levelTip = restriction && restriction.levelRequired > 1
       ? `Requires level ${restriction.levelRequired}`
       : '';
@@ -2556,462 +2556,462 @@ function renderInv(){
       nameLine,
       it.desc || '',
       mods ? `Mods: ${mods}` : '',
-      use  ? `Use: ${use}`   : '',
+      use ? `Use: ${use}` : '',
       `Rarity: ${it.rarity}`,
       `Value: ${valueStr}`,
       levelTip
     ].filter(Boolean).join('\n');
     row.title = tip;
-    row.onclick=e=>{ if(e.target.tagName==='BUTTON') return; if(['weapon','armor','trinket'].includes(it.type)) equipItem(selectedMember, player.inv.indexOf(it)); };
+    row.onclick = e => { if (e.target.tagName === 'BUTTON') return; if (['weapon', 'armor', 'trinket'].includes(it.type)) equipItem(selectedMember, player.inv.indexOf(it)); };
     inv.appendChild(row);
   });
 }
-  type EngineQuest = { id?: string; title?: string; status?: string; [key: string]: unknown };
-  function renderQuests(){
-    const host=document.getElementById('quests');
-    if(!host) return;
-    host.innerHTML='';
-    const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals));
-    const questList = globals.quests ? (Object.values(globals.quests) as EngineQuest[]) : [];
-    const list=questList.filter(v=> v && v.status!=='available');
-  if(list.length===0){
-    host.innerHTML='<div class="q muted">(no quests)</div>';
+type EngineQuest = { id?: string; title?: string; status?: string;[key: string]: unknown };
+function renderQuests() {
+  const host = document.getElementById('quests');
+  if (!host) return;
+  host.innerHTML = '';
+  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
+  const questList = globals.quests ? (Object.values(globals.quests) as EngineQuest[]) : [];
+  const list = questList.filter(v => v && v.status !== 'available');
+  if (list.length === 0) {
+    host.innerHTML = '<div class="q muted">(no quests)</div>';
     return;
   }
-  const partyLoc=questPartyLocation();
-  list.forEach(q=>{
-    const progress=questProgressInfo(q);
-    const target=questCompassTarget(q, partyLoc, progress);
-    const card=document.createElement('div');
-    card.className='q';
-    card.dataset.questId=q.id || '';
+  const partyLoc = questPartyLocation();
+  list.forEach(q => {
+    const progress = questProgressInfo(q);
+    const target = questCompassTarget(q, partyLoc, progress);
+    const card = document.createElement('div');
+    card.className = 'q';
+    card.dataset.questId = q.id || '';
     card.appendChild(renderQuestCompass(q, target, partyLoc));
-    const info=document.createElement('div');
-    info.className='quest-info';
-    const header=document.createElement('div');
-    header.className='quest-header';
-    const title=document.createElement('b');
-    title.className='quest-title';
-    title.textContent=q.title || q.id;
+    const info = document.createElement('div');
+    info.className = 'quest-info';
+    const header = document.createElement('div');
+    header.className = 'quest-header';
+    const title = document.createElement('b');
+    title.className = 'quest-title';
+    title.textContent = q.title || q.id;
     header.appendChild(title);
-    if(progress.required>0){
-      const prog=document.createElement('span');
-      prog.className='quest-progress';
-      prog.textContent=`${progress.total}/${progress.required}`;
+    if (progress.required > 0) {
+      const prog = document.createElement('span');
+      prog.className = 'quest-progress';
+      prog.textContent = `${progress.total}/${progress.required}`;
       header.appendChild(prog);
     }
     info.appendChild(header);
-    const desc=document.createElement('div');
-    desc.className='small quest-desc';
-    desc.textContent=questDescriptionText(q, progress, target);
+    const desc = document.createElement('div');
+    desc.className = 'small quest-desc';
+    desc.textContent = questDescriptionText(q, progress, target);
     info.appendChild(desc);
-    if(target && target.label && target.type!=='completed'){
-      const targetRow=document.createElement('div');
-      targetRow.className='small quest-target';
-      targetRow.textContent=questTargetText(target, partyLoc);
+    if (target && target.label && target.type !== 'completed') {
+      const targetRow = document.createElement('div');
+      targetRow.className = 'small quest-target';
+      targetRow.textContent = questTargetText(target, partyLoc);
       info.appendChild(targetRow);
     }
-    const status=document.createElement('div');
-    status.className='status';
-    status.textContent=q.status || 'active';
+    const status = document.createElement('div');
+    status.className = 'status';
+    status.textContent = q.status || 'active';
     info.appendChild(status);
     card.appendChild(info);
     host.appendChild(card);
   });
 }
 
-function updateQuestCompassTargets(){
-  const questData=globalThis.quests;
-  if(!questData) return;
-  const host=document.getElementById('quests');
-  if(!host) return;
-  const partyLoc=questPartyLocation();
-  host.querySelectorAll('.q').forEach(card=>{
-    const questId=card.dataset?.questId;
-    if(!questId) return;
-    const q=questData[questId];
-    if(!q) return;
-    const progress=questProgressInfo(q);
-    const target=questCompassTarget(q, partyLoc, progress);
-    const compass=card.querySelector('.quest-compass');
-    if(compass){
-      const canvas=compass.querySelector('canvas');
-      if(canvas) drawQuestCompass(canvas, target, partyLoc);
-      compass.title=questCompassTooltip(target, partyLoc);
+function updateQuestCompassTargets() {
+  const questData = globalThis.quests;
+  if (!questData) return;
+  const host = document.getElementById('quests');
+  if (!host) return;
+  const partyLoc = questPartyLocation();
+  host.querySelectorAll('.q').forEach(card => {
+    const questId = card.dataset?.questId;
+    if (!questId) return;
+    const q = questData[questId];
+    if (!q) return;
+    const progress = questProgressInfo(q);
+    const target = questCompassTarget(q, partyLoc, progress);
+    const compass = card.querySelector('.quest-compass');
+    if (compass) {
+      const canvas = compass.querySelector('canvas');
+      if (canvas) drawQuestCompass(canvas, target, partyLoc);
+      compass.title = questCompassTooltip(target, partyLoc);
     }
-    const desc=card.querySelector('.quest-desc');
-    if(desc) desc.textContent=questDescriptionText(q, progress, target);
-    const targetRow=card.querySelector('.quest-target');
-    if(target && target.label && target.type!=='completed'){
-      if(targetRow){
-        targetRow.textContent=questTargetText(target, partyLoc);
-      }else{
-        const info=card.querySelector('.quest-info');
-        const status=card.querySelector('.status');
-        if(info){
-          const row=document.createElement('div');
-          row.className='small quest-target';
-          row.textContent=questTargetText(target, partyLoc);
+    const desc = card.querySelector('.quest-desc');
+    if (desc) desc.textContent = questDescriptionText(q, progress, target);
+    const targetRow = card.querySelector('.quest-target');
+    if (target && target.label && target.type !== 'completed') {
+      if (targetRow) {
+        targetRow.textContent = questTargetText(target, partyLoc);
+      } else {
+        const info = card.querySelector('.quest-info');
+        const status = card.querySelector('.status');
+        if (info) {
+          const row = document.createElement('div');
+          row.className = 'small quest-target';
+          row.textContent = questTargetText(target, partyLoc);
           info.insertBefore(row, status || null);
         }
       }
-    }else if(targetRow){
+    } else if (targetRow) {
       targetRow.remove();
     }
   });
 }
 
-  function questPartyLocation(){
-    const loc={ map:'world', x:0, y:0 };
-    const p=(!Array.isArray(party) && typeof party==='object') ? party as { map?: string; x?: number; y?: number } : null;
-    const globalState = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals)).state;
-    if(p && typeof p.map==='string') loc.map=p.map;
-    else if(globalState && typeof globalState.map==='string') loc.map=globalState.map;
-    if(p && typeof p.x==='number') loc.x=p.x;
-    else if(globalState?.mapEntry && typeof globalState.mapEntry.x==='number') loc.x=globalState.mapEntry.x;
-    if(p && typeof p.y==='number') loc.y=p.y;
-    else if(globalState?.mapEntry && typeof globalState.mapEntry.y==='number') loc.y=globalState.mapEntry.y;
-    return loc;
-  }
+function questPartyLocation() {
+  const loc = { map: 'world', x: 0, y: 0 };
+  const p = (!Array.isArray(party) && typeof party === 'object') ? party as { map?: string; x?: number; y?: number } : null;
+  const globalState = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals)).state;
+  if (p && typeof p.map === 'string') loc.map = p.map;
+  else if (globalState && typeof globalState.map === 'string') loc.map = globalState.map;
+  if (p && typeof p.x === 'number') loc.x = p.x;
+  else if (globalState?.mapEntry && typeof globalState.mapEntry.x === 'number') loc.x = globalState.mapEntry.x;
+  if (p && typeof p.y === 'number') loc.y = p.y;
+  else if (globalState?.mapEntry && typeof globalState.mapEntry.y === 'number') loc.y = globalState.mapEntry.y;
+  return loc;
+}
 
-function questProgressInfo(q){
-  const required=Math.max(0, q.count || (q.item || q.itemTag ? 1 : 0));
-  const turnedIn=typeof q.progress==='number'?q.progress:0;
-  const countFn=typeof countItems==='function'?countItems:null;
-  let carried=0;
-  if(countFn){
-    if(q.item) carried=countFn(q.item);
-    else if(q.itemTag) carried=countFn(q.itemTag);
+function questProgressInfo(q) {
+  const required = Math.max(0, q.count || (q.item || q.itemTag ? 1 : 0));
+  const turnedIn = typeof q.progress === 'number' ? q.progress : 0;
+  const countFn = typeof countItems === 'function' ? countItems : null;
+  let carried = 0;
+  if (countFn) {
+    if (q.item) carried = countFn(q.item);
+    else if (q.itemTag) carried = countFn(q.itemTag);
   }
-  const total=Math.min(required, turnedIn + carried);
-  const need=Math.max(0, required - turnedIn);
-  const hasFlag=!q.reqFlag || (typeof flagValue==='function' ? !!flagValue(q.reqFlag) : true);
-  const ready=q.status==='active' && required>0 && ((turnedIn>=required) || (carried>=need && hasFlag));
+  const total = Math.min(required, turnedIn + carried);
+  const need = Math.max(0, required - turnedIn);
+  const hasFlag = !q.reqFlag || (typeof flagValue === 'function' ? !!flagValue(q.reqFlag) : true);
+  const ready = q.status === 'active' && required > 0 && ((turnedIn >= required) || (carried >= need && hasFlag));
   return { required, turnedIn, carried, total, need, ready };
 }
 
-function questMapDisplayName(id){
-  if(!id) return '';
-  if(typeof mapLabel === 'function'){
+function questMapDisplayName(id) {
+  if (!id) return '';
+  if (typeof mapLabel === 'function') {
     const label = mapLabel(id);
-    if(label && typeof label === 'string' && label.trim()) return label;
+    if (label && typeof label === 'string' && label.trim()) return label;
   }
-  if(typeof mapLabels === 'object' && mapLabels){
+  if (typeof mapLabels === 'object' && mapLabels) {
     const alt = mapLabels[id];
-    if(typeof alt === 'string' && alt.trim()) return alt.trim();
+    if (typeof alt === 'string' && alt.trim()) return alt.trim();
   }
-  const str = String(id).replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
-  if(!str) return '';
-  return str.replace(/\b\w/g,c=>c.toUpperCase());
+  const str = String(id).replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!str) return '';
+  return str.replace(/\b\w/g, c => c.toUpperCase());
 }
 
-function questDescriptionText(q, progress, target){
-  if(q.status==='completed'){
-    if(q.outcome) return q.outcome;
-    return typeof q.desc==='string'?q.desc:'';
+function questDescriptionText(q, progress, target) {
+  if (q.status === 'completed') {
+    if (q.outcome) return q.outcome;
+    return typeof q.desc === 'string' ? q.desc : '';
   }
-  if(progress.ready){
-    const giver=Array.isArray(q.givers) && q.givers.length ? q.givers[0] : null;
-    const giverName=giver ? (giver.name || humanizeQuestId(giver.id)) : '';
-    const itemName=questItemName(q);
-    if(giverName && itemName) return `Return the ${itemName} to ${giverName}.`;
-    if(giverName) return `Return to ${giverName}.`;
-    if(itemName) return `Return the ${itemName}.`;
+  if (progress.ready) {
+    const giver = Array.isArray(q.givers) && q.givers.length ? q.givers[0] : null;
+    const giverName = giver ? (giver.name || humanizeQuestId(giver.id)) : '';
+    const itemName = questItemName(q);
+    if (giverName && itemName) return `Return the ${itemName} to ${giverName}.`;
+    if (giverName) return `Return to ${giverName}.`;
+    if (itemName) return `Return the ${itemName}.`;
   }
-  if(target && target.type==='offmap' && target.map){
+  if (target && target.type === 'offmap' && target.map) {
     const mapName = questMapDisplayName(target.map) || target.map;
     return `Objective located in ${mapName}.`;
   }
-  return typeof q.desc==='string'?q.desc:'';
+  return typeof q.desc === 'string' ? q.desc : '';
 }
 
-function questTargetText(target, partyLoc){
-  if(!target) return '';
-  if(target.type==='npc'){
-    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` (${questMapDisplayName(target.map) || target.map})` : '';
+function questTargetText(target, partyLoc) {
+  if (!target) return '';
+  if (target.type === 'npc') {
+    const mapNote = target.map && partyLoc?.map && target.map !== partyLoc.map ? ` (${questMapDisplayName(target.map) || target.map})` : '';
     return `Return to ${target.label || 'the quest giver'}${mapNote}`;
   }
-  if(target.type==='item'){
-    const coords=(typeof target.x==='number' && typeof target.y==='number')?` (${target.x}, ${target.y})`:'';
-    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` — ${questMapDisplayName(target.map) || target.map}` : '';
-    const label=target.label || 'the objective';
+  if (target.type === 'item') {
+    const coords = (typeof target.x === 'number' && typeof target.y === 'number') ? ` (${target.x}, ${target.y})` : '';
+    const mapNote = target.map && partyLoc?.map && target.map !== partyLoc.map ? ` — ${questMapDisplayName(target.map) || target.map}` : '';
+    const label = target.label || 'the objective';
     return `Search near ${label}${coords}${mapNote}`;
   }
-  if(target.type==='offmap'){
+  if (target.type === 'offmap') {
     const mapName = target.map ? (questMapDisplayName(target.map) || target.map) : '';
     return mapName ? `Objective located in ${mapName}` : 'Objective located elsewhere';
   }
   return '';
 }
 
-function questCompassTarget(q, partyLoc, progress){
-  if(!q) return null;
-  if(q.status==='completed') return { type:'completed', label:q.title };
-  if(progress.ready){
-    const giver=Array.isArray(q.givers) && q.givers.length ? q.givers[0] : null;
-    if(giver){
-      const label=giver.name || humanizeQuestId(giver.id);
-      if(partyLoc && giver.map && partyLoc.map && giver.map!==partyLoc.map){
-        return { type:'offmap', map:giver.map, label };
+function questCompassTarget(q, partyLoc, progress) {
+  if (!q) return null;
+  if (q.status === 'completed') return { type: 'completed', label: q.title };
+  if (progress.ready) {
+    const giver = Array.isArray(q.givers) && q.givers.length ? q.givers[0] : null;
+    if (giver) {
+      const label = giver.name || humanizeQuestId(giver.id);
+      if (partyLoc && giver.map && partyLoc.map && giver.map !== partyLoc.map) {
+        return { type: 'offmap', map: giver.map, label };
       }
-      return { type:'npc', map:giver.map || partyLoc?.map || 'world', x:giver.x, y:giver.y, label };
+      return { type: 'npc', map: giver.map || partyLoc?.map || 'world', x: giver.x, y: giver.y, label };
     }
   }
-  const itemTarget=findQuestItemTarget(q, partyLoc);
-  if(!itemTarget) return null;
-  if(partyLoc && itemTarget.map && partyLoc.map && itemTarget.map!==partyLoc.map){
-    return { type:'offmap', map:itemTarget.map, label:itemTarget.label };
+  const itemTarget = findQuestItemTarget(q, partyLoc);
+  if (!itemTarget) return null;
+  if (partyLoc && itemTarget.map && partyLoc.map && itemTarget.map !== partyLoc.map) {
+    return { type: 'offmap', map: itemTarget.map, label: itemTarget.label };
   }
   return itemTarget;
 }
 
-function findQuestItemTarget(q, partyLoc){
-  const drops=Array.isArray(itemDrops)?itemDrops:[];
-  const matches=[];
-  if(q.item){
-    drops.forEach(drop=>{
-      if(!drop || drop.id!==q.item) return;
-      matches.push({ type:'item', map:drop.map || 'world', x:drop.x, y:drop.y, label:questItemName(q) || humanizeQuestId(drop.id) });
+function findQuestItemTarget(q, partyLoc) {
+  const drops = Array.isArray(itemDrops) ? itemDrops : [];
+  const matches = [];
+  if (q.item) {
+    drops.forEach(drop => {
+      if (!drop || drop.id !== q.item) return;
+      matches.push({ type: 'item', map: drop.map || 'world', x: drop.x, y: drop.y, label: questItemName(q) || humanizeQuestId(drop.id) });
     });
-    if(!matches.length && q.itemLocation){
-      matches.push({ type:'item', map:q.itemLocation.map || 'world', x:q.itemLocation.x, y:q.itemLocation.y, label:questItemName(q) });
+    if (!matches.length && q.itemLocation) {
+      matches.push({ type: 'item', map: q.itemLocation.map || 'world', x: q.itemLocation.x, y: q.itemLocation.y, label: questItemName(q) });
     }
-  } else if(q.itemTag){
-    const tag=String(q.itemTag).toLowerCase();
-    drops.forEach(drop=>{
-      if(!drop || !drop.id) return;
-      const def=(typeof ITEMS==='object' && ITEMS) ? ITEMS[drop.id] : null;
-      const tags=Array.isArray(def?.tags)?def.tags.map(t=>String(t).toLowerCase()):[];
-      if(tags.includes(tag) || drop.id===q.itemTag){
-        const label=def?.name || questItemName(q) || humanizeQuestId(drop.id);
-        matches.push({ type:'item', map:drop.map || 'world', x:drop.x, y:drop.y, label });
+  } else if (q.itemTag) {
+    const tag = String(q.itemTag).toLowerCase();
+    drops.forEach(drop => {
+      if (!drop || !drop.id) return;
+      const def = (typeof ITEMS === 'object' && ITEMS) ? ITEMS[drop.id] : null;
+      const tags = Array.isArray(def?.tags) ? def.tags.map(t => String(t).toLowerCase()) : [];
+      if (tags.includes(tag) || drop.id === q.itemTag) {
+        const label = def?.name || questItemName(q) || humanizeQuestId(drop.id);
+        matches.push({ type: 'item', map: drop.map || 'world', x: drop.x, y: drop.y, label });
       }
     });
   }
-  if(!matches.length) return null;
-  const currentMap=partyLoc?.map;
-  const sameMap=typeof currentMap==='string'?matches.filter(m=>!m.map || m.map===currentMap):matches;
-  const pool=sameMap.length?sameMap:matches;
-  if(typeof partyLoc?.x!=='number' || typeof partyLoc?.y!=='number') return pool[0];
-  let best=null;
-  let bestDist=Infinity;
-  pool.forEach(loc=>{
-    if(!loc) return;
-    const dx=(loc.x ?? 0) - partyLoc.x;
-    const dy=(loc.y ?? 0) - partyLoc.y;
-    const dist=Math.abs(dx)+Math.abs(dy);
-    if(dist<bestDist){ best=loc; bestDist=dist; }
+  if (!matches.length) return null;
+  const currentMap = partyLoc?.map;
+  const sameMap = typeof currentMap === 'string' ? matches.filter(m => !m.map || m.map === currentMap) : matches;
+  const pool = sameMap.length ? sameMap : matches;
+  if (typeof partyLoc?.x !== 'number' || typeof partyLoc?.y !== 'number') return pool[0];
+  let best = null;
+  let bestDist = Infinity;
+  pool.forEach(loc => {
+    if (!loc) return;
+    const dx = (loc.x ?? 0) - partyLoc.x;
+    const dy = (loc.y ?? 0) - partyLoc.y;
+    const dist = Math.abs(dx) + Math.abs(dy);
+    if (dist < bestDist) { best = loc; bestDist = dist; }
   });
   return best || pool[0];
 }
 
-function questCompassTooltip(target, partyLoc){
-  if(!target) return 'Explore to advance this quest.';
-  if(target.type==='completed') return 'Quest completed';
-  if(target.label){
-    const mapNote=target.map && partyLoc?.map && target.map!==partyLoc.map ? ` (${questMapDisplayName(target.map) || target.map})` : '';
-    const prefix=target.type==='npc' ? 'Return to ' : target.type==='item' ? 'Search near ' : '';
-    const text=`${prefix}${target.label}${mapNote}`.trim();
+function questCompassTooltip(target, partyLoc) {
+  if (!target) return 'Explore to advance this quest.';
+  if (target.type === 'completed') return 'Quest completed';
+  if (target.label) {
+    const mapNote = target.map && partyLoc?.map && target.map !== partyLoc.map ? ` (${questMapDisplayName(target.map) || target.map})` : '';
+    const prefix = target.type === 'npc' ? 'Return to ' : target.type === 'item' ? 'Search near ' : '';
+    const text = `${prefix}${target.label}${mapNote}`.trim();
     return text || 'Quest objective';
   }
   return 'Quest objective';
 }
 
-function renderQuestCompass(q, target, partyLoc){
-  const wrap=document.createElement('div');
-  wrap.className='quest-compass';
-  if(q?.id) wrap.dataset.questId=q.id;
-  const canvas=document.createElement('canvas');
-  canvas.width=32;
-  canvas.height=32;
+function renderQuestCompass(q, target, partyLoc) {
+  const wrap = document.createElement('div');
+  wrap.className = 'quest-compass';
+  if (q?.id) wrap.dataset.questId = q.id;
+  const canvas = document.createElement('canvas');
+  canvas.width = 32;
+  canvas.height = 32;
   wrap.appendChild(canvas);
   drawQuestCompass(canvas, target, partyLoc);
-  wrap.title=questCompassTooltip(target, partyLoc);
+  wrap.title = questCompassTooltip(target, partyLoc);
   return wrap;
 }
 
-function drawQuestCompass(canvas, target, partyLoc){
-  const ctx=canvas.getContext && canvas.getContext('2d');
-  if(!ctx) return;
-  const size=canvas.width;
-  ctx.imageSmoothingEnabled=false;
-  ctx.clearRect(0,0,size,size);
-  ctx.fillStyle='#040704';
-  ctx.fillRect(0,0,size,size);
-  ctx.strokeStyle='#152415';
-  ctx.lineWidth=2;
-  ctx.strokeRect(1,1,size-2,size-2);
-  ctx.strokeStyle='#1f3a1f';
-  ctx.strokeRect(2,2,size-4,size-4);
+function drawQuestCompass(canvas, target, partyLoc) {
+  const ctx = canvas.getContext && canvas.getContext('2d');
+  if (!ctx) return;
+  const size = canvas.width;
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, size, size);
+  ctx.fillStyle = '#040704';
+  ctx.fillRect(0, 0, size, size);
+  ctx.strokeStyle = '#152415';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, size - 2, size - 2);
+  ctx.strokeStyle = '#1f3a1f';
+  ctx.strokeRect(2, 2, size - 4, size - 4);
   ctx.beginPath();
-  ctx.strokeStyle='#2c522c';
-  ctx.lineWidth=3;
-  ctx.arc(size/2,size/2,size/2-5,0,Math.PI*2);
+  ctx.strokeStyle = '#2c522c';
+  ctx.lineWidth = 3;
+  ctx.arc(size / 2, size / 2, size / 2 - 5, 0, Math.PI * 2);
   ctx.stroke();
-  if(!target){
-    ctx.fillStyle='#3f7b3f';
-    ctx.fillRect(size/2-2,size/2-2,4,4);
+  if (!target) {
+    ctx.fillStyle = '#3f7b3f';
+    ctx.fillRect(size / 2 - 2, size / 2 - 2, 4, 4);
     return;
   }
-  if(target.type==='completed'){
-    ctx.strokeStyle='#7cff7c';
-    ctx.lineWidth=3;
+  if (target.type === 'completed') {
+    ctx.strokeStyle = '#7cff7c';
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(size/2-7,size/2+1);
-    ctx.lineTo(size/2-1,size/2+6);
-    ctx.lineTo(size/2+7,size/2-6);
+    ctx.moveTo(size / 2 - 7, size / 2 + 1);
+    ctx.lineTo(size / 2 - 1, size / 2 + 6);
+    ctx.lineTo(size / 2 + 7, size / 2 - 6);
     ctx.stroke();
     return;
   }
-  if(target.type==='offmap'){
-    ctx.strokeStyle='#6ad86a';
-    ctx.lineWidth=3;
-    ctx.strokeRect(size/2-6,size/2-6,12,12);
+  if (target.type === 'offmap') {
+    ctx.strokeStyle = '#6ad86a';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(size / 2 - 6, size / 2 - 6, 12, 12);
     ctx.beginPath();
-    ctx.moveTo(size/2-4,size/2-4);
-    ctx.lineTo(size/2+4,size/2+4);
-    ctx.moveTo(size/2+4,size/2-4);
-    ctx.lineTo(size/2-4,size/2+4);
+    ctx.moveTo(size / 2 - 4, size / 2 - 4);
+    ctx.lineTo(size / 2 + 4, size / 2 + 4);
+    ctx.moveTo(size / 2 + 4, size / 2 - 4);
+    ctx.lineTo(size / 2 - 4, size / 2 + 4);
     ctx.stroke();
     return;
   }
-  const px=partyLoc?.x ?? 0;
-  const py=partyLoc?.y ?? 0;
-  if(typeof target.x!=='number' || typeof target.y!=='number'){
-    ctx.fillStyle='#3f7b3f';
-    ctx.fillRect(size/2-2,size/2-2,4,4);
+  const px = partyLoc?.x ?? 0;
+  const py = partyLoc?.y ?? 0;
+  if (typeof target.x !== 'number' || typeof target.y !== 'number') {
+    ctx.fillStyle = '#3f7b3f';
+    ctx.fillRect(size / 2 - 2, size / 2 - 2, 4, 4);
     return;
   }
-  const dx=target.x - px;
-  const dy=target.y - py;
-  if(dx===0 && dy===0){
-    ctx.fillStyle=target.type==='npc' ? '#7cff7c' : '#56d856';
-    ctx.fillRect(size/2-2,size/2-2,4,4);
+  const dx = target.x - px;
+  const dy = target.y - py;
+  if (dx === 0 && dy === 0) {
+    ctx.fillStyle = target.type === 'npc' ? '#7cff7c' : '#56d856';
+    ctx.fillRect(size / 2 - 2, size / 2 - 2, 4, 4);
     return;
   }
-  const ang=Math.atan2(dx, -dy);
-  const radius=size/2-7;
+  const ang = Math.atan2(dx, -dy);
+  const radius = size / 2 - 7;
   ctx.save();
-  ctx.translate(size/2,size/2);
+  ctx.translate(size / 2, size / 2);
   ctx.rotate(ang);
-  ctx.strokeStyle=target.type==='npc' ? '#7cff7c' : '#56d856';
-  ctx.lineWidth=3;
+  ctx.strokeStyle = target.type === 'npc' ? '#7cff7c' : '#56d856';
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(0,4);
-  ctx.lineTo(0,-radius);
+  ctx.moveTo(0, 4);
+  ctx.lineTo(0, -radius);
   ctx.stroke();
-  ctx.fillStyle=ctx.strokeStyle;
+  ctx.fillStyle = ctx.strokeStyle;
   ctx.beginPath();
-  ctx.moveTo(0,-radius-2);
-  ctx.lineTo(3,-radius+3);
-  ctx.lineTo(-3,-radius+3);
+  ctx.moveTo(0, -radius - 2);
+  ctx.lineTo(3, -radius + 3);
+  ctx.lineTo(-3, -radius + 3);
   ctx.closePath();
   ctx.fill();
   ctx.restore();
 }
 
-function questItemName(q){
-  if(!q) return '';
-  if(q.item){
-    const def=(typeof ITEMS==='object' && ITEMS) ? ITEMS[q.item] : null;
-    if(def && def.name) return def.name;
+function questItemName(q) {
+  if (!q) return '';
+  if (q.item) {
+    const def = (typeof ITEMS === 'object' && ITEMS) ? ITEMS[q.item] : null;
+    if (def && def.name) return def.name;
     return humanizeQuestId(q.item);
   }
-  if(q.itemTag){
-    const tag=String(q.itemTag).toLowerCase();
-    if(typeof ITEMS==='object' && ITEMS){
-      const match=Object.values(ITEMS).find(it=>Array.isArray(it?.tags) && it.tags.map(t=>String(t).toLowerCase()).includes(tag));
-      if(match && match.name) return match.name;
+  if (q.itemTag) {
+    const tag = String(q.itemTag).toLowerCase();
+    if (typeof ITEMS === 'object' && ITEMS) {
+      const match = Object.values(ITEMS).find(it => Array.isArray(it?.tags) && it.tags.map(t => String(t).toLowerCase()).includes(tag));
+      if (match && match.name) return match.name;
     }
     return humanizeQuestId(q.itemTag);
   }
   return '';
 }
 
-function humanizeQuestId(id){
-  if(!id) return '';
-  return String(id).replace(/[_-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+function humanizeQuestId(id) {
+  if (!id) return '';
+  return String(id).replace(/[_-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
-function renderParty(){
-  const p=document.getElementById('party');
-  p.innerHTML='';
-  if(party.length===0){
-    p.innerHTML='<div class="pcard muted">(no party members yet)</div>';
+function renderParty() {
+  const p = document.getElementById('party');
+  p.innerHTML = '';
+  if (party.length === 0) {
+    p.innerHTML = '<div class="pcard muted">(no party members yet)</div>';
     return;
   }
-  const selectMember=idx=>{
-    selectedMember=idx;
+  const selectMember = idx => {
+    selectedMember = idx;
     EventBus?.emit('party:selected', selectedMember);
-    p.querySelectorAll('.pcard').forEach((card,j)=>{
-      card.classList.toggle('selected', j===selectedMember);
+    p.querySelectorAll('.pcard').forEach((card, j) => {
+      card.classList.toggle('selected', j === selectedMember);
     });
-    if(Array.isArray(player?.inv)) renderInv?.();
+    if (Array.isArray(player?.inv)) renderInv?.();
   };
-  const labelEquip=eq=>{
-    if(!eq) return '—';
-    const base=eq.name||'Unnamed';
-    return (eq.cursed&&eq.cursedKnown)? base+' (cursed)':base;
+  const labelEquip = eq => {
+    if (!eq) return '—';
+    const base = eq.name || 'Unnamed';
+    return (eq.cursed && eq.cursedKnown) ? base + ' (cursed)' : base;
   };
-party.forEach((m,i)=>{
-  const c=document.createElement('div');
-  c.className='pcard'+(i===selectedMember?' selected':'');
-  c.tabIndex=0;
-  const bonus=m._bonus||{};
-  const fmt=v=> (v>0? '+'+v : v);
-  const wEq=m.equip.weapon, aEq=m.equip.armor, tEq=m.equip.trinket;
-  const wLabel=labelEquip(wEq);
-  const aLabel=labelEquip(aEq);
-  const tLabel=labelEquip(tEq);
-  const nextXP=xpToNext(m.lvl);
-  const pct=Math.min(100,(m.xp/nextXP)*100);
-  const persona = globalThis.Dustland?.gameState?.getPersona?.(m.persona);
-  const label = persona ? `${m.name} (${persona.label})` : m.name;
-  const portraitSrc = persona?.portrait || m.portraitSheet;
-  c.innerHTML = `<div class='row'><div class='portrait'></div><div><b>${label}</b> — ${m.role} (Lv ${m.lvl})</div></div>`+
-  `<div class='row small'>${statLine(m.stats as any)}</div>`+
-`<div class='row stats'>HP ${m.hp}/${m.maxHp}  ADR ${m.adr}  ATK ${fmt(bonus.ATK||0)}  DEF ${fmt(bonus.DEF||0)}  LCK ${fmt(bonus.LCK||0)}</div>`+
-`<div class='row'><div class='xpbar' data-xp='${m.xp}/${nextXP}'><div class='fill' style='width:${pct}%'></div></div></div>`+
-`<div class='row small'>
-  <span class='equip-line'>WPN: ${wLabel}${wEq?` <button class="btn" data-a="unequip" data-slot="weapon" title="Unequip" aria-label="Unequip">🚫</button>`:''}</span>
-  <span class='equip-line'>ARM: ${aLabel}${aEq?` <button class="btn" data-a="unequip" data-slot="armor" title="Unequip" aria-label="Unequip">🚫</button>`:''}</span>
-  <span class='equip-line'>TRK: ${tLabel}${tEq?` <button class="btn" data-a="unequip" data-slot="trinket" title="Unequip" aria-label="Unequip">🚫</button>`:''}</span>
+  party.forEach((m, i) => {
+    const c = document.createElement('div');
+    c.className = 'pcard' + (i === selectedMember ? ' selected' : '');
+    c.tabIndex = 0;
+    const bonus = m._bonus || {};
+    const fmt = v => (v > 0 ? '+' + v : v);
+    const wEq = m.equip.weapon, aEq = m.equip.armor, tEq = m.equip.trinket;
+    const wLabel = labelEquip(wEq);
+    const aLabel = labelEquip(aEq);
+    const tLabel = labelEquip(tEq);
+    const nextXP = xpToNext(m.lvl);
+    const pct = Math.min(100, (m.xp / nextXP) * 100);
+    const persona = globalThis.Dustland?.gameState?.getPersona?.(m.persona);
+    const label = persona ? `${m.name} (${persona.label})` : m.name;
+    const portraitSrc = persona?.portrait || m.portraitSheet;
+    c.innerHTML = `<div class='row'><div class='portrait'></div><div><b>${label}</b> — ${m.role} (Lv ${m.lvl})</div></div>` +
+      `<div class='row small'>${statLine(m.stats as any)}</div>` +
+      `<div class='row stats'>HP ${m.hp}/${m.maxHp}  ADR ${m.adr}  ATK ${fmt(bonus.ATK || 0)}  DEF ${fmt(bonus.DEF || 0)}  LCK ${fmt(bonus.LCK || 0)}</div>` +
+      `<div class='row'><div class='xpbar' data-xp='${m.xp}/${nextXP}'><div class='fill' style='width:${pct}%'></div></div></div>` +
+      `<div class='row small'>
+  <span class='equip-line'>WPN: ${wLabel}${wEq ? ` <button class="btn" data-a="unequip" data-slot="weapon" title="Unequip" aria-label="Unequip">🚫</button>` : ''}</span>
+  <span class='equip-line'>ARM: ${aLabel}${aEq ? ` <button class="btn" data-a="unequip" data-slot="armor" title="Unequip" aria-label="Unequip">🚫</button>` : ''}</span>
+  <span class='equip-line'>TRK: ${tLabel}${tEq ? ` <button class="btn" data-a="unequip" data-slot="trinket" title="Unequip" aria-label="Unequip">🚫</button>` : ''}</span>
 </div>`;
-  const portrait=c.querySelector('.portrait');
-  if (typeof setPortraitDiv === 'function') {
-    const temp = { ...m, portraitSheet: portraitSrc };
-    setPortraitDiv(portrait, temp);
-  } else if (portraitSrc) {
-    portrait.style.backgroundImage=`url(${portraitSrc})`;
-    if(/_4\.[a-z]+$/i.test(portraitSrc)){
-      portrait.style.backgroundSize='200% 200%';
-      portrait.style.backgroundPosition='0% 0%';
-    }else{
-      portrait.style.backgroundSize='100% 100%';
-      portrait.style.backgroundPosition='center';
+    const portrait = c.querySelector('.portrait');
+    if (typeof setPortraitDiv === 'function') {
+      const temp = { ...m, portraitSheet: portraitSrc };
+      setPortraitDiv(portrait, temp);
+    } else if (portraitSrc) {
+      portrait.style.backgroundImage = `url(${portraitSrc})`;
+      if (/_4\.[a-z]+$/i.test(portraitSrc)) {
+        portrait.style.backgroundSize = '200% 200%';
+        portrait.style.backgroundPosition = '0% 0%';
+      } else {
+        portrait.style.backgroundSize = '100% 100%';
+        portrait.style.backgroundPosition = 'center';
+      }
     }
-  }
-  const existingBadge = portrait.querySelector('.spbadge');
-    if(m.skillPoints>0){
-      if(existingBadge){
+    const existingBadge = portrait.querySelector('.spbadge');
+    if (m.skillPoints > 0) {
+      if (existingBadge) {
         existingBadge.textContent = String(m.skillPoints);
-      }else{
-        const badge=document.createElement('div');
-        badge.className='spbadge';
-        badge.textContent=String(m.skillPoints);
+      } else {
+        const badge = document.createElement('div');
+        badge.className = 'spbadge';
+        badge.textContent = String(m.skillPoints);
         portrait.appendChild(badge);
       }
-  }else if(existingBadge){
-    existingBadge.remove();
-  }
-  c.onclick=()=>selectMember(i);
-  c.onfocus=()=>selectMember(i);
-  c.querySelectorAll('button[data-a="unequip"]').forEach(b=>{
-    const sl=b.dataset.slot;
-    b.onclick=()=> (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals)).unequipItem?.(i,sl);
+    } else if (existingBadge) {
+      existingBadge.remove();
+    }
+    c.onclick = () => selectMember(i);
+    c.onfocus = () => selectMember(i);
+    c.querySelectorAll('button[data-a="unequip"]').forEach(b => {
+      const sl = b.dataset.slot;
+      b.onclick = () => (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals)).unequipItem?.(i, sl);
+    });
+    p.appendChild(c);
   });
-  p.appendChild(c);
-});
 }
 
 function openShop(npc) {
@@ -3045,10 +3045,10 @@ function openShop(npc) {
       return part.charAt(0).toUpperCase() + part.slice(1);
     }).join(' ');
   }
-    function sortSlotKeys(keys: Iterable<string>) {
-      return Array.from(keys).sort((a, b) => {
-        const idxA = slotOrder.indexOf(a);
-        const idxB = slotOrder.indexOf(b);
+  function sortSlotKeys(keys: Iterable<string>) {
+    return Array.from(keys).sort((a, b) => {
+      const idxA = slotOrder.indexOf(a);
+      const idxB = slotOrder.indexOf(b);
       if (idxA !== -1 && idxB !== -1) return idxA - idxB;
       if (idxA !== -1) return -1;
       if (idxB !== -1) return 1;
@@ -3059,10 +3059,10 @@ function openShop(npc) {
     if (!slotFilter) return true;
     return resolveSlotKey(item) === slotFilter;
   }
-    function updateSlotFilterOptions(keys: string[]) {
-      if (!shopSlotFilter) return;
-      const target = [''].concat(keys);
-      const existing = Array.from(shopSlotFilter.options).map(opt => (opt as HTMLOptionElement).value);
+  function updateSlotFilterOptions(keys: string[]) {
+    if (!shopSlotFilter) return;
+    const target = [''].concat(keys);
+    const existing = Array.from(shopSlotFilter.options).map(opt => (opt as HTMLOptionElement).value);
     let needsUpdate = existing.length !== target.length;
     if (!needsUpdate) {
       for (let i = 0; i < target.length; i++) {
@@ -3169,7 +3169,7 @@ function openShop(npc) {
       return out;
     };
 
-      const slotKeys = new Set<string>();
+    const slotKeys = new Set<string>();
     const registerSlotKey = (item) => {
       if (!item) return;
       slotKeys.add(resolveSlotKey(item));
@@ -3395,299 +3395,299 @@ const engineExports = { log: engineLog, updateHUD, renderInv, renderQuests, rend
 Object.assign(globalThis, engineExports);
 
 // ===== Minimal Unit Tests (#test) =====
-function assert(name, cond){
+function assert(name, cond) {
   if (cond) {
     engineLog('✅ ' + name);
   } else {
     console.error('Test failed: ' + name);
   }
 }
-function runTests(){
-  openCreator(); assert('Creator visible', creator.style.display==='flex');
-  step=2; renderStep(); assert('Stat + buttons exist', ccRight.querySelectorAll('button[data-d="1"]').length>0);
+function runTests() {
+  openCreator(); assert('Creator visible', creator.style.display === 'flex');
+  step = 2; renderStep(); assert('Stat + buttons exist', ccRight.querySelectorAll('button[data-d="1"]').length > 0);
 
-  genWorld(); const hutsOK = buildings.length>0 && buildings.every(b=> b.interiorId && interiors[b.interiorId] && interiors[b.interiorId].grid); assert('Huts have interiors', hutsOK);
+  genWorld(); const hutsOK = buildings.length > 0 && buildings.every(b => b.interiorId && interiors[b.interiorId] && interiors[b.interiorId].grid); assert('Huts have interiors', hutsOK);
 
-  if(typeof getEngineGlobals().moduleTests === 'function') getEngineGlobals().moduleTests(assert);
+  if (typeof getEngineGlobals().moduleTests === 'function') getEngineGlobals().moduleTests(assert);
 }
 
 // ===== Input =====
-  if (document.getElementById('saveBtn')) {
-    const saveBtn=document.getElementById('saveBtn');
-    if(saveBtn) saveBtn.onclick=()=>save();
-    const loadBtn=document.getElementById('loadBtn');
-    if(loadBtn) loadBtn.onclick=()=>{ load(); };
-    const clearBtn=document.getElementById('clearBtn');
-    if(clearBtn) clearBtn.onclick=()=>{
-      if (confirm('Delete saved game?')) clearSave();
-    };
-    const resetBtn=document.getElementById('resetBtn');
-    if(resetBtn) resetBtn.onclick=()=>{
-      if (confirm('Reset game and return to character creation?')) resetAll();
-    };
-  const nanoBtn=document.getElementById('nanoToggle');
-  if(nanoBtn){
-    const updateNano=()=>{
+if (document.getElementById('saveBtn')) {
+  const saveBtn = document.getElementById('saveBtn');
+  if (saveBtn) saveBtn.onclick = () => save();
+  const loadBtn = document.getElementById('loadBtn');
+  if (loadBtn) loadBtn.onclick = () => { load(); };
+  const clearBtn = document.getElementById('clearBtn');
+  if (clearBtn) clearBtn.onclick = () => {
+    if (confirm('Delete saved game?')) clearSave();
+  };
+  const resetBtn = document.getElementById('resetBtn');
+  if (resetBtn) resetBtn.onclick = () => {
+    if (confirm('Reset game and return to character creation?')) resetAll();
+  };
+  const nanoBtn = document.getElementById('nanoToggle');
+  if (nanoBtn) {
+    const updateNano = () => {
       nanoBtn.textContent = `Nano Dialog: ${window.NanoDialog?.enabled ? 'On' : 'Off'}`;
-      const persist=document.getElementById('persistLLM');
-      if(persist){
-        const ready=window.NanoDialog?.isReady?.();
+      const persist = document.getElementById('persistLLM');
+      if (persist) {
+        const ready = window.NanoDialog?.isReady?.();
         persist.style.display = window.NanoDialog?.enabled && ready ? '' : 'none';
       }
     };
-    nanoBtn.onclick=()=>{
-      if(window.NanoDialog){
-        NanoDialog.enabled=!NanoDialog.enabled;
+    nanoBtn.onclick = () => {
+      if (window.NanoDialog) {
+        NanoDialog.enabled = !NanoDialog.enabled;
         if (typeof toast === 'function') engineToast(`Dynamic dialog ${NanoDialog.enabled ? 'enabled' : 'disabled'}`);
         if (getEngineGlobals().NanoDialog?.refreshIndicator) getEngineGlobals().NanoDialog.refreshIndicator();
       }
       updateNano();
     };
     updateNano();
-    if(window.NanoDialog?.init) NanoDialog.init().then(updateNano);
+    if (window.NanoDialog?.init) NanoDialog.init().then(updateNano);
   }
-  const audioBtn=document.getElementById('audioToggle');
-  if(audioBtn) audioBtn.onclick=()=>toggleAudio();
-  const musicBtn=document.getElementById('musicToggle');
-  if(musicBtn){
+  const audioBtn = document.getElementById('audioToggle');
+  if (audioBtn) audioBtn.onclick = () => toggleAudio();
+  const musicBtn = document.getElementById('musicToggle');
+  if (musicBtn) {
     const dustlandApi = getEngineGlobals().Dustland as { music?: { isEnabled?: () => boolean; toggleEnabled?: () => void } } | undefined;
-    const updateMusicBtn=()=>{
+    const updateMusicBtn = () => {
       const enabled = !!dustlandApi?.music?.isEnabled?.();
       musicBtn.textContent = `Music: ${enabled ? 'On' : 'Off'}`;
     };
-    musicBtn.onclick=()=>{
+    musicBtn.onclick = () => {
       dustlandApi?.music?.toggleEnabled?.();
       updateMusicBtn();
     };
     musicBus?.on?.('music:state', updateMusicBtn);
     updateMusicBtn();
   }
-  const mobileBtn=document.getElementById('mobileToggle');
-  if(mobileBtn) mobileBtn.onclick=()=>toggleMobileControls();
-  const tileCharBtn=document.getElementById('tileCharToggle');
-  if(tileCharBtn) tileCharBtn.onclick=()=>toggleTileChars();
-  const tilePreviewBtn=document.getElementById('tilePreviewBtn');
-  tilePreviewOverlay=document.getElementById('tilePreview');
-  tilePreviewGrid=document.getElementById('tilePreviewGrid');
-  tilePreviewEmpty=document.getElementById('tilePreviewEmpty');
-  const tilePreviewClose=document.getElementById('tilePreviewClose');
-  if(tilePreviewBtn) tilePreviewBtn.addEventListener('click', ()=>openTilePreview());
-  if(tilePreviewClose) tilePreviewClose.addEventListener('click', ()=>closeTilePreview());
-  if(tilePreviewOverlay){
-    tilePreviewOverlay.addEventListener('click', evt=>{
-      if(evt.target===tilePreviewOverlay) closeTilePreview();
+  const mobileBtn = document.getElementById('mobileToggle');
+  if (mobileBtn) mobileBtn.onclick = () => toggleMobileControls();
+  const tileCharBtn = document.getElementById('tileCharToggle');
+  if (tileCharBtn) tileCharBtn.onclick = () => toggleTileChars();
+  const tilePreviewBtn = document.getElementById('tilePreviewBtn');
+  tilePreviewOverlay = document.getElementById('tilePreview');
+  tilePreviewGrid = document.getElementById('tilePreviewGrid');
+  tilePreviewEmpty = document.getElementById('tilePreviewEmpty');
+  const tilePreviewClose = document.getElementById('tilePreviewClose');
+  if (tilePreviewBtn) tilePreviewBtn.addEventListener('click', () => openTilePreview());
+  if (tilePreviewClose) tilePreviewClose.addEventListener('click', () => closeTilePreview());
+  if (tilePreviewOverlay) {
+    tilePreviewOverlay.addEventListener('click', evt => {
+      if (evt.target === tilePreviewOverlay) closeTilePreview();
     });
-    tilePreviewOverlay.setAttribute?.('aria-hidden', tilePreviewOverlay.style.display==='flex' ? 'false' : 'true');
+    tilePreviewOverlay.setAttribute?.('aria-hidden', tilePreviewOverlay.style.display === 'flex' ? 'false' : 'true');
   }
-  if(document?.addEventListener){
-    document.addEventListener('keydown', evt=>{
-      if(evt.key==='Escape' && tilePreviewOpen) closeTilePreview();
+  if (document?.addEventListener) {
+    document.addEventListener('keydown', evt => {
+      if (evt.key === 'Escape' && tilePreviewOpen) closeTilePreview();
     });
   }
-  const fogBtn=document.getElementById('fogToggle');
-  if(fogBtn) fogBtn.onclick=()=>toggleFogOfWar();
-  const fontScaleSlider=document.getElementById('fontScale');
-  if(fontScaleSlider){
-    fontScaleSlider.addEventListener('input', ()=>{
+  const fogBtn = document.getElementById('fogToggle');
+  if (fogBtn) fogBtn.onclick = () => toggleFogOfWar();
+  const fontScaleSlider = document.getElementById('fontScale');
+  if (fontScaleSlider) {
+    fontScaleSlider.addEventListener('input', () => {
       const raw = Number.parseFloat(fontScaleSlider.value);
       setFontScale(raw);
     });
     updateFontScaleUI(fontScale);
   }
-  const fontFamilySelect=document.getElementById('fontFamily');
-  if(fontFamilySelect){
-    fontFamilySelect.addEventListener('change', ()=>{
+  const fontFamilySelect = document.getElementById('fontFamily');
+  if (fontFamilySelect) {
+    fontFamilySelect.addEventListener('change', () => {
       setFontFamily(fontFamilySelect.value);
     });
     updateFontFamilyUI(fontFamily.id);
   }
-  const retroToggle=document.getElementById('retroNpcToggle');
-  if(retroToggle){
+  const retroToggle = document.getElementById('retroNpcToggle');
+  if (retroToggle) {
     const saved = globalThis.localStorage?.getItem('retroNpcArt');
     const initial = saved === '1' || (saved !== '0' && retroToggle.checked);
     setRetroNpcArt(initial, true);
     retroToggle.checked = retroNpcArtEnabled;
-    retroToggle.addEventListener('change', ()=>setRetroNpcArt(retroToggle.checked));
+    retroToggle.addEventListener('change', () => setRetroNpcArt(retroToggle.checked));
   } else {
     setRetroNpcArt(retroNpcArtEnabled, true);
   }
-  const skinPreviewInput=document.getElementById('skinPreviewName');
-  const skinPreviewButton=document.getElementById('skinPreviewLoad');
-  const skinPreviewStatus=document.getElementById('skinPreviewStatus');
-  if(skinPreviewInput && skinPreviewButton){
-    const DEFAULT_GENERATED_SKIN_BASE_DIR='ComfyUI/output';
-    const updateSkinStatus=(text,isError=false)=>{
-      if(!skinPreviewStatus) return;
-      skinPreviewStatus.textContent=text || '';
+  const skinPreviewInput = document.getElementById('skinPreviewName');
+  const skinPreviewButton = document.getElementById('skinPreviewLoad');
+  const skinPreviewStatus = document.getElementById('skinPreviewStatus');
+  if (skinPreviewInput && skinPreviewButton) {
+    const DEFAULT_GENERATED_SKIN_BASE_DIR = 'ComfyUI/output';
+    const updateSkinStatus = (text, isError = false) => {
+      if (!skinPreviewStatus) return;
+      skinPreviewStatus.textContent = text || '';
       skinPreviewStatus.classList.toggle('is-error', !!isError);
     };
     type SkinOverrides = { baseDir?: string; styleDir?: string; extension?: string; slots?: unknown };
-    const buildOverrides=(styleId): SkinOverrides=>{
-        const manager=globalThis.Dustland?.skin;
-      const stored=manager?.getGeneratedSkinConfig?.(styleId) as SkinOverrides | undefined;
-      const overrides: SkinOverrides={};
-      if(stored && typeof stored==='object'){
-        if(typeof stored.baseDir==='string' && stored.baseDir.trim()) overrides.baseDir=stored.baseDir;
-        if(typeof stored.styleDir==='string' && stored.styleDir.trim()) overrides.styleDir=stored.styleDir;
-        if(typeof stored.extension==='string' && stored.extension.trim()) overrides.extension=stored.extension;
-        if(Object.prototype.hasOwnProperty.call(stored,'slots')) overrides.slots=stored.slots;
+    const buildOverrides = (styleId): SkinOverrides => {
+      const manager = globalThis.Dustland?.skin;
+      const stored = manager?.getGeneratedSkinConfig?.(styleId) as SkinOverrides | undefined;
+      const overrides: SkinOverrides = {};
+      if (stored && typeof stored === 'object') {
+        if (typeof stored.baseDir === 'string' && stored.baseDir.trim()) overrides.baseDir = stored.baseDir;
+        if (typeof stored.styleDir === 'string' && stored.styleDir.trim()) overrides.styleDir = stored.styleDir;
+        if (typeof stored.extension === 'string' && stored.extension.trim()) overrides.extension = stored.extension;
+        if (Object.prototype.hasOwnProperty.call(stored, 'slots')) overrides.slots = stored.slots;
       }
-      if(!('baseDir' in overrides)) overrides.baseDir=DEFAULT_GENERATED_SKIN_BASE_DIR;
-      if(!('styleDir' in overrides)) overrides.styleDir=styleId;
+      if (!('baseDir' in overrides)) overrides.baseDir = DEFAULT_GENERATED_SKIN_BASE_DIR;
+      if (!('styleDir' in overrides)) overrides.styleDir = styleId;
       return overrides;
     };
-    const loadPreview=()=>{
-      const styleId=skinPreviewInput.value.trim();
-      if(!styleId){
+    const loadPreview = () => {
+      const styleId = skinPreviewInput.value.trim();
+      if (!styleId) {
         updateSkinStatus('Enter a style ID to preview.', true);
         return;
       }
-      const manager=globalThis.Dustland?.skin;
-      if(!manager?.loadGeneratedSkin){
+      const manager = globalThis.Dustland?.skin;
+      if (!manager?.loadGeneratedSkin) {
         updateSkinStatus('Skin preview unavailable.', true);
         return;
       }
       updateSkinStatus('Loading skin preview…');
-      try{
-          const overrides=buildOverrides(styleId) as unknown;
-          const loaded=manager.loadGeneratedSkin(styleId, overrides as any);
-        if(loaded){
+      try {
+        const overrides = buildOverrides(styleId) as unknown;
+        const loaded = manager.loadGeneratedSkin(styleId, overrides as any);
+        if (loaded) {
           updateSkinStatus(`Previewing "${styleId}".`);
-        }else{
+        } else {
           updateSkinStatus(`No assets found for "${styleId}".`, true);
         }
-      }catch(err){
+      } catch (err) {
         console.error('Failed to load skin preview', err);
         updateSkinStatus('Failed to load skin preview.', true);
       }
     };
     skinPreviewButton.addEventListener('click', loadPreview);
-    skinPreviewInput.addEventListener('keydown', evt=>{
-      if(evt.key==='Enter'){
+    skinPreviewInput.addEventListener('keydown', evt => {
+      if (evt.key === 'Enter') {
         evt.preventDefault();
         loadPreview();
       }
     });
-  } else if(skinPreviewStatus){
-    skinPreviewStatus.textContent='';
+  } else if (skinPreviewStatus) {
+    skinPreviewStatus.textContent = '';
     skinPreviewStatus.classList.remove('is-error');
   }
-  const iconPrev=document.getElementById('playerIconPrev');
-  const iconNext=document.getElementById('playerIconNext');
+  const iconPrev = document.getElementById('playerIconPrev');
+  const iconNext = document.getElementById('playerIconNext');
   const savedIcon = Number.parseInt(globalThis.localStorage?.getItem(PLAYER_ICON_STORAGE_KEY), 10);
-  if(Number.isFinite(savedIcon)) setPlayerIcon(savedIcon, { skipStorage: true });
+  if (Number.isFinite(savedIcon)) setPlayerIcon(savedIcon, { skipStorage: true });
   else updatePlayerIconPreview();
-  if(iconPrev) iconPrev.onclick=()=>setPlayerIcon(playerIconIndex-1);
-  if(iconNext) iconNext.onclick=()=>setPlayerIcon(playerIconIndex+1);
-  const shotBtn=document.getElementById('screenshotBtn');
-  if(shotBtn) shotBtn.onclick=()=>{
-    const canvas=document.getElementById('game');
-    if(!canvas) return;
-    const url=canvas.toDataURL('image/png');
-    const a=document.createElement('a');
-    a.href=url;
-    a.download='dustland.png';
+  if (iconPrev) iconPrev.onclick = () => setPlayerIcon(playerIconIndex - 1);
+  if (iconNext) iconNext.onclick = () => setPlayerIcon(playerIconIndex + 1);
+  const shotBtn = document.getElementById('screenshotBtn');
+  if (shotBtn) shotBtn.onclick = () => {
+    const canvas = document.getElementById('game');
+    if (!canvas) return;
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'dustland.png';
     a.click();
   };
   setAudio(audioEnabled);
   setMobileControls(mobileControlsEnabled);
   setTileChars(tileCharsEnabled);
   setFogOfWar(fogOfWarEnabled, { skipStorage: true });
-  const settingsBtn=document.getElementById('settingsBtn');
-  const settings=document.getElementById('settings');
-  if(settingsBtn && settings){
-    settingsBtn.onclick=()=>{ settings.style.display='flex'; };
-    const closeBtn=document.getElementById('settingsClose');
-    if(closeBtn) closeBtn.onclick=()=>{ settings.style.display='none'; };
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settings = document.getElementById('settings');
+  if (settingsBtn && settings) {
+    settingsBtn.onclick = () => { settings.style.display = 'flex'; };
+    const closeBtn = document.getElementById('settingsClose');
+    if (closeBtn) closeBtn.onclick = () => { settings.style.display = 'none'; };
   }
-  const debugBtn=document.getElementById('debugBtn');
-  const debugMenu=document.getElementById('debugMenu');
-  if(debugBtn && debugMenu){
-    const debugClose=document.getElementById('debugClose');
-    const hideDebug=()=>{ debugMenu.style.display='none'; };
-    const showDebug=()=>{ debugMenu.style.display='flex'; };
-    debugBtn.onclick=showDebug;
+  const debugBtn = document.getElementById('debugBtn');
+  const debugMenu = document.getElementById('debugMenu');
+  if (debugBtn && debugMenu) {
+    const debugClose = document.getElementById('debugClose');
+    const hideDebug = () => { debugMenu.style.display = 'none'; };
+    const showDebug = () => { debugMenu.style.display = 'flex'; };
+    debugBtn.onclick = showDebug;
     debugClose?.addEventListener('click', hideDebug);
-    const attachHide=(btn)=>{ btn?.addEventListener('click', hideDebug); };
+    const attachHide = (btn) => { btn?.addEventListener('click', hideDebug); };
     attachHide(document.getElementById('fxBtn'));
     attachHide(document.getElementById('perfBtn'));
-    const exportBtn=document.getElementById('exportSaveBtn');
-    if(exportBtn){
-      exportBtn.addEventListener('click', ()=>{
-        if(typeof save === 'function') save();
+    const exportBtn = document.getElementById('exportSaveBtn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        if (typeof save === 'function') save();
         const dataStr = globalThis.localStorage?.getItem('dustland_crt');
-        if(!dataStr){
-          const msg='No save data available to export.';
+        if (!dataStr) {
+          const msg = 'No save data available to export.';
           console.warn(msg);
           globalThis.alert?.(msg);
           return;
         }
-        if(typeof Blob === 'undefined' || !globalThis.URL?.createObjectURL){
-          const msg='Export not supported in this environment.';
+        if (typeof Blob === 'undefined' || !globalThis.URL?.createObjectURL) {
+          const msg = 'Export not supported in this environment.';
           console.warn(msg);
           globalThis.alert?.(msg);
           return;
         }
-        try{
-          const blob=new Blob([dataStr],{ type:'application/json' });
-          const url=globalThis.URL.createObjectURL(blob);
-          const link=document.createElement('a');
-          const stamp=new Date().toISOString().replace(/[:]/g,'-');
-          link.href=url;
-          link.download=`dustland-save-${stamp}.json`;
+        try {
+          const blob = new Blob([dataStr], { type: 'application/json' });
+          const url = globalThis.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          const stamp = new Date().toISOString().replace(/[:]/g, '-');
+          link.href = url;
+          link.download = `dustland-save-${stamp}.json`;
           document.body.appendChild(link);
-          if(typeof link.click==='function') link.click();
+          if (typeof link.click === 'function') link.click();
           else link.dispatchEvent?.(new Event('click'));
           link.remove();
           globalThis.URL.revokeObjectURL?.(url);
           hideDebug();
           engineLog('Save exported.');
-          if(typeof toast === 'function') engineToast('Save exported.');
-        }catch(err){
+          if (typeof toast === 'function') engineToast('Save exported.');
+        } catch (err) {
           console.error('Failed to export save', err);
-          const msg='Failed to export save.';
+          const msg = 'Failed to export save.';
           globalThis.alert?.(msg);
         }
       });
     }
-    const importBtn=document.getElementById('importSaveBtn');
-    const importInput=document.getElementById('importSaveInput');
-    if(importBtn && importInput){
-      importBtn.addEventListener('click', ()=>{
-        importInput.value='';
-        if(typeof importInput.click==='function') importInput.click();
+    const importBtn = document.getElementById('importSaveBtn');
+    const importInput = document.getElementById('importSaveInput');
+    if (importBtn && importInput) {
+      importBtn.addEventListener('click', () => {
+        importInput.value = '';
+        if (typeof importInput.click === 'function') importInput.click();
         else importInput.dispatchEvent?.(new Event('click'));
       });
-      importInput.addEventListener('change', ()=>{
-        const file=importInput.files?.[0];
-        if(!file) return;
-        if(typeof FileReader === 'undefined'){
-          const msg='Import not supported in this environment.';
+      importInput.addEventListener('change', () => {
+        const file = importInput.files?.[0];
+        if (!file) return;
+        if (typeof FileReader === 'undefined') {
+          const msg = 'Import not supported in this environment.';
           console.warn(msg);
           globalThis.alert?.(msg);
           return;
         }
-        const reader=new FileReader();
-        reader.onerror=()=>{
+        const reader = new FileReader();
+        reader.onerror = () => {
           console.error('Failed to read save file', reader.error);
-          const msg='Failed to read save file.';
+          const msg = 'Failed to read save file.';
           globalThis.alert?.(msg);
         };
-        reader.onload=()=>{
-          try{
-            const text=typeof reader.result==='string'?reader.result:String(reader.result||'');
-            const parsed=JSON.parse(text);
-            if(typeof parsed!=='object' || !parsed){
+        reader.onload = () => {
+          try {
+            const text = typeof reader.result === 'string' ? reader.result : String(reader.result || '');
+            const parsed = JSON.parse(text);
+            if (typeof parsed !== 'object' || !parsed) {
               throw new Error('Invalid save payload');
             }
             globalThis.localStorage?.setItem('dustland_crt', JSON.stringify(parsed));
             hideDebug();
-            if(typeof load === 'function') load();
+            if (typeof load === 'function') load();
             engineLog('Save imported.');
-            if(typeof toast === 'function') engineToast('Save imported.');
-          }catch(err){
+            if (typeof toast === 'function') engineToast('Save imported.');
+          } catch (err) {
             console.error('Failed to import save', err);
-            const msg='Failed to import save. Ensure the file is a valid Dustland save.';
+            const msg = 'Failed to import save. Ensure the file is a valid Dustland save.';
             globalThis.alert?.(msg);
           }
         };
@@ -3695,44 +3695,44 @@ function runTests(){
       });
     }
   }
-  panelToggle=document.getElementById('panelToggle');
-  panel=document.querySelector('.panel');
-  if(panelToggle && panel){
-    const open=globalThis.localStorage?.getItem('panel_open')==='1';
-    if(open){
+  panelToggle = document.getElementById('panelToggle');
+  panel = document.querySelector('.panel');
+  if (panelToggle && panel) {
+    const open = globalThis.localStorage?.getItem('panel_open') === '1';
+    if (open) {
       panel.classList.add('show');
-      panelToggle.textContent='×';
+      panelToggle.textContent = '×';
     }
-    panelToggle.onclick=()=>{
-      const openState=panel.classList.toggle('show');
-      panelToggle.textContent=openState?'×':'☰';
-      globalThis.localStorage?.setItem('panel_open', openState?'1':'0');
+    panelToggle.onclick = () => {
+      const openState = panel.classList.toggle('show');
+      panelToggle.textContent = openState ? '×' : '☰';
+      globalThis.localStorage?.setItem('panel_open', openState ? '1' : '0');
     };
   }
 
-  window.addEventListener('keydown',(e)=>{
+  window.addEventListener('keydown', (e) => {
     const game = globalThis.Dustland || (globalThis.Dustland = {});
     const lockUntil = game.inputLockUntil;
-    if(typeof lockUntil === 'number' && lockUntil > Date.now()){
+    if (typeof lockUntil === 'number' && lockUntil > Date.now()) {
       const lockedKey = typeof game.inputLockKey === 'string' ? game.inputLockKey : null;
-      if(!lockedKey){
+      if (!lockedKey) {
         return;
       }
       const incoming = typeof e.key === 'string' ? e.key.toLowerCase() : '';
-      if(incoming && incoming === lockedKey){
+      if (incoming && incoming === lockedKey) {
         return;
       }
-    } else if(game.inputLockKey){
+    } else if (game.inputLockKey) {
       game.inputLockKey = null;
     }
-    if(overlay?.classList.contains('shown')){
-      if(e.key==='Escape') closeDialog();
-      else if(handleDialogKey?.(e)) e.preventDefault();
+    if (overlay?.classList.contains('shown')) {
+      if (e.key === 'Escape') closeDialog();
+      else if (handleDialogKey?.(e)) e.preventDefault();
       return;
     }
     const combat = document.getElementById('combatOverlay');
-    if(combat?.classList?.contains('shown')){
-      if(handleCombatKey?.(e)) e.preventDefault();
+    if (combat?.classList?.contains('shown')) {
+      if (handleCombatKey?.(e)) e.preventDefault();
       return;
     }
     const shop = document.getElementById('shopOverlay');
@@ -3740,29 +3740,29 @@ function runTests(){
       if (e.key === 'Escape') document.getElementById('closeShopBtn')?.click();
       return;
     }
-    const target=e.target || document.activeElement;
-    const isTypingTarget=target?.matches?.('input:not([type]),input[type="text"],input[type="search"],input[type="email"],input[type="password"],input[type="number"],input[type="url"],input[type="tel"],textarea');
-    const isEditable=target?.isContentEditable;
-    if(isTypingTarget || isEditable){
+    const target = e.target || document.activeElement;
+    const isTypingTarget = target?.matches?.('input:not([type]),input[type="text"],input[type="search"],input[type="email"],input[type="password"],input[type="number"],input[type="url"],input[type="tel"],textarea');
+    const isEditable = target?.isContentEditable;
+    if (isTypingTarget || isEditable) {
       return;
     }
-    if((e.key==='b' || e.key==='B') && mobileControlsEnabled && panel?.classList?.contains('show')){
+    if ((e.key === 'b' || e.key === 'B') && mobileControlsEnabled && panel?.classList?.contains('show')) {
       closePanel();
       e.preventDefault();
       return;
     }
-    const toastFn = typeof (globalThis as DustlandGlobals).engineToast === 'function'
-      ? (globalThis as DustlandGlobals).engineToast
-      : typeof (globalThis as DustlandGlobals).toast === 'function'
-        ? (globalThis as DustlandGlobals).toast
+    const toastFn = typeof (globalThis as DustlandEngineGlobals).engineToast === 'function'
+      ? (globalThis as DustlandEngineGlobals).engineToast
+      : typeof (globalThis as DustlandEngineGlobals).toast === 'function'
+        ? (globalThis as DustlandEngineGlobals).toast
         : undefined;
     const keyId = typeof e.key === 'string' ? e.key.toLowerCase() : '';
-    if(keyId) game.lastNonCombatKey = keyId;
-    switch(e.key){
-      case 'ArrowUp': case 'w': case 'W': move(0,-1); break;
-      case 'ArrowDown': case 's': case 'S': move(0,1); break;
-      case 'ArrowLeft': case 'a': case 'A': move(-1,0); break;
-      case 'ArrowRight': case 'd': case 'D': move(1,0); break;
+    if (keyId) game.lastNonCombatKey = keyId;
+    switch (e.key) {
+      case 'ArrowUp': case 'w': case 'W': move(0, -1); break;
+      case 'ArrowDown': case 's': case 'S': move(0, 1); break;
+      case 'ArrowLeft': case 'a': case 'A': move(-1, 0); break;
+      case 'ArrowRight': case 'd': case 'D': move(1, 0); break;
       case ' ': case 'Spacebar':
         e.preventDefault();
         interact();
@@ -3777,18 +3777,18 @@ function runTests(){
       case 'f': case 'F': toggleFogOfWar(); break;
       case 'i': case 'I': showTab('inv'); break;
       case 'p': case 'P': showTab('party'); break;
-      case 'q': if(!e.ctrlKey && !e.metaKey){ showTab('quests'); e.preventDefault(); } break;
+      case 'q': if (!e.ctrlKey && !e.metaKey) { showTab('quests'); e.preventDefault(); } break;
       case 'Tab':
         e.preventDefault();
         e.stopImmediatePropagation();
-        if (party.length>0){
+        if (party.length > 0) {
           selectedMember = (selectedMember + 1) % party.length;
           renderParty();
           if (typeof globalThis.renderInv === 'function') globalThis.renderInv();
           toastFn?.(`Leader: ${party[selectedMember].name}`);
         }
         break;
-      case 'm': case 'M': showMini=!showMini; break;
+      case 'm': case 'M': showMini = !showMini; break;
     }
   });
 
@@ -3796,18 +3796,18 @@ function runTests(){
   NanoDialog.enabled = false;
 }
 
-disp.addEventListener('click',e=>{
-  const rect=disp.getBoundingClientRect();
-  const x=Math.floor((e.clientX-rect.left)/TS)+camX;
-  const y=Math.floor((e.clientY-rect.top)/TS)+camY;
-  interactAt(x,y);
+disp.addEventListener('click', e => {
+  const rect = disp.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left) / TS) + camX;
+  const y = Math.floor((e.clientY - rect.top) / TS) + camY;
+  interactAt(x, y);
 });
-disp.addEventListener('touchstart',e=>{
-  const t=e.touches[0];
-  const rect=disp.getBoundingClientRect();
-  const x=Math.floor((t.clientX-rect.left)/TS)+camX;
-  const y=Math.floor((t.clientY-rect.top)/TS)+camY;
-  interactAt(x,y);
+disp.addEventListener('touchstart', e => {
+  const t = e.touches[0];
+  const rect = disp.getBoundingClientRect();
+  const x = Math.floor((t.clientX - rect.left) / TS) + camX;
+  const y = Math.floor((t.clientY - rect.top) / TS) + camY;
+  interactAt(x, y);
   e.preventDefault();
 });
 

@@ -1,11 +1,11 @@
 // Basic weather manager broadcasting changes via the event bus.
-(function(){
+(function () {
   type WeatherState = {
     state: string;
     icon: string;
     desc: string;
     speedMod: number;
-    encounterBias: unknown;
+    encounterBias?: number | Record<string, number>;
     [key: string]: unknown;
   };
 
@@ -23,6 +23,6 @@
   function getWeather(): WeatherState {
     return current;
   }
-  if(!globalThis.Dustland) globalThis.Dustland = {} as typeof globalThis.Dustland;
+  if (!globalThis.Dustland) globalThis.Dustland = {} as typeof globalThis.Dustland;
   globalThis.Dustland.weather = { getWeather, setWeather };
 })();

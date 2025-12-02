@@ -10,14 +10,15 @@ type NpcDialogTree = Record<string, NpcDialogNode>;
 interface ShopInventoryEntry {
   id?: string;
   count?: number;
-  [key: string]: unknown;
+  [key: string]: any;
 }
 
 type ShopConfig =
   | true
-  | (Record<string, unknown> & {
-      inv?: ShopInventoryEntry[];
-    });
+  | {
+    inv?: ShopInventoryEntry[];
+    [key: string]: any;
+  };
 
 type NpcProcessNode = (this: NpcEntity, node: string | null) => void;
 type NpcProcessChoice = (this: NpcEntity, choice: NpcDialogChoice) => void;
@@ -65,7 +66,7 @@ type BaseStatsFactory = () => Record<string, number>;
 
 type EnemyPresetRegistry = Record<string, string[] | undefined>;
 
-type NpcGlobals = typeof globalThis & {
+type NpcGlobals = DustlandGlobals & {
   Dustland?: DustlandNamespace & {
     actions?: DustlandActionsApi;
     openShop?: (npc: DustlandNpc) => void;
@@ -78,7 +79,7 @@ type NpcGlobals = typeof globalThis & {
   updateHUD?: () => void;
   textEl?: HTMLElement | null;
   CURRENCY?: string;
-  dialogState?: { node: string | null } & Record<string, unknown>;
+  dialogState?: { node: string | null } & Record<string, any>;
   renderDialog?: () => void;
   closeDialog?: () => void;
   defaultQuestProcessor?: (npc: DustlandNpc | null | undefined, node: string | null) => void;
@@ -89,7 +90,7 @@ type NpcGlobals = typeof globalThis & {
   enemyPresets?: EnemyPresetRegistry;
 };
 
-const npcGlobals = globalThis as NpcGlobals;
+const npcGlobals = globalThis as unknown as NpcGlobals;
 const NPC_COLOR = '#9ef7a0';
 const OBJECT_COLOR = '#225a20';
 
@@ -121,7 +122,7 @@ class NpcEntity implements DustlandNpc {
   questIdx: number;
   trainer?: string | null;
   overrideColor?: boolean;
-  [key: string]: unknown;
+  [key: string]: any;
 
   constructor({
     id,
@@ -204,7 +205,7 @@ class NpcEntity implements DustlandNpc {
             Number((combatSource as { hp?: number }).hp ?? (combatSource as { HP?: number }).HP ?? 0)
           )
         };
-        Dustland?.actions?.startCombat?.(combatant as CombatParticipant & Record<string, unknown>);
+        Dustland?.actions?.startCombat?.(combatant as CombatParticipant);
       } else if (this.shop && node === 'sell') {
         const player = npcGlobals.player;
         const inventory = Array.isArray(player?.inv) ? player.inv : [];
@@ -219,13 +220,13 @@ class NpcEntity implements DustlandNpc {
         sellNode.text = items.length ? 'What are you selling?' : 'Nothing to sell.';
         items.push({ label: '(Back)', to: 'start' });
         sellNode.choices = items;
-        } else if (this.shop && node === 'buy') {
-          npcGlobals.closeDialog?.();
-          const openShop = npcGlobals.Dustland?.openShop;
-          if (typeof openShop === 'function') {
-            openShop(this);
-          }
-          return;
+      } else if (this.shop && node === 'buy') {
+        npcGlobals.closeDialog?.();
+        const openShop = npcGlobals.Dustland?.openShop;
+        if (typeof openShop === 'function') {
+          openShop(this);
+        }
+        return;
       } else if (this.workbench && node === 'start') {
         npcGlobals.closeDialog?.();
         Dustland?.openWorkbench?.();
@@ -288,11 +289,11 @@ class NpcEntity implements DustlandNpc {
     }
   }
 
-  remember(key: string, value: unknown): void {
+  remember(key: string, value: any): void {
     Dustland?.gameState?.rememberNPC?.(this.id, key, value);
   }
 
-  recall(key: string): unknown {
+  recall(key: string): any {
     return Dustland?.gameState?.recallNPC?.(this.id, key);
   }
 }
@@ -427,12 +428,12 @@ function removeNPC(npc: DustlandNpc | null | undefined): void {
 
 type NpcFactoryDefinition =
   | (DustlandNpcTemplate &
-      Record<string, unknown> & {
-        dialogs?: string[];
-        dialog?: string | string[];
-        loop?: unknown;
-        quests?: Array<string | DustlandNpcQuest | Quest | null | undefined>;
-      })
+    Record<string, any> & {
+      dialogs?: string[];
+      dialog?: string | string[];
+      loop?: any;
+      quests?: Array<string | DustlandNpcQuest | Quest | null | undefined>;
+    })
   | (DustlandNpc & { id: string });
 
 type NpcFactory = Record<string, (x?: number, y?: number) => NpcEntity>;
@@ -483,21 +484,21 @@ function createNpcFactory(defs: NpcFactoryDefinition[] | null | undefined): NpcF
           .filter((q): q is DustlandNpcQuest | Quest => Boolean(q));
       }
       if (dlgArr) opts.questDialogs = dlgArr;
-        const npc = makeNPC(
-          n.id,
-          (n.map as string | undefined) ?? 'world',
-          spawnX,
-          spawnY,
-          typeof n.color === 'string' ? n.color : undefined,
-          (typeof n.name === 'string' ? n.name : undefined) ?? n.id,
-          typeof n.title === 'string' ? n.title : '',
-          typeof n.desc === 'string' ? n.desc : '',
-          treeData ?? null,
-          null,
-          null,
-          null,
-          opts
-        ) as NpcEntity;
+      const npc = makeNPC(
+        n.id,
+        (n.map as string | undefined) ?? 'world',
+        spawnX,
+        spawnY,
+        typeof n.color === 'string' ? n.color : undefined,
+        (typeof n.name === 'string' ? n.name : undefined) ?? n.id,
+        typeof n.title === 'string' ? n.title : '',
+        typeof n.desc === 'string' ? n.desc : '',
+        treeData ?? null,
+        null,
+        null,
+        null,
+        opts
+      ) as NpcEntity;
       if (Array.isArray((n as DustlandNpc).loop)) npc.loop = (n as DustlandNpc).loop;
       return npc;
     };

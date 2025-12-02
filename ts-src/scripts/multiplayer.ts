@@ -21,6 +21,7 @@ type RemotePartySnapshot = Readonly<RemotePartyEntry>;
 interface MultiplayerPeerInfo {
   id?: RemotePartyId;
   status?: string;
+  label?: string;
   [key: string]: unknown;
 }
 
@@ -51,6 +52,7 @@ type DebugModeInput = boolean | { movement?: boolean | null | undefined } | null
 
 interface MultiplayerOptions {
   debugMode?: DebugModeInput;
+  server?: string;
   [key: string]: unknown;
 }
 
@@ -75,8 +77,8 @@ type DustlandWithMultiplayer = DustlandNamespace & {
   movement?: (DustlandNamespace['movement'] extends Record<string, unknown>
     ? DustlandNamespace['movement']
     : Record<string, unknown>) & {
-    mapIdForState?: () => string | undefined;
-  };
+      mapIdForState?: () => string | undefined;
+    };
 };
 
 (function () {
@@ -158,7 +160,7 @@ type DustlandWithMultiplayer = DustlandNamespace & {
   updateRemoteState();
 
   function bindEvent<E extends DustlandEventName>(event: E, handler: DustlandEventHandler<E>): () => void {
-    if (!bus?.on) return () => {};
+    if (!bus?.on) return () => { };
     bus.on(event, handler);
     return () => bus?.off?.(event, handler);
   }
@@ -284,13 +286,13 @@ type DustlandWithMultiplayer = DustlandNamespace & {
         emitPeers(peers);
         const ids = Array.isArray(peers)
           ? peers
-              .map(peer => peer?.id)
-              .filter((value): value is RemotePartyId => typeof value === 'string' || typeof value === 'number')
+            .map(peer => peer?.id)
+            .filter((value): value is RemotePartyId => typeof value === 'string' || typeof value === 'number')
           : [];
         pruneRemoteParties(ids);
       }) as (() => void) | null;
       room.onPeers = fn => {
-        if (typeof fn !== 'function') return () => {};
+        if (typeof fn !== 'function') return () => { };
         const remove = baseOnPeers(fn);
         return () => remove?.();
       };

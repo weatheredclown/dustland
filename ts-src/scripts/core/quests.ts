@@ -26,13 +26,13 @@
     | QuestDialogNode
     | string
     | {
-        npcId?: string;
-        npc?: string;
-        id?: string;
-        nodeId?: string;
-        node?: string;
-        to?: string;
-      }
+      npcId?: string;
+      npc?: string;
+      id?: string;
+      nodeId?: string;
+      node?: string;
+      to?: string;
+    }
     | null
     | undefined;
 
@@ -57,7 +57,7 @@
     dialogNodes?: QuestDialogNodeInput[];
     dialogProgress?: Record<string, boolean> | null;
     progressText?: string;
-    dialog?: unknown;
+    dialog?: DustlandQuestDialogConfig | Record<string, unknown> | string | null;
     questDialogs?: string[];
     questIdx?: number;
     [key: string]: unknown;
@@ -80,27 +80,20 @@
     [key: string]: unknown;
   }
 
-  interface QuestRuntimeGlobals {
+  type QuestRuntimeGlobals = DustlandGlobals & {
     renderQuests?: () => void;
-    log?: (message: string) => void;
-    toast?: (message: string) => void;
     queueNanoDialogForNPCs?: (nodeId?: string, reason?: string, map?: string) => void;
     flagValue?: (flag: string) => number;
     textEl?: HTMLElement | null;
     choicesEl?: HTMLElement | null;
     closeDialog?: () => void;
-    player?: PlayerState;
     countItems?: (idOrTag: string) => number;
     findItemIndex?: (idOrTag: string) => number;
-    removeFromInv?: (index: number, quantity?: number) => void;
     resolveItem?: (reward: unknown) => GameItem | null | undefined;
-    addToInv?: (item: unknown) => boolean;
     ITEMS?: Record<string, GameItem>;
     party?: Party;
     awardXP?: (target: unknown, amount: number) => void;
-    EventBus?: DustlandEventBus;
-    Dustland?: DustlandNamespace;
-  }
+  };
 
   type QuestLike =
     | Quest
@@ -500,8 +493,8 @@
           const addFn = g.addToInv;
           const added = addFn?.(rewardIt);
           if (!added && Array.isArray(playerState.inv)) {
-             // Fallback manual add if addToInv failed or missing
-             playerState.inv.push(rewardIt);
+            // Fallback manual add if addToInv failed or missing
+            playerState.inv.push(rewardIt);
           }
         }
       }

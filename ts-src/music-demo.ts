@@ -183,11 +183,11 @@
   }
 
   function euclid(steps, pulses, rot) {
-    steps = Math.max(1, steps|0);
-    pulses = Math.max(0, Math.min(steps, pulses|0));
+    steps = Math.max(1, steps | 0);
+    pulses = Math.max(0, Math.min(steps, pulses | 0));
     var pattern = [];
-    if (pulses === 0) { for (var z=0; z<steps; z++) pattern.push(0); return pattern; }
-    if (pulses === steps) { for (var y=0; y<steps; y++) pattern.push(1); return pattern; }
+    if (pulses === 0) { for (var z = 0; z < steps; z++) pattern.push(0); return pattern; }
+    if (pulses === steps) { for (var y = 0; y < steps; y++) pattern.push(1); return pattern; }
     var counts = [], remainders = [], divisor = steps - pulses;
     remainders[0] = pulses;
     var level = 0;
@@ -198,13 +198,13 @@
       level++;
     }
     counts[level] = divisor;
-    var r = function(l) {
+    var r = function (l) {
       if (l === -1) { pattern.push(0); }
       else if (l === -2) { pattern.push(1); }
-      else { for (var i=0;i<counts[l];i++) r(l-1); if (remainders[l] !== 0) r(l-2); }
+      else { for (var i = 0; i < counts[l]; i++) r(l - 1); if (remainders[l] !== 0) r(l - 2); }
     };
     r(level);
-    var rotN = ((rot||0)%steps+steps)%steps; return pattern.slice(rotN).concat(pattern.slice(0,rotN));
+    var rotN = ((rot || 0) % steps + steps) % steps; return pattern.slice(rotN).concat(pattern.slice(0, rotN));
   }
 
   // Audio node helpers
@@ -414,7 +414,7 @@
 
     // On bar start, play intro pattern per setting
     if (beatInBar === 0) {
-      playBarIntro((music.harmony[ Math.floor(step / stepsPerBar) % music.harmony.length ] || 0), t2);
+      playBarIntro((music.harmony[Math.floor(step / stepsPerBar) % music.harmony.length] || 0), t2);
     }
 
     // Bass pattern: root or fifth of current chord degree (more deterministic)
@@ -445,10 +445,10 @@
     } else if (globalSeed && globalSeed.length) {
       for (var j = 0; j < globalSeed.length; j++) {
         var s = globalSeed[j];
-        if ((s.step|0) === stepInBar) {
-          var sd = (s.degree|0) + deg; // transpose by harmony degree
+        if ((s.step | 0) === stepInBar) {
+          var sd = (s.degree | 0) + deg; // transpose by harmony degree
           var lm = midiFromDegree(music.key, music.scale, sd, 0);
-          var ld = secondsPer16th() * Math.max(1, (s.dur|0) || 2);
+          var ld = secondsPer16th() * Math.max(1, (s.dur | 0) || 2);
           playLeadNote(lm, t2, ld, vel);
         }
       }
@@ -519,13 +519,31 @@
   // Optional Magenta VAE integration for lead interpolation
   type LeadOverrideEvent = { step: number; midi: number; durSteps?: number };
   type LeadOverrideMap = Record<number, LeadOverrideEvent[]>;
+
+  interface Note {
+    pitch: number;
+    quantizedStartStep: number;
+    quantizedEndStep: number;
+    velocity: number;
+    isDrum: boolean;
+  }
+
+  interface NoteSequence {
+    ticksPerQuarter: number;
+    totalTime?: number;
+    tempos?: { qpm: number }[];
+    notes: Note[];
+    totalQuantizedSteps: number;
+    quantizationInfo: { stepsPerQuarter: number };
+  }
+
   var mg = {
     enabled: false,
     loading: false,
     ready: false,
     vae: null as {
       initialize: () => Promise<void>;
-      interpolate: (inputs: unknown[], count: number) => Promise<unknown[]>;
+      interpolate: (inputs: NoteSequence[], count: number) => Promise<NoteSequence[]>;
     } | null,
     leadOverride: {} as LeadOverrideMap
   };
@@ -554,7 +572,7 @@
   }
 
   function degreesSeedFallback(deg) {
-    return [ { step: 0, degree: deg, dur: 2 }, { step: 4, degree: deg, dur: 2 }, { step: 8, degree: deg + 2, dur: 2 }, { step: 12, degree: deg, dur: 2 } ];
+    return [{ step: 0, degree: deg, dur: 2 }, { step: 4, degree: deg, dur: 2 }, { step: 8, degree: deg + 2, dur: 2 }, { step: 12, degree: deg, dur: 2 }];
   }
 
   function seedToNoteSequenceDegrees(key, scaleName, degForFallback) {
@@ -563,8 +581,8 @@
     for (var i = 0; i < seed.length; i++) {
       var n = seed[i];
       var midi = midiFromDegree(key, scaleName, n.degree, 0);
-      var start = Math.max(0, Math.min(stepsPerBar - 1, (n.step|0)));
-      var end = Math.max(start + 1, Math.min(stepsPerBar, start + Math.max(1, (n.dur|0) || 2)));
+      var start = Math.max(0, Math.min(stepsPerBar - 1, (n.step | 0)));
+      var end = Math.max(start + 1, Math.min(stepsPerBar, start + Math.max(1, (n.dur | 0) || 2)));
       ns.notes.push({ pitch: midi, quantizedStartStep: start, quantizedEndStep: end, velocity: 100, isDrum: false });
     }
     return ns;
@@ -576,11 +594,11 @@
       var notes = ns.notes || [];
       for (var i = 0; i < notes.length; i++) {
         var q = notes[i];
-        var st = (q.quantizedStartStep|0);
-        var en = (q.quantizedEndStep|0);
+        var st = (q.quantizedStartStep | 0);
+        var en = (q.quantizedEndStep | 0);
         var step = Math.max(0, Math.min(stepsPerBar - 1, st));
         var dur = Math.max(1, Math.min(stepsPerBar - step, en - st));
-        arr.push({ step: step, midi: q.pitch|0, durSteps: dur });
+        arr.push({ step: step, midi: q.pitch | 0, durSteps: dur });
       }
     } else if (window.mm && window.mm.sequences && ns.tempos && ns.notes) {
       try {
@@ -611,22 +629,22 @@
         if (!out || !out.length) throw new Error('no sequences');
         var barEvents = [];
         for (var i = 1; i < out.length - 1; i++) { // use interior sequences
-        var seq = out[i] as any;
-        if (!seq) continue;
-        if (!seq.quantizationInfo && window.mm && window.mm.sequences) {
-          try { seq = window.mm.sequences.quantizeNoteSequence(seq, 4); } catch (e) { /* ignore */ void e; }
-        }
+          var seq = out[i] as any;
+          if (!seq) continue;
+          if (!seq.quantizationInfo && window.mm && window.mm.sequences) {
+            try { seq = window.mm.sequences.quantizeNoteSequence(seq, 4); } catch (e) { /* ignore */ void e; }
+          }
           // Split 2-bar sequence into two one-bar chunks
           for (var off = 0; off <= stepsPerBar; off += stepsPerBar) {
             var ns = { ticksPerQuarter: 220, totalQuantizedSteps: stepsPerBar, quantizationInfo: { stepsPerQuarter: 4 }, notes: [] };
             var notes = (seq as any).notes || [];
             for (var j = 0; j < notes.length; j++) {
               var q = notes[j];
-              var st = (q.quantizedStartStep|0) - off;
-              var en = (q.quantizedEndStep|0) - off;
+              var st = (q.quantizedStartStep | 0) - off;
+              var en = (q.quantizedEndStep | 0) - off;
               if (st < 0 || st >= stepsPerBar) continue;
               var adjEn = Math.max(st + 1, Math.min(stepsPerBar, en));
-              ns.notes.push({ pitch: q.pitch|0, quantizedStartStep: st, quantizedEndStep: adjEn, velocity: q.velocity || 100, isDrum: !!q.isDrum });
+              ns.notes.push({ pitch: q.pitch | 0, quantizedStartStep: st, quantizedEndStep: adjEn, velocity: q.velocity || 100, isDrum: !!q.isDrum });
             }
             var ev = eventsFromNoteSequence(ns);
             if (ev && ev.length) barEvents.push(ev);
@@ -702,19 +720,19 @@
     barBeat.textContent = (bar + 1) + ' / ' + Math.floor(beat);
   }
 
-    function start() {
-      if (playing) return;
-      if (!ac) {
-        var ContextCtor = window.AudioContext || window.webkitAudioContext;
-        if (!ContextCtor) return;
-        ac = new ContextCtor();
-        master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination);
-        delay = ac.createDelay(0.5); delay.delayTime.value = 0.22;
-        delayGain = ac.createGain(); delayGain.gain.value = 0.25;
-      }
+  function start() {
+    if (playing) return;
+    if (!ac) {
+      var ContextCtor = window.AudioContext || window.webkitAudioContext;
+      if (!ContextCtor) return;
+      ac = new ContextCtor();
+      master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination);
+      delay = ac.createDelay(0.5); delay.delayTime.value = 0.22;
+      delayGain = ac.createGain(); delayGain.gain.value = 0.25;
+    }
     if (tone.enabled && window.Tone && !tone.ready) {
       // ensure Tone audio context is started
-      Tone.start().then(function(){ /* started */ }).catch(function(){});
+      Tone.start().then(function () { /* started */ }).catch(function () { });
     }
     // Sync to next whole 16th to keep changes musical
     var t = ac.currentTime + 0.05;
@@ -722,53 +740,53 @@
     current16th = 0;
     music.barCount = 0;
     playing = true;
-      scheduleTimer = setInterval(scheduler, lookahead * 1000);
-    }
+    scheduleTimer = setInterval(scheduler, lookahead * 1000);
+  }
 
-    function stop() {
-      if (!playing) return;
-      playing = false;
-      if (scheduleTimer) {
-        clearInterval(scheduleTimer);
-        scheduleTimer = null;
+  function stop() {
+    if (!playing) return;
+    playing = false;
+    if (scheduleTimer) {
+      clearInterval(scheduleTimer);
+      scheduleTimer = null;
+    }
+  }
+
+  // UI wiring
+  if (startBtn && seedEl) {
+    startBtn.onclick = function () {
+      if (!ac) setSeed(parseInt(seedEl.value || '1', 10));
+      start();
+    };
+  }
+  if (stopBtn) stopBtn.onclick = function () { stop(); };
+  if (nextBtn) nextBtn.onclick = function () { if (playing) music.nextMood = music.nextMood || music.mood; };
+  // Apply current harmony edits when switching moods via click
+  if (moodList) {
+    moodList.addEventListener('click', function (e) {
+      var target = e.target as HTMLElement | null;
+      if (target?.dataset?.mood) {
+        persistHarmonyFromInput();
       }
-    }
+    }, true);
+  }
 
-    // UI wiring
-    if (startBtn && seedEl) {
-      startBtn.onclick = function () {
-        if (!ac) setSeed(parseInt(seedEl.value || '1', 10));
-        start();
-      };
-    }
-    if (stopBtn) stopBtn.onclick = function () { stop(); };
-    if (nextBtn) nextBtn.onclick = function () { if (playing) music.nextMood = music.nextMood || music.mood; };
-    // Apply current harmony edits when switching moods via click
-    if (moodList) {
-      moodList.addEventListener('click', function (e) {
-        var target = e.target as HTMLElement | null;
-        if (target?.dataset?.mood) {
-          persistHarmonyFromInput();
-        }
-      }, true);
-    }
-
-    if (tempoEl) tempoEl.oninput = function () {
-      var v = parseInt(tempoEl.value, 10);
-      if (tempoLabel) tempoLabel.textContent = v + ' BPM';
-      music.bpm = v;
-      // persist per-mood tempo
-      var idx = MOODS.findIndex(function (x) { return x.id === music.mood; });
-      if (idx >= 0) MOODS[idx].bpm = v;
-      renderConfig();
-    };
-    if (keyEl) keyEl.onchange = function () {
-      music.key = keyEl.value;
-      var idx = MOODS.findIndex(function (x) { return x.id === music.mood; });
-      if (idx >= 0) MOODS[idx].key = music.key;
-      if (scaleLabel) scaleLabel.textContent = music.key + ' ' + music.scale;
-      renderConfig();
-    };
+  if (tempoEl) tempoEl.oninput = function () {
+    var v = parseInt(tempoEl.value, 10);
+    if (tempoLabel) tempoLabel.textContent = v + ' BPM';
+    music.bpm = v;
+    // persist per-mood tempo
+    var idx = MOODS.findIndex(function (x) { return x.id === music.mood; });
+    if (idx >= 0) MOODS[idx].bpm = v;
+    renderConfig();
+  };
+  if (keyEl) keyEl.onchange = function () {
+    music.key = keyEl.value;
+    var idx = MOODS.findIndex(function (x) { return x.id === music.mood; });
+    if (idx >= 0) MOODS[idx].key = music.key;
+    if (scaleLabel) scaleLabel.textContent = music.key + ' ' + music.scale;
+    renderConfig();
+  };
   seedEl.onchange = function () { setSeed(parseInt(seedEl.value || '1', 10)); };
   if (mgBtn) mgBtn.onclick = function () { loadMagenta(); };
   if (toneBtn) toneBtn.onclick = function () { loadTone(); };
@@ -878,7 +896,7 @@
             for (var i = 0; i < cfg.motifs.length; i++) {
               var cm = cfg.motifs[i] || {};
               var name = cm.name ? String(cm.name) : ('Motif ' + (i + 1));
-              var notes = Array.isArray(cm.notes) ? cm.notes.map(function (n) { return { step: (n.step|0), degree: (n.degree|0), dur: (n.dur|0) || 2 }; }) : [];
+              var notes = Array.isArray(cm.notes) ? cm.notes.map(function (n) { return { step: (n.step | 0), degree: (n.degree | 0), dur: (n.dur | 0) || 2 }; }) : [];
               motifs.push({ id: 'motif' + (i + 1), name: name, notes: notes });
             }
             selectedMotifIndex = Math.min(Math.max(0, selectedMotifIndex), Math.max(0, motifs.length - 1));
@@ -917,7 +935,7 @@
     var m = MOODS.find(function (x) { return x.id === music.mood; });
     if (!m) return;
     if (moodKeyEl) { m.key = music.key = moodKeyEl.value; if (keyEl) keyEl.value = music.key; }
-      if (moodBpmEl) { m.bpm = music.bpm = parseInt(moodBpmEl.value, 10) || m.bpm; if (tempoEl) { tempoEl.value = String(music.bpm); tempoLabel.textContent = music.bpm + ' BPM'; } }
+    if (moodBpmEl) { m.bpm = music.bpm = parseInt(moodBpmEl.value, 10) || m.bpm; if (tempoEl) { tempoEl.value = String(music.bpm); tempoLabel.textContent = music.bpm + ' BPM'; } }
     if (moodScaleEl) { m.scale = music.scale = moodScaleEl.value; }
     if (moodDensityEl) { var d = parseFloat(moodDensityEl.value); if (!isNaN(d)) m.density = music.density = d; }
     if (moodSwingEl) { var s = parseFloat(moodSwingEl.value); if (!isNaN(s)) m.swing = music.swing = s; }
@@ -981,7 +999,7 @@
   function motifVariation(notes) {
     // Return a shallow-varied copy of notes within the bar
     var out = [];
-    for (var i = 0; i < notes.length; i++) out.push({ step: (notes[i].step|0), degree: (notes[i].degree|0), dur: (notes[i].dur|0) || 2 });
+    for (var i = 0; i < notes.length; i++) out.push({ step: (notes[i].step | 0), degree: (notes[i].degree | 0), dur: (notes[i].dur | 0) || 2 });
     if (out.length) {
       // 30%: nudge last note later by 1 step
       if (rnd() < 0.3) { out[out.length - 1].step = Math.min(stepsPerBar - 1, out[out.length - 1].step + 1); }
@@ -1013,8 +1031,8 @@
     for (var i = 0; i < varied.length; i++) {
       var n = varied[i];
       var midi = midiFromDegree(music.key, music.scale, n.degree + deg, 0);
-      var st = Math.max(0, Math.min(stepsPerBar - 1, (n.step|0)));
-      var en = Math.max(st + 1, Math.min(stepsPerBar, st + Math.max(1, (n.dur|0) || 2)));
+      var st = Math.max(0, Math.min(stepsPerBar - 1, (n.step | 0)));
+      var en = Math.max(st + 1, Math.min(stepsPerBar, st + Math.max(1, (n.dur | 0) || 2)));
       ns.notes.push({ pitch: midi, quantizedStartStep: st, quantizedEndStep: en });
     }
     motifBarMap[barIndex] = eventsFromNoteSequence(ns);
@@ -1130,9 +1148,9 @@
 
   // Defaults
   applyMood('somber');
-    if (tempoEl) tempoEl.value = String(music.bpm);
-    if (tempoLabel) tempoLabel.textContent = music.bpm + ' BPM';
-    if (keyEl) keyEl.value = music.key;
+  if (tempoEl) tempoEl.value = String(music.bpm);
+  if (tempoLabel) tempoLabel.textContent = music.bpm + ' BPM';
+  if (keyEl) keyEl.value = music.key;
   ensureDefaultMotif();
   setMotifMode('improv');
   renderMotifList();

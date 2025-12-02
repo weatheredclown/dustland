@@ -1,10 +1,10 @@
-(function(){
-  if(!globalThis.Dustland) globalThis.Dustland = {};
+(function () {
+  if (!globalThis.Dustland) globalThis.Dustland = {};
   const dustland = globalThis.Dustland;
   const gs = dustland.gameState;
   const bus = dustland.eventBus || globalThis.EventBus;
-  if(typeof gs?.setPersona !== 'function') return;
-  if(typeof bus?.on !== 'function') return;
+  if (typeof gs?.setPersona !== 'function') return;
+  if (typeof bus?.on !== 'function') return;
 
   const templates: Record<string, DustlandPersonaTemplate> = {
     'mara.masked': {
@@ -32,19 +32,24 @@
 
   dustland.personaTemplates = templates;
 
+  interface PersonaItemPayload {
+    tags?: string[];
+    persona?: string;
+  }
+
   bus.on('item:picked', (payload: unknown) => {
-    const item = payload as { tags?: unknown; persona?: unknown } | undefined;
+    const item = payload as PersonaItemPayload | undefined;
     const tags = Array.isArray(item?.tags)
       ? item.tags
-          .map(tag => (typeof tag === 'string' ? tag.toLowerCase() : ''))
-          .filter(Boolean)
+        .map(tag => (typeof tag === 'string' ? tag.toLowerCase() : ''))
+        .filter(Boolean)
       : [];
-    if(!tags.includes('mask')) return;
+    if (!tags.includes('mask')) return;
 
     const personaId = typeof item?.persona === 'string' ? item.persona : undefined;
-    if(!personaId) return;
+    if (!personaId) return;
 
     const template = templates[personaId];
-    if(template) gs.setPersona(personaId, template);
+    if (template) gs.setPersona(personaId, template);
   });
 })();

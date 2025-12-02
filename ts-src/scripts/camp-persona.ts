@@ -8,6 +8,7 @@
     id?: string;
     name?: string;
     count?: number;
+    scrap?: number;
     [key: string]: unknown;
   };
 
@@ -37,7 +38,7 @@
       globals.openWorldMap?.('camp');
     });
   }
-  const formatScrap = (value: unknown): string => {
+  const formatScrap = (value: number | string | unknown): string => {
     if (typeof value !== 'number') return String(value ?? '');
     try {
       return value.toLocaleString('en-US');

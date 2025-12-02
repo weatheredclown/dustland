@@ -1,6 +1,6 @@
 import type { DustlandFeatureFlags } from './scripts/ack/server-mode-types.js';
 
-export {};
+export { };
 
 declare global {
   type WizardPrimitive = string | number | boolean | null | undefined;
@@ -149,7 +149,7 @@ declare global {
 
   interface DustlandSpoilsCacheApi {
     ranks?: Record<string, { name?: string; desc?: string; icon?: string }>;
-    create: (rank: string) => { id: string; rank?: string; [key: string]: unknown };
+    create: (rank: string) => { id: string; rank?: string;[key: string]: unknown };
     pickRank: (challenge: number, rng?: () => number) => string;
     rollDrop: (challenge: number, rng?: () => number) => unknown;
     renderIcon: (rank: string, onOpen?: () => void) => HTMLElement | null;
@@ -236,8 +236,8 @@ declare global {
     w?: number;
     h?: number;
     dry?: boolean;
-    perStep?: { hp?: number; [key: string]: unknown };
-    step?: { hp?: number; [key: string]: unknown };
+    perStep?: { hp?: number;[key: string]: unknown };
+    step?: { hp?: number;[key: string]: unknown };
     [key: string]: unknown;
   }
 
@@ -246,7 +246,7 @@ declare global {
     icon: string;
     desc: string;
     speedMod: number;
-    encounterBias: unknown;
+    encounterBias?: number | Record<string, number>;
     [key: string]: unknown;
   }
 
@@ -285,7 +285,7 @@ declare global {
     success?: string;
     effects?: unknown[];
     checks?: unknown[];
-    check?: { stat?: string; dc?: number; [key: string]: unknown };
+    check?: { stat?: string; dc?: number;[key: string]: unknown };
     once?: boolean;
     if?: unknown;
     ifOnce?: { node?: string; label?: string; used?: boolean };
@@ -435,7 +435,7 @@ declare global {
   type DustlandBehaviorCondition =
     | { type: 'npcExists'; npcId?: string }
     | { type: 'flag'; flag: string; value?: number; op?: '>=' | '>' | '<=' | '<' | '==' | '=' | '!=' }
-    | { type?: string; [key: string]: unknown };
+    | { type?: string;[key: string]: unknown };
 
   interface DustlandDialogVariant {
     condition?: DustlandBehaviorCondition;
@@ -484,7 +484,7 @@ declare global {
   interface DustlandModuleInstance {
     postLoad?: (
       moduleData: DustlandModuleInstance,
-      context?: { phase?: string; [key: string]: unknown }
+      context?: { phase?: string;[key: string]: unknown }
     ) => void;
     start?: { map: string; x: number; y: number } | null;
     templates?: Array<{
@@ -578,13 +578,13 @@ declare global {
     'skin:changed': SkinChangedPayload;
     'combat:started': undefined;
     'combat:ended': { result?: CombatOutcome | string | null | undefined };
-    'combat:event': { type?: string; [key: string]: unknown } | unknown;
+    'combat:event': { type?: string;[key: string]: unknown } | unknown;
     'combat:telemetry': unknown;
-    'enemy:defeated': { target?: unknown; [key: string]: unknown } | unknown;
+    'enemy:defeated': { target?: unknown;[key: string]: unknown } | unknown;
     'movement:player': MovementEventPayload;
     'music:mood': MusicMoodPayload;
     'party:selected': PartySelectedPayload;
-    'sfx': string | { id?: string; [key: string]: unknown };
+    'sfx': string | { id?: string;[key: string]: unknown };
     'weather:change': DustlandWeatherState;
     [event: string]: unknown | undefined;
   }
@@ -682,13 +682,13 @@ declare global {
     [key: string]: unknown;
   }
 
-interface ItemGeneratorRange {
+  interface ItemGeneratorRange {
     min: number;
     max: number;
   }
-  
+
   type ItemGeneratorRank = 'rusted' | 'sealed' | 'armored' | 'vaulted';
-  
+
   type ItemGeneratorRandomSource = () => number;
 
   interface GeneratedTrinketItem extends PartyItem {
@@ -704,7 +704,7 @@ interface ItemGeneratorRange {
     adjectives: readonly string[];
     nouns: readonly string[];
     statRanges: Record<string, ItemGeneratorRange> &
-      Record<ItemGeneratorRank, ItemGeneratorRange>;
+    Record<ItemGeneratorRank, ItemGeneratorRange>;
     scrapValues: Record<string, number>;
     statKeys: readonly string[];
     calcScrap: (item: GeneratedTrinketItem) => number;
@@ -939,11 +939,11 @@ interface ItemGeneratorRange {
   type PartySpecialEntry =
     | string
     | {
-        id?: string;
-        name?: string;
-        label?: string;
-        [key: string]: unknown;
-      };
+      id?: string;
+      name?: string;
+      label?: string;
+      [key: string]: unknown;
+    };
 
   interface PartyItem extends GameItem {
     mods?: {
@@ -1043,10 +1043,10 @@ interface ItemGeneratorRange {
     unlockTime?: number | null;
     overrideColor?: boolean;
     tree?:
-      | DustlandDialogTree
-      | Record<string, unknown>
-      | (() => DustlandDialogTree | Record<string, unknown> | null | undefined)
-      | null;
+    | DustlandDialogTree
+    | Record<string, unknown>
+    | (() => DustlandDialogTree | Record<string, unknown> | null | undefined)
+    | null;
     quest?: Quest | DustlandNpcQuest;
     combat?: {
       xp?: number;
@@ -1118,8 +1118,8 @@ interface ItemGeneratorRange {
   declare var EventBus: DustlandEventBus;
   declare var state:
     | (DustlandCoreState & {
-        arenas?: Record<string, DustlandBehaviorArenaState | undefined>;
-      })
+      arenas?: Record<string, DustlandBehaviorArenaState | undefined>;
+    })
     | undefined;
 
   interface MemoryTapeItem {
@@ -1229,7 +1229,7 @@ interface ItemGeneratorRange {
     resetAll?: () => void;
     moduleData?: DustlandModuleInstance | null;
     modulePickerPending?: boolean;
-    perfStats?: { tiles?: number; sfx?: number; [key: string]: number | undefined };
+    perfStats?: { tiles?: number; sfx?: number;[key: string]: number | undefined };
     fxConfig?: Record<string, unknown> | null;
     DustlandSkin?: unknown;
     state?: (DustlandCoreState & {
@@ -1313,7 +1313,7 @@ interface ItemGeneratorRange {
   }
 
   let __combatState:
-    | { enemies?: Array<{ name?: string; DEF?: number; hp: number; [key: string]: unknown }>; [key: string]: unknown }
+    | { enemies?: Array<{ name?: string; DEF?: number; hp: number;[key: string]: unknown }>;[key: string]: unknown }
     | undefined;
 
   function log(message: string, type?: string): void;
