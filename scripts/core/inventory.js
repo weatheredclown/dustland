@@ -31,7 +31,7 @@ const _LOOT_VACUUM_TAG = 'loot_vacuum';
 const _LOOT_VACUUM_IDS = new Set(['suction_relay']);
 function _cloneData(obj) {
     if (!obj)
-        return null;
+        return obj;
     try {
         return JSON.parse(JSON.stringify(obj));
     }
@@ -52,7 +52,7 @@ function _listRequiredRoles(it) {
     const req = it?.equip?.requires;
     if (!req)
         return roles;
-    const addRole = value => {
+    const addRole = (value) => {
         if (typeof value !== 'string')
             return;
         const name = value.trim();
@@ -149,8 +149,8 @@ function _isStackable(it) {
         return false;
     if (!_isEquipType(it.type))
         return true;
-    const rarity = typeof it.rarity === 'string' ? it.rarity.toLowerCase() : '';
-    return rarity === 'common';
+    const rarity = it.rarity;
+    return typeof rarity === 'string' && rarity.toLowerCase() === 'common';
 }
 function _getStackCount(it) {
     return Math.max(1, Number.isFinite(it?.count) ? it.count : 1);
@@ -188,7 +188,7 @@ function _cloneItem(it) {
  */
 function _registerItem(item) {
     const norm = _normalizeItem(item);
-    if (!norm.id)
+    if (!norm || !norm.id)
         throw new Error('Item must have id');
     _ITEMS[norm.id] = norm;
     return norm;
@@ -687,7 +687,11 @@ function _pickupCache(drop) {
             toast('Inventory is full.');
         return false;
     }
-    ids.forEach(id => _addToInv(_getItem(id)));
+    ids.forEach(id => {
+        const item = _getItem(id);
+        if (item)
+            _addToInv(item);
+    });
     return true;
 }
 /**

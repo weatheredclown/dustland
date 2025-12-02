@@ -1,7 +1,7 @@
 export {};
 
 declare global {
-  type DustlandWizardStepState = Record<string, unknown>;
+  type DustlandWizardStepState = WizardState;
 
   interface DustlandWizardStep {
     render(container: HTMLElement, state: DustlandWizardStepState): void;
@@ -9,7 +9,7 @@ declare global {
     onComplete?(state: DustlandWizardStepState): void;
   }
 
-  type DustlandWizardStepFactory = (...args: unknown[]) => DustlandWizardStep;
+  type DustlandWizardStepFactory = WizardStepFactory;
 
   interface DustlandNamespace {
     WizardSteps?: Record<string, DustlandWizardStepFactory>;

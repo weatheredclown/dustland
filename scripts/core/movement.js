@@ -25,12 +25,12 @@ let essentialRestockCache = { module: null, data: null };
 function buildCombatant(def, npc) {
     const base = def || {};
     const hp = typeof base.hp === 'number' ? base.hp : (typeof base.HP === 'number' ? base.HP : 1);
-    const name = typeof base.name === 'string' ? base.name : npc?.name;
+    const name = typeof base.name === 'string' ? base.name : npc?.name || 'Unknown';
     return { ...base, hp, npc, name };
 }
 function startMovementCombat(def, npc) {
     const combatant = buildCombatant(def, npc);
-    return Dustland.actions?.startCombat?.(combatant);
+    return Dustland?.actions?.startCombat?.(combatant);
 }
 function normalizePositiveInt(value, fallback) {
     const base = Number.isFinite(value) ? value : fallback;
@@ -619,7 +619,7 @@ function resolveEncounterChallenge(entry) {
         return null;
     if (Number.isFinite(entry.challenge))
         return entry.challenge;
-    const challenge = entry.combat && Number.isFinite(entry.combat.challenge)
+    const challenge = entry.combat && typeof entry.combat === 'object' && Number.isFinite(entry.combat.challenge)
         ? entry.combat.challenge
         : null;
     if (Number.isFinite(challenge))
@@ -627,7 +627,7 @@ function resolveEncounterChallenge(entry) {
     const templateId = entry.templateId;
     if (templateId && typeof npcTemplates !== 'undefined' && Array.isArray(npcTemplates)) {
         const tpl = npcTemplates.find(t => t && t.id === templateId);
-        if (tpl && Number.isFinite(tpl.combat?.challenge)) {
+        if (tpl && tpl.combat && typeof tpl.combat === 'object' && Number.isFinite(tpl.combat.challenge)) {
             return tpl.combat.challenge;
         }
     }

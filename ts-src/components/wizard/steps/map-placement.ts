@@ -2,8 +2,8 @@ type MapPlacementPoint = { x: number; y: number };
 
 const isMapPlacementPoint = (value: WizardStateValue | undefined): value is MapPlacementPoint => {
   if (!value || typeof value !== 'object') return false;
-  const candidate = value as Record<string, unknown>;
-  return typeof candidate.x === 'number' && typeof candidate.y === 'number';
+  const candidate = value as Partial<MapPlacementPoint>;
+  return Number.isFinite(candidate.x) && Number.isFinite(candidate.y);
 };
 
 const mapPlacementStep: WizardStepFactory = (key: string) => {
