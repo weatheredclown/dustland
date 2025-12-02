@@ -11,6 +11,7 @@
 
 ## Delivery snapshot
 
+- **Type safety project closed**: all `@ts-nocheck` headers are removed, and shared helpers cover the remaining DOM and engine surfaces. Keep the suppression count at zero by running the guardrail command before merges.
 - **Combat loop is live**: the adrenaline HUD, specials, and boss telegraph effects are wired into the current combat renderer and status system. The remaining gaps are AI aggression, encounter pacing, and HUD readability at speed.
 - **RPG progression is playable**: XP curves, skill points, trainers, Memory Worm respecs, and mentor hooks ship in the runtime. Balancing the curve and upgrading trainer inventories are the open items.
 - **Hydration and fast travel shipped**: hydration ticks during movement and consumes items, and bunker terminals feed the world-map fast travel UI. Further polish should focus on messaging and scope controls.
@@ -18,14 +19,14 @@
 
 ## Prioritized Roadmap
 
-1. **Type safety and event hygiene** – remove the remaining `@ts-nocheck` headers (combat, movement, core, adventure-kit, engine) and stabilize ambient globals so CI can enforce type coverage.
-2. **Combat polish** – tighten enemy AI scripts, add visibility cues for status effects, and lock in HUD layout tweaks for adrenaline and health readability.
-3. **Progression tuning** – rebalance XP gain, trainer price ladders, and Memory Worm availability based on the current skill-point loop.
-4. **Module cohesion** – finish integrating the True Dust starter path and ensure map fragments and bunker routes align with the existing modules.
-5. **Production checks in CI** – schedule `npm run check:prod` as a nightly and pre-release gate to keep synced builds and HTML presubmit coverage.
-6. **Economy refresh** – extend trader persistence and inventory refresh rules before adding new vendor locations.
-7. **Wizard and tooling extensions** – add more Adventure Kit wizard steps (placement, preview) and keep module CLI coverage healthy.
-8. **Multiplayer experiments** – keep on ice until the single-player loop is balanced and stable.
+1. **Combat polish** – tighten enemy AI scripts, add visibility cues for status effects, and lock in HUD layout tweaks for adrenaline and health readability.
+2. **Progression tuning** – rebalance XP gain, trainer price ladders, and Memory Worm availability based on the current skill-point loop.
+3. **Module cohesion** – finish integrating the True Dust starter path and ensure map fragments and bunker routes align with the existing modules.
+4. **Production checks in CI** – schedule `npm run check:prod` as a nightly and pre-release gate to keep synced builds and HTML presubmit coverage.
+5. **Economy refresh** – extend trader persistence and inventory refresh rules before adding new vendor locations.
+6. **Wizard and tooling extensions** – add more Adventure Kit wizard steps (placement, preview) and keep module CLI coverage healthy.
+7. **Multiplayer experiments** – keep on ice until the single-player loop is balanced and stable.
+8. **Type safety maintenance** – keep the `@ts-nocheck` count at zero by enforcing typed helpers and rejecting regressions in CI.
 
 *Dynamic Weather is complete and lives in `docs/design/core-systems/dynamic-weather.md`.*
 
