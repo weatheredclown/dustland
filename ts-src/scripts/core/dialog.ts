@@ -7,7 +7,7 @@ const titleEl = document.getElementById('npcTitle');
 const portEl = document.getElementById('port');
 const persistBtn = document.getElementById('persistLLM');
 
-type DialogGlobals = typeof globalThis & {
+type DialogGlobals = DustlandGlobals & {
   Dustland?: DustlandNamespace;
   player?: PlayerState;
   party?: Party;
@@ -19,12 +19,12 @@ type DialogGlobals = typeof globalThis & {
     id?: string,
     name?: string,
     role?: string,
-    options?: Record<string, unknown>
+    options?: Record<string, any>
   ) => PartyMember;
   countItems?: (idOrTag: string) => number;
   findItemIndex?: (idOrTag: string) => number;
   removeFromInv?: (index: number, quantity?: number) => void;
-  applyModule?: (moduleData: unknown, options?: { fullReset?: boolean }) => void;
+  applyModule?: (moduleData: any, options?: { fullReset?: boolean }) => void;
   setPartyPos?: (x: number, y: number) => void;
   setMap?: (mapId: string) => void;
   centerCamera?: (x: number, y: number, mapId?: string) => void;
@@ -39,19 +39,19 @@ type DialogGlobals = typeof globalThis & {
     name?: string,
     title?: string,
     desc?: string,
-    tree?: Record<string, unknown> | null,
+    tree?: Record<string, any> | null,
     quest?: DustlandNpcQuest | null,
-    dialog?: unknown,
-    extra?: unknown,
-    options?: Record<string, unknown>
+    dialog?: any,
+    extra?: any,
+    options?: Record<string, any>
   ) => DustlandNpc;
-  setFlag?: (flag: string, value: unknown) => void;
+  setFlag?: (flag: string, value: any) => void;
   incFlag?: (flag: string, value?: number) => void;
-  flagValue?: (flag: string) => unknown;
+  flagValue?: (flag: string) => any;
   hasItem?: (idOrTag: string) => boolean;
-  setGameState?: (next: number) => void;
+  setGameState?: (next: any) => void;
   trackQuestDialogNode?: (npcId: string, nodeId: string) => void;
-  checkFlagCondition?: (condition: unknown) => boolean;
+  checkFlagCondition?: (condition: any) => boolean;
   defaultQuestProcessor?: (
     npc: DustlandNpc | null | undefined,
     action: string
@@ -60,9 +60,10 @@ type DialogGlobals = typeof globalThis & {
   world?: DustlandMap[];
   persistLlmNodes?: (tree: DustlandDialogTree | null | undefined) => void;
   EventBus?: DustlandEventBus | DustlandEventBusApi;
+  setPortraitDiv?: (element: HTMLElement, npc: DustlandNpc) => void;
 };
 
-const dialogGlobals = globalThis as DialogGlobals;
+const dialogGlobals = globalThis as unknown as DialogGlobals;
 
 type NormalizedDialogChoice = DustlandDialogChoice & {
   label?: string;
@@ -71,12 +72,12 @@ type NormalizedDialogChoice = DustlandDialogChoice & {
 
 interface NormalizedDialogNode {
   text: string;
-  checks: unknown[];
-  effects: unknown[];
+  checks: any[];
+  effects: any[];
   next: NormalizedDialogChoice[];
   jump?: DustlandDialogJumpTarget[];
   noLeave?: boolean;
-  [key: string]: unknown;
+  [key: string]: any;
 }
 
 type NormalizedDialogTree = Record<string, NormalizedDialogNode> & {
@@ -102,7 +103,7 @@ interface QuestDialogConfigNormalized {
 }
 
 type DialogNpc = DustlandNpc & {
-  quest?: DustlandNpcQuest | (Quest & Record<string, unknown>);
+  quest?: DustlandNpcQuest | (Quest & Record<string, any>);
   processNode?: (nodeId: string | null) => void;
 };
 
@@ -120,7 +121,7 @@ let selectedChoice = 0;
 const DustlandNamespace = dialogGlobals.Dustland;
 
 if (persistBtn && typeof persistBtn === 'object' && 'onclick' in persistBtn) {
-  (persistBtn as { onclick: ((this: unknown, ev: MouseEvent) => unknown) | null }).onclick = () => {
+  (persistBtn as { onclick: ((this: any, ev: MouseEvent) => any) | null }).onclick = () => {
     dialogGlobals.persistLlmNodes?.(dialogState.tree as unknown as DustlandDialogTree);
     renderDialog();
   };
@@ -188,8 +189,8 @@ function ensureLeaveOption(node: NormalizedDialogNode | undefined): void {
   node.next = choices;
 }
 
-function normalizeDialogTree(tree: unknown): NormalizedDialogTree {
-  const source = (typeof tree === 'object' && tree) ? (tree as Record<string, unknown>) : {};
+function normalizeDialogTree(tree: any): NormalizedDialogTree {
+  const source = (typeof tree === 'object' && tree) ? (tree as Record<string, any>) : {};
   const out: Record<string, NormalizedDialogNode> = {};
 
   for (const id in source) {
@@ -234,8 +235,8 @@ function normalizeDialogTree(tree: unknown): NormalizedDialogTree {
     const jumpList = node.jump;
     const jump = Array.isArray(jumpList)
       ? (jumpList
-          .map(j => (typeof j === 'object' && j ? { to: j.to, if: j.if } : null))
-          .filter(Boolean) as DustlandDialogJumpTarget[])
+        .map(j => (typeof j === 'object' && j ? { to: j.to, if: j.if } : null))
+        .filter(Boolean) as DustlandDialogJumpTarget[])
       : [];
 
     out[id] = {
@@ -266,13 +267,13 @@ function ensureNode(tree: NormalizedDialogTree, id: string): NormalizedDialogNod
 }
 
 function normalizeChoiceConfig(
-  data: unknown,
+  data: any,
   defaults: DustlandDialogChoiceConfig & { label?: string }
 ): DustlandDialogChoiceConfig & { label?: string } {
   if (!data) return { ...defaults };
   if (typeof data === 'string') return { ...defaults, label: data };
   if (typeof data === 'object') {
-    const source = data as Record<string, unknown>;
+    const source = data as Record<string, any>;
     const result: DustlandDialogChoiceConfig & { label?: string } = {
       ...defaults,
       ...(source as DustlandDialogChoiceConfig)
@@ -286,11 +287,11 @@ function normalizeChoiceConfig(
   return { ...defaults };
 }
 
-function normalizeDialogStage(data: unknown): QuestDialogStage {
+function normalizeDialogStage(data: any): QuestDialogStage {
   if (!data) return { text: '' };
   if (typeof data === 'string') return { text: data };
   if (typeof data === 'object') {
-    const source = data as Record<string, unknown>;
+    const source = data as Record<string, any>;
     const stage: QuestDialogStage = { text: '' };
     if (typeof source.text === 'string') stage.text = source.text;
     else if (typeof source.dialog === 'string') stage.text = source.dialog;
@@ -302,35 +303,35 @@ function normalizeDialogStage(data: unknown): QuestDialogStage {
   return { text: '' };
 }
 
-function normalizeQuestDialogConfig(dialog: unknown): QuestDialogConfigNormalized {
+function normalizeQuestDialogConfig(dialog: any): QuestDialogConfigNormalized {
   const src = typeof dialog === 'string' ? { offer: dialog } : dialog;
-  const offer = normalizeDialogStage((src as Record<string, unknown> | undefined)?.offer ?? (src as Record<string, unknown> | undefined)?.offerText ?? (src as Record<string, unknown> | undefined)?.start ?? (src as Record<string, unknown> | undefined)?.available ?? null);
+  const offer = normalizeDialogStage((src as Record<string, any> | undefined)?.offer ?? (src as Record<string, any> | undefined)?.offerText ?? (src as Record<string, any> | undefined)?.start ?? (src as Record<string, any> | undefined)?.available ?? null);
   if (!offer.choice) {
-    const raw = (src as Record<string, unknown> | undefined)?.acceptLabel ?? (src as Record<string, unknown> | undefined)?.offerChoice ?? null;
+    const raw = (src as Record<string, any> | undefined)?.acceptLabel ?? (src as Record<string, any> | undefined)?.offerChoice ?? null;
     if (raw) offer.choice = normalizeChoiceConfig(raw, {});
   }
-  const accept = normalizeDialogStage((src as Record<string, unknown> | undefined)?.accept ?? (src as Record<string, unknown> | undefined)?.acceptText ?? null);
+  const accept = normalizeDialogStage((src as Record<string, any> | undefined)?.accept ?? (src as Record<string, any> | undefined)?.acceptText ?? null);
   if (!accept.choice) {
-    const raw = (src as Record<string, unknown> | undefined)?.acceptChoice ?? null;
+    const raw = (src as Record<string, any> | undefined)?.acceptChoice ?? null;
     if (raw) accept.choice = normalizeChoiceConfig(raw, {});
   }
-  const turnIn = normalizeDialogStage((src as Record<string, unknown> | undefined)?.turnIn ?? (src as Record<string, unknown> | undefined)?.turnin ?? (src as Record<string, unknown> | undefined)?.turnInText ?? (src as Record<string, unknown> | undefined)?.turninText ?? null);
+  const turnIn = normalizeDialogStage((src as Record<string, any> | undefined)?.turnIn ?? (src as Record<string, any> | undefined)?.turnin ?? (src as Record<string, any> | undefined)?.turnInText ?? (src as Record<string, any> | undefined)?.turninText ?? null);
   if (!turnIn.choice) {
     const raw =
-      (src as Record<string, unknown> | undefined)?.turnInChoice ??
-      (src as Record<string, unknown> | undefined)?.turnInLabel ??
-      (src as Record<string, unknown> | undefined)?.turninChoice ??
-      (src as Record<string, unknown> | undefined)?.turninLabel ??
+      (src as Record<string, any> | undefined)?.turnInChoice ??
+      (src as Record<string, any> | undefined)?.turnInLabel ??
+      (src as Record<string, any> | undefined)?.turninChoice ??
+      (src as Record<string, any> | undefined)?.turninLabel ??
       null;
     if (raw) turnIn.choice = normalizeChoiceConfig(raw, {});
   }
-  const active = normalizeDialogStage((src as Record<string, unknown> | undefined)?.active ?? (src as Record<string, unknown> | undefined)?.activeText ?? (src as Record<string, unknown> | undefined)?.progress ?? null);
+  const active = normalizeDialogStage((src as Record<string, any> | undefined)?.active ?? (src as Record<string, any> | undefined)?.activeText ?? (src as Record<string, any> | undefined)?.progress ?? null);
   const completed = normalizeDialogStage(
-    (src as Record<string, unknown> | undefined)?.completed ??
-      (src as Record<string, unknown> | undefined)?.completedText ??
-      (src as Record<string, unknown> | undefined)?.complete ??
-      (src as Record<string, unknown> | undefined)?.completeText ??
-      null
+    (src as Record<string, any> | undefined)?.completed ??
+    (src as Record<string, any> | undefined)?.completedText ??
+    (src as Record<string, any> | undefined)?.complete ??
+    (src as Record<string, any> | undefined)?.completeText ??
+    null
   );
   return {
     offer,
@@ -394,10 +395,10 @@ function applyQuestDialog(tree: NormalizedDialogTree, npc: DialogNpc | null): vo
   ensureLeaveOption(turnNode);
 }
 
-function runEffects(effects: unknown[]): void {
+function runEffects(effects: any[]): void {
   for (const eff of effects || []) {
     if (typeof eff === 'function') {
-      (eff as (ctx: Record<string, unknown>) => void)({
+      (eff as (ctx: Record<string, any>) => void)({
         player: dialogGlobals.player,
         party: dialogGlobals.party,
         state: dialogGlobals.state
@@ -415,9 +416,9 @@ function runEffects(effects: unknown[]): void {
 interface DialogCheckConfig {
   stat?: string;
   dc?: number;
-  onSuccess?: unknown;
-  onFail?: unknown;
-  [key: string]: unknown;
+  onSuccess?: any;
+  onFail?: any;
+  [key: string]: any;
 }
 
 function resolveCheck(
@@ -450,9 +451,9 @@ function processQuestFlag(choice: NormalizedDialogChoice): DustlandQuestProcesso
   return null;
 }
 
-function dialogJoinParty(join: Record<string, unknown> | undefined): void {
+function dialogJoinParty(join: Record<string, any> | undefined): void {
   if (!join) return;
-  const opts: Record<string, unknown> = {};
+  const opts: Record<string, any> = {};
   const joinData = join as { id?: string; name?: string; role?: string; portraitSheet?: string };
   if (joinData.portraitSheet) {
     opts.portraitSheet = joinData.portraitSheet;
@@ -526,7 +527,7 @@ function calcCombatXP(npc: DialogNpc): number {
   const avgLvl = Math.max(
     1,
     partyMembers.reduce((sum, member) => sum + (member.lvl || 1), 0) /
-      (partyMembers.length || 1)
+    (partyMembers.length || 1)
   );
   let xp = 0;
   for (const combat of enemies) {
@@ -759,7 +760,7 @@ function advanceDialog(stateObj: DialogState, choiceIdx: number): AdvanceResult 
   }
 
   if (choice.applyModule) {
-    const moduleData = (dialogGlobals as Record<string, unknown>)[choice.applyModule];
+    const moduleData = (dialogGlobals as Record<string, any>)[choice.applyModule];
     if (moduleData) {
       dialogGlobals.applyModule?.(moduleData, { fullReset: false });
     } else {
