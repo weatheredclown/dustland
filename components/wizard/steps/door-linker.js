@@ -2,10 +2,7 @@ const isDoorCoordinate = (value) => {
     if (!value || typeof value !== 'object')
         return false;
     const candidate = value;
-    return (typeof candidate.x === 'number' &&
-        typeof candidate.y === 'number' &&
-        Number.isFinite(candidate.x) &&
-        Number.isFinite(candidate.y));
+    return Number.isFinite(candidate.x) && Number.isFinite(candidate.y);
 };
 const doorLinkerStep = (entryKey, exitKey, entryLabel, exitLabel) => {
     const entryKeyName = entryKey || 'entry';

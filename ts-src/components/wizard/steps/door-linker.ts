@@ -2,13 +2,8 @@ type DoorCoordinate = { x: number; y: number };
 
 const isDoorCoordinate = (value: WizardStateValue | undefined): value is DoorCoordinate => {
   if (!value || typeof value !== 'object') return false;
-  const candidate = value as Record<string, unknown>;
-  return (
-    typeof candidate.x === 'number' &&
-    typeof candidate.y === 'number' &&
-    Number.isFinite(candidate.x) &&
-    Number.isFinite(candidate.y)
-  );
+  const candidate = value as Partial<DoorCoordinate>;
+  return Number.isFinite(candidate.x) && Number.isFinite(candidate.y);
 };
 
 const doorLinkerStep: WizardStepFactory = (
