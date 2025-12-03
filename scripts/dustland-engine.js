@@ -1,5 +1,5 @@
 // ===== Rendering & Utilities =====
-const ENGINE_VERSION = '0.243.41';
+const ENGINE_VERSION = '0.243.42';
 let cachedGlobals;
 function getEngineGlobals() {
     if (cachedGlobals)
