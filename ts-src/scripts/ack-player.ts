@@ -1,5 +1,14 @@
 (() => {
-  const globals = globalThis as unknown as GlobalThis;
+  type AckGlobals = typeof globalThis & {
+    Dustland?: DustlandNamespace;
+    params?: URLSearchParams;
+    UI?: DustlandUiApi;
+    WORLD_H?: number;
+    postLoad?: (module: ModuleData) => void;
+    [key: string]: unknown;
+  };
+
+  const globals = globalThis as AckGlobals;
   const dustland = globals.Dustland;
   type ModuleData = DustlandModuleInstance & {
     module?: string;
@@ -102,7 +111,7 @@
 
         let modObj: unknown = null;
         for (const name of guesses) {
-          const candidate = (globals as unknown as Record<string, unknown>)[name];
+          const candidate = globals[name];
           if (candidate) {
             modObj = candidate;
             break;
