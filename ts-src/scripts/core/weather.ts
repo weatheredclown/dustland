@@ -5,14 +5,15 @@
     icon: string;
     desc: string;
     speedMod: number;
-    encounterBias?: number | Record<string, number>;
-    [key: string]: unknown;
+    encounterBias?: number | Record<string, number> | null;
   };
 
-  const globals = globalThis as { Dustland?: { eventBus?: { emit?: (event: string, payload?: unknown) => void } } };
-  const weatherBus = (globals.Dustland?.eventBus || globalThis.EventBus) as {
-    emit?: (event: string, payload?: unknown) => void;
+  type WeatherBus = {
+    emit?: (event: string, payload?: WeatherState) => void;
   };
+
+  const globals = globalThis as { Dustland?: { eventBus?: WeatherBus } };
+  const weatherBus = (globals.Dustland?.eventBus || globalThis.EventBus) as WeatherBus;
 
   let current: WeatherState = { state: 'clear', icon: '☀️', desc: 'Clear skies', speedMod: 1, encounterBias: null };
   function setWeather(next: Partial<WeatherState>): WeatherState {

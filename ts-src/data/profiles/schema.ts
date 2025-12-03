@@ -38,9 +38,9 @@ const profileSchema: ProfileSchema = {
   }
 };
 
-interface ProfileGlobals extends GlobalThis {
+type ProfileGlobals = typeof globalThis & {
   PROFILE_SCHEMA?: ProfileSchema;
-}
+};
 
-const profileGlobals = globalThis as unknown as ProfileGlobals;
+const profileGlobals = globalThis as ProfileGlobals;
 profileGlobals.PROFILE_SCHEMA = profileSchema;

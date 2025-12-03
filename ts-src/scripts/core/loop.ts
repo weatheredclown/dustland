@@ -2,11 +2,12 @@
   type LoopPoint = { x: number; y: number };
 
   function nextLoopPoint(prev: LoopPoint | undefined, npc: LoopPoint){
-    const globals = globalThis as unknown as {
+    type LoopGlobals = typeof globalThis & {
       WORLD_W?: number;
       WORLD_H?: number;
       clamp: (value: number, min: number, max: number) => number;
     };
+    const globals = globalThis as LoopGlobals;
     if(!prev) return { x:npc.x, y:npc.y };
     const maxDist = 10;
     let x = prev.x + 1;

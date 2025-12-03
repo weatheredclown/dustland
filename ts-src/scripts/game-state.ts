@@ -17,7 +17,13 @@
     npcMemory: NpcMemory;
   };
 
-  const globals = globalThis as unknown as GlobalThis;
+  type GameStateGlobals = typeof globalThis & {
+    Dustland?: DustlandNamespace;
+    EventBus?: DustlandEventBus;
+    eventBus?: DustlandEventBus;
+  };
+
+  const globals = globalThis as GameStateGlobals;
   const dustland = (globals.Dustland ??= {} as DustlandNamespace);
   const getEventBus = (): DustlandEventBus | undefined =>
     globals.EventBus ?? globals.eventBus ?? dustland.eventBus;

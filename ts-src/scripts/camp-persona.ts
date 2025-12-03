@@ -1,5 +1,19 @@
 (function () {
-  const globals = globalThis as unknown as GlobalThis;
+  type CampPersonaGlobals = typeof globalThis & {
+    EventBus?: DustlandEventBus;
+    Dustland?: DustlandNamespace;
+    openWorldMap?: (mapId?: string) => void;
+    player?: PlayerState;
+    party?: Party;
+    state?: DustlandGameRuntimeState;
+    checkFlagCondition?: (condition: unknown) => boolean;
+    healAll?: () => void;
+    log?: (message: string) => void;
+    toast?: (message: string) => void;
+    updateHUD?: () => void;
+  };
+
+  const globals = globalThis as CampPersonaGlobals;
   const bus = globals.EventBus;
   const dustland = globals.Dustland;
   const gs = dustland?.gameState;
