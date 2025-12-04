@@ -253,42 +253,50 @@ const worldOneModule = JSON.parse(DATA) as DustlandModuleInstance;
 globalThis.WORLD_ONE_MODULE = worldOneModule;
 
 function postLoad(module: DustlandModuleInstance) {
-  const handle = (list?: unknown): unknown[] => {
+  type DialogEffectDirective = { effect?: 'activateBunker' | 'openWorldMap'; id?: string };
+  type DialogEffect =
+    | DialogEffectDirective
+    | (() => void)
+    | string
+    | number
+    | boolean
+    | null
+    | undefined
+    | Record<string, unknown>;
+  type DialogChoice = { effects?: DialogEffect[] } & Record<string, unknown>;
+  type DialogNode = { effects?: DialogEffect[]; choices?: DialogChoice[] } & Record<string, unknown>;
+
+  const isEffectDirective = (effect: DialogEffect): effect is DialogEffectDirective => {
+    return !!effect && typeof effect === 'object' && 'effect' in effect;
+  };
+
+  const handle = (list?: DialogEffect[] | null): DialogEffect[] => {
     const entries = Array.isArray(list) ? list : [];
     return entries.map(effect => {
-      if (effect && typeof effect === 'object') {
-        const effectRecord = effect as { effect?: string; id?: string };
-        if (effectRecord.effect === 'activateBunker') {
-          return () => Dustland.fastTravel?.activateBunker?.(effectRecord.id);
+      if (isEffectDirective(effect)) {
+        if (effect.effect === 'activateBunker') {
+          return () => Dustland.fastTravel?.activateBunker?.(effect.id);
         }
-        if (effectRecord.effect === 'openWorldMap') {
-          return () => Dustland.worldMap?.open?.(effectRecord.id);
+        if (effect.effect === 'openWorldMap') {
+          return () => Dustland.worldMap?.open?.(effect.id);
         }
       }
       return effect;
     });
   };
   module.npcs?.forEach(npc => {
-    const nodes = npc.tree ? Object.values(npc.tree) : [];
+    const nodes = npc.tree ? Object.values(npc.tree as Record<string, DialogNode>) : [];
     nodes.forEach(node => {
       if (!node || typeof node !== 'object') {
         return;
       }
-      const nodeRecord = node as Record<string, unknown>;
-      const nodeEffects = nodeRecord['effects'];
-      if (Array.isArray(nodeEffects)) {
-        nodeRecord['effects'] = handle(nodeEffects);
+      if (Array.isArray(node.effects)) {
+        node.effects = handle(node.effects);
       }
-      const choices = nodeRecord['choices'];
-      if (Array.isArray(choices)) {
-        choices.forEach(choice => {
-          if (!choice || typeof choice !== 'object') {
-            return;
-          }
-          const choiceRecord = choice as Record<string, unknown>;
-          const choiceEffects = choiceRecord['effects'];
-          if (Array.isArray(choiceEffects)) {
-            choiceRecord['effects'] = handle(choiceEffects);
+      if (Array.isArray(node.choices)) {
+        node.choices.forEach(choice => {
+          if (choice?.effects) {
+            choice.effects = handle(choice.effects);
           }
         });
       }
