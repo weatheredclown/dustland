@@ -107,7 +107,6 @@ chiptuneGlobal.Dustland = chiptuneGlobal.Dustland || {};
   const defaultSource = 'base';
 
   let activeMood = 'explore';
-  let currentPresetId = 'somber';
   let currentSeed = 1;
   let rngState = 1;
 
@@ -228,14 +227,6 @@ chiptuneGlobal.Dustland = chiptuneGlobal.Dustland || {};
     rngState = currentSeed;
   }
 
-  function rnd(){
-    rngState = (rngState + 0x6D2B79F5) >>> 0;
-    let t = rngState;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  }
-
   function midiFromDegree(key, scaleName, degree, octaveOffset){
     const base = BASES[key] || 60;
     const scale = SCALES[scaleName] || SCALES.minor;
@@ -337,21 +328,6 @@ chiptuneGlobal.Dustland = chiptuneGlobal.Dustland || {};
     osc.type = type;
     if(freq != null) osc.frequency.setValueAtTime(freq, time ?? audioCtx.currentTime);
     return osc;
-  }
-
-  function scheduleTone(frequency: number, duration?: number, gainValue?: number, wave?: OscillatorType, when?: number){
-    if(!audioCtx || !masterGain) return;
-    const osc = mkOsc((wave || 'square') as OscillatorType);
-    const gain = audioCtx.createGain();
-    osc.frequency.value = frequency;
-    osc.connect(gain).connect(masterGain);
-    const start = Math.max(audioCtx.currentTime, when ?? audioCtx.currentTime);
-    const dur = Math.max(0.05, duration ?? 0.2);
-    gain.gain.value = Math.max(0.0001, gainValue ?? 0.1);
-    gain.gain.setValueAtTime(gain.gain.value, start);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-    osc.start(start);
-    osc.stop(start + dur + 0.05);
   }
 
   function playKick(t: number, vel?: number){
@@ -666,7 +642,6 @@ chiptuneGlobal.Dustland = chiptuneGlobal.Dustland || {};
   function applyMood(apiId){
     const presetId = resolvePresetId(apiId);
     const preset = MOOD_PRESETS[presetId] || MOOD_PRESETS.somber;
-    currentPresetId = presetId;
     activeMood = apiId || 'explore';
     music.bpm = preset.bpm;
     music.key = preset.key || music.key;

@@ -284,11 +284,6 @@ async function runBalanceTest() {
                 return null;
             return filtered[Math.floor(Math.random() * filtered.length)];
         }
-        function isAdjacent(pos1, pos2) {
-            const dx = Math.abs(pos1.x - pos2.x);
-            const dy = Math.abs(pos1.y - pos2.y);
-            return dx <= 1 && dy <= 1;
-        }
         function findAdjacentWalkableTile(map, pos) {
             if (!queryTileFn)
                 return { x: pos.x, y: pos.y };

@@ -508,7 +508,7 @@ function collectTilePreviewEntries() {
   const numericEntries = [];
   const tiles = getEngineGlobals().TILE;
   if (tiles && typeof tiles === 'object') {
-    for (const [name, id] of Object.entries(tiles)) {
+    for (const id of Object.values(tiles)) {
       if (!Number.isFinite(id)) continue;
       const key = `num:${id}`;
       if (seen.has(key)) continue;
@@ -922,7 +922,7 @@ const retroSilhouettes = {
     </g>`;
   },
   automaton(colors, faceSymbol) {
-    const { base, highlight, shadow, accent, edge } = colors;
+    const { base, highlight, accent, edge } = colors;
     return `<g>
       <rect x="11" y="9" width="10" height="9" rx="2" fill="${base}" stroke="${edge}" stroke-width="1"/>
       <rect x="12" y="18" width="8" height="6" rx="1.5" fill="${accent}" stroke="${edge}" stroke-width="0.9"/>
@@ -1676,10 +1676,9 @@ function render(gameState = state, dt) {
   const dims = (mapWH(activeMap) || {}) as { W?: number; H?: number };
   const { w: vWRaw, h: vHRaw } = getViewSize();
   const vW = Number.isFinite(vWRaw) ? vWRaw : VIEW_W;
-  const vH = Number.isFinite(vHRaw) ? vHRaw : VIEW_H;
-  const W = Number.isFinite(dims.W) ? dims.W : vW;
-  const H = Number.isFinite(dims.H) ? dims.H : vH;
-  const mapSmallerThanView = W < vW || H < vH;
+    const vH = Number.isFinite(vHRaw) ? vHRaw : VIEW_H;
+    const W = Number.isFinite(dims.W) ? dims.W : vW;
+    const H = Number.isFinite(dims.H) ? dims.H : vH;
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = '#000';

@@ -17,7 +17,6 @@ type OtherBasGlobals = typeof globalThis & {
   const globals = globalThis as OtherBasGlobals;
 
   const seedWorldContent = (): void => {};
-  const postLoad = (): void => {};
 
   globals.seedWorldContent = seedWorldContent;
 
@@ -967,7 +966,10 @@ type OtherBasGlobals = typeof globalThis & {
 const otherBasModule = JSON.parse(DATA) as OtherBasModule;
 globals.OTHER_BAS_MODULE = otherBasModule;
 otherBasModule.listing = `MCBDTFM6S0VZIE9GRjpDT0xPUiAxNQ0KMTAgUFJJTlQgIkhFUkUgQkVHSU5T
-otherBasModule.postLoad = postLoad;
+otherBasModule.postLoad = (moduleData): void => {
+  void moduleData;
+};
+otherBasModule.postLoad(otherBasModule);
 IFRIRSBUUkFOU0NSSVBUIE9GIFRIRSBPVEhFUiBBRFZFTlRVUkUgR0FNRS4u
 LiI6UFJJTlQgIkNvcHl3cml0ZSAxOTkwOiAgTElTQ0VOU0VEIFRPOiBILlAu
 IEhhY2tlciwgTGFzZXIiOzpDT0xPUiA0OlBSSU5UICJQcmVzcyI7OkNPTE9S
