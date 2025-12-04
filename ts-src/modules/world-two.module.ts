@@ -301,7 +301,7 @@ const DATA = `
 }
 `;
 
-const WORLD_TWO_MODULE: WorldTwoModule = (globals.WORLD_TWO_MODULE = JSON.parse(DATA));
+globals.WORLD_TWO_MODULE = JSON.parse(DATA) as WorldTwoModule;
 function postLoad(module: WorldTwoModule){
   const handle = (list: Array<any> | null | undefined) => (list || []).map((e: any) => {
     if (e && e.effect === 'activateBunker') {

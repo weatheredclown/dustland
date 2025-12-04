@@ -262,7 +262,7 @@
   }
 }
 `;
-    const WORLD_TWO_MODULE = (globals.WORLD_TWO_MODULE = JSON.parse(DATA));
+    globals.WORLD_TWO_MODULE = JSON.parse(DATA);
     function postLoad(module) {
         const handle = (list) => (list || []).map((e) => {
             if (e && e.effect === 'activateBunker') {

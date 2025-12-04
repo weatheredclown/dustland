@@ -444,29 +444,28 @@ type NanoGlobal = typeof globalThis & {
       .filter(([,q])=>q?.status==='completed')
       .map(([id,q])=> (q?.title && q.title.trim()) || id);
 
-    const existing = _visibleLabels(npc, nodeId, node);
-    const text = node.text;
+      const existingLabels = _visibleLabels(npc, nodeId, node);
+      const existingSection = existingLabels.map(l => `- ${l}`).join('\n') || '- (none)';
+      const text = node.text;
 
-    // Consider this in the prompt:
-    //CURRENT UI CHOICES SHOWN TO PLAYER (do not duplicate these labels):
-    //${existing.map(l => `- ${l}`).join('\n') || '- (none)'}
-
-    // Ask for short lines plus up to two choice hooks
-    var prompt = `You write in-universe dialog for DUSTLAND — a rusted, sun-blasted world.
-Voice must match the NPC. Dry humor, 90s CRPG bite, hints of hope.
-Each line: 4–14 word complete sentences, ≤80 chars. No quotes. No leading dashes/bullets.
-Stay in-world. Avoid modern real-world references or idioms (e.g., saunas, airports, brand names, bar talk).
-Do NOT include the NPC’s name in any line. No stage directions.
+      var prompt = `You write in-universe dialog for DUSTLAND — a rusted, sun-blasted world.
+  Voice must match the NPC. Dry humor, 90s CRPG bite, hints of hope.
+  Each line: 4–14 word complete sentences, ≤80 chars. No quotes. No leading dashes/bullets.
+  Stay in-world. Avoid modern real-world references or idioms (e.g., saunas, airports, brand names, bar talk).
+  Do NOT include the NPC’s name in any line. No stage directions.
 
 NPC:
 - id: ${npc.id}
 - name: ${npc.name}
-- title: ${npc.title}
-- description: ${desc || 'n/a'}
-- text: ${text}
+  - title: ${npc.title}
+  - description: ${desc || 'n/a'}
+  - text: ${text}
 
-Player:
-- party leader: ${leader ? leader.name : 'none'}
+  CURRENT UI CHOICES SHOWN TO PLAYER (do not duplicate these labels):
+  ${existingSection}
+
+  Player:
+  - party leader: ${leader ? leader.name : 'none'}
 - leader stats: ${leader ? JSON.stringify(leader.stats) : '{}'}
 - inventory: ${inv.join(', ') || 'empty'}
 - completed quests: ${completed.join(', ') || 'none'}
