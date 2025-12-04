@@ -2777,7 +2777,6 @@ function beginNpcCoordinateSelection() {
   clearPaletteSelection();
   const idEl = document.getElementById('npcId');
   const nameEl = document.getElementById('npcName');
-  const titleEl = document.getElementById('npcTitle');
   const id = idEl?.value.trim();
   const name = nameEl?.value.trim();
   const missing = [];
