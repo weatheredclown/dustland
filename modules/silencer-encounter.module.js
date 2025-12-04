@@ -125,7 +125,7 @@ const DATA = `
   "portals": [],
   "buildings": []
 }`;
-function postLoad(module) { }
+function postLoad(_module) { }
 const moduleData = JSON.parse(DATA);
 moduleData.postLoad = postLoad;
 globalThis.SILENCER_ENCOUNTER = moduleData;

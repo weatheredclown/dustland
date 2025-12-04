@@ -165,7 +165,7 @@ const DATA = `
   "templates": []
 }
 `;
-function postLoad(module) { }
+function postLoad(_module) { }
 const moduleData = JSON.parse(DATA);
 moduleData.postLoad = postLoad;
 globalThis.CLI_DEMO_MODULE = moduleData;

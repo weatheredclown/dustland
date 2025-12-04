@@ -149,7 +149,7 @@
         dorian: [0, 2, 3, 5, 7, 9, 10],
         phrygian: [0, 1, 3, 5, 7, 8, 10]
     };
-    function scaleOf(key, name) { return SCALES[name] || SCALES.minor; }
+    function scaleOf(_key, name) { return SCALES[name] || SCALES.minor; }
     function midiFromDegree(key, scaleName, degree, octaveOffset) {
         var base = BASES[key] || 60;
         var sc = scaleOf(key, scaleName);

@@ -913,7 +913,7 @@ function placeHut(x, y, b = {}) {
     else {
         w = b.w || 6;
         h = b.h || 5;
-        grid = Array.from({ length: h }, (_, yy) => Array.from({ length: w }, (_, xx) => TILE_SET.BUILDING));
+        grid = Array.from({ length: h }, () => Array.from({ length: w }, () => TILE_SET.BUILDING));
         const relX = b.doorX != null ? b.doorX - x : Math.floor(w / 2);
         const relY = b.doorY != null ? b.doorY - y : h - 1;
         if (relY >= 0 && relY < h && relX >= 0 && relX < w)

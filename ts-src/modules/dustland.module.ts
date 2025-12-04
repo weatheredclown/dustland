@@ -16525,7 +16525,7 @@ function configureWorkbenchRecipes() {
   }
 }
 
-function dustlandPostLoad(module: DustlandModuleInstance, ctx: { phase?: string } = {}) {
+function dustlandPostLoad(_module: DustlandModuleInstance, ctx: { phase?: string } = {}) {
   const phase = ctx?.phase;
   const scheduleReconfigure = () => {
     const scheduler = typeof globalThis.queueMicrotask === 'function'

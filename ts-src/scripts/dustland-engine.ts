@@ -1668,7 +1668,7 @@ function drawSkinSprite(ctx, sprite, dx, dy, size = TS) {
   return true;
 }
 
-function render(gameState = state, dt) {
+function render(gameState = state, _dt) {
   const ctx = sctx;
   if (!ctx) return;
 

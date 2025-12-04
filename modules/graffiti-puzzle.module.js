@@ -56,7 +56,7 @@ const DATA = `{
   "buildings": [],
   "start": { "map": "graffiti", "x": 3, "y": 5 }
 }`;
-function postLoad(module) { }
+function postLoad(_module) { }
 const moduleData = JSON.parse(DATA);
 moduleData.postLoad = postLoad;
 globals.GRAFFITI_PUZZLE = moduleData;

@@ -401,7 +401,7 @@ const DATA = `
 }
 `;
 
-function postLoad(module: DustlandModuleInstance): void {}
+function postLoad(_module: DustlandModuleInstance): void {}
 
 const moduleData = JSON.parse(DATA) as EdgeModule;
 moduleData.postLoad = postLoad;
