@@ -264,15 +264,23 @@
 `;
     globals.WORLD_TWO_MODULE = JSON.parse(DATA);
     function postLoad(module) {
-        const handle = (list) => (list || []).map((e) => {
-            if (e && e.effect === 'activateBunker') {
-                return () => globals.Dustland?.fastTravel?.activateBunker?.(e.id);
-            }
-            if (e && e.effect === 'openWorldMap') {
-                return () => globals.Dustland?.worldMap?.open?.(e.id);
-            }
-            return e;
-        });
+        const isEffectDirective = (effect) => {
+            return !!effect && typeof effect === 'object' && 'effect' in effect;
+        };
+        const handle = (list) => {
+            const effects = Array.isArray(list) ? list : [];
+            return effects.map(effect => {
+                if (isEffectDirective(effect)) {
+                    if (effect.effect === 'activateBunker') {
+                        return () => globals.Dustland?.fastTravel?.activateBunker?.(effect.id);
+                    }
+                    if (effect.effect === 'openWorldMap') {
+                        return () => globals.Dustland?.worldMap?.open?.(effect.id);
+                    }
+                }
+                return effect;
+            });
+        };
         module.npcs?.forEach(n => {
             Object.values(n.tree || {}).forEach(node => {
                 if (node.effects)

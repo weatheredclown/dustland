@@ -1,4 +1,7 @@
 import { isFirebaseConfigValid } from '../ack/server-mode.js';
+function isHostedConfigDocument(value) {
+    return !!value && typeof value === 'object';
+}
 const CONFIG_PATH = './firebase-config.json';
 export async function bootstrapHostedFirebase(globalObject = globalThis) {
     const features = ensureFeatureContainer(globalObject);
@@ -38,7 +41,8 @@ async function fetchHostedConfig(globalObject) {
         if (!response?.ok) {
             return null;
         }
-        return await response.json();
+        const json = await response.json();
+        return isHostedConfigDocument(json) ? json : null;
     }
     catch (error) {
         console.warn('Skipping hosted Firebase config – fetch failed.', error);
@@ -46,13 +50,12 @@ async function fetchHostedConfig(globalObject) {
     }
 }
 function parseHostedConfig(payload) {
-    if (!payload || typeof payload !== 'object') {
+    if (!payload) {
         return null;
     }
-    const document = payload;
-    const firebaseSource = selectFirebaseSource(document);
+    const firebaseSource = selectFirebaseSource(payload);
     const firebaseConfig = extractFirebaseConfig(firebaseSource);
-    const featureFlags = extractFeatureFlags(document);
+    const featureFlags = extractFeatureFlags(payload);
     if (!firebaseConfig && !featureFlags) {
         return null;
     }

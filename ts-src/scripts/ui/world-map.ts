@@ -41,8 +41,8 @@ type DustlandModuleProps = {
 
 type WorldMapEventBus = {
   emit?: (event: string, payload?: unknown) => void;
-  on?: (event: string, listener: (...args: any[]) => void) => void;
-  off?: (event: string, listener: (...args: any[]) => void) => void;
+  on?: (event: string, listener: (...args: unknown[]) => void) => void;
+  off?: (event: string, listener: (...args: unknown[]) => void) => void;
 };
 
 type DustlandApi = DustlandNamespace & {

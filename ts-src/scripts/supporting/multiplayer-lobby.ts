@@ -1,7 +1,7 @@
 type LobbyEventBus = {
-  emit?(event: string, ...args: any[]): void;
-  on?(event: string, handler: (...args: any[]) => void): void;
-  off?(event: string, handler: (...args: any[]) => void): void;
+  emit?(event: string, ...args: unknown[]): void;
+  on?(event: string, handler: (...args: unknown[]) => void): void;
+  off?(event: string, handler: (...args: unknown[]) => void): void;
 };
 
 type MultiplayerBridge = {
@@ -10,9 +10,22 @@ type MultiplayerBridge = {
   subscribe?(event: string, handler: (payload: unknown) => void): (() => void) | void;
 };
 
+type MultiplayerHostRoom = {
+  close?: () => void;
+  onPeers?: (cb: (peers: Array<{ id: string }> | null | undefined) => void) => (() => void) | void;
+  createOffer?: () => Promise<{ id: string; code?: string | null } | null>;
+  acceptAnswer?: (ticketId: string, answer: string) => Promise<void>;
+};
+
+type MultiplayerConnection = {
+  close?: () => void;
+  answer?: string;
+  ready?: Promise<void>;
+};
+
 type MultiplayerApi = {
-  startHost?: () => Promise<unknown>;
-  connect?: (options: { code: string }) => Promise<unknown>;
+  startHost?: () => Promise<MultiplayerHostRoom | null>;
+  connect?: (options: { code: string }) => Promise<MultiplayerConnection | null>;
   removeInvite?: (code: string) => void;
 };
 
@@ -47,8 +60,8 @@ const globalDustland = globalThis as LobbyGlobals;
   const copyAnswerBtn = document.getElementById('copyAnswer') as HTMLButtonElement | null;
   const joinStatusEl = document.getElementById('joinStatus') as HTMLElement | null;
 
-  let hostRoom: any = null;
-  let joinSocket: any = null;
+  let hostRoom: MultiplayerHostRoom | null = null;
+  let joinSocket: MultiplayerConnection | null = null;
   let removePeerWatcher: (() => void) | null = null;
   let enteredGame = false;
   let gameFrame: HTMLIFrameElement | null = null;
@@ -253,7 +266,8 @@ const globalDustland = globalThis as LobbyGlobals;
       if (!hostRoom) throw new Error('Hosting unavailable.');
       setText(hostStatusEl, 'Hosting active. Generate a host code for each friend.');
       if (newInviteBtn) newInviteBtn.disabled = false;
-      removePeerWatcher = hostRoom?.onPeers?.(updatePeerList);
+      const watcher = hostRoom?.onPeers?.(updatePeerList);
+      removePeerWatcher = typeof watcher === 'function' ? watcher : null;
       updatePeerList([]);
       rememberRole('host');
       if (autoInvite) await createInvite();

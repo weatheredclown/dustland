@@ -15,6 +15,10 @@ type HostedConfigDocument = {
   [key: string]: unknown;
 };
 
+function isHostedConfigDocument(value: unknown): value is HostedConfigDocument {
+  return !!value && typeof value === 'object';
+}
+
 type ParsedHostedConfig = {
   firebaseConfig: DustlandFirebaseBootstrap | null;
   featureFlags: DustlandFeatureFlags | null;
@@ -57,7 +61,7 @@ function shouldFetchHostedConfig(globalObject: HostingGlobal): boolean {
   return protocol.startsWith('http');
 }
 
-async function fetchHostedConfig(globalObject: HostingGlobal): Promise<unknown | null> {
+async function fetchHostedConfig(globalObject: HostingGlobal): Promise<HostedConfigDocument | null> {
   const fetchFn = globalObject.fetch ?? globalThis.fetch;
   if (typeof fetchFn !== 'function') {
     return null;
@@ -67,21 +71,21 @@ async function fetchHostedConfig(globalObject: HostingGlobal): Promise<unknown |
     if (!response?.ok) {
       return null;
     }
-    return await response.json();
+    const json = await response.json();
+    return isHostedConfigDocument(json) ? json : null;
   } catch (error) {
     console.warn('Skipping hosted Firebase config – fetch failed.', error);
     return null;
   }
 }
 
-function parseHostedConfig(payload: unknown): ParsedHostedConfig | null {
-  if (!payload || typeof payload !== 'object') {
+function parseHostedConfig(payload: HostedConfigDocument | null): ParsedHostedConfig | null {
+  if (!payload) {
     return null;
   }
-  const document = payload as HostedConfigDocument;
-  const firebaseSource = selectFirebaseSource(document);
+  const firebaseSource = selectFirebaseSource(payload);
   const firebaseConfig = extractFirebaseConfig(firebaseSource);
-  const featureFlags = extractFeatureFlags(document);
+  const featureFlags = extractFeatureFlags(payload);
   if (!firebaseConfig && !featureFlags) {
     return null;
   }

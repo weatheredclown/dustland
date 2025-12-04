@@ -256,7 +256,8 @@ const globalDustland = globalThis;
             setText(hostStatusEl, 'Hosting active. Generate a host code for each friend.');
             if (newInviteBtn)
                 newInviteBtn.disabled = false;
-            removePeerWatcher = hostRoom?.onPeers?.(updatePeerList);
+            const watcher = hostRoom?.onPeers?.(updatePeerList);
+            removePeerWatcher = typeof watcher === 'function' ? watcher : null;
             updatePeerList([]);
             rememberRole('host');
             if (autoInvite)
