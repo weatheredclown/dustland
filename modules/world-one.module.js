@@ -250,16 +250,18 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
     const worldOneModule = JSON.parse(DATA);
     globalThis.WORLD_ONE_MODULE = worldOneModule;
     function postLoad(module) {
+        const isEffectDirective = (effect) => {
+            return !!effect && typeof effect === 'object' && 'effect' in effect;
+        };
         const handle = (list) => {
             const entries = Array.isArray(list) ? list : [];
             return entries.map(effect => {
-                if (effect && typeof effect === 'object') {
-                    const effectRecord = effect;
-                    if (effectRecord.effect === 'activateBunker') {
-                        return () => Dustland.fastTravel?.activateBunker?.(effectRecord.id);
+                if (isEffectDirective(effect)) {
+                    if (effect.effect === 'activateBunker') {
+                        return () => Dustland.fastTravel?.activateBunker?.(effect.id);
                     }
-                    if (effectRecord.effect === 'openWorldMap') {
-                        return () => Dustland.worldMap?.open?.(effectRecord.id);
+                    if (effect.effect === 'openWorldMap') {
+                        return () => Dustland.worldMap?.open?.(effect.id);
                     }
                 }
                 return effect;
@@ -271,21 +273,13 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
                 if (!node || typeof node !== 'object') {
                     return;
                 }
-                const nodeRecord = node;
-                const nodeEffects = nodeRecord['effects'];
-                if (Array.isArray(nodeEffects)) {
-                    nodeRecord['effects'] = handle(nodeEffects);
+                if (Array.isArray(node.effects)) {
+                    node.effects = handle(node.effects);
                 }
-                const choices = nodeRecord['choices'];
-                if (Array.isArray(choices)) {
-                    choices.forEach(choice => {
-                        if (!choice || typeof choice !== 'object') {
-                            return;
-                        }
-                        const choiceRecord = choice;
-                        const choiceEffects = choiceRecord['effects'];
-                        if (Array.isArray(choiceEffects)) {
-                            choiceRecord['effects'] = handle(choiceEffects);
+                if (Array.isArray(node.choices)) {
+                    node.choices.forEach(choice => {
+                        if (choice?.effects) {
+                            choice.effects = handle(choice.effects);
                         }
                     });
                 }

@@ -1,5 +1,5 @@
 // ===== Rendering & Utilities =====
-const ENGINE_VERSION = '0.243.48';
+const ENGINE_VERSION = '0.243.14';
 let cachedGlobals;
 function getEngineGlobals() {
     if (cachedGlobals)
@@ -3552,7 +3552,8 @@ const engineExports = { log: engineLog, updateHUD, renderInv, renderQuests, rend
 Object.assign(globalThis, engineExports);
 // ===== Minimal Unit Tests (#test) =====
 function assert(name, cond) {
-    if (cond) {
+    const passed = Boolean(cond);
+    if (passed) {
         engineLog('✅ ' + name);
     }
     else {

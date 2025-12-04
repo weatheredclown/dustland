@@ -2,13 +2,15 @@
 
 const ENGINE_VERSION = '0.243.14';
 
+type EngineAssert = (name: string, condition: unknown) => void;
+
 type DustlandEngineGlobals = typeof globalThis & {
   TILE?: Record<string, number>;
   fogOfWarEnabled?: boolean;
   FOG_RADIUS?: number | string;
   tileChars?: unknown;
   playerAdrenalineFx?: unknown;
-  moduleTests?: ((assert: any) => void) | undefined;
+  moduleTests?: ((assert: EngineAssert) => void) | undefined;
   NanoDialog?: { enabled?: boolean; init?: () => Promise<void>; isReady?: () => boolean; refreshIndicator?: () => void };
   Dustland?: (typeof globalThis & {
     music?: { isEnabled?: () => boolean; toggleEnabled?: () => void };
@@ -1282,7 +1284,8 @@ if (weatherBanner && globalThis.Dustland?.weather) {
 const fxOverlay = document.createElement('div');
 fxOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;opacity:0;transition:opacity .2s;z-index:200;';
 document.body.appendChild(fxOverlay);
-type PlayFxFn = ((type: any) => void) & { _t?: ReturnType<typeof setTimeout> };
+type PlayFxType = 'adrenaline' | 'special' | string;
+type PlayFxFn = ((type: PlayFxType) => void) & { _t?: ReturnType<typeof setTimeout> };
 const playFX: PlayFxFn = (type) => {
   if (audioEnabled && typeof audioCtx?.createOscillator === 'function') {
     const o = audioCtx.createOscillator();
@@ -3394,8 +3397,9 @@ const engineExports = { log: engineLog, updateHUD, renderInv, renderQuests, rend
 Object.assign(globalThis, engineExports);
 
 // ===== Minimal Unit Tests (#test) =====
-function assert(name, cond) {
-  if (cond) {
+function assert(name: string, cond: unknown): void {
+  const passed = Boolean(cond);
+  if (passed) {
     engineLog('✅ ' + name);
   } else {
     console.error('Test failed: ' + name);
