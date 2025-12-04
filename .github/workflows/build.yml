@@ -40,8 +40,7 @@ jobs:
           FIREBASE_MESSAGE_SENDER_ID: ${{ secrets.FIREBASE_MESSAGE_SENDER_ID }}
           FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
         run: |
-          mkdir -p scripts/hosting
-          cat > scripts/hosting/firebase-config.json <<'EOF'
+          cat > firebase-config.json <<'EOF'
           {
             "apiKey": "${FIREBASE_API_KEY}",
             "authDomain": "${FIREBASE_AUTH_DOMAIN}",
