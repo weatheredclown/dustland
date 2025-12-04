@@ -231,11 +231,11 @@ class PartyRoster extends Array<Character> {
       _roster: null,
     });
   }
-  push(...members: Character[]): number {
+  override push(...members: Character[]): number {
     const unique = members.filter(m => m && !this.includes(m));
     return super.push(...unique);
   }
-  unshift(...members: Character[]): number {
+  override unshift(...members: Character[]): number {
     const unique = members.filter(m => m && !this.includes(m));
     return super.unshift(...unique);
   }
