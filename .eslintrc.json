@@ -22,7 +22,16 @@
         "semi": ["error", "always"],
         "jsdoc/check-types": "error",
         "@typescript-eslint/no-unused-vars": "off",
-        "@typescript-eslint/no-explicit-any": "off"
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/ban-ts-comment": [
+          "error",
+          {
+            "ts-nocheck": true,
+            "ts-ignore": false,
+            "ts-expect-error": false,
+            "ts-check": false
+          }
+        ]
       }
     },
     {
