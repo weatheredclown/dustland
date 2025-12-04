@@ -41,7 +41,7 @@ declare global {
 function seedWorldContent(): void {}
 globalThis.seedWorldContent = seedWorldContent;
 
-function postLoad(module: DustlandModuleInstance): void {}
+function postLoad(_module: DustlandModuleInstance): void {}
 
 const moduleData = JSON.parse(DATA) as JaxRepairModule;
 moduleData.postLoad = postLoad;

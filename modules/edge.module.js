@@ -389,7 +389,7 @@ const DATA = `
   ]
 }
 `;
-function postLoad(module) { }
+function postLoad(_module) { }
 const moduleData = JSON.parse(DATA);
 moduleData.postLoad = postLoad;
 globalThis.EDGE_MODULE = moduleData;

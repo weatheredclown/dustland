@@ -86,7 +86,7 @@ const DATA = `{
   "start": { "map": "graffiti", "x": 3, "y": 5 }
 }`;
 
-function postLoad(module: DustlandModuleInstance): void {}
+function postLoad(_module: DustlandModuleInstance): void {}
 
 const moduleData = JSON.parse(DATA) as GraffitiPuzzleModule;
 moduleData.postLoad = postLoad;

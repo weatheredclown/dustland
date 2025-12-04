@@ -29,7 +29,7 @@ const DATA = `{
 }`;
 function seedWorldContent() { }
 globalThis.seedWorldContent = seedWorldContent;
-function postLoad(module) { }
+function postLoad(_module) { }
 const moduleData = JSON.parse(DATA);
 moduleData.postLoad = postLoad;
 globalThis.JAX_REPAIR = moduleData;

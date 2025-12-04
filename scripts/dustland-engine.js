@@ -1,5 +1,5 @@
 // ===== Rendering & Utilities =====
-const ENGINE_VERSION = '0.243.42';
+const ENGINE_VERSION = '0.243.14';
 let cachedGlobals;
 function getEngineGlobals() {
     if (cachedGlobals)
@@ -1692,7 +1692,7 @@ function drawSkinSprite(ctx, sprite, dx, dy, size = TS) {
     ctx.drawImage(img, sx, sy, sw, sh, destX + offX, destY + offY, dw, dh);
     return true;
 }
-function render(gameState = state, dt) {
+function render(gameState = state, _dt) {
     const ctx = sctx;
     if (!ctx)
         return;

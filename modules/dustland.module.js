@@ -16548,7 +16548,7 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
             }
         }
     }
-    function dustlandPostLoad(module, ctx = {}) {
+    function dustlandPostLoad(_module, ctx = {}) {
         const phase = ctx?.phase;
         const scheduleReconfigure = () => {
             const scheduler = typeof globalThis.queueMicrotask === 'function'

@@ -2520,7 +2520,7 @@ function renderLoopFields(pts) {
     if (!wrap)
         return;
     wrap.innerHTML = '';
-    pts.forEach((p, i) => {
+    pts.forEach(p => {
         const row = document.createElement('div');
         row.className = 'row loopPoint';
         row.innerHTML = `<label>X<input type="number" class="loopX" value="${p.x}" /></label>` +
@@ -5080,7 +5080,7 @@ function startNewBldg() {
     document.getElementById('bldgBoarded').checked = false;
     document.getElementById('bldgBunker').checked = false;
     document.getElementById('bldgInterior').disabled = false;
-    bldgGrid = Array.from({ length: 5 }, (_, yy) => Array.from({ length: 6 }, (_, xx) => TILE.BUILDING));
+    bldgGrid = Array.from({ length: 5 }, () => Array.from({ length: 6 }, () => TILE.BUILDING));
     bldgGrid[4][3] = TILE.DOOR;
     bldgPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     bldgPalette.querySelector('button[data-tile="B"]').classList.add('active');
