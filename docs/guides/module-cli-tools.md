@@ -53,7 +53,9 @@ node scripts/module-tools/append.js modules/golden.module.json items id=rope nam
 ```
 
 The tools work with `.module.json` files and `.module.js` files containing a
-`const DATA = \`...\`` block. If a needed operation isn't supported, extend the
+`const DATA = \`...\`` block. When a matching `.module.ts` source file exists in
+`ts-src/modules/`, the CLI automatically reads and writes that TypeScript file
+so edits survive rebuilds. If a needed operation isn't supported, extend the
 tools before modifying modules.
 
 ## Add an NPC
