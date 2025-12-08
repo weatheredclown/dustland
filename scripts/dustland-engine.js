@@ -1570,7 +1570,7 @@ function centerCamera(x, y, map) {
         W = WORLD_W;
         H = WORLD_H;
     }
-    else if (interiors[map]) {
+    else if (map && interiors[map]) {
         const I = interiors[map];
         W = (I && I.w) || VIEW_W;
         H = (I && I.h) || VIEW_H;
