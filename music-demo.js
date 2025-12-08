@@ -89,7 +89,7 @@
         bpm: 120,
         key: 'G',
         scale: 'minor',
-        mood: 'explore',
+        mood: 'somber',
         nextMood: null,
         swing: 0.0, // 0..0.5
         density: 0.7, // 0..1
@@ -100,7 +100,7 @@
         barCount: 0
     };
     // Moods definition (adjectives) with per-mood bpm and key
-    var MOODS = [
+    var MOOD_PRESETS = [
         { id: 'somber', name: 'Somber', info: 'Low energy, minor tones, rests create space.', key: 'G', bpm: 92, scale: 'minor', swing: 0.02, density: 0.45, leadWave: 'triangle', bassWave: 'triangle', harmony: [0, 3, 5, 3], barStart: 'stab' },
         { id: 'angry', name: 'Angry', info: 'Aggressive, tight rhythm, phrygian bite.', key: 'G', bpm: 160, scale: 'phrygian', swing: 0.01, density: 0.95, leadWave: 'square', bassWave: 'square', harmony: [0, 1, 2, 1], barStart: 'stab' },
         { id: 'endangered', name: 'Endangered', info: 'Urgent minor pulse, snare fills.', key: 'G', bpm: 140, scale: 'minor', swing: 0.02, density: 0.85, leadWave: 'square', bassWave: 'square', harmony: [0, 2, 4, 2], barStart: 'stab' },
@@ -111,13 +111,14 @@
         { id: 'mystery', name: 'Mystery', info: 'Shadowy dorian feel, syncopation.', key: 'G', bpm: 96, scale: 'dorian', swing: 0.0, density: 0.4, leadWave: 'triangle', bassWave: 'square', harmony: [0, 2, 6, 2], barStart: 'stab' },
         { id: 'chill', name: 'Chill', info: 'Laid-back square leads with airy bass.', key: 'G', bpm: 88, scale: 'major', swing: 0.03, density: 0.4, leadWave: 'square', bassWave: 'triangle', harmony: [0, 4, 5, 4], barStart: 'stab' }
     ];
+    var MOODS = MOOD_PRESETS.map(function (m) { return { ...m, harmony: m.harmony.slice() }; });
     // Universal seed for JSON config and Magenta basis (shared across moods)
     var globalSeed = [];
     // Global motif sets: each motif is an array of seed notes for one bar
     var motifs = [];
     var selectedMotifIndex = -1; // for editing
     var activeMotifIndex = -1; // used in playback this bar
-    var motifMode = 'improv'; // 'repeat' | 'improv'
+    var motifMode = 'improv';
     var motifBarMap = {}; // barIndex -> array of events (after variation)
     // Build mood UI
     MOODS.forEach(function (m) {
@@ -142,6 +143,10 @@
         }
     }
     // Scale helpers
+    var KEY_NAMES = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+    var SCALE_NAMES = ['major', 'minor', 'dorian', 'phrygian'];
+    var WAVE_TYPES = ['square', 'triangle'];
+    var BAR_STARTS = ['stab', 'arp'];
     var BASES = { 'C': 60, 'D': 62, 'E': 64, 'F': 65, 'G': 67, 'A': 69, 'B': 71 };
     var SCALES = {
         major: [0, 2, 4, 5, 7, 9, 11],
@@ -149,6 +154,18 @@
         dorian: [0, 2, 3, 5, 7, 9, 10],
         phrygian: [0, 1, 3, 5, 7, 8, 10]
     };
+    function normalizeKey(value) {
+        return KEY_NAMES.indexOf(value) >= 0 ? value : 'C';
+    }
+    function normalizeScale(value) {
+        return SCALE_NAMES.indexOf(value) >= 0 ? value : 'minor';
+    }
+    function normalizeWave(value) {
+        return WAVE_TYPES.indexOf(value) >= 0 ? value : 'square';
+    }
+    function normalizeBarStart(value) {
+        return BAR_STARTS.indexOf(value) >= 0 ? value : 'stab';
+    }
     function scaleOf(_key, name) { return SCALES[name] || SCALES.minor; }
     function midiFromDegree(key, scaleName, degree, octaveOffset) {
         var base = BASES[key] || 60;
@@ -848,7 +865,7 @@
         };
     if (keyEl)
         keyEl.onchange = function () {
-            music.key = keyEl.value;
+            music.key = normalizeKey(keyEl.value);
             var idx = MOODS.findIndex(function (x) { return x.id === music.mood; });
             if (idx >= 0)
                 MOODS[idx].key = music.key;
@@ -1075,7 +1092,7 @@
         if (!m)
             return;
         if (moodKeyEl) {
-            m.key = music.key = moodKeyEl.value;
+            m.key = music.key = normalizeKey(moodKeyEl.value);
             if (keyEl)
                 keyEl.value = music.key;
         }
@@ -1087,7 +1104,7 @@
             }
         }
         if (moodScaleEl) {
-            m.scale = music.scale = moodScaleEl.value;
+            m.scale = music.scale = normalizeScale(moodScaleEl.value);
         }
         if (moodDensityEl) {
             var d = parseFloat(moodDensityEl.value);
@@ -1100,13 +1117,13 @@
                 m.swing = music.swing = s;
         }
         if (moodLeadWaveEl) {
-            m.leadWave = music.leadWave = moodLeadWaveEl.value;
+            m.leadWave = music.leadWave = normalizeWave(moodLeadWaveEl.value);
         }
         if (moodBassWaveEl) {
-            m.bassWave = music.bassWave = moodBassWaveEl.value;
+            m.bassWave = music.bassWave = normalizeWave(moodBassWaveEl.value);
         }
         if (barStartEl) {
-            m.barStart = music.barStart = barStartEl.value;
+            m.barStart = music.barStart = normalizeBarStart(barStartEl.value);
         }
         var sc = scaleOf(music.key, music.scale).join(',');
         scaleLabel.textContent = music.key + ' ' + music.scale + ' [' + sc + ']';
