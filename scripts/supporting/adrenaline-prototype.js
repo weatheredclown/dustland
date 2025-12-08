@@ -1,5 +1,4 @@
 /// <reference types="node" />
-// Simple arena fight to observe adrenaline gain pacing.
 const adrenalineGlobal = globalThis;
 if (typeof window === 'undefined') {
     (async () => {

@@ -13,13 +13,36 @@ const DEFAULT_MODULES = [
   'modules/pit-bas.module.js'
 ];
 
-let cachedTrader: any = null;
+type TraderPriceOptions = {
+  entry?: TraderInventoryEntry | null;
+  markup?: number;
+  grudge?: number;
+  tierMultiplier?: number;
+  scarcityMultiplier?: number;
+};
+
+type TraderInventoryEntry = {
+  id?: string;
+  count?: number;
+  maxStack?: number;
+  value?: number;
+  tier?: number;
+  rarity?: string | number;
+  rank?: string;
+  scarcity?: string | number;
+};
+
+type TraderStatic = {
+  calculatePrice: (valueOrItem: number | ModuleItem, opts?: TraderPriceOptions) => number;
+};
+
+let cachedTrader: TraderStatic | null = null;
 
 function loadTraderClass(repoRoot){
   if (cachedTrader) return cachedTrader;
   const traderPath = path.resolve(repoRoot, 'scripts', 'core', 'trader.js');
   const code = fs.readFileSync(traderPath, 'utf8');
-  const context: Record<string, any> = {
+  const context: Record<string, unknown> & { Dustland?: { Trader?: TraderStatic } } = {
     console,
     Math,
     JSON,
@@ -45,16 +68,16 @@ function resolveModulePath(candidate){
   return null;
 }
 
-function extractModuleData(filePath){
+function extractModuleData(filePath: string): ModuleData {
   const ext = path.extname(filePath);
   const raw = fs.readFileSync(filePath, 'utf8');
   if(ext === '.json'){
-    return JSON.parse(raw);
+    return JSON.parse(raw) as ModuleData;
   }
   if(ext === '.js'){
     const match = raw.match(/const DATA = `([\s\S]*?)`;/);
     if(!match) throw new Error(`Unable to locate DATA export in ${filePath}`);
-    return JSON.parse(match[1]);
+    return JSON.parse(match[1]) as ModuleData;
   }
   throw new Error(`Unsupported module format for ${filePath}`);
 }
@@ -152,9 +175,31 @@ function formatNumber(value){
   return value.toFixed(2);
 }
 
-function collectScrapSources(data: Record<string, any>, threshold: number){
+type CombatReward = number | { min?: number; max?: number } | null | undefined;
+
+type ModuleCombat = {
+  scrap?: CombatReward;
+  challenge?: number | null;
+};
+
+type ModuleNpcShop = {
+  inv?: Array<(TraderInventoryEntry & { id?: string }) | null> | null;
+  markup?: number;
+  grudge?: number;
+};
+
+type ModuleData = {
+  name?: string;
+  seed?: string;
+  items?: Array<ModuleItem | null | undefined> | null;
+  templates?: Array<{ id?: string; name?: string; combat?: ModuleCombat }>;
+  npcs?: Array<{ id?: string; name?: string; combat?: ModuleCombat; shop?: ModuleNpcShop | boolean | null; vending?: boolean }>;
+  enemies?: Array<{ id?: string; name?: string; combat?: ModuleCombat }>;
+};
+
+function collectScrapSources(data: ModuleData, threshold: number){
   const sources: Array<{ kind: string; id: string; min: number; max: number; avg: number; challenge: number | null }> = [];
-  const consider = (kind: string, ref: string, combat: any) => {
+  const consider = (kind: string, ref: string, combat: ModuleCombat | null | undefined) => {
     if(!combat || !combat.scrap) return;
     const scrap = combat.scrap;
     let min;
