@@ -1,6 +1,6 @@
 // ===== Rendering & Utilities =====
 
-const ENGINE_VERSION = '0.243.14';
+const ENGINE_VERSION = '0.243.51';
 
 type EngineAssert = (name: string, condition: unknown) => void;
 
@@ -1530,7 +1530,7 @@ const pickupVacuumImpl: PickupVacuumFn = (fromX, fromY, toX, toY) => {
 const enginePickupVacuum: PickupVacuumFn = getEngineGlobals().pickupVacuum ?? pickupVacuumImpl;
 getEngineGlobals().pickupVacuum = enginePickupVacuum;
 
-function draw(t) {
+function draw(t: number) {
   if (disp.width < 16) {
     return;
   }
@@ -1562,17 +1562,17 @@ function draw(t) {
 }
 
 // ===== Camera =====
-function centerCamera(x, y, map) {
+function centerCamera(x: number, y: number, map?: string) {
   let W, H;
   if (map === 'world') { W = WORLD_W; H = WORLD_H; }
-  else if (interiors[map]) { const I = interiors[map]; W = (I && I.w) || VIEW_W; H = (I && I.h) || VIEW_H; }
+  else if (map && interiors[map]) { const I = interiors[map]; W = (I && I.w) || VIEW_W; H = (I && I.h) || VIEW_H; }
   else { W = VIEW_W; H = VIEW_H; }
   const { w: vW, h: vH } = getViewSize();
   camX = clamp(x - Math.floor(vW / 2), 0, Math.max(0, (W || vW) - vW));
   camY = clamp(y - Math.floor(vH / 2), 0, Math.max(0, (H || vH) - vH));
 }
 
-function shouldRenderFog(map) {
+function shouldRenderFog(map?: string) {
   if (!map) return false;
   const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
   const enabled = typeof fogOfWarEnabled === 'boolean'
@@ -1583,7 +1583,7 @@ function shouldRenderFog(map) {
   return map !== 'creator';
 }
 
-function renderFog(ctx, map, offX, offY, viewW, viewH) {
+function renderFog(ctx: CanvasRenderingContext2D, map: string, offX: number, offY: number, viewW: number, viewH: number) {
   if (!ctx || !shouldRenderFog(map)) return;
   const dims = (typeof mapWH === 'function' ? mapWH(map) : null) as { W?: number; H?: number } | null;
   const W = Number.isFinite(dims?.W) ? dims?.W ?? null : null;
@@ -1640,7 +1640,7 @@ function skinManager() {
   return globalThis.DustlandSkin || globalThis.Dustland?.skin || null;
 }
 
-function drawSkinSprite(ctx, sprite, dx, dy, size = TS) {
+function drawSkinSprite(ctx: CanvasRenderingContext2D, sprite: any, dx: number, dy: number, size = TS) {
   if (!ctx || !sprite || !sprite.image) return false;
   const img = sprite.image;
   if (!img.complete || !(img.naturalWidth || img.width) || !(img.naturalHeight || img.height)) return false;
@@ -1671,7 +1671,7 @@ function drawSkinSprite(ctx, sprite, dx, dy, size = TS) {
   return true;
 }
 
-function render(gameState = state, _dt) {
+function render(gameState: any = state, _dt?: number) {
   const ctx = sctx;
   if (!ctx) return;
 
@@ -2007,9 +2007,9 @@ function render(gameState = state, _dt) {
   ctx.restore();
 }
 
-function getNpcColor(n) {
+function getNpcColor(n: DustlandNpc) {
   if (n.overrideColor && n.color) return n.color;
-  if (n.trainer) return '#ffcc99';
+  if ((n as any).trainer) return '#ffcc99';
   if (n.shop) return '#ffee99';
   if (n.inanimate) return '#d4af37';
   if (n.questId || n.quests) return '#cc99ff';
@@ -2018,14 +2018,14 @@ function getNpcColor(n) {
   return '#9ef7a0';
 }
 
-function getNpcSymbol(n) {
+function getNpcSymbol(n: DustlandNpc & { symbol?: string; inanimate?: boolean; questId?: string; quests?: any }) {
   if (n.symbol) return n.symbol;
   if (n.inanimate) return '?';
   if (n.questId || n.quests) return '★';
   return '!';
 }
 
-function drawEntities(ctx, list, offX, offY, skin) {
+function drawEntities(ctx: CanvasRenderingContext2D, list: any[], offX: number, offY: number, skin: any) {
   const { w: vW, h: vH } = getViewSize();
   for (const n of list) {
     if (n.x >= camX && n.y >= camY && n.x < camX + vW && n.y < camY + vH) {
@@ -2188,7 +2188,7 @@ function resetPlayerAdrenalineFx() {
   if (disp?.style?.removeProperty) disp.style.removeProperty('--fxBloom');
 }
 
-function pulseAdrenaline(t) {
+function pulseAdrenaline(t: number) {
   if (typeof leader !== 'function') { resetPlayerAdrenalineFx(); return; }
   const lead = leader();
   const fx = globalThis.fxConfig;
@@ -2206,7 +2206,7 @@ function pulseAdrenaline(t) {
   playerAdrenalineFx.glow = ratio * 0.6 + intensity * 0.4;
 }
 
-function showTab(which) {
+function showTab(which: string) {
   activeTab = which;
   if (window.innerWidth >= TAB_BREAKPOINT) return;
   const inv = document.getElementById('inv'), partyEl = document.getElementById('party'), q = document.getElementById('quests');
@@ -2261,7 +2261,7 @@ if (document.getElementById('tabInv')) {
 }
 // ===== Renderers =====
 
-function calcItemValue(it, member) {
+function calcItemValue(it: GameItem, member?: PartyMember) {
   if (!it) return 0;
   const m = member || party[selectedMember] || party[0];
   let score = it.value ?? 0;
@@ -2663,7 +2663,7 @@ function updateQuestCompassTargets() {
   });
 }
 
-function questPartyLocation() {
+function questPartyLocation(): { map: string; x: number; y: number } {
   const loc = { map: 'world', x: 0, y: 0 };
   const p = (!Array.isArray(party) && typeof party === 'object') ? party as { map?: string; x?: number; y?: number } : null;
   const globalState = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals)).state;
@@ -2676,7 +2676,7 @@ function questPartyLocation() {
   return loc;
 }
 
-function questProgressInfo(q) {
+function questProgressInfo(q: any) {
   const required = Math.max(0, q.count || (q.item || q.itemTag ? 1 : 0));
   const turnedIn = typeof q.progress === 'number' ? q.progress : 0;
   const countFn = typeof countItems === 'function' ? countItems : null;
@@ -2692,7 +2692,7 @@ function questProgressInfo(q) {
   return { required, turnedIn, carried, total, need, ready };
 }
 
-function questMapDisplayName(id) {
+function questMapDisplayName(id: string) {
   if (!id) return '';
   if (typeof mapLabel === 'function') {
     const label = mapLabel(id);
@@ -2707,7 +2707,7 @@ function questMapDisplayName(id) {
   return str.replace(/\b\w/g, c => c.toUpperCase());
 }
 
-function questDescriptionText(q, progress, target) {
+function questDescriptionText(q: any, progress: any, target: any) {
   if (q.status === 'completed') {
     if (q.outcome) return q.outcome;
     return typeof q.desc === 'string' ? q.desc : '';
@@ -2727,7 +2727,7 @@ function questDescriptionText(q, progress, target) {
   return typeof q.desc === 'string' ? q.desc : '';
 }
 
-function questTargetText(target, partyLoc) {
+function questTargetText(target: any, partyLoc: any) {
   if (!target) return '';
   if (target.type === 'npc') {
     const mapNote = target.map && partyLoc?.map && target.map !== partyLoc.map ? ` (${questMapDisplayName(target.map) || target.map})` : '';
@@ -2746,7 +2746,7 @@ function questTargetText(target, partyLoc) {
   return '';
 }
 
-function questCompassTarget(q, partyLoc, progress) {
+function questCompassTarget(q: any, partyLoc: any, progress: any) {
   if (!q) return null;
   if (q.status === 'completed') return { type: 'completed', label: q.title };
   if (progress.ready) {
@@ -2767,9 +2767,9 @@ function questCompassTarget(q, partyLoc, progress) {
   return itemTarget;
 }
 
-function findQuestItemTarget(q, partyLoc) {
+function findQuestItemTarget(q: any, partyLoc: any) {
   const drops = Array.isArray(itemDrops) ? itemDrops : [];
-  const matches = [];
+  const matches: any[] = [];
   if (q.item) {
     drops.forEach(drop => {
       if (!drop || drop.id !== q.item) return;
@@ -2807,7 +2807,7 @@ function findQuestItemTarget(q, partyLoc) {
   return best || pool[0];
 }
 
-function questCompassTooltip(target, partyLoc) {
+function questCompassTooltip(target: any, partyLoc: any) {
   if (!target) return 'Explore to advance this quest.';
   if (target.type === 'completed') return 'Quest completed';
   if (target.label) {
@@ -2819,7 +2819,7 @@ function questCompassTooltip(target, partyLoc) {
   return 'Quest objective';
 }
 
-function renderQuestCompass(q, target, partyLoc) {
+function renderQuestCompass(q: any, target: any, partyLoc: any) {
   const wrap = document.createElement('div');
   wrap.className = 'quest-compass';
   if (q?.id) wrap.dataset.questId = q.id;
@@ -2832,7 +2832,7 @@ function renderQuestCompass(q, target, partyLoc) {
   return wrap;
 }
 
-function drawQuestCompass(canvas, target, partyLoc) {
+function drawQuestCompass(canvas: HTMLCanvasElement, target: any, partyLoc: any) {
   const ctx = canvas.getContext && canvas.getContext('2d');
   if (!ctx) return;
   const size = canvas.width;
@@ -2912,7 +2912,7 @@ function drawQuestCompass(canvas, target, partyLoc) {
   ctx.restore();
 }
 
-function questItemName(q) {
+function questItemName(q: any) {
   if (!q) return '';
   if (q.item) {
     const def = (typeof ITEMS === 'object' && ITEMS) ? ITEMS[q.item] : null;
@@ -2930,7 +2930,7 @@ function questItemName(q) {
   return '';
 }
 
-function humanizeQuestId(id) {
+function humanizeQuestId(id: string) {
   if (!id) return '';
   return String(id).replace(/[_-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -3016,7 +3016,7 @@ function renderParty() {
   });
 }
 
-function openShop(npc) {
+function openShop(npc: DustlandNpc & { shop?: any; vending?: boolean; cancelCount?: number; tree?: any }) {
   const shopOverlay = document.getElementById('shopOverlay');
   const shopName = document.getElementById('shopName');
   const closeShopBtn = document.getElementById('closeShopBtn');
