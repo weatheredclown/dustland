@@ -1,4 +1,4 @@
-import { FIREBASE_APP_NAME } from './firebase-clients.js';
+import { FIREBASE_APP_NAME, loadFirebaseModule } from './firebase-clients.js';
 export class NullModuleRepository {
     async init(_session) {
         // No-op
@@ -43,9 +43,9 @@ export class FirestoreModuleRepository {
             throw new Error('Firebase config missing.');
         }
         this.session = session;
-        const { initializeApp, getApps } = await import('firebase/app');
-        const { getFirestore } = await import('firebase/firestore');
-        const { getFunctions } = await import('firebase/functions');
+        const { initializeApp, getApps } = await loadFirebaseModule('firebase-app');
+        const { getFirestore } = await loadFirebaseModule('firebase-firestore');
+        const { getFunctions } = await loadFirebaseModule('firebase-functions');
         const existing = getApps().find(app => app.name === FIREBASE_APP_NAME);
         const app = existing ?? initializeApp(session.bootstrap.config, FIREBASE_APP_NAME);
         this.db = getFirestore(app);
@@ -55,7 +55,7 @@ export class FirestoreModuleRepository {
         const userId = this.session?.user?.uid;
         if (!userId || !this.db)
             return [];
-        const { collection, getDocs, query, where, orderBy } = await import('firebase/firestore');
+        const { collection, getDocs, query, where, orderBy } = await loadFirebaseModule('firebase-firestore');
         const col = collection(this.db, 'maps');
         const q = query(col, where('ownerId', '==', userId), orderBy('updatedAt', 'desc'));
         const snap = await getDocs(q);
@@ -65,7 +65,7 @@ export class FirestoreModuleRepository {
         const userId = this.session?.user?.uid;
         if (!userId || !this.db)
             return [];
-        const { collection, getDocs, query, where } = await import('firebase/firestore');
+        const { collection, getDocs, query, where } = await loadFirebaseModule('firebase-firestore');
         const sharesCol = collection(this.db, 'shares');
         const shareSnap = await getDocs(query(sharesCol, where('userId', '==', userId)));
         if (shareSnap.empty)
@@ -84,7 +84,7 @@ export class FirestoreModuleRepository {
     async listPublic() {
         if (!this.db)
             return [];
-        const { collection, getDocs, orderBy, query } = await import('firebase/firestore');
+        const { collection, getDocs, orderBy, query } = await loadFirebaseModule('firebase-firestore');
         const listings = collection(this.db, 'publicListings');
         const snap = await getDocs(query(listings, orderBy('updatedAt', 'desc')));
         return snap.docs.map(doc => this.mapDocToSummary(doc.id, doc.data(), true));
@@ -92,7 +92,7 @@ export class FirestoreModuleRepository {
     async loadVersion(moduleId) {
         if (!this.db)
             return null;
-        const { doc, getDoc } = await import('firebase/firestore');
+        const { doc, getDoc } = await loadFirebaseModule('firebase-firestore');
         const mapRef = doc(this.db, 'maps', moduleId);
         const mapSnap = await getDoc(mapRef);
         if (!mapSnap.exists())
@@ -119,7 +119,7 @@ export class FirestoreModuleRepository {
     async saveDraft(moduleId, payload) {
         if (!this.db)
             throw new Error('Firestore is not initialized.');
-        const { doc, setDoc } = await import('firebase/firestore');
+        const { doc, setDoc } = await loadFirebaseModule('firebase-firestore');
         const mapId = moduleId ?? createId('map');
         const versionId = createId('version');
         const now = Date.now();
@@ -141,7 +141,7 @@ export class FirestoreModuleRepository {
     async publish(moduleId) {
         if (!this.db)
             throw new Error('Firestore is not initialized.');
-        const { doc, getDoc, setDoc } = await import('firebase/firestore');
+        const { doc, getDoc, setDoc } = await loadFirebaseModule('firebase-firestore');
         const mapRef = doc(this.db, 'maps', moduleId);
         const mapSnap = await getDoc(mapRef);
         const now = Date.now();
@@ -164,7 +164,7 @@ export class FirestoreModuleRepository {
         if (!userId) {
             throw new Error('User not found. Ask them to sign up first.');
         }
-        const { doc, setDoc } = await import('firebase/firestore');
+        const { doc, setDoc } = await loadFirebaseModule('firebase-firestore');
         const now = Date.now();
         const shareId = `${moduleId}_${userId}`;
         const shareRef = doc(this.db, 'shares', shareId);
@@ -182,7 +182,7 @@ export class FirestoreModuleRepository {
         if (!this.functions)
             return email.toLowerCase();
         try {
-            const { httpsCallable } = await import('firebase/functions');
+            const { httpsCallable } = await loadFirebaseModule('firebase-functions');
             const callable = httpsCallable(this.functions, 'resolveUserByEmail');
             const res = await callable({ email });
             return res.data?.uid ?? null;
@@ -204,7 +204,7 @@ export class FirestoreModuleRepository {
         };
     }
     async safeGetDoc(col, id) {
-        const { doc, getDoc } = await import('firebase/firestore');
+        const { doc, getDoc } = await loadFirebaseModule('firebase-firestore');
         const ref = doc(col, id);
         const snap = await getDoc(ref);
         if (!snap.exists())
