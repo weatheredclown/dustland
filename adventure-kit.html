@@ -960,17 +960,18 @@
       </div>
     </div>
   </div>
-  <div id="quickActions" class="quick-actions" role="toolbar" aria-label="Quick actions">
-    <div id="serverModeActions" class="quick-actions__cloud" hidden>
-      <span class="quick-actions__cloud-status" data-role="server-mode-status" aria-live="polite"></span>
-      <button class="btn" type="button" aria-haspopup="dialog">☁ Cloud</button>
+    <div id="quickActions" class="quick-actions" role="toolbar" aria-label="Quick actions">
+      <div id="serverModeActions" class="quick-actions__cloud" hidden>
+        <span class="quick-actions__cloud-status" data-role="server-mode-status" aria-live="polite"></span>
+        <button class="btn" type="button" aria-haspopup="dialog">☁ Cloud</button>
+      </div>
+      <button id="quickSave" class="btn" type="button" title="Save module (Ctrl+S)">💾 Save</button>
+      <button id="cloudLoad" class="btn" type="button" title="Load the latest cloud draft" hidden>☁ Load</button>
+      <button id="cloudSave" class="btn" type="button" title="Save to the cloud" hidden>☁ Save</button>
+      <button id="cloudPublish" class="btn" type="button" title="Publish for everyone" hidden>📢 Publish</button>
+      <button id="cloudShare" class="btn" type="button" title="Share with collaborators" hidden>🔗 Share</button>
+      <button id="playtestFloat" class="btn btn--primary" type="button" title="Playtest module (Ctrl+P)">▶ Playtest</button>
     </div>
-    <button id="quickSave" class="btn" type="button" title="Save module (Ctrl+S)">💾 Save</button>
-    <button id="cloudSave" class="btn" type="button" title="Save to the cloud" hidden>☁ Save</button>
-    <button id="cloudPublish" class="btn" type="button" title="Publish for everyone" hidden>📢 Publish</button>
-    <button id="cloudShare" class="btn" type="button" title="Share with collaborators" hidden>🔗 Share</button>
-    <button id="playtestFloat" class="btn btn--primary" type="button" title="Playtest module (Ctrl+P)">▶ Playtest</button>
-  </div>
   <script defer src="./scripts/event-bus.js"></script>
   <script defer src="./scripts/supporting/chiptune.js"></script>
   <script defer src="./scripts/core/effects.js"></script>
