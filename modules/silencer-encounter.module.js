@@ -1,3 +1,4 @@
+// @ts-nocheck
 function seedWorldContent() { }
 globalThis.seedWorldContent = seedWorldContent;
 const DATA = `

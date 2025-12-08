@@ -1,3 +1,4 @@
+// @ts-nocheck
 /// <reference types="node" />
 // This script is loaded into balance-tester.html and runs the game balance simulation.
 

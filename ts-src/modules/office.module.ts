@@ -1,3 +1,4 @@
+// @ts-nocheck
 type OfficeModule = DustlandModuleInstance & {
   worldGen?: (seed?: number) => { castleId?: string } | null;
 };

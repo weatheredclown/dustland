@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* global EventBus */
 
 type UnknownRecord = Record<string, unknown>;

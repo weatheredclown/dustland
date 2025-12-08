@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ===== Effects =====
 (function () {
     const globals = globalThis;

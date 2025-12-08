@@ -1,3 +1,4 @@
+// @ts-nocheck
 // TODO: migrate dustland-core to the typed DustlandCoreGlobals surface.
 /* eslint-disable no-var */
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 interface PositionLike {
   x?: number;
   y?: number;

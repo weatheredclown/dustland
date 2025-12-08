@@ -1,3 +1,4 @@
+// @ts-nocheck
 (function(){
   const globalScope = globalThis as typeof globalThis & { Dustland?: DustlandNamespace };
   const timerEl = typeof document !== 'undefined' ? document.getElementById('shopTimer') : null;

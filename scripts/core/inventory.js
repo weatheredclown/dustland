@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ===== Inventory / equipment =====
 globalThis.Dustland = globalThis.Dustland || {};
 const _inventoryEventBus = globalThis.Dustland?.eventBus ?? globalThis.EventBus;

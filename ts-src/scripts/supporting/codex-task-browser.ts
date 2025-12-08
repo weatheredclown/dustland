@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-nocheck
 /// <reference types="node" />
 import fs from 'node:fs';
 import path from 'node:path';

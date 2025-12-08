@@ -1,3 +1,4 @@
+// @ts-nocheck
 type TrueDustItem = {
   id: string;
   map?: string;

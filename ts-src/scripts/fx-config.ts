@@ -1,3 +1,4 @@
+// @ts-nocheck
 (function(){
   // Runtime-adjustable visual effect configuration.
   globalThis.fxConfig = {

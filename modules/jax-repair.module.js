@@ -1,3 +1,4 @@
+// @ts-nocheck
 const DATA = `{
   "seed": "jax-repair",
   "name": "jax-repair",

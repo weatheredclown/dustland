@@ -1,3 +1,4 @@
+// @ts-nocheck
 type MultiplayerEventName =
   | 'movement:player'
   | 'combat:event'

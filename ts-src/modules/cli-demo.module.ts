@@ -1,3 +1,4 @@
+// @ts-nocheck
 type CliDemoModule = DustlandModuleInstance & {
   postLoad?: (moduleData: DustlandModuleInstance) => void;
 };

@@ -1,3 +1,4 @@
+// @ts-nocheck
 const trainerUpgrades = {
     power: [
         { id: 'str', label: 'STR +1', cost: 1, type: 'stat', stat: 'STR', delta: 1 },

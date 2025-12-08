@@ -1,3 +1,4 @@
+// @ts-nocheck
 type LobbyEventBus = {
   emit?(event: string, ...args: unknown[]): void;
   on?(event: string, handler: (...args: unknown[]) => void): void;

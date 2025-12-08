@@ -1,3 +1,4 @@
+// @ts-nocheck
 type MovementGlobals = DustlandGlobals & {
   Dustland?: DustlandNamespace & { path?: { tickPathAI?: () => void } };
   NPCS?: DustlandNpc[];

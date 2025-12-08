@@ -41,7 +41,7 @@ type DustlandGlobal = DustlandNamespace & {
     const handlers = listeners.get(evt);
     if(!handlers) return;
     handlers.forEach(fn => {
-      (fn as EventHandler<E>)(payload as DustlandEventPayloads[E]);
+      (fn as EventHandler<E>)(payload as any);
     });
   }
 

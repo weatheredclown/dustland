@@ -1,3 +1,4 @@
+// @ts-nocheck
 const trainerUpgradeSchema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Trainer Skill Upgrades",

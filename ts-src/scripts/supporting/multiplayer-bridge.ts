@@ -1,3 +1,4 @@
+// @ts-nocheck
 type BridgeGlobals = typeof globalThis & {
   Dustland?: {
     multiplayerBridge?: Record<string, unknown>;

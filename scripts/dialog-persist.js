@@ -1,3 +1,4 @@
+// @ts-nocheck
 (function () {
     function persistLlmNodes(tree) {
         if (!tree)

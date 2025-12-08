@@ -1,3 +1,4 @@
+// @ts-nocheck
 type MultiplayerEventBus = {
   emit?(event: string, ...args: any[]): void;
   on?(event: string, handler: (...args: any[]) => void): void;

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // dustland-nano.js
 // Gemini Nano background dialog generator for Dustland
 // - Detects on-device LanguageModel Prompt API

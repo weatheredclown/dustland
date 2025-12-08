@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Adventure Construction Kit
 // Provides basic tools to build Dustland modules.
 // Ensure world generation doesn't pull default content

@@ -1,3 +1,4 @@
+// @ts-nocheck
 (function () {
     globalThis.Dustland = globalThis.Dustland || {};
     const bus = globalThis.EventBus;

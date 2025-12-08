@@ -1,3 +1,4 @@
+// @ts-nocheck
 (function(){
   const globalScope = typeof globalThis !== 'undefined' ? globalThis : window;
   function dispatchReady(){

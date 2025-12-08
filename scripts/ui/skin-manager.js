@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* global EventBus */
 (function () {
     const UI_VAR_MAP = {

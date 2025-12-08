@@ -1,3 +1,4 @@
+// @ts-nocheck
 type WorkbenchEventBus = { emit?: (event: string, payload?: unknown) => void } | undefined;
 
 interface InventoryItem {

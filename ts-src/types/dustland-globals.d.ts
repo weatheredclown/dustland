@@ -1,5 +1,6 @@
 interface DustlandEventBus {
   on?: (event: string, handler: (...args: any[]) => void) => void;
+  off?: (event: string, handler: (...args: any[]) => void) => void;
   emit?: (event: string, ...args: any[]) => void;
 }
 
@@ -9,6 +10,13 @@ interface WeatherState {
   desc?: string;
   speedMod?: number;
   encounterBias?: number | Record<string, number>;
+  [key: string]: unknown;
+}
+
+interface MultiplayerPeer {
+  id: string;
+  status: string;
+  label: string;
   [key: string]: unknown;
 }
 
@@ -24,6 +32,35 @@ interface DustlandNamespace {
   worldTurns?: number;
   movement?: unknown;
   lastNonCombatKey?: string | null;
+  music?: { isEnabled?: () => boolean; toggleEnabled?: () => void };
+  multiplayerParties?: { list?: () => MultiplayerPeer[] };
+  multiplayerState?: { remoteParties?: MultiplayerPeer[] };
+  openShop?: (shop: unknown) => void;
+  retroNpcArt?: {
+      isEnabled: () => boolean;
+      setEnabled: (v: boolean, opts?: any) => void;
+      getItemGlyph: () => any;
+      getLootGlyph: () => any;
+      getItemCacheGlyph: () => any;
+  };
+  fogOfWar?: {
+      isEnabled: () => boolean;
+      setEnabled: (v: boolean, opts?: any) => void;
+      toggle: () => void;
+  };
+  font?: {
+      getScale: () => number;
+      setScale: (v: number, opts?: any) => void;
+  };
+  skin?: any;
+  gameState?: any;
+  Trader?: {
+    calculatePrice?: (item: any, opts: any) => number;
+    resolveBaseValue?: (item: any) => number;
+    basePriceFromValue?: (value: number) => number;
+    resolveGrudgeMultiplier?: (grudge: number) => number;
+  };
+  updateTradeUI?: (shop: any) => void;
 }
 
 interface DustlandFeatures {
@@ -32,6 +69,8 @@ interface DustlandFeatures {
 }
 
 declare global {
+  type EngineAssert = (name: string, condition: unknown) => void;
+
   interface DustlandGlobals {
     player?: PlayerState;
     removeFromInv?: (index: number) => void;
@@ -40,7 +79,41 @@ declare global {
     dropItemNearParty?: (item: GameItem) => void;
     ItemGen?: ItemGenerator;
     EventBus?: DustlandEventBus;
-    log?: (message: string) => void;
+    log?: (message: string, type?: 'warn' | 'error' | string) => void;
+    toast?: (msg: string) => void;
+    logger?: (msg: string, type?: 'warn' | 'error' | string) => void;
+    engineLog?: (msg: string, type?: 'warn' | 'error' | string) => void;
+    engineToast?: (msg: string) => void;
+
+    // Engine specific
+    TILE?: Record<string, number>;
+    fogOfWarEnabled?: boolean;
+    FOG_RADIUS?: number | string;
+    tileChars?: unknown;
+    playerAdrenalineFx?: unknown;
+    moduleTests?: ((assert: EngineAssert) => void) | undefined;
+    NanoDialog?: { enabled?: boolean; init?: () => Promise<void>; isReady?: () => boolean; refreshIndicator?: () => void };
+    Dustland?: DustlandNamespace;
+
+    canEquip?: (member: unknown, item: unknown) => boolean;
+    getEquipRestrictions?: (member: unknown, item: unknown) => unknown;
+    describeRequiredRoles?: (roles: unknown) => string;
+    unequipItem?: (member: unknown, slot: unknown) => unknown;
+    dropItems?: (indices: number[]) => unknown;
+    quests?: Record<string, unknown>;
+    state?: { map?: string; mapEntry?: { x?: number; y?: number }; fog?: any; itemDrops?: any; portals?: any; entities?: any; party?: any; [key: string]: any };
+    engineGlobals?: DustlandGlobals;
+    pickupVacuum?: (fromX: number, fromY: number, toX?: number, toY?: number) => void;
+
+    // UI Helpers
+    updateHUD?: () => void;
+    renderInv?: () => void;
+    renderQuests?: () => void;
+    renderParty?: () => void;
+    footstepBump?: () => void;
+    pickupSparkle?: (x: number, y: number) => void;
+    playFX?: (type: string) => void;
+
     [key: string]: unknown;
   }
 
@@ -76,6 +149,7 @@ declare global {
   var ITEM_BANK: Record<string, any>;
   var Enemies: any[];
   var itemDrops: any[];
+  var portals: any[];
   var pathQueue: any;
   var pickupVacuum: ((...coords: number[]) => void) | undefined;
   var addToInv: ((item: any, opts?: any) => boolean) | undefined;

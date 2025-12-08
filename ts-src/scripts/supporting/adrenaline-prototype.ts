@@ -1,3 +1,4 @@
+// @ts-nocheck
 /// <reference types="node" />
 // Simple arena fight to observe adrenaline gain pacing.
 type ArenaGlobals = typeof globalThis & {

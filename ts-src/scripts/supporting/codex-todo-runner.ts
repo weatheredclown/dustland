@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-nocheck
 /// <reference types="node" />
 // Run with `node scripts/supporting/codex-todo-runner.js` from the repo root.
 

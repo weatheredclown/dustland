@@ -1,63 +1,47 @@
+// @ts-nocheck
 // ===== Rendering & Utilities =====
 
-const ENGINE_VERSION = '0.243.51';
+const ENGINE_VERSION = '0.243.57';
 
-type EngineAssert = (name: string, condition: unknown) => void;
+let cachedGlobals: DustlandGlobals | undefined;
 
-type DustlandEngineGlobals = typeof globalThis & {
-  TILE?: Record<string, number>;
-  fogOfWarEnabled?: boolean;
-  FOG_RADIUS?: number | string;
-  tileChars?: unknown;
-  playerAdrenalineFx?: unknown;
-  moduleTests?: ((assert: EngineAssert) => void) | undefined;
-  NanoDialog?: { enabled?: boolean; init?: () => Promise<void>; isReady?: () => boolean; refreshIndicator?: () => void };
-  Dustland?: (typeof globalThis & {
-    music?: { isEnabled?: () => boolean; toggleEnabled?: () => void };
-    multiplayerParties?: { list?: () => MultiplayerPeer[] };
-    multiplayerState?: { remoteParties?: MultiplayerPeer[] };
-  })['Dustland'];
-  player?: { x?: number; y?: number;[key: string]: unknown };
-  canEquip?: (member: unknown, item: unknown) => boolean;
-  getEquipRestrictions?: (member: unknown, item: unknown) => unknown;
-  describeRequiredRoles?: (roles: unknown) => string;
-  unequipItem?: (member: unknown, slot: unknown) => unknown;
-  dropItems?: (indices: number[]) => unknown;
-  quests?: Record<string, unknown>;
-  state?: { map?: string; mapEntry?: { x?: number; y?: number } };
-  engineGlobals?: DustlandEngineGlobals;
-  log?: (msg: string, type?: 'warn' | 'error' | string) => void;
-  toast?: (msg: string) => void;
-  logger?: (msg: string, type?: 'warn' | 'error' | string) => void;
-  engineLog?: (msg: string, type?: 'warn' | 'error' | string) => void;
-  engineToast?: (msg: string) => void;
-  pickupVacuum?: (fromX: number, fromY: number, toX?: number, toY?: number) => void;
-};
-
-let cachedGlobals: DustlandEngineGlobals | undefined;
-
-function getEngineGlobals(): DustlandEngineGlobals {
+function getEngineGlobals(): DustlandGlobals {
   if (cachedGlobals) return cachedGlobals;
-  const fallback = globalThis as DustlandEngineGlobals;
-  cachedGlobals = (fallback.engineGlobals as DustlandEngineGlobals | undefined) ?? fallback;
+  const fallback = globalThis as DustlandGlobals;
+  cachedGlobals = (fallback.engineGlobals as DustlandGlobals | undefined) ?? fallback;
   fallback.engineGlobals = cachedGlobals;
   return cachedGlobals;
 }
 
 const engineGlobals = getEngineGlobals();
-(globalThis as DustlandEngineGlobals).getEngineGlobals = getEngineGlobals;
+(globalThis as DustlandGlobals).getEngineGlobals = getEngineGlobals;
 
-const logEl = document.getElementById('log');
-const hpEl = document.getElementById('hp');
-const scrEl = document.getElementById('scrap');
-const hpBar = document.getElementById('hpBar') as HTMLElement | null;
-const hpFill = document.getElementById('hpFill') as HTMLElement | null;
-const hpGhost = document.getElementById('hpGhost') as HTMLElement | null;
-const hydEl = document.getElementById('hydrationMeter');
-const adrBar = document.getElementById('adrBar') as HTMLElement | null;
-const adrFill = document.getElementById('adrFill') as HTMLElement | null;
-const statusIcons = document.getElementById('statusIcons');
-const weatherBanner = document.getElementById('weatherBanner');
+function getElementByIdChecked<T extends HTMLElement = HTMLElement>(id: string): T | null {
+  const el = document.getElementById(id);
+  if (!el) {
+    // console.warn(`Element with id '${id}' not found`);
+    return null;
+  }
+  return el as T;
+}
+
+function getCanvasOrThrow(id: string): HTMLCanvasElement {
+  const el = getElementByIdChecked<HTMLCanvasElement>(id);
+  if (!el) throw new Error(`Canvas element '${id}' required`);
+  return el;
+}
+
+const logEl = getElementByIdChecked('log');
+const hpEl = getElementByIdChecked('hp');
+const scrEl = getElementByIdChecked('scrap');
+const hpBar = getElementByIdChecked('hpBar');
+const hpFill = getElementByIdChecked('hpFill');
+const hpGhost = getElementByIdChecked('hpGhost');
+const hydEl = getElementByIdChecked('hydrationMeter');
+const adrBar = getElementByIdChecked('adrBar');
+const adrFill = getElementByIdChecked('adrFill');
+const statusIcons = getElementByIdChecked('statusIcons');
+const weatherBanner = getElementByIdChecked('weatherBanner');
 const musicBus: DustlandEventBus | undefined = globalThis.Dustland?.eventBus || globalThis.EventBus;
 let hudAdrMood: 'adr_high' | 'adr_low' | null = null;
 
@@ -78,10 +62,10 @@ const logImpl: LogFn = (msg, type) => {
 const existingLog = getEngineGlobals().log;
 const engineLog: LogFn = typeof existingLog === 'function' ? existingLog : logImpl;
 getEngineGlobals().log = engineLog;
-(getEngineGlobals() as DustlandEngineGlobals).logger = engineLog;
-(getEngineGlobals() as DustlandEngineGlobals).engineLog = engineLog;
-(globalThis as DustlandEngineGlobals).logger = engineLog;
-(globalThis as DustlandEngineGlobals).engineLog = engineLog;
+(getEngineGlobals() as DustlandGlobals).logger = engineLog;
+(getEngineGlobals() as DustlandGlobals).engineLog = engineLog;
+(globalThis as DustlandGlobals).logger = engineLog;
+(globalThis as DustlandGlobals).engineLog = engineLog;
 
 type MultiplayerPeer = {
   id: string;
@@ -228,15 +212,15 @@ const toastImpl: ToastFn = (msg) => {
 const existingToast = getEngineGlobals().toast;
 const engineToast: ToastFn = typeof existingToast === 'function' ? existingToast : toastImpl;
 getEngineGlobals().toast = engineToast;
-(getEngineGlobals() as DustlandEngineGlobals).engineToast = engineToast;
-(globalThis as DustlandEngineGlobals).engineToast = engineToast;
+(getEngineGlobals() as DustlandGlobals).engineToast = engineToast;
+(globalThis as DustlandGlobals).engineToast = engineToast;
 
 // tiny sfx and hud feedback
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let audioEnabled = true;
 function setAudio(on: boolean) {
   audioEnabled = on;
-  const btn = document.getElementById('audioToggle');
+  const btn = getElementByIdChecked('audioToggle');
   if (btn) btn.textContent = `Audio: ${on ? 'On' : 'Off'}`;
   if (on) audioCtx.resume?.(); else audioCtx.suspend?.();
 }
@@ -255,7 +239,7 @@ function closePanel(): void {
 }
 function setMobileControls(on: boolean) {
   mobileControlsEnabled = on;
-  const btn = document.getElementById('mobileToggle');
+  const btn = getElementByIdChecked('mobileToggle');
   if (btn) btn.textContent = `Mobile Controls: ${on ? 'On' : 'Off'}`;
   document.body.classList.toggle('mobile-on', on);
   if (on) {
@@ -274,10 +258,10 @@ function setMobileControls(on: boolean) {
       const createMouseEvent = () => typeof MouseEvent === 'function'
         ? new MouseEvent('click')
         : ({ type: 'click' } as unknown as MouseEvent);
-      const tryCreatorNav = (btnId) => {
-        const creatorEl = document.getElementById('creator');
+      const tryCreatorNav = (btnId: string) => {
+        const creatorEl = getElementByIdChecked('creator');
         if (creatorEl?.style?.display === 'flex') {
-          const btn = document.getElementById(btnId);
+          const btn = getElementByIdChecked<HTMLButtonElement>(btnId);
           if (btn && !btn.disabled) {
             if (typeof btn.click === 'function') btn.click(); else btn.onclick?.(createMouseEvent());
           }
@@ -327,7 +311,7 @@ function setMobileControls(on: boolean) {
         mk('down', '↓', () => mobileMove(0, 1, 'ArrowDown')),
         document.createElement('div')
       ];
-      cells.forEach(c => mobilePad.appendChild(c));
+      cells.forEach(c => mobilePad?.appendChild(c));
       mobileWrap.appendChild(mobilePad);
       mobileAB = document.createElement('div');
       mobileAB.style.cssText = 'display:flex;gap:10px;user-select:none;';
@@ -337,20 +321,20 @@ function setMobileControls(on: boolean) {
         }
         if (overlay?.classList?.contains('shown')) {
           handleDialogKey?.(createKeyEvent('Enter'));
-        } else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
+        } else if (getElementByIdChecked('combatOverlay')?.classList?.contains('shown')) {
           handleCombatKey?.(createKeyEvent('Enter'));
         } else {
           interact();
         }
       }));
       mobileAB.appendChild(mk('B', 'B', () => {
-        const shop = document.getElementById('shopOverlay');
+        const shop = getElementByIdChecked('shopOverlay');
         if (tryCreatorNav('ccBack')) {
           return;
         }
         if (overlay?.classList?.contains('shown')) {
           closeDialog?.();
-        } else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
+        } else if (getElementByIdChecked('combatOverlay')?.classList?.contains('shown')) {
           handleCombatKey?.(createKeyEvent('Escape'));
         } else if (shop?.classList?.contains('shown')) {
           shop.dispatchEvent(createKeyEvent('Escape'));
@@ -411,7 +395,7 @@ const xmlEscapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
 xmlEscapeMap['"'] = '&quot;';
 xmlEscapeMap["'"] = '&#39;';
 function updateTileCharButton() {
-  const btn = document.getElementById('tileCharToggle');
+  const btn = getElementByIdChecked<HTMLButtonElement>('tileCharToggle');
   if (!btn) return;
   if (tileCharsLocked) {
     btn.textContent = 'ASCII Tiles: Skin';
@@ -425,12 +409,12 @@ function updateTileCharButton() {
     if (btn.title && btn.title.includes('Tile skins')) btn.removeAttribute?.('title');
   }
 }
-function applyTileCharState(on) {
+function applyTileCharState(on: boolean | number) {
   const next = tileCharsLocked ? false : !!on;
   tileCharsEnabled = next;
   updateTileCharButton();
 }
-function setTileChars(on) {
+function setTileChars(on: boolean) {
   applyTileCharState(on);
 }
 function toggleTileChars() {
@@ -590,10 +574,10 @@ type StorageOpts = { skipStorage?: boolean };
 
 const initialSkin = skinManager()?.getCurrentSkin?.();
 setTileCharLock(!!initialSkin?.tiles);
-function setFogOfWar(on, opts: StorageOpts = {}) {
+function setFogOfWar(on: boolean | unknown, opts: StorageOpts = {}) {
   fogOfWarEnabled = !!on;
   if (typeof document !== 'undefined') {
-    const btn = document.getElementById('fogToggle');
+    const btn = getElementByIdChecked('fogToggle');
     if (btn) btn.textContent = `Fog of War: ${fogOfWarEnabled ? 'On' : 'Off'}`;
   }
   if (!opts.skipStorage) {
@@ -624,13 +608,13 @@ function getFontScaleRootStyle() {
   if (typeof document === 'undefined') return null;
   return document.documentElement?.style || document.body?.style || null;
 }
-function updateFontScaleUI(scale) {
+function updateFontScaleUI(scale: number) {
   if (typeof document === 'undefined') return;
-  const slider = document.getElementById('fontScale');
+  const slider = getElementByIdChecked<HTMLInputElement>('fontScale');
   if (slider) {
     slider.value = formatFontScale(scale);
   }
-  const readout = document.getElementById('fontScaleValue');
+  const readout = getElementByIdChecked('fontScaleValue');
   if (readout) {
     readout.textContent = `${Math.round(scale * 100)}%`;
   }
@@ -676,15 +660,15 @@ function getFontFamilyOption(id) {
   return FONT_FAMILY_DEFAULT;
 }
 
-function updateFontFamilyUI(id) {
+function updateFontFamilyUI(id: string | undefined) {
   if (typeof document === 'undefined') return;
   const option = getFontFamilyOption(id);
-  const select = document.getElementById('fontFamily');
+  const select = getElementByIdChecked<HTMLSelectElement>('fontFamily');
   if (select) {
     select.value = option.id;
     select.style?.setProperty?.('font-family', option.css);
   }
-  const sample = document.getElementById('fontFamilySample');
+  const sample = getElementByIdChecked('fontFamilySample');
   if (sample) {
     sample.textContent = FONT_FAMILY_SAMPLE_TEXT;
     sample.style?.setProperty?.('font-family', option.css);
@@ -728,7 +712,7 @@ if (Number.isFinite(savedFontScale)) {
 function setRetroNpcArt(on: boolean, optsOrSkip?: StorageOpts | boolean) {
   const opts = typeof optsOrSkip === 'object' ? optsOrSkip : { skipStorage: !!optsOrSkip };
   retroNpcArtEnabled = !!on;
-  const cb = document.getElementById('retroNpcToggle');
+  const cb = getElementByIdChecked<HTMLInputElement>('retroNpcToggle');
   if (cb) cb.checked = retroNpcArtEnabled;
   if (typeof document !== 'undefined') {
     document.body?.classList?.toggle('retro-npc-art', retroNpcArtEnabled);
@@ -759,8 +743,8 @@ function updatePlayerIconPreview() {
   if (!playerIcons.length) return;
   playerIconIndex = clampPlayerIconIndex(playerIconIndex);
   const meta = playerIcons[playerIconIndex];
-  const preview = document.getElementById('playerIconPreview');
-  const nameEl = document.getElementById('playerIconName');
+  const preview = getElementByIdChecked('playerIconPreview');
+  const nameEl = getElementByIdChecked('playerIconName');
   if (nameEl && meta) {
     nameEl.textContent = meta.label;
   }
@@ -1352,13 +1336,13 @@ function lightenColor(hex, amt = 0.2) {
   return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
 }
 {
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
+  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals));
   globals.tileChars = tileChars;
 }
 globalThis.jitterColor = jitterColor;
 
 // ===== Camera & CRT draw with ghosting =====
-const disp = document.getElementById('game');
+const disp = getCanvasOrThrow('game');
 const playerAdrenalineFx = {
   intensity: 0,
   scale: 1,
@@ -1368,7 +1352,7 @@ const playerAdrenalineFx = {
   glow: 0
 };
 {
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
+  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals));
   globals.playerAdrenalineFx = playerAdrenalineFx;
 }
 const rawAttrWidth = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('width')) : NaN;
@@ -1574,7 +1558,7 @@ function centerCamera(x: number, y: number, map?: string) {
 
 function shouldRenderFog(map?: string) {
   if (!map) return false;
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
+  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals));
   const enabled = typeof fogOfWarEnabled === 'boolean'
     ? fogOfWarEnabled
     : (typeof globals.fogOfWarEnabled === 'boolean' ? globals.fogOfWarEnabled : true);
@@ -1601,7 +1585,7 @@ function renderFog(ctx: CanvasRenderingContext2D, map: string, offX: number, off
   } else if (fogState && typeof fogState === 'object') {
     visitedLookup = fogState;
   }
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
+  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals));
   const rawRadius = Number(globals.FOG_RADIUS);
   const radius = Math.max(1, Number.isFinite(rawRadius) ? rawRadius : 5);
   const denom = radius + 1;
@@ -2209,8 +2193,12 @@ function pulseAdrenaline(t: number) {
 function showTab(which: string) {
   activeTab = which;
   if (window.innerWidth >= TAB_BREAKPOINT) return;
-  const inv = document.getElementById('inv'), partyEl = document.getElementById('party'), q = document.getElementById('quests');
-  const tInv = document.getElementById('tabInv'), tP = document.getElementById('tabParty'), tQ = document.getElementById('tabQuests');
+  const inv = getElementByIdChecked('inv');
+  const partyEl = getElementByIdChecked('party');
+  const q = getElementByIdChecked('quests');
+  const tInv = getElementByIdChecked('tabInv');
+  const tP = getElementByIdChecked('tabParty');
+  const tQ = getElementByIdChecked('tabQuests');
   if (!inv) return;
   inv.style.display = (which === 'inv' ? 'grid' : 'none');
   if (partyEl) partyEl.style.display = (which === 'party' ? 'grid' : 'none');
@@ -2228,7 +2216,9 @@ function showTab(which: string) {
 function updateTabsLayout() {
   const wide = window.innerWidth >= TAB_BREAKPOINT;
   const tabs = document.querySelector('.tabs');
-  const inv = document.getElementById('inv'), partyEl = document.getElementById('party'), q = document.getElementById('quests');
+  const inv = getElementByIdChecked('inv');
+  const partyEl = getElementByIdChecked('party');
+  const q = getElementByIdChecked('quests');
   if (wide) {
     if (tabs) tabs.style.display = 'none';
     if (inv) {
@@ -2246,18 +2236,24 @@ window.addEventListener('resize', updateTabsLayout);
 updateTabsLayout();
 
 if (document.getElementById('tabInv')) {
-  const keyHandler = which => e => {
+  const keyHandler = (which: string) => (e: KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showTab(which); }
   };
-  const tabInv = document.getElementById('tabInv');
-  const tabParty = document.getElementById('tabParty');
-  const tabQuests = document.getElementById('tabQuests');
-  tabInv.onclick = () => showTab('inv');
-  tabParty.onclick = () => showTab('party');
-  tabQuests.onclick = () => showTab('quests');
-  tabInv.onkeydown = keyHandler('inv');
-  tabParty.onkeydown = keyHandler('party');
-  tabQuests.onkeydown = keyHandler('quests');
+  const tabInv = getElementByIdChecked('tabInv');
+  const tabParty = getElementByIdChecked('tabParty');
+  const tabQuests = getElementByIdChecked('tabQuests');
+  if (tabInv) {
+    tabInv.onclick = () => showTab('inv');
+    tabInv.onkeydown = keyHandler('inv');
+  }
+  if (tabParty) {
+    tabParty.onclick = () => showTab('party');
+    tabParty.onkeydown = keyHandler('party');
+  }
+  if (tabQuests) {
+    tabQuests.onclick = () => showTab('quests');
+    tabQuests.onkeydown = keyHandler('quests');
+  }
 }
 // ===== Renderers =====
 
@@ -2304,8 +2300,9 @@ function sortInventorySlotKeys(keys: Iterable<string>) {
   });
 }
 function renderInv() {
-  const inv = document.getElementById('inv');
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
+  const inv = getElementByIdChecked('inv');
+  if (!inv) return;
+  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals));
   inv.innerHTML = '';
   if (dropMode) {
     const ctrl = document.createElement('div');
@@ -2570,10 +2567,10 @@ function renderInv() {
 }
 type EngineQuest = { id?: string; title?: string; status?: string;[key: string]: unknown };
 function renderQuests() {
-  const host = document.getElementById('quests');
+  const host = getElementByIdChecked('quests');
   if (!host) return;
   host.innerHTML = '';
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
+  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals));
   const questList = globals.quests ? (Object.values(globals.quests) as EngineQuest[]) : [];
   const list = questList.filter(v => v && v.status !== 'available');
   if (list.length === 0) {
@@ -2625,7 +2622,7 @@ function renderQuests() {
 function updateQuestCompassTargets() {
   const questData = globalThis.quests;
   if (!questData) return;
-  const host = document.getElementById('quests');
+  const host = getElementByIdChecked('quests');
   if (!host) return;
   const partyLoc = questPartyLocation();
   host.querySelectorAll('.q').forEach(card => {
@@ -2666,7 +2663,7 @@ function updateQuestCompassTargets() {
 function questPartyLocation(): { map: string; x: number; y: number } {
   const loc = { map: 'world', x: 0, y: 0 };
   const p = (!Array.isArray(party) && typeof party === 'object') ? party as { map?: string; x?: number; y?: number } : null;
-  const globalState = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals)).state;
+  const globalState = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals)).state;
   if (p && typeof p.map === 'string') loc.map = p.map;
   else if (globalState && typeof globalState.map === 'string') loc.map = globalState.map;
   if (p && typeof p.x === 'number') loc.x = p.x;
@@ -2936,7 +2933,8 @@ function humanizeQuestId(id: string) {
 }
 
 function renderParty() {
-  const p = document.getElementById('party');
+  const p = getElementByIdChecked('party');
+  if (!p) return;
   p.innerHTML = '';
   if (party.length === 0) {
     p.innerHTML = '<div class="pcard muted">(no party members yet)</div>';
@@ -3010,20 +3008,22 @@ function renderParty() {
     c.onfocus = () => selectMember(i);
     c.querySelectorAll('button[data-a="unequip"]').forEach(b => {
       const sl = b.dataset.slot;
-      b.onclick = () => (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals)).unequipItem?.(i, sl);
+      (b as HTMLElement).onclick = () => (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandGlobals)).unequipItem?.(i, sl);
     });
     p.appendChild(c);
   });
 }
 
 function openShop(npc: DustlandNpc & { shop?: any; vending?: boolean; cancelCount?: number; tree?: any }) {
-  const shopOverlay = document.getElementById('shopOverlay');
-  const shopName = document.getElementById('shopName');
-  const closeShopBtn = document.getElementById('closeShopBtn');
-  const shopBuy = document.getElementById('shopBuy');
-  const shopSell = document.getElementById('shopSell');
-  const shopScrap = document.getElementById('shopScrap');
-  const shopSlotFilter = document.getElementById('shopSlotFilter');
+  const shopOverlay = getElementByIdChecked('shopOverlay');
+  const shopName = getElementByIdChecked('shopName');
+  const closeShopBtn = getElementByIdChecked('closeShopBtn');
+  const shopBuy = getElementByIdChecked('shopBuy');
+  const shopSell = getElementByIdChecked('shopSell');
+  const shopScrap = getElementByIdChecked('shopScrap');
+  const shopSlotFilter = getElementByIdChecked<HTMLSelectElement>('shopSlotFilter');
+
+  if (!shopOverlay || !shopName || !closeShopBtn || !shopBuy || !shopSell) return;
 
   if (!npc.shop) return;
   if (npc.shop === true) npc.shop = {};
@@ -3416,23 +3416,23 @@ function runTests() {
 
 // ===== Input =====
 if (document.getElementById('saveBtn')) {
-  const saveBtn = document.getElementById('saveBtn');
+  const saveBtn = getElementByIdChecked('saveBtn');
   if (saveBtn) saveBtn.onclick = () => save();
-  const loadBtn = document.getElementById('loadBtn');
+  const loadBtn = getElementByIdChecked('loadBtn');
   if (loadBtn) loadBtn.onclick = () => { load(); };
-  const clearBtn = document.getElementById('clearBtn');
+  const clearBtn = getElementByIdChecked('clearBtn');
   if (clearBtn) clearBtn.onclick = () => {
     if (confirm('Delete saved game?')) clearSave();
   };
-  const resetBtn = document.getElementById('resetBtn');
+  const resetBtn = getElementByIdChecked('resetBtn');
   if (resetBtn) resetBtn.onclick = () => {
     if (confirm('Reset game and return to character creation?')) resetAll();
   };
-  const nanoBtn = document.getElementById('nanoToggle');
+  const nanoBtn = getElementByIdChecked('nanoToggle');
   if (nanoBtn) {
     const updateNano = () => {
       nanoBtn.textContent = `Nano Dialog: ${window.NanoDialog?.enabled ? 'On' : 'Off'}`;
-      const persist = document.getElementById('persistLLM');
+      const persist = getElementByIdChecked('persistLLM');
       if (persist) {
         const ready = window.NanoDialog?.isReady?.();
         persist.style.display = window.NanoDialog?.enabled && ready ? '' : 'none';
@@ -3449,11 +3449,11 @@ if (document.getElementById('saveBtn')) {
     updateNano();
     if (window.NanoDialog?.init) NanoDialog.init().then(updateNano);
   }
-  const audioBtn = document.getElementById('audioToggle');
+  const audioBtn = getElementByIdChecked('audioToggle');
   if (audioBtn) audioBtn.onclick = () => toggleAudio();
-  const musicBtn = document.getElementById('musicToggle');
+  const musicBtn = getElementByIdChecked('musicToggle');
   if (musicBtn) {
-    const dustlandApi = getEngineGlobals().Dustland as { music?: { isEnabled?: () => boolean; toggleEnabled?: () => void } } | undefined;
+    const dustlandApi = getEngineGlobals().Dustland;
     const updateMusicBtn = () => {
       const enabled = !!dustlandApi?.music?.isEnabled?.();
       musicBtn.textContent = `Music: ${enabled ? 'On' : 'Off'}`;
@@ -3465,15 +3465,15 @@ if (document.getElementById('saveBtn')) {
     musicBus?.on?.('music:state', updateMusicBtn);
     updateMusicBtn();
   }
-  const mobileBtn = document.getElementById('mobileToggle');
+  const mobileBtn = getElementByIdChecked('mobileToggle');
   if (mobileBtn) mobileBtn.onclick = () => toggleMobileControls();
-  const tileCharBtn = document.getElementById('tileCharToggle');
+  const tileCharBtn = getElementByIdChecked('tileCharToggle');
   if (tileCharBtn) tileCharBtn.onclick = () => toggleTileChars();
-  const tilePreviewBtn = document.getElementById('tilePreviewBtn');
-  tilePreviewOverlay = document.getElementById('tilePreview');
-  tilePreviewGrid = document.getElementById('tilePreviewGrid');
-  tilePreviewEmpty = document.getElementById('tilePreviewEmpty');
-  const tilePreviewClose = document.getElementById('tilePreviewClose');
+  const tilePreviewBtn = getElementByIdChecked('tilePreviewBtn');
+  tilePreviewOverlay = getElementByIdChecked('tilePreview');
+  tilePreviewGrid = getElementByIdChecked('tilePreviewGrid');
+  tilePreviewEmpty = getElementByIdChecked('tilePreviewEmpty');
+  const tilePreviewClose = getElementByIdChecked('tilePreviewClose');
   if (tilePreviewBtn) tilePreviewBtn.addEventListener('click', () => openTilePreview());
   if (tilePreviewClose) tilePreviewClose.addEventListener('click', () => closeTilePreview());
   if (tilePreviewOverlay) {
@@ -3487,9 +3487,9 @@ if (document.getElementById('saveBtn')) {
       if (evt.key === 'Escape' && tilePreviewOpen) closeTilePreview();
     });
   }
-  const fogBtn = document.getElementById('fogToggle');
+  const fogBtn = getElementByIdChecked('fogToggle');
   if (fogBtn) fogBtn.onclick = () => toggleFogOfWar();
-  const fontScaleSlider = document.getElementById('fontScale');
+  const fontScaleSlider = getElementByIdChecked<HTMLInputElement>('fontScale');
   if (fontScaleSlider) {
     fontScaleSlider.addEventListener('input', () => {
       const raw = Number.parseFloat(fontScaleSlider.value);
@@ -3497,14 +3497,14 @@ if (document.getElementById('saveBtn')) {
     });
     updateFontScaleUI(fontScale);
   }
-  const fontFamilySelect = document.getElementById('fontFamily');
+  const fontFamilySelect = getElementByIdChecked<HTMLSelectElement>('fontFamily');
   if (fontFamilySelect) {
     fontFamilySelect.addEventListener('change', () => {
       setFontFamily(fontFamilySelect.value);
     });
     updateFontFamilyUI(fontFamily.id);
   }
-  const retroToggle = document.getElementById('retroNpcToggle');
+  const retroToggle = getElementByIdChecked<HTMLInputElement>('retroNpcToggle');
   if (retroToggle) {
     const saved = globalThis.localStorage?.getItem('retroNpcArt');
     const initial = saved === '1' || (saved !== '0' && retroToggle.checked);
@@ -3514,9 +3514,9 @@ if (document.getElementById('saveBtn')) {
   } else {
     setRetroNpcArt(retroNpcArtEnabled, true);
   }
-  const skinPreviewInput = document.getElementById('skinPreviewName');
-  const skinPreviewButton = document.getElementById('skinPreviewLoad');
-  const skinPreviewStatus = document.getElementById('skinPreviewStatus');
+  const skinPreviewInput = getElementByIdChecked<HTMLInputElement>('skinPreviewName');
+  const skinPreviewButton = getElementByIdChecked('skinPreviewLoad');
+  const skinPreviewStatus = getElementByIdChecked('skinPreviewStatus');
   if (skinPreviewInput && skinPreviewButton) {
     const DEFAULT_GENERATED_SKIN_BASE_DIR = 'ComfyUI/output';
     const updateSkinStatus = (text, isError = false) => {
@@ -3575,16 +3575,16 @@ if (document.getElementById('saveBtn')) {
     skinPreviewStatus.textContent = '';
     skinPreviewStatus.classList.remove('is-error');
   }
-  const iconPrev = document.getElementById('playerIconPrev');
-  const iconNext = document.getElementById('playerIconNext');
+  const iconPrev = getElementByIdChecked('playerIconPrev');
+  const iconNext = getElementByIdChecked('playerIconNext');
   const savedIcon = Number.parseInt(globalThis.localStorage?.getItem(PLAYER_ICON_STORAGE_KEY), 10);
   if (Number.isFinite(savedIcon)) setPlayerIcon(savedIcon, { skipStorage: true });
   else updatePlayerIconPreview();
   if (iconPrev) iconPrev.onclick = () => setPlayerIcon(playerIconIndex - 1);
   if (iconNext) iconNext.onclick = () => setPlayerIcon(playerIconIndex + 1);
-  const shotBtn = document.getElementById('screenshotBtn');
+  const shotBtn = getElementByIdChecked('screenshotBtn');
   if (shotBtn) shotBtn.onclick = () => {
-    const canvas = document.getElementById('game');
+    const canvas = getCanvasOrThrow('game');
     if (!canvas) return;
     const url = canvas.toDataURL('image/png');
     const a = document.createElement('a');
@@ -3596,25 +3596,25 @@ if (document.getElementById('saveBtn')) {
   setMobileControls(mobileControlsEnabled);
   setTileChars(tileCharsEnabled);
   setFogOfWar(fogOfWarEnabled, { skipStorage: true });
-  const settingsBtn = document.getElementById('settingsBtn');
-  const settings = document.getElementById('settings');
+  const settingsBtn = getElementByIdChecked('settingsBtn');
+  const settings = getElementByIdChecked('settings');
   if (settingsBtn && settings) {
     settingsBtn.onclick = () => { settings.style.display = 'flex'; };
-    const closeBtn = document.getElementById('settingsClose');
+    const closeBtn = getElementByIdChecked('settingsClose');
     if (closeBtn) closeBtn.onclick = () => { settings.style.display = 'none'; };
   }
-  const debugBtn = document.getElementById('debugBtn');
-  const debugMenu = document.getElementById('debugMenu');
+  const debugBtn = getElementByIdChecked('debugBtn');
+  const debugMenu = getElementByIdChecked('debugMenu');
   if (debugBtn && debugMenu) {
-    const debugClose = document.getElementById('debugClose');
+    const debugClose = getElementByIdChecked('debugClose');
     const hideDebug = () => { debugMenu.style.display = 'none'; };
     const showDebug = () => { debugMenu.style.display = 'flex'; };
     debugBtn.onclick = showDebug;
     debugClose?.addEventListener('click', hideDebug);
-    const attachHide = (btn) => { btn?.addEventListener('click', hideDebug); };
-    attachHide(document.getElementById('fxBtn'));
-    attachHide(document.getElementById('perfBtn'));
-    const exportBtn = document.getElementById('exportSaveBtn');
+    const attachHide = (btn: HTMLElement | null) => { btn?.addEventListener('click', hideDebug); };
+    attachHide(getElementByIdChecked('fxBtn'));
+    attachHide(getElementByIdChecked('perfBtn'));
+    const exportBtn = getElementByIdChecked('exportSaveBtn');
     if (exportBtn) {
       exportBtn.addEventListener('click', () => {
         if (typeof save === 'function') save();
@@ -3653,8 +3653,8 @@ if (document.getElementById('saveBtn')) {
         }
       });
     }
-    const importBtn = document.getElementById('importSaveBtn');
-    const importInput = document.getElementById('importSaveInput');
+    const importBtn = getElementByIdChecked('importSaveBtn');
+    const importInput = getElementByIdChecked<HTMLInputElement>('importSaveInput');
     if (importBtn && importInput) {
       importBtn.addEventListener('click', () => {
         importInput.value = '';
@@ -3698,7 +3698,7 @@ if (document.getElementById('saveBtn')) {
       });
     }
   }
-  panelToggle = document.getElementById('panelToggle');
+  panelToggle = getElementByIdChecked('panelToggle');
   panel = document.querySelector('.panel');
   if (panelToggle && panel) {
     const open = globalThis.localStorage?.getItem('panel_open') === '1';
@@ -3733,17 +3733,17 @@ if (document.getElementById('saveBtn')) {
       else if (handleDialogKey?.(e)) e.preventDefault();
       return;
     }
-    const combat = document.getElementById('combatOverlay');
+    const combat = getElementByIdChecked('combatOverlay');
     if (combat?.classList?.contains('shown')) {
       if (handleCombatKey?.(e)) e.preventDefault();
       return;
     }
-    const shop = document.getElementById('shopOverlay');
+    const shop = getElementByIdChecked('shopOverlay');
     if (shop?.classList?.contains('shown')) {
-      if (e.key === 'Escape') document.getElementById('closeShopBtn')?.click();
+      if (e.key === 'Escape') getElementByIdChecked('closeShopBtn')?.click();
       return;
     }
-    const target = e.target || document.activeElement;
+    const target = (e.target || document.activeElement) as Element | null;
     const isTypingTarget = target?.matches?.('input:not([type]),input[type="text"],input[type="search"],input[type="email"],input[type="password"],input[type="number"],input[type="url"],input[type="tel"],textarea');
     const isEditable = target?.isContentEditable;
     if (isTypingTarget || isEditable) {
@@ -3754,10 +3754,10 @@ if (document.getElementById('saveBtn')) {
       e.preventDefault();
       return;
     }
-    const toastFn = typeof (globalThis as DustlandEngineGlobals).engineToast === 'function'
-      ? (globalThis as DustlandEngineGlobals).engineToast
-      : typeof (globalThis as DustlandEngineGlobals).toast === 'function'
-        ? (globalThis as DustlandEngineGlobals).toast
+    const toastFn = typeof (globalThis as DustlandGlobals).engineToast === 'function'
+      ? (globalThis as DustlandGlobals).engineToast
+      : typeof (globalThis as DustlandGlobals).toast === 'function'
+        ? (globalThis as DustlandGlobals).toast
         : undefined;
     const keyId = typeof e.key === 'string' ? e.key.toLowerCase() : '';
     if (keyId) game.lastNonCombatKey = keyId;

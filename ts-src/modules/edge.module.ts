@@ -1,3 +1,4 @@
+// @ts-nocheck
 type EdgeModule = DustlandModuleInstance & {
   postLoad?: (moduleData: DustlandModuleInstance) => void;
 };

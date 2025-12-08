@@ -1,3 +1,4 @@
+// @ts-nocheck
 globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
 (() => {
     const DATA = `

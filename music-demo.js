@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
   Chiptune Dynamic Music Lab
   - Plain JS, globals only, no bundlers

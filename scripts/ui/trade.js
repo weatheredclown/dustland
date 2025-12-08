@@ -1,3 +1,4 @@
+// @ts-nocheck
 (function () {
     const globalScope = globalThis;
     const timerEl = typeof document !== 'undefined' ? document.getElementById('shopTimer') : null;

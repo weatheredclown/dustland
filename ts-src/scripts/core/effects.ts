@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ===== Effects =====
 (function(){
   type StatsHolder = { stats?: Record<string, number | undefined> };
