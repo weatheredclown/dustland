@@ -5445,6 +5445,8 @@ function applyLoadedModule(data) {
   showArenaEditor(false);
 }
 
+(globalThis as typeof globalThis & { applyLoadedModule?: typeof applyLoadedModule }).applyLoadedModule = applyLoadedModule;
+
 function validateSpawns() {
   const walkable = { 0: true, 1: true, 2: false, 3: true, 4: true, 5: true, 6: false, 7: true, 8: true, 9: false };
   const issues = [];
