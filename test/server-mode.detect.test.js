@@ -27,6 +27,20 @@ test('server mode disabled with invalid config', () => {
   assert.equal(result.reason, 'invalid-config');
 });
 
+test('server mode defaults on when firebase config is present', () => {
+  const stubWindow = {
+    DUSTLAND_FIREBASE: {
+      projectId: 'abc',
+      apiKey: 'key',
+      appId: 'app',
+      authDomain: 'example.firebaseapp.com',
+    },
+  };
+  const result = detectServerMode(stubWindow);
+  assert.equal(result.status, 'firebase-ready');
+  assert.equal(result.features.serverMode, true);
+});
+
 test('server mode ready with valid config', () => {
   const stubWindow = {
     DUSTLAND_FEATURES: { serverMode: true },
