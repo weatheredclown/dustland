@@ -916,6 +916,10 @@ declare global {
     BuildingWizard?: unknown;
     updateTradeUI?: (trader: unknown) => void;
     bunkers?: DustlandFastTravelBunker[];
+    currentModule?: string;
+    loadedModules?: Record<string, any>;
+    worldTurns?: number;
+    lastNonCombatKey?: string | null;
     [key: string]: unknown;
   }
 
@@ -1028,6 +1032,16 @@ declare global {
     leader(): PartyMember | undefined;
   }
 
+  interface PartyRoster extends Array<any> {
+    x: number;
+    y: number;
+    map: any;
+    mapEntry?: { map: string; x: number; y: number } | null;
+    flags: any;
+    fallen: any[];
+    _roster: any;
+  }
+
   interface DustlandNpc {
     id?: string;
     map?: string;
@@ -1122,6 +1136,25 @@ declare global {
     })
     | undefined;
 
+  declare var NanoDialog: { enabled?: boolean; init?: () => Promise<void>; isReady?: () => boolean } | undefined;
+  declare var NanoPalette: { init?: () => void; generate?: () => Promise<unknown> } | undefined;
+  declare var TILE: DustlandTileset;
+  declare var ITEMS: Record<string, GameItem>;
+  declare var itemDrops: DustlandItemDrop[];
+  declare var addToInv: ((item: any, opts?: any) => boolean) | undefined;
+  declare var getItem: ((id: any) => any) | undefined;
+  declare var useItem: ((item: any, target?: any) => boolean) | undefined;
+  declare var pickupVacuum: ((...coords: number[]) => void) | undefined;
+  declare var pickupCache: ((drop: any) => boolean) | undefined;
+  declare var getPartyInventoryCapacity: (() => number) | undefined;
+  declare var openWorldMap: ((id?: any) => void) | undefined;
+  declare function bootMap(): void;
+  declare var quests: Record<string, Quest> | undefined;
+  declare var bossesDefeated: number | undefined;
+  declare var runCount: number | undefined;
+  declare var PLAYER: any;
+  declare var Mods: Record<string, any> | undefined;
+
   interface MemoryTapeItem {
     recording?: string | null;
     [key: string]: unknown;
@@ -1159,7 +1192,7 @@ declare global {
     leader?: () => PartyMember | undefined;
     awardXP?: (target: unknown, amount: number) => void;
     resolveItem?: (reward: unknown) => { name?: string } | null;
-    addToInv?: (item: unknown) => boolean;
+    addToInv?: (item: any, opts?: any) => boolean;
     ITEMS?: Record<string, GameItem>;
     dropItemNearParty?: (item: unknown) => void;
     startCombat?: (defender: CombatTarget) => Promise<CombatOutcome> | CombatOutcome;
@@ -1383,6 +1416,12 @@ declare global {
     DUSTLAND_FIREBASE?: Record<string, unknown> | null;
     Dustland?: DustlandNamespace;
     hasItem?: (...args: unknown[]) => boolean;
+    seedWorldContent?: () => void;
+    bossTelegraphFX?: { intensity?: number; duration?: number };
+    setBossTelegraphFX?: (opts?: { intensity?: number; duration?: number }) => void;
+    NanoDialog?: { enabled?: boolean; init?: () => Promise<void>; isReady?: () => boolean };
+    NanoPalette?: { init?: () => void; generate?: () => Promise<unknown> };
+    [key: string]: any;
   }
 
   interface GlobalThis {
