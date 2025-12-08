@@ -13,19 +13,31 @@ const DEFAULT_MODULES = [
   'modules/pit-bas.module.js'
 ];
 
-let cachedTrader: any = null;
+type TraderPriceOptions = { entry?: ModuleVendorEntry | null; markup?: number; grudge?: number };
 
-function loadTraderClass(repoRoot){
+type TraderClass = {
+  calculatePrice(item: ModuleItem | number | null | undefined, options?: TraderPriceOptions): number;
+};
+
+interface TraderSandbox extends vm.Context {
+  Dustland?: { Trader?: TraderClass };
+  EventBus: DustlandEventBus;
+  globalThis: TraderSandbox;
+}
+
+let cachedTrader: TraderClass | null = null;
+
+function loadTraderClass(repoRoot: string): TraderClass{
   if (cachedTrader) return cachedTrader;
   const traderPath = path.resolve(repoRoot, 'scripts', 'core', 'trader.js');
   const code = fs.readFileSync(traderPath, 'utf8');
-  const context: Record<string, any> = {
+  const context: TraderSandbox = {
     console,
     Math,
     JSON,
-    globalThis: {},
-    EventBus: { emit: () => {} }
-  };
+    globalThis: {} as TraderSandbox,
+    EventBus: { emit: () => {}, on: () => {}, off: () => {} }
+  } as TraderSandbox;
   context.globalThis = context;
   context.Dustland = context.Dustland || {};
   vm.createContext(context);
@@ -35,7 +47,7 @@ function loadTraderClass(repoRoot){
   return cachedTrader;
 }
 
-function resolveModulePath(candidate){
+function resolveModulePath(candidate: string | null | undefined): string | null{
   if(!candidate) return null;
   const abs = path.isAbsolute(candidate) ? candidate : path.resolve(REPO_ROOT, candidate);
   if(fs.existsSync(abs)) return abs;
@@ -45,16 +57,16 @@ function resolveModulePath(candidate){
   return null;
 }
 
-function extractModuleData(filePath){
+function extractModuleData(filePath: string): ModuleData{
   const ext = path.extname(filePath);
   const raw = fs.readFileSync(filePath, 'utf8');
   if(ext === '.json'){
-    return JSON.parse(raw);
+    return JSON.parse(raw) as ModuleData;
   }
   if(ext === '.js'){
     const match = raw.match(/const DATA = `([\s\S]*?)`;/);
     if(!match) throw new Error(`Unable to locate DATA export in ${filePath}`);
-    return JSON.parse(match[1]);
+    return JSON.parse(match[1]) as ModuleData;
   }
   throw new Error(`Unsupported module format for ${filePath}`);
 }
@@ -68,7 +80,80 @@ type ModuleItem = {
   [key: string]: unknown;
 };
 
-function normalizeItemList(list: Array<ModuleItem | null | undefined> | null | undefined){
+type ModuleVendorEntry = { id: string; [key: string]: unknown };
+
+type CombatConfig = {
+  scrap?: number | { min?: number; max?: number };
+  challenge?: number;
+};
+
+type CombatEntity = {
+  id?: string;
+  name?: string;
+  combat?: CombatConfig;
+};
+
+type ModuleVendor = {
+  id?: string;
+  name?: string;
+  markup?: number;
+  vending?: boolean;
+  grudge?: number;
+  inv?: ModuleVendorEntry[];
+};
+
+type ModuleNpc = CombatEntity & {
+  shop?: ModuleVendor | boolean;
+  vending?: boolean;
+};
+
+type ModuleData = {
+  name?: string;
+  seed?: string;
+  items?: Array<ModuleItem | null | undefined>;
+  templates?: CombatEntity[];
+  npcs?: ModuleNpc[];
+  enemies?: CombatEntity[];
+};
+
+type ScrapSource = { kind: string; id: string; min: number; max: number; avg: number; challenge: number | null };
+
+type VendorReportItem = {
+  id: string;
+  baseValue: number;
+  markup: number;
+  price: number;
+  modScore: number;
+  healValue: number | null;
+  needsValue: boolean;
+  missing: boolean;
+  note: string;
+};
+
+type VendorReport = {
+  id: string;
+  name: string;
+  markup: number;
+  items: VendorReportItem[];
+};
+
+type SummaryStats = { min: number | null; max: number | null; avg: number | null; count: number };
+
+type FlaggedItem = { module: string; vendor: string; itemId: string; note: string };
+
+type ModuleReport = {
+  name: string;
+  file: string;
+  scrapSources: ScrapSource[];
+  scrapSummary: SummaryStats;
+  vendors: VendorReport[];
+  vendorSummary: SummaryStats;
+  flagged: FlaggedItem[];
+};
+
+type PricingReport = { modules: ModuleReport[]; totals: { scrap: SummaryStats; vendor: SummaryStats; flagged: FlaggedItem[] } };
+
+function normalizeItemList(list: Array<ModuleItem | null | undefined> | null | undefined): Map<string, ModuleItem>{
   const map = new Map<string, ModuleItem>();
   (list || []).forEach(item => {
     if(!item || !item.id) return;
@@ -92,13 +177,13 @@ function normalizeItemList(list: Array<ModuleItem | null | undefined> | null | u
   return map;
 }
 
-function calcModScore(item: { mods?: Record<string, unknown> } | null | undefined){
+function calcModScore(item: { mods?: Record<string, unknown> } | null | undefined): number{
   const mods = item?.mods;
   if (!mods) return 0;
   return Object.values(mods).reduce<number>((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
 }
 
-function extractHealValue(item: ModuleItem | undefined | null){
+function extractHealValue(item: ModuleItem | undefined | null): number | null{
   if(!item || !item.use) return null;
   const use = item.use;
   if(use && typeof use === 'object' && 'amount' in use){
@@ -108,7 +193,7 @@ function extractHealValue(item: ModuleItem | undefined | null){
   return null;
 }
 
-function summarizeScrap(sources){
+function summarizeScrap(sources: ScrapSource[]): SummaryStats{
   if(!sources.length) return { min: null, max: null, avg: null, count: 0 };
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
@@ -126,7 +211,7 @@ function summarizeScrap(sources){
   };
 }
 
-function summarizePrices(items){
+function summarizePrices(items: Array<{ price: number }> | VendorReportItem[]): SummaryStats{
   if(!items.length) return { min: null, max: null, avg: null, count: 0 };
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
@@ -146,19 +231,19 @@ function summarizePrices(items){
   };
 }
 
-function formatNumber(value){
+function formatNumber(value: number | null): string{
   if(value == null) return 'n/a';
   if(Number.isInteger(value)) return String(value);
   return value.toFixed(2);
 }
 
-function collectScrapSources(data: Record<string, any>, threshold: number){
-  const sources: Array<{ kind: string; id: string; min: number; max: number; avg: number; challenge: number | null }> = [];
-  const consider = (kind: string, ref: string, combat: any) => {
+function collectScrapSources(data: ModuleData, threshold: number): ScrapSource[]{
+  const sources: ScrapSource[] = [];
+  const consider = (kind: string, ref: string, combat: CombatConfig | undefined) => {
     if(!combat || !combat.scrap) return;
     const scrap = combat.scrap;
-    let min;
-    let max;
+    let min: number | undefined;
+    let max: number | undefined;
     if(typeof scrap === 'number'){
       min = scrap;
       max = scrap;
@@ -186,14 +271,17 @@ function collectScrapSources(data: Record<string, any>, threshold: number){
   return sources;
 }
 
-export function collectPricingData(modulePaths: string[], opts: { challengeThreshold?: number; repoRoot?: string } = {}){
+type AggregatePrice = VendorReportItem & { module: string; vendor: string };
+type ModuleScrapSource = ScrapSource & { module: string };
+
+export function collectPricingData(modulePaths: string[], opts: { challengeThreshold?: number; repoRoot?: string } = {}): PricingReport{
   const threshold = typeof opts.challengeThreshold === 'number' ? opts.challengeThreshold : 10;
   const repoRoot = opts.repoRoot || REPO_ROOT;
   const Trader = loadTraderClass(repoRoot);
-  const modules = [];
-  const allScrap = [];
-  const allPrices = [];
-  const allFlags = [];
+  const modules: ModuleReport[] = [];
+  const allScrap: ModuleScrapSource[] = [];
+  const allPrices: AggregatePrice[] = [];
+  const allFlags: FlaggedItem[] = [];
 
   modulePaths.forEach(filePath => {
     if(!filePath) return;
@@ -202,8 +290,8 @@ export function collectPricingData(modulePaths: string[], opts: { challengeThres
     const moduleName = data.name || data.seed || path.basename(filePath, path.extname(filePath));
     const scrapSources = collectScrapSources(data, threshold);
     const scrapSummary = summarizeScrap(scrapSources);
-    const vendors = [];
-    const moduleFlags = [];
+    const vendors: VendorReport[] = [];
+    const moduleFlags: FlaggedItem[] = [];
 
     (data.npcs || []).forEach(npc => {
       const shop = npc?.shop;
@@ -211,7 +299,7 @@ export function collectPricingData(modulePaths: string[], opts: { challengeThres
       const inv = Array.isArray(shop.inv) ? shop.inv : [];
       if(!inv.length) return;
       const baseMarkup = npc.vending ? 1 : (typeof shop.markup === 'number' ? shop.markup : 2);
-      const vendorItems = [];
+      const vendorItems: VendorReportItem[] = [];
       inv.forEach(entry => {
         if(!entry || !entry.id) return;
         const itemData = items.get(entry.id);
@@ -230,7 +318,7 @@ export function collectPricingData(modulePaths: string[], opts: { challengeThres
         const note = !itemData ? 'missing item definition'
           : needsValue ? 'missing base value'
             : '';
-        const reportItem = {
+        const reportItem: VendorReportItem = {
           id: entry.id,
           baseValue,
           markup: baseMarkup,
@@ -244,7 +332,7 @@ export function collectPricingData(modulePaths: string[], opts: { challengeThres
         vendorItems.push(reportItem);
         allPrices.push({ ...reportItem, module: moduleName, vendor: npc.name || npc.id || 'unknown' });
         if(note){
-          const flag = {
+          const flag: FlaggedItem = {
             module: moduleName,
             vendor: npc.name || npc.id || 'unknown',
             itemId: entry.id,
@@ -265,7 +353,7 @@ export function collectPricingData(modulePaths: string[], opts: { challengeThres
     });
 
     const vendorSummary = summarizePrices(vendors.flatMap(v => v.items));
-    const moduleReport = {
+    const moduleReport: ModuleReport = {
       name: moduleName,
       file: path.relative(repoRoot, filePath),
       scrapSources,
@@ -287,8 +375,8 @@ export function collectPricingData(modulePaths: string[], opts: { challengeThres
   return { modules, totals };
 }
 
-function formatModule(module){
-  const lines = [];
+function formatModule(module: ModuleReport): string{
+  const lines: string[] = [];
   lines.push(`=== ${module.name} (${module.file}) ===`);
   if(module.scrapSources.length){
     lines.push('Early scrap sources:');
@@ -327,7 +415,7 @@ function formatModule(module){
   return lines.join('\n');
 }
 
-export function formatReport(report){
+export function formatReport(report: PricingReport): string{
   const sections = report.modules.map(formatModule);
   const totals = report.totals;
   sections.push('=== Aggregate summary ===');
@@ -355,7 +443,7 @@ async function main(){
   const candidates = args.length ? args : DEFAULT_MODULES;
   const modules = candidates
     .map(resolveModulePath)
-    .filter(Boolean);
+    .filter((value): value is string => Boolean(value));
   const skipped = candidates.length - modules.length;
   if(skipped){
     console.warn(`Skipped ${skipped} module(s); file not found.`);

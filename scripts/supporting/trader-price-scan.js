@@ -22,7 +22,7 @@ function loadTraderClass(repoRoot) {
         Math,
         JSON,
         globalThis: {},
-        EventBus: { emit: () => { } }
+        EventBus: { emit: () => { }, on: () => { }, off: () => { } }
     };
     context.globalThis = context;
     context.Dustland = context.Dustland || {};
@@ -360,7 +360,7 @@ async function main() {
     const candidates = args.length ? args : DEFAULT_MODULES;
     const modules = candidates
         .map(resolveModulePath)
-        .filter(Boolean);
+        .filter((value) => Boolean(value));
     const skipped = candidates.length - modules.length;
     if (skipped) {
         console.warn(`Skipped ${skipped} module(s); file not found.`);
