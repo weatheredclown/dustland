@@ -1696,7 +1696,7 @@ function render(gameState = state, _dt) {
     const ctx = sctx;
     if (!ctx)
         return;
-    const activeMap = gameState.map || mapIdForState();
+    const activeMap = gameState?.map || mapIdForState();
     const dims = (mapWH(activeMap) || {});
     const { w: vWRaw, h: vHRaw } = getViewSize();
     const vW = Number.isFinite(vWRaw) ? vWRaw : VIEW_W;
@@ -1714,10 +1714,10 @@ function render(gameState = state, _dt) {
     ctx.fillRect(0, 0, BASE_CANVAS_WIDTH, BASE_CANVAS_HEIGHT);
     const offX = Math.max(0, Math.floor((vW - W) / 2));
     const offY = Math.max(0, Math.floor((vH - H) / 2));
-    const items = (gameState.itemDrops || itemDrops);
-    const ps = (gameState.portals || portals);
-    const entities = (gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : []));
-    const pos = (gameState.party || party);
+    const items = (gameState?.itemDrops || itemDrops);
+    const ps = (gameState?.portals || portals);
+    const entities = (gameState?.entities || (typeof NPCS !== 'undefined' ? NPCS : []));
+    const pos = (gameState?.party || party);
     const dustlandState = getEngineGlobals().Dustland;
     const remoteParties = dustlandState?.multiplayerParties?.list?.() || dustlandState?.multiplayerState?.remoteParties || [];
     const skin = skinManager();
@@ -2072,7 +2072,7 @@ function getNpcSymbol(n) {
 function drawEntities(ctx, list, offX, offY, skin) {
     const { w: vW, h: vH } = getViewSize();
     for (const n of list) {
-        if (n.x >= camX && n.y >= camY && n.x < camX + vW && n.y < camY + vH) {
+        if (n.x !== undefined && n.y !== undefined && n.x >= camX && n.y >= camY && n.x < camX + vW && n.y < camY + vH) {
             const vx = (n.x - camX + offX) * TS, vy = (n.y - camY + offY) * TS;
             const entitySprite = skin?.getEntitySprite?.(n);
             if (entitySprite) {
