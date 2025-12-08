@@ -1,10 +1,38 @@
 /// <reference types="node" />
 // Simple arena fight to observe adrenaline gain pacing.
-const adrenalineGlobal = globalThis as typeof globalThis & Record<string, any>;
+type ArenaGlobals = typeof globalThis & {
+  party?: PartyRosterLike;
+  selectedMember?: number;
+  log?: (msg: unknown) => void;
+  EventBus?: AdrenalineEventBus;
+  updateHUD?: () => void;
+  renderParty?: () => void;
+  renderWorld?: () => void;
+  tryAutoPickup?: () => boolean;
+  toast?: () => void;
+  setMap?: () => void;
+  setPartyPos?: () => void;
+  removeNPC?: () => void;
+  playFX?: () => void;
+  addToInv?: () => boolean;
+  registerItem?: <T>(item: T) => T;
+  SpoilsCache?: { rollDrop: () => unknown };
+  player?: { inv: unknown[]; scrap: number; hp: number };
+  itemDrops?: unknown[];
+  worldSeed?: number;
+  __combatState?: Record<string, unknown>;
+  __restoreRandom?: () => void;
+  Dustland?: { combatTelemetry?: unknown[] };
+};
 
-type PartyRosterLike = {
-  length: number;
-  push(...members: any[]): number;
+const adrenalineGlobal = globalThis as ArenaGlobals;
+
+type PartyRosterLike = Pick<Party, 'length' | 'push'>;
+
+type AdrenalineEventBus = {
+  on: (event: DustlandEventName, handler: DustlandEventHandler) => void;
+  off: (event: DustlandEventName, handler: DustlandEventHandler) => void;
+  emit: <E extends DustlandEventName>(event: E, payload?: DustlandEventPayloads[E]) => void;
 };
 
 if (typeof window === 'undefined') {
@@ -179,11 +207,6 @@ function bootstrapGlobals(w, seed) {
   Math.random = rng;
 
   const listeners = new Map<DustlandEventName, Set<DustlandEventHandler>>();
-  type AdrenalineEventBus = {
-    on: (event: DustlandEventName, handler: DustlandEventHandler) => void;
-    off: (event: DustlandEventName, handler: DustlandEventHandler) => void;
-    emit: <E extends DustlandEventName>(event: E, payload?: DustlandEventPayloads[E]) => void;
-  };
 
   const bus: AdrenalineEventBus = {
     on(event, handler) {
