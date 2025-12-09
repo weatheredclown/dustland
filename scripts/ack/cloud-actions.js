@@ -12,6 +12,7 @@ function initCloudActions() {
     const session = ServerSession.get();
     let ready = false;
     let lastUserId = null;
+    let unavailableMessage = 'Cloud saves unavailable. Sign in to enable them.';
     const toggleButtons = (enabled) => {
         saveBtn.hidden = !enabled;
         loadBtn.hidden = !enabled;
@@ -21,6 +22,12 @@ function initCloudActions() {
         loadBtn.disabled = !enabled;
         publishBtn.disabled = !enabled;
         shareBtn.disabled = !enabled;
+    };
+    const requireReady = () => {
+        if (ready)
+            return true;
+        alert(unavailableMessage);
+        return false;
     };
     toggleButtons(false);
     session.subscribe(async (snapshot) => {
@@ -35,11 +42,21 @@ function initCloudActions() {
             catch (err) {
                 console.warn('Cloud actions unavailable', err);
                 toggleButtons(false);
+                unavailableMessage = 'Cloud actions unavailable: ' + err.message;
             }
         }
         else if (!canUseCloud) {
             ready = false;
             toggleButtons(false);
+            if (snapshot.bootstrap.status !== 'firebase-ready') {
+                unavailableMessage = 'Cloud saves require a configured server connection.';
+            }
+            else if (snapshot.status === 'error') {
+                unavailableMessage = 'Cloud sign-in failed: ' + (snapshot.error?.message ?? 'Unknown issue');
+            }
+            else {
+                unavailableMessage = 'Sign in to enable cloud saves.';
+            }
         }
     });
     const listCloudModules = async () => {
@@ -79,7 +96,7 @@ function initCloudActions() {
         }
     };
     const loadFromCloud = async () => {
-        if (!ready)
+        if (!requireReady())
             return;
         const target = await pickCloudModule();
         if (!target)
@@ -108,7 +125,7 @@ function initCloudActions() {
         }
     };
     saveBtn.addEventListener('click', async () => {
-        if (!ready)
+        if (!requireReady())
             return;
         const exporter = globals.exportModulePayload;
         if (typeof exporter !== 'function') {
@@ -131,7 +148,7 @@ function initCloudActions() {
         void loadFromCloud();
     });
     publishBtn.addEventListener('click', async () => {
-        if (!ready)
+        if (!requireReady())
             return;
         const mapId = globals.moduleData?.id;
         if (!mapId) {
@@ -147,7 +164,7 @@ function initCloudActions() {
         }
     });
     shareBtn.addEventListener('click', async () => {
-        if (!ready)
+        if (!requireReady())
             return;
         const mapId = globals.moduleData?.id;
         if (!mapId) {
