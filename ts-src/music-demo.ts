@@ -30,8 +30,13 @@
     | 'mystery'
     | 'chill';
 
-  type ToneSynths = { lead: any; bass: any; kick: any; snare: any; hat: any; };
-  type ToneFx = { crusher: any; color: any; ping: any; delay: any; limiter: any; hp: any; };
+  type ToneFrequencyTarget = { setValueAtTime(value: number, time: number): void; };
+  type ToneTriggerInstrument = { triggerAttackRelease(note: string | number, duration?: number, time?: number, velocity?: number): void; };
+  type ToneNoiseInstrument = ToneTriggerInstrument & { noise: { type: string }; envelope: { decay: number; }; };
+  type ToneBassInstrument = ToneTriggerInstrument & { frequency?: ToneFrequencyTarget; };
+  type ToneLeadInstrument = ToneTriggerInstrument & { oscillator?: { width?: { value: number; }; }; };
+  type ToneSynths = { lead: ToneLeadInstrument; bass: ToneBassInstrument; kick: ToneTriggerInstrument; snare: ToneNoiseInstrument; hat: ToneNoiseInstrument; };
+  type ToneFx = { crusher: { bits: number; }; color: { frequency: ToneFrequencyTarget }; ping: { wet: { value: number } }; delay: { wet: { value: number } }; limiter: object; hp: object; };
 
   interface ToneState {
     enabled: boolean;

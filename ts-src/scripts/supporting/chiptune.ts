@@ -1,8 +1,8 @@
 type ChiptuneEventBus = {
-  emit?(event: string, ...args: any[]): void;
-  on?(event: string, handler: (...args: any[]) => void): void;
-  off?(event: string, handler: (...args: any[]) => void): void;
-  once?(event: string, handler: (...args: any[]) => void): void;
+  emit?(event: string, ...args: unknown[]): void;
+  on?(event: string, handler: (...args: unknown[]) => void): void;
+  off?(event: string, handler: (...args: unknown[]) => void): void;
+  once?(event: string, handler: (...args: unknown[]) => void): void;
 };
 
 type ChiptuneGlobals = typeof globalThis & {
@@ -80,8 +80,13 @@ chiptuneGlobal.Dustland = chiptuneGlobal.Dustland || {};
   const scheduleAheadTime = 0.2;
   const stepsPerBar = 16;
 
-  type ToneSynths = { lead: any; bass: any; kick: any; snare: any; hat: any };
-  type ToneFx = Record<string, any> | null;
+  type ToneFrequencyTarget = { setValueAtTime(value: number, time: number): void };
+  type ToneTriggerInstrument = { triggerAttackRelease(note: string | number, duration?: number, time?: number, velocity?: number): void };
+  type ToneNoiseInstrument = ToneTriggerInstrument & { noise: { type: string }; envelope: { decay: number } };
+  type ToneBassInstrument = ToneTriggerInstrument & { frequency?: ToneFrequencyTarget };
+  type ToneLeadInstrument = ToneTriggerInstrument & { oscillator?: { width?: { value: number } } };
+  type ToneSynths = { lead: ToneLeadInstrument; bass: ToneBassInstrument; kick: ToneTriggerInstrument; snare: ToneNoiseInstrument; hat: ToneNoiseInstrument };
+  type ToneFx = { crusher: object; color: object; ping: object; delay: object; limiter: object; hp: object } | null;
   const tone: { enabled: boolean; loading: boolean; ready: boolean; synths: ToneSynths | null; fx: ToneFx } = {
     enabled: true,
     loading: false,
