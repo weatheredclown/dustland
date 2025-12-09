@@ -1,5 +1,5 @@
 // ===== Spoils Cache =====
-const spoilsGlobals = globalThis as DustlandGlobals;
+const spoilsGlobals = globalThis as unknown as DustlandGlobals;
 
 const spoilsRanks: Record<string, { name: string; desc: string; icon: string }> = {
   rusted: {

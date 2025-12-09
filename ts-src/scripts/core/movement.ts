@@ -5,7 +5,7 @@ type MovementGlobals = DustlandGlobals & {
   leaderHasLootVacuum?: () => boolean;
 };
 
-const movementGlobals = globalThis as MovementGlobals;
+const movementGlobals = globalThis as unknown as MovementGlobals;
 
 const { effects: Effects } = movementGlobals.Dustland || {};
 var bus = (movementGlobals.Dustland && movementGlobals.Dustland.eventBus) || movementGlobals.EventBus;
