@@ -1,17 +1,32 @@
 import fs from 'node:fs';
+import path from 'node:path';
 
 type ModuleData = {
   data: unknown;
   write: (data: unknown) => void;
 };
 
+function resolveModuleFile(file: string): string {
+  const absolute = path.resolve(file);
+  if (file.endsWith('.js')) {
+    const relative = path.relative(process.cwd(), absolute);
+    const tsInSource = path.resolve(process.cwd(), 'ts-src', relative.replace(/\.js$/, '.ts'));
+    const tsAlongside = absolute.replace(/\.js$/, '.ts');
+    if (fs.existsSync(tsInSource)) return tsInSource;
+    if (fs.existsSync(tsAlongside)) return tsAlongside;
+  }
+  if (fs.existsSync(absolute)) return absolute;
+  throw new Error(`Module file not found: ${file}`);
+}
+
 function readModule(file: string): ModuleData {
-  const text = fs.readFileSync(file, 'utf8');
+  const resolvedFile = resolveModuleFile(file);
+  const text = fs.readFileSync(resolvedFile, 'utf8');
   if (file.endsWith('.json')) {
     return {
       data: JSON.parse(text),
       write(data: unknown) {
-        fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
+        fs.writeFileSync(resolvedFile, JSON.stringify(data, null, 2) + '\n');
       }
     };
   }
@@ -38,14 +53,14 @@ function readModule(file: string): ModuleData {
   const prefix = text.slice(0, jsonStart);
   const suffix = text.slice(suffixStart);
   const jsonText = text.slice(jsonStart, jsonEnd);
-  return {
-    data: JSON.parse(jsonText),
-    write(data: unknown) {
-      const newJson = '\n' + JSON.stringify(data, null, 2) + '\n';
-      fs.writeFileSync(file, prefix + newJson + suffix);
-    }
-  };
-}
+    return {
+      data: JSON.parse(jsonText),
+      write(data: unknown) {
+        const newJson = '\n' + JSON.stringify(data, null, 2) + '\n';
+        fs.writeFileSync(resolvedFile, prefix + newJson + suffix);
+      }
+    };
+  }
 
 function getByPath<T>(obj: T, path: string | undefined): unknown {
   if (!path) return obj;

@@ -1,11 +1,28 @@
 import fs from 'node:fs';
+import path from 'node:path';
+function resolveModuleFile(file) {
+    const absolute = path.resolve(file);
+    if (file.endsWith('.js')) {
+        const relative = path.relative(process.cwd(), absolute);
+        const tsInSource = path.resolve(process.cwd(), 'ts-src', relative.replace(/\.js$/, '.ts'));
+        const tsAlongside = absolute.replace(/\.js$/, '.ts');
+        if (fs.existsSync(tsInSource))
+            return tsInSource;
+        if (fs.existsSync(tsAlongside))
+            return tsAlongside;
+    }
+    if (fs.existsSync(absolute))
+        return absolute;
+    throw new Error(`Module file not found: ${file}`);
+}
 function readModule(file) {
-    const text = fs.readFileSync(file, 'utf8');
+    const resolvedFile = resolveModuleFile(file);
+    const text = fs.readFileSync(resolvedFile, 'utf8');
     if (file.endsWith('.json')) {
         return {
             data: JSON.parse(text),
             write(data) {
-                fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
+                fs.writeFileSync(resolvedFile, JSON.stringify(data, null, 2) + '\n');
             }
         };
     }
@@ -40,7 +57,7 @@ function readModule(file) {
         data: JSON.parse(jsonText),
         write(data) {
             const newJson = '\n' + JSON.stringify(data, null, 2) + '\n';
-            fs.writeFileSync(file, prefix + newJson + suffix);
+            fs.writeFileSync(resolvedFile, prefix + newJson + suffix);
         }
     };
 }

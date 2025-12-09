@@ -1,30 +1,72 @@
 // ===== Rendering & Utilities =====
 
-const ENGINE_VERSION = '0.243.51';
+const ENGINE_VERSION = '0.243.55';
 
 type EngineAssert = (name: string, condition: unknown) => void;
+
+interface MultiplayerPeer {
+  id: string;
+  status: string;
+  label: string;
+}
+
+interface MultiplayerPresenceEvent {
+  status?: string;
+  role?: 'host' | 'client' | string;
+  peers?: unknown;
+  reason?: unknown;
+  message?: unknown;
+  __fromNet?: boolean;
+  [key: string]: unknown;
+}
+
+interface SkinSprite {
+  image?: HTMLImageElement;
+  sx?: number;
+  sy?: number;
+  sw?: number;
+  sh?: number;
+  scale?: number;
+  dw?: number;
+  dh?: number;
+  displayWidth?: number;
+  displayHeight?: number;
+  align?: string;
+  anchor?: string;
+  offsetX?: number;
+  offsetY?: number;
+  dx?: number;
+  dy?: number;
+}
 
 type DustlandEngineGlobals = typeof globalThis & {
   TILE?: Record<string, number>;
   fogOfWarEnabled?: boolean;
   FOG_RADIUS?: number | string;
-  tileChars?: unknown;
-  playerAdrenalineFx?: unknown;
+  tileChars?: Record<number, string>;
+  playerAdrenalineFx?: {
+    intensity: number;
+    scale: number;
+    hueShift: number;
+    saturation: number;
+    brightness: number;
+    glow: number;
+  };
   moduleTests?: ((assert: EngineAssert) => void) | undefined;
   NanoDialog?: { enabled?: boolean; init?: () => Promise<void>; isReady?: () => boolean; refreshIndicator?: () => void };
-  Dustland?: (typeof globalThis & {
+  Dustland?: DustlandNamespace & {
     music?: { isEnabled?: () => boolean; toggleEnabled?: () => void };
     multiplayerParties?: { list?: () => MultiplayerPeer[] };
     multiplayerState?: { remoteParties?: MultiplayerPeer[] };
-  })['Dustland'];
-  player?: { x?: number; y?: number;[key: string]: unknown };
-  canEquip?: (member: unknown, item: unknown) => boolean;
-  getEquipRestrictions?: (member: unknown, item: unknown) => unknown;
+  };
+  player?: PlayerState;
+  canEquip?: (member: PartyMember, item: GameItem) => boolean;
+  getEquipRestrictions?: (member: PartyMember, item: GameItem) => { allowed?: boolean; levelMet?: boolean; levelRequired?: number; reasons?: string[] };
   describeRequiredRoles?: (roles: unknown) => string;
-  unequipItem?: (member: unknown, slot: unknown) => unknown;
-  dropItems?: (indices: number[]) => unknown;
-  quests?: Record<string, unknown>;
-  state?: { map?: string; mapEntry?: { x?: number; y?: number } };
+  unequipItem?: (memberIndex: number, slot: string) => void;
+  dropItems?: (indices: number[]) => void;
+  quests?: Record<string, Quest>;
+  state?: DustlandCoreState;
   engineGlobals?: DustlandEngineGlobals;
   log?: (msg: string, type?: 'warn' | 'error' | string) => void;
   toast?: (msg: string) => void;
@@ -83,21 +125,6 @@ getEngineGlobals().log = engineLog;
 (globalThis as DustlandEngineGlobals).logger = engineLog;
 (globalThis as DustlandEngineGlobals).engineLog = engineLog;
 
-type MultiplayerPeer = {
-  id: string;
-  status: string;
-  label: string;
-};
-
-type MultiplayerPresenceEvent = {
-  status?: string;
-  role?: 'host' | 'client' | string;
-  peers?: unknown;
-  reason?: unknown;
-  message?: unknown;
-  __fromNet?: boolean;
-  [key: string]: unknown;
-};
 
 const origWarn = console.warn;
 console.warn = function (...args) {
@@ -483,7 +510,7 @@ function tileLabelForId(id) {
   return 'Tile';
 }
 
-function drawTilePreviewSprite(canvas, sprite) {
+function drawTilePreviewSprite(canvas: HTMLCanvasElement, sprite: SkinSprite) {
   if (!canvas || !sprite) return;
   const ctx = canvas.getContext?.('2d');
   if (!ctx) return;
@@ -1640,11 +1667,11 @@ function skinManager() {
   return globalThis.DustlandSkin || globalThis.Dustland?.skin || null;
 }
 
-function drawSkinSprite(ctx: CanvasRenderingContext2D, sprite: any, dx: number, dy: number, size = TS) {
+function drawSkinSprite(ctx: CanvasRenderingContext2D, sprite: SkinSprite | null | undefined, dx: number, dy: number, size = TS) {
   if (!ctx || !sprite || !sprite.image) return false;
   const img = sprite.image;
   if (!img.complete || !(img.naturalWidth || img.width) || !(img.naturalHeight || img.height)) return false;
-  const sx = Number.isFinite(sprite.sx) ? sprite.sx : 0;
+  const sx = Number.isFinite(sprite.sx) ? sprite.sx! : 0;
   const sy = Number.isFinite(sprite.sy) ? sprite.sy : 0;
   const sw = Number.isFinite(sprite.sw) ? sprite.sw : (img.naturalWidth || img.width);
   const sh = Number.isFinite(sprite.sh) ? sprite.sh : (img.naturalHeight || img.height);
@@ -1671,17 +1698,17 @@ function drawSkinSprite(ctx: CanvasRenderingContext2D, sprite: any, dx: number, 
   return true;
 }
 
-function render(gameState: any = state, _dt?: number) {
+function render(gameState: DustlandCoreState = state!, _dt?: number) {
   const ctx = sctx;
   if (!ctx) return;
 
-  const activeMap = gameState.map || mapIdForState();
+  const activeMap = gameState?.map || mapIdForState();
   const dims = (mapWH(activeMap) || {}) as { W?: number; H?: number };
   const { w: vWRaw, h: vHRaw } = getViewSize();
   const vW = Number.isFinite(vWRaw) ? vWRaw : VIEW_W;
-    const vH = Number.isFinite(vHRaw) ? vHRaw : VIEW_H;
-    const W = Number.isFinite(dims.W) ? dims.W : vW;
-    const H = Number.isFinite(dims.H) ? dims.H : vH;
+  const vH = Number.isFinite(vHRaw) ? vHRaw : VIEW_H;
+  const W = Number.isFinite(dims.W) ? dims.W! : vW;
+  const H = Number.isFinite(dims.H) ? dims.H! : vH;
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = '#000';
@@ -1696,10 +1723,10 @@ function render(gameState: any = state, _dt?: number) {
   const offX = Math.max(0, Math.floor((vW - W) / 2));
   const offY = Math.max(0, Math.floor((vH - H) / 2));
 
-  const items = (gameState.itemDrops || itemDrops) as any[];
-  const ps = (gameState.portals || portals) as any[];
-  const entities = (gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : [])) as any[];
-  const pos = (gameState.party || party) as { x: number; y: number;[key: string]: unknown };
+  const items = (gameState?.itemDrops || itemDrops) as DustlandItemDrop[];
+  const ps = (gameState?.portals || portals) as DustlandPortal[];
+  const entities = (gameState?.entities || (typeof NPCS !== 'undefined' ? NPCS : [])) as DustlandNpc[];
+  const pos = (gameState?.party || party) as unknown as { x: number; y: number;[key: string]: unknown };
   type RemoteParty = MultiplayerPeer & { map?: string; x?: number; y?: number; updated?: number };
   const dustlandState = getEngineGlobals().Dustland as { multiplayerParties?: { list?: () => RemoteParty[] }; multiplayerState?: { remoteParties?: RemoteParty[] } } | undefined;
   const remoteParties = (dustlandState?.multiplayerParties?.list?.() as RemoteParty[] | undefined) || dustlandState?.multiplayerState?.remoteParties || [];
@@ -2025,12 +2052,12 @@ function getNpcSymbol(n: DustlandNpc & { symbol?: string; inanimate?: boolean; q
   return '!';
 }
 
-function drawEntities(ctx: CanvasRenderingContext2D, list: any[], offX: number, offY: number, skin: any) {
+function drawEntities(ctx: CanvasRenderingContext2D, list: DustlandNpc[], offX: number, offY: number, skin: DustlandSkinApi | null) {
   const { w: vW, h: vH } = getViewSize();
   for (const n of list) {
-    if (n.x >= camX && n.y >= camY && n.x < camX + vW && n.y < camY + vH) {
+    if (n.x !== undefined && n.y !== undefined && n.x >= camX && n.y >= camY && n.x < camX + vW && n.y < camY + vH) {
       const vx = (n.x - camX + offX) * TS, vy = (n.y - camY + offY) * TS;
-      const entitySprite = skin?.getEntitySprite?.(n);
+      const entitySprite = skin?.getEntitySprite?.(n) as SkinSprite | undefined;
       if (entitySprite) {
         const drawn = drawSkinSprite(ctx, entitySprite, vx, vy, TS);
         if (drawn) continue;
