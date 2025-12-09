@@ -39,7 +39,7 @@ type _InventoryGlobals = DustlandGlobals & {
   };
 };
 
-const _globals = globalThis as _InventoryGlobals;
+const _globals = globalThis as unknown as _InventoryGlobals;
 const _getPlayer = (): PlayerState => {
   const current = _globals.player ?? (_globals.player = { inv: [] as PartyItem[], campChest: [] as PartyItem[], campChestUnlocked: false } as PlayerState);
   if (!Array.isArray(current.inv)) {

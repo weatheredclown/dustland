@@ -807,8 +807,7 @@ function applyModule(data: Record<string, any> = {}, options: { fullReset?: bool
       const { map, x, y, ...def } = it;
       const registered = registerItem(def);
       if (map !== undefined && x !== undefined && y !== undefined) {
-        const loc: AnyRecord = { id: registered.id, map: map || 'world', x, y };
-        loc.dropType = 'world';
+        const loc: DustlandItemDrop = { id: registered.id, map: map || 'world', x, y, dropType: 'world' };
         itemDrops.push(loc);
         questItemLocations[registered.id] = { map: loc.map, x: loc.x, y: loc.y };
       }
