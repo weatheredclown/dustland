@@ -21,6 +21,7 @@ function initCloudActions(): void {
   const session = ServerSession.get();
   let ready = false;
   let lastUserId: string | null = null;
+  let unavailableMessage = 'Cloud saves unavailable. Sign in to enable them.';
 
   const toggleButtons = (enabled: boolean): void => {
     saveBtn.hidden = !enabled;
@@ -31,6 +32,12 @@ function initCloudActions(): void {
     loadBtn.disabled = !enabled;
     publishBtn.disabled = !enabled;
     shareBtn.disabled = !enabled;
+  };
+
+  const requireReady = (): boolean => {
+    if (ready) return true;
+    alert(unavailableMessage);
+    return false;
   };
 
   toggleButtons(false);
@@ -46,10 +53,18 @@ function initCloudActions(): void {
       } catch (err) {
         console.warn('Cloud actions unavailable', err);
         toggleButtons(false);
+        unavailableMessage = 'Cloud actions unavailable: ' + (err as Error).message;
       }
     } else if (!canUseCloud) {
       ready = false;
       toggleButtons(false);
+      if (snapshot.bootstrap.status !== 'firebase-ready') {
+        unavailableMessage = 'Cloud saves require a configured server connection.';
+      } else if (snapshot.status === 'error') {
+        unavailableMessage = 'Cloud sign-in failed: ' + (snapshot.error?.message ?? 'Unknown issue');
+      } else {
+        unavailableMessage = 'Sign in to enable cloud saves.';
+      }
     }
   });
 
@@ -90,7 +105,7 @@ function initCloudActions(): void {
   };
 
   const loadFromCloud = async (): Promise<void> => {
-    if (!ready) return;
+    if (!requireReady()) return;
     const target = await pickCloudModule();
     if (!target) return;
     try {
@@ -116,7 +131,7 @@ function initCloudActions(): void {
   };
 
   saveBtn.addEventListener('click', async () => {
-    if (!ready) return;
+    if (!requireReady()) return;
     const exporter = globals.exportModulePayload;
     if (typeof exporter !== 'function') {
       alert('Unable to export the current module.');
@@ -138,7 +153,7 @@ function initCloudActions(): void {
   });
 
   publishBtn.addEventListener('click', async () => {
-    if (!ready) return;
+    if (!requireReady()) return;
     const mapId = globals.moduleData?.id;
     if (!mapId) {
       alert('Save a draft before publishing.');
@@ -153,7 +168,7 @@ function initCloudActions(): void {
   });
 
   shareBtn.addEventListener('click', async () => {
-    if (!ready) return;
+    if (!requireReady()) return;
     const mapId = globals.moduleData?.id;
     if (!mapId) {
       alert('Save a draft before sharing.');
