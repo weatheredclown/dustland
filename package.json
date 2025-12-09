@@ -6,7 +6,9 @@
   "main": "scripts/dustland-core.js",
   "scripts": {
     "build": "npm run build:ts && npm run build:sync",
-    "build:ts": "tsc --project tsconfig.json",
+    "build:ts": "npm run build:ts:strict && npm run build:ts:overrides",
+    "build:ts:strict": "tsc --project tsconfig.json",
+    "build:ts:overrides": "tsc --project tsconfig.overrides.json",
     "build:sync": "node build-tools/sync-ts-output.js",
     "build:watch": "tsc --project tsconfig.json --watch",
     "serve": "http-server -p 8080",

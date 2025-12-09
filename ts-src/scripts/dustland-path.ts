@@ -36,6 +36,7 @@ interface NPCState {
     walkable?: Record<string, boolean>;
     NPCS?: NPCState[];
     party?: { x: number; y: number };
+    queryTile?: (x: number, y: number, map?: string) => { tile: string | number | null; entities: TileEntity[] };
   };
   console.log('[Path] Script loaded');
   const MAX_CACHE = 256;
@@ -122,8 +123,10 @@ interface NPCState {
   }
 
   function isWalkableAt(map: string,x: number,y: number,ignoreId?: string | number | null){
-    const info=queryTile(x,y,map) as unknown as { tile: string | number | null; entities: TileEntity[] };
-    if(info.tile===null) return false;
+    const queryTileFn = globalScope.queryTile;
+    if (!queryTileFn) return false;
+    const info = queryTileFn(x,y,map);
+    if(info.tile === null) return false;
     const tiles = globalScope.walkable;
     if(tiles && !tiles[String(info.tile)]) return false;
     // treat unlocked doors as non-blocking

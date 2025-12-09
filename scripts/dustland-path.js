@@ -83,7 +83,10 @@
         return out;
     }
     function isWalkableAt(map, x, y, ignoreId) {
-        const info = queryTile(x, y, map);
+        const queryTileFn = globalScope.queryTile;
+        if (!queryTileFn)
+            return false;
+        const info = queryTileFn(x, y, map);
         if (info.tile === null)
             return false;
         const tiles = globalScope.walkable;

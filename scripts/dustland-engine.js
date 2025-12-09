@@ -1,5 +1,6 @@
+/// <reference path="../types/dustland-engine-globals.d.ts" />
 // ===== Rendering & Utilities =====
-const ENGINE_VERSION = '0.243.57';
+const ENGINE_VERSION = '0.243.51';
 let cachedGlobals;
 function getEngineGlobals() {
     if (cachedGlobals)
@@ -9,19 +10,46 @@ function getEngineGlobals() {
     fallback.engineGlobals = cachedGlobals;
     return cachedGlobals;
 }
-const engineGlobals = getEngineGlobals();
-globalThis.getEngineGlobals = getEngineGlobals;
-const logEl = document.getElementById('log');
-const hpEl = document.getElementById('hp');
-const scrEl = document.getElementById('scrap');
-const hpBar = document.getElementById('hpBar');
-const hpFill = document.getElementById('hpFill');
-const hpGhost = document.getElementById('hpGhost');
-const hydEl = document.getElementById('hydrationMeter');
-const adrBar = document.getElementById('adrBar');
-const adrFill = document.getElementById('adrFill');
-const statusIcons = document.getElementById('statusIcons');
-const weatherBanner = document.getElementById('weatherBanner');
+var engineGlobals = getEngineGlobals();
+globalThis.engineGlobals = engineGlobals;
+engineGlobals.getEngineGlobals = getEngineGlobals;
+function getElementByIdChecked(id) {
+    const el = document.getElementById(id);
+    if (!el)
+        throw new Error(`Missing element #${id}`);
+    return el;
+}
+function getElementByIdOptional(id) {
+    return document.getElementById(id) ?? null;
+}
+function getCanvasOrThrow(id) {
+    const doc = typeof document === 'undefined' ? null : document;
+    if (!doc || !doc.getElementById) {
+        return doc?.createElement?.('canvas') ?? {};
+    }
+    const el = getElementByIdOptional(id);
+    if (!el)
+        return doc.createElement('canvas');
+    if (typeof HTMLCanvasElement !== 'undefined' && !(el instanceof HTMLCanvasElement))
+        throw new Error(`#${id} is not a canvas`);
+    return el;
+}
+const logEl = getElementByIdOptional('log');
+const hpEl = getElementByIdOptional('hp');
+const scrEl = getElementByIdOptional('scrap');
+const hpBar = getElementByIdOptional('hpBar');
+const hpFill = getElementByIdOptional('hpFill');
+const hpGhost = getElementByIdOptional('hpGhost');
+const hydEl = getElementByIdOptional('hydrationMeter');
+const adrBar = getElementByIdOptional('adrBar');
+const adrFill = getElementByIdOptional('adrFill');
+const statusIcons = getElementByIdOptional('statusIcons');
+const weatherBanner = getElementByIdOptional('weatherBanner');
+const dialogOverlay = getElementByIdOptional('overlay');
+globalThis.dialogOverlay = dialogOverlay;
+function getDialogOverlay() {
+    return globalThis.dialogOverlay ?? null;
+}
 const musicBus = globalThis.Dustland?.eventBus || globalThis.EventBus;
 let hudAdrMood = null;
 const FOG_UNSEEN_ALPHA = 0.94;
@@ -39,13 +67,11 @@ const logImpl = (msg, type) => {
         console.log("Log: " + msg);
     }
 };
-const existingLog = getEngineGlobals().log;
+const existingLog = engineGlobals.log;
 const engineLog = typeof existingLog === 'function' ? existingLog : logImpl;
-getEngineGlobals().log = engineLog;
-getEngineGlobals().logger = engineLog;
-getEngineGlobals().engineLog = engineLog;
-globalThis.logger = engineLog;
-globalThis.engineLog = engineLog;
+engineGlobals.log = engineLog;
+engineGlobals.logger = engineLog;
+engineGlobals.engineLog = engineLog;
 const origWarn = console.warn;
 console.warn = function (...args) {
     origWarn.apply(console, args);
@@ -177,11 +203,10 @@ const toastImpl = (msg) => {
             save();
     }
 };
-const existingToast = getEngineGlobals().toast;
+const existingToast = engineGlobals.toast;
 const engineToast = typeof existingToast === 'function' ? existingToast : toastImpl;
-getEngineGlobals().toast = engineToast;
-getEngineGlobals().engineToast = engineToast;
-globalThis.engineToast = engineToast;
+engineGlobals.toast = engineToast;
+engineGlobals.engineToast = engineToast;
 // tiny sfx and hud feedback
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let audioEnabled = true;
@@ -266,7 +291,8 @@ function setMobileControls(on) {
                 return b;
             };
             const mobileMove = (dx, dy, key) => {
-                if (overlay?.classList?.contains('shown')) {
+                const overlayEl = globalThis.dialogOverlay;
+                if (overlayEl?.classList?.contains('shown')) {
                     handleDialogKey?.(createKeyEvent(key));
                 }
                 else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
@@ -297,7 +323,8 @@ function setMobileControls(on) {
                 if (tryCreatorNav('ccNext')) {
                     return;
                 }
-                if (overlay?.classList?.contains('shown')) {
+                const overlayEl = globalThis.dialogOverlay;
+                if (overlayEl?.classList?.contains('shown')) {
                     handleDialogKey?.(createKeyEvent('Enter'));
                 }
                 else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
@@ -312,7 +339,8 @@ function setMobileControls(on) {
                 if (tryCreatorNav('ccBack')) {
                     return;
                 }
-                if (overlay?.classList?.contains('shown')) {
+                const overlayEl = globalThis.dialogOverlay;
+                if (overlayEl?.classList?.contains('shown')) {
                     closeDialog?.();
                 }
                 else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
@@ -597,7 +625,7 @@ const FONT_SCALE_MAX = 1.75;
 const FONT_SCALE_DEFAULT = 1;
 let fontScale = FONT_SCALE_DEFAULT;
 function clampFontScale(value) {
-    const num = Number.parseFloat(value);
+    const num = Number.parseFloat(String(value));
     if (!Number.isFinite(num))
         return fontScale;
     const snapped = Math.round(num * 100) / 100;
@@ -1350,7 +1378,7 @@ function jitterColor(hex, x, y) {
     const b = parseInt(hex.slice(5, 7), 16);
     const hash = (x * 73856093 ^ y * 19349663) & 255;
     const factor = 0.9 + (hash / 255) * 0.2;
-    const adj = v => Math.max(0, Math.min(255, Math.floor(v * factor)));
+    const adj = (v) => Math.max(0, Math.min(255, Math.floor(v * factor)));
     return `rgb(${adj(r)},${adj(g)},${adj(b)})`;
 }
 function lightenColor(hex, amt = 0.2) {
@@ -1363,12 +1391,12 @@ function lightenColor(hex, amt = 0.2) {
     return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
 }
 {
-    const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis);
+    const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : globalThis;
     globals.tileChars = tileChars;
 }
 globalThis.jitterColor = jitterColor;
 // ===== Camera & CRT draw with ghosting =====
-const disp = document.getElementById('game');
+const disp = getCanvasOrThrow('game');
 const playerAdrenalineFx = {
     intensity: 0,
     scale: 1,
@@ -1378,7 +1406,7 @@ const playerAdrenalineFx = {
     glow: 0
 };
 {
-    const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis);
+    const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : globalThis;
     globals.playerAdrenalineFx = playerAdrenalineFx;
 }
 const rawAttrWidth = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('width')) : NaN;
@@ -1543,7 +1571,7 @@ function draw(t) {
     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     const bx = bumpEnd > now ? bumpX : 0;
     const by = bumpEnd > now ? bumpY : 0;
-    const fx = globalThis.fxConfig || {};
+    const fx = (globalThis.fxConfig || {});
     if (fx.enabled === false) {
         dctx.globalAlpha = 1;
         dctx.drawImage(scene, bx, by);
@@ -1586,7 +1614,7 @@ function centerCamera(x, y, map) {
 function shouldRenderFog(map) {
     if (!map)
         return false;
-    const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis);
+    const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : globalThis;
     const enabled = typeof fogOfWarEnabled === 'boolean'
         ? fogOfWarEnabled
         : (typeof globals.fogOfWarEnabled === 'boolean' ? globals.fogOfWarEnabled : true);
@@ -1618,7 +1646,7 @@ function renderFog(ctx, map, offX, offY, viewW, viewH) {
     else if (fogState && typeof fogState === 'object') {
         visitedLookup = fogState;
     }
-    const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis);
+    const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : globalThis;
     const rawRadius = Number(globals.FOG_RADIUS);
     const radius = Math.max(1, Number.isFinite(rawRadius) ? rawRadius : 5);
     const denom = radius + 1;
@@ -2101,7 +2129,8 @@ let activeTab = 'inv';
 const updateHudState = {};
 function updateHUD() {
     const prevHp = updateHudState.lastHpVal ?? player.hp;
-    hpEl.textContent = String(player.hp);
+    if (hpEl)
+        hpEl.textContent = String(player.hp);
     if (scrEl)
         scrEl.textContent = String(player.scrap);
     const lead = typeof leader === 'function' ? leader() : null;
@@ -2394,7 +2423,7 @@ function sortInventorySlotKeys(keys) {
 }
 function renderInv() {
     const inv = document.getElementById('inv');
-    const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis);
+    const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : globalThis;
     inv.innerHTML = '';
     if (dropMode) {
         const ctrl = document.createElement('div');
@@ -2684,7 +2713,7 @@ function renderQuests() {
     if (!host)
         return;
     host.innerHTML = '';
-    const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis);
+    const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : globalThis;
     const questList = globals.quests ? Object.values(globals.quests) : [];
     const list = questList.filter(v => v && v.status !== 'available');
     if (list.length === 0) {
@@ -2783,7 +2812,8 @@ function updateQuestCompassTargets() {
 function questPartyLocation() {
     const loc = { map: 'world', x: 0, y: 0 };
     const p = (!Array.isArray(party) && typeof party === 'object') ? party : null;
-    const globalState = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis).state;
+    const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : globalThis;
+    const globalState = globals.state;
     if (p && typeof p.map === 'string')
         loc.map = p.map;
     else if (globalState && typeof globalState.map === 'string')
@@ -3158,7 +3188,7 @@ function renderParty() {
         c.onfocus = () => selectMember(i);
         c.querySelectorAll('button[data-a="unequip"]').forEach(b => {
             const sl = b.dataset.slot;
-            b.onclick = () => (typeof getEngineGlobals === 'function' ? getEngineGlobals() : globalThis).unequipItem?.(i, sl);
+            b.onclick = () => engineGlobals.unequipItem?.(i, sl);
         });
         p.appendChild(c);
     });
@@ -3569,8 +3599,8 @@ function runTests() {
     genWorld();
     const hutsOK = buildings.length > 0 && buildings.every(b => b.interiorId && interiors[b.interiorId] && interiors[b.interiorId].grid);
     assert('Huts have interiors', hutsOK);
-    if (typeof getEngineGlobals().moduleTests === 'function')
-        getEngineGlobals().moduleTests(assert);
+    if (typeof engineGlobals.moduleTests === 'function')
+        engineGlobals.moduleTests(assert);
 }
 // ===== Input =====
 if (document.getElementById('saveBtn')) {
@@ -3931,7 +3961,8 @@ if (document.getElementById('saveBtn')) {
         else if (game.inputLockKey) {
             game.inputLockKey = null;
         }
-        if (overlay?.classList.contains('shown')) {
+        const overlayEl = globalThis.dialogOverlay;
+        if (overlayEl?.classList.contains('shown')) {
             if (e.key === 'Escape')
                 closeDialog();
             else if (handleDialogKey?.(e))
@@ -3961,10 +3992,11 @@ if (document.getElementById('saveBtn')) {
             e.preventDefault();
             return;
         }
-        const toastFn = typeof globalThis.engineToast === 'function'
-            ? globalThis.engineToast
-            : typeof globalThis.toast === 'function'
-                ? globalThis.toast
+        const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : globalThis;
+        const toastFn = typeof globals.engineToast === 'function'
+            ? globals.engineToast
+            : typeof globals.toast === 'function'
+                ? globals.toast
                 : undefined;
         const keyId = typeof e.key === 'string' ? e.key.toLowerCase() : '';
         if (keyId)
