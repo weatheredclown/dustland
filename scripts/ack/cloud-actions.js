@@ -13,15 +13,29 @@ function initCloudActions() {
     let ready = false;
     let lastUserId = null;
     let unavailableMessage = 'Cloud saves unavailable. Sign in to enable them.';
-    const toggleButtons = (enabled) => {
-        saveBtn.hidden = !enabled;
-        loadBtn.hidden = !enabled;
-        publishBtn.hidden = !enabled;
-        shareBtn.hidden = !enabled;
-        saveBtn.disabled = !enabled;
-        loadBtn.disabled = !enabled;
-        publishBtn.disabled = !enabled;
-        shareBtn.disabled = !enabled;
+    const titles = new Map([
+        [saveBtn, saveBtn.title],
+        [loadBtn, loadBtn.title],
+        [publishBtn, publishBtn.title],
+        [shareBtn, shareBtn.title],
+    ]);
+    const updateButtonStates = (enabled) => {
+        const btns = [saveBtn, loadBtn, publishBtn, shareBtn];
+        const message = enabled ? '' : unavailableMessage;
+        btns.forEach(btn => {
+            btn.hidden = false;
+            btn.disabled = false;
+            if (enabled) {
+                btn.removeAttribute('aria-disabled');
+                btn.classList.remove('cloud-action-disabled');
+                btn.title = titles.get(btn) ?? btn.title;
+            }
+            else {
+                btn.setAttribute('aria-disabled', 'true');
+                btn.classList.add('cloud-action-disabled');
+                btn.title = message || btn.title;
+            }
+        });
     };
     const requireReady = () => {
         if (ready)
@@ -29,7 +43,7 @@ function initCloudActions() {
         alert(unavailableMessage);
         return false;
     };
-    toggleButtons(false);
+    updateButtonStates(false);
     session.subscribe(async (snapshot) => {
         const canUseCloud = snapshot.status === 'authenticated' && snapshot.bootstrap.status === 'firebase-ready';
         lastUserId = snapshot.user?.uid ?? null;
@@ -37,17 +51,16 @@ function initCloudActions() {
             try {
                 await repo.init(snapshot);
                 ready = true;
-                toggleButtons(true);
+                updateButtonStates(true);
             }
             catch (err) {
                 console.warn('Cloud actions unavailable', err);
-                toggleButtons(false);
                 unavailableMessage = 'Cloud actions unavailable: ' + err.message;
+                updateButtonStates(false);
             }
         }
         else if (!canUseCloud) {
             ready = false;
-            toggleButtons(false);
             if (snapshot.bootstrap.status !== 'firebase-ready') {
                 unavailableMessage = 'Cloud saves require a configured server connection.';
             }
@@ -57,6 +70,7 @@ function initCloudActions() {
             else {
                 unavailableMessage = 'Sign in to enable cloud saves.';
             }
+            updateButtonStates(false);
         }
     });
     const listCloudModules = async () => {
