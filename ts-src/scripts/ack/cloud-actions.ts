@@ -1,3 +1,4 @@
+import { bootstrapHostedFirebase } from '../hosting/firebase-bootstrap.js';
 import { FirestoreModuleRepository, type ModuleSummary } from './module-repository.js';
 import { ServerSession } from './server-session.js';
 
@@ -9,12 +10,14 @@ type AckGlobals = typeof globalThis & {
   applyLoadedModule?: (data: unknown) => void;
 };
 
-function initCloudActions(): void {
+async function initCloudActions(): Promise<void> {
   const saveBtn = document.getElementById('cloudSave') as HTMLButtonElement | null;
   const loadBtn = document.getElementById('cloudLoad') as HTMLButtonElement | null;
   const publishBtn = document.getElementById('cloudPublish') as HTMLButtonElement | null;
   const shareBtn = document.getElementById('cloudShare') as HTMLButtonElement | null;
   if (!saveBtn || !publishBtn || !shareBtn || !loadBtn) return;
+
+  await bootstrapHostedFirebase();
 
   const globals = globalThis as AckGlobals;
   const repo = new FirestoreModuleRepository();

@@ -1,12 +1,14 @@
+import { bootstrapHostedFirebase } from '../hosting/firebase-bootstrap.js';
 import { FirestoreModuleRepository } from './module-repository.js';
 import { ServerSession } from './server-session.js';
-function initCloudActions() {
+async function initCloudActions() {
     const saveBtn = document.getElementById('cloudSave');
     const loadBtn = document.getElementById('cloudLoad');
     const publishBtn = document.getElementById('cloudPublish');
     const shareBtn = document.getElementById('cloudShare');
     if (!saveBtn || !publishBtn || !shareBtn || !loadBtn)
         return;
+    await bootstrapHostedFirebase();
     const globals = globalThis;
     const repo = new FirestoreModuleRepository();
     const session = ServerSession.get();
