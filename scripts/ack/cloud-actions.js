@@ -14,6 +14,7 @@ async function initCloudActions() {
     const session = ServerSession.get();
     let ready = false;
     let lastUserId = null;
+    let lastModuleId = globals.moduleData?.id ?? null;
     let unavailableMessage = 'Cloud saves unavailable. Sign in to enable them.';
     const titles = new Map([
         [saveBtn, saveBtn.title],
@@ -133,6 +134,7 @@ async function initCloudActions() {
                 globals.moduleData.name = target.title ?? globals.moduleData.name;
                 if (target.summary)
                     globals.moduleData.summary = target.summary;
+                lastModuleId = version.moduleId;
             }
             alert('Loaded cloud module: ' + (target.title || target.id));
         }
@@ -152,8 +154,10 @@ async function initCloudActions() {
             const payload = exporter().data;
             const moduleId = globals.moduleData?.id ?? null;
             const version = await repo.saveDraft(moduleId, payload);
-            if (globals.moduleData)
-                globals.moduleData.id = version.moduleId;
+            if (!globals.moduleData)
+                globals.moduleData = {};
+            globals.moduleData.id = version.moduleId;
+            lastModuleId = version.moduleId;
             alert('Draft saved to the cloud.');
         }
         catch (err) {
@@ -166,7 +170,7 @@ async function initCloudActions() {
     publishBtn.addEventListener('click', async () => {
         if (!requireReady())
             return;
-        const mapId = globals.moduleData?.id;
+        const mapId = globals.moduleData?.id ?? lastModuleId;
         if (!mapId) {
             alert('Save a draft before publishing.');
             return;
@@ -182,7 +186,7 @@ async function initCloudActions() {
     shareBtn.addEventListener('click', async () => {
         if (!requireReady())
             return;
-        const mapId = globals.moduleData?.id;
+        const mapId = globals.moduleData?.id ?? lastModuleId;
         if (!mapId) {
             alert('Save a draft before sharing.');
             return;

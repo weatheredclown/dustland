@@ -24,6 +24,7 @@ async function initCloudActions(): Promise<void> {
   const session = ServerSession.get();
   let ready = false;
   let lastUserId: string | null = null;
+  let lastModuleId: string | null = globals.moduleData?.id ?? null;
   let unavailableMessage = 'Cloud saves unavailable. Sign in to enable them.';
   const titles = new Map<HTMLButtonElement, string>([
     [saveBtn, saveBtn.title],
@@ -139,6 +140,7 @@ async function initCloudActions(): Promise<void> {
         globals.moduleData.id = version.moduleId;
         globals.moduleData.name = target.title ?? globals.moduleData.name;
         if (target.summary) globals.moduleData.summary = target.summary;
+        lastModuleId = version.moduleId;
       }
       alert('Loaded cloud module: ' + (target.title || target.id));
     } catch (err) {
@@ -157,7 +159,9 @@ async function initCloudActions(): Promise<void> {
       const payload = exporter().data;
       const moduleId = globals.moduleData?.id ?? null;
       const version = await repo.saveDraft(moduleId, payload);
-      if (globals.moduleData) globals.moduleData.id = version.moduleId;
+      if (!globals.moduleData) globals.moduleData = {};
+      globals.moduleData.id = version.moduleId;
+      lastModuleId = version.moduleId;
       alert('Draft saved to the cloud.');
     } catch (err) {
       alert('Cloud save failed: ' + (err as Error).message);
@@ -170,7 +174,7 @@ async function initCloudActions(): Promise<void> {
 
   publishBtn.addEventListener('click', async () => {
     if (!requireReady()) return;
-    const mapId = globals.moduleData?.id;
+    const mapId = globals.moduleData?.id ?? lastModuleId;
     if (!mapId) {
       alert('Save a draft before publishing.');
       return;
@@ -185,7 +189,7 @@ async function initCloudActions(): Promise<void> {
 
   shareBtn.addEventListener('click', async () => {
     if (!requireReady()) return;
-    const mapId = globals.moduleData?.id;
+    const mapId = globals.moduleData?.id ?? lastModuleId;
     if (!mapId) {
       alert('Save a draft before sharing.');
       return;
