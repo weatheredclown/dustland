@@ -1,3 +1,4 @@
+import { bootstrapHostedFirebase } from '../hosting/firebase-bootstrap.js';
 import { ServerSession, type ServerSessionSnapshot } from './server-session.js';
 
 type ServerModeUiState = {
@@ -7,11 +8,13 @@ type ServerModeUiState = {
   buttonTooltip: string;
 };
 
-function initServerModeControls(): void {
+async function initServerModeControls(): Promise<void> {
   const container = document.getElementById('serverModeActions');
   if (!container) {
     return;
   }
+
+  await bootstrapHostedFirebase();
 
   const statusEl = container.querySelector<HTMLElement>('[data-role="server-mode-status"]');
   const button = container.querySelector<HTMLButtonElement>('button');

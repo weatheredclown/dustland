@@ -1,9 +1,11 @@
+import { bootstrapHostedFirebase } from '../hosting/firebase-bootstrap.js';
 import { ServerSession } from './server-session.js';
-function initServerModeControls() {
+async function initServerModeControls() {
     const container = document.getElementById('serverModeActions');
     if (!container) {
         return;
     }
+    await bootstrapHostedFirebase();
     const statusEl = container.querySelector('[data-role="server-mode-status"]');
     const button = container.querySelector('button');
     if (!statusEl || !button) {
