@@ -26,6 +26,7 @@ async function initCloudActions(): Promise<void> {
   let lastModuleId: string | null = globals.moduleData?.id ?? null;
   let unavailableMessage = 'Cloud saves unavailable. Sign in to enable them.';
   let bootstrapFailed = false;
+  let serverConfigWarningLogged = false;
   const titles = new Map<HTMLButtonElement, string>([
     [saveBtn, saveBtn.title],
     [loadBtn, loadBtn.title],
@@ -122,6 +123,10 @@ async function initCloudActions(): Promise<void> {
       } else if (!canUseCloud) {
         ready = false;
         if (snapshot.bootstrap.status !== 'firebase-ready') {
+          if (!serverConfigWarningLogged) {
+            console.warn('Cloud actions unavailable: server connection not configured.', snapshot.bootstrap);
+            serverConfigWarningLogged = true;
+          }
           unavailableMessage = 'Cloud saves require a configured server connection.';
         } else if (snapshot.status === 'error') {
           unavailableMessage = 'Cloud sign-in failed: ' + (snapshot.error?.message ?? 'Unknown issue');
