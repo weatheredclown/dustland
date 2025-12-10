@@ -39,6 +39,12 @@ function main() {
             sh('git stash push --include-untracked --quiet');
             stashed = true;
         }
+        try {
+            sh('git fetch --tags --force --prune --prune-tags');
+        }
+        catch {
+            // proceed with local tags if remote fetch fails
+        }
         let tag = '';
         try {
             tag = sh('git describe --tags --abbrev=0');
@@ -55,6 +61,10 @@ function main() {
         const enginePath = 'scripts/dustland-engine.js';
         const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
         const next = inc(pkg.version, bumpFrom(messages));
+        if (sh(`git tag --list v${next}`)) {
+            console.log(`Tag v${next} already exists; skipping release.`);
+            return;
+        }
         pkg.version = next;
         fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
         const eng = fs.readFileSync(enginePath, 'utf8').replace(/ENGINE_VERSION = '[^']+'/, `ENGINE_VERSION = '${next}'`);
