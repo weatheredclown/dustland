@@ -6,8 +6,8 @@ window.seedWorldContent = () => { };
 
 window.DUSTLAND_FEATURES = window.DUSTLAND_FEATURES ?? {};
 const hasFirebaseConfig = typeof window.DUSTLAND_FIREBASE === 'object' && window.DUSTLAND_FIREBASE !== null;
-if (typeof window.DUSTLAND_FEATURES.serverMode !== 'boolean') {
-  window.DUSTLAND_FEATURES.serverMode = hasFirebaseConfig;
+if (typeof window.DUSTLAND_FEATURES.serverMode !== 'boolean' && hasFirebaseConfig) {
+  window.DUSTLAND_FEATURES.serverMode = true;
 }
 const PLAYTEST_KEY = 'ack_playtest';
 
