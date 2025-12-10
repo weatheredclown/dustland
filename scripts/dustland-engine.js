@@ -3624,6 +3624,7 @@ if (document.getElementById('saveBtn')) {
         };
     const nanoBtn = document.getElementById('nanoToggle');
     if (nanoBtn) {
+        let nanoInitPromise = null;
         const updateNano = () => {
             nanoBtn.textContent = `Nano Dialog: ${window.NanoDialog?.enabled ? 'On' : 'Off'}`;
             const persist = document.getElementById('persistLLM');
@@ -3632,7 +3633,18 @@ if (document.getElementById('saveBtn')) {
                 persist.style.display = window.NanoDialog?.enabled && ready ? '' : 'none';
             }
         };
+        const ensureNanoInit = () => {
+            if (!nanoInitPromise && window.NanoDialog?.init) {
+                nanoInitPromise = NanoDialog.init()
+                    .then(() => { updateNano(); })
+                    .catch((err) => {
+                    console.error('[Nano] init failed:', err);
+                    nanoInitPromise = null;
+                });
+            }
+        };
         nanoBtn.onclick = () => {
+            ensureNanoInit();
             if (window.NanoDialog) {
                 NanoDialog.enabled = !NanoDialog.enabled;
                 if (typeof toast === 'function')
@@ -3643,8 +3655,6 @@ if (document.getElementById('saveBtn')) {
             updateNano();
         };
         updateNano();
-        if (window.NanoDialog?.init)
-            NanoDialog.init().then(updateNano);
     }
     const audioBtn = document.getElementById('audioToggle');
     if (audioBtn)
