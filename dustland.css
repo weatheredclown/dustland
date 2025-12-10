@@ -2242,6 +2242,25 @@ input[type="range"] {
         white-space: nowrap;
     }
 
+    .quick-actions .btn.is-busy {
+        cursor: progress;
+        opacity: .8;
+    }
+
+    .quick-actions__status {
+        font-size: 0.75rem;
+        color: #b7c8b7;
+        white-space: nowrap;
+    }
+
+    .quick-actions__status[data-state="success"] {
+        color: #9ef7a0;
+    }
+
+    .quick-actions__status[data-state="error"] {
+        color: #ffb4b4;
+    }
+
     @media (max-width: 720px) {
         .quick-actions {
             right: 12px;

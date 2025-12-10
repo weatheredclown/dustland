@@ -15,6 +15,7 @@ async function initCloudActions(): Promise<void> {
   const loadBtn = document.getElementById('cloudLoad') as HTMLButtonElement | null;
   const publishBtn = document.getElementById('cloudPublish') as HTMLButtonElement | null;
   const shareBtn = document.getElementById('cloudShare') as HTMLButtonElement | null;
+  const statusEl = document.getElementById('cloudActionStatus');
   if (!saveBtn || !publishBtn || !shareBtn || !loadBtn) return;
 
   const globals = globalThis as AckGlobals;
@@ -31,18 +32,55 @@ async function initCloudActions(): Promise<void> {
     [publishBtn, publishBtn.title],
     [shareBtn, shareBtn.title],
   ]);
+  const labels = new Map<HTMLButtonElement, string>([
+    [saveBtn, saveBtn.textContent ?? ''],
+    [loadBtn, loadBtn.textContent ?? ''],
+    [publishBtn, publishBtn.textContent ?? ''],
+    [shareBtn, shareBtn.textContent ?? ''],
+  ]);
+
+  const setStatus = (message: string, state: 'info' | 'success' | 'error' = 'info'): void => {
+    if (!statusEl) return;
+    statusEl.textContent = message;
+    if (message) {
+      statusEl.dataset.state = state;
+      statusEl.hidden = false;
+    } else {
+      delete statusEl.dataset.state;
+      statusEl.hidden = true;
+    }
+  };
+
+  const setBusyState = (button: HTMLButtonElement, label: string): (() => void) => {
+    const baseLabel = labels.get(button) ?? button.textContent ?? '';
+    button.textContent = `⏳ ${label}`;
+    button.classList.add('is-busy');
+    button.disabled = true;
+    return () => {
+      const defaultLabel = labels.get(button) ?? baseLabel;
+      button.classList.remove('is-busy');
+      button.textContent = defaultLabel;
+      updateButtonStates(ready);
+    };
+  };
 
   const updateButtonStates = (enabled: boolean): void => {
     const btns = [saveBtn, loadBtn, publishBtn, shareBtn];
     const message = enabled ? '' : unavailableMessage;
     btns.forEach(btn => {
+      const busy = btn.classList.contains('is-busy');
       btn.hidden = false;
-      btn.disabled = false;
-      if (enabled) {
+      if (busy) {
+        btn.disabled = true;
+        btn.setAttribute('aria-disabled', 'true');
+        btn.classList.remove('cloud-action-disabled');
+      } else if (enabled) {
+        btn.disabled = false;
         btn.removeAttribute('aria-disabled');
         btn.classList.remove('cloud-action-disabled');
         btn.title = titles.get(btn) ?? btn.title;
       } else {
+        btn.disabled = false;
         btn.setAttribute('aria-disabled', 'true');
         btn.classList.add('cloud-action-disabled');
         btn.title = message || btn.title;
@@ -133,15 +171,22 @@ async function initCloudActions(): Promise<void> {
 
   const loadFromCloud = async (): Promise<void> => {
     if (!requireReady()) return;
-    const target = await pickCloudModule();
-    if (!target) return;
+    const stopBusy = setBusyState(loadBtn, 'Loading…');
+    setStatus('Fetching cloud modules…');
     try {
+      const target = await pickCloudModule();
+      if (!target) {
+        setStatus('Cloud load canceled.');
+        return;
+      }
       const version = await repo.loadVersion(target.id);
       if (!version) {
+        setStatus('No saved version found for that module.', 'error');
         alert('No saved version found for that module.');
         return;
       }
       if (typeof globals.applyLoadedModule !== 'function') {
+        setStatus('Unable to load module into the editor.', 'error');
         alert('Unable to load module into the editor.');
         return;
       }
@@ -152,9 +197,13 @@ async function initCloudActions(): Promise<void> {
         if (target.summary) globals.moduleData.summary = target.summary;
         lastModuleId = version.moduleId;
       }
-      alert('Loaded cloud module: ' + (target.title || target.id));
+      setStatus('Loaded cloud module: ' + (target.title || target.id), 'success');
     } catch (err) {
-      alert('Cloud load failed: ' + (err as Error).message);
+      const message = (err as Error).message || 'Unknown issue';
+      setStatus('Cloud load failed: ' + message, 'error');
+      alert('Cloud load failed: ' + message);
+    } finally {
+      stopBusy();
     }
   };
 
@@ -165,6 +214,8 @@ async function initCloudActions(): Promise<void> {
       alert('Unable to export the current module.');
       return;
     }
+    const stopBusy = setBusyState(saveBtn, 'Saving…');
+    setStatus('Saving draft to the cloud…');
     try {
       const payload = exporter().data;
       const moduleId = globals.moduleData?.id ?? null;
@@ -172,9 +223,13 @@ async function initCloudActions(): Promise<void> {
       if (!globals.moduleData) globals.moduleData = {};
       globals.moduleData.id = version.moduleId;
       lastModuleId = version.moduleId;
-      alert('Draft saved to the cloud.');
+      setStatus('Draft saved to the cloud.', 'success');
     } catch (err) {
-      alert('Cloud save failed: ' + (err as Error).message);
+      const message = (err as Error).message || 'Unknown issue';
+      setStatus('Cloud save failed: ' + message, 'error');
+      alert('Cloud save failed: ' + message);
+    } finally {
+      stopBusy();
     }
   });
 
@@ -189,11 +244,17 @@ async function initCloudActions(): Promise<void> {
       alert('Save a draft before publishing.');
       return;
     }
+    const stopBusy = setBusyState(publishBtn, 'Publishing…');
+    setStatus('Publishing module to the cloud…');
     try {
       await repo.publish(mapId);
-      alert('Module published.');
+      setStatus('Module published.', 'success');
     } catch (err) {
-      alert('Publish failed: ' + (err as Error).message);
+      const message = (err as Error).message || 'Unknown issue';
+      setStatus('Publish failed: ' + message, 'error');
+      alert('Publish failed: ' + message);
+    } finally {
+      stopBusy();
     }
   });
 
@@ -206,11 +267,17 @@ async function initCloudActions(): Promise<void> {
     }
     const email = prompt('Invite collaborator by email:');
     if (!email) return;
+    const stopBusy = setBusyState(shareBtn, 'Sharing…');
+    setStatus('Recording share invitation…');
     try {
       await repo.share?.(mapId, email.trim(), 'editor');
-      alert('Share invitation recorded.');
+      setStatus('Share invitation recorded.', 'success');
     } catch (err) {
-      alert('Share failed: ' + (err as Error).message);
+      const message = (err as Error).message || 'Unknown issue';
+      setStatus('Share failed: ' + message, 'error');
+      alert('Share failed: ' + message);
+    } finally {
+      stopBusy();
     }
   });
 }
