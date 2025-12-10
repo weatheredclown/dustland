@@ -1,105 +1,59 @@
+/// <reference path="../types/dustland-engine-globals.d.ts" />
 // ===== Rendering & Utilities =====
 
-const ENGINE_VERSION = '0.243.55';
-
-type EngineAssert = (name: string, condition: unknown) => void;
-
-interface MultiplayerPeer {
-  id: string;
-  status: string;
-  label: string;
-}
-
-interface MultiplayerPresenceEvent {
-  status?: string;
-  role?: 'host' | 'client' | string;
-  peers?: unknown;
-  reason?: unknown;
-  message?: unknown;
-  __fromNet?: boolean;
-  [key: string]: unknown;
-}
-
-interface SkinSprite {
-  image?: HTMLImageElement;
-  sx?: number;
-  sy?: number;
-  sw?: number;
-  sh?: number;
-  scale?: number;
-  dw?: number;
-  dh?: number;
-  displayWidth?: number;
-  displayHeight?: number;
-  align?: string;
-  anchor?: string;
-  offsetX?: number;
-  offsetY?: number;
-  dx?: number;
-  dy?: number;
-}
-
-type DustlandEngineGlobals = typeof globalThis & {
-  TILE?: Record<string, number>;
-  fogOfWarEnabled?: boolean;
-  FOG_RADIUS?: number | string;
-  tileChars?: Record<number, string>;
-  playerAdrenalineFx?: {
-    intensity: number;
-    scale: number;
-    hueShift: number;
-    saturation: number;
-    brightness: number;
-    glow: number;
-  };
-  moduleTests?: ((assert: EngineAssert) => void) | undefined;
-  NanoDialog?: { enabled?: boolean; init?: () => Promise<void>; isReady?: () => boolean; refreshIndicator?: () => void };
-  Dustland?: DustlandNamespace & {
-    music?: { isEnabled?: () => boolean; toggleEnabled?: () => void };
-    multiplayerParties?: { list?: () => MultiplayerPeer[] };
-    multiplayerState?: { remoteParties?: MultiplayerPeer[] };
-  };
-  player?: PlayerState;
-  canEquip?: (member: PartyMember, item: GameItem) => boolean;
-  getEquipRestrictions?: (member: PartyMember, item: GameItem) => { allowed?: boolean; levelMet?: boolean; levelRequired?: number; reasons?: string[] };
-  describeRequiredRoles?: (roles: unknown) => string;
-  unequipItem?: (memberIndex: number, slot: string) => void;
-  dropItems?: (indices: number[]) => void;
-  quests?: Record<string, Quest>;
-  state?: DustlandCoreState;
-  engineGlobals?: DustlandEngineGlobals;
-  log?: (msg: string, type?: 'warn' | 'error' | string) => void;
-  toast?: (msg: string) => void;
-  logger?: (msg: string, type?: 'warn' | 'error' | string) => void;
-  engineLog?: (msg: string, type?: 'warn' | 'error' | string) => void;
-  engineToast?: (msg: string) => void;
-  pickupVacuum?: (fromX: number, fromY: number, toX?: number, toY?: number) => void;
-};
+const ENGINE_VERSION = '0.244.2';
 
 let cachedGlobals: DustlandEngineGlobals | undefined;
 
 function getEngineGlobals(): DustlandEngineGlobals {
   if (cachedGlobals) return cachedGlobals;
-  const fallback = globalThis as DustlandEngineGlobals;
-  cachedGlobals = (fallback.engineGlobals as DustlandEngineGlobals | undefined) ?? fallback;
+  const fallback = globalThis as unknown as DustlandEngineGlobals;
+  cachedGlobals = fallback.engineGlobals ?? fallback;
   fallback.engineGlobals = cachedGlobals;
   return cachedGlobals;
 }
 
-const engineGlobals = getEngineGlobals();
-(globalThis as DustlandEngineGlobals).getEngineGlobals = getEngineGlobals;
+var engineGlobals: DustlandEngineGlobals = getEngineGlobals();
+(globalThis as unknown as DustlandEngineGlobals).engineGlobals = engineGlobals;
+engineGlobals.getEngineGlobals = getEngineGlobals;
 
-const logEl = document.getElementById('log');
-const hpEl = document.getElementById('hp');
-const scrEl = document.getElementById('scrap');
-const hpBar = document.getElementById('hpBar') as HTMLElement | null;
-const hpFill = document.getElementById('hpFill') as HTMLElement | null;
-const hpGhost = document.getElementById('hpGhost') as HTMLElement | null;
-const hydEl = document.getElementById('hydrationMeter');
-const adrBar = document.getElementById('adrBar') as HTMLElement | null;
-const adrFill = document.getElementById('adrFill') as HTMLElement | null;
-const statusIcons = document.getElementById('statusIcons');
-const weatherBanner = document.getElementById('weatherBanner');
+function getElementByIdChecked<T extends HTMLElement>(id: string): T {
+  const el = document.getElementById(id);
+  if (!el) throw new Error(`Missing element #${id}`);
+  return el as T;
+}
+
+function getElementByIdOptional<T extends HTMLElement>(id: string): T | null {
+  return (document.getElementById(id) as T | null) ?? null;
+}
+
+function getCanvasOrThrow(id: string): HTMLCanvasElement {
+  const doc = typeof document === 'undefined' ? null : document;
+  if (!doc || !doc.getElementById) {
+    return doc?.createElement?.('canvas') ?? ({} as HTMLCanvasElement);
+  }
+  const el = getElementByIdOptional<HTMLElement>(id);
+  if (!el) return doc.createElement('canvas');
+  if (typeof HTMLCanvasElement !== 'undefined' && !(el instanceof HTMLCanvasElement)) throw new Error(`#${id} is not a canvas`);
+  return el as HTMLCanvasElement;
+}
+
+const logEl = getElementByIdOptional<HTMLDivElement>('log');
+const hpEl = getElementByIdOptional<HTMLElement>('hp');
+const scrEl = getElementByIdOptional<HTMLElement>('scrap');
+const hpBar = getElementByIdOptional<HTMLElement>('hpBar');
+const hpFill = getElementByIdOptional<HTMLElement>('hpFill');
+const hpGhost = getElementByIdOptional<HTMLElement>('hpGhost');
+const hydEl = getElementByIdOptional<HTMLElement>('hydrationMeter');
+const adrBar = getElementByIdOptional<HTMLElement>('adrBar');
+const adrFill = getElementByIdOptional<HTMLElement>('adrFill');
+const statusIcons = getElementByIdOptional<HTMLElement>('statusIcons');
+const weatherBanner = getElementByIdOptional<HTMLElement>('weatherBanner');
+const dialogOverlay = getElementByIdOptional<HTMLElement>('overlay');
+engineGlobals.dialogOverlay = dialogOverlay;
+function getDialogOverlay(): HTMLElement | null {
+  return engineGlobals.dialogOverlay ?? null;
+}
 const musicBus: DustlandEventBus | undefined = globalThis.Dustland?.eventBus || globalThis.EventBus;
 let hudAdrMood: 'adr_high' | 'adr_low' | null = null;
 
@@ -117,14 +71,11 @@ const logImpl: LogFn = (msg, type) => {
     console.log("Log: " + msg);
   }
 };
-const existingLog = getEngineGlobals().log;
+const existingLog = engineGlobals.log;
 const engineLog: LogFn = typeof existingLog === 'function' ? existingLog : logImpl;
-getEngineGlobals().log = engineLog;
-(getEngineGlobals() as DustlandEngineGlobals).logger = engineLog;
-(getEngineGlobals() as DustlandEngineGlobals).engineLog = engineLog;
-(globalThis as DustlandEngineGlobals).logger = engineLog;
-(globalThis as DustlandEngineGlobals).engineLog = engineLog;
-
+engineGlobals.log = engineLog;
+engineGlobals.logger = engineLog;
+engineGlobals.engineLog = engineLog;
 
 const origWarn = console.warn;
 console.warn = function (...args) {
@@ -252,11 +203,10 @@ const toastImpl: ToastFn = (msg) => {
     if (typeof save === 'function') save();
   }
 };
-const existingToast = getEngineGlobals().toast;
+const existingToast = engineGlobals.toast;
 const engineToast: ToastFn = typeof existingToast === 'function' ? existingToast : toastImpl;
-getEngineGlobals().toast = engineToast;
-(getEngineGlobals() as DustlandEngineGlobals).engineToast = engineToast;
-(globalThis as DustlandEngineGlobals).engineToast = engineToast;
+engineGlobals.toast = engineToast;
+engineGlobals.engineToast = engineToast;
 
 // tiny sfx and hud feedback
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -301,7 +251,7 @@ function setMobileControls(on: boolean) {
       const createMouseEvent = () => typeof MouseEvent === 'function'
         ? new MouseEvent('click')
         : ({ type: 'click' } as unknown as MouseEvent);
-      const tryCreatorNav = (btnId) => {
+        const tryCreatorNav = (btnId: string) => {
         const creatorEl = document.getElementById('creator');
         if (creatorEl?.style?.display === 'flex') {
           const btn = document.getElementById(btnId);
@@ -312,7 +262,7 @@ function setMobileControls(on: boolean) {
         }
         return false;
       };
-      const mk = (name, t, fn) => {
+        const mk = (name: string, t: string, fn: () => void) => {
         const b = document.createElement('button');
         b.textContent = t;
         b.style.cssText = 'width:48px;height:48px;border:2px solid #0f0;border-radius:8px;background:#000;color:#0f0;font-size:1.25rem;user-select:none;outline:none;touch-action:manipulation;';
@@ -332,8 +282,9 @@ function setMobileControls(on: boolean) {
         mobileButtons[name] = b;
         return b;
       };
-      const mobileMove = (dx, dy, key) => {
-        if (overlay?.classList?.contains('shown')) {
+        const mobileMove = (dx: number, dy: number, key: string) => {
+        const overlayEl = engineGlobals.dialogOverlay;
+        if (overlayEl?.classList?.contains('shown')) {
           handleDialogKey?.(createKeyEvent(key));
         } else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
           handleCombatKey?.(createKeyEvent(key));
@@ -362,7 +313,8 @@ function setMobileControls(on: boolean) {
         if (tryCreatorNav('ccNext')) {
           return;
         }
-        if (overlay?.classList?.contains('shown')) {
+        const overlayEl = engineGlobals.dialogOverlay;
+        if (overlayEl?.classList?.contains('shown')) {
           handleDialogKey?.(createKeyEvent('Enter'));
         } else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
           handleCombatKey?.(createKeyEvent('Enter'));
@@ -375,7 +327,8 @@ function setMobileControls(on: boolean) {
         if (tryCreatorNav('ccBack')) {
           return;
         }
-        if (overlay?.classList?.contains('shown')) {
+        const overlayEl = engineGlobals.dialogOverlay;
+        if (overlayEl?.classList?.contains('shown')) {
           closeDialog?.();
         } else if (document.getElementById('combatOverlay')?.classList?.contains('shown')) {
           handleCombatKey?.(createKeyEvent('Escape'));
@@ -426,17 +379,17 @@ if (savedFogSetting === '0') {
 } else if (savedFogSetting === '1') {
   fogOfWarEnabled = true;
 }
-let retroNpcArtEnabled = false;
-const retroNpcArtCache = new Map();
-let retroPlayerSprite = null;
-let retroPlayerSpriteIndex = -1;
-let retroItemSprite = null;
-let retroLootSprite = null;
-let retroItemCacheSprite = null;
-const DEFAULT_NPC_COLOR = '#9ef7a0';
-const xmlEscapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
-xmlEscapeMap['"'] = '&quot;';
-xmlEscapeMap["'"] = '&#39;';
+  let retroNpcArtEnabled = false;
+  const retroNpcArtCache = new Map<string, unknown>();
+  let retroPlayerSprite: HTMLImageElement | null = null;
+  let retroPlayerSpriteIndex = -1;
+  let retroItemSprite: HTMLImageElement | null = null;
+  let retroLootSprite: HTMLImageElement | null = null;
+  let retroItemCacheSprite: HTMLImageElement | null = null;
+  const DEFAULT_NPC_COLOR = '#9ef7a0';
+  const xmlEscapeMap: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
+  xmlEscapeMap['"'] = '&quot;';
+  xmlEscapeMap["'"] = '&#39;';
 function updateTileCharButton() {
   const btn = document.getElementById('tileCharToggle');
   if (!btn) return;
@@ -452,12 +405,12 @@ function updateTileCharButton() {
     if (btn.title && btn.title.includes('Tile skins')) btn.removeAttribute?.('title');
   }
 }
-function applyTileCharState(on) {
+function applyTileCharState(on: boolean) {
   const next = tileCharsLocked ? false : !!on;
   tileCharsEnabled = next;
   updateTileCharButton();
 }
-function setTileChars(on) {
+function setTileChars(on: boolean) {
   applyTileCharState(on);
 }
 function toggleTileChars() {
@@ -465,7 +418,7 @@ function toggleTileChars() {
   applyTileCharState(!tileCharsEnabled);
 }
 globalThis.toggleTileChars = toggleTileChars;
-function setTileCharLock(locked) {
+function setTileCharLock(locked: boolean) {
   const next = !!locked;
   if (next === tileCharsLocked) {
     updateTileCharButton();
@@ -480,12 +433,12 @@ function setTileCharLock(locked) {
   }
 }
 
-let tilePreviewOverlay = null;
-let tilePreviewGrid = null;
-let tilePreviewEmpty = null;
+  let tilePreviewOverlay: HTMLElement | null = null;
+  let tilePreviewGrid: HTMLElement | null = null;
+  let tilePreviewEmpty: HTMLElement | null = null;
 let tilePreviewOpen = false;
 
-function prettifyTileLabel(name) {
+function prettifyTileLabel(name: string) {
   if (!name) return '';
   return String(name)
     .replace(/[_-]+/g, ' ')
@@ -494,7 +447,7 @@ function prettifyTileLabel(name) {
     .replace(/\b\w/g, ch => ch.toUpperCase());
 }
 
-function tileLabelForId(id) {
+function tileLabelForId(id: number | string | null | undefined) {
   if (typeof id === 'number') {
     const tiles = getEngineGlobals().TILE;
     if (tiles && typeof tiles === 'object') {
@@ -510,7 +463,7 @@ function tileLabelForId(id) {
   return 'Tile';
 }
 
-function drawTilePreviewSprite(canvas: HTMLCanvasElement, sprite: SkinSprite) {
+function drawTilePreviewSprite(canvas: HTMLCanvasElement | null, sprite: { image?: HTMLImageElement } | null | undefined) {
   if (!canvas || !sprite) return;
   const ctx = canvas.getContext?.('2d');
   if (!ctx) return;
@@ -617,7 +570,7 @@ type StorageOpts = { skipStorage?: boolean };
 
 const initialSkin = skinManager()?.getCurrentSkin?.();
 setTileCharLock(!!initialSkin?.tiles);
-function setFogOfWar(on, opts: StorageOpts = {}) {
+  function setFogOfWar(on: boolean, opts: StorageOpts = {}) {
   fogOfWarEnabled = !!on;
   if (typeof document !== 'undefined') {
     const btn = document.getElementById('fogToggle');
@@ -635,15 +588,15 @@ const FONT_SCALE_MIN = 1;
 const FONT_SCALE_MAX = 1.75;
 const FONT_SCALE_DEFAULT = 1;
 let fontScale = FONT_SCALE_DEFAULT;
-function clampFontScale(value) {
-  const num = Number.parseFloat(value);
+  function clampFontScale(value: number | string) {
+  const num = Number.parseFloat(String(value));
   if (!Number.isFinite(num)) return fontScale;
   const snapped = Math.round(num * 100) / 100;
   if (snapped < FONT_SCALE_MIN) return FONT_SCALE_MIN;
   if (snapped > FONT_SCALE_MAX) return FONT_SCALE_MAX;
   return snapped;
 }
-function formatFontScale(value) {
+  function formatFontScale(value: number) {
   const str = value.toFixed(2);
   return str.replace(/(\.\d*?)0+$/, '$1').replace(/\.0$/, '').replace(/\.$/, '');
 }
@@ -651,7 +604,7 @@ function getFontScaleRootStyle() {
   if (typeof document === 'undefined') return null;
   return document.documentElement?.style || document.body?.style || null;
 }
-function updateFontScaleUI(scale) {
+  function updateFontScaleUI(scale: number) {
   if (typeof document === 'undefined') return;
   const slider = document.getElementById('fontScale');
   if (slider) {
@@ -662,7 +615,7 @@ function updateFontScaleUI(scale) {
     readout.textContent = `${Math.round(scale * 100)}%`;
   }
 }
-function applyFontScale(scale) {
+  function applyFontScale(scale: number) {
   fontScale = scale;
   const rootStyle = getFontScaleRootStyle();
   const value = formatFontScale(scale);
@@ -1275,7 +1228,7 @@ const sfxBase = new Audio(sfxSpriteSrc);
 const sfxPool = Array.from({ length: 5 }, () => sfxBase.cloneNode());
 const sfxTimers = new Array(sfxPool.length).fill(0);
 let sfxIndex = 0;
-function playSfx(id) {
+function playSfx(id: string) {
   const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
   if (!audioEnabled) return;
   if (id === 'tick') return sfxTick();
@@ -1331,7 +1284,7 @@ const playFX: PlayFxFn = (type) => {
   clearTimeout(playFX._t);
   playFX._t = setTimeout(() => { fxOverlay.style.opacity = '0'; }, 200);
 };
-function hudBadge(msg) {
+function hudBadge(msg: string) {
   const target = hpEl;
   if (!target) return;
   const span = document.createElement('span');
@@ -1360,16 +1313,16 @@ const tileCharColors = {
   8: lightenColor('#8bd98d', 0.2),
   9: lightenColor('#000000', 0.2)
 };
-function jitterColor(hex, x, y) {
+function jitterColor(hex: string, x: number, y: number) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   const hash = (x * 73856093 ^ y * 19349663) & 255;
   const factor = 0.9 + (hash / 255) * 0.2;
-  const adj = v => Math.max(0, Math.min(255, Math.floor(v * factor)));
+  const adj = (v: number) => Math.max(0, Math.min(255, Math.floor(v * factor)));
   return `rgb(${adj(r)},${adj(g)},${adj(b)})`;
 }
-function lightenColor(hex, amt = 0.2) {
+function lightenColor(hex: string, amt = 0.2) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
@@ -1379,13 +1332,13 @@ function lightenColor(hex, amt = 0.2) {
   return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
 }
 {
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
+  const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : (globalThis as unknown as DustlandEngineGlobals);
   globals.tileChars = tileChars;
 }
 globalThis.jitterColor = jitterColor;
 
 // ===== Camera & CRT draw with ghosting =====
-const disp = document.getElementById('game');
+const disp = getCanvasOrThrow('game');
 const playerAdrenalineFx = {
   intensity: 0,
   scale: 1,
@@ -1395,7 +1348,7 @@ const playerAdrenalineFx = {
   glow: 0
 };
 {
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
+  const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : (globalThis as unknown as DustlandEngineGlobals);
   globals.playerAdrenalineFx = playerAdrenalineFx;
 }
 const rawAttrWidth = (disp && typeof disp.getAttribute === 'function') ? Number(disp.getAttribute('width')) : NaN;
@@ -1430,7 +1383,7 @@ const CRT_CANVAS_MAX_SCALE = 3;
 const CRT_DESKTOP_BREAKPOINT = 900;
 const crtTube = disp ? disp.parentElement : null;
 
-function setCanvasDimensions(width, height) {
+function setCanvasDimensions(width: number, height: number) {
   if (!disp) return;
   const widthPx = `${Math.floor(width)}px`;
   const heightPx = `${Math.floor(height)}px`;
@@ -1501,14 +1454,14 @@ sctx.font = `${(12 * fontScale) / RENDER_SCALE}px system-ui, sans-serif`;
 let camX = 0, camY = 0, showMini = true;
 let _lastTime = 0;
 let bumpX = 0, bumpY = 0, bumpEnd = 0;
-const FOOTSTEP_BUMP_RANGE = 0.6;
-const FOOTSTEP_BUMP_DURATION_MS = 35;
-const sparkles = [];
-const vacuumTrails = [];
-const soundSources = [];
+  const FOOTSTEP_BUMP_RANGE = 0.6;
+  const FOOTSTEP_BUMP_DURATION_MS = 35;
+  const sparkles: Array<{ x: number; y: number }> = [];
+  const vacuumTrails: Array<{ fromX: number; fromY: number; toX: number; toY: number; start: number; end: number }> = [];
+  const soundSources: Array<{ id?: string; x: number; y: number; map?: string }> = [];
 let lastChimeTime = 0;
 
-function playWindChime(x, y) {
+function playWindChime(x: number, y: number) {
   if (!audioEnabled || Date.now() - lastChimeTime < 500) return;
   lastChimeTime = Date.now();
   const dx = party.x - x;
@@ -1567,7 +1520,7 @@ function draw(t: number) {
   const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
   const bx = bumpEnd > now ? bumpX : 0;
   const by = bumpEnd > now ? bumpY : 0;
-  const fx = globalThis.fxConfig || {};
+    const fx = (globalThis.fxConfig || {}) as { enabled?: boolean; prevAlpha?: number; offsetX?: number; offsetY?: number; sceneAlpha?: number };
   if (fx.enabled === false) {
     dctx.globalAlpha = 1;
     dctx.drawImage(scene, bx, by);
@@ -1601,7 +1554,7 @@ function centerCamera(x: number, y: number, map?: string) {
 
 function shouldRenderFog(map?: string) {
   if (!map) return false;
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
+  const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : (globalThis as unknown as DustlandEngineGlobals);
   const enabled = typeof fogOfWarEnabled === 'boolean'
     ? fogOfWarEnabled
     : (typeof globals.fogOfWarEnabled === 'boolean' ? globals.fogOfWarEnabled : true);
@@ -1628,7 +1581,7 @@ function renderFog(ctx: CanvasRenderingContext2D, map: string, offX: number, off
   } else if (fogState && typeof fogState === 'object') {
     visitedLookup = fogState;
   }
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
+  const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : (globalThis as unknown as DustlandEngineGlobals);
   const rawRadius = Number(globals.FOG_RADIUS);
   const radius = Math.max(1, Number.isFinite(rawRadius) ? rawRadius : 5);
   const denom = radius + 1;
@@ -1667,11 +1620,11 @@ function skinManager() {
   return globalThis.DustlandSkin || globalThis.Dustland?.skin || null;
 }
 
-function drawSkinSprite(ctx: CanvasRenderingContext2D, sprite: SkinSprite | null | undefined, dx: number, dy: number, size = TS) {
+function drawSkinSprite(ctx: CanvasRenderingContext2D, sprite: any, dx: number, dy: number, size = TS) {
   if (!ctx || !sprite || !sprite.image) return false;
   const img = sprite.image;
   if (!img.complete || !(img.naturalWidth || img.width) || !(img.naturalHeight || img.height)) return false;
-  const sx = Number.isFinite(sprite.sx) ? sprite.sx! : 0;
+  const sx = Number.isFinite(sprite.sx) ? sprite.sx : 0;
   const sy = Number.isFinite(sprite.sy) ? sprite.sy : 0;
   const sw = Number.isFinite(sprite.sw) ? sprite.sw : (img.naturalWidth || img.width);
   const sh = Number.isFinite(sprite.sh) ? sprite.sh : (img.naturalHeight || img.height);
@@ -1698,17 +1651,17 @@ function drawSkinSprite(ctx: CanvasRenderingContext2D, sprite: SkinSprite | null
   return true;
 }
 
-function render(gameState: DustlandCoreState = state!, _dt?: number) {
+function render(gameState: any = state, _dt?: number) {
   const ctx = sctx;
   if (!ctx) return;
 
-  const activeMap = gameState?.map || mapIdForState();
+  const activeMap = gameState.map || mapIdForState();
   const dims = (mapWH(activeMap) || {}) as { W?: number; H?: number };
   const { w: vWRaw, h: vHRaw } = getViewSize();
   const vW = Number.isFinite(vWRaw) ? vWRaw : VIEW_W;
-  const vH = Number.isFinite(vHRaw) ? vHRaw : VIEW_H;
-  const W = Number.isFinite(dims.W) ? dims.W! : vW;
-  const H = Number.isFinite(dims.H) ? dims.H! : vH;
+    const vH = Number.isFinite(vHRaw) ? vHRaw : VIEW_H;
+    const W = Number.isFinite(dims.W) ? dims.W : vW;
+    const H = Number.isFinite(dims.H) ? dims.H : vH;
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = '#000';
@@ -1723,10 +1676,10 @@ function render(gameState: DustlandCoreState = state!, _dt?: number) {
   const offX = Math.max(0, Math.floor((vW - W) / 2));
   const offY = Math.max(0, Math.floor((vH - H) / 2));
 
-  const items = (gameState?.itemDrops || itemDrops) as DustlandItemDrop[];
-  const ps = (gameState?.portals || portals) as DustlandPortal[];
-  const entities = (gameState?.entities || (typeof NPCS !== 'undefined' ? NPCS : [])) as DustlandNpc[];
-  const pos = (gameState?.party || party) as unknown as { x: number; y: number;[key: string]: unknown };
+  const items = (gameState.itemDrops || itemDrops) as any[];
+  const ps = (gameState.portals || portals) as any[];
+  const entities = (gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : [])) as any[];
+  const pos = (gameState.party || party) as { x: number; y: number;[key: string]: unknown };
   type RemoteParty = MultiplayerPeer & { map?: string; x?: number; y?: number; updated?: number };
   const dustlandState = getEngineGlobals().Dustland as { multiplayerParties?: { list?: () => RemoteParty[] }; multiplayerState?: { remoteParties?: RemoteParty[] } } | undefined;
   const remoteParties = (dustlandState?.multiplayerParties?.list?.() as RemoteParty[] | undefined) || dustlandState?.multiplayerState?.remoteParties || [];
@@ -2052,18 +2005,18 @@ function getNpcSymbol(n: DustlandNpc & { symbol?: string; inanimate?: boolean; q
   return '!';
 }
 
-function drawEntities(ctx: CanvasRenderingContext2D, list: DustlandNpc[], offX: number, offY: number, skin: DustlandSkinApi | null) {
+function drawEntities(ctx: CanvasRenderingContext2D, list: any[], offX: number, offY: number, skin: any) {
   const { w: vW, h: vH } = getViewSize();
   for (const n of list) {
-    if (n.x !== undefined && n.y !== undefined && n.x >= camX && n.y >= camY && n.x < camX + vW && n.y < camY + vH) {
+    if (n.x >= camX && n.y >= camY && n.x < camX + vW && n.y < camY + vH) {
       const vx = (n.x - camX + offX) * TS, vy = (n.y - camY + offY) * TS;
-      const entitySprite = skin?.getEntitySprite?.(n) as SkinSprite | undefined;
+      const entitySprite = skin?.getEntitySprite?.(n);
       if (entitySprite) {
         const drawn = drawSkinSprite(ctx, entitySprite, vx, vy, TS);
         if (drawn) continue;
       }
       if (retroNpcArtEnabled) {
-        const sprite = getRetroNpcSprite(n);
+        const sprite = getRetroNpcSprite(n) as HTMLImageElement | null;
         if (sprite?.complete) {
           ctx.drawImage(sprite, vx, vy, TS, TS);
           continue;
@@ -2089,7 +2042,7 @@ const updateHudState: {
 
 function updateHUD() {
   const prevHp = updateHudState.lastHpVal ?? player.hp;
-  hpEl.textContent = String(player.hp);
+  if (hpEl) hpEl.textContent = String(player.hp);
   if (scrEl) scrEl.textContent = String(player.scrap);
   const lead = typeof leader === 'function' ? leader() : null;
   const fx = globalThis.fxConfig;
@@ -2332,7 +2285,7 @@ function sortInventorySlotKeys(keys: Iterable<string>) {
 }
 function renderInv() {
   const inv = document.getElementById('inv');
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
+  const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : (globalThis as unknown as DustlandEngineGlobals);
   inv.innerHTML = '';
   if (dropMode) {
     const ctrl = document.createElement('div');
@@ -2600,7 +2553,7 @@ function renderQuests() {
   const host = document.getElementById('quests');
   if (!host) return;
   host.innerHTML = '';
-  const globals = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals));
+  const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : (globalThis as unknown as DustlandEngineGlobals);
   const questList = globals.quests ? (Object.values(globals.quests) as EngineQuest[]) : [];
   const list = questList.filter(v => v && v.status !== 'available');
   if (list.length === 0) {
@@ -2693,7 +2646,8 @@ function updateQuestCompassTargets() {
 function questPartyLocation(): { map: string; x: number; y: number } {
   const loc = { map: 'world', x: 0, y: 0 };
   const p = (!Array.isArray(party) && typeof party === 'object') ? party as { map?: string; x?: number; y?: number } : null;
-  const globalState = (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals)).state;
+  const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : (globalThis as unknown as DustlandEngineGlobals);
+  const globalState = globals.state;
   if (p && typeof p.map === 'string') loc.map = p.map;
   else if (globalState && typeof globalState.map === 'string') loc.map = globalState.map;
   if (p && typeof p.x === 'number') loc.x = p.x;
@@ -3037,7 +2991,7 @@ function renderParty() {
     c.onfocus = () => selectMember(i);
     c.querySelectorAll('button[data-a="unequip"]').forEach(b => {
       const sl = b.dataset.slot;
-      b.onclick = () => (typeof getEngineGlobals === 'function' ? getEngineGlobals() : (globalThis as DustlandEngineGlobals)).unequipItem?.(i, sl);
+      b.onclick = () => engineGlobals.unequipItem?.(i, sl);
     });
     p.appendChild(c);
   });
@@ -3438,7 +3392,7 @@ function runTests() {
 
   genWorld(); const hutsOK = buildings.length > 0 && buildings.every(b => b.interiorId && interiors[b.interiorId] && interiors[b.interiorId].grid); assert('Huts have interiors', hutsOK);
 
-  if (typeof getEngineGlobals().moduleTests === 'function') getEngineGlobals().moduleTests(assert);
+  if (typeof engineGlobals.moduleTests === 'function') engineGlobals.moduleTests(assert);
 }
 
 // ===== Input =====
@@ -3544,16 +3498,16 @@ if (document.getElementById('saveBtn')) {
   const skinPreviewInput = document.getElementById('skinPreviewName');
   const skinPreviewButton = document.getElementById('skinPreviewLoad');
   const skinPreviewStatus = document.getElementById('skinPreviewStatus');
-  if (skinPreviewInput && skinPreviewButton) {
-    const DEFAULT_GENERATED_SKIN_BASE_DIR = 'ComfyUI/output';
-    const updateSkinStatus = (text, isError = false) => {
-      if (!skinPreviewStatus) return;
-      skinPreviewStatus.textContent = text || '';
-      skinPreviewStatus.classList.toggle('is-error', !!isError);
-    };
-    type SkinOverrides = { baseDir?: string; styleDir?: string; extension?: string; slots?: unknown };
-    const buildOverrides = (styleId): SkinOverrides => {
-      const manager = globalThis.Dustland?.skin;
+    if (skinPreviewInput && skinPreviewButton) {
+      const DEFAULT_GENERATED_SKIN_BASE_DIR = 'ComfyUI/output';
+      const updateSkinStatus = (text: string, isError = false) => {
+        if (!skinPreviewStatus) return;
+        skinPreviewStatus.textContent = text || '';
+        skinPreviewStatus.classList.toggle('is-error', !!isError);
+      };
+      type SkinOverrides = { baseDir?: string; styleDir?: string; extension?: string; slots?: unknown };
+      const buildOverrides = (styleId: string | null | undefined): SkinOverrides => {
+        const manager = globalThis.Dustland?.skin;
       const stored = manager?.getGeneratedSkinConfig?.(styleId) as SkinOverrides | undefined;
       const overrides: SkinOverrides = {};
       if (stored && typeof stored === 'object') {
@@ -3633,12 +3587,12 @@ if (document.getElementById('saveBtn')) {
   const debugBtn = document.getElementById('debugBtn');
   const debugMenu = document.getElementById('debugMenu');
   if (debugBtn && debugMenu) {
-    const debugClose = document.getElementById('debugClose');
-    const hideDebug = () => { debugMenu.style.display = 'none'; };
-    const showDebug = () => { debugMenu.style.display = 'flex'; };
-    debugBtn.onclick = showDebug;
-    debugClose?.addEventListener('click', hideDebug);
-    const attachHide = (btn) => { btn?.addEventListener('click', hideDebug); };
+      const debugClose = document.getElementById('debugClose');
+      const hideDebug = () => { debugMenu.style.display = 'none'; };
+      const showDebug = () => { debugMenu.style.display = 'flex'; };
+      debugBtn.onclick = showDebug;
+      debugClose?.addEventListener('click', hideDebug);
+      const attachHide = (btn: HTMLElement | null) => { btn?.addEventListener('click', hideDebug); };
     attachHide(document.getElementById('fxBtn'));
     attachHide(document.getElementById('perfBtn'));
     const exportBtn = document.getElementById('exportSaveBtn');
@@ -3755,7 +3709,10 @@ if (document.getElementById('saveBtn')) {
     } else if (game.inputLockKey) {
       game.inputLockKey = null;
     }
-    if (overlay?.classList.contains('shown')) {
+    const overlayEl = (globalThis as unknown as DustlandEngineGlobals).engineGlobals?.dialogOverlay
+      ?? (globalThis as unknown as DustlandEngineGlobals).dialogOverlay
+      ?? null;
+    if (overlayEl?.classList.contains('shown')) {
       if (e.key === 'Escape') closeDialog();
       else if (handleDialogKey?.(e)) e.preventDefault();
       return;
@@ -3781,10 +3738,11 @@ if (document.getElementById('saveBtn')) {
       e.preventDefault();
       return;
     }
-    const toastFn = typeof (globalThis as DustlandEngineGlobals).engineToast === 'function'
-      ? (globalThis as DustlandEngineGlobals).engineToast
-      : typeof (globalThis as DustlandEngineGlobals).toast === 'function'
-        ? (globalThis as DustlandEngineGlobals).toast
+    const globals = typeof engineGlobals !== 'undefined' ? engineGlobals : (globalThis as unknown as DustlandEngineGlobals);
+    const toastFn = typeof globals.engineToast === 'function'
+      ? globals.engineToast
+      : typeof globals.toast === 'function'
+        ? globals.toast
         : undefined;
     const keyId = typeof e.key === 'string' ? e.key.toLowerCase() : '';
     if (keyId) game.lastNonCombatKey = keyId;

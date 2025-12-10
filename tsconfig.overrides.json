@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "exclude": [],
+  "include": [
+    "ts-src/**/*.d.ts",
+    "ts-src/components/**/*.ts",
+    "ts-src/data/**/*.ts",
+    "ts-src/modules/**/*.ts",
+    "ts-src/music-demo.ts",
+    "ts-src/scripts/adventure-kit.ts",
+    "ts-src/scripts/procedural-map.ts",
+    "ts-src/scripts/dustland-engine.ts",
+    "ts-src/scripts/core/**/*.ts",
+    "ts-src/scripts/dialog-persist.ts",
+    "ts-src/scripts/dustland-core.ts",
+    "ts-src/scripts/dustland-nano.ts",
+    "ts-src/scripts/fx-config.ts",
+    "ts-src/scripts/multiplayer.ts",
+    "ts-src/scripts/supporting/**/*.ts",
+    "ts-src/scripts/ui/skin-manager.ts",
+    "ts-src/scripts/ui/trade.ts",
+    "ts-src/scripts/workbench.ts"
+  ]
+}

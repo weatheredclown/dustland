@@ -10,6 +10,7 @@
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "strict": false,
+    "noImplicitAny": true,
     "noUnusedLocals": true,
     "noImplicitOverride": true,
     "noEmitOnError": false,
@@ -20,5 +21,23 @@
   "include": [
     "ts-src/**/*.ts",
     "ts-src/**/*.d.ts"
+  ],
+  "exclude": [
+    "ts-src/components/**/*",
+    "ts-src/data/**/*",
+    "ts-src/modules/**/*",
+    "ts-src/music-demo.ts",
+    "ts-src/scripts/adventure-kit.ts",
+    "ts-src/scripts/core/**/*",
+    "ts-src/scripts/dialog-persist.ts",
+    "ts-src/scripts/dustland-core.ts",
+    "ts-src/scripts/dustland-engine.ts",
+    "ts-src/scripts/dustland-nano.ts",
+    "ts-src/scripts/fx-config.ts",
+    "ts-src/scripts/multiplayer.ts",
+    "ts-src/scripts/supporting/**/*",
+    "ts-src/scripts/ui/skin-manager.ts",
+    "ts-src/scripts/ui/trade.ts",
+    "ts-src/scripts/workbench.ts"
   ]
 }
