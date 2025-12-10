@@ -8,13 +8,13 @@ async function initCloudActions() {
     const shareBtn = document.getElementById('cloudShare');
     if (!saveBtn || !publishBtn || !shareBtn || !loadBtn)
         return;
-    await bootstrapHostedFirebase();
     const globals = globalThis;
     const repo = new FirestoreModuleRepository();
     const session = ServerSession.get();
     let ready = false;
     let lastUserId = null;
     let unavailableMessage = 'Cloud saves unavailable. Sign in to enable them.';
+    let bootstrapFailed = false;
     const titles = new Map([
         [saveBtn, saveBtn.title],
         [loadBtn, loadBtn.title],
@@ -46,35 +46,46 @@ async function initCloudActions() {
         return false;
     };
     updateButtonStates(false);
-    session.subscribe(async (snapshot) => {
-        const canUseCloud = snapshot.status === 'authenticated' && snapshot.bootstrap.status === 'firebase-ready';
-        lastUserId = snapshot.user?.uid ?? null;
-        if (canUseCloud && !ready) {
-            try {
-                await repo.init(snapshot);
-                ready = true;
-                updateButtonStates(true);
+    try {
+        await bootstrapHostedFirebase();
+    }
+    catch (err) {
+        console.warn('Cloud actions unavailable', err);
+        unavailableMessage = 'Cloud actions unavailable: ' + err.message;
+        updateButtonStates(false);
+        bootstrapFailed = true;
+    }
+    if (!bootstrapFailed) {
+        session.subscribe(async (snapshot) => {
+            const canUseCloud = snapshot.status === 'authenticated' && snapshot.bootstrap.status === 'firebase-ready';
+            lastUserId = snapshot.user?.uid ?? null;
+            if (canUseCloud && !ready) {
+                try {
+                    await repo.init(snapshot);
+                    ready = true;
+                    updateButtonStates(true);
+                }
+                catch (err) {
+                    console.warn('Cloud actions unavailable', err);
+                    unavailableMessage = 'Cloud actions unavailable: ' + err.message;
+                    updateButtonStates(false);
+                }
             }
-            catch (err) {
-                console.warn('Cloud actions unavailable', err);
-                unavailableMessage = 'Cloud actions unavailable: ' + err.message;
+            else if (!canUseCloud) {
+                ready = false;
+                if (snapshot.bootstrap.status !== 'firebase-ready') {
+                    unavailableMessage = 'Cloud saves require a configured server connection.';
+                }
+                else if (snapshot.status === 'error') {
+                    unavailableMessage = 'Cloud sign-in failed: ' + (snapshot.error?.message ?? 'Unknown issue');
+                }
+                else {
+                    unavailableMessage = 'Sign in to enable cloud saves.';
+                }
                 updateButtonStates(false);
             }
-        }
-        else if (!canUseCloud) {
-            ready = false;
-            if (snapshot.bootstrap.status !== 'firebase-ready') {
-                unavailableMessage = 'Cloud saves require a configured server connection.';
-            }
-            else if (snapshot.status === 'error') {
-                unavailableMessage = 'Cloud sign-in failed: ' + (snapshot.error?.message ?? 'Unknown issue');
-            }
-            else {
-                unavailableMessage = 'Sign in to enable cloud saves.';
-            }
-            updateButtonStates(false);
-        }
-    });
+        });
+    }
     const listCloudModules = async () => {
         const lists = await Promise.all([repo.listMine(), repo.listShared(), repo.listPublic()]);
         return lists
