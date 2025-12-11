@@ -234,6 +234,7 @@ async function initCloudActions() {
             return;
         const exporter = globals.exportModulePayload;
         if (typeof exporter !== 'function') {
+            setStatus('Unable to export the current module.', 'error');
             alert('Unable to export the current module.');
             return;
         }
@@ -271,6 +272,7 @@ async function initCloudActions() {
             return;
         const mapId = globals.moduleData?.id ?? lastModuleId;
         if (!mapId) {
+            setStatus('Save a draft before publishing.', 'error');
             alert('Save a draft before publishing.');
             return;
         }
@@ -294,12 +296,15 @@ async function initCloudActions() {
             return;
         const mapId = globals.moduleData?.id ?? lastModuleId;
         if (!mapId) {
+            setStatus('Save a draft before sharing.', 'error');
             alert('Save a draft before sharing.');
             return;
         }
         const email = prompt('Invite collaborator by email:');
-        if (!email)
+        if (!email) {
+            setStatus('Share canceled.');
             return;
+        }
         const stopBusy = setBusyState(shareBtn, 'Sharing…');
         setStatus('Recording share invitation…');
         try {
