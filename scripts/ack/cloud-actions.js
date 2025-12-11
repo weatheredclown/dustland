@@ -55,6 +55,21 @@ async function initCloudActions() {
             updateButtonStates(ready);
         };
     };
+    const withTimeout = async (promise, action, timeoutMs = 20000) => {
+        let timeoutId;
+        try {
+            const timeout = new Promise((_, reject) => {
+                timeoutId = window.setTimeout(() => {
+                    reject(new Error(`${action} timed out. Check your connection and try again.`));
+                }, timeoutMs);
+            });
+            return await Promise.race([promise, timeout]);
+        }
+        finally {
+            if (timeoutId !== undefined)
+                window.clearTimeout(timeoutId);
+        }
+    };
     const updateButtonStates = (enabled) => {
         const btns = [saveBtn, loadBtn, publishBtn, shareBtn];
         const message = enabled ? '' : unavailableMessage;
@@ -224,10 +239,14 @@ async function initCloudActions() {
         }
         const stopBusy = setBusyState(saveBtn, 'Saving…');
         setStatus('Saving draft to the cloud…');
+        const warnSlowSave = window.setTimeout(() => {
+            setStatus('Still saving to the cloud… Check your connection and keep this page open.', 'info');
+        }, 8000);
         try {
             const payload = exporter().data;
             const moduleId = globals.moduleData?.id ?? null;
-            const version = await repo.saveDraft(moduleId, payload);
+            const savePromise = repo.saveDraft(moduleId, payload);
+            const version = await withTimeout(savePromise, 'Cloud save', 30000);
             if (!globals.moduleData)
                 globals.moduleData = {};
             globals.moduleData.id = version.moduleId;
@@ -240,6 +259,7 @@ async function initCloudActions() {
             alert('Cloud save failed: ' + message);
         }
         finally {
+            window.clearTimeout(warnSlowSave);
             stopBusy();
         }
     });
