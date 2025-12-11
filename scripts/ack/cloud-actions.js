@@ -83,6 +83,7 @@ async function initCloudActions() {
     const requireReady = () => {
         if (ready)
             return true;
+        setStatus(unavailableMessage, 'error');
         alert(unavailableMessage);
         return false;
     };
@@ -93,6 +94,7 @@ async function initCloudActions() {
     catch (err) {
         console.warn('Cloud actions unavailable', err);
         unavailableMessage = 'Cloud actions unavailable: ' + err.message;
+        setStatus(unavailableMessage, 'error');
         updateButtonStates(false);
         bootstrapFailed = true;
     }
@@ -109,6 +111,7 @@ async function initCloudActions() {
                 catch (err) {
                     console.warn('Cloud actions unavailable', err);
                     unavailableMessage = 'Cloud actions unavailable: ' + err.message;
+                    setStatus(unavailableMessage, 'error');
                     updateButtonStates(false);
                 }
             }
@@ -126,6 +129,9 @@ async function initCloudActions() {
                 }
                 else {
                     unavailableMessage = 'Sign in to enable cloud saves.';
+                }
+                if (snapshot.status === 'error') {
+                    setStatus(unavailableMessage, 'error');
                 }
                 updateButtonStates(false);
             }

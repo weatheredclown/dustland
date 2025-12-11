@@ -91,6 +91,7 @@ async function initCloudActions(): Promise<void> {
 
   const requireReady = (): boolean => {
     if (ready) return true;
+    setStatus(unavailableMessage, 'error');
     alert(unavailableMessage);
     return false;
   };
@@ -102,6 +103,7 @@ async function initCloudActions(): Promise<void> {
   } catch (err) {
     console.warn('Cloud actions unavailable', err);
     unavailableMessage = 'Cloud actions unavailable: ' + (err as Error).message;
+    setStatus(unavailableMessage, 'error');
     updateButtonStates(false);
     bootstrapFailed = true;
   }
@@ -118,6 +120,7 @@ async function initCloudActions(): Promise<void> {
         } catch (err) {
           console.warn('Cloud actions unavailable', err);
           unavailableMessage = 'Cloud actions unavailable: ' + (err as Error).message;
+          setStatus(unavailableMessage, 'error');
           updateButtonStates(false);
         }
       } else if (!canUseCloud) {
@@ -132,6 +135,9 @@ async function initCloudActions(): Promise<void> {
           unavailableMessage = 'Cloud sign-in failed: ' + (snapshot.error?.message ?? 'Unknown issue');
         } else {
           unavailableMessage = 'Sign in to enable cloud saves.';
+        }
+        if (snapshot.status === 'error') {
+          setStatus(unavailableMessage, 'error');
         }
         updateButtonStates(false);
       }
