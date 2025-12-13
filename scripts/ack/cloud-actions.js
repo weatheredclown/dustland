@@ -15,6 +15,7 @@ async function initCloudActions() {
     let ready = false;
     let lastUserId = null;
     let lastModuleId = globals.moduleData?.id ?? null;
+    let lastRequest = null;
     let unavailableMessage = 'Cloud saves unavailable. Sign in to enable them.';
     let bootstrapFailed = false;
     let serverConfigWarningLogged = false;
@@ -70,6 +71,12 @@ async function initCloudActions() {
                 window.clearTimeout(timeoutId);
         }
     };
+    const runCloudRequest = async (label, promiseFactory, timeoutMs) => {
+        lastRequest = label;
+        const promise = promiseFactory();
+        return timeoutMs === undefined ? await promise : await withTimeout(promise, label, timeoutMs);
+    };
+    const formatWithLastRequest = (message) => lastRequest ? `${message} (last request: ${lastRequest})` : message;
     const updateButtonStates = (enabled) => {
         const btns = [saveBtn, loadBtn, publishBtn, shareBtn];
         const message = enabled ? '' : unavailableMessage;
@@ -153,7 +160,7 @@ async function initCloudActions() {
         });
     }
     const listCloudModules = async () => {
-        const lists = await Promise.all([repo.listMine(), repo.listShared(), repo.listPublic()]);
+        const lists = await runCloudRequest('fetching available cloud modules (mine/shared/public)', () => Promise.all([repo.listMine(), repo.listShared(), repo.listPublic()]));
         return lists
             .flat()
             .sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
@@ -184,7 +191,8 @@ async function initCloudActions() {
             return modules[index - 1];
         }
         catch (err) {
-            alert('Unable to list cloud modules: ' + err.message);
+            const message = formatWithLastRequest(err.message || 'Unknown issue');
+            alert('Unable to list cloud modules: ' + message);
             return null;
         }
     };
@@ -199,7 +207,7 @@ async function initCloudActions() {
                 setStatus('Cloud load canceled.');
                 return;
             }
-            const version = await repo.loadVersion(target.id);
+            const version = await runCloudRequest('loading module version from Firestore', () => repo.loadVersion(target.id));
             if (!version) {
                 setStatus('No saved version found for that module.', 'error');
                 alert('No saved version found for that module.');
@@ -221,7 +229,7 @@ async function initCloudActions() {
             setStatus('Loaded cloud module: ' + (target.title || target.id), 'success');
         }
         catch (err) {
-            const message = err.message || 'Unknown issue';
+            const message = formatWithLastRequest(err.message || 'Unknown issue');
             setStatus('Cloud load failed: ' + message, 'error');
             alert('Cloud load failed: ' + message);
         }
@@ -247,7 +255,7 @@ async function initCloudActions() {
             const payload = exporter().data;
             const moduleId = globals.moduleData?.id ?? null;
             const savePromise = repo.saveDraft(moduleId, payload);
-            const version = await withTimeout(savePromise, 'Cloud save', 30000);
+            const version = await runCloudRequest('saving draft to Firestore', () => withTimeout(savePromise, 'Cloud save', 30000));
             if (!globals.moduleData)
                 globals.moduleData = {};
             globals.moduleData.id = version.moduleId;
@@ -255,7 +263,7 @@ async function initCloudActions() {
             setStatus('Draft saved to the cloud.', 'success');
         }
         catch (err) {
-            const message = err.message || 'Unknown issue';
+            const message = formatWithLastRequest(err.message || 'Unknown issue');
             setStatus('Cloud save failed: ' + message, 'error');
             alert('Cloud save failed: ' + message);
         }
@@ -279,11 +287,11 @@ async function initCloudActions() {
         const stopBusy = setBusyState(publishBtn, 'Publishing…');
         setStatus('Publishing module to the cloud…');
         try {
-            await repo.publish(mapId);
+            await runCloudRequest('publishing module to cloud', () => repo.publish(mapId));
             setStatus('Module published.', 'success');
         }
         catch (err) {
-            const message = err.message || 'Unknown issue';
+            const message = formatWithLastRequest(err.message || 'Unknown issue');
             setStatus('Publish failed: ' + message, 'error');
             alert('Publish failed: ' + message);
         }
@@ -308,11 +316,11 @@ async function initCloudActions() {
         const stopBusy = setBusyState(shareBtn, 'Sharing…');
         setStatus('Recording share invitation…');
         try {
-            await repo.share?.(mapId, email.trim(), 'editor');
+            await runCloudRequest('recording share invitation', () => repo.share?.(mapId, email.trim(), 'editor') ?? Promise.resolve());
             setStatus('Share invitation recorded.', 'success');
         }
         catch (err) {
-            const message = err.message || 'Unknown issue';
+            const message = formatWithLastRequest(err.message || 'Unknown issue');
             setStatus('Share failed: ' + message, 'error');
             alert('Share failed: ' + message);
         }
