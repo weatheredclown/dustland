@@ -125,8 +125,6 @@ export class FirestoreModuleRepository {
         const now = Date.now();
         const createdBy = this.session?.user?.uid ?? 'anonymous';
         const ownerId = this.session?.user?.uid ?? 'anonymous';
-        const versionRef = doc(this.db, 'mapVersions', `${mapId}_${versionId}`);
-        await setDoc(versionRef, { moduleId: mapId, versionId, payload, createdAt: now, createdBy });
         const mapRef = doc(this.db, 'maps', mapId);
         await setDoc(mapRef, {
             ownerId,
@@ -136,6 +134,8 @@ export class FirestoreModuleRepository {
             title: payload.name ?? '',
             summary: payload.summary ?? '',
         }, { merge: true });
+        const versionRef = doc(this.db, 'mapVersions', `${mapId}_${versionId}`);
+        await setDoc(versionRef, { moduleId: mapId, versionId, payload, createdAt: now, createdBy });
         return { moduleId: mapId, versionId, payload, createdAt: now, createdBy };
     }
     async publish(moduleId) {
