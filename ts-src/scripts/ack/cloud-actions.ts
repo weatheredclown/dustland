@@ -20,7 +20,7 @@ async function initCloudActions(): Promise<void> {
 
   const globals = globalThis as AckGlobals;
   const repo = new FirestoreModuleRepository();
-  const session = ServerSession.get();
+  let session: ServerSession | null = null;
   let ready = false;
   let lastUserId: string | null = null;
   let lastModuleId: string | null = globals.moduleData?.id ?? null;
@@ -114,6 +114,7 @@ async function initCloudActions(): Promise<void> {
 
   try {
     await bootstrapHostedFirebase();
+    session = ServerSession.get();
   } catch (err) {
     console.warn('Cloud actions unavailable', err);
     unavailableMessage = 'Cloud actions unavailable: ' + (err as Error).message;
@@ -122,7 +123,7 @@ async function initCloudActions(): Promise<void> {
     bootstrapFailed = true;
   }
 
-  if (!bootstrapFailed) {
+  if (!bootstrapFailed && session) {
     session.subscribe(async snapshot => {
       const canUseCloud = snapshot.status === 'authenticated' && snapshot.bootstrap.status === 'firebase-ready';
       lastUserId = snapshot.user?.uid ?? null;
