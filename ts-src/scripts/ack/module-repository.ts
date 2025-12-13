@@ -182,8 +182,6 @@ export class FirestoreModuleRepository implements ModuleRepository {
     const now = Date.now();
     const createdBy = this.session?.user?.uid ?? 'anonymous';
     const ownerId = this.session?.user?.uid ?? 'anonymous';
-    const versionRef = doc(this.db, 'mapVersions', `${mapId}_${versionId}`);
-    await setDoc(versionRef, { moduleId: mapId, versionId, payload, createdAt: now, createdBy });
     const mapRef = doc(this.db, 'maps', mapId);
     await setDoc(
       mapRef,
@@ -197,6 +195,8 @@ export class FirestoreModuleRepository implements ModuleRepository {
       },
       { merge: true },
     );
+    const versionRef = doc(this.db, 'mapVersions', `${mapId}_${versionId}`);
+    await setDoc(versionRef, { moduleId: mapId, versionId, payload, createdAt: now, createdBy });
     return { moduleId: mapId, versionId, payload, createdAt: now, createdBy };
   }
 
