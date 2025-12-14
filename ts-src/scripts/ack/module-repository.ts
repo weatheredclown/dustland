@@ -176,13 +176,25 @@ export class FirestoreModuleRepository implements ModuleRepository {
 
   async saveDraft(moduleId: string | null, payload: unknown): Promise<ModuleVersion> {
     if (!this.db) throw new Error('Firestore is not initialized.');
-    const { doc, setDoc } = await loadFirebaseModule<typeof import('firebase/firestore')>('firebase-firestore');
+    const userId = this.session?.user?.uid;
+    if (!userId) throw new Error('Sign in before saving to the cloud.');
+    const { doc, getDoc, setDoc } = await loadFirebaseModule<typeof import('firebase/firestore')>('firebase-firestore');
     const mapId = moduleId ?? createId('map');
     const versionId = createId('version');
     const now = Date.now();
     const createdBy = this.session?.user?.uid ?? 'anonymous';
-    const ownerId = this.session?.user?.uid ?? 'anonymous';
     const mapRef = doc(this.db, 'maps', mapId);
+    const existingMap = moduleId ? await getDoc(mapRef) : null;
+    const existingOwnerId = existingMap?.exists() ? ((existingMap.data() as FirestoreModuleDoc).ownerId ?? null) : null;
+    if (moduleId && existingMap?.exists()) {
+      const canEdit = await this.hasEditAccess(mapId, existingOwnerId);
+      if (!canEdit) {
+        throw new Error(
+          'You do not have edit access to this module. Ask the owner to share edit access before saving.',
+        );
+      }
+    }
+    const ownerId = existingOwnerId ?? userId;
     const mapPayload = {
       ownerId,
       visibility: 'private',
@@ -206,6 +218,24 @@ export class FirestoreModuleRepository implements ModuleRepository {
       () => setDoc(versionRef, versionPayload),
     );
     return { moduleId: mapId, versionId, payload, createdAt: now, createdBy };
+  }
+
+  private async hasEditAccess(mapId: string, ownerId: string | null): Promise<boolean> {
+    const userId = this.session?.user?.uid;
+    if (!userId) return false;
+    if (ownerId && ownerId === userId) return true;
+    if (!this.db) return false;
+    try {
+      const { doc, getDoc } = await loadFirebaseModule<typeof import('firebase/firestore')>('firebase-firestore');
+      const shareRef = doc(this.db, 'shares', `${mapId}_${userId}`);
+      const shareSnap = await getDoc(shareRef);
+      if (!shareSnap.exists()) return false;
+      const role = (shareSnap.get('role') as string | null) ?? null;
+      return role === 'editor';
+    } catch (err) {
+      if (this.isPermissionError(err)) return false;
+      throw err;
+    }
   }
 
   async publish(moduleId: string): Promise<void> {
