@@ -183,20 +183,28 @@ export class FirestoreModuleRepository implements ModuleRepository {
     const createdBy = this.session?.user?.uid ?? 'anonymous';
     const ownerId = this.session?.user?.uid ?? 'anonymous';
     const mapRef = doc(this.db, 'maps', mapId);
-    await setDoc(
-      mapRef,
-      {
-        ownerId,
-        visibility: 'private',
-        updatedAt: now,
-        latestVersionId: versionId,
-        title: (payload as { name?: string }).name ?? '',
-        summary: (payload as { summary?: string }).summary ?? '',
-      },
-      { merge: true },
+    const mapPayload = {
+      ownerId,
+      visibility: 'private',
+      updatedAt: now,
+      latestVersionId: versionId,
+      title: (payload as { name?: string }).name ?? '',
+      summary: (payload as { summary?: string }).summary ?? '',
+    };
+    await this.writeWithDetail(
+      'saving draft metadata',
+      `maps/${mapId}`,
+      mapPayload,
+      () => setDoc(mapRef, mapPayload, { merge: true }),
     );
     const versionRef = doc(this.db, 'mapVersions', `${mapId}_${versionId}`);
-    await setDoc(versionRef, { moduleId: mapId, versionId, payload, createdAt: now, createdBy });
+    const versionPayload = { moduleId: mapId, versionId, payload, createdAt: now, createdBy };
+    await this.writeWithDetail(
+      'saving draft version',
+      `mapVersions/${mapId}_${versionId}`,
+      versionPayload,
+      () => setDoc(versionRef, versionPayload),
+    );
     return { moduleId: mapId, versionId, payload, createdAt: now, createdBy };
   }
 
@@ -208,18 +216,26 @@ export class FirestoreModuleRepository implements ModuleRepository {
     const now = Date.now();
     const data = (mapSnap.exists() ? mapSnap.data() : null) as FirestoreModuleDoc | null;
     const publishedVersionId = data?.latestVersionId ?? data?.publishedVersionId ?? null;
-    await setDoc(mapRef, { visibility: 'public', publishedVersionId, updatedAt: now }, { merge: true });
+    const publishPayload = { visibility: 'public', publishedVersionId, updatedAt: now };
+    await this.writeWithDetail(
+      'publishing module',
+      `maps/${moduleId}`,
+      publishPayload,
+      () => setDoc(mapRef, publishPayload, { merge: true }),
+    );
     const listingRef = doc(this.db, 'publicListings', moduleId);
-    await setDoc(
-      listingRef,
-      {
-        title: data?.title ?? '',
-        summary: data?.summary ?? '',
-        ownerId: data?.ownerId ?? this.session?.user?.uid ?? 'anonymous',
-        updatedAt: now,
-        publishedVersionId,
-      },
-      { merge: true },
+    const listingPayload = {
+      title: data?.title ?? '',
+      summary: data?.summary ?? '',
+      ownerId: data?.ownerId ?? this.session?.user?.uid ?? 'anonymous',
+      updatedAt: now,
+      publishedVersionId,
+    };
+    await this.writeWithDetail(
+      'publishing listing',
+      `publicListings/${moduleId}`,
+      listingPayload,
+      () => setDoc(listingRef, listingPayload, { merge: true }),
     );
   }
 
@@ -233,17 +249,71 @@ export class FirestoreModuleRepository implements ModuleRepository {
     const now = Date.now();
     const shareId = `${moduleId}_${userId}`;
     const shareRef = doc(this.db, 'shares', shareId);
-    await setDoc(
-      shareRef,
-      {
-        mapId: moduleId,
-        userId,
-        role,
-        addedAt: now,
-        addedBy: this.session?.user?.uid ?? 'anonymous',
-      },
-      { merge: true },
+    const sharePayload = {
+      mapId: moduleId,
+      userId,
+      role,
+      addedAt: now,
+      addedBy: this.session?.user?.uid ?? 'anonymous',
+    };
+    await this.writeWithDetail(
+      'sharing module',
+      `shares/${shareId}`,
+      sharePayload,
+      () => setDoc(shareRef, sharePayload, { merge: true }),
     );
+  }
+
+  private getActorDescription(): string {
+    const userId = this.session?.user?.uid ?? 'anonymous';
+    const email = this.session?.user?.email ?? 'unknown email';
+    return `${userId} (${email})`;
+  }
+
+  private isPermissionError(err: unknown): boolean {
+    const code = (err as { code?: string }).code;
+    if (code === 'permission-denied' || code === 'PERMISSION_DENIED') {
+      return true;
+    }
+    const message = (err as { message?: string }).message?.toLowerCase();
+    return message?.includes('missing or insufficient permissions') ?? false;
+  }
+
+  private formatPayloadSummary(payload: unknown): string {
+    if (!payload || typeof payload !== 'object') {
+      return String(payload);
+    }
+    const keys = Object.keys(payload as Record<string, unknown>);
+    if (keys.length === 0) return 'empty object';
+    const preview: Record<string, unknown> = {};
+    for (const key of keys) {
+      preview[key] = (payload as Record<string, unknown>)[key];
+      if (Object.keys(preview).length >= 5) break;
+    }
+    return JSON.stringify(preview);
+  }
+
+  private async writeWithDetail<T>(
+    operation: string,
+    refPath: string,
+    payload: unknown,
+    writer: () => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await writer();
+    } catch (err) {
+      if (this.isPermissionError(err)) {
+        const actor = this.getActorDescription();
+        const payloadSummary = this.formatPayloadSummary(payload);
+        const errorMessage = (err as { message?: string }).message ?? String(err);
+        const errorCode = (err as { code?: string }).code ?? 'unknown-code';
+        throw new Error(
+          `Missing or insufficient privileges while ${operation} at ${refPath} as ${actor}. ` +
+            `Payload: ${payloadSummary}. Firebase error ${errorCode}: ${errorMessage}`,
+        );
+      }
+      throw err;
+    }
   }
 
   private async resolveUserByEmail(email: string): Promise<string | null> {
