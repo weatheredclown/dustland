@@ -19,14 +19,14 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-      FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
-      FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-      FIREBASE_DEPLOY_TOKEN: ${{ secrets.FIREBASE_DEPLOY_TOKEN }}
-      FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
-      FIREBASE_MESSAGE_SENDER_ID: ${{ secrets.FIREBASE_MESSAGE_SENDER_ID }}
-      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-      FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+      FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY || '' }}
+      FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID || '' }}
+      FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN || '' }}
+      FIREBASE_DEPLOY_TOKEN: ${{ secrets.FIREBASE_DEPLOY_TOKEN || '' }}
+      FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID || '' }}
+      FIREBASE_MESSAGE_SENDER_ID: ${{ secrets.FIREBASE_MESSAGE_SENDER_ID || '' }}
+      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID || '' }}
+      FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -55,12 +55,12 @@ jobs:
           }
           EOF
       - name: Deploy Firestore rules
-        if: ${{ env.FIREBASE_DEPLOY_TOKEN != '' }}
         run: |
+          if [ -z "$FIREBASE_DEPLOY_TOKEN" ]; then
+            echo "Skipping Firestore rules deploy because FIREBASE_DEPLOY_TOKEN is not set."
+            exit 0
+          fi
           firebase deploy --only firestore:rules --project "$FIREBASE_PROJECT_ID" --token "$FIREBASE_DEPLOY_TOKEN" --non-interactive
-      - name: Skip Firestore deploy (token missing)
-        if: ${{ env.FIREBASE_DEPLOY_TOKEN == '' }}
-        run: echo "Skipping Firestore rules deploy because FIREBASE_DEPLOY_TOKEN is not set."
       - name: Bump version
         run: node scripts/supporting/version-bump.js
       - name: Setup Pages
