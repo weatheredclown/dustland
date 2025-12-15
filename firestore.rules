@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function mapIdFromVersion(docId) {
+      return docId.split('_')[0];
+    }
+
+    function mapRef(mapId) {
+      return get(/databases/$(database)/documents/maps/$(mapId));
+    }
+
+    function isOwner(mapDoc) {
+      return mapDoc.exists() && isSignedIn() && mapDoc.data.ownerId == request.auth.uid;
+    }
+
+    function shareRef(mapId, uid) {
+      return get(/databases/$(database)/documents/shares/$(mapId + '_' + uid));
+    }
+
+    function shareRole(mapId) {
+      let share = shareRef(mapId, request.auth.uid);
+      return share.exists() ? share.data.role : null;
+    }
+
+    function canReadMap(mapDoc, mapId) {
+      return mapDoc.exists()
+        && (mapDoc.data.visibility == 'public'
+          || isOwner(mapDoc)
+          || (isSignedIn() && shareRef(mapId, request.auth.uid).exists()));
+    }
+
+    function canEditMap(mapDoc, mapId) {
+      return canReadMap(mapDoc, mapId)
+        && (isOwner(mapDoc) || shareRole(mapId) == 'editor');
+    }
+
+    match /maps/{mapId} {
+      allow read: if canReadMap(resource, mapId);
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if canEditMap(resource, mapId);
+      allow delete: if false;
+    }
+
+    match /mapVersions/{docId} {
+      // Use stored moduleId to identify map for permissions, avoiding fragile ID parsing
+      allow read: if canReadMap(mapRef(resource.data.moduleId), resource.data.moduleId);
+
+      // Enforce consistency between docId and payload, and check permissions on the referenced map
+      allow create: if isSignedIn()
+        && request.resource.data.moduleId + '_' + request.resource.data.versionId == docId
+        && canEditMap(mapRef(request.resource.data.moduleId), request.resource.data.moduleId);
+
+      allow update, delete: if false; // versions stay immutable
+    }
+
+    match /shares/{docId} {
+      // Use stored mapId/userId for permissions to avoid ID parsing issues
+      allow read: if isSignedIn()
+        && (request.auth.uid == resource.data.userId || isOwner(mapRef(resource.data.mapId)));
+
+      allow create: if isSignedIn()
+        && request.resource.data.mapId + '_' + request.resource.data.userId == docId
+        && isOwner(mapRef(request.resource.data.mapId));
+
+      allow delete: if isSignedIn()
+        && (request.auth.uid == resource.data.userId || isOwner(mapRef(resource.data.mapId)));
+
+      allow update: if false;
+    }
+
+    match /publicListings/{mapId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isOwner(mapRef(mapId));
+    }
+
+    match /users/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+  }
+}

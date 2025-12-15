@@ -389,6 +389,7 @@ function createId(prefix: string): string {
   if (uuid) {
     return uuid;
   }
+  // Use hyphen instead of underscore to avoid ambiguity when splitting IDs in Firestore rules
   const random = Math.random().toString(36).slice(2, 10);
-  return `${prefix}_${random}`;
+  return `${prefix}-${random}`;
 }
