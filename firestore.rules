@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function mapIdFromVersion(docId) {
+      return docId.split('_')[0];
+    }
+
+    function getMap(mapId) {
+      return get(/databases/$(database)/documents/maps/$(mapId));
+    }
+
+    function mapExists(mapId) {
+      return exists(/databases/$(database)/documents/maps/$(mapId));
+    }
+
+    function isOwner(mapDoc) {
+      // If mapDoc was fetched via get(), the document data is available.
+      // We rely on the caller to ensure the map exists or handle the error from get().
+      return isSignedIn() && mapDoc.data.ownerId == request.auth.uid;
+    }
+
+    function hasShare(mapId, uid) {
+      return exists(/databases/$(database)/documents/shares/$(mapId + '_' + uid));
+    }
+
+    function getShare(mapId, uid) {
+      return get(/databases/$(database)/documents/shares/$(mapId + '_' + uid));
+    }
+
+    function getShareRole(mapId) {
+      return hasShare(mapId, request.auth.uid) ? getShare(mapId, request.auth.uid).data.role : null;
+    }
+
+    function canReadMap(mapDoc, mapId) {
+      // mapDoc is passed from getMap() which errors if map doesn't exist.
+      // So if we are here, map exists.
+      return mapDoc.data.visibility == 'public'
+        || isOwner(mapDoc)
+        || (isSignedIn() && hasShare(mapId, request.auth.uid));
+    }
+
+    function canEditMap(mapDoc, mapId) {
+      return canReadMap(mapDoc, mapId)
+        && (isOwner(mapDoc) || getShareRole(mapId) == 'editor');
+    }
+
+    match /maps/{mapId} {
+      // 'resource' is the document being read/updated. It exists.
+      allow read: if canReadMap(resource, mapId);
+
+      // Creating a new map. request.resource is the new document.
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+
+      // Updating an existing map.
+      allow update: if canEditMap(resource, mapId);
+
+      allow delete: if false;
+    }
+
+    match /mapVersions/{docId} {
+      // mapId is derived from docId.
+      // We fetch the parent map document. If it doesn't exist, getMap errors (Deny).
+      allow read: if canReadMap(getMap(mapIdFromVersion(docId)), mapIdFromVersion(docId));
+
+      // When creating a version, the map MUST exist.
+      allow create: if isSignedIn()
+        && canEditMap(getMap(mapIdFromVersion(docId)), mapIdFromVersion(docId));
+
+      allow update, delete: if false; // versions stay immutable
+    }
+
+    match /shares/{docId} {
+      function shareMapId() { return docId.split('_')[0]; }
+
+      // Use getMap() directly. If map missing, rule fails (Deny).
+      allow read: if isSignedIn()
+        && (request.auth.uid == resource.data.userId || isOwner(getMap(shareMapId())));
+
+      allow create: if isSignedIn()
+        && request.resource.data.mapId == shareMapId()
+        && isOwner(getMap(shareMapId()));
+
+      allow delete: if isSignedIn()
+        && (request.auth.uid == resource.data.userId || isOwner(getMap(shareMapId())));
+
+      allow update: if false;
+    }
+
+    match /publicListings/{mapId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isOwner(getMap(mapId));
+    }
+
+    match /users/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+  }
+}
