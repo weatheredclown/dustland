@@ -2193,6 +2193,7 @@ input[type="range"] {
         bottom: 20px;
         z-index: 9999;
         display: flex;
+        flex-wrap: wrap;
         gap: 8px;
         align-items: center;
         background: rgba(11, 13, 11, .92);
@@ -2201,6 +2202,7 @@ input[type="range"] {
         padding: 8px 12px;
         box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
         backdrop-filter: blur(2px);
+        max-width: min(620px, calc(100vw - 24px));
     }
 
     .quick-actions__cloud {
@@ -2250,7 +2252,11 @@ input[type="range"] {
     .quick-actions__status {
         font-size: 0.75rem;
         color: #b7c8b7;
-        white-space: nowrap;
+        white-space: normal;
+        word-break: break-word;
+        flex: 1 0 100%;
+        order: 10;
+        margin-top: 2px;
     }
 
     .quick-actions__status[data-state="success"] {
