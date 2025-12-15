@@ -60,7 +60,14 @@ service cloud.firestore {
         && versionMapId(docId) + '_' + request.resource.data.versionId == docId
         && canEditMap(mapRef(versionMapId(docId)), versionMapId(docId));
 
-      allow update, delete: if false; // versions stay immutable
+      // Permit re-saving an existing version when metadata is unchanged
+      allow update: if isSignedIn()
+        && request.resource.data.moduleId == resource.data.moduleId
+        && request.resource.data.versionId == resource.data.versionId
+        && request.resource.data.moduleId + '_' + request.resource.data.versionId == docId
+        && canEditMap(mapRef(resource.data.moduleId), resource.data.moduleId);
+
+      allow delete: if false;
     }
 
     match /shares/{docId} {
