@@ -148,7 +148,15 @@ export class FirestoreModuleRepository {
         await this.writeWithDetail('saving draft metadata', `maps/${mapId}`, mapPayload, () => setDoc(mapRef, mapPayload, { merge: true }));
         const versionRef = doc(this.db, 'mapVersions', `${mapId}_${versionId}`);
         const versionPayload = { moduleId: mapId, versionId, payload, createdAt: now, createdBy };
-        await this.writeWithDetail('saving draft version', `mapVersions/${mapId}_${versionId}`, versionPayload, () => setDoc(versionRef, versionPayload));
+        try {
+            await this.writeWithDetail('saving draft version', `mapVersions/${mapId}_${versionId}`, versionPayload, () => setDoc(versionRef, versionPayload));
+        }
+        catch (err) {
+            if (this.isPermissionError(err)) {
+                throw new Error('You do not have edit access to this module. Ask the owner to share editor access or duplicate the module to save your own copy.');
+            }
+            throw err;
+        }
         return { moduleId: mapId, versionId, payload, createdAt: now, createdBy };
     }
     async hasEditAccess(mapId, ownerId) {
