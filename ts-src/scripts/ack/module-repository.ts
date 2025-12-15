@@ -219,7 +219,7 @@ export class FirestoreModuleRepository implements ModuleRepository {
         () => setDoc(versionRef, versionPayload),
       );
     } catch (err) {
-      if (this.isPermissionError(err)) {
+      if (isPermissionError(err)) {
         throw new Error(
           'You do not have edit access to this module. Ask the owner to share editor access or duplicate the module to save your own copy.',
         );
@@ -242,7 +242,7 @@ export class FirestoreModuleRepository implements ModuleRepository {
       const role = (shareSnap.get('role') as string | null) ?? null;
       return role === 'editor';
     } catch (err) {
-      if (this.isPermissionError(err)) return false;
+      if (isPermissionError(err)) return false;
       throw err;
     }
   }
@@ -309,15 +309,6 @@ export class FirestoreModuleRepository implements ModuleRepository {
     return `${userId} (${email})`;
   }
 
-  private isPermissionError(err: unknown): boolean {
-    const code = (err as { code?: string }).code;
-    if (code === 'permission-denied' || code === 'PERMISSION_DENIED') {
-      return true;
-    }
-    const message = (err as { message?: string }).message?.toLowerCase();
-    return message?.includes('missing or insufficient permissions') ?? false;
-  }
-
   private formatPayloadSummary(payload: unknown): string {
     if (!payload || typeof payload !== 'object') {
       return String(payload);
@@ -341,7 +332,7 @@ export class FirestoreModuleRepository implements ModuleRepository {
     try {
       return await writer();
     } catch (err) {
-      if (this.isPermissionError(err)) {
+      if (isPermissionError(err)) {
         const actor = this.getActorDescription();
         const payloadSummary = this.formatPayloadSummary(payload);
         const errorMessage = (err as { message?: string }).message ?? String(err);
@@ -401,4 +392,13 @@ function createId(prefix: string): string {
   // Use hyphen instead of underscore to avoid ambiguity when splitting IDs in Firestore rules
   const random = Math.random().toString(36).slice(2, 10);
   return `${prefix}-${random}`;
+}
+
+export function isPermissionError(err: unknown): boolean {
+  const code = (err as { code?: string }).code;
+  if (code === 'permission-denied' || code === 'PERMISSION_DENIED') {
+    return true;
+  }
+  const message = (err as { message?: string }).message?.toLowerCase();
+  return message?.includes('missing or insufficient permissions') ?? false;
 }

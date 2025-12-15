@@ -1,5 +1,5 @@
 import { bootstrapHostedFirebase } from '../hosting/firebase-bootstrap.js';
-import { FirestoreModuleRepository, type ModuleSummary } from './module-repository.js';
+import { FirestoreModuleRepository, type ModuleSummary, isPermissionError } from './module-repository.js';
 import { ServerSession } from './server-session.js';
 
 type ExportFn = () => { data: unknown };
@@ -249,8 +249,20 @@ async function initCloudActions(): Promise<void> {
     try {
       const payload = exporter().data;
       const moduleId = globals.moduleData?.id ?? null;
-      const savePromise = repo.saveDraft(moduleId, payload);
-      const version = await withTimeout(savePromise, 'Cloud save', 30000);
+      let version;
+      try {
+        const savePromise = repo.saveDraft(moduleId, payload);
+        version = await withTimeout(savePromise, 'Cloud save', 30000);
+      } catch (err) {
+        if (!moduleId || !isPermissionError(err)) {
+          throw err;
+        }
+        setStatus('No edit access to the original module. Saving a copy instead…');
+        if (globals.moduleData) delete globals.moduleData.id;
+        lastModuleId = null;
+        const savePromise = repo.saveDraft(null, payload);
+        version = await withTimeout(savePromise, 'Cloud save', 30000);
+      }
       if (!globals.moduleData) globals.moduleData = {};
       globals.moduleData.id = version.moduleId;
       lastModuleId = version.moduleId;

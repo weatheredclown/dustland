@@ -152,7 +152,7 @@ export class FirestoreModuleRepository {
             await this.writeWithDetail('saving draft version', `mapVersions/${mapId}_${versionId}`, versionPayload, () => setDoc(versionRef, versionPayload));
         }
         catch (err) {
-            if (this.isPermissionError(err)) {
+            if (isPermissionError(err)) {
                 throw new Error('You do not have edit access to this module. Ask the owner to share editor access or duplicate the module to save your own copy.');
             }
             throw err;
@@ -177,7 +177,7 @@ export class FirestoreModuleRepository {
             return role === 'editor';
         }
         catch (err) {
-            if (this.isPermissionError(err))
+            if (isPermissionError(err))
                 return false;
             throw err;
         }
@@ -228,14 +228,6 @@ export class FirestoreModuleRepository {
         const email = this.session?.user?.email ?? 'unknown email';
         return `${userId} (${email})`;
     }
-    isPermissionError(err) {
-        const code = err.code;
-        if (code === 'permission-denied' || code === 'PERMISSION_DENIED') {
-            return true;
-        }
-        const message = err.message?.toLowerCase();
-        return message?.includes('missing or insufficient permissions') ?? false;
-    }
     formatPayloadSummary(payload) {
         if (!payload || typeof payload !== 'object') {
             return String(payload);
@@ -256,7 +248,7 @@ export class FirestoreModuleRepository {
             return await writer();
         }
         catch (err) {
-            if (this.isPermissionError(err)) {
+            if (isPermissionError(err)) {
                 const actor = this.getActorDescription();
                 const payloadSummary = this.formatPayloadSummary(payload);
                 const errorMessage = err.message ?? String(err);
@@ -311,4 +303,12 @@ function createId(prefix) {
     // Use hyphen instead of underscore to avoid ambiguity when splitting IDs in Firestore rules
     const random = Math.random().toString(36).slice(2, 10);
     return `${prefix}-${random}`;
+}
+export function isPermissionError(err) {
+    const code = err.code;
+    if (code === 'permission-denied' || code === 'PERMISSION_DENIED') {
+        return true;
+    }
+    const message = err.message?.toLowerCase();
+    return message?.includes('missing or insufficient permissions') ?? false;
 }
