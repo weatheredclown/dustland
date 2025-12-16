@@ -197,7 +197,31 @@ async function initCloudActions(): Promise<void> {
 
   const listCloudModules = async (allowRetry = true): Promise<ModuleSummary[]> => {
     try {
-      const lists = await Promise.all([repo.listMine(), repo.listShared(), repo.listPublic()]);
+      const results = await Promise.allSettled([repo.listMine(), repo.listShared(), repo.listPublic()]);
+      const mineResult = results[0];
+      const sharedResult = results[1];
+      const publicResult = results[2];
+
+      // If listing my own modules fails, this is critical (likely auth issue)
+      if (mineResult.status === 'rejected') {
+        throw mineResult.reason;
+      }
+
+      const lists: ModuleSummary[][] = [];
+      lists.push(mineResult.value);
+
+      if (sharedResult.status === 'fulfilled') {
+        lists.push(sharedResult.value);
+      } else {
+        console.warn('Unable to list shared modules:', sharedResult.reason);
+      }
+
+      if (publicResult.status === 'fulfilled') {
+        lists.push(publicResult.value);
+      } else {
+        console.warn('Unable to list public modules:', publicResult.reason);
+      }
+
       return lists
         .flat()
         .sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
