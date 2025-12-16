@@ -70,6 +70,13 @@ async function initCloudActions() {
                 window.clearTimeout(timeoutId);
         }
     };
+    const isPermissionError = (err) => {
+        const code = err.code?.toLowerCase?.();
+        if (code === 'permission-denied' || code === 'permission_denied')
+            return true;
+        const message = err.message?.toLowerCase?.() ?? '';
+        return message.includes('missing or insufficient permissions');
+    };
     const updateButtonStates = (enabled) => {
         const btns = [saveBtn, loadBtn, publishBtn, shareBtn];
         const message = enabled ? '' : unavailableMessage;
@@ -154,10 +161,18 @@ async function initCloudActions() {
         });
     }
     const listCloudModules = async () => {
-        const lists = await Promise.all([repo.listMine(), repo.listShared(), repo.listPublic()]);
-        return lists
-            .flat()
-            .sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+        try {
+            const lists = await Promise.all([repo.listMine(), repo.listShared(), repo.listPublic()]);
+            return lists
+                .flat()
+                .sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+        }
+        catch (err) {
+            if (isPermissionError(err)) {
+                throw new Error('Cloud permissions error. Verify your Firebase security rules or sign in and request access to shared modules.');
+            }
+            throw err;
+        }
     };
     const pickCloudModule = async () => {
         try {
