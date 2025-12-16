@@ -79,13 +79,6 @@ async function initCloudActions(): Promise<void> {
     }
   };
 
-  const isPermissionError = (err: unknown): boolean => {
-    const code = (err as { code?: string }).code?.toLowerCase?.();
-    if (code === 'permission-denied' || code === 'permission_denied') return true;
-    const message = (err as { message?: string }).message?.toLowerCase?.() ?? '';
-    return message.includes('missing or insufficient permissions');
-  };
-
   const updateButtonStates = (enabled: boolean): void => {
     const btns = [saveBtn, loadBtn, publishBtn, shareBtn];
     const message = enabled ? '' : unavailableMessage;
