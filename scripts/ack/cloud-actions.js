@@ -162,7 +162,11 @@ async function initCloudActions() {
         }
         catch (err) {
             if (isPermissionError(err)) {
-                throw new Error('Cloud permissions error. Verify your Firebase security rules or sign in and request access to shared modules.');
+                ready = false;
+                unavailableMessage = 'Cloud access requires a fresh sign-in. Sign in again to view cloud modules.';
+                setStatus(unavailableMessage, 'error');
+                updateButtonStates(false);
+                throw new Error(unavailableMessage);
             }
             throw err;
         }
