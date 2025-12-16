@@ -103,6 +103,27 @@ async function initCloudActions() {
         return false;
     };
     updateButtonStates(false);
+    const reinitializeRepo = async () => {
+        if (!session)
+            return false;
+        const snapshot = session.getSnapshot();
+        const canUseCloud = snapshot.status === 'authenticated' && snapshot.bootstrap.status === 'firebase-ready';
+        if (!canUseCloud)
+            return false;
+        try {
+            await repo.init(snapshot);
+            ready = true;
+            updateButtonStates(true);
+            return true;
+        }
+        catch (err) {
+            console.warn('Cloud actions unavailable', err);
+            unavailableMessage = 'Cloud actions unavailable: ' + err.message;
+            setStatus(unavailableMessage, 'error');
+            updateButtonStates(false);
+        }
+        return false;
+    };
     try {
         await bootstrapHostedFirebase();
         session = ServerSession.get();
@@ -153,7 +174,7 @@ async function initCloudActions() {
             }
         });
     }
-    const listCloudModules = async () => {
+    const listCloudModules = async (allowRetry = true) => {
         try {
             const lists = await Promise.all([repo.listMine(), repo.listShared(), repo.listPublic()]);
             return lists
@@ -162,6 +183,10 @@ async function initCloudActions() {
         }
         catch (err) {
             if (isPermissionError(err)) {
+                const refreshed = allowRetry && (await reinitializeRepo());
+                if (refreshed) {
+                    return listCloudModules(false);
+                }
                 ready = false;
                 unavailableMessage = 'Cloud access requires a fresh sign-in. Sign in again to view cloud modules.';
                 setStatus(unavailableMessage, 'error');
