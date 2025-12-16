@@ -228,8 +228,9 @@ async function initCloudActions() {
         try {
             const modules = await listCloudModules();
             if (!modules.length) {
+                setStatus('No cloud modules found. Save or publish one first.', 'error');
                 alert('No cloud modules found. Save or publish one first.');
-                return null;
+                return { module: null, canceled: false };
             }
             const menu = modules
                 .map((m, idx) => {
@@ -241,17 +242,19 @@ async function initCloudActions() {
                 .join('\n');
             const choice = prompt('Load a cloud module by number:\n' + menu);
             if (!choice)
-                return null;
+                return { module: null, canceled: true };
             const index = parseInt(choice, 10);
             if (!Number.isFinite(index) || index < 1 || index > modules.length) {
                 alert('Invalid selection.');
-                return null;
+                return { module: null, canceled: false };
             }
-            return modules[index - 1];
+            return { module: modules[index - 1], canceled: false };
         }
         catch (err) {
-            alert('Unable to list cloud modules: ' + err.message);
-            return null;
+            const message = err.message;
+            setStatus('Unable to list cloud modules: ' + message, 'error');
+            alert('Unable to list cloud modules: ' + message);
+            throw err;
         }
     };
     const loadFromCloud = async () => {
@@ -260,9 +263,10 @@ async function initCloudActions() {
         const stopBusy = setBusyState(loadBtn, 'Loading…');
         setStatus('Fetching cloud modules…');
         try {
-            const target = await pickCloudModule();
+            const { module: target, canceled } = await pickCloudModule();
             if (!target) {
-                setStatus('Cloud load canceled.');
+                if (canceled)
+                    setStatus('Cloud load canceled.');
                 return;
             }
             const version = await repo.loadVersion(target.id);
