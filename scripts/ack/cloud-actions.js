@@ -70,13 +70,6 @@ async function initCloudActions() {
                 window.clearTimeout(timeoutId);
         }
     };
-    const isPermissionError = (err) => {
-        const code = err.code?.toLowerCase?.();
-        if (code === 'permission-denied' || code === 'permission_denied')
-            return true;
-        const message = err.message?.toLowerCase?.() ?? '';
-        return message.includes('missing or insufficient permissions');
-    };
     const updateButtonStates = (enabled) => {
         const btns = [saveBtn, loadBtn, publishBtn, shareBtn];
         const message = enabled ? '' : unavailableMessage;
