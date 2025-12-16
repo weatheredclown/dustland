@@ -1,4 +1,5 @@
 import { bootstrapHostedFirebase } from '../hosting/firebase-bootstrap.js';
+import { FIREBASE_APP_NAME, loadFirebaseApp, loadFirebaseAuth } from './firebase-clients.js';
 import { FirestoreModuleRepository, isPermissionError } from './module-repository.js';
 import { ServerSession } from './server-session.js';
 async function initCloudActions() {
@@ -124,6 +125,24 @@ async function initCloudActions() {
         }
         return false;
     };
+    const refreshAuthToken = async () => {
+        try {
+            const [appModule, authModule] = await Promise.all([loadFirebaseApp(), loadFirebaseAuth()]);
+            const app = appModule.getApps().find(candidate => candidate.name === FIREBASE_APP_NAME);
+            if (!app)
+                return false;
+            const auth = authModule.getAuth(app);
+            const user = auth.currentUser;
+            if (!user)
+                return false;
+            await user.getIdToken(true);
+            return true;
+        }
+        catch (err) {
+            console.warn('Unable to refresh auth token', err);
+            return false;
+        }
+    };
     try {
         await bootstrapHostedFirebase();
         session = ServerSession.get();
@@ -183,7 +202,7 @@ async function initCloudActions() {
         }
         catch (err) {
             if (isPermissionError(err)) {
-                const refreshed = allowRetry && (await reinitializeRepo());
+                const refreshed = allowRetry && (await refreshAuthToken()) && (await reinitializeRepo());
                 if (refreshed) {
                     return listCloudModules(false);
                 }
