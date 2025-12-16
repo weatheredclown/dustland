@@ -123,14 +123,16 @@ export class FirestoreModuleRepository {
         if (!userId)
             throw new Error('Sign in before saving to the cloud.');
         const { doc, getDoc, setDoc } = await loadFirebaseModule('firebase-firestore');
-        const mapId = moduleId ?? createId('map');
+        const sanitizedModuleId = moduleId?.trim();
+        const hasExistingId = Boolean(sanitizedModuleId);
+        const mapId = sanitizedModuleId ?? createId('map');
         const versionId = createId('version');
         const now = Date.now();
         const createdBy = this.session?.user?.uid ?? 'anonymous';
         const mapRef = doc(this.db, 'maps', mapId);
-        const existingMap = moduleId ? await getDoc(mapRef) : null;
+        const existingMap = hasExistingId ? await getDoc(mapRef) : null;
         const existingOwnerId = existingMap?.exists() ? (existingMap.data().ownerId ?? null) : null;
-        if (moduleId && existingMap?.exists()) {
+        if (hasExistingId && existingMap?.exists()) {
             const canEdit = await this.hasEditAccess(mapId, existingOwnerId);
             if (!canEdit) {
                 throw new Error('You do not have edit access to this module. Ask the owner to share edit access before saving.');

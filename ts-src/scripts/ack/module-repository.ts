@@ -179,14 +179,16 @@ export class FirestoreModuleRepository implements ModuleRepository {
     const userId = this.session?.user?.uid;
     if (!userId) throw new Error('Sign in before saving to the cloud.');
     const { doc, getDoc, setDoc } = await loadFirebaseModule<typeof import('firebase/firestore')>('firebase-firestore');
-    const mapId = moduleId ?? createId('map');
+    const sanitizedModuleId = moduleId?.trim();
+    const hasExistingId = Boolean(sanitizedModuleId);
+    const mapId = sanitizedModuleId ?? createId('map');
     const versionId = createId('version');
     const now = Date.now();
     const createdBy = this.session?.user?.uid ?? 'anonymous';
     const mapRef = doc(this.db, 'maps', mapId);
-    const existingMap = moduleId ? await getDoc(mapRef) : null;
+    const existingMap = hasExistingId ? await getDoc(mapRef) : null;
     const existingOwnerId = existingMap?.exists() ? ((existingMap.data() as FirestoreModuleDoc).ownerId ?? null) : null;
-    if (moduleId && existingMap?.exists()) {
+    if (hasExistingId && existingMap?.exists()) {
       const canEdit = await this.hasEditAccess(mapId, existingOwnerId);
       if (!canEdit) {
         throw new Error(
