@@ -211,6 +211,14 @@ async function initCloudActions(): Promise<void> {
         unavailableMessage = 'Cloud access requires a fresh sign-in. Sign in again to view cloud modules.';
         setStatus(unavailableMessage, 'error');
         updateButtonStates(false);
+        if (session) {
+          try {
+            await session.signOut();
+            await session.signIn();
+          } catch (signInErr) {
+            console.warn('Unable to restart sign-in after permission error.', signInErr);
+          }
+        }
         throw new Error(unavailableMessage);
       }
       throw err as Error;
