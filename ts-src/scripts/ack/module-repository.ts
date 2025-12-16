@@ -398,9 +398,16 @@ export class FirestoreModuleRepository implements ModuleRepository {
   ): Promise<FirestoreModuleDoc | null> {
     const { doc, getDoc } = await loadFirebaseModule<typeof import('firebase/firestore')>('firebase-firestore');
     const ref = doc(col, id);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return null;
-    return snap.data() as FirestoreModuleDoc;
+    try {
+      const snap = await getDoc(ref);
+      if (!snap.exists()) return null;
+      return snap.data() as FirestoreModuleDoc;
+    } catch (err) {
+      if (isPermissionError(err)) {
+        return null;
+      }
+      throw err;
+    }
   }
 }
 
@@ -420,5 +427,6 @@ export function isPermissionError(err: unknown): boolean {
     return true;
   }
   const message = (err as { message?: string }).message?.toLowerCase();
-  return message?.includes('missing or insufficient permissions') ?? false;
+  if (message?.includes('missing or insufficient permissions')) return true;
+  return message?.includes('do not have edit access to this module') ?? false;
 }

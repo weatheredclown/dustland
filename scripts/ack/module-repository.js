@@ -306,10 +306,18 @@ export class FirestoreModuleRepository {
     async safeGetDoc(col, id) {
         const { doc, getDoc } = await loadFirebaseModule('firebase-firestore');
         const ref = doc(col, id);
-        const snap = await getDoc(ref);
-        if (!snap.exists())
-            return null;
-        return snap.data();
+        try {
+            const snap = await getDoc(ref);
+            if (!snap.exists())
+                return null;
+            return snap.data();
+        }
+        catch (err) {
+            if (isPermissionError(err)) {
+                return null;
+            }
+            throw err;
+        }
     }
 }
 function createId(prefix) {
@@ -327,5 +335,7 @@ export function isPermissionError(err) {
         return true;
     }
     const message = err.message?.toLowerCase();
-    return message?.includes('missing or insufficient permissions') ?? false;
+    if (message?.includes('missing or insufficient permissions'))
+        return true;
+    return message?.includes('do not have edit access to this module') ?? false;
 }
