@@ -150,14 +150,29 @@ export class FirestoreModuleRepository {
         await this.writeWithDetail('saving draft metadata', `maps/${mapId}`, mapPayload, () => setDoc(mapRef, mapPayload, { merge: true }));
         const versionRef = doc(this.db, 'mapVersions', `${mapId}_${versionId}`);
         const versionPayload = { moduleId: mapId, versionId, payload, createdAt: now, createdBy };
-        try {
-            await this.writeWithDetail('saving draft version', `mapVersions/${mapId}_${versionId}`, versionPayload, () => setDoc(versionRef, versionPayload));
+        let lastError;
+        // Retry the version save to handle eventual consistency where the map document
+        // created above might not be visible to the security rules engine immediately.
+        for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+                await this.writeWithDetail('saving draft version', `mapVersions/${mapId}_${versionId}`, versionPayload, () => setDoc(versionRef, versionPayload));
+                lastError = null;
+                break;
+            }
+            catch (err) {
+                lastError = err;
+                if (isPermissionError(err)) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    continue;
+                }
+                throw err;
+            }
         }
-        catch (err) {
-            if (isPermissionError(err)) {
+        if (lastError) {
+            if (isPermissionError(lastError)) {
                 throw new Error('You do not have edit access to this module. Ask the owner to share editor access or duplicate the module to save your own copy.');
             }
-            throw err;
+            throw lastError;
         }
         return { moduleId: mapId, versionId, payload, createdAt: now, createdBy };
     }
@@ -255,7 +270,7 @@ export class FirestoreModuleRepository {
                 const payloadSummary = this.formatPayloadSummary(payload);
                 const errorMessage = err.message ?? String(err);
                 const errorCode = err.code ?? 'unknown-code';
-                throw new Error(`Missing or insufficient privileges while ${operation} at ${refPath} as ${actor}. ` +
+                throw new Error(`Missing or insufficient permissions while ${operation} at ${refPath} as ${actor}. ` +
                     `Payload: ${payloadSummary}. Firebase error ${errorCode}: ${errorMessage}`);
             }
             throw err;
@@ -312,5 +327,6 @@ export function isPermissionError(err) {
         return true;
     }
     const message = err.message?.toLowerCase();
-    return message?.includes('missing or insufficient permissions') ?? false;
+    return ((message?.includes('missing or insufficient permissions') || message?.includes('you do not have edit access')) ??
+        false);
 }

@@ -420,5 +420,8 @@ export function isPermissionError(err: unknown): boolean {
     return true;
   }
   const message = (err as { message?: string }).message?.toLowerCase();
-  return message?.includes('missing or insufficient permissions') ?? false;
+  return (
+    (message?.includes('missing or insufficient permissions') || message?.includes('you do not have edit access')) ??
+    false
+  );
 }

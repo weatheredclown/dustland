@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-const { FirestoreModuleRepository, NullModuleRepository } = await import('../scripts/ack/module-repository.js');
+const { FirestoreModuleRepository, NullModuleRepository, isPermissionError } = await import(
+  '../scripts/ack/module-repository.js'
+);
 
 test('NullModuleRepository saveDraft keeps provided module id', async t => {
   const repo = new NullModuleRepository();
@@ -77,4 +79,19 @@ test('mapDocToSummary applies defaults when fields are missing', t => {
     updatedAt: 1800000000000,
     publishedVersionId: null,
   });
+});
+test('isPermissionError identifies custom edit access error', () => {
+  const err = new Error(
+    'You do not have edit access to this module. Ask the owner to share editor access or duplicate the module to save your own copy.',
+  );
+  assert.equal(isPermissionError(err), true);
+});
+
+test('isPermissionError identifies standard permission errors', () => {
+  const err1 = { code: 'permission-denied' };
+  assert.equal(isPermissionError(err1), true);
+  const err2 = { message: 'Missing or insufficient permissions.' };
+  assert.equal(isPermissionError(err2), true);
+  const err3 = new Error('Some other error');
+  assert.equal(isPermissionError(err3), false);
 });
