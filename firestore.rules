@@ -26,6 +26,8 @@ service cloud.firestore {
       return share.exists() ? share.data.role : null;
     }
 
+    // Listing modules from the Adventure Kit relies on read access for owners,
+    // editors (via shares), and public viewers.
     function canReadMap(mapDoc, mapId) {
       return mapDoc.exists()
         && (mapDoc.data.visibility == 'public'
