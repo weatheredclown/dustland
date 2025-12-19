@@ -207,18 +207,10 @@ async function initCloudActions() {
                     return listCloudModules(false);
                 }
                 ready = false;
-                unavailableMessage = 'Cloud access requires a fresh sign-in. Sign in again to view cloud modules.';
+                unavailableMessage =
+                    'Cloud access denied for this account. Verify your permissions or try a different signed-in user.';
                 setStatus(unavailableMessage, 'error');
                 updateButtonStates(false);
-                if (session) {
-                    try {
-                        await session.signOut();
-                        await session.signIn();
-                    }
-                    catch (signInErr) {
-                        console.warn('Unable to restart sign-in after permission error.', signInErr);
-                    }
-                }
                 throw new Error(unavailableMessage);
             }
             throw err;
