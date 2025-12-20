@@ -83,10 +83,14 @@ service cloud.firestore {
         && request.resource.data.mapId + '_' + request.resource.data.userId == docId
         && isOwner(mapRef(request.resource.data.mapId));
 
+      allow update: if isSignedIn()
+        && request.resource.data.mapId + '_' + request.resource.data.userId == docId
+        && request.resource.data.mapId == resource.data.mapId
+        && request.resource.data.userId == resource.data.userId
+        && isOwner(mapRef(resource.data.mapId));
+
       allow delete: if isSignedIn()
         && (request.auth.uid == resource.data.userId || isOwner(mapRef(resource.data.mapId)));
-
-      allow update: if false;
     }
 
     match /publicListings/{mapId} {
