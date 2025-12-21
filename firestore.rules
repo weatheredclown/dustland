@@ -21,16 +21,22 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/shares/$(mapId + '_' + uid));
     }
 
+    function listingRef(mapId) {
+      return get(/databases/$(database)/documents/publicListings/$(mapId));
+    }
+
     function shareRole(mapId) {
       let share = shareRef(mapId, request.auth.uid);
       return share.exists() ? share.data.role : null;
     }
 
     // Listing modules from the Adventure Kit relies on read access for owners,
-    // editors (via shares), and public viewers.
+    // editors (via shares), and public viewers. Treat public listings as public
+    // visibility to match the client-side loading behavior.
     function canReadMap(mapDoc, mapId) {
       return mapDoc.exists()
         && (mapDoc.data.visibility == 'public'
+          || listingRef(mapId).exists()
           || isOwner(mapDoc)
           || (isSignedIn() && shareRef(mapId, request.auth.uid).exists()));
     }
