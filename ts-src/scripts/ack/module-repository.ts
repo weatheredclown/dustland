@@ -269,11 +269,19 @@ export class FirestoreModuleRepository implements ModuleRepository {
 
   async publish(moduleId: string): Promise<void> {
     if (!this.db) throw new Error('Firestore is not initialized.');
+    const userId = this.session?.user?.uid;
+    if (!userId) throw new Error('Sign in before publishing a module.');
     const { doc, getDoc, setDoc } = await loadFirebaseModule<typeof import('firebase/firestore')>('firebase-firestore');
     const mapRef = doc(this.db, 'maps', moduleId);
     const mapSnap = await getDoc(mapRef);
+    if (!mapSnap.exists()) {
+      throw new Error('Module not found. Save a draft before publishing.');
+    }
     const now = Date.now();
-    const data = (mapSnap.exists() ? mapSnap.data() : null) as FirestoreModuleDoc | null;
+    const data = mapSnap.data() as FirestoreModuleDoc;
+    if (!data.ownerId || data.ownerId !== userId) {
+      throw new Error('Only the module owner can publish.');
+    }
     const publishedVersionId = data?.latestVersionId ?? data?.publishedVersionId ?? null;
     const publishPayload = { visibility: 'public', publishedVersionId, updatedAt: now };
     await this.writeWithDetail(

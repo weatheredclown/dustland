@@ -202,11 +202,20 @@ export class FirestoreModuleRepository {
     async publish(moduleId) {
         if (!this.db)
             throw new Error('Firestore is not initialized.');
+        const userId = this.session?.user?.uid;
+        if (!userId)
+            throw new Error('Sign in before publishing a module.');
         const { doc, getDoc, setDoc } = await loadFirebaseModule('firebase-firestore');
         const mapRef = doc(this.db, 'maps', moduleId);
         const mapSnap = await getDoc(mapRef);
+        if (!mapSnap.exists()) {
+            throw new Error('Module not found. Save a draft before publishing.');
+        }
         const now = Date.now();
-        const data = (mapSnap.exists() ? mapSnap.data() : null);
+        const data = mapSnap.data();
+        if (!data.ownerId || data.ownerId !== userId) {
+            throw new Error('Only the module owner can publish.');
+        }
         const publishedVersionId = data?.latestVersionId ?? data?.publishedVersionId ?? null;
         const publishPayload = { visibility: 'public', publishedVersionId, updatedAt: now };
         await this.writeWithDetail('publishing module', `maps/${moduleId}`, publishPayload, () => setDoc(mapRef, publishPayload, { merge: true }));
