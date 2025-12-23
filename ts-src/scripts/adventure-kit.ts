@@ -31,7 +31,9 @@ const tileNames: Record<number, string> = {
   [TILE.BRUSH]: 'Brush',
   [TILE.ROAD]: 'Road',
   [TILE.RUIN]: 'Ruin',
-  [TILE.WALL]: 'Wall'
+  [TILE.WALL]: 'Wall',
+  [TILE.FLOOR]: 'Floor',
+  [TILE.DOOR]: 'Door'
 };
 
 const walkableTiles: Record<number, boolean> = {
@@ -46,6 +48,139 @@ const walkableTiles: Record<number, boolean> = {
   8: true,
   9: false
 };
+const worldTileIds = [
+  TILE.SAND,
+  TILE.ROCK,
+  TILE.WATER,
+  TILE.BRUSH,
+  TILE.ROAD,
+  TILE.RUIN,
+  TILE.WALL
+];
+const interiorTileIds = [TILE.WALL, TILE.FLOOR, TILE.DOOR];
+const spriteCache: Record<string, HTMLImageElement | null> = {};
+let pendingSpriteRefresh = false;
+
+function getWorldTileList() {
+  if (typeof worldTileIds !== 'undefined' && Array.isArray(worldTileIds)) return worldTileIds;
+  const alt = (globalThis as any).worldTileIds;
+  if (Array.isArray(alt)) return alt;
+  const defaults = [
+    typeof TILE !== 'undefined' && TILE.SAND != null ? TILE.SAND : 0,
+    typeof TILE !== 'undefined' && TILE.ROCK != null ? TILE.ROCK : 1,
+    typeof TILE !== 'undefined' && TILE.WATER != null ? TILE.WATER : 2,
+    typeof TILE !== 'undefined' && TILE.BRUSH != null ? TILE.BRUSH : 3,
+    typeof TILE !== 'undefined' && TILE.ROAD != null ? TILE.ROAD : 4,
+    typeof TILE !== 'undefined' && TILE.RUIN != null ? TILE.RUIN : 5,
+    typeof TILE !== 'undefined' && TILE.WALL != null ? TILE.WALL : 6
+  ];
+  return defaults;
+}
+
+function getInteriorTileList() {
+  if (typeof interiorTileIds !== 'undefined' && Array.isArray(interiorTileIds)) return interiorTileIds;
+  const alt = (globalThis as any).interiorTileIds;
+  if (Array.isArray(alt)) return alt;
+  const wall = typeof TILE !== 'undefined' && TILE.WALL != null ? TILE.WALL : 6;
+  const floor = typeof TILE !== 'undefined' && TILE.FLOOR != null ? TILE.FLOOR : 7;
+  const door = typeof TILE !== 'undefined' && TILE.DOOR != null ? TILE.DOOR : 8;
+  return [wall, floor, door];
+}
+
+function resetSpriteCache() {
+  Object.keys(spriteCache).forEach(k => delete spriteCache[k]);
+}
+
+function cloneTileSpriteMap(map?: TileSpriteMap): TileSpriteMap {
+  if (!map || typeof map !== 'object') return {};
+  const copy: TileSpriteMap = {};
+  Object.entries(map).forEach(([k, v]) => {
+    if (typeof v === 'string') copy[k] = v;
+  });
+  return copy;
+}
+
+function ensureTileGraphicsConfig(config?: TileGraphicsConfig): TileGraphicsConfig {
+  const cfg = config && typeof config === 'object' ? config : {};
+  return {
+    defaults: cloneTileSpriteMap(cfg.defaults),
+    interiors: cloneTileSpriteMap(cfg.interiors),
+    maps: (() => {
+      const maps: Record<string, TileSpriteMap> = {};
+      if (cfg.maps && typeof cfg.maps === 'object') {
+        Object.entries(cfg.maps).forEach(([mapId, tiles]) => {
+          maps[mapId] = cloneTileSpriteMap(tiles);
+        });
+      }
+      return maps;
+    })()
+  };
+}
+
+function scheduleSpriteRefresh() {
+  if (pendingSpriteRefresh) return;
+  pendingSpriteRefresh = true;
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => {
+      pendingSpriteRefresh = false;
+      drawWorld();
+      drawInterior();
+      updateTilePaletteGraphics();
+      updateNpcTilePreview();
+    });
+  } else {
+    pendingSpriteRefresh = false;
+    drawWorld();
+    drawInterior();
+    updateTilePaletteGraphics();
+    updateNpcTilePreview();
+  }
+}
+
+function loadSprite(path?: string | null): HTMLImageElement | null {
+  if (!path) return null;
+  if (spriteCache[path] !== undefined) return spriteCache[path];
+  const img = new Image();
+  img.onload = () => scheduleSpriteRefresh();
+  img.onerror = () => { spriteCache[path] = null; };
+  spriteCache[path] = img;
+  img.src = path;
+  return img;
+}
+
+function clearSpriteCacheFor(path: string | undefined | null) {
+  if (!path) return;
+  delete spriteCache[path];
+}
+
+function getTileSpritePath(mapName: string, tile: number): string | undefined {
+  const graphics = moduleData.tileGraphics || {};
+  const key = String(tile);
+  const mapSprites = graphics.maps?.[mapName];
+  if (mapSprites && mapSprites[key]) return mapSprites[key];
+  if (mapName !== 'world' && graphics.interiors && graphics.interiors[key]) return graphics.interiors[key];
+  if (graphics.defaults && graphics.defaults[key]) return graphics.defaults[key];
+  if (mapName === 'world' && graphics.maps?.world && graphics.maps.world[key]) return graphics.maps.world[key];
+  return undefined;
+}
+
+function getTileSprite(mapName: string, tile: number): HTMLImageElement | null {
+  const path = getTileSpritePath(mapName, tile);
+  if (!path) return null;
+  return loadSprite(path);
+}
+
+function getNpcTileSpritePath(n: any): string | undefined {
+  if (!n) return undefined;
+  if (typeof n.tileSprite === 'string' && n.tileSprite.trim()) return n.tileSprite.trim();
+  return undefined;
+}
+
+function getNpcTileSprite(n: any): HTMLImageElement | null {
+  const path = getNpcTileSpritePath(n);
+  if (!path) return null;
+  return loadSprite(path);
+}
 
 type LoopPoint = { x: number; y: number };
 type DialogEffect =
@@ -153,12 +288,19 @@ type ModuleData = {
   moduleVar?: unknown;
   props: Record<string, unknown>;
   behaviors: Record<string, any>;
+  tileGraphics?: TileGraphicsConfig;
   procGen?: ProcGenConfig;
   _origKeys?: string[];
   zoneEffects?: any[];
   generateMap?: (seed: number, opts?: unknown) => unknown;
 };
 type AckPersonaData = PersonaData & { label?: string; portrait?: string; [key: string]: unknown };
+type TileSpriteMap = Record<string, string>;
+type TileGraphicsConfig = {
+  defaults?: TileSpriteMap;
+  interiors?: TileSpriteMap;
+  maps?: Record<string, TileSpriteMap>;
+};
 declare function nextLoopPoint(prev: LoopPoint | undefined, npc: LoopPoint): LoopPoint;
 
 const stampNames = {
@@ -493,6 +635,7 @@ loopMinus.addEventListener('click', () => {
 });
 
 const moduleData = (globalThis as ModuleGlobals).moduleData ?? ((globalThis as ModuleGlobals).moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
+moduleData.tileGraphics = ensureTileGraphicsConfig(moduleData.tileGraphics);
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod', 'spread'];
 const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];
@@ -587,10 +730,13 @@ let selectedObj = null;
 const mapSelect = document.getElementById('mapSelect');
 let currentMap = 'world';
 function updateMapSelect(selected = 'world') {
+  refreshTileGraphicMapOptions(selected);
   if (!mapSelect) return;
   const maps = ['world', ...moduleData.interiors.map(I => I.id)];
   mapSelect.innerHTML = maps.map(m => `<option value="${m}">${m}</option>`).join('');
   mapSelect.value = selected;
+  renderTileGraphicsEditor();
+  updateTilePaletteGraphics();
 }
 function showMap(map) {
   currentMap = map;
@@ -610,6 +756,8 @@ function showMap(map) {
   worldZoom = map === 'world' ? worldZoom : 1;
   panX = map === 'world' ? panX : 0;
   panY = map === 'world' ? panY : 0;
+  updateTilePaletteGraphics();
+  renderTileGraphicsEditor();
   drawWorld();
   if (idx >= 0) drawInterior();
 }
@@ -660,6 +808,189 @@ if (brushSizeSlider) {
   });
 }
 
+const tileGraphicTarget = document.getElementById('tileGraphicTarget') as HTMLSelectElement | null;
+const tileGraphicMap = document.getElementById('tileGraphicMap') as HTMLSelectElement | null;
+const tileGraphicMapWrap = document.getElementById('tileGraphicMapWrap');
+const tileGraphicList = document.getElementById('tileGraphicList');
+
+function tileFallbackColor(tile: number, mapName: string) {
+  if (mapName === 'world') return akColors[tile] || '#000';
+  return tile === TILE.WALL ? '#444' : tile === TILE.DOOR ? '#8bd98d' : '#222';
+}
+
+function updateTilePaletteGraphics() {
+  if (worldPalette) {
+    worldPalette.querySelectorAll('button').forEach(btn => {
+      const tileId = parseInt(btn.dataset.tile, 10);
+      if (Number.isNaN(tileId)) return;
+      const path = typeof getTileSpritePath === 'function' ? getTileSpritePath('world', tileId) : undefined;
+      const style = (btn as HTMLElement).style;
+      if (path) {
+        style.backgroundImage = `url(${path})`;
+        style.backgroundSize = 'cover';
+        style.backgroundPosition = 'center';
+        style.backgroundColor = 'transparent';
+      } else {
+        style.backgroundImage = '';
+        style.backgroundColor = akColors[tileId] || '#000';
+      }
+    });
+  }
+  if (intPalette) {
+    const currentInterior = editInteriorIdx >= 0 ? moduleData.interiors[editInteriorIdx]?.id : '';
+    const mapName = currentInterior || (currentMap !== 'world' ? currentMap : 'interior');
+    const tileMap = { W: TILE.WALL, F: TILE.FLOOR, D: TILE.DOOR } as Record<string, number>;
+    intPalette.querySelectorAll('button').forEach(btn => {
+      const tileId = tileMap[btn.dataset.tile];
+      if (tileId == null) return;
+      const path = typeof getTileSpritePath === 'function' ? getTileSpritePath(mapName, tileId) : undefined;
+      const style = (btn as HTMLElement).style;
+      if (path) {
+        style.backgroundImage = `url(${path})`;
+        style.backgroundSize = 'cover';
+        style.backgroundPosition = 'center';
+        style.backgroundColor = 'transparent';
+      } else {
+        style.backgroundImage = '';
+        style.backgroundColor = tileFallbackColor(tileId, mapName);
+      }
+    });
+  }
+}
+
+function refreshTileGraphicMapOptions(selected = 'world') {
+  if (!tileGraphicMap) return;
+  const maps = ['world', ...moduleData.interiors.map(I => I.id)];
+  tileGraphicMap.innerHTML = maps.map(m => `<option value="${m}">${m}</option>`).join('');
+  tileGraphicMap.value = maps.includes(selected) ? selected : maps[0] || 'world';
+}
+
+function getTileGraphicValue(scope: string, mapId: string, tileId: number): string {
+  const cfg = moduleData.tileGraphics || {};
+  const key = String(tileId);
+  if (scope === 'defaults') return cfg.defaults?.[key] || '';
+  if (scope === 'interiors') return cfg.interiors?.[key] || '';
+  if (scope === 'map') return cfg.maps?.[mapId]?.[key] || '';
+  return '';
+}
+
+function setTileGraphicValue(scope: string, mapId: string, tileId: number, value: string) {
+  const cfg = moduleData.tileGraphics || (moduleData.tileGraphics = ensureTileGraphicsConfig(moduleData.tileGraphics));
+  const key = String(tileId);
+  if (scope === 'defaults') {
+    if (value) cfg.defaults![key] = value; else delete cfg.defaults?.[key];
+    return;
+  }
+  if (scope === 'interiors') {
+    if (value) cfg.interiors![key] = value; else delete cfg.interiors?.[key];
+    return;
+  }
+  if (scope === 'map') {
+    cfg.maps = cfg.maps || {};
+    cfg.maps[mapId] = cfg.maps[mapId] || {};
+    if (value) cfg.maps[mapId][key] = value;
+    else {
+      delete cfg.maps[mapId][key];
+      if (Object.keys(cfg.maps[mapId]).length === 0) delete cfg.maps[mapId];
+    }
+  }
+}
+
+function renderTileGraphicsEditor() {
+  if (!tileGraphicList) return;
+  const scope = tileGraphicTarget?.value || 'defaults';
+  const mapId = tileGraphicMap?.value || 'world';
+  const worldTiles = typeof getWorldTileList === 'function'
+    ? getWorldTileList()
+    : (Array.isArray((globalThis as any).worldTileIds)
+      ? (globalThis as any).worldTileIds
+      : [
+        typeof TILE !== 'undefined' && TILE.SAND != null ? TILE.SAND : 0,
+        typeof TILE !== 'undefined' && TILE.ROCK != null ? TILE.ROCK : 1,
+        typeof TILE !== 'undefined' && TILE.WATER != null ? TILE.WATER : 2,
+        typeof TILE !== 'undefined' && TILE.BRUSH != null ? TILE.BRUSH : 3,
+        typeof TILE !== 'undefined' && TILE.ROAD != null ? TILE.ROAD : 4,
+        typeof TILE !== 'undefined' && TILE.RUIN != null ? TILE.RUIN : 5,
+        typeof TILE !== 'undefined' && TILE.WALL != null ? TILE.WALL : 6
+      ]);
+  const interiorTiles = typeof getInteriorTileList === 'function'
+    ? getInteriorTileList()
+    : (Array.isArray((globalThis as any).interiorTileIds)
+      ? (globalThis as any).interiorTileIds
+      : [
+        typeof TILE !== 'undefined' && TILE.WALL != null ? TILE.WALL : 6,
+        typeof TILE !== 'undefined' && TILE.FLOOR != null ? TILE.FLOOR : 7,
+        typeof TILE !== 'undefined' && TILE.DOOR != null ? TILE.DOOR : 8
+      ]);
+  const ids = (scope === 'interiors' || (scope === 'map' && mapId !== 'world')) ? interiorTiles : worldTiles;
+  tileGraphicList.innerHTML = '';
+  ids.forEach(id => {
+    const row = document.createElement('label');
+    row.className = 'tile-graphic-row';
+    const name = document.createElement('span');
+    const tileLabel = typeof tileNames !== 'undefined' && tileNames && tileNames[id] ? tileNames[id] : `Tile ${id}`;
+    name.textContent = tileLabel;
+    name.className = 'tile-graphic-name';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = getTileGraphicValue(scope, mapId, id);
+    if (input.dataset) {
+      input.dataset.tile = String(id);
+      input.dataset.scope = scope;
+      input.dataset.map = mapId;
+    } else {
+      (input as any).dataset = { tile: String(id), scope, map: mapId };
+    }
+    input.placeholder = 'assets/tiles/custom.png';
+    input.addEventListener('input', onTileGraphicInput);
+    const swatch = document.createElement('div');
+    swatch.className = 'tile-graphic-preview';
+    const path = typeof getTileSpritePath === 'function' ? getTileSpritePath(mapId, id) : undefined;
+    if (path) {
+      swatch.style.backgroundImage = `url(${path})`;
+      swatch.style.backgroundSize = 'cover';
+      swatch.style.backgroundPosition = 'center';
+      swatch.title = path;
+    } else {
+      swatch.style.backgroundImage = '';
+      swatch.style.backgroundColor = tileFallbackColor(id, mapId === 'world' ? 'world' : 'interior');
+      swatch.title = 'Palette color';
+    }
+    row.appendChild(name);
+    row.appendChild(input);
+    row.appendChild(swatch);
+    tileGraphicList.appendChild(row);
+  });
+}
+
+function onTileGraphicInput(e: Event) {
+  const target = e.target as HTMLInputElement;
+  if (!target) return;
+  const scope = target.dataset?.scope || 'defaults';
+  const mapId = target.dataset?.map || 'world';
+  const tileId = parseInt(target.dataset?.tile || '', 10);
+  if (Number.isNaN(tileId)) return;
+  const next = target.value.trim();
+  const prev = getTileGraphicValue(scope, mapId, tileId);
+  if (prev === next) return;
+  if (prev) clearSpriteCacheFor(prev);
+  if (!next) {
+    setTileGraphicValue(scope, mapId, tileId, '');
+  } else {
+    clearSpriteCacheFor(next);
+    setTileGraphicValue(scope, mapId, tileId, next);
+  }
+  updateTilePaletteGraphics();
+  renderTileGraphicsEditor();
+  drawWorld();
+  drawInterior();
+}
+
+function updateTileGraphicScopeVisibility() {
+  if (!tileGraphicTarget) return;
+  if (tileGraphicMapWrap) tileGraphicMapWrap.style.display = tileGraphicTarget.value === 'map' ? 'block' : 'none';
+}
+
 function addTerrainFeature(x, y, tile) {
   if (!setTile('world', x, y, tile)) return;
   if (!worldPaintNoise) return;
@@ -700,6 +1031,52 @@ function getEditorNpcSymbol(n: any) {
   return '!';
 }
 
+function drawTileSprite(ctx: CanvasRenderingContext2D, mapName: string, tile: number, px: number, py: number, sx: number, sy: number) {
+  const sprite = getTileSprite(mapName, tile);
+  if (sprite && sprite.complete) {
+    const prevSmoothing = ctx.imageSmoothingEnabled;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(sprite, px, py, sx, sy);
+    ctx.imageSmoothingEnabled = prevSmoothing;
+    return true;
+  }
+  return false;
+}
+
+function drawNpcMarker(ctx: CanvasRenderingContext2D, npc: any, px: number, py: number, sx: number, sy: number, hovering: boolean) {
+  const sprite = getNpcTileSprite(npc);
+  const spriteDrawn = sprite && sprite.complete;
+  if (spriteDrawn) {
+    const prevSmoothing = ctx.imageSmoothingEnabled;
+    ctx.imageSmoothingEnabled = false;
+    if (hovering) {
+      ctx.shadowColor = '#fff';
+      ctx.shadowBlur = 8;
+    }
+    ctx.drawImage(sprite as CanvasImageSource, px, py, sx, sy);
+    if (hovering) {
+      ctx.strokeStyle = '#fff';
+      ctx.strokeRect(px, py, sx, sy);
+    }
+    ctx.shadowBlur = 0;
+    ctx.imageSmoothingEnabled = prevSmoothing;
+    return;
+  }
+  ctx.fillStyle = hovering ? '#fff' : getEditorNpcColor(npc);
+  if (hovering) {
+    ctx.shadowColor = '#fff';
+    ctx.shadowBlur = 8;
+  }
+  ctx.fillRect(px, py, sx, sy);
+  ctx.fillStyle = '#000';
+  ctx.fillText(getEditorNpcSymbol(npc), px + 4, py + 12);
+  if (hovering) {
+    ctx.strokeStyle = '#fff';
+    ctx.strokeRect(px, py, sx, sy);
+  }
+  ctx.shadowBlur = 0;
+}
+
 function drawWorld() {
   const map = currentMap;
   let W = WORLD_W, H = WORLD_H;
@@ -728,12 +1105,15 @@ function drawWorld() {
       const px = (x - (map === 'world' ? panX : 0)) * sx;
       if (px + sx < 0 || px >= canvas.width) continue;
       const t = row[x];
-      if (map === 'world') {
-        ctx.fillStyle = akColors[t] || '#000';
-      } else {
-        ctx.fillStyle = t === TILE.WALL ? '#444' : t === TILE.DOOR ? '#8bd98d' : '#222';
+      const spriteDrawn = drawTileSprite(ctx, map, t, px, py, sx, sy);
+      if (!spriteDrawn) {
+        if (map === 'world') {
+          ctx.fillStyle = akColors[t] || '#000';
+        } else {
+          ctx.fillStyle = t === TILE.WALL ? '#444' : t === TILE.DOOR ? '#8bd98d' : '#222';
+        }
+        ctx.fillRect(px, py, sx, sy);
       }
-      ctx.fillRect(px, py, sx, sy);
       if (map === 'world' && spawnHeat && spawnHeatMap && spawnHeatMax > 0) {
         const d = spawnHeatMap[y][x];
         if (d && d !== Infinity) {
@@ -803,18 +1183,7 @@ function drawWorld() {
     const py = (n.y - pyoff) * sy;
     if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height) return;
     ctx.save();
-    ctx.fillStyle = hovering ? '#fff' : getEditorNpcColor(n);
-    if (hovering) {
-      ctx.shadowColor = '#fff';
-      ctx.shadowBlur = 8;
-    }
-    ctx.fillRect(px, py, sx, sy);
-    ctx.fillStyle = '#000';
-    ctx.fillText(getEditorNpcSymbol(n), px + 4, py + 12);
-    if (hovering) {
-      ctx.strokeStyle = '#fff';
-      ctx.strokeRect(px, py, sx, sy);
-    }
+    drawNpcMarker(ctx, n, px, py, sx, sy, hovering);
     ctx.restore();
   });
   if (map === 'world' && selectedObj && selectedObj.type === 'npc' && selectedObj.obj.loop) {
@@ -988,15 +1357,15 @@ function drawInterior() {
     if (!row) continue;
     for (let x = 0; x < I.w; x++) {
       const t = row[x];
-      intCtx.fillStyle = t === TILE.WALL ? '#444' : t === TILE.DOOR ? '#8bd98d' : '#222';
-      intCtx.fillRect(x * sx, y * sy, sx, sy);
+      const drawn = drawTileSprite(intCtx, I.id, t, x * sx, y * sy, sx, sy);
+      if (!drawn) {
+        intCtx.fillStyle = t === TILE.WALL ? '#444' : t === TILE.DOOR ? '#8bd98d' : '#222';
+        intCtx.fillRect(x * sx, y * sy, sx, sy);
+      }
     }
   }
   moduleData.npcs.filter(n => n.map === I.id).forEach(n => {
-    intCtx.fillStyle = getEditorNpcColor(n);
-    intCtx.fillRect(n.x * sx, n.y * sy, sx, sy);
-    intCtx.fillStyle = '#000';
-    intCtx.fillText(getEditorNpcSymbol(n), n.x * sx + 4, n.y * sy + 12);
+    drawNpcMarker(intCtx, n, n.x * sx, n.y * sy, sx, sy, false);
   });
   moduleData.items.filter(it => it.map === I.id).forEach(it => {
     intCtx.strokeStyle = '#ff0';
@@ -2306,6 +2675,25 @@ function setNpcPortrait() {
   const img = npcPortraitPath || npcPortraits[npcPortraitIndex];
   if (el) el.style.backgroundImage = img ? `url(${img})` : '';
 }
+function updateNpcTilePreview() {
+  const preview = document.getElementById('npcTileSpritePreview');
+  const input = document.getElementById('npcTileSprite') as HTMLInputElement | null;
+  const colorInput = document.getElementById('npcColor') as HTMLInputElement | null;
+  if (!preview) return;
+  const path = input?.value?.trim() || '';
+  if (path) {
+    preview.style.backgroundImage = `url(${path})`;
+    preview.style.backgroundSize = 'cover';
+    preview.style.backgroundPosition = 'center';
+    preview.style.backgroundColor = 'transparent';
+    preview.title = path;
+  } else {
+    preview.style.backgroundImage = '';
+    const fallback = colorInput?.value || '#9ef7a0';
+    preview.style.backgroundColor = fallback;
+    preview.title = 'Palette color';
+  }
+}
 const personaPortraits = npcPortraits;
 let itemPersonaPortraitIndex = 0;
 let itemPersonaPortraitPath = '';
@@ -2835,6 +3223,9 @@ function startNewNPC() {
   document.getElementById('npcColorOverride').checked = false;
   updateColorOverride();
   document.getElementById('npcSymbol').value = '!';
+  const npcTileSprite = document.getElementById('npcTileSprite') as HTMLInputElement | null;
+  if (npcTileSprite) npcTileSprite.value = '';
+  updateNpcTilePreview();
   populateMapDropdown(document.getElementById('npcMap'), '');
   document.getElementById('npcX').value = '';
   document.getElementById('npcY').value = '';
@@ -2942,6 +3333,7 @@ function collectNPCFromForm() {
   const overrideColor = document.getElementById('npcColorOverride').checked;
   const color = document.getElementById('npcColor').value.trim() || '#fff';
   const symbol = document.getElementById('npcSymbol').value.trim().charAt(0) || '!';
+  const tileSprite = document.getElementById('npcTileSprite')?.value?.trim() || '';
   const map = document.getElementById('npcMap').value.trim() || 'world';
   const rawX = document.getElementById('npcX').value;
   const rawY = document.getElementById('npcY').value;
@@ -3040,6 +3432,7 @@ function collectNPCFromForm() {
   else if (firstQuest) npc.questId = firstQuest;
   if (dialogLines.length > 1) npc.dialogs = dialogLines;
   else if (dialogLines[0]) npc.dialog = dialogLines[0];
+  if (tileSprite) npc.tileSprite = tileSprite;
   if (document.getElementById('npcPatrol').checked) {
     const pts = gatherLoopFields();
     if (pts.length >= 2) npc.loop = pts;
@@ -3129,6 +3522,7 @@ function applyNPCChanges() {
   } else {
     selectedObj = null;
   }
+  updateNpcTilePreview();
   drawWorld();
   drawInterior();
 }
@@ -3178,6 +3572,9 @@ function editNPC(i) {
   document.getElementById('npcColorOverride').checked = !!n.overrideColor;
   updateColorOverride();
   document.getElementById('npcSymbol').value = n.symbol || '!';
+  const npcTileSprite = document.getElementById('npcTileSprite') as HTMLInputElement | null;
+  if (npcTileSprite) npcTileSprite.value = n.tileSprite || '';
+  updateNpcTilePreview();
   populateMapDropdown(document.getElementById('npcMap'), n.map);
   document.getElementById('npcX').value = n.x;
   document.getElementById('npcY').value = n.y;
@@ -5388,6 +5785,8 @@ function applyLoadedModule(data) {
   moduleData.zones = data.zones || [];
   moduleData.zoneEffects = (data.zoneEffects || []).map(z => ({ ...z }));
   moduleData.behaviors = JSON.parse(JSON.stringify(data.behaviors || {}));
+  resetSpriteCache();
+  moduleData.tileGraphics = ensureTileGraphicsConfig(data.tileGraphics);
   moduleData.encounters = [];
   if (data.encounters) {
     Object.entries(data.encounters).forEach(([map, list]) => {
@@ -5423,6 +5822,9 @@ function applyLoadedModule(data) {
   });
   moduleData.buildings = [...buildings];
 
+  renderTileGraphicsEditor();
+  updateTilePaletteGraphics();
+  updateTileGraphicScopeVisibility();
   drawWorld();
   renderNPCList();
   renderItemList();
@@ -5735,6 +6137,16 @@ function exportModulePayload() {
       if (hasProps) base.props = moduleData.props;
       return;
     }
+    if (k === 'tileGraphics') {
+      const gfx = moduleData.tileGraphics || {};
+      const hasDefaults = Object.keys(gfx.defaults || {}).length > 0;
+      const hasInteriors = Object.keys(gfx.interiors || {}).length > 0;
+      const hasMaps = Object.keys(gfx.maps || {}).length > 0;
+      if (moduleData._origKeys?.includes('tileGraphics') || hasDefaults || hasInteriors || hasMaps) {
+        base.tileGraphics = ensureTileGraphicsConfig(moduleData.tileGraphics);
+      }
+      return;
+    }
     if (k === 'personas' && !hasPersonas) return;
     if (moduleData[k] !== undefined) base[k] = moduleData[k];
   });
@@ -5987,6 +6399,15 @@ if (spawnHeatBtn) spawnHeatBtn.onclick = () => {
   spawnHeatBtn.textContent = `Spawn Heat: ${spawnHeat ? 'On' : 'Off'}`;
   drawWorld();
 };
+if (tileGraphicTarget) {
+  tileGraphicTarget.addEventListener('change', () => {
+    updateTileGraphicScopeVisibility();
+    renderTileGraphicsEditor();
+  });
+}
+if (tileGraphicMap) {
+  tileGraphicMap.addEventListener('change', () => renderTileGraphicsEditor());
+}
 document.getElementById('addNode').onclick = addNode;
 document.getElementById('editDialog').onclick = openDialogEditor;
 document.getElementById('closeDialogModal').onclick = closeDialogEditor;
@@ -6012,6 +6433,8 @@ document.getElementById('npcShop').addEventListener('change', updateNPCOptSectio
 document.getElementById('npcHidden').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcTrainer').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcColorOverride').addEventListener('change', updateColorOverride);
+document.getElementById('npcTileSprite')?.addEventListener('input', updateNpcTilePreview);
+document.getElementById('npcColor')?.addEventListener('input', updateNpcTilePreview);
 document.getElementById('npcLocked').addEventListener('change', onLockedToggle);
 document.getElementById('genQuestDialog').onclick = generateQuestTree;
 if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
@@ -6727,3 +7150,7 @@ if (document && typeof document.addEventListener === 'function') {
 
 document.getElementById('playtestFloat')?.addEventListener('click', playtestModule);
 updateMapSelect();
+updateTileGraphicScopeVisibility();
+renderTileGraphicsEditor();
+updateTilePaletteGraphics();
+updateNpcTilePreview();

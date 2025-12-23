@@ -48,6 +48,27 @@ const ackModuleSchema = {
         "additionalProperties": true
       }
     },
+    "tileGraphics": {
+      "type": "object",
+      "properties": {
+        "defaults": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "interiors": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "maps": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "buildings": {
       "type": "array",
       "items": {
@@ -108,6 +129,7 @@ const ackModuleSchema = {
           "locked": { "type": "boolean" },
           "shop": { "type": "object" },
           "hidden": { "type": "boolean" },
+          "tileSprite": { "type": "string" },
           "reveal": { "type": "object" },
           "portraitSheet": { "type": "string" },
           "hintSound": { "type": "boolean" },
