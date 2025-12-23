@@ -33,6 +33,9 @@ declare global {
       moduleData?: unknown;
       EventBus?: CoreEventBus;
       eventBus?: CoreEventBus;
+      CustomEvent?: typeof CustomEvent;
+      Event?: typeof Event;
+      confirm?: (message?: string) => boolean;
     };
 }
 

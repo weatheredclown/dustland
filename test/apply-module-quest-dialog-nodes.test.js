@@ -69,6 +69,7 @@ test('applyModule registers dialog node objectives on quests', () => {
     centerCamera: () => {}
   };
   context.globalThis = context;
+  context.coreGlobals = context;
   vm.runInNewContext(questsSrc, context);
   vm.runInNewContext(applySrc, context);
 
