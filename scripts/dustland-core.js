@@ -1,4 +1,3 @@
-// TODO: migrate dustland-core to the typed DustlandCoreGlobals surface.
 /* eslint-disable no-var */
 const coreGlobals = globalThis;
 const coreEventBus = coreGlobals.EventBus ?? coreGlobals.eventBus;
@@ -170,10 +169,10 @@ function gridFromEmoji(rows) {
 function gridToEmoji(grid) {
     return grid.map(r => r.map(t => tileEmojiMap[t] || '').join(''));
 }
-globalThis.tileEmoji = tileEmojiMap;
-globalThis.emojiTile = emojiTileMap;
-globalThis.gridFromEmoji = gridFromEmoji;
-globalThis.gridToEmoji = gridToEmoji;
+coreGlobals.tileEmoji = tileEmojiMap;
+coreGlobals.emojiTile = emojiTileMap;
+coreGlobals.gridFromEmoji = gridFromEmoji;
+coreGlobals.gridToEmoji = gridToEmoji;
 const mapNameEl = typeof document !== 'undefined' ? document.getElementById('mapname') : null;
 const mapLabels = { world: 'Wastes', creator: 'Creator' };
 function formatMapName(id) {
@@ -228,7 +227,7 @@ function getViewSize() {
         h: Math.min(VIEW_H, Math.floor(ih / TS))
     };
 }
-globalThis.getViewSize = getViewSize;
+coreGlobals.getViewSize = getViewSize;
 // ===== Game state =====
 let world = [];
 let interiors = {};
@@ -317,9 +316,9 @@ function registerZoneEffects(list) {
         zoneEffects.push(z);
         applyZoneWalls(z);
         const id = z.useItem?.id;
-        if (id && globalThis.EventBus?.on) {
-            globalThis.EventBus.on(`used:${id}`, () => {
-                if (z.if && !globalThis.checkFlagCondition?.(z.if))
+        if (id && coreGlobals.EventBus?.on) {
+            coreGlobals.EventBus.on(`used:${id}`, () => {
+                if (z.if && !coreGlobals.checkFlagCondition?.(z.if))
                     return;
                 const map = z.map || 'world';
                 if (party.map !== map)
@@ -330,7 +329,7 @@ function registerZoneEffects(list) {
                 if (z.useItem.once && z.useItem._used)
                     return;
                 if (z.useItem.reward) {
-                    globalThis.Dustland?.actions?.applyQuestReward(z.useItem.reward);
+                    coreGlobals.Dustland?.actions?.applyQuestReward(z.useItem.reward);
                 }
                 if (z.useItem.once)
                     z.useItem._used = true;
@@ -523,7 +522,7 @@ function applyModule(data = {}, options = {}) {
     const { fullReset = true } = options;
     let moduleData = data || {};
     const moduleName = moduleData.name || '';
-    const dl = globalThis.Dustland || (globalThis.Dustland = {});
+    const dl = coreGlobals.Dustland || (coreGlobals.Dustland = {});
     dl.behaviors?.teardown?.();
     dl.effects?.reset?.();
     dl.currentModule = moduleName;
@@ -559,15 +558,15 @@ function applyModule(data = {}, options = {}) {
             if (k !== 'world' && k !== 'creator')
                 delete mapLabels[k];
         });
-        if (globalThis.Dustland?.workbench?.setRecipes) {
-            globalThis.Dustland.workbench.setRecipes([]);
+        if (coreGlobals.Dustland?.workbench?.setRecipes) {
+            coreGlobals.Dustland.workbench.setRecipes([]);
         }
         // Generate terrain based on config
         let generated = false;
         if (moduleData.worldGen) {
             let gen = moduleData.worldGen;
             if (typeof gen === 'string')
-                gen = globalThis[gen];
+                gen = coreGlobals[gen];
             if (typeof gen === 'function') {
                 const extra = gen(seed, moduleData) || {};
                 moduleData = { ...moduleData, ...extra };
@@ -653,19 +652,19 @@ function applyModule(data = {}, options = {}) {
             const base = personaTemplates[id] ? { ...personaTemplates[id] } : { id };
             personaTemplates[id] = { ...base, ...def, id: def.id || base.id || id };
         });
-        const personaState = globalThis.Dustland?.gameState?.getState?.()?.personas;
-        if (personaState && globalThis.Dustland?.gameState?.setPersona && personas) {
+        const personaState = coreGlobals.Dustland?.gameState?.getState?.()?.personas;
+        if (personaState && coreGlobals.Dustland?.gameState?.setPersona && personas) {
             Object.keys(personaState).forEach(id => {
                 if (personas[id]) {
                     const merged = { ...personaState[id], ...personas[id], id };
-                    globalThis.Dustland.gameState.setPersona(id, merged);
+                    coreGlobals.Dustland.gameState.setPersona(id, merged);
                 }
             });
         }
     }
     // Effect packs
-    if (moduleData.effectPacks && globalThis.Dustland?.gameState?.loadEffectPacks) {
-        globalThis.Dustland.gameState.loadEffectPacks(moduleData.effectPacks);
+    if (moduleData.effectPacks && coreGlobals.Dustland?.gameState?.loadEffectPacks) {
+        coreGlobals.Dustland.gameState.loadEffectPacks(moduleData.effectPacks);
     }
     // Items
     const questItemLocations = {};
@@ -793,8 +792,8 @@ function applyModule(data = {}, options = {}) {
     else
         console.log(`${nameForLog} loaded successfully.`);
     if (typeof document !== 'undefined' && typeof document.dispatchEvent === 'function') {
-        const CE = document.defaultView?.CustomEvent || globalThis.CustomEvent;
-        const Ev = document.defaultView?.Event || globalThis.Event;
+        const CE = document.defaultView?.CustomEvent || coreGlobals.CustomEvent;
+        const Ev = document.defaultView?.Event || coreGlobals.Event;
         const evt = typeof CE === 'function' ? new CE('moduleLoaded', { detail: { name: nameForLog } }) : new Ev('moduleLoaded');
         document.dispatchEvent(evt);
     }
@@ -946,12 +945,12 @@ function placeHut(x, y, b = {}) {
     const nb = { x, y, w: w ?? 0, h: h ?? 0, doorX, doorY, interiorId, boarded, under, grid };
     if (bunker) {
         nb.bunker = true;
-        const moduleName = globalThis.Dustland?.currentModule || '';
+        const moduleName = coreGlobals.Dustland?.currentModule || '';
         const bunkerId = b.bunkerId || `bunker_${x}_${y}`;
         nb.bunkerId = bunkerId;
-        const bunkers = (globalThis.Dustland || (globalThis.Dustland = {})).bunkers || (globalThis.Dustland.bunkers = []);
+        const bunkers = (coreGlobals.Dustland || (coreGlobals.Dustland = {})).bunkers || (coreGlobals.Dustland.bunkers = []);
         if (!bunkers.some(b => b.id === bunkerId)) {
-            const ft = globalThis.Dustland?.fastTravel;
+            const ft = coreGlobals.Dustland?.fastTravel;
             const ftNetwork = ft?.networkFor;
             const network = typeof ftNetwork === 'function' ? String(ftNetwork(moduleName)) : 'global';
             const entry = { id: bunkerId, x: doorX ?? x, y: doorY ?? y, map: 'world', module: moduleName, name: moduleName, active: !boarded, network };
@@ -1104,9 +1103,9 @@ const SHOP_DEFAULTS = Object.freeze({
 function getNpcTemplateDefinition(id) {
     if (!id)
         return null;
-    const moduleName = globalThis.Dustland?.currentModule ?? '';
+    const moduleName = coreGlobals.Dustland?.currentModule ?? '';
     if (moduleName) {
-        const moduleData = globalThis.Dustland?.loadedModules?.[moduleName];
+        const moduleData = coreGlobals.Dustland?.loadedModules?.[moduleName];
         const found = moduleData?.npcs?.find(n => n.id === id);
         if (found)
             return found;
@@ -1257,7 +1256,7 @@ function applyNpcPatch(npc, patch) {
     }
 }
 function gatherGameState() {
-    const gs = globalThis.Dustland?.gameState;
+    const gs = coreGlobals.Dustland?.gameState;
     const raw = (gs && typeof gs.getState === 'function') ? gs.getState() : null;
     return {
         flags: deepClone(raw?.flags || {}),
@@ -1267,9 +1266,9 @@ function gatherGameState() {
     };
 }
 function applyGameState(data) {
-    if (!data || !globalThis.Dustland?.gameState)
+    if (!data || !coreGlobals.Dustland?.gameState)
         return;
-    const gs = globalThis.Dustland.gameState;
+    const gs = coreGlobals.Dustland.gameState;
     const flags = deepClone(data.flags || {});
     const personas = deepClone((data.personas || {}));
     const effectPacks = deepClone(data.effectPacks || {});
@@ -1377,7 +1376,7 @@ function serializePartyMember(p) {
     };
 }
 function serializeGameState() {
-    const gs = globalThis.Dustland?.gameState;
+    const gs = coreGlobals.Dustland?.gameState;
     if (!gs || typeof gs.getState !== 'function')
         return null;
     const raw = gs.getState();
@@ -1416,12 +1415,12 @@ function save() {
     const buildingsData = deepClone(buildings);
     const itemDropData = deepClone(itemDrops);
     const worldFlagData = deepClone(worldFlags);
-    const bunkerData = deepClone(globalThis.Dustland?.bunkers || []);
+    const bunkerData = deepClone(coreGlobals.Dustland?.bunkers || []);
     const saveData = {
         format: SAVE_FORMAT,
         version: 2,
         savedAt: Date.now(),
-        module: globalThis.Dustland?.currentModule ?? coreGlobals.moduleData?.name ?? coreGlobals.moduleData?.id ?? null,
+        module: coreGlobals.Dustland?.currentModule ?? coreGlobals.moduleData?.name ?? coreGlobals.moduleData?.id ?? null,
         worldSeed,
         world: worldData,
         player: playerData,
@@ -1563,7 +1562,7 @@ function loadLegacySave(d) {
         mem.applyEquipmentStats();
         const personaId = mem.persona;
         if (personaId) {
-            globalThis.Dustland?.profiles?.remove?.(mem, personaId);
+            coreGlobals.Dustland?.profiles?.remove?.(mem, personaId);
             mem.persona = undefined;
             Dustland.gameState.applyPersona(mem.id, personaId);
         }
@@ -1575,8 +1574,8 @@ function loadLegacySave(d) {
         toast('Game loaded.');
 }
 function loadModernSave(d) {
-    const moduleName = resolveModuleName(d.module) ?? globalThis.Dustland?.currentModule ?? null;
-    const moduleData = (moduleName != null ? globalThis.Dustland?.loadedModules?.[moduleName] : null) || coreGlobals.moduleData;
+    const moduleName = resolveModuleName(d.module) ?? coreGlobals.Dustland?.currentModule ?? null;
+    const moduleData = (moduleName != null ? coreGlobals.Dustland?.loadedModules?.[moduleName] : null) || coreGlobals.moduleData;
     party.length = 0;
     party.flags = {};
     party.fallen = [];
@@ -1603,7 +1602,7 @@ function loadModernSave(d) {
         if (moduleWorld.length && worldsDiffer(moduleWorld, d.world)) {
             const moduleLabel = moduleData?.title || moduleData?.displayName || moduleData?.name || moduleName || 'this module';
             const prompt = `${moduleLabel} has a newer world layout. Discard the world stored in your save and load the updated map? Choose Cancel to keep your saved world.`;
-            const discard = typeof globalThis.confirm === 'function' ? globalThis.confirm(prompt) : false;
+            const discard = typeof coreGlobals.confirm === 'function' ? coreGlobals.confirm(prompt) : false;
             if (discard) {
                 useSavedWorld = false;
                 log('Saved world discarded; using updated module map.');
@@ -1739,12 +1738,12 @@ function loadModernSave(d) {
     else {
         setPartyPos(party.x, party.y);
     }
-    if (globalThis.Dustland) {
-        const bunkers = globalThis.Dustland.bunkers || (globalThis.Dustland.bunkers = []);
+    if (coreGlobals.Dustland) {
+        const bunkers = coreGlobals.Dustland.bunkers || (coreGlobals.Dustland.bunkers = []);
         bunkers.length = 0;
         if (Array.isArray(d.bunkers)) {
-            if (globalThis.Dustland.fastTravel?.upsertBunkers) {
-                globalThis.Dustland.fastTravel.upsertBunkers(d.bunkers);
+            if (coreGlobals.Dustland.fastTravel?.upsertBunkers) {
+                coreGlobals.Dustland.fastTravel.upsertBunkers(d.bunkers);
             }
             else {
                 d.bunkers.forEach(b => bunkers.push(deepClone(b)));
@@ -1757,7 +1756,7 @@ function loadModernSave(d) {
         mem.applyEquipmentStats();
         const personaId = mem.persona;
         if (personaId) {
-            globalThis.Dustland?.profiles?.remove?.(mem, personaId);
+            coreGlobals.Dustland?.profiles?.remove?.(mem, personaId);
             mem.persona = undefined;
             Dustland.gameState.applyPersona(mem.id, personaId);
         }
@@ -1827,12 +1826,12 @@ function resetAll() {
     state.fog = {};
     state.map = 'creator';
     openCreator();
-    globalThis.Dustland?.inventory?.loadStarterItems?.();
+    coreGlobals.Dustland?.inventory?.loadStarterItems?.();
     log('Reset. Back to character creation.');
     if (typeof toast === 'function')
         toast('Game reset.');
 }
-Object.assign(globalThis, { showStart, hideStart, openCreator, closeCreator, resetAll });
+Object.assign(coreGlobals, { showStart, hideStart, openCreator, closeCreator, resetAll });
 // ===== Character Creator =====
 const creator = document.getElementById('creator');
 const ccStepEl = document.getElementById('ccStep');
@@ -2237,7 +2236,7 @@ const coreExports = {
     getQuirk
 };
 Object.assign(coreExports, { getGameState: () => gameState });
-globalThis.Dustland = globalThis.Dustland || {};
-globalThis.Dustland.zoneEffects = zoneEffects;
-Object.assign(globalThis.Dustland, coreExports);
-Object.assign(globalThis, coreExports);
+coreGlobals.Dustland = coreGlobals.Dustland || {};
+coreGlobals.Dustland.zoneEffects = zoneEffects;
+Object.assign(coreGlobals.Dustland, coreExports);
+Object.assign(coreGlobals, coreExports);

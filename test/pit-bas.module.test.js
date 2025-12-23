@@ -314,6 +314,7 @@ test('merchant quest requires all treasures', () => {
     getNextId: id => id,
   };
   game.globalThis = game;
+  game.coreGlobals = game;
   vm.runInNewContext(questsSrc, game);
   const coreFile = path.join(__dirname, '..', 'scripts', 'dustland-core.js');
   const coreSrc = fs.readFileSync(coreFile, 'utf8');
