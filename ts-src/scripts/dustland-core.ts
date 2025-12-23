@@ -538,11 +538,13 @@ type CoreState = {
   map: string;
   mapFlags: Record<string, unknown>;
   fog: Record<string, unknown>;
+  customImages?: Record<string, string>;
+  tileOverrides?: Record<string, Record<string, string>>;
   mapEntry?: { map: string; x: number; y: number } | null;
   [key: string]: unknown;
 };
 
-var state: CoreState = { map:'world', mapFlags: {}, fog: {} }; // default map
+var state: CoreState = { map:'world', mapFlags: {}, fog: {}, customImages: {}, tileOverrides: {} }; // default map
 const player: PlayerState = {
   hp: 10,
   inv: [] as PartyItem[],
@@ -681,6 +683,8 @@ function applyModule(data: Record<string, any> = {}, options: { fullReset?: bool
 
     // Clear core collections
     state.fog = {};
+    state.customImages = {};
+    state.tileOverrides = {};
     Object.keys(interiors).forEach(k => delete interiors[k]);
     buildings.length = 0;
     portals.length = 0;
@@ -775,6 +779,13 @@ function applyModule(data: Record<string, any> = {}, options: { fullReset?: bool
     Object.entries(encounters).forEach(([map, list]) => {
       enemyBanks[map] = (list || []).map(e => ({ ...e } as CombatSource));
     });
+  }
+
+  if (moduleData.customImages) {
+    state.customImages = deepClone(moduleData.customImages);
+  }
+  if (moduleData.tileOverrides) {
+    state.tileOverrides = deepClone(moduleData.tileOverrides);
   }
 
   if (personaTemplates && moduleData.personas) {
@@ -1704,6 +1715,8 @@ function loadModernSave(d){
   state.map = state.map || 'world';
   state.mapFlags = state.mapFlags || {};
   state.fog = state.fog || {};
+  state.customImages = state.customImages || {};
+  state.tileOverrides = state.tileOverrides || {};
   if(Array.isArray(partyData.members) && partyData.members[0]){
     party.x = partyData.members[0].x ?? party.x;
     party.y = partyData.members[0].y ?? party.y;

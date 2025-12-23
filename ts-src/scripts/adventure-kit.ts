@@ -157,9 +157,23 @@ type ModuleData = {
   _origKeys?: string[];
   zoneEffects?: any[];
   generateMap?: (seed: number, opts?: unknown) => unknown;
+  customImages?: Record<string, string>;
+  tileOverrides?: Record<string, Record<string, string>>;
 };
 type AckPersonaData = PersonaData & { label?: string; portrait?: string; [key: string]: unknown };
 declare function nextLoopPoint(prev: LoopPoint | undefined, npc: LoopPoint): LoopPoint;
+
+let assetPaint: string | null = null;
+const assetCache = new Map<string, HTMLImageElement>();
+
+function getAssetImage(id: string) {
+  if (!moduleData.customImages || !moduleData.customImages[id]) return null;
+  if (assetCache.has(id)) return assetCache.get(id);
+  const img = new Image();
+  img.src = moduleData.customImages[id];
+  assetCache.set(id, img);
+  return img;
+}
 
 const stampNames = {
   hill: 'Hill',
@@ -492,7 +506,7 @@ loopMinus.addEventListener('click', () => {
   showLoopControls(null);
 });
 
-const moduleData = (globalThis as ModuleGlobals).moduleData ?? ((globalThis as ModuleGlobals).moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
+const moduleData = (globalThis as ModuleGlobals).moduleData ?? ((globalThis as ModuleGlobals).moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {}, customImages: {}, tileOverrides: {} });
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod', 'spread'];
 const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];
@@ -639,6 +653,7 @@ const paletteLabel = document.getElementById('paletteLabel');
 let worldPaint = null;
 let worldStamp = null;
 let worldPainting = false;
+let assetPainting = false;
 let didPaint = false, didInteriorPaint = false;
 const noiseToggle = document.getElementById('noiseToggle');
 const brushSizeSlider = document.getElementById('brushSize');
@@ -728,12 +743,23 @@ function drawWorld() {
       const px = (x - (map === 'world' ? panX : 0)) * sx;
       if (px + sx < 0 || px >= canvas.width) continue;
       const t = row[x];
-      if (map === 'world') {
-        ctx.fillStyle = akColors[t] || '#000';
-      } else {
-        ctx.fillStyle = t === TILE.WALL ? '#444' : t === TILE.DOOR ? '#8bd98d' : '#222';
+      const overrideId = moduleData.tileOverrides?.[map]?.[`${x},${y}`];
+      let drawn = false;
+      if (overrideId) {
+        const img = getAssetImage(overrideId);
+        if (img && img.complete && img.width > 0) {
+          ctx.drawImage(img, px, py, sx, sy);
+          drawn = true;
+        }
       }
-      ctx.fillRect(px, py, sx, sy);
+      if (!drawn) {
+        if (map === 'world') {
+          ctx.fillStyle = akColors[t] || '#000';
+        } else {
+          ctx.fillStyle = t === TILE.WALL ? '#444' : t === TILE.DOOR ? '#8bd98d' : '#222';
+        }
+        ctx.fillRect(px, py, sx, sy);
+      }
       if (map === 'world' && spawnHeat && spawnHeatMap && spawnHeatMax > 0) {
         const d = spawnHeatMap[y][x];
         if (d && d !== Infinity) {
@@ -988,8 +1014,19 @@ function drawInterior() {
     if (!row) continue;
     for (let x = 0; x < I.w; x++) {
       const t = row[x];
-      intCtx.fillStyle = t === TILE.WALL ? '#444' : t === TILE.DOOR ? '#8bd98d' : '#222';
-      intCtx.fillRect(x * sx, y * sy, sx, sy);
+      const overrideId = moduleData.tileOverrides?.[I.id]?.[`${x},${y}`];
+      let drawn = false;
+      if (overrideId) {
+        const img = getAssetImage(overrideId);
+        if (img && img.complete && img.width > 0) {
+          intCtx.drawImage(img, x * sx, y * sy, sx, sy);
+          drawn = true;
+        }
+      }
+      if (!drawn) {
+        intCtx.fillStyle = t === TILE.WALL ? '#444' : t === TILE.DOOR ? '#8bd98d' : '#222';
+        intCtx.fillRect(x * sx, y * sy, sx, sy);
+      }
     }
   }
   moduleData.npcs.filter(n => n.map === I.id).forEach(n => {
@@ -1093,12 +1130,235 @@ intCanvas.addEventListener('mousedown', e => {
   if (!coordTarget && !placingType && (overNpc || overItem)) {
     return;
   }
+  if (assetPaint) {
+    moduleData.tileOverrides = moduleData.tileOverrides || {};
+    moduleData.tileOverrides[I.id] = moduleData.tileOverrides[I.id] || {};
+    moduleData.tileOverrides[I.id][`${x},${y}`] = assetPaint;
+    assetPainting = true;
+    didInteriorPaint = true;
+    drawInterior();
+    return;
+  }
   intPainting = true;
   paintInterior(e);
 });
-intCanvas.addEventListener('mousemove', e => { if (intPainting) paintInterior(e); });
-intCanvas.addEventListener('mouseup', () => { intPainting = false; });
-intCanvas.addEventListener('mouseleave', () => { intPainting = false; didInteriorPaint = false; });
+intCanvas.addEventListener('mousemove', e => {
+  if (assetPainting) {
+    const I = moduleData.interiors[editInteriorIdx];
+    const { x, y } = interiorCanvasPos(e);
+    if (x >= 0 && y >= 0 && x < I.w && y < I.h && assetPaint) {
+      moduleData.tileOverrides = moduleData.tileOverrides || {};
+      moduleData.tileOverrides[I.id] = moduleData.tileOverrides[I.id] || {};
+      moduleData.tileOverrides[I.id][`${x},${y}`] = assetPaint;
+      drawInterior();
+    }
+    return;
+  }
+  if (intPainting) paintInterior(e);
+});
+intCanvas.addEventListener('mouseup', () => { intPainting = false; assetPainting = false; });
+intCanvas.addEventListener('mouseleave', () => { intPainting = false; assetPainting = false; didInteriorPaint = false; });
+
+canvas.addEventListener('mousedown', ev => {
+  // ... existing handler ...
+  if (ev.button === 2 && currentMap === 'world') {
+    showLoopControls(null);
+    panning = true;
+    const rect = canvas.getBoundingClientRect();
+    const { scaleX, scaleY } = getCanvasScale(rect);
+    panScaleX = scaleX;
+    panScaleY = scaleY;
+    panMouseX = ev.clientX;
+    panMouseY = ev.clientY;
+    panStartX = panX;
+    panStartY = panY;
+    canvas.style.cursor = 'grabbing';
+    return;
+  }
+  showLoopControls(null);
+  if (ev.button !== 0) return;
+  const { x, y } = canvasPos(ev);
+  const overNpc = moduleData.npcs.some(n => n.map === currentMap && n.x === x && n.y === y);
+  const overItem = moduleData.items.some(it => it.map === currentMap && it.x === x && it.y === y);
+  const overBldg = currentMap === 'world' && moduleData.buildings.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+  const overStart = currentMap === 'world' && moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y;
+  const overEvent = moduleData.events.some(ev2 => ev2.map === currentMap && ev2.x === x && ev2.y === y);
+  const overPortal = moduleData.portals.some(p => p.map === currentMap && p.x === x && p.y === y);
+  const overZone = selectedObj && selectedObj.type === 'zone' && selectedObj.obj.map === currentMap && x >= selectedObj.obj.x && x < selectedObj.obj.x + selectedObj.obj.w && y >= selectedObj.obj.y && y < selectedObj.obj.y + selectedObj.obj.h;
+  if (currentMap === 'world' && assetPaint && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal || overZone)) {
+    assetPainting = true;
+    moduleData.tileOverrides = moduleData.tileOverrides || {};
+    moduleData.tileOverrides.world = moduleData.tileOverrides.world || {};
+    moduleData.tileOverrides.world[`${x},${y}`] = assetPaint;
+    didPaint = true;
+    drawWorld();
+    updateCursor(x, y);
+    return;
+  }
+  // ... rest of handler
+  if (currentMap === 'world' && worldStamp && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal || overZone)) {
+    stampWorld(x, y, worldStamp);
+    drawWorld();
+    updateCursor(x, y);
+    return;
+  }
+  if (currentMap === 'world' && worldPaint != null && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal || overZone)) {
+    worldPainting = true;
+    hoverTile = { x, y };
+    addTerrainFeature(x, y, worldPaint);
+    didPaint = true;
+    drawWorld();
+    updateCursor(x, y);
+    return;
+  }
+  if (currentMap !== 'world' && !coordTarget && !placingType && !(overNpc || overItem || overEvent || overPortal || overZone)) {
+    hoverTile = { x, y };
+    const I = moduleData.interiors.find(i => i.id === currentMap);
+    if (assetPaint) {
+      moduleData.tileOverrides = moduleData.tileOverrides || {};
+      moduleData.tileOverrides[I.id] = moduleData.tileOverrides[I.id] || {};
+      moduleData.tileOverrides[I.id][`${x},${y}`] = assetPaint;
+      assetPainting = true;
+      didPaint = true;
+      drawWorld();
+      drawInterior();
+      updateCursor(x, y);
+      return;
+    }
+    if (I) {
+      applyInteriorBrush(I, x, y, intPaint);
+      delete I._origGrid;
+      intPainting = true;
+      didPaint = true;
+      drawWorld();
+      drawInterior();
+      updateCursor(x, y);
+    }
+    return;
+  }
+  hoverTarget = null;
+  didDrag = false;
+  if (coordTarget) {
+    const target = coordTarget;
+    document.getElementById(target.x).value = x;
+    document.getElementById(target.y).value = y;
+    if (target.map) populateMapDropdown(document.getElementById(target.map), currentMap);
+    coordTarget = null;
+    canvas.style.cursor = '';
+    if (target.x === 'npcX' && target.y === 'npcY') {
+      finishNpcCoordinateSelection(x, y);
+    }
+    drawWorld();
+    return;
+  }
+  if (placingType) {
+    if (placingType === 'item') {
+      populateMapDropdown(document.getElementById('itemMap'), currentMap);
+      document.getElementById('itemX').value = x;
+      document.getElementById('itemY').value = y;
+      if (placingCb) placingCb();
+      document.getElementById('cancelItem').style.display = 'none';
+    } else if (placingType === 'bldg' && currentMap === 'world') {
+      document.getElementById('bldgX').value = x;
+      document.getElementById('bldgY').value = y;
+      if (placingCb) placingCb();
+      document.getElementById('cancelBldg').style.display = 'none';
+    }
+    placingType = null;
+    placingPos = null;
+    placingCb = null;
+    drawWorld();
+    updateCursor(x, y);
+    return;
+  }
+  if (settingStart && currentMap === 'world') {
+    if (!isTileWalkable('world', x, y)) {
+      setMapActionBanner('That tile is blocked. Pick a walkable tile for the start.', 'error');
+      return;
+    }
+    moduleData.start = { map: 'world', x, y };
+    settingStart = false;
+    setMapActionBanner(`Player start set to (${x}, ${y}).`, 'success', 3000);
+    drawWorld();
+    updateCursor(x, y);
+    return;
+  }
+  if (currentMap === 'world' && moduleData.start && moduleData.start.map === 'world' && moduleData.start.x === x && moduleData.start.y === y) {
+    dragTarget = moduleData.start;
+    dragTarget._type = 'start';
+    updateCursor(x, y);
+    return;
+  }
+  if (selectedObj && selectedObj.type === 'zone' && selectedObj.obj.map === currentMap) {
+    const z = selectedObj.obj;
+    const nearTL = x >= z.x - 1 && x <= z.x && y >= z.y - 1 && y <= z.y;
+    const nearBR = x >= z.x + z.w - 1 && x <= z.x + z.w && y >= z.y + z.h - 1 && y <= z.y + z.h;
+    if (nearTL) {
+      dragTarget = z;
+      dragTarget._type = 'zoneTL';
+      dragOffsetX = z.x + z.w;
+      dragOffsetY = z.y + z.h;
+      updateCursor(x, y);
+      return;
+    } else if (nearBR) {
+      dragTarget = z;
+      dragTarget._type = 'zoneBR';
+      updateCursor(x, y);
+      return;
+    } else if (x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h) {
+      dragTarget = z;
+      dragTarget._type = 'zoneMove';
+      dragOffsetX = x - z.x;
+      dragOffsetY = y - z.y;
+      updateCursor(x, y);
+      return;
+    }
+  }
+  if (selectedObj && selectedObj.type === 'npc' && selectedObj.obj.loop) {
+    const idx = selectedObj.obj.loop.findIndex(p => p.x === x && p.y === y);
+    if (idx >= 0) {
+      dragTarget = { _type: 'loop', npc: selectedObj.obj, idx };
+      updateCursor(x, y);
+      return;
+    }
+  }
+  dragTarget = moduleData.npcs.find(n => n.map === currentMap && n.x === x && n.y === y);
+  if (dragTarget) {
+    dragTarget._type = 'npc';
+    updateCursor(x, y);
+    return;
+  }
+  dragTarget = moduleData.items.find(it => it.map === currentMap && it.x === x && it.y === y);
+  if (dragTarget) {
+    dragTarget._type = 'item';
+    updateCursor(x, y);
+    return;
+  }
+  dragTarget = currentMap === 'world' ? moduleData.buildings.find(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h) : null;
+  if (dragTarget) {
+    dragTarget._type = 'bldg';
+    document.getElementById('bldgX').value = dragTarget.x;
+    document.getElementById('bldgY').value = dragTarget.y;
+    editBldgIdx = moduleData.buildings.indexOf(dragTarget);
+    document.getElementById('delBldg').style.display = 'block';
+    selectedObj = { type: 'bldg', obj: dragTarget };
+    drawWorld();
+    showBldgEditor(true);
+    updateCursor(x, y);
+    return;
+  }
+  document.getElementById('npcX').value = x; document.getElementById('npcY').value = y;
+  document.getElementById('itemX').value = x; document.getElementById('itemY').value = y;
+  document.getElementById('bldgX').value = x; document.getElementById('bldgY').value = y;
+  document.getElementById('eventX').value = x; document.getElementById('eventY').value = y;
+  document.getElementById('zoneX').value = x; document.getElementById('zoneY').value = y;
+  const px = document.getElementById('portalX');
+  const py = document.getElementById('portalY');
+  if (px && py) { px.value = x; py.value = y; }
+  selectedObj = null;
+  drawWorld();
+  updateCursor(x, y);
+});
 
 intCanvas.addEventListener('click', e => {
   if (editInteriorIdx < 0) return;
@@ -6130,6 +6390,17 @@ canvas.addEventListener('mousedown', ev => {
   if (currentMap !== 'world' && !coordTarget && !placingType && !(overNpc || overItem || overEvent || overPortal || overZone)) {
     hoverTile = { x, y };
     const I = moduleData.interiors.find(i => i.id === currentMap);
+    if (assetPaint) {
+      moduleData.tileOverrides = moduleData.tileOverrides || {};
+      moduleData.tileOverrides[I.id] = moduleData.tileOverrides[I.id] || {};
+      moduleData.tileOverrides[I.id][`${x},${y}`] = assetPaint;
+      assetPainting = true;
+      didPaint = true;
+      drawWorld();
+      drawInterior();
+      updateCursor(x, y);
+      return;
+    }
     if (I) {
       applyInteriorBrush(I, x, y, intPaint);
       delete I._origGrid;
@@ -6280,10 +6551,30 @@ canvas.addEventListener('mousemove', ev => {
   const { x, y } = canvasPos(ev);
   hoverTile = { x, y };
   if (currentMap === 'world' && worldStamp) drawWorld();
+  if (currentMap === 'world' && assetPainting && assetPaint) {
+    moduleData.tileOverrides = moduleData.tileOverrides || {};
+    moduleData.tileOverrides.world = moduleData.tileOverrides.world || {};
+    moduleData.tileOverrides.world[`${x},${y}`] = assetPaint;
+    didPaint = true;
+    drawWorld();
+    return;
+  }
   if (currentMap === 'world' && worldPainting && worldPaint != null) {
     addTerrainFeature(x, y, worldPaint);
     didPaint = true;
     drawWorld();
+    return;
+  }
+  if (currentMap !== 'world' && assetPainting && assetPaint) {
+    const I = moduleData.interiors.find(i => i.id === currentMap);
+    if (I) {
+      moduleData.tileOverrides = moduleData.tileOverrides || {};
+      moduleData.tileOverrides[I.id] = moduleData.tileOverrides[I.id] || {};
+      moduleData.tileOverrides[I.id][`${x},${y}`] = assetPaint;
+      didPaint = true;
+      drawWorld();
+      drawInterior();
+    }
     return;
   }
   if (currentMap !== 'world' && intPainting) {
@@ -6557,6 +6848,115 @@ function mergeWizardResult(res) {
   if (typeof renderZoneList === 'function') renderZoneList();
   if (typeof renderEncounterList === 'function') renderEncounterList();
   if (typeof renderTemplateList === 'function') renderTemplateList();
+  if (typeof renderAssetList === 'function') renderAssetList();
+}
+
+function renderAssetList() {
+  const list = document.getElementById('assetList');
+  if (!list) return;
+  const ids = Object.keys(moduleData.customImages || {});
+  list.innerHTML = ids.map(id => {
+    const src = moduleData.customImages[id];
+    return `<div class="asset-row" data-id="${id}">
+      <img src="${src}" class="asset-thumb">
+      <span class="asset-name">${id}</span>
+      <button class="btn asset-paint" title="Paint">🖌</button>
+      <button class="btn asset-del" title="Delete">🗑</button>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.asset-paint').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = (e.target as HTMLElement).closest('.asset-row').dataset.id;
+      assetPaint = id === assetPaint ? null : id;
+      worldPaint = null;
+      clearPaletteSelection();
+      // Highlight the selected asset button
+      list.querySelectorAll('.asset-paint').forEach(b => b.classList.remove('active'));
+      if (assetPaint) btn.classList.add('active');
+    });
+  });
+  list.querySelectorAll('.asset-del').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = (e.target as HTMLElement).closest('.asset-row').dataset.id;
+      confirmDialog(`Delete asset ${id}?`, () => {
+        delete moduleData.customImages[id];
+        renderAssetList();
+        drawWorld();
+      });
+    });
+  });
+}
+
+function uploadAsset() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = e => {
+    const file = (e.target as HTMLInputElement).files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      const id = 'asset_' + Date.now(); // Simple ID generation
+      moduleData.customImages = moduleData.customImages || {};
+      moduleData.customImages[id] = base64;
+      renderAssetList();
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function injectAssetTab() {
+  const panel = document.getElementById('editorPanel');
+  if (!panel) return;
+  const tabList = panel.querySelector('.tabs2');
+  if (!tabList) return;
+
+  if (document.getElementById('tabAssets')) return; // Already injected
+
+  const tab = document.createElement('button');
+  tab.id = 'tabAssets';
+  tab.className = 'tab2';
+  tab.dataset.tab = 'assets';
+  tab.textContent = 'Assets';
+  tab.addEventListener('click', () => {
+    if (window.showEditorTab) window.showEditorTab('assets');
+  });
+  tabList.appendChild(tab);
+
+  const pane = document.createElement('div');
+  pane.className = 'pane';
+  pane.dataset.pane = 'assets';
+  pane.style.display = 'none';
+  pane.innerHTML = `
+    <div class="pane-header">Asset Manager</div>
+    <div class="pane-content">
+      <div class="row">
+        <button class="btn btn--primary" id="uploadAssetBtn">Upload Image</button>
+      </div>
+      <div id="assetList" class="asset-list"></div>
+    </div>
+    <style>
+      .asset-list { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+      .asset-row { display: flex; align-items: center; gap: 8px; background: #111; padding: 4px; border: 1px solid #333; }
+      .asset-thumb { width: 32px; height: 32px; object-fit: contain; background: #000; }
+      .asset-name { flex: 1; font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+      .asset-paint.active { background: #0f0; color: #000; }
+    </style>
+  `;
+  panel.appendChild(pane);
+
+  document.getElementById('uploadAssetBtn').addEventListener('click', uploadAsset);
+}
+
+// Call injection on load
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectAssetTab);
+  } else {
+    injectAssetTab();
+  }
 }
 
 function openWizard(cfg) {
