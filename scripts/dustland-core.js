@@ -402,7 +402,7 @@ function revealFog(map, x, y, radius = FOG_RADIUS) {
         }
     }
 }
-var state = { map: 'world', mapFlags: {}, fog: {} }; // default map
+var state = { map: 'world', mapFlags: {}, fog: {}, customImages: {}, tileOverrides: {} }; // default map
 const player = {
     hp: 10,
     inv: [],
@@ -540,6 +540,8 @@ function applyModule(data = {}, options = {}) {
         setRNGSeed(seed);
         // Clear core collections
         state.fog = {};
+        state.customImages = {};
+        state.tileOverrides = {};
         Object.keys(interiors).forEach(k => delete interiors[k]);
         buildings.length = 0;
         portals.length = 0;
@@ -644,6 +646,12 @@ function applyModule(data = {}, options = {}) {
         Object.entries(encounters).forEach(([map, list]) => {
             enemyBanks[map] = (list || []).map(e => ({ ...e }));
         });
+    }
+    if (moduleData.customImages) {
+        state.customImages = deepClone(moduleData.customImages);
+    }
+    if (moduleData.tileOverrides) {
+        state.tileOverrides = deepClone(moduleData.tileOverrides);
     }
     if (personaTemplates && moduleData.personas) {
         const personas = moduleData.personas;
@@ -1716,6 +1724,8 @@ function loadModernSave(d) {
     state.map = state.map || 'world';
     state.mapFlags = state.mapFlags || {};
     state.fog = state.fog || {};
+    state.customImages = state.customImages || {};
+    state.tileOverrides = state.tileOverrides || {};
     if (Array.isArray(partyData.members) && partyData.members[0]) {
         party.x = partyData.members[0].x ?? party.x;
         party.y = partyData.members[0].y ?? party.y;

@@ -1769,9 +1769,29 @@ function render(gameState = state, _dt) {
                     const t = getTile(activeMap, gx, gy);
                     if (t === null)
                         continue;
-                    const tileSprite = skin?.getTileSprite?.(t, { x: gx, y: gy, map: activeMap });
                     let tileDrawn = false;
-                    if (tileSprite) {
+                    const overrideId = gameState.tileOverrides?.[activeMap]?.[`${gx},${gy}`];
+                    if (overrideId) {
+                        const base64 = gameState.customImages?.[overrideId];
+                        if (base64) {
+                            const Img = globalThis.Image;
+                            // Simple cache for engine to avoid re-creating images every frame
+                            const cacheKey = `custom_${overrideId}`;
+                            let img = globalThis._customAssetCache?.[cacheKey];
+                            if (!img) {
+                                img = new Img();
+                                img.src = base64;
+                                globalThis._customAssetCache = globalThis._customAssetCache || {};
+                                globalThis._customAssetCache[cacheKey] = img;
+                            }
+                            if (img.complete && img.width > 0) {
+                                ctx.drawImage(img, vx * TS, vy * TS, TS, TS);
+                                tileDrawn = true;
+                            }
+                        }
+                    }
+                    const tileSprite = !tileDrawn && skin?.getTileSprite?.(t, { x: gx, y: gy, map: activeMap });
+                    if (!tileDrawn && tileSprite) {
                         tileDrawn = drawSkinSprite(ctx, tileSprite, vx * TS, vy * TS, TS);
                     }
                     if (!tileDrawn) {
