@@ -316,12 +316,18 @@ let loopHover = null;
 const loopPlus = document.createElement('span');
 loopPlus.textContent = '+';
 loopPlus.className = 'pill';
+loopPlus.setAttribute('role', 'button');
+loopPlus.setAttribute('tabindex', '0');
+loopPlus.setAttribute('aria-label', 'Add loop point');
 loopPlus.style.position = 'absolute';
 loopPlus.style.display = 'none';
 document.body.appendChild(loopPlus);
 const loopMinus = document.createElement('span');
 loopMinus.textContent = '-';
 loopMinus.className = 'pill';
+loopMinus.setAttribute('role', 'button');
+loopMinus.setAttribute('tabindex', '0');
+loopMinus.setAttribute('aria-label', 'Remove loop point');
 loopMinus.style.position = 'absolute';
 loopMinus.style.display = 'none';
 document.body.appendChild(loopMinus);
@@ -1725,7 +1731,7 @@ function addChoiceRow(container, ch = {}) {
         delete rowDataset.extraEffects;
     row.innerHTML = `<label>Label<input class="choiceLabel" value="${label}"/></label>
     <label>To<select class="choiceTo"></select></label>
-    <button class="btn delChoice" type="button">x</button>
+    <button class="btn delChoice" type="button" aria-label="Delete choice">x</button>
     <details class="choiceAdv"><summary>Advanced</summary>
       <div class="advOptions"></div>
       <div style="margin-top:4px"><select class="advSelect">
@@ -1761,6 +1767,7 @@ function addChoiceRow(container, ch = {}) {
         del.className = 'btn delAdv';
         del.type = 'button';
         del.textContent = 'x';
+        del.setAttribute('aria-label', 'Delete condition');
         del.addEventListener('click', () => { div.remove(); refreshChoiceDropdowns(); updateTreeData(); });
         div.prepend(del);
         opts.appendChild(div);
@@ -2052,7 +2059,7 @@ function renderTreeEditor() {
             return;
         const div = document.createElement('div');
         div.className = 'node';
-        div.innerHTML = `<div class="nodeHeader"><button class="btn toggle" type="button">-</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="btn delNode" type="button" title="Delete node">&#128465;</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
+        div.innerHTML = `<div class="nodeHeader"><button class="btn toggle" type="button" aria-label="Toggle node">-</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="btn delNode" type="button" title="Delete node" aria-label="Delete node">&#128465;</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
         const choicesDiv = div.querySelector('.choices');
         if (!choicesDiv)
             return;
@@ -2529,6 +2536,9 @@ function renderLoopFields(pts) {
         const del = document.createElement('span');
         del.textContent = '-';
         del.className = 'pill';
+        del.setAttribute('role', 'button');
+        del.setAttribute('tabindex', '0');
+        del.setAttribute('aria-label', 'Remove loop point');
         del.onclick = () => row.remove();
         row.appendChild(del);
         wrap.appendChild(row);
