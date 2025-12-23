@@ -509,6 +509,11 @@
           <label><input type="checkbox" id="npcColorOverride"> Override Color</label>
           <label id="npcColorWrap" style="display:none">Color<input id="npcColor" type="color" value="#9ef7a0" /></label>
           <label>Symbol<input id="npcSymbol" maxlength="1" value="!" /></label>
+          <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+            <label style="flex:1">Tile Image (PNG)<input type="file" id="npcTileUpload" accept="image/png" /></label>
+            <div id="npcTilePreview" aria-live="polite" style="width:32px;height:32px;border:1px solid #555;background:#111 center/contain no-repeat;display:flex;align-items:center;justify-content:center;font-size:12px;">None</div>
+            <button class="btn" type="button" id="npcTileClear">Clear</button>
+          </div>
           <label>Map<select id="npcMap"></select></label>
           <div class="xy">
             <label>X<input id="npcX" type="number" min="0" /></label>
@@ -620,6 +625,11 @@
           <div class="xy" id="itemXY">
             <label>X<input id="itemX" type="number" min="0" /></label>
             <label>Y<input id="itemY" type="number" min="0" /></label>
+          </div>
+          <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+            <label style="flex:1">Tile Image (PNG)<input type="file" id="itemTileUpload" accept="image/png" /></label>
+            <div id="itemTilePreview" aria-live="polite" style="width:32px;height:32px;border:1px solid #555;background:#111 center/contain no-repeat;display:flex;align-items:center;justify-content:center;font-size:12px;">None</div>
+            <button class="btn" type="button" id="itemTileClear">Clear</button>
           </div>
           <button class="btn" type="button" id="itemPick" title="Click on the map to choose location">Select on Map</button>
           <button class="btn" type="button" id="itemRemove" style="display:none">Remove from World</button>
