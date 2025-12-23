@@ -13,8 +13,12 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/maps/$(mapId));
     }
 
+    function docExists(doc) {
+      return doc != null && doc.data != null;
+    }
+
     function isOwner(mapDoc) {
-      return mapDoc.exists() && isSignedIn() && mapDoc.data.ownerId == request.auth.uid;
+      return docExists(mapDoc) && isSignedIn() && mapDoc.data.ownerId == request.auth.uid;
     }
 
     function shareRef(mapId, uid) {
@@ -27,18 +31,18 @@ service cloud.firestore {
 
     function shareRole(mapId) {
       let share = shareRef(mapId, request.auth.uid);
-      return share.exists() ? share.data.role : null;
+      return docExists(share) ? share.data.role : null;
     }
 
     // Listing modules from the Adventure Kit relies on read access for owners,
     // editors (via shares), and public viewers. Treat public listings as public
     // visibility to match the client-side loading behavior.
     function canReadMap(mapDoc, mapId) {
-      return mapDoc.exists()
+      return docExists(mapDoc)
         && (mapDoc.data.visibility == 'public'
-          || listingRef(mapId).exists()
+          || docExists(listingRef(mapId))
           || isOwner(mapDoc)
-          || (isSignedIn() && shareRef(mapId, request.auth.uid).exists()));
+          || (isSignedIn() && docExists(shareRef(mapId, request.auth.uid))));
     }
 
     function canEditMap(mapDoc, mapId) {
@@ -67,7 +71,7 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && versionMapId(docId) + '_' + request.resource.data.versionId == docId
         && (canEditMap(mapRef(versionMapId(docId)), versionMapId(docId))
-          || (!mapRef(versionMapId(docId)).exists()
+          || (!docExists(mapRef(versionMapId(docId)))
             && request.resource.data.createdBy == request.auth.uid));
 
       // Permit re-saving an existing version when metadata is unchanged
