@@ -46,13 +46,11 @@ We want the Adventure Kit (ACK) to cover three player-facing requests at once: s
 - **Runtime load:** Engine loads `customAssets` manifest first, primes caches, then applies `tileGraphics`, `tileOverrides`, and NPC/item sprites.
 - **Backfill:** Existing modules without `customAssets` remain valid. If legacy `tileImage` data URLs are detected, the importer saves them as new assets and rewrites references on load.
 - **Versioning:** Bump schema/engine minor version; avoid downgrades (no #1555 regression). Add migrations to remove in-module blobs when re-saving.
+- **Firestore:** Asset store should support remote targets with signed URLs
+- **Memory-Bound:** Cap the number of unique per-tile overrides per map to keep memory bounded (2,000 per zone)
 
 ## Tooling & Tests
 - **CLI support:** Extend `scripts/module-tools` with commands to list/upload/remove assets, apply per-tile paints by coord, and audit missing/unused assets.
 - **Presubmit checks:** Lint ensures `tileOverrides` reference valid coordinates and assets; size checks prevent oversized uploads. Add a test that loading a module with palette skins, per-tile paints, and NPC/item sprites renders without fetches after first load.
 - **Docs:** Update Adventure Kit guide and module schema docs with examples for `customAssets`, `tileGraphics`, `tileOverrides`, and `tileSprite` usage.
 
-## Open Questions
-- Should the asset store support remote (S3/Firestore Storage) targets with signed URLs, or remain local-first for offline editing?
-- Do we cap the number of unique per-tile overrides per map to keep memory bounded (e.g., 2,000 per zone)?
-- Should tint/opacity be exposed in the first release or kept hidden until palette skins settle?
