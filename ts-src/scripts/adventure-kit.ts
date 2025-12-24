@@ -5010,21 +5010,30 @@ if (stampsBtn && stampWindow) {
       aiBtn.id = 'nanoStampBtn';
       aiBtn.className = 'btn';
       aiBtn.textContent = '🤖';
+      aiBtn.setAttribute('aria-label', 'Generate AI Stamp');
       aiBtn.addEventListener('click', async () => {
-        const block = await window.NanoPalette.generate();
-        if (block) {
-          const grid = gridFromEmoji(block as string[]);
-          (worldStamps as any).nano = grid;
-          (worldStampEmoji as any).nano = block;
-          (stampNames as any).nano = 'Nano';
-          renderStampWindow();
-          worldStamp = (worldStamps as any).nano;
-          worldPaint = null;
-          if (worldPalette) worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-          if (paletteLabel) paletteLabel.textContent = (stampNames as any).nano || '';
-          stampWindow.style.display = 'none';
-          updateCursor();
-          drawWorld();
+        const originalText = aiBtn.textContent;
+        aiBtn.disabled = true;
+        aiBtn.textContent = '⏳';
+        try {
+          const block = await window.NanoPalette.generate();
+          if (block) {
+            const grid = gridFromEmoji(block as string[]);
+            (worldStamps as any).nano = grid;
+            (worldStampEmoji as any).nano = block;
+            (stampNames as any).nano = 'Nano';
+            renderStampWindow();
+            worldStamp = (worldStamps as any).nano;
+            worldPaint = null;
+            if (worldPalette) worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            if (paletteLabel) paletteLabel.textContent = (stampNames as any).nano || '';
+            stampWindow.style.display = 'none';
+            updateCursor();
+            drawWorld();
+          }
+        } finally {
+          aiBtn.disabled = false;
+          aiBtn.textContent = originalText;
         }
       });
       stampWindow.appendChild(aiBtn);
