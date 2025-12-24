@@ -1,6 +1,6 @@
 /// <reference path="../types/dustland-engine-globals.d.ts" />
 // ===== Rendering & Utilities =====
-const ENGINE_VERSION = '0.246.3';
+const ENGINE_VERSION = '0.245.27';
 let cachedGlobals;
 function getEngineGlobals() {
     if (cachedGlobals)
