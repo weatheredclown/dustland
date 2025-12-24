@@ -157,6 +157,8 @@ type ModuleData = {
   _origKeys?: string[];
   zoneEffects?: any[];
   generateMap?: (seed: number, opts?: unknown) => unknown;
+  tileOverrides?: Record<string, Record<string, TileOverride>>;
+  customAssets?: Record<string, CustomAssetMeta>;
 };
 type AckPersonaData = PersonaData & { label?: string; portrait?: string; [key: string]: unknown };
 declare function nextLoopPoint(prev: LoopPoint | undefined, npc: LoopPoint): LoopPoint;
@@ -645,6 +647,10 @@ const paletteLabel = document.getElementById('paletteLabel');
 let worldPaint = null;
 let worldStamp = null;
 let worldPainting = false;
+let activeTab = 'npc';
+let paintMode = 'tile';
+let paintAssetId = '';
+let paintOpacity = 1.0;
 let didPaint = false, didInteriorPaint = false;
 const noiseToggle = document.getElementById('noiseToggle');
 const brushSizeSlider = document.getElementById('brushSize');
@@ -2848,6 +2854,7 @@ function startNewNPC() {
   populateMapDropdown(document.getElementById('npcMap'), '');
   document.getElementById('npcX').value = '';
   document.getElementById('npcY').value = '';
+  document.getElementById('npcTileSprite').value = '';
   renderLoopFields([]);
   document.getElementById('npcPatrol').checked = false;
   updatePatrolSection();
@@ -3438,6 +3445,7 @@ function addItem() {
   const narrativeId = document.getElementById('itemNarrativeId').value.trim();
   const narrativePrompt = document.getElementById('itemNarrativePrompt').value.trim();
   const onMap = document.getElementById('itemOnMap').checked;
+  const tileSprite = document.getElementById('itemTileSprite').value.trim();
   const map = onMap ? document.getElementById('itemMap').value.trim() : '';
   const x = parseInt(document.getElementById('itemX').value, 10) || 0;
   const y = parseInt(document.getElementById('itemY').value, 10) || 0;
@@ -3560,6 +3568,7 @@ function editItem(i) {
   document.getElementById('itemX').value = it.x || 0;
   document.getElementById('itemY').value = it.y || 0;
   document.getElementById('itemOnMap').checked = !!it.map;
+  document.getElementById('itemTileSprite').value = '';
   updateItemMapWrap();
   updateModsWrap();
   loadMods(it.mods);
@@ -6128,10 +6137,29 @@ canvas.addEventListener('mousedown', ev => {
     updateCursor(x, y);
     return;
   }
-  if (currentMap === 'world' && worldPaint != null && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal || overZone)) {
+  const isPaintTab = activeTab === 'paint';
+  const validPaint = worldPaint != null || (isPaintTab && (paintMode === 'asset' || paintMode === 'clear'));
+  if (currentMap === 'world' && validPaint && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal || overZone)) {
     worldPainting = true;
     hoverTile = { x, y };
-    addTerrainFeature(x, y, worldPaint);
+
+    if (isPaintTab && paintMode !== 'tile') {
+       moduleData.tileOverrides = moduleData.tileOverrides || {};
+       moduleData.tileOverrides[currentMap] = moduleData.tileOverrides[currentMap] || {};
+       const key = `${x},${y}`;
+
+       if (paintMode === 'clear') {
+         delete moduleData.tileOverrides[currentMap][key];
+       } else if (paintMode === 'asset' && paintAssetId) {
+         moduleData.tileOverrides[currentMap][key] = {
+           assetId: paintAssetId,
+           opacity: paintOpacity
+         };
+       }
+    } else if (worldPaint != null) {
+       addTerrainFeature(x, y, worldPaint);
+    }
+
     didPaint = true;
     drawWorld();
     updateCursor(x, y);
@@ -6290,8 +6318,25 @@ canvas.addEventListener('mousemove', ev => {
   const { x, y } = canvasPos(ev);
   hoverTile = { x, y };
   if (currentMap === 'world' && worldStamp) drawWorld();
-  if (currentMap === 'world' && worldPainting && worldPaint != null) {
-    addTerrainFeature(x, y, worldPaint);
+  const isPaintTab = activeTab === 'paint';
+  const validPaint = worldPaint != null || (isPaintTab && (paintMode === 'asset' || paintMode === 'clear'));
+  if (currentMap === 'world' && worldPainting && validPaint) {
+    if (isPaintTab && paintMode !== 'tile') {
+       moduleData.tileOverrides = moduleData.tileOverrides || {};
+       moduleData.tileOverrides[currentMap] = moduleData.tileOverrides[currentMap] || {};
+       const key = `${x},${y}`;
+
+       if (paintMode === 'clear') {
+         delete moduleData.tileOverrides[currentMap][key];
+       } else if (paintMode === 'asset' && paintAssetId) {
+         moduleData.tileOverrides[currentMap][key] = {
+           assetId: paintAssetId,
+           opacity: paintOpacity
+         };
+       }
+    } else if (worldPaint != null) {
+       addTerrainFeature(x, y, worldPaint);
+    }
     didPaint = true;
     drawWorld();
     return;
@@ -6610,9 +6655,189 @@ animate();
   const panes = Array.from(panel.querySelectorAll('[data-pane]'));
   const layout = document.querySelector('.ak-layout');
   const mapCard = document.getElementById('mapCard');
-  let current = 'npc';
+  // let current used to be here, now using global activeTab
+  activeTab = 'npc';
   let wide = false;
   let sizingRaf = 0;
+
+  // New Paint tab setup
+  const paintTab = document.createElement('div');
+  paintTab.className = 'tab2';
+  paintTab.dataset.tab = 'paint';
+  paintTab.textContent = 'Paint';
+  paintTab.setAttribute('role', 'tab');
+  tabList.appendChild(paintTab);
+
+  const paintPane = document.createElement('div');
+  paintPane.dataset.pane = 'paint';
+  paintPane.className = 'editor-section';
+  paintPane.style.display = 'none';
+  paintPane.innerHTML = `
+    <h3>Tile Paint</h3>
+    <div id="paintControls">
+      <label>Mode<select id="paintMode"><option value="tile">Tile</option><option value="asset">Custom Asset</option></select></label>
+      <div id="paintAssetWrap" style="display:none">
+        <label>Asset ID<input id="paintAssetId" placeholder="custom asset id"/></label>
+        <button class="btn" id="paintAssetPick">Pick Asset</button>
+      </div>
+      <label>Opacity<input type="range" id="paintOpacity" min="0" max="1" step="0.1" value="1"/><span id="paintOpacityVal">1.0</span></label>
+      <button class="btn" id="paintClearTile">Clear Tile Override</button>
+    </div>
+    <h3>Custom Assets</h3>
+    <div id="customAssetsList"></div>
+    <div class="row">
+      <label>Upload Asset<input type="file" id="uploadAssetInput" accept="image/png,image/webp"/></label>
+    </div>
+  `;
+  panel.querySelector('.scroll-y').appendChild(paintPane);
+  panes.push(paintPane);
+
+  // Paint logic variables: using globals defined at top
+  paintMode = 'tile';
+
+  document.getElementById('paintMode').addEventListener('change', (e: any) => {
+    paintMode = e.target.value;
+    document.getElementById('paintAssetWrap').style.display = paintMode === 'asset' ? 'block' : 'none';
+  });
+
+  document.getElementById('paintOpacity').addEventListener('input', (e: any) => {
+    paintOpacity = parseFloat(e.target.value);
+    document.getElementById('paintOpacityVal').textContent = paintOpacity.toFixed(1);
+  });
+
+  document.getElementById('paintAssetId').addEventListener('input', (e: any) => {
+    paintAssetId = e.target.value.trim();
+  });
+
+  document.getElementById('paintClearTile').addEventListener('click', () => {
+    // Logic to clear override on click handled in map click handler
+    paintMode = 'clear';
+    // Visual feedback or toast
+  });
+
+  // Custom Asset Upload
+  document.getElementById('uploadAssetInput').addEventListener('change', (e: any) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check size limit (1MB)
+    if (file.size > 1024 * 1024) {
+      alert('File too large (max 1MB)');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (evt: any) => {
+      const img = new Image();
+      img.onload = () => {
+        // Validation: max 1024x1024
+        if (img.width > 1024 || img.height > 1024) {
+           alert('Image dimensions too large (max 1024x1024)');
+           return;
+        }
+
+        // Generate ID / store
+        // In a real app we'd hash it. Here we use random or name-based ID.
+        // Also we store as data URL for now since we don't have a backend.
+        // Memory says: "Custom visual assets (User Uploads) are stored as Base64 strings in ModuleData.customImages"
+        // But we are implementing the new spec "customAssets".
+        // Let's use customAssets with url = data URL.
+
+        const assetId = 'asset_' + Date.now(); // Simple ID generation
+        moduleData.customAssets = moduleData.customAssets || {};
+        moduleData.customAssets[assetId] = {
+          url: evt.target.result,
+          width: img.width,
+          height: img.height,
+          uploadedAt: Date.now()
+        };
+
+        renderCustomAssetList();
+        document.getElementById('paintAssetId').value = assetId;
+        paintAssetId = assetId;
+        paintMode = 'asset';
+        document.getElementById('paintMode').value = 'asset';
+        document.getElementById('paintAssetWrap').style.display = 'block';
+      };
+      img.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function renderCustomAssetList() {
+    const list = document.getElementById('customAssetsList');
+    list.innerHTML = '';
+    const assets = moduleData.customAssets || {};
+    if (Object.keys(assets).length === 0) {
+      list.innerHTML = '<div class="muted">(no custom assets)</div>';
+      return;
+    }
+    Object.entries(assets).forEach(([id, meta]) => {
+       const div = document.createElement('div');
+       div.className = 'asset-row'; // Add css later or inline
+       div.style.display = 'flex';
+       div.style.alignItems = 'center';
+       div.style.gap = '8px';
+       div.style.marginBottom = '4px';
+
+       const img = document.createElement('img');
+       img.src = meta.url;
+       img.style.width = '32px';
+       img.style.height = '32px';
+       img.style.objectFit = 'contain';
+       img.style.border = '1px solid #444';
+
+       const span = document.createElement('span');
+       span.textContent = id;
+       span.style.flex = '1';
+       span.style.overflow = 'hidden';
+       span.style.textOverflow = 'ellipsis';
+
+       const useBtn = document.createElement('button');
+       useBtn.className = 'btn small';
+       useBtn.textContent = 'Use';
+       useBtn.onclick = () => {
+         paintAssetId = id;
+         document.getElementById('paintAssetId').value = id;
+         paintMode = 'asset';
+         document.getElementById('paintMode').value = 'asset';
+         document.getElementById('paintAssetWrap').style.display = 'block';
+       };
+
+       const delBtn = document.createElement('button');
+       delBtn.className = 'btn small';
+       delBtn.textContent = 'x';
+       delBtn.onclick = () => {
+         if (confirm(`Delete asset ${id}?`)) {
+           delete moduleData.customAssets[id];
+           renderCustomAssetList();
+         }
+       };
+
+       div.appendChild(img);
+       div.appendChild(span);
+       div.appendChild(useBtn);
+       div.appendChild(delBtn);
+       list.appendChild(div);
+    });
+  }
+
+  // Attach event listener for map clicking to handle paint
+  // We need to hook into canvas 'mousedown' or click.
+  // Existing canvas mousedown handles painting. We can extend it.
+  // Ideally we modify 'paintWorld' or the canvas mousedown handler.
+  // But modifying big chunks of code is risky with 'replace_with_git_merge_diff' if context matches multiple places.
+  // The canvas mousedown handler calls 'addTerrainFeature' or 'applyInteriorBrush'.
+  // We should intercept or modify that.
+
+  // Let's monkey-patch addTerrainFeature and applyInteriorBrush or similar if possible,
+  // or better, add a check in the event listener if we can locate it reliably.
+  // The event listener is at line ~1352.
+
+  paintTab.addEventListener('click', () => {
+     renderCustomAssetList();
+  });
+
 
   if (tabList && tabList.addEventListener) {
     tabList.addEventListener('wheel', e => {
@@ -6673,11 +6898,11 @@ animate();
     if (wide) {
       panes.forEach(p => p.style.display = '');
     }
-    show(current);
+    show(activeTab);
   }
 
   function show(tabName) {
-    current = tabName;
+    activeTab = tabName;
     tabs.forEach(t => {
       const on = t.dataset.tab === tabName;
       t.classList.toggle('active', on);

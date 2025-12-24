@@ -23,6 +23,7 @@ declare global {
     FOG_RADIUS?: number | string;
     tileChars?: unknown;
     playerAdrenalineFx?: unknown;
+    DUSTLAND_MODULE?: DustlandModuleInstance;
     moduleTests?: ((assert: EngineAssert) => void) | undefined;
     NanoDialog?: { enabled?: boolean; init?: () => Promise<void>; isReady?: () => boolean; refreshIndicator?: () => void };
     Dustland?: (DustlandNamespace & {
