@@ -51,9 +51,7 @@ service cloud.firestore {
     }
 
     function versionMapId(docId) {
-      return request.resource != null && request.resource.data.moduleId != null
-        ? request.resource.data.moduleId
-        : mapIdFromVersion(docId);
+      return mapIdFromVersion(docId);
     }
 
     match /maps/{mapId} {
