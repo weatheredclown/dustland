@@ -519,9 +519,9 @@
           <button class="btn" type="button" id="addLoopPt" style="display:none">+ Waypoint</button>
           <div class="portrait" id="npcPort"></div>
           <div class="row" style="margin:8px 0">
-            <span class="pill" id="npcPrevP">&lt;</span>
+            <button type="button" class="pill" id="npcPrevP" aria-label="Previous portrait">&lt;</button>
             <span class="pill">Portrait</span>
-            <span class="pill" id="npcNextP">&gt;</span>
+            <button type="button" class="pill" id="npcNextP" aria-label="Next portrait">&gt;</button>
           </div>
           <label><input type="checkbox" id="npcPortraitLock" checked> Lock Portrait</label>
           <label><input type="checkbox" id="npcHidden"> Hidden NPC</label>
@@ -633,9 +633,9 @@
             <label>Persona Label<input id="itemPersonaLabel" placeholder="Masked persona label" /></label>
             <div class="portrait" id="itemPersonaPort"></div>
             <div class="row" style="margin:8px 0">
-              <span class="pill" id="itemPersonaPrev">&lt;</span>
+              <button type="button" class="pill" id="itemPersonaPrev" aria-label="Previous mask portrait">&lt;</button>
               <span class="pill">Mask Portrait</span>
-              <span class="pill" id="itemPersonaNext">&gt;</span>
+              <button type="button" class="pill" id="itemPersonaNext" aria-label="Next mask portrait">&gt;</button>
             </div>
             <label>Custom Portrait<input id="itemPersonaPortraitPath" placeholder="assets/portraits/custom.png" /></label>
           </div>
