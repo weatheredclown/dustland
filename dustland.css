@@ -1617,7 +1617,8 @@ input[type="range"] {
         border-radius: 999px;
         background: var(--skin-pill-bg-color, #101410);
         color: var(--skin-pill-color, var(--ink));
-        cursor: pointer
+        cursor: pointer;
+        font-family: inherit
     }
 
     .pill.sel {
