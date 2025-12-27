@@ -79,6 +79,53 @@
       cursor: pointer;
     }
 
+    .tile-graphic-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    .tile-graphic-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .tile-graphic-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 48px;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .tile-graphic-row input {
+      width: 100%;
+    }
+
+    .tile-graphic-name {
+      font-size: 0.8125rem;
+    }
+
+    .tile-graphic-preview,
+    .tile-swatch {
+      border: 1px solid #2b3b2b;
+      border-radius: 4px;
+      background: #111;
+    }
+
+    .tile-graphic-preview {
+      width: 100%;
+      height: 40px;
+    }
+
+    .tile-swatch {
+      width: 100%;
+      height: 48px;
+      margin-top: 4px;
+    }
+
     .lootTableWrap {
       margin-top: 4px;
     }
@@ -442,6 +489,21 @@
           <button class="btn" id="noiseToggle" title="Toggle organic brush noise">Noise: On</button>
           <label for="brushSize">Brush Size <input type="range" id="brushSize" min="1" max="10" value="1"><span id="brushSizeLabel">1</span></label>
         </div>
+        <details class="card" id="tileGraphicsCard">
+          <summary>Tile Graphics</summary>
+          <div class="tile-graphic-controls">
+            <label for="tileGraphicTarget">Scope
+              <select id="tileGraphicTarget">
+                <option value="defaults">World palette</option>
+                <option value="interiors">Interior palette</option>
+                <option value="map">Map override</option>
+              </select>
+            </label>
+            <label for="tileGraphicMap" id="tileGraphicMapWrap" style="display:none">Map<select id="tileGraphicMap"></select></label>
+          </div>
+          <div id="tileGraphicList" class="tile-graphic-grid"></div>
+          <p class="inline-hint">Swap palette colors for RPG-style tiles per map, per palette, or per NPC.</p>
+        </details>
         <div class="btn-group">
           <div style="padding:0px 13px 0px 0px;font-family: sans-serif;">
           <label for="moduleName">Module Name</label>
@@ -509,6 +571,11 @@
           <label><input type="checkbox" id="npcColorOverride"> Override Color</label>
           <label id="npcColorWrap" style="display:none">Color<input id="npcColor" type="color" value="#9ef7a0" /></label>
           <label>Symbol<input id="npcSymbol" maxlength="1" value="!" /></label>
+          <label>Tile Sprite
+            <input id="npcTileSprite" placeholder="assets/tiles/npc.png" />
+            <span class="inline-hint">Shown on the map instead of color blocks.</span>
+            <div id="npcTileSpritePreview" class="tile-swatch"></div>
+          </label>
           <label>Map<select id="npcMap"></select></label>
           <div class="xy">
             <label>X<input id="npcX" type="number" min="0" /></label>
