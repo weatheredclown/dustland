@@ -1359,6 +1359,15 @@ const colors = { 0: '#1e271d', 1: '#313831', 2: '#1573ff', 3: '#203320', 4: '#77
 // Alternate floor colors used in office interiors for subtle variation
 const officeFloorColors = ['#233223', '#243424', '#222a22'];
 const officeMaps = new Set(['floor1', 'floor2', 'floor3']);
+const imageCache = new Map();
+function getCachedImage(url) {
+    if (imageCache.has(url))
+        return imageCache.get(url);
+    const img = new Image();
+    img.src = url;
+    imageCache.set(url, img);
+    return img;
+}
 const tileChars = { 0: '.', 1: '^', 2: '~', 3: ',', 4: '=', 5: '%', 6: '#', 7: '.', 8: '+', 9: 'B' };
 const tileCharColors = {
     0: lightenColor('#1e271d', 0.2),
@@ -1761,6 +1770,31 @@ function render(gameState = state, _dt) {
             const perf = (typeof performance !== 'undefined' && performance.now) ? performance : null;
             const measureTiles = !!globalThis.perfStats;
             const tileStart = measureTiles ? (perf ? perf.now() : Date.now()) : 0;
+            const moduleData = getEngineGlobals().DUSTLAND_MODULE;
+            const customAssets = moduleData?.customAssets;
+            const overrides = moduleData?.tileOverrides;
+            const mapOverrides = overrides?.[activeMap];
+            const resolveAsset = (id) => {
+                if (customAssets?.[id]) {
+                    // If we had a real asset manager, we'd use it here.
+                    // For now, assume customAssets[id].url is usable directly or preloaded
+                    // In a real implementation, we might need an async loader or preloader
+                    // Here we just return a simple object that drawSkinSprite might understand if we adapt it
+                    // But drawSkinSprite expects a loaded image object or similar.
+                    // The memory says "Custom visual assets (User Uploads) are stored as Base64 strings in ModuleData.customImages"
+                    // but the new spec says customAssets maps ID to metadata including URL.
+                    // Let's support both for backward compatibility or transition.
+                    const meta = customAssets[id];
+                    if (meta.url) {
+                        // Create an image element if not cached.
+                        // Note: This is synchronous render loop, so we can't await.
+                        // Ideally assets should be preloaded.
+                        // We'll use a global cache for now.
+                        return getCachedImage(meta.url);
+                    }
+                }
+                return null;
+            };
             for (let vy = 0; vy < vH; vy++) {
                 for (let vx = 0; vx < vW; vx++) {
                     const gx = camX + vx - offX, gy = camY + vy - offY;
@@ -1769,6 +1803,7 @@ function render(gameState = state, _dt) {
                     const t = getTile(activeMap, gx, gy);
                     if (t === null)
                         continue;
+                    // Always draw base tile first
                     const tileSprite = skin?.getTileSprite?.(t, { x: gx, y: gy, map: activeMap });
                     let tileDrawn = false;
                     if (tileSprite) {
@@ -1781,6 +1816,21 @@ function render(gameState = state, _dt) {
                         }
                         ctx.fillStyle = jitterColor(col, gx, gy);
                         ctx.fillRect(vx * TS, vy * TS, TS, TS);
+                    }
+                    // Then draw override on top
+                    if (mapOverrides) {
+                        const key = `${gx},${gy}`;
+                        const override = mapOverrides[key];
+                        if (override && override.assetId) {
+                            const img = resolveAsset(override.assetId);
+                            if (img) {
+                                if (override.opacity !== undefined)
+                                    ctx.globalAlpha = override.opacity;
+                                ctx.drawImage(img, vx * TS, vy * TS, TS, TS);
+                                if (override.opacity !== undefined)
+                                    ctx.globalAlpha = 1;
+                            }
+                        }
                     }
                     if (tileCharsEnabled) {
                         const ch = tileChars[t];
@@ -2099,9 +2149,18 @@ function getNpcSymbol(n) {
 }
 function drawEntities(ctx, list, offX, offY, skin) {
     const { w: vW, h: vH } = getViewSize();
+    const moduleData = getEngineGlobals().DUSTLAND_MODULE;
+    const customAssets = moduleData?.customAssets;
     for (const n of list) {
         if (n.x >= camX && n.y >= camY && n.x < camX + vW && n.y < camY + vH) {
             const vx = (n.x - camX + offX) * TS, vy = (n.y - camY + offY) * TS;
+            if (n.tileSprite && customAssets?.[n.tileSprite]) {
+                const img = getCachedImage(customAssets[n.tileSprite].url);
+                if (img) {
+                    ctx.drawImage(img, vx, vy, TS, TS);
+                    continue;
+                }
+            }
             const entitySprite = skin?.getEntitySprite?.(n);
             if (entitySprite) {
                 const drawn = drawSkinSprite(ctx, entitySprite, vx, vy, TS);
@@ -2125,7 +2184,7 @@ function drawEntities(ctx, list, offX, offY, skin) {
 Object.assign(window, { renderOrderSystem: { order: renderOrder, render } });
 // ===== HUD & Tabs =====
 const TAB_BREAKPOINT = 1980;
-let activeTab = 'inv';
+let engineActiveTab = 'inv';
 const updateHudState = {};
 function updateHUD() {
     const prevHp = updateHudState.lastHpVal ?? player.hp;
@@ -2297,7 +2356,7 @@ function pulseAdrenaline(t) {
     playerAdrenalineFx.glow = ratio * 0.6 + intensity * 0.4;
 }
 function showTab(which) {
-    activeTab = which;
+    engineActiveTab = which;
     if (window.innerWidth >= TAB_BREAKPOINT)
         return;
     const inv = document.getElementById('inv'), partyEl = document.getElementById('party'), q = document.getElementById('quests');
@@ -2348,7 +2407,7 @@ function updateTabsLayout() {
     else {
         if (tabs)
             tabs.style.display = 'flex';
-        showTab(activeTab);
+        showTab(engineActiveTab);
     }
     updateCanvasStretch();
 }
