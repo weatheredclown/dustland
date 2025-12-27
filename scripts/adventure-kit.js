@@ -7258,6 +7258,8 @@ animate();
     if (!panel)
         return;
     const tabList = panel.querySelector('.tabs2');
+    if (!tabList)
+        return;
     const tabs = Array.from(tabList.querySelectorAll('.tab2'));
     const panes = Array.from(panel.querySelectorAll('[data-pane]'));
     const layout = document.querySelector('.ak-layout');
@@ -7294,7 +7296,8 @@ animate();
       <label>Upload Asset<input type="file" id="uploadAssetInput" accept="image/png,image/webp"/></label>
     </div>
   `;
-    panel.querySelector('.scroll-y').appendChild(paintPane);
+    const paneHost = panel.querySelector('.tabpanes') ?? panel;
+    paneHost.appendChild(paintPane);
     panes.push(paintPane);
     // Paint logic variables: using globals defined at top
     paintMode = 'tile';
