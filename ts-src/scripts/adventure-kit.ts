@@ -631,7 +631,10 @@ if (intPalette) {
   const names = { W: 'Wall', F: 'Floor', D: 'Door' };
   intPalette.querySelectorAll('button').forEach(btn => {
     const name = names[btn.dataset.tile];
-    if (name) btn.title = name;
+    if (name) {
+      btn.title = name;
+      btn.setAttribute('aria-label', name);
+    }
   });
 }
 
@@ -641,6 +644,17 @@ const bldgPalette = document.getElementById('bldgPalette');
 let bldgPaint = TILE.BUILDING;
 let bldgPainting = false;
 let bldgGrid = [];
+
+if (bldgPalette) {
+  const names: Record<string, string> = { B: 'Building', D: 'Door', E: 'Erase' };
+  bldgPalette.querySelectorAll('button').forEach(btn => {
+    const name = names[btn.dataset.tile || ''];
+    if (name) {
+      btn.title = name;
+      btn.setAttribute('aria-label', name);
+    }
+  });
+}
 
 const worldPalette = document.getElementById('worldPalette');
 const paletteLabel = document.getElementById('paletteLabel');
@@ -4944,6 +4958,7 @@ if (worldPalette) {
     const id = parseInt(btn.dataset.tile, 10);
     const name = tileNames[id] || '';
     btn.title = name;
+    btn.setAttribute('aria-label', name);
     btn.dataset.name = name;
   });
   function bindPaletteBtn(btn) {
