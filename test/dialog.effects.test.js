@@ -7,6 +7,7 @@ function stubEl(){
   const el = {
     style:{},
     classList:{ _set:new Set(), contains(){return false;}, add(){}, remove(){}, toggle(){} },
+    dataset:{},
     textContent:'',
     onclick:null,
     value:'',
