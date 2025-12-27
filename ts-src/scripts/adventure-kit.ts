@@ -5978,18 +5978,92 @@ document.getElementById('npcCancelPick').onclick = cancelNpcCoordinateSelection;
 document.getElementById('itemPick').onclick = () => { coordTarget = { x: 'itemX', y: 'itemY', map: 'itemMap' }; };
 document.getElementById('save').onclick = saveModule;
 document.getElementById('quickSave')?.addEventListener('click', saveModule);
-document.getElementById('load').onclick = () => document.getElementById('loadFile').click();
-document.getElementById('loadFile').addEventListener('change', e => {
-  const file = e.target.files[0];
+
+function loadErrorMessage(err: unknown) {
+  return (err as { message?: string })?.message ?? String(err);
+}
+
+function setLoadStatus(msg: string, isError = false) {
+  const status = document.getElementById('loadStatus');
+  if (status) {
+    status.textContent = msg;
+    status.style.color = isError ? '#f88' : '';
+  } else if (isError && msg) {
+    alert(msg);
+  }
+}
+
+function resetLoadModal() {
+  setLoadStatus('');
+  const input = document.getElementById('loadFile') as HTMLInputElement | null;
+  if (input) input.value = '';
+  document.getElementById('loadDropZone')?.classList.remove('dragging');
+}
+
+function closeLoadModal() {
+  document.getElementById('loadModal')?.classList.remove('shown');
+  resetLoadModal();
+}
+
+function showLoadModal() {
+  resetLoadModal();
+  const modal = document.getElementById('loadModal');
+  if (modal) {
+    modal.classList.add('shown');
+    (document.getElementById('browseLoadFile') as HTMLButtonElement | null)?.focus?.();
+  } else {
+    document.getElementById('loadFile')?.click();
+  }
+}
+
+function importModuleText(text: string) {
+  try { applyLoadedModule(JSON.parse(text)); closeLoadModal(); }
+  catch (err) { setLoadStatus('Invalid module: ' + loadErrorMessage(err), true); }
+}
+
+function handleModuleFile(file?: File | null) {
   if (!file) return;
+  setLoadStatus('');
   const reader = new FileReader();
-  reader.onload = () => {
-    try { const json = JSON.parse(reader.result as string); applyLoadedModule(json); }
-    catch (err) { alert('Invalid module: ' + err.message); }
-  };
+  reader.onload = () => importModuleText(reader.result as string);
+  reader.onerror = () => setLoadStatus('Unable to read that file.', true);
   reader.readAsText(file);
-  e.target.value = '';
-});
+}
+
+document.getElementById('load').onclick = showLoadModal;
+const loadInput = document.getElementById('loadFile') as HTMLInputElement | null;
+if (loadInput) loadInput.addEventListener('change', () => handleModuleFile(loadInput.files?.[0]));
+
+const loadDropZone = document.getElementById('loadDropZone');
+if (loadDropZone) {
+  const stop = (e: Event) => { e.preventDefault?.(); e.stopPropagation?.(); };
+  ['dragenter', 'dragover'].forEach(evt => loadDropZone.addEventListener(evt, e => {
+    stop(e);
+    loadDropZone.classList.add('dragging');
+  }));
+  ['dragleave', 'drop'].forEach(evt => loadDropZone.addEventListener(evt, e => {
+    stop(e);
+    loadDropZone.classList.remove('dragging');
+  }));
+  loadDropZone.addEventListener('drop', e => {
+    stop(e);
+    const files = (e as DragEvent).dataTransfer?.files;
+    handleModuleFile(files?.[0]);
+  });
+  loadDropZone.addEventListener('click', () => loadInput?.click());
+  loadDropZone.addEventListener('keydown', e => {
+    const key = (e as KeyboardEvent).key;
+    if (key === 'Enter' || key === ' ' || key === 'Spacebar') {
+      e.preventDefault?.();
+      loadInput?.click();
+    }
+  });
+}
+
+const browseLoadBtn = document.getElementById('browseLoadFile');
+if (browseLoadBtn) browseLoadBtn.addEventListener('click', () => loadInput?.click());
+document.getElementById('closeLoadModal')?.addEventListener('click', closeLoadModal);
+document.getElementById('loadModal')?.addEventListener('click', e => { if ((e.target as HTMLElement)?.id === 'loadModal') closeLoadModal(); });
 document.getElementById('setStart').onclick = () => {
   settingStart = true;
   setMapActionBanner('Start position active: choose a walkable tile on the world map.', 'info');
