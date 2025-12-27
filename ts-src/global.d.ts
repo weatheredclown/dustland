@@ -75,6 +75,21 @@ declare global {
 
   type JsonSchema = Record<string, unknown>;
 
+  interface CustomAssetMeta {
+    url: string;
+    width: number;
+    height: number;
+    checksum?: string;
+    uploadedBy?: string;
+    uploadedAt?: number;
+  }
+
+  interface TileOverride {
+    assetId: string;
+    opacity?: number;
+    tint?: string;
+  }
+
   type DustlandSkinVarValue = string | number | null | undefined;
 
   interface DustlandSkinUi extends Record<string, Record<string, unknown> | undefined> {
@@ -509,6 +524,9 @@ declare global {
     props?: Record<string, unknown> | null;
     behaviors?: DustlandModuleBehaviors | null;
     effects?: Record<string, unknown>;
+    customAssets?: Record<string, CustomAssetMeta>;
+    tileGraphics?: Record<string, Record<string, string>>;
+    tileOverrides?: Record<string, Record<string, TileOverride>>;
     [key: string]: unknown;
   }
 
@@ -1069,6 +1087,7 @@ declare global {
       count?: number;
       [key: string]: unknown;
     };
+    tileSprite?: string;
     _loop?: { path?: unknown[]; job?: unknown };
     onMemoryTape?: (recording: string | null) => void;
     [key: string]: unknown;
