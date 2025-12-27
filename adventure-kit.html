@@ -551,6 +551,11 @@
           </div>
           <label><input type="checkbox" id="npcPortraitLock" checked> Lock Portrait</label>
           <label>Tile Sprite<input id="npcTileSprite" placeholder="custom asset id" /></label>
+          <div class="row" style="align-items:center;gap:8px;margin:4px 0">
+            <div id="npcTileSpritePreview" class="small muted" style="min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center;border:1px dashed #444;padding:2px;"></div>
+            <input type="file" id="npcTileSpriteUpload" accept="image/png,image/webp" style="display:none" />
+            <button class="btn" type="button" id="npcTileSpriteUploadBtn">Upload Sprite</button>
+          </div>
           <label><input type="checkbox" id="npcHidden"> Hidden NPC</label>
           <label><input type="checkbox" id="npcLocked"> Locked NPC</label>
           <label><input type="checkbox" id="npcInanimate"> Inanimate</label>
@@ -643,6 +648,11 @@
           <label>Narrative ID<input id="itemNarrativeId" /></label>
           <label>Narrative Prompt<input id="itemNarrativePrompt" /></label>
           <label>Tile Sprite<input id="itemTileSprite" placeholder="custom asset id" /></label>
+          <div class="row" style="align-items:center;gap:8px;margin:4px 0">
+            <div id="itemTileSpritePreview" class="small muted" style="min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center;border:1px dashed #444;padding:2px;"></div>
+            <input type="file" id="itemTileSpriteUpload" accept="image/png,image/webp" style="display:none" />
+            <button class="btn" type="button" id="itemTileSpriteUploadBtn">Upload Sprite</button>
+          </div>
           <label><input id="itemOnMap" type="checkbox"/> On Map</label>
           <label id="itemMapWrap">Map<select id="itemMap"></select></label>
           <div class="xy" id="itemXY">

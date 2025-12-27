@@ -676,6 +676,156 @@ let paintMode = 'tile';
 let paintAssetId = '';
 let paintOpacity = 1.0;
 let didPaint = false, didInteriorPaint = false;
+
+function renderCustomAssetList() {
+  const list = document.getElementById('customAssetsList');
+  if (!list) return;
+  list.innerHTML = '';
+  const assets = moduleData.customAssets || {};
+  if (Object.keys(assets).length === 0) {
+    list.innerHTML = '<div class="muted">(no custom assets)</div>';
+    return;
+  }
+  Object.entries(assets).forEach(([id, meta]) => {
+    const div = document.createElement('div');
+    div.className = 'asset-row';
+    div.style.display = 'flex';
+    div.style.alignItems = 'center';
+    div.style.gap = '8px';
+    div.style.marginBottom = '4px';
+
+    const img = document.createElement('img');
+    img.src = meta.url;
+    img.style.width = '32px';
+    img.style.height = '32px';
+    img.style.objectFit = 'contain';
+    img.style.border = '1px solid #444';
+
+    const span = document.createElement('span');
+    span.textContent = id;
+    span.style.flex = '1';
+    span.style.overflow = 'hidden';
+    span.style.textOverflow = 'ellipsis';
+
+    const useBtn = document.createElement('button');
+    useBtn.className = 'btn small';
+    useBtn.textContent = 'Use';
+    useBtn.onclick = () => {
+      paintAssetId = id;
+      const assetIdEl = document.getElementById('paintAssetId') as HTMLInputElement | null;
+      if (assetIdEl) assetIdEl.value = id;
+      paintMode = 'asset';
+      const modeEl = document.getElementById('paintMode');
+      if (modeEl) modeEl.value = 'asset';
+      const wrap = document.getElementById('paintAssetWrap');
+      if (wrap) wrap.style.display = 'block';
+    };
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn small';
+    delBtn.textContent = 'x';
+    delBtn.onclick = () => {
+      if (confirm(`Delete asset ${id}?`)) {
+        delete moduleData.customAssets[id];
+        renderCustomAssetList();
+      }
+    };
+
+    div.appendChild(img);
+    div.appendChild(span);
+    div.appendChild(useBtn);
+    div.appendChild(delBtn);
+    list.appendChild(div);
+  });
+}
+
+function createCustomAssetFromFile(file: File): Promise<string | null> {
+  return new Promise(resolve => {
+    if (file.size > 1024 * 1024) {
+      alert('File too large (max 1MB)');
+      resolve(null);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = evt => {
+      const dataUrl = typeof evt?.target?.result === 'string' ? evt.target.result : null;
+      if (!dataUrl) {
+        resolve(null);
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        if (img.width > 1024 || img.height > 1024) {
+          alert('Image dimensions too large (max 1024x1024)');
+          resolve(null);
+          return;
+        }
+        const assetId = `asset_${Date.now()}`;
+        moduleData.customAssets = moduleData.customAssets || {};
+        moduleData.customAssets[assetId] = {
+          url: dataUrl,
+          width: img.width,
+          height: img.height,
+          uploadedAt: Date.now()
+        };
+        renderCustomAssetList();
+        resolve(assetId);
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function updateTileSpritePreview(inputId: string, previewId: string) {
+  const input = document.getElementById(inputId) as HTMLInputElement | null;
+  const preview = document.getElementById(previewId);
+  if (!preview) return;
+  preview.innerHTML = '';
+  const id = input?.value.trim();
+  if (!id) {
+    preview.textContent = 'No tile sprite';
+    return;
+  }
+  const meta = moduleData.customAssets?.[id];
+  if (meta?.url) {
+    const img = document.createElement('img');
+    img.src = meta.url;
+    img.alt = id;
+    img.style.width = '32px';
+    img.style.height = '32px';
+    img.style.objectFit = 'contain';
+    img.style.border = '1px solid #444';
+    img.style.background = '#000';
+    img.title = id;
+    preview.appendChild(img);
+  } else {
+    preview.textContent = 'Asset not found';
+  }
+}
+
+function attachTileSpriteUpload(uploadInputId: string, targetInputId: string, previewId: string, onApplied?: () => void) {
+  const uploadEl = document.getElementById(uploadInputId) as HTMLInputElement | null;
+  if (!uploadEl) return;
+  uploadEl.addEventListener('change', async (e: Event) => {
+    const input = e.target as HTMLInputElement | null;
+    const file = input?.files?.[0];
+    if (!file) return;
+    const assetId = await createCustomAssetFromFile(file);
+    if (assetId) {
+      const target = document.getElementById(targetInputId) as HTMLInputElement | null;
+      if (target) {
+        target.value = assetId;
+        target.dispatchEvent(new Event('input', { bubbles: true }));
+        target.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      updateTileSpritePreview(targetInputId, previewId);
+      if (onApplied) onApplied();
+    }
+    if (input) input.value = '';
+  });
+}
 const noiseToggle = document.getElementById('noiseToggle');
 const brushSizeSlider = document.getElementById('brushSize');
 const brushSizeLabel = document.getElementById('brushSizeLabel');
@@ -2879,6 +3029,7 @@ function startNewNPC() {
   document.getElementById('npcX').value = '';
   document.getElementById('npcY').value = '';
   document.getElementById('npcTileSprite').value = '';
+  updateTileSpritePreview('npcTileSprite', 'npcTileSpritePreview');
   renderLoopFields([]);
   document.getElementById('npcPatrol').checked = false;
   updatePatrolSection();
@@ -2984,6 +3135,7 @@ function collectNPCFromForm() {
   const color = document.getElementById('npcColor').value.trim() || '#fff';
   const symbol = document.getElementById('npcSymbol').value.trim().charAt(0) || '!';
   const map = document.getElementById('npcMap').value.trim() || 'world';
+  const tileSprite = document.getElementById('npcTileSprite').value.trim();
   const rawX = document.getElementById('npcX').value;
   const rawY = document.getElementById('npcY').value;
   const parsedX = Number.parseInt(rawX, 10);
@@ -3076,6 +3228,7 @@ function collectNPCFromForm() {
   if (!Number.isFinite(x)) x = 0;
   if (!Number.isFinite(y)) y = 0;
   const npc: any = { id, name, title, desc, symbol, map, x, y, tree };
+  if (tileSprite) npc.tileSprite = tileSprite;
   if (overrideColor) { npc.color = color; npc.overrideColor = true; }
   if (questIds.length > 1) npc.quests = questIds;
   else if (firstQuest) npc.questId = firstQuest;
@@ -3222,6 +3375,8 @@ function editNPC(i) {
   populateMapDropdown(document.getElementById('npcMap'), n.map);
   document.getElementById('npcX').value = n.x;
   document.getElementById('npcY').value = n.y;
+  document.getElementById('npcTileSprite').value = n.tileSprite || '';
+  updateTileSpritePreview('npcTileSprite', 'npcTileSpritePreview');
   npcLastCoords = { map: n.map || 'world', x: n.x, y: n.y };
   renderLoopFields(n.loop || []);
   document.getElementById('npcPatrol').checked = Array.isArray(n.loop) && n.loop.length >= 2;
@@ -3422,6 +3577,8 @@ function startNewItem() {
   document.getElementById('itemX').value = 0;
   document.getElementById('itemY').value = 0;
   document.getElementById('itemOnMap').checked = false;
+  document.getElementById('itemTileSprite').value = '';
+  updateTileSpritePreview('itemTileSprite', 'itemTileSpritePreview');
   resetPersonaFields();
   updateModsWrap();
   loadMods({});
@@ -3497,6 +3654,7 @@ function addItem() {
   const useText = document.getElementById('itemUse').value.trim();
   if (use && useText) use.text = useText;
   const item: any = { id, name, desc, type, tags, mods, value, use, equip };
+  if (tileSprite) item.tileSprite = tileSprite;
   if (fuel) item.fuel = fuel;
   if (narrativeId || narrativePrompt) {
     item.narrative = {};
@@ -3592,7 +3750,8 @@ function editItem(i) {
   document.getElementById('itemX').value = it.x || 0;
   document.getElementById('itemY').value = it.y || 0;
   document.getElementById('itemOnMap').checked = !!it.map;
-  document.getElementById('itemTileSprite').value = '';
+  document.getElementById('itemTileSprite').value = it.tileSprite || '';
+  updateTileSpritePreview('itemTileSprite', 'itemTileSpritePreview');
   updateItemMapWrap();
   updateModsWrap();
   loadMods(it.mods);
@@ -5980,6 +6139,30 @@ document.getElementById('itemPersonaNext').onclick = () => {
   if (pathEl) pathEl.value = '';
   setItemPersonaPortrait();
 };
+document.getElementById('npcTileSprite').addEventListener('input', () => {
+  updateTileSpritePreview('npcTileSprite', 'npcTileSpritePreview');
+});
+document.getElementById('itemTileSprite').addEventListener('input', () => {
+  updateTileSpritePreview('itemTileSprite', 'itemTileSpritePreview');
+});
+const npcTileUploadBtn = document.getElementById('npcTileSpriteUploadBtn');
+if (npcTileUploadBtn) {
+  npcTileUploadBtn.addEventListener('click', () => {
+    const input = document.getElementById('npcTileSpriteUpload') as HTMLInputElement | null;
+    input?.click();
+  });
+}
+attachTileSpriteUpload('npcTileSpriteUpload', 'npcTileSprite', 'npcTileSpritePreview', applyNPCChanges);
+const itemTileUploadBtn = document.getElementById('itemTileSpriteUploadBtn');
+if (itemTileUploadBtn) {
+  itemTileUploadBtn.addEventListener('click', () => {
+    const input = document.getElementById('itemTileSpriteUpload') as HTMLInputElement | null;
+    input?.click();
+  });
+}
+attachTileSpriteUpload('itemTileSpriteUpload', 'itemTileSprite', 'itemTileSpritePreview');
+updateTileSpritePreview('npcTileSprite', 'npcTileSpritePreview');
+updateTileSpritePreview('itemTileSprite', 'itemTileSpritePreview');
 document.getElementById('eventEffect').addEventListener('change', updateEventEffectFields);
 document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
 document.getElementById('npcFlagType').addEventListener('change', updateFlagBuilder);
@@ -6828,111 +7011,20 @@ animate();
   });
 
   // Custom Asset Upload
-  document.getElementById('uploadAssetInput').addEventListener('change', (e: any) => {
+  document.getElementById('uploadAssetInput').addEventListener('change', async (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    // Check size limit (1MB)
-    if (file.size > 1024 * 1024) {
-      alert('File too large (max 1MB)');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (evt: any) => {
-      const img = new Image();
-      img.onload = () => {
-        // Validation: max 1024x1024
-        if (img.width > 1024 || img.height > 1024) {
-           alert('Image dimensions too large (max 1024x1024)');
-           return;
-        }
-
-        // Generate ID / store
-        // In a real app we'd hash it. Here we use random or name-based ID.
-        // Also we store as data URL for now since we don't have a backend.
-        // Memory says: "Custom visual assets (User Uploads) are stored as Base64 strings in ModuleData.customImages"
-        // But we are implementing the new spec "customAssets".
-        // Let's use customAssets with url = data URL.
-
-        const assetId = 'asset_' + Date.now(); // Simple ID generation
-        moduleData.customAssets = moduleData.customAssets || {};
-        moduleData.customAssets[assetId] = {
-          url: evt.target.result,
-          width: img.width,
-          height: img.height,
-          uploadedAt: Date.now()
-        };
-
-        renderCustomAssetList();
-        document.getElementById('paintAssetId').value = assetId;
-        paintAssetId = assetId;
-        paintMode = 'asset';
-        document.getElementById('paintMode').value = 'asset';
-        document.getElementById('paintAssetWrap').style.display = 'block';
-      };
-      img.src = evt.target.result;
-    };
-    reader.readAsDataURL(file);
+    const assetId = await createCustomAssetFromFile(file);
+    if (!assetId) return;
+    const paintAssetEl = document.getElementById('paintAssetId') as HTMLInputElement | null;
+    if (paintAssetEl) paintAssetEl.value = assetId;
+    paintAssetId = assetId;
+    paintMode = 'asset';
+    const modeEl = document.getElementById('paintMode');
+    if (modeEl) modeEl.value = 'asset';
+    const wrap = document.getElementById('paintAssetWrap');
+    if (wrap) wrap.style.display = 'block';
   });
-
-  function renderCustomAssetList() {
-    const list = document.getElementById('customAssetsList');
-    list.innerHTML = '';
-    const assets = moduleData.customAssets || {};
-    if (Object.keys(assets).length === 0) {
-      list.innerHTML = '<div class="muted">(no custom assets)</div>';
-      return;
-    }
-    Object.entries(assets).forEach(([id, meta]) => {
-       const div = document.createElement('div');
-       div.className = 'asset-row'; // Add css later or inline
-       div.style.display = 'flex';
-       div.style.alignItems = 'center';
-       div.style.gap = '8px';
-       div.style.marginBottom = '4px';
-
-       const img = document.createElement('img');
-       img.src = meta.url;
-       img.style.width = '32px';
-       img.style.height = '32px';
-       img.style.objectFit = 'contain';
-       img.style.border = '1px solid #444';
-
-       const span = document.createElement('span');
-       span.textContent = id;
-       span.style.flex = '1';
-       span.style.overflow = 'hidden';
-       span.style.textOverflow = 'ellipsis';
-
-       const useBtn = document.createElement('button');
-       useBtn.className = 'btn small';
-       useBtn.textContent = 'Use';
-       useBtn.onclick = () => {
-         paintAssetId = id;
-         document.getElementById('paintAssetId').value = id;
-         paintMode = 'asset';
-         document.getElementById('paintMode').value = 'asset';
-         document.getElementById('paintAssetWrap').style.display = 'block';
-       };
-
-       const delBtn = document.createElement('button');
-       delBtn.className = 'btn small';
-       delBtn.textContent = 'x';
-       delBtn.onclick = () => {
-         if (confirm(`Delete asset ${id}?`)) {
-           delete moduleData.customAssets[id];
-           renderCustomAssetList();
-         }
-       };
-
-       div.appendChild(img);
-       div.appendChild(span);
-       div.appendChild(useBtn);
-       div.appendChild(delBtn);
-       list.appendChild(div);
-    });
-  }
 
   // Attach event listener for map clicking to handle paint
   // We need to hook into canvas 'mousedown' or click.
