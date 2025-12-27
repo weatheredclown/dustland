@@ -740,18 +740,24 @@ function drawWorld() {
         const py = (n.y - pyoff) * sy;
         if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height)
             return;
+        const tileDrawn = drawTileImage(ctx, typeof n.tileImage === 'string' ? n.tileImage : '', px, py, sx, sy);
         ctx.save();
-        ctx.fillStyle = hovering ? '#fff' : getEditorNpcColor(n);
-        if (hovering) {
-            ctx.shadowColor = '#fff';
-            ctx.shadowBlur = 8;
+        if (tileDrawn) {
+            if (hovering) {
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(px, py, sx, sy);
+            }
         }
-        ctx.fillRect(px, py, sx, sy);
-        ctx.fillStyle = '#000';
-        ctx.fillText(getEditorNpcSymbol(n), px + 4, py + 12);
-        if (hovering) {
-            ctx.strokeStyle = '#fff';
-            ctx.strokeRect(px, py, sx, sy);
+        else {
+            ctx.fillStyle = hovering ? '#fff' : getEditorNpcColor(n);
+            if (hovering) {
+                ctx.shadowColor = '#fff';
+                ctx.shadowBlur = 8;
+            }
+            ctx.fillRect(px, py, sx, sy);
+            ctx.fillStyle = '#000';
+            ctx.fillText(getEditorNpcSymbol(n), px + 4, py + 12);
         }
         ctx.restore();
     });
@@ -786,6 +792,7 @@ function drawWorld() {
         const py = (it.y - pyoff) * sy;
         if (px + sx < 0 || py + sy < 0 || px > canvas.width || py > canvas.height)
             return;
+        const tileDrawn = drawTileImage(ctx, typeof it.tileImage === 'string' ? it.tileImage : '', px, py, sx, sy);
         ctx.save();
         ctx.strokeStyle = hovering ? '#fff' : '#ff0';
         if (hovering) {
@@ -949,14 +956,25 @@ function drawInterior() {
         }
     }
     moduleData.npcs.filter(n => n.map === I.id).forEach(n => {
-        intCtx.fillStyle = getEditorNpcColor(n);
-        intCtx.fillRect(n.x * sx, n.y * sy, sx, sy);
-        intCtx.fillStyle = '#000';
-        intCtx.fillText(getEditorNpcSymbol(n), n.x * sx + 4, n.y * sy + 12);
+        const nx = n.x * sx;
+        const ny = n.y * sy;
+        const tileDrawn = drawTileImage(intCtx, typeof n.tileImage === 'string' ? n.tileImage : '', nx, ny, sx, sy);
+        if (!tileDrawn) {
+            intCtx.fillStyle = getEditorNpcColor(n);
+            intCtx.fillRect(nx, ny, sx, sy);
+            intCtx.fillStyle = '#000';
+            intCtx.fillText(getEditorNpcSymbol(n), nx + 4, ny + 12);
+        }
     });
     moduleData.items.filter(it => it.map === I.id).forEach(it => {
+        const ix = it.x * sx;
+        const iy = it.y * sy;
+        const tileDrawn = drawTileImage(intCtx, typeof it.tileImage === 'string' ? it.tileImage : '', ix, iy, sx, sy);
         intCtx.strokeStyle = '#ff0';
-        intCtx.strokeRect(it.x * sx + 1, it.y * sy + 1, sx - 2, sy - 2);
+        intCtx.strokeRect(ix + 1, iy + 1, sx - 2, sy - 2);
+        if (tileDrawn) {
+            intCtx.lineWidth = 1;
+        }
     });
     if (selectedObj && selectedObj.obj.map === I.id) {
         const o = selectedObj.obj;
@@ -2416,6 +2434,104 @@ function setItemPersonaPortrait() {
     if (el)
         el.style.backgroundImage = img ? `url(${img})` : '';
 }
+const tileImageCache = new Map();
+let npcTileImage = '';
+let itemTileImage = '';
+function clearTileImageCache() {
+    tileImageCache.clear();
+}
+function requestTileRedraw() {
+    drawWorld();
+    drawInterior();
+}
+function getTileImage(src) {
+    const path = (src || '').trim();
+    const Img = typeof Image === 'function' ? Image : null;
+    if (!path || !Img)
+        return null;
+    const cached = tileImageCache.get(path);
+    if (cached)
+        return cached;
+    const img = new Img();
+    img.decoding = 'async';
+    img.src = path;
+    img.addEventListener('load', requestTileRedraw, { once: true });
+    tileImageCache.set(path, img);
+    return img;
+}
+function drawTileImage(ctx, src, px, py, w, h) {
+    if (!ctx)
+        return false;
+    const img = getTileImage(src);
+    if (!img)
+        return false;
+    if (img.complete && (img.naturalWidth || img.width) && (img.naturalHeight || img.height)) {
+        ctx.drawImage(img, px, py, w, h);
+        return true;
+    }
+    return false;
+}
+function setTilePreview(previewId, src) {
+    const el = document.getElementById(previewId);
+    if (!el)
+        return;
+    if (src) {
+        el.style.backgroundImage = `url(${src})`;
+        el.textContent = '';
+        el.setAttribute('aria-label', 'Tile image selected');
+    }
+    else {
+        el.style.backgroundImage = '';
+        el.textContent = 'None';
+        el.setAttribute('aria-label', 'No tile image selected');
+    }
+}
+function setNpcTilePreview() {
+    setTilePreview('npcTilePreview', getNpcTileImageValue());
+}
+function setItemTilePreview() {
+    setTilePreview('itemTilePreview', getItemTileImageValue());
+}
+function setNpcTileImageValue(value) {
+    if (typeof npcTileImage !== 'undefined')
+        npcTileImage = value;
+    globalThis.npcTileImage = value;
+}
+function getNpcTileImageValue() {
+    if (typeof npcTileImage === 'string')
+        return npcTileImage;
+    const globalValue = globalThis.npcTileImage;
+    return typeof globalValue === 'string' ? globalValue : '';
+}
+function setItemTileImageValue(value) {
+    if (typeof itemTileImage !== 'undefined')
+        itemTileImage = value;
+    globalThis.itemTileImage = value;
+}
+function getItemTileImageValue() {
+    if (typeof itemTileImage === 'string')
+        return itemTileImage;
+    const globalValue = globalThis.itemTileImage;
+    return typeof globalValue === 'string' ? globalValue : '';
+}
+function readTileFile(file, onReady) {
+    if (!file)
+        return;
+    if (typeof FileReader === 'undefined')
+        return;
+    const type = (file.type || '').toLowerCase();
+    if (!type.includes('png')) {
+        alert('Please upload a PNG image with transparency for map tiles.');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+        const result = typeof reader.result === 'string' ? reader.result : '';
+        if (result)
+            onReady(result);
+    };
+    reader.readAsDataURL(file);
+}
 function resetPersonaFields() {
     const idEl = document.getElementById('itemPersonaId');
     const labelEl = document.getElementById('itemPersonaLabel');
@@ -2999,6 +3115,8 @@ function startNewNPC() {
     document.getElementById('npcColorOverride').checked = false;
     updateColorOverride();
     document.getElementById('npcSymbol').value = '!';
+    setNpcTileImageValue('');
+    setNpcTilePreview();
     populateMapDropdown(document.getElementById('npcMap'), '');
     document.getElementById('npcX').value = '';
     document.getElementById('npcY').value = '';
@@ -3229,6 +3347,12 @@ function collectNPCFromForm() {
     if (!Number.isFinite(y))
         y = 0;
     const npc = { id, name, title, desc, symbol, map, x, y, tree };
+    const npcTileGlobal = globalThis.npcTileImage;
+    const npcTile = typeof npcTileImage === 'string'
+        ? npcTileImage
+        : (typeof npcTileGlobal === 'string' ? npcTileGlobal : '');
+    if (npcTile)
+        npc.tileImage = npcTile;
     if (overrideColor) {
         npc.color = color;
         npc.overrideColor = true;
@@ -3395,6 +3519,8 @@ function editNPC(i) {
     document.getElementById('npcColorOverride').checked = !!n.overrideColor;
     updateColorOverride();
     document.getElementById('npcSymbol').value = n.symbol || '!';
+    setNpcTileImageValue(typeof n.tileImage === 'string' ? n.tileImage : '');
+    setNpcTilePreview();
     populateMapDropdown(document.getElementById('npcMap'), n.map);
     document.getElementById('npcX').value = n.x;
     document.getElementById('npcY').value = n.y;
@@ -3604,6 +3730,8 @@ function startNewItem() {
     document.getElementById('itemX').value = 0;
     document.getElementById('itemY').value = 0;
     document.getElementById('itemOnMap').checked = false;
+    setItemTileImageValue('');
+    setItemTilePreview();
     resetPersonaFields();
     updateModsWrap();
     loadMods({});
@@ -3686,6 +3814,12 @@ function addItem() {
     if (use && useText)
         use.text = useText;
     const item = { id, name, desc, type, tags, mods, value, use, equip };
+    const itemTileGlobal = globalThis.itemTileImage;
+    const itemTile = typeof itemTileImage === 'string'
+        ? itemTileImage
+        : (typeof itemTileGlobal === 'string' ? itemTileGlobal : '');
+    if (itemTile)
+        item.tileImage = itemTile;
     if (fuel)
         item.fuel = fuel;
     if (narrativeId || narrativePrompt) {
@@ -3736,6 +3870,8 @@ function addItem() {
     loadMods({});
     document.getElementById('itemNarrativeId').value = '';
     document.getElementById('itemNarrativePrompt').value = '';
+    setItemTileImageValue('');
+    setItemTilePreview();
     renderItemList();
     selectedObj = null;
     drawWorld();
@@ -3792,6 +3928,8 @@ function editItem(i) {
     document.getElementById('itemOnMap').checked = !!it.map;
     document.getElementById('itemTileSprite').value = '';
     updateItemMapWrap();
+    setItemTileImageValue(typeof it.tileImage === 'string' ? it.tileImage : '');
+    setItemTilePreview();
     updateModsWrap();
     loadMods(it.mods);
     document.getElementById('itemValue').value = it.value || 0;
@@ -5744,6 +5882,7 @@ function deleteQuest() {
     });
 }
 function applyLoadedModule(data) {
+    clearTileImageCache();
     moduleData.module = data.module;
     moduleData.moduleVar = data.moduleVar;
     moduleData.props = { ...(data.props || {}) };
@@ -5833,6 +5972,10 @@ function applyLoadedModule(data) {
     showInteriorEditor(false);
     showQuestEditor(false);
     showArenaEditor(false);
+    setNpcTileImageValue('');
+    setItemTileImageValue('');
+    setNpcTilePreview();
+    setItemTilePreview();
 }
 globalThis.applyLoadedModule = applyLoadedModule;
 function validateSpawns() {
@@ -6365,6 +6508,50 @@ document.getElementById('npcNextP').onclick = () => {
     setNpcPortrait();
     applyNPCChanges();
 };
+const npcTileInput = document.getElementById('npcTileUpload');
+if (npcTileInput) {
+    npcTileInput.addEventListener('change', e => {
+        const file = e.target?.files?.[0];
+        readTileFile(file, dataUrl => {
+            setNpcTileImageValue(dataUrl);
+            setNpcTilePreview();
+            applyNPCChanges();
+        });
+        npcTileInput.value = '';
+    });
+}
+const npcTileClear = document.getElementById('npcTileClear');
+if (npcTileClear) {
+    npcTileClear.addEventListener('click', () => {
+        setNpcTileImageValue('');
+        setNpcTilePreview();
+        applyNPCChanges();
+    });
+}
+const itemTileInput = document.getElementById('itemTileUpload');
+if (itemTileInput) {
+    itemTileInput.addEventListener('change', e => {
+        const file = e.target?.files?.[0];
+        readTileFile(file, dataUrl => {
+            setItemTileImageValue(dataUrl);
+            setItemTilePreview();
+            drawWorld();
+            drawInterior();
+        });
+        itemTileInput.value = '';
+    });
+}
+const itemTileClear = document.getElementById('itemTileClear');
+if (itemTileClear) {
+    itemTileClear.addEventListener('click', () => {
+        setItemTileImageValue('');
+        setItemTilePreview();
+        drawWorld();
+        drawInterior();
+    });
+}
+setNpcTilePreview();
+setItemTilePreview();
 setupListFilter('npcFilter', 'npcList');
 setupListFilter('itemFilter', 'itemList');
 setupListFilter('questFilter', 'questList');
