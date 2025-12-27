@@ -11,6 +11,8 @@ type AckGlobals = typeof globalThis & {
   applyLoadedModule?: (data: unknown) => void;
 };
 
+type CloudMapAction = 'load' | 'delete' | 'unshare';
+
 async function initCloudActions(): Promise<void> {
   const saveBtn = document.getElementById('cloudSave') as HTMLButtonElement | null;
   const loadBtn = document.getElementById('cloudLoad') as HTMLButtonElement | null;
@@ -23,7 +25,6 @@ async function initCloudActions(): Promise<void> {
   const repo = new FirestoreModuleRepository();
   let session: ServerSession | null = null;
   let ready = false;
-  let lastUserId: string | null = null;
   let lastModuleId: string | null = globals.moduleData?.id ?? null;
   let unavailableMessage = 'Cloud saves unavailable. Sign in to enable them.';
   let bootstrapFailed = false;
@@ -162,7 +163,6 @@ async function initCloudActions(): Promise<void> {
   if (!bootstrapFailed && session) {
     session.subscribe(async snapshot => {
       const canUseCloud = snapshot.status === 'authenticated' && snapshot.bootstrap.status === 'firebase-ready';
-      lastUserId = snapshot.user?.uid ?? null;
       if (canUseCloud && !ready) {
         try {
           await repo.init(snapshot);
@@ -198,8 +198,9 @@ async function initCloudActions(): Promise<void> {
   const listCloudModules = async (allowRetry = true): Promise<ModuleSummary[]> => {
     try {
       const lists = await Promise.all([repo.listMine(), repo.listShared(), repo.listPublic()]);
-      return lists
-        .flat()
+      const annotate = (mods: ModuleSummary[], access: 'owner' | 'shared' | 'public') =>
+        mods.map(mod => ({ ...mod, access: mod.access ?? access }));
+      return [...annotate(lists[0], 'owner'), ...annotate(lists[1], 'shared'), ...annotate(lists[2], 'public')]
         .sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
     } catch (err) {
       if (isPermissionError(err)) {
@@ -220,28 +221,87 @@ async function initCloudActions(): Promise<void> {
 
   const pickCloudModule = async (): Promise<{ module: ModuleSummary | null; canceled: boolean }> => {
     try {
-      const modules = await listCloudModules();
+      let modules = await listCloudModules();
       if (!modules.length) {
         setStatus('No cloud modules found. Save or publish one first.', 'error');
         alert('No cloud modules found. Save or publish one first.');
         return { module: null, canceled: false };
       }
-      const menu = modules
-        .map((m, idx) => {
-          const timestamp = m.updatedAt ? new Date(m.updatedAt).toLocaleString() : 'unknown time';
-          const name = m.title?.trim() || 'Untitled Map';
-          const source = m.visibility === 'public' ? 'Public' : m.ownerId === lastUserId ? 'Mine' : 'Shared';
-          return `${idx + 1}. ${name} — ${source ?? 'cloud'} (${timestamp})`;
-        })
-        .join('\n');
-      const choice = prompt('Load a cloud module by number:\n' + menu);
-      if (!choice) return { module: null, canceled: true };
-      const index = parseInt(choice, 10);
-      if (!Number.isFinite(index) || index < 1 || index > modules.length) {
-        alert('Invalid selection.');
-        return { module: null, canceled: false };
+      while (modules.length) {
+        const menu = modules
+          .map((m, idx) => {
+            const timestamp = m.updatedAt ? new Date(m.updatedAt).toLocaleString() : 'unknown time';
+            const name = m.title?.trim() || 'Untitled Map';
+            const source = m.access === 'owner' ? 'Mine' : m.access === 'shared' ? 'Shared' : 'Public';
+            return `${idx + 1}. ${name} — ${source} (${timestamp})`;
+          })
+          .join('\n');
+        const choice = prompt(
+          'Load a cloud module:\n' +
+            menu +
+            '\n\nEnter a number to load it.\n' +
+            'Prefix with D to delete one of your maps (e.g., D2).\n' +
+            'Prefix with U to remove a shared map (e.g., U3).',
+        );
+        if (!choice) return { module: null, canceled: true };
+        const normalized = choice.trim();
+        if (!normalized) continue;
+        const actionPrefix = normalized[0].toLowerCase();
+        const action: CloudMapAction = actionPrefix === 'd' ? 'delete' : actionPrefix === 'u' ? 'unshare' : 'load';
+        const numStr = action === 'load' ? normalized : normalized.slice(1);
+        const index = parseInt(numStr, 10);
+        if (!Number.isFinite(index) || index < 1 || index > modules.length) {
+          alert('Invalid selection.');
+          continue;
+        }
+        const target = modules[index - 1];
+        if (action === 'delete') {
+          if (target.access !== 'owner') {
+            alert('You can only delete maps you own.');
+            continue;
+          }
+          const confirmed = confirm(`Delete ${target.title || 'this map'} from the cloud? This cannot be undone.`);
+          if (!confirmed) continue;
+          if (!repo.deleteModule) {
+            alert('Delete is not available right now.');
+            continue;
+          }
+          try {
+            await repo.deleteModule(target.id);
+            modules = await listCloudModules();
+            setStatus('Map deleted.', 'success');
+          } catch (err) {
+            const message = (err as Error).message || 'Unable to delete that map.';
+            setStatus('Delete failed: ' + message, 'error');
+            alert('Delete failed: ' + message);
+          }
+          continue;
+        }
+        if (action === 'unshare') {
+          if (target.access !== 'shared') {
+            alert('Only shared maps can be removed from your library.');
+            continue;
+          }
+          const confirmed = confirm(`Remove access to ${target.title || 'this map'}?`);
+          if (!confirmed) continue;
+          if (!repo.unshare) {
+            alert('Unshare is not available right now.');
+            continue;
+          }
+          try {
+            await repo.unshare(target.id);
+            modules = await listCloudModules();
+            setStatus('Share removed.', 'success');
+          } catch (err) {
+            const message = (err as Error).message || 'Unable to remove that share.';
+            setStatus('Unshare failed: ' + message, 'error');
+            alert('Unshare failed: ' + message);
+          }
+          continue;
+        }
+        return { module: target, canceled: false };
       }
-      return { module: modules[index - 1], canceled: false };
+      return { module: null, canceled: false };
     } catch (err) {
       const message = (err as Error).message;
       setStatus('Unable to list cloud modules: ' + message, 'error');

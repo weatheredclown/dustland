@@ -6746,13 +6746,15 @@ animate();
   // New Paint tab setup
   const paintTab = document.createElement('div');
   paintTab.className = 'tab2';
-  paintTab.dataset.tab = 'paint';
+  const paintTabDataset = paintTab.dataset ?? ((paintTab as { dataset?: DOMStringMap }).dataset = {} as DOMStringMap);
+  paintTabDataset.tab = 'paint';
   paintTab.textContent = 'Paint';
   paintTab.setAttribute('role', 'tab');
   tabList.appendChild(paintTab);
 
   const paintPane = document.createElement('div');
-  paintPane.dataset.pane = 'paint';
+  const paintPaneDataset = paintPane.dataset ?? ((paintPane as { dataset?: DOMStringMap }).dataset = {} as DOMStringMap);
+  paintPaneDataset.pane = 'paint';
   paintPane.className = 'editor-section';
   paintPane.style.display = 'none';
   paintPane.innerHTML = `
@@ -6772,7 +6774,8 @@ animate();
       <label>Upload Asset<input type="file" id="uploadAssetInput" accept="image/png,image/webp"/></label>
     </div>
   `;
-  panel.querySelector('.scroll-y').appendChild(paintPane);
+  const scrollContainer = panel.querySelector('.scroll-y');
+  (scrollContainer ?? panel).appendChild(paintPane);
   panes.push(paintPane);
 
   // Paint logic variables: using globals defined at top
