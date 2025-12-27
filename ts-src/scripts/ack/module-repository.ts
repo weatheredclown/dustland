@@ -11,6 +11,7 @@ export interface ModuleSummary {
   ownerId: string;
   updatedAt: number;
   publishedVersionId?: string | null;
+  access?: 'owner' | 'shared' | 'public';
   [key: string]: unknown;
 }
 
@@ -32,6 +33,8 @@ export interface ModuleRepository {
   saveDraft(moduleId: string | null, payload: unknown): Promise<ModuleVersion>;
   publish(moduleId: string): Promise<void>;
   share?(moduleId: string, email: string, role?: 'viewer' | 'editor'): Promise<void>;
+  deleteModule?(moduleId: string): Promise<void>;
+  unshare?(moduleId: string): Promise<void>;
 }
 
 export class NullModuleRepository implements ModuleRepository {
@@ -71,6 +74,14 @@ export class NullModuleRepository implements ModuleRepository {
   }
 
   async share(_moduleId: string, _email: string): Promise<void> {
+    // No-op
+  }
+
+  async deleteModule(_moduleId: string): Promise<void> {
+    // No-op
+  }
+
+  async unshare(_moduleId: string): Promise<void> {
     // No-op
   }
 }
@@ -116,7 +127,10 @@ export class FirestoreModuleRepository implements ModuleRepository {
     const col = collection(this.db, 'maps');
     const q = query(col, where('ownerId', '==', userId), orderBy('updatedAt', 'desc'));
     const snap = await getDocs(q);
-    return snap.docs.map(doc => this.mapDocToSummary(doc.id, doc.data() as FirestoreModuleDoc));
+    return snap.docs.map(doc => ({
+      ...this.mapDocToSummary(doc.id, doc.data() as FirestoreModuleDoc),
+      access: 'owner',
+    }));
   }
 
   async listShared(): Promise<ModuleSummary[]> {
@@ -134,7 +148,10 @@ export class FirestoreModuleRepository implements ModuleRepository {
     for (const mapId of mapIds) {
       const mapDoc = await this.safeGetDoc(mapsCol, mapId);
       if (mapDoc) {
-        summaries.push(this.mapDocToSummary(mapId, mapDoc));
+        summaries.push({
+          ...this.mapDocToSummary(mapId, mapDoc),
+          access: 'shared',
+        });
       }
     }
     return summaries;
@@ -147,7 +164,10 @@ export class FirestoreModuleRepository implements ModuleRepository {
     );
     const listings = collection(this.db, 'publicListings');
     const snap = await getDocs(query(listings, orderBy('updatedAt', 'desc')));
-    return snap.docs.map(doc => this.mapDocToSummary(doc.id, doc.data() as FirestoreModuleDoc, true));
+    return snap.docs.map(doc => ({
+      ...this.mapDocToSummary(doc.id, doc.data() as FirestoreModuleDoc, true),
+      access: 'public',
+    }));
   }
 
   async loadVersion(moduleId: string): Promise<ModuleVersion | null> {
@@ -328,6 +348,56 @@ export class FirestoreModuleRepository implements ModuleRepository {
       `shares/${shareId}`,
       sharePayload,
       () => setDoc(shareRef, sharePayload, { merge: true }),
+    );
+  }
+
+  async deleteModule(moduleId: string): Promise<void> {
+    if (!this.db) throw new Error('Firestore is not initialized.');
+    const userId = this.session?.user?.uid;
+    if (!userId) throw new Error('Sign in before deleting a module.');
+    const { collection, deleteDoc, doc, getDoc, getDocs, query, where } = await loadFirebaseModule<
+      typeof import('firebase/firestore')
+    >('firebase-firestore');
+    const mapRef = doc(this.db, 'maps', moduleId);
+    const mapSnap = await getDoc(mapRef);
+    if (!mapSnap.exists()) {
+      throw new Error('Module not found.');
+    }
+    const mapData = mapSnap.data() as FirestoreModuleDoc;
+    if (mapData.ownerId !== userId) {
+      throw new Error('Only the module owner can delete this map.');
+    }
+    await this.writeWithDetail('deleting module', `maps/${moduleId}`, { moduleId }, () => deleteDoc(mapRef));
+
+    const listingRef = doc(this.db, 'publicListings', moduleId);
+    await this.writeWithDetail('removing public listing', `publicListings/${moduleId}`, {}, () => deleteDoc(listingRef));
+
+    const sharesCol = collection(this.db, 'shares');
+    const shareSnap = await getDocs(query(sharesCol, where('mapId', '==', moduleId)));
+    await Promise.all(
+      shareSnap.docs.map(share =>
+        this.writeWithDetail('removing share', `shares/${share.id}`, {}, () => deleteDoc(share.ref)),
+      ),
+    );
+
+    const versionsCol = collection(this.db, 'mapVersions');
+    const versionSnap = await getDocs(query(versionsCol, where('moduleId', '==', moduleId)));
+    await Promise.all(
+      versionSnap.docs.map(version =>
+        this.writeWithDetail('removing saved version', `mapVersions/${version.id}`, {}, () => deleteDoc(version.ref)),
+      ),
+    );
+  }
+
+  async unshare(moduleId: string): Promise<void> {
+    if (!this.db) throw new Error('Firestore is not initialized.');
+    const userId = this.session?.user?.uid;
+    if (!userId) throw new Error('Sign in before changing shares.');
+    const { deleteDoc, doc } = await loadFirebaseModule<typeof import('firebase/firestore')>('firebase-firestore');
+    const shareId = `${moduleId}_${userId}`;
+    const shareRef = doc(this.db, 'shares', shareId);
+    await this.writeWithDetail('removing personal share', `shares/${shareId}`, { moduleId, userId }, () =>
+      deleteDoc(shareRef),
     );
   }
 
