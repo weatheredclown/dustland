@@ -7258,7 +7258,14 @@ animate();
     if (!panel)
         return;
     const tabList = panel.querySelector('.tabs2');
+    if (!tabList)
+        return;
     const tabs = Array.from(tabList.querySelectorAll('.tab2'));
+    if (!tabs.length)
+        return;
+    const paneWrap = panel.querySelector('.tabpanes');
+    if (!paneWrap)
+        return;
     const panes = Array.from(panel.querySelectorAll('[data-pane]'));
     const layout = document.querySelector('.ak-layout');
     const mapCard = document.getElementById('mapCard');
@@ -7278,9 +7285,9 @@ animate();
     paintPane.className = 'editor-section';
     paintPane.style.display = 'none';
     paintPane.innerHTML = `
-    <h3>Tile Paint</h3>
-    <div id="paintControls">
-      <label>Mode<select id="paintMode"><option value="tile">Tile</option><option value="asset">Custom Asset</option></select></label>
+      <h3>Tile Paint</h3>
+      <div id="paintControls">
+        <label>Mode<select id="paintMode"><option value="tile">Tile</option><option value="asset">Custom Asset</option></select></label>
       <div id="paintAssetWrap" style="display:none">
         <label>Asset ID<input id="paintAssetId" placeholder="custom asset id"/></label>
         <button class="btn" id="paintAssetPick">Pick Asset</button>
@@ -7288,13 +7295,13 @@ animate();
       <label>Opacity<input type="range" id="paintOpacity" min="0" max="1" step="0.1" value="1"/><span id="paintOpacityVal">1.0</span></label>
       <button class="btn" id="paintClearTile">Clear Tile Override</button>
     </div>
-    <h3>Custom Assets</h3>
-    <div id="customAssetsList"></div>
-    <div class="row">
-      <label>Upload Asset<input type="file" id="uploadAssetInput" accept="image/png,image/webp"/></label>
-    </div>
-  `;
-    panel.querySelector('.scroll-y').appendChild(paintPane);
+      <h3>Custom Assets</h3>
+      <div id="customAssetsList"></div>
+      <div class="row">
+        <label>Upload Asset<input type="file" id="uploadAssetInput" accept="image/png,image/webp"/></label>
+      </div>
+    `;
+    paneWrap.appendChild(paintPane);
     panes.push(paintPane);
     // Paint logic variables: using globals defined at top
     paintMode = 'tile';
