@@ -410,6 +410,33 @@
       max-height: 80vh;
       overflow: auto;
     }
+
+    #loadModal .card {
+      width: 420px;
+      max-width: calc(100% - 20px);
+    }
+
+    #loadDropZone {
+      border: 1px dashed #6fc58f;
+      padding: 12px;
+      text-align: center;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, .25);
+      cursor: pointer;
+    }
+
+    #loadDropZone.dragging {
+      border-color: #fff;
+      background: rgba(110, 197, 143, .15);
+    }
+
+    #loadModalActions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 8px;
+    }
   </style>
 </head>
 
@@ -473,7 +500,6 @@
         <div class="btn-group">
           <button class="btn" id="spawnHeatBtn" title="Toggle spawn heat map">Spawn Heat: Off</button>
         </div>
-      <input type="file" id="loadFile" accept="application/json" style="display:none" />
     </section>
     <aside class="editor-panel" id="editorPanel" aria-hidden="false">
       <fieldset class="card" id="problemCard" style="display:none;border-color:#a00">
@@ -524,6 +550,7 @@
             <span class="pill" id="npcNextP">&gt;</span>
           </div>
           <label><input type="checkbox" id="npcPortraitLock" checked> Lock Portrait</label>
+          <label>Tile Sprite<input id="npcTileSprite" placeholder="custom asset id" /></label>
           <label><input type="checkbox" id="npcHidden"> Hidden NPC</label>
           <label><input type="checkbox" id="npcLocked"> Locked NPC</label>
           <label><input type="checkbox" id="npcInanimate"> Inanimate</label>
@@ -615,6 +642,7 @@
           <datalist id="tagOptions"></datalist>
           <label>Narrative ID<input id="itemNarrativeId" /></label>
           <label>Narrative Prompt<input id="itemNarrativePrompt" /></label>
+          <label>Tile Sprite<input id="itemTileSprite" placeholder="custom asset id" /></label>
           <label><input id="itemOnMap" type="checkbox"/> On Map</label>
           <label id="itemMapWrap">Map<select id="itemMap"></select></label>
           <div class="xy" id="itemXY">
@@ -926,6 +954,23 @@
       </div><!-- /.tabpanes -->
     </aside>
   </div><!-- /.ak-layout -->
+  <div id="loadModal" class="modal">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div><b>Load Module</b></div>
+        <button class="btn" type="button" id="closeLoadModal">Close</button>
+      </div>
+      <div id="loadDropZone" role="button" tabindex="0" aria-label="Load module JSON">
+        <div style="font-weight:bold;margin-bottom:4px">Drop a module JSON file</div>
+        <div style="font-size:0.9rem">Or browse to pick a saved module.</div>
+      </div>
+      <div id="loadModalActions">
+        <div id="loadStatus" class="inline-hint" aria-live="polite"></div>
+        <button class="btn btn--primary" type="button" id="browseLoadFile">Browse</button>
+      </div>
+      <input type="file" id="loadFile" accept="application/json" style="display:none" />
+    </div>
+  </div>
   <div id="dialogModal" class="modal">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">

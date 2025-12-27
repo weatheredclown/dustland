@@ -3,6 +3,13 @@
 
 We want the Adventure Kit (ACK) to cover three player-facing requests at once: skin the palette with curated sprites, paint individual tiles with custom art, and let NPCs/items show bespoke tiles. This proposal merges the behaviors from PRs #1553, #1555, and #1556 into a single, storage-safe flow that never embeds base64 blobs inside module JSON.
 
+## Implementation Status
+**Complete (Implemented)**
+- **Schema:** `CustomAssetMeta` and `TileOverride` types defined. `ModuleData` extended with `customAssets` and `tileOverrides`.
+- **Engine:** `dustland-engine.ts` render loop updated to draw layered tile overrides with transparency support.
+- **Editor:** `adventure-kit.ts` "Paint" tab implemented for uploading assets and painting them onto the map.
+- **NPCs/Items:** `tileSprite` field added to NPC and Item editors, resolving to custom assets.
+
 ## Goals
 - Let creators skin palette tiles globally, per-map, or per-scope (world vs. interiors) using sprite URLs.
 - Support per-tile painting with uploaded art while keeping module files lean and cacheable.
@@ -53,4 +60,3 @@ We want the Adventure Kit (ACK) to cover three player-facing requests at once: s
 - **CLI support:** Extend `scripts/module-tools` with commands to list/upload/remove assets, apply per-tile paints by coord, and audit missing/unused assets.
 - **Presubmit checks:** Lint ensures `tileOverrides` reference valid coordinates and assets; size checks prevent oversized uploads. Add a test that loading a module with palette skins, per-tile paints, and NPC/item sprites renders without fetches after first load.
 - **Docs:** Update Adventure Kit guide and module schema docs with examples for `customAssets`, `tileGraphics`, `tileOverrides`, and `tileSprite` usage.
-
