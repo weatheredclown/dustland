@@ -545,6 +545,16 @@ if (intPalette) {
 const bldgCanvas = (typeof document !== 'undefined' && typeof document.getElementById === 'function') ? document.getElementById('bldgCanvas') : null;
 const bldgCtx = bldgCanvas && typeof bldgCanvas.getContext === 'function' ? bldgCanvas.getContext('2d') : null;
 const bldgPalette = document.getElementById('bldgPalette');
+if (bldgPalette) {
+    const names = { B: 'Building', D: 'Door', E: 'Erase' };
+    bldgPalette.querySelectorAll('button').forEach(btn => {
+        const name = names[btn.dataset.tile];
+        if (name) {
+            btn.title = name;
+            btn.setAttribute('aria-label', name);
+        }
+    });
+}
 let bldgPaint = TILE.BUILDING;
 let bldgPainting = false;
 let bldgGrid = [];
