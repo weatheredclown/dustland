@@ -5321,23 +5321,33 @@ if (stampsBtn && stampWindow) {
             aiBtn.id = 'nanoStampBtn';
             aiBtn.className = 'btn';
             aiBtn.textContent = '🤖';
+            aiBtn.setAttribute('aria-label', 'Generate AI Stamp');
             aiBtn.addEventListener('click', async () => {
-                const block = await window.NanoPalette.generate();
-                if (block) {
-                    const grid = gridFromEmoji(block);
-                    worldStamps.nano = grid;
-                    worldStampEmoji.nano = block;
-                    stampNames.nano = 'Nano';
-                    renderStampWindow();
-                    worldStamp = worldStamps.nano;
-                    worldPaint = null;
-                    if (worldPalette)
-                        worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-                    if (paletteLabel)
-                        paletteLabel.textContent = stampNames.nano || '';
-                    stampWindow.style.display = 'none';
-                    updateCursor();
-                    drawWorld();
+                const originalText = aiBtn.textContent;
+                aiBtn.disabled = true;
+                aiBtn.textContent = '⏳';
+                try {
+                    const block = await window.NanoPalette.generate();
+                    if (block) {
+                        const grid = gridFromEmoji(block);
+                        worldStamps.nano = grid;
+                        worldStampEmoji.nano = block;
+                        stampNames.nano = 'Nano';
+                        renderStampWindow();
+                        worldStamp = worldStamps.nano;
+                        worldPaint = null;
+                        if (worldPalette)
+                            worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                        if (paletteLabel)
+                            paletteLabel.textContent = stampNames.nano || '';
+                        stampWindow.style.display = 'none';
+                        updateCursor();
+                        drawWorld();
+                    }
+                }
+                finally {
+                    aiBtn.disabled = false;
+                    aiBtn.textContent = originalText;
                 }
             });
             stampWindow.appendChild(aiBtn);
