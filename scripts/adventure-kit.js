@@ -6342,6 +6342,12 @@ function renderProblems(issues) {
         pendingNodes.forEach(node => list.appendChild(node));
     }
 }
+function hasBlockingProblems() {
+    const issues = (validateSpawns() || []);
+    if (issues.length)
+        renderProblems(issues);
+    return issues.some(issue => !issue?.warn);
+}
 function exportModulePayload() {
     moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
     if (moduleData.personas) {
@@ -6400,12 +6406,8 @@ function exportModulePayload() {
 }
 globalThis.exportModulePayload = exportModulePayload;
 function saveModule() {
-    const issues = validateSpawns() || [];
-    if (issues.length) {
-        renderProblems(issues);
-        if (issues.some(i => !i.warn))
-            return;
-    }
+    if (hasBlockingProblems())
+        return;
     const { data } = exportModulePayload();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -6415,6 +6417,8 @@ function saveModule() {
     URL.revokeObjectURL(a.href);
 }
 function playtestModule() {
+    if (hasBlockingProblems())
+        return;
     moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
     if (moduleData.personas) {
         const used = new Set((moduleData.items || []).map(it => it.persona).filter(Boolean));
