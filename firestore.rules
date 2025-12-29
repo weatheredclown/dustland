@@ -58,7 +58,7 @@ service cloud.firestore {
       allow read: if canReadMap(resource, mapId);
       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
       allow update: if canEditMap(resource, mapId);
-      allow delete: if false;
+      allow delete: if isOwner(resource);
     }
 
     match /mapVersions/{docId} {
@@ -79,7 +79,11 @@ service cloud.firestore {
         && request.resource.data.moduleId + '_' + request.resource.data.versionId == docId
         && canEditMap(mapRef(resource.data.moduleId), resource.data.moduleId);
 
-      allow delete: if false;
+      allow delete: if isSignedIn()
+        && ((docExists(mapRef(resource.data.moduleId))
+            && canEditMap(mapRef(resource.data.moduleId), resource.data.moduleId))
+          || (!docExists(mapRef(resource.data.moduleId))
+            && resource.data.createdBy == request.auth.uid));
     }
 
     match /shares/{docId} {
