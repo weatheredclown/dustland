@@ -5,7 +5,14 @@ async function initServerModeControls() {
     if (!container) {
         return;
     }
-    await bootstrapHostedFirebase();
+    try {
+        await bootstrapHostedFirebase();
+    }
+    catch (err) {
+        console.warn('Server mode controls unavailable', err);
+        container.hidden = true;
+        return;
+    }
     const statusEl = container.querySelector('[data-role="server-mode-status"]');
     const button = container.querySelector('button');
     if (!statusEl || !button) {
@@ -30,10 +37,6 @@ async function initServerModeControls() {
     });
 }
 function applySnapshot(snapshot, container, statusEl, button) {
-    if (snapshot.bootstrap.status !== 'firebase-ready') {
-        container.hidden = true;
-        return;
-    }
     container.hidden = false;
     container.dataset.state = snapshot.status;
     const uiState = describeSnapshot(snapshot);
@@ -42,7 +45,16 @@ function applySnapshot(snapshot, container, statusEl, button) {
     button.disabled = uiState.buttonDisabled;
     button.title = uiState.buttonTooltip;
 }
-function describeSnapshot(snapshot) {
+export function describeSnapshot(snapshot) {
+    if (snapshot.bootstrap.status !== 'firebase-ready') {
+        const reason = snapshot.bootstrap.reason ?? 'feature-flag';
+        return {
+            message: formatDisabledMessage(reason),
+            buttonLabel: '☁ Cloud',
+            buttonDisabled: true,
+            buttonTooltip: formatDisabledTooltip(reason),
+        };
+    }
     switch (snapshot.status) {
         case 'idle':
             return {
@@ -93,6 +105,28 @@ function describeSnapshot(snapshot) {
             };
     }
 }
+function formatDisabledMessage(reason) {
+    switch (reason) {
+        case 'missing-config':
+            return 'Cloud saves unavailable. Add Firebase settings to enable them.';
+        case 'invalid-config':
+            return 'Cloud saves unavailable. Check your Firebase keys.';
+        case 'feature-flag':
+        default:
+            return 'Cloud saves unavailable. Server mode is turned off for this build.';
+    }
+}
+function formatDisabledTooltip(reason) {
+    switch (reason) {
+        case 'missing-config':
+            return 'Provide DUSTLAND_FIREBASE settings to turn on cloud saves.';
+        case 'invalid-config':
+            return 'Fix the Firebase config before signing in.';
+        case 'feature-flag':
+        default:
+            return 'Cloud saves are disabled. Enable serverMode to use them.';
+    }
+}
 function formatUserName(snapshot) {
     const raw = snapshot.user;
     if (!raw) {
@@ -106,9 +140,11 @@ function formatUserName(snapshot) {
     }
     return raw.uid || 'player';
 }
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initServerModeControls, { once: true });
-}
-else {
-    initServerModeControls();
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initServerModeControls, { once: true });
+    }
+    else {
+        void initServerModeControls();
+    }
 }
