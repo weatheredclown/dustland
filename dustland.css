@@ -2128,6 +2128,7 @@ input[type="range"] {
     .tabpanes {
         overflow: auto;
         padding: 8px;
+        padding-bottom: 120px;
     }
 
     .npc-section {
@@ -2275,6 +2276,10 @@ input[type="range"] {
             flex-direction: column;
             align-items: stretch;
             padding: 8px;
+        }
+
+        .tabpanes {
+            padding-bottom: 200px;
         }
     }
 
