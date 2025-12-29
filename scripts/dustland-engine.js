@@ -1,6 +1,6 @@
 /// <reference path="../types/dustland-engine-globals.d.ts" />
 // ===== Rendering & Utilities =====
-const ENGINE_VERSION = '0.245.27';
+const ENGINE_VERSION = '0.252.0';
 let cachedGlobals;
 function getEngineGlobals() {
     if (cachedGlobals)
@@ -1755,6 +1755,8 @@ function render(gameState = state, _dt) {
     const ps = (gameState.portals || portals);
     const entities = (gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : []));
     const pos = (gameState.party || party);
+    const moduleData = getEngineGlobals().DUSTLAND_MODULE;
+    const customAssets = moduleData?.customAssets;
     const dustlandState = getEngineGlobals().Dustland;
     const remoteParties = dustlandState?.multiplayerParties?.list?.() || dustlandState?.multiplayerState?.remoteParties || [];
     const skin = skinManager();
@@ -1770,8 +1772,6 @@ function render(gameState = state, _dt) {
             const perf = (typeof performance !== 'undefined' && performance.now) ? performance : null;
             const measureTiles = !!globalThis.perfStats;
             const tileStart = measureTiles ? (perf ? perf.now() : Date.now()) : 0;
-            const moduleData = getEngineGlobals().DUSTLAND_MODULE;
-            const customAssets = moduleData?.customAssets;
             const overrides = moduleData?.tileOverrides;
             const mapOverrides = overrides?.[activeMap];
             const resolveAsset = (id) => {
@@ -1864,6 +1864,13 @@ function render(gameState = state, _dt) {
                     const multi = Array.isArray(it.items) && it.items.length > 1;
                     const dropType = typeof it.dropType === 'string' ? it.dropType : (it.source === 'loot' ? 'loot' : 'world');
                     const isLoot = dropType === 'loot';
+                    if (typeof it.tileSprite === 'string' && customAssets?.[it.tileSprite]) {
+                        const img = getCachedImage(customAssets[it.tileSprite].url);
+                        if (img) {
+                            ctx.drawImage(img, vx, vy, TS, TS);
+                            continue;
+                        }
+                    }
                     const skinItemSprite = skin?.getItemSprite?.(it, { dropType, multi });
                     if (skinItemSprite) {
                         if (multi) {

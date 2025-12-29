@@ -1689,6 +1689,8 @@ function render(gameState: any = state, _dt?: number) {
   const ps = (gameState.portals || portals) as any[];
   const entities = (gameState.entities || (typeof NPCS !== 'undefined' ? NPCS : [])) as any[];
   const pos = (gameState.party || party) as { x: number; y: number;[key: string]: unknown };
+  const moduleData = getEngineGlobals().DUSTLAND_MODULE;
+  const customAssets = moduleData?.customAssets;
   type RemoteParty = MultiplayerPeer & { map?: string; x?: number; y?: number; updated?: number };
   const dustlandState = getEngineGlobals().Dustland as { multiplayerParties?: { list?: () => RemoteParty[] }; multiplayerState?: { remoteParties?: RemoteParty[] } } | undefined;
   const remoteParties = (dustlandState?.multiplayerParties?.list?.() as RemoteParty[] | undefined) || dustlandState?.multiplayerState?.remoteParties || [];
@@ -1706,8 +1708,6 @@ function render(gameState: any = state, _dt?: number) {
       const perf = (typeof performance !== 'undefined' && performance.now) ? performance : null;
       const measureTiles = !!globalThis.perfStats;
       const tileStart = measureTiles ? (perf ? perf.now() : Date.now()) : 0;
-      const moduleData = getEngineGlobals().DUSTLAND_MODULE;
-      const customAssets = moduleData?.customAssets;
       const overrides = moduleData?.tileOverrides;
       const mapOverrides = overrides?.[activeMap];
 
@@ -1799,6 +1799,13 @@ function render(gameState: any = state, _dt?: number) {
           const multi = Array.isArray(it.items) && it.items.length > 1;
           const dropType = typeof it.dropType === 'string' ? it.dropType : (it.source === 'loot' ? 'loot' : 'world');
           const isLoot = dropType === 'loot';
+          if (typeof it.tileSprite === 'string' && customAssets?.[it.tileSprite]) {
+            const img = getCachedImage(customAssets[it.tileSprite].url);
+            if (img) {
+              ctx.drawImage(img, vx, vy, TS, TS);
+              continue;
+            }
+          }
           const skinItemSprite = skin?.getItemSprite?.(it, { dropType, multi });
           if (skinItemSprite) {
             if (multi) {
