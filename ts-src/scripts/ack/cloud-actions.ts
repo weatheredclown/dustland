@@ -227,81 +227,198 @@ async function initCloudActions(): Promise<void> {
         alert('No cloud modules found. Save or publish one first.');
         return { module: null, canceled: false };
       }
-      while (modules.length) {
-        const menu = modules
-          .map((m, idx) => {
-            const timestamp = m.updatedAt ? new Date(m.updatedAt).toLocaleString() : 'unknown time';
-            const name = m.title?.trim() || 'Untitled Map';
-            const source = m.access === 'owner' ? 'Mine' : m.access === 'shared' ? 'Shared' : 'Public';
-            return `${idx + 1}. ${name} — ${source} (${timestamp})`;
-          })
-          .join('\n');
-        const choice = prompt(
-          'Load a cloud module:\n' +
-            menu +
-            '\n\nEnter a number to load it.\n' +
-            'Prefix with D to delete one of your maps (e.g., D2).\n' +
-            'Prefix with U to remove a shared map (e.g., U3).',
-        );
-        if (!choice) return { module: null, canceled: true };
-        const normalized = choice.trim();
-        if (!normalized) continue;
-        const actionPrefix = normalized[0].toLowerCase();
-        const action: CloudMapAction = actionPrefix === 'd' ? 'delete' : actionPrefix === 'u' ? 'unshare' : 'load';
-        const numStr = action === 'load' ? normalized : normalized.slice(1);
-        const index = parseInt(numStr, 10);
-        if (!Number.isFinite(index) || index < 1 || index > modules.length) {
-          alert('Invalid selection.');
-          continue;
+
+      const createModuleRow = (
+        module: ModuleSummary,
+        onSelect: (action: CloudMapAction) => void,
+        refresh: () => Promise<void>,
+      ) => {
+        const container = document.createElement('div');
+        container.style.cssText =
+          'border:1px solid #1f2b1f;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;background:#0a100a;';
+
+        const titleRow = document.createElement('div');
+        titleRow.style.cssText = 'display:flex;justify-content:space-between;gap:8px;align-items:center;';
+
+        const title = document.createElement('div');
+        title.textContent = module.title?.trim() || 'Untitled Map';
+        title.style.cssText = 'color:#e8ffe8;font-weight:600;flex:1;';
+        titleRow.appendChild(title);
+
+        const status = document.createElement('div');
+        const timestamp = module.updatedAt ? new Date(module.updatedAt).toLocaleString() : 'unknown time';
+        const source = module.access === 'owner' ? 'Mine' : module.access === 'shared' ? 'Shared' : 'Public';
+        status.textContent = `${source} • ${timestamp}`;
+        status.className = 'module-summary';
+        status.style.cssText = 'color:#a3c1a3;font-size:0.85rem;';
+        container.appendChild(titleRow);
+        container.appendChild(status);
+
+        if (module.summary) {
+          const summary = document.createElement('div');
+          summary.textContent = module.summary;
+          summary.style.cssText = 'color:#8fb18f;font-size:0.9rem;';
+          container.appendChild(summary);
         }
-        const target = modules[index - 1];
-        if (action === 'delete') {
-          if (target.access !== 'owner') {
-            alert('You can only delete maps you own.');
-            continue;
-          }
-          const confirmed = confirm(`Delete ${target.title || 'this map'} from the cloud? This cannot be undone.`);
-          if (!confirmed) continue;
-          if (!repo.deleteModule) {
-            alert('Delete is not available right now.');
-            continue;
-          }
+
+        const actions = document.createElement('div');
+        actions.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;';
+
+        const loadBtn = document.createElement('button');
+        loadBtn.type = 'button';
+        loadBtn.className = 'btn';
+        loadBtn.textContent = 'Load';
+        loadBtn.onclick = () => onSelect('load');
+        actions.appendChild(loadBtn);
+
+        if (module.access === 'owner' && repo.deleteModule) {
+          const deleteBtn = document.createElement('button');
+          deleteBtn.type = 'button';
+          deleteBtn.className = 'btn';
+          deleteBtn.textContent = 'Delete';
+          deleteBtn.onclick = async () => {
+            const confirmed = confirm(`Delete ${module.title || 'this map'} from the cloud? This cannot be undone.`);
+            if (!confirmed) return;
+            deleteBtn.disabled = true;
+            try {
+              await repo.deleteModule?.(module.id);
+              setStatus('Map deleted.', 'success');
+              await refresh();
+            } catch (err) {
+              const message = (err as Error).message || 'Unable to delete that map.';
+              setStatus('Delete failed: ' + message, 'error');
+              alert('Delete failed: ' + message);
+            } finally {
+              deleteBtn.disabled = false;
+            }
+          };
+          actions.appendChild(deleteBtn);
+        }
+
+        if (module.access === 'shared' && repo.unshare) {
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'btn';
+          removeBtn.textContent = 'Remove';
+          removeBtn.onclick = async () => {
+            const confirmed = confirm(`Remove access to ${module.title || 'this map'}?`);
+            if (!confirmed) return;
+            removeBtn.disabled = true;
+            try {
+              await repo.unshare?.(module.id);
+              setStatus('Share removed.', 'success');
+              await refresh();
+            } catch (err) {
+              const message = (err as Error).message || 'Unable to remove that share.';
+              setStatus('Unshare failed: ' + message, 'error');
+              alert('Unshare failed: ' + message);
+            } finally {
+              removeBtn.disabled = false;
+            }
+          };
+          actions.appendChild(removeBtn);
+        }
+
+        container.appendChild(actions);
+        return container;
+      };
+
+      return await new Promise<{ module: ModuleSummary | null; canceled: boolean }>(resolve => {
+        const overlay = document.createElement('div');
+        overlay.id = 'cloudModulePicker';
+        overlay.style.cssText =
+          'position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:100;';
+
+        const dialog = document.createElement('div');
+        dialog.style.cssText =
+          'background:#0c120c;border:1px solid #1f2b1f;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.45);width:90%;max-width:640px;max-height:80vh;display:flex;flex-direction:column;padding:14px;gap:10px;color:#d8eed8;';
+
+        const header = document.createElement('div');
+        header.style.cssText = 'display:flex;justify-content:space-between;gap:10px;align-items:center;';
+
+        const title = document.createElement('div');
+        title.textContent = 'Load a cloud module';
+        title.style.cssText = 'font-weight:700;font-size:1.1rem;';
+        header.appendChild(title);
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'btn';
+        closeBtn.type = 'button';
+        closeBtn.textContent = 'Cancel';
+        closeBtn.onclick = () => {
+          cleanup();
+          resolve({ module: null, canceled: true });
+        };
+        header.appendChild(closeBtn);
+
+        const help = document.createElement('div');
+        help.textContent = 'Choose a map to load or manage its availability.';
+        help.style.cssText = 'color:#9fbf9f;font-size:0.9rem;';
+
+        const list = document.createElement('div');
+        list.style.cssText = 'overflow:auto;display:flex;flex-direction:column;gap:10px;min-height:120px;';
+
+        const refreshList = async () => {
           try {
-            await repo.deleteModule(target.id);
             modules = await listCloudModules();
-            setStatus('Map deleted.', 'success');
           } catch (err) {
-            const message = (err as Error).message || 'Unable to delete that map.';
-            setStatus('Delete failed: ' + message, 'error');
-            alert('Delete failed: ' + message);
+            cleanup();
+            resolve({ module: null, canceled: true });
+            throw err;
           }
-          continue;
+          list.replaceChildren();
+          if (!modules.length) {
+            const empty = document.createElement('div');
+            empty.textContent = 'No cloud modules available.';
+            empty.style.cssText = 'color:#9fbf9f;text-align:center;padding:12px;';
+            list.appendChild(empty);
+            return;
+          }
+          modules.forEach(mod => {
+            const row = createModuleRow(
+              mod,
+              action => {
+                if (action === 'load') {
+                  cleanup();
+                  resolve({ module: mod, canceled: false });
+                }
+              },
+              refreshList,
+            );
+            list.appendChild(row);
+          });
+        };
+
+        void refreshList().catch(() => {
+          /* handled in refreshList */
+        });
+
+        overlay.addEventListener('click', evt => {
+          if (evt.target === overlay) {
+            cleanup();
+            resolve({ module: null, canceled: true });
+          }
+        });
+
+        const onKeyDown = (evt: KeyboardEvent) => {
+          if (evt.key === 'Escape') {
+            cleanup();
+            resolve({ module: null, canceled: true });
+          }
+        };
+        document.addEventListener('keydown', onKeyDown);
+
+        function cleanup() {
+          document.removeEventListener('keydown', onKeyDown);
+          overlay.remove();
         }
-        if (action === 'unshare') {
-          if (target.access !== 'shared') {
-            alert('Only shared maps can be removed from your library.');
-            continue;
-          }
-          const confirmed = confirm(`Remove access to ${target.title || 'this map'}?`);
-          if (!confirmed) continue;
-          if (!repo.unshare) {
-            alert('Unshare is not available right now.');
-            continue;
-          }
-          try {
-            await repo.unshare(target.id);
-            modules = await listCloudModules();
-            setStatus('Share removed.', 'success');
-          } catch (err) {
-            const message = (err as Error).message || 'Unable to remove that share.';
-            setStatus('Unshare failed: ' + message, 'error');
-            alert('Unshare failed: ' + message);
-          }
-          continue;
-        }
-        return { module: target, canceled: false };
-      }
-      return { module: null, canceled: false };
+
+        dialog.appendChild(header);
+        dialog.appendChild(help);
+        dialog.appendChild(list);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+      });
     } catch (err) {
       const message = (err as Error).message;
       setStatus('Unable to list cloud modules: ' + message, 'error');
