@@ -7481,13 +7481,16 @@ animate();
     let wide = false;
     let sizingRaf = 0;
     // New Paint tab setup
-    const paintTab = document.createElement('div');
+    const paintTab = document.createElement('button');
     paintTab.className = 'tab2';
+    paintTab.type = 'button';
     const paintTabDataset = paintTab.dataset ?? (paintTab.dataset = {});
     paintTabDataset.tab = 'paint';
     paintTab.textContent = 'Paint';
     paintTab.setAttribute('role', 'tab');
+    paintTab.setAttribute('aria-selected', 'false');
     tabList.appendChild(paintTab);
+    tabs.push(paintTab);
     const paintPane = document.createElement('div');
     const paintPaneDataset = paintPane.dataset ?? (paintPane.dataset = {});
     paintPaneDataset.pane = 'paint';
