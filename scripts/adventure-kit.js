@@ -578,6 +578,16 @@ let paintMode = 'tile';
 let paintAssetId = '';
 let paintOpacity = 1.0;
 let didPaint = false, didInteriorPaint = false;
+const assetImageCache = new Map();
+function getCachedAsset(url) {
+    if (assetImageCache.has(url))
+        return assetImageCache.get(url);
+    const img = new Image();
+    img.src = url;
+    img.onload = () => drawWorld();
+    assetImageCache.set(url, img);
+    return img;
+}
 function renderCustomAssetList() {
     const list = document.getElementById('customAssetsList');
     if (!list)
@@ -805,6 +815,8 @@ function drawWorld() {
     let sx = baseTileW * worldZoom, sy = baseTileH * worldZoom;
     const pulse = 2 + Math.sin(Date.now() / 300) * 2;
     let grid = world;
+    const mapOverrides = moduleData.tileOverrides?.[map];
+    const customAssets = moduleData.customAssets || {};
     if (map !== 'world') {
         const I = moduleData.interiors.find(i => i.id === map);
         if (!I || !Array.isArray(I.grid))
@@ -847,6 +859,20 @@ function drawWorld() {
                     const a = Math.min(1, d / spawnHeatMax) * 0.5;
                     ctx.fillStyle = 'rgba(255,0,0,' + a + ')';
                     ctx.fillRect(px, py, sx, sy);
+                }
+            }
+            if (mapOverrides) {
+                const override = mapOverrides[`${x},${y}`];
+                if (override?.assetId) {
+                    const meta = customAssets[override.assetId];
+                    const img = meta?.url ? getCachedAsset(meta.url) : null;
+                    if (img?.complete) {
+                        if (override.opacity !== undefined)
+                            ctx.globalAlpha = override.opacity;
+                        ctx.drawImage(img, px, py, sx, sy);
+                        if (override.opacity !== undefined)
+                            ctx.globalAlpha = 1;
+                    }
                 }
             }
             if (highlightSelection) {
