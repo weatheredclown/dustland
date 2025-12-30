@@ -107,7 +107,13 @@ service cloud.firestore {
 
     match /publicListings/{mapId} {
       allow read: if true;
-      allow write: if isSignedIn() && isOwner(mapRef(mapId));
+      allow create, update: if isSignedIn()
+        && (isOwner(mapRef(mapId))
+          || (!docExists(mapRef(mapId)) && request.resource.data.ownerId == request.auth.uid));
+
+      allow delete: if isSignedIn()
+        && (isOwner(mapRef(mapId))
+          || resource.data.ownerId == request.auth.uid);
     }
 
     match /users/{uid} {
