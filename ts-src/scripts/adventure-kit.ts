@@ -734,6 +734,7 @@ function renderCustomAssetList() {
     const delBtn = document.createElement('button');
     delBtn.className = 'btn small';
     delBtn.textContent = 'x';
+    delBtn.setAttribute('aria-label', `Delete asset ${id}`);
     delBtn.onclick = () => {
       if (confirm(`Delete asset ${id}?`)) {
         delete moduleData.customAssets[id];
@@ -5198,6 +5199,8 @@ if (stampsBtn && stampWindow) {
     for (const [id, stamp] of Object.entries(worldStamps)) {
       const opt = document.createElement('div');
       opt.className = 'stamp-option';
+      opt.setAttribute('role', 'button');
+      opt.setAttribute('tabindex', '0');
       const canv = document.createElement('canvas');
       canv.width = 64; canv.height = 64;
       const c = canv.getContext('2d');
@@ -5211,7 +5214,7 @@ if (stampsBtn && stampWindow) {
       const lbl = document.createElement('span');
       lbl.textContent = stampNames[id] || id;
       opt.appendChild(lbl);
-      opt.addEventListener('click', () => {
+      const selectStamp = () => {
         worldStamp = worldStamps[id];
         worldPaint = null;
         if (worldPalette) worldPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
@@ -5219,6 +5222,13 @@ if (stampsBtn && stampWindow) {
         stampWindow.style.display = 'none';
         updateCursor();
         drawWorld();
+      };
+      opt.addEventListener('click', selectStamp);
+      opt.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectStamp();
+        }
       });
       stampWindow.appendChild(opt);
     }
