@@ -367,10 +367,18 @@ export class FirestoreModuleRepository implements ModuleRepository {
     if (mapData.ownerId !== userId) {
       throw new Error('Only the module owner can delete this map.');
     }
-    await this.writeWithDetail('deleting module', `maps/${moduleId}`, { moduleId }, () => deleteDoc(mapRef));
-
     const listingRef = doc(this.db, 'publicListings', moduleId);
-    await this.writeWithDetail('removing public listing', `publicListings/${moduleId}`, {}, () => deleteDoc(listingRef));
+    try {
+      await this.writeWithDetail('removing public listing', `publicListings/${moduleId}`, {}, () => deleteDoc(listingRef));
+    } catch (err) {
+      if (isPermissionError(err)) {
+        console.warn('Public listing cleanup skipped; lacking permission.', err);
+      } else {
+        throw err;
+      }
+    }
+
+    await this.writeWithDetail('deleting module', `maps/${moduleId}`, { moduleId }, () => deleteDoc(mapRef));
 
     const sharesCol = collection(this.db, 'shares');
     const shareSnap = await getDocs(query(sharesCol, where('mapId', '==', moduleId)));
