@@ -270,9 +270,13 @@ async function initCloudActions() {
                             await refresh();
                         }
                         catch (err) {
+                            const actor = session?.getSnapshot().user;
+                            const actorLabel = actor?.email || actor?.displayName || actor?.uid || 'unknown user';
+                            const actionDetails = `Tried to delete ${module.title || module.id} (${module.id}) as ${actorLabel}.`;
                             const message = err.message || 'Unable to delete that map.';
-                            setStatus('Delete failed: ' + message, 'error');
-                            alert('Delete failed: ' + message);
+                            const fullMessage = `${actionDetails} ${message}`;
+                            setStatus('Delete failed: ' + fullMessage, 'error');
+                            alert('Delete failed: ' + fullMessage);
                         }
                         finally {
                             deleteBtn.disabled = false;
