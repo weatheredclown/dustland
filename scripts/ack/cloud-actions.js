@@ -265,6 +265,11 @@ async function initCloudActions() {
                             return;
                         deleteBtn.disabled = true;
                         try {
+                            // Refresh the token proactively so we don't trigger a permission-denied response that is
+                            // immediately retried with a fresh token. This keeps the Firestore logs clean and avoids
+                            // briefly showing a failure before the retry succeeds.
+                            await refreshAuthToken();
+                            await reinitializeRepo();
                             let retried = false;
                             try {
                                 await repo.deleteModule?.(module.id);
