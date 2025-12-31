@@ -378,8 +378,6 @@ export class FirestoreModuleRepository implements ModuleRepository {
       }
     }
 
-    await this.writeWithDetail('deleting module', `maps/${moduleId}`, { moduleId }, () => deleteDoc(mapRef));
-
     const sharesCol = collection(this.db, 'shares');
     const shareSnap = await getDocs(query(sharesCol, where('mapId', '==', moduleId)));
     await Promise.all(
@@ -395,6 +393,8 @@ export class FirestoreModuleRepository implements ModuleRepository {
         this.writeWithDetail('removing saved version', `mapVersions/${version.id}`, {}, () => deleteDoc(version.ref)),
       ),
     );
+
+    await this.writeWithDetail('deleting module', `maps/${moduleId}`, { moduleId }, () => deleteDoc(mapRef));
   }
 
   async unshare(moduleId: string): Promise<void> {
