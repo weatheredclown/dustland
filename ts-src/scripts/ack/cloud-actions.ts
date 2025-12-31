@@ -281,17 +281,40 @@ async function initCloudActions(): Promise<void> {
             if (!confirmed) return;
             deleteBtn.disabled = true;
             try {
-              await repo.deleteModule?.(module.id);
+              let retried = false;
+              try {
+                await repo.deleteModule?.(module.id);
+              } catch (err) {
+                if (isPermissionError(err)) {
+                  const refreshed = !retried && (await refreshAuthToken()) && (await reinitializeRepo());
+                  if (refreshed) {
+                    retried = true;
+                    await repo.deleteModule?.(module.id);
+                  } else {
+                    throw err;
+                  }
+                } else {
+                  throw err;
+                }
+              }
               setStatus('Map deleted.', 'success');
               await refresh();
             } catch (err) {
               const actor = session?.getSnapshot().user;
               const actorLabel = actor?.email || actor?.displayName || actor?.uid || 'unknown user';
               const actionDetails = `Tried to delete ${module.title || module.id} (${module.id}) as ${actorLabel}.`;
-              const message = (err as Error).message || 'Unable to delete that map.';
-              const fullMessage = `${actionDetails} ${message}`;
-              setStatus('Delete failed: ' + fullMessage, 'error');
-              alert('Delete failed: ' + fullMessage);
+              if (isPermissionError(err)) {
+                console.warn(actionDetails + ' Permission denied.', err);
+                const message =
+                  'You do not have permission to delete this map. Sign in as the owner or ask them to remove it.';
+                setStatus('Delete failed: ' + message, 'error');
+                alert('Delete failed: ' + message);
+              } else {
+                const message = (err as Error).message || 'Unable to delete that map.';
+                const fullMessage = `${actionDetails} ${message}`;
+                setStatus('Delete failed: ' + fullMessage, 'error');
+                alert('Delete failed: ' + fullMessage);
+              }
             } finally {
               deleteBtn.disabled = false;
             }
