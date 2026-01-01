@@ -1,3 +1,3 @@
-## 2025-12-23 - [Accessible Editor Actions]
-**Learning:** The Adventure Construction Kit (ACK) heavily relies on generated DOM for tree editors and map controls. Many interactive elements (delete buttons, toggle buttons) were icon-only or character-only without ARIA labels, making them inaccessible to screen readers.
-**Action:** When generating DOM elements in code (e.g., `document.createElement`), always add `aria-label` to icon-only buttons, especially in complex editors where context is visual.
+## 2026-01-01 - [Accessible List Items in ACK]
+**Learning:** In the Adventure Construction Kit (ACK), interactive lists (NPCs, Items, etc.) were rendered as `<div>` elements with `onclick` handlers, making them inaccessible to keyboard users.
+**Action:** When creating interactive lists, use `<button>` elements (with appropriate styling to remove default button chrome if needed) to ensure they are focusable and operable via keyboard. I introduced a `.list-item-btn` class to maintain the visual design while adding accessibility.
