@@ -1307,7 +1307,7 @@ function showInteriorEditor(show) {
 function renderInteriorList() {
     const list = document.getElementById('intList');
     const ints = moduleData.interiors.map((I, i) => ({ I, i })).sort((a, b) => a.I.id.localeCompare(b.I.id));
-    list.innerHTML = ints.map(({ I, i }) => `<div data-idx="${i}">${I.label || I.id}</div>`).join('');
+    list.innerHTML = ints.map(({ I, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">${I.label || I.id}</button>`).join('');
     Array.from(list.children).forEach(div => div.onclick = () => editInterior(parseInt(div.dataset.idx, 10)));
     updateInteriorOptions();
     refreshChoiceDropdowns();
@@ -3694,7 +3694,7 @@ function renderNPCList() {
     const npcs = moduleData.npcs.map((n, i) => ({ n, i })).sort((a, b) => a.n.id.localeCompare(b.n.id));
     list.innerHTML = npcs.map(({ n, i }) => {
         const q = Array.isArray(n.quests) ? n.quests.join(',') : (n.questId || '');
-        return `<div data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${q ? ` [${q}]` : ''}</div>`;
+        return `<button type="button" class="list-item-btn" data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${q ? ` [${q}]` : ''}</button>`;
     }).join('');
     Array.from(list.children).forEach(div => {
         const idx = parseInt(div.dataset.idx, 10);
@@ -4056,7 +4056,7 @@ function renderItemList() {
     const items = moduleData.items.map((it, i) => ({ it, i })).sort((a, b) => a.it.name.localeCompare(b.it.name));
     list.innerHTML = items.map(({ it, i }) => {
         const loc = it.map ? ` @${it.map} (${it.x},${it.y})` : '';
-        return `<div data-idx="${i}">${it.name}${loc}</div>`;
+        return `<button type="button" class="list-item-btn" data-idx="${i}">${it.name}${loc}</button>`;
     }).join('');
     Array.from(list.children).forEach(div => div.onclick = () => editItem(parseInt(div.dataset.idx, 10)));
     refreshChoiceDropdowns();
@@ -5375,7 +5375,7 @@ function cancelBldg() {
 function renderBldgList() {
     const list = document.getElementById('bldgList');
     const bldgs = moduleData.buildings.map((b, i) => ({ b, i })).sort((a, b) => a.b.x - b.b.x || a.b.y - b.b.y);
-    list.innerHTML = bldgs.map(({ b, i }) => `<div data-idx="${i}">Bldg @(${b.x},${b.y})</div>`).join('');
+    list.innerHTML = bldgs.map(({ b, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">Bldg @(${b.x},${b.y})</button>`).join('');
     Array.from(list.children).forEach(div => div.onclick = () => editBldg(parseInt(div.dataset.idx, 10)));
 }
 function editBldg(i) {
