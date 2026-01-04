@@ -1349,8 +1349,8 @@ function showInteriorEditor(show) {
 function renderInteriorList() {
   const list = document.getElementById('intList');
   const ints = moduleData.interiors.map((I, i) => ({ I, i })).sort((a, b) => a.I.id.localeCompare(b.I.id));
-  list.innerHTML = ints.map(({ I, i }) => `<div data-idx="${i}">${I.label || I.id}</div>`).join('');
-  Array.from(list.children).forEach(div => div.onclick = () => editInterior(parseInt(div.dataset.idx, 10)));
+  list.innerHTML = ints.map(({ I, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">${I.label || I.id}</button>`).join('');
+  Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editInterior(parseInt((btn as HTMLElement).dataset.idx, 10)));
   updateInteriorOptions();
   refreshChoiceDropdowns();
   updateMapSelect(mapSelect ? mapSelect.value : 'world');
@@ -3491,15 +3491,16 @@ function renderNPCList() {
   const npcs = moduleData.npcs.map((n, i) => ({ n, i })).sort((a, b) => a.n.id.localeCompare(b.n.id));
   list.innerHTML = npcs.map(({ n, i }) => {
     const q = Array.isArray(n.quests) ? n.quests.join(',') : (n.questId || '');
-    return `<div data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${q ? ` [${q}]` : ''}</div>`;
+    return `<button type="button" class="list-item-btn" data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${q ? ` [${q}]` : ''}</button>`;
   }).join('');
-  Array.from(list.children).forEach(div => {
-    const idx = parseInt(div.dataset.idx, 10);
-    div.onclick = () => editNPC(idx);
+  Array.from(list.children).forEach(btn => {
+    const el = btn as HTMLElement;
+    const idx = parseInt(el.dataset.idx, 10);
+    el.onclick = () => editNPC(idx);
     if (idx === editNPCIdx) {
-      div.style.outline = '1px solid #4f6b4f';
-      div.style.background = '#141a14';
-      div.scrollIntoView({ block: 'nearest' });
+      el.style.outline = '1px solid #4f6b4f';
+      el.style.background = '#141a14';
+      el.scrollIntoView({ block: 'nearest' });
     }
   });
   updateQuestOptions();
@@ -3827,9 +3828,9 @@ function renderItemList() {
   const items = moduleData.items.map((it, i) => ({ it, i })).sort((a, b) => a.it.name.localeCompare(b.it.name));
   list.innerHTML = items.map(({ it, i }) => {
     const loc = it.map ? ` @${it.map} (${it.x},${it.y})` : '';
-    return `<div data-idx="${i}">${it.name}${loc}</div>`;
+    return `<button type="button" class="list-item-btn" data-idx="${i}">${it.name}${loc}</button>`;
   }).join('');
-  Array.from(list.children).forEach(div => div.onclick = () => editItem(parseInt(div.dataset.idx, 10)));
+  Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editItem(parseInt((btn as HTMLElement).dataset.idx, 10)));
   refreshChoiceDropdowns();
   renderProblems();
 }
@@ -4170,9 +4171,9 @@ function renderEncounterList() {
     const lootStr = summary ? ` - ${summary}` : '';
     const location = formatEncounterLocation(e);
     const locStr = location ? ` [${location}]` : '';
-    return `<div data-idx="${i}">${e.map}: ${name}${locStr}${lootStr}</div>`;
+    return `<button type="button" class="list-item-btn" data-idx="${i}">${e.map}: ${name}${locStr}${lootStr}</button>`;
   }).join('');
-  Array.from(list.children).forEach(div => div.onclick = () => editEncounter(parseInt(div.dataset.idx, 10)));
+  Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editEncounter(parseInt((btn as HTMLElement).dataset.idx, 10)));
 }
 function deleteEncounter() {
   if (editEncounterIdx < 0) return;
@@ -4293,8 +4294,8 @@ function editTemplate(i) {
 }
 function renderTemplateList() {
   const list = document.getElementById('templateList');
-  list.innerHTML = moduleData.templates.map((t, i) => `<div data-idx="${i}">${t.id}</div>`).join('');
-  Array.from(list.children).forEach(div => div.onclick = () => editTemplate(parseInt(div.dataset.idx, 10)));
+  list.innerHTML = moduleData.templates.map((t, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${t.id}</button>`).join('');
+  Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editTemplate(parseInt((btn as HTMLElement).dataset.idx, 10)));
   refreshChoiceDropdowns();
 }
 function deleteTemplate() {
@@ -4397,9 +4398,9 @@ function renderEventList() {
   const list = document.getElementById('eventList');
   list.innerHTML = moduleData.events.map((e, i) => {
     const eff = e.events[0]?.effect;
-    return `<div data-idx="${i}">${e.map} @(${e.x},${e.y}) - ${eff}</div>`;
+    return `<button type="button" class="list-item-btn" data-idx="${i}">${e.map} @(${e.x},${e.y}) - ${eff}</button>`;
   }).join('');
-  Array.from(list.children).forEach(div => div.onclick = () => editEvent(parseInt(div.dataset.idx, 10)));
+  Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editEvent(parseInt((btn as HTMLElement).dataset.idx, 10)));
   populateFlagList();
 }
 
@@ -4709,10 +4710,10 @@ function renderArenaList() {
     const waveCount = Array.isArray(arena.waves) ? arena.waves.length : 0;
     const reward = arena.reward?.toast || arena.reward?.log || '';
     const rewardStr = reward ? ` - ${reward}` : '';
-    return `<div data-idx="${idx}">${arena.map || 'world'} (${waveCount} waves)${rewardStr}</div>`;
+    return `<button type="button" class="list-item-btn" data-idx="${idx}">${arena.map || 'world'} (${waveCount} waves)${rewardStr}</button>`;
   }).join('');
-  Array.from(listEl.children).forEach(div => {
-    div.onclick = () => editArena(parseInt(div.dataset.idx, 10));
+  Array.from(listEl.children).forEach(btn => {
+    (btn as HTMLElement).onclick = () => editArena(parseInt((btn as HTMLElement).dataset.idx, 10));
   });
 }
 
@@ -4867,8 +4868,8 @@ function formatZoneSummary(z) {
 
 function renderZoneList() {
   const list = document.getElementById('zoneList');
-  list.innerHTML = moduleData.zones.map((z, i) => `<div data-idx="${i}">${formatZoneSummary(z)}</div>`).join('');
-  Array.from(list.children).forEach(div => div.onclick = () => editZone(parseInt(div.dataset.idx, 10)));
+  list.innerHTML = moduleData.zones.map((z, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${formatZoneSummary(z)}</button>`).join('');
+  Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editZone(parseInt((btn as HTMLElement).dataset.idx, 10)));
   const encMap = document.getElementById('encMap');
   if (encMap) {
     const encZone = document.getElementById('encZone');
@@ -4968,8 +4969,8 @@ function editPortal(i) {
 
 function renderPortalList() {
   const list = document.getElementById('portalList');
-  list.innerHTML = moduleData.portals.map((p, i) => `<div data-idx="${i}">${p.map} @(${p.x},${p.y}) → ${p.toMap} (${p.toX},${p.toY})</div>`).join('');
-  Array.from(list.children).forEach(div => div.onclick = () => editPortal(parseInt(div.dataset.idx, 10)));
+  list.innerHTML = moduleData.portals.map((p, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${p.map} @(${p.x},${p.y}) → ${p.toMap} (${p.toX},${p.toY})</button>`).join('');
+  Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editPortal(parseInt((btn as HTMLElement).dataset.idx, 10)));
 }
 
 function deletePortal() {
@@ -5076,8 +5077,8 @@ function cancelBldg() {
 function renderBldgList() {
   const list = document.getElementById('bldgList');
   const bldgs = moduleData.buildings.map((b, i) => ({ b, i })).sort((a, b) => a.b.x - b.b.x || a.b.y - b.b.y);
-  list.innerHTML = bldgs.map(({ b, i }) => `<div data-idx="${i}">Bldg @(${b.x},${b.y})</div>`).join('');
-  Array.from(list.children).forEach(div => div.onclick = () => editBldg(parseInt(div.dataset.idx, 10)));
+  list.innerHTML = bldgs.map(({ b, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">Bldg @(${b.x},${b.y})</button>`).join('');
+  Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editBldg(parseInt((btn as HTMLElement).dataset.idx, 10)));
 }
 
 function editBldg(i) {
@@ -5543,8 +5544,8 @@ function addQuest() {
 }
 function renderQuestList() {
   const list = document.getElementById('questList');
-  list.innerHTML = moduleData.quests.map((q, i) => `<div data-idx="${i}">${q.id}: ${q.title}</div>`).join('');
-  Array.from(list.children).forEach(div => div.onclick = () => editQuest(parseInt(div.dataset.idx, 10)));
+  list.innerHTML = moduleData.quests.map((q, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${q.id}: ${q.title}</button>`).join('');
+  Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editQuest(parseInt((btn as HTMLElement).dataset.idx, 10)));
   updateQuestOptions();
 }
 function editQuest(i) {
