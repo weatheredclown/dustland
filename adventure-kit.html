@@ -79,6 +79,28 @@
       cursor: pointer;
     }
 
+    .list-item-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      cursor: pointer;
+      padding: 2px 0;
+    }
+
+    .list-item-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .list-item-btn:focus-visible {
+      outline: 2px solid var(--accent, #9ef7a0);
+      background: rgba(158, 247, 160, 0.1);
+    }
+
     .lootTableWrap {
       margin-top: 4px;
     }
@@ -155,7 +177,8 @@
     #problemCard {
       border-color: #a00;
     }
-    #problemCard .list div {
+    #problemCard .list div,
+    #problemCard .list .list-item-btn {
       color: #f66;
     }
 
