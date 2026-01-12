@@ -628,15 +628,33 @@
         ackBtn.id = 'ackGlyph';
         ackBtn.textContent = '✎';
         ackBtn.title = 'Adventure Kit';
+        ackBtn.setAttribute('role', 'button');
+        ackBtn.setAttribute('tabindex', '0');
+        ackBtn.setAttribute('aria-label', 'Adventure Kit');
         ackBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer';
         ackBtn.onclick = () => { window.location.href = 'adventure-kit.html'; };
+        ackBtn.onkeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                ackBtn.click();
+            }
+        };
         overlay.appendChild(ackBtn);
         const mpBtn = document.createElement('div');
         mpBtn.id = 'mpGlyph';
         mpBtn.textContent = '⇆';
         mpBtn.title = 'Multiplayer';
+        mpBtn.setAttribute('role', 'button');
+        mpBtn.setAttribute('tabindex', '0');
+        mpBtn.setAttribute('aria-label', 'Multiplayer');
         mpBtn.style.cssText = 'position:absolute;top:44px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer';
         mpBtn.onclick = () => { window.location.href = 'multiplayer.html'; };
+        mpBtn.onkeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                mpBtn.click();
+            }
+        };
         overlay.appendChild(mpBtn);
         const canvas = document.createElement('canvas');
         canvas.id = 'dustParticles';

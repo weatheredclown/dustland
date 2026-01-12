@@ -45,6 +45,7 @@ function stubEl(){
       return stubEl();
     },
     querySelectorAll(){ return []; },
+    setAttribute(){},
     addEventListener(type, fn){ this.listeners[type] = fn; },
     dispatchEvent(evt){ const fn = this.listeners[evt.type]; if (fn) fn(evt); },
     ctx,
