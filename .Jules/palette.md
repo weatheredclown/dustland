@@ -1,3 +1,4 @@
-## 2025-12-23 - [Accessible Editor Actions]
-**Learning:** The Adventure Construction Kit (ACK) heavily relies on generated DOM for tree editors and map controls. Many interactive elements (delete buttons, toggle buttons) were icon-only or character-only without ARIA labels, making them inaccessible to screen readers.
-**Action:** When generating DOM elements in code (e.g., `document.createElement`), always add `aria-label` to icon-only buttons, especially in complex editors where context is visual.
+
+## 2024-05-22 - Replacing Interactive Divs with Buttons
+**Learning:** Replacing interactive `div`s with `button` elements in dynamic lists requires a careful CSS reset (`appearance: none`, `background: none`, `border: none`, `text-align: left`, `width: 100%`) to maintain visual consistency while gaining native accessibility benefits like keyboard focus and screen reader support.
+**Action:** When refactoring legacy list components, apply the `.list-item-btn` class pattern immediately to ensure focus visibility without breaking the existing layout.
