@@ -1304,11 +1304,27 @@ intPalette.querySelector('button')?.classList.add('active');
 function showInteriorEditor(show) {
     document.getElementById('intEditor').style.display = show ? 'block' : 'none';
 }
+function bindListInteraction(list) {
+    if (!list)
+        return;
+    Array.from(list.children).forEach(el => {
+        const div = el;
+        div.setAttribute('role', 'button');
+        div.setAttribute('tabindex', '0');
+        div.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                div.click();
+            }
+        });
+    });
+}
 function renderInteriorList() {
     const list = document.getElementById('intList');
     const ints = moduleData.interiors.map((I, i) => ({ I, i })).sort((a, b) => a.I.id.localeCompare(b.I.id));
     list.innerHTML = ints.map(({ I, i }) => `<div data-idx="${i}">${I.label || I.id}</div>`).join('');
     Array.from(list.children).forEach(div => div.onclick = () => editInterior(parseInt(div.dataset.idx, 10)));
+    bindListInteraction(list);
     updateInteriorOptions();
     refreshChoiceDropdowns();
     updateMapSelect(mapSelect ? mapSelect.value : 'world');
@@ -3705,6 +3721,7 @@ function renderNPCList() {
             div.scrollIntoView({ block: 'nearest' });
         }
     });
+    bindListInteraction(list);
     updateQuestOptions();
     refreshChoiceDropdowns();
     renderProblems();
@@ -4059,6 +4076,7 @@ function renderItemList() {
         return `<div data-idx="${i}">${it.name}${loc}</div>`;
     }).join('');
     Array.from(list.children).forEach(div => div.onclick = () => editItem(parseInt(div.dataset.idx, 10)));
+    bindListInteraction(list);
     refreshChoiceDropdowns();
     renderProblems();
 }
@@ -4422,6 +4440,7 @@ function renderEncounterList() {
         return `<div data-idx="${i}">${e.map}: ${name}${locStr}${lootStr}</div>`;
     }).join('');
     Array.from(list.children).forEach(div => div.onclick = () => editEncounter(parseInt(div.dataset.idx, 10)));
+    bindListInteraction(list);
 }
 function deleteEncounter() {
     if (editEncounterIdx < 0)
@@ -4552,6 +4571,7 @@ function renderTemplateList() {
     const list = document.getElementById('templateList');
     list.innerHTML = moduleData.templates.map((t, i) => `<div data-idx="${i}">${t.id}</div>`).join('');
     Array.from(list.children).forEach(div => div.onclick = () => editTemplate(parseInt(div.dataset.idx, 10)));
+    bindListInteraction(list);
     refreshChoiceDropdowns();
 }
 function deleteTemplate() {
@@ -4653,6 +4673,7 @@ function renderEventList() {
         return `<div data-idx="${i}">${e.map} @(${e.x},${e.y}) - ${eff}</div>`;
     }).join('');
     Array.from(list.children).forEach(div => div.onclick = () => editEvent(parseInt(div.dataset.idx, 10)));
+    bindListInteraction(list);
     populateFlagList();
 }
 function deleteEvent() {
@@ -5009,6 +5030,7 @@ function renderArenaList() {
     Array.from(listEl.children).forEach(div => {
         div.onclick = () => editArena(parseInt(div.dataset.idx, 10));
     });
+    bindListInteraction(listEl);
 }
 // --- Zones ---
 function showZoneEditor(show) {
@@ -5173,6 +5195,7 @@ function renderZoneList() {
     const list = document.getElementById('zoneList');
     list.innerHTML = moduleData.zones.map((z, i) => `<div data-idx="${i}">${formatZoneSummary(z)}</div>`).join('');
     Array.from(list.children).forEach(div => div.onclick = () => editZone(parseInt(div.dataset.idx, 10)));
+    bindListInteraction(list);
     const encMap = document.getElementById('encMap');
     if (encMap) {
         const encZone = document.getElementById('encZone');
@@ -5267,6 +5290,7 @@ function renderPortalList() {
     const list = document.getElementById('portalList');
     list.innerHTML = moduleData.portals.map((p, i) => `<div data-idx="${i}">${p.map} @(${p.x},${p.y}) → ${p.toMap} (${p.toX},${p.toY})</div>`).join('');
     Array.from(list.children).forEach(div => div.onclick = () => editPortal(parseInt(div.dataset.idx, 10)));
+    bindListInteraction(list);
 }
 function deletePortal() {
     if (editPortalIdx < 0)
@@ -5377,6 +5401,7 @@ function renderBldgList() {
     const bldgs = moduleData.buildings.map((b, i) => ({ b, i })).sort((a, b) => a.b.x - b.b.x || a.b.y - b.b.y);
     list.innerHTML = bldgs.map(({ b, i }) => `<div data-idx="${i}">Bldg @(${b.x},${b.y})</div>`).join('');
     Array.from(list.children).forEach(div => div.onclick = () => editBldg(parseInt(div.dataset.idx, 10)));
+    bindListInteraction(list);
 }
 function editBldg(i) {
     const b = moduleData.buildings[i];
@@ -5902,6 +5927,7 @@ function renderQuestList() {
     const list = document.getElementById('questList');
     list.innerHTML = moduleData.quests.map((q, i) => `<div data-idx="${i}">${q.id}: ${q.title}</div>`).join('');
     Array.from(list.children).forEach(div => div.onclick = () => editQuest(parseInt(div.dataset.idx, 10)));
+    bindListInteraction(list);
     updateQuestOptions();
 }
 function editQuest(i) {
