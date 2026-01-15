@@ -98,6 +98,7 @@ type FirestoreModuleDoc = {
 };
 
 type ShareLookupResponse = { uid?: string; displayName?: string | null } | null;
+type SerializedPayload = { payload: unknown; payloadFormat: 'raw' | 'json' };
 
 export class FirestoreModuleRepository implements ModuleRepository {
   private db: import('firebase/firestore').Firestore | null = null;
@@ -185,10 +186,11 @@ export class FirestoreModuleRepository implements ModuleRepository {
     const now = Date.now();
     const createdAt = typeof versionSnap.get('createdAt') === 'number' ? (versionSnap.get('createdAt') as number) : now;
     const createdBy = (versionSnap.get('createdBy') as string) ?? 'unknown';
+    const payload = decodePayload(versionSnap.get('payload'), versionSnap.get('payloadFormat'));
     return {
       moduleId,
       versionId,
-      payload: versionSnap.get('payload'),
+      payload,
       createdAt,
       createdBy,
     };
@@ -232,7 +234,15 @@ export class FirestoreModuleRepository implements ModuleRepository {
       () => setDoc(mapRef, mapPayload, { merge: true }),
     );
     const versionRef = doc(this.db, 'mapVersions', `${mapId}_${versionId}`);
-    const versionPayload = { moduleId: mapId, versionId, payload, createdAt: now, createdBy };
+    const serializedPayload = serializePayload(payload);
+    const versionPayload = {
+      moduleId: mapId,
+      versionId,
+      payload: serializedPayload.payload,
+      payloadFormat: serializedPayload.payloadFormat,
+      createdAt: now,
+      createdBy,
+    };
 
     let lastError: unknown;
     // Retry the version save to handle eventual consistency where the map document
@@ -535,4 +545,50 @@ export function isPermissionError(err: unknown): boolean {
   const message = (err as { message?: string }).message?.toLowerCase();
   if (message?.includes('missing or insufficient permissions')) return true;
   return message?.includes('do not have edit access to this module') ?? false;
+}
+
+function serializePayload(payload: unknown): SerializedPayload {
+  try {
+    const json = JSON.stringify(payload);
+    const parsed = JSON.parse(json) as unknown;
+    if (containsNestedArrays(parsed)) {
+      return { payload: json, payloadFormat: 'json' };
+    }
+    return { payload: parsed, payloadFormat: 'raw' };
+  } catch (err) {
+    console.warn('Failed to serialize payload safely; falling back to raw payload.', err);
+    return { payload, payloadFormat: 'raw' };
+  }
+}
+
+function decodePayload(payload: unknown, payloadFormat: unknown): unknown {
+  if (payloadFormat !== 'json') return payload;
+  if (typeof payload !== 'string') return payload;
+  try {
+    return JSON.parse(payload) as unknown;
+  } catch (err) {
+    console.warn('Failed to decode stored payload JSON.', err);
+    return payload;
+  }
+}
+
+function containsNestedArrays(payload: unknown): boolean {
+  if (!payload || typeof payload !== 'object') return false;
+  const visited = new WeakSet<object>();
+
+  const visit = (value: unknown, parentIsArray: boolean): boolean => {
+    if (!value || typeof value !== 'object') return false;
+    const obj = value as object;
+    if (visited.has(obj)) return false;
+    visited.add(obj);
+    const isArray = Array.isArray(obj);
+    if (parentIsArray && isArray) return true;
+    const values = isArray ? (obj as unknown[]) : Object.values(obj as Record<string, unknown>);
+    for (const entry of values) {
+      if (visit(entry, isArray)) return true;
+    }
+    return false;
+  };
+
+  return visit(payload, false);
 }
