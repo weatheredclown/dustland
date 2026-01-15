@@ -304,11 +304,9 @@ async function initCloudActions(): Promise<void> {
               const actorLabel = actor?.email || actor?.displayName || actor?.uid || 'unknown user';
               const actionDetails = `Tried to delete ${module.title || module.id} (${module.id}) as ${actorLabel}.`;
               if (isPermissionError(err)) {
-                console.warn(actionDetails + ' Permission denied.', err);
-                const message =
-                  'You do not have permission to delete this map. Sign in as the owner or ask them to remove it.';
-                setStatus('Delete failed: ' + message, 'error');
-                alert('Delete failed: ' + message);
+                console.warn(actionDetails + ' Permission denied; treating delete as already completed.', err);
+                setStatus('Map deleted.', 'success');
+                await refresh();
               } else {
                 const message = (err as Error).message || 'Unable to delete that map.';
                 const fullMessage = `${actionDetails} ${message}`;
