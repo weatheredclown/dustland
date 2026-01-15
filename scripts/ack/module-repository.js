@@ -123,10 +123,11 @@ export class FirestoreModuleRepository {
         const now = Date.now();
         const createdAt = typeof versionSnap.get('createdAt') === 'number' ? versionSnap.get('createdAt') : now;
         const createdBy = versionSnap.get('createdBy') ?? 'unknown';
+        const payload = decodePayload(versionSnap.get('payload'), versionSnap.get('payloadFormat'));
         return {
             moduleId,
             versionId,
-            payload: versionSnap.get('payload'),
+            payload,
             createdAt,
             createdBy,
         };
@@ -164,7 +165,15 @@ export class FirestoreModuleRepository {
         };
         await this.writeWithDetail('saving draft metadata', `maps/${mapId}`, mapPayload, () => setDoc(mapRef, mapPayload, { merge: true }));
         const versionRef = doc(this.db, 'mapVersions', `${mapId}_${versionId}`);
-        const versionPayload = { moduleId: mapId, versionId, payload, createdAt: now, createdBy };
+        const serializedPayload = serializePayload(payload);
+        const versionPayload = {
+            moduleId: mapId,
+            versionId,
+            payload: serializedPayload.payload,
+            payloadFormat: serializedPayload.payloadFormat,
+            createdAt: now,
+            createdBy,
+        };
         let lastError;
         // Retry the version save to handle eventual consistency where the map document
         // created above might not be visible to the security rules engine immediately.
@@ -435,4 +444,54 @@ export function isPermissionError(err) {
     if (message?.includes('missing or insufficient permissions'))
         return true;
     return message?.includes('do not have edit access to this module') ?? false;
+}
+function serializePayload(payload) {
+    try {
+        const json = JSON.stringify(payload);
+        const parsed = JSON.parse(json);
+        if (containsNestedArrays(parsed)) {
+            return { payload: json, payloadFormat: 'json' };
+        }
+        return { payload: parsed, payloadFormat: 'raw' };
+    }
+    catch (err) {
+        console.warn('Failed to serialize payload safely; falling back to raw payload.', err);
+        return { payload, payloadFormat: 'raw' };
+    }
+}
+function decodePayload(payload, payloadFormat) {
+    if (payloadFormat !== 'json')
+        return payload;
+    if (typeof payload !== 'string')
+        return payload;
+    try {
+        return JSON.parse(payload);
+    }
+    catch (err) {
+        console.warn('Failed to decode stored payload JSON.', err);
+        return payload;
+    }
+}
+function containsNestedArrays(payload) {
+    if (!payload || typeof payload !== 'object')
+        return false;
+    const visited = new WeakSet();
+    const visit = (value, parentIsArray) => {
+        if (!value || typeof value !== 'object')
+            return false;
+        const obj = value;
+        if (visited.has(obj))
+            return false;
+        visited.add(obj);
+        const isArray = Array.isArray(obj);
+        if (parentIsArray && isArray)
+            return true;
+        const values = isArray ? obj : Object.values(obj);
+        for (const entry of values) {
+            if (visit(entry, isArray))
+                return true;
+        }
+        return false;
+    };
+    return visit(payload, false);
 }
