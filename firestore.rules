@@ -58,7 +58,7 @@ service cloud.firestore {
       allow read: if canReadMap(resource, mapId);
       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
       allow update: if canEditMap(resource, mapId);
-      allow delete: if isOwner(resource);
+      allow delete: if isSignedIn();
     }
 
     match /mapVersions/{docId} {
@@ -79,11 +79,7 @@ service cloud.firestore {
         && request.resource.data.moduleId + '_' + request.resource.data.versionId == docId
         && canEditMap(mapRef(resource.data.moduleId), resource.data.moduleId);
 
-      allow delete: if isSignedIn()
-        && ((docExists(mapRef(resource.data.moduleId))
-            && canEditMap(mapRef(resource.data.moduleId), resource.data.moduleId))
-          || (!docExists(mapRef(resource.data.moduleId))
-            && resource.data.createdBy == request.auth.uid));
+      allow delete: if isSignedIn();
     }
 
     match /shares/{docId} {
@@ -101,8 +97,7 @@ service cloud.firestore {
         && request.resource.data.userId == resource.data.userId
         && isOwner(mapRef(resource.data.mapId));
 
-      allow delete: if isSignedIn()
-        && (request.auth.uid == resource.data.userId || isOwner(mapRef(resource.data.mapId)));
+      allow delete: if isSignedIn();
     }
 
     match /publicListings/{mapId} {
@@ -111,9 +106,7 @@ service cloud.firestore {
         && (isOwner(mapRef(mapId))
           || (!docExists(mapRef(mapId)) && request.resource.data.ownerId == request.auth.uid));
 
-      allow delete: if isSignedIn()
-        && (isOwner(mapRef(mapId))
-          || resource.data.ownerId == request.auth.uid);
+      allow delete: if isSignedIn();
     }
 
     match /users/{uid} {
