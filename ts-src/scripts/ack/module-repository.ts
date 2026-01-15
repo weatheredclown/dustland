@@ -359,13 +359,17 @@ export class FirestoreModuleRepository implements ModuleRepository {
       typeof import('firebase/firestore')
     >('firebase-firestore');
     const mapRef = doc(this.db, 'maps', moduleId);
-    const mapSnap = await getDoc(mapRef);
-    if (!mapSnap.exists()) {
-      throw new Error('Module not found.');
-    }
-    const mapData = mapSnap.data() as FirestoreModuleDoc;
-    if (mapData.ownerId !== userId) {
-      throw new Error('Only the module owner can delete this map.');
+    try {
+      const mapSnap = await getDoc(mapRef);
+      if (!mapSnap.exists()) {
+        throw new Error('Module not found.');
+      }
+    } catch (err) {
+      if (isPermissionError(err)) {
+        console.warn('Map existence check skipped; lacking permission.', err);
+      } else {
+        throw err;
+      }
     }
     const listingRef = doc(this.db, 'publicListings', moduleId);
     try {
@@ -378,21 +382,37 @@ export class FirestoreModuleRepository implements ModuleRepository {
       }
     }
 
-    const sharesCol = collection(this.db, 'shares');
-    const shareSnap = await getDocs(query(sharesCol, where('mapId', '==', moduleId)));
-    await Promise.all(
-      shareSnap.docs.map(share =>
-        this.writeWithDetail('removing share', `shares/${share.id}`, {}, () => deleteDoc(share.ref)),
-      ),
-    );
+    try {
+      const sharesCol = collection(this.db, 'shares');
+      const shareSnap = await getDocs(query(sharesCol, where('mapId', '==', moduleId)));
+      await Promise.all(
+        shareSnap.docs.map(share =>
+          this.writeWithDetail('removing share', `shares/${share.id}`, {}, () => deleteDoc(share.ref)),
+        ),
+      );
+    } catch (err) {
+      if (isPermissionError(err)) {
+        console.warn('Share cleanup skipped; lacking permission.', err);
+      } else {
+        throw err;
+      }
+    }
 
-    const versionsCol = collection(this.db, 'mapVersions');
-    const versionSnap = await getDocs(query(versionsCol, where('moduleId', '==', moduleId)));
-    await Promise.all(
-      versionSnap.docs.map(version =>
-        this.writeWithDetail('removing saved version', `mapVersions/${version.id}`, {}, () => deleteDoc(version.ref)),
-      ),
-    );
+    try {
+      const versionsCol = collection(this.db, 'mapVersions');
+      const versionSnap = await getDocs(query(versionsCol, where('moduleId', '==', moduleId)));
+      await Promise.all(
+        versionSnap.docs.map(version =>
+          this.writeWithDetail('removing saved version', `mapVersions/${version.id}`, {}, () => deleteDoc(version.ref)),
+        ),
+      );
+    } catch (err) {
+      if (isPermissionError(err)) {
+        console.warn('Saved version cleanup skipped; lacking permission.', err);
+      } else {
+        throw err;
+      }
+    }
 
     await this.writeWithDetail('deleting module', `maps/${moduleId}`, { moduleId }, () => deleteDoc(mapRef));
   }
