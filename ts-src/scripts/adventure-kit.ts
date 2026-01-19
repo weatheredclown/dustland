@@ -1348,6 +1348,14 @@ function showInteriorEditor(show) {
 
 function renderInteriorList() {
   const list = document.getElementById('intList');
+  if (!list) return;
+  if (!moduleData.interiors.length) {
+    list.innerHTML = '<div class="list-empty-state muted" style="padding:2px 4px">(no interiors)</div>';
+    updateInteriorOptions();
+    refreshChoiceDropdowns();
+    updateMapSelect(mapSelect ? mapSelect.value : 'world');
+    return;
+  }
   const ints = moduleData.interiors.map((I, i) => ({ I, i })).sort((a, b) => a.I.id.localeCompare(b.I.id));
   list.innerHTML = ints.map(({ I, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">${I.label || I.id}</button>`).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editInterior(parseInt((btn as HTMLElement).dataset.idx, 10)));
@@ -1480,9 +1488,25 @@ function setupListFilter(inputId, listId) {
   if (!input || !list) return;
   const apply = () => {
     const term = input.value.toLowerCase();
+    let visibleCount = 0;
     Array.from(list.children).forEach(ch => {
-      ch.style.display = ch.textContent.toLowerCase().includes(term) ? '' : 'none';
+      if (ch.classList.contains('list-empty-state') || ch.classList.contains('filter-empty-msg')) return;
+      const visible = ch.textContent.toLowerCase().includes(term);
+      ch.style.display = visible ? '' : 'none';
+      if (visible) visibleCount++;
     });
+    let emptyMsg = list.querySelector('.filter-empty-msg');
+    if (visibleCount === 0 && term) {
+      if (!emptyMsg) {
+        emptyMsg = document.createElement('div');
+        emptyMsg.className = 'filter-empty-msg muted';
+        emptyMsg.style.padding = '2px 4px';
+        emptyMsg.textContent = '(no matches)';
+        list.appendChild(emptyMsg);
+      }
+    } else if (emptyMsg) {
+      emptyMsg.remove();
+    }
   };
   listFilterApplyFns.set(inputId, apply);
   input.addEventListener('input', apply);
@@ -3488,6 +3512,14 @@ function editNPC(i) {
 }
 function renderNPCList() {
   const list = document.getElementById('npcList');
+  if (!list) return;
+  if (!moduleData.npcs.length) {
+    list.innerHTML = '<div class="list-empty-state muted" style="padding:2px 4px">(no NPCs)</div>';
+    updateQuestOptions();
+    refreshChoiceDropdowns();
+    renderProblems();
+    return;
+  }
   const npcs = moduleData.npcs.map((n, i) => ({ n, i })).sort((a, b) => a.n.id.localeCompare(b.n.id));
   list.innerHTML = npcs.map(({ n, i }) => {
     const q = Array.isArray(n.quests) ? n.quests.join(',') : (n.questId || '');
@@ -3824,6 +3856,13 @@ function editItem(i) {
 }
 function renderItemList() {
   const list = document.getElementById('itemList');
+  if (!list) return;
+  if (!moduleData.items.length) {
+    list.innerHTML = '<div class="list-empty-state muted" style="padding:2px 4px">(no items)</div>';
+    refreshChoiceDropdowns();
+    renderProblems();
+    return;
+  }
   const items = moduleData.items.map((it, i) => ({ it, i })).sort((a, b) => a.it.name.localeCompare(b.it.name));
   list.innerHTML = items.map(({ it, i }) => {
     const loc = it.map ? ` @${it.map} (${it.x},${it.y})` : '';
@@ -4163,6 +4202,11 @@ function editEncounter(i) {
 }
 function renderEncounterList() {
   const list = document.getElementById('encounterList');
+  if (!list) return;
+  if (!moduleData.encounters.length) {
+    list.innerHTML = '<div class="list-empty-state muted" style="padding:2px 4px">(no encounters)</div>';
+    return;
+  }
   list.innerHTML = moduleData.encounters.map((e, i) => {
     const t = moduleData.templates.find(t => t.id === e.templateId);
     const name = t ? t.name : e.templateId;
@@ -4293,6 +4337,12 @@ function editTemplate(i) {
 }
 function renderTemplateList() {
   const list = document.getElementById('templateList');
+  if (!list) return;
+  if (!moduleData.templates.length) {
+    list.innerHTML = '<div class="list-empty-state muted" style="padding:2px 4px">(no templates)</div>';
+    refreshChoiceDropdowns();
+    return;
+  }
   list.innerHTML = moduleData.templates.map((t, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${t.id}</button>`).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editTemplate(parseInt((btn as HTMLElement).dataset.idx, 10)));
   refreshChoiceDropdowns();
@@ -4395,6 +4445,12 @@ function editEvent(i) {
 
 function renderEventList() {
   const list = document.getElementById('eventList');
+  if (!list) return;
+  if (!moduleData.events.length) {
+    list.innerHTML = '<div class="list-empty-state muted" style="padding:2px 4px">(no events)</div>';
+    populateFlagList();
+    return;
+  }
   list.innerHTML = moduleData.events.map((e, i) => {
     const eff = e.events[0]?.effect;
     return `<button type="button" class="list-item-btn" data-idx="${i}">${e.map} @(${e.x},${e.y}) - ${eff}</button>`;
@@ -4705,6 +4761,10 @@ function renderArenaList() {
   const listEl = document.getElementById('arenaList');
   if (!listEl) return;
   const list = Array.isArray(moduleData.behaviors?.arenas) ? moduleData.behaviors.arenas : [];
+  if (!list.length) {
+    listEl.innerHTML = '<div class="list-empty-state muted" style="padding:2px 4px">(no arenas)</div>';
+    return;
+  }
   listEl.innerHTML = list.map((arena, idx) => {
     const waveCount = Array.isArray(arena.waves) ? arena.waves.length : 0;
     const reward = arena.reward?.toast || arena.reward?.log || '';
@@ -4867,6 +4927,17 @@ function formatZoneSummary(z) {
 
 function renderZoneList() {
   const list = document.getElementById('zoneList');
+  if (!list) return;
+  if (!moduleData.zones.length) {
+    list.innerHTML = '<div class="list-empty-state muted" style="padding:2px 4px">(no zones)</div>';
+    const encMap = document.getElementById('encMap');
+    if (encMap) {
+      const encZone = document.getElementById('encZone');
+      const selectedTag = encZone ? encZone.value : '';
+      populateEncounterZoneDropdown(encMap.value || 'world', selectedTag);
+    }
+    return;
+  }
   list.innerHTML = moduleData.zones.map((z, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${formatZoneSummary(z)}</button>`).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editZone(parseInt((btn as HTMLElement).dataset.idx, 10)));
   const encMap = document.getElementById('encMap');
@@ -4968,6 +5039,11 @@ function editPortal(i) {
 
 function renderPortalList() {
   const list = document.getElementById('portalList');
+  if (!list) return;
+  if (!moduleData.portals.length) {
+    list.innerHTML = '<div class="list-empty-state muted" style="padding:2px 4px">(no portals)</div>';
+    return;
+  }
   list.innerHTML = moduleData.portals.map((p, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${p.map} @(${p.x},${p.y}) → ${p.toMap} (${p.toX},${p.toY})</button>`).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editPortal(parseInt((btn as HTMLElement).dataset.idx, 10)));
 }
@@ -5075,6 +5151,11 @@ function cancelBldg() {
 }
 function renderBldgList() {
   const list = document.getElementById('bldgList');
+  if (!list) return;
+  if (!moduleData.buildings.length) {
+    list.innerHTML = '<div class="list-empty-state muted" style="padding:2px 4px">(no buildings)</div>';
+    return;
+  }
   const bldgs = moduleData.buildings.map((b, i) => ({ b, i })).sort((a, b) => a.b.x - b.b.x || a.b.y - b.b.y);
   list.innerHTML = bldgs.map(({ b, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">Bldg @(${b.x},${b.y})</button>`).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editBldg(parseInt((btn as HTMLElement).dataset.idx, 10)));
@@ -5543,6 +5624,12 @@ function addQuest() {
 }
 function renderQuestList() {
   const list = document.getElementById('questList');
+  if (!list) return;
+  if (!moduleData.quests.length) {
+    list.innerHTML = '<div class="list-empty-state muted" style="padding:2px 4px">(no quests)</div>';
+    updateQuestOptions();
+    return;
+  }
   list.innerHTML = moduleData.quests.map((q, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${q.id}: ${q.title}</button>`).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editQuest(parseInt((btn as HTMLElement).dataset.idx, 10)));
   updateQuestOptions();

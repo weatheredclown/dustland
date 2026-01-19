@@ -40,6 +40,7 @@ function stubEl(){
     click(){},
     dispatchEvent(){},
     focus(){ document.activeElement = el; },
+    remove(){},
   };
   Object.defineProperty(el,'innerHTML',{ get(){return this._innerHTML;}, set(v){ this._innerHTML=v; this.children=[]; }});
   return el;
