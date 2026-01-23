@@ -313,20 +313,18 @@ function computeSpawnHeat() {
     }
 }
 let loopHover = null;
-const loopPlus = document.createElement('span');
+const loopPlus = document.createElement('button');
+loopPlus.type = 'button';
 loopPlus.textContent = '+';
 loopPlus.className = 'pill';
-loopPlus.setAttribute('role', 'button');
-loopPlus.setAttribute('tabindex', '0');
 loopPlus.setAttribute('aria-label', 'Add loop point');
 loopPlus.style.position = 'absolute';
 loopPlus.style.display = 'none';
 document.body.appendChild(loopPlus);
-const loopMinus = document.createElement('span');
+const loopMinus = document.createElement('button');
+loopMinus.type = 'button';
 loopMinus.textContent = '-';
 loopMinus.className = 'pill';
-loopMinus.setAttribute('role', 'button');
-loopMinus.setAttribute('tabindex', '0');
 loopMinus.setAttribute('aria-label', 'Remove loop point');
 loopMinus.style.position = 'absolute';
 loopMinus.style.display = 'none';
@@ -2736,11 +2734,10 @@ function renderLoopFields(pts) {
         row.className = 'row loopPoint';
         row.innerHTML = `<label>X<input type="number" class="loopX" value="${p.x}" /></label>` +
             `<label>Y<input type="number" class="loopY" value="${p.y}" /></label>`;
-        const del = document.createElement('span');
+        const del = document.createElement('button');
+        del.type = 'button';
         del.textContent = '-';
         del.className = 'pill';
-        del.setAttribute('role', 'button');
-        del.setAttribute('tabindex', '0');
         del.setAttribute('aria-label', 'Remove loop point');
         del.onclick = () => row.remove();
         row.appendChild(del);
