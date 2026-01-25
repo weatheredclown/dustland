@@ -474,13 +474,13 @@
               <div id="nanoBadge" class="nano-badge off">✗</div>
             </div>
             <div id="worldPalette">
-              <button type="button" data-tile="0" style="background:#1e271d" title="Sand"></button>
-              <button type="button" data-tile="1" style="background:#2c342c" title="Rock"></button>
-              <button type="button" data-tile="2" style="background:#1573ff" title="Water"></button>
-              <button type="button" data-tile="3" style="background:#203320" title="Brush"></button>
-              <button type="button" data-tile="4" style="background:#777777" title="Road"></button>
-              <button type="button" data-tile="5" style="background:#304326" title="Ruin"></button>
-              <button type="button" data-tile="6" style="background:#4d5f4d" title="Wall"></button>
+              <button type="button" data-tile="0" style="background:#1e271d" title="Sand" aria-label="Sand"></button>
+              <button type="button" data-tile="1" style="background:#2c342c" title="Rock" aria-label="Rock"></button>
+              <button type="button" data-tile="2" style="background:#1573ff" title="Water" aria-label="Water"></button>
+              <button type="button" data-tile="3" style="background:#203320" title="Brush" aria-label="Brush"></button>
+              <button type="button" data-tile="4" style="background:#777777" title="Road" aria-label="Road"></button>
+              <button type="button" data-tile="5" style="background:#304326" title="Ruin" aria-label="Ruin"></button>
+              <button type="button" data-tile="6" style="background:#4d5f4d" title="Wall" aria-label="Wall"></button>
             </div>
             <button class="btn" type="button" id="stampsBtn" title="Stamps" aria-label="Stamps">🔖</button>
             <div id="stampWindow"></div>
@@ -543,7 +543,7 @@
       <div class="tabpanes">
         <fieldset class="card" id="npcCard" data-pane="npc">
           <legend>NPCs</legend>
-          <input id="npcFilter" placeholder="Filter NPCs..." />
+          <input id="npcFilter" placeholder="Filter NPCs..." aria-label="Filter NPCs" />
           <div class="list" id="npcList"></div>
           <button class="btn" type="button" id="newNPC">New NPC</button>
           <div id="npcEditor" style="display:none">
@@ -647,7 +647,7 @@
         </fieldset>
       <fieldset class="card" id="itemCard" data-pane="items" style="display:none">
         <legend>Items</legend>
-        <input id="itemFilter" placeholder="Filter items..." />
+        <input id="itemFilter" placeholder="Filter items..." aria-label="Filter items" />
         <div class="list" id="itemList"></div>
         <button class="btn" type="button" id="newItem">+ Item</button>
         <div id="itemEditor" style="display:none">
@@ -779,7 +779,7 @@
       </fieldset>
       <fieldset class="card" id="questCard" data-pane="quests" style="display:none">
         <legend>Quests</legend>
-        <input id="questFilter" placeholder="Filter quests..." />
+        <input id="questFilter" placeholder="Filter quests..." aria-label="Filter quests" />
         <div class="list" id="questList"></div>
         <button class="btn" type="button" id="newQuest">+ Quest</button>
         <div id="questEditor" style="display:none">
@@ -838,7 +838,7 @@
       </fieldset>
       <fieldset class="card" id="eventCard" data-pane="events" style="display:none">
         <legend>Tile Events</legend>
-        <input id="eventFilter" placeholder="Filter events..." />
+        <input id="eventFilter" placeholder="Filter events..." aria-label="Filter events" />
         <div class="list" id="eventList"></div>
         <button class="btn" type="button" id="newEvent">+ Event</button>
         <div id="eventEditor" style="display:none">
@@ -867,7 +867,7 @@
     </fieldset>
       <fieldset class="card" id="arenaCard" data-pane="arenas" style="display:none">
         <legend>Arenas</legend>
-        <input id="arenaFilter" placeholder="Filter arenas..." />
+        <input id="arenaFilter" placeholder="Filter arenas..." aria-label="Filter arenas" />
         <div class="list" id="arenaList"></div>
         <button class="btn" type="button" id="newArena">+ Arena</button>
         <div id="arenaEditor" style="display:none">
@@ -921,7 +921,7 @@
       </fieldset>
       <fieldset class="card" id="encounterCard" data-pane="encounters" style="display:none">
         <legend>Encounters</legend>
-        <input id="encFilter" placeholder="Filter encounters..." />
+        <input id="encFilter" placeholder="Filter encounters..." aria-label="Filter encounters" />
         <div class="list" id="encounterList"></div>
         <button class="btn" type="button" id="newEncounter">+ Enemy</button>
         <div id="encounterEditor" style="display:none">
