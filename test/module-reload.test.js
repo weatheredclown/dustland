@@ -27,6 +27,7 @@ function stubEl(){
     remove(){},
     querySelector: () => stubEl(),
     querySelectorAll: () => [],
+    setAttribute(k, v){ this[k] = v; },
     textContent: '',
     get className(){ return classNameValue; },
     set className(value){ classNameValue = value || ''; syncFromString(classNameValue); },

@@ -45,6 +45,7 @@ function stubEl(){
       return stubEl();
     },
     querySelectorAll(){ return []; },
+    setAttribute(k, v){ this[k] = v; },
     addEventListener(type, fn){ this.listeners[type] = fn; },
     dispatchEvent(evt){ const fn = this.listeners[evt.type]; if (fn) fn(evt); },
     ctx,
@@ -224,16 +225,14 @@ test('adventure kit glyph navigates to editor', () => {
   const overlay = bodyEl.children.find(c => c.id === 'modulePicker');
   const glyph = overlay.children.find(c => c.id === 'ackGlyph');
   assert.ok(glyph);
-  glyph.onclick();
-  assert.strictEqual(global.location.href, 'adventure-kit.html');
+  assert.strictEqual(glyph.href, 'adventure-kit.html');
 });
 
 test('multiplayer glyph navigates to multiplayer', () => {
   const overlay = bodyEl.children.find(c => c.id === 'modulePicker');
   const glyph = overlay.children.find(c => c.id === 'mpGlyph');
   assert.ok(glyph);
-  glyph.onclick();
-  assert.strictEqual(global.location.href, 'multiplayer.html');
+  assert.strictEqual(glyph.href, 'multiplayer.html');
 });
 
 test('particles respawn at edges after aging', () => {
