@@ -1,0 +1,4465 @@
+
+> dustland@0.255.1 pretest /app
+> npm run build
+
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+npm warn Unknown env config "npm-globalconfig". This will stop working in the next major version of npm.
+npm warn Unknown env config "_jsr-registry". This will stop working in the next major version of npm.
+
+> dustland@0.255.1 build
+> npm run build:ts && npm run build:sync
+
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+npm warn Unknown env config "npm-globalconfig". This will stop working in the next major version of npm.
+npm warn Unknown env config "_jsr-registry". This will stop working in the next major version of npm.
+
+> dustland@0.255.1 build:ts
+> npm run build:ts:strict && npm run build:ts:overrides
+
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+npm warn Unknown env config "npm-globalconfig". This will stop working in the next major version of npm.
+npm warn Unknown env config "_jsr-registry". This will stop working in the next major version of npm.
+
+> dustland@0.255.1 build:ts:strict
+> tsc --project tsconfig.json
+
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+npm warn Unknown env config "npm-globalconfig". This will stop working in the next major version of npm.
+npm warn Unknown env config "_jsr-registry". This will stop working in the next major version of npm.
+
+> dustland@0.255.1 build:ts:overrides
+> tsc --project tsconfig.overrides.json
+
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+npm warn Unknown env config "npm-globalconfig". This will stop working in the next major version of npm.
+npm warn Unknown env config "_jsr-registry". This will stop working in the next major version of npm.
+
+> dustland@0.255.1 build:sync
+> node build-tools/sync-ts-output.js
+
+
+> dustland@0.255.1 test /app
+> npm run lint && node --test
+
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+npm warn Unknown env config "npm-globalconfig". This will stop working in the next major version of npm.
+npm warn Unknown env config "_jsr-registry". This will stop working in the next major version of npm.
+
+> dustland@0.255.1 lint
+> eslint ts-src test --ext .ts,.js && yamllint .github/workflows/*.yml
+
+✔ YAML Lint successful.
+TAP version 13
+# Subtest: defineAbility stores ability with cost and prereqs
+ok 1 - defineAbility stores ability with cost and prereqs
+  ---
+  duration_ms: 1.988617
+  type: 'test'
+  ...
+# Subtest: defineAbility supports passive abilities
+ok 2 - defineAbility supports passive abilities
+  ---
+  duration_ms: 0.263121
+  type: 'test'
+  ...
+# Subtest: defineSpecial registers special with fields and defaults
+ok 3 - defineSpecial registers special with fields and defaults
+  ---
+  duration_ms: 0.462998
+  type: 'test'
+  ...
+# Subtest: starter specials load from data file
+ok 4 - starter specials load from data file
+  ---
+  duration_ms: 303.453827
+  type: 'test'
+  ...
+# Subtest: ack-player auto-loads module from URL param
+ok 5 - ack-player auto-loads module from URL param
+  ---
+  duration_ms: 92.604756
+  type: 'test'
+  ...
+# Subtest: engine skips start when ack-player param present
+ok 6 - engine skips start when ack-player param present
+  ---
+  duration_ms: 104.189737
+  type: 'test'
+  ...
+# Subtest: ack-player loads module script and runs postLoad
+ok 7 - ack-player loads module script and runs postLoad
+  ---
+  duration_ms: 109.13505
+  type: 'test'
+  ...
+# Subtest: ack-player registers profiles from module
+ok 8 - ack-player registers profiles from module
+  ---
+  duration_ms: 97.757358
+  type: 'test'
+  ...
+# Subtest: applyLoadedModule clears previous building tiles
+ok 9 - applyLoadedModule clears previous building tiles
+  ---
+  duration_ms: 19.15043
+  type: 'test'
+  ...
+# Subtest: applyLoadedModule avoids duplicate buildings
+ok 10 - applyLoadedModule avoids duplicate buildings
+  ---
+  duration_ms: 15.013399
+  type: 'test'
+  ...
+# Subtest: saveModule uses module name for download
+ok 11 - saveModule uses module name for download
+  ---
+  duration_ms: 8.544377
+  type: 'test'
+  ...
+# Subtest: zones round-trip through saveModule
+ok 12 - zones round-trip through saveModule
+  ---
+  duration_ms: 8.03727
+  type: 'test'
+  ...
+# Subtest: playtestModule includes zones
+ok 13 - playtestModule includes zones
+  ---
+  duration_ms: 4.09581
+  type: 'test'
+  ...
+# Subtest: zones can be walled with directional entrances
+ok 14 - zones can be walled with directional entrances
+  ---
+  duration_ms: 2.188301
+  type: 'test'
+  ...
+# Subtest: zone field updates apply immediately
+ok 15 - zone field updates apply immediately
+  ---
+  duration_ms: 2.755002
+  type: 'test'
+  ...
+# Subtest: custom item tags update tag options
+ok 16 - custom item tags update tag options
+  ---
+  duration_ms: 2.134913
+  type: 'test'
+  ...
+# Subtest: can add item without map placement
+ok 17 - can add item without map placement
+  ---
+  duration_ms: 2.651123
+  type: 'test'
+  ...
+# Subtest: map fields use dropdown options
+ok 18 - map fields use dropdown options
+  ---
+  duration_ms: 4.017451
+  type: 'test'
+  ...
+# Subtest: item select on map populates map dropdown
+ok 19 - item select on map populates map dropdown
+  ---
+  duration_ms: 6.063662
+  type: 'test'
+  ...
+# Subtest: saveModule exports persona overrides for mask items
+ok 20 - saveModule exports persona overrides for mask items
+  ---
+  duration_ms: 5.264166
+  type: 'test'
+  ...
+# Subtest: world paint persists through save/load
+ok 21 - world paint persists through save/load
+  ---
+  duration_ms: 8.122915
+  type: 'test'
+  ...
+# Subtest: world base tiles persist through save/load
+ok 22 - world base tiles persist through save/load
+  ---
+  duration_ms: 7.383838
+  type: 'test'
+  ...
+# Subtest: interior paint persists through save/load
+ok 23 - interior paint persists through save/load
+  ---
+  duration_ms: 8.200535
+  type: 'test'
+  ...
+# Subtest: saveModule exports buildings, interiors, and encounters without _origKeys
+ok 24 - saveModule exports buildings, interiors, and encounters without _origKeys
+  ---
+  duration_ms: 17.671232
+  type: 'test'
+  ...
+# Subtest: validateSpawns lists blocked spawns
+ok 25 - validateSpawns lists blocked spawns
+  ---
+  duration_ms: 9.682197
+  type: 'test'
+  ...
+# Subtest: validateSpawns flags locked NPC without unlock
+ok 26 - validateSpawns flags locked NPC without unlock
+  ---
+  duration_ms: 2.041198
+  type: 'test'
+  ...
+# Subtest: validateSpawns warns on missing NPC portrait or prompt
+ok 27 - validateSpawns warns on missing NPC portrait or prompt
+  ---
+  duration_ms: 1.729222
+  type: 'test'
+  ...
+# Subtest: saveModule proceeds when NPCs only have warnings
+ok 28 - saveModule proceeds when NPCs only have warnings
+  ---
+  duration_ms: 3.345339
+  type: 'test'
+  ...
+# Subtest: addTerrainFeature sprinkles noise
+ok 29 - addTerrainFeature sprinkles noise
+  ---
+  duration_ms: 1.940462
+  type: 'test'
+  ...
+# Subtest: brushSize slider adjusts noise radius
+ok 30 - brushSize slider adjusts noise radius
+  ---
+  duration_ms: 8.94332
+  type: 'test'
+  ...
+# Subtest: stampWorld applies a stamp pattern
+ok 31 - stampWorld applies a stamp pattern
+  ---
+  duration_ms: 10.811425
+  type: 'test'
+  ...
+# Subtest: hill stamp emits 16x16 emoji grid
+ok 32 - hill stamp emits 16x16 emoji grid
+  ---
+  duration_ms: 0.300074
+  type: 'test'
+  ...
+# Subtest: stamps window selects a world stamp
+ok 33 - stamps window selects a world stamp
+  ---
+  duration_ms: 3.707747
+  type: 'test'
+  ...
+# Subtest: stamps window positions near button
+ok 34 - stamps window positions near button
+  ---
+  duration_ms: 3.469976
+  type: 'test'
+  ...
+# Subtest: nano button generates a stamp
+ok 35 - nano button generates a stamp
+  ---
+  duration_ms: 3.782939
+  type: 'test'
+  ...
+# Subtest: dragging building ignores paint
+ok 36 - dragging building ignores paint
+  ---
+  duration_ms: 3.074198
+  type: 'test'
+  ...
+# Subtest: select on map does not paint
+ok 37 - select on map does not paint
+  ---
+  duration_ms: 7.07386
+  type: 'test'
+  ...
+# Subtest: clicking building while paint palette active still edits
+ok 38 - clicking building while paint palette active still edits
+  ---
+  duration_ms: 12.4643
+  type: 'test'
+  ...
+# Subtest: painting then leaving map keeps next click
+ok 39 - painting then leaving map keeps next click
+  ---
+  duration_ms: 27.26437
+  type: 'test'
+  ...
+# Subtest: painting over building restores tiles
+ok 40 - painting over building restores tiles
+  ---
+  duration_ms: 12.727559
+  type: 'test'
+  ...
+# Subtest: painting interior in main window
+ok 41 - painting interior in main window
+  ---
+  duration_ms: 6.163998
+  type: 'test'
+  ...
+# Subtest: regenWorld creates empty map without buildings
+ok 42 - regenWorld creates empty map without buildings
+  ---
+  duration_ms: 3.016718
+  type: 'test'
+  ...
+# Subtest: world palette selection stays highlighted and labels color
+ok 43 - world palette selection stays highlighted and labels color
+  ---
+  duration_ms: 8.917916
+  type: 'test'
+  ...
+# Subtest: coordinate/item/bldg placement clears world palette selection
+ok 44 - coordinate/item/bldg placement clears world palette selection
+  ---
+  duration_ms: 3.361319
+  type: 'test'
+  ...
+# Subtest: clearWorld wipes tiles and data
+ok 45 - clearWorld wipes tiles and data
+  ---
+  duration_ms: 12.663612
+  type: 'test'
+  ...
+# Subtest: renderDialogPreview clears when no start node
+ok 46 - renderDialogPreview clears when no start node
+  ---
+  duration_ms: 0.391835
+  type: 'test'
+  ...
+# Subtest: node delete uses confirm dialog
+ok 47 - node delete uses confirm dialog
+  ---
+  duration_ms: 0.67207
+  type: 'test'
+  ...
+# Subtest: confirm modal renders after dialog modal
+ok 48 - confirm modal renders after dialog modal
+  ---
+  duration_ms: 43.838969
+  type: 'test'
+  ...
+# Subtest: confirm dialog supports enter/escape shortcuts
+ok 49 - confirm dialog supports enter/escape shortcuts
+  ---
+  duration_ms: 0.465476
+  type: 'test'
+  ...
+# Subtest: confirm dialog space key acts like yes
+ok 50 - confirm dialog space key acts like yes
+  ---
+  duration_ms: 0.255305
+  type: 'test'
+  ...
+# Subtest: confirm dialog focuses yes and restores prior focus
+ok 51 - confirm dialog focuses yes and restores prior focus
+  ---
+  duration_ms: 0.220979
+  type: 'test'
+  ...
+# Subtest: closing dialog editor persists dialog changes
+ok 52 - closing dialog editor persists dialog changes
+  ---
+  duration_ms: 9.727144
+  type: 'test'
+  ...
+# Subtest: dialog text edited in tree editor is preserved
+ok 53 - dialog text edited in tree editor is preserved
+  ---
+  duration_ms: 3.450872
+  type: 'test'
+  ...
+# Subtest: renderTreeEditor reflects NPC-specific tree updates
+ok 54 - renderTreeEditor reflects NPC-specific tree updates
+  ---
+  duration_ms: 22.690752
+  type: 'test'
+  ...
+# Subtest: advanced dialog choices persist after reopening editor
+ok 55 - advanced dialog choices persist after reopening editor
+  ---
+  duration_ms: 9.428026
+  type: 'test'
+  ...
+# Subtest: editNPC expands short hex colors
+ok 56 - editNPC expands short hex colors
+  ---
+  duration_ms: 1.82101
+  type: 'test'
+  ...
+# Subtest: NPC symbol is saved and restored
+ok 57 - NPC symbol is saved and restored
+  ---
+  duration_ms: 7.725975
+  type: 'test'
+  ...
+# Subtest: NPC title survives round trip
+ok 58 - NPC title survives round trip
+  ---
+  duration_ms: 1.974901
+  type: 'test'
+  ...
+# Subtest: NPC trainer fields round trip
+ok 59 - NPC trainer fields round trip
+  ---
+  duration_ms: 1.708119
+  type: 'test'
+  ...
+# Subtest: NPC combat fields round trip through editor
+ok 60 - NPC combat fields round trip through editor
+  ---
+  duration_ms: 2.467275
+  type: 'test'
+  ...
+# Subtest: loadMods accepts undefined
+ok 61 - loadMods accepts undefined
+  ---
+  duration_ms: 0.403928
+  type: 'test'
+  ...
+# Subtest: dustland module JSON round trips through ACK
+ok 62 - dustland module JSON round trips through ACK
+  ---
+  duration_ms: 85.74592
+  type: 'test'
+  ...
+# Subtest: editing NPC centers map on its position
+ok 63 - editing NPC centers map on its position
+  ---
+  duration_ms: 5.136511
+  type: 'test'
+  ...
+# Subtest: editing item centers map on its position
+ok 64 - editing item centers map on its position
+  ---
+  duration_ms: 2.467174
+  type: 'test'
+  ...
+# Subtest: editing building centers map on its position
+ok 65 - editing building centers map on its position
+  ---
+  duration_ms: 2.145638
+  type: 'test'
+  ...
+# Subtest: closeItemEditor hides the item editor
+ok 66 - closeItemEditor hides the item editor
+  ---
+  duration_ms: 3.923823
+  type: 'test'
+  ...
+# Subtest: equip editor shows only for equippable types
+ok 67 - equip editor shows only for equippable types
+  ---
+  duration_ms: 12.192156
+  type: 'test'
+  ...
+# Subtest: closeBldgEditor hides the building editor
+ok 68 - closeBldgEditor hides the building editor
+  ---
+  duration_ms: 3.653748
+  type: 'test'
+  ...
+# Subtest: closeInteriorEditor hides the interior editor
+ok 69 - closeInteriorEditor hides the interior editor
+  ---
+  duration_ms: 0.31192
+  type: 'test'
+  ...
+# Subtest: collectNPCFromForm retains custom portrait path
+ok 70 - collectNPCFromForm retains custom portrait path
+  ---
+  duration_ms: 2.004234
+  type: 'test'
+  ...
+# Subtest: building boarded state round trips through editor
+ok 71 - building boarded state round trips through editor
+  ---
+  duration_ms: 8.795985
+  type: 'test'
+  ...
+# Subtest: building bunker flag round trips through editor
+ok 72 - building bunker flag round trips through editor
+  ---
+  duration_ms: 8.38262
+  type: 'test'
+  ...
+# Subtest: npc locked state round trips through editor
+ok 73 - npc locked state round trips through editor
+  ---
+  duration_ms: 6.185639
+  type: 'test'
+  ...
+# Subtest: placing NPC on interior map
+ok 74 - placing NPC on interior map
+  ---
+  duration_ms: 10.587694
+  type: 'test'
+  ...
+# Subtest: interior painting respects brush size slider
+ok 75 - interior painting respects brush size slider
+  ---
+  duration_ms: 6.26037
+  type: 'test'
+  ...
+# Subtest: locked node scaffold added and not orphaned
+ok 76 - locked node scaffold added and not orphaned
+  ---
+  duration_ms: 6.467873
+  type: 'test'
+  ...
+# Subtest: updateTreeData captures NPC lock effects
+ok 77 - updateTreeData captures NPC lock effects
+  ---
+  duration_ms: 0.594341
+  type: 'test'
+  ...
+# Subtest: startSpoofPlayback shows locked node when npc locked
+ok 78 - startSpoofPlayback shows locked node when npc locked
+  ---
+  duration_ms: 5.590957
+  type: 'test'
+  ...
+# Subtest: updateTreeData captures NPC color effects
+ok 79 - updateTreeData captures NPC color effects
+  ---
+  duration_ms: 0.559621
+  type: 'test'
+  ...
+# Subtest: updateTreeData captures unlockNPC from dataset
+ok 80 - updateTreeData captures unlockNPC from dataset
+  ---
+  duration_ms: 0.515315
+  type: 'test'
+  ...
+# Subtest: computeSpawnHeat maps distance from roads
+ok 81 - computeSpawnHeat maps distance from roads
+  ---
+  duration_ms: 35.435798
+  type: 'test'
+  ...
+# Subtest: renderEncounterList shows loot and collectEncounter reconciles template loot
+ok 82 - renderEncounterList shows loot and collectEncounter reconciles template loot
+  ---
+  duration_ms: 0.932823
+  type: 'test'
+  ...
+# Subtest: collectEncounter stores zone tag when zone mode selected
+ok 83 - collectEncounter stores zone tag when zone mode selected
+  ---
+  duration_ms: 29.688696
+  type: 'test'
+  ...
+# Subtest: generateProceduralWorld preserves existing data
+ok 84 - generateProceduralWorld preserves existing data
+  ---
+  duration_ms: 7.488291
+  type: 'test'
+  ...
+# Subtest: append-room visualizes vertical portals and walls
+ok 85 - append-room visualizes vertical portals and walls
+  ---
+  duration_ms: 57.749241
+  type: 'test'
+  ...
+# Subtest: applyModule registers dialog node objectives on quests
+ok 86 - applyModule registers dialog node objectives on quests
+  ---
+  duration_ms: 4.704057
+  type: 'test'
+  ...
+# Subtest: dustland module embeds the broadcast fragment chain
+ok 87 - dustland module embeds the broadcast fragment chain
+  ---
+  duration_ms: 14.613581
+  type: 'test'
+  ...
+# Subtest: broadcast NPCs inside Dustland award their fragments
+ok 88 - broadcast NPCs inside Dustland award their fragments
+  ---
+  duration_ms: 17.872242
+  type: 'test'
+  ...
+# Subtest: mapOutputPath resolves known destinations
+ok 89 - mapOutputPath resolves known destinations
+  ---
+  duration_ms: 1.487556
+  type: 'test'
+  ...
+# Subtest: analyzeBuild flags missing, stale, and unmatched outputs
+ok 90 - analyzeBuild flags missing, stale, and unmatched outputs
+  ---
+  duration_ms: 5.619546
+  type: 'test'
+  ...
+# Subtest: exiting building returns party to door tile
+ok 91 - exiting building returns party to door tile
+  ---
+  duration_ms: 4.303638
+  type: 'test'
+  ...
+# Subtest: entering bunker opens world map and activates fast travel
+ok 92 - entering bunker opens world map and activates fast travel
+  ---
+  duration_ms: 4.424228
+  type: 'test'
+  ...
+# Subtest: storeCampChestItem requires unlocked chest
+ok 93 - storeCampChestItem requires unlocked chest
+  ---
+  duration_ms: 1.449227
+  type: 'test'
+  ...
+# Subtest: storeCampChestItem splits stacks across chest slots
+ok 94 - storeCampChestItem splits stacks across chest slots
+  ---
+  duration_ms: 1.454008
+  type: 'test'
+  ...
+# Subtest: withdrawCampChestItem merges stacks into inventory
+ok 95 - withdrawCampChestItem merges stacks into inventory
+  ---
+  duration_ms: 0.593553
+  type: 'test'
+  ...
+# Subtest: addToInv stacks common equipment
+ok 96 - addToInv stacks common equipment
+  ---
+  duration_ms: 0.529862
+  type: 'test'
+  ...
+# Subtest: equipItem consumes a single copy from equipment stacks
+ok 97 - equipItem consumes a single copy from equipment stacks
+  ---
+  duration_ms: 0.979527
+  type: 'test'
+  ...
+# Subtest: non-stackable items retain identity when stored
+ok 98 - non-stackable items retain identity when stored
+  ---
+  duration_ms: 0.315663
+  type: 'test'
+  ...
+# Subtest: withdrawCampChestItem fails when inventory full
+ok 99 - withdrawCampChestItem fails when inventory full
+  ---
+  duration_ms: 0.557556
+  type: 'test'
+  ...
+# Subtest: unlockCampChest seeds medkits and emits change once
+ok 100 - unlockCampChest seeds medkits and emits change once
+  ---
+  duration_ms: 0.471241
+  type: 'test'
+  ...
+# Subtest: camp:open heals party and shows persona menu
+ok 101 - camp:open heals party and shows persona menu
+  ---
+  duration_ms: 99.17256
+  type: 'test'
+  ...
+# Subtest: camp:open allows unequipping persona
+ok 102 - camp:open allows unequipping persona
+  ---
+  duration_ms: 18.346085
+  type: 'test'
+  ...
+# Subtest: camp:open shows message when no personas
+ok 103 - camp:open shows message when no personas
+  ---
+  duration_ms: 11.835644
+  type: 'test'
+  ...
+# Subtest: camp:open blocked in dry or damaging zones
+ok 104 - camp:open blocked in dry or damaging zones
+  ---
+  duration_ms: 10.133714
+  type: 'test'
+  ...
+# Subtest: camp:open toggles fast travel button and opens map
+ok 105 - camp:open toggles fast travel button and opens map
+  ---
+  duration_ms: 14.749823
+  type: 'test'
+  ...
+# Subtest: camp chest purchase unlocks storage and reopens overlay
+ok 106 - camp chest purchase unlocks storage and reopens overlay
+  ---
+  duration_ms: 48.77921
+  type: 'test'
+  ...
+# Subtest: jax, and nyx encounters exist
+ok 107 - jax, and nyx encounters exist
+  ---
+  duration_ms: 3.945469
+  type: 'test'
+  ...
+# Subtest: random names prefill and stay unique
+ok 108 - random names prefill and stay unique
+  ---
+  duration_ms: 131.558653
+  type: 'test'
+  ...
+# Subtest: ChestWizard commit builds module data
+ok 109 - ChestWizard commit builds module data
+  ---
+  duration_ms: 14.104063
+  type: 'test'
+  ...
+# Subtest: ChestWizard config wires steps
+ok 110 - ChestWizard config wires steps
+  ---
+  duration_ms: 10.962866
+  type: 'test'
+  ...
+# Subtest: generateMelody is deterministic
+ok 111 - generateMelody is deterministic
+  ---
+  duration_ms: 10.886225
+  type: 'test'
+  ...
+# Subtest: loadCodexTasks reads and validates payload
+ok 112 - loadCodexTasks reads and validates payload
+  ---
+  duration_ms: 1.629219
+  type: 'test'
+  ...
+# Subtest: normalizeTasks fills optional fields
+ok 113 - normalizeTasks fills optional fields
+  ---
+  duration_ms: 1.080331
+  type: 'test'
+  ...
+# Subtest: filterTasks matches across metadata
+ok 114 - filterTasks matches across metadata
+  ---
+  duration_ms: 0.424015
+  type: 'test'
+  ...
+# Subtest: pickTask resolves indexes and ids
+ok 115 - pickTask resolves indexes and ids
+  ---
+  duration_ms: 0.338775
+  type: 'test'
+  ...
+# Subtest: formatTask prints multi-line summary
+ok 116 - formatTask prints multi-line summary
+  ---
+  duration_ms: 0.582275
+  type: 'test'
+  ...
+# Subtest: extractTodos handles quoted text
+ok 117 - extractTodos handles quoted text
+  ---
+  duration_ms: 1.283504
+  type: 'test'
+  ...
+# Subtest: closeCombat restores party without overlay
+ok 118 - closeCombat restores party without overlay
+  ---
+  duration_ms: 11.210485
+  type: 'test'
+  ...
+# Subtest: combat ignores held arrow key on start
+ok 119 - combat ignores held arrow key on start
+  ---
+  duration_ms: 18.598235
+  type: 'test'
+  ...
+# Subtest: party roster restores after combat
+ok 120 - party roster restores after combat
+  ---
+  duration_ms: 21.487397
+  type: 'test'
+  ...
+# Subtest: combat announces encountered enemies
+ok 121 - combat announces encountered enemies
+  ---
+  duration_ms: 25.629587
+  type: 'test'
+  ...
+# Subtest: core startGame has no default module
+ok 122 - core startGame has no default module
+  ---
+  duration_ms: 2.115333
+  type: 'test'
+  ...
+# Subtest: clamp restricts values to range
+ok 123 - clamp restricts values to range
+  ---
+  duration_ms: 2.997374
+  type: 'test'
+  ...
+# Subtest: createRNG produces deterministic sequences
+ok 124 - createRNG produces deterministic sequences
+  ---
+  duration_ms: 0.294797
+  type: 'test'
+  ...
+# Subtest: resolveCheck uses rng and runs effects
+ok 125 - resolveCheck uses rng and runs effects
+  ---
+  duration_ms: 1.433612
+  type: 'test'
+  ...
+# Subtest: addToInv accepts item ids
+ok 126 - addToInv accepts item ids
+  ---
+  duration_ms: 1.093641
+  type: 'test'
+  ...
+# Subtest: registerItem requires an id
+ok 127 - registerItem requires an id
+  ---
+  duration_ms: 0.739823
+  type: 'test'
+  ...
+# Subtest: picking up an item logs once
+ok 128 - picking up an item logs once
+  ---
+  duration_ms: 0.412174
+  type: 'test'
+  ...
+# Subtest: cursed items reveal on unequip attempt and stay equipped
+ok 129 - cursed items reveal on unequip attempt and stay equipped
+  ---
+  duration_ms: 1.160573
+  type: 'test'
+  ...
+# Subtest: uncursed gear can be removed and triggers unequip effects
+ok 130 - uncursed gear can be removed and triggers unequip effects
+  ---
+  duration_ms: 2.034303
+  type: 'test'
+  ...
+# Subtest: equipping teleport item moves party and logs message
+ok 131 - equipping teleport item moves party and logs message
+  ---
+  duration_ms: 1.131959
+  type: 'test'
+  ...
+# Subtest: pathfinding blocks on NPCs
+ok 132 - pathfinding blocks on NPCs
+  ---
+  duration_ms: 3.938065
+  type: 'test'
+  ...
+# Subtest: applyModule parses emoji world grid
+ok 133 - applyModule parses emoji world grid
+  ---
+  duration_ms: 0.431276
+  type: 'test'
+  ...
+# Subtest: applyModule assigns NPC loops
+ok 134 - applyModule assigns NPC loops
+  ---
+  duration_ms: 0.275071
+  type: 'test'
+  ...
+# Subtest: applyModule preserves locked npc state
+ok 135 - applyModule preserves locked npc state
+  ---
+  duration_ms: 1.632251
+  type: 'test'
+  ...
+# Subtest: applyModule reports successful load
+ok 136 - applyModule reports successful load
+  ---
+  duration_ms: 1.169393
+  type: 'test'
+  ...
+# Subtest: applyModule removes random huts when module supplies buildings
+ok 137 - applyModule removes random huts when module supplies buildings
+  ---
+  duration_ms: 8.47041
+  type: 'test'
+  ...
+# Subtest: applyModule merges module personas into templates and state
+ok 138 - applyModule merges module personas into templates and state
+  ---
+  duration_ms: 44.061123
+  type: 'test'
+  ...
+# Subtest: walking regenerates leader HP
+ok 139 - walking regenerates leader HP
+  ---
+  duration_ms: 2.99702
+  type: 'test'
+  ...
+# Subtest: movement delay improves with agility and equipment
+ok 140 - movement delay improves with agility and equipment
+  ---
+  duration_ms: 1.309003
+  type: 'test'
+  ...
+# Subtest: movement delay respects move_delay_mod equipment
+ok 141 - movement delay respects move_delay_mod equipment
+  ---
+  duration_ms: 1.083164
+  type: 'test'
+  ...
+# Subtest: queryTile reports entities and items
+ok 142 - queryTile reports entities and items
+  ---
+  duration_ms: 0.357709
+  type: 'test'
+  ...
+# Subtest: interactAt picks up adjacent item
+ok 143 - interactAt picks up adjacent item
+  ---
+  duration_ms: 0.70502
+  type: 'test'
+  ...
+# Subtest: useItem heals party member and consumes item
+ok 144 - useItem heals party member and consumes item
+  ---
+  duration_ms: 0.89301
+  type: 'test'
+  ...
+# Subtest: useItem boosts stat temporarily
+ok 145 - useItem boosts stat temporarily
+  ---
+  duration_ms: 1.184297
+  type: 'test'
+  ...
+# Subtest: findFreeDropTile avoids water and party tiles
+ok 146 - findFreeDropTile avoids water and party tiles
+  ---
+  duration_ms: 1.742232
+  type: 'test'
+  ...
+# Subtest: selected party member receives XP on dialog success
+ok 147 - selected party member receives XP on dialog success
+  ---
+  duration_ms: 2.729153
+  type: 'test'
+  ...
+# Subtest: level up grants +10 max HP and a skill point
+ok 148 - level up grants +10 max HP and a skill point
+  ---
+  duration_ms: 0.268494
+  type: 'test'
+  ...
+# Subtest: mentor bark plays sound and shows text
+ok 149 - mentor bark plays sound and shows text
+  ---
+  duration_ms: 0.302678
+  type: 'test'
+  ...
+# Subtest: respec consumes memory worm and restores skill points
+ok 150 - respec consumes memory worm and restores skill points
+  ---
+  duration_ms: 0.697146
+  type: 'test'
+  ...
+# Subtest: respec allows choosing new specialization and quirk
+ok 151 - respec allows choosing new specialization and quirk
+  ---
+  duration_ms: 0.399507
+  type: 'test'
+  ...
+# Subtest: bosses can drop memory worms
+ok 152 - bosses can drop memory worms
+  ---
+  duration_ms: 4.09281
+  type: 'test'
+  ...
+# Subtest: boss memory worm drop respects probability
+ok 153 - boss memory worm drop respects probability
+  ---
+  duration_ms: 0.696482
+  type: 'test'
+  ...
+# Subtest: advanceDialog moves to next node
+ok 154 - advanceDialog moves to next node
+  ---
+  duration_ms: 0.208313
+  type: 'test'
+  ...
+# Subtest: advanceDialog handles cost and reward
+ok 155 - advanceDialog handles cost and reward
+  ---
+  duration_ms: 0.521779
+  type: 'test'
+  ...
+# Subtest: advanceDialog respects goto with costItem
+ok 156 - advanceDialog respects goto with costItem
+  ---
+  duration_ms: 0.499285
+  type: 'test'
+  ...
+# Subtest: advanceDialog costItem transitions to target node
+ok 157 - advanceDialog costItem transitions to target node
+  ---
+  duration_ms: 0.317403
+  type: 'test'
+  ...
+# Subtest: advanceDialog respects costSlot
+ok 158 - advanceDialog respects costSlot
+  ---
+  duration_ms: 0.260913
+  type: 'test'
+  ...
+# Subtest: advanceDialog handles costTag
+ok 159 - advanceDialog handles costTag
+  ---
+  duration_ms: 0.466837
+  type: 'test'
+  ...
+# Subtest: advanceDialog honours reqSlot
+ok 160 - advanceDialog honours reqSlot
+  ---
+  duration_ms: 0.27013
+  type: 'test'
+  ...
+# Subtest: advanceDialog uses reqItem without consuming and allows goto
+ok 161 - advanceDialog uses reqItem without consuming and allows goto
+  ---
+  duration_ms: 0.384846
+  type: 'test'
+  ...
+# Subtest: advanceDialog reqItem transitions to target node
+ok 162 - advanceDialog reqItem transitions to target node
+  ---
+  duration_ms: 0.21704
+  type: 'test'
+  ...
+# Subtest: advanceDialog matches reqItem case-insensitively
+ok 163 - advanceDialog matches reqItem case-insensitively
+  ---
+  duration_ms: 0.395379
+  type: 'test'
+  ...
+# Subtest: advanceDialog uses reqTag without consuming and allows goto
+ok 164 - advanceDialog uses reqTag without consuming and allows goto
+  ---
+  duration_ms: 0.407804
+  type: 'test'
+  ...
+# Subtest: advanceDialog goto can target NPC
+ok 165 - advanceDialog goto can target NPC
+  ---
+  duration_ms: 0.322559
+  type: 'test'
+  ...
+# Subtest: advanceDialog goto supports relative movement
+ok 166 - advanceDialog goto supports relative movement
+  ---
+  duration_ms: 0.252109
+  type: 'test'
+  ...
+# Subtest: advanceDialog returns success flag on failure
+ok 167 - advanceDialog returns success flag on failure
+  ---
+  duration_ms: 0.376859
+  type: 'test'
+  ...
+# Subtest: once choice consumed on failed check
+ok 168 - once choice consumed on failed check
+  ---
+  duration_ms: 0.29767
+  type: 'test'
+  ...
+# Subtest: once choice persists when lacking item
+ok 169 - once choice persists when lacking item
+  ---
+  duration_ms: 0.281953
+  type: 'test'
+  ...
+# Subtest: door portals link interiors
+ok 170 - door portals link interiors
+  ---
+  duration_ms: 0.631244
+  type: 'test'
+  ...
+# Subtest: applyModule overwrites existing interiors
+ok 171 - applyModule overwrites existing interiors
+  ---
+  duration_ms: 22.844364
+  type: 'test'
+  ...
+# Subtest: mapSupportsFog disables fog inside interiors
+ok 172 - mapSupportsFog disables fog inside interiors
+  ---
+  duration_ms: 0.626305
+  type: 'test'
+  ...
+# Subtest: applyModule assigns interior display names
+ok 173 - applyModule assigns interior display names
+  ---
+  duration_ms: 0.954761
+  type: 'test'
+  ...
+# Subtest: makeInteriorRoom supports custom size
+ok 174 - makeInteriorRoom supports custom size
+  ---
+  duration_ms: 0.194509
+  type: 'test'
+  ...
+# Subtest: placeHut uses custom grid and door
+ok 175 - placeHut uses custom grid and door
+  ---
+  duration_ms: 4.319997
+  type: 'test'
+  ...
+# Subtest: quest turn-in grants reward item
+ok 176 - quest turn-in grants reward item
+  ---
+  duration_ms: 2.301893
+  type: 'test'
+  ...
+# Subtest: quest tag turn-in handles partial counts
+ok 177 - quest tag turn-in handles partial counts
+  ---
+  duration_ms: 0.765315
+  type: 'test'
+  ...
+# Subtest: quest turn-in enforces minimum XP baseline
+ok 178 - quest turn-in enforces minimum XP baseline
+  ---
+  duration_ms: 2.780796
+  type: 'test'
+  ...
+# Subtest: quest turn-in caps XP rewards at 100
+ok 179 - quest turn-in caps XP rewards at 100
+  ---
+  duration_ms: 0.322615
+  type: 'test'
+  ...
+# Subtest: turn-in choice appears immediately after accepting
+ok 180 - turn-in choice appears immediately after accepting
+  ---
+  duration_ms: 0.842336
+  type: 'test'
+  ...
+# Subtest: quest turn-in without required items skips choice effects
+ok 181 - quest turn-in without required items skips choice effects
+  ---
+  duration_ms: 1.007399
+  type: 'test'
+  ...
+# Subtest: createNpcFactory builds NPCs from definitions
+ok 182 - createNpcFactory builds NPCs from definitions
+  ---
+  duration_ms: 0.593565
+  type: 'test'
+  ...
+# Subtest: createNpcFactory defaults empty tree to dialog
+ok 183 - createNpcFactory defaults empty tree to dialog
+  ---
+  duration_ms: 0.211754
+  type: 'test'
+  ...
+# Subtest: createNpcFactory applies loop points
+ok 184 - createNpcFactory applies loop points
+  ---
+  duration_ms: 0.221696
+  type: 'test'
+  ...
+# Subtest: inanimate NPC defaults to dark green color
+ok 185 - inanimate NPC defaults to dark green color
+  ---
+  duration_ms: 0.164615
+  type: 'test'
+  ...
+# Subtest: openDialog displays portrait when sheet provided
+ok 186 - openDialog displays portrait when sheet provided
+  ---
+  duration_ms: 0.669442
+  type: 'test'
+  ...
+# Subtest: openDialog uses full image when not sprite sheet
+ok 187 - openDialog uses full image when not sprite sheet
+  ---
+  duration_ms: 0.316672
+  type: 'test'
+  ...
+# Subtest: setPortraitDiv uses full image when not sprite sheet
+ok 188 - setPortraitDiv uses full image when not sprite sheet
+  ---
+  duration_ms: 0.244987
+  type: 'test'
+  ...
+# Subtest: joinParty copies current NPC portraitSheet
+ok 189 - joinParty copies current NPC portraitSheet
+  ---
+  duration_ms: 0.226703
+  type: 'test'
+  ...
+# Subtest: clamp swaps reversed bounds
+ok 190 - clamp swaps reversed bounds
+  ---
+  duration_ms: 0.13022
+  type: 'test'
+  ...
+# Subtest: makeNPC tolerates start nodes without choices
+ok 191 - makeNPC tolerates start nodes without choices
+  ---
+  duration_ms: 0.276507
+  type: 'test'
+  ...
+# Subtest: makeNPC normalizes existing fight choices
+ok 192 - makeNPC normalizes existing fight choices
+  ---
+  duration_ms: 0.287844
+  type: 'test'
+  ...
+# Subtest: fight choice triggers combat
+ok 193 - fight choice triggers combat
+  ---
+  duration_ms: 0.653323
+  type: 'test'
+  ...
+# Subtest: boss special telegraphs before striking
+ok 194 - boss special telegraphs before striking
+  ---
+  duration_ms: 2.974648
+  type: 'test'
+  ...
+# Subtest: choices pointing to bye are rendered last
+ok 195 - choices pointing to bye are rendered last
+  ---
+  duration_ms: 0.340098
+  type: 'test'
+  ...
+# Subtest: hidden NPC reveals after visit condition met
+ok 196 - hidden NPC reveals after visit condition met
+  ---
+  duration_ms: 5.18545
+  type: 'test'
+  ...
+# Subtest: dialog choices can be gated by world flags
+ok 197 - dialog choices can be gated by world flags
+  ---
+  duration_ms: 0.408168
+  type: 'test'
+  ...
+# Subtest: resetAll clears world flags
+ok 198 - resetAll clears world flags
+  ---
+  duration_ms: 0.29437
+  type: 'test'
+  ...
+# Subtest: resetAll leaves saved game intact
+ok 199 - resetAll leaves saved game intact
+  ---
+  duration_ms: 0.220589
+  type: 'test'
+  ...
+# Subtest: dialog choices can be gated by party flags
+ok 200 - dialog choices can be gated by party flags
+  ---
+  duration_ms: 0.239863
+  type: 'test'
+  ...
+# Subtest: board/unboard effects toggle building access
+ok 201 - board/unboard effects toggle building access
+  ---
+  duration_ms: 0.17325
+  type: 'test'
+  ...
+# Subtest: lock/unlock effects toggle npc access
+ok 202 - lock/unlock effects toggle npc access
+  ---
+  duration_ms: 0.655126
+  type: 'test'
+  ...
+# Subtest: lockNPC duration unlocks after time
+ok 203 - lockNPC duration unlocks after time
+  ---
+  duration_ms: 0.365726
+  type: 'test'
+  ...
+# Subtest: npcColor effect changes NPC color
+ok 204 - npcColor effect changes NPC color
+  ---
+  duration_ms: 0.173876
+  type: 'test'
+  ...
+# Subtest: dialog choice applies object effects
+ok 205 - dialog choice applies object effects
+  ---
+  duration_ms: 0.297444
+  type: 'test'
+  ...
+# Subtest: onEnter triggers effects and temporary stat mod
+ok 206 - onEnter triggers effects and temporary stat mod
+  ---
+  duration_ms: 1.402209
+  type: 'test'
+  ...
+# Subtest: handleDialogKey navigates dialog choices with WASD
+ok 207 - handleDialogKey navigates dialog choices with WASD
+  ---
+  duration_ms: 0.422891
+  type: 'test'
+  ...
+# Subtest: space selects dialog choice
+ok 208 - space selects dialog choice
+  ---
+  duration_ms: 0.20561
+  type: 'test'
+  ...
+# Subtest: party enforces maximum size of six
+ok 209 - party enforces maximum size of six
+  ---
+  duration_ms: 0.170113
+  type: 'test'
+  ...
+# Subtest: NPC is not removed when party is full
+ok 210 - NPC is not removed when party is full
+  ---
+  duration_ms: 0.317222
+  type: 'test'
+  ...
+# Subtest: cannot remove created party members
+ok 211 - cannot remove created party members
+  ---
+  duration_ms: 0.26017
+  type: 'test'
+  ...
+# Subtest: removed member becomes NPC at current location
+ok 212 - removed member becomes NPC at current location
+  ---
+  duration_ms: 0.229312
+  type: 'test'
+  ...
+# Subtest: NPCs are removed individually during combat
+ok 213 - NPCs are removed individually during combat
+  ---
+  duration_ms: 1.175789
+  type: 'test'
+  ...
+# Subtest: defeated enemies can drop spoils cache
+ok 214 - defeated enemies can drop spoils cache
+  ---
+  duration_ms: 0.84187
+  type: 'test'
+  ...
+# Subtest: bandits can drop scrap on defeat
+ok 215 - bandits can drop scrap on defeat
+  ---
+  duration_ms: 0.581266
+  type: 'test'
+  ...
+# Subtest: npc scrap config drops scrap
+ok 216 - npc scrap config drops scrap
+  ---
+  duration_ms: 0.59744
+  type: 'test'
+  ...
+# Subtest: lootChance prevents drops on high rolls
+ok 217 - lootChance prevents drops on high rolls
+  ---
+  duration_ms: 1.624874
+  type: 'test'
+  ...
+# Subtest: lootChance allows drops on low rolls
+ok 218 - lootChance allows drops on low rolls
+  ---
+  duration_ms: 0.764638
+  type: 'test'
+  ...
+# Subtest: fallen party members are revived after combat
+ok 219 - fallen party members are revived after combat
+  ---
+  duration_ms: 0.721963
+  type: 'test'
+  ...
+# Subtest: bruise resets map to entry
+ok 220 - bruise resets map to entry
+  ---
+  duration_ms: 0.520394
+  type: 'test'
+  ...
+# Subtest: falling resets adrenaline
+ok 221 - falling resets adrenaline
+  ---
+  duration_ms: 0.40367
+  type: 'test'
+  ...
+# Subtest: combat hp bars update after damage
+ok 222 - combat hp bars update after damage
+  ---
+  duration_ms: 0.626126
+  type: 'test'
+  ...
+# Subtest: party adrenaline bar reflects adr percent
+ok 223 - party adrenaline bar reflects adr percent
+  ---
+  duration_ms: 0.41681
+  type: 'test'
+  ...
+# Subtest: enemy hp bar defaults maxHp to hp
+ok 224 - enemy hp bar defaults maxHp to hp
+  ---
+  duration_ms: 0.464705
+  type: 'test'
+  ...
+# Subtest: combat menu can be clicked
+ok 225 - combat menu can be clicked
+  ---
+  duration_ms: 0.342665
+  type: 'test'
+  ...
+# Subtest: space selects combat option
+ok 226 - space selects combat option
+  ---
+  duration_ms: 0.41059
+  type: 'test'
+  ...
+# Subtest: turn indicator updates with active member
+ok 227 - turn indicator updates with active member
+  ---
+  duration_ms: 0.390059
+  type: 'test'
+  ...
+# Subtest: party member receives class special
+ok 228 - party member receives class special
+  ---
+  duration_ms: 0.230919
+  type: 'test'
+  ...
+# Subtest: special ids resolve to objects in combat
+ok 229 - special ids resolve to objects in combat
+  ---
+  duration_ms: 0.291518
+  type: 'test'
+  ...
+# Subtest: openCombat preserves adrenaline for party members
+ok 230 - openCombat preserves adrenaline for party members
+  ---
+  duration_ms: 0.310628
+  type: 'test'
+  ...
+# Subtest: basic attack plays adrenaline fx
+ok 231 - basic attack plays adrenaline fx
+  ---
+  duration_ms: 0.482447
+  type: 'test'
+  ...
+# Subtest: special move triggers fx
+ok 232 - special move triggers fx
+  ---
+  duration_ms: 1.243534
+  type: 'test'
+  ...
+# Subtest: special applies cost and cooldown
+ok 233 - special applies cost and cooldown
+  ---
+  duration_ms: 0.782146
+  type: 'test'
+  ...
+# Subtest: status effects play fx
+ok 234 - status effects play fx
+  ---
+  duration_ms: 0.1857
+  type: 'test'
+  ...
+# Subtest: adrenaline cools when walking at full health
+ok 235 - adrenaline cools when walking at full health
+  ---
+  duration_ms: 0.406353
+  type: 'test'
+  ...
+# Subtest: healAll restores HP and clears adrenaline
+ok 236 - healAll restores HP and clears adrenaline
+  ---
+  duration_ms: 0.152348
+  type: 'test'
+  ...
+# Subtest: startCombat forwards portrait fields
+ok 237 - startCombat forwards portrait fields
+  ---
+  duration_ms: 0.499296
+  type: 'test'
+  ...
+# Subtest: save serializes party when map method is shadowed
+ok 238 - save serializes party when map method is shadowed
+  ---
+  duration_ms: 1.427364
+  type: 'test'
+  ...
+# Subtest: save/load preserves NPC loops
+ok 239 - save/load preserves NPC loops
+  ---
+  duration_ms: 2.645526
+  type: 'test'
+  ...
+# Subtest: save/load preserves persona assignments
+ok 240 - save/load preserves persona assignments
+  ---
+  duration_ms: 1.445211
+  type: 'test'
+  ...
+# Subtest: save/load retains effect packs and persona boosts
+ok 241 - save/load retains effect packs and persona boosts
+  ---
+  duration_ms: 1.438556
+  type: 'test'
+  ...
+# Subtest: save/load preserves enhanced weapon base ids
+ok 242 - save/load preserves enhanced weapon base ids
+  ---
+  duration_ms: 0.924419
+  type: 'test'
+  ...
+# Subtest: load bypasses legacy loader for v2 saves
+ok 243 - load bypasses legacy loader for v2 saves
+  ---
+  duration_ms: 65.9985
+  type: 'test'
+  ...
+# Subtest: loadModernSave reloads the current module before patching state
+ok 244 - loadModernSave reloads the current module before patching state
+  ---
+  duration_ms: 1.196447
+  type: 'test'
+  ...
+# Subtest: loadModernSave can discard a mismatched saved world
+ok 245 - loadModernSave can discard a mismatched saved world
+  ---
+  duration_ms: 0.659967
+  type: 'test'
+  ...
+# Subtest: loadModernSave keeps the saved world when discard is cancelled
+ok 246 - loadModernSave keeps the saved world when discard is cancelled
+  ---
+  duration_ms: 0.779053
+  type: 'test'
+  ...
+# Subtest: loadModernSave restores bunkers and world flags
+ok 247 - loadModernSave restores bunkers and world flags
+  ---
+  duration_ms: 1.246298
+  type: 'test'
+  ...
+# Subtest: loadModernSave ensures trader baseline goods return
+ok 248 - loadModernSave ensures trader baseline goods return
+  ---
+  duration_ms: 1.88584
+  type: 'test'
+  ...
+# Subtest: clearSave removes stored game data
+ok 249 - clearSave removes stored game data
+  ---
+  duration_ms: 0.25829
+  type: 'test'
+  ...
+# Subtest: combat overlay sits behind the log panel
+ok 250 - combat overlay sits behind the log panel
+  ---
+  duration_ms: 7.191257
+  type: 'test'
+  ...
+# Subtest: combat overlay leaves room for panel
+ok 251 - combat overlay leaves room for panel
+  ---
+  duration_ms: 3.458052
+  type: 'test'
+  ...
+# Subtest: encounters blocked within 3 tiles of roads
+ok 252 - encounters blocked within 3 tiles of roads
+  ---
+  duration_ms: 1.661186
+  type: 'test'
+  ...
+# Subtest: no encounters occur on roads
+ok 253 - no encounters occur on roads
+  ---
+  duration_ms: 0.419581
+  type: 'test'
+  ...
+# Subtest: random encounters have a cooldown
+ok 254 - random encounters have a cooldown
+  ---
+  duration_ms: 42.386071
+  type: 'test'
+  ...
+# Subtest: encounter templates forward portraitLock
+ok 255 - encounter templates forward portraitLock
+  ---
+  duration_ms: 10.9588
+  type: 'test'
+  ...
+# Subtest: random encounters award XP based on strength
+ok 256 - random encounters award XP based on strength
+  ---
+  duration_ms: 10.79061
+  type: 'test'
+  ...
+# Subtest: trivial enemies appear in groups
+ok 257 - trivial enemies appear in groups
+  ---
+  duration_ms: 11.935623
+  type: 'test'
+  ...
+# Subtest: distant encounters use hard enemy pool
+ok 258 - distant encounters use hard enemy pool
+  ---
+  duration_ms: 1.158762
+  type: 'test'
+  ...
+# Subtest: encounter guard trinket skips minor threats
+ok 259 - encounter guard trinket skips minor threats
+  ---
+  duration_ms: 25.767983
+  type: 'test'
+  ...
+# Subtest: enemies respect max distance
+ok 260 - enemies respect max distance
+  ---
+  duration_ms: 0.526204
+  type: 'test'
+  ...
+# Subtest: zone-tagged encounters trigger only inside tagged zone
+ok 261 - zone-tagged encounters trigger only inside tagged zone
+  ---
+  duration_ms: 21.075304
+  type: 'test'
+  ...
+# Subtest: enemy requires a specific weapon
+ok 262 - enemy requires a specific weapon
+  ---
+  duration_ms: 2.032986
+  type: 'test'
+  ...
+# Subtest: grin offers trinket option after charm fails
+ok 263 - grin offers trinket option after charm fails
+  ---
+  duration_ms: 0.957493
+  type: 'test'
+  ...
+# Subtest: grin recruitment offers persuade or pay options after recruiting
+ok 264 - grin recruitment offers persuade or pay options after recruiting
+  ---
+  duration_ms: 0.475669
+  type: 'test'
+  ...
+# Subtest: basic attacks generate adrenaline from weapon stats
+ok 265 - basic attacks generate adrenaline from weapon stats
+  ---
+  duration_ms: 0.648226
+  type: 'test'
+  ...
+# Subtest: equipment modifiers apply at battle start
+ok 266 - equipment modifiers apply at battle start
+  ---
+  duration_ms: 0.618605
+  type: 'test'
+  ...
+# Subtest: adrenaline boosts attack damage
+ok 267 - adrenaline boosts attack damage
+  ---
+  duration_ms: 0.486311
+  type: 'test'
+  ...
+# Subtest: adrenaline damage modifiers amplify boost
+ok 268 - adrenaline damage modifiers amplify boost
+  ---
+  duration_ms: 0.431806
+  type: 'test'
+  ...
+# Subtest: enemy immune to basic attacks requires specials
+ok 269 - enemy immune to basic attacks requires specials
+  ---
+  duration_ms: 0.890009
+  type: 'test'
+  ...
+# Subtest: enemy counters basic attacks
+ok 270 - enemy counters basic attacks
+  ---
+  duration_ms: 0.537615
+  type: 'test'
+  ...
+# Subtest: combat log records player and enemy actions
+ok 271 - combat log records player and enemy actions
+  ---
+  duration_ms: 0.644534
+  type: 'test'
+  ...
+# Subtest: enemy targets weakest party member
+ok 272 - enemy targets weakest party member
+  ---
+  duration_ms: 0.690668
+  type: 'test'
+  ...
+# Subtest: nearby combat NPCs join combat
+ok 273 - nearby combat NPCs join combat
+  ---
+  duration_ms: 0.665245
+  type: 'test'
+  ...
+# Subtest: shop npc opens dialog before trading
+ok 274 - shop npc opens dialog before trading
+  ---
+  duration_ms: 0.301646
+  type: 'test'
+  ...
+# Subtest: combat uses stats and equipment
+ok 275 - combat uses stats and equipment
+  ---
+  duration_ms: 0.744756
+  type: 'test'
+  ...
+# Subtest: registerZoneEffects overlays walled zones onto map tiles
+ok 276 - registerZoneEffects overlays walled zones onto map tiles
+  ---
+  duration_ms: 1.003806
+  type: 'test'
+  ...
+# Subtest: specialization and quirk bonuses apply
+ok 277 - specialization and quirk bonuses apply
+  ---
+  duration_ms: 138.044978
+  type: 'test'
+  ...
+# Subtest: stat labels include names and benefits
+ok 278 - stat labels include names and benefits
+  ---
+  duration_ms: 145.334499
+  type: 'test'
+  ...
+# Subtest: Custom Asset Rendering
+ok 279 - Custom Asset Rendering
+  ---
+  duration_ms: 24.416957
+  type: 'test'
+  ...
+# Subtest: collectDesignTodos captures headings and ancestors
+ok 280 - collectDesignTodos captures headings and ancestors
+  ---
+  duration_ms: 4.263784
+  type: 'test'
+  ...
+# Subtest: buildCodexTasksPayload sorts and formats entries
+ok 281 - buildCodexTasksPayload sorts and formats entries
+  ---
+  duration_ms: 2.231808
+  type: 'test'
+  ...
+# Subtest: dial widget increments and clamps
+ok 282 - dial widget increments and clamps
+  ---
+  duration_ms: 8.968089
+  type: 'test'
+  ...
+# Subtest: dial widget triggers onChange callback
+ok 283 - dial widget triggers onChange callback
+  ---
+  duration_ms: 3.161276
+  type: 'test'
+  ...
+# Subtest: renderTreeEditor skips imports and keeps required item
+ok 284 - renderTreeEditor skips imports and keeps required item
+  ---
+  duration_ms: 118.553375
+  type: 'test'
+  ...
+# Subtest: persistLlmNodes removes volatile flags
+ok 285 - persistLlmNodes removes volatile flags
+  ---
+  duration_ms: 11.922811
+  type: 'test'
+  ...
+# Subtest: detects missing to targets
+ok 286 - detects missing to targets
+  ---
+  duration_ms: 1.780906
+  type: 'test'
+  ...
+# Subtest: updateTreeData captures door board/unboard effects
+ok 287 - updateTreeData captures door board/unboard effects
+  ---
+  duration_ms: 3.38233
+  type: 'test'
+  ...
+# Subtest: updateTreeData captures scrap reward
+ok 288 - updateTreeData captures scrap reward
+  ---
+  duration_ms: 0.803627
+  type: 'test'
+  ...
+# Subtest: updateTreeData captures item reward without explicit type
+ok 289 - updateTreeData captures item reward without explicit type
+  ---
+  duration_ms: 0.731067
+  type: 'test'
+  ...
+# Subtest: updateTreeData captures required item
+ok 290 - updateTreeData captures required item
+  ---
+  duration_ms: 0.656042
+  type: 'test'
+  ...
+# Subtest: updateTreeData uses dataset when reqItem option missing
+ok 291 - updateTreeData uses dataset when reqItem option missing
+  ---
+  duration_ms: 0.451042
+  type: 'test'
+  ...
+# Subtest: updateTreeData removes deleted nodes
+ok 292 - updateTreeData removes deleted nodes
+  ---
+  duration_ms: 0.423096
+  type: 'test'
+  ...
+# Subtest: dialog jump redirects based on flags
+ok 293 - dialog jump redirects based on flags
+  ---
+  duration_ms: 3.635982
+  type: 'test'
+  ...
+# Subtest: openDialog tolerates missing portrait element
+ok 294 - openDialog tolerates missing portrait element
+  ---
+  duration_ms: 81.796794
+  type: 'test'
+  ...
+# Subtest: test/dom-fixture.js
+ok 40 - test/dom-fixture.js
+  ---
+  duration_ms: 40.586686
+  type: 'test'
+  ...
+# Subtest: doorLinker step records entry and exit
+ok 296 - doorLinker step records entry and exit
+  ---
+  duration_ms: 10.234712
+  type: 'test'
+  ...
+# Subtest: dropItems creates cache
+ok 297 - dropItems creates cache
+  ---
+  duration_ms: 4.510997
+  type: 'test'
+  ...
+# Subtest: pickupCache restores items when space available
+ok 298 - pickupCache restores items when space available
+  ---
+  duration_ms: 1.082181
+  type: 'test'
+  ...
+# Subtest: pickupCache fails if inventory full
+ok 299 - pickupCache fails if inventory full
+  ---
+  duration_ms: 0.464992
+  type: 'test'
+  ...
+# Subtest: tryAutoPickup collects loot drops when inventory has room
+ok 300 - tryAutoPickup collects loot drops when inventory has room
+  ---
+  duration_ms: 0.445429
+  type: 'test'
+  ...
+# Subtest: tryAutoPickup collects loot caches when capacity allows
+ok 301 - tryAutoPickup collects loot caches when capacity allows
+  ---
+  duration_ms: 0.311205
+  type: 'test'
+  ...
+# Subtest: tryAutoPickup vacuums adjacent loot when leader equipped
+ok 302 - tryAutoPickup vacuums adjacent loot when leader equipped
+  ---
+  duration_ms: 0.433227
+  type: 'test'
+  ...
+# Subtest: tryAutoPickup leaves loot on the ground when inventory is full
+ok 303 - tryAutoPickup leaves loot on the ground when inventory is full
+  ---
+  duration_ms: 0.314103
+  type: 'test'
+  ...
+# Subtest: dustland module starts in test hall
+ok 304 - dustland module starts in test hall
+  ---
+  duration_ms: 13.147316
+  type: 'test'
+  ...
+# Subtest: dustland module includes patrolling enemy
+ok 305 - dustland module includes patrolling enemy
+  ---
+  duration_ms: 7.983319
+  type: 'test'
+  ...
+# Subtest: dustland module includes plot improvements
+ok 306 - dustland module includes plot improvements
+  ---
+  duration_ms: 4.651825
+  type: 'test'
+  ...
+# Subtest: dustland module warns about hall monster
+ok 307 - dustland module warns about hall monster
+  ---
+  duration_ms: 12.298264
+  type: 'test'
+  ...
+# Subtest: workshop building includes workbench NPC
+ok 308 - workshop building includes workbench NPC
+  ---
+  duration_ms: 4.369567
+  type: 'test'
+  ...
+# Subtest: workshop no longer stores power cells
+ok 309 - workshop no longer stores power cells
+  ---
+  duration_ms: 3.218027
+  type: 'test'
+  ...
+# Subtest: medkit heals for 10 HP
+ok 310 - medkit heals for 10 HP
+  ---
+  duration_ms: 3.163712
+  type: 'test'
+  ...
+# Subtest: cloth supplies can be found to the south
+ok 311 - cloth supplies can be found to the south
+  ---
+  duration_ms: 3.374007
+  type: 'test'
+  ...
+# Subtest: plant fiber can be scavenged
+ok 312 - plant fiber can be scavenged
+  ---
+  duration_ms: 3.234858
+  type: 'test'
+  ...
+# Subtest: bandage heals more than water flask
+ok 313 - bandage heals more than water flask
+  ---
+  duration_ms: 4.468628
+  type: 'test'
+  ...
+# Subtest: vine creature rolls loot table for scavenged supplies
+ok 314 - vine creature rolls loot table for scavenged supplies
+  ---
+  duration_ms: 3.203921
+  type: 'test'
+  ...
+# Subtest: rotwalker rolls loot table for salvage
+ok 315 - rotwalker rolls loot table for salvage
+  ---
+  duration_ms: 2.902248
+  type: 'test'
+  ...
+# Subtest: sand titan can drop artifact blade or fuel cell
+ok 316 - sand titan can drop artifact blade or fuel cell
+  ---
+  duration_ms: 2.975912
+  type: 'test'
+  ...
+# Subtest: northeast hut has portal to hall
+ok 317 - northeast hut has portal to hall
+  ---
+  duration_ms: 3.576539
+  type: 'test'
+  ...
+# Subtest: trader patrols east-west with basic goods
+ok 318 - trader patrols east-west with basic goods
+  ---
+  duration_ms: 2.940961
+  type: 'test'
+  ...
+# Subtest: vortex sends player to world map
+ok 319 - vortex sends player to world map
+  ---
+  duration_ms: 2.964956
+  type: 'test'
+  ...
+# Subtest: dustStorm and addSoundSource effects
+ok 320 - dustStorm and addSoundSource effects
+  ---
+  duration_ms: 80.911939
+  type: 'test'
+  ...
+# Subtest: echoes content requires matching key quests
+ok 321 - echoes content requires matching key quests
+  ---
+  duration_ms: 5.740493
+  type: 'test'
+  ...
+# Subtest: effectPackInspector fires loaded packs
+ok 322 - effectPackInspector fires loaded packs
+  ---
+  duration_ms: 2.459534
+  type: 'test'
+  ...
+# Subtest: effect packs respond to events
+ok 323 - effect packs respond to events
+  ---
+  duration_ms: 11.528972
+  type: 'test'
+  ...
+# Subtest: effects exposes Dustland namespace
+ok 324 - effects exposes Dustland namespace
+  ---
+  duration_ms: 12.424938
+  type: 'test'
+  ...
+# Subtest: base equipment items are registered
+ok 325 - base equipment items are registered
+  ---
+  duration_ms: 3.197181
+  type: 'test'
+  ...
+# Subtest: equipment modifiers apply to characters
+ok 326 - equipment modifiers apply to characters
+  ---
+  duration_ms: 0.493263
+  type: 'test'
+  ...
+# Subtest: adrenaline modifiers are applied
+ok 327 - adrenaline modifiers are applied
+  ---
+  duration_ms: 0.332361
+  type: 'test'
+  ...
+# Subtest: adrenaline damage modifiers are applied
+ok 328 - adrenaline damage modifiers are applied
+  ---
+  duration_ms: 0.273695
+  type: 'test'
+  ...
+# Subtest: equipping item toasts stat changes
+ok 329 - equipping item toasts stat changes
+  ---
+  duration_ms: 1.010795
+  type: 'test'
+  ...
+# Subtest: EventBus exposes Dustland namespace
+ok 330 - EventBus exposes Dustland namespace
+  ---
+  duration_ms: 8.476944
+  type: 'test'
+  ...
+# Subtest: event flags watch and clear via Dustland namespace
+ok 331 - event flags watch and clear via Dustland namespace
+  ---
+  duration_ms: 2.059813
+  type: 'test'
+  ...
+# Subtest: test/fast-timeouts.js
+ok 53 - test/fast-timeouts.js
+  ---
+  duration_ms: 39.585963
+  type: 'test'
+  ...
+# Subtest: skips hosted config fetch for local file sessions
+ok 333 - skips hosted config fetch for local file sessions
+  ---
+  duration_ms: 1.945317
+  type: 'test'
+  ...
+# Subtest: hydrates firebase config and enables server mode by default
+ok 334 - hydrates firebase config and enables server mode by default
+  ---
+  duration_ms: 34.573329
+  type: 'test'
+  ...
+# Subtest: applies feature flag overrides from hosted config
+ok 335 - applies feature flag overrides from hosted config
+  ---
+  duration_ms: 0.702425
+  type: 'test'
+  ...
+# Subtest: flee success resolves combat
+ok 336 - flee success resolves combat
+  ---
+  duration_ms: 3.57284
+  type: 'test'
+  ...
+# Subtest: failed flee grants enemy attack and advances turn
+ok 337 - failed flee grants enemy attack and advances turn
+  ---
+  duration_ms: 1.462824
+  type: 'test'
+  ...
+# Subtest: revealFog stores gradient visibility and preserves the brightest value
+ok 338 - revealFog stores gradient visibility and preserves the brightest value
+  ---
+  duration_ms: 13.474761
+  type: 'test'
+  ...
+# Subtest: renderFog blends stored visibility with unseen darkness
+ok 339 - renderFog blends stored visibility with unseen darkness
+  ---
+  duration_ms: 5.438588
+  type: 'test'
+  ...
+# Subtest: font scale slider updates CSS variable and localStorage
+ok 340 - font scale slider updates CSS variable and localStorage
+  ---
+  duration_ms: 10.559453
+  type: 'test'
+  ...
+# Subtest: fuel cell pickup adds fuel instead of inventory
+ok 341 - fuel cell pickup adds fuel instead of inventory
+  ---
+  duration_ms: 4.421784
+  type: 'test'
+  ...
+# Subtest: custom fuel item adds specified fuel
+ok 342 - custom fuel item adds specified fuel
+  ---
+  duration_ms: 3.229592
+  type: 'test'
+  ...
+# Subtest: game state exposes shared data and updater
+ok 343 - game state exposes shared data and updater
+  ---
+  duration_ms: 7.92645
+  type: 'test'
+  ...
+# Subtest: glinting key triggers vision
+ok 344 - glinting key triggers vision
+  ---
+  duration_ms: 19.253542
+  type: 'test'
+  ...
+# Subtest: exit door remarks on glinting key
+ok 345 - exit door remarks on glinting key
+  ---
+  duration_ms: 13.924793
+  type: 'test'
+  ...
+# Subtest: golden module json exposes core features
+ok 346 - golden module json exposes core features
+  ---
+  duration_ms: 4.301113
+  type: 'test'
+  ...
+# Subtest: grenade consumable damages every enemy
+ok 347 - grenade consumable damages every enemy
+  ---
+  duration_ms: 26.551886
+  type: 'test'
+  ...
+# Subtest: grenade that overkills clears the encounter
+ok 348 - grenade that overkills clears the encounter
+  ---
+  duration_ms: 8.51939
+  type: 'test'
+  ...
+# Subtest: guard stance scales with level
+ok 349 - guard stance scales with level
+  ---
+  duration_ms: 1.395694
+  type: 'test'
+  ...
+# Subtest: guard overflow reflects damage to the attacker
+ok 350 - guard overflow reflects damage to the attacker
+  ---
+  duration_ms: 3.21214
+  type: 'test'
+  ...
+# Subtest: guard reflection can defeat an attacker
+ok 351 - guard reflection can defeat an attacker
+  ---
+  duration_ms: 1.250133
+  type: 'test'
+  ...
+# Subtest: hall door opens to world after 100 turns
+ok 352 - hall door opens to world after 100 turns
+  ---
+  duration_ms: 16.02777
+  type: 'test'
+  ...
+# Subtest: hp bar flashes, updates aria values, and body gains critical/out classes
+ok 353 - hp bar flashes, updates aria values, and body gains critical/out classes
+  ---
+  duration_ms: 114.794201
+  type: 'test'
+  ...
+# Subtest: damage flash disabled by default but can be enabled
+ok 354 - damage flash disabled by default but can be enabled
+  ---
+  duration_ms: 19.72761
+  type: 'test'
+  ...
+# Subtest: adrenaline tint and grayscale filters update based on config
+ok 355 - adrenaline tint and grayscale filters update based on config
+  ---
+  duration_ms: 19.320032
+  type: 'test'
+  ...
+# Subtest: low health applies a desaturation filter
+ok 356 - low health applies a desaturation filter
+  ---
+  duration_ms: 15.830999
+  type: 'test'
+  ...
+# Subtest: adrenaline pulse updates player fx with adr ratio
+ok 357 - adrenaline pulse updates player fx with adr ratio
+  ---
+  duration_ms: 28.928085
+  type: 'test'
+  ...
+# Subtest: adrenaline pulse ignores hp when active
+ok 358 - adrenaline pulse ignores hp when active
+  ---
+  duration_ms: 13.290152
+  type: 'test'
+  ...
+# Subtest: hydration meter shows droplets when not full
+ok 359 - hydration meter shows droplets when not full
+  ---
+  duration_ms: 112.615769
+  type: 'test'
+  ...
+# Subtest: hydration only drains in dry zones
+ok 360 - hydration only drains in dry zones
+  ---
+  duration_ms: 9.535141
+  type: 'test'
+  ...
+# Subtest: inventory add/remove effects
+ok 361 - inventory add/remove effects
+  ---
+  duration_ms: 8.375265
+  type: 'test'
+  ...
+# Subtest: better items are highlighted
+ok 362 - better items are highlighted
+  ---
+  duration_ms: 107.182646
+  type: 'test'
+  ...
+# Subtest: leader change re-evaluates highlights
+ok 363 - leader change re-evaluates highlights
+  ---
+  duration_ms: 22.292636
+  type: 'test'
+  ...
+# Subtest: party selection refreshes item highlights
+ok 364 - party selection refreshes item highlights
+  ---
+  duration_ms: 35.526718
+  type: 'test'
+  ...
+# Subtest: weapon suggestions respect member stats and weapon type
+ok 365 - weapon suggestions respect member stats and weapon type
+  ---
+  duration_ms: 33.576452
+  type: 'test'
+  ...
+# Subtest: role requirements are case-insensitive for equip highlights
+ok 366 - role requirements are case-insensitive for equip highlights
+  ---
+  duration_ms: 13.632604
+  type: 'test'
+  ...
+# Subtest: setLeader equips missing gear and suggests a single upgrade per slot
+ok 367 - setLeader equips missing gear and suggests a single upgrade per slot
+  ---
+  duration_ms: 18.515346
+  type: 'test'
+  ...
+# Subtest: strong weapons are level locked until requirement met
+ok 368 - strong weapons are level locked until requirement met
+  ---
+  duration_ms: 16.273716
+  type: 'test'
+  ...
+# Subtest: generator creates trinket with stat boost
+ok 369 - generator creates trinket with stat boost
+  ---
+  duration_ms: 1.532661
+  type: 'test'
+  ...
+# Subtest: generated items have unique ids
+ok 370 - generated items have unique ids
+  ---
+  duration_ms: 0.298623
+  type: 'test'
+  ...
+# Subtest: higher rank yields higher boost
+ok 371 - higher rank yields higher boost
+  ---
+  duration_ms: 0.323661
+  type: 'test'
+  ...
+# Subtest: pools and stat tables populated
+ok 372 - pools and stat tables populated
+  ---
+  duration_ms: 2.443933
+  type: 'test'
+  ...
+# Subtest: generate uses updated tables
+ok 373 - generate uses updated tables
+  ---
+  duration_ms: 0.415733
+  type: 'test'
+  ...
+# Subtest: narrative tag emits item:narrative
+ok 374 - narrative tag emits item:narrative
+  ---
+  duration_ms: 11.230771
+  type: 'test'
+  ...
+# Subtest: heal items with zero value are estimated
+ok 375 - heal items with zero value are estimated
+  ---
+  duration_ms: 1.524963
+  type: 'test'
+  ...
+# Subtest: mod items with zero value are estimated
+ok 376 - mod items with zero value are estimated
+  ---
+  duration_ms: 0.373553
+  type: 'test'
+  ...
+# Subtest: boost items with zero value are estimated
+ok 377 - boost items with zero value are estimated
+  ---
+  duration_ms: 0.214995
+  type: 'test'
+  ...
+# Subtest: jax repair module defines countdown
+ok 378 - jax repair module defines countdown
+  ---
+  duration_ms: 1.684053
+  type: 'test'
+  ...
+# Subtest: keyboard shortcuts toggle audio, mobile controls, and pickup
+ok 379 - keyboard shortcuts toggle audio, mobile controls, and pickup
+  ---
+  duration_ms: 13.100064
+  type: 'test'
+  ...
+# Subtest: ascii tiles lock when a skin supplies terrain art
+ok 380 - ascii tiles lock when a skin supplies terrain art
+  ---
+  duration_ms: 2.437208
+  type: 'test'
+  ...
+# Subtest: mergeBuildingState preserves module door positions
+ok 381 - mergeBuildingState preserves module door positions
+  ---
+  duration_ms: 3.091779
+  type: 'test'
+  ...
+# Subtest: load() resets invalid position to world
+ok 382 - load() resets invalid position to world
+  ---
+  duration_ms: 3.165707
+  type: 'test'
+  ...
+# Subtest: load() relocates dust_storm saves to world
+ok 383 - load() relocates dust_storm saves to world
+  ---
+  duration_ms: 0.658111
+  type: 'test'
+  ...
+# Subtest: setMap falls back to world when map missing
+ok 384 - setMap falls back to world when map missing
+  ---
+  duration_ms: 0.183459
+  type: 'test'
+  ...
+# Subtest: load() runs module postLoad hook
+ok 385 - load() runs module postLoad hook
+  ---
+  duration_ms: 3.054753
+  type: 'test'
+  ...
+# Subtest: load() infers trainer type for legacy saves
+ok 386 - load() infers trainer type for legacy saves
+  ---
+  duration_ms: 4.155173
+  type: 'test'
+  ...
+# Subtest: nextLoopPoint defaults to NPC position when no previous
+ok 387 - nextLoopPoint defaults to NPC position when no previous
+  ---
+  duration_ms: 1.900348
+  type: 'test'
+  ...
+# Subtest: nextLoopPoint stays within 10 squares of previous
+ok 388 - nextLoopPoint stays within 10 squares of previous
+  ---
+  duration_ms: 0.331935
+  type: 'test'
+  ...
+# Subtest: lootbox demo startGame runs postLoad before applying module
+ok 389 - lootbox demo startGame runs postLoad before applying module
+  ---
+  duration_ms: 3.728122
+  type: 'test'
+  ...
+# Subtest: luck boosts healing potions
+ok 390 - luck boosts healing potions
+  ---
+  duration_ms: 1.945306
+  type: 'test'
+  ...
+# Subtest: luck can boost damage dealt
+ok 391 - luck can boost damage dealt
+  ---
+  duration_ms: 3.765519
+  type: 'test'
+  ...
+# Subtest: luck can reduce damage taken
+ok 392 - luck can reduce damage taken
+  ---
+  duration_ms: 0.936787
+  type: 'test'
+  ...
+# Subtest: extreme luck can instantly defeat enemies
+ok 393 - extreme luck can instantly defeat enemies
+  ---
+  duration_ms: 2.180256
+  type: 'test'
+  ...
+# Subtest: tileChars and jitterColor provide ascii and color variation
+ok 394 - tileChars and jitterColor provide ascii and color variation
+  ---
+  duration_ms: 10.342519
+  type: 'test'
+  ...
+# Subtest: memory tape records and plays back
+ok 395 - memory tape records and plays back
+  ---
+  duration_ms: 3.113161
+  type: 'test'
+  ...
+# Subtest: mobile buttons are non-selectable and glow on press
+ok 396 - mobile buttons are non-selectable and glow on press
+  ---
+  duration_ms: 14.162384
+  type: 'test'
+  ...
+# Subtest: mobile arrows navigate dialog when overlay shown
+ok 397 - mobile arrows navigate dialog when overlay shown
+  ---
+  duration_ms: 3.488926
+  type: 'test'
+  ...
+# Subtest: mobile arrows navigate combat menu when in combat
+ok 398 - mobile arrows navigate combat menu when in combat
+  ---
+  duration_ms: 4.696151
+  type: 'test'
+  ...
+# Subtest: mobile A selects combat option when in combat
+ok 399 - mobile A selects combat option when in combat
+  ---
+  duration_ms: 2.171325
+  type: 'test'
+  ...
+# Subtest: mobile B closes dialog when overlay shown
+ok 400 - mobile B closes dialog when overlay shown
+  ---
+  duration_ms: 2.211675
+  type: 'test'
+  ...
+# Subtest: mobile B flees combat
+ok 401 - mobile B flees combat
+  ---
+  duration_ms: 2.397616
+  type: 'test'
+  ...
+# Subtest: mobile A advances character creator
+ok 402 - mobile A advances character creator
+  ---
+  duration_ms: 4.021432
+  type: 'test'
+  ...
+# Subtest: mobile B goes back in character creator
+ok 403 - mobile B goes back in character creator
+  ---
+  duration_ms: 1.980034
+  type: 'test'
+  ...
+# Subtest: module-json export/import round trip
+ok 404 - module-json export/import round trip
+  ---
+  duration_ms: 105.229415
+  type: 'test'
+  ...
+# Subtest: engine waits for module picker before boot
+ok 405 - engine waits for module picker before boot
+  ---
+  duration_ms: 104.876253
+  type: 'test'
+  ...
+# Subtest: module picker shows title and dust background
+ok 406 - module picker shows title and dust background
+  ---
+  duration_ms: 1.474516
+  type: 'test'
+  ...
+# Subtest: cloud login row stays hidden when server mode disabled
+ok 407 - cloud login row stays hidden when server mode disabled
+  ---
+  duration_ms: 0.213961
+  type: 'test'
+  ...
+# Subtest: adventure kit glyph navigates to editor
+ok 408 - adventure kit glyph navigates to editor
+  ---
+  duration_ms: 0.21639
+  type: 'test'
+  ...
+# Subtest: multiplayer glyph navigates to multiplayer
+ok 409 - multiplayer glyph navigates to multiplayer
+  ---
+  duration_ms: 0.422457
+  type: 'test'
+  ...
+# Subtest: particles respawn at edges after aging
+ok 410 - particles respawn at edges after aging
+  ---
+  duration_ms: 0.526474
+  type: 'test'
+  ...
+# Subtest: arrow keys cycle module selection
+ok 411 - arrow keys cycle module selection
+  ---
+  duration_ms: 0.438249
+  type: 'test'
+  ...
+# Subtest: module picker limits visible options and enables scrolling
+ok 412 - module picker limits visible options and enables scrolling
+  ---
+  duration_ms: 0.305549
+  type: 'test'
+  ...
+# Subtest: broadcast fragments are surfaced inside Dustland instead of picker entries
+ok 413 - broadcast fragments are surfaced inside Dustland instead of picker entries
+  ---
+  duration_ms: 0.217751
+  type: 'test'
+  ...
+# Subtest: pit module points to pit-bas
+ok 414 - pit module points to pit-bas
+  ---
+  duration_ms: 0.468489
+  type: 'test'
+  ...
+# Subtest: other module points to other-bas
+ok 415 - other module points to other-bas
+  ---
+  duration_ms: 0.619684
+  type: 'test'
+  ...
+# Subtest: two-worlds module points to entry script
+ok 416 - two-worlds module points to entry script
+  ---
+  duration_ms: 0.272745
+  type: 'test'
+  ...
+# Subtest: true-dust module points to entry script
+ok 417 - true-dust module points to entry script
+  ---
+  duration_ms: 0.274322
+  type: 'test'
+  ...
+# Subtest: host module click broadcasts selection
+ok 418 - host module click broadcasts selection
+  ---
+  duration_ms: 0.994073
+  type: 'test'
+  ...
+# Subtest: bridge relays host selection to joiner module picker
+ok 419 - bridge relays host selection to joiner module picker
+  ---
+  duration_ms: 23.258819
+  type: 'test'
+  ...
+# Subtest: enter key loads selected module
+ok 420 - enter key loads selected module
+  ---
+  duration_ms: 0.359009
+  type: 'test'
+  ...
+# Subtest: loadModule preserves existing save data
+ok 421 - loadModule preserves existing save data
+  ---
+  duration_ms: 0.429785
+  type: 'test'
+  ...
+# Subtest: load button hidden until module loads
+ok 422 - load button hidden until module loads
+  ---
+  duration_ms: 0.124999
+  type: 'test'
+  ...
+# Subtest: client role waits for host selection broadcast
+ok 423 - client role waits for host selection broadcast
+  ---
+  duration_ms: 5.723661
+  type: 'test'
+  ...
+# ../scripts/module-picker.js:631
+#         ackBtn.setAttribute('aria-label', 'Adventure Construction Kit');
+#                ^
+# TypeError: ackBtn.setAttribute is not a function
+#     at showModulePicker (../scripts/module-picker.js:631:16)
+#     at ../scripts/module-picker.js:873:5
+#     at ../scripts/module-picker.js:874:3
+#     at Script.runInThisContext (node:vm:137:12)
+#     at Object.runInThisContext (node:vm:317:38)
+#     at file:///app/test/module-reload.test.js:82:4
+# Node.js v22.22.0
+# Subtest: test/module-reload.test.js
+not ok 88 - test/module-reload.test.js
+  ---
+  duration_ms: 64.39132
+  type: 'test'
+  location: '/app/test/module-reload.test.js:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: NullModuleRepository saveDraft keeps provided module id
+ok 425 - NullModuleRepository saveDraft keeps provided module id
+  ---
+  duration_ms: 5.75495
+  type: 'test'
+  ...
+# Subtest: writeWithDetail reports permission errors with payload preview
+ok 426 - writeWithDetail reports permission errors with payload preview
+  ---
+  duration_ms: 1.596028
+  type: 'test'
+  ...
+# Subtest: resolveUserByEmail falls back to lower-cased email when functions are missing
+ok 427 - resolveUserByEmail falls back to lower-cased email when functions are missing
+  ---
+  duration_ms: 0.464838
+  type: 'test'
+  ...
+# Subtest: mapDocToSummary applies defaults when fields are missing
+ok 428 - mapDocToSummary applies defaults when fields are missing
+  ---
+  duration_ms: 1.477835
+  type: 'test'
+  ...
+# Subtest: test/module-summary.test.js
+ok 90 - test/module-summary.test.js
+  ---
+  duration_ms: 48.913827
+  type: 'test'
+  ...
+# Subtest: read and write json module
+ok 430 - read and write json module
+  ---
+  duration_ms: 2.252003
+  type: 'test'
+  ...
+# Subtest: read and write js module
+ok 431 - read and write js module
+  ---
+  duration_ms: 1.302141
+  type: 'test'
+  ...
+# Subtest: add and edit npc via cli
+ok 432 - add and edit npc via cli
+  ---
+  duration_ms: 101.682288
+  type: 'test'
+  ...
+# Subtest: add and edit zone via cli
+ok 433 - add and edit zone via cli
+  ---
+  duration_ms: 91.889227
+  type: 'test'
+  ...
+# Subtest: movement exposes Dustland namespace
+ok 434 - movement exposes Dustland namespace
+  ---
+  duration_ms: 9.785056
+  type: 'test'
+  ...
+# Subtest: movement reads zones added after load
+ok 435 - movement reads zones added after load
+  ---
+  duration_ms: 10.016256
+  type: 'test'
+  ...
+# Subtest: combat events propagate between clients
+ok 436 - combat events propagate between clients
+  ---
+  duration_ms: 9.523596
+  type: 'test'
+  ...
+# Subtest: start host surfaces errors and re-enables button
+ok 437 - start host surfaces errors and re-enables button
+  ---
+  duration_ms: 4.14361
+  type: 'test'
+  ...
+# Subtest: generate answer handles invalid host code
+ok 438 - generate answer handles invalid host code
+  ---
+  duration_ms: 1.554227
+  type: 'test'
+  ...
+# Subtest: host can juggle multiple invites
+ok 439 - host can juggle multiple invites
+  ---
+  duration_ms: 3.81638
+  type: 'test'
+  ...
+# Subtest: movement events propagate between clients
+ok 440 - movement events propagate between clients
+  ---
+  duration_ms: 10.27605
+  type: 'test'
+  ...
+# Subtest: remote party positions sync to peers
+ok 441 - remote party positions sync to peers
+  ---
+  duration_ms: 4.641798
+  type: 'test'
+  ...
+# Subtest: multiplayer presence events announce joins and closes
+ok 442 - multiplayer presence events announce joins and closes
+  ---
+  duration_ms: 15.869674
+  type: 'test'
+  ...
+# Subtest: world state broadcasts to clients
+ok 443 - world state broadcasts to clients
+  ---
+  duration_ms: 18.42868
+  type: 'test'
+  ...
+# Subtest: music demo includes chill mood
+ok 444 - music demo includes chill mood
+  ---
+  duration_ms: 3.088267
+  type: 'test'
+  ...
+# Subtest: dialog and combat emit music mood events
+ok 445 - dialog and combat emit music mood events
+  ---
+  duration_ms: 136.131503
+  type: 'test'
+  ...
+# Subtest: music seed updates via event bus
+ok 446 - music seed updates via event bus
+  ---
+  duration_ms: 1.304448
+  type: 'test'
+  ...
+# Subtest: setSeed and instrument hooks
+ok 447 - setSeed and instrument hooks
+  ---
+  duration_ms: 1.243548
+  type: 'test'
+  ...
+# Subtest: music exposes enable toggle and manual mood
+ok 448 - music exposes enable toggle and manual mood
+  ---
+  duration_ms: 0.971244
+  type: 'test'
+  ...
+# Subtest: clampMidiToScale snaps notes to scale
+ok 449 - clampMidiToScale snaps notes to scale
+  ---
+  duration_ms: 9.01694
+  type: 'test'
+  ...
+# Subtest: zone drains HP and warps on wipe
+ok 450 - zone drains HP and warps on wipe
+  ---
+  duration_ms: 22.308143
+  type: 'test'
+  ...
+# Subtest: mask negates zone damage
+ok 451 - mask negates zone damage
+  ---
+  duration_ms: 7.577251
+  type: 'test'
+  ...
+# Subtest: equipped mask negates zone damage
+ok 452 - equipped mask negates zone damage
+  ---
+  duration_ms: 6.282853
+  type: 'test'
+  ...
+# [Nano] Script loaded and initializing public API...
+# [Nano] Feature supported: true
+# [Nano] availability() returned: available
+# [Nano] Creating session (model already available)...
+# [Nano] Starting background worker pump...
+# [Nano] queueForNPC called: npcId=npc1, nodeId=start, reason=test
+# [Nano] Job queued. Queue length now: 1
+# [Nano] Processing job: { npcId: 'npc1', nodeId: 'start', reason: 'test', when: 1769404966933 }
+# [Nano] Building prompt for npcId: npc1 nodeId: start
+# [Nano] Prompt built:
+# You write in-universe dialog for DUSTLAND — a rusted, sun-blasted world.
+#   Voice must match the NPC. Dry humor, 90s CRPG bite, hints of hope.
+#   Each line: 4–14 word complete sentences, ≤80 chars. No quotes. No leading dashes/bullets.
+#   Stay in-world. Avoid modern real-world references or idioms (e.g., saunas, airports, brand names, bar talk).
+#   Do NOT include the NPC’s name in any line. No stage directions.
+# NPC:
+# - id: npc1
+# - name: Scrap Dealer
+#   - title: Trader
+#   - description: n/a
+#   - text: Greetings
+#   CURRENT UI CHOICES SHOWN TO PLAYER (do not duplicate these labels):
+#   - (none)
+#   Player:
+#   - party leader: Hero
+# - leader stats: {"STR":5}
+# - inventory: empty
+# - completed quests: none
+# Context:
+# - dialog node: start
+# - If inventory/quests are relevant, reference them naturally.
+# - Avoid generic greetings or “you’re new here” clichés.
+# - Do not repeat lines previously used for this NPC/node.
+# CHOICE SCHEMA:
+# - Skill check format: <label>|<STAT>|<DC>|<Reward>|<Success>|<Failure>
+# - Only create a skill check if the reward is XP or an item.
+# - STAT in {STR, AGI, INT, PER, LCK, CHA}; DC 6–12.
+# - Reward must be "XP N" or an item name; otherwise, omit the skill check.
+# - Simple dialog format (no roll): <label>|<Response>
+# - Success/failure/response lines follow the same style rules as dialog lines.
+#  - Output 0–2 choices total. If no useful option fits, leave the Choices section empty.
+# - Do not duplicate any label already visible to the player.
+# OUTPUT EXAMPLES (FOLLOW FORMAT EXACTLY; THESE ARE EXAMPLES, NOT TO BE REPEATED):
+# Lines:
+# Pump coughs at dusk but still runs.
+# Keep the gears oiled and it behaves.
+# If it wheezes, kick the intake gently.
+# Choices:
+# Check the intake|INT|9|XP 10|Mesh clears and hum steadies.|You drop a bolt, cursing softly.
+# Ask about spare parts|Any for trade?|She shakes her head and turns away.
+# Lines:
+# Tolls keep the road quiet and safe.
+# Pay the price or pay in blood.
+# Your choice decides your luck today.
+# Choices:
+# Intimidate her guard|STR|10|XP 12|Guard backs off, eyes wide.|He laughs and calls your bluff.
+# Ask for mercy|Can you cut the toll?|She snorts but lets you pass.
+# Lines:
+# Road’s quiet, but don’t trust quiet.
+# Keep your head low past the ruins.
+# Trade if you must; run if you can’t.
+# Choices:
+# Check the intake|INT|9|XP 10|You tweak the valves and it purrs.|Steam hisses and you flinch back.
+# Offer spare gasket|CHA|8|Valve|She smiles and pockets the part.|She waves you off, unimpressed.
+# EXACT OUTPUT FORMAT:
+# Lines:
+# <up to 3 short dialog lines, no name/quotes/bullets>
+# Choices:
+# <label>|<STAT>|<DC>|<Reward>|<Success>|<Failure>
+# <label>|<Response>
+# [Nano] returned:
+# Lines:
+# Rust bites every gear, but we endure.
+# Keep your scrap dry.
+# Never trade hope for rust.
+# Choices:
+# Ask about wares|Got anything rare?
+# Inspect the stall|INT|8|XP 5|You spot a hidden coil.|You find only dust.
+# Produced: [
+#   'Rust bites every gear, but we endure.',
+#   'Keep your scrap dry.',
+#   'Never trade hope for rust.'
+# ] [
+#   { label: 'Ask about wares', response: 'Got anything rare?' },
+#   {
+#     label: 'Inspect the stall',
+#     check: { stat: 'INT', dc: 8 },
+#     reward: 'XP 5',
+#     success: 'You spot a hidden coil.',
+#     failure: 'You find only dust.'
+#   }
+# ]
+# [Nano] linesFor called: npcId=npc1, nodeId=start
+# [Nano] Feature supported: true
+# [Nano] availability() returned: available
+# [Nano] Creating session (model already available)...
+# [Nano] Starting background worker pump...
+# [Nano] queueForNPC called: npcId=npc1, nodeId=bogus, reason=test
+# [Nano] Job queued. Queue length now: 1
+# [Nano] Processing job: { npcId: 'npc1', nodeId: 'bogus', reason: 'test', when: 1769404967039 }
+# [Nano] Building prompt for npcId: npc1 nodeId: bogus
+# [Nano] Node not found: bogus
+# [Nano] No prompt built; skipping job.
+# Subtest: NanoDialog generates lines and choices
+ok 453 - NanoDialog generates lines and choices
+  ---
+  duration_ms: 109.335861
+  type: 'test'
+  ...
+# [Nano] linesFor called: npcId=npc1, nodeId=bogus
+# [Nano] Feature supported: true
+# [Nano] availability() returned: available
+# [Nano] Creating session (model already available)...
+# [Nano] Starting background worker pump...
+# [Nano] prompt palette:
+# Emojis: 🏝 sand, 🪨 rock, 🌊 water, 🌿 brush, 🛣 road, 🏚 ruin, 🧱 wall, ⬜ floor, 🚪 door, 🏠 building. These are map tiles in a 2D game world.
+# Examples of 16x16 emoji blocks:
+# New 16x16 block:
+# [Nano] returned:
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# [Nano] Feature supported: true
+# [Nano] availability() returned: available
+# [Nano] Creating session (model already available)...
+# [Nano] Starting background worker pump...
+# [Nano] prompt palette:
+# Emojis: 🏝 sand, 🪨 rock, 🌊 water, 🌿 brush, 🛣 road, 🏚 ruin, 🧱 wall, ⬜ floor, 🚪 door, 🏠 building. These are map tiles in a 2D game world.
+# Examples of 16x16 emoji blocks:
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# 🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨🪨
+# New 16x16 block:
+# [Nano] returned:
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# 🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝🏝
+# [Nano] Feature supported: false
+# [Nano] Prompt API not supported in this browser.
+# Subtest: NanoDialog skips missing dialog nodes
+ok 454 - NanoDialog skips missing dialog nodes
+  ---
+  duration_ms: 102.454582
+  type: 'test'
+  ...
+# Subtest: NanoPalette generates a block
+ok 455 - NanoPalette generates a block
+  ---
+  duration_ms: 1.50874
+  type: 'test'
+  ...
+# Subtest: NanoPalette uses stamp emoji examples by default
+ok 456 - NanoPalette uses stamp emoji examples by default
+  ---
+  duration_ms: 0.854089
+  type: 'test'
+  ...
+# Subtest: hides indicator when init fails
+ok 457 - hides indicator when init fails
+  ---
+  duration_ms: 0.604169
+  type: 'test'
+  ...
+# Subtest: auto combat NPCs are red
+ok 458 - auto combat NPCs are red
+  ---
+  duration_ms: 1.181864
+  type: 'test'
+  ...
+# Subtest: non-auto hostile NPCs are pink
+ok 459 - non-auto hostile NPCs are pink
+  ---
+  duration_ms: 0.229935
+  type: 'test'
+  ...
+# [Path] Script loaded
+# Subtest: locked door blocks movement and path
+ok 460 - locked door blocks movement and path
+  ---
+  duration_ms: 4.875867
+  type: 'test'
+  ...
+# Subtest: unlocked door allows movement and path
+ok 461 - unlocked door allows movement and path
+  ---
+  duration_ms: 0.772785
+  type: 'test'
+  ...
+# Subtest: populateMapDropdown lists maps and selects current
+ok 462 - populateMapDropdown lists maps and selects current
+  ---
+  duration_ms: 12.024323
+  type: 'test'
+  ...
+# Subtest: npc memory stores values
+ok 463 - npc memory stores values
+  ---
+  duration_ms: 3.637943
+  type: 'test'
+  ...
+# [Path] Script loaded
+# Subtest: NPC follows waypoints with capped speed and waits when close
+ok 464 - NPC follows waypoints with capped speed and waits when close
+  ---
+  duration_ms: 7.022592
+  type: 'test'
+  ...
+# Subtest: NPC re-pathfinds after being moved
+ok 465 - NPC re-pathfinds after being moved
+  ---
+  duration_ms: 3.144185
+  type: 'test'
+  ...
+# Subtest: NPC loops back to start after final waypoint
+ok 466 - NPC loops back to start after final waypoint
+  ---
+  duration_ms: 0.542312
+  type: 'test'
+  ...
+# Subtest: collectNPCFromForm uses patrol checkbox for loops
+ok 467 - collectNPCFromForm uses patrol checkbox for loops
+  ---
+  duration_ms: 11.152329
+  type: 'test'
+  ...
+# Subtest: collectNPCFromForm reads loot chance
+ok 468 - collectNPCFromForm reads loot chance
+  ---
+  duration_ms: 6.220834
+  type: 'test'
+  ...
+# Subtest: collectNPCFromForm reads workbench checkbox
+ok 469 - collectNPCFromForm reads workbench checkbox
+  ---
+  duration_ms: 5.469083
+  type: 'test'
+  ...
+# Subtest: collectEncounter reads loot chance
+ok 470 - collectEncounter reads loot chance
+  ---
+  duration_ms: 4.901404
+  type: 'test'
+  ...
+# Subtest: collectTemplate reads loot chance
+ok 471 - collectTemplate reads loot chance
+  ---
+  duration_ms: 5.26506
+  type: 'test'
+  ...
+# Subtest: collectTemplate clamps challenge to 1-10
+ok 472 - collectTemplate clamps challenge to 1-10
+  ---
+  duration_ms: 4.866011
+  type: 'test'
+  ...
+# Subtest: NPC serves quest list sequentially
+ok 473 - NPC serves quest list sequentially
+  ---
+  duration_ms: 7.150839
+  type: 'test'
+  ...
+# Subtest: NPC advances quest dialog with quest chain
+ok 474 - NPC advances quest dialog with quest chain
+  ---
+  duration_ms: 1.924971
+  type: 'test'
+  ...
+# Subtest: NPC Scaling
+    # Subtest: scaleEnemy applies level-based scaling
+    ok 1 - scaleEnemy applies level-based scaling
+      ---
+      duration_ms: 1.187145
+      type: 'test'
+      ...
+    # Subtest: scaleEnemyWithPreset uses named build
+    ok 2 - scaleEnemyWithPreset uses named build
+      ---
+      duration_ms: 0.283314
+      type: 'test'
+      ...
+    1..2
+ok 475 - NPC Scaling
+  ---
+  duration_ms: 11.503297
+  type: 'test'
+  ...
+# Subtest: NPC Templates legend includes tooltip
+ok 476 - NPC Templates legend includes tooltip
+  ---
+  duration_ms: 281.093443
+  type: 'test'
+  ...
+# Subtest: collectNPCFromForm captures trainer type
+ok 477 - collectNPCFromForm captures trainer type
+  ---
+  duration_ms: 10.524839
+  type: 'test'
+  ...
+# Subtest: NpcWizard commit builds module data
+ok 478 - NpcWizard commit builds module data
+  ---
+  duration_ms: 13.558696
+  type: 'test'
+  ...
+# Subtest: NpcWizard config wires steps
+ok 479 - NpcWizard config wires steps
+  ---
+  duration_ms: 12.605796
+  type: 'test'
+  ...
+# Subtest: nyx dialog branches deeply
+ok 480 - nyx dialog branches deeply
+  ---
+  duration_ms: 5.900302
+  type: 'test'
+  ...
+# Subtest: office module boards castle and unboards via dialog
+ok 481 - office module boards castle and unboards via dialog
+  ---
+  duration_ms: 2.043637
+  type: 'test'
+  ...
+# Subtest: startGame preserves generated world when applying module
+ok 482 - startGame preserves generated world when applying module
+  ---
+  duration_ms: 0.448036
+  type: 'test'
+  ...
+# Subtest: office module places Boots of Speed near forest entry
+ok 483 - office module places Boots of Speed near forest entry
+  ---
+  duration_ms: 0.392974
+  type: 'test'
+  ...
+# Subtest: office module defines a powerful maze sword
+ok 484 - office module defines a powerful maze sword
+  ---
+  duration_ms: 0.460507
+  type: 'test'
+  ...
+# Subtest: office module uses object visuals for elevator and vending machine
+ok 485 - office module uses object visuals for elevator and vending machine
+  ---
+  duration_ms: 0.396242
+  type: 'test'
+  ...
+# Subtest: security guard persuasion can be retried
+ok 486 - security guard persuasion can be retried
+  ---
+  duration_ms: 0.633373
+  type: 'test'
+  ...
+# Subtest: startGame grants 10 scrap
+ok 487 - startGame grants 10 scrap
+  ---
+  duration_ms: 1.109355
+  type: 'test'
+  ...
+# Subtest: office worker lends scrap when low and missing badge
+ok 488 - office worker lends scrap when low and missing badge
+  ---
+  duration_ms: 1.155454
+  type: 'test'
+  ...
+# Subtest: office worker hides loan if you have enough scrap
+ok 489 - office worker hides loan if you have enough scrap
+  ---
+  duration_ms: 0.738517
+  type: 'test'
+  ...
+# Subtest: vending machine buys access card for scrap
+ok 490 - vending machine buys access card for scrap
+  ---
+  duration_ms: 102.479002
+  type: 'test'
+  ...
+# Subtest: vending machine sells Dusty Candy Bar
+ok 491 - vending machine sells Dusty Candy Bar
+  ---
+  duration_ms: 16.464461
+  type: 'test'
+  ...
+# Subtest: office worker hides loan if you still have your badge
+ok 492 - office worker hides loan if you still have your badge
+  ---
+  duration_ms: 0.655447
+  type: 'test'
+  ...
+# Subtest: openCreator does nothing without DOM
+ok 493 - openCreator does nothing without DOM
+  ---
+  duration_ms: 71.054729
+  type: 'test'
+  ...
+# Subtest: other-bas module exposes listing and start map
+ok 494 - other-bas module exposes listing and start map
+  ---
+  duration_ms: 1.185201
+  type: 'test'
+  ...
+# Subtest: other-bas module includes rooms and items
+ok 495 - other-bas module includes rooms and items
+  ---
+  duration_ms: 0.262094
+  type: 'test'
+  ...
+# Subtest: panel toggle shows and hides panel
+ok 496 - panel toggle shows and hides panel
+  ---
+  duration_ms: 10.477757
+  type: 'test'
+  ...
+# Subtest: b key closes panel on mobile
+ok 497 - b key closes panel on mobile
+  ---
+  duration_ms: 2.783349
+  type: 'test'
+  ...
+# Subtest: camera recenters on party collapse
+ok 498 - camera recenters on party collapse
+  ---
+  duration_ms: 20.706651
+  type: 'test'
+  ...
+# Subtest: party panels handle click and focus selection
+ok 499 - party panels handle click and focus selection
+  ---
+  duration_ms: 13.597358
+  type: 'test'
+  ...
+# Subtest: renderParty shows single frame from sprite sheet
+ok 500 - renderParty shows single frame from sprite sheet
+  ---
+  duration_ms: 2.606226
+  type: 'test'
+  ...
+# Subtest: party prevents duplicates and can reorder members
+ok 501 - party prevents duplicates and can reorder members
+  ---
+  duration_ms: 2.022127
+  type: 'test'
+  ...
+# [Path] Script loaded
+# Subtest: PathQueue finds a path
+ok 502 - PathQueue finds a path
+  ---
+  duration_ms: 8.439701
+  type: 'test'
+  ...
+# Subtest: PathQueue reuses cached paths
+ok 503 - PathQueue reuses cached paths
+  ---
+  duration_ms: 1.792109
+  type: 'test'
+  ...
+# Subtest: PathQueue evicts oldest cache entries
+ok 504 - PathQueue evicts oldest cache entries
+  ---
+  duration_ms: 328.897076
+  type: 'test'
+  ...
+# Subtest: Persist LLM button hidden until Nano is ready
+ok 505 - Persist LLM button hidden until Nano is ready
+  ---
+  duration_ms: 11.485998
+  type: 'test'
+  ...
+# Subtest: persona STR mod increases attack damage
+ok 506 - persona STR mod increases attack damage
+  ---
+  duration_ms: 24.77297
+  type: 'test'
+  ...
+# Subtest: applyPersona emits equip and unequip
+ok 507 - applyPersona emits equip and unequip
+  ---
+  duration_ms: 3.630661
+  type: 'test'
+  ...
+# Subtest: renderParty reflects persona portrait and label
+ok 508 - renderParty reflects persona portrait and label
+  ---
+  duration_ms: 18.630911
+  type: 'test'
+  ...
+# Subtest: renderParty uses module persona overrides
+ok 509 - renderParty uses module persona overrides
+  ---
+  duration_ms: 11.162993
+  type: 'test'
+  ...
+# Subtest: mask cache drop registers persona
+ok 510 - mask cache drop registers persona
+  ---
+  duration_ms: 2.385316
+  type: 'test'
+  ...
+# Subtest: persona mods apply combat bonuses
+ok 511 - persona mods apply combat bonuses
+  ---
+  duration_ms: 76.963837
+  type: 'test'
+  ...
+# Subtest: applyPersona assigns persona to party member
+ok 512 - applyPersona assigns persona to party member
+  ---
+  duration_ms: 78.331173
+  type: 'test'
+  ...
+# Subtest: personas register alternate masks
+ok 513 - personas register alternate masks
+  ---
+  duration_ms: 75.639507
+  type: 'test'
+  ...
+# Subtest: pit bas module initializes rooms and items
+ok 514 - pit bas module initializes rooms and items
+  ---
+  duration_ms: 6.91539
+  type: 'test'
+  ...
+# Subtest: pit bas portals are not on walls
+ok 515 - pit bas portals are not on walls
+  ---
+  duration_ms: 1.6946
+  type: 'test'
+  ...
+# Subtest: pit bas module logs entry message
+ok 516 - pit bas module logs entry message
+  ---
+  duration_ms: 1.662851
+  type: 'test'
+  ...
+# Subtest: pit bas module defines basic npcs
+ok 517 - pit bas module defines basic npcs
+  ---
+  duration_ms: 3.545604
+  type: 'test'
+  ...
+# Subtest: merchant quest requires all treasures
+ok 518 - merchant quest requires all treasures
+  ---
+  duration_ms: 6.445683
+  type: 'test'
+  ...
+# Subtest: lightning room zaps without rod
+ok 519 - lightning room zaps without rod
+  ---
+  duration_ms: 1.645507
+  type: 'test'
+  ...
+# Subtest: lightning rod deflects bolt
+ok 520 - lightning rod deflects bolt
+  ---
+  duration_ms: 1.575055
+  type: 'test'
+  ...
+# Subtest: river bed requires air tanks
+ok 521 - river bed requires air tanks
+  ---
+  duration_ms: 1.59193
+  type: 'test'
+  ...
+# Subtest: dark rooms can trigger grue attacks
+ok 522 - dark rooms can trigger grue attacks
+  ---
+  duration_ms: 1.876486
+  type: 'test'
+  ...
+# Subtest: light prevents grue attacks
+ok 523 - light prevents grue attacks
+  ---
+  duration_ms: 1.796598
+  type: 'test'
+  ...
+# Subtest: placement check passes for valid module
+ok 524 - placement check passes for valid module
+  ---
+  duration_ms: 48.565313
+  type: 'test'
+  ...
+# Subtest: placement check fails for wall placement
+ok 525 - placement check fails for wall placement
+  ---
+  duration_ms: 48.218857
+  type: 'test'
+  ...
+# Subtest: poison deals damage over time
+ok 526 - poison deals damage over time
+  ---
+  duration_ms: 1.63757
+  type: 'test'
+  ...
+# Subtest: reapplying poison extends duration instead of stacking
+ok 527 - reapplying poison extends duration instead of stacking
+  ---
+  duration_ms: 0.271964
+  type: 'test'
+  ...
+# Subtest: cleanse item clears poison
+ok 528 - cleanse item clears poison
+  ---
+  duration_ms: 1.952538
+  type: 'test'
+  ...
+# Subtest: poison immunity prevents poison application
+ok 529 - poison immunity prevents poison application
+  ---
+  duration_ms: 1.184962
+  type: 'test'
+  ...
+# Subtest: walking ticks poison damage outside combat
+ok 530 - walking ticks poison damage outside combat
+  ---
+  duration_ms: 9.273691
+  type: 'test'
+  ...
+# Subtest: portal layout arranges connected interiors on the world map
+ok 531 - portal layout arranges connected interiors on the world map
+  ---
+  duration_ms: 7.000986
+  type: 'test'
+  ...
+# Subtest: portal layer renders above items
+ok 532 - portal layer renders above items
+  ---
+  duration_ms: 13.800212
+  type: 'test'
+  ...
+# Subtest: creator assigns chosen portrait to member
+ok 533 - creator assigns chosen portrait to member
+  ---
+  duration_ms: 126.102961
+  type: 'test'
+  ...
+# Subtest: creator supports highest portrait id
+ok 534 - creator supports highest portrait id
+  ---
+  duration_ms: 16.981365
+  type: 'test'
+  ...
+# Subtest: combat uses member portrait
+ok 535 - combat uses member portrait
+  ---
+  duration_ms: 16.838275
+  type: 'test'
+  ...
+# Subtest: creator picks random default portrait
+ok 536 - creator picks random default portrait
+  ---
+  duration_ms: 14.411165
+  type: 'test'
+  ...
+# Subtest: named NPC keeps consistent 2x2 frame
+ok 537 - named NPC keeps consistent 2x2 frame
+  ---
+  duration_ms: 19.072306
+  type: 'test'
+  ...
+# Subtest: generic portrait keeps frame once chosen
+ok 538 - generic portrait keeps frame once chosen
+  ---
+  duration_ms: 18.264505
+  type: 'test'
+  ...
+# Subtest: setPortraitDiv shows prompt when missing portrait
+ok 539 - setPortraitDiv shows prompt when missing portrait
+  ---
+  duration_ms: 9.484116
+  type: 'test'
+  ...
+# Subtest: generateHeightField is deterministic
+ok 540 - generateHeightField is deterministic
+  ---
+  duration_ms: 3.375402
+  type: 'test'
+  ...
+# Subtest: generateHeightField supports radial falloff
+ok 541 - generateHeightField supports radial falloff
+  ---
+  duration_ms: 0.756803
+  type: 'test'
+  ...
+# Subtest: heightFieldToTiles maps heights to elevation types
+ok 542 - heightFieldToTiles maps heights to elevation types
+  ---
+  duration_ms: 0.339584
+  type: 'test'
+  ...
+# Subtest: refineTiles smooths stray cells
+ok 543 - refineTiles smooths stray cells
+  ---
+  duration_ms: 0.602749
+  type: 'test'
+  ...
+# Subtest: refineTiles removes isolated land
+ok 544 - refineTiles removes isolated land
+  ---
+  duration_ms: 0.324676
+  type: 'test'
+  ...
+# Subtest: connectRegionCenters plans bridges between islands
+ok 545 - connectRegionCenters plans bridges between islands
+  ---
+  duration_ms: 1.693745
+  type: 'test'
+  ...
+# Subtest: connectRegionCenters synthesizes anchors on single landmass
+ok 546 - connectRegionCenters synthesizes anchors on single landmass
+  ---
+  duration_ms: 2.541201
+  type: 'test'
+  ...
+# Subtest: findRegionCenters subdivides large landmass
+ok 547 - findRegionCenters subdivides large landmass
+  ---
+  duration_ms: 0.719448
+  type: 'test'
+  ...
+# Subtest: carveRoads paints paths and records crossroads
+ok 548 - carveRoads paints paths and records crossroads
+  ---
+  duration_ms: 0.958775
+  type: 'test'
+  ...
+# Subtest: scatterRuins respects spacing and terrain
+ok 549 - scatterRuins respects spacing and terrain
+  ---
+  duration_ms: 1.527912
+  type: 'test'
+  ...
+# Subtest: scatterRuins spreads hubs apart
+ok 550 - scatterRuins spreads hubs apart
+  ---
+  duration_ms: 9.790601
+  type: 'test'
+  ...
+# Subtest: generateProceduralMap returns grid of requested size
+ok 551 - generateProceduralMap returns grid of requested size
+  ---
+  duration_ms: 14.246657
+  type: 'test'
+  ...
+# Subtest: generateProceduralMap is deterministic
+ok 552 - generateProceduralMap is deterministic
+  ---
+  duration_ms: 38.070161
+  type: 'test'
+  ...
+# Subtest: generateProceduralMap adds roads on single land region
+ok 553 - generateProceduralMap adds roads on single land region
+  ---
+  duration_ms: 21.640904
+  type: 'test'
+  ...
+# Subtest: generateProceduralMap scatters ruins
+ok 554 - generateProceduralMap scatters ruins
+  ---
+  duration_ms: 9.495816
+  type: 'test'
+  ...
+# Subtest: generateProceduralMap groups ruin clusters
+ok 555 - generateProceduralMap groups ruin clusters
+  ---
+  duration_ms: 32.137536
+  type: 'test'
+  ...
+# Subtest: generateProceduralMap respects feature toggles
+ok 556 - generateProceduralMap respects feature toggles
+  ---
+  duration_ms: 5.590708
+  type: 'test'
+  ...
+# Subtest: exportMap writes JSON file
+ok 557 - exportMap writes JSON file
+  ---
+  duration_ms: 0.882652
+  type: 'test'
+  ...
+# Subtest: generateMap regenerates deterministically
+ok 558 - generateMap regenerates deterministically
+  ---
+  duration_ms: 17.642476
+  type: 'test'
+  ...
+# Subtest: applyPersona uses profile runtime service
+ok 559 - applyPersona uses profile runtime service
+  ---
+  duration_ms: 18.464403
+  type: 'test'
+  ...
+# Subtest: first level reachable under ten minutes at assumed rate
+ok 560 - first level reachable under ten minutes at assumed rate
+  ---
+  duration_ms: 8.753866
+  type: 'test'
+  ...
+# Subtest: awardXP uses xpCurve thresholds
+ok 561 - awardXP uses xpCurve thresholds
+  ---
+  duration_ms: 1.540443
+  type: 'test'
+  ...
+# Subtest: scaleEnemy grows stats and HP per level
+ok 562 - scaleEnemy grows stats and HP per level
+  ---
+  duration_ms: 0.316609
+  type: 'test'
+  ...
+# Subtest: quest progress increments after visiting dialog node
+ok 563 - quest progress increments after visiting dialog node
+  ---
+  duration_ms: 3.641213
+  type: 'test'
+  ...
+# Subtest: defaultQuestProcessor blocks turn-in until dialog node requirement is met
+ok 564 - defaultQuestProcessor blocks turn-in until dialog node requirement is met
+  ---
+  duration_ms: 3.919354
+  type: 'test'
+  ...
+# Subtest: quest UI uses map display names
+ok 565 - quest UI uses map display names
+  ---
+  duration_ms: 83.135188
+  type: 'test'
+  ...
+# Subtest: quest completion records outcome
+ok 566 - quest completion records outcome
+  ---
+  duration_ms: 1.457396
+  type: 'test'
+  ...
+# Subtest: pinned quests survive save/load cycle
+ok 567 - pinned quests survive save/load cycle
+  ---
+  duration_ms: 11.918703
+  type: 'test'
+  ...
+# Subtest: quest progress combines turned-in and carried items
+ok 568 - quest progress combines turned-in and carried items
+  ---
+  duration_ms: 97.386487
+  type: 'test'
+  ...
+# Subtest: quest description changes when objective ready to turn in
+ok 569 - quest description changes when objective ready to turn in
+  ---
+  duration_ms: 16.919511
+  type: 'test'
+  ...
+# Subtest: renderProblems reuses DOM and handler
+ok 570 - renderProblems reuses DOM and handler
+  ---
+  duration_ms: 119.952731
+  type: 'test'
+  ...
+# Subtest: refreshChoiceDropdowns restores preset required item
+ok 571 - refreshChoiceDropdowns restores preset required item
+  ---
+  duration_ms: 90.21141
+  type: 'test'
+  ...
+# Subtest: renderTreeEditor repopulates required item dropdown
+ok 572 - renderTreeEditor repopulates required item dropdown
+  ---
+  duration_ms: 34.508566
+  type: 'test'
+  ...
+# Subtest: dustland module includes respec vendor
+ok 573 - dustland module includes respec vendor
+  ---
+  duration_ms: 6.780509
+  type: 'test'
+  ...
+# Subtest: rock tiles are walkable and hall uses wall tiles
+ok 574 - rock tiles are walkable and hall uses wall tiles
+  ---
+  duration_ms: 11.75702
+  type: 'test'
+  ...
+# Subtest: scrap wastes has challenge mix
+ok 575 - scrap wastes has challenge mix
+  ---
+  duration_ms: 8.610996
+  type: 'test'
+  ...
+# Subtest: describeSnapshot surfaces bootstrap disable reason
+ok 576 - describeSnapshot surfaces bootstrap disable reason
+  ---
+  duration_ms: 1.36916
+  type: 'test'
+  ...
+# Subtest: server mode disabled when flag missing
+ok 577 - server mode disabled when flag missing
+  ---
+  duration_ms: 1.331535
+  type: 'test'
+  ...
+# Subtest: server mode disabled when config missing
+ok 578 - server mode disabled when config missing
+  ---
+  duration_ms: 0.249394
+  type: 'test'
+  ...
+# Subtest: server mode disabled with invalid config
+ok 579 - server mode disabled with invalid config
+  ---
+  duration_ms: 0.332955
+  type: 'test'
+  ...
+# Subtest: server mode defaults on when firebase config is present
+ok 580 - server mode defaults on when firebase config is present
+  ---
+  duration_ms: 0.225185
+  type: 'test'
+  ...
+# Subtest: server mode ready with valid config
+ok 581 - server mode ready with valid config
+  ---
+  duration_ms: 0.263789
+  type: 'test'
+  ...
+# Subtest: server session authenticates with Firebase
+ok 582 - server session authenticates with Firebase
+  ---
+  duration_ms: 6.799436
+  type: 'test'
+  ...
+# Subtest: playSfx handles aborted play without unhandled rejection
+ok 583 - playSfx handles aborted play without unhandled rejection
+  ---
+  duration_ms: 224.339858
+  type: 'test'
+  ...
+# Subtest: toggleAudio prevents playback
+ok 584 - toggleAudio prevents playback
+  ---
+  duration_ms: 31.231816
+  type: 'test'
+  ...
+# Subtest: playSfx reuses a pool of five audio elements
+ok 585 - playSfx reuses a pool of five audio elements
+  ---
+  duration_ms: 29.11464
+  type: 'test'
+  ...
+# Subtest: damage sfx uses oscillator without creating audio elements
+ok 586 - damage sfx uses oscillator without creating audio elements
+  ---
+  duration_ms: 35.572488
+  type: 'test'
+  ...
+# Subtest: shop grudge persists after save/load
+ok 587 - shop grudge persists after save/load
+  ---
+  duration_ms: 82.692375
+  type: 'test'
+  ...
+# Subtest: essential supplies restock after ten world turns
+ok 588 - essential supplies restock after ten world turns
+  ---
+  duration_ms: 13.803044
+  type: 'test'
+  ...
+# Subtest: shop window uses expanded height and keeps scroll bounds
+ok 589 - shop window uses expanded height and keeps scroll bounds
+  ---
+  duration_ms: 8.824302
+  type: 'test'
+  ...
+# Subtest: arrow keys in shop do not move the player
+ok 590 - arrow keys in shop do not move the player
+  ---
+  duration_ms: 98.071153
+  type: 'test'
+  ...
+# Subtest: shop displays current scrap and updates after purchase
+ok 591 - shop displays current scrap and updates after purchase
+  ---
+  duration_ms: 26.973822
+  type: 'test'
+  ...
+# Subtest: shop stacks identical buy items with counters
+ok 592 - shop stacks identical buy items with counters
+  ---
+  duration_ms: 18.517328
+  type: 'test'
+  ...
+# Subtest: shop sorts buy stacks by value high to low
+ok 593 - shop sorts buy stacks by value high to low
+  ---
+  duration_ms: 23.541464
+  type: 'test'
+  ...
+# Subtest: shop stacks identical sell items and updates counts after selling
+ok 594 - shop stacks identical sell items and updates counts after selling
+  ---
+  duration_ms: 22.338489
+  type: 'test'
+  ...
+# Subtest: shop sorts sell stacks by value high to low
+ok 595 - shop sorts sell stacks by value high to low
+  ---
+  duration_ms: 28.982804
+  type: 'test'
+  ...
+# Subtest: showMap handles interiors missing grid data
+ok 596 - showMap handles interiors missing grid data
+  ---
+  duration_ms: 11.441265
+  type: 'test'
+  ...
+# Subtest: signal compass hides for hidden target when navigation disabled
+ok 597 - signal compass hides for hidden target when navigation disabled
+  ---
+  duration_ms: 8.70412
+  type: 'test'
+  ...
+# Subtest: signal compass shows when navigation enabled
+ok 598 - signal compass shows when navigation enabled
+  ---
+  duration_ms: 4.240555
+  type: 'test'
+  ...
+# Subtest: renders skill point badge when points available
+ok 599 - renders skill point badge when points available
+  ---
+  duration_ms: 13.129824
+  type: 'test'
+  ...
+# Subtest: no badge when no skill points
+ok 600 - no badge when no skill points
+  ---
+  duration_ms: 4.216882
+  type: 'test'
+  ...
+# Subtest: badge updates without duplication on re-render
+ok 601 - badge updates without duplication on re-render
+  ---
+  duration_ms: 2.400145
+  type: 'test'
+  ...
+# Subtest: badge removed after training
+ok 602 - badge removed after training
+  ---
+  duration_ms: 2.678857
+  type: 'test'
+  ...
+# Subtest: loadGeneratedSkin builds tile sprites from tile_* manifest slots
+ok 603 - loadGeneratedSkin builds tile sprites from tile_* manifest slots
+  ---
+  duration_ms: 11.224971
+  type: 'test'
+  ...
+# Subtest: loadGeneratedSkin infers tile sprites when slots omit manifest paths
+ok 604 - loadGeneratedSkin infers tile sprites when slots omit manifest paths
+  ---
+  duration_ms: 2.447177
+  type: 'test'
+  ...
+# Subtest: loadGeneratedSkin derives tile atlas entries without slot manifests
+ok 605 - loadGeneratedSkin derives tile atlas entries without slot manifests
+  ---
+  duration_ms: 4.148761
+  type: 'test'
+  ...
+# Subtest: loadGeneratedSkin loads packaged retro-console assets without overrides
+ok 606 - loadGeneratedSkin loads packaged retro-console assets without overrides
+  ---
+  duration_ms: 4.70901
+  type: 'test'
+  ...
+# Subtest: SkinStyleJSONLoader merges template fragments in arrays
+ok 607 - SkinStyleJSONLoader merges template fragments in arrays
+  ---
+  duration_ms: 331.312124
+  type: 'test'
+  ...
+# Subtest: run-skin-workflow generator matches loader merge semantics
+ok 608 - run-skin-workflow generator matches loader merge semantics
+  ---
+  duration_ms: 477.956077
+  type: 'test'
+  ...
+# Subtest: run-skin-workflow auto slots expose label-driven descriptions
+ok 609 - run-skin-workflow auto slots expose label-driven descriptions
+  ---
+  duration_ms: 474.215542
+  type: 'test'
+  ...
+# Subtest: SkinStyleJSONLoader accepts plain asset arrays
+ok 610 - SkinStyleJSONLoader accepts plain asset arrays
+  ---
+  duration_ms: 354.726288
+  type: 'test'
+  ...
+# Subtest: SkinStyleJSONLoader loads the documented game asset batch example
+ok 611 - SkinStyleJSONLoader loads the documented game asset batch example
+  ---
+  duration_ms: 343.375308
+  type: 'test'
+  ...
+# Subtest: leader luck above 7 boosts slot machine payout
+ok 612 - leader luck above 7 boosts slot machine payout
+  ---
+  duration_ms: 25.794118
+  type: 'test'
+  ...
+# Subtest: slot machine works after save and load
+ok 613 - slot machine works after save and load
+  ---
+  duration_ms: 70.680048
+  type: 'test'
+  ...
+# Subtest: dustland module adds slot shack with gambling options
+ok 614 - dustland module adds slot shack with gambling options
+  ---
+  duration_ms: 6.91144
+  type: 'test'
+  ...
+# Subtest: slot shack interior includes an exit door
+ok 615 - slot shack interior includes an exit door
+  ---
+  duration_ms: 4.606693
+  type: 'test'
+  ...
+# Subtest: slot machine drops cache after paying out 500 scrap net
+ok 616 - slot machine drops cache after paying out 500 scrap net
+  ---
+  duration_ms: 13.892679
+  type: 'test'
+  ...
+# [Path] Script loaded
+# [Nano] Script loaded and initializing public API...
+# Subtest: dustland.html loads without runtime errors
+ok 617 - dustland.html loads without runtime errors
+  ---
+  duration_ms: 464.834333
+  type: 'test'
+  ...
+# [Path] Script loaded
+# [Nano] Script loaded and initializing public API...
+# [Nano] Feature supported: false
+# [Nano] Prompt API not supported in this browser.
+# Subtest: adventure-kit.html loads without runtime errors
+ok 618 - adventure-kit.html loads without runtime errors
+  ---
+  duration_ms: 363.865811
+  type: 'test'
+  ...
+# Subtest: spoils cache ranks are defined
+ok 619 - spoils cache ranks are defined
+  ---
+  duration_ms: 2.251736
+  type: 'test'
+  ...
+# Subtest: generated mask items carry mask tag
+ok 620 - generated mask items carry mask tag
+  ---
+  duration_ms: 0.768264
+  type: 'test'
+  ...
+# Subtest: create returns cache item
+ok 621 - create returns cache item
+  ---
+  duration_ms: 0.27702
+  type: 'test'
+  ...
+# Subtest: drop roll tied to challenge rating
+ok 622 - drop roll tied to challenge rating
+  ---
+  duration_ms: 0.367498
+  type: 'test'
+  ...
+# Subtest: pickRank tuned for challenge tiers
+ok 623 - pickRank tuned for challenge tiers
+  ---
+  duration_ms: 0.514906
+  type: 'test'
+  ...
+# Subtest: tierWeights can be overridden for modding
+ok 624 - tierWeights can be overridden for modding
+  ---
+  duration_ms: 0.25545
+  type: 'test'
+  ...
+# Subtest: renderIcon creates element with rank class
+ok 625 - renderIcon creates element with rank class
+  ---
+  duration_ms: 0.469885
+  type: 'test'
+  ...
+# Subtest: open generates loot and removes one cache
+ok 626 - open generates loot and removes one cache
+  ---
+  duration_ms: 0.59067
+  type: 'test'
+  ...
+# Subtest: mask loot from cache includes mask tag
+ok 627 - mask loot from cache includes mask tag
+  ---
+  duration_ms: 0.781656
+  type: 'test'
+  ...
+# Subtest: openAll opens caches and adds loot
+ok 628 - openAll opens caches and adds loot
+  ---
+  duration_ms: 0.799541
+  type: 'test'
+  ...
+# Subtest: registering cache preserves rank for inventory
+ok 629 - registering cache preserves rank for inventory
+  ---
+  duration_ms: 0.676815
+  type: 'test'
+  ...
+# Subtest: openAll handles missing ItemGen gracefully
+ok 630 - openAll handles missing ItemGen gracefully
+  ---
+  duration_ms: 1.965443
+  type: 'test'
+  ...
+# Subtest: drop odds scale with challenge (empirical)
+ok 631 - drop odds scale with challenge (empirical)
+  ---
+  duration_ms: 7.532745
+  type: 'test'
+  ...
+# Subtest: tier distribution roughly matches weights by challenge
+ok 632 - tier distribution roughly matches weights by challenge
+  ---
+  duration_ms: 69.185946
+  type: 'test'
+  ...
+# Subtest: spread mod hits all enemies with reduced damage
+ok 633 - spread mod hits all enemies with reduced damage
+  ---
+  duration_ms: 28.811683
+  type: 'test'
+  ...
+# Subtest: loadStarterItems seeds items from script
+ok 634 - loadStarterItems seeds items from script
+  ---
+  duration_ms: 4.612512
+  type: 'test'
+  ...
+# Subtest: Tab cycles leader without triggering NPC start events
+ok 635 - Tab cycles leader without triggering NPC start events
+  ---
+  duration_ms: 78.660104
+  type: 'test'
+  ...
+# Subtest: test/test-harness.js
+ok 175 - test/test-harness.js
+  ---
+  duration_ms: 44.239773
+  type: 'test'
+  ...
+# Subtest: trade UI shows timer and grudge
+ok 637 - trade UI shows timer and grudge
+  ---
+  duration_ms: 81.019902
+  type: 'test'
+  ...
+# Subtest: grudge raises prices after cancellations
+ok 638 - grudge raises prices after cancellations
+  ---
+  duration_ms: 1.500047
+  type: 'test'
+  ...
+# Subtest: tier and scarcity multipliers influence price
+ok 639 - tier and scarcity multipliers influence price
+  ---
+  duration_ms: 0.723306
+  type: 'test'
+  ...
+# Subtest: collectPricingData summarizes dustland traders and scrap
+ok 640 - collectPricingData summarizes dustland traders and scrap
+  ---
+  duration_ms: 18.037331
+  type: 'test'
+  ...
+# Subtest: formatReport emits readable summary
+ok 641 - formatReport emits readable summary
+  ---
+  duration_ms: 5.173872
+  type: 'test'
+  ...
+# Subtest: refresh cycles through waves
+ok 642 - refresh cycles through waves
+  ---
+  duration_ms: 2.197596
+  type: 'test'
+  ...
+# Subtest: trainer upgrade flow stays under fifteen seconds
+ok 643 - trainer upgrade flow stays under fifteen seconds
+  ---
+  duration_ms: 74.866778
+  type: 'test'
+  ...
+# Subtest: trainStat spends a point and raises stat
+ok 644 - trainStat spends a point and raises stat
+  ---
+  duration_ms: 3.730781
+  type: 'test'
+  ...
+# Subtest: dustland module includes trainer NPCs
+ok 645 - dustland module includes trainer NPCs
+  ---
+  duration_ms: 8.268898
+  type: 'test'
+  ...
+# Subtest: render trainer options with stat deltas
+ok 646 - render trainer options with stat deltas
+  ---
+  duration_ms: 84.537931
+  type: 'test'
+  ...
+# Subtest: uses npc tree when dialog state lacks train node
+ok 647 - uses npc tree when dialog state lacks train node
+  ---
+  duration_ms: 10.557744
+  type: 'test'
+  ...
+# Subtest: apply upgrade via effect
+ok 648 - apply upgrade via effect
+  ---
+  duration_ms: 10.542912
+  type: 'test'
+  ...
+# Subtest: shows leader skill points in text
+ok 649 - shows leader skill points in text
+  ---
+  duration_ms: 9.264734
+  type: 'test'
+  ...
+# Subtest: bandit defeat sets flag
+ok 650 - bandit defeat sets flag
+  ---
+  duration_ms: 3.72161
+  type: 'test'
+  ...
+# Subtest: dockhand branches on Rygar presence
+ok 651 - dockhand branches on Rygar presence
+  ---
+  duration_ms: 5.59396
+  type: 'test'
+  ...
+# Subtest: mask memory quest updates journal and checkpoints
+ok 652 - mask memory quest updates journal and checkpoints
+  ---
+  duration_ms: 5.575403
+  type: 'test'
+  ...
+# Subtest: mask quest requires mask tag and manual start
+ok 653 - mask quest requires mask tag and manual start
+  ---
+  duration_ms: 3.820006
+  type: 'test'
+  ...
+# Subtest: true dust module defines safe zone and spawns
+ok 654 - true dust module defines safe zone and spawns
+  ---
+  duration_ms: 2.523942
+  type: 'test'
+  ...
+# Subtest: radio static triggers near scrap cache
+ok 655 - radio static triggers near scrap cache
+  ---
+  duration_ms: 3.475649
+  type: 'test'
+  ...
+# Subtest: TypeScript sources stay free of @ts-nocheck
+ok 656 - TypeScript sources stay free of @ts-nocheck
+  ---
+  duration_ms: 112.537128
+  type: 'test'
+  ...
+# Subtest: two-worlds module defers start until world one loads
+ok 657 - two-worlds module defers start until world one loads
+  ---
+  duration_ms: 1.808792
+  type: 'test'
+  ...
+# Subtest: ui module emits DOM updates via events
+ok 658 - ui module emits DOM updates via events
+  ---
+  duration_ms: 9.992265
+  type: 'test'
+  ...
+# Subtest: unarmed attacks damage undefended foes
+ok 659 - unarmed attacks damage undefended foes
+  ---
+  duration_ms: 24.39625
+  type: 'test'
+  ...
+# Subtest: attack logs bounce when defense absorbs it
+ok 660 - attack logs bounce when defense absorbs it
+  ---
+  duration_ms: 7.048162
+  type: 'test'
+  ...
+# Subtest: wait heals leader
+ok 661 - wait heals leader
+  ---
+  duration_ms: 23.905439
+  type: 'test'
+  ...
+# Subtest: heal zone boosts party regen
+ok 662 - heal zone boosts party regen
+  ---
+  duration_ms: 5.354657
+  type: 'test'
+  ...
+# Subtest: no encounter zone blocks fights
+ok 663 - no encounter zone blocks fights
+  ---
+  duration_ms: 5.835086
+  type: 'test'
+  ...
+# Subtest: walking heals and updates party UI
+ok 664 - walking heals and updates party UI
+  ---
+  duration_ms: 22.554603
+  type: 'test'
+  ...
+# Subtest: weather banner updates on weather change
+ok 665 - weather banner updates on weather change
+  ---
+  duration_ms: 110.590394
+  type: 'test'
+  ...
+# Subtest: weather affects move delay and encounter bias
+ok 666 - weather affects move delay and encounter bias
+  ---
+  duration_ms: 46.553881
+  type: 'test'
+  ...
+# Subtest: interact moves through portal on floor tile
+ok 667 - interact moves through portal on floor tile
+  ---
+  duration_ms: 1.558112
+  type: 'test'
+  ...
+# Subtest: BuildingWizard commit links doors
+ok 668 - BuildingWizard commit links doors
+  ---
+  duration_ms: 9.403337
+  type: 'test'
+  ...
+# Subtest: commit tolerates missing door links
+ok 669 - commit tolerates missing door links
+  ---
+  duration_ms: 2.889021
+  type: 'test'
+  ...
+# Subtest: building wizard links rooms
+ok 670 - building wizard links rooms
+  ---
+  duration_ms: 8.643155
+  type: 'test'
+  ...
+# Subtest: building wizard config exists
+ok 671 - building wizard config exists
+  ---
+  duration_ms: 1.044876
+  type: 'test'
+  ...
+# Subtest: all registered wizards appear in list
+ok 672 - all registered wizards appear in list
+  ---
+  duration_ms: 11.20487
+  type: 'test'
+  ...
+# Subtest: openWizard commits results and Enter triggers next
+ok 673 - openWizard commits results and Enter triggers next
+  ---
+  duration_ms: 10.229934
+  type: 'test'
+  ...
+# Subtest: tilemap picker step stores selection
+ok 674 - tilemap picker step stores selection
+  ---
+  duration_ms: 8.180342
+  type: 'test'
+  ...
+# Subtest: wizard preserves state and validates steps
+ok 675 - wizard preserves state and validates steps
+  ---
+  duration_ms: 10.11661
+  type: 'test'
+  ...
+# Subtest: asset picker step stores selection
+ok 676 - asset picker step stores selection
+  ---
+  duration_ms: 3.534767
+  type: 'test'
+  ...
+# Subtest: item picker step captures reward
+ok 677 - item picker step captures reward
+  ---
+  duration_ms: 4.642339
+  type: 'test'
+  ...
+# Subtest: craftSignalBeacon consumes fuel and scrap
+ok 678 - craftSignalBeacon consumes fuel and scrap
+  ---
+  duration_ms: 3.438834
+  type: 'test'
+  ...
+# Subtest: craftSolarTarp uses cloth and scrap
+ok 679 - craftSolarTarp uses cloth and scrap
+  ---
+  duration_ms: 2.590898
+  type: 'test'
+  ...
+# Subtest: craftBandage consumes plant fiber
+ok 680 - craftBandage consumes plant fiber
+  ---
+  duration_ms: 1.45072
+  type: 'test'
+  ...
+# Subtest: craftAntidote consumes plant fiber and water flask
+ok 681 - craftAntidote consumes plant fiber and water flask
+  ---
+  duration_ms: 1.372276
+  type: 'test'
+  ...
+# Subtest: craftEnhancedItem upgrades weapons when you have five copies
+ok 682 - craftEnhancedItem upgrades weapons when you have five copies
+  ---
+  duration_ms: 1.99052
+  type: 'test'
+  ...
+# Subtest: workbench shows requirement counts for recipes you lack
+ok 683 - workbench shows requirement counts for recipes you lack
+  ---
+  duration_ms: 101.948978
+  type: 'test'
+  ...
+# Subtest: arrow keys in workbench do not bubble to window
+ok 684 - arrow keys in workbench do not bubble to window
+  ---
+  duration_ms: 18.495105
+  type: 'test'
+  ...
+# Subtest: workbench lists enhancement recipes when you have duplicate gear
+ok 685 - workbench lists enhancement recipes when you have duplicate gear
+  ---
+  duration_ms: 15.477803
+  type: 'test'
+  ...
+# Subtest: world loot decays after configured turns
+ok 686 - world loot decays after configured turns
+  ---
+  duration_ms: 17.721749
+  type: 'test'
+  ...
+# Subtest: fast travel merges remote module bunkers for cost calculations
+ok 687 - fast travel merges remote module bunkers for cost calculations
+  ---
+  duration_ms: 4.773413
+  type: 'test'
+  ...
+# Subtest: module-scoped bunkers remain local
+ok 688 - module-scoped bunkers remain local
+  ---
+  duration_ms: 3.153427
+  type: 'test'
+  ...
+# Subtest: travel pass removes fast travel fuel cost
+ok 689 - travel pass removes fast travel fuel cost
+  ---
+  duration_ms: 1.534599
+  type: 'test'
+  ...
+# Subtest: open draws subway-style nodes for destinations
+ok 690 - open draws subway-style nodes for destinations
+  ---
+  duration_ms: 9.246682
+  type: 'test'
+  ...
+# Subtest: xpToNext pulls values from xpCurve
+ok 691 - xpToNext pulls values from xpCurve
+  ---
+  duration_ms: 1.023572
+  type: 'test'
+  ...
+# Subtest: message-only zone logs on enter and exit
+ok 692 - message-only zone logs on enter and exit
+  ---
+  duration_ms: 22.518588
+  type: 'test'
+  ...
+# Subtest: zone spawns respect probability and cooldown
+ok 693 - zone spawns respect probability and cooldown
+  ---
+  duration_ms: 22.158778
+  type: 'test'
+  ...
+# Subtest: zone rewards on item use and only once
+ok 694 - zone rewards on item use and only once
+  ---
+  duration_ms: 2.321696
+  type: 'test'
+  ...
+# Subtest: wand triggers zone reward and logs use
+ok 695 - wand triggers zone reward and logs use
+  ---
+  duration_ms: 0.33222
+  type: 'test'
+  ...
+# Subtest: zone sets and clears weather on enter and exit
+ok 696 - zone sets and clears weather on enter and exit
+  ---
+  duration_ms: 21.289276
+  type: 'test'
+  ...
+1..696
+# tests 698
+# suites 0
+# pass 697
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 17210.802136
+ ELIFECYCLE  Test failed. See above for more details.

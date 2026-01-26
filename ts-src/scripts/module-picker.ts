@@ -734,20 +734,22 @@ function showModulePicker() {
   styleTag.textContent = '@keyframes pulse{0%,100%{opacity:.8}50%{opacity:1}}.btn.selected{border-color:#4f6b4f;background:#151b15}.tab-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}.tab-row button{font-family:var(--ui-font);background:#0f110f;border:1px solid #2a382a;color:#9fbf9f;padding:6px 10px;border-radius:8px;cursor:pointer}.tab-row button.active{color:#0f0;border-color:#3c533c;background:#101610}.module-meta{font-size:.75rem;color:#7a907a}.module-summary{color:#9fbf9f;font-size:.85rem;margin-top:2px}';
   document.head.appendChild(styleTag);
 
-  const ackBtn = document.createElement('div');
+  const ackBtn = document.createElement('a');
   ackBtn.id = 'ackGlyph';
   ackBtn.textContent = '✎';
   ackBtn.title = 'Adventure Kit';
-  ackBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer';
-  ackBtn.onclick = () => { window.location.href = 'adventure-kit.html'; };
+  ackBtn.setAttribute('aria-label', 'Adventure Construction Kit');
+  ackBtn.href = 'adventure-kit.html';
+  ackBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer;text-decoration:none';
   overlay.appendChild(ackBtn);
 
-  const mpBtn = document.createElement('div');
+  const mpBtn = document.createElement('a');
   mpBtn.id = 'mpGlyph';
   mpBtn.textContent = '⇆';
   mpBtn.title = 'Multiplayer';
-  mpBtn.style.cssText = 'position:absolute;top:44px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer';
-  mpBtn.onclick = () => { window.location.href = 'multiplayer.html'; };
+  mpBtn.setAttribute('aria-label', 'Multiplayer');
+  mpBtn.href = 'multiplayer.html';
+  mpBtn.style.cssText = 'position:absolute;top:44px;right:10px;z-index:1;color:#0f0;font-size:1.5rem;cursor:pointer;text-decoration:none';
   overlay.appendChild(mpBtn);
 
   const canvas = document.createElement('canvas');
