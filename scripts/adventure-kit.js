@@ -1304,9 +1304,14 @@ function showInteriorEditor(show) {
 }
 function renderInteriorList() {
     const list = document.getElementById('intList');
-    const ints = moduleData.interiors.map((I, i) => ({ I, i })).sort((a, b) => a.I.id.localeCompare(b.I.id));
-    list.innerHTML = ints.map(({ I, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">${I.label || I.id}</button>`).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editInterior(parseInt(btn.dataset.idx, 10)));
+    if (!moduleData.interiors.length) {
+        list.innerHTML = '<div class="list-empty-state muted">No interiors created yet.</div>';
+    }
+    else {
+        const ints = moduleData.interiors.map((I, i) => ({ I, i })).sort((a, b) => a.I.id.localeCompare(b.I.id));
+        list.innerHTML = ints.map(({ I, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">${I.label || I.id}</button>`).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editInterior(parseInt(btn.dataset.idx, 10)));
+    }
     updateInteriorOptions();
     refreshChoiceDropdowns();
     updateMapSelect(mapSelect ? mapSelect.value : 'world');
@@ -1446,6 +1451,8 @@ function setupListFilter(inputId, listId) {
     const apply = () => {
         const term = input.value.toLowerCase();
         Array.from(list.children).forEach(ch => {
+            if (ch.classList.contains('list-empty-state'))
+                return;
             ch.style.display = ch.textContent.toLowerCase().includes(term) ? '' : 'none';
         });
     };
@@ -3688,6 +3695,10 @@ function editNPC(i) {
 }
 function renderNPCList() {
     const list = document.getElementById('npcList');
+    if (!moduleData.npcs.length) {
+        list.innerHTML = '<div class="list-empty-state muted">No NPCs created yet.</div>';
+        return;
+    }
     const npcs = moduleData.npcs.map((n, i) => ({ n, i })).sort((a, b) => a.n.id.localeCompare(b.n.id));
     list.innerHTML = npcs.map(({ n, i }) => {
         const q = Array.isArray(n.quests) ? n.quests.join(',') : (n.questId || '');
@@ -4050,11 +4061,16 @@ function editItem(i) {
 }
 function renderItemList() {
     const list = document.getElementById('itemList');
-    const items = moduleData.items.map((it, i) => ({ it, i })).sort((a, b) => a.it.name.localeCompare(b.it.name));
-    list.innerHTML = items.map(({ it, i }) => {
-        const loc = it.map ? ` @${it.map} (${it.x},${it.y})` : '';
-        return `<button type="button" class="list-item-btn" data-idx="${i}">${it.name}${loc}</button>`;
-    }).join('');
+    if (!moduleData.items.length) {
+        list.innerHTML = '<div class="list-empty-state muted">No items created yet.</div>';
+    }
+    else {
+        const items = moduleData.items.map((it, i) => ({ it, i })).sort((a, b) => a.it.name.localeCompare(b.it.name));
+        list.innerHTML = items.map(({ it, i }) => {
+            const loc = it.map ? ` @${it.map} (${it.x},${it.y})` : '';
+            return `<button type="button" class="list-item-btn" data-idx="${i}">${it.name}${loc}</button>`;
+        }).join('');
+    }
     Array.from(list.children).forEach(btn => btn.onclick = () => editItem(parseInt(btn.dataset.idx, 10)));
     refreshChoiceDropdowns();
     renderProblems();
@@ -4409,6 +4425,10 @@ function editEncounter(i) {
 }
 function renderEncounterList() {
     const list = document.getElementById('encounterList');
+    if (!moduleData.encounters.length) {
+        list.innerHTML = '<div class="list-empty-state muted">No encounters created yet.</div>';
+        return;
+    }
     list.innerHTML = moduleData.encounters.map((e, i) => {
         const t = moduleData.templates.find(t => t.id === e.templateId);
         const name = t ? t.name : e.templateId;
@@ -4547,8 +4567,13 @@ function editTemplate(i) {
 }
 function renderTemplateList() {
     const list = document.getElementById('templateList');
-    list.innerHTML = moduleData.templates.map((t, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${t.id}</button>`).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editTemplate(parseInt(btn.dataset.idx, 10)));
+    if (!moduleData.templates.length) {
+        list.innerHTML = '<div class="list-empty-state muted">No templates created yet.</div>';
+    }
+    else {
+        list.innerHTML = moduleData.templates.map((t, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${t.id}</button>`).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editTemplate(parseInt(btn.dataset.idx, 10)));
+    }
     refreshChoiceDropdowns();
 }
 function deleteTemplate() {
@@ -4645,11 +4670,16 @@ function editEvent(i) {
 }
 function renderEventList() {
     const list = document.getElementById('eventList');
-    list.innerHTML = moduleData.events.map((e, i) => {
-        const eff = e.events[0]?.effect;
-        return `<button type="button" class="list-item-btn" data-idx="${i}">${e.map} @(${e.x},${e.y}) - ${eff}</button>`;
-    }).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editEvent(parseInt(btn.dataset.idx, 10)));
+    if (!moduleData.events.length) {
+        list.innerHTML = '<div class="list-empty-state muted">No events created yet.</div>';
+    }
+    else {
+        list.innerHTML = moduleData.events.map((e, i) => {
+            const eff = e.events[0]?.effect;
+            return `<button type="button" class="list-item-btn" data-idx="${i}">${e.map} @(${e.x},${e.y}) - ${eff}</button>`;
+        }).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editEvent(parseInt(btn.dataset.idx, 10)));
+    }
     populateFlagList();
 }
 function deleteEvent() {
@@ -4997,6 +5027,10 @@ function renderArenaList() {
     if (!listEl)
         return;
     const list = Array.isArray(moduleData.behaviors?.arenas) ? moduleData.behaviors.arenas : [];
+    if (!list.length) {
+        listEl.innerHTML = '<div class="list-empty-state muted">No arenas created yet.</div>';
+        return;
+    }
     listEl.innerHTML = list.map((arena, idx) => {
         const waveCount = Array.isArray(arena.waves) ? arena.waves.length : 0;
         const reward = arena.reward?.toast || arena.reward?.log || '';
@@ -5168,8 +5202,13 @@ function formatZoneSummary(z) {
 }
 function renderZoneList() {
     const list = document.getElementById('zoneList');
-    list.innerHTML = moduleData.zones.map((z, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${formatZoneSummary(z)}</button>`).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editZone(parseInt(btn.dataset.idx, 10)));
+    if (!moduleData.zones.length) {
+        list.innerHTML = '<div class="list-empty-state muted">No zones created yet.</div>';
+    }
+    else {
+        list.innerHTML = moduleData.zones.map((z, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${formatZoneSummary(z)}</button>`).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editZone(parseInt(btn.dataset.idx, 10)));
+    }
     const encMap = document.getElementById('encMap');
     if (encMap) {
         const encZone = document.getElementById('encZone');
@@ -5262,8 +5301,13 @@ function editPortal(i) {
 }
 function renderPortalList() {
     const list = document.getElementById('portalList');
-    list.innerHTML = moduleData.portals.map((p, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${p.map} @(${p.x},${p.y}) → ${p.toMap} (${p.toX},${p.toY})</button>`).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editPortal(parseInt(btn.dataset.idx, 10)));
+    if (!moduleData.portals.length) {
+        list.innerHTML = '<div class="list-empty-state muted">No portals created yet.</div>';
+    }
+    else {
+        list.innerHTML = moduleData.portals.map((p, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${p.map} @(${p.x},${p.y}) → ${p.toMap} (${p.toX},${p.toY})</button>`).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editPortal(parseInt(btn.dataset.idx, 10)));
+    }
 }
 function deletePortal() {
     if (editPortalIdx < 0)
@@ -5371,6 +5415,10 @@ function cancelBldg() {
 }
 function renderBldgList() {
     const list = document.getElementById('bldgList');
+    if (!moduleData.buildings.length) {
+        list.innerHTML = '<div class="list-empty-state muted">No buildings created yet.</div>';
+        return;
+    }
     const bldgs = moduleData.buildings.map((b, i) => ({ b, i })).sort((a, b) => a.b.x - b.b.x || a.b.y - b.b.y);
     list.innerHTML = bldgs.map(({ b, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">Bldg @(${b.x},${b.y})</button>`).join('');
     Array.from(list.children).forEach(btn => btn.onclick = () => editBldg(parseInt(btn.dataset.idx, 10)));
@@ -5897,8 +5945,13 @@ function addQuest() {
 }
 function renderQuestList() {
     const list = document.getElementById('questList');
-    list.innerHTML = moduleData.quests.map((q, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${q.id}: ${q.title}</button>`).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editQuest(parseInt(btn.dataset.idx, 10)));
+    if (!moduleData.quests.length) {
+        list.innerHTML = '<div class="list-empty-state muted">No quests created yet.</div>';
+    }
+    else {
+        list.innerHTML = moduleData.quests.map((q, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${q.id}: ${q.title}</button>`).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editQuest(parseInt(btn.dataset.idx, 10)));
+    }
     updateQuestOptions();
 }
 function editQuest(i) {
