@@ -5495,10 +5495,9 @@ if (stampsBtn && stampWindow) {
     function renderStampWindow() {
         stampWindow.innerHTML = '';
         for (const [id, stamp] of Object.entries(worldStamps)) {
-            const opt = document.createElement('div');
+            const opt = document.createElement('button');
+            opt.type = 'button';
             opt.className = 'stamp-option';
-            opt.setAttribute('role', 'button');
-            opt.setAttribute('tabindex', '0');
             const canv = document.createElement('canvas');
             canv.width = 64;
             canv.height = 64;
@@ -5525,12 +5524,6 @@ if (stampsBtn && stampWindow) {
                 drawWorld();
             };
             opt.addEventListener('click', selectStamp);
-            opt.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    selectStamp();
-                }
-            });
             stampWindow.appendChild(opt);
         }
         if (window.NanoPalette) {
