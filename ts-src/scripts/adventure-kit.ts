@@ -1473,14 +1473,36 @@ const listFilterApplyFns = new Map();
 const listFilterResetMarkers = new WeakSet<HTMLElement>();
 
 function setupListFilter(inputId, listId) {
-  const input = document.getElementById(inputId);
+  const input = document.getElementById(inputId) as HTMLInputElement | null;
   const list = document.getElementById(listId);
   if (!input || !list) return;
   const apply = () => {
     const term = input.value.toLowerCase();
+    let visibleCount = 0;
+    let hasContent = false;
     Array.from(list.children).forEach(ch => {
-      ch.style.display = ch.textContent.toLowerCase().includes(term) ? '' : 'none';
+      const el = ch as HTMLElement;
+      if (el.classList.contains('filter-empty-msg')) return;
+      if (el.classList.contains('list-empty-state')) return;
+      hasContent = true;
+      const match = (el.textContent || '').toLowerCase().includes(term);
+      el.style.display = match ? '' : 'none';
+      if (match) visibleCount++;
     });
+    let emptyMsg = list.querySelector('.filter-empty-msg') as HTMLElement | null;
+    if (hasContent && visibleCount === 0) {
+      if (!emptyMsg) {
+        emptyMsg = document.createElement('div');
+        emptyMsg.className = 'filter-empty-msg muted';
+        emptyMsg.style.padding = '4px 8px';
+        emptyMsg.style.fontStyle = 'italic';
+        emptyMsg.textContent = 'No matches found.';
+        list.appendChild(emptyMsg);
+      }
+      emptyMsg.style.display = '';
+    } else {
+      if (emptyMsg) emptyMsg.style.display = 'none';
+    }
   };
   listFilterApplyFns.set(inputId, apply);
   input.addEventListener('input', apply);
@@ -3486,10 +3508,14 @@ function editNPC(i) {
 function renderNPCList() {
   const list = document.getElementById('npcList');
   const npcs = moduleData.npcs.map((n, i) => ({ n, i })).sort((a, b) => a.n.id.localeCompare(b.n.id));
-  list.innerHTML = npcs.map(({ n, i }) => {
-    const q = Array.isArray(n.quests) ? n.quests.join(',') : (n.questId || '');
-    return `<button type="button" class="list-item-btn" data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${q ? ` [${q}]` : ''}</button>`;
-  }).join('');
+  if (npcs.length === 0) {
+    list.innerHTML = '<div class="list-empty-state muted" style="padding:4px">No NPCs created yet.</div>';
+  } else {
+    list.innerHTML = npcs.map(({ n, i }) => {
+      const q = Array.isArray(n.quests) ? n.quests.join(',') : (n.questId || '');
+      return `<button type="button" class="list-item-btn" data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${q ? ` [${q}]` : ''}</button>`;
+    }).join('');
+  }
   Array.from(list.children).forEach(btn => {
     const idx = parseInt((btn as HTMLElement).dataset.idx, 10);
     (btn as HTMLElement).onclick = () => editNPC(idx);
