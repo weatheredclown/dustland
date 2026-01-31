@@ -3485,6 +3485,10 @@ function editNPC(i) {
 }
 function renderNPCList() {
   const list = document.getElementById('npcList');
+  if (moduleData.npcs.length === 0) {
+    list.innerHTML = '<div class="list-empty-state muted">No NPCs created yet.</div>';
+    return;
+  }
   const npcs = moduleData.npcs.map((n, i) => ({ n, i })).sort((a, b) => a.n.id.localeCompare(b.n.id));
   list.innerHTML = npcs.map(({ n, i }) => {
     const q = Array.isArray(n.quests) ? n.quests.join(',') : (n.questId || '');
@@ -3821,6 +3825,10 @@ function editItem(i) {
 }
 function renderItemList() {
   const list = document.getElementById('itemList');
+  if (moduleData.items.length === 0) {
+    list.innerHTML = '<div class="list-empty-state muted">No items created yet.</div>';
+    return;
+  }
   const items = moduleData.items.map((it, i) => ({ it, i })).sort((a, b) => a.it.name.localeCompare(b.it.name));
   list.innerHTML = items.map(({ it, i }) => {
     const loc = it.map ? ` @${it.map} (${it.x},${it.y})` : '';
@@ -5072,6 +5080,10 @@ function cancelBldg() {
 }
 function renderBldgList() {
   const list = document.getElementById('bldgList');
+  if (moduleData.buildings.length === 0) {
+    list.innerHTML = '<div class="list-empty-state muted">No buildings created yet.</div>';
+    return;
+  }
   const bldgs = moduleData.buildings.map((b, i) => ({ b, i })).sort((a, b) => a.b.x - b.b.x || a.b.y - b.b.y);
   list.innerHTML = bldgs.map(({ b, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">Bldg @(${b.x},${b.y})</button>`).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editBldg(parseInt((btn as HTMLElement).dataset.idx, 10)));
@@ -5540,6 +5552,10 @@ function addQuest() {
 }
 function renderQuestList() {
   const list = document.getElementById('questList');
+  if (moduleData.quests.length === 0) {
+    list.innerHTML = '<div class="list-empty-state muted">No quests created yet.</div>';
+    return;
+  }
   list.innerHTML = moduleData.quests.map((q, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${q.id}: ${q.title}</button>`).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editQuest(parseInt((btn as HTMLElement).dataset.idx, 10)));
   updateQuestOptions();
