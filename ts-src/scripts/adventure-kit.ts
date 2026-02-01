@@ -625,44 +625,13 @@ const intCtx = intCanvas.getContext('2d');
 const intPalette = document.getElementById('intPalette');
 let intPaint = TILE.WALL;
 let intPainting = false;
-if (intPalette) {
-  const names = { W: 'Wall', F: 'Floor', D: 'Door' };
-  intPalette.querySelectorAll('button').forEach(btn => {
-    const name = names[btn.dataset.tile];
-    if (name) {
-      btn.title = name;
-      btn.setAttribute('aria-label', name);
-    }
-  });
-}
 
 const bldgCanvas = (typeof document !== 'undefined' && typeof document.getElementById === 'function') ? document.getElementById('bldgCanvas') : null;
 const bldgCtx = bldgCanvas && typeof bldgCanvas.getContext === 'function' ? bldgCanvas.getContext('2d') : null;
 const bldgPalette = document.getElementById('bldgPalette');
-if (bldgPalette) {
-  const names = { B: 'Building', D: 'Door', E: 'Erase' };
-  bldgPalette.querySelectorAll('button').forEach(btn => {
-    const name = names[btn.dataset.tile];
-    if (name) {
-      btn.title = name;
-      btn.setAttribute('aria-label', name);
-    }
-  });
-}
 let bldgPaint = TILE.BUILDING;
 let bldgPainting = false;
 let bldgGrid = [];
-
-if (bldgPalette) {
-  const names: Record<string, string> = { B: 'Building', D: 'Door', E: 'Erase' };
-  bldgPalette.querySelectorAll('button').forEach(btn => {
-    const name = names[btn.dataset.tile || ''];
-    if (name) {
-      btn.title = name;
-      btn.setAttribute('aria-label', name);
-    }
-  });
-}
 
 const worldPalette = document.getElementById('worldPalette');
 const paletteLabel = document.getElementById('paletteLabel');
