@@ -723,9 +723,9 @@
           <label>W<input id="bldgW" type="number" min="1" value="6" /></label>
           <label>H<input id="bldgH" type="number" min="1" value="5" /></label>
           <div id="bldgPalette">
-            <button type="button" data-tile="B" style="background:#fff"></button>
-            <button type="button" data-tile="D" style="background:#8bd98d"></button>
-            <button type="button" data-tile="E" style="background:#000"></button>
+            <button type="button" data-tile="B" style="background:#fff" title="Building" aria-label="Building"></button>
+            <button type="button" data-tile="D" style="background:#8bd98d" title="Door" aria-label="Door"></button>
+            <button type="button" data-tile="E" style="background:#000" title="Erase" aria-label="Erase"></button>
           </div>
           <canvas id="bldgCanvas" width="192" height="160" style="margin-top:4px"></canvas>
           <label><input type="checkbox" id="bldgBunker"> Bunker</label>
@@ -747,9 +747,9 @@
           <label>W<input id="intW" type="number" min="3" value="12" /></label>
           <label>H<input id="intH" type="number" min="3" value="9" /></label>
           <div id="intPalette">
-            <button type="button" data-tile="W" style="background:#444"></button>
-            <button type="button" data-tile="F" style="background:#222"></button>
-            <button type="button" data-tile="D" style="background:#8bd98d"></button>
+            <button type="button" data-tile="W" style="background:#444" title="Wall" aria-label="Wall"></button>
+            <button type="button" data-tile="F" style="background:#222" title="Floor" aria-label="Floor"></button>
+            <button type="button" data-tile="D" style="background:#8bd98d" title="Door" aria-label="Door"></button>
           </div>
           <canvas id="intCanvas" width="192" height="144" style="margin-top:4px"></canvas>
           <button class="btn" type="button" id="delInterior" style="display:none">Delete Interior</button>
