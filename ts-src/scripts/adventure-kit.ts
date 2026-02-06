@@ -1349,6 +1349,7 @@ function renderInteriorList() {
   const ints = moduleData.interiors.map((I, i) => ({ I, i })).sort((a, b) => a.I.id.localeCompare(b.I.id));
   list.innerHTML = ints.map(({ I, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">${I.label || I.id}</button>`).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editInterior(parseInt((btn as HTMLElement).dataset.idx, 10)));
+  if (moduleData.interiors.length === 0) renderEmptyState(list, 'No interiors created yet.');
   updateInteriorOptions();
   refreshChoiceDropdowns();
   updateMapSelect(mapSelect ? mapSelect.value : 'world');
@@ -1472,6 +1473,11 @@ function confirmDialog(msg, onYes) {
 const listFilterApplyFns = new Map();
 const listFilterResetMarkers = new WeakSet<HTMLElement>();
 
+function renderEmptyState(list, message) {
+  if (!list) return;
+  list.innerHTML = `<div class="list-empty-state muted" style="padding:4px;font-style:italic;opacity:0.7">${message}</div>`;
+}
+
 function setupListFilter(inputId, listId) {
   const input = document.getElementById(inputId);
   const list = document.getElementById(listId);
@@ -1479,7 +1485,8 @@ function setupListFilter(inputId, listId) {
   const apply = () => {
     const term = input.value.toLowerCase();
     Array.from(list.children).forEach(ch => {
-      ch.style.display = ch.textContent.toLowerCase().includes(term) ? '' : 'none';
+      if ((ch as HTMLElement).classList.contains('list-empty-state')) return;
+      (ch as HTMLElement).style.display = (ch.textContent || '').toLowerCase().includes(term) ? '' : 'none';
     });
   };
   listFilterApplyFns.set(inputId, apply);
@@ -3499,6 +3506,7 @@ function renderNPCList() {
       btn.scrollIntoView({ block: 'nearest' });
     }
   });
+  if (npcs.length === 0) renderEmptyState(list, 'No NPCs created yet.');
   updateQuestOptions();
   refreshChoiceDropdowns();
   renderProblems();
@@ -3827,6 +3835,7 @@ function renderItemList() {
     return `<button type="button" class="list-item-btn" data-idx="${i}">${it.name}${loc}</button>`;
   }).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editItem(parseInt((btn as HTMLElement).dataset.idx, 10)));
+  if (items.length === 0) renderEmptyState(list, 'No items created yet.');
   refreshChoiceDropdowns();
   renderProblems();
 }
@@ -4170,6 +4179,7 @@ function renderEncounterList() {
     return `<button type="button" class="list-item-btn" data-idx="${i}">${e.map}: ${name}${locStr}${lootStr}</button>`;
   }).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editEncounter(parseInt((btn as HTMLElement).dataset.idx, 10)));
+  if (moduleData.encounters.length === 0) renderEmptyState(list, 'No encounters created yet.');
 }
 function deleteEncounter() {
   if (editEncounterIdx < 0) return;
@@ -4292,6 +4302,7 @@ function renderTemplateList() {
   const list = document.getElementById('templateList');
   list.innerHTML = moduleData.templates.map((t, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${t.id}</button>`).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editTemplate(parseInt((btn as HTMLElement).dataset.idx, 10)));
+  if (moduleData.templates.length === 0) renderEmptyState(list, 'No templates created yet.');
   refreshChoiceDropdowns();
 }
 function deleteTemplate() {
@@ -4397,6 +4408,7 @@ function renderEventList() {
     return `<button type="button" class="list-item-btn" data-idx="${i}">${e.map} @(${e.x},${e.y}) - ${eff}</button>`;
   }).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editEvent(parseInt((btn as HTMLElement).dataset.idx, 10)));
+  if (moduleData.events.length === 0) renderEmptyState(list, 'No tile events created yet.');
   populateFlagList();
 }
 
@@ -4711,6 +4723,7 @@ function renderArenaList() {
   Array.from(listEl.children).forEach(div => {
     (div as HTMLElement).onclick = () => editArena(parseInt((div as HTMLElement).dataset.idx, 10));
   });
+  if (list.length === 0) renderEmptyState(listEl, 'No arenas created yet.');
 }
 
 // --- Zones ---
@@ -4866,6 +4879,7 @@ function renderZoneList() {
   const list = document.getElementById('zoneList');
   list.innerHTML = moduleData.zones.map((z, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${formatZoneSummary(z)}</button>`).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editZone(parseInt((btn as HTMLElement).dataset.idx, 10)));
+  if (moduleData.zones.length === 0) renderEmptyState(list, 'No zones created yet.');
   const encMap = document.getElementById('encMap');
   if (encMap) {
     const encZone = document.getElementById('encZone');
@@ -4967,6 +4981,7 @@ function renderPortalList() {
   const list = document.getElementById('portalList');
   list.innerHTML = moduleData.portals.map((p, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${p.map} @(${p.x},${p.y}) → ${p.toMap} (${p.toX},${p.toY})</button>`).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editPortal(parseInt((btn as HTMLElement).dataset.idx, 10)));
+  if (moduleData.portals.length === 0) renderEmptyState(list, 'No portals created yet.');
 }
 
 function deletePortal() {
@@ -5075,6 +5090,7 @@ function renderBldgList() {
   const bldgs = moduleData.buildings.map((b, i) => ({ b, i })).sort((a, b) => a.b.x - b.b.x || a.b.y - b.b.y);
   list.innerHTML = bldgs.map(({ b, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">Bldg @(${b.x},${b.y})</button>`).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editBldg(parseInt((btn as HTMLElement).dataset.idx, 10)));
+  if (moduleData.buildings.length === 0) renderEmptyState(list, 'No buildings created yet.');
 }
 
 function editBldg(i) {
@@ -5542,6 +5558,7 @@ function renderQuestList() {
   const list = document.getElementById('questList');
   list.innerHTML = moduleData.quests.map((q, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${q.id}: ${q.title}</button>`).join('');
   Array.from(list.children).forEach(btn => (btn as HTMLElement).onclick = () => editQuest(parseInt((btn as HTMLElement).dataset.idx, 10)));
+  if (moduleData.quests.length === 0) renderEmptyState(list, 'No quests created yet.');
   updateQuestOptions();
 }
 function editQuest(i) {
