@@ -1,5 +1,5 @@
 # Dustland Combat Balance Report: dustland-module
-_Generated 2025-09-25T14:24:25.694Z_
+_Generated 2025-09-25T14:38:29.978Z_
 
 This report estimates how Dustland combatants perform using deterministic averages drawn from the current data files. It considers party builds at multiple levels and equipment tiers, then compares their expected output against enemies found in the module.
 
@@ -45,29 +45,29 @@ This report estimates how Dustland combatants perform using deterministic averag
 | Ranged | 7 | T5 | T5 | AGI 10 | 10 | 5 | 12.09 | 9 | 0%: 15.5<br>50%: 23.25<br>100%: 31 |
 
 ## Enemy Overview
-| Enemy | HP | ATK | DEF | Counter | Immune | Requires | Special |
+| Enemy | HP | ATK | DEF | Counter | XP | Requires | Special |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Rotwalker | 6 | 1 | 0 | — | — | — | — |
-| Mira | 8 | 3 | 1 | 2 | — | — | — |
-| Nora | 8 | 2 | 1 | — | — | — | dmg 2 |
-| Tess | 8 | 2 | 1 | — | — | — | dmg 2 |
-| Road Raider | 16 | 4 | 5 | — | — | — | — |
-| Scrap Mutt | 5 | 1 | 0 | — | — | — | — |
-| Rust Bandit | 6 | 1 | 0 | — | — | — | — |
-| Feral Nomad | 6 | 2 | 0 | — | — | — | — |
-| Waste Ghoul | 7 | 2 | 0 | — | — | — | — |
-| Iron Brute | 15 | 3 | 2 | — | — | — | — |
-| Grit Stalker | 7 | 2 | 1 | — | — | — | — |
-| Scrap Behemoth | 30 | 3 | 2 | — | — | — | dmg 5 |
-| Dust Rat | 5 | 2 | 1 | — | — | — | — |
-| Gear Ghoul | 8 | 3 | 2 | — | — | — | — |
-| Siltpack Ravener | 14 | 4 | 1 | — | — | tag:ranged | dmg 3 |
-| Grinder Matriarchs | 22 | 5 | 2 | — | — | artifact_blade | dmg 4 |
-| Glasswing Pride | 28 | 6 | 3 | — | — | wand | dmg 5 |
-| Sovereign of Dust | 160 | 12 | 6 | — | — | artifact_blade, epic_blade | dmg 12 |
-| Ashen Howler Ambush | 28 | 5 | 2 | — | — | — | dmg 5 |
-| Ashen Screamers | 32 | 6 | 3 | — | — | — | dmg 6 |
-| Ashen Alpha | 48 | 8 | 4 | — | — | — | dmg 7 |
+| Rotwalker | 6 | 1 | 0 | — | 2 | — | — |
+| Mira | 8 | 3 | 1 | 2 | 4 | — | — |
+| Nora | 8 | 2 | 1 | — | 4 | — | dmg 2 |
+| Tess | 8 | 2 | 1 | — | 4 | — | dmg 2 |
+| Road Raider | 16 | 4 | 5 | — | 4 | — | — |
+| Scrap Mutt | 5 | 1 | 0 | — | 3 | — | — |
+| Rust Bandit | 6 | 1 | 0 | — | 3 | — | — |
+| Feral Nomad | 6 | 2 | 0 | — | 3 | — | — |
+| Waste Ghoul | 7 | 2 | 0 | — | 4 | — | — |
+| Iron Brute | 15 | 3 | 2 | — | 5 | — | — |
+| Grit Stalker | 7 | 2 | 1 | — | 4 | — | — |
+| Scrap Behemoth | 30 | 3 | 2 | — | 6 | — | dmg 5 |
+| Dust Rat | 5 | 2 | 1 | — | 3 | — | — |
+| Gear Ghoul | 8 | 3 | 2 | — | 4 | — | — |
+| Siltpack Ravener | 14 | 4 | 1 | — | 54 | tag:ranged | dmg 3 |
+| Grinder Matriarchs | 22 | 5 | 2 | — | 96 | artifact_blade | dmg 4 |
+| Glasswing Pride | 28 | 6 | 3 | — | 160 | wand | dmg 5 |
+| Sovereign of Dust | 160 | 12 | 6 | — | 225 | artifact_blade, epic_blade | dmg 12 |
+| Ashen Howler Ambush | 28 | 5 | 2 | — | 66 | — | dmg 5 |
+| Ashen Screamers | 32 | 6 | 3 | — | 78 | — | dmg 6 |
+| Ashen Alpha | 48 | 8 | 4 | — | 90 | — | dmg 7 |
 
 ### Enemy Templates
 | Template | HP | Special Dmg | Immune |
