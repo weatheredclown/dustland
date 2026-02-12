@@ -1,4 +1,4 @@
-import process from 'node:process';
+import process from 'process';
 import { readModule, getByPath } from './utils.js';
 const [file, path] = process.argv.slice(2);
 if (!file) {
