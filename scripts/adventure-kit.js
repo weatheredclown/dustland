@@ -1473,6 +1473,7 @@ function resetListFilter(inputId, options = {}) {
         input.focus();
 }
 function regenWorld() {
+    globalThis.ackRecordSnapshot?.();
     moduleData.seed = Date.now();
     genWorld(moduleData.seed, { buildings: [] });
     moduleData.buildings = [];
@@ -1497,9 +1498,11 @@ function regenWorld() {
     renderTemplateList();
     renderArenaList();
     drawWorld();
+    globalThis.markAckDirty?.();
 }
 function generateProceduralWorld(regen) {
     confirmDialog(regen ? 'Regenerate the world map?' : 'Replace the world map?', () => {
+        globalThis.ackRecordSnapshot?.();
         moduleData.procGen = moduleData.procGen || {};
         if (!regen) {
             const seedVal = parseInt(document.getElementById('procSeed').value, 10);
@@ -1527,11 +1530,13 @@ function generateProceduralWorld(regen) {
         renderTemplateList();
         renderArenaList();
         drawWorld();
+        globalThis.markAckDirty?.();
     });
 }
 globalThis.generateProceduralWorld = generateProceduralWorld;
 function clearWorld() {
     confirmDialog('Clear the world map?', () => {
+        globalThis.ackRecordSnapshot?.();
         for (let y = 0; y < WORLD_H; y++) {
             for (let x = 0; x < WORLD_W; x++) {
                 setTile('world', x, y, TILE.SAND);
@@ -1565,6 +1570,7 @@ function clearWorld() {
         renderTemplateList();
         renderArenaList();
         drawWorld();
+        globalThis.markAckDirty?.();
     });
 }
 function collectMods(containerId = 'modBuilder') {
@@ -3484,6 +3490,7 @@ function collectNPCFromForm() {
 }
 // Add or update an NPC
 function saveNPC() {
+    globalThis.ackRecordSnapshot?.();
     const { valid, errors } = validateNpcForm();
     if (!valid) {
         setNpcNotice(errors.join(' '), 'error');
@@ -3518,6 +3525,7 @@ function saveNPC() {
     drawInterior();
     if (wasNew)
         resetListFilter('npcFilter');
+    globalThis.markAckDirty?.();
 }
 function applyNPCChanges() {
     npcDirty = true;
@@ -3698,6 +3706,7 @@ function renderNPCList() {
 function deleteNPC() {
     if (editNPCIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     confirmDialog('Delete this NPC?', () => {
         moduleData.npcs.splice(editNPCIdx, 1);
         editNPCIdx = -1;
@@ -3720,6 +3729,7 @@ function deleteNPC() {
         loadTreeEditor();
         showNPCEditor(false);
         validateNpcForm({ silent: true });
+        globalThis.markAckDirty?.();
     });
 }
 function closeNPCEditor() {
@@ -3832,6 +3842,7 @@ function beginPlaceItem() {
     drawWorld();
 }
 function addItem() {
+    globalThis.ackRecordSnapshot?.();
     const wasNew = editItemIdx < 0;
     const name = document.getElementById('itemName').value.trim();
     const id = document.getElementById('itemId').value.trim();
@@ -3938,6 +3949,7 @@ function addItem() {
     showItemEditor(false);
     if (wasNew)
         resetListFilter('itemFilter');
+    globalThis.markAckDirty?.();
 }
 function cancelItem() {
     placingType = null;
@@ -3950,6 +3962,7 @@ function cancelItem() {
     updateCursor();
 }
 function removeItemFromWorld() {
+    globalThis.ackRecordSnapshot?.();
     document.getElementById('itemOnMap').checked = false;
     document.getElementById('itemMap').value = '';
     if (editItemIdx >= 0) {
@@ -3962,6 +3975,7 @@ function removeItemFromWorld() {
         }
         renderItemList();
         drawWorld();
+        globalThis.markAckDirty?.();
     }
     updateItemMapWrap();
 }
@@ -4056,6 +4070,7 @@ function renderItemList() {
 function deleteItem() {
     if (editItemIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     confirmDialog('Delete this item?', () => {
         moduleData.items.splice(editItemIdx, 1);
         editItemIdx = -1;
@@ -4066,6 +4081,7 @@ function deleteItem() {
         selectedObj = null;
         drawWorld();
         showItemEditor(false);
+        globalThis.markAckDirty?.();
     });
 }
 function closeItemEditor() {
@@ -4370,6 +4386,7 @@ function collectEncounter() {
     return entry;
 }
 function addEncounter() {
+    globalThis.ackRecordSnapshot?.();
     const entry = collectEncounter();
     if (editEncounterIdx >= 0) {
         moduleData.encounters[editEncounterIdx] = entry;
@@ -4381,6 +4398,7 @@ function addEncounter() {
     document.getElementById('delEncounter').style.display = 'none';
     renderEncounterList();
     showEncounterEditor(false);
+    globalThis.markAckDirty?.();
 }
 function editEncounter(i) {
     const e = moduleData.encounters[i];
@@ -4422,6 +4440,7 @@ function renderEncounterList() {
 function deleteEncounter() {
     if (editEncounterIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     confirmDialog('Delete this enemy?', () => {
         moduleData.encounters.splice(editEncounterIdx, 1);
         editEncounterIdx = -1;
@@ -4429,6 +4448,7 @@ function deleteEncounter() {
         document.getElementById('delEncounter').style.display = 'none';
         renderEncounterList();
         showEncounterEditor(false);
+        globalThis.markAckDirty?.();
     });
 }
 // --- NPC Templates ---
@@ -4506,6 +4526,7 @@ function collectTemplate() {
     return { id, name, desc, color, portraitSheet, combat };
 }
 function addTemplate() {
+    globalThis.ackRecordSnapshot?.();
     const entry = collectTemplate();
     if (editTemplateIdx >= 0) {
         moduleData.templates[editTemplateIdx] = entry;
@@ -4517,6 +4538,7 @@ function addTemplate() {
     document.getElementById('delTemplate').style.display = 'none';
     renderTemplateList();
     showTemplateEditor(false);
+    globalThis.markAckDirty?.();
 }
 function editTemplate(i) {
     const t = moduleData.templates[i];
@@ -4558,6 +4580,7 @@ function renderTemplateList() {
 function deleteTemplate() {
     if (editTemplateIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     confirmDialog('Delete this template?', () => {
         moduleData.templates.splice(editTemplateIdx, 1);
         editTemplateIdx = -1;
@@ -4565,6 +4588,7 @@ function deleteTemplate() {
         document.getElementById('delTemplate').style.display = 'none';
         renderTemplateList();
         showTemplateEditor(false);
+        globalThis.markAckDirty?.();
     });
 }
 // --- Tile Events ---
@@ -4612,6 +4636,7 @@ function collectEvent() {
     return { map, x, y, events: [ev] };
 }
 function addEvent() {
+    globalThis.ackRecordSnapshot?.();
     const entry = collectEvent();
     if (editEventIdx >= 0) {
         moduleData.events[editEventIdx] = entry;
@@ -4626,6 +4651,7 @@ function addEvent() {
     selectedObj = null;
     drawWorld();
     showEventEditor(false);
+    globalThis.markAckDirty?.();
 }
 function editEvent(i) {
     const e = moduleData.events[i];
@@ -4664,6 +4690,7 @@ function renderEventList() {
 function deleteEvent() {
     if (editEventIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     confirmDialog('Delete this event?', () => {
         moduleData.events.splice(editEventIdx, 1);
         editEventIdx = -1;
@@ -4673,6 +4700,7 @@ function deleteEvent() {
         selectedObj = null;
         drawWorld();
         showEventEditor(false);
+        globalThis.markAckDirty?.();
     });
 }
 // --- Arenas ---
@@ -4939,6 +4967,7 @@ function collectArena() {
     return arena;
 }
 function addArena() {
+    globalThis.ackRecordSnapshot?.();
     const arena = collectArena();
     if (!arena)
         return;
@@ -4956,6 +4985,7 @@ function addArena() {
     document.getElementById('delArena').style.display = 'none';
     renderArenaList();
     showArenaEditor(false);
+    globalThis.markAckDirty?.();
 }
 function editArena(idx) {
     const list = Array.isArray(moduleData.behaviors?.arenas) ? moduleData.behaviors.arenas : [];
@@ -4980,6 +5010,7 @@ function editArena(idx) {
 function deleteArena() {
     if (editArenaIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     confirmDialog('Delete this arena?', () => {
         const list = arenaList();
         if (!list)
@@ -4992,6 +5023,7 @@ function deleteArena() {
         renderArenaList();
         showArenaEditor(false);
         cleanupBehaviors();
+        globalThis.markAckDirty?.();
     });
 }
 function cancelArena() {
@@ -5120,6 +5152,7 @@ function collectZone() {
     return entry;
 }
 function addZone() {
+    globalThis.ackRecordSnapshot?.();
     const entry = collectZone();
     if (!moduleData._origKeys)
         moduleData._origKeys = Object.keys(moduleData);
@@ -5138,6 +5171,7 @@ function addZone() {
     showZoneEditor(false);
     selectedObj = null;
     drawWorld();
+    globalThis.markAckDirty?.();
 }
 function editZone(i) {
     const z = moduleData.zones[i];
@@ -5214,6 +5248,7 @@ document.getElementById('zoneWalled').addEventListener('change', updateZoneWallF
 function deleteZone() {
     if (editZoneIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     moduleData.zones.splice(editZoneIdx, 1);
     editZoneIdx = -1;
     document.getElementById('addZone').textContent = 'Add Zone';
@@ -5222,6 +5257,7 @@ function deleteZone() {
     showZoneEditor(false);
     selectedObj = null;
     drawWorld();
+    globalThis.markAckDirty?.();
 }
 // --- Portals ---
 function showPortalEditor(show) {
@@ -5249,6 +5285,7 @@ function collectPortal() {
     return { map, x, y, toMap, toX, toY };
 }
 function addPortal() {
+    globalThis.ackRecordSnapshot?.();
     const entry = collectPortal();
     if (editPortalIdx >= 0) {
         moduleData.portals[editPortalIdx] = entry;
@@ -5263,6 +5300,7 @@ function addPortal() {
     selectedObj = null;
     drawWorld();
     showPortalEditor(false);
+    globalThis.markAckDirty?.();
 }
 function editPortal(i) {
     const p = moduleData.portals[i];
@@ -5292,6 +5330,7 @@ function renderPortalList() {
 function deletePortal() {
     if (editPortalIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     moduleData.portals.splice(editPortalIdx, 1);
     editPortalIdx = -1;
     document.getElementById('addPortal').textContent = 'Add Portal';
@@ -5300,6 +5339,7 @@ function deletePortal() {
     selectedObj = null;
     drawWorld();
     showPortalEditor(false);
+    globalThis.markAckDirty?.();
 }
 // --- Buildings ---
 function drawBldg() {
@@ -5356,6 +5396,7 @@ function beginPlaceBldg() {
 }
 // Add a new building to the world and start editing it
 function addBuilding() {
+    globalThis.ackRecordSnapshot?.();
     const x = parseInt(document.getElementById('bldgX').value, 10) || 0;
     const y = parseInt(document.getElementById('bldgY').value, 10) || 0;
     const bunker = document.getElementById('bldgBunker').checked;
@@ -5383,6 +5424,7 @@ function addBuilding() {
     drawWorld();
     document.getElementById('delBldg').style.display = 'block';
     document.getElementById('addBldg').style.display = 'none';
+    globalThis.markAckDirty?.();
 }
 function cancelBldg() {
     placingType = null;
@@ -5687,6 +5729,7 @@ function applyBldgChanges() {
 function deleteBldg() {
     if (editBldgIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     const b = moduleData.buildings[editBldgIdx];
     removeBuilding(b);
     moduleData.buildings.splice(editBldgIdx, 1);
@@ -5698,6 +5741,7 @@ function deleteBldg() {
     selectedObj = null;
     drawWorld();
     showBldgEditor(false);
+    globalThis.markAckDirty?.();
 }
 function closeBldgEditor() {
     editBldgIdx = -1;
@@ -5872,6 +5916,7 @@ function startNewQuest() {
     document.getElementById('questId').focus();
 }
 function addQuest() {
+    globalThis.ackRecordSnapshot?.();
     const id = document.getElementById('questId').value.trim();
     const title = document.getElementById('questTitle').value.trim();
     const desc = document.getElementById('questDesc').value.trim();
@@ -5923,6 +5968,7 @@ function addQuest() {
     renderNPCList();
     document.getElementById('questId').value = nextId('quest', moduleData.quests);
     showQuestEditor(false);
+    globalThis.markAckDirty?.();
 }
 function renderQuestList() {
     const list = document.getElementById('questList');
@@ -5973,6 +6019,7 @@ function updateQuestOptions() {
 function deleteQuest() {
     if (editQuestIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     confirmDialog('Delete this quest?', () => {
         const q = moduleData.quests[editQuestIdx];
         moduleData.npcs.forEach(n => {
@@ -5992,6 +6039,7 @@ function deleteQuest() {
         updateQuestOptions();
         document.getElementById('questId').value = nextId('quest', moduleData.quests);
         showQuestEditor(false);
+        globalThis.markAckDirty?.();
     });
 }
 function applyLoadedModule(data) {
@@ -6084,6 +6132,7 @@ function applyLoadedModule(data) {
     showInteriorEditor(false);
     showQuestEditor(false);
     showArenaEditor(false);
+    globalThis.clearAckDirty?.();
 }
 globalThis.applyLoadedModule = applyLoadedModule;
 function validateSpawns() {
@@ -6482,6 +6531,7 @@ function saveModule() {
     a.download = moduleData.name + '.json';
     a.click();
     URL.revokeObjectURL(a.href);
+    globalThis.clearAckDirty?.();
 }
 function playtestModule() {
     if (hasBlockingProblems())
@@ -6511,6 +6561,7 @@ function playtestModule() {
     const data = { ...moduleBase, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints, zones, zoneEffects };
     localStorage.setItem(PLAYTEST_KEY, JSON.stringify(data));
     window.open('dustland.html?ack-player=1#play', '_blank');
+    globalThis.clearAckDirty?.();
 }
 document.getElementById('clear').onclick = clearWorld;
 const moduleBunkerScope = document.getElementById('moduleBunkerScope');
@@ -6965,6 +7016,7 @@ canvas.addEventListener('mousedown', ev => {
     const isPaintTab = activeTab === 'paint';
     const validPaint = worldPaint != null || (isPaintTab && (paintMode === 'asset' || paintMode === 'clear'));
     if (currentMap === 'world' && validPaint && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal || overZone)) {
+        globalThis.ackRecordSnapshot?.();
         worldPainting = true;
         hoverTile = { x, y };
         if (isPaintTab && paintMode !== 'tile') {
@@ -6993,6 +7045,7 @@ canvas.addEventListener('mousedown', ev => {
         hoverTile = { x, y };
         const I = moduleData.interiors.find(i => i.id === currentMap);
         if (I) {
+            globalThis.ackRecordSnapshot?.();
             applyInteriorBrush(I, x, y, intPaint);
             delete I._origGrid;
             intPainting = true;
@@ -7470,6 +7523,7 @@ if (wizardList && globalThis.Dustland?.wizards) {
 function mergeWizardResult(res) {
     if (!res)
         return;
+    globalThis.ackRecordSnapshot?.();
     Object.entries(res).forEach(([k, v]) => {
         if (Array.isArray(moduleData[k]))
             moduleData[k].push(...v);
@@ -7499,6 +7553,7 @@ function mergeWizardResult(res) {
         renderEncounterList();
     if (typeof renderTemplateList === 'function')
         renderTemplateList();
+    globalThis.markAckDirty?.();
 }
 function openWizard(cfg) {
     const modal = document.getElementById('wizardModal');
@@ -7739,6 +7794,26 @@ animate();
         window.showEditorTab = show;
     }
 })();
+// Expose hooks for ACK editor extensions
+globalThis.ackExportModulePayload = exportModulePayload;
+globalThis.ackApplyLoadedModule = applyLoadedModule;
+globalThis.ackGetWorld = () => world;
+globalThis.ackSetWorld = (w) => { world = w; globalThis.world = w; };
+globalThis.ackRefreshAllLists = function () {
+    renderNPCList();
+    renderItemList();
+    renderBldgList();
+    renderInteriorList();
+    renderPortalList();
+    renderZoneList();
+    renderQuestList();
+    renderEventList();
+    renderArenaList();
+    renderEncounterList();
+    renderTemplateList();
+    drawWorld();
+};
+globalThis.ackGetModuleData = () => moduleData;
 if (document && typeof document.addEventListener === 'function') {
     document.addEventListener('keydown', e => {
         if (e.ctrlKey || e.metaKey) {
@@ -7749,6 +7824,14 @@ if (document && typeof document.addEventListener === 'function') {
             else if (e.key === 'p') {
                 e.preventDefault();
                 playtestModule();
+            }
+            else if (e.key === 'z') {
+                e.preventDefault();
+                globalThis.ackUndo?.();
+            }
+            else if (e.key === 'y') {
+                e.preventDefault();
+                globalThis.ackRedo?.();
             }
         }
     });

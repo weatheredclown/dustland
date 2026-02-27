@@ -35,6 +35,7 @@
     "ts-src/scripts/dustland-nano.ts",
     "ts-src/scripts/fx-config.ts",
     "ts-src/scripts/multiplayer.ts",
+    "ts-src/scripts/ack-editor/**/*",
     "ts-src/scripts/supporting/**/*",
     "ts-src/scripts/ui/skin-manager.ts",
     "ts-src/scripts/ui/trade.ts",

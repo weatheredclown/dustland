@@ -491,7 +491,7 @@
         </div>
         <div class="btn-group">
           <div style="padding:0px 13px 0px 0px;font-family: sans-serif;">
-          <label for="moduleName">Module Name</label>
+          <label for="moduleName">Module Name<span id="dirtyIndicator"></span></label>
           <input type="text" id="moduleName" />
           </div>
           <div style="padding:0px 13px 0px 0px;font-family: sans-serif;max-width:200px;">
@@ -1040,6 +1040,8 @@
         <span class="quick-actions__cloud-status" data-role="server-mode-status" aria-live="polite"></span>
         <button class="btn" type="button" aria-haspopup="dialog">☁ Cloud</button>
       </div>
+      <button id="undoBtn" class="btn" type="button" title="Undo (Ctrl+Z)" disabled aria-label="Undo">&#8617; Undo</button>
+      <button id="redoBtn" class="btn" type="button" title="Redo (Ctrl+Y)" disabled aria-label="Redo">&#8618; Redo</button>
       <button id="quickSave" class="btn" type="button" title="Save module (Ctrl+S)">💾 Save</button>
       <button id="cloudLoad" class="btn" type="button" title="Load the latest cloud draft" hidden>☁ Load</button>
       <button id="cloudSave" class="btn" type="button" title="Save to the cloud" hidden>☁ Save</button>
@@ -1106,6 +1108,8 @@
       })();
     </script>
     <script defer src="./scripts/adventure-kit.js"></script>
+    <script defer src="./scripts/ack-editor/autosave.js"></script>
+    <script defer src="./scripts/ack-editor/undo-manager.js"></script>
   </body>
 
 </html>
