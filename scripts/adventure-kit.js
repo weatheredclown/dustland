@@ -7122,71 +7122,76 @@ if (questRewardCustomType)
     questRewardCustomType.addEventListener('change', () => {
         maybeSyncQuestRewardSlot();
     });
-document.getElementById('addBldg').onclick = beginPlaceBldg;
-document.getElementById('addQuest').onclick = addQuest;
-document.getElementById('addEvent').onclick = addEvent;
-document.getElementById('cancelItem').onclick = cancelItem;
-document.getElementById('cancelBldg').onclick = cancelBldg;
-document.getElementById('newEvent').onclick = startNewEvent;
-document.getElementById('addPortal').onclick = addPortal;
-document.getElementById('newPortal').onclick = startNewPortal;
-document.getElementById('newZone').onclick = startNewZone;
-document.getElementById('bldgBunker').addEventListener('change', () => {
-    document.getElementById('bldgInterior').disabled = document.getElementById('bldgBunker').checked;
+document.getElementById('addBldg')?.addEventListener('click', beginPlaceBldg);
+document.getElementById('addQuest')?.addEventListener('click', addQuest);
+document.getElementById('addEvent')?.addEventListener('click', addEvent);
+document.getElementById('cancelItem')?.addEventListener('click', cancelItem);
+document.getElementById('cancelBldg')?.addEventListener('click', cancelBldg);
+document.getElementById('newEvent')?.addEventListener('click', startNewEvent);
+document.getElementById('addPortal')?.addEventListener('click', addPortal);
+document.getElementById('newPortal')?.addEventListener('click', startNewPortal);
+document.getElementById('newZone')?.addEventListener('click', startNewZone);
+document.getElementById('bldgBunker')?.addEventListener('change', () => {
+    const bunker = document.getElementById('bldgBunker');
+    const interior = document.getElementById('bldgInterior');
+    if (bunker && interior)
+        interior.disabled = bunker.checked;
 });
-document.getElementById('addZone').onclick = addZone;
-document.getElementById('delZone').onclick = deleteZone;
-document.getElementById('delNPC').onclick = deleteNPC;
-document.getElementById('closeNPC').onclick = closeNPCEditor;
-document.getElementById('closeItem').onclick = closeItemEditor;
-document.getElementById('closeBldg').onclick = closeBldgEditor;
-document.getElementById('closeInterior').onclick = closeInteriorEditor;
-document.getElementById('newArena').onclick = startNewArena;
-document.getElementById('addArena').onclick = addArena;
-document.getElementById('arenaAddWave').onclick = () => addArenaWaveBlock({});
-document.getElementById('cancelArena').onclick = cancelArena;
-document.getElementById('delArena').onclick = deleteArena;
-document.getElementById('newEncounter').onclick = startNewEncounter;
-document.getElementById('addEncounter').onclick = addEncounter;
-document.getElementById('encAddLootRow').onclick = () => addLootTableRow(document.getElementById('encLootTable'));
-document.getElementById('cancelEncounter').onclick = () => { editEncounterIdx = -1; showEncounterEditor(false); };
-document.getElementById('delEncounter').onclick = deleteEncounter;
-document.getElementById('closeEncounter').onclick = () => showEncounterEditor(false);
-document.getElementById('newTemplate').onclick = startNewTemplate;
-document.getElementById('addTemplate').onclick = addTemplate;
-document.getElementById('templateAddLootRow').onclick = () => addLootTableRow(document.getElementById('templateLootTable'));
-document.getElementById('delTemplate').onclick = deleteTemplate;
-document.getElementById('templateDropScrap').onchange = toggleTemplateScrapFields;
-document.getElementById('encTemplate').addEventListener('change', () => {
+document.getElementById('addZone')?.addEventListener('click', addZone);
+document.getElementById('delZone')?.addEventListener('click', deleteZone);
+document.getElementById('delNPC')?.addEventListener('click', deleteNPC);
+document.getElementById('closeNPC')?.addEventListener('click', closeNPCEditor);
+document.getElementById('closeItem')?.addEventListener('click', closeItemEditor);
+document.getElementById('closeBldg')?.addEventListener('click', closeBldgEditor);
+document.getElementById('closeInterior')?.addEventListener('click', closeInteriorEditor);
+document.getElementById('newArena')?.addEventListener('click', startNewArena);
+document.getElementById('addArena')?.addEventListener('click', addArena);
+document.getElementById('arenaAddWave')?.addEventListener('click', () => addArenaWaveBlock({}));
+document.getElementById('cancelArena')?.addEventListener('click', cancelArena);
+document.getElementById('delArena')?.addEventListener('click', deleteArena);
+document.getElementById('newEncounter')?.addEventListener('click', startNewEncounter);
+document.getElementById('addEncounter')?.addEventListener('click', addEncounter);
+document.getElementById('encAddLootRow')?.addEventListener('click', () => { const t = document.getElementById('encLootTable'); if (t)
+    addLootTableRow(t); });
+document.getElementById('cancelEncounter')?.addEventListener('click', () => { editEncounterIdx = -1; showEncounterEditor(false); });
+document.getElementById('delEncounter')?.addEventListener('click', deleteEncounter);
+document.getElementById('closeEncounter')?.addEventListener('click', () => showEncounterEditor(false));
+document.getElementById('newTemplate')?.addEventListener('click', startNewTemplate);
+document.getElementById('addTemplate')?.addEventListener('click', addTemplate);
+document.getElementById('templateAddLootRow')?.addEventListener('click', () => { const t = document.getElementById('templateLootTable'); if (t)
+    addLootTableRow(t); });
+document.getElementById('delTemplate')?.addEventListener('click', deleteTemplate);
+document.getElementById('templateDropScrap')?.addEventListener('change', toggleTemplateScrapFields);
+document.getElementById('encTemplate')?.addEventListener('change', () => {
     const container = document.getElementById('encLootTable');
     if (!container || container.querySelector('.lootRow'))
         return;
-    const tmplId = document.getElementById('encTemplate').value.trim();
+    const tmplId = document.getElementById('encTemplate')?.value?.trim();
     const tmpl = moduleData.templates.find(t => t.id === tmplId);
     const table = getTemplateLootTable(tmpl);
     if (table.length)
         setLootTable(container, table);
 });
-document.getElementById('encLocationMode').addEventListener('change', updateEncounterLocationMode);
-document.getElementById('encMap').addEventListener('change', () => {
+document.getElementById('encLocationMode')?.addEventListener('change', updateEncounterLocationMode);
+document.getElementById('encMap')?.addEventListener('change', () => {
     const mapSel = document.getElementById('encMap');
     const zoneSel = document.getElementById('encZone');
-    populateEncounterZoneDropdown(mapSel.value || 'world', zoneSel ? zoneSel.value : '');
+    populateEncounterZoneDropdown(mapSel?.value || 'world', zoneSel ? zoneSel.value : '');
     updateEncounterLocationMode();
 });
 updateEncounterLocationMode();
-document.getElementById('npcPrevP').onclick = () => {
+document.getElementById('npcPrevP')?.addEventListener('click', () => {
     npcPortraitIndex = (npcPortraitIndex + npcPortraits.length - 1) % npcPortraits.length;
     npcPortraitPath = '';
     setNpcPortrait();
     applyNPCChanges();
-};
-document.getElementById('npcNextP').onclick = () => {
+});
+document.getElementById('npcNextP')?.addEventListener('click', () => {
     npcPortraitIndex = (npcPortraitIndex + 1) % npcPortraits.length;
     npcPortraitPath = '';
     setNpcPortrait();
     applyNPCChanges();
-};
+});
 setupListFilter('npcFilter', 'npcList');
 setupListFilter('itemFilter', 'itemList');
 setupListFilter('questFilter', 'questList');
@@ -7227,44 +7232,46 @@ document.getElementById('zoneFxAddSpawn')?.addEventListener('click', () => {
     if (c)
         addZoneFxSpawnBlock(c);
 });
-document.getElementById('delItem').onclick = deleteItem;
-document.getElementById('delBldg').onclick = deleteBldg;
-document.getElementById('newInterior').onclick = startNewInterior;
-document.getElementById('delInterior').onclick = deleteInterior;
-document.getElementById('delQuest').onclick = deleteQuest;
-document.getElementById('delEvent').onclick = deleteEvent;
-document.getElementById('delPortal').onclick = deletePortal;
-populateTypeDropdown(document.getElementById('itemType'));
-document.getElementById('itemType').addEventListener('change', updateModsWrap);
-document.getElementById('itemUseType').addEventListener('change', updateUseWrap);
-document.getElementById('itemTags').addEventListener('input', updatePersonaSection);
-document.getElementById('itemPersonaId').addEventListener('input', updatePersonaSection);
-document.getElementById('itemPersonaPortraitPath').addEventListener('input', e => {
+document.getElementById('delItem')?.addEventListener('click', deleteItem);
+document.getElementById('delBldg')?.addEventListener('click', deleteBldg);
+document.getElementById('newInterior')?.addEventListener('click', startNewInterior);
+document.getElementById('delInterior')?.addEventListener('click', deleteInterior);
+document.getElementById('delQuest')?.addEventListener('click', deleteQuest);
+document.getElementById('delEvent')?.addEventListener('click', deleteEvent);
+document.getElementById('delPortal')?.addEventListener('click', deletePortal);
+const itemTypeEl = document.getElementById('itemType');
+if (itemTypeEl)
+    populateTypeDropdown(itemTypeEl);
+document.getElementById('itemType')?.addEventListener('change', updateModsWrap);
+document.getElementById('itemUseType')?.addEventListener('change', updateUseWrap);
+document.getElementById('itemTags')?.addEventListener('input', updatePersonaSection);
+document.getElementById('itemPersonaId')?.addEventListener('input', updatePersonaSection);
+document.getElementById('itemPersonaPortraitPath')?.addEventListener('input', e => {
     itemPersonaPortraitPath = e.target.value.trim();
     if (itemPersonaPortraitPath)
         itemPersonaPortraitIndex = 0;
     setItemPersonaPortrait();
 });
-document.getElementById('itemPersonaPrev').onclick = () => {
+document.getElementById('itemPersonaPrev')?.addEventListener('click', () => {
     itemPersonaPortraitIndex = (itemPersonaPortraitIndex + personaPortraits.length - 1) % personaPortraits.length;
     itemPersonaPortraitPath = '';
     const pathEl = document.getElementById('itemPersonaPortraitPath');
     if (pathEl)
         pathEl.value = '';
     setItemPersonaPortrait();
-};
-document.getElementById('itemPersonaNext').onclick = () => {
+});
+document.getElementById('itemPersonaNext')?.addEventListener('click', () => {
     itemPersonaPortraitIndex = (itemPersonaPortraitIndex + 1) % personaPortraits.length;
     itemPersonaPortraitPath = '';
     const pathEl = document.getElementById('itemPersonaPortraitPath');
     if (pathEl)
         pathEl.value = '';
     setItemPersonaPortrait();
-};
-document.getElementById('npcTileSprite').addEventListener('input', () => {
+});
+document.getElementById('npcTileSprite')?.addEventListener('input', () => {
     updateTileSpritePreview('npcTileSprite', 'npcTileSpritePreview');
 });
-document.getElementById('itemTileSprite').addEventListener('input', () => {
+document.getElementById('itemTileSprite')?.addEventListener('input', () => {
     updateTileSpritePreview('itemTileSprite', 'itemTileSpritePreview');
 });
 const npcTileUploadBtn = document.getElementById('npcTileSpriteUploadBtn');
@@ -7290,8 +7297,8 @@ document.getElementById('addEventSub')?.addEventListener('click', () => {
     if (c)
         addEventSubBlock(c);
 });
-document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
-document.getElementById('npcFlagType').addEventListener('change', updateFlagBuilder);
+document.getElementById('eventPick')?.addEventListener('click', () => { coordTarget = { x: 'eventX', y: 'eventY' }; });
+document.getElementById('npcFlagType')?.addEventListener('change', updateFlagBuilder);
 setupNpcSections();
 const npcEditorEl = typeof document !== 'undefined' ? document.getElementById('npcEditor') : null;
 if (npcEditorEl) {
@@ -7306,21 +7313,23 @@ if (npcEditorEl) {
         }
     });
 }
-document.getElementById('moduleName').value = moduleData.name;
-document.getElementById('npcPatrol').addEventListener('change', () => {
+const moduleNameEl = document.getElementById('moduleName');
+if (moduleNameEl)
+    moduleNameEl.value = moduleData.name;
+document.getElementById('npcPatrol')?.addEventListener('change', () => {
     updatePatrolSection();
     applyNPCChanges();
 });
 updatePatrolSection();
-document.getElementById('bldgEditor').addEventListener('input', applyBldgChanges);
-document.getElementById('bldgEditor').addEventListener('change', applyBldgChanges);
-document.getElementById('npcFlagPick').onclick = () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY', map: 'npcFlagMap' }; };
-document.getElementById('portalPick').onclick = () => { coordTarget = { x: 'portalX', y: 'portalY' }; };
-document.getElementById('portalDestPick').onclick = () => { coordTarget = { x: 'portalToX', y: 'portalToY' }; };
-document.getElementById('npcPick').onclick = beginNpcCoordinateSelection;
-document.getElementById('npcCancelPick').onclick = cancelNpcCoordinateSelection;
-document.getElementById('itemPick').onclick = () => { coordTarget = { x: 'itemX', y: 'itemY', map: 'itemMap' }; };
-document.getElementById('save').onclick = saveModule;
+document.getElementById('bldgEditor')?.addEventListener('input', applyBldgChanges);
+document.getElementById('bldgEditor')?.addEventListener('change', applyBldgChanges);
+document.getElementById('npcFlagPick')?.addEventListener('click', () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY', map: 'npcFlagMap' }; });
+document.getElementById('portalPick')?.addEventListener('click', () => { coordTarget = { x: 'portalX', y: 'portalY' }; });
+document.getElementById('portalDestPick')?.addEventListener('click', () => { coordTarget = { x: 'portalToX', y: 'portalToY' }; });
+document.getElementById('npcPick')?.addEventListener('click', beginNpcCoordinateSelection);
+document.getElementById('npcCancelPick')?.addEventListener('click', cancelNpcCoordinateSelection);
+document.getElementById('itemPick')?.addEventListener('click', () => { coordTarget = { x: 'itemX', y: 'itemY', map: 'itemMap' }; });
+document.getElementById('save')?.addEventListener('click', saveModule);
 document.getElementById('quickSave')?.addEventListener('click', saveModule);
 function loadErrorMessage(err) {
     return err?.message ?? String(err);
@@ -7433,19 +7442,21 @@ function syncStartFromInputs() {
 ['moduleStartMap', 'moduleStartX', 'moduleStartY'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', syncStartFromInputs);
 });
-populateMapDropdown(document.getElementById('moduleStartMap'), moduleData.start?.map || 'world');
+const moduleStartMapEl = document.getElementById('moduleStartMap');
+if (moduleStartMapEl)
+    populateMapDropdown(moduleStartMapEl, moduleData.start?.map || 'world');
 syncStartInputsFromData();
-document.getElementById('setStart').onclick = () => {
+document.getElementById('setStart')?.addEventListener('click', () => {
     settingStart = true;
     setMapActionBanner('Start position active: choose a walkable tile on the world map.', 'info');
     drawWorld();
-};
-document.getElementById('resetStart').onclick = () => {
+});
+document.getElementById('resetStart')?.addEventListener('click', () => {
     moduleData.start = { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
     syncStartInputsFromData();
     drawWorld();
     setMapActionBanner('Start position reset to the default location.', 'info', 2500);
-};
+});
 const spawnHeatBtn = document.getElementById('spawnHeatBtn');
 if (spawnHeatBtn)
     spawnHeatBtn.onclick = () => {
@@ -7453,14 +7464,14 @@ if (spawnHeatBtn)
         spawnHeatBtn.textContent = `Spawn Heat: ${spawnHeat ? 'On' : 'Off'}`;
         drawWorld();
     };
-document.getElementById('addNode').onclick = addNode;
-document.getElementById('editDialog').onclick = openDialogEditor;
-document.getElementById('closeDialogModal').onclick = closeDialogEditor;
-document.getElementById('dialogModal').addEventListener('click', e => { if (e.target.id === 'dialogModal')
+document.getElementById('addNode')?.addEventListener('click', addNode);
+document.getElementById('editDialog')?.addEventListener('click', openDialogEditor);
+document.getElementById('closeDialogModal')?.addEventListener('click', closeDialogEditor);
+document.getElementById('dialogModal')?.addEventListener('click', e => { if (e.target?.id === 'dialogModal')
     closeDialogEditor(); });
 // Live preview when dialog text changes
 ['npcDialog', 'npcAccept', 'npcTurnin'].forEach(id => {
-    document.getElementById(id).addEventListener('input', renderDialogPreview);
+    document.getElementById(id)?.addEventListener('input', renderDialogPreview);
 });
 // When quest selection changes, show/hide extra fields, update preview, and (optionally) auto-generate the quest scaffold
 const npcQuestEl = document.getElementById('npcQuests');
@@ -7475,19 +7486,19 @@ if (npcQuestEl)
             renderDialogPreview(); // just refresh preview of whatever is in the editor
         }
     });
-document.getElementById('npcCombat').addEventListener('change', updateNPCOptSections);
-document.getElementById('npcShop').addEventListener('change', updateNPCOptSections);
+document.getElementById('npcCombat')?.addEventListener('change', updateNPCOptSections);
+document.getElementById('npcShop')?.addEventListener('change', updateNPCOptSections);
 document.getElementById('shopAddInvRow')?.addEventListener('click', () => {
     const c = document.getElementById('shopInvTable');
     if (c)
         addShopInvRow(c);
 });
 document.getElementById('shopImportItems')?.addEventListener('click', importModuleItemsToShop);
-document.getElementById('npcHidden').addEventListener('change', updateNPCOptSections);
-document.getElementById('npcTrainer').addEventListener('change', updateNPCOptSections);
-document.getElementById('npcColorOverride').addEventListener('change', updateColorOverride);
-document.getElementById('npcLocked').addEventListener('change', onLockedToggle);
-document.getElementById('genQuestDialog').onclick = generateQuestTree;
+document.getElementById('npcHidden')?.addEventListener('change', updateNPCOptSections);
+document.getElementById('npcTrainer')?.addEventListener('change', updateNPCOptSections);
+document.getElementById('npcColorOverride')?.addEventListener('change', updateColorOverride);
+document.getElementById('npcLocked')?.addEventListener('change', onLockedToggle);
+document.getElementById('genQuestDialog')?.addEventListener('click', generateQuestTree);
 if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape' && npcMapMode) {

@@ -37,7 +37,7 @@ function stubEl(){
     },
     parentElement:{ style:{}, appendChild(){}, querySelectorAll(){ return []; } },
     setAttribute(){},
-    click(){},
+    click(){ if (this.onclick) this.onclick(); if (this._listeners?.click) this._listeners.click.forEach(fn => fn()); },
     dispatchEvent(){},
     focus(){ document.activeElement = el; },
   };
@@ -284,7 +284,7 @@ test('item select on map populates map dropdown', () => {
   startNewItem();
   document.getElementById('itemOnMap').checked = true;
   updateItemMapWrap();
-  document.getElementById('itemPick').onclick();
+  document.getElementById('itemPick').click();
   canvasEl._listeners.mousedown[0]({ clientX:3, clientY:2, button:0 });
   assert.strictEqual(document.getElementById('itemMap').value, 'world');
   moduleData.items = [];
@@ -301,7 +301,7 @@ test('saveModule exports persona overrides for mask items', () => {
   document.getElementById('itemTags').value = 'mask, quest';
   document.getElementById('itemPersonaId').value = 'mara.masked';
   document.getElementById('itemPersonaLabel').value = 'Echo Mara';
-  document.getElementById('itemPersonaNext').onclick();
+  document.getElementById('itemPersonaNext').click();
   addItem();
   assert.strictEqual(moduleData.items.length, 1);
   assert.strictEqual(moduleData.items[0].persona, 'mara.masked');
