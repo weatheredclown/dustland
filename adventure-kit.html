@@ -504,6 +504,18 @@
           <button class="btn btn--primary" id="save" title="Download module as a JSON file">Save</button>
           <button class="btn" id="load" title="Load a module from a JSON file">Load</button>
         </div>
+        <details id="modulePropsPanel" style="font-family:sans-serif;font-size:12px;padding:2px 8px;">
+          <summary style="cursor:pointer;">Module Properties</summary>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;">
+            <label>Description<br/><textarea id="moduleDesc" rows="2" style="width:200px;font-family:monospace;font-size:11px;"></textarea></label>
+            <label>Author<br/><input type="text" id="moduleAuthor" style="width:120px;" /></label>
+            <label>Version<br/><input type="text" id="moduleVersion" placeholder="1.0.0" style="width:70px;" /></label>
+            <label>Tags<br/><input type="text" id="moduleTags" placeholder="wasteland, combat" style="width:180px;" /></label>
+            <label>Start Map<br/><select id="moduleStartMap"></select></label>
+            <label>Start X<br/><input id="moduleStartX" type="number" min="0" style="width:50px;" /></label>
+            <label>Start Y<br/><input id="moduleStartY" type="number" min="0" style="width:50px;" /></label>
+          </div>
+        </details>
         <div class="btn-group">
           <button class="btn" id="setStart" title="Set player starting tile">Set Start</button>
           <button class="btn" id="resetStart" title="Reset player starting tile to the default">Reset Start</button>
@@ -538,6 +550,8 @@
         <button class="tab2" type="button" data-tab="zones" role="tab" aria-selected="false"><span aria-hidden="true">🗺</span> Zones</button>
         <button class="tab2" type="button" data-tab="encounters" role="tab" aria-selected="false"><span aria-hidden="true">🎲</span> Encounters</button>
         <button class="tab2" type="button" data-tab="templates" role="tab" aria-selected="false"><span aria-hidden="true">📦</span> Templates</button>
+        <button class="tab2" type="button" data-tab="personas" role="tab" aria-selected="false"><span aria-hidden="true">🎭</span> Personas</button>
+        <button class="tab2" type="button" data-tab="zonefx" role="tab" aria-selected="false"><span aria-hidden="true">🌪</span> Zone FX</button>
         <button class="tab2" type="button" data-tab="wizards" role="tab" aria-selected="false"><span aria-hidden="true">🧙</span> Wizards</button>
       </div>
       <div class="tabpanes">
@@ -624,6 +638,14 @@
           <div id="shopOpts" style="display:none">
             <label>Markup<input id="shopMarkup" type="number" min="1" value="2" /></label>
             <label>Refresh<input id="shopRefresh" type="number" min="0" value="0" /></label>
+            <div style="margin-top:4px;">
+              <div style="font-weight:bold;font-size:11px;">Shop Inventory</div>
+              <div id="shopInvTable"></div>
+              <div style="display:flex;gap:4px;margin-top:4px;">
+                <button class="btn" type="button" id="shopAddInvRow">+ Item</button>
+                <button class="btn" type="button" id="shopImportItems">Import Module Items</button>
+              </div>
+            </div>
           </div>
           <label><input type="checkbox" id="npcTrainer"> Trainer NPC</label>
           <div id="trainerOpts" style="display:none">
@@ -848,21 +870,12 @@
             <label>Y<input id="eventY" type="number" min="0" /></label>
           </div>
           <button class="btn" type="button" id="eventPick" title="Click on the map to choose location">Select on Map</button>
-          <label>Effect<select id="eventEffect">
-              <option value="toast">Toast</option>
-              <option value="log">Log</option>
-              <option value="addFlag">Add Flag</option>
-              <option value="modStat">Mod Stat</option>
-            </select></label>
-          <label id="eventMsgWrap">Message<input id="eventMsg" placeholder="Event message" /></label>
-          <label id="eventFlagWrap" style="display:none">Flag<input id="eventFlag" /></label>
-          <div id="eventStatWrap" style="display:none">
-            <label>Stat<select id="eventStat"></select></label>
-            <label>Delta<input id="eventDelta" type="number" /></label>
-            <label>Duration<input id="eventDuration" type="number" min="0" /></label>
+          <div id="eventSubList"></div>
+          <button class="btn" type="button" id="addEventSub">+ Add Sub-Event</button>
+          <div class="editor-actions">
+            <button class="btn btn--primary" id="addEvent">Add Event</button>
+            <button class="btn" id="delEvent" style="display:none">Delete Event</button>
           </div>
-        <button class="btn" id="addEvent">Add Event</button>
-        <button class="btn" id="delEvent" style="display:none">Delete Event</button>
       </div>
     </fieldset>
       <fieldset class="card" id="arenaCard" data-pane="arenas" style="display:none">
@@ -976,6 +989,82 @@
         <button class="btn" id="addTemplate">Add Template</button>
         <button class="btn" id="delTemplate" style="display:none">Delete Template</button>
       </div>
+      </fieldset>
+      <fieldset class="card" id="personaCard" data-pane="personas" style="display:none">
+        <legend>Personas</legend>
+        <input id="personaFilter" placeholder="Filter personas..." aria-label="Filter personas" />
+        <div class="list" id="personaList"></div>
+        <button class="btn" type="button" id="newPersona">+ Persona</button>
+        <div id="personaEditor" style="display:none">
+          <label>ID<input id="personaEditorId" placeholder="mara.masked" /></label>
+          <label>Label<input id="personaEditorLabel" placeholder="Masked Mara" /></label>
+          <div class="portrait" id="personaEditorPort"></div>
+          <div class="row" style="margin:4px 0">
+            <button type="button" class="pill" id="personaEditorPrevP" aria-label="Previous portrait">&lt;</button>
+            <span class="pill">Portrait</span>
+            <button type="button" class="pill" id="personaEditorNextP" aria-label="Next portrait">&gt;</button>
+          </div>
+          <label>Custom Portrait<input id="personaEditorPortraitPath" placeholder="assets/portraits/custom.png" /></label>
+          <label>Portrait Prompt<input id="personaEditorPrompt" placeholder="Describe the portrait" /></label>
+          <div style="margin:4px 0">
+            <div style="font-weight:bold;font-size:11px;">Stat Mods</div>
+            <div class="xy">
+              <label>STR<input id="personaModSTR" type="number" value="0" style="width:50px" /></label>
+              <label>AGI<input id="personaModAGI" type="number" value="0" style="width:50px" /></label>
+              <label>INT<input id="personaModINT" type="number" value="0" style="width:50px" /></label>
+            </div>
+            <div class="xy">
+              <label>PER<input id="personaModPER" type="number" value="0" style="width:50px" /></label>
+              <label>LCK<input id="personaModLCK" type="number" value="0" style="width:50px" /></label>
+              <label>CHA<input id="personaModCHA" type="number" value="0" style="width:50px" /></label>
+            </div>
+          </div>
+          <div id="personaItemRefs" class="small" style="margin:4px 0;opacity:0.7;"></div>
+          <div class="editor-actions">
+            <button class="btn btn--primary" id="savePersona">Save Persona</button>
+            <button class="btn" id="delPersona" style="display:none">Delete Persona</button>
+            <button class="btn" type="button" id="closePersona">Done</button>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset class="card" id="zoneFxCard" data-pane="zonefx" style="display:none">
+        <legend>Zone Effects</legend>
+        <input id="zoneFxFilter" placeholder="Filter zone effects..." aria-label="Filter zone effects" />
+        <div class="list" id="zoneFxList"></div>
+        <button class="btn" type="button" id="newZoneFx">+ Zone Effect</button>
+        <div id="zoneFxEditor" style="display:none">
+          <label>Map<select id="zoneFxMap"></select></label>
+          <div class="xy">
+            <label>X<input id="zoneFxX" type="number" min="0" style="width:50px" /></label>
+            <label>Y<input id="zoneFxY" type="number" min="0" style="width:50px" /></label>
+          </div>
+          <div class="xy">
+            <label>W<input id="zoneFxW" type="number" min="1" value="1" style="width:50px" /></label>
+            <label>H<input id="zoneFxH" type="number" min="1" value="1" style="width:50px" /></label>
+          </div>
+          <label>Weather<input id="zoneFxWeather" /></label>
+          <label>HP per Step<input id="zoneFxHpPerStep" type="number" /></label>
+          <div class="xy">
+            <label>Min Steps<input id="zoneFxMinSteps" type="number" min="0" style="width:60px" /></label>
+            <label>Max Steps<input id="zoneFxMaxSteps" type="number" min="0" style="width:60px" /></label>
+          </div>
+          <label>Heal Mult<input id="zoneFxHealMult" type="number" step="0.1" min="0" /></label>
+          <label><input type="checkbox" id="zoneFxNoEnc" /> No Encounters</label>
+          <label><input type="checkbox" id="zoneFxDry" /> Dry</label>
+          <label>Require Item<input id="zoneFxRequire" /></label>
+          <label>Negate Item<input id="zoneFxNegate" /></label>
+          <label>Condition Flag<input id="zoneFxIf" placeholder="flag expression" /></label>
+          <div style="margin:4px 0">
+            <div style="font-weight:bold;font-size:11px;">Spawns</div>
+            <div id="zoneFxSpawns"></div>
+            <button class="btn" type="button" id="zoneFxAddSpawn">+ Spawn</button>
+          </div>
+          <div class="editor-actions">
+            <button class="btn btn--primary" id="addZoneFx">Add Zone Effect</button>
+            <button class="btn" id="delZoneFx" style="display:none">Delete Zone Effect</button>
+            <button class="btn" type="button" id="closeZoneFx">Done</button>
+          </div>
+        </div>
       </fieldset>
       <fieldset class="card" id="wizardCard" data-pane="wizards" style="display:none">
         <legend>Wizards</legend>

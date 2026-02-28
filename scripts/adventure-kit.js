@@ -380,7 +380,7 @@ loopMinus.addEventListener('click', () => {
     drawWorld();
     showLoopControls(null);
 });
-const moduleData = globalThis.moduleData ?? (globalThis.moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
+const moduleData = globalThis.moduleData ?? (globalThis.moduleData = { seed: Date.now(), name: 'adventure-module', description: '', author: '', version: '', tags: [], npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod', 'spread'];
 const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];
@@ -3233,6 +3233,9 @@ function startNewNPC() {
     document.getElementById('npcWorkbench').checked = false;
     document.getElementById('shopMarkup').value = 2;
     document.getElementById('shopRefresh').value = 0;
+    const shopInvEl = document.getElementById('shopInvTable');
+    if (shopInvEl)
+        shopInvEl.innerHTML = '';
     document.getElementById('npcTrainer').checked = false;
     document.getElementById('npcTrainerType').value = 'power';
     updateNPCOptSections();
@@ -3289,6 +3292,68 @@ function removeTrainerChoiceEffect(tree) {
         choice.effects = remaining;
     else
         delete choice.effects;
+}
+// === Shop Inventory Editor ===
+function addShopInvRow(container, entry = {}) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:4px;align-items:center;margin:2px 0;';
+    const itemSelect = document.createElement('select');
+    itemSelect.className = 'shopInvItem';
+    const emptyOpt = document.createElement('option');
+    emptyOpt.value = '';
+    emptyOpt.textContent = '-- item --';
+    itemSelect.appendChild(emptyOpt);
+    (moduleData.items || []).forEach(it => {
+        const opt = document.createElement('option');
+        opt.value = it.id || '';
+        opt.textContent = it.name || it.id || '';
+        itemSelect.appendChild(opt);
+    });
+    itemSelect.value = entry.id || '';
+    const countInput = document.createElement('input');
+    countInput.type = 'number';
+    countInput.min = '1';
+    countInput.className = 'shopInvCount';
+    countInput.value = String(entry.count ?? 1);
+    countInput.style.width = '50px';
+    countInput.title = 'Count';
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn';
+    removeBtn.textContent = 'x';
+    removeBtn.style.cssText = 'padding:0 6px;min-width:auto;';
+    removeBtn.addEventListener('click', () => row.remove());
+    row.appendChild(itemSelect);
+    row.appendChild(countInput);
+    row.appendChild(removeBtn);
+    container.appendChild(row);
+    return row;
+}
+function setShopInv(container, inv) {
+    if (!container)
+        return;
+    container.innerHTML = '';
+    (inv || []).forEach(entry => addShopInvRow(container, entry));
+}
+function collectShopInv(container) {
+    return Array.from(container.querySelectorAll('div')).map(row => {
+        const sel = row.querySelector('.shopInvItem');
+        const cnt = row.querySelector('.shopInvCount');
+        const id = sel?.value?.trim() || '';
+        const count = parseInt(cnt?.value || '1', 10) || 1;
+        return id ? { id, count } : null;
+    }).filter(Boolean);
+}
+function importModuleItemsToShop() {
+    const container = document.getElementById('shopInvTable');
+    if (!container)
+        return;
+    const existing = new Set(Array.from(container.querySelectorAll('.shopInvItem')).map((sel) => sel.value));
+    moduleData.items.forEach(it => {
+        if (it.id && !existing.has(it.id)) {
+            addShopInvRow(container, { id: it.id, count: 1 });
+        }
+    });
 }
 function collectNPCFromForm() {
     const id = document.getElementById('npcId').value.trim();
@@ -3468,8 +3533,11 @@ function collectNPCFromForm() {
                 npc.combat.special.delay = delay;
         }
     }
-    if (shop)
-        npc.shop = { markup: shopMarkup, refresh: shopRefresh, inv: [] };
+    if (shop) {
+        const shopInvContainer = document.getElementById('shopInvTable');
+        const inv = shopInvContainer ? collectShopInv(shopInvContainer) : [];
+        npc.shop = { markup: shopMarkup, refresh: shopRefresh, inv };
+    }
     if (trainer)
         npc.trainer = trainer;
     if (workbench)
@@ -3655,6 +3723,7 @@ function editNPC(i) {
     document.getElementById('npcWorkbench').checked = !!n.workbench;
     document.getElementById('shopMarkup').value = n.shop ? n.shop.markup || 2 : 2;
     document.getElementById('shopRefresh').value = n.shop ? n.shop.refresh || 0 : 0;
+    setShopInv(document.getElementById('shopInvTable'), n.shop?.inv || []);
     document.getElementById('npcTrainer').checked = !!n.trainer;
     document.getElementById('npcTrainerType').value = n.trainer || 'power';
     updateNPCOptSections();
@@ -4595,24 +4664,91 @@ function deleteTemplate() {
 function showEventEditor(show) {
     document.getElementById('eventEditor').style.display = show ? 'block' : 'none';
 }
-function updateEventEffectFields() {
-    const eff = document.getElementById('eventEffect').value;
-    document.getElementById('eventMsgWrap').style.display = (eff === 'toast' || eff === 'log') ? 'block' : 'none';
-    document.getElementById('eventFlagWrap').style.display = eff === 'addFlag' ? 'block' : 'none';
-    document.getElementById('eventStatWrap').style.display = eff === 'modStat' ? 'block' : 'none';
+function addEventSubBlock(container, ev = {}) {
+    const div = document.createElement('div');
+    div.className = 'eventSubBlock';
+    div.style.cssText = 'border-left:2px solid #2b3b2b;padding-left:8px;margin-bottom:6px;';
+    const effectSel = document.createElement('select');
+    effectSel.className = 'eventSubEffect';
+    ['toast', 'log', 'addFlag', 'modStat'].forEach(val => {
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = val;
+        effectSel.appendChild(opt);
+    });
+    effectSel.value = ev.effect || 'toast';
+    const msgLabel = document.createElement('label');
+    msgLabel.className = 'eventSubMsg';
+    const msgInput = document.createElement('input');
+    msgInput.className = 'eventSubMsgInput';
+    msgInput.placeholder = 'Message';
+    msgInput.value = ev.msg || '';
+    msgLabel.textContent = 'Message ';
+    msgLabel.appendChild(msgInput);
+    const flagLabel = document.createElement('label');
+    flagLabel.className = 'eventSubFlag';
+    const flagInput = document.createElement('input');
+    flagInput.className = 'eventSubFlagInput';
+    flagInput.placeholder = 'Flag name';
+    flagInput.value = ev.flag || '';
+    flagLabel.textContent = 'Flag ';
+    flagLabel.appendChild(flagInput);
+    flagLabel.style.display = 'none';
+    const statWrap = document.createElement('div');
+    statWrap.className = 'eventSubStatWrap';
+    statWrap.style.display = 'none';
+    const statSel = document.createElement('select');
+    statSel.className = 'eventSubStatSelect';
+    STAT_OPTS.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; statSel.appendChild(o); });
+    statSel.value = ev.stat || STAT_OPTS[0];
+    const deltaIn = document.createElement('input');
+    deltaIn.className = 'eventSubDeltaInput';
+    deltaIn.type = 'number';
+    deltaIn.placeholder = 'Delta';
+    deltaIn.value = String(ev.delta ?? 0);
+    deltaIn.style.width = '50px';
+    const durIn = document.createElement('input');
+    durIn.className = 'eventSubDurInput';
+    durIn.type = 'number';
+    durIn.min = '0';
+    durIn.placeholder = 'Duration';
+    durIn.value = String(ev.duration ?? 0);
+    durIn.style.width = '60px';
+    statWrap.appendChild(statSel);
+    statWrap.appendChild(deltaIn);
+    statWrap.appendChild(durIn);
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn';
+    removeBtn.textContent = 'Remove';
+    removeBtn.style.cssText = 'padding:0 6px;margin-top:2px;';
+    removeBtn.addEventListener('click', () => div.remove());
+    function updateSubFields() {
+        const eff = effectSel.value;
+        msgLabel.style.display = (eff === 'toast' || eff === 'log') ? 'block' : 'none';
+        flagLabel.style.display = eff === 'addFlag' ? 'block' : 'none';
+        statWrap.style.display = eff === 'modStat' ? 'flex' : 'none';
+    }
+    effectSel.addEventListener('change', updateSubFields);
+    div.appendChild(effectSel);
+    div.appendChild(msgLabel);
+    div.appendChild(flagLabel);
+    div.appendChild(statWrap);
+    div.appendChild(removeBtn);
+    container.appendChild(div);
+    updateSubFields();
+    return div;
 }
 function startNewEvent() {
     editEventIdx = -1;
     populateMapDropdown(document.getElementById('eventMap'), 'world');
     document.getElementById('eventX').value = 0;
     document.getElementById('eventY').value = 0;
-    document.getElementById('eventEffect').value = 'toast';
-    document.getElementById('eventMsg').value = '';
-    document.getElementById('eventFlag').value = '';
-    document.getElementById('eventStat').value = STAT_OPTS[0];
-    document.getElementById('eventDelta').value = 0;
-    document.getElementById('eventDuration').value = 0;
-    updateEventEffectFields();
+    const container = document.getElementById('eventSubList');
+    if (container) {
+        container.innerHTML = '';
+        addEventSubBlock(container);
+    }
     document.getElementById('addEvent').textContent = 'Add Event';
     document.getElementById('delEvent').style.display = 'none';
     showEventEditor(true);
@@ -4622,18 +4758,22 @@ function collectEvent() {
     const map = document.getElementById('eventMap').value.trim() || 'world';
     const x = parseInt(document.getElementById('eventX').value, 10) || 0;
     const y = parseInt(document.getElementById('eventY').value, 10) || 0;
-    const eff = document.getElementById('eventEffect').value;
-    const ev = { when: 'enter', effect: eff };
-    if (eff === 'toast' || eff === 'log')
-        ev.msg = document.getElementById('eventMsg').value;
-    if (eff === 'addFlag')
-        ev.flag = document.getElementById('eventFlag').value;
-    if (eff === 'modStat') {
-        ev.stat = document.getElementById('eventStat').value;
-        ev.delta = parseInt(document.getElementById('eventDelta').value, 10) || 0;
-        ev.duration = parseInt(document.getElementById('eventDuration').value, 10) || 0;
-    }
-    return { map, x, y, events: [ev] };
+    const container = document.getElementById('eventSubList');
+    const events = container ? Array.from(container.querySelectorAll('.eventSubBlock')).map((div) => {
+        const eff = div.querySelector('.eventSubEffect')?.value || 'toast';
+        const ev = { when: 'enter', effect: eff };
+        if (eff === 'toast' || eff === 'log')
+            ev.msg = div.querySelector('.eventSubMsgInput')?.value || '';
+        if (eff === 'addFlag')
+            ev.flag = div.querySelector('.eventSubFlagInput')?.value || '';
+        if (eff === 'modStat') {
+            ev.stat = div.querySelector('.eventSubStatSelect')?.value || '';
+            ev.delta = parseInt(div.querySelector('.eventSubDeltaInput')?.value, 10) || 0;
+            ev.duration = parseInt(div.querySelector('.eventSubDurInput')?.value, 10) || 0;
+        }
+        return ev;
+    }) : [];
+    return { map, x, y, events: events.length ? events : [{ when: 'enter', effect: 'toast' }] };
 }
 function addEvent() {
     globalThis.ackRecordSnapshot?.();
@@ -4659,14 +4799,15 @@ function editEvent(i) {
     populateMapDropdown(document.getElementById('eventMap'), e.map);
     document.getElementById('eventX').value = e.x;
     document.getElementById('eventY').value = e.y;
-    const ev = e.events[0] || { effect: 'toast' };
-    document.getElementById('eventEffect').value = ev.effect;
-    document.getElementById('eventMsg').value = ev.msg || '';
-    document.getElementById('eventFlag').value = ev.flag || '';
-    document.getElementById('eventStat').value = ev.stat || STAT_OPTS[0];
-    document.getElementById('eventDelta').value = ev.delta || 0;
-    document.getElementById('eventDuration').value = ev.duration || 0;
-    updateEventEffectFields();
+    const container = document.getElementById('eventSubList');
+    if (container) {
+        container.innerHTML = '';
+        const evts = e.events || [];
+        if (evts.length === 0)
+            addEventSubBlock(container);
+        else
+            evts.forEach(ev => addEventSubBlock(container, ev));
+    }
     document.getElementById('addEvent').textContent = 'Update Event';
     document.getElementById('delEvent').style.display = 'block';
     showEventEditor(true);
@@ -4680,8 +4821,10 @@ function renderEventList() {
     }
     else {
         list.innerHTML = moduleData.events.map((e, i) => {
-            const eff = e.events[0]?.effect;
-            return `<button type="button" class="list-item-btn" data-idx="${i}">${e.map} @(${e.x},${e.y}) - ${eff}</button>`;
+            const count = e.events?.length || 0;
+            const eff = e.events[0]?.effect || '?';
+            const badge = count > 1 ? ` (${count} sub-events)` : ` - ${eff}`;
+            return `<button type="button" class="list-item-btn" data-idx="${i}">${e.map} @(${e.x},${e.y})${badge}</button>`;
         }).join('');
         Array.from(list.children).forEach(btn => btn.onclick = () => editEvent(parseInt(btn.dataset.idx, 10)));
     }
@@ -5258,6 +5401,353 @@ function deleteZone() {
     selectedObj = null;
     drawWorld();
     globalThis.markAckDirty?.();
+}
+// === Persona Editor ===
+const PERSONA_STAT_KEYS = ['STR', 'AGI', 'INT', 'PER', 'LCK', 'CHA'];
+let editPersonaId = null;
+let personaEditorPortraitIndex = 0;
+function showPersonaEditor(show) {
+    document.getElementById('personaEditor').style.display = show ? 'block' : 'none';
+}
+function setPersonaEditorPortrait() {
+    const el = document.getElementById('personaEditorPort');
+    if (!el)
+        return;
+    const customPath = document.getElementById('personaEditorPortraitPath')?.value?.trim() || '';
+    const img = customPath || npcPortraits[personaEditorPortraitIndex] || '';
+    el.style.backgroundImage = img ? `url(${img})` : 'none';
+}
+function renderPersonaList() {
+    const list = document.getElementById('personaList');
+    if (!list)
+        return;
+    const ids = Object.keys(moduleData.personas || {}).sort();
+    if (ids.length === 0) {
+        list.innerHTML = renderEmptyState('No personas created yet.');
+    }
+    else {
+        list.innerHTML = ids.map(id => {
+            const p = moduleData.personas[id];
+            const label = p?.label ? ` — ${p.label}` : '';
+            return `<button type="button" class="list-item-btn" data-id="${id}">${id}${label}</button>`;
+        }).join('');
+        Array.from(list.children).forEach(btn => {
+            btn.onclick = () => editPersona(btn.dataset.id);
+        });
+    }
+}
+function startNewPersona() {
+    editPersonaId = null;
+    document.getElementById('personaEditorId').value = '';
+    document.getElementById('personaEditorLabel').value = '';
+    document.getElementById('personaEditorPortraitPath').value = '';
+    document.getElementById('personaEditorPrompt').value = '';
+    personaEditorPortraitIndex = 0;
+    setPersonaEditorPortrait();
+    PERSONA_STAT_KEYS.forEach(s => {
+        document.getElementById(`personaMod${s}`).value = '0';
+    });
+    document.getElementById('personaItemRefs').innerHTML = '';
+    document.getElementById('savePersona').textContent = 'Add Persona';
+    document.getElementById('delPersona').style.display = 'none';
+    showPersonaEditor(true);
+}
+function editPersona(id) {
+    editPersonaId = id;
+    const p = (moduleData.personas || {})[id] || {};
+    document.getElementById('personaEditorId').value = id;
+    document.getElementById('personaEditorLabel').value = p.label || '';
+    document.getElementById('personaEditorPrompt').value = p.portraitPrompt || '';
+    const portraitPath = p.portrait || '';
+    const idx = npcPortraits.indexOf(portraitPath);
+    if (idx >= 0) {
+        personaEditorPortraitIndex = idx;
+        document.getElementById('personaEditorPortraitPath').value = '';
+    }
+    else {
+        personaEditorPortraitIndex = 0;
+        document.getElementById('personaEditorPortraitPath').value = portraitPath;
+    }
+    setPersonaEditorPortrait();
+    const mods = p.mods || {};
+    PERSONA_STAT_KEYS.forEach(s => {
+        document.getElementById(`personaMod${s}`).value = String(mods[s] ?? 0);
+    });
+    const refs = moduleData.items.filter(it => it.persona === id).map(it => it.id || it.name);
+    const refEl = document.getElementById('personaItemRefs');
+    if (refEl)
+        refEl.innerHTML = refs.length
+            ? `Referenced by: ${refs.join(', ')}`
+            : '<em>Not referenced by any items.</em>';
+    document.getElementById('savePersona').textContent = 'Update Persona';
+    document.getElementById('delPersona').style.display = 'block';
+    showPersonaEditor(true);
+}
+function collectPersonaFromForm() {
+    const id = document.getElementById('personaEditorId').value.trim();
+    const label = document.getElementById('personaEditorLabel').value.trim();
+    const portraitPrompt = document.getElementById('personaEditorPrompt').value.trim();
+    const customPath = document.getElementById('personaEditorPortraitPath').value.trim();
+    const portrait = customPath || (personaEditorPortraitIndex > 0 ? npcPortraits[personaEditorPortraitIndex] : '');
+    const mods = {};
+    PERSONA_STAT_KEYS.forEach(s => {
+        const v = parseInt(document.getElementById(`personaMod${s}`).value, 10);
+        if (v)
+            mods[s] = v;
+    });
+    const data = {};
+    if (Object.keys(mods).length)
+        data.mods = mods;
+    if (label)
+        data.label = label;
+    if (portrait)
+        data.portrait = portrait;
+    if (portraitPrompt)
+        data.portraitPrompt = portraitPrompt;
+    return { id, data };
+}
+function savePersona() {
+    globalThis.ackRecordSnapshot?.();
+    const { id, data } = collectPersonaFromForm();
+    if (!id)
+        return;
+    if (!moduleData.personas)
+        moduleData.personas = {};
+    if (editPersonaId && editPersonaId !== id) {
+        delete moduleData.personas[editPersonaId];
+        moduleData.items.forEach(it => { if (it.persona === editPersonaId)
+            it.persona = id; });
+    }
+    moduleData.personas[id] = data;
+    editPersonaId = id;
+    renderPersonaList();
+    document.getElementById('savePersona').textContent = 'Update Persona';
+    document.getElementById('delPersona').style.display = 'block';
+    globalThis.markAckDirty?.();
+}
+function deletePersona() {
+    if (!editPersonaId)
+        return;
+    globalThis.ackRecordSnapshot?.();
+    confirmDialog('Delete persona "' + editPersonaId + '"?', () => {
+        delete moduleData.personas[editPersonaId];
+        editPersonaId = null;
+        renderPersonaList();
+        showPersonaEditor(false);
+        globalThis.markAckDirty?.();
+    });
+}
+// === Zone Effects Editor ===
+let editZoneFxIdx = -1;
+function showZoneFxEditor(show) {
+    document.getElementById('zoneFxEditor').style.display = show ? 'block' : 'none';
+}
+function addZoneFxSpawnBlock(container, spawn = {}) {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;gap:4px;align-items:center;margin:2px 0;';
+    div.className = 'zoneFxSpawn';
+    const nameIn = document.createElement('input');
+    nameIn.className = 'zoneFxSpawnName';
+    nameIn.placeholder = 'Name';
+    nameIn.value = spawn.name || '';
+    nameIn.style.width = '90px';
+    const hpIn = document.createElement('input');
+    hpIn.className = 'zoneFxSpawnHP';
+    hpIn.type = 'number';
+    hpIn.placeholder = 'HP';
+    hpIn.value = spawn.HP ?? '';
+    hpIn.style.width = '45px';
+    const atkIn = document.createElement('input');
+    atkIn.className = 'zoneFxSpawnATK';
+    atkIn.type = 'number';
+    atkIn.placeholder = 'ATK';
+    atkIn.value = spawn.ATK ?? '';
+    atkIn.style.width = '45px';
+    const defIn = document.createElement('input');
+    defIn.className = 'zoneFxSpawnDEF';
+    defIn.type = 'number';
+    defIn.placeholder = 'DEF';
+    defIn.value = spawn.DEF ?? '';
+    defIn.style.width = '45px';
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn';
+    removeBtn.textContent = 'x';
+    removeBtn.style.cssText = 'padding:0 6px;min-width:auto;';
+    removeBtn.addEventListener('click', () => div.remove());
+    div.appendChild(nameIn);
+    div.appendChild(hpIn);
+    div.appendChild(atkIn);
+    div.appendChild(defIn);
+    div.appendChild(removeBtn);
+    container.appendChild(div);
+    return div;
+}
+function setZoneFxSpawns(container, spawns) {
+    if (!container)
+        return;
+    container.innerHTML = '';
+    (spawns || []).forEach(s => addZoneFxSpawnBlock(container, s));
+}
+function collectZoneFxSpawns(container) {
+    return Array.from(container.querySelectorAll('.zoneFxSpawn')).map((div) => {
+        const name = div.querySelector('.zoneFxSpawnName')?.value?.trim() || '';
+        if (!name)
+            return null;
+        const spawn = { name };
+        const hp = parseInt(div.querySelector('.zoneFxSpawnHP')?.value, 10);
+        const atk = parseInt(div.querySelector('.zoneFxSpawnATK')?.value, 10);
+        const def = parseInt(div.querySelector('.zoneFxSpawnDEF')?.value, 10);
+        if (!isNaN(hp))
+            spawn.HP = hp;
+        if (!isNaN(atk))
+            spawn.ATK = atk;
+        if (!isNaN(def))
+            spawn.DEF = def;
+        return spawn;
+    }).filter(Boolean);
+}
+function collectZoneFx() {
+    const map = document.getElementById('zoneFxMap').value.trim() || 'world';
+    const x = parseInt(document.getElementById('zoneFxX').value, 10) || 0;
+    const y = parseInt(document.getElementById('zoneFxY').value, 10) || 0;
+    const w = parseInt(document.getElementById('zoneFxW').value, 10) || 1;
+    const h = parseInt(document.getElementById('zoneFxH').value, 10) || 1;
+    const weather = document.getElementById('zoneFxWeather').value.trim();
+    const hpPerStep = parseInt(document.getElementById('zoneFxHpPerStep').value, 10);
+    const minSteps = parseInt(document.getElementById('zoneFxMinSteps').value, 10);
+    const maxSteps = parseInt(document.getElementById('zoneFxMaxSteps').value, 10);
+    const healMult = parseFloat(document.getElementById('zoneFxHealMult').value);
+    const noEnc = document.getElementById('zoneFxNoEnc').checked;
+    const dry = document.getElementById('zoneFxDry').checked;
+    const require_ = document.getElementById('zoneFxRequire').value.trim();
+    const negate = document.getElementById('zoneFxNegate').value.trim();
+    const ifFlag = document.getElementById('zoneFxIf').value.trim();
+    const spawns = collectZoneFxSpawns(document.getElementById('zoneFxSpawns'));
+    const entry = { map, x, y, w, h };
+    if (weather)
+        entry.weather = weather;
+    if (!isNaN(hpPerStep))
+        entry.perStep = { hp: hpPerStep };
+    if (!isNaN(minSteps))
+        entry.minSteps = minSteps;
+    if (!isNaN(maxSteps))
+        entry.maxSteps = maxSteps;
+    if (!isNaN(healMult))
+        entry.healMult = healMult;
+    if (noEnc)
+        entry.noEncounters = true;
+    if (dry)
+        entry.dry = true;
+    if (require_)
+        entry.require = require_;
+    if (negate)
+        entry.negate = negate;
+    if (ifFlag)
+        entry.if = ifFlag;
+    if (spawns.length)
+        entry.spawns = spawns;
+    return entry;
+}
+function addZoneFx() {
+    globalThis.ackRecordSnapshot?.();
+    const entry = collectZoneFx();
+    if (!moduleData.zoneEffects)
+        moduleData.zoneEffects = [];
+    if (!moduleData._origKeys)
+        moduleData._origKeys = Object.keys(moduleData);
+    if (!moduleData._origKeys.includes('zoneEffects'))
+        moduleData._origKeys.push('zoneEffects');
+    if (editZoneFxIdx >= 0) {
+        moduleData.zoneEffects[editZoneFxIdx] = entry;
+    }
+    else {
+        moduleData.zoneEffects.push(entry);
+    }
+    editZoneFxIdx = -1;
+    document.getElementById('addZoneFx').textContent = 'Add Zone Effect';
+    document.getElementById('delZoneFx').style.display = 'none';
+    renderZoneFxList();
+    showZoneFxEditor(false);
+    drawWorld();
+    globalThis.markAckDirty?.();
+}
+function editZoneFx(i) {
+    const z = moduleData.zoneEffects[i];
+    editZoneFxIdx = i;
+    populateMapDropdown(document.getElementById('zoneFxMap'), z.map || 'world');
+    document.getElementById('zoneFxX').value = String(z.x ?? 0);
+    document.getElementById('zoneFxY').value = String(z.y ?? 0);
+    document.getElementById('zoneFxW').value = String(z.w ?? 1);
+    document.getElementById('zoneFxH').value = String(z.h ?? 1);
+    document.getElementById('zoneFxWeather').value = typeof z.weather === 'string' ? z.weather : '';
+    document.getElementById('zoneFxHpPerStep').value = String(z.perStep?.hp ?? z.step?.hp ?? '');
+    document.getElementById('zoneFxMinSteps').value = String(z.minSteps ?? '');
+    document.getElementById('zoneFxMaxSteps').value = String(z.maxSteps ?? '');
+    document.getElementById('zoneFxHealMult').value = String(z.healMult ?? '');
+    document.getElementById('zoneFxNoEnc').checked = !!z.noEncounters;
+    document.getElementById('zoneFxDry').checked = !!z.dry;
+    document.getElementById('zoneFxRequire').value = z.require || '';
+    document.getElementById('zoneFxNegate').value = z.negate || '';
+    document.getElementById('zoneFxIf').value = z.if ? String(z.if) : '';
+    setZoneFxSpawns(document.getElementById('zoneFxSpawns'), z.spawns || []);
+    document.getElementById('addZoneFx').textContent = 'Update Zone Effect';
+    document.getElementById('delZoneFx').style.display = 'block';
+    showZoneFxEditor(true);
+}
+function renderZoneFxList() {
+    const list = document.getElementById('zoneFxList');
+    if (!list)
+        return;
+    const effects = moduleData.zoneEffects || [];
+    if (effects.length === 0) {
+        list.innerHTML = renderEmptyState('No zone effects created yet.');
+    }
+    else {
+        list.innerHTML = effects.map((z, i) => {
+            const loc = `${z.map || 'world'} (${z.x},${z.y} ${z.w}x${z.h})`;
+            const detail = z.weather ? ` [${z.weather}]` : z.spawns?.length ? ` [${z.spawns.length} spawns]` : '';
+            return `<button type="button" class="list-item-btn" data-idx="${i}">${loc}${detail}</button>`;
+        }).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editZoneFx(parseInt(btn.dataset.idx, 10)));
+    }
+}
+function deleteZoneFx() {
+    if (editZoneFxIdx < 0)
+        return;
+    globalThis.ackRecordSnapshot?.();
+    confirmDialog('Delete this zone effect?', () => {
+        moduleData.zoneEffects.splice(editZoneFxIdx, 1);
+        editZoneFxIdx = -1;
+        document.getElementById('addZoneFx').textContent = 'Add Zone Effect';
+        document.getElementById('delZoneFx').style.display = 'none';
+        renderZoneFxList();
+        showZoneFxEditor(false);
+        drawWorld();
+        globalThis.markAckDirty?.();
+    });
+}
+function startNewZoneFx() {
+    editZoneFxIdx = -1;
+    populateMapDropdown(document.getElementById('zoneFxMap'), 'world');
+    document.getElementById('zoneFxX').value = '0';
+    document.getElementById('zoneFxY').value = '0';
+    document.getElementById('zoneFxW').value = '1';
+    document.getElementById('zoneFxH').value = '1';
+    document.getElementById('zoneFxWeather').value = '';
+    document.getElementById('zoneFxHpPerStep').value = '';
+    document.getElementById('zoneFxMinSteps').value = '';
+    document.getElementById('zoneFxMaxSteps').value = '';
+    document.getElementById('zoneFxHealMult').value = '';
+    document.getElementById('zoneFxNoEnc').checked = false;
+    document.getElementById('zoneFxDry').checked = false;
+    document.getElementById('zoneFxRequire').value = '';
+    document.getElementById('zoneFxNegate').value = '';
+    document.getElementById('zoneFxIf').value = '';
+    document.getElementById('zoneFxSpawns').innerHTML = '';
+    document.getElementById('addZoneFx').textContent = 'Add Zone Effect';
+    document.getElementById('delZoneFx').style.display = 'none';
+    showZoneFxEditor(true);
 }
 // --- Portals ---
 function showPortalEditor(show) {
@@ -6083,7 +6573,18 @@ function applyLoadedModule(data) {
         });
     }
     moduleData.start = data.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+    moduleData.description = data.description || '';
+    moduleData.author = data.author || '';
+    moduleData.version = data.version || '';
+    moduleData.tags = Array.isArray(data.tags) ? data.tags : [];
     document.getElementById('moduleName').value = moduleData.name;
+    document.getElementById('moduleDesc').value = moduleData.description;
+    document.getElementById('moduleAuthor').value = moduleData.author;
+    document.getElementById('moduleVersion').value = moduleData.version;
+    document.getElementById('moduleTags').value = moduleData.tags.join(', ');
+    populateMapDropdown(document.getElementById('moduleStartMap'), moduleData.start?.map || 'world');
+    document.getElementById('moduleStartX').value = String(moduleData.start?.x ?? 2);
+    document.getElementById('moduleStartY').value = String(moduleData.start?.y ?? Math.floor(WORLD_H / 2));
     const bunkerScope = moduleData.props?.bunkerTravelScope || 'global';
     const scopeEl = document.getElementById('moduleBunkerScope');
     if (scopeEl)
@@ -6123,6 +6624,8 @@ function applyLoadedModule(data) {
     renderArenaList();
     renderEncounterList();
     renderTemplateList();
+    renderPersonaList();
+    renderZoneFxList();
     updateQuestOptions();
     loadMods({});
     showItemEditor(false);
@@ -6466,6 +6969,11 @@ function hasBlockingProblems() {
 }
 function exportModulePayload() {
     moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
+    moduleData.description = document.getElementById('moduleDesc').value.trim();
+    moduleData.author = document.getElementById('moduleAuthor').value.trim();
+    moduleData.version = document.getElementById('moduleVersion').value.trim();
+    const tagsRaw = document.getElementById('moduleTags').value.trim();
+    moduleData.tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
     if (moduleData.personas) {
         const used = new Set((moduleData.items || []).map(it => it.persona).filter(Boolean));
         Object.keys(moduleData.personas).forEach(id => {
@@ -6503,6 +7011,14 @@ function exportModulePayload() {
             return;
         }
         if (k === 'personas' && !hasPersonas)
+            return;
+        if (k === 'description' && !moduleData[k])
+            return;
+        if (k === 'author' && !moduleData[k])
+            return;
+        if (k === 'version' && !moduleData[k])
+            return;
+        if (k === 'tags' && (!moduleData[k] || !moduleData[k].length))
             return;
         if (moduleData[k] !== undefined)
             base[k] = moduleData[k];
@@ -6677,6 +7193,40 @@ setupListFilter('questFilter', 'questList');
 setupListFilter('eventFilter', 'eventList');
 setupListFilter('arenaFilter', 'arenaList');
 setupListFilter('encFilter', 'encounterList');
+setupListFilter('personaFilter', 'personaList');
+setupListFilter('zoneFxFilter', 'zoneFxList');
+// Persona Editor wiring
+document.getElementById('newPersona')?.addEventListener('click', startNewPersona);
+document.getElementById('savePersona')?.addEventListener('click', savePersona);
+document.getElementById('delPersona')?.addEventListener('click', deletePersona);
+document.getElementById('closePersona')?.addEventListener('click', () => {
+    editPersonaId = null;
+    showPersonaEditor(false);
+});
+document.getElementById('personaEditorPrevP')?.addEventListener('click', () => {
+    personaEditorPortraitIndex = (personaEditorPortraitIndex + npcPortraits.length - 1) % npcPortraits.length;
+    document.getElementById('personaEditorPortraitPath').value = '';
+    setPersonaEditorPortrait();
+});
+document.getElementById('personaEditorNextP')?.addEventListener('click', () => {
+    personaEditorPortraitIndex = (personaEditorPortraitIndex + 1) % npcPortraits.length;
+    document.getElementById('personaEditorPortraitPath').value = '';
+    setPersonaEditorPortrait();
+});
+document.getElementById('personaEditorPortraitPath')?.addEventListener('input', setPersonaEditorPortrait);
+// Zone Effects Editor wiring
+document.getElementById('newZoneFx')?.addEventListener('click', startNewZoneFx);
+document.getElementById('addZoneFx')?.addEventListener('click', addZoneFx);
+document.getElementById('delZoneFx')?.addEventListener('click', deleteZoneFx);
+document.getElementById('closeZoneFx')?.addEventListener('click', () => {
+    editZoneFxIdx = -1;
+    showZoneFxEditor(false);
+});
+document.getElementById('zoneFxAddSpawn')?.addEventListener('click', () => {
+    const c = document.getElementById('zoneFxSpawns');
+    if (c)
+        addZoneFxSpawnBlock(c);
+});
 document.getElementById('delItem').onclick = deleteItem;
 document.getElementById('delBldg').onclick = deleteBldg;
 document.getElementById('newInterior').onclick = startNewInterior;
@@ -6735,7 +7285,11 @@ if (itemTileUploadBtn) {
 attachTileSpriteUpload('itemTileSpriteUpload', 'itemTileSprite', 'itemTileSpritePreview');
 updateTileSpritePreview('npcTileSprite', 'npcTileSpritePreview');
 updateTileSpritePreview('itemTileSprite', 'itemTileSpritePreview');
-document.getElementById('eventEffect').addEventListener('change', updateEventEffectFields);
+document.getElementById('addEventSub')?.addEventListener('click', () => {
+    const c = document.getElementById('eventSubList');
+    if (c)
+        addEventSubBlock(c);
+});
 document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
 document.getElementById('npcFlagType').addEventListener('change', updateFlagBuilder);
 setupNpcSections();
@@ -6856,6 +7410,31 @@ if (browseLoadBtn)
 document.getElementById('closeLoadModal')?.addEventListener('click', closeLoadModal);
 document.getElementById('loadModal')?.addEventListener('click', e => { if (e.target?.id === 'loadModal')
     closeLoadModal(); });
+// === Module Properties — start position sync ===
+function syncStartInputsFromData() {
+    const s = moduleData.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+    const mapEl = document.getElementById('moduleStartMap');
+    if (mapEl)
+        mapEl.value = s.map || 'world';
+    const xEl = document.getElementById('moduleStartX');
+    if (xEl)
+        xEl.value = String(s.x ?? 2);
+    const yEl = document.getElementById('moduleStartY');
+    if (yEl)
+        yEl.value = String(s.y ?? Math.floor(WORLD_H / 2));
+}
+function syncStartFromInputs() {
+    const map = document.getElementById('moduleStartMap')?.value || 'world';
+    const x = parseInt(document.getElementById('moduleStartX')?.value, 10) || 0;
+    const y = parseInt(document.getElementById('moduleStartY')?.value, 10) || 0;
+    moduleData.start = { map, x, y };
+    drawWorld();
+}
+['moduleStartMap', 'moduleStartX', 'moduleStartY'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', syncStartFromInputs);
+});
+populateMapDropdown(document.getElementById('moduleStartMap'), moduleData.start?.map || 'world');
+syncStartInputsFromData();
 document.getElementById('setStart').onclick = () => {
     settingStart = true;
     setMapActionBanner('Start position active: choose a walkable tile on the world map.', 'info');
@@ -6863,6 +7442,7 @@ document.getElementById('setStart').onclick = () => {
 };
 document.getElementById('resetStart').onclick = () => {
     moduleData.start = { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+    syncStartInputsFromData();
     drawWorld();
     setMapActionBanner('Start position reset to the default location.', 'info', 2500);
 };
@@ -6897,6 +7477,12 @@ if (npcQuestEl)
     });
 document.getElementById('npcCombat').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcShop').addEventListener('change', updateNPCOptSections);
+document.getElementById('shopAddInvRow')?.addEventListener('click', () => {
+    const c = document.getElementById('shopInvTable');
+    if (c)
+        addShopInvRow(c);
+});
+document.getElementById('shopImportItems')?.addEventListener('click', importModuleItemsToShop);
 document.getElementById('npcHidden').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcTrainer').addEventListener('change', updateNPCOptSections);
 document.getElementById('npcColorOverride').addEventListener('change', updateColorOverride);
@@ -7101,6 +7687,7 @@ canvas.addEventListener('mousedown', ev => {
             return;
         }
         moduleData.start = { map: 'world', x, y };
+        syncStartInputsFromData();
         settingStart = false;
         setMapActionBanner(`Player start set to (${x}, ${y}).`, 'success', 3000);
         drawWorld();
@@ -7811,6 +8398,8 @@ globalThis.ackRefreshAllLists = function () {
     renderArenaList();
     renderEncounterList();
     renderTemplateList();
+    renderPersonaList();
+    renderZoneFxList();
     drawWorld();
 };
 globalThis.ackGetModuleData = () => moduleData;
