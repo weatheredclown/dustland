@@ -2805,24 +2805,9 @@ function showNPCEditor(show) {
     }
 }
 function setNpcNotice(message, type = 'info', autoClear = false) {
-    const notice = document.getElementById('npcFormNotice');
-    if (!notice)
-        return;
     clearTimeout(npcNoticeTimer);
     npcNoticeTimer = 0;
-    notice.textContent = message || '';
-    notice.style.display = message ? 'block' : 'none';
-    notice.classList.remove('error', 'success');
-    if (type === 'error')
-        notice.classList.add('error');
-    if (type === 'success')
-        notice.classList.add('success');
-    if (autoClear && message) {
-        npcNoticeTimer = setTimeout(() => {
-            notice.classList.remove('success');
-            notice.style.display = 'none';
-        }, 3500);
-    }
+    setEntityNotice('npcFormNotice', message, type, autoClear);
 }
 function updateNpcMapBanner(message, show) {
     const banner = document.getElementById('npcMapBanner');
@@ -2837,7 +2822,7 @@ function setNpcCancelVisible(show) {
         return;
     cancelBtn.style.display = show ? 'inline-block' : 'none';
 }
-function setNpcFieldInvalid(el, invalid) {
+function setFieldInvalid(el, invalid) {
     if (!el)
         return;
     const cls = el.classList;
@@ -2853,6 +2838,44 @@ function setNpcFieldInvalid(el, invalid) {
         if (typeof el.removeAttribute === 'function')
             el.removeAttribute('aria-invalid');
     }
+}
+function setNpcFieldInvalid(el, invalid) {
+    setFieldInvalid(el, invalid);
+}
+function setEntityNotice(noticeId, message, type = 'info', autoClear = false) {
+    const notice = document.getElementById(noticeId);
+    if (!notice)
+        return;
+    const prev = notice._noticeTimer;
+    if (prev)
+        clearTimeout(prev);
+    notice.textContent = message || '';
+    notice.style.display = message ? 'block' : 'none';
+    notice.classList.remove('error', 'success');
+    if (type === 'error')
+        notice.classList.add('error');
+    if (type === 'success')
+        notice.classList.add('success');
+    if (autoClear && message) {
+        notice._noticeTimer = setTimeout(() => {
+            notice.classList.remove('success');
+            notice.style.display = 'none';
+        }, 3500);
+    }
+}
+function isDuplicateId(id, collection, excludeIdx) {
+    if (!id)
+        return false;
+    return collection.some((entry, idx) => idx !== excludeIdx && entry?.id === id);
+}
+function getValidMapIds() {
+    const maps = new Set();
+    maps.add('world');
+    (moduleData.interiors || []).forEach(I => {
+        if (I?.id)
+            maps.add(I.id);
+    });
+    return maps;
 }
 function getNpcFieldWrapper(id) {
     const el = document.getElementById(id);
@@ -3898,6 +3921,7 @@ function startNewItem() {
     selectedObj = null;
     drawWorld();
     showItemEditor(true);
+    validateItemForm({ silent: true });
     document.getElementById('itemName').focus();
 }
 function beginPlaceItem() {
@@ -3910,7 +3934,44 @@ function beginPlaceItem() {
     selectedObj = null;
     drawWorld();
 }
+function validateItemForm(options = {}) {
+    const { silent = false } = options;
+    const idEl = document.getElementById('itemId');
+    const nameEl = document.getElementById('itemName');
+    if (!idEl || !nameEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const id = idEl.value.trim();
+    const name = nameEl.value.trim();
+    const errors = [];
+    const warnings = [];
+    if (!id)
+        errors.push('Enter an ID for the item.');
+    else if (isDuplicateId(id, moduleData.items, editItemIdx))
+        errors.push(`ID "${id}" is already used by another item.`);
+    if (!name)
+        errors.push('Enter a name for the item.');
+    setFieldInvalid(idEl, !id || isDuplicateId(id, moduleData.items, editItemIdx));
+    setFieldInvalid(nameEl, !name);
+    const saveBtn = document.getElementById('addItem');
+    if (saveBtn)
+        saveBtn.disabled = errors.length > 0;
+    const hintEl = document.getElementById('itemSaveHint');
+    if (hintEl) {
+        hintEl.textContent = errors.length ? errors[0] : '';
+        hintEl.classList.toggle('visible', errors.length > 0);
+    }
+    if (!silent) {
+        if (errors.length)
+            setEntityNotice('itemFormNotice', errors.join(' '), 'error');
+        else
+            setEntityNotice('itemFormNotice', '');
+    }
+    return { valid: errors.length === 0, errors, warnings };
+}
 function addItem() {
+    const { valid } = validateItemForm();
+    if (!valid)
+        return;
     globalThis.ackRecordSnapshot?.();
     const wasNew = editItemIdx < 0;
     const name = document.getElementById('itemName').value.trim();
@@ -4117,6 +4178,7 @@ function editItem(i) {
     document.getElementById('delItem').style.display = 'block';
     document.getElementById('cancelItem').style.display = 'none';
     showItemEditor(true);
+    validateItemForm({ silent: true });
     selectedObj = { type: 'item', obj: it };
     drawWorld();
 }
@@ -4419,6 +4481,7 @@ function startNewEncounter() {
     document.getElementById('addEncounter').textContent = 'Add Enemy';
     document.getElementById('delEncounter').style.display = 'none';
     showEncounterEditor(true);
+    validateEncounterForm({ silent: true });
     tmplSel.focus();
     updateEncounterLocationMode();
 }
@@ -4454,7 +4517,39 @@ function collectEncounter() {
     }
     return entry;
 }
+function validateEncounterForm(options = {}) {
+    const { silent = false } = options;
+    const templateEl = document.getElementById('encTemplate');
+    if (!templateEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const templateId = templateEl.value?.trim() || '';
+    const errors = [];
+    const warnings = [];
+    if (!templateId)
+        errors.push('Select a template for this encounter.');
+    else if (!moduleData.templates.some(t => t.id === templateId))
+        errors.push(`Template "${templateId}" does not exist.`);
+    setFieldInvalid(templateEl, errors.length > 0);
+    const saveBtn = document.getElementById('addEncounter');
+    if (saveBtn)
+        saveBtn.disabled = errors.length > 0;
+    const hintEl = document.getElementById('encounterSaveHint');
+    if (hintEl) {
+        hintEl.textContent = errors.length ? errors[0] : '';
+        hintEl.classList.toggle('visible', errors.length > 0);
+    }
+    if (!silent) {
+        if (errors.length)
+            setEntityNotice('encounterFormNotice', errors.join(' '), 'error');
+        else
+            setEntityNotice('encounterFormNotice', '');
+    }
+    return { valid: errors.length === 0, errors, warnings };
+}
 function addEncounter() {
+    const { valid } = validateEncounterForm();
+    if (!valid)
+        return;
     globalThis.ackRecordSnapshot?.();
     const entry = collectEncounter();
     if (editEncounterIdx >= 0) {
@@ -4486,6 +4581,7 @@ function editEncounter(i) {
     document.getElementById('addEncounter').textContent = 'Update Enemy';
     document.getElementById('delEncounter').style.display = 'block';
     showEncounterEditor(true);
+    validateEncounterForm({ silent: true });
     updateEncounterLocationMode();
 }
 function renderEncounterList() {
@@ -4553,6 +4649,7 @@ function startNewTemplate() {
     document.getElementById('delTemplate').style.display = 'none';
     toggleTemplateScrapFields();
     showTemplateEditor(true);
+    validateTemplateForm({ silent: true });
 }
 function collectTemplate() {
     const id = document.getElementById('templateId').value.trim();
@@ -4594,7 +4691,44 @@ function collectTemplate() {
     }
     return { id, name, desc, color, portraitSheet, combat };
 }
+function validateTemplateForm(options = {}) {
+    const { silent = false } = options;
+    const idEl = document.getElementById('templateId');
+    const nameEl = document.getElementById('templateName');
+    if (!idEl || !nameEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const id = idEl.value.trim();
+    const name = nameEl.value.trim();
+    const errors = [];
+    const warnings = [];
+    if (!id)
+        errors.push('Enter an ID for the template.');
+    else if (isDuplicateId(id, moduleData.templates, editTemplateIdx))
+        errors.push(`ID "${id}" is already used by another template.`);
+    if (!name)
+        errors.push('Enter a name for the template.');
+    setFieldInvalid(idEl, !id || isDuplicateId(id, moduleData.templates, editTemplateIdx));
+    setFieldInvalid(nameEl, !name);
+    const saveBtn = document.getElementById('addTemplate');
+    if (saveBtn)
+        saveBtn.disabled = errors.length > 0;
+    const hintEl = document.getElementById('templateSaveHint');
+    if (hintEl) {
+        hintEl.textContent = errors.length ? errors[0] : '';
+        hintEl.classList.toggle('visible', errors.length > 0);
+    }
+    if (!silent) {
+        if (errors.length)
+            setEntityNotice('templateFormNotice', errors.join(' '), 'error');
+        else
+            setEntityNotice('templateFormNotice', '');
+    }
+    return { valid: errors.length === 0, errors, warnings };
+}
 function addTemplate() {
+    const { valid } = validateTemplateForm();
+    if (!valid)
+        return;
     globalThis.ackRecordSnapshot?.();
     const entry = collectTemplate();
     if (editTemplateIdx >= 0) {
@@ -4634,6 +4768,7 @@ function editTemplate(i) {
     document.getElementById('delTemplate').style.display = 'block';
     toggleTemplateScrapFields();
     showTemplateEditor(true);
+    validateTemplateForm({ silent: true });
 }
 function renderTemplateList() {
     const list = document.getElementById('templateList');
@@ -5764,6 +5899,7 @@ function startNewPortal() {
     document.getElementById('addPortal').textContent = 'Add Portal';
     document.getElementById('delPortal').style.display = 'none';
     showPortalEditor(true);
+    validatePortalForm({ silent: true });
 }
 function collectPortal() {
     const map = document.getElementById('portalMap').value.trim() || 'world';
@@ -5774,7 +5910,53 @@ function collectPortal() {
     const toY = parseInt(document.getElementById('portalToY').value, 10) || 0;
     return { map, x, y, toMap, toX, toY };
 }
+function validatePortalForm(options = {}) {
+    const { silent = false } = options;
+    const mapEl = document.getElementById('portalMap');
+    const toMapEl = document.getElementById('portalToMap');
+    if (!mapEl || !toMapEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const map = mapEl.value?.trim() || '';
+    const toMap = toMapEl.value?.trim() || '';
+    const errors = [];
+    const warnings = [];
+    const validMaps = getValidMapIds();
+    if (!map)
+        errors.push('Select a source map.');
+    else if (!validMaps.has(map))
+        errors.push(`Source map "${map}" does not exist.`);
+    if (!toMap)
+        errors.push('Select a destination map.');
+    else if (!validMaps.has(toMap))
+        errors.push(`Destination map "${toMap}" does not exist.`);
+    if (map && toMap && map === toMap) {
+        const x = parseInt(document.getElementById('portalX')?.value, 10);
+        const y = parseInt(document.getElementById('portalY')?.value, 10);
+        const toX = parseInt(document.getElementById('portalToX')?.value, 10);
+        const toY = parseInt(document.getElementById('portalToY')?.value, 10);
+        if (x === toX && y === toY)
+            warnings.push('Portal source and destination are the same tile.');
+    }
+    setFieldInvalid(mapEl, !map || !validMaps.has(map));
+    setFieldInvalid(toMapEl, !toMap || !validMaps.has(toMap));
+    const saveBtn = document.getElementById('addPortal');
+    if (saveBtn)
+        saveBtn.disabled = errors.length > 0;
+    const hintEl = document.getElementById('portalSaveHint');
+    if (hintEl) {
+        hintEl.textContent = errors.length ? errors[0] : '';
+        hintEl.classList.toggle('visible', errors.length > 0);
+    }
+    if (!silent) {
+        const msg = errors.length ? errors.join(' ') : warnings.length ? warnings.join(' ') : '';
+        setEntityNotice('portalFormNotice', msg, errors.length ? 'error' : 'info');
+    }
+    return { valid: errors.length === 0, errors, warnings };
+}
 function addPortal() {
+    const { valid } = validatePortalForm();
+    if (!valid)
+        return;
     globalThis.ackRecordSnapshot?.();
     const entry = collectPortal();
     if (editPortalIdx >= 0) {
@@ -5804,6 +5986,7 @@ function editPortal(i) {
     document.getElementById('addPortal').textContent = 'Update Portal';
     document.getElementById('delPortal').style.display = 'block';
     showPortalEditor(true);
+    validatePortalForm({ silent: true });
     selectedObj = { type: 'portal', obj: p };
     drawWorld();
 }
@@ -6403,9 +6586,48 @@ function startNewQuest() {
     document.getElementById('addQuest').textContent = 'Add Quest';
     document.getElementById('delQuest').style.display = 'none';
     showQuestEditor(true);
+    validateQuestForm({ silent: true });
     document.getElementById('questId').focus();
 }
+function validateQuestForm(options = {}) {
+    const { silent = false } = options;
+    const idEl = document.getElementById('questId');
+    const titleEl = document.getElementById('questTitle');
+    if (!idEl || !titleEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const id = idEl.value.trim();
+    const title = titleEl.value.trim();
+    const npcId = document.getElementById('questNPC')?.value?.trim() || '';
+    const errors = [];
+    const warnings = [];
+    if (!id)
+        errors.push('Enter an ID for the quest.');
+    else if (isDuplicateId(id, moduleData.quests, editQuestIdx))
+        errors.push(`ID "${id}" is already used by another quest.`);
+    if (!title)
+        errors.push('Enter a title for the quest.');
+    if (npcId && !moduleData.npcs.some(n => n.id === npcId))
+        warnings.push(`NPC "${npcId}" does not exist in this module.`);
+    setFieldInvalid(idEl, !id || isDuplicateId(id, moduleData.quests, editQuestIdx));
+    setFieldInvalid(titleEl, !title);
+    const saveBtn = document.getElementById('addQuest');
+    if (saveBtn)
+        saveBtn.disabled = errors.length > 0;
+    const hintEl = document.getElementById('questSaveHint');
+    if (hintEl) {
+        hintEl.textContent = errors.length ? errors[0] : '';
+        hintEl.classList.toggle('visible', errors.length > 0);
+    }
+    if (!silent) {
+        const msg = errors.length ? errors.join(' ') : warnings.length ? warnings.join(' ') : '';
+        setEntityNotice('questFormNotice', msg, errors.length ? 'error' : warnings.length ? 'info' : 'info');
+    }
+    return { valid: errors.length === 0, errors, warnings };
+}
 function addQuest() {
+    const { valid } = validateQuestForm();
+    if (!valid)
+        return;
     globalThis.ackRecordSnapshot?.();
     const id = document.getElementById('questId').value.trim();
     const title = document.getElementById('questTitle').value.trim();
@@ -6487,6 +6709,7 @@ function editQuest(i) {
     document.getElementById('addQuest').textContent = 'Update Quest';
     document.getElementById('delQuest').style.display = 'block';
     showQuestEditor(true);
+    validateQuestForm({ silent: true });
 }
 function updateQuestOptions() {
     const sel = document.getElementById('npcQuests');
@@ -6856,6 +7079,31 @@ function validateSpawns() {
         const label = 'Enemy template ' + (t.id || t.name || ('#' + (i + 1)));
         checkCombatRequires(t, label, 'template', i);
     });
+    // Orphan portal detection
+    const validMaps = getValidMapIds();
+    (moduleData.portals || []).forEach((p, i) => {
+        if (p.toMap && !validMaps.has(p.toMap)) {
+            issues.push({ msg: `Portal #${i + 1} targets missing map "${p.toMap}"`, type: 'portal', idx: i });
+        }
+        if (p.map && !validMaps.has(p.map)) {
+            issues.push({ msg: `Portal #${i + 1} on missing map "${p.map}"`, type: 'portal', idx: i });
+        }
+    });
+    // Encounter references missing template
+    (moduleData.encounters || []).forEach((e, i) => {
+        if (e.templateId && !moduleData.templates.some(t => t.id === e.templateId)) {
+            issues.push({ msg: `Encounter #${i + 1} references missing template "${e.templateId}"`, type: 'encounter', idx: i });
+        }
+    });
+    // NPCs referencing nonexistent quests
+    (moduleData.npcs || []).forEach((n, i) => {
+        const questIds = Array.isArray(n.quests) ? n.quests : n.questId ? [n.questId] : [];
+        questIds.forEach(qId => {
+            if (!moduleData.quests.some(q => q.id === qId)) {
+                issues.push({ msg: `NPC ${n.id || '#' + (i + 1)} references missing quest "${qId}"`, type: 'npc', idx: i, warn: true });
+            }
+        });
+    });
     return issues;
 }
 function onProblemClick() {
@@ -6890,6 +7138,10 @@ function onProblemClick() {
         editItem(prob.idx);
     else if (prob.type === 'template')
         editTemplate(prob.idx);
+    else if (prob.type === 'portal')
+        editPortal(prob.idx);
+    else if (prob.type === 'encounter')
+        editEncounter(prob.idx);
     else if (prob.type === 'start') {
         showMap('world');
         focusMap(moduleData.start.x, moduleData.start.y);
@@ -7292,6 +7544,24 @@ if (itemTileUploadBtn) {
 attachTileSpriteUpload('itemTileSpriteUpload', 'itemTileSprite', 'itemTileSpritePreview');
 updateTileSpritePreview('npcTileSprite', 'npcTileSpritePreview');
 updateTileSpritePreview('itemTileSprite', 'itemTileSpritePreview');
+// Live inline validation listeners
+['itemName', 'itemId'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateItemForm());
+});
+['questId', 'questTitle'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateQuestForm());
+});
+document.getElementById('questNPC')?.addEventListener('change', () => validateQuestForm());
+['templateId', 'templateName'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateTemplateForm());
+});
+document.getElementById('encTemplate')?.addEventListener('change', () => validateEncounterForm());
+['portalMap', 'portalToMap'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => validatePortalForm());
+});
+['portalX', 'portalY', 'portalToX', 'portalToY'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validatePortalForm());
+});
 document.getElementById('addEventSub')?.addEventListener('click', () => {
     const c = document.getElementById('eventSubList');
     if (c)

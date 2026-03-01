@@ -727,7 +727,9 @@
           <label id="itemBoostAmtWrap" style="display:none">Boost Amount<input id="itemBoostAmount" type="number" min="1" /></label>
           <label id="itemBoostDurWrap" style="display:none">Boost Duration<input id="itemBoostDuration" type="number" min="1" /></label>
           <label id="itemUseWrap" style="display:none">Use Text<textarea id="itemUse" rows="2"></textarea></label>
+          <div id="itemFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
           <button class="btn" id="addItem">Add Item</button>
+          <div id="itemSaveHint" class="save-hint"></div>
           <button class="btn" type="button" id="cancelItem" style="display:none">Cancel</button>
           <button class="btn" id="delItem" style="display:none">Delete Item</button>
           <button class="btn" type="button" id="closeItem">Done</button>
@@ -795,7 +797,9 @@
             <label>To Y<input id="portalToY" type="number" min="0" /></label>
           </div>
           <button class="btn" type="button" id="portalDestPick" title="Click on the map to choose destination">Pick Destination</button>
+          <div id="portalFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
           <button class="btn" id="addPortal">Add Portal</button>
+          <div id="portalSaveHint" class="save-hint"></div>
           <button class="btn" id="delPortal" style="display:none">Delete Portal</button>
         </div>
       </fieldset>
@@ -854,7 +858,9 @@
           <label>NPC<select id="questNPC">
               <option value="">(none)</option>
             </select></label>
+          <div id="questFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
           <button class="btn" id="addQuest">Add Quest</button>
+          <div id="questSaveHint" class="save-hint"></div>
           <button class="btn" id="delQuest" style="display:none">Delete Quest</button>
         </div>
       </fieldset>
@@ -953,7 +959,9 @@
             <div id="encLootTable" class="lootTable"></div>
             <button class="btn" type="button" id="encAddLootRow">+ Loot Entry</button>
           </div>
+          <div id="encounterFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
           <button class="btn" id="addEncounter">Add Enemy</button>
+          <div id="encounterSaveHint" class="save-hint"></div>
           <button class="btn" type="button" id="cancelEncounter" style="display:none">Cancel</button>
           <button class="btn" id="delEncounter" style="display:none">Delete Enemy</button>
           <button class="btn" type="button" id="closeEncounter">Done</button>
@@ -986,7 +994,9 @@
           <label class="templateScrapField" style="display:none">Min Scrap<input id="templateScrapMin" type="number" min="0" value="1" /></label>
           <label class="templateScrapField" style="display:none">Max Scrap<input id="templateScrapMax" type="number" min="0" value="1" /></label>
           <label>Requires<input id="templateRequires" /></label>
+        <div id="templateFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
         <button class="btn" id="addTemplate">Add Template</button>
+        <div id="templateSaveHint" class="save-hint"></div>
         <button class="btn" id="delTemplate" style="display:none">Delete Template</button>
       </div>
       </fieldset>

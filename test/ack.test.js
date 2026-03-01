@@ -1597,3 +1597,162 @@ test('generateProceduralWorld preserves existing data', () => {
 
   assert.strictEqual(snapshotAfter, snapshot);
 });
+
+// ===== Inline Validation Tests =====
+
+test('validateItemForm rejects empty ID', () => {
+  moduleData.items = [];
+  editItemIdx = -1;
+  document.getElementById('itemId').value = '';
+  document.getElementById('itemName').value = 'Test Item';
+  const result = validateItemForm({ silent: true });
+  assert.strictEqual(result.valid, false);
+  assert.ok(result.errors.some(e => e.includes('ID')));
+});
+
+test('validateItemForm rejects empty name', () => {
+  moduleData.items = [];
+  editItemIdx = -1;
+  document.getElementById('itemId').value = 'test_item';
+  document.getElementById('itemName').value = '';
+  const result = validateItemForm({ silent: true });
+  assert.strictEqual(result.valid, false);
+  assert.ok(result.errors.some(e => e.includes('name')));
+});
+
+test('validateItemForm rejects duplicate ID', () => {
+  moduleData.items = [{ id: 'sword', name: 'Sword' }];
+  editItemIdx = -1;
+  document.getElementById('itemId').value = 'sword';
+  document.getElementById('itemName').value = 'Another Sword';
+  const result = validateItemForm({ silent: true });
+  assert.strictEqual(result.valid, false);
+  assert.ok(result.errors.some(e => e.includes('already used')));
+  moduleData.items = [];
+});
+
+test('validateItemForm accepts valid input', () => {
+  moduleData.items = [];
+  editItemIdx = -1;
+  document.getElementById('itemId').value = 'new_item';
+  document.getElementById('itemName').value = 'New Item';
+  const result = validateItemForm({ silent: true });
+  assert.strictEqual(result.valid, true);
+  assert.strictEqual(result.errors.length, 0);
+});
+
+test('addItem does not add item when validation fails', () => {
+  moduleData.items = [];
+  editItemIdx = -1;
+  document.getElementById('itemId').value = '';
+  document.getElementById('itemName').value = '';
+  addItem();
+  assert.strictEqual(moduleData.items.length, 0);
+});
+
+test('validateQuestForm rejects empty ID', () => {
+  moduleData.quests = [];
+  editQuestIdx = -1;
+  document.getElementById('questId').value = '';
+  document.getElementById('questTitle').value = 'Test Quest';
+  const result = validateQuestForm({ silent: true });
+  assert.strictEqual(result.valid, false);
+  assert.ok(result.errors.some(e => e.includes('ID')));
+});
+
+test('validateQuestForm warns on missing NPC', () => {
+  moduleData.quests = [];
+  moduleData.npcs = [];
+  editQuestIdx = -1;
+  document.getElementById('questId').value = 'q1';
+  document.getElementById('questTitle').value = 'Test Quest';
+  document.getElementById('questNPC').value = 'nonexistent_npc';
+  const result = validateQuestForm({ silent: true });
+  assert.strictEqual(result.valid, true);
+  assert.ok(result.warnings.some(w => w.includes('nonexistent_npc')));
+  document.getElementById('questNPC').value = '';
+});
+
+test('validateTemplateForm rejects duplicate ID', () => {
+  moduleData.templates = [{ id: 'rat', name: 'Rat', combat: { HP: 1, ATK: 1, DEF: 0 } }];
+  editTemplateIdx = -1;
+  document.getElementById('templateId').value = 'rat';
+  document.getElementById('templateName').value = 'Another Rat';
+  const result = validateTemplateForm({ silent: true });
+  assert.strictEqual(result.valid, false);
+  assert.ok(result.errors.some(e => e.includes('already used')));
+  moduleData.templates = [];
+});
+
+test('validateEncounterForm rejects missing template', () => {
+  moduleData.templates = [];
+  document.getElementById('encTemplate').value = 'nonexistent';
+  const result = validateEncounterForm({ silent: true });
+  assert.strictEqual(result.valid, false);
+  assert.ok(result.errors.some(e => e.includes('does not exist')));
+});
+
+test('validateEncounterForm accepts existing template', () => {
+  moduleData.templates = [{ id: 'rat', name: 'Rat', combat: { HP: 1, ATK: 1, DEF: 0 } }];
+  document.getElementById('encTemplate').value = 'rat';
+  const result = validateEncounterForm({ silent: true });
+  assert.strictEqual(result.valid, true);
+  moduleData.templates = [];
+});
+
+test('validatePortalForm rejects orphan destination map', () => {
+  moduleData.interiors = [];
+  document.getElementById('portalMap').value = 'world';
+  document.getElementById('portalToMap').value = 'deleted_interior';
+  document.getElementById('portalX').value = '0';
+  document.getElementById('portalY').value = '0';
+  document.getElementById('portalToX').value = '0';
+  document.getElementById('portalToY').value = '0';
+  const result = validatePortalForm({ silent: true });
+  assert.strictEqual(result.valid, false);
+  assert.ok(result.errors.some(e => e.includes('does not exist')));
+});
+
+test('validatePortalForm warns on same-tile portal', () => {
+  moduleData.interiors = [];
+  document.getElementById('portalMap').value = 'world';
+  document.getElementById('portalToMap').value = 'world';
+  document.getElementById('portalX').value = '5';
+  document.getElementById('portalY').value = '5';
+  document.getElementById('portalToX').value = '5';
+  document.getElementById('portalToY').value = '5';
+  const result = validatePortalForm({ silent: true });
+  assert.strictEqual(result.valid, true);
+  assert.ok(result.warnings.some(w => w.includes('same tile')));
+});
+
+test('validateSpawns catches orphan portals', () => {
+  const savedPortals = moduleData.portals;
+  moduleData.portals = [{ map: 'world', x: 0, y: 0, toMap: 'gone_room', toX: 1, toY: 1 }];
+  moduleData.interiors = [];
+  const issues = validateSpawns();
+  assert.ok(issues.some(i => i.type === 'portal' && i.msg.includes('gone_room')));
+  moduleData.portals = savedPortals;
+});
+
+test('validateSpawns catches encounters referencing missing templates', () => {
+  const savedEnc = moduleData.encounters;
+  const savedTmpl = moduleData.templates;
+  moduleData.encounters = [{ map: 'world', templateId: 'deleted_tmpl' }];
+  moduleData.templates = [];
+  const issues = validateSpawns();
+  assert.ok(issues.some(i => i.type === 'encounter' && i.msg.includes('deleted_tmpl')));
+  moduleData.encounters = savedEnc;
+  moduleData.templates = savedTmpl;
+});
+
+test('validateSpawns catches NPCs referencing missing quests', () => {
+  const savedNpcs = moduleData.npcs;
+  const savedQuests = moduleData.quests;
+  moduleData.npcs = [{ id: 'npc1', name: 'NPC', map: 'world', x: 0, y: 0, quests: ['gone_quest'] }];
+  moduleData.quests = [];
+  const issues = validateSpawns();
+  assert.ok(issues.some(i => i.type === 'npc' && i.msg.includes('gone_quest')));
+  moduleData.npcs = savedNpcs;
+  moduleData.quests = savedQuests;
+});
