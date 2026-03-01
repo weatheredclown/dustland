@@ -1325,9 +1325,9 @@ function resizeInterior() {
     delete I._origGrid;
     drawInterior();
 }
-document.getElementById('intW').addEventListener('change', resizeInterior);
-document.getElementById('intH').addEventListener('change', resizeInterior);
-document.getElementById('intLabel').addEventListener('input', e => {
+document.getElementById('intW')?.addEventListener('change', resizeInterior);
+document.getElementById('intH')?.addEventListener('change', resizeInterior);
+document.getElementById('intLabel')?.addEventListener('input', e => {
     if (editInteriorIdx < 0)
         return;
     const I = moduleData.interiors[editInteriorIdx];
@@ -5387,7 +5387,7 @@ function updateZoneDims() {
 ['zoneX', 'zoneY', 'zoneW', 'zoneH'].forEach(id => {
     document.getElementById(id).addEventListener('input', updateZoneDims);
 });
-document.getElementById('zoneWalled').addEventListener('change', updateZoneWallFields);
+document.getElementById('zoneWalled')?.addEventListener('change', updateZoneWallFields);
 function deleteZone() {
     if (editZoneIdx < 0)
         return;
@@ -5995,8 +5995,8 @@ function resizeBldg() {
     drawBldg();
     applyBldgChanges();
 }
-document.getElementById('bldgW').addEventListener('change', resizeBldg);
-document.getElementById('bldgH').addEventListener('change', resizeBldg);
+document.getElementById('bldgW')?.addEventListener('change', resizeBldg);
+document.getElementById('bldgH')?.addEventListener('change', resizeBldg);
 bldgPalette.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => {
         bldgPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
@@ -7079,7 +7079,7 @@ function playtestModule() {
     window.open('dustland.html?ack-player=1#play', '_blank');
     globalThis.clearAckDirty?.();
 }
-document.getElementById('clear').onclick = clearWorld;
+document.getElementById('clear')?.addEventListener('click', clearWorld);
 const moduleBunkerScope = document.getElementById('moduleBunkerScope');
 if (moduleBunkerScope) {
     moduleBunkerScope.addEventListener('change', () => {
@@ -7097,26 +7097,26 @@ function runGenerate(regen) {
     else
         generateProceduralWorld(regen);
 }
-document.getElementById('procGen').onclick = () => runGenerate(false);
-document.getElementById('procRegen').onclick = () => runGenerate(true);
-document.getElementById('saveNPC').onclick = saveNPC;
-document.getElementById('addItem').onclick = () => {
-    const onMap = document.getElementById('itemOnMap').checked;
-    const mapVal = document.getElementById('itemMap').value.trim();
+document.getElementById('procGen')?.addEventListener('click', () => runGenerate(false));
+document.getElementById('procRegen')?.addEventListener('click', () => runGenerate(true));
+document.getElementById('saveNPC')?.addEventListener('click', saveNPC);
+document.getElementById('addItem')?.addEventListener('click', () => {
+    const onMap = document.getElementById('itemOnMap')?.checked;
+    const mapVal = document.getElementById('itemMap')?.value?.trim();
     if (editItemIdx >= 0 || !onMap || !mapVal)
         addItem();
     else
         beginPlaceItem();
-};
-document.getElementById('newItem').onclick = startNewItem;
-document.getElementById('itemMap').addEventListener('input', updateItemMapWrap);
-document.getElementById('itemOnMap').addEventListener('change', updateItemMapWrap);
-document.getElementById('itemRemove').onclick = removeItemFromWorld;
-document.getElementById('newNPC').onclick = startNewNPC;
-document.getElementById('discardNPC').onclick = discardNPC;
-document.getElementById('newBldg').onclick = startNewBldg;
-document.getElementById('newQuest').onclick = startNewQuest;
-document.getElementById('questRewardType').addEventListener('change', updateQuestRewardFields);
+});
+document.getElementById('newItem')?.addEventListener('click', startNewItem);
+document.getElementById('itemMap')?.addEventListener('input', updateItemMapWrap);
+document.getElementById('itemOnMap')?.addEventListener('change', updateItemMapWrap);
+document.getElementById('itemRemove')?.addEventListener('click', removeItemFromWorld);
+document.getElementById('newNPC')?.addEventListener('click', startNewNPC);
+document.getElementById('discardNPC')?.addEventListener('click', discardNPC);
+document.getElementById('newBldg')?.addEventListener('click', startNewBldg);
+document.getElementById('newQuest')?.addEventListener('click', startNewQuest);
+document.getElementById('questRewardType')?.addEventListener('change', updateQuestRewardFields);
 const questRewardCustomType = document.getElementById('questRewardCustomType');
 if (questRewardCustomType)
     questRewardCustomType.addEventListener('change', () => {
@@ -7384,7 +7384,7 @@ function handleModuleFile(file) {
     reader.onerror = () => setLoadStatus('Unable to read that file.', true);
     reader.readAsText(file);
 }
-document.getElementById('load').onclick = showLoadModal;
+document.getElementById('load')?.addEventListener('click', showLoadModal);
 const loadInput = document.getElementById('loadFile');
 if (loadInput)
     loadInput.addEventListener('change', () => handleModuleFile(loadInput.files?.[0]));
@@ -8102,9 +8102,15 @@ showNPCEditor(false);
 showBldgEditor(false);
 showQuestEditor(false);
 showEventEditor(false);
-document.getElementById('npcId').value = nextId('npc', moduleData.npcs);
-document.getElementById('questId').value = nextId('quest', moduleData.quests);
-document.getElementById('eventStat').innerHTML = STAT_OPTS.map(s => `<option value="${s}">${s}</option>`).join('');
+const npcIdEl = document.getElementById('npcId');
+if (npcIdEl)
+    npcIdEl.value = nextId('npc', moduleData.npcs);
+const questIdEl = document.getElementById('questId');
+if (questIdEl)
+    questIdEl.value = nextId('quest', moduleData.quests);
+const eventStatEl = document.getElementById('eventStat');
+if (eventStatEl)
+    eventStatEl.innerHTML = STAT_OPTS.map(s => `<option value="${s}">${s}</option>`).join('');
 renderEventList();
 loadTreeEditor();
 setPlaceholders();
