@@ -1,4 +1,4 @@
-import process from 'node:process';
+import process from 'process';
 import { readModule, getByPath, findIndexById, removeIndex } from './utils.js';
 const [file, id] = process.argv.slice(2);
 if (!file || !id) {
