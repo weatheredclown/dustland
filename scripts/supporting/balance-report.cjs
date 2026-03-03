@@ -219,6 +219,15 @@ function extractCombatants(moduleData) {
     const hp = combat.HP ?? combat.hp ?? null;
     const atk = combat.ATK ?? combat.atk ?? null;
     const def = combat.DEF ?? combat.def ?? 0;
+    const xpOverride = Number.isFinite(combat.xp) ? combat.xp : null;
+    const challenge = Number.isFinite(combat.challenge)
+      ? combat.challenge
+      : Number.isFinite(combat.HP)
+        ? combat.HP
+        : Number.isFinite(combat.hp)
+          ? combat.hp
+          : null;
+    const count = Number.isFinite(combat.count) ? combat.count : null;
     const entry = {
       id: npc.id || npc.name || null,
       name: npc.name || npc.id || 'Unknown Enemy',
@@ -230,7 +239,10 @@ function extractCombatants(moduleData) {
       requires: combat.requires || null,
       special: combat.special || null,
       notes: combat.auto ? ['auto'] : [],
-      source: moduleData.__file
+      source: moduleData.__file,
+      xpOverride,
+      challenge,
+      count
     };
     combats.push(entry);
   }
@@ -457,18 +469,32 @@ function formatScenarioRow(scenario) {
   ];
 }
 
-function formatEnemyRow(enemy, adrLevels) {
+function formatEnemyXP(enemy, avgLevel = 1) {
+  const override = Number.isFinite(enemy.xpOverride) ? enemy.xpOverride : null;
+  if (override != null) return override;
+  const level = Math.max(1, Math.round(avgLevel));
+  const count = Math.max(1, Number.isFinite(enemy.count) ? enemy.count : 1);
+  const strength = Number.isFinite(enemy.challenge)
+    ? enemy.challenge
+    : Number.isFinite(enemy.hp)
+      ? enemy.hp
+      : null;
+  if (!Number.isFinite(strength)) return null;
+  return count * Math.max(1, Math.ceil(strength / level));
+}
+
+function formatEnemyRow(enemy, adrLevels, avgLevel) {
   const special = enemy.special ? (enemy.special.dmg ? `dmg ${enemy.special.dmg}` : '—') : '—';
   const requires = enemy.requires ? (Array.isArray(enemy.requires) ? enemy.requires.join(', ') : enemy.requires) : '—';
-  const immune = Array.isArray(enemy.immune) && enemy.immune.length ? enemy.immune.join(', ') : '—';
   const counter = enemy.counterBasic?.dmg ? `${enemy.counterBasic.dmg}` : '—';
+  const xp = formatEnemyXP(enemy, avgLevel);
   return [
     enemy.name,
     enemy.hp != null ? `${enemy.hp}` : '—',
     enemy.atk != null ? `${enemy.atk}` : '—',
     `${enemy.def || 0}`,
     counter,
-    immune,
+    Number.isFinite(xp) ? `${xp}` : '—',
     requires,
     special
   ];
@@ -560,8 +586,11 @@ function buildReport(data) {
   lines.push('');
 
   lines.push('## Enemy Overview');
-  const enemyHeaders = ['Enemy', 'HP', 'ATK', 'DEF', 'Counter', 'Immune', 'Requires', 'Special'];
-  const enemyRows = enemies.map(enemy => formatEnemyRow(enemy, adrLevels));
+  const avgPartyLevel = scenarios.length
+    ? scenarios.reduce((sum, scenario) => sum + (scenario.level || 1), 0) / scenarios.length
+    : 1;
+  const enemyHeaders = ['Enemy', 'HP', 'ATK', 'DEF', 'Counter', 'XP', 'Requires', 'Special'];
+  const enemyRows = enemies.map(enemy => formatEnemyRow(enemy, adrLevels, avgPartyLevel));
   lines.push(markdownTable(enemyHeaders, enemyRows));
   lines.push('');
 
