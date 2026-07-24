@@ -1120,6 +1120,29 @@
         <div><b>Dialog Tree Editor</b></div>
         <button class="btn" type="button" id="closeDialogModal">Close</button>
       </div>
+      <div id="dlgToolbar" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px">
+        <input id="dlgSearch" placeholder="Search nodes &amp; choices..." aria-label="Search dialog nodes" style="flex:1 1 160px" />
+        <select id="dlgFilter" aria-label="Filter dialog nodes">
+          <option value="">All nodes</option>
+          <option value="effects">With effects</option>
+          <option value="checks">With stat checks</option>
+          <option value="conditions">With conditions</option>
+          <option value="orphans">Unreachable</option>
+        </select>
+        <select id="dlgTemplate" aria-label="Insert dialog template">
+          <option value="">Insert template…</option>
+          <option value="greeting">Greeting</option>
+          <option value="fetchQuest">Fetch quest (accept/turn-in)</option>
+          <option value="gatekeeper">Locked gatekeeper</option>
+          <option value="lore">Lore branches</option>
+        </select>
+        <button class="btn" type="button" id="pasteSubtree" style="display:none" title="Paste the copied dialog subtree into this tree">Paste Subtree</button>
+      </div>
+      <div id="dlgStatus" class="small" role="status" aria-live="polite" style="margin:2px 0;opacity:0.8"></div>
+      <details id="dlgGraphWrap" style="margin:4px 0">
+        <summary style="cursor:pointer">Graph view</summary>
+        <div id="dlgGraph" style="overflow:auto;max-height:260px;border:1px solid #2b3b2b;margin-top:4px"></div>
+      </details>
       <div id="treeEditor"></div>
       <div id="treeWarning" style="color:#fc0;font-size:0.75rem;margin-top:4px"></div>
       <button class="btn" type="button" id="addNode">Add Node</button>

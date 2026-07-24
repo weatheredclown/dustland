@@ -49,14 +49,15 @@ A creator who has never seen the ACK can build a small, complete, playable modul
 ## Milestone 2 — Dialog authoring at scale
 
 *The dialog editor is the richest surface and the biggest friction point. A writer with a 40-node tree currently has no way to search it, no way to see its shape, and no way to reuse work.*
+*Status: implemented 2026-07-24 (see notes per item).*
 
-- [ ] **Dialog search & filter**: text search across node text and choice labels; filters for nodes with effects, with stat checks, orphaned, unreachable from root.
-- [ ] **Copy/paste dialog subtrees** between nodes and between NPCs.
-- [ ] **Dialog templates**: one-click insert for the common patterns (greeting + shop, fetch-quest accept/turn-in, gatekeeper, lore branch) with placeholders to fill in.
-- [ ] **Conditional preview**: playtest dialog in-editor with arbitrary flags/inventory/stats set, so every branch is testable without launching the game.
-- [ ] **Visual dialog graph (stretch — cut from 1.0 if it slips)**: read-only node-graph rendering with orphan/broken-link highlighting is 1.0-worthy on its own; draggable node editing can wait for 1.x.
+- [x] **Dialog search & filter** — toolbar in the dialog modal: text search across node ids, text, choice labels, and success/failure lines; filters for nodes with effects, stat checks, conditions, and unreachable nodes (engine-entered nodes recognized). Shows "N of M nodes" while active.
+- [x] **Copy/paste dialog subtrees** — a copy button on every node card grabs the node plus everything it links to; the clipboard lives in `localStorage`, so it survives switching NPCs. Paste merges with collision-safe renaming and remaps internal links.
+- [x] **Dialog templates** — "Insert template…" dropdown: greeting, fetch quest (accept/turn-in wired to the quest engine's `q` choices and `do_turnin` node), locked gatekeeper (with `locked` node), and lore branches. Inserted templates auto-link from `start`.
+- [x] **Conditional preview** — the inline preview now honors spoofed flags (`if` conditions with all operators), required/cost items, and tags; unavailable choices render disabled with the reason in their tooltip. Stat-check choices offer explicit "pass"/"fail" buttons showing the success/failure text and branching accordingly. Spoof panel values persist across edits instead of resetting. (Spoofed in-game playback already existed.)
+- [x] **Visual dialog graph (read-only)** — collapsible "Graph view" in the dialog modal: SVG layered by BFS depth from engine entry nodes, edges for choice links, orphans outlined in orange, click any box to scroll to and flash its node card. Draggable editing remains post-1.0.
 
-**Done when:** a writer can find any line of dialog in seconds, reuse a quest-dialog pattern without rebuilding it, and verify every branch without leaving the editor.
+**Done when:** a writer can find any line of dialog in seconds, reuse a quest-dialog pattern without rebuilding it, and verify every branch without leaving the editor. ✅
 
 ## Milestone 3 — Discoverability: the editor explains itself
 
