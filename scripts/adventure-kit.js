@@ -1311,6 +1311,7 @@ function startNewInterior() {
 }
 function editInterior(i) {
     const I = moduleData.interiors[i];
+    globalThis.ackSetEditingContext?.(I?.label || I?.id || '');
     editInteriorIdx = i;
     document.getElementById('intId').value = I.id;
     document.getElementById('intLabel').value = I.label || '';
@@ -3491,12 +3492,29 @@ function setupNpcSections() {
     const canFragment = typeof document.createDocumentFragment === 'function';
     const frag = canFragment ? document.createDocumentFragment() : null;
     const sectionNodes = [];
+    let savedSectionState = {};
+    try {
+        savedSectionState = JSON.parse(localStorage.getItem('ack_npc_sections') || '{}') || {};
+    }
+    catch (e) {
+        savedSectionState = {};
+    }
+    const persistSectionState = () => {
+        try {
+            const state = {};
+            npcSectionRefs.forEach((el, id) => { state[id] = !!el.open; });
+            localStorage.setItem('ack_npc_sections', JSON.stringify(state));
+        }
+        catch (e) { /* storage unavailable */ }
+    };
     sections.forEach(section => {
         const detail = document.createElement('details');
         detail.className = 'npc-section';
         detail.id = section.id;
-        if (section.open)
+        const saved = savedSectionState[section.id];
+        if (saved !== undefined ? saved : section.open)
             detail.open = true;
+        detail.addEventListener?.('toggle', persistSectionState);
         const summary = document.createElement('summary');
         summary.textContent = section.label;
         detail.appendChild(summary);
@@ -4165,6 +4183,7 @@ function expandHex(hex) {
     return hex;
 }
 function editNPC(i) {
+    globalThis.ackSetEditingContext?.(moduleData.npcs[i]?.id || moduleData.npcs[i]?.name || '');
     const n = moduleData.npcs[i];
     showMap(n.map);
     focusMap(n.x, n.y);
@@ -4578,6 +4597,7 @@ function addItem() {
     showItemEditor(false);
     if (wasNew)
         resetListFilter('itemFilter');
+    setEntityNotice('itemFormNotice', 'Item saved.', 'success', true);
     globalThis.markAckDirty?.();
 }
 function cancelItem() {
@@ -4609,6 +4629,7 @@ function removeItemFromWorld() {
     updateItemMapWrap();
 }
 function editItem(i) {
+    globalThis.ackSetEditingContext?.(moduleData.items[i]?.id || moduleData.items[i]?.name || '');
     const it = moduleData.items[i];
     if (it.map) {
         showMap(it.map);
@@ -5061,6 +5082,7 @@ function addEncounter() {
     document.getElementById('delEncounter').style.display = 'none';
     renderEncounterList();
     showEncounterEditor(false);
+    setEntityNotice('encounterFormNotice', 'Enemy saved.', 'success', true);
     globalThis.markAckDirty?.();
 }
 function editEncounter(i) {
@@ -5240,6 +5262,7 @@ function addTemplate() {
     document.getElementById('delTemplate').style.display = 'none';
     renderTemplateList();
     showTemplateEditor(false);
+    setEntityNotice('templateFormNotice', 'Template saved.', 'success', true);
     globalThis.markAckDirty?.();
 }
 function editTemplate(i) {
@@ -5470,6 +5493,7 @@ function addEvent() {
     selectedObj = null;
     drawWorld();
     showEventEditor(false);
+    setEntityNotice('eventFormNotice', 'Event saved.', 'success', true);
     globalThis.markAckDirty?.();
 }
 function editEvent(i) {
@@ -5830,6 +5854,7 @@ function addArena() {
     document.getElementById('delArena').style.display = 'none';
     renderArenaList();
     showArenaEditor(false);
+    setEntityNotice('arenaFormNotice', 'Arena saved.', 'success', true);
     globalThis.markAckDirty?.();
 }
 function editArena(idx) {
@@ -6034,6 +6059,7 @@ function addZone() {
     else {
         moduleData.zones.push(entry);
     }
+    setEntityNotice('zoneFormNotice', 'Zone saved.', 'success', true);
     editZoneIdx = -1;
     document.getElementById('addZone').textContent = 'Add Zone';
     document.getElementById('delZone').style.display = 'none';
@@ -6199,6 +6225,7 @@ function startNewPersona() {
 }
 function editPersona(id) {
     editPersonaId = id;
+    globalThis.ackSetEditingContext?.(id || '');
     const p = (moduleData.personas || {})[id] || {};
     document.getElementById('personaEditorId').value = id;
     document.getElementById('personaEditorLabel').value = p.label || '';
@@ -6271,6 +6298,7 @@ function savePersona() {
     renderPersonaList();
     document.getElementById('savePersona').textContent = 'Update Persona';
     document.getElementById('delPersona').style.display = 'block';
+    setEntityNotice('personaFormNotice', 'Persona saved.', 'success', true);
     globalThis.markAckDirty?.();
 }
 function deletePersona() {
@@ -6456,6 +6484,7 @@ function addZoneFx() {
     renderZoneFxList();
     showZoneFxEditor(false);
     drawWorld();
+    setEntityNotice('zoneFxFormNotice', 'Zone effect saved.', 'success', true);
     globalThis.markAckDirty?.();
 }
 function editZoneFx(i) {
@@ -6616,6 +6645,7 @@ function addPortal() {
     else {
         moduleData.portals.push(entry);
     }
+    setEntityNotice('portalFormNotice', 'Portal saved.', 'success', true);
     editPortalIdx = -1;
     document.getElementById('addPortal').textContent = 'Add Portal';
     document.getElementById('delPortal').style.display = 'none';
@@ -6771,6 +6801,7 @@ function addBuilding() {
     drawWorld();
     document.getElementById('delBldg').style.display = 'block';
     document.getElementById('addBldg').style.display = 'none';
+    setEntityNotice('bldgFormNotice', 'Building placed.', 'success', true);
     globalThis.markAckDirty?.();
 }
 function cancelBldg() {
@@ -6798,6 +6829,7 @@ function renderBldgList() {
 }
 function editBldg(i) {
     const b = moduleData.buildings[i];
+    globalThis.ackSetEditingContext?.(b ? `building @(${b.x},${b.y})` : '');
     showMap('world');
     focusMap(b.x + b.w / 2, b.y + b.h / 2);
     editBldgIdx = i;
@@ -7359,6 +7391,7 @@ function addQuest() {
     renderNPCList();
     document.getElementById('questId').value = nextId('quest', moduleData.quests);
     showQuestEditor(false);
+    setEntityNotice('questFormNotice', 'Quest saved.', 'success', true);
     globalThis.markAckDirty?.();
 }
 function renderQuestList() {
@@ -7374,6 +7407,7 @@ function renderQuestList() {
 }
 function editQuest(i) {
     const q = moduleData.quests[i];
+    globalThis.ackSetEditingContext?.(q?.id || '');
     editQuestIdx = i;
     document.getElementById('questId').value = q.id;
     document.getElementById('questTitle').value = q.title;
@@ -9470,6 +9504,7 @@ animate();
     }
     function show(tabName) {
         activeTab = tabName;
+        globalThis.ackSetEditingContext?.('');
         tabs.forEach(t => {
             const on = t.dataset.tab === tabName;
             t.classList.toggle('active', on);
@@ -9552,8 +9587,54 @@ if (document && typeof document.addEventListener === 'function') {
                 e.preventDefault();
                 globalThis.ackRedo?.();
             }
+            else if (e.key >= '1' && e.key <= '9') {
+                const pane = TAB_HOTKEYS[parseInt(e.key, 10) - 1];
+                if (pane && typeof window !== 'undefined' && typeof window.showEditorTab === 'function') {
+                    e.preventDefault();
+                    window.showEditorTab(pane);
+                }
+            }
+        }
+        else if (e.key === 'Escape') {
+            const dlgModal = document.getElementById('dialogModal');
+            if (dlgModal?.classList?.contains('shown'))
+                closeDialogEditor();
         }
     });
 }
+// --- Discoverability: onboarding panel, tab hotkeys, editing context ---
+const START_HERE_KEY = 'ack_start_here_done';
+const TAB_HOTKEYS = ['npc', 'items', 'buildings', 'interiors', 'portals', 'quests', 'events', 'arenas', 'zones'];
+const TAB_LABELS = {
+    npc: 'NPCs', items: 'Items', buildings: 'Buildings', interiors: 'Interiors', portals: 'Portals',
+    quests: 'Quests', events: 'Tile Events', arenas: 'Arenas', zones: 'Zones', encounters: 'Encounters',
+    templates: 'Templates', personas: 'Personas', zonefx: 'Zone Effects', wizards: 'Wizards'
+};
+function showStartHere(show) {
+    const panel = document.getElementById('startHere');
+    if (panel)
+        panel.style.display = show ? 'block' : 'none';
+}
+try {
+    if (typeof localStorage !== 'undefined' && !localStorage.getItem(START_HERE_KEY))
+        showStartHere(true);
+}
+catch (e) { /* storage unavailable */ }
+document.getElementById('startHereClose')?.addEventListener('click', () => {
+    try {
+        localStorage.setItem(START_HERE_KEY, '1');
+    }
+    catch (e) { /* ignore */ }
+    showStartHere(false);
+});
+document.getElementById('helpBtn')?.addEventListener('click', () => showStartHere(true));
+function setEditingContext(entity) {
+    const el = document.getElementById('editorContext');
+    if (!el)
+        return;
+    const label = TAB_LABELS[activeTab] || '';
+    el.textContent = entity ? `${label} → ${entity}` : label;
+}
+globalThis.ackSetEditingContext = setEditingContext;
 document.getElementById('playtestFloat')?.addEventListener('click', playtestModule);
 updateMapSelect();

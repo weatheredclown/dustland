@@ -289,6 +289,25 @@
       margin-top: 8px;
     }
 
+    .editor-actions {
+      position: sticky;
+      bottom: 0;
+      background: #0f120f;
+      padding: 6px 0 2px;
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      align-items: center;
+      z-index: 2;
+      border-top: 1px solid #2b3b2b;
+    }
+
+    .panel-hint {
+      opacity: 0.7;
+      font-size: 0.75rem;
+      margin: 2px 0 6px;
+    }
+
     #treeEditor .node {
       border: 1px solid #2b3b2b;
       padding: 4px;
@@ -532,6 +551,19 @@
         <legend>Problems</legend>
         <div class="list" id="problemList"></div>
       </fieldset>
+      <div id="startHere" class="card" style="display:none;margin-bottom:6px">
+        <b>Start here</b>
+        <div class="small" style="margin:4px 0">A build order that works:</div>
+        <ol class="small" style="margin:0 0 4px 16px;padding:0">
+          <li>Generate or paint a world map (map tools on the left)</li>
+          <li>Add buildings and their interiors</li>
+          <li>Create NPCs and write their dialog</li>
+          <li>Add items, quests, and encounters</li>
+          <li>Playtest any time with Ctrl+P</li>
+        </ol>
+        <div class="small" style="margin-bottom:4px">New? The <b>Wizards</b> tab builds NPCs, chests, and buildings step by step. The Problems card flags anything broken — click a problem to jump to it. Ctrl+1–9 switches tabs.</div>
+        <button class="btn" type="button" id="startHereClose">Got it</button>
+      </div>
       <div class="tabs2" role="tablist" aria-label="Editors">
         <button class="tab2 active" type="button" data-tab="npc" role="tab" aria-selected="true"><span aria-hidden="true">🧍</span> NPCs</button>
         <button class="tab2" type="button" data-tab="items" role="tab" aria-selected="false"><span aria-hidden="true">🎒</span> Items</button>
@@ -548,9 +580,11 @@
         <button class="tab2" type="button" data-tab="zonefx" role="tab" aria-selected="false"><span aria-hidden="true">🌪</span> Zone FX</button>
         <button class="tab2" type="button" data-tab="wizards" role="tab" aria-selected="false"><span aria-hidden="true">🧙</span> Wizards</button>
       </div>
+      <div id="editorContext" class="small" aria-live="polite" style="opacity:0.75;margin:2px 0"></div>
       <div class="tabpanes">
         <fieldset class="card" id="npcCard" data-pane="npc">
           <legend>NPCs</legend>
+          <div class="panel-hint">People and creatures. Give them dialog, shops, quests, or combat.</div>
           <input id="npcFilter" placeholder="Filter NPCs..." aria-label="Filter NPCs" />
           <div class="list" id="npcList"></div>
           <button class="btn" type="button" id="newNPC">New NPC</button>
@@ -663,6 +697,7 @@
         </fieldset>
       <fieldset class="card" id="itemCard" data-pane="items" style="display:none">
         <legend>Items</legend>
+        <div class="panel-hint">Weapons, armor, and loot. Place them on maps or hand them out via dialog and quests.</div>
         <input id="itemFilter" placeholder="Filter items..." aria-label="Filter items" />
         <div class="list" id="itemList"></div>
         <button class="btn" type="button" id="newItem">+ Item</button>
@@ -722,15 +757,18 @@
           <label id="itemBoostDurWrap" style="display:none">Boost Duration<input id="itemBoostDuration" type="number" min="1" /></label>
           <label id="itemUseWrap" style="display:none">Use Text<textarea id="itemUse" rows="2"></textarea></label>
           <div id="itemFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
-          <button class="btn" id="addItem">Add Item</button>
+          <div class="editor-actions">
+            <button class="btn" id="addItem">Add Item</button>
+            <button class="btn" type="button" id="cancelItem" style="display:none">Cancel</button>
+            <button class="btn" id="delItem" style="display:none">Delete Item</button>
+            <button class="btn" type="button" id="closeItem">Done</button>
+          </div>
           <div id="itemSaveHint" class="save-hint"></div>
-          <button class="btn" type="button" id="cancelItem" style="display:none">Cancel</button>
-          <button class="btn" id="delItem" style="display:none">Delete Item</button>
-          <button class="btn" type="button" id="closeItem">Done</button>
         </div>
       </fieldset>
       <fieldset class="card" id="bldgCard" data-pane="buildings" style="display:none">
         <legend>Buildings</legend>
+        <div class="panel-hint">Structures on the world map. Each non-bunker building opens into an interior.</div>
         <div class="list" id="bldgList"></div>
         <button class="btn" type="button" id="newBldg">+ Building</button>
         <div id="bunkerTravelWrap" style="display:none;margin:4px 0;">
@@ -757,15 +795,18 @@
           <label>Interior<select id="bldgInterior"></select></label>
           <label><input type="checkbox" id="bldgBoarded"> Boarded</label>
           <div id="bldgFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
-          <button class="btn" id="addBldg">Add Building</button>
+          <div class="editor-actions">
+            <button class="btn" id="addBldg">Add Building</button>
+            <button class="btn" type="button" id="cancelBldg" style="display:none">Cancel</button>
+            <button class="btn" id="delBldg" style="display:none">Remove Building</button>
+            <button class="btn" type="button" id="closeBldg">Done</button>
+          </div>
           <div id="bldgSaveHint" class="save-hint"></div>
-          <button class="btn" type="button" id="cancelBldg" style="display:none">Cancel</button>
-          <button class="btn" id="delBldg" style="display:none">Remove Building</button>
-          <button class="btn" type="button" id="closeBldg">Done</button>
         </div>
       </fieldset>
       <fieldset class="card" id="intCard" data-pane="interiors" style="display:none">
         <legend>Interiors</legend>
+        <div class="panel-hint">Room layouts behind building doors. Paint walls, floors, and doors.</div>
         <div class="list" id="intList"></div>
         <button class="btn" type="button" id="newInterior">+ Interior</button>
         <div id="intEditor" style="display:none">
@@ -780,12 +821,15 @@
             <button type="button" data-tile="D" style="background:#8bd98d" title="Door" aria-label="Door"></button>
           </div>
           <canvas id="intCanvas" width="192" height="144" style="margin-top:4px"></canvas>
-          <button class="btn" type="button" id="delInterior" style="display:none">Delete Interior</button>
-          <button class="btn" type="button" id="closeInterior">Done</button>
+          <div class="editor-actions">
+            <button class="btn" type="button" id="delInterior" style="display:none">Delete Interior</button>
+            <button class="btn" type="button" id="closeInterior">Done</button>
+          </div>
         </div>
       </fieldset>
       <fieldset class="card" id="portalCard" data-pane="portals" style="display:none">
         <legend>Portals</legend>
+        <div class="panel-hint">Teleports between maps. Link world tiles to interiors and back.</div>
         <div class="list" id="portalList"></div>
         <button class="btn" type="button" id="newPortal">+ Portal</button>
         <div id="portalEditor" style="display:none">
@@ -802,13 +846,16 @@
           </div>
           <button class="btn" type="button" id="portalDestPick" title="Click on the map to choose destination">Pick Destination</button>
           <div id="portalFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
-          <button class="btn" id="addPortal">Add Portal</button>
+          <div class="editor-actions">
+            <button class="btn" id="addPortal">Add Portal</button>
+            <button class="btn" id="delPortal" style="display:none">Delete Portal</button>
+          </div>
           <div id="portalSaveHint" class="save-hint"></div>
-          <button class="btn" id="delPortal" style="display:none">Delete Portal</button>
         </div>
       </fieldset>
       <fieldset class="card" id="questCard" data-pane="quests" style="display:none">
         <legend>Quests</legend>
+        <div class="panel-hint">Objectives with rewards. Assign each quest to the NPC who gives it.</div>
         <input id="questFilter" placeholder="Filter quests..." aria-label="Filter quests" />
         <div class="list" id="questList"></div>
         <button class="btn" type="button" id="newQuest">+ Quest</button>
@@ -863,13 +910,16 @@
               <option value="">(none)</option>
             </select></label>
           <div id="questFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
-          <button class="btn" id="addQuest">Add Quest</button>
+          <div class="editor-actions">
+            <button class="btn" id="addQuest">Add Quest</button>
+            <button class="btn" id="delQuest" style="display:none">Delete Quest</button>
+          </div>
           <div id="questSaveHint" class="save-hint"></div>
-          <button class="btn" id="delQuest" style="display:none">Delete Quest</button>
         </div>
       </fieldset>
       <fieldset class="card" id="eventCard" data-pane="events" style="display:none">
         <legend>Tile Events</legend>
+        <div class="panel-hint">Scripted effects that fire when the party steps on a tile.</div>
         <input id="eventFilter" placeholder="Filter events..." aria-label="Filter events" />
         <div class="list" id="eventList"></div>
         <button class="btn" type="button" id="newEvent">+ Event</button>
@@ -892,6 +942,7 @@
     </fieldset>
       <fieldset class="card" id="arenaCard" data-pane="arenas" style="display:none">
         <legend>Arenas</legend>
+        <div class="panel-hint">Wave-based combat challenges with rewards.</div>
         <input id="arenaFilter" placeholder="Filter arenas..." aria-label="Filter arenas" />
         <div class="list" id="arenaList"></div>
         <button class="btn" type="button" id="newArena">+ Arena</button>
@@ -915,6 +966,7 @@
       </fieldset>
       <fieldset class="card" id="zoneCard" data-pane="zones" style="display:none">
         <legend>Zones</legend>
+        <div class="panel-hint">Rectangular areas with per-step effects, weather, or walls.</div>
         <div class="list" id="zoneList"></div>
         <button class="btn" type="button" id="newZone">+ Zone</button>
         <div id="zoneEditor" style="display:none">
@@ -943,13 +995,16 @@
             <label><input type="checkbox" id="zoneEntranceWest" />West Entrance</label>
           </div>
           <div id="zoneFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
-          <button class="btn" id="addZone">Add Zone</button>
+          <div class="editor-actions">
+            <button class="btn" id="addZone">Add Zone</button>
+            <button class="btn" id="delZone" style="display:none">Delete Zone</button>
+          </div>
           <div id="zoneSaveHint" class="save-hint"></div>
-          <button class="btn" id="delZone" style="display:none">Delete Zone</button>
         </div>
       </fieldset>
       <fieldset class="card" id="encounterCard" data-pane="encounters" style="display:none">
         <legend>Encounters</legend>
+        <div class="panel-hint">Random enemy spawns by road distance or zone tag.</div>
         <input id="encFilter" placeholder="Filter encounters..." aria-label="Filter encounters" />
         <div class="list" id="encounterList"></div>
         <button class="btn" type="button" id="newEncounter">+ Enemy</button>
@@ -970,15 +1025,18 @@
             <button class="btn" type="button" id="encAddLootRow">+ Loot Entry</button>
           </div>
           <div id="encounterFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
-          <button class="btn" id="addEncounter">Add Enemy</button>
+          <div class="editor-actions">
+            <button class="btn" id="addEncounter">Add Enemy</button>
+            <button class="btn" type="button" id="cancelEncounter" style="display:none">Cancel</button>
+            <button class="btn" id="delEncounter" style="display:none">Delete Enemy</button>
+            <button class="btn" type="button" id="closeEncounter">Done</button>
+          </div>
           <div id="encounterSaveHint" class="save-hint"></div>
-          <button class="btn" type="button" id="cancelEncounter" style="display:none">Cancel</button>
-          <button class="btn" id="delEncounter" style="display:none">Delete Enemy</button>
-          <button class="btn" type="button" id="closeEncounter">Done</button>
         </div>
       </fieldset>
       <fieldset class="card" id="templateCard" data-pane="templates" style="display:none">
         <legend>NPC Templates <span class="help" title="Templates for enemies that can spawn from dialog">(?)</span></legend>
+        <div class="panel-hint">Enemy stat blocks used by encounters, arenas, and dialog fights.</div>
         <div class="list" id="templateList"></div>
         <button class="btn" type="button" id="newTemplate">+ Template</button>
         <div id="templateEditor" style="display:none">
@@ -1005,13 +1063,16 @@
           <label class="templateScrapField" style="display:none">Max Scrap<input id="templateScrapMax" type="number" min="0" value="1" /></label>
           <label>Requires<input id="templateRequires" /></label>
         <div id="templateFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
-        <button class="btn" id="addTemplate">Add Template</button>
+        <div class="editor-actions">
+          <button class="btn" id="addTemplate">Add Template</button>
+          <button class="btn" id="delTemplate" style="display:none">Delete Template</button>
+        </div>
         <div id="templateSaveHint" class="save-hint"></div>
-        <button class="btn" id="delTemplate" style="display:none">Delete Template</button>
       </div>
       </fieldset>
       <fieldset class="card" id="personaCard" data-pane="personas" style="display:none">
         <legend>Personas</legend>
+        <div class="panel-hint">Alternate identities that items can grant, with portraits and stat mods.</div>
         <input id="personaFilter" placeholder="Filter personas..." aria-label="Filter personas" />
         <div class="list" id="personaList"></div>
         <button class="btn" type="button" id="newPersona">+ Persona</button>
@@ -1051,6 +1112,7 @@
       </fieldset>
       <fieldset class="card" id="zoneFxCard" data-pane="zonefx" style="display:none">
         <legend>Zone Effects</legend>
+        <div class="panel-hint">Area effects with conditions and spawns — a scriptable superset of Zones.</div>
         <input id="zoneFxFilter" placeholder="Filter zone effects..." aria-label="Filter zone effects" />
         <div class="list" id="zoneFxList"></div>
         <button class="btn" type="button" id="newZoneFx">+ Zone Effect</button>
@@ -1092,6 +1154,7 @@
       </fieldset>
       <fieldset class="card" id="wizardCard" data-pane="wizards" style="display:none">
         <legend>Wizards</legend>
+        <div class="panel-hint">Guided flows that build common content step by step. The best place to start.</div>
         <div id="wizardList"></div>
       </fieldset>
       </div><!-- /.tabpanes -->
@@ -1178,6 +1241,7 @@
       </div>
       <button id="undoBtn" class="btn" type="button" title="Undo (Ctrl+Z)" disabled aria-label="Undo">&#8617; Undo</button>
       <button id="redoBtn" class="btn" type="button" title="Redo (Ctrl+Y)" disabled aria-label="Redo">&#8618; Redo</button>
+      <button id="helpBtn" class="btn" type="button" title="Show the getting-started guide" aria-label="Help">? Help</button>
       <button id="quickSave" class="btn" type="button" title="Save module (Ctrl+S)">💾 Save</button>
       <button id="cloudLoad" class="btn" type="button" title="Load the latest cloud draft" hidden>☁ Load</button>
       <button id="cloudSave" class="btn" type="button" title="Save to the cloud" hidden>☁ Save</button>

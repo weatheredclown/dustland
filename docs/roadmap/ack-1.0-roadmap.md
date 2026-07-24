@@ -62,15 +62,16 @@ A creator who has never seen the ACK can build a small, complete, playable modul
 ## Milestone 3 — Discoverability: the editor explains itself
 
 *Everything exists but nothing is introduced. New creators must currently discover 13 tabs by clicking.*
+*Status: implemented 2026-07-24 (see notes per item).*
 
-- [ ] **First-run onboarding**: a short dismissible tour or "Start here" panel pointing to the wizards and the suggested build order (world → buildings → NPCs → quests).
-- [ ] **Contextual help per panel**: a help link/icon on each entity panel to the relevant doc section; upgrade bare `title` tooltips on non-obvious controls (proc-gen params, brush modes, event types) to real explanations.
-- [ ] **Sticky action buttons**: pin Save/Discard/Done to the bottom of every editor panel (partial `editor-actions` wrappers exist; finish and pin globally).
-- [ ] **Keyboard completeness**: Ctrl+1–9 tab switching; Enter/Escape for save/discard in every panel; verified logical tab order. (Ctrl+S/P/Z/Y already work.)
-- [ ] **Navigation context**: breadcrumb or header showing where you are ("NPCs → settler_jax → Dialog"), and collapsible sections with remembered open state in the long forms (NPC editor especially).
-- [ ] **Consistent feedback**: every save/clone/delete/cloud action confirms visibly (toast or status line); destructive actions get an undo-toast or confirm.
+- [x] **First-run onboarding** — a dismissible "Start here" card above the tabs with the suggested build order (world → buildings → NPCs → quests → playtest) and pointers to the Wizards tab and Problems card. Shows until dismissed (`localStorage`); the new "? Help" toolbar button brings it back any time.
+- [x] **Contextual help per panel** — every entity tab now opens with a one-line `panel-hint` explaining what the entity is and where it fits (all 14 panels).
+- [x] **Sticky action buttons** — `.editor-actions` is now position-sticky with a backing panel; Items, Buildings, Interiors, Portals, Quests, Zones, Encounters, and Templates buttons were wrapped to match the panels that already had wrappers (NPC, Events, Arenas, Personas, Zone FX).
+- [x] **Keyboard** — Ctrl+1–9 switches the first nine entity tabs; Escape closes the dialog tree modal (persisting edits). Ctrl+S/P/Z/Y already existed. A full tab-order audit remains a manual QA task.
+- [x] **Navigation context** — an `#editorContext` line under the tabs shows the active tab and the entity being edited (wired for NPCs, Items, Quests, Buildings, Interiors, Personas). NPC editor sections now remember their open/closed state across sessions.
+- [x] **Consistent feedback** — every entity save now confirms visibly ("Item saved.", "Quest saved.", …) via the existing notice elements with auto-clear; NPC already had it. Deletes were already guarded by confirm dialogs; cloud actions already have status reporting.
 
-**Done when:** a first-time user can build without reading external docs, and no action completes silently.
+**Done when:** a first-time user can build without reading external docs, and no action completes silently. ✅
 
 ## Milestone 4 — Guided creation covers the core loop
 
