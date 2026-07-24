@@ -712,13 +712,20 @@ const brushSizeSlider = document.getElementById('brushSize');
 const brushSizeLabel = document.getElementById('brushSizeLabel');
 let worldPaintNoise = true;
 let brushSize = 1;
+function updateBrushSizeVisibility() {
+    const wrap = document.getElementById('brushSizeWrap');
+    if (wrap)
+        wrap.style.display = worldPaintNoise ? '' : 'none';
+}
 if (noiseToggle) {
     noiseToggle.addEventListener('click', () => {
         worldPaintNoise = !worldPaintNoise;
         noiseToggle.textContent = `Noise: ${worldPaintNoise ? 'On' : 'Off'}`;
+        updateBrushSizeVisibility();
     });
     noiseToggle.textContent = 'Noise: On';
 }
+updateBrushSizeVisibility();
 if (brushSizeSlider) {
     if (brushSizeLabel)
         brushSizeLabel.textContent = brushSizeSlider.value;
@@ -1224,8 +1231,10 @@ intCanvas.addEventListener('mousedown', e => {
     if (!coordTarget && !placingType && (overNpc || overItem)) {
         return;
     }
+    globalThis.ackRecordSnapshot?.();
     intPainting = true;
     paintInterior(e);
+    globalThis.markAckDirty?.();
 });
 intCanvas.addEventListener('mousemove', e => { if (intPainting)
     paintInterior(e); });
@@ -1271,6 +1280,8 @@ intPalette.querySelectorAll('button').forEach(btn => {
 intPalette.querySelector('button')?.classList.add('active');
 function showInteriorEditor(show) {
     document.getElementById('intEditor').style.display = show ? 'block' : 'none';
+    if (show)
+        validateInteriorForm({ silent: true });
 }
 function renderInteriorList() {
     const list = document.getElementById('intList');
@@ -1287,6 +1298,7 @@ function renderInteriorList() {
     updateMapSelect(mapSelect ? mapSelect.value : 'world');
 }
 function startNewInterior() {
+    globalThis.ackRecordSnapshot?.();
     const w = parseInt(document.getElementById('intW').value, 10) || 12;
     const h = parseInt(document.getElementById('intH').value, 10) || 9;
     const id = makeInteriorRoom(undefined, w, h);
@@ -1295,6 +1307,7 @@ function startNewInterior() {
     moduleData.interiors.push(I);
     renderInteriorList();
     editInterior(moduleData.interiors.length - 1);
+    globalThis.markAckDirty?.();
 }
 function editInterior(i) {
     const I = moduleData.interiors[i];
@@ -1307,9 +1320,32 @@ function editInterior(i) {
     document.getElementById('delInterior').style.display = 'block';
     drawInterior();
 }
+function validateInteriorForm(options = {}) {
+    const { silent = false } = options;
+    const wEl = document.getElementById('intW');
+    const hEl = document.getElementById('intH');
+    if (!wEl || !hEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const w = parseInt(wEl.value, 10);
+    const h = parseInt(hEl.value, 10);
+    const errors = [];
+    const badW = isNaN(w) || w < 3 || w > 100;
+    const badH = isNaN(h) || h < 3 || h > 100;
+    if (badW)
+        errors.push('Interior width must be between 3 and 100.');
+    if (badH)
+        errors.push('Interior height must be between 3 and 100.');
+    setFieldInvalid(wEl, badW);
+    setFieldInvalid(hEl, badH);
+    applyValidationUi({ notice: 'intFormNotice' }, errors, silent);
+    return { valid: errors.length === 0, errors, warnings: [] };
+}
 function resizeInterior() {
     if (editInteriorIdx < 0)
         return;
+    if (!validateInteriorForm().valid)
+        return;
+    globalThis.ackRecordSnapshot?.();
     const I = moduleData.interiors[editInteriorIdx];
     const w = parseInt(document.getElementById('intW').value, 10) || I.w;
     const h = parseInt(document.getElementById('intH').value, 10) || I.h;
@@ -1324,6 +1360,7 @@ function resizeInterior() {
     I.grid = ng;
     delete I._origGrid;
     drawInterior();
+    globalThis.markAckDirty?.();
 }
 document.getElementById('intW')?.addEventListener('change', resizeInterior);
 document.getElementById('intH')?.addEventListener('change', resizeInterior);
@@ -1345,12 +1382,14 @@ document.getElementById('intLabel')?.addEventListener('input', e => {
 function deleteInterior() {
     if (editInteriorIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     const I = moduleData.interiors[editInteriorIdx];
     delete interiors[I.id];
     moduleData.interiors.splice(editInteriorIdx, 1);
     editInteriorIdx = -1;
     showInteriorEditor(false);
     renderInteriorList();
+    globalThis.markAckDirty?.();
 }
 function closeInteriorEditor() {
     editInteriorIdx = -1;
@@ -2876,6 +2915,64 @@ function getValidMapIds() {
             maps.add(I.id);
     });
     return maps;
+}
+function getMapDims(mapId) {
+    if (mapId === 'world') {
+        const h = Array.isArray(world) ? world.length : 0;
+        const w = h && Array.isArray(world[0]) ? world[0].length : 0;
+        return w && h ? { w, h } : null;
+    }
+    const I = (moduleData.interiors || []).find(entry => entry?.id === mapId);
+    return I ? { w: I.w, h: I.h } : null;
+}
+function applyValidationUi(ui, errors, silent) {
+    const { button, hint, notice } = ui || {};
+    if (button) {
+        const saveBtn = document.getElementById(button);
+        if (saveBtn)
+            saveBtn.disabled = errors.length > 0;
+    }
+    if (hint) {
+        const hintEl = document.getElementById(hint);
+        if (hintEl) {
+            hintEl.textContent = errors.length ? errors[0] : '';
+            hintEl.classList.toggle('visible', errors.length > 0);
+        }
+    }
+    if (notice && !silent) {
+        if (errors.length)
+            setEntityNotice(notice, errors.join(' '), 'error');
+        else
+            setEntityNotice(notice, '');
+    }
+}
+function validateRectInMap(fields, errors) {
+    const { mapEl, xEl, yEl, wEl, hEl, label } = fields;
+    const map = mapEl?.value?.trim() || 'world';
+    const validMaps = getValidMapIds();
+    const badMap = !validMaps.has(map);
+    if (badMap)
+        errors.push(`${label} map "${map}" does not exist.`);
+    setFieldInvalid(mapEl, badMap);
+    const dims = badMap ? null : getMapDims(map);
+    const x = parseInt(xEl?.value, 10);
+    const y = parseInt(yEl?.value, 10);
+    const w = wEl ? parseInt(wEl.value, 10) : 1;
+    const h = hEl ? parseInt(hEl.value, 10) : 1;
+    const badW = wEl ? (isNaN(w) || w < 1) : false;
+    const badH = hEl ? (isNaN(h) || h < 1) : false;
+    if (badW || badH)
+        errors.push(`${label} width/height must be at least 1.`);
+    const badX = isNaN(x) || x < 0 || (dims ? x + (badW ? 1 : w) > dims.w : false);
+    const badY = isNaN(y) || y < 0 || (dims ? y + (badH ? 1 : h) > dims.h : false);
+    if (badX || badY)
+        errors.push(`${label} area must fit inside the "${map}" map.`);
+    setFieldInvalid(xEl, badX);
+    setFieldInvalid(yEl, badY);
+    if (wEl)
+        setFieldInvalid(wEl, badW || badX);
+    if (hEl)
+        setFieldInvalid(hEl, badH || badY);
 }
 function getNpcFieldWrapper(id) {
     const el = document.getElementById(id);
@@ -4798,6 +4895,48 @@ function deleteTemplate() {
 // --- Tile Events ---
 function showEventEditor(show) {
     document.getElementById('eventEditor').style.display = show ? 'block' : 'none';
+    if (show)
+        validateEventForm({ silent: true });
+}
+function validateEventForm(options = {}) {
+    const { silent = false } = options;
+    const mapEl = document.getElementById('eventMap');
+    const xEl = document.getElementById('eventX');
+    const yEl = document.getElementById('eventY');
+    if (!mapEl || !xEl || !yEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const errors = [];
+    validateRectInMap({ mapEl, xEl, yEl, label: 'Event' }, errors);
+    const container = document.getElementById('eventSubList');
+    const subs = container ? Array.from(container.querySelectorAll('.eventSubBlock')) : [];
+    if (!subs.length)
+        errors.push('Add at least one sub-event.');
+    subs.forEach((div, i) => {
+        const eff = div.querySelector('.eventSubEffect')?.value || 'toast';
+        if (eff === 'toast' || eff === 'log') {
+            const msgEl = div.querySelector('.eventSubMsgInput');
+            const bad = !msgEl?.value?.trim();
+            setFieldInvalid(msgEl, bad);
+            if (bad)
+                errors.push(`Sub-event ${i + 1} needs a message.`);
+        }
+        else if (eff === 'addFlag') {
+            const flagEl = div.querySelector('.eventSubFlagInput');
+            const bad = !flagEl?.value?.trim();
+            setFieldInvalid(flagEl, bad);
+            if (bad)
+                errors.push(`Sub-event ${i + 1} needs a flag name.`);
+        }
+        else if (eff === 'modStat') {
+            const statEl = div.querySelector('.eventSubStatSelect');
+            const bad = !statEl?.value?.trim();
+            setFieldInvalid(statEl, bad);
+            if (bad)
+                errors.push(`Sub-event ${i + 1} needs a stat.`);
+        }
+    });
+    applyValidationUi({ button: 'addEvent', hint: 'eventSaveHint', notice: 'eventFormNotice' }, errors, silent);
+    return { valid: errors.length === 0, errors, warnings: [] };
 }
 function addEventSubBlock(container, ev = {}) {
     const div = document.createElement('div');
@@ -4911,6 +5050,9 @@ function collectEvent() {
     return { map, x, y, events: events.length ? events : [{ when: 'enter', effect: 'toast' }] };
 }
 function addEvent() {
+    const { valid } = validateEventForm();
+    if (!valid)
+        return;
     globalThis.ackRecordSnapshot?.();
     const entry = collectEvent();
     if (editEventIdx >= 0) {
@@ -5020,6 +5162,26 @@ function showArenaEditor(show) {
     const editor = document.getElementById('arenaEditor');
     if (editor)
         editor.style.display = show ? 'block' : 'none';
+    if (show)
+        validateArenaForm({ silent: true });
+}
+function validateArenaForm(options = {}) {
+    const { silent = false } = options;
+    const container = document.getElementById('arenaWaveContainer');
+    if (!container)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const errors = [];
+    const templateSels = Array.from(container.querySelectorAll('.arenaWaveTemplate'));
+    const filled = templateSels.filter(sel => sel.value?.trim());
+    if (!filled.length) {
+        errors.push('Add at least one wave with an enemy template.');
+        setFieldInvalid(templateSels[0], true);
+    }
+    else {
+        templateSels.forEach(sel => setFieldInvalid(sel, false));
+    }
+    applyValidationUi({ button: 'addArena', hint: 'arenaSaveHint', notice: 'arenaFormNotice' }, errors, silent);
+    return { valid: errors.length === 0, errors, warnings: [] };
 }
 function updateArenaWaveHeaders() {
     const waves = document.querySelectorAll('#arenaWaveContainer .arenaWave');
@@ -5245,6 +5407,9 @@ function collectArena() {
     return arena;
 }
 function addArena() {
+    const { valid } = validateArenaForm();
+    if (!valid)
+        return;
     globalThis.ackRecordSnapshot?.();
     const arena = collectArena();
     if (!arena)
@@ -5334,6 +5499,28 @@ function renderArenaList() {
 // --- Zones ---
 function showZoneEditor(show) {
     document.getElementById('zoneEditor').style.display = show ? 'block' : 'none';
+    if (show)
+        validateZoneForm({ silent: true });
+}
+function validateZoneForm(options = {}) {
+    const { silent = false } = options;
+    const mapEl = document.getElementById('zoneMap');
+    const xEl = document.getElementById('zoneX');
+    const yEl = document.getElementById('zoneY');
+    const wEl = document.getElementById('zoneW');
+    const hEl = document.getElementById('zoneH');
+    if (!mapEl || !xEl || !yEl || !wEl || !hEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const errors = [];
+    validateRectInMap({ mapEl, xEl, yEl, wEl, hEl, label: 'Zone' }, errors);
+    const useItemEl = document.getElementById('zoneUseItem');
+    const rewardEl = document.getElementById('zoneReward');
+    const rewardWithoutItem = !!rewardEl?.value?.trim() && !useItemEl?.value?.trim();
+    if (rewardWithoutItem)
+        errors.push('A reward needs a Use Item id.');
+    setFieldInvalid(useItemEl, rewardWithoutItem);
+    applyValidationUi({ button: 'addZone', hint: 'zoneSaveHint', notice: 'zoneFormNotice' }, errors, silent);
+    return { valid: errors.length === 0, errors, warnings: [] };
 }
 function updateZoneWallFields() {
     const wrap = document.getElementById('zoneEntrancesWrap');
@@ -5430,6 +5617,9 @@ function collectZone() {
     return entry;
 }
 function addZone() {
+    const { valid } = validateZoneForm();
+    if (!valid)
+        return;
     globalThis.ackRecordSnapshot?.();
     const entry = collectZone();
     if (!moduleData._origKeys)
@@ -5543,6 +5733,24 @@ let editPersonaId = null;
 let personaEditorPortraitIndex = 0;
 function showPersonaEditor(show) {
     document.getElementById('personaEditor').style.display = show ? 'block' : 'none';
+    if (show)
+        validatePersonaForm({ silent: true });
+}
+function validatePersonaForm(options = {}) {
+    const { silent = false } = options;
+    const idEl = document.getElementById('personaEditorId');
+    if (!idEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const id = idEl.value.trim();
+    const errors = [];
+    const taken = !!id && !!moduleData.personas?.[id] && editPersonaId !== id;
+    if (!id)
+        errors.push('Enter an ID for the persona.');
+    else if (taken)
+        errors.push(`ID "${id}" is already used by another persona.`);
+    setFieldInvalid(idEl, !id || taken);
+    applyValidationUi({ button: 'savePersona', hint: 'personaSaveHint', notice: 'personaFormNotice' }, errors, silent);
+    return { valid: errors.length === 0, errors, warnings: [] };
 }
 function setPersonaEditorPortrait() {
     const el = document.getElementById('personaEditorPort');
@@ -5642,6 +5850,9 @@ function collectPersonaFromForm() {
     return { id, data };
 }
 function savePersona() {
+    const { valid } = validatePersonaForm();
+    if (!valid)
+        return;
     globalThis.ackRecordSnapshot?.();
     const { id, data } = collectPersonaFromForm();
     if (!id)
@@ -5676,6 +5887,41 @@ function deletePersona() {
 let editZoneFxIdx = -1;
 function showZoneFxEditor(show) {
     document.getElementById('zoneFxEditor').style.display = show ? 'block' : 'none';
+    if (show)
+        validateZoneFxForm({ silent: true });
+}
+function validateZoneFxForm(options = {}) {
+    const { silent = false } = options;
+    const mapEl = document.getElementById('zoneFxMap');
+    const xEl = document.getElementById('zoneFxX');
+    const yEl = document.getElementById('zoneFxY');
+    const wEl = document.getElementById('zoneFxW');
+    const hEl = document.getElementById('zoneFxH');
+    if (!mapEl || !xEl || !yEl || !wEl || !hEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const errors = [];
+    validateRectInMap({ mapEl, xEl, yEl, wEl, hEl, label: 'Zone effect' }, errors);
+    const minEl = document.getElementById('zoneFxMinSteps');
+    const maxEl = document.getElementById('zoneFxMaxSteps');
+    const minSteps = parseInt(minEl?.value, 10);
+    const maxSteps = parseInt(maxEl?.value, 10);
+    const badRange = !isNaN(minSteps) && !isNaN(maxSteps) && minSteps > maxSteps;
+    if (badRange)
+        errors.push('Min Steps cannot exceed Max Steps.');
+    setFieldInvalid(minEl, badRange);
+    setFieldInvalid(maxEl, badRange);
+    let entry = null;
+    try {
+        entry = collectZoneFx();
+    }
+    catch (e) {
+        entry = null;
+    }
+    const hasEffect = !!entry && Object.keys(entry).some(k => !['map', 'x', 'y', 'w', 'h'].includes(k));
+    if (!hasEffect)
+        errors.push('Configure at least one effect (weather, HP per step, spawns, etc.).');
+    applyValidationUi({ button: 'addZoneFx', hint: 'zoneFxSaveHint', notice: 'zoneFxFormNotice' }, errors, silent);
+    return { valid: errors.length === 0, errors, warnings: [] };
 }
 function addZoneFxSpawnBlock(container, spawn = {}) {
     const div = document.createElement('div');
@@ -5785,6 +6031,9 @@ function collectZoneFx() {
     return entry;
 }
 function addZoneFx() {
+    const { valid } = validateZoneFxForm();
+    if (!valid)
+        return;
     globalThis.ackRecordSnapshot?.();
     const entry = collectZoneFx();
     if (!moduleData.zoneEffects)
@@ -6031,6 +6280,27 @@ function drawBldg() {
 }
 function showBldgEditor(show) {
     document.getElementById('bldgEditor').style.display = show ? 'block' : 'none';
+    if (show)
+        validateBldgForm({ silent: true });
+}
+function validateBldgForm(options = {}) {
+    const { silent = false } = options;
+    const xEl = document.getElementById('bldgX');
+    const yEl = document.getElementById('bldgY');
+    if (!xEl || !yEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const x = parseInt(xEl.value, 10);
+    const y = parseInt(yEl.value, 10);
+    const dims = getMapDims('world');
+    const errors = [];
+    const badX = isNaN(x) || x < 0 || (dims ? x >= dims.w : false);
+    const badY = isNaN(y) || y < 0 || (dims ? y >= dims.h : false);
+    if (badX || badY)
+        errors.push('Building X/Y must be inside the world map.');
+    setFieldInvalid(xEl, badX);
+    setFieldInvalid(yEl, badY);
+    applyValidationUi({ hint: 'bldgSaveHint', notice: 'bldgFormNotice' }, errors, silent);
+    return { valid: errors.length === 0, errors, warnings: [] };
 }
 function startNewBldg() {
     editBldgIdx = -1;
@@ -6069,6 +6339,8 @@ function beginPlaceBldg() {
 }
 // Add a new building to the world and start editing it
 function addBuilding() {
+    if (!validateBldgForm().valid)
+        return;
     globalThis.ackRecordSnapshot?.();
     const x = parseInt(document.getElementById('bldgX').value, 10) || 0;
     const y = parseInt(document.getElementById('bldgY').value, 10) || 0;
@@ -6109,6 +6381,9 @@ function cancelBldg() {
     updateCursor();
 }
 function renderBldgList() {
+    const bunkerWrap = document.getElementById('bunkerTravelWrap');
+    if (bunkerWrap)
+        bunkerWrap.style.display = moduleData.buildings.some(b => b?.bunker) ? 'block' : 'none';
     const list = document.getElementById('bldgList');
     if (moduleData.buildings.length === 0) {
         list.innerHTML = renderEmptyState('No buildings created yet.');
@@ -6370,6 +6645,8 @@ function redrawBuildings() {
 // Update the currently edited building when fields or tiles change
 function applyBldgChanges() {
     if (editBldgIdx < 0)
+        return;
+    if (!validateBldgForm().valid)
         return;
     const x = parseInt(document.getElementById('bldgX').value, 10) || 0;
     const y = parseInt(document.getElementById('bldgY').value, 10) || 0;
@@ -7104,6 +7381,97 @@ function validateSpawns() {
             }
         });
     });
+    // Dialog choices pointing at missing nodes, and unreachable nodes
+    (moduleData.npcs || []).forEach((n, i) => {
+        const tree = n.tree || {};
+        const label = n.id || '#' + (i + 1);
+        Object.entries(tree).forEach(([nodeId, node]) => {
+            (node?.choices || []).forEach(ch => {
+                const to = typeof ch?.to === 'string' ? ch.to : '';
+                if (!to || to === 'bye')
+                    return;
+                if (to === 'do_fight' && n.combat)
+                    return;
+                if (!tree[to]) {
+                    issues.push({ msg: `NPC ${label} dialog "${nodeId}" links to missing node "${to}"`, type: 'npc', idx: i });
+                }
+            });
+        });
+        const nodeIds = Object.keys(tree);
+        if (nodeIds.length > 1 && tree.start) {
+            // Nodes the dialog engine can enter directly, without a choice link
+            const engineEntries = ['start', 'locked', 'sell', 'accept', 'do_turnin', 'do_fight'];
+            const reachable = new Set(engineEntries.filter(id => tree[id]));
+            const queue = [...reachable];
+            while (queue.length) {
+                const cur = tree[queue.shift()];
+                (cur?.choices || []).forEach(ch => {
+                    const to = typeof ch?.to === 'string' ? ch.to : '';
+                    if (to && tree[to] && !reachable.has(to)) {
+                        reachable.add(to);
+                        queue.push(to);
+                    }
+                });
+            }
+            nodeIds.forEach(nodeId => {
+                if (!reachable.has(nodeId) && nodeId !== 'bye') {
+                    issues.push({ msg: `NPC ${label} dialog node "${nodeId}" is unreachable`, type: 'npc', idx: i, warn: true });
+                }
+            });
+        }
+    });
+    // Shop inventory referencing unknown items
+    (moduleData.npcs || []).forEach((n, i) => {
+        (n.shop?.inv || []).forEach(entry => {
+            const itemId = typeof entry === 'string' ? entry : entry?.id || entry?.item;
+            if (itemId && !moduleData.items.some(it => it.id === itemId)) {
+                issues.push({ msg: `NPC ${n.id || '#' + (i + 1)} shop sells unknown item "${itemId}"`, type: 'npc', idx: i, warn: true });
+            }
+        });
+    });
+    // Quests nobody gives, and fetch items with no source
+    const givenQuests = new Set();
+    (moduleData.npcs || []).forEach(n => {
+        (Array.isArray(n.quests) ? n.quests : n.questId ? [n.questId] : []).forEach(qId => givenQuests.add(qId));
+    });
+    (moduleData.quests || []).forEach((q, i) => {
+        if (q.id && !givenQuests.has(q.id)) {
+            issues.push({ msg: `Quest ${q.id} is not assigned to any NPC`, type: 'quest', idx: i, warn: true });
+        }
+        if (q.item && !availableItems.has(q.item)) {
+            issues.push({ msg: `Quest ${q.id || '#' + (i + 1)} wants item "${q.item}" but nothing provides it`, type: 'quest', idx: i, warn: true });
+        }
+    });
+    // Buildings pointing at missing interiors
+    (moduleData.buildings || []).forEach((b, i) => {
+        if (!b.bunker && b.interiorId && !(moduleData.interiors || []).some(I => I.id === b.interiorId)) {
+            issues.push({ msg: `Building @(${b.x},${b.y}) opens into missing interior "${b.interiorId}"`, type: 'bldg', idx: i });
+        }
+    });
+    // Entities placed on maps that no longer exist
+    (moduleData.events || []).forEach((e, i) => {
+        if (e.map && !validMaps.has(e.map)) {
+            issues.push({ msg: `Event @(${e.x},${e.y}) is on missing map "${e.map}"`, type: 'event', idx: i });
+        }
+    });
+    (moduleData.zones || []).forEach((z, i) => {
+        if (z.map && !validMaps.has(z.map)) {
+            issues.push({ msg: `Zone ${z.tag || '#' + (i + 1)} is on missing map "${z.map}"`, type: 'zone', idx: i });
+        }
+    });
+    (moduleData.zoneEffects || []).forEach((z, i) => {
+        if (z.map && !validMaps.has(z.map)) {
+            issues.push({ msg: `Zone effect #${i + 1} is on missing map "${z.map}"`, type: 'zonefx', idx: i });
+        }
+    });
+    // Arena waves referencing missing templates
+    (moduleData.behaviors?.arenas || []).forEach((a, i) => {
+        (a.waves || []).forEach(wave => {
+            if (wave.templateId && !moduleData.templates.some(t => t.id === wave.templateId)) {
+                issues.push({ msg: `Arena ${a.bankId || a.map || '#' + (i + 1)} wave uses missing template "${wave.templateId}"`, type: 'arena', idx: i });
+            }
+        });
+    });
     return issues;
 }
 function onProblemClick() {
@@ -7142,6 +7510,33 @@ function onProblemClick() {
         editPortal(prob.idx);
     else if (prob.type === 'encounter')
         editEncounter(prob.idx);
+    else if (prob.type === 'quest') {
+        if (window.showEditorTab)
+            window.showEditorTab('quests');
+        editQuest(prob.idx);
+    }
+    else if (prob.type === 'event') {
+        if (window.showEditorTab)
+            window.showEditorTab('events');
+        editEvent(prob.idx);
+    }
+    else if (prob.type === 'zone') {
+        if (window.showEditorTab)
+            window.showEditorTab('zones');
+        editZone(prob.idx);
+    }
+    else if (prob.type === 'zonefx') {
+        if (window.showEditorTab)
+            window.showEditorTab('zonefx');
+        editZoneFx(prob.idx);
+    }
+    else if (prob.type === 'arena')
+        editArena(prob.idx);
+    else if (prob.type === 'bldg') {
+        if (window.showEditorTab)
+            window.showEditorTab('buildings');
+        editBldg(prob.idx);
+    }
     else if (prob.type === 'start') {
         showMap('world');
         focusMap(moduleData.start.x, moduleData.start.y);
@@ -7335,12 +7730,14 @@ document.getElementById('clear')?.addEventListener('click', clearWorld);
 const moduleBunkerScope = document.getElementById('moduleBunkerScope');
 if (moduleBunkerScope) {
     moduleBunkerScope.addEventListener('change', () => {
+        globalThis.ackRecordSnapshot?.();
         const scope = moduleBunkerScope.value || 'global';
         moduleData.props = moduleData.props || {};
         if (scope === 'global')
             delete moduleData.props.bunkerTravelScope;
         else
             moduleData.props.bunkerTravelScope = scope;
+        globalThis.markAckDirty?.();
     });
 }
 function runGenerate(regen) {
@@ -7566,7 +7963,39 @@ document.getElementById('addEventSub')?.addEventListener('click', () => {
     const c = document.getElementById('eventSubList');
     if (c)
         addEventSubBlock(c);
+    validateEventForm({ silent: true });
 });
+// Live inline validation listeners for editors without dedicated field wiring
+['bldgX', 'bldgY'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateBldgForm());
+});
+['intW', 'intH'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateInteriorForm());
+});
+document.getElementById('eventMap')?.addEventListener('change', () => validateEventForm());
+['eventX', 'eventY'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateEventForm());
+});
+['input', 'change'].forEach(evt => {
+    document.getElementById('eventSubList')?.addEventListener(evt, () => validateEventForm());
+    document.getElementById('arenaWaveContainer')?.addEventListener(evt, () => validateArenaForm());
+    document.getElementById('zoneFxSpawns')?.addEventListener(evt, () => validateZoneFxForm());
+});
+document.getElementById('arenaAddWave')?.addEventListener('click', () => validateArenaForm({ silent: true }));
+document.getElementById('zoneMap')?.addEventListener('change', () => validateZoneForm());
+['zoneX', 'zoneY', 'zoneW', 'zoneH', 'zoneUseItem', 'zoneReward'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateZoneForm());
+});
+document.getElementById('personaEditorId')?.addEventListener('input', () => validatePersonaForm());
+document.getElementById('zoneFxMap')?.addEventListener('change', () => validateZoneFxForm());
+['zoneFxNoEnc', 'zoneFxDry'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => validateZoneFxForm());
+});
+['zoneFxX', 'zoneFxY', 'zoneFxW', 'zoneFxH', 'zoneFxWeather', 'zoneFxHpPerStep', 'zoneFxMinSteps',
+    'zoneFxMaxSteps', 'zoneFxHealMult', 'zoneFxRequire', 'zoneFxNegate', 'zoneFxIf'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateZoneFxForm());
+});
+document.getElementById('zoneFxAddSpawn')?.addEventListener('click', () => validateZoneFxForm({ silent: true }));
 document.getElementById('eventPick')?.addEventListener('click', () => { coordTarget = { x: 'eventX', y: 'eventY' }; });
 document.getElementById('npcFlagType')?.addEventListener('change', updateFlagBuilder);
 setupNpcSections();
@@ -7904,6 +8333,7 @@ canvas.addEventListener('mousedown', ev => {
             addTerrainFeature(x, y, worldPaint);
         }
         didPaint = true;
+        globalThis.markAckDirty?.();
         drawWorld();
         updateCursor(x, y);
         return;
@@ -7917,6 +8347,7 @@ canvas.addEventListener('mousedown', ev => {
             delete I._origGrid;
             intPainting = true;
             didPaint = true;
+            globalThis.markAckDirty?.();
             drawWorld();
             drawInterior();
             updateCursor(x, y);
