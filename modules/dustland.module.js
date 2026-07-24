@@ -300,39 +300,6 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
       }
     },
     {
-      "map": "world",
-      "x": 65,
-      "y": 18,
-      "id": "signal_fragment_a",
-      "name": "Signal Fragment",
-      "type": "quest",
-      "tags": [
-        "signal_fragment"
-      ]
-    },
-    {
-      "map": "world",
-      "x": 63,
-      "y": 22,
-      "id": "signal_fragment_b",
-      "name": "Signal Fragment",
-      "type": "quest",
-      "tags": [
-        "signal_fragment"
-      ]
-    },
-    {
-      "map": null,
-      "x": null,
-      "y": null,
-      "id": "signal_fragment_c",
-      "name": "Signal Fragment",
-      "type": "quest",
-      "tags": [
-        "signal_fragment"
-      ]
-    },
-    {
       "id": "epic_blade",
       "name": "Epic Blade",
       "type": "weapon",
@@ -786,9 +753,15 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
     },
     {
       "id": "signal_fragment_1",
-      "name": "Signal Fragment 1",
+      "name": "Signal Fragment I",
       "type": "quest",
-      "desc": "A strange, humming piece of metal that seems to resonate with the radio waves."
+      "desc": "A strange, humming piece of metal that seems to resonate with the radio waves.",
+      "map": "world",
+      "x": 65,
+      "y": 18,
+      "tags": [
+        "signal_fragment"
+      ]
     },
     {
       "id": "power_cell",
@@ -797,15 +770,27 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
     },
     {
       "id": "signal_fragment_2",
-      "name": "Signal Fragment 2",
+      "name": "Signal Fragment II",
       "type": "quest",
-      "desc": "Another humming fragment. The resonance is stronger."
+      "desc": "Another humming fragment. The resonance is stronger.",
+      "map": "world",
+      "x": 63,
+      "y": 22,
+      "tags": [
+        "signal_fragment"
+      ]
     },
     {
       "id": "signal_fragment_3",
-      "name": "Signal Fragment 3",
+      "name": "Signal Fragment III",
       "type": "quest",
-      "desc": "The final fragment. It hums with a powerful, clear energy."
+      "desc": "The final fragment. It hums with a powerful, clear energy.",
+      "map": null,
+      "x": null,
+      "y": null,
+      "tags": [
+        "signal_fragment"
+      ]
     },
     {
       "id": "minigun",
@@ -958,10 +943,10 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
     {
       "id": "q_signal",
       "title": "Broken Signal",
-      "desc": "Collect three signal fragments in the wastes.",
-      "item": "signal_fragment",
+      "desc": "Collect any three numbered Signal Fragments in the wastes.",
       "count": 3,
-      "xp": 9
+      "xp": 9,
+      "itemTag": "signal_fragment"
     },
     {
       "id": "q_spark",
@@ -990,20 +975,20 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
       "dialog": {
         "offer": "The Archivist taps a reel. 'The Sun Charm hums with a lost broadcast. Bring it so I can hear the dawn.'",
         "active": "The Archivist taps a reel. 'The Sun Charm hums with a lost broadcast. Bring it so I can hear the dawn.'",
-        "completed": "The Archivist squints at the receiver. 'I traced the pattern, but Signal Fragment C will complete the chorus.'"
+        "completed": "The Archivist squints at the receiver. 'I traced the pattern, but Signal Fragment III will complete the chorus.'"
       }
     },
     {
       "id": "q_solar_signal",
       "title": "Resonate the Signal",
-      "desc": "Recover Signal Fragment C from the echo relay hidden in the far northeast so the Archivist can finish the broadcast and unlock the Epic Blade.",
-      "item": "signal_fragment_c",
+      "desc": "Recover Signal Fragment III from the echo relay hidden in the far northeast so the Archivist can finish the broadcast and unlock the Epic Blade.",
+      "item": "signal_fragment_3",
       "reward": "epic_blade",
       "xp": 24,
       "dialog": {
-        "offer": "The Archivist squints at the receiver. 'I traced the pattern, but Signal Fragment C will complete the chorus.'",
-        "active": "The Archivist squints at the receiver. 'I traced the pattern, but Signal Fragment C will complete the chorus.'",
-        "completed": "The Archivist lets the reels spin freely. 'The message sings thanks to you. Stay and listen.'"
+        "offer": "The Archivist squints at the receiver. 'I traced the pattern, but Signal Fragment III will complete the chorus.'",
+        "active": "The Archivist squints at the receiver. 'I traced the pattern, but Signal Fragment III will complete the chorus.'",
+        "completed": "The Archivist lets the three Signal Fragments sing as one. Stay and listen."
       }
     },
     {
@@ -1047,13 +1032,33 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
       "id": "task_grudge_sour_routes",
       "title": "Sour Cass's Routes",
       "desc": "Tip off rival caravans to rile Cass and raise her grudge.",
-      "xp": 3
+      "xp": 3,
+      "givers": [
+        {
+          "id": "trader",
+          "name": "Cass the Trader",
+          "map": "world",
+          "x": 49,
+          "y": 25
+        }
+      ],
+      "progressText": "Cass is waiting for you to decide whether to sabotage her routes."
     },
     {
       "id": "task_grudge_patch_wagon",
       "title": "Patch Cass's Wagon",
       "desc": "Deliver spare parts so Cass eases her grudge.",
-      "xp": 3
+      "xp": 3,
+      "givers": [
+        {
+          "id": "trader",
+          "name": "Cass the Trader",
+          "map": "world",
+          "x": 49,
+          "y": 25
+        }
+      ],
+      "progressText": "Cass is waiting for spare parts and a calmer route plan."
     },
     {
       "id": "q_first_echo",
@@ -1441,8 +1446,8 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
       "y": 2,
       "color": "#f66",
       "name": "Rotwalker",
-      "title": "Test Monster",
-      "desc": "A shambler posted here for practice.",
+      "title": "Chained Training Ghoul",
+      "desc": "A chained rotwalker kept as the Hall’s grim combat lesson.",
       "prompt": "Rotting training ghoul chained in the hall",
       "portraitSheet": "assets/portraits/dustland-module/rotwalker_4.png",
       "portraitLock": false,
@@ -1596,7 +1601,7 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
       "questId": "q_waterpump",
       "tree": {
         "start": {
-          "text": "I can hear the pump wheeze. Need a Valve to breathe again.,Pump’s choking on sand. Only a Valve will save it.",
+          "text": "I can hear the pump wheeze. Need a Valve to breathe again. Pump’s choking on sand, and only a Valve will save it.",
           "choices": [
             {
               "label": "(Accept) I will find a Valve.",
@@ -1973,7 +1978,7 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
       "questId": "q_signal",
       "tree": {
         "start": {
-          "text": "Radio's dead. Need fragments to spark it. Archivist in the Test Hall swears the last shard hums in that northeast relay sealed behind the old tower.",
+          "text": "Radio's dead. Need fragments to spark it. Archivist in Dawn Hall swears the last shard hums in that northeast relay sealed behind the old tower.",
           "choices": [
             {
               "label": "(Accept)",
@@ -2062,7 +2067,7 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
       "portraitSheet": "assets/portraits/cass_4.png",
       "tree": {
         "start": {
-          "text": "Got goods to sell? I pay in scrap.",
+          "text": "Got goods to sell? I pay in scrap. If you want to sour my routes, say so to my face—rival caravans are circling.",
           "choices": [
             {
               "label": "Browse goods",
@@ -2071,8 +2076,61 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
             {
               "label": "(Sell items)",
               "to": "sell"
+            },
+            {
+              "label": "(Accept) Sour Cass's routes",
+              "to": "sour_accept",
+              "q": "accept"
+            },
+            {
+              "label": "(Do it) Tip off rival caravans",
+              "to": "sour_done",
+              "q": "turnin",
+              "effects": [
+                {
+                  "effect": "modTraderGrudge",
+                  "npcId": "trader",
+                  "delta": 1,
+                  "toast": "Cass's routes sour, and her grudge rises."
+                }
+              ]
+            },
+            {
+              "label": "(Accept) Patch Cass's wagon",
+              "to": "patch_accept",
+              "q": "accept"
+            },
+            {
+              "label": "(Finish) Patch the wagon",
+              "to": "patch_done",
+              "q": "turnin",
+              "effects": [
+                {
+                  "effect": "modTraderGrudge",
+                  "npcId": "trader",
+                  "delta": -1,
+                  "min": 0,
+                  "toast": "Cass's wagon rolls smoother, and her grudge eases."
+                }
+              ]
             }
           ]
+        },
+        "sour_accept": {
+          "text": "Cass narrows her eyes. 'If you stir the rival caravans, don't pretend I won't remember it.'",
+          "choices": []
+        },
+        "sour_done": {
+          "text": "Word reaches Cass before the dust settles. 'Fine. Prices remember grudges, too.'",
+          "choices": []
+        },
+        "patch_accept": {
+          "text": "Cass taps the cracked axle. 'Bring hands, spare bolts, and a little remorse.'",
+          "choices": []
+        },
+        "patch_done": {
+          "text": "The patched wagon sits straight again. Cass exhales. 'All right. Maybe you aren't bad for business.'",
+          "choices": []
         }
       },
       "loop": [
@@ -2135,7 +2193,15 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
         ],
         "refresh": 24
       },
-      "symbol": "!"
+      "symbol": "!",
+      "quests": [
+        "task_grudge_sour_routes",
+        "task_grudge_patch_wagon"
+      ],
+      "questDialogs": [
+        "Got goods to sell? I pay in scrap. If you want to sour my routes, say so to my face—rival caravans are circling.",
+        "You made my routes rough. Patch my wagon with spare parts and I'll lower the grudge."
+      ]
     },
     {
       "id": "tess_patrol",
@@ -3198,7 +3264,7 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
       "symbol": "!",
       "tree": {
         "start": {
-          "text": "The Dustland Sovereign drifts above the altar, eyes blazing.",
+          "text": "The Dustland Sovereign drifts above the altar, eyes blazing. Around the threshold, ruined blades are fused into glass: only the Artifact Blade and Epic Blade can keep their edge here.",
           "choices": [
             {
               "label": "(Fight)",
@@ -3281,12 +3347,12 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
             {
               "label": "(Let the charm sing)",
               "to": "grant",
-              "reward": "signal_fragment_c"
+              "reward": "signal_fragment_3"
             }
           ]
         },
         "grant": {
-          "text": "Light floods the relay and condenses into a prismatic shard. Signal Fragment C thrums warm in your grip.",
+          "text": "Light floods the relay and condenses into a prismatic shard. Signal Fragment III thrums warm in your grip.",
           "choices": []
         }
       }
@@ -4290,7 +4356,19 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
         {
           "when": "enter",
           "effect": "toast",
-          "msg": "You smell rot."
+          "msg": "You wake in Dawn Hall with one order: reopen the wastes, find the lost broadcast, and stop the rot silencing every settlement."
+        }
+      ]
+    },
+    {
+      "map": "room_oc3abv",
+      "x": 39,
+      "y": 48,
+      "events": [
+        {
+          "when": "enter",
+          "effect": "toast",
+          "msg": "A warning is carved into the boss door: without the Artifact Blade and Epic Blade, the Sovereign turns steel to dust."
         }
       ]
     }
@@ -16143,7 +16221,8 @@ globalThis.seedWorldContent = globalThis.seedWorldContent ?? (() => { });
         "🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱"
       ],
       "entryX": 15,
-      "entryY": 18
+      "entryY": 18,
+      "name": "Dawn Hall"
     },
     {
       "id": "slot_shack",
