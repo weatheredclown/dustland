@@ -33,15 +33,30 @@
     return ackDirty;
   }
 
+  function setAutosaveStatus(msg, isError = false) {
+    const el = document.getElementById('autosaveStatus');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.style.color = isError ? '#f66' : '';
+  }
+
   function doAutosave() {
     if (!ackDirty) return;
+    let payload = null;
     try {
       const exportFn = globalThis.ackExportModulePayload;
       if (typeof exportFn !== 'function') return;
       const { data } = exportFn();
-      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
+      payload = JSON.stringify(data);
     } catch (e) {
-      // silent — autosave is best-effort
+      return; // export failed — nothing coherent to save
+    }
+    try {
+      localStorage.setItem(AUTOSAVE_KEY, payload);
+      const now = new Date();
+      setAutosaveStatus('Autosaved ' + now.toLocaleTimeString());
+    } catch (e) {
+      setAutosaveStatus('Autosave failed — browser storage is full. Download or cloud-save your module.', true);
     }
   }
 
@@ -79,6 +94,7 @@
   globalThis.markAckDirty = markAckDirty;
   globalThis.clearAckDirty = clearAckDirty;
   globalThis.isAckDirty = isAckDirty;
+  globalThis.ackDoAutosave = doAutosave;
 
   // Check for autosave on init (after a small delay to let adventure-kit.ts init)
   setTimeout(loadAutosave, 500);

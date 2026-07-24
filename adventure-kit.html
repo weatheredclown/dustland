@@ -487,19 +487,13 @@
             <div id="paletteLabel"></div>
           </div>
           <button class="btn" id="noiseToggle" title="Toggle organic brush noise">Noise: On</button>
-          <label for="brushSize">Brush Size <input type="range" id="brushSize" min="1" max="10" value="1"><span id="brushSizeLabel">1</span></label>
+          <label for="brushSize" id="brushSizeWrap">Brush Size <input type="range" id="brushSize" min="1" max="10" value="1"><span id="brushSizeLabel">1</span></label>
         </div>
         <div class="btn-group">
           <div style="padding:0px 13px 0px 0px;font-family: sans-serif;">
           <label for="moduleName">Module Name<span id="dirtyIndicator"></span></label>
           <input type="text" id="moduleName" />
-          </div>
-          <div style="padding:0px 13px 0px 0px;font-family: sans-serif;max-width:200px;">
-          <label for="moduleBunkerScope">Bunker Travel</label>
-          <select id="moduleBunkerScope">
-            <option value="global">Share across modules</option>
-            <option value="module">This module only</option>
-          </select>
+          <span id="autosaveStatus" class="small" role="status" aria-live="polite" style="display:block;opacity:0.7;"></span>
           </div>
           <button class="btn btn--primary" id="save" title="Download module as a JSON file">Save</button>
           <button class="btn" id="load" title="Load a module from a JSON file">Load</button>
@@ -739,6 +733,13 @@
         <legend>Buildings</legend>
         <div class="list" id="bldgList"></div>
         <button class="btn" type="button" id="newBldg">+ Building</button>
+        <div id="bunkerTravelWrap" style="display:none;margin:4px 0;">
+          <label for="moduleBunkerScope">Bunker Travel</label>
+          <select id="moduleBunkerScope">
+            <option value="global">Share across modules</option>
+            <option value="module">This module only</option>
+          </select>
+        </div>
         <div id="bldgEditor" style="display:none">
           <div class="xy">
             <label>X<input id="bldgX" type="number" min="0" /></label>
@@ -755,7 +756,9 @@
           <label><input type="checkbox" id="bldgBunker"> Bunker</label>
           <label>Interior<select id="bldgInterior"></select></label>
           <label><input type="checkbox" id="bldgBoarded"> Boarded</label>
+          <div id="bldgFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
           <button class="btn" id="addBldg">Add Building</button>
+          <div id="bldgSaveHint" class="save-hint"></div>
           <button class="btn" type="button" id="cancelBldg" style="display:none">Cancel</button>
           <button class="btn" id="delBldg" style="display:none">Remove Building</button>
           <button class="btn" type="button" id="closeBldg">Done</button>
@@ -770,6 +773,7 @@
           <label>Label<input id="intLabel" placeholder="Interior" /></label>
           <label>W<input id="intW" type="number" min="3" value="12" /></label>
           <label>H<input id="intH" type="number" min="3" value="9" /></label>
+          <div id="intFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
           <div id="intPalette">
             <button type="button" data-tile="W" style="background:#444" title="Wall" aria-label="Wall"></button>
             <button type="button" data-tile="F" style="background:#222" title="Floor" aria-label="Floor"></button>
@@ -878,10 +882,12 @@
           <button class="btn" type="button" id="eventPick" title="Click on the map to choose location">Select on Map</button>
           <div id="eventSubList"></div>
           <button class="btn" type="button" id="addEventSub">+ Add Sub-Event</button>
+          <div id="eventFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
           <div class="editor-actions">
             <button class="btn btn--primary" id="addEvent">Add Event</button>
             <button class="btn" id="delEvent" style="display:none">Delete Event</button>
           </div>
+          <div id="eventSaveHint" class="save-hint"></div>
       </div>
     </fieldset>
       <fieldset class="card" id="arenaCard" data-pane="arenas" style="display:none">
@@ -898,11 +904,13 @@
           <label>Reward Toast<input id="arenaRewardToast" /></label>
           <div id="arenaWaveContainer"></div>
           <button class="btn" type="button" id="arenaAddWave">+ Wave</button>
+          <div id="arenaFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
           <div class="btn-group">
             <button class="btn btn--primary" id="addArena">Add Arena</button>
             <button class="btn" type="button" id="cancelArena" style="display:none">Cancel</button>
             <button class="btn" id="delArena" style="display:none">Delete Arena</button>
           </div>
+          <div id="arenaSaveHint" class="save-hint"></div>
         </div>
       </fieldset>
       <fieldset class="card" id="zoneCard" data-pane="zones" style="display:none">
@@ -934,7 +942,9 @@
             <label><input type="checkbox" id="zoneEntranceEast" />East Entrance</label>
             <label><input type="checkbox" id="zoneEntranceWest" />West Entrance</label>
           </div>
+          <div id="zoneFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
           <button class="btn" id="addZone">Add Zone</button>
+          <div id="zoneSaveHint" class="save-hint"></div>
           <button class="btn" id="delZone" style="display:none">Delete Zone</button>
         </div>
       </fieldset>
@@ -1030,11 +1040,13 @@
             </div>
           </div>
           <div id="personaItemRefs" class="small" style="margin:4px 0;opacity:0.7;"></div>
+          <div id="personaFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
           <div class="editor-actions">
             <button class="btn btn--primary" id="savePersona">Save Persona</button>
             <button class="btn" id="delPersona" style="display:none">Delete Persona</button>
             <button class="btn" type="button" id="closePersona">Done</button>
           </div>
+          <div id="personaSaveHint" class="save-hint"></div>
         </div>
       </fieldset>
       <fieldset class="card" id="zoneFxCard" data-pane="zonefx" style="display:none">
@@ -1069,11 +1081,13 @@
             <div id="zoneFxSpawns"></div>
             <button class="btn" type="button" id="zoneFxAddSpawn">+ Spawn</button>
           </div>
+          <div id="zoneFxFormNotice" class="inline-hint" role="status" aria-live="polite" style="display:none"></div>
           <div class="editor-actions">
             <button class="btn btn--primary" id="addZoneFx">Add Zone Effect</button>
             <button class="btn" id="delZoneFx" style="display:none">Delete Zone Effect</button>
             <button class="btn" type="button" id="closeZoneFx">Done</button>
           </div>
+          <div id="zoneFxSaveHint" class="save-hint"></div>
         </div>
       </fieldset>
       <fieldset class="card" id="wizardCard" data-pane="wizards" style="display:none">
