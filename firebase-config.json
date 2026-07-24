@@ -1,0 +1,13 @@
+{
+  "firebase": {
+    "apiKey": "demo-dustland-api-key",
+    "authDomain": "dustland-dev.firebaseapp.com",
+    "projectId": "dustland-dev",
+    "appId": "1:demo:web:dustland"
+  },
+  "features": {
+    "serverMode": true,
+    "firestoreEmulatorHost": "127.0.0.1:8080",
+    "authEmulatorHost": "127.0.0.1:9099"
+  }
+}

@@ -3,3 +3,10 @@ node_modules/
 __pycache__/
 build/
 server.log
+.cache/
+.claude/
+.config/
+.firebaserc
+CLAUDE.md
+firebase-data/
+ComfyUI/scripts/__pycache__/

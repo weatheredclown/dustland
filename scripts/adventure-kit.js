@@ -380,7 +380,7 @@ loopMinus.addEventListener('click', () => {
     drawWorld();
     showLoopControls(null);
 });
-const moduleData = globalThis.moduleData ?? (globalThis.moduleData = { seed: Date.now(), name: 'adventure-module', npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
+const moduleData = globalThis.moduleData ?? (globalThis.moduleData = { seed: Date.now(), name: 'adventure-module', description: '', author: '', version: '', tags: [], npcs: [], items: [], quests: [], buildings: [], interiors: [], portals: [], events: [], zones: [], encounters: [], templates: [], personas: {}, start: { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) }, module: undefined, moduleVar: undefined, props: {}, behaviors: {} });
 const STAT_OPTS = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA'];
 const MOD_TYPES = ['ATK', 'DEF', 'LCK', 'INT', 'PER', 'CHA', 'STR', 'AGI', 'ADR', 'adrenaline_gen_mod', 'adrenaline_dmg_mod', 'spread'];
 const PRESET_TAGS = ['key', 'pass', 'tool', 'idol', 'signal_fragment', 'mask'];
@@ -530,42 +530,12 @@ const intCtx = intCanvas.getContext('2d');
 const intPalette = document.getElementById('intPalette');
 let intPaint = TILE.WALL;
 let intPainting = false;
-if (intPalette) {
-    const names = { W: 'Wall', F: 'Floor', D: 'Door' };
-    intPalette.querySelectorAll('button').forEach(btn => {
-        const name = names[btn.dataset.tile];
-        if (name) {
-            btn.title = name;
-            btn.setAttribute('aria-label', name);
-        }
-    });
-}
 const bldgCanvas = (typeof document !== 'undefined' && typeof document.getElementById === 'function') ? document.getElementById('bldgCanvas') : null;
 const bldgCtx = bldgCanvas && typeof bldgCanvas.getContext === 'function' ? bldgCanvas.getContext('2d') : null;
 const bldgPalette = document.getElementById('bldgPalette');
-if (bldgPalette) {
-    const names = { B: 'Building', D: 'Door', E: 'Erase' };
-    bldgPalette.querySelectorAll('button').forEach(btn => {
-        const name = names[btn.dataset.tile];
-        if (name) {
-            btn.title = name;
-            btn.setAttribute('aria-label', name);
-        }
-    });
-}
 let bldgPaint = TILE.BUILDING;
 let bldgPainting = false;
 let bldgGrid = [];
-if (bldgPalette) {
-    const names = { B: 'Building', D: 'Door', E: 'Erase' };
-    bldgPalette.querySelectorAll('button').forEach(btn => {
-        const name = names[btn.dataset.tile || ''];
-        if (name) {
-            btn.title = name;
-            btn.setAttribute('aria-label', name);
-        }
-    });
-}
 const worldPalette = document.getElementById('worldPalette');
 const paletteLabel = document.getElementById('paletteLabel');
 let worldPaint = null;
@@ -742,13 +712,20 @@ const brushSizeSlider = document.getElementById('brushSize');
 const brushSizeLabel = document.getElementById('brushSizeLabel');
 let worldPaintNoise = true;
 let brushSize = 1;
+function updateBrushSizeVisibility() {
+    const wrap = document.getElementById('brushSizeWrap');
+    if (wrap)
+        wrap.style.display = worldPaintNoise ? '' : 'none';
+}
 if (noiseToggle) {
     noiseToggle.addEventListener('click', () => {
         worldPaintNoise = !worldPaintNoise;
         noiseToggle.textContent = `Noise: ${worldPaintNoise ? 'On' : 'Off'}`;
+        updateBrushSizeVisibility();
     });
     noiseToggle.textContent = 'Noise: On';
 }
+updateBrushSizeVisibility();
 if (brushSizeSlider) {
     if (brushSizeLabel)
         brushSizeLabel.textContent = brushSizeSlider.value;
@@ -1254,8 +1231,10 @@ intCanvas.addEventListener('mousedown', e => {
     if (!coordTarget && !placingType && (overNpc || overItem)) {
         return;
     }
+    globalThis.ackRecordSnapshot?.();
     intPainting = true;
     paintInterior(e);
+    globalThis.markAckDirty?.();
 });
 intCanvas.addEventListener('mousemove', e => { if (intPainting)
     paintInterior(e); });
@@ -1301,19 +1280,25 @@ intPalette.querySelectorAll('button').forEach(btn => {
 intPalette.querySelector('button')?.classList.add('active');
 function showInteriorEditor(show) {
     document.getElementById('intEditor').style.display = show ? 'block' : 'none';
+    if (show)
+        validateInteriorForm({ silent: true });
 }
 function renderInteriorList() {
     const list = document.getElementById('intList');
-    const ints = moduleData.interiors.map((I, i) => ({ I, i })).sort((a, b) => a.I.id.localeCompare(b.I.id));
-    list.innerHTML = ints.map(({ I, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">${I.label || I.id}</button>`).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editInterior(parseInt(btn.dataset.idx, 10)));
-    if (moduleData.interiors.length === 0)
-        renderEmptyState(list, 'No interiors created yet.');
+    if (moduleData.interiors.length === 0) {
+        list.innerHTML = renderEmptyState('No interiors created yet.');
+    }
+    else {
+        const ints = moduleData.interiors.map((I, i) => ({ I, i })).sort((a, b) => a.I.id.localeCompare(b.I.id));
+        list.innerHTML = ints.map(({ I, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">${I.label || I.id}</button>`).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editInterior(parseInt(btn.dataset.idx, 10)));
+    }
     updateInteriorOptions();
     refreshChoiceDropdowns();
     updateMapSelect(mapSelect ? mapSelect.value : 'world');
 }
 function startNewInterior() {
+    globalThis.ackRecordSnapshot?.();
     const w = parseInt(document.getElementById('intW').value, 10) || 12;
     const h = parseInt(document.getElementById('intH').value, 10) || 9;
     const id = makeInteriorRoom(undefined, w, h);
@@ -1322,6 +1307,7 @@ function startNewInterior() {
     moduleData.interiors.push(I);
     renderInteriorList();
     editInterior(moduleData.interiors.length - 1);
+    globalThis.markAckDirty?.();
 }
 function editInterior(i) {
     const I = moduleData.interiors[i];
@@ -1334,9 +1320,32 @@ function editInterior(i) {
     document.getElementById('delInterior').style.display = 'block';
     drawInterior();
 }
+function validateInteriorForm(options = {}) {
+    const { silent = false } = options;
+    const wEl = document.getElementById('intW');
+    const hEl = document.getElementById('intH');
+    if (!wEl || !hEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const w = parseInt(wEl.value, 10);
+    const h = parseInt(hEl.value, 10);
+    const errors = [];
+    const badW = isNaN(w) || w < 3 || w > 100;
+    const badH = isNaN(h) || h < 3 || h > 100;
+    if (badW)
+        errors.push('Interior width must be between 3 and 100.');
+    if (badH)
+        errors.push('Interior height must be between 3 and 100.');
+    setFieldInvalid(wEl, badW);
+    setFieldInvalid(hEl, badH);
+    applyValidationUi({ notice: 'intFormNotice' }, errors, silent);
+    return { valid: errors.length === 0, errors, warnings: [] };
+}
 function resizeInterior() {
     if (editInteriorIdx < 0)
         return;
+    if (!validateInteriorForm().valid)
+        return;
+    globalThis.ackRecordSnapshot?.();
     const I = moduleData.interiors[editInteriorIdx];
     const w = parseInt(document.getElementById('intW').value, 10) || I.w;
     const h = parseInt(document.getElementById('intH').value, 10) || I.h;
@@ -1351,10 +1360,11 @@ function resizeInterior() {
     I.grid = ng;
     delete I._origGrid;
     drawInterior();
+    globalThis.markAckDirty?.();
 }
-document.getElementById('intW').addEventListener('change', resizeInterior);
-document.getElementById('intH').addEventListener('change', resizeInterior);
-document.getElementById('intLabel').addEventListener('input', e => {
+document.getElementById('intW')?.addEventListener('change', resizeInterior);
+document.getElementById('intH')?.addEventListener('change', resizeInterior);
+document.getElementById('intLabel')?.addEventListener('input', e => {
     if (editInteriorIdx < 0)
         return;
     const I = moduleData.interiors[editInteriorIdx];
@@ -1372,12 +1382,14 @@ document.getElementById('intLabel').addEventListener('input', e => {
 function deleteInterior() {
     if (editInteriorIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     const I = moduleData.interiors[editInteriorIdx];
     delete interiors[I.id];
     moduleData.interiors.splice(editInteriorIdx, 1);
     editInteriorIdx = -1;
     showInteriorEditor(false);
     renderInteriorList();
+    globalThis.markAckDirty?.();
 }
 function closeInteriorEditor() {
     editInteriorIdx = -1;
@@ -1440,10 +1452,8 @@ function confirmDialog(msg, onYes) {
 }
 const listFilterApplyFns = new Map();
 const listFilterResetMarkers = new WeakSet();
-function renderEmptyState(list, message) {
-    if (!list)
-        return;
-    list.innerHTML = `<div class="list-empty-state muted" style="padding:4px;font-style:italic;opacity:0.7">${message}</div>`;
+function renderEmptyState(message) {
+    return `<div class="list-empty-state muted" style="padding: 4px;">${message}</div>`;
 }
 function setupListFilter(inputId, listId) {
     const input = document.getElementById(inputId);
@@ -1455,7 +1465,7 @@ function setupListFilter(inputId, listId) {
         Array.from(list.children).forEach(ch => {
             if (ch.classList.contains('list-empty-state'))
                 return;
-            ch.style.display = (ch.textContent || '').toLowerCase().includes(term) ? '' : 'none';
+            ch.style.display = ch.textContent.toLowerCase().includes(term) ? '' : 'none';
         });
     };
     listFilterApplyFns.set(inputId, apply);
@@ -1502,6 +1512,7 @@ function resetListFilter(inputId, options = {}) {
         input.focus();
 }
 function regenWorld() {
+    globalThis.ackRecordSnapshot?.();
     moduleData.seed = Date.now();
     genWorld(moduleData.seed, { buildings: [] });
     moduleData.buildings = [];
@@ -1524,10 +1535,13 @@ function regenWorld() {
     renderZoneList();
     renderEncounterList();
     renderTemplateList();
+    renderArenaList();
     drawWorld();
+    globalThis.markAckDirty?.();
 }
 function generateProceduralWorld(regen) {
     confirmDialog(regen ? 'Regenerate the world map?' : 'Replace the world map?', () => {
+        globalThis.ackRecordSnapshot?.();
         moduleData.procGen = moduleData.procGen || {};
         if (!regen) {
             const seedVal = parseInt(document.getElementById('procSeed').value, 10);
@@ -1553,12 +1567,15 @@ function generateProceduralWorld(regen) {
         renderZoneList();
         renderEncounterList();
         renderTemplateList();
+        renderArenaList();
         drawWorld();
+        globalThis.markAckDirty?.();
     });
 }
 globalThis.generateProceduralWorld = generateProceduralWorld;
 function clearWorld() {
     confirmDialog('Clear the world map?', () => {
+        globalThis.ackRecordSnapshot?.();
         for (let y = 0; y < WORLD_H; y++) {
             for (let x = 0; x < WORLD_W; x++) {
                 setTile('world', x, y, TILE.SAND);
@@ -1589,7 +1606,10 @@ function clearWorld() {
         renderPortalList();
         renderZoneList();
         renderEncounterList();
+        renderTemplateList();
+        renderArenaList();
         drawWorld();
+        globalThis.markAckDirty?.();
     });
 }
 function collectMods(containerId = 'modBuilder') {
@@ -1668,40 +1688,124 @@ function renderDialogPreview() {
         prev.parentElement.insertBefore(ctl, prev);
         document.getElementById('playDlg').onclick = () => playInGameWithSpoof();
         document.getElementById('stopDlg').onclick = () => stopSpoofPlayback();
+        document.getElementById('spoofFlags')?.addEventListener('input', () => renderDialogPreview());
     }
-    // Render imports spoof panel (lightweight)
+    // Render imports spoof panel (lightweight); preserve typed values across rebuilds
     const importsEl = document.getElementById('spoofImports');
     if (importsEl) {
         let imports = (tree && tree.imports) || null;
         if (!imports && tree)
             imports = generateImportsShallow(tree);
         const flags = (imports && imports.flags) || [];
-        const items = (imports && imports.items) || [];
-        let html = '';
-        if (flags.length) {
-            html += '<div><b>Flags</b> ' + flags.map(f => `<label style="margin-right:6px">${f}<input type="number" data-flag="${f}" value="1" min="0" style="width:56px;margin-left:4px"/></label>`).join('') + '</div>';
+        const items = ((imports && imports.items) || []).slice();
+        Object.values(tree || {}).forEach((node) => {
+            (node?.choices || []).forEach(c => {
+                if (c?.reqTag)
+                    items.push('tag:' + c.reqTag);
+                if (c?.costTag)
+                    items.push('tag:' + c.costTag);
+            });
+        });
+        const itemKeys = [...new Set(items)];
+        const sig = JSON.stringify([flags, itemKeys]);
+        if (importsEl.dataset?.sig !== sig) {
+            const prevVals = {};
+            importsEl.querySelectorAll('input').forEach(inp => {
+                const el = inp;
+                prevVals[el.dataset.flag ? 'f:' + el.dataset.flag : 'i:' + el.dataset.item] = el.value;
+            });
+            let html = '';
+            if (flags.length) {
+                html += '<div><b>Flags</b> ' + flags.map(f => `<label style="margin-right:6px">${f}<input type="number" data-flag="${f}" value="${prevVals['f:' + f] ?? '1'}" min="0" style="width:56px;margin-left:4px"/></label>`).join('') + '</div>';
+            }
+            if (itemKeys.length) {
+                html += '<div style="margin-top:4px"><b>Items</b> ' + itemKeys.map(it => `<label style="margin-right:6px">${it}<input type="number" data-item="${it}" value="${prevVals['i:' + it] ?? '1'}" min="0" style="width:56px;margin-left:4px"/></label>`).join('') + '</div>';
+            }
+            importsEl.innerHTML = html || '<span class="muted">(no imports)</span>';
+            if (importsEl.dataset)
+                importsEl.dataset.sig = sig;
         }
-        if (items.length) {
-            html += '<div style="margin-top:4px"><b>Items</b> ' + items.map(it => `<label style="margin-right:6px">${it}<input type="number" data-item="${it}" value="1" min="0" style="width:56px;margin-left:4px"/></label>`).join('') + '</div>';
+        if (!importsEl.dataset?.wired) {
+            if (importsEl.dataset)
+                importsEl.dataset.wired = '1';
+            importsEl.addEventListener('input', () => renderDialogPreview());
         }
-        importsEl.innerHTML = html || '<span class="muted">(no imports)</span>';
     }
     if (!tree || !tree.start) {
         prev.innerHTML = '';
         return;
     }
-    function show(id) {
+    const spoofedFlags = buildSpoofFlagsFromPanel() || parseSpoofFlags(document.getElementById('spoofFlags')?.value || '');
+    const spoofedItems = buildSpoofItemsFromPanel() || {};
+    const cmp = (a, op, b) => {
+        if (op === '>')
+            return a > b;
+        if (op === '<')
+            return a < b;
+        if (op === '<=')
+            return a <= b;
+        if (op === '==')
+            return a === b;
+        if (op === '!=')
+            return a !== b;
+        return a >= b;
+    };
+    const itemCount = key => Number(spoofedItems[key] ?? 0) || 0;
+    const choiceBlockers = c => {
+        const reasons = [];
+        if (c.if?.flag && !cmp(Number(spoofedFlags[c.if.flag] ?? 0) || 0, c.if.op || '>=', c.if.value ?? 1)) {
+            reasons.push(`flag ${c.if.flag} ${c.if.op || '>='} ${c.if.value ?? 1}`);
+        }
+        if (c.reqItem && itemCount(c.reqItem) <= 0)
+            reasons.push(`needs ${c.reqItem}`);
+        if (c.costItem && itemCount(c.costItem) <= 0)
+            reasons.push(`costs ${c.costItem}`);
+        if (c.reqTag && itemCount('tag:' + c.reqTag) <= 0)
+            reasons.push(`needs tag ${c.reqTag}`);
+        if (c.costTag && itemCount('tag:' + c.costTag) <= 0)
+            reasons.push(`costs tag ${c.costTag}`);
+        return reasons;
+    };
+    function show(id, note = '') {
         const node = tree[id];
         if (!node)
             return;
-        const html = (node.choices || [])
-            .map(c => `<button class="btn" data-to="${c.to || ''}" style="margin-top:4px">${c.label}</button>`)
-            .join('');
-        prev.innerHTML = `<div>${node.text || ''}</div>` + html;
-        Array.from(prev.querySelectorAll('button')).forEach(btn => btn.onclick = () => {
-            const t = btn.dataset.to;
-            if (t)
-                show(t);
+        const parts = [];
+        const actions = [];
+        if (note)
+            parts.push(`<div class="small" style="opacity:0.8">${note}</div>`);
+        parts.push(`<div>${node.text || ''}</div>`);
+        const pushBtn = (label, title, action, faded = false) => {
+            const blocked = !action;
+            actions.push(action);
+            const style = `margin-top:4px${faded ? ';opacity:0.6' : ''}${blocked ? ';opacity:0.4' : ''}`;
+            parts.push(`<button class="btn" data-act="${actions.length - 1}" style="${style}"${title ? ` title="${title}"` : ''}${blocked ? ' disabled' : ''}>${label}</button>`);
+        };
+        (node.choices || []).forEach(c => {
+            if (!c)
+                return;
+            const blockers = choiceBlockers(c);
+            const blockedTitle = blockers.length ? 'Unavailable: ' + blockers.join(', ') + ' — adjust spoof values above to test' : '';
+            if (c.stat && c.dc != null) {
+                pushBtn(`${c.label} [${c.stat} DC ${c.dc}: pass]`, blockedTitle || 'Preview the successful check', blockers.length ? null : () => {
+                    const next = c.to && tree[c.to] ? c.to : id;
+                    show(next, c.success || '(Check passed.)');
+                });
+                pushBtn(`${c.label} [fail]`, blockedTitle || 'Preview the failed check', blockers.length ? null : () => show(id, c.failure || '(Check failed.)'), true);
+                return;
+            }
+            pushBtn(c.label || '(choice)', blockedTitle, blockers.length ? null : () => {
+                if (c.to && tree[c.to])
+                    show(c.to);
+            });
+        });
+        prev.innerHTML = parts.join('');
+        Array.from(prev.querySelectorAll('button')).forEach(btn => {
+            btn.onclick = () => {
+                const act = actions[parseInt(btn.dataset?.act ?? '-1', 10)];
+                if (act)
+                    act();
+            };
         });
     }
     show('start');
@@ -2263,13 +2367,18 @@ function renderTreeEditor() {
     const wrap = document.getElementById('treeEditor');
     if (!wrap)
         return;
+    if (!wrap.dataset?.dirtyWired) {
+        if (wrap.dataset)
+            wrap.dataset.dirtyWired = '1';
+        wrap.addEventListener('input', () => globalThis.markAckDirty?.());
+    }
     wrap.innerHTML = '';
     Object.entries(getTreeData()).forEach(([id, node]) => {
         if (id === 'imports')
             return;
         const div = document.createElement('div');
         div.className = 'node';
-        div.innerHTML = `<div class="nodeHeader"><button class="btn toggle" type="button" aria-label="Toggle node">-</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="btn delNode" type="button" title="Delete node" aria-label="Delete node">&#128465;</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
+        div.innerHTML = `<div class="nodeHeader"><button class="btn toggle" type="button" aria-label="Toggle node">-</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="btn copyNode" type="button" title="Copy this node and everything it links to" aria-label="Copy subtree">&#10697;</button><button class="btn delNode" type="button" title="Delete node" aria-label="Delete node">&#128465;</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
         const choicesDiv = div.querySelector('.choices');
         if (!choicesDiv)
             return;
@@ -2277,6 +2386,9 @@ function renderTreeEditor() {
         const addChoiceBtn = div.querySelector('.addChoice');
         if (addChoiceBtn)
             addChoiceBtn.onclick = () => addChoiceRow(choicesDiv);
+        const copyBtn = div.querySelector('.copyNode');
+        if (copyBtn)
+            copyBtn.onclick = () => copyDialogSubtree(div.querySelector('.nodeId')?.value.trim());
         const toggleBtn = div.querySelector('.toggle');
         toggleBtn.addEventListener('click', () => {
             div.classList.toggle('collapsed');
@@ -2296,6 +2408,8 @@ function renderTreeEditor() {
     wrap.querySelectorAll('select').forEach(el => el.addEventListener('change', updateTreeData));
     wrap.querySelectorAll('input[type=checkbox]').forEach(el => el.addEventListener('change', updateTreeData));
     refreshChoiceDropdowns();
+    if (typeof applyDialogNodeFilter === 'function')
+        applyDialogNodeFilter();
 }
 function updateTreeData() {
     const wrap = document.getElementById('treeEditor');
@@ -2501,6 +2615,8 @@ function updateTreeData() {
     // Live preview + keep "to" dropdowns in sync with current node keys
     renderDialogPreview();
     refreshChoiceDropdowns();
+    if (typeof renderDialogGraph === 'function')
+        renderDialogGraph();
     // ---- Validation: highlight bad targets & orphans ----
     // 1) Choice target validation: red border if target doesn't exist
     choiceRefs.forEach(({ to, el }) => {
@@ -2548,6 +2664,7 @@ function loadTreeEditor() {
 }
 function openDialogEditor() {
     document.getElementById('dialogModal').classList.add('shown');
+    updatePasteSubtreeButton();
     renderTreeEditor();
 }
 function closeDialogEditor() {
@@ -2574,6 +2691,311 @@ function addNode() {
     setTreeData(tree);
     renderTreeEditor();
     updateTreeData();
+}
+// === Dialog subtree clipboard, templates, and search ===
+const DIALOG_CLIPBOARD_KEY = 'ack_dialog_clipboard';
+function setDialogEditorStatus(msg, autoClear = true) {
+    const el = document.getElementById('dlgStatus');
+    if (!el)
+        return;
+    const prev = el._statusTimer;
+    if (prev)
+        clearTimeout(prev);
+    el.textContent = msg || '';
+    if (autoClear && msg) {
+        el._statusTimer = setTimeout(() => { el.textContent = ''; }, 4000);
+    }
+}
+function collectDialogSubtree(tree, rootId) {
+    const nodes = {};
+    const queue = [rootId];
+    while (queue.length) {
+        const id = queue.shift();
+        if (!id || nodes[id] || !tree[id] || id === 'imports')
+            continue;
+        nodes[id] = JSON.parse(JSON.stringify(tree[id]));
+        (tree[id].choices || []).forEach(ch => { if (ch?.to && tree[ch.to])
+            queue.push(ch.to); });
+    }
+    return nodes;
+}
+function copyDialogSubtree(rootId) {
+    if (!rootId)
+        return;
+    updateTreeData();
+    const tree = getTreeData();
+    if (!tree[rootId])
+        return;
+    const nodes = collectDialogSubtree(tree, rootId);
+    try {
+        localStorage.setItem(DIALOG_CLIPBOARD_KEY, JSON.stringify({ root: rootId, nodes }));
+    }
+    catch (e) {
+        setDialogEditorStatus('Copy failed — browser storage is full.');
+        return;
+    }
+    updatePasteSubtreeButton();
+    const linked = Object.keys(nodes).length - 1;
+    setDialogEditorStatus(`Copied "${rootId}"${linked ? ` + ${linked} linked node(s)` : ''}. Paste into any NPC's dialog.`);
+}
+function readDialogClipboard() {
+    try {
+        const raw = localStorage.getItem(DIALOG_CLIPBOARD_KEY);
+        if (!raw)
+            return null;
+        const clip = JSON.parse(raw);
+        if (!clip?.root || !clip.nodes || !clip.nodes[clip.root])
+            return null;
+        return clip;
+    }
+    catch (e) {
+        return null;
+    }
+}
+function updatePasteSubtreeButton() {
+    const btn = document.getElementById('pasteSubtree');
+    if (btn)
+        btn.style.display = readDialogClipboard() ? 'inline-block' : 'none';
+}
+// Merge nodes into tree with collision-safe renaming; internal links are remapped.
+function mergeDialogNodes(tree, nodes, rootId) {
+    const rename = {};
+    const taken = new Set(Object.keys(tree));
+    Object.keys(nodes).forEach(id => {
+        let cand = id;
+        let i = 1;
+        while (taken.has(cand))
+            cand = `${id}-${i++}`;
+        rename[id] = cand;
+        taken.add(cand);
+    });
+    Object.entries(nodes).forEach(([id, node]) => {
+        const copy = JSON.parse(JSON.stringify(node));
+        (copy.choices || []).forEach(ch => { if (ch?.to && rename[ch.to])
+            ch.to = rename[ch.to]; });
+        tree[rename[id]] = copy;
+    });
+    return rename[rootId];
+}
+function pasteDialogSubtree() {
+    const clip = readDialogClipboard();
+    if (!clip) {
+        updatePasteSubtreeButton();
+        return;
+    }
+    updateTreeData();
+    const tree = getTreeData();
+    const newRoot = mergeDialogNodes(tree, clip.nodes, clip.root);
+    setTreeData(tree);
+    renderTreeEditor();
+    updateTreeData();
+    globalThis.markAckDirty?.();
+    setDialogEditorStatus(`Pasted ${Object.keys(clip.nodes).length} node(s) as "${newRoot}". Link a choice to it.`);
+}
+const DIALOG_TEMPLATES = {
+    greeting: {
+        linkLabel: '(Talk)',
+        root: 'greet',
+        nodes: {
+            greet: { text: 'Hello, wanderer. Stay out of the dust.', choices: [{ label: '(Leave)', to: 'bye' }] }
+        }
+    },
+    fetchQuest: {
+        linkLabel: '(Ask about work)',
+        root: 'job',
+        nodes: {
+            job: {
+                text: 'I lost something out there. Bring it back and I\'ll make it worth your while.',
+                choices: [
+                    { label: '(Accept the job)', to: 'accept', q: 'accept' },
+                    { label: '(Turn in)', to: 'do_turnin', q: 'turnin' },
+                    { label: '(Leave)', to: 'bye' }
+                ]
+            },
+            accept: { text: 'Good. It should be somewhere in the waste. Don\'t come back empty-handed.', choices: [{ label: '(Leave)', to: 'bye' }] },
+            do_turnin: { text: 'You actually found it. Here\'s your cut.', choices: [{ label: '(Leave)', to: 'bye' }] }
+        }
+    },
+    gatekeeper: {
+        linkLabel: '(Approach the door)',
+        root: 'gate',
+        nodes: {
+            gate: {
+                text: 'The way is sealed. Only those with the key pass.',
+                choices: [
+                    { label: '(Use key)', to: 'gate-open', reqItem: 'key_item', once: true },
+                    { label: '(Leave)', to: 'bye' }
+                ]
+            },
+            'gate-open': { text: 'The lock grinds open. Beyond, darkness waits.', choices: [{ label: '(Continue)', to: 'bye' }] },
+            locked: { text: '(It won\'t budge.)', choices: [{ label: '(Leave)', to: 'bye' }] }
+        }
+    },
+    lore: {
+        linkLabel: '(Ask about the old world)',
+        root: 'lore',
+        nodes: {
+            lore: {
+                text: 'What do you want to know?',
+                choices: [
+                    { label: 'The Dust', to: 'lore-dust' },
+                    { label: 'Before the fall', to: 'lore-fall' },
+                    { label: '(Leave)', to: 'bye' }
+                ]
+            },
+            'lore-dust': { text: 'The dust never settles. It remembers.', choices: [{ label: '(Ask more)', to: 'lore' }] },
+            'lore-fall': { text: 'There were cities once. Now there are warnings.', choices: [{ label: '(Ask more)', to: 'lore' }] }
+        }
+    }
+};
+function insertDialogTemplate(key) {
+    const tpl = DIALOG_TEMPLATES[key];
+    if (!tpl)
+        return;
+    updateTreeData();
+    const tree = getTreeData();
+    const newRoot = mergeDialogNodes(tree, tpl.nodes, tpl.root);
+    const startNode = tree.start;
+    if (startNode && newRoot !== 'start') {
+        startNode.choices = startNode.choices || [];
+        startNode.choices.push({ label: tpl.linkLabel, to: newRoot });
+    }
+    setTreeData(tree);
+    renderTreeEditor();
+    updateTreeData();
+    globalThis.markAckDirty?.();
+    setDialogEditorStatus(tree.start && newRoot !== 'start'
+        ? `Inserted template at "${newRoot}" and linked it from "start".`
+        : `Inserted template at "${newRoot}".`);
+}
+// Read-only node graph: layered by BFS depth, orphans highlighted, click to jump.
+function renderDialogGraph() {
+    const wrapEl = document.getElementById('dlgGraphWrap');
+    const graphEl = document.getElementById('dlgGraph');
+    if (!wrapEl || !graphEl || !wrapEl.open)
+        return;
+    const tree = getTreeData();
+    const ids = Object.keys(tree).filter(k => k !== 'imports');
+    if (!ids.length) {
+        graphEl.innerHTML = '<div class="small" style="padding:4px">No nodes yet.</div>';
+        return;
+    }
+    const depth = {};
+    const queue = [];
+    ['start', 'locked', 'sell', 'accept', 'do_turnin', 'do_fight'].forEach(id => {
+        if (tree[id] && depth[id] === undefined) {
+            depth[id] = 0;
+            queue.push(id);
+        }
+    });
+    while (queue.length) {
+        const id = queue.shift();
+        (tree[id]?.choices || []).forEach(c => {
+            const to = typeof c?.to === 'string' ? c.to : '';
+            if (to && tree[to] && depth[to] === undefined) {
+                depth[to] = depth[id] + 1;
+                queue.push(to);
+            }
+        });
+    }
+    const maxDepth = Math.max(0, ...Object.values(depth));
+    const orphanCol = maxDepth + 1;
+    const cols = [];
+    ids.forEach(id => {
+        const col = depth[id] !== undefined ? depth[id] : orphanCol;
+        (cols[col] || (cols[col] = [])).push(id);
+    });
+    const BOX_W = 110, BOX_H = 24, GAP_X = 50, GAP_Y = 10, PAD = 8;
+    const pos = {};
+    cols.forEach((colIds, ci) => {
+        (colIds || []).forEach((id, ri) => {
+            pos[id] = { x: PAD + ci * (BOX_W + GAP_X), y: PAD + ri * (BOX_H + GAP_Y) };
+        });
+    });
+    const width = PAD * 2 + cols.length * (BOX_W + GAP_X);
+    const height = PAD * 2 + Math.max(...cols.map(c => (c || []).length)) * (BOX_H + GAP_Y);
+    const edges = [];
+    ids.forEach(id => {
+        (tree[id]?.choices || []).forEach(c => {
+            const to = typeof c?.to === 'string' ? c.to : '';
+            if (!to || !pos[to] || !pos[id])
+                return;
+            const a = pos[id], b = pos[to];
+            edges.push(`<line x1="${a.x + BOX_W}" y1="${a.y + BOX_H / 2}" x2="${b.x}" y2="${b.y + BOX_H / 2}" stroke="#4a6a4a" stroke-width="1"/>`);
+        });
+    });
+    const boxes = ids.map(id => {
+        const p = pos[id];
+        const orphan = depth[id] === undefined && id !== 'bye';
+        const label = id.length > 15 ? id.slice(0, 14) + '…' : id;
+        return `<g data-node="${id}" style="cursor:pointer"><rect x="${p.x}" y="${p.y}" width="${BOX_W}" height="${BOX_H}" fill="#101a10" stroke="${orphan ? '#fa0' : '#2b6b2b'}" rx="3"/><text x="${p.x + 6}" y="${p.y + 16}" fill="${orphan ? '#fc0' : '#9ef7a0'}" font-size="11" font-family="monospace">${label}</text></g>`;
+    });
+    graphEl.innerHTML = `<svg width="${width}" height="${height}" role="img" aria-label="Dialog node graph">${edges.join('')}${boxes.join('')}</svg>`;
+    graphEl.querySelectorAll('[data-node]').forEach(g => {
+        g.onclick = () => {
+            const id = g.dataset?.node || g.getAttribute('data-node');
+            const wrap = document.getElementById('treeEditor');
+            if (!wrap || !id)
+                return;
+            const target = Array.from(wrap.querySelectorAll('.node')).find(n => (n.querySelector('.nodeId')?.value.trim() === id));
+            if (target) {
+                target.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+                target.style.outline = '1px solid #9ef7a0';
+                setTimeout(() => { target.style.outline = ''; }, 1200);
+            }
+        };
+    });
+}
+function applyDialogNodeFilter() {
+    const wrap = document.getElementById('treeEditor');
+    if (!wrap)
+        return;
+    const q = (document.getElementById('dlgSearch')?.value || '').trim().toLowerCase();
+    const mode = document.getElementById('dlgFilter')?.value || '';
+    const statusEl = document.getElementById('dlgStatus');
+    const tree = getTreeData();
+    const reachable = new Set();
+    const visit = id => {
+        if (reachable.has(id) || !tree[id])
+            return;
+        reachable.add(id);
+        (tree[id].choices || []).forEach(c => { if (c.to)
+            visit(c.to); });
+    };
+    ['start', 'locked', 'sell', 'accept', 'do_turnin', 'do_fight'].forEach(id => { if (tree[id])
+        visit(id); });
+    let shown = 0;
+    let total = 0;
+    wrap.querySelectorAll('.node').forEach(nodeEl => {
+        const id = nodeEl.querySelector('.nodeId')?.value.trim() || '';
+        const node = tree[id] || { text: '', choices: [] };
+        total += 1;
+        let ok = true;
+        if (q) {
+            const hay = [id, node.text || '']
+                .concat((node.choices || []).flatMap(c => [c?.label || '', c?.to || '', c?.success || '', c?.failure || '']))
+                .join('\n').toLowerCase();
+            ok = hay.includes(q);
+        }
+        if (ok && mode) {
+            const cs = node.choices || [];
+            if (mode === 'effects')
+                ok = cs.some(c => (c?.effects?.length ?? 0) > 0 || c?.setFlag || c?.reward || c?.spawn || c?.goto || c?.join);
+            else if (mode === 'checks')
+                ok = cs.some(c => c?.stat);
+            else if (mode === 'conditions')
+                ok = cs.some(c => c?.if || c?.reqItem || c?.reqTag || c?.reqSlot || c?.costItem || c?.costTag || c?.costSlot || c?.ifOnce);
+            else if (mode === 'orphans')
+                ok = !reachable.has(id) && id !== 'bye';
+        }
+        nodeEl.style.display = ok ? '' : 'none';
+        if (ok)
+            shown += 1;
+    });
+    if (statusEl && (q || mode))
+        statusEl.textContent = `Showing ${shown} of ${total} nodes`;
+    else if (statusEl && !statusEl._statusTimer)
+        statusEl.textContent = '';
 }
 function generateQuestTree() {
     const sel = document.getElementById('npcQuests');
@@ -2824,24 +3246,9 @@ function showNPCEditor(show) {
     }
 }
 function setNpcNotice(message, type = 'info', autoClear = false) {
-    const notice = document.getElementById('npcFormNotice');
-    if (!notice)
-        return;
     clearTimeout(npcNoticeTimer);
     npcNoticeTimer = 0;
-    notice.textContent = message || '';
-    notice.style.display = message ? 'block' : 'none';
-    notice.classList.remove('error', 'success');
-    if (type === 'error')
-        notice.classList.add('error');
-    if (type === 'success')
-        notice.classList.add('success');
-    if (autoClear && message) {
-        npcNoticeTimer = setTimeout(() => {
-            notice.classList.remove('success');
-            notice.style.display = 'none';
-        }, 3500);
-    }
+    setEntityNotice('npcFormNotice', message, type, autoClear);
 }
 function updateNpcMapBanner(message, show) {
     const banner = document.getElementById('npcMapBanner');
@@ -2856,7 +3263,7 @@ function setNpcCancelVisible(show) {
         return;
     cancelBtn.style.display = show ? 'inline-block' : 'none';
 }
-function setNpcFieldInvalid(el, invalid) {
+function setFieldInvalid(el, invalid) {
     if (!el)
         return;
     const cls = el.classList;
@@ -2872,6 +3279,102 @@ function setNpcFieldInvalid(el, invalid) {
         if (typeof el.removeAttribute === 'function')
             el.removeAttribute('aria-invalid');
     }
+}
+function setNpcFieldInvalid(el, invalid) {
+    setFieldInvalid(el, invalid);
+}
+function setEntityNotice(noticeId, message, type = 'info', autoClear = false) {
+    const notice = document.getElementById(noticeId);
+    if (!notice)
+        return;
+    const prev = notice._noticeTimer;
+    if (prev)
+        clearTimeout(prev);
+    notice.textContent = message || '';
+    notice.style.display = message ? 'block' : 'none';
+    notice.classList.remove('error', 'success');
+    if (type === 'error')
+        notice.classList.add('error');
+    if (type === 'success')
+        notice.classList.add('success');
+    if (autoClear && message) {
+        notice._noticeTimer = setTimeout(() => {
+            notice.classList.remove('success');
+            notice.style.display = 'none';
+        }, 3500);
+    }
+}
+function isDuplicateId(id, collection, excludeIdx) {
+    if (!id)
+        return false;
+    return collection.some((entry, idx) => idx !== excludeIdx && entry?.id === id);
+}
+function getValidMapIds() {
+    const maps = new Set();
+    maps.add('world');
+    (moduleData.interiors || []).forEach(I => {
+        if (I?.id)
+            maps.add(I.id);
+    });
+    return maps;
+}
+function getMapDims(mapId) {
+    if (mapId === 'world') {
+        const h = Array.isArray(world) ? world.length : 0;
+        const w = h && Array.isArray(world[0]) ? world[0].length : 0;
+        return w && h ? { w, h } : null;
+    }
+    const I = (moduleData.interiors || []).find(entry => entry?.id === mapId);
+    return I ? { w: I.w, h: I.h } : null;
+}
+function applyValidationUi(ui, errors, silent) {
+    const { button, hint, notice } = ui || {};
+    if (button) {
+        const saveBtn = document.getElementById(button);
+        if (saveBtn)
+            saveBtn.disabled = errors.length > 0;
+    }
+    if (hint) {
+        const hintEl = document.getElementById(hint);
+        if (hintEl) {
+            hintEl.textContent = errors.length ? errors[0] : '';
+            hintEl.classList.toggle('visible', errors.length > 0);
+        }
+    }
+    if (notice && !silent) {
+        if (errors.length)
+            setEntityNotice(notice, errors.join(' '), 'error');
+        else
+            setEntityNotice(notice, '');
+    }
+}
+function validateRectInMap(fields, errors) {
+    const { mapEl, xEl, yEl, wEl, hEl, label } = fields;
+    const map = mapEl?.value?.trim() || 'world';
+    const validMaps = getValidMapIds();
+    const badMap = !validMaps.has(map);
+    if (badMap)
+        errors.push(`${label} map "${map}" does not exist.`);
+    setFieldInvalid(mapEl, badMap);
+    const dims = badMap ? null : getMapDims(map);
+    const x = parseInt(xEl?.value, 10);
+    const y = parseInt(yEl?.value, 10);
+    const w = wEl ? parseInt(wEl.value, 10) : 1;
+    const h = hEl ? parseInt(hEl.value, 10) : 1;
+    const badW = wEl ? (isNaN(w) || w < 1) : false;
+    const badH = hEl ? (isNaN(h) || h < 1) : false;
+    if (badW || badH)
+        errors.push(`${label} width/height must be at least 1.`);
+    const badX = isNaN(x) || x < 0 || (dims ? x + (badW ? 1 : w) > dims.w : false);
+    const badY = isNaN(y) || y < 0 || (dims ? y + (badH ? 1 : h) > dims.h : false);
+    if (badX || badY)
+        errors.push(`${label} area must fit inside the "${map}" map.`);
+    setFieldInvalid(xEl, badX);
+    setFieldInvalid(yEl, badY);
+    if (wEl)
+        setFieldInvalid(wEl, badW || badX);
+    if (hEl)
+        setFieldInvalid(hEl, badH || badY);
 }
 function getNpcFieldWrapper(id) {
     const el = document.getElementById(id);
@@ -3252,6 +3755,9 @@ function startNewNPC() {
     document.getElementById('npcWorkbench').checked = false;
     document.getElementById('shopMarkup').value = 2;
     document.getElementById('shopRefresh').value = 0;
+    const shopInvEl = document.getElementById('shopInvTable');
+    if (shopInvEl)
+        shopInvEl.innerHTML = '';
     document.getElementById('npcTrainer').checked = false;
     document.getElementById('npcTrainerType').value = 'power';
     updateNPCOptSections();
@@ -3308,6 +3814,68 @@ function removeTrainerChoiceEffect(tree) {
         choice.effects = remaining;
     else
         delete choice.effects;
+}
+// === Shop Inventory Editor ===
+function addShopInvRow(container, entry = {}) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:4px;align-items:center;margin:2px 0;';
+    const itemSelect = document.createElement('select');
+    itemSelect.className = 'shopInvItem';
+    const emptyOpt = document.createElement('option');
+    emptyOpt.value = '';
+    emptyOpt.textContent = '-- item --';
+    itemSelect.appendChild(emptyOpt);
+    (moduleData.items || []).forEach(it => {
+        const opt = document.createElement('option');
+        opt.value = it.id || '';
+        opt.textContent = it.name || it.id || '';
+        itemSelect.appendChild(opt);
+    });
+    itemSelect.value = entry.id || '';
+    const countInput = document.createElement('input');
+    countInput.type = 'number';
+    countInput.min = '1';
+    countInput.className = 'shopInvCount';
+    countInput.value = String(entry.count ?? 1);
+    countInput.style.width = '50px';
+    countInput.title = 'Count';
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn';
+    removeBtn.textContent = 'x';
+    removeBtn.style.cssText = 'padding:0 6px;min-width:auto;';
+    removeBtn.addEventListener('click', () => row.remove());
+    row.appendChild(itemSelect);
+    row.appendChild(countInput);
+    row.appendChild(removeBtn);
+    container.appendChild(row);
+    return row;
+}
+function setShopInv(container, inv) {
+    if (!container)
+        return;
+    container.innerHTML = '';
+    (inv || []).forEach(entry => addShopInvRow(container, entry));
+}
+function collectShopInv(container) {
+    return Array.from(container.querySelectorAll('div')).map(row => {
+        const sel = row.querySelector('.shopInvItem');
+        const cnt = row.querySelector('.shopInvCount');
+        const id = sel?.value?.trim() || '';
+        const count = parseInt(cnt?.value || '1', 10) || 1;
+        return id ? { id, count } : null;
+    }).filter(Boolean);
+}
+function importModuleItemsToShop() {
+    const container = document.getElementById('shopInvTable');
+    if (!container)
+        return;
+    const existing = new Set(Array.from(container.querySelectorAll('.shopInvItem')).map((sel) => sel.value));
+    moduleData.items.forEach(it => {
+        if (it.id && !existing.has(it.id)) {
+            addShopInvRow(container, { id: it.id, count: 1 });
+        }
+    });
 }
 function collectNPCFromForm() {
     const id = document.getElementById('npcId').value.trim();
@@ -3487,8 +4055,11 @@ function collectNPCFromForm() {
                 npc.combat.special.delay = delay;
         }
     }
-    if (shop)
-        npc.shop = { markup: shopMarkup, refresh: shopRefresh, inv: [] };
+    if (shop) {
+        const shopInvContainer = document.getElementById('shopInvTable');
+        const inv = shopInvContainer ? collectShopInv(shopInvContainer) : [];
+        npc.shop = { markup: shopMarkup, refresh: shopRefresh, inv };
+    }
     if (trainer)
         npc.trainer = trainer;
     if (workbench)
@@ -3509,6 +4080,7 @@ function collectNPCFromForm() {
 }
 // Add or update an NPC
 function saveNPC() {
+    globalThis.ackRecordSnapshot?.();
     const { valid, errors } = validateNpcForm();
     if (!valid) {
         setNpcNotice(errors.join(' '), 'error');
@@ -3543,6 +4115,7 @@ function saveNPC() {
     drawInterior();
     if (wasNew)
         resetListFilter('npcFilter');
+    globalThis.markAckDirty?.();
 }
 function applyNPCChanges() {
     npcDirty = true;
@@ -3672,6 +4245,7 @@ function editNPC(i) {
     document.getElementById('npcWorkbench').checked = !!n.workbench;
     document.getElementById('shopMarkup').value = n.shop ? n.shop.markup || 2 : 2;
     document.getElementById('shopRefresh').value = n.shop ? n.shop.refresh || 0 : 0;
+    setShopInv(document.getElementById('shopInvTable'), n.shop?.inv || []);
     document.getElementById('npcTrainer').checked = !!n.trainer;
     document.getElementById('npcTrainerType').value = n.trainer || 'power';
     updateNPCOptSections();
@@ -3697,22 +4271,25 @@ function editNPC(i) {
 }
 function renderNPCList() {
     const list = document.getElementById('npcList');
-    const npcs = moduleData.npcs.map((n, i) => ({ n, i })).sort((a, b) => a.n.id.localeCompare(b.n.id));
-    list.innerHTML = npcs.map(({ n, i }) => {
-        const q = Array.isArray(n.quests) ? n.quests.join(',') : (n.questId || '');
-        return `<button type="button" class="list-item-btn" data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${q ? ` [${q}]` : ''}</button>`;
-    }).join('');
-    Array.from(list.children).forEach(btn => {
-        const idx = parseInt(btn.dataset.idx, 10);
-        btn.onclick = () => editNPC(idx);
-        if (idx === editNPCIdx) {
-            btn.style.outline = '1px solid #4f6b4f';
-            btn.style.background = '#141a14';
-            btn.scrollIntoView({ block: 'nearest' });
-        }
-    });
-    if (npcs.length === 0)
-        renderEmptyState(list, 'No NPCs created yet.');
+    if (moduleData.npcs.length === 0) {
+        list.innerHTML = renderEmptyState('No NPCs created yet.');
+    }
+    else {
+        const npcs = moduleData.npcs.map((n, i) => ({ n, i })).sort((a, b) => a.n.id.localeCompare(b.n.id));
+        list.innerHTML = npcs.map(({ n, i }) => {
+            const q = Array.isArray(n.quests) ? n.quests.join(',') : (n.questId || '');
+            return `<button type="button" class="list-item-btn" data-idx="${i}">${n.id} @${n.map} (${n.x},${n.y})${q ? ` [${q}]` : ''}</button>`;
+        }).join('');
+        Array.from(list.children).forEach(btn => {
+            const idx = parseInt(btn.dataset.idx, 10);
+            btn.onclick = () => editNPC(idx);
+            if (idx === editNPCIdx) {
+                btn.style.outline = '1px solid #4f6b4f';
+                btn.style.background = '#141a14';
+                btn.scrollIntoView({ block: 'nearest' });
+            }
+        });
+    }
     updateQuestOptions();
     refreshChoiceDropdowns();
     renderProblems();
@@ -3720,6 +4297,7 @@ function renderNPCList() {
 function deleteNPC() {
     if (editNPCIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     confirmDialog('Delete this NPC?', () => {
         moduleData.npcs.splice(editNPCIdx, 1);
         editNPCIdx = -1;
@@ -3742,6 +4320,7 @@ function deleteNPC() {
         loadTreeEditor();
         showNPCEditor(false);
         validateNpcForm({ silent: true });
+        globalThis.markAckDirty?.();
     });
 }
 function closeNPCEditor() {
@@ -3841,6 +4420,7 @@ function startNewItem() {
     selectedObj = null;
     drawWorld();
     showItemEditor(true);
+    validateItemForm({ silent: true });
     document.getElementById('itemName').focus();
 }
 function beginPlaceItem() {
@@ -3853,7 +4433,45 @@ function beginPlaceItem() {
     selectedObj = null;
     drawWorld();
 }
+function validateItemForm(options = {}) {
+    const { silent = false } = options;
+    const idEl = document.getElementById('itemId');
+    const nameEl = document.getElementById('itemName');
+    if (!idEl || !nameEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const id = idEl.value.trim();
+    const name = nameEl.value.trim();
+    const errors = [];
+    const warnings = [];
+    if (!id)
+        errors.push('Enter an ID for the item.');
+    else if (isDuplicateId(id, moduleData.items, editItemIdx))
+        errors.push(`ID "${id}" is already used by another item.`);
+    if (!name)
+        errors.push('Enter a name for the item.');
+    setFieldInvalid(idEl, !id || isDuplicateId(id, moduleData.items, editItemIdx));
+    setFieldInvalid(nameEl, !name);
+    const saveBtn = document.getElementById('addItem');
+    if (saveBtn)
+        saveBtn.disabled = errors.length > 0;
+    const hintEl = document.getElementById('itemSaveHint');
+    if (hintEl) {
+        hintEl.textContent = errors.length ? errors[0] : '';
+        hintEl.classList.toggle('visible', errors.length > 0);
+    }
+    if (!silent) {
+        if (errors.length)
+            setEntityNotice('itemFormNotice', errors.join(' '), 'error');
+        else
+            setEntityNotice('itemFormNotice', '');
+    }
+    return { valid: errors.length === 0, errors, warnings };
+}
 function addItem() {
+    const { valid } = validateItemForm();
+    if (!valid)
+        return;
+    globalThis.ackRecordSnapshot?.();
     const wasNew = editItemIdx < 0;
     const name = document.getElementById('itemName').value.trim();
     const id = document.getElementById('itemId').value.trim();
@@ -3960,6 +4578,7 @@ function addItem() {
     showItemEditor(false);
     if (wasNew)
         resetListFilter('itemFilter');
+    globalThis.markAckDirty?.();
 }
 function cancelItem() {
     placingType = null;
@@ -3972,6 +4591,7 @@ function cancelItem() {
     updateCursor();
 }
 function removeItemFromWorld() {
+    globalThis.ackRecordSnapshot?.();
     document.getElementById('itemOnMap').checked = false;
     document.getElementById('itemMap').value = '';
     if (editItemIdx >= 0) {
@@ -3984,6 +4604,7 @@ function removeItemFromWorld() {
         }
         renderItemList();
         drawWorld();
+        globalThis.markAckDirty?.();
     }
     updateItemMapWrap();
 }
@@ -4056,25 +4677,30 @@ function editItem(i) {
     document.getElementById('delItem').style.display = 'block';
     document.getElementById('cancelItem').style.display = 'none';
     showItemEditor(true);
+    validateItemForm({ silent: true });
     selectedObj = { type: 'item', obj: it };
     drawWorld();
 }
 function renderItemList() {
     const list = document.getElementById('itemList');
-    const items = moduleData.items.map((it, i) => ({ it, i })).sort((a, b) => a.it.name.localeCompare(b.it.name));
-    list.innerHTML = items.map(({ it, i }) => {
-        const loc = it.map ? ` @${it.map} (${it.x},${it.y})` : '';
-        return `<button type="button" class="list-item-btn" data-idx="${i}">${it.name}${loc}</button>`;
-    }).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editItem(parseInt(btn.dataset.idx, 10)));
-    if (items.length === 0)
-        renderEmptyState(list, 'No items created yet.');
+    if (moduleData.items.length === 0) {
+        list.innerHTML = renderEmptyState('No items created yet.');
+    }
+    else {
+        const items = moduleData.items.map((it, i) => ({ it, i })).sort((a, b) => a.it.name.localeCompare(b.it.name));
+        list.innerHTML = items.map(({ it, i }) => {
+            const loc = it.map ? ` @${it.map} (${it.x},${it.y})` : '';
+            return `<button type="button" class="list-item-btn" data-idx="${i}">${it.name}${loc}</button>`;
+        }).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editItem(parseInt(btn.dataset.idx, 10)));
+    }
     refreshChoiceDropdowns();
     renderProblems();
 }
 function deleteItem() {
     if (editItemIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     confirmDialog('Delete this item?', () => {
         moduleData.items.splice(editItemIdx, 1);
         editItemIdx = -1;
@@ -4085,6 +4711,7 @@ function deleteItem() {
         selectedObj = null;
         drawWorld();
         showItemEditor(false);
+        globalThis.markAckDirty?.();
     });
 }
 function closeItemEditor() {
@@ -4353,6 +4980,7 @@ function startNewEncounter() {
     document.getElementById('addEncounter').textContent = 'Add Enemy';
     document.getElementById('delEncounter').style.display = 'none';
     showEncounterEditor(true);
+    validateEncounterForm({ silent: true });
     tmplSel.focus();
     updateEncounterLocationMode();
 }
@@ -4388,7 +5016,40 @@ function collectEncounter() {
     }
     return entry;
 }
+function validateEncounterForm(options = {}) {
+    const { silent = false } = options;
+    const templateEl = document.getElementById('encTemplate');
+    if (!templateEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const templateId = templateEl.value?.trim() || '';
+    const errors = [];
+    const warnings = [];
+    if (!templateId)
+        errors.push('Select a template for this encounter.');
+    else if (!moduleData.templates.some(t => t.id === templateId))
+        errors.push(`Template "${templateId}" does not exist.`);
+    setFieldInvalid(templateEl, errors.length > 0);
+    const saveBtn = document.getElementById('addEncounter');
+    if (saveBtn)
+        saveBtn.disabled = errors.length > 0;
+    const hintEl = document.getElementById('encounterSaveHint');
+    if (hintEl) {
+        hintEl.textContent = errors.length ? errors[0] : '';
+        hintEl.classList.toggle('visible', errors.length > 0);
+    }
+    if (!silent) {
+        if (errors.length)
+            setEntityNotice('encounterFormNotice', errors.join(' '), 'error');
+        else
+            setEntityNotice('encounterFormNotice', '');
+    }
+    return { valid: errors.length === 0, errors, warnings };
+}
 function addEncounter() {
+    const { valid } = validateEncounterForm();
+    if (!valid)
+        return;
+    globalThis.ackRecordSnapshot?.();
     const entry = collectEncounter();
     if (editEncounterIdx >= 0) {
         moduleData.encounters[editEncounterIdx] = entry;
@@ -4400,6 +5061,7 @@ function addEncounter() {
     document.getElementById('delEncounter').style.display = 'none';
     renderEncounterList();
     showEncounterEditor(false);
+    globalThis.markAckDirty?.();
 }
 function editEncounter(i) {
     const e = moduleData.encounters[i];
@@ -4418,26 +5080,31 @@ function editEncounter(i) {
     document.getElementById('addEncounter').textContent = 'Update Enemy';
     document.getElementById('delEncounter').style.display = 'block';
     showEncounterEditor(true);
+    validateEncounterForm({ silent: true });
     updateEncounterLocationMode();
 }
 function renderEncounterList() {
     const list = document.getElementById('encounterList');
-    list.innerHTML = moduleData.encounters.map((e, i) => {
-        const t = moduleData.templates.find(t => t.id === e.templateId);
-        const name = t ? t.name : e.templateId;
-        const summary = formatLootTableSummary(getEncounterLootTable(e, t));
-        const lootStr = summary ? ` - ${summary}` : '';
-        const location = formatEncounterLocation(e);
-        const locStr = location ? ` [${location}]` : '';
-        return `<button type="button" class="list-item-btn" data-idx="${i}">${e.map}: ${name}${locStr}${lootStr}</button>`;
-    }).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editEncounter(parseInt(btn.dataset.idx, 10)));
-    if (moduleData.encounters.length === 0)
-        renderEmptyState(list, 'No encounters created yet.');
+    if (moduleData.encounters.length === 0) {
+        list.innerHTML = renderEmptyState('No enemies created yet.');
+    }
+    else {
+        list.innerHTML = moduleData.encounters.map((e, i) => {
+            const t = moduleData.templates.find(t => t.id === e.templateId);
+            const name = t ? t.name : e.templateId;
+            const summary = formatLootTableSummary(getEncounterLootTable(e, t));
+            const lootStr = summary ? ` - ${summary}` : '';
+            const location = formatEncounterLocation(e);
+            const locStr = location ? ` [${location}]` : '';
+            return `<button type="button" class="list-item-btn" data-idx="${i}">${e.map}: ${name}${locStr}${lootStr}</button>`;
+        }).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editEncounter(parseInt(btn.dataset.idx, 10)));
+    }
 }
 function deleteEncounter() {
     if (editEncounterIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     confirmDialog('Delete this enemy?', () => {
         moduleData.encounters.splice(editEncounterIdx, 1);
         editEncounterIdx = -1;
@@ -4445,6 +5112,7 @@ function deleteEncounter() {
         document.getElementById('delEncounter').style.display = 'none';
         renderEncounterList();
         showEncounterEditor(false);
+        globalThis.markAckDirty?.();
     });
 }
 // --- NPC Templates ---
@@ -4480,6 +5148,7 @@ function startNewTemplate() {
     document.getElementById('delTemplate').style.display = 'none';
     toggleTemplateScrapFields();
     showTemplateEditor(true);
+    validateTemplateForm({ silent: true });
 }
 function collectTemplate() {
     const id = document.getElementById('templateId').value.trim();
@@ -4521,7 +5190,45 @@ function collectTemplate() {
     }
     return { id, name, desc, color, portraitSheet, combat };
 }
+function validateTemplateForm(options = {}) {
+    const { silent = false } = options;
+    const idEl = document.getElementById('templateId');
+    const nameEl = document.getElementById('templateName');
+    if (!idEl || !nameEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const id = idEl.value.trim();
+    const name = nameEl.value.trim();
+    const errors = [];
+    const warnings = [];
+    if (!id)
+        errors.push('Enter an ID for the template.');
+    else if (isDuplicateId(id, moduleData.templates, editTemplateIdx))
+        errors.push(`ID "${id}" is already used by another template.`);
+    if (!name)
+        errors.push('Enter a name for the template.');
+    setFieldInvalid(idEl, !id || isDuplicateId(id, moduleData.templates, editTemplateIdx));
+    setFieldInvalid(nameEl, !name);
+    const saveBtn = document.getElementById('addTemplate');
+    if (saveBtn)
+        saveBtn.disabled = errors.length > 0;
+    const hintEl = document.getElementById('templateSaveHint');
+    if (hintEl) {
+        hintEl.textContent = errors.length ? errors[0] : '';
+        hintEl.classList.toggle('visible', errors.length > 0);
+    }
+    if (!silent) {
+        if (errors.length)
+            setEntityNotice('templateFormNotice', errors.join(' '), 'error');
+        else
+            setEntityNotice('templateFormNotice', '');
+    }
+    return { valid: errors.length === 0, errors, warnings };
+}
 function addTemplate() {
+    const { valid } = validateTemplateForm();
+    if (!valid)
+        return;
+    globalThis.ackRecordSnapshot?.();
     const entry = collectTemplate();
     if (editTemplateIdx >= 0) {
         moduleData.templates[editTemplateIdx] = entry;
@@ -4533,6 +5240,7 @@ function addTemplate() {
     document.getElementById('delTemplate').style.display = 'none';
     renderTemplateList();
     showTemplateEditor(false);
+    globalThis.markAckDirty?.();
 }
 function editTemplate(i) {
     const t = moduleData.templates[i];
@@ -4559,18 +5267,23 @@ function editTemplate(i) {
     document.getElementById('delTemplate').style.display = 'block';
     toggleTemplateScrapFields();
     showTemplateEditor(true);
+    validateTemplateForm({ silent: true });
 }
 function renderTemplateList() {
     const list = document.getElementById('templateList');
-    list.innerHTML = moduleData.templates.map((t, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${t.id}</button>`).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editTemplate(parseInt(btn.dataset.idx, 10)));
-    if (moduleData.templates.length === 0)
-        renderEmptyState(list, 'No templates created yet.');
+    if (moduleData.templates.length === 0) {
+        list.innerHTML = renderEmptyState('No templates created yet.');
+    }
+    else {
+        list.innerHTML = moduleData.templates.map((t, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${t.id}</button>`).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editTemplate(parseInt(btn.dataset.idx, 10)));
+    }
     refreshChoiceDropdowns();
 }
 function deleteTemplate() {
     if (editTemplateIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     confirmDialog('Delete this template?', () => {
         moduleData.templates.splice(editTemplateIdx, 1);
         editTemplateIdx = -1;
@@ -4578,30 +5291,140 @@ function deleteTemplate() {
         document.getElementById('delTemplate').style.display = 'none';
         renderTemplateList();
         showTemplateEditor(false);
+        globalThis.markAckDirty?.();
     });
 }
 // --- Tile Events ---
 function showEventEditor(show) {
     document.getElementById('eventEditor').style.display = show ? 'block' : 'none';
+    if (show)
+        validateEventForm({ silent: true });
 }
-function updateEventEffectFields() {
-    const eff = document.getElementById('eventEffect').value;
-    document.getElementById('eventMsgWrap').style.display = (eff === 'toast' || eff === 'log') ? 'block' : 'none';
-    document.getElementById('eventFlagWrap').style.display = eff === 'addFlag' ? 'block' : 'none';
-    document.getElementById('eventStatWrap').style.display = eff === 'modStat' ? 'block' : 'none';
+function validateEventForm(options = {}) {
+    const { silent = false } = options;
+    const mapEl = document.getElementById('eventMap');
+    const xEl = document.getElementById('eventX');
+    const yEl = document.getElementById('eventY');
+    if (!mapEl || !xEl || !yEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const errors = [];
+    validateRectInMap({ mapEl, xEl, yEl, label: 'Event' }, errors);
+    const container = document.getElementById('eventSubList');
+    const subs = container ? Array.from(container.querySelectorAll('.eventSubBlock')) : [];
+    if (!subs.length)
+        errors.push('Add at least one sub-event.');
+    subs.forEach((div, i) => {
+        const eff = div.querySelector('.eventSubEffect')?.value || 'toast';
+        if (eff === 'toast' || eff === 'log') {
+            const msgEl = div.querySelector('.eventSubMsgInput');
+            const bad = !msgEl?.value?.trim();
+            setFieldInvalid(msgEl, bad);
+            if (bad)
+                errors.push(`Sub-event ${i + 1} needs a message.`);
+        }
+        else if (eff === 'addFlag') {
+            const flagEl = div.querySelector('.eventSubFlagInput');
+            const bad = !flagEl?.value?.trim();
+            setFieldInvalid(flagEl, bad);
+            if (bad)
+                errors.push(`Sub-event ${i + 1} needs a flag name.`);
+        }
+        else if (eff === 'modStat') {
+            const statEl = div.querySelector('.eventSubStatSelect');
+            const bad = !statEl?.value?.trim();
+            setFieldInvalid(statEl, bad);
+            if (bad)
+                errors.push(`Sub-event ${i + 1} needs a stat.`);
+        }
+    });
+    applyValidationUi({ button: 'addEvent', hint: 'eventSaveHint', notice: 'eventFormNotice' }, errors, silent);
+    return { valid: errors.length === 0, errors, warnings: [] };
+}
+function addEventSubBlock(container, ev = {}) {
+    const div = document.createElement('div');
+    div.className = 'eventSubBlock';
+    div.style.cssText = 'border-left:2px solid #2b3b2b;padding-left:8px;margin-bottom:6px;';
+    const effectSel = document.createElement('select');
+    effectSel.className = 'eventSubEffect';
+    ['toast', 'log', 'addFlag', 'modStat'].forEach(val => {
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = val;
+        effectSel.appendChild(opt);
+    });
+    effectSel.value = ev.effect || 'toast';
+    const msgLabel = document.createElement('label');
+    msgLabel.className = 'eventSubMsg';
+    const msgInput = document.createElement('input');
+    msgInput.className = 'eventSubMsgInput';
+    msgInput.placeholder = 'Message';
+    msgInput.value = ev.msg || '';
+    msgLabel.textContent = 'Message ';
+    msgLabel.appendChild(msgInput);
+    const flagLabel = document.createElement('label');
+    flagLabel.className = 'eventSubFlag';
+    const flagInput = document.createElement('input');
+    flagInput.className = 'eventSubFlagInput';
+    flagInput.placeholder = 'Flag name';
+    flagInput.value = ev.flag || '';
+    flagLabel.textContent = 'Flag ';
+    flagLabel.appendChild(flagInput);
+    flagLabel.style.display = 'none';
+    const statWrap = document.createElement('div');
+    statWrap.className = 'eventSubStatWrap';
+    statWrap.style.display = 'none';
+    const statSel = document.createElement('select');
+    statSel.className = 'eventSubStatSelect';
+    STAT_OPTS.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; statSel.appendChild(o); });
+    statSel.value = ev.stat || STAT_OPTS[0];
+    const deltaIn = document.createElement('input');
+    deltaIn.className = 'eventSubDeltaInput';
+    deltaIn.type = 'number';
+    deltaIn.placeholder = 'Delta';
+    deltaIn.value = String(ev.delta ?? 0);
+    deltaIn.style.width = '50px';
+    const durIn = document.createElement('input');
+    durIn.className = 'eventSubDurInput';
+    durIn.type = 'number';
+    durIn.min = '0';
+    durIn.placeholder = 'Duration';
+    durIn.value = String(ev.duration ?? 0);
+    durIn.style.width = '60px';
+    statWrap.appendChild(statSel);
+    statWrap.appendChild(deltaIn);
+    statWrap.appendChild(durIn);
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn';
+    removeBtn.textContent = 'Remove';
+    removeBtn.style.cssText = 'padding:0 6px;margin-top:2px;';
+    removeBtn.addEventListener('click', () => div.remove());
+    function updateSubFields() {
+        const eff = effectSel.value;
+        msgLabel.style.display = (eff === 'toast' || eff === 'log') ? 'block' : 'none';
+        flagLabel.style.display = eff === 'addFlag' ? 'block' : 'none';
+        statWrap.style.display = eff === 'modStat' ? 'flex' : 'none';
+    }
+    effectSel.addEventListener('change', updateSubFields);
+    div.appendChild(effectSel);
+    div.appendChild(msgLabel);
+    div.appendChild(flagLabel);
+    div.appendChild(statWrap);
+    div.appendChild(removeBtn);
+    container.appendChild(div);
+    updateSubFields();
+    return div;
 }
 function startNewEvent() {
     editEventIdx = -1;
     populateMapDropdown(document.getElementById('eventMap'), 'world');
     document.getElementById('eventX').value = 0;
     document.getElementById('eventY').value = 0;
-    document.getElementById('eventEffect').value = 'toast';
-    document.getElementById('eventMsg').value = '';
-    document.getElementById('eventFlag').value = '';
-    document.getElementById('eventStat').value = STAT_OPTS[0];
-    document.getElementById('eventDelta').value = 0;
-    document.getElementById('eventDuration').value = 0;
-    updateEventEffectFields();
+    const container = document.getElementById('eventSubList');
+    if (container) {
+        container.innerHTML = '';
+        addEventSubBlock(container);
+    }
     document.getElementById('addEvent').textContent = 'Add Event';
     document.getElementById('delEvent').style.display = 'none';
     showEventEditor(true);
@@ -4611,20 +5434,28 @@ function collectEvent() {
     const map = document.getElementById('eventMap').value.trim() || 'world';
     const x = parseInt(document.getElementById('eventX').value, 10) || 0;
     const y = parseInt(document.getElementById('eventY').value, 10) || 0;
-    const eff = document.getElementById('eventEffect').value;
-    const ev = { when: 'enter', effect: eff };
-    if (eff === 'toast' || eff === 'log')
-        ev.msg = document.getElementById('eventMsg').value;
-    if (eff === 'addFlag')
-        ev.flag = document.getElementById('eventFlag').value;
-    if (eff === 'modStat') {
-        ev.stat = document.getElementById('eventStat').value;
-        ev.delta = parseInt(document.getElementById('eventDelta').value, 10) || 0;
-        ev.duration = parseInt(document.getElementById('eventDuration').value, 10) || 0;
-    }
-    return { map, x, y, events: [ev] };
+    const container = document.getElementById('eventSubList');
+    const events = container ? Array.from(container.querySelectorAll('.eventSubBlock')).map((div) => {
+        const eff = div.querySelector('.eventSubEffect')?.value || 'toast';
+        const ev = { when: 'enter', effect: eff };
+        if (eff === 'toast' || eff === 'log')
+            ev.msg = div.querySelector('.eventSubMsgInput')?.value || '';
+        if (eff === 'addFlag')
+            ev.flag = div.querySelector('.eventSubFlagInput')?.value || '';
+        if (eff === 'modStat') {
+            ev.stat = div.querySelector('.eventSubStatSelect')?.value || '';
+            ev.delta = parseInt(div.querySelector('.eventSubDeltaInput')?.value, 10) || 0;
+            ev.duration = parseInt(div.querySelector('.eventSubDurInput')?.value, 10) || 0;
+        }
+        return ev;
+    }) : [];
+    return { map, x, y, events: events.length ? events : [{ when: 'enter', effect: 'toast' }] };
 }
 function addEvent() {
+    const { valid } = validateEventForm();
+    if (!valid)
+        return;
+    globalThis.ackRecordSnapshot?.();
     const entry = collectEvent();
     if (editEventIdx >= 0) {
         moduleData.events[editEventIdx] = entry;
@@ -4639,6 +5470,7 @@ function addEvent() {
     selectedObj = null;
     drawWorld();
     showEventEditor(false);
+    globalThis.markAckDirty?.();
 }
 function editEvent(i) {
     const e = moduleData.events[i];
@@ -4646,14 +5478,15 @@ function editEvent(i) {
     populateMapDropdown(document.getElementById('eventMap'), e.map);
     document.getElementById('eventX').value = e.x;
     document.getElementById('eventY').value = e.y;
-    const ev = e.events[0] || { effect: 'toast' };
-    document.getElementById('eventEffect').value = ev.effect;
-    document.getElementById('eventMsg').value = ev.msg || '';
-    document.getElementById('eventFlag').value = ev.flag || '';
-    document.getElementById('eventStat').value = ev.stat || STAT_OPTS[0];
-    document.getElementById('eventDelta').value = ev.delta || 0;
-    document.getElementById('eventDuration').value = ev.duration || 0;
-    updateEventEffectFields();
+    const container = document.getElementById('eventSubList');
+    if (container) {
+        container.innerHTML = '';
+        const evts = e.events || [];
+        if (evts.length === 0)
+            addEventSubBlock(container);
+        else
+            evts.forEach(ev => addEventSubBlock(container, ev));
+    }
     document.getElementById('addEvent').textContent = 'Update Event';
     document.getElementById('delEvent').style.display = 'block';
     showEventEditor(true);
@@ -4662,18 +5495,24 @@ function editEvent(i) {
 }
 function renderEventList() {
     const list = document.getElementById('eventList');
-    list.innerHTML = moduleData.events.map((e, i) => {
-        const eff = e.events[0]?.effect;
-        return `<button type="button" class="list-item-btn" data-idx="${i}">${e.map} @(${e.x},${e.y}) - ${eff}</button>`;
-    }).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editEvent(parseInt(btn.dataset.idx, 10)));
-    if (moduleData.events.length === 0)
-        renderEmptyState(list, 'No tile events created yet.');
+    if (moduleData.events.length === 0) {
+        list.innerHTML = renderEmptyState('No events created yet.');
+    }
+    else {
+        list.innerHTML = moduleData.events.map((e, i) => {
+            const count = e.events?.length || 0;
+            const eff = e.events[0]?.effect || '?';
+            const badge = count > 1 ? ` (${count} sub-events)` : ` - ${eff}`;
+            return `<button type="button" class="list-item-btn" data-idx="${i}">${e.map} @(${e.x},${e.y})${badge}</button>`;
+        }).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editEvent(parseInt(btn.dataset.idx, 10)));
+    }
     populateFlagList();
 }
 function deleteEvent() {
     if (editEventIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     confirmDialog('Delete this event?', () => {
         moduleData.events.splice(editEventIdx, 1);
         editEventIdx = -1;
@@ -4683,6 +5522,7 @@ function deleteEvent() {
         selectedObj = null;
         drawWorld();
         showEventEditor(false);
+        globalThis.markAckDirty?.();
     });
 }
 // --- Arenas ---
@@ -4724,6 +5564,26 @@ function showArenaEditor(show) {
     const editor = document.getElementById('arenaEditor');
     if (editor)
         editor.style.display = show ? 'block' : 'none';
+    if (show)
+        validateArenaForm({ silent: true });
+}
+function validateArenaForm(options = {}) {
+    const { silent = false } = options;
+    const container = document.getElementById('arenaWaveContainer');
+    if (!container)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const errors = [];
+    const templateSels = Array.from(container.querySelectorAll('.arenaWaveTemplate'));
+    const filled = templateSels.filter(sel => sel.value?.trim());
+    if (!filled.length) {
+        errors.push('Add at least one wave with an enemy template.');
+        setFieldInvalid(templateSels[0], true);
+    }
+    else {
+        templateSels.forEach(sel => setFieldInvalid(sel, false));
+    }
+    applyValidationUi({ button: 'addArena', hint: 'arenaSaveHint', notice: 'arenaFormNotice' }, errors, silent);
+    return { valid: errors.length === 0, errors, warnings: [] };
 }
 function updateArenaWaveHeaders() {
     const waves = document.querySelectorAll('#arenaWaveContainer .arenaWave');
@@ -4949,6 +5809,10 @@ function collectArena() {
     return arena;
 }
 function addArena() {
+    const { valid } = validateArenaForm();
+    if (!valid)
+        return;
+    globalThis.ackRecordSnapshot?.();
     const arena = collectArena();
     if (!arena)
         return;
@@ -4966,6 +5830,7 @@ function addArena() {
     document.getElementById('delArena').style.display = 'none';
     renderArenaList();
     showArenaEditor(false);
+    globalThis.markAckDirty?.();
 }
 function editArena(idx) {
     const list = Array.isArray(moduleData.behaviors?.arenas) ? moduleData.behaviors.arenas : [];
@@ -4990,6 +5855,7 @@ function editArena(idx) {
 function deleteArena() {
     if (editArenaIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     confirmDialog('Delete this arena?', () => {
         const list = arenaList();
         if (!list)
@@ -5002,6 +5868,7 @@ function deleteArena() {
         renderArenaList();
         showArenaEditor(false);
         cleanupBehaviors();
+        globalThis.markAckDirty?.();
     });
 }
 function cancelArena() {
@@ -5016,21 +5883,46 @@ function renderArenaList() {
     if (!listEl)
         return;
     const list = Array.isArray(moduleData.behaviors?.arenas) ? moduleData.behaviors.arenas : [];
-    listEl.innerHTML = list.map((arena, idx) => {
-        const waveCount = Array.isArray(arena.waves) ? arena.waves.length : 0;
-        const reward = arena.reward?.toast || arena.reward?.log || '';
-        const rewardStr = reward ? ` - ${reward}` : '';
-        return `<button type="button" class="list-item-btn" data-idx="${idx}">${arena.map || 'world'} (${waveCount} waves)${rewardStr}</button>`;
-    }).join('');
-    Array.from(listEl.children).forEach(div => {
-        div.onclick = () => editArena(parseInt(div.dataset.idx, 10));
-    });
-    if (list.length === 0)
-        renderEmptyState(listEl, 'No arenas created yet.');
+    if (list.length === 0) {
+        listEl.innerHTML = renderEmptyState('No arenas created yet.');
+    }
+    else {
+        listEl.innerHTML = list.map((arena, idx) => {
+            const waveCount = Array.isArray(arena.waves) ? arena.waves.length : 0;
+            const reward = arena.reward?.toast || arena.reward?.log || '';
+            const rewardStr = reward ? ` - ${reward}` : '';
+            return `<button type="button" class="list-item-btn" data-idx="${idx}">${arena.map || 'world'} (${waveCount} waves)${rewardStr}</button>`;
+        }).join('');
+        Array.from(listEl.children).forEach(div => {
+            div.onclick = () => editArena(parseInt(div.dataset.idx, 10));
+        });
+    }
 }
 // --- Zones ---
 function showZoneEditor(show) {
     document.getElementById('zoneEditor').style.display = show ? 'block' : 'none';
+    if (show)
+        validateZoneForm({ silent: true });
+}
+function validateZoneForm(options = {}) {
+    const { silent = false } = options;
+    const mapEl = document.getElementById('zoneMap');
+    const xEl = document.getElementById('zoneX');
+    const yEl = document.getElementById('zoneY');
+    const wEl = document.getElementById('zoneW');
+    const hEl = document.getElementById('zoneH');
+    if (!mapEl || !xEl || !yEl || !wEl || !hEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const errors = [];
+    validateRectInMap({ mapEl, xEl, yEl, wEl, hEl, label: 'Zone' }, errors);
+    const useItemEl = document.getElementById('zoneUseItem');
+    const rewardEl = document.getElementById('zoneReward');
+    const rewardWithoutItem = !!rewardEl?.value?.trim() && !useItemEl?.value?.trim();
+    if (rewardWithoutItem)
+        errors.push('A reward needs a Use Item id.');
+    setFieldInvalid(useItemEl, rewardWithoutItem);
+    applyValidationUi({ button: 'addZone', hint: 'zoneSaveHint', notice: 'zoneFormNotice' }, errors, silent);
+    return { valid: errors.length === 0, errors, warnings: [] };
 }
 function updateZoneWallFields() {
     const wrap = document.getElementById('zoneEntrancesWrap');
@@ -5127,6 +6019,10 @@ function collectZone() {
     return entry;
 }
 function addZone() {
+    const { valid } = validateZoneForm();
+    if (!valid)
+        return;
+    globalThis.ackRecordSnapshot?.();
     const entry = collectZone();
     if (!moduleData._origKeys)
         moduleData._origKeys = Object.keys(moduleData);
@@ -5145,6 +6041,7 @@ function addZone() {
     showZoneEditor(false);
     selectedObj = null;
     drawWorld();
+    globalThis.markAckDirty?.();
 }
 function editZone(i) {
     const z = moduleData.zones[i];
@@ -5189,10 +6086,13 @@ function formatZoneSummary(z) {
 }
 function renderZoneList() {
     const list = document.getElementById('zoneList');
-    list.innerHTML = moduleData.zones.map((z, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${formatZoneSummary(z)}</button>`).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editZone(parseInt(btn.dataset.idx, 10)));
-    if (moduleData.zones.length === 0)
-        renderEmptyState(list, 'No zones created yet.');
+    if (moduleData.zones.length === 0) {
+        list.innerHTML = renderEmptyState('No zones created yet.');
+    }
+    else {
+        list.innerHTML = moduleData.zones.map((z, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${formatZoneSummary(z)}</button>`).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editZone(parseInt(btn.dataset.idx, 10)));
+    }
     const encMap = document.getElementById('encMap');
     if (encMap) {
         const encZone = document.getElementById('encZone');
@@ -5214,10 +6114,11 @@ function updateZoneDims() {
 ['zoneX', 'zoneY', 'zoneW', 'zoneH'].forEach(id => {
     document.getElementById(id).addEventListener('input', updateZoneDims);
 });
-document.getElementById('zoneWalled').addEventListener('change', updateZoneWallFields);
+document.getElementById('zoneWalled')?.addEventListener('change', updateZoneWallFields);
 function deleteZone() {
     if (editZoneIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     moduleData.zones.splice(editZoneIdx, 1);
     editZoneIdx = -1;
     document.getElementById('addZone').textContent = 'Add Zone';
@@ -5226,6 +6127,413 @@ function deleteZone() {
     showZoneEditor(false);
     selectedObj = null;
     drawWorld();
+    globalThis.markAckDirty?.();
+}
+// === Persona Editor ===
+const PERSONA_STAT_KEYS = ['STR', 'AGI', 'INT', 'PER', 'LCK', 'CHA'];
+let editPersonaId = null;
+let personaEditorPortraitIndex = 0;
+function showPersonaEditor(show) {
+    document.getElementById('personaEditor').style.display = show ? 'block' : 'none';
+    if (show)
+        validatePersonaForm({ silent: true });
+}
+function validatePersonaForm(options = {}) {
+    const { silent = false } = options;
+    const idEl = document.getElementById('personaEditorId');
+    if (!idEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const id = idEl.value.trim();
+    const errors = [];
+    const taken = !!id && !!moduleData.personas?.[id] && editPersonaId !== id;
+    if (!id)
+        errors.push('Enter an ID for the persona.');
+    else if (taken)
+        errors.push(`ID "${id}" is already used by another persona.`);
+    setFieldInvalid(idEl, !id || taken);
+    applyValidationUi({ button: 'savePersona', hint: 'personaSaveHint', notice: 'personaFormNotice' }, errors, silent);
+    return { valid: errors.length === 0, errors, warnings: [] };
+}
+function setPersonaEditorPortrait() {
+    const el = document.getElementById('personaEditorPort');
+    if (!el)
+        return;
+    const customPath = document.getElementById('personaEditorPortraitPath')?.value?.trim() || '';
+    const img = customPath || npcPortraits[personaEditorPortraitIndex] || '';
+    el.style.backgroundImage = img ? `url(${img})` : 'none';
+}
+function renderPersonaList() {
+    const list = document.getElementById('personaList');
+    if (!list)
+        return;
+    const ids = Object.keys(moduleData.personas || {}).sort();
+    if (ids.length === 0) {
+        list.innerHTML = renderEmptyState('No personas created yet.');
+    }
+    else {
+        list.innerHTML = ids.map(id => {
+            const p = moduleData.personas[id];
+            const label = p?.label ? ` — ${p.label}` : '';
+            return `<button type="button" class="list-item-btn" data-id="${id}">${id}${label}</button>`;
+        }).join('');
+        Array.from(list.children).forEach(btn => {
+            btn.onclick = () => editPersona(btn.dataset.id);
+        });
+    }
+}
+function startNewPersona() {
+    editPersonaId = null;
+    document.getElementById('personaEditorId').value = '';
+    document.getElementById('personaEditorLabel').value = '';
+    document.getElementById('personaEditorPortraitPath').value = '';
+    document.getElementById('personaEditorPrompt').value = '';
+    personaEditorPortraitIndex = 0;
+    setPersonaEditorPortrait();
+    PERSONA_STAT_KEYS.forEach(s => {
+        document.getElementById(`personaMod${s}`).value = '0';
+    });
+    document.getElementById('personaItemRefs').innerHTML = '';
+    document.getElementById('savePersona').textContent = 'Add Persona';
+    document.getElementById('delPersona').style.display = 'none';
+    showPersonaEditor(true);
+}
+function editPersona(id) {
+    editPersonaId = id;
+    const p = (moduleData.personas || {})[id] || {};
+    document.getElementById('personaEditorId').value = id;
+    document.getElementById('personaEditorLabel').value = p.label || '';
+    document.getElementById('personaEditorPrompt').value = p.portraitPrompt || '';
+    const portraitPath = p.portrait || '';
+    const idx = npcPortraits.indexOf(portraitPath);
+    if (idx >= 0) {
+        personaEditorPortraitIndex = idx;
+        document.getElementById('personaEditorPortraitPath').value = '';
+    }
+    else {
+        personaEditorPortraitIndex = 0;
+        document.getElementById('personaEditorPortraitPath').value = portraitPath;
+    }
+    setPersonaEditorPortrait();
+    const mods = p.mods || {};
+    PERSONA_STAT_KEYS.forEach(s => {
+        document.getElementById(`personaMod${s}`).value = String(mods[s] ?? 0);
+    });
+    const refs = moduleData.items.filter(it => it.persona === id).map(it => it.id || it.name);
+    const refEl = document.getElementById('personaItemRefs');
+    if (refEl)
+        refEl.innerHTML = refs.length
+            ? `Referenced by: ${refs.join(', ')}`
+            : '<em>Not referenced by any items.</em>';
+    document.getElementById('savePersona').textContent = 'Update Persona';
+    document.getElementById('delPersona').style.display = 'block';
+    showPersonaEditor(true);
+}
+function collectPersonaFromForm() {
+    const id = document.getElementById('personaEditorId').value.trim();
+    const label = document.getElementById('personaEditorLabel').value.trim();
+    const portraitPrompt = document.getElementById('personaEditorPrompt').value.trim();
+    const customPath = document.getElementById('personaEditorPortraitPath').value.trim();
+    const portrait = customPath || (personaEditorPortraitIndex > 0 ? npcPortraits[personaEditorPortraitIndex] : '');
+    const mods = {};
+    PERSONA_STAT_KEYS.forEach(s => {
+        const v = parseInt(document.getElementById(`personaMod${s}`).value, 10);
+        if (v)
+            mods[s] = v;
+    });
+    const data = {};
+    if (Object.keys(mods).length)
+        data.mods = mods;
+    if (label)
+        data.label = label;
+    if (portrait)
+        data.portrait = portrait;
+    if (portraitPrompt)
+        data.portraitPrompt = portraitPrompt;
+    return { id, data };
+}
+function savePersona() {
+    const { valid } = validatePersonaForm();
+    if (!valid)
+        return;
+    globalThis.ackRecordSnapshot?.();
+    const { id, data } = collectPersonaFromForm();
+    if (!id)
+        return;
+    if (!moduleData.personas)
+        moduleData.personas = {};
+    if (editPersonaId && editPersonaId !== id) {
+        delete moduleData.personas[editPersonaId];
+        moduleData.items.forEach(it => { if (it.persona === editPersonaId)
+            it.persona = id; });
+    }
+    moduleData.personas[id] = data;
+    editPersonaId = id;
+    renderPersonaList();
+    document.getElementById('savePersona').textContent = 'Update Persona';
+    document.getElementById('delPersona').style.display = 'block';
+    globalThis.markAckDirty?.();
+}
+function deletePersona() {
+    if (!editPersonaId)
+        return;
+    globalThis.ackRecordSnapshot?.();
+    confirmDialog('Delete persona "' + editPersonaId + '"?', () => {
+        delete moduleData.personas[editPersonaId];
+        editPersonaId = null;
+        renderPersonaList();
+        showPersonaEditor(false);
+        globalThis.markAckDirty?.();
+    });
+}
+// === Zone Effects Editor ===
+let editZoneFxIdx = -1;
+function showZoneFxEditor(show) {
+    document.getElementById('zoneFxEditor').style.display = show ? 'block' : 'none';
+    if (show)
+        validateZoneFxForm({ silent: true });
+}
+function validateZoneFxForm(options = {}) {
+    const { silent = false } = options;
+    const mapEl = document.getElementById('zoneFxMap');
+    const xEl = document.getElementById('zoneFxX');
+    const yEl = document.getElementById('zoneFxY');
+    const wEl = document.getElementById('zoneFxW');
+    const hEl = document.getElementById('zoneFxH');
+    if (!mapEl || !xEl || !yEl || !wEl || !hEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const errors = [];
+    validateRectInMap({ mapEl, xEl, yEl, wEl, hEl, label: 'Zone effect' }, errors);
+    const minEl = document.getElementById('zoneFxMinSteps');
+    const maxEl = document.getElementById('zoneFxMaxSteps');
+    const minSteps = parseInt(minEl?.value, 10);
+    const maxSteps = parseInt(maxEl?.value, 10);
+    const badRange = !isNaN(minSteps) && !isNaN(maxSteps) && minSteps > maxSteps;
+    if (badRange)
+        errors.push('Min Steps cannot exceed Max Steps.');
+    setFieldInvalid(minEl, badRange);
+    setFieldInvalid(maxEl, badRange);
+    let entry = null;
+    try {
+        entry = collectZoneFx();
+    }
+    catch (e) {
+        entry = null;
+    }
+    const hasEffect = !!entry && Object.keys(entry).some(k => !['map', 'x', 'y', 'w', 'h'].includes(k));
+    if (!hasEffect)
+        errors.push('Configure at least one effect (weather, HP per step, spawns, etc.).');
+    applyValidationUi({ button: 'addZoneFx', hint: 'zoneFxSaveHint', notice: 'zoneFxFormNotice' }, errors, silent);
+    return { valid: errors.length === 0, errors, warnings: [] };
+}
+function addZoneFxSpawnBlock(container, spawn = {}) {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;gap:4px;align-items:center;margin:2px 0;';
+    div.className = 'zoneFxSpawn';
+    const nameIn = document.createElement('input');
+    nameIn.className = 'zoneFxSpawnName';
+    nameIn.placeholder = 'Name';
+    nameIn.value = spawn.name || '';
+    nameIn.style.width = '90px';
+    const hpIn = document.createElement('input');
+    hpIn.className = 'zoneFxSpawnHP';
+    hpIn.type = 'number';
+    hpIn.placeholder = 'HP';
+    hpIn.value = spawn.HP ?? '';
+    hpIn.style.width = '45px';
+    const atkIn = document.createElement('input');
+    atkIn.className = 'zoneFxSpawnATK';
+    atkIn.type = 'number';
+    atkIn.placeholder = 'ATK';
+    atkIn.value = spawn.ATK ?? '';
+    atkIn.style.width = '45px';
+    const defIn = document.createElement('input');
+    defIn.className = 'zoneFxSpawnDEF';
+    defIn.type = 'number';
+    defIn.placeholder = 'DEF';
+    defIn.value = spawn.DEF ?? '';
+    defIn.style.width = '45px';
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn';
+    removeBtn.textContent = 'x';
+    removeBtn.style.cssText = 'padding:0 6px;min-width:auto;';
+    removeBtn.addEventListener('click', () => div.remove());
+    div.appendChild(nameIn);
+    div.appendChild(hpIn);
+    div.appendChild(atkIn);
+    div.appendChild(defIn);
+    div.appendChild(removeBtn);
+    container.appendChild(div);
+    return div;
+}
+function setZoneFxSpawns(container, spawns) {
+    if (!container)
+        return;
+    container.innerHTML = '';
+    (spawns || []).forEach(s => addZoneFxSpawnBlock(container, s));
+}
+function collectZoneFxSpawns(container) {
+    return Array.from(container.querySelectorAll('.zoneFxSpawn')).map((div) => {
+        const name = div.querySelector('.zoneFxSpawnName')?.value?.trim() || '';
+        if (!name)
+            return null;
+        const spawn = { name };
+        const hp = parseInt(div.querySelector('.zoneFxSpawnHP')?.value, 10);
+        const atk = parseInt(div.querySelector('.zoneFxSpawnATK')?.value, 10);
+        const def = parseInt(div.querySelector('.zoneFxSpawnDEF')?.value, 10);
+        if (!isNaN(hp))
+            spawn.HP = hp;
+        if (!isNaN(atk))
+            spawn.ATK = atk;
+        if (!isNaN(def))
+            spawn.DEF = def;
+        return spawn;
+    }).filter(Boolean);
+}
+function collectZoneFx() {
+    const map = document.getElementById('zoneFxMap').value.trim() || 'world';
+    const x = parseInt(document.getElementById('zoneFxX').value, 10) || 0;
+    const y = parseInt(document.getElementById('zoneFxY').value, 10) || 0;
+    const w = parseInt(document.getElementById('zoneFxW').value, 10) || 1;
+    const h = parseInt(document.getElementById('zoneFxH').value, 10) || 1;
+    const weather = document.getElementById('zoneFxWeather').value.trim();
+    const hpPerStep = parseInt(document.getElementById('zoneFxHpPerStep').value, 10);
+    const minSteps = parseInt(document.getElementById('zoneFxMinSteps').value, 10);
+    const maxSteps = parseInt(document.getElementById('zoneFxMaxSteps').value, 10);
+    const healMult = parseFloat(document.getElementById('zoneFxHealMult').value);
+    const noEnc = document.getElementById('zoneFxNoEnc').checked;
+    const dry = document.getElementById('zoneFxDry').checked;
+    const require_ = document.getElementById('zoneFxRequire').value.trim();
+    const negate = document.getElementById('zoneFxNegate').value.trim();
+    const ifFlag = document.getElementById('zoneFxIf').value.trim();
+    const spawns = collectZoneFxSpawns(document.getElementById('zoneFxSpawns'));
+    const entry = { map, x, y, w, h };
+    if (weather)
+        entry.weather = weather;
+    if (!isNaN(hpPerStep))
+        entry.perStep = { hp: hpPerStep };
+    if (!isNaN(minSteps))
+        entry.minSteps = minSteps;
+    if (!isNaN(maxSteps))
+        entry.maxSteps = maxSteps;
+    if (!isNaN(healMult))
+        entry.healMult = healMult;
+    if (noEnc)
+        entry.noEncounters = true;
+    if (dry)
+        entry.dry = true;
+    if (require_)
+        entry.require = require_;
+    if (negate)
+        entry.negate = negate;
+    if (ifFlag)
+        entry.if = ifFlag;
+    if (spawns.length)
+        entry.spawns = spawns;
+    return entry;
+}
+function addZoneFx() {
+    const { valid } = validateZoneFxForm();
+    if (!valid)
+        return;
+    globalThis.ackRecordSnapshot?.();
+    const entry = collectZoneFx();
+    if (!moduleData.zoneEffects)
+        moduleData.zoneEffects = [];
+    if (!moduleData._origKeys)
+        moduleData._origKeys = Object.keys(moduleData);
+    if (!moduleData._origKeys.includes('zoneEffects'))
+        moduleData._origKeys.push('zoneEffects');
+    if (editZoneFxIdx >= 0) {
+        moduleData.zoneEffects[editZoneFxIdx] = entry;
+    }
+    else {
+        moduleData.zoneEffects.push(entry);
+    }
+    editZoneFxIdx = -1;
+    document.getElementById('addZoneFx').textContent = 'Add Zone Effect';
+    document.getElementById('delZoneFx').style.display = 'none';
+    renderZoneFxList();
+    showZoneFxEditor(false);
+    drawWorld();
+    globalThis.markAckDirty?.();
+}
+function editZoneFx(i) {
+    const z = moduleData.zoneEffects[i];
+    editZoneFxIdx = i;
+    populateMapDropdown(document.getElementById('zoneFxMap'), z.map || 'world');
+    document.getElementById('zoneFxX').value = String(z.x ?? 0);
+    document.getElementById('zoneFxY').value = String(z.y ?? 0);
+    document.getElementById('zoneFxW').value = String(z.w ?? 1);
+    document.getElementById('zoneFxH').value = String(z.h ?? 1);
+    document.getElementById('zoneFxWeather').value = typeof z.weather === 'string' ? z.weather : '';
+    document.getElementById('zoneFxHpPerStep').value = String(z.perStep?.hp ?? z.step?.hp ?? '');
+    document.getElementById('zoneFxMinSteps').value = String(z.minSteps ?? '');
+    document.getElementById('zoneFxMaxSteps').value = String(z.maxSteps ?? '');
+    document.getElementById('zoneFxHealMult').value = String(z.healMult ?? '');
+    document.getElementById('zoneFxNoEnc').checked = !!z.noEncounters;
+    document.getElementById('zoneFxDry').checked = !!z.dry;
+    document.getElementById('zoneFxRequire').value = z.require || '';
+    document.getElementById('zoneFxNegate').value = z.negate || '';
+    document.getElementById('zoneFxIf').value = z.if ? String(z.if) : '';
+    setZoneFxSpawns(document.getElementById('zoneFxSpawns'), z.spawns || []);
+    document.getElementById('addZoneFx').textContent = 'Update Zone Effect';
+    document.getElementById('delZoneFx').style.display = 'block';
+    showZoneFxEditor(true);
+}
+function renderZoneFxList() {
+    const list = document.getElementById('zoneFxList');
+    if (!list)
+        return;
+    const effects = moduleData.zoneEffects || [];
+    if (effects.length === 0) {
+        list.innerHTML = renderEmptyState('No zone effects created yet.');
+    }
+    else {
+        list.innerHTML = effects.map((z, i) => {
+            const loc = `${z.map || 'world'} (${z.x},${z.y} ${z.w}x${z.h})`;
+            const detail = z.weather ? ` [${z.weather}]` : z.spawns?.length ? ` [${z.spawns.length} spawns]` : '';
+            return `<button type="button" class="list-item-btn" data-idx="${i}">${loc}${detail}</button>`;
+        }).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editZoneFx(parseInt(btn.dataset.idx, 10)));
+    }
+}
+function deleteZoneFx() {
+    if (editZoneFxIdx < 0)
+        return;
+    globalThis.ackRecordSnapshot?.();
+    confirmDialog('Delete this zone effect?', () => {
+        moduleData.zoneEffects.splice(editZoneFxIdx, 1);
+        editZoneFxIdx = -1;
+        document.getElementById('addZoneFx').textContent = 'Add Zone Effect';
+        document.getElementById('delZoneFx').style.display = 'none';
+        renderZoneFxList();
+        showZoneFxEditor(false);
+        drawWorld();
+        globalThis.markAckDirty?.();
+    });
+}
+function startNewZoneFx() {
+    editZoneFxIdx = -1;
+    populateMapDropdown(document.getElementById('zoneFxMap'), 'world');
+    document.getElementById('zoneFxX').value = '0';
+    document.getElementById('zoneFxY').value = '0';
+    document.getElementById('zoneFxW').value = '1';
+    document.getElementById('zoneFxH').value = '1';
+    document.getElementById('zoneFxWeather').value = '';
+    document.getElementById('zoneFxHpPerStep').value = '';
+    document.getElementById('zoneFxMinSteps').value = '';
+    document.getElementById('zoneFxMaxSteps').value = '';
+    document.getElementById('zoneFxHealMult').value = '';
+    document.getElementById('zoneFxNoEnc').checked = false;
+    document.getElementById('zoneFxDry').checked = false;
+    document.getElementById('zoneFxRequire').value = '';
+    document.getElementById('zoneFxNegate').value = '';
+    document.getElementById('zoneFxIf').value = '';
+    document.getElementById('zoneFxSpawns').innerHTML = '';
+    document.getElementById('addZoneFx').textContent = 'Add Zone Effect';
+    document.getElementById('delZoneFx').style.display = 'none';
+    showZoneFxEditor(true);
 }
 // --- Portals ---
 function showPortalEditor(show) {
@@ -5242,6 +6550,7 @@ function startNewPortal() {
     document.getElementById('addPortal').textContent = 'Add Portal';
     document.getElementById('delPortal').style.display = 'none';
     showPortalEditor(true);
+    validatePortalForm({ silent: true });
 }
 function collectPortal() {
     const map = document.getElementById('portalMap').value.trim() || 'world';
@@ -5252,7 +6561,54 @@ function collectPortal() {
     const toY = parseInt(document.getElementById('portalToY').value, 10) || 0;
     return { map, x, y, toMap, toX, toY };
 }
+function validatePortalForm(options = {}) {
+    const { silent = false } = options;
+    const mapEl = document.getElementById('portalMap');
+    const toMapEl = document.getElementById('portalToMap');
+    if (!mapEl || !toMapEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const map = mapEl.value?.trim() || '';
+    const toMap = toMapEl.value?.trim() || '';
+    const errors = [];
+    const warnings = [];
+    const validMaps = getValidMapIds();
+    if (!map)
+        errors.push('Select a source map.');
+    else if (!validMaps.has(map))
+        errors.push(`Source map "${map}" does not exist.`);
+    if (!toMap)
+        errors.push('Select a destination map.');
+    else if (!validMaps.has(toMap))
+        errors.push(`Destination map "${toMap}" does not exist.`);
+    if (map && toMap && map === toMap) {
+        const x = parseInt(document.getElementById('portalX')?.value, 10);
+        const y = parseInt(document.getElementById('portalY')?.value, 10);
+        const toX = parseInt(document.getElementById('portalToX')?.value, 10);
+        const toY = parseInt(document.getElementById('portalToY')?.value, 10);
+        if (x === toX && y === toY)
+            warnings.push('Portal source and destination are the same tile.');
+    }
+    setFieldInvalid(mapEl, !map || !validMaps.has(map));
+    setFieldInvalid(toMapEl, !toMap || !validMaps.has(toMap));
+    const saveBtn = document.getElementById('addPortal');
+    if (saveBtn)
+        saveBtn.disabled = errors.length > 0;
+    const hintEl = document.getElementById('portalSaveHint');
+    if (hintEl) {
+        hintEl.textContent = errors.length ? errors[0] : '';
+        hintEl.classList.toggle('visible', errors.length > 0);
+    }
+    if (!silent) {
+        const msg = errors.length ? errors.join(' ') : warnings.length ? warnings.join(' ') : '';
+        setEntityNotice('portalFormNotice', msg, errors.length ? 'error' : 'info');
+    }
+    return { valid: errors.length === 0, errors, warnings };
+}
 function addPortal() {
+    const { valid } = validatePortalForm();
+    if (!valid)
+        return;
+    globalThis.ackRecordSnapshot?.();
     const entry = collectPortal();
     if (editPortalIdx >= 0) {
         moduleData.portals[editPortalIdx] = entry;
@@ -5267,6 +6623,7 @@ function addPortal() {
     selectedObj = null;
     drawWorld();
     showPortalEditor(false);
+    globalThis.markAckDirty?.();
 }
 function editPortal(i) {
     const p = moduleData.portals[i];
@@ -5280,19 +6637,24 @@ function editPortal(i) {
     document.getElementById('addPortal').textContent = 'Update Portal';
     document.getElementById('delPortal').style.display = 'block';
     showPortalEditor(true);
+    validatePortalForm({ silent: true });
     selectedObj = { type: 'portal', obj: p };
     drawWorld();
 }
 function renderPortalList() {
     const list = document.getElementById('portalList');
-    list.innerHTML = moduleData.portals.map((p, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${p.map} @(${p.x},${p.y}) → ${p.toMap} (${p.toX},${p.toY})</button>`).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editPortal(parseInt(btn.dataset.idx, 10)));
-    if (moduleData.portals.length === 0)
-        renderEmptyState(list, 'No portals created yet.');
+    if (moduleData.portals.length === 0) {
+        list.innerHTML = renderEmptyState('No portals created yet.');
+    }
+    else {
+        list.innerHTML = moduleData.portals.map((p, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${p.map} @(${p.x},${p.y}) → ${p.toMap} (${p.toX},${p.toY})</button>`).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editPortal(parseInt(btn.dataset.idx, 10)));
+    }
 }
 function deletePortal() {
     if (editPortalIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     moduleData.portals.splice(editPortalIdx, 1);
     editPortalIdx = -1;
     document.getElementById('addPortal').textContent = 'Add Portal';
@@ -5301,6 +6663,7 @@ function deletePortal() {
     selectedObj = null;
     drawWorld();
     showPortalEditor(false);
+    globalThis.markAckDirty?.();
 }
 // --- Buildings ---
 function drawBldg() {
@@ -5319,6 +6682,27 @@ function drawBldg() {
 }
 function showBldgEditor(show) {
     document.getElementById('bldgEditor').style.display = show ? 'block' : 'none';
+    if (show)
+        validateBldgForm({ silent: true });
+}
+function validateBldgForm(options = {}) {
+    const { silent = false } = options;
+    const xEl = document.getElementById('bldgX');
+    const yEl = document.getElementById('bldgY');
+    if (!xEl || !yEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const x = parseInt(xEl.value, 10);
+    const y = parseInt(yEl.value, 10);
+    const dims = getMapDims('world');
+    const errors = [];
+    const badX = isNaN(x) || x < 0 || (dims ? x >= dims.w : false);
+    const badY = isNaN(y) || y < 0 || (dims ? y >= dims.h : false);
+    if (badX || badY)
+        errors.push('Building X/Y must be inside the world map.');
+    setFieldInvalid(xEl, badX);
+    setFieldInvalid(yEl, badY);
+    applyValidationUi({ hint: 'bldgSaveHint', notice: 'bldgFormNotice' }, errors, silent);
+    return { valid: errors.length === 0, errors, warnings: [] };
 }
 function startNewBldg() {
     editBldgIdx = -1;
@@ -5357,6 +6741,9 @@ function beginPlaceBldg() {
 }
 // Add a new building to the world and start editing it
 function addBuilding() {
+    if (!validateBldgForm().valid)
+        return;
+    globalThis.ackRecordSnapshot?.();
     const x = parseInt(document.getElementById('bldgX').value, 10) || 0;
     const y = parseInt(document.getElementById('bldgY').value, 10) || 0;
     const bunker = document.getElementById('bldgBunker').checked;
@@ -5384,6 +6771,7 @@ function addBuilding() {
     drawWorld();
     document.getElementById('delBldg').style.display = 'block';
     document.getElementById('addBldg').style.display = 'none';
+    globalThis.markAckDirty?.();
 }
 function cancelBldg() {
     placingType = null;
@@ -5395,12 +6783,18 @@ function cancelBldg() {
     updateCursor();
 }
 function renderBldgList() {
+    const bunkerWrap = document.getElementById('bunkerTravelWrap');
+    if (bunkerWrap)
+        bunkerWrap.style.display = moduleData.buildings.some(b => b?.bunker) ? 'block' : 'none';
     const list = document.getElementById('bldgList');
-    const bldgs = moduleData.buildings.map((b, i) => ({ b, i })).sort((a, b) => a.b.x - b.b.x || a.b.y - b.b.y);
-    list.innerHTML = bldgs.map(({ b, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">Bldg @(${b.x},${b.y})</button>`).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editBldg(parseInt(btn.dataset.idx, 10)));
-    if (moduleData.buildings.length === 0)
-        renderEmptyState(list, 'No buildings created yet.');
+    if (moduleData.buildings.length === 0) {
+        list.innerHTML = renderEmptyState('No buildings created yet.');
+    }
+    else {
+        const bldgs = moduleData.buildings.map((b, i) => ({ b, i })).sort((a, b) => a.b.x - b.b.x || a.b.y - b.b.y);
+        list.innerHTML = bldgs.map(({ b, i }) => `<button type="button" class="list-item-btn" data-idx="${i}">Bldg @(${b.x},${b.y})</button>`).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editBldg(parseInt(btn.dataset.idx, 10)));
+    }
 }
 function editBldg(i) {
     const b = moduleData.buildings[i];
@@ -5461,8 +6855,8 @@ function resizeBldg() {
     drawBldg();
     applyBldgChanges();
 }
-document.getElementById('bldgW').addEventListener('change', resizeBldg);
-document.getElementById('bldgH').addEventListener('change', resizeBldg);
+document.getElementById('bldgW')?.addEventListener('change', resizeBldg);
+document.getElementById('bldgH')?.addEventListener('change', resizeBldg);
 bldgPalette.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => {
         bldgPalette.querySelectorAll('button').forEach(b => b.classList.remove('active'));
@@ -5654,6 +7048,8 @@ function redrawBuildings() {
 function applyBldgChanges() {
     if (editBldgIdx < 0)
         return;
+    if (!validateBldgForm().valid)
+        return;
     const x = parseInt(document.getElementById('bldgX').value, 10) || 0;
     const y = parseInt(document.getElementById('bldgY').value, 10) || 0;
     const bunker = document.getElementById('bldgBunker').checked;
@@ -5685,6 +7081,7 @@ function applyBldgChanges() {
 function deleteBldg() {
     if (editBldgIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     const b = moduleData.buildings[editBldgIdx];
     removeBuilding(b);
     moduleData.buildings.splice(editBldgIdx, 1);
@@ -5696,6 +7093,7 @@ function deleteBldg() {
     selectedObj = null;
     drawWorld();
     showBldgEditor(false);
+    globalThis.markAckDirty?.();
 }
 function closeBldgEditor() {
     editBldgIdx = -1;
@@ -5867,9 +7265,49 @@ function startNewQuest() {
     document.getElementById('addQuest').textContent = 'Add Quest';
     document.getElementById('delQuest').style.display = 'none';
     showQuestEditor(true);
+    validateQuestForm({ silent: true });
     document.getElementById('questId').focus();
 }
+function validateQuestForm(options = {}) {
+    const { silent = false } = options;
+    const idEl = document.getElementById('questId');
+    const titleEl = document.getElementById('questTitle');
+    if (!idEl || !titleEl)
+        return { valid: false, errors: ['Missing form fields'], warnings: [] };
+    const id = idEl.value.trim();
+    const title = titleEl.value.trim();
+    const npcId = document.getElementById('questNPC')?.value?.trim() || '';
+    const errors = [];
+    const warnings = [];
+    if (!id)
+        errors.push('Enter an ID for the quest.');
+    else if (isDuplicateId(id, moduleData.quests, editQuestIdx))
+        errors.push(`ID "${id}" is already used by another quest.`);
+    if (!title)
+        errors.push('Enter a title for the quest.');
+    if (npcId && !moduleData.npcs.some(n => n.id === npcId))
+        warnings.push(`NPC "${npcId}" does not exist in this module.`);
+    setFieldInvalid(idEl, !id || isDuplicateId(id, moduleData.quests, editQuestIdx));
+    setFieldInvalid(titleEl, !title);
+    const saveBtn = document.getElementById('addQuest');
+    if (saveBtn)
+        saveBtn.disabled = errors.length > 0;
+    const hintEl = document.getElementById('questSaveHint');
+    if (hintEl) {
+        hintEl.textContent = errors.length ? errors[0] : '';
+        hintEl.classList.toggle('visible', errors.length > 0);
+    }
+    if (!silent) {
+        const msg = errors.length ? errors.join(' ') : warnings.length ? warnings.join(' ') : '';
+        setEntityNotice('questFormNotice', msg, errors.length ? 'error' : warnings.length ? 'info' : 'info');
+    }
+    return { valid: errors.length === 0, errors, warnings };
+}
 function addQuest() {
+    const { valid } = validateQuestForm();
+    if (!valid)
+        return;
+    globalThis.ackRecordSnapshot?.();
     const id = document.getElementById('questId').value.trim();
     const title = document.getElementById('questTitle').value.trim();
     const desc = document.getElementById('questDesc').value.trim();
@@ -5921,13 +7359,17 @@ function addQuest() {
     renderNPCList();
     document.getElementById('questId').value = nextId('quest', moduleData.quests);
     showQuestEditor(false);
+    globalThis.markAckDirty?.();
 }
 function renderQuestList() {
     const list = document.getElementById('questList');
-    list.innerHTML = moduleData.quests.map((q, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${q.id}: ${q.title}</button>`).join('');
-    Array.from(list.children).forEach(btn => btn.onclick = () => editQuest(parseInt(btn.dataset.idx, 10)));
-    if (moduleData.quests.length === 0)
-        renderEmptyState(list, 'No quests created yet.');
+    if (moduleData.quests.length === 0) {
+        list.innerHTML = renderEmptyState('No quests created yet.');
+    }
+    else {
+        list.innerHTML = moduleData.quests.map((q, i) => `<button type="button" class="list-item-btn" data-idx="${i}">${q.id}: ${q.title}</button>`).join('');
+        Array.from(list.children).forEach(btn => btn.onclick = () => editQuest(parseInt(btn.dataset.idx, 10)));
+    }
     updateQuestOptions();
 }
 function editQuest(i) {
@@ -5946,6 +7388,7 @@ function editQuest(i) {
     document.getElementById('addQuest').textContent = 'Update Quest';
     document.getElementById('delQuest').style.display = 'block';
     showQuestEditor(true);
+    validateQuestForm({ silent: true });
 }
 function updateQuestOptions() {
     const sel = document.getElementById('npcQuests');
@@ -5968,6 +7411,7 @@ function updateQuestOptions() {
 function deleteQuest() {
     if (editQuestIdx < 0)
         return;
+    globalThis.ackRecordSnapshot?.();
     confirmDialog('Delete this quest?', () => {
         const q = moduleData.quests[editQuestIdx];
         moduleData.npcs.forEach(n => {
@@ -5987,6 +7431,7 @@ function deleteQuest() {
         updateQuestOptions();
         document.getElementById('questId').value = nextId('quest', moduleData.quests);
         showQuestEditor(false);
+        globalThis.markAckDirty?.();
     });
 }
 function applyLoadedModule(data) {
@@ -6030,7 +7475,18 @@ function applyLoadedModule(data) {
         });
     }
     moduleData.start = data.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+    moduleData.description = data.description || '';
+    moduleData.author = data.author || '';
+    moduleData.version = data.version || '';
+    moduleData.tags = Array.isArray(data.tags) ? data.tags : [];
     document.getElementById('moduleName').value = moduleData.name;
+    document.getElementById('moduleDesc').value = moduleData.description;
+    document.getElementById('moduleAuthor').value = moduleData.author;
+    document.getElementById('moduleVersion').value = moduleData.version;
+    document.getElementById('moduleTags').value = moduleData.tags.join(', ');
+    populateMapDropdown(document.getElementById('moduleStartMap'), moduleData.start?.map || 'world');
+    document.getElementById('moduleStartX').value = String(moduleData.start?.x ?? 2);
+    document.getElementById('moduleStartY').value = String(moduleData.start?.y ?? Math.floor(WORLD_H / 2));
     const bunkerScope = moduleData.props?.bunkerTravelScope || 'global';
     const scopeEl = document.getElementById('moduleBunkerScope');
     if (scopeEl)
@@ -6070,6 +7526,8 @@ function applyLoadedModule(data) {
     renderArenaList();
     renderEncounterList();
     renderTemplateList();
+    renderPersonaList();
+    renderZoneFxList();
     updateQuestOptions();
     loadMods({});
     showItemEditor(false);
@@ -6079,6 +7537,7 @@ function applyLoadedModule(data) {
     showInteriorEditor(false);
     showQuestEditor(false);
     showArenaEditor(false);
+    globalThis.clearAckDirty?.();
 }
 globalThis.applyLoadedModule = applyLoadedModule;
 function validateSpawns() {
@@ -6299,6 +7758,122 @@ function validateSpawns() {
         const label = 'Enemy template ' + (t.id || t.name || ('#' + (i + 1)));
         checkCombatRequires(t, label, 'template', i);
     });
+    // Orphan portal detection
+    const validMaps = getValidMapIds();
+    (moduleData.portals || []).forEach((p, i) => {
+        if (p.toMap && !validMaps.has(p.toMap)) {
+            issues.push({ msg: `Portal #${i + 1} targets missing map "${p.toMap}"`, type: 'portal', idx: i });
+        }
+        if (p.map && !validMaps.has(p.map)) {
+            issues.push({ msg: `Portal #${i + 1} on missing map "${p.map}"`, type: 'portal', idx: i });
+        }
+    });
+    // Encounter references missing template
+    (moduleData.encounters || []).forEach((e, i) => {
+        if (e.templateId && !moduleData.templates.some(t => t.id === e.templateId)) {
+            issues.push({ msg: `Encounter #${i + 1} references missing template "${e.templateId}"`, type: 'encounter', idx: i });
+        }
+    });
+    // NPCs referencing nonexistent quests
+    (moduleData.npcs || []).forEach((n, i) => {
+        const questIds = Array.isArray(n.quests) ? n.quests : n.questId ? [n.questId] : [];
+        questIds.forEach(qId => {
+            if (!moduleData.quests.some(q => q.id === qId)) {
+                issues.push({ msg: `NPC ${n.id || '#' + (i + 1)} references missing quest "${qId}"`, type: 'npc', idx: i, warn: true });
+            }
+        });
+    });
+    // Dialog choices pointing at missing nodes, and unreachable nodes
+    (moduleData.npcs || []).forEach((n, i) => {
+        const tree = n.tree || {};
+        const label = n.id || '#' + (i + 1);
+        Object.entries(tree).forEach(([nodeId, node]) => {
+            (node?.choices || []).forEach(ch => {
+                const to = typeof ch?.to === 'string' ? ch.to : '';
+                if (!to || to === 'bye')
+                    return;
+                if (to === 'do_fight' && n.combat)
+                    return;
+                if (!tree[to]) {
+                    issues.push({ msg: `NPC ${label} dialog "${nodeId}" links to missing node "${to}"`, type: 'npc', idx: i });
+                }
+            });
+        });
+        const nodeIds = Object.keys(tree);
+        if (nodeIds.length > 1 && tree.start) {
+            // Nodes the dialog engine can enter directly, without a choice link
+            const engineEntries = ['start', 'locked', 'sell', 'accept', 'do_turnin', 'do_fight'];
+            const reachable = new Set(engineEntries.filter(id => tree[id]));
+            const queue = [...reachable];
+            while (queue.length) {
+                const cur = tree[queue.shift()];
+                (cur?.choices || []).forEach(ch => {
+                    const to = typeof ch?.to === 'string' ? ch.to : '';
+                    if (to && tree[to] && !reachable.has(to)) {
+                        reachable.add(to);
+                        queue.push(to);
+                    }
+                });
+            }
+            nodeIds.forEach(nodeId => {
+                if (!reachable.has(nodeId) && nodeId !== 'bye') {
+                    issues.push({ msg: `NPC ${label} dialog node "${nodeId}" is unreachable`, type: 'npc', idx: i, warn: true });
+                }
+            });
+        }
+    });
+    // Shop inventory referencing unknown items
+    (moduleData.npcs || []).forEach((n, i) => {
+        (n.shop?.inv || []).forEach(entry => {
+            const itemId = typeof entry === 'string' ? entry : entry?.id || entry?.item;
+            if (itemId && !moduleData.items.some(it => it.id === itemId)) {
+                issues.push({ msg: `NPC ${n.id || '#' + (i + 1)} shop sells unknown item "${itemId}"`, type: 'npc', idx: i, warn: true });
+            }
+        });
+    });
+    // Quests nobody gives, and fetch items with no source
+    const givenQuests = new Set();
+    (moduleData.npcs || []).forEach(n => {
+        (Array.isArray(n.quests) ? n.quests : n.questId ? [n.questId] : []).forEach(qId => givenQuests.add(qId));
+    });
+    (moduleData.quests || []).forEach((q, i) => {
+        if (q.id && !givenQuests.has(q.id)) {
+            issues.push({ msg: `Quest ${q.id} is not assigned to any NPC`, type: 'quest', idx: i, warn: true });
+        }
+        if (q.item && !availableItems.has(q.item)) {
+            issues.push({ msg: `Quest ${q.id || '#' + (i + 1)} wants item "${q.item}" but nothing provides it`, type: 'quest', idx: i, warn: true });
+        }
+    });
+    // Buildings pointing at missing interiors
+    (moduleData.buildings || []).forEach((b, i) => {
+        if (!b.bunker && b.interiorId && !(moduleData.interiors || []).some(I => I.id === b.interiorId)) {
+            issues.push({ msg: `Building @(${b.x},${b.y}) opens into missing interior "${b.interiorId}"`, type: 'bldg', idx: i });
+        }
+    });
+    // Entities placed on maps that no longer exist
+    (moduleData.events || []).forEach((e, i) => {
+        if (e.map && !validMaps.has(e.map)) {
+            issues.push({ msg: `Event @(${e.x},${e.y}) is on missing map "${e.map}"`, type: 'event', idx: i });
+        }
+    });
+    (moduleData.zones || []).forEach((z, i) => {
+        if (z.map && !validMaps.has(z.map)) {
+            issues.push({ msg: `Zone ${z.tag || '#' + (i + 1)} is on missing map "${z.map}"`, type: 'zone', idx: i });
+        }
+    });
+    (moduleData.zoneEffects || []).forEach((z, i) => {
+        if (z.map && !validMaps.has(z.map)) {
+            issues.push({ msg: `Zone effect #${i + 1} is on missing map "${z.map}"`, type: 'zonefx', idx: i });
+        }
+    });
+    // Arena waves referencing missing templates
+    (moduleData.behaviors?.arenas || []).forEach((a, i) => {
+        (a.waves || []).forEach(wave => {
+            if (wave.templateId && !moduleData.templates.some(t => t.id === wave.templateId)) {
+                issues.push({ msg: `Arena ${a.bankId || a.map || '#' + (i + 1)} wave uses missing template "${wave.templateId}"`, type: 'arena', idx: i });
+            }
+        });
+    });
     return issues;
 }
 function onProblemClick() {
@@ -6333,6 +7908,37 @@ function onProblemClick() {
         editItem(prob.idx);
     else if (prob.type === 'template')
         editTemplate(prob.idx);
+    else if (prob.type === 'portal')
+        editPortal(prob.idx);
+    else if (prob.type === 'encounter')
+        editEncounter(prob.idx);
+    else if (prob.type === 'quest') {
+        if (window.showEditorTab)
+            window.showEditorTab('quests');
+        editQuest(prob.idx);
+    }
+    else if (prob.type === 'event') {
+        if (window.showEditorTab)
+            window.showEditorTab('events');
+        editEvent(prob.idx);
+    }
+    else if (prob.type === 'zone') {
+        if (window.showEditorTab)
+            window.showEditorTab('zones');
+        editZone(prob.idx);
+    }
+    else if (prob.type === 'zonefx') {
+        if (window.showEditorTab)
+            window.showEditorTab('zonefx');
+        editZoneFx(prob.idx);
+    }
+    else if (prob.type === 'arena')
+        editArena(prob.idx);
+    else if (prob.type === 'bldg') {
+        if (window.showEditorTab)
+            window.showEditorTab('buildings');
+        editBldg(prob.idx);
+    }
     else if (prob.type === 'start') {
         showMap('world');
         focusMap(moduleData.start.x, moduleData.start.y);
@@ -6412,6 +8018,11 @@ function hasBlockingProblems() {
 }
 function exportModulePayload() {
     moduleData.name = document.getElementById('moduleName').value.trim() || 'adventure-module';
+    moduleData.description = document.getElementById('moduleDesc').value.trim();
+    moduleData.author = document.getElementById('moduleAuthor').value.trim();
+    moduleData.version = document.getElementById('moduleVersion').value.trim();
+    const tagsRaw = document.getElementById('moduleTags').value.trim();
+    moduleData.tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
     if (moduleData.personas) {
         const used = new Set((moduleData.items || []).map(it => it.persona).filter(Boolean));
         Object.keys(moduleData.personas).forEach(id => {
@@ -6450,6 +8061,14 @@ function exportModulePayload() {
         }
         if (k === 'personas' && !hasPersonas)
             return;
+        if (k === 'description' && !moduleData[k])
+            return;
+        if (k === 'author' && !moduleData[k])
+            return;
+        if (k === 'version' && !moduleData[k])
+            return;
+        if (k === 'tags' && (!moduleData[k] || !moduleData[k].length))
+            return;
         if (moduleData[k] !== undefined)
             base[k] = moduleData[k];
     });
@@ -6477,6 +8096,7 @@ function saveModule() {
     a.download = moduleData.name + '.json';
     a.click();
     URL.revokeObjectURL(a.href);
+    globalThis.clearAckDirty?.();
 }
 function playtestModule() {
     if (hasBlockingProblems())
@@ -6506,17 +8126,20 @@ function playtestModule() {
     const data = { ...moduleBase, encounters: enc, world: gridToEmoji(world), buildings: bldgs, interiors: ints, zones, zoneEffects };
     localStorage.setItem(PLAYTEST_KEY, JSON.stringify(data));
     window.open('dustland.html?ack-player=1#play', '_blank');
+    globalThis.clearAckDirty?.();
 }
-document.getElementById('clear').onclick = clearWorld;
+document.getElementById('clear')?.addEventListener('click', clearWorld);
 const moduleBunkerScope = document.getElementById('moduleBunkerScope');
 if (moduleBunkerScope) {
     moduleBunkerScope.addEventListener('change', () => {
+        globalThis.ackRecordSnapshot?.();
         const scope = moduleBunkerScope.value || 'global';
         moduleData.props = moduleData.props || {};
         if (scope === 'global')
             delete moduleData.props.bunkerTravelScope;
         else
             moduleData.props.bunkerTravelScope = scope;
+        globalThis.markAckDirty?.();
     });
 }
 function runGenerate(regen) {
@@ -6525,140 +8148,181 @@ function runGenerate(regen) {
     else
         generateProceduralWorld(regen);
 }
-document.getElementById('procGen').onclick = () => runGenerate(false);
-document.getElementById('procRegen').onclick = () => runGenerate(true);
-document.getElementById('saveNPC').onclick = saveNPC;
-document.getElementById('addItem').onclick = () => {
-    const onMap = document.getElementById('itemOnMap').checked;
-    const mapVal = document.getElementById('itemMap').value.trim();
+document.getElementById('procGen')?.addEventListener('click', () => runGenerate(false));
+document.getElementById('procRegen')?.addEventListener('click', () => runGenerate(true));
+document.getElementById('saveNPC')?.addEventListener('click', saveNPC);
+document.getElementById('addItem')?.addEventListener('click', () => {
+    const onMap = document.getElementById('itemOnMap')?.checked;
+    const mapVal = document.getElementById('itemMap')?.value?.trim();
     if (editItemIdx >= 0 || !onMap || !mapVal)
         addItem();
     else
         beginPlaceItem();
-};
-document.getElementById('newItem').onclick = startNewItem;
-document.getElementById('itemMap').addEventListener('input', updateItemMapWrap);
-document.getElementById('itemOnMap').addEventListener('change', updateItemMapWrap);
-document.getElementById('itemRemove').onclick = removeItemFromWorld;
-document.getElementById('newNPC').onclick = startNewNPC;
-document.getElementById('discardNPC').onclick = discardNPC;
-document.getElementById('newBldg').onclick = startNewBldg;
-document.getElementById('newQuest').onclick = startNewQuest;
-document.getElementById('questRewardType').addEventListener('change', updateQuestRewardFields);
+});
+document.getElementById('newItem')?.addEventListener('click', startNewItem);
+document.getElementById('itemMap')?.addEventListener('input', updateItemMapWrap);
+document.getElementById('itemOnMap')?.addEventListener('change', updateItemMapWrap);
+document.getElementById('itemRemove')?.addEventListener('click', removeItemFromWorld);
+document.getElementById('newNPC')?.addEventListener('click', startNewNPC);
+document.getElementById('discardNPC')?.addEventListener('click', discardNPC);
+document.getElementById('newBldg')?.addEventListener('click', startNewBldg);
+document.getElementById('newQuest')?.addEventListener('click', startNewQuest);
+document.getElementById('questRewardType')?.addEventListener('change', updateQuestRewardFields);
 const questRewardCustomType = document.getElementById('questRewardCustomType');
 if (questRewardCustomType)
     questRewardCustomType.addEventListener('change', () => {
         maybeSyncQuestRewardSlot();
     });
-document.getElementById('addBldg').onclick = beginPlaceBldg;
-document.getElementById('addQuest').onclick = addQuest;
-document.getElementById('addEvent').onclick = addEvent;
-document.getElementById('cancelItem').onclick = cancelItem;
-document.getElementById('cancelBldg').onclick = cancelBldg;
-document.getElementById('newEvent').onclick = startNewEvent;
-document.getElementById('addPortal').onclick = addPortal;
-document.getElementById('newPortal').onclick = startNewPortal;
-document.getElementById('newZone').onclick = startNewZone;
-document.getElementById('bldgBunker').addEventListener('change', () => {
-    document.getElementById('bldgInterior').disabled = document.getElementById('bldgBunker').checked;
+document.getElementById('addBldg')?.addEventListener('click', beginPlaceBldg);
+document.getElementById('addQuest')?.addEventListener('click', addQuest);
+document.getElementById('addEvent')?.addEventListener('click', addEvent);
+document.getElementById('cancelItem')?.addEventListener('click', cancelItem);
+document.getElementById('cancelBldg')?.addEventListener('click', cancelBldg);
+document.getElementById('newEvent')?.addEventListener('click', startNewEvent);
+document.getElementById('addPortal')?.addEventListener('click', addPortal);
+document.getElementById('newPortal')?.addEventListener('click', startNewPortal);
+document.getElementById('newZone')?.addEventListener('click', startNewZone);
+document.getElementById('bldgBunker')?.addEventListener('change', () => {
+    const bunker = document.getElementById('bldgBunker');
+    const interior = document.getElementById('bldgInterior');
+    if (bunker && interior)
+        interior.disabled = bunker.checked;
 });
-document.getElementById('addZone').onclick = addZone;
-document.getElementById('delZone').onclick = deleteZone;
-document.getElementById('delNPC').onclick = deleteNPC;
-document.getElementById('closeNPC').onclick = closeNPCEditor;
-document.getElementById('closeItem').onclick = closeItemEditor;
-document.getElementById('closeBldg').onclick = closeBldgEditor;
-document.getElementById('closeInterior').onclick = closeInteriorEditor;
-document.getElementById('newArena').onclick = startNewArena;
-document.getElementById('addArena').onclick = addArena;
-document.getElementById('arenaAddWave').onclick = () => addArenaWaveBlock({});
-document.getElementById('cancelArena').onclick = cancelArena;
-document.getElementById('delArena').onclick = deleteArena;
-document.getElementById('newEncounter').onclick = startNewEncounter;
-document.getElementById('addEncounter').onclick = addEncounter;
-document.getElementById('encAddLootRow').onclick = () => addLootTableRow(document.getElementById('encLootTable'));
-document.getElementById('cancelEncounter').onclick = () => { editEncounterIdx = -1; showEncounterEditor(false); };
-document.getElementById('delEncounter').onclick = deleteEncounter;
-document.getElementById('closeEncounter').onclick = () => showEncounterEditor(false);
-document.getElementById('newTemplate').onclick = startNewTemplate;
-document.getElementById('addTemplate').onclick = addTemplate;
-document.getElementById('templateAddLootRow').onclick = () => addLootTableRow(document.getElementById('templateLootTable'));
-document.getElementById('delTemplate').onclick = deleteTemplate;
-document.getElementById('templateDropScrap').onchange = toggleTemplateScrapFields;
-document.getElementById('encTemplate').addEventListener('change', () => {
+document.getElementById('addZone')?.addEventListener('click', addZone);
+document.getElementById('delZone')?.addEventListener('click', deleteZone);
+document.getElementById('delNPC')?.addEventListener('click', deleteNPC);
+document.getElementById('closeNPC')?.addEventListener('click', closeNPCEditor);
+document.getElementById('closeItem')?.addEventListener('click', closeItemEditor);
+document.getElementById('closeBldg')?.addEventListener('click', closeBldgEditor);
+document.getElementById('closeInterior')?.addEventListener('click', closeInteriorEditor);
+document.getElementById('newArena')?.addEventListener('click', startNewArena);
+document.getElementById('addArena')?.addEventListener('click', addArena);
+document.getElementById('arenaAddWave')?.addEventListener('click', () => addArenaWaveBlock({}));
+document.getElementById('cancelArena')?.addEventListener('click', cancelArena);
+document.getElementById('delArena')?.addEventListener('click', deleteArena);
+document.getElementById('newEncounter')?.addEventListener('click', startNewEncounter);
+document.getElementById('addEncounter')?.addEventListener('click', addEncounter);
+document.getElementById('encAddLootRow')?.addEventListener('click', () => { const t = document.getElementById('encLootTable'); if (t)
+    addLootTableRow(t); });
+document.getElementById('cancelEncounter')?.addEventListener('click', () => { editEncounterIdx = -1; showEncounterEditor(false); });
+document.getElementById('delEncounter')?.addEventListener('click', deleteEncounter);
+document.getElementById('closeEncounter')?.addEventListener('click', () => showEncounterEditor(false));
+document.getElementById('newTemplate')?.addEventListener('click', startNewTemplate);
+document.getElementById('addTemplate')?.addEventListener('click', addTemplate);
+document.getElementById('templateAddLootRow')?.addEventListener('click', () => { const t = document.getElementById('templateLootTable'); if (t)
+    addLootTableRow(t); });
+document.getElementById('delTemplate')?.addEventListener('click', deleteTemplate);
+document.getElementById('templateDropScrap')?.addEventListener('change', toggleTemplateScrapFields);
+document.getElementById('encTemplate')?.addEventListener('change', () => {
     const container = document.getElementById('encLootTable');
     if (!container || container.querySelector('.lootRow'))
         return;
-    const tmplId = document.getElementById('encTemplate').value.trim();
+    const tmplId = document.getElementById('encTemplate')?.value?.trim();
     const tmpl = moduleData.templates.find(t => t.id === tmplId);
     const table = getTemplateLootTable(tmpl);
     if (table.length)
         setLootTable(container, table);
 });
-document.getElementById('encLocationMode').addEventListener('change', updateEncounterLocationMode);
-document.getElementById('encMap').addEventListener('change', () => {
+document.getElementById('encLocationMode')?.addEventListener('change', updateEncounterLocationMode);
+document.getElementById('encMap')?.addEventListener('change', () => {
     const mapSel = document.getElementById('encMap');
     const zoneSel = document.getElementById('encZone');
-    populateEncounterZoneDropdown(mapSel.value || 'world', zoneSel ? zoneSel.value : '');
+    populateEncounterZoneDropdown(mapSel?.value || 'world', zoneSel ? zoneSel.value : '');
     updateEncounterLocationMode();
 });
 updateEncounterLocationMode();
-document.getElementById('npcPrevP').onclick = () => {
+document.getElementById('npcPrevP')?.addEventListener('click', () => {
     npcPortraitIndex = (npcPortraitIndex + npcPortraits.length - 1) % npcPortraits.length;
     npcPortraitPath = '';
     setNpcPortrait();
     applyNPCChanges();
-};
-document.getElementById('npcNextP').onclick = () => {
+});
+document.getElementById('npcNextP')?.addEventListener('click', () => {
     npcPortraitIndex = (npcPortraitIndex + 1) % npcPortraits.length;
     npcPortraitPath = '';
     setNpcPortrait();
     applyNPCChanges();
-};
+});
 setupListFilter('npcFilter', 'npcList');
 setupListFilter('itemFilter', 'itemList');
 setupListFilter('questFilter', 'questList');
 setupListFilter('eventFilter', 'eventList');
 setupListFilter('arenaFilter', 'arenaList');
 setupListFilter('encFilter', 'encounterList');
-document.getElementById('delItem').onclick = deleteItem;
-document.getElementById('delBldg').onclick = deleteBldg;
-document.getElementById('newInterior').onclick = startNewInterior;
-document.getElementById('delInterior').onclick = deleteInterior;
-document.getElementById('delQuest').onclick = deleteQuest;
-document.getElementById('delEvent').onclick = deleteEvent;
-document.getElementById('delPortal').onclick = deletePortal;
-populateTypeDropdown(document.getElementById('itemType'));
-document.getElementById('itemType').addEventListener('change', updateModsWrap);
-document.getElementById('itemUseType').addEventListener('change', updateUseWrap);
-document.getElementById('itemTags').addEventListener('input', updatePersonaSection);
-document.getElementById('itemPersonaId').addEventListener('input', updatePersonaSection);
-document.getElementById('itemPersonaPortraitPath').addEventListener('input', e => {
+setupListFilter('personaFilter', 'personaList');
+setupListFilter('zoneFxFilter', 'zoneFxList');
+// Persona Editor wiring
+document.getElementById('newPersona')?.addEventListener('click', startNewPersona);
+document.getElementById('savePersona')?.addEventListener('click', savePersona);
+document.getElementById('delPersona')?.addEventListener('click', deletePersona);
+document.getElementById('closePersona')?.addEventListener('click', () => {
+    editPersonaId = null;
+    showPersonaEditor(false);
+});
+document.getElementById('personaEditorPrevP')?.addEventListener('click', () => {
+    personaEditorPortraitIndex = (personaEditorPortraitIndex + npcPortraits.length - 1) % npcPortraits.length;
+    document.getElementById('personaEditorPortraitPath').value = '';
+    setPersonaEditorPortrait();
+});
+document.getElementById('personaEditorNextP')?.addEventListener('click', () => {
+    personaEditorPortraitIndex = (personaEditorPortraitIndex + 1) % npcPortraits.length;
+    document.getElementById('personaEditorPortraitPath').value = '';
+    setPersonaEditorPortrait();
+});
+document.getElementById('personaEditorPortraitPath')?.addEventListener('input', setPersonaEditorPortrait);
+// Zone Effects Editor wiring
+document.getElementById('newZoneFx')?.addEventListener('click', startNewZoneFx);
+document.getElementById('addZoneFx')?.addEventListener('click', addZoneFx);
+document.getElementById('delZoneFx')?.addEventListener('click', deleteZoneFx);
+document.getElementById('closeZoneFx')?.addEventListener('click', () => {
+    editZoneFxIdx = -1;
+    showZoneFxEditor(false);
+});
+document.getElementById('zoneFxAddSpawn')?.addEventListener('click', () => {
+    const c = document.getElementById('zoneFxSpawns');
+    if (c)
+        addZoneFxSpawnBlock(c);
+});
+document.getElementById('delItem')?.addEventListener('click', deleteItem);
+document.getElementById('delBldg')?.addEventListener('click', deleteBldg);
+document.getElementById('newInterior')?.addEventListener('click', startNewInterior);
+document.getElementById('delInterior')?.addEventListener('click', deleteInterior);
+document.getElementById('delQuest')?.addEventListener('click', deleteQuest);
+document.getElementById('delEvent')?.addEventListener('click', deleteEvent);
+document.getElementById('delPortal')?.addEventListener('click', deletePortal);
+const itemTypeEl = document.getElementById('itemType');
+if (itemTypeEl)
+    populateTypeDropdown(itemTypeEl);
+document.getElementById('itemType')?.addEventListener('change', updateModsWrap);
+document.getElementById('itemUseType')?.addEventListener('change', updateUseWrap);
+document.getElementById('itemTags')?.addEventListener('input', updatePersonaSection);
+document.getElementById('itemPersonaId')?.addEventListener('input', updatePersonaSection);
+document.getElementById('itemPersonaPortraitPath')?.addEventListener('input', e => {
     itemPersonaPortraitPath = e.target.value.trim();
     if (itemPersonaPortraitPath)
         itemPersonaPortraitIndex = 0;
     setItemPersonaPortrait();
 });
-document.getElementById('itemPersonaPrev').onclick = () => {
+document.getElementById('itemPersonaPrev')?.addEventListener('click', () => {
     itemPersonaPortraitIndex = (itemPersonaPortraitIndex + personaPortraits.length - 1) % personaPortraits.length;
     itemPersonaPortraitPath = '';
     const pathEl = document.getElementById('itemPersonaPortraitPath');
     if (pathEl)
         pathEl.value = '';
     setItemPersonaPortrait();
-};
-document.getElementById('itemPersonaNext').onclick = () => {
+});
+document.getElementById('itemPersonaNext')?.addEventListener('click', () => {
     itemPersonaPortraitIndex = (itemPersonaPortraitIndex + 1) % personaPortraits.length;
     itemPersonaPortraitPath = '';
     const pathEl = document.getElementById('itemPersonaPortraitPath');
     if (pathEl)
         pathEl.value = '';
     setItemPersonaPortrait();
-};
-document.getElementById('npcTileSprite').addEventListener('input', () => {
+});
+document.getElementById('npcTileSprite')?.addEventListener('input', () => {
     updateTileSpritePreview('npcTileSprite', 'npcTileSpritePreview');
 });
-document.getElementById('itemTileSprite').addEventListener('input', () => {
+document.getElementById('itemTileSprite')?.addEventListener('input', () => {
     updateTileSpritePreview('itemTileSprite', 'itemTileSpritePreview');
 });
 const npcTileUploadBtn = document.getElementById('npcTileSpriteUploadBtn');
@@ -6679,9 +8343,63 @@ if (itemTileUploadBtn) {
 attachTileSpriteUpload('itemTileSpriteUpload', 'itemTileSprite', 'itemTileSpritePreview');
 updateTileSpritePreview('npcTileSprite', 'npcTileSpritePreview');
 updateTileSpritePreview('itemTileSprite', 'itemTileSpritePreview');
-document.getElementById('eventEffect').addEventListener('change', updateEventEffectFields);
-document.getElementById('eventPick').onclick = () => { coordTarget = { x: 'eventX', y: 'eventY' }; };
-document.getElementById('npcFlagType').addEventListener('change', updateFlagBuilder);
+// Live inline validation listeners
+['itemName', 'itemId'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateItemForm());
+});
+['questId', 'questTitle'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateQuestForm());
+});
+document.getElementById('questNPC')?.addEventListener('change', () => validateQuestForm());
+['templateId', 'templateName'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateTemplateForm());
+});
+document.getElementById('encTemplate')?.addEventListener('change', () => validateEncounterForm());
+['portalMap', 'portalToMap'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => validatePortalForm());
+});
+['portalX', 'portalY', 'portalToX', 'portalToY'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validatePortalForm());
+});
+document.getElementById('addEventSub')?.addEventListener('click', () => {
+    const c = document.getElementById('eventSubList');
+    if (c)
+        addEventSubBlock(c);
+    validateEventForm({ silent: true });
+});
+// Live inline validation listeners for editors without dedicated field wiring
+['bldgX', 'bldgY'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateBldgForm());
+});
+['intW', 'intH'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateInteriorForm());
+});
+document.getElementById('eventMap')?.addEventListener('change', () => validateEventForm());
+['eventX', 'eventY'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateEventForm());
+});
+['input', 'change'].forEach(evt => {
+    document.getElementById('eventSubList')?.addEventListener(evt, () => validateEventForm());
+    document.getElementById('arenaWaveContainer')?.addEventListener(evt, () => validateArenaForm());
+    document.getElementById('zoneFxSpawns')?.addEventListener(evt, () => validateZoneFxForm());
+});
+document.getElementById('arenaAddWave')?.addEventListener('click', () => validateArenaForm({ silent: true }));
+document.getElementById('zoneMap')?.addEventListener('change', () => validateZoneForm());
+['zoneX', 'zoneY', 'zoneW', 'zoneH', 'zoneUseItem', 'zoneReward'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateZoneForm());
+});
+document.getElementById('personaEditorId')?.addEventListener('input', () => validatePersonaForm());
+document.getElementById('zoneFxMap')?.addEventListener('change', () => validateZoneFxForm());
+['zoneFxNoEnc', 'zoneFxDry'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => validateZoneFxForm());
+});
+['zoneFxX', 'zoneFxY', 'zoneFxW', 'zoneFxH', 'zoneFxWeather', 'zoneFxHpPerStep', 'zoneFxMinSteps',
+    'zoneFxMaxSteps', 'zoneFxHealMult', 'zoneFxRequire', 'zoneFxNegate', 'zoneFxIf'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => validateZoneFxForm());
+});
+document.getElementById('zoneFxAddSpawn')?.addEventListener('click', () => validateZoneFxForm({ silent: true }));
+document.getElementById('eventPick')?.addEventListener('click', () => { coordTarget = { x: 'eventX', y: 'eventY' }; });
+document.getElementById('npcFlagType')?.addEventListener('change', updateFlagBuilder);
 setupNpcSections();
 const npcEditorEl = typeof document !== 'undefined' ? document.getElementById('npcEditor') : null;
 if (npcEditorEl) {
@@ -6696,21 +8414,23 @@ if (npcEditorEl) {
         }
     });
 }
-document.getElementById('moduleName').value = moduleData.name;
-document.getElementById('npcPatrol').addEventListener('change', () => {
+const moduleNameEl = document.getElementById('moduleName');
+if (moduleNameEl)
+    moduleNameEl.value = moduleData.name;
+document.getElementById('npcPatrol')?.addEventListener('change', () => {
     updatePatrolSection();
     applyNPCChanges();
 });
 updatePatrolSection();
-document.getElementById('bldgEditor').addEventListener('input', applyBldgChanges);
-document.getElementById('bldgEditor').addEventListener('change', applyBldgChanges);
-document.getElementById('npcFlagPick').onclick = () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY', map: 'npcFlagMap' }; };
-document.getElementById('portalPick').onclick = () => { coordTarget = { x: 'portalX', y: 'portalY' }; };
-document.getElementById('portalDestPick').onclick = () => { coordTarget = { x: 'portalToX', y: 'portalToY' }; };
-document.getElementById('npcPick').onclick = beginNpcCoordinateSelection;
-document.getElementById('npcCancelPick').onclick = cancelNpcCoordinateSelection;
-document.getElementById('itemPick').onclick = () => { coordTarget = { x: 'itemX', y: 'itemY', map: 'itemMap' }; };
-document.getElementById('save').onclick = saveModule;
+document.getElementById('bldgEditor')?.addEventListener('input', applyBldgChanges);
+document.getElementById('bldgEditor')?.addEventListener('change', applyBldgChanges);
+document.getElementById('npcFlagPick')?.addEventListener('click', () => { coordTarget = { x: 'npcFlagX', y: 'npcFlagY', map: 'npcFlagMap' }; });
+document.getElementById('portalPick')?.addEventListener('click', () => { coordTarget = { x: 'portalX', y: 'portalY' }; });
+document.getElementById('portalDestPick')?.addEventListener('click', () => { coordTarget = { x: 'portalToX', y: 'portalToY' }; });
+document.getElementById('npcPick')?.addEventListener('click', beginNpcCoordinateSelection);
+document.getElementById('npcCancelPick')?.addEventListener('click', cancelNpcCoordinateSelection);
+document.getElementById('itemPick')?.addEventListener('click', () => { coordTarget = { x: 'itemX', y: 'itemY', map: 'itemMap' }; });
+document.getElementById('save')?.addEventListener('click', saveModule);
 document.getElementById('quickSave')?.addEventListener('click', saveModule);
 function loadErrorMessage(err) {
     return err?.message ?? String(err);
@@ -6765,7 +8485,7 @@ function handleModuleFile(file) {
     reader.onerror = () => setLoadStatus('Unable to read that file.', true);
     reader.readAsText(file);
 }
-document.getElementById('load').onclick = showLoadModal;
+document.getElementById('load')?.addEventListener('click', showLoadModal);
 const loadInput = document.getElementById('loadFile');
 if (loadInput)
     loadInput.addEventListener('change', () => handleModuleFile(loadInput.files?.[0]));
@@ -6800,16 +8520,44 @@ if (browseLoadBtn)
 document.getElementById('closeLoadModal')?.addEventListener('click', closeLoadModal);
 document.getElementById('loadModal')?.addEventListener('click', e => { if (e.target?.id === 'loadModal')
     closeLoadModal(); });
-document.getElementById('setStart').onclick = () => {
+// === Module Properties — start position sync ===
+function syncStartInputsFromData() {
+    const s = moduleData.start || { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+    const mapEl = document.getElementById('moduleStartMap');
+    if (mapEl)
+        mapEl.value = s.map || 'world';
+    const xEl = document.getElementById('moduleStartX');
+    if (xEl)
+        xEl.value = String(s.x ?? 2);
+    const yEl = document.getElementById('moduleStartY');
+    if (yEl)
+        yEl.value = String(s.y ?? Math.floor(WORLD_H / 2));
+}
+function syncStartFromInputs() {
+    const map = document.getElementById('moduleStartMap')?.value || 'world';
+    const x = parseInt(document.getElementById('moduleStartX')?.value, 10) || 0;
+    const y = parseInt(document.getElementById('moduleStartY')?.value, 10) || 0;
+    moduleData.start = { map, x, y };
+    drawWorld();
+}
+['moduleStartMap', 'moduleStartX', 'moduleStartY'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', syncStartFromInputs);
+});
+const moduleStartMapEl = document.getElementById('moduleStartMap');
+if (moduleStartMapEl)
+    populateMapDropdown(moduleStartMapEl, moduleData.start?.map || 'world');
+syncStartInputsFromData();
+document.getElementById('setStart')?.addEventListener('click', () => {
     settingStart = true;
     setMapActionBanner('Start position active: choose a walkable tile on the world map.', 'info');
     drawWorld();
-};
-document.getElementById('resetStart').onclick = () => {
+});
+document.getElementById('resetStart')?.addEventListener('click', () => {
     moduleData.start = { map: 'world', x: 2, y: Math.floor(WORLD_H / 2) };
+    syncStartInputsFromData();
     drawWorld();
     setMapActionBanner('Start position reset to the default location.', 'info', 2500);
-};
+});
 const spawnHeatBtn = document.getElementById('spawnHeatBtn');
 if (spawnHeatBtn)
     spawnHeatBtn.onclick = () => {
@@ -6817,14 +8565,24 @@ if (spawnHeatBtn)
         spawnHeatBtn.textContent = `Spawn Heat: ${spawnHeat ? 'On' : 'Off'}`;
         drawWorld();
     };
-document.getElementById('addNode').onclick = addNode;
-document.getElementById('editDialog').onclick = openDialogEditor;
-document.getElementById('closeDialogModal').onclick = closeDialogEditor;
-document.getElementById('dialogModal').addEventListener('click', e => { if (e.target.id === 'dialogModal')
+document.getElementById('addNode')?.addEventListener('click', addNode);
+document.getElementById('editDialog')?.addEventListener('click', openDialogEditor);
+document.getElementById('closeDialogModal')?.addEventListener('click', closeDialogEditor);
+document.getElementById('dlgSearch')?.addEventListener('input', applyDialogNodeFilter);
+document.getElementById('dlgFilter')?.addEventListener('change', applyDialogNodeFilter);
+document.getElementById('dlgTemplate')?.addEventListener('change', e => {
+    const sel = e.target;
+    if (sel.value)
+        insertDialogTemplate(sel.value);
+    sel.value = '';
+});
+document.getElementById('pasteSubtree')?.addEventListener('click', pasteDialogSubtree);
+document.getElementById('dlgGraphWrap')?.addEventListener('toggle', renderDialogGraph);
+document.getElementById('dialogModal')?.addEventListener('click', e => { if (e.target?.id === 'dialogModal')
     closeDialogEditor(); });
 // Live preview when dialog text changes
 ['npcDialog', 'npcAccept', 'npcTurnin'].forEach(id => {
-    document.getElementById(id).addEventListener('input', renderDialogPreview);
+    document.getElementById(id)?.addEventListener('input', renderDialogPreview);
 });
 // When quest selection changes, show/hide extra fields, update preview, and (optionally) auto-generate the quest scaffold
 const npcQuestEl = document.getElementById('npcQuests');
@@ -6839,13 +8597,19 @@ if (npcQuestEl)
             renderDialogPreview(); // just refresh preview of whatever is in the editor
         }
     });
-document.getElementById('npcCombat').addEventListener('change', updateNPCOptSections);
-document.getElementById('npcShop').addEventListener('change', updateNPCOptSections);
-document.getElementById('npcHidden').addEventListener('change', updateNPCOptSections);
-document.getElementById('npcTrainer').addEventListener('change', updateNPCOptSections);
-document.getElementById('npcColorOverride').addEventListener('change', updateColorOverride);
-document.getElementById('npcLocked').addEventListener('change', onLockedToggle);
-document.getElementById('genQuestDialog').onclick = generateQuestTree;
+document.getElementById('npcCombat')?.addEventListener('change', updateNPCOptSections);
+document.getElementById('npcShop')?.addEventListener('change', updateNPCOptSections);
+document.getElementById('shopAddInvRow')?.addEventListener('click', () => {
+    const c = document.getElementById('shopInvTable');
+    if (c)
+        addShopInvRow(c);
+});
+document.getElementById('shopImportItems')?.addEventListener('click', importModuleItemsToShop);
+document.getElementById('npcHidden')?.addEventListener('change', updateNPCOptSections);
+document.getElementById('npcTrainer')?.addEventListener('change', updateNPCOptSections);
+document.getElementById('npcColorOverride')?.addEventListener('change', updateColorOverride);
+document.getElementById('npcLocked')?.addEventListener('change', onLockedToggle);
+document.getElementById('genQuestDialog')?.addEventListener('click', generateQuestTree);
 if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape' && npcMapMode) {
@@ -6960,6 +8724,7 @@ canvas.addEventListener('mousedown', ev => {
     const isPaintTab = activeTab === 'paint';
     const validPaint = worldPaint != null || (isPaintTab && (paintMode === 'asset' || paintMode === 'clear'));
     if (currentMap === 'world' && validPaint && !coordTarget && !(overNpc || overItem || overBldg || overStart || overEvent || overPortal || overZone)) {
+        globalThis.ackRecordSnapshot?.();
         worldPainting = true;
         hoverTile = { x, y };
         if (isPaintTab && paintMode !== 'tile') {
@@ -6980,6 +8745,7 @@ canvas.addEventListener('mousedown', ev => {
             addTerrainFeature(x, y, worldPaint);
         }
         didPaint = true;
+        globalThis.markAckDirty?.();
         drawWorld();
         updateCursor(x, y);
         return;
@@ -6988,10 +8754,12 @@ canvas.addEventListener('mousedown', ev => {
         hoverTile = { x, y };
         const I = moduleData.interiors.find(i => i.id === currentMap);
         if (I) {
+            globalThis.ackRecordSnapshot?.();
             applyInteriorBrush(I, x, y, intPaint);
             delete I._origGrid;
             intPainting = true;
             didPaint = true;
+            globalThis.markAckDirty?.();
             drawWorld();
             drawInterior();
             updateCursor(x, y);
@@ -7043,6 +8811,7 @@ canvas.addEventListener('mousedown', ev => {
             return;
         }
         moduleData.start = { map: 'world', x, y };
+        syncStartInputsFromData();
         settingStart = false;
         setMapActionBanner(`Player start set to (${x}, ${y}).`, 'success', 3000);
         drawWorld();
@@ -7446,9 +9215,15 @@ showNPCEditor(false);
 showBldgEditor(false);
 showQuestEditor(false);
 showEventEditor(false);
-document.getElementById('npcId').value = nextId('npc', moduleData.npcs);
-document.getElementById('questId').value = nextId('quest', moduleData.quests);
-document.getElementById('eventStat').innerHTML = STAT_OPTS.map(s => `<option value="${s}">${s}</option>`).join('');
+const npcIdEl = document.getElementById('npcId');
+if (npcIdEl)
+    npcIdEl.value = nextId('npc', moduleData.npcs);
+const questIdEl = document.getElementById('questId');
+if (questIdEl)
+    questIdEl.value = nextId('quest', moduleData.quests);
+const eventStatEl = document.getElementById('eventStat');
+if (eventStatEl)
+    eventStatEl.innerHTML = STAT_OPTS.map(s => `<option value="${s}">${s}</option>`).join('');
 renderEventList();
 loadTreeEditor();
 setPlaceholders();
@@ -7465,6 +9240,7 @@ if (wizardList && globalThis.Dustland?.wizards) {
 function mergeWizardResult(res) {
     if (!res)
         return;
+    globalThis.ackRecordSnapshot?.();
     Object.entries(res).forEach(([k, v]) => {
         if (Array.isArray(moduleData[k]))
             moduleData[k].push(...v);
@@ -7494,6 +9270,7 @@ function mergeWizardResult(res) {
         renderEncounterList();
     if (typeof renderTemplateList === 'function')
         renderTemplateList();
+    globalThis.markAckDirty?.();
 }
 function openWizard(cfg) {
     const modal = document.getElementById('wizardModal');
@@ -7734,6 +9511,28 @@ animate();
         window.showEditorTab = show;
     }
 })();
+// Expose hooks for ACK editor extensions
+globalThis.ackExportModulePayload = exportModulePayload;
+globalThis.ackApplyLoadedModule = applyLoadedModule;
+globalThis.ackGetWorld = () => world;
+globalThis.ackSetWorld = (w) => { world = w; globalThis.world = w; };
+globalThis.ackRefreshAllLists = function () {
+    renderNPCList();
+    renderItemList();
+    renderBldgList();
+    renderInteriorList();
+    renderPortalList();
+    renderZoneList();
+    renderQuestList();
+    renderEventList();
+    renderArenaList();
+    renderEncounterList();
+    renderTemplateList();
+    renderPersonaList();
+    renderZoneFxList();
+    drawWorld();
+};
+globalThis.ackGetModuleData = () => moduleData;
 if (document && typeof document.addEventListener === 'function') {
     document.addEventListener('keydown', e => {
         if (e.ctrlKey || e.metaKey) {
@@ -7744,6 +9543,14 @@ if (document && typeof document.addEventListener === 'function') {
             else if (e.key === 'p') {
                 e.preventDefault();
                 playtestModule();
+            }
+            else if (e.key === 'z') {
+                e.preventDefault();
+                globalThis.ackUndo?.();
+            }
+            else if (e.key === 'y') {
+                e.preventDefault();
+                globalThis.ackRedo?.();
             }
         }
     });
