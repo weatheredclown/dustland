@@ -252,6 +252,31 @@ test('generateProceduralMap groups ruin clusters', () => {
   assert.ok(max >= 10);
 });
 
+test('connectRegionCenters avoids parallel duplicate road lanes', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, ROAD: 4 };
+  const tiles = Array.from({ length: 9 }, () => Array(9).fill(0));
+  const field = Array.from({ length: 9 }, () => Array(9).fill(0));
+  const centers = [{ x: 0, y: 4 }, { x: 8, y: 4 }, { x: 8, y: 5 }];
+  const network = globalThis.connectRegionCenters(tiles, field, centers, 11);
+  const carved = globalThis.carveRoads(tiles, network);
+  assert.ok(carved.segments.some(segment => segment.path.some(step => step.x === 8 && step.y === 4)));
+  assert.equal(tiles[5][4], 0);
+});
+
+test('scatterRuins stamps varied footprint ruins', () => {
+  globalThis.TILE = { SAND: 0, WATER: 2, ROAD: 4, RUIN: 6 };
+  const grid = Array.from({ length: 32 }, () => Array(32).fill(0));
+  const res = globalThis.scatterRuins(grid, 19);
+  assert.ok(res.hubs.length > 0);
+  const hub = res.hubs[0];
+  const nearby = res.ruins.filter(pt => Math.abs(pt.x - hub.x) <= 4 && Math.abs(pt.y - hub.y) <= 4);
+  assert.ok(nearby.length >= 6);
+  const xs = new Set(nearby.map(pt => pt.x));
+  const ys = new Set(nearby.map(pt => pt.y));
+  assert.ok(xs.size >= 3);
+  assert.ok(ys.size >= 3);
+});
+
 test('generateProceduralMap respects feature toggles', () => {
   globalThis.TILE = { SAND: 0, WATER: 2, BRUSH: 3, ROCK: 5, ROAD: 4, RUIN: 6 };
   const map = globalThis.generateProceduralMap(5, 16, 16, 4, 0, { roads: false, ruins: false });
