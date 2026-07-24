@@ -344,6 +344,18 @@ class MinHeap {
         return this.data.length;
     }
 }
+function nearbyPreferredRoadPenalty(preference, x, y) {
+    let adjacent = 0;
+    for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0)
+                continue;
+            if (preference[y + dy]?.[x + dx])
+                adjacent++;
+        }
+    }
+    return adjacent * 2.5;
+}
 function buildPath(start, goal, tiles, field, preference) {
     const h = tiles.length;
     const w = tiles[0]?.length ?? 0;
@@ -393,8 +405,12 @@ function buildPath(start, goal, tiles, field, preference) {
             const slope = Math.abs(field[ny][nx] - field[cy][cx]);
             step += terrainCost(tile);
             step += slope * 12;
-            if (preference[ny]?.[nx])
-                step *= 0.35;
+            if (preference[ny]?.[nx]) {
+                step *= 0.25;
+            }
+            else {
+                step += nearbyPreferredRoadPenalty(preference, nx, ny);
+            }
             if (isWaterTile(tile))
                 step += 8;
             if (prevDir[current.idx] !== -1 && prevDir[current.idx] !== dirIndex)
@@ -529,35 +545,86 @@ function carveRoads(tiles, network) {
     }
     return { anchors: network.anchors, segments: carvedSegments, crossroads };
 }
+function canPlaceRuinTile(tiles, x, y) {
+    const tile = tiles[y]?.[x];
+    if (tile === undefined)
+        return false;
+    if (tileMatches(tile, 'WATER'))
+        return false;
+    if (tileMatches(tile, 'ROAD'))
+        return false;
+    if (tileMatches(tile, 'RUIN'))
+        return false;
+    return true;
+}
+function paintRuinTile(tiles, ruins, x, y, chance = 1) {
+    if (chance < 1 && chance <= 0)
+        return;
+    if (chance < 1) {
+        const noise = Math.abs(Math.sin((x * 127.1 + y * 311.7) * 43758.5453));
+        if ((noise - Math.floor(noise)) > chance)
+            return;
+    }
+    if (!canPlaceRuinTile(tiles, x, y))
+        return;
+    const ruin = readTile('RUIN');
+    tiles[y][x] = ruin ?? tiles[y][x];
+    ruins.push({ x, y });
+}
+function stampRuinFootprint(tiles, ruins, hub, rand) {
+    const style = Math.floor(rand() * 4);
+    const width = 4 + Math.floor(rand() * 4);
+    const height = 3 + Math.floor(rand() * 4);
+    const left = hub.x - Math.floor(width / 2);
+    const top = hub.y - Math.floor(height / 2);
+    for (let y = top; y < top + height; y++) {
+        for (let x = left; x < left + width; x++) {
+            const edge = x === left || x === left + width - 1 || y === top || y === top + height - 1;
+            const checker = ((x + y + style) & 1) === 0;
+            const brokenWall = rand() > 0.18;
+            if (style === 0 && edge && brokenWall)
+                paintRuinTile(tiles, ruins, x, y);
+            if (style === 1 && (edge || (checker && rand() > 0.55)))
+                paintRuinTile(tiles, ruins, x, y);
+            if (style === 2 && (x === left || y === top || (x === left + width - 1 && rand() > 0.35)))
+                paintRuinTile(tiles, ruins, x, y);
+            if (style === 3 && (Math.abs(x - hub.x) <= 1 || Math.abs(y - hub.y) <= 1) && rand() > 0.28) {
+                paintRuinTile(tiles, ruins, x, y);
+            }
+        }
+    }
+    const spurs = 2 + Math.floor(rand() * 4);
+    for (let i = 0; i < spurs; i++) {
+        const horizontal = rand() > 0.5;
+        const length = 2 + Math.floor(rand() * 5);
+        const sign = rand() > 0.5 ? 1 : -1;
+        const originX = hub.x + Math.floor(rand() * width) - Math.floor(width / 2);
+        const originY = hub.y + Math.floor(rand() * height) - Math.floor(height / 2);
+        for (let step = 0; step < length; step++) {
+            const x = originX + (horizontal ? step * sign : 0);
+            const y = originY + (horizontal ? 0 : step * sign);
+            paintRuinTile(tiles, ruins, x, y, 0.72);
+        }
+    }
+}
 function scatterRuins(tiles, seed = 1) {
     const h = tiles.length;
     const w = tiles[0]?.length ?? 0;
     const rand = mulberry32(normalizeSeed(seed));
-    const count = Math.max(3, Math.round((w * h) / 160));
+    const count = Math.max(3, Math.round((w * h) / 180));
     const ruins = [];
     const hubs = [];
-    const water = readTile('WATER');
-    const road = readTile('ROAD');
-    const ruin = readTile('RUIN');
     const pickRandomLand = () => {
         for (let attempt = 0; attempt < 200; attempt++) {
             const x = Math.floor(rand() * w);
             const y = Math.floor(rand() * h);
-            const tile = tiles[y]?.[x];
-            if (tile === undefined)
-                continue;
-            if (tile === water || tile === road || tile === ruin)
-                continue;
-            return { x, y };
+            if (canPlaceRuinTile(tiles, x, y))
+                return { x, y };
         }
         for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
-                const tile = tiles[y]?.[x];
-                if (tile === undefined)
-                    continue;
-                if (tile === water || tile === road || tile === ruin)
-                    continue;
-                return { x, y };
+                if (canPlaceRuinTile(tiles, x, y))
+                    return { x, y };
             }
         }
         return null;
@@ -565,17 +632,13 @@ function scatterRuins(tiles, seed = 1) {
     const selectHub = () => {
         if (!h || !w)
             return null;
-        if (!hubs.length) {
+        if (!hubs.length)
             return pickRandomLand();
-        }
         let bestDistSq = -1;
         const candidates = [];
         for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
-                const tile = tiles[y]?.[x];
-                if (tile === undefined)
-                    continue;
-                if (tile === water || tile === road || tile === ruin)
+                if (!canPlaceRuinTile(tiles, x, y))
                     continue;
                 let minDistSq = Infinity;
                 for (const hub of hubs) {
@@ -595,45 +658,16 @@ function scatterRuins(tiles, seed = 1) {
                 }
             }
         }
-        if (bestDistSq < MIN_RUIN_HUB_DISTANCE_SQ || !candidates.length) {
+        if (bestDistSq < MIN_RUIN_HUB_DISTANCE_SQ || !candidates.length)
             return null;
-        }
-        const choice = candidates[Math.floor(rand() * candidates.length) % candidates.length];
-        return choice;
+        return candidates[Math.floor(rand() * candidates.length) % candidates.length];
     };
     for (let i = 0; i < count; i++) {
         const hub = selectHub();
         if (!hub)
             break;
-        const { x, y } = hub;
         hubs.push(hub);
-        const radius = 2 + Math.floor(rand() * 4);
-        const groups = 2 + Math.floor(rand() * 3);
-        for (let g = 0; g < groups; g++) {
-            const angle = rand() * Math.PI * 2;
-            const dist = 2 + Math.floor(rand() * Math.max(1, radius / 2));
-            const cx = x + Math.round(Math.cos(angle) * dist);
-            const cy = y + Math.round(Math.sin(angle) * dist);
-            if (cx < 0 || cx >= w || cy < 0 || cy >= h)
-                continue;
-            const tile = tiles[cy]?.[cx];
-            if (tile === water || tile === road || tile === ruin)
-                continue;
-            tiles[cy][cx] = ruin ?? tile ?? 0;
-            ruins.push({ x: cx, y: cy });
-            const extra = 1 + Math.floor(rand() * 3);
-            for (let n = 0; n < extra; n++) {
-                const nx = cx + Math.floor(rand() * 3) - 1;
-                const ny = cy + Math.floor(rand() * 3) - 1;
-                if (nx < 0 || nx >= w || ny < 0 || ny >= h)
-                    continue;
-                const current = tiles[ny]?.[nx];
-                if (current === water || current === road || current === ruin)
-                    continue;
-                tiles[ny][nx] = ruin ?? current ?? 0;
-                ruins.push({ x: nx, y: ny });
-            }
-        }
+        stampRuinFootprint(tiles, ruins, hub, rand);
     }
     return { tiles, ruins, hubs };
 }
