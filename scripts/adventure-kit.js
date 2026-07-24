@@ -1688,40 +1688,124 @@ function renderDialogPreview() {
         prev.parentElement.insertBefore(ctl, prev);
         document.getElementById('playDlg').onclick = () => playInGameWithSpoof();
         document.getElementById('stopDlg').onclick = () => stopSpoofPlayback();
+        document.getElementById('spoofFlags')?.addEventListener('input', () => renderDialogPreview());
     }
-    // Render imports spoof panel (lightweight)
+    // Render imports spoof panel (lightweight); preserve typed values across rebuilds
     const importsEl = document.getElementById('spoofImports');
     if (importsEl) {
         let imports = (tree && tree.imports) || null;
         if (!imports && tree)
             imports = generateImportsShallow(tree);
         const flags = (imports && imports.flags) || [];
-        const items = (imports && imports.items) || [];
-        let html = '';
-        if (flags.length) {
-            html += '<div><b>Flags</b> ' + flags.map(f => `<label style="margin-right:6px">${f}<input type="number" data-flag="${f}" value="1" min="0" style="width:56px;margin-left:4px"/></label>`).join('') + '</div>';
+        const items = ((imports && imports.items) || []).slice();
+        Object.values(tree || {}).forEach((node) => {
+            (node?.choices || []).forEach(c => {
+                if (c?.reqTag)
+                    items.push('tag:' + c.reqTag);
+                if (c?.costTag)
+                    items.push('tag:' + c.costTag);
+            });
+        });
+        const itemKeys = [...new Set(items)];
+        const sig = JSON.stringify([flags, itemKeys]);
+        if (importsEl.dataset?.sig !== sig) {
+            const prevVals = {};
+            importsEl.querySelectorAll('input').forEach(inp => {
+                const el = inp;
+                prevVals[el.dataset.flag ? 'f:' + el.dataset.flag : 'i:' + el.dataset.item] = el.value;
+            });
+            let html = '';
+            if (flags.length) {
+                html += '<div><b>Flags</b> ' + flags.map(f => `<label style="margin-right:6px">${f}<input type="number" data-flag="${f}" value="${prevVals['f:' + f] ?? '1'}" min="0" style="width:56px;margin-left:4px"/></label>`).join('') + '</div>';
+            }
+            if (itemKeys.length) {
+                html += '<div style="margin-top:4px"><b>Items</b> ' + itemKeys.map(it => `<label style="margin-right:6px">${it}<input type="number" data-item="${it}" value="${prevVals['i:' + it] ?? '1'}" min="0" style="width:56px;margin-left:4px"/></label>`).join('') + '</div>';
+            }
+            importsEl.innerHTML = html || '<span class="muted">(no imports)</span>';
+            if (importsEl.dataset)
+                importsEl.dataset.sig = sig;
         }
-        if (items.length) {
-            html += '<div style="margin-top:4px"><b>Items</b> ' + items.map(it => `<label style="margin-right:6px">${it}<input type="number" data-item="${it}" value="1" min="0" style="width:56px;margin-left:4px"/></label>`).join('') + '</div>';
+        if (!importsEl.dataset?.wired) {
+            if (importsEl.dataset)
+                importsEl.dataset.wired = '1';
+            importsEl.addEventListener('input', () => renderDialogPreview());
         }
-        importsEl.innerHTML = html || '<span class="muted">(no imports)</span>';
     }
     if (!tree || !tree.start) {
         prev.innerHTML = '';
         return;
     }
-    function show(id) {
+    const spoofedFlags = buildSpoofFlagsFromPanel() || parseSpoofFlags(document.getElementById('spoofFlags')?.value || '');
+    const spoofedItems = buildSpoofItemsFromPanel() || {};
+    const cmp = (a, op, b) => {
+        if (op === '>')
+            return a > b;
+        if (op === '<')
+            return a < b;
+        if (op === '<=')
+            return a <= b;
+        if (op === '==')
+            return a === b;
+        if (op === '!=')
+            return a !== b;
+        return a >= b;
+    };
+    const itemCount = key => Number(spoofedItems[key] ?? 0) || 0;
+    const choiceBlockers = c => {
+        const reasons = [];
+        if (c.if?.flag && !cmp(Number(spoofedFlags[c.if.flag] ?? 0) || 0, c.if.op || '>=', c.if.value ?? 1)) {
+            reasons.push(`flag ${c.if.flag} ${c.if.op || '>='} ${c.if.value ?? 1}`);
+        }
+        if (c.reqItem && itemCount(c.reqItem) <= 0)
+            reasons.push(`needs ${c.reqItem}`);
+        if (c.costItem && itemCount(c.costItem) <= 0)
+            reasons.push(`costs ${c.costItem}`);
+        if (c.reqTag && itemCount('tag:' + c.reqTag) <= 0)
+            reasons.push(`needs tag ${c.reqTag}`);
+        if (c.costTag && itemCount('tag:' + c.costTag) <= 0)
+            reasons.push(`costs tag ${c.costTag}`);
+        return reasons;
+    };
+    function show(id, note = '') {
         const node = tree[id];
         if (!node)
             return;
-        const html = (node.choices || [])
-            .map(c => `<button class="btn" data-to="${c.to || ''}" style="margin-top:4px">${c.label}</button>`)
-            .join('');
-        prev.innerHTML = `<div>${node.text || ''}</div>` + html;
-        Array.from(prev.querySelectorAll('button')).forEach(btn => btn.onclick = () => {
-            const t = btn.dataset.to;
-            if (t)
-                show(t);
+        const parts = [];
+        const actions = [];
+        if (note)
+            parts.push(`<div class="small" style="opacity:0.8">${note}</div>`);
+        parts.push(`<div>${node.text || ''}</div>`);
+        const pushBtn = (label, title, action, faded = false) => {
+            const blocked = !action;
+            actions.push(action);
+            const style = `margin-top:4px${faded ? ';opacity:0.6' : ''}${blocked ? ';opacity:0.4' : ''}`;
+            parts.push(`<button class="btn" data-act="${actions.length - 1}" style="${style}"${title ? ` title="${title}"` : ''}${blocked ? ' disabled' : ''}>${label}</button>`);
+        };
+        (node.choices || []).forEach(c => {
+            if (!c)
+                return;
+            const blockers = choiceBlockers(c);
+            const blockedTitle = blockers.length ? 'Unavailable: ' + blockers.join(', ') + ' — adjust spoof values above to test' : '';
+            if (c.stat && c.dc != null) {
+                pushBtn(`${c.label} [${c.stat} DC ${c.dc}: pass]`, blockedTitle || 'Preview the successful check', blockers.length ? null : () => {
+                    const next = c.to && tree[c.to] ? c.to : id;
+                    show(next, c.success || '(Check passed.)');
+                });
+                pushBtn(`${c.label} [fail]`, blockedTitle || 'Preview the failed check', blockers.length ? null : () => show(id, c.failure || '(Check failed.)'), true);
+                return;
+            }
+            pushBtn(c.label || '(choice)', blockedTitle, blockers.length ? null : () => {
+                if (c.to && tree[c.to])
+                    show(c.to);
+            });
+        });
+        prev.innerHTML = parts.join('');
+        Array.from(prev.querySelectorAll('button')).forEach(btn => {
+            btn.onclick = () => {
+                const act = actions[parseInt(btn.dataset?.act ?? '-1', 10)];
+                if (act)
+                    act();
+            };
         });
     }
     show('start');
@@ -2283,13 +2367,18 @@ function renderTreeEditor() {
     const wrap = document.getElementById('treeEditor');
     if (!wrap)
         return;
+    if (!wrap.dataset?.dirtyWired) {
+        if (wrap.dataset)
+            wrap.dataset.dirtyWired = '1';
+        wrap.addEventListener('input', () => globalThis.markAckDirty?.());
+    }
     wrap.innerHTML = '';
     Object.entries(getTreeData()).forEach(([id, node]) => {
         if (id === 'imports')
             return;
         const div = document.createElement('div');
         div.className = 'node';
-        div.innerHTML = `<div class="nodeHeader"><button class="btn toggle" type="button" aria-label="Toggle node">-</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="btn delNode" type="button" title="Delete node" aria-label="Delete node">&#128465;</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
+        div.innerHTML = `<div class="nodeHeader"><button class="btn toggle" type="button" aria-label="Toggle node">-</button><label>Node ID<input class="nodeId" value="${id}"></label><button class="btn copyNode" type="button" title="Copy this node and everything it links to" aria-label="Copy subtree">&#10697;</button><button class="btn delNode" type="button" title="Delete node" aria-label="Delete node">&#128465;</button></div><div class="nodeBody"><label>Dialog Text<textarea class="nodeText" rows="2">${node.text || ''}</textarea></label><fieldset class="choiceGroup"><legend>Choices</legend><div class="choices"></div><button class="btn addChoice" type="button">Add Choice</button></fieldset></div>`;
         const choicesDiv = div.querySelector('.choices');
         if (!choicesDiv)
             return;
@@ -2297,6 +2386,9 @@ function renderTreeEditor() {
         const addChoiceBtn = div.querySelector('.addChoice');
         if (addChoiceBtn)
             addChoiceBtn.onclick = () => addChoiceRow(choicesDiv);
+        const copyBtn = div.querySelector('.copyNode');
+        if (copyBtn)
+            copyBtn.onclick = () => copyDialogSubtree(div.querySelector('.nodeId')?.value.trim());
         const toggleBtn = div.querySelector('.toggle');
         toggleBtn.addEventListener('click', () => {
             div.classList.toggle('collapsed');
@@ -2316,6 +2408,8 @@ function renderTreeEditor() {
     wrap.querySelectorAll('select').forEach(el => el.addEventListener('change', updateTreeData));
     wrap.querySelectorAll('input[type=checkbox]').forEach(el => el.addEventListener('change', updateTreeData));
     refreshChoiceDropdowns();
+    if (typeof applyDialogNodeFilter === 'function')
+        applyDialogNodeFilter();
 }
 function updateTreeData() {
     const wrap = document.getElementById('treeEditor');
@@ -2521,6 +2615,8 @@ function updateTreeData() {
     // Live preview + keep "to" dropdowns in sync with current node keys
     renderDialogPreview();
     refreshChoiceDropdowns();
+    if (typeof renderDialogGraph === 'function')
+        renderDialogGraph();
     // ---- Validation: highlight bad targets & orphans ----
     // 1) Choice target validation: red border if target doesn't exist
     choiceRefs.forEach(({ to, el }) => {
@@ -2568,6 +2664,7 @@ function loadTreeEditor() {
 }
 function openDialogEditor() {
     document.getElementById('dialogModal').classList.add('shown');
+    updatePasteSubtreeButton();
     renderTreeEditor();
 }
 function closeDialogEditor() {
@@ -2594,6 +2691,311 @@ function addNode() {
     setTreeData(tree);
     renderTreeEditor();
     updateTreeData();
+}
+// === Dialog subtree clipboard, templates, and search ===
+const DIALOG_CLIPBOARD_KEY = 'ack_dialog_clipboard';
+function setDialogEditorStatus(msg, autoClear = true) {
+    const el = document.getElementById('dlgStatus');
+    if (!el)
+        return;
+    const prev = el._statusTimer;
+    if (prev)
+        clearTimeout(prev);
+    el.textContent = msg || '';
+    if (autoClear && msg) {
+        el._statusTimer = setTimeout(() => { el.textContent = ''; }, 4000);
+    }
+}
+function collectDialogSubtree(tree, rootId) {
+    const nodes = {};
+    const queue = [rootId];
+    while (queue.length) {
+        const id = queue.shift();
+        if (!id || nodes[id] || !tree[id] || id === 'imports')
+            continue;
+        nodes[id] = JSON.parse(JSON.stringify(tree[id]));
+        (tree[id].choices || []).forEach(ch => { if (ch?.to && tree[ch.to])
+            queue.push(ch.to); });
+    }
+    return nodes;
+}
+function copyDialogSubtree(rootId) {
+    if (!rootId)
+        return;
+    updateTreeData();
+    const tree = getTreeData();
+    if (!tree[rootId])
+        return;
+    const nodes = collectDialogSubtree(tree, rootId);
+    try {
+        localStorage.setItem(DIALOG_CLIPBOARD_KEY, JSON.stringify({ root: rootId, nodes }));
+    }
+    catch (e) {
+        setDialogEditorStatus('Copy failed — browser storage is full.');
+        return;
+    }
+    updatePasteSubtreeButton();
+    const linked = Object.keys(nodes).length - 1;
+    setDialogEditorStatus(`Copied "${rootId}"${linked ? ` + ${linked} linked node(s)` : ''}. Paste into any NPC's dialog.`);
+}
+function readDialogClipboard() {
+    try {
+        const raw = localStorage.getItem(DIALOG_CLIPBOARD_KEY);
+        if (!raw)
+            return null;
+        const clip = JSON.parse(raw);
+        if (!clip?.root || !clip.nodes || !clip.nodes[clip.root])
+            return null;
+        return clip;
+    }
+    catch (e) {
+        return null;
+    }
+}
+function updatePasteSubtreeButton() {
+    const btn = document.getElementById('pasteSubtree');
+    if (btn)
+        btn.style.display = readDialogClipboard() ? 'inline-block' : 'none';
+}
+// Merge nodes into tree with collision-safe renaming; internal links are remapped.
+function mergeDialogNodes(tree, nodes, rootId) {
+    const rename = {};
+    const taken = new Set(Object.keys(tree));
+    Object.keys(nodes).forEach(id => {
+        let cand = id;
+        let i = 1;
+        while (taken.has(cand))
+            cand = `${id}-${i++}`;
+        rename[id] = cand;
+        taken.add(cand);
+    });
+    Object.entries(nodes).forEach(([id, node]) => {
+        const copy = JSON.parse(JSON.stringify(node));
+        (copy.choices || []).forEach(ch => { if (ch?.to && rename[ch.to])
+            ch.to = rename[ch.to]; });
+        tree[rename[id]] = copy;
+    });
+    return rename[rootId];
+}
+function pasteDialogSubtree() {
+    const clip = readDialogClipboard();
+    if (!clip) {
+        updatePasteSubtreeButton();
+        return;
+    }
+    updateTreeData();
+    const tree = getTreeData();
+    const newRoot = mergeDialogNodes(tree, clip.nodes, clip.root);
+    setTreeData(tree);
+    renderTreeEditor();
+    updateTreeData();
+    globalThis.markAckDirty?.();
+    setDialogEditorStatus(`Pasted ${Object.keys(clip.nodes).length} node(s) as "${newRoot}". Link a choice to it.`);
+}
+const DIALOG_TEMPLATES = {
+    greeting: {
+        linkLabel: '(Talk)',
+        root: 'greet',
+        nodes: {
+            greet: { text: 'Hello, wanderer. Stay out of the dust.', choices: [{ label: '(Leave)', to: 'bye' }] }
+        }
+    },
+    fetchQuest: {
+        linkLabel: '(Ask about work)',
+        root: 'job',
+        nodes: {
+            job: {
+                text: 'I lost something out there. Bring it back and I\'ll make it worth your while.',
+                choices: [
+                    { label: '(Accept the job)', to: 'accept', q: 'accept' },
+                    { label: '(Turn in)', to: 'do_turnin', q: 'turnin' },
+                    { label: '(Leave)', to: 'bye' }
+                ]
+            },
+            accept: { text: 'Good. It should be somewhere in the waste. Don\'t come back empty-handed.', choices: [{ label: '(Leave)', to: 'bye' }] },
+            do_turnin: { text: 'You actually found it. Here\'s your cut.', choices: [{ label: '(Leave)', to: 'bye' }] }
+        }
+    },
+    gatekeeper: {
+        linkLabel: '(Approach the door)',
+        root: 'gate',
+        nodes: {
+            gate: {
+                text: 'The way is sealed. Only those with the key pass.',
+                choices: [
+                    { label: '(Use key)', to: 'gate-open', reqItem: 'key_item', once: true },
+                    { label: '(Leave)', to: 'bye' }
+                ]
+            },
+            'gate-open': { text: 'The lock grinds open. Beyond, darkness waits.', choices: [{ label: '(Continue)', to: 'bye' }] },
+            locked: { text: '(It won\'t budge.)', choices: [{ label: '(Leave)', to: 'bye' }] }
+        }
+    },
+    lore: {
+        linkLabel: '(Ask about the old world)',
+        root: 'lore',
+        nodes: {
+            lore: {
+                text: 'What do you want to know?',
+                choices: [
+                    { label: 'The Dust', to: 'lore-dust' },
+                    { label: 'Before the fall', to: 'lore-fall' },
+                    { label: '(Leave)', to: 'bye' }
+                ]
+            },
+            'lore-dust': { text: 'The dust never settles. It remembers.', choices: [{ label: '(Ask more)', to: 'lore' }] },
+            'lore-fall': { text: 'There were cities once. Now there are warnings.', choices: [{ label: '(Ask more)', to: 'lore' }] }
+        }
+    }
+};
+function insertDialogTemplate(key) {
+    const tpl = DIALOG_TEMPLATES[key];
+    if (!tpl)
+        return;
+    updateTreeData();
+    const tree = getTreeData();
+    const newRoot = mergeDialogNodes(tree, tpl.nodes, tpl.root);
+    const startNode = tree.start;
+    if (startNode && newRoot !== 'start') {
+        startNode.choices = startNode.choices || [];
+        startNode.choices.push({ label: tpl.linkLabel, to: newRoot });
+    }
+    setTreeData(tree);
+    renderTreeEditor();
+    updateTreeData();
+    globalThis.markAckDirty?.();
+    setDialogEditorStatus(tree.start && newRoot !== 'start'
+        ? `Inserted template at "${newRoot}" and linked it from "start".`
+        : `Inserted template at "${newRoot}".`);
+}
+// Read-only node graph: layered by BFS depth, orphans highlighted, click to jump.
+function renderDialogGraph() {
+    const wrapEl = document.getElementById('dlgGraphWrap');
+    const graphEl = document.getElementById('dlgGraph');
+    if (!wrapEl || !graphEl || !wrapEl.open)
+        return;
+    const tree = getTreeData();
+    const ids = Object.keys(tree).filter(k => k !== 'imports');
+    if (!ids.length) {
+        graphEl.innerHTML = '<div class="small" style="padding:4px">No nodes yet.</div>';
+        return;
+    }
+    const depth = {};
+    const queue = [];
+    ['start', 'locked', 'sell', 'accept', 'do_turnin', 'do_fight'].forEach(id => {
+        if (tree[id] && depth[id] === undefined) {
+            depth[id] = 0;
+            queue.push(id);
+        }
+    });
+    while (queue.length) {
+        const id = queue.shift();
+        (tree[id]?.choices || []).forEach(c => {
+            const to = typeof c?.to === 'string' ? c.to : '';
+            if (to && tree[to] && depth[to] === undefined) {
+                depth[to] = depth[id] + 1;
+                queue.push(to);
+            }
+        });
+    }
+    const maxDepth = Math.max(0, ...Object.values(depth));
+    const orphanCol = maxDepth + 1;
+    const cols = [];
+    ids.forEach(id => {
+        const col = depth[id] !== undefined ? depth[id] : orphanCol;
+        (cols[col] || (cols[col] = [])).push(id);
+    });
+    const BOX_W = 110, BOX_H = 24, GAP_X = 50, GAP_Y = 10, PAD = 8;
+    const pos = {};
+    cols.forEach((colIds, ci) => {
+        (colIds || []).forEach((id, ri) => {
+            pos[id] = { x: PAD + ci * (BOX_W + GAP_X), y: PAD + ri * (BOX_H + GAP_Y) };
+        });
+    });
+    const width = PAD * 2 + cols.length * (BOX_W + GAP_X);
+    const height = PAD * 2 + Math.max(...cols.map(c => (c || []).length)) * (BOX_H + GAP_Y);
+    const edges = [];
+    ids.forEach(id => {
+        (tree[id]?.choices || []).forEach(c => {
+            const to = typeof c?.to === 'string' ? c.to : '';
+            if (!to || !pos[to] || !pos[id])
+                return;
+            const a = pos[id], b = pos[to];
+            edges.push(`<line x1="${a.x + BOX_W}" y1="${a.y + BOX_H / 2}" x2="${b.x}" y2="${b.y + BOX_H / 2}" stroke="#4a6a4a" stroke-width="1"/>`);
+        });
+    });
+    const boxes = ids.map(id => {
+        const p = pos[id];
+        const orphan = depth[id] === undefined && id !== 'bye';
+        const label = id.length > 15 ? id.slice(0, 14) + '…' : id;
+        return `<g data-node="${id}" style="cursor:pointer"><rect x="${p.x}" y="${p.y}" width="${BOX_W}" height="${BOX_H}" fill="#101a10" stroke="${orphan ? '#fa0' : '#2b6b2b'}" rx="3"/><text x="${p.x + 6}" y="${p.y + 16}" fill="${orphan ? '#fc0' : '#9ef7a0'}" font-size="11" font-family="monospace">${label}</text></g>`;
+    });
+    graphEl.innerHTML = `<svg width="${width}" height="${height}" role="img" aria-label="Dialog node graph">${edges.join('')}${boxes.join('')}</svg>`;
+    graphEl.querySelectorAll('[data-node]').forEach(g => {
+        g.onclick = () => {
+            const id = g.dataset?.node || g.getAttribute('data-node');
+            const wrap = document.getElementById('treeEditor');
+            if (!wrap || !id)
+                return;
+            const target = Array.from(wrap.querySelectorAll('.node')).find(n => (n.querySelector('.nodeId')?.value.trim() === id));
+            if (target) {
+                target.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+                target.style.outline = '1px solid #9ef7a0';
+                setTimeout(() => { target.style.outline = ''; }, 1200);
+            }
+        };
+    });
+}
+function applyDialogNodeFilter() {
+    const wrap = document.getElementById('treeEditor');
+    if (!wrap)
+        return;
+    const q = (document.getElementById('dlgSearch')?.value || '').trim().toLowerCase();
+    const mode = document.getElementById('dlgFilter')?.value || '';
+    const statusEl = document.getElementById('dlgStatus');
+    const tree = getTreeData();
+    const reachable = new Set();
+    const visit = id => {
+        if (reachable.has(id) || !tree[id])
+            return;
+        reachable.add(id);
+        (tree[id].choices || []).forEach(c => { if (c.to)
+            visit(c.to); });
+    };
+    ['start', 'locked', 'sell', 'accept', 'do_turnin', 'do_fight'].forEach(id => { if (tree[id])
+        visit(id); });
+    let shown = 0;
+    let total = 0;
+    wrap.querySelectorAll('.node').forEach(nodeEl => {
+        const id = nodeEl.querySelector('.nodeId')?.value.trim() || '';
+        const node = tree[id] || { text: '', choices: [] };
+        total += 1;
+        let ok = true;
+        if (q) {
+            const hay = [id, node.text || '']
+                .concat((node.choices || []).flatMap(c => [c?.label || '', c?.to || '', c?.success || '', c?.failure || '']))
+                .join('\n').toLowerCase();
+            ok = hay.includes(q);
+        }
+        if (ok && mode) {
+            const cs = node.choices || [];
+            if (mode === 'effects')
+                ok = cs.some(c => (c?.effects?.length ?? 0) > 0 || c?.setFlag || c?.reward || c?.spawn || c?.goto || c?.join);
+            else if (mode === 'checks')
+                ok = cs.some(c => c?.stat);
+            else if (mode === 'conditions')
+                ok = cs.some(c => c?.if || c?.reqItem || c?.reqTag || c?.reqSlot || c?.costItem || c?.costTag || c?.costSlot || c?.ifOnce);
+            else if (mode === 'orphans')
+                ok = !reachable.has(id) && id !== 'bye';
+        }
+        nodeEl.style.display = ok ? '' : 'none';
+        if (ok)
+            shown += 1;
+    });
+    if (statusEl && (q || mode))
+        statusEl.textContent = `Showing ${shown} of ${total} nodes`;
+    else if (statusEl && !statusEl._statusTimer)
+        statusEl.textContent = '';
 }
 function generateQuestTree() {
     const sel = document.getElementById('npcQuests');
@@ -8166,6 +8568,16 @@ if (spawnHeatBtn)
 document.getElementById('addNode')?.addEventListener('click', addNode);
 document.getElementById('editDialog')?.addEventListener('click', openDialogEditor);
 document.getElementById('closeDialogModal')?.addEventListener('click', closeDialogEditor);
+document.getElementById('dlgSearch')?.addEventListener('input', applyDialogNodeFilter);
+document.getElementById('dlgFilter')?.addEventListener('change', applyDialogNodeFilter);
+document.getElementById('dlgTemplate')?.addEventListener('change', e => {
+    const sel = e.target;
+    if (sel.value)
+        insertDialogTemplate(sel.value);
+    sel.value = '';
+});
+document.getElementById('pasteSubtree')?.addEventListener('click', pasteDialogSubtree);
+document.getElementById('dlgGraphWrap')?.addEventListener('toggle', renderDialogGraph);
 document.getElementById('dialogModal')?.addEventListener('click', e => { if (e.target?.id === 'dialogModal')
     closeDialogEditor(); });
 // Live preview when dialog text changes
