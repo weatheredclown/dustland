@@ -5346,7 +5346,7 @@ function addEventSubBlock(container, ev = {}) {
     div.style.cssText = 'border-left:2px solid #2b3b2b;padding-left:8px;margin-bottom:6px;';
     const effectSel = document.createElement('select');
     effectSel.className = 'eventSubEffect';
-    ['toast', 'log', 'addFlag', 'modStat'].forEach(val => {
+    ['toast', 'log', 'addFlag', 'modStat', 'endSequence'].forEach(val => {
         const opt = document.createElement('option');
         opt.value = val;
         opt.textContent = val;
@@ -5370,6 +5370,24 @@ function addEventSubBlock(container, ev = {}) {
     flagLabel.textContent = 'Flag ';
     flagLabel.appendChild(flagInput);
     flagLabel.style.display = 'none';
+    const endWrap = document.createElement('div');
+    endWrap.className = 'eventSubEndWrap';
+    endWrap.style.display = 'none';
+    const endMessages = document.createElement('textarea');
+    endMessages.className = 'eventSubEndMessages';
+    endMessages.placeholder = 'End messages, one per line';
+    endMessages.value = Array.isArray(ev.messages) ? ev.messages.join('\n') : (ev.msg || 'GAME OVER');
+    endMessages.style.cssText = 'width:100%;min-height:54px;';
+    const endCredits = document.createElement('textarea');
+    endCredits.className = 'eventSubEndCredits';
+    endCredits.placeholder = 'Module credits, one per line as Name — Title';
+    endCredits.value = Array.isArray(ev.credits) ? ev.credits.map(c => typeof c === 'string' ? c : `${c.name || ''}${c.title || c.role ? ' — ' + (c.title || c.role) : ''}`).join('\n') : '';
+    endCredits.style.cssText = 'width:100%;min-height:54px;';
+    const endHint = document.createElement('small');
+    endHint.textContent = 'Fades to black, prints THE END, then rolls module credits plus Dustland game credits.';
+    endWrap.appendChild(endMessages);
+    endWrap.appendChild(endCredits);
+    endWrap.appendChild(endHint);
     const statWrap = document.createElement('div');
     statWrap.className = 'eventSubStatWrap';
     statWrap.style.display = 'none';
@@ -5404,11 +5422,13 @@ function addEventSubBlock(container, ev = {}) {
         msgLabel.style.display = (eff === 'toast' || eff === 'log') ? 'block' : 'none';
         flagLabel.style.display = eff === 'addFlag' ? 'block' : 'none';
         statWrap.style.display = eff === 'modStat' ? 'flex' : 'none';
+        endWrap.style.display = eff === 'endSequence' ? 'block' : 'none';
     }
     effectSel.addEventListener('change', updateSubFields);
     div.appendChild(effectSel);
     div.appendChild(msgLabel);
     div.appendChild(flagLabel);
+    div.appendChild(endWrap);
     div.appendChild(statWrap);
     div.appendChild(removeBtn);
     container.appendChild(div);
@@ -5446,6 +5466,15 @@ function collectEvent() {
             ev.stat = div.querySelector('.eventSubStatSelect')?.value || '';
             ev.delta = parseInt(div.querySelector('.eventSubDeltaInput')?.value, 10) || 0;
             ev.duration = parseInt(div.querySelector('.eventSubDurInput')?.value, 10) || 0;
+        }
+        if (eff === 'endSequence') {
+            const rawMessages = div.querySelector('.eventSubEndMessages')?.value || '';
+            const rawCredits = div.querySelector('.eventSubEndCredits')?.value || '';
+            ev.messages = rawMessages.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+            ev.credits = rawCredits.split(/\r?\n/).map(line => {
+                const parts = line.split(/\s+[—-]\s+/);
+                return { name: (parts.shift() || '').trim(), title: parts.join(' — ').trim() };
+            }).filter(credit => credit.name || credit.title);
         }
         return ev;
     }) : [];

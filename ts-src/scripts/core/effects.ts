@@ -46,6 +46,8 @@
     stat?: string;
     flag?: string;
     msg?: string;
+    messages?: string[];
+    credits?: unknown[];
     [key: string]: unknown;
   };
 
@@ -215,6 +217,10 @@
             break;
           case 'log':
             if (typeof log === 'function') log(eff.msg ?? '');
+            break;
+          case 'endSequence':
+          case 'gameOver':
+            globalThis.Dustland?.actions?.playEndSequence?.(eff);
             break;
           case 'openWorkbench':
             globalThis.Dustland?.openWorkbench?.();
