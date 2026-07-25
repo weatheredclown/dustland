@@ -146,6 +146,10 @@
                         if (typeof log === 'function')
                             log(eff.msg ?? '');
                         break;
+                    case 'endSequence':
+                    case 'gameOver':
+                        globalThis.Dustland?.actions?.playEndSequence?.(eff);
+                        break;
                     case 'openWorkbench':
                         globalThis.Dustland?.openWorkbench?.();
                         break;

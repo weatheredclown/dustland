@@ -7,6 +7,23 @@ const ackModuleSchema = {
         "name": { "type": "string" },
         "module": { "type": "string" },
         "moduleVar": { "type": "string" },
+        "credits": {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    { "type": "string" },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "name": { "type": "string" },
+                            "title": { "type": "string" },
+                            "role": { "type": "string" }
+                        },
+                        "additionalProperties": true
+                    }
+                ]
+            }
+        },
         "start": {
             "type": "object",
             "properties": {
