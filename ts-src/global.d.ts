@@ -502,6 +502,7 @@ declare global {
       context?: { phase?: string;[key: string]: unknown }
     ) => void;
     start?: { map: string; x: number; y: number } | null;
+    credits?: Array<string | { name?: string; title?: string; role?: string; [key: string]: unknown }>;
     templates?: Array<{
       id?: string;
       color?: string;
@@ -883,6 +884,7 @@ declare global {
   interface DustlandActionsApi {
     applyQuestReward?: (reward: unknown) => void;
     startCombat?: (enemy: CombatParticipant & { [key: string]: unknown }) => void;
+    playEndSequence?: (config?: { [key: string]: unknown }) => Promise<void>;
     [key: string]: unknown;
   }
 
