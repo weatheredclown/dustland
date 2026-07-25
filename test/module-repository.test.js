@@ -76,5 +76,42 @@ test('mapDocToSummary applies defaults when fields are missing', t => {
     ownerId: 'unknown',
     updatedAt: 1800000000000,
     publishedVersionId: null,
+    thumb: '',
   });
+});
+
+test('mapDocToSummary carries the stored thumbnail through', () => {
+  const repo = new FirestoreModuleRepository();
+  const summary = repo.mapDocToSummary('map-7', { thumb: 'data:image/jpeg;base64,abc' });
+  assert.equal(summary.thumb, 'data:image/jpeg;base64,abc');
+});
+
+test('NullModuleRepository lists no versions and loads none by id', async () => {
+  const repo = new NullModuleRepository();
+  assert.deepEqual(await repo.listVersions('mod-1'), []);
+  assert.equal(await repo.loadVersion('mod-1', 'v-2'), null);
+});
+
+test('describeCloudError explains offline failures with a next step', async () => {
+  const { describeCloudError } = await import('../scripts/ack/module-repository.js');
+  const err = new Error('transport failure');
+  err.code = 'unavailable';
+  const message = describeCloudError(err);
+  assert.match(message, /offline/i);
+  assert.match(message, /try again/i);
+});
+
+test('describeCloudError explains expired sign-in with a next step', async () => {
+  const { describeCloudError } = await import('../scripts/ack/module-repository.js');
+  const err = new Error('credential no longer valid');
+  err.code = 'unauthenticated';
+  const message = describeCloudError(err);
+  assert.match(message, /sign-in has expired/i);
+  assert.match(message, /sign in again/i);
+});
+
+test('describeCloudError keeps detailed messages for other failures', async () => {
+  const { describeCloudError } = await import('../scripts/ack/module-repository.js');
+  assert.equal(describeCloudError(new Error('boom')), 'boom');
+  assert.equal(describeCloudError({}), 'Unknown issue.');
 });

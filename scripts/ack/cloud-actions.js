@@ -1,6 +1,6 @@
 import { bootstrapHostedFirebase } from '../hosting/firebase-bootstrap.js';
 import { FIREBASE_APP_NAME, loadFirebaseApp, loadFirebaseAuth } from './firebase-clients.js';
-import { FirestoreModuleRepository, isPermissionError } from './module-repository.js';
+import { FirestoreModuleRepository, describeCloudError, isAuthExpiredError, isPermissionError, } from './module-repository.js';
 import { ServerSession } from './server-session.js';
 async function initCloudActions() {
     const saveBtn = document.getElementById('cloudSave');
@@ -228,6 +228,14 @@ async function initCloudActions() {
                     'border:1px solid #1f2b1f;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;background:#0a100a;';
                 const titleRow = document.createElement('div');
                 titleRow.style.cssText = 'display:flex;justify-content:space-between;gap:8px;align-items:center;';
+                if (module.thumb) {
+                    const thumb = document.createElement('img');
+                    thumb.src = module.thumb;
+                    thumb.alt = '';
+                    thumb.style.cssText =
+                        'width:64px;height:48px;object-fit:cover;border:1px solid #2b3b2b;border-radius:6px;image-rendering:pixelated;flex:none;';
+                    titleRow.appendChild(thumb);
+                }
                 const title = document.createElement('div');
                 title.textContent = module.title?.trim() || 'Untitled Map';
                 title.style.cssText = 'color:#e8ffe8;font-weight:600;flex:1;';
@@ -254,6 +262,59 @@ async function initCloudActions() {
                 loadBtn.textContent = 'Load';
                 loadBtn.onclick = () => onSelect('load');
                 actions.appendChild(loadBtn);
+                const historyPanel = document.createElement('div');
+                historyPanel.style.cssText = 'display:none;flex-direction:column;gap:4px;border-top:1px solid #1f2b1f;padding-top:6px;';
+                let historyLoaded = false;
+                const historyBtn = document.createElement('button');
+                historyBtn.type = 'button';
+                historyBtn.className = 'btn';
+                historyBtn.textContent = 'History';
+                historyBtn.setAttribute('aria-expanded', 'false');
+                historyBtn.onclick = async () => {
+                    const open = historyPanel.style.display !== 'none';
+                    if (open) {
+                        historyPanel.style.display = 'none';
+                        historyBtn.setAttribute('aria-expanded', 'false');
+                        return;
+                    }
+                    historyPanel.style.display = 'flex';
+                    historyBtn.setAttribute('aria-expanded', 'true');
+                    if (historyLoaded)
+                        return;
+                    historyPanel.textContent = 'Loading version history…';
+                    try {
+                        const versions = (await repo.listVersions?.(module.id)) ?? [];
+                        historyLoaded = true;
+                        historyPanel.replaceChildren();
+                        if (!versions.length) {
+                            historyPanel.textContent = 'No saved versions found.';
+                            return;
+                        }
+                        versions.forEach((version, idx) => {
+                            const row = document.createElement('div');
+                            row.style.cssText = 'display:flex;justify-content:space-between;gap:8px;align-items:center;';
+                            const label = document.createElement('div');
+                            const when = version.createdAt ? new Date(version.createdAt).toLocaleString() : 'unknown time';
+                            label.textContent = idx === 0 ? `${when} (latest)` : when;
+                            label.style.cssText = 'color:#a3c1a3;font-size:0.85rem;flex:1;';
+                            label.title = `Saved by ${version.createdBy}`;
+                            row.appendChild(label);
+                            const restoreBtn = document.createElement('button');
+                            restoreBtn.type = 'button';
+                            restoreBtn.className = 'btn';
+                            restoreBtn.textContent = idx === 0 ? 'Load' : 'Restore';
+                            restoreBtn.onclick = () => onSelect('load', version.versionId);
+                            row.appendChild(restoreBtn);
+                            historyPanel.appendChild(row);
+                        });
+                    }
+                    catch (err) {
+                        historyLoaded = false;
+                        historyPanel.textContent = 'Could not load history: ' + describeCloudError(err);
+                    }
+                };
+                if (repo.listVersions)
+                    actions.appendChild(historyBtn);
                 if (module.access === 'owner' && repo.deleteModule) {
                     const deleteBtn = document.createElement('button');
                     deleteBtn.type = 'button';
@@ -337,6 +398,7 @@ async function initCloudActions() {
                     actions.appendChild(removeBtn);
                 }
                 container.appendChild(actions);
+                container.appendChild(historyPanel);
                 return container;
             };
             return await new Promise(resolve => {
@@ -345,11 +407,15 @@ async function initCloudActions() {
                 overlay.style.cssText =
                     'position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:100;';
                 const dialog = document.createElement('div');
+                dialog.setAttribute('role', 'dialog');
+                dialog.setAttribute('aria-modal', 'true');
+                dialog.setAttribute('aria-labelledby', 'cloudModulePickerTitle');
                 dialog.style.cssText =
                     'background:#0c120c;border:1px solid #1f2b1f;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.45);width:90%;max-width:640px;max-height:80vh;display:flex;flex-direction:column;padding:14px;gap:10px;color:#d8eed8;';
                 const header = document.createElement('div');
                 header.style.cssText = 'display:flex;justify-content:space-between;gap:10px;align-items:center;';
                 const title = document.createElement('div');
+                title.id = 'cloudModulePickerTitle';
                 title.textContent = 'Load a cloud module';
                 title.style.cssText = 'font-weight:700;font-size:1.1rem;';
                 header.appendChild(title);
@@ -385,10 +451,10 @@ async function initCloudActions() {
                         return;
                     }
                     modules.forEach(mod => {
-                        const row = createModuleRow(mod, action => {
+                        const row = createModuleRow(mod, (action, versionId) => {
                             if (action === 'load') {
                                 cleanup();
-                                resolve({ module: mod, canceled: false });
+                                resolve({ module: mod, versionId, canceled: false });
                             }
                         }, refreshList);
                         list.appendChild(row);
@@ -419,6 +485,7 @@ async function initCloudActions() {
                 dialog.appendChild(list);
                 overlay.appendChild(dialog);
                 document.body.appendChild(overlay);
+                closeBtn.focus?.();
             });
         }
         catch (err) {
@@ -434,13 +501,13 @@ async function initCloudActions() {
         const stopBusy = setBusyState(loadBtn, 'Loading…');
         setStatus('Fetching cloud modules…');
         try {
-            const { module: target, canceled } = await pickCloudModule();
+            const { module: target, versionId, canceled } = await pickCloudModule();
             if (!target) {
                 if (canceled)
                     setStatus('Cloud load canceled.');
                 return;
             }
-            const version = await repo.loadVersion(target.id);
+            const version = await repo.loadVersion(target.id, versionId);
             if (!version) {
                 setStatus('No saved version found for that module.', 'error');
                 alert('No saved version found for that module.');
@@ -459,10 +526,17 @@ async function initCloudActions() {
                     globals.moduleData.summary = target.summary;
                 lastModuleId = version.moduleId;
             }
-            setStatus('Loaded cloud module: ' + (target.title || target.id), 'success');
+            const label = target.title || target.id;
+            if (versionId) {
+                const when = version.createdAt ? new Date(version.createdAt).toLocaleString() : 'an earlier time';
+                setStatus(`Restored ${label} from ${when}. Use ☁ Save to keep this version as the latest.`, 'success');
+            }
+            else {
+                setStatus('Loaded cloud module: ' + label, 'success');
+            }
         }
         catch (err) {
-            const message = err.message || 'Unknown issue';
+            const message = describeCloudError(err);
             setStatus('Cloud load failed: ' + message, 'error');
             alert('Cloud load failed: ' + message);
         }
@@ -493,15 +567,22 @@ async function initCloudActions() {
                 version = await withTimeout(savePromise, 'Cloud save', 30000);
             }
             catch (err) {
-                if (!moduleId || !isPermissionError(err)) {
+                if (isAuthExpiredError(err) && (await refreshAuthToken()) && (await reinitializeRepo())) {
+                    setStatus('Sign-in refreshed. Retrying cloud save…');
+                    const savePromise = repo.saveDraft(moduleId, payload);
+                    version = await withTimeout(savePromise, 'Cloud save', 30000);
+                }
+                else if (moduleId && isPermissionError(err)) {
+                    setStatus('No edit access to the original module. Saving a copy instead…');
+                    if (globals.moduleData)
+                        delete globals.moduleData.id;
+                    lastModuleId = null;
+                    const savePromise = repo.saveDraft(null, payload);
+                    version = await withTimeout(savePromise, 'Cloud save', 30000);
+                }
+                else {
                     throw err;
                 }
-                setStatus('No edit access to the original module. Saving a copy instead…');
-                if (globals.moduleData)
-                    delete globals.moduleData.id;
-                lastModuleId = null;
-                const savePromise = repo.saveDraft(null, payload);
-                version = await withTimeout(savePromise, 'Cloud save', 30000);
             }
             if (!globals.moduleData)
                 globals.moduleData = {};
@@ -510,7 +591,7 @@ async function initCloudActions() {
             setStatus('Draft saved to the cloud.', 'success');
         }
         catch (err) {
-            const message = err.message || 'Unknown issue';
+            const message = describeCloudError(err);
             setStatus('Cloud save failed: ' + message, 'error');
             alert('Cloud save failed: ' + message);
         }
@@ -538,7 +619,7 @@ async function initCloudActions() {
             setStatus('Module published.', 'success');
         }
         catch (err) {
-            const message = err.message || 'Unknown issue';
+            const message = describeCloudError(err);
             setStatus('Publish failed: ' + message, 'error');
             alert('Publish failed: ' + message);
         }
@@ -567,7 +648,7 @@ async function initCloudActions() {
             setStatus('Share invitation recorded.', 'success');
         }
         catch (err) {
-            const message = err.message || 'Unknown issue';
+            const message = describeCloudError(err);
             setStatus('Share failed: ' + message, 'error');
             alert('Share failed: ' + message);
         }

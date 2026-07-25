@@ -87,13 +87,15 @@ A creator who has never seen the ACK can build a small, complete, playable modul
 
 ## Milestone 5 — Cloud & finish
 
-- [ ] **Version history UI**: list prior cloud saves with timestamps, load/restore any version (repository has `loadVersion` but only fetches latest; no history list exists).
-- [ ] **Module thumbnail/preview image** on the properties panel and in the cloud picker.
-- [ ] **Cloud error clarity**: audit the failure paths (auth expired, permission denied, offline) so each shows an actionable message rather than a generic failure.
-- [ ] **Responsive layout pass**: panels usable at narrower widths and browser zoom; map overlays adapt to DPI.
-- [ ] **Pre-1.0 accessibility audit**: the recent aria-label work is a good base; verify with a screen-reader pass over one full create-an-NPC flow.
+*Status: implemented 2026-07-25 except the live screen-reader session (see notes per item).*
 
-**Done when:** creators can recover any prior cloud version, and every cloud failure tells them what to do next.
+- [x] **Version history UI** — `listVersions` on the repository (no composite index needed; sorted client-side) plus a History button on every row of the cloud picker: expands to a timestamped list of saves with per-version Restore. Restoring loads that payload into the editor and prompts to ☁ Save to make it the latest. `loadVersion` now accepts a specific version id.
+- [x] **Module thumbnail/preview image** — "📷 Capture from map" on the properties panel snapshots the world canvas into a small JPEG stored in the module payload (`thumbnail`), round-trips through save/load/export, and shows next to the title in the cloud picker (mirrored to `maps`/`publicListings` metadata, capped at ~200 KB).
+- [x] **Cloud error clarity** — `describeCloudError` classifies offline (`unavailable`, `navigator.onLine`) and expired sign-in (`unauthenticated`) failures into messages that say what to do next; save/load/publish/share all use it, and an expired token now triggers one automatic refresh-and-retry on save. Permission errors keep their existing detailed actor/path messages.
+- [x] **Responsive layout pass** — modals clamp to the viewport (`max-width:calc(100vw - 20px)`, `max-height:92vh`, internal scroll), the fixed-width dialog editor gives way below 640px, properties-panel fields stop overflowing, and layout padding tightens on small screens. The base layout already stacked below 1100px with scrollable tabs; map canvases already scale via CSS with pointer math corrected by `getCanvasScale`.
+- [ ] **Pre-1.0 accessibility audit** — groundwork done in code: all four editor modals and the cloud picker now carry `role="dialog"`/`aria-modal` with labelled titles, focus moves into the wizard modal and cloud picker on open, and Escape closes the wizard and load modals (dialog editor already had it). **The live screen-reader pass over a full create-an-NPC flow remains manual QA** — it needs a human with NVDA/VoiceOver.
+
+**Done when:** creators can recover any prior cloud version, and every cloud failure tells them what to do next. ✅ (both true; the screen-reader session is the one open item)
 
 ---
 

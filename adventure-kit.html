@@ -443,6 +443,32 @@
       display: flex;
     }
 
+    /* Keep every modal usable at narrow widths and high browser zoom. */
+    .modal .card {
+      max-width: calc(100vw - 20px);
+      max-height: 92vh;
+      overflow: auto;
+      box-sizing: border-box;
+    }
+
+    #modulePropsPanel input,
+    #modulePropsPanel textarea {
+      max-width: 100%;
+    }
+
+    @media (max-width: 640px) {
+      .ak-layout {
+        padding: 8px;
+        gap: 8px;
+      }
+
+      #dialogModal .card {
+        width: auto;
+        flex: 1;
+        margin: 0 10px;
+      }
+    }
+
     #dialogModal .card {
       position: relative;
       width: 600px;
@@ -527,6 +553,12 @@
             <label>Start Map<br/><select id="moduleStartMap"></select></label>
             <label>Start X<br/><input id="moduleStartX" type="number" min="0" style="width:50px;" /></label>
             <label>Start Y<br/><input id="moduleStartY" type="number" min="0" style="width:50px;" /></label>
+            <div>
+              Thumbnail<br/>
+              <img id="moduleThumb" alt="Module thumbnail" style="display:none;width:96px;height:72px;object-fit:cover;border:1px solid #2b3b2b;border-radius:4px;image-rendering:pixelated;" />
+              <span id="moduleThumbEmpty" class="small" style="opacity:0.7;">None yet</span><br/>
+              <button class="btn" type="button" id="captureThumb" title="Capture the current map view as this module's preview image">📷 Capture from map</button>
+            </div>
           </div>
         </details>
         <div class="btn-group">
@@ -1161,9 +1193,9 @@
     </aside>
   </div><!-- /.ak-layout -->
   <div id="loadModal" class="modal">
-    <div class="card">
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="loadModalTitle">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div><b>Load Module</b></div>
+        <div><b id="loadModalTitle">Load Module</b></div>
         <button class="btn" type="button" id="closeLoadModal">Close</button>
       </div>
       <div id="loadDropZone" role="button" tabindex="0" aria-label="Load module JSON">
@@ -1178,9 +1210,9 @@
     </div>
   </div>
   <div id="dialogModal" class="modal">
-    <div class="card">
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="dialogModalTitle">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div><b>Dialog Tree Editor</b></div>
+        <div><b id="dialogModalTitle">Dialog Tree Editor</b></div>
         <button class="btn" type="button" id="closeDialogModal">Close</button>
       </div>
       <div id="dlgToolbar" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px">
@@ -1213,7 +1245,7 @@
     </div>
   </div>
   <div id="wizardModal" class="modal">
-    <div class="card">
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="wizardTitle">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div><b id="wizardTitle"></b></div>
         <button class="btn" type="button" id="closeWizard">Close</button>
@@ -1226,7 +1258,7 @@
     </div>
   </div>
   <div id="confirmModal" class="modal">
-    <div class="card" style="padding:12px;text-align:center">
+    <div class="card" role="alertdialog" aria-modal="true" aria-describedby="confirmText" style="padding:12px;text-align:center">
       <div id="confirmText" style="margin-bottom:8px"></div>
       <div>
         <button class="btn" id="confirmYes">Yes</button>

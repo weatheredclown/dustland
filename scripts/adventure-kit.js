@@ -7543,6 +7543,8 @@ function applyLoadedModule(data) {
     moduleData.description = data.description || '';
     moduleData.author = data.author || '';
     moduleData.version = data.version || '';
+    moduleData.thumbnail = typeof data.thumbnail === 'string' ? data.thumbnail : '';
+    refreshModuleThumb();
     moduleData.tags = Array.isArray(data.tags) ? data.tags : [];
     document.getElementById('moduleName').value = moduleData.name;
     document.getElementById('moduleDesc').value = moduleData.description;
@@ -8132,6 +8134,8 @@ function exportModulePayload() {
             return;
         if (k === 'version' && !moduleData[k])
             return;
+        if (k === 'thumbnail' && !moduleData[k])
+            return;
         if (k === 'tags' && (!moduleData[k] || !moduleData[k].length))
             return;
         if (moduleData[k] !== undefined)
@@ -8151,6 +8155,39 @@ function exportModulePayload() {
     return { data };
 }
 globalThis.exportModulePayload = exportModulePayload;
+function refreshModuleThumb() {
+    const img = document.getElementById('moduleThumb');
+    const empty = document.getElementById('moduleThumbEmpty');
+    const thumb = typeof moduleData.thumbnail === 'string' ? moduleData.thumbnail : '';
+    if (img) {
+        if (thumb)
+            img.src = thumb;
+        else
+            img.removeAttribute?.('src');
+        img.style.display = thumb ? 'inline-block' : 'none';
+    }
+    if (empty)
+        empty.style.display = thumb ? 'none' : 'inline';
+}
+document.getElementById('captureThumb')?.addEventListener('click', () => {
+    const src = document.getElementById('map');
+    if (!src || typeof src.toDataURL !== 'function')
+        return;
+    const out = document.createElement('canvas');
+    out.width = 192;
+    out.height = 144;
+    const ctx = out.getContext('2d');
+    if (!ctx)
+        return;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(src, 0, 0, out.width, out.height);
+    moduleData.thumbnail = out.toDataURL('image/jpeg', 0.7);
+    if (Array.isArray(moduleData._origKeys) && !moduleData._origKeys.includes('thumbnail')) {
+        moduleData._origKeys.push('thumbnail');
+    }
+    refreshModuleThumb();
+    globalThis.markAckDirty?.();
+});
 function saveModule() {
     if (hasBlockingProblems())
         return;
@@ -9359,6 +9396,7 @@ function openWizard(cfg) {
     const close = document.getElementById('closeWizard');
     title.textContent = cfg.title;
     modal.style.display = 'block';
+    close?.focus?.();
     const wiz = Dustland.Wizard(body, cfg.steps, {
         onComplete(state) {
             // Snapshot before commit: some wizards adjust existing entries
@@ -9644,8 +9682,14 @@ if (document && typeof document.addEventListener === 'function') {
         }
         else if (e.key === 'Escape') {
             const dlgModal = document.getElementById('dialogModal');
+            const wizModal = document.getElementById('wizardModal');
+            const loadModal = document.getElementById('loadModal');
             if (dlgModal?.classList?.contains('shown'))
                 closeDialogEditor();
+            else if (wizModal && wizModal.style.display === 'block')
+                wizModal.style.display = 'none';
+            else if (loadModal?.classList?.contains('shown'))
+                loadModal.classList.remove('shown');
         }
     });
 }

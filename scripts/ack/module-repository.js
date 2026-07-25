@@ -12,8 +12,11 @@ export class NullModuleRepository {
     async listPublic() {
         return [];
     }
-    async loadVersion(_moduleId) {
+    async loadVersion(_moduleId, _versionId) {
         return null;
+    }
+    async listVersions(_moduleId) {
+        return [];
     }
     async saveDraft(moduleId, payload) {
         const now = Date.now();
@@ -104,16 +107,19 @@ export class FirestoreModuleRepository {
             access: 'public',
         }));
     }
-    async loadVersion(moduleId) {
+    async loadVersion(moduleId, requestedVersionId) {
         if (!this.db)
             return null;
         const { doc, getDoc } = await loadFirebaseModule('firebase-firestore');
-        const mapRef = doc(this.db, 'maps', moduleId);
-        const mapSnap = await getDoc(mapRef);
-        if (!mapSnap.exists())
-            return null;
-        const mapData = mapSnap.data();
-        const versionId = mapData.latestVersionId ?? mapData.publishedVersionId;
+        let versionId = requestedVersionId;
+        if (!versionId) {
+            const mapRef = doc(this.db, 'maps', moduleId);
+            const mapSnap = await getDoc(mapRef);
+            if (!mapSnap.exists())
+                return null;
+            const mapData = mapSnap.data();
+            versionId = mapData.latestVersionId ?? mapData.publishedVersionId ?? undefined;
+        }
         if (!versionId)
             return null;
         const versionRef = doc(this.db, 'mapVersions', `${moduleId}_${versionId}`);
@@ -131,6 +137,25 @@ export class FirestoreModuleRepository {
             createdAt,
             createdBy,
         };
+    }
+    async listVersions(moduleId) {
+        if (!this.db)
+            return [];
+        const { collection, getDocs, query, where } = await loadFirebaseModule('firebase-firestore');
+        const versionsCol = collection(this.db, 'mapVersions');
+        // Filter without orderBy so no composite index is required; sort locally.
+        const snap = await getDocs(query(versionsCol, where('moduleId', '==', moduleId)));
+        return snap.docs
+            .map(docSnap => {
+            const data = docSnap.data();
+            return {
+                moduleId,
+                versionId: data.versionId ?? docSnap.id.slice(moduleId.length + 1),
+                createdAt: typeof data.createdAt === 'number' ? data.createdAt : 0,
+                createdBy: data.createdBy ?? 'unknown',
+            };
+        })
+            .sort((a, b) => b.createdAt - a.createdAt);
     }
     async saveDraft(moduleId, payload) {
         if (!this.db)
@@ -163,6 +188,9 @@ export class FirestoreModuleRepository {
             title: payload.name ?? '',
             summary: payload.summary ?? '',
         };
+        const thumb = sanitizeThumb(payload.thumbnail);
+        if (thumb !== null)
+            mapPayload.thumb = thumb;
         await this.writeWithDetail('saving draft metadata', `maps/${mapId}`, mapPayload, () => setDoc(mapRef, mapPayload, { merge: true }));
         const versionRef = doc(this.db, 'mapVersions', `${mapId}_${versionId}`);
         const serializedPayload = serializePayload(payload);
@@ -251,6 +279,8 @@ export class FirestoreModuleRepository {
             updatedAt: now,
             publishedVersionId,
         };
+        if (typeof data?.thumb === 'string' && data.thumb)
+            listingPayload.thumb = data.thumb;
         await this.writeWithDetail('publishing listing', `publicListings/${moduleId}`, listingPayload, () => setDoc(listingRef, listingPayload, { merge: true }));
     }
     async share(moduleId, email, role = 'viewer') {
@@ -407,6 +437,7 @@ export class FirestoreModuleRepository {
             ownerId: data.ownerId ?? 'unknown',
             updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : Date.now(),
             publishedVersionId: data.publishedVersionId ?? null,
+            thumb: typeof data.thumb === 'string' ? data.thumb : '',
         };
     }
     async safeGetDoc(col, id) {
@@ -444,6 +475,45 @@ export function isPermissionError(err) {
     if (message?.includes('missing or insufficient permissions'))
         return true;
     return message?.includes('do not have edit access to this module') ?? false;
+}
+export function isAuthExpiredError(err) {
+    const code = err.code ?? '';
+    if (code === 'unauthenticated' || code === 'auth/id-token-expired' || code === 'auth/user-token-expired')
+        return true;
+    const message = err.message?.toLowerCase() ?? '';
+    return message.includes('token') && message.includes('expired');
+}
+export function isOfflineError(err) {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false)
+        return true;
+    const code = err.code ?? '';
+    if (code === 'unavailable')
+        return true;
+    const message = err.message?.toLowerCase() ?? '';
+    return message.includes('client is offline') || message.includes('network error') || message.includes('network request failed');
+}
+// Turn a raw cloud failure into a message that tells the user what to do next.
+export function describeCloudError(err) {
+    if (isOfflineError(err)) {
+        return 'You appear to be offline. Reconnect to the internet and try again — your work stays safe in the editor and its local autosave.';
+    }
+    if (isAuthExpiredError(err)) {
+        return 'Your sign-in has expired. Sign in again, then retry.';
+    }
+    const message = err.message;
+    return message || 'Unknown issue.';
+}
+const MAX_THUMB_CHARS = 200000;
+function sanitizeThumb(value) {
+    if (typeof value !== 'string')
+        return null;
+    if (!value)
+        return '';
+    if (!value.startsWith('data:image/'))
+        return null;
+    if (value.length > MAX_THUMB_CHARS)
+        return null;
+    return value;
 }
 function serializePayload(payload) {
     try {

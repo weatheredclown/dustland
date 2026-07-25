@@ -12,6 +12,7 @@ export interface ModuleSummary {
   updatedAt: number;
   publishedVersionId?: string | null;
   access?: 'owner' | 'shared' | 'public';
+  thumb?: string;
   [key: string]: unknown;
 }
 
@@ -24,12 +25,20 @@ export interface ModuleVersion {
   [key: string]: unknown;
 }
 
+export interface ModuleVersionInfo {
+  moduleId: string;
+  versionId: string;
+  createdAt: number;
+  createdBy: string;
+}
+
 export interface ModuleRepository {
   init(session: ServerSessionSnapshot): Promise<void> | void;
   listMine(): Promise<ModuleSummary[]>;
   listShared(): Promise<ModuleSummary[]>;
   listPublic(): Promise<ModuleSummary[]>;
-  loadVersion(moduleId: string): Promise<ModuleVersion | null>;
+  loadVersion(moduleId: string, versionId?: string): Promise<ModuleVersion | null>;
+  listVersions?(moduleId: string): Promise<ModuleVersionInfo[]>;
   saveDraft(moduleId: string | null, payload: unknown): Promise<ModuleVersion>;
   publish(moduleId: string): Promise<void>;
   share?(moduleId: string, email: string, role?: 'viewer' | 'editor'): Promise<void>;
@@ -54,8 +63,12 @@ export class NullModuleRepository implements ModuleRepository {
     return [];
   }
 
-  async loadVersion(_moduleId: string): Promise<ModuleVersion | null> {
+  async loadVersion(_moduleId: string, _versionId?: string): Promise<ModuleVersion | null> {
     return null;
+  }
+
+  async listVersions(_moduleId: string): Promise<ModuleVersionInfo[]> {
+    return [];
   }
 
   async saveDraft(moduleId: string | null, payload: unknown): Promise<ModuleVersion> {
@@ -171,14 +184,17 @@ export class FirestoreModuleRepository implements ModuleRepository {
     }));
   }
 
-  async loadVersion(moduleId: string): Promise<ModuleVersion | null> {
+  async loadVersion(moduleId: string, requestedVersionId?: string): Promise<ModuleVersion | null> {
     if (!this.db) return null;
     const { doc, getDoc } = await loadFirebaseModule<typeof import('firebase/firestore')>('firebase-firestore');
-    const mapRef = doc(this.db, 'maps', moduleId);
-    const mapSnap = await getDoc(mapRef);
-    if (!mapSnap.exists()) return null;
-    const mapData = mapSnap.data() as FirestoreModuleDoc;
-    const versionId = mapData.latestVersionId ?? mapData.publishedVersionId;
+    let versionId = requestedVersionId;
+    if (!versionId) {
+      const mapRef = doc(this.db, 'maps', moduleId);
+      const mapSnap = await getDoc(mapRef);
+      if (!mapSnap.exists()) return null;
+      const mapData = mapSnap.data() as FirestoreModuleDoc;
+      versionId = mapData.latestVersionId ?? mapData.publishedVersionId ?? undefined;
+    }
     if (!versionId) return null;
     const versionRef = doc(this.db, 'mapVersions', `${moduleId}_${versionId}`);
     const versionSnap = await getDoc(versionRef);
@@ -194,6 +210,27 @@ export class FirestoreModuleRepository implements ModuleRepository {
       createdAt,
       createdBy,
     };
+  }
+
+  async listVersions(moduleId: string): Promise<ModuleVersionInfo[]> {
+    if (!this.db) return [];
+    const { collection, getDocs, query, where } = await loadFirebaseModule<typeof import('firebase/firestore')>(
+      'firebase-firestore',
+    );
+    const versionsCol = collection(this.db, 'mapVersions');
+    // Filter without orderBy so no composite index is required; sort locally.
+    const snap = await getDocs(query(versionsCol, where('moduleId', '==', moduleId)));
+    return snap.docs
+      .map(docSnap => {
+        const data = docSnap.data() as { versionId?: string; createdAt?: number; createdBy?: string };
+        return {
+          moduleId,
+          versionId: data.versionId ?? docSnap.id.slice(moduleId.length + 1),
+          createdAt: typeof data.createdAt === 'number' ? data.createdAt : 0,
+          createdBy: data.createdBy ?? 'unknown',
+        };
+      })
+      .sort((a, b) => b.createdAt - a.createdAt);
   }
 
   async saveDraft(moduleId: string | null, payload: unknown): Promise<ModuleVersion> {
@@ -219,7 +256,7 @@ export class FirestoreModuleRepository implements ModuleRepository {
       }
     }
     const ownerId = existingOwnerId ?? userId;
-    const mapPayload = {
+    const mapPayload: Record<string, unknown> = {
       ownerId,
       visibility: 'private',
       updatedAt: now,
@@ -227,6 +264,8 @@ export class FirestoreModuleRepository implements ModuleRepository {
       title: (payload as { name?: string }).name ?? '',
       summary: (payload as { summary?: string }).summary ?? '',
     };
+    const thumb = sanitizeThumb((payload as { thumbnail?: unknown }).thumbnail);
+    if (thumb !== null) mapPayload.thumb = thumb;
     await this.writeWithDetail(
       'saving draft metadata',
       `maps/${mapId}`,
@@ -321,13 +360,14 @@ export class FirestoreModuleRepository implements ModuleRepository {
       () => setDoc(mapRef, publishPayload, { merge: true }),
     );
     const listingRef = doc(this.db, 'publicListings', moduleId);
-    const listingPayload = {
+    const listingPayload: Record<string, unknown> = {
       title: data?.title ?? '',
       summary: data?.summary ?? '',
       ownerId: data?.ownerId ?? this.session?.user?.uid ?? 'anonymous',
       updatedAt: now,
       publishedVersionId,
     };
+    if (typeof data?.thumb === 'string' && data.thumb) listingPayload.thumb = data.thumb;
     await this.writeWithDetail(
       'publishing listing',
       `publicListings/${moduleId}`,
@@ -505,6 +545,7 @@ export class FirestoreModuleRepository implements ModuleRepository {
       ownerId: (data.ownerId as string) ?? 'unknown',
       updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : Date.now(),
       publishedVersionId: (data.publishedVersionId as string | null | undefined) ?? null,
+      thumb: typeof data.thumb === 'string' ? (data.thumb as string) : '',
     };
   }
 
@@ -545,6 +586,43 @@ export function isPermissionError(err: unknown): boolean {
   const message = (err as { message?: string }).message?.toLowerCase();
   if (message?.includes('missing or insufficient permissions')) return true;
   return message?.includes('do not have edit access to this module') ?? false;
+}
+
+export function isAuthExpiredError(err: unknown): boolean {
+  const code = (err as { code?: string }).code ?? '';
+  if (code === 'unauthenticated' || code === 'auth/id-token-expired' || code === 'auth/user-token-expired') return true;
+  const message = (err as { message?: string }).message?.toLowerCase() ?? '';
+  return message.includes('token') && message.includes('expired');
+}
+
+export function isOfflineError(err: unknown): boolean {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return true;
+  const code = (err as { code?: string }).code ?? '';
+  if (code === 'unavailable') return true;
+  const message = (err as { message?: string }).message?.toLowerCase() ?? '';
+  return message.includes('client is offline') || message.includes('network error') || message.includes('network request failed');
+}
+
+// Turn a raw cloud failure into a message that tells the user what to do next.
+export function describeCloudError(err: unknown): string {
+  if (isOfflineError(err)) {
+    return 'You appear to be offline. Reconnect to the internet and try again — your work stays safe in the editor and its local autosave.';
+  }
+  if (isAuthExpiredError(err)) {
+    return 'Your sign-in has expired. Sign in again, then retry.';
+  }
+  const message = (err as { message?: string }).message;
+  return message || 'Unknown issue.';
+}
+
+const MAX_THUMB_CHARS = 200000;
+
+function sanitizeThumb(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  if (!value) return '';
+  if (!value.startsWith('data:image/')) return null;
+  if (value.length > MAX_THUMB_CHARS) return null;
+  return value;
 }
 
 function serializePayload(payload: unknown): SerializedPayload {
