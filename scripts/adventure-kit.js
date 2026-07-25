@@ -3028,6 +3028,8 @@ function toggleQuestTextWrap() {
 }
 // --- NPCs ---
 const npcPortraits = [null, ...Array.from({ length: 90 }, (_, i) => `assets/portraits/portrait_${1000 + i}.png`)];
+// Wizards read this to offer the same portrait choices as the NPC editor.
+globalThis.ackPortraits = npcPortraits;
 let npcPortraitIndex = 0;
 let npcPortraitPath = '';
 function setNpcPortrait() {
@@ -9274,13 +9276,26 @@ if (wizardList && globalThis.Dustland?.wizards) {
 function mergeWizardResult(res) {
     if (!res)
         return;
-    globalThis.ackRecordSnapshot?.();
     Object.entries(res).forEach(([k, v]) => {
         if (Array.isArray(moduleData[k]))
             moduleData[k].push(...v);
         else
             moduleData[k] = v;
     });
+    if (typeof res.name === 'string') {
+        const nameEl = document.getElementById('moduleName');
+        if (nameEl)
+            nameEl.value = res.name;
+    }
+    if (res.start && typeof res.start === 'object') {
+        populateMapDropdown(document.getElementById('moduleStartMap'), res.start.map || 'world');
+        const sx = document.getElementById('moduleStartX');
+        const sy = document.getElementById('moduleStartY');
+        if (sx)
+            sx.value = String(res.start.x ?? '');
+        if (sy)
+            sy.value = String(res.start.y ?? '');
+    }
     if (typeof applyModule === 'function')
         applyModule(moduleData, { fullReset: false });
     // Refresh lists so wizard changes appear immediately.
@@ -9317,6 +9332,9 @@ function openWizard(cfg) {
     modal.style.display = 'block';
     const wiz = Dustland.Wizard(body, cfg.steps, {
         onComplete(state) {
+            // Snapshot before commit: some wizards adjust existing entries
+            // (e.g. adding a trophy drop to a template) inside commit().
+            globalThis.ackRecordSnapshot?.();
             if (cfg.commit)
                 mergeWizardResult(cfg.commit(state));
             modal.style.display = 'none';

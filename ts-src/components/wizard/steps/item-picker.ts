@@ -1,13 +1,19 @@
 type ItemPickerOption = string | { id: string; name: string };
+type ItemPickerOptions = ItemPickerOption[] | (() => ItemPickerOption[] | undefined) | undefined;
 
 const itemPickerStep: WizardStepFactory = (
   label: string,
-  options: ItemPickerOption[] | undefined,
+  options: ItemPickerOptions,
   key: string,
   rewardKey?: string,
 ) => {
   let selectEl: HTMLSelectElement | null = null;
   let rewardInputEl: HTMLInputElement | null = null;
+
+  const resolveOptions = (): ItemPickerOption[] => {
+    const raw = typeof options === 'function' ? options() : options;
+    return Array.isArray(raw) ? raw.filter(Boolean) : [];
+  };
 
   return {
     render(container, state) {
@@ -25,7 +31,7 @@ const itemPickerStep: WizardStepFactory = (
       if (!currentValue) placeholder.selected = true;
       select.appendChild(placeholder);
 
-      (options ?? []).forEach(opt => {
+      resolveOptions().forEach(opt => {
         const optionEl = document.createElement('option');
         if (typeof opt === 'string') {
           optionEl.value = opt;

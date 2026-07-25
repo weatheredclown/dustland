@@ -1,6 +1,10 @@
 const itemPickerStep = (label, options, key, rewardKey) => {
     let selectEl = null;
     let rewardInputEl = null;
+    const resolveOptions = () => {
+        const raw = typeof options === 'function' ? options() : options;
+        return Array.isArray(raw) ? raw.filter(Boolean) : [];
+    };
     return {
         render(container, state) {
             const labelEl = document.createElement('label');
@@ -14,7 +18,7 @@ const itemPickerStep = (label, options, key, rewardKey) => {
             if (!currentValue)
                 placeholder.selected = true;
             select.appendChild(placeholder);
-            (options ?? []).forEach(opt => {
+            resolveOptions().forEach(opt => {
                 const optionEl = document.createElement('option');
                 if (typeof opt === 'string') {
                     optionEl.value = opt;

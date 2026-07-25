@@ -76,13 +76,14 @@ A creator who has never seen the ACK can build a small, complete, playable modul
 ## Milestone 4 — Guided creation covers the core loop
 
 *Wizards exist for NPC+Quest, Chest, and Building. 1.0 needs the full "first module" path guided.*
+*Status: implemented 2026-07-24 (see notes per item).*
 
-- [ ] **Starter Module wizard**: name → generate/paint world → place player start → first NPC with dialog → one quest → one building. Target: playable minimal module in under 5 minutes.
-- [ ] **Encounter wizard**: zone/tile → enemy template (create if missing) → count/chance → loot → confirm.
-- [ ] **Expanded Quest wizard**: kill and exploration quests in addition to fetch; reward step; auto-generated quest-giver dialog nodes.
-- [ ] **Dynamic asset pickers in all wizards**: replace remaining hardcoded portrait filenames and item IDs with pickers fed from module data.
+- [x] **Starter Module wizard** — name → seed → world generation → player start → first NPC with greeting → fetch quest with placed item → one building. Picked tiles snap to the nearest walkable terrain so the module is playable immediately. (The wizard placement canvas is still the simple 16×16 picker, so positions land in the map's top-left region — improving it is a post-1.0 nicety.)
+- [x] **Encounter wizard** — map + zone tag or road-distance band → enemy template (pick existing or create with HP/ATK/DEF) → loot drop with chance % → confirm. "Spawn count" is not a per-encounter engine concept (banks spawn by distance/zone), so the wizard exposes exactly what the engine supports.
+- [x] **Expanded Quest wizard** — the NPC & Quest wizard now offers fetch, kill, and explore quests with a reward step (scrap, optional item, optional XP). Kill quests count trophy drops wired into the enemy template's loot table; explore quests plant a tile event that sets the quest's `reqFlag`. Quest-giver dialog is auto-generated with `q: accept`/`q: turnin` choices and a `do_turnin` node, matching the quest engine's conventions.
+- [x] **Dynamic asset pickers in all wizards** — portraits come from the editor's portrait list (`ackPortraits`) with a custom-path escape hatch; item, enemy-template, and map pickers read live module data via `ackGetModuleData`. The Chest wizard (previously registered but never loaded by adventure-kit.html) plus the new wizards are now on the page. Remaining hardcoded list: the Building wizard's two `.tmx` interior layouts.
 
-**Done when:** the wizard tab alone can produce a complete playable module.
+**Done when:** the wizard tab alone can produce a complete playable module. ✅
 
 ## Milestone 5 — Cloud & finish
 
