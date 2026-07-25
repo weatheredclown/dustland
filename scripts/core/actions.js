@@ -42,6 +42,41 @@
     function setEndOverlayText(overlay, html) {
         overlay.innerHTML = `<div style="max-width:760px;line-height:1.7;text-shadow:0 0 12px #0f0;">${html}</div>`;
     }
+    // The credit window is sized to show 3-4 entries at a time.
+    const CREDIT_WINDOW = '12em';
+    function ensureEndSequenceStyles() {
+        if (typeof document === 'undefined')
+            return;
+        if (document.getElementById('dustlandEndSequenceStyles'))
+            return;
+        const style = document.createElement('style');
+        style.id = 'dustlandEndSequenceStyles';
+        style.textContent = [
+            `@keyframes dustlandCreditScroll { from { transform: translateY(0); } to { transform: translateY(calc(-100% - ${CREDIT_WINDOW})); } }`,
+            '@keyframes dustlandCreditPulse {',
+            '  0%, 100% { opacity: .35; box-shadow: 0 0 4px rgba(110,255,140,.25); }',
+            '  50% { opacity: .95; box-shadow: 0 0 12px rgba(110,255,140,.7); }',
+            '}'
+        ].join('\n');
+        document.body.appendChild(style);
+    }
+    function renderCreditScroll(overlay, credits, durationMs) {
+        ensureEndSequenceStyles();
+        const entries = credits.map(credit => `<div style="padding:.65em 0;">` +
+            `<p style="font-size:1.2rem;margin:0;">${escapeHtml(credit.name)}</p>` +
+            (credit.title ? `<p style="color:#6f6;font-size:.85rem;margin:.3rem 0 0;">${escapeHtml(credit.title)}</p>` : '') +
+            `</div>`).join('');
+        const rule = (side) => `<div style="height:2px;${side};background:linear-gradient(90deg,transparent,#5f5 20%,#5f5 80%,transparent);animation:dustlandCreditPulse 2.2s ease-in-out infinite;"></div>`;
+        setEndOverlayText(overlay, `<div style="width:min(420px,80vw);margin:0 auto;">` +
+            rule('margin-bottom:.4em') +
+            `<div style="position:relative;height:${CREDIT_WINDOW};overflow:hidden;` +
+            `-webkit-mask-image:linear-gradient(transparent,#000 14%,#000 86%,transparent);` +
+            `mask-image:linear-gradient(transparent,#000 14%,#000 86%,transparent);">` +
+            `<div style="position:absolute;left:0;right:0;top:100%;animation:dustlandCreditScroll ${Math.max(1, durationMs)}ms linear forwards;">${entries}</div>` +
+            `</div>` +
+            rule('margin-top:.4em') +
+            `</div>`);
+    }
     const Actions = {
         applyQuestReward(reward) {
             if (!reward)
@@ -119,13 +154,20 @@
                 ...(Array.isArray(config.credits) ? config.credits : activeModuleCredits()),
                 ...(includeGameCredits ? GAME_CREDITS : [])
             ].map(normalizeCredit).filter(Boolean);
-            for (const credit of credits) {
-                const line = credit.title ? `${credit.name} — ${credit.title}` : credit.name;
-                if (typeof globalThis.log === 'function')
-                    globalThis.log(line);
+            if (credits.length) {
+                for (const credit of credits) {
+                    const line = credit.title ? `${credit.name} — ${credit.title}` : credit.name;
+                    if (typeof globalThis.log === 'function')
+                        globalThis.log(line);
+                }
+                // The extra beats cover the scroll's lead-in from below the window
+                // and its run-out past the top delimiter.
+                const scrollMs = (credits.length + 3) * creditMs;
                 if (overlay)
-                    setEndOverlayText(overlay, `<p style="font-size:1.2rem;margin:0;">${escapeHtml(credit.name)}</p>${credit.title ? `<p style="color:#6f6;margin:.4rem 0 0;">${escapeHtml(credit.title)}</p>` : ''}`);
-                await sleep(creditMs);
+                    renderCreditScroll(overlay, credits, scrollMs);
+                await sleep(scrollMs);
+                if (overlay)
+                    setEndOverlayText(overlay, `<h1 style="margin:0 0 12px;">${safeTitle}</h1>${subtitle}`);
             }
         }
     };
