@@ -267,6 +267,7 @@ Common examples:
 { "effect": "lockNPC", "npcId": "id" }
 { "effect": "addFlag", "flag": "story_flag" }
 { "effect": "openWorldMap", "id": "dest" }
+{ "effect": "endSequence", "messages": ["The signal dies."], "credits": [{ "name": "Module Author", "title": "Writer" }] }
 ```
 
 ### TileEvent
