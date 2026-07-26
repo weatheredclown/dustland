@@ -10,3 +10,5 @@ server.log
 CLAUDE.md
 firebase-data/
 ComfyUI/scripts/__pycache__/
+data/modules/*.json
+

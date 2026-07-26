@@ -12,16 +12,17 @@ function createProjectRoot() {
 
 test('mapOutputPath resolves known destinations', () => {
   const root = '/tmp/project';
-  const scripts = mapOutputPath(root, 'scripts/example.ts');
+  const toPosix = (p) => p?.replace(/\\/g, '/');
+  const scripts = toPosix(mapOutputPath(root, 'scripts/example.ts'));
   assert.ok(scripts?.endsWith('scripts/example.js'));
 
-  const components = mapOutputPath(root, 'components/panel/view.ts');
+  const components = toPosix(mapOutputPath(root, 'components/panel/view.ts'));
   assert.ok(components?.endsWith('components/panel/view.js'));
 
-  const modules = mapOutputPath(root, 'modules/demo/module.ts');
+  const modules = toPosix(mapOutputPath(root, 'modules/demo/module.ts'));
   assert.ok(modules?.endsWith('modules/demo/module.js'));
 
-  const musicDemo = mapOutputPath(root, 'music-demo.ts');
+  const musicDemo = toPosix(mapOutputPath(root, 'music-demo.ts'));
   assert.ok(musicDemo?.endsWith('music-demo.js'));
 
   assert.equal(mapOutputPath(root, 'scripts/types.d.ts'), null);

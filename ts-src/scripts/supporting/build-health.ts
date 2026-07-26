@@ -103,7 +103,34 @@ export function analyzeBuild(projectRoot: string): BuildAnalysis {
   return {missing, stale, unmatched, total: sources.length, checked};
 }
 
-function runCli(): void {
+export interface ModuleSchemaIssue {
+  file: string;
+  errors: string[];
+}
+
+export async function validateModuleSchemas(projectRoot: string): Promise<ModuleSchemaIssue[]> {
+  const { default: Ajv } = await import('ajv');
+  await import(pathToFileURL(path.join(projectRoot, 'data', 'modules', 'schema.js')).href);
+  const { listModuleSources } = await import(
+    pathToFileURL(path.join(projectRoot, 'scripts', 'supporting', 'module-data.js')).href
+  ) as typeof import('./module-data.js');
+  const schema = globalThis.ACK_MODULE_SCHEMA;
+  if (!schema) throw new Error('ACK_MODULE_SCHEMA not defined after loading data/modules/schema.js');
+  const ajv = new Ajv({ allErrors: true });
+  const validate = ajv.compile(schema);
+  const issues: ModuleSchemaIssue[] = [];
+  for (const { file, data } of listModuleSources(projectRoot)) {
+    if (!validate(data)) {
+      const errors = (validate.errors ?? []).map(
+        err => `${(err as { dataPath?: string }).dataPath || 'root'}: ${err.message ?? 'invalid'}`
+      );
+      issues.push({ file, errors });
+    }
+  }
+  return issues;
+}
+
+async function runCli(): Promise<void> {
   const projectRoot = process.cwd();
   const analysis = analyzeBuild(projectRoot);
   if (analysis.missing.length || analysis.stale.length || analysis.unmatched.length) {
@@ -132,7 +159,19 @@ function runCli(): void {
     console.error(`Build health failed (${parts.join(', ')}).`);
     process.exit(1);
   }
-  console.log(`Build health passed: ${analysis.checked}/${analysis.total} sources are current.`);
+  const schemaIssues = await validateModuleSchemas(projectRoot);
+  if (schemaIssues.length) {
+    console.error('Module schema validation failures:');
+    for (const issue of schemaIssues) {
+      console.error(`  - ${issue.file}`);
+      for (const err of issue.errors) {
+        console.error(`      ${err}`);
+      }
+    }
+    console.error(`Build health failed (${schemaIssues.length} module(s) violate ACK_MODULE_SCHEMA).`);
+    process.exit(1);
+  }
+  console.log(`Build health passed: ${analysis.checked}/${analysis.total} sources are current; all module data matches ACK_MODULE_SCHEMA.`);
 }
 
 const invokedAsScript = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;

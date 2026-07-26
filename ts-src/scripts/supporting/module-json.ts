@@ -1,8 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { extractModuleData, toPosixPath } from './module-data.js';
 
 function usage(): never {
-  console.log('Usage: node scripts/supporting/module-json.js <export|import> <moduleFile>');
+  console.log('Usage: node scripts/supporting/module-json.js <export|import> <moduleFile|all>');
   process.exit(1);
 }
 
@@ -26,11 +27,7 @@ interface ModuleJson {
 
 const args = process.argv.slice(2);
 if (args.length < 2) usage();
-const [cmd, file] = args as [string, string];
-
-const modulePath = path.resolve(file);
-const baseName = path.basename(modulePath).replace(/\.module\.js$/, '');
-const jsonPath = path.join('data', 'modules', `${baseName}.json`);
+const [cmd, target] = args as [string, string];
 
 const tileEmoji = Object.freeze({
   0: '\u{1F3DD}',
@@ -71,28 +68,38 @@ function worldIsEmoji(grid: unknown): grid is string[] {
   return grid.every(row => typeof row === 'string');
 }
 
-function extractData(str: string): string | null {
-  const match = str.match(/const DATA = `([\s\S]*?)`;/);
-  return match ? match[1] : null;
-}
+const extractData = extractModuleData;
 
-if (cmd === 'export') {
+function exportSingleModule(file: string, silentIfMissing = false): boolean {
+  const modulePath = path.resolve(file);
+  const baseName = path.basename(modulePath).replace(/\.module\.js$/, '');
+  const jsonPath = path.join('data', 'modules', `${baseName}.json`);
+
   const text = fs.readFileSync(modulePath, 'utf8');
   const dataStr = extractData(text);
   if (!dataStr) {
-    console.error('DATA block not found.');
-    process.exit(1);
+    if (!silentIfMissing) {
+      console.error(`DATA block not found in ${file}.`);
+    }
+    return false;
   }
   const obj = JSON.parse(dataStr) as ModuleJson;
   if (worldIsNumeric(obj.world)) {
     obj.world = gridToEmoji(obj.world);
   }
-  obj.module = file;
+  obj.module = toPosixPath(file);
   obj.name = obj.name || `${baseName}-module`;
   fs.mkdirSync(path.dirname(jsonPath), { recursive: true });
-  fs.writeFileSync(jsonPath, JSON.stringify(obj, null, 2));
+  fs.writeFileSync(jsonPath, JSON.stringify(obj, null, 2) + '\n');
   console.log(`Exported ${jsonPath}`);
-} else if (cmd === 'import') {
+  return true;
+}
+
+function importSingleModule(file: string): void {
+  const modulePath = path.resolve(file);
+  const baseName = path.basename(modulePath).replace(/\.module\.js$/, '');
+  const jsonPath = path.join('data', 'modules', `${baseName}.json`);
+
   const jsonText = fs.readFileSync(jsonPath, 'utf8');
   const obj = JSON.parse(jsonText) as ModuleJson;
   if (worldIsEmoji(obj.world)) {
@@ -102,11 +109,44 @@ if (cmd === 'export') {
   const cleanText = JSON.stringify(obj, null, 2);
   const text = fs.readFileSync(modulePath, 'utf8');
   const newText = text.replace(
-    /const DATA = `[\s\S]*?`;/,
-    `const DATA = \`\n${cleanText}\n\`;`,
+    /const ((?:[A-Z0-9_]+_)?DATA) = `[\s\S]*?`;/,
+    (_match, varName: string) => `const ${varName} = \`\n${cleanText}\n\`;`,
   );
   fs.writeFileSync(modulePath, newText);
   console.log(`Updated ${modulePath}`);
+}
+
+if (cmd === 'export') {
+  if (target === 'all' || target === '--all') {
+    const modulesDir = path.resolve('modules');
+    const files = fs.readdirSync(modulesDir).filter(f => f.endsWith('.module.js'));
+    let count = 0;
+    for (const f of files) {
+      const relPath = path.join('modules', f);
+      if (exportSingleModule(relPath, true)) {
+        count++;
+      }
+    }
+    console.log(`Batch exported ${count} module JSON files to data/modules/`);
+  } else {
+    exportSingleModule(target);
+  }
+} else if (cmd === 'import') {
+  if (target === 'all' || target === '--all') {
+    const modulesDir = path.resolve('modules');
+    const files = fs.readdirSync(modulesDir).filter(f => f.endsWith('.module.js'));
+    for (const f of files) {
+      const relPath = path.join('modules', f);
+      const baseName = f.replace(/\.module\.js$/, '');
+      const jsonPath = path.join('data', 'modules', `${baseName}.json`);
+      if (fs.existsSync(jsonPath)) {
+        importSingleModule(relPath);
+      }
+    }
+  } else {
+    importSingleModule(target);
+  }
 } else {
   usage();
 }
+

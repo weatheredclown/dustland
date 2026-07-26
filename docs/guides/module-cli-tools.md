@@ -4,6 +4,15 @@ The `scripts/module-tools` directory provides commands for reading and editing
 module data. The underlying storage uses JSON today, but the CLI accepts
 parameter-based fields so the interface remains stable if the format changes.
 
+The checked-in state of a module is the JSON inlined in its `.module.js`
+`DATA` block (browsers cannot fetch local JSON from `file:` pages).
+`node scripts/supporting/module-json.js export <file|all>` writes one-way
+exports to `data/modules/*.json` for inspection and validation; those exports
+are gitignored, never the state of record. Every module's data must satisfy
+`ACK_MODULE_SCHEMA` (`data/modules/schema.js`) — validated by
+`test/module-schema.test.js` and by `scripts/supporting/build-health.js`
+during `check:prod`.
+
 ## Generate a module file
 
 ```sh
@@ -268,6 +277,28 @@ Common examples:
 { "effect": "addFlag", "flag": "story_flag" }
 { "effect": "openWorldMap", "id": "dest" }
 { "effect": "endSequence", "messages": ["The signal dies."], "credits": [{ "name": "Module Author", "title": "Writer" }] }
+```
+
+`endSequence` messages may also be objects with a flag condition, so epilogue
+slides react to what the player actually did. After the credits scroll the
+overlay offers a "Return to Title" button that reloads the game:
+
+```json
+{ "effect": "endSequence", "messages": [
+  "The dust settles.",
+  { "text": "The pump sings again.", "if": { "flag": "pump_restored", "op": ">=", "value": 1 } }
+] }
+```
+
+An NPC's `combat` block may include `deathEffects`, an effects list applied
+when that enemy is defeated — the hook the main campaign uses to roll credits
+when the final boss falls:
+
+```json
+{ "combat": { "HP": 160, "boss": true, "deathEffects": [
+  { "effect": "addFlag", "flag": "boss_fallen" },
+  { "effect": "endSequence", "title": "THE END", "messages": ["It is done."] }
+] } }
 ```
 
 ### TileEvent
