@@ -5400,8 +5400,16 @@ function addEventSubBlock(container, ev = {}) {
     endWrap.style.display = 'none';
     const endMessages = document.createElement('textarea');
     endMessages.className = 'eventSubEndMessages';
-    endMessages.placeholder = 'End messages, one per line';
-    endMessages.value = Array.isArray(ev.messages) ? ev.messages.join('\n') : (ev.msg || 'GAME OVER');
+    endMessages.placeholder = 'End messages, one per line (append ":: if flagName" for conditional slides)';
+    endMessages.value = Array.isArray(ev.messages)
+        ? ev.messages.map(m => {
+            if (m && typeof m === 'object') {
+                const flag = m.if?.flag;
+                return flag ? `${m.text ?? ''} :: if ${flag}` : (m.text ?? '');
+            }
+            return m;
+        }).join('\n')
+        : (ev.msg || 'GAME OVER');
     endMessages.style.cssText = 'width:100%;min-height:54px;';
     const endCredits = document.createElement('textarea');
     endCredits.className = 'eventSubEndCredits';
@@ -5409,7 +5417,7 @@ function addEventSubBlock(container, ev = {}) {
     endCredits.value = Array.isArray(ev.credits) ? ev.credits.map(c => typeof c === 'string' ? c : `${c.name || ''}${c.title || c.role ? ' — ' + (c.title || c.role) : ''}`).join('\n') : '';
     endCredits.style.cssText = 'width:100%;min-height:54px;';
     const endHint = document.createElement('small');
-    endHint.textContent = 'Fades to black, prints THE END, then rolls module credits plus Dustland game credits.';
+    endHint.textContent = 'Fades to black, prints THE END, then rolls module credits plus Dustland game credits. A message line ending in ":: if flagName" only shows when that flag is set, for reactive epilogues.';
     endWrap.appendChild(endMessages);
     endWrap.appendChild(endCredits);
     endWrap.appendChild(endHint);
@@ -5495,7 +5503,12 @@ function collectEvent() {
         if (eff === 'endSequence') {
             const rawMessages = div.querySelector('.eventSubEndMessages')?.value || '';
             const rawCredits = div.querySelector('.eventSubEndCredits')?.value || '';
-            ev.messages = rawMessages.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+            ev.messages = rawMessages.split(/\r?\n/).map(line => line.trim()).filter(Boolean).map(line => {
+                const m = line.match(/^(.*?)\s*::\s*if\s+(\S+)$/);
+                if (!m)
+                    return line;
+                return { text: m[1].trim(), if: { flag: m[2], op: '>=', value: 1 } };
+            });
             ev.credits = rawCredits.split(/\r?\n/).map(line => {
                 const parts = line.split(/\s+[—-]\s+/);
                 return { name: (parts.shift() || '').trim(), title: parts.join(' — ').trim() };

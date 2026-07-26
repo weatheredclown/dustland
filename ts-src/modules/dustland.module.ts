@@ -1631,7 +1631,13 @@ const DATA = `
         },
         "do_turnin": {
           "text": "It fits! Water again. Take this.",
-          "choices": []
+          "choices": [],
+          "effects": [
+            {
+              "effect": "addFlag",
+              "flag": "pump_restored"
+            }
+          ]
         }
       },
       "symbol": "!"
@@ -2008,7 +2014,13 @@ const DATA = `
         },
         "do_turnin": {
           "text": "Signal hums again. Nice work. Archivist said that resonance forges blades fit to carve dust-kings.",
-          "choices": []
+          "choices": [],
+          "effects": [
+            {
+              "effect": "addFlag",
+              "flag": "broadcast_restored"
+            }
+          ]
         }
       },
       "symbol": "!"
@@ -2626,8 +2638,8 @@ const DATA = `
     {
       "id": "respec_vendor",
       "map": "world",
-      "x": 94,
-      "y": 50,
+      "x": 84,
+      "y": 45,
       "color": "#9ef7a0",
       "name": "Nora",
       "title": "Worm Seller",
@@ -3265,10 +3277,35 @@ const DATA = `
       "symbol": "!",
       "tree": {
         "start": {
+          "text": "",
+          "jump": [
+            {
+              "if": {
+                "flag": "signal_heard",
+                "op": ">=",
+                "value": 1
+              },
+              "to": "start_heard"
+            },
+            {
+              "to": "start_plain"
+            }
+          ]
+        },
+        "start_plain": {
           "text": "The Dustland Sovereign drifts above the altar, eyes blazing. Around the threshold, ruined blades are fused into glass: only the Artifact Blade and Epic Blade can keep their edge here.",
           "choices": [
             {
               "label": "(Fight)",
+              "to": "do_fight"
+            }
+          ]
+        },
+        "start_heard": {
+          "text": "You know it for what it is now: the hand pressed over the wastes’ mouth. The Sovereign drifts above the altar, and every storm it ever raised was a hush. Around the threshold, ruined blades are fused into glass: only the Artifact Blade and Epic Blade can keep their edge here.",
+          "choices": [
+            {
+              "label": "(End the silencing)",
               "to": "do_fight"
             }
           ]
@@ -3307,7 +3344,105 @@ const DATA = `
           "min": 15,
           "max": 25
         },
-        "xp": 225
+        "xp": 225,
+        "deathEffects": [
+          {
+            "effect": "addFlag",
+            "flag": "sovereign_fallen"
+          },
+          {
+            "effect": "log",
+            "msg": "The Sovereign of Dust collapses into a hush of falling sand."
+          },
+          {
+            "effect": "endSequence",
+            "title": "DAWN OVER THE RELAY",
+            "subtitle": "The Dustland remembers.",
+            "messages": [
+              "The Sovereign of Dust unravels grain by grain, and above the Hollow the storm simply... stops.",
+              {
+                "text": "In the hush that follows you finally hear it plain: the Signal, unsmothered, rising through the salt like dawn through glass.",
+                "if": {
+                  "flag": "signal_heard",
+                  "op": ">=",
+                  "value": 1
+                }
+              },
+              {
+                "text": "From the Observatory dish the old voices pour across every band. No one in the Dustland walks the roads alone anymore.",
+                "if": {
+                  "flag": "signal_amplified",
+                  "op": ">=",
+                  "value": 1
+                }
+              },
+              {
+                "text": "The Observatory dish stands silent by your choice. The wastes keep their song like a held breath — remembered, not broadcast.",
+                "if": {
+                  "flag": "signal_rested",
+                  "op": ">=",
+                  "value": 1
+                }
+              },
+              {
+                "text": "The relay tower holds its note, and one by one every dead radio in the wastes clears its throat.",
+                "if": {
+                  "flag": "broadcast_restored",
+                  "op": ">=",
+                  "value": 1
+                }
+              },
+              {
+                "text": "Nila’s pump draws clear and cold. By next season there is green at the roadside, and nobody calls it a miracle twice.",
+                "if": {
+                  "flag": "pump_restored",
+                  "op": ">=",
+                  "value": 1
+                }
+              },
+              {
+                "text": "Bren stands the wall at dusk, telling anyone who will listen about the scout who came back.",
+                "if": {
+                  "flag": "scout_bren_recovered",
+                  "op": ">=",
+                  "value": 1
+                }
+              },
+              {
+                "text": "The Duke’s caravans roll under Hall colors, grain riding where grenades used to.",
+                "if": {
+                  "flag": "duke_pact",
+                  "op": ">=",
+                  "value": 1
+                }
+              },
+              {
+                "text": "Waystation by waystation the bunker lights come on, and couriers start calling the long dark roads short.",
+                "if": {
+                  "flag": "bunker_waystation_online",
+                  "op": ">=",
+                  "value": 1
+                }
+              },
+              {
+                "text": "In the resonant cave the crystals keep perfect time — red, blue, green — a metronome for a world relearning its song.",
+                "if": {
+                  "flag": "cave_puzzle_complete",
+                  "op": ">=",
+                  "value": 1
+                }
+              },
+              "Dawn comes up over the relay. The Dustland does not forget its dead; now, at last, it can hear them.",
+              "You were witnesses, not heroes. It was enough."
+            ],
+            "credits": [
+              {
+                "name": "Tim Laubach",
+                "title": "Dustland Campaign"
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -3762,7 +3897,13 @@ const DATA = `
         },
         "favor_granted": {
           "text": "The Duke taps a ring against his goblet before nodding. 'Send word to Mahra that my caravans will carry her grenades. Tell her I expect the Hall to answer when I call.'",
-          "choices": []
+          "choices": [],
+          "effects": [
+            {
+              "effect": "addFlag",
+              "flag": "duke_pact"
+            }
+          ]
         }
       },
       "symbol": "!"
@@ -4256,8 +4397,13 @@ const DATA = `
             {
               "label": "(Take Final Fragment)",
               "to": "bye",
-              "reward": "signal_fragment_3",
-              "applyModule": "GRAFFITI_PUZZLE"
+              "reward": "signal_fragment_3"
+            }
+          ],
+          "effects": [
+            {
+              "effect": "addFlag",
+              "flag": "observatory_route"
             }
           ]
         }
@@ -4342,6 +4488,520 @@ const DATA = `
                   "flag": "cave_puzzle_complete"
                 }
               ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "obs_door",
+      "map": "world",
+      "x": 103,
+      "y": 84,
+      "color": "#a7c9a2",
+      "name": "Sealed Aperture",
+      "title": "The Observatory",
+      "desc": "A blind iris of glass and salt set into the dome’s only door.",
+      "prompt": "Massive sealed iris door crusted with salt",
+      "symbol": "?",
+      "tree": {
+        "start": {
+          "text": "",
+          "jump": [
+            {
+              "if": {
+                "flag": "observatory_route",
+                "op": ">=",
+                "value": 1
+              },
+              "to": "unsealed"
+            },
+            {
+              "to": "sealed"
+            }
+          ]
+        },
+        "sealed": {
+          "text": "A dome of salt-scoured glass rises out of the flats, dish tilted at a sky it stopped trusting long ago. The iris stays shut. Somewhere inside, a receiver waits for a song that has not finished yet.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "unsealed": {
+          "text": "The full song hums in your bones, and the iris hears it too. Petals of glass grind back one by one, breathing out air that has waited decades to be breathed.",
+          "choices": [
+            {
+              "label": "(Step inside)",
+              "to": "bye",
+              "effects": [
+                {
+                  "effect": "unboardDoor",
+                  "interiorId": "observatory"
+                },
+                {
+                  "effect": "removeNpc",
+                  "id": "obs_door"
+                },
+                {
+                  "effect": "teleport",
+                  "map": "observatory",
+                  "x": 8,
+                  "y": 10,
+                  "log": "You step into the Observatory. The dark is full of patient machines."
+                }
+              ]
+            },
+            {
+              "label": "(Not yet)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "observatory_listener",
+      "map": "observatory",
+      "x": 8,
+      "y": 2,
+      "color": "#9ef7a0",
+      "name": "The Listener Array",
+      "title": "Receiver of the Wastes",
+      "desc": "A console of spooled tape and salt-fogged dials, still warm.",
+      "prompt": "Ancient listening console under a vast cracked dish",
+      "symbol": "?",
+      "tree": {
+        "start": {
+          "text": "",
+          "jump": [
+            {
+              "if": {
+                "flag": "signal_heard",
+                "op": ">=",
+                "value": 1
+              },
+              "to": "after"
+            },
+            {
+              "to": "first"
+            }
+          ]
+        },
+        "first": {
+          "text": "The dish fills the dome like a held breath. On the console, three cradles sit worn smooth — the exact shape of the fragments whose song led you here. One switch is labeled, in careful hand-paint: LISTEN.",
+          "choices": [
+            {
+              "label": "(Listen)",
+              "to": "reveal1"
+            },
+            {
+              "label": "(Step back)",
+              "to": "bye"
+            }
+          ]
+        },
+        "reveal1": {
+          "text": "Static. Then — voices. Hundreds of them, braided into one carrier wave. A woman reciting well depths. A child counting caravan bells. Someone singing to a dying radio so it would not die alone.",
+          "choices": [
+            {
+              "label": "(Keep listening)",
+              "to": "reveal2"
+            }
+          ]
+        },
+        "reveal2": {
+          "text": "The Signal was never a beacon. It is the wastes’ surviving voice — everyone the Dustland swallowed, still singing up through the salt. And something has been pressing it quiet for years: the Sovereign of Dust, a warden that mistakes silence for peace. That is why the blades had to be tempered. Not to win a fight. To end a hush.",
+          "choices": [
+            {
+              "label": "(Continue)",
+              "to": "choice"
+            }
+          ]
+        },
+        "choice": {
+          "text": "The console waits on you. Amplify the song across every band and let the living hear the dead — or spool the reels down gently and let them rest, carried in memory alone.",
+          "choices": [
+            {
+              "label": "(Amplify the signal)",
+              "to": "amplified",
+              "effects": [
+                {
+                  "effect": "addFlag",
+                  "flag": "signal_heard"
+                },
+                {
+                  "effect": "addFlag",
+                  "flag": "signal_amplified"
+                }
+              ]
+            },
+            {
+              "label": "(Let the song rest)",
+              "to": "rested",
+              "effects": [
+                {
+                  "effect": "addFlag",
+                  "flag": "signal_heard"
+                },
+                {
+                  "effect": "addFlag",
+                  "flag": "signal_rested"
+                }
+              ]
+            }
+          ]
+        },
+        "amplified": {
+          "text": "The dish drinks the dawnlight and gives it back as sound. The first voice rolls out over the flats like weather. Somewhere far behind you, every dead radio clears its throat. Below the console, a hatch unbolts itself: the Long Stair, down to the thing that wanted this quiet.",
+          "choices": [
+            {
+              "label": "(Continue)",
+              "to": "bye"
+            }
+          ]
+        },
+        "rested": {
+          "text": "You spool the reels down gently, one voice at a time, until the carrier wave is a single held note — then silence. Not the Sovereign’s silence. A kept one. Below the console, a hatch unbolts itself: the Long Stair, down to the thing that tried to steal what you just chose freely.",
+          "choices": [
+            {
+              "label": "(Continue)",
+              "to": "bye"
+            }
+          ]
+        },
+        "after": {
+          "text": "The reels turn softly, keeping their vigil. The Long Stair waits below — the Sovereign’s Hollow, and an end to the silencing.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "observatory_stair",
+      "map": "observatory",
+      "x": 2,
+      "y": 9,
+      "color": "#c9a76f",
+      "name": "The Long Stair",
+      "title": "Down to the Hollow",
+      "desc": "Salt-worn steps spiral into the dark beneath the dish.",
+      "prompt": "Spiral stone stairwell descending into darkness",
+      "symbol": "?",
+      "tree": {
+        "start": {
+          "text": "Salt-worn steps spiral into the dark under the dish, and the air rising out of them tastes of storm. This is the way down to the Sovereign’s Hollow. Once you descend, there is no coming back until it is done.",
+          "choices": [
+            {
+              "label": "(Descend the Long Stair)",
+              "to": "bye",
+              "effects": [
+                {
+                  "effect": "teleport",
+                  "map": "room_oc3abv",
+                  "x": 25,
+                  "y": 47,
+                  "log": "The Long Stair swallows your footsteps. Far below, the Hollow breathes."
+                }
+              ]
+            },
+            {
+              "label": "(Not yet)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lore_bell_keeper",
+      "map": "dry_bell",
+      "x": 4,
+      "y": 2,
+      "color": "#8f938f",
+      "name": "Keeper Odessa",
+      "title": "The Dry Bell",
+      "desc": "She polishes the same glass she has polished for twenty years.",
+      "prompt": "Weathered barkeep under a hanging bronze bell",
+      "symbol": "~",
+      "tree": {
+        "start": {
+          "text": "The bell over the door came off a church the sand drank whole. Rings once a year, all on its own, and nobody laughs when it does. Sit. Water's honest here — Sparrow's Rest runs on Cass's scales and my stove.",
+          "choices": [
+            {
+              "label": "Ask about the road east",
+              "to": "more"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "more": {
+          "text": "East? The Duchess chains the road and calls it a tax. Past her it's bunkers, ridge wind, and then the deep wastes. Folk who go past Overlook come back rich or don't come back.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lore_caravan_cook",
+      "map": "world",
+      "x": 53,
+      "y": 25,
+      "color": "#8f938f",
+      "name": "Cook Sable",
+      "title": "Stew & Rumors",
+      "desc": "A dented pot, a long spoon, and every rumor on the road.",
+      "prompt": "Caravan cook stirring a huge dented pot",
+      "symbol": "~",
+      "tree": {
+        "start": {
+          "text": "Stew's whatever walked past yesterday, salt's free, rumors are freer. They say the Echo Relay out northeast still sings. Nobody who walks that far stays sane — or poor.",
+          "choices": [
+            {
+              "label": "Ask about the Hall",
+              "to": "more"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "more": {
+          "text": "Dawn Hall, west down the road. Good people, bad pump. If you're new out here, that's where you learn which end of a blade to hold.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lore_retired_toll",
+      "map": "world",
+      "x": 50,
+      "y": 23,
+      "color": "#8f938f",
+      "name": "Old Marek",
+      "title": "Retired Toll-Taker",
+      "desc": "He counts scrap that is not there anymore, out of habit.",
+      "prompt": "Stooped old man counting invisible coins",
+      "symbol": "~",
+      "tree": {
+        "start": {
+          "text": "Thirty years I took toll on this bend, before the Duchess took the taking. Road tax or road rash, she says. Ha. In my day we only broke the rude ones.",
+          "choices": [
+            {
+              "label": "Ask about the Duke",
+              "to": "more"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "more": {
+          "text": "The Duke of the Wastes sits in his rust throne away east and dreams of owning every road you'll ever walk. Charm him or bribe him — either way, count your fingers after.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lore_salt_pilgrim",
+      "map": "overlook_rest",
+      "x": 4,
+      "y": 2,
+      "color": "#8f938f",
+      "name": "Pilgrim Ashe",
+      "title": "Walked the Salt",
+      "desc": "Salt has cured the hem of their coat into something like armor.",
+      "prompt": "Gaunt pilgrim crusted in white salt",
+      "symbol": "~",
+      "tree": {
+        "start": {
+          "text": "I walked the salt flats once, all the way southeast. There's a glass dome out there with a dish tilted at a sky it stopped trusting. Sealed. Waiting. I pressed my ear to it and heard a held breath.",
+          "choices": [
+            {
+              "label": "Ask what the dome wants",
+              "to": "more"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "more": {
+          "text": "Not what. Who. Things out there listen for a song that isn't finished. If you ever finish it — walk soft, and carry tempered steel.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lore_last_courier",
+      "map": "world",
+      "x": 79,
+      "y": 44,
+      "color": "#8f938f",
+      "name": "Courier Wren",
+      "title": "End of the Route",
+      "desc": "Their satchel is empty. It has been empty for a while.",
+      "prompt": "Wiry courier with an empty mail satchel",
+      "symbol": "~",
+      "tree": {
+        "start": {
+          "text": "Last Ridge is the last stop. Past this bunker the routes just... stop being routes. The Hollow's down southeast, and it breathes, and everything between here and there knows it.",
+          "choices": [
+            {
+              "label": "Ask about the roads behind",
+              "to": "more"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "more": {
+          "text": "West it's civilization again — ridge bunker, then the Duchess's toll, then Sparrow's Rest where the stew's hot. Feels like another planet from up here.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lore_cistern_keeper",
+      "map": "world",
+      "x": 13,
+      "y": 38,
+      "color": "#8f938f",
+      "name": "Cistern-Keeper Dov",
+      "title": "Dawn Hall Water",
+      "desc": "He taps the cistern wall and listens like a doctor.",
+      "prompt": "Sun-creased man with an ear pressed to a cistern",
+      "symbol": "~",
+      "tree": {
+        "start": {
+          "text": "Hear that? Half-full and dropping. This whole Hall drinks on Nila's pump and a prayer. World-before had taps in every wall — imagine wasting a thing like that.",
+          "choices": [
+            {
+              "label": "Ask who can help",
+              "to": "more"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "more": {
+          "text": "Work wants hands. Ivo pays for letters carried, Rella pays for tower repairs, and the Archivist inside pays in stranger coin — stories.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lore_hall_stoker",
+      "map": "hall",
+      "x": 24,
+      "y": 15,
+      "color": "#8f938f",
+      "name": "Stoker Imm",
+      "title": "Keeper of the Stoves",
+      "desc": "Ash to the elbows, warmth to spare.",
+      "prompt": "Broad woman feeding a scrap-iron stove",
+      "symbol": "~",
+      "tree": {
+        "start": {
+          "text": "Founders built this Hall around one stove and one rule: nobody sleeps cold. The ghoul chained in the training yard? Rotwalker's older than the rule. Some relics we keep to remember what the dust does.",
+          "choices": [
+            {
+              "label": "Ask about the Archivist",
+              "to": "more"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "more": {
+          "text": "Him and his tapes. Every scrap of sound is a life, he says. Bring him one and watch him go young for a minute.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lore_bunker_squatter",
+      "map": "world",
+      "x": 61,
+      "y": 50,
+      "color": "#8f938f",
+      "name": "Squatter Finn",
+      "title": "Ridge Bunker Steps",
+      "desc": "Lives on the bunker steps. Claims squatter’s rights to the view.",
+      "prompt": "Scrawny squatter wrapped in a tarp on bunker steps",
+      "symbol": "~",
+      "tree": {
+        "start": {
+          "text": "This bunker? Mine, till someone with fuel says otherwise. The old network wakes if you feed the doors a fuel cell — then it's one long blink from here to anywhere lit.",
+          "choices": [
+            {
+              "label": "Ask about the view",
+              "to": "more"
+            },
+            {
+              "label": "(Leave)",
+              "to": "bye"
+            }
+          ]
+        },
+        "more": {
+          "text": "From the ridge you can see the whole argument: Hall smoke west, toll chains behind you, Overlook's lamp east. And past that, where nobody's lamp reaches — that's where the roads go quiet.",
+          "choices": [
+            {
+              "label": "(Leave)",
+              "to": "bye"
             }
           ]
         }
@@ -16190,6 +16850,100 @@ const DATA = `
       "doorY": 80,
       "interiorId": "radio_shack",
       "boarded": false
+    },
+    {
+      "x": 101,
+      "y": 80,
+      "w": 5,
+      "h": 4,
+      "doorX": 103,
+      "doorY": 83,
+      "interiorId": "observatory",
+      "boarded": true,
+      "grid": [
+        [
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        [
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        [
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        [
+          9,
+          9,
+          8,
+          9,
+          9
+        ]
+      ]
+    },
+    {
+      "x": 51,
+      "y": 22,
+      "w": 3,
+      "h": 3,
+      "doorX": 52,
+      "doorY": 24,
+      "interiorId": "dry_bell",
+      "boarded": false,
+      "grid": [
+        [
+          9,
+          9,
+          9
+        ],
+        [
+          9,
+          9,
+          9
+        ],
+        [
+          9,
+          8,
+          9
+        ]
+      ]
+    },
+    {
+      "x": 79,
+      "y": 41,
+      "w": 3,
+      "h": 3,
+      "doorX": 80,
+      "doorY": 43,
+      "interiorId": "overlook_rest",
+      "boarded": false,
+      "grid": [
+        [
+          9,
+          9,
+          9
+        ],
+        [
+          9,
+          9,
+          9
+        ],
+        [
+          9,
+          8,
+          9
+        ]
+      ]
     }
   ],
   "interiors": [
@@ -16474,6 +17228,61 @@ const DATA = `
         "🪨⬜⬜⬜⬜⬜⬜⬜⬜⬜🪨",
         "🪨🪨🪨🪨🪨🚪🪨🪨🪨🪨🪨"
       ]
+    },
+    {
+      "id": "observatory",
+      "w": 17,
+      "h": 12,
+      "grid": [
+        "🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱",
+        "🧱⬜⬜⬜⬜⬜⬜🌟🌟🌟⬜⬜⬜⬜⬜⬜🧱",
+        "🧱⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜🧱",
+        "🧱⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜🧱",
+        "🧱🧱🧱⬜⬜🧱⬜⬜⬜⬜⬜🧱⬜⬜🧱🧱🧱",
+        "🧱⬜⬜⬜⬜🧱⬜⬜⬜⬜⬜🧱⬜⬜⬜⬜🧱",
+        "🧱⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜🧱",
+        "🧱⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜🧱",
+        "🧱⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜🧱",
+        "🧱⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜🧱",
+        "🧱⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜🧱",
+        "🧱🧱🧱🧱🧱🧱🧱🧱🚪🧱🧱🧱🧱🧱🧱🧱🧱"
+      ],
+      "entryX": 8,
+      "entryY": 10,
+      "name": "The Observatory"
+    },
+    {
+      "id": "dry_bell",
+      "w": 8,
+      "h": 7,
+      "grid": [
+        "🧱🧱🧱🧱🧱🧱🧱🧱",
+        "🧱⬜⬜⬜⬜⬜⬜🧱",
+        "🧱⬜⬜⬜⬜⬜⬜🧱",
+        "🧱⬜⬜⬜⬜⬜⬜🧱",
+        "🧱⬜⬜⬜⬜⬜⬜🧱",
+        "🧱⬜⬜⬜⬜⬜⬜🧱",
+        "🧱🧱🧱🚪🧱🧱🧱🧱"
+      ],
+      "entryX": 3,
+      "entryY": 5,
+      "name": "The Dry Bell"
+    },
+    {
+      "id": "overlook_rest",
+      "w": 7,
+      "h": 6,
+      "grid": [
+        "🧱🧱🧱🧱🧱🧱🧱",
+        "🧱⬜⬜⬜⬜⬜🧱",
+        "🧱⬜⬜⬜⬜⬜🧱",
+        "🧱⬜⬜⬜⬜⬜🧱",
+        "🧱⬜⬜⬜⬜⬜🧱",
+        "🧱🧱🚪🧱🧱🧱🧱"
+      ],
+      "entryX": 2,
+      "entryY": 4,
+      "name": "Last Ridge Bedrolls"
     }
   ]
 }

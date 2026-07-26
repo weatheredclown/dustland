@@ -4,10 +4,28 @@
 challenge, puzzles, a difficulty ramp that pulls the player outward into the world, and a
 finish that pays off everything the opening promises.
 
-**Status:** Proposed. Grounded in a code-level audit of `ts-src/modules/dustland.module.ts`
+**Status:** In progress. Grounded in a code-level audit of `ts-src/modules/dustland.module.ts`
 (the module `module-picker.ts` pre-selects), the core engine (`ts-src/scripts/core/`), and
 the existing design docs. Per project convention, completion claims in older docs were
 verified against code; several turned out to be stubs and are called out below.
+
+**Progress (verified in code, 2026-07-25):**
+
+- Phase 0 landed earlier (`6ec97688`), except the `applyModule: "GRAFFITI_PUZZLE"` link on
+  the cave Hermit's turn-in, which survived that commit and has now been removed — the
+  Hermit instead sets `observatory_route`, opening the finale.
+- Phase 2 core is now in: `combat.deathEffects` (effects applied when an enemy falls,
+  `combat.ts`), conditional `endSequence` slides (`{text, if}` entries filtered by
+  `checkFlagCondition`, `actions.ts`) with a post-credits "Return to Title" button, and a
+  `:: if flagName` line syntax in the ACK end-sequence editor. Content: the sealed
+  Observatory on the southeast salt flats (`obs_door` → `observatory` interior with the
+  Listener Array reveal, the amplify/rest choice, and the Long Stair point-of-no-return
+  down to the Hollow), a convergence-aware Sovereign intro, and a Sovereign
+  `deathEffects` ending — "Dawn Over the Relay" — with nine flag-reactive epilogue slides
+  (`signal_heard`/`signal_amplified`/`signal_rested`, `broadcast_restored`,
+  `pump_restored`, `scout_bren_recovered`, `duke_pact`, `bunker_waystation_online`,
+  `cave_puzzle_complete`) plus credits. Covered by `test/end-sequence-finale.test.js`.
+- Not yet started: Phase 1 (difficulty/stakes), Phases 3–6.
 
 ---
 

@@ -1,7 +1,8 @@
 (function () {
   type EndCredit = string | { name?: string; title?: string; role?: string; [key: string]: unknown };
+  type EndSlide = string | { text?: string; if?: unknown };
   type EndSequenceConfig = {
-    messages?: string[];
+    messages?: EndSlide[];
     credits?: EndCredit[];
     title?: string;
     subtitle?: string;
@@ -55,6 +56,18 @@
 
   function setEndOverlayText(overlay: HTMLElement, html: string): void {
     overlay.innerHTML = `<div style="max-width:760px;line-height:1.7;text-shadow:0 0 12px #0f0;">${html}</div>`;
+  }
+
+  function appendRestartButton(overlay: HTMLElement): void {
+    if (typeof document === 'undefined') return;
+    const btn = document.createElement('button');
+    btn.id = 'dustlandEndRestart';
+    btn.textContent = '▸ RETURN TO TITLE';
+    btn.style.cssText = 'margin-top:24px;padding:10px 22px;background:transparent;color:#9f9;border:1px solid #5f5;font-family:inherit;letter-spacing:.12em;font-size:1rem;cursor:pointer;text-shadow:0 0 8px #0f0;';
+    btn.onmouseenter = () => { btn.style.background = 'rgba(110,255,140,.15)'; };
+    btn.onmouseleave = () => { btn.style.background = 'transparent'; };
+    btn.onclick = () => { globalThis.location?.reload?.(); };
+    (overlay.firstElementChild ?? overlay).appendChild(btn);
   }
 
   // The credit window is sized to show 3-4 entries at a time.
@@ -146,9 +159,19 @@
     },
     async playEndSequence(config: EndSequenceConfig = {}) {
       const overlay = ensureEndOverlay();
-      const messages = Array.isArray(config.messages) && config.messages.length
-        ? config.messages.map(String)
-        : ['GAME OVER'];
+      const rawMessages = Array.isArray(config.messages) ? config.messages : [];
+      const checkCond = (globalThis as { checkFlagCondition?: (cond: unknown) => boolean }).checkFlagCondition;
+      const messages = rawMessages
+        .map(entry => {
+          if (entry && typeof entry === 'object') {
+            const cond = entry.if;
+            if (cond && typeof checkCond === 'function' && !checkCond(cond)) return null;
+            return String(entry.text ?? '');
+          }
+          return String(entry);
+        })
+        .filter((msg): msg is string => !!msg);
+      if (!rawMessages.length) messages.push('GAME OVER');
       const fadeMs = Number.isFinite(config.fadeMs) ? Number(config.fadeMs) : 1200;
       const messageMs = Number.isFinite(config.messageMs) ? Number(config.messageMs) : 1800;
       const creditMs = Number.isFinite(config.creditMs) ? Number(config.creditMs) : 900;
@@ -186,6 +209,7 @@
         await sleep(scrollMs);
         if (overlay) setEndOverlayText(overlay, `<h1 style="margin:0 0 12px;">${safeTitle}</h1>${subtitle}`);
       }
+      if (overlay) appendRestartButton(overlay);
     }
   };
   globalThis.Dustland = globalThis.Dustland || {};

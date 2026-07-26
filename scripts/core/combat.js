@@ -968,7 +968,13 @@ function handleEnemyDefeat(attacker, target, sourceLabel) {
     }
     if (target.npc)
         removeNPC?.(target.npc);
+    applyDeathEffects(target);
     return true;
+}
+function applyDeathEffects(target) {
+    const fx = target?.deathEffects;
+    if (Array.isArray(fx) && fx.length)
+        globalThis.Dustland?.effects?.apply?.(fx);
 }
 function playerItemAOEDamage(attacker, baseDamage, opts = {}) {
     const amount = Math.max(0, baseDamage | 0);
@@ -1244,6 +1250,7 @@ function enemyAttack() {
         }
         if (enemy.npc)
             removeNPC?.(enemy.npc);
+        applyDeathEffects(enemy);
         combatState.enemies.splice(combatState.active, 1);
         renderCombat();
         if (combatState.enemies.length === 0) {
