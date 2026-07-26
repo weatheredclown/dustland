@@ -742,9 +742,12 @@ declare global {
   interface Quest {
     id: string;
     name: string;
+    title?: string;
     status: QuestStatus;
     desc?: string;
     progress?: number;
+    pinned?: boolean;
+    complete?: (outcome?: string) => void;
     onStart?: (...args: unknown[]) => unknown;
     onComplete?: (...args: unknown[]) => unknown;
     [key: string]: unknown;
@@ -1171,6 +1174,12 @@ declare global {
   declare var openWorldMap: ((id?: any) => void) | undefined;
   declare function bootMap(): void;
   declare var quests: Record<string, Quest> | undefined;
+  declare var Quest: new (
+    id: string,
+    title: string,
+    desc?: string,
+    meta?: Record<string, unknown>
+  ) => Quest;
   declare var bossesDefeated: number | undefined;
   declare var runCount: number | undefined;
   declare var PLAYER: any;

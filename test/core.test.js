@@ -1008,6 +1008,35 @@ test('quest turn-in grants reward item', () => {
   assert.ok(player.inv.some(it => it.id === 'cursed_vr_helmet'));
 });
 
+test('global Quest class exposes complete()', () => {
+  // Regression: dustland-core.js used to declare its own top-level `class Quest`,
+  // lexically shadowing the real Quest from core/quests.js with one that had no
+  // complete() method.
+  const q = new Quest('q_proto', 'Proto', '');
+  assert.strictEqual(typeof q.complete, 'function');
+});
+
+test('quests registered by applyModule can be turned in', () => {
+  player.inv.length = 0;
+  NPCS.length = 0;
+  for (const k in quests) delete quests[k];
+  applyModule({
+    world: [[TILE.SAND, TILE.SAND]],
+    items: [{ id: 'mod_scrap', name: 'Mod Scrap', type: 'quest' }],
+    quests: [{ id: 'q_module', title: 'Module Quest', desc: 'Fetch scrap', item: 'mod_scrap', count: 1 }],
+    npcs: [{ id: 'mod_giver', map: 'world', x: 1, y: 0, name: 'Giver', questId: 'q_module' }]
+  });
+  const npc = NPCS.find(n => n.id === 'mod_giver');
+  assert.ok(npc?.quest, 'module NPC should hold the registered quest');
+  assert.strictEqual(typeof npc.quest.complete, 'function');
+  defaultQuestProcessor(npc, 'accept');
+  assert.strictEqual(quests.q_module.status, 'active');
+  addToInv({ id: 'mod_scrap' });
+  const result = defaultQuestProcessor(npc, 'do_turnin');
+  assert.ok(result?.completed);
+  assert.strictEqual(quests.q_module.status, 'completed');
+});
+
 test('quest tag turn-in handles partial counts', () => {
   player.inv.length = 0;
   const msgs = [];

@@ -5,37 +5,10 @@ const coreGlobals = globalThis as unknown as DustlandCoreGlobals;
 const coreEventBus = coreGlobals.EventBus ?? coreGlobals.eventBus;
 const { on } = coreEventBus ?? { on: () => undefined };
 
-class Quest {
-  id: string;
-  name: string;
-  status: QuestStatus;
-  desc?: string;
-  onStart?: (...args: unknown[]) => unknown;
-  onComplete?: (...args: unknown[]) => unknown;
-  pinned?: boolean;
-  item?: string;
-  itemTag?: string;
-  count?: number;
-  reward?: unknown;
-  xp?: number | string;
-  moveTo?: unknown;
-  itemLocation?: unknown;
-  targetMap?: unknown;
-  dialog?: unknown;
-  dialogNodes?: unknown;
-  reqFlag?: unknown;
-  progressText?: unknown;
-
-  constructor(id: string, title: string, desc: string, opts?: Record<string, unknown>) {
-    this.id = id;
-    this.name = title;
-    this.desc = desc;
-    this.status = 'available';
-    if (opts) {
-      Object.assign(this, opts);
-    }
-  }
-}
+// Quest instances come from scripts/core/quests.js, which exposes the canonical
+// Quest class on globalThis. A local `class Quest` here would shadow it with a
+// lexical binding lacking complete(), breaking quest turn-in for every quest
+// this file registers in the quest log.
 
 type CheckHandler = (...args: unknown[]) => unknown;
 

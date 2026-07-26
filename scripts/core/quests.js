@@ -123,8 +123,16 @@
             questGlobals.queueNanoDialogForNPCs?.('start', 'quest update');
         }
         complete(id, outcome) {
-            const quest = this.quests[id];
-            quest?.complete(outcome);
+            let quest = this.quests[id];
+            if (!quest)
+                return;
+            if (typeof quest.complete !== 'function') {
+                // Legacy saves and older code paths stored plain quest data here;
+                // upgrade to a real Quest so complete() exists.
+                quest = new Quest(quest.id ?? id, quest.title ?? quest.name ?? id, quest.desc ?? '', quest);
+                this.quests[id] = quest;
+            }
+            quest.complete(outcome);
         }
         pin(id) {
             const quest = this.quests[id];
@@ -218,8 +226,11 @@
             g.player = playerState;
         if (!Array.isArray(playerState.inv))
             playerState.inv = [];
+        // Only quest actions may register the quest in the log; add() activates the
+        // quest, so passive nodes (like 'start' on dialog open) must not trigger it.
+        const isQuestAction = nodeId === 'accept' || nodeId === 'do_turnin';
         let questEntry = questLog.quests[meta.id];
-        if (!questEntry && meta.status !== 'completed') {
+        if (!questEntry && meta.status !== 'completed' && isQuestAction) {
             questLog.add(meta);
             questEntry = questLog.quests[meta.id];
         }
@@ -236,7 +247,7 @@
                     meta.status = questEntry.status;
             }
         }
-        if (!questLog.quests[meta.id]) {
+        if (!questLog.quests[meta.id] && isQuestAction) {
             questLog.add(meta);
             questEntry = questLog.quests[meta.id];
         }
