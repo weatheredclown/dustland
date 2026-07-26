@@ -563,7 +563,7 @@ function advanceDialog(stateObj, choiceIdx) {
         return {
             next: prevNode,
             text: msg,
-            close: false,
+            close: true,
             success: false,
             retriable: true
         };
